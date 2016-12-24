@@ -1,0 +1,28 @@
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+code {
+  font-family: 'Roboto Mono', monospace;
+}
+
+// prevent CSS transitions from running before content is ready
+body.no-transitions * {
+  transition: none !important;
+}
+
+ng-view,
+main {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  color: $colorBlackTextPrimary;
+}
+

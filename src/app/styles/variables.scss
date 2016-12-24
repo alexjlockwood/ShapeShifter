@@ -1,0 +1,35 @@
+// dimensions
+$mobileChromeBreakpoint: 600px;
+
+// borders and seams
+$thinBorderColor: rgba(#000, .12);
+$thinBorderColorLighter: rgba(#000, .06);
+$thinBorderColorDarker: rgba(#000, .2);
+$thinBorderColorWhite: rgba(#fff, .2);
+
+// colors
+$colorBlackTextPrimary: rgba(#000, .87);
+$colorBlackTextSecondary: rgba(#000, .54);
+$colorBlackTextDisabled: rgba(#000, .38);
+$colorBlackTextVeryLight: rgba(#000, .15);
+$colorWhiteTextPrimary: rgba(#fff, 1.0);
+$colorWhiteTextSecondary: rgba(#fff, .70);
+$colorWhiteTextDisabled: rgba(#fff, .5);
+
+$colorPrimary400: material-color('blue', '400');
+$colorPrimary500: material-color('blue', '500');
+$colorPrimary600: material-color('blue', '600');
+$colorPrimary700: material-color('blue', '700');
+
+$colorFocusBorder: material-color('blue', '400');
+$colorSelection: material-color('blue', '700');
+$colorSelectedAnimationBlock: material-color('blue', '500');
+
+$colorError: material-color('red', 'a200');
+$colorSuccess: material-color('teal', 'a700');
+
+// animation timings
+$animTimeMedium: .3s;
+$animTimeFast: $animTimeMedium / 2;
+$animTimeVeryFast: $animTimeMedium / 3;
+$animTimeSlow: $animTimeMedium * 1.5;
