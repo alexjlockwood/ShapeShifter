@@ -1,17 +1,48 @@
 import * as bezierjs from 'bezier-js';
 
 
-export class SvgPathData {
+export default class SvgPathData {
   private string_: string;
   private length: number = 0;
   private bounds: { l: number, t: number, r: number, b: number };
   private commands_: { command: string, args: number[] }[];
 
+  static interpolate(start, end, f) {
+    if (!end || !start || !end.commands || !start.commands
+      || end.commands.length !== start.commands.length) {
+      // TODO: show a warning
+      return [];
+    }
+
+    let interpolatedCommands = [];
+
+    let i, j;
+    for (i = 0; i < start.commands.length; i++) {
+      let si = start.commands[i], ei = end.commands[i];
+      if (!ei.args || !si.args || ei.args.length !== si.args.length) {
+        console.warn('Incompatible path interpolation');
+        return [];
+      }
+
+      let interpolatedArgs = [];
+      for (j = 0; j < si.args.length; j++) {
+        interpolatedArgs.push(simpleInterpolate_(si.args[j], ei.args[j], f));
+      }
+
+      interpolatedCommands.push({
+        command: si.command,
+        args: interpolatedArgs
+      });
+    }
+
+    return new SvgPathData(interpolatedCommands);
+  }
+
   constructor(obj) {
     this.bounds = null;
 
     if (obj) {
-      if (typeof obj == 'string') {
+      if (typeof obj === 'string') {
         this.pathString = obj;
       } else if (Array.isArray(obj)) {
         this.commands = obj;
@@ -44,7 +75,7 @@ export class SvgPathData {
   execute(ctx) {
     ctx.beginPath();
     this.commands_.forEach(({command, args}) => {
-      if (command == '__arc__') {
+      if (command === '__arc__') {
         executeArc_(ctx, args);
       } else {
         ctx[command](...args);
@@ -66,7 +97,7 @@ export class SvgPathData {
 
   transform(transforms) {
     this.commands_.forEach(({ command, args }) => {
-      if (command == '__arc__') {
+      if (command === '__arc__') {
         const start = transformPoint_({ x: args[0], y: args[1] }, transforms);
         args[0] = start.x;
         args[1] = start.y;
@@ -101,37 +132,6 @@ export class SvgPathData {
     let { length, bounds } = computePathLengthAndBounds_(this.commands_);
     this.length = length;
     this.bounds = bounds;
-  }
-
-  static interpolate(start, end, f) {
-    if (!end || !start || !end.commands || !start.commands
-      || end.commands.length != start.commands.length) {
-      // TODO: show a warning
-      return [];
-    }
-
-    let interpolatedCommands = [];
-
-    let i, j;
-    for (i = 0; i < start.commands.length; i++) {
-      let si = start.commands[i], ei = end.commands[i];
-      if (!ei.args || !si.args || ei.args.length != si.args.length) {
-        console.warn('Incompatible path interpolation');
-        return [];
-      }
-
-      let interpolatedArgs = [];
-      for (j = 0; j < si.args.length; j++) {
-        interpolatedArgs.push(simpleInterpolate_(si.args[j], ei.args[j], f));
-      }
-
-      interpolatedCommands.push({
-        command: si.command,
-        args: interpolatedArgs
-      });
-    }
-
-    return new SvgPathData(interpolatedCommands);
   }
 }
 
@@ -171,7 +171,7 @@ function parseCommands_(pathString) {
         return (currentToken = TOKEN_RELATIVE_COMMAND);
       } else if ('A' <= c && c <= 'Z') {
         return (currentToken = TOKEN_ABSOLUTE_COMMAND);
-      } else if (('0' <= c && c <= '9') || c == '.' || c == '-') {
+      } else if (('0' <= c && c <= '9') || c === '.' || c === '-') {
         return (currentToken = TOKEN_VALUE);
       }
 
@@ -212,23 +212,23 @@ function parseCommands_(pathString) {
     while (tempIndex < length) {
       let c = pathString.charAt(tempIndex);
 
-      if (!('0' <= c && c <= '9') && (c != '.' || seenDot) && (c != '-' || !start) && c != 'e') {
+      if (!('0' <= c && c <= '9') && (c !== '.' || seenDot) && (c !== '-' || !start) && c !== 'e') {
         // end of value
         break;
       }
 
-      if (c == '.') {
+      if (c === '.') {
         seenDot = true;
       }
 
       start = false;
-      if (c == 'e') {
+      if (c === 'e') {
         start = true;
       }
       ++tempIndex;
     }
 
-    if (tempIndex == index) {
+    if (tempIndex === index) {
       throw new Error('Expected value');
     }
 
@@ -460,7 +460,7 @@ function parseCommands_(pathString) {
 function commandsToString_(commands): string {
   let tokens = [];
   commands.forEach(({command, args}) => {
-    if (command == '__arc__') {
+    if (command === '__arc__') {
       tokens.push('A');
       tokens.splice(tokens.length, 0, args.slice(2)); // skip first two arc args
       return;
@@ -489,12 +489,12 @@ function executeArc_(ctx, arcArgs) {
 
   xAxisRotation *= Math.PI / 180;
 
-  if (currentPointX == tempPoint1X && currentPointY == tempPoint1Y) {
+  if (currentPointX === tempPoint1X && currentPointY === tempPoint1Y) {
     // degenerate to point
     return;
   }
 
-  if (rx == 0 || ry == 0) {
+  if (rx === 0 || ry === 0) {
     // degenerate to line
     ctx.lineTo(tempPoint1X, tempPoint1Y);
     return;
@@ -594,12 +594,12 @@ function computePathLengthAndBounds_(commands) {
 
         xAxisRotation *= Math.PI / 180;
 
-        if (currentPointX == tempPoint1X && currentPointY == tempPoint1Y) {
+        if (currentPointX === tempPoint1X && currentPointY === tempPoint1Y) {
           // degenerate to point (0 length)
           break;
         }
 
-        if (rx == 0 || ry == 0) {
+        if (rx === 0 || ry === 0) {
           // degenerate to line
           length += dist_(currentPointX, currentPointY, tempPoint1X, tempPoint1Y);
           expandBounds_(tempPoint1X, tempPoint1Y);
@@ -670,7 +670,7 @@ function arcToBeziers_(xf, yf, rx, ry, rotate, largeArcFlag, sweepFlag, xt, yt) 
   }
 
   // Step 2 : Compute (cx1, cy1) - the transformed centre point
-  let sign = (largeArcFlag == sweepFlag) ? -1 : 1;
+  let sign = (largeArcFlag === sweepFlag) ? -1 : 1;
   let sq = ((rx_sq * ry_sq) - (rx_sq * y1_sq) - (ry_sq * x1_sq)) / ((rx_sq * y1_sq) + (ry_sq * x1_sq));
   sq = (sq < 0) ? 0 : sq;
   let coef = (sign * Math.sqrt(sq));
@@ -802,7 +802,7 @@ function unitCircleArcToBeziers_(angleStart, angleExtent) {
 }
 
 
-function transformPoint_(p, transformMatricies) {
+function transformPoint_(point, transformMatricies) {
   return transformMatricies.reduce((p, transform) => {
     const m = transform.matrix;
     return {
@@ -810,7 +810,7 @@ function transformPoint_(p, transformMatricies) {
       x: m.a * p.x + m.c * p.y + m.e * 1,
       y: m.b * p.x + m.d * p.y + m.f * 1,
     };
-  }, p);
+  }, point);
 }
 
 

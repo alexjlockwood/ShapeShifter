@@ -19,7 +19,7 @@ export const SvgLoader = {
         return null;
       }
 
-      if (node.nodeType == Node.TEXT_NODE || node.nodeType == Node.COMMENT_NODE) {
+      if (node.nodeType === Node.TEXT_NODE || node.nodeType === Node.COMMENT_NODE) {
         return null;
       }
 

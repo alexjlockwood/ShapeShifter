@@ -32,7 +32,7 @@ export function getUniqueId(opts) {
   let id_ = () => opts.prefix + (n ? `_${n}` : '');
   while (true) {
     let o = opts.objectById(id_());
-    if (!o || o == opts.targetObject) {
+    if (!o || o === opts.targetObject) {
       break;
     }
 
