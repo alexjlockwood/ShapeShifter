@@ -118,18 +118,18 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
       }
 
       // create a path layer
-      return new PathLayer({
-        id: makeFinalNodeId_(node, 'path'),
-        pathData: path,
-        fillColor: ('fillColor' in context) ? ColorUtil.svgToAndroidColor(context.fillColor) : null,
-        fillAlpha: ('fillAlpha' in context) ? context.fillAlpha : undefined,
-        strokeColor: ('strokeColor' in context) ? ColorUtil.svgToAndroidColor(context.strokeColor) : null,
-        strokeAlpha: ('strokeAlpha' in context) ? context.strokeAlpha : undefined,
-        strokeWidth: context.strokeWidth || undefined,
-        strokeLinecap: context.strokeLinecap || undefined,
-        strokeLinejoin: context.strokeLinejoin || undefined,
-        strokeMiterLimit: context.strokeMiterLimit || undefined,
-      });
+      return new PathLayer(
+        makeFinalNodeId_(node, 'path'),
+        new SvgPathData(path),
+        ('fillColor' in context) ? ColorUtil.svgToAndroidColor(context.fillColor) : null,
+        ('fillAlpha' in context) ? context.fillAlpha : undefined,
+        ('strokeColor' in context) ? ColorUtil.svgToAndroidColor(context.strokeColor) : null,
+        ('strokeAlpha' in context) ? context.strokeAlpha : undefined,
+        context.strokeWidth || undefined,
+        context.strokeLinecap || undefined,
+        context.strokeLinejoin || undefined,
+        context.strokeMiterLimit || undefined,
+      );
     }
 
     if (node.childNodes.length) {
@@ -138,9 +138,10 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
         .filter(layer => !!layer);
       if (layers && layers.length) {
         // create a group (there are valid children)
-        return new GroupLayer(layers, {
-          id: makeFinalNodeId_(node, 'group'),
-        });
+        return new GroupLayer(
+          layers,
+          makeFinalNodeId_(node, 'group'),
+        );
       }
     }
 
@@ -176,5 +177,5 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
   let childrenLayers = rootLayer ? rootLayer.children : undefined;
   let alpha = documentElement.getAttribute('opacity') || undefined;
 
-  return new VectorLayer(childrenLayers, {id, width, height, alpha});
+  return new VectorLayer(childrenLayers, id, width, height, alpha);
 }

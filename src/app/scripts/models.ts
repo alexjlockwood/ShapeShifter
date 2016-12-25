@@ -1,70 +1,70 @@
+import { SvgPathData } from './svgpathdata';
+
 export interface Layer {
   children: Layer[] | null;
   id: string;
 }
 
 export abstract class AbstractLayer implements Layer {
-  children: Layer[] | null;
-  id: string;
-
-  constructor(children: Layer[], id = '') { }
+  constructor(
+    public children: Layer[] | null,
+    public id = '',
+  ) { }
 }
 
 export class PathLayer extends AbstractLayer {
-  pathData: string;
-  fillColor: string | null;
-  fillAlpha: number;
-  strokeColor: string | null;
-  strokeAlpha: number;
-  strokeWidth: number;
-  strokeLinecap: string;
-  strokeLinejoin: string;
-  strokeMiterLimit: number;
-
-  constructor({
-    id = '',
-    pathData = '',
-    fillColor,
-    fillAlpha = 1,
-    strokeColor,
-    strokeAlpha = 1,
-    strokeWidth = 0,
-    strokeLinecap = 'butt',
-    strokeLinejoin = 'miter',
-    strokeMiterLimit = 4,
-  }) {
+  constructor(
+    public id = '',
+    public pathData: SvgPathData,
+    public fillColor: string | null,
+    public fillAlpha = 1,
+    public strokeColor: string | null,
+    public strokeAlpha = 1,
+    public strokeWidth = 0,
+    public strokeLinecap = 'butt',
+    public strokeLinejoin = 'miter',
+    public strokeMiterLimit = 4,
+    public trimPathStart = 0,
+    public trimPathEnd = 1,
+    public trimPathOffset = 0,
+  ) {
     super(null, id);
   }
 }
 
 export class ClipPathLayer extends AbstractLayer {
-  pathData: string;
-
-  constructor({id = '', pathData = ''}) {
+  constructor(
+    public id = '',
+    public pathData: SvgPathData,
+  ) {
     super(null, id);
   }
 }
 
 export class GroupLayer extends AbstractLayer {
-
-  constructor(children: Layer[] = [], {
-    id = '',
-  }) {
+  constructor(
+    public children: Layer[] = [],
+    public id = '',
+    public pivotX = 0,
+    public pivotY = 0,
+    public rotation = 0,
+    public scaleX = 1,
+    public scaleY = 1,
+    public translateX = 0,
+    public translateY = 0,
+  ) {
     super(children, id);
   }
 }
 
 export class VectorLayer extends AbstractLayer {
-  width: number;
-  height: number;
-  alpha: number;
-
-  constructor(children: Layer[] = [], {
-    id = '',
-    width = 0,
-    height = 0,
-    alpha = 1,
-  }) {
+  constructor(
+    public children: Layer[] = [],
+    public id = '',
+    public width = 0,
+    public height = 0,
+    public alpha = 1,
+  ) {
     super(children, id);
   }
 }
