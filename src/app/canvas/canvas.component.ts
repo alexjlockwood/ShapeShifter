@@ -1,7 +1,5 @@
 import { Component, OnInit, ElementRef, ViewChild } from '@angular/core';
-import * as svgloader from './../scripts/svgloader';
-import * as ColorUtil from './../scripts/colorutil';
-import * as BezierUtils from 'bezier-js';
+import * as Bezier from 'bezier-js';
 
 @Component({
   selector: 'app-canvas',
@@ -28,9 +26,13 @@ export class CanvasComponent implements OnInit {
     // this.canvas.height = this.height;
     this.draw();
 
-    console.log(ColorUtil.parseAndroidColor('#ff000000'));
-    console.log(BezierUtils);
-    console.log(new BezierUtils.Bezier(0, 0, 0, 0, 0, 0));
+    new Bezier(0, 0, 0, 0, 0, 0);
+    console.log(Bezier);
+
+    //let bez: Bezier = Bezier.fromSVG("C 0,0 0,0 0,0");
+
+    //console.log(BezierUtils);
+    //console.log(new BezierUtils.Bezier(0, 0, 0, 0, 0, 0));
 
     let svgString = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 24 24">
   <g transform="scale(0.5,0.5) rotate(90, 12, 12) translate(0,0)">

@@ -1,5 +1,4 @@
-import { Bezier } from 'bezier-js';
-
+import * as Bezier from 'bezier-js';
 
 export class SvgPathData {
   string_: string;
