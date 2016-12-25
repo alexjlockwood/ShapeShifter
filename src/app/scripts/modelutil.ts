@@ -1,27 +1,3 @@
-export function getOrderedAnimationBlocksByLayerIdAndProperty(animation) {
-  let animationBlocksByLayerId = {};
-
-  animation.blocks.forEach(block => {
-    let blocksByProperty = animationBlocksByLayerId[block.layerId];
-    if (!blocksByProperty) {
-      blocksByProperty = {};
-      animationBlocksByLayerId[block.layerId] = blocksByProperty;
-    }
-
-    blocksByProperty[block.propertyName] = blocksByProperty[block.propertyName] || [];
-    blocksByProperty[block.propertyName].push(block);
-  });
-
-  for (let layerId in animationBlocksByLayerId) {
-    let blocksByProperty = animationBlocksByLayerId[layerId];
-    for (let propertyName in blocksByProperty) {
-      blocksByProperty[propertyName].sort((a, b) => a.startTime - b.startTime);
-    }
-  }
-
-  return animationBlocksByLayerId;
-}
-
 export function getUniqueId(opts) {
   opts = opts || {};
   opts.prefix = opts.prefix || '';
@@ -35,8 +11,7 @@ export function getUniqueId(opts) {
     if (!o || o === opts.targetObject) {
       break;
     }
-
-    ++n;
+    n++;
   }
 
   return id_();

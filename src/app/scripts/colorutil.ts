@@ -2,7 +2,7 @@ import * as tinycolor from 'tinycolor2';
 
 const BRIGHTNESS_THRESHOLD = 130;
 
-export function parseAndroidColor(val: string): ColorFormats.RGBA {
+export function parseAndroidColor(val: string): ColorFormats.RGBA | null {
   val = (val || '').replace(/^\s*#?|\s*$/g, '');
   const dict: ColorFormats.RGBA = { a: 0, r: 0, g: 0, b: 0 };
 
@@ -44,7 +44,7 @@ export function toAndroidString(dict: ColorFormats.RGBA): string {
   return str;
 }
 
-export function svgToAndroidColor(color: string): string {
+export function svgToAndroidColor(color: string): string | null {
   if (color === 'none') {
     return null;
   }

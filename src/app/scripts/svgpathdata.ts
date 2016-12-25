@@ -1,17 +1,17 @@
-import * as bezierjs from 'bezier-js';
+import { Bezier } from 'bezier-js';
 
 
-export default class SvgPathData {
-  private string_: string;
-  private length: number = 0;
-  private bounds: { l: number, t: number, r: number, b: number };
-  private commands_: { command: string, args: number[] }[];
+export class SvgPathData {
+  string_: string;
+  length: number = 0;
+  bounds: { l: number, t: number, r: number, b: number };
+  commands_: { command: string, args: number[] }[];
 
   static interpolate(start, end, f) {
     if (!end || !start || !end.commands || !start.commands
       || end.commands.length !== start.commands.length) {
       // TODO: show a warning
-      return [];
+      return null;
     }
 
     let interpolatedCommands = [];
@@ -21,7 +21,7 @@ export default class SvgPathData {
       let si = start.commands[i], ei = end.commands[i];
       if (!ei.args || !si.args || ei.args.length !== si.args.length) {
         console.warn('Incompatible path interpolation');
-        return [];
+        return ;
       }
 
       let interpolatedArgs = [];
@@ -568,7 +568,7 @@ function computePathLengthAndBounds_(commands) {
       }
 
       case 'bezierCurveTo': {
-        let bez = new bezierjs.Bezier(currentPoint.x, currentPoint.y, args[0], args[1],
+        let bez = new Bezier(currentPoint.x, currentPoint.y, args[0], args[1],
           args[2], args[3], args[4], args[5]);
         length += bez.length();
         currentPoint.x = args[4];
@@ -578,7 +578,7 @@ function computePathLengthAndBounds_(commands) {
       }
 
       case 'quadraticCurveTo': {
-        let bez = new bezierjs.Bezier(currentPoint.x, currentPoint.y, args[0], args[1], args[2], args[3]);
+        let bez = new Bezier(currentPoint.x, currentPoint.y, args[0], args[1], args[2], args[3]);
         length += bez.length();
         currentPoint.x = args[2];
         currentPoint.y = args[3];
@@ -612,7 +612,7 @@ function computePathLengthAndBounds_(commands) {
           tempPoint1X, tempPoint1Y);
 
         for (let i = 0; i < bezierCoords.length; i += 8) {
-          let bez = new bezierjs.Bezier(currentPoint.x, currentPoint.y,
+          let bez = new Bezier(currentPoint.x, currentPoint.y,
             bezierCoords[i + 2], bezierCoords[i + 3],
             bezierCoords[i + 4], bezierCoords[i + 5],
             bezierCoords[i + 6], bezierCoords[i + 7]);
