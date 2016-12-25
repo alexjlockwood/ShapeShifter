@@ -5,7 +5,7 @@ export interface Layer {
   id: string;
 }
 
-export abstract class AbstractLayer implements Layer {
+abstract class AbstractLayer implements Layer {
   constructor(
     public children: Layer[] | null,
     public id = '',
