@@ -5,22 +5,20 @@ import * as ColorUtil from './../scripts/colorutil';
 import * as $ from 'jquery';
 import { StateService } from '../state.service';
 import { Subscription } from 'rxjs/Subscription';
+import * as erd from 'element-resize-detector';
 
 
+// TODO(alockwood): remove jquery? seems unnecessary on second thought
 // TODO(alockwood): add offscreen canvas to implement alpha
 // TODO(alockwood): adjust scale depending on window.devicePixelRatio
-// TODO(alockwood): adjust the canvas size properly on initial page load
 @Component({
   selector: 'app-canvas',
   templateUrl: './canvas.component.html',
   styleUrls: ['./canvas.component.scss']
 })
 export class CanvasComponent implements AfterViewInit, OnDestroy {
-  @ViewChild('canvasContainer')
-  private canvasContainerRef: ElementRef;
-  @ViewChild('renderingCanvas')
-  private canvasRef: ElementRef;
-  private canvas: any;
+  @ViewChild('renderingCanvas') private canvasRef: ElementRef;
+  private canvas;
   private vectorLayer: VectorLayer;
   private scale_: number;
   private backingStoreScale_: number;
@@ -28,19 +26,32 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   @Input() private isPreviewCanvas: boolean;
   @Input() private isEndCanvas: boolean;
   //private offscreenCanvas: any;
+  private shouldLabelPoints = false;
+  private subscriptions = [];
 
-  private subscription: Subscription;
-
-  constructor(private stateService: StateService) { }
+  constructor(private elementRef: ElementRef, private stateService: StateService) {
+    erd().listenTo(this.elementRef.nativeElement, element => {
+      this.resizeAndDrawCanvas(element.getBoundingClientRect().width);
+    });
+  }
 
   ngAfterViewInit() {
+    this.subscriptions.push(
+      this.stateService.getShouldLabelPointsChangedSubscription(
+        shouldLabelPoints => {
+          if (this.shouldLabelPoints !== shouldLabelPoints) {
+            this.shouldLabelPoints = shouldLabelPoints;
+            this.drawCanvas();
+          }
+        }));
+
     if (this.isPreviewCanvas) {
-      this.subscription = this.stateService.timelineChangedSource.subscribe(
-        animationFraction => {
-          animationFraction /= 1000;
-          console.log('re-drawing preview canvas: ' + animationFraction);
-          this.drawCanvas();
-        });
+      this.subscriptions.push(
+        this.stateService.getAnimationFractionChangedSubscription(
+          animationFraction => {
+            console.log('re-drawing preview canvas: ' + animationFraction);
+            this.drawCanvas();
+          }));
       this.vectorLayer = this.stateService.previewVectorLayer;
     } else if (this.isStartCanvas) {
       this.vectorLayer = this.stateService.startVectorLayer;
@@ -50,23 +61,14 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     console.log(this.vectorLayer);
 
     this.canvas = $(this.canvasRef.nativeElement);
-    // TODO(alockwood): adjust the canvas size properly on initial page load
-    this.resizeAndDrawCanvas(300);
     this.drawCanvas();
   }
 
   ngOnDestroy() {
-    if (this.subscription) {
-      this.subscription.unsubscribe();
-    }
+    this.subscriptions.forEach(s => s.unsubscribe());
   }
 
-  onResize(event) {
-    console.log("resize", event, event.width, event.width);
-    this.resizeAndDrawCanvas(event.width);
-  }
-
-  resizeAndDrawCanvas(size) {
+  private resizeAndDrawCanvas(size) {
     const containerWidth = size;
     const containerHeight = size;
     const containerAspectRatio = containerWidth / containerHeight;
@@ -95,95 +97,12 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     this.drawCanvas();
   }
 
-  drawCanvas() {
-    const transforms = [];
-    const drawLayer_ = (ctx: CanvasRenderingContext2D, layer: Layer) => {
-      if (layer instanceof VectorLayer) {
-        layer.children.forEach(layer => drawLayer_(ctx, layer));
-        return;
-      }
-
-      if (layer instanceof GroupLayer) {
-        transforms.push(() => {
-          ctx.translate(layer.pivotX, layer.pivotY);
-          ctx.translate(layer.translateX, layer.translateY);
-          ctx.rotate(layer.rotation * Math.PI / 180);
-          ctx.scale(layer.scaleX, layer.scaleY);
-          ctx.translate(-layer.pivotX, -layer.pivotY);
-        });
-        ctx.save();
-        layer.children.forEach(layer => drawLayer_(ctx, layer));
-        ctx.restore();
-        transforms.pop();
-        return;
-      }
-
-      if (layer instanceof ClipPathLayer) {
-        ctx.save();
-        transforms.forEach(t => t());
-        layer.pathData.execute(ctx);
-        ctx.restore();
-
-        // clip further layers
-        ctx.clip();
-        return;
-      }
-
-      if (layer instanceof PathLayer) {
-        ctx.save();
-        transforms.forEach(t => t());
-        layer.pathData.execute(ctx);
-        ctx.restore();
-
-        // draw the actual layer
-        ctx.strokeStyle = ColorUtil.androidToCssColor(layer.strokeColor, layer.strokeAlpha);
-        ctx.lineWidth = layer.strokeWidth;
-        ctx.fillStyle = ColorUtil.androidToCssColor(layer.fillColor, layer.fillAlpha);
-        ctx.lineCap = layer.strokeLinecap;
-        ctx.lineJoin = layer.strokeLinejoin;
-        ctx.miterLimit = layer.strokeMiterLimit || 4;
-
-        if (layer.trimPathStart !== 0 || layer.trimPathEnd !== 1 || layer.trimPathOffset !== 0) {
-          // Calculate the visible fraction of the trimmed path. If trimPathStart
-          // is greater than trimPathEnd, then the result should be the combined
-          // length of the two line segments: [trimPathStart,1] and [0,trimPathEnd].
-          let shownFraction = layer.trimPathEnd - layer.trimPathStart;
-          if (layer.trimPathStart > layer.trimPathEnd) {
-            shownFraction += 1;
-          }
-          // Calculate the dash array. The first array element is the length of
-          // the trimmed path and the second element is the gap, which is the
-          // difference in length between the total path length and the visible
-          // trimmed path length.
-          ctx.setLineDash([
-            shownFraction * layer.pathData.length,
-            (1 - shownFraction + 0.001) * layer.pathData.length
-          ]);
-          // The amount to offset the path is equal to the trimPathStart plus
-          // trimPathOffset. We mod the result because the trimmed path
-          // should wrap around once it reaches 1.
-          ctx.lineDashOffset =
-            layer.pathData.length * (1 - ((layer.trimPathStart + layer.trimPathOffset) % 1));
-        } else {
-          ctx.setLineDash([]);
-        }
-
-        if (layer.strokeColor && layer.strokeWidth && layer.trimPathStart !== layer.trimPathEnd) {
-          ctx.stroke();
-        }
-
-        if (layer.fillColor) {
-          ctx.fill();
-        }
-        return;
-      }
-    };
-
+  private drawCanvas() {
     const ctx = this.canvas.get(0).getContext('2d');
     ctx.save();
     ctx.scale(this.backingStoreScale_, this.backingStoreScale_);
     ctx.clearRect(0, 0, this.vectorLayer.width, this.vectorLayer.height);
-    drawLayer_(ctx, this.vectorLayer);
+    this.drawLayer(this.vectorLayer, ctx, []);
     ctx.restore();
 
     // draw pixel grid
@@ -205,4 +124,118 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       }
     }
   }
+
+  private drawLayer(layer: Layer, ctx: CanvasRenderingContext2D, transforms: TransformFn[]) {
+    if (layer instanceof VectorLayer) {
+      layer.children.forEach(layer => this.drawLayer(layer, ctx, transforms));
+    } else if (layer instanceof GroupLayer) {
+      this.drawGroupLayer(layer, ctx, transforms);
+    } else if (layer instanceof ClipPathLayer) {
+      this.drawClipPathLayer(layer, ctx, transforms);
+    } else if (layer instanceof PathLayer) {
+      this.drawPathLayer(layer, ctx, transforms);
+      if (this.shouldLabelPoints) {
+        this.drawPathLayerPoints(layer, ctx, transforms);
+      }
+    }
+  }
+
+  private drawGroupLayer(layer: GroupLayer, ctx: CanvasRenderingContext2D, transforms: TransformFn[]) {
+    transforms.push(() => {
+      ctx.translate(layer.pivotX, layer.pivotY);
+      ctx.translate(layer.translateX, layer.translateY);
+      ctx.rotate(layer.rotation * Math.PI / 180);
+      ctx.scale(layer.scaleX, layer.scaleY);
+      ctx.translate(-layer.pivotX, -layer.pivotY);
+    });
+    ctx.save();
+    layer.children.forEach(layer => this.drawLayer(layer, ctx, transforms));
+    ctx.restore();
+    transforms.pop();
+  }
+
+  private drawClipPathLayer(layer: ClipPathLayer, ctx: CanvasRenderingContext2D, transforms: (() => void)[]) {
+    ctx.save();
+    transforms.forEach(t => t());
+    layer.pathData.execute(ctx);
+    ctx.restore();
+
+    // clip further layers
+    ctx.clip();
+  }
+
+  // TODO(alockwood): update layer.pathData.length so that it reflects transforms such as scale
+  private drawPathLayer(layer: PathLayer, ctx: CanvasRenderingContext2D, transforms: TransformFn[]) {
+    ctx.save();
+    transforms.forEach(t => t());
+    layer.pathData.execute(ctx);
+    ctx.restore();
+
+    // draw the actual layer
+    ctx.strokeStyle = ColorUtil.androidToCssColor(layer.strokeColor, layer.strokeAlpha);
+    ctx.lineWidth = layer.strokeWidth;
+    ctx.fillStyle = ColorUtil.androidToCssColor(layer.fillColor, layer.fillAlpha);
+    ctx.lineCap = layer.strokeLinecap;
+    ctx.lineJoin = layer.strokeLinejoin;
+    ctx.miterLimit = layer.strokeMiterLimit || 4;
+
+    if (layer.trimPathStart !== 0 || layer.trimPathEnd !== 1 || layer.trimPathOffset !== 0) {
+      // Calculate the visible fraction of the trimmed path. If trimPathStart
+      // is greater than trimPathEnd, then the result should be the combined
+      // length of the two line segments: [trimPathStart,1] and [0,trimPathEnd].
+      let shownFraction = layer.trimPathEnd - layer.trimPathStart;
+      if (layer.trimPathStart > layer.trimPathEnd) {
+        shownFraction += 1;
+      }
+      // Calculate the dash array. The first array element is the length of
+      // the trimmed path and the second element is the gap, which is the
+      // difference in length between the total path length and the visible
+      // trimmed path length.
+      ctx.setLineDash([
+        shownFraction * layer.pathData.length,
+        (1 - shownFraction + 0.001) * layer.pathData.length
+      ]);
+      // The amount to offset the path is equal to the trimPathStart plus
+      // trimPathOffset. We mod the result because the trimmed path
+      // should wrap around once it reaches 1.
+      ctx.lineDashOffset =
+        layer.pathData.length * (1 - ((layer.trimPathStart + layer.trimPathOffset) % 1));
+    } else {
+      ctx.setLineDash([]);
+    }
+
+    if (layer.strokeColor && layer.strokeWidth && layer.trimPathStart !== layer.trimPathEnd) {
+      ctx.stroke();
+    }
+
+    if (layer.fillColor) {
+      ctx.fill();
+    }
+  }
+
+  // TODO(alockwood): avoid scaling the points we draw here as a result of applying the transforms
+  private drawPathLayerPoints(layer: PathLayer, ctx: CanvasRenderingContext2D, transforms: TransformFn[]) {
+    const points = [];
+    layer.pathData.commands.forEach(c => points.push(...c.points));
+
+    ctx.save();
+    transforms.forEach(t => t());
+    points.forEach((p, index) => {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 0.75, 0, 2 * Math.PI, false);
+      ctx.fillStyle = 'green';
+      ctx.fill();
+      ctx.beginPath();
+      ctx.fillStyle = "white";
+      ctx.font = '1px serif';
+      const text = (index + 1).toString();
+      const width = ctx.measureText(text).width;
+      const height = ctx.measureText(text).width;
+      ctx.fillText(text, p.x - width / 2, p.y + height / 2);
+      ctx.fill();
+    })
+    ctx.restore();
+  }
 }
+
+type TransformFn = () => void;

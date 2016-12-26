@@ -1,2 +1,8 @@
+Status: Unmorphable
+
+<i class="material-icons">play_arrow</i>
+
 <!-- TODO: use (input) instead. see https://github.com/angular/material2/issues/2296 -->
-<md-slider class="timeline-slider" min="0" max="1000" step="1" value="0" (change)="onSliderChanged($event.value)"></md-slider>
+<md-slider class="timeline-slider" min="0" [max]="maxAnimationFractionSliderValue" step="1" value="0" (change)="onAnimationFractionChanged($event.value)"></md-slider>
+
+<md-checkbox (change)="onLabelPointsChanged($event.checked)">Label points</md-checkbox>

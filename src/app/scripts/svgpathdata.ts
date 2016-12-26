@@ -1,11 +1,11 @@
 import * as Bezier from 'bezier-js';
-
+import { Point, TransformMatrix, Rect } from './types';
 
 export class SvgPathData {
-  string_: string;
-  length: number = 0;
-  bounds: { l: number, t: number, r: number, b: number };
-  commands_: { command: string, args: number[] }[];
+  private pathString_: string;
+  private commands_: Command[];
+  private length_ = 0;
+  private bounds_: Rect = null;
 
   static interpolate(start: SvgPathData, end: SvgPathData, f: number) {
     if (!end || !start || !end.commands || !start.commands
@@ -26,21 +26,20 @@ export class SvgPathData {
 
       let interpolatedArgs = [];
       for (j = 0; j < si.args.length; j++) {
-        interpolatedArgs.push(simpleInterpolate_(si.args[j], ei.args[j], f));
+        interpolatedArgs.push(si.args[j] + (ei.args[j] - si.args[j]) * f);
       }
 
-      interpolatedCommands.push({
-        command: si.command,
-        args: interpolatedArgs
-      });
+      interpolatedCommands.push(new Command(si.command, interpolatedArgs));
     }
 
     return new SvgPathData(interpolatedCommands);
   }
 
-  constructor(obj) {
-    this.bounds = null;
-
+  constructor();
+  constructor(obj: string);
+  constructor(obj: Command[]);
+  constructor(obj: SvgPathData);
+  constructor(obj?: any) {
     if (obj) {
       if (typeof obj === 'string') {
         this.pathString = obj;
@@ -53,30 +52,19 @@ export class SvgPathData {
   }
 
   get pathString() {
-    return this.string_ || '';
+    return this.pathString_ || '';
   }
 
-  set pathString(value) {
-    this.string_ = value;
-    this.commands_ = parseCommands_(value);
+  set pathString(path: string) {
+    this.pathString_ = path;
+    this.commands_ = parseCommands_(path);
     let {length, bounds} = computePathLengthAndBounds_(this.commands_);
-    this.length = length;
-    this.bounds = bounds;
+    this.length_ = length;
+    this.bounds_ = bounds;
   }
 
   toString() {
     return this.pathString;
-  }
-
-  execute(ctx: CanvasRenderingContext2D) {
-    ctx.beginPath();
-    this.commands_.forEach(({command, args}) => {
-      if (command === '__arc__') {
-        executeArc_(ctx, args);
-      } else {
-        ctx[command](...args);
-      }
-    });
   }
 
   get commands() {
@@ -85,16 +73,31 @@ export class SvgPathData {
 
   set commands(value) {
     this.commands_ = (value ? value.slice() : []);
-    this.string_ = commandsToString_(this.commands_);
+    this.pathString_ = commandsToString_(this.commands_);
     let {length, bounds} = computePathLengthAndBounds_(this.commands_);
-    this.length = length;
-    this.bounds = bounds;
+    this.length_ = length;
+    this.bounds_ = bounds;
   }
 
-  transform(transforms) {
+  get length() {
+    return this.length_;
+  }
+
+  execute(ctx: CanvasRenderingContext2D) {
+    ctx.beginPath();
+    this.commands_.forEach(({command, args}) => {
+      if (command === '__arc__') {
+        executeArc_(ctx, args);
+      } else {
+        ctx[<string>command](...args);
+      }
+    });
+  }
+
+  transform(transforms: { matrix: TransformMatrix }[]) {
     this.commands_.forEach(({ command, args }) => {
       if (command === '__arc__') {
-        const start = transformPoint_({ x: args[0], y: args[1] }, transforms);
+        const start = transformPoint_(new Point(args[0], args[1]), transforms);
         args[0] = start.x;
         args[1] = start.y;
         const arc = transformArc_({
@@ -105,8 +108,7 @@ export class SvgPathData {
           sweepFlag: args[6],
           endX: args[7],
           endY: args[8],
-        },
-          transforms);
+        }, transforms);
         args[2] = arc.rx;
         args[3] = arc.ry;
         args[4] = arc.xAxisRotation;
@@ -118,22 +120,34 @@ export class SvgPathData {
       }
 
       for (let i = 0; i < args.length; i += 2) {
-        let transformed = transformPoint_({ x: args[i], y: args[i + 1] }, transforms);
+        let transformed = transformPoint_(new Point(args[i], args[i + 1]), transforms);
         args[i] = transformed.x;
         args[i + 1] = transformed.y;
       }
     });
 
-    this.string_ = commandsToString_(this.commands_);
+    this.pathString_ = commandsToString_(this.commands_);
     let { length, bounds } = computePathLengthAndBounds_(this.commands_);
-    this.length = length;
-    this.bounds = bounds;
+    this.length_ = length;
+    this.bounds_ = bounds;
   }
 }
 
 
-let simpleInterpolate_ = (start: number, end: number, f: number) => start + (end - start) * f;
+export type CommandType = 'moveTo' | 'lineTo' | 'quadraticCurveTo' | 'bezierCurveTo' | '__arc__' | 'closePath';
 
+export class Command {
+  constructor(public command: CommandType, public args: number[]) { }
+
+  // TODO(alockwood): figure out what to do with elliptical arcs
+  get points(): Point[] {
+    const points = [];
+    for (let i = 0; i < this.args.length; i += 2) {
+      points.push(new Point(this.args[i], this.args[i + 1]));
+    }
+    return points;
+  }
+}
 
 const enum Token {
   AbsoluteCommand,
@@ -142,26 +156,24 @@ const enum Token {
   EOF,
 }
 
-function parseCommands_(pathString: string) {
-  let commands = [];
-  let pushCommandComplex_ = (command, ...args) => commands.push({ command, args });
-  let pushCommandPoints_ = (command, ...points) => commands.push({
-    command, args: points.reduce((arr, point) => arr.concat(point.x, point.y), [])
-  });
 
-  let currentPoint = { x: NaN, y: NaN };
-  let currentControlPoint = null; // used for S and T commands
+function parseCommands_(pathString: string) {
+  let commands: Command[] = [];
+  let pushCommandComplex_ = (command: CommandType, ...args: number[]) => commands.push(new Command(command, args));
+  let pushCommandPoints_ = (command: CommandType, ...points: Point[]) =>
+    commands.push(new Command(command, points.reduce((list, p) => list.concat(p.x, p.y), [])));
+
   let index = 0;
   let length = pathString.length;
-
-  let tempPoint1 = { x: 0, y: 0 };
-  let tempPoint2 = { x: 0, y: 0 };
-  let tempPoint3 = { x: 0, y: 0 };
-
+  let currentPoint = new Point(NaN, NaN);
+  let currentControlPoint = null; // used for S and T commands
+  let tempPoint1 = new Point(0, 0);
+  let tempPoint2 = new Point(0, 0);
+  let tempPoint3 = new Point(0, 0);
   let firstMove = true;
-  let currentToken;
+  let currentToken: Token;
 
-  let advanceToNextToken_ = () => {
+  let advanceToNextToken_: () => Token = () => {
     while (index < length) {
       let c = pathString.charAt(index);
       if ('a' <= c && c <= 'z') {
@@ -171,7 +183,6 @@ function parseCommands_(pathString: string) {
       } else if (('0' <= c && c <= '9') || c === '.' || c === '-') {
         return (currentToken = Token.Value);
       }
-
       // skip unrecognized character
       index++;
     }
@@ -187,7 +198,7 @@ function parseCommands_(pathString: string) {
     return pathString.charAt(index++);
   };
 
-  let consumePoint_ = (out, relative) => {
+  let consumePoint_ = (out: Point, relative: boolean) => {
     out.x = consumeValue_();
     out.y = consumeValue_();
     if (relative) {
@@ -206,7 +217,7 @@ function parseCommands_(pathString: string) {
     let seenDot = false;
     let tempIndex = index;
     while (tempIndex < length) {
-      let c = pathString.charAt(tempIndex);
+      const c = pathString.charAt(tempIndex);
 
       if (!('0' <= c && c <= '9') && (c !== '.' || seenDot) && (c !== '-' || !start) && c !== 'e') {
         // end of value
@@ -221,14 +232,14 @@ function parseCommands_(pathString: string) {
       if (c === 'e') {
         start = true;
       }
-      ++tempIndex;
+      tempIndex++;
     }
 
     if (tempIndex === index) {
       throw new Error('Expected value');
     }
 
-    let str = pathString.substring(index, tempIndex);
+    const str = pathString.substring(index, tempIndex);
     index = tempIndex;
     return parseFloat(str);
   };
@@ -248,7 +259,7 @@ function parseCommands_(pathString: string) {
             pushCommandPoints_('moveTo', tempPoint1);
             firstPoint = false;
             if (firstMove) {
-              currentPoint = Object.assign({}, tempPoint1);
+              currentPoint = Point.from(tempPoint1);
               firstMove = false;
             }
           } else {
@@ -257,7 +268,7 @@ function parseCommands_(pathString: string) {
         }
 
         currentControlPoint = null;
-        currentPoint = Object.assign({}, tempPoint1);
+        currentPoint = Point.from(tempPoint1);
         break;
       }
 
@@ -274,8 +285,8 @@ function parseCommands_(pathString: string) {
           consumePoint_(tempPoint3, relative);
           pushCommandPoints_('bezierCurveTo', tempPoint1, tempPoint2, tempPoint3);
 
-          currentControlPoint = Object.assign({}, tempPoint2);
-          currentPoint = Object.assign({}, tempPoint3);
+          currentControlPoint = Point.from(tempPoint2);
+          currentPoint = Point.from(tempPoint3);
         }
 
         break;
@@ -295,12 +306,12 @@ function parseCommands_(pathString: string) {
             tempPoint3.x = currentPoint.x + (currentPoint.x - currentControlPoint.x);
             tempPoint3.y = currentPoint.y + (currentPoint.y - currentControlPoint.y);
           } else {
-            Object.assign(tempPoint3, tempPoint1);
+            tempPoint3 = Point.from(tempPoint1);
           }
           pushCommandPoints_('bezierCurveTo', tempPoint3, tempPoint1, tempPoint2);
 
-          currentControlPoint = Object.assign({}, tempPoint1);
-          currentPoint = Object.assign({}, tempPoint2);
+          currentControlPoint = Point.from(tempPoint1);
+          currentPoint = Point.from(tempPoint2);
         }
 
         break;
@@ -318,8 +329,8 @@ function parseCommands_(pathString: string) {
           consumePoint_(tempPoint2, relative);
           pushCommandPoints_('quadraticCurveTo', tempPoint1, tempPoint2);
 
-          currentControlPoint = Object.assign({}, tempPoint1);
-          currentPoint = Object.assign({}, tempPoint2);
+          currentControlPoint = Point.from(tempPoint1);
+          currentPoint = Point.from(tempPoint2);
         }
 
         break;
@@ -338,12 +349,12 @@ function parseCommands_(pathString: string) {
             tempPoint2.x = currentPoint.x + (currentPoint.x - currentControlPoint.x);
             tempPoint2.y = currentPoint.y + (currentPoint.y - currentControlPoint.y);
           } else {
-            Object.assign(tempPoint2, tempPoint1);
+            tempPoint2 = Point.from(tempPoint1);
           }
           pushCommandPoints_('quadraticCurveTo', tempPoint2, tempPoint1);
 
-          currentControlPoint = Object.assign({}, tempPoint2);
-          currentPoint = Object.assign({}, tempPoint1);
+          currentControlPoint = Point.from(tempPoint2);
+          currentPoint = Point.from(tempPoint1);
         }
 
         break;
@@ -361,7 +372,7 @@ function parseCommands_(pathString: string) {
           pushCommandPoints_('lineTo', tempPoint1);
 
           currentControlPoint = null;
-          currentPoint = Object.assign({}, tempPoint1);
+          currentPoint = Point.from(tempPoint1);
         }
 
         break;
@@ -384,7 +395,7 @@ function parseCommands_(pathString: string) {
           pushCommandPoints_('lineTo', tempPoint1);
 
           currentControlPoint = null;
-          currentPoint = Object.assign({}, tempPoint1);
+          currentPoint = Point.from(tempPoint1);
         }
         break;
       }
@@ -414,7 +425,7 @@ function parseCommands_(pathString: string) {
           // pp.addMarkerAngle(tempPoint1, ah - dir * Math.PI);
 
           currentControlPoint = null;
-          currentPoint = Object.assign({}, tempPoint1);
+          currentPoint = Point.from(tempPoint1);
         }
         break;
       }
@@ -435,7 +446,7 @@ function parseCommands_(pathString: string) {
           pushCommandPoints_('lineTo', tempPoint1);
 
           currentControlPoint = null;
-          currentPoint = Object.assign({}, tempPoint1);
+          currentPoint = Point.from(tempPoint1);
         }
         break;
       }
@@ -453,7 +464,7 @@ function parseCommands_(pathString: string) {
 }
 
 
-function commandsToString_(commands): string {
+function commandsToString_(commands: Command[]) {
   let tokens = [];
   commands.forEach(({command, args}) => {
     if (command === '__arc__') {
@@ -477,13 +488,11 @@ function commandsToString_(commands): string {
 }
 
 
-function executeArc_(ctx, arcArgs) {
+function executeArc_(ctx: CanvasRenderingContext2D, arcArgs) {
   let [currentPointX, currentPointY,
     rx, ry, xAxisRotation,
     largeArcFlag, sweepFlag,
     tempPoint1X, tempPoint1Y] = arcArgs;
-
-  xAxisRotation *= Math.PI / 180;
 
   if (currentPointX === tempPoint1X && currentPointY === tempPoint1Y) {
     // degenerate to point
@@ -502,16 +511,17 @@ function executeArc_(ctx, arcArgs) {
     tempPoint1X, tempPoint1Y);
 
   for (let i = 0; i < bezierCoords.length; i += 8) {
-    ctx.bezierCurveTo(bezierCoords[i + 2], bezierCoords[i + 3],
+    ctx.bezierCurveTo(
+      bezierCoords[i + 2], bezierCoords[i + 3],
       bezierCoords[i + 4], bezierCoords[i + 5],
       bezierCoords[i + 6], bezierCoords[i + 7]);
   }
 }
 
 
-function computePathLengthAndBounds_(commands) {
+function computePathLengthAndBounds_(commands: Command[]) {
   let length = 0;
-  let bounds = { l: Infinity, t: Infinity, r: -Infinity, b: -Infinity };
+  let bounds = new Rect(Infinity, Infinity, -Infinity, -Infinity);
 
   let expandBounds_ = (x: number, y: number) => {
     bounds.l = Math.min(x, bounds.l);
@@ -531,7 +541,7 @@ function computePathLengthAndBounds_(commands) {
   let firstPoint = null;
   let currentPoint = { x: 0, y: 0 };
 
-  let dist_ = (x1, y1, x2, y2) => {
+  let dist_ = (x1: number, y1: number, x2: number, y2: number) => {
     return Math.sqrt(Math.pow(y2 - y1, 2) + Math.pow(x2 - x1, 2));
   };
 
@@ -564,8 +574,11 @@ function computePathLengthAndBounds_(commands) {
       }
 
       case 'bezierCurveTo': {
-        let bez = new Bezier(currentPoint.x, currentPoint.y, args[0], args[1],
-          args[2], args[3], args[4], args[5]);
+        let bez = new Bezier(
+          currentPoint.x, currentPoint.y,
+          args[0], args[1],
+          args[2], args[3],
+          args[4], args[5]);
         length += bez.length();
         currentPoint.x = args[4];
         currentPoint.y = args[5];
@@ -574,7 +587,10 @@ function computePathLengthAndBounds_(commands) {
       }
 
       case 'quadraticCurveTo': {
-        let bez = new Bezier(currentPoint.x, currentPoint.y, args[0], args[1], args[2], args[3]);
+        let bez = new Bezier(
+          currentPoint.x, currentPoint.y,
+          args[0], args[1],
+          args[2], args[3]);
         length += bez.length();
         currentPoint.x = args[2];
         currentPoint.y = args[3];
@@ -588,8 +604,6 @@ function computePathLengthAndBounds_(commands) {
           largeArcFlag, sweepFlag,
           tempPoint1X, tempPoint1Y] = args;
 
-        xAxisRotation *= Math.PI / 180;
-
         if (currentPointX === tempPoint1X && currentPointY === tempPoint1Y) {
           // degenerate to point (0 length)
           break;
@@ -602,13 +616,15 @@ function computePathLengthAndBounds_(commands) {
           return;
         }
 
-        let bezierCoords = arcToBeziers_(currentPointX, currentPointY,
+        let bezierCoords = arcToBeziers_(
+          currentPointX, currentPointY,
           rx, ry, xAxisRotation,
           largeArcFlag, sweepFlag,
           tempPoint1X, tempPoint1Y);
 
         for (let i = 0; i < bezierCoords.length; i += 8) {
-          let bez = new Bezier(currentPoint.x, currentPoint.y,
+          let bez = new Bezier(
+            currentPoint.x, currentPoint.y,
             bezierCoords[i + 2], bezierCoords[i + 3],
             bezierCoords[i + 4], bezierCoords[i + 5],
             bezierCoords[i + 6], bezierCoords[i + 7]);
@@ -629,13 +645,14 @@ function computePathLengthAndBounds_(commands) {
 
 
 // Based on code from https://code.google.com/archive/p/androidsvg
-function arcToBeziers_(xf, yf, rx, ry, rotate, largeArcFlag, sweepFlag, xt, yt) {
+function arcToBeziers_(xf, yf, rx, ry, xAxisRotation, largeArcFlag, sweepFlag, xt, yt) {
   // Sign of the radii is ignored (behaviour specified by the spec)
   rx = Math.abs(rx);
   ry = Math.abs(ry);
 
-  let cosAngle = Math.cos(rotate);
-  let sinAngle = Math.sin(rotate);
+  xAxisRotation = xAxisRotation * Math.PI / 180;
+  let cosAngle = Math.cos(xAxisRotation);
+  let sinAngle = Math.sin(xAxisRotation);
 
   // We simplify the calculations by transforming the arc so that the origin is at the
   // midpoint calculated above followed by a rotation to line up the coordinate axes
@@ -752,7 +769,7 @@ function arcToBeziers_(xf, yf, rx, ry, rotate, largeArcFlag, sweepFlag, xt, yt) 
 *
 * The returned array has the format [x0,y0, x1,y1,...].
 */
-function unitCircleArcToBeziers_(angleStart: number, angleExtent: number) {
+function unitCircleArcToBeziers_(angleStart: number, angleExtent: number): number[] {
   let numSegments = Math.ceil(Math.abs(angleExtent) / 90);
 
   angleStart = angleStart * Math.PI / 180;
@@ -798,8 +815,8 @@ function unitCircleArcToBeziers_(angleStart: number, angleExtent: number) {
 }
 
 
-function transformPoint_(point, transformMatricies) {
-  return transformMatricies.reduce((p, transform) => {
+function transformPoint_(point: Point, transformMatrices: { matrix: TransformMatrix }[]) {
+  return transformMatrices.reduce((p, transform) => {
     const m = transform.matrix;
     return {
       // dot product
@@ -812,9 +829,9 @@ function transformPoint_(point, transformMatricies) {
 
 // Code adapted from here:
 // https://gist.github.com/alexjlockwood/c037140879806fb4d9820b7e70195494#file-flatten-js-L441-L547
-function transformArc_(initialArc, transformMatricies) {
+function transformArc_(initialArc, transformMatrices: { matrix: TransformMatrix }[]) {
   const isNearZero = n => Math.abs(n) < 0.0000000000000001;
-  return transformMatricies.reduce((arc, transform) => {
+  return transformMatrices.reduce((arc, transform) => {
     let {rx, ry, xAxisRotation, largeArcFlag, sweepFlag, endX, endY} = arc;
 
     xAxisRotation = xAxisRotation * Math.PI / 180;
@@ -887,7 +904,7 @@ function transformArc_(initialArc, transformMatricies) {
 
     // Finally, transform arc endpoint. This takes care about the
     // translational part which we ignored at the whole math-showdown above.
-    const end = transformPoint_({ x: endX, y: endY }, [transform]);
+    const end = transformPoint_(new Point(endX, endY), [transform]);
 
     xAxisRotation = xAxisRotation * 180 / Math.PI;
 

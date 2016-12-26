@@ -18,7 +18,7 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
 
   const usedIds = {};
 
-  const makeFinalNodeId_ = (node, typeIdPrefix) => {
+  const makeFinalNodeId_ = (node, typeIdPrefix: string) => {
     const finalId = ModelUtil.getUniqueId({
       prefix: sanitizeId_(node.id || typeIdPrefix),
       objectById: id => usedIds[id],

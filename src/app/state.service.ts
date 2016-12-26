@@ -7,8 +7,10 @@ import * as SvgLoader from './scripts/svgloader';
 
 @Injectable()
 export class StateService {
-  readonly timelineChangedSource = new Subject<number>();
-  readonly timelineChangedStream = this.timelineChangedSource.asObservable();
+  private readonly timelineSliderSource = new Subject<number>();
+  private readonly timelineSliderStream = this.timelineSliderSource.asObservable();
+  private readonly timelineCheckboxSource = new Subject<boolean>();
+  private readonly timelineCheckboxStream = this.timelineCheckboxSource.asObservable();
 
   private startVectorLayer_: VectorLayer;
   private previewVectorLayer_: VectorLayer;
@@ -16,20 +18,21 @@ export class StateService {
 
   constructor() {
     const startSvgString = `
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-        <path d="M 4 4 L 16 16" stroke="red" stroke-width="2" />
+      <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24">
+        <path d="M 5,11 L 11,11 L 11,5 L 13,5 L 13,11 L 19,11 L 19,13
+                 L 13,13 L 13,19 L 11,19 L 11,13 L 5,13 Z" fill="#000" />
       </svg>`;
     this.startVectorLayer_ = SvgLoader.loadVectorLayerFromSvgString(startSvgString);
     const endSvgString = `
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-        <path d="M 8 8 L 20 20" stroke="red" stroke-width="2" />
+      <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24">
+        <path d="M 5,11 L 11,11 L 11,11 L 13,11 L 13,11 L 19,11 L 19,13
+                 L 13,13 L 13,13 L 11,13 L 11,13 L 5,13 Z" fill="#000" />
       </svg>`;
     this.endVectorLayer_ = SvgLoader.loadVectorLayerFromSvgString(endSvgString);
     this.previewVectorLayer_ = this.startVectorLayer_.clone();
 
-    this.timelineChangedSource.subscribe(
+    this.getAnimationFractionChangedSubscription(
       animationFraction => {
-        animationFraction /= 1000;
         console.log('re-interpolating preview canvas: ' + animationFraction);
         this.animatePreview(animationFraction);
       });
@@ -66,5 +69,21 @@ export class StateService {
 
   get endVectorLayer() {
     return this.endVectorLayer_;
+  }
+
+  notifyAnimationFractionChanged(animationFraction: number) {
+    this.timelineSliderSource.next(animationFraction);
+  }
+
+  notifyShouldLabelPointsChanged(isChecked: boolean) {
+    this.timelineCheckboxSource.next(isChecked);
+  }
+
+  getAnimationFractionChangedSubscription(callback: (number) => void) {
+    return this.timelineSliderSource.subscribe(callback);
+  }
+
+  getShouldLabelPointsChangedSubscription(callback: (boolean) => void) {
+    return this.timelineCheckboxSource.subscribe(callback);
   }
 }
