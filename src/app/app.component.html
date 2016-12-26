@@ -1,2 +1,12 @@
-<app-canvas class="studio-canvas"></app-canvas>
-
+<div class="app-container">
+  <div fxLayout="row">
+    <div fxFlex="2.5%"></div>
+    <app-canvas class="studio-canvas" fxFlex="30%" [isStartCanvas]="true"></app-canvas>
+    <div fxFlex="2.5%"></div>
+    <app-canvas class="studio-canvas" fxFlex="30%" [isPreviewCanvas]="true"></app-canvas>
+    <div fxFlex="2.5%"></div>
+    <app-canvas class="studio-canvas" fxFlex="30%" [isEndCanvas]="true"></app-canvas>
+    <div fxFlex="2.5%"></div>
+  </div>
+  <app-timeline fxLayout="row" fxLayoutAlign="center center"></app-timeline>
+</div>

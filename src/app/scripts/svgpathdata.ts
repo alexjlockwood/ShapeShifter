@@ -7,7 +7,7 @@ export class SvgPathData {
   bounds: { l: number, t: number, r: number, b: number };
   commands_: { command: string, args: number[] }[];
 
-  static interpolate(start, end, f) {
+  static interpolate(start: SvgPathData, end: SvgPathData, f: number) {
     if (!end || !start || !end.commands || !start.commands
       || end.commands.length !== start.commands.length) {
       // TODO: show a warning
@@ -21,7 +21,7 @@ export class SvgPathData {
       let si = start.commands[i], ei = end.commands[i];
       if (!ei.args || !si.args || ei.args.length !== si.args.length) {
         console.warn('Incompatible path interpolation');
-        return ;
+        return null;
       }
 
       let interpolatedArgs = [];
@@ -68,11 +68,7 @@ export class SvgPathData {
     return this.pathString;
   }
 
-  toJSON() {
-    return this.pathString;
-  }
-
-  execute(ctx) {
+  execute(ctx: CanvasRenderingContext2D) {
     ctx.beginPath();
     this.commands_.forEach(({command, args}) => {
       if (command === '__arc__') {
@@ -136,16 +132,17 @@ export class SvgPathData {
 }
 
 
-let simpleInterpolate_ = (start, end, f) => start + (end - start) * f;
+let simpleInterpolate_ = (start: number, end: number, f: number) => start + (end - start) * f;
 
 
-const TOKEN_ABSOLUTE_COMMAND = 1;
-const TOKEN_RELATIVE_COMMAND = 2;
-const TOKEN_VALUE = 3;
-const TOKEN_EOF = 4;
+const enum Token {
+  AbsoluteCommand,
+  RelativeCommand,
+  Value,
+  EOF,
+}
 
-
-function parseCommands_(pathString) {
+function parseCommands_(pathString: string) {
   let commands = [];
   let pushCommandComplex_ = (command, ...args) => commands.push({ command, args });
   let pushCommandPoints_ = (command, ...points) => commands.push({
@@ -168,26 +165,25 @@ function parseCommands_(pathString) {
     while (index < length) {
       let c = pathString.charAt(index);
       if ('a' <= c && c <= 'z') {
-        return (currentToken = TOKEN_RELATIVE_COMMAND);
+        return (currentToken = Token.RelativeCommand);
       } else if ('A' <= c && c <= 'Z') {
-        return (currentToken = TOKEN_ABSOLUTE_COMMAND);
+        return (currentToken = Token.AbsoluteCommand);
       } else if (('0' <= c && c <= '9') || c === '.' || c === '-') {
-        return (currentToken = TOKEN_VALUE);
+        return (currentToken = Token.Value);
       }
 
       // skip unrecognized character
-      ++index;
+      index++;
     }
 
-    return (currentToken = TOKEN_EOF);
+    return (currentToken = Token.EOF);
   };
 
   let consumeCommand_ = () => {
     advanceToNextToken_();
-    if (currentToken !== TOKEN_RELATIVE_COMMAND && currentToken !== TOKEN_ABSOLUTE_COMMAND) {
+    if (currentToken !== Token.RelativeCommand && currentToken !== Token.AbsoluteCommand) {
       throw new Error('Expected command');
     }
-
     return pathString.charAt(index++);
   };
 
@@ -202,7 +198,7 @@ function parseCommands_(pathString) {
 
   let consumeValue_ = () => {
     advanceToNextToken_();
-    if (currentToken !== TOKEN_VALUE) {
+    if (currentToken !== Token.Value) {
       throw new Error('Expected value');
     }
 
@@ -239,14 +235,14 @@ function parseCommands_(pathString) {
 
   while (index < length) {
     let command = consumeCommand_();
-    let relative = (currentToken === TOKEN_RELATIVE_COMMAND);
+    let relative = (currentToken === Token.RelativeCommand);
 
     switch (command) {
       case 'M':
       case 'm': {
         // move command
         let firstPoint = true;
-        while (advanceToNextToken_() === TOKEN_VALUE) {
+        while (advanceToNextToken_() === Token.Value) {
           consumePoint_(tempPoint1, relative && !isNaN(currentPoint.x));
           if (firstPoint) {
             pushCommandPoints_('moveTo', tempPoint1);
@@ -272,7 +268,7 @@ function parseCommands_(pathString) {
           throw new Error('Relative commands require current point');
         }
 
-        while (advanceToNextToken_() === TOKEN_VALUE) {
+        while (advanceToNextToken_() === Token.Value) {
           consumePoint_(tempPoint1, relative);
           consumePoint_(tempPoint2, relative);
           consumePoint_(tempPoint3, relative);
@@ -292,7 +288,7 @@ function parseCommands_(pathString) {
           throw new Error('Relative commands require current point');
         }
 
-        while (advanceToNextToken_() === TOKEN_VALUE) {
+        while (advanceToNextToken_() === Token.Value) {
           consumePoint_(tempPoint1, relative);
           consumePoint_(tempPoint2, relative);
           if (currentControlPoint) {
@@ -317,7 +313,7 @@ function parseCommands_(pathString) {
           throw new Error('Relative commands require current point');
         }
 
-        while (advanceToNextToken_() === TOKEN_VALUE) {
+        while (advanceToNextToken_() === Token.Value) {
           consumePoint_(tempPoint1, relative);
           consumePoint_(tempPoint2, relative);
           pushCommandPoints_('quadraticCurveTo', tempPoint1, tempPoint2);
@@ -336,7 +332,7 @@ function parseCommands_(pathString) {
           throw new Error('Relative commands require current point');
         }
 
-        while (advanceToNextToken_() === TOKEN_VALUE) {
+        while (advanceToNextToken_() === Token.Value) {
           consumePoint_(tempPoint1, relative);
           if (currentControlPoint) {
             tempPoint2.x = currentPoint.x + (currentPoint.x - currentControlPoint.x);
@@ -360,7 +356,7 @@ function parseCommands_(pathString) {
           throw new Error('Relative commands require current point');
         }
 
-        while (advanceToNextToken_() === TOKEN_VALUE) {
+        while (advanceToNextToken_() === Token.Value) {
           consumePoint_(tempPoint1, relative);
           pushCommandPoints_('lineTo', tempPoint1);
 
@@ -378,7 +374,7 @@ function parseCommands_(pathString) {
           throw new Error('Relative commands require current point');
         }
 
-        while (advanceToNextToken_() === TOKEN_VALUE) {
+        while (advanceToNextToken_() === Token.Value) {
           tempPoint1.x = consumeValue_();
           tempPoint1.y = currentPoint.y;
           if (relative) {
@@ -400,7 +396,7 @@ function parseCommands_(pathString) {
           throw new Error('Relative commands require current point');
         }
 
-        while (advanceToNextToken_() === TOKEN_VALUE) {
+        while (advanceToNextToken_() === Token.Value) {
           let rx = consumeValue_();
           let ry = consumeValue_();
           let xAxisRotation = consumeValue_();
@@ -430,7 +426,7 @@ function parseCommands_(pathString) {
           throw new Error('Relative commands require current point');
         }
 
-        while (advanceToNextToken_() === TOKEN_VALUE) {
+        while (advanceToNextToken_() === Token.Value) {
           tempPoint1.y = consumeValue_();
           tempPoint1.x = currentPoint.x;
           if (relative) {
@@ -517,7 +513,7 @@ function computePathLengthAndBounds_(commands) {
   let length = 0;
   let bounds = { l: Infinity, t: Infinity, r: -Infinity, b: -Infinity };
 
-  let expandBounds_ = (x, y) => {
+  let expandBounds_ = (x: number, y: number) => {
     bounds.l = Math.min(x, bounds.l);
     bounds.t = Math.min(y, bounds.t);
     bounds.r = Math.max(x, bounds.r);
@@ -756,7 +752,7 @@ function arcToBeziers_(xf, yf, rx, ry, rotate, largeArcFlag, sweepFlag, xt, yt) 
 *
 * The returned array has the format [x0,y0, x1,y1,...].
 */
-function unitCircleArcToBeziers_(angleStart, angleExtent) {
+function unitCircleArcToBeziers_(angleStart: number, angleExtent: number) {
   let numSegments = Math.ceil(Math.abs(angleExtent) / 90);
 
   angleStart = angleStart * Math.PI / 180;

@@ -5,10 +5,10 @@ import * as ModelUtil from './modelutil';
 
 
 export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
-  let parser = new DOMParser();
-  let doc = parser.parseFromString(svgString, 'image/svg+xml');
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(svgString, 'image/svg+xml');
 
-  let sanitizeId_ = (value: string) => {
+  const sanitizeId_ = (value: string) => {
     return (value || '')
       .toLowerCase()
       .replace(/^\s+|\s+$/g, '')
@@ -16,10 +16,10 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
       .replace(/[^\w_]+/g, '');
   };
 
-  let usedIds = {};
+  const usedIds = {};
 
-  let makeFinalNodeId_ = (node, typeIdPrefix) => {
-    let finalId = ModelUtil.getUniqueId({
+  const makeFinalNodeId_ = (node, typeIdPrefix) => {
+    const finalId = ModelUtil.getUniqueId({
       prefix: sanitizeId_(node.id || typeIdPrefix),
       objectById: id => usedIds[id],
     });
@@ -27,7 +27,7 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
     return finalId;
   };
 
-  let lengthPx_ = svgLength => {
+  const lengthPx_ = svgLength => {
     if (svgLength.baseVal) {
       svgLength = svgLength.baseVal;
     }
@@ -35,7 +35,7 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
     return svgLength.valueInSpecifiedUnits;
   };
 
-  let nodeToLayerData_ = (node, context): Layer => {
+  const nodeToLayerData_ = (node, context): Layer => {
     if (!node) {
       return null;
     }
@@ -44,7 +44,7 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
       return null;
     }
 
-    let simpleAttr_ = (nodeAttr, contextAttr) => {
+    const simpleAttr_ = (nodeAttr, contextAttr) => {
       if (node.attributes[nodeAttr]) {
         context[contextAttr] = node.attributes[nodeAttr].value;
       }
@@ -61,10 +61,8 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
     simpleAttr_('fill-opacity', 'fillAlpha');
 
     // add transforms
-
     if (node.transform) {
-      let transforms = Array.from(node.transform.baseVal);
-      transforms.reverse();
+      const transforms = Array.from(node.transform.baseVal).reverse();
       context.transforms = context.transforms ? context.transforms.slice() : [];
       context.transforms.splice(0, 0, ...transforms);
     }
@@ -75,14 +73,14 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
       path = (<any>node.attributes).d.value;
 
     } else if (node instanceof SVGRectElement) {
-      let l = lengthPx_(node.x),
+      const l = lengthPx_(node.x),
         t = lengthPx_(node.y),
         r = l + lengthPx_(node.width),
         b = t + lengthPx_(node.height);
       path = `M ${l},${t} ${r},${t} ${r},${b} ${l},${b} Z`;
 
     } else if (node instanceof SVGLineElement) {
-      let x1 = lengthPx_(node.x1),
+      const x1 = lengthPx_(node.x1),
         y1 = lengthPx_(node.y1),
         x2 = lengthPx_(node.x2),
         y2 = lengthPx_(node.y2);
@@ -95,13 +93,13 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
       }
 
     } else if (node instanceof SVGCircleElement) {
-      let cx = lengthPx_(node.cx),
+      const cx = lengthPx_(node.cx),
         cy = lengthPx_(node.cy),
         r = lengthPx_(node.r);
       path = `M ${cx},${cy - r} A ${r} ${r} 0 1 0 ${cx},${cy + r} A ${r} ${r} 0 1 0 ${cx},${cy - r} Z`;
 
     } else if (node instanceof SVGEllipseElement) {
-      let cx = lengthPx_(node.cx),
+      const cx = lengthPx_(node.cx),
         cy = lengthPx_(node.cy),
         rx = lengthPx_(node.rx),
         ry = lengthPx_(node.ry);
@@ -112,7 +110,7 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
     if (path) {
       // transform all points
       if (context.transforms && context.transforms.length) {
-        let pathData = new SvgPathData(path);
+        const pathData = new SvgPathData(path);
         pathData.transform(context.transforms);
         path = pathData.pathString;
       }
@@ -133,7 +131,7 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
     }
 
     if (node.childNodes.length) {
-      let layers = Array.from(node.childNodes)
+      const layers = Array.from(node.childNodes)
         .map(child => nodeToLayerData_(child, Object.assign({}, context)))
         .filter(layer => !!layer);
       if (layers && layers.length) {
@@ -148,8 +146,8 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
     return null;
   };
 
-  let docElContext: any = {};
-  let documentElement: any = doc.documentElement;
+  const docElContext: any = {};
+  const documentElement: any = doc.documentElement;
   let width = lengthPx_(documentElement.width);
   let height = lengthPx_(documentElement.height);
 
@@ -172,10 +170,10 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
     ];
   }
 
-  let rootLayer = nodeToLayerData_(documentElement, docElContext);
-  let id = makeFinalNodeId_(documentElement, 'vector');
-  let childrenLayers = rootLayer ? rootLayer.children : undefined;
-  let alpha = documentElement.getAttribute('opacity') || undefined;
+  const rootLayer = nodeToLayerData_(documentElement, docElContext);
+  const id = makeFinalNodeId_(documentElement, 'vector');
+  const childrenLayers = rootLayer ? rootLayer.children : undefined;
+  const alpha = documentElement.getAttribute('opacity') || undefined;
 
   return new VectorLayer(childrenLayers, id, width, height, alpha);
 }
