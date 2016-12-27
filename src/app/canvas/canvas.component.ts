@@ -1,11 +1,13 @@
-import { Component, AfterViewInit, ElementRef, HostListener, ViewChild, OnDestroy, Input } from '@angular/core';
+import {
+  Component, AfterViewInit, ElementRef, HostListener,
+  ViewChild, ViewChildren, OnDestroy, Input
+} from '@angular/core';
 import { Layer, PathLayer, ClipPathLayer, GroupLayer, VectorLayer } from './../scripts/models';
 import * as Svgloader from './../scripts/svgloader';
 import * as ColorUtil from './../scripts/colorutil';
 import * as $ from 'jquery';
-import { StateService } from '../state.service';
-import { Subscription } from 'rxjs/Subscription';
 import * as erd from 'element-resize-detector';
+import { RulerComponent } from './ruler/ruler.component';
 
 
 // TODO(alockwood): remove jquery? seems unnecessary on second thought
@@ -16,73 +18,87 @@ import * as erd from 'element-resize-detector';
   templateUrl: './canvas.component.html',
   styleUrls: ['./canvas.component.scss']
 })
-export class CanvasComponent implements AfterViewInit, OnDestroy {
+export class CanvasComponent implements AfterViewInit {
   @ViewChild('renderingCanvas') private canvasRef: ElementRef;
+  @ViewChildren(RulerComponent) private rulerComponents;
   private canvas;
-  private vectorLayer: VectorLayer;
+  private vectorLayer_: VectorLayer;
   private scale_: number;
   private backingStoreScale_: number;
-  @Input() private isStartCanvas: boolean;
-  @Input() private isPreviewCanvas: boolean;
-  @Input() private isEndCanvas: boolean;
+  private shouldLabelPoints_ = false;
+  private canvasContainerSize: number;
   //private offscreenCanvas: any;
-  private shouldLabelPoints = false;
-  private subscriptions = [];
 
-  constructor(private elementRef: ElementRef, private stateService: StateService) {
-    erd().listenTo(this.elementRef.nativeElement, element => {
-      this.resizeAndDrawCanvas(element.getBoundingClientRect().width);
-    });
-  }
+  constructor(private elementRef: ElementRef) { }
 
   ngAfterViewInit() {
-    this.subscriptions.push(
-      this.stateService.getShouldLabelPointsChangedSubscription(
-        shouldLabelPoints => {
-          if (this.shouldLabelPoints !== shouldLabelPoints) {
-            this.shouldLabelPoints = shouldLabelPoints;
-            this.drawCanvas();
-          }
-        }));
-
-    if (this.isPreviewCanvas) {
-      this.subscriptions.push(
-        this.stateService.getAnimationFractionChangedSubscription(
-          animationFraction => {
-            console.log('re-drawing preview canvas: ' + animationFraction);
-            this.drawCanvas();
-          }));
-      this.vectorLayer = this.stateService.previewVectorLayer;
-    } else if (this.isStartCanvas) {
-      this.vectorLayer = this.stateService.startVectorLayer;
-    } else if (this.isEndCanvas) {
-      this.vectorLayer = this.stateService.endVectorLayer;
-    }
-    console.log(this.vectorLayer);
+    this.canvasContainerSize = this.elementRef.nativeElement.getBoundingClientRect().width;
+    erd().listenTo(this.elementRef.nativeElement, element => {
+      let canvasContainerSize = element.getBoundingClientRect().width;
+      if (this.canvasContainerSize !== canvasContainerSize) {
+        this.canvasContainerSize = canvasContainerSize;
+        this.resizeAndDraw();
+      }
+    });
 
     this.canvas = $(this.canvasRef.nativeElement);
-    this.drawCanvas();
+    this.canvas
+      .on('mousemove', event => {
+        const canvasOffset = this.canvas.offset();
+        const x = Math.round((event.pageX - canvasOffset.left) / this.scale_);
+        const y = Math.round((event.pageY - canvasOffset.top) / this.scale_);
+        this.rulerComponents.forEach(r => r.showMouse(x, y));
+      })
+      .on('mouseleave', () => {
+        this.rulerComponents.forEach(r => r.hideMouse());
+      });
+
+    this.resizeAndDraw();
   }
 
-  ngOnDestroy() {
-    this.subscriptions.forEach(s => s.unsubscribe());
+  get vectorLayer() {
+    return this.vectorLayer_;
   }
 
-  private resizeAndDrawCanvas(size) {
-    const containerWidth = size;
-    const containerHeight = size;
-    const containerAspectRatio = containerWidth / containerHeight;
+  set vectorLayer(vectorLayer: VectorLayer) {
+    const didWidthChange = !this.vectorLayer || this.vectorLayer.width !== vectorLayer.width;
+    const didHeightChange = !this.vectorLayer || this.vectorLayer.height !== vectorLayer.height;
+    this.vectorLayer_ = vectorLayer;
+    if (didWidthChange || didHeightChange) {
+      this.resizeAndDraw();
+    } else {
+      this.draw();
+    }
+  }
+
+  get shouldLabelPoints() {
+    return this.shouldLabelPoints_;
+  }
+
+  set shouldLabelPoints(shouldLabelPoints) {
+    if (this.shouldLabelPoints_ !== shouldLabelPoints) {
+      this.shouldLabelPoints_ = shouldLabelPoints;
+      this.draw();
+    }
+  }
+
+  private resizeAndDraw() {
+    if (!this.vectorLayer) {
+      return;
+    }
+
+    const containerAspectRatio = this.canvasContainerSize / this.canvasContainerSize;
     const artworkAspectRatio = this.vectorLayer.width / (this.vectorLayer.height || 1);
 
     if (artworkAspectRatio > containerAspectRatio) {
-      this.scale_ = containerWidth / this.vectorLayer.width;
+      this.scale_ = this.canvasContainerSize / this.vectorLayer.width;
     } else {
-      this.scale_ = containerHeight / this.vectorLayer.height;
+      this.scale_ = this.canvasContainerSize / this.vectorLayer.height;
     }
     this.scale_ = Math.max(1, Math.floor(this.scale_));
 
     // TODO(alockwood): figure out how to inject window device pixel ratio below
-    this.backingStoreScale_ = this.scale_ * (window.devicePixelRatio || 1);
+    this.backingStoreScale_ = this.scale_ * (window && window.devicePixelRatio || 1);
 
     this.canvas
       .attr({
@@ -94,10 +110,22 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         height: this.vectorLayer.height * this.scale_,
       });
 
+    this.draw();
+  }
+
+  draw() {
+    if (!this.vectorLayer) {
+      return;
+    }
     this.drawCanvas();
+    this.drawRulers();
   }
 
   private drawCanvas() {
+    if (!this.vectorLayer) {
+      return;
+    }
+
     const ctx = this.canvas.get(0).getContext('2d');
     ctx.save();
     ctx.scale(this.backingStoreScale_, this.backingStoreScale_);
@@ -235,6 +263,19 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       ctx.fill();
     })
     ctx.restore();
+  }
+
+  private drawRulers() {
+    if (!this.vectorLayer) {
+      return;
+    }
+    this.rulerComponents.forEach(r => {
+      r.setVectorLayerSize({
+        width: this.vectorLayer.width,
+        height: this.vectorLayer.height
+      });
+      r.draw();
+    });
   }
 }
 
