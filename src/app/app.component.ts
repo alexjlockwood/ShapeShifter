@@ -18,6 +18,8 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   @ViewChild('previewCanvas') private previewCanvas: CanvasComponent;
   @ViewChild('endCanvas') private endCanvas: CanvasComponent;
   @ViewChild('startPointList') private startPointList: PointListComponent;
+  @ViewChild('previewPointList') private previewPointList: PointListComponent;
+  @ViewChild('endPointList') private endPointList: PointListComponent;
   private startVectorLayer: VectorLayer;
   private previewVectorLayer: VectorLayer;
   private endVectorLayer: VectorLayer;
@@ -58,10 +60,15 @@ export class AppComponent implements AfterViewInit, OnDestroy {
         animationFraction => {
           this.animatePreviewVectorLayer(animationFraction);
           this.previewCanvas.vectorLayer = this.previewVectorLayer;
+          this.previewPointList.vectorLayer = this.previewVectorLayer;
         }));
 
     // TODO(alockwood): try to find a less hacky way to do this...? the app crashes otherwise...
-    setTimeout(() => this.startPointList.vectorLayer = this.startVectorLayer);
+    setTimeout(() => {
+      this.startPointList.vectorLayer = this.startVectorLayer;
+      this.previewPointList.vectorLayer = this.previewVectorLayer;
+      this.endPointList.vectorLayer = this.endVectorLayer;
+    });
   }
 
   ngOnDestroy() {
@@ -71,7 +78,7 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   private animatePreviewVectorLayer(fraction: number) {
     const animateLayer = layer => {
       if (layer.children) {
-        layer.children.forEach(c => animateLayer(c));
+        layer.children.forEach(l => animateLayer(l));
         return;
       }
       if (layer instanceof PathLayer) {
@@ -79,7 +86,6 @@ export class AppComponent implements AfterViewInit, OnDestroy {
         const el = this.endVectorLayer.findLayerById(layer.id);
         if (sl && el && sl instanceof PathLayer && el instanceof PathLayer) {
           const newPathData = SvgPathData.interpolate(sl.pathData, el.pathData, fraction);
-          console.log(sl.pathData, el.pathData, newPathData);
           if (newPathData) {
             layer.pathData = newPathData;
           }

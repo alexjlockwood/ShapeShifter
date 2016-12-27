@@ -1,4 +1,12 @@
-<i class="material-icons">autorenew</i><i class="material-icons">skip_previous</i><i class="material-icons">skip_next</i>
+<button md-icon-button mdTooltip="Reverse" mdTooltipPosition="above" md-theme="dark">
+  <md-icon class="md-24">autorenew</md-icon>
+</button>
+<button md-icon-button mdTooltip="Shift backwards" mdTooltipPosition="above" md-theme="dark">
+  <md-icon class="md-24">skip_previous</md-icon>
+</button>
+<button md-icon-button mdTooltip="Shift forwards" mdTooltipPosition="above" md-theme="dark">
+  <md-icon class="md-24">skip_next</md-icon>
+</button>
 <ol>
   <li *ngFor="let command of commands; let i = index">
     {{ command }}

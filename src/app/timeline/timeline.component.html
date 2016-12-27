@@ -1,6 +1,8 @@
 Status: Unmorphable
 
-<i class="material-icons">play_arrow</i>
+<button md-icon-button mdTooltip="Play" mdTooltipPosition="above" md-theme="dark">
+  <md-icon class="md-24">play_arrow</md-icon>
+</button>
 
 <!-- TODO: use (input) instead. see https://github.com/angular/material2/issues/2296 -->
 <md-slider class="timeline-slider" min="0" [max]="maxAnimationFractionSliderValue" step="1" value="0" (change)="onAnimationFractionChanged($event.value)"></md-slider>
