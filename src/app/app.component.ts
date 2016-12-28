@@ -30,16 +30,14 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   ngAfterViewInit() {
     const startSvgString = `
       <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24">
-        <path d="M 5,11 L 11,11 L 11,5 L 13,5 L 13,11 L 19,11 L 19,13
-                 L 13,13 L 13,19 L 11,19 L 11,13 L 5,13 Z" fill="#000" />
+        <path d="M 0 0 C 9.6 0 4.8 24 24 24" stroke="#000" stroke-width="1"/>
       </svg>`;
     this.startVectorLayer = SvgLoader.loadVectorLayerFromSvgString(startSvgString);
     this.startCanvas.vectorLayer = this.startVectorLayer;
 
     const endSvgString = `
       <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24">
-        <path d="M 5,11 L 11,11 L 11,11 L 13,11 L 13,11 L 19,11 L 19,13
-                 L 13,13 L 13,13 L 11,13 L 11,13 L 5,13 Z" fill="#000" />
+        <path d="M 0 24 C 0 4.8 9.6 0 24 0" stroke="#000" stroke-width="1"/>
       </svg>`;
     this.endVectorLayer = SvgLoader.loadVectorLayerFromSvgString(endSvgString);
     this.endCanvas.vectorLayer = this.endVectorLayer;

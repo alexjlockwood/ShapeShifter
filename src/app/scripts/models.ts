@@ -1,4 +1,6 @@
 import { SvgPathData } from './svgpathdata';
+import { Matrix } from './mathutil';
+
 
 export interface Layer {
   children: Layer[] | null;
@@ -109,6 +111,18 @@ export class GroupLayer extends AbstractLayer {
       this.scaleY,
       this.translateX,
       this.translateY);
+  }
+
+  toMatrices() {
+    let cosr = Math.cos(this.rotation * Math.PI / 180);
+    let sinr = Math.sin(this.rotation * Math.PI / 180);
+    return [
+      new Matrix(1, 0, 0, 1, this.pivotX, this.pivotY),
+      new Matrix(1, 0, 0, 1, this.translateX, this.translateY),
+      new Matrix(cosr, sinr, -sinr, cosr, 0, 0),
+      new Matrix(this.scaleX, 0, 0, this.scaleY, 0, 0),
+      new Matrix(1, 0, 0, 1, -this.pivotX, -this.pivotY)
+    ];
   }
 }
 

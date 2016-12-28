@@ -2,6 +2,11 @@ import { Component, OnInit } from '@angular/core';
 import { StateService } from './../state.service';
 import { VectorLayer, PathLayer } from './../scripts/models';
 import { DragulaService } from 'ng2-dragula';
+import {
+  Command, MoveCommand, LineCommand, QuadraticCurveCommand,
+  BezierCurveCommand, EllipticalArcCommand, ClosePathCommand
+} from './../scripts/svgcommands';
+
 
 @Component({
   selector: 'app-pointlist',
@@ -69,8 +74,30 @@ export class PointListComponent {
     const pathLayer = this.vectorLayer.children[0];
     if (pathLayer instanceof PathLayer) {
       this.commands = pathLayer.pathData.commands.map(c => {
-        return c.command + ' ' + c.points.toString();
+        const points = c.points.map(p => {
+          const x = Number(p.x.toFixed(2));
+          const y = Number(p.y.toFixed(2));
+          return `(${x},${y})`;
+        });
+        return this.getCommandCharacter(c) + ' ' + points.toString();
       });
     }
+  }
+
+  private getCommandCharacter(command: Command) {
+    if (command instanceof MoveCommand) {
+      return 'M';
+    } else if (command instanceof LineCommand) {
+      return 'L';
+    } else if (command instanceof BezierCurveCommand) {
+      return 'C';
+    } else if (command instanceof QuadraticCurveCommand) {
+      return 'Q';
+    } else if (command instanceof ClosePathCommand) {
+      return 'Z';
+    } else if (command instanceof EllipticalArcCommand) {
+      return 'A';
+    }
+    return '[unknown]';
   }
 }

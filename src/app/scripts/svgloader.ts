@@ -111,7 +111,8 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
       // transform all points
       if (context.transforms && context.transforms.length) {
         const pathData = new SvgPathData(path);
-        pathData.transform(context.transforms);
+        const matrices = context.transforms.map(t => t.matrix);
+        pathData.transform(matrices);
         path = pathData.pathString;
       }
 
