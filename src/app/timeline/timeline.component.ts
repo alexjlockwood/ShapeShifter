@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, AfterViewInit } from '@angular/core';
 import { StateService } from './../state.service';
 
 @Component({
@@ -6,12 +6,15 @@ import { StateService } from './../state.service';
   templateUrl: './timeline.component.html',
   styleUrls: ['./timeline.component.scss']
 })
-export class TimelineComponent implements OnInit {
+export class TimelineComponent implements AfterViewInit {
   private readonly maxAnimationFractionSliderValue = 1000;
+  private shouldLabelPoints: boolean = false;
 
   constructor(private stateService: StateService) { }
 
-  ngOnInit() { }
+  ngAfterViewInit() {
+    this.onLabelPointsChanged(this.shouldLabelPoints);
+  }
 
   // TODO(alockwood): make this update each time the slider is changed (not just on mouse up)
   onAnimationFractionChanged(sliderValue: number) {

@@ -18,6 +18,7 @@ const TICK_SIZE = 6;
 })
 export class RulerComponent implements AfterViewInit {
   @ViewChild('canvasRuler') private canvasRef: ElementRef;
+  private element;
   private canvas;
   private mouseX = -1;
   private mouseY = -1;
@@ -25,10 +26,18 @@ export class RulerComponent implements AfterViewInit {
   private vectorLayerHeight = 0;
   @Input() private isHorizontal = false;
 
-  constructor() { }
+  constructor(private elementRef: ElementRef) { }
 
   ngAfterViewInit() {
+    this.element = $(this.elementRef.nativeElement);
     this.canvas = $(this.canvasRef.nativeElement);
+    const width = this.canvas.width();
+    const height = this.canvas.height();
+    const devicePixelRatio = (window && window.devicePixelRatio) || 1;
+    this.element.attr('width', width * devicePixelRatio);
+    this.element.attr('height', height * devicePixelRatio);
+    this.canvas.attr('width', width * devicePixelRatio);
+    this.canvas.attr('height', height * devicePixelRatio);
   }
 
   showMouse(x: number, y: number) {
@@ -55,11 +64,8 @@ export class RulerComponent implements AfterViewInit {
     const width = this.canvas.width();
     const height = this.canvas.height();
     const devicePixelRatio = (window && window.devicePixelRatio) || 1;
-    this.canvas.attr('width', width * devicePixelRatio);
-    this.canvas.attr('height', height * devicePixelRatio);
 
     const ctx = this.canvas.get(0).getContext('2d');
-    console.log(this.isHorizontal);
     ctx.scale(devicePixelRatio, devicePixelRatio);
     ctx.translate(
       this.isHorizontal ? EXTRA_PADDING : 0,
@@ -80,7 +86,7 @@ export class RulerComponent implements AfterViewInit {
     const spacingRulerPx = spacingArtPx * zoom;
 
     // text labels
-    ctx.fillStyle = 'rgba(255,255,255,.3)';
+    ctx.fillStyle = 'rgba(0,0,0,.3)';
     ctx.font = '10px Roboto';
     if (this.isHorizontal) {
       ctx.textBaseline = 'alphabetic';
@@ -102,7 +108,7 @@ export class RulerComponent implements AfterViewInit {
       }
     }
 
-    ctx.fillStyle = 'rgba(255,255,255,.7)';
+    ctx.fillStyle = 'rgba(0,0,0,.7)';
     if (this.isHorizontal && this.mouseX >= 0) {
       ctx.fillText(this.mouseX, this.mouseX * zoom, height - LABEL_OFFSET);
     } else if (!this.isHorizontal && this.mouseY >= 0) {

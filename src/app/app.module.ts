@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpModule } from '@angular/http';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { MaterialModule } from '@angular/material';
+import { DragulaModule } from 'ng2-dragula';
 
 import { AppComponent } from './app.component';
 import { CanvasComponent } from './canvas/canvas.component';
@@ -26,6 +27,7 @@ import "hammerjs";
     BrowserModule,
     FormsModule,
     HttpModule,
+    DragulaModule,
     FlexLayoutModule.forRoot(),
     MaterialModule.forRoot()
   ],

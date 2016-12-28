@@ -7,8 +7,8 @@
 <button md-icon-button mdTooltip="Shift forwards" mdTooltipPosition="above" md-theme="dark">
   <md-icon class="md-24">skip_next</md-icon>
 </button>
-<ol>
-  <li *ngFor="let command of commands; let i = index">
-    {{ command }}
-  </li>
-</ol>
+<div>
+  <ol [dragula]='"pointlist-bag"' [dragulaModel]='commands'>
+    <li *ngFor="let command of commands">{{ command }}</li>
+  </ol>
+</div>

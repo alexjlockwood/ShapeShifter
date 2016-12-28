@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { StateService } from './../state.service';
 import { VectorLayer, PathLayer } from './../scripts/models';
-
+import { DragulaService } from 'ng2-dragula';
 
 @Component({
   selector: 'app-pointlist',
@@ -12,7 +12,48 @@ export class PointListComponent {
   private commands: string[] = [];
   private vectorLayer_: VectorLayer;
 
-  constructor() { }
+  constructor(private dragulaService: DragulaService) {
+    dragulaService.drag.subscribe((value) => {
+      console.log(`drag: ${value[0]}`);
+      this.onDrag(value.slice(1));
+    });
+    dragulaService.drop.subscribe((value) => {
+      console.log(`drop: ${value[0]}`);
+      this.onDrop(value.slice(1));
+    });
+    dragulaService.over.subscribe((value) => {
+      console.log(`over: ${value[0]}`);
+      this.onOver(value.slice(1));
+    });
+    dragulaService.out.subscribe((value) => {
+      console.log(`out: ${value[0]}`);
+      this.onOut(value.slice(1));
+    });
+  }
+
+  private onDrag(args) {
+    let [e, el] = args;
+    // do something
+    //console.log(e, el);
+  }
+
+  private onDrop(args) {
+    let [e, el] = args;
+    // do something
+    //console.log(e, el);
+  }
+
+  private onOver(args) {
+    let [e, el, container] = args;
+    // do something
+    //console.log(e, el);
+  }
+
+  private onOut(args) {
+    let [e, el, container] = args;
+    // do something
+    //console.log(e, el);
+  }
 
   get vectorLayer() {
     return this.vectorLayer_;
