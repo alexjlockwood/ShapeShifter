@@ -71,17 +71,24 @@ export class PointListComponent {
 
   // TODO(alockwood): this only works with SVGs that have a single PathLayer child right now
   private drawPointList() {
-    const pathLayer = this.vectorLayer.children[0];
-    if (pathLayer instanceof PathLayer) {
-      this.commands = pathLayer.pathData.commands.map(c => {
-        const points = c.points.map(p => {
-          const x = Number(p.x.toFixed(2));
-          const y = Number(p.y.toFixed(2));
-          return `(${x},${y})`;
-        });
-        return this.getCommandCharacter(c) + ' ' + points.toString();
-      });
+    this.commands = [];
+    let findPoints = layer => {
+      if (layer.children) {
+        layer.children.forEach(c => findPoints(c));
+        return;
+      }
+      if (layer instanceof PathLayer) {
+        this.commands.push(...layer.pathData.commands.map(c => {
+          const points = c.points.map(p => {
+            const x = Number(p.x.toFixed(2));
+            const y = Number(p.y.toFixed(2));
+            return `(${x},${y})`;
+          });
+          return this.getCommandCharacter(c) + ' ' + points.toString();
+        }));
+      };
     }
+    findPoints(this.vectorLayer);
   }
 
   private getCommandCharacter(command: Command) {

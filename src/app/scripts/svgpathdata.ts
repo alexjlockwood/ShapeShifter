@@ -1,7 +1,7 @@
 import * as Bezier from 'bezier-js';
 import { Point, Matrix, Rect } from './mathutil';
 import {
-  Command, MoveCommand, LineCommand, QuadraticCurveCommand,
+  Command, SimpleCommand, MoveCommand, LineCommand, QuadraticCurveCommand,
   BezierCurveCommand, EllipticalArcCommand, ClosePathCommand
 } from './svgcommands';
 import * as SvgUtil from './svgutil';
@@ -14,7 +14,22 @@ export class SvgPathData {
   private length_ = 0;
   private bounds_: Rect = null;
 
-  static interpolate(start: SvgPathData, end: SvgPathData, fraction: number) {
+  static arePathsMorphable(start: SvgPathData, end: SvgPathData) {
+    if (!start || !end
+      || !start.commands || !end.commands
+      || start.commands.length !== end.commands.length) {
+      return false;
+    }
+    for (let i = 0; i < start.commands.length; i++) {
+      const si = start.commands[i], ei = end.commands[i];
+      if (si.constructor !== ei.constructor) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  static interpolatePaths(start: SvgPathData, end: SvgPathData, fraction: number) {
     if (!end || !start || !end.commands || !start.commands
       || end.commands.length !== start.commands.length) {
       // TODO: show a warning
@@ -26,11 +41,11 @@ export class SvgPathData {
     let i, j;
     for (i = 0; i < start.commands.length; i++) {
       let si = start.commands[i], ei = end.commands[i];
-      if (!ei.args || !si.args || ei.args.length !== si.args.length) {
-        console.warn('Incompatible path interpolation');
-        return null;
-      }
-      interpolatedCommands.push(si.interpolateTo(ei, fraction));
+      //if (!ei.points || !si.args || ei.args.length !== si.args.length) {
+      //  console.warn('Incompatible path interpolation');
+      //  return null;
+      //}
+      interpolatedCommands.push(si.interpolate(ei, fraction));
     }
 
     return new SvgPathData(interpolatedCommands);
@@ -91,38 +106,7 @@ export class SvgPathData {
   }
 
   transform(transforms: Matrix[]) {
-    this.commands_.forEach(command => {
-      const args = command.args;
-      if (command instanceof EllipticalArcCommand) {
-        const start = new Point(args[0], args[1]).transform(...transforms);
-        args[0] = start.x;
-        args[1] = start.y;
-        const arc = SvgUtil.transformArc({
-          rx: args[2],
-          ry: args[3],
-          xAxisRotation: args[4],
-          largeArcFlag: args[5],
-          sweepFlag: args[6],
-          endX: args[7],
-          endY: args[8],
-        }, transforms);
-        args[2] = arc.rx;
-        args[3] = arc.ry;
-        args[4] = arc.xAxisRotation;
-        args[5] = arc.largeArcFlag;
-        args[6] = arc.sweepFlag;
-        args[7] = arc.endX;
-        args[8] = arc.endY;
-        return;
-      }
-
-      for (let i = 0; i < args.length; i += 2) {
-        let transformed = new Point(args[i], args[i + 1]).transform(...transforms);
-        args[i] = transformed.x;
-        args[i + 1] = transformed.y;
-      }
-    });
-
+    this.commands_.forEach(c => c.transform(transforms));
     this.pathString_ = SvgParser.commandsToString(this.commands_);
     let { length, bounds } = computePathLengthAndBounds_(this.commands_);
     this.length_ = length;
@@ -151,62 +135,54 @@ function computePathLengthAndBounds_(commands: Command[]) {
   };
 
   let firstPoint = null;
-  let currentPoint = { x: 0, y: 0 };
+  let currentPoint = new Point(0, 0);
 
-  let dist_ = (x1: number, y1: number, x2: number, y2: number) => {
-    return Math.sqrt(Math.pow(y2 - y1, 2) + Math.pow(x2 - x1, 2));
+  let dist_ = (p1: Point, p2: Point) => {
+    return Math.sqrt(Math.pow(p2.y - p1.y, 2) + Math.pow(p2.x - p1.x, 2));
   };
 
   commands.forEach(command => {
-    const args = command.args;
     if (command instanceof MoveCommand) {
-
+      const nextPoint = command.points[1];
       if (!firstPoint) {
-        firstPoint = { x: args[0], y: args[1] };
+        firstPoint = nextPoint;
       }
-      currentPoint.x = args[0];
-      currentPoint.y = args[1];
-      expandBounds_(args[0], args[1]);
+      currentPoint = nextPoint;
+      expandBounds_(nextPoint.x, nextPoint.y);
     }
 
     else if (command instanceof LineCommand) {
-      length += dist_(args[0], args[1], currentPoint.x, currentPoint.y);
-      currentPoint.x = args[0];
-      currentPoint.y = args[1];
-      expandBounds_(args[0], args[1]);
+      const nextPoint = command.points[1];
+      length += dist_(nextPoint, currentPoint);
+      currentPoint = nextPoint;
+      expandBounds_(nextPoint.x, nextPoint.y);
     }
 
     else if (command instanceof ClosePathCommand) {
       if (firstPoint) {
-        length += dist_(firstPoint.x, firstPoint.y, currentPoint.x, currentPoint.y);
+        length += dist_(firstPoint, currentPoint);
       }
       firstPoint = null;
     }
 
     else if (command instanceof BezierCurveCommand) {
-      let bez = new Bezier(
-        currentPoint.x, currentPoint.y,
-        args[0], args[1],
-        args[2], args[3],
-        args[4], args[5]);
+      const points = command.points;
+      let bez = new Bezier(currentPoint, points[1], points[2], points[3]);
       length += bez.length();
-      currentPoint.x = args[4];
-      currentPoint.y = args[5];
+      currentPoint = points[3];
       expandBoundsToBezier_(bez);
     }
 
     else if (command instanceof QuadraticCurveCommand) {
-      let bez = new Bezier(
-        currentPoint.x, currentPoint.y,
-        args[0], args[1],
-        args[2], args[3]);
+      const points = command.points;
+      let bez = new Bezier(currentPoint, points[1], points[2]);
       length += bez.length();
-      currentPoint.x = args[2];
-      currentPoint.y = args[3];
+      currentPoint = points[2];
       expandBoundsToBezier_(bez);
     }
 
     else if (command instanceof EllipticalArcCommand) {
+      const args = command.args;
       let [currentPointX, currentPointY,
         rx, ry, xAxisRotation,
         largeArcFlag, sweepFlag,
@@ -219,7 +195,7 @@ function computePathLengthAndBounds_(commands: Command[]) {
 
       if (rx === 0 || ry === 0) {
         // degenerate to line
-        length += dist_(currentPointX, currentPointY, tempPoint1X, tempPoint1Y);
+        length += dist_(new Point(currentPointX, currentPointY), new Point(tempPoint1X, tempPoint1Y));
         expandBounds_(tempPoint1X, tempPoint1Y);
         return;
       }

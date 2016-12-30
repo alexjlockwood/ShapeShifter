@@ -1,14 +1,12 @@
 import { Point } from './mathutil';
 import {
-  Command, MoveCommand, LineCommand, QuadraticCurveCommand,
+  Command, SimpleCommand, MoveCommand, LineCommand, QuadraticCurveCommand,
   BezierCurveCommand, EllipticalArcCommand, ClosePathCommand
 } from './svgcommands';
 
 
 export function parseCommands(pathString: string) {
   let commands: Command[] = [];
-  let pointsToNumberList_ = (...points: Point[]) => points.reduce((list, p) => list.concat(p.x, p.y), []);
-
   let index = 0;
   let length = pathString.length;
   let currentPoint = new Point(NaN, NaN);
@@ -21,7 +19,7 @@ export function parseCommands(pathString: string) {
 
   let advanceToNextToken_: () => Token = () => {
     while (index < length) {
-      let c = pathString.charAt(index);
+      const c = pathString.charAt(index);
       if ('a' <= c && c <= 'z') {
         return (currentToken = Token.RelativeCommand);
       } else if ('A' <= c && c <= 'Z') {
@@ -102,14 +100,14 @@ export function parseCommands(pathString: string) {
         while (advanceToNextToken_() === Token.Value) {
           consumePoint_(tempPoint1, relative && !isNaN(currentPoint.x));
           if (firstPoint) {
-            commands.push(new MoveCommand(pointsToNumberList_(tempPoint1)));
+            commands.push(new MoveCommand(new Point(0, 0), tempPoint1));
             firstPoint = false;
             if (firstMove) {
               currentPoint = Point.from(tempPoint1);
               firstMove = false;
             }
           } else {
-            commands.push(new LineCommand(pointsToNumberList_(tempPoint1)));
+            commands.push(new LineCommand(currentPoint, tempPoint1));
           }
         }
 
@@ -129,7 +127,7 @@ export function parseCommands(pathString: string) {
           consumePoint_(tempPoint1, relative);
           consumePoint_(tempPoint2, relative);
           consumePoint_(tempPoint3, relative);
-          commands.push(new BezierCurveCommand(pointsToNumberList_(tempPoint1, tempPoint2, tempPoint3)));
+          commands.push(new BezierCurveCommand(currentPoint, tempPoint1, tempPoint2, tempPoint3));
 
           currentControlPoint = Point.from(tempPoint2);
           currentPoint = Point.from(tempPoint3);
@@ -154,7 +152,7 @@ export function parseCommands(pathString: string) {
           } else {
             tempPoint3 = Point.from(tempPoint1);
           }
-          commands.push(new BezierCurveCommand(pointsToNumberList_(tempPoint3, tempPoint1, tempPoint2)));
+          commands.push(new BezierCurveCommand(currentPoint, tempPoint3, tempPoint1, tempPoint2));
 
           currentControlPoint = Point.from(tempPoint1);
           currentPoint = Point.from(tempPoint2);
@@ -173,7 +171,7 @@ export function parseCommands(pathString: string) {
         while (advanceToNextToken_() === Token.Value) {
           consumePoint_(tempPoint1, relative);
           consumePoint_(tempPoint2, relative);
-          commands.push(new QuadraticCurveCommand(pointsToNumberList_(tempPoint1, tempPoint2)));
+          commands.push(new QuadraticCurveCommand(currentPoint, tempPoint1, tempPoint2));
 
           currentControlPoint = Point.from(tempPoint1);
           currentPoint = Point.from(tempPoint2);
@@ -197,7 +195,7 @@ export function parseCommands(pathString: string) {
           } else {
             tempPoint2 = Point.from(tempPoint1);
           }
-          commands.push(new QuadraticCurveCommand(pointsToNumberList_(tempPoint2, tempPoint1)));
+          commands.push(new QuadraticCurveCommand(currentPoint, tempPoint2, tempPoint1));
 
           currentControlPoint = Point.from(tempPoint2);
           currentPoint = Point.from(tempPoint1);
@@ -215,7 +213,7 @@ export function parseCommands(pathString: string) {
 
         while (advanceToNextToken_() === Token.Value) {
           consumePoint_(tempPoint1, relative);
-          commands.push(new LineCommand(pointsToNumberList_(tempPoint1)));
+          commands.push(new LineCommand(currentPoint, tempPoint1));
 
           currentControlPoint = null;
           currentPoint = Point.from(tempPoint1);
@@ -237,7 +235,7 @@ export function parseCommands(pathString: string) {
           if (relative) {
             tempPoint1.x += currentPoint.x;
           }
-          commands.push(new LineCommand(pointsToNumberList_(tempPoint1)));
+          commands.push(new LineCommand(currentPoint, tempPoint1));
 
           currentControlPoint = null;
           currentPoint = Point.from(tempPoint1);
@@ -260,11 +258,11 @@ export function parseCommands(pathString: string) {
           let sweepFlag = consumeValue_();
           consumePoint_(tempPoint1, relative);
 
-          commands.push(new EllipticalArcCommand([
+          commands.push(new EllipticalArcCommand(
             currentPoint.x, currentPoint.y,
             rx, ry,
             xAxisRotation, largeArcFlag, sweepFlag,
-            tempPoint1.x, tempPoint1.y]));
+            tempPoint1.x, tempPoint1.y));
 
           // pp.addMarkerAngle(halfWay, ah - dir * Math.PI / 2);
           // pp.addMarkerAngle(tempPoint1, ah - dir * Math.PI);
@@ -288,7 +286,7 @@ export function parseCommands(pathString: string) {
           if (relative) {
             tempPoint1.y += currentPoint.y;
           }
-          commands.push(new LineCommand(pointsToNumberList_(tempPoint1)));
+          commands.push(new LineCommand(currentPoint, tempPoint1));
 
           currentControlPoint = null;
           currentPoint = Point.from(tempPoint1);
@@ -312,10 +310,9 @@ export function parseCommands(pathString: string) {
 export function commandsToString(commands: Command[]) {
   const tokens = [];
   commands.forEach(command => {
-    const args = command.args;
     if (command instanceof EllipticalArcCommand) {
       tokens.push('A');
-      tokens.splice(tokens.length, 0, args.slice(2)); // skip first two arc args
+      tokens.splice(tokens.length, 0, command.args.slice(2)); // skip first two arc args
       return;
     }
 
@@ -331,7 +328,9 @@ export function commandsToString(commands: Command[]) {
       tokens.push('Z');
     }
 
-    tokens.splice(tokens.length, 0, ...args.map(arg => Number(arg.toFixed(3)).toString()));
+    const pointsToNumberList_ = (...points: Point[]) => points.reduce((list, p) => list.concat(p.x, p.y), []);
+    const args = pointsToNumberList_(...command.points.slice(1));
+    tokens.splice(tokens.length, 0, ...args.map(n => Number(n.toFixed(3)).toString()));
   });
 
   return tokens.join(' ');

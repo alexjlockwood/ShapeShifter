@@ -30,14 +30,26 @@ export class AppComponent implements AfterViewInit, OnDestroy {
   ngAfterViewInit() {
     const startSvgString = `
       <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24">
-        <path d="M 0 0 C 9.6 0 4.8 24 24 24" stroke="#000" stroke-width="1"/>
-      </svg>`;
+        <g transform="translate(12,12)">
+        <g transform="scale(0.75,0.75)">
+        <g transform="translate(-12,-12)">
+        <path d="M 0 0 L 4 4 C 11 12 17 12 24 12" stroke="#000" stroke-width="1"/>
+        </g>
+        </g>
+        </g>
+        </svg>`;
     this.startVectorLayer = SvgLoader.loadVectorLayerFromSvgString(startSvgString);
     this.startCanvas.vectorLayer = this.startVectorLayer;
 
     const endSvgString = `
       <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24">
-        <path d="M 0 24 C 0 4.8 9.6 0 24 0" stroke="#000" stroke-width="1"/>
+        <g transform="translate(12,12)">
+        <g transform="scale(0.75,0.75)">
+        <g transform="translate(-12,-12)">
+        <path d="M 0 0 L 12 12 C 16 16 20 20 24 24" stroke="#000" stroke-width="1"/>
+        </g>
+        </g>
+        </g>
       </svg>`;
     this.endVectorLayer = SvgLoader.loadVectorLayerFromSvgString(endSvgString);
     this.endCanvas.vectorLayer = this.endVectorLayer;
@@ -83,9 +95,11 @@ export class AppComponent implements AfterViewInit, OnDestroy {
         const sl = this.startVectorLayer.findLayerById(layer.id);
         const el = this.endVectorLayer.findLayerById(layer.id);
         if (sl && el && sl instanceof PathLayer && el instanceof PathLayer) {
-          const newPathData = SvgPathData.interpolate(sl.pathData, el.pathData, fraction);
-          if (newPathData) {
-            layer.pathData = newPathData;
+          if (SvgPathData.arePathsMorphable(sl.pathData, el.pathData)) {
+            const newPathData = SvgPathData.interpolatePaths(sl.pathData, el.pathData, fraction);
+            if (newPathData) {
+              layer.pathData = newPathData;
+            }
           }
         }
       }

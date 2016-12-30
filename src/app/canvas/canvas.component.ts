@@ -8,6 +8,8 @@ import * as ColorUtil from './../scripts/colorutil';
 import * as $ from 'jquery';
 import * as erd from 'element-resize-detector';
 import { RulerComponent } from './ruler/ruler.component';
+import { Point } from './../scripts/mathutil';
+import { Command } from './../scripts/svgcommands';
 
 
 // TODO(alockwood): remove jquery? seems unnecessary on second thought
@@ -43,6 +45,47 @@ export class CanvasComponent implements AfterViewInit {
 
     this.canvas = $(this.canvasRef.nativeElement);
     this.canvas
+      .on('mousedown', event => {
+        const canvasOffset = this.canvas.offset();
+        const x = (event.pageX - canvasOffset.left) / this.scale_;
+        const y = (event.pageY - canvasOffset.top) / this.scale_;
+        const mousePoint = new Point(x, y);
+        const matrices = [];
+        // TODO(alockwood): select clips and/or groups in addition to paths?
+        const toggleSelectedPath_ = layer => {
+          if (layer instanceof VectorLayer) {
+            return layer.children.some(l => toggleSelectedPath_(l));
+          }
+          if (layer instanceof GroupLayer) {
+            const transformMatrices = layer.toMatrices();
+            matrices.splice(matrices.length, 0, ...transformMatrices);
+            const result = layer.children.some(l => toggleSelectedPath_(l));
+            matrices.splice(-transformMatrices.length, transformMatrices.length);
+            return result;
+          }
+          if (layer instanceof PathLayer) {
+            //let shouldUpdateSelection = false;
+            const transformedMousePoint = mousePoint.transform(...Array.from(matrices).reverse());
+            const selectedPoints = this.findSelectedPathPoints(layer, transformedMousePoint, 0.5);
+            //if (shouldUpdateSelection) {
+            //  if (event.metaKey || event.shiftKey) {
+            //    console.log('setting selection: ' + layer.id);
+            //this.studioState_.toggleSelected(layer);
+            //  } else {
+            //    console.log('setting selection: ' + layer.id);
+            //this.studioState_.selection = [layer];
+            //  }
+            //}
+            console.log(selectedPoints);
+            return selectedPoints.length > 0;
+          }
+          return false;
+        };
+        if (!toggleSelectedPath_(this.vectorLayer) && !(event.metaKey || event.shiftKey)) {
+          //this.studioState_.selection = [];
+          console.log('clearing selection');
+        }
+      })
       .on('mousemove', event => {
         const canvasOffset = this.canvas.offset();
         const x = Math.round((event.pageX - canvasOffset.left) / this.scale_);
@@ -54,6 +97,29 @@ export class CanvasComponent implements AfterViewInit {
       });
 
     this.resizeAndDraw();
+  }
+
+  private findSelectedPathPoints(
+    layer: PathLayer,
+    point: Point,
+    radius: number): { point: Point, command: Command }[] {
+    let dist_ = (p1: Point, p2: Point) => {
+      return Math.sqrt(Math.pow(p2.y - p1.y, 2) + Math.pow(p2.x - p1.x, 2));
+    };
+
+    const points = [];
+    layer.pathData.commands.forEach(c => {
+      c.points.forEach(p => {
+        if (dist_(point, p) <= radius) {
+          points.push({
+            point: p,
+            command: c,
+          });
+        }
+      });
+    });
+
+    return points;
   }
 
   get vectorLayer() {
@@ -182,7 +248,10 @@ export class CanvasComponent implements AfterViewInit {
     transforms.pop();
   }
 
-  private drawClipPathLayer(layer: ClipPathLayer, ctx: CanvasRenderingContext2D, transforms: (() => void)[]) {
+  private drawClipPathLayer(
+    layer: ClipPathLayer,
+    ctx: CanvasRenderingContext2D,
+    transforms: (() => void)[]) {
     ctx.save();
     transforms.forEach(t => t());
     layer.pathData.execute(ctx);
