@@ -1,0 +1,12 @@
+// libraries and such
+@import 'material-colors';
+@import 'material-shadows';
+
+// global styles
+@import 'variables';
+
+// core page layouts and common stuff
+@import 'root';
+
+// material design theme
+@import '~@angular/material/core/theming/prebuilt/indigo-pink.css';

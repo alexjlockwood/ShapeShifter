@@ -1,21 +1,19 @@
-<div class="app-container" style="margin-top:32px">
-  <div fxLayout="row">
-    <div fxFlex="2.5%"></div>
-    <app-canvas #startCanvas fxFlex="30%"></app-canvas>
-    <div fxFlex="2.5%"></div>
-    <app-canvas #previewCanvas fxFlex="30%"></app-canvas>
-    <div fxFlex="2.5%"></div>
-    <app-canvas #endCanvas fxFlex="30%"></app-canvas>
-    <div fxFlex="2.5%"></div>
+<div class="app-container">
+  <div *ngIf="shouldDisplayCanvases()" fxLayout="column" fxLayoutAlign="space-around">
+    <div fxLayout="row" fxLayoutAlign="space-around">
+      <app-canvas fxFlex="30%" [vectorLayer]="startVectorLayer" [shouldLabelPoints]="shouldLabelPoints"></app-canvas>
+      <app-canvas fxFlex="30%" [vectorLayer]="previewVectorLayer" [shouldLabelPoints]="shouldLabelPoints"></app-canvas>
+      <app-canvas fxFlex="30%" [vectorLayer]="endVectorLayer" [shouldLabelPoints]="shouldLabelPoints"></app-canvas>
+    </div>
+    <app-timeline (animationFractionChangedEmitter)="onAnimationFractionChanged($event)" (labelPointsChangedEmitter)="onLabelPointsChanged($event)"></app-timeline>
+    <div fxLayout="row" fxLayoutAlign="space-around">
+      <app-pointlist fxFlex="30%" [vectorLayer]="startVectorLayer"></app-pointlist>
+      <app-pointlist fxFlex="30%" [vectorLayer]="previewVectorLayer"></app-pointlist>
+      <app-pointlist fxFlex="30%" [vectorLayer]="endVectorLayer"></app-pointlist>
+    </div>
   </div>
-  <app-timeline fxLayout="row" fxLayoutAlign="center center"></app-timeline>
-  <div fxLayout="row">
-    <div fxFlex="2.5%"></div>
-    <app-pointlist #startPointList fxFlex="30%"></app-pointlist>
-    <div fxFlex="2.5%"></div>
-    <app-pointlist #previewPointList fxFlex="30%"></app-pointlist>
-    <div fxFlex="2.5%"></div>
-    <app-pointlist #endPointList fxFlex="30%"></app-pointlist>
-    <div fxFlex="2.5%"></div>
+  <div *ngIf="!shouldDisplayCanvases()" class="drop-target-container fill-height" fxLayout="row">
+    <app-dropsvg fxFlex="50%" fxLayoutAlign="center center" [componentId]="'dropSvgStart'" (svgFileLoadedEmitter)="onStartSvgTextLoaded($event)"></app-dropsvg>
+    <app-dropsvg fxFlex="50%" fxLayoutAlign="center center" [componentId]="'dropSvgEnd'" (svgFileLoadedEmitter)="onEndSvgTextLoaded($event)"></app-dropsvg>
   </div>
 </div>

@@ -1,27 +1,23 @@
-import { Component, AfterViewInit } from '@angular/core';
-import { StateService } from './../state.service';
+import { Component, Output, EventEmitter } from '@angular/core';
+
 
 @Component({
   selector: 'app-timeline',
   templateUrl: './timeline.component.html',
   styleUrls: ['./timeline.component.scss']
 })
-export class TimelineComponent implements AfterViewInit {
+export class TimelineComponent {
   private readonly maxAnimationFractionSliderValue = 1000;
   private shouldLabelPoints: boolean = false;
-
-  constructor(private stateService: StateService) { }
-
-  ngAfterViewInit() {
-    this.onLabelPointsChanged(this.shouldLabelPoints);
-  }
+  @Output() labelPointsChangedEmitter = new EventEmitter<boolean>();
+  @Output() animationFractionChangedEmitter = new EventEmitter<number>();
 
   // TODO(alockwood): make this update each time the slider is changed (not just on mouse up)
   onAnimationFractionChanged(sliderValue: number) {
-    this.stateService.notifyAnimationFractionChanged(sliderValue / this.maxAnimationFractionSliderValue);
+    this.animationFractionChangedEmitter.emit(sliderValue / this.maxAnimationFractionSliderValue);
   }
 
   onLabelPointsChanged(shouldLabelPoints: boolean) {
-    this.stateService.notifyShouldLabelPointsChanged(shouldLabelPoints);
+    this.labelPointsChangedEmitter.emit(shouldLabelPoints);
   }
 }

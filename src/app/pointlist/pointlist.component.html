@@ -11,7 +11,7 @@
   <md-icon class="md-24">skip_next</md-icon>
 </button>
 <div>
-  <ol [dragula]='"pointlist-bag"' [dragulaModel]='commands'>
+  <ol>
     <li *ngFor="let command of commands">{{ command }}</li>
   </ol>
 </div>

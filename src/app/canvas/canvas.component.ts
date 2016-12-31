@@ -1,6 +1,6 @@
 import {
   Component, AfterViewInit, ElementRef, HostListener,
-  ViewChild, ViewChildren, OnDestroy, Input
+  ViewChild, ViewChildren, OnDestroy, Input, OnChanges, SimpleChange
 } from '@angular/core';
 import { Layer, PathLayer, ClipPathLayer, GroupLayer, VectorLayer } from './../scripts/models';
 import * as Svgloader from './../scripts/svgloader';
@@ -20,7 +20,7 @@ import { Command } from './../scripts/svgcommands';
   templateUrl: './canvas.component.html',
   styleUrls: ['./canvas.component.scss']
 })
-export class CanvasComponent implements AfterViewInit {
+export class CanvasComponent implements AfterViewInit, OnChanges {
   @ViewChild('renderingCanvas') private canvasRef: ElementRef;
   @ViewChildren(RulerComponent) private rulerComponents;
   private canvas;
@@ -29,11 +29,13 @@ export class CanvasComponent implements AfterViewInit {
   private backingStoreScale_: number;
   private shouldLabelPoints_ = false;
   private canvasContainerSize: number;
-  //private offscreenCanvas: any;
+  private isViewInit = false;
 
   constructor(private elementRef: ElementRef) { }
 
   ngAfterViewInit() {
+    this.isViewInit = true;
+
     this.canvasContainerSize = this.elementRef.nativeElement.getBoundingClientRect().width;
     erd().listenTo(this.elementRef.nativeElement, element => {
       let canvasContainerSize = element.getBoundingClientRect().width;
@@ -122,14 +124,23 @@ export class CanvasComponent implements AfterViewInit {
     return points;
   }
 
+  ngOnChanges(changes: {[propKey: string]: SimpleChange}) {
+    console.log(changes);
+  }
+
   get vectorLayer() {
     return this.vectorLayer_;
   }
 
+  @Input()
   set vectorLayer(vectorLayer: VectorLayer) {
+    console.log('changed', vectorLayer);
     const didWidthChange = !this.vectorLayer || this.vectorLayer.width !== vectorLayer.width;
     const didHeightChange = !this.vectorLayer || this.vectorLayer.height !== vectorLayer.height;
     this.vectorLayer_ = vectorLayer;
+    if (!this.isViewInit) {
+      return;
+    }
     if (didWidthChange || didHeightChange) {
       this.resizeAndDraw();
     } else {
@@ -141,10 +152,14 @@ export class CanvasComponent implements AfterViewInit {
     return this.shouldLabelPoints_;
   }
 
+  @Input()
   set shouldLabelPoints(shouldLabelPoints) {
-    if (this.shouldLabelPoints_ !== shouldLabelPoints) {
+    console.log(shouldLabelPoints);
+    if (this.shouldLabelPoints !== shouldLabelPoints) {
       this.shouldLabelPoints_ = shouldLabelPoints;
-      this.draw();
+      if (this.isViewInit) {
+        this.draw();
+      }
     }
   }
 

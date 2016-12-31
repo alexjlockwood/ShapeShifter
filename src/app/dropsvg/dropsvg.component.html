@@ -1,0 +1,6 @@
+<div class="drop-svg-container" fxLayout="row" fxFlex="50%">
+  <div fxLayout="column" fxFlex="100%" fxLayoutAlign="center center">
+    <input class="svg-file-picker" type="file" id="{{componentId}}" accept=".svg" (change)="onLoadSvgFileComplete($event.srcElement.files)">
+    <label class="svg-file-picker-label" fxFlex="100%" fxLayoutAlign="center center" for="{{componentId}}">Drop SVG</label>
+  </div>
+</div>

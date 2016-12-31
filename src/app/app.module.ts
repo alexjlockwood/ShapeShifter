@@ -14,6 +14,7 @@ import { RulerComponent } from './canvas/ruler/ruler.component';
 import { TimelineComponent } from './timeline/timeline.component';
 
 import "hammerjs";
+import { DropSvgComponent } from './dropsvg/dropsvg.component';
 
 @NgModule({
   declarations: [
@@ -21,7 +22,8 @@ import "hammerjs";
     CanvasComponent,
     RulerComponent,
     TimelineComponent,
-    PointListComponent
+    PointListComponent,
+    DropSvgComponent
   ],
   imports: [
     BrowserModule,

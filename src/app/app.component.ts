@@ -1,8 +1,6 @@
-import { Component, ViewChild, AfterViewInit, OnDestroy } from '@angular/core';
+import { Component } from '@angular/core';
 import { CanvasComponent } from './canvas/canvas.component';
 import { PointListComponent } from './pointlist/pointlist.component';
-import { StateService } from './state.service';
-import { Subscription } from 'rxjs/Subscription';
 import { VectorLayer, PathLayer } from './scripts/models';
 import * as SvgLoader from './scripts/svgloader';
 import { SvgPathData } from './scripts/svgpathdata';
@@ -13,79 +11,13 @@ import { SvgPathData } from './scripts/svgpathdata';
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
-export class AppComponent implements AfterViewInit, OnDestroy {
-  @ViewChild('startCanvas') private startCanvas: CanvasComponent;
-  @ViewChild('previewCanvas') private previewCanvas: CanvasComponent;
-  @ViewChild('endCanvas') private endCanvas: CanvasComponent;
-  @ViewChild('startPointList') private startPointList: PointListComponent;
-  @ViewChild('previewPointList') private previewPointList: PointListComponent;
-  @ViewChild('endPointList') private endPointList: PointListComponent;
+export class AppComponent {
   private startVectorLayer: VectorLayer;
   private previewVectorLayer: VectorLayer;
   private endVectorLayer: VectorLayer;
-  private subscriptions: Subscription[] = [];
+  private shouldLabelPoints = false;
 
-  constructor(private stateService: StateService) { }
-
-  ngAfterViewInit() {
-    const startSvgString = `
-      <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24">
-        <g transform="translate(12,12)">
-        <g transform="scale(0.75,0.75)">
-        <g transform="translate(-12,-12)">
-        <path d="M 0 0 L 4 4 C 11 12 17 12 24 12" stroke="#000" stroke-width="1"/>
-        </g>
-        </g>
-        </g>
-        </svg>`;
-    this.startVectorLayer = SvgLoader.loadVectorLayerFromSvgString(startSvgString);
-    this.startCanvas.vectorLayer = this.startVectorLayer;
-
-    const endSvgString = `
-      <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24">
-        <g transform="translate(12,12)">
-        <g transform="scale(0.75,0.75)">
-        <g transform="translate(-12,-12)">
-        <path d="M 0 0 L 12 12 C 16 16 20 20 24 24" stroke="#000" stroke-width="1"/>
-        </g>
-        </g>
-        </g>
-      </svg>`;
-    this.endVectorLayer = SvgLoader.loadVectorLayerFromSvgString(endSvgString);
-    this.endCanvas.vectorLayer = this.endVectorLayer;
-
-    this.previewVectorLayer = this.startVectorLayer.clone();
-    this.previewCanvas.vectorLayer = this.previewVectorLayer;
-
-    this.subscriptions.push(
-      this.stateService.getShouldLabelPointsChangedSubscription(
-        shouldLabelPoints => {
-          this.startCanvas.shouldLabelPoints = shouldLabelPoints;
-          this.previewCanvas.shouldLabelPoints = shouldLabelPoints;
-          this.endCanvas.shouldLabelPoints = shouldLabelPoints;
-        }));
-
-    this.subscriptions.push(
-      this.stateService.getAnimationFractionChangedSubscription(
-        animationFraction => {
-          this.animatePreviewVectorLayer(animationFraction);
-          this.previewCanvas.vectorLayer = this.previewVectorLayer;
-          this.previewPointList.vectorLayer = this.previewVectorLayer;
-        }));
-
-    // TODO(alockwood): try to find a less hacky way to do this...? the app crashes otherwise...
-    setTimeout(() => {
-      this.startPointList.vectorLayer = this.startVectorLayer;
-      this.previewPointList.vectorLayer = this.previewVectorLayer;
-      this.endPointList.vectorLayer = this.endVectorLayer;
-    });
-  }
-
-  ngOnDestroy() {
-    this.subscriptions.forEach(s => s.unsubscribe());
-  }
-
-  private animatePreviewVectorLayer(fraction: number) {
+  private animatePreviewVectorLayer(fraction: number): VectorLayer {
     const animateLayer = layer => {
       if (layer.children) {
         layer.children.forEach(l => animateLayer(l));
@@ -105,5 +37,44 @@ export class AppComponent implements AfterViewInit, OnDestroy {
       }
     };
     animateLayer(this.previewVectorLayer);
+    const layer = this.previewVectorLayer;
+    return new VectorLayer(
+      layer.children,
+      layer.id,
+      layer.width,
+      layer.height,
+      layer.alpha);
+  }
+
+  onStartSvgTextLoaded(svgText: string) {
+    console.log('start', svgText);
+    this.startVectorLayer = SvgLoader.loadVectorLayerFromSvgString(svgText);
+    this.maybeDisplayPreview();
+  }
+
+  onEndSvgTextLoaded(svgText: string) {
+    console.log('end', svgText);
+    this.endVectorLayer = SvgLoader.loadVectorLayerFromSvgString(svgText);
+    this.maybeDisplayPreview();
+  }
+
+  onAnimationFractionChanged(fraction: number) {
+    console.log(fraction);
+    this.previewVectorLayer = this.animatePreviewVectorLayer(fraction);
+  }
+
+  onLabelPointsChanged(shouldLabelPoints: boolean) {
+    console.log(shouldLabelPoints);
+    this.shouldLabelPoints = shouldLabelPoints;
+  }
+
+  maybeDisplayPreview() {
+    if (this.shouldDisplayCanvases()) {
+      this.previewVectorLayer = this.startVectorLayer.clone();
+    }
+  }
+
+  shouldDisplayCanvases() {
+    return this.startVectorLayer && this.endVectorLayer;
   }
 }
