@@ -1,6 +1,6 @@
 import {
   Component, AfterViewInit, ElementRef, HostListener,
-  ViewChild, ViewChildren, OnDestroy, Input, OnChanges, SimpleChange
+  ViewChild, ViewChildren, OnDestroy, Input
 } from '@angular/core';
 import { Layer, PathLayer, ClipPathLayer, GroupLayer, VectorLayer } from './../scripts/models';
 import * as Svgloader from './../scripts/svgloader';
@@ -20,7 +20,7 @@ import { Command } from './../scripts/svgcommands';
   templateUrl: './canvas.component.html',
   styleUrls: ['./canvas.component.scss']
 })
-export class CanvasComponent implements AfterViewInit, OnChanges {
+export class CanvasComponent implements AfterViewInit {
   @ViewChild('renderingCanvas') private canvasRef: ElementRef;
   @ViewChildren(RulerComponent) private rulerComponents;
   private canvas;
