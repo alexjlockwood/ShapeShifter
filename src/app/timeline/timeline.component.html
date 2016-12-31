@@ -1,9 +1,24 @@
-<div fxLayout="row" fxLayoutAlign="center center">
-  Status: Unmorphable
-  <button md-icon-button mdTooltip="Play" mdTooltipPosition="above" md-theme="dark">
+<div fxLayout="row"
+  fxLayoutAlign="center center">
+  Status: {{isPathMorphable ? 'Morphable' : 'Unmorphable'}}
+  <button md-icon-button
+    (click)="onPlayClicked()"
+    mdTooltip="Play"
+    mdTooltipPosition="above"
+    md-theme="dark"
+    [disabled]="!isPathMorphable">
     <md-icon class="md-24">play_arrow</md-icon>
   </button>
   <!-- TODO: use (input) instead. see https://github.com/angular/material2/issues/2296 -->
-  <md-slider class="timeline-slider" min="0" [max]="maxAnimationFractionSliderValue" step="1" value="0" (change)="onAnimationFractionChanged($event.value)"></md-slider>
-  <md-checkbox [checked]="shouldLabelPoints" (change)="onLabelPointsChanged($event.checked)">Label points</md-checkbox>
+  <md-slider class="timeline-slider"
+    min="0"
+    [max]="maxAnimationFractionSliderValue"
+    step="1"
+    value="0"
+    (change)="onAnimationFractionSliderChanged($event.value)"
+    [disabled]="!isPathMorphable"></md-slider>
+  <md-checkbox [checked]="shouldLabelPoints"
+    (change)="onLabelPointsCheckboxChanged($event.checked)"
+    [disabled]="!isPathMorphable">Label points</md-checkbox>
 </div>
+

@@ -15,6 +15,7 @@ export class AppComponent implements OnInit {
   private startVectorLayer: VectorLayer;
   private previewVectorLayer: VectorLayer;
   private endVectorLayer: VectorLayer;
+  private isPathMorphable = true;
   private shouldLabelPoints = false;
 
   ngOnInit() {

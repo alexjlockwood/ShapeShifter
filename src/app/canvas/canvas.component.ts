@@ -78,14 +78,14 @@ export class CanvasComponent implements AfterViewInit {
             //this.studioState_.selection = [layer];
             //  }
             //}
-            console.log(selectedPoints);
+            //console.log(selectedPoints);
             return selectedPoints.length > 0;
           }
           return false;
         };
         if (!toggleSelectedPath_(this.vectorLayer) && !(event.metaKey || event.shiftKey)) {
           //this.studioState_.selection = [];
-          console.log('clearing selection');
+          //console.log('clearing selection');
         }
       })
       .on('mousemove', event => {

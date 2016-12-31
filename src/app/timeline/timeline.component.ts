@@ -1,4 +1,4 @@
-import { Component, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
 
 
 @Component({
@@ -7,17 +7,37 @@ import { Component, Output, EventEmitter } from '@angular/core';
   styleUrls: ['./timeline.component.scss']
 })
 export class TimelineComponent {
+  private readonly animationDuration = 1000;
   private readonly maxAnimationFractionSliderValue = 1000;
-  private shouldLabelPoints: boolean = false;
+  @Input() private shouldLabelPoints: boolean;
+  @Input() private isPathMorphable: boolean;
   @Output() labelPointsChangedEmitter = new EventEmitter<boolean>();
   @Output() animationFractionChangedEmitter = new EventEmitter<number>();
 
   // TODO(alockwood): make this update each time the slider is changed (not just on mouse up)
-  onAnimationFractionChanged(sliderValue: number) {
+  onAnimationFractionSliderChanged(sliderValue: number) {
     this.animationFractionChangedEmitter.emit(sliderValue / this.maxAnimationFractionSliderValue);
   }
 
-  onLabelPointsChanged(shouldLabelPoints: boolean) {
+  onLabelPointsCheckboxChanged(shouldLabelPoints: boolean) {
     this.labelPointsChangedEmitter.emit(shouldLabelPoints);
+  }
+
+  onPlayClicked() {
+    let startTimestamp = null;
+    const onAnimationFrame = (timestamp: number) => {
+      if (!startTimestamp) {
+        startTimestamp = timestamp;
+      }
+      const progress = timestamp - startTimestamp;
+      if (progress < this.animationDuration) {
+        this.animationFractionChangedEmitter.emit(progress / this.animationDuration);
+        requestAnimationFrame(onAnimationFrame);
+      } else {
+        this.animationFractionChangedEmitter.emit(1);
+        startTimestamp = null;
+      }
+    };
+    requestAnimationFrame(onAnimationFrame);
   }
 }

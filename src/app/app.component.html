@@ -1,19 +1,43 @@
 <div class="app-container">
-  <div *ngIf="shouldDisplayCanvases()" fxLayout="column" fxLayoutAlign="space-around">
-    <div fxLayout="row" fxLayoutAlign="space-around">
-      <app-canvas fxFlex="30%" [vectorLayer]="startVectorLayer" [shouldLabelPoints]="shouldLabelPoints"></app-canvas>
-      <app-canvas fxFlex="30%" [vectorLayer]="previewVectorLayer" [shouldLabelPoints]="shouldLabelPoints"></app-canvas>
-      <app-canvas fxFlex="30%" [vectorLayer]="endVectorLayer" [shouldLabelPoints]="shouldLabelPoints"></app-canvas>
+  <div *ngIf="shouldDisplayCanvases()"
+    fxLayout="column"
+    fxLayoutAlign="space-around">
+    <div fxLayout="row"
+      fxLayoutAlign="space-around">
+      <app-canvas fxFlex="30%"
+        [vectorLayer]="startVectorLayer"
+        [shouldLabelPoints]="shouldLabelPoints"></app-canvas>
+      <app-canvas fxFlex="30%"
+        [vectorLayer]="previewVectorLayer"
+        [shouldLabelPoints]="shouldLabelPoints"></app-canvas>
+      <app-canvas fxFlex="30%"
+        [vectorLayer]="endVectorLayer"
+        [shouldLabelPoints]="shouldLabelPoints"></app-canvas>
     </div>
-    <app-timeline (animationFractionChangedEmitter)="onAnimationFractionChanged($event)" (labelPointsChangedEmitter)="onLabelPointsChanged($event)"></app-timeline>
-    <div fxLayout="row" fxLayoutAlign="space-around">
-      <app-pointlist fxFlex="30%" [vectorLayer]="startVectorLayer"></app-pointlist>
-      <app-pointlist fxFlex="30%" [vectorLayer]="previewVectorLayer"></app-pointlist>
-      <app-pointlist fxFlex="30%" [vectorLayer]="endVectorLayer"></app-pointlist>
+    <app-timeline [isPathMorphable]="isPathMorphable"
+      (animationFractionChangedEmitter)="onAnimationFractionChanged($event)"
+      (labelPointsChangedEmitter)="onLabelPointsChanged($event)"></app-timeline>
+    <div fxLayout="row"
+      fxLayoutAlign="space-around">
+      <app-pointlist fxFlex="30%"
+        [vectorLayer]="startVectorLayer"></app-pointlist>
+      <app-pointlist fxFlex="30%"
+        [vectorLayer]="previewVectorLayer"></app-pointlist>
+      <app-pointlist fxFlex="30%"
+        [vectorLayer]="endVectorLayer"></app-pointlist>
     </div>
   </div>
-  <div *ngIf="!shouldDisplayCanvases()" class="drop-target-container fill-height" fxLayout="row">
-    <app-dropsvg fxFlex="50%" fxLayoutAlign="center center" [componentId]="'dropSvgStart'" (svgFileLoadedEmitter)="onStartSvgTextLoaded($event)"></app-dropsvg>
-    <app-dropsvg fxFlex="50%" fxLayoutAlign="center center" [componentId]="'dropSvgEnd'" (svgFileLoadedEmitter)="onEndSvgTextLoaded($event)"></app-dropsvg>
+  <div *ngIf="!shouldDisplayCanvases()"
+    class="drop-target-container fill-height"
+    fxLayout="row">
+    <app-dropsvg fxFlex="50%"
+      fxLayoutAlign="center center"
+      [componentId]="'dropSvgStart'"
+      (svgFileLoadedEmitter)="onStartSvgTextLoaded($event)"></app-dropsvg>
+    <app-dropsvg fxFlex="50%"
+      fxLayoutAlign="center center"
+      [componentId]="'dropSvgEnd'"
+      (svgFileLoadedEmitter)="onEndSvgTextLoaded($event)"></app-dropsvg>
   </div>
 </div>
+
