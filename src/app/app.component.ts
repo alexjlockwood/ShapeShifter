@@ -37,34 +37,24 @@ export class AppComponent {
       }
     };
     animateLayer(this.previewVectorLayer);
-    const layer = this.previewVectorLayer;
-    return new VectorLayer(
-      layer.children,
-      layer.id,
-      layer.width,
-      layer.height,
-      layer.alpha);
+    return Object.create(this.previewVectorLayer);
   }
 
   onStartSvgTextLoaded(svgText: string) {
-    console.log('start', svgText);
     this.startVectorLayer = SvgLoader.loadVectorLayerFromSvgString(svgText);
     this.maybeDisplayPreview();
   }
 
   onEndSvgTextLoaded(svgText: string) {
-    console.log('end', svgText);
     this.endVectorLayer = SvgLoader.loadVectorLayerFromSvgString(svgText);
     this.maybeDisplayPreview();
   }
 
   onAnimationFractionChanged(fraction: number) {
-    console.log(fraction);
     this.previewVectorLayer = this.animatePreviewVectorLayer(fraction);
   }
 
   onLabelPointsChanged(shouldLabelPoints: boolean) {
-    console.log(shouldLabelPoints);
     this.shouldLabelPoints = shouldLabelPoints;
   }
 

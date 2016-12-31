@@ -124,17 +124,12 @@ export class CanvasComponent implements AfterViewInit, OnChanges {
     return points;
   }
 
-  ngOnChanges(changes: {[propKey: string]: SimpleChange}) {
-    console.log(changes);
-  }
-
   get vectorLayer() {
     return this.vectorLayer_;
   }
 
   @Input()
   set vectorLayer(vectorLayer: VectorLayer) {
-    console.log('changed', vectorLayer);
     const didWidthChange = !this.vectorLayer || this.vectorLayer.width !== vectorLayer.width;
     const didHeightChange = !this.vectorLayer || this.vectorLayer.height !== vectorLayer.height;
     this.vectorLayer_ = vectorLayer;
@@ -154,7 +149,6 @@ export class CanvasComponent implements AfterViewInit, OnChanges {
 
   @Input()
   set shouldLabelPoints(shouldLabelPoints) {
-    console.log(shouldLabelPoints);
     if (this.shouldLabelPoints !== shouldLabelPoints) {
       this.shouldLabelPoints_ = shouldLabelPoints;
       if (this.isViewInit) {
