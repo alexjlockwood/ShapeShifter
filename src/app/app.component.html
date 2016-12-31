@@ -9,7 +9,9 @@
         [shouldLabelPoints]="shouldLabelPoints"></app-canvas>
       <app-canvas fxFlex="30%"
         [vectorLayer]="previewVectorLayer"
-        [shouldLabelPoints]="shouldLabelPoints"></app-canvas>
+        [shouldLabelPoints]="shouldLabelPoints"
+        [selectedCommands]="selectedCommands"
+        (selectedCommandsChangedEmitter)="onSelectedCommandsChanged($event)"></app-canvas>
       <app-canvas fxFlex="30%"
         [vectorLayer]="endVectorLayer"
         [shouldLabelPoints]="shouldLabelPoints"></app-canvas>

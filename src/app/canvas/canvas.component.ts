@@ -1,34 +1,34 @@
 import {
   Component, AfterViewInit, ElementRef, HostListener,
-  ViewChild, ViewChildren, OnDestroy, Input
+  ViewChild, ViewChildren, OnDestroy, Input, Output, EventEmitter
 } from '@angular/core';
 import { Layer, PathLayer, ClipPathLayer, GroupLayer, VectorLayer } from './../scripts/models';
 import * as Svgloader from './../scripts/svgloader';
 import * as ColorUtil from './../scripts/colorutil';
 import * as $ from 'jquery';
 import * as erd from 'element-resize-detector';
-import { RulerComponent } from './ruler/ruler.component';
-import { Point } from './../scripts/mathutil';
+import { Point, Matrix } from './../scripts/mathutil';
 import { Command } from './../scripts/svgcommands';
 
 
 // TODO(alockwood): remove jquery? seems unnecessary on second thought
 // TODO(alockwood): add offscreen canvas to implement alpha
-// TODO(alockwood): adjust scale depending on window.devicePixelRatio
 @Component({
   selector: 'app-canvas',
   templateUrl: './canvas.component.html',
   styleUrls: ['./canvas.component.scss']
 })
 export class CanvasComponent implements AfterViewInit {
-  @ViewChild('renderingCanvas') private canvasRef: ElementRef;
-  @ViewChildren(RulerComponent) private rulerComponents;
-  private canvas;
   private vectorLayer_: VectorLayer;
-  private scale_: number;
-  private backingStoreScale_: number;
   private shouldLabelPoints_ = false;
+  private selectedCommands_: Command[] = [];
+  @Output() selectedCommandsChangedEmitter = new EventEmitter<Command[]>();
+
+  @ViewChild('renderingCanvas') private renderingCanvasRef: ElementRef;
   private canvasContainerSize: number;
+  private canvas;
+  private scale: number;
+  private backingStoreScale: number;
   private isViewInit = false;
 
   constructor(private elementRef: ElementRef) { }
@@ -45,83 +45,16 @@ export class CanvasComponent implements AfterViewInit {
       }
     });
 
-    this.canvas = $(this.canvasRef.nativeElement);
+    this.canvas = $(this.renderingCanvasRef.nativeElement);
     this.canvas
       .on('mousedown', event => {
         const canvasOffset = this.canvas.offset();
-        const x = (event.pageX - canvasOffset.left) / this.scale_;
-        const y = (event.pageY - canvasOffset.top) / this.scale_;
-        const mousePoint = new Point(x, y);
-        const matrices = [];
-        // TODO(alockwood): select clips and/or groups in addition to paths?
-        const toggleSelectedPath_ = layer => {
-          if (layer instanceof VectorLayer) {
-            return layer.children.some(l => toggleSelectedPath_(l));
-          }
-          if (layer instanceof GroupLayer) {
-            const transformMatrices = layer.toMatrices();
-            matrices.splice(matrices.length, 0, ...transformMatrices);
-            const result = layer.children.some(l => toggleSelectedPath_(l));
-            matrices.splice(-transformMatrices.length, transformMatrices.length);
-            return result;
-          }
-          if (layer instanceof PathLayer) {
-            //let shouldUpdateSelection = false;
-            const transformedMousePoint = mousePoint.transform(...Array.from(matrices).reverse());
-            const selectedPoints = this.findSelectedPathPoints(layer, transformedMousePoint, 0.5);
-            //if (shouldUpdateSelection) {
-            //  if (event.metaKey || event.shiftKey) {
-            //    console.log('setting selection: ' + layer.id);
-            //this.studioState_.toggleSelected(layer);
-            //  } else {
-            //    console.log('setting selection: ' + layer.id);
-            //this.studioState_.selection = [layer];
-            //  }
-            //}
-            //console.log(selectedPoints);
-            return selectedPoints.length > 0;
-          }
-          return false;
-        };
-        if (!toggleSelectedPath_(this.vectorLayer) && !(event.metaKey || event.shiftKey)) {
-          //this.studioState_.selection = [];
-          //console.log('clearing selection');
-        }
-      })
-      .on('mousemove', event => {
-        const canvasOffset = this.canvas.offset();
-        const x = Math.round((event.pageX - canvasOffset.left) / this.scale_);
-        const y = Math.round((event.pageY - canvasOffset.top) / this.scale_);
-        this.rulerComponents.forEach(r => r.showMouse(x, y));
-      })
-      .on('mouseleave', () => {
-        this.rulerComponents.forEach(r => r.hideMouse());
+        const x = (event.pageX - canvasOffset.left) / this.scale;
+        const y = (event.pageY - canvasOffset.top) / this.scale;
+        this.onMouseDown(new Point(x, y), event.metaKey || event.shiftKey);
       });
 
     this.resizeAndDraw();
-  }
-
-  private findSelectedPathPoints(
-    layer: PathLayer,
-    point: Point,
-    radius: number): { point: Point, command: Command }[] {
-    let dist_ = (p1: Point, p2: Point) => {
-      return Math.sqrt(Math.pow(p2.y - p1.y, 2) + Math.pow(p2.x - p1.x, 2));
-    };
-
-    const points = [];
-    layer.pathData.commands.forEach(c => {
-      c.points.forEach(p => {
-        if (dist_(point, p) <= radius) {
-          points.push({
-            point: p,
-            command: c,
-          });
-        }
-      });
-    });
-
-    return points;
   }
 
   get vectorLayer() {
@@ -133,9 +66,6 @@ export class CanvasComponent implements AfterViewInit {
     const didWidthChange = !this.vectorLayer || this.vectorLayer.width !== vectorLayer.width;
     const didHeightChange = !this.vectorLayer || this.vectorLayer.height !== vectorLayer.height;
     this.vectorLayer_ = vectorLayer;
-    if (!this.isViewInit) {
-      return;
-    }
     if (didWidthChange || didHeightChange) {
       this.resizeAndDraw();
     } else {
@@ -149,16 +79,23 @@ export class CanvasComponent implements AfterViewInit {
 
   @Input()
   set shouldLabelPoints(shouldLabelPoints) {
-    if (this.shouldLabelPoints !== shouldLabelPoints) {
-      this.shouldLabelPoints_ = shouldLabelPoints;
-      if (this.isViewInit) {
-        this.draw();
-      }
-    }
+    this.shouldLabelPoints_ = shouldLabelPoints;
+    this.draw();
+  }
+
+  get selectedCommands() {
+    return this.selectedCommands_;
+  }
+
+  @Input()
+  set selectedCommands(selectedCommands: Command[]) {
+    console.log(selectedCommands);
+    this.selectedCommands_ = selectedCommands;
+    this.draw();
   }
 
   private resizeAndDraw() {
-    if (!this.vectorLayer) {
+    if (!this.isViewInit) {
       return;
     }
 
@@ -166,69 +103,66 @@ export class CanvasComponent implements AfterViewInit {
     const artworkAspectRatio = this.vectorLayer.width / (this.vectorLayer.height || 1);
 
     if (artworkAspectRatio > containerAspectRatio) {
-      this.scale_ = this.canvasContainerSize / this.vectorLayer.width;
+      this.scale = this.canvasContainerSize / this.vectorLayer.width;
     } else {
-      this.scale_ = this.canvasContainerSize / this.vectorLayer.height;
+      this.scale = this.canvasContainerSize / this.vectorLayer.height;
     }
-    this.scale_ = Math.max(1, Math.floor(this.scale_));
-
-    // TODO(alockwood): figure out how to inject window device pixel ratio below
-    this.backingStoreScale_ = this.scale_ * (window && window.devicePixelRatio || 1);
+    this.scale = Math.max(1, Math.floor(this.scale));
+    this.backingStoreScale = this.scale * (window.devicePixelRatio || 1);
 
     this.canvas
       .attr({
-        width: this.vectorLayer.width * this.backingStoreScale_,
-        height: this.vectorLayer.height * this.backingStoreScale_,
+        width: this.vectorLayer.width * this.backingStoreScale,
+        height: this.vectorLayer.height * this.backingStoreScale,
       })
       .css({
-        width: this.vectorLayer.width * this.scale_,
-        height: this.vectorLayer.height * this.scale_,
+        width: this.vectorLayer.width * this.scale,
+        height: this.vectorLayer.height * this.scale,
       });
 
     this.draw();
   }
 
   draw() {
-    if (!this.vectorLayer) {
+    if (!this.isViewInit) {
       return;
     }
     this.drawCanvas();
-    this.drawRulers();
   }
 
   private drawCanvas() {
-    if (!this.vectorLayer) {
+    if (!this.isViewInit) {
       return;
     }
 
     const ctx = this.canvas.get(0).getContext('2d');
     ctx.save();
-    ctx.scale(this.backingStoreScale_, this.backingStoreScale_);
+    ctx.scale(this.backingStoreScale, this.backingStoreScale);
     ctx.clearRect(0, 0, this.vectorLayer.width, this.vectorLayer.height);
     this.drawLayer(this.vectorLayer, ctx, []);
     ctx.restore();
 
     // draw pixel grid
-    if (this.scale_ > 4) {
+    if (this.scale > 4) {
       ctx.fillStyle = 'rgba(128, 128, 128, .25)';
       for (let x = 1; x < this.vectorLayer.width; x++) {
         ctx.fillRect(
-          x * this.backingStoreScale_ - 0.5 * (window.devicePixelRatio || 1),
+          x * this.backingStoreScale - 0.5 * (window.devicePixelRatio || 1),
           0,
           1 * (window.devicePixelRatio || 1),
-          this.vectorLayer.height * this.backingStoreScale_);
+          this.vectorLayer.height * this.backingStoreScale);
       }
       for (let y = 1; y < this.vectorLayer.height; y++) {
         ctx.fillRect(
           0,
-          y * this.backingStoreScale_ - 0.5 * (window.devicePixelRatio || 1),
-          this.vectorLayer.width * this.backingStoreScale_,
+          y * this.backingStoreScale - 0.5 * (window.devicePixelRatio || 1),
+          this.vectorLayer.width * this.backingStoreScale,
           1 * (window.devicePixelRatio || 1));
       }
     }
   }
 
-  private drawLayer(layer: Layer, ctx: CanvasRenderingContext2D, transforms: TransformFn[]) {
+  private drawLayer(layer: Layer, ctx: CanvasRenderingContext2D, transforms: TransformFunc[]) {
     if (layer instanceof VectorLayer) {
       layer.children.forEach(layer => this.drawLayer(layer, ctx, transforms));
     } else if (layer instanceof GroupLayer) {
@@ -243,7 +177,7 @@ export class CanvasComponent implements AfterViewInit {
     }
   }
 
-  private drawGroupLayer(layer: GroupLayer, ctx: CanvasRenderingContext2D, transforms: TransformFn[]) {
+  private drawGroupLayer(layer: GroupLayer, ctx: CanvasRenderingContext2D, transforms: TransformFunc[]) {
     transforms.push(() => {
       ctx.translate(layer.pivotX, layer.pivotY);
       ctx.translate(layer.translateX, layer.translateY);
@@ -271,7 +205,7 @@ export class CanvasComponent implements AfterViewInit {
   }
 
   // TODO(alockwood): update layer.pathData.length so that it reflects transforms such as scale
-  private drawPathLayer(layer: PathLayer, ctx: CanvasRenderingContext2D, transforms: TransformFn[]) {
+  private drawPathLayer(layer: PathLayer, ctx: CanvasRenderingContext2D, transforms: TransformFunc[]) {
     ctx.save();
     transforms.forEach(t => t());
     layer.pathData.execute(ctx);
@@ -320,16 +254,29 @@ export class CanvasComponent implements AfterViewInit {
   }
 
   // TODO(alockwood): avoid scaling the points we draw here as a result of applying the transforms
-  private drawPathLayerPoints(layer: PathLayer, ctx: CanvasRenderingContext2D, transforms: TransformFn[]) {
-    const points = [];
-    layer.pathData.commands.forEach(c => points.push(...c.points));
+  private drawPathLayerPoints(layer: PathLayer, ctx: CanvasRenderingContext2D, transforms: TransformFunc[]) {
+    const points: { point: Point, isSelected: boolean }[] = [];
+    layer.pathData.commands.forEach(c => {
+      if (this.selectedCommands.some(selectedCommand => selectedCommand === c)) {
+        points.push(...c.points.map(p => {
+          return { point: p, isSelected: true };
+        }));
+      } else {
+        points.push(...c.points.map(p => {
+          return { point: p, isSelected: false };
+        }));
+      }
+    });
 
     ctx.save();
     transforms.forEach(t => t());
-    points.forEach((p, index) => {
+    points.forEach((obj, index) => {
+      const p = obj.point;
+      const color = obj.isSelected ? 'red' : 'green';
+      const radius = obj.isSelected ? 0.8 : 0.6;
       ctx.beginPath();
-      ctx.arc(p.x, p.y, 0.75, 0, 2 * Math.PI, false);
-      ctx.fillStyle = 'green';
+      ctx.arc(p.x, p.y, radius, 0, 2 * Math.PI, false);
+      ctx.fillStyle = color;
       ctx.fill();
       ctx.beginPath();
       ctx.fillStyle = "white";
@@ -339,22 +286,61 @@ export class CanvasComponent implements AfterViewInit {
       const height = ctx.measureText(text).width;
       ctx.fillText(text, p.x - width / 2, p.y + height / 2);
       ctx.fill();
-    })
+    });
     ctx.restore();
   }
 
-  private drawRulers() {
-    if (!this.vectorLayer) {
-      return;
+  private onMouseDown(mouseDown: Point, isMetaOrShiftKeyPressed: boolean) {
+    // TODO(alockwood): select clips and/or groups in addition to paths?
+    const matrices = [];
+    const findSelectedPointCommands_ = (layer: Layer): PointCommand[] => {
+      const recurseAndFlatten = (l: Layer) => {
+        return l.children.map(c => findSelectedPointCommands_(c))
+          .reduce((result, next) => result.concat(next), []);
+      };
+      if (layer instanceof VectorLayer) {
+        return recurseAndFlatten(layer);
+      }
+      if (layer instanceof (GroupLayer)) {
+        const transformMatrices = layer.toMatrices();
+        matrices.splice(matrices.length, 0, ...transformMatrices);
+        const result = recurseAndFlatten(layer);
+        matrices.splice(-transformMatrices.length, transformMatrices.length);
+        return result;
+      }
+      if (layer instanceof PathLayer) {
+        const transformedMousePoint = mouseDown.transform(...Array.from(matrices).reverse());
+        return this.findPointCommandsInRange(layer, transformedMousePoint, 0.5);
+      }
+      return [];
     }
-    this.rulerComponents.forEach(r => {
-      r.setVectorLayerSize({
-        width: this.vectorLayer.width,
-        height: this.vectorLayer.height
+    let selectedPointCommands = findSelectedPointCommands_(this.vectorLayer);
+    if (selectedPointCommands.length) {
+      selectedPointCommands = [selectedPointCommands[selectedPointCommands.length - 1]];
+    }
+    this.selectedCommandsChangedEmitter.emit(selectedPointCommands.map(pc => pc.command));
+  }
+
+  private findPointCommandsInRange(
+    layer: PathLayer,
+    point: Point,
+    radius: number): PointCommand[] {
+
+    const pointCommands = [];
+    layer.pathData.commands.forEach(c => {
+      c.points.forEach(p => {
+        if (point.distanceTo(p) <= radius) {
+          pointCommands.push({
+            point: p,
+            command: c,
+          });
+        }
       });
-      r.draw();
     });
+
+    return pointCommands;
   }
 }
 
-type TransformFn = () => void;
+type PointCommand = { point: Point, command: Command };
+type TransformFunc = () => void;

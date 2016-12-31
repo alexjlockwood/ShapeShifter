@@ -1,9 +1,10 @@
-<div #canvasContainer
-  class="canvas-container"
-  fxLayout="row">
-  <!-- <app-canvas-ruler [isHorizontal]="true" class="canvas-ruler orientation-horizontal"></app-canvas-ruler> -->
-  <!-- <app-canvas-ruler class="canvas-ruler orientation-vertical"></app-canvas-ruler> -->
-  <canvas #renderingCanvas
-    class="rendering-canvas"></canvas>
+<div fxLayout="row"
+  fxFlex
+  fxLayoutAlign="center center">
+  <div fxLayout="row"
+    class="canvas-container">
+    <canvas #renderingCanvas
+      class="rendering-canvas"></canvas>
+  </div>
 </div>
 

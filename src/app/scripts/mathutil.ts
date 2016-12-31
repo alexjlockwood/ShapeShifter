@@ -1,7 +1,7 @@
 export class Point {
 
-  static from(point: Point) {
-    return new Point(point.x, point.y);
+  static from(p: Point) {
+    return new Point(p.x, p.y);
   }
 
   constructor(public x = 0, public y = 0) { }
@@ -13,6 +13,10 @@ export class Point {
         m.b * p.x + m.d * p.y + m.f * 1,
       );
     }, this);
+  }
+
+  distanceTo(p: Point) {
+    return Math.sqrt(Math.pow(this.y - p.y, 2) + Math.pow(this.x - p.x, 2));
   }
 }
 

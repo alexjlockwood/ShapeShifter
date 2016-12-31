@@ -10,7 +10,6 @@ import { AppComponent } from './app.component';
 import { CanvasComponent } from './canvas/canvas.component';
 import { PointListComponent } from './pointlist/pointlist.component';
 import { StateService } from './state.service';
-import { RulerComponent } from './canvas/ruler/ruler.component';
 import { TimelineComponent } from './timeline/timeline.component';
 
 import "hammerjs";
@@ -20,7 +19,6 @@ import { DropSvgComponent } from './dropsvg/dropsvg.component';
   declarations: [
     AppComponent,
     CanvasComponent,
-    RulerComponent,
     TimelineComponent,
     PointListComponent,
     DropSvgComponent

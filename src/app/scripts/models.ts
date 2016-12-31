@@ -5,8 +5,10 @@ import { Matrix } from './mathutil';
 export interface Layer {
   children: Layer[] | null;
   id: string;
-  clone<T extends Layer>(): T;
+  deepCopy<T extends Layer>(): T;
   findLayerById(id: string): Layer | null;
+  isStructurallyIdenticalWith(layer: Layer): boolean;
+  isMorphableWith(layer: Layer): boolean;
 }
 
 abstract class AbstractLayer implements Layer {
@@ -15,7 +17,7 @@ abstract class AbstractLayer implements Layer {
     public id: string,
   ) { }
 
-  abstract clone<T extends Layer>(): T;
+  abstract deepCopy<T extends Layer>(): T;
 
   findLayerById(id: string): Layer | null {
     if (this.id === id) {
@@ -30,6 +32,36 @@ abstract class AbstractLayer implements Layer {
       }
     }
     return null;
+  }
+
+  isStructurallyIdenticalWith(layer: Layer) {
+    if (this.constructor !== layer.constructor || this.id !== layer.id) {
+      return false;
+    }
+    if (this instanceof VectorLayer || this instanceof GroupLayer) {
+      return this.children.length === layer.children.length
+        && this.children.every((c, i) => c.isStructurallyIdenticalWith(layer.children[i]));
+    }
+    return true;
+  }
+
+  isMorphableWith(layer: Layer) {
+    if (this.constructor !== layer.constructor || this.id !== layer.id) {
+      return false;
+    }
+    if (this instanceof VectorLayer || this instanceof GroupLayer) {
+      return this.children.length === layer.children.length
+        && this.children.every((c, i) => c.isMorphableWith(layer.children[i]));
+    }
+    if (this instanceof PathLayer) {
+      const cmds1 = this.pathData.commands;
+      const cmds2 = (layer as PathLayer).pathData.commands;
+      if (cmds1.length !== cmds2.length) {
+        return false;
+      }
+      return cmds1.every((c, i) => c.constructor === cmds2[i].constructor);
+    }
+    return true;
   }
 }
 
@@ -52,7 +84,7 @@ export class PathLayer extends AbstractLayer {
     super(null, id);
   }
 
-  clone<T extends Layer>(): PathLayer {
+  deepCopy<T extends Layer>(): PathLayer {
     return new PathLayer(
       this.id,
       new SvgPathData(this.pathData),
@@ -78,7 +110,7 @@ export class ClipPathLayer extends AbstractLayer {
     super(null, id);
   }
 
-  clone<T extends Layer>() {
+  deepCopy<T extends Layer>() {
     return new ClipPathLayer(
       this.id,
       this.pathData);
@@ -100,9 +132,9 @@ export class GroupLayer extends AbstractLayer {
     super(children || [], id);
   }
 
-  clone<T extends Layer>() {
+  deepCopy<T extends Layer>() {
     return new GroupLayer(
-      this.children.map(c => c.clone()),
+      this.children.map(c => c.deepCopy()),
       this.id,
       this.pivotX,
       this.pivotY,
@@ -137,9 +169,9 @@ export class VectorLayer extends AbstractLayer {
     super(children || [], id);
   }
 
-  clone<T extends Layer>() {
+  deepCopy<T extends Layer>() {
     return new VectorLayer(
-      this.children.map(c => c.clone()),
+      this.children.map(c => c.deepCopy()),
       this.id,
       this.width,
       this.height,
