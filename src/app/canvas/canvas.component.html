@@ -4,7 +4,8 @@
   <div fxLayout="row"
     class="canvas-container">
     <canvas #renderingCanvas
-      class="rendering-canvas"></canvas>
+      class="rendering-canvas"
+      (mousedown)="onMouseDown($event)"></canvas>
   </div>
 </div>
 

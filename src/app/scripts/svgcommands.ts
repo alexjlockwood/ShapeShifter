@@ -14,11 +14,13 @@ export abstract class Command {
     return this.points_.map(p => Point.from(p));
   }
 
-  abstract execute(ctx: CanvasRenderingContext2D);
+  abstract execute(ctx: CanvasRenderingContext2D): void;
 
   abstract interpolate<T extends Command>(target: T, fraction: number): T;
 
-  abstract transform(transforms: Matrix[]);
+  abstract transform(transforms: Matrix[]): void;
+
+  abstract toSvgChar();
 }
 
 export abstract class SimpleCommand extends Command {
@@ -58,6 +60,10 @@ export class MoveCommand extends SimpleCommand {
     const pts = SimpleCommand.interpolatePoints(this, target, fraction);
     return new MoveCommand(pts[0], pts[1]);
   }
+
+  toSvgChar() {
+    return 'M';
+  }
 }
 
 export class LineCommand extends SimpleCommand {
@@ -72,6 +78,10 @@ export class LineCommand extends SimpleCommand {
   interpolate(target: LineCommand, fraction: number): LineCommand {
     const pts = SimpleCommand.interpolatePoints(this, target, fraction);
     return new LineCommand(pts[0], pts[1]);
+  }
+
+  toSvgChar() {
+    return 'L';
   }
 }
 
@@ -89,6 +99,10 @@ export class QuadraticCurveCommand extends SimpleCommand {
   interpolate(target: QuadraticCurveCommand, fraction: number): QuadraticCurveCommand {
     const points = SimpleCommand.interpolatePoints(this, target, fraction);
     return new QuadraticCurveCommand(points[0], points[1], points[2]);
+  }
+
+  toSvgChar() {
+    return 'Q';
   }
 }
 
@@ -108,6 +122,10 @@ export class BezierCurveCommand extends SimpleCommand {
     const pts = SimpleCommand.interpolatePoints(this, target, fraction);
     return new BezierCurveCommand(pts[0], pts[1], pts[2], pts[3]);
   }
+
+  toSvgChar() {
+    return 'C';
+  }
 }
 
 export class ClosePathCommand extends SimpleCommand {
@@ -121,6 +139,10 @@ export class ClosePathCommand extends SimpleCommand {
 
   interpolate(target: ClosePathCommand, fraction: number): ClosePathCommand {
     return this;
+  }
+
+  toSvgChar() {
+    return 'Z';
   }
 }
 
@@ -166,5 +188,9 @@ export class EllipticalArcCommand extends Command {
 
   get points(): Point[] {
     return [new Point(this.args[0], this.args[1]), new Point(this.args[7], this.args[8])];
+  }
+
+  toSvgChar() {
+    return 'A';
   }
 }

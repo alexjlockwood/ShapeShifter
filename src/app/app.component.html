@@ -17,6 +17,7 @@
         [shouldLabelPoints]="shouldLabelPoints"></app-canvas>
     </div>
     <app-timeline [isPathMorphable]="isPathMorphable"
+      [shouldLabelPoints]="shouldLabelPoints"
       (animationFractionChangedEmitter)="onAnimationFractionChanged($event)"
       (labelPointsChangedEmitter)="onLabelPointsChanged($event)"></app-timeline>
     <div fxLayout="row"

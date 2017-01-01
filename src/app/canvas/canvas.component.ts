@@ -1,6 +1,6 @@
 import {
-  Component, AfterViewInit, ElementRef, HostListener,
-  ViewChild, ViewChildren, OnDestroy, Input, Output, EventEmitter
+  Component, AfterViewInit, OnDestroy, ElementRef, HostListener,
+  ViewChild, ViewChildren, Input, Output, EventEmitter
 } from '@angular/core';
 import { Layer, PathLayer, ClipPathLayer, GroupLayer, VectorLayer } from './../scripts/models';
 import * as Svgloader from './../scripts/svgloader';
@@ -11,6 +11,9 @@ import { Point, Matrix } from './../scripts/mathutil';
 import { Command } from './../scripts/svgcommands';
 
 
+const ELEMENT_RESIZE_DETECTOR = erd();
+
+
 // TODO(alockwood): remove jquery? seems unnecessary on second thought
 // TODO(alockwood): add offscreen canvas to implement alpha
 @Component({
@@ -18,7 +21,7 @@ import { Command } from './../scripts/svgcommands';
   templateUrl: './canvas.component.html',
   styleUrls: ['./canvas.component.scss']
 })
-export class CanvasComponent implements AfterViewInit {
+export class CanvasComponent implements AfterViewInit, OnDestroy {
   private vectorLayer_: VectorLayer;
   private shouldLabelPoints_ = false;
   private selectedCommands_: Command[] = [];
@@ -35,26 +38,20 @@ export class CanvasComponent implements AfterViewInit {
 
   ngAfterViewInit() {
     this.isViewInit = true;
-
+    this.canvas = $(this.renderingCanvasRef.nativeElement);
     this.canvasContainerSize = this.elementRef.nativeElement.getBoundingClientRect().width;
-    erd().listenTo(this.elementRef.nativeElement, element => {
+    ELEMENT_RESIZE_DETECTOR.listenTo(this.elementRef.nativeElement, element => {
       let canvasContainerSize = element.getBoundingClientRect().width;
       if (this.canvasContainerSize !== canvasContainerSize) {
         this.canvasContainerSize = canvasContainerSize;
         this.resizeAndDraw();
       }
     });
-
-    this.canvas = $(this.renderingCanvasRef.nativeElement);
-    this.canvas
-      .on('mousedown', event => {
-        const canvasOffset = this.canvas.offset();
-        const x = (event.pageX - canvasOffset.left) / this.scale;
-        const y = (event.pageY - canvasOffset.top) / this.scale;
-        this.onMouseDown(new Point(x, y), event.metaKey || event.shiftKey);
-      });
-
     this.resizeAndDraw();
+  }
+
+  ngOnDestroy() {
+    ELEMENT_RESIZE_DETECTOR.removeAllListeners(this.elementRef.nativeElement);
   }
 
   get vectorLayer() {
@@ -63,6 +60,8 @@ export class CanvasComponent implements AfterViewInit {
 
   @Input()
   set vectorLayer(vectorLayer: VectorLayer) {
+    // TODO(alockwood): if vector layer is null, then clear the canvas
+
     const didWidthChange = !this.vectorLayer || this.vectorLayer.width !== vectorLayer.width;
     const didHeightChange = !this.vectorLayer || this.vectorLayer.height !== vectorLayer.height;
     this.vectorLayer_ = vectorLayer;
@@ -95,7 +94,7 @@ export class CanvasComponent implements AfterViewInit {
   }
 
   private resizeAndDraw() {
-    if (!this.isViewInit) {
+    if (!this.isViewInit || !this.vectorLayer) {
       return;
     }
 
@@ -124,14 +123,14 @@ export class CanvasComponent implements AfterViewInit {
   }
 
   draw() {
-    if (!this.isViewInit) {
+    if (!this.isViewInit || !this.vectorLayer) {
       return;
     }
     this.drawCanvas();
   }
 
   private drawCanvas() {
-    if (!this.isViewInit) {
+    if (!this.isViewInit || !this.vectorLayer) {
       return;
     }
 
@@ -255,25 +254,29 @@ export class CanvasComponent implements AfterViewInit {
 
   // TODO(alockwood): avoid scaling the points we draw here as a result of applying the transforms
   private drawPathLayerPoints(layer: PathLayer, ctx: CanvasRenderingContext2D, transforms: TransformFunc[]) {
-    const points: { point: Point, isSelected: boolean }[] = [];
+    //const points: { point: Point, isSelected: boolean }[] = [];
+    const points = [];
     layer.pathData.commands.forEach(c => {
-      if (this.selectedCommands.some(selectedCommand => selectedCommand === c)) {
-        points.push(...c.points.map(p => {
-          return { point: p, isSelected: true };
-        }));
-      } else {
-        points.push(...c.points.map(p => {
-          return { point: p, isSelected: false };
-        }));
+      // if (this.selectedCommands.some(selectedCommand => selectedCommand === c)) {
+      //   points.push(...c.points.map(p => {
+      //     return { point: p, isSelected: true };
+      //   }));
+      // } else {
+      //   points.push(...c.points.map(p => {
+      //     return { point: p, isSelected: false };
+      //   }));
+      // }
+      const cmdPts = c.points;
+      if (cmdPts.length) {
+        points.push(cmdPts[cmdPts.length - 1]);
       }
     });
 
     ctx.save();
     transforms.forEach(t => t());
-    points.forEach((obj, index) => {
-      const p = obj.point;
-      const color = obj.isSelected ? 'red' : 'green';
-      const radius = obj.isSelected ? 0.8 : 0.6;
+    points.forEach((p, index) => {
+      const color = 'green';//obj.isSelected ? 'red' : 'green';
+      const radius = 0.6;//obj.isSelected ? 0.8 : 0.6;
       ctx.beginPath();
       ctx.arc(p.x, p.y, radius, 0, 2 * Math.PI, false);
       ctx.fillStyle = color;
@@ -290,7 +293,11 @@ export class CanvasComponent implements AfterViewInit {
     ctx.restore();
   }
 
-  private onMouseDown(mouseDown: Point, isMetaOrShiftKeyPressed: boolean) {
+  onMouseDown(event) {
+    const canvasOffset = this.canvas.offset();
+    const x = (event.pageX - canvasOffset.left) / this.scale;
+    const y = (event.pageY - canvasOffset.top) / this.scale;
+    const mouseDown = new Point(x, y);
     // TODO(alockwood): select clips and/or groups in addition to paths?
     const matrices = [];
     const findSelectedPointCommands_ = (layer: Layer): PointCommand[] => {

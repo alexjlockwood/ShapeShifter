@@ -23,7 +23,7 @@
   <md-icon class="md-24">skip_next</md-icon>
 </button>
 <div>
-  <ol>
+  <ol [dragula]="'pointListBag'" [dragulaModel]="commands">
     <li *ngFor="let command of commands">{{ command }}</li>
   </ol>
 </div>
