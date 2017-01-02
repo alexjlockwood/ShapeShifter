@@ -4,7 +4,7 @@ export class Point {
     return new Point(p.x, p.y);
   }
 
-  constructor(public x = 0, public y = 0) { }
+  constructor(public readonly x = 0, public readonly y = 0) { }
 
   transform(...matrices: Matrix[]) {
     return matrices.reduce((p: Point, m: Matrix) => {
@@ -22,14 +22,15 @@ export class Point {
 
 export class Matrix {
   constructor(
-    public a = 0,
-    public b = 0,
-    public c = 0,
-    public d = 0,
-    public e = 0,
-    public f = 0) { }
+    public readonly a = 0,
+    public readonly b = 0,
+    public readonly c = 0,
+    public readonly d = 0,
+    public readonly e = 0,
+    public readonly f = 0) { }
 
-  inverse(m: Matrix) {
+  invert() {
+    const m = this;
     return new Matrix(
       m.d / (m.a * m.d - m.b * m.c),
       m.b / (m.b * m.c - m.a * m.d),
@@ -42,5 +43,9 @@ export class Matrix {
 }
 
 export class Rect {
-  constructor(public l = 0, public t = 0, public r = 0, public b = 0) { }
+  constructor(
+    public l = 0,
+    public t = 0,
+    public r = 0,
+    public b = 0) { }
 }

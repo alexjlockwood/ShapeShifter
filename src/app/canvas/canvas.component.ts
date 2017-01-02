@@ -8,7 +8,7 @@ import * as ColorUtil from './../scripts/colorutil';
 import * as $ from 'jquery';
 import * as erd from 'element-resize-detector';
 import { Point, Matrix } from './../scripts/mathutil';
-import { Command } from './../scripts/svgcommands';
+import { Command, ClosePathCommand } from './../scripts/svgcommands';
 
 
 const ELEMENT_RESIZE_DETECTOR = erd();
@@ -88,7 +88,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
   @Input()
   set selectedCommands(selectedCommands: Command[]) {
-    console.log(selectedCommands);
     this.selectedCommands_ = selectedCommands;
     this.draw();
   }
@@ -141,6 +140,12 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     this.drawLayer(this.vectorLayer, ctx, []);
     ctx.restore();
 
+    if (this.shouldLabelPoints) {
+      this.drawPathPoints(this.vectorLayer, ctx, [
+        new Matrix(this.backingStoreScale, 0, 0, this.backingStoreScale, 0, 0)
+      ]);
+    }
+
     // draw pixel grid
     if (this.scale > 4) {
       ctx.fillStyle = 'rgba(128, 128, 128, .25)';
@@ -161,7 +166,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  private drawLayer(layer: Layer, ctx: CanvasRenderingContext2D, transforms: TransformFunc[]) {
+  private drawLayer(layer: Layer, ctx: CanvasRenderingContext2D, transforms: Matrix[]) {
     if (layer instanceof VectorLayer) {
       layer.children.forEach(layer => this.drawLayer(layer, ctx, transforms));
     } else if (layer instanceof GroupLayer) {
@@ -170,32 +175,42 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       this.drawClipPathLayer(layer, ctx, transforms);
     } else if (layer instanceof PathLayer) {
       this.drawPathLayer(layer, ctx, transforms);
-      if (this.shouldLabelPoints) {
-        this.drawPathLayerPoints(layer, ctx, transforms);
-      }
     }
   }
 
-  private drawGroupLayer(layer: GroupLayer, ctx: CanvasRenderingContext2D, transforms: TransformFunc[]) {
-    transforms.push(() => {
-      ctx.translate(layer.pivotX, layer.pivotY);
-      ctx.translate(layer.translateX, layer.translateY);
-      ctx.rotate(layer.rotation * Math.PI / 180);
-      ctx.scale(layer.scaleX, layer.scaleY);
-      ctx.translate(-layer.pivotX, -layer.pivotY);
-    });
+  private drawPathPoints(layer: Layer, ctx: CanvasRenderingContext2D, transforms: Matrix[]) {
+    if (layer instanceof VectorLayer) {
+      layer.children.forEach(layer => this.drawPathPoints(layer, ctx, transforms));
+    } else if (layer instanceof GroupLayer) {
+      const matrices = layer.toMatrices();
+      transforms.splice(transforms.length, 0, ...matrices);
+      ctx.save();
+      layer.children.forEach(l => this.drawPathPoints(l, ctx, transforms));
+      ctx.restore();
+      transforms.splice(-matrices.length, matrices.length);
+    } else if (layer instanceof ClipPathLayer) {
+      // TODO(alockwood): figure this out
+      // this.drawClipPathLayer(layer, ctx, transforms);
+    } else if (layer instanceof PathLayer) {
+      this.drawPathLayerPoints(layer, ctx, transforms);
+    }
+  }
+
+  private drawGroupLayer(layer: GroupLayer, ctx: CanvasRenderingContext2D, transforms: Matrix[]) {
+    const matrices = layer.toMatrices();
+    transforms.splice(transforms.length, 0, ...matrices);
     ctx.save();
-    layer.children.forEach(layer => this.drawLayer(layer, ctx, transforms));
+    layer.children.forEach(l => this.drawLayer(l, ctx, transforms));
     ctx.restore();
-    transforms.pop();
+    transforms.splice(-matrices.length, matrices.length);
   }
 
   private drawClipPathLayer(
     layer: ClipPathLayer,
     ctx: CanvasRenderingContext2D,
-    transforms: (() => void)[]) {
+    transforms: Matrix[]) {
     ctx.save();
-    transforms.forEach(t => t());
+    transforms.forEach(m => ctx.transform(m.a, m.b, m.c, m.d, m.e, m.f));
     layer.pathData.execute(ctx);
     ctx.restore();
 
@@ -204,9 +219,9 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   }
 
   // TODO(alockwood): update layer.pathData.length so that it reflects transforms such as scale
-  private drawPathLayer(layer: PathLayer, ctx: CanvasRenderingContext2D, transforms: TransformFunc[]) {
+  private drawPathLayer(layer: PathLayer, ctx: CanvasRenderingContext2D, transforms: Matrix[]) {
     ctx.save();
-    transforms.forEach(t => t());
+    transforms.forEach(m => ctx.transform(m.a, m.b, m.c, m.d, m.e, m.f));
     layer.pathData.execute(ctx);
     ctx.restore();
 
@@ -253,40 +268,31 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   }
 
   // TODO(alockwood): avoid scaling the points we draw here as a result of applying the transforms
-  private drawPathLayerPoints(layer: PathLayer, ctx: CanvasRenderingContext2D, transforms: TransformFunc[]) {
-    //const points: { point: Point, isSelected: boolean }[] = [];
+  private drawPathLayerPoints(layer: PathLayer, ctx: CanvasRenderingContext2D, transforms: Matrix[]) {
     const points = [];
     layer.pathData.commands.forEach(c => {
-      // if (this.selectedCommands.some(selectedCommand => selectedCommand === c)) {
-      //   points.push(...c.points.map(p => {
-      //     return { point: p, isSelected: true };
-      //   }));
-      // } else {
-      //   points.push(...c.points.map(p => {
-      //     return { point: p, isSelected: false };
-      //   }));
-      // }
-      const cmdPts = c.points;
-      if (cmdPts.length) {
-        points.push(cmdPts[cmdPts.length - 1]);
+      if (!(c instanceof ClosePathCommand)) {
+        points.push(c.points[c.points.length - 1]);
       }
     });
 
     ctx.save();
-    transforms.forEach(t => t());
+    const matrices = Array.from(transforms).reverse();
     points.forEach((p, index) => {
-      const color = 'green';//obj.isSelected ? 'red' : 'green';
-      const radius = 0.6;//obj.isSelected ? 0.8 : 0.6;
+      p = p.transform(...matrices);
+      const color = 'green';
+      const radius = 32;
       ctx.beginPath();
       ctx.arc(p.x, p.y, radius, 0, 2 * Math.PI, false);
       ctx.fillStyle = color;
       ctx.fill();
       ctx.beginPath();
       ctx.fillStyle = "white";
-      ctx.font = '1px serif';
+      ctx.font = '32px serif';
       const text = (index + 1).toString();
       const width = ctx.measureText(text).width;
-      const height = ctx.measureText(text).width;
+      // TODO(alockwood): is there a better way to get the height?
+      const height = ctx.measureText('o').width;
       ctx.fillText(text, p.x - width / 2, p.y + height / 2);
       ctx.fill();
     });
@@ -350,4 +356,3 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 }
 
 type PointCommand = { point: Point, command: Command };
-type TransformFunc = () => void;

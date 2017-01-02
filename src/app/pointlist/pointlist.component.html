@@ -1,29 +1,33 @@
 <button md-icon-button
   mdTooltip="Add point"
   mdTooltipPosition="above"
-  md-theme="dark">
+  md-theme="dark"
+  (click)="onAddPointClick()">
   <md-icon class="md-24">add</md-icon>
 </button>
 <button md-icon-button
   mdTooltip="Reverse"
   mdTooltipPosition="above"
-  md-theme="dark">
+  md-theme="dark"
+  (click)="onReversePointsClick()">
   <md-icon class="md-24">autorenew</md-icon>
 </button>
 <button md-icon-button
   mdTooltip="Shift backwards"
   mdTooltipPosition="above"
-  md-theme="dark">
+  md-theme="dark"
+  (click)="onShiftBackwardPointsClick()">
   <md-icon class="md-24">skip_previous</md-icon>
 </button>
 <button md-icon-button
   mdTooltip="Shift forwards"
   mdTooltipPosition="above"
-  md-theme="dark">
+  md-theme="dark"
+  (click)="onShiftForwardPointsClick()">
   <md-icon class="md-24">skip_next</md-icon>
 </button>
 <div>
-  <ol [dragula]="'pointListBag'" [dragulaModel]="commands">
+  <ol>
     <li *ngFor="let command of commands">{{ command }}</li>
   </ol>
 </div>

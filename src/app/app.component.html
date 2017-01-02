@@ -23,11 +23,12 @@
     <div fxLayout="row"
       fxLayoutAlign="space-around">
       <app-pointlist fxFlex="30%"
-        [vectorLayer]="startVectorLayer"></app-pointlist>
+        [pathLayer]="startPathLayer"></app-pointlist>
       <app-pointlist fxFlex="30%"
-        [vectorLayer]="previewVectorLayer"></app-pointlist>
+        [pathLayer]="previewPathLayer"></app-pointlist>
       <app-pointlist fxFlex="30%"
-        [vectorLayer]="endVectorLayer"></app-pointlist>
+        [pathLayer]="endPathLayer"
+        (pointListReversedEmitter)="onPointListReversed($event)"></app-pointlist>
     </div>
   </div>
   <div *ngIf="!shouldDisplayCanvases()"

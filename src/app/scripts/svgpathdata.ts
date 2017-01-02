@@ -14,43 +14,6 @@ export class SvgPathData {
   private length_ = 0;
   private bounds_: Rect = null;
 
-  static arePathsMorphable(start: SvgPathData, end: SvgPathData) {
-    if (!start || !end
-      || !start.commands || !end.commands
-      || start.commands.length !== end.commands.length) {
-      return false;
-    }
-    for (let i = 0; i < start.commands.length; i++) {
-      const si = start.commands[i], ei = end.commands[i];
-      if (si.constructor !== ei.constructor) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  static interpolatePaths(start: SvgPathData, end: SvgPathData, fraction: number) {
-    if (!end || !start || !end.commands || !start.commands
-      || end.commands.length !== start.commands.length) {
-      // TODO: show a warning
-      return null;
-    }
-
-    let interpolatedCommands = [];
-
-    let i, j;
-    for (i = 0; i < start.commands.length; i++) {
-      let si = start.commands[i], ei = end.commands[i];
-      //if (!ei.points || !si.args || ei.args.length !== si.args.length) {
-      //  console.warn('Incompatible path interpolation');
-      //  return null;
-      //}
-      interpolatedCommands.push(si.interpolate(ei, fraction));
-    }
-
-    return new SvgPathData(interpolatedCommands);
-  }
-
   constructor();
   constructor(obj: string);
   constructor(obj: Command[]);
@@ -112,6 +75,34 @@ export class SvgPathData {
     this.length_ = length;
     this.bounds_ = bounds;
   }
+
+  isMorphable(start: SvgPathData, end: SvgPathData) {
+    if (!start || !end
+      || !this.commands || !start.commands || !end.commands
+      || this.commands.length !== start.commands.length
+      || start.commands.length !== end.commands.length) {
+      return false;
+    }
+    for (let i = 0; i < start.commands.length; i++) {
+      const si = start.commands[i];
+      const ei = end.commands[i];
+      if (this.commands[i].constructor !== si.constructor || si.constructor !== ei.constructor) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  interpolate(start: SvgPathData, end: SvgPathData, fraction: number) {
+    if (!this.isMorphable(start, end)) {
+      return null;
+    }
+    for (let i = 0; i < start.commands.length; i++) {
+      const si = start.commands[i];
+      const ei = end.commands[i];
+      this.commands[i].interpolate(si, ei, fraction);
+    }
+  }
 }
 
 
@@ -137,10 +128,6 @@ function computePathLengthAndBounds_(commands: Command[]) {
   let firstPoint = null;
   let currentPoint = new Point(0, 0);
 
-  let dist_ = (p1: Point, p2: Point) => {
-    return Math.sqrt(Math.pow(p2.y - p1.y, 2) + Math.pow(p2.x - p1.x, 2));
-  };
-
   commands.forEach(command => {
     if (command instanceof MoveCommand) {
       const nextPoint = command.points[1];
@@ -153,14 +140,14 @@ function computePathLengthAndBounds_(commands: Command[]) {
 
     else if (command instanceof LineCommand) {
       const nextPoint = command.points[1];
-      length += dist_(nextPoint, currentPoint);
+      length += nextPoint.distanceTo(currentPoint);
       currentPoint = nextPoint;
       expandBounds_(nextPoint.x, nextPoint.y);
     }
 
     else if (command instanceof ClosePathCommand) {
       if (firstPoint) {
-        length += dist_(firstPoint, currentPoint);
+        length += firstPoint.distanceTo(currentPoint);
       }
       firstPoint = null;
     }
@@ -195,7 +182,7 @@ function computePathLengthAndBounds_(commands: Command[]) {
 
       if (rx === 0 || ry === 0) {
         // degenerate to line
-        length += dist_(new Point(currentPointX, currentPointY), new Point(tempPoint1X, tempPoint1Y));
+        length += new Point(currentPointX, currentPointY).distanceTo(new Point(tempPoint1X, tempPoint1Y));
         expandBounds_(tempPoint1X, tempPoint1Y);
         return;
       }
@@ -213,12 +200,10 @@ function computePathLengthAndBounds_(commands: Command[]) {
           bezierCoords[i + 4], bezierCoords[i + 5],
           bezierCoords[i + 6], bezierCoords[i + 7]);
         length += bez.length();
-        currentPoint.x = bezierCoords[i + 6];
-        currentPoint.y = bezierCoords[i + 7];
+        currentPoint = new Point(bezierCoords[i + 6], bezierCoords[i + 7]);
         expandBoundsToBezier_(bez);
       }
-      currentPoint.x = tempPoint1X;
-      currentPoint.y = tempPoint1Y;
+      currentPoint = new Point(tempPoint1X, tempPoint1Y);
     }
   });
 

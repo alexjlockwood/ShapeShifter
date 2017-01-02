@@ -5,19 +5,18 @@ import {
 } from './svgcommands';
 
 
+// TODO(alockwood): add 'M 0,0' at the beginning if it doesn't exist?
 export function parseCommands(pathString: string) {
-  let commands: Command[] = [];
+  const commands: Command[] = [];
   let index = 0;
   let length = pathString.length;
-  let currentPoint = new Point(NaN, NaN);
+  let currentPoint = new Point(0, 0);
   let currentControlPoint = null; // used for S and T commands
-  let tempPoint1 = new Point(0, 0);
-  let tempPoint2 = new Point(0, 0);
-  let tempPoint3 = new Point(0, 0);
   let firstMove = true;
+  let lastMovePoint = new Point(0, 0);
   let currentToken: Token;
 
-  let advanceToNextToken_: () => Token = () => {
+  const advanceToNextToken_: (() => Token) = () => {
     while (index < length) {
       const c = pathString.charAt(index);
       if ('a' <= c && c <= 'z') {
@@ -30,11 +29,10 @@ export function parseCommands(pathString: string) {
       // skip unrecognized character
       index++;
     }
-
     return (currentToken = Token.EOF);
   };
 
-  let consumeCommand_ = () => {
+  const consumeCommand_ = () => {
     advanceToNextToken_();
     if (currentToken !== Token.RelativeCommand && currentToken !== Token.AbsoluteCommand) {
       throw new Error('Expected command');
@@ -42,16 +40,17 @@ export function parseCommands(pathString: string) {
     return pathString.charAt(index++);
   };
 
-  let consumePoint_ = (out: Point, relative: boolean) => {
-    out.x = consumeValue_();
-    out.y = consumeValue_();
+  const consumePoint_ = (relative: boolean): Point => {
+    let x = consumeValue_();
+    let y = consumeValue_();
     if (relative) {
-      out.x += currentPoint.x;
-      out.y += currentPoint.y;
+      x += currentPoint.x;
+      y += currentPoint.y;
     }
+    return new Point(x, y);
   };
 
-  let consumeValue_ = () => {
+  const consumeValue_ = () => {
     advanceToNextToken_();
     if (currentToken !== Token.Value) {
       throw new Error('Expected value');
@@ -90,29 +89,31 @@ export function parseCommands(pathString: string) {
 
   while (index < length) {
     const commandChar = consumeCommand_();
-    const relative = (currentToken === Token.RelativeCommand);
+    const relative = currentToken === Token.RelativeCommand;
 
     switch (commandChar) {
       case 'M':
       case 'm': {
         // move command
         let firstPoint = true;
+        let tempPoint1 = new Point(0, 0);
         while (advanceToNextToken_() === Token.Value) {
-          consumePoint_(tempPoint1, relative && !isNaN(currentPoint.x));
+         tempPoint1 = consumePoint_(relative && !firstMove);
           if (firstPoint) {
-            commands.push(new MoveCommand(new Point(0, 0), tempPoint1));
+            commands.push(new MoveCommand(currentPoint, tempPoint1));
             firstPoint = false;
             if (firstMove) {
-              currentPoint = Point.from(tempPoint1);
+              currentPoint = tempPoint1;
               firstMove = false;
             }
+            lastMovePoint = tempPoint1;
           } else {
             commands.push(new LineCommand(currentPoint, tempPoint1));
           }
         }
 
         currentControlPoint = null;
-        currentPoint = Point.from(tempPoint1);
+        currentPoint = tempPoint1;
         break;
       }
 
@@ -124,13 +125,13 @@ export function parseCommands(pathString: string) {
         }
 
         while (advanceToNextToken_() === Token.Value) {
-          consumePoint_(tempPoint1, relative);
-          consumePoint_(tempPoint2, relative);
-          consumePoint_(tempPoint3, relative);
+          const tempPoint1 = consumePoint_(relative);
+          const tempPoint2 = consumePoint_(relative);
+          const tempPoint3 = consumePoint_(relative);
           commands.push(new BezierCurveCommand(currentPoint, tempPoint1, tempPoint2, tempPoint3));
 
-          currentControlPoint = Point.from(tempPoint2);
-          currentPoint = Point.from(tempPoint3);
+          currentControlPoint = tempPoint2;
+          currentPoint = tempPoint3;
         }
 
         break;
@@ -144,18 +145,20 @@ export function parseCommands(pathString: string) {
         }
 
         while (advanceToNextToken_() === Token.Value) {
-          consumePoint_(tempPoint1, relative);
-          consumePoint_(tempPoint2, relative);
+          const tempPoint1 = consumePoint_(relative);
+          const tempPoint2 = consumePoint_(relative);
+          let tempPoint3;
           if (currentControlPoint) {
-            tempPoint3.x = currentPoint.x + (currentPoint.x - currentControlPoint.x);
-            tempPoint3.y = currentPoint.y + (currentPoint.y - currentControlPoint.y);
+            const x = currentPoint.x + (currentPoint.x - currentControlPoint.x);
+            const y = currentPoint.y + (currentPoint.y - currentControlPoint.y);
+            tempPoint3 = new Point(x, y);
           } else {
-            tempPoint3 = Point.from(tempPoint1);
+            tempPoint3 = tempPoint1;
           }
           commands.push(new BezierCurveCommand(currentPoint, tempPoint3, tempPoint1, tempPoint2));
 
-          currentControlPoint = Point.from(tempPoint1);
-          currentPoint = Point.from(tempPoint2);
+          currentControlPoint = tempPoint1;
+          currentPoint = tempPoint2;
         }
 
         break;
@@ -169,12 +172,12 @@ export function parseCommands(pathString: string) {
         }
 
         while (advanceToNextToken_() === Token.Value) {
-          consumePoint_(tempPoint1, relative);
-          consumePoint_(tempPoint2, relative);
+          const tempPoint1 = consumePoint_(relative);
+          const tempPoint2 = consumePoint_(relative);
           commands.push(new QuadraticCurveCommand(currentPoint, tempPoint1, tempPoint2));
 
-          currentControlPoint = Point.from(tempPoint1);
-          currentPoint = Point.from(tempPoint2);
+          currentControlPoint = tempPoint1;
+          currentPoint = tempPoint2;
         }
 
         break;
@@ -188,17 +191,19 @@ export function parseCommands(pathString: string) {
         }
 
         while (advanceToNextToken_() === Token.Value) {
-          consumePoint_(tempPoint1, relative);
+          const tempPoint1 = consumePoint_(relative);
+          let tempPoint2;
           if (currentControlPoint) {
-            tempPoint2.x = currentPoint.x + (currentPoint.x - currentControlPoint.x);
-            tempPoint2.y = currentPoint.y + (currentPoint.y - currentControlPoint.y);
+            const x = currentPoint.x + (currentPoint.x - currentControlPoint.x);
+            const y = currentPoint.y + (currentPoint.y - currentControlPoint.y);
+            tempPoint2 = new Point(x, y);
           } else {
-            tempPoint2 = Point.from(tempPoint1);
+            tempPoint2 = tempPoint1;
           }
           commands.push(new QuadraticCurveCommand(currentPoint, tempPoint2, tempPoint1));
 
-          currentControlPoint = Point.from(tempPoint2);
-          currentPoint = Point.from(tempPoint1);
+          currentControlPoint = tempPoint2;
+          currentPoint = tempPoint1;
         }
 
         break;
@@ -212,11 +217,11 @@ export function parseCommands(pathString: string) {
         }
 
         while (advanceToNextToken_() === Token.Value) {
-          consumePoint_(tempPoint1, relative);
+          const tempPoint1 = consumePoint_(relative);
           commands.push(new LineCommand(currentPoint, tempPoint1));
 
           currentControlPoint = null;
-          currentPoint = Point.from(tempPoint1);
+          currentPoint = tempPoint1;
         }
 
         break;
@@ -230,15 +235,16 @@ export function parseCommands(pathString: string) {
         }
 
         while (advanceToNextToken_() === Token.Value) {
-          tempPoint1.x = consumeValue_();
-          tempPoint1.y = currentPoint.y;
+          let x = consumeValue_();
+          const y = currentPoint.y;
           if (relative) {
-            tempPoint1.x += currentPoint.x;
+            x += currentPoint.x;
           }
+          const tempPoint1 = new Point(x, y);
           commands.push(new LineCommand(currentPoint, tempPoint1));
 
           currentControlPoint = null;
-          currentPoint = Point.from(tempPoint1);
+          currentPoint = tempPoint1;
         }
         break;
       }
@@ -251,12 +257,12 @@ export function parseCommands(pathString: string) {
         }
 
         while (advanceToNextToken_() === Token.Value) {
-          let rx = consumeValue_();
-          let ry = consumeValue_();
-          let xAxisRotation = consumeValue_();
-          let largeArcFlag = consumeValue_();
-          let sweepFlag = consumeValue_();
-          consumePoint_(tempPoint1, relative);
+          const rx = consumeValue_();
+          const ry = consumeValue_();
+          const xAxisRotation = consumeValue_();
+          const largeArcFlag = consumeValue_();
+          const sweepFlag = consumeValue_();
+          const tempPoint1 = consumePoint_(relative);
 
           commands.push(new EllipticalArcCommand(
             currentPoint.x, currentPoint.y,
@@ -264,11 +270,8 @@ export function parseCommands(pathString: string) {
             xAxisRotation, largeArcFlag, sweepFlag,
             tempPoint1.x, tempPoint1.y));
 
-          // pp.addMarkerAngle(halfWay, ah - dir * Math.PI / 2);
-          // pp.addMarkerAngle(tempPoint1, ah - dir * Math.PI);
-
           currentControlPoint = null;
-          currentPoint = Point.from(tempPoint1);
+          currentPoint = tempPoint1;
         }
         break;
       }
@@ -281,15 +284,16 @@ export function parseCommands(pathString: string) {
         }
 
         while (advanceToNextToken_() === Token.Value) {
-          tempPoint1.y = consumeValue_();
-          tempPoint1.x = currentPoint.x;
+          const x = currentPoint.x;
+          let y = consumeValue_();
           if (relative) {
-            tempPoint1.y += currentPoint.y;
+            y += currentPoint.y;
           }
+          const tempPoint1 = new Point(x, y);
           commands.push(new LineCommand(currentPoint, tempPoint1));
 
           currentControlPoint = null;
-          currentPoint = Point.from(tempPoint1);
+          currentPoint = tempPoint1;
         }
         break;
       }
@@ -297,10 +301,14 @@ export function parseCommands(pathString: string) {
       case 'Z':
       case 'z': {
         // close command
-        commands.push(new ClosePathCommand());
+        commands.push(new ClosePathCommand(currentPoint, lastMovePoint));
         break;
       }
     }
+  }
+
+  if (!commands.length || !(commands[0] instanceof MoveCommand)) {
+    commands.unshift(new MoveCommand(new Point(0, 0), new Point(0, 0)));
   }
 
   return commands;
@@ -329,7 +337,7 @@ export function commandsToString(commands: Command[]) {
     }
 
     const pointsToNumberList_ = (...points: Point[]) => points.reduce((list, p) => list.concat(p.x, p.y), []);
-    const args = pointsToNumberList_(...command.points.slice(1));
+    const args = pointsToNumberList_(...(command instanceof ClosePathCommand ? [] : command.points.slice(1)));
     tokens.splice(tokens.length, 0, ...args.map(n => Number(n.toFixed(3)).toString()));
   });
 
