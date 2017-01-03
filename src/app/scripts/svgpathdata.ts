@@ -5,7 +5,7 @@ import {
   BezierCurveCommand, EllipticalArcCommand, ClosePathCommand
 } from './svgcommands';
 import * as SvgUtil from './svgutil';
-import * as SvgParser from './svgparser';
+import * as PathParser from './pathparser';
 
 
 export class SvgPathData {
@@ -36,7 +36,7 @@ export class SvgPathData {
 
   set pathString(path: string) {
     this.pathString_ = path;
-    this.commands_ = SvgParser.parseCommands(path);
+    this.commands_ = PathParser.parseCommands(path);
     let {length, bounds} = computePathLengthAndBounds_(this.commands_);
     this.length_ = length;
     this.bounds_ = bounds;
@@ -52,7 +52,7 @@ export class SvgPathData {
 
   set commands(value) {
     this.commands_ = (value ? value.slice() : []);
-    this.pathString_ = SvgParser.commandsToString(this.commands_);
+    this.pathString_ = PathParser.commandsToString(this.commands_);
     let {length, bounds} = computePathLengthAndBounds_(this.commands_);
     this.length_ = length;
     this.bounds_ = bounds;
@@ -70,7 +70,7 @@ export class SvgPathData {
 
   transform(transforms: Matrix[]) {
     this.commands_.forEach(c => c.transform(transforms));
-    this.pathString_ = SvgParser.commandsToString(this.commands_);
+    this.pathString_ = PathParser.commandsToString(this.commands_);
     let { length, bounds } = computePathLengthAndBounds_(this.commands_);
     this.length_ = length;
     this.bounds_ = bounds;

@@ -6,7 +6,7 @@ import {
 
 
 // TODO(alockwood): add 'M 0,0' at the beginning if it doesn't exist?
-export function parseCommands(pathString: string) {
+export function parseCommands(pathString: string): Command[] {
   const commands: Command[] = [];
   let index = 0;
   let length = pathString.length;
