@@ -5,7 +5,7 @@ import {
   Command, MoveCommand, LineCommand, QuadraticCurveCommand,
   BezierCurveCommand, EllipticalArcCommand, ClosePathCommand
 } from './../scripts/svgcommands';
-import { StateService } from './../state.service';
+import { StateService, VectorLayerType } from './../state.service';
 import { Subscription } from 'rxjs/Subscription';
 
 
@@ -15,7 +15,7 @@ import { Subscription } from 'rxjs/Subscription';
   styleUrls: ['./pointlist.component.scss']
 })
 export class PointListComponent implements OnInit, OnDestroy {
-  @Input() vectorLayerKey: string;
+  @Input() vectorLayerType: VectorLayerType;
   private commands_: string[] = [];
   private pathLayer_: PathLayer;
   private subscription: Subscription;
@@ -24,7 +24,7 @@ export class PointListComponent implements OnInit, OnDestroy {
   constructor(private stateService: StateService) { }
 
   ngOnInit() {
-    this.subscription = this.stateService.subscribeToVectorLayer(this.vectorLayerKey, layer => {
+    this.subscription = this.stateService.subscribeToVectorLayer(this.vectorLayerType, layer => {
       if (!layer) {
         return;
       }
@@ -95,7 +95,7 @@ export class PointListComponent implements OnInit, OnDestroy {
     newCommands.push(new ClosePathCommand(lastEndpoint, commands[0].points[1]));
 
     this.pathLayer.pathData = new SvgPathData(newCommands);
-    this.stateService.setVectorLayer(this.vectorLayerKey, this.vectorLayer);
+    this.stateService.setVectorLayer(this.vectorLayerType, this.vectorLayer);
   }
 
   onShiftBackwardPointsClick() { }

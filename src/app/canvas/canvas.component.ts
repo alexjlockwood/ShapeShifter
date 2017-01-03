@@ -9,7 +9,7 @@ import * as $ from 'jquery';
 import * as erd from 'element-resize-detector';
 import { Point, Matrix } from './../scripts/mathutil';
 import { Command, ClosePathCommand } from './../scripts/svgcommands';
-import { StateService } from './../state.service';
+import { StateService, VectorLayerType } from './../state.service';
 import { Subscription } from 'rxjs/Subscription';
 
 
@@ -24,7 +24,7 @@ const ELEMENT_RESIZE_DETECTOR = erd();
   styleUrls: ['./canvas.component.scss']
 })
 export class CanvasComponent implements AfterViewInit, OnDestroy {
-  @Input() vectorLayerKey: string;
+  @Input() vectorLayerType: VectorLayerType;
 
   private vectorLayer_: VectorLayer;
   private shouldLabelPoints_ = false;
@@ -53,7 +53,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         this.resizeAndDraw();
       }
     });
-    this.subscription = this.stateService.subscribeToVectorLayer(this.vectorLayerKey, layer => {
+    this.subscription = this.stateService.subscribeToVectorLayer(this.vectorLayerType, layer => {
       if (!layer) {
         return;
       }

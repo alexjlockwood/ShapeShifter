@@ -6,7 +6,7 @@ import { Point } from './scripts/mathutil';
 import { Command, MoveCommand, LineCommand, ClosePathCommand } from './scripts/svgcommands';
 import { Subscription } from 'rxjs/Subscription';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
-import { StateService } from './state.service';
+import { StateService, VectorLayerType } from './state.service';
 
 
 const debugMode = true;
@@ -17,10 +17,9 @@ const debugMode = true;
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent implements OnInit {
-  // These are identical to the constants defined in StateService.
-  private readonly start = 'start';
-  private readonly preview = 'preview';
-  private readonly end = 'end';
+  private readonly startVectorLayerType = VectorLayerType.Start;
+  private readonly previewVectorLayerType = VectorLayerType.Preview;
+  private readonly endVectorLayerType = VectorLayerType.End;
 
   private selectedCommands: Command[] = [];
   private isPathMorphable = true;
@@ -98,28 +97,28 @@ export class AppComponent implements OnInit {
     this.selectedCommands = selectedCommands;
   }
 
-  get startVectorLayer() {
-    return this.stateService.getVectorLayer(this.start);
+  private get startVectorLayer() {
+    return this.stateService.getVectorLayer(this.startVectorLayerType);
   }
 
-  set startVectorLayer(vectorLayer: VectorLayer) {
-    this.stateService.setVectorLayer(this.start, vectorLayer);
+  private set startVectorLayer(vectorLayer: VectorLayer) {
+    this.stateService.setVectorLayer(this.startVectorLayerType, vectorLayer);
   }
 
-  get previewVectorLayer() {
-    return this.stateService.getVectorLayer(this.preview);
+  private get previewVectorLayer() {
+    return this.stateService.getVectorLayer(this.previewVectorLayerType);
   }
 
-  set previewVectorLayer(vectorLayer: VectorLayer) {
-    this.stateService.setVectorLayer(this.preview, vectorLayer);
+  private set previewVectorLayer(vectorLayer: VectorLayer) {
+    this.stateService.setVectorLayer(this.previewVectorLayerType, vectorLayer);
   }
 
-  get endVectorLayer() {
-    return this.stateService.getVectorLayer(this.end);
+  private get endVectorLayer() {
+    return this.stateService.getVectorLayer(this.endVectorLayerType);
   }
 
-  set endVectorLayer(vectorLayer: VectorLayer) {
-    this.stateService.setVectorLayer(this.end, vectorLayer);
+  private set endVectorLayer(vectorLayer: VectorLayer) {
+    this.stateService.setVectorLayer(this.endVectorLayerType, vectorLayer);
   }
 
   private initDebugMode() {

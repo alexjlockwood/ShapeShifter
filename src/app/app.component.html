@@ -5,15 +5,15 @@
     <div fxLayout="row"
       fxLayoutAlign="space-around">
       <app-canvas fxFlex="30%"
-        [vectorLayerKey]="start"
+        [vectorLayerType]="startVectorLayerType"
         [shouldLabelPoints]="shouldLabelPoints"></app-canvas>
       <app-canvas fxFlex="30%"
-        [vectorLayerKey]="preview"
+        [vectorLayerType]="previewVectorLayerType"
         [shouldLabelPoints]="shouldLabelPoints"
         [selectedCommands]="selectedCommands"
         (selectedCommandsChangedEmitter)="onSelectedCommandsChanged($event)"></app-canvas>
       <app-canvas fxFlex="30%"
-        [vectorLayerKey]="end"
+        [vectorLayerType]="endVectorLayerType"
         [shouldLabelPoints]="shouldLabelPoints"></app-canvas>
     </div>
     <app-timeline [isPathMorphable]="isPathMorphable"
@@ -23,11 +23,11 @@
     <div fxLayout="row"
       fxLayoutAlign="space-around">
       <app-pointlist fxFlex="30%"
-        [vectorLayerKey]="start"></app-pointlist>
+        [vectorLayerType]="startVectorLayerType"></app-pointlist>
       <app-pointlist fxFlex="30%"
-        [vectorLayerKey]="preview"></app-pointlist>
+        [vectorLayerType]="previewVectorLayerType"></app-pointlist>
       <app-pointlist fxFlex="30%"
-        [vectorLayerKey]="end"></app-pointlist>
+        [vectorLayerType]="endVectorLayerType"></app-pointlist>
     </div>
   </div>
   <div *ngIf="!shouldDisplayCanvases()"
