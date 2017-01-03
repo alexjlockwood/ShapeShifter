@@ -272,13 +272,14 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     const points = [];
     layer.pathData.commands.forEach(c => {
       if (!(c instanceof ClosePathCommand)) {
-        points.push(c.points[c.points.length - 1]);
+        points.push(c.end);
       }
     });
 
     ctx.save();
     const matrices = Array.from(transforms).reverse();
     points.forEach((p, index) => {
+      //console.log(layer.pathData.pathString, p);
       p = p.transform(...matrices);
       const color = 'green';
       const radius = 32;

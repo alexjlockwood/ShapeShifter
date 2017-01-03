@@ -23,11 +23,11 @@
     <div fxLayout="row"
       fxLayoutAlign="space-around">
       <app-pointlist fxFlex="30%"
-        [pathLayer]="startPathLayer"></app-pointlist>
+        [pathLayerStream]="startPathLayerStream"></app-pointlist>
       <app-pointlist fxFlex="30%"
-        [pathLayer]="previewPathLayer"></app-pointlist>
+        [pathLayerStream]="previewPathLayerStream"></app-pointlist>
       <app-pointlist fxFlex="30%"
-        [pathLayer]="endPathLayer"
+        [pathLayerStream]="endPathLayerStream"
         (pointListReversedEmitter)="onPointListReversed($event)"></app-pointlist>
     </div>
   </div>

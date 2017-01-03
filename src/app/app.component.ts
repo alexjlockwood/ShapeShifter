@@ -1,9 +1,13 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Layer, VectorLayer, GroupLayer, PathLayer } from './scripts/models';
 import * as SvgLoader from './scripts/svgloader';
 import { SvgPathData } from './scripts/svgpathdata';
 import { Point } from './scripts/mathutil';
 import { Command, MoveCommand, LineCommand, ClosePathCommand } from './scripts/svgcommands';
+import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+import { Observable } from 'rxjs/Observable';
+import { Subscription } from 'rxjs/Subscription';
+import { StateService } from './state.service';
 
 
 const debugMode = true;
@@ -13,24 +17,45 @@ const debugMode = true;
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
-export class AppComponent implements OnInit {
+export class AppComponent implements OnInit, OnDestroy {
   private startVectorLayer: VectorLayer;
   private previewVectorLayer: VectorLayer;
   private endVectorLayer_: VectorLayer;
+  private startPathLayerSource = new BehaviorSubject<PathLayer>(undefined);
+  private previewPathLayerSource = new BehaviorSubject<PathLayer>(undefined);
+  private endPathLayerSource = new BehaviorSubject<PathLayer>(undefined);;
+  startPathLayerStream = this.startPathLayerSource.asObservable();
+  previewPathLayerStream = this.previewPathLayerSource.asObservable();
+  endPathLayerStream = this.endPathLayerSource.asObservable();
   private endPathLayer_: PathLayer;
   private selectedCommands: Command[] = [];
   private isPathMorphable = true;
   private shouldLabelPoints = true;
   private areVectorLayersCompatible = false;
+  private subscriptions: Subscription[] = [];
+
+  constructor(private stateService: StateService) { }
 
   ngOnInit() {
     if (debugMode) {
       this.initDebugMode();
     }
+
+    this.subscriptions.push(...[
+      this.stateService.getStartLayerSubscription(l => this.startVectorLayer = l),
+      this.stateService.getPreviewLayerSubscription(l => this.previewVectorLayer = l),
+      this.stateService.getEndLayerSubscription(l => this.endVectorLayer = l),
+    ]);
   }
 
+  ngOnDestroy() {
+    this.subscriptions.forEach(s => s.unsubscribe());
+  }
+
+  // Called by the dropsvg component.
   onStartSvgTextLoaded(svgText: string) {
     this.startVectorLayer = SvgLoader.loadVectorLayerFromSvgString(svgText);
+    this.previewVectorLayer = SvgLoader.loadVectorLayerFromSvgString(svgText);
     this.maybeDisplayPreview();
   }
 
@@ -48,7 +73,6 @@ export class AppComponent implements OnInit {
     }
     if (this.shouldDisplayCanvases()) {
       this.isPathMorphable = this.startVectorLayer.isMorphableWith(this.endVectorLayer);
-      this.previewVectorLayer = this.startVectorLayer.deepCopy();
     }
   }
 
@@ -127,6 +151,8 @@ export class AppComponent implements OnInit {
 
   set endPathLayer(pathLayer: PathLayer) {
     this.endPathLayer_ = pathLayer;
+    console.log('emitting thingy');
+    this.endPathLayerSource.next(pathLayer);
   }
 
   get endPathLayer() {
@@ -134,33 +160,45 @@ export class AppComponent implements OnInit {
   }
 
   onPointListReversed(pathLayer: PathLayer) {
+    console.log(pathLayer);
     // TODO(alockwood): relax these preconditions...
     const commands = pathLayer.pathData.commands;
-    if (commands.length < 2) {
+    const numCommands = commands.length;
+    if (numCommands < 1) {
       return;
     }
-    if (!(commands[0] instanceof MoveCommand)) {
+    const firstCommand = commands[0];
+    const lastCommand = commands[numCommands - 1];
+    if (!(firstCommand instanceof MoveCommand)) {
       return;
     }
-    if (!(commands[commands.length - 1] instanceof ClosePathCommand)) {
-      return;
-    }
-    const newCommands = [];
-    newCommands.push(commands[0]);
-    let lastEndpoint = commands[0].points[1];
-    for (let i = commands.length - 2; i >= 1; i--) {
-      const endPoint = commands[i].points[1];
-      newCommands.push(new LineCommand(lastEndpoint, endPoint));
-      lastEndpoint = endPoint;
-    }
-    newCommands.push(new ClosePathCommand(lastEndpoint, commands[0].points[1]));
 
+    const endsWithClosePath = lastCommand instanceof ClosePathCommand;
+    console.log(endsWithClosePath);
+
+    const newCommands = [];
+    newCommands.push(new MoveCommand(firstCommand.start, lastCommand.end));
+    for (let i = numCommands - 1; i >= 1; i--) {
+      const command = commands[i];
+      if (endsWithClosePath && i === 1) {
+        newCommands.push(new ClosePathCommand(command.end, command.start));
+      } else if (endsWithClosePath && i === numCommands - 1) {
+        newCommands.push(new LineCommand(command.end, command.start));
+      } else {
+        command.reverse();
+        newCommands.push(command);
+      }
+    }
+    for (let i = 0; i < newCommands.length; i++) {
+      //console.log(newCommands[i], newCommands[i].points.toString());
+    }
     pathLayer.pathData = new SvgPathData(newCommands);
-    this.endVectorLayer = Object.create(this.endVectorLayer);
+    this.endPathLayer = pathLayer;//.deepCopy(); // TODO(alockwood): don't do this...
+    //this.endVectorLayer = this.endVectorLayer.deepCopy(); // TODO(alockwood): don't do this...
   }
 
   private initDebugMode() {
-     this.onEndSvgTextLoaded(`
+    this.onStartSvgTextLoaded(`
       <svg xmlns="http://www.w3.org/2000/svg"
         width="24px"
         height="24px"
@@ -168,7 +206,7 @@ export class AppComponent implements OnInit {
         <path d="M 5 11 L 11 11 L 11 5 L 13 5 L 13 11 L 19 11 L 19 13 L 13 13 L 13 19 L 11 19 L 11 13 L 5 13 Z"
           fill="#000" />
       </svg>`);
-    this.onStartSvgTextLoaded(`
+    this.onEndSvgTextLoaded(`
       <svg xmlns="http://www.w3.org/2000/svg"
         width="24px"
         height="24px"

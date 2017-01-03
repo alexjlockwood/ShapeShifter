@@ -3,21 +3,60 @@ import { Matrix } from './mathutil';
 
 
 export interface Layer {
+  parent: Layer | null;
   children: Layer[] | null;
   id: string;
-  deepCopy<T extends Layer>(): T;
+  remove();
+  replace(layer: Layer);
   findLayerById(id: string): Layer | null;
   isStructurallyIdenticalWith(layer: Layer): boolean;
   isMorphableWith(layer: Layer): boolean;
 }
 
 abstract class AbstractLayer implements Layer {
+  private parent_: Layer | null;
+
   constructor(
     public children: Layer[] | null,
     public id: string,
   ) { }
 
-  abstract deepCopy<T extends Layer>(): T;
+  set parent(parent: Layer | null) {
+    this.parent_ = parent;
+  }
+
+  get parent() {
+    return this.parent_;
+  }
+
+  remove() {
+    if (!this.parent || !this.parent.children) {
+      console.warn('Attempt to remove a layer with no parent or a parent with no children');
+      return;
+    }
+    const index = this.parent.children.indexOf(this);
+    if (index < 0) {
+      console.warn('Failed to remove layer');
+      return;
+    }
+    this.parent.children.splice(index, 1);
+    this.parent = null;
+  }
+
+  replace(layer: Layer) {
+    if (!this.parent || !this.parent.children) {
+      console.warn('Attempt to replace a layer with no parent or a parent with no children');
+      return;
+    }
+    const index = this.parent.children.indexOf(this);
+    if (index < 0) {
+      console.warn('Failed to replace layer');
+      return;
+    }
+    this.parent.children[index] = layer;
+    layer.parent = this.parent;
+    this.parent = null;
+  }
 
   findLayerById(id: string): Layer | null {
     if (this.id === id) {
@@ -67,7 +106,7 @@ abstract class AbstractLayer implements Layer {
 
 export class PathLayer extends AbstractLayer {
   constructor(
-    public id: string,
+    id: string,
     public pathData: SvgPathData,
     public fillColor: string | null,
     public fillAlpha = 1,
@@ -83,44 +122,21 @@ export class PathLayer extends AbstractLayer {
   ) {
     super(null, id);
   }
-
-  deepCopy<T extends Layer>(): PathLayer {
-    return new PathLayer(
-      this.id,
-      new SvgPathData(this.pathData),
-      this.fillColor,
-      this.fillAlpha,
-      this.strokeColor,
-      this.strokeAlpha,
-      this.strokeWidth,
-      this.strokeLinecap,
-      this.strokeLinejoin,
-      this.strokeMiterLimit,
-      this.trimPathStart,
-      this.trimPathEnd,
-      this.trimPathOffset);
-  }
 }
 
 export class ClipPathLayer extends AbstractLayer {
   constructor(
-    public id: string,
+    id: string,
     public pathData: SvgPathData,
   ) {
     super(null, id);
-  }
-
-  deepCopy<T extends Layer>() {
-    return new ClipPathLayer(
-      this.id,
-      this.pathData);
   }
 }
 
 export class GroupLayer extends AbstractLayer {
   constructor(
-    public children: Layer[] | null,
-    public id: string,
+    children: Layer[] | null,
+    id: string,
     public pivotX = 0,
     public pivotY = 0,
     public rotation = 0,
@@ -132,22 +148,9 @@ export class GroupLayer extends AbstractLayer {
     super(children || [], id);
   }
 
-  deepCopy<T extends Layer>() {
-    return new GroupLayer(
-      this.children.map(c => c.deepCopy()),
-      this.id,
-      this.pivotX,
-      this.pivotY,
-      this.rotation,
-      this.scaleX,
-      this.scaleY,
-      this.translateX,
-      this.translateY);
-  }
-
   toMatrices() {
-    let cosr = Math.cos(this.rotation * Math.PI / 180);
-    let sinr = Math.sin(this.rotation * Math.PI / 180);
+    const cosr = Math.cos(this.rotation * Math.PI / 180);
+    const sinr = Math.sin(this.rotation * Math.PI / 180);
     return [
       new Matrix(1, 0, 0, 1, this.pivotX, this.pivotY),
       new Matrix(1, 0, 0, 1, this.translateX, this.translateY),
@@ -160,8 +163,8 @@ export class GroupLayer extends AbstractLayer {
 
 export class VectorLayer extends AbstractLayer {
   constructor(
-    public children: Layer[] | null,
-    public id: string,
+    children: Layer[] | null,
+    id: string,
     public width = 0,
     public height = 0,
     public alpha = 1,
@@ -169,12 +172,11 @@ export class VectorLayer extends AbstractLayer {
     super(children || [], id);
   }
 
-  deepCopy<T extends Layer>() {
-    return new VectorLayer(
-      this.children.map(c => c.deepCopy()),
-      this.id,
-      this.width,
-      this.height,
-      this.alpha);
+  get parent() {
+    return null;
+  }
+
+  set parent(layer: Layer) {
+    console.warn('Attempt to set a parent on a VectorLayer');
   }
 }
