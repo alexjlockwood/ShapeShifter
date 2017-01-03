@@ -342,7 +342,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     const pointCommands = [];
     layer.pathData.commands.forEach(c => {
       c.points.forEach(p => {
-        if (point.distanceTo(p) <= radius) {
+        if (p && point.distanceTo(p) <= radius) {
           pointCommands.push({
             point: p,
             command: c,

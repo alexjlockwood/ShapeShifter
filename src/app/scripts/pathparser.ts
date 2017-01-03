@@ -7,17 +7,12 @@ import {
 
 // TODO(alockwood): add 'M 0,0' at the beginning if it doesn't exist?
 export function parseCommands(pathString: string): Command[] {
-  const commands: Command[] = [];
   let index = 0;
-  let length = pathString.length;
-  let currentPoint = new Point(0, 0);
-  let currentControlPoint = null; // used for S and T commands
-  let firstMove = true;
-  let lastMovePoint = new Point(0, 0);
+  let currentPoint: Point;
   let currentToken: Token;
 
   const advanceToNextToken_: (() => Token) = () => {
-    while (index < length) {
+    while (index < pathString.length) {
       const c = pathString.charAt(index);
       if ('a' <= c && c <= 'z') {
         return (currentToken = Token.RelativeCommand);
@@ -59,7 +54,7 @@ export function parseCommands(pathString: string): Command[] {
     let start = true;
     let seenDot = false;
     let tempIndex = index;
-    while (tempIndex < length) {
+    while (tempIndex < pathString.length) {
       const c = pathString.charAt(tempIndex);
 
       if (!('0' <= c && c <= '9') && (c !== '.' || seenDot) && (c !== '-' || !start) && c !== 'e') {
@@ -87,51 +82,54 @@ export function parseCommands(pathString: string): Command[] {
     return parseFloat(str);
   };
 
-  while (index < length) {
+  const commands: Command[] = [];
+  let currentControlPoint: Point;
+  let lastMovePoint: Point;
+
+  while (index < pathString.length) {
     const commandChar = consumeCommand_();
     const relative = currentToken === Token.RelativeCommand;
 
     switch (commandChar) {
       case 'M':
       case 'm': {
-        // move command
-        let firstPoint = true;
-        let tempPoint1 = new Point(0, 0);
-        while (advanceToNextToken_() === Token.Value) {
-         tempPoint1 = consumePoint_(relative && !firstMove);
-          if (firstPoint) {
-            commands.push(new MoveCommand(currentPoint, tempPoint1));
-            firstPoint = false;
-            if (firstMove) {
-              currentPoint = tempPoint1;
-              firstMove = false;
-            }
-            lastMovePoint = tempPoint1;
-          } else {
-            commands.push(new LineCommand(currentPoint, tempPoint1));
-          }
+        if (relative && !currentPoint) {
+          throw new Error('Current point must be set for a relative command');
         }
 
-        currentControlPoint = null;
-        currentPoint = tempPoint1;
+        let isFirstPoint = true;
+        while (advanceToNextToken_() === Token.Value) {
+          const nextPoint = consumePoint_(relative);
+
+          if (isFirstPoint) {
+            isFirstPoint = false;
+            commands.push(new MoveCommand(currentPoint, nextPoint));
+            lastMovePoint = nextPoint;
+          } else {
+            commands.push(new LineCommand(currentPoint, nextPoint));
+          }
+
+          currentControlPoint = null;
+          currentPoint = nextPoint;
+        }
+
         break;
       }
 
       case 'C':
       case 'c': {
-        // cubic curve command
-        if (isNaN(currentPoint.x)) {
-          throw new Error('Relative commands require current point');
+        if (!currentPoint) {
+          throw new Error('Current point does not exist');
         }
 
         while (advanceToNextToken_() === Token.Value) {
-          const tempPoint1 = consumePoint_(relative);
-          const tempPoint2 = consumePoint_(relative);
-          const tempPoint3 = consumePoint_(relative);
-          commands.push(new BezierCurveCommand(currentPoint, tempPoint1, tempPoint2, tempPoint3));
+          const cp1 = consumePoint_(relative);
+          const cp2 = consumePoint_(relative);
+          const end = consumePoint_(relative);
+          commands.push(new BezierCurveCommand(currentPoint, cp1, cp2, end));
 
-          currentControlPoint = tempPoint2;
-          currentPoint = tempPoint3;
+          currentControlPoint = cp2;
+          currentPoint = end;
         }
 
         break;
@@ -139,26 +137,25 @@ export function parseCommands(pathString: string): Command[] {
 
       case 'S':
       case 's': {
-        // cubic curve command (string of curves)
-        if (isNaN(currentPoint.x)) {
-          throw new Error('Relative commands require current point');
+        if (!currentPoint) {
+          throw new Error('Current point does not exist');
         }
 
         while (advanceToNextToken_() === Token.Value) {
-          const tempPoint1 = consumePoint_(relative);
-          const tempPoint2 = consumePoint_(relative);
-          let tempPoint3;
+          let cp1;
+          const cp2 = consumePoint_(relative);
+          const end = consumePoint_(relative);
           if (currentControlPoint) {
             const x = currentPoint.x + (currentPoint.x - currentControlPoint.x);
             const y = currentPoint.y + (currentPoint.y - currentControlPoint.y);
-            tempPoint3 = new Point(x, y);
+            cp1 = new Point(x, y);
           } else {
-            tempPoint3 = tempPoint1;
+            cp1 = cp2;
           }
-          commands.push(new BezierCurveCommand(currentPoint, tempPoint3, tempPoint1, tempPoint2));
+          commands.push(new BezierCurveCommand(currentPoint, cp1, cp2, end));
 
-          currentControlPoint = tempPoint1;
-          currentPoint = tempPoint2;
+          currentControlPoint = cp2;
+          currentPoint = end;
         }
 
         break;
@@ -166,18 +163,17 @@ export function parseCommands(pathString: string): Command[] {
 
       case 'Q':
       case 'q': {
-        // quadratic curve command
-        if (isNaN(currentPoint.x)) {
-          throw new Error('Relative commands require current point');
+        if (!currentPoint) {
+          throw new Error('Current point does not exist');
         }
 
         while (advanceToNextToken_() === Token.Value) {
-          const tempPoint1 = consumePoint_(relative);
-          const tempPoint2 = consumePoint_(relative);
-          commands.push(new QuadraticCurveCommand(currentPoint, tempPoint1, tempPoint2));
+          const cp = consumePoint_(relative);
+          const end = consumePoint_(relative);
+          commands.push(new QuadraticCurveCommand(currentPoint, cp, end));
 
-          currentControlPoint = tempPoint1;
-          currentPoint = tempPoint2;
+          currentControlPoint = cp;
+          currentPoint = end;
         }
 
         break;
@@ -185,25 +181,24 @@ export function parseCommands(pathString: string): Command[] {
 
       case 'T':
       case 't': {
-        // quadratic curve command (string of curves)
-        if (isNaN(currentPoint.x)) {
-          throw new Error('Relative commands require current point');
+        if (!currentPoint) {
+          throw new Error('Current point does not exist');
         }
 
         while (advanceToNextToken_() === Token.Value) {
-          const tempPoint1 = consumePoint_(relative);
-          let tempPoint2;
+          let cp;
+          const end = consumePoint_(relative);
           if (currentControlPoint) {
             const x = currentPoint.x + (currentPoint.x - currentControlPoint.x);
             const y = currentPoint.y + (currentPoint.y - currentControlPoint.y);
-            tempPoint2 = new Point(x, y);
+            cp = new Point(x, y);
           } else {
-            tempPoint2 = tempPoint1;
+            cp = end;
           }
-          commands.push(new QuadraticCurveCommand(currentPoint, tempPoint2, tempPoint1));
+          commands.push(new QuadraticCurveCommand(currentPoint, cp, end));
 
-          currentControlPoint = tempPoint2;
-          currentPoint = tempPoint1;
+          currentControlPoint = cp;
+          currentPoint = end;
         }
 
         break;
@@ -211,17 +206,16 @@ export function parseCommands(pathString: string): Command[] {
 
       case 'L':
       case 'l': {
-        // line command
-        if (isNaN(currentPoint.x)) {
-          throw new Error('Relative commands require current point');
+        if (!currentPoint) {
+          throw new Error('Current point does not exist');
         }
 
         while (advanceToNextToken_() === Token.Value) {
-          const tempPoint1 = consumePoint_(relative);
-          commands.push(new LineCommand(currentPoint, tempPoint1));
+          const end = consumePoint_(relative);
+          commands.push(new LineCommand(currentPoint, end));
 
           currentControlPoint = null;
-          currentPoint = tempPoint1;
+          currentPoint = end;
         }
 
         break;
@@ -229,9 +223,8 @@ export function parseCommands(pathString: string): Command[] {
 
       case 'H':
       case 'h': {
-        // horizontal line command
-        if (isNaN(currentPoint.x)) {
-          throw new Error('Relative commands require current point');
+        if (!currentPoint) {
+          throw new Error('Current point does not exist');
         }
 
         while (advanceToNextToken_() === Token.Value) {
@@ -240,20 +233,40 @@ export function parseCommands(pathString: string): Command[] {
           if (relative) {
             x += currentPoint.x;
           }
-          const tempPoint1 = new Point(x, y);
-          commands.push(new LineCommand(currentPoint, tempPoint1));
+          const end = new Point(x, y);
+          commands.push(new LineCommand(currentPoint, end));
 
           currentControlPoint = null;
-          currentPoint = tempPoint1;
+          currentPoint = end;
+        }
+        break;
+      }
+
+      case 'V':
+      case 'v': {
+        if (!currentPoint) {
+          throw new Error('Current point does not exist');
+        }
+
+        while (advanceToNextToken_() === Token.Value) {
+          const x = currentPoint.x;
+          let y = consumeValue_();
+          if (relative) {
+            y += currentPoint.y;
+          }
+          const end = new Point(x, y);
+          commands.push(new LineCommand(currentPoint, end));
+
+          currentControlPoint = null;
+          currentPoint = end;
         }
         break;
       }
 
       case 'A':
       case 'a': {
-        // arc command
-        if (isNaN(currentPoint.x)) {
-          throw new Error('Relative commands require current point');
+        if (!currentPoint) {
+          throw new Error('Current point does not exist');
         }
 
         while (advanceToNextToken_() === Token.Value) {
@@ -276,39 +289,16 @@ export function parseCommands(pathString: string): Command[] {
         break;
       }
 
-      case 'V':
-      case 'v': {
-        // vertical line command
-        if (isNaN(currentPoint.x)) {
-          throw new Error('Relative commands require current point');
-        }
-
-        while (advanceToNextToken_() === Token.Value) {
-          const x = currentPoint.x;
-          let y = consumeValue_();
-          if (relative) {
-            y += currentPoint.y;
-          }
-          const tempPoint1 = new Point(x, y);
-          commands.push(new LineCommand(currentPoint, tempPoint1));
-
-          currentControlPoint = null;
-          currentPoint = tempPoint1;
-        }
-        break;
-      }
-
       case 'Z':
       case 'z': {
-        // close command
+        if (!currentPoint) {
+          throw new Error('Current point does not exist');
+        }
+
         commands.push(new ClosePathCommand(currentPoint, lastMovePoint));
         break;
       }
     }
-  }
-
-  if (!commands.length || !(commands[0] instanceof MoveCommand)) {
-    commands.unshift(new MoveCommand(new Point(0, 0), new Point(0, 0)));
   }
 
   return commands;

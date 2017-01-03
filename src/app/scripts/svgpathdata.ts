@@ -65,10 +65,30 @@ export class SvgPathData {
   /** Draw the path using the specified canvas context. */
   execute(ctx: CanvasRenderingContext2D) {
     ctx.beginPath();
-    this.commands_.forEach(c => c.execute(ctx));
+    this.commands_.forEach(c => {
+      if (c instanceof MoveCommand) {
+        ctx.moveTo(c.points[1].x, c.points[1].y);
+      } else if (c instanceof LineCommand) {
+        ctx.lineTo(c.points[1].x, c.points[1].y);
+      } else if (c instanceof QuadraticCurveCommand) {
+        ctx.quadraticCurveTo(
+          c.points[1].x, c.points[1].y,
+          c.points[2].x, c.points[2].y);
+      } else if (c instanceof BezierCurveCommand) {
+        ctx.bezierCurveTo(
+          c.points[1].x, c.points[1].y,
+          c.points[2].x, c.points[2].y,
+          c.points[3].x, c.points[3].y);
+      } else if (c instanceof EllipticalArcCommand) {
+        SvgUtil.executeArc(ctx, c.args);
+      } else if (c instanceof ClosePathCommand) {
+        ctx.closePath();
+      }
+    });
   }
 
   transform(transforms: Matrix[]) {
+    console.log(this.commands_);
     this.commands_.forEach(c => c.transform(transforms));
     this.pathString_ = PathParser.commandsToString(this.commands_);
     let { length, bounds } = computePathLengthAndBounds_(this.commands_);
