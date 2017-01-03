@@ -1,43 +1,27 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject } from 'rxjs/BehaviorSubject';
-import { VectorLayer } from './scripts/models';
+import { Subject } from 'rxjs/Subject';
+import { Subscription } from 'rxjs/Subscription';
 
 @Injectable()
 export class StateService {
-  private startVectorLayer_: VectorLayer;
-  private previewVectorLayer_: VectorLayer;
-  private endVectorLayer_: VectorLayer;
-  private readonly startSource = new BehaviorSubject<VectorLayer>(undefined);
-  private readonly previewSource = new BehaviorSubject<VectorLayer>(undefined);
-  private readonly endSource = new BehaviorSubject<VectorLayer>(undefined);
-  private readonly startStream = this.startSource.asObservable();
-  private readonly previewStream = this.previewSource.asObservable();
-  private readonly endStream = this.endSource.asObservable();
+  private readonly timelineSliderSource = new Subject<number>();
+  private readonly timelineSliderStream = this.timelineSliderSource.asObservable();
+  private readonly timelineCheckboxSource = new Subject<boolean>();
+  private readonly timelineCheckboxStream = this.timelineCheckboxSource.asObservable();
 
-  getStartLayerSubscription(callback: (layer: VectorLayer) => void) {
-   return this.startStream.subscribe(callback);
+  notifyAnimationFractionChanged(animationFraction: number) {
+    this.timelineSliderSource.next(animationFraction);
   }
 
-  getPreviewLayerSubscription(callback: (layer: VectorLayer) => void) {
-   return this.previewStream.subscribe(callback);
+  notifyShouldLabelPointsChanged(isChecked: boolean) {
+    this.timelineCheckboxSource.next(isChecked);
   }
 
-  getEndLayerSubscription(callback: (layer: VectorLayer) => void) {
-   return this.endStream.subscribe(callback);
+  getAnimationFractionChangedSubscription(callback: (nuanmber) => void): Subscription {
+    return this.timelineSliderSource.subscribe(callback);
   }
 
-  set startVectorLayer(vectorLayer: VectorLayer) {
-    this.startVectorLayer_ = vectorLayer;
-    this.startSource.next(vectorLayer);
-  }
-
-  set previewVectorLayer(vectorLayer: VectorLayer) {
-    this.previewVectorLayer_ = vectorLayer;
-    this.previewSource.next(vectorLayer);
-  }
-
-  set endVectorLayer(vectorLayer: VectorLayer) {
-    this.endVectorLayer_ = vectorLayer;
-    this.endSource.next(vectorLayer);
+  getShouldLabelPointsChangedSubscription(callback: (boolean) => void): Subscription {
+    return this.timelineCheckboxSource.subscribe(callback);
   }
 }

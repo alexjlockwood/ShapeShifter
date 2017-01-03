@@ -8,7 +8,7 @@ export abstract class Command {
 
   protected constructor(svgChar: string, ...points_: Point[]) {
     this.svgChar_ = svgChar;
-    this.points_ = points_;
+    this.points_ = Array.from(points_);
   }
 
   get svgChar() {
@@ -19,19 +19,13 @@ export abstract class Command {
     return this.points_;
   }
 
-  get start() {
-    return this.points_[0];
-  }
-
-  get end() {
-    return this.points_[this.points_.length - 1];
-  }
+  abstract execute(ctx: CanvasRenderingContext2D): void;
 
   abstract interpolate<T extends Command>(start: T, end: T, fraction: number): void;
 
   abstract transform(transforms: Matrix[]): void;
 
-  abstract reverse(): void;
+  //abstract reverse(): void;
 }
 
 export abstract class SimpleCommand extends Command {
@@ -54,15 +48,15 @@ export abstract class SimpleCommand extends Command {
       this.points[i] = this.points[i].transform(...transforms);
     }
   }
-
-  reverse() {
-    this.points.reverse();
-  }
 }
 
 export class MoveCommand extends SimpleCommand {
   constructor(start: Point, end: Point) {
     super('M', start, end);
+  }
+
+  execute(ctx: CanvasRenderingContext2D) {
+    ctx.moveTo(this.points[1].x, this.points[1].y);
   }
 }
 
@@ -70,11 +64,21 @@ export class LineCommand extends SimpleCommand {
   constructor(start: Point, end: Point) {
     super('L', start, end);
   }
+
+  execute(ctx: CanvasRenderingContext2D) {
+    ctx.lineTo(this.points[1].x, this.points[1].y);
+  }
 }
 
 export class QuadraticCurveCommand extends SimpleCommand {
   constructor(start: Point, cp: Point, end: Point) {
     super('Q', start, cp, end);
+  }
+
+  execute(ctx: CanvasRenderingContext2D) {
+    ctx.quadraticCurveTo(
+      this.points[1].x, this.points[1].y,
+      this.points[2].x, this.points[2].y);
   }
 }
 
@@ -82,11 +86,22 @@ export class BezierCurveCommand extends SimpleCommand {
   constructor(start: Point, cp1: Point, cp2: Point, end: Point) {
     super('C', start, cp1, cp2, end);
   }
+
+  execute(ctx: CanvasRenderingContext2D) {
+    ctx.bezierCurveTo(
+      this.points[1].x, this.points[1].y,
+      this.points[2].x, this.points[2].y,
+      this.points[3].x, this.points[3].y);
+  }
 }
 
 export class ClosePathCommand extends SimpleCommand {
   constructor(start: Point, end: Point) {
     super('Z', start, end);
+  }
+
+  execute(ctx: CanvasRenderingContext2D) {
+    ctx.closePath();
   }
 }
 
@@ -97,6 +112,10 @@ export class EllipticalArcCommand extends Command {
   constructor(...args: number[]) {
     super('A', new Point(args[0], args[1]), new Point(args[7], args[8]));
     this.args = args;
+  }
+
+  execute(ctx: CanvasRenderingContext2D) {
+    SvgUtil.executeArc(ctx, this.args);
   }
 
   // TODO(alockwood): implement this somehow?
@@ -122,19 +141,5 @@ export class EllipticalArcCommand extends Command {
     this.args[6] = arc.sweepFlag;
     this.args[7] = arc.endX;
     this.args[8] = arc.endY;
-  }
-
-  // TODO(alockwood): confirm this is right
-  reverse() {
-    const startX = this.args[7];
-    const startY = this.args[8];
-    const endX = this.args[0];
-    const endY = this.args[1];
-    const sweepFlag = this.args[6] === 0 ? 1 : 0;
-    this.args[0] = startX;
-    this.args[1] = startY;
-    this.args[6] = sweepFlag;
-    this.args[7] = endX;
-    this.args[8] = endY;
   }
 }

@@ -18,10 +18,6 @@ export class Point {
   distanceTo(p: Point) {
     return Math.sqrt(Math.pow(this.y - p.y, 2) + Math.pow(this.x - p.x, 2));
   }
-
-  toString() {
-    return `(${this.x},${this.y})`;
-  }
 }
 
 export class Matrix {

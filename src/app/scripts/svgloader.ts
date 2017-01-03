@@ -108,6 +108,7 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
     }
 
     if (path) {
+      // transform all points
       if (context.transforms && context.transforms.length) {
         const pathData = new SvgPathData(path);
         const matrices = context.transforms.map(t => t.matrix);
@@ -115,6 +116,7 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
         path = pathData.pathString;
       }
 
+      // create a path layer
       return new PathLayer(
         makeFinalNodeId_(node, 'path'),
         new SvgPathData(path),
@@ -133,10 +135,12 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
       const layers = Array.from(node.childNodes)
         .map(child => nodeToLayerData_(child, Object.assign({}, context)))
         .filter(layer => !!layer);
-      if (layers.length) {
-        const groupLayer = new GroupLayer(layers, makeFinalNodeId_(node, 'group'));
-        layers.forEach(layer => layer.parent = groupLayer);
-        return groupLayer;
+      if (layers && layers.length) {
+        // create a group (there are valid children)
+        return new GroupLayer(
+          layers,
+          makeFinalNodeId_(node, 'group'),
+        );
       }
     }
 
@@ -152,7 +156,7 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
     width = documentElement.viewBox.baseVal.width;
     height = documentElement.viewBox.baseVal.height;
 
-    // Fake a translate transform for the viewbox.
+    // fake a translate transform for the viewbox
     docElContext.transforms = [
       {
         matrix: {
@@ -172,7 +176,5 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
   const childrenLayers = rootLayer ? rootLayer.children : undefined;
   const alpha = documentElement.getAttribute('opacity') || undefined;
 
-  const vectorLayer = new VectorLayer(childrenLayers, id, width, height, alpha);
-  childrenLayers.forEach(l => l.parent = vectorLayer);
-  return vectorLayer;
+  return new VectorLayer(childrenLayers, id, width, height, alpha);
 }

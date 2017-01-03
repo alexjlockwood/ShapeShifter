@@ -1,12 +1,10 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { Layer, VectorLayer, PathLayer } from './../scripts/models';
 import { SvgPathData } from './../scripts/svgpathdata';
 import {
   Command, MoveCommand, LineCommand, QuadraticCurveCommand,
   BezierCurveCommand, EllipticalArcCommand, ClosePathCommand
 } from './../scripts/svgcommands';
-import { Observable } from 'rxjs/Observable';
-import { Subscription } from 'rxjs/Subscription';
 
 
 @Component({
@@ -14,32 +12,16 @@ import { Subscription } from 'rxjs/Subscription';
   templateUrl: './pointlist.component.html',
   styleUrls: ['./pointlist.component.scss']
 })
-export class PointListComponent implements OnInit, OnDestroy {
+export class PointListComponent {
   private commands_: string[] = [];
   private pathLayer_: PathLayer;
-  private subscription: Subscription;
-
-  @Input() pathLayerStream: Observable<PathLayer>;
   @Output() pointListReversedEmitter = new EventEmitter<PathLayer>();
 
-  ngOnInit() {
-    console.log('ngOnInit()');
-    this.subscription = this.pathLayerStream.subscribe(pathLayer => {
-      if (!pathLayer) {
-        return;
-      }
-      console.log('path layer updated');
-      this.pathLayer = pathLayer;
-    });
-  }
-
-  ngOnDestroy() {
-    this.subscription.unsubscribe();
-  }
+  constructor() { }
 
   // TODO(alockwood): figure out how to handle multiple paths in the vector layer
-  private set pathLayer(pathLayer: PathLayer) {
-    console.log('asdf');
+  @Input()
+  set pathLayer(pathLayer: PathLayer) {
     this.pathLayer_ = pathLayer;
 
     const commands: string[] = [];
