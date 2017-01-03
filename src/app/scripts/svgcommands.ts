@@ -32,7 +32,8 @@ export abstract class SimpleCommand extends Command {
   }
 
   interpolate<T extends SimpleCommand>(start: T, end: T, fraction: number) {
-    for (let i = 0; i < start.points.length; i++) {
+    const startIndex = this instanceof MoveCommand && !this.points[0] ? 1 : 0;
+    for (let i = startIndex; i < start.points.length; i++) {
       const startPoint = start.points[i];
       const endPoint = end.points[i];
       const x = startPoint.x + (endPoint.x - startPoint.x) * fraction;
@@ -42,12 +43,10 @@ export abstract class SimpleCommand extends Command {
   }
 
   transform(transforms: Matrix[]) {
-    for (let i = 0; i < this.points.length; i++) {
+    const startIndex = this instanceof MoveCommand && !this.points[0] ? 1 : 0;
+    for (let i = startIndex; i < this.points.length; i++) {
       const point = this.points[i];
-      if (point) {
-        // The first point in a move command may be undefined.
-        this.points[i] = point.transform(...transforms);
-      }
+      this.points[i] = point.transform(...transforms);
     }
   }
 }

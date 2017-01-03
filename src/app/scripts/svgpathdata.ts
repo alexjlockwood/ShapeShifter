@@ -88,7 +88,6 @@ export class SvgPathData {
   }
 
   transform(transforms: Matrix[]) {
-    console.log(this.commands_);
     this.commands_.forEach(c => c.transform(transforms));
     this.pathString_ = PathParser.commandsToString(this.commands_);
     let { length, bounds } = computePathLengthAndBounds_(this.commands_);

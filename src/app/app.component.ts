@@ -4,6 +4,9 @@ import * as SvgLoader from './scripts/svgloader';
 import { SvgPathData } from './scripts/svgpathdata';
 import { Point } from './scripts/mathutil';
 import { Command, MoveCommand, LineCommand, ClosePathCommand } from './scripts/svgcommands';
+import { Subscription } from 'rxjs/Subscription';
+import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+import { StateService } from './state.service';
 
 
 const debugMode = true;
@@ -14,14 +17,17 @@ const debugMode = true;
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent implements OnInit {
-  private startVectorLayer: VectorLayer;
-  private previewVectorLayer: VectorLayer;
-  private endVectorLayer_: VectorLayer;
-  private endPathLayer_: PathLayer;
+  // These are identical to the constants defined in StateService.
+  private readonly start = 'start';
+  private readonly preview = 'preview';
+  private readonly end = 'end';
+
   private selectedCommands: Command[] = [];
   private isPathMorphable = true;
   private shouldLabelPoints = true;
   private areVectorLayersCompatible = false;
+
+  constructor(private stateService: StateService) { }
 
   ngOnInit() {
     if (debugMode) {
@@ -31,6 +37,7 @@ export class AppComponent implements OnInit {
 
   onStartSvgTextLoaded(svgText: string) {
     this.startVectorLayer = SvgLoader.loadVectorLayerFromSvgString(svgText);
+    this.previewVectorLayer = SvgLoader.loadVectorLayerFromSvgString(svgText);
     this.maybeDisplayPreview();
   }
 
@@ -48,7 +55,6 @@ export class AppComponent implements OnInit {
     }
     if (this.shouldDisplayCanvases()) {
       this.isPathMorphable = this.startVectorLayer.isMorphableWith(this.endVectorLayer);
-      this.previewVectorLayer = this.startVectorLayer.deepCopy();
     }
   }
 
@@ -81,7 +87,7 @@ export class AppComponent implements OnInit {
       }
     };
     animateLayer(this.previewVectorLayer);
-    return Object.create(this.previewVectorLayer);
+    return this.previewVectorLayer;
   }
 
   onSelectedCommandsChanged(selectedCommands: Command[]) {
@@ -92,71 +98,28 @@ export class AppComponent implements OnInit {
     this.selectedCommands = selectedCommands;
   }
 
-  // TODO(alockwood): make this return a list instead?
-  private findFirstPathLayer(layer: Layer): PathLayer | null {
-    if (layer.children) {
-      for (let i = 0; i < layer.children.length; i++) {
-        const pathLayer = this.findFirstPathLayer(layer.children[i]);
-        if (pathLayer) {
-          return pathLayer;
-        }
-      }
-    }
-    if (layer instanceof PathLayer) {
-      return layer;
-    }
-    return null;
+  get startVectorLayer() {
+    return this.stateService.getVectorLayer(this.start);
   }
 
-  get startPathLayer() {
-    return this.findFirstPathLayer(this.startVectorLayer);
+  set startVectorLayer(vectorLayer: VectorLayer) {
+    this.stateService.setVectorLayer(this.start, vectorLayer);
   }
 
-  get previewPathLayer() {
-    return this.findFirstPathLayer(this.previewVectorLayer);
+  get previewVectorLayer() {
+    return this.stateService.getVectorLayer(this.preview);
   }
 
-  set endVectorLayer(vectorLayer: VectorLayer) {
-    this.endVectorLayer_ = vectorLayer;
-    this.endPathLayer = this.findFirstPathLayer(this.endVectorLayer);
+  set previewVectorLayer(vectorLayer: VectorLayer) {
+    this.stateService.setVectorLayer(this.preview, vectorLayer);
   }
 
   get endVectorLayer() {
-    return this.endVectorLayer_;
+    return this.stateService.getVectorLayer(this.end);
   }
 
-  set endPathLayer(pathLayer: PathLayer) {
-    this.endPathLayer_ = pathLayer;
-  }
-
-  get endPathLayer() {
-    return this.endPathLayer_;
-  }
-
-  onPointListReversed(pathLayer: PathLayer) {
-    // TODO(alockwood): relax these preconditions...
-    const commands = pathLayer.pathData.commands;
-    if (commands.length < 2) {
-      return;
-    }
-    if (!(commands[0] instanceof MoveCommand)) {
-      return;
-    }
-    if (!(commands[commands.length - 1] instanceof ClosePathCommand)) {
-      return;
-    }
-    const newCommands = [];
-    newCommands.push(commands[0]);
-    let lastEndpoint = commands[0].points[1];
-    for (let i = commands.length - 2; i >= 1; i--) {
-      const endPoint = commands[i].points[1];
-      newCommands.push(new LineCommand(lastEndpoint, endPoint));
-      lastEndpoint = endPoint;
-    }
-    newCommands.push(new ClosePathCommand(lastEndpoint, commands[0].points[1]));
-
-    pathLayer.pathData = new SvgPathData(newCommands);
-    this.endVectorLayer = Object.create(this.endVectorLayer);
+  set endVectorLayer(vectorLayer: VectorLayer) {
+    this.stateService.setVectorLayer(this.end, vectorLayer);
   }
 
   private initDebugMode() {

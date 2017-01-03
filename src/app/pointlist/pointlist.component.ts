@@ -1,10 +1,12 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
 import { Layer, VectorLayer, PathLayer } from './../scripts/models';
 import { SvgPathData } from './../scripts/svgpathdata';
 import {
   Command, MoveCommand, LineCommand, QuadraticCurveCommand,
   BezierCurveCommand, EllipticalArcCommand, ClosePathCommand
 } from './../scripts/svgcommands';
+import { StateService } from './../state.service';
+import { Subscription } from 'rxjs/Subscription';
 
 
 @Component({
@@ -12,16 +14,43 @@ import {
   templateUrl: './pointlist.component.html',
   styleUrls: ['./pointlist.component.scss']
 })
-export class PointListComponent {
+export class PointListComponent implements OnInit, OnDestroy {
+  @Input() vectorLayerKey: string;
   private commands_: string[] = [];
   private pathLayer_: PathLayer;
-  @Output() pointListReversedEmitter = new EventEmitter<PathLayer>();
+  private subscription: Subscription;
+  private vectorLayer_: VectorLayer;
 
-  constructor() { }
+  constructor(private stateService: StateService) { }
+
+  ngOnInit() {
+    this.subscription = this.stateService.subscribeToVectorLayer(this.vectorLayerKey, layer => {
+      if (!layer) {
+        return;
+      }
+      this.vectorLayer = layer;
+    });
+  }
+
+  ngOnDestroy() {
+    this.subscription.unsubscribe();
+  }
+
+  private get vectorLayer() {
+    return this.vectorLayer_;
+  }
+
+  private set vectorLayer(vectorLayer: VectorLayer) {
+    this.vectorLayer_ = vectorLayer;
+    this.pathLayer = this.findFirstPathLayer(this.vectorLayer_);
+  }
+
+  private get pathLayer() {
+    return this.pathLayer_;
+  }
 
   // TODO(alockwood): figure out how to handle multiple paths in the vector layer
-  @Input()
-  set pathLayer(pathLayer: PathLayer) {
+  private set pathLayer(pathLayer: PathLayer) {
     this.pathLayer_ = pathLayer;
 
     const commands: string[] = [];
@@ -44,10 +73,47 @@ export class PointListComponent {
   onAddPointClick() { }
 
   onReversePointsClick() {
-    this.pointListReversedEmitter.emit(this.pathLayer_);
+    // TODO(alockwood): relax these preconditions...
+    const commands = this.pathLayer.pathData.commands;
+    if (commands.length < 2) {
+      return;
+    }
+    if (!(commands[0] instanceof MoveCommand)) {
+      return;
+    }
+    if (!(commands[commands.length - 1] instanceof ClosePathCommand)) {
+      return;
+    }
+    const newCommands = [];
+    newCommands.push(commands[0]);
+    let lastEndpoint = commands[0].points[1];
+    for (let i = commands.length - 2; i >= 1; i--) {
+      const endPoint = commands[i].points[1];
+      newCommands.push(new LineCommand(lastEndpoint, endPoint));
+      lastEndpoint = endPoint;
+    }
+    newCommands.push(new ClosePathCommand(lastEndpoint, commands[0].points[1]));
+
+    this.pathLayer.pathData = new SvgPathData(newCommands);
+    this.stateService.setVectorLayer(this.vectorLayerKey, this.vectorLayer);
   }
 
   onShiftBackwardPointsClick() { }
 
   onShiftForwardPointsClick() { }
+
+  private findFirstPathLayer(layer: Layer): PathLayer | null {
+    if (layer.children) {
+      for (let i = 0; i < layer.children.length; i++) {
+        const pathLayer = this.findFirstPathLayer(layer.children[i]);
+        if (pathLayer) {
+          return pathLayer;
+        }
+      }
+    }
+    if (layer instanceof PathLayer) {
+      return layer;
+    }
+    return null;
+  }
 }

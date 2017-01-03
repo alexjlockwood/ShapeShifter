@@ -9,6 +9,8 @@ import * as $ from 'jquery';
 import * as erd from 'element-resize-detector';
 import { Point, Matrix } from './../scripts/mathutil';
 import { Command, ClosePathCommand } from './../scripts/svgcommands';
+import { StateService } from './../state.service';
+import { Subscription } from 'rxjs/Subscription';
 
 
 const ELEMENT_RESIZE_DETECTOR = erd();
@@ -22,6 +24,8 @@ const ELEMENT_RESIZE_DETECTOR = erd();
   styleUrls: ['./canvas.component.scss']
 })
 export class CanvasComponent implements AfterViewInit, OnDestroy {
+  @Input() vectorLayerKey: string;
+
   private vectorLayer_: VectorLayer;
   private shouldLabelPoints_ = false;
   private selectedCommands_: Command[] = [];
@@ -34,7 +38,9 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   private backingStoreScale: number;
   private isViewInit = false;
 
-  constructor(private elementRef: ElementRef) { }
+  private subscription: Subscription;
+
+  constructor(private elementRef: ElementRef, private stateService: StateService) { }
 
   ngAfterViewInit() {
     this.isViewInit = true;
@@ -47,19 +53,24 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         this.resizeAndDraw();
       }
     });
-    this.resizeAndDraw();
+    this.subscription = this.stateService.subscribeToVectorLayer(this.vectorLayerKey, layer => {
+      if (!layer) {
+        return;
+      }
+      this.vectorLayer = layer;
+    });
   }
 
   ngOnDestroy() {
     ELEMENT_RESIZE_DETECTOR.removeAllListeners(this.elementRef.nativeElement);
+    this.subscription.unsubscribe();
   }
 
-  get vectorLayer() {
+  private get vectorLayer() {
     return this.vectorLayer_;
   }
 
-  @Input()
-  set vectorLayer(vectorLayer: VectorLayer) {
+  private set vectorLayer(vectorLayer: VectorLayer) {
     // TODO(alockwood): if vector layer is null, then clear the canvas
 
     const didWidthChange = !this.vectorLayer || this.vectorLayer.width !== vectorLayer.width;
