@@ -19,11 +19,19 @@ export abstract class Command {
     return this.points_;
   }
 
+  get startPoint() {
+    return this.points_[0];
+  }
+
+  get endPoint() {
+    return this.points_[this.points_.length - 1];
+  }
+
   abstract interpolate<T extends Command>(start: T, end: T, fraction: number): void;
 
   abstract transform(transforms: Matrix[]): void;
 
-  //abstract reverse(): void;
+  abstract reverse(): void;
 }
 
 export abstract class SimpleCommand extends Command {
@@ -48,6 +56,10 @@ export abstract class SimpleCommand extends Command {
       const point = this.points[i];
       this.points[i] = point.transform(...transforms);
     }
+  }
+
+  reverse() {
+    this.points.reverse();
   }
 }
 
@@ -113,5 +125,19 @@ export class EllipticalArcCommand extends Command {
     this.args[6] = arc.sweepFlag;
     this.args[7] = arc.endX;
     this.args[8] = arc.endY;
+  }
+
+  reverse() {
+    const args = this.args;
+    const startX = this.args[7];
+    const startY = this.args[8];
+    const endX = this.args[0];
+    const endY = this.args[1];
+    const sweepFlag = args[6] === 0 ? 1 : 0;
+    this.args[0] = startX;
+    this.args[1] = startY;
+    this.args[6] = sweepFlag;
+    this.args[7] = endX;
+    this.args[8] = endY;
   }
 }

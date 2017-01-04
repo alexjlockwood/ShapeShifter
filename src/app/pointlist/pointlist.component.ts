@@ -16,19 +16,24 @@ import { Subscription } from 'rxjs/Subscription';
 })
 export class PointListComponent implements OnInit, OnDestroy {
   @Input() vectorLayerType: VectorLayerType;
-  private commands_: string[] = [];
-  private pathLayer_: PathLayer;
-  private subscription: Subscription;
+
   private vectorLayer_: VectorLayer;
+  private pathLayers_: PathLayer[] = [];
+  private pathLayerCommands_: Command[][] = [];
+  private pathLayerCommandStrings_: string[][] = [];
+
+  private subscription: Subscription;
 
   constructor(private stateService: StateService) { }
 
+  // TODO(alockwood): figure out how to handle multiple paths in the vector layer
   ngOnInit() {
     this.subscription = this.stateService.subscribeToVectorLayer(this.vectorLayerType, layer => {
       if (!layer) {
         return;
       }
-      this.vectorLayer = layer;
+      this.vectorLayer_ = layer;
+      this.buildPathCommandStrings();
     });
   }
 
@@ -36,84 +41,46 @@ export class PointListComponent implements OnInit, OnDestroy {
     this.subscription.unsubscribe();
   }
 
-  private get vectorLayer() {
-    return this.vectorLayer_;
-  }
-
-  private set vectorLayer(vectorLayer: VectorLayer) {
-    this.vectorLayer_ = vectorLayer;
-    this.pathLayer = this.findFirstPathLayer(this.vectorLayer_);
-  }
-
-  private get pathLayer() {
-    return this.pathLayer_;
-  }
-
-  // TODO(alockwood): figure out how to handle multiple paths in the vector layer
-  private set pathLayer(pathLayer: PathLayer) {
-    this.pathLayer_ = pathLayer;
-
-    const commands: string[] = [];
-    commands.push(...pathLayer.pathData.commands.map(c => {
-      const cmdPts = c.points;
-      if (c instanceof ClosePathCommand) {
-        return `${c.svgChar}`;
-      } else {
-        const p = cmdPts[cmdPts.length - 1];
-        return `${c.svgChar} ${p.x},${p.y}`;
+  buildPathCommandStrings() {
+    const pathLayers: PathLayer[] = [];
+    const pathLayerCommands: Command[][] = [];
+    const pathLayerCommandStrings: string[][] = [];
+    this.vectorLayer_.walk(layer => {
+      if (layer instanceof PathLayer) {
+        pathLayers.push(layer);
+        pathLayerCommands.push(layer.pathData.commands);
+        pathLayerCommandStrings.push(layer.pathData.commands.map(c => {
+          if (c instanceof ClosePathCommand) {
+            return `${c.svgChar}`;
+          } else {
+            const p = c.points[c.points.length - 1];
+            return `${c.svgChar} ${p.x}, ${p.y}`;
+          }
+        }));
       }
-    }));
-    this.commands_ = commands;
+    });
+    this.pathLayers_ = pathLayers;
+    this.pathLayerCommands_ = pathLayerCommands;
+    this.pathLayerCommandStrings_ = pathLayerCommandStrings;
   }
 
-  get commands() {
-    return this.commands_;
+  get pathLayerCommandStrings() {
+    return this.pathLayerCommandStrings_;
   }
 
   onAddPointClick() { }
 
   onReversePointsClick() {
-    // TODO(alockwood): relax these preconditions...
-    const commands = this.pathLayer.pathData.commands;
-    if (commands.length < 2) {
-      return;
-    }
-    if (!(commands[0] instanceof MoveCommand)) {
-      return;
-    }
-    if (!(commands[commands.length - 1] instanceof ClosePathCommand)) {
-      return;
-    }
-    const newCommands = [];
-    newCommands.push(commands[0]);
-    let lastEndpoint = commands[0].points[1];
-    for (let i = commands.length - 2; i >= 1; i--) {
-      const endPoint = commands[i].points[1];
-      newCommands.push(new LineCommand(lastEndpoint, endPoint));
-      lastEndpoint = endPoint;
-    }
-    newCommands.push(new ClosePathCommand(lastEndpoint, commands[0].points[1]));
-
-    this.pathLayer.pathData = new SvgPathData(newCommands);
-    this.stateService.setVectorLayer(this.vectorLayerType, this.vectorLayer);
+    this.vectorLayer_.walk(layer => {
+      if (layer instanceof PathLayer) {
+        layer.pathData.reverse();
+      }
+    });
+    this.buildPathCommandStrings();
+    this.stateService.setVectorLayer(this.vectorLayerType, this.vectorLayer_);
   }
 
   onShiftBackwardPointsClick() { }
 
   onShiftForwardPointsClick() { }
-
-  private findFirstPathLayer(layer: Layer): PathLayer | null {
-    if (layer.children) {
-      for (let i = 0; i < layer.children.length; i++) {
-        const pathLayer = this.findFirstPathLayer(layer.children[i]);
-        if (pathLayer) {
-          return pathLayer;
-        }
-      }
-    }
-    if (layer instanceof PathLayer) {
-      return layer;
-    }
-    return null;
-  }
 }

@@ -37,7 +37,7 @@ export class SvgPathData {
   set pathString(path: string) {
     this.pathString_ = path;
     this.commands_ = PathParser.parseCommands(path);
-    let {length, bounds} = computePathLengthAndBounds_(this.commands_);
+    const {length, bounds} = computePathLengthAndBounds_(this.commands_);
     this.length_ = length;
     this.bounds_ = bounds;
   }
@@ -90,7 +90,7 @@ export class SvgPathData {
   transform(transforms: Matrix[]) {
     this.commands_.forEach(c => c.transform(transforms));
     this.pathString_ = PathParser.commandsToString(this.commands_);
-    let { length, bounds } = computePathLengthAndBounds_(this.commands_);
+    const { length, bounds } = computePathLengthAndBounds_(this.commands_);
     this.length_ = length;
     this.bounds_ = bounds;
   }
@@ -122,6 +122,38 @@ export class SvgPathData {
       this.commands[i].interpolate(si, ei, fraction);
     }
   }
+
+  reverse() {
+    const cmds = this.commands;
+    const numCmds = cmds.length;
+    if (numCmds < 2) {
+      return;
+    }
+    const firstCmd = cmds[0];
+    const lastCmd = cmds[numCmds - 1];
+    if (!(firstCmd instanceof MoveCommand)) {
+      return;
+    }
+
+    const newCmds = [firstCmd];
+    for (let i = numCmds - 1; i >= 1; i--) {
+      let nextCmd = cmds[i];
+      if (i === numCmds - 1 && lastCmd instanceof ClosePathCommand) {
+        nextCmd = new LineCommand(nextCmd.endPoint, nextCmd.startPoint);
+      } else if (i === 1 && lastCmd instanceof ClosePathCommand) {
+        nextCmd = new ClosePathCommand(nextCmd.endPoint, nextCmd.startPoint);
+      } else {
+        nextCmd.reverse();
+      }
+      newCmds.push(nextCmd);
+    }
+    if (lastCmd instanceof ClosePathCommand) {
+    }
+
+    // TODO(alockwood): this could be more efficient (no need to recalculate bounds etc.)
+    // TODO(alockwood): probably no need to reconstruct the entire command list either...
+    this.commands = newCmds;
+  }
 }
 
 
@@ -129,14 +161,14 @@ function computePathLengthAndBounds_(commands: Command[]) {
   let length = 0;
   let bounds = new Rect(Infinity, Infinity, -Infinity, -Infinity);
 
-  let expandBounds_ = (x: number, y: number) => {
+  const expandBounds_ = (x: number, y: number) => {
     bounds.l = Math.min(x, bounds.l);
     bounds.t = Math.min(y, bounds.t);
     bounds.r = Math.max(x, bounds.r);
     bounds.b = Math.max(y, bounds.b);
   };
 
-  let expandBoundsToBezier_ = bez => {
+  const expandBoundsToBezier_ = bez => {
     let bbox = bez.bbox();
     expandBounds_(bbox.x.min, bbox.y.min);
     expandBounds_(bbox.x.max, bbox.y.min);
@@ -201,7 +233,8 @@ function computePathLengthAndBounds_(commands: Command[]) {
 
       if (rx === 0 || ry === 0) {
         // degenerate to line
-        length += new Point(currentPointX, currentPointY).distanceTo(new Point(tempPoint1X, tempPoint1Y));
+        length += new Point(currentPointX, currentPointY)
+          .distanceTo(new Point(tempPoint1X, tempPoint1Y));
         expandBounds_(tempPoint1X, tempPoint1Y);
         return;
       }

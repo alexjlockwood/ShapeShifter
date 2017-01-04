@@ -63,6 +63,16 @@ abstract class AbstractLayer implements Layer {
     }
     return true;
   }
+
+  walk(func: (layer: Layer) => void) {
+    const visit = (layer: Layer) => {
+      func(layer);
+      if (layer.children) {
+        layer.children.forEach(l => visit(l));
+      }
+    };
+    visit(this);
+  }
 }
 
 export class PathLayer extends AbstractLayer {
