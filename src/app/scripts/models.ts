@@ -5,7 +5,6 @@ import { Matrix } from './mathutil';
 export interface Layer {
   children: Layer[] | null;
   id: string;
-  deepCopy<T extends Layer>(): T;
   findLayerById(id: string): Layer | null;
   isStructurallyIdenticalWith(layer: Layer): boolean;
   isMorphableWith(layer: Layer): boolean;
@@ -16,8 +15,6 @@ abstract class AbstractLayer implements Layer {
     public children: Layer[] | null,
     public id: string,
   ) { }
-
-  abstract deepCopy<T extends Layer>(): T;
 
   findLayerById(id: string): Layer | null {
     if (this.id === id) {
@@ -93,23 +90,6 @@ export class PathLayer extends AbstractLayer {
   ) {
     super(null, id);
   }
-
-  deepCopy<T extends Layer>(): PathLayer {
-    return new PathLayer(
-      this.id,
-      new SvgPathData(this.pathData),
-      this.fillColor,
-      this.fillAlpha,
-      this.strokeColor,
-      this.strokeAlpha,
-      this.strokeWidth,
-      this.strokeLinecap,
-      this.strokeLinejoin,
-      this.strokeMiterLimit,
-      this.trimPathStart,
-      this.trimPathEnd,
-      this.trimPathOffset);
-  }
 }
 
 export class ClipPathLayer extends AbstractLayer {
@@ -118,12 +98,6 @@ export class ClipPathLayer extends AbstractLayer {
     public pathData: SvgPathData,
   ) {
     super(null, id);
-  }
-
-  deepCopy<T extends Layer>() {
-    return new ClipPathLayer(
-      this.id,
-      this.pathData);
   }
 }
 
@@ -140,19 +114,6 @@ export class GroupLayer extends AbstractLayer {
     public translateY = 0,
   ) {
     super(children || [], id);
-  }
-
-  deepCopy<T extends Layer>() {
-    return new GroupLayer(
-      this.children.map(c => c.deepCopy()),
-      this.id,
-      this.pivotX,
-      this.pivotY,
-      this.rotation,
-      this.scaleX,
-      this.scaleY,
-      this.translateX,
-      this.translateY);
   }
 
   toMatrices() {
@@ -177,14 +138,5 @@ export class VectorLayer extends AbstractLayer {
     public alpha = 1,
   ) {
     super(children || [], id);
-  }
-
-  deepCopy<T extends Layer>() {
-    return new VectorLayer(
-      this.children.map(c => c.deepCopy()),
-      this.id,
-      this.width,
-      this.height,
-      this.alpha);
   }
 }

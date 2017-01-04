@@ -80,7 +80,23 @@ export class PointListComponent implements OnInit, OnDestroy {
     this.stateService.setVectorLayer(this.vectorLayerType, this.vectorLayer_);
   }
 
-  onShiftBackwardPointsClick() { }
+  onShiftBackPointsClick() {
+    this.vectorLayer_.walk(layer => {
+      if (layer instanceof PathLayer) {
+        layer.pathData.shiftBack();
+      }
+    });
+    this.buildPathCommandStrings();
+    this.stateService.setVectorLayer(this.vectorLayerType, this.vectorLayer_);
+  }
 
-  onShiftForwardPointsClick() { }
+  onShiftForwardPointsClick() {
+    this.vectorLayer_.walk(layer => {
+      if (layer instanceof PathLayer) {
+        layer.pathData.shiftForward();
+      }
+    });
+    this.buildPathCommandStrings();
+    this.stateService.setVectorLayer(this.vectorLayerType, this.vectorLayer_);
+  }
 }

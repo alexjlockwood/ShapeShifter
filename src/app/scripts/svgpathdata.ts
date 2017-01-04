@@ -123,6 +123,7 @@ export class SvgPathData {
     }
   }
 
+  // TODO(alockwood): need to deal with paths that contain more than one Z command etc.
   reverse() {
     const cmds = this.commands;
     const numCmds = cmds.length;
@@ -147,12 +148,44 @@ export class SvgPathData {
       }
       newCmds.push(nextCmd);
     }
-    if (lastCmd instanceof ClosePathCommand) {
-    }
 
     // TODO(alockwood): this could be more efficient (no need to recalculate bounds etc.)
     // TODO(alockwood): probably no need to reconstruct the entire command list either...
     this.commands = newCmds;
+  }
+
+  // TODO(alockwood): need to deal with paths that contain more than one Z command etc.
+  // TODO(alockwood): implement this... doesnt work right now
+  shiftBack() {
+    const cmds = this.commands;
+    const numCmds = cmds.length;
+    if (numCmds < 2) {
+      return;
+    }
+    const firstCmd = cmds[0];
+    const lastCmd = cmds[numCmds - 1];
+    if (!(firstCmd instanceof MoveCommand)) {
+      return;
+    }
+
+    const newCmds = [new MoveCommand(null, lastCmd.startPoint)];
+    if (lastCmd instanceof ClosePathCommand) {
+      newCmds.push(new LineCommand(lastCmd.startPoint, lastCmd.endPoint));
+    }
+    const numIterations = lastCmd instanceof ClosePathCommand ? numCmds - 1 : numCmds;
+    for (let i = 1; i < numIterations; i++) {
+      newCmds.push(cmds[i]);
+    }
+    if (lastCmd instanceof ClosePathCommand) {
+      newCmds.push(new ClosePathCommand(newCmds[newCmds.length - 1].endPoint, newCmds[1].startPoint));
+    }
+
+    this.commands = newCmds;
+  }
+
+  // TODO(alockwood): need to deal with paths that contain more than one Z command etc.
+  shiftForward() {
+    // TODO(alockwood): implement this...
   }
 }
 
