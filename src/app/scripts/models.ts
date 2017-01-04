@@ -74,7 +74,7 @@ abstract class AbstractLayer implements Layer {
 
 export class PathLayer extends AbstractLayer {
   constructor(
-    public id: string,
+    id: string,
     public pathData: SvgPathData,
     public fillColor: string | null,
     public fillAlpha = 1,
@@ -94,7 +94,7 @@ export class PathLayer extends AbstractLayer {
 
 export class ClipPathLayer extends AbstractLayer {
   constructor(
-    public id: string,
+    id: string,
     public pathData: SvgPathData,
   ) {
     super(null, id);
@@ -103,8 +103,8 @@ export class ClipPathLayer extends AbstractLayer {
 
 export class GroupLayer extends AbstractLayer {
   constructor(
-    public children: Layer[] | null,
-    public id: string,
+    children: Layer[] | null,
+    id: string,
     public pivotX = 0,
     public pivotY = 0,
     public rotation = 0,
@@ -131,8 +131,8 @@ export class GroupLayer extends AbstractLayer {
 
 export class VectorLayer extends AbstractLayer {
   constructor(
-    public children: Layer[] | null,
-    public id: string,
+    children: Layer[] | null,
+    id: string,
     public width = 0,
     public height = 0,
     public alpha = 1,
