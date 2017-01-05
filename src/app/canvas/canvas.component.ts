@@ -282,7 +282,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  // TODO(alockwood): avoid scaling the points we draw here as a result of applying the transforms
   private drawPathLayerPoints(layer: PathLayer, ctx: CanvasRenderingContext2D, transforms: Matrix[]) {
     const points = [];
     layer.pathData.commands.forEach(c => {

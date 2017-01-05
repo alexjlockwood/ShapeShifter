@@ -13,7 +13,7 @@ export class SvgPathData {
   private commands_: Command[];
   private length_ = 0;
   private bounds_: Rect = null;
-  private projections_: Projector[];
+  private projectors_: Projector[];
 
   constructor();
   constructor(obj: string);
@@ -38,10 +38,7 @@ export class SvgPathData {
   set pathString(path: string) {
     this.pathString_ = path;
     this.commands_ = PathParser.parseCommands(path);
-    const {length, bounds} = computePathLengthAndBounds_(this.commands_);
-    this.length_ = length;
-    this.bounds_ = bounds;
-    this.updateProjections();
+    this.updateCommandProperties();
   }
 
   toString() {
@@ -52,31 +49,17 @@ export class SvgPathData {
     return this.commands_;
   }
 
-  set commands(value) {
-    this.commands_ = (value ? value.slice() : []);
+  set commands(commands: Command[]) {
+    this.commands_ = (commands ? commands.slice() : []);
     this.pathString_ = PathParser.commandsToString(this.commands_);
-    const {length, bounds} = computePathLengthAndBounds_(this.commands_);
-    this.length_ = length;
-    this.bounds_ = bounds;
-    this.updateProjections();
+    this.updateCommandProperties();
   }
 
-  private updateProjections() {
-    this.projections_ = [];
-    for (let i = 0; i < this.commands.length; i++) {
-      const cmd = this.commands[i];
-      if (cmd instanceof LineCommand || cmd instanceof ClosePathCommand) {
-        this.projections_[i] = new Bezier(cmd.points[0], cmd.points[0], cmd.points[1]);
-      } else if (cmd instanceof QuadraticCurveCommand) {
-        this.projections_[i] = new Bezier(cmd.points[0], cmd.points[1], cmd.points[2]);
-      } else if (cmd instanceof BezierCurveCommand) {
-        this.projections_[i] = new Bezier(cmd.points[0], cmd.points[1], cmd.points[2], cmd.points[3]);
-      } else if (cmd instanceof EllipticalArcCommand) {
-        throw new Error('TODO: implement this for elliptical arc commands');
-      } else {
-        this.projections_[i] = new NoopProjector();
-      }
-    }
+  private updateCommandProperties() {
+    const {length, bounds, projectors} = computeCommandProperties(this.commands_);
+    this.length_ = length;
+    this.bounds_ = bounds;
+    this.projectors_ = projectors;
   }
 
   get length() {
@@ -232,13 +215,7 @@ export class SvgPathData {
   }
 
   project(point: Point): { point: Point, t: number, d: number } | null {
-    let minProj = null;
-    for (let i = 0; i < this.projections_.length; i++) {
-      const proj = this.projections_[i].project(point);
-      if (proj && (!minProj || proj.d < minProj.d)) {
-        minProj = proj;
-      }
-    }
+    let minProj = new MultiProjector(...this.projectors_).project(point);
     if (!minProj) {
       return null;
     }
@@ -246,9 +223,10 @@ export class SvgPathData {
   }
 }
 
-function computePathLengthAndBounds_(commands: Command[]) {
+function computeCommandProperties(commands: Command[]) {
   let length = 0;
-  let bounds = new Rect(Infinity, Infinity, -Infinity, -Infinity);
+  const bounds = new Rect(Infinity, Infinity, -Infinity, -Infinity);
+  const projectors: Projector[] = [];
 
   const expandBounds_ = (x: number, y: number) => {
     bounds.l = Math.min(x, bounds.l);
@@ -258,7 +236,7 @@ function computePathLengthAndBounds_(commands: Command[]) {
   };
 
   const expandBoundsToBezier_ = bez => {
-    let bbox = bez.bbox();
+    const bbox = bez.bbox();
     expandBounds_(bbox.x.min, bbox.y.min);
     expandBounds_(bbox.x.max, bbox.y.min);
     expandBounds_(bbox.x.min, bbox.y.max);
@@ -276,11 +254,13 @@ function computePathLengthAndBounds_(commands: Command[]) {
       }
       currentPoint = nextPoint;
       expandBounds_(nextPoint.x, nextPoint.y);
+      projectors.push(new NoopProjector());
     }
 
     else if (command instanceof LineCommand) {
       const nextPoint = command.points[1];
       length += nextPoint.distanceTo(currentPoint);
+      projectors.push(new Bezier(currentPoint, nextPoint, nextPoint));
       currentPoint = nextPoint;
       expandBounds_(nextPoint.x, nextPoint.y);
     }
@@ -288,13 +268,15 @@ function computePathLengthAndBounds_(commands: Command[]) {
     else if (command instanceof ClosePathCommand) {
       if (firstPoint) {
         length += firstPoint.distanceTo(currentPoint);
+        projectors.push(new Bezier(currentPoint, firstPoint, firstPoint));
       }
       firstPoint = null;
     }
 
     else if (command instanceof BezierCurveCommand) {
       const points = command.points;
-      let bez = new Bezier(currentPoint, points[1], points[2], points[3]);
+      const bez = new Bezier(currentPoint, points[1], points[2], points[3]);
+      projectors.push(bez);
       length += bez.length();
       currentPoint = points[3];
       expandBoundsToBezier_(bez);
@@ -302,7 +284,8 @@ function computePathLengthAndBounds_(commands: Command[]) {
 
     else if (command instanceof QuadraticCurveCommand) {
       const points = command.points;
-      let bez = new Bezier(currentPoint, points[1], points[2]);
+      const bez = new Bezier(currentPoint, points[1], points[2]);
+      projectors.push(bez);
       length += bez.length();
       currentPoint = points[2];
       expandBoundsToBezier_(bez);
@@ -310,53 +293,99 @@ function computePathLengthAndBounds_(commands: Command[]) {
 
     else if (command instanceof EllipticalArcCommand) {
       const args = command.args;
-      let [currentPointX, currentPointY,
+      const [currentPointX, currentPointY,
         rx, ry, xAxisRotation,
         largeArcFlag, sweepFlag,
         tempPoint1X, tempPoint1Y] = args;
 
       if (currentPointX === tempPoint1X && currentPointY === tempPoint1Y) {
         // degenerate to point (0 length)
+        projectors.push(new NoopProjector());
         return;
       }
 
       if (rx === 0 || ry === 0) {
         // degenerate to line
-        length += new Point(currentPointX, currentPointY)
-          .distanceTo(new Point(tempPoint1X, tempPoint1Y));
+        const nextPoint = new Point(tempPoint1X, tempPoint1Y);
+        length += new Point(currentPointX, currentPointY).distanceTo(nextPoint);
         expandBounds_(tempPoint1X, tempPoint1Y);
+        projectors.push(new Bezier(currentPoint, currentPoint, nextPoint));
+        currentPoint = nextPoint;
         return;
       }
 
-      let bezierCoords = SvgUtil.arcToBeziers(
+      const bezierCoords = SvgUtil.arcToBeziers(
         currentPointX, currentPointY,
         rx, ry, xAxisRotation,
         largeArcFlag, sweepFlag,
         tempPoint1X, tempPoint1Y);
 
+      const arcProjectors: Projector[] = [];
       for (let i = 0; i < bezierCoords.length; i += 8) {
-        let bez = new Bezier(
+        const bez = new Bezier(
           currentPoint.x, currentPoint.y,
           bezierCoords[i + 2], bezierCoords[i + 3],
           bezierCoords[i + 4], bezierCoords[i + 5],
           bezierCoords[i + 6], bezierCoords[i + 7]);
+        arcProjectors.push(bez);
         length += bez.length();
         currentPoint = new Point(bezierCoords[i + 6], bezierCoords[i + 7]);
         expandBoundsToBezier_(bez);
       }
+      projectors.push(new MultiProjector(...arcProjectors));
       currentPoint = new Point(tempPoint1X, tempPoint1Y);
     }
   });
 
-  return { length, bounds };
+  return { length, bounds, projectors };
 }
 
 interface Projector {
-  project(point: Point): { x: number, y: number, t: number, d: number };
+  project(point: Point): Projection | null;
 }
 
 class NoopProjector implements Projector {
-  project(point: Point): { x: number, y: number, t: number, d: number } | null {
+  project(point: Point): Projection | null {
     return null;
   }
 }
+
+class MultiProjector implements Projector {
+  private readonly projectors_: Projector[];
+
+  constructor(...projectors: Projector[]) {
+    this.projectors_ = projectors;
+  }
+
+  project(point: Point): Projection | null {
+    let minProj = null;
+    for (let i = 0; i < this.projectors_.length; i++) {
+      const proj = this.projectors_[i].project(point);
+      if (proj && (!minProj || proj.d < minProj.d)) {
+        minProj = proj;
+      }
+    }
+    if (!minProj) {
+      return null;
+    }
+    return { x: minProj.x, y: minProj.y, t: minProj.t, d: minProj.d };
+  }
+}
+
+// TODO(alockwood): figure out a better way to declare these types globally...
+
+declare type Projection = { x: number, y: number, t: number, d: number };
+
+declare type Bezier = {
+  constructor(points: Point[]);
+  constructor(coords: number[]);
+  constructor(
+    x1: number, y1: number,
+    x2: number, y2: number,
+    x3: number, y3: number,
+    x4?: number, y4?: number);
+  constructor(p1: Point, p2: Point, p3: Point, p4?: Point);
+  length(): number;
+  project(point: Point): Projection;
+};
+
