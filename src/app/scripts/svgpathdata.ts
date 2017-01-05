@@ -123,69 +123,94 @@ export class SvgPathData {
     }
   }
 
-  // TODO(alockwood): need to deal with paths that contain more than one Z command etc.
+  // TODO(alockwood): add tests for zero/one length commands
+  // TODO(alockwood): add a test for commands with multiple moves but no close paths
   reverse() {
-    const cmds = this.commands;
-    const numCmds = cmds.length;
-    if (numCmds < 2) {
-      return;
-    }
-    const firstCmd = cmds[0];
-    const lastCmd = cmds[numCmds - 1];
-    if (!(firstCmd instanceof MoveCommand)) {
-      return;
+    const cmdLists: Command[][] = [[]];
+
+    let currentCmdList = cmdLists[0];
+    for (let i = 0; i < this.commands.length; i++) {
+      const cmd = this.commands[i];
+      currentCmdList.push(cmd);
+      if (cmd instanceof ClosePathCommand && i !== this.commands.length - 1) {
+        currentCmdList = [];
+        cmdLists.push(currentCmdList);
+      }
     }
 
-    const newCmds = [firstCmd];
-    for (let i = numCmds - 1; i >= 1; i--) {
-      let nextCmd = cmds[i];
-      if (i === numCmds - 1 && lastCmd instanceof ClosePathCommand) {
-        nextCmd = new LineCommand(nextCmd.endPoint, nextCmd.startPoint);
-      } else if (i === 1 && lastCmd instanceof ClosePathCommand) {
-        nextCmd = new ClosePathCommand(nextCmd.endPoint, nextCmd.startPoint);
-      } else {
-        nextCmd.reverse();
+    const newCmdLists: Command[][] = [];
+    for (let i = 0; i < cmdLists.length; i++) {
+      const cmds = cmdLists[i];
+      const newCmds = [new MoveCommand(undefined, cmds[cmds.length - 1].endPoint)];
+      for (let i = cmds.length - 1; i >= 1; i--) {
+        cmds[i].reverse();
+        newCmds.push(cmds[i]);
       }
-      newCmds.push(nextCmd);
+      const secondCmd = newCmds[1];
+      if (secondCmd instanceof ClosePathCommand) {
+        newCmds[1] = new LineCommand(secondCmd.startPoint, secondCmd.endPoint);
+        const lastCmd = newCmds[newCmds.length - 1];
+        newCmds[newCmds.length - 1] = new ClosePathCommand(lastCmd.startPoint, lastCmd.endPoint);
+      }
+      newCmdLists.push(newCmds);
     }
 
     // TODO(alockwood): this could be more efficient (no need to recalculate bounds etc.)
-    // TODO(alockwood): probably no need to reconstruct the entire command list either...
-    this.commands = newCmds;
+    this.commands = [].concat.apply([], newCmdLists);
   }
 
-  // TODO(alockwood): need to deal with paths that contain more than one Z command etc.
-  // TODO(alockwood): implement this... doesnt work right now
+  // TODO(alockwood): add tests for zero/one length commands
+  // TODO(alockwood): add a test for commands with multiple moves but no close paths
   shiftBack() {
-    const cmds = this.commands;
-    const numCmds = cmds.length;
-    if (numCmds < 2) {
-      return;
+    const cmdLists: Command[][] = [[]];
+
+    let currentCmdList = cmdLists[0];
+    for (let i = 0; i < this.commands.length; i++) {
+      const cmd = this.commands[i];
+      currentCmdList.push(cmd);
+      if (cmd instanceof ClosePathCommand && i !== this.commands.length - 1) {
+        currentCmdList = [];
+        cmdLists.push(currentCmdList);
+      }
     }
-    const firstCmd = cmds[0];
-    const lastCmd = cmds[numCmds - 1];
-    if (!(firstCmd instanceof MoveCommand)) {
+
+    // TODO(alockwood): does it make sense to shift a non-closed path? (i.e. a stroked line)
+    const finalCmdLists = cmdLists.filter(cmdList => {
+      return cmdList[0].endPoint === cmdList[cmdList.length - 1].endPoint;
+    });
+    if (!finalCmdLists.length) {
       return;
     }
 
-    const newCmds = [new MoveCommand(null, lastCmd.startPoint)];
-    if (lastCmd instanceof ClosePathCommand) {
-      newCmds.push(new LineCommand(lastCmd.startPoint, lastCmd.endPoint));
-    }
-    const numIterations = lastCmd instanceof ClosePathCommand ? numCmds - 1 : numCmds;
-    for (let i = 1; i < numIterations; i++) {
-      newCmds.push(cmds[i]);
-    }
-    if (lastCmd instanceof ClosePathCommand) {
-      newCmds.push(new ClosePathCommand(newCmds[newCmds.length - 1].endPoint, newCmds[1].startPoint));
+    const newCmdLists: Command[][] = [];
+    for (let i = 0; i < finalCmdLists.length; i++) {
+      const cmds = finalCmdLists[i];
+      cmds.unshift(cmds.pop());
+
+      if (cmds[0] instanceof ClosePathCommand) {
+        const lastCmd = cmds[cmds.length - 1];
+        cmds[cmds.length - 1] = new ClosePathCommand(lastCmd.startPoint, lastCmd.endPoint);
+        cmds[1] = new LineCommand(cmds[0].startPoint, cmds[0].endPoint);
+        cmds[0] = new MoveCommand(undefined, cmds[1].startPoint);
+      } else {
+        cmds[1] = cmds[0];
+        cmds[0] = new MoveCommand(undefined, cmds[1].startPoint);
+      }
+
+      newCmdLists.push(cmds);
     }
 
-    this.commands = newCmds;
+    // TODO(alockwood): this could be more efficient (no need to recalculate bounds etc.)
+    this.commands = [].concat.apply([], newCmdLists);
   }
 
-  // TODO(alockwood): need to deal with paths that contain more than one Z command etc.
+  // TODO(alockwood): add tests for zero/one length commands
+  // TODO(alockwood): add a test for commands with multiple moves but no close paths
   shiftForward() {
-    // TODO(alockwood): implement this...
+    // TODO(alockwood): make this more efficient... :P
+    for (let i = 0; i < this.commands.length - 2; i++) {
+      this.shiftBack();
+    }
   }
 }
 
