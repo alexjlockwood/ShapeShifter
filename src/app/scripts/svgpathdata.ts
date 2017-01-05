@@ -231,7 +231,7 @@ export class SvgPathData {
     }
   }
 
-  project(point: Point): { point: Point, d: number } | null {
+  project(point: Point): { point: Point, t: number, d: number } | null {
     let minProj = null;
     for (let i = 0; i < this.projections_.length; i++) {
       const proj = this.projections_[i].project(point);
@@ -242,7 +242,7 @@ export class SvgPathData {
     if (!minProj) {
       return null;
     }
-    return { point: new Point(minProj.x, minProj.y), d: minProj.d };
+    return { point: new Point(minProj.x, minProj.y), t: minProj.t, d: minProj.d };
   }
 }
 
