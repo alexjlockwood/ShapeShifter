@@ -37,6 +37,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   private scale: number;
   private backingStoreScale: number;
   private isViewInit = false;
+  private closestProjection: { point: Point, d: number } = null;
 
   private subscription: Subscription;
 
@@ -157,6 +158,12 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       ]);
     }
 
+    if (this.closestProjection) {
+      this.drawClosestProjection(this.vectorLayer, ctx, [
+        new Matrix(this.backingStoreScale, 0, 0, this.backingStoreScale, 0, 0)
+      ]);
+    }
+
     // draw pixel grid
     if (this.scale > 4) {
       ctx.fillStyle = 'rgba(128, 128, 128, .25)';
@@ -186,24 +193,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       this.drawClipPathLayer(layer, ctx, transforms);
     } else if (layer instanceof PathLayer) {
       this.drawPathLayer(layer, ctx, transforms);
-    }
-  }
-
-  private drawPathPoints(layer: Layer, ctx: CanvasRenderingContext2D, transforms: Matrix[]) {
-    if (layer instanceof VectorLayer) {
-      layer.children.forEach(layer => this.drawPathPoints(layer, ctx, transforms));
-    } else if (layer instanceof GroupLayer) {
-      const matrices = layer.toMatrices();
-      transforms.splice(transforms.length, 0, ...matrices);
-      ctx.save();
-      layer.children.forEach(l => this.drawPathPoints(l, ctx, transforms));
-      ctx.restore();
-      transforms.splice(-matrices.length, matrices.length);
-    } else if (layer instanceof ClipPathLayer) {
-      // TODO(alockwood): figure this out
-      // this.drawClipPathLayer(layer, ctx, transforms);
-    } else if (layer instanceof PathLayer) {
-      this.drawPathLayerPoints(layer, ctx, transforms);
     }
   }
 
@@ -278,6 +267,21 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
   }
 
+  private drawPathPoints(layer: Layer, ctx: CanvasRenderingContext2D, transforms: Matrix[]) {
+    if (layer instanceof VectorLayer) {
+      layer.children.forEach(layer => this.drawPathPoints(layer, ctx, transforms));
+    } else if (layer instanceof GroupLayer) {
+      const matrices = layer.toMatrices();
+      transforms.splice(transforms.length, 0, ...matrices);
+      ctx.save();
+      layer.children.forEach(l => this.drawPathPoints(l, ctx, transforms));
+      ctx.restore();
+      transforms.splice(-matrices.length, matrices.length);
+    } else if (layer instanceof PathLayer) {
+      this.drawPathLayerPoints(layer, ctx, transforms);
+    }
+  }
+
   // TODO(alockwood): avoid scaling the points we draw here as a result of applying the transforms
   private drawPathLayerPoints(layer: PathLayer, ctx: CanvasRenderingContext2D, transforms: Matrix[]) {
     const points = [];
@@ -308,6 +312,29 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       ctx.fill();
     });
     ctx.restore();
+  }
+
+  private drawClosestProjection(layer: Layer, ctx: CanvasRenderingContext2D, transforms: Matrix[]) {
+    if (layer instanceof VectorLayer) {
+      layer.children.forEach(layer => this.drawClosestProjection(layer, ctx, transforms));
+    } else if (layer instanceof GroupLayer) {
+      const matrices = layer.toMatrices();
+      transforms.splice(transforms.length, 0, ...matrices);
+      ctx.save();
+      layer.children.forEach(l => this.drawClosestProjection(l, ctx, transforms));
+      ctx.restore();
+      transforms.splice(-matrices.length, matrices.length);
+    } else if (layer instanceof PathLayer) {
+      ctx.save();
+      const matrices = Array.from(transforms).reverse();
+      const p = this.closestProjection.point.transform(...matrices);
+      const radius = 16;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, radius, 0, 2 * Math.PI, false);
+      ctx.fillStyle = 'red';
+      ctx.fill();
+      ctx.restore();
+    }
   }
 
   onMouseDown(event) {
@@ -343,6 +370,33 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       selectedPointCommands = [selectedPointCommands[selectedPointCommands.length - 1]];
     }
     this.selectedCommandsChangedEmitter.emit(selectedPointCommands.map(pc => pc.command));
+  }
+
+  onMouseMove(event) {
+    const canvasOffset = this.canvas.offset();
+    const x = (event.pageX - canvasOffset.left) / this.scale;
+    const y = (event.pageY - canvasOffset.top) / this.scale;
+    const mouseMove = new Point(x, y);
+    let closestProjection = null;
+    this.vectorLayer.walk(layer => {
+      if (layer instanceof PathLayer) {
+        const projection = layer.pathData.project(mouseMove);
+        if (projection && (!closestProjection || projection.d < closestProjection.d)) {
+          closestProjection = projection;
+        }
+      }
+    });
+    if (this.closestProjection !== closestProjection) {
+      this.closestProjection = closestProjection;
+      this.draw();
+    }
+  }
+
+  onMouseLeave(event) {
+    if (this.closestProjection) {
+      this.closestProjection = null;
+      this.draw();
+    }
   }
 
   private findPointCommandsInRange(

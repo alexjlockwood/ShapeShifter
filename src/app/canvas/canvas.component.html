@@ -5,7 +5,9 @@
     class="canvas-container">
     <canvas #renderingCanvas
       class="rendering-canvas"
-      (mousedown)="onMouseDown($event)"></canvas>
+      (mousedown)="onMouseDown($event)"
+      (mousemove)="onMouseMove($event)"
+      (mouseleave)="onMouseLeave($event)"></canvas>
   </div>
 </div>
 

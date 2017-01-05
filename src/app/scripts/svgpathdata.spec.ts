@@ -15,7 +15,7 @@ describe('SvgPathData', () => {
     const actual = new SvgPathData("M 0 0 L 10 10 L 20 20 L 30 30 Z");
     actual.reverse();
     const expected = new SvgPathData("M 0 0 L 30 30 L 20 20 L 10 10 Z");
-    expect(actual.commands).toEqual(expected.commands);
+    expect(actual).toEqual(expected);
   });
 
   it('shiftBack: M 19 11 L 19 13 L 5 13 L 5 11 Z', () => {

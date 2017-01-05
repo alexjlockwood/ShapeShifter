@@ -13,6 +13,7 @@ export class SvgPathData {
   private commands_: Command[];
   private length_ = 0;
   private bounds_: Rect = null;
+  private projections_: Projector[];
 
   constructor();
   constructor(obj: string);
@@ -40,6 +41,7 @@ export class SvgPathData {
     const {length, bounds} = computePathLengthAndBounds_(this.commands_);
     this.length_ = length;
     this.bounds_ = bounds;
+    this.updateProjections();
   }
 
   toString() {
@@ -56,6 +58,25 @@ export class SvgPathData {
     let {length, bounds} = computePathLengthAndBounds_(this.commands_);
     this.length_ = length;
     this.bounds_ = bounds;
+    this.updateProjections();
+  }
+
+  private updateProjections() {
+    this.projections_ = [];
+    for (let i = 0; i < this.commands.length; i++) {
+      const cmd = this.commands[i];
+      if (cmd instanceof LineCommand || cmd instanceof ClosePathCommand) {
+        this.projections_[i] = new Bezier(cmd.points[0], cmd.points[0], cmd.points[1]);
+      } else if (cmd instanceof QuadraticCurveCommand) {
+        this.projections_[i] = new Bezier(cmd.points[0], cmd.points[1], cmd.points[2]);
+      } else if (cmd instanceof BezierCurveCommand) {
+        this.projections_[i] = new Bezier(cmd.points[0], cmd.points[1], cmd.points[2], cmd.points[3]);
+      } else if (cmd instanceof EllipticalArcCommand) {
+        throw new Error('TODO: implement this for elliptical arc commands');
+      } else {
+        this.projections_[i] = new NoopProjector();
+      }
+    }
   }
 
   get length() {
@@ -89,10 +110,7 @@ export class SvgPathData {
 
   transform(transforms: Matrix[]) {
     this.commands_.forEach(c => c.transform(transforms));
-    this.pathString_ = PathParser.commandsToString(this.commands_);
-    const { length, bounds } = computePathLengthAndBounds_(this.commands_);
-    this.length_ = length;
-    this.bounds_ = bounds;
+    this.commands = this.commands_;
   }
 
   isMorphable(start: SvgPathData, end: SvgPathData) {
@@ -212,8 +230,21 @@ export class SvgPathData {
       this.shiftBack();
     }
   }
-}
 
+  project(point: Point): { point: Point, d: number } | null {
+    let minProj = null;
+    for (let i = 0; i < this.projections_.length; i++) {
+      const proj = this.projections_[i].project(point);
+      if (proj && (!minProj || proj.d < minProj.d)) {
+        minProj = proj;
+      }
+    }
+    if (!minProj) {
+      return null;
+    }
+    return { point: new Point(minProj.x, minProj.y), d: minProj.d };
+  }
+}
 
 function computePathLengthAndBounds_(commands: Command[]) {
   let length = 0;
@@ -318,4 +349,14 @@ function computePathLengthAndBounds_(commands: Command[]) {
   });
 
   return { length, bounds };
+}
+
+interface Projector {
+  project(point: Point): { x: number, y: number, t: number, d: number };
+}
+
+class NoopProjector implements Projector {
+  project(point: Point): { x: number, y: number, t: number, d: number } | null {
+    return null;
+  }
 }
