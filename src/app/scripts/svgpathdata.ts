@@ -55,7 +55,7 @@ export class SvgPathData {
   set commands(value) {
     this.commands_ = (value ? value.slice() : []);
     this.pathString_ = PathParser.commandsToString(this.commands_);
-    let {length, bounds} = computePathLengthAndBounds_(this.commands_);
+    const {length, bounds} = computePathLengthAndBounds_(this.commands_);
     this.length_ = length;
     this.bounds_ = bounds;
     this.updateProjections();
