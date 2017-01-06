@@ -11,7 +11,7 @@ import { Point, Matrix } from './../scripts/mathutil';
 import { Command, ClosePathCommand } from './../scripts/svgcommands';
 import { StateService, VectorLayerType } from './../state.service';
 import { Subscription } from 'rxjs/Subscription';
-
+import { SvgPathData, Projection, ProjectionInfo } from './../scripts/svgpathdata';
 
 const ELEMENT_RESIZE_DETECTOR = erd();
 
@@ -25,21 +25,21 @@ const ELEMENT_RESIZE_DETECTOR = erd();
 })
 export class CanvasComponent implements AfterViewInit, OnDestroy {
   @Input() vectorLayerType: VectorLayerType;
+  @Output() selectedCommandsChangedEmitter = new EventEmitter<Command[]>();
+  @ViewChild('renderingCanvas') private renderingCanvasRef: ElementRef;
 
   private vectorLayer_: VectorLayer;
   private shouldLabelPoints_ = false;
   private selectedCommands_: Command[] = [];
-  @Output() selectedCommandsChangedEmitter = new EventEmitter<Command[]>();
-
-  @ViewChild('renderingCanvas') private renderingCanvasRef: ElementRef;
   private canvasContainerSize: number;
   private canvas;
   private scale: number;
   private backingStoreScale: number;
   private isViewInit = false;
-  private closestProjection: { point: Point, d: number } = null;
-
+  private closestProjectionInfo: ProjectionInfo = null;
+  private closestPathLayerId: string = null;
   private subscription: Subscription;
+  private pathPointRadius: number;
 
   constructor(private elementRef: ElementRef, private stateService: StateService) { }
 
@@ -130,6 +130,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         height: this.vectorLayer.height * this.scale,
       });
 
+    this.pathPointRadius = this.backingStoreScale * 0.95;
     this.draw();
   }
 
@@ -158,7 +159,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       ]);
     }
 
-    if (this.closestProjection) {
+    if (this.closestProjectionInfo) {
       this.drawClosestProjection(this.vectorLayer, ctx, [
         new Matrix(this.backingStoreScale, 0, 0, this.backingStoreScale, 0, 0)
       ]);
@@ -295,14 +296,13 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     points.forEach((p, index) => {
       p = p.transform(...matrices);
       const color = 'green';
-      const radius = 32;
       ctx.beginPath();
-      ctx.arc(p.x, p.y, radius, 0, 2 * Math.PI, false);
+      ctx.arc(p.x, p.y, this.pathPointRadius, 0, 2 * Math.PI, false);
       ctx.fillStyle = color;
       ctx.fill();
       ctx.beginPath();
       ctx.fillStyle = "white";
-      ctx.font = '32px serif';
+      ctx.font = this.pathPointRadius + 'px serif';
       const text = (index + 1).toString();
       const width = ctx.measureText(text).width;
       // TODO(alockwood): is there a better way to get the height?
@@ -326,74 +326,104 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     } else if (layer instanceof PathLayer) {
       ctx.save();
       const matrices = Array.from(transforms).reverse();
-      const p = this.closestProjection.point.transform(...matrices);
-      const radius = 16;
+      const proj = this.closestProjectionInfo.projection;
+      const p = new Point(proj.x, proj.y).transform(...matrices);
       ctx.beginPath();
-      ctx.arc(p.x, p.y, radius, 0, 2 * Math.PI, false);
+      ctx.arc(p.x, p.y, this.pathPointRadius, 0, 2 * Math.PI, false);
       ctx.fillStyle = 'red';
       ctx.fill();
       ctx.restore();
     }
   }
 
+  // TODO(alockwood): need to transform the mouse point coordinates using the group transforms
   onMouseDown(event) {
     const canvasOffset = this.canvas.offset();
     const x = (event.pageX - canvasOffset.left) / this.scale;
     const y = (event.pageY - canvasOffset.top) / this.scale;
     const mouseDown = new Point(x, y);
     // TODO(alockwood): select clips and/or groups in addition to paths?
-    const matrices = [];
-    const findSelectedPointCommands_ = (layer: Layer): PointCommand[] => {
-      const recurseAndFlatten = (l: Layer) => {
-        return l.children.map(c => findSelectedPointCommands_(c))
-          .reduce((result, next) => result.concat(next), []);
-      };
-      if (layer instanceof VectorLayer) {
-        return recurseAndFlatten(layer);
-      }
-      if (layer instanceof (GroupLayer)) {
-        const transformMatrices = layer.toMatrices();
-        matrices.splice(matrices.length, 0, ...transformMatrices);
-        const result = recurseAndFlatten(layer);
-        matrices.splice(-transformMatrices.length, transformMatrices.length);
-        return result;
-      }
-      if (layer instanceof PathLayer) {
-        const transformedMousePoint = mouseDown.transform(...Array.from(matrices).reverse());
-        return this.findPointCommandsInRange(layer, transformedMousePoint, 0.5);
-      }
-      return [];
+    // const matrices = [];
+    // const findSelectedPointCommands_ = (layer: Layer): PointCommand[] => {
+    //   const recurseAndFlatten = (l: Layer) => {
+    //     return l.children.map(c => findSelectedPointCommands_(c))
+    //       .reduce((result, next) => result.concat(next), []);
+    //   };
+    //   if (layer instanceof VectorLayer) {
+    //     return recurseAndFlatten(layer);
+    //   }
+    //   if (layer instanceof (GroupLayer)) {
+    //     const transformMatrices = layer.toMatrices();
+    //     matrices.splice(matrices.length, 0, ...transformMatrices);
+    //     const result = recurseAndFlatten(layer);
+    //     matrices.splice(-transformMatrices.length, transformMatrices.length);
+    //     return result;
+    //   }
+    //   if (layer instanceof PathLayer) {
+    //     const transformedMousePoint = mouseDown.transform(...Array.from(matrices).reverse());
+    //     return this.findPointCommandsInRange(layer, transformedMousePoint, 0.5);
+    //   }
+    //   return [];
+    // }
+    // let selectedPointCommands = findSelectedPointCommands_(this.vectorLayer);
+    // if (selectedPointCommands.length) {
+    //   selectedPointCommands = [selectedPointCommands[selectedPointCommands.length - 1]];
+    // }
+    // this.selectedCommandsChangedEmitter.emit(selectedPointCommands.map(pc => pc.command));
+
+    if (this.vectorLayerType !== VectorLayerType.End) {
+      return;
     }
-    let selectedPointCommands = findSelectedPointCommands_(this.vectorLayer);
-    if (selectedPointCommands.length) {
-      selectedPointCommands = [selectedPointCommands[selectedPointCommands.length - 1]];
+
+    this.findClosestProjectionInfo(mouseDown);
+
+    if (this.closestProjectionInfo) {
+      const pathLayer = this.vectorLayer_.findLayerById(this.closestPathLayerId) as PathLayer;
+      pathLayer.pathData.split(this.closestProjectionInfo.commandIndex, this.closestProjectionInfo.projection.t);
+      this.stateService.setVectorLayer(this.vectorLayerType, this.vectorLayer);
     }
-    this.selectedCommandsChangedEmitter.emit(selectedPointCommands.map(pc => pc.command));
   }
 
+  // TODO(alockwood): need to transform the mouse point coordinates using the group transforms
   onMouseMove(event) {
     const canvasOffset = this.canvas.offset();
     const x = (event.pageX - canvasOffset.left) / this.scale;
     const y = (event.pageY - canvasOffset.top) / this.scale;
     const mouseMove = new Point(x, y);
-    let closestProjection = null;
-    this.vectorLayer.walk(layer => {
-      if (layer instanceof PathLayer) {
-        const projection = layer.pathData.project(mouseMove);
-        if (projection && (!closestProjection || projection.d < closestProjection.d)) {
-          closestProjection = projection;
-        }
-      }
-    });
-    if (this.closestProjection !== closestProjection) {
-      this.closestProjection = closestProjection;
+
+    if (this.vectorLayerType !== VectorLayerType.End) {
+      return;
+    }
+
+    this.findClosestProjectionInfo(mouseMove);
+
+    if (this.closestProjectionInfo) {
       this.draw();
     }
   }
 
+  private findClosestProjectionInfo(point: Point) {
+    let closestProjectionInfo: ProjectionInfo = null;
+    let closestPathLayerId: string = null;
+    this.vectorLayer.walk(layer => {
+      if (layer instanceof PathLayer) {
+        const projectionInfo = layer.pathData.project(point);
+        if (projectionInfo
+          && (!closestProjectionInfo || projectionInfo.projection.d < closestProjectionInfo.projection.d)) {
+          closestProjectionInfo = projectionInfo;
+          closestPathLayerId = layer.id;
+        }
+      }
+    });
+    if (this.closestProjectionInfo !== closestProjectionInfo) {
+      this.closestProjectionInfo = closestProjectionInfo;
+      this.closestPathLayerId = closestPathLayerId;
+    }
+  }
+
   onMouseLeave(event) {
-    if (this.closestProjection) {
-      this.closestProjection = null;
+    if (this.closestProjectionInfo) {
+      this.closestProjectionInfo = null;
       this.draw();
     }
   }

@@ -1,9 +1,5 @@
 export class Point {
 
-  static from(p: Point) {
-    return new Point(p.x, p.y);
-  }
-
   constructor(public readonly x = 0, public readonly y = 0) { }
 
   transform(...matrices: Matrix[]) {
@@ -17,6 +13,10 @@ export class Point {
 
   distanceTo(p: Point) {
     return Math.sqrt(Math.pow(this.y - p.y, 2) + Math.pow(this.x - p.x, 2));
+  }
+
+  equals(p: Point) {
+    return this.x === p.x && this.y === p.y;
   }
 }
 

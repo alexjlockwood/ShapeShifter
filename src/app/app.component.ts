@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Layer, VectorLayer, GroupLayer, PathLayer } from './scripts/models';
 import * as SvgLoader from './scripts/svgloader';
 import { SvgPathData } from './scripts/svgpathdata';
@@ -16,7 +16,7 @@ const debugMode = true;
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
-export class AppComponent implements OnInit {
+export class AppComponent implements OnInit, OnDestroy {
   private readonly startVectorLayerType = VectorLayerType.Start;
   private readonly previewVectorLayerType = VectorLayerType.Preview;
   private readonly endVectorLayerType = VectorLayerType.End;
@@ -25,12 +25,19 @@ export class AppComponent implements OnInit {
   private isPathMorphable = true;
   private shouldLabelPoints = true;
   private areVectorLayersCompatible = false;
+  private subscription: Subscription = null;
 
   constructor(private stateService: StateService) { }
 
   ngOnInit() {
     if (debugMode) {
       this.initDebugMode();
+    }
+  }
+
+  ngOnDestroy() {
+    if (this.subscription) {
+      this.subscription.unsubscribe();
     }
   }
 
@@ -54,6 +61,9 @@ export class AppComponent implements OnInit {
     }
     if (this.shouldDisplayCanvases()) {
       this.isPathMorphable = this.startVectorLayer.isMorphableWith(this.endVectorLayer);
+      this.subscription = this.stateService.subscribeToVectorLayer(VectorLayerType.End, vectorLayer => {
+        this.isPathMorphable = this.startVectorLayer.isMorphableWith(this.endVectorLayer);
+      });
     }
   }
 
@@ -93,7 +103,7 @@ export class AppComponent implements OnInit {
     if (!this.isPathMorphable) {
       return;
     }
-    // TODO(alockwood): avoid change detection if selected commands hasn't changed
+    // TODO(alockwood): avoid change detection if selected commands haven't changed
     this.selectedCommands = selectedCommands;
   }
 
@@ -130,23 +140,25 @@ export class AppComponent implements OnInit {
         <path d="M 5 11 L 11 11 L 11 5 L 13 5 L 13 11 L 19 11 L 19 13 L 13 13 L 13 19 L 11 19 L 11 13 L 5 13 Z"
           fill="#000" />
       </svg>`);
-     this.onEndSvgTextLoaded(`
+    this.onEndSvgTextLoaded(`
       <svg xmlns="http://www.w3.org/2000/svg"
         width="24px"
         height="24px"
         viewBox="0 0 24 24">
-        <path d="M 5 11 L 11 11 L 11 5 L 13 5 L 13 11 L 19 11 L 19 13 L 13 13 L 13 19 L 11 19 L 11 13 L 5 13 Z"
+        <path d="M 19 11 L 5 11 L 5 13 L 19 13 Z"
           fill="#000" />
       </svg>`);
-    // this.onEndSvgTextLoaded(`
-    //   <svg xmlns="http://www.w3.org/2000/svg"
-    //     width="24px"
-    //     height="24px"
-    //     viewBox="0 0 24 24">
-    //     <path d="M 19 11 L 5 11 L 5 13 L 19 13 Z"
-    //       fill="#000" />
-    //   </svg>`);
     // this.onStartSvgTextLoaded(`
+    //   <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24">
+    //     <g transform="translate(12,12)">
+    //       <g transform="scale(0.75,0.75)">
+    //         <g transform="translate(-12,-12)">
+    //           <path d="M 0 0 L 12 12 C 13 13 14 14 15 15 C 16 16 17 17 18 18 C 19 19 20 20 21 21 C 22 22 23 23 24 24 L 24 24" stroke="#000" stroke-width="1" />
+    //         </g>
+    //       </g>
+    //     </g>
+    //   </svg>`);
+    // this.onEndSvgTextLoaded(`
     //   <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24">
     //     <g transform="translate(12,12)">
     //       <g transform="scale(0.75,0.75)">
@@ -156,22 +168,17 @@ export class AppComponent implements OnInit {
     //       </g>
     //     </g>
     //   </svg>`);
-    // this.onEndSvgTextLoaded(`
-    //   <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24">
-    //     <g transform="translate(12,12)">
-    //       <g transform="scale(0.75,0.75)">
-    //         <g transform="translate(-12,-12)">
-    //           <path d="M 0 0 L 12 12 C 16 16 20 20 24 24 L 24 24" stroke="#000" stroke-width="1" />
-    //         </g>
-    //       </g>
-    //     </g>
-    //   </svg>`);
-    // const groupLayer = this.startVectorLayer.children[0] as GroupLayer;
-    //groupLayer.pivotX = 12;
-    //groupLayer.pivotY = 12;
-    //groupLayer.rotation = 180;
-    ////groupLayer.scaleX = 0.5;
-    //groupLayer.scaleY = 0.5;
-    // console.log(this.startVectorLayer);
+    // const groupLayerStart = this.startVectorLayer.children[0] as GroupLayer;
+    // groupLayerStart.pivotX = 12;
+    // groupLayerStart.pivotY = 12;
+    // groupLayerStart.rotation = 180;
+    // const groupLayerPreview = this.previewVectorLayer.children[0] as GroupLayer;
+    // groupLayerPreview.pivotX = 12;
+    // groupLayerPreview.pivotY = 12;
+    // groupLayerPreview.rotation = 180;
+    // const groupLayerEnd = this.endVectorLayer.children[0] as GroupLayer;
+    // groupLayerEnd.pivotX = 12;
+    // groupLayerEnd.pivotY = 12;
+    // groupLayerEnd.rotation = 180;
   }
 }

@@ -54,7 +54,9 @@ export class PointListComponent implements OnInit, OnDestroy {
             return `${c.svgChar}`;
           } else {
             const p = c.points[c.points.length - 1];
-            return `${c.svgChar} ${p.x}, ${p.y}`;
+            const x = Number(p.x.toFixed(3)).toString();
+            const y = Number(p.y.toFixed(3)).toString();
+            return `${c.svgChar} ${x}, ${y}`;
           }
         }));
       }
