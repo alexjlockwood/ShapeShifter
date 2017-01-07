@@ -1,14 +1,14 @@
 import * as Bezier from 'bezier-js';
 import { Point, Matrix, Rect } from './mathutil';
 import {
-  Command, SimpleCommand, MoveCommand, LineCommand, QuadraticCurveCommand,
+  Command, MoveCommand, LineCommand, QuadraticCurveCommand,
   BezierCurveCommand, EllipticalArcCommand, ClosePathCommand
 } from './svgcommands';
 import * as SvgUtil from './svgutil';
 import * as PathParser from './pathparser';
 
 
-export class SvgPathData {
+export class SvgPath {
   private pathString_: string;
   private commands_: Command[];
   private length_ = 0;
@@ -18,14 +18,14 @@ export class SvgPathData {
   constructor();
   constructor(obj: string);
   constructor(obj: Command[]);
-  constructor(obj: SvgPathData);
+  constructor(obj: SvgPath);
   constructor(obj?: any) {
     if (obj) {
       if (typeof obj === 'string') {
         this.pathString = obj;
       } else if (Array.isArray(obj)) {
         this.commands = obj;
-      } else if (obj instanceof SvgPathData) {
+      } else if (obj instanceof SvgPath) {
         this.pathString = obj.pathString;
       }
     }
@@ -96,7 +96,7 @@ export class SvgPathData {
     this.commands = this.commands_;
   }
 
-  isMorphable(start: SvgPathData, end: SvgPathData) {
+  isMorphable(start: SvgPath, end: SvgPath) {
     if (!start || !end
       || !this.commands || !start.commands || !end.commands
       || this.commands.length !== start.commands.length
@@ -113,7 +113,7 @@ export class SvgPathData {
     return true;
   }
 
-  interpolate(start: SvgPathData, end: SvgPathData, fraction: number) {
+  interpolate(start: SvgPath, end: SvgPath, fraction: number) {
     if (!this.isMorphable(start, end)) {
       return null;
     }
@@ -131,8 +131,8 @@ export class SvgPathData {
 
     const newCmdLists: Command[][] = [];
     for (let i = 0; i < cmdLists.length; i++) {
-      const cmds = cmdLists[i];
-      const newCmds = [new MoveCommand(undefined, cmds[cmds.length - 1].endPoint)];
+      const cmds: Command[] = cmdLists[i];
+      const newCmds: Command[] = [new MoveCommand(undefined, cmds[cmds.length - 1].endPoint)];
       for (let i = cmds.length - 1; i >= 1; i--) {
         cmds[i].reverse();
         newCmds.push(cmds[i]);

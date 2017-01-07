@@ -1,8 +1,24 @@
 import { Point, Matrix } from './mathutil';
 import * as SvgUtil from './svgutil';
 
+export interface Command {
 
-export abstract class Command {
+  svgChar: string;
+
+  points: Point[];
+
+  startPoint: Point;
+
+  endPoint: Point;
+
+  interpolate<T extends Command>(start: T, end: T, fraction: number);
+
+  transform(transforms: Matrix[]);
+
+  reverse();
+}
+
+export abstract class CommandImpl implements Command {
   private readonly svgChar_: string;
   private readonly points_: Point[];
 
@@ -27,74 +43,67 @@ export abstract class Command {
     return this.points_[this.points_.length - 1];
   }
 
-  abstract interpolate<T extends Command>(start: T, end: T, fraction: number): void;
-
-  abstract transform(transforms: Matrix[]): void;
-
-  abstract reverse(): void;
-}
-
-export abstract class SimpleCommand extends Command {
-  protected constructor(svgChar: string, ...points_: Point[]) {
-    super(svgChar, ...points_);
-  }
-
-  interpolate<T extends SimpleCommand>(start: T, end: T, fraction: number) {
-    const startIndex = this instanceof MoveCommand && !this.points[0] ? 1 : 0;
-    for (let i = startIndex; i < start.points.length; i++) {
+  interpolate<T extends Command>(start: T, end: T, fraction: number) {
+    for (let i = 0; i < start.points.length; i++) {
       const startPoint = start.points[i];
       const endPoint = end.points[i];
-      const x = startPoint.x + (endPoint.x - startPoint.x) * fraction;
-      const y = startPoint.y + (endPoint.y - startPoint.y) * fraction;
-      this.points[i] = new Point(x, y);
+      if (startPoint && endPoint) {
+        const x = startPoint.x + (endPoint.x - startPoint.x) * fraction;
+        const y = startPoint.y + (endPoint.y - startPoint.y) * fraction;
+        this.points[i] = new Point(x, y);
+      }
     }
   }
 
   transform(transforms: Matrix[]) {
-    const startIndex = this instanceof MoveCommand && !this.points[0] ? 1 : 0;
-    for (let i = startIndex; i < this.points.length; i++) {
-      const point = this.points[i];
-      this.points[i] = point.transform(...transforms);
+    for (let i = 0; i < this.points.length; i++) {
+      if (this.points[i]) {
+        this.points[i] = this.points[i].transform(...transforms);
+      }
     }
   }
 
   reverse() {
-    this.points.reverse();
+    if (this.startPoint) {
+      // Only reverse the command if it has a valid start point (i.e. if it isn't
+      // the first move command in the path).
+      this.points.reverse();
+    }
   }
 }
 
-export class MoveCommand extends SimpleCommand {
+export class MoveCommand extends CommandImpl {
   constructor(start: Point, end: Point) {
     super('M', start, end);
   }
 }
 
-export class LineCommand extends SimpleCommand {
+export class LineCommand extends CommandImpl {
   constructor(start: Point, end: Point) {
     super('L', start, end);
   }
 }
 
-export class QuadraticCurveCommand extends SimpleCommand {
+export class QuadraticCurveCommand extends CommandImpl {
   constructor(start: Point, cp: Point, end: Point) {
     super('Q', start, cp, end);
   }
 }
 
-export class BezierCurveCommand extends SimpleCommand {
+export class BezierCurveCommand extends CommandImpl {
   constructor(start: Point, cp1: Point, cp2: Point, end: Point) {
     super('C', start, cp1, cp2, end);
   }
 }
 
-export class ClosePathCommand extends SimpleCommand {
+export class ClosePathCommand extends CommandImpl {
   constructor(start: Point, end: Point) {
     super('Z', start, end);
   }
 }
 
 // TODO(alockwood): figure out what to do with elliptical arcs
-export class EllipticalArcCommand extends Command {
+export class EllipticalArcCommand extends CommandImpl {
   readonly args: number[];
 
   constructor(...args: number[]) {
@@ -103,7 +112,9 @@ export class EllipticalArcCommand extends Command {
   }
 
   // TODO(alockwood): implement this somehow?
-  interpolate(start: EllipticalArcCommand, end: EllipticalArcCommand, fraction: number) { }
+  interpolate(start: EllipticalArcCommand, end: EllipticalArcCommand, fraction: number) {
+    console.warn('TODO: implement interpolate for elliptical arcs')
+  }
 
   transform(transforms: Matrix[]) {
     const start = new Point(this.args[0], this.args[1]).transform(...transforms);
@@ -128,15 +139,11 @@ export class EllipticalArcCommand extends Command {
   }
 
   reverse() {
-    const args = this.args;
-    const startX = this.args[7];
-    const startY = this.args[8];
     const endX = this.args[0];
     const endY = this.args[1];
-    const sweepFlag = args[6] === 0 ? 1 : 0;
-    this.args[0] = startX;
-    this.args[1] = startY;
-    this.args[6] = sweepFlag;
+    this.args[0] = this.args[7];
+    this.args[1] = this.args[8];
+    this.args[6] = this.args[6] === 0 ? 1 : 0;
     this.args[7] = endX;
     this.args[8] = endY;
   }

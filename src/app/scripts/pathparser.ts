@@ -1,6 +1,6 @@
 import { Point } from './mathutil';
 import {
-  Command, SimpleCommand, MoveCommand, LineCommand, QuadraticCurveCommand,
+  Command, MoveCommand, LineCommand, QuadraticCurveCommand,
   BezierCurveCommand, EllipticalArcCommand, ClosePathCommand
 } from './svgcommands';
 

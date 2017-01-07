@@ -40,7 +40,7 @@ export class PointItemComponent implements AfterViewInit {
     ctx.fill();
     ctx.beginPath();
     ctx.fillStyle = "white";
-    ctx.font = commandIndexCanvasSize + 'px serif';
+    ctx.font = radius + 'px serif';
     const text = (this.commandIndex + 1).toString();
     const textWidth = ctx.measureText(text).width;
     // TODO(alockwood): is there a better way to get the height?

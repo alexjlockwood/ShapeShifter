@@ -23,7 +23,8 @@
     <div appSplitter
       (onDividerDrag)="onDividerDrag($event)"
       style="height: 16px;"></div>
-    <div fxLayout="row"
+    <div class="pointlist-container"
+      fxLayout="row"
       fxLayoutAlign="space-around">
       <app-pointlist fxFlex="30%"
         [vectorLayerType]="startVectorLayerType"></app-pointlist>

@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Layer, VectorLayer, GroupLayer, PathLayer } from './scripts/models';
 import * as SvgLoader from './scripts/svgloader';
-import { SvgPathData } from './scripts/svgpathdata';
+import { SvgPath } from './scripts/svgpath';
 import { Point } from './scripts/mathutil';
 import { Command, MoveCommand, LineCommand, ClosePathCommand } from './scripts/svgcommands';
 import { Subscription } from 'rxjs/Subscription';
@@ -164,13 +164,16 @@ export class AppComponent implements OnInit, OnDestroy {
         <g transform="translate(12,12)">
           <g transform="scale(0.75,0.75)">
             <g transform="translate(-12,-12)">
-            <g transform="translate(12,12)">
-            <g transform="rotate(90)">
-            <g transform="translate(-12,-12)">
-              <path d="M 0 0 L 12 12 C 13 13 14 14 15 15 C 16 16 17 17 18 18 C 19 19 20 20 21 21 C 22 22 23 23 24 24 L 24 24" stroke="#000" stroke-width="1" />
+              <g transform="translate(12,12)">
+                <g transform="rotate(90)">
+                  <g transform="translate(-12,-12)">
+                    <path d="M 0 0 L 12 12 C 13 13 14 14 15 15 C 16 16 17 17 18 18 C 19 19 20 20 21 21 C 22 22 23 23 24 24 L 24 24" stroke="#000" stroke-width="1" />
+                  </g>
+                </g>
+              </g>
             </g>
           </g>
-        </g></g></g></g>
+        </g>
       </svg>`);
     this.onEndSvgTextLoaded(`
       <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24">
@@ -184,13 +187,16 @@ export class AppComponent implements OnInit, OnDestroy {
         <g transform="translate(12,12)">
           <g transform="scale(0.75,0.75)">
             <g transform="translate(-12,-12)">
-            <g transform="translate(12,12)">
-            <g transform="rotate(90)">
-            <g transform="translate(-12,-12)">
-              <path d="M 0 0 L 12 12 C 13 13 14 14 15 15 C 16 16 17 17 18 18 C 19 19 20 20 21 21 C 22 22 23 23 24 24 L 24 24" stroke="#000" stroke-width="1" />
+              <g transform="translate(12,12)">
+                <g transform="rotate(90)">
+                  <g transform="translate(-12,-12)">
+                    <path d="M 0 0 L 12 12 C 13 13 14 14 15 15 C 16 16 17 17 18 18 C 19 19 20 20 21 21 C 22 22 23 23 24 24 L 24 24" stroke="#000" stroke-width="1" />
+                  </g>
+                </g>
+              </g>
             </g>
           </g>
-        </g></g></g></g>
+        </g>
       </svg>`);
     // const groupLayerStart = this.startVectorLayer.children[0] as GroupLayer;
     // groupLayerStart.pivotX = 12;

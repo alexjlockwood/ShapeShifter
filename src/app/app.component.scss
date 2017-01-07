@@ -15,3 +15,8 @@
   height: 100%;
 }
 
+// TODO(alockwood): fix this hack
+div.pointlist-container {
+  height: 800px;
+  overflow: auto;
+}

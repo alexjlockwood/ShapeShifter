@@ -1,6 +1,6 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
 import { Layer, VectorLayer, PathLayer } from './../scripts/models';
-import { SvgPathData } from './../scripts/svgpathdata';
+import { SvgPath } from './../scripts/svgpath';
 import {
   Command, MoveCommand, LineCommand, QuadraticCurveCommand,
   BezierCurveCommand, EllipticalArcCommand, ClosePathCommand
