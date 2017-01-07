@@ -27,8 +27,13 @@
   <md-icon class="md-24">skip_next</md-icon>
 </button>
 <div>
-  <ol *ngFor="let commandStrings of pathLayerCommandStrings">
-    <li *ngFor="let commandString of commandStrings">{{ commandString }}</li>
-  </ol>
+  <div *ngFor="let commandStrings of pathLayerCommandStrings"
+    fxLayout="column">
+    <app-pointitem *ngFor="let commandString of commandStrings; let i = index"
+      fxLayout="row"
+      fxLayoutAlign="start center"
+      [commandIndex]="i"
+      [commandString]="commandString"></app-pointitem>
+  </div>
 </div>
 

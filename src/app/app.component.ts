@@ -131,43 +131,67 @@ export class AppComponent implements OnInit, OnDestroy {
     this.stateService.setVectorLayer(this.endVectorLayerType, vectorLayer);
   }
 
+  onDividerDrag(event) {
+    console.log(event);
+  }
+
   private initDebugMode() {
-    this.onStartSvgTextLoaded(`
-      <svg xmlns="http://www.w3.org/2000/svg"
-        width="24px"
-        height="24px"
-        viewBox="0 0 24 24">
-        <path d="M 5 11 L 11 11 L 11 5 L 13 5 L 13 11 L 19 11 L 19 13 L 13 13 L 13 19 L 11 19 L 11 13 L 5 13 Z"
-          fill="#000" />
-      </svg>`);
-    this.onEndSvgTextLoaded(`
-      <svg xmlns="http://www.w3.org/2000/svg"
-        width="24px"
-        height="24px"
-        viewBox="0 0 24 24">
-        <path d="M 19 11 L 5 11 L 5 13 L 19 13 Z"
-          fill="#000" />
-      </svg>`);
     // this.onStartSvgTextLoaded(`
-    //   <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24">
-    //     <g transform="translate(12,12)">
-    //       <g transform="scale(0.75,0.75)">
-    //         <g transform="translate(-12,-12)">
-    //           <path d="M 0 0 L 12 12 C 13 13 14 14 15 15 C 16 16 17 17 18 18 C 19 19 20 20 21 21 C 22 22 23 23 24 24 L 24 24" stroke="#000" stroke-width="1" />
-    //         </g>
-    //       </g>
-    //     </g>
+    //   <svg xmlns="http://www.w3.org/2000/svg"
+    //     width="24px"
+    //     height="24px"
+    //     viewBox="0 0 24 24">
+    //     <path d="M 5 11 L 11 11 L 11 5 L 13 5 L 13 11 L 19 11 L 19 13 L 13 13 L 13 19 L 11 19 L 11 13 L 5 13 Z"
+    //       fill="#000" />
     //   </svg>`);
     // this.onEndSvgTextLoaded(`
-    //   <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24">
-    //     <g transform="translate(12,12)">
-    //       <g transform="scale(0.75,0.75)">
-    //         <g transform="translate(-12,-12)">
-    //           <path d="M 0 0 L 4 4 C 11 12 17 12 24 12 L 24 24" stroke="#000" stroke-width="1" />
-    //         </g>
-    //       </g>
-    //     </g>
+    //   <svg xmlns="http://www.w3.org/2000/svg"
+    //     width="24px"
+    //     height="24px"
+    //     viewBox="0 0 24 24">
+    //     <path d="M 19 11 L 5 11 L 5 13 L 19 13 Z"
+    //       fill="#000" />
     //   </svg>`);
+    this.onStartSvgTextLoaded(`
+      <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24">
+        <g transform="translate(12,12)">
+          <g transform="scale(0.75,0.75)">
+            <g transform="translate(-12,-12)">
+              <path d="M 0 0 L 12 12 C 13 13 14 14 15 15 C 16 16 17 17 18 18 C 19 19 20 20 21 21 C 22 22 23 23 24 24 L 24 24" stroke="#000" stroke-width="1" />
+            </g>
+          </g>
+        </g>
+        <g transform="translate(12,12)">
+          <g transform="scale(0.75,0.75)">
+            <g transform="translate(-12,-12)">
+            <g transform="translate(12,12)">
+            <g transform="rotate(90)">
+            <g transform="translate(-12,-12)">
+              <path d="M 0 0 L 12 12 C 13 13 14 14 15 15 C 16 16 17 17 18 18 C 19 19 20 20 21 21 C 22 22 23 23 24 24 L 24 24" stroke="#000" stroke-width="1" />
+            </g>
+          </g>
+        </g></g></g></g>
+      </svg>`);
+    this.onEndSvgTextLoaded(`
+      <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24">
+        <g transform="translate(12,12)">
+          <g transform="scale(0.75,0.75)">
+            <g transform="translate(-12,-12)">
+              <path d="M 0 0 L 4 4 C 11 12 17 12 24 12 L 24 24" stroke="#000" stroke-width="1" />
+            </g>
+          </g>
+        </g>
+        <g transform="translate(12,12)">
+          <g transform="scale(0.75,0.75)">
+            <g transform="translate(-12,-12)">
+            <g transform="translate(12,12)">
+            <g transform="rotate(90)">
+            <g transform="translate(-12,-12)">
+              <path d="M 0 0 L 12 12 C 13 13 14 14 15 15 C 16 16 17 17 18 18 C 19 19 20 20 21 21 C 22 22 23 23 24 24 L 24 24" stroke="#000" stroke-width="1" />
+            </g>
+          </g>
+        </g></g></g></g>
+      </svg>`);
     // const groupLayerStart = this.startVectorLayer.children[0] as GroupLayer;
     // groupLayerStart.pivotX = 12;
     // groupLayerStart.pivotY = 12;

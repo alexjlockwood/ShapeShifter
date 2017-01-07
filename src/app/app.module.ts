@@ -14,6 +14,8 @@ import { TimelineComponent } from './timeline/timeline.component';
 
 import "hammerjs";
 import { DropSvgComponent } from './dropsvg/dropsvg.component';
+import { SplitterDirective } from './splitter/splitter.directive';
+import { PointItemComponent } from './pointitem/pointitem.component';
 
 @NgModule({
   declarations: [
@@ -21,7 +23,9 @@ import { DropSvgComponent } from './dropsvg/dropsvg.component';
     CanvasComponent,
     TimelineComponent,
     PointListComponent,
-    DropSvgComponent
+    DropSvgComponent,
+    SplitterDirective,
+    PointItemComponent
   ],
   imports: [
     BrowserModule,

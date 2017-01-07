@@ -26,15 +26,15 @@ export class PointListComponent implements OnInit, OnDestroy {
 
   constructor(private stateService: StateService) { }
 
-  // TODO(alockwood): figure out how to handle multiple paths in the vector layer
   ngOnInit() {
-    this.subscription = this.stateService.subscribeToVectorLayer(this.vectorLayerType, layer => {
-      if (!layer) {
-        return;
-      }
-      this.vectorLayer_ = layer;
-      this.buildPathCommandStrings();
-    });
+    this.subscription =
+      this.stateService.subscribeToVectorLayer(this.vectorLayerType, layer => {
+        if (!layer) {
+          return;
+        }
+        this.vectorLayer_ = layer;
+        this.buildPathCommandStrings();
+      });
   }
 
   ngOnDestroy() {

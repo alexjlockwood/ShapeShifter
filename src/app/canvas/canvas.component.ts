@@ -130,7 +130,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         height: this.vectorLayer.height * this.scale,
       });
 
-    this.pathPointRadius = this.backingStoreScale * 0.95;
+    this.pathPointRadius = this.backingStoreScale * 0.6;
     this.draw();
   }
 
@@ -379,7 +379,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
     if (this.closestProjectionInfo) {
       const pathLayer = this.vectorLayer_.findLayerById(this.closestPathLayerId) as PathLayer;
-      pathLayer.pathData.split(this.closestProjectionInfo.commandIndex, this.closestProjectionInfo.projection.t);
+      pathLayer.pathData.split(
+        this.closestProjectionInfo.commandIndex, this.closestProjectionInfo.projection.t);
       this.stateService.setVectorLayer(this.vectorLayerType, this.vectorLayer);
     }
   }
@@ -409,7 +410,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       if (layer instanceof PathLayer) {
         const projectionInfo = layer.pathData.project(point);
         if (projectionInfo
-          && (!closestProjectionInfo || projectionInfo.projection.d < closestProjectionInfo.projection.d)) {
+          && (!closestProjectionInfo
+            || projectionInfo.projection.d < closestProjectionInfo.projection.d)) {
           closestProjectionInfo = projectionInfo;
           closestPathLayerId = layer.id;
         }

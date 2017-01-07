@@ -20,6 +20,9 @@
       [shouldLabelPoints]="shouldLabelPoints"
       (animationFractionChangedEmitter)="onAnimationFractionChanged($event)"
       (labelPointsChangedEmitter)="onLabelPointsChanged($event)"></app-timeline>
+    <div appSplitter
+      (onDividerDrag)="onDividerDrag($event)"
+      style="height: 16px;"></div>
     <div fxLayout="row"
       fxLayoutAlign="space-around">
       <app-pointlist fxFlex="30%"
