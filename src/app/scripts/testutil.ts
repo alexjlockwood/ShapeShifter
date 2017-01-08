@@ -1,9 +1,9 @@
 import { Point } from './mathutil';
-import { Command, MoveCommand, LineCommand, BezierCurveCommand } from './svgcommands';
+import { DrawCommand, MoveCommand, LineCommand, BezierCurveCommand } from './svgcommands';
 
 
 export class CommandListBuilder {
-  private commands: Command[] = [];
+  private commands: DrawCommand[] = [];
   private lastPoint: Point;
 
   moveTo(x, y) {

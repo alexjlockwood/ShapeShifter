@@ -1,4 +1,4 @@
-import { SvgPath } from './svgpath';
+import { SvgPathData } from './svgpathdata';
 import { Matrix } from './mathutil';
 
 
@@ -75,7 +75,7 @@ abstract class AbstractLayer implements Layer {
 export class PathLayer extends AbstractLayer {
   constructor(
     id: string,
-    public pathData: SvgPath,
+    public pathData: SvgPathData,
     public fillColor: string | null,
     public fillAlpha = 1,
     public strokeColor: string | null,
@@ -95,7 +95,7 @@ export class PathLayer extends AbstractLayer {
 export class ClipPathLayer extends AbstractLayer {
   constructor(
     id: string,
-    public pathData: SvgPath,
+    public pathData: SvgPathData,
   ) {
     super(null, id);
   }

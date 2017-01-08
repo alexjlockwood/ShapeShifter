@@ -1,12 +1,11 @@
 import { Point } from './mathutil';
 import {
-  Command, MoveCommand, LineCommand, QuadraticCurveCommand,
-  BezierCurveCommand, EllipticalArcCommand, ClosePathCommand
+  DrawCommand, MoveCommand, LineCommand, QuadraticCurveCommand,
+  BezierCurveCommand, EllipticalArcCommand, ClosePathCommand, SubPathCommand
 } from './svgcommands';
 
 
-// TODO(alockwood): add 'M 0,0' at the beginning if it doesn't exist?
-export function parseCommands(pathString: string): Command[] {
+export function parseCommands(pathString: string): SubPathCommand[] {
   let index = 0;
   let currentPoint: Point;
   let currentToken: Token;
@@ -82,7 +81,7 @@ export function parseCommands(pathString: string): Command[] {
     return parseFloat(str);
   };
 
-  const commands: Command[] = [];
+  const commands: DrawCommand[] = [];
   let currentControlPoint: Point;
   let lastMovePoint: Point;
 
@@ -301,11 +300,23 @@ export function parseCommands(pathString: string): Command[] {
     }
   }
 
-  return commands;
+  const cmdGroups: DrawCommand[][] = [[]];
+  let currentCmdList = cmdGroups[0];
+  for (let i = 0; i < commands.length; i++) {
+    const cmd = commands[i];
+    currentCmdList.push(cmd);
+    if (cmd instanceof ClosePathCommand && i !== commands.length - 1) {
+      currentCmdList = [];
+      cmdGroups.push(currentCmdList);
+    }
+  }
+  return cmdGroups.map(drawCommands => new SubPathCommand(...drawCommands));
 }
 
 
-export function commandsToString(commands: Command[]) {
+export function commandsToString(subPathCommands: SubPathCommand[]) {
+  const commands = [];
+  subPathCommands.forEach(c => commands.push(...c.commands));
   const tokens = [];
   commands.forEach(command => {
     if (command instanceof EllipticalArcCommand) {

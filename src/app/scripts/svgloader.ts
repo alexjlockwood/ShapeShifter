@@ -1,6 +1,6 @@
 import { Layer, VectorLayer, GroupLayer, PathLayer } from './models';
 import * as ColorUtil from './colorutil';
-import { SvgPath } from './svgpath';
+import { SvgPathData } from './svgpathdata';
 import * as ModelUtil from './modelutil';
 
 
@@ -110,7 +110,7 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
     if (path) {
       // transform all points
       if (context.transforms && context.transforms.length) {
-        const pathData = new SvgPath(path);
+        const pathData = new SvgPathData(path);
         const matrices = context.transforms.map(t => t.matrix);
         pathData.transform(matrices);
         path = pathData.pathString;
@@ -119,7 +119,7 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
       // create a path layer
       return new PathLayer(
         makeFinalNodeId_(node, 'path'),
-        new SvgPath(path),
+        new SvgPathData(path),
         ('fillColor' in context) ? ColorUtil.svgToAndroidColor(context.fillColor) : null,
         ('fillAlpha' in context) ? context.fillAlpha : undefined,
         ('strokeColor' in context) ? ColorUtil.svgToAndroidColor(context.strokeColor) : null,

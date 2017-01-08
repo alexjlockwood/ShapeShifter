@@ -8,10 +8,10 @@ import * as ColorUtil from './../scripts/colorutil';
 import * as $ from 'jquery';
 import * as erd from 'element-resize-detector';
 import { Point, Matrix } from './../scripts/mathutil';
-import { Command, ClosePathCommand } from './../scripts/svgcommands';
+import { DrawCommand, ClosePathCommand } from './../scripts/svgcommands';
 import { StateService, VectorLayerType } from './../state.service';
 import { Subscription } from 'rxjs/Subscription';
-import { SvgPath, Projection, ProjectionInfo } from './../scripts/svgpath';
+import { SvgPathData, Projection, ProjectionInfo } from './../scripts/svgpathdata';
 
 const ELEMENT_RESIZE_DETECTOR = erd();
 
@@ -25,12 +25,12 @@ const ELEMENT_RESIZE_DETECTOR = erd();
 })
 export class CanvasComponent implements AfterViewInit, OnDestroy {
   @Input() vectorLayerType: VectorLayerType;
-  @Output() selectedCommandsChangedEmitter = new EventEmitter<Command[]>();
+  @Output() selectedCommandsChangedEmitter = new EventEmitter<DrawCommand[]>();
   @ViewChild('renderingCanvas') private renderingCanvasRef: ElementRef;
 
   private vectorLayer_: VectorLayer;
   private shouldLabelPoints_ = false;
-  private selectedCommands_: Command[] = [];
+  private selectedCommands_: DrawCommand[] = [];
   private canvasContainerSize: number;
   private canvas;
   private scale: number;
@@ -99,7 +99,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   }
 
   @Input()
-  set selectedCommands(selectedCommands: Command[]) {
+  set selectedCommands(selectedCommands: DrawCommand[]) {
     this.selectedCommands_ = selectedCommands;
     this.draw();
   }
@@ -380,7 +380,9 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     if (this.closestProjectionInfo) {
       const pathLayer = this.vectorLayer_.findLayerById(this.closestPathLayerId) as PathLayer;
       pathLayer.pathData.split(
-        this.closestProjectionInfo.commandIndex, this.closestProjectionInfo.projection.t);
+        this.closestProjectionInfo.subPathCommandIndex,
+        this.closestProjectionInfo.commandIndex,
+        this.closestProjectionInfo.projection.t);
       this.stateService.setVectorLayer(this.vectorLayerType, this.vectorLayer);
     }
   }
@@ -451,4 +453,4 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   }
 }
 
-type PointCommand = { point: Point, command: Command };
+type PointCommand = { point: Point, command: DrawCommand };

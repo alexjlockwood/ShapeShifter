@@ -1,8 +1,8 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
 import { Layer, VectorLayer, PathLayer } from './../scripts/models';
-import { SvgPath } from './../scripts/svgpath';
+import { SvgPathData } from './../scripts/svgpathdata';
 import {
-  Command, MoveCommand, LineCommand, QuadraticCurveCommand,
+  DrawCommand, MoveCommand, LineCommand, QuadraticCurveCommand,
   BezierCurveCommand, EllipticalArcCommand, ClosePathCommand
 } from './../scripts/svgcommands';
 import { StateService, VectorLayerType } from './../state.service';
@@ -19,7 +19,7 @@ export class PointListComponent implements OnInit, OnDestroy {
 
   private vectorLayer_: VectorLayer;
   private pathLayers_: PathLayer[] = [];
-  private pathLayerCommands_: Command[][] = [];
+  private pathLayerCommands_: DrawCommand[][] = [];
   private pathLayerCommandStrings_: string[][] = [];
 
   private subscription: Subscription;
@@ -43,7 +43,7 @@ export class PointListComponent implements OnInit, OnDestroy {
 
   buildPathCommandStrings() {
     const pathLayers: PathLayer[] = [];
-    const pathLayerCommands: Command[][] = [];
+    const pathLayerCommands: DrawCommand[][] = [];
     const pathLayerCommandStrings: string[][] = [];
     this.vectorLayer_.walk(layer => {
       if (layer instanceof PathLayer) {
