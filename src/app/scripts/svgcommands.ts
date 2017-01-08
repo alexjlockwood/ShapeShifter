@@ -120,9 +120,9 @@ export abstract class DrawCommand implements PathCommand {
   private readonly svgChar_: string;
   private readonly points_: Point[];
 
-  protected constructor(svgChar: string, ...points_: Point[]) {
+  protected constructor(svgChar: string, ...points: Point[]) {
     this.svgChar_ = svgChar;
-    this.points_ = Array.from(points_);
+    this.points_ = points.slice();
   }
 
   isMorphableWith(start: DrawCommand, end: DrawCommand) {

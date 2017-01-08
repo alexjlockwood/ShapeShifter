@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import { Component, OnChanges, SimpleChanges, Input, Output, EventEmitter, OnInit } from '@angular/core';
 import { Layer, VectorLayer, PathLayer } from './../../scripts/models';
 import { SvgPathData } from './../../scripts/svgpathdata';
 import {
@@ -14,7 +14,7 @@ import { Subscription } from 'rxjs/Subscription';
   templateUrl: './path.component.html',
   styleUrls: ['./path.component.scss']
 })
-export class PathComponent implements OnInit {
+export class PathComponent implements OnInit, OnChanges {
   @Input() vectorLayerType: VectorLayerType;
   @Input() pathCommand: SvgPathData;
   subPathCommands: SubPathCommand[] = [];
@@ -22,6 +22,8 @@ export class PathComponent implements OnInit {
   ngOnInit() {
     this.subPathCommands = this.pathCommand.subPathCommands;
   }
+
+  ngOnChanges(changes: SimpleChanges) { }
 
   trackSubPathCommand(index: number, subPathCommand: SubPathCommand) {
     return subPathCommand;

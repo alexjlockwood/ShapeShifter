@@ -21,11 +21,13 @@
     <md-icon class="md-24">skip_next</md-icon>
   </button>
 </div>
-<app-command *ngFor="let drawCommand of drawCommands; let commandIndex = index; trackBy: trackDrawCommand"
+<app-command *ngFor="let drawCommandWrapper of drawCommandWrappers;
+                     let commandIndex = index;
+                     trackBy: trackDrawCommandWrapper"
   fxLayout="row"
   fxLayoutAlign="start center"
   [vectorLayerType]="vectorLayerType"
-  [commandIndex]="commandIndex"
-  [drawCommand]="drawCommand">
+  [commandIndex]="drawCommandWrapper.index"
+  [drawCommand]="drawCommandWrapper.command">
 </app-command>
 

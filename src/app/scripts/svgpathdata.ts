@@ -9,7 +9,7 @@ import * as PathParser from './pathparser';
 
 
 export class SvgPathData implements PathCommand {
-  private pathString_: string;
+  private pathString_: string = '';
   private subPathCommands_: SubPathCommand[] = [];
   private length_ = 0;
   private bounds_: Rect = null;
@@ -28,28 +28,55 @@ export class SvgPathData implements PathCommand {
     }
   }
 
-  get pathString() {
-    return this.pathString_ || '';
-  }
-
   set pathString(path: string) {
     this.pathString_ = path;
     this.subPathCommands_ = PathParser.parseCommands(path);
-    this.updateCommandProperties();
-  }
-
-  toString() {
-    return this.pathString;
-  }
-
-  get length() {
-    return this.length_;
+    this.updatePathCommand(false);
   }
 
   set subPathCommands(subPathCommands: SubPathCommand[]) {
-    this.subPathCommands_ = subPathCommands ? subPathCommands.slice() : [];
-    this.pathString_ = PathParser.commandsToString(this.subPathCommands_);
-    this.updateCommandProperties();
+    this.subPathCommands_ = subPathCommands;
+    this.updatePathCommand(true);
+  }
+
+  private updatePathCommand(shouldUpdatePathString: boolean) {
+    if (shouldUpdatePathString) {
+      this.pathString_ = PathParser.commandsToString(this.subPathCommands_);
+    }
+    const {length, bounds, bezierWrappersMap} = computeCommandProperties(this.subPathCommands_);
+    this.length_ = length;
+    this.bounds_ = bounds;
+    this.bezierWrappersMap_ = bezierWrappersMap;
+  }
+
+  interpolate(start: SvgPathData, end: SvgPathData, fraction: number) {
+    if (!this.isMorphableWith(start, end)) {
+      return;
+    }
+    this.subPathCommands_.forEach((c, i) =>
+      c.interpolate(start.subPathCommands_[i], end.subPathCommands_[i], fraction));
+    this.subPathCommands = this.subPathCommands_;
+  }
+
+  // TODO(alockwood): only recalculate bounds and length when necessary
+  transform(transforms: Matrix[]) {
+    this.subPathCommands_.forEach(c => c.transform(transforms));
+    this.subPathCommands = this.subPathCommands_;
+  }
+
+  reverse() {
+    this.subPathCommands_.forEach(c => c.reverse());
+    this.subPathCommands = this.subPathCommands_;
+  }
+
+  shiftBack() {
+    this.subPathCommands_.forEach(c => c.shiftBack());
+    this.subPathCommands = this.subPathCommands_;
+  }
+
+  shiftForward() {
+    this.subPathCommands_.forEach(c => c.shiftForward());
+    this.subPathCommands = this.subPathCommands_;
   }
 
   get subPathCommands() {
@@ -63,23 +90,22 @@ export class SvgPathData implements PathCommand {
     return drawCommands;
   }
 
-  private updateCommandProperties() {
-    const {length, bounds, bezierWrappersMap} = computeCommandProperties(this.subPathCommands);
-    this.length_ = length;
-    this.bounds_ = bounds;
-    this.bezierWrappersMap_ = bezierWrappersMap;
+  get pathString() {
+    return this.pathString_;
+  }
+
+  get length() {
+    return this.length_;
+  }
+
+  toString() {
+    return this.pathString;
   }
 
   /** Draw the path using the specified canvas context. */
   execute(ctx: CanvasRenderingContext2D) {
     ctx.beginPath();
     this.subPathCommands_.forEach(c => c.execute(ctx));
-  }
-
-  // TODO(alockwood): only recalculate bounds and length when necessary
-  transform(transforms: Matrix[]) {
-    this.subPathCommands_.forEach(c => c.transform(transforms));
-    this.subPathCommands = this.subPathCommands_;
   }
 
   isMorphableWith(start: SvgPathData, end: SvgPathData) {
@@ -90,25 +116,6 @@ export class SvgPathData implements PathCommand {
     return this.subPathCommands.every((c, i) => {
       return c.isMorphableWith(start.subPathCommands[i], end.subPathCommands[i]);
     });
-  }
-
-  interpolate(start: SvgPathData, end: SvgPathData, fraction: number) {
-    if (!this.isMorphableWith(start, end)) {
-      return;
-    }
-    this.commands.forEach((c, i) => c.interpolate(start.commands[i], end.commands[i], fraction));
-  }
-
-  reverse() {
-    this.subPathCommands.forEach(c => c.reverse());
-  }
-
-  shiftBack() {
-    this.subPathCommands.forEach(c => c.shiftBack());
-  }
-
-  shiftForward() {
-    this.subPathCommands.forEach(c => c.shiftForward());
   }
 
   project(point: Point): ProjectionInfo | null {

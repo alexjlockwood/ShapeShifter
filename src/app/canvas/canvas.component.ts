@@ -410,7 +410,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     let closestPathLayerId: string = null;
     this.vectorLayer.walk(layer => {
       if (layer instanceof PathLayer) {
-        console.log('asdf');
         const projectionInfo = layer.pathData.project(point);
         if (projectionInfo
           && (!closestProjectionInfo

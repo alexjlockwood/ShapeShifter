@@ -30,7 +30,7 @@ export class InspectorComponent implements OnInit, OnDestroy {
         const pathCommands: SvgPathData[] = [];
         layer.walk(l => {
           if (l instanceof PathLayer) {
-            pathCommands.push(l.pathData);
+            pathCommands.push(new SvgPathData(l.pathData)); // TODO: FIX THIS!!! CAUSES MASSIVE PERFORMANCE PROBLEMS!!!
           }
         });
         this.pathCommands = pathCommands;

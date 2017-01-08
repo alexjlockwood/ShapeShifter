@@ -1,4 +1,4 @@
-import { Component, AfterViewInit, Input, ViewChild, ElementRef } from '@angular/core';
+import { Component, AfterViewInit, OnChanges, SimpleChanges, Input, ViewChild, ElementRef } from '@angular/core';
 import { DrawCommand, ClosePathCommand } from './../../scripts/svgcommands';
 import { StateService, VectorLayerType } from './../../state.service';
 import * as $ from 'jquery';
@@ -8,17 +8,22 @@ import * as $ from 'jquery';
   templateUrl: './command.component.html',
   styleUrls: ['./command.component.scss']
 })
-export class CommandComponent implements AfterViewInit {
+export class CommandComponent implements AfterViewInit, OnChanges {
   @ViewChild('commandIndexCanvas') private commandIndexCanvas: ElementRef;
   @Input() vectorLayerType: VectorLayerType;
   @Input() commandIndex: number;
   @Input() drawCommand: DrawCommand;
-  isItemEditable: boolean = true;
+  isItemEditable: boolean = false;
 
   constructor() { }
 
   ngAfterViewInit() {
     // TODO(alockwood): use ngFor trackBy to avoid recreating these items on animation frames
+    this.drawCommandIndex();
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    console.log('ngOnChanges');
     this.drawCommandIndex();
   }
 

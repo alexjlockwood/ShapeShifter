@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import { Component, OnChanges, SimpleChanges, Input, Output, EventEmitter, OnInit } from '@angular/core';
 import { Layer, VectorLayer, PathLayer } from './../../scripts/models';
 import { SvgPathData } from './../../scripts/svgpathdata';
 import { StateService, VectorLayerType } from './../../state.service';
@@ -14,16 +14,24 @@ import { Subscription } from 'rxjs/Subscription';
   templateUrl: './subpath.component.html',
   styleUrls: ['./subpath.component.scss']
 })
-export class SubPathComponent implements OnInit {
+export class SubPathComponent implements OnInit, OnChanges {
   @Input() vectorLayerType: VectorLayerType;
   @Input() subPathCommand: SubPathCommand;
-  drawCommands: DrawCommand[] = [];
+  drawCommandWrappers: DrawCommandWrapper[] = [];
   private subscription: Subscription;
 
   constructor(private stateService: StateService) { }
 
   ngOnInit() {
-    this.drawCommands = this.subPathCommand.commands;
+    this.updateDrawCommandWrappers();
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    this.updateDrawCommandWrappers();
+  }
+
+  private updateDrawCommandWrappers() {
+    this.drawCommandWrappers = this.subPathCommand.commands.map((c, i) => { return { index: i, command: c } });
   }
 
   onReverseClick() {
@@ -41,7 +49,12 @@ export class SubPathComponent implements OnInit {
     this.stateService.notifyChange(this.vectorLayerType);
   }
 
-  trackDrawCommand(index: number, drawCommand: DrawCommand) {
-    return drawCommand;
+  trackDrawCommandWrapper(index: number, drawCommandWrapper: DrawCommandWrapper) {
+    return drawCommandWrapper;
   }
+}
+
+interface DrawCommandWrapper {
+  index: number;
+  command: DrawCommand;
 }
