@@ -40,6 +40,10 @@ export class StateService {
     this.vectorLayers[type] = vectorLayer;
     this.vectorLayerSources[type].next(vectorLayer);
   }
+
+  notifyVectorLayerChanged(type: VectorLayerType) {
+    this.vectorLayerSources[type].next(this.vectorLayers[type]);
+  }
 }
 
 export enum VectorLayerType {

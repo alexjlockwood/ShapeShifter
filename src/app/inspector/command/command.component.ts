@@ -1,15 +1,18 @@
 import { Component, AfterViewInit, Input, ViewChild, ElementRef } from '@angular/core';
+import { DrawCommand, ClosePathCommand } from './../../scripts/svgcommands';
+import { StateService, VectorLayerType } from './../../state.service';
 import * as $ from 'jquery';
 
 @Component({
-  selector: 'app-pointitem',
-  templateUrl: './pointitem.component.html',
-  styleUrls: ['./pointitem.component.scss']
+  selector: 'app-command',
+  templateUrl: './command.component.html',
+  styleUrls: ['./command.component.scss']
 })
-export class PointItemComponent implements AfterViewInit {
+export class CommandComponent implements AfterViewInit {
   @ViewChild('commandIndexCanvas') private commandIndexCanvas: ElementRef;
+  @Input() vectorLayerType: VectorLayerType;
   @Input() commandIndex: number;
-  @Input() commandString: string;
+  @Input() drawCommand: DrawCommand;
   isItemEditable: boolean = true;
 
   constructor() { }
@@ -50,11 +53,23 @@ export class PointItemComponent implements AfterViewInit {
     ctx.restore();
   }
 
-  onEditPointClick() {
+  get drawCommandEndPointText() {
+    const c = this.drawCommand;
+    if (c instanceof ClosePathCommand) {
+      return `${c.svgChar}`;
+    } else {
+      const p = c.points[c.points.length - 1];
+      const x = Number(p.x.toFixed(3)).toString();
+      const y = Number(p.y.toFixed(3)).toString();
+      return `${c.svgChar} ${x}, ${y}`;
+    }
+  }
 
+  onEditPointClick() {
+    console.log('edit point click');
   }
 
   onDeletePointClick() {
-
+    console.log('delete point click');
   }
 }

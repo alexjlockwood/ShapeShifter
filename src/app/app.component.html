@@ -26,12 +26,12 @@
     <div class="pointlist-container"
       fxLayout="row"
       fxLayoutAlign="space-around">
-      <app-pointlist fxFlex="30%"
-        [vectorLayerType]="startVectorLayerType"></app-pointlist>
-      <app-pointlist fxFlex="30%"
-        [vectorLayerType]="previewVectorLayerType"></app-pointlist>
-      <app-pointlist fxFlex="30%"
-        [vectorLayerType]="endVectorLayerType"></app-pointlist>
+      <app-inspector fxFlex="30%"
+        [vectorLayerType]="startVectorLayerType"></app-inspector>
+      <app-inspector fxFlex="30%"
+        [vectorLayerType]="previewVectorLayerType"></app-inspector>
+      <app-inspector fxFlex="30%"
+        [vectorLayerType]="endVectorLayerType"></app-inspector>
     </div>
   </div>
   <div *ngIf="!shouldDisplayCanvases()"

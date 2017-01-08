@@ -8,6 +8,7 @@ export interface Layer {
   findLayerById(id: string): Layer | null;
   isStructurallyIdenticalWith(layer: Layer): boolean;
   isMorphableWith(layer: Layer): boolean;
+  walk(func: (layer: Layer) => void): void;
 }
 
 abstract class AbstractLayer implements Layer {
