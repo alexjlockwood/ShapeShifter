@@ -23,11 +23,13 @@ export class SubPathCommand implements PathCommand {
       || this.commands.length !== end.commands.length) {
       return false;
     }
-    return this.commands.every((c, i) => c.isMorphableWith(start.commands[i], end.commands[i]));
+    return this.commands.every((c, i) =>
+      c.isMorphableWith(start.commands[i], end.commands[i]));
   }
 
   interpolate(start: SubPathCommand, end: SubPathCommand, fraction: number) {
-    this.commands.forEach((c, i) => this.commands[i].interpolate(start.commands[i], end.commands[i], fraction));
+    this.commands.forEach((c, i) =>
+      this.commands[i].interpolate(start.commands[i], end.commands[i], fraction));
   }
 
   transform(transforms: Matrix[]) {
@@ -73,7 +75,8 @@ export class SubPathCommand implements PathCommand {
     if (secondCmd instanceof ClosePathCommand) {
       newCmds[1] = new LineCommand(secondCmd.startPoint, secondCmd.endPoint);
       const lastCmd = newCmds[newCmds.length - 1];
-      newCmds[newCmds.length - 1] = new ClosePathCommand(lastCmd.startPoint, lastCmd.endPoint);
+      newCmds[newCmds.length - 1] =
+        new ClosePathCommand(lastCmd.startPoint, lastCmd.endPoint);
     }
     this.commands_ = newCmds;
   }
@@ -108,12 +111,8 @@ export class SubPathCommand implements PathCommand {
     } else {
       cmds[1] = cmds[0];
     }
-    // TODO(alockwood): confirm that the start point is correct here for paths with multiple moves
+    // TODO(alockwood): confirm that this start point is correct for paths w/ multiple moves
     cmds[0] = new MoveCommand(moveStartPoint, cmds[1].startPoint);
-  }
-
-  split() {
-
   }
 }
 
@@ -135,8 +134,8 @@ export abstract class DrawCommand implements PathCommand {
       const startPoint = start.points[i];
       const endPoint = end.points[i];
       if (startPoint && endPoint) {
-        const x = startPoint.x + (endPoint.x - startPoint.x) * fraction;
-        const y = startPoint.y + (endPoint.y - startPoint.y) * fraction;
+        const x = lerp(startPoint.x, endPoint.x, fraction);
+        const y = lerp(startPoint.y, endPoint.y, fraction);
         this.points[i] = new Point(x, y);
       }
     }
@@ -245,9 +244,16 @@ export class EllipticalArcCommand extends DrawCommand {
     SvgUtil.executeArc(ctx, this.args);
   }
 
-  // TODO(alockwood): implement this somehow?
+  // TODO(alockwood): confirm this is correct?
   interpolate(start: EllipticalArcCommand, end: EllipticalArcCommand, fraction: number) {
-    console.warn('TODO: implement interpolate for elliptical arcs')
+    this.args.forEach((_, i) => {
+      if (i === 5 || i === 6) {
+        // Doesn't make sense to interpolate the large arc and sweep flags.
+        this.args[i] = fraction === 0 ? start.args[i] : end.args[i];
+        return;
+      }
+      this.args[i] = lerp(start.args[i], end.args[i], fraction);
+    });
   }
 
   transform(transforms: Matrix[]) {
@@ -281,4 +287,8 @@ export class EllipticalArcCommand extends DrawCommand {
     this.args[7] = endX;
     this.args[8] = endY;
   }
+}
+
+function lerp(a: number, b: number, t: number) {
+  return a + (b - a) * t;
 }

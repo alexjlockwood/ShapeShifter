@@ -23,7 +23,7 @@ export class InspectorComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.subscription =
-      this.stateService.subscribeToVectorLayer(this.vectorLayerType, layer => {
+      this.stateService.subscribe(this.vectorLayerType, layer => {
         if (!layer) {
           return;
         }
@@ -39,5 +39,9 @@ export class InspectorComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.subscription.unsubscribe();
+  }
+
+  trackPathCommand(index: number, pathCommand: SvgPathData) {
+    return pathCommand;
   }
 }

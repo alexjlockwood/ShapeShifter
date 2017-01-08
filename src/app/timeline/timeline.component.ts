@@ -7,12 +7,12 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
   styleUrls: ['./timeline.component.scss']
 })
 export class TimelineComponent {
-  private readonly animationDuration = 1000;
-  private readonly maxAnimationFractionSliderValue = 1000;
-  @Input() private shouldLabelPoints: boolean;
-  @Input() private isPathMorphable: boolean;
+  public readonly maxAnimationFractionSliderValue = 1000;
+  @Input() shouldLabelPoints: boolean;
+  @Input() isMorphable: boolean;
   @Output() labelPointsChangedEmitter = new EventEmitter<boolean>();
   @Output() animationFractionChangedEmitter = new EventEmitter<number>();
+  private readonly animationDuration = 1000;
 
   // TODO(alockwood): make this update each time the slider is changed (not just on mouse up)
   onAnimationFractionSliderChanged(sliderValue: number) {
@@ -23,7 +23,7 @@ export class TimelineComponent {
     this.labelPointsChangedEmitter.emit(shouldLabelPoints);
   }
 
-  onPlayClicked() {
+  onPlayClick() {
     let startTimestamp = null;
     const onAnimationFrame = (timestamp: number) => {
       if (!startTimestamp) {

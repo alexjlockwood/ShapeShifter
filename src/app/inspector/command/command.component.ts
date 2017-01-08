@@ -42,7 +42,7 @@ export class CommandComponent implements AfterViewInit {
     ctx.fillStyle = color;
     ctx.fill();
     ctx.beginPath();
-    ctx.fillStyle = "white";
+    ctx.fillStyle = 'white';
     ctx.font = radius + 'px serif';
     const text = (this.commandIndex + 1).toString();
     const textWidth = ctx.measureText(text).width;

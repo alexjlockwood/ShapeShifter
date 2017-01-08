@@ -1,4 +1,4 @@
-<app-subpath *ngFor="let subPathCommand of subPathCommands"
+<app-subpath *ngFor="let subPathCommand of subPathCommands; trackBy: trackSubPathCommand"
   fxLayout="column"
   [vectorLayerType]="vectorLayerType"
   [subPathCommand]="subPathCommand">

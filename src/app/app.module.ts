@@ -11,7 +11,7 @@ import { CanvasComponent } from './canvas/canvas.component';
 import { StateService } from './state.service';
 import { TimelineComponent } from './timeline/timeline.component';
 
-import "hammerjs";
+import 'hammerjs';
 import { DropSvgComponent } from './dropsvg/dropsvg.component';
 import { SplitterDirective } from './splitter/splitter.directive';
 import { InspectorComponent } from './inspector/inspector.component';

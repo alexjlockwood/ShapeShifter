@@ -34,16 +34,6 @@ export function parseCommands(pathString: string): SubPathCommand[] {
     return pathString.charAt(index++);
   };
 
-  const consumePoint_ = (relative: boolean): Point => {
-    let x = consumeValue_();
-    let y = consumeValue_();
-    if (relative) {
-      x += currentPoint.x;
-      y += currentPoint.y;
-    }
-    return new Point(x, y);
-  };
-
   const consumeValue_ = () => {
     advanceToNextToken_();
     if (currentToken !== Token.Value) {
@@ -79,6 +69,16 @@ export function parseCommands(pathString: string): SubPathCommand[] {
     const str = pathString.substring(index, tempIndex);
     index = tempIndex;
     return parseFloat(str);
+  };
+
+  const consumePoint_ = (relative: boolean): Point => {
+    let x = consumeValue_();
+    let y = consumeValue_();
+    if (relative) {
+      x += currentPoint.x;
+      y += currentPoint.y;
+    }
+    return new Point(x, y);
   };
 
   const commands: DrawCommand[] = [];

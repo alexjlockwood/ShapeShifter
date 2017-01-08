@@ -17,14 +17,14 @@ const debugMode = true;
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent implements OnInit, OnDestroy {
-  private readonly startVectorLayerType = VectorLayerType.Start;
-  private readonly previewVectorLayerType = VectorLayerType.Preview;
-  private readonly endVectorLayerType = VectorLayerType.End;
+  public readonly startVectorLayerType = VectorLayerType.Start;
+  public readonly previewVectorLayerType = VectorLayerType.Preview;
+  public readonly endVectorLayerType = VectorLayerType.End;
+  shouldLabelPoints = true;
+  isMorphable = false;
+  selectedCommands: DrawCommand[] = [];
 
-  private selectedCommands: DrawCommand[] = [];
-  private isPathMorphable = true;
-  private shouldLabelPoints = true;
-  private areVectorLayersCompatible = false;
+  private isStructurallyIdentical = false;
   private subscription: Subscription = null;
 
   constructor(private stateService: StateService) { }
@@ -54,21 +54,22 @@ export class AppComponent implements OnInit, OnDestroy {
 
   private maybeDisplayPreview() {
     if (this.startVectorLayer && this.endVectorLayer) {
-      this.areVectorLayersCompatible = this.startVectorLayer.isStructurallyIdenticalWith(this.endVectorLayer);
-      if (!this.areVectorLayersCompatible) {
+      this.isStructurallyIdentical =
+        this.startVectorLayer.isStructurallyIdenticalWith(this.endVectorLayer);
+      if (!this.isStructurallyIdentical) {
         console.warn('vector layer structures are not structurally identical');
       }
     }
     if (this.shouldDisplayCanvases()) {
-      this.isPathMorphable = this.startVectorLayer.isMorphableWith(this.endVectorLayer);
-      this.subscription = this.stateService.subscribeToVectorLayer(VectorLayerType.End, vectorLayer => {
-        this.isPathMorphable = this.startVectorLayer.isMorphableWith(this.endVectorLayer);
+      this.isMorphable = this.startVectorLayer.isMorphableWith(this.endVectorLayer);
+      this.subscription = this.stateService.subscribe(VectorLayerType.End, vectorLayer => {
+        this.isMorphable = this.startVectorLayer.isMorphableWith(this.endVectorLayer);
       });
     }
   }
 
   shouldDisplayCanvases() {
-    return this.startVectorLayer && this.endVectorLayer && this.areVectorLayersCompatible;
+    return this.startVectorLayer && this.endVectorLayer && this.isStructurallyIdentical;
   }
 
   onLabelPointsChanged(shouldLabelPoints: boolean) {
@@ -100,7 +101,7 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   onSelectedCommandsChanged(selectedCommands: DrawCommand[]) {
-    if (!this.isPathMorphable) {
+    if (!this.isMorphable) {
       return;
     }
     // TODO(alockwood): avoid change detection if selected commands haven't changed
@@ -157,7 +158,8 @@ export class AppComponent implements OnInit, OnDestroy {
         <g transform="translate(12,12)">
           <g transform="scale(0.75,0.75)">
             <g transform="translate(-12,-12)">
-              <path d="M 0 0 L 12 12 C 13 13 14 14 15 15 C 16 16 17 17 18 18 C 19 19 20 20 21 21 C 22 22 23 23 24 24 L 24 24" stroke="#000" stroke-width="1" />
+              <path d="M 0 0 L 12 12 C 13 13 14 14 15 15 C 16 16 17 17 18 18
+                       C 19 19 20 20 21 21 C 22 22 23 23 24 24 L 24 24" stroke="#000" stroke-width="1" />
             </g>
           </g>
         </g>

@@ -24,7 +24,7 @@ export class StateService {
       vectorLayers[t] = undefined;
     });
     this.vectorLayerSources = vectorLayerSources;
-    this.vectorLayerStreams = vectorLayerStreams
+    this.vectorLayerStreams = vectorLayerStreams;
     this.vectorLayers = vectorLayers;
   }
 
@@ -32,7 +32,7 @@ export class StateService {
     return this.vectorLayers[type];
   }
 
-  subscribeToVectorLayer(type: VectorLayerType, callback: (vectorLayer: VectorLayer) => void) {
+  subscribe(type: VectorLayerType, callback: (vectorLayer: VectorLayer) => void) {
     return this.vectorLayerStreams[type].subscribe(callback);
   }
 
@@ -41,7 +41,7 @@ export class StateService {
     this.vectorLayerSources[type].next(vectorLayer);
   }
 
-  notifyVectorLayerChanged(type: VectorLayerType) {
+  notifyChange(type: VectorLayerType) {
     this.vectorLayerSources[type].next(this.vectorLayers[type]);
   }
 }

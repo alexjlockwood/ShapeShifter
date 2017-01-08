@@ -22,4 +22,8 @@ export class PathComponent implements OnInit {
   ngOnInit() {
     this.subPathCommands = this.pathCommand.subPathCommands;
   }
+
+  trackSubPathCommand(index: number, subPathCommand: SubPathCommand) {
+    return subPathCommand;
+  }
 }

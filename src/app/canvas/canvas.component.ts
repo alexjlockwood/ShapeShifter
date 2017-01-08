@@ -54,7 +54,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         this.resizeAndDraw();
       }
     });
-    this.subscription = this.stateService.subscribeToVectorLayer(this.vectorLayerType, layer => {
+    this.subscription = this.stateService.subscribe(this.vectorLayerType, layer => {
       if (!layer) {
         return;
       }
@@ -187,7 +187,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
   private drawLayer(layer: Layer, ctx: CanvasRenderingContext2D, transforms: Matrix[]) {
     if (layer instanceof VectorLayer) {
-      layer.children.forEach(layer => this.drawLayer(layer, ctx, transforms));
+      layer.children.forEach(l => this.drawLayer(l, ctx, transforms));
     } else if (layer instanceof GroupLayer) {
       this.drawGroupLayer(layer, ctx, transforms);
     } else if (layer instanceof ClipPathLayer) {
@@ -270,7 +270,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
   private drawPathPoints(layer: Layer, ctx: CanvasRenderingContext2D, transforms: Matrix[]) {
     if (layer instanceof VectorLayer) {
-      layer.children.forEach(layer => this.drawPathPoints(layer, ctx, transforms));
+      layer.children.forEach(l => this.drawPathPoints(l, ctx, transforms));
     } else if (layer instanceof GroupLayer) {
       const matrices = layer.toMatrices();
       transforms.splice(transforms.length, 0, ...matrices);
@@ -301,7 +301,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       ctx.fillStyle = color;
       ctx.fill();
       ctx.beginPath();
-      ctx.fillStyle = "white";
+      ctx.fillStyle = 'white';
       ctx.font = this.pathPointRadius + 'px serif';
       const text = (index + 1).toString();
       const width = ctx.measureText(text).width;
@@ -315,7 +315,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
   private drawClosestProjection(layer: Layer, ctx: CanvasRenderingContext2D, transforms: Matrix[]) {
     if (layer instanceof VectorLayer) {
-      layer.children.forEach(layer => this.drawClosestProjection(layer, ctx, transforms));
+      layer.children.forEach(l => this.drawClosestProjection(l, ctx, transforms));
     } else if (layer instanceof GroupLayer) {
       const matrices = layer.toMatrices();
       transforms.splice(transforms.length, 0, ...matrices);
@@ -410,6 +410,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     let closestPathLayerId: string = null;
     this.vectorLayer.walk(layer => {
       if (layer instanceof PathLayer) {
+        console.log('asdf');
         const projectionInfo = layer.pathData.project(point);
         if (projectionInfo
           && (!closestProjectionInfo

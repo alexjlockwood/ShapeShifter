@@ -76,7 +76,7 @@ export class SvgPathData implements PathCommand {
     this.subPathCommands_.forEach(c => c.execute(ctx));
   }
 
-  // TODO(alockwood): move this logic into the commands... only recalculate bounds and length when necessary
+  // TODO(alockwood): only recalculate bounds and length when necessary
   transform(transforms: Matrix[]) {
     this.subPathCommands_.forEach(c => c.transform(transforms));
     this.subPathCommands = this.subPathCommands_;
@@ -112,10 +112,10 @@ export class SvgPathData implements PathCommand {
   }
 
   project(point: Point): ProjectionInfo | null {
-    const bezierWrappers: {subPathCommandIndex: number, commandIndex: number, bw: BezierWrapper}[] = [];
+    const bezierWrappers: { subPathCommandIndex: number, commandIndex: number, bw: BezierWrapper }[] = [];
     this.bezierWrappersMap_.forEach((bws, subPathCommandIndex) => {
       bws.forEach((bw, commandIndex) => {
-        bezierWrappers.push({subPathCommandIndex, commandIndex, bw});
+        bezierWrappers.push({ subPathCommandIndex, commandIndex, bw });
       });
     });
     return bezierWrappers.map(({subPathCommandIndex, commandIndex, bw}) => {
@@ -208,42 +208,33 @@ function computeCommandProperties(subPathCommands: SubPathCommand[]) {
         currentPoint = nextPoint;
         expandBounds_(nextPoint.x, nextPoint.y);
         bezierWrappers.push(new BezierWrapper(command));
-      }
-
-      else if (command instanceof LineCommand) {
+      } else if (command instanceof LineCommand) {
         const nextPoint = command.points[1];
         length += nextPoint.distanceTo(currentPoint);
         bezierWrappers.push(new BezierWrapper(command, new Bezier(currentPoint, currentPoint, nextPoint, nextPoint)));
         currentPoint = nextPoint;
         expandBounds_(nextPoint.x, nextPoint.y);
-      }
-
-      else if (command instanceof ClosePathCommand) {
+      } else if (command instanceof ClosePathCommand) {
         if (firstPoint) {
           length += firstPoint.distanceTo(currentPoint);
           bezierWrappers.push(new BezierWrapper(command, new Bezier(currentPoint, currentPoint, firstPoint, firstPoint)));
         }
         firstPoint = null;
-      }
-      else if (command instanceof BezierCurveCommand) {
+      } else if (command instanceof BezierCurveCommand) {
         const points = command.points;
         const bez = new Bezier(currentPoint, points[1], points[2], points[3]);
         bezierWrappers.push(new BezierWrapper(command, bez));
         length += bez.length();
         currentPoint = points[3];
         expandBoundsToBezier_(bez);
-      }
-
-      else if (command instanceof QuadraticCurveCommand) {
+      } else if (command instanceof QuadraticCurveCommand) {
         const points = command.points;
         const bez = new Bezier(currentPoint, points[1], points[2]);
         bezierWrappers.push(new BezierWrapper(command, bez));
         length += bez.length();
         currentPoint = points[2];
         expandBoundsToBezier_(bez);
-      }
-
-      else if (command instanceof EllipticalArcCommand) {
+      } else if (command instanceof EllipticalArcCommand) {
         const args = command.args;
         const [currentPointX, currentPointY,
           rx, ry, xAxisRotation,
@@ -343,7 +334,7 @@ export type ProjectionInfo = {
   subPathCommandIndex: number;
   commandIndex: number;
   projection: Projection;
-}
+};
 
 interface Split {
   left: Bezier;

@@ -26,18 +26,22 @@ export class SubPathComponent implements OnInit {
     this.drawCommands = this.subPathCommand.commands;
   }
 
-  onReversePointsClick() {
+  onReverseClick() {
     this.subPathCommand.reverse();
-    this.stateService.notifyVectorLayerChanged(this.vectorLayerType);
+    this.stateService.notifyChange(this.vectorLayerType);
   }
 
   onShiftBackClick() {
     this.subPathCommand.shiftBack();
-    this.stateService.notifyVectorLayerChanged(this.vectorLayerType);
+    this.stateService.notifyChange(this.vectorLayerType);
   }
 
   onShiftForwardClick() {
     this.subPathCommand.shiftForward();
-    this.stateService.notifyVectorLayerChanged(this.vectorLayerType);
+    this.stateService.notifyChange(this.vectorLayerType);
+  }
+
+  trackDrawCommand(index: number, drawCommand: DrawCommand) {
+    return drawCommand;
   }
 }

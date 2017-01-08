@@ -8,7 +8,7 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
 })
 export class DropSvgComponent {
   //@Input() private onSvgFileLoadedFunc: (fileName: string, fileType: string, svgText: string) => void;
-  @Input() private componentId: string;
+  @Input() componentId: string;
   @Output() svgFileLoadedEmitter = new EventEmitter<string>();
 
   onLoadSvgFileComplete(fileList: FileList) {

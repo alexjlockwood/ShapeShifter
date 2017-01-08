@@ -5,7 +5,7 @@ import { Point } from '../scripts/mathutil';
   selector: '[appSplitter]'
 })
 export class SplitterDirective {
-  @Output() onDividerDrag: EventEmitter<{start: Point, move: Point, end: Point}> = new EventEmitter();
+  @Output() onDividerDrag: EventEmitter<{ start: Point, move: Point, end: Point }> = new EventEmitter();
 
   private start: Point;
 
@@ -57,8 +57,7 @@ export class SplitterDirective {
         if (e.pageX) {
           endX = e.pageX;
           endY = e.pageY;
-        }
-        else if (e.clientX) {
+        } else if (e.clientX) {
           endX = e.clientX;
           endY = e.clientX;
         }
