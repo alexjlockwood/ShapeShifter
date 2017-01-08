@@ -18,12 +18,11 @@ export class CommandComponent implements AfterViewInit, OnChanges {
   constructor() { }
 
   ngAfterViewInit() {
-    // TODO(alockwood): use ngFor trackBy to avoid recreating these items on animation frames
     this.drawCommandIndex();
   }
 
+  // TODO(alockwood): use ngFor trackBy to avoid recreating these items on animation frames
   ngOnChanges(changes: SimpleChanges) {
-    console.log('ngOnChanges');
     this.drawCommandIndex();
   }
 

@@ -16,7 +16,15 @@
 }
 
 // TODO(alockwood): fix this hack
-div.pointlist-container {
-  height: 800px;
+div.inspector-container {
   overflow: auto;
+}
+
+div.app-splitter {
+  height: 8px;
+  margin-bottom: 8px;
+}
+
+div.app-splitter:hover {
+  background-color: rgba(0, 0, 0, 0.1);
 }

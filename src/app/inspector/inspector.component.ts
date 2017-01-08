@@ -30,7 +30,7 @@ export class InspectorComponent implements OnInit, OnDestroy {
         const pathCommands: SvgPathData[] = [];
         layer.walk(l => {
           if (l instanceof PathLayer) {
-            pathCommands.push(new SvgPathData(l.pathData)); // TODO: FIX THIS!!! CAUSES MASSIVE PERFORMANCE PROBLEMS!!!
+            pathCommands.push(l.pathData);
           }
         });
         this.pathCommands = pathCommands;
@@ -39,9 +39,5 @@ export class InspectorComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.subscription.unsubscribe();
-  }
-
-  trackPathCommand(index: number, pathCommand: SvgPathData) {
-    return pathCommand;
   }
 }

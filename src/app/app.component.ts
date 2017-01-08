@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ElementRef, ViewChild, OnDestroy } from '@angular/core';
 import { Layer, VectorLayer, GroupLayer, PathLayer } from './scripts/models';
 import * as SvgLoader from './scripts/svgloader';
 import { SvgPathData } from './scripts/svgpathdata';
@@ -7,7 +7,8 @@ import { DrawCommand, MoveCommand, LineCommand, ClosePathCommand } from './scrip
 import { Subscription } from 'rxjs/Subscription';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { StateService, VectorLayerType } from './state.service';
-
+import { DividerDragEvent } from './splitter/splitter.directive';
+import * as $ from 'jquery';
 
 const debugMode = true;
 
@@ -16,7 +17,7 @@ const debugMode = true;
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
-export class AppComponent implements OnInit, OnDestroy {
+export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   public readonly startVectorLayerType = VectorLayerType.Start;
   public readonly previewVectorLayerType = VectorLayerType.Preview;
   public readonly endVectorLayerType = VectorLayerType.End;
@@ -27,12 +28,26 @@ export class AppComponent implements OnInit, OnDestroy {
   private isStructurallyIdentical = false;
   private subscription: Subscription = null;
 
+  @ViewChild('appContainer') appContainerRef: ElementRef;
+  @ViewChild('canvasContainer') canvasContainerRef: ElementRef;
+  @ViewChild('inspectorContainer') inspectorContainerRef: ElementRef;
+  private appContainer;
+  private canvasContainer;
+  private inspectorContainer;
+  private lastDividerDragEvent: DividerDragEvent;
+
   constructor(private stateService: StateService) { }
 
   ngOnInit() {
     if (debugMode) {
       this.initDebugMode();
     }
+  }
+
+  ngAfterViewInit() {
+    this.appContainer = $(this.appContainerRef.nativeElement);
+    this.canvasContainer = $(this.canvasContainerRef.nativeElement);
+    this.inspectorContainer = $(this.inspectorContainerRef.nativeElement);
   }
 
   ngOnDestroy() {
@@ -132,8 +147,23 @@ export class AppComponent implements OnInit, OnDestroy {
     this.stateService.setVectorLayer(this.endVectorLayerType, vectorLayer);
   }
 
-  onDividerDrag(event) {
+  onDividerDrag(event: DividerDragEvent) {
     console.log(event);
+    if (event.move) {
+      const appContainerRect = this.appContainer.get(0).getBoundingClientRect();
+      const appContainerWidth = appContainerRect.width;
+      const appContainerHeight = appContainerRect.height;
+      const canvasContainerRect = this.canvasContainer.get(0).getBoundingClientRect();
+      const canvasContainerWidth = canvasContainerRect.width;
+      const canvasContainerHeight = canvasContainerRect.height;
+      const inspectorContainerRect = this.inspectorContainer.get(0).getBoundingClientRect();
+      const inspectorContainerWidth = inspectorContainerRect.width;
+      const inspectorContainerHeight = inspectorContainerRect.height;
+      const heightDiff = event.move.y - event.start.y;
+      this.canvasContainer.height(event.move.y);
+      this.inspectorContainer.height(appContainerHeight - event.move.y);
+    }
+    this.lastDividerDragEvent = event;
   }
 
   private initDebugMode() {
@@ -163,6 +193,9 @@ export class AppComponent implements OnInit, OnDestroy {
             </g>
           </g>
         </g>
+        <g transform="translate(0,12)">
+          <path d="M 2,6 C 2,3.79 3.79,2 6,2 C 8.21,2 10,3.79 10,6 C 10,8.21 8.21,10 6,10 C 3.79,10 2,8.21 2,6" fill="#DB4437"/>
+        </g>
       </svg>`);
     this.onEndSvgTextLoaded(`
       <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24">
@@ -172,6 +205,9 @@ export class AppComponent implements OnInit, OnDestroy {
               <path d="M 0 0 L 4 4 C 11 12 17 12 24 12 L 24 24" stroke="#000" stroke-width="1" />
             </g>
           </g>
+        </g>
+        <g transform="translate(0,12)">
+          <path d="M 2,6 C 2,3.79 3.79,2 6,2 C 8.21,2 10,3.79 10,6 C 10,8.21 8.21,10 6,10 C 3.79,10 2,8.21 2,6" fill="#DB4437" />
         </g>
       </svg>`);
     // const groupLayerStart = this.startVectorLayer.children[0] as GroupLayer;

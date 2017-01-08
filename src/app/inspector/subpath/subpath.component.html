@@ -10,6 +10,7 @@
     mdTooltip="Shift back"
     mdTooltipPosition="above"
     md-theme="dark"
+    [disabled]="!isSubPathClosed"
     (click)="onShiftBackClick()">
     <md-icon class="md-24">skip_previous</md-icon>
   </button>
@@ -17,17 +18,16 @@
     mdTooltip="Shift forwards"
     mdTooltipPosition="above"
     md-theme="dark"
+    [disabled]="!isSubPathClosed"
     (click)="onShiftForwardClick()">
     <md-icon class="md-24">skip_next</md-icon>
   </button>
 </div>
-<app-command *ngFor="let drawCommandWrapper of drawCommandWrappers;
-                     let commandIndex = index;
-                     trackBy: trackDrawCommandWrapper"
+<app-command *ngFor="let drawCommand of drawCommands; let commandIndex = index"
   fxLayout="row"
   fxLayoutAlign="start center"
   [vectorLayerType]="vectorLayerType"
-  [commandIndex]="drawCommandWrapper.index"
-  [drawCommand]="drawCommandWrapper.command">
+  [commandIndex]="commandIndex"
+  [drawCommand]="drawCommand">
 </app-command>
 

@@ -17,21 +17,21 @@ import { Subscription } from 'rxjs/Subscription';
 export class SubPathComponent implements OnInit, OnChanges {
   @Input() vectorLayerType: VectorLayerType;
   @Input() subPathCommand: SubPathCommand;
-  drawCommandWrappers: DrawCommandWrapper[] = [];
+  drawCommands: DrawCommand[] = [];
+  isSubPathClosed: boolean;
   private subscription: Subscription;
 
   constructor(private stateService: StateService) { }
 
   ngOnInit() {
-    this.updateDrawCommandWrappers();
+    this.updateSubPathCommand();
   }
 
-  ngOnChanges(changes: SimpleChanges) {
-    this.updateDrawCommandWrappers();
-  }
+  ngOnChanges(changes: SimpleChanges) { }
 
-  private updateDrawCommandWrappers() {
-    this.drawCommandWrappers = this.subPathCommand.commands.map((c, i) => { return { index: i, command: c } });
+  private updateSubPathCommand() {
+    this.drawCommands = this.subPathCommand.commands;
+    this.isSubPathClosed = this.subPathCommand.isClosed();
   }
 
   onReverseClick() {
@@ -48,13 +48,4 @@ export class SubPathComponent implements OnInit, OnChanges {
     this.subPathCommand.shiftForward();
     this.stateService.notifyChange(this.vectorLayerType);
   }
-
-  trackDrawCommandWrapper(index: number, drawCommandWrapper: DrawCommandWrapper) {
-    return drawCommandWrapper;
-  }
-}
-
-interface DrawCommandWrapper {
-  index: number;
-  command: DrawCommand;
 }

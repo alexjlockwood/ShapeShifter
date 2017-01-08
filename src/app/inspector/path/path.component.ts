@@ -24,8 +24,4 @@ export class PathComponent implements OnInit, OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges) { }
-
-  trackSubPathCommand(index: number, subPathCommand: SubPathCommand) {
-    return subPathCommand;
-  }
 }

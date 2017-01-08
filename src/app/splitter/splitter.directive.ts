@@ -1,15 +1,20 @@
-import { Directive, Output, EventEmitter, ElementRef, HostListener } from '@angular/core';
+import { OnInit, Directive, Output, EventEmitter, ElementRef, HostListener } from '@angular/core';
 import { Point } from '../scripts/mathutil';
 
 @Directive({
   selector: '[appSplitter]'
 })
-export class SplitterDirective {
-  @Output() onDividerDrag: EventEmitter<{ start: Point, move: Point, end: Point }> = new EventEmitter();
+export class SplitterDirective implements OnInit {
+  @Output() onDividerDrag = new EventEmitter<DividerDragEvent>();
 
   private start: Point;
 
-  constructor() { }
+  constructor(private element: ElementRef) { }
+
+  ngOnInit() {
+    this.element.nativeElement.style.position = 'relative';
+    this.element.nativeElement.style.cursor = 'row-resize';
+  }
 
   @HostListener('mousedown') onMouseDown(event: MouseEvent) {
     event = event || <MouseEvent>window.event;
@@ -42,7 +47,7 @@ export class SplitterDirective {
         }
         this.onDividerDrag.emit({
           start: this.start,
-          move: new Point(endX - this.start.x, endY - this.start.y),
+          move: new Point(endX, endY),
           end: null,
         });
       };
@@ -63,11 +68,19 @@ export class SplitterDirective {
         }
         this.onDividerDrag.emit({
           start: this.start,
-          move: new Point(endX - this.start.x, endY - this.start.y),
-          end: new Point(endX - this.start.x, endY - this.start.y),
+          move: new Point(endX, endY),
+          end: new Point(endX, endY),
         });
         this.start = undefined;
       };
     }
   }
 }
+
+export type DividerDragEvent = {
+  start: Point,
+  move?: Point,
+  end?: Point,
+};
+
+
