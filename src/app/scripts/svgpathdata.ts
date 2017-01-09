@@ -1,5 +1,6 @@
 import { Bezier, Projection, Split } from './bezierutil';
 import { Point, Matrix, Rect } from './mathutil';
+import * as MathUtil from './mathutil';
 import {
   DrawCommand, MoveCommand, LineCommand, QuadraticCurveCommand,
   BezierCurveCommand, EllipticalArcCommand, ClosePathCommand, SubPathCommand, PathCommand
@@ -180,7 +181,7 @@ export class SvgPathData extends PathCommand {
           commandWrappers.push(new CommandWrapper(this, subPathCmdIndex, drawCmdIndex));
         } else if (command instanceof LineCommand) {
           const nextPoint = command.points[1];
-          length += nextPoint.distanceTo(currentPoint);
+          length += MathUtil.distance(currentPoint, nextPoint);
           commandWrappers.push(new CommandWrapper(
             this, subPathCmdIndex, drawCmdIndex,
             new Bezier(currentPoint, currentPoint, nextPoint, nextPoint)));
@@ -188,7 +189,7 @@ export class SvgPathData extends PathCommand {
           expandBounds_(nextPoint.x, nextPoint.y);
         } else if (command instanceof ClosePathCommand) {
           if (firstPoint) {
-            length += firstPoint.distanceTo(currentPoint);
+            length += MathUtil.distance(firstPoint, currentPoint);
             commandWrappers.push(new CommandWrapper(
               this, subPathCmdIndex, drawCmdIndex,
               new Bezier(currentPoint, currentPoint, firstPoint, firstPoint)));

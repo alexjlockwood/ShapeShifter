@@ -8,6 +8,7 @@ import * as ColorUtil from './../scripts/colorutil';
 import * as $ from 'jquery';
 import * as erd from 'element-resize-detector';
 import { Point, Matrix } from './../scripts/mathutil';
+import * as MathUtil from './../scripts/mathutil';
 import { DrawCommand, ClosePathCommand } from './../scripts/svgcommands';
 import { StateService, VectorLayerType } from './../state.service';
 import { Subscription } from 'rxjs/Subscription';
@@ -197,7 +198,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  private drawGroupLayer(layer: GroupLayer, ctx: CanvasRenderingContext2D, transforms: Matrix[]) {
+  private drawGroupLayer(
+    layer: GroupLayer, ctx: CanvasRenderingContext2D, transforms: Matrix[]) {
     const matrices = layer.toMatrices();
     transforms.splice(transforms.length, 0, ...matrices);
     ctx.save();
@@ -283,7 +285,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  private drawPathLayerPoints(layer: PathLayer, ctx: CanvasRenderingContext2D, transforms: Matrix[]) {
+  private drawPathLayerPoints(
+    layer: PathLayer, ctx: CanvasRenderingContext2D, transforms: Matrix[]) {
     const points = [];
     layer.pathData.commands.forEach(s => {
       s.commands.forEach(c => {
@@ -296,7 +299,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     ctx.save();
     const matrices = Array.from(transforms).reverse();
     for (let i = points.length - 1; i >= 0; i--) {
-      const p = points[i].transform(...matrices);
+      const p = MathUtil.transform(points[i], ...matrices);
       const color = 'green';
       ctx.beginPath();
       ctx.arc(p.x, p.y, this.pathPointRadius, 0, 2 * Math.PI, false);
@@ -315,7 +318,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     ctx.restore();
   }
 
-  private drawClosestProjection(layer: Layer, ctx: CanvasRenderingContext2D, transforms: Matrix[]) {
+  private drawClosestProjection(
+    layer: Layer, ctx: CanvasRenderingContext2D, transforms: Matrix[]) {
     if (layer instanceof VectorLayer) {
       layer.children.forEach(l => this.drawClosestProjection(l, ctx, transforms));
     } else if (layer instanceof GroupLayer) {
@@ -329,7 +333,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       ctx.save();
       const matrices = Array.from(transforms).reverse();
       const proj = this.closestProjectionInfo.projection;
-      const p = new Point(proj.x, proj.y).transform(...matrices);
+      const p = MathUtil.transform({ x: proj.x, y: proj.y }, ...matrices);
       ctx.beginPath();
       ctx.arc(p.x, p.y, this.pathPointRadius, 0, 2 * Math.PI, false);
       ctx.fillStyle = 'red';
@@ -443,7 +447,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     layer.pathData.commands.forEach(s => {
       s.commands.forEach(c => {
         c.points.forEach(p => {
-          if (p && point.distanceTo(p) <= radius) {
+          if (p && MathUtil.distance(point, p) <= radius) {
             pointCommands.push({
               point: p,
               command: c,

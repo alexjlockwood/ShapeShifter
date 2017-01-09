@@ -1,5 +1,5 @@
 import { Point, Matrix } from './mathutil';
-
+import * as MathUtil from './mathutil';
 
 export function executeArc(ctx: CanvasRenderingContext2D, arcArgs) {
   let [currentPointX, currentPointY,
@@ -30,7 +30,6 @@ export function executeArc(ctx: CanvasRenderingContext2D, arcArgs) {
       bezierCoords[i + 6], bezierCoords[i + 7]);
   }
 }
-
 
 // Based on code from https://code.google.com/archive/p/androidsvg
 export function arcToBeziers(xf, yf, rx, ry, xAxisRotation, largeArcFlag, sweepFlag, xt, yt) {
@@ -279,7 +278,7 @@ export function transformArc(initialArc, transformMatrices: Matrix[]) {
 
     // Finally, transform arc endpoint. This takes care about the
     // translational part which we ignored at the whole math-showdown above.
-    const end = new Point(endX, endY).transform(matrix);
+    const end = MathUtil.transform({ x: endX, y: endY }, matrix);
 
     xAxisRotation = xAxisRotation * 180 / Math.PI;
 

@@ -1,27 +1,20 @@
+type PointType = { x: number, y: number };
+
 export class Point {
-
-  static from(...points: { x: number, y: number }[]) {
-    return points.map(p => new Point(p.x, p.y));
-  }
-
   constructor(public readonly x = 0, public readonly y = 0) { }
+}
 
-  transform(...matrices: Matrix[]) {
-    return matrices.reduce((p: Point, m: Matrix) => {
-      return new Point(
-        m.a * p.x + m.c * p.y + m.e * 1,
-        m.b * p.x + m.d * p.y + m.f * 1,
-      );
-    }, this);
-  }
+export function transform(point: PointType, ...matrices: Matrix[]) {
+  return matrices.reduce((p: Point, m: Matrix) => {
+    return new Point(
+      m.a * p.x + m.c * p.y + m.e * 1,
+      m.b * p.x + m.d * p.y + m.f * 1,
+    );
+  }, point);
+}
 
-  distanceTo(p: Point) {
-    return Math.sqrt(Math.pow(this.y - p.y, 2) + Math.pow(this.x - p.x, 2));
-  }
-
-  equals(p: Point) {
-    return this.x === p.x && this.y === p.y;
-  }
+export function distance(p1: PointType, p2: PointType) {
+  return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
 }
 
 export class Matrix {
@@ -61,8 +54,8 @@ export class Matrix {
     // return the minimal height of the 2 bases.
 
     const matrix = new Matrix(this.a, this.b, this.c, this.d, 0, 0);
-    const vecA = new Point(0, 1).transform(matrix);
-    const vecB = new Point(1, 0).transform(matrix);
+    const vecA = transform({ x: 0, y: 1 }, matrix);
+    const vecB = transform({ x: 1, y: 0 }, matrix);
     const scaleX = Math.hypot(vecA.x, vecA.y);
     const scaleY = Math.hypot(vecB.x, vecB.y);
     const crossProduct = vecA.y * vecB.x - vecA.x * vecB.y;
@@ -70,8 +63,6 @@ export class Matrix {
     return maxScale > 0 ? Math.abs(crossProduct) / maxScale : 0;
   }
 }
-
-
 
 export class Rect {
   constructor(

@@ -1,4 +1,5 @@
 import { Point, Matrix } from './mathutil';
+import * as MathUtil from './mathutil';
 import * as SvgUtil from './svgutil';
 
 export interface Command {
@@ -81,7 +82,7 @@ export class SubPathCommand implements Command {
   }
 
   isClosed() {
-    return this.start.equals(this.end);
+    return this.start.x === this.end.x && this.start.y === this.end.y;
   }
 
   // TODO(alockwood): add a test for commands with multiple moves but no close paths
@@ -177,7 +178,7 @@ export abstract class DrawCommand implements Command {
   transform(transforms: Matrix[]) {
     for (let i = 0; i < this.points.length; i++) {
       if (this.points[i]) {
-        this.points[i] = this.points[i].transform(...transforms);
+        this.points[i] = MathUtil.transform(this.points[i], ...transforms);
       }
     }
   }
@@ -291,7 +292,8 @@ export class EllipticalArcCommand extends DrawCommand {
   }
 
   transform(transforms: Matrix[]) {
-    const start = new Point(this.args[0], this.args[1]).transform(...transforms);
+    const start = MathUtil.transform(
+      { x: this.args[0], y: this.args[1] }, ...transforms);
     this.args[0] = start.x;
     this.args[1] = start.y;
     const arc = SvgUtil.transformArc({
