@@ -1,8 +1,6 @@
 import * as BezierImpl from 'bezier-js';
 import { Point } from './mathutil';
 
-const s = new BezierImpl(0, 1, 2, 3, 4, 5);
-
 export class Bezier {
   private readonly bezierImpl;
   private readonly points_: Point[];
@@ -16,6 +14,22 @@ export class Bezier {
     }
     this.bezierImpl = new BezierImpl(points);
     this.points_ = this.bezierImpl.points.map(p => new Point(p.x, p.y));
+  }
+
+  get start() {
+    return this.points[0];
+  }
+
+  get cp1() {
+    return this.points[1];
+  }
+
+  get cp2() {
+    return this.points[2];
+  }
+
+  get end() {
+    return this.points[this.points.length - 1];
   }
 
   get points() {
@@ -43,6 +57,10 @@ export class Bezier {
       right: new Bezier(...split.right.points),
     };
   }
+
+  bbox(): BBox {
+    return this.bezierImpl.bbox();
+  }
 }
 
 export interface Projection {
@@ -55,4 +73,16 @@ export interface Projection {
 export interface Split {
   left: Bezier;
   right: Bezier;
+}
+
+export interface BBox {
+  x: MinMax;
+  y: MinMax;
+}
+
+export interface MinMax {
+  min: number;
+  mid?: number;
+  max: number;
+  size?: number;
 }

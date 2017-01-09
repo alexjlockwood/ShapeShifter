@@ -1,4 +1,4 @@
-import * as Bezier from 'bezier-js';
+import { Bezier, Projection, Split } from './bezierutil';
 import { Point, Matrix, Rect } from './mathutil';
 import {
   DrawCommand, MoveCommand, LineCommand, QuadraticCurveCommand,
@@ -122,39 +122,21 @@ export class SvgPathData extends PathCommand {
     }
 
     const {left, right} = commandWrapper.split(t);
-    const leftStartPoint = new Point(left.points[0].x, left.points[0].y);
-    const leftEndPoint = new Point(left.points[left.points.length - 1].x, left.points[left.points.length - 1].y);
-    const rightStartPoint = new Point(right.points[0].x, right.points[0].y);
-    const rightEndPoint = new Point(right.points[right.points.length - 1].x, right.points[right.points.length - 1].y);
     const cmd = commandWrapper.command;
     let leftCmd: DrawCommand;
     let rightCmd: DrawCommand;
     if (cmd instanceof LineCommand) {
-      leftCmd = new LineCommand(leftStartPoint, leftEndPoint);
-      rightCmd = new LineCommand(rightStartPoint, rightEndPoint);
+      leftCmd = new LineCommand(left.start, left.end);
+      rightCmd = new LineCommand(right.start, right.end);
     } else if (cmd instanceof ClosePathCommand) {
-      leftCmd = new LineCommand(leftStartPoint, leftEndPoint);
-      rightCmd = new ClosePathCommand(rightStartPoint, rightEndPoint);
+      leftCmd = new LineCommand(left.start, left.end);
+      rightCmd = new ClosePathCommand(right.start, right.end);
     } else if (cmd instanceof QuadraticCurveCommand) {
-      leftCmd = new QuadraticCurveCommand(
-        new Point(left.points[0].x, left.points[0].y),
-        new Point(left.points[1].x, left.points[1].y),
-        new Point(left.points[2].x, left.points[2].y));
-      rightCmd = new QuadraticCurveCommand(
-        new Point(right.points[0].x, right.points[0].y),
-        new Point(right.points[1].x, right.points[1].y),
-        new Point(right.points[2].x, right.points[2].y));
+      leftCmd = new QuadraticCurveCommand(left.start, left.cp1, left.end);
+      rightCmd = new QuadraticCurveCommand(right.start, right.cp1, right.end);
     } else if (cmd instanceof BezierCurveCommand) {
-      leftCmd = new BezierCurveCommand(
-        new Point(left.points[0].x, left.points[0].y),
-        new Point(left.points[1].x, left.points[1].y),
-        new Point(left.points[2].x, left.points[2].y),
-        new Point(left.points[3].x, left.points[3].y));
-      rightCmd = new BezierCurveCommand(
-        new Point(right.points[0].x, right.points[0].y),
-        new Point(right.points[1].x, right.points[1].y),
-        new Point(right.points[2].x, right.points[2].y),
-        new Point(right.points[3].x, right.points[3].y));
+      leftCmd = new BezierCurveCommand(left.start, left.cp1, left.cp2, left.end);
+      rightCmd = new BezierCurveCommand(right.start, right.cp1, right.cp2, right.end);
     } else if (cmd instanceof EllipticalArcCommand) {
       throw new Error('TODO: implement split for ellpitical arcs');
     }
@@ -174,7 +156,7 @@ export class SvgPathData extends PathCommand {
       bounds.b = Math.max(y, bounds.b);
     };
 
-    const expandBoundsToBezier_ = bez => {
+    const expandBoundsToBezier_ = (bez: Bezier) => {
       const bbox = bez.bbox();
       expandBounds_(bbox.x.min, bbox.y.min);
       expandBounds_(bbox.x.max, bbox.y.min);
@@ -200,14 +182,16 @@ export class SvgPathData extends PathCommand {
           const nextPoint = command.points[1];
           length += nextPoint.distanceTo(currentPoint);
           commandWrappers.push(new CommandWrapper(
-            this, subPathCmdIndex, drawCmdIndex, new Bezier(currentPoint, currentPoint, nextPoint, nextPoint)));
+            this, subPathCmdIndex, drawCmdIndex,
+            new Bezier(currentPoint, currentPoint, nextPoint, nextPoint)));
           currentPoint = nextPoint;
           expandBounds_(nextPoint.x, nextPoint.y);
         } else if (command instanceof ClosePathCommand) {
           if (firstPoint) {
             length += firstPoint.distanceTo(currentPoint);
             commandWrappers.push(new CommandWrapper(
-              this, subPathCmdIndex, drawCmdIndex, new Bezier(currentPoint, currentPoint, firstPoint, firstPoint)));
+              this, subPathCmdIndex, drawCmdIndex,
+              new Bezier(currentPoint, currentPoint, firstPoint, firstPoint)));
           }
           firstPoint = null;
         } else if (command instanceof BezierCurveCommand) {
@@ -243,7 +227,8 @@ export class SvgPathData extends PathCommand {
             length += new Point(currentPointX, currentPointY).distanceTo(nextPoint);
             expandBounds_(tempPoint1X, tempPoint1Y);
             commandWrappers.push(new CommandWrapper(
-              this, subPathCmdIndex, drawCmdIndex, new Bezier(currentPoint, currentPoint, nextPoint, nextPoint)));
+              this, subPathCmdIndex, drawCmdIndex,
+              new Bezier(currentPoint, currentPoint, nextPoint, nextPoint)));
             currentPoint = nextPoint;
             return;
           }
@@ -257,10 +242,10 @@ export class SvgPathData extends PathCommand {
           const arcBeziers: Bezier[] = [];
           for (let i = 0; i < bezierCoords.length; i += 8) {
             const bez = new Bezier(
-              currentPoint.x, currentPoint.y,
-              bezierCoords[i + 2], bezierCoords[i + 3],
-              bezierCoords[i + 4], bezierCoords[i + 5],
-              bezierCoords[i + 6], bezierCoords[i + 7]);
+              { x: currentPoint.x, y: currentPoint.y },
+              { x: bezierCoords[i + 2], y: bezierCoords[i + 3] },
+              { x: bezierCoords[i + 4], y: bezierCoords[i + 5] },
+              { x: bezierCoords[i + 6], y: bezierCoords[i + 7] });
             arcBeziers.push(bez);
             length += bez.length();
             currentPoint = new Point(bezierCoords[i + 6], bezierCoords[i + 7]);
@@ -314,37 +299,8 @@ class CommandWrapper {
   }
 }
 
-// TODO(alockwood): figure out a better way to declare these types...
-
-export type Projection = {
-  x: number;
-  y: number;
-  t: number;
-  d: number;
-};
-
 export type ProjectionInfo = {
   subPathCommandIndex: number;
   commandIndex: number;
   projection: Projection;
-};
-
-interface Split {
-  left: Bezier;
-  right: Bezier;
-}
-
-type Bezier = {
-  constructor(points: Point[]);
-  constructor(coords: number[]);
-  constructor(
-    x1: number, y1: number,
-    x2: number, y2: number,
-    x3: number, y3: number,
-    x4?: number, y4?: number);
-  constructor(p1: Point, p2: Point, p3: Point, p4?: Point);
-  points: Point[];
-  length(): number;
-  project(point: Point): Projection;
-  split(t: number): Split;
 };

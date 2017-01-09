@@ -1,7 +1,6 @@
 import { SvgPathData } from './svgpathdata';
 import { Matrix } from './mathutil';
 
-
 export interface Layer {
   children: Layer[] | null;
   id: string;
@@ -22,8 +21,8 @@ abstract class AbstractLayer implements Layer {
       return this;
     }
     if (this.children) {
-      for (let i = 0; i < this.children.length; i++) {
-        const layer = this.children[i].findLayerById(id);
+      for (let child of this.children) {
+        const layer = child.findLayerById(id);
         if (layer) {
           return layer;
         }
@@ -36,35 +35,35 @@ abstract class AbstractLayer implements Layer {
     if (this.constructor !== layer.constructor || this.id !== layer.id) {
       return false;
     }
-    if (this instanceof VectorLayer || this instanceof GroupLayer) {
-      return this.children.length === layer.children.length
-        && this.children.every((c, i) => c.isStructurallyIdenticalWith(layer.children[i]));
+    if (!this.children) {
+      return true;
     }
-    return true;
+    return this.children.length === layer.children.length
+      && this.children.every((c, i) => c.isStructurallyIdenticalWith(layer.children[i]));
   }
 
   isMorphableWith(layer: Layer) {
     if (this.constructor !== layer.constructor || this.id !== layer.id) {
       return false;
     }
-    if (this instanceof VectorLayer || this instanceof GroupLayer) {
-      return this.children.length === layer.children.length
-        && this.children.every((c, i) => c.isMorphableWith(layer.children[i]));
-    }
     if (this instanceof PathLayer) {
       return this.pathData.isMorphableWith((layer as PathLayer).pathData);
     }
-    return true;
+    if (!this.children) {
+      return true;
+    }
+    return this.children.length === layer.children.length
+      && this.children.every((c, i) => c.isMorphableWith(layer.children[i]));
   }
 
-  walk<T>(func: (layer: Layer, context?: T) => T, context?: T) {
-    const visit = (layer: Layer, context?: T) => {
-      const childContext = func(layer, context);
+  walk(func: (layer: Layer) => void) {
+    const visit = (layer: Layer) => {
+      func(layer);
       if (layer.children) {
-        layer.children.forEach(l => visit(l, childContext));
+        layer.children.forEach(l => visit(l));
       }
     };
-    visit(this, context);
+    visit(this);
   }
 }
 
@@ -72,9 +71,9 @@ export class PathLayer extends AbstractLayer {
   constructor(
     id: string,
     public pathData: SvgPathData,
-    public fillColor: string | null,
+    public fillColor: string | null = null,
     public fillAlpha = 1,
-    public strokeColor: string | null,
+    public strokeColor: string | null = null,
     public strokeAlpha = 1,
     public strokeWidth = 0,
     public strokeLinecap = 'butt',
@@ -99,7 +98,7 @@ export class ClipPathLayer extends AbstractLayer {
 
 export class GroupLayer extends AbstractLayer {
   constructor(
-    children: Layer[] | null,
+    children: Layer[],
     id: string,
     public pivotX = 0,
     public pivotY = 0,
@@ -127,7 +126,7 @@ export class GroupLayer extends AbstractLayer {
 
 export class VectorLayer extends AbstractLayer {
   constructor(
-    children: Layer[] | null,
+    children: Layer[],
     id: string,
     public width = 0,
     public height = 0,

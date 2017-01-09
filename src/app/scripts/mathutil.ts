@@ -1,5 +1,9 @@
 export class Point {
 
+  static from(...points: { x: number, y: number }[]) {
+    return points.map(p => new Point(p.x, p.y));
+  }
+
   constructor(public readonly x = 0, public readonly y = 0) { }
 
   transform(...matrices: Matrix[]) {

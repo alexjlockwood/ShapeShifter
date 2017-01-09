@@ -11,7 +11,7 @@ import { Point, Matrix } from './../scripts/mathutil';
 import { DrawCommand, ClosePathCommand } from './../scripts/svgcommands';
 import { StateService, VectorLayerType } from './../state.service';
 import { Subscription } from 'rxjs/Subscription';
-import { SvgPathData, Projection, ProjectionInfo } from './../scripts/svgpathdata';
+import { SvgPathData, ProjectionInfo } from './../scripts/svgpathdata';
 
 const ELEMENT_RESIZE_DETECTOR = erd();
 
@@ -288,7 +288,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     layer.pathData.commands.forEach(s => {
       s.commands.forEach(c => {
         if (!(c instanceof ClosePathCommand)) {
-          points.push(c.endPoint);
+          points.push(c.end);
         }
       });
     });

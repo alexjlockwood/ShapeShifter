@@ -1,6 +1,6 @@
 import { Point } from './mathutil';
 import { DrawCommand, MoveCommand, LineCommand, BezierCurveCommand } from './svgcommands';
-
+import { PathLayer, GroupLayer, VectorLayer, Layer } from './models';
 
 export class CommandListBuilder {
   private commands: DrawCommand[] = [];
@@ -37,3 +37,39 @@ export class CommandListBuilder {
   }
 }
 
+export class VectorLayerBuilder {
+  private children: GroupLayer[] = [];
+  private id: string;
+
+  constructor(id: string) {
+    this.id = id;
+  }
+
+  add(groupLayer: GroupLayer) {
+    this.children.push(groupLayer);
+    return this;
+  }
+
+  build() {
+    return new VectorLayer(this.children, this.id);
+  }
+}
+
+
+export class GroupLayerBuilder {
+  private children: PathLayer[] = [];
+  private id: string;
+
+  constructor(id: string) {
+    this.id = id;
+  }
+
+  add(pathLayer: PathLayer) {
+    this.children.push(pathLayer);
+    return this;
+  }
+
+  build() {
+    return new GroupLayer(this.children, this.id);
+  }
+}

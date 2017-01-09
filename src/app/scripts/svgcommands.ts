@@ -72,16 +72,16 @@ export class SubPathCommand implements Command {
     return this.commands_;
   }
 
-  get startPoint() {
-    return this.commands[0].endPoint;
+  get start() {
+    return this.commands[0].end;
   }
 
-  get endPoint() {
-    return this.commands[this.commands.length - 1].endPoint;
+  get end() {
+    return this.commands[this.commands.length - 1].end;
   }
 
   isClosed() {
-    return this.startPoint.equals(this.endPoint);
+    return this.start.equals(this.end);
   }
 
   // TODO(alockwood): add a test for commands with multiple moves but no close paths
@@ -93,7 +93,7 @@ export class SubPathCommand implements Command {
     }
     const cmds: DrawCommand[] = this.commands;
     const newCmds: DrawCommand[] = [
-      new MoveCommand(firstMoveCommand.startPoint, cmds[cmds.length - 1].endPoint)
+      new MoveCommand(firstMoveCommand.start, cmds[cmds.length - 1].end)
     ];
     for (let i = cmds.length - 1; i >= 1; i--) {
       cmds[i].reverse();
@@ -101,10 +101,10 @@ export class SubPathCommand implements Command {
     }
     const secondCmd = newCmds[1];
     if (secondCmd instanceof ClosePathCommand) {
-      newCmds[1] = new LineCommand(secondCmd.startPoint, secondCmd.endPoint);
+      newCmds[1] = new LineCommand(secondCmd.start, secondCmd.end);
       const lastCmd = newCmds[newCmds.length - 1];
       newCmds[newCmds.length - 1] =
-        new ClosePathCommand(lastCmd.startPoint, lastCmd.endPoint);
+        new ClosePathCommand(lastCmd.start, lastCmd.end);
     }
     this.commands_ = newCmds;
   }
@@ -129,18 +129,18 @@ export class SubPathCommand implements Command {
 
     const newCmdLists: DrawCommand[][] = [];
     const cmds = this.commands;
-    const moveStartPoint = cmds[0].startPoint;
+    const moveStartPoint = cmds[0].start;
     cmds.unshift(cmds.pop());
 
     if (cmds[0] instanceof ClosePathCommand) {
       const lastCmd = cmds[cmds.length - 1];
-      cmds[cmds.length - 1] = new ClosePathCommand(lastCmd.startPoint, lastCmd.endPoint);
-      cmds[1] = new LineCommand(cmds[0].startPoint, cmds[0].endPoint);
+      cmds[cmds.length - 1] = new ClosePathCommand(lastCmd.start, lastCmd.end);
+      cmds[1] = new LineCommand(cmds[0].start, cmds[0].end);
     } else {
       cmds[1] = cmds[0];
     }
     // TODO(alockwood): confirm that this start point is correct for paths w/ multiple moves
-    cmds[0] = new MoveCommand(moveStartPoint, cmds[1].startPoint);
+    cmds[0] = new MoveCommand(moveStartPoint, cmds[1].start);
   }
 }
 
@@ -185,7 +185,7 @@ export abstract class DrawCommand implements Command {
   abstract execute(ctx: CanvasRenderingContext2D): void;
 
   reverse() {
-    if (this.startPoint) {
+    if (this.start) {
       // Only reverse the command if it has a valid start point (i.e. if it isn't
       // the first move command in the path).
       this.points.reverse();
@@ -200,11 +200,11 @@ export abstract class DrawCommand implements Command {
     return this.points_;
   }
 
-  get startPoint() {
+  get start() {
     return this.points_[0];
   }
 
-  get endPoint() {
+  get end() {
     return this.points_[this.points_.length - 1];
   }
 }
@@ -215,7 +215,7 @@ export class MoveCommand extends DrawCommand {
   }
 
   execute(ctx: CanvasRenderingContext2D) {
-    ctx.moveTo(this.endPoint.x, this.endPoint.y);
+    ctx.moveTo(this.end.x, this.end.y);
   }
 }
 
@@ -225,7 +225,7 @@ export class LineCommand extends DrawCommand {
   }
 
   execute(ctx: CanvasRenderingContext2D) {
-    ctx.lineTo(this.endPoint.x, this.endPoint.y);
+    ctx.lineTo(this.end.x, this.end.y);
   }
 }
 
