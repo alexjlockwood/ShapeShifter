@@ -103,7 +103,7 @@ export class SvgPathData extends PathCommand {
         subPathCommandIndex: cw.subPathCommandIndex,
         commandIndex: cw.drawCommandIndex,
         projection: cw.project(point),
-      }
+      };
     }).filter(i => !!i.projection)
       .reduce((prev, curr) => {
         return prev && prev.projection.d < curr.projection.d ? prev : curr;
