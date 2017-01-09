@@ -1,35 +1,63 @@
 import { Point, Matrix } from './mathutil';
 import * as SvgUtil from './svgutil';
 
-export interface PathCommand {
-  isMorphableWith<T extends PathCommand>(start: T, end: T): boolean;
-  interpolate<T extends PathCommand>(start: T, end: T, fraction: number): void;
+export interface Command {
+  isMorphableWith<T extends Command>(command: T): boolean;
+  interpolate<T extends Command>(start: T, end: T, fraction: number): boolean;
   transform(transforms: Matrix[]): void;
   execute(ctx: CanvasRenderingContext2D): void;
 }
 
-export class SubPathCommand implements PathCommand {
+export abstract class PathCommand implements Command {
+  protected commands_: SubPathCommand[] = [];
+
+  get commands() {
+    return this.commands_;
+  }
+
+  isMorphableWith(command: PathCommand) {
+    return this.commands_.length === command.commands_.length
+      && this.commands_.every((c, i) => c.isMorphableWith(command.commands_[i]));
+  }
+
+  interpolate(start: PathCommand, end: PathCommand, fraction: number) {
+    if (!this.isMorphableWith(start) || !this.isMorphableWith(end)) {
+      return false;
+    }
+    this.commands_.forEach((c, i) =>
+      c.interpolate(start.commands_[i], end.commands_[i], fraction));
+    return true;
+  }
+
+  transform(transforms: Matrix[]) {
+    this.commands_.forEach(c => c.transform(transforms));
+  }
+
+  execute(ctx: CanvasRenderingContext2D) {
+    ctx.beginPath();
+    this.commands_.forEach(c => c.execute(ctx));
+  }
+}
+
+export class SubPathCommand implements Command {
   private commands_: DrawCommand[];
 
   constructor(...commands: DrawCommand[]) {
-    if (!commands.length || !(commands[0] instanceof MoveCommand)) {
-      throw new Error('SubPathCommands must begin with a valid MoveCommand');
-    }
     this.commands_ = commands;
   }
 
-  isMorphableWith(start: SubPathCommand, end: SubPathCommand) {
-    if (start.commands.length !== this.commands.length
-      || this.commands.length !== end.commands.length) {
-      return false;
-    }
-    return this.commands.every((c, i) =>
-      c.isMorphableWith(start.commands[i], end.commands[i]));
+  isMorphableWith(command: SubPathCommand) {
+    return this.commands.length === command.commands.length
+      && this.commands.every((c, i) => c.isMorphableWith(command.commands[i]));
   }
 
   interpolate(start: SubPathCommand, end: SubPathCommand, fraction: number) {
+    if (!this.isMorphableWith(start) || !this.isMorphableWith(end)) {
+      return false;
+    }
     this.commands.forEach((c, i) =>
       this.commands[i].interpolate(start.commands[i], end.commands[i], fraction));
+    return true;
   }
 
   transform(transforms: Matrix[]) {
@@ -116,20 +144,24 @@ export class SubPathCommand implements PathCommand {
   }
 }
 
-export abstract class DrawCommand implements PathCommand {
+export abstract class DrawCommand implements Command {
   private readonly svgChar_: string;
   private readonly points_: Point[];
 
   protected constructor(svgChar: string, ...points: Point[]) {
     this.svgChar_ = svgChar;
-    this.points_ = points.slice();
+    this.points_ = points;
   }
 
-  isMorphableWith(start: DrawCommand, end: DrawCommand) {
-    return start.constructor === this.constructor && this.constructor === end.constructor;
+  isMorphableWith(command: DrawCommand) {
+    return this.constructor === command.constructor
+      && this.points.length === command.points.length;
   }
 
   interpolate<T extends DrawCommand>(start: T, end: T, fraction: number) {
+    if (!this.isMorphableWith(start) || !this.isMorphableWith(end)) {
+      return false;
+    }
     for (let i = 0; i < start.points.length; i++) {
       const startPoint = start.points[i];
       const endPoint = end.points[i];
@@ -139,6 +171,7 @@ export abstract class DrawCommand implements PathCommand {
         this.points[i] = new Point(x, y);
       }
     }
+    return true;
   }
 
   transform(transforms: Matrix[]) {
@@ -150,6 +183,14 @@ export abstract class DrawCommand implements PathCommand {
   }
 
   abstract execute(ctx: CanvasRenderingContext2D): void;
+
+  reverse() {
+    if (this.startPoint) {
+      // Only reverse the command if it has a valid start point (i.e. if it isn't
+      // the first move command in the path).
+      this.points.reverse();
+    }
+  }
 
   get svgChar() {
     return this.svgChar_;
@@ -165,14 +206,6 @@ export abstract class DrawCommand implements PathCommand {
 
   get endPoint() {
     return this.points_[this.points_.length - 1];
-  }
-
-  reverse() {
-    if (this.startPoint) {
-      // Only reverse the command if it has a valid start point (i.e. if it isn't
-      // the first move command in the path).
-      this.points.reverse();
-    }
   }
 }
 
@@ -240,8 +273,8 @@ export class EllipticalArcCommand extends DrawCommand {
     this.args = args;
   }
 
-  execute(ctx: CanvasRenderingContext2D) {
-    SvgUtil.executeArc(ctx, this.args);
+  isMorphableWith(command: EllipticalArcCommand) {
+    return true;
   }
 
   // TODO(alockwood): confirm this is correct?
@@ -254,6 +287,7 @@ export class EllipticalArcCommand extends DrawCommand {
       }
       this.args[i] = lerp(start.args[i], end.args[i], fraction);
     });
+    return true;
   }
 
   transform(transforms: Matrix[]) {
@@ -276,6 +310,10 @@ export class EllipticalArcCommand extends DrawCommand {
     this.args[6] = arc.sweepFlag;
     this.args[7] = arc.endX;
     this.args[8] = arc.endY;
+  }
+
+  execute(ctx: CanvasRenderingContext2D) {
+    SvgUtil.executeArc(ctx, this.args);
   }
 
   reverse() {

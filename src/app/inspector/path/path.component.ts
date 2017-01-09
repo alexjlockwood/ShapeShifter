@@ -18,9 +18,10 @@ export class PathComponent implements OnInit, OnChanges {
   @Input() vectorLayerType: VectorLayerType;
   @Input() pathCommand: SvgPathData;
   subPathCommands: SubPathCommand[] = [];
+  isSelected: boolean = false;
 
   ngOnInit() {
-    this.subPathCommands = this.pathCommand.subPathCommands;
+    this.subPathCommands = this.pathCommand.commands;
   }
 
   ngOnChanges(changes: SimpleChanges) { }

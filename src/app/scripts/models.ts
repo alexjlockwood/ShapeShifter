@@ -52,24 +52,19 @@ abstract class AbstractLayer implements Layer {
         && this.children.every((c, i) => c.isMorphableWith(layer.children[i]));
     }
     if (this instanceof PathLayer) {
-      const cmds1 = this.pathData.commands;
-      const cmds2 = (layer as PathLayer).pathData.commands;
-      if (cmds1.length !== cmds2.length) {
-        return false;
-      }
-      return cmds1.every((c, i) => c.constructor === cmds2[i].constructor);
+      return this.pathData.isMorphableWith((layer as PathLayer).pathData);
     }
     return true;
   }
 
-  walk(func: (layer: Layer) => void) {
-    const visit = (layer: Layer) => {
-      func(layer);
+  walk<T>(func: (layer: Layer, context?: T) => T, context?: T) {
+    const visit = (layer: Layer, context?: T) => {
+      const childContext = func(layer, context);
       if (layer.children) {
-        layer.children.forEach(l => visit(l));
+        layer.children.forEach(l => visit(l, childContext));
       }
     };
-    visit(this);
+    visit(this, context);
   }
 }
 

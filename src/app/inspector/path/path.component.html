@@ -1,6 +1,7 @@
 <app-subpath *ngFor="let subPathCommand of subPathCommands"
   fxLayout="column"
   [vectorLayerType]="vectorLayerType"
-  [subPathCommand]="subPathCommand">
+  [subPathCommand]="subPathCommand"
+  [ngClass]="{'selected': isSelected}">
 </app-subpath>
 

@@ -110,9 +110,9 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
 
     const containerAspectRatio = this.canvasContainerSize / this.canvasContainerSize;
-    const artworkAspectRatio = this.vectorLayer.width / (this.vectorLayer.height || 1);
+    const vectorAspectRatio = this.vectorLayer.width / (this.vectorLayer.height || 1);
 
-    if (artworkAspectRatio > containerAspectRatio) {
+    if (vectorAspectRatio > containerAspectRatio) {
       this.scale = this.canvasContainerSize / this.vectorLayer.width;
     } else {
       this.scale = this.canvasContainerSize / this.vectorLayer.height;
@@ -153,7 +153,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     this.drawLayer(this.vectorLayer, ctx, []);
     ctx.restore();
 
-    if (this.shouldLabelPoints) {
+    if (this.shouldLabelPoints && this.vectorLayerType !== VectorLayerType.Preview) {
       this.drawPathPoints(this.vectorLayer, ctx, [
         new Matrix(this.backingStoreScale, 0, 0, this.backingStoreScale, 0, 0)
       ]);
@@ -285,16 +285,18 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
   private drawPathLayerPoints(layer: PathLayer, ctx: CanvasRenderingContext2D, transforms: Matrix[]) {
     const points = [];
-    layer.pathData.commands.forEach(c => {
-      if (!(c instanceof ClosePathCommand)) {
-        points.push(c.points[c.points.length - 1]);
-      }
+    layer.pathData.commands.forEach(s => {
+      s.commands.forEach(c => {
+        if (!(c instanceof ClosePathCommand)) {
+          points.push(c.endPoint);
+        }
+      });
     });
 
     ctx.save();
     const matrices = Array.from(transforms).reverse();
-    points.forEach((p, index) => {
-      p = p.transform(...matrices);
+    for (let i = points.length - 1; i >= 0; i--) {
+      const p = points[i].transform(...matrices);
       const color = 'green';
       ctx.beginPath();
       ctx.arc(p.x, p.y, this.pathPointRadius, 0, 2 * Math.PI, false);
@@ -303,13 +305,13 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       ctx.beginPath();
       ctx.fillStyle = 'white';
       ctx.font = this.pathPointRadius + 'px serif';
-      const text = (index + 1).toString();
+      const text = (i + 1).toString();
       const width = ctx.measureText(text).width;
       // TODO(alockwood): is there a better way to get the height?
       const height = ctx.measureText('o').width;
       ctx.fillText(text, p.x - width / 2, p.y + height / 2);
       ctx.fill();
-    });
+    }
     ctx.restore();
   }
 
@@ -438,14 +440,16 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     radius: number): PointCommand[] {
 
     const pointCommands = [];
-    layer.pathData.commands.forEach(c => {
-      c.points.forEach(p => {
-        if (p && point.distanceTo(p) <= radius) {
-          pointCommands.push({
-            point: p,
-            command: c,
-          });
-        }
+    layer.pathData.commands.forEach(s => {
+      s.commands.forEach(c => {
+        c.points.forEach(p => {
+          if (p && point.distanceTo(p) <= radius) {
+            pointCommands.push({
+              point: p,
+              command: c,
+            });
+          }
+        })
       });
     });
 

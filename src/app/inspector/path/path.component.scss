@@ -1,6 +1,12 @@
+@import '../../styles/material-shadows';
 :host {
   box-sizing: border-box;
   padding: 16px;
-  border: 5px solid blue;
+  box-shadow: material-shadow(4);
+  margin-top: 16px;
+  margin-bottom: 16px;
 }
 
+.selected {
+  background-color: #888;
+}

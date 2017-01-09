@@ -105,7 +105,8 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
         const sl = this.startVectorLayer.findLayerById(layer.id);
         const el = this.endVectorLayer.findLayerById(layer.id);
         if (sl && el && sl instanceof PathLayer && el instanceof PathLayer) {
-          if (layer.pathData.isMorphableWith(sl.pathData, el.pathData)) {
+          if (layer.pathData.isMorphableWith(sl.pathData)
+            && layer.pathData.isMorphableWith(el.pathData)) {
             layer.pathData.interpolate(sl.pathData, el.pathData, fraction);
           }
         }
@@ -193,8 +194,10 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
             </g>
           </g>
         </g>
-        <g transform="translate(0,12)">
+        <g transform="translate(0,9)">
+        <g transform="scale(1.25,1.25)">
           <path d="M 2,6 C 2,3.79 3.79,2 6,2 C 8.21,2 10,3.79 10,6 C 10,8.21 8.21,10 6,10 C 3.79,10 2,8.21 2,6" fill="#DB4437"/>
+        </g>
         </g>
       </svg>`);
     this.onEndSvgTextLoaded(`
@@ -207,8 +210,9 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
           </g>
         </g>
         <g transform="translate(0,12)">
+          <g transform="scale(1,1)">
           <path d="M 2,6 C 2,3.79 3.79,2 6,2 C 8.21,2 10,3.79 10,6 C 10,8.21 8.21,10 6,10 C 3.79,10 2,8.21 2,6" fill="#DB4437" />
-        </g>
+        </g></g>
       </svg>`);
     // const groupLayerStart = this.startVectorLayer.children[0] as GroupLayer;
     // groupLayerStart.pivotX = 12;
