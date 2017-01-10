@@ -50,7 +50,6 @@ export class Walker {
   // truth test fails.
   reject(obj, strategy: StrategyFunc, visitor: VisitorFunc, ctx?) {
     return this.filter(obj, strategy, function(v, k?, p?) {
-      //console.log(v);
       return !visitor.call(ctx, v, k, p);
     });
   }
