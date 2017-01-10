@@ -1,4 +1,3 @@
-import { } from 'jasmine';
 import { Layer, VectorLayer, GroupLayer, PathLayer } from './models';
 import { VectorLayerBuilder, GroupLayerBuilder } from './testutil';
 
@@ -20,7 +19,6 @@ describe('AbstractLayer', () => {
     expect(vl.findLayerById('vector')).toEqual(vl);
   });
   it('findLayerById #2', () => {
-    console.log(vl.findLayerById('pl1'));
     expect(vl.findLayerById('pl1').id).toEqual('pl1');
   });
 });

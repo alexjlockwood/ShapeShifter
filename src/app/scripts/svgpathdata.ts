@@ -224,8 +224,10 @@ export class SvgPathData extends PathCommand {
 
           if (rx === 0 || ry === 0) {
             // degenerate to line
-            const nextPoint = new Point(tempPoint1X, tempPoint1Y);
-            length += new Point(currentPointX, currentPointY).distanceTo(nextPoint);
+            const nextPoint = new Point;
+            length += MathUtil.distance(
+              { x: currentPointX, y: currentPointY },
+              { x: tempPoint1X, y: tempPoint1Y });
             expandBounds_(tempPoint1X, tempPoint1Y);
             commandWrappers.push(new CommandWrapper(
               this, subPathCmdIndex, drawCmdIndex,

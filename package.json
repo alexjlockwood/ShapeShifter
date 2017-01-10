@@ -26,7 +26,7 @@
     "@angular/platform-browser": "^2.3.1",
     "@angular/platform-browser-dynamic": "^2.3.1",
     "@angular/router": "^3.3.1",
-    "@types/lodash": "^4.14.47",
+    "@types/lodash": "^4.14.48",
     "bezier-js": "^2.0.1",
     "core-js": "^2.4.1",
     "dragula": "^3.7.2",

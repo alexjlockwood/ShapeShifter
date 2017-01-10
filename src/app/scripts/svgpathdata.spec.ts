@@ -1,4 +1,3 @@
-import { } from 'jasmine';
 import * as PathParser from './pathparser';
 import { CommandListBuilder } from './testutil';
 import { SvgPathData } from './svgpathdata';

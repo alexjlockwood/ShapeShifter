@@ -1,4 +1,3 @@
-import { } from 'jasmine';
 import { Bezier, Projection, Split } from './bezierutil';
 import { Point } from './mathutil';
 

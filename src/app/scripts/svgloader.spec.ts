@@ -1,4 +1,3 @@
-import { } from 'jasmine';
 import * as SvgLoader from './svgloader';
 import { VectorLayer, PathLayer } from './models';
 
