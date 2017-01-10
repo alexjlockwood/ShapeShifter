@@ -15,7 +15,7 @@ const stopWalk = {};
 export class Walker {
 
   // The traversal strategy defaults to the identity function.
-  constructor(private _traversalFunc = obj => obj) { }
+  constructor(private _traversalFunc: TraversalFunc = obj => obj) { }
 
   // Performs a preorder traversal of `obj` and returns the first value
   // which passes a truth test.
@@ -35,7 +35,7 @@ export class Walker {
   // or `postorder`.
   filter(obj, strategy: StrategyFunc, visitor: VisitorFunc, ctx?) {
     const results = [];
-    if (obj == null) {
+    if (!obj) {
       return results;
     }
     strategy(obj, function(v, k?, p?) {
@@ -50,6 +50,7 @@ export class Walker {
   // truth test fails.
   reject(obj, strategy: StrategyFunc, visitor: VisitorFunc, ctx?) {
     return this.filter(obj, strategy, function(v, k?, p?) {
+      //console.log(v);
       return !visitor.call(ctx, v, k, p);
     });
   }
@@ -82,12 +83,12 @@ export class Walker {
   // Internal helper providing the implementation for `pluck` and `pluckDeep`.
   private pluckInternal(obj, propertyName, isRecursive: boolean) {
     const results = [];
-    this.preorder(obj, function(value, key?) {
-      if (!isRecursive && key == propertyName) {
+    this.preorder(obj, function(v, k?) {
+      if (!isRecursive && k === propertyName) {
         return stopRecursion;
       }
-      if (_.has(value, propertyName)) {
-        results[results.length] = value[propertyName];
+      if (_.has(v, propertyName)) {
+        results[results.length] = v[propertyName];
       }
     });
     return results;
@@ -97,8 +98,7 @@ export class Walker {
   // `visitor` function for each object only after traversing its children.
   // `traversalFunc` is intended for internal callers, and is not part
   // of the public API.
-  postorder(obj, visitor: VisitorFunc, ctx?, traversalFunc?: TraversalFunc) {
-    traversalFunc = traversalFunc || this._traversalFunc;
+  postorder(obj, visitor: VisitorFunc, ctx?, traversalFunc = this._traversalFunc) {
     walkInternal(obj, traversalFunc, null, visitor, ctx);
   }
 
@@ -106,8 +106,7 @@ export class Walker {
   // `visitor` function for each object before traversing its children.
   // `traversalFunc` is intended for internal callers, and is not part
   // of the public API.
-  preorder(obj, visitor: VisitorFunc, ctx?, traversalFunc?: TraversalFunc) {
-    traversalFunc = traversalFunc || this._traversalFunc;
+  preorder(obj, visitor: VisitorFunc, ctx?, traversalFunc = this._traversalFunc) {
     walkInternal(obj, traversalFunc, visitor, null, ctx);
   }
 
@@ -145,7 +144,7 @@ function walkInternal(
   traversalFunc: TraversalFunc,
   beforeFunc: (value, key?, parent?) => any,
   afterFunc: (value, key?, parent?, subResults?) => any,
-  context,
+  ctx,
   collectResults?: boolean) {
 
   const visited = [];
@@ -154,13 +153,14 @@ function walkInternal(
     // when trying to visit the same object twice.
     if (_.isObject(value)) {
       if (visited.indexOf(value) >= 0) {
-        throw new TypeError('Not a tree: same object found in two different branches');
+        throw new TypeError(
+          'Not a tree: same object found in two different branches');
       }
       visited.push(value);
     }
 
     if (beforeFunc) {
-      const result = beforeFunc.call(context, value, key, parent);
+      const result = beforeFunc.call(ctx, value, key, parent);
       if (result === stopWalk) {
         return stopWalk;
       }
@@ -177,13 +177,13 @@ function walkInternal(
       if (collectResults) {
         subResults = Array.isArray(value) ? [] : {};
       }
-      const stop = _.some(target, (obj, key?) => {
-        const result = _walk(obj, key, value);
+      const stop = _.some(target, function(obj, k?){
+        const result = _walk(obj, k, value);
         if (result === stopWalk) {
           return true;
         }
         if (subResults) {
-          subResults[key] = result;
+          subResults[k] = result;
         }
       });
       if (stop) {
@@ -191,7 +191,7 @@ function walkInternal(
       }
     }
     if (afterFunc) {
-      return afterFunc.call(context, value, key, parent, subResults);
+      return afterFunc.call(ctx, value, key, parent, subResults);
     }
   })(root);
 }
