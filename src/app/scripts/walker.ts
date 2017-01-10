@@ -1,9 +1,5 @@
 import * as _ from 'lodash';
 
-type VisitorFunc = (value, key, parent) => any;
-type StrategyFunc = (obj, visitor: VisitorFunc, context, traversalStrategy: TraversalFunc) => void;
-type TraversalFunc = (obj) => any;
-
 // An internal object that can be returned from a visitor function to
 // prevent a top-down walk from walking subtrees of a node.
 const stopRecursion = {};
@@ -12,46 +8,49 @@ const stopRecursion = {};
 // cause the walk to immediately stop.
 const stopWalk = {};
 
-const notTreeError = 'Not a tree: same object found in two different branches';
-
+// A Walker is a functional utility class that can traverse and manipulate
+// tree like structures. This can be extremely useful when parsing SVG
+// DOM trees, finding vector drawable layers by their IDs, interpolating
+// properties on a layer's descendants on each animation frame, etc.
 export class Walker {
 
-  constructor(private _traversalStrategy = defaultTraversal) { }
+  // The traversal strategy defaults to the identity function.
+  constructor(private _traversalFunc = obj => obj) { }
 
   // Performs a preorder traversal of `obj` and returns the first value
   // which passes a truth test.
-  find(obj, visitor: VisitorFunc, context?) {
+  find(obj, visitor: VisitorFunc, ctx?) {
     let result;
-    this.preorder(obj, function(value, key, parent) {
-      if (visitor.call(context, value, key, parent)) {
-        result = value;
+    this.preorder(obj, function(v, k?, p?) {
+      if (visitor.call(ctx, v, k, p)) {
+        result = v;
         return stopWalk;
       }
-    }, context);
+    }, ctx);
     return result;
   }
 
   // Recursively traverses `obj` and returns all the elements that pass a
   // truth test. `strategy` is the traversal function to use, e.g. `preorder`
   // or `postorder`.
-  filter(obj, strategy: StrategyFunc, visitor: VisitorFunc, context?) {
+  filter(obj, strategy: StrategyFunc, visitor: VisitorFunc, ctx?) {
     const results = [];
     if (obj == null) {
       return results;
     }
-    strategy(obj, function(value, key, parent) {
-      if (visitor.call(context, value, key, parent)) {
-        results.push(value);
+    strategy(obj, function(v, k?, p?) {
+      if (visitor.call(ctx, v, k, p)) {
+        results.push(v);
       }
-    }, null, this._traversalStrategy);
+    }, null, this._traversalFunc);
     return results;
   }
 
   // Recursively traverses `obj` and returns all the elements for which a
   // truth test fails.
-  reject(obj, strategy: StrategyFunc, visitor: VisitorFunc, context?) {
-    return this.filter(obj, strategy, function(value, key, parent) {
-      return !visitor.call(context, value, key, parent);
+  reject(obj, strategy: StrategyFunc, visitor: VisitorFunc, ctx?) {
+    return this.filter(obj, strategy, function(v, k?, p?) {
+      return !visitor.call(ctx, v, k, p);
     });
   }
 
@@ -59,32 +58,32 @@ export class Walker {
   // mapping each value through the transformation function `visitor`.
   // `strategy` is the traversal function to use, e.g. `preorder` or
   // `postorder`.
-  map(obj, strategy: StrategyFunc, visitor: VisitorFunc, context?) {
+  map(obj, strategy: StrategyFunc, visitor: VisitorFunc, ctx?) {
     const results = [];
-    strategy(obj, function(value, key, parent) {
-      results[results.length] = visitor.call(context, value, key, parent);
-    }, null, this._traversalStrategy);
+    strategy(obj, function(v, k?, p?) {
+      results[results.length] = visitor.call(ctx, v, k, p);
+    }, null, this._traversalFunc);
     return results;
   }
 
   // Return the value of properties named `propertyName` reachable from the
   // tree rooted at `obj`. Results are not recursively searched; use
-  // `pluckRec` for that.
+  // `pluckDeep` for that.
   pluck(obj, propertyName) {
     return this.pluckInternal(obj, propertyName, false);
   }
 
   // Version of `pluck` which recursively searches results for nested objects
   // with a property named `propertyName`.
-  pluckRec(obj, propertyName) {
+  pluckDeep(obj, propertyName) {
     return this.pluckInternal(obj, propertyName, true);
   }
 
-  // Internal helper providing the implementation for `pluck` and `pluckRec`.
-  private pluckInternal(obj, propertyName, recursive: boolean) {
+  // Internal helper providing the implementation for `pluck` and `pluckDeep`.
+  private pluckInternal(obj, propertyName, isRecursive: boolean) {
     const results = [];
-    this.preorder(obj, function(value, key) {
-      if (!recursive && key == propertyName) {
+    this.preorder(obj, function(value, key?) {
+      if (!isRecursive && key == propertyName) {
         return stopRecursion;
       }
       if (_.has(value, propertyName)) {
@@ -96,20 +95,20 @@ export class Walker {
 
   // Recursively traverses `obj` in a depth-first fashion, invoking the
   // `visitor` function for each object only after traversing its children.
-  // `traversalStrategy` is intended for internal callers, and is not part
+  // `traversalFunc` is intended for internal callers, and is not part
   // of the public API.
-  postorder(obj, visitor: VisitorFunc, context?, traversalStrategy?: TraversalFunc) {
-    traversalStrategy = traversalStrategy || this._traversalStrategy;
-    walkInternal(obj, traversalStrategy, null, visitor, context);
+  postorder(obj, visitor: VisitorFunc, ctx?, traversalFunc?: TraversalFunc) {
+    traversalFunc = traversalFunc || this._traversalFunc;
+    walkInternal(obj, traversalFunc, null, visitor, ctx);
   }
 
   // Recursively traverses `obj` in a depth-first fashion, invoking the
   // `visitor` function for each object before traversing its children.
-  // `traversalStrategy` is intended for internal callers, and is not part
+  // `traversalFunc` is intended for internal callers, and is not part
   // of the public API.
-  preorder(obj, visitor: VisitorFunc, context?, traversalStrategy?: TraversalFunc) {
-    traversalStrategy = traversalStrategy || this._traversalStrategy;
-    walkInternal(obj, traversalStrategy, visitor, null, context);
+  preorder(obj, visitor: VisitorFunc, ctx?, traversalFunc?: TraversalFunc) {
+    traversalFunc = traversalFunc || this._traversalFunc;
+    walkInternal(obj, traversalFunc, visitor, null, ctx);
   }
 
   // Builds up a single value by doing a post-order traversal of `obj` and
@@ -117,23 +116,23 @@ export class Walker {
   // objects, the `memo` argument to `visitor` is the value of the `leafMemo`
   // argument to `reduce`. For non-leaf objects, `memo` is a collection of
   // the results of calling `reduce` on the object's children.
-  reduce(obj, visitor: (memo, value, key, parent) => any, leafMemo, context?) {
-    const reducer = function(value, key, parent, subResults) {
+  reduce(obj, visitor: (memo, value, key?, parent?) => any, leafMemo?, ctx?) {
+    const reducer = function(value, key?, parent?, subResults?) {
       return visitor(subResults || leafMemo, value, key, parent);
     };
-    return walkInternal(obj, this._traversalStrategy, null, reducer, context, true);
+    return walkInternal(obj, this._traversalFunc, null, reducer, ctx, true);
   }
 
-  collect(obj, strategy: StrategyFunc, visitor: VisitorFunc, context?) {
-    return this.map(obj, strategy, visitor, context);
+  collect(obj, strategy: StrategyFunc, visitor: VisitorFunc, ctx?) {
+    return this.map(obj, strategy, visitor, ctx);
   }
 
-  detect(obj, visitor: VisitorFunc, context?) {
-    return this.find(obj, visitor, context);
+  detect(obj, visitor: VisitorFunc, ctx?) {
+    return this.find(obj, visitor, ctx);
   }
 
-  select(obj, strategy: StrategyFunc, visitor: VisitorFunc, context?) {
-    return this.filter(obj, strategy, visitor, context);
+  select(obj, strategy: StrategyFunc, visitor: VisitorFunc, ctx?) {
+    return this.filter(obj, strategy, visitor, ctx);
   }
 }
 
@@ -143,9 +142,9 @@ export class Walker {
 // collection of the results of walking the node's subtrees.
 function walkInternal(
   root,
-  traversalStrategy: TraversalFunc,
-  beforeFunc: (value, key, parent) => any,
-  afterFunc: (value, key, parent, subresults?) => any,
+  traversalFunc: TraversalFunc,
+  beforeFunc: (value, key?, parent?) => any,
+  afterFunc: (value, key?, parent?, subResults?) => any,
   context,
   collectResults?: boolean) {
 
@@ -155,7 +154,7 @@ function walkInternal(
     // when trying to visit the same object twice.
     if (_.isObject(value)) {
       if (visited.indexOf(value) >= 0) {
-        throw new TypeError(notTreeError);
+        throw new TypeError('Not a tree: same object found in two different branches');
       }
       visited.push(value);
     }
@@ -171,14 +170,14 @@ function walkInternal(
     }
 
     let subResults;
-    const target = traversalStrategy(value);
+    const target = traversalFunc(value);
     if (_.isObject(target) && !_.isEmpty(target)) {
       // If collecting results from subtrees, collect them in the same shape
       // as the parent node.
       if (collectResults) {
         subResults = Array.isArray(value) ? [] : {};
       }
-      const stop = _.some(target, (obj, key) => {
+      const stop = _.some(target, (obj, key?) => {
         const result = _walk(obj, key, value);
         if (result === stopWalk) {
           return true;
@@ -197,26 +196,6 @@ function walkInternal(
   })(root);
 }
 
-// Implements the default traversal strategy: if `obj` is a DOM node, walk
-// its DOM children; otherwise, walk all the objects it references.
-function defaultTraversal(obj) {
-  return _.isElement(obj) ? obj.children : obj;
-}
-
-// Returns an object containing the walk functions. If `traversalStrategy`
-// is specified, it is a function determining how objects should be
-// traversed. Given an object, it returns the object to be recursively
-// walked. The default strategy is equivalent to `_.identity` for regular
-// objects, and for DOM nodes it returns the node's DOM children.
-// function walk(traversalStrategy?: TraversalFunc) {
-//   return new Walker(traversalStrategy || defaultTraversal);
-// Bind all of the public functions in the walker to itself. This allows
-// the traversal strategy to be dynamically scoped.
-// _.bindAll.apply(null, [walker].concat(_.keys(walker)));
-// walker._traversalStrategy = traversalStrategy || defaultTraversal;
-// return walker;
-// }
-// Use `_.walk` as a namespace to hold versions of the walk functions which
-// use the default traversal strategy.
-// _.extend(walk, walk());
-// _.mixin({ walk: walk });
+type VisitorFunc = (value, key, parent) => any;
+type StrategyFunc = (obj, visitor: VisitorFunc, ctx, traversalFunc: TraversalFunc) => void;
+type TraversalFunc = (obj) => any;
