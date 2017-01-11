@@ -3,12 +3,13 @@ import { Point, Matrix, Rect } from './mathutil';
 import * as MathUtil from './mathutil';
 import {
   DrawCommand, MoveCommand, LineCommand, QuadraticCurveCommand,
-  BezierCurveCommand, EllipticalArcCommand, ClosePathCommand, SubPathCommand, PathCommand
+  BezierCurveCommand, EllipticalArcCommand, ClosePathCommand, SubPathCommand
 } from './svgcommands';
 import * as SvgUtil from './svgutil';
 import * as PathParser from './pathparser';
 
-export class SvgPathData extends PathCommand {
+export class SvgPathData {
+  private commands_: SubPathCommand[] = [];
   private pathString_: string = '';
   private length_ = 0;
   private bounds_: Rect = null;
@@ -18,7 +19,6 @@ export class SvgPathData extends PathCommand {
   constructor(obj: string);
   constructor(obj: SvgPathData);
   constructor(obj?: any) {
-    super();
     if (obj) {
       if (typeof obj === 'string') {
         this.pathString = obj;
@@ -57,19 +57,39 @@ export class SvgPathData extends PathCommand {
     this.commandWrappers_ = commandWrappers;
   }
 
-  interpolate(start: PathCommand, end: PathCommand, fraction: number) {
-    if (super.interpolate(start, end, fraction)) {
-      // TODO(alockwood): avoid doing these hacks
-      this.commands = this.commands;
-      return true;
+  isMorphableWith(cmd: SvgPathData) {
+    return this.commands.length === cmd.commands.length
+      && this.commands.every((s, i) => {
+        return s.commands.length === cmd.commands[i].commands.length
+          && s.commands.every((d, j) => {
+            return d.isMorphableWith(cmd.commands[i].commands[j]);
+          });
+      });
+  }
+
+  interpolate(start: SvgPathData, end: SvgPathData, fraction: number) {
+    if (!this.isMorphableWith(start) || !this.isMorphableWith(end)) {
+      return false;
     }
-    return false;
+    this.commands.forEach((s, i) => {
+      s.commands.forEach((d, j) => {
+        d.interpolate(start.commands[i].commands[j], end.commands[i].commands[j], fraction);
+      });
+    });
+    // TODO(alockwood): avoid doing these hacks
+    this.commands = this.commands;
+    return true;
   }
 
   transform(transforms: Matrix[]) {
-    super.transform(transforms);
+    this.commands.forEach(s => s.commands.forEach(d => d.transform(transforms)));
     // TODO(alockwood): only recalculate bounds and length when necessary
     this.commands = this.commands;
+  }
+
+  execute(ctx: CanvasRenderingContext2D) {
+    ctx.beginPath();
+    this.commands.forEach(s => s.commands.forEach(d => d.execute(ctx)));
   }
 
   reverse() {
@@ -269,7 +289,7 @@ class CommandWrapper {
   readonly beziers: Bezier[];
 
   constructor(
-    public readonly pathCommand: PathCommand,
+    public readonly pathCommand: SvgPathData,
     public readonly subPathCommandIndex: number,
     public readonly drawCommandIndex: number,
     ...beziers: Bezier[]) {
