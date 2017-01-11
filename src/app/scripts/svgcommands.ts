@@ -13,16 +13,10 @@ export class SubPathCommand {
     return this.commands_;
   }
 
-  get start() {
-    return this.commands[0].end;
-  }
-
-  get end() {
-    return this.commands[this.commands.length - 1].end;
-  }
-
   isClosed() {
-    return this.start.x === this.end.x && this.start.y === this.end.y;
+    const start = this.commands[0].end;
+    const end = this.commands[this.commands.length - 1].end;
+    return start.x === end.x && start.y === end.y;
   }
 
   // TODO(alockwood): add a test for commands with multiple moves but no close paths

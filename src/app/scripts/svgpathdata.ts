@@ -13,7 +13,7 @@ export class SvgPathData {
   private pathString_: string = '';
   private length_ = 0;
   private bounds_: Rect = null;
-  private commandWrappers_: CommandWrapper[];
+  private commandWrappers_: DrawCommandWrapper[];
 
   constructor();
   constructor(obj: string);
@@ -42,7 +42,8 @@ export class SvgPathData {
     return this.commands_;
   }
 
-  set commands(commands: SubPathCommand[]) {
+  // TODO(alockwood): this is mostly used as a hack around angular change detection... need to fix.
+  private invalidateCommands(commands: SubPathCommand[]) {
     this.commands_ = commands;
     this.updatePathCommand(true);
   }
@@ -77,14 +78,14 @@ export class SvgPathData {
       });
     });
     // TODO(alockwood): avoid doing these hacks
-    this.commands = this.commands;
+    this.invalidateCommands(this.commands);
     return true;
   }
 
   transform(transforms: Matrix[]) {
     this.commands.forEach(s => s.commands.forEach(d => d.transform(transforms)));
     // TODO(alockwood): only recalculate bounds and length when necessary
-    this.commands = this.commands;
+    this.invalidateCommands(this.commands);
   }
 
   execute(ctx: CanvasRenderingContext2D) {
@@ -94,17 +95,17 @@ export class SvgPathData {
 
   reverse() {
     this.commands.forEach(c => c.reverse());
-    this.commands = this.commands;
+    this.invalidateCommands(this.commands);
   }
 
   shiftBack() {
     this.commands.forEach(c => c.shiftBack());
-    this.commands = this.commands;
+    this.invalidateCommands(this.commands);
   }
 
   shiftForward() {
     this.commands.forEach(c => c.shiftForward());
-    this.commands = this.commands;
+    this.invalidateCommands(this.commands);
   }
 
   get length() {
@@ -125,7 +126,7 @@ export class SvgPathData {
         commandIndex: cw.drawCommandIndex,
         projection: cw.project(point),
       };
-    }).filter(i => !!i.projection)
+    }).filter(pi => !!pi.projection)
       .reduce((prev, curr) => {
         return prev && prev.projection.d < curr.projection.d ? prev : curr;
       }, null);
@@ -161,9 +162,9 @@ export class SvgPathData {
     } else if (cmd instanceof EllipticalArcCommand) {
       throw new Error('TODO: implement split for ellpitical arcs');
     }
-    const commands: DrawCommand[] = this.commands[subPathCommandIndex].commands;
+    const commands = this.commands[subPathCommandIndex].commands;
     commands.splice(commandIndex, 1, leftCmd, rightCmd);
-    this.commands = this.commands;
+    this.invalidateCommands(this.commands);
   }
 
   private computeCommandProperties() {
@@ -198,11 +199,11 @@ export class SvgPathData {
           }
           currentPoint = nextPoint;
           expandBounds_(nextPoint.x, nextPoint.y);
-          commandWrappers.push(new CommandWrapper(this, subPathCmdIndex, drawCmdIndex));
+          commandWrappers.push(new DrawCommandWrapper(this, subPathCmdIndex, drawCmdIndex));
         } else if (command instanceof LineCommand) {
           const nextPoint = command.points[1];
           length += MathUtil.distance(currentPoint, nextPoint);
-          commandWrappers.push(new CommandWrapper(
+          commandWrappers.push(new DrawCommandWrapper(
             this, subPathCmdIndex, drawCmdIndex,
             new Bezier(currentPoint, currentPoint, nextPoint, nextPoint)));
           currentPoint = nextPoint;
@@ -210,7 +211,7 @@ export class SvgPathData {
         } else if (command instanceof ClosePathCommand) {
           if (firstPoint) {
             length += MathUtil.distance(firstPoint, currentPoint);
-            commandWrappers.push(new CommandWrapper(
+            commandWrappers.push(new DrawCommandWrapper(
               this, subPathCmdIndex, drawCmdIndex,
               new Bezier(currentPoint, currentPoint, firstPoint, firstPoint)));
           }
@@ -218,14 +219,14 @@ export class SvgPathData {
         } else if (command instanceof BezierCurveCommand) {
           const points = command.points;
           const bez = new Bezier(currentPoint, points[1], points[2], points[3]);
-          commandWrappers.push(new CommandWrapper(this, subPathCmdIndex, drawCmdIndex, bez));
+          commandWrappers.push(new DrawCommandWrapper(this, subPathCmdIndex, drawCmdIndex, bez));
           length += bez.length();
           currentPoint = points[3];
           expandBoundsToBezier_(bez);
         } else if (command instanceof QuadraticCurveCommand) {
           const points = command.points;
           const bez = new Bezier(currentPoint, points[1], points[2]);
-          commandWrappers.push(new CommandWrapper(this, subPathCmdIndex, drawCmdIndex, bez));
+          commandWrappers.push(new DrawCommandWrapper(this, subPathCmdIndex, drawCmdIndex, bez));
           length += bez.length();
           currentPoint = points[2];
           expandBoundsToBezier_(bez);
@@ -238,7 +239,7 @@ export class SvgPathData {
 
           if (currentPointX === tempPoint1X && currentPointY === tempPoint1Y) {
             // degenerate to point (0 length)
-            commandWrappers.push(new CommandWrapper(this, subPathCmdIndex, drawCmdIndex));
+            commandWrappers.push(new DrawCommandWrapper(this, subPathCmdIndex, drawCmdIndex));
             return;
           }
 
@@ -249,7 +250,7 @@ export class SvgPathData {
               { x: currentPointX, y: currentPointY },
               { x: tempPoint1X, y: tempPoint1Y });
             expandBounds_(tempPoint1X, tempPoint1Y);
-            commandWrappers.push(new CommandWrapper(
+            commandWrappers.push(new DrawCommandWrapper(
               this, subPathCmdIndex, drawCmdIndex,
               new Bezier(currentPoint, currentPoint, nextPoint, nextPoint)));
             currentPoint = nextPoint;
@@ -274,7 +275,8 @@ export class SvgPathData {
             currentPoint = new Point(bezierCoords[i + 6], bezierCoords[i + 7]);
             expandBoundsToBezier_(bez);
           }
-          commandWrappers.push(new CommandWrapper(this, subPathCmdIndex, drawCmdIndex, ...arcBeziers));
+          commandWrappers.push(
+            new DrawCommandWrapper(this, subPathCmdIndex, drawCmdIndex, ...arcBeziers));
           currentPoint = new Point(tempPoint1X, tempPoint1Y);
         }
       });
@@ -284,8 +286,10 @@ export class SvgPathData {
   }
 }
 
-/** Wraps around the bezier curves associated with a draw command. */
-class CommandWrapper {
+/**
+ * Contains additional information about each individual draw command.
+ */
+class DrawCommandWrapper {
   readonly beziers: Bezier[];
 
   constructor(
