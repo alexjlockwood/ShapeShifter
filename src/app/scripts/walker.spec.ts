@@ -34,7 +34,6 @@ describe('Walk', () => {
         node.val = node.l.val + node.r.val;
       }
     };
-
     let tree = getSimpleTestTree();
     walker.postorder(tree, visitor);
     expect(tree.val).toBe(16, 'should visit subtrees first');
@@ -83,7 +82,7 @@ describe('Walk', () => {
     expect(visited).toBe('***2*31**5*640', 'post-order with context');
 
     if (document.querySelector && document.querySelector('#map-test')) {
-      const domWalker = new Walker(obj => obj.children ? obj.children : obj);
+      const domWalker = new Walker<Element>(obj => obj.children ? obj.children : obj);
       const root = document.querySelector('#map-test');
       let ids = domWalker.map(root, domWalker.preorder, el => { return el.id; });
       expect(ids).toEqual(['map-test', 'id1', 'id2'], 'preorder map with DOM elements');
@@ -110,27 +109,6 @@ describe('Walk', () => {
     const newTree = [['foo'], tree];
     const result = walker.map(newTree, walker.postorder, visitor);
     expect(_.difference(result, postorderResult)).toEqual(['foo'], 'map on list of trees');
-  });
-
-  it("pluck", () => {
-    const tree = getSimpleTestTree();
-    (tree as any).val = { val: 'z' };
-
-    var plucked = walker.pluckDeep(tree, 'val');
-    expect(plucked.shift()).toBe(tree.val);
-    expect(plucked.join('')).toBe('z123456', 'pluckRec is recursive');
-
-    plucked = walker.pluck(tree, 'val');
-    expect(plucked.shift()).toBe(tree.val);
-    expect(plucked.join('')).toBe('123456', 'regular pluck is not recursive');
-
-    (tree.l.r as any).foo = 42;
-    expect(walker.pluck(tree, 'foo')).toEqual([42], 'pluck a value from deep in the tree');
-
-    const tree2 = getMixedTestTree();
-    expect(walker.pluck(tree2, 'city')).toEqual(['Munich', 'San Francisco', 'Toronto'], 'pluck from a mixed tree');
-    const tree3 = [tree2, { city: 'Loserville', population: 'you' }];
-    expect(walker.pluck(tree3, 'population')).toEqual([1378000, 812826, 2615000, 'you'], 'pluck from a list of trees');
   });
 
   it("reduce", () => {
@@ -226,13 +204,7 @@ describe('Walk', () => {
         throw new Error("Leaf value visited when it shouldn't be");
       }
     };
-    expect(customWalker.pluck(tree, 'val').length).toBe(7, 'pluck with custom traversal');
-    expect(customWalker.pluckDeep(tree, 'val').length).toBe(7, 'pluckRec with custom traversal');
-
     expect(customWalker.map(tree, walker.postorder, _.identity).length).toBe(7, 'traversal strategy is dynamically scoped');
-
-    // Check that the default walker is unaffected.
     expect(walker.map(tree, walker.postorder, _.identity).length).toBe(14, 'default map still works');
-    expect(walker.pluckDeep(tree, 'val').join('')).toBe('0123456', 'default pluckRec still works');
   });
 });
