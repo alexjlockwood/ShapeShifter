@@ -26,7 +26,7 @@ export class SubPathCommand {
       firstMoveCommand.reverse();
       return;
     }
-    const cmds: DrawCommand[] = this.commands;
+    const cmds = this.commands;
     const newCmds: DrawCommand[] = [
       new MoveCommand(firstMoveCommand.start, cmds[cmds.length - 1].end)
     ];
