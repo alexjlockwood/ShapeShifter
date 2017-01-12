@@ -1,12 +1,14 @@
 import { Layer, VectorLayer, GroupLayer, PathLayer } from './models';
 import * as ColorUtil from './colorutil';
 import { SvgPathData } from './svgpathdata';
-import * as ModelUtil from './modelutil';
 import * as PathParser from './pathparser';
 import * as MathUtil from './mathutil';
 import { EllipticalArcCommand } from './svgcommands';
 import * as SvgUtil from './svgutil';
 
+/**
+ * Utility function that takes an SVG string as input and returns a VectorLayer model object.
+ */
 export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
   const parser = new DOMParser();
   const doc = parser.parseFromString(svgString, 'image/svg+xml');
@@ -22,10 +24,10 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
   const usedIds = {};
 
   const makeFinalNodeId_ = (node, typeIdPrefix: string) => {
-    const finalId = ModelUtil.getUniqueId({
-      prefix: sanitizeId_(node.id || typeIdPrefix),
-      objectById: id => usedIds[id],
-    });
+    const finalId = getUniqueId(
+      sanitizeId_(node.id || typeIdPrefix),
+      id => usedIds[id],
+    );
     usedIds[finalId] = true;
     return finalId;
   };
@@ -208,4 +210,17 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
   const alpha = documentElement.getAttribute('opacity') || undefined;
 
   return new VectorLayer(childrenLayers, id, width, height, alpha);
+}
+
+function getUniqueId(prefix = '', objectById = (_) => null, targetObject = null) {
+  let n = 0;
+  const id_ = () => prefix + (n ? `_${n}` : '');
+  while (true) {
+    const o = objectById(id_());
+    if (!o || o === targetObject) {
+      break;
+    }
+    n++;
+  }
+  return id_();
 }

@@ -9,15 +9,12 @@ import * as $ from 'jquery';
 import * as erd from 'element-resize-detector';
 import { Point, Matrix } from './../scripts/mathutil';
 import * as MathUtil from './../scripts/mathutil';
-import { DrawCommand, ClosePathCommand } from './../scripts/svgcommands';
 import { StateService, VectorLayerType } from './../state.service';
 import { Subscription } from 'rxjs/Subscription';
 import { SvgPathData, ProjectionInfo } from './../scripts/svgpathdata';
 
 const ELEMENT_RESIZE_DETECTOR = erd();
 
-
-// TODO(alockwood): remove jquery? seems unnecessary on second thought
 // TODO(alockwood): add offscreen canvas to implement alpha
 @Component({
   selector: 'app-canvas',
@@ -26,12 +23,10 @@ const ELEMENT_RESIZE_DETECTOR = erd();
 })
 export class CanvasComponent implements AfterViewInit, OnDestroy {
   @Input() vectorLayerType: VectorLayerType;
-  @Output() selectedCommandsChangedEmitter = new EventEmitter<DrawCommand[]>();
   @ViewChild('renderingCanvas') private renderingCanvasRef: ElementRef;
 
   private vectorLayer_: VectorLayer;
   private shouldLabelPoints_ = false;
-  private selectedCommands_: DrawCommand[] = [];
   private canvasContainerSize: number;
   private canvas;
   private scale: number;
@@ -49,7 +44,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     this.canvas = $(this.renderingCanvasRef.nativeElement);
     this.canvasContainerSize = this.elementRef.nativeElement.getBoundingClientRect().width;
     ELEMENT_RESIZE_DETECTOR.listenTo(this.elementRef.nativeElement, element => {
-      let canvasContainerSize = element.getBoundingClientRect().width;
+      const canvasContainerSize = element.getBoundingClientRect().width;
       if (this.canvasContainerSize !== canvasContainerSize) {
         this.canvasContainerSize = canvasContainerSize;
         this.resizeAndDraw();
@@ -85,23 +80,9 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  get shouldLabelPoints() {
-    return this.shouldLabelPoints_;
-  }
-
   @Input()
   set shouldLabelPoints(shouldLabelPoints) {
     this.shouldLabelPoints_ = shouldLabelPoints;
-    this.draw();
-  }
-
-  get selectedCommands() {
-    return this.selectedCommands_;
-  }
-
-  @Input()
-  set selectedCommands(selectedCommands: DrawCommand[]) {
-    this.selectedCommands_ = selectedCommands;
     this.draw();
   }
 
@@ -154,7 +135,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     this.drawLayer(this.vectorLayer, ctx, []);
     ctx.restore();
 
-    if (this.shouldLabelPoints && this.vectorLayerType !== VectorLayerType.Preview) {
+    if (this.shouldLabelPoints_ && this.vectorLayerType !== VectorLayerType.Preview) {
       this.drawPathPoints(this.vectorLayer, ctx, [
         new Matrix(this.backingStoreScale, 0, 0, this.backingStoreScale, 0, 0)
       ]);
@@ -200,7 +181,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
   private drawGroupLayer(
     layer: GroupLayer, ctx: CanvasRenderingContext2D, transforms: Matrix[]) {
-    const matrices = layer.toMatrices();
+    const matrices = this.toMatrices(layer);
     transforms.splice(transforms.length, 0, ...matrices);
     ctx.save();
     layer.children.forEach(l => this.drawLayer(l, ctx, transforms));
@@ -274,7 +255,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     if (layer instanceof VectorLayer) {
       layer.children.forEach(l => this.drawPathPoints(l, ctx, transforms));
     } else if (layer instanceof GroupLayer) {
-      const matrices = layer.toMatrices();
+      const matrices = this.toMatrices(layer);
       transforms.splice(transforms.length, 0, ...matrices);
       ctx.save();
       layer.children.forEach(l => this.drawPathPoints(l, ctx, transforms));
@@ -288,9 +269,9 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   private drawPathLayerPoints(
     layer: PathLayer, ctx: CanvasRenderingContext2D, transforms: Matrix[]) {
     const points = [];
-    layer.pathData.subPathCommands.forEach(s => {
+    layer.pathData.commands.forEach(s => {
       s.commands.forEach(c => {
-        if (!(c instanceof ClosePathCommand)) {
+        if (c.svgChar.toUpperCase() !== 'Z') {
           points.push(c.end);
         }
       });
@@ -323,7 +304,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     if (layer instanceof VectorLayer) {
       layer.children.forEach(l => this.drawClosestProjection(l, ctx, transforms));
     } else if (layer instanceof GroupLayer) {
-      const matrices = layer.toMatrices();
+      const matrices = this.toMatrices(layer);
       transforms.splice(transforms.length, 0, ...matrices);
       ctx.save();
       layer.children.forEach(l => this.drawClosestProjection(l, ctx, transforms));
@@ -349,34 +330,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     const x = (event.pageX - canvasOffset.left) / this.scale;
     const y = (event.pageY - canvasOffset.top) / this.scale;
     const mouseDown = new Point(x, y);
-    // TODO(alockwood): select clips and/or groups in addition to paths?
-    // const matrices = [];
-    // const findSelectedPointCommands_ = (layer: Layer): PointCommand[] => {
-    //   const recurseAndFlatten = (l: Layer) => {
-    //     return l.children.map(c => findSelectedPointCommands_(c))
-    //       .reduce((result, next) => result.concat(next), []);
-    //   };
-    //   if (layer instanceof VectorLayer) {
-    //     return recurseAndFlatten(layer);
-    //   }
-    //   if (layer instanceof (GroupLayer)) {
-    //     const transformMatrices = layer.toMatrices();
-    //     matrices.splice(matrices.length, 0, ...transformMatrices);
-    //     const result = recurseAndFlatten(layer);
-    //     matrices.splice(-transformMatrices.length, transformMatrices.length);
-    //     return result;
-    //   }
-    //   if (layer instanceof PathLayer) {
-    //     const transformedMousePoint = mouseDown.transform(...Array.from(matrices).reverse());
-    //     return this.findPointCommandsInRange(layer, transformedMousePoint, 0.5);
-    //   }
-    //   return [];
-    // }
-    // let selectedPointCommands = findSelectedPointCommands_(this.vectorLayer);
-    // if (selectedPointCommands.length) {
-    //   selectedPointCommands = [selectedPointCommands[selectedPointCommands.length - 1]];
-    // }
-    // this.selectedCommandsChangedEmitter.emit(selectedPointCommands.map(pc => pc.command));
 
     if (this.vectorLayerType !== VectorLayerType.End) {
       return;
@@ -437,27 +390,15 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  private findPointCommandsInRange(
-    layer: PathLayer,
-    point: Point,
-    radius: number): PointCommand[] {
-
-    const pointCommands = [];
-    layer.pathData.subPathCommands.forEach(s => {
-      s.commands.forEach(c => {
-        c.points.forEach(p => {
-          if (p && MathUtil.distance(point, p) <= radius) {
-            pointCommands.push({
-              point: p,
-              command: c,
-            });
-          }
-        });
-      });
-    });
-
-    return pointCommands;
+  private toMatrices(layer: GroupLayer) {
+    let cosr = Math.cos(layer.rotation * Math.PI / 180);
+    let sinr = Math.sin(layer.rotation * Math.PI / 180);
+    return [
+      new Matrix(1, 0, 0, 1, layer.pivotX, layer.pivotY),
+      new Matrix(1, 0, 0, 1, layer.translateX, layer.translateY),
+      new Matrix(cosr, sinr, -sinr, cosr, 0, 0),
+      new Matrix(layer.scaleX, 0, 0, layer.scaleY, 0, 0),
+      new Matrix(1, 0, 0, 1, -layer.pivotX, -layer.pivotY)
+    ];
   }
 }
-
-type PointCommand = { point: Point, command: DrawCommand };

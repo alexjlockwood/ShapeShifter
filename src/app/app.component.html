@@ -11,9 +11,7 @@
           [shouldLabelPoints]="shouldLabelPoints"></app-canvas>
         <app-canvas fxFlex="30%"
           [vectorLayerType]="previewVectorLayerType"
-          [shouldLabelPoints]="shouldLabelPoints"
-          [selectedCommands]="selectedCommands"
-          (selectedCommandsChangedEmitter)="onSelectedCommandsChanged($event)"></app-canvas>
+          [shouldLabelPoints]="shouldLabelPoints"></app-canvas>
         <app-canvas fxFlex="30%"
           [vectorLayerType]="endVectorLayerType"
           [shouldLabelPoints]="shouldLabelPoints"></app-canvas>
@@ -33,8 +31,6 @@
         fxLayoutAlign="space-around">
         <app-inspector fxFlex="30%"
           [vectorLayerType]="startVectorLayerType"></app-inspector>
-<!--         <app-inspector fxFlex="30%"
-          [vectorLayerType]="previewVectorLayerType"></app-inspector> -->
         <app-inspector fxFlex="30%"
           [vectorLayerType]="endVectorLayerType"></app-inspector>
       </div>

@@ -10,7 +10,7 @@
     mdTooltip="Shift back"
     mdTooltipPosition="above"
     md-theme="dark"
-    [disabled]="!isSubPathClosed"
+    [disabled]="!isSubPathClosed()"
     (click)="onShiftBackClick()">
     <md-icon class="md-24">skip_previous</md-icon>
   </button>
@@ -18,7 +18,7 @@
     mdTooltip="Shift forwards"
     mdTooltipPosition="above"
     md-theme="dark"
-    [disabled]="!isSubPathClosed"
+    [disabled]="!isSubPathClosed()"
     (click)="onShiftForwardClick()">
     <md-icon class="md-24">skip_next</md-icon>
   </button>

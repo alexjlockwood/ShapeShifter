@@ -1,9 +1,11 @@
 type PointType = { x: number, y: number };
 
+/** An immutable point class. */
 export class Point {
   constructor(public readonly x = 0, public readonly y = 0) { }
 }
 
+/** Applies a list of transformation matrices to the specified point. */
 export function transform(point: PointType, ...matrices: Matrix[]) {
   return matrices.reduce((p: Point, m: Matrix) => {
     return new Point(
@@ -13,10 +15,12 @@ export function transform(point: PointType, ...matrices: Matrix[]) {
   }, point);
 }
 
+/** Calculates the distance between two points. */
 export function distance(p1: PointType, p2: PointType) {
   return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
 }
 
+/** An immutable Matrix class that uses the standard SVG transformation matrix notation. */
 export class Matrix {
   constructor(
     public readonly a = 0,
@@ -26,6 +30,7 @@ export class Matrix {
     public readonly e = 0,
     public readonly f = 0) { }
 
+  /** Returns the inverse of this transformation matrix. */
   invert() {
     const m = this;
     return new Matrix(
@@ -64,10 +69,16 @@ export class Matrix {
   }
 }
 
+/** A simple rectangle container class. */
 export class Rect {
   constructor(
     public l = 0,
     public t = 0,
     public r = 0,
     public b = 0) { }
+}
+
+/** Linearly interpolate between point a and point b using time t. */
+export function lerp(a: number, b: number, t: number) {
+  return a + (b - a) * t;
 }

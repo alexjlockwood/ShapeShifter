@@ -3,8 +3,11 @@ import {
   DrawCommand, MoveCommand, LineCommand, QuadraticCurveCommand,
   BezierCurveCommand, EllipticalArcCommand, ClosePathCommand
 } from './svgcommands';
-import { SubPathCommand } from './svgsubpath';
 
+/**
+ * Takes an SVG path string (i.e. the text specified in the path's 'd' attribute) and returns
+ * list of DrawCommands that represent the SVG path's individual sequence of instructions.
+ */
 export function parseCommands(pathString: string): DrawCommand[] {
   let index = 0;
   let currentPoint: Point;
@@ -303,30 +306,32 @@ export function parseCommands(pathString: string): DrawCommand[] {
   return commands;
 }
 
-
+/**
+ * Takes an list of DrawCommands and converts them back into a SVG path string.
+ */
 export function commandsToString(commands: DrawCommand[]) {
   const tokens = [];
-  commands.forEach(command => {
-    if (command instanceof EllipticalArcCommand) {
+  commands.forEach(cmd => {
+    if (cmd instanceof EllipticalArcCommand) {
       tokens.push('A');
-      tokens.splice(tokens.length, 0, command.args.slice(2)); // skip first two arc args
+      tokens.splice(tokens.length, 0, cmd.args.slice(2)); // skip first two arc args
       return;
     }
 
-    if (command instanceof MoveCommand) {
+    if (cmd instanceof MoveCommand) {
       tokens.push('M');
-    } else if (command instanceof LineCommand) {
+    } else if (cmd instanceof LineCommand) {
       tokens.push('L');
-    } else if (command instanceof BezierCurveCommand) {
+    } else if (cmd instanceof BezierCurveCommand) {
       tokens.push('C');
-    } else if (command instanceof QuadraticCurveCommand) {
+    } else if (cmd instanceof QuadraticCurveCommand) {
       tokens.push('Q');
-    } else if (command instanceof ClosePathCommand) {
+    } else if (cmd instanceof ClosePathCommand) {
       tokens.push('Z');
     }
 
-    const pointsToNumberList_ = (...points: Point[]) => points.reduce((list, p) => list.concat(p.x, p.y), []);
-    const args = pointsToNumberList_(...(command instanceof ClosePathCommand ? [] : command.points.slice(1)));
+    const pointsToNumberListFunc = (...points: Point[]) => points.reduce((list, p) => list.concat(p.x, p.y), []);
+    const args = pointsToNumberListFunc(...(cmd instanceof ClosePathCommand ? [] : cmd.points.slice(1)));
     tokens.splice(tokens.length, 0, ...args.map(n => Number(n.toFixed(3)).toString()));
   });
 

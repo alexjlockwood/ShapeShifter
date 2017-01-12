@@ -1,5 +1,5 @@
 import { Component, AfterViewInit, OnChanges, SimpleChanges, Input, ViewChild, ElementRef } from '@angular/core';
-import { DrawCommand, ClosePathCommand } from './../../scripts/svgcommands';
+import { IDrawCommand } from './../../scripts/commands';
 import { StateService, VectorLayerType } from './../../state.service';
 import * as $ from 'jquery';
 
@@ -12,10 +12,9 @@ export class CommandComponent implements AfterViewInit, OnChanges {
   @ViewChild('commandIndexCanvas') private commandIndexCanvas: ElementRef;
   @Input() vectorLayerType: VectorLayerType;
   @Input() commandIndex: number;
-  @Input() drawCommand: DrawCommand;
-  isItemEditable: boolean = false;
+  @Input() drawCommand: IDrawCommand;
 
-  constructor() { }
+  constructor(private stateService: StateService) { }
 
   ngAfterViewInit() {
     this.drawCommandIndex();
@@ -27,8 +26,6 @@ export class CommandComponent implements AfterViewInit, OnChanges {
   }
 
   private drawCommandIndex() {
-    this.isItemEditable = this.drawCommand.isModifiable;
-
     const canvas = $(this.commandIndexCanvas.nativeElement);
     const commandIndexCanvasSize = canvas.get(0).getBoundingClientRect().width;
     const width = commandIndexCanvasSize;
@@ -61,7 +58,7 @@ export class CommandComponent implements AfterViewInit, OnChanges {
 
   get drawCommandEndPointText() {
     const c = this.drawCommand;
-    if (c instanceof ClosePathCommand) {
+    if (c.svgChar.toUpperCase() === 'Z') {
       return `${c.svgChar}`;
     } else {
       const p = c.points[c.points.length - 1];
@@ -71,11 +68,21 @@ export class CommandComponent implements AfterViewInit, OnChanges {
     }
   }
 
+  isEditable() {
+    return false;
+  }
+
+  isDeletable() {
+    return this.drawCommand.isModfiable;
+  }
+
   onEditPointClick() {
-    console.log('edit point click');
+    // TODO(alockwood): implement this
+    this.stateService.notifyChange(this.vectorLayerType);
   }
 
   onDeletePointClick() {
-    console.log('delete point click');
+    this.drawCommand.delete();
+    this.stateService.notifyChange(this.vectorLayerType);
   }
 }

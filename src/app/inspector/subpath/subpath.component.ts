@@ -1,14 +1,6 @@
-import { Component, OnChanges, SimpleChanges, Input, Output, EventEmitter, OnInit } from '@angular/core';
-import { Layer, VectorLayer, PathLayer } from './../../scripts/models';
-import { SvgPathData } from './../../scripts/svgpathdata';
+import { Component, OnChanges, SimpleChanges, Input, OnInit } from '@angular/core';
 import { StateService, VectorLayerType } from './../../state.service';
-import {
-  DrawCommand, MoveCommand, LineCommand, QuadraticCurveCommand,
-  BezierCurveCommand, EllipticalArcCommand, ClosePathCommand
-} from './../../scripts/svgcommands';
-import { SubPathCommand } from '../../scripts/svgsubpath';
-import { Subscription } from 'rxjs/Subscription';
-
+import { IDrawCommand, ISubPathCommand } from './../../scripts/commands';
 
 @Component({
   selector: 'app-subpath',
@@ -17,10 +9,8 @@ import { Subscription } from 'rxjs/Subscription';
 })
 export class SubPathComponent implements OnInit, OnChanges {
   @Input() vectorLayerType: VectorLayerType;
-  @Input() subPathCommand: SubPathCommand;
-  drawCommands: DrawCommand[] = [];
-  isSubPathClosed: boolean;
-  private subscription: Subscription;
+  @Input() subPathCommand: ISubPathCommand;
+  drawCommands: IDrawCommand[] = [];
 
   constructor(private stateService: StateService) { }
 
@@ -34,7 +24,10 @@ export class SubPathComponent implements OnInit, OnChanges {
 
   private updateSubPathCommand() {
     this.drawCommands = this.subPathCommand.commands;
-    this.isSubPathClosed = this.subPathCommand.isClosed();
+  }
+
+  isSubPathClosed() {
+    return this.subPathCommand.isClosed();
   }
 
   onReverseClick() {

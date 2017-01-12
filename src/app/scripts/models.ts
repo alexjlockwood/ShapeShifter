@@ -1,6 +1,9 @@
 import { SvgPathData } from './svgpathdata';
 import { Matrix } from './mathutil';
 
+/**
+ * Interface that is shared amongst all vector drawable layer model types.
+ */
 export interface Layer {
   children: Layer[] | null;
   id: string;
@@ -10,6 +13,9 @@ export interface Layer {
   walk(func: (layer: Layer) => void): void;
 }
 
+/**
+ * Root class for all layer model classes. Primarily used for code reuse.
+ */
 abstract class AbstractLayer implements Layer {
   constructor(
     public children: Layer[] | null,
@@ -67,6 +73,9 @@ abstract class AbstractLayer implements Layer {
   }
 }
 
+/**
+ * Model object that mirrors the VectorDrawable's '<path>' element.
+ */
 export class PathLayer extends AbstractLayer {
   constructor(
     id: string,
@@ -87,6 +96,9 @@ export class PathLayer extends AbstractLayer {
   }
 }
 
+/**
+ * Model object that mirrors the VectorDrawable's '<clip-path>' element.
+ */
 export class ClipPathLayer extends AbstractLayer {
   constructor(
     id: string,
@@ -96,6 +108,9 @@ export class ClipPathLayer extends AbstractLayer {
   }
 }
 
+/**
+ * Model object that mirrors the VectorDrawable's '<group>' element.
+ */
 export class GroupLayer extends AbstractLayer {
   constructor(
     children: Layer[],
@@ -110,20 +125,11 @@ export class GroupLayer extends AbstractLayer {
   ) {
     super(children || [], id);
   }
-
-  toMatrices() {
-    let cosr = Math.cos(this.rotation * Math.PI / 180);
-    let sinr = Math.sin(this.rotation * Math.PI / 180);
-    return [
-      new Matrix(1, 0, 0, 1, this.pivotX, this.pivotY),
-      new Matrix(1, 0, 0, 1, this.translateX, this.translateY),
-      new Matrix(cosr, sinr, -sinr, cosr, 0, 0),
-      new Matrix(this.scaleX, 0, 0, this.scaleY, 0, 0),
-      new Matrix(1, 0, 0, 1, -this.pivotX, -this.pivotY)
-    ];
-  }
 }
 
+/**
+ * Model object that mirrors the VectorDrawable's '<vector>' element.
+ */
 export class VectorLayer extends AbstractLayer {
   constructor(
     children: Layer[],

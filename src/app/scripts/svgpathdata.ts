@@ -1,33 +1,33 @@
 import * as _ from 'lodash';
-import { Bezier, Projection, Split } from './bezierutil';
+import { Bezier, Projection } from './bezierutil';
 import { Point, Matrix, Rect } from './mathutil';
 import * as MathUtil from './mathutil';
 import {
   DrawCommand, MoveCommand, LineCommand, QuadraticCurveCommand,
-  BezierCurveCommand, EllipticalArcCommand, ClosePathCommand
+  BezierCurveCommand, EllipticalArcCommand, ClosePathCommand, SubPathCommand
 } from './svgcommands';
-import { SubPathCommand } from './svgsubpath';
+import { IPathCommand } from './commands';
 import * as SvgUtil from './svgutil';
 import * as PathParser from './pathparser';
 
-// TODO(alockwood): need to dynamically update the length/bounds/pathstring
-export class SvgPathData {
+/**
+ * Provides all of the information associated with a vector drawable's path data.
+ */
+export class SvgPathData implements IPathCommand {
   private originalDrawCommands_: DrawCommand[];
   private drawCommandWrappers_: DrawCommandWrapper[];
-  private subPathCommands_: SubPathCommand[] = [];
-  private pathString_: string = '';
+  private commands_: SubPathCommand[] = [];
+  private path_: string;
   private length_ = 0;
   private bounds_: Rect = null;
 
-  constructor(obj: string | SvgPathData) {
-    if (typeof obj === 'string') {
-      this.pathString_ = obj;
-    } else if (obj instanceof SvgPathData) {
-      this.pathString_ = obj.pathString;
-    }
-    this.originalDrawCommands_ = PathParser.parseCommands(this.pathString_);
+  // TODO(alockwood): need to dynamically update the length/bounds/pathstring
+  constructor(path: string) {
+    this.path_ = path;
+    this.originalDrawCommands_ = PathParser.parseCommands(this.path_);
 
-    const {length, bounds, drawCommandWrappers} = initInternalState(this.originalDrawCommands_);
+    const {length, bounds, drawCommandWrappers} =
+      initInternalState(this, this.originalDrawCommands_);
     this.length_ = length;
     this.bounds_ = bounds;
     this.drawCommandWrappers_ = drawCommandWrappers;
@@ -35,91 +35,112 @@ export class SvgPathData {
     this.rebuildInternalState();
   }
 
-  // TODO(alockwood): make sure this gets updated
-  get pathString() {
-    return this.pathString_;
+  get id() {
+    return this.path_;
   }
 
-  get originalDrawCommands() {
-    return this.originalDrawCommands_;
+  get commands() {
+    return this.commands_;
   }
 
-  get subPathCommands() {
-    return this.subPathCommands_;
+  /** Returns the path length of this SVG path. */
+  get length() {
+    return this.length_;
   }
 
-  private rebuildInternalState(rebuildPathString = false) {
+  toString() {
+    return this.path_;
+  }
+
+  // TODO(alockwood): make this private
+  rebuildInternalState(rebuildPathString = false) {
     const drawCommands = [].concat.apply([], this.drawCommandWrappers_.map(cw => cw.commands));
     if (rebuildPathString) {
-      this.pathString_ = PathParser.commandsToString(drawCommands);
+      this.path_ = PathParser.commandsToString(drawCommands);
     }
-    this.subPathCommands_ = createSubPathCommands(drawCommands);
+    this.commands_ = createSubPathCommands(drawCommands);
   }
 
+  /** Returns true iff this path is morphable with the specified path. */
   isMorphableWith(cmd: SvgPathData) {
-    return this.subPathCommands.length === cmd.subPathCommands.length
-      && this.subPathCommands.every((s, i) => {
-        return s.commands.length === cmd.subPathCommands[i].commands.length
+    return this.commands.length === cmd.commands.length
+      && this.commands.every((s, i) => {
+        return s.commands.length === cmd.commands[i].commands.length
           && s.commands.every((d, j) => {
-            const drawCmd = cmd.subPathCommands[i].commands[j];
+            const drawCmd = cmd.commands[i].commands[j];
             return d.constructor === drawCmd.constructor
               && d.points.length === drawCmd.points.length;
           });
       });
   }
 
+  /** Interpolates this path between a start and end path using the specified fraction. */
   interpolate(start: SvgPathData, end: SvgPathData, fraction: number) {
     if (!this.isMorphableWith(start) || !this.isMorphableWith(end)) {
-      return false;
+      return;
     }
-    this.subPathCommands.forEach((s, i) => {
+    this.commands.forEach((s, i) => {
       s.commands.forEach((d, j) => {
-        const d1 = start.subPathCommands[i].commands[j];
-        const d2 = end.subPathCommands[i].commands[j];
-        d.interpolate(d1, d2, fraction);
+        if (d instanceof EllipticalArcCommand) {
+          // TODO(alockwood): confirm this is how we should interpolate arcs?
+          const d1 = start.commands[i].commands[j] as EllipticalArcCommand;
+          const d2 = end.commands[i].commands[j] as EllipticalArcCommand;
+          d.args.forEach((_, i) => {
+            if (i === 5 || i === 6) {
+              // Doesn't make sense to interpolate the large arc and sweep flags.
+              d.args[i] = fraction === 0 ? d1.args[i] : d2.args[i];
+              return;
+            }
+            d.args[i] = MathUtil.lerp(d1.args[i], d2.args[i], fraction);
+          });
+        } else {
+          const d1 = start.commands[i].commands[j];
+          const d2 = end.commands[i].commands[j];
+          for (let i = 0; i < d1.points.length; i++) {
+            const startPoint = d1.points[i];
+            const endPoint = d2.points[i];
+            if (startPoint && endPoint) {
+              const x = MathUtil.lerp(startPoint.x, endPoint.x, fraction);
+              const y = MathUtil.lerp(startPoint.y, endPoint.y, fraction);
+              d.points[i] = new Point(x, y);
+            }
+          }
+        }
       });
     });
     this.rebuildInternalState();
-    return true;
   }
 
+  /** Draws the SVG path on the provided canvas context. */
   execute(ctx: CanvasRenderingContext2D) {
     ctx.beginPath();
-    this.subPathCommands.forEach(s => s.commands.forEach(d => d.execute(ctx)));
+    this.commands.forEach(s => s.commands.forEach(d => {
+      if (d instanceof MoveCommand) {
+        ctx.moveTo(d.end.x, d.end.y);
+      } else if (d instanceof LineCommand) {
+        ctx.lineTo(d.end.x, d.end.y);
+      } else if (d instanceof QuadraticCurveCommand) {
+        ctx.quadraticCurveTo(
+          d.points[1].x, d.points[1].y,
+          d.points[2].x, d.points[2].y);
+      } else if (d instanceof BezierCurveCommand) {
+        ctx.bezierCurveTo(
+          d.points[1].x, d.points[1].y,
+          d.points[2].x, d.points[2].y,
+          d.points[3].x, d.points[3].y);
+      } else if (d instanceof ClosePathCommand) {
+        ctx.closePath();
+      } else if (d instanceof EllipticalArcCommand) {
+        SvgUtil.executeArc(ctx, d.args);
+      }
+    }));
   }
 
-  reverse() {
-    // TODO(alockwood): Calling this.subPathCommands is a bit fragile... should probably be
-    // modifying the draw command wrappers instead since that is what we use
-    // to construct the subpaths in the first place.
-    this.subPathCommands.forEach(c => c.reverse());
-    this.rebuildInternalState(true);
-  }
-
-  shiftBack() {
-    // TODO(alockwood): Calling this.subPathCommands is a bit fragile... should probably be
-    // modifying the draw command wrappers instead since that is what we use
-    // to construct the subpaths in the first place.
-    this.subPathCommands.forEach(c => c.shiftBack());
-    this.rebuildInternalState(true);
-  }
-
-  shiftForward() {
-    // TODO(alockwood): Calling this.subPathCommands is a bit fragile... should probably be
-    // modifying the draw command wrappers instead since that is what we use
-    // to construct the subpaths in the first place.
-    this.subPathCommands.forEach(c => c.shiftForward());
-    this.rebuildInternalState(true);
-  }
-
-  get length() {
-    return this.length_;
-  }
-
-  toString() {
-    return this.pathString;
-  }
-
+  /**
+   * Calculates the point on this path that is closest to the specified point argument.
+   * Also returns a 'split' function that can be used to split the path at the returned
+   * projection point.
+   */
   project(point: Point): ProjectionInfo | null {
     return this.drawCommandWrappers_.map(cw => {
       const projection = cw.project(point);
@@ -156,7 +177,7 @@ function createSubPathCommands(drawCommands: DrawCommand[]) {
 }
 
 
-function initInternalState(commands: DrawCommand[]) {
+function initInternalState(svgPathData: SvgPathData, commands: DrawCommand[]) {
   let length = 0;
   const bounds = new Rect(Infinity, Infinity, -Infinity, -Infinity);
 
@@ -187,32 +208,32 @@ function initInternalState(commands: DrawCommand[]) {
       }
       currentPoint = nextPoint;
       expandBounds_(nextPoint.x, nextPoint.y);
-      drawCommandWrappers.push(new DrawCommandWrapper(cmd));
+      drawCommandWrappers.push(new DrawCommandWrapper(svgPathData, cmd));
     } else if (cmd instanceof LineCommand) {
       const nextPoint = cmd.points[1];
       length += MathUtil.distance(currentPoint, nextPoint);
-      drawCommandWrappers.push(new DrawCommandWrapper(
+      drawCommandWrappers.push(new DrawCommandWrapper(svgPathData,
         cmd, new Bezier(currentPoint, currentPoint, nextPoint, nextPoint)));
       currentPoint = nextPoint;
       expandBounds_(nextPoint.x, nextPoint.y);
     } else if (cmd instanceof ClosePathCommand) {
       if (firstPoint) {
         length += MathUtil.distance(firstPoint, currentPoint);
-        drawCommandWrappers.push(new DrawCommandWrapper(
+        drawCommandWrappers.push(new DrawCommandWrapper(svgPathData,
           cmd, new Bezier(currentPoint, currentPoint, firstPoint, firstPoint)));
       }
       firstPoint = null;
     } else if (cmd instanceof BezierCurveCommand) {
       const points = cmd.points;
       const bez = new Bezier(currentPoint, points[1], points[2], points[3]);
-      drawCommandWrappers.push(new DrawCommandWrapper(cmd, bez));
+      drawCommandWrappers.push(new DrawCommandWrapper(svgPathData, cmd, bez));
       length += bez.length();
       currentPoint = points[3];
       expandBoundsToBezier_(bez);
     } else if (cmd instanceof QuadraticCurveCommand) {
       const points = cmd.points;
       const bez = new Bezier(currentPoint, points[1], points[2]);
-      drawCommandWrappers.push(new DrawCommandWrapper(cmd, bez));
+      drawCommandWrappers.push(new DrawCommandWrapper(svgPathData, cmd, bez));
       length += bez.length();
       currentPoint = points[2];
       expandBoundsToBezier_(bez);
@@ -225,7 +246,7 @@ function initInternalState(commands: DrawCommand[]) {
 
       if (currentPointX === tempPoint1X && currentPointY === tempPoint1Y) {
         // degenerate to point (0 length)
-        drawCommandWrappers.push(new DrawCommandWrapper(cmd));
+        drawCommandWrappers.push(new DrawCommandWrapper(svgPathData, cmd));
         return;
       }
 
@@ -236,7 +257,7 @@ function initInternalState(commands: DrawCommand[]) {
           { x: currentPointX, y: currentPointY },
           { x: tempPoint1X, y: tempPoint1Y });
         expandBounds_(tempPoint1X, tempPoint1Y);
-        drawCommandWrappers.push(new DrawCommandWrapper(
+        drawCommandWrappers.push(new DrawCommandWrapper(svgPathData,
           cmd, new Bezier(currentPoint, currentPoint, nextPoint, nextPoint)));
         currentPoint = nextPoint;
         return;
@@ -260,7 +281,7 @@ function initInternalState(commands: DrawCommand[]) {
         currentPoint = new Point(bezierCoords[i + 6], bezierCoords[i + 7]);
         expandBoundsToBezier_(bez);
       }
-      drawCommandWrappers.push(new DrawCommandWrapper(cmd, ...arcBeziers));
+      drawCommandWrappers.push(new DrawCommandWrapper(svgPathData, cmd, ...arcBeziers));
       currentPoint = new Point(tempPoint1X, tempPoint1Y);
     }
   });
@@ -279,6 +300,7 @@ class DrawCommandWrapper {
   private splitCommands: DrawCommand[] = [];
 
   constructor(
+    private readonly svgPathData: SvgPathData,
     public readonly sourceCommand: DrawCommand,
     ...sourceBeziers: Bezier[]) {
     this.sourceBeziers = sourceBeziers;
@@ -334,7 +356,12 @@ class DrawCommandWrapper {
   get commands() {
     if (this.splitCommands.length) {
       for (let i = 0; i < this.splitCommands.length - 1; i++) {
-        this.splitCommands[i].isModifiable = true;
+        const cmd = this.splitCommands[i];
+        cmd.onDeleteCommandClick = () => {
+          this.splits.splice(i, 1);
+          this.rebuildSplitCommands();
+          this.svgPathData.rebuildInternalState();
+        };
       }
       return this.splitCommands;
     }
@@ -346,3 +373,4 @@ export type ProjectionInfo = {
   projection: Projection;
   split: () => void;
 };
+

@@ -5,7 +5,7 @@
   mdTooltip="Edit point"
   mdTooltipPosition="above"
   md-theme="dark"
-  [fxShow]="isItemEditable"
+  [fxShow]="isEditable()"
   fxLayoutAlign="center center"
   (click)="onEditPointClick()">
   <md-icon class="md-24">mode_edit</md-icon>
@@ -15,7 +15,7 @@
   mdTooltipPosition="above"
   md-theme="dark"
   fxLayoutAlign="center center"
-  [fxShow]="isItemEditable"
+  [fxShow]="isDeletable()"
   (click)="onDeletePointClick()">
   <md-icon class="md-24">delete</md-icon>
 </button>

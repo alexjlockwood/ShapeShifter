@@ -1,9 +1,7 @@
 import { Component, OnInit, AfterViewInit, ElementRef, ViewChild, OnDestroy } from '@angular/core';
 import { Layer, VectorLayer, GroupLayer, PathLayer } from './scripts/models';
 import * as SvgLoader from './scripts/svgloader';
-import { SvgPathData } from './scripts/svgpathdata';
 import { Point } from './scripts/mathutil';
-import { DrawCommand, MoveCommand, LineCommand, ClosePathCommand } from './scripts/svgcommands';
 import { Subscription } from 'rxjs/Subscription';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { StateService, VectorLayerType } from './state.service';
@@ -23,7 +21,6 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   public readonly endVectorLayerType = VectorLayerType.End;
   shouldLabelPoints = true;
   isMorphable = false;
-  selectedCommands: DrawCommand[] = [];
 
   private isStructurallyIdentical = false;
   private subscription: Subscription = null;
@@ -114,14 +111,6 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     };
     animateLayer(this.previewVectorLayer);
     return this.previewVectorLayer;
-  }
-
-  onSelectedCommandsChanged(selectedCommands: DrawCommand[]) {
-    if (!this.isMorphable) {
-      return;
-    }
-    // TODO(alockwood): avoid change detection if selected commands haven't changed
-    this.selectedCommands = selectedCommands;
   }
 
   private get startVectorLayer() {

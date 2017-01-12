@@ -1,6 +1,9 @@
 import * as BezierImpl from 'bezier-js';
 import { Point } from './mathutil';
 
+/**
+ * A simple typed wrapper class around the amazing bezier-js library.
+ */
 export class Bezier {
   private readonly bezierImpl;
   private readonly points_: Point[];
@@ -16,29 +19,19 @@ export class Bezier {
     this.points_ = this.bezierImpl.points.map(p => new Point(p.x, p.y));
   }
 
-  get start() {
-    return this.points[0];
-  }
+  get start() { return this.points[0]; }
 
-  get cp1() {
-    return this.points[1];
-  }
+  get cp1() { return this.points[1]; }
 
-  get cp2() {
-    return this.points[2];
-  }
+  get cp2() { return this.points[2]; }
 
-  get end() {
-    return this.points[this.points.length - 1];
-  }
+  get end() { return this.points[this.points.length - 1]; }
 
-  get points() {
-    return this.points_;
-  }
+  get points() { return this.points_; }
 
-  length(): number {
-    return this.bezierImpl.length();
-  }
+  length(): number { return this.bezierImpl.length(); }
+
+  bbox(): BBox { return this.bezierImpl.bbox(); }
 
   project(point: Point): Projection {
     const proj = this.bezierImpl.project(point);
@@ -53,10 +46,6 @@ export class Bezier {
   split(t1: number, t2: number): Bezier {
     return new Bezier(...this.bezierImpl.split(t1, t2).points);
   }
-
-  bbox(): BBox {
-    return this.bezierImpl.bbox();
-  }
 }
 
 export interface Projection {
@@ -64,11 +53,6 @@ export interface Projection {
   y: number;
   t: number;
   d: number;
-}
-
-export interface Split {
-  left: Bezier;
-  right: Bezier;
 }
 
 export interface BBox {

@@ -1,4 +1,4 @@
-import { Bezier, Projection, Split } from './bezierutil';
+import { Bezier, Projection } from './bezierutil';
 import { Point } from './mathutil';
 
 describe('Bezier', () => {

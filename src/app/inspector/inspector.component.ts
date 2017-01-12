@@ -1,10 +1,6 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
-import { Layer, VectorLayer, PathLayer } from './../scripts/models';
-import { SvgPathData } from './../scripts/svgpathdata';
-import {
-  DrawCommand, MoveCommand, LineCommand, QuadraticCurveCommand,
-  BezierCurveCommand, EllipticalArcCommand, ClosePathCommand
-} from './../scripts/svgcommands';
+import { Component, Input, OnInit, OnDestroy } from '@angular/core';
+import { PathLayer } from './../scripts/models';
+import { IPathCommand } from './../scripts/commands';
 import { StateService, VectorLayerType } from './../state.service';
 import { Subscription } from 'rxjs/Subscription';
 
@@ -16,31 +12,31 @@ import { Subscription } from 'rxjs/Subscription';
 })
 export class InspectorComponent implements OnInit, OnDestroy {
   @Input() vectorLayerType: VectorLayerType;
-  pathCommands: SvgPathData[] = [];
+  pathCommands: IPathCommand[] = [];
   private subscription: Subscription;
 
   constructor(private stateService: StateService) { }
 
   ngOnInit() {
     this.subscription =
-      this.stateService.subscribe(this.vectorLayerType, layer => {
-        if (!layer) {
+      this.stateService.subscribe(this.vectorLayerType, vectorLayer => {
+        if (!vectorLayer) {
           return;
         }
-        const pathCommands: SvgPathData[] = [];
-        layer.walk(l => {
-          if (l instanceof PathLayer) {
-            pathCommands.push(l.pathData);
+        const pathCommands: IPathCommand[] = [];
+        vectorLayer.walk(layer => {
+          if (layer instanceof PathLayer) {
+            pathCommands.push(layer.pathData);
           }
         });
         this.pathCommands = pathCommands;
       });
   }
 
-  trackSvgPathData(index: number, item: SvgPathData) {
+  trackSvgPathData(index: number, item: IPathCommand) {
     // TODO(alockwood): this needs to somehow incorporate the path position
     // (in case multiple paths have identical path strings)
-    return item.pathString;
+    return item.id;
   }
 
   ngOnDestroy() {
