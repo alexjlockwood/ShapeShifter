@@ -1,6 +1,7 @@
 import { Point, Matrix } from './mathutil';
 import * as MathUtil from './mathutil';
 
+/** Draws an elliptical arc on the specified canvas context. */
 export function executeArc(ctx: CanvasRenderingContext2D, arcArgs) {
   let [currentPointX, currentPointY,
     rx, ry, xAxisRotation,
@@ -31,7 +32,7 @@ export function executeArc(ctx: CanvasRenderingContext2D, arcArgs) {
   }
 }
 
-// Based on code from https://code.google.com/archive/p/androidsvg
+/** Estimates an elliptical arc as a sequence of bezier curves. */
 export function arcToBeziers(xf, yf, rx, ry, xAxisRotation, largeArcFlag, sweepFlag, xt, yt) {
   // Sign of the radii is ignored (behaviour specified by the spec)
   rx = Math.abs(rx);

@@ -2,7 +2,7 @@ import { Point } from './mathutil';
 import {
   DrawCommand, MoveCommand, LineCommand, QuadraticCurveCommand,
   BezierCurveCommand, EllipticalArcCommand, ClosePathCommand
-} from './svgcommands';
+} from './svgpathdata';
 
 /**
  * Takes an SVG path string (i.e. the text specified in the path's 'd' attribute) and returns

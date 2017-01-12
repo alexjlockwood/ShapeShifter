@@ -1,7 +1,6 @@
 import * as _ from 'lodash';
 import { } from 'jasmine';
 import { Walker } from './walker';
-import { Layer, VectorLayer, GroupLayer, PathLayer } from './models';
 
 describe('Walk', () => {
 
@@ -26,7 +25,7 @@ describe('Walk', () => {
 
   let walker = new Walker();
 
-  it("basic", () => {
+  it('basic', () => {
     // Updates the value of `node` to be the sum of the values of its subtrees.
     // Ignores leaf nodes.
     const visitor = node => {
@@ -43,7 +42,7 @@ describe('Walk', () => {
     expect(tree.val).toBe(5, 'should visit subtrees after the node itself');
   });
 
-  it("circularRefs", () => {
+  it('circularRefs', () => {
     let tree = getSimpleTestTree();
     (tree.l.l as any).r = tree;
     expect(() => { walker.preorder(tree, _.identity); })
@@ -57,7 +56,7 @@ describe('Walk', () => {
       .toThrow(new TypeError('Not a tree: same object found in two different branches'));
   });
 
-  it("simpleMap", () => {
+  it('simpleMap', () => {
     const visitor = function(node, key, parent) {
       if (_.has(node, 'val')) {
         return node.val;
@@ -92,7 +91,7 @@ describe('Walk', () => {
     }
   });
 
-  it("mixedMap", () => {
+  it('mixedMap', () => {
     const visitor = (node, key, parent) => {
       return _.isString(node) ? node.toLowerCase() : null;
     };
@@ -111,7 +110,7 @@ describe('Walk', () => {
     expect(_.difference(result, postorderResult)).toEqual(['foo'], 'map on list of trees');
   });
 
-  it("reduce", () => {
+  it('reduce', () => {
     const add = (a, b) => a + b;
     const leafMemo = [];
     const sum = (memo, node) => {
@@ -143,7 +142,7 @@ describe('Walk', () => {
     expect(walker.map(tree, walker.preorder, toString).join('')).toBe('-0-4-6-5-1-3-2', 'pre-order map');
   });
 
-  it("find", () => {
+  it('find', () => {
     const tree = getSimpleTestTree();
 
     // Returns a visitor function that will succeed when a node with the given
@@ -164,7 +163,7 @@ describe('Walk', () => {
     expect(walker.find(tree, findValue(99))).toEqual(undefined);
   });
 
-  it("filter", () => {
+  it('filter', () => {
     const tree = getSimpleTestTree();
     (tree.r as any).val = '.oOo.';  // Remove one of the numbers.
     const isEvenNumber = x => {
@@ -180,7 +179,7 @@ describe('Walk', () => {
     expect(walker.filter(tree, walker.preorder, _.identity).length).toBe(13, 'filter on identity function');
   });
 
-  it("reject", () => {
+  it('reject', () => {
     const tree = getSimpleTestTree();
     (tree.r as any).val = '.oOo.';  // Remove one of the numbers.
 
@@ -192,7 +191,7 @@ describe('Walk', () => {
     expect(walker.reject(tree, walker.preorder, _.identity).length).toBe(1, 'reject with identity function');
   });
 
-  it("customTraversal", () => {
+  it('customTraversal', () => {
     const tree = getSimpleTestTree();
 
     // Set up a walker that will not traverse the 'val' properties.
@@ -201,7 +200,7 @@ describe('Walk', () => {
     });
     const visitor = node => {
       if (!_.isObject(node)) {
-        throw new Error("Leaf value visited when it shouldn't be");
+        throw new Error('Leaf value visited when it shouldn\'t be');
       }
     };
     expect(customWalker.map(tree, walker.postorder, _.identity).length).toBe(7, 'traversal strategy is dynamically scoped');

@@ -1,5 +1,4 @@
-import { Layer, VectorLayer, GroupLayer, PathLayer } from './models';
-import { VectorLayerBuilder, GroupLayerBuilder } from './testutil';
+import { Layer, VectorLayer, GroupLayer, PathLayer } from './layers';
 
 describe('AbstractLayer', () => {
   const pl1 = new PathLayer('pl1', null);

@@ -1,16 +1,27 @@
-import { SvgPathData } from './svgpathdata';
-import { Matrix } from './mathutil';
+import { IPathCommand } from './commands';
 
 /**
  * Interface that is shared amongst all vector drawable layer model types.
  */
 export interface Layer {
+
+  /** This layers children layers, or null if none exist. */
   children: Layer[] | null;
+
+  /** A string uniquely identifying this layer in its containing tree. */
   id: string;
+
+  /** Returns the first descendent layer with the specified ID. */
   findLayerById(id: string): Layer | null;
+
+  /** Returns true iff this layer is structurally identical with the corresponding layer. */
   isStructurallyIdenticalWith(layer: Layer): boolean;
+
+  /** Returns true iff this layer is morphable with the corresponding layer. */
   isMorphableWith(layer: Layer): boolean;
-  walk(func: (layer: Layer) => void): void;
+
+  /** Walks the layer tree, executing beforeFunc on each node using a preorder traversal. */
+  walk(beforeFunc: (layer: Layer) => void): void;
 }
 
 /**
@@ -22,6 +33,7 @@ abstract class AbstractLayer implements Layer {
     public id: string,
   ) { }
 
+  // Overrides the Layer interface.
   findLayerById(id: string): Layer | null {
     if (this.id === id) {
       return this;
@@ -37,6 +49,7 @@ abstract class AbstractLayer implements Layer {
     return null;
   }
 
+  // Overrides the Layer interface.
   isStructurallyIdenticalWith(layer: Layer) {
     if (this.constructor !== layer.constructor || this.id !== layer.id) {
       return false;
@@ -48,6 +61,7 @@ abstract class AbstractLayer implements Layer {
       && this.children.every((c, i) => c.isStructurallyIdenticalWith(layer.children[i]));
   }
 
+  // Overrides the Layer interface.
   isMorphableWith(layer: Layer) {
     if (this.constructor !== layer.constructor || this.id !== layer.id) {
       return false;
@@ -62,9 +76,10 @@ abstract class AbstractLayer implements Layer {
       && this.children.every((c, i) => c.isMorphableWith(layer.children[i]));
   }
 
-  walk(func: (layer: Layer) => void) {
+  // Overrides the Layer interface.
+  walk(beforeFunc: (layer: Layer) => void) {
     const visit = (layer: Layer) => {
-      func(layer);
+      beforeFunc(layer);
       if (layer.children) {
         layer.children.forEach(l => visit(l));
       }
@@ -79,7 +94,7 @@ abstract class AbstractLayer implements Layer {
 export class PathLayer extends AbstractLayer {
   constructor(
     id: string,
-    public pathData: SvgPathData,
+    public pathData: IPathCommand,
     public fillColor: string | null = null,
     public fillAlpha = 1,
     public strokeColor: string | null = null,
@@ -102,7 +117,7 @@ export class PathLayer extends AbstractLayer {
 export class ClipPathLayer extends AbstractLayer {
   constructor(
     id: string,
-    public pathData: SvgPathData,
+    public pathData: IPathCommand,
   ) {
     super(null, id);
   }

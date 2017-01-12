@@ -1,5 +1,5 @@
 import { Component, OnInit, AfterViewInit, ElementRef, ViewChild, OnDestroy } from '@angular/core';
-import { Layer, VectorLayer, GroupLayer, PathLayer } from './scripts/models';
+import { Layer, VectorLayer, GroupLayer, PathLayer } from './scripts/layers';
 import * as SvgLoader from './scripts/svgloader';
 import { Point } from './scripts/mathutil';
 import { Subscription } from 'rxjs/Subscription';

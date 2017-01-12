@@ -1,3 +1,4 @@
+import * as _ from 'lodash';
 import { Component, AfterViewInit, OnChanges, SimpleChanges, Input, ViewChild, ElementRef } from '@angular/core';
 import { IDrawCommand } from './../../scripts/commands';
 import { StateService, VectorLayerType } from './../../state.service';
@@ -61,7 +62,7 @@ export class CommandComponent implements AfterViewInit, OnChanges {
     if (c.svgChar.toUpperCase() === 'Z') {
       return `${c.svgChar}`;
     } else {
-      const p = c.points[c.points.length - 1];
+      const p = _.last(c.points);
       const x = Number(p.x.toFixed(3)).toString();
       const y = Number(p.y.toFixed(3)).toString();
       return `${c.svgChar} ${x}, ${y}`;

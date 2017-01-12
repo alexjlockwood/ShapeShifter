@@ -1,5 +1,4 @@
 import * as PathParser from './pathparser';
-import { CommandListBuilder } from './testutil';
 
 // describe('PathParser', () => {
 //   it('M 0 0 M 10 10 M 20 20 M 30 30', () => {

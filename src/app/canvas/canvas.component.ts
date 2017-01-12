@@ -1,8 +1,9 @@
+import * as _ from 'lodash';
 import {
   Component, AfterViewInit, OnDestroy, ElementRef, HostListener,
   ViewChild, ViewChildren, Input, Output, EventEmitter
 } from '@angular/core';
-import { Layer, PathLayer, ClipPathLayer, GroupLayer, VectorLayer } from './../scripts/models';
+import { Layer, PathLayer, ClipPathLayer, GroupLayer, VectorLayer } from './../scripts/layers';
 import * as Svgloader from './../scripts/svgloader';
 import * as ColorUtil from './../scripts/colorutil';
 import * as $ from 'jquery';
@@ -11,7 +12,7 @@ import { Point, Matrix } from './../scripts/mathutil';
 import * as MathUtil from './../scripts/mathutil';
 import { StateService, VectorLayerType } from './../state.service';
 import { Subscription } from 'rxjs/Subscription';
-import { SvgPathData, ProjectionInfo } from './../scripts/svgpathdata';
+import { Projection } from './../scripts/bezierutil';
 
 const ELEMENT_RESIZE_DETECTOR = erd();
 
@@ -230,14 +231,14 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       // difference in length between the total path length and the visible
       // trimmed path length.
       ctx.setLineDash([
-        shownFraction * layer.pathData.length,
-        (1 - shownFraction + 0.001) * layer.pathData.length
+        shownFraction * layer.pathData.pathLength,
+        (1 - shownFraction + 0.001) * layer.pathData.pathLength
       ]);
       // The amount to offset the path is equal to the trimPathStart plus
       // trimPathOffset. We mod the result because the trimmed path
       // should wrap around once it reaches 1.
       ctx.lineDashOffset =
-        layer.pathData.length * (1 - ((layer.trimPathStart + layer.trimPathOffset) % 1));
+        layer.pathData.pathLength * (1 - ((layer.trimPathStart + layer.trimPathOffset) % 1));
     } else {
       ctx.setLineDash([]);
     }
@@ -272,7 +273,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     layer.pathData.commands.forEach(s => {
       s.commands.forEach(c => {
         if (c.svgChar.toUpperCase() !== 'Z') {
-          points.push(c.end);
+          points.push(_.last(c.points));
         }
       });
     });
@@ -402,3 +403,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     ];
   }
 }
+
+type ProjectionInfo = {
+  projection: Projection;
+  split: () => void;
+};

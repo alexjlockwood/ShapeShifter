@@ -1,3 +1,4 @@
+import * as _ from 'lodash';
 import * as BezierImpl from 'bezier-js';
 import { Point } from './mathutil';
 
@@ -25,7 +26,7 @@ export class Bezier {
 
   get cp2() { return this.points[2]; }
 
-  get end() { return this.points[this.points.length - 1]; }
+  get end() { return _.last(this.points); }
 
   get points() { return this.points_; }
 

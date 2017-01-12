@@ -1,6 +1,5 @@
-import * as PathParser from './pathparser';
-import { CommandListBuilder } from './testutil';
-import { SvgPathData } from './svgpathdata';
+// import * as PathParser from './pathparser';
+// import { SvgPathData } from './svgpathdata';
 
 describe('SvgPathData', () => {
   // it('reverse: M 0 0 L 10 10 L 20 20 L 30 30', () => {

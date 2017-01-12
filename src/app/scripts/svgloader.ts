@@ -1,9 +1,9 @@
-import { Layer, VectorLayer, GroupLayer, PathLayer } from './models';
+import { Layer, VectorLayer, GroupLayer, PathLayer } from './layers';
 import * as ColorUtil from './colorutil';
-import { SvgPathData } from './svgpathdata';
+import { createPathCommand } from './svgpathdata';
 import * as PathParser from './pathparser';
 import * as MathUtil from './mathutil';
-import { EllipticalArcCommand } from './svgcommands';
+import { EllipticalArcCommand } from './svgpathdata';
 import * as SvgUtil from './svgutil';
 
 /**
@@ -152,7 +152,7 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
       // create a path layer
       return new PathLayer(
         makeFinalNodeId_(node, 'path'),
-        new SvgPathData(path),
+        createPathCommand(path),
         ('fillColor' in context) ? ColorUtil.svgToAndroidColor(context.fillColor) : null,
         ('fillAlpha' in context) ? context.fillAlpha : undefined,
         ('strokeColor' in context) ? ColorUtil.svgToAndroidColor(context.strokeColor) : null,
