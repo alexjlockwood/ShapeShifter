@@ -2,7 +2,10 @@ import { Layer, VectorLayer, GroupLayer, PathLayer } from './models';
 import * as ColorUtil from './colorutil';
 import { SvgPathData } from './svgpathdata';
 import * as ModelUtil from './modelutil';
-
+import * as PathParser from './pathparser';
+import * as MathUtil from './mathutil';
+import { EllipticalArcCommand } from './svgcommands';
+import * as SvgUtil from './svgutil';
 
 export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
   const parser = new DOMParser();
@@ -110,10 +113,38 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
     if (path) {
       // transform all points
       if (context.transforms && context.transforms.length) {
-        const pathData = new SvgPathData(path);
+        const commands = PathParser.parseCommands(path);
         const matrices = context.transforms.map(t => t.matrix);
-        pathData.transform(matrices);
-        path = pathData.pathString;
+        commands.forEach(c => {
+          if (c instanceof EllipticalArcCommand) {
+            const start = MathUtil.transform({ x: c.args[0], y: c.args[1] }, ...matrices);
+            c.args[0] = start.x;
+            c.args[1] = start.y;
+            const arc = SvgUtil.transformArc({
+              rx: c.args[2],
+              ry: c.args[3],
+              xAxisRotation: c.args[4],
+              largeArcFlag: c.args[5],
+              sweepFlag: c.args[6],
+              endX: c.args[7],
+              endY: c.args[8],
+            }, matrices);
+            c.args[2] = arc.rx;
+            c.args[3] = arc.ry;
+            c.args[4] = arc.xAxisRotation;
+            c.args[5] = arc.largeArcFlag;
+            c.args[6] = arc.sweepFlag;
+            c.args[7] = arc.endX;
+            c.args[8] = arc.endY;
+          } else {
+            for (let i = 0; i < c.points.length; i++) {
+              if (c.points[i]) {
+                c.points[i] = MathUtil.transform(c.points[i], ...matrices);
+              }
+            }
+          }
+        });
+        path = PathParser.commandsToString(commands);
       }
 
       // create a path layer

@@ -288,7 +288,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   private drawPathLayerPoints(
     layer: PathLayer, ctx: CanvasRenderingContext2D, transforms: Matrix[]) {
     const points = [];
-    layer.pathData.commands.forEach(s => {
+    layer.pathData.subPathCommands.forEach(s => {
       s.commands.forEach(c => {
         if (!(c instanceof ClosePathCommand)) {
           points.push(c.end);
@@ -343,6 +343,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   }
 
   // TODO(alockwood): need to transform the mouse point coordinates using the group transforms
+  // TODO(alockwood): don't split if user control clicks (or double clicks on mac)
   onMouseDown(event) {
     const canvasOffset = this.canvas.offset();
     const x = (event.pageX - canvasOffset.left) / this.scale;
@@ -385,11 +386,9 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
     if (this.closestProjectionInfo) {
       const pathLayer = this.vectorLayer_.findLayerById(this.closestPathLayerId) as PathLayer;
-      pathLayer.pathData.split(
-        this.closestProjectionInfo.subPathCommandIndex,
-        this.closestProjectionInfo.commandIndex,
-        this.closestProjectionInfo.projection.t);
+      this.closestProjectionInfo.split();
       this.stateService.setVectorLayer(this.vectorLayerType, this.vectorLayer);
+      this.closestProjectionInfo = null;
     }
   }
 
@@ -444,7 +443,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     radius: number): PointCommand[] {
 
     const pointCommands = [];
-    layer.pathData.commands.forEach(s => {
+    layer.pathData.subPathCommands.forEach(s => {
       s.commands.forEach(c => {
         c.points.forEach(p => {
           if (p && MathUtil.distance(point, p) <= radius) {

@@ -27,6 +27,8 @@ export class CommandComponent implements AfterViewInit, OnChanges {
   }
 
   private drawCommandIndex() {
+    this.isItemEditable = this.drawCommand.isModifiable;
+
     const canvas = $(this.commandIndexCanvas.nativeElement);
     const commandIndexCanvasSize = canvas.get(0).getBoundingClientRect().width;
     const width = commandIndexCanvasSize;

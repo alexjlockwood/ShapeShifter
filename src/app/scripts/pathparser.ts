@@ -1,11 +1,11 @@
 import { Point } from './mathutil';
 import {
   DrawCommand, MoveCommand, LineCommand, QuadraticCurveCommand,
-  BezierCurveCommand, EllipticalArcCommand, ClosePathCommand, SubPathCommand
+  BezierCurveCommand, EllipticalArcCommand, ClosePathCommand
 } from './svgcommands';
+import { SubPathCommand } from './svgsubpath';
 
-
-export function parseCommands(pathString: string): SubPathCommand[] {
+export function parseCommands(pathString: string): DrawCommand[] {
   let index = 0;
   let currentPoint: Point;
   let currentToken: Token;
@@ -300,23 +300,11 @@ export function parseCommands(pathString: string): SubPathCommand[] {
     }
   }
 
-  const cmdGroups: DrawCommand[][] = [[]];
-  let currentCmdList = cmdGroups[0];
-  for (let i = 0; i < commands.length; i++) {
-    const cmd = commands[i];
-    currentCmdList.push(cmd);
-    if (cmd instanceof ClosePathCommand && i !== commands.length - 1) {
-      currentCmdList = [];
-      cmdGroups.push(currentCmdList);
-    }
-  }
-  return cmdGroups.map(drawCommands => new SubPathCommand(...drawCommands));
+  return commands;
 }
 
 
-export function commandsToString(subPathCommands: SubPathCommand[]) {
-  const commands = [];
-  subPathCommands.forEach(c => commands.push(...c.commands));
+export function commandsToString(commands: DrawCommand[]) {
   const tokens = [];
   commands.forEach(command => {
     if (command instanceof EllipticalArcCommand) {

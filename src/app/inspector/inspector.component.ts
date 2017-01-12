@@ -37,6 +37,12 @@ export class InspectorComponent implements OnInit, OnDestroy {
       });
   }
 
+  trackSvgPathData(index: number, item: SvgPathData) {
+    // TODO(alockwood): this needs to somehow incorporate the path position
+    // (in case multiple paths have identical path strings)
+    return item.pathString;
+  }
+
   ngOnDestroy() {
     this.subscription.unsubscribe();
   }

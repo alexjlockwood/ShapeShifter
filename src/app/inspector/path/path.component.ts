@@ -3,8 +3,9 @@ import { Layer, VectorLayer, PathLayer } from './../../scripts/models';
 import { SvgPathData } from './../../scripts/svgpathdata';
 import {
   DrawCommand, MoveCommand, LineCommand, QuadraticCurveCommand,
-  BezierCurveCommand, EllipticalArcCommand, ClosePathCommand, SubPathCommand
+  BezierCurveCommand, EllipticalArcCommand, ClosePathCommand
 } from './../../scripts/svgcommands';
+import { SubPathCommand } from '../../scripts/svgsubpath';
 import { StateService, VectorLayerType } from './../../state.service';
 import { Subscription } from 'rxjs/Subscription';
 
@@ -21,8 +22,10 @@ export class PathComponent implements OnInit, OnChanges {
   isSelected: boolean = false;
 
   ngOnInit() {
-    this.subPathCommands = this.pathCommand.commands;
+    this.subPathCommands = this.pathCommand.subPathCommands;
   }
 
-  ngOnChanges(changes: SimpleChanges) { }
+  ngOnChanges(changes: SimpleChanges) {
+    // console.log('path');
+  }
 }

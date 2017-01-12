@@ -1,4 +1,4 @@
-<app-path *ngFor="let pathCommand of pathCommands"
+<app-path *ngFor="let pathCommand of pathCommands; trackBy: trackSvgPathData"
   fxLayout="column"
   [vectorLayerType]="vectorLayerType"
   [pathCommand]="pathCommand">

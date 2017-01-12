@@ -50,12 +50,8 @@ export class Bezier {
     };
   }
 
-  split(t: number): Split {
-    const split = this.bezierImpl.split(t);
-    return {
-      left: new Bezier(...split.left.points),
-      right: new Bezier(...split.right.points),
-    };
+  split(t1: number, t2: number): Bezier {
+    return new Bezier(...this.bezierImpl.split(t1, t2).points);
   }
 
   bbox(): BBox {

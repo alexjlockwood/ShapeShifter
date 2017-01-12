@@ -4,8 +4,9 @@ import { SvgPathData } from './../../scripts/svgpathdata';
 import { StateService, VectorLayerType } from './../../state.service';
 import {
   DrawCommand, MoveCommand, LineCommand, QuadraticCurveCommand,
-  BezierCurveCommand, EllipticalArcCommand, ClosePathCommand, SubPathCommand
+  BezierCurveCommand, EllipticalArcCommand, ClosePathCommand
 } from './../../scripts/svgcommands';
+import { SubPathCommand } from '../../scripts/svgsubpath';
 import { Subscription } from 'rxjs/Subscription';
 
 
@@ -27,7 +28,9 @@ export class SubPathComponent implements OnInit, OnChanges {
     this.updateSubPathCommand();
   }
 
-  ngOnChanges(changes: SimpleChanges) { }
+  ngOnChanges(changes: SimpleChanges) {
+    // console.log('subpath');
+  }
 
   private updateSubPathCommand() {
     this.drawCommands = this.subPathCommand.commands;

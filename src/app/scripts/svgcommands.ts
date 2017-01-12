@@ -2,95 +2,17 @@ import { Point, Matrix } from './mathutil';
 import * as MathUtil from './mathutil';
 import * as SvgUtil from './svgutil';
 
-export class SubPathCommand {
-  private commands_: DrawCommand[];
-
-  constructor(...commands: DrawCommand[]) {
-    this.commands_ = commands;
-  }
-
-  get commands() {
-    return this.commands_;
-  }
-
-  isClosed() {
-    const start = this.commands[0].end;
-    const end = this.commands[this.commands.length - 1].end;
-    return start.x === end.x && start.y === end.y;
-  }
-
-  // TODO(alockwood): add a test for commands with multiple moves but no close paths
-  reverse() {
-    const firstMoveCommand = this.commands[0];
-    if (this.commands.length === 1) {
-      firstMoveCommand.reverse();
-      return;
-    }
-    const cmds = this.commands;
-    const newCmds: DrawCommand[] = [
-      new MoveCommand(firstMoveCommand.start, cmds[cmds.length - 1].end)
-    ];
-    for (let i = cmds.length - 1; i >= 1; i--) {
-      cmds[i].reverse();
-      newCmds.push(cmds[i]);
-    }
-    const secondCmd = newCmds[1];
-    if (secondCmd instanceof ClosePathCommand) {
-      newCmds[1] = new LineCommand(secondCmd.start, secondCmd.end);
-      const lastCmd = newCmds[newCmds.length - 1];
-      newCmds[newCmds.length - 1] =
-        new ClosePathCommand(lastCmd.start, lastCmd.end);
-    }
-    this.commands_ = newCmds;
-  }
-
-  // TODO(alockwood): add a test for commands with multiple moves but no close paths
-  shiftForward() {
-    if (this.commands.length === 1 || !this.isClosed()) {
-      return;
-    }
-
-    // TODO(alockwood): make this more efficient... :P
-    for (let i = 0; i < this.commands.length - 2; i++) {
-      this.shiftBack();
-    }
-  }
-
-  // TODO(alockwood): add a test for commands with multiple moves but no close paths
-  shiftBack() {
-    if (this.commands.length === 1 || !this.isClosed()) {
-      return;
-    }
-
-    const newCmdLists: DrawCommand[][] = [];
-    const cmds = this.commands;
-    const moveStartPoint = cmds[0].start;
-    cmds.unshift(cmds.pop());
-
-    if (cmds[0] instanceof ClosePathCommand) {
-      const lastCmd = cmds[cmds.length - 1];
-      cmds[cmds.length - 1] = new ClosePathCommand(lastCmd.start, lastCmd.end);
-      cmds[1] = new LineCommand(cmds[0].start, cmds[0].end);
-    } else {
-      cmds[1] = cmds[0];
-    }
-    // TODO(alockwood): confirm that this start point is correct for paths w/ multiple moves
-    cmds[0] = new MoveCommand(moveStartPoint, cmds[1].start);
-  }
-}
-
+/**
+ * Represents an individual SVG draw command.
+ */
 export abstract class DrawCommand {
   private readonly svgChar_: string;
   private readonly points_: Point[];
+  private isModifiable_ = false;
 
   protected constructor(svgChar: string, ...points: Point[]) {
     this.svgChar_ = svgChar;
     this.points_ = points;
-  }
-
-  isMorphableWith(command: DrawCommand) {
-    return this.constructor === command.constructor
-      && this.points.length === command.points.length;
   }
 
   interpolate<T extends DrawCommand>(start: T, end: T, fraction: number) {
@@ -106,23 +28,7 @@ export abstract class DrawCommand {
     return true;
   }
 
-  transform(transforms: Matrix[]) {
-    for (let i = 0; i < this.points.length; i++) {
-      if (this.points[i]) {
-        this.points[i] = MathUtil.transform(this.points[i], ...transforms);
-      }
-    }
-  }
-
   abstract execute(ctx: CanvasRenderingContext2D): void;
-
-  reverse() {
-    if (this.start) {
-      // Only reverse the command if it has a valid start point (i.e. if it isn't
-      // the first move command in the path).
-      this.points.reverse();
-    }
-  }
 
   get svgChar() {
     return this.svgChar_;
@@ -138,6 +44,14 @@ export abstract class DrawCommand {
 
   get end() {
     return this.points_[this.points_.length - 1];
+  }
+
+  set isModifiable(isModifiable: boolean) {
+    this.isModifiable_ = isModifiable;
+  }
+
+  get isModifiable() {
+    return this.isModifiable_;
   }
 }
 
@@ -205,10 +119,6 @@ export class EllipticalArcCommand extends DrawCommand {
     this.args = args;
   }
 
-  isMorphableWith(command: EllipticalArcCommand) {
-    return true;
-  }
-
   // TODO(alockwood): confirm this is correct?
   interpolate(start: EllipticalArcCommand, end: EllipticalArcCommand, fraction: number) {
     this.args.forEach((_, i) => {
@@ -222,41 +132,8 @@ export class EllipticalArcCommand extends DrawCommand {
     return true;
   }
 
-  transform(transforms: Matrix[]) {
-    const start = MathUtil.transform(
-      { x: this.args[0], y: this.args[1] }, ...transforms);
-    this.args[0] = start.x;
-    this.args[1] = start.y;
-    const arc = SvgUtil.transformArc({
-      rx: this.args[2],
-      ry: this.args[3],
-      xAxisRotation: this.args[4],
-      largeArcFlag: this.args[5],
-      sweepFlag: this.args[6],
-      endX: this.args[7],
-      endY: this.args[8],
-    }, transforms);
-    this.args[2] = arc.rx;
-    this.args[3] = arc.ry;
-    this.args[4] = arc.xAxisRotation;
-    this.args[5] = arc.largeArcFlag;
-    this.args[6] = arc.sweepFlag;
-    this.args[7] = arc.endX;
-    this.args[8] = arc.endY;
-  }
-
   execute(ctx: CanvasRenderingContext2D) {
     SvgUtil.executeArc(ctx, this.args);
-  }
-
-  reverse() {
-    const endX = this.args[0];
-    const endY = this.args[1];
-    this.args[0] = this.args[7];
-    this.args[1] = this.args[8];
-    this.args[6] = this.args[6] === 0 ? 1 : 0;
-    this.args[7] = endX;
-    this.args[8] = endY;
   }
 }
 
