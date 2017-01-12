@@ -1,5 +1,4 @@
-import { Point, Matrix } from './mathutil';
-import * as MathUtil from './mathutil';
+import { Point, Matrix, MathUtil } from '../common/public';
 
 /** Draws an elliptical arc on the specified canvas context. */
 export function executeArc(ctx: CanvasRenderingContext2D, arcArgs) {

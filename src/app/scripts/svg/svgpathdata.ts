@@ -1,8 +1,6 @@
 import * as _ from 'lodash';
-import { Bezier, Projection } from './bezierutil';
-import { Point, Matrix, Rect } from './mathutil';
-import * as MathUtil from './mathutil';
-import { ICommand, IPathCommand, ISubPathCommand, IDrawCommand } from './commands';
+import { MathUtil, Bezier, Projection, Point, Matrix, Rect } from '../common/public';
+import { ICommand, IPathCommand, ISubPathCommand, IDrawCommand } from '../model/public';
 import * as SvgUtil from './svgutil';
 import * as PathParser from './pathparser';
 
@@ -499,6 +497,14 @@ export abstract class DrawCommand implements IDrawCommand {
   delete() {
     this.onDeleteClickListener_();
   }
+
+  transform(matrices: Matrix[]) {
+    for (let i = 0; i < this.points.length; i++) {
+      if (this.points[i]) {
+        this.points[i] = MathUtil.transform(this.points[i], ...matrices);
+      }
+    }
+  }
 }
 
 export class MoveCommand extends DrawCommand {
@@ -537,5 +543,27 @@ export class EllipticalArcCommand extends DrawCommand {
   constructor(...args: number[]) {
     super('A', new Point(args[0], args[1]), new Point(args[7], args[8]));
     this.args = args;
+  }
+
+  transform(matrices: Matrix[]) {
+    const start = MathUtil.transform({ x: this.args[0], y: this.args[1] }, ...matrices);
+    this.args[0] = start.x;
+    this.args[1] = start.y;
+    const arc = SvgUtil.transformArc({
+      rx: this.args[2],
+      ry: this.args[3],
+      xAxisRotation: this.args[4],
+      largeArcFlag: this.args[5],
+      sweepFlag: this.args[6],
+      endX: this.args[7],
+      endY: this.args[8],
+    }, matrices);
+    this.args[2] = arc.rx;
+    this.args[3] = arc.ry;
+    this.args[4] = arc.xAxisRotation;
+    this.args[5] = arc.largeArcFlag;
+    this.args[6] = arc.sweepFlag;
+    this.args[7] = arc.endX;
+    this.args[8] = arc.endY;
   }
 }

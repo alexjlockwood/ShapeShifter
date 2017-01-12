@@ -1,9 +1,7 @@
-import { Layer, VectorLayer, GroupLayer, PathLayer } from './layers';
-import * as ColorUtil from './colorutil';
+import { Layer, VectorLayer, GroupLayer, PathLayer } from '../model/public';
+import { ColorUtil, MathUtil } from '../common/public';
 import { createPathCommand } from './svgpathdata';
 import * as PathParser from './pathparser';
-import * as MathUtil from './mathutil';
-import { EllipticalArcCommand } from './svgpathdata';
 import * as SvgUtil from './svgutil';
 
 /**
@@ -113,40 +111,8 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
     }
 
     if (path) {
-      // transform all points
       if (context.transforms && context.transforms.length) {
-        const commands = PathParser.parseCommands(path);
-        const matrices = context.transforms.map(t => t.matrix);
-        commands.forEach(c => {
-          if (c instanceof EllipticalArcCommand) {
-            const start = MathUtil.transform({ x: c.args[0], y: c.args[1] }, ...matrices);
-            c.args[0] = start.x;
-            c.args[1] = start.y;
-            const arc = SvgUtil.transformArc({
-              rx: c.args[2],
-              ry: c.args[3],
-              xAxisRotation: c.args[4],
-              largeArcFlag: c.args[5],
-              sweepFlag: c.args[6],
-              endX: c.args[7],
-              endY: c.args[8],
-            }, matrices);
-            c.args[2] = arc.rx;
-            c.args[3] = arc.ry;
-            c.args[4] = arc.xAxisRotation;
-            c.args[5] = arc.largeArcFlag;
-            c.args[6] = arc.sweepFlag;
-            c.args[7] = arc.endX;
-            c.args[8] = arc.endY;
-          } else {
-            for (let i = 0; i < c.points.length; i++) {
-              if (c.points[i]) {
-                c.points[i] = MathUtil.transform(c.points[i], ...matrices);
-              }
-            }
-          }
-        });
-        path = PathParser.commandsToString(commands);
+        path = PathParser.transformPathString(path, context.transforms.map(t => t.matrix));
       }
 
       // create a path layer

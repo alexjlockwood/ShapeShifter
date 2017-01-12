@@ -1,7 +1,7 @@
 import { Component, OnInit, AfterViewInit, ElementRef, ViewChild, OnDestroy } from '@angular/core';
-import { Layer, VectorLayer, GroupLayer, PathLayer } from './scripts/layers';
-import * as SvgLoader from './scripts/svgloader';
-import { Point } from './scripts/mathutil';
+import { Layer, VectorLayer, GroupLayer, PathLayer } from './scripts/model/layers';
+import { SvgLoader } from './scripts/svg/public';
+import { Point } from './scripts/common/mathutil';
 import { Subscription } from 'rxjs/Subscription';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { StateService, VectorLayerType } from './state.service';

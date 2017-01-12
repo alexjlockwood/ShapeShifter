@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 import { Component, AfterViewInit, OnChanges, SimpleChanges, Input, ViewChild, ElementRef } from '@angular/core';
-import { IDrawCommand } from './../../scripts/commands';
+import { IDrawCommand } from './../../scripts/model/public';
 import { StateService, VectorLayerType } from './../../state.service';
 import * as $ from 'jquery';
 

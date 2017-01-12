@@ -1,4 +1,5 @@
-import { Point } from './mathutil';
+import { Point, Matrix, MathUtil } from '../common/public';
+import * as SvgUtil from './svgutil';
 import {
   DrawCommand, MoveCommand, LineCommand, QuadraticCurveCommand,
   BezierCurveCommand, EllipticalArcCommand, ClosePathCommand
@@ -8,7 +9,7 @@ import {
  * Takes an SVG path string (i.e. the text specified in the path's 'd' attribute) and returns
  * list of DrawCommands that represent the SVG path's individual sequence of instructions.
  */
-export function parseCommands(pathString: string): DrawCommand[] {
+export function parseCommands(pathString: string, matrices?: Matrix[]): DrawCommand[] {
   let index = 0;
   let currentPoint: Point;
   let currentToken: Token;
@@ -303,6 +304,10 @@ export function parseCommands(pathString: string): DrawCommand[] {
     }
   }
 
+  if (matrices) {
+    commands.forEach(cmd => cmd.transform(matrices));
+  }
+
   return commands;
 }
 
@@ -312,32 +317,24 @@ export function parseCommands(pathString: string): DrawCommand[] {
 export function commandsToString(commands: DrawCommand[]) {
   const tokens = [];
   commands.forEach(cmd => {
+    tokens.push(cmd.svgChar);
     if (cmd instanceof EllipticalArcCommand) {
-      tokens.push('A');
       tokens.splice(tokens.length, 0, cmd.args.slice(2)); // skip first two arc args
       return;
     }
-
-    if (cmd instanceof MoveCommand) {
-      tokens.push('M');
-    } else if (cmd instanceof LineCommand) {
-      tokens.push('L');
-    } else if (cmd instanceof BezierCurveCommand) {
-      tokens.push('C');
-    } else if (cmd instanceof QuadraticCurveCommand) {
-      tokens.push('Q');
-    } else if (cmd instanceof ClosePathCommand) {
-      tokens.push('Z');
-    }
-
+    const isClosePathCommand = cmd.svgChar.toUpperCase() === 'Z';
     const pointsToNumberListFunc = (...points: Point[]) => points.reduce((list, p) => list.concat(p.x, p.y), []);
-    const args = pointsToNumberListFunc(...(cmd instanceof ClosePathCommand ? [] : cmd.points.slice(1)));
+    const args = pointsToNumberListFunc(...(isClosePathCommand ? [] : cmd.points.slice(1)));
     tokens.splice(tokens.length, 0, ...args.map(n => Number(n.toFixed(3)).toString()));
   });
 
   return tokens.join(' ');
 }
 
+/** Transforms the provided path string. */
+export function transformPathString(pathString: string, matrices: Matrix[]): string {
+  return commandsToString(parseCommands(pathString, matrices));
+}
 
 const enum Token {
   AbsoluteCommand,

@@ -1,5 +1,4 @@
-import { Projection } from './bezierutil';
-import { Point } from './mathutil';
+import { Point, Projection } from '../common/public';
 
 export interface ICommand {
 
