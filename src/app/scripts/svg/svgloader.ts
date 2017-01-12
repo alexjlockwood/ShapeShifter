@@ -1,5 +1,5 @@
-import { Layer, VectorLayer, GroupLayer, PathLayer } from '../model/public';
-import { ColorUtil, MathUtil } from '../common/public';
+import { Layer, VectorLayer, GroupLayer, PathLayer } from '../model';
+import { ColorUtil, MathUtil } from '../common';
 import { createPathCommand } from './svgpathdata';
 import * as PathParser from './pathparser';
 import * as SvgUtil from './svgutil';

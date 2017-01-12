@@ -1,5 +1,5 @@
 import { Component, Input, OnInit, OnDestroy } from '@angular/core';
-import { PathLayer, IPathCommand } from './../scripts/model/public';
+import { PathLayer, IPathCommand } from './../scripts/model';
 import { StateService, VectorLayerType } from './../state.service';
 import { Subscription } from 'rxjs/Subscription';
 

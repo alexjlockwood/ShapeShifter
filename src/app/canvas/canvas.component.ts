@@ -3,15 +3,13 @@ import {
   Component, AfterViewInit, OnDestroy, ElementRef, HostListener,
   ViewChild, ViewChildren, Input, Output, EventEmitter
 } from '@angular/core';
-import { Layer, PathLayer, ClipPathLayer, GroupLayer, VectorLayer } from './../scripts/model/public';
-import { ColorUtil } from './../scripts/common/public';
+import { Layer, PathLayer, ClipPathLayer, GroupLayer, VectorLayer } from './../scripts/model';
+import { } from './../scripts/common';
 import * as $ from 'jquery';
 import * as erd from 'element-resize-detector';
-import { Point, Matrix } from './../scripts/common/public';
-import * as MathUtil from './../scripts/common/public';
+import { Point, Matrix, Projection, MathUtil, ColorUtil } from './../scripts/common';
 import { StateService, VectorLayerType } from './../state.service';
 import { Subscription } from 'rxjs/Subscription';
-import { Projection } from './../scripts/common/public';
 
 const ELEMENT_RESIZE_DETECTOR = erd();
 

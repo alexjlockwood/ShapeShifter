@@ -1,5 +1,5 @@
 import { Component, OnChanges, SimpleChanges, Input, OnInit } from '@angular/core';
-import { IPathCommand, ISubPathCommand } from './../../scripts/model/public';
+import { IPathCommand, ISubPathCommand } from './../../scripts/model';
 import { StateService, VectorLayerType } from './../../state.service';
 import { Subscription } from 'rxjs/Subscription';
 

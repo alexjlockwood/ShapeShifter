@@ -1,6 +1,5 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 
-
 @Component({
   selector: 'app-dropsvg',
   templateUrl: './dropsvg.component.html',

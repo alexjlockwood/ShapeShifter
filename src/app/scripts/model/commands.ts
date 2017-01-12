@@ -1,4 +1,4 @@
-import { Point, Projection } from '../common/public';
+import { Point, Projection } from '../common';
 
 export interface ICommand {
 

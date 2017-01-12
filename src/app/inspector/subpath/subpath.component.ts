@@ -1,6 +1,6 @@
 import { Component, OnChanges, SimpleChanges, Input, OnInit } from '@angular/core';
 import { StateService, VectorLayerType } from './../../state.service';
-import { IDrawCommand, ISubPathCommand } from './../../scripts/model/public';
+import { IDrawCommand, ISubPathCommand } from './../../scripts/model';
 
 @Component({
   selector: 'app-subpath',

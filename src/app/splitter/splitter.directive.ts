@@ -1,5 +1,5 @@
 import { OnInit, Directive, Output, EventEmitter, ElementRef, HostListener } from '@angular/core';
-import { Point } from '../scripts/common/public';
+import { Point } from '../scripts/common';
 
 @Directive({
   selector: '[appSplitter]'

@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
-import { MathUtil, Bezier, Projection, Point, Matrix, Rect } from '../common/public';
-import { ICommand, IPathCommand, ISubPathCommand, IDrawCommand } from '../model/public';
+import { MathUtil, Bezier, Projection, Point, Matrix, Rect } from '../common';
+import { ICommand, IPathCommand, ISubPathCommand, IDrawCommand } from '../model';
 import * as SvgUtil from './svgutil';
 import * as PathParser from './pathparser';
 

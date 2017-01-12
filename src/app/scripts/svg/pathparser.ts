@@ -1,4 +1,4 @@
-import { Point, Matrix, MathUtil } from '../common/public';
+import { Point, Matrix, MathUtil } from '../common';
 import * as SvgUtil from './svgutil';
 import {
   DrawCommand, MoveCommand, LineCommand, QuadraticCurveCommand,
