@@ -9,39 +9,46 @@ import { IDrawCommand, ISubPathCommand } from './../../scripts/model';
 })
 export class SubPathComponent implements OnInit, OnChanges {
   @Input() vectorLayerType: VectorLayerType;
-  @Input() subPathCommand: ISubPathCommand;
+  private subPathCommand_: ISubPathCommand;
   drawCommands: IDrawCommand[] = [];
 
   constructor(private stateService: StateService) { }
 
   ngOnInit() {
-    this.updateSubPathCommand();
+    // console.log('ngOnInit()');
   }
 
   ngOnChanges(changes: SimpleChanges) {
     // console.log('subpath');
   }
 
-  private updateSubPathCommand() {
-    this.drawCommands = this.subPathCommand.commands;
+  get subPathCommand() {
+    return this.subPathCommand_;
+  }
+
+  @Input()
+  set subPathCommand(subPathCommand: ISubPathCommand) {
+    console.log('setting new sub path command');
+    this.subPathCommand_ = subPathCommand;
+    this.drawCommands = subPathCommand.commands;//.map(c => Object.create(c));
   }
 
   isSubPathClosed() {
-    return this.subPathCommand.isClosed();
+    return this.subPathCommand_.isClosed();
   }
 
   onReverseClick() {
-    this.subPathCommand.reverse();
-    this.stateService.notifyChange(this.vectorLayerType);
+    this.subPathCommand_.reverse();
+    this.stateService.notifyVectorLayerChange(this.vectorLayerType);
   }
 
   onShiftBackClick() {
-    this.subPathCommand.shiftBack();
-    this.stateService.notifyChange(this.vectorLayerType);
+    this.subPathCommand_.shiftBack();
+    this.stateService.notifyVectorLayerChange(this.vectorLayerType);
   }
 
   onShiftForwardClick() {
-    this.subPathCommand.shiftForward();
-    this.stateService.notifyChange(this.vectorLayerType);
+    this.subPathCommand_.shiftForward();
+    this.stateService.notifyVectorLayerChange(this.vectorLayerType);
   }
 }

@@ -3,7 +3,7 @@ import * as SvgUtil from './svgutil';
 import {
   DrawCommand, MoveCommand, LineCommand, QuadraticCurveCommand,
   BezierCurveCommand, EllipticalArcCommand, ClosePathCommand
-} from './svgpathdata';
+} from './drawcommand';
 
 /**
  * Takes an SVG path string (i.e. the text specified in the path's 'd' attribute) and returns

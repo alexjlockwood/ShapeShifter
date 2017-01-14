@@ -79,11 +79,12 @@ export class CommandComponent implements AfterViewInit, OnChanges {
 
   onEditPointClick() {
     // TODO(alockwood): implement this
-    this.stateService.notifyChange(this.vectorLayerType);
+    this.stateService.notifyVectorLayerChange(this.vectorLayerType);
   }
 
   onDeletePointClick() {
+    console.log('delete');
     this.drawCommand.delete();
-    this.stateService.notifyChange(this.vectorLayerType);
+    this.stateService.notifyVectorLayerChange(this.vectorLayerType);
   }
 }

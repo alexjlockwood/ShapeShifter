@@ -4,7 +4,6 @@ import {
   ViewChild, ViewChildren, Input, Output, EventEmitter
 } from '@angular/core';
 import { Layer, PathLayer, ClipPathLayer, GroupLayer, VectorLayer } from './../scripts/model';
-import { } from './../scripts/common';
 import * as $ from 'jquery';
 import * as erd from 'element-resize-detector';
 import { Point, Matrix, Projection, MathUtil, ColorUtil } from './../scripts/common';
@@ -23,7 +22,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   @Input() vectorLayerType: VectorLayerType;
   @ViewChild('renderingCanvas') private renderingCanvasRef: ElementRef;
 
-  private vectorLayer_: VectorLayer;
+  private vectorLayer: VectorLayer;
   private shouldLabelPoints_ = false;
   private canvasContainerSize: number;
   private canvas;
@@ -32,7 +31,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   private isViewInit = false;
   private closestProjectionInfo: ProjectionInfo = null;
   private closestPathLayerId: string = null;
-  private subscription: Subscription;
+  private subscriptions: Subscription[] = [];
   private pathPointRadius: number;
 
   constructor(private elementRef: ElementRef, private stateService: StateService) { }
@@ -48,34 +47,44 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         this.resizeAndDraw();
       }
     });
-    this.subscription = this.stateService.subscribe(this.vectorLayerType, layer => {
-      if (!layer) {
-        return;
-      }
-      this.vectorLayer = layer;
-    });
+    this.subscriptions.push(
+      this.stateService.addOnVectorLayerChangeListener(
+        this.vectorLayerType, vl => {
+          if (vl) {
+            const oldVl = this.vectorLayer;
+            const didWidthChange = !oldVl || oldVl.width !== vl.width;
+            const didHeightChange = !oldVl || oldVl.height !== vl.height;
+            this.vectorLayer = vl;
+            if (didWidthChange || didHeightChange) {
+              this.resizeAndDraw();
+            } else {
+              this.draw();
+            }
+          }
+        }));
+    if (this.vectorLayerType === VectorLayerType.Preview) {
+      this.subscriptions.push(
+        this.stateService.addOnAnimationChangeListener(fraction => {
+          if (this.vectorLayer) {
+            // TODO(alockwood): if vector layer is null, then clear the canvas
+            const startLayer = this.stateService.getVectorLayer(VectorLayerType.Start);
+            const endLayer = this.stateService.getVectorLayer(VectorLayerType.End);
+            this.vectorLayer.walk(layer => {
+              if (layer instanceof PathLayer) {
+                const start = startLayer.findLayerById(layer.id) as PathLayer;
+                const end = endLayer.findLayerById(layer.id) as PathLayer;
+                layer.pathData.interpolate(start.pathData, end.pathData, fraction);
+              }
+            })
+            this.draw();
+          }
+        }));
+    }
   }
 
   ngOnDestroy() {
     ELEMENT_RESIZE_DETECTOR.removeAllListeners(this.elementRef.nativeElement);
-    this.subscription.unsubscribe();
-  }
-
-  private get vectorLayer() {
-    return this.vectorLayer_;
-  }
-
-  private set vectorLayer(vectorLayer: VectorLayer) {
-    // TODO(alockwood): if vector layer is null, then clear the canvas
-
-    const didWidthChange = !this.vectorLayer || this.vectorLayer.width !== vectorLayer.width;
-    const didHeightChange = !this.vectorLayer || this.vectorLayer.height !== vectorLayer.height;
-    this.vectorLayer_ = vectorLayer;
-    if (didWidthChange || didHeightChange) {
-      this.resizeAndDraw();
-    } else {
-      this.draw();
-    }
+    this.subscriptions.forEach(s => s.unsubscribe());
   }
 
   @Input()
@@ -336,7 +345,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     this.findClosestProjectionInfo(mouseDown);
 
     if (this.closestProjectionInfo) {
-      const pathLayer = this.vectorLayer_.findLayerById(this.closestPathLayerId) as PathLayer;
+      const pathLayer = this.vectorLayer.findLayerById(this.closestPathLayerId) as PathLayer;
       this.closestProjectionInfo.split();
       this.stateService.setVectorLayer(this.vectorLayerType, this.vectorLayer);
       this.closestProjectionInfo = null;

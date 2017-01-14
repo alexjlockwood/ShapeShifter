@@ -74,7 +74,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     }
     if (this.shouldDisplayCanvases()) {
       this.isMorphable = this.startVectorLayer.isMorphableWith(this.endVectorLayer);
-      this.subscription = this.stateService.subscribe(VectorLayerType.End, vectorLayer => {
+      this.subscription = this.stateService.addOnVectorLayerChangeListener(VectorLayerType.End, vectorLayer => {
         this.isMorphable = this.startVectorLayer.isMorphableWith(this.endVectorLayer);
       });
     }
@@ -86,31 +86,6 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
   onLabelPointsChanged(shouldLabelPoints: boolean) {
     this.shouldLabelPoints = shouldLabelPoints;
-  }
-
-  onAnimationFractionChanged(fraction: number) {
-    this.previewVectorLayer = this.animatePreviewVectorLayer(fraction);
-  }
-
-  private animatePreviewVectorLayer(fraction: number): VectorLayer {
-    const animateLayer = layer => {
-      if (layer.children) {
-        layer.children.forEach(l => animateLayer(l));
-        return;
-      }
-      if (layer instanceof PathLayer) {
-        const sl = this.startVectorLayer.findLayerById(layer.id);
-        const el = this.endVectorLayer.findLayerById(layer.id);
-        if (sl && el && sl instanceof PathLayer && el instanceof PathLayer) {
-          if (layer.pathData.isMorphableWith(sl.pathData)
-            && layer.pathData.isMorphableWith(el.pathData)) {
-            layer.pathData.interpolate(sl.pathData, el.pathData, fraction);
-          }
-        }
-      }
-    };
-    animateLayer(this.previewVectorLayer);
-    return this.previewVectorLayer;
   }
 
   private get startVectorLayer() {

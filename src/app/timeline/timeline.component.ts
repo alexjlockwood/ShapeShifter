@@ -1,5 +1,5 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
-
+import { Component, Input, Output, EventEmitter, NgZone } from '@angular/core';
+import { StateService } from '../state.service';
 
 @Component({
   selector: 'app-timeline',
@@ -11,12 +11,14 @@ export class TimelineComponent {
   @Input() shouldLabelPoints: boolean;
   @Input() isMorphable: boolean;
   @Output() labelPointsChangedEmitter = new EventEmitter<boolean>();
-  @Output() animationFractionChangedEmitter = new EventEmitter<number>();
   private readonly animationDuration = 1000;
 
-  // TODO(alockwood): make this update each time the slider is changed (not just on mouse up)
+  constructor(private stateService: StateService, private ngZone: NgZone) { }
+
+  // TODO(alockwood): make this update each time the slider is changed
   onAnimationFractionSliderChanged(sliderValue: number) {
-    this.animationFractionChangedEmitter.emit(sliderValue / this.maxAnimationFractionSliderValue);
+    const fraction = sliderValue / this.maxAnimationFractionSliderValue;
+    this.stateService.setAnimationFraction(fraction);
   }
 
   onLabelPointsCheckboxChanged(shouldLabelPoints: boolean) {
@@ -31,13 +33,13 @@ export class TimelineComponent {
       }
       const progress = timestamp - startTimestamp;
       if (progress < this.animationDuration) {
-        this.animationFractionChangedEmitter.emit(progress / this.animationDuration);
+        this.stateService.setAnimationFraction(progress / this.animationDuration);
         requestAnimationFrame(onAnimationFrame);
       } else {
-        this.animationFractionChangedEmitter.emit(1);
+        this.stateService.setAnimationFraction(1);
         startTimestamp = null;
       }
     };
-    requestAnimationFrame(onAnimationFrame);
+    this.ngZone.runOutsideAngular(() => requestAnimationFrame(onAnimationFrame));
   }
 }
