@@ -3,30 +3,60 @@ import { Point, Matrix, MathUtil } from '../common';
 import { IDrawCommand } from '../model';
 import * as SvgUtil from './svgutil';
 
-export abstract class DrawCommand implements IDrawCommand {
-  private id_: string;
+export class DrawCommand implements IDrawCommand {
+
+  static moveTo(start: Point, end: Point) {
+    return new DrawCommand('M', [start, end]);
+  }
+
+  static lineTo(start: Point, end: Point) {
+    return new DrawCommand('L', [start, end]);
+
+  }
+
+  static quadTo(start: Point, cp: Point, end: Point) {
+    return new DrawCommand('Q', [start, cp, end]);
+  }
+
+  static cubicTo(start: Point, cp1: Point, cp2: Point, end: Point) {
+    return new DrawCommand('C', [start, cp1, cp2, end]);
+  }
+
+  static arcTo(start: Point, rx: number, ry: number, xAxisRotation: number,
+    largeArcFlag: number, sweepFlag: number, end: Point) {
+    return new DrawCommand('A', [start, end],
+      start.x, start.y, rx, ry, xAxisRotation, largeArcFlag, sweepFlag, end.x, end.y);
+  }
+
+  static closePath(start: Point, end: Point) {
+    return new DrawCommand('Z', [start, end]);
+  }
+
   private readonly svgChar_: string;
-  private readonly points_: Point[];
+  private readonly points_: ReadonlyArray<Point>;
+  private readonly args_: ReadonlyArray<number>;
 
   // TODO(alockwood): storing this state in here is hacky
   private onDeleteClickListener_: () => void;
 
-  protected constructor(svgChar: string, ...points: Point[]) {
+  private constructor(svgChar: string, points: Point[], ...args: number[]) {
     this.svgChar_ = svgChar;
-    this.points_ = points;
+    this.points_ = points.slice();
+    if (args) {
+      this.args_ = args;
+    } else {
+      this.args_ = pointsToArgs(points);
+    }
   }
-
-  // Overrides ICommand interface.
-  set id(id: string) { this.id_ = id; }
-
-  // Overrides ICommand interface.
-  get id() { return this.id_; }
 
   // Overrides IDrawCommand interface.
   get svgChar() { return this.svgChar_; }
 
   // Overrides IDrawCommand interface.
-  get points() { return this.points_; }
+  get points(): ReadonlyArray<Point> { return this.points_; }
+
+  /** Returns the raw number arguments for this draw command. */
+  get args(): ReadonlyArray<number> { return this.args_; }
 
   get start() { return this.points_[0]; }
 
@@ -44,72 +74,58 @@ export abstract class DrawCommand implements IDrawCommand {
     this.onDeleteClickListener_();
   }
 
-  transform(matrices: Matrix[]) {
-    for (let i = 0; i < this.points.length; i++) {
-      if (this.points[i]) {
-        this.points[i] = MathUtil.transform(this.points[i], ...matrices);
-      }
+  transform(matrices: Matrix[]): DrawCommand {
+    if (this.svgChar === 'A') {
+      const start = MathUtil.transform(this.start, ...matrices);
+      const arc = SvgUtil.transformArc({
+        rx: this.args[2],
+        ry: this.args[3],
+        xAxisRotation: this.args[4],
+        largeArcFlag: this.args[5],
+        sweepFlag: this.args[6],
+        endX: this.args[7],
+        endY: this.args[8],
+      }, matrices);
+      return new DrawCommand('A', [start, new Point(arc.endX, arc.endY)],
+        start.x, start.y,
+        arc.rx, arc.ry,
+        arc.xAxisRotation, arc.largeArcFlag, arc.sweepFlag,
+        arc.endX, arc.endY);
+    } else {
+      return new DrawCommand(this.svgChar, this.points.map(p => {
+        return p ? MathUtil.transform(p, ...matrices) : p;
+      }));
     }
   }
-}
 
-export class MoveCommand extends DrawCommand {
-  constructor(start: Point, end: Point) {
-    super('M', start, end);
+  reverse(): DrawCommand {
+    let points = this.points.slice();
+    let args;
+    if (this.svgChar === 'A') {
+      points.reverse();
+      args = this.args.slice();
+      const endX = args[0];
+      const endY = args[1];
+      args[0] = args[7];
+      args[1] = args[8];
+      args[6] = args[6] === 0 ? 1 : 0;
+      args[7] = endX;
+      args[8] = endY;
+    } else if (!(this.svgChar === 'M' || this.start)) {
+      points.reverse();
+      args = pointsToArgs(points);
+    } else {
+      args = pointsToArgs(points);
+    }
+    return new DrawCommand(this.svgChar, points, ...args);
   }
 }
 
-export class LineCommand extends DrawCommand {
-  constructor(start: Point, end: Point) {
-    super('L', start, end);
-  }
-}
-
-export class QuadraticCurveCommand extends DrawCommand {
-  constructor(start: Point, cp: Point, end: Point) {
-    super('Q', start, cp, end);
-  }
-}
-
-export class BezierCurveCommand extends DrawCommand {
-  constructor(start: Point, cp1: Point, cp2: Point, end: Point) {
-    super('C', start, cp1, cp2, end);
-  }
-}
-
-export class ClosePathCommand extends DrawCommand {
-  constructor(start: Point, end: Point) {
-    super('Z', start, end);
-  }
-}
-
-export class EllipticalArcCommand extends DrawCommand {
-  readonly args: number[];
-
-  constructor(...args: number[]) {
-    super('A', new Point(args[0], args[1]), new Point(args[7], args[8]));
-    this.args = args;
-  }
-
-  transform(matrices: Matrix[]) {
-    const start = MathUtil.transform({ x: this.args[0], y: this.args[1] }, ...matrices);
-    this.args[0] = start.x;
-    this.args[1] = start.y;
-    const arc = SvgUtil.transformArc({
-      rx: this.args[2],
-      ry: this.args[3],
-      xAxisRotation: this.args[4],
-      largeArcFlag: this.args[5],
-      sweepFlag: this.args[6],
-      endX: this.args[7],
-      endY: this.args[8],
-    }, matrices);
-    this.args[2] = arc.rx;
-    this.args[3] = arc.ry;
-    this.args[4] = arc.xAxisRotation;
-    this.args[5] = arc.largeArcFlag;
-    this.args[6] = arc.sweepFlag;
-    this.args[7] = arc.endX;
-    this.args[8] = arc.endY;
-  }
+function pointsToArgs(points: Point[]): number[] {
+  const args = [];
+  points.forEach(p => {
+    args.push(p.x);
+    args.push(p.y);
+  });
+  return args;
 }

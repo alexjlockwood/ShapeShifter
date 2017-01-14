@@ -4,11 +4,7 @@ import { ICommand, IPathCommand, ISubPathCommand, IDrawCommand } from '../model'
 import * as SvgUtil from './svgutil';
 import * as PathParser from './pathparser';
 import { SubPathCommand } from './subpathcommand';
-import {
-  DrawCommand, MoveCommand, LineCommand,
-  QuadraticCurveCommand, BezierCurveCommand,
-  ClosePathCommand, EllipticalArcCommand
-} from './drawcommand';
+import { DrawCommand } from './drawcommand';
 
 /**
  * Provides all of the information associated with a path layer's path data.
@@ -33,11 +29,6 @@ export class PathCommand implements IPathCommand {
     this.drawCommandWrappers_ = drawCommandWrappers;
 
     this.rebuildInternalState();
-  }
-
-  // Overrides ICommand interface.
-  get id() {
-    return this.path_;
   }
 
   // Overrides IPathCommand interface.
@@ -66,7 +57,7 @@ export class PathCommand implements IPathCommand {
         return s.commands.length === cmd.commands[i].commands.length
           && s.commands.every((d, j) => {
             const drawCmd = cmd.commands[i].commands[j];
-            return d.constructor === drawCmd.constructor
+            return d.svgChar === drawCmd.svgChar
               && d.points.length === drawCmd.points.length;
           });
       });
@@ -77,19 +68,20 @@ export class PathCommand implements IPathCommand {
     if (!this.isMorphableWith(start) || !this.isMorphableWith(end)) {
       return;
     }
+    // TODO(alockwood): determine if we should make the args/points immutable...
     this.commands.forEach((s, i) => {
       s.commands.forEach((d, j) => {
-        if (d instanceof EllipticalArcCommand) {
-          // TODO(alockwood): confirm this is how we should interpolate arcs?
-          const d1 = start.commands[i].commands[j] as EllipticalArcCommand;
-          const d2 = end.commands[i].commands[j] as EllipticalArcCommand;
-          d.args.forEach((_, x) => {
+        if (d.svgChar === 'A') {
+          const d1 = start.commands[i].commands[j];
+          const d2 = end.commands[i].commands[j];
+          const args = d.args as number[];
+          args.forEach((_, x) => {
             if (x === 5 || x === 6) {
               // Doesn't make sense to interpolate the large arc and sweep flags.
-              d.args[x] = fraction === 0 ? d1.args[x] : d2.args[x];
+              args[x] = fraction === 0 ? d1.args[x] : d2.args[x];
               return;
             }
-            d.args[x] = MathUtil.lerp(d1.args[x], d2.args[x], fraction);
+            args[x] = MathUtil.lerp(d1.args[x], d2.args[x], fraction);
           });
         } else {
           const d1 = start.commands[i].commands[j];
@@ -100,7 +92,8 @@ export class PathCommand implements IPathCommand {
             if (startPoint && endPoint) {
               const px = MathUtil.lerp(startPoint.x, endPoint.x, fraction);
               const py = MathUtil.lerp(startPoint.y, endPoint.y, fraction);
-              d.points[x] = new Point(px, py);
+              // TODO(alockwood): determine if we should make the args/points immutable...
+              (d.points as Point[])[x] = new Point(px, py);
             }
           }
         }
@@ -113,22 +106,22 @@ export class PathCommand implements IPathCommand {
   execute(ctx: CanvasRenderingContext2D) {
     ctx.beginPath();
     this.commands.forEach(s => s.commands.forEach(d => {
-      if (d instanceof MoveCommand) {
+      if (d.svgChar === 'M') {
         ctx.moveTo(d.end.x, d.end.y);
-      } else if (d instanceof LineCommand) {
+      } else if (d.svgChar === 'L') {
         ctx.lineTo(d.end.x, d.end.y);
-      } else if (d instanceof QuadraticCurveCommand) {
+      } else if (d.svgChar === 'Q') {
         ctx.quadraticCurveTo(
           d.points[1].x, d.points[1].y,
           d.points[2].x, d.points[2].y);
-      } else if (d instanceof BezierCurveCommand) {
+      } else if (d.svgChar === 'C') {
         ctx.bezierCurveTo(
           d.points[1].x, d.points[1].y,
           d.points[2].x, d.points[2].y,
           d.points[3].x, d.points[3].y);
-      } else if (d instanceof ClosePathCommand) {
+      } else if (d.svgChar === 'Z') {
         ctx.closePath();
-      } else if (d instanceof EllipticalArcCommand) {
+      } else if (d.svgChar === 'A') {
         SvgUtil.executeArc(ctx, d.args);
       }
     }));
@@ -180,7 +173,7 @@ function initInternalState(pathCommand: PathCommand, commands: DrawCommand[]) {
 
   const drawCommandWrappers: DrawCommandWrapper[] = [];
   commands.forEach(cmd => {
-    if (cmd instanceof MoveCommand) {
+    if (cmd.svgChar === 'M') {
       const nextPoint = cmd.points[1];
       if (!firstPoint) {
         firstPoint = nextPoint;
@@ -188,35 +181,35 @@ function initInternalState(pathCommand: PathCommand, commands: DrawCommand[]) {
       currentPoint = nextPoint;
       expandBounds_(nextPoint.x, nextPoint.y);
       drawCommandWrappers.push(new DrawCommandWrapper(pathCommand, cmd));
-    } else if (cmd instanceof LineCommand) {
+    } else if (cmd.svgChar === 'L') {
       const nextPoint = cmd.points[1];
       length += MathUtil.distance(currentPoint, nextPoint);
       drawCommandWrappers.push(new DrawCommandWrapper(pathCommand,
         cmd, new Bezier(currentPoint, currentPoint, nextPoint, nextPoint)));
       currentPoint = nextPoint;
       expandBounds_(nextPoint.x, nextPoint.y);
-    } else if (cmd instanceof ClosePathCommand) {
+    } else if (cmd.svgChar === 'Z') {
       if (firstPoint) {
         length += MathUtil.distance(firstPoint, currentPoint);
         drawCommandWrappers.push(new DrawCommandWrapper(pathCommand,
           cmd, new Bezier(currentPoint, currentPoint, firstPoint, firstPoint)));
       }
       firstPoint = null;
-    } else if (cmd instanceof BezierCurveCommand) {
+    } else if (cmd.svgChar === 'C') {
       const points = cmd.points;
       const bez = new Bezier(currentPoint, points[1], points[2], points[3]);
       drawCommandWrappers.push(new DrawCommandWrapper(pathCommand, cmd, bez));
       length += bez.length();
       currentPoint = points[3];
       expandBoundsToBezier_(bez);
-    } else if (cmd instanceof QuadraticCurveCommand) {
+    } else if (cmd.svgChar === 'Q') {
       const points = cmd.points;
       const bez = new Bezier(currentPoint, points[1], points[2]);
       drawCommandWrappers.push(new DrawCommandWrapper(pathCommand, cmd, bez));
       length += bez.length();
       currentPoint = points[2];
       expandBoundsToBezier_(bez);
-    } else if (cmd instanceof EllipticalArcCommand) {
+    } else if (cmd.svgChar === 'A') {
       const args = cmd.args;
       const [currentPointX, currentPointY,
         rx, ry, xAxisRotation,
@@ -295,7 +288,7 @@ class DrawCommandWrapper {
     if (!this.sourceBeziers.length) {
       return;
     }
-    if (this.sourceCommand instanceof EllipticalArcCommand) {
+    if (this.sourceCommand.svgChar === 'A') {
       throw new Error('TODO: implement split support for elliptical arcs');
     }
     this.splits.splice(_.sortedIndex(this.splits, t), 0, t);
@@ -319,14 +312,14 @@ class DrawCommandWrapper {
 
   private bezierToDrawCommand(bezier: Bezier) {
     const cmd = this.sourceCommand;
-    if (cmd instanceof LineCommand) {
-      return new LineCommand(bezier.start, bezier.end);
-    } else if (cmd instanceof ClosePathCommand) {
-      return new ClosePathCommand(bezier.start, bezier.end);
-    } else if (cmd instanceof QuadraticCurveCommand) {
-      return new QuadraticCurveCommand(bezier.start, bezier.cp1, bezier.end);
-    } else if (cmd instanceof BezierCurveCommand) {
-      return new BezierCurveCommand(bezier.start, bezier.cp1, bezier.cp2, bezier.end);
+    if (cmd.svgChar === 'L') {
+      return DrawCommand.lineTo(bezier.start, bezier.end);
+    } else if (cmd.svgChar === 'Z') {
+      return DrawCommand.closePath(bezier.start, bezier.end);
+    } else if (cmd.svgChar === 'Q') {
+      return DrawCommand.quadTo(bezier.start, bezier.cp1, bezier.end);
+    } else if (cmd.svgChar === 'C') {
+      return DrawCommand.cubicTo(bezier.start, bezier.cp1, bezier.cp2, bezier.end);
     } else {// if (cmd instanceof EllipticalArcCommand) {
       throw new Error('TODO: implement split for ellpitical arcs');
     }

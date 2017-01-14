@@ -1,16 +1,12 @@
 import { Point, Projection } from '../common';
 
-export interface ICommand {
-
-  /** A unique identifier for this command. Used by ngFor* loops for efficient DOM updates. */
-  id: string;
-}
+export interface ICommand { }
 
 /** Defines the set of methods that are seen by the path inspector/canvas. */
 export interface IPathCommand extends ICommand {
 
   /** The list of children sub path commands in this path. */
-  commands: ISubPathCommand[];
+  commands: ReadonlyArray<ISubPathCommand>;
 
   /** Returns the length of the path. */
   pathLength: number;
@@ -39,19 +35,19 @@ export interface IPathCommand extends ICommand {
 export interface ISubPathCommand extends ICommand {
 
   /** The list of children draw commands in this sub path. */
-  commands: IDrawCommand[];
+  commands: ReadonlyArray<IDrawCommand>;
 
   /** Returns true iff the sub path's start point is equal to its end point. */
   isClosed(): boolean;
 
   /** Reverses the order of the points in the sub path. */
-  reverse(): void;
+  reverse(): ISubPathCommand;
 
   /** Shifts back the order of the points in the sub path. */
-  shiftBack(): void;
+  shiftBack(): ISubPathCommand;
 
   /** Shifts forward the order of the points in the sub path. */
-  shiftForward(): void;
+  shiftForward(): ISubPathCommand;
 }
 
 /** Defines the set of methods that are seen by the command inspector/canvas. */
@@ -61,7 +57,7 @@ export interface IDrawCommand extends ICommand {
   svgChar: string;
 
   /** Returns the points for this draw command. */
-  points: Point[];
+  points: ReadonlyArray<Point>;
 
   /** Returns true iff the draw command is editable/deletable. */
   isModfiable: boolean;

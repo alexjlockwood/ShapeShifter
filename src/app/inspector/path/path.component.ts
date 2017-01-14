@@ -12,7 +12,7 @@ import { Observable } from 'rxjs/Observable';
 export class PathComponent implements OnInit, OnChanges {
   @Input() vectorLayerType: VectorLayerType;
   pathCommand_: IPathCommand;
-  subPathCommands: ISubPathCommand[] = [];
+  subPathCommands: ReadonlyArray<ISubPathCommand> = [];
 
   ngOnInit() {
     // console.log('ngOnInit');

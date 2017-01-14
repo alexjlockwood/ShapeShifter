@@ -10,7 +10,7 @@ import { IDrawCommand, ISubPathCommand } from './../../scripts/model';
 export class SubPathComponent implements OnInit, OnChanges {
   @Input() vectorLayerType: VectorLayerType;
   private subPathCommand_: ISubPathCommand;
-  drawCommands: IDrawCommand[] = [];
+  drawCommands: ReadonlyArray<IDrawCommand> = [];
 
   constructor(private stateService: StateService) { }
 
@@ -30,7 +30,7 @@ export class SubPathComponent implements OnInit, OnChanges {
   set subPathCommand(subPathCommand: ISubPathCommand) {
     console.log('setting new sub path command');
     this.subPathCommand_ = subPathCommand;
-    this.drawCommands = subPathCommand.commands;//.map(c => Object.create(c));
+    this.drawCommands = subPathCommand.commands;
   }
 
   isSubPathClosed() {
