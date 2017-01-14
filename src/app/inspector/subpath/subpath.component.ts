@@ -4,7 +4,42 @@ import { IDrawCommand, ISubPathCommand } from './../../scripts/model';
 
 @Component({
   selector: 'app-subpath',
-  templateUrl: './subpath.component.html',
+  template: `
+  <div fxLayout="row">
+    <button md-icon-button
+        mdTooltip="Reverse"
+        mdTooltipPosition="above"
+        md-theme="dark"
+        (click)="onReverseClick()">
+      <md-icon class="md-24">autorenew</md-icon>
+    </button>
+
+    <button md-icon-button
+        mdTooltip="Shift back"
+        mdTooltipPosition="above"
+        md-theme="dark"
+        [disabled]="!isSubPathClosed()"
+        (click)="onShiftBackClick()">
+    <md-icon class="md-24">skip_previous</md-icon>
+    </button>
+
+    <button md-icon-button
+        mdTooltip="Shift forwards"
+        mdTooltipPosition="above"
+        md-theme="dark"
+        [disabled]="!isSubPathClosed()"
+        (click)="onShiftForwardClick()">
+      <md-icon class="md-24">skip_next</md-icon>
+    </button>
+  </div>
+
+  <app-command *ngFor="let drawCommand of drawCommands; let commandIndex = index"
+      fxLayout="row"
+      fxLayoutAlign="start center"
+      [vectorLayerType]="vectorLayerType"
+      [commandIndex]="commandIndex"
+      [drawCommand]="drawCommand">
+  </app-command>`,
   styleUrls: ['./subpath.component.scss']
 })
 export class SubPathComponent implements OnInit, OnChanges {

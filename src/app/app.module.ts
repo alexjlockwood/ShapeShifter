@@ -37,9 +37,7 @@ import { CommandComponent } from './inspector/command/command.component';
     FlexLayoutModule.forRoot(),
     MaterialModule.forRoot()
   ],
-  providers: [
-    StateService
-  ],
+  providers: [StateService],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
