@@ -150,14 +150,14 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     //   </svg>`);
     this.onStartSvgTextLoaded(`
       <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24">
-        <g transform="translate(12,12)">
+        <!--<g transform="translate(12,12)">
           <g transform="scale(0.75,0.75)">
             <g transform="translate(-12,-12)">
               <path d="M 0 0 L 12 12 C 13 13 14 14 15 15 C 16 16 17 17 18 18
                        C 19 19 20 20 21 21 C 22 22 23 23 24 24 L 24 24" stroke="#000" stroke-width="1" />
             </g>
           </g>
-        </g>
+        </g>-->
         <g transform="translate(0,9)">
         <g transform="scale(1.25,1.25)">
           <path d="M 2,6 C 2,3.79 3.79,2 6,2 C 8.21,2 10,3.79 10,6 C 10,8.21 8.21,10 6,10 C 3.79,10 2,8.21 2,6" fill="#DB4437"/>
@@ -166,13 +166,13 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       </svg>`);
     this.onEndSvgTextLoaded(`
       <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24">
-        <g transform="translate(12,12)">
+        <!--<g transform="translate(12,12)">
           <g transform="scale(0.75,0.75)">
             <g transform="translate(-12,-12)">
               <path d="M 0 0 L 4 4 C 11 12 17 12 24 12 L 24 24" stroke="#000" stroke-width="1" />
             </g>
           </g>
-        </g>
+        </g>-->
         <g transform="translate(0,12)">
           <g transform="scale(1,1)">
           <path d="M 2,6 C 2,3.79 3.79,2 6,2 C 8.21,2 10,3.79 10,6 C 10,8.21 8.21,10 6,10 C 3.79,10 2,8.21 2,6" fill="#DB4437" />

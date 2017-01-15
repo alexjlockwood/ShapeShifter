@@ -28,13 +28,13 @@ export class SubPathCommand implements ISubPathCommand {
     return cmdGroups.reverse().map(cmds => new SubPathCommand(...cmds.reverse()));
   }
 
-  private constructor(...commands: DrawCommand[]) { this.commands_ = commands; }
+  constructor(...commands: DrawCommand[]) { this.commands_ = commands; }
 
   get commands() { return this.commands_; }
 
   get isClosed() {
     const start = this.commands[0].end;
     const end = _.last(this.commands).end;
-    return start.x === end.x && start.y === end.y;
+    return start.equals(end);
   }
 }

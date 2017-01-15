@@ -11,26 +11,34 @@ import { DrawCommand } from './drawcommand';
  * associated with a path layer's pathData attribute.
  */
 export class PathCommand implements IPathCommand {
+
+  // TODO: fix split/unsplitting paths after reversals/shifts. the indexing is messed up right now
   private commandWrappers_: CommandWrapper[][];
+  private shiftOffsets_: number[];
   private commands_: ReadonlyArray<SubPathCommand>;
   private path_: string;
+  private isReversed = false;
 
   static from(path: string) {
     return new PathCommand(path);
   }
 
   // TODO(alockwood): add method to calculate bounds and length
-  private constructor(obj: string | CommandWrapper[][]) {
+  private constructor(obj: string | PathCommand) {
     if (typeof obj === 'string') {
       this.path_ = obj;
       this.commands_ = SubPathCommand.from(...PathParser.parseCommands(obj));
       this.commandWrappers_ = this.commands_.map(s => createCommandWrappers(s.commands));
+      this.shiftOffsets_ = this.commands_.map(_ => 0);
     } else {
       const drawCommands =
-        [].concat.apply([], [].concat.apply([], obj.map(cws => cws)).map(cw => cw.commands));
+        [].concat.apply([],
+          [].concat.apply([], obj.commandWrappers_.map(cws => cws)).map(cw => cw.commands));
       this.commands_ = SubPathCommand.from(...drawCommands);
       this.path_ = PathParser.commandsToString(drawCommands);
-      this.commandWrappers_ = obj;
+      this.commandWrappers_ = obj.commandWrappers_;
+      this.shiftOffsets_ = obj.shiftOffsets_;
+      this.isReversed = obj.isReversed;
     }
   }
 
@@ -40,7 +48,60 @@ export class PathCommand implements IPathCommand {
 
   // Overrides IPathCommand interface.
   get commands() {
-    return this.commands_;
+    // TODO: precompute this
+    const subPathCommands = !this.isReversed ? this.commands_ : this.commands_.map(s => {
+      const cmds = s.commands;
+      const firstMoveCommand = cmds[0];
+      if (cmds.length === 1) {
+        return new SubPathCommand(firstMoveCommand);
+      }
+      const newCmds: DrawCommand[] = [
+        DrawCommand.moveTo(firstMoveCommand.start, _.last(cmds).end),
+      ];
+      for (let i = cmds.length - 1; i >= 1; i--) {
+        newCmds.push(cmds[i].reverse());
+      }
+      const secondCmd = newCmds[1];
+      if (secondCmd.svgChar === 'Z') {
+        newCmds[1] = DrawCommand.lineTo(secondCmd.start, secondCmd.end);
+        const lastCmd = _.last(newCmds);
+        newCmds[newCmds.length - 1] =
+          DrawCommand.closePath(lastCmd.start, lastCmd.end);
+      }
+      return new SubPathCommand(...newCmds);
+    });
+
+    // TODO: precompute this
+    // TODO: unsplitting and splitting doesnt work yet
+    return subPathCommands.map((s, subPathIndex) => {
+      if (this.shiftOffsets_[subPathIndex] === 0) {
+        return s;
+      }
+      if (s.commands.length === 1 || !s.isClosed) {
+        return s;
+      }
+      const newCmdLists: DrawCommand[][] = [];
+      const cmds = s.commands.slice();
+      for (let i = 0; i < (s.commands.length - this.shiftOffsets_[subPathIndex] - 1); i++) {
+        console.log(cmds[0].end, _.last(cmds).end);
+        const isClosed = cmds[0].end.equals(_.last(cmds).end);
+        const moveStartPoint = cmds[0].start;
+        cmds.unshift(cmds.pop());
+
+        if (cmds[0].svgChar === 'Z') {
+          const lastCmd = _.last(cmds);
+          cmds[cmds.length - 1] = DrawCommand.closePath(lastCmd.start, lastCmd.end);
+          cmds[1] = DrawCommand.lineTo(cmds[0].start, cmds[0].end);
+          // TODO(alockwood): confirm that this start point is correct for paths w/ multiple moves
+          cmds[0] = DrawCommand.moveTo(moveStartPoint, cmds[1].start);
+        } else {
+          cmds[1] = cmds[0];
+          // TODO(alockwood): confirm that this start point is correct for paths w/ multiple moves
+          cmds[0] = DrawCommand.moveTo(moveStartPoint, _.last(cmds).end);
+        }
+      }
+      return new SubPathCommand(...cmds);
+    });
   }
 
   // Overrides IPathCommand interface.
@@ -108,7 +169,7 @@ export class PathCommand implements IPathCommand {
         projection,
         split: () => {
           cw.split(projection.t);
-          return new PathCommand(this.commandWrappers_);
+          return new PathCommand(this);
         }
       };
     }).filter(item => !!item.projection)
@@ -120,76 +181,44 @@ export class PathCommand implements IPathCommand {
   // Overrides IPathCommand interface.
   reverse(subPathIndex: number) {
     // TODO(alockwood): add a test for commands with multiple moves but no close paths
-    const cws = this.commandWrappers_[subPathIndex];
-    const numCommands = cws.reduce((prev, curr) => prev + curr.commands.length, 0);
-    if (numCommands <= 1) {
-      // TODO: confirm we should do nothing in this case?
-      return this;
-    }
-    const firstCommand = cws[0].commands[0];
-    const newCws = [
-      cws[0].convert(
-        DrawCommand.moveTo(firstCommand.start, _.last(_.last(cws).commands).end)),
-    ];
-    for (let i = cws.length - 1; i >= 1; i--) {
-      newCws.push(cws[i].reverse());
-    }
-    const secondCmd = newCws[1].commands[0];
-    if (secondCmd.svgChar === 'Z') {
-      newCws[1].convert(
-        DrawCommand.lineTo(secondCmd.start, secondCmd.end, secondCmd.isSplit));
-      const lastCmd = _.last(_.last(newCws).commands);
-      newCws[newCws.length - 1].convert(
-        DrawCommand.closePath(lastCmd.start, lastCmd.end, lastCmd.isSplit));
-    }
-    this.commandWrappers_[subPathIndex] = newCws;
-    return new PathCommand(this.commandWrappers_);
+    this.isReversed = !this.isReversed;
+    return new PathCommand(this);
   }
 
   // Overrides IPathCommand interface.
   shiftBack(subPathIndex: number) {
     // TODO(alockwood): add a test for commands with multiple moves but no close paths
-
-    // if (this.commands.length === 1 || !this.isClosed) {
-    //   return this;
-    // }
-
-    // const newCmdLists: DrawCommand[][] = [];
-    // const cmds = this.commands.slice();
-    // const moveStartPoint = cmds[0].start;
-    // cmds.unshift(cmds.pop());
-
-    // if (cmds[0].svgChar === 'Z') {
-    //   const lastCmd = _.last(cmds);
-    //   cmds[cmds.length - 1] = DrawCommand.closePath(lastCmd.start, lastCmd.end);
-    //   cmds[1] = DrawCommand.lineTo(cmds[0].start, cmds[0].end);
-    // } else {
-    //   cmds[1] = cmds[0];
-    // }
-    // // TODO(alockwood): confirm that this start point is correct for paths w/ multiple moves
-    // cmds[0] = DrawCommand.moveTo(moveStartPoint, cmds[1].start);
-
-    // return new SubPathCommand(...cmds);
-
-    return this;
+    const subPathCommand = this.commands_[subPathIndex];
+    const numCommands = subPathCommand.commands.length;
+    if (numCommands <= 1 || !subPathCommand.isClosed) {
+      return this;
+    }
+    let newShiftOffset = this.shiftOffsets_[subPathIndex] - 1;
+    if (newShiftOffset < 0) {
+      newShiftOffset += numCommands - 1;
+    }
+    this.shiftOffsets_[subPathIndex] = newShiftOffset;
+    return new PathCommand(this);
   }
 
   // Overrides IPathCommand interface.
   shiftForward(subPathIndex: number) {
     // TODO(alockwood): add a test for commands with multiple moves but no close paths
-
-    // if (this.commands.length === 1 || !this.isClosed) {
-    //   return this;
-    // }
-
-    // // TODO(alockwood): make this more efficient... :P
-    // let result: SubPathCommand = this;
-    // for (let i = 0; i < this.commands.length - 2; i++) {
-    //   result = result.shiftBack();
-    // }
-    // return result;
-
-    return this;
+    const subPathCommand = this.commands_[subPathIndex];
+    const numCommands = subPathCommand.commands.length;
+    if (numCommands <= 1 || !subPathCommand.isClosed) {
+      return this;
+    }
+    //if (!subPathCommand.isClosed) {
+    // Do nothing if the path is not closed.
+    //  return this;
+    //}
+    let newShiftOffset = this.shiftOffsets_[subPathIndex] + 1;
+    if (newShiftOffset >= numCommands - 1) {
+      newShiftOffset -= numCommands - 1;
+    }
+    this.shiftOffsets_[subPathIndex] = newShiftOffset;
+    return new PathCommand(this);
   }
 
   // Overrides IPathCommand interface.
@@ -212,7 +241,7 @@ export class PathCommand implements IPathCommand {
       counter += cw.commands.length;
     }
     targetCw.unsplit(targetIndex);
-    return new PathCommand(this.commandWrappers_);
+    return new PathCommand(this);
   }
 }
 

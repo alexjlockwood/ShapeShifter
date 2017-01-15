@@ -291,7 +291,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     const matrices = Array.from(transforms).reverse();
     for (let i = points.length - 1; i >= 0; i--) {
       const p = MathUtil.transform(points[i].p, ...matrices);
-      const color = points[i].isSplit ? 'orange' : 'green';
+      const color = i == 0 ? 'blue' : points[i].isSplit ? 'orange' : 'green';
       const radius = this.pathPointRadius * (points[i].isSplit ? 0.8 : 1);
       ctx.beginPath();
       ctx.arc(p.x, p.y, radius, 0, 2 * Math.PI, false);

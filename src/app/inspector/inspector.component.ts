@@ -56,18 +56,16 @@ export class InspectorComponent implements OnInit, OnChanges, OnDestroy {
         const pathLayer = vl.findLayerById(this.pathLayerIds[pathCommandIndex]) as PathLayer;
         if (eventType === EventType.Reverse) {
           pathLayer.pathData = pathLayer.pathData.reverse(subPathCommandIndex);
-          this.stateService.notifyVectorLayerChange(this.vectorLayerType);
         } else if (eventType === EventType.ShiftBack) {
-
+          pathLayer.pathData = pathLayer.pathData.shiftBack(subPathCommandIndex);
         } else if (eventType === EventType.ShiftForward) {
-
+          pathLayer.pathData = pathLayer.pathData.shiftForward(subPathCommandIndex);
         } else if (eventType === EventType.Edit) {
 
         } else if (eventType === EventType.Delete) {
           pathLayer.pathData = pathLayer.pathData.unsplit(subPathCommandIndex, drawCommandIndex);
-          this.stateService.notifyVectorLayerChange(this.vectorLayerType);
         }
-        console.log(eventType, pathCommandIndex, subPathCommandIndex, drawCommandIndex);
+        this.stateService.notifyVectorLayerChange(this.vectorLayerType);
       }));
   }
 

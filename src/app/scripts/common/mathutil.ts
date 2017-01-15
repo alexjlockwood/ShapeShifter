@@ -3,16 +3,20 @@ interface IPoint { x: number; y: number; };
 /** An immutable point class. */
 export class Point {
   constructor(public readonly x = 0, public readonly y = 0) { }
+
+  equals(p: Point) {
+    return this.x === p.x && this.y === p.y;
+  }
 }
 
 /** Applies a list of transformation matrices to the specified point. */
-export function transform(point: IPoint, ...matrices: Matrix[]) {
+export function transform(point: IPoint, ...matrices: Matrix[]): Point {
   return matrices.reduce((p: Point, m: Matrix) => {
     return new Point(
       m.a * p.x + m.c * p.y + m.e * 1,
       m.b * p.x + m.d * p.y + m.f * 1,
     );
-  }, point);
+  }, new Point(point.x, point.y));
 }
 
 /** Calculates the distance between two points. */
@@ -44,9 +48,6 @@ export class Matrix {
   }
 
   getScale() {
-    // From getMatrixScale in
-    // https://android.googlesource.com/platform/frameworks/base/+/master/libs/hwui/VectorDrawable.cpp
-
     // Given unit vectors A = (0, 1) and B = (1, 0).
     // After matrix mapping, we got A' and B'. Let theta = the angel b/t A' and B'.
     // Therefore, the final scale we want is min(|A'| * sin(theta), |B'| * sin(theta)),
