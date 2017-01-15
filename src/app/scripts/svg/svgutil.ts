@@ -1,36 +1,5 @@
 import { Point, Matrix, MathUtil } from '../common';
 
-/** Draws an elliptical arc on the specified canvas context. */
-export function executeArc(ctx: CanvasRenderingContext2D, arcArgs) {
-  let [currentPointX, currentPointY,
-    rx, ry, xAxisRotation,
-    largeArcFlag, sweepFlag,
-    tempPoint1X, tempPoint1Y] = arcArgs;
-
-  if (currentPointX === tempPoint1X && currentPointY === tempPoint1Y) {
-    // degenerate to point
-    return;
-  }
-
-  if (rx === 0 || ry === 0) {
-    // degenerate to line
-    ctx.lineTo(tempPoint1X, tempPoint1Y);
-    return;
-  }
-
-  let bezierCoords = arcToBeziers(currentPointX, currentPointY,
-    rx, ry, xAxisRotation,
-    largeArcFlag, sweepFlag,
-    tempPoint1X, tempPoint1Y);
-
-  for (let i = 0; i < bezierCoords.length; i += 8) {
-    ctx.bezierCurveTo(
-      bezierCoords[i + 2], bezierCoords[i + 3],
-      bezierCoords[i + 4], bezierCoords[i + 5],
-      bezierCoords[i + 6], bezierCoords[i + 7]);
-  }
-}
-
 /** Estimates an elliptical arc as a sequence of bezier curves. */
 export function arcToBeziers(xf, yf, rx, ry, xAxisRotation, largeArcFlag, sweepFlag, xt, yt) {
   // Sign of the radii is ignored (behaviour specified by the spec)

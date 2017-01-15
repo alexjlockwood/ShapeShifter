@@ -3,12 +3,15 @@ import {
   Component, AfterViewInit, OnDestroy, ElementRef, HostListener,
   ViewChild, ViewChildren, Input, Output, EventEmitter
 } from '@angular/core';
-import { Layer, PathLayer, ClipPathLayer, GroupLayer, VectorLayer } from './../scripts/model';
+import {
+  Layer, PathLayer, ClipPathLayer, GroupLayer, VectorLayer, IPathCommand
+} from './../scripts/model';
 import * as $ from 'jquery';
 import * as erd from 'element-resize-detector';
 import { Point, Matrix, Projection, MathUtil, ColorUtil } from './../scripts/common';
 import { StateService, VectorLayerType } from './../state.service';
 import { Subscription } from 'rxjs/Subscription';
+import { arcToBeziers } from '../scripts/svg';
 
 const ELEMENT_RESIZE_DETECTOR = erd();
 
@@ -202,7 +205,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     transforms: Matrix[]) {
     ctx.save();
     transforms.forEach(m => ctx.transform(m.a, m.b, m.c, m.d, m.e, m.f));
-    layer.pathData.execute(ctx);
+    this.execute(layer, ctx);
     ctx.restore();
 
     // clip further layers
@@ -213,7 +216,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   private drawPathLayer(layer: PathLayer, ctx: CanvasRenderingContext2D, transforms: Matrix[]) {
     ctx.save();
     transforms.forEach(m => ctx.transform(m.a, m.b, m.c, m.d, m.e, m.f));
-    layer.pathData.execute(ctx);
+    this.execute(layer, ctx);
     ctx.restore();
 
     // draw the actual layer
@@ -346,7 +349,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
     if (this.closestProjectionInfo) {
       const pathLayer = this.vectorLayer.findLayerById(this.closestPathLayerId) as PathLayer;
-      this.closestProjectionInfo.split();
+      pathLayer.pathData = this.closestProjectionInfo.split();
       this.stateService.setVectorLayer(this.vectorLayerType, this.vectorLayer);
       this.closestProjectionInfo = null;
     }
@@ -408,9 +411,67 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       new Matrix(1, 0, 0, 1, -layer.pivotX, -layer.pivotY)
     ];
   }
+
+  /** Draws an command on the specified canvas context. */
+  execute(layer: PathLayer | ClipPathLayer, ctx: CanvasRenderingContext2D) {
+    ctx.beginPath();
+    layer.pathData.commands.forEach(s => s.commands.forEach(d => {
+      const start = d.points[0];
+      const end = _.last(d.points);
+      if (d.svgChar === 'M') {
+        ctx.moveTo(end.x, end.y);
+      } else if (d.svgChar === 'L') {
+        ctx.lineTo(end.x, end.y);
+      } else if (d.svgChar === 'Q') {
+        ctx.quadraticCurveTo(
+          d.points[1].x, d.points[1].y,
+          d.points[2].x, d.points[2].y);
+      } else if (d.svgChar === 'C') {
+        ctx.bezierCurveTo(
+          d.points[1].x, d.points[1].y,
+          d.points[2].x, d.points[2].y,
+          d.points[3].x, d.points[3].y);
+      } else if (d.svgChar === 'Z') {
+        ctx.closePath();
+      } else if (d.svgChar === 'A') {
+        this.executeArc(ctx, d.args);
+      }
+    }));
+  }
+
+  /** Draws an elliptical arc on the specified canvas context. */
+  private executeArc(ctx: CanvasRenderingContext2D, arcArgs) {
+    let [currentPointX, currentPointY,
+      rx, ry, xAxisRotation,
+      largeArcFlag, sweepFlag,
+      tempPoint1X, tempPoint1Y] = arcArgs;
+
+    if (currentPointX === tempPoint1X && currentPointY === tempPoint1Y) {
+      // degenerate to point
+      return;
+    }
+
+    if (rx === 0 || ry === 0) {
+      // degenerate to line
+      ctx.lineTo(tempPoint1X, tempPoint1Y);
+      return;
+    }
+
+    let bezierCoords = arcToBeziers(currentPointX, currentPointY,
+      rx, ry, xAxisRotation,
+      largeArcFlag, sweepFlag,
+      tempPoint1X, tempPoint1Y);
+
+    for (let i = 0; i < bezierCoords.length; i += 8) {
+      ctx.bezierCurveTo(
+        bezierCoords[i + 2], bezierCoords[i + 3],
+        bezierCoords[i + 4], bezierCoords[i + 5],
+        bezierCoords[i + 6], bezierCoords[i + 7]);
+    }
+  }
 }
 
 type ProjectionInfo = {
   projection: Projection;
-  split: () => void;
+  split: () => IPathCommand;
 };

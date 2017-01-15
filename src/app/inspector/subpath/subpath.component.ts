@@ -1,6 +1,9 @@
-import { Component, OnChanges, SimpleChanges, Input, OnInit } from '@angular/core';
-import { StateService, VectorLayerType } from './../../state.service';
+import {
+  Component, OnChanges, SimpleChanges, Input, OnInit,
+  EventEmitter, Output
+} from '@angular/core';
 import { IDrawCommand, ISubPathCommand } from './../../scripts/model';
+import { InspectorService, EventType } from '../inspector.service';
 
 @Component({
   selector: 'app-subpath',
@@ -18,7 +21,7 @@ import { IDrawCommand, ISubPathCommand } from './../../scripts/model';
         mdTooltip="Shift back"
         mdTooltipPosition="above"
         md-theme="dark"
-        [disabled]="!isSubPathClosed()"
+        [disabled]="!subPathCommand.isClosed"
         (click)="onShiftBackClick()">
     <md-icon class="md-24">skip_previous</md-icon>
     </button>
@@ -27,27 +30,31 @@ import { IDrawCommand, ISubPathCommand } from './../../scripts/model';
         mdTooltip="Shift forwards"
         mdTooltipPosition="above"
         md-theme="dark"
-        [disabled]="!isSubPathClosed()"
+        [disabled]="!subPathCommand.isClosed"
         (click)="onShiftForwardClick()">
       <md-icon class="md-24">skip_next</md-icon>
     </button>
   </div>
 
-  <app-command *ngFor="let drawCommand of drawCommands; let commandIndex = index"
+  <app-command *ngFor="let command of drawCommands; let commandIndex = index"
       fxLayout="row"
       fxLayoutAlign="start center"
-      [vectorLayerType]="vectorLayerType"
-      [commandIndex]="commandIndex"
-      [drawCommand]="drawCommand">
+      [pathCommandIndex]="pathCommandIndex"
+      [subPathCommandIndex]="subPathCommandIndex"
+      [drawCommandIndex]="commandIndex"
+      [drawCommand]="command">
   </app-command>`,
   styleUrls: ['./subpath.component.scss']
 })
 export class SubPathComponent implements OnInit, OnChanges {
-  @Input() vectorLayerType: VectorLayerType;
-  private subPathCommand_: ISubPathCommand;
-  drawCommands: ReadonlyArray<IDrawCommand> = [];
+  @Input('pathCommandIndex') pathCommandIndex: number;
+  @Input('subPathCommandIndex') subPathCommandIndex: number;
 
-  constructor(private stateService: StateService) { }
+  // Draw commands to use to populate the ngFor loop of command components.
+  drawCommands: ReadonlyArray<IDrawCommand> = [];
+  private subPathCommand_: ISubPathCommand;
+
+  constructor(private inspectorService: InspectorService) { }
 
   ngOnInit() {
     // console.log('ngOnInit()');
@@ -57,33 +64,38 @@ export class SubPathComponent implements OnInit, OnChanges {
     // console.log('subpath');
   }
 
-  get subPathCommand() {
-    return this.subPathCommand_;
-  }
-
   @Input()
   set subPathCommand(subPathCommand: ISubPathCommand) {
-    console.log('setting new sub path command');
+    // console.log('setting new sub path command');
     this.subPathCommand_ = subPathCommand;
     this.drawCommands = subPathCommand.commands;
   }
 
-  isSubPathClosed() {
-    return this.subPathCommand_.isClosed();
+  get subPathCommand() {
+    return this.subPathCommand_;
   }
 
   onReverseClick() {
-    this.subPathCommand_.reverse();
-    this.stateService.notifyVectorLayerChange(this.vectorLayerType);
+    this.inspectorService.notifyChange({
+      eventType: EventType.Reverse,
+      pathCommandIndex: this.pathCommandIndex,
+      subPathCommandIndex: this.subPathCommandIndex,
+    });
   }
 
   onShiftBackClick() {
-    this.subPathCommand_.shiftBack();
-    this.stateService.notifyVectorLayerChange(this.vectorLayerType);
+    this.inspectorService.notifyChange({
+      eventType: EventType.ShiftBack,
+      pathCommandIndex: this.pathCommandIndex,
+      subPathCommandIndex: this.subPathCommandIndex,
+    });
   }
 
   onShiftForwardClick() {
-    this.subPathCommand_.shiftForward();
-    this.stateService.notifyVectorLayerChange(this.vectorLayerType);
+    this.inspectorService.notifyChange({
+      eventType: EventType.ShiftForward,
+      pathCommandIndex: this.pathCommandIndex,
+      subPathCommandIndex: this.subPathCommandIndex,
+    });
   }
 }

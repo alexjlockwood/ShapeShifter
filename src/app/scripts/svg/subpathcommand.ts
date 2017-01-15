@@ -2,9 +2,13 @@ import * as _ from 'lodash';
 import { ICommand, IPathCommand, ISubPathCommand, IDrawCommand } from '../model';
 import { DrawCommand } from './drawcommand';
 
+/**
+ * Implementation of the ISubPathCommand interface. An IPathCommand is split up
+ * into multiple ISubPathCommands, each beginning with a 'move to' draw command.
+ */
 export class SubPathCommand implements ISubPathCommand {
 
-  static from(drawCommands: DrawCommand[]) {
+  static from(...drawCommands: DrawCommand[]) {
     if (!drawCommands.length) {
       return [];
     }
@@ -21,13 +25,13 @@ export class SubPathCommand implements ISubPathCommand {
     return cmdGroups.reverse().map(cmds => new SubPathCommand(...cmds.reverse()));
   }
 
-  private commands_: DrawCommand[];
+  private readonly commands_: ReadonlyArray<DrawCommand>;
 
   private constructor(...commands: DrawCommand[]) { this.commands_ = commands; }
 
   get commands() { return this.commands_; }
 
-  isClosed() {
+  get isClosed() {
     const start = this.commands[0].end;
     const end = _.last(this.commands).end;
     return start.x === end.x && start.y === end.y;
@@ -58,7 +62,7 @@ export class SubPathCommand implements ISubPathCommand {
 
   // TODO(alockwood): add a test for commands with multiple moves but no close paths
   shiftForward() {
-    if (this.commands.length === 1 || !this.isClosed()) {
+    if (this.commands.length === 1 || !this.isClosed) {
       return this;
     }
 
@@ -72,7 +76,7 @@ export class SubPathCommand implements ISubPathCommand {
 
   // TODO(alockwood): add a test for commands with multiple moves but no close paths
   shiftBack() {
-    if (this.commands.length === 1 || !this.isClosed()) {
+    if (this.commands.length === 1 || !this.isClosed) {
       return this;
     }
 

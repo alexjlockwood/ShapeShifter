@@ -7,7 +7,8 @@ import { Point } from './mathutil';
  */
 export class Bezier {
   private readonly bezierImpl;
-  private readonly points_: Point[];
+  private readonly points_: ReadonlyArray<Point>;
+  private readonly length_: number;
 
   constructor(...points: { x: number, y: number }[]) {
     if (points.length < 2 || 4 < points.length) {
@@ -18,6 +19,7 @@ export class Bezier {
     }
     this.bezierImpl = new BezierImpl(points);
     this.points_ = this.bezierImpl.points.map(p => new Point(p.x, p.y));
+    this.length_ = this.bezierImpl.length();
   }
 
   get start() { return this.points[0]; }
@@ -30,7 +32,7 @@ export class Bezier {
 
   get points() { return this.points_; }
 
-  length(): number { return this.bezierImpl.length(); }
+  length() { return this.length_; }
 
   bbox(): BBox { return this.bezierImpl.bbox(); }
 

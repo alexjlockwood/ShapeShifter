@@ -1,13 +1,16 @@
 import * as _ from 'lodash';
-import { Component, AfterViewInit, OnChanges, SimpleChanges, Input, ViewChild, ElementRef } from '@angular/core';
+import {
+  Component, AfterViewInit, OnChanges, Output, OnInit,
+  SimpleChanges, Input, ViewChild, ElementRef, EventEmitter
+} from '@angular/core';
 import { IDrawCommand } from './../../scripts/model';
-import { StateService, VectorLayerType } from './../../state.service';
 import * as $ from 'jquery';
+import { InspectorService, EventType } from '../inspector.service';
 
 @Component({
   selector: 'app-command',
   template: `
-  <canvas #commandIndexCanvas
+  <canvas #drawCommandIndexCanvas
       class="command-index"></canvas>
 
   <span fxFlex>{{ drawCommandEndPointText }}</span>
@@ -18,7 +21,7 @@ import * as $ from 'jquery';
       md-theme="dark"
       [fxShow]="isEditable()"
       fxLayoutAlign="center center"
-      (click)="onEditPointClick()">
+      (click)="onEditButtonClick()">
     <md-icon class="md-24">mode_edit</md-icon>
   </button>
 
@@ -28,30 +31,35 @@ import * as $ from 'jquery';
       md-theme="dark"
       fxLayoutAlign="center center"
       [fxShow]="isDeletable()"
-      (click)="onDeletePointClick()">
+      (click)="onDeleteButtonClick()">
     <md-icon class="md-24">delete</md-icon>
   </button>`,
   styleUrls: ['./command.component.scss']
 })
-export class CommandComponent implements AfterViewInit, OnChanges {
-  @ViewChild('commandIndexCanvas') private commandIndexCanvas: ElementRef;
-  @Input() vectorLayerType: VectorLayerType;
-  @Input() commandIndex: number;
-  @Input() drawCommand: IDrawCommand;
+export class CommandComponent implements OnInit, AfterViewInit, OnChanges {
+  @ViewChild('drawCommandIndexCanvas') private drawCommandIndexCanvas: ElementRef;
+  @Input('pathCommandIndex') pathCommandIndex: number;
+  @Input('subPathCommandIndex') subPathCommandIndex: number;
+  @Input('drawCommandIndex') drawCommandIndex: number;
+  @Input('drawCommand') drawCommand: IDrawCommand;
 
-  constructor(private stateService: StateService) { }
+  constructor(private inspectorService: InspectorService) { }
+
+  ngOnInit() {
+    // console.log('ngOnInit()');
+  }
 
   ngAfterViewInit() {
-    this.drawCommandIndex();
+    this.draw();
   }
 
   // TODO(alockwood): use ngFor trackBy to avoid recreating these items on animation frames
   ngOnChanges(changes: SimpleChanges) {
-    this.drawCommandIndex();
+    this.draw();
   }
 
-  private drawCommandIndex() {
-    const canvas = $(this.commandIndexCanvas.nativeElement);
+  private draw() {
+    const canvas = $(this.drawCommandIndexCanvas.nativeElement);
     const commandIndexCanvasSize = canvas.get(0).getBoundingClientRect().width;
     const width = commandIndexCanvasSize;
     const height = commandIndexCanvasSize;
@@ -72,7 +80,7 @@ export class CommandComponent implements AfterViewInit, OnChanges {
     ctx.beginPath();
     ctx.fillStyle = 'white';
     ctx.font = radius + 'px serif';
-    const text = (this.commandIndex + 1).toString();
+    const text = (this.drawCommandIndex + 1).toString();
     const textWidth = ctx.measureText(text).width;
     // TODO(alockwood): is there a better way to get the height?
     const textHeight = ctx.measureText('o').width;
@@ -94,21 +102,29 @@ export class CommandComponent implements AfterViewInit, OnChanges {
   }
 
   isEditable() {
+    // TODO(alockwood): implement this
     return false;
   }
 
   isDeletable() {
-    return this.drawCommand.isModfiable;
+    return this.drawCommand.isSplit;
   }
 
-  onEditPointClick() {
-    // TODO(alockwood): implement this
-    this.stateService.notifyVectorLayerChange(this.vectorLayerType);
+  onEditButtonClick() {
+    this.inspectorService.notifyChange({
+      eventType: EventType.Edit,
+      pathCommandIndex: this.pathCommandIndex,
+      subPathCommandIndex: this.subPathCommandIndex,
+      drawCommandIndex: this.drawCommandIndex,
+    });
   }
 
-  onDeletePointClick() {
-    console.log('delete');
-    this.drawCommand.delete();
-    this.stateService.notifyVectorLayerChange(this.vectorLayerType);
+  onDeleteButtonClick() {
+    this.inspectorService.notifyChange({
+      eventType: EventType.Delete,
+      pathCommandIndex: this.pathCommandIndex,
+      subPathCommandIndex: this.subPathCommandIndex,
+      drawCommandIndex: this.drawCommandIndex,
+    });
   }
 }

@@ -5,49 +5,69 @@ import {
 import { PathLayer, IPathCommand } from './../scripts/model';
 import { StateService, VectorLayerType } from './../state.service';
 import { Subscription } from 'rxjs/Subscription';
+import { InspectorService, EventType, InspectorEvent } from './inspector.service';
 
 @Component({
   selector: 'app-inspector',
   template: `
-  <app-path *ngFor="let pathCommand of pathCommands"
+  <app-path *ngFor="let command of pathCommands; let commandIndex = index; trackBy: trackByFn"
       fxLayout="column"
-      [vectorLayerType]="vectorLayerType"
-      [pathCommand]="pathCommand">
+      [pathCommandIndex]="commandIndex"
+      [pathCommand]="command">
   </app-path>`,
-  styleUrls: ['./inspector.component.scss']
+  styleUrls: ['./inspector.component.scss'],
+  providers: [InspectorService]
 })
 export class InspectorComponent implements OnInit, OnChanges, OnDestroy {
-  @Input() vectorLayerType: VectorLayerType;
-  pathCommands: IPathCommand[] = [];
-  private subscription: Subscription;
+  @Input('vectorLayerType') vectorLayerType: VectorLayerType;
 
-  // TODO: idea for saturday... pass path data and index to each component
-  // so that inspector components only interact with path data directly.
+  // Path commands to use to populate the ngFor loop of path components.
+  pathCommands: ReadonlyArray<IPathCommand> = [];
+  pathLayerIds: ReadonlyArray<string> = [];
 
-  // Another idea: pass functions/observers up to the children components so that they
-  // have no knowledge of how to manipulate the paths. then the root inspector can
-  // receive the callbacks and recreate the path data each time and set it to the
-  // appropriate path layer. the root inspector can also pass up ids for the children
-  // to use to do efficient ngFor track by stuff.
-  constructor(private stateService: StateService) { }
+  private subscriptions: Subscription[] = [];
+
+  constructor(
+    private stateService: StateService,
+    private inspectorService: InspectorService) { }
 
   ngOnInit() {
-    this.subscription =
+    this.subscriptions.push(
       this.stateService.addOnVectorLayerChangeListener(
         this.vectorLayerType, vl => {
           if (!vl) {
             return;
           }
+          const pathLayerIds: string[] = [];
           const pathCommands: IPathCommand[] = [];
           vl.walk(layer => {
             if (layer instanceof PathLayer) {
-              // TODO(alockwood): fix these hacks!!!!!!!!!!!!
-              layer.pathData = Object.create(layer.pathData);
+              pathLayerIds.push(layer.id);
               pathCommands.push(layer.pathData);
             }
           });
+          this.pathLayerIds = pathLayerIds;
           this.pathCommands = pathCommands;
-        });
+        }));
+    this.subscriptions.push(
+      this.inspectorService.addListener((event: InspectorEvent) => {
+        const {eventType, pathCommandIndex, subPathCommandIndex, drawCommandIndex} = event;
+        if (eventType === EventType.Reverse) {
+
+        } else if (eventType === EventType.ShiftBack) {
+
+        } else if (eventType === EventType.ShiftForward) {
+
+        } else if (eventType === EventType.Edit) {
+
+        } else if (eventType === EventType.Delete) {
+          const vl = this.stateService.getVectorLayer(this.vectorLayerType);
+          const pathLayer = vl.findLayerById(this.pathLayerIds[pathCommandIndex]) as PathLayer;
+          pathLayer.pathData = pathLayer.pathData.unsplit(subPathCommandIndex, drawCommandIndex);
+          this.stateService.notifyVectorLayerChange(this.vectorLayerType);
+        }
+        console.log(eventType, pathCommandIndex, subPathCommandIndex, drawCommandIndex);
+      }));
   }
 
   ngOnChanges() {
@@ -55,6 +75,10 @@ export class InspectorComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   ngOnDestroy() {
-    this.subscription.unsubscribe();
+    this.subscriptions.forEach(s => s.unsubscribe());
+  }
+
+  trackByFn(index: number, item: IPathCommand) {
+    return index;
   }
 }

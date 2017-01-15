@@ -10,18 +10,20 @@ import { Observable } from 'rxjs/Observable';
 @Component({
   selector: 'app-path',
   template: `
-  <app-subpath *ngFor="let subPathCommand of subPathCommands"
+  <app-subpath *ngFor="let command of subPathCommands; let commandIndex = index; trackBy: trackByFn"
       fxLayout="column"
-      [vectorLayerType]="vectorLayerType"
-      [subPathCommand]="subPathCommand">
+      [pathCommandIndex]="pathCommandIndex"
+      [subPathCommandIndex]="commandIndex"
+      [subPathCommand]="command">
   </app-subpath>`,
   styleUrls: ['./path.component.scss']
 })
 export class PathComponent implements OnInit, OnChanges {
-  @Input() vectorLayerType: VectorLayerType;
-  @Output() changeEventEmitter = new EventEmitter<any>();
-  pathCommand_: IPathCommand;
+  @Input('pathCommandIndex') pathCommandIndex: number;
+
+  // Sub path commands to use to populate the ngFor loop of sub path components.
   subPathCommands: ReadonlyArray<ISubPathCommand> = [];
+  private pathCommand_: IPathCommand;
 
   ngOnInit() {
     // console.log('ngOnInit');
@@ -31,14 +33,19 @@ export class PathComponent implements OnInit, OnChanges {
     // console.log('path');
   }
 
-  get pathCommand() {
-    return this.pathCommand_;
-  }
-
   @Input()
   set pathCommand(pathCommand: IPathCommand) {
     // console.log('setting new path command');
     this.pathCommand_ = pathCommand;
     this.subPathCommands = pathCommand.commands;
   }
+
+  get pathCommand() {
+    return this.pathCommand_;
+  }
+
+  trackByFn(index: number, item: ISubPathCommand) {
+    return index;
+  }
 }
+
