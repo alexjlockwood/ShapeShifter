@@ -401,8 +401,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   }
 
   private toMatrices(layer: GroupLayer) {
-    let cosr = Math.cos(layer.rotation * Math.PI / 180);
-    let sinr = Math.sin(layer.rotation * Math.PI / 180);
+    const cosr = Math.cos(layer.rotation * Math.PI / 180);
+    const sinr = Math.sin(layer.rotation * Math.PI / 180);
     return [
       new Matrix(1, 0, 0, 1, layer.pivotX, layer.pivotY),
       new Matrix(1, 0, 0, 1, layer.translateX, layer.translateY),
@@ -441,7 +441,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
   /** Draws an elliptical arc on the specified canvas context. */
   private executeArc(ctx: CanvasRenderingContext2D, arcArgs) {
-    let [currentPointX, currentPointY,
+    const [currentPointX, currentPointY,
       rx, ry, xAxisRotation,
       largeArcFlag, sweepFlag,
       tempPoint1X, tempPoint1Y] = arcArgs;
@@ -457,7 +457,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       return;
     }
 
-    let bezierCoords = arcToBeziers(currentPointX, currentPointY,
+    const bezierCoords = arcToBeziers(currentPointX, currentPointY,
       rx, ry, xAxisRotation,
       largeArcFlag, sweepFlag,
       tempPoint1X, tempPoint1Y);

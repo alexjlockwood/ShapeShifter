@@ -97,7 +97,7 @@ export class DrawCommand implements IDrawCommand {
 
   /** Returns a new reversed draw command. */
   reverse(): DrawCommand {
-    const points = this.points.slice();
+    let points = this.points.slice();
     let args = this.args.slice();
     if (this.svgChar === 'A') {
       points.reverse();
@@ -108,13 +108,24 @@ export class DrawCommand implements IDrawCommand {
       args[6] = args[6] === 0 ? 1 : 0;
       args[7] = endX;
       args[8] = endY;
-    } else if (!(this.svgChar === 'M' || this.start)) {
+    } else if (this.svgChar !== 'M' || this.start) {
       // The first move command of an SVG path has an undefined
       // starting point, so no change is required in that case.
-      points.reverse();
+      points = points.reverse();
       args = pointsToArgs(points);
     }
     return new DrawCommand(this.svgChar, this.isSplit, points, ...args);
+  }
+
+  toString() {
+    if (this.svgChar === 'Z') {
+      return `${this.svgChar}`;
+    } else {
+      const p = _.last(this.points);
+      const x = Number(p.x.toFixed(3)).toString();
+      const y = Number(p.y.toFixed(3)).toString();
+      return `${this.svgChar} ${x}, ${y}`;
+    }
   }
 }
 

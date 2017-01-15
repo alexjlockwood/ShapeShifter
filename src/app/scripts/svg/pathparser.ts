@@ -112,10 +112,8 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): DrawComm
           currentControlPoint = null;
           currentPoint = nextPoint;
         }
-
-        break;
       }
-
+        break;
       case 'C':
       case 'c': {
         if (!currentPoint) {
@@ -131,10 +129,8 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): DrawComm
           currentControlPoint = cp2;
           currentPoint = end;
         }
-
-        break;
       }
-
+        break;
       case 'S':
       case 's': {
         if (!currentPoint) {
@@ -157,10 +153,8 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): DrawComm
           currentControlPoint = cp2;
           currentPoint = end;
         }
-
-        break;
       }
-
+        break;
       case 'Q':
       case 'q': {
         if (!currentPoint) {
@@ -175,10 +169,8 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): DrawComm
           currentControlPoint = cp;
           currentPoint = end;
         }
-
-        break;
       }
-
+        break;
       case 'T':
       case 't': {
         if (!currentPoint) {
@@ -200,10 +192,8 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): DrawComm
           currentControlPoint = cp;
           currentPoint = end;
         }
-
-        break;
       }
-
+        break;
       case 'L':
       case 'l': {
         if (!currentPoint) {
@@ -217,10 +207,8 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): DrawComm
           currentControlPoint = null;
           currentPoint = end;
         }
-
-        break;
       }
-
+        break;
       case 'H':
       case 'h': {
         if (!currentPoint) {
@@ -239,9 +227,8 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): DrawComm
           currentControlPoint = null;
           currentPoint = end;
         }
-        break;
       }
-
+        break;
       case 'V':
       case 'v': {
         if (!currentPoint) {
@@ -260,9 +247,8 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): DrawComm
           currentControlPoint = null;
           currentPoint = end;
         }
-        break;
       }
-
+        break;
       case 'A':
       case 'a': {
         if (!currentPoint) {
@@ -286,18 +272,16 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): DrawComm
           currentControlPoint = null;
           currentPoint = tempPoint1;
         }
-        break;
       }
-
+        break;
       case 'Z':
       case 'z': {
         if (!currentPoint) {
           throw new Error('Current point does not exist');
         }
-
         commands.push(DrawCommand.closePath(currentPoint, lastMovePoint));
-        break;
       }
+        break;
     }
   }
 

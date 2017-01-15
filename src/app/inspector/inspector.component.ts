@@ -52,8 +52,11 @@ export class InspectorComponent implements OnInit, OnChanges, OnDestroy {
     this.subscriptions.push(
       this.inspectorService.addListener((event: InspectorEvent) => {
         const {eventType, pathCommandIndex, subPathCommandIndex, drawCommandIndex} = event;
+        const vl = this.stateService.getVectorLayer(this.vectorLayerType);
+        const pathLayer = vl.findLayerById(this.pathLayerIds[pathCommandIndex]) as PathLayer;
         if (eventType === EventType.Reverse) {
-
+          pathLayer.pathData = pathLayer.pathData.reverse(subPathCommandIndex);
+          this.stateService.notifyVectorLayerChange(this.vectorLayerType);
         } else if (eventType === EventType.ShiftBack) {
 
         } else if (eventType === EventType.ShiftForward) {
@@ -61,8 +64,6 @@ export class InspectorComponent implements OnInit, OnChanges, OnDestroy {
         } else if (eventType === EventType.Edit) {
 
         } else if (eventType === EventType.Delete) {
-          const vl = this.stateService.getVectorLayer(this.vectorLayerType);
-          const pathLayer = vl.findLayerById(this.pathLayerIds[pathCommandIndex]) as PathLayer;
           pathLayer.pathData = pathLayer.pathData.unsplit(subPathCommandIndex, drawCommandIndex);
           this.stateService.notifyVectorLayerChange(this.vectorLayerType);
         }

@@ -7,30 +7,30 @@ export function arcToBeziers(xf, yf, rx, ry, xAxisRotation, largeArcFlag, sweepF
   ry = Math.abs(ry);
 
   xAxisRotation = xAxisRotation * Math.PI / 180;
-  let cosAngle = Math.cos(xAxisRotation);
-  let sinAngle = Math.sin(xAxisRotation);
+  const cosAngle = Math.cos(xAxisRotation);
+  const sinAngle = Math.sin(xAxisRotation);
 
   // We simplify the calculations by transforming the arc so that the origin is at the
   // midpoint calculated above followed by a rotation to line up the coordinate axes
   // with the axes of the ellipse.
 
   // Compute the midpoint of the line between the current and the end point
-  let dx2 = (xf - xt) / 2;
-  let dy2 = (yf - yt) / 2;
+  const dx2 = (xf - xt) / 2;
+  const dy2 = (yf - yt) / 2;
 
   // Step 1 : Compute (x1', y1') - the transformed start point
-  let x1 = (cosAngle * dx2 + sinAngle * dy2);
-  let y1 = (-sinAngle * dx2 + cosAngle * dy2);
+  const x1 = (cosAngle * dx2 + sinAngle * dy2);
+  const y1 = (-sinAngle * dx2 + cosAngle * dy2);
 
   let rx_sq = rx * rx;
   let ry_sq = ry * ry;
-  let x1_sq = x1 * x1;
-  let y1_sq = y1 * y1;
+  const x1_sq = x1 * x1;
+  const y1_sq = y1 * y1;
 
   // Check that radii are large enough.
   // If they are not, the spec says to scale them up so they are.
   // This is to compensate for potential rounding errors/differences between SVG implementations.
-  let radiiCheck = x1_sq / rx_sq + y1_sq / ry_sq;
+  const radiiCheck = x1_sq / rx_sq + y1_sq / ry_sq;
   if (radiiCheck > 1) {
     rx = Math.sqrt(radiiCheck) * rx;
     ry = Math.sqrt(radiiCheck) * ry;
@@ -42,21 +42,21 @@ export function arcToBeziers(xf, yf, rx, ry, xAxisRotation, largeArcFlag, sweepF
   let sign = (largeArcFlag === sweepFlag) ? -1 : 1;
   let sq = ((rx_sq * ry_sq) - (rx_sq * y1_sq) - (ry_sq * x1_sq)) / ((rx_sq * y1_sq) + (ry_sq * x1_sq));
   sq = (sq < 0) ? 0 : sq;
-  let coef = (sign * Math.sqrt(sq));
-  let cx1 = coef * ((rx * y1) / ry);
-  let cy1 = coef * -((ry * x1) / rx);
+  const coef = (sign * Math.sqrt(sq));
+  const cx1 = coef * ((rx * y1) / ry);
+  const cy1 = coef * -((ry * x1) / rx);
 
   // Step 3 : Compute (cx, cy) from (cx1, cy1)
-  let sx2 = (xf + xt) / 2;
-  let sy2 = (yf + yt) / 2;
-  let cx = sx2 + (cosAngle * cx1 - sinAngle * cy1);
-  let cy = sy2 + (sinAngle * cx1 + cosAngle * cy1);
+  const sx2 = (xf + xt) / 2;
+  const sy2 = (yf + yt) / 2;
+  const cx = sx2 + (cosAngle * cx1 - sinAngle * cy1);
+  const cy = sy2 + (sinAngle * cx1 + cosAngle * cy1);
 
   // Step 4 : Compute the angleStart (angle1) and the angleExtent (dangle)
-  let ux = (x1 - cx1) / rx;
-  let uy = (y1 - cy1) / ry;
-  let vx = (-x1 - cx1) / rx;
-  let vy = (-y1 - cy1) / ry;
+  const ux = (x1 - cx1) / rx;
+  const uy = (y1 - cy1) / ry;
+  const vx = (-x1 - cx1) / rx;
+  const vy = (-y1 - cy1) / ry;
   let p, n;
 
   // Compute the angle start
@@ -83,14 +83,14 @@ export function arcToBeziers(xf, yf, rx, ry, xAxisRotation, largeArcFlag, sweepF
   // support arcs that are axis aligned.  Therefore we need to substitute the arc
   // with bezier curves.  The following method call will generate the beziers for
   // a unit circle that covers the arc angles we want.
-  let bezierCoords = unitCircleArcToBeziers(angleStart, angleExtent);
+  const bezierCoords = unitCircleArcToBeziers(angleStart, angleExtent);
 
   // Calculate a transformation matrix that will move and scale these bezier points to the correct location.
   // translate(cx, cy) --> rotate(rotate) --> scale(rx, ry)
   for (let i = 0; i < bezierCoords.length; i += 2) {
     // dot product
-    let x = bezierCoords[i];
-    let y = bezierCoords[i + 1];
+    const x = bezierCoords[i];
+    const y = bezierCoords[i + 1];
     bezierCoords[i] =
       cosAngle * rx * x +
       -sinAngle * ry * y +
@@ -126,17 +126,17 @@ export function arcToBeziers(xf, yf, rx, ry, xAxisRotation, largeArcFlag, sweepF
 * The returned array has the format [x0,y0, x1,y1,...].
 */
 function unitCircleArcToBeziers(angleStart: number, angleExtent: number): number[] {
-  let numSegments = Math.ceil(Math.abs(angleExtent) / 90);
+  const numSegments = Math.ceil(Math.abs(angleExtent) / 90);
 
   angleStart = angleStart * Math.PI / 180;
   angleExtent = angleExtent * Math.PI / 180;
 
-  let angleIncrement = angleExtent / numSegments;
+  const angleIncrement = angleExtent / numSegments;
 
   // The length of each control point vector is given by the following formula.
-  let controlLength = 4 / 3 * Math.sin(angleIncrement / 2) / (1 + Math.cos(angleIncrement / 2));
+  const controlLength = 4 / 3 * Math.sin(angleIncrement / 2) / (1 + Math.cos(angleIncrement / 2));
 
-  let coords = new Array(numSegments * 8);
+  const coords = new Array(numSegments * 8);
   let pos = 0;
 
   for (let i = 0; i < numSegments; i++) {
@@ -176,7 +176,13 @@ function unitCircleArcToBeziers(angleStart: number, angleExtent: number): number
 export function transformArc(initialArc, transformMatrices: Matrix[]) {
   const isNearZero = n => Math.abs(n) < 0.0000000000000001;
   return transformMatrices.reduce((arc, matrix) => {
-    let {rx, ry, xAxisRotation, largeArcFlag, sweepFlag, endX, endY} = arc;
+    let rx = arc.rx;
+    let ry = arc.ry;
+    let xAxisRotation = arc.xAxisRotation;
+    const largeArcFlag = arc.largeArcFlag;
+    let sweepFlag = arc.sweepFlag;
+    const endX = arc.endX;
+    const endY = arc.endY;
 
     xAxisRotation = xAxisRotation * Math.PI / 180;
 
@@ -184,7 +190,7 @@ export function transformArc(initialArc, transformMatrices: Matrix[]) {
     const c = Math.cos(xAxisRotation);
 
     // Matrix representation of transformed ellipse.
-    let m = [];
+    const m = [];
 
     // Build ellipse representation matrix (unit circle transformation).
     // The 2x2 matrix multiplication with the upper 2x2 of a_mat is inlined.

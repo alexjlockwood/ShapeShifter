@@ -91,7 +91,7 @@ export class CommandComponent implements OnInit, AfterViewInit, OnChanges {
 
   get drawCommandEndPointText() {
     const c = this.drawCommand;
-    if (c.svgChar.toUpperCase() === 'Z') {
+    if (c.svgChar === 'Z') {
       return `${c.svgChar}`;
     } else {
       const p = _.last(c.points);
