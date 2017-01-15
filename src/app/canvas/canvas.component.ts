@@ -281,8 +281,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     const points = [];
     layer.pathData.commands.forEach(s => {
       s.commands.forEach(c => {
-        if (c.svgChar.toUpperCase() !== 'Z') {
-          points.push(_.last(c.points));
+        if (c.svgChar !== 'Z') {
+          points.push({p: _.last(c.points), isSplit: c.isSplit});
         }
       });
     });
@@ -290,15 +290,16 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     ctx.save();
     const matrices = Array.from(transforms).reverse();
     for (let i = points.length - 1; i >= 0; i--) {
-      const p = MathUtil.transform(points[i], ...matrices);
-      const color = 'green';
+      const p = MathUtil.transform(points[i].p, ...matrices);
+      const color = points[i].isSplit ? 'orange' : 'green';
+      const radius = this.pathPointRadius * (points[i].isSplit ? 0.8 : 1);
       ctx.beginPath();
-      ctx.arc(p.x, p.y, this.pathPointRadius, 0, 2 * Math.PI, false);
+      ctx.arc(p.x, p.y, radius, 0, 2 * Math.PI, false);
       ctx.fillStyle = color;
       ctx.fill();
       ctx.beginPath();
       ctx.fillStyle = 'white';
-      ctx.font = this.pathPointRadius + 'px serif';
+      ctx.font = radius + 'px serif';
       const text = (i + 1).toString();
       const width = ctx.measureText(text).width;
       // TODO(alockwood): is there a better way to get the height?
@@ -413,7 +414,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   }
 
   /** Draws an command on the specified canvas context. */
-  execute(layer: PathLayer | ClipPathLayer, ctx: CanvasRenderingContext2D) {
+  private execute(layer: PathLayer | ClipPathLayer, ctx: CanvasRenderingContext2D) {
     ctx.beginPath();
     layer.pathData.commands.forEach(s => s.commands.forEach(d => {
       const start = d.points[0];
