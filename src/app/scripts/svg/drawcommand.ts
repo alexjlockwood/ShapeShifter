@@ -10,6 +10,9 @@ import * as SvgUtil from './svgutil';
  */
 export class DrawCommand implements IDrawCommand {
 
+  private readonly points_: ReadonlyArray<Point>;
+  private readonly args_: ReadonlyArray<number>;
+
   static moveTo(start: Point, end: Point, isSplit?: boolean) {
     return new DrawCommand('M', !!isSplit, [start, end]);
   }
@@ -35,9 +38,6 @@ export class DrawCommand implements IDrawCommand {
   static closePath(start: Point, end: Point, isSplit?: boolean) {
     return new DrawCommand('Z', isSplit, [start, end]);
   }
-
-  private readonly points_: ReadonlyArray<Point>;
-  private readonly args_: ReadonlyArray<number>;
 
   private constructor(
     private readonly svgChar_: string,
@@ -97,7 +97,7 @@ export class DrawCommand implements IDrawCommand {
 
   /** Returns a new reversed draw command. */
   reverse(): DrawCommand {
-    let points = this.points.slice();
+    const points = this.points.slice();
     let args = this.args.slice();
     if (this.svgChar === 'A') {
       points.reverse();

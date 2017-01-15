@@ -23,7 +23,7 @@ describe('Walk', () => {
     };
   };
 
-  let walker = new Walker();
+  const walker = new Walker();
 
   it('basic', () => {
     // Updates the value of `node` to be the sum of the values of its subtrees.
@@ -151,7 +151,7 @@ describe('Walk', () => {
       let found = false;
       return node => {
         if (found) {
-          throw 'already found!';
+          throw new Error('already found!');
         }
         found = (node.val === value);
         return found;

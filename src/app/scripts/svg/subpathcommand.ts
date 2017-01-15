@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import { ICommand, IPathCommand, ISubPathCommand, IDrawCommand } from '../model';
+import { IPathCommand, ISubPathCommand, IDrawCommand } from '../model';
 import { DrawCommand } from './drawcommand';
 
 /**
@@ -7,6 +7,8 @@ import { DrawCommand } from './drawcommand';
  * into multiple ISubPathCommands, each beginning with a 'move to' draw command.
  */
 export class SubPathCommand implements ISubPathCommand {
+
+  private readonly commands_: ReadonlyArray<DrawCommand>;
 
   static from(...drawCommands: DrawCommand[]) {
     if (!drawCommands.length) {
@@ -24,8 +26,6 @@ export class SubPathCommand implements ISubPathCommand {
     }
     return cmdGroups.reverse().map(cmds => new SubPathCommand(...cmds.reverse()));
   }
-
-  private readonly commands_: ReadonlyArray<DrawCommand>;
 
   private constructor(...commands: DrawCommand[]) { this.commands_ = commands; }
 

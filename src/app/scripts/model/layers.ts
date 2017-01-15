@@ -39,7 +39,7 @@ abstract class AbstractLayer implements Layer {
       return this;
     }
     if (this.children) {
-      for (let child of this.children) {
+      for (const child of this.children) {
         const layer = child.findLayerById(id);
         if (layer) {
           return layer;

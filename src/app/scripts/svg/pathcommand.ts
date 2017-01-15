@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 import { MathUtil, Bezier, Projection, Point, Matrix, Rect } from '../common';
-import { ICommand, IPathCommand, ISubPathCommand, IDrawCommand } from '../model';
+import { IPathCommand, ISubPathCommand, IDrawCommand } from '../model';
 import * as SvgUtil from './svgutil';
 import * as PathParser from './pathparser';
 import { SubPathCommand } from './subpathcommand';
@@ -24,7 +24,7 @@ export class PathCommand implements IPathCommand {
     if (typeof obj === 'string') {
       this.path_ = obj;
       this.commands_ = SubPathCommand.from(...PathParser.parseCommands(obj));
-      this.commandWrappers_ = this.commands_.map(s => createCommandWrappers(...s.commands))
+      this.commandWrappers_ = this.commands_.map(s => createCommandWrappers(...s.commands));
     } else {
       const drawCommands =
         [].concat.apply([], [].concat.apply([], obj.map(cws => cws)).map(cw => cw.commands));
@@ -143,7 +143,7 @@ export class PathCommand implements IPathCommand {
     let counter = 0;
     let targetCw: CommandWrapper;
     let targetIndex: number;
-    for (let cw of cws) {
+    for (const cw of cws) {
       if (counter + cw.commands.length > drawIndex) {
         targetCw = cw;
         targetIndex = drawIndex - counter;

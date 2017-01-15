@@ -1,4 +1,4 @@
-type PointType = { x: number, y: number };
+interface IPoint { x: number; y: number; };
 
 /** An immutable point class. */
 export class Point {
@@ -6,7 +6,7 @@ export class Point {
 }
 
 /** Applies a list of transformation matrices to the specified point. */
-export function transform(point: PointType, ...matrices: Matrix[]) {
+export function transform(point: IPoint, ...matrices: Matrix[]) {
   return matrices.reduce((p: Point, m: Matrix) => {
     return new Point(
       m.a * p.x + m.c * p.y + m.e * 1,
@@ -16,7 +16,7 @@ export function transform(point: PointType, ...matrices: Matrix[]) {
 }
 
 /** Calculates the distance between two points. */
-export function distance(p1: PointType, p2: PointType) {
+export function distance(p1: IPoint, p2: IPoint) {
   return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
 }
 

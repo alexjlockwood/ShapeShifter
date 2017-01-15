@@ -77,10 +77,10 @@ export class SplitterDirective implements OnInit {
   }
 }
 
-export type DividerDragEvent = {
-  start: Point,
-  move?: Point,
-  end?: Point,
+export interface DividerDragEvent {
+  start: Point;
+  move?: Point;
+  end?: Point;
 };
 
 

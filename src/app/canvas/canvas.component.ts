@@ -78,7 +78,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
                 const end = endLayer.findLayerById(layer.id) as PathLayer;
                 layer.pathData.interpolate(start.pathData, end.pathData, fraction);
               }
-            })
+            });
             this.draw();
           }
         }));
@@ -471,7 +471,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   }
 }
 
-type ProjectionInfo = {
+interface ProjectionInfo {
   projection: Projection;
   split: () => IPathCommand;
-};
+}

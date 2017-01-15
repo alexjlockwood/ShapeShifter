@@ -6,7 +6,7 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
   styleUrls: ['./dropsvg.component.scss']
 })
 export class DropSvgComponent {
-  //@Input() private onSvgFileLoadedFunc: (fileName: string, fileType: string, svgText: string) => void;
+  // @Input() private onSvgFileLoadedFunc: (fileName: string, fileType: string, svgText: string) => void;
   @Input() componentId: string;
   @Output() svgFileLoadedEmitter = new EventEmitter<string>();
 

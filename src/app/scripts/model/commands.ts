@@ -1,9 +1,7 @@
 import { Point, Projection } from '../common';
 
-export interface ICommand { }
-
 /** Defines the set of methods that are seen by the path inspector/canvas. */
-export interface IPathCommand extends ICommand {
+export interface IPathCommand {
 
   /** The list of children sub path commands in this path. */
   commands: ReadonlyArray<ISubPathCommand>;
@@ -59,7 +57,7 @@ export interface IPathCommand extends ICommand {
 }
 
 /** Defines the set of methods that are seen by the sub path inspector/canvas. */
-export interface ISubPathCommand extends ICommand {
+export interface ISubPathCommand {
 
   /** The list of children draw commands in this sub path. */
   commands: ReadonlyArray<IDrawCommand>;
@@ -69,7 +67,7 @@ export interface ISubPathCommand extends ICommand {
 }
 
 /** Defines the set of methods that are seen by the command inspector/canvas. */
-export interface IDrawCommand extends ICommand {
+export interface IDrawCommand {
 
   /** Returns the SVG character for this draw command. */
   svgChar: string;
