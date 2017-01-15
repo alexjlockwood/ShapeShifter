@@ -161,34 +161,25 @@ function createCommandWrappers(...commands: DrawCommand[]) {
     throw new Error('First command must be a move');
   }
 
-  let lastMovePoint;
-  let currentPoint;
-
   const drawCommandWrappers: CommandWrapper[] = [];
   commands.forEach(cmd => {
     if (cmd.svgChar === 'M') {
-      lastMovePoint = cmd.points[1];
       drawCommandWrappers.push(new CommandWrapper(cmd));
-      currentPoint = cmd.points[1];
     } else if (cmd.svgChar === 'L') {
       drawCommandWrappers.push(
         new CommandWrapper(
-          cmd, new Bezier(currentPoint, currentPoint, cmd.points[1], cmd.points[1])));
-      currentPoint = cmd.points[1];
+          cmd, new Bezier(cmd.start, cmd.start, cmd.end, cmd.end)));
     } else if (cmd.svgChar === 'Z') {
       drawCommandWrappers.push(
         new CommandWrapper(
-          cmd, new Bezier(currentPoint, currentPoint, lastMovePoint, lastMovePoint)));
-      currentPoint = lastMovePoint;
+          cmd, new Bezier(cmd.start, cmd.start, cmd.end, cmd.end)));
     } else if (cmd.svgChar === 'C') {
       drawCommandWrappers.push(
         new CommandWrapper(
-          cmd, new Bezier(currentPoint, cmd.points[1], cmd.points[2], cmd.points[3])));
-      currentPoint = cmd.points[3];
+          cmd, new Bezier(cmd.points[0], cmd.points[1], cmd.points[2], cmd.points[3])));
     } else if (cmd.svgChar === 'Q') {
       drawCommandWrappers.push(
-        new CommandWrapper(cmd, new Bezier(currentPoint, cmd.points[1], cmd.points[2])));
-      currentPoint = cmd.points[2];
+        new CommandWrapper(cmd, new Bezier(cmd.points[0], cmd.points[1], cmd.points[2])));
     } else if (cmd.svgChar === 'A') {
       const [
         currentPointX, currentPointY,
@@ -205,8 +196,7 @@ function createCommandWrappers(...commands: DrawCommand[]) {
         // degenerate to line
         const nextPoint = new Point;
         drawCommandWrappers.push(
-          new CommandWrapper(cmd, new Bezier(currentPoint, currentPoint, nextPoint, nextPoint)));
-        currentPoint = nextPoint;
+          new CommandWrapper(cmd, new Bezier(cmd.start, cmd.start, cmd.end, cmd.end)));
         return;
       }
 
@@ -219,15 +209,13 @@ function createCommandWrappers(...commands: DrawCommand[]) {
       const arcBeziers: Bezier[] = [];
       for (let i = 0; i < bezierCoords.length; i += 8) {
         const bez = new Bezier(
-          { x: currentPoint.x, y: currentPoint.y },
+          { x: cmd.start.x, y: cmd.start.y },
           { x: bezierCoords[i + 2], y: bezierCoords[i + 3] },
           { x: bezierCoords[i + 4], y: bezierCoords[i + 5] },
           { x: bezierCoords[i + 6], y: bezierCoords[i + 7] });
         arcBeziers.push(bez);
-        currentPoint = new Point(bezierCoords[i + 6], bezierCoords[i + 7]);
       }
       drawCommandWrappers.push(new CommandWrapper(cmd, ...arcBeziers));
-      currentPoint = new Point(endX, endY);
     }
   });
 
@@ -245,7 +233,7 @@ class CommandWrapper {
   private readonly splits: number[] = [];
   private readonly splitCommands: DrawCommand[] = [];
 
-  constructor(public readonly sourceCommand: DrawCommand, ...sourceBeziers: Bezier[]) {
+  constructor(private readonly sourceCommand: DrawCommand, ...sourceBeziers: Bezier[]) {
     this.sourceBeziers = sourceBeziers;
   }
 
