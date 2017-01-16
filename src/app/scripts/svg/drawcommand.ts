@@ -3,6 +3,8 @@ import { Point, Matrix, MathUtil } from '../common';
 import { IDrawCommand } from '../model';
 import * as SvgUtil from './svgutil';
 
+export type SvgChar = 'M' | 'L' | 'Q' | 'C' | 'A' | 'Z';
+
 /**
  * Implementation of the IDrawCommand interface. Each draw command represents
  * a single SVG drawing command (move, line, quadratic curve, bezier curve,
@@ -40,7 +42,7 @@ export class DrawCommand implements IDrawCommand {
   }
 
   private constructor(
-    private readonly svgChar_: string,
+    private readonly svgChar_: SvgChar,
     private readonly isSplit_: boolean,
     points: Point[], ...args: number[]) {
     this.points_ = points.slice();

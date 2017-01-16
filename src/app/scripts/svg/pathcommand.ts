@@ -83,7 +83,6 @@ export class PathCommand implements IPathCommand {
       const newCmdLists: DrawCommand[][] = [];
       const cmds = s.commands.slice();
       for (let i = 0; i < (s.commands.length - this.shiftOffsets_[subPathIndex] - 1); i++) {
-        console.log(cmds[0].end, _.last(cmds).end);
         const isClosed = cmds[0].end.equals(_.last(cmds).end);
         const moveStartPoint = cmds[0].start;
         cmds.unshift(cmds.pop());
@@ -230,13 +229,11 @@ export class PathCommand implements IPathCommand {
   unsplit(subPathIndex: number, drawIndex: number) {
     // TODO: indexing is still a bit off here I think...
     // need to make sure we mod the offsets properly after unsplitting
-    console.log('before', drawIndex);
     const numCommands = this.commands_[subPathIndex].commands.length;
     drawIndex += this.shiftOffsets_[subPathIndex];
     if (drawIndex >= numCommands - 1) {
       drawIndex -= numCommands - 1;
     }
-    console.log('after', drawIndex);
     const cws = this.commandWrappers_[subPathIndex];
     let counter = 0;
     let targetCw: CommandWrapper;
