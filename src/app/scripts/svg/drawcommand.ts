@@ -30,10 +30,10 @@ export class DrawCommandImpl implements DrawCommand {
   get svgChar() { return this.svgChar_; }
 
   // Overrides the DrawCommand interface.
-  get points(): ReadonlyArray<Point> { return this.points_; }
+  get points() { return this.points_; }
 
   // Overrides the DrawCommand interface.
-  get args(): ReadonlyArray<number> { return this.args_; }
+  get args() { return this.args_; }
 
   // Overrides the DrawCommand interface.
   get start() { return this.points[0]; }
@@ -107,10 +107,7 @@ export class DrawCommandImpl implements DrawCommand {
 
 function pointsToArgs(points: Point[]): number[] {
   const args = [];
-  points.forEach(p => {
-    args.push(p.x);
-    args.push(p.y);
-  });
+  points.forEach(p => { args.push(p.x); args.push(p.y); });
   return args;
 }
 

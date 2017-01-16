@@ -147,12 +147,8 @@ class PathCommandImpl implements PathCommand {
             }
             args[x] = MathUtil.lerp(d1.args[x], d2.args[x], fraction);
           });
-          drawCommands.push(
-            new DrawCommandImpl(
-              d.svgChar,
-              d.isSplit,
-              [new Point(args[0], args[1]), new Point(args[7], args[8])],
-              ...args));
+          const points = [new Point(args[0], args[1]), new Point(args[7], args[8])];
+          drawCommands.push(new DrawCommandImpl(d.svgChar, d.isSplit, points, ...args));
         } else {
           const d1 = start.commands[i].commands[j];
           const d2 = end.commands[i].commands[j];
@@ -166,11 +162,7 @@ class PathCommandImpl implements PathCommand {
               points.push(new Point(px, py));
             }
           }
-          drawCommands.push(
-            new DrawCommandImpl(
-              d.svgChar,
-              d.isSplit,
-              points));
+          drawCommands.push(new DrawCommandImpl(d.svgChar, d.isSplit, points));
         }
       });
     });
@@ -180,21 +172,23 @@ class PathCommandImpl implements PathCommand {
 
   // Overrides PathCommand interface.
   project(point: Point): { projection: Projection, split: () => PathCommand } | undefined {
-    const drawCommandWrappers: CommandWrapper[] =
-      _.flatMap(this.commandWrappers_, cws => cws);
-    return drawCommandWrappers.map(cw => {
-      const projection = cw.project(point);
-      return {
-        projection,
-        split: () => {
-          cw.split(projection.t);
-          return new PathCommandImpl(this);
-        }
-      };
-    }).filter(item => !!item.projection)
+    return _.chain(this.commandWrappers_)
+      .flatMap(cws => cws)
+      .map(cw => {
+        const projection = cw.project(point);
+        return {
+          projection,
+          split: () => {
+            cw.split(projection.t);
+            return new PathCommandImpl(this);
+          }
+        };
+      })
+      .filter(item => !!item.projection)
       .reduce((prev, curr) => {
         return prev && prev.projection.d < curr.projection.d ? prev : curr;
-      }, undefined);
+      }, undefined)
+      .value();
   }
 
   // Overrides PathCommand interface.
@@ -276,7 +270,7 @@ class CommandWrapper {
   // TODO(alockwood): possible to have more than one bezier for elliptical arcs?
   private readonly svgChar: string;
   private backingCommand: DrawCommandImpl;
-  private backingBeziers: Bezier[];
+  private backingBeziers: ReadonlyArray<Bezier>;
   private splits: number[] = [];
   private splitCommands: DrawCommandImpl[] = [];
 
@@ -317,6 +311,7 @@ class CommandWrapper {
     this.rebuildSplitCommands();
   }
 
+  // TODO: make this entirely immutable...
   private rebuildSplitCommands() {
     this.splitCommands = [];
     if (!this.splits.length) {

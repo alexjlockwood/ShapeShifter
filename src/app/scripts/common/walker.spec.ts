@@ -57,7 +57,7 @@ describe('Walk', () => {
   });
 
   it('simpleMap', () => {
-    const visitor = function(node, key, parent) {
+    const visitor = function(this: any, node, key, parent) {
       if (_.has(node, 'val')) {
         return node.val;
       }

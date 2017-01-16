@@ -302,7 +302,8 @@ export function commandsToString(commands: DrawCommandImpl[]) {
       return;
     }
     const isClosePathCommand = cmd.svgChar === 'Z';
-    const pointsToNumberListFunc = (...points: Point[]) => points.reduce((list, p) => list.concat(p.x, p.y), []);
+    const pointsToNumberListFunc =
+      (...points: Point[]) => points.reduce((list, p) => list.concat(p.x, p.y), []);
     const args = pointsToNumberListFunc(...(isClosePathCommand ? [] : cmd.points.slice(1)));
     tokens.splice(tokens.length, 0, ...args.map(n => Number(n.toFixed(3)).toString()));
   });
