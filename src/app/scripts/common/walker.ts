@@ -158,6 +158,7 @@ function walkInternal<T>(
         if (subResults) {
           subResults[k] = result;
         }
+        return undefined;
       });
       if (stop) {
         return stopWalk;
