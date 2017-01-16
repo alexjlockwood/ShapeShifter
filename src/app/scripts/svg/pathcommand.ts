@@ -228,6 +228,15 @@ export class PathCommand implements IPathCommand {
 
   // Overrides IPathCommand interface.
   unsplit(subPathIndex: number, drawIndex: number) {
+    // TODO: indexing is still a bit off here I think...
+    // need to make sure we mod the offsets properly after unsplitting
+    console.log('before', drawIndex);
+    const numCommands = this.commands_[subPathIndex].commands.length;
+    drawIndex += this.shiftOffsets_[subPathIndex];
+    if (drawIndex >= numCommands - 1) {
+      drawIndex -= numCommands - 1;
+    }
+    console.log('after', drawIndex);
     const cws = this.commandWrappers_[subPathIndex];
     let counter = 0;
     let targetCw: CommandWrapper;
