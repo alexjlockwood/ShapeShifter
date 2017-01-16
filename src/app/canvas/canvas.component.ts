@@ -130,31 +130,53 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     if (!this.isViewInit || !this.vectorLayer) {
       return;
     }
-    this.drawCanvas();
-  }
-
-  private drawCanvas() {
-    if (!this.isViewInit || !this.vectorLayer) {
-      return;
-    }
 
     const ctx = this.canvas.get(0).getContext('2d');
     ctx.save();
     ctx.scale(this.backingStoreScale, this.backingStoreScale);
     ctx.clearRect(0, 0, this.vectorLayer.width, this.vectorLayer.height);
-    this.drawLayer(this.vectorLayer, ctx, []);
+    this.recurseAndDrawLayers({
+      layer: this.vectorLayer,
+      ctx,
+      transforms: [],
+      pathFunc: this.drawPathLayer,
+      clipPathFunc: (args: LayerArgs<ClipPathLayer>) => {
+        executePathData(args.layer, args.ctx, args.transforms);
+        ctx.clip();
+      },
+    });
     ctx.restore();
 
     if (this.shouldLabelPoints_ && this.vectorLayerType !== VectorLayerType.Preview) {
-      this.drawPathPoints(this.vectorLayer, ctx, [
-        new Matrix(this.backingStoreScale, 0, 0, this.backingStoreScale, 0, 0)
-      ]);
+      this.recurseAndDrawLayers({
+        layer: this.vectorLayer,
+        ctx,
+        transforms: [
+          new Matrix(this.backingStoreScale, 0, 0, this.backingStoreScale, 0, 0)
+        ],
+        pathFunc: this.drawPathLayerPoints,
+      });
     }
 
     if (this.closestProjectionInfo) {
-      this.drawClosestProjection(this.vectorLayer, ctx, [
-        new Matrix(this.backingStoreScale, 0, 0, this.backingStoreScale, 0, 0)
-      ]);
+      this.recurseAndDrawLayers({
+        layer: this.vectorLayer,
+        ctx,
+        transforms: [
+          new Matrix(this.backingStoreScale, 0, 0, this.backingStoreScale, 0, 0)
+        ],
+        pathFunc: (args: LayerArgs<PathLayer>) => {
+          args.ctx.save();
+          const matrices = args.transforms.slice().reverse();
+          const proj = this.closestProjectionInfo.projection;
+          const p = MathUtil.transform({ x: proj.x, y: proj.y }, ...matrices);
+          args.ctx.beginPath();
+          args.ctx.arc(p.x, p.y, this.pathPointRadius, 0, 2 * Math.PI, false);
+          args.ctx.fillStyle = 'red';
+          args.ctx.fill();
+          args.ctx.restore();
+        },
+      });
     }
 
     // draw pixel grid
@@ -177,47 +199,9 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  private drawLayer(layer: Layer, ctx: CanvasRenderingContext2D, transforms: Matrix[]) {
-    if (layer instanceof VectorLayer) {
-      layer.children.forEach(l => this.drawLayer(l, ctx, transforms));
-    } else if (layer instanceof GroupLayer) {
-      this.drawGroupLayer(layer, ctx, transforms);
-    } else if (layer instanceof ClipPathLayer) {
-      this.drawClipPathLayer(layer, ctx, transforms);
-    } else if (layer instanceof PathLayer) {
-      this.drawPathLayer(layer, ctx, transforms);
-    }
-  }
-
-  private drawGroupLayer(
-    layer: GroupLayer, ctx: CanvasRenderingContext2D, transforms: Matrix[]) {
-    const matrices = this.toMatrices(layer);
-    transforms.splice(transforms.length, 0, ...matrices);
-    ctx.save();
-    layer.children.forEach(l => this.drawLayer(l, ctx, transforms));
-    ctx.restore();
-    transforms.splice(-matrices.length, matrices.length);
-  }
-
-  private drawClipPathLayer(
-    layer: ClipPathLayer,
-    ctx: CanvasRenderingContext2D,
-    transforms: Matrix[]) {
-    ctx.save();
-    transforms.forEach(m => ctx.transform(m.a, m.b, m.c, m.d, m.e, m.f));
-    this.execute(layer, ctx);
-    ctx.restore();
-
-    // clip further layers
-    ctx.clip();
-  }
-
   // TODO(alockwood): update layer.pathData.length so that it reflects transforms such as scale
-  private drawPathLayer(layer: PathLayer, ctx: CanvasRenderingContext2D, transforms: Matrix[]) {
-    ctx.save();
-    transforms.forEach(m => ctx.transform(m.a, m.b, m.c, m.d, m.e, m.f));
-    this.execute(layer, ctx);
-    ctx.restore();
+  private drawPathLayer({layer, ctx, transforms}: LayerArgs<PathLayer>) {
+    executePathData(layer, ctx, transforms);
 
     // draw the actual layer
     ctx.strokeStyle = ColorUtil.androidToCssColor(layer.strokeColor, layer.strokeAlpha);
@@ -261,34 +245,18 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  private drawPathPoints(layer: Layer, ctx: CanvasRenderingContext2D, transforms: Matrix[]) {
-    if (layer instanceof VectorLayer) {
-      layer.children.forEach(l => this.drawPathPoints(l, ctx, transforms));
-    } else if (layer instanceof GroupLayer) {
-      const matrices = this.toMatrices(layer);
-      transforms.splice(transforms.length, 0, ...matrices);
-      ctx.save();
-      layer.children.forEach(l => this.drawPathPoints(l, ctx, transforms));
-      ctx.restore();
-      transforms.splice(-matrices.length, matrices.length);
-    } else if (layer instanceof PathLayer) {
-      this.drawPathLayerPoints(layer, ctx, transforms);
-    }
-  }
-
-  private drawPathLayerPoints(
-    layer: PathLayer, ctx: CanvasRenderingContext2D, transforms: Matrix[]) {
+  private drawPathLayerPoints({layer, ctx, transforms}: LayerArgs<PathLayer>) {
     const points = [];
     layer.pathData.commands.forEach(s => {
       s.commands.forEach(c => {
         if (c.svgChar !== 'Z') {
-          points.push({p: _.last(c.points), isSplit: c.isSplit});
+          points.push({ p: _.last(c.points), isSplit: c.isSplit });
         }
       });
     });
 
     ctx.save();
-    const matrices = Array.from(transforms).reverse();
+    const matrices = transforms.slice().reverse();
     for (let i = points.length - 1; i >= 0; i--) {
       const p = MathUtil.transform(points[i].p, ...matrices);
       const color = i === 0 ? 'blue' : points[i].isSplit ? 'orange' : 'green';
@@ -308,30 +276,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       ctx.fill();
     }
     ctx.restore();
-  }
-
-  private drawClosestProjection(
-    layer: Layer, ctx: CanvasRenderingContext2D, transforms: Matrix[]) {
-    if (layer instanceof VectorLayer) {
-      layer.children.forEach(l => this.drawClosestProjection(l, ctx, transforms));
-    } else if (layer instanceof GroupLayer) {
-      const matrices = this.toMatrices(layer);
-      transforms.splice(transforms.length, 0, ...matrices);
-      ctx.save();
-      layer.children.forEach(l => this.drawClosestProjection(l, ctx, transforms));
-      ctx.restore();
-      transforms.splice(-matrices.length, matrices.length);
-    } else if (layer instanceof PathLayer) {
-      ctx.save();
-      const matrices = Array.from(transforms).reverse();
-      const proj = this.closestProjectionInfo.projection;
-      const p = MathUtil.transform({ x: proj.x, y: proj.y }, ...matrices);
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, this.pathPointRadius, 0, 2 * Math.PI, false);
-      ctx.fillStyle = 'red';
-      ctx.fill();
-      ctx.restore();
-    }
   }
 
   // TODO(alockwood): need to transform the mouse point coordinates using the group transforms
@@ -401,75 +345,116 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  private toMatrices(layer: GroupLayer) {
-    const cosr = Math.cos(layer.rotation * Math.PI / 180);
-    const sinr = Math.sin(layer.rotation * Math.PI / 180);
-    return [
-      new Matrix(1, 0, 0, 1, layer.pivotX, layer.pivotY),
-      new Matrix(1, 0, 0, 1, layer.translateX, layer.translateY),
-      new Matrix(cosr, sinr, -sinr, cosr, 0, 0),
-      new Matrix(layer.scaleX, 0, 0, layer.scaleY, 0, 0),
-      new Matrix(1, 0, 0, 1, -layer.pivotX, -layer.pivotY)
-    ];
-  }
-
-  /** Draws an command on the specified canvas context. */
-  private execute(layer: PathLayer | ClipPathLayer, ctx: CanvasRenderingContext2D) {
-    ctx.beginPath();
-    layer.pathData.commands.forEach(s => s.commands.forEach(d => {
-      const start = d.points[0];
-      const end = _.last(d.points);
-      if (d.svgChar === 'M') {
-        ctx.moveTo(end.x, end.y);
-      } else if (d.svgChar === 'L') {
-        ctx.lineTo(end.x, end.y);
-      } else if (d.svgChar === 'Q') {
-        ctx.quadraticCurveTo(
-          d.points[1].x, d.points[1].y,
-          d.points[2].x, d.points[2].y);
-      } else if (d.svgChar === 'C') {
-        ctx.bezierCurveTo(
-          d.points[1].x, d.points[1].y,
-          d.points[2].x, d.points[2].y,
-          d.points[3].x, d.points[3].y);
-      } else if (d.svgChar === 'Z') {
-        ctx.closePath();
-      } else if (d.svgChar === 'A') {
-        this.executeArc(ctx, d.args);
+  /**
+   * Recursively draws a vector layer, applying group transforms at each level of the
+   * tree so that children layers can draw their content properly.
+   */
+  private recurseAndDrawLayers(args: LayerArgs<Layer>) {
+    const {layer, ctx, transforms, pathFunc, clipPathFunc} = args;
+    if (layer instanceof VectorLayer || layer instanceof GroupLayer) {
+      const matrices = [];
+      if (layer instanceof GroupLayer) {
+        const cosr = Math.cos(layer.rotation * Math.PI / 180);
+        const sinr = Math.sin(layer.rotation * Math.PI / 180);
+        matrices.push(...[
+          new Matrix(1, 0, 0, 1, layer.pivotX, layer.pivotY),
+          new Matrix(1, 0, 0, 1, layer.translateX, layer.translateY),
+          new Matrix(cosr, sinr, -sinr, cosr, 0, 0),
+          new Matrix(layer.scaleX, 0, 0, layer.scaleY, 0, 0),
+          new Matrix(1, 0, 0, 1, -layer.pivotX, -layer.pivotY)
+        ]);
       }
-    }));
+      transforms.splice(transforms.length, 0, ...matrices);
+      ctx.save();
+      layer.children.forEach(
+        l => this.recurseAndDrawLayers({ layer: l, ctx, transforms, pathFunc, clipPathFunc }));
+      ctx.restore();
+      transforms.splice(-matrices.length, matrices.length);
+    } else if (layer instanceof PathLayer) {
+      if (pathFunc) {
+        pathFunc.call(this, { layer, ctx, transforms });
+      }
+    } else if (layer instanceof ClipPathLayer) {
+      if (clipPathFunc) {
+        clipPathFunc.call(this, { layer, ctx, transforms });
+      }
+    }
   }
+}
 
-  /** Draws an elliptical arc on the specified canvas context. */
-  private executeArc(ctx: CanvasRenderingContext2D, arcArgs) {
-    const [currentPointX, currentPointY,
-      rx, ry, xAxisRotation,
-      largeArcFlag, sweepFlag,
-      tempPoint1X, tempPoint1Y] = arcArgs;
+/** Draws an command on the specified canvas context. */
+function executePathData(
+  layer: PathLayer | ClipPathLayer,
+  ctx: CanvasRenderingContext2D,
+  transforms: Matrix[]) {
 
-    if (currentPointX === tempPoint1X && currentPointY === tempPoint1Y) {
-      // degenerate to point
-      return;
-    }
+  ctx.save();
+  transforms.forEach(m => ctx.transform(m.a, m.b, m.c, m.d, m.e, m.f));
 
-    if (rx === 0 || ry === 0) {
-      // degenerate to line
-      ctx.lineTo(tempPoint1X, tempPoint1Y);
-      return;
-    }
-
-    const bezierCoords = arcToBeziers(currentPointX, currentPointY,
-      rx, ry, xAxisRotation,
-      largeArcFlag, sweepFlag,
-      tempPoint1X, tempPoint1Y);
-
-    for (let i = 0; i < bezierCoords.length; i += 8) {
+  ctx.beginPath();
+  layer.pathData.commands.forEach(s => s.commands.forEach(d => {
+    const start = d.points[0];
+    const end = _.last(d.points);
+    if (d.svgChar === 'M') {
+      ctx.moveTo(end.x, end.y);
+    } else if (d.svgChar === 'L') {
+      ctx.lineTo(end.x, end.y);
+    } else if (d.svgChar === 'Q') {
+      ctx.quadraticCurveTo(
+        d.points[1].x, d.points[1].y,
+        d.points[2].x, d.points[2].y);
+    } else if (d.svgChar === 'C') {
       ctx.bezierCurveTo(
-        bezierCoords[i + 2], bezierCoords[i + 3],
-        bezierCoords[i + 4], bezierCoords[i + 5],
-        bezierCoords[i + 6], bezierCoords[i + 7]);
+        d.points[1].x, d.points[1].y,
+        d.points[2].x, d.points[2].y,
+        d.points[3].x, d.points[3].y);
+    } else if (d.svgChar === 'Z') {
+      ctx.closePath();
+    } else if (d.svgChar === 'A') {
+      executeArc(ctx, d.args);
     }
+  }));
+
+  ctx.restore();
+}
+
+/** Draws an elliptical arc on the specified canvas context. */
+function executeArc(ctx: CanvasRenderingContext2D, arcArgs) {
+  const [currentPointX, currentPointY,
+    rx, ry, xAxisRotation,
+    largeArcFlag, sweepFlag,
+    tempPoint1X, tempPoint1Y] = arcArgs;
+
+  if (currentPointX === tempPoint1X && currentPointY === tempPoint1Y) {
+    // degenerate to point
+    return;
   }
+
+  if (rx === 0 || ry === 0) {
+    // degenerate to line
+    ctx.lineTo(tempPoint1X, tempPoint1Y);
+    return;
+  }
+
+  const bezierCoords = arcToBeziers(currentPointX, currentPointY,
+    rx, ry, xAxisRotation,
+    largeArcFlag, sweepFlag,
+    tempPoint1X, tempPoint1Y);
+
+  for (let i = 0; i < bezierCoords.length; i += 8) {
+    ctx.bezierCurveTo(
+      bezierCoords[i + 2], bezierCoords[i + 3],
+      bezierCoords[i + 4], bezierCoords[i + 5],
+      bezierCoords[i + 6], bezierCoords[i + 7]);
+  }
+}
+
+interface LayerArgs<T extends Layer> {
+  layer: T;
+  ctx: CanvasRenderingContext2D;
+  transforms: Matrix[];
+  pathFunc?: (args: LayerArgs<PathLayer>) => void;
+  clipPathFunc?: (args: LayerArgs<ClipPathLayer>) => void;
 }
 
 interface ProjectionInfo {
