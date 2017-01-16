@@ -1,9 +1,7 @@
 import * as _ from 'lodash';
 import { Point, Matrix, MathUtil } from '../common';
-import { DrawCommand } from '../model';
+import { DrawCommand, SvgChar } from '../model';
 import * as SvgUtil from './svgutil';
-
-export type SvgChar = 'M' | 'L' | 'Q' | 'C' | 'A' | 'Z';
 
 /**
  * Implementation of the IDrawCommand interface. Each draw command represents
@@ -14,32 +12,6 @@ export class DrawCommandImpl implements DrawCommand {
 
   private readonly points_: ReadonlyArray<Point>;
   private readonly args_: ReadonlyArray<number>;
-
-  static moveTo(start: Point, end: Point, isSplit?: boolean) {
-    return new DrawCommandImpl('M', !!isSplit, [start, end]);
-  }
-
-  static lineTo(start: Point, end: Point, isSplit?: boolean) {
-    return new DrawCommandImpl('L', !!isSplit, [start, end]);
-  }
-
-  static quadTo(start: Point, cp: Point, end: Point, isSplit?: boolean) {
-    return new DrawCommandImpl('Q', !!isSplit, [start, cp, end]);
-  }
-
-  static cubicTo(start: Point, cp1: Point, cp2: Point, end: Point, isSplit?: boolean) {
-    return new DrawCommandImpl('C', !!isSplit, [start, cp1, cp2, end]);
-  }
-
-  static arcTo(start: Point, rx: number, ry: number, xAxisRotation: number,
-    largeArcFlag: number, sweepFlag: number, end: Point, isSplit?: boolean) {
-    return new DrawCommandImpl('A', !!isSplit, [start, end],
-      start.x, start.y, rx, ry, xAxisRotation, largeArcFlag, sweepFlag, end.x, end.y);
-  }
-
-  static closePath(start: Point, end: Point, isSplit?: boolean) {
-    return new DrawCommandImpl('Z', isSplit, [start, end]);
-  }
 
   constructor(
     private readonly svgChar_: SvgChar,
@@ -54,21 +26,22 @@ export class DrawCommandImpl implements DrawCommand {
     }
   }
 
-  // Overrides IDrawCommand interface.
+  // Overrides the DrawCommand interface.
   get svgChar() { return this.svgChar_; }
 
-  // Overrides IDrawCommand interface.
+  // Overrides the DrawCommand interface.
   get points(): ReadonlyArray<Point> { return this.points_; }
 
-  // Overrides IDrawCommand interface.
+  // Overrides the DrawCommand interface.
   get args(): ReadonlyArray<number> { return this.args_; }
 
-  /** Returns the command's starting point. */
+  // Overrides the DrawCommand interface.
   get start() { return this.points[0]; }
 
-  /** Returns the command's ending point. */
+  // Overrides the DrawCommand interface.
   get end() { return _.last(this.points); }
 
+  // Overrides the DrawCommand interface.
   get isSplit() {
     return this.isSplit_;
   }
@@ -139,4 +112,30 @@ function pointsToArgs(points: Point[]): number[] {
     args.push(p.y);
   });
   return args;
+}
+
+export function moveTo(start: Point, end: Point, isSplit?: boolean) {
+  return new DrawCommandImpl('M', !!isSplit, [start, end]);
+}
+
+export function lineTo(start: Point, end: Point, isSplit?: boolean) {
+  return new DrawCommandImpl('L', !!isSplit, [start, end]);
+}
+
+export function quadTo(start: Point, cp: Point, end: Point, isSplit?: boolean) {
+  return new DrawCommandImpl('Q', !!isSplit, [start, cp, end]);
+}
+
+export function cubicTo(start: Point, cp1: Point, cp2: Point, end: Point, isSplit?: boolean) {
+  return new DrawCommandImpl('C', !!isSplit, [start, cp1, cp2, end]);
+}
+
+export function arcTo(start: Point, rx: number, ry: number, xAxisRotation: number,
+  largeArcFlag: number, sweepFlag: number, end: Point, isSplit?: boolean) {
+  return new DrawCommandImpl('A', !!isSplit, [start, end],
+    start.x, start.y, rx, ry, xAxisRotation, largeArcFlag, sweepFlag, end.x, end.y);
+}
+
+export function closePath(start: Point, end: Point, isSplit?: boolean) {
+  return new DrawCommandImpl('Z', isSplit, [start, end]);
 }

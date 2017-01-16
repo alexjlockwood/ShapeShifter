@@ -47,6 +47,7 @@ export interface PathCommand {
    * Splits the draw command at the specified index.
    * Returns a new path command object.
    */
+  // TODO: determine whether we should implement this?
   // split(subPathIndex: number, drawIndex: number): IPathCommand;
 
   /**
@@ -79,7 +80,7 @@ export interface SubPathCommand {
 export interface DrawCommand {
 
   /** Returns the SVG character for this draw command. */
-  svgChar: string;
+  svgChar: SvgChar;
 
   /** Returns the raw number arguments for this draw command. */
   args: ReadonlyArray<number>;
@@ -87,9 +88,17 @@ export interface DrawCommand {
   /** Returns the points for this draw command. */
   points: ReadonlyArray<Point>;
 
+  /** Returns the command's starting point. */
+  start: Point;
+
+  /** Returns the command's ending point. */
+  end: Point;
+
   /**
    * Returns true iff the draw command was created as a result of being split.
    * Only split commands are able to be editted and deleted via the inspector/canvas.
    */
   isSplit: boolean;
 }
+
+export type SvgChar = 'M' | 'L' | 'Q' | 'C' | 'A' | 'Z';

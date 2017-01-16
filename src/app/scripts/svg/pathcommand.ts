@@ -4,13 +4,15 @@ import { PathCommand, SubPathCommand, DrawCommand } from '../model';
 import * as SvgUtil from './svgutil';
 import * as PathParser from './pathparser';
 import { SubPathCommandImpl } from './subpathcommand';
-import { DrawCommandImpl } from './drawcommand';
+import {
+  DrawCommandImpl, moveTo, lineTo, quadTo, cubicTo, arcTo, closePath
+} from './drawcommand';
 
 /**
  * Implementation of the PathCommand interface. Represents all of the information
  * associated with a path layer's pathData attribute.
  */
-export class PathCommandImpl implements PathCommand {
+class PathCommandImpl implements PathCommand {
 
   // TODO: fix split/unsplitting paths after reversals/shifts. the indexing is messed up right now
   private commandWrappers_: CommandWrapper[][];
@@ -19,12 +21,8 @@ export class PathCommandImpl implements PathCommand {
   private path_: string;
   private isReversed = false;
 
-  static from(path: string) {
-    return new PathCommandImpl(path);
-  }
-
   // TODO(alockwood): add method to calculate bounds and length
-  private constructor(obj: string | PathCommandImpl | DrawCommandImpl[]) {
+  constructor(obj: string | PathCommandImpl | DrawCommandImpl[]) {
     if (typeof obj === 'string') {
       this.path_ = obj;
       this.commands_ = SubPathCommandImpl.from(...PathParser.parseCommands(obj));
@@ -65,17 +63,17 @@ export class PathCommandImpl implements PathCommand {
         return new SubPathCommandImpl(firstMoveCommand);
       }
       const newCmds: DrawCommandImpl[] = [
-        DrawCommandImpl.moveTo(firstMoveCommand.start, _.last(cmds).end),
+        moveTo(firstMoveCommand.start, _.last(cmds).end),
       ];
       for (let i = cmds.length - 1; i >= 1; i--) {
         newCmds.push(cmds[i].reverse());
       }
       const secondCmd = newCmds[1];
       if (secondCmd.svgChar === 'Z') {
-        newCmds[1] = DrawCommandImpl.lineTo(secondCmd.start, secondCmd.end);
+        newCmds[1] = lineTo(secondCmd.start, secondCmd.end);
         const lastCmd = _.last(newCmds);
         newCmds[newCmds.length - 1] =
-          DrawCommandImpl.closePath(lastCmd.start, lastCmd.end);
+          closePath(lastCmd.start, lastCmd.end);
       }
       return new SubPathCommandImpl(...newCmds);
     });
@@ -98,14 +96,14 @@ export class PathCommandImpl implements PathCommand {
 
         if (cmds[0].svgChar === 'Z') {
           const lastCmd = _.last(cmds);
-          cmds[cmds.length - 1] = DrawCommandImpl.closePath(lastCmd.start, lastCmd.end);
-          cmds[1] = DrawCommandImpl.lineTo(cmds[0].start, cmds[0].end);
+          cmds[cmds.length - 1] = closePath(lastCmd.start, lastCmd.end);
+          cmds[1] = lineTo(cmds[0].start, cmds[0].end);
           // TODO(alockwood): confirm that this start point is correct for paths w/ multiple moves
-          cmds[0] = DrawCommandImpl.moveTo(moveStartPoint, cmds[1].start);
+          cmds[0] = moveTo(moveStartPoint, cmds[1].start);
         } else {
           cmds[1] = cmds[0];
           // TODO(alockwood): confirm that this start point is correct for paths w/ multiple moves
-          cmds[0] = DrawCommandImpl.moveTo(moveStartPoint, _.last(cmds).end);
+          cmds[0] = moveTo(moveStartPoint, _.last(cmds).end);
         }
       }
       return new SubPathCommandImpl(...cmds);
@@ -341,13 +339,13 @@ class CommandWrapper {
   private bezierToDrawCommand(splitBezier: Bezier, isSplit: boolean) {
     const bez = splitBezier;
     if (this.svgChar === 'L') {
-      return DrawCommandImpl.lineTo(bez.start, bez.end, isSplit);
+      return lineTo(bez.start, bez.end, isSplit);
     } else if (this.svgChar === 'Z') {
-      return DrawCommandImpl.closePath(bez.start, bez.end, isSplit);
+      return closePath(bez.start, bez.end, isSplit);
     } else if (this.svgChar === 'Q') {
-      return DrawCommandImpl.quadTo(bez.start, bez.cp1, bez.end, isSplit);
+      return quadTo(bez.start, bez.cp1, bez.end, isSplit);
     } else if (this.svgChar === 'C') {
-      return DrawCommandImpl.cubicTo(bez.start, bez.cp1, bez.cp2, bez.end, isSplit);
+      return cubicTo(bez.start, bez.cp1, bez.cp2, bez.end, isSplit);
     } else {
       throw new Error('TODO: implement split for ellpitical arcs');
     }
@@ -410,4 +408,8 @@ function drawCommandToBeziers(cmd: DrawCommandImpl): Bezier[] {
   }
 
   return [];
+}
+
+export function createPathCommand(path: string) {
+  return new PathCommandImpl(path);
 }

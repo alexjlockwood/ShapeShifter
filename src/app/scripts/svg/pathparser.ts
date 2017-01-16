@@ -1,6 +1,8 @@
 import { Point, Matrix, MathUtil } from '../common';
 import * as SvgUtil from './svgutil';
-import { DrawCommandImpl } from './drawcommand';
+import {
+  DrawCommandImpl, moveTo, lineTo, quadTo, cubicTo, arcTo, closePath
+} from './drawcommand';
 
 /**
  * Takes an SVG path string (i.e. the text specified in the path's 'd' attribute) and returns
@@ -103,10 +105,10 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): DrawComm
 
           if (isFirstPoint) {
             isFirstPoint = false;
-            commands.push(DrawCommandImpl.moveTo(currentPoint, nextPoint));
+            commands.push(moveTo(currentPoint, nextPoint));
             lastMovePoint = nextPoint;
           } else {
-            commands.push(DrawCommandImpl.lineTo(currentPoint, nextPoint));
+            commands.push(lineTo(currentPoint, nextPoint));
           }
 
           currentControlPoint = undefined;
@@ -124,7 +126,7 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): DrawComm
           const cp1 = consumePoint_(relative);
           const cp2 = consumePoint_(relative);
           const end = consumePoint_(relative);
-          commands.push(DrawCommandImpl.cubicTo(currentPoint, cp1, cp2, end));
+          commands.push(cubicTo(currentPoint, cp1, cp2, end));
 
           currentControlPoint = cp2;
           currentPoint = end;
@@ -148,7 +150,7 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): DrawComm
           } else {
             cp1 = cp2;
           }
-          commands.push(DrawCommandImpl.cubicTo(currentPoint, cp1, cp2, end));
+          commands.push(cubicTo(currentPoint, cp1, cp2, end));
 
           currentControlPoint = cp2;
           currentPoint = end;
@@ -164,7 +166,7 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): DrawComm
         while (advanceToNextToken_() === Token.Value) {
           const cp = consumePoint_(relative);
           const end = consumePoint_(relative);
-          commands.push(DrawCommandImpl.quadTo(currentPoint, cp, end));
+          commands.push(quadTo(currentPoint, cp, end));
 
           currentControlPoint = cp;
           currentPoint = end;
@@ -187,7 +189,7 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): DrawComm
           } else {
             cp = end;
           }
-          commands.push(DrawCommandImpl.quadTo(currentPoint, cp, end));
+          commands.push(quadTo(currentPoint, cp, end));
 
           currentControlPoint = cp;
           currentPoint = end;
@@ -202,7 +204,7 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): DrawComm
 
         while (advanceToNextToken_() === Token.Value) {
           const end = consumePoint_(relative);
-          commands.push(DrawCommandImpl.lineTo(currentPoint, end));
+          commands.push(lineTo(currentPoint, end));
 
           currentControlPoint = undefined;
           currentPoint = end;
@@ -222,7 +224,7 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): DrawComm
             x += currentPoint.x;
           }
           const end = new Point(x, y);
-          commands.push(DrawCommandImpl.lineTo(currentPoint, end));
+          commands.push(lineTo(currentPoint, end));
 
           currentControlPoint = undefined;
           currentPoint = end;
@@ -242,7 +244,7 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): DrawComm
             y += currentPoint.y;
           }
           const end = new Point(x, y);
-          commands.push(DrawCommandImpl.lineTo(currentPoint, end));
+          commands.push(lineTo(currentPoint, end));
 
           currentControlPoint = undefined;
           currentPoint = end;
@@ -263,7 +265,7 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): DrawComm
           const sweepFlag = consumeValue_();
           const tempPoint1 = consumePoint_(relative);
 
-          commands.push(DrawCommandImpl.arcTo(
+          commands.push(arcTo(
             new Point(currentPoint.x, currentPoint.y),
             rx, ry,
             xAxisRotation, largeArcFlag, sweepFlag,
@@ -279,7 +281,7 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): DrawComm
         if (!currentPoint) {
           throw new Error('Current point does not exist');
         }
-        commands.push(DrawCommandImpl.closePath(currentPoint, lastMovePoint));
+        commands.push(closePath(currentPoint, lastMovePoint));
       }
         break;
     }
