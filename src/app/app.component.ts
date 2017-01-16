@@ -6,7 +6,7 @@ import { SvgLoader } from './scripts/svg';
 import { Point } from './scripts/common';
 import { Subscription } from 'rxjs/Subscription';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
-import { GlobalStateService, PanelType } from './state.service';
+import { GlobalStateService, VectorType } from './globalstate.service';
 import { DividerDragEvent } from './splitter/splitter.directive';
 import * as $ from 'jquery';
 
@@ -18,9 +18,9 @@ const debugMode = true;
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
-  public readonly startVectorLayerType = PanelType.Start;
-  public readonly previewVectorLayerType = PanelType.Preview;
-  public readonly endVectorLayerType = PanelType.End;
+  public readonly startVectorLayerType = VectorType.Start;
+  public readonly previewVectorLayerType = VectorType.Preview;
+  public readonly endVectorLayerType = VectorType.End;
   shouldLabelPoints = true;
   isMorphable = false;
 
@@ -76,12 +76,12 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       this.checkAreLayersMorphable();
       this.subscriptions.push(
         this.stateService.addOnVectorLayerChangeListener(
-          PanelType.Start, vectorLayer => {
+          VectorType.Start, vectorLayer => {
             this.checkAreLayersMorphable();
           }));
       this.subscriptions.push(
         this.stateService.addOnVectorLayerChangeListener(
-          PanelType.End, vectorLayer => {
+          VectorType.End, vectorLayer => {
             this.checkAreLayersMorphable();
           }));
     }

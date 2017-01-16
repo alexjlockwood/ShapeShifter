@@ -3,14 +3,14 @@ import {
   Input, Output, OnInit, EventEmitter
 } from '@angular/core';
 import { PathCommand, SubPathCommand } from './../../scripts/model';
-import { GlobalStateService, PanelType } from './../../state.service';
+import { GlobalStateService, VectorType } from './../../state.service';
 import { Subscription } from 'rxjs/Subscription';
 import { Observable } from 'rxjs/Observable';
 
 @Component({
   selector: 'app-path',
   template: `
-  <app-subpath *ngFor="let command of subPathCommands; let commandIndex = index; trackBy: trackByFn"
+  <app-subpath *ngFor="let command of subPathCommands; let commandIndex = index; trackBy: trackSubPathCommand"
       fxLayout="column"
       [pathCommandIndex]="pathCommandIndex"
       [subPathCommandIndex]="commandIndex"
@@ -44,7 +44,8 @@ export class PathComponent implements OnInit, OnChanges {
     return this.pathCommand_;
   }
 
-  trackByFn(index: number, item: SubPathCommand) {
+  trackSubPathCommand(index: number, item: SubPathCommand) {
+    // TODO: will need to change this once we support reordering sub paths
     return index;
   }
 }

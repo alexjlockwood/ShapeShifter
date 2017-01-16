@@ -2,15 +2,15 @@ import {
   Component, Input, OnInit, ChangeDetectorRef,
   OnDestroy, NgZone, OnChanges
 } from '@angular/core';
-import { PathLayer, PathCommand } from './../scripts/model';
-import { GlobalStateService, PanelType } from './../state.service';
+import { PathLayer, PathCommand } from '../scripts/model';
+import { GlobalStateService, VectorType } from '../globalstate.service';
 import { Subscription } from 'rxjs/Subscription';
 import { InspectorService, EventType, InspectorEvent } from './inspector.service';
 
 @Component({
   selector: 'app-inspector',
   template: `
-  <app-path *ngFor="let command of pathCommands; let commandIndex = index; trackBy: trackByFn"
+  <app-path *ngFor="let command of pathCommands; let commandIndex = index; trackBy: trackPathCommand"
       fxLayout="column"
       [pathCommandIndex]="commandIndex"
       [pathCommand]="command">
@@ -19,7 +19,7 @@ import { InspectorService, EventType, InspectorEvent } from './inspector.service
   providers: [InspectorService]
 })
 export class InspectorComponent implements OnInit, OnChanges, OnDestroy {
-  @Input('vectorLayerType') vectorLayerType: PanelType;
+  @Input('vectorLayerType') vectorType: VectorType;
 
   // Path commands to use to populate the ngFor loop of path components.
   pathCommands: ReadonlyArray<PathCommand> = [];
@@ -34,7 +34,7 @@ export class InspectorComponent implements OnInit, OnChanges, OnDestroy {
   ngOnInit() {
     this.subscriptions.push(
       this.stateService.addOnVectorLayerChangeListener(
-        this.vectorLayerType, vl => {
+        this.vectorType, vl => {
           if (!vl) {
             return;
           }
@@ -52,7 +52,7 @@ export class InspectorComponent implements OnInit, OnChanges, OnDestroy {
     this.subscriptions.push(
       this.inspectorService.addListener((event: InspectorEvent) => {
         const {eventType, pathCommandIndex, subPathCommandIndex, drawCommandIndex} = event;
-        const vl = this.stateService.getVectorLayer(this.vectorLayerType);
+        const vl = this.stateService.getVectorLayer(this.vectorType);
         const pathLayer = vl.findLayerById(this.pathLayerIds[pathCommandIndex]) as PathLayer;
         if (eventType === EventType.Reverse) {
           pathLayer.pathData = pathLayer.pathData.reverse(subPathCommandIndex);
@@ -60,12 +60,12 @@ export class InspectorComponent implements OnInit, OnChanges, OnDestroy {
           pathLayer.pathData = pathLayer.pathData.shiftBack(subPathCommandIndex);
         } else if (eventType === EventType.ShiftForward) {
           pathLayer.pathData = pathLayer.pathData.shiftForward(subPathCommandIndex);
-        } else if (eventType === EventType.Edit) {
-
         } else if (eventType === EventType.Delete) {
           pathLayer.pathData = pathLayer.pathData.unsplit(subPathCommandIndex, drawCommandIndex);
+        } else if (eventType === EventType.Select) {
+
         }
-        this.stateService.notifyVectorLayerChange(this.vectorLayerType);
+        this.stateService.notifyVectorLayerChange(this.vectorType);
       }));
   }
 
@@ -77,7 +77,8 @@ export class InspectorComponent implements OnInit, OnChanges, OnDestroy {
     this.subscriptions.forEach(s => s.unsubscribe());
   }
 
-  trackByFn(index: number, item: PathCommand) {
+  trackPathCommand(index: number, item: PathCommand) {
+    // TODO: will need to change this once we support reordering paths
     return index;
   }
 }

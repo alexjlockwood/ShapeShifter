@@ -4,9 +4,13 @@ import { Subscription } from 'rxjs/Subscription';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Observable } from 'rxjs/Observable';
 
+/**
+ * This service broadcasts and listens for changes on behalf of each inspector
+ * instance. Inspector components get there own instance and share it with their
+ * inspector child components.
+ */
 @Injectable()
 export class InspectorService {
-
   private readonly inspectorSource = new Subject<InspectorEvent>();
   private readonly inspectorStream = this.inspectorSource.asObservable();
 
@@ -23,8 +27,8 @@ export enum EventType {
   Reverse,
   ShiftForward,
   ShiftBack,
-  Edit,
   Delete,
+  Select,
 };
 
 export interface InspectorEvent {

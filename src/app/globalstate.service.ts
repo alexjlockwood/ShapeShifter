@@ -20,7 +20,7 @@ export class GlobalStateService {
   private readonly animationChangeStream = this.animationChangeSource.asObservable();
 
   constructor() {
-    [PanelType.Start, PanelType.Preview, PanelType.End]
+    [VectorType.Start, VectorType.Preview, VectorType.End]
       .forEach(type => {
         this.sources[type] = new BehaviorSubject<VectorLayer>(undefined);
         this.streams[type] = this.sources[type].asObservable();
@@ -28,18 +28,18 @@ export class GlobalStateService {
   }
 
   /** Returns the vector layer with the specified type. */
-  getVectorLayer(type: PanelType) {
+  getVectorLayer(type: VectorType) {
     return this.vls[type];
   }
 
   /** Sets and broadcasts the vector layer with the specified type. */
-  setVectorLayer(type: PanelType, vl: VectorLayer) {
+  setVectorLayer(type: VectorType, vl: VectorLayer) {
     this.vls[type] = vl;
     this.notifyVectorLayerChange(type);
   }
 
   /** Broadcasts the vector layer with the specified type. */
-  notifyVectorLayerChange(type: PanelType) {
+  notifyVectorLayerChange(type: VectorType) {
     this.sources[type].next(this.vls[type]);
   }
 
@@ -48,7 +48,7 @@ export class GlobalStateService {
    * unsubscribe from the returned subscription object when it is destroyed.
    */
   addOnVectorLayerChangeListener(
-    type: PanelType,
+    type: VectorType,
     callback: (vl: VectorLayer) => void) {
     return this.streams[type].subscribe(callback);
   }
@@ -78,6 +78,6 @@ export class GlobalStateService {
   }
 }
 
-export enum PanelType {
+export enum VectorType {
   Start, Preview, End
 }

@@ -7,7 +7,7 @@ import { MaterialModule } from '@angular/material';
 
 import { AppComponent } from './app.component';
 import { CanvasComponent } from './canvas/canvas.component';
-import { GlobalStateService } from './state.service';
+import { GlobalStateService } from './globalstate.service';
 import { TimelineComponent } from './timeline/timeline.component';
 
 import 'hammerjs';

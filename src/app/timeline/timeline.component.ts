@@ -1,5 +1,5 @@
 import { Component, Input, Output, EventEmitter, NgZone } from '@angular/core';
-import { GlobalStateService } from '../state.service';
+import { GlobalStateService } from '../globalstate.service';
 
 @Component({
   selector: 'app-timeline',

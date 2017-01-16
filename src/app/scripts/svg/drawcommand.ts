@@ -9,7 +9,6 @@ import * as SvgUtil from './svgutil';
  * elliptical arc, or close path).
  */
 export class DrawCommandImpl implements DrawCommand {
-
   private readonly points_: ReadonlyArray<Point>;
   private readonly args_: ReadonlyArray<number>;
 

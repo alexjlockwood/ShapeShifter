@@ -5,11 +5,11 @@ import {
 } from '@angular/core';
 import {
   Layer, PathLayer, ClipPathLayer, GroupLayer, VectorLayer, PathCommand
-} from './../scripts/model';
+} from '../scripts/model';
 import * as $ from 'jquery';
 import * as erd from 'element-resize-detector';
-import { Point, Matrix, Projection, MathUtil, ColorUtil } from './../scripts/common';
-import { GlobalStateService, PanelType } from './../state.service';
+import { Point, Matrix, Projection, MathUtil, ColorUtil } from '../scripts/common';
+import { GlobalStateService, VectorType } from '../globalstate.service';
 import { Subscription } from 'rxjs/Subscription';
 import { arcToBeziers } from '../scripts/svg';
 
@@ -22,7 +22,7 @@ const ELEMENT_RESIZE_DETECTOR = erd();
   styleUrls: ['./canvas.component.scss']
 })
 export class CanvasComponent implements AfterViewInit, OnDestroy {
-  @Input() vectorLayerType: PanelType;
+  @Input() vectorLayerType: VectorType;
   @ViewChild('renderingCanvas') private renderingCanvasRef: ElementRef;
 
   private vectorLayer: VectorLayer;
@@ -65,13 +65,13 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
             }
           }
         }));
-    if (this.vectorLayerType === PanelType.Preview) {
+    if (this.vectorLayerType === VectorType.Preview) {
       this.subscriptions.push(
         this.stateService.addOnAnimationChangeListener(fraction => {
           if (this.vectorLayer) {
             // TODO(alockwood): if vector layer is undefined, then clear the canvas
-            const startLayer = this.stateService.getVectorLayer(PanelType.Start);
-            const endLayer = this.stateService.getVectorLayer(PanelType.End);
+            const startLayer = this.stateService.getVectorLayer(VectorType.Start);
+            const endLayer = this.stateService.getVectorLayer(VectorType.End);
             this.vectorLayer.walk(layer => {
               if (layer instanceof PathLayer) {
                 const start = startLayer.findLayerById(layer.id) as PathLayer;
@@ -148,7 +148,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     });
     ctx.restore();
 
-    if (this.shouldLabelPoints_ && this.vectorLayerType !== PanelType.Preview) {
+    if (this.shouldLabelPoints_ && this.vectorLayerType !== VectorType.Preview) {
       this.recurseAndDrawLayers({
         layer: this.vectorLayer,
         ctx,
@@ -282,7 +282,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     const y = (event.pageY - canvasOffset.top) / this.scale;
     const mouseDown = new Point(x, y);
 
-    if (this.vectorLayerType === PanelType.Preview) {
+    if (this.vectorLayerType === VectorType.Preview) {
       return;
     }
 
@@ -303,7 +303,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     const y = (event.pageY - canvasOffset.top) / this.scale;
     const mouseMove = new Point(x, y);
 
-    if (this.vectorLayerType === PanelType.Preview) {
+    if (this.vectorLayerType === VectorType.Preview) {
       return;
     }
 
