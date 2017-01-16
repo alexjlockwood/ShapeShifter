@@ -4,7 +4,7 @@ import { DrawCommand, SvgChar } from '../model';
 import * as SvgUtil from './svgutil';
 
 /**
- * Implementation of the IDrawCommand interface. Each draw command represents
+ * Implementation of the DrawCommand interface. Each draw command represents
  * a single SVG drawing command (move, line, quadratic curve, bezier curve,
  * elliptical arc, or close path).
  */
@@ -26,25 +26,23 @@ export class DrawCommandImpl implements DrawCommand {
     }
   }
 
-  // Overrides the DrawCommand interface.
+  // Implements the DrawCommand interface.
   get svgChar() { return this.svgChar_; }
 
-  // Overrides the DrawCommand interface.
+  // Implements the DrawCommand interface.
   get points() { return this.points_; }
 
-  // Overrides the DrawCommand interface.
+  // Implements the DrawCommand interface.
   get args() { return this.args_; }
 
-  // Overrides the DrawCommand interface.
+  // Implements the DrawCommand interface.
   get start() { return this.points[0]; }
 
-  // Overrides the DrawCommand interface.
+  // Implements the DrawCommand interface.
   get end() { return _.last(this.points); }
 
-  // Overrides the DrawCommand interface.
-  get isSplit() {
-    return this.isSplit_;
-  }
+  // Implements the DrawCommand interface.
+  get isSplit() { return this.isSplit_; }
 
   /** Returns a new transformed draw command. */
   transform(matrices: Matrix[]): DrawCommandImpl {
@@ -59,15 +57,21 @@ export class DrawCommandImpl implements DrawCommand {
         endX: this.args[7],
         endY: this.args[8],
       }, matrices);
-      return new DrawCommandImpl('A', this.isSplit, [start, new Point(arc.endX, arc.endY)],
+      return new DrawCommandImpl(
+        'A',
+        this.isSplit,
+        [start, new Point(arc.endX, arc.endY)],
         start.x, start.y,
         arc.rx, arc.ry,
         arc.xAxisRotation, arc.largeArcFlag, arc.sweepFlag,
         arc.endX, arc.endY);
     } else {
-      return new DrawCommandImpl(this.svgChar, this.isSplit, this.points.map(p => {
-        return p ? MathUtil.transform(p, ...matrices) : p;
-      }));
+      return new DrawCommandImpl(
+        this.svgChar,
+        this.isSplit,
+        this.points.map(p => {
+          return p ? MathUtil.transform(p, ...matrices) : p;
+        }));
     }
   }
 
@@ -98,8 +102,8 @@ export class DrawCommandImpl implements DrawCommand {
       return `${this.svgChar}`;
     } else {
       const p = _.last(this.points);
-      const x = Number(p.x.toFixed(3)).toString();
-      const y = Number(p.y.toFixed(3)).toString();
+      const x = _.round(p.x, 3);
+      const y = _.round(p.y, 3);
       return `${this.svgChar} ${x}, ${y}`;
     }
   }
@@ -119,11 +123,12 @@ export function lineTo(start: Point, end: Point, isSplit?: boolean) {
   return new DrawCommandImpl('L', !!isSplit, [start, end]);
 }
 
-export function quadTo(start: Point, cp: Point, end: Point, isSplit?: boolean) {
+export function quadraticCurveTo(start: Point, cp: Point, end: Point, isSplit?: boolean) {
   return new DrawCommandImpl('Q', !!isSplit, [start, cp, end]);
 }
 
-export function cubicTo(start: Point, cp1: Point, cp2: Point, end: Point, isSplit?: boolean) {
+export function bezierCurveTo(
+  start: Point, cp1: Point, cp2: Point, end: Point, isSplit?: boolean) {
   return new DrawCommandImpl('C', !!isSplit, [start, cp1, cp2, end]);
 }
 

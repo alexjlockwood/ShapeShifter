@@ -1,7 +1,7 @@
 import { Point, Matrix, MathUtil } from '../common';
 import * as SvgUtil from './svgutil';
 import {
-  DrawCommandImpl, moveTo, lineTo, quadTo, cubicTo, arcTo, closePath
+  DrawCommandImpl, moveTo, lineTo, quadraticCurveTo, cubicTo, arcTo, closePath
 } from './drawcommand';
 
 /**
@@ -23,7 +23,7 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): DrawComm
       } else if (('0' <= c && c <= '9') || c === '.' || c === '-') {
         return (currentToken = Token.Value);
       }
-      // skip unrecognized character
+      // Skip unrecognized character.
       index++;
     }
     return (currentToken = Token.EOF);
@@ -49,8 +49,11 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): DrawComm
     while (tempIndex < pathString.length) {
       const c = pathString.charAt(tempIndex);
 
-      if (!('0' <= c && c <= '9') && (c !== '.' || seenDot) && (c !== '-' || !start) && c !== 'e') {
-        // end of value
+      if (!('0' <= c && c <= '9')
+        && (c !== '.' || seenDot)
+        && (c !== '-' || !start)
+        && c !== 'e') {
+        // End of value.
         break;
       }
 
@@ -166,7 +169,7 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): DrawComm
         while (advanceToNextToken_() === Token.Value) {
           const cp = consumePoint_(relative);
           const end = consumePoint_(relative);
-          commands.push(quadTo(currentPoint, cp, end));
+          commands.push(quadraticCurveTo(currentPoint, cp, end));
 
           currentControlPoint = cp;
           currentPoint = end;
@@ -189,7 +192,7 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): DrawComm
           } else {
             cp = end;
           }
-          commands.push(quadTo(currentPoint, cp, end));
+          commands.push(quadraticCurveTo(currentPoint, cp, end));
 
           currentControlPoint = cp;
           currentPoint = end;

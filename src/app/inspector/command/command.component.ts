@@ -95,8 +95,8 @@ export class CommandComponent implements OnInit, AfterViewInit, OnChanges {
       return `${c.svgChar}`;
     } else {
       const p = _.last(c.points);
-      const x = Number(p.x.toFixed(3)).toString();
-      const y = Number(p.y.toFixed(3)).toString();
+      const x = _.round(p.x, 3);
+      const y = _.round(p.y, 3);
       return `${c.svgChar} ${x}, ${y}`;
     }
   }

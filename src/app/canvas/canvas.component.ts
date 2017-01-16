@@ -28,7 +28,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   private vectorLayer: VectorLayer;
   private shouldLabelPoints_ = false;
   private canvasContainerSize: number;
-  private canvas;
+  private canvas: JQuery;
   private scale: number;
   private backingStoreScale: number;
   private isViewInit = false;
@@ -92,7 +92,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   }
 
   @Input()
-  set shouldLabelPoints(shouldLabelPoints) {
+  set shouldLabelPoints(shouldLabelPoints: boolean) {
     this.shouldLabelPoints_ = shouldLabelPoints;
     this.draw();
   }
@@ -132,7 +132,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       return;
     }
 
-    const ctx = this.canvas.get(0).getContext('2d');
+    const ctx = (this.canvas.get(0) as HTMLCanvasElement).getContext('2d');
     ctx.save();
     ctx.scale(this.backingStoreScale, this.backingStoreScale);
     ctx.clearRect(0, 0, this.vectorLayer.width, this.vectorLayer.height);
@@ -343,7 +343,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
   /**
    * Recursively draws a vector layer, applying group transforms at each level of the
-   * tree so that children layers can draw their content properly.
+   * tree so that children layers can draw their content to the canvas properly.
    */
   private recurseAndDrawLayers(args: LayerArgs<Layer>) {
     const {layer, ctx, transforms, pathFunc, clipPathFunc} = args;
@@ -388,28 +388,30 @@ function executePathData(
   transforms.forEach(m => ctx.transform(m.a, m.b, m.c, m.d, m.e, m.f));
 
   ctx.beginPath();
-  layer.pathData.commands.forEach(s => s.commands.forEach(d => {
-    const start = d.points[0];
-    const end = _.last(d.points);
-    if (d.svgChar === 'M') {
-      ctx.moveTo(end.x, end.y);
-    } else if (d.svgChar === 'L') {
-      ctx.lineTo(end.x, end.y);
-    } else if (d.svgChar === 'Q') {
-      ctx.quadraticCurveTo(
-        d.points[1].x, d.points[1].y,
-        d.points[2].x, d.points[2].y);
-    } else if (d.svgChar === 'C') {
-      ctx.bezierCurveTo(
-        d.points[1].x, d.points[1].y,
-        d.points[2].x, d.points[2].y,
-        d.points[3].x, d.points[3].y);
-    } else if (d.svgChar === 'Z') {
-      ctx.closePath();
-    } else if (d.svgChar === 'A') {
-      executeArcCommand(ctx, d.args);
-    }
-  }));
+  layer.pathData.commands.forEach(s => {
+    s.commands.forEach(d => {
+      const start = d.points[0];
+      const end = _.last(d.points);
+      if (d.svgChar === 'M') {
+        ctx.moveTo(end.x, end.y);
+      } else if (d.svgChar === 'L') {
+        ctx.lineTo(end.x, end.y);
+      } else if (d.svgChar === 'Q') {
+        ctx.quadraticCurveTo(
+          d.points[1].x, d.points[1].y,
+          d.points[2].x, d.points[2].y);
+      } else if (d.svgChar === 'C') {
+        ctx.bezierCurveTo(
+          d.points[1].x, d.points[1].y,
+          d.points[2].x, d.points[2].y,
+          d.points[3].x, d.points[3].y);
+      } else if (d.svgChar === 'Z') {
+        ctx.closePath();
+      } else if (d.svgChar === 'A') {
+        executeArcCommand(ctx, d.args);
+      }
+    })
+  });
 
   ctx.restore();
 }
