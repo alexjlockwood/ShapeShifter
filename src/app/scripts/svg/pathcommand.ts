@@ -228,10 +228,6 @@ class PathCommandImpl implements PathCommand {
     if (numCommands <= 1 || !subPathCommand.isClosed) {
       return this;
     }
-    //if (!subPathCommand.isClosed) {
-    // Do nothing if the path is not closed.
-    //  return this;
-    //}
     let newShiftOffset = this.shiftOffsets_[subPathIndex] + 1;
     if (newShiftOffset >= numCommands - 1) {
       newShiftOffset -= numCommands - 1;
