@@ -76,7 +76,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
               if (layer instanceof PathLayer) {
                 const start = startLayer.findLayerById(layer.id) as PathLayer;
                 const end = endLayer.findLayerById(layer.id) as PathLayer;
-                layer.pathData.interpolate(start.pathData, end.pathData, fraction);
+                layer.pathData =
+                  layer.pathData.interpolate(start.pathData, end.pathData, fraction);
               }
             });
             this.draw();
@@ -281,7 +282,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     const y = (event.pageY - canvasOffset.top) / this.scale;
     const mouseDown = new Point(x, y);
 
-    if (this.vectorLayerType !== VectorLayerType.End) {
+    if (this.vectorLayerType === VectorLayerType.Preview) {
       return;
     }
 
@@ -302,7 +303,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     const y = (event.pageY - canvasOffset.top) / this.scale;
     const mouseMove = new Point(x, y);
 
-    if (this.vectorLayerType !== VectorLayerType.End) {
+    if (this.vectorLayerType === VectorLayerType.Preview) {
       return;
     }
 

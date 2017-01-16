@@ -41,10 +41,11 @@ export class DrawCommandImpl implements DrawCommand {
     return new DrawCommandImpl('Z', isSplit, [start, end]);
   }
 
-  private constructor(
+  constructor(
     private readonly svgChar_: SvgChar,
     private readonly isSplit_: boolean,
-    points: Point[], ...args: number[]) {
+    points: Point[],
+    ...args: number[]) {
     this.points_ = points.slice();
     if (args) {
       this.args_ = args;

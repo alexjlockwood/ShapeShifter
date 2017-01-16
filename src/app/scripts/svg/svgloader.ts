@@ -1,4 +1,4 @@
-import { Layer, VectorLayer, GroupLayer, PathLayer } from '../model';
+import { Layer, VectorLayer, GroupLayer, PathLayer, ClipPathLayer } from '../model';
 import { ColorUtil, MathUtil } from '../common';
 import { PathCommandImpl } from './pathcommand';
 import * as PathParser from './pathparser';
@@ -38,7 +38,7 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
     return svgLength.valueInSpecifiedUnits;
   };
 
-  const nodeToLayerData_ = (node, context): Layer => {
+  const nodeToLayerData_ = (node, context): GroupLayer | ClipPathLayer | PathLayer => {
     if (!node) {
       return undefined;
     }

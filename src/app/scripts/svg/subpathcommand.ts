@@ -40,17 +40,17 @@ export class SubPathCommandImpl implements SubPathCommand {
     });
   }
 
-  // Overrides SubPathCommand interface.
+  // Overrides the SubPathCommand interface.
   get commands() { return this.commands_; }
 
-  // Overrides SubPathCommand interface.
+  // Overrides the SubPathCommand interface.
   get isClosed() {
     const start = this.commands[0].end;
     const end = _.last(this.commands).end;
     return start.equals(end);
   }
 
-  // Overrides SubPathCommand interface.
+  // Overrides the SubPathCommand interface.
   get points() {
     return this.points_;
   }

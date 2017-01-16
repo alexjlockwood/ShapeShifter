@@ -23,7 +23,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   isMorphable = false;
 
   private isStructurallyIdentical = false;
-  private subscription: Subscription;
+  private subscriptions: Subscription[] = [];
 
   @ViewChild('appContainer') appContainerRef: ElementRef;
   @ViewChild('canvasContainer') canvasContainerRef: ElementRef;
@@ -48,14 +48,12 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    if (this.subscription) {
-      this.subscription.unsubscribe();
-    }
+    this.subscriptions.forEach(s => s.unsubscribe());
   }
 
   onStartSvgTextLoaded(svgText: string) {
     this.startVectorLayer = SvgLoader.loadVectorLayerFromSvgString(svgText);
-    this.previewVectorLayer = SvgLoader.loadVectorLayerFromSvgString(svgText);
+    this.previewVectorLayer = this.startVectorLayer.clone();
     this.maybeDisplayPreview();
   }
 
@@ -73,10 +71,24 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     }
     if (this.shouldDisplayCanvases()) {
-      this.isMorphable = this.startVectorLayer.isMorphableWith(this.endVectorLayer);
-      this.subscription = this.stateService.addOnVectorLayerChangeListener(VectorLayerType.End, vectorLayer => {
-        this.isMorphable = this.startVectorLayer.isMorphableWith(this.endVectorLayer);
-      });
+      this.checkAreLayersMorphable();
+      this.subscriptions.push(
+        this.stateService.addOnVectorLayerChangeListener(VectorLayerType.Start, vectorLayer => {
+          this.checkAreLayersMorphable();
+        }));
+      this.subscriptions.push(
+        this.stateService.addOnVectorLayerChangeListener(VectorLayerType.End, vectorLayer => {
+          this.checkAreLayersMorphable();
+        }));
+    }
+  }
+
+  private checkAreLayersMorphable() {
+    const wasMorphable = this.isMorphable;
+    this.isMorphable = this.startVectorLayer.isMorphableWith(this.endVectorLayer);
+    if (this.isMorphable && !wasMorphable) {
+      // Recreate the preview canvas layer.
+      this.previewVectorLayer = this.startVectorLayer.clone();
     }
   }
 

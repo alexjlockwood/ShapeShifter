@@ -13,7 +13,7 @@ export interface PathCommand {
    * Interpolates this path between a start and end path using the specified fraction.
    * Does nothing if the paths are not morphable with each other.
    */
-  interpolate(start: PathCommand, end: PathCommand, fraction: number): void;
+  interpolate(start: PathCommand, end: PathCommand, fraction: number): PathCommand;
 
   /** Returns true iff this path is morphable with the specified path command. */
   isMorphableWith(cmd: PathCommand): boolean;
@@ -54,6 +54,9 @@ export interface PathCommand {
    * Returns a new path command object.
    */
   unsplit(subPathIndex: number, drawIndex: number): PathCommand;
+
+  /** Returns a cloned instance of this path command. */
+  clone(): PathCommand;
 }
 
 /** Defines the set of methods that are seen by the sub path inspector/canvas. */

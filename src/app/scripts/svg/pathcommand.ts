@@ -24,22 +24,31 @@ export class PathCommandImpl implements PathCommand {
   }
 
   // TODO(alockwood): add method to calculate bounds and length
-  private constructor(obj: string | PathCommandImpl) {
+  private constructor(obj: string | PathCommandImpl | DrawCommandImpl[]) {
     if (typeof obj === 'string') {
       this.path_ = obj;
       this.commands_ = SubPathCommandImpl.from(...PathParser.parseCommands(obj));
       this.commandWrappers_ = this.commands_.map(s => createCommandWrappers(s.commands));
       this.shiftOffsets_ = this.commands_.map(_ => 0);
-    } else {
+    } else if (obj instanceof PathCommandImpl) {
       const drawCommands =
-        [].concat.apply([],
-          [].concat.apply([], obj.commandWrappers_.map(cws => cws)).map(cw => cw.commands));
+        _.flatMap(_.flatMap(obj.commandWrappers_, cws => cws), cw => cw.commands);
       this.commands_ = SubPathCommandImpl.from(...drawCommands);
       this.path_ = PathParser.commandsToString(drawCommands);
-      this.commandWrappers_ = obj.commandWrappers_;
-      this.shiftOffsets_ = obj.shiftOffsets_;
+      this.commandWrappers_ =
+        obj.commandWrappers_.map(cws => cws.map(cw => new CommandWrapper(cw)));
+      this.shiftOffsets_ = obj.shiftOffsets_.slice();
       this.isReversed = obj.isReversed;
+    } else {
+      this.path_ = PathParser.commandsToString(obj);
+      this.commands_ = SubPathCommandImpl.from(...obj);
+      this.commandWrappers_ = this.commands_.map(s => createCommandWrappers(s.commands));
+      this.shiftOffsets_ = this.commands_.map(_ => 0);
     }
+  }
+
+  clone() {
+    return new PathCommandImpl(this);
   }
 
   toString() {
@@ -120,17 +129,18 @@ export class PathCommandImpl implements PathCommand {
   }
 
   // Overrides PathCommand interface.
-  interpolate(start: PathCommand, end: PathCommand, fraction: number) {
+  interpolate(start: PathCommand, end: PathCommand, fraction: number): PathCommand {
     if (!this.isMorphableWith(start) || !this.isMorphableWith(end)) {
-      return;
+      return this;
     }
-    // TODO(alockwood): determine if we should make the args/points immutable...
+
+    const drawCommands: DrawCommandImpl[] = [];
     this.commands.forEach((s, i) => {
       s.commands.forEach((d, j) => {
         if (d.svgChar === 'A') {
           const d1 = start.commands[i].commands[j];
           const d2 = end.commands[i].commands[j];
-          const args = d.args as number[];
+          const args = d.args.slice();
           args.forEach((_, x) => {
             if (x === 5 || x === 6) {
               // Doesn't make sense to interpolate the large arc and sweep flags.
@@ -139,29 +149,41 @@ export class PathCommandImpl implements PathCommand {
             }
             args[x] = MathUtil.lerp(d1.args[x], d2.args[x], fraction);
           });
+          drawCommands.push(
+            new DrawCommandImpl(
+              d.svgChar,
+              d.isSplit,
+              [new Point(args[0], args[1]), new Point(args[7], args[8])],
+              ...args));
         } else {
           const d1 = start.commands[i].commands[j];
           const d2 = end.commands[i].commands[j];
+          const points = [];
           for (let x = 0; x < d1.points.length; x++) {
             const startPoint = d1.points[x];
             const endPoint = d2.points[x];
             if (startPoint && endPoint) {
               const px = MathUtil.lerp(startPoint.x, endPoint.x, fraction);
               const py = MathUtil.lerp(startPoint.y, endPoint.y, fraction);
-              (d.points as Point[])[x] = new Point(px, py);
+              points.push(new Point(px, py));
             }
           }
+          drawCommands.push(
+            new DrawCommandImpl(
+              d.svgChar,
+              d.isSplit,
+              points));
         }
       });
     });
-    // TODO(alockwood): do we need to rebuild any internal state here?
-    // if so, we should probably make everything immutable and return a new command object
+
+    return new PathCommandImpl(drawCommands);
   }
 
   // Overrides PathCommand interface.
   project(point: Point): { projection: Projection, split: () => PathCommand } | undefined {
     const drawCommandWrappers: CommandWrapper[] =
-      [].concat.apply([], this.commandWrappers_.map(cws => cws));
+      _.flatMap(this.commandWrappers_, cws => cws);
     return drawCommandWrappers.map(cw => {
       const projection = cw.project(point);
       return {
@@ -264,31 +286,18 @@ class CommandWrapper {
   private splits: number[] = [];
   private splitCommands: DrawCommandImpl[] = [];
 
-  constructor(cmd: DrawCommandImpl) {
-    this.svgChar = cmd.svgChar;
-    this.backingCommand = cmd;
-    this.backingBeziers = drawCommandToBeziers(cmd);
-  }
-
-  convert(cmd: DrawCommandImpl) {
-    if (this.svgChar === cmd.svgChar
-      || (this.svgChar === 'L' && cmd.svgChar === 'Z')
-      || (this.svgChar === 'Z' && cmd.svgChar === 'L')) {
-      this.backingCommand = cmd;
-      this.backingBeziers = drawCommandToBeziers(cmd);
+  constructor(obj: DrawCommandImpl | CommandWrapper) {
+    if (obj instanceof DrawCommandImpl) {
+      this.svgChar = obj.svgChar;
+      this.backingCommand = obj;
+      this.backingBeziers = drawCommandToBeziers(obj);
+    } else {
+      this.svgChar = obj.svgChar;
+      this.backingCommand = obj.backingCommand;
+      this.backingBeziers = drawCommandToBeziers(obj.backingCommand);
+      this.splits = obj.splits.slice();
+      this.splitCommands = obj.splitCommands.slice();
     }
-    return this;
-  }
-
-  reverse() {
-    if (this.svgChar === 'M') {
-      return this;
-    }
-    this.backingCommand = this.backingCommand.reverse();
-    this.backingBeziers = drawCommandToBeziers(this.backingCommand);
-    this.splits = this.splits.map(t => 1 - t).reverse();
-    this.rebuildSplitCommands();
-    return this;
   }
 
   project(point: Point): Projection | undefined {

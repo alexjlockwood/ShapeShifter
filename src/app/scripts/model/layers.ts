@@ -6,7 +6,7 @@ import { PathCommand } from './commands';
 export interface Layer {
 
   /** This layers children layers, or undefined if none exist. */
-  children: Layer[] | undefined;
+  children: (GroupLayer | ClipPathLayer | PathLayer)[] | undefined;
 
   /** A string uniquely identifying this layer in its containing tree. */
   id: string;
@@ -29,7 +29,7 @@ export interface Layer {
  */
 abstract class AbstractLayer implements Layer {
   constructor(
-    public children: Layer[] | undefined,
+    public children: (GroupLayer | ClipPathLayer | PathLayer)[] | undefined,
     public id: string,
   ) { }
 
@@ -128,7 +128,7 @@ export class ClipPathLayer extends AbstractLayer {
  */
 export class GroupLayer extends AbstractLayer {
   constructor(
-    children: Layer[],
+    children: (GroupLayer | ClipPathLayer | PathLayer)[],
     id: string,
     public pivotX = 0,
     public pivotY = 0,
@@ -146,13 +146,56 @@ export class GroupLayer extends AbstractLayer {
  * Model object that mirrors the VectorDrawable's '<vector>' element.
  */
 export class VectorLayer extends AbstractLayer {
+
   constructor(
-    children: Layer[],
+    children: (GroupLayer | ClipPathLayer | PathLayer)[],
     id: string,
     public width = 0,
     public height = 0,
     public alpha = 1,
   ) {
     super(children || [], id);
+  }
+
+  clone(): VectorLayer {
+    return (function _clone(layer: GroupLayer | ClipPathLayer | PathLayer | VectorLayer) {
+      if (layer instanceof GroupLayer) {
+        return new GroupLayer(
+          layer.children.map(child => _clone(child)),
+          layer.id,
+          layer.pivotX,
+          layer.pivotY,
+          layer.rotation,
+          layer.scaleX,
+          layer.scaleY,
+          layer.translateX,
+          layer.translateY);
+      }
+      if (layer instanceof ClipPathLayer) {
+        return new ClipPathLayer(layer.id, layer.pathData.clone());
+      }
+      if (layer instanceof PathLayer) {
+        return new PathLayer(
+          layer.id,
+          layer.pathData.clone(),
+          layer.fillColor,
+          layer.fillAlpha,
+          layer.strokeColor,
+          layer.strokeAlpha,
+          layer.strokeWidth,
+          layer.strokeLinecap,
+          layer.strokeLinejoin,
+          layer.strokeMiterLimit,
+          layer.trimPathStart,
+          layer.trimPathEnd,
+          layer.trimPathOffset);
+      }
+      return new VectorLayer(
+        layer.children.map(child => _clone(child)),
+        layer.id,
+        layer.width,
+        layer.height,
+        layer.alpha);
+    })(this);
   }
 }
