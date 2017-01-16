@@ -72,8 +72,7 @@ class PathCommandImpl implements PathCommand {
       if (secondCmd.svgChar === 'Z') {
         newCmds[1] = lineTo(secondCmd.start, secondCmd.end);
         const lastCmd = _.last(newCmds);
-        newCmds[newCmds.length - 1] =
-          closePath(lastCmd.start, lastCmd.end);
+        newCmds[newCmds.length - 1] = closePath(lastCmd.start, lastCmd.end);
       }
       return new SubPathCommandImpl(...newCmds);
     });
