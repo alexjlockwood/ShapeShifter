@@ -3,7 +3,7 @@ import {
   Component, AfterViewInit, OnChanges, Output, OnInit,
   SimpleChanges, Input, ViewChild, ElementRef, EventEmitter
 } from '@angular/core';
-import { IDrawCommand } from './../../scripts/model';
+import { DrawCommand } from './../../scripts/model';
 import * as $ from 'jquery';
 import { InspectorService, EventType } from '../inspector.service';
 
@@ -41,7 +41,7 @@ export class CommandComponent implements OnInit, AfterViewInit, OnChanges {
   @Input('pathCommandIndex') pathCommandIndex: number;
   @Input('subPathCommandIndex') subPathCommandIndex: number;
   @Input('drawCommandIndex') drawCommandIndex: number;
-  @Input('drawCommand') drawCommand: IDrawCommand;
+  @Input('drawCommand') drawCommand: DrawCommand;
 
   constructor(private inspectorService: InspectorService) { }
 

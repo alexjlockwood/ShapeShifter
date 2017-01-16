@@ -1,12 +1,12 @@
 import { Point, Matrix, MathUtil } from '../common';
 import * as SvgUtil from './svgutil';
-import { DrawCommand } from './drawcommand';
+import { DrawCommandImpl } from './drawcommand';
 
 /**
  * Takes an SVG path string (i.e. the text specified in the path's 'd' attribute) and returns
  * list of DrawCommands that represent the SVG path's individual sequence of instructions.
  */
-export function parseCommands(pathString: string, matrices?: Matrix[]): DrawCommand[] {
+export function parseCommands(pathString: string, matrices?: Matrix[]): DrawCommandImpl[] {
   let index = 0;
   let currentPoint: Point;
   let currentToken: Token;
@@ -82,7 +82,7 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): DrawComm
     return new Point(x, y);
   };
 
-  const commands: DrawCommand[] = [];
+  const commands: DrawCommandImpl[] = [];
   let currentControlPoint: Point;
   let lastMovePoint: Point;
 
@@ -103,13 +103,13 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): DrawComm
 
           if (isFirstPoint) {
             isFirstPoint = false;
-            commands.push(DrawCommand.moveTo(currentPoint, nextPoint));
+            commands.push(DrawCommandImpl.moveTo(currentPoint, nextPoint));
             lastMovePoint = nextPoint;
           } else {
-            commands.push(DrawCommand.lineTo(currentPoint, nextPoint));
+            commands.push(DrawCommandImpl.lineTo(currentPoint, nextPoint));
           }
 
-          currentControlPoint = null;
+          currentControlPoint = undefined;
           currentPoint = nextPoint;
         }
       }
@@ -124,7 +124,7 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): DrawComm
           const cp1 = consumePoint_(relative);
           const cp2 = consumePoint_(relative);
           const end = consumePoint_(relative);
-          commands.push(DrawCommand.cubicTo(currentPoint, cp1, cp2, end));
+          commands.push(DrawCommandImpl.cubicTo(currentPoint, cp1, cp2, end));
 
           currentControlPoint = cp2;
           currentPoint = end;
@@ -148,7 +148,7 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): DrawComm
           } else {
             cp1 = cp2;
           }
-          commands.push(DrawCommand.cubicTo(currentPoint, cp1, cp2, end));
+          commands.push(DrawCommandImpl.cubicTo(currentPoint, cp1, cp2, end));
 
           currentControlPoint = cp2;
           currentPoint = end;
@@ -164,7 +164,7 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): DrawComm
         while (advanceToNextToken_() === Token.Value) {
           const cp = consumePoint_(relative);
           const end = consumePoint_(relative);
-          commands.push(DrawCommand.quadTo(currentPoint, cp, end));
+          commands.push(DrawCommandImpl.quadTo(currentPoint, cp, end));
 
           currentControlPoint = cp;
           currentPoint = end;
@@ -187,7 +187,7 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): DrawComm
           } else {
             cp = end;
           }
-          commands.push(DrawCommand.quadTo(currentPoint, cp, end));
+          commands.push(DrawCommandImpl.quadTo(currentPoint, cp, end));
 
           currentControlPoint = cp;
           currentPoint = end;
@@ -202,9 +202,9 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): DrawComm
 
         while (advanceToNextToken_() === Token.Value) {
           const end = consumePoint_(relative);
-          commands.push(DrawCommand.lineTo(currentPoint, end));
+          commands.push(DrawCommandImpl.lineTo(currentPoint, end));
 
-          currentControlPoint = null;
+          currentControlPoint = undefined;
           currentPoint = end;
         }
       }
@@ -222,9 +222,9 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): DrawComm
             x += currentPoint.x;
           }
           const end = new Point(x, y);
-          commands.push(DrawCommand.lineTo(currentPoint, end));
+          commands.push(DrawCommandImpl.lineTo(currentPoint, end));
 
-          currentControlPoint = null;
+          currentControlPoint = undefined;
           currentPoint = end;
         }
       }
@@ -242,9 +242,9 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): DrawComm
             y += currentPoint.y;
           }
           const end = new Point(x, y);
-          commands.push(DrawCommand.lineTo(currentPoint, end));
+          commands.push(DrawCommandImpl.lineTo(currentPoint, end));
 
-          currentControlPoint = null;
+          currentControlPoint = undefined;
           currentPoint = end;
         }
       }
@@ -263,13 +263,13 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): DrawComm
           const sweepFlag = consumeValue_();
           const tempPoint1 = consumePoint_(relative);
 
-          commands.push(DrawCommand.arcTo(
+          commands.push(DrawCommandImpl.arcTo(
             new Point(currentPoint.x, currentPoint.y),
             rx, ry,
             xAxisRotation, largeArcFlag, sweepFlag,
             new Point(tempPoint1.x, tempPoint1.y)));
 
-          currentControlPoint = null;
+          currentControlPoint = undefined;
           currentPoint = tempPoint1;
         }
       }
@@ -279,7 +279,7 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): DrawComm
         if (!currentPoint) {
           throw new Error('Current point does not exist');
         }
-        commands.push(DrawCommand.closePath(currentPoint, lastMovePoint));
+        commands.push(DrawCommandImpl.closePath(currentPoint, lastMovePoint));
       }
         break;
     }
@@ -291,7 +291,7 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): DrawComm
 /**
  * Takes an list of DrawCommands and converts them back into a SVG path string.
  */
-export function commandsToString(commands: DrawCommand[]) {
+export function commandsToString(commands: DrawCommandImpl[]) {
   const tokens = [];
   commands.forEach(cmd => {
     tokens.push(cmd.svgChar);

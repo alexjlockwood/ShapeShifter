@@ -2,7 +2,7 @@ import * as tinycolor from 'tinycolor2';
 
 const BRIGHTNESS_THRESHOLD = 130;
 
-export function parseAndroidColor(val: string): ColorFormats.RGBA | null {
+export function parseAndroidColor(val: string): ColorFormats.RGBA | undefined {
   val = (val || '').replace(/^\s*#?|\s*$/g, '');
   const dict: ColorFormats.RGBA = { a: 0, r: 0, g: 0, b: 0 };
 
@@ -27,10 +27,10 @@ export function parseAndroidColor(val: string): ColorFormats.RGBA | null {
     dict.g = parseInt(val.substring(4, 6), 16);
     dict.b = parseInt(val.substring(6, 8), 16);
   } else {
-    return null;
+    return undefined;
   }
 
-  return (isNaN(dict.r) || isNaN(dict.g) || isNaN(dict.b) || isNaN(dict.a)) ? null : dict;
+  return (isNaN(dict.r) || isNaN(dict.g) || isNaN(dict.b) || isNaN(dict.a)) ? undefined : dict;
 }
 
 export function toAndroidString(dict: ColorFormats.RGBA): string {
@@ -44,15 +44,15 @@ export function toAndroidString(dict: ColorFormats.RGBA): string {
   return str;
 }
 
-export function svgToAndroidColor(color: string): string | null {
+export function svgToAndroidColor(color: string): string | undefined {
   if (color === 'none') {
-    return null;
+    return undefined;
   }
   const colorInstance = tinycolor(color);
   return '#' + colorInstance.toHex8().substr(6) + colorInstance.toHex();
 }
 
-export function androidToCssColor(androidColor: string | null, multAlpha = 1): string {
+export function androidToCssColor(androidColor: string | undefined, multAlpha = 1): string {
   if (!androidColor) {
     return 'transparent';
   }
@@ -60,7 +60,7 @@ export function androidToCssColor(androidColor: string | null, multAlpha = 1): s
   return `rgba(${d.r},${d.g},${d.b},${(d.a * multAlpha / 255).toFixed(2)})`;
 }
 
-export function isAndroidColorDark(androidColor: string | null) {
+export function isAndroidColorDark(androidColor: string | undefined) {
   if (!androidColor) {
     return false;
   }

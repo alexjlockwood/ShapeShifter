@@ -2,7 +2,7 @@ import {
   Component, OnChanges, SimpleChanges,
   Input, Output, OnInit, EventEmitter
 } from '@angular/core';
-import { IPathCommand, ISubPathCommand } from './../../scripts/model';
+import { PathCommand, SubPathCommand } from './../../scripts/model';
 import { StateService, VectorLayerType } from './../../state.service';
 import { Subscription } from 'rxjs/Subscription';
 import { Observable } from 'rxjs/Observable';
@@ -22,8 +22,8 @@ export class PathComponent implements OnInit, OnChanges {
   @Input('pathCommandIndex') pathCommandIndex: number;
 
   // Sub path commands to use to populate the ngFor loop of sub path components.
-  subPathCommands: ReadonlyArray<ISubPathCommand> = [];
-  private pathCommand_: IPathCommand;
+  subPathCommands: ReadonlyArray<SubPathCommand> = [];
+  private pathCommand_: PathCommand;
 
   ngOnInit() {
     // console.log('ngOnInit');
@@ -34,7 +34,7 @@ export class PathComponent implements OnInit, OnChanges {
   }
 
   @Input()
-  set pathCommand(pathCommand: IPathCommand) {
+  set pathCommand(pathCommand: PathCommand) {
     // console.log('setting new path command');
     this.pathCommand_ = pathCommand;
     this.subPathCommands = pathCommand.commands;
@@ -44,7 +44,7 @@ export class PathComponent implements OnInit, OnChanges {
     return this.pathCommand_;
   }
 
-  trackByFn(index: number, item: ISubPathCommand) {
+  trackByFn(index: number, item: SubPathCommand) {
     return index;
   }
 }

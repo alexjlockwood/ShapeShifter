@@ -1,18 +1,18 @@
-import { IPathCommand } from './commands';
+import { PathCommand } from './commands';
 
 /**
  * Interface that is shared amongst all vector drawable layer model types.
  */
 export interface Layer {
 
-  /** This layers children layers, or null if none exist. */
-  children: Layer[] | null;
+  /** This layers children layers, or undefined if none exist. */
+  children: Layer[] | undefined;
 
   /** A string uniquely identifying this layer in its containing tree. */
   id: string;
 
   /** Returns the first descendent layer with the specified ID. */
-  findLayerById(id: string): Layer | null;
+  findLayerById(id: string): Layer | undefined;
 
   /** Returns true iff this layer is structurally identical with the corresponding layer. */
   isStructurallyIdenticalWith(layer: Layer): boolean;
@@ -29,12 +29,12 @@ export interface Layer {
  */
 abstract class AbstractLayer implements Layer {
   constructor(
-    public children: Layer[] | null,
+    public children: Layer[] | undefined,
     public id: string,
   ) { }
 
   // Overrides the Layer interface.
-  findLayerById(id: string): Layer | null {
+  findLayerById(id: string): Layer | undefined {
     if (this.id === id) {
       return this;
     }
@@ -46,7 +46,7 @@ abstract class AbstractLayer implements Layer {
         }
       }
     }
-    return null;
+    return undefined;
   }
 
   // Overrides the Layer interface.
@@ -94,10 +94,10 @@ abstract class AbstractLayer implements Layer {
 export class PathLayer extends AbstractLayer {
   constructor(
     id: string,
-    public pathData: IPathCommand,
-    public fillColor: string | null = null,
+    public pathData: PathCommand,
+    public fillColor?: string,
     public fillAlpha = 1,
-    public strokeColor: string | null = null,
+    public strokeColor?: string,
     public strokeAlpha = 1,
     public strokeWidth = 0,
     public strokeLinecap = 'butt',
@@ -107,7 +107,7 @@ export class PathLayer extends AbstractLayer {
     public trimPathEnd = 1,
     public trimPathOffset = 0,
   ) {
-    super(null, id);
+    super(undefined, id);
   }
 }
 
@@ -117,9 +117,9 @@ export class PathLayer extends AbstractLayer {
 export class ClipPathLayer extends AbstractLayer {
   constructor(
     id: string,
-    public pathData: IPathCommand,
+    public pathData: PathCommand,
   ) {
-    super(null, id);
+    super(undefined, id);
   }
 }
 

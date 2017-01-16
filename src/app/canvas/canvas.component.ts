@@ -4,7 +4,7 @@ import {
   ViewChild, ViewChildren, Input, Output, EventEmitter
 } from '@angular/core';
 import {
-  Layer, PathLayer, ClipPathLayer, GroupLayer, VectorLayer, IPathCommand
+  Layer, PathLayer, ClipPathLayer, GroupLayer, VectorLayer, PathCommand
 } from './../scripts/model';
 import * as $ from 'jquery';
 import * as erd from 'element-resize-detector';
@@ -32,8 +32,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   private scale: number;
   private backingStoreScale: number;
   private isViewInit = false;
-  private closestProjectionInfo: ProjectionInfo = null;
-  private closestPathLayerId: string = null;
+  private closestProjectionInfo: ProjectionInfo;
+  private closestPathLayerId: string;
   private subscriptions: Subscription[] = [];
   private pathPointRadius: number;
 
@@ -69,7 +69,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       this.subscriptions.push(
         this.stateService.addOnAnimationChangeListener(fraction => {
           if (this.vectorLayer) {
-            // TODO(alockwood): if vector layer is null, then clear the canvas
+            // TODO(alockwood): if vector layer is undefined, then clear the canvas
             const startLayer = this.stateService.getVectorLayer(VectorLayerType.Start);
             const endLayer = this.stateService.getVectorLayer(VectorLayerType.End);
             this.vectorLayer.walk(layer => {
@@ -246,21 +246,16 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   }
 
   private drawPathLayerPoints({layer, ctx, transforms}: LayerArgs<PathLayer>) {
-    const points = [];
-    layer.pathData.commands.forEach(s => {
-      s.commands.forEach(c => {
-        if (c.svgChar !== 'Z') {
-          points.push({ p: _.last(c.points), isSplit: c.isSplit });
-        }
-      });
+    const pathDataPoints = _.flatMap(layer.pathData.commands, cmd => {
+      return cmd.points as { point: Point, isSplit: boolean }[];
     });
 
     ctx.save();
     const matrices = transforms.slice().reverse();
-    for (let i = points.length - 1; i >= 0; i--) {
-      const p = MathUtil.transform(points[i].p, ...matrices);
-      const color = i === 0 ? 'blue' : points[i].isSplit ? 'orange' : 'green';
-      const radius = this.pathPointRadius * (points[i].isSplit ? 0.8 : 1);
+    for (let i = pathDataPoints.length - 1; i >= 0; i--) {
+      const p = MathUtil.transform(pathDataPoints[i].point, ...matrices);
+      const color = i === 0 ? 'blue' : pathDataPoints[i].isSplit ? 'orange' : 'green';
+      const radius = this.pathPointRadius * (pathDataPoints[i].isSplit ? 0.8 : 1);
       ctx.beginPath();
       ctx.arc(p.x, p.y, radius, 0, 2 * Math.PI, false);
       ctx.fillStyle = color;
@@ -296,7 +291,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       const pathLayer = this.vectorLayer.findLayerById(this.closestPathLayerId) as PathLayer;
       pathLayer.pathData = this.closestProjectionInfo.split();
       this.stateService.setVectorLayer(this.vectorLayerType, this.vectorLayer);
-      this.closestProjectionInfo = null;
+      this.closestProjectionInfo = undefined;
     }
   }
 
@@ -319,8 +314,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   }
 
   private findClosestProjectionInfo(point: Point) {
-    let closestProjectionInfo: ProjectionInfo = null;
-    let closestPathLayerId: string = null;
+    let closestProjectionInfo: ProjectionInfo = undefined;
+    let closestPathLayerId: string = undefined;
     this.vectorLayer.walk(layer => {
       if (layer instanceof PathLayer) {
         const projectionInfo = layer.pathData.project(point);
@@ -340,7 +335,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
   onMouseLeave(event) {
     if (this.closestProjectionInfo) {
-      this.closestProjectionInfo = null;
+      this.closestProjectionInfo = undefined;
       this.draw();
     }
   }
@@ -411,7 +406,7 @@ function executePathData(
     } else if (d.svgChar === 'Z') {
       ctx.closePath();
     } else if (d.svgChar === 'A') {
-      executeArc(ctx, d.args);
+      executeArcCommand(ctx, d.args);
     }
   }));
 
@@ -419,7 +414,7 @@ function executePathData(
 }
 
 /** Draws an elliptical arc on the specified canvas context. */
-function executeArc(ctx: CanvasRenderingContext2D, arcArgs) {
+function executeArcCommand(ctx: CanvasRenderingContext2D, arcArgs: ReadonlyArray<number>) {
   const [currentPointX, currentPointY,
     rx, ry, xAxisRotation,
     largeArcFlag, sweepFlag,
@@ -459,5 +454,5 @@ interface LayerArgs<T extends Layer> {
 
 interface ProjectionInfo {
   projection: Projection;
-  split: () => IPathCommand;
+  split: () => PathCommand;
 }

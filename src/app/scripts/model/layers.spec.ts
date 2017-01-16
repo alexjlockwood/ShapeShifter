@@ -1,14 +1,14 @@
 import { Layer, VectorLayer, GroupLayer, PathLayer } from './layers';
 
 describe('AbstractLayer', () => {
-  const pl1 = new PathLayer('pl1', null);
-  const pl2 = new PathLayer('pl2', null);
-  const pl3 = new PathLayer('pl3', null);
-  const pl4 = new PathLayer('pl4', null);
-  const pl5 = new PathLayer('pl5', null);
-  const pl6 = new PathLayer('pl6', null);
-  const pl7 = new PathLayer('pl7', null);
-  const pl8 = new PathLayer('pl8', null);
+  const pl1 = new PathLayer('pl1', undefined);
+  const pl2 = new PathLayer('pl2', undefined);
+  const pl3 = new PathLayer('pl3', undefined);
+  const pl4 = new PathLayer('pl4', undefined);
+  const pl5 = new PathLayer('pl5', undefined);
+  const pl6 = new PathLayer('pl6', undefined);
+  const pl7 = new PathLayer('pl7', undefined);
+  const pl8 = new PathLayer('pl8', undefined);
   const gl1 = new GroupLayer([pl1, pl2, pl3, pl4], 'gl1');
   const gl2 = new GroupLayer([gl1, pl5], 'gl2');
   const gl3 = new GroupLayer([pl6, gl2], 'gl3');

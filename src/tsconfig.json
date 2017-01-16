@@ -14,6 +14,8 @@
     "typeRoots": [
       "../node_modules/@types"
     ],
+    "noImplicitReturns": true,
+    "pretty": true,
     "types": [
       "hammerjs",
       "jasmine"

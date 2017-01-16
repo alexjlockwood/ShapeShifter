@@ -93,13 +93,13 @@ describe('Walk', () => {
 
   it('mixedMap', () => {
     const visitor = (node, key, parent) => {
-      return _.isString(node) ? node.toLowerCase() : null;
+      return _.isString(node) ? node.toLowerCase() : undefined;
     };
 
     const tree = getMixedTestTree();
     const preorderResult = walker.map(tree, walker.preorder, visitor);
     expect(preorderResult.length).toBe(19, 'all nodes are visited');
-    expect(_.reject(preorderResult, _.isNull)).toEqual(
+    expect(_.reject(preorderResult, _.isUndefined)).toEqual(
       ['munich', 'muenchen', 'san francisco', 'sf', 'san fran', 'toronto', 'to', 't-dot'], 'pre-order map on a mixed tree');
 
     const postorderResult = walker.map(tree, walker.postorder, visitor);

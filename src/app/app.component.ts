@@ -23,7 +23,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   isMorphable = false;
 
   private isStructurallyIdentical = false;
-  private subscription: Subscription = null;
+  private subscription: Subscription;
 
   @ViewChild('appContainer') appContainerRef: ElementRef;
   @ViewChild('canvasContainer') canvasContainerRef: ElementRef;

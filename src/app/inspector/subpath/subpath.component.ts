@@ -2,7 +2,7 @@ import {
   Component, OnChanges, SimpleChanges, Input, OnInit,
   EventEmitter, Output
 } from '@angular/core';
-import { IDrawCommand, ISubPathCommand } from './../../scripts/model';
+import { DrawCommand, SubPathCommand } from './../../scripts/model';
 import { InspectorService, EventType } from '../inspector.service';
 
 @Component({
@@ -51,8 +51,8 @@ export class SubPathComponent implements OnInit, OnChanges {
   @Input('subPathCommandIndex') subPathCommandIndex: number;
 
   // Draw commands to use to populate the ngFor loop of command components.
-  drawCommands: ReadonlyArray<IDrawCommand> = [];
-  private subPathCommand_: ISubPathCommand;
+  drawCommands: ReadonlyArray<DrawCommand> = [];
+  private subPathCommand_: SubPathCommand;
 
   constructor(private inspectorService: InspectorService) { }
 
@@ -65,7 +65,7 @@ export class SubPathComponent implements OnInit, OnChanges {
   }
 
   @Input()
-  set subPathCommand(subPathCommand: ISubPathCommand) {
+  set subPathCommand(subPathCommand: SubPathCommand) {
     // console.log('setting new sub path command');
     this.subPathCommand_ = subPathCommand;
     this.drawCommands = subPathCommand.commands;

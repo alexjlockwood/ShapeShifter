@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 import { Point, Matrix, MathUtil } from '../common';
-import { IDrawCommand } from '../model';
+import { DrawCommand } from '../model';
 import * as SvgUtil from './svgutil';
 
 export type SvgChar = 'M' | 'L' | 'Q' | 'C' | 'A' | 'Z';
@@ -10,35 +10,35 @@ export type SvgChar = 'M' | 'L' | 'Q' | 'C' | 'A' | 'Z';
  * a single SVG drawing command (move, line, quadratic curve, bezier curve,
  * elliptical arc, or close path).
  */
-export class DrawCommand implements IDrawCommand {
+export class DrawCommandImpl implements DrawCommand {
 
   private readonly points_: ReadonlyArray<Point>;
   private readonly args_: ReadonlyArray<number>;
 
   static moveTo(start: Point, end: Point, isSplit?: boolean) {
-    return new DrawCommand('M', !!isSplit, [start, end]);
+    return new DrawCommandImpl('M', !!isSplit, [start, end]);
   }
 
   static lineTo(start: Point, end: Point, isSplit?: boolean) {
-    return new DrawCommand('L', !!isSplit, [start, end]);
+    return new DrawCommandImpl('L', !!isSplit, [start, end]);
   }
 
   static quadTo(start: Point, cp: Point, end: Point, isSplit?: boolean) {
-    return new DrawCommand('Q', !!isSplit, [start, cp, end]);
+    return new DrawCommandImpl('Q', !!isSplit, [start, cp, end]);
   }
 
   static cubicTo(start: Point, cp1: Point, cp2: Point, end: Point, isSplit?: boolean) {
-    return new DrawCommand('C', !!isSplit, [start, cp1, cp2, end]);
+    return new DrawCommandImpl('C', !!isSplit, [start, cp1, cp2, end]);
   }
 
   static arcTo(start: Point, rx: number, ry: number, xAxisRotation: number,
     largeArcFlag: number, sweepFlag: number, end: Point, isSplit?: boolean) {
-    return new DrawCommand('A', !!isSplit, [start, end],
+    return new DrawCommandImpl('A', !!isSplit, [start, end],
       start.x, start.y, rx, ry, xAxisRotation, largeArcFlag, sweepFlag, end.x, end.y);
   }
 
   static closePath(start: Point, end: Point, isSplit?: boolean) {
-    return new DrawCommand('Z', isSplit, [start, end]);
+    return new DrawCommandImpl('Z', isSplit, [start, end]);
   }
 
   private constructor(
@@ -73,7 +73,7 @@ export class DrawCommand implements IDrawCommand {
   }
 
   /** Returns a new transformed draw command. */
-  transform(matrices: Matrix[]): DrawCommand {
+  transform(matrices: Matrix[]): DrawCommandImpl {
     if (this.svgChar === 'A') {
       const start = MathUtil.transform(this.start, ...matrices);
       const arc = SvgUtil.transformArc({
@@ -85,20 +85,20 @@ export class DrawCommand implements IDrawCommand {
         endX: this.args[7],
         endY: this.args[8],
       }, matrices);
-      return new DrawCommand('A', this.isSplit, [start, new Point(arc.endX, arc.endY)],
+      return new DrawCommandImpl('A', this.isSplit, [start, new Point(arc.endX, arc.endY)],
         start.x, start.y,
         arc.rx, arc.ry,
         arc.xAxisRotation, arc.largeArcFlag, arc.sweepFlag,
         arc.endX, arc.endY);
     } else {
-      return new DrawCommand(this.svgChar, this.isSplit, this.points.map(p => {
+      return new DrawCommandImpl(this.svgChar, this.isSplit, this.points.map(p => {
         return p ? MathUtil.transform(p, ...matrices) : p;
       }));
     }
   }
 
   /** Returns a new reversed draw command. */
-  reverse(): DrawCommand {
+  reverse(): DrawCommandImpl {
     let points = this.points.slice();
     let args = this.args.slice();
     if (this.svgChar === 'A') {
@@ -116,7 +116,7 @@ export class DrawCommand implements IDrawCommand {
       points = points.reverse();
       args = pointsToArgs(points);
     }
-    return new DrawCommand(this.svgChar, this.isSplit, points, ...args);
+    return new DrawCommandImpl(this.svgChar, this.isSplit, points, ...args);
   }
 
   toString() {

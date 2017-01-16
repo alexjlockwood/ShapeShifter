@@ -26,6 +26,7 @@ export class Walker<T> {
         result = v;
         return stopWalk;
       }
+      return undefined;
     }, ctx);
     return result;
   }
@@ -42,7 +43,7 @@ export class Walker<T> {
       if (visitor.call(ctx, v, k, p)) {
         results.push(v);
       }
-    }, null, this._traversalFunc);
+    }, undefined, this._traversalFunc);
     return results;
   }
 
@@ -62,7 +63,7 @@ export class Walker<T> {
     const results: U[] = [];
     strategy(obj, function(v, k?, p?) {
       results[results.length] = visitor.call(ctx, v, k, p);
-    }, null, this._traversalFunc);
+    }, undefined, this._traversalFunc);
     return results;
   }
 
@@ -71,7 +72,7 @@ export class Walker<T> {
   // `traversalFunc` is intended for internal callers, and is not part
   // of the public API.
   postorder(obj: T, visitor: (v: T, k?, p?) => void, ctx?, traversalFunc = this._traversalFunc) {
-    walkInternal(obj, traversalFunc, null, visitor, ctx);
+    walkInternal(obj, traversalFunc, undefined, visitor, ctx);
   }
 
   // Recursively traverses `obj` in a depth-first fashion, invoking the
@@ -79,7 +80,7 @@ export class Walker<T> {
   // `traversalFunc` is intended for internal callers, and is not part
   // of the public API.
   preorder(obj: T, visitor: (v: T, k?, p?) => void, ctx?, traversalFunc = this._traversalFunc) {
-    walkInternal(obj, traversalFunc, visitor, null, ctx);
+    walkInternal(obj, traversalFunc, visitor, undefined, ctx);
   }
 
   // Builds up a single value by doing a post-order traversal of `obj` and
@@ -91,7 +92,7 @@ export class Walker<T> {
     const reducer = function(v, k?, p?, subResults?) {
       return visitor(subResults || leafMemo, v, k, p);
     };
-    return walkInternal(obj, this._traversalFunc, null, reducer, ctx, true);
+    return walkInternal(obj, this._traversalFunc, undefined, reducer, ctx, true);
   }
 
   collect<U>(obj: T, strategy: StrategyFunc<T>, visitor: (v: T, k?, p?) => U, ctx?) {

@@ -1,6 +1,6 @@
 import { Layer, VectorLayer, GroupLayer, PathLayer } from '../model';
 import { ColorUtil, MathUtil } from '../common';
-import { PathCommand } from './pathcommand';
+import { PathCommandImpl } from './pathcommand';
 import * as PathParser from './pathparser';
 import * as SvgUtil from './svgutil';
 
@@ -40,11 +40,11 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
 
   const nodeToLayerData_ = (node, context): Layer => {
     if (!node) {
-      return null;
+      return undefined;
     }
 
     if (node.nodeType === Node.TEXT_NODE || node.nodeType === Node.COMMENT_NODE) {
-      return null;
+      return undefined;
     }
 
     const simpleAttr_ = (nodeAttr, contextAttr) => {
@@ -118,10 +118,10 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
       // create a path layer
       return new PathLayer(
         makeFinalNodeId_(node, 'path'),
-        PathCommand.from(path),
-        ('fillColor' in context) ? ColorUtil.svgToAndroidColor(context.fillColor) : null,
+        PathCommandImpl.from(path),
+        ('fillColor' in context) ? ColorUtil.svgToAndroidColor(context.fillColor) : undefined,
         ('fillAlpha' in context) ? context.fillAlpha : undefined,
-        ('strokeColor' in context) ? ColorUtil.svgToAndroidColor(context.strokeColor) : null,
+        ('strokeColor' in context) ? ColorUtil.svgToAndroidColor(context.strokeColor) : undefined,
         ('strokeAlpha' in context) ? context.strokeAlpha : undefined,
         context.strokeWidth || undefined,
         context.strokeLinecap || undefined,
@@ -143,7 +143,7 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
       }
     }
 
-    return null;
+    return undefined;
   };
 
   const docElContext: any = {};
@@ -178,7 +178,7 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
   return new VectorLayer(childrenLayers, id, width, height, alpha);
 }
 
-function getUniqueId(prefix = '', objectById = (_) => null, targetObject = null) {
+function getUniqueId(prefix = '', objectById = (_) => undefined, targetObject?) {
   let n = 0;
   const id_ = () => prefix + (n ? `_${n}` : '');
   while (true) {

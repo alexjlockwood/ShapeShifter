@@ -2,7 +2,7 @@ import {
   Component, Input, OnInit, ChangeDetectorRef,
   OnDestroy, NgZone, OnChanges
 } from '@angular/core';
-import { PathLayer, IPathCommand } from './../scripts/model';
+import { PathLayer, PathCommand } from './../scripts/model';
 import { StateService, VectorLayerType } from './../state.service';
 import { Subscription } from 'rxjs/Subscription';
 import { InspectorService, EventType, InspectorEvent } from './inspector.service';
@@ -22,7 +22,7 @@ export class InspectorComponent implements OnInit, OnChanges, OnDestroy {
   @Input('vectorLayerType') vectorLayerType: VectorLayerType;
 
   // Path commands to use to populate the ngFor loop of path components.
-  pathCommands: ReadonlyArray<IPathCommand> = [];
+  pathCommands: ReadonlyArray<PathCommand> = [];
   pathLayerIds: ReadonlyArray<string> = [];
 
   private subscriptions: Subscription[] = [];
@@ -39,7 +39,7 @@ export class InspectorComponent implements OnInit, OnChanges, OnDestroy {
             return;
           }
           const pathLayerIds: string[] = [];
-          const pathCommands: IPathCommand[] = [];
+          const pathCommands: PathCommand[] = [];
           vl.walk(layer => {
             if (layer instanceof PathLayer) {
               pathLayerIds.push(layer.id);
@@ -77,7 +77,7 @@ export class InspectorComponent implements OnInit, OnChanges, OnDestroy {
     this.subscriptions.forEach(s => s.unsubscribe());
   }
 
-  trackByFn(index: number, item: IPathCommand) {
+  trackByFn(index: number, item: PathCommand) {
     return index;
   }
 }

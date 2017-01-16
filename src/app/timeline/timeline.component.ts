@@ -26,7 +26,7 @@ export class TimelineComponent {
   }
 
   onPlayClick() {
-    let startTimestamp = null;
+    let startTimestamp = undefined;
     const onAnimationFrame = (timestamp: number) => {
       if (!startTimestamp) {
         startTimestamp = timestamp;
@@ -37,7 +37,7 @@ export class TimelineComponent {
         requestAnimationFrame(onAnimationFrame);
       } else {
         this.stateService.setAnimationFraction(1);
-        startTimestamp = null;
+        startTimestamp = undefined;
       }
     };
     this.ngZone.runOutsideAngular(() => requestAnimationFrame(onAnimationFrame));

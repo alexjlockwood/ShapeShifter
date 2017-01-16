@@ -28,8 +28,8 @@ export class SplitterDirective implements OnInit {
     if (this.start) {
       this.onDividerDrag.emit({
         start: this.start,
-        move: null,
-        end: null,
+        move: undefined,
+        end: undefined,
       });
 
       document.body.onmousemove = (e: MouseEvent) => {
@@ -48,12 +48,12 @@ export class SplitterDirective implements OnInit {
         this.onDividerDrag.emit({
           start: this.start,
           move: new Point(endX, endY),
-          end: null,
+          end: undefined,
         });
       };
 
       document.body.onmouseup = (e: MouseEvent) => {
-        document.body.onmousemove = document.body.onmouseup = null;
+        document.body.onmousemove = document.body.onmouseup = undefined;
         e = e || <MouseEvent>window.event;
         e.stopPropagation();
         e.preventDefault();
