@@ -5,7 +5,7 @@ import * as SvgUtil from './svgutil';
 import * as PathParser from './pathparser';
 import { SubPathCommandImpl } from './subpathcommand';
 import {
-  DrawCommandImpl, moveTo, lineTo, quadraticCurveTo, cubicTo, arcTo, closePath
+  DrawCommandImpl, moveTo, lineTo, quadraticCurveTo, bezierCurveTo, arcTo, closePath
 } from './drawcommand';
 
 /**
@@ -345,7 +345,7 @@ class CommandWrapper {
     } else if (this.svgChar === 'Q') {
       return quadraticCurveTo(bez.start, bez.cp1, bez.end, isSplit);
     } else if (this.svgChar === 'C') {
-      return cubicTo(bez.start, bez.cp1, bez.cp2, bez.end, isSplit);
+      return bezierCurveTo(bez.start, bez.cp1, bez.cp2, bez.end, isSplit);
     } else {
       throw new Error('TODO: implement split for ellpitical arcs');
     }

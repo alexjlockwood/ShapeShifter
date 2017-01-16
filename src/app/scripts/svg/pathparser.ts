@@ -1,7 +1,7 @@
 import { Point, Matrix, MathUtil } from '../common';
 import * as SvgUtil from './svgutil';
 import {
-  DrawCommandImpl, moveTo, lineTo, quadraticCurveTo, cubicTo, arcTo, closePath
+  DrawCommandImpl, moveTo, lineTo, quadraticCurveTo, bezierCurveTo, arcTo, closePath
 } from './drawcommand';
 
 /**
@@ -129,7 +129,7 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): DrawComm
           const cp1 = consumePoint_(relative);
           const cp2 = consumePoint_(relative);
           const end = consumePoint_(relative);
-          commands.push(cubicTo(currentPoint, cp1, cp2, end));
+          commands.push(bezierCurveTo(currentPoint, cp1, cp2, end));
 
           currentControlPoint = cp2;
           currentPoint = end;
@@ -153,7 +153,7 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): DrawComm
           } else {
             cp1 = cp2;
           }
-          commands.push(cubicTo(currentPoint, cp1, cp2, end));
+          commands.push(bezierCurveTo(currentPoint, cp1, cp2, end));
 
           currentControlPoint = cp2;
           currentPoint = end;
