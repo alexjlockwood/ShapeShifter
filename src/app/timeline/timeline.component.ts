@@ -1,5 +1,5 @@
 import { Component, Input, Output, EventEmitter, NgZone } from '@angular/core';
-import { StateService } from '../state.service';
+import { GlobalStateService } from '../state.service';
 
 @Component({
   selector: 'app-timeline',
@@ -13,7 +13,7 @@ export class TimelineComponent {
   @Output() labelPointsChangedEmitter = new EventEmitter<boolean>();
   private readonly animationDuration = 1000;
 
-  constructor(private stateService: StateService, private ngZone: NgZone) { }
+  constructor(private stateService: GlobalStateService, private ngZone: NgZone) { }
 
   // TODO(alockwood): make this update each time the slider is changed
   onAnimationFractionSliderChanged(sliderValue: number) {

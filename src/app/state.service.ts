@@ -5,8 +5,12 @@ import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { VectorLayer } from './scripts/model';
 import { Observable } from 'rxjs/Observable';
 
+/**
+ * This service is responsible for holding the state of the application, such as the
+ * currently displayed vector layers, the current animation fraction, etc.
+ */
 @Injectable()
-export class StateService {
+export class GlobalStateService {
   private readonly vls: VectorLayer[] = [];
   private readonly sources: Subject<VectorLayer>[] = [];
   private readonly streams: Observable<VectorLayer>[] = [];
@@ -16,7 +20,7 @@ export class StateService {
   private readonly animationChangeStream = this.animationChangeSource.asObservable();
 
   constructor() {
-    [VectorLayerType.Start, VectorLayerType.Preview, VectorLayerType.End]
+    [PanelType.Start, PanelType.Preview, PanelType.End]
       .forEach(type => {
         this.sources[type] = new BehaviorSubject<VectorLayer>(undefined);
         this.streams[type] = this.sources[type].asObservable();
@@ -24,18 +28,18 @@ export class StateService {
   }
 
   /** Returns the vector layer with the specified type. */
-  getVectorLayer(type: VectorLayerType) {
+  getVectorLayer(type: PanelType) {
     return this.vls[type];
   }
 
   /** Sets and broadcasts the vector layer with the specified type. */
-  setVectorLayer(type: VectorLayerType, vl: VectorLayer) {
+  setVectorLayer(type: PanelType, vl: VectorLayer) {
     this.vls[type] = vl;
     this.notifyVectorLayerChange(type);
   }
 
   /** Broadcasts the vector layer with the specified type. */
-  notifyVectorLayerChange(type: VectorLayerType) {
+  notifyVectorLayerChange(type: PanelType) {
     this.sources[type].next(this.vls[type]);
   }
 
@@ -44,7 +48,7 @@ export class StateService {
    * unsubscribe from the returned subscription object when it is destroyed.
    */
   addOnVectorLayerChangeListener(
-    type: VectorLayerType,
+    type: PanelType,
     callback: (vl: VectorLayer) => void) {
     return this.streams[type].subscribe(callback);
   }
@@ -74,6 +78,6 @@ export class StateService {
   }
 }
 
-export enum VectorLayerType {
+export enum PanelType {
   Start, Preview, End
 }

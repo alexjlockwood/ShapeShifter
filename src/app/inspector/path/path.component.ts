@@ -3,7 +3,7 @@ import {
   Input, Output, OnInit, EventEmitter
 } from '@angular/core';
 import { PathCommand, SubPathCommand } from './../../scripts/model';
-import { StateService, VectorLayerType } from './../../state.service';
+import { GlobalStateService, PanelType } from './../../state.service';
 import { Subscription } from 'rxjs/Subscription';
 import { Observable } from 'rxjs/Observable';
 

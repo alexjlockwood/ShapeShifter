@@ -14,13 +14,21 @@ export interface Layer {
   /** Returns the first descendent layer with the specified ID. */
   findLayerById(id: string): Layer | undefined;
 
-  /** Returns true iff this layer is structurally identical with the corresponding layer. */
+  /**
+   * Returns true iff this layer is structurally identical with the
+   * corresponding layer.
+   */
   isStructurallyIdenticalWith(layer: Layer): boolean;
 
-  /** Returns true iff this layer is morphable with the corresponding layer. */
+  /**
+   * Returns true iff this layer is morphable with the corresponding layer.
+   */
   isMorphableWith(layer: Layer): boolean;
 
-  /** Walks the layer tree, executing beforeFunc on each node using a preorder traversal. */
+  /**
+   * Walks the layer tree, executing beforeFunc on each node using a
+   * preorder traversal.
+   */
   walk(beforeFunc: (layer: Layer) => void): void;
 }
 
@@ -33,7 +41,7 @@ abstract class AbstractLayer implements Layer {
     public id: string,
   ) { }
 
-  // Overrides the Layer interface.
+  // Implements the Layer interface.
   findLayerById(id: string): Layer | undefined {
     if (this.id === id) {
       return this;
@@ -49,7 +57,7 @@ abstract class AbstractLayer implements Layer {
     return undefined;
   }
 
-  // Overrides the Layer interface.
+  // Implements the Layer interface.
   isStructurallyIdenticalWith(layer: Layer) {
     if (this.constructor !== layer.constructor || this.id !== layer.id) {
       return false;
@@ -58,10 +66,11 @@ abstract class AbstractLayer implements Layer {
       return true;
     }
     return this.children.length === layer.children.length
-      && this.children.every((c, i) => c.isStructurallyIdenticalWith(layer.children[i]));
+      && this.children.every((c, i) =>
+        c.isStructurallyIdenticalWith(layer.children[i]));
   }
 
-  // Overrides the Layer interface.
+  // Implements the Layer interface.
   isMorphableWith(layer: Layer) {
     if (this.constructor !== layer.constructor || this.id !== layer.id) {
       return false;
@@ -73,18 +82,19 @@ abstract class AbstractLayer implements Layer {
       return true;
     }
     return this.children.length === layer.children.length
-      && this.children.every((c, i) => c.isMorphableWith(layer.children[i]));
+      && this.children.every((c, i) =>
+        c.isMorphableWith(layer.children[i]));
   }
 
-  // Overrides the Layer interface.
+  // Implements the Layer interface.
   walk(beforeFunc: (layer: Layer) => void) {
-    const visit = (layer: Layer) => {
+    const _visit = (layer: Layer) => {
       beforeFunc(layer);
       if (layer.children) {
-        layer.children.forEach(l => visit(l));
+        layer.children.forEach(l => _visit(l));
       }
     };
-    visit(this);
+    _visit(this);
   }
 }
 
@@ -128,7 +138,7 @@ export class ClipPathLayer extends AbstractLayer {
  */
 export class GroupLayer extends AbstractLayer {
   constructor(
-    children: (GroupLayer | ClipPathLayer | PathLayer)[],
+    children: Array<GroupLayer | ClipPathLayer | PathLayer>,
     id: string,
     public pivotX = 0,
     public pivotY = 0,
@@ -148,7 +158,7 @@ export class GroupLayer extends AbstractLayer {
 export class VectorLayer extends AbstractLayer {
 
   constructor(
-    children: (GroupLayer | ClipPathLayer | PathLayer)[],
+    children: Array<GroupLayer | ClipPathLayer | PathLayer>,
     id: string,
     public width = 0,
     public height = 0,
@@ -158,44 +168,46 @@ export class VectorLayer extends AbstractLayer {
   }
 
   clone(): VectorLayer {
-    return (function _clone(layer: GroupLayer | ClipPathLayer | PathLayer | VectorLayer) {
-      if (layer instanceof GroupLayer) {
-        return new GroupLayer(
+    const _clone =
+      (layer: GroupLayer | ClipPathLayer | PathLayer | VectorLayer) => {
+        if (layer instanceof GroupLayer) {
+          return new GroupLayer(
+            layer.children.map(child => _clone(child)),
+            layer.id,
+            layer.pivotX,
+            layer.pivotY,
+            layer.rotation,
+            layer.scaleX,
+            layer.scaleY,
+            layer.translateX,
+            layer.translateY);
+        }
+        if (layer instanceof ClipPathLayer) {
+          return new ClipPathLayer(layer.id, layer.pathData.clone());
+        }
+        if (layer instanceof PathLayer) {
+          return new PathLayer(
+            layer.id,
+            layer.pathData.clone(),
+            layer.fillColor,
+            layer.fillAlpha,
+            layer.strokeColor,
+            layer.strokeAlpha,
+            layer.strokeWidth,
+            layer.strokeLinecap,
+            layer.strokeLinejoin,
+            layer.strokeMiterLimit,
+            layer.trimPathStart,
+            layer.trimPathEnd,
+            layer.trimPathOffset);
+        }
+        return new VectorLayer(
           layer.children.map(child => _clone(child)),
           layer.id,
-          layer.pivotX,
-          layer.pivotY,
-          layer.rotation,
-          layer.scaleX,
-          layer.scaleY,
-          layer.translateX,
-          layer.translateY);
-      }
-      if (layer instanceof ClipPathLayer) {
-        return new ClipPathLayer(layer.id, layer.pathData.clone());
-      }
-      if (layer instanceof PathLayer) {
-        return new PathLayer(
-          layer.id,
-          layer.pathData.clone(),
-          layer.fillColor,
-          layer.fillAlpha,
-          layer.strokeColor,
-          layer.strokeAlpha,
-          layer.strokeWidth,
-          layer.strokeLinecap,
-          layer.strokeLinejoin,
-          layer.strokeMiterLimit,
-          layer.trimPathStart,
-          layer.trimPathEnd,
-          layer.trimPathOffset);
-      }
-      return new VectorLayer(
-        layer.children.map(child => _clone(child)),
-        layer.id,
-        layer.width,
-        layer.height,
-        layer.alpha);
-    })(this);
+          layer.width,
+          layer.height,
+          layer.alpha);
+      };
+    return _clone(this);
   }
 }

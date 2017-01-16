@@ -3,7 +3,7 @@ import {
   OnDestroy, NgZone, OnChanges
 } from '@angular/core';
 import { PathLayer, PathCommand } from './../scripts/model';
-import { StateService, VectorLayerType } from './../state.service';
+import { GlobalStateService, PanelType } from './../state.service';
 import { Subscription } from 'rxjs/Subscription';
 import { InspectorService, EventType, InspectorEvent } from './inspector.service';
 
@@ -19,7 +19,7 @@ import { InspectorService, EventType, InspectorEvent } from './inspector.service
   providers: [InspectorService]
 })
 export class InspectorComponent implements OnInit, OnChanges, OnDestroy {
-  @Input('vectorLayerType') vectorLayerType: VectorLayerType;
+  @Input('vectorLayerType') vectorLayerType: PanelType;
 
   // Path commands to use to populate the ngFor loop of path components.
   pathCommands: ReadonlyArray<PathCommand> = [];
@@ -28,7 +28,7 @@ export class InspectorComponent implements OnInit, OnChanges, OnDestroy {
   private subscriptions: Subscription[] = [];
 
   constructor(
-    private stateService: StateService,
+    private stateService: GlobalStateService,
     private inspectorService: InspectorService) { }
 
   ngOnInit() {

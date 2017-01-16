@@ -7,7 +7,7 @@ import { MaterialModule } from '@angular/material';
 
 import { AppComponent } from './app.component';
 import { CanvasComponent } from './canvas/canvas.component';
-import { StateService } from './state.service';
+import { GlobalStateService } from './state.service';
 import { TimelineComponent } from './timeline/timeline.component';
 
 import 'hammerjs';
@@ -37,7 +37,7 @@ import { CommandComponent } from './inspector/command/command.component';
     FlexLayoutModule.forRoot(),
     MaterialModule.forRoot()
   ],
-  providers: [StateService],
+  providers: [GlobalStateService],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
