@@ -18,8 +18,13 @@ export class InspectorService {
     return this.inspectorStream.subscribe(callback);
   }
 
-  notifyChange(event: InspectorEvent) {
-    this.inspectorSource.next(event);
+  notifyChange(eventType: EventType, args: InspectorArgs) {
+    this.inspectorSource.next({
+      eventType: eventType,
+      pathId: args.pathId,
+      subPathIdx: args.subPathIdx,
+      drawIdx: args.drawIdx,
+    });
   }
 }
 
@@ -28,12 +33,14 @@ export enum EventType {
   ShiftForward,
   ShiftBack,
   Delete,
-  Select,
 };
 
-export interface InspectorEvent {
+export interface InspectorArgs {
+  pathId: string;
+  subPathIdx?: number;
+  drawIdx?: number;
+}
+
+export interface InspectorEvent extends InspectorArgs {
   eventType: EventType;
-  pathCommandIndex?: number;
-  subPathCommandIndex?: number;
-  drawCommandIndex?: number;
 }

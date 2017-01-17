@@ -2,7 +2,7 @@ import {
   Component, OnChanges, SimpleChanges,
   Input, Output, OnInit, EventEmitter
 } from '@angular/core';
-import { PathCommand, SubPathCommand } from './../../scripts/model';
+import { PathCommand, SubPathCommand, EditorType } from './../../scripts/model';
 import { Subscription } from 'rxjs/Subscription';
 import { Observable } from 'rxjs/Observable';
 
@@ -11,20 +11,13 @@ import { Observable } from 'rxjs/Observable';
   templateUrl: './path.component.html',
   styleUrls: ['./path.component.scss']
 })
-export class PathComponent implements OnInit, OnChanges {
-  @Input('pathCommandIndex') pathCommandIndex: number;
+export class PathComponent {
+  @Input() editorType: EditorType;
+  @Input() pathId: string;
 
   // Sub path commands to use to populate the ngFor loop of sub path components.
   subPathCommands: ReadonlyArray<SubPathCommand> = [];
   private pathCommand_: PathCommand;
-
-  ngOnInit() {
-    // console.log('ngOnInit');
-  }
-
-  ngOnChanges(changes: SimpleChanges) {
-    // console.log('path');
-  }
 
   @Input()
   set pathCommand(pathCommand: PathCommand) {

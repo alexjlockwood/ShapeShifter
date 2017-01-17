@@ -2,7 +2,7 @@ import {
   Component, OnChanges, SimpleChanges, Input, OnInit,
   EventEmitter, Output
 } from '@angular/core';
-import { DrawCommand, SubPathCommand } from './../../scripts/model';
+import { DrawCommand, SubPathCommand, EditorType } from './../../scripts/model';
 import { InspectorService, EventType } from '../inspector.service';
 
 @Component({
@@ -11,8 +11,9 @@ import { InspectorService, EventType } from '../inspector.service';
   styleUrls: ['./subpath.component.scss']
 })
 export class SubPathComponent {
-  @Input('pathCommandIndex') pathCommandIndex: number;
-  @Input('subPathCommandIndex') subPathCommandIndex: number;
+  @Input() editorType: EditorType;
+  @Input() pathId: string;
+  @Input() subPathIdx: number;
 
   // Draw commands to use to populate the ngFor loop of command components.
   drawCommands: ReadonlyArray<DrawCommand> = [];
@@ -31,26 +32,23 @@ export class SubPathComponent {
   }
 
   onReverseClick() {
-    this.inspectorService.notifyChange({
-      eventType: EventType.Reverse,
-      pathCommandIndex: this.pathCommandIndex,
-      subPathCommandIndex: this.subPathCommandIndex,
+    this.inspectorService.notifyChange(EventType.Reverse, {
+      pathId: this.pathId,
+      subPathIdx: this.subPathIdx,
     });
   }
 
   onShiftBackClick() {
-    this.inspectorService.notifyChange({
-      eventType: EventType.ShiftBack,
-      pathCommandIndex: this.pathCommandIndex,
-      subPathCommandIndex: this.subPathCommandIndex,
+    this.inspectorService.notifyChange(EventType.ShiftBack, {
+      pathId: this.pathId,
+      subPathIdx: this.subPathIdx,
     });
   }
 
   onShiftForwardClick() {
-    this.inspectorService.notifyChange({
-      eventType: EventType.ShiftForward,
-      pathCommandIndex: this.pathCommandIndex,
-      subPathCommandIndex: this.subPathCommandIndex,
+    this.inspectorService.notifyChange(EventType.ShiftForward, {
+      pathId: this.pathId,
+      subPathIdx: this.subPathIdx,
     });
   }
 }

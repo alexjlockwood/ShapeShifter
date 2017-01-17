@@ -7,13 +7,13 @@
       <div fxLayout="row"
         fxLayoutAlign="space-around">
         <app-canvas fxFlex="30%"
-          [vectorLayerType]="startVectorLayerType"
+          [editorType]="startVectorLayerType"
           [shouldLabelPoints]="shouldLabelPoints"></app-canvas>
         <app-canvas fxFlex="30%"
-          [vectorLayerType]="previewVectorLayerType"
+          [editorType]="previewVectorLayerType"
           [shouldLabelPoints]="shouldLabelPoints"></app-canvas>
         <app-canvas fxFlex="30%"
-          [vectorLayerType]="endVectorLayerType"
+          [editorType]="endVectorLayerType"
           [shouldLabelPoints]="shouldLabelPoints"></app-canvas>
       </div>
       <app-timeline [isMorphable]="isMorphable"
@@ -29,9 +29,9 @@
         fxLayout="row"
         fxLayoutAlign="space-around">
         <app-inspector fxFlex="30%"
-          [vectorLayerType]="startVectorLayerType"></app-inspector>
+          [editorType]="startVectorLayerType"></app-inspector>
         <app-inspector fxFlex="30%"
-          [vectorLayerType]="endVectorLayerType"></app-inspector>
+          [editorType]="endVectorLayerType"></app-inspector>
       </div>
     </div>
   </div>

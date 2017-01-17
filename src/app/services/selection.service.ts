@@ -1,3 +1,4 @@
+import * as _ from 'lodash';
 import { Injectable } from '@angular/core';
 import { Subject } from 'rxjs/Subject';
 import { Subscription } from 'rxjs/Subscription';
@@ -12,21 +13,25 @@ export class SelectionService {
   private readonly sources: Subject<Selection[]>[] = [];
   private readonly streams: Observable<Selection[]>[] = [];
 
+  // TODO: maybe it does make sense to move selection state into the path commands after all?
+  // first impression was that synchronizing inspector and selection state might be difficult
+  // otherwise (i.e. making sure selections and reversals/shifts/splits/etc. stay in sync).
   constructor() {
-    [EditorType.Start, EditorType.Preview, EditorType.End]
-      .forEach(type => {
-        this.sources[type] = new BehaviorSubject<Selection[]>([]);
-        this.streams[type] = this.sources[type].asObservable();
-      });
+    const editorTypes = [EditorType.Start, EditorType.Preview, EditorType.End];
+    editorTypes.forEach(type => {
+      this.selections[type] = [];
+      this.sources[type] = new BehaviorSubject<Selection[]>([]);
+      this.streams[type] = this.sources[type].asObservable();
+    });
   }
 
   /** Returns the selections with the specified type. */
-  getSelections(type: EditorType) {
+  private getSelections(type: EditorType) {
     return this.selections[type];
   }
 
   /** Sets and broadcasts the selections with the specified type. */
-  setSelections(type: EditorType, selections: Selection[]) {
+  private setSelections(type: EditorType, selections: Selection[]) {
     this.selections[type] = selections;
     this.notifyChange(type);
   }
@@ -45,6 +50,17 @@ export class SelectionService {
     callback: (selections: Selection[]) => void) {
     return this.streams[type].subscribe(callback);
   }
+
+  toggleSelection(type: EditorType, selection: Selection) {
+    const isSelected = _.some(this.selections[type], selection);
+    this.selections[type] = isSelected ? [] : [selection];
+    this.notifyChange(type);
+  }
 }
 
-type Selection = number;
+// TODO: figure out how to keep these in sync with reversals/shifts/splits/unsplits.
+export interface Selection {
+  pathId: string;
+  subPathIdx: number;
+  drawIdx: number;
+}

@@ -1,33 +1,54 @@
 import * as _ from 'lodash';
 import {
   Component, AfterViewInit, OnChanges, Output, OnInit, HostListener,
-  SimpleChanges, Input, ViewChild, ElementRef
+  SimpleChanges, Input, ViewChild, ElementRef, OnDestroy
 } from '@angular/core';
-import { DrawCommand } from '../../scripts/model';
+import { DrawCommand, EditorType } from '../../scripts/model';
 import * as $ from 'jquery';
 import { InspectorService, EventType } from '../inspector.service';
-import { SelectionService } from '../../services/selection.service';
+import { SelectionService, Selection } from '../../services/selection.service';
+import { Subscription } from 'rxjs/Subscription';
 
 @Component({
   selector: 'app-command',
   templateUrl: './command.component.html',
   styleUrls: ['./command.component.scss']
 })
-export class CommandComponent implements AfterViewInit {
+export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('drawCommandIndexCanvas') private drawCommandIndexCanvas: ElementRef;
-  @Input('pathCommandIndex') pathCommandIndex: number;
-  @Input('subPathCommandIndex') subPathCommandIndex: number;
-  @Input('drawCommandIndex') drawCommandIndex: number;
-  @Input('drawCommand') drawCommand: DrawCommand;
+  @Input() editorType: EditorType;
+  @Input() pathId: string;
+  @Input() subPathIdx: number;
+  @Input() drawIdx: number;
+  @Input() drawCommand: DrawCommand;
 
   private isCommandSelected_ = false;
+  private subscription: Subscription;
+  private selectionArgs: Selection;
 
   constructor(
     private selectionService: SelectionService,
     private inspectorService: InspectorService) { }
 
+  // TODO: the last index of the subpath doesnt seem to update its number after each split...
+  ngOnInit() {
+    this.selectionArgs = {
+      pathId: this.pathId,
+      subPathIdx: this.subPathIdx,
+      drawIdx: this.drawIdx,
+    };
+    this.subscription = this.selectionService.addListener(this.editorType,
+      (selections: Selection[]) => {
+        this.isCommandSelected = _.some(selections, this.selectionArgs);
+      });
+  }
+
   ngAfterViewInit() {
     this.draw();
+  }
+
+  ngOnDestroy() {
+    this.subscription.unsubscribe();
   }
 
   // TODO(alockwood): use ngFor trackBy to avoid recreating these items on animation frames
@@ -41,7 +62,8 @@ export class CommandComponent implements AfterViewInit {
       .attr({ width: width * dpi, height: height * dpi })
       .css({ width, height });
 
-    const ctx: CanvasRenderingContext2D = (canvas.get(0) as any).getContext('2d');
+    const ctx: CanvasRenderingContext2D =
+      (canvas.get(0) as HTMLCanvasElement).getContext('2d');
     const radius = commandIndexCanvasSize * dpi / 2;
 
     ctx.save();
@@ -53,7 +75,7 @@ export class CommandComponent implements AfterViewInit {
     ctx.beginPath();
     ctx.fillStyle = 'white';
     ctx.font = radius + 'px serif';
-    const text = (this.drawCommandIndex + 1).toString();
+    const text = (this.drawIdx + 1).toString();
     const textWidth = ctx.measureText(text).width;
     // TODO(alockwood): is there a better way to get the height?
     const textHeight = ctx.measureText('o').width;
@@ -79,11 +101,11 @@ export class CommandComponent implements AfterViewInit {
   }
 
   set isCommandSelected(isCommandSelected: boolean) {
-    this.isCommandSelected_ = isCommandSelected
+    this.isCommandSelected_ = isCommandSelected;
   }
 
   @HostListener('click') onCommandClick() {
-    this.isCommandSelected = !this.isCommandSelected;
+    this.selectionService.toggleSelection(this.editorType, this.selectionArgs);
   }
 
   isEditable() {
@@ -105,11 +127,10 @@ export class CommandComponent implements AfterViewInit {
   }
 
   onDeleteButtonClick(event) {
-    this.inspectorService.notifyChange({
-      eventType: EventType.Delete,
-      pathCommandIndex: this.pathCommandIndex,
-      subPathCommandIndex: this.subPathCommandIndex,
-      drawCommandIndex: this.drawCommandIndex,
+    this.inspectorService.notifyChange(EventType.Delete, {
+      pathId: this.pathId,
+      subPathIdx: this.subPathIdx,
+      drawIdx: this.drawIdx,
     });
 
     // This ensures that the parent div won't also receive the same click event.

@@ -13,12 +13,12 @@ import { InspectorService, EventType, InspectorEvent } from './inspector.service
   styleUrls: ['./inspector.component.scss'],
   providers: [InspectorService]
 })
-export class InspectorComponent implements OnInit, OnChanges, OnDestroy {
-  @Input('vectorLayerType') vectorType: EditorType;
+export class InspectorComponent implements OnInit, OnDestroy {
+  @Input() editorType: EditorType;
 
   // Path commands to use to populate the ngFor loop of path components.
+  pathIds: ReadonlyArray<string> = [];
   pathCommands: ReadonlyArray<PathCommand> = [];
-  pathLayerIds: ReadonlyArray<string> = [];
 
   private subscriptions: Subscription[] = [];
 
@@ -29,43 +29,37 @@ export class InspectorComponent implements OnInit, OnChanges, OnDestroy {
   ngOnInit() {
     this.subscriptions.push(
       this.layerStateService.addListener(
-        this.vectorType, vl => {
+        this.editorType, vl => {
           if (!vl) {
             return;
           }
-          const pathLayerIds: string[] = [];
+          const pathIds: string[] = [];
           const pathCommands: PathCommand[] = [];
           vl.walk(layer => {
             if (layer instanceof PathLayer) {
-              pathLayerIds.push(layer.id);
+              pathIds.push(layer.id);
               pathCommands.push(layer.pathData);
             }
           });
-          this.pathLayerIds = pathLayerIds;
+          this.pathIds = pathIds;
           this.pathCommands = pathCommands;
         }));
     this.subscriptions.push(
       this.inspectorService.addListener((event: InspectorEvent) => {
-        const {eventType, pathCommandIndex, subPathCommandIndex, drawCommandIndex} = event;
-        const vl = this.layerStateService.getVectorLayer(this.vectorType);
-        const pathLayer = vl.findLayerById(this.pathLayerIds[pathCommandIndex]) as PathLayer;
+        const {eventType, pathId, subPathIdx, drawIdx} = event;
+        const vl = this.layerStateService.getVectorLayer(this.editorType);
+        const pathLayer = vl.findLayerById(pathId) as PathLayer;
         if (eventType === EventType.Reverse) {
-          pathLayer.pathData = pathLayer.pathData.reverse(subPathCommandIndex);
+          pathLayer.pathData = pathLayer.pathData.reverse(subPathIdx);
         } else if (eventType === EventType.ShiftBack) {
-          pathLayer.pathData = pathLayer.pathData.shiftBack(subPathCommandIndex);
+          pathLayer.pathData = pathLayer.pathData.shiftBack(subPathIdx);
         } else if (eventType === EventType.ShiftForward) {
-          pathLayer.pathData = pathLayer.pathData.shiftForward(subPathCommandIndex);
+          pathLayer.pathData = pathLayer.pathData.shiftForward(subPathIdx);
         } else if (eventType === EventType.Delete) {
-          pathLayer.pathData = pathLayer.pathData.unsplit(subPathCommandIndex, drawCommandIndex);
-        } else if (eventType === EventType.Select) {
-
+          pathLayer.pathData = pathLayer.pathData.unsplit(subPathIdx, drawIdx);
         }
-        this.layerStateService.notifyChange(this.vectorType);
+        this.layerStateService.notifyChange(this.editorType);
       }));
-  }
-
-  ngOnChanges() {
-    // console.log('onChanges');
   }
 
   ngOnDestroy() {
