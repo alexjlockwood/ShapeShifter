@@ -1,63 +1,36 @@
 import * as _ from 'lodash';
 import {
-  Component, AfterViewInit, OnChanges, Output, OnInit,
-  SimpleChanges, Input, ViewChild, ElementRef, EventEmitter
+  Component, AfterViewInit, OnChanges, Output, OnInit, HostListener,
+  SimpleChanges, Input, ViewChild, ElementRef
 } from '@angular/core';
-import { DrawCommand } from './../../scripts/model';
+import { DrawCommand } from '../../scripts/model';
 import * as $ from 'jquery';
 import { InspectorService, EventType } from '../inspector.service';
+import { SelectionService } from '../../services/selection.service';
 
 @Component({
   selector: 'app-command',
-  template: `
-  <canvas #drawCommandIndexCanvas
-      class="command-index"></canvas>
-
-  <span fxFlex>{{ drawCommandEndPointText }}</span>
-
-  <button md-icon-button
-      mdTooltip="Edit point"
-      mdTooltipPosition="above"
-      md-theme="dark"
-      [fxShow]="isEditable()"
-      fxLayoutAlign="center center"
-      (click)="onEditButtonClick()">
-    <md-icon class="md-24">mode_edit</md-icon>
-  </button>
-
-  <button md-icon-button
-      mdTooltip="Delete point"
-      mdTooltipPosition="above"
-      md-theme="dark"
-      fxLayoutAlign="center center"
-      [fxShow]="isDeletable()"
-      (click)="onDeleteButtonClick()">
-    <md-icon class="md-24">delete</md-icon>
-  </button>`,
+  templateUrl: './command.component.html',
   styleUrls: ['./command.component.scss']
 })
-export class CommandComponent implements OnInit, AfterViewInit, OnChanges {
+export class CommandComponent implements AfterViewInit {
   @ViewChild('drawCommandIndexCanvas') private drawCommandIndexCanvas: ElementRef;
   @Input('pathCommandIndex') pathCommandIndex: number;
   @Input('subPathCommandIndex') subPathCommandIndex: number;
   @Input('drawCommandIndex') drawCommandIndex: number;
   @Input('drawCommand') drawCommand: DrawCommand;
 
-  constructor(private inspectorService: InspectorService) { }
+  private isCommandSelected_ = false;
 
-  ngOnInit() {
-    // console.log('ngOnInit()');
-  }
+  constructor(
+    private selectionService: SelectionService,
+    private inspectorService: InspectorService) { }
 
   ngAfterViewInit() {
     this.draw();
   }
 
   // TODO(alockwood): use ngFor trackBy to avoid recreating these items on animation frames
-  ngOnChanges(changes: SimpleChanges) {
-    this.draw();
-  }
-
   private draw() {
     const canvas = $(this.drawCommandIndexCanvas.nativeElement);
     const commandIndexCanvasSize = canvas.get(0).getBoundingClientRect().width;
@@ -101,6 +74,18 @@ export class CommandComponent implements OnInit, AfterViewInit, OnChanges {
     }
   }
 
+  get isCommandSelected() {
+    return this.isCommandSelected_;
+  }
+
+  set isCommandSelected(isCommandSelected: boolean) {
+    this.isCommandSelected_ = isCommandSelected
+  }
+
+  @HostListener('click') onCommandClick() {
+    this.isCommandSelected = !this.isCommandSelected;
+  }
+
   isEditable() {
     // TODO(alockwood): implement this
     return false;
@@ -110,21 +95,24 @@ export class CommandComponent implements OnInit, AfterViewInit, OnChanges {
     return this.drawCommand.isSplit;
   }
 
-  onEditButtonClick() {
-    this.inspectorService.notifyChange({
-      eventType: EventType.Edit,
-      pathCommandIndex: this.pathCommandIndex,
-      subPathCommandIndex: this.subPathCommandIndex,
-      drawCommandIndex: this.drawCommandIndex,
-    });
+  onEditButtonClick(event) {
+    // this.inspectorService.notifyChange({
+    //   eventType: EventType.Edit,
+    //   pathCommandIndex: this.pathCommandIndex,
+    //   subPathCommandIndex: this.subPathCommandIndex,
+    //   drawCommandIndex: this.drawCommandIndex,
+    // });
   }
 
-  onDeleteButtonClick() {
+  onDeleteButtonClick(event) {
     this.inspectorService.notifyChange({
       eventType: EventType.Delete,
       pathCommandIndex: this.pathCommandIndex,
       subPathCommandIndex: this.subPathCommandIndex,
       drawCommandIndex: this.drawCommandIndex,
     });
+
+    // This ensures that the parent div won't also receive the same click event.
+    event.cancelBubble = true;
   }
 }

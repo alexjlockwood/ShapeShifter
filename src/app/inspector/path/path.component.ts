@@ -3,19 +3,12 @@ import {
   Input, Output, OnInit, EventEmitter
 } from '@angular/core';
 import { PathCommand, SubPathCommand } from './../../scripts/model';
-import { GlobalStateService, VectorType } from './../../state.service';
 import { Subscription } from 'rxjs/Subscription';
 import { Observable } from 'rxjs/Observable';
 
 @Component({
   selector: 'app-path',
-  template: `
-  <app-subpath *ngFor="let command of subPathCommands; let commandIndex = index; trackBy: trackSubPathCommand"
-      fxLayout="column"
-      [pathCommandIndex]="pathCommandIndex"
-      [subPathCommandIndex]="commandIndex"
-      [subPathCommand]="command">
-  </app-subpath>`,
+  templateUrl: './path.component.html',
   styleUrls: ['./path.component.scss']
 })
 export class PathComponent implements OnInit, OnChanges {

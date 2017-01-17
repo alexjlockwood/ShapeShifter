@@ -1,0 +1,28 @@
+<div class="command-container"
+  [class.selected]="isCommandSelected"
+  fxLayout="row"
+  fxLayoutAlign="start center"
+  fxFlex>
+  <canvas #drawCommandIndexCanvas
+    class="command-index"></canvas>
+  <span fxFlex>{{ drawCommandEndPointText }}</span>
+  <button md-icon-button
+    mdTooltip="Edit point"
+    mdTooltipPosition="above"
+    md-theme="dark"
+    [fxShow]="isEditable()"
+    fxLayoutAlign="center center"
+    (click)="onEditButtonClick($event)">
+    <md-icon class="md-24">mode_edit</md-icon>
+  </button>
+  <button md-icon-button
+    mdTooltip="Delete point"
+    mdTooltipPosition="above"
+    md-theme="dark"
+    fxLayoutAlign="center center"
+    [fxShow]="isDeletable()"
+    (click)="onDeleteButtonClick($event)">
+    <md-icon class="md-24">delete</md-icon>
+  </button>
+</div>
+

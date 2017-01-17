@@ -2,15 +2,12 @@ import { Injectable } from '@angular/core';
 import { Subject } from 'rxjs/Subject';
 import { Subscription } from 'rxjs/Subscription';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
-import { VectorLayer } from './scripts/model';
+import { VectorLayer } from '../scripts/model';
 import { Observable } from 'rxjs/Observable';
+import { EditorType } from '../scripts/model';
 
-/**
- * This service is responsible for holding the state of the application, such as the
- * currently displayed vector layers, the current animation fraction, etc.
- */
 @Injectable()
-export class GlobalStateService {
+export class LayerStateService {
   private readonly vls: VectorLayer[] = [];
   private readonly sources: Subject<VectorLayer>[] = [];
   private readonly streams: Observable<VectorLayer>[] = [];
@@ -20,7 +17,7 @@ export class GlobalStateService {
   private readonly animationChangeStream = this.animationChangeSource.asObservable();
 
   constructor() {
-    [VectorType.Start, VectorType.Preview, VectorType.End]
+    [EditorType.Start, EditorType.Preview, EditorType.End]
       .forEach(type => {
         this.sources[type] = new BehaviorSubject<VectorLayer>(undefined);
         this.streams[type] = this.sources[type].asObservable();
@@ -28,18 +25,18 @@ export class GlobalStateService {
   }
 
   /** Returns the vector layer with the specified type. */
-  getVectorLayer(type: VectorType) {
+  getVectorLayer(type: EditorType) {
     return this.vls[type];
   }
 
   /** Sets and broadcasts the vector layer with the specified type. */
-  setVectorLayer(type: VectorType, vl: VectorLayer) {
+  setVectorLayer(type: EditorType, vl: VectorLayer) {
     this.vls[type] = vl;
-    this.notifyVectorLayerChange(type);
+    this.notifyChange(type);
   }
 
   /** Broadcasts the vector layer with the specified type. */
-  notifyVectorLayerChange(type: VectorType) {
+  notifyChange(type: EditorType) {
     this.sources[type].next(this.vls[type]);
   }
 
@@ -47,37 +44,9 @@ export class GlobalStateService {
    * Adds a listener to receive vector layer change events. The caller should
    * unsubscribe from the returned subscription object when it is destroyed.
    */
-  addOnVectorLayerChangeListener(
-    type: VectorType,
+  addListener(
+    type: EditorType,
     callback: (vl: VectorLayer) => void) {
     return this.streams[type].subscribe(callback);
   }
-
-  /** Returns the current global animation fraction. */
-  getAnimationFraction() {
-    return this.currentAnimationFraction;
-  }
-
-  /** Sets and broadcasts the current global animation fraction. */
-  setAnimationFraction(fraction: number) {
-    this.currentAnimationFraction = fraction;
-    this.notifyAnimationChange();
-  }
-
-  /** Broadcasts the current global animation fraction. */
-  notifyAnimationChange() {
-    this.animationChangeSource.next(this.currentAnimationFraction);
-  }
-
-  /**
-   * Adds a listener to receive animation change events. The caller should
-   * unsubscribe from the returned subscription object when it is destroyed.
-   */
-  addOnAnimationChangeListener(callback: (fraction: number) => void) {
-    return this.animationChangeStream.subscribe(callback);
-  }
-}
-
-export enum VectorType {
-  Start, Preview, End
 }

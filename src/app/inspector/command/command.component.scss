@@ -9,3 +9,11 @@ canvas.command-index {
   box-sizing: border-box;
   padding: 8px;
 }
+
+div.command-container:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+div.command-container.selected {
+  background-color: rgba(0, 0, 0, 0.2);
+}

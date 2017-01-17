@@ -4,12 +4,14 @@ import {
   ViewChild, ViewChildren, Input, Output, EventEmitter
 } from '@angular/core';
 import {
-  Layer, PathLayer, ClipPathLayer, GroupLayer, VectorLayer, PathCommand
+  Layer, PathLayer, ClipPathLayer, GroupLayer,
+  VectorLayer, PathCommand, EditorType
 } from '../scripts/model';
 import * as $ from 'jquery';
 import * as erd from 'element-resize-detector';
 import { Point, Matrix, Projection, MathUtil, ColorUtil } from '../scripts/common';
-import { GlobalStateService, VectorType } from '../globalstate.service';
+import { AnimationService } from '../services/animation.service';
+import { LayerStateService } from '../services/layerstate.service';
 import { Subscription } from 'rxjs/Subscription';
 import { arcToBeziers } from '../scripts/svg';
 
@@ -22,7 +24,7 @@ const ELEMENT_RESIZE_DETECTOR = erd();
   styleUrls: ['./canvas.component.scss']
 })
 export class CanvasComponent implements AfterViewInit, OnDestroy {
-  @Input() vectorLayerType: VectorType;
+  @Input() vectorLayerType: EditorType;
   @ViewChild('renderingCanvas') private renderingCanvasRef: ElementRef;
 
   private vectorLayer: VectorLayer;
@@ -37,7 +39,10 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   private subscriptions: Subscription[] = [];
   private pathPointRadius: number;
 
-  constructor(private elementRef: ElementRef, private stateService: GlobalStateService) { }
+  constructor(
+    private elementRef: ElementRef,
+    private layerStateService: LayerStateService,
+    private animationService: AnimationService) { }
 
   ngAfterViewInit() {
     this.isViewInit = true;
@@ -51,7 +56,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       }
     });
     this.subscriptions.push(
-      this.stateService.addOnVectorLayerChangeListener(
+      this.layerStateService.addListener(
         this.vectorLayerType, vl => {
           if (vl) {
             const oldVl = this.vectorLayer;
@@ -65,13 +70,13 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
             }
           }
         }));
-    if (this.vectorLayerType === VectorType.Preview) {
+    if (this.vectorLayerType === EditorType.Preview) {
       this.subscriptions.push(
-        this.stateService.addOnAnimationChangeListener(fraction => {
+        this.animationService.addListener(fraction => {
           if (this.vectorLayer) {
             // TODO(alockwood): if vector layer is undefined, then clear the canvas
-            const startLayer = this.stateService.getVectorLayer(VectorType.Start);
-            const endLayer = this.stateService.getVectorLayer(VectorType.End);
+            const startLayer = this.layerStateService.getVectorLayer(EditorType.Start);
+            const endLayer = this.layerStateService.getVectorLayer(EditorType.End);
             this.vectorLayer.walk(layer => {
               if (layer instanceof PathLayer) {
                 const start = startLayer.findLayerById(layer.id) as PathLayer;
@@ -148,7 +153,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     });
     ctx.restore();
 
-    if (this.shouldLabelPoints_ && this.vectorLayerType !== VectorType.Preview) {
+    if (this.shouldLabelPoints_ && this.vectorLayerType !== EditorType.Preview) {
       this.recurseAndDrawLayers({
         layer: this.vectorLayer,
         ctx,
@@ -255,7 +260,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     const matrices = transforms.slice().reverse();
     for (let i = pathDataPoints.length - 1; i >= 0; i--) {
       const p = MathUtil.transform(pathDataPoints[i].point, ...matrices);
-      const color = i === 0 ? 'blue' : pathDataPoints[i].isSplit ? 'orange' : 'green';
+      const color = i === 0 ? 'blue' : pathDataPoints[i].isSplit ? 'purple' : 'green';
       const radius = this.pathPointRadius * (pathDataPoints[i].isSplit ? 0.8 : 1);
       ctx.beginPath();
       ctx.arc(p.x, p.y, radius, 0, 2 * Math.PI, false);
@@ -282,7 +287,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     const y = (event.pageY - canvasOffset.top) / this.scale;
     const mouseDown = new Point(x, y);
 
-    if (this.vectorLayerType === VectorType.Preview) {
+    if (this.vectorLayerType === EditorType.Preview) {
       return;
     }
 
@@ -291,7 +296,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     if (this.closestProjectionInfo) {
       const pathLayer = this.vectorLayer.findLayerById(this.closestPathLayerId) as PathLayer;
       pathLayer.pathData = this.closestProjectionInfo.split();
-      this.stateService.setVectorLayer(this.vectorLayerType, this.vectorLayer);
+      this.layerStateService.setVectorLayer(this.vectorLayerType, this.vectorLayer);
       this.closestProjectionInfo = undefined;
     }
   }
@@ -303,7 +308,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     const y = (event.pageY - canvasOffset.top) / this.scale;
     const mouseMove = new Point(x, y);
 
-    if (this.vectorLayerType === VectorType.Preview) {
+    if (this.vectorLayerType === EditorType.Preview) {
       return;
     }
 

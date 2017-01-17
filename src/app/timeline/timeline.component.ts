@@ -1,5 +1,5 @@
 import { Component, Input, Output, EventEmitter, NgZone } from '@angular/core';
-import { GlobalStateService } from '../globalstate.service';
+import { AnimationService } from '../services/animation.service';
 
 @Component({
   selector: 'app-timeline',
@@ -13,12 +13,14 @@ export class TimelineComponent {
   @Output() labelPointsChangedEmitter = new EventEmitter<boolean>();
   private readonly animationDuration = 1000;
 
-  constructor(private stateService: GlobalStateService, private ngZone: NgZone) { }
+  constructor(
+    private animationService: AnimationService,
+    private ngZone: NgZone) { }
 
   // TODO(alockwood): make this update each time the slider is changed
   onAnimationFractionSliderChanged(sliderValue: number) {
     const fraction = sliderValue / this.maxAnimationFractionSliderValue;
-    this.stateService.setAnimationFraction(fraction);
+    this.animationService.setAnimationFraction(fraction);
   }
 
   onLabelPointsCheckboxChanged(shouldLabelPoints: boolean) {
@@ -33,10 +35,10 @@ export class TimelineComponent {
       }
       const progress = timestamp - startTimestamp;
       if (progress < this.animationDuration) {
-        this.stateService.setAnimationFraction(progress / this.animationDuration);
+        this.animationService.setAnimationFraction(progress / this.animationDuration);
         requestAnimationFrame(onAnimationFrame);
       } else {
-        this.stateService.setAnimationFraction(1);
+        this.animationService.setAnimationFraction(1);
         startTimestamp = undefined;
       }
     };

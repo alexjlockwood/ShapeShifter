@@ -4,9 +4,10 @@ import {
 import { Layer, VectorLayer, GroupLayer, PathLayer } from './scripts/model';
 import { SvgLoader } from './scripts/svg';
 import { Point } from './scripts/common';
+import { EditorType } from './scripts/model';
 import { Subscription } from 'rxjs/Subscription';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
-import { GlobalStateService, VectorType } from './globalstate.service';
+import { LayerStateService } from './services/layerstate.service';
 import { DividerDragEvent } from './splitter/splitter.directive';
 import * as $ from 'jquery';
 
@@ -18,9 +19,9 @@ const debugMode = true;
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
-  public readonly startVectorLayerType = VectorType.Start;
-  public readonly previewVectorLayerType = VectorType.Preview;
-  public readonly endVectorLayerType = VectorType.End;
+  public readonly startVectorLayerType = EditorType.Start;
+  public readonly previewVectorLayerType = EditorType.Preview;
+  public readonly endVectorLayerType = EditorType.End;
   shouldLabelPoints = true;
   isMorphable = false;
 
@@ -35,7 +36,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   private inspectorContainer: JQuery;
   private lastDividerDragEvent: DividerDragEvent;
 
-  constructor(private stateService: GlobalStateService) { }
+  constructor(private layerStateService: LayerStateService) { }
 
   ngOnInit() {
     if (debugMode) {
@@ -75,15 +76,13 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.shouldDisplayCanvases()) {
       this.checkAreLayersMorphable();
       this.subscriptions.push(
-        this.stateService.addOnVectorLayerChangeListener(
-          VectorType.Start, vectorLayer => {
-            this.checkAreLayersMorphable();
-          }));
+        this.layerStateService.addListener(EditorType.Start, vl => {
+          this.checkAreLayersMorphable();
+        }));
       this.subscriptions.push(
-        this.stateService.addOnVectorLayerChangeListener(
-          VectorType.End, vectorLayer => {
-            this.checkAreLayersMorphable();
-          }));
+        this.layerStateService.addListener(EditorType.End, vl => {
+          this.checkAreLayersMorphable();
+        }));
     }
   }
 
@@ -105,27 +104,27 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private get startVectorLayer() {
-    return this.stateService.getVectorLayer(this.startVectorLayerType);
+    return this.layerStateService.getVectorLayer(this.startVectorLayerType);
   }
 
   private set startVectorLayer(vectorLayer: VectorLayer) {
-    this.stateService.setVectorLayer(this.startVectorLayerType, vectorLayer);
+    this.layerStateService.setVectorLayer(this.startVectorLayerType, vectorLayer);
   }
 
   private get previewVectorLayer() {
-    return this.stateService.getVectorLayer(this.previewVectorLayerType);
+    return this.layerStateService.getVectorLayer(this.previewVectorLayerType);
   }
 
   private set previewVectorLayer(vectorLayer: VectorLayer) {
-    this.stateService.setVectorLayer(this.previewVectorLayerType, vectorLayer);
+    this.layerStateService.setVectorLayer(this.previewVectorLayerType, vectorLayer);
   }
 
   private get endVectorLayer() {
-    return this.stateService.getVectorLayer(this.endVectorLayerType);
+    return this.layerStateService.getVectorLayer(this.endVectorLayerType);
   }
 
   private set endVectorLayer(vectorLayer: VectorLayer) {
-    this.stateService.setVectorLayer(this.endVectorLayerType, vectorLayer);
+    this.layerStateService.setVectorLayer(this.endVectorLayerType, vectorLayer);
   }
 
   onDividerDrag(event: DividerDragEvent) {

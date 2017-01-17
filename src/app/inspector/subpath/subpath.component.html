@@ -1,0 +1,34 @@
+<div fxLayout="row">
+  <button md-icon-button
+    mdTooltip="Reverse"
+    mdTooltipPosition="above"
+    md-theme="dark"
+    (click)="onReverseClick()">
+    <md-icon class="md-24">autorenew</md-icon>
+  </button>
+  <button md-icon-button
+    mdTooltip="Shift back"
+    mdTooltipPosition="above"
+    md-theme="dark"
+    [disabled]="!subPathCommand.isClosed"
+    (click)="onShiftBackClick()">
+    <md-icon class="md-24">skip_previous</md-icon>
+  </button>
+  <button md-icon-button
+    mdTooltip="Shift forwards"
+    mdTooltipPosition="above"
+    md-theme="dark"
+    [disabled]="!subPathCommand.isClosed"
+    (click)="onShiftForwardClick()">
+    <md-icon class="md-24">skip_next</md-icon>
+  </button>
+</div>
+<app-command *ngFor="let command of drawCommands; let commandIndex = index"
+  fxLayout="row"
+  fxLayoutAlign="start center"
+  [pathCommandIndex]="pathCommandIndex"
+  [subPathCommandIndex]="subPathCommandIndex"
+  [drawCommandIndex]="commandIndex"
+  [drawCommand]="command">
+</app-command>
+

@@ -2,24 +2,19 @@ import {
   Component, Input, OnInit, ChangeDetectorRef,
   OnDestroy, NgZone, OnChanges
 } from '@angular/core';
-import { PathLayer, PathCommand } from '../scripts/model';
-import { GlobalStateService, VectorType } from '../globalstate.service';
+import { PathLayer, PathCommand, EditorType } from '../scripts/model';
+import { LayerStateService } from '../services/layerstate.service';
 import { Subscription } from 'rxjs/Subscription';
 import { InspectorService, EventType, InspectorEvent } from './inspector.service';
 
 @Component({
   selector: 'app-inspector',
-  template: `
-  <app-path *ngFor="let command of pathCommands; let commandIndex = index; trackBy: trackPathCommand"
-      fxLayout="column"
-      [pathCommandIndex]="commandIndex"
-      [pathCommand]="command">
-  </app-path>`,
+  templateUrl: './inspector.component.html',
   styleUrls: ['./inspector.component.scss'],
   providers: [InspectorService]
 })
 export class InspectorComponent implements OnInit, OnChanges, OnDestroy {
-  @Input('vectorLayerType') vectorType: VectorType;
+  @Input('vectorLayerType') vectorType: EditorType;
 
   // Path commands to use to populate the ngFor loop of path components.
   pathCommands: ReadonlyArray<PathCommand> = [];
@@ -28,12 +23,12 @@ export class InspectorComponent implements OnInit, OnChanges, OnDestroy {
   private subscriptions: Subscription[] = [];
 
   constructor(
-    private stateService: GlobalStateService,
+    private layerStateService: LayerStateService,
     private inspectorService: InspectorService) { }
 
   ngOnInit() {
     this.subscriptions.push(
-      this.stateService.addOnVectorLayerChangeListener(
+      this.layerStateService.addListener(
         this.vectorType, vl => {
           if (!vl) {
             return;
@@ -52,7 +47,7 @@ export class InspectorComponent implements OnInit, OnChanges, OnDestroy {
     this.subscriptions.push(
       this.inspectorService.addListener((event: InspectorEvent) => {
         const {eventType, pathCommandIndex, subPathCommandIndex, drawCommandIndex} = event;
-        const vl = this.stateService.getVectorLayer(this.vectorType);
+        const vl = this.layerStateService.getVectorLayer(this.vectorType);
         const pathLayer = vl.findLayerById(this.pathLayerIds[pathCommandIndex]) as PathLayer;
         if (eventType === EventType.Reverse) {
           pathLayer.pathData = pathLayer.pathData.reverse(subPathCommandIndex);
@@ -65,7 +60,7 @@ export class InspectorComponent implements OnInit, OnChanges, OnDestroy {
         } else if (eventType === EventType.Select) {
 
         }
-        this.stateService.notifyVectorLayerChange(this.vectorType);
+        this.layerStateService.notifyChange(this.vectorType);
       }));
   }
 
