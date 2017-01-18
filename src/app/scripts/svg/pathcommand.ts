@@ -361,12 +361,9 @@ class CommandWrapper {
   }
 
   unsplit(splitIndex: number) {
-    console.log('unsplit', splitIndex, this);
     const splits = this.splits.slice();
     splits.splice(splitIndex, 1);
-    const result = this.rebuildSplitCommands(splits);
-    console.log(result, this);
-    return result;
+    return this.rebuildSplitCommands(splits);
   }
 
   private rebuildSplitCommands(newSplits: number[]) {
