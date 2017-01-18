@@ -14,20 +14,10 @@ import { Observable } from 'rxjs/Observable';
 export class PathComponent {
   @Input() editorType: EditorType;
   @Input() pathId: string;
+  @Input() pathCommand: PathCommand;
 
-  // Sub path commands to use to populate the ngFor loop of sub path components.
-  subPathCommands: ReadonlyArray<SubPathCommand> = [];
-  private pathCommand_: PathCommand;
-
-  @Input()
-  set pathCommand(pathCommand: PathCommand) {
-    // console.log('setting new path command');
-    this.pathCommand_ = pathCommand;
-    this.subPathCommands = pathCommand.commands;
-  }
-
-  get pathCommand() {
-    return this.pathCommand_;
+  get subPathCommands() {
+    return this.pathCommand.commands;
   }
 
   trackSubPathCommand(index: number, item: SubPathCommand) {

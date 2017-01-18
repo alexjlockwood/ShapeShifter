@@ -15,12 +15,13 @@ import { Subscription } from 'rxjs/Subscription';
   styleUrls: ['./command.component.scss']
 })
 export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
-  @ViewChild('drawCommandIndexCanvas') private drawCommandIndexCanvas: ElementRef;
   @Input() editorType: EditorType;
   @Input() pathId: string;
   @Input() subPathIdx: number;
   @Input() drawIdx: number;
   @Input() drawCommand: DrawCommand;
+
+  @ViewChild('drawCommandIndexCanvas') private drawCommandIndexCanvas: ElementRef;
 
   private isCommandSelected_ = false;
   private subscription: Subscription;
@@ -30,7 +31,8 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
     private selectionService: SelectionService,
     private inspectorService: InspectorService) { }
 
-  // TODO: the last index of the subpath doesnt seem to update its number after each split...
+  // TODO: the last index of the subpath doesnt seem
+  // to update its number after each split...
   ngOnInit() {
     this.selectionArgs = {
       pathId: this.pathId,
@@ -51,7 +53,7 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
     this.subscription.unsubscribe();
   }
 
-  // TODO(alockwood): use ngFor trackBy to avoid recreating these items on animation frames
+  // TODO(alockwood): use ngFor trackBy to avoid recreating these items constantly
   private draw() {
     const canvas = $(this.drawCommandIndexCanvas.nativeElement);
     const commandIndexCanvasSize = canvas.get(0).getBoundingClientRect().width;

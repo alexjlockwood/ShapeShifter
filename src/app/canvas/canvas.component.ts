@@ -78,8 +78,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         this.animationService.addListener(fraction => {
           if (this.vectorLayer) {
             // TODO(alockwood): if vector layer is undefined, then clear the canvas
-            const startLayer = this.layerStateService.getVectorLayer(EditorType.Start);
-            const endLayer = this.layerStateService.getVectorLayer(EditorType.End);
+            const startLayer = this.layerStateService.getData(EditorType.Start);
+            const endLayer = this.layerStateService.getData(EditorType.End);
             this.vectorLayer.walk(layer => {
               if (layer instanceof PathLayer) {
                 const start = startLayer.findLayerById(layer.id) as PathLayer;
@@ -346,7 +346,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     if (this.closestProjectionInfo) {
       const pathLayer = this.vectorLayer.findLayerById(this.closestPathLayerId) as PathLayer;
       pathLayer.pathData = this.closestProjectionInfo.split();
-      this.layerStateService.setVectorLayer(this.editorType, this.vectorLayer);
+      this.layerStateService.setData(this.editorType, this.vectorLayer);
       this.closestProjectionInfo = undefined;
     }
   }

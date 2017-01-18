@@ -14,21 +14,12 @@ export class SubPathComponent {
   @Input() editorType: EditorType;
   @Input() pathId: string;
   @Input() subPathIdx: number;
-
-  // Draw commands to use to populate the ngFor loop of command components.
-  drawCommands: ReadonlyArray<DrawCommand> = [];
-  private subPathCommand_: SubPathCommand;
+  @Input() subPathCommand: SubPathCommand;
 
   constructor(private inspectorService: InspectorService) { }
 
-  @Input()
-  set subPathCommand(subPathCommand: SubPathCommand) {
-    this.subPathCommand_ = subPathCommand;
-    this.drawCommands = subPathCommand.commands;
-  }
-
-  get subPathCommand() {
-    return this.subPathCommand_;
+  get drawCommands() {
+    return this.subPathCommand.commands;
   }
 
   onReverseClick() {

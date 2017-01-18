@@ -47,7 +47,7 @@ export class InspectorComponent implements OnInit, OnDestroy {
     this.subscriptions.push(
       this.inspectorService.addListener((event: InspectorEvent) => {
         const {eventType, pathId, subPathIdx, drawIdx} = event;
-        const vl = this.layerStateService.getVectorLayer(this.editorType);
+        const vl = this.layerStateService.getData(this.editorType);
         const pathLayer = vl.findLayerById(pathId) as PathLayer;
         if (eventType === EventType.Reverse) {
           pathLayer.pathData = pathLayer.pathData.reverse(subPathIdx);
