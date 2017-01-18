@@ -128,7 +128,6 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   onDeleteButtonClick(event) {
-    console.log(this.drawCommand);
     this.inspectorService.notifyChange(EventType.Delete, {
       pathId: this.pathId,
       subPathIdx: this.subPathIdx,

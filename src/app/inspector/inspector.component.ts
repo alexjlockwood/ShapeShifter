@@ -56,7 +56,10 @@ export class InspectorComponent implements OnInit, OnDestroy {
         } else if (eventType === EventType.ShiftForward) {
           pathLayer.pathData = pathLayer.pathData.shiftForward(subPathIdx);
         } else if (eventType === EventType.Delete) {
+          console.log('delete', subPathIdx, drawIdx);
+          console.log(pathLayer.pathData);
           pathLayer.pathData = pathLayer.pathData.unsplit(subPathIdx, drawIdx);
+          console.log(pathLayer.pathData);
         }
         this.layerStateService.notifyChange(this.editorType);
       }));

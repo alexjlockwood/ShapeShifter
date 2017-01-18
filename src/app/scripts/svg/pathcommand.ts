@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 import { MathUtil, Bezier, Projection, Point, Matrix, Rect } from '../common';
-import { PathCommand, SubPathCommand, DrawCommand } from '../model';
+import { PathCommand, SubPathCommand, DrawCommand, SvgChar } from '../model';
 import * as SvgUtil from './svgutil';
 import * as PathParser from './pathparser';
 import { SubPathCommandImpl } from './subpathcommand';
@@ -15,7 +15,7 @@ interface ClonedPathCommandInfo {
   commandWrappers_?: ReadonlyArray<ReadonlyArray<CommandWrapper>>;
   shiftOffsets_?: ReadonlyArray<number>;
   isReversed_?: boolean;
-};
+}
 
 /**
  * Implementation of the PathCommand interface. Represents all of the information
@@ -54,15 +54,19 @@ class PathCommandImpl implements PathCommand {
   }
 
   clone(overrides?: ClonedPathCommandInfo) {
+    let newCommandWrappers = this.commandWrappers_;
+    if (overrides && overrides.commandWrappers_) {
+      newCommandWrappers = overrides.commandWrappers_;
+    }
     const drawCommands =
-      _.chain(this.commandWrappers_)
+      _.chain(newCommandWrappers)
         .flatMap(cws => cws)
         .flatMap(cw => cw.commands)
         .value();
     const clonedInfo: ClonedPathCommandInfo = {
       path_: PathParser.commandsToString(drawCommands),
       subPathCommands_: createSubPathCommands(...drawCommands),
-      commandWrappers_: _.map(this.commandWrappers_, cws => _.map(cws, cw => cw.clone())),
+      commandWrappers_: newCommandWrappers.map(cws => cws.slice()),
       shiftOffsets_: this.shiftOffsets_.slice(),
       isReversed_: this.isReversed_,
     };
@@ -255,8 +259,9 @@ class PathCommandImpl implements PathCommand {
 
   // Implements the PathCommand interface.
   split(subPathIndex: number, drawIndex: number, t: number) {
-    this.commandWrappers_[subPathIndex][drawIndex].split(t);
-    return this.clone();
+    const cws = this.commandWrappers_.map(cws => cws.slice());
+    cws[subPathIndex][drawIndex] = cws[subPathIndex][drawIndex].split(t);
+    return this.clone({ commandWrappers_: cws });
   }
 
   // Implements the PathCommand interface.
@@ -268,21 +273,32 @@ class PathCommandImpl implements PathCommand {
     if (drawIndex >= numCommands - 1) {
       drawIndex -= numCommands - 1;
     }
-    const cws = this.commandWrappers_[subPathIndex];
     let counter = 0;
     let targetCw: CommandWrapper;
     let targetIndex: number;
-    for (const cw of cws) {
+    let cwsDrawIndex = 0;
+    for (const cw of this.commandWrappers_[subPathIndex]) {
       if (counter + cw.commands.length > drawIndex) {
         targetCw = cw;
         targetIndex = drawIndex - counter;
         break;
       }
       counter += cw.commands.length;
+      cwsDrawIndex++;
     }
-    targetCw.unsplit(targetIndex);
-    return this.clone();
+    const newCws = this.commandWrappers_.map(cws => cws.slice());
+    newCws[subPathIndex][cwsDrawIndex] = targetCw.unsplit(targetIndex);
+    return this.clone({ commandWrappers_: newCws });
   }
+}
+
+// Command wrapper internals that have been cloned.
+interface ClonedCommandWrapperInfo {
+  svgChar?: SvgChar;
+  backingCommand?: DrawCommandImpl;
+  backingBeziers?: ReadonlyArray<Bezier>;
+  splits?: ReadonlyArray<number>;
+  splitCommands?: ReadonlyArray<DrawCommandImpl>;
 }
 
 /**
@@ -292,13 +308,13 @@ class PathCommandImpl implements PathCommand {
 class CommandWrapper {
 
   // TODO(alockwood): possible to have more than one bezier for elliptical arcs?
-  private readonly svgChar: string;
+  private readonly svgChar: SvgChar;
   private readonly backingCommand: DrawCommandImpl;
   private readonly backingBeziers: ReadonlyArray<Bezier>;
-  private readonly splits: number[];
-  private readonly splitCommands: DrawCommandImpl[];
+  private readonly splits: ReadonlyArray<number>;
+  private readonly splitCommands: ReadonlyArray<DrawCommandImpl>;
 
-  constructor(obj: DrawCommandImpl | CommandWrapper) {
+  constructor(obj: DrawCommandImpl | ClonedCommandWrapperInfo) {
     if (obj instanceof DrawCommandImpl) {
       this.svgChar = obj.svgChar;
       this.backingCommand = obj;
@@ -308,14 +324,20 @@ class CommandWrapper {
     } else {
       this.svgChar = obj.svgChar;
       this.backingCommand = obj.backingCommand;
-      this.backingBeziers = drawCommandToBeziers(obj.backingCommand);
-      this.splits = obj.splits.slice();
-      this.splitCommands = obj.splitCommands.slice();
+      this.backingBeziers = obj.backingBeziers;
+      this.splits = obj.splits;
+      this.splitCommands = obj.splitCommands;
     }
   }
 
-  clone() {
-    return new CommandWrapper(this);
+  clone(overrides?: ClonedCommandWrapperInfo) {
+    return new CommandWrapper(_.assign({}, {
+      svgChar: this.svgChar,
+      backingCommand: this.backingCommand,
+      backingBeziers: this.backingBeziers,
+      splits: this.splits.slice(),
+      splitCommands: this.splitCommands.slice(),
+    }, overrides));
   }
 
   project(point: Point): Projection | undefined {
@@ -327,34 +349,45 @@ class CommandWrapper {
   // TODO(alockwood): add a test for splitting a command with a path length of 0
   split(t: number) {
     if (!this.backingBeziers.length) {
-      return;
+      return this;
     }
     if (this.svgChar === 'A') {
       throw new Error('TODO: implement split support for elliptical arcs');
     }
-    this.splits.splice(_.sortedIndex(this.splits, t), 0, t);
-    this.rebuildSplitCommands();
+    const splits = this.splits.slice();
+    splits.splice(_.sortedIndex(splits, t), 0, t);
+    return this.rebuildSplitCommands(splits);
   }
 
   unsplit(splitIndex: number) {
-    this.splits.splice(splitIndex, 1);
-    this.rebuildSplitCommands();
+    console.log('unsplit', splitIndex, this);
+    const splits = this.splits.slice();
+    splits.splice(splitIndex, 1);
+    const result = this.rebuildSplitCommands(splits);
+    console.log(result, this);
+    return result;
   }
 
-  // TODO: make this entirely immutable...
-  private rebuildSplitCommands() {
-    this.splitCommands.splice(0, this.splitCommands.length);
-    if (!this.splits.length) {
-      return;
+  private rebuildSplitCommands(newSplits: number[]) {
+    const newSplitCommands = [];
+    if (!newSplits.length) {
+      return this.clone({
+        splits: newSplits,
+        splitCommands: newSplitCommands,
+      });
     }
-    const splits = [...this.splits, 1];
+    const splits = [...newSplits, 1];
     let prevT = 0;
     for (let i = 0; i < splits.length; i++) {
       const currT = splits[i];
       const splitBez = this.backingBeziers[0].split(prevT, currT);
-      this.splitCommands.push(this.bezierToDrawCommand(splitBez, i !== splits.length - 1));
+      newSplitCommands.push(this.bezierToDrawCommand(splitBez, i !== splits.length - 1));
       prevT = currT;
     }
+    return this.clone({
+      splits: newSplits,
+      splitCommands: newSplitCommands,
+    });
   }
 
   private bezierToDrawCommand(splitBezier: Bezier, isSplit: boolean) {
