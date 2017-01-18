@@ -259,15 +259,16 @@ class PathCommandImpl implements PathCommand {
 
   // Implements the PathCommand interface.
   split(subPathIndex: number, drawIndex: number, t: number) {
-    const cws = this.commandWrappers_.map(cws => cws.slice());
-    cws[subPathIndex][drawIndex] = cws[subPathIndex][drawIndex].split(t);
-    return this.clone({ commandWrappers_: cws });
+    const newCws = this.commandWrappers_.map(cws => cws.slice());
+    newCws[subPathIndex][drawIndex] = newCws[subPathIndex][drawIndex].split(t);
+    return this.clone({ commandWrappers_: newCws });
   }
 
   // Implements the PathCommand interface.
   unsplit(subPathIndex: number, drawIndex: number) {
     // TODO: indexing is still a bit off here I think...
-    // need to make sure we mod the offsets properly after unsplitting
+    // doesn't work after reverse/shift/unshifting yet, but shouldn't be too hard to fix.
+    // need to make sure we mod the offsets properly after unsplitting as well.
     const numCommands = this.subPathCommands_[subPathIndex].commands.length;
     drawIndex += this.shiftOffsets_[subPathIndex];
     if (drawIndex >= numCommands - 1) {
