@@ -7,6 +7,10 @@ export class Point {
   equals(p: Point) {
     return this.x === p.x && this.y === p.y;
   }
+
+  toString() {
+    return `(${this.x}, ${this.y})`;
+  }
 }
 
 /** Applies a list of transformation matrices to the specified point. */

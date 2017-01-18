@@ -42,4 +42,8 @@ export class SubPathComponent {
       subPathIdx: this.subPathIdx,
     });
   }
+
+  trackDrawCommand(index: number, item: DrawCommand) {
+    return `${index}_${item.commandString}`;
+  }
 }

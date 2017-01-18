@@ -10,47 +10,37 @@ import { DrawCommandImpl } from './drawcommand';
 export class SubPathCommandImpl implements SubPathCommand {
 
   // TODO: make sure paths with one M and multiple Zs are treated as multiple sub paths
-  private readonly commands_: ReadonlyArray<DrawCommandImpl>;
-  private readonly points_: ReadonlyArray<{point: Point, isSplit: boolean}>;
-
-  static from(...drawCommands: DrawCommandImpl[]): SubPathCommandImpl[] {
-    if (!drawCommands.length) {
-      return [];
-    }
-    const cmdGroups: DrawCommandImpl[][] = [];
-    let currentCmdList = [];
-    for (let i = drawCommands.length - 1; i >= 0; i--) {
-      const cmd = drawCommands[i];
-      currentCmdList.push(cmd);
-      if (cmd.svgChar === 'M') {
-        cmdGroups.push(currentCmdList);
-        currentCmdList = [];
-      }
-    }
-    return cmdGroups.reverse().map(cmds => new SubPathCommandImpl(...cmds.reverse()));
-  }
+  private readonly drawCommands_: ReadonlyArray<DrawCommandImpl>;
+  private readonly points_: ReadonlyArray<{ point: Point, isSplit: boolean }>;
 
   constructor(...commands: DrawCommandImpl[]) {
-    this.commands_ = commands;
-    this.points_ = _.flatMap(this.commands_, cmd => {
+    this.drawCommands_ = commands;
+    this.points_ = _.flatMap(this.drawCommands_, cmd => {
       if (cmd.svgChar === 'Z') {
         return [];
       }
-      return [{point: _.last(cmd.points), isSplit: cmd.isSplit}];
+      return [{ point: _.last(cmd.points), isSplit: cmd.isSplit }];
     });
   }
 
-  // Overrides the SubPathCommand interface.
-  get commands() { return this.commands_; }
+  // Implements the SubPathCommand interface.
+  get commands() { return this.drawCommands_; }
 
-  // Overrides the SubPathCommand interface.
+  // Implements the SubPathCommand interface.
   get isClosed() {
     const start = this.commands[0].end;
     const end = _.last(this.commands).end;
-    return start.equals(end);
+    const result = start.equals(end);
+    const nearZero = 0.000001;
+    if (Math.abs(start.x - end.x) < nearZero
+      && Math.abs(start.y - end.y) < nearZero
+      && !result) {
+      console.warn('subpath should probably be closed', start, end);
+    }
+    return result;
   }
 
-  // Overrides the SubPathCommand interface.
+  // Implements the SubPathCommand interface.
   get points() {
     return this.points_;
   }

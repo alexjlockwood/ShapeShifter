@@ -108,8 +108,10 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
   @Input()
   set shouldLabelPoints(shouldLabelPoints: boolean) {
-    this.shouldLabelPoints_ = shouldLabelPoints;
-    this.draw();
+    if (this.shouldLabelPoints_ !== shouldLabelPoints) {
+      this.shouldLabelPoints_ = shouldLabelPoints;
+      this.draw();
+    }
   }
 
   private resizeAndDraw() {
@@ -183,11 +185,11 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           if (!selections.length) {
             return;
           }
-          const drawCommands = selections.map(s => {
+          const dcmds = selections.map(s => {
             return args.layer.pathData.commands[s.subPathIdx].commands[s.drawIdx];
           });
 
-          executeDrawCommands(drawCommands, args.ctx, args.transforms, true);
+          executeDrawCommands(dcmds, args.ctx, args.transforms, true);
 
           ctx.save();
           ctx.lineWidth = 6 / this.scale; // 2px
@@ -213,8 +215,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           new Matrix(this.backingStoreScale, 0, 0, this.backingStoreScale, 0, 0)
         ],
         pathFunc: (args: LayerArgs<PathLayer>) => {
-          const pathDataPoints = _.flatMap(args.layer.pathData.commands, cmd => {
-            return cmd.points as { point: Point, isSplit: boolean }[];
+          const pathDataPoints = _.flatMap(args.layer.pathData.commands, scmd => {
+            return scmd.points as { point: Point, isSplit: boolean }[];
           });
 
           args.ctx.save();

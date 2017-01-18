@@ -11,6 +11,7 @@ import * as SvgUtil from './svgutil';
 export class DrawCommandImpl implements DrawCommand {
   private readonly points_: ReadonlyArray<Point>;
   private readonly args_: ReadonlyArray<number>;
+  readonly commandString: string;
 
   constructor(
     private readonly svgChar_: SvgChar,
@@ -18,10 +19,20 @@ export class DrawCommandImpl implements DrawCommand {
     points: Point[],
     ...args: number[]) {
     this.points_ = points.slice();
+
     if (args) {
       this.args_ = args;
     } else {
       this.args_ = pointsToArgs(points);
+    }
+
+    if (this.svgChar === 'Z') {
+      this.commandString = `${this.svgChar}`;
+    } else {
+      const p = _.last(this.points);
+      const x = _.round(p.x, 3);
+      const y = _.round(p.y, 3);
+      this.commandString = `${this.svgChar} ${x}, ${y}`;
     }
   }
 
@@ -97,14 +108,7 @@ export class DrawCommandImpl implements DrawCommand {
   }
 
   toString() {
-    if (this.svgChar === 'Z') {
-      return `${this.svgChar}`;
-    } else {
-      const p = _.last(this.points);
-      const x = _.round(p.x, 3);
-      const y = _.round(p.y, 3);
-      return `${this.svgChar} ${x}, ${y}`;
-    }
+    return this.commandString;
   }
 }
 
@@ -138,5 +142,5 @@ export function arcTo(start: Point, rx: number, ry: number, xAxisRotation: numbe
 }
 
 export function closePath(start: Point, end: Point, isSplit?: boolean) {
-  return new DrawCommandImpl('Z', isSplit, [start, end]);
+  return new DrawCommandImpl('Z', !!isSplit, [start, end]);
 }

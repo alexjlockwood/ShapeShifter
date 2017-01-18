@@ -8,6 +8,15 @@ import {
   DrawCommandImpl, moveTo, lineTo, quadraticCurveTo, bezierCurveTo, arcTo, closePath
 } from './drawcommand';
 
+// Path command internals that have been cloned.
+interface ClonedPathCommandInfo {
+  path_?: string;
+  subPathCommands_?: ReadonlyArray<SubPathCommandImpl>;
+  commandWrappers_?: ReadonlyArray<ReadonlyArray<CommandWrapper>>;
+  shiftOffsets_?: ReadonlyArray<number>;
+  isReversed_?: boolean;
+};
+
 /**
  * Implementation of the PathCommand interface. Represents all of the information
  * associated with a path layer's pathData attribute.
@@ -15,40 +24,49 @@ import {
 class PathCommandImpl implements PathCommand {
 
   // TODO: fix split/unsplitting paths after reversals/shifts. the indexing is messed up right now
-  private commandWrappers_: CommandWrapper[][];
-  private shiftOffsets_: number[];
-  private commands_: ReadonlyArray<SubPathCommandImpl>;
-  private path_: string;
-  private isReversed = false;
+  private readonly path_: string;
+  private readonly subPathCommands_: ReadonlyArray<SubPathCommandImpl>;
+  private readonly commandWrappers_: ReadonlyArray<ReadonlyArray<CommandWrapper>>;
+  private readonly shiftOffsets_: ReadonlyArray<number>;
+  private readonly isReversed_: boolean;
 
   // TODO(alockwood): add method to calculate bounds and length
-  constructor(obj: string | PathCommandImpl | DrawCommandImpl[]) {
+  constructor(obj: string | DrawCommandImpl[] | ClonedPathCommandInfo) {
     if (typeof obj === 'string') {
       this.path_ = obj;
-      this.commands_ = SubPathCommandImpl.from(...PathParser.parseCommands(obj));
-      this.commandWrappers_ = _.map(this.commands_, s => createCommandWrappers(s.commands));
-      this.shiftOffsets_ = _.map(this.commands_, _ => 0);
-    } else if (obj instanceof PathCommandImpl) {
-      const drawCommands =
-        _.chain(obj.commandWrappers_)
-          .flatMap(cws => cws)
-          .flatMap(cw => cw.commands)
-          .value();
-      this.commands_ = SubPathCommandImpl.from(...drawCommands);
-      this.path_ = PathParser.commandsToString(drawCommands);
-      this.commandWrappers_ = _.map(obj.commandWrappers_, cws => _.map(cws, cw => cw.clone()));
-      this.shiftOffsets_ = obj.shiftOffsets_.slice();
-      this.isReversed = obj.isReversed;
-    } else {
+      this.subPathCommands_ = createSubPathCommands(...PathParser.parseCommands(obj));
+      this.commandWrappers_ = _.map(this.subPathCommands_, s => createCommandWrappers(s.commands));
+      this.shiftOffsets_ = _.map(this.subPathCommands_, _ => 0);
+      this.isReversed_ = false;
+    } else if (Array.isArray(obj)) {
       this.path_ = PathParser.commandsToString(obj);
-      this.commands_ = SubPathCommandImpl.from(...obj);
-      this.commandWrappers_ = _.map(this.commands_, s => createCommandWrappers(s.commands));
-      this.shiftOffsets_ = _.map(this.commands_, _ => 0);
+      this.subPathCommands_ = createSubPathCommands(...obj);
+      this.commandWrappers_ = _.map(this.subPathCommands_, s => createCommandWrappers(s.commands));
+      this.shiftOffsets_ = _.map(this.subPathCommands_, _ => 0);
+      this.isReversed_ = false;
+    } else {
+      this.path_ = obj.path_;
+      this.subPathCommands_ = obj.subPathCommands_;
+      this.commandWrappers_ = obj.commandWrappers_;
+      this.shiftOffsets_ = obj.shiftOffsets_;
+      this.isReversed_ = obj.isReversed_;
     }
   }
 
-  clone() {
-    return new PathCommandImpl(this);
+  clone(overrides?: ClonedPathCommandInfo) {
+    const drawCommands =
+      _.chain(this.commandWrappers_)
+        .flatMap(cws => cws)
+        .flatMap(cw => cw.commands)
+        .value();
+    const clonedInfo: ClonedPathCommandInfo = {
+      path_: PathParser.commandsToString(drawCommands),
+      subPathCommands_: createSubPathCommands(...drawCommands),
+      commandWrappers_: _.map(this.commandWrappers_, cws => _.map(cws, cw => cw.clone())),
+      shiftOffsets_: this.shiftOffsets_.slice(),
+      isReversed_: this.isReversed_,
+    };
+    return new PathCommandImpl(_.assign({}, clonedInfo, overrides));
   }
 
   toString() {
@@ -58,59 +76,61 @@ class PathCommandImpl implements PathCommand {
   // Implements the PathCommand interface.
   get commands() {
     // TODO: precompute this
-    return this.commands_
-      .map(s => {
-        if (!this.isReversed) {
-          return s;
-        }
-        const cmds = s.commands;
-        const firstMoveCommand = cmds[0];
-        if (cmds.length === 1) {
-          return new SubPathCommandImpl(firstMoveCommand);
-        }
-        const newCmds: DrawCommandImpl[] = [
-          moveTo(firstMoveCommand.start, _.last(cmds).end),
-        ];
-        for (let i = cmds.length - 1; i >= 1; i--) {
-          newCmds.push(cmds[i].reverse());
-        }
-        const secondCmd = newCmds[1];
-        if (secondCmd.svgChar === 'Z') {
-          newCmds[1] = lineTo(secondCmd.start, secondCmd.end);
-          const lastCmd = _.last(newCmds);
-          newCmds[newCmds.length - 1] = closePath(lastCmd.start, lastCmd.end);
-        }
-        return new SubPathCommandImpl(...newCmds);
-      })
-      .map((s, index) => {
-        const currShiftOffset = this.shiftOffsets_[index];
-        if (currShiftOffset === 0) {
-          return s;
-        }
-        if (s.commands.length === 1 || !s.isClosed) {
-          return s;
-        }
-        const newCmdLists: DrawCommandImpl[][] = [];
-        const cmds = s.commands.slice();
-        for (let i = 0; i < (s.commands.length - currShiftOffset - 1); i++) {
-          const isClosed = cmds[0].end.equals(_.last(cmds).end);
-          const moveStartPoint = cmds[0].start;
-          cmds.unshift(cmds.pop());
+    const reverseSubPath = (s: SubPathCommandImpl) => {
+      if (!this.isReversed_) {
+        return s;
+      }
+      const cmds = s.commands;
+      const firstMoveCommand = cmds[0];
+      if (cmds.length === 1) {
+        return new SubPathCommandImpl(firstMoveCommand);
+      }
+      const newCmds: DrawCommandImpl[] = [
+        moveTo(firstMoveCommand.start, _.last(cmds).end),
+      ];
+      for (let i = cmds.length - 1; i >= 1; i--) {
+        newCmds.push(cmds[i].reverse());
+      }
+      const secondCmd = newCmds[1];
+      if (secondCmd.svgChar === 'Z') {
+        newCmds[1] = lineTo(secondCmd.start, secondCmd.end);
+        const lastCmd = _.last(newCmds);
+        newCmds[newCmds.length - 1] = closePath(lastCmd.start, lastCmd.end);
+      }
+      return new SubPathCommandImpl(...newCmds);
+    };
+    const shiftSubPath = (s: SubPathCommandImpl, index: number) => {
+      const currShiftOffset = this.shiftOffsets_[index];
+      if (currShiftOffset === 0) {
+        return s;
+      }
+      if (s.commands.length === 1 || !s.isClosed) {
+        return s;
+      }
+      const newCmdLists: DrawCommandImpl[][] = [];
+      const cmds = s.commands.slice();
+      for (let i = 0; i < (s.commands.length - currShiftOffset - 1); i++) {
+        const isClosed = cmds[0].end.equals(_.last(cmds).end);
+        const moveStartPoint = cmds[0].start;
+        cmds.unshift(cmds.pop());
 
-          if (cmds[0].svgChar === 'Z') {
-            const lastCmd = _.last(cmds);
-            cmds[cmds.length - 1] = closePath(lastCmd.start, lastCmd.end);
-            cmds[1] = lineTo(cmds[0].start, cmds[0].end);
-            // TODO(alockwood): start point correct for paths w/ multiple moves?
-            cmds[0] = moveTo(moveStartPoint, cmds[1].start);
-          } else {
-            cmds[1] = cmds[0];
-            // TODO(alockwood): start point correct for paths w/ multiple moves?
-            cmds[0] = moveTo(moveStartPoint, _.last(cmds).end);
-          }
+        if (cmds[0].svgChar === 'Z') {
+          const lastCmd = _.last(cmds);
+          cmds[cmds.length - 1] = closePath(lastCmd.start, lastCmd.end);
+          cmds[1] = lineTo(cmds[0].start, cmds[0].end);
+          // TODO(alockwood): start point correct for paths w/ multiple moves?
+          cmds[0] = moveTo(moveStartPoint, cmds[1].start);
+        } else {
+          cmds[1] = cmds[0];
+          // TODO(alockwood): start point correct for paths w/ multiple moves?
+          cmds[0] = moveTo(moveStartPoint, _.last(cmds).end);
         }
-        return new SubPathCommandImpl(...cmds);
-      });
+      }
+      return new SubPathCommandImpl(...cmds);
+    };
+    return this.subPathCommands_
+      .map(s => reverseSubPath(s))
+      .map((s, i) => shiftSubPath(s, i));
   }
 
   // Implements the PathCommand interface.
@@ -178,17 +198,14 @@ class PathCommandImpl implements PathCommand {
   // Implements the PathCommand interface.
   project(point: Point): { projection: Projection, split: () => PathCommand } | undefined {
     return _.chain(this.commandWrappers_)
-      .flatMap(cws => cws)
-      .map(cw => {
+      .map((cws, subPathIdx) => cws.map((cw, drawIdx) => {
         const projection = cw.project(point);
         return {
           projection,
-          split: () => {
-            cw.split(projection.t);
-            return this.clone();
-          }
+          split: () => this.split(subPathIdx, drawIdx, projection.t),
         };
-      })
+      }))
+      .flatMap(projections => projections)
       .filter(obj => !!obj.projection)
       .reduce((prev, curr) => {
         return prev && prev.projection.d < curr.projection.d ? prev : curr;
@@ -199,52 +216,54 @@ class PathCommandImpl implements PathCommand {
   // Implements the PathCommand interface.
   reverse(subPathIndex: number) {
     // TODO(alockwood): add a test for commands with multiple moves but no close paths
-    this.isReversed = !this.isReversed;
-    return this.clone();
+    return this.clone({ isReversed_: !this.isReversed_ });
   }
 
   // Implements the PathCommand interface.
   shiftBack(subPathIndex: number) {
     // TODO(alockwood): add a test for commands with multiple moves but no close paths
-    const subPathCommand = this.commands_[subPathIndex];
-    const numCommands = subPathCommand.commands.length;
-    if (numCommands <= 1 || !subPathCommand.isClosed) {
+    const scmd = this.subPathCommands_[subPathIndex];
+    const numCommands = scmd.commands.length;
+    if (numCommands <= 1 || !scmd.isClosed) {
       return this;
     }
     let newShiftOffset = this.shiftOffsets_[subPathIndex] - 1;
     if (newShiftOffset < 0) {
       newShiftOffset += numCommands - 1;
     }
-    this.shiftOffsets_[subPathIndex] = newShiftOffset;
-    return this.clone();
+    const shiftOffsets = this.shiftOffsets_.slice();
+    shiftOffsets[subPathIndex] = newShiftOffset;
+    return this.clone({ shiftOffsets_: shiftOffsets });
   }
 
   // Implements the PathCommand interface.
   shiftForward(subPathIndex: number) {
     // TODO(alockwood): add a test for commands with multiple moves but no close paths
-    const subPathCommand = this.commands_[subPathIndex];
-    const numCommands = subPathCommand.commands.length;
-    if (numCommands <= 1 || !subPathCommand.isClosed) {
+    const scmd = this.subPathCommands_[subPathIndex];
+    const numCommands = scmd.commands.length;
+    if (numCommands <= 1 || !scmd.isClosed) {
       return this;
     }
     let newShiftOffset = this.shiftOffsets_[subPathIndex] + 1;
     if (newShiftOffset >= numCommands - 1) {
       newShiftOffset -= numCommands - 1;
     }
-    this.shiftOffsets_[subPathIndex] = newShiftOffset;
-    return this.clone();
+    const shiftOffsets = this.shiftOffsets_.slice();
+    shiftOffsets[subPathIndex] = newShiftOffset;
+    return this.clone({ shiftOffsets_: shiftOffsets });
   }
 
   // Implements the PathCommand interface.
-  // split(subPathIndex: number, drawIndex: number) {
-  //   return this;
-  // }
+  split(subPathIndex: number, drawIndex: number, t: number) {
+    this.commandWrappers_[subPathIndex][drawIndex].split(t);
+    return this.clone();
+  }
 
   // Implements the PathCommand interface.
   unsplit(subPathIndex: number, drawIndex: number) {
     // TODO: indexing is still a bit off here I think...
     // need to make sure we mod the offsets properly after unsplitting
-    const numCommands = this.commands_[subPathIndex].commands.length;
+    const numCommands = this.subPathCommands_[subPathIndex].commands.length;
     drawIndex += this.shiftOffsets_[subPathIndex];
     if (drawIndex >= numCommands - 1) {
       drawIndex -= numCommands - 1;
@@ -274,16 +293,18 @@ class CommandWrapper {
 
   // TODO(alockwood): possible to have more than one bezier for elliptical arcs?
   private readonly svgChar: string;
-  private backingCommand: DrawCommandImpl;
-  private backingBeziers: ReadonlyArray<Bezier>;
-  private splits: number[] = [];
-  private splitCommands: DrawCommandImpl[] = [];
+  private readonly backingCommand: DrawCommandImpl;
+  private readonly backingBeziers: ReadonlyArray<Bezier>;
+  private readonly splits: number[];
+  private readonly splitCommands: DrawCommandImpl[];
 
   constructor(obj: DrawCommandImpl | CommandWrapper) {
     if (obj instanceof DrawCommandImpl) {
       this.svgChar = obj.svgChar;
       this.backingCommand = obj;
       this.backingBeziers = drawCommandToBeziers(obj);
+      this.splits = [];
+      this.splitCommands = [];
     } else {
       this.svgChar = obj.svgChar;
       this.backingCommand = obj.backingCommand;
@@ -322,7 +343,7 @@ class CommandWrapper {
 
   // TODO: make this entirely immutable...
   private rebuildSplitCommands() {
-    this.splitCommands = [];
+    this.splitCommands.splice(0, this.splitCommands.length);
     if (!this.splits.length) {
       return;
     }
@@ -354,6 +375,23 @@ class CommandWrapper {
   get commands() {
     return this.splitCommands.length ? this.splitCommands : [this.backingCommand];
   }
+}
+
+function createSubPathCommands(...drawCommands: DrawCommandImpl[]) {
+  if (!drawCommands.length) {
+    return [];
+  }
+  const cmdGroups: DrawCommandImpl[][] = [];
+  let currentCmdList = [];
+  for (let i = drawCommands.length - 1; i >= 0; i--) {
+    const cmd = drawCommands[i];
+    currentCmdList.push(cmd);
+    if (cmd.svgChar === 'M') {
+      cmdGroups.push(currentCmdList);
+      currentCmdList = [];
+    }
+  }
+  return cmdGroups.reverse().map(cmds => new SubPathCommandImpl(...cmds.reverse()));
 }
 
 function createCommandWrappers(commands: ReadonlyArray<DrawCommandImpl>) {

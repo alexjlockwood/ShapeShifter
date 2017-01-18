@@ -20,12 +20,11 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
   @Input() subPathIdx: number;
   @Input() drawIdx: number;
   @Input() drawCommand: DrawCommand;
-
   @ViewChild('drawCommandIndexCanvas') private drawCommandIndexCanvas: ElementRef;
 
   private isCommandSelected_ = false;
-  private subscription: Subscription;
-  private selectionArgs: Selection;
+  private subscription_: Subscription;
+  private selectionArgs_: Selection;
 
   constructor(
     private selectionService: SelectionService,
@@ -34,14 +33,14 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
   // TODO: the last index of the subpath doesnt seem
   // to update its number after each split...
   ngOnInit() {
-    this.selectionArgs = {
+    this.selectionArgs_ = {
       pathId: this.pathId,
       subPathIdx: this.subPathIdx,
       drawIdx: this.drawIdx,
     };
-    this.subscription = this.selectionService.addListener(this.editorType,
+    this.subscription_ = this.selectionService.addListener(this.editorType,
       (selections: Selection[]) => {
-        this.isCommandSelected = _.some(selections, this.selectionArgs);
+        this.isCommandSelected = _.some(selections, this.selectionArgs_);
       });
   }
 
@@ -50,7 +49,7 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    this.subscription.unsubscribe();
+    this.subscription_.unsubscribe();
   }
 
   // TODO(alockwood): use ngFor trackBy to avoid recreating these items constantly
@@ -107,7 +106,7 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   @HostListener('click') onCommandClick() {
-    this.selectionService.toggleSelection(this.editorType, this.selectionArgs);
+    this.selectionService.toggleSelection(this.editorType, this.selectionArgs_);
   }
 
   isEditable() {
@@ -129,6 +128,7 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   onDeleteButtonClick(event) {
+    console.log(this.drawCommand);
     this.inspectorService.notifyChange(EventType.Delete, {
       pathId: this.pathId,
       subPathIdx: this.subPathIdx,

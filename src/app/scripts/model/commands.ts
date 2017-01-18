@@ -47,8 +47,7 @@ export interface PathCommand {
    * Splits the draw command at the specified index.
    * Returns a new path command object.
    */
-  // TODO: determine whether we should implement this?
-  // split(subPathIndex: number, drawIndex: number): IPathCommand;
+  split(subPathIndex: number, drawIndex: number, t: number): PathCommand;
 
   /**
    * Un-splits the draw command at the specified index.
@@ -81,6 +80,9 @@ export interface DrawCommand {
 
   /** Returns the SVG character for this draw command. */
   svgChar: SvgChar;
+
+  /** A human-readable representation of this command. */
+  commandString: string;
 
   /** Returns the raw number arguments for this draw command. */
   args: ReadonlyArray<number>;
