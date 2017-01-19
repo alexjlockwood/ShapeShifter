@@ -43,6 +43,9 @@ export class SubPathComponent {
     });
   }
 
+  // TODO: this doesn't work when the item is changing from deleted to not deleted etc.
+  // need to make sure this accurately reflects the appearance of the item in the UI so
+  // it always updates.
   trackDrawCommand(index: number, item: DrawCommand) {
     return `${index}_${item.commandString}`;
   }

@@ -16,7 +16,7 @@ export class DrawCommandImpl implements DrawCommand {
   constructor(
     private readonly svgChar_: SvgChar,
     private readonly isSplit_: boolean,
-    points: Point[],
+    points: ReadonlyArray<Point>,
     ...args: number[]) {
     this.points_ = points.slice();
 
@@ -112,7 +112,7 @@ export class DrawCommandImpl implements DrawCommand {
   }
 }
 
-function pointsToArgs(points: Point[]): number[] {
+function pointsToArgs(points: ReadonlyArray<Point>): number[] {
   const args = [];
   points.forEach(p => { args.push(p.x); args.push(p.y); });
   return args;

@@ -9,6 +9,9 @@ export interface PathCommand {
   /** Returns the length of the path. */
   pathLength: number;
 
+  /** Returns the path's SVG path string. */
+  pathString: string;
+
   /**
    * Interpolates this path between a start and end path using the specified fraction.
    * Does nothing if the paths are not morphable with each other.

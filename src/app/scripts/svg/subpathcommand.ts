@@ -15,11 +15,11 @@ export class SubPathCommandImpl implements SubPathCommand {
 
   constructor(...commands: DrawCommandImpl[]) {
     this.drawCommands_ = commands;
-    this.points_ = _.flatMap(this.drawCommands_, cmd => {
+    this.points_ = _.flatMap(commands, cmd => {
       if (cmd.svgChar === 'Z') {
         return [];
       }
-      return [{ point: _.last(cmd.points), isSplit: cmd.isSplit }];
+      return [{ point: _.last(cmd.points), isSplit: !!cmd.isSplit }];
     });
   }
 

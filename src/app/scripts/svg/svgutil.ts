@@ -1,5 +1,17 @@
 import { Point, Matrix, MathUtil } from '../common';
 
+export interface EllipticalArc {
+  startX: number;
+  startY: number;
+  rx: number;
+  ry: number;
+  xAxisRotation: number;
+  largeArcFlag: number;
+  sweepFlag: number;
+  endX: number;
+  endY: number;
+}
+
 /** Estimates an elliptical arc as a sequence of bezier curves. */
 export function arcToBeziers(xf, yf, rx, ry, xAxisRotation, largeArcFlag, sweepFlag, xt, yt) {
   // Sign of the radii is ignored (behaviour specified by the spec)
