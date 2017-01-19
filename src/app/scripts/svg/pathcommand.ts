@@ -113,16 +113,18 @@ class PathCommandImpl implements PathCommand {
 
         if (cmds[0].svgChar === 'Z') {
           const lastCmd = _.last(cmds);
-          cmds[cmds.length - 1] = closePath(lastCmd.start, lastCmd.end);
+          const isLastCmdSplit = lastCmd.isSplit;
+          cmds[cmds.length - 1] = closePath(lastCmd.start, lastCmd.end, isLastCmdSplit);
           cmds[1] = lineTo(cmds[0].start, cmds[0].end, cmds[0].isSplit);
           // TODO(alockwood): start point correct for paths w/ multiple moves?
-          cmds[0] = moveTo(moveStartPoint, cmds[1].start);
+          cmds[0] = moveTo(moveStartPoint, cmds[1].start, isLastCmdSplit);
         } else {
           cmds[1] = cmds[0];
           // TODO(alockwood): start point correct for paths w/ multiple moves?
-          cmds[0] = moveTo(moveStartPoint, _.last(cmds).end);
+          cmds[0] = moveTo(moveStartPoint, _.last(cmds).end, false);
         }
       }
+      console.log(cmds);
       return cmds;
     };
     const drawCommands = [];
@@ -289,10 +291,10 @@ class PathCommandImpl implements PathCommand {
 
   // Implements the PathCommand interface.
   unsplit(subPathIndex: number, drawIndex: number) {
-    // TODO: indexing is still a bit off here I think...
-    // doesn't work after reverse/shift/unshifting yet, but shouldn't be too hard to fix.
-    // need to make sure we mod the offsets properly after unsplitting as well.
     const numCommands = this.subPathCommands_[subPathIndex].commands.length;
+    if (this.reversals_[subPathIndex]) {
+      drawIndex = numCommands - drawIndex - 1;
+    }
     drawIndex += this.shiftOffsets_[subPathIndex];
     if (drawIndex >= numCommands - 1) {
       drawIndex -= numCommands - 1;
@@ -310,9 +312,13 @@ class PathCommandImpl implements PathCommand {
       counter += cw.commands.length;
       cwsDrawIndex++;
     }
+
+    // TODO: also update the shift offsets (so that they don't grow past the number of commands?)
     const newCws = this.commandWrappers_.map(cws => cws.slice());
     newCws[subPathIndex][cwsDrawIndex] = targetCw.unsplit(targetIndex);
-    return this.clone({ commandWrappers_: newCws });
+    return this.clone({ 
+      commandWrappers_: newCws,
+    });
   }
 }
 
