@@ -4,7 +4,7 @@ import { Point, Projection } from '../common';
 export interface PathCommand {
 
   /** The list of children sub path commands in this path. */
-  commands: ReadonlyArray<SubPathCommand>;
+  subPathCommands: ReadonlyArray<SubPathCommand>;
 
   /** Returns the length of the path. */
   pathLength: number;

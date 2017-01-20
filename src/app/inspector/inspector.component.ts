@@ -53,7 +53,7 @@ export class InspectorComponent implements OnInit, OnDestroy {
         const pathLayer = vl.findLayerById(pathId) as PathLayer;
         if (eventType === EventType.Reverse) {
           pathLayer.pathData = pathLayer.pathData.reverse(subPathIdx);
-          const numCommands = pathLayer.pathData.commands[subPathIdx].commands.length;
+          const numCommands = pathLayer.pathData.subPathCommands[subPathIdx].commands.length;
           this.selectionService.reverse(this.editorType, subPathIdx, numCommands);
         } else if (eventType === EventType.ShiftBack) {
           pathLayer.pathData = pathLayer.pathData.shiftBack(subPathIdx);

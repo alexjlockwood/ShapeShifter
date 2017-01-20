@@ -180,7 +180,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
             return;
           }
           const dcmds = selections.map(s => {
-            return args.layer.pathData.commands[s.subPathIdx].commands[s.drawIdx];
+            return args.layer.pathData.subPathCommands[s.subPathIdx].commands[s.drawIdx];
           });
 
           executeDrawCommands(dcmds, args.ctx, args.transforms, true);
@@ -209,7 +209,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           new Matrix(this.backingStoreScale, 0, 0, this.backingStoreScale, 0, 0)
         ],
         pathFunc: (args: LayerArgs<PathLayer>) => {
-          const pathDataPoints = _.flatMap(args.layer.pathData.commands, scmd => {
+          const pathDataPoints = _.flatMap(args.layer.pathData.subPathCommands, scmd => {
             return scmd.points as { point: Point, isSplit: boolean }[];
           });
 
@@ -437,7 +437,7 @@ function executePathData(
   isDrawingSelection?: boolean) {
 
   const drawCommands =
-    _.flatMap(layer.pathData.commands, s => s.commands as DrawCommand[]);
+    _.flatMap(layer.pathData.subPathCommands, s => s.commands as DrawCommand[]);
   executeDrawCommands(drawCommands, ctx, transforms, isDrawingSelection);
 }
 

@@ -46,7 +46,7 @@ export class DrawCommandImpl implements DrawCommand {
   get args() { return this.args_; }
 
   // Implements the DrawCommand interface.
-  get start() { return this.points[0]; }
+  get start() { return _.first(this.points); }
 
   // Implements the DrawCommand interface.
   get end() { return _.last(this.points); }

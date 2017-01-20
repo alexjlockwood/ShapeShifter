@@ -17,7 +17,7 @@ export class PathComponent {
   @Input() pathCommand: PathCommand;
 
   get subPathCommands() {
-    return this.pathCommand.commands;
+    return this.pathCommand.subPathCommands;
   }
 
   trackSubPathCommand(index: number, item: SubPathCommand) {
