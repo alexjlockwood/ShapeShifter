@@ -168,12 +168,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
     // Draw any selected paths.
     if (this.currentSelections.length) {
-      const drawCommands: DrawCommand[] = [];
-      this.currentSelections.forEach(selection => {
-        const layer = this.vectorLayer.findLayerById(selection.pathId) as PathLayer;
-        drawCommands.push(
-          layer.pathData.commands[selection.subPathIdx].commands[selection.drawIdx]);
-      });
       ctx.save();
       ctx.scale(this.backingStoreScale, this.backingStoreScale);
       this.recurseAndDrawLayers({

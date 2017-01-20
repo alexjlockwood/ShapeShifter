@@ -20,7 +20,6 @@ class PathCommandImpl implements PathCommand {
   private readonly commandWrappers_: ReadonlyArray<ReadonlyArray<CommandWrapper>>;
   private readonly shiftOffsets_: ReadonlyArray<number>;
   private readonly reversals_: ReadonlyArray<boolean>;
-  private readonly returnedSubPathCommands: ReadonlyArray<SubPathCommandImpl>;
 
   // TODO(alockwood): add method to calculate bounds and length
   constructor(obj: string | DrawCommandImpl[] | ClonedPathCommandInfo) {
@@ -420,6 +419,7 @@ class CommandWrapper {
   }
 }
 
+// TODO: create multiple sub path cmds for svgs like 'M ... Z ... Z ... Z'
 function createSubPathCommands(...drawCommands: DrawCommandImpl[]) {
   if (!drawCommands.length) {
     return [];
