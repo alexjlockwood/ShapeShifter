@@ -89,12 +89,12 @@ class PathCommandImpl implements PathCommand {
       if (endsWithClosePath) {
         const lineCmd = lineTo(firstMove.end, newCmds[1].start, _.last(cmds).isSplit);
         newCmds.splice(1, 0, lineCmd);
+        // TODO: confirm that passing 'false' is really what we want here?
         newCmds.push(closePath(_.last(newCmds).end, firstMove.end, false));
       }
 
       return newCmds;
     };
-
 
     const maybeShiftCommandsFn_ = (drawCmds: DrawCommandImpl[], shiftOffset: number) => {
       if (shiftOffset === 0
@@ -119,6 +119,7 @@ class PathCommandImpl implements PathCommand {
         } else {
           cmds[1] = cmds[0];
           // TODO(alockwood): start point correct for paths w/ multiple moves?
+          // TODO: confirm that passing 'false' is really what we want here?
           cmds[0] = moveTo(moveStartPoint, _.last(cmds).end, false);
         }
       }

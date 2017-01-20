@@ -30,8 +30,6 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
     private selectionService: SelectionService,
     private inspectorService: InspectorService) { }
 
-  // TODO: the last index of the subpath doesnt seem
-  // to update its number after each split...
   ngOnInit() {
     this.selectionArgs_ = {
       pathId: this.pathId,
@@ -52,7 +50,6 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
     this.subscription_.unsubscribe();
   }
 
-  // TODO(alockwood): use ngFor trackBy to avoid recreating these items constantly
   private draw() {
     const canvas = $(this.drawCommandIndexCanvas.nativeElement);
     const commandIndexCanvasSize = canvas.get(0).getBoundingClientRect().width;
@@ -78,7 +75,7 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
     ctx.font = radius + 'px serif';
     const text = (this.drawIdx + 1).toString();
     const textWidth = ctx.measureText(text).width;
-    // TODO(alockwood): is there a better way to get the height?
+    // TODO: is there a better way to get the height?
     const textHeight = ctx.measureText('o').width;
     ctx.fillText(text, radius - textWidth / 2, radius + textHeight / 2);
     ctx.fill();
@@ -119,12 +116,7 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   onEditButtonClick(event) {
-    // this.inspectorService.notifyChange({
-    //   eventType: EventType.Edit,
-    //   pathCommandIndex: this.pathCommandIndex,
-    //   subPathCommandIndex: this.subPathCommandIndex,
-    //   drawCommandIndex: this.drawCommandIndex,
-    // });
+    // TODO(alockwood): implement this
   }
 
   onDeleteButtonClick(event) {
