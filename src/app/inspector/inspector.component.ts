@@ -4,6 +4,7 @@ import {
 } from '@angular/core';
 import { PathLayer, PathCommand, EditorType } from '../scripts/model';
 import { LayerStateService } from '../services/layerstate.service';
+import { SelectionService } from '../services/selection.service';
 import { Subscription } from 'rxjs/Subscription';
 import { InspectorService, EventType, InspectorEvent } from './inspector.service';
 
@@ -24,6 +25,7 @@ export class InspectorComponent implements OnInit, OnDestroy {
 
   constructor(
     private layerStateService: LayerStateService,
+    private selectionService: SelectionService,
     private inspectorService: InspectorService) { }
 
   ngOnInit() {
@@ -51,15 +53,14 @@ export class InspectorComponent implements OnInit, OnDestroy {
         const pathLayer = vl.findLayerById(pathId) as PathLayer;
         if (eventType === EventType.Reverse) {
           pathLayer.pathData = pathLayer.pathData.reverse(subPathIdx);
+          const numCommands = pathLayer.pathData.commands[subPathIdx].commands.length;
+          this.selectionService.reverse(this.editorType, subPathIdx, numCommands);
         } else if (eventType === EventType.ShiftBack) {
           pathLayer.pathData = pathLayer.pathData.shiftBack(subPathIdx);
         } else if (eventType === EventType.ShiftForward) {
           pathLayer.pathData = pathLayer.pathData.shiftForward(subPathIdx);
         } else if (eventType === EventType.Delete) {
-          console.log('delete', subPathIdx, drawIdx);
-          console.log(pathLayer.pathData);
           pathLayer.pathData = pathLayer.pathData.unsplit(subPathIdx, drawIdx);
-          console.log(pathLayer.pathData);
         }
         this.layerStateService.notifyChange(this.editorType);
       }));
