@@ -1,8 +1,8 @@
 import { Point, Matrix, MathUtil } from '../common';
 
 export interface EllipticalArc {
-  startX: number;
-  startY: number;
+  startX?: number;
+  startY?: number;
   rx: number;
   ry: number;
   xAxisRotation: number;
@@ -13,7 +13,12 @@ export interface EllipticalArc {
 }
 
 /** Estimates an elliptical arc as a sequence of bezier curves. */
-export function arcToBeziers(xf, yf, rx, ry, xAxisRotation, largeArcFlag, sweepFlag, xt, yt) {
+export function arcToBeziers(arc: EllipticalArc) {
+  const {startX: xf, startY: yf, largeArcFlag, sweepFlag, endX: xt, endY: yt} = arc;
+  let rx = arc.rx;
+  let ry = arc.ry;
+  let xAxisRotation = arc.xAxisRotation;
+
   // Sign of the radii is ignored (behaviour specified by the spec)
   rx = Math.abs(rx);
   ry = Math.abs(ry);
@@ -185,7 +190,7 @@ function unitCircleArcToBeziers(angleStart: number, angleExtent: number): number
 
 // Code adapted from here:
 // https://gist.github.com/alexjlockwood/c037140879806fb4d9820b7e70195494#file-flatten-js-L441-L547
-export function transformArc(initialArc, transformMatrices: Matrix[]) {
+export function transformArc(initialArc: EllipticalArc, transformMatrices: Matrix[]) {
   const isNearZero = n => Math.abs(n) < 0.0000000000000001;
   return transformMatrices.reduce((arc, matrix) => {
     let rx = arc.rx;
@@ -277,6 +282,6 @@ export function transformArc(initialArc, transformMatrices: Matrix[]) {
       sweepFlag,
       endX: end.x,
       endY: end.y,
-    };
+    } as EllipticalArc;
   }, initialArc);
 }

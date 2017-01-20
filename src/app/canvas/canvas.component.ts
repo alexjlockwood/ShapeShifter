@@ -502,10 +502,14 @@ function executeArcCommand(ctx: CanvasRenderingContext2D, arcArgs: ReadonlyArray
     return;
   }
 
-  const bezierCoords = arcToBeziers(currentPointX, currentPointY,
+  const bezierCoords = arcToBeziers({
+    startX: currentPointX,
+    startY: currentPointY,
     rx, ry, xAxisRotation,
     largeArcFlag, sweepFlag,
-    tempPoint1X, tempPoint1Y);
+    endX: tempPoint1X,
+    endY: tempPoint1Y,
+  });
 
   for (let i = 0; i < bezierCoords.length; i += 8) {
     ctx.bezierCurveTo(

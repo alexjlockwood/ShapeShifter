@@ -483,11 +483,13 @@ function drawCommandToBeziers(cmd: DrawCommandImpl): Bezier[] {
       return [new Bezier(cmd.start, cmd.start, cmd.end, cmd.end)];
     }
 
-    const bezierCoords = SvgUtil.arcToBeziers(
-      currentPointX, currentPointY,
+    const bezierCoords = SvgUtil.arcToBeziers({
+      startX: currentPointX, 
+      startY: currentPointY,
       rx, ry, xAxisRotation,
       largeArcFlag, sweepFlag,
-      endX, endY);
+      endX, endY,
+    });
 
     const arcBeziers: Bezier[] = [];
     for (let i = 0; i < bezierCoords.length; i += 8) {
