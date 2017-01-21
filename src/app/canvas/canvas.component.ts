@@ -150,30 +150,30 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
 
     // Draw the vector layer to the canvas.
-    const ctx = (this.canvas.get(0) as HTMLCanvasElement).getContext('2d');
-    ctx.save();
-    ctx.scale(this.backingStoreScale, this.backingStoreScale);
-    ctx.clearRect(0, 0, this.vectorLayer.width, this.vectorLayer.height);
+    const context = (this.canvas.get(0) as HTMLCanvasElement).getContext('2d');
+    context.save();
+    context.scale(this.backingStoreScale, this.backingStoreScale);
+    context.clearRect(0, 0, this.vectorLayer.width, this.vectorLayer.height);
     this.traverseLayers({
       layer: this.vectorLayer,
       transforms: [],
-      ctx,
+      ctx: context,
       pathFunc: this.drawPathLayer,
       clipPathFunc: (args: LayerArgs<ClipPathLayer>) => {
         executePathData(args.layer, args.ctx, args.transforms);
-        ctx.clip();
+        args.ctx.clip();
       },
     });
-    ctx.restore();
+    context.restore();
 
     // Draw any selected paths.
     if (this.currentSelections.length) {
-      ctx.save();
-      ctx.scale(this.backingStoreScale, this.backingStoreScale);
+      context.save();
+      context.scale(this.backingStoreScale, this.backingStoreScale);
       this.traverseLayers({
         layer: this.vectorLayer,
         transforms: [],
-        ctx,
+        ctx: context,
         pathFunc: (args: LayerArgs<PathLayer>) => {
           const selections = this.currentSelections.filter(s => s.pathId === args.layer.id);
           if (!selections.length) {
@@ -185,36 +185,33 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
           executeDrawCommands(dcmds, args.ctx, args.transforms, true);
 
-          ctx.save();
-          ctx.lineWidth = 6 / this.scale; // 2px
-          ctx.strokeStyle = '#fff';
-          ctx.lineCap = 'round';
-          ctx.stroke();
-          ctx.strokeStyle = '#2196f3';
-          ctx.lineWidth = 3 / this.scale; // 2px
-          ctx.stroke();
-          ctx.restore();
+          args.ctx.save();
+          args.ctx.lineWidth = 6 / this.scale; // 2px
+          args.ctx.strokeStyle = '#fff';
+          args.ctx.lineCap = 'round';
+          args.ctx.stroke();
+          args.ctx.strokeStyle = '#2196f3';
+          args.ctx.lineWidth = 3 / this.scale; // 2px
+          args.ctx.stroke();
+          args.ctx.restore();
         },
       });
-      ctx.restore();
+      context.restore();
     }
 
     // Draw any labeled points to the canvas.
     if (this.shouldLabelPoints_ && this.editorType !== EditorType.Preview) {
       this.traverseLayers({
         layer: this.vectorLayer,
-        // TODO: why is specifying this transform necessary? i forget... we don't do it above
-        transforms: [
-          new Matrix(this.backingStoreScale, 0, 0, this.backingStoreScale, 0, 0)
-        ],
-        ctx,
+        transforms: [new Matrix(this.backingStoreScale, 0, 0, this.backingStoreScale, 0, 0)],
+        ctx: context,
         pathFunc: (args: LayerArgs<PathLayer>) => {
           const pathDataPoints = _.flatMap(args.layer.pathData.subPathCommands, scmd => {
             return scmd.points as { point: Point, isSplit: boolean }[];
           });
 
-          args.ctx.save();
           const matrices = args.transforms.slice().reverse();
+          args.ctx.save();
           for (let i = pathDataPoints.length - 1; i >= 0; i--) {
             const p = MathUtil.transform(pathDataPoints[i].point, ...matrices);
             const color = i === 0 ? 'blue' : pathDataPoints[i].isSplit ? 'purple' : 'green';
@@ -227,9 +224,9 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
             args.ctx.fillStyle = 'white';
             args.ctx.font = radius + 'px serif';
             const text = (i + 1).toString();
-            const width = ctx.measureText(text).width;
+            const width = args.ctx.measureText(text).width;
             // TODO(alockwood): is there a better way to get the height?
-            const height = ctx.measureText('o').width;
+            const height = args.ctx.measureText('o').width;
             args.ctx.fillText(text, p.x - width / 2, p.y + height / 2);
             args.ctx.fill();
           }
@@ -241,10 +238,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     if (this.closestProjectionInfo) {
       this.traverseLayers({
         layer: this.vectorLayer,
-        transforms: [
-          new Matrix(this.backingStoreScale, 0, 0, this.backingStoreScale, 0, 0)
-        ],
-        ctx,
+        transforms: [new Matrix(this.backingStoreScale, 0, 0, this.backingStoreScale, 0, 0)],
+        ctx: context,
         pathFunc: (args: LayerArgs<PathLayer>) => {
           if (args.layer.id !== this.closestPathLayerId) {
             return;
@@ -264,16 +259,16 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
     // draw pixel grid
     if (this.scale > 4) {
-      ctx.fillStyle = 'rgba(128, 128, 128, .25)';
+      context.fillStyle = 'rgba(128, 128, 128, .25)';
       for (let x = 1; x < this.vectorLayer.width; x++) {
-        ctx.fillRect(
+        context.fillRect(
           x * this.backingStoreScale - 0.5 * (window.devicePixelRatio || 1),
           0,
           1 * (window.devicePixelRatio || 1),
           this.vectorLayer.height * this.backingStoreScale);
       }
       for (let y = 1; y < this.vectorLayer.height; y++) {
-        ctx.fillRect(
+        context.fillRect(
           0,
           y * this.backingStoreScale - 0.5 * (window.devicePixelRatio || 1),
           this.vectorLayer.width * this.backingStoreScale,
@@ -284,6 +279,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
   // TODO(alockwood): update layer.pathData.length so that it reflects transforms such as scale
   private drawPathLayer({layer, ctx, transforms}: LayerArgs<PathLayer>) {
+    ctx.save();
+
     executePathData(layer, ctx, transforms);
 
     // draw the actual layer
@@ -318,14 +315,13 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     } else {
       ctx.setLineDash([]);
     }
-
     if (layer.strokeColor && layer.strokeWidth && layer.trimPathStart !== layer.trimPathEnd) {
       ctx.stroke();
     }
-
     if (layer.fillColor) {
       ctx.fill();
     }
+    ctx.restore();
   }
 
   // TODO(alockwood): don't split if user control clicks (or double clicks on mac)
@@ -423,14 +419,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         ]);
       }
       transforms.splice(transforms.length, 0, ...matrices);
-      if (ctx) {
-        ctx.save();
-      }
       layer.children.forEach(
         l => this.traverseLayers({ layer: l, ctx, transforms, pathFunc, clipPathFunc }));
-      if (ctx) {
-        ctx.restore();
-      }
       transforms.splice(-matrices.length, matrices.length);
     } else if (layer instanceof PathLayer) {
       if (pathFunc) {
