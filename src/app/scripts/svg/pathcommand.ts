@@ -53,9 +53,9 @@ class PathCommandImpl implements PathCommand {
 
     const maybeReverseCommandsFn_ = (subPathIdx: number) => {
       const shouldReverse =
-        overrides.reversals_ === undefined
-          ? this.reversals_[subPathIdx]
-          : overrides.reversals_[subPathIdx];
+        overrides.reversals_
+          ? overrides.reversals_[subPathIdx] 
+          : this.reversals_[subPathIdx];
 
       const cmds = _.flatMap(newCmdWrappers[subPathIdx], (cw: CommandWrapper) => {
         if (!shouldReverse || cw.commands.length === 1) {

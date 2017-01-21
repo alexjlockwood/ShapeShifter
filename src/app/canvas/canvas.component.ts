@@ -154,10 +154,10 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     ctx.save();
     ctx.scale(this.backingStoreScale, this.backingStoreScale);
     ctx.clearRect(0, 0, this.vectorLayer.width, this.vectorLayer.height);
-    this.recurseAndDrawLayers({
+    this.traverseLayers({
       layer: this.vectorLayer,
-      ctx,
       transforms: [],
+      ctx,
       pathFunc: this.drawPathLayer,
       clipPathFunc: (args: LayerArgs<ClipPathLayer>) => {
         executePathData(args.layer, args.ctx, args.transforms);
@@ -170,10 +170,10 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     if (this.currentSelections.length) {
       ctx.save();
       ctx.scale(this.backingStoreScale, this.backingStoreScale);
-      this.recurseAndDrawLayers({
+      this.traverseLayers({
         layer: this.vectorLayer,
-        ctx,
         transforms: [],
+        ctx,
         pathFunc: (args: LayerArgs<PathLayer>) => {
           const selections = this.currentSelections.filter(s => s.pathId === args.layer.id);
           if (!selections.length) {
@@ -201,13 +201,13 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
     // Draw any labeled points to the canvas.
     if (this.shouldLabelPoints_ && this.editorType !== EditorType.Preview) {
-      this.recurseAndDrawLayers({
+      this.traverseLayers({
         layer: this.vectorLayer,
-        ctx,
         // TODO: why is specifying this transform necessary? i forget... we don't do it above
         transforms: [
           new Matrix(this.backingStoreScale, 0, 0, this.backingStoreScale, 0, 0)
         ],
+        ctx,
         pathFunc: (args: LayerArgs<PathLayer>) => {
           const pathDataPoints = _.flatMap(args.layer.pathData.subPathCommands, scmd => {
             return scmd.points as { point: Point, isSplit: boolean }[];
@@ -239,13 +239,16 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
 
     if (this.closestProjectionInfo) {
-      this.recurseAndDrawLayers({
+      this.traverseLayers({
         layer: this.vectorLayer,
-        ctx,
         transforms: [
           new Matrix(this.backingStoreScale, 0, 0, this.backingStoreScale, 0, 0)
         ],
+        ctx,
         pathFunc: (args: LayerArgs<PathLayer>) => {
+          if (args.layer.id !== this.closestPathLayerId) {
+            return;
+          }
           args.ctx.save();
           const matrices = args.transforms.slice().reverse();
           const proj = this.closestProjectionInfo.projection;
@@ -366,19 +369,25 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   }
 
   private findClosestProjectionInfo(point: Point) {
-    let closestProjectionInfo: ProjectionInfo = undefined;
-    let closestPathLayerId: string = undefined;
-    this.vectorLayer.walk(layer => {
-      if (layer instanceof PathLayer) {
-        const projectionInfo = layer.pathData.project(point);
+    let closestProjectionInfo: ProjectionInfo;
+    let closestPathLayerId: string;
+
+    this.traverseLayers({
+      layer: this.vectorLayer,
+      transforms: [],
+      pathFunc: (args: LayerArgs<PathLayer>) => {
+        const reversedMatrices = args.transforms.slice().reverse();
+        const transformedPoint = MathUtil.transform(point, ...reversedMatrices);
+        const projectionInfo = args.layer.pathData.project(transformedPoint);
         if (projectionInfo
           && (!closestProjectionInfo
             || projectionInfo.projection.d < closestProjectionInfo.projection.d)) {
           closestProjectionInfo = projectionInfo;
-          closestPathLayerId = layer.id;
+          closestPathLayerId = args.layer.id;
         }
-      }
+      },
     });
+
     if (this.closestProjectionInfo !== closestProjectionInfo) {
       this.closestProjectionInfo = closestProjectionInfo;
       this.closestPathLayerId = closestPathLayerId;
@@ -393,10 +402,10 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   }
 
   /**
-   * Recursively draws a vector layer, applying group transforms at each level of the
+   * Recursively traverses a vector layer, applying group transforms at each level of the
    * tree so that children layers can draw their content to the canvas properly.
    */
-  private recurseAndDrawLayers(args: LayerArgs<Layer>) {
+  private traverseLayers(args: LayerArgs<Layer>) {
     const {layer, ctx, transforms, pathFunc, clipPathFunc} = args;
     if (layer instanceof VectorLayer || layer instanceof GroupLayer) {
       const matrices = [];
@@ -412,10 +421,14 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         ]);
       }
       transforms.splice(transforms.length, 0, ...matrices);
-      ctx.save();
+      if (ctx) {
+        ctx.save();
+      }
       layer.children.forEach(
-        l => this.recurseAndDrawLayers({ layer: l, ctx, transforms, pathFunc, clipPathFunc }));
-      ctx.restore();
+        l => this.traverseLayers({ layer: l, ctx, transforms, pathFunc, clipPathFunc }));
+      if (ctx) {
+        ctx.restore();
+      }
       transforms.splice(-matrices.length, matrices.length);
     } else if (layer instanceof PathLayer) {
       if (pathFunc) {
@@ -521,8 +534,8 @@ function executeArcCommand(ctx: CanvasRenderingContext2D, arcArgs: ReadonlyArray
 
 interface LayerArgs<T extends Layer> {
   layer: T;
-  ctx: CanvasRenderingContext2D;
   transforms: Matrix[];
+  ctx?: CanvasRenderingContext2D;
   pathFunc?: (args: LayerArgs<PathLayer>) => void;
   clipPathFunc?: (args: LayerArgs<ClipPathLayer>) => void;
 }
