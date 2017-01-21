@@ -65,7 +65,7 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
     const radius = commandIndexCanvasSize * dpi / 2;
 
     ctx.save();
-    const color = 'green';
+    const color = this.drawIdx === 0 ? 'blue' : this.drawCommand.isSplit ? 'purple' : 'green';
     ctx.beginPath();
     ctx.arc(radius, radius, radius, 0, 2 * Math.PI, false);
     ctx.fillStyle = color;

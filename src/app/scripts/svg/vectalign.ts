@@ -1,4 +1,3 @@
-import * as _ from 'lodash';
 import { DrawCommand } from '../model';
 
 const MATCH = 1;
@@ -12,8 +11,8 @@ export interface Alignment {
 
 /** Aligns two sequences of draw commands using the Needleman-Wunsch algorithm. */
 export function align(from: DrawCommand[], to: DrawCommand[]) {
-  const listA: Alignment[] = from.map(drawCommand => { return { drawCommand } });
-  const listB: Alignment[] = to.map(drawCommand => { return { drawCommand } });
+  const listA: Alignment[] = from.map(drawCommand => { return { drawCommand }; });
+  const listB: Alignment[] = to.map(drawCommand => { return { drawCommand }; });
   const originalListA = from;
   const originalListB = to;
   const alignedListA: Alignment[] = [];

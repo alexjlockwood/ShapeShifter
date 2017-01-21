@@ -54,7 +54,7 @@ class PathCommandImpl implements PathCommand {
     const maybeReverseCommandsFn_ = (subPathIdx: number) => {
       const shouldReverse =
         overrides.reversals_
-          ? overrides.reversals_[subPathIdx] 
+          ? overrides.reversals_[subPathIdx]
           : this.reversals_[subPathIdx];
 
       const cmds = _.flatMap(newCmdWrappers[subPathIdx], (cw: CommandWrapper) => {
@@ -366,15 +366,17 @@ class CommandWrapper {
   }
 
   // TODO(alockwood): add a test for splitting a command with a path length of 0
-  split(t: number) {
-    if (!this.backingBeziers.length) {
+  split(...ts: number[]) {
+    if (ts.length === 0 || !this.backingBeziers.length) {
       return this;
     }
     if (this.svgChar === 'A') {
       throw new Error('TODO: implement split support for elliptical arcs');
     }
     const splits = this.splits.slice();
-    splits.splice(_.sortedIndex(splits, t), 0, t);
+    for (const t of ts) {
+      splits.splice(_.sortedIndex(splits, t), 0, t);
+    }
     return this.rebuildSplitCommands(splits);
   }
 
@@ -485,7 +487,7 @@ function drawCommandToBeziers(cmd: DrawCommandImpl): Bezier[] {
     }
 
     const bezierCoords = SvgUtil.arcToBeziers({
-      startX: currentPointX, 
+      startX: currentPointX,
       startY: currentPointY,
       rx, ry, xAxisRotation,
       largeArcFlag, sweepFlag,
