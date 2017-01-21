@@ -1,19 +1,18 @@
 import * as _ from 'lodash';
 import { Point } from '../common';
 import { PathCommand, SubPathCommand, DrawCommand } from '../model';
-import { DrawCommandImpl } from './drawcommand';
 
 /**
  * Implementation of the SubPathCommand interface. A PathCommand is split up
  * into multiple SubPathCommands, each beginning with a 'move to' draw command.
  */
-export class SubPathCommandImpl implements SubPathCommand {
+class SubPathCommandImpl implements SubPathCommand {
 
   // TODO: make sure paths with one M and multiple Zs are treated as multiple sub paths
-  private readonly drawCommands_: ReadonlyArray<DrawCommandImpl>;
+  private readonly drawCommands_: ReadonlyArray<DrawCommand>;
   private readonly points_: ReadonlyArray<{ point: Point, isSplit: boolean }>;
 
-  constructor(...commands: DrawCommandImpl[]) {
+  constructor(commands: DrawCommand[]) {
     this.drawCommands_ = commands;
     this.points_ = _.flatMap(commands, cmd => {
       if (cmd.svgChar === 'Z') {
@@ -24,7 +23,9 @@ export class SubPathCommandImpl implements SubPathCommand {
   }
 
   // Implements the SubPathCommand interface.
-  get commands() { return this.drawCommands_; }
+  get commands(): ReadonlyArray<DrawCommand> {
+    return this.drawCommands_;
+  }
 
   // Implements the SubPathCommand interface.
   get isClosed() {
@@ -44,4 +45,8 @@ export class SubPathCommandImpl implements SubPathCommand {
   get points() {
     return this.points_;
   }
+}
+
+export function createSubPathCommand(...commands: DrawCommand[]): SubPathCommand {
+  return new SubPathCommandImpl(commands);
 }

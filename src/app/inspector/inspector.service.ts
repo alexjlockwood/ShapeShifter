@@ -29,6 +29,7 @@ export class InspectorService {
 }
 
 export enum EventType {
+  AutoAlign,
   Reverse,
   ShiftForward,
   ShiftBack,

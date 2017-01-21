@@ -13,6 +13,7 @@ export abstract class BaseService<T> {
   constructor(defaultValue: T | undefined) {
     [EditorType.Start, EditorType.Preview, EditorType.End]
       .forEach(type => {
+        this.dataMap.set(type, defaultValue);
         this.sources.set(type, new BehaviorSubject<T>(defaultValue));
         this.streams.set(type, this.sources.get(type).asObservable());
       });

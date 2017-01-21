@@ -3,10 +3,12 @@ import { MathUtil, Bezier, Projection, Point, Matrix, Rect } from '../common';
 import { PathCommand, SubPathCommand, DrawCommand, SvgChar } from '../model';
 import * as SvgUtil from './svgutil';
 import * as PathParser from './pathparser';
-import { SubPathCommandImpl } from './subpathcommand';
+import { createSubPathCommand } from './subpathcommand';
 import {
   DrawCommandImpl, moveTo, lineTo, quadraticCurveTo, bezierCurveTo, arcTo, closePath
 } from './drawcommand';
+import * as VectAlign from './vectalign';
+import { Alignment } from './vectalign';
 
 /**
  * Implementation of the PathCommand interface. Represents all of the information
@@ -15,7 +17,7 @@ import {
 class PathCommandImpl implements PathCommand {
 
   private readonly path_: string;
-  private readonly subPathCommands_: ReadonlyArray<SubPathCommandImpl>;
+  private readonly subPathCommands_: ReadonlyArray<SubPathCommand>;
   private readonly commandWrappers_: ReadonlyArray<ReadonlyArray<CommandWrapper>>;
   private readonly shiftOffsets_: ReadonlyArray<number>;
   private readonly reversals_: ReadonlyArray<boolean>;
@@ -123,7 +125,6 @@ class PathCommandImpl implements PathCommand {
           cmds[0] = moveTo(moveStartPoint, _.last(cmds).end, false);
         }
       }
-      console.log(cmds);
       return cmds;
     };
     const drawCommands = [];
@@ -155,7 +156,7 @@ class PathCommandImpl implements PathCommand {
   }
 
   // Implements the PathCommand interface.
-  get subPathCommands() {
+  get subPathCommands(): ReadonlyArray<SubPathCommand> {
     return this.subPathCommands_;
   }
 
@@ -171,7 +172,7 @@ class PathCommandImpl implements PathCommand {
     return scmds1.length === scmds2.length
       && scmds1.every((_, i) =>
         scmds1[i].commands.length === scmds2[i].commands.length
-        && scmds1[i].commands.every((_, j) =>
+        && scmds1[i].commands.every((__, j) =>
           scmds1[i].commands[j].svgChar === scmds2[i].commands[j].svgChar));
   }
 
@@ -238,6 +239,63 @@ class PathCommandImpl implements PathCommand {
   }
 
   // Implements the PathCommand interface.
+  autoAlign(subPathIndex: number, target: PathCommand): PathCommand {
+    const createFromCmdGroupsFn = (...pathCommands: PathCommand[]): PathCommand[] => {
+      const fromPaths = [];
+      for (const p of pathCommands) {
+        const numFromCmds = p.subPathCommands[subPathIndex].commands.length;
+        for (let i = 0; i < numFromCmds - 1; i++) {
+          fromPaths.push(p.shiftBack(subPathIndex, i));
+        }
+      }
+      return fromPaths;
+    };
+
+    const fromPaths = createFromCmdGroupsFn(this, this.reverse(subPathIndex));
+    const alignments = fromPaths.map(p => {
+      const toCmds = target.subPathCommands[subPathIndex].commands;
+      const fromCmds = p.subPathCommands[subPathIndex].commands;
+      return { fromPathCommand: p, alignment: VectAlign.align(fromCmds, toCmds) };
+    });
+
+    const pathAlignment = alignments.reduce((prev, curr) => {
+      const prevScore = prev.alignment.score;
+      const currScore = curr.alignment.score;
+      return prevScore > currScore ? prev : curr;
+    });
+
+    const countGapsFn = (alignments: Alignment[]) => {
+      return alignments.reduce((prev, curr) => {
+        return curr.drawCommand ? prev : prev + 1;
+      }, 0);
+    };
+
+    const numFromGaps = countGapsFn(pathAlignment.alignment.from);
+    const numToGaps = countGapsFn(pathAlignment.alignment.to);
+    if (numToGaps > 0) {
+      // TODO: if the target path contains gaps, we'll probably need to convert
+      return pathAlignment.fromPathCommand;
+    }
+    if (numFromGaps === 0) {
+      // If there are no gaps in the from path command, then we're done.
+      return pathAlignment.fromPathCommand;
+    }
+
+    // TODO: Fill in the empty gaps by adding additional no-op drawing commands.
+    // let currAlignmentIndex = 0;
+    // let currDrawCmdIndex = 0;
+    // let numConsecutiveGaps = 0;
+    // const fromCmds = pathAlignment.alignment.from;
+    // while (currAlignmentIndex < fromCmds.length) {
+    //   if (fromCmds[currAlignmentIndex].drawCommand) {
+    //   }
+    //   currAlignmentIndex++;
+    // }
+
+    return pathAlignment.fromPathCommand;
+  }
+
+  // Implements the PathCommand interface.
   reverse(subPathIndex: number) {
     // TODO(alockwood): add a test for commands with multiple moves but no close paths
     const reversals_ = this.reversals_.slice();
@@ -246,15 +304,16 @@ class PathCommandImpl implements PathCommand {
   }
 
   // Implements the PathCommand interface.
-  shiftBack(subPathIndex: number) {
-    // TODO(alockwood): add a test for commands with multiple moves but no close paths
+  shiftBack(subPathIndex: number, numShifts = 1) {
+    // TODO: add a test for commands with multiple moves but no close paths
+    // TODO: add a test for commands ending with a Z with the same end point as its prev cmd
     const scmd = this.subPathCommands_[subPathIndex];
     const numCommands = scmd.commands.length;
     if (numCommands <= 1 || !scmd.isClosed) {
       return this;
     }
-    let newShiftOffset = this.shiftOffsets_[subPathIndex] - 1;
-    if (newShiftOffset < 0) {
+    let newShiftOffset = this.shiftOffsets_[subPathIndex] - numShifts;
+    while (newShiftOffset < 0) {
       newShiftOffset += numCommands - 1;
     }
     const shiftOffsets_ = this.shiftOffsets_.slice();
@@ -263,15 +322,16 @@ class PathCommandImpl implements PathCommand {
   }
 
   // Implements the PathCommand interface.
-  shiftForward(subPathIndex: number) {
-    // TODO(alockwood): add a test for commands with multiple moves but no close paths
+  shiftForward(subPathIndex: number, numShifts = 1) {
+    // TODO: add a test for commands with multiple moves but no close paths
+    // TODO: add a test for commands ending with a Z with the same end point as its prev cmd
     const scmd = this.subPathCommands_[subPathIndex];
     const numCommands = scmd.commands.length;
     if (numCommands <= 1 || !scmd.isClosed) {
       return this;
     }
-    let newShiftOffset = this.shiftOffsets_[subPathIndex] + 1;
-    if (newShiftOffset >= numCommands - 1) {
+    let newShiftOffset = this.shiftOffsets_[subPathIndex] + numShifts;
+    while (newShiftOffset >= numCommands - 1) {
       newShiftOffset -= numCommands - 1;
     }
     const shiftOffsets_ = this.shiftOffsets_.slice();
@@ -280,10 +340,13 @@ class PathCommandImpl implements PathCommand {
   }
 
   // Implements the PathCommand interface.
-  split(subPathIndex: number, drawIndex: number, t: number) {
+  split(subPathIndex: number, drawIndex: number, ...ts: number[]) {
+    if (ts.length === 0) {
+      return this;
+    }
     const pathCws = this.commandWrappers_.map(cws => cws.slice());
     const subPathCws = pathCws[subPathIndex];
-    subPathCws[drawIndex] = subPathCws[drawIndex].split(t);
+    subPathCws[drawIndex] = subPathCws[drawIndex].split(...ts);
     return this.clone({ commandWrappers_: pathCws });
   }
 
@@ -421,11 +484,11 @@ class CommandWrapper {
 }
 
 // TODO: create multiple sub path cmds for svgs like 'M ... Z ... Z ... Z'
-function createSubPathCommands(...drawCommands: DrawCommandImpl[]) {
+function createSubPathCommands(...drawCommands: DrawCommand[]) {
   if (!drawCommands.length) {
     return [];
   }
-  const cmdGroups: DrawCommandImpl[][] = [];
+  const cmdGroups: DrawCommand[][] = [];
   let currentCmdList = [];
   for (let i = drawCommands.length - 1; i >= 0; i--) {
     const cmd = drawCommands[i];
@@ -435,10 +498,10 @@ function createSubPathCommands(...drawCommands: DrawCommandImpl[]) {
       currentCmdList = [];
     }
   }
-  return cmdGroups.reverse().map(cmds => new SubPathCommandImpl(...cmds.reverse()));
+  return cmdGroups.reverse().map(cmds => createSubPathCommand(...cmds.reverse()));
 }
 
-function createCommandWrappers(commands: ReadonlyArray<DrawCommandImpl>) {
+function createCommandWrappers(commands: ReadonlyArray<DrawCommand>) {
   if (commands.length && commands[0].svgChar !== 'M') {
     throw new Error('First command must be a move');
   }
@@ -512,7 +575,7 @@ function drawCommandToBeziers(cmd: DrawCommandImpl): Bezier[] {
 // Path command internals that have been cloned.
 interface ClonedPathCommandInfo {
   path_?: string;
-  subPathCommands_?: ReadonlyArray<SubPathCommandImpl>;
+  subPathCommands_?: ReadonlyArray<SubPathCommand>;
   commandWrappers_?: ReadonlyArray<ReadonlyArray<CommandWrapper>>;
   shiftOffsets_?: ReadonlyArray<number>;
   reversals_?: ReadonlyArray<boolean>;

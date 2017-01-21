@@ -22,6 +22,13 @@ export class SubPathComponent {
     return this.subPathCommand.commands;
   }
 
+  onAutoAlignClick() {
+    this.inspectorService.notifyChange(EventType.AutoAlign, {
+      pathId: this.pathId,
+      subPathIdx: this.subPathIdx,
+    });
+  }
+
   onReverseClick() {
     this.inspectorService.notifyChange(EventType.Reverse, {
       pathId: this.pathId,

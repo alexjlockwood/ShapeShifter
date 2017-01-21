@@ -29,6 +29,12 @@ export interface PathCommand {
   project(point: Point): { projection: Projection, split: () => PathCommand } | undefined;
 
   /**
+   * Attempts to auto-align the path command as a best-estimate.
+   * Returns a new path command object.
+   */
+  autoAlign(subPathIndex: number, target: PathCommand): PathCommand;
+
+  /**
    * Reverses the order of the points in the sub path at the specified index.
    * Returns a new path command object.
    */
@@ -38,19 +44,19 @@ export interface PathCommand {
    * Shifts back the order of the points in the sub path at the specified index.
    * Returns a new path command object.
    */
-  shiftBack(subPathIndex: number): PathCommand;
+  shiftBack(subPathIndex: number, numShifts?: number): PathCommand;
 
   /**
    * Shifts forward the order of the points in the sub path at the specified index.
    * Returns a new path command object.
    */
-  shiftForward(subPathIndex: number): PathCommand;
+  shiftForward(subPathIndex: number, numShifts?: number): PathCommand;
 
   /**
    * Splits the draw command at the specified index.
    * Returns a new path command object.
    */
-  split(subPathIndex: number, drawIndex: number, t: number): PathCommand;
+  split(subPathIndex: number, drawIndex: number, ...ts: number[]): PathCommand;
 
   /**
    * Un-splits the draw command at the specified index.

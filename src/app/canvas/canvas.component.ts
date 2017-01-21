@@ -328,8 +328,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  // TODO(alockwood): need to transform the mouse point coordinates using the group transforms
   // TODO(alockwood): don't split if user control clicks (or double clicks on mac)
+  @HostListener('mousedown', ['$event'])
   onMouseDown(event) {
     const canvasOffset = this.canvas.offset();
     const x = (event.pageX - canvasOffset.left) / this.scale;
@@ -351,6 +351,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   }
 
   // TODO(alockwood): need to transform the mouse point coordinates using the group transforms
+  @HostListener('mousemove', ['$event'])
   onMouseMove(event) {
     const canvasOffset = this.canvas.offset();
     const x = (event.pageX - canvasOffset.left) / this.scale;
@@ -394,6 +395,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
   }
 
+  @HostListener('mouseleave', ['$event'])
   onMouseLeave(event) {
     if (this.closestProjectionInfo) {
       this.closestProjectionInfo = undefined;

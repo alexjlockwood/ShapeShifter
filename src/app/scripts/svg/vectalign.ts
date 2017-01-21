@@ -1,4 +1,6 @@
+import * as _ from 'lodash';
 import { DrawCommand } from '../model';
+import * as MathUtil from '../common';
 
 const MATCH = 1;
 const MISMATCH = -1;
@@ -10,7 +12,7 @@ export interface Alignment {
 }
 
 /** Aligns two sequences of draw commands using the Needleman-Wunsch algorithm. */
-export function align(from: DrawCommand[], to: DrawCommand[]) {
+export function align(from: ReadonlyArray<DrawCommand>, to: ReadonlyArray<DrawCommand>) {
   const listA: Alignment[] = from.map(drawCommand => { return { drawCommand }; });
   const listB: Alignment[] = to.map(drawCommand => { return { drawCommand }; });
   const originalListA = from;
@@ -38,7 +40,13 @@ export function align(from: DrawCommand[], to: DrawCommand[]) {
     }
     const cmdA = listA[i].drawCommand;
     const cmdB = listB[j].drawCommand;
-    return cmdA.svgChar === cmdB.svgChar ? MATCH : MISMATCH;
+    if (cmdA.svgChar !== cmdB.svgChar) {
+      return MISMATCH;
+    }
+    // TODO: if we are going to use distance as part of the scoring function,
+    // the value should be dependent on the SVG's viewport width/height.
+    const distance = Math.max(MATCH, MathUtil.distance(cmdA.end, cmdB.end));
+    return 1 / distance;
   };
 
   // Process the scoring matrix.
@@ -68,5 +76,9 @@ export function align(from: DrawCommand[], to: DrawCommand[]) {
     }
   }
 
-  return { from: alignedListA, to: alignedListB };
+  return {
+    from: alignedListA,
+    to: alignedListB,
+    score: _.last(_.last(matrix)),
+  };
 }

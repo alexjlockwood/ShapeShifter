@@ -11,9 +11,6 @@ import { BaseService } from './base.service';
 @Injectable()
 export class SelectionService extends BaseService<Array<Selection>> {
 
-  // TODO: maybe it does make sense to move selection state into the path commands after all?
-  // first impression was that synchronizing inspector and selection state might be difficult
-  // otherwise (i.e. making sure selections and reversals/shifts/splits/etc. stay in sync).
   constructor() {
     super([]);
   }

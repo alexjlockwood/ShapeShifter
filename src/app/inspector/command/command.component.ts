@@ -102,7 +102,9 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
     this.isCommandSelected_ = isCommandSelected;
   }
 
-  @HostListener('click') onCommandClick() {
+  @HostListener('click')
+  onCommandClick() {
+    // Selecting the last 'Z' command doesn't seem to work...
     this.selectionService.toggleSelection(this.editorType, this.selectionArgs_);
   }
 
