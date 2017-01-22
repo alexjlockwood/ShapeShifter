@@ -1,19 +1,54 @@
 <div #appContainer class="app-container">
   <div fxLayout="column" *ngIf="shouldDisplayCanvases()">
-    <div fxLayout="row" fxLayoutAlign="space-around" #canvasContainer>
-      <app-canvas fxFlex="30%" [editorType]="startVectorLayerType" [shouldLabelPoints]="shouldLabelPoints"></app-canvas>
-      <app-canvas fxFlex="30%" [editorType]="previewVectorLayerType" [shouldLabelPoints]="shouldLabelPoints"></app-canvas>
-      <app-canvas fxFlex="30%" [editorType]="endVectorLayerType" [shouldLabelPoints]="shouldLabelPoints"></app-canvas>
+    <div #canvasContainer
+      class="canvas-container"
+      fxLayout="row"
+      fxLayoutAlign="space-around">
+      <app-canvas fxFlex="30%"
+        [editorType]="startVectorLayerType"
+        [shouldLabelPoints]="shouldLabelPoints">
+      </app-canvas>
+      <app-canvas fxFlex="30%"
+        [editorType]="previewVectorLayerType"
+        [shouldLabelPoints]="shouldLabelPoints">
+      </app-canvas>
+      <app-canvas fxFlex="30%"
+        [editorType]="endVectorLayerType"
+        [shouldLabelPoints]="shouldLabelPoints">
+      </app-canvas>
     </div>
-    <app-timeline [isMorphable]="isMorphable" [shouldLabelPoints]="shouldLabelPoints" (labelPointsChangedEmitter)="onLabelPointsChanged($event)"></app-timeline>
-    <div appSplitter class="app-splitter" (onDividerDrag)="onDividerDrag($event)"></div>
-    <div #inspectorContainer class="inspector-container" fxLayout="row" fxLayoutAlign="space-around">
-      <app-inspector fxFlex="30%" [editorType]="startVectorLayerType"></app-inspector>
-      <app-inspector fxFlex="30%" [editorType]="endVectorLayerType"></app-inspector>
+    <app-timeline [isMorphable]="isMorphable"
+      [shouldLabelPoints]="shouldLabelPoints"
+      (labelPointsChangedEmitter)="onLabelPointsChanged($event)">
+    </app-timeline>
+    <div appSplitter
+      class="app-splitter"
+      (onDividerDrag)="onDividerDrag($event)">
+    </div>
+    <div #inspectorContainer
+      class="inspector-container"
+      fxLayout="row"
+      fxLayoutAlign="space-around">
+      <app-inspector fxFlex="37.5%"
+        [editorType]="startVectorLayerType">
+      </app-inspector>
+      <app-inspector fxFlex="37.5%"
+        [editorType]="endVectorLayerType">
+      </app-inspector>
     </div>
   </div>
-  <div *ngIf="!shouldDisplayCanvases()" class="drop-target-container fill-height" fxLayout="row">
-    <app-dropsvg fxFlex="50%" fxLayoutAlign="center center" [componentId]="'dropSvgStart'" (svgFileLoadedEmitter)="onStartSvgTextLoaded($event)"></app-dropsvg>
-    <app-dropsvg fxFlex="50%" fxLayoutAlign="center center" [componentId]="'dropSvgEnd'" (svgFileLoadedEmitter)="onEndSvgTextLoaded($event)"></app-dropsvg>
+  <div *ngIf="!shouldDisplayCanvases()"
+    class="drop-target-container fill-height"
+    fxLayout="row">
+    <app-dropsvg fxFlex="50%"
+      fxLayoutAlign="center center"
+      [componentId]="'dropSvgStart'"
+      (svgFileLoadedEmitter)="onStartSvgTextLoaded($event)">
+    </app-dropsvg>
+    <app-dropsvg fxFlex="50%"
+      fxLayoutAlign="center center"
+      [componentId]="'dropSvgEnd'"
+      (svgFileLoadedEmitter)="onEndSvgTextLoaded($event)">
+    </app-dropsvg>
   </div>
 </div>

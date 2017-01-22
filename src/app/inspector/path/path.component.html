@@ -1,8 +1,12 @@
-<app-subpath *ngFor="let subPathCommand of subPathCommands; let subPathIdx = index; trackBy: trackSubPathCommand"
-  fxLayout="column"
-  [editorType]="editorType"
-  [pathId]="pathId"
-  [subPathIdx]="subPathIdx"
-  [subPathCommand]="subPathCommand">
-</app-subpath>
-
+<md-card>
+  <app-subpath
+    *ngFor="let subPathCommand of subPathCommands;
+      let subPathIdx = index;
+      trackBy: trackSubPathCommand"
+    fxLayout="column"
+    [editorType]="editorType"
+    [pathId]="pathId"
+    [subPathIdx]="subPathIdx"
+    [subPathCommand]="subPathCommand">
+  </app-subpath>
+</md-card>

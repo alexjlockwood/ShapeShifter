@@ -30,7 +30,10 @@
     <md-icon class="md-24">skip_next</md-icon>
   </button>
 </div>
-<app-command *ngFor="let drawCommand of drawCommands; let drawIdx = index; trackBy: trackDrawCommand"
+<app-command
+  *ngFor="let drawCommand of drawCommands;
+    let drawIdx = index;
+    trackBy: trackDrawCommand"
   fxLayout="row"
   fxLayoutAlign="start center"
   [editorType]="editorType"

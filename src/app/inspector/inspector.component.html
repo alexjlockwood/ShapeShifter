@@ -1,4 +1,7 @@
-<app-path *ngFor="let pathCommand of pathCommands; let pathIdx = index; trackBy: trackPathCommand"
+<app-path
+  *ngFor="let pathCommand of pathCommands;
+    let pathIdx = index;
+    trackBy: trackPathCommand"
   fxLayout="column"
   [editorType]="editorType"
   [pathId]="pathIds[pathIdx]"
