@@ -1,5 +1,6 @@
 import {
-  Component, OnInit, AfterViewInit, ElementRef, ViewChild, OnDestroy
+  Component, OnInit, AfterViewInit, ElementRef,
+  ViewChild, OnDestroy, HostListener
 } from '@angular/core';
 import { Layer, VectorLayer, GroupLayer, PathLayer } from './scripts/model';
 import { SvgLoader } from './scripts/svg';
@@ -42,6 +43,22 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     if (debugMode) {
       this.initDebugMode();
     }
+
+    // Register global key events.
+    $(window).on('keydown', event => {
+      if (event.metaKey && event.keyCode === 'Z'.charCodeAt(0)) {
+        // Undo/redo (Z key).
+        // TODO: implement an undo service to keep track of undo/redo state.
+        console.log(event.shiftKey ? 'redo' : 'undo');
+        // return false;
+      } else if (event.keyCode === 32) {
+        // Spacebar.
+        // TODO: start the currently displayed animation
+        console.log('spacebar');
+        // return false;
+      }
+      return undefined;
+    });
   }
 
   ngAfterViewInit() {

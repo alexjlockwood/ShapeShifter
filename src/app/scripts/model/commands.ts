@@ -32,7 +32,7 @@ export interface PathCommand {
    * Attempts to auto-align the path command as a best-estimate.
    * Returns a new path command object.
    */
-  autoAlign(subPathIndex: number, target: PathCommand): PathCommand;
+  autoAlign(subPathIndex: number, toPathCmd: PathCommand): PathCommand;
 
   /**
    * Reverses the order of the points in the sub path at the specified index.

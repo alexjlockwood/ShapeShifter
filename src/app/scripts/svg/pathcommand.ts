@@ -227,7 +227,7 @@ class PathCommandImpl implements PathCommand {
         const projection = cw.project(point);
         return {
           projection,
-          split: () => this.split(subPathIdx, drawIdx, projection.t),
+          split: () => this.splitInternal(subPathIdx, drawIdx, projection.t),
         };
       }))
       .flatMap(projections => projections)
@@ -239,7 +239,7 @@ class PathCommandImpl implements PathCommand {
   }
 
   // Implements the PathCommand interface.
-  autoAlign(subPathIndex: number, target: PathCommand): PathCommand {
+  autoAlign(subPathIndex: number, toPathCmd: PathCommand): PathCommand {
     const createFromCmdGroupsFn = (...pathCommands: PathCommand[]): PathCommand[] => {
       const fromPaths = [];
       for (const p of pathCommands) {
@@ -253,7 +253,7 @@ class PathCommandImpl implements PathCommand {
 
     const fromPaths = createFromCmdGroupsFn(this, this.reverse(subPathIndex));
     const alignments = fromPaths.map(p => {
-      const toCmds = target.subPathCommands[subPathIndex].commands;
+      const toCmds = toPathCmd.subPathCommands[subPathIndex].commands;
       const fromCmds = p.subPathCommands[subPathIndex].commands;
       return { fromPathCommand: p, alignment: VectAlign.align(fromCmds, toCmds) };
     });
@@ -344,9 +344,45 @@ class PathCommandImpl implements PathCommand {
     if (ts.length === 0) {
       return this;
     }
+    const numCommands = this.subPathCommands_[subPathIndex].commands.length;
+    if (this.reversals_[subPathIndex]) {
+      drawIndex = numCommands - drawIndex - 1;
+    }
+    drawIndex += this.shiftOffsets_[subPathIndex];
+    if (drawIndex >= numCommands - 1) {
+      drawIndex -= numCommands - 1;
+    }
+    let counter = 0;
+    let targetCw: CommandWrapper;
+    let targetIndex: number;
+    let cwsDrawIndex = 0;
+    for (const cw of this.commandWrappers_[subPathIndex]) {
+      if (counter + cw.commands.length > drawIndex) {
+        targetCw = cw;
+        targetIndex = drawIndex - counter;
+        break;
+      }
+      counter += cw.commands.length;
+      cwsDrawIndex++;
+    }
+
+    const newCws = this.commandWrappers_.map(cws => cws.slice());
+    newCws[subPathIndex][cwsDrawIndex] = targetCw.splitAtIndex(targetIndex, ...ts);
+    return this.clone({ commandWrappers_: newCws });
+
+    // const pathCws = this.commandWrappers_.map(cws => cws.slice());
+    // const subPathCws = pathCws[subPathIndex];
+    // subPathCws[drawIndex] = subPathCws[drawIndex].split(...ts);
+    // return this.clone({ commandWrappers_: pathCws });
+  }
+
+  private splitInternal(subPathCwIndex: number, drawCwIndex: number, ...ts: number[]) {
+    if (ts.length === 0) {
+      return this;
+    }
     const pathCws = this.commandWrappers_.map(cws => cws.slice());
-    const subPathCws = pathCws[subPathIndex];
-    subPathCws[drawIndex] = subPathCws[drawIndex].split(...ts);
+    const subPathCws = pathCws[subPathCwIndex];
+    subPathCws[drawCwIndex] = subPathCws[drawCwIndex].split(...ts);
     return this.clone({ commandWrappers_: pathCws });
   }
 
@@ -443,6 +479,13 @@ class CommandWrapper {
     return this.rebuildSplitCommands(splits);
   }
 
+  splitAtIndex(splitIndex: number, ...ts: number[]) {
+    const tempSplits = [0, ...this.splits, 1];
+    const startSplit = tempSplits[splitIndex];
+    const endSplit = tempSplits[splitIndex + 1];
+    return this.split(...ts.map(t => MathUtil.lerp(startSplit, endSplit, t)));
+  }
+
   unsplit(splitIndex: number) {
     const splits = this.splits.slice();
     splits.splice(splitIndex, 1);
@@ -513,7 +556,7 @@ function bezierToDrawCommand(svgChar: SvgChar, splitBezier: Bezier, isSplit: boo
   if (svgChar === 'L') {
     return lineTo(bez.start, bez.end, isSplit);
   } else if (svgChar === 'Z') {
-    return closePath(bez.start, bez.end);
+    return closePath(bez.start, bez.end, isSplit);
   } else if (svgChar === 'Q') {
     return quadraticCurveTo(bez.start, bez.cp1, bez.end, isSplit);
   } else if (svgChar === 'C') {
@@ -524,10 +567,13 @@ function bezierToDrawCommand(svgChar: SvgChar, splitBezier: Bezier, isSplit: boo
 }
 
 function drawCommandToBeziers(cmd: DrawCommandImpl): Bezier[] {
-  if (cmd.svgChar === 'L') {
-    return [new Bezier(cmd.start, cmd.start, cmd.end, cmd.end)];
-  } else if (cmd.svgChar === 'Z') {
-    return [new Bezier(cmd.start, cmd.start, cmd.end, cmd.end)];
+  if (cmd.svgChar === 'L' || cmd.svgChar === 'Z') {
+    const start = cmd.start;
+    const cp = new Point(
+      MathUtil.lerp(cmd.end.x, cmd.start.x, 0.5),
+      MathUtil.lerp(cmd.end.y, cmd.start.y, 0.5));
+    const end = cmd.end;
+    return [new Bezier(start, cp, end)];
   } else if (cmd.svgChar === 'C') {
     return [new Bezier(cmd.points[0], cmd.points[1], cmd.points[2], cmd.points[3])];
   } else if (cmd.svgChar === 'Q') {
@@ -546,7 +592,12 @@ function drawCommandToBeziers(cmd: DrawCommandImpl): Bezier[] {
 
     if (rx === 0 || ry === 0) {
       // Degenerate to line.
-      return [new Bezier(cmd.start, cmd.start, cmd.end, cmd.end)];
+      const start = cmd.start;
+      const cp = new Point(
+        MathUtil.lerp(cmd.end.x, cmd.start.x, 0.5),
+        MathUtil.lerp(cmd.end.y, cmd.start.y, 0.5));
+      const end = cmd.end;
+      return [new Bezier(start, cp, cp, end)];
     }
 
     const bezierCoords = SvgUtil.arcToBeziers({

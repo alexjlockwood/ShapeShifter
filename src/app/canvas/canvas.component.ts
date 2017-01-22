@@ -331,17 +331,17 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       return;
     }
     const mouseDown = this.mouseEventToPoint(event);
-    this.activePathPoint =
-      this.findClosestPathPointInRange(mouseDown, this.splitPathPointRadius);
-    console.log(this.activePathPoint);
+    // this.activePathPoint =
+    //   this.findClosestPathPointInRange(mouseDown, this.splitPathPointRadius);
+    //console.log(this.activePathPoint);
 
-    // this.findClosestProjectionInfo(mouseDown);
-    // if (this.closestProjectionInfo) {
-    //   const pathLayer = this.vectorLayer.findLayerById(this.closestPathLayerId) as PathLayer;
-    //   pathLayer.pathData = this.closestProjectionInfo.split();
-    //   this.layerStateService.setData(this.editorType, this.vectorLayer);
-    //   this.closestProjectionInfo = undefined;
-    // }
+    this.findClosestProjectionInfo(mouseDown);
+    if (this.closestProjectionInfo) {
+      const pathLayer = this.vectorLayer.findLayerById(this.closestPathLayerId) as PathLayer;
+      pathLayer.pathData = this.closestProjectionInfo.split();
+      this.layerStateService.setData(this.editorType, this.vectorLayer);
+      this.closestProjectionInfo = undefined;
+    }
   }
 
   @HostListener('mousemove', ['$event'])
@@ -351,10 +351,10 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       return;
     }
     const mouseMove = this.mouseEventToPoint(event);
-    // this.findClosestProjectionInfo(mouseMove);
-    // if (this.closestProjectionInfo) {
-    //   this.draw();
-    // }
+    this.findClosestProjectionInfo(mouseMove);
+    if (this.closestProjectionInfo) {
+      this.draw();
+    }
   }
 
   @HostListener('mouseup', ['$event'])
