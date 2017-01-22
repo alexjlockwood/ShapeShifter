@@ -2,11 +2,12 @@
   fxLayoutAlign="center center">
   <md-card fxLayout="row"
     fxLayoutAlign="center center">
-    Status:&nbsp;
-    <span
-      [class.text-is-not-morphable]="!isMorphable"
-      [class.text-is-morphable]="isMorphable">
-      <strong>{{isMorphable ? 'Morphable' : 'Unmorphable'}}</strong>
+    <span>Status:
+      <span
+        [class.text-is-not-morphable]="!isMorphable"
+        [class.text-is-morphable]="isMorphable">
+        <strong>{{isMorphable ? 'Morphable' : 'Unmorphable'}}</strong>
+      </span>
     </span>
     <button
       md-icon-button
@@ -28,9 +29,18 @@
       [disabled]="!isMorphable">
     </md-slider>
     <md-checkbox
+      class="timeline-checkbox"
       [checked]="shouldLabelPoints"
       (change)="onLabelPointsCheckboxChanged($event.checked)">
       Label points
+    </md-checkbox>
+    <!-- TODO: implement snap to grid functionality -->
+    <md-checkbox
+      class="timeline-checkbox"
+      [disabled]="true"
+      [checked]="shouldSnapToGrid"
+      (change)="onSnapToGridCheckboxChanged($event.checked)">
+      Snap to grid
     </md-checkbox>
   </md-card>
 </div>

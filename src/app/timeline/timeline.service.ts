@@ -62,3 +62,9 @@ export class TimelineService {
     this.shouldLabelPointsSource.next(this.shouldLabelPoints);
   }
 }
+
+// TODO: use this to notify setting changes instead
+export interface TimelineSettings {
+  shouldLabelPoints?: boolean;
+  shouldSnapToGrid?: boolean;
+}

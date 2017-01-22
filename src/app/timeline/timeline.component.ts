@@ -27,10 +27,6 @@ export class TimelineComponent {
     this.timelineService.setAnimationFraction(fraction);
   }
 
-  onLabelPointsCheckboxChanged(shouldLabelPoints: boolean) {
-    this.timelineService.setShouldLabelPoints(shouldLabelPoints);
-  }
-
   onPlayClick() {
     let startTimestamp = undefined;
     const onAnimationFrame = (timestamp: number) => {
@@ -47,5 +43,13 @@ export class TimelineComponent {
       }
     };
     this.ngZone.runOutsideAngular(() => requestAnimationFrame(onAnimationFrame));
+  }
+
+  onLabelPointsCheckboxChanged(shouldLabelPoints: boolean) {
+    this.timelineService.setShouldLabelPoints(shouldLabelPoints);
+  }
+
+  onSnapToGridCheckboxChanged(shouldSnapToGrid: boolean) {
+    // TODO: implement this
   }
 }
