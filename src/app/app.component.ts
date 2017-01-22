@@ -23,8 +23,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   public readonly startVectorLayerType = EditorType.Start;
   public readonly previewVectorLayerType = EditorType.Preview;
   public readonly endVectorLayerType = EditorType.End;
-  shouldLabelPoints = true;
-  isMorphable = false;
+  private isMorphable = false;
 
   private isStructurallyIdentical = false;
   private subscriptions: Subscription[] = [];
@@ -114,10 +113,6 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
   shouldDisplayCanvases() {
     return this.startVectorLayer && this.endVectorLayer && this.isStructurallyIdentical;
-  }
-
-  onLabelPointsChanged(shouldLabelPoints: boolean) {
-    this.shouldLabelPoints = shouldLabelPoints;
   }
 
   private get startVectorLayer() {

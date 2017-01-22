@@ -5,20 +5,16 @@
       fxLayout="row"
       fxLayoutAlign="space-around">
       <app-canvas fxFlex="30%"
-        [editorType]="startVectorLayerType"
-        [shouldLabelPoints]="shouldLabelPoints">
+        [editorType]="startVectorLayerType">
       </app-canvas>
       <app-canvas fxFlex="30%"
-        [editorType]="previewVectorLayerType"
-        [shouldLabelPoints]="shouldLabelPoints">
+        [editorType]="previewVectorLayerType">
       </app-canvas>
       <app-canvas fxFlex="30%"
-        [editorType]="endVectorLayerType"
-        [shouldLabelPoints]="shouldLabelPoints">
+        [editorType]="endVectorLayerType">
       </app-canvas>
     </div>
     <app-timeline [isMorphable]="isMorphable"
-      [shouldLabelPoints]="shouldLabelPoints"
       (labelPointsChangedEmitter)="onLabelPointsChanged($event)">
     </app-timeline>
     <div appSplitter

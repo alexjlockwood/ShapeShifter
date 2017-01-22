@@ -1,5 +1,5 @@
 import { Component, Input, Output, EventEmitter, NgZone } from '@angular/core';
-import { AnimationService } from '../services/animation.service';
+import { TimelineService } from './timeline.service';
 
 @Component({
   selector: 'app-timeline',
@@ -8,23 +8,23 @@ import { AnimationService } from '../services/animation.service';
 })
 export class TimelineComponent {
   public readonly maxAnimationFractionSliderValue = 1000;
-  @Input() shouldLabelPoints: boolean;
+  @Input() shouldSnapToGrid: boolean;
   @Input() isMorphable: boolean;
   @Output() labelPointsChangedEmitter = new EventEmitter<boolean>();
   private readonly animationDuration = 1000;
 
   constructor(
-    private animationService: AnimationService,
+    private timelineService: TimelineService,
     private ngZone: NgZone) { }
 
   // TODO(alockwood): make this update each time the slider is changed
   onAnimationFractionSliderChanged(sliderValue: number) {
     const fraction = sliderValue / this.maxAnimationFractionSliderValue;
-    this.animationService.setAnimationFraction(fraction);
+    this.timelineService.setAnimationFraction(fraction);
   }
 
   onLabelPointsCheckboxChanged(shouldLabelPoints: boolean) {
-    this.labelPointsChangedEmitter.emit(shouldLabelPoints);
+    this.timelineService.setShouldLabelPoints(shouldLabelPoints);
   }
 
   onPlayClick() {
@@ -35,10 +35,10 @@ export class TimelineComponent {
       }
       const progress = timestamp - startTimestamp;
       if (progress < this.animationDuration) {
-        this.animationService.setAnimationFraction(progress / this.animationDuration);
+        this.timelineService.setAnimationFraction(progress / this.animationDuration);
         requestAnimationFrame(onAnimationFrame);
       } else {
-        this.animationService.setAnimationFraction(1);
+        this.timelineService.setAnimationFraction(1);
         startTimestamp = undefined;
       }
     };

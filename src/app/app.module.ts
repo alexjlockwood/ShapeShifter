@@ -14,7 +14,7 @@ import { InspectorComponent } from './inspector/inspector.component';
 import { PathComponent } from './inspector/path/path.component';
 import { SubPathComponent } from './inspector/subpath/subpath.component';
 import { CommandComponent } from './inspector/command/command.component';
-import { AnimationService } from './services/animation.service';
+import { TimelineService } from './timeline/timeline.service';
 import { LayerStateService } from './services/layerstate.service';
 import { SelectionService } from './services/selection.service';
 
@@ -40,7 +40,7 @@ import 'hammerjs';
     FlexLayoutModule.forRoot(),
     MaterialModule.forRoot()
   ],
-  providers: [AnimationService, LayerStateService, SelectionService],
+  providers: [TimelineService, LayerStateService, SelectionService],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

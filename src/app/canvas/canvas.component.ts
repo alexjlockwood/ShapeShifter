@@ -10,7 +10,7 @@ import {
 import * as $ from 'jquery';
 import * as erd from 'element-resize-detector';
 import { Point, Matrix, Projection, MathUtil, ColorUtil } from '../scripts/common';
-import { AnimationService } from '../services/animation.service';
+import { TimelineService } from '../timeline/timeline.service';
 import { LayerStateService } from '../services/layerstate.service';
 import { Subscription } from 'rxjs/Subscription';
 import { arcToBeziers } from '../scripts/svg';
@@ -29,12 +29,12 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   @ViewChild('renderingCanvas') private renderingCanvasRef: ElementRef;
 
   private vectorLayer: VectorLayer;
-  private shouldLabelPoints_ = false;
+  private shouldLabelPoints: boolean;
   private canvasContainerSize: number;
   private canvas: JQuery;
   private scale: number;
   private backingStoreScale: number;
-  private isViewInit = false;
+  private isViewInit: boolean;
   private subscriptions: Subscription[] = [];
   private pathPointRadius: number;
   private splitPathPointRadius: number;
@@ -45,7 +45,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   constructor(
     private elementRef: ElementRef,
     private layerStateService: LayerStateService,
-    private animationService: AnimationService,
+    private timelineService: TimelineService,
     private selectionService: SelectionService) { }
 
   ngAfterViewInit() {
@@ -77,7 +77,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         }));
     if (this.editorType === EditorType.Preview) {
       this.subscriptions.push(
-        this.animationService.addListener(fraction => {
+        this.timelineService.addAnimationFractionListener(fraction => {
           if (!this.vectorLayer) {
             return;
           }
@@ -102,20 +102,19 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
             this.currentSelections = selections;
             this.draw();
           }));
+      this.subscriptions.push(
+        this.timelineService.addShouldLabelPointsListener(
+          shouldLabelPoints => {
+            this.shouldLabelPoints = shouldLabelPoints;
+            this.draw();
+          }
+      ));
     }
   }
 
   ngOnDestroy() {
     ELEMENT_RESIZE_DETECTOR.removeAllListeners(this.elementRef.nativeElement);
     this.subscriptions.forEach(s => s.unsubscribe());
-  }
-
-  @Input()
-  set shouldLabelPoints(shouldLabelPoints: boolean) {
-    if (this.shouldLabelPoints_ !== shouldLabelPoints) {
-      this.shouldLabelPoints_ = shouldLabelPoints;
-      this.draw();
-    }
   }
 
   private resizeAndDraw() {
@@ -248,7 +247,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
 
     // Draw any labeled points.
-    if (this.shouldLabelPoints_ && this.editorType !== EditorType.Preview) {
+    if (this.shouldLabelPoints && this.editorType !== EditorType.Preview) {
       const startingTransforms =
         [new Matrix(this.backingStoreScale, 0, 0, this.backingStoreScale, 0, 0)];
       this.vectorLayer.walk((layer, transforms) => {
