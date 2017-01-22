@@ -7,15 +7,6 @@
     class="command-index"></canvas>
   <span fxFlex>{{ drawCommandEndPointText }}</span>
   <button md-icon-button
-    mdTooltip="Split point"
-    mdTooltipPosition="above"
-    md-theme="dark"
-    [fxShow]="isSplittable()"
-    fxLayoutAlign="center center"
-    (click)="onSplitButtonClick($event)">
-    <md-icon class="md-24">content_cut</md-icon>
-  </button>
-  <button md-icon-button
     mdTooltip="Edit point"
     mdTooltipPosition="above"
     md-theme="dark"
@@ -32,6 +23,15 @@
     [fxShow]="isUnsplittable()"
     (click)="onUnsplitButtonClick($event)">
     <md-icon class="md-24">delete</md-icon>
+  </button>
+  <button md-icon-button
+    mdTooltip="Split point"
+    mdTooltipPosition="above"
+    md-theme="dark"
+    [fxShow]="isSplittable()"
+    fxLayoutAlign="center center"
+    (click)="onSplitButtonClick($event)">
+    <md-icon class="md-24">content_cut</md-icon>
   </button>
 </div>
 

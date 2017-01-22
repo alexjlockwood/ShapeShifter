@@ -350,7 +350,7 @@ class PathCommandImpl implements PathCommand {
       drawIdx = numCommands - drawIdx - 1;
     }
     drawIdx += this.shiftOffsets_[subPathIdx];
-    if (drawIdx >= numCommands - 1) {
+    if (drawIdx > numCommands - 1) {
       drawIdx -= numCommands - 1;
     }
     let counter = 0;
