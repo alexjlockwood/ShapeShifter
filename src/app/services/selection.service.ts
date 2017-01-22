@@ -29,7 +29,7 @@ export class SelectionService extends BaseService<Array<Selection>> {
       }
       // TODO: this doesn't quite work yet... but close enough for now.
       // ideally the selected path should stay the same. try it on a plus SVG to reproduce.
-      return _.assign({}, sel, { drawIdx: numCommands - sel.drawIdx - 1 })
+      return _.assign({}, sel, { drawIdx: numCommands - sel.drawIdx - 1 });
     }));
     this.notifyChange(type);
   }

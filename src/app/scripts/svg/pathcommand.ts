@@ -306,24 +306,6 @@ class PathCommandImpl implements PathCommand {
 
   // Implements the PathCommand interface.
   shiftBack(subPathIdx: number, numShifts = 1) {
-    // TODO: add a test for cmds with multiple moves but no close paths
-    // TODO: add a test for cmds ending with a Z with the same end point as its prev cmd
-    const scmd = this.subPathCommands_[subPathIdx];
-    const numCommands = scmd.commands.length;
-    if (numCommands <= 1 || !scmd.isClosed) {
-      return this;
-    }
-    let newShiftOffset = this.shiftOffsets_[subPathIdx] - numShifts;
-    while (newShiftOffset < 0) {
-      newShiftOffset += numCommands - 1;
-    }
-    const shiftOffsets_ = this.shiftOffsets_.slice();
-    shiftOffsets_[subPathIdx] = newShiftOffset;
-    return this.clone({ shiftOffsets_ });
-  }
-
-  // Implements the PathCommand interface.
-  shiftForward(subPathIdx: number, numShifts = 1) {
     // TODO: add a test for commands with multiple moves but no close paths
     // TODO: add a test for commands ending with a Z with the same end point as its prev cmd
     const scmd = this.subPathCommands_[subPathIdx];
@@ -334,6 +316,24 @@ class PathCommandImpl implements PathCommand {
     let newShiftOffset = this.shiftOffsets_[subPathIdx] + numShifts;
     while (newShiftOffset >= numCommands - 1) {
       newShiftOffset -= numCommands - 1;
+    }
+    const shiftOffsets_ = this.shiftOffsets_.slice();
+    shiftOffsets_[subPathIdx] = newShiftOffset;
+    return this.clone({ shiftOffsets_ });
+  }
+
+  // Implements the PathCommand interface.
+  shiftForward(subPathIdx: number, numShifts = 1) {
+    // TODO: add a test for cmds with multiple moves but no close paths
+    // TODO: add a test for cmds ending with a Z with the same end point as its prev cmd
+    const scmd = this.subPathCommands_[subPathIdx];
+    const numCommands = scmd.commands.length;
+    if (numCommands <= 1 || !scmd.isClosed) {
+      return this;
+    }
+    let newShiftOffset = this.shiftOffsets_[subPathIdx] - numShifts;
+    while (newShiftOffset < 0) {
+      newShiftOffset += numCommands - 1;
     }
     const shiftOffsets_ = this.shiftOffsets_.slice();
     shiftOffsets_[subPathIdx] = newShiftOffset;
