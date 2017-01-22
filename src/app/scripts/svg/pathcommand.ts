@@ -23,13 +23,13 @@ class PathCommandImpl implements PathCommand {
   private readonly reversals_: ReadonlyArray<boolean>;
 
   // TODO: add method to calculate bounds and length
-  // TODO: fix split/unsplitting paths after reversals/shifts
   // TODO: reversing a shifted path doesn't work yet
   constructor(obj: string | DrawCommandImpl[] | ClonedPathCommandInfo) {
     if (typeof obj === 'string' || Array.isArray(obj)) {
       if (typeof obj === 'string') {
         this.path_ = obj;
-        this.subPathCommands_ = createSubPathCommands(...PathParser.parseCommands(obj));
+        this.subPathCommands_ =
+          createSubPathCommands(...PathParser.parseCommands(obj));
       } else {
         this.path_ = PathParser.commandsToString(obj);
         this.subPathCommands_ = createSubPathCommands(...obj);

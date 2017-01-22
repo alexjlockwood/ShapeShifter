@@ -35,13 +35,12 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   private scale: number;
   private backingStoreScale: number;
   private isViewInit = false;
-  private closestProjectionInfo: ProjectionInfo;
-  private closestPathLayerId: string;
   private subscriptions: Subscription[] = [];
   private pathPointRadius: number;
   private splitPathPointRadius: number;
   private currentSelections: Selection[] = [];
-  private activePathPoint: PathPoint;
+  private activeDragPoint: DragPoint;
+  private activeProjectionOntoPath: ProjectionOntoPath;
 
   constructor(
     private elementRef: ElementRef,
@@ -86,12 +85,13 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           const startLayer = this.layerStateService.getData(EditorType.Start);
           const endLayer = this.layerStateService.getData(EditorType.End);
           this.vectorLayer.walk(layer => {
-            if (layer instanceof PathLayer) {
-              const start = startLayer.findLayerById(layer.id) as PathLayer;
-              const end = endLayer.findLayerById(layer.id) as PathLayer;
-              layer.pathData =
-                layer.pathData.interpolate(start.pathData, end.pathData, fraction);
+            if (!(layer instanceof PathLayer)) {
+              return;
             }
+            const start = startLayer.findLayerById(layer.id) as PathLayer;
+            const end = endLayer.findLayerById(layer.id) as PathLayer;
+            layer.pathData =
+              layer.pathData.interpolate(start.pathData, end.pathData, fraction);
           });
           this.draw();
         }));
@@ -283,20 +283,21 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       }, startingTransforms);
     }
 
-    if (this.closestProjectionInfo) {
+    // Draw any actively dragged points along the path.
+    if (this.activeProjectionOntoPath) {
       const startingTransforms =
         [new Matrix(this.backingStoreScale, 0, 0, this.backingStoreScale, 0, 0)];
       this.vectorLayer.walk((layer, transforms) => {
-        if (!(layer instanceof PathLayer) || layer.id !== this.closestPathLayerId) {
+        if (layer.id !== this.activeProjectionOntoPath.layerId) {
           return;
         }
         ctx.save();
-        const matrices = transforms.slice().reverse();
-        const proj = this.closestProjectionInfo.projection;
-        const p = MathUtil.transform({ x: proj.x, y: proj.y }, ...matrices);
+        transforms.reverse();
+        const proj = this.activeProjectionOntoPath.projection;
+        const p = MathUtil.transform({ x: proj.x, y: proj.y }, ...transforms);
         ctx.beginPath();
-        ctx.arc(p.x, p.y, this.pathPointRadius, 0, 2 * Math.PI, false);
-        ctx.fillStyle = 'red';
+        ctx.arc(p.x, p.y, this.splitPathPointRadius, 0, 2 * Math.PI, false);
+        ctx.fillStyle = 'purple';
         ctx.fill();
         ctx.restore();
       }, startingTransforms);
@@ -322,7 +323,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  // TODO: don't split if user control clicks (or two finger clicks on mac)
   @HostListener('mousedown', ['$event'])
   onMouseDown(event: MouseEvent) {
     if (this.editorType === EditorType.Preview) {
@@ -330,17 +330,13 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       return;
     }
     const mouseDown = this.mouseEventToPoint(event);
-    this.activePathPoint =
-      this.findClosestPathPointInRange(mouseDown, this.splitPathPointRadius);
-
-    // this.findClosestProjectionInfo(mouseDown);
-    // if (this.closestProjectionInfo) {
-    //   const pathLayer =
-    //     this.vectorLayer.findLayerById(this.closestPathLayerId) as PathLayer;
-    //   pathLayer.pathData = this.closestProjectionInfo.split();
-    //   this.layerStateService.setData(this.editorType, this.vectorLayer);
-    //   this.closestProjectionInfo = undefined;
-    // }
+    this.activeDragPoint =
+      this.findPathPointInRange(mouseDown, this.splitPathPointRadius);
+    if (this.activeDragPoint) {
+      this.activeProjectionOntoPath =
+        this.calculateProjectionOntoPath(mouseDown, this.activeDragPoint.layerId);
+      this.draw();
+    }
   }
 
   @HostListener('mousemove', ['$event'])
@@ -349,11 +345,12 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       // The user never interacts with the preview canvas.
       return;
     }
-    // const mouseMove = this.mouseEventToPoint(event);
-    // this.findClosestProjectionInfo(mouseMove);
-    // if (this.closestProjectionInfo) {
-    //   this.draw();
-    // }
+    const mouseMove = this.mouseEventToPoint(event);
+    if (this.activeDragPoint) {
+      this.activeProjectionOntoPath =
+        this.calculateProjectionOntoPath(mouseMove, this.activeDragPoint.layerId);
+      this.draw();
+    }
   }
 
   @HostListener('mouseup', ['$event'])
@@ -362,6 +359,31 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       // The user never interacts with the preview canvas.
       return;
     }
+    if (this.activeDragPoint) {
+      const activeLayer =
+        this.vectorLayer.findLayerById(this.activeDragPoint.layerId) as PathLayer;
+
+      // Delete the old drag point from the path.
+      activeLayer.pathData =
+        activeLayer.pathData.unsplit(
+          this.activeDragPoint.subPathIdx, this.activeDragPoint.drawIdx);
+
+      // Recalculate the projection in case the unsplit operation shuffled
+      // the path indices.
+      this.activeProjectionOntoPath =
+        this.calculateProjectionOntoPath(
+          this.mouseEventToPoint(event), this.activeDragPoint.layerId);
+
+      // Re-split the path at the projection point.
+      activeLayer.pathData = this.activeProjectionOntoPath.split();
+
+      // Notify the global layer state service about the change and draw.
+      this.layerStateService.setData(this.editorType, this.vectorLayer);
+      this.activeDragPoint = undefined;
+      this.activeProjectionOntoPath = undefined;
+      this.draw();
+    }
+
   }
 
   @HostListener('mouseleave', ['$event'])
@@ -370,16 +392,21 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       // The user never interacts with the preview canvas.
       return;
     }
-    if (this.closestProjectionInfo) {
-      this.closestProjectionInfo = undefined;
+    if (this.activeDragPoint) {
+      this.activeDragPoint = undefined;
+      this.activeProjectionOntoPath = undefined;
       this.draw();
     }
   }
 
-  private findClosestPathPointInRange(
+  /**
+   * Finds the path point closest to the specified mouse point, with a max
+   * distance specified by range. By default, non-split path points are ignored.
+   */
+  private findPathPointInRange(
     mousePoint: Point,
     range: number,
-    splitOnly = true): PathPoint | undefined {
+    splitOnly = true): DragPoint | undefined {
 
     const minPathPoints = [];
     this.vectorLayer.walk((layer, transforms) => {
@@ -415,29 +442,33 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }, undefined);
   }
 
-  private findClosestProjectionInfo(point: Point) {
-    let closestProjectionInfo: ProjectionInfo;
-    let closestPathLayerId: string;
+  /**
+   * Calculates the projection onto the path with the specified layer ID.
+   * The resulting projection is our way of determining the on-curve point
+   * closest to the specified off-curve mouse point.
+   */
+  private calculateProjectionOntoPath(
+    mousePoint: Point,
+    layerId: string): ProjectionOntoPath | undefined {
 
+    let projectionOntoPath: ProjectionOntoPath;
     this.vectorLayer.walk((layer, transforms) => {
-      if (!(layer instanceof PathLayer)) {
+      if (!(layer instanceof PathLayer) || layerId !== layer.id) {
         return;
       }
       transforms.reverse();
-      const transformedPoint = MathUtil.transform(point, ...transforms);
+      const transformedPoint = MathUtil.transform(mousePoint, ...transforms);
       const projectionInfo = layer.pathData.project(transformedPoint);
-      if (projectionInfo
-        && (!closestProjectionInfo
-          || projectionInfo.projection.d < closestProjectionInfo.projection.d)) {
-        closestProjectionInfo = projectionInfo;
-        closestPathLayerId = layer.id;
+      if (!projectionInfo) {
+        return;
       }
+      projectionOntoPath = {
+        layerId: layer.id,
+        projection: projectionInfo.projection,
+        split: projectionInfo.split,
+      };
     });
-
-    if (this.closestProjectionInfo !== closestProjectionInfo) {
-      this.closestProjectionInfo = closestProjectionInfo;
-      this.closestPathLayerId = closestPathLayerId;
-    }
+    return projectionOntoPath;
   }
 
   private mouseEventToPoint(event: MouseEvent) {
@@ -538,13 +569,15 @@ function executeArcCommand(ctx: CanvasRenderingContext2D, arcArgs: ReadonlyArray
   }
 }
 
-interface ProjectionInfo {
+/** Contains information about a projection onto a path. */
+interface ProjectionOntoPath {
+  layerId: string;
   projection: Projection;
   split: () => PathCommand;
 }
 
 /** Contains information about a dragged point in a path. */
-interface PathPoint {
+interface DragPoint {
   layerId: string;
   subPathIdx: number;
   drawIdx: number;
