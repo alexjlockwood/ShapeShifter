@@ -30,7 +30,9 @@ export interface Layer {
    * Walks the layer tree, executing beforeFunc on each node using a
    * preorder traversal.
    */
-  walk(beforeFunc: (layer: Layer, transforms?: Matrix[]) => void): void;
+  walk(
+    beforeFn: (layer: Layer, transforms?: Matrix[]) => void,
+    startingTransforms?: Matrix[]): void;
 }
 
 /**
@@ -88,8 +90,8 @@ abstract class AbstractLayer implements Layer {
   }
 
   // Implements the Layer interface.
-  walk(beforeFn?:
-    (layer: Layer, transforms?: Matrix[]) => void,
+  walk(
+    beforeFn: (layer: Layer, transforms?: Matrix[]) => void,
     startingTransforms: Matrix[] = []) {
 
     const visitFn = (layer: Layer, transforms: Matrix[] = []) => {
