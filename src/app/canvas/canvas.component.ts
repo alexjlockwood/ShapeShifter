@@ -158,7 +158,52 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       layer: this.vectorLayer,
       transforms: [],
       ctx: context,
-      pathFunc: this.drawPathLayer,
+      pathFunc: ({layer, transforms, ctx}: LayerArgs<PathLayer>) => {
+        // TODO(alockwood): update layer.pathData.length so that it reflects scale transforms
+        ctx.save();
+
+        executePathData(layer, ctx, transforms);
+
+        // draw the actual layer
+        ctx.strokeStyle = ColorUtil.androidToCssColor(layer.strokeColor, layer.strokeAlpha);
+        ctx.lineWidth = layer.strokeWidth;
+        ctx.fillStyle = ColorUtil.androidToCssColor(layer.fillColor, layer.fillAlpha);
+        ctx.lineCap = layer.strokeLinecap;
+        ctx.lineJoin = layer.strokeLinejoin;
+        ctx.miterLimit = layer.strokeMiterLimit || 4;
+
+        if (layer.trimPathStart !== 0 || layer.trimPathEnd !== 1 || layer.trimPathOffset !== 0) {
+          // Calculate the visible fraction of the trimmed path. If trimPathStart
+          // is greater than trimPathEnd, then the result should be the combined
+          // length of the two line segments: [trimPathStart,1] and [0,trimPathEnd].
+          let shownFraction = layer.trimPathEnd - layer.trimPathStart;
+          if (layer.trimPathStart > layer.trimPathEnd) {
+            shownFraction += 1;
+          }
+          // Calculate the dash array. The first array element is the length of
+          // the trimmed path and the second element is the gap, which is the
+          // difference in length between the total path length and the visible
+          // trimmed path length.
+          ctx.setLineDash([
+            shownFraction * layer.pathData.pathLength,
+            (1 - shownFraction + 0.001) * layer.pathData.pathLength
+          ]);
+          // The amount to offset the path is equal to the trimPathStart plus
+          // trimPathOffset. We mod the result because the trimmed path
+          // should wrap around once it reaches 1.
+          ctx.lineDashOffset =
+            layer.pathData.pathLength * (1 - ((layer.trimPathStart + layer.trimPathOffset) % 1));
+        } else {
+          ctx.setLineDash([]);
+        }
+        if (layer.strokeColor && layer.strokeWidth && layer.trimPathStart !== layer.trimPathEnd) {
+          ctx.stroke();
+        }
+        if (layer.fillColor) {
+          ctx.fill();
+        }
+        ctx.restore();
+      },
       clipPathFunc: (args: LayerArgs<ClipPathLayer>) => {
         executePathData(args.layer, args.ctx, args.transforms);
         args.ctx.clip();
@@ -174,26 +219,26 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         layer: this.vectorLayer,
         transforms: [],
         ctx: context,
-        pathFunc: (args: LayerArgs<PathLayer>) => {
-          const selections = this.currentSelections.filter(s => s.pathId === args.layer.id);
+        pathFunc: ({layer, transforms, ctx}: LayerArgs<PathLayer>) => {
+          const selections = this.currentSelections.filter(s => s.pathId === layer.id);
           if (!selections.length) {
             return;
           }
           const dcmds = selections.map(s => {
-            return args.layer.pathData.subPathCommands[s.subPathIdx].commands[s.drawIdx];
+            return layer.pathData.subPathCommands[s.subPathIdx].commands[s.drawIdx];
           });
 
-          executeDrawCommands(dcmds, args.ctx, args.transforms, true);
+          executeDrawCommands(dcmds, ctx, transforms, true);
 
-          args.ctx.save();
-          args.ctx.lineWidth = 6 / this.scale; // 2px
-          args.ctx.strokeStyle = '#fff';
-          args.ctx.lineCap = 'round';
-          args.ctx.stroke();
-          args.ctx.strokeStyle = '#2196f3';
-          args.ctx.lineWidth = 3 / this.scale; // 2px
-          args.ctx.stroke();
-          args.ctx.restore();
+          ctx.save();
+          ctx.lineWidth = 6 / this.scale; // 2px
+          ctx.strokeStyle = '#fff';
+          ctx.lineCap = 'round';
+          ctx.stroke();
+          ctx.strokeStyle = '#2196f3';
+          ctx.lineWidth = 3 / this.scale; // 2px
+          ctx.stroke();
+          ctx.restore();
         },
       });
       context.restore();
@@ -205,32 +250,32 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         layer: this.vectorLayer,
         transforms: [new Matrix(this.backingStoreScale, 0, 0, this.backingStoreScale, 0, 0)],
         ctx: context,
-        pathFunc: (args: LayerArgs<PathLayer>) => {
-          const pathDataPoints = _.flatMap(args.layer.pathData.subPathCommands, scmd => {
+        pathFunc: ({layer, transforms, ctx}: LayerArgs<PathLayer>) => {
+          const pathDataPoints = _.flatMap(layer.pathData.subPathCommands, scmd => {
             return scmd.points as { point: Point, isSplit: boolean }[];
           });
 
-          const matrices = args.transforms.slice().reverse();
-          args.ctx.save();
+          const matrices = transforms.slice().reverse();
+          ctx.save();
           for (let i = pathDataPoints.length - 1; i >= 0; i--) {
             const p = MathUtil.transform(pathDataPoints[i].point, ...matrices);
             const color = i === 0 ? 'blue' : pathDataPoints[i].isSplit ? 'purple' : 'green';
             const radius = this.pathPointRadius * (pathDataPoints[i].isSplit ? 0.8 : 1);
-            args.ctx.beginPath();
-            args.ctx.arc(p.x, p.y, radius, 0, 2 * Math.PI, false);
-            args.ctx.fillStyle = color;
-            args.ctx.fill();
-            args.ctx.beginPath();
-            args.ctx.fillStyle = 'white';
-            args.ctx.font = radius + 'px serif';
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, radius, 0, 2 * Math.PI, false);
+            ctx.fillStyle = color;
+            ctx.fill();
+            ctx.beginPath();
+            ctx.fillStyle = 'white';
+            ctx.font = radius + 'px serif';
             const text = (i + 1).toString();
-            const width = args.ctx.measureText(text).width;
+            const width = ctx.measureText(text).width;
             // TODO(alockwood): is there a better way to get the height?
-            const height = args.ctx.measureText('o').width;
-            args.ctx.fillText(text, p.x - width / 2, p.y + height / 2);
-            args.ctx.fill();
+            const height = ctx.measureText('o').width;
+            ctx.fillText(text, p.x - width / 2, p.y + height / 2);
+            ctx.fill();
           }
-          args.ctx.restore();
+          ctx.restore();
         }
       });
     }
@@ -240,24 +285,24 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         layer: this.vectorLayer,
         transforms: [new Matrix(this.backingStoreScale, 0, 0, this.backingStoreScale, 0, 0)],
         ctx: context,
-        pathFunc: (args: LayerArgs<PathLayer>) => {
-          if (args.layer.id !== this.closestPathLayerId) {
+        pathFunc: ({layer, transforms, ctx}: LayerArgs<PathLayer>) => {
+          if (layer.id !== this.closestPathLayerId) {
             return;
           }
-          args.ctx.save();
-          const matrices = args.transforms.slice().reverse();
+          ctx.save();
+          const matrices = transforms.slice().reverse();
           const proj = this.closestProjectionInfo.projection;
           const p = MathUtil.transform({ x: proj.x, y: proj.y }, ...matrices);
-          args.ctx.beginPath();
-          args.ctx.arc(p.x, p.y, this.pathPointRadius, 0, 2 * Math.PI, false);
-          args.ctx.fillStyle = 'red';
-          args.ctx.fill();
-          args.ctx.restore();
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, this.pathPointRadius, 0, 2 * Math.PI, false);
+          ctx.fillStyle = 'red';
+          ctx.fill();
+          ctx.restore();
         },
       });
     }
 
-    // draw pixel grid
+    // Draw the pixel grid.
     if (this.scale > 4) {
       context.fillStyle = 'rgba(128, 128, 128, .25)';
       for (let x = 1; x < this.vectorLayer.width; x++) {
@@ -277,67 +322,14 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  // TODO(alockwood): update layer.pathData.length so that it reflects transforms such as scale
-  private drawPathLayer({layer, ctx, transforms}: LayerArgs<PathLayer>) {
-    ctx.save();
-
-    executePathData(layer, ctx, transforms);
-
-    // draw the actual layer
-    ctx.strokeStyle = ColorUtil.androidToCssColor(layer.strokeColor, layer.strokeAlpha);
-    ctx.lineWidth = layer.strokeWidth;
-    ctx.fillStyle = ColorUtil.androidToCssColor(layer.fillColor, layer.fillAlpha);
-    ctx.lineCap = layer.strokeLinecap;
-    ctx.lineJoin = layer.strokeLinejoin;
-    ctx.miterLimit = layer.strokeMiterLimit || 4;
-
-    if (layer.trimPathStart !== 0 || layer.trimPathEnd !== 1 || layer.trimPathOffset !== 0) {
-      // Calculate the visible fraction of the trimmed path. If trimPathStart
-      // is greater than trimPathEnd, then the result should be the combined
-      // length of the two line segments: [trimPathStart,1] and [0,trimPathEnd].
-      let shownFraction = layer.trimPathEnd - layer.trimPathStart;
-      if (layer.trimPathStart > layer.trimPathEnd) {
-        shownFraction += 1;
-      }
-      // Calculate the dash array. The first array element is the length of
-      // the trimmed path and the second element is the gap, which is the
-      // difference in length between the total path length and the visible
-      // trimmed path length.
-      ctx.setLineDash([
-        shownFraction * layer.pathData.pathLength,
-        (1 - shownFraction + 0.001) * layer.pathData.pathLength
-      ]);
-      // The amount to offset the path is equal to the trimPathStart plus
-      // trimPathOffset. We mod the result because the trimmed path
-      // should wrap around once it reaches 1.
-      ctx.lineDashOffset =
-        layer.pathData.pathLength * (1 - ((layer.trimPathStart + layer.trimPathOffset) % 1));
-    } else {
-      ctx.setLineDash([]);
-    }
-    if (layer.strokeColor && layer.strokeWidth && layer.trimPathStart !== layer.trimPathEnd) {
-      ctx.stroke();
-    }
-    if (layer.fillColor) {
-      ctx.fill();
-    }
-    ctx.restore();
-  }
-
   // TODO(alockwood): don't split if user control clicks (or double clicks on mac)
   @HostListener('mousedown', ['$event'])
-  onMouseDown(event) {
-    const canvasOffset = this.canvas.offset();
-    const x = (event.pageX - canvasOffset.left) / this.scale;
-    const y = (event.pageY - canvasOffset.top) / this.scale;
-    const mouseDown = new Point(x, y);
-
+  onMouseDown(event: MouseEvent) {
     if (this.editorType === EditorType.Preview) {
       return;
     }
-
+    const mouseDown = this.mouseEventToPoint(event);
     this.findClosestProjectionInfo(mouseDown);
-
     if (this.closestProjectionInfo) {
       const pathLayer = this.vectorLayer.findLayerById(this.closestPathLayerId) as PathLayer;
       pathLayer.pathData = this.closestProjectionInfo.split();
@@ -346,21 +338,25 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  // TODO(alockwood): need to transform the mouse point coordinates using the group transforms
   @HostListener('mousemove', ['$event'])
-  onMouseMove(event) {
-    const canvasOffset = this.canvas.offset();
-    const x = (event.pageX - canvasOffset.left) / this.scale;
-    const y = (event.pageY - canvasOffset.top) / this.scale;
-    const mouseMove = new Point(x, y);
-
+  onMouseMove(event: MouseEvent) {
     if (this.editorType === EditorType.Preview) {
       return;
     }
-
+    const mouseMove = this.mouseEventToPoint(event);
     this.findClosestProjectionInfo(mouseMove);
-
     if (this.closestProjectionInfo) {
+      this.draw();
+    }
+  }
+
+  @HostListener('mouseleave', ['$event'])
+  onMouseLeave(event) {
+    if (this.editorType === EditorType.Preview) {
+      return;
+    }
+    if (this.closestProjectionInfo) {
+      this.closestProjectionInfo = undefined;
       this.draw();
     }
   }
@@ -372,15 +368,15 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     this.traverseLayers({
       layer: this.vectorLayer,
       transforms: [],
-      pathFunc: (args: LayerArgs<PathLayer>) => {
-        const reversedMatrices = args.transforms.slice().reverse();
+      pathFunc: ({layer, transforms}: LayerArgs<PathLayer>) => {
+        const reversedMatrices = transforms.slice().reverse();
         const transformedPoint = MathUtil.transform(point, ...reversedMatrices);
-        const projectionInfo = args.layer.pathData.project(transformedPoint);
+        const projectionInfo = layer.pathData.project(transformedPoint);
         if (projectionInfo
           && (!closestProjectionInfo
             || projectionInfo.projection.d < closestProjectionInfo.projection.d)) {
           closestProjectionInfo = projectionInfo;
-          closestPathLayerId = args.layer.id;
+          closestPathLayerId = layer.id;
         }
       },
     });
@@ -391,12 +387,11 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  @HostListener('mouseleave', ['$event'])
-  onMouseLeave(event) {
-    if (this.closestProjectionInfo) {
-      this.closestProjectionInfo = undefined;
-      this.draw();
-    }
+  private mouseEventToPoint(event: MouseEvent) {
+    const canvasOffset = this.canvas.offset();
+    const x = (event.pageX - canvasOffset.left) / this.scale;
+    const y = (event.pageY - canvasOffset.top) / this.scale;
+    return new Point(x, y);
   }
 
   /**
@@ -420,7 +415,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       }
       transforms.splice(transforms.length, 0, ...matrices);
       layer.children.forEach(
-        l => this.traverseLayers({ layer: l, ctx, transforms, pathFunc, clipPathFunc }));
+        layer => this.traverseLayers({ layer, ctx, transforms, pathFunc, clipPathFunc }));
       transforms.splice(-matrices.length, matrices.length);
     } else if (layer instanceof PathLayer) {
       if (pathFunc) {
