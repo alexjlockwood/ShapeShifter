@@ -264,8 +264,8 @@ class PathCommandImpl implements PathCommand {
       return prevScore > currScore ? prev : curr;
     });
 
-    const countGapsFn = (alignments: Alignment[]) => {
-      return alignments.reduce((prev, curr) => {
+    const countGapsFn = (aligns: Alignment[]) => {
+      return aligns.reduce((prev, curr) => {
         return curr.drawCommand ? prev : prev + 1;
       }, 0);
     };

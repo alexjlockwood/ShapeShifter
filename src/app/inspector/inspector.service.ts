@@ -33,7 +33,8 @@ export enum EventType {
   Reverse,
   ShiftForward,
   ShiftBack,
-  Delete,
+  Split,
+  Unsplit,
 };
 
 export interface InspectorArgs {

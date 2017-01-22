@@ -1,11 +1,20 @@
 <div class="command-container"
-  [class.selected]="isCommandSelected"
+  [class.selected]="isSelected"
   fxLayout="row"
   fxLayoutAlign="start center"
   fxFlex>
   <canvas #drawCommandIndexCanvas
     class="command-index"></canvas>
   <span fxFlex>{{ drawCommandEndPointText }}</span>
+  <button md-icon-button
+    mdTooltip="Split point"
+    mdTooltipPosition="above"
+    md-theme="dark"
+    [fxShow]="isSplittable()"
+    fxLayoutAlign="center center"
+    (click)="onSplitButtonClick($event)">
+    <md-icon class="md-24">content_cut</md-icon>
+  </button>
   <button md-icon-button
     mdTooltip="Edit point"
     mdTooltipPosition="above"
@@ -20,8 +29,8 @@
     mdTooltipPosition="above"
     md-theme="dark"
     fxLayoutAlign="center center"
-    [fxShow]="isDeletable()"
-    (click)="onDeleteButtonClick($event)">
+    [fxShow]="isUnsplittable()"
+    (click)="onUnsplitButtonClick($event)">
     <md-icon class="md-24">delete</md-icon>
   </button>
 </div>

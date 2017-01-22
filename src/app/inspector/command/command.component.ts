@@ -22,7 +22,7 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
   @Input() drawCommand: DrawCommand;
   @ViewChild('drawCommandIndexCanvas') private drawCommandIndexCanvas: ElementRef;
 
-  private isCommandSelected_ = false;
+  private isSelected_ = false;
   private subscription_: Subscription;
   private selectionArgs_: Selection;
 
@@ -38,7 +38,7 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
     };
     this.subscription_ = this.selectionService.addListener(this.editorType,
       (selections: Selection[]) => {
-        this.isCommandSelected = _.some(selections, this.selectionArgs_);
+        this.isSelected = _.some(selections, this.selectionArgs_);
       });
   }
 
@@ -94,12 +94,12 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  get isCommandSelected() {
-    return this.isCommandSelected_;
+  get isSelected() {
+    return this.isSelected_;
   }
 
-  set isCommandSelected(isCommandSelected: boolean) {
-    this.isCommandSelected_ = isCommandSelected;
+  set isSelected(isSelected: boolean) {
+    this.isSelected_ = isSelected;
   }
 
   @HostListener('click')
@@ -113,16 +113,28 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
     return false;
   }
 
-  isDeletable() {
+  isSplittable() {
+    return this.drawCommand.svgChar !== 'M';
+  }
+
+  isUnsplittable() {
     return this.drawCommand.isSplit;
   }
 
   onEditButtonClick(event) {
-    // TODO(alockwood): implement this
+    // this.onCommandButtonClick(EventType.Edit);
   }
 
-  onDeleteButtonClick(event) {
-    this.inspectorService.notifyChange(EventType.Delete, {
+  onSplitButtonClick(event) {
+    this.onCommandButtonClick(EventType.Split);
+  }
+
+  onUnsplitButtonClick(event) {
+    this.onCommandButtonClick(EventType.Unsplit);
+  }
+
+  private onCommandButtonClick(eventType: EventType) {
+    this.inspectorService.notifyChange(eventType, {
       pathId: this.pathId,
       subPathIdx: this.subPathIdx,
       drawIdx: this.drawIdx,

@@ -54,6 +54,6 @@ export class SubPathComponent {
   // need to make sure this accurately reflects the appearance of the item in the UI so
   // it always updates.
   trackDrawCommand(index: number, item: DrawCommand) {
-    return `${index}_${item.commandString}`;
+    return `${index}_${item.commandString}_${item.isSplit}`;
   }
 }

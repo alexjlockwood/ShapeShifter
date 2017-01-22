@@ -39,7 +39,9 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   private closestPathLayerId: string;
   private subscriptions: Subscription[] = [];
   private pathPointRadius: number;
+  private splitPathPointRadius: number;
   private currentSelections: Selection[] = [];
+  private activePathPoint: PathPoint;
 
   constructor(
     private elementRef: ElementRef,
@@ -141,6 +143,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       });
 
     this.pathPointRadius = this.backingStoreScale * 0.6;
+    this.splitPathPointRadius = this.pathPointRadius * 0.8;
     this.draw();
   }
 
@@ -149,7 +152,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       return;
     }
 
-    // Draw the vector layer to the canvas.
+    // Draw the layers to the canvas.
     const ctx = (this.canvas.get(0) as HTMLCanvasElement).getContext('2d');
     ctx.save();
     ctx.scale(this.backingStoreScale, this.backingStoreScale);
@@ -168,7 +171,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
       executePathData(layer, ctx, transforms);
 
-      // draw the actual layer
+      // Draw the actual layer to the canvas.
       ctx.strokeStyle = ColorUtil.androidToCssColor(layer.strokeColor, layer.strokeAlpha);
       ctx.lineWidth = layer.strokeWidth;
       ctx.fillStyle = ColorUtil.androidToCssColor(layer.fillColor, layer.fillAlpha);
@@ -242,7 +245,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       ctx.restore();
     }
 
-    // Draw any labeled points to the canvas.
+    // Draw any labeled points.
     if (this.shouldLabelPoints_ && this.editorType !== EditorType.Preview) {
       const startingTransforms =
         [new Matrix(this.backingStoreScale, 0, 0, this.backingStoreScale, 0, 0)];
@@ -258,7 +261,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         for (let i = pathDataPoints.length - 1; i >= 0; i--) {
           const p = MathUtil.transform(pathDataPoints[i].point, ...transforms);
           const color = i === 0 ? 'blue' : pathDataPoints[i].isSplit ? 'purple' : 'green';
-          const radius = this.pathPointRadius * (pathDataPoints[i].isSplit ? 0.8 : 1);
+          const radius =
+            pathDataPoints[i].isSplit ? this.splitPathPointRadius : this.pathPointRadius;
           ctx.beginPath();
           ctx.arc(p.x, p.y, radius, 0, 2 * Math.PI, false);
           ctx.fillStyle = color;
@@ -319,43 +323,95 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  // TODO(alockwood): don't split if user control clicks (or double clicks on mac)
+  // TODO(alockwood): don't split if user control clicks (or two finger clicks on mac)
   @HostListener('mousedown', ['$event'])
   onMouseDown(event: MouseEvent) {
     if (this.editorType === EditorType.Preview) {
+      // The user never interacts with the preview canvas.
       return;
     }
     const mouseDown = this.mouseEventToPoint(event);
-    this.findClosestProjectionInfo(mouseDown);
-    if (this.closestProjectionInfo) {
-      const pathLayer = this.vectorLayer.findLayerById(this.closestPathLayerId) as PathLayer;
-      pathLayer.pathData = this.closestProjectionInfo.split();
-      this.layerStateService.setData(this.editorType, this.vectorLayer);
-      this.closestProjectionInfo = undefined;
-    }
+    this.activePathPoint =
+      this.findClosestPathPointInRange(mouseDown, this.splitPathPointRadius);
+    console.log(this.activePathPoint);
+
+    // this.findClosestProjectionInfo(mouseDown);
+    // if (this.closestProjectionInfo) {
+    //   const pathLayer = this.vectorLayer.findLayerById(this.closestPathLayerId) as PathLayer;
+    //   pathLayer.pathData = this.closestProjectionInfo.split();
+    //   this.layerStateService.setData(this.editorType, this.vectorLayer);
+    //   this.closestProjectionInfo = undefined;
+    // }
   }
 
   @HostListener('mousemove', ['$event'])
   onMouseMove(event: MouseEvent) {
     if (this.editorType === EditorType.Preview) {
+      // The user never interacts with the preview canvas.
       return;
     }
     const mouseMove = this.mouseEventToPoint(event);
-    this.findClosestProjectionInfo(mouseMove);
-    if (this.closestProjectionInfo) {
-      this.draw();
+    // this.findClosestProjectionInfo(mouseMove);
+    // if (this.closestProjectionInfo) {
+    //   this.draw();
+    // }
+  }
+
+  @HostListener('mouseup', ['$event'])
+  onMouseUp(event: MouseEvent) {
+    if (this.editorType === EditorType.Preview) {
+      // The user never interacts with the preview canvas.
+      return;
     }
   }
 
   @HostListener('mouseleave', ['$event'])
   onMouseLeave(event) {
     if (this.editorType === EditorType.Preview) {
+      // The user never interacts with the preview canvas.
       return;
     }
     if (this.closestProjectionInfo) {
       this.closestProjectionInfo = undefined;
       this.draw();
     }
+  }
+
+  private findClosestPathPointInRange(mousePoint: Point, range: number, splitOnly = true) {
+    const minPathPoints = [];
+    this.vectorLayer.walk((layer, transforms) => {
+      if (!(layer instanceof PathLayer)) {
+        return;
+      }
+      transforms.reverse();
+      const layerId = layer.id;
+      const transformedMousePoint = MathUtil.transform(mousePoint, ...transforms);
+      const minPathPoint = _.chain(layer.pathData.subPathCommands)
+        .map((subPathCmd: SubPathCommand, subPathIdx: number) => {
+          const result = subPathCmd.commands
+            .map((drawCmd, drawIdx) => {
+              const distance = MathUtil.distance(drawCmd.end, transformedMousePoint);
+              const isSplit = drawCmd.isSplit;
+              return { layerId, subPathIdx, drawIdx, distance, isSplit };
+            })
+            .filter(cmdInfo => splitOnly && cmdInfo.isSplit);
+          console.log(result);
+          return result;
+        })
+        .flatMap(pathPoints => pathPoints)
+        .filter(pathPoint => pathPoint.distance <= (range / this.backingStoreScale))
+        .reduce((prev, curr) => {
+          return prev && prev.distance < curr.distance ? prev : curr
+        }, undefined)
+        .value();
+      if (minPathPoint) {
+        minPathPoints.push(minPathPoint);
+      }
+    });
+
+    return minPathPoints.reduce((prev, curr) => {
+      return prev && prev.distance < curr.distance ? prev : curr;
+    }, undefined);
   }
 
   private findClosestProjectionInfo(point: Point) {
@@ -484,4 +540,11 @@ function executeArcCommand(ctx: CanvasRenderingContext2D, arcArgs: ReadonlyArray
 interface ProjectionInfo {
   projection: Projection;
   split: () => PathCommand;
+}
+
+/** Contains information about a dragged point in a path. */
+interface PathPoint {
+  layerId: string;
+  subPathIdx: number;
+  drawIdx: number;
 }
