@@ -464,8 +464,8 @@ class CommandWrapper {
       .reduce((prev, curr) => prev && prev.d < curr.d ? prev : curr, undefined);
   }
 
-  // TODO(alockwood): add a test for splitting a command with a path length of 0
   split(...ts: number[]) {
+    // TODO(alockwood): add a test for splitting a command with a path length of 0
     if (ts.length === 0 || !this.backingBeziers.length) {
       return this;
     }
