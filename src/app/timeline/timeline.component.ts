@@ -17,6 +17,10 @@ export class TimelineComponent {
     private timelineService: TimelineService,
     private ngZone: NgZone) { }
 
+  get shouldLabelPoints() {
+    return this.timelineService.getShouldLabelPoints();
+  }
+
   // TODO(alockwood): make this update each time the slider is changed
   onAnimationFractionSliderChanged(sliderValue: number) {
     const fraction = sliderValue / this.maxAnimationFractionSliderValue;

@@ -1,7 +1,13 @@
-<md-card>
-  <div fxLayout="row"
+<div fxLayout="row"
+  fxLayoutAlign="center center">
+  <md-card fxLayout="row"
     fxLayoutAlign="center center">
-    Status: {{isMorphable ? 'Morphable' : 'Unmorphable'}}
+    Status:&nbsp;
+    <span
+      [class.text-is-not-morphable]="!isMorphable"
+      [class.text-is-morphable]="isMorphable">
+      <strong>{{isMorphable ? 'Morphable' : 'Unmorphable'}}</strong>
+    </span>
     <button
       md-icon-button
       (click)="onPlayClick()"
@@ -26,5 +32,5 @@
       (change)="onLabelPointsCheckboxChanged($event.checked)">
       Label points
     </md-checkbox>
-  </div>
-</md-card>
+  </md-card>
+</div>

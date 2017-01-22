@@ -72,7 +72,7 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
     ctx.fill();
     ctx.beginPath();
     ctx.fillStyle = 'white';
-    ctx.font = radius + 'px serif';
+    ctx.font = radius + 'px Roboto';
     const text = (this.drawIdx + 1).toString();
     const textWidth = ctx.measureText(text).width;
     // TODO: is there a better way to get the height?

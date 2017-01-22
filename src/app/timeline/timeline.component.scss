@@ -1,3 +1,14 @@
+@import '../styles/material-colors';
+
 .timeline-slider {
   width: 350px;
 }
+
+span.text-is-not-morphable {
+  color: material-color('red', '600');
+}
+
+span.text-is-morphable {
+  color: material-color('green', '700');
+}
+
