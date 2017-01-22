@@ -9,21 +9,21 @@ import * as SvgUtil from './svgutil';
  * elliptical arc, or close path).
  */
 export class DrawCommandImpl implements DrawCommand {
-  private readonly points_: ReadonlyArray<Point>;
-  private readonly args_: ReadonlyArray<number>;
+  readonly points: ReadonlyArray<Point>;
+  readonly args: ReadonlyArray<number>;
   readonly commandString: string;
 
   constructor(
-    private readonly svgChar_: SvgChar,
-    private readonly isSplit_: boolean,
+    public readonly svgChar: SvgChar,
+    public readonly isSplit: boolean,
     points: ReadonlyArray<Point>,
     ...args: number[]) {
-    this.points_ = points.slice();
+    this.points = points.slice();
 
     if (args) {
-      this.args_ = args;
+      this.args = args;
     } else {
-      this.args_ = pointsToArgs(points);
+      this.args = pointsToArgs(points);
     }
 
     if (this.svgChar === 'Z') {
@@ -37,22 +37,10 @@ export class DrawCommandImpl implements DrawCommand {
   }
 
   // Implements the DrawCommand interface.
-  get svgChar() { return this.svgChar_; }
-
-  // Implements the DrawCommand interface.
-  get points() { return this.points_; }
-
-  // Implements the DrawCommand interface.
-  get args() { return this.args_; }
-
-  // Implements the DrawCommand interface.
   get start() { return _.first(this.points); }
 
   // Implements the DrawCommand interface.
   get end() { return _.last(this.points); }
-
-  // Implements the DrawCommand interface.
-  get isSplit() { return this.isSplit_; }
 
   /** Returns a new transformed draw command. */
   transform(matrices: Matrix[]): DrawCommandImpl {
