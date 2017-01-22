@@ -95,6 +95,11 @@ export class DrawCommandImpl implements DrawCommand {
     return new DrawCommandImpl(this.svgChar, this.isSplit, points, ...args);
   }
 
+  /** Returns a new draw command object with its split property toggled. */
+  toggleSplit() {
+    return new DrawCommandImpl(this.svgChar, !this.isSplit, this.points, ...this.args);
+  }
+
   toString() {
     return this.commandString;
   }

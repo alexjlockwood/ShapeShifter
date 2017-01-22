@@ -54,98 +54,117 @@ class PathCommandImpl implements PathCommand {
         ? overrides.commandWrappers_
         : this.commandWrappers_;
 
-    const maybeReverseCommandsFn = (subPathIdx: number) => {
-      const shouldReverse =
-        overrides.reversals_
-          ? overrides.reversals_[subPathIdx]
-          : this.reversals_[subPathIdx];
+    const shouldReverseFn = (subPathIdx: number) =>
+      overrides.reversals_
+        ? overrides.reversals_[subPathIdx]
+        : this.reversals_[subPathIdx];
 
-      const cmds = _.flatMap(newCmdWrappers[subPathIdx], (cw: CommandWrapper) => {
-        if (!shouldReverse || cw.commands.length === 1) {
-          return cw.commands as DrawCommandImpl[];
-        }
-        const toggleSplitFn = (cmd: DrawCommandImpl) => {
-          return new DrawCommandImpl(cmd.svgChar, !cmd.isSplit, cmd.points, ...cmd.args);
-        };
-        const splitCmds = cw.commands.slice();
-        splitCmds[0] = toggleSplitFn(_.first(splitCmds));
-        splitCmds[splitCmds.length - 1] = toggleSplitFn(_.last(splitCmds));
-        return splitCmds;
+    const getShiftOffsetFn = (subPathIdx: number) =>
+      overrides.shiftOffsets_
+        ? overrides.shiftOffsets_[subPathIdx]
+        : this.shiftOffsets_[subPathIdx];
+
+    const maybeReverseCommandsFn = (subPathIdx: number) => {
+      const subPathCws = newCmdWrappers[subPathIdx];
+      const hasOneDrawCmd =
+        subPathCws.length === 1 && _.first(subPathCws).commands.length === 1;
+      if (hasOneDrawCmd || !shouldReverseFn(subPathIdx)) {
+        // Nothing to do in these two cases.
+        return _.flatMap(subPathCws, cw => cw.commands as DrawCommandImpl[]);
+      }
+
+      // Extract the draw commands from our command wrapper map.
+      const drawCmds = _.flatMap(subPathCws, cw => {
+        // Consider a segment A ---- B ---- C with AB split and
+        // BC non-split. When reversed, we want the user to see the opposite
+        // (C ---- B ---- A w/ CB split and BA non-split).
+        const reversedCmds = cw.commands.slice();
+        reversedCmds[0] = _.first(reversedCmds).toggleSplit();
+        reversedCmds[reversedCmds.length - 1] = _.last(reversedCmds).toggleSplit();
+        return reversedCmds;
       });
 
-      if (!shouldReverse || cmds.length <= 1) {
-        return cmds;
+      const endsWithZ = _.last(drawCmds).svgChar === 'Z';
+      const startingIndex = endsWithZ ? drawCmds.length - 2 : drawCmds.length - 1;
+      const endingIndex = endsWithZ ? 1 : 0;
+
+      const newDrawCmds = [moveTo(_.first(drawCmds).start, _.last(drawCmds).end)];
+      for (let i = startingIndex; i > endingIndex; i--) {
+        newDrawCmds.push(drawCmds[i].reverse());
       }
 
-      const newCmds: DrawCommandImpl[] = [];
-      const firstMove = moveTo(_.first(cmds).start, _.last(cmds).end);
-      newCmds.push(firstMove);
-
-      const endsWithClosePath = _.last(cmds).svgChar === 'Z';
-      const startingIndex = endsWithClosePath ? cmds.length - 2 : cmds.length - 1;
-      const endingIndex = endsWithClosePath ? 2 : 1;
-      for (let i = startingIndex; i >= endingIndex; i--) {
-        newCmds.push(cmds[i].reverse());
+      // TODO: not 100% confident that this code is correct (edge cases)
+      if (endsWithZ) {
+        // If the sub path ends with a Z, we need to modify things a tiny
+        // bit to ensure that the reversed result still maintains the same
+        // sequence of command types.
+        const firstNewDrawCmd = _.first(newDrawCmds);
+        const secondNewDrawCmd = newDrawCmds[1];
+        const lastNewDrawCmd = _.last(newDrawCmds);
+        const secondOldDrawCmd = drawCmds[1];
+        const lastOldDrawCmd = _.last(drawCmds);
+        newDrawCmds.splice(1, 0,
+          lineTo(firstNewDrawCmd.end, secondNewDrawCmd.start, lastOldDrawCmd.isSplit));
+        newDrawCmds.push(
+          closePath(lastNewDrawCmd.end, firstNewDrawCmd.end, secondOldDrawCmd.isSplit));
       }
 
-      // TODO: test that this works with non-closed paths...
-      if (endsWithClosePath) {
-        const lineCmd = lineTo(firstMove.end, newCmds[1].start, _.last(cmds).isSplit);
-        newCmds.splice(1, 0, lineCmd);
-        // TODO: confirm that passing 'false' is really what we want here?
-        newCmds.push(closePath(_.last(newCmds).end, firstMove.end, false));
-      }
-
-      return newCmds;
+      return newDrawCmds;
     };
 
-    const maybeShiftCommandsFn = (drawCmds: DrawCommandImpl[], shiftOffset: number) => {
+    // TODO: edge cases: 'M Z', 'M L Z L Z' (or maybe forbid multi-closepath cases?)
+    // TODO: another edge case: closed paths not ending in a Z
+    const maybeShiftCommandsFn = (subPathIdx: number, drawCmds: DrawCommandImpl[]) => {
+      let shiftOffset = getShiftOffsetFn(subPathIdx);
       if (shiftOffset === 0
         || drawCmds.length === 1
         || !drawCmds[0].end.equals(_.last(drawCmds).end)) {
+        // If there is no shift offset, the sub path is one command long,
+        // or if the sub path is not closed, then do nothing.
         return drawCmds;
       }
-      const cmds = drawCmds.slice();
-      const newCmdLists: DrawCommandImpl[][] = [];
-      for (let i = 0; i < (cmds.length - shiftOffset - 1); i++) {
-        const isClosed = cmds[0].end.equals(_.last(cmds).end);
-        const moveStartPoint = cmds[0].start;
-        cmds.unshift(cmds.pop());
 
-        if (cmds[0].svgChar === 'Z') {
-          const lastCmd = _.last(cmds);
-          const isLastCmdSplit = lastCmd.isSplit;
-          cmds[cmds.length - 1] = closePath(lastCmd.start, lastCmd.end, isLastCmdSplit);
-          cmds[1] = lineTo(cmds[0].start, cmds[0].end, cmds[0].isSplit);
+      if (shouldReverseFn(subPathIdx)) {
+        shiftOffset *= -1;
+        shiftOffset += drawCmds.length - 1;
+      }
+
+      for (let i = 0; i < (drawCmds.length - shiftOffset - 1); i++) {
+        drawCmds.unshift(drawCmds.pop());
+
+        const firstCmd = _.first(drawCmds);
+        const secondCmd = drawCmds[1];
+        const lastCmd = _.last(drawCmds);
+        if (firstCmd.svgChar === 'Z') {
+          // Consider a shift that takes 'M L L L Z' to 'Z M L L L'.
+          // Replace the last command with a Z, replace the first command
+          // with a move, and replace the second command with a line.
+          drawCmds[drawCmds.length - 1] =
+            closePath(lastCmd.start, lastCmd.end, lastCmd.isSplit);
+          drawCmds[1] = lineTo(firstCmd.start, firstCmd.end, firstCmd.isSplit);
           // TODO(alockwood): start point correct for paths w/ multiple moves?
-          cmds[0] = moveTo(moveStartPoint, cmds[1].start, isLastCmdSplit);
+          drawCmds[0] = moveTo(secondCmd.start, drawCmds[1].start, lastCmd.isSplit);
         } else {
-          cmds[1] = cmds[0];
-          // TODO(alockwood): start point correct for paths w/ multiple moves?
-          // TODO: confirm that passing 'false' is really what we want here?
-          cmds[0] = moveTo(moveStartPoint, _.last(cmds).end, false);
+          // Consider a shift that takes 'M L L L L' to 'L M L L L'.
+          // In this case we simply swap the first and second commands
+          // and update their attributes accordingly.
+          drawCmds[1] = firstCmd;
+          drawCmds[0] = moveTo(secondCmd.start, firstCmd.start, false);
         }
       }
-      return cmds;
+      return drawCmds;
     };
-    const drawCommands = [];
-    this.subPathCommands_.forEach((_, subPathIdx) => {
-      const cmds = maybeReverseCommandsFn(subPathIdx);
-      const shiftOffset =
-        overrides.shiftOffsets_ === undefined
-          ? this.shiftOffsets_[subPathIdx]
-          : overrides.shiftOffsets_[subPathIdx];
-      drawCommands.push(...maybeShiftCommandsFn(cmds, shiftOffset));
+
+    const drawCommands = _.flatMap(newCmdWrappers, (_, subPathIdx) => {
+      return maybeShiftCommandsFn(subPathIdx, maybeReverseCommandsFn(subPathIdx));
     });
-    const clonedInfo: ClonedPathCommandInfo = {
+    return new PathCommandImpl(_.assign({}, {
       path_: PathParser.commandsToString(drawCommands),
       subPathCommands_: createSubPathCommands(...drawCommands),
       commandWrappers_: newCmdWrappers.map(cws => cws.slice()),
       shiftOffsets_: this.shiftOffsets_.slice(),
       reversals_: this.reversals_.slice(),
-    };
-
-    return new PathCommandImpl(_.assign({}, clonedInfo, overrides));
+    }, overrides));
   }
 
   get pathString() {

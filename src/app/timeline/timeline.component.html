@@ -3,9 +3,9 @@
   <md-card fxLayout="row"
     fxLayoutAlign="center center">
     <span>Status:
-      <span
-        [class.text-is-not-morphable]="!isMorphable"
-        [class.text-is-morphable]="isMorphable">
+      <span [ngClass]="{
+        'text-is-not-morphable': !isMorphable,
+        'text-is-morphable': isMorphable}">
         <strong>{{isMorphable ? 'Morphable' : 'Unmorphable'}}</strong>
       </span>
     </span>
