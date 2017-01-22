@@ -150,170 +150,167 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
 
     // Draw the vector layer to the canvas.
-    const context = (this.canvas.get(0) as HTMLCanvasElement).getContext('2d');
-    context.save();
-    context.scale(this.backingStoreScale, this.backingStoreScale);
-    context.clearRect(0, 0, this.vectorLayer.width, this.vectorLayer.height);
-    this.traverseLayers({
-      layer: this.vectorLayer,
-      transforms: [],
-      ctx: context,
-      pathFunc: ({layer, transforms, ctx}: LayerArgs<PathLayer>) => {
-        // TODO(alockwood): update layer.pathData.length so that it reflects scale transforms
-        ctx.save();
-
+    const ctx = (this.canvas.get(0) as HTMLCanvasElement).getContext('2d');
+    ctx.save();
+    ctx.scale(this.backingStoreScale, this.backingStoreScale);
+    ctx.clearRect(0, 0, this.vectorLayer.width, this.vectorLayer.height);
+    this.vectorLayer.walk((layer, transforms) => {
+      if (layer instanceof ClipPathLayer) {
         executePathData(layer, ctx, transforms);
+        ctx.clip();
+        return;
+      }
+      if (!(layer instanceof PathLayer)) {
+        return;
+      }
+      // TODO(alockwood): update layer.pathData.length so that it reflects scale transforms
+      ctx.save();
 
-        // draw the actual layer
-        ctx.strokeStyle = ColorUtil.androidToCssColor(layer.strokeColor, layer.strokeAlpha);
-        ctx.lineWidth = layer.strokeWidth;
-        ctx.fillStyle = ColorUtil.androidToCssColor(layer.fillColor, layer.fillAlpha);
-        ctx.lineCap = layer.strokeLinecap;
-        ctx.lineJoin = layer.strokeLinejoin;
-        ctx.miterLimit = layer.strokeMiterLimit || 4;
+      executePathData(layer, ctx, transforms);
 
-        if (layer.trimPathStart !== 0 || layer.trimPathEnd !== 1 || layer.trimPathOffset !== 0) {
-          // Calculate the visible fraction of the trimmed path. If trimPathStart
-          // is greater than trimPathEnd, then the result should be the combined
-          // length of the two line segments: [trimPathStart,1] and [0,trimPathEnd].
-          let shownFraction = layer.trimPathEnd - layer.trimPathStart;
-          if (layer.trimPathStart > layer.trimPathEnd) {
-            shownFraction += 1;
-          }
-          // Calculate the dash array. The first array element is the length of
-          // the trimmed path and the second element is the gap, which is the
-          // difference in length between the total path length and the visible
-          // trimmed path length.
-          ctx.setLineDash([
-            shownFraction * layer.pathData.pathLength,
-            (1 - shownFraction + 0.001) * layer.pathData.pathLength
-          ]);
-          // The amount to offset the path is equal to the trimPathStart plus
-          // trimPathOffset. We mod the result because the trimmed path
-          // should wrap around once it reaches 1.
-          ctx.lineDashOffset =
-            layer.pathData.pathLength * (1 - ((layer.trimPathStart + layer.trimPathOffset) % 1));
-        } else {
-          ctx.setLineDash([]);
+      // draw the actual layer
+      ctx.strokeStyle = ColorUtil.androidToCssColor(layer.strokeColor, layer.strokeAlpha);
+      ctx.lineWidth = layer.strokeWidth;
+      ctx.fillStyle = ColorUtil.androidToCssColor(layer.fillColor, layer.fillAlpha);
+      ctx.lineCap = layer.strokeLinecap;
+      ctx.lineJoin = layer.strokeLinejoin;
+      ctx.miterLimit = layer.strokeMiterLimit || 4;
+
+      if (layer.trimPathStart !== 0 || layer.trimPathEnd !== 1 || layer.trimPathOffset !== 0) {
+        // Calculate the visible fraction of the trimmed path. If trimPathStart
+        // is greater than trimPathEnd, then the result should be the combined
+        // length of the two line segments: [trimPathStart,1] and [0,trimPathEnd].
+        let shownFraction = layer.trimPathEnd - layer.trimPathStart;
+        if (layer.trimPathStart > layer.trimPathEnd) {
+          shownFraction += 1;
         }
-        if (layer.strokeColor && layer.strokeWidth && layer.trimPathStart !== layer.trimPathEnd) {
-          ctx.stroke();
-        }
-        if (layer.fillColor) {
-          ctx.fill();
-        }
-        ctx.restore();
-      },
-      clipPathFunc: (args: LayerArgs<ClipPathLayer>) => {
-        executePathData(args.layer, args.ctx, args.transforms);
-        args.ctx.clip();
-      },
+        // Calculate the dash array. The first array element is the length of
+        // the trimmed path and the second element is the gap, which is the
+        // difference in length between the total path length and the visible
+        // trimmed path length.
+        ctx.setLineDash([
+          shownFraction * layer.pathData.pathLength,
+          (1 - shownFraction + 0.001) * layer.pathData.pathLength
+        ]);
+        // The amount to offset the path is equal to the trimPathStart plus
+        // trimPathOffset. We mod the result because the trimmed path
+        // should wrap around once it reaches 1.
+        ctx.lineDashOffset =
+          layer.pathData.pathLength * (1 - ((layer.trimPathStart + layer.trimPathOffset) % 1));
+      } else {
+        ctx.setLineDash([]);
+      }
+      if (layer.strokeColor && layer.strokeWidth && layer.trimPathStart !== layer.trimPathEnd) {
+        ctx.stroke();
+      }
+      if (layer.fillColor) {
+        ctx.fill();
+      }
+      ctx.restore();
     });
-    context.restore();
+    ctx.restore();
 
     // Draw any selected paths.
     if (this.currentSelections.length) {
-      context.save();
-      context.scale(this.backingStoreScale, this.backingStoreScale);
-      this.traverseLayers({
-        layer: this.vectorLayer,
-        transforms: [],
-        ctx: context,
-        pathFunc: ({layer, transforms, ctx}: LayerArgs<PathLayer>) => {
-          const selections = this.currentSelections.filter(s => s.pathId === layer.id);
-          if (!selections.length) {
-            return;
-          }
-          const dcmds = selections.map(s => {
-            return layer.pathData.subPathCommands[s.subPathIdx].commands[s.drawIdx];
-          });
+      ctx.save();
+      ctx.scale(this.backingStoreScale, this.backingStoreScale);
+      this.vectorLayer.walk((layer, transforms) => {
+        if (!(layer instanceof PathLayer)) {
+          return;
+        }
+        const selections = this.currentSelections.filter(s => s.pathId === layer.id);
+        if (!selections.length) {
+          return;
+        }
+        const drawCommands = selections.map(sel => {
+          const subPathCommands = layer.pathData.subPathCommands;
+          return subPathCommands[sel.subPathIdx].commands[sel.drawIdx];
+        });
 
-          executeDrawCommands(dcmds, ctx, transforms, true);
+        executeDrawCommands(drawCommands, ctx, transforms, true);
 
-          ctx.save();
-          ctx.lineWidth = 6 / this.scale; // 2px
-          ctx.strokeStyle = '#fff';
-          ctx.lineCap = 'round';
-          ctx.stroke();
-          ctx.strokeStyle = '#2196f3';
-          ctx.lineWidth = 3 / this.scale; // 2px
-          ctx.stroke();
-          ctx.restore();
-        },
+        ctx.save();
+        ctx.lineWidth = 6 / this.scale; // 2px
+        ctx.strokeStyle = '#fff';
+        ctx.lineCap = 'round';
+        ctx.stroke();
+        ctx.strokeStyle = '#2196f3';
+        ctx.lineWidth = 3 / this.scale; // 2px
+        ctx.stroke();
+        ctx.restore();
       });
-      context.restore();
+      ctx.restore();
     }
 
     // Draw any labeled points to the canvas.
     if (this.shouldLabelPoints_ && this.editorType !== EditorType.Preview) {
-      this.traverseLayers({
-        layer: this.vectorLayer,
-        transforms: [new Matrix(this.backingStoreScale, 0, 0, this.backingStoreScale, 0, 0)],
-        ctx: context,
-        pathFunc: ({layer, transforms, ctx}: LayerArgs<PathLayer>) => {
-          const pathDataPoints = _.flatMap(layer.pathData.subPathCommands, scmd => {
-            return scmd.points as { point: Point, isSplit: boolean }[];
-          });
-
-          const matrices = transforms.slice().reverse();
-          ctx.save();
-          for (let i = pathDataPoints.length - 1; i >= 0; i--) {
-            const p = MathUtil.transform(pathDataPoints[i].point, ...matrices);
-            const color = i === 0 ? 'blue' : pathDataPoints[i].isSplit ? 'purple' : 'green';
-            const radius = this.pathPointRadius * (pathDataPoints[i].isSplit ? 0.8 : 1);
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, radius, 0, 2 * Math.PI, false);
-            ctx.fillStyle = color;
-            ctx.fill();
-            ctx.beginPath();
-            ctx.fillStyle = 'white';
-            ctx.font = radius + 'px serif';
-            const text = (i + 1).toString();
-            const width = ctx.measureText(text).width;
-            // TODO(alockwood): is there a better way to get the height?
-            const height = ctx.measureText('o').width;
-            ctx.fillText(text, p.x - width / 2, p.y + height / 2);
-            ctx.fill();
-          }
-          ctx.restore();
+      const startingTransforms =
+        [new Matrix(this.backingStoreScale, 0, 0, this.backingStoreScale, 0, 0)];
+      this.vectorLayer.walk((layer, transforms) => {
+        if (!(layer instanceof PathLayer)) {
+          return;
         }
-      });
+        const pathDataPoints = _.flatMap(layer.pathData.subPathCommands, subPathCommand => {
+          return subPathCommand.points as { point: Point, isSplit: boolean }[];
+        });
+        transforms.reverse();
+        ctx.save();
+        for (let i = pathDataPoints.length - 1; i >= 0; i--) {
+          const p = MathUtil.transform(pathDataPoints[i].point, ...transforms);
+          const color = i === 0 ? 'blue' : pathDataPoints[i].isSplit ? 'purple' : 'green';
+          const radius = this.pathPointRadius * (pathDataPoints[i].isSplit ? 0.8 : 1);
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, radius, 0, 2 * Math.PI, false);
+          ctx.fillStyle = color;
+          ctx.fill();
+          ctx.beginPath();
+          ctx.fillStyle = 'white';
+          ctx.font = radius + 'px serif';
+          const text = (i + 1).toString();
+          const width = ctx.measureText(text).width;
+          // TODO(alockwood): is there a better way to get the height?
+          const height = ctx.measureText('o').width;
+          ctx.fillText(text, p.x - width / 2, p.y + height / 2);
+          ctx.fill();
+        }
+        ctx.restore();
+      }, startingTransforms);
     }
 
     if (this.closestProjectionInfo) {
-      this.traverseLayers({
-        layer: this.vectorLayer,
-        transforms: [new Matrix(this.backingStoreScale, 0, 0, this.backingStoreScale, 0, 0)],
-        ctx: context,
-        pathFunc: ({layer, transforms, ctx}: LayerArgs<PathLayer>) => {
-          if (layer.id !== this.closestPathLayerId) {
-            return;
-          }
-          ctx.save();
-          const matrices = transforms.slice().reverse();
-          const proj = this.closestProjectionInfo.projection;
-          const p = MathUtil.transform({ x: proj.x, y: proj.y }, ...matrices);
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, this.pathPointRadius, 0, 2 * Math.PI, false);
-          ctx.fillStyle = 'red';
-          ctx.fill();
-          ctx.restore();
-        },
-      });
+      const startingTransforms =
+        [new Matrix(this.backingStoreScale, 0, 0, this.backingStoreScale, 0, 0)];
+      this.vectorLayer.walk((layer, transforms) => {
+        if (!(layer instanceof PathLayer)) {
+          return;
+        }
+        if (layer.id !== this.closestPathLayerId) {
+          return;
+        }
+        ctx.save();
+        const matrices = transforms.slice().reverse();
+        const proj = this.closestProjectionInfo.projection;
+        const p = MathUtil.transform({ x: proj.x, y: proj.y }, ...matrices);
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, this.pathPointRadius, 0, 2 * Math.PI, false);
+        ctx.fillStyle = 'red';
+        ctx.fill();
+        ctx.restore();
+      }, startingTransforms);
     }
 
     // Draw the pixel grid.
     if (this.scale > 4) {
-      context.fillStyle = 'rgba(128, 128, 128, .25)';
+      ctx.fillStyle = 'rgba(128, 128, 128, .25)';
       for (let x = 1; x < this.vectorLayer.width; x++) {
-        context.fillRect(
+        ctx.fillRect(
           x * this.backingStoreScale - 0.5 * (window.devicePixelRatio || 1),
           0,
           1 * (window.devicePixelRatio || 1),
           this.vectorLayer.height * this.backingStoreScale);
       }
       for (let y = 1; y < this.vectorLayer.height; y++) {
-        context.fillRect(
+        ctx.fillRect(
           0,
           y * this.backingStoreScale - 0.5 * (window.devicePixelRatio || 1),
           this.vectorLayer.width * this.backingStoreScale,
@@ -365,20 +362,19 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     let closestProjectionInfo: ProjectionInfo;
     let closestPathLayerId: string;
 
-    this.traverseLayers({
-      layer: this.vectorLayer,
-      transforms: [],
-      pathFunc: ({layer, transforms}: LayerArgs<PathLayer>) => {
-        const reversedMatrices = transforms.slice().reverse();
-        const transformedPoint = MathUtil.transform(point, ...reversedMatrices);
-        const projectionInfo = layer.pathData.project(transformedPoint);
-        if (projectionInfo
-          && (!closestProjectionInfo
-            || projectionInfo.projection.d < closestProjectionInfo.projection.d)) {
-          closestProjectionInfo = projectionInfo;
-          closestPathLayerId = layer.id;
-        }
-      },
+    this.vectorLayer.walk((layer, transforms) => {
+      if (!(layer instanceof PathLayer)) {
+        return;
+      }
+      transforms.reverse();
+      const transformedPoint = MathUtil.transform(point, ...transforms);
+      const projectionInfo = layer.pathData.project(transformedPoint);
+      if (projectionInfo
+        && (!closestProjectionInfo
+          || projectionInfo.projection.d < closestProjectionInfo.projection.d)) {
+        closestProjectionInfo = projectionInfo;
+        closestPathLayerId = layer.id;
+      }
     });
 
     if (this.closestProjectionInfo !== closestProjectionInfo) {
@@ -392,40 +388,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     const x = (event.pageX - canvasOffset.left) / this.scale;
     const y = (event.pageY - canvasOffset.top) / this.scale;
     return new Point(x, y);
-  }
-
-  /**
-   * Recursively traverses a vector layer, applying group transforms at each level of the
-   * tree so that children layers can draw their content to the canvas properly.
-   */
-  private traverseLayers(args: LayerArgs<Layer>) {
-    const {layer, ctx, transforms, pathFunc, clipPathFunc} = args;
-    if (layer instanceof VectorLayer || layer instanceof GroupLayer) {
-      const matrices = [];
-      if (layer instanceof GroupLayer) {
-        const cosr = Math.cos(layer.rotation * Math.PI / 180);
-        const sinr = Math.sin(layer.rotation * Math.PI / 180);
-        matrices.push(...[
-          new Matrix(1, 0, 0, 1, layer.pivotX, layer.pivotY),
-          new Matrix(1, 0, 0, 1, layer.translateX, layer.translateY),
-          new Matrix(cosr, sinr, -sinr, cosr, 0, 0),
-          new Matrix(layer.scaleX, 0, 0, layer.scaleY, 0, 0),
-          new Matrix(1, 0, 0, 1, -layer.pivotX, -layer.pivotY)
-        ]);
-      }
-      transforms.splice(transforms.length, 0, ...matrices);
-      layer.children.forEach(
-        layer => this.traverseLayers({ layer, ctx, transforms, pathFunc, clipPathFunc }));
-      transforms.splice(-matrices.length, matrices.length);
-    } else if (layer instanceof PathLayer) {
-      if (pathFunc) {
-        pathFunc.call(this, { layer, ctx, transforms });
-      }
-    } else if (layer instanceof ClipPathLayer) {
-      if (clipPathFunc) {
-        clipPathFunc.call(this, { layer, ctx, transforms });
-      }
-    }
   }
 }
 
@@ -517,14 +479,6 @@ function executeArcCommand(ctx: CanvasRenderingContext2D, arcArgs: ReadonlyArray
       bezierCoords[i + 4], bezierCoords[i + 5],
       bezierCoords[i + 6], bezierCoords[i + 7]);
   }
-}
-
-interface LayerArgs<T extends Layer> {
-  layer: T;
-  transforms: Matrix[];
-  ctx?: CanvasRenderingContext2D;
-  pathFunc?: (args: LayerArgs<PathLayer>) => void;
-  clipPathFunc?: (args: LayerArgs<ClipPathLayer>) => void;
 }
 
 interface ProjectionInfo {

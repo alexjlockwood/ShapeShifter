@@ -1,4 +1,5 @@
 import { PathCommand } from './commands';
+import { Matrix } from '../common';
 
 /**
  * Interface that is shared amongst all vector drawable layer model types.
@@ -29,7 +30,7 @@ export interface Layer {
    * Walks the layer tree, executing beforeFunc on each node using a
    * preorder traversal.
    */
-  walk(beforeFunc: (layer: Layer) => void): void;
+  walk(beforeFunc: (layer: Layer, transforms?: Matrix[]) => void): void;
 }
 
 /**
@@ -87,14 +88,29 @@ abstract class AbstractLayer implements Layer {
   }
 
   // Implements the Layer interface.
-  walk(beforeFunc: (layer: Layer) => void) {
-    const _visit = (layer: Layer) => {
-      beforeFunc(layer);
+  walk(beforeFn?:
+    (layer: Layer, transforms?: Matrix[]) => void,
+    startingTransforms: Matrix[] = []) {
+
+    const visitFn = (layer: Layer, transforms: Matrix[] = []) => {
+      transforms = transforms.slice();
+      if (layer instanceof GroupLayer) {
+        const cosr = Math.cos(layer.rotation * Math.PI / 180);
+        const sinr = Math.sin(layer.rotation * Math.PI / 180);
+        transforms.push(...[
+          new Matrix(1, 0, 0, 1, layer.pivotX, layer.pivotY),
+          new Matrix(1, 0, 0, 1, layer.translateX, layer.translateY),
+          new Matrix(cosr, sinr, -sinr, cosr, 0, 0),
+          new Matrix(layer.scaleX, 0, 0, layer.scaleY, 0, 0),
+          new Matrix(1, 0, 0, 1, -layer.pivotX, -layer.pivotY)
+        ]);
+      }
+      beforeFn(layer, transforms);
       if (layer.children) {
-        layer.children.forEach(l => _visit(l));
+        layer.children.forEach(l => visitFn(l, transforms));
       }
     };
-    _visit(this);
+    visitFn(this, startingTransforms);
   }
 }
 
