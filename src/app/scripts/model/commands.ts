@@ -1,9 +1,12 @@
 import { Point, Projection } from '../common';
 
+// The different types of supported SVG commands.
+export type SvgChar = 'M' | 'L' | 'Q' | 'C' | 'A' | 'Z';
+
 /** Defines the set of methods that are seen by the path inspector/canvas. */
 export interface PathCommand {
 
-  /** The list of children sub path commands in this path. */
+  /** Returns the list of sub path commands in this path. */
   subPathCommands: ReadonlyArray<SubPathCommand>;
 
   /** Returns the length of the path. */
@@ -29,40 +32,40 @@ export interface PathCommand {
   project(point: Point): { projection: Projection, split: () => PathCommand } | undefined;
 
   /**
-   * Attempts to auto-align the path command as a best-estimate.
+   * Attempts an auto-alignment of the sub path command at the specified index.
    * Returns a new path command object.
    */
-  autoAlign(subPathIndex: number, toPathCmd: PathCommand): PathCommand;
+  autoAlign(subPathIdx: number, toPathCmd: PathCommand): PathCommand;
 
   /**
    * Reverses the order of the points in the sub path at the specified index.
    * Returns a new path command object.
    */
-  reverse(subPathIndex: number): PathCommand;
+  reverse(subPathIdx: number): PathCommand;
 
   /**
    * Shifts back the order of the points in the sub path at the specified index.
    * Returns a new path command object.
    */
-  shiftBack(subPathIndex: number, numShifts?: number): PathCommand;
+  shiftBack(subPathIdx: number, numShifts?: number): PathCommand;
 
   /**
    * Shifts forward the order of the points in the sub path at the specified index.
    * Returns a new path command object.
    */
-  shiftForward(subPathIndex: number, numShifts?: number): PathCommand;
+  shiftForward(subPathIdx: number, numShifts?: number): PathCommand;
 
   /**
    * Splits the draw command at the specified index.
    * Returns a new path command object.
    */
-  split(subPathIndex: number, drawIndex: number, ...ts: number[]): PathCommand;
+  split(subPathIdx: number, drawIdx: number, ...ts: number[]): PathCommand;
 
   /**
    * Un-splits the draw command at the specified index.
    * Returns a new path command object.
    */
-  unsplit(subPathIndex: number, drawIndex: number): PathCommand;
+  unsplit(subPathIdx: number, drawIdx: number): PathCommand;
 
   /** Returns a cloned instance of this path command. */
   clone(): PathCommand;
@@ -111,5 +114,3 @@ export interface DrawCommand {
    */
   isSplit: boolean;
 }
-
-export type SvgChar = 'M' | 'L' | 'Q' | 'C' | 'A' | 'Z';

@@ -18,7 +18,7 @@ import { SelectionService, Selection } from '../services/selection.service';
 
 const ELEMENT_RESIZE_DETECTOR = erd();
 
-// TODO(alockwood): add offscreen canvas to implement alpha
+// TODO: add offscreen canvas to implement alpha
 @Component({
   selector: 'app-canvas',
   templateUrl: './canvas.component.html',
@@ -63,35 +63,37 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     this.subscriptions.push(
       this.layerStateService.addListener(
         this.editorType, vl => {
-          if (vl) {
-            const oldVl = this.vectorLayer;
-            const didWidthChange = !oldVl || oldVl.width !== vl.width;
-            const didHeightChange = !oldVl || oldVl.height !== vl.height;
-            this.vectorLayer = vl;
-            if (didWidthChange || didHeightChange) {
-              this.resizeAndDraw();
-            } else {
-              this.draw();
-            }
+          if (!vl) {
+            return;
+          }
+          const oldVl = this.vectorLayer;
+          const didWidthChange = !oldVl || oldVl.width !== vl.width;
+          const didHeightChange = !oldVl || oldVl.height !== vl.height;
+          this.vectorLayer = vl;
+          if (didWidthChange || didHeightChange) {
+            this.resizeAndDraw();
+          } else {
+            this.draw();
           }
         }));
     if (this.editorType === EditorType.Preview) {
       this.subscriptions.push(
         this.animationService.addListener(fraction => {
-          if (this.vectorLayer) {
-            // TODO(alockwood): if vector layer is undefined, then clear the canvas
-            const startLayer = this.layerStateService.getData(EditorType.Start);
-            const endLayer = this.layerStateService.getData(EditorType.End);
-            this.vectorLayer.walk(layer => {
-              if (layer instanceof PathLayer) {
-                const start = startLayer.findLayerById(layer.id) as PathLayer;
-                const end = endLayer.findLayerById(layer.id) as PathLayer;
-                layer.pathData =
-                  layer.pathData.interpolate(start.pathData, end.pathData, fraction);
-              }
-            });
-            this.draw();
+          if (!this.vectorLayer) {
+            return;
           }
+          // TODO: if vector layer is undefined, then clear the canvas
+          const startLayer = this.layerStateService.getData(EditorType.Start);
+          const endLayer = this.layerStateService.getData(EditorType.End);
+          this.vectorLayer.walk(layer => {
+            if (layer instanceof PathLayer) {
+              const start = startLayer.findLayerById(layer.id) as PathLayer;
+              const end = endLayer.findLayerById(layer.id) as PathLayer;
+              layer.pathData =
+                layer.pathData.interpolate(start.pathData, end.pathData, fraction);
+            }
+          });
+          this.draw();
         }));
     } else {
       this.subscriptions.push(
@@ -120,10 +122,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     if (!this.isViewInit || !this.vectorLayer) {
       return;
     }
-
     const containerAspectRatio = this.canvasContainerSize / this.canvasContainerSize;
     const vectorAspectRatio = this.vectorLayer.width / (this.vectorLayer.height || 1);
-
     if (vectorAspectRatio > containerAspectRatio) {
       this.scale = this.canvasContainerSize / this.vectorLayer.width;
     } else {
@@ -131,7 +131,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
     this.scale = Math.max(1, Math.floor(this.scale));
     this.backingStoreScale = this.scale * (window.devicePixelRatio || 1);
-
     this.canvas
       .attr({
         width: this.vectorLayer.width * this.backingStoreScale,
@@ -141,7 +140,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         width: this.vectorLayer.width * this.scale,
         height: this.vectorLayer.height * this.scale,
       });
-
     this.pathPointRadius = this.backingStoreScale * 0.6;
     this.splitPathPointRadius = this.pathPointRadius * 0.8;
     this.draw();
@@ -166,7 +164,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       if (!(layer instanceof PathLayer)) {
         return;
       }
-      // TODO(alockwood): update layer.pathData.length so that it reflects scale transforms
+      // TODO: update layer.pathData.length so that it reflects scale transforms
       ctx.save();
 
       executePathData(layer, ctx, transforms);
@@ -179,7 +177,9 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       ctx.lineJoin = layer.strokeLinejoin;
       ctx.miterLimit = layer.strokeMiterLimit || 4;
 
-      if (layer.trimPathStart !== 0 || layer.trimPathEnd !== 1 || layer.trimPathOffset !== 0) {
+      if (layer.trimPathStart !== 0
+        || layer.trimPathEnd !== 1
+        || layer.trimPathOffset !== 0) {
         // Calculate the visible fraction of the trimmed path. If trimPathStart
         // is greater than trimPathEnd, then the result should be the combined
         // length of the two line segments: [trimPathStart,1] and [0,trimPathEnd].
@@ -198,12 +198,14 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         // The amount to offset the path is equal to the trimPathStart plus
         // trimPathOffset. We mod the result because the trimmed path
         // should wrap around once it reaches 1.
-        ctx.lineDashOffset =
-          layer.pathData.pathLength * (1 - ((layer.trimPathStart + layer.trimPathOffset) % 1));
+        ctx.lineDashOffset = layer.pathData.pathLength
+          * (1 - ((layer.trimPathStart + layer.trimPathOffset) % 1));
       } else {
         ctx.setLineDash([]);
       }
-      if (layer.strokeColor && layer.strokeWidth && layer.trimPathStart !== layer.trimPathEnd) {
+      if (layer.strokeColor
+        && layer.strokeWidth
+        && layer.trimPathStart !== layer.trimPathEnd) {
         ctx.stroke();
       }
       if (layer.fillColor) {
@@ -225,9 +227,9 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         if (!selections.length) {
           return;
         }
-        const drawCommands = selections.map(sel => {
+        const drawCommands = selections.map(selection => {
           const subPathCommands = layer.pathData.subPathCommands;
-          return subPathCommands[sel.subPathIdx].commands[sel.drawIdx];
+          return subPathCommands[selection.subPathIdx].commands[selection.drawIdx];
         });
 
         executeDrawCommands(drawCommands, ctx, transforms, true);
@@ -272,7 +274,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           ctx.font = radius + 'px serif';
           const text = (i + 1).toString();
           const width = ctx.measureText(text).width;
-          // TODO(alockwood): is there a better way to get the height?
+          // TODO: is there a better way to get the height?
           const height = ctx.measureText('o').width;
           ctx.fillText(text, p.x - width / 2, p.y + height / 2);
           ctx.fill();
@@ -285,10 +287,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       const startingTransforms =
         [new Matrix(this.backingStoreScale, 0, 0, this.backingStoreScale, 0, 0)];
       this.vectorLayer.walk((layer, transforms) => {
-        if (!(layer instanceof PathLayer)) {
-          return;
-        }
-        if (layer.id !== this.closestPathLayerId) {
+        if (!(layer instanceof PathLayer) || layer.id !== this.closestPathLayerId) {
           return;
         }
         ctx.save();
@@ -323,7 +322,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  // TODO(alockwood): don't split if user control clicks (or two finger clicks on mac)
+  // TODO: don't split if user control clicks (or two finger clicks on mac)
   @HostListener('mousedown', ['$event'])
   onMouseDown(event: MouseEvent) {
     if (this.editorType === EditorType.Preview) {
@@ -331,17 +330,17 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       return;
     }
     const mouseDown = this.mouseEventToPoint(event);
-    // this.activePathPoint =
-    //   this.findClosestPathPointInRange(mouseDown, this.splitPathPointRadius);
-    //console.log(this.activePathPoint);
+    this.activePathPoint =
+      this.findClosestPathPointInRange(mouseDown, this.splitPathPointRadius);
 
-    this.findClosestProjectionInfo(mouseDown);
-    if (this.closestProjectionInfo) {
-      const pathLayer = this.vectorLayer.findLayerById(this.closestPathLayerId) as PathLayer;
-      pathLayer.pathData = this.closestProjectionInfo.split();
-      this.layerStateService.setData(this.editorType, this.vectorLayer);
-      this.closestProjectionInfo = undefined;
-    }
+    // this.findClosestProjectionInfo(mouseDown);
+    // if (this.closestProjectionInfo) {
+    //   const pathLayer =
+    //     this.vectorLayer.findLayerById(this.closestPathLayerId) as PathLayer;
+    //   pathLayer.pathData = this.closestProjectionInfo.split();
+    //   this.layerStateService.setData(this.editorType, this.vectorLayer);
+    //   this.closestProjectionInfo = undefined;
+    // }
   }
 
   @HostListener('mousemove', ['$event'])
@@ -350,11 +349,11 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       // The user never interacts with the preview canvas.
       return;
     }
-    const mouseMove = this.mouseEventToPoint(event);
-    this.findClosestProjectionInfo(mouseMove);
-    if (this.closestProjectionInfo) {
-      this.draw();
-    }
+    // const mouseMove = this.mouseEventToPoint(event);
+    // this.findClosestProjectionInfo(mouseMove);
+    // if (this.closestProjectionInfo) {
+    //   this.draw();
+    // }
   }
 
   @HostListener('mouseup', ['$event'])
@@ -377,7 +376,11 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  private findClosestPathPointInRange(mousePoint: Point, range: number, splitOnly = true) {
+  private findClosestPathPointInRange(
+    mousePoint: Point,
+    range: number,
+    splitOnly = true): PathPoint | undefined {
+
     const minPathPoints = [];
     this.vectorLayer.walk((layer, transforms) => {
       if (!(layer instanceof PathLayer)) {
@@ -388,27 +391,25 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       const transformedMousePoint = MathUtil.transform(mousePoint, ...transforms);
       const minPathPoint = _.chain(layer.pathData.subPathCommands)
         .map((subPathCmd: SubPathCommand, subPathIdx: number) => {
-          const result = subPathCmd.commands
+          return subPathCmd.commands
             .map((drawCmd, drawIdx) => {
               const distance = MathUtil.distance(drawCmd.end, transformedMousePoint);
               const isSplit = drawCmd.isSplit;
               return { layerId, subPathIdx, drawIdx, distance, isSplit };
             })
+            // Filter out non-split commands last to preserve the indices above.
             .filter(cmdInfo => splitOnly && cmdInfo.isSplit);
-          console.log(result);
-          return result;
         })
         .flatMap(pathPoints => pathPoints)
         .filter(pathPoint => pathPoint.distance <= (range / this.backingStoreScale))
         .reduce((prev, curr) => {
-          return prev && prev.distance < curr.distance ? prev : curr
+          return prev && prev.distance < curr.distance ? prev : curr;
         }, undefined)
         .value();
       if (minPathPoint) {
         minPathPoints.push(minPathPoint);
       }
     });
-
     return minPathPoints.reduce((prev, curr) => {
       return prev && prev.distance < curr.distance ? prev : curr;
     }, undefined);
