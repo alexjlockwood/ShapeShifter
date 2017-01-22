@@ -23,7 +23,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   public readonly startVectorLayerType = EditorType.Start;
   public readonly previewVectorLayerType = EditorType.Preview;
   public readonly endVectorLayerType = EditorType.End;
-  private isMorphable = false;
+  isMorphable = false;
 
   private isStructurallyIdentical = false;
   private subscriptions: Subscription[] = [];

@@ -8,9 +8,7 @@ import { TimelineService } from './timeline.service';
 })
 export class TimelineComponent {
   public readonly maxAnimationFractionSliderValue = 1000;
-  @Input() shouldSnapToGrid: boolean;
   @Input() isMorphable: boolean;
-  @Output() labelPointsChangedEmitter = new EventEmitter<boolean>();
   private readonly animationDuration = 1000;
 
   constructor(
