@@ -1,4 +1,4 @@
-# shape-shifter
+# Shape Shifter
 
 [![Build Status](https://travis-ci.org/alexjlockwood/shape-shifter.svg?branch=master)](https://travis-ci.org/alexjlockwood/shape-shifter)
 
