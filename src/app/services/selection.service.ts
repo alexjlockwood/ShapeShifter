@@ -75,4 +75,4 @@ export enum HoverType {
   Split,
   // The user hovered over the unsplit button in the command inspector.
   Unsplit,
-};
+}
