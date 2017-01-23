@@ -19,11 +19,10 @@ class PathCommandImpl implements PathCommand {
   private readonly path_: string;
   private readonly subPathCommands_: ReadonlyArray<SubPathCommand>;
   private readonly commandWrappers_: ReadonlyArray<ReadonlyArray<CommandWrapper>>;
-  private readonly shiftOffsets_: number[];
+  private readonly shiftOffsets_: ReadonlyArray<number>;
   private readonly reversals_: ReadonlyArray<boolean>;
 
   // TODO: add method to calculate bounds and length
-  // TODO: reversing a shifted path doesn't work yet
   constructor(obj: string | DrawCommandImpl[] | ClonedPathCommandInfo) {
     if (typeof obj === 'string' || Array.isArray(obj)) {
       if (typeof obj === 'string') {
@@ -429,11 +428,13 @@ class PathCommandImpl implements PathCommand {
     const newCws = this.commandWrappers_.map(cws => cws.slice());
     newCws[subPathIdx][cwsDrawIndex] = targetCw.unsplit(targetIndex);
     const shiftOffset = this.shiftOffsets_[subPathIdx];
+    const shiftOffsets = this.shiftOffsets_.slice();
     if (shiftOffset === numCommands - 1) {
-      this.shiftOffsets_[subPathIdx] = shiftOffset - 1;
+      shiftOffsets[subPathIdx] = shiftOffset - 1;
     }
     return this.clone({
       commandWrappers_: newCws,
+      shiftOffsets_: shiftOffsets,
     });
   }
 }
