@@ -301,7 +301,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         ctx.save();
         for (let i = pathDataPoints.length - 1; i >= 0; i--) {
           const p = MathUtil.transform(pathDataPoints[i].point, ...transforms);
-          const color = i === 0 ? 'blue' : pathDataPoints[i].isSplit ? 'purple' : 'green';
+          const color = i === 0 ? ColorUtil.MOVE_POINT_COLOR
+            : pathDataPoints[i].isSplit ? ColorUtil.SPLIT_POINT_COLOR : ColorUtil.NORMAL_POINT_COLOR;
           const radius =
             pathDataPoints[i].isSplit ? this.splitPathPointRadius : this.pathPointRadius;
           ctx.beginPath();

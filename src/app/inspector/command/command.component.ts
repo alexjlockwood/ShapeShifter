@@ -8,6 +8,7 @@ import * as $ from 'jquery';
 import { InspectorService, EventType } from '../inspector.service';
 import { SelectionService, Selection } from '../../services/selection.service';
 import { Subscription } from 'rxjs/Subscription';
+import { ColorUtil } from '../../scripts/common';
 
 @Component({
   selector: 'app-command',
@@ -65,7 +66,9 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
     const radius = commandIndexCanvasSize * dpi / 2;
 
     ctx.save();
-    const color = this.drawIdx === 0 ? 'blue' : this.drawCommand.isSplit ? 'purple' : 'green';
+    const color = this.drawIdx === 0
+      ? ColorUtil.MOVE_POINT_COLOR : this.drawCommand.isSplit
+        ? ColorUtil.SPLIT_POINT_COLOR : ColorUtil.NORMAL_POINT_COLOR;
     ctx.beginPath();
     ctx.arc(radius, radius, radius, 0, 2 * Math.PI, false);
     ctx.fillStyle = color;

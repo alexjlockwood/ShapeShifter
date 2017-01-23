@@ -1,5 +1,9 @@
 import * as tinycolor from 'tinycolor2';
 
+export const MOVE_POINT_COLOR = '#1976D2';
+export const NORMAL_POINT_COLOR = '#388E3C';
+export const SPLIT_POINT_COLOR = '#9C27B0';
+
 const BRIGHTNESS_THRESHOLD = 130;
 
 export function parseAndroidColor(val: string): ColorFormats.RGBA | undefined {
@@ -67,4 +71,3 @@ export function isAndroidColorDark(androidColor: string | undefined) {
   const d = parseAndroidColor(androidColor);
   return ((30 * d.r + 59 * d.g + 11 * d.b) / 100) <= BRIGHTNESS_THRESHOLD;
 }
-
