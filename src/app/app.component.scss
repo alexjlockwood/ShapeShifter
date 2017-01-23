@@ -7,7 +7,6 @@
   top: 0;
   right: 0;
   bottom: 0;
-  background-color: material-color('grey', '100');
 }
 
 .fill-width {
@@ -26,6 +25,7 @@ div.canvas-container {
 
 div.inspector-container {
   height: 320px;
+  background-color: material-color('grey', '200');
   overflow: auto;
 }
 
