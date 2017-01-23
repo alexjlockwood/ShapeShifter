@@ -49,6 +49,7 @@ class PathCommandImpl implements PathCommand {
 
   // Implements the PathCommand interface.
   clone(overrides: ClonedPathCommandInfo = {}) {
+    // TODO: only recompute the stuff that we know has changed...
     const newCmdWrappers =
       overrides.commandWrappers_
         ? overrides.commandWrappers_
@@ -76,8 +77,8 @@ class PathCommandImpl implements PathCommand {
       // Extract the draw commands from our command wrapper map.
       const drawCmds = _.flatMap(subPathCws, cw => {
         // Consider a segment A ---- B ---- C with AB split and
-        // BC non-split. When reversed, we want the user to see the opposite
-        // (C ---- B ---- A w/ CB split and BA non-split).
+        // BC non-split. When reversed, we want the user to see
+        // C ---- B ---- A w/ CB split and BA non-split.
         const reversedCmds = cw.commands.slice();
         reversedCmds[0] = _.first(reversedCmds).toggleSplit();
         reversedCmds[reversedCmds.length - 1] = _.last(reversedCmds).toggleSplit();
