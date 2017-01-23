@@ -19,7 +19,7 @@ class PathCommandImpl implements PathCommand {
   private readonly path_: string;
   private readonly subPathCommands_: ReadonlyArray<SubPathCommand>;
   private readonly commandWrappers_: ReadonlyArray<ReadonlyArray<CommandWrapper>>;
-  private readonly shiftOffsets_: ReadonlyArray<number>;
+  private readonly shiftOffsets_: number[];
   private readonly reversals_: ReadonlyArray<boolean>;
 
   // TODO: add method to calculate bounds and length
@@ -428,6 +428,10 @@ class PathCommandImpl implements PathCommand {
     // TODO: also update shift offsets (so that they don't grow past the number of cmds?)
     const newCws = this.commandWrappers_.map(cws => cws.slice());
     newCws[subPathIdx][cwsDrawIndex] = targetCw.unsplit(targetIndex);
+    const shiftOffset = this.shiftOffsets_[subPathIdx];
+    if (shiftOffset === numCommands - 1) {
+      this.shiftOffsets_[subPathIdx] = shiftOffset - 1;
+    }
     return this.clone({
       commandWrappers_: newCws,
     });
