@@ -21,10 +21,11 @@
 div.canvas-container {
   box-sizing: border-box;
   padding: 16px;
+  background-color: material-color('blue-grey', '700');
 }
 
-// TODO(alockwood): fix this hack
 div.inspector-container {
+  height: 320px;
   overflow: auto;
 }
 

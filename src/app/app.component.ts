@@ -140,19 +140,9 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   onDividerDrag(event: DividerDragEvent) {
-    // console.log(event);
     if (event.move) {
       const appContainerRect = this.appContainer.get(0).getBoundingClientRect();
-      const appContainerWidth = appContainerRect.width;
       const appContainerHeight = appContainerRect.height;
-      const canvasContainerRect = this.canvasContainer.get(0).getBoundingClientRect();
-      const canvasContainerWidth = canvasContainerRect.width;
-      const canvasContainerHeight = canvasContainerRect.height;
-      const inspectorContainerRect = this.inspectorContainer.get(0).getBoundingClientRect();
-      const inspectorContainerWidth = inspectorContainerRect.width;
-      const inspectorContainerHeight = inspectorContainerRect.height;
-      const heightDiff = event.move.y - event.start.y;
-      this.canvasContainer.height(event.move.y);
       this.inspectorContainer.height(appContainerHeight - event.move.y);
     }
     this.lastDividerDragEvent = event;
