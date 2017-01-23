@@ -32,6 +32,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   private shouldLabelPoints: boolean;
   private canvasContainerSize: number;
   private canvas: JQuery;
+  private offscreenCanvas: JQuery;
   private scale: number;
   private backingStoreScale: number;
   private isViewInit: boolean;
@@ -51,6 +52,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   ngAfterViewInit() {
     this.isViewInit = true;
     this.canvas = $(this.renderingCanvasRef.nativeElement);
+    this.offscreenCanvas = $(document.createElement('canvas'));
     this.canvasContainerSize = this.elementRef.nativeElement.getBoundingClientRect().width;
     ELEMENT_RESIZE_DETECTOR.listenTo(this.elementRef.nativeElement, element => {
       const canvasContainerSize = element.getBoundingClientRect().width;
@@ -108,7 +110,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
             this.shouldLabelPoints = shouldLabelPoints;
             this.draw();
           }
-      ));
+        ));
     }
   }
 
@@ -130,30 +132,64 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
     this.scale = Math.max(1, Math.floor(this.scale));
     this.backingStoreScale = this.scale * (window.devicePixelRatio || 1);
-    this.canvas
-      .attr({
-        width: this.vectorLayer.width * this.backingStoreScale,
-        height: this.vectorLayer.height * this.backingStoreScale,
-      })
-      .css({
-        width: this.vectorLayer.width * this.scale,
-        height: this.vectorLayer.height * this.scale,
-      });
+    [this.canvas, this.offscreenCanvas].forEach(canvas => {
+      canvas
+        .attr({
+          width: this.vectorLayer.width * this.backingStoreScale,
+          height: this.vectorLayer.height * this.backingStoreScale,
+        })
+        .css({
+          width: this.vectorLayer.width * this.scale,
+          height: this.vectorLayer.height * this.scale,
+        });
+    });
     this.pathPointRadius = this.backingStoreScale * 0.6;
     this.splitPathPointRadius = this.pathPointRadius * 0.8;
     this.draw();
   }
 
-  draw() {
+  private draw() {
     if (!this.isViewInit || !this.vectorLayer) {
       return;
     }
 
-    // Draw the layers to the canvas.
     const ctx = (this.canvas.get(0) as HTMLCanvasElement).getContext('2d');
+    const offscreenCtx = (this.offscreenCanvas.get(0) as HTMLCanvasElement).getContext('2d');
+
     ctx.save();
     ctx.scale(this.backingStoreScale, this.backingStoreScale);
     ctx.clearRect(0, 0, this.vectorLayer.width, this.vectorLayer.height);
+
+    // TODO: use this offscreen context in the future somehow...
+    const currentAlpha = 1;
+    if (currentAlpha < 1) {
+      offscreenCtx.save();
+      offscreenCtx.scale(this.backingStoreScale, this.backingStoreScale);
+      offscreenCtx.clearRect(0, 0, this.vectorLayer.width, this.vectorLayer.height);
+    }
+
+    const drawingCtx = currentAlpha < 1 ? offscreenCtx : ctx;
+    this.drawVectorLayer(drawingCtx);
+    this.drawSelections(drawingCtx);
+    this.drawLabeledPoints(drawingCtx);
+    this.drawDraggingPoints(drawingCtx);
+
+    if (currentAlpha < 1) {
+      ctx.save();
+      ctx.globalAlpha = currentAlpha;
+      ctx.scale(1 / this.backingStoreScale, 1 / this.backingStoreScale);
+      ctx.drawImage(offscreenCtx.canvas, 0, 0);
+      ctx.restore();
+      offscreenCtx.restore();
+    }
+
+    ctx.restore();
+
+    this.drawPixelGrid(ctx);
+  }
+
+  // Draw the layers to the canvas.
+  private drawVectorLayer(ctx: CanvasRenderingContext2D) {
     this.vectorLayer.walk((layer, transforms) => {
       if (layer instanceof ClipPathLayer) {
         executePathData(layer, ctx, transforms);
@@ -213,8 +249,10 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       ctx.restore();
     });
     ctx.restore();
+  }
 
-    // Draw any selected paths.
+  // Draw any selected paths.
+  private drawSelections(ctx: CanvasRenderingContext2D) {
     if (this.currentSelections.length) {
       ctx.save();
       ctx.scale(this.backingStoreScale, this.backingStoreScale);
@@ -245,8 +283,10 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       });
       ctx.restore();
     }
+  }
 
-    // Draw any labeled points.
+  // Draw any labeled points.
+  private drawLabeledPoints(ctx: CanvasRenderingContext2D) {
     if (this.shouldLabelPoints && this.editorType !== EditorType.Preview) {
       const startingTransforms =
         [new Matrix(this.backingStoreScale, 0, 0, this.backingStoreScale, 0, 0)];
@@ -281,8 +321,10 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         ctx.restore();
       }, startingTransforms);
     }
+  }
 
-    // Draw any actively dragged points along the path.
+  // Draw any actively dragged points along the path.
+  private drawDraggingPoints(ctx: CanvasRenderingContext2D) {
     if (this.activeProjectionOntoPath) {
       const startingTransforms =
         [new Matrix(this.backingStoreScale, 0, 0, this.backingStoreScale, 0, 0)];
@@ -301,7 +343,9 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         ctx.restore();
       }, startingTransforms);
     }
+  }
 
+  private drawPixelGrid(ctx: CanvasRenderingContext2D) {
     // Draw the pixel grid.
     if (this.scale > 4) {
       ctx.fillStyle = 'rgba(128, 128, 128, .25)';
