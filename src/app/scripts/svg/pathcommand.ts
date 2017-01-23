@@ -243,7 +243,7 @@ class PathCommandImpl implements PathCommand {
   // Implements the PathCommand interface.
   project(point: Point): { projection: Projection, split: () => PathCommand } | undefined {
     return _.chain(this.commandWrappers_)
-      .map((cws, subPathIdx) => cws.map((cw, drawIdx) => {
+      .map((subPathCws, subPathIdx) => subPathCws.map((cw, drawIdx) => {
         const projection = cw.project(point);
         return {
           projection,
