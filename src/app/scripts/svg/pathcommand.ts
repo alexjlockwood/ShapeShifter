@@ -42,7 +42,7 @@ class PathCommandImpl implements PathCommand {
       this.path_ = obj.path_;
       this.subPathCommands_ = obj.subPathCommands_;
       this.commandWrappers_ = obj.commandWrappers_;
-      this.shiftOffsets_ = obj.shiftOffsets_;
+      this.shiftOffsets_ = obj.shiftOffsets_ as number[];
       this.reversals_ = obj.reversals_;
     }
   }
