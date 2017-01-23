@@ -10,11 +10,19 @@ import { BaseService } from './base.service';
 
 @Injectable()
 export class SelectionService extends BaseService<Array<Selection>> {
+  private readonly hoverSources = new Map<EditorType, Subject<Hover>>();
+  private readonly hoverStreams = new Map<EditorType, Observable<Hover>>();
 
   constructor() {
     super([]);
+    [EditorType.Start, EditorType.Preview, EditorType.End]
+      .forEach(type => {
+        this.hoverSources.set(type, new Subject<Hover>());
+        this.hoverStreams.set(type, this.hoverSources.get(type).asObservable());
+      });
   }
 
+  // TODO: make this API more flexible/generic
   toggleSelection(type: EditorType, selection: Selection) {
     const selections = this.getData(type);
     const isSelected = _.some(selections, selection);
@@ -22,6 +30,7 @@ export class SelectionService extends BaseService<Array<Selection>> {
     this.notifyChange(type);
   }
 
+  // TODO: clean up this API...
   reverse(type: EditorType, subPathIdx: number, numCommands: number) {
     this.setData(type, this.getData(type).map(sel => {
       if (sel.subPathIdx !== subPathIdx) {
@@ -35,9 +44,35 @@ export class SelectionService extends BaseService<Array<Selection>> {
   }
 }
 
-// TODO: figure out how to keep these in sync with reversals/shifts/splits/unsplits.
+/**
+ * A selection represents an action that persists as the result of a user click.
+ */
 export interface Selection {
   pathId: string;
   subPathIdx: number;
   drawIdx: number;
 }
+
+/**
+ * A hover represents a transient action that results as a result of a mouse hover.
+ */
+export interface Hover {
+  pathId: string;
+  subPathIdx: number;
+  drawIdx: number;
+  hoverType: HoverType;
+}
+
+/**
+ * Describes the different types of hover events.
+ */
+export enum HoverType {
+  // The user cleared a hover event.
+  None,
+  // The user hovered over a draw command in the inspector/canvas.
+  Command,
+  // The user hovered over the split button in the command inspector.
+  Split,
+  // The user hovered over the unsplit button in the command inspector.
+  Unsplit,
+};
