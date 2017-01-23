@@ -2,6 +2,8 @@ import * as _ from 'lodash';
 import * as BezierImpl from 'bezier-js';
 import { Point } from './mathutil';
 
+const MAX_PRECISION = 8;
+
 /**
  * A simple typed wrapper class around the amazing bezier-js library.
  */
@@ -14,6 +16,10 @@ export class Bezier {
     if (points.length < 2 || 4 < points.length) {
       throw new Error('Invalid number of points');
     }
+    points.forEach(p => {
+      p.x = _.round(p.x, MAX_PRECISION);
+      p.y = _.round(p.y, MAX_PRECISION);
+    });
     if (points.length === 2) {
       points.push(points[1]);
     }
@@ -22,19 +28,33 @@ export class Bezier {
     this.length_ = this.bezierImpl.length();
   }
 
-  get start() { return this.points[0]; }
+  get start() {
+    return this.points[0];
+  }
 
-  get cp1() { return this.points[1]; }
+  get cp1() {
+    return this.points[1];
+  }
 
-  get cp2() { return this.points[2]; }
+  get cp2() {
+    return this.points[2];
+  }
 
-  get end() { return _.last(this.points); }
+  get end() {
+    return _.last(this.points);
+  }
 
-  get points() { return this.points_; }
+  get points() {
+    return this.points_;
+  }
 
-  length() { return this.length_; }
+  length() {
+    return this.length_;
+  }
 
-  bbox(): BBox { return this.bezierImpl.bbox(); }
+  bbox(): BBox {
+    return this.bezierImpl.bbox();
+  }
 
   project(point: Point): Projection {
     const proj = this.bezierImpl.project(point);
