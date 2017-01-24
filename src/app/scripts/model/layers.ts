@@ -76,6 +76,7 @@ abstract class AbstractLayer implements Layer {
       // TODO: update svgloader to remove already existing SVG ids? important!!!
       return false;
     }
+    // TODO: what about vector layers with differently sized viewports?
     if (!this.children) {
       return true;
     }

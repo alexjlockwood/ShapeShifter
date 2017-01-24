@@ -30,11 +30,12 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   @ViewChild('renderingCanvas') private renderingCanvasRef: ElementRef;
 
   private vectorLayer: VectorLayer;
-  private canvasContainerSize: number;
+  private containerSize: number;
+  private element: JQuery;
   private canvas: JQuery;
   private offscreenCanvas: JQuery;
-  private scale: number;
-  private backingStoreScale: number;
+  private cssScale: number;
+  private attrScale: number;
   private isViewInit: boolean;
   private subscriptions: Subscription[] = [];
   private pathPointRadius: number;
@@ -52,13 +53,14 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
   ngAfterViewInit() {
     this.isViewInit = true;
+    this.element = $(this.elementRef.nativeElement);
     this.canvas = $(this.renderingCanvasRef.nativeElement);
     this.offscreenCanvas = $(document.createElement('canvas'));
-    this.canvasContainerSize = this.elementRef.nativeElement.getBoundingClientRect().width;
+    this.containerSize = this.element.width();
     ELEMENT_RESIZE_DETECTOR.listenTo(this.elementRef.nativeElement, element => {
-      const canvasContainerSize = element.getBoundingClientRect().width;
-      if (this.canvasContainerSize !== canvasContainerSize) {
-        this.canvasContainerSize = canvasContainerSize;
+      const containerSize = this.element.width();
+      if (this.containerSize !== containerSize) {
+        this.containerSize = containerSize;
         this.resizeAndDraw();
       }
     });
@@ -127,31 +129,41 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     if (!this.isViewInit || !this.vectorLayer) {
       return;
     }
-    // TODO: this doesn't work for non-square canvases
     // TODO: wrap the canvases in a parent component that resizes its children canvases
-    const containerAspectRatio = this.canvasContainerSize / this.canvasContainerSize;
+    const containerWidth = Math.max(1, this.containerSize);
+    const containerHeight = Math.max(1, this.containerSize);
+    const containerAspectRatio = containerWidth / containerHeight;
     const vectorAspectRatio = this.vectorLayer.width / (this.vectorLayer.height || 1);
+
+    // The 'cssScale' represents the number of CSS pixels per SVG viewport pixel.
     if (vectorAspectRatio > containerAspectRatio) {
-      this.scale = this.canvasContainerSize / this.vectorLayer.width;
+      this.cssScale = containerWidth / (this.vectorLayer.width || 1);
     } else {
-      this.scale = this.canvasContainerSize / this.vectorLayer.height;
+      this.cssScale = containerHeight / (this.vectorLayer.height || 1);
     }
-    this.scale = Math.max(1, Math.floor(this.scale));
-    this.backingStoreScale = this.scale * (window.devicePixelRatio || 1);
+    //this.cssScale = Math.max(1, Math.floor(this.cssScale));
+    const cssWidth = this.vectorLayer.width * this.cssScale;
+    const cssHeight = this.vectorLayer.height * this.cssScale;
     [this.canvas, this.offscreenCanvas].forEach(canvas => {
       canvas
         .attr({
-          width: this.vectorLayer.width * this.backingStoreScale,
-          height: this.vectorLayer.height * this.backingStoreScale,
+          width: cssWidth * devicePixelRatio,
+          height: cssHeight * devicePixelRatio,
         })
         .css({
-          width: this.vectorLayer.width * this.scale,
-          height: this.vectorLayer.height * this.scale,
+          width: cssWidth,
+          height: cssHeight,
         });
     });
+
+    // The 'attrScale' represents the number of physical pixels per SVG viewport pixel.
+    this.attrScale = this.cssScale * devicePixelRatio;
+
+    console.log(this.containerSize, this.cssScale, this.attrScale, devicePixelRatio);
+
     // TODO: this is too small for SVGs with large viewports. use this.scale instead?
-    this.pathPointRadius = this.backingStoreScale * 0.6;
-    this.splitPathPointRadius = this.pathPointRadius * 0.8;
+    this.pathPointRadius = this.cssScale;
+    this.splitPathPointRadius = this.pathPointRadius * 1.25;
     this.draw();
   }
 
@@ -166,14 +178,14 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       (this.offscreenCanvas.get(0) as HTMLCanvasElement).getContext('2d');
 
     ctx.save();
-    ctx.scale(this.backingStoreScale, this.backingStoreScale);
+    ctx.scale(this.attrScale, this.attrScale);
     ctx.clearRect(0, 0, this.vectorLayer.width, this.vectorLayer.height);
 
     // TODO: use this offscreen context in the future somehow...
     const currentAlpha = 1;
     if (currentAlpha < 1) {
       offscreenCtx.save();
-      offscreenCtx.scale(this.backingStoreScale, this.backingStoreScale);
+      offscreenCtx.scale(this.attrScale, this.attrScale);
       offscreenCtx.clearRect(0, 0, this.vectorLayer.width, this.vectorLayer.height);
     }
 
@@ -186,7 +198,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     if (currentAlpha < 1) {
       ctx.save();
       ctx.globalAlpha = currentAlpha;
-      ctx.scale(1 / this.backingStoreScale, 1 / this.backingStoreScale);
+      ctx.scale(1 / this.attrScale, 1 / this.attrScale);
       ctx.drawImage(offscreenCtx.canvas, 0, 0);
       ctx.restore();
       offscreenCtx.restore();
@@ -266,7 +278,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   private drawSelections(ctx: CanvasRenderingContext2D) {
     if (this.selectionService.getData(this.editorType).length) {
       ctx.save();
-      ctx.scale(this.backingStoreScale, this.backingStoreScale);
+      ctx.scale(this.attrScale, this.attrScale);
       this.vectorLayer.walk((layer, transforms) => {
         if (!(layer instanceof PathLayer)) {
           return;
@@ -285,12 +297,12 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         executeDrawCommands(drawCommands, ctx, transforms, true);
 
         ctx.save();
-        ctx.lineWidth = 6 / this.scale; // 2px
+        ctx.lineWidth = 6 / this.cssScale; // 2px
         ctx.strokeStyle = '#fff';
         ctx.lineCap = 'round';
         ctx.stroke();
         ctx.strokeStyle = '#2196f3';
-        ctx.lineWidth = 3 / this.scale; // 2px
+        ctx.lineWidth = 3 / this.cssScale; // 2px
         ctx.stroke();
         ctx.restore();
       });
@@ -304,7 +316,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       && this.editorType !== EditorType.Preview) {
       const currentHover = this.currentHover;
       const startingTransforms =
-        [new Matrix(this.backingStoreScale, 0, 0, this.backingStoreScale, 0, 0)];
+        [new Matrix(this.attrScale, 0, 0, this.attrScale, 0, 0)];
       this.vectorLayer.walk((layer, transforms) => {
         if (!(layer instanceof PathLayer)) {
           return;
@@ -368,7 +380,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
             if (currentHover.type !== HoverType.None
               && _.isEqual(currentPointInfo.commandId, currentHover.commandId)) {
               // TODO: update this number to something more reasonable
-              radius *= 1.5;
+              radius = this.pathPointRadius * 1.25;
             }
           }
 
@@ -389,7 +401,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     // TODO: all of the above can easily be done using the split snapshot approach above.
     if (this.activeProjectionOntoPath) {
       const startingTransforms =
-        [new Matrix(this.backingStoreScale, 0, 0, this.backingStoreScale, 0, 0)];
+        [new Matrix(this.attrScale, 0, 0, this.attrScale, 0, 0)];
       this.vectorLayer.walk((layer, transforms) => {
         if (layer.id !== this.activeProjectionOntoPath.layerId) {
           return;
@@ -433,21 +445,21 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
   // Draw the pixel grid.
   private drawPixelGrid(ctx: CanvasRenderingContext2D) {
-    if (this.scale > 4) {
+    if (this.cssScale > 4) {
       const devicePixelRatio = window.devicePixelRatio || 1;
       ctx.fillStyle = 'rgba(128, 128, 128, .25)';
       for (let x = 1; x < this.vectorLayer.width; x++) {
         ctx.fillRect(
-          x * this.backingStoreScale - 0.5 * devicePixelRatio,
+          x * this.attrScale - 0.5 * devicePixelRatio,
           0,
           1 * devicePixelRatio,
-          this.vectorLayer.height * this.backingStoreScale);
+          this.vectorLayer.height * this.attrScale);
       }
       for (let y = 1; y < this.vectorLayer.height; y++) {
         ctx.fillRect(
           0,
-          y * this.backingStoreScale - 0.5 * devicePixelRatio,
-          this.vectorLayer.width * this.backingStoreScale,
+          y * this.attrScale - 0.5 * devicePixelRatio,
+          this.vectorLayer.width * this.attrScale,
           1 * devicePixelRatio);
       }
     }
@@ -557,7 +569,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         })
         .flatMap(pathPoints => pathPoints)
         // TODO: confirm that using the backingStoreScale here is correct...
-        .filter(pathPoint => pathPoint.distance <= (range / this.backingStoreScale))
+        .filter(pathPoint => pathPoint.distance <= (range / this.attrScale))
         .reduce((prev, curr) => {
           return prev && prev.distance < curr.distance ? prev : curr;
         }, undefined)
@@ -602,8 +614,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
   private mouseEventToPoint(event: MouseEvent) {
     const canvasOffset = this.canvas.offset();
-    const x = (event.pageX - canvasOffset.left) / this.scale;
-    const y = (event.pageY - canvasOffset.top) / this.scale;
+    const x = (event.pageX - canvasOffset.left) / this.cssScale;
+    const y = (event.pageY - canvasOffset.top) / this.cssScale;
     return new Point(x, y);
   }
 }
