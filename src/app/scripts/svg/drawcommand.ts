@@ -67,9 +67,7 @@ export class DrawCommandImpl implements DrawCommand {
       return new DrawCommandImpl(
         this.svgChar,
         this.isSplit,
-        this.points.map(p => {
-          return p ? MathUtil.transform(p, ...matrices) : p;
-        }));
+        this.points.map(p => p ? MathUtil.transform(p, ...matrices) : p));
     }
   }
 

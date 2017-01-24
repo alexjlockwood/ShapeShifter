@@ -1,6 +1,6 @@
 :host {
   box-sizing: border-box;
-  padding: 4px;
+  //padding: 2px;
 }
 
 canvas.command-index {
@@ -10,7 +10,7 @@ canvas.command-index {
   padding: 8px;
 }
 
-div.command-container:hover {
+div.command-container.hovering {
   background-color: rgba(0, 0, 0, 0.1);
 }
 

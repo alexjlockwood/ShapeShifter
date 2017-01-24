@@ -1,13 +1,16 @@
 <div
   class="command-container"
   [class.selected]="isSelected"
+  [class.hovering]="isHovering"
   fxLayout="row"
   fxLayoutAlign="start center"
-  fxFlex>
+  fxFlex
+  (mouseenter)="onCommandHoverEvent(true)"
+  (mouseleave)="onCommandHoverEvent(false)">
   <canvas #drawCommandIndexCanvas class="command-index"></canvas>
   <span fxFlex>{{ drawCommandEndPointText }}</span>
   <button md-icon-button
-    mdTooltip="Edit point"
+    mdTooltip="Edit"
     mdTooltipPosition="above"
     md-theme="dark"
     [fxShow]="isEditable()"
@@ -16,20 +19,24 @@
     <md-icon class="md-24">mode_edit</md-icon>
   </button>
   <button md-icon-button
-    mdTooltip="Delete point"
+    mdTooltip="Delete"
     mdTooltipPosition="above"
     md-theme="dark"
     fxLayoutAlign="center center"
     [fxShow]="isUnsplittable()"
+    (mouseenter)="onUnsplitHoverEvent(true)"
+    (mouseleave)="onUnsplitHoverEvent(false)"
     (click)="onUnsplitButtonClick($event)">
     <md-icon class="md-24">delete</md-icon>
   </button>
   <button md-icon-button
-    mdTooltip="Split point"
+    mdTooltip="Split"
     mdTooltipPosition="above"
     md-theme="dark"
     [fxShow]="isSplittable()"
     fxLayoutAlign="center center"
+    (mouseenter)="onSplitHoverEvent(true)"
+    (mouseleave)="onSplitHoverEvent(false)"
     (click)="onSplitButtonClick($event)">
     <md-icon class="md-24">content_cut</md-icon>
   </button>

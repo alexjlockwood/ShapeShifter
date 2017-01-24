@@ -16,6 +16,8 @@ import { Alignment } from './vectalign';
  */
 class PathCommandImpl implements PathCommand {
 
+  // TODO: reversing a path with a close path with identical start/end points doesn't work
+  // TODO: consider an svg that ends with Z and one that doesn't. how to make these morphable?
   private readonly path_: string;
   private readonly subPathCommands_: ReadonlyArray<SubPathCommand>;
   private readonly commandWrappers_: ReadonlyArray<ReadonlyArray<CommandWrapper>>;
@@ -38,11 +40,11 @@ class PathCommandImpl implements PathCommand {
       this.shiftOffsets_ = this.subPathCommands_.map(_ => 0);
       this.reversals_ = this.subPathCommands_.map(_ => false);
     } else {
-      this.path_ = obj.path_;
-      this.subPathCommands_ = obj.subPathCommands_;
-      this.commandWrappers_ = obj.commandWrappers_;
-      this.shiftOffsets_ = obj.shiftOffsets_ as number[];
-      this.reversals_ = obj.reversals_;
+      this.path_ = PathParser.commandsToString(obj.drawCommands_);
+      this.subPathCommands_ = createSubPathCommands(...obj.drawCommands_);
+      this.commandWrappers_ = obj.commandWrappers_.map(cws => cws.slice());
+      this.shiftOffsets_ = obj.shiftOffsets_.slice();
+      this.reversals_ = obj.reversals_.slice();
     }
   }
 
@@ -159,11 +161,10 @@ class PathCommandImpl implements PathCommand {
       return maybeShiftCommandsFn(subPathIdx, maybeReverseCommandsFn(subPathIdx));
     });
     return new PathCommandImpl(_.assign({}, {
-      path_: PathParser.commandsToString(drawCommands),
-      subPathCommands_: createSubPathCommands(...drawCommands),
-      commandWrappers_: newCmdWrappers.map(cws => cws.slice()),
-      shiftOffsets_: this.shiftOffsets_.slice(),
-      reversals_: this.reversals_.slice(),
+      drawCommands_: drawCommands,
+      commandWrappers_: newCmdWrappers,
+      shiftOffsets_: this.shiftOffsets_,
+      reversals_: this.reversals_,
     }, overrides));
   }
 
@@ -462,8 +463,8 @@ class CommandWrapper {
     } else {
       this.backingCommand = obj.backingCommand;
       this.backingBeziers = obj.backingBeziers;
-      this.splits = obj.splits;
-      this.splitCommands = obj.splitCommands;
+      this.splits = obj.splits.slice();
+      this.splitCommands = obj.splitCommands.slice();
     }
   }
 
@@ -472,8 +473,8 @@ class CommandWrapper {
       svgChar: this.svgChar,
       backingCommand: this.backingCommand,
       backingBeziers: this.backingBeziers,
-      splits: this.splits.slice(),
-      splitCommands: this.splitCommands.slice(),
+      splits: this.splits,
+      splitCommands: this.splitCommands,
     }, overrides));
   }
 
@@ -644,8 +645,7 @@ function drawCommandToBeziers(cmd: DrawCommandImpl): Bezier[] {
 
 // Path command internals that have been cloned.
 interface ClonedPathCommandInfo {
-  path_?: string;
-  subPathCommands_?: ReadonlyArray<SubPathCommand>;
+  drawCommands_?: ReadonlyArray<DrawCommandImpl>;
   commandWrappers_?: ReadonlyArray<ReadonlyArray<CommandWrapper>>;
   shiftOffsets_?: ReadonlyArray<number>;
   reversals_?: ReadonlyArray<boolean>;

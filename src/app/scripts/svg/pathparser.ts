@@ -3,6 +3,7 @@ import * as SvgUtil from './svgutil';
 import {
   DrawCommandImpl, moveTo, lineTo, quadraticCurveTo, bezierCurveTo, arcTo, closePath
 } from './drawcommand';
+import { DrawCommand } from '../model';
 
 /**
  * Takes an SVG path string (i.e. the text specified in the path's 'd' attribute) and returns
@@ -296,7 +297,7 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): DrawComm
 /**
  * Takes an list of DrawCommands and converts them back into a SVG path string.
  */
-export function commandsToString(commands: DrawCommandImpl[]) {
+export function commandsToString(commands: ReadonlyArray<DrawCommand>) {
   const tokens = [];
   commands.forEach(cmd => {
     tokens.push(cmd.svgChar);

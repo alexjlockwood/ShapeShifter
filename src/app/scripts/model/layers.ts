@@ -2,14 +2,14 @@ import { PathCommand } from './commands';
 import { Matrix } from '../common';
 
 /**
- * Interface that is shared amongst all vector drawable layer model types.
+ * Interface that is shared by all vector drawable layer models below.
  */
 export interface Layer {
 
   /** This layers children layers, or undefined if none exist. */
   children: (GroupLayer | ClipPathLayer | PathLayer)[] | undefined;
 
-  /** A string uniquely identifying this layer in its containing tree. */
+  /** A string uniquely identifying this layer in its tree. */
   id: string;
 
   /** Returns the first descendent layer with the specified ID. */
@@ -17,12 +17,19 @@ export interface Layer {
 
   /**
    * Returns true iff this layer is structurally identical with the
-   * corresponding layer.
+   * specified layer. Two layers are 'structurally identical' if they
+   * have the same structure (i.e. each path has the same number of
+   * parent group layers, each path has a corresponding path with the
+   * same id in the other layer, etc.).
    */
   isStructurallyIdenticalWith(layer: Layer): boolean;
 
   /**
-   * Returns true iff this layer is morphable with the corresponding layer.
+   * Returns true iff this layer is morphable with the specified layer. Two
+   * paths are 'morphable' if they have the same number of SVG commands,
+   * each in the same order and with the same number of point parameters.
+   * Two layers are morphable if they are structurally identical and if
+   * each pair of paths are morphable with each other.
    */
   isMorphableWith(layer: Layer): boolean;
 
@@ -36,7 +43,7 @@ export interface Layer {
 }
 
 /**
- * Root class for all layer model classes. Primarily used for code reuse.
+ * Root class for all layer model classes. Primarily for code reuse.
  */
 abstract class AbstractLayer implements Layer {
   constructor(
@@ -62,7 +69,11 @@ abstract class AbstractLayer implements Layer {
 
   // Implements the Layer interface.
   isStructurallyIdenticalWith(layer: Layer) {
-    if (this.constructor !== layer.constructor || this.id !== layer.id) {
+    if (this.constructor !== layer.constructor) {
+      return false;
+    }
+    if (this.id !== layer.id) {
+      // TODO: update svgloader to remove already existing SVG ids? important!!!
       return false;
     }
     if (!this.children) {
@@ -75,7 +86,11 @@ abstract class AbstractLayer implements Layer {
 
   // Implements the Layer interface.
   isMorphableWith(layer: Layer) {
-    if (this.constructor !== layer.constructor || this.id !== layer.id) {
+    if (this.constructor !== layer.constructor) {
+      return false;
+    }
+    if (this.id !== layer.id) {
+      // TODO: update svgloader to remove already existing SVG ids? important!!!
       return false;
     }
     if (this instanceof PathLayer) {
@@ -85,8 +100,7 @@ abstract class AbstractLayer implements Layer {
       return true;
     }
     return this.children.length === layer.children.length
-      && this.children.every((c, i) =>
-        c.isMorphableWith(layer.children[i]));
+      && this.children.every((c, i) => c.isMorphableWith(layer.children[i]));
   }
 
   // Implements the Layer interface.
@@ -131,6 +145,7 @@ export class PathLayer extends AbstractLayer {
     public strokeLinecap = 'butt',
     public strokeLinejoin = 'miter',
     public strokeMiterLimit = 4,
+    // Trim paths are not currently used, but may be useful in the future.
     public trimPathStart = 0,
     public trimPathEnd = 1,
     public trimPathOffset = 0,
@@ -186,11 +201,11 @@ export class VectorLayer extends AbstractLayer {
   }
 
   clone(): VectorLayer {
-    const _clone =
+    const cloneFn =
       (layer: GroupLayer | ClipPathLayer | PathLayer | VectorLayer) => {
         if (layer instanceof GroupLayer) {
           return new GroupLayer(
-            layer.children.map(child => _clone(child)),
+            layer.children.map(child => cloneFn(child)),
             layer.id,
             layer.pivotX,
             layer.pivotY,
@@ -220,12 +235,12 @@ export class VectorLayer extends AbstractLayer {
             layer.trimPathOffset);
         }
         return new VectorLayer(
-          layer.children.map(child => _clone(child)),
+          layer.children.map(child => cloneFn(child)),
           layer.id,
           layer.width,
           layer.height,
           layer.alpha);
       };
-    return _clone(this);
+    return cloneFn(this);
   }
 }

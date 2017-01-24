@@ -1,6 +1,13 @@
 <div fxLayout="row" fxFlex fxLayoutAlign="center center">
   <div fxLayout="row" class="canvas-container">
-    <canvas #renderingCanvas class="rendering-canvas"></canvas>
+    <canvas
+      #renderingCanvas
+      class="rendering-canvas"
+      (mousedown)="onMouseDown($event)"
+      (mouseup)="onMouseUp($event)"
+      (mousemove)="onMouseMove($event)"
+      (mouseleave)="onMouseLeave($event)">
+    </canvas>
   </div>
 </div>
 

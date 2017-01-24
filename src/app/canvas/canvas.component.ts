@@ -15,6 +15,7 @@ import { LayerStateService } from '../services/layerstate.service';
 import { Subscription } from 'rxjs/Subscription';
 import { arcToBeziers } from '../scripts/svg';
 import { SelectionService, Selection } from '../services/selection.service';
+import { HoverStateService, CommandId, HoverType, Hover } from '../services/hoverstate.service';
 
 const ELEMENT_RESIZE_DETECTOR = erd();
 
@@ -29,7 +30,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   @ViewChild('renderingCanvas') private renderingCanvasRef: ElementRef;
 
   private vectorLayer: VectorLayer;
-  private shouldLabelPoints: boolean;
   private canvasContainerSize: number;
   private canvas: JQuery;
   private offscreenCanvas: JQuery;
@@ -39,12 +39,13 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   private subscriptions: Subscription[] = [];
   private pathPointRadius: number;
   private splitPathPointRadius: number;
-  private currentSelections: Selection[] = [];
   private activeDragPoint: DragPoint;
   private activeProjectionOntoPath: ProjectionOntoPath;
+  private currentHover: Hover;
 
   constructor(
     private elementRef: ElementRef,
+    private hoverStateService: HoverStateService,
     private layerStateService: LayerStateService,
     private timelineService: TimelineService,
     private selectionService: SelectionService) { }
@@ -99,18 +100,21 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         }));
     } else {
       this.subscriptions.push(
-        this.selectionService.addListener(
-          this.editorType, (selections: Selection[]) => {
-            this.currentSelections = selections;
+        this.selectionService.addListener(this.editorType, () => this.draw()));
+      this.subscriptions.push(
+        this.timelineService.addShouldLabelPointsListener(() => this.draw()));
+      this.subscriptions.push(
+        this.hoverStateService.stream
+          .map(hover => {
+            if (!_.includes(hover.visibleTo, this.editorType)) {
+              return undefined;
+            }
+            return hover;
+          })
+          .subscribe(hover => {
+            this.currentHover = hover;
             this.draw();
           }));
-      this.subscriptions.push(
-        this.timelineService.addShouldLabelPointsListener(
-          shouldLabelPoints => {
-            this.shouldLabelPoints = shouldLabelPoints;
-            this.draw();
-          }
-        ));
     }
   }
 
@@ -123,6 +127,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     if (!this.isViewInit || !this.vectorLayer) {
       return;
     }
+    // TODO: this doesn't work for non-square canvases
+    // TODO: wrap the canvases in a parent component that resizes its children canvases
     const containerAspectRatio = this.canvasContainerSize / this.canvasContainerSize;
     const vectorAspectRatio = this.vectorLayer.width / (this.vectorLayer.height || 1);
     if (vectorAspectRatio > containerAspectRatio) {
@@ -143,6 +149,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           height: this.vectorLayer.height * this.scale,
         });
     });
+    // TODO: this is too small for SVGs with large viewports. use this.scale instead?
     this.pathPointRadius = this.backingStoreScale * 0.6;
     this.splitPathPointRadius = this.pathPointRadius * 0.8;
     this.draw();
@@ -153,8 +160,10 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       return;
     }
 
-    const ctx = (this.canvas.get(0) as HTMLCanvasElement).getContext('2d');
-    const offscreenCtx = (this.offscreenCanvas.get(0) as HTMLCanvasElement).getContext('2d');
+    const ctx =
+      (this.canvas.get(0) as HTMLCanvasElement).getContext('2d');
+    const offscreenCtx =
+      (this.offscreenCanvas.get(0) as HTMLCanvasElement).getContext('2d');
 
     ctx.save();
     ctx.scale(this.backingStoreScale, this.backingStoreScale);
@@ -199,12 +208,11 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       if (!(layer instanceof PathLayer)) {
         return;
       }
+
       // TODO: update layer.pathData.length so that it reflects scale transforms
       ctx.save();
-
       executePathData(layer, ctx, transforms);
 
-      // Draw the actual layer to the canvas.
       ctx.strokeStyle = ColorUtil.androidToCssColor(layer.strokeColor, layer.strokeAlpha);
       ctx.lineWidth = layer.strokeWidth;
       ctx.fillStyle = ColorUtil.androidToCssColor(layer.fillColor, layer.fillAlpha);
@@ -212,6 +220,9 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       ctx.lineJoin = layer.strokeLinejoin;
       ctx.miterLimit = layer.strokeMiterLimit || 4;
 
+      // Note that trim paths aren't currently being used... but maybe someday
+      // it will be useful (i.e. if we want to support importing AVDs from Roman's
+      // AndroidIconAnimator tool).
       if (layer.trimPathStart !== 0
         || layer.trimPathEnd !== 1
         || layer.trimPathOffset !== 0) {
@@ -253,14 +264,16 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
   // Draw any selected paths.
   private drawSelections(ctx: CanvasRenderingContext2D) {
-    if (this.currentSelections.length) {
+    if (this.selectionService.getData(this.editorType).length) {
       ctx.save();
       ctx.scale(this.backingStoreScale, this.backingStoreScale);
       this.vectorLayer.walk((layer, transforms) => {
         if (!(layer instanceof PathLayer)) {
           return;
         }
-        const selections = this.currentSelections.filter(s => s.pathId === layer.id);
+        const selections =
+          this.selectionService.getData(this.editorType)
+            .filter(s => s.pathId === layer.id);
         if (!selections.length) {
           return;
         }
@@ -287,38 +300,82 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
   // Draw any labeled points.
   private drawLabeledPoints(ctx: CanvasRenderingContext2D) {
-    if (this.shouldLabelPoints && this.editorType !== EditorType.Preview) {
+    if (this.timelineService.getShouldLabelPoints()
+      && this.editorType !== EditorType.Preview) {
+      const currentHover = this.currentHover;
       const startingTransforms =
         [new Matrix(this.backingStoreScale, 0, 0, this.backingStoreScale, 0, 0)];
       this.vectorLayer.walk((layer, transforms) => {
         if (!(layer instanceof PathLayer)) {
           return;
         }
-        const pathDataPoints = _.flatMap(layer.pathData.subPathCommands, subPathCommand => {
-          return subPathCommand.points as { point: Point, isSplit: boolean }[];
-        });
+
+        const pathId = layer.id;
+        let pathData = layer.pathData;
+        if (currentHover
+          && currentHover.type === HoverType.Split
+          && currentHover.commandId.pathId === pathId) {
+          // If the user is hovering over the split button, then build
+          // a snapshot of what the path would look like after the action
+          // and display the result. Note that after the split action,
+          // the hover's drawIdx can be used to identify the new split point.
+          pathData =
+            layer.pathData.split(
+              currentHover.commandId.subPathIdx,
+              currentHover.commandId.drawIdx,
+              0.5);
+        }
+
+        // Build a list containing all necessary information needed in
+        // order to draw the labeled points.
+        const subPathCmds = pathData.subPathCommands;
+        const pathDataPointInfo = _.chain(subPathCmds)
+          .map((subPathCmd: SubPathCommand, subPathIdx: number) => {
+            // TODO: do we really want to filter out the close paths here?
+            return _.map(subPathCmd.commands.filter(drawCmd => drawCmd.svgChar !== 'Z'),
+              (drawCmd, drawIdx) => {
+                return {
+                  commandId: { pathId, subPathIdx, drawIdx } as CommandId,
+                  point: _.last(drawCmd.points),
+                  isSplit: drawCmd.isSplit,
+                };
+              });
+          })
+          .flatMap(pointInfo => pointInfo)
+          .value();
+
         transforms.reverse();
         ctx.save();
-        for (let i = pathDataPoints.length - 1; i >= 0; i--) {
-          const p = MathUtil.transform(pathDataPoints[i].point, ...transforms);
-          const color = i === 0 ? ColorUtil.MOVE_POINT_COLOR
-            : pathDataPoints[i].isSplit ? ColorUtil.SPLIT_POINT_COLOR : ColorUtil.NORMAL_POINT_COLOR;
-          const radius =
-            pathDataPoints[i].isSplit ? this.splitPathPointRadius : this.pathPointRadius;
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, radius, 0, 2 * Math.PI, false);
-          ctx.fillStyle = color;
-          ctx.fill();
-          ctx.beginPath();
-          ctx.fillStyle = 'white';
-          ctx.font = radius + 'px Roboto';
-          const text = (i + 1).toString();
-          const width = ctx.measureText(text).width;
-          // TODO: is there a better way to get the height?
-          const height = ctx.measureText('o').width;
-          ctx.fillText(text, p.x - width / 2, p.y + height / 2);
-          ctx.fill();
+
+        // Draw the points in reverse order so that larger numbered points
+        // display on top of lower numbered points.
+        for (let i = pathDataPointInfo.length - 1; i >= 0; i--) {
+          const currentPointInfo = pathDataPointInfo[i];
+
+          let color, radius;
+          if (i === 0) {
+            color = ColorUtil.MOVE_POINT_COLOR;
+            radius = this.pathPointRadius;
+          } else if (currentPointInfo.isSplit) {
+            color = ColorUtil.SPLIT_POINT_COLOR;
+            radius = this.splitPathPointRadius;
+          } else {
+            color = ColorUtil.NORMAL_POINT_COLOR;
+            radius = this.pathPointRadius;
+          }
+
+          if (currentHover) {
+            if (currentHover.type !== HoverType.None
+              && _.isEqual(currentPointInfo.commandId, currentHover.commandId)) {
+              // TODO: update this number to something more reasonable
+              radius *= 1.5;
+            }
+          }
+
+          const point = MathUtil.transform(currentPointInfo.point, ...transforms);
+          this.drawLabeledPoint(ctx, point, radius, color, (i + 1).toString());
         }
+
         ctx.restore();
       }, startingTransforms);
     }
@@ -326,6 +383,10 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
   // Draw any actively dragged points along the path.
   private drawDraggingPoints(ctx: CanvasRenderingContext2D) {
+    // TODO: remove the dragged point from its original location after it has been lifted.
+    // TODO: don't snap to the path until it reaches a certain distance threshold.
+    // TODO: if the point is dropped while not snapped to a path, then revert the change.
+    // TODO: all of the above can easily be done using the split snapshot approach above.
     if (this.activeProjectionOntoPath) {
       const startingTransforms =
         [new Matrix(this.backingStoreScale, 0, 0, this.backingStoreScale, 0, 0)];
@@ -333,41 +394,65 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         if (layer.id !== this.activeProjectionOntoPath.layerId) {
           return;
         }
-        ctx.save();
         transforms.reverse();
-        const proj = this.activeProjectionOntoPath.projection;
-        const p = MathUtil.transform({ x: proj.x, y: proj.y }, ...transforms);
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, this.splitPathPointRadius, 0, 2 * Math.PI, false);
-        ctx.fillStyle = 'purple';
-        ctx.fill();
+        ctx.save();
+        const projection = this.activeProjectionOntoPath.projection;
+        const point =
+          MathUtil.transform({ x: projection.x, y: projection.y }, ...transforms);
+        this.drawLabeledPoint(
+          ctx, point, this.splitPathPointRadius, ColorUtil.SPLIT_POINT_COLOR);
         ctx.restore();
       }, startingTransforms);
     }
   }
 
+  // Draw a single labeled point with optional text.
+  private drawLabeledPoint(
+    ctx: CanvasRenderingContext2D,
+    point: Point,
+    radius: number,
+    color: string,
+    text?: string) {
+
+    ctx.beginPath();
+    ctx.arc(point.x, point.y, radius, 0, 2 * Math.PI, false);
+    ctx.fillStyle = color;
+    ctx.fill();
+
+    if (text) {
+      ctx.beginPath();
+      ctx.fillStyle = 'white';
+      ctx.font = radius + 'px Roboto';
+      const width = ctx.measureText(text).width;
+      // TODO: is there a better way to get the height?
+      const height = ctx.measureText('o').width;
+      ctx.fillText(text, point.x - width / 2, point.y + height / 2);
+      ctx.fill();
+    }
+  }
+
+  // Draw the pixel grid.
   private drawPixelGrid(ctx: CanvasRenderingContext2D) {
-    // Draw the pixel grid.
     if (this.scale > 4) {
+      const devicePixelRatio = window.devicePixelRatio || 1;
       ctx.fillStyle = 'rgba(128, 128, 128, .25)';
       for (let x = 1; x < this.vectorLayer.width; x++) {
         ctx.fillRect(
-          x * this.backingStoreScale - 0.5 * (window.devicePixelRatio || 1),
+          x * this.backingStoreScale - 0.5 * devicePixelRatio,
           0,
-          1 * (window.devicePixelRatio || 1),
+          1 * devicePixelRatio,
           this.vectorLayer.height * this.backingStoreScale);
       }
       for (let y = 1; y < this.vectorLayer.height; y++) {
         ctx.fillRect(
           0,
-          y * this.backingStoreScale - 0.5 * (window.devicePixelRatio || 1),
+          y * this.backingStoreScale - 0.5 * devicePixelRatio,
           this.vectorLayer.width * this.backingStoreScale,
-          1 * (window.devicePixelRatio || 1));
+          1 * devicePixelRatio);
       }
     }
   }
 
-  @HostListener('mousedown', ['$event'])
   onMouseDown(event: MouseEvent) {
     if (this.editorType === EditorType.Preview) {
       // The user never interacts with the preview canvas.
@@ -383,7 +468,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  @HostListener('mousemove', ['$event'])
   onMouseMove(event: MouseEvent) {
     if (this.editorType === EditorType.Preview) {
       // The user never interacts with the preview canvas.
@@ -397,7 +481,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  @HostListener('mouseup', ['$event'])
   onMouseUp(event: MouseEvent) {
     if (this.editorType === EditorType.Preview) {
       // The user never interacts with the preview canvas.
@@ -425,12 +508,13 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       this.layerStateService.setData(this.editorType, this.vectorLayer);
       this.activeDragPoint = undefined;
       this.activeProjectionOntoPath = undefined;
+
+      // TODO: will calling 'setData' make this draw() call unnecessary?
       this.draw();
     }
 
   }
 
-  @HostListener('mouseleave', ['$event'])
   onMouseLeave(event) {
     if (this.editorType === EditorType.Preview) {
       // The user never interacts with the preview canvas.
@@ -472,6 +556,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
             .filter(cmdInfo => splitOnly && cmdInfo.isSplit);
         })
         .flatMap(pathPoints => pathPoints)
+        // TODO: confirm that using the backingStoreScale here is correct...
         .filter(pathPoint => pathPoint.distance <= (range / this.backingStoreScale))
         .reduce((prev, curr) => {
           return prev && prev.distance < curr.distance ? prev : curr;

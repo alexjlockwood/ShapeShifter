@@ -38,10 +38,11 @@ export class InspectorComponent implements OnInit, OnDestroy {
           const pathIds: string[] = [];
           const pathCommands: PathCommand[] = [];
           vl.walk(layer => {
-            if (layer instanceof PathLayer) {
-              pathIds.push(layer.id);
-              pathCommands.push(layer.pathData);
+            if (!(layer instanceof PathLayer)) {
+              return;
             }
+            pathIds.push(layer.id);
+            pathCommands.push(layer.pathData);
           });
           this.pathIds = pathIds;
           this.pathCommands = pathCommands;

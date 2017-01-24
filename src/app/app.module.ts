@@ -17,7 +17,7 @@ import { CommandComponent } from './inspector/command/command.component';
 import { TimelineService } from './timeline/timeline.service';
 import { LayerStateService } from './services/layerstate.service';
 import { SelectionService } from './services/selection.service';
-
+import { HoverStateService } from './services/hoverstate.service';
 
 import 'hammerjs';
 
@@ -40,7 +40,9 @@ import 'hammerjs';
     FlexLayoutModule.forRoot(),
     MaterialModule.forRoot()
   ],
-  providers: [TimelineService, LayerStateService, SelectionService],
+  providers: [
+    TimelineService, LayerStateService, SelectionService, HoverStateService,
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

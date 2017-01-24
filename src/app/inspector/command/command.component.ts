@@ -7,6 +7,7 @@ import { DrawCommand, EditorType } from '../../scripts/model';
 import * as $ from 'jquery';
 import { InspectorService, EventType } from '../inspector.service';
 import { SelectionService, Selection } from '../../services/selection.service';
+import { HoverStateService, HoverType } from '../../services/hoverstate.service';
 import { Subscription } from 'rxjs/Subscription';
 import { ColorUtil } from '../../scripts/common';
 
@@ -24,10 +25,15 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('drawCommandIndexCanvas') private drawCommandIndexCanvas: ElementRef;
 
   private isSelected_ = false;
+  private isHovering_ = false;
+  private isHoveringOverCommand = false;
+  private isHoveringOverSplit = false;
+  private isHoveringOverUnsplit = false;
   private subscription_: Subscription;
   private selectionArgs_: Selection;
 
   constructor(
+    private hoverStateService: HoverStateService,
     private selectionService: SelectionService,
     private inspectorService: InspectorService) { }
 
@@ -97,6 +103,14 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
+  get isHovering() {
+    return this.isHovering_;
+  }
+
+  set isHovering(isHovering: boolean) {
+    this.isHovering_ = isHovering;
+  }
+
   get isSelected() {
     return this.isSelected_;
   }
@@ -122,6 +136,53 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
 
   isUnsplittable() {
     return this.drawCommand.isSplit;
+  }
+
+  onCommandHoverEvent(isHoveringOverCommand: boolean) {
+    this.isHoveringOverCommand = isHoveringOverCommand;
+    this.broadcastHoverEvent(isHoveringOverCommand, HoverType.Command);
+  }
+
+  onUnsplitHoverEvent(isHoveringOverUnsplit: boolean) {
+    this.isHoveringOverUnsplit = isHoveringOverUnsplit;
+    this.broadcastHoverEvent(isHoveringOverUnsplit, HoverType.Unsplit);
+  }
+
+  onSplitHoverEvent(isHoveringOverSplit: boolean) {
+    this.isHoveringOverSplit = isHoveringOverSplit;
+    this.broadcastHoverEvent(isHoveringOverSplit, HoverType.Split);
+  }
+
+  private broadcastHoverEvent(isHovering: boolean, hoverType: HoverType) {
+    const pathId = this.pathId;
+    const subPathIdx = this.subPathIdx;
+    const drawIdx = this.drawIdx;
+    const commandId = { pathId, subPathIdx, drawIdx };
+    const visibleTo =
+      hoverType === HoverType.Command
+        ? [EditorType.Start, EditorType.End]
+        : [this.editorType];
+    if (isHovering) {
+      this.hoverStateService.setHover({
+        type: hoverType,
+        commandId: { pathId, subPathIdx, drawIdx },
+        source: this.editorType,
+        visibleTo,
+      });
+    } else if (hoverType !== HoverType.Command && this.isHoveringOverCommand) {
+      this.hoverStateService.setHover({
+        type: HoverType.Command,
+        commandId: { pathId, subPathIdx, drawIdx },
+        source: this.editorType,
+        visibleTo: [EditorType.Start, EditorType.End],
+      });
+    } else {
+      this.hoverStateService.clearHover();
+    }
+    this.isHovering =
+      this.isHoveringOverCommand
+      && !this.isHoveringOverSplit
+      && !this.isHoveringOverUnsplit;
   }
 
   onEditButtonClick(event) {
