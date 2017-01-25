@@ -156,8 +156,8 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
         viewBox="0 0 24 24">
         <path d="
         M 19 11
-        C 5 11 5 11 5 11
-        C 5 13 5 13 5 13
+        C 19 11 5 11 5 11
+        C 5 11 5 13 5 13
         L 19 13
         L 19 11"
         fill="#000" />

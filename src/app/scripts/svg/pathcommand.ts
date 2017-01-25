@@ -215,6 +215,7 @@ class PathCommandImpl implements PathCommand {
           args.forEach((_, k) => {
             if (k === 5 || k === 6) {
               // Doesn't make sense to interpolate the large arc and sweep flags.
+              // TODO: confirm this is how arcs are interpolated in android?
               args[k] = fraction === 0 ? d1.args[k] : d2.args[k];
               return;
             }
@@ -367,29 +368,41 @@ class PathCommandImpl implements PathCommand {
     if (ts.length === 0) {
       return this;
     }
-    const { cwCmdIdx, cwDrawCmdIdx } = this.getCommandWrapperAt(subPathIdx, drawIdx);
-    const targetCw = this.commandWrappers_[subPathIdx][cwCmdIdx];
-    const newCws = this.commandWrappers_.map(cws => cws.slice());
-    newCws[subPathIdx][cwCmdIdx] = targetCw.splitAtIndex(cwDrawCmdIdx, ...ts);
-    return this.clone({ commandWrappers_: newCws });
+    const { targetCw, cwCmdIdx, cwDrawCmdIdx } =
+      this.findCommandWrapper(subPathIdx, drawIdx);
+    const newCw = targetCw.splitAtIndex(cwDrawCmdIdx, ...ts);
+    return this.clone({
+      commandWrappers_: this.replaceCommandWrapper(subPathIdx, cwCmdIdx, newCw),
+    });
   }
 
-  private splitInternal(subPathCwIdx: number, drawCwIdx: number, ...ts: number[]) {
+  // Implements the PathCommand interface.
+  splitInHalf(subPathIdx: number, drawIdx: number) {
+    const { targetCw, cwCmdIdx, cwDrawCmdIdx } =
+      this.findCommandWrapper(subPathIdx, drawIdx);
+    const newCw = targetCw.splitInHalfAtIndex(cwDrawCmdIdx);
+    return this.clone({
+      commandWrappers_: this.replaceCommandWrapper(subPathIdx, cwCmdIdx, newCw),
+    });
+  }
+
+  // Same as split above, except can be used when the command wrapper indices are known.
+  private splitInternal(subPathCwIdx: number, cwCmdIdx: number, ...ts: number[]) {
     if (ts.length === 0) {
       return this;
     }
-    const pathCws = this.commandWrappers_.map(cws => cws.slice());
-    const subPathCws = pathCws[subPathCwIdx];
-    subPathCws[drawCwIdx] = subPathCws[drawCwIdx].split(...ts);
-    return this.clone({ commandWrappers_: pathCws });
+    const targetCw = this.commandWrappers_[subPathCwIdx][cwCmdIdx];
+    const newCw = targetCw.split(...ts);
+    return this.clone({
+      commandWrappers_: this.replaceCommandWrapper(subPathCwIdx, cwCmdIdx, newCw),
+    });
   }
 
   // Implements the PathCommand interface.
   unsplit(subPathIdx: number, drawIdx: number) {
-    const { cwCmdIdx, cwDrawCmdIdx } = this.getCommandWrapperAt(subPathIdx, drawIdx);
-    const targetCw = this.commandWrappers_[subPathIdx][cwCmdIdx];
-    const newCws = this.commandWrappers_.map(cws => cws.slice());
-    newCws[subPathIdx][cwCmdIdx] = targetCw.unsplit(cwDrawCmdIdx);
+    const { targetCw, cwCmdIdx, cwDrawCmdIdx } = this.findCommandWrapper(subPathIdx, drawIdx);
+    const newCw = targetCw.unsplit(cwDrawCmdIdx);
+    const newCws = this.replaceCommandWrapper(subPathIdx, cwCmdIdx, newCw);
     const shiftOffset = this.shiftOffsets_[subPathIdx];
     const shiftOffsets = this.shiftOffsets_.slice();
     if (shiftOffset === this.subPathCommands_[subPathIdx].commands.length - 1) {
@@ -403,14 +416,15 @@ class PathCommandImpl implements PathCommand {
 
   // Implements the PathCommand interface.
   convert(subPathIdx: number, drawIdx: number, svgChar: SvgChar): PathCommand {
-    const { cwCmdIdx, cwDrawCmdIdx } = this.getCommandWrapperAt(subPathIdx, drawIdx);
-    const targetCw = this.commandWrappers_[subPathIdx][cwCmdIdx];
-    const newCws = this.commandWrappers_.map(cws => cws.slice());
-    newCws[subPathIdx][cwCmdIdx] = targetCw.convert(cwDrawCmdIdx, svgChar);
-    return this.clone({ commandWrappers_: newCws });
+    const { targetCw, cwCmdIdx, cwDrawCmdIdx } =
+      this.findCommandWrapper(subPathIdx, drawIdx);
+    const newCw = targetCw.convert(cwDrawCmdIdx, svgChar);
+    return this.clone({
+      commandWrappers_: this.replaceCommandWrapper(subPathIdx, cwCmdIdx, newCw),
+    });
   }
 
-  private getCommandWrapperAt(subPathIdx: number, drawIdx: number) {
+  private findCommandWrapper(subPathIdx: number, drawIdx: number) {
     const numCommands = this.subPathCommands_[subPathIdx].commands.length;
     if (this.reversals_[subPathIdx]) {
       drawIdx = numCommands - drawIdx - 1;
@@ -427,6 +441,7 @@ class PathCommandImpl implements PathCommand {
       if (counter + cw.commands.length > drawIdx) {
         cwDrawCmdIdx = drawIdx - counter;
         return {
+          targetCw: cw,
           cwCmdIdx,
           cwDrawCmdIdx,
         };
@@ -435,6 +450,12 @@ class PathCommandImpl implements PathCommand {
       cwCmdIdx++;
     }
     throw new Error('Error retrieving command wrapper');
+  }
+
+  private replaceCommandWrapper(subPathCwIdx: number, drawCwIdx: number, cw: CommandWrapper) {
+    const newCws = this.commandWrappers_.map(cws => cws.slice());
+    newCws[subPathCwIdx][drawCwIdx] = cw;
+    return newCws;
   }
 }
 
@@ -508,6 +529,15 @@ class CommandWrapper {
     const startSplit = tempSplits[splitIndex];
     const endSplit = tempSplits[splitIndex + 1];
     return this.split(...ts.map(t => MathUtil.lerp(startSplit, endSplit, t)));
+  }
+
+  // TODO: this breaks right now for beziers like (5 11, 5 13, 5 13, 5 13)
+  splitInHalfAtIndex(splitIndex: number) {
+    const tempSplits = [0, ...this.splits];
+    const startSplit = tempSplits[splitIndex];
+    const endSplit = tempSplits[splitIndex + 1];
+    const distance = MathUtil.lerp(startSplit, endSplit, 0.5);
+    return this.split(Bezier.findTimeByDistance(this.backingBeziers[0], distance));
   }
 
   unsplit(splitIndex: number) {

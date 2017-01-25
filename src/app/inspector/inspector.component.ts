@@ -97,7 +97,7 @@ export class InspectorComponent implements OnInit, OnDestroy {
             break;
           case EventType.Split:
             // TODO: splitting the last close path command crashes the app.
-            // TODO: https://github.com/Pomax/bezierjs/issues/69#issuecomment-274988551
+            // TODO: use splitInHalf
             pathLayer.pathData = pathLayer.pathData.split(subPathIdx, drawIdx, 0.5);
             // TODO: update selections
             break;

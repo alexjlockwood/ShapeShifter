@@ -61,6 +61,9 @@ export interface PathCommand {
    */
   split(subPathIdx: number, drawIdx: number, ...ts: number[]): PathCommand;
 
+  /** Splits the draw command at the specified index in half. */
+  splitInHalf(subPathIdx: number, drawIdx: number);
+
   /**
    * Un-splits the draw command at the specified index.
    * Returns a new path command object.
