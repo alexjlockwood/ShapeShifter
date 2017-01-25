@@ -11,7 +11,7 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
   const parser = new DOMParser();
   const doc = parser.parseFromString(svgString, 'image/svg+xml');
 
-  const sanitizeId_ = (value: string) => {
+  const sanitizeIdFn = (value: string) => {
     return (value || '')
       .toLowerCase()
       .replace(/^\s+|\s+$/g, '')
@@ -21,16 +21,16 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
 
   const usedIds = {};
 
-  const makeFinalNodeId_ = (node, typeIdPrefix: string) => {
+  const makeFinalNodeIdFn = (node, typeIdPrefix: string) => {
     const finalId = getUniqueId(
-      sanitizeId_(node.id || typeIdPrefix),
+      sanitizeIdFn(node.id || typeIdPrefix),
       id => usedIds[id],
     );
     usedIds[finalId] = true;
     return finalId;
   };
 
-  const lengthPx_ = svgLength => {
+  const lengthPxFn = svgLength => {
     if (svgLength.baseVal) {
       svgLength = svgLength.baseVal;
     }
@@ -38,7 +38,7 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
     return svgLength.valueInSpecifiedUnits;
   };
 
-  const nodeToLayerData_ = (node, context): GroupLayer | ClipPathLayer | PathLayer => {
+  const nodeToLayerDataFn = (node, context): GroupLayer | ClipPathLayer | PathLayer => {
     if (!node) {
       return undefined;
     }
@@ -47,21 +47,21 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
       return undefined;
     }
 
-    const simpleAttr_ = (nodeAttr, contextAttr) => {
+    const simpleAttrFn = (nodeAttr, contextAttr) => {
       if (node.attributes[nodeAttr]) {
         context[contextAttr] = node.attributes[nodeAttr].value;
       }
     };
 
     // set attributes
-    simpleAttr_('stroke', 'strokeColor');
-    simpleAttr_('stroke-width', 'strokeWidth');
-    simpleAttr_('stroke-linecap', 'strokeLinecap');
-    simpleAttr_('stroke-linejoin', 'strokeLinejoin');
-    simpleAttr_('stroke-miterlimit', 'strokeMiterLimit');
-    simpleAttr_('stroke-opacity', 'strokeAlpha');
-    simpleAttr_('fill', 'fillColor');
-    simpleAttr_('fill-opacity', 'fillAlpha');
+    simpleAttrFn('stroke', 'strokeColor');
+    simpleAttrFn('stroke-width', 'strokeWidth');
+    simpleAttrFn('stroke-linecap', 'strokeLinecap');
+    simpleAttrFn('stroke-linejoin', 'strokeLinejoin');
+    simpleAttrFn('stroke-miterlimit', 'strokeMiterLimit');
+    simpleAttrFn('stroke-opacity', 'strokeAlpha');
+    simpleAttrFn('fill', 'fillColor');
+    simpleAttrFn('fill-opacity', 'fillAlpha');
 
     // add transforms
     if (node.transform) {
@@ -73,39 +73,40 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
     // see if this is a path
     let path;
     if (node instanceof SVGPathElement) {
-      path = (<any>node.attributes).d.value;
+      path = (node.attributes as any).d.value;
 
     } else if (node instanceof SVGRectElement) {
-      const l = lengthPx_(node.x),
-        t = lengthPx_(node.y),
-        r = l + lengthPx_(node.width),
-        b = t + lengthPx_(node.height);
+      const l = lengthPxFn(node.x),
+        t = lengthPxFn(node.y),
+        r = l + lengthPxFn(node.width),
+        b = t + lengthPxFn(node.height);
       path = `M ${l},${t} ${r},${t} ${r},${b} ${l},${b} Z`;
 
     } else if (node instanceof SVGLineElement) {
-      const x1 = lengthPx_(node.x1),
-        y1 = lengthPx_(node.y1),
-        x2 = lengthPx_(node.x2),
-        y2 = lengthPx_(node.y2);
+      const x1 = lengthPxFn(node.x1),
+        y1 = lengthPxFn(node.y1),
+        x2 = lengthPxFn(node.x2),
+        y2 = lengthPxFn(node.y2);
       path = `M ${x1},${y1} ${x2},${y2} Z`;
 
     } else if (node instanceof SVGPolygonElement || node instanceof SVGPolylineElement) {
-      path = 'M ' + Array.from(<any>(node.points)).map((pt: any) => pt.x + ',' + pt.y).join(' ');
+      path = 'M ' + Array.from((node.points as any)).map((pt: any) => pt.x + ',' + pt.y).join(' ');
       if (node instanceof SVGPolygonElement) {
         path += ' Z';
       }
 
     } else if (node instanceof SVGCircleElement) {
-      const cx = lengthPx_(node.cx),
-        cy = lengthPx_(node.cy),
-        r = lengthPx_(node.r);
-      path = `M ${cx},${cy - r} A ${r} ${r} 0 1 0 ${cx},${cy + r} A ${r} ${r} 0 1 0 ${cx},${cy - r} Z`;
+      const cx = lengthPxFn(node.cx),
+        cy = lengthPxFn(node.cy),
+        r = lengthPxFn(node.r);
+      path = `M ${cx},${cy - r} A ${r} ${r} 0 1 0 ${cx},${cy + r} `
+        + `A ${r} ${r} 0 1 0 ${cx},${cy - r} Z`;
 
     } else if (node instanceof SVGEllipseElement) {
-      const cx = lengthPx_(node.cx),
-        cy = lengthPx_(node.cy),
-        rx = lengthPx_(node.rx),
-        ry = lengthPx_(node.ry);
+      const cx = lengthPxFn(node.cx),
+        cy = lengthPxFn(node.cy),
+        rx = lengthPxFn(node.rx),
+        ry = lengthPxFn(node.ry);
       path = `M ${cx},${cy - ry} A ${rx} ${ry} 0 1 0 ${cx},${cy + ry} ` +
         `A ${rx} ${ry} 0 1 0 ${cx},${cy - ry} Z`;
     }
@@ -117,7 +118,7 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
 
       // create a path layer
       return new PathLayer(
-        makeFinalNodeId_(node, 'path'),
+        makeFinalNodeIdFn(node, 'path'),
         createPathCommand(path),
         ('fillColor' in context) ? ColorUtil.svgToAndroidColor(context.fillColor) : undefined,
         ('fillAlpha' in context) ? context.fillAlpha : undefined,
@@ -132,13 +133,13 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
 
     if (node.childNodes.length) {
       const layers = Array.from(node.childNodes)
-        .map(child => nodeToLayerData_(child, Object.assign({}, context)))
+        .map(child => nodeToLayerDataFn(child, Object.assign({}, context)))
         .filter(layer => !!layer);
       if (layers && layers.length) {
         // create a group (there are valid children)
         return new GroupLayer(
           layers,
-          makeFinalNodeId_(node, 'group'),
+          makeFinalNodeIdFn(node, 'group'),
         );
       }
     }
@@ -148,8 +149,8 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
 
   const docElContext: any = {};
   const documentElement: any = doc.documentElement;
-  let width = lengthPx_(documentElement.width);
-  let height = lengthPx_(documentElement.height);
+  let width = lengthPxFn(documentElement.width);
+  let height = lengthPxFn(documentElement.height);
 
   if (documentElement.viewBox) {
     width = documentElement.viewBox.baseVal.width;
@@ -170,8 +171,8 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
     ];
   }
 
-  const rootLayer = nodeToLayerData_(documentElement, docElContext);
-  const id = makeFinalNodeId_(documentElement, 'vector');
+  const rootLayer = nodeToLayerDataFn(documentElement, docElContext);
+  const id = makeFinalNodeIdFn(documentElement, 'vector');
   const childrenLayers = rootLayer ? rootLayer.children : undefined;
   const alpha = documentElement.getAttribute('opacity') || undefined;
 
@@ -180,13 +181,13 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
 
 function getUniqueId(prefix = '', objectById = (_) => undefined, targetObject?) {
   let n = 0;
-  const id_ = () => prefix + (n ? `_${n}` : '');
+  const idFn = () => prefix + (n ? `_${n}` : '');
   while (true) {
-    const o = objectById(id_());
+    const o = objectById(idFn());
     if (!o || o === targetObject) {
       break;
     }
     n++;
   }
-  return id_();
+  return idFn();
 }
