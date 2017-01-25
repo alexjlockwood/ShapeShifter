@@ -329,6 +329,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           // a snapshot of what the path would look like after the action
           // and display the result. Note that after the split action,
           // the hover's drawIdx can be used to identify the new split point.
+          // TODO: https://github.com/Pomax/bezierjs/issues/69#issuecomment-274988551
           pathData =
             layer.pathData.split(
               currentHover.commandId.subPathIdx,
