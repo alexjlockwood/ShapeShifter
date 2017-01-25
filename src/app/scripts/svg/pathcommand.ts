@@ -16,6 +16,8 @@ import { Alignment } from './vectalign';
  */
 class PathCommandImpl implements PathCommand {
 
+  // TODO: consider reversing M C C L Z
+  // TODO: reversing a path with a mix of Ls and Cs doesnt work.
   // TODO: reversing a path with a close path with identical start/end points doesn't work
   // TODO: consider an svg that ends with Z and one that doesn't. how to make these morphable?
   private readonly path_: string;
@@ -365,29 +367,10 @@ class PathCommandImpl implements PathCommand {
     if (ts.length === 0) {
       return this;
     }
-    const numCommands = this.subPathCommands_[subPathIdx].commands.length;
-    if (this.reversals_[subPathIdx]) {
-      drawIdx = numCommands - drawIdx - 1;
-    }
-    drawIdx += this.shiftOffsets_[subPathIdx];
-    if (drawIdx > numCommands - 1) {
-      drawIdx -= numCommands - 1;
-    }
-    let counter = 0;
-    let targetCw: CommandWrapper;
-    let targetIndex: number;
-    let cwsDrawIndex = 0;
-    for (const cw of this.commandWrappers_[subPathIdx]) {
-      if (counter + cw.commands.length > drawIdx) {
-        targetCw = cw;
-        targetIndex = drawIdx - counter;
-        break;
-      }
-      counter += cw.commands.length;
-      cwsDrawIndex++;
-    }
+    const { cwCmdIdx, cwDrawCmdIdx } = this.getCommandWrapperAt(subPathIdx, drawIdx);
+    const targetCw = this.commandWrappers_[subPathIdx][cwCmdIdx];
     const newCws = this.commandWrappers_.map(cws => cws.slice());
-    newCws[subPathIdx][cwsDrawIndex] = targetCw.splitAtIndex(targetIndex, ...ts);
+    newCws[subPathIdx][cwCmdIdx] = targetCw.splitAtIndex(cwDrawCmdIdx, ...ts);
     return this.clone({ commandWrappers_: newCws });
   }
 
@@ -403,40 +386,55 @@ class PathCommandImpl implements PathCommand {
 
   // Implements the PathCommand interface.
   unsplit(subPathIdx: number, drawIdx: number) {
-    const numCommands = this.subPathCommands_[subPathIdx].commands.length;
-    if (this.reversals_[subPathIdx]) {
-      drawIdx = numCommands - drawIdx - 1;
-    }
-    drawIdx += this.shiftOffsets_[subPathIdx];
-    if (drawIdx >= numCommands - 1) {
-      drawIdx -= numCommands - 1;
-    }
-    let counter = 0;
-    let targetCw: CommandWrapper;
-    let targetIndex: number;
-    let cwsDrawIndex = 0;
-    for (const cw of this.commandWrappers_[subPathIdx]) {
-      if (counter + cw.commands.length > drawIdx) {
-        targetCw = cw;
-        targetIndex = drawIdx - counter;
-        break;
-      }
-      counter += cw.commands.length;
-      cwsDrawIndex++;
-    }
-
-    // TODO: also update shift offsets (so that they don't grow past the number of cmds?)
+    const { cwCmdIdx, cwDrawCmdIdx } = this.getCommandWrapperAt(subPathIdx, drawIdx);
+    const targetCw = this.commandWrappers_[subPathIdx][cwCmdIdx];
     const newCws = this.commandWrappers_.map(cws => cws.slice());
-    newCws[subPathIdx][cwsDrawIndex] = targetCw.unsplit(targetIndex);
+    newCws[subPathIdx][cwCmdIdx] = targetCw.unsplit(cwDrawCmdIdx);
     const shiftOffset = this.shiftOffsets_[subPathIdx];
     const shiftOffsets = this.shiftOffsets_.slice();
-    if (shiftOffset === numCommands - 1) {
+    if (shiftOffset === this.subPathCommands_[subPathIdx].commands.length - 1) {
       shiftOffsets[subPathIdx] = shiftOffset - 1;
     }
     return this.clone({
       commandWrappers_: newCws,
       shiftOffsets_: shiftOffsets,
     });
+  }
+
+  // Implements the PathCommand interface.
+  convert(subPathIdx: number, drawIdx: number, svgChar: SvgChar): PathCommand {
+    const { cwCmdIdx, cwDrawCmdIdx } = this.getCommandWrapperAt(subPathIdx, drawIdx);
+    const targetCw = this.commandWrappers_[subPathIdx][cwCmdIdx];
+    const newCws = this.commandWrappers_.map(cws => cws.slice());
+    newCws[subPathIdx][cwCmdIdx] = targetCw.convert(cwDrawCmdIdx, svgChar);
+    return this.clone({ commandWrappers_: newCws });
+  }
+
+  private getCommandWrapperAt(subPathIdx: number, drawIdx: number) {
+    const numCommands = this.subPathCommands_[subPathIdx].commands.length;
+    if (this.reversals_[subPathIdx]) {
+      drawIdx = numCommands - drawIdx - 1;
+    }
+    drawIdx += this.shiftOffsets_[subPathIdx];
+    if (drawIdx >= numCommands - 1) {
+      // TODO: splitting the last Z only works after changing the above to '>'?
+      drawIdx -= numCommands - 1;
+    }
+    let counter = 0;
+    let cwCmdIdx = 0;
+    let cwDrawCmdIdx = 0;
+    for (const cw of this.commandWrappers_[subPathIdx]) {
+      if (counter + cw.commands.length > drawIdx) {
+        cwDrawCmdIdx = drawIdx - counter;
+        return {
+          cwCmdIdx,
+          cwDrawCmdIdx,
+        };
+      }
+      counter += cw.commands.length;
+      cwCmdIdx++;
+    }
+    throw new Error('Error retrieving command wrapper');
   }
 }
 
@@ -447,34 +445,35 @@ class PathCommandImpl implements PathCommand {
 class CommandWrapper {
 
   // TODO(alockwood): possible to have more than one bezier for elliptical arcs?
-  private readonly svgChar: SvgChar;
   private readonly backingCommand: DrawCommandImpl;
   private readonly backingBeziers: ReadonlyArray<Bezier>;
   private readonly splits: ReadonlyArray<number>;
-  private readonly splitCommands: ReadonlyArray<DrawCommandImpl>;
+  private readonly svgChars: ReadonlyArray<SvgChar>;
+  private readonly drawCommands: ReadonlyArray<DrawCommandImpl>;
 
   constructor(obj: DrawCommandImpl | ClonedCommandWrapperInfo) {
-    this.svgChar = obj.svgChar;
     if (obj instanceof DrawCommandImpl) {
       this.backingCommand = obj;
       this.backingBeziers = drawCommandToBeziers(obj);
-      this.splits = [];
-      this.splitCommands = [];
+      this.splits = [1];
+      this.svgChars = [this.backingCommand.svgChar];
+      this.drawCommands = [obj];
     } else {
       this.backingCommand = obj.backingCommand;
       this.backingBeziers = obj.backingBeziers;
       this.splits = obj.splits.slice();
-      this.splitCommands = obj.splitCommands.slice();
+      this.svgChars = obj.svgChars.slice();
+      this.drawCommands = obj.drawCommands.slice();
     }
   }
 
   private clone(overrides: ClonedCommandWrapperInfo = {}) {
     return new CommandWrapper(_.assign({}, {
-      svgChar: this.svgChar,
       backingCommand: this.backingCommand,
       backingBeziers: this.backingBeziers,
       splits: this.splits,
-      splitCommands: this.splitCommands,
+      svgChars: this.svgChars,
+      drawCommands: this.drawCommands,
     }, overrides));
   }
 
@@ -485,22 +484,27 @@ class CommandWrapper {
   }
 
   split(...ts: number[]) {
-    // TODO(alockwood): add a test for splitting a command with a path length of 0
+    // TODO: add a test for splitting a command with a path length of 0
+    // TODO: add a test for the case when t === 1
     if (ts.length === 0 || !this.backingBeziers.length) {
       return this;
     }
-    if (this.svgChar === 'A') {
+    if (this.backingCommand.svgChar === 'A') {
       throw new Error('TODO: implement split support for elliptical arcs');
     }
     const splits = this.splits.slice();
+    const svgChars = this.svgChars.slice();
     for (const t of ts) {
-      splits.splice(_.sortedIndex(splits, t), 0, t);
+      const insertionIndex = _.sortedIndex(splits, t);
+      splits.splice(insertionIndex, 0, t);
+      // TODO: what about if the last command is a Z? then we want the svg char to be L?
+      svgChars.splice(insertionIndex, 0, this.commands[insertionIndex].svgChar);
     }
-    return this.rebuildSplitCommands(splits);
+    return this.rebuildCommands(splits, svgChars);
   }
 
   splitAtIndex(splitIndex: number, ...ts: number[]) {
-    const tempSplits = [0, ...this.splits, 1];
+    const tempSplits = [0, ...this.splits];
     const startSplit = tempSplits[splitIndex];
     const endSplit = tempSplits[splitIndex + 1];
     return this.split(...ts.map(t => MathUtil.lerp(startSplit, endSplit, t)));
@@ -508,41 +512,48 @@ class CommandWrapper {
 
   unsplit(splitIndex: number) {
     const splits = this.splits.slice();
+    const svgChars = this.svgChars.slice();
     splits.splice(splitIndex, 1);
-    return this.rebuildSplitCommands(splits);
+    svgChars.splice(splitIndex, 1);
+    return this.rebuildCommands(splits, svgChars);
   }
 
-  private rebuildSplitCommands(newSplits: number[]) {
-    const newSplitCommands = [];
-    if (!newSplits.length) {
+  convert(convertIndex: number, svgChar: SvgChar) {
+    const splits = this.splits.slice();
+    const svgChars = this.svgChars.slice();
+    svgChars[convertIndex] = svgChar;
+    return this.rebuildCommands(splits, svgChars);
+  }
+
+  private rebuildCommands(newSplits: number[], newSvgChars: SvgChar[]) {
+    if (newSplits.length === 1) {
+      const newDrawCommands =
+        [bezierToDrawCommand(newSvgChars[0], this.backingBeziers[0], false)];
       return this.clone({
         splits: newSplits,
-        splitCommands: newSplitCommands,
+        svgChars: newSvgChars,
+        drawCommands: newDrawCommands,
       });
     }
-    const splits = [...newSplits, 1];
+    const newCommands = [];
     let prevT = 0;
-    for (let i = 0; i < splits.length; i++) {
-      const currT = splits[i];
+    for (let i = 0; i < newSplits.length; i++) {
+      const currT = newSplits[i];
+      const svgChar = newSvgChars[i];
       const splitBez = this.backingBeziers[0].split(prevT, currT);
-      const isSplit = i !== splits.length - 1;
-      let svgChar;
-      if (this.svgChar === 'Z' && i !== splits.length - 1) {
-        svgChar = 'L';
-      } else {
-        svgChar = this.svgChar;
-      }
-      newSplitCommands.push(bezierToDrawCommand(svgChar, splitBez, isSplit));
+      const isSplit = i !== newSplits.length - 1;
+      newCommands.push(bezierToDrawCommand(svgChar, splitBez, isSplit));
       prevT = currT;
     }
     return this.clone({
       splits: newSplits,
-      splitCommands: newSplitCommands,
+      svgChars: newSvgChars,
+      drawCommands: newCommands,
     });
   }
 
   get commands() {
-    return this.splitCommands.length ? this.splitCommands : [this.backingCommand];
+    return this.drawCommands;
   }
 }
 
@@ -657,7 +668,8 @@ interface ClonedCommandWrapperInfo {
   backingCommand?: DrawCommandImpl;
   backingBeziers?: ReadonlyArray<Bezier>;
   splits?: ReadonlyArray<number>;
-  splitCommands?: ReadonlyArray<DrawCommandImpl>;
+  svgChars?: ReadonlyArray<SvgChar>;
+  drawCommands?: ReadonlyArray<DrawCommandImpl>;
 }
 
 export function createPathCommand(path: string): PathCommand {

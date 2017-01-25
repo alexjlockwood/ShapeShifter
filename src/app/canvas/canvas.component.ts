@@ -129,6 +129,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     if (!this.isViewInit || !this.vectorLayer) {
       return;
     }
+
     // TODO: wrap the canvases in a parent component that resizes its children canvases
     const containerWidth = Math.max(1, this.containerSize);
     const containerHeight = Math.max(1, this.containerSize);
@@ -141,7 +142,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     } else {
       this.cssScale = containerHeight / (this.vectorLayer.height || 1);
     }
-    //this.cssScale = Math.max(1, Math.floor(this.cssScale));
     const cssWidth = this.vectorLayer.width * this.cssScale;
     const cssHeight = this.vectorLayer.height * this.cssScale;
     [this.canvas, this.offscreenCanvas].forEach(canvas => {
@@ -159,11 +159,9 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     // The 'attrScale' represents the number of physical pixels per SVG viewport pixel.
     this.attrScale = this.cssScale * devicePixelRatio;
 
-    console.log(this.containerSize, this.cssScale, this.attrScale, devicePixelRatio);
-
-    // TODO: this is too small for SVGs with large viewports. use this.scale instead?
+    // TODO: this is too small for SVGs with large viewports.
     this.pathPointRadius = this.cssScale;
-    this.splitPathPointRadius = this.pathPointRadius * 1.25;
+    this.splitPathPointRadius = this.pathPointRadius * 0.8;
     this.draw();
   }
 
@@ -445,6 +443,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
   // Draw the pixel grid.
   private drawPixelGrid(ctx: CanvasRenderingContext2D) {
+    ctx.save();
     if (this.cssScale > 4) {
       const devicePixelRatio = window.devicePixelRatio || 1;
       ctx.fillStyle = 'rgba(128, 128, 128, .25)';
@@ -452,7 +451,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         ctx.fillRect(
           x * this.attrScale - 0.5 * devicePixelRatio,
           0,
-          1 * devicePixelRatio,
+          devicePixelRatio,
           this.vectorLayer.height * this.attrScale);
       }
       for (let y = 1; y < this.vectorLayer.height; y++) {
@@ -460,9 +459,10 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           0,
           y * this.attrScale - 0.5 * devicePixelRatio,
           this.vectorLayer.width * this.attrScale,
-          1 * devicePixelRatio);
+          devicePixelRatio);
       }
     }
+    ctx.restore();
   }
 
   onMouseDown(event: MouseEvent) {
@@ -524,7 +524,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       // TODO: will calling 'setData' make this draw() call unnecessary?
       this.draw();
     }
-
   }
 
   onMouseLeave(event) {

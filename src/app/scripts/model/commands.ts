@@ -67,6 +67,12 @@ export interface PathCommand {
    */
   unsplit(subPathIdx: number, drawIdx: number): PathCommand;
 
+  /**
+   * Convert the draw command at the specified index.
+   * Returns a new path command object.
+   */
+  convert(subPathIdx: number, drawIdx: number, svgChar: SvgChar): PathCommand;
+
   /** Returns a cloned instance of this path command. */
   clone(): PathCommand;
 }
@@ -113,4 +119,10 @@ export interface DrawCommand {
    * Only split commands are able to be editted and deleted via the inspector/canvas.
    */
   isSplit: boolean;
+
+  /**
+   * Returns true iff this draw command can be converted into a new command
+   * that is morphable with the specified SVG command type.
+   */
+  canConvertTo(ch: SvgChar): boolean;
 }

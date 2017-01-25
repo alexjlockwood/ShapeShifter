@@ -37,10 +37,43 @@ export class DrawCommandImpl implements DrawCommand {
   }
 
   // Implements the DrawCommand interface.
-  get start() { return _.first(this.points); }
+  get start() {
+    return _.first(this.points);
+  }
 
   // Implements the DrawCommand interface.
-  get end() { return _.last(this.points); }
+  get end() {
+    return _.last(this.points);
+  }
+
+  // Implements the DrawCommand interface.
+  canConvertTo(ch: SvgChar) {
+    if (this.svgChar === ch) {
+      // Commands already have the same type, so do nothing.
+      return false;
+    }
+    if (this.svgChar === 'M' || ch === 'M') {
+      // Doesn't make sense to convert a move command.
+      return false;
+    }
+    switch (this.svgChar) {
+      case 'L':
+        // TODO: handle the case where an L can be converted into a Z!
+        return ch === 'Q' || ch === 'C';
+      case 'Z':
+        return ch === 'L' || ch === 'Q' || ch === 'C';
+      case 'Q':
+        // TODO: handle quadratic bezier curves
+        break;
+      case 'C':
+        // TODO: handle cubic bezier curves
+        break;
+      case 'A':
+        // TODO: handle elliptical arcs
+        break;
+    }
+    return false;
+  }
 
   /** Returns a new transformed draw command. */
   transform(matrices: Matrix[]): DrawCommandImpl {

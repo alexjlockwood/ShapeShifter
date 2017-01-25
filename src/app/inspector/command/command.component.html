@@ -10,13 +10,13 @@
   <canvas #drawCommandIndexCanvas class="command-index"></canvas>
   <span fxFlex>{{ drawCommandEndPointText }}</span>
   <button md-icon-button
-    mdTooltip="Edit"
+    mdTooltip="Convert"
     mdTooltipPosition="above"
     md-theme="dark"
-    [fxShow]="isEditable()"
+    [fxShow]="isConvertable()"
     fxLayoutAlign="center center"
-    (click)="onEditButtonClick($event)">
-    <md-icon class="md-24">mode_edit</md-icon>
+    (click)="onConvertButtonClick($event)">
+    <md-icon class="md-24">build</md-icon>
   </button>
   <button md-icon-button
     mdTooltip="Delete"
@@ -30,7 +30,7 @@
     <md-icon class="md-24">delete</md-icon>
   </button>
   <button md-icon-button
-    mdTooltip="Split"
+    mdTooltip="Add"
     mdTooltipPosition="above"
     md-theme="dark"
     [fxShow]="isSplittable()"
@@ -38,7 +38,7 @@
     (mouseenter)="onSplitHoverEvent(true)"
     (mouseleave)="onSplitHoverEvent(false)"
     (click)="onSplitButtonClick($event)">
-    <md-icon class="md-24">content_cut</md-icon>
+    <md-icon class="md-24">add</md-icon>
   </button>
 </div>
 

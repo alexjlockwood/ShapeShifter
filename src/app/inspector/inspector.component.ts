@@ -53,7 +53,7 @@ export class InspectorComponent implements OnInit, OnDestroy {
         const vl = this.layerStateService.getData(this.editorType);
         const pathLayer = vl.findLayerById(pathId) as PathLayer;
         switch (eventType) {
-          case EventType.AutoAlign:
+          case EventType.AutoAlign: {
             const targetEditorType =
               this.editorType === EditorType.End
                 ? EditorType.Start
@@ -64,6 +64,23 @@ export class InspectorComponent implements OnInit, OnDestroy {
               pathLayer.pathData = pathLayer.pathData.autoAlign(subPathIdx, targetPathData);
               // TODO: need to update selections as well (or clear them if that's too hard)
             }
+          }
+            break;
+          case EventType.Convert: {
+            const targetEditorType =
+              this.editorType === EditorType.End
+                ? EditorType.Start
+                : EditorType.End;
+            const targetVl = this.layerStateService.getData(targetEditorType);
+            const targetPathData = (targetVl.findLayerById(pathId) as PathLayer).pathData;
+            const targetSvgChar =
+              targetPathData.subPathCommands[subPathIdx].commands[drawIdx].svgChar;
+            if (targetPathData) {
+              pathLayer.pathData =
+                pathLayer.pathData.convert(subPathIdx, drawIdx, targetSvgChar);
+              // TODO: update selections
+            }
+          }
             break;
           case EventType.Reverse:
             pathLayer.pathData = pathLayer.pathData.reverse(subPathIdx);

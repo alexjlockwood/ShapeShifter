@@ -3,9 +3,10 @@ import {
   Component, AfterViewInit, OnChanges, Output, OnInit, HostListener,
   SimpleChanges, Input, ViewChild, ElementRef, OnDestroy
 } from '@angular/core';
-import { DrawCommand, EditorType } from '../../scripts/model';
+import { DrawCommand, EditorType, PathLayer } from '../../scripts/model';
 import * as $ from 'jquery';
 import { InspectorService, EventType } from '../inspector.service';
+import { LayerStateService } from '../../services/layerstate.service';
 import { SelectionService, Selection } from '../../services/selection.service';
 import { HoverStateService, HoverType } from '../../services/hoverstate.service';
 import { Subscription } from 'rxjs/Subscription';
@@ -33,6 +34,7 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
   private selectionArgs_: Selection;
 
   constructor(
+    private layerStateService: LayerStateService,
     private hoverStateService: HoverStateService,
     private selectionService: SelectionService,
     private inspectorService: InspectorService) { }
@@ -125,9 +127,22 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
     this.selectionService.toggleSelection(this.editorType, this.selectionArgs_);
   }
 
-  isEditable() {
-    // TODO(alockwood): implement this
-    return false;
+  isConvertable() {
+    // TODO: this API usage is a little bit weird/hacky?
+    const editorType =
+      this.editorType === EditorType.Start
+        ? EditorType.End
+        : EditorType.Start;
+    const vl = this.layerStateService.getData(editorType);
+    const pathData = (vl.findLayerById(this.pathId) as PathLayer).pathData;
+    if (pathData.subPathCommands.length <= this.subPathIdx) {
+      return false;
+    }
+    if (pathData.subPathCommands[this.subPathIdx].commands.length <= this.drawIdx) {
+      return false;
+    }
+    const drawCmd = pathData.subPathCommands[this.subPathIdx].commands[this.drawIdx];
+    return this.drawCommand.canConvertTo(drawCmd.svgChar);
   }
 
   isSplittable() {
@@ -185,8 +200,8 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
       && !this.isHoveringOverUnsplit;
   }
 
-  onEditButtonClick(event) {
-    // this.onCommandButtonClick(EventType.Edit);
+  onConvertButtonClick(event) {
+    this.onCommandButtonClick(EventType.Convert);
   }
 
   onSplitButtonClick(event) {
