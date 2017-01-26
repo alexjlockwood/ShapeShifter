@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import { MathUtil, Bezier, Projection, Point, Matrix, Rect } from '../common';
+import { MathUtil, Bezier, createBezier, Projection, Point, Matrix, Rect } from '../common';
 import { PathCommand, SubPathCommand, DrawCommand, SvgChar } from '../model';
 import * as SvgUtil from './svgutil';
 import * as PathParser from './pathparser';
@@ -9,6 +9,10 @@ import {
 } from './drawcommand';
 import * as VectAlign from './vectalign';
 import { Alignment } from './vectalign';
+
+export function createPathCommand(path: string): PathCommand {
+  return new PathCommandImpl(path);
+}
 
 /**
  * Implementation of the PathCommand interface. Represents all of the information
@@ -120,21 +124,22 @@ class PathCommandImpl implements PathCommand {
     // TODO: another edge case: closed paths not ending in a Z
     const maybeShiftCommandsFn = (subPathIdx: number, drawCmds: DrawCommandImpl[]) => {
       let shiftOffset = getShiftOffsetFn(subPathIdx);
-      if (shiftOffset === 0
+      if (!shiftOffset
         || drawCmds.length === 1
-        || !drawCmds[0].end.equals(_.last(drawCmds).end)) {
+        || !_.first(drawCmds).end.equals(_.last(drawCmds).end)) {
         // If there is no shift offset, the sub path is one command long,
         // or if the sub path is not closed, then do nothing.
         return drawCmds;
       }
 
+      const numCommands = drawCmds.length;
       if (shouldReverseFn(subPathIdx) && shiftOffset !== 0) {
         shiftOffset *= -1;
-        shiftOffset += drawCmds.length - 1;
+        shiftOffset += numCommands - 1;
       }
 
       // TODO: this is pretty inefficient... no need to recreate draw commands like this
-      for (let i = 0; i < (drawCmds.length - shiftOffset - 1); i++) {
+      for (let i = 0; i < (numCommands - 1 - shiftOffset); i++) {
         drawCmds.unshift(drawCmds.pop());
 
         const firstCmd = _.first(drawCmds);
@@ -248,11 +253,11 @@ class PathCommandImpl implements PathCommand {
   // Implements the PathCommand interface.
   project(point: Point): { projection: Projection, split: () => PathCommand } | undefined {
     return _.chain(this.commandWrappers_)
-      .map((subPathCws, subPathIdx) => subPathCws.map((cw, drawIdx) => {
+      .map((subPathCws, cwsIdx) => subPathCws.map((cw, cwIdx) => {
         const projection = cw.project(point);
         return {
           projection,
-          split: () => this.splitInternal(subPathIdx, drawIdx, projection.t),
+          split: () => this.splitCommandWrapper(cwsIdx, cwIdx, projection.t),
         };
       }))
       .flatMap(projections => projections)
@@ -380,88 +385,83 @@ class PathCommandImpl implements PathCommand {
     if (!ts.length) {
       return this;
     }
-    const { targetCw, cwCmdIdx, cwDrawCmdIdx } =
-      this.findCommandWrapper(subPathIdx, drawIdx);
-    const shiftOffsets =
-      this.maybeUpdateShiftOffsetsAfterSplit(subPathIdx, cwCmdIdx, ts.length);
-    const newCw = targetCw.splitAtIndex(cwDrawCmdIdx, ...ts);
-    return this.clone({
-      commandWrappers_: this.replaceCommandWrapper(subPathIdx, cwCmdIdx, newCw),
-      shiftOffsets_: shiftOffsets,
-    });
+    const { cwIdx, splitIdx } = this.findCommandWrapper(subPathIdx, drawIdx);
+    return this.splitCommandWrapper(subPathIdx, cwIdx, splitIdx);
   }
 
   // Implements the PathCommand interface.
-  splitInHalf(subPathIdx: number, drawIdx: number) {
-    const { targetCw, cwCmdIdx, cwDrawCmdIdx } =
-      this.findCommandWrapper(subPathIdx, drawIdx);
-    const shiftOffsets =
-      this.maybeUpdateShiftOffsetsAfterSplit(subPathIdx, cwCmdIdx, 1);
-    const newCw = targetCw.splitInHalfAtIndex(cwDrawCmdIdx);
-    return this.clone({
-      commandWrappers_: this.replaceCommandWrapper(subPathIdx, cwCmdIdx, newCw),
-      shiftOffsets_: shiftOffsets,
-    });
-  }
+  // splitInHalf(subPathIdx: number, drawIdx: number) {
+  //   const { targetCw, cwCmdIdx, cwDrawCmdIdx } =
+  //     this.findCommandWrapper(subPathIdx, drawIdx);
+  //   const shiftOffsets =
+  //     this.maybeUpdateShiftOffsetsAfterSplit(subPathIdx, cwCmdIdx, 1);
+  //   const newCw = targetCw.splitInHalfAtIndex(cwDrawCmdIdx);
+  //   return this.clone({
+  //     commandWrappers_: this.replaceCommandWrapper(subPathIdx, cwCmdIdx, newCw),
+  //     shiftOffsets_: shiftOffsets,
+  //   });
+  // }
 
   // Same as split above, except can be used when the command wrapper indices are known.
-  private splitInternal(subPathCwIdx: number, cwCmdIdx: number, ...ts: number[]) {
+  private splitCommandWrapper(cwsIdx: number, cwIdx: number, ...ts: number[]) {
     if (!ts.length) {
       return this;
     }
     const shiftOffsets =
-      this.maybeUpdateShiftOffsetsAfterSplit(subPathCwIdx, cwCmdIdx, ts.length);
-    const targetCw = this.commandWrappers_[subPathCwIdx][cwCmdIdx];
-    const newCw = targetCw.split(...ts);
+      this.maybeUpdateShiftOffsetsAfterSplit(cwsIdx, cwIdx, ts.length);
+    const targetCw = this.commandWrappers_[cwsIdx][cwIdx];
     return this.clone({
-      commandWrappers_: this.replaceCommandWrapper(subPathCwIdx, cwCmdIdx, newCw),
+      commandWrappers_: this.replaceCommandWrapper(cwsIdx, cwIdx, targetCw.split(...ts)),
       shiftOffsets_: shiftOffsets,
     });
   }
 
-  // If 0 <= cwCmdIdx <= shiftOffset, then that means we need to add one to the
+  // If 0 <= cwIdx <= shiftOffset, then that means we need to add one to the
   // shiftoffset to account for the new split point that is about to be inserted.
   // There should be no need to mod the result, as the split will add a new command
   // to the sub path anyway.
   private maybeUpdateShiftOffsetsAfterSplit(
-    subPathIdx: number, cwCmdIdx: number, numSplits: number) {
+    cwsIdx: number, cwIdx: number, numSplits: number) {
+    if (numSplits > 1) {
+      throw new Error('Confirm this code works with numSplits > 1 before use');
+    }
+
     const shiftOffsets = this.shiftOffsets_.slice();
-    const shiftOffset = shiftOffsets[subPathIdx];
-    if (shiftOffset && cwCmdIdx <= shiftOffset) {
-      shiftOffsets[subPathIdx] = shiftOffset + 1;
+    const shiftOffset = shiftOffsets[cwsIdx];
+    if (shiftOffset && cwIdx <= shiftOffset) {
+      // TODO: figure out how to make this work when numShifts > 1?
+      shiftOffsets[cwsIdx] = shiftOffset + numSplits;
     }
     return shiftOffsets;
   }
 
   // Implements the PathCommand interface.
   unsplit(subPathIdx: number, drawIdx: number) {
-    const { targetCw, cwCmdIdx, cwDrawCmdIdx } =
-      this.findCommandWrapper(subPathIdx, drawIdx);
-    const newCw = targetCw.unsplit(cwDrawCmdIdx);
+    const { targetCw, cwIdx, splitIdx } = this.findCommandWrapper(subPathIdx, drawIdx);
+    const newCw = targetCw.unsplitAtIndex(splitIdx);
     const shiftOffsets = this.shiftOffsets_.slice();
     const shiftOffset = this.shiftOffsets_[subPathIdx];
-    if (shiftOffset && cwCmdIdx <= shiftOffset) {
+    if (shiftOffset && cwIdx <= shiftOffset) {
       shiftOffsets[subPathIdx] = shiftOffset - 1;
     }
     return this.clone({
-      commandWrappers_: this.replaceCommandWrapper(subPathIdx, cwCmdIdx, newCw),
+      commandWrappers_: this.replaceCommandWrapper(subPathIdx, cwIdx, newCw),
       shiftOffsets_: shiftOffsets,
     });
   }
 
   // Implements the PathCommand interface.
   convert(subPathIdx: number, drawIdx: number, svgChar: SvgChar): PathCommand {
-    const { targetCw, cwCmdIdx, cwDrawCmdIdx } =
-      this.findCommandWrapper(subPathIdx, drawIdx);
-    const newCw = targetCw.convert(cwDrawCmdIdx, svgChar);
+    const { targetCw, cwIdx, splitIdx } = this.findCommandWrapper(subPathIdx, drawIdx);
+    const newCw = targetCw.convertAtIndex(splitIdx, svgChar);
     return this.clone({
-      commandWrappers_: this.replaceCommandWrapper(subPathIdx, cwCmdIdx, newCw),
+      commandWrappers_: this.replaceCommandWrapper(subPathIdx, cwIdx, newCw),
     });
   }
 
   getId(subPathIdx: number, drawIdx: number) {
-    const { targetCw, cwCmdIdx, cwDrawCmdIdx } = this.findCommandWrapper(subPathIdx, drawIdx);
-    return targetCw.getIdAtIndex(cwDrawCmdIdx);
+    const { targetCw, splitIdx } = this.findCommandWrapper(subPathIdx, drawIdx);
+    return targetCw.getIdAtIndex(splitIdx);
   }
 
   private findCommandWrapper(subPathIdx: number, drawIdx: number) {
@@ -473,21 +473,21 @@ class PathCommandImpl implements PathCommand {
     if (drawIdx >= numCommands) {
       drawIdx -= (numCommands - 1);
     }
-    let counter = 0, cwCmdIdx = 0, cwDrawCmdIdx = 0;
+    let counter = 0, cwIdx = 0, splitIdx = 0;
     for (const targetCw of this.commandWrappers_[subPathIdx]) {
       if (counter + targetCw.commands.length > drawIdx) {
-        cwDrawCmdIdx = drawIdx - counter;
-        return { targetCw, cwCmdIdx, cwDrawCmdIdx };
+        splitIdx = drawIdx - counter;
+        return { targetCw, cwIdx, splitIdx };
       }
       counter += targetCw.commands.length;
-      cwCmdIdx++;
+      cwIdx++;
     }
     throw new Error('Error retrieving command wrapper');
   }
 
-  private replaceCommandWrapper(subPathCwIdx: number, drawCwIdx: number, cw: CommandWrapper) {
+  private replaceCommandWrapper(cwsIdx: number, cwIdx: number, cw: CommandWrapper) {
     const newCws = this.commandWrappers_.map(cws => cws.slice());
-    newCws[subPathCwIdx][drawCwIdx] = cw;
+    newCws[cwsIdx][cwIdx] = cw;
     return newCws;
   }
 }
@@ -503,25 +503,32 @@ class CommandWrapper {
   // TODO(alockwood): possible to have more than one bezier for elliptical arcs?
   private readonly backingCommand: DrawCommandImpl;
   private readonly backingBeziers: ReadonlyArray<Bezier>;
+
+  // A command wrapper wraps around the initial SVG draw command and outputs
+  // a list of transformed draw commands resulting from splits, unsplits,
+  // conversions, etc. If the initial SVG draw command hasn't been modified,
+  // then a list containing the initial SVG draw command is returned.
+  private readonly drawCommands: ReadonlyArray<DrawCommandImpl>;
+
+  // Precondition: the sizes of these arrays should always be identical.
+  private readonly ids: ReadonlyArray<string>;
   private readonly splits: ReadonlyArray<number>;
   private readonly svgChars: ReadonlyArray<SvgChar>;
-  private readonly ids: ReadonlyArray<string>;
-  private readonly drawCommands: ReadonlyArray<DrawCommandImpl>;
 
   constructor(obj: DrawCommandImpl | ClonedCommandWrapperInfo) {
     if (obj instanceof DrawCommandImpl) {
       this.backingCommand = obj;
       this.backingBeziers = drawCommandToBeziers(obj);
+      this.ids = [_.uniqueId()];
       this.splits = [1];
       this.svgChars = [this.backingCommand.svgChar];
-      this.ids = [_.uniqueId()];
       this.drawCommands = [obj];
     } else {
       this.backingCommand = obj.backingCommand;
       this.backingBeziers = obj.backingBeziers;
+      this.ids = obj.ids.slice();
       this.splits = obj.splits.slice();
       this.svgChars = obj.svgChars.slice();
-      this.ids = obj.ids.slice();
       this.drawCommands = obj.drawCommands.slice();
     }
   }
@@ -530,23 +537,23 @@ class CommandWrapper {
     return new CommandWrapper(_.assign({}, {
       backingCommand: this.backingCommand,
       backingBeziers: this.backingBeziers,
+      ids: this.ids,
       splits: this.splits,
       svgChars: this.svgChars,
-      ids: this.ids,
       drawCommands: this.drawCommands,
     }, overrides));
   }
 
-  getIdAtIndex(idIndex: number) {
-    return this.ids[idIndex];
-  }
-
+  // Note that the projection is performed in relation to the command wrapper's
+  // original backing draw command.
   project(point: Point): Projection | undefined {
     return this.backingBeziers
       .map(bez => bez.project(point))
       .reduce((prev, curr) => prev && prev.d < curr.d ? prev : curr, undefined);
   }
 
+  // Note that the split is performed in relation to the command wrapper's
+  // original backing draw command.
   split(...ts: number[]) {
     // TODO: add a test for splitting a command with a path length of 0
     // TODO: add a test for the case when t === 1
@@ -556,80 +563,74 @@ class CommandWrapper {
     if (this.backingCommand.svgChar === 'A') {
       throw new Error('TODO: implement split support for elliptical arcs');
     }
+    const ids = this.ids.slice();
     const splits = this.splits.slice();
     const svgChars = this.svgChars.slice();
-    const ids = this.ids.slice();
     for (const t of ts) {
-      const insertionIndex = _.sortedIndex(splits, t);
-      splits.splice(insertionIndex, 0, t);
+      const insertionIdx = _.sortedIndex(splits, t);
+      ids.splice(insertionIdx, 0, _.uniqueId());
+      splits.splice(insertionIdx, 0, t);
       // TODO: what about if the last command is a Z? then we want the svg char to be L?
-      svgChars.splice(insertionIndex, 0, this.commands[insertionIndex].svgChar);
-      ids.splice(insertionIndex, 0, _.uniqueId());
+      svgChars.splice(insertionIdx, 0, this.commands[insertionIdx].svgChar);
     }
-    return this.rebuildCommands(splits, svgChars, ids);
+    return this.rebuildCommands(ids, splits, svgChars);
   }
 
-  splitAtIndex(splitIndex: number, ...ts: number[]) {
+  // Each draw command is given a globally unique ID (to improve performance
+  // inside *ngFor loops, etc.).
+  getIdAtIndex(splitIdx: number) {
+    return this.ids[splitIdx];
+  }
+
+  splitAtIndex(splitIdx: number, ...ts: number[]) {
     const tempSplits = [0, ...this.splits];
-    const startSplit = tempSplits[splitIndex];
-    const endSplit = tempSplits[splitIndex + 1];
+    const startSplit = tempSplits[splitIdx];
+    const endSplit = tempSplits[splitIdx + 1];
     return this.split(...ts.map(t => MathUtil.lerp(startSplit, endSplit, t)));
   }
 
   // TODO: this breaks right now for beziers like (5 11, 5 13, 5 13, 5 13)
-  splitInHalfAtIndex(splitIndex: number) {
-    const tempSplits = [0, ...this.splits];
-    const startSplit = tempSplits[splitIndex];
-    const endSplit = tempSplits[splitIndex + 1];
-    const distance = MathUtil.lerp(startSplit, endSplit, 0.5);
-    return this.split(Bezier.findTimeByDistance(this.backingBeziers[0], distance));
-  }
+  // splitInHalfAtIndex(splitIndex: number) {
+  //   const tempSplits = [0, ...this.splits];
+  //   const startSplit = tempSplits[splitIndex];
+  //   const endSplit = tempSplits[splitIndex + 1];
+  //   const distance = MathUtil.lerp(startSplit, endSplit, 0.5);
+  //   return this.split(Bezier.findTimeByDistance(this.backingBeziers[0], distance));
+  // }
 
-  unsplit(splitIndex: number) {
+  unsplitAtIndex(splitIdx: number) {
+    const ids = this.ids.slice();
     const splits = this.splits.slice();
     const svgChars = this.svgChars.slice();
-    const ids = this.ids.slice();
-    splits.splice(splitIndex, 1);
-    svgChars.splice(splitIndex, 1);
-    ids.splice(splitIndex, 1);
-    return this.rebuildCommands(splits, svgChars, ids);
+    ids.splice(splitIdx, 1);
+    splits.splice(splitIdx, 1);
+    svgChars.splice(splitIdx, 1);
+    return this.rebuildCommands(ids, splits, svgChars);
   }
 
-  convert(convertIndex: number, svgChar: SvgChar) {
-    const splits = this.splits.slice();
+  convertAtIndex(splitIdx: number, svgChar: SvgChar) {
     const svgChars = this.svgChars.slice();
-    const ids = this.ids.slice();
-    svgChars[convertIndex] = svgChar;
-    return this.rebuildCommands(splits, svgChars, ids);
+    svgChars[splitIdx] = svgChar;
+    return this.rebuildCommands(this.ids.slice(), this.splits.slice(), svgChars);
   }
 
-  private rebuildCommands(newSplits: number[], newSvgChars: SvgChar[], newIds: string[]) {
-    if (newSplits.length === 1) {
-      const newDrawCommands =
-        [bezierToDrawCommand(newSvgChars[0], this.backingBeziers[0], false)];
-      return this.clone({
-        splits: newSplits,
-        svgChars: newSvgChars,
-        ids: newIds,
-        drawCommands: newDrawCommands,
-      });
+  // TODO: this could be more efficient (avoid recreating draw commands unnecessarily)
+  private rebuildCommands(ids: string[], splits: number[], svgChars: SvgChar[]) {
+    if (splits.length === 1) {
+      const drawCommands =
+        [bezierToDrawCommand(svgChars[0], this.backingBeziers[0], false)];
+      return this.clone({ splits, svgChars, ids, drawCommands });
     }
-    const newCommands = [];
+    const drawCommands = [];
     let prevT = 0;
-    for (let i = 0; i < newSplits.length; i++) {
-      const currT = newSplits[i];
-      const svgChar = newSvgChars[i];
+    for (let i = 0; i < splits.length; i++) {
+      const currT = splits[i];
       const splitBez = this.backingBeziers[0].split(prevT, currT);
-      const isSplit = i !== newSplits.length - 1;
-      newCommands.push(bezierToDrawCommand(svgChar, splitBez, isSplit));
+      const isSplit = i !== splits.length - 1;
+      drawCommands.push(bezierToDrawCommand(svgChars[i], splitBez, isSplit));
       prevT = currT;
     }
-    return this.clone({
-      splits: newSplits,
-      svgChars: newSvgChars,
-      ids: newIds,
-      drawCommands: newCommands,
-    });
+    return this.clone({ ids, splits, svgChars, drawCommands });
   }
 
   get commands() {
@@ -684,11 +685,11 @@ function drawCommandToBeziers(cmd: DrawCommandImpl): Bezier[] {
       MathUtil.lerp(cmd.end.x, cmd.start.x, 0.5),
       MathUtil.lerp(cmd.end.y, cmd.start.y, 0.5));
     const end = cmd.end;
-    return [new Bezier(start, cp, end)];
+    return [createBezier(start, cp, end)];
   } else if (cmd.svgChar === 'C') {
-    return [new Bezier(cmd.points[0], cmd.points[1], cmd.points[2], cmd.points[3])];
+    return [createBezier(cmd.points[0], cmd.points[1], cmd.points[2], cmd.points[3])];
   } else if (cmd.svgChar === 'Q') {
-    return [new Bezier(cmd.points[0], cmd.points[1], cmd.points[2])];
+    return [createBezier(cmd.points[0], cmd.points[1], cmd.points[2])];
   } else if (cmd.svgChar === 'A') {
     const [
       currentPointX, currentPointY,
@@ -708,7 +709,7 @@ function drawCommandToBeziers(cmd: DrawCommandImpl): Bezier[] {
         MathUtil.lerp(cmd.end.x, cmd.start.x, 0.5),
         MathUtil.lerp(cmd.end.y, cmd.start.y, 0.5));
       const end = cmd.end;
-      return [new Bezier(start, cp, cp, end)];
+      return [createBezier(start, cp, cp, end)];
     }
 
     const bezierCoords = SvgUtil.arcToBeziers({
@@ -721,7 +722,7 @@ function drawCommandToBeziers(cmd: DrawCommandImpl): Bezier[] {
 
     const arcBeziers: Bezier[] = [];
     for (let i = 0; i < bezierCoords.length; i += 8) {
-      const bez = new Bezier(
+      const bez = createBezier(
         { x: cmd.start.x, y: cmd.start.y },
         { x: bezierCoords[i + 2], y: bezierCoords[i + 3] },
         { x: bezierCoords[i + 4], y: bezierCoords[i + 5] },
@@ -744,15 +745,11 @@ interface ClonedPathCommandInfo {
 
 // Command wrapper internals that have been cloned.
 interface ClonedCommandWrapperInfo {
-  svgChar?: SvgChar;
   backingCommand?: DrawCommandImpl;
   backingBeziers?: ReadonlyArray<Bezier>;
+  ids?: ReadonlyArray<string>;
   splits?: ReadonlyArray<number>;
   svgChars?: ReadonlyArray<SvgChar>;
-  ids?: ReadonlyArray<string>;
   drawCommands?: ReadonlyArray<DrawCommandImpl>;
 }
 
-export function createPathCommand(path: string): PathCommand {
-  return new PathCommandImpl(path);
-}
