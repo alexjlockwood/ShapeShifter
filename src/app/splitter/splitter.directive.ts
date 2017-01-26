@@ -16,8 +16,9 @@ export class SplitterDirective implements OnInit {
     this.element.nativeElement.style.cursor = 'row-resize';
   }
 
-  @HostListener('mousedown') onMouseDown(event: MouseEvent) {
-    event = event || <MouseEvent>window.event;
+  @HostListener('mousedown')
+  onMouseDown(event: MouseEvent) {
+    event = event || window.event as MouseEvent;
     event.stopPropagation();
     event.preventDefault();
     if (event.pageX) {
@@ -33,7 +34,7 @@ export class SplitterDirective implements OnInit {
       });
 
       document.body.onmousemove = (e: MouseEvent) => {
-        e = e || <MouseEvent>window.event;
+        e = e || window.event as MouseEvent;
         e.stopPropagation();
         e.preventDefault();
         let endX = 0;
@@ -54,7 +55,7 @@ export class SplitterDirective implements OnInit {
 
       document.body.onmouseup = (e: MouseEvent) => {
         document.body.onmousemove = document.body.onmouseup = undefined;
-        e = e || <MouseEvent>window.event;
+        e = e || window.event as MouseEvent;
         e.stopPropagation();
         e.preventDefault();
         let endX = 0;
