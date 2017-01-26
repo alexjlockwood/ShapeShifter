@@ -133,6 +133,7 @@ class PathCommandImpl implements PathCommand {
         shiftOffset += drawCmds.length - 1;
       }
 
+      // TODO: this is pretty inefficient... no need to recreate draw commands like this
       for (let i = 0; i < (drawCmds.length - shiftOffset - 1); i++) {
         drawCmds.unshift(drawCmds.pop());
 
@@ -154,7 +155,6 @@ class PathCommandImpl implements PathCommand {
           // and update their attributes accordingly.
           drawCmds[1] = firstCmd;
           drawCmds[0] = moveTo(secondCmd.start, firstCmd.start, false);
-          console.log(drawCmds[0], drawCmds[1]);
         }
       }
       return drawCmds;
@@ -323,9 +323,9 @@ class PathCommandImpl implements PathCommand {
   // Implements the PathCommand interface.
   reverse(subPathIdx: number) {
     // TODO(alockwood): add a test for commands with multiple moves but no close paths
-    const reversals_ = this.reversals_.slice();
-    reversals_[subPathIdx] = !reversals_[subPathIdx];
-    return this.clone({ reversals_ });
+    return this.clone({
+      reversals_: this.reversals_.map((r, i) => i === subPathIdx ? !r : r),
+    });
   }
 
   // Implements the PathCommand interface.
@@ -336,23 +336,6 @@ class PathCommandImpl implements PathCommand {
     return this.shiftBackInternal(subPathIdx, numShifts);
   }
 
-  private shiftBackInternal(subPathIdx: number, numShifts = 1) {
-    // TODO: add a test for commands with multiple moves but no close paths
-    // TODO: add a test for commands ending with a Z with the same end point as its prev cmd
-    const scmd = this.subPathCommands_[subPathIdx];
-    const numCommands = scmd.commands.length;
-    if (numCommands <= 1 || !scmd.isClosed) {
-      return this;
-    }
-    let newShiftOffset = this.shiftOffsets_[subPathIdx] + numShifts;
-    while (newShiftOffset >= numCommands - 1) {
-      newShiftOffset -= numCommands - 1;
-    }
-    const shiftOffsets_ = this.shiftOffsets_.slice();
-    shiftOffsets_[subPathIdx] = newShiftOffset;
-    return this.clone({ shiftOffsets_ });
-  }
-
   // Implements the PathCommand interface.
   shiftForward(subPathIdx: number, numShifts = 1) {
     if (this.reversals_[subPathIdx]) {
@@ -361,31 +344,46 @@ class PathCommandImpl implements PathCommand {
     return this.shiftForwardInternal(subPathIdx, numShifts);
   }
 
+  private shiftBackInternal(subPathIdx: number, numShifts = 1) {
+    return this.shiftInternal(
+      subPathIdx, (offset: number, numCommands: number) => {
+        return (offset + numShifts) % (numCommands - 1);
+      });
+  }
+
   private shiftForwardInternal(subPathIdx: number, numShifts = 1) {
+    return this.shiftInternal(
+      subPathIdx, (offset: number, numCommands: number) => {
+        const floorModFn = (i, imax) => ((i % imax) + imax) % imax;
+        return floorModFn(offset - numShifts, numCommands - 1);
+      });
+  }
+
+  private shiftInternal(
+    subPathIdx: number,
+    calcOffsetFn: (offset: number, numCommands: number) => number) {
     // TODO: add a test for cmds with multiple moves but no close paths
     // TODO: add a test for cmds ending with a Z with the same end point as its prev cmd
-    const scmd = this.subPathCommands_[subPathIdx];
-    const numCommands = scmd.commands.length;
-    if (numCommands <= 1 || !scmd.isClosed) {
+    const numCommands = this.subPathCommands_[subPathIdx].commands.length;
+    if (numCommands <= 1 || !this.subPathCommands_[subPathIdx].isClosed) {
       return this;
     }
-    let newShiftOffset = this.shiftOffsets_[subPathIdx] - numShifts;
-    while (newShiftOffset < 0) {
-      newShiftOffset += numCommands - 1;
-    }
-    const shiftOffsets_ = this.shiftOffsets_.slice();
-    shiftOffsets_[subPathIdx] = newShiftOffset;
-    return this.clone({ shiftOffsets_ });
+    return this.clone({
+      shiftOffsets_: this.shiftOffsets_.map((offset, i) => {
+        return i === subPathIdx ? calcOffsetFn(offset, numCommands) : offset;
+      }),
+    });
   }
 
   // Implements the PathCommand interface.
   split(subPathIdx: number, drawIdx: number, ...ts: number[]) {
-    if (ts.length === 0) {
+    if (!ts.length) {
       return this;
     }
     const { targetCw, cwCmdIdx, cwDrawCmdIdx } =
       this.findCommandWrapper(subPathIdx, drawIdx);
-    const shiftOffsets = this.maybeUpdateShiftOffsetsAfterSplit(subPathIdx, cwCmdIdx);
+    const shiftOffsets =
+      this.maybeUpdateShiftOffsetsAfterSplit(subPathIdx, cwCmdIdx, ts.length);
     const newCw = targetCw.splitAtIndex(cwDrawCmdIdx, ...ts);
     return this.clone({
       commandWrappers_: this.replaceCommandWrapper(subPathIdx, cwCmdIdx, newCw),
@@ -397,7 +395,8 @@ class PathCommandImpl implements PathCommand {
   splitInHalf(subPathIdx: number, drawIdx: number) {
     const { targetCw, cwCmdIdx, cwDrawCmdIdx } =
       this.findCommandWrapper(subPathIdx, drawIdx);
-    const shiftOffsets = this.maybeUpdateShiftOffsetsAfterSplit(subPathIdx, cwCmdIdx);
+    const shiftOffsets =
+      this.maybeUpdateShiftOffsetsAfterSplit(subPathIdx, cwCmdIdx, 1);
     const newCw = targetCw.splitInHalfAtIndex(cwDrawCmdIdx);
     return this.clone({
       commandWrappers_: this.replaceCommandWrapper(subPathIdx, cwCmdIdx, newCw),
@@ -407,10 +406,11 @@ class PathCommandImpl implements PathCommand {
 
   // Same as split above, except can be used when the command wrapper indices are known.
   private splitInternal(subPathCwIdx: number, cwCmdIdx: number, ...ts: number[]) {
-    if (ts.length === 0) {
+    if (!ts.length) {
       return this;
     }
-    const shiftOffsets = this.maybeUpdateShiftOffsetsAfterSplit(subPathCwIdx, cwCmdIdx);
+    const shiftOffsets =
+      this.maybeUpdateShiftOffsetsAfterSplit(subPathCwIdx, cwCmdIdx, ts.length);
     const targetCw = this.commandWrappers_[subPathCwIdx][cwCmdIdx];
     const newCw = targetCw.split(...ts);
     return this.clone({
@@ -423,7 +423,8 @@ class PathCommandImpl implements PathCommand {
   // shiftoffset to account for the new split point that is about to be inserted.
   // There should be no need to mod the result, as the split will add a new command
   // to the sub path anyway.
-  private maybeUpdateShiftOffsetsAfterSplit(subPathIdx: number, cwCmdIdx: number) {
+  private maybeUpdateShiftOffsetsAfterSplit(
+    subPathIdx: number, cwCmdIdx: number, numSplits: number) {
     const shiftOffsets = this.shiftOffsets_.slice();
     const shiftOffset = shiftOffsets[subPathIdx];
     if (shiftOffset && cwCmdIdx <= shiftOffset) {
@@ -434,16 +435,16 @@ class PathCommandImpl implements PathCommand {
 
   // Implements the PathCommand interface.
   unsplit(subPathIdx: number, drawIdx: number) {
-    const { targetCw, cwCmdIdx, cwDrawCmdIdx } = this.findCommandWrapper(subPathIdx, drawIdx);
+    const { targetCw, cwCmdIdx, cwDrawCmdIdx } =
+      this.findCommandWrapper(subPathIdx, drawIdx);
     const newCw = targetCw.unsplit(cwDrawCmdIdx);
-    const newCws = this.replaceCommandWrapper(subPathIdx, cwCmdIdx, newCw);
     const shiftOffsets = this.shiftOffsets_.slice();
     const shiftOffset = this.shiftOffsets_[subPathIdx];
     if (shiftOffset && cwCmdIdx <= shiftOffset) {
       shiftOffsets[subPathIdx] = shiftOffset - 1;
     }
     return this.clone({
-      commandWrappers_: newCws,
+      commandWrappers_: this.replaceCommandWrapper(subPathIdx, cwCmdIdx, newCw),
       shiftOffsets_: shiftOffsets,
     });
   }
@@ -460,26 +461,20 @@ class PathCommandImpl implements PathCommand {
 
   private findCommandWrapper(subPathIdx: number, drawIdx: number) {
     const numCommands = this.subPathCommands_[subPathIdx].commands.length;
-    if (this.reversals_[subPathIdx] && drawIdx !== 0) {
+    if (drawIdx && this.reversals_[subPathIdx]) {
       drawIdx = numCommands - drawIdx;
     }
     drawIdx += this.shiftOffsets_[subPathIdx];
     if (drawIdx >= numCommands) {
       drawIdx -= (numCommands - 1);
     }
-    let counter = 0;
-    let cwCmdIdx = 0;
-    let cwDrawCmdIdx = 0;
-    for (const cw of this.commandWrappers_[subPathIdx]) {
-      if (counter + cw.commands.length > drawIdx) {
+    let counter = 0, cwCmdIdx = 0, cwDrawCmdIdx = 0;
+    for (const targetCw of this.commandWrappers_[subPathIdx]) {
+      if (counter + targetCw.commands.length > drawIdx) {
         cwDrawCmdIdx = drawIdx - counter;
-        return {
-          targetCw: cw,
-          cwCmdIdx,
-          cwDrawCmdIdx,
-        };
+        return { targetCw, cwCmdIdx, cwDrawCmdIdx };
       }
-      counter += cw.commands.length;
+      counter += targetCw.commands.length;
       cwCmdIdx++;
     }
     throw new Error('Error retrieving command wrapper');
@@ -540,7 +535,7 @@ class CommandWrapper {
   split(...ts: number[]) {
     // TODO: add a test for splitting a command with a path length of 0
     // TODO: add a test for the case when t === 1
-    if (ts.length === 0 || !this.backingBeziers.length) {
+    if (!ts.length || !this.backingBeziers.length) {
       return this;
     }
     if (this.backingCommand.svgChar === 'A') {

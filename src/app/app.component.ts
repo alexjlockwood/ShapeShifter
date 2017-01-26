@@ -171,9 +171,17 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
         width="24px"
         height="24px"
         viewBox="0 0 24 24">
-        <path stroke-width="2" stroke="#000" d="
-        M 0 0 L 5 5 L 10 10 L 20 20"
-        fill="none" />
+        <path d="
+        M 19 11
+        L 12 11
+        L 5 11
+        C 5 11 5 12 5 12
+        L 5 13
+        L 12 13
+        L 19 13
+        L 19 12
+        L 19 11"
+        fill="#000" />
       </svg>`);
     // this.onEndSvgTextLoaded(`
     //   <svg xmlns="http://www.w3.org/2000/svg"
