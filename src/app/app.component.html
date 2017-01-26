@@ -2,6 +2,15 @@
   #appContainer
   class="app-container"
   fxLayout="column">
+    <div class="preview-banner">
+      <i class="material-icons">info</i>
+      <span class="message-text">
+        This is a preview release. Message
+        <a href="https://twitter.com/alexjlockwood" target="_blank">@alexjlockwood</a>
+        with feedback and view the source code on
+        <a href="https://github.com/alexjlockwood/ShapeShifter" target="_blank">GitHub</a>.
+      </span>
+    </div>
   <div
     *ngIf="shouldDisplayCanvases()"
     class="canvas-container"

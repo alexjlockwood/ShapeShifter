@@ -1,4 +1,5 @@
 @import './styles/material-colors';
+@import './styles/variables';
 
 :host,
 .app-container {
@@ -21,6 +22,7 @@ div.canvas-container {
   box-sizing: border-box;
   padding: 16px;
   background-color: material-color('blue-grey', '700');
+  user-select: none;
 }
 
 div.inspector-container {
@@ -36,4 +38,32 @@ div.app-splitter {
 
 div.app-splitter:hover {
   background-color: rgba(0, 0, 0, 0.1);
+}
+
+.preview-banner {
+  padding: 8px 12px;
+  font-size: 12px;
+  line-height: 16px;
+  background-color: material-color('orange', '200');
+  color: rgba(material-color('deep-orange', '900'), .8);
+  box-shadow: material-shadow(1);
+  z-index: 1;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+
+  .material-icons {
+    font-size: 16px;
+    margin-right: 8px;
+    color: rgba(material-color('deep-orange', '800'), .8);
+  }
+
+  a {
+    color: material-color('deep-orange', '900');
+    font-weight: 500;
+  }
+
+  .message-text {
+    flex: 1;
+  }
 }
