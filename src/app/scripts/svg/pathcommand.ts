@@ -346,6 +346,7 @@ class PathCommandImpl implements PathCommand {
   private shiftInternal(
     subPathIdx: number,
     calcOffsetFn: (offset: number, numCommands: number) => number) {
+
     // TODO: add a test for cmds with multiple moves but no close paths
     // TODO: add a test for cmds ending with a Z with the same end point as its prev cmd
     const numCommands = this.subPathCommands_[subPathIdx].commands.length;
@@ -361,11 +362,8 @@ class PathCommandImpl implements PathCommand {
 
   // Implements the PathCommand interface.
   split(subPathIdx: number, drawIdx: number, ...ts: number[]) {
-    if (!ts.length) {
-      return this;
-    }
-    const { cwIdx, splitIdx } = this.findCommandWrapper(subPathIdx, drawIdx);
-    return this.splitCommandWrapper(subPathIdx, cwIdx, splitIdx);
+    const { cwIdx } = this.findCommandWrapper(subPathIdx, drawIdx);
+    return this.splitCommandWrapper(subPathIdx, cwIdx, ...ts);
   }
 
   // Implements the PathCommand interface.
@@ -402,6 +400,8 @@ class PathCommandImpl implements PathCommand {
   private maybeUpdateShiftOffsetsAfterSplit(
     cwsIdx: number, cwIdx: number, numSplits: number) {
     if (numSplits > 1) {
+      // For example, it is probably possible for us to perform a split that
+      // results in points being added both before and after the shifted pivot point.
       throw new Error('Confirm this code works with numSplits > 1 before use');
     }
 

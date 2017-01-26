@@ -3,16 +3,24 @@ import { Point, Projection } from '../common';
 // The different types of supported SVG commands.
 export type SvgChar = 'M' | 'L' | 'Q' | 'C' | 'A' | 'Z';
 
-/** Defines the set of methods that are seen by the path inspector/canvas. */
+/**
+ * Defines the set of methods that are seen by the path inspector/canvas.
+ */
 export interface PathCommand {
 
-  /** Returns the list of sub path commands in this path. */
+  /**
+   * Returns the list of sub path commands in this path.
+   */
   subPathCommands: ReadonlyArray<SubPathCommand>;
 
-  /** Returns the length of the path. */
+  /**
+   * Returns the length of the path.
+   */
   pathLength: number;
 
-  /** Returns the path's SVG path string. */
+  /**
+   * Returns the path's SVG path string.
+   */
   pathString: string;
 
   /**
@@ -21,7 +29,9 @@ export interface PathCommand {
    */
   interpolate(start: PathCommand, end: PathCommand, fraction: number): PathCommand;
 
-  /** Returns true iff this path is morphable with the specified path command. */
+  /**
+   * Returns true iff this path is morphable with the specified path command.
+   */
   isMorphableWith(cmd: PathCommand): boolean;
 
   /**
@@ -76,19 +86,31 @@ export interface PathCommand {
    */
   convert(subPathIdx: number, drawIdx: number, svgChar: SvgChar): PathCommand;
 
+  /**
+   * Returns the unique id associated with the draw cmomand at the
+   * specified index.
+   */
   getId(subPathIdx: number, drawIdx: number): string;
 
-  /** Returns a cloned instance of this path command. */
+  /**
+   * Returns a cloned instance of this path command.
+   */
   clone(): PathCommand;
 }
 
-/** Defines the set of methods that are seen by the sub path inspector/canvas. */
+/**
+ * Defines the set of methods that are seen by the sub path inspector/canvas.
+ */
 export interface SubPathCommand {
 
-  /** The list of children draw commands in this sub path. */
+  /**
+   * The list of children draw commands in this sub path.
+   */
   commands: ReadonlyArray<DrawCommand>;
 
-  /** Returns true iff the sub path's start point is equal to its end point. */
+  /**
+   * Returns true iff the sub path's start point is equal to its end point.
+   */
   isClosed: boolean;
 
   /**
@@ -98,25 +120,39 @@ export interface SubPathCommand {
   points: ReadonlyArray<{point: Point, isSplit: boolean}>;
 }
 
-/** Defines the set of methods that are seen by the command inspector/canvas. */
+/**
+ * Defines the set of methods that are seen by the command inspector/canvas.
+ */
 export interface DrawCommand {
 
-  /** Returns the SVG character for this draw command. */
+  /**
+   * Returns the SVG character for this draw command.
+   */
   svgChar: SvgChar;
 
-  /** A human-readable representation of this command. */
+  /**
+   * A human-readable representation of this command.
+   */
   commandString: string;
 
-  /** Returns the raw number arguments for this draw command. */
+  /**
+   * Returns the raw number arguments for this draw command.
+   */
   args: ReadonlyArray<number>;
 
-  /** Returns the points for this draw command. */
+  /**
+   * Returns the points for this draw command.
+   */
   points: ReadonlyArray<Point>;
 
-  /** Returns the command's starting point. */
+  /**
+   * Returns the command's starting point.
+   */
   start: Point;
 
-  /** Returns the command's ending point. */
+  /**
+   * Returns the command's ending point.
+   */
   end: Point;
 
   /**
