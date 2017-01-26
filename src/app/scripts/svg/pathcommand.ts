@@ -459,6 +459,11 @@ class PathCommandImpl implements PathCommand {
     });
   }
 
+  getId(subPathIdx: number, drawIdx: number) {
+    const { targetCw, cwCmdIdx, cwDrawCmdIdx } = this.findCommandWrapper(subPathIdx, drawIdx);
+    return targetCw.getIdAtIndex(cwDrawCmdIdx);
+  }
+
   private findCommandWrapper(subPathIdx: number, drawIdx: number) {
     const numCommands = this.subPathCommands_[subPathIdx].commands.length;
     if (drawIdx && this.reversals_[subPathIdx]) {
@@ -500,6 +505,7 @@ class CommandWrapper {
   private readonly backingBeziers: ReadonlyArray<Bezier>;
   private readonly splits: ReadonlyArray<number>;
   private readonly svgChars: ReadonlyArray<SvgChar>;
+  private readonly ids: ReadonlyArray<string>;
   private readonly drawCommands: ReadonlyArray<DrawCommandImpl>;
 
   constructor(obj: DrawCommandImpl | ClonedCommandWrapperInfo) {
@@ -508,12 +514,14 @@ class CommandWrapper {
       this.backingBeziers = drawCommandToBeziers(obj);
       this.splits = [1];
       this.svgChars = [this.backingCommand.svgChar];
+      this.ids = [_.uniqueId()];
       this.drawCommands = [obj];
     } else {
       this.backingCommand = obj.backingCommand;
       this.backingBeziers = obj.backingBeziers;
       this.splits = obj.splits.slice();
       this.svgChars = obj.svgChars.slice();
+      this.ids = obj.ids.slice();
       this.drawCommands = obj.drawCommands.slice();
     }
   }
@@ -524,8 +532,13 @@ class CommandWrapper {
       backingBeziers: this.backingBeziers,
       splits: this.splits,
       svgChars: this.svgChars,
+      ids: this.ids,
       drawCommands: this.drawCommands,
     }, overrides));
+  }
+
+  getIdAtIndex(idIndex: number) {
+    return this.ids[idIndex];
   }
 
   project(point: Point): Projection | undefined {
@@ -545,13 +558,15 @@ class CommandWrapper {
     }
     const splits = this.splits.slice();
     const svgChars = this.svgChars.slice();
+    const ids = this.ids.slice();
     for (const t of ts) {
       const insertionIndex = _.sortedIndex(splits, t);
       splits.splice(insertionIndex, 0, t);
       // TODO: what about if the last command is a Z? then we want the svg char to be L?
       svgChars.splice(insertionIndex, 0, this.commands[insertionIndex].svgChar);
+      ids.splice(insertionIndex, 0, _.uniqueId());
     }
-    return this.rebuildCommands(splits, svgChars);
+    return this.rebuildCommands(splits, svgChars, ids);
   }
 
   splitAtIndex(splitIndex: number, ...ts: number[]) {
@@ -573,25 +588,29 @@ class CommandWrapper {
   unsplit(splitIndex: number) {
     const splits = this.splits.slice();
     const svgChars = this.svgChars.slice();
+    const ids = this.ids.slice();
     splits.splice(splitIndex, 1);
     svgChars.splice(splitIndex, 1);
-    return this.rebuildCommands(splits, svgChars);
+    ids.splice(splitIndex, 1);
+    return this.rebuildCommands(splits, svgChars, ids);
   }
 
   convert(convertIndex: number, svgChar: SvgChar) {
     const splits = this.splits.slice();
     const svgChars = this.svgChars.slice();
+    const ids = this.ids.slice();
     svgChars[convertIndex] = svgChar;
-    return this.rebuildCommands(splits, svgChars);
+    return this.rebuildCommands(splits, svgChars, ids);
   }
 
-  private rebuildCommands(newSplits: number[], newSvgChars: SvgChar[]) {
+  private rebuildCommands(newSplits: number[], newSvgChars: SvgChar[], newIds: string[]) {
     if (newSplits.length === 1) {
       const newDrawCommands =
         [bezierToDrawCommand(newSvgChars[0], this.backingBeziers[0], false)];
       return this.clone({
         splits: newSplits,
         svgChars: newSvgChars,
+        ids: newIds,
         drawCommands: newDrawCommands,
       });
     }
@@ -608,6 +627,7 @@ class CommandWrapper {
     return this.clone({
       splits: newSplits,
       svgChars: newSvgChars,
+      ids: newIds,
       drawCommands: newCommands,
     });
   }
@@ -729,6 +749,7 @@ interface ClonedCommandWrapperInfo {
   backingBeziers?: ReadonlyArray<Bezier>;
   splits?: ReadonlyArray<number>;
   svgChars?: ReadonlyArray<SvgChar>;
+  ids?: ReadonlyArray<string>;
   drawCommands?: ReadonlyArray<DrawCommandImpl>;
 }
 

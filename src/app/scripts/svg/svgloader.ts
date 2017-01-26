@@ -80,6 +80,7 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
         t = lengthPxFn(node.y),
         r = l + lengthPxFn(node.width),
         b = t + lengthPxFn(node.height);
+      // TODO: need to handle corner radii as well (rx/ry)
       path = `M ${l},${t} ${r},${t} ${r},${b} ${l},${b} Z`;
 
     } else if (node instanceof SVGLineElement) {

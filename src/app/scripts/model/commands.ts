@@ -76,6 +76,8 @@ export interface PathCommand {
    */
   convert(subPathIdx: number, drawIdx: number, svgChar: SvgChar): PathCommand;
 
+  getId(subPathIdx: number, drawIdx: number): string;
+
   /** Returns a cloned instance of this path command. */
   clone(): PathCommand;
 }

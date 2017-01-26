@@ -21,8 +21,8 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
   @Input() editorType: EditorType;
   @Input() pathId: string;
   @Input() subPathIdx: number;
-  @Input() drawIdx: number;
-  @Input() drawCommand: DrawCommand;
+  private drawIdx_: number;
+  private drawCommand_: DrawCommand;
   @ViewChild('drawCommandIndexCanvas') private drawCommandIndexCanvas: ElementRef;
 
   private isSelected_ = false;
@@ -32,6 +32,10 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
   private isHoveringOverUnsplit = false;
   private subscription_: Subscription;
   private selectionArgs_: Selection;
+  private isViewInit = false;
+  private canvas;
+  private commandIndexCanvasSize: number;
+  private dpi: number;
 
   constructor(
     private layerStateService: LayerStateService,
@@ -52,7 +56,40 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngAfterViewInit() {
+    this.isViewInit = true;
+
+    this.canvas = $(this.drawCommandIndexCanvas.nativeElement);
+    this.commandIndexCanvasSize = this.canvas.get(0).getBoundingClientRect().width;
+    const width = this.commandIndexCanvasSize;
+    const height = this.commandIndexCanvasSize;
+    this.dpi = window.devicePixelRatio || 1;
+    this.canvas
+      .attr({ width: width * this.dpi, height: height * this.dpi })
+      .css({ width, height });
+
     this.draw();
+  }
+
+  @Input()
+  set drawIdx(drawIdx: number) {
+    if (this.drawIdx_ !== drawIdx) {
+      this.drawIdx_ = drawIdx;
+      this.draw();
+    }
+  }
+
+  get drawIdx() {
+    return this.drawIdx_;
+  }
+
+  @Input()
+  set drawCommand(drawCommand: DrawCommand) {
+    this.drawCommand_ = drawCommand;
+    this.draw();
+  }
+
+  get drawCommand() {
+    return this.drawCommand_;
   }
 
   ngOnDestroy() {
@@ -60,18 +97,14 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private draw() {
-    const canvas = $(this.drawCommandIndexCanvas.nativeElement);
-    const commandIndexCanvasSize = canvas.get(0).getBoundingClientRect().width;
-    const width = commandIndexCanvasSize;
-    const height = commandIndexCanvasSize;
-    const dpi = window.devicePixelRatio || 1;
-    canvas
-      .attr({ width: width * dpi, height: height * dpi })
-      .css({ width, height });
+    if (!this.isViewInit) {
+      return;
+    }
+
 
     const ctx: CanvasRenderingContext2D =
-      (canvas.get(0) as HTMLCanvasElement).getContext('2d');
-    const radius = commandIndexCanvasSize * dpi / 2;
+      (this.canvas.get(0) as HTMLCanvasElement).getContext('2d');
+    const radius = this.commandIndexCanvasSize * this.dpi / 2;
 
     ctx.save();
     const color = this.drawIdx === 0
