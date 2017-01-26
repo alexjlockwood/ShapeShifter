@@ -28,6 +28,10 @@ export function distance(p1: IPoint, p2: IPoint) {
   return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
 }
 
+export function floorMod(num, maxNum) {
+  return ((num % maxNum) + maxNum) % maxNum;
+}
+
 /** An immutable Matrix class that uses the standard SVG transformation matrix notation. */
 export class Matrix {
   constructor(

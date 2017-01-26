@@ -20,6 +20,7 @@ export function createPathCommand(path: string): PathCommand {
  */
 class PathCommandImpl implements PathCommand {
 
+  // TODO: forbid multi-closepath cases
   // TODO: consider reversing M C C L Z
   // TODO: reversing a path with a mix of Ls and Cs doesnt work.
   // TODO: reversing a path with a close path with identical start/end points doesn't work
@@ -86,41 +87,28 @@ class PathCommandImpl implements PathCommand {
         // Consider a segment A ---- B ---- C with AB split and
         // BC non-split. When reversed, we want the user to see
         // C ---- B ---- A w/ CB split and BA non-split.
-        const reversedCmds = cw.commands.slice();
-        reversedCmds[0] = _.first(reversedCmds).toggleSplit();
-        reversedCmds[reversedCmds.length - 1] = _.last(reversedCmds).toggleSplit();
-        return reversedCmds;
+        const cmds = cw.commands.slice();
+        cmds[0] = _.first(cmds).toggleSplit();
+        cmds[cmds.length - 1] = _.last(cmds).toggleSplit();
+        return cmds;
       });
 
-      const endsWithZ = _.last(drawCmds).svgChar === 'Z';
-      const startingIndex = endsWithZ ? drawCmds.length - 2 : drawCmds.length - 1;
-      const endingIndex = endsWithZ ? 1 : 0;
 
-      const newDrawCmds = [moveTo(_.first(drawCmds).start, _.last(drawCmds).end)];
-      for (let i = startingIndex; i > endingIndex; i--) {
-        newDrawCmds.push(drawCmds[i].reverse());
+      // If the last command is a 'Z', replace it with a line before we reverse.
+      const lastCmd = _.last(drawCmds);
+      if (lastCmd.svgChar === 'Z') {
+        drawCmds[drawCmds.length - 1] = lineTo(lastCmd.start, lastCmd.end);
       }
 
-      // TODO: not 100% confident that this code is correct (edge cases)
-      if (endsWithZ) {
-        // If the sub path ends with a Z, we need to modify things a tiny
-        // bit to ensure that the reversed result still maintains the same
-        // sequence of command types.
-        const firstNewDrawCmd = _.first(newDrawCmds);
-        const secondNewDrawCmd = newDrawCmds[1];
-        const lastNewDrawCmd = _.last(newDrawCmds);
-        const secondOldDrawCmd = drawCmds[1];
-        const lastOldDrawCmd = _.last(drawCmds);
-        newDrawCmds.splice(1, 0,
-          lineTo(firstNewDrawCmd.end, secondNewDrawCmd.start, lastOldDrawCmd.isSplit));
-        newDrawCmds.push(
-          closePath(lastNewDrawCmd.end, firstNewDrawCmd.end, secondOldDrawCmd.isSplit));
+      // Reverse the draw commands.
+      const newDrawCmds = [moveTo(_.first(drawCmds).start, _.last(drawCmds).end)];
+      for (let i = drawCmds.length - 1; i > 0; i--) {
+        newDrawCmds.push(drawCmds[i].reverse());
       }
 
       return newDrawCmds;
     };
 
-    // TODO: edge cases: 'M Z', 'M L Z L Z' (or maybe forbid multi-closepath cases?)
     // TODO: another edge case: closed paths not ending in a Z
     const maybeShiftCommandsFn = (subPathIdx: number, drawCmds: DrawCommandImpl[]) => {
       let shiftOffset = getShiftOffsetFn(subPathIdx);
@@ -133,36 +121,28 @@ class PathCommandImpl implements PathCommand {
       }
 
       const numCommands = drawCmds.length;
-      if (shouldReverseFn(subPathIdx) && shiftOffset !== 0) {
+      if (shouldReverseFn(subPathIdx)) {
         shiftOffset *= -1;
         shiftOffset += numCommands - 1;
       }
 
-      // TODO: this is pretty inefficient... no need to recreate draw commands like this
-      for (let i = 0; i < (numCommands - 1 - shiftOffset); i++) {
-        drawCmds.unshift(drawCmds.pop());
-
-        const firstCmd = _.first(drawCmds);
-        const secondCmd = drawCmds[1];
-        const lastCmd = _.last(drawCmds);
-        if (firstCmd.svgChar === 'Z') {
-          // Consider a shift that takes 'M L L L Z' to 'Z M L L L'.
-          // Replace the last command with a Z, replace the first command
-          // with a move, and replace the second command with a line.
-          drawCmds[drawCmds.length - 1] =
-            closePath(lastCmd.start, lastCmd.end, lastCmd.isSplit);
-          drawCmds[1] = lineTo(firstCmd.start, firstCmd.end, firstCmd.isSplit);
-          // TODO(alockwood): start point correct for paths w/ multiple moves?
-          drawCmds[0] = moveTo(secondCmd.start, drawCmds[1].start, lastCmd.isSplit);
-        } else {
-          // Consider a shift that takes 'M L L L L' to 'L M L L L'.
-          // In this case we simply swap the first and second commands
-          // and update their attributes accordingly.
-          drawCmds[1] = firstCmd;
-          drawCmds[0] = moveTo(secondCmd.start, firstCmd.start, false);
-        }
+      // If the last command is a 'Z', replace it with a line before we shift.
+      const lastCmd = _.last(drawCmds);
+      if (lastCmd.svgChar === 'Z') {
+        drawCmds[drawCmds.length - 1] = lineTo(lastCmd.start, lastCmd.end);
       }
-      return drawCmds;
+
+      // Shift the sequence of drawing commands. After the shift, the original move
+      // command will be at index 'numCommands - shiftOffset'.
+      const newDrawCmds = [];
+      for (let i = 0; i < drawCmds.length; i++) {
+        newDrawCmds.push(drawCmds[(i + shiftOffset) % drawCmds.length]);
+      }
+
+      // The first start point will either be undefined, or the end point of the previous sub path.
+      const prevMoveCmd = newDrawCmds.splice(numCommands - shiftOffset, 1)[0];
+      newDrawCmds.unshift(moveTo(prevMoveCmd.start, newDrawCmds[0].start));
+      return newDrawCmds;
     };
 
     const drawCommands = _.flatMap(newCmdWrappers, (_, subPathIdx) => {
@@ -359,8 +339,7 @@ class PathCommandImpl implements PathCommand {
   private shiftForwardInternal(subPathIdx: number, numShifts = 1) {
     return this.shiftInternal(
       subPathIdx, (offset: number, numCommands: number) => {
-        const floorModFn = (i, imax) => ((i % imax) + imax) % imax;
-        return floorModFn(offset - numShifts, numCommands - 1);
+        return MathUtil.floorMod(offset - numShifts, numCommands - 1);
       });
   }
 
