@@ -101,7 +101,6 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-
     const ctx: CanvasRenderingContext2D =
       (this.canvas.get(0) as HTMLCanvasElement).getContext('2d');
     const radius = this.commandIndexCanvasSize * this.dpi / 2;
