@@ -489,7 +489,9 @@ class PathCommandImpl implements PathCommand {
 
 /**
  * Contains additional information about each individual draw command so that we can
- * remember how they should be projected onto and split/unsplit at runtime.
+ * remember how they should be projected onto and split/unsplit/converted at runtime.
+ * PathCommands are immutable, stateless objects that depend on CommandWrappers to
+ * remember their state.
  */
 class CommandWrapper {
 
