@@ -1,6 +1,6 @@
 # Shape Shifter
 
-[![Build Status](https://travis-ci.org/alexjlockwood/shape-shifter.svg?branch=master)](https://travis-ci.org/alexjlockwood/shape-shifter)
+[![Build Status](https://travis-ci.org/alexjlockwood/ShapeShifter.svg?branch=master)](https://travis-ci.org/alexjlockwood/ShapeShifter)
 
 ## Development server
 Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The app will automatically reload if you change any of the source files.
