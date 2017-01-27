@@ -161,8 +161,8 @@ export class CanvasComponent implements OnInit, OnDestroy {
     // The 'attrScale' represents the number of physical pixels per SVG viewport pixel.
     this.attrScale = this.cssScale * devicePixelRatio;
 
-    // TODO: this is too small for SVGs with large viewports.
-    this.pathPointRadius = this.cssScale;
+    // TODO: this still doesn't work very well for large viewports and/or on resizing
+    this.pathPointRadius = Math.max(8, this.cssScale);
     this.splitPathPointRadius = this.pathPointRadius * 0.8;
     this.draw();
   }

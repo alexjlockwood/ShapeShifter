@@ -8,7 +8,7 @@
   (mouseenter)="onCommandHoverEvent(true)"
   (mouseleave)="onCommandHoverEvent(false)">
   <canvas #drawCommandIndexCanvas class="command-index"></canvas>
-  <span fxFlex>{{ drawCommandEndPointText }}</span>
+  <span class="command-text" fxFlex>{{ drawCommandEndPointText }}</span>
   <button md-icon-button
     mdTooltip="Convert"
     mdTooltipPosition="above"
