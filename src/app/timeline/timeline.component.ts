@@ -10,8 +10,8 @@ import { EditorType } from '../scripts/model';
   styleUrls: ['./timeline.component.scss']
 })
 export class TimelineComponent implements OnInit {
-  readonly maxAnimationFractionSliderValue = 1000;
-  readonly animationDuration = 1000;
+  maxAnimationFractionSliderValue = 1000;
+  animationDuration = 1000;
   isMorphable = false;
 
   private subscriptions: Subscription[] = [];

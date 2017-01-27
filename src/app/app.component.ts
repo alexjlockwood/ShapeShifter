@@ -2,6 +2,7 @@ import {
   Component, OnInit, AfterViewInit, ElementRef,
   ViewChild, OnDestroy, HostListener
 } from '@angular/core';
+import { environment } from '../environments/environment';
 import { Layer, VectorLayer, GroupLayer, PathLayer } from './scripts/model';
 import { SvgLoader } from './scripts/svg';
 import { Point } from './scripts/common';
@@ -12,7 +13,7 @@ import { LayerStateService } from './services/layerstate.service';
 import { DividerDragEvent } from './splitter/splitter.directive';
 import * as $ from 'jquery';
 
-const debugMode = true;
+const debugMode = !environment.production;
 
 @Component({
   selector: 'app-root',
@@ -22,9 +23,9 @@ const debugMode = true;
 export class AppComponent implements OnInit, OnDestroy {
 
   // TODO: need to check whether svgs are structurally identical somehow...
-  readonly startVectorLayerType = EditorType.Start;
-  readonly previewVectorLayerType = EditorType.Preview;
-  readonly endVectorLayerType = EditorType.End;
+  startVectorLayerType = EditorType.Start;
+  previewVectorLayerType = EditorType.Preview;
+  endVectorLayerType = EditorType.End;
   shouldDisplayStartEditor = false;
   shouldDisplayEndEditor = false;
   private isStructurallyIdentical = false;
