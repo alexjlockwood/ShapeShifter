@@ -19,7 +19,6 @@ import { HoverStateService, CommandId, HoverType, Hover } from '../services/hove
 
 const ELEMENT_RESIZE_DETECTOR = erd();
 
-// TODO: add offscreen canvas to implement alpha
 @Component({
   selector: 'app-canvas',
   templateUrl: './canvas.component.html',
