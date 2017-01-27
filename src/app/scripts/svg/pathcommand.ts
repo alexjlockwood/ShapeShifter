@@ -97,7 +97,7 @@ class PathCommandImpl implements PathCommand {
       // If the last command is a 'Z', replace it with a line before we reverse.
       const lastCmd = _.last(drawCmds);
       if (lastCmd.svgChar === 'Z') {
-        drawCmds[drawCmds.length - 1] = lineTo(lastCmd.start, lastCmd.end);
+        drawCmds[drawCmds.length - 1] = lineTo(lastCmd.start, lastCmd.end, lastCmd.isSplit);
       }
 
       // Reverse the draw commands.
@@ -129,19 +129,38 @@ class PathCommandImpl implements PathCommand {
       // If the last command is a 'Z', replace it with a line before we shift.
       const lastCmd = _.last(drawCmds);
       if (lastCmd.svgChar === 'Z') {
-        drawCmds[drawCmds.length - 1] = lineTo(lastCmd.start, lastCmd.end);
+        drawCmds[numCommands - 1] = lineTo(lastCmd.start, lastCmd.end, lastCmd.isSplit);
+      }
+
+      const newDrawCmds = [];
+
+      // Handle these case separately cause they are annoying and I'm sick of edge cases.
+      if (shiftOffset === 1) {
+        newDrawCmds.push(moveTo(_.first(drawCmds).start, drawCmds[1].end));
+        for (let i = 2; i < drawCmds.length; i++) {
+          newDrawCmds.push(drawCmds[i]);
+        }
+        newDrawCmds.push(drawCmds[1]);
+        return newDrawCmds;
+      } else if (shiftOffset === numCommands - 1) {
+        newDrawCmds.push(moveTo(_.first(drawCmds).start, drawCmds[numCommands - 2].end));
+        newDrawCmds.push(_.last(drawCmds));
+        for (let i = 1; i < drawCmds.length - 1; i++) {
+          newDrawCmds.push(drawCmds[i]);
+        }
+        return newDrawCmds;
       }
 
       // Shift the sequence of drawing commands. After the shift, the original move
       // command will be at index 'numCommands - shiftOffset'.
-      const newDrawCmds = [];
-      for (let i = 0; i < drawCmds.length; i++) {
-        newDrawCmds.push(drawCmds[(i + shiftOffset) % drawCmds.length]);
+      for (let i = 0; i < numCommands; i++) {
+        newDrawCmds.push(drawCmds[(i + shiftOffset) % numCommands]);
       }
 
       // The first start point will either be undefined, or the end point of the previous sub path.
       const prevMoveCmd = newDrawCmds.splice(numCommands - shiftOffset, 1)[0];
-      newDrawCmds.unshift(moveTo(prevMoveCmd.start, newDrawCmds[0].start));
+      newDrawCmds.push(newDrawCmds.shift());
+      newDrawCmds.unshift(moveTo(prevMoveCmd.start, _.last(newDrawCmds).end));
       return newDrawCmds;
     };
 
@@ -362,8 +381,14 @@ class PathCommandImpl implements PathCommand {
 
   // Implements the PathCommand interface.
   split(subPathIdx: number, drawIdx: number, ...ts: number[]) {
-    const { cwIdx } = this.findCommandWrapper(subPathIdx, drawIdx);
-    return this.splitCommandWrapper(subPathIdx, cwIdx, ...ts);
+    const { targetCw, cwIdx, splitIdx } = this.findCommandWrapper(subPathIdx, drawIdx);
+    const shiftOffsets =
+      this.maybeUpdateShiftOffsetsAfterSplit(subPathIdx, cwIdx, ts.length);
+    const newCw = targetCw.splitAtIndex(splitIdx, ...ts);
+    return this.clone({
+      commandWrappers_: this.replaceCommandWrapper(subPathIdx, cwIdx, newCw),
+      shiftOffsets_: shiftOffsets,
+    });
   }
 
   // Implements the PathCommand interface.

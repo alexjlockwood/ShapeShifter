@@ -8,13 +8,13 @@ describe('PathCommand', () => {
     expect(actual.pathString).toEqual(expected.pathString);
 
     actual = createPathCommand('M 0 0 L 10 10 L 20 20 Z').reverse(0);
-    expected = createPathCommand('M 0 0 L 20 20 L 10 10 Z');
+    expected = createPathCommand('M 0 0 L 20 20 L 10 10 L 0 0');
     expect(actual.pathString).toEqual(expected.pathString);
   });
 
   it('reverse/shift minus w/ lines', () => {
     let actual = createPathCommand('M 19 11 L 5 11 L 5 13 L 19 13 Z').reverse(0);
-    let expected = createPathCommand('M 19 11 L 19 13 L 5 13 L 5 11 Z');
+    let expected = createPathCommand('M 19 11 L 19 13 L 5 13 L 5 11 L 19 11');
     expect(actual.pathString).toEqual(expected.pathString);
 
     actual = actual.reverse(0);
@@ -22,7 +22,7 @@ describe('PathCommand', () => {
     expect(actual.pathString).toEqual(expected.pathString);
 
     actual = actual.shiftBack(0);
-    expected = createPathCommand('M 5 11 L 5 13 L 19 13 L 19 11 Z');
+    expected = createPathCommand('M 5 11 L 5 13 L 19 13 L 19 11 L 5 11');
     expect(actual.pathString).toEqual(expected.pathString);
 
     actual = actual.shiftForward(0);
