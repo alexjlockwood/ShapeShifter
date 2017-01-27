@@ -1,19 +1,49 @@
-import { Component, Input, Output, EventEmitter, NgZone } from '@angular/core';
+import { Component, NgZone, OnInit } from '@angular/core';
 import { TimelineService } from './timeline.service';
+import { LayerStateService } from '../services/layerstate.service';
+import { Subscription } from 'rxjs/Subscription';
+import { EditorType } from '../scripts/model';
 
 @Component({
   selector: 'app-timeline',
   templateUrl: './timeline.component.html',
   styleUrls: ['./timeline.component.scss']
 })
-export class TimelineComponent {
-  public readonly maxAnimationFractionSliderValue = 1000;
-  @Input() isMorphable: boolean;
-  private readonly animationDuration = 1000;
+export class TimelineComponent implements OnInit {
+  readonly maxAnimationFractionSliderValue = 1000;
+  readonly animationDuration = 1000;
+  isMorphable = false;
+
+  private subscriptions: Subscription[] = [];
 
   constructor(
+    private layerStateService: LayerStateService,
     private timelineService: TimelineService,
     private ngZone: NgZone) { }
+
+  ngOnInit() {
+    this.subscriptions.push(
+      this.layerStateService.addListener(EditorType.Start, vl => {
+        const shouldDisplayStartEditor = !!vl;
+        if (!vl) {
+          return;
+        }
+        this.checkAreLayersMorphable();
+      }));
+    this.subscriptions.push(
+      this.layerStateService.addListener(EditorType.End, vl => {
+        if (!vl) {
+          return;
+        }
+        this.checkAreLayersMorphable();
+      }));
+  }
+
+  private checkAreLayersMorphable() {
+    this.isMorphable =
+      this.layerStateService.getData(EditorType.Start)
+        .isMorphableWith(this.layerStateService.getData(EditorType.End));
+  }
 
   get shouldLabelPoints() {
     return this.timelineService.getShouldLabelPoints();

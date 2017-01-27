@@ -12,7 +12,6 @@
       </span>
     </div>
   <div
-    *ngIf="shouldDisplayCanvases()"
     class="canvas-container"
     fxLayout="column"
     fxFlex="1 0 auto">
@@ -22,22 +21,35 @@
       fxLayoutAlign="space-around center"
       fxFlex="1 0 auto">
       <app-canvas
+        *ngIf="shouldDisplayStartEditor"
         fxFlex="30%"
         [editorType]="startVectorLayerType">
       </app-canvas>
+      <app-droptarget
+        *ngIf="!shouldDisplayStartEditor"
+        fxFlex="30%"
+        [editorType]="startVectorLayerType">
+      </app-droptarget>
       <app-canvas
         fxFlex="30%"
         [editorType]="previewVectorLayerType">
       </app-canvas>
       <app-canvas
+        *ngIf="shouldDisplayEndEditor"
         fxFlex="30%"
         [editorType]="endVectorLayerType">
       </app-canvas>
+      <app-droptarget
+        *ngIf="!shouldDisplayEndEditor"
+        fxFlex="30%"
+        [editorType]="endVectorLayerType">
+      </app-droptarget>
     </div>
-    <app-timeline [isMorphable]="isMorphable"></app-timeline>
+    <app-timeline
+      *ngIf="shouldDisplayStartEditor && shouldDisplayEndEditor">
+    </app-timeline>
   </div>
   <div
-    *ngIf="shouldDisplayCanvases()"
     #inspectorContainer
     class="inspector-container"
     fxLayout="column">
@@ -48,21 +60,24 @@
       (onDividerDrag)="onDividerDrag($event)">
     </div>
     <div
+      *ngIf="shouldDisplayStartEditor && shouldDisplayEndEditor"
       fxLayout="row"
       fxLayoutAlign="space-around">
-      <app-inspector fxFlex="37.5%"
+      <app-inspector
+        fxFlex="37.5%"
         [editorType]="startVectorLayerType">
       </app-inspector>
-      <app-inspector fxFlex="37.5%"
+      <app-inspector
+        fxFlex="37.5%"
         [editorType]="endVectorLayerType">
       </app-inspector>
     </div>
   </div>
-  <div
+  <!--<div
     *ngIf="!shouldDisplayCanvases()"
     class="drop-target-container fill-height"
-    fxLayout="row">
-    <app-dropsvg fxFlex="50%"
+    fxLayout="row">-->
+    <!--<app-dropsvg fxFlex="50%"
       fxLayoutAlign="center center"
       [componentId]="'dropSvgStart'"
       (svgFileLoadedEmitter)="onStartSvgTextLoaded($event)">
@@ -71,6 +86,6 @@
       fxLayoutAlign="center center"
       [componentId]="'dropSvgEnd'"
       (svgFileLoadedEmitter)="onEndSvgTextLoaded($event)">
-    </app-dropsvg>
-  </div>
+    </app-dropsvg>-->
+  <!--</div>-->
 </div>

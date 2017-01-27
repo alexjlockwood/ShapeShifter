@@ -1,0 +1,9 @@
+<div class="file-drop-target" #fileDropTarget>
+  <input
+    type="file"
+    accept=".svg"
+    id="input-file-id{{editorType}}"
+    (change)="onSvgFileChosen($event.srcElement.files)">
+  <label
+    for="input-file-id{{editorType}}">Click to import SVG</label>
+</div>

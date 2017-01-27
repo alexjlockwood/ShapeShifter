@@ -8,7 +8,6 @@ import { MaterialModule } from '@angular/material';
 import { AppComponent } from './app.component';
 import { CanvasComponent } from './canvas/canvas.component';
 import { TimelineComponent } from './timeline/timeline.component';
-import { DropSvgComponent } from './dropsvg/dropsvg.component';
 import { SplitterDirective } from './splitter/splitter.directive';
 import { InspectorComponent } from './inspector/inspector.component';
 import { PathComponent } from './inspector/path/path.component';
@@ -18,6 +17,7 @@ import { TimelineService } from './timeline/timeline.service';
 import { LayerStateService } from './services/layerstate.service';
 import { SelectionService } from './services/selection.service';
 import { HoverStateService } from './services/hoverstate.service';
+import { DropTargetComponent } from './droptarget/droptarget.component';
 
 import 'hammerjs';
 
@@ -26,12 +26,12 @@ import 'hammerjs';
     AppComponent,
     CanvasComponent,
     TimelineComponent,
-    DropSvgComponent,
+    DropTargetComponent,
     SplitterDirective,
     InspectorComponent,
     PathComponent,
     SubPathComponent,
-    CommandComponent
+    CommandComponent,
   ],
   imports: [
     BrowserModule,
