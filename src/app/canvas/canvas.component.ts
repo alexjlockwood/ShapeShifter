@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 import {
-  Component, AfterViewInit, OnDestroy, ElementRef, HostListener,
+  Component, OnInit, OnDestroy, ElementRef, HostListener,
   ViewChild, ViewChildren, Input, Output, EventEmitter
 } from '@angular/core';
 import {
@@ -25,7 +25,7 @@ const ELEMENT_RESIZE_DETECTOR = erd();
   templateUrl: './canvas.component.html',
   styleUrls: ['./canvas.component.scss']
 })
-export class CanvasComponent implements AfterViewInit, OnDestroy {
+export class CanvasComponent implements OnInit, OnDestroy {
   @Input() editorType: EditorType;
   @ViewChild('renderingCanvas') private renderingCanvasRef: ElementRef;
 
@@ -51,7 +51,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     private timelineService: TimelineService,
     private selectionService: SelectionService) { }
 
-  ngAfterViewInit() {
+  ngOnInit() {
     this.isViewInit = true;
     this.element = $(this.elementRef.nativeElement);
     this.canvas = $(this.renderingCanvasRef.nativeElement);
@@ -118,6 +118,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
             this.draw();
           }));
     }
+    this.resizeAndDraw();
   }
 
   ngOnDestroy() {
@@ -126,7 +127,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   }
 
   private resizeAndDraw() {
-    if (!this.isViewInit || !this.vectorLayer) {
+    if (!this.isViewInit) {
       return;
     }
 
@@ -134,16 +135,18 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     const containerWidth = Math.max(1, this.containerSize);
     const containerHeight = Math.max(1, this.containerSize);
     const containerAspectRatio = containerWidth / containerHeight;
-    const vectorAspectRatio = this.vectorLayer.width / (this.vectorLayer.height || 1);
+    const vlWidth = !this.vectorLayer ? 1 : this.vectorLayer.width || 1;
+    const vlHeight = !this.vectorLayer ? 1 : this.vectorLayer.height || 1;
+    const vectorAspectRatio = vlWidth / vlHeight;
 
     // The 'cssScale' represents the number of CSS pixels per SVG viewport pixel.
     if (vectorAspectRatio > containerAspectRatio) {
-      this.cssScale = containerWidth / (this.vectorLayer.width || 1);
+      this.cssScale = containerWidth / vlWidth;
     } else {
-      this.cssScale = containerHeight / (this.vectorLayer.height || 1);
+      this.cssScale = containerHeight / vlHeight;
     }
-    const cssWidth = this.vectorLayer.width * this.cssScale;
-    const cssHeight = this.vectorLayer.height * this.cssScale;
+    const cssWidth = vlWidth * this.cssScale;
+    const cssHeight = vlHeight * this.cssScale;
     [this.canvas, this.offscreenCanvas].forEach(canvas => {
       canvas
         .attr({
