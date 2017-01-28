@@ -88,6 +88,9 @@ class PathCommandImpl implements PathCommand {
         // BC non-split. When reversed, we want the user to see
         // C ---- B ---- A w/ CB split and BA non-split.
         const cmds = cw.commands.slice();
+        if (cmds[0].svgChar === 'M') {
+          return cmds;
+        }
         cmds[0] = _.first(cmds).toggleSplit();
         cmds[cmds.length - 1] = _.last(cmds).toggleSplit();
         return cmds;
@@ -101,11 +104,11 @@ class PathCommandImpl implements PathCommand {
       }
 
       // Reverse the draw commands.
-      const newDrawCmds = [moveTo(_.first(drawCmds).start, _.last(drawCmds).end)];
+      const newDrawCmds = [];
       for (let i = drawCmds.length - 1; i > 0; i--) {
         newDrawCmds.push(drawCmds[i].reverse());
       }
-
+      newDrawCmds.unshift(moveTo(_.first(drawCmds).start, _.first(newDrawCmds).start));
       return newDrawCmds;
     };
 
@@ -442,7 +445,7 @@ class PathCommandImpl implements PathCommand {
   // Implements the PathCommand interface.
   unsplit(subPathIdx: number, drawIdx: number) {
     const { targetCw, cwIdx, splitIdx } = this.findCommandWrapper(subPathIdx, drawIdx);
-    const newCw = targetCw.unsplitAtIndex(splitIdx);
+    const newCw = targetCw.unsplitAtIndex(this.reversals_[subPathIdx] ? splitIdx - 1 : splitIdx);
     const shiftOffsets = this.shiftOffsets_.slice();
     const shiftOffset = this.shiftOffsets_[subPathIdx];
     if (shiftOffset && cwIdx <= shiftOffset) {
@@ -477,10 +480,10 @@ class PathCommandImpl implements PathCommand {
     if (drawIdx >= numCommands) {
       drawIdx -= (numCommands - 1);
     }
-    let counter = 0, cwIdx = 0, splitIdx = 0;
+    let counter = 0, cwIdx = 0;
     for (const targetCw of this.commandWrappers_[subPathIdx]) {
       if (counter + targetCw.commands.length > drawIdx) {
-        splitIdx = drawIdx - counter;
+        const splitIdx = drawIdx - counter;
         return { targetCw, cwIdx, splitIdx };
       }
       counter += targetCw.commands.length;

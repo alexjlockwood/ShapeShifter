@@ -19,6 +19,7 @@ import { HoverStateService, CommandId, HoverType, Hover } from '../services/hove
 
 const ELEMENT_RESIZE_DETECTOR = erd();
 
+// TODO: create a parent component that will resize this stuff properly (no flexbox?)
 @Component({
   selector: 'app-canvas',
   templateUrl: './canvas.component.html',
