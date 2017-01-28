@@ -38,7 +38,7 @@ export function createPathHelper(...points: IPoint[]): PathHelper {
       // TODO: is it possible for the second point to be
       // smaller/larger than the first/third? does that cause issues?
     //  return new LineHelper(newPoints[0], newPoints[2]);
-    //}
+    // }
   } else if (newPoints.length === 4) {
     // if (MathUtil.areCollinear(...newPoints)) {
       // TODO: is it possible for the second/third points to be
