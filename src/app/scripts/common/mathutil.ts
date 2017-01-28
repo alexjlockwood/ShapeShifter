@@ -5,12 +5,28 @@ export class Point {
   constructor(public readonly x = 0, public readonly y = 0) { }
 
   equals(p: Point) {
-    return this.x === p.x && this.y === p.y;
+    const diffX = Math.abs(this.x - p.x);
+    const diffY = Math.abs(this.y - p.y);
+    return diffX < 1e-8 && diffY < 1e-8;
   }
 
   toString() {
     return `(${this.x}, ${this.y})`;
   }
+}
+
+/** Returns true if the points are collinear. */
+export function areCollinear(...points: Point[]) {
+  if (points.length < 3) {
+    return true;
+  }
+  const {x: a, y: b} = points[0];
+  const {x: m, y: n} = points[1];
+  return points.every(({x, y}: Point) => {
+    // The points are collinear if the area of the triangle they form
+    // is equal (or in this case close to) zero.
+    return a * (n - y) + m * (y - b) + x * (b - n) < 1e-8;
+  });
 }
 
 /** Applies a list of transformation matrices to the specified point. */
