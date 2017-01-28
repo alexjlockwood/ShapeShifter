@@ -10,19 +10,29 @@
   bottom: 0;
 }
 
-.fill-width {
-  width: 100%;
-}
-
-.fill-height {
-  height: 100%;
-}
-
-div.canvas-container {
+div.animation-container {
   box-sizing: border-box;
   padding: 16px;
   background-color: material-color('blue-grey', '700');
   user-select: none;
+}
+
+div.canvas-container {
+
+}
+
+app-droptarget,
+app-canvas {
+  box-sizing: border-box;
+  padding: 32px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.canvas-item,
+.canvas-item {
+  flex: 1 1 0;
 }
 
 div.inspector-container {

@@ -22,13 +22,17 @@ const debugMode = !environment.production;
 })
 export class AppComponent implements OnInit, OnDestroy {
 
-  // TODO: need to check whether svgs are structurally identical somehow...
+  // TODO: need to warn user about svgs not being structurally identical somehow...
   startVectorLayerType = EditorType.Start;
   previewVectorLayerType = EditorType.Preview;
   endVectorLayerType = EditorType.End;
   shouldDisplayStartEditor = false;
   shouldDisplayEndEditor = false;
-  private isStructurallyIdentical = false;
+  isStructurallyIdentical = false;
+  isMorphable = false;
+
+  private startLayer: VectorLayer;
+  private endLayer: VectorLayer;
   private subscriptions: Subscription[] = [];
 
   @ViewChild('appContainer') private appContainerRef: ElementRef;
@@ -63,20 +67,15 @@ export class AppComponent implements OnInit, OnDestroy {
 
     this.subscriptions.push(
       this.layerStateService.addListener(EditorType.Start, vl => {
-        const shouldDisplayStartEditor = !!vl;
-        if (this.shouldDisplayStartEditor !== shouldDisplayStartEditor) {
-          this.shouldDisplayStartEditor = shouldDisplayStartEditor;
-          if (this.shouldDisplayStartEditor) {
-            this.layerStateService.setData(EditorType.Preview, vl.clone());
-          }
-        }
+        this.startLayer = vl;
+        this.shouldDisplayStartEditor = !!vl;
+        this.checkAreLayersMorphable();
       }));
     this.subscriptions.push(
       this.layerStateService.addListener(EditorType.End, vl => {
-        const shouldDisplayEndEditor = !!vl;
-        if (this.shouldDisplayEndEditor !== shouldDisplayEndEditor) {
-          this.shouldDisplayEndEditor = shouldDisplayEndEditor;
-        }
+        this.endLayer = vl;
+        this.shouldDisplayEndEditor = !!vl;
+        this.checkAreLayersMorphable();
       }));
 
     this.initDebugMode();
@@ -84,6 +83,17 @@ export class AppComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.subscriptions.forEach(s => s.unsubscribe());
+  }
+
+  private checkAreLayersMorphable() {
+    if (!this.startLayer || !this.endLayer) {
+      return;
+    }
+    const isMorphable = this.startLayer.isMorphableWith(this.endLayer);
+    if (this.isMorphable !== isMorphable) {
+      this.layerStateService.setData(EditorType.Preview, this.startLayer.clone());
+      this.isMorphable = isMorphable;
+    }
   }
 
   onDividerDrag(event: DividerDragEvent) {

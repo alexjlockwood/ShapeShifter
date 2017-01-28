@@ -29,7 +29,7 @@ export class CanvasComponent implements OnInit, OnDestroy {
   @ViewChild('renderingCanvas') private renderingCanvasRef: ElementRef;
 
   private vectorLayer: VectorLayer;
-  private containerSize: number;
+  private componentSize: number;
   private element: JQuery;
   private canvas: JQuery;
   private offscreenCanvas: JQuery;
@@ -42,6 +42,7 @@ export class CanvasComponent implements OnInit, OnDestroy {
   private activeDragPoint: DragPoint;
   private activeProjectionOntoPath: ProjectionOntoPath;
   private currentHover: Hover;
+  private elementResizeCallback: () => void;
 
   constructor(
     private elementRef: ElementRef,
@@ -55,14 +56,15 @@ export class CanvasComponent implements OnInit, OnDestroy {
     this.element = $(this.elementRef.nativeElement);
     this.canvas = $(this.renderingCanvasRef.nativeElement);
     this.offscreenCanvas = $(document.createElement('canvas'));
-    this.containerSize = this.element.width();
-    ELEMENT_RESIZE_DETECTOR.listenTo(this.elementRef.nativeElement, element => {
-      const containerSize = this.element.width();
-      if (this.containerSize !== containerSize) {
-        this.containerSize = containerSize;
+    this.componentSize = Math.min(this.element.width(), this.element.parent().height());
+    this.elementResizeCallback = () => {
+      const containerSize = Math.min(this.element.width(), this.element.parent().height());
+      if (this.componentSize !== containerSize) {
+        this.componentSize = containerSize;
         this.resizeAndDraw();
       }
-    });
+    };
+    ELEMENT_RESIZE_DETECTOR.listenTo(this.element.parent().get(0), this.elementResizeCallback);
     this.subscriptions.push(
       this.layerStateService.addListener(
         this.editorType, vl => {
@@ -121,7 +123,7 @@ export class CanvasComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    ELEMENT_RESIZE_DETECTOR.removeAllListeners(this.elementRef.nativeElement);
+    ELEMENT_RESIZE_DETECTOR.removeListener(this.element.parent().get(0), this.elementResizeCallback);
     this.subscriptions.forEach(s => s.unsubscribe());
   }
 
@@ -131,8 +133,8 @@ export class CanvasComponent implements OnInit, OnDestroy {
     }
 
     // TODO: wrap the canvases in a parent component that resizes its children canvases
-    const containerWidth = Math.max(1, this.containerSize);
-    const containerHeight = Math.max(1, this.containerSize);
+    const containerWidth = Math.max(1, this.componentSize);
+    const containerHeight = Math.max(1, this.componentSize);
     const containerAspectRatio = containerWidth / containerHeight;
     const vlWidth = !this.vectorLayer ? 1 : this.vectorLayer.width || 1;
     const vlHeight = !this.vectorLayer ? 1 : this.vectorLayer.height || 1;
