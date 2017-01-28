@@ -162,7 +162,7 @@ export class CanvasComponent implements OnInit, OnDestroy {
     this.attrScale = this.cssScale * devicePixelRatio;
 
     // TODO: this still doesn't work very well for large viewports and/or on resizing
-    this.pathPointRadius = 8 / this.cssScale;
+    this.pathPointRadius = this.cssScale;
     this.splitPathPointRadius = this.pathPointRadius * 0.8;
     this.draw();
   }
