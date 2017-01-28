@@ -331,12 +331,10 @@ export class CanvasComponent implements OnInit, OnDestroy {
           // a snapshot of what the path would look like after the action
           // and display the result. Note that after the split action,
           // the hover's drawIdx can be used to identify the new split point.
-          // TODO: use splitInHalf
           pathData =
-            layer.pathData.split(
+            layer.pathData.splitInHalf(
               currentHover.commandId.subPathIdx,
-              currentHover.commandId.drawIdx,
-              0.5);
+              currentHover.commandId.drawIdx);
         }
 
         // Build a list containing all necessary information needed in

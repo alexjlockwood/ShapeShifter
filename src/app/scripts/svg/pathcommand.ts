@@ -504,7 +504,6 @@ class PathCommandImpl implements PathCommand {
  */
 class CommandWrapper {
 
-  // TODO(alockwood): possible to have more than one bezier for elliptical arcs?
   private readonly backingCommand: DrawCommandImpl;
   private readonly pathHelper: PathHelper;
 
@@ -619,16 +618,17 @@ class CommandWrapper {
   private rebuildCommands(ids: string[], splits: number[], svgChars: SvgChar[]) {
     if (splits.length === 1) {
       const drawCommands =
-        [pathHelperToDrawCommand(svgChars[0], this.pathHelper, false)];
+        [pointsToDrawCommand(svgChars[0], this.pathHelper.points, false)];
       return this.clone({ splits, svgChars, ids, drawCommands });
     }
     const drawCommands = [];
     let prevT = 0;
     for (let i = 0; i < splits.length; i++) {
       const currT = splits[i];
-      const splitBez = this.pathHelper.split(prevT, currT);
+      const splitPathHelper = this.pathHelper.split(prevT, currT);
       const isSplit = i !== splits.length - 1;
-      drawCommands.push(pathHelperToDrawCommand(svgChars[i], splitBez, isSplit));
+      drawCommands.push(
+        pointsToDrawCommand(svgChars[i], splitPathHelper.points, isSplit));
       prevT = currT;
     }
     return this.clone({ ids, splits, svgChars, drawCommands });
@@ -664,25 +664,27 @@ function createCommandWrappers(commands: ReadonlyArray<DrawCommand>) {
   return commands.map(cmd => new CommandWrapper(cmd));
 }
 
-function pathHelperToDrawCommand(svgChar: SvgChar, helper: PathHelper, isSplit: boolean) {
+function pointsToDrawCommand(
+  svgChar: SvgChar, points: ReadonlyArray<Point>, isSplit: boolean) {
+
   if (svgChar === 'L') {
-    const start = helper.points[0];
-    const end = helper.points[1] || start;
+    const start = points[0];
+    const end = points[1] || start;
     return lineTo(start, end, isSplit);
   } else if (svgChar === 'Z') {
-    const start = helper.points[0];
-    const end = helper.points[1] || start;
+    const start = points[0];
+    const end = points[1] || start;
     return closePath(start, end, isSplit);
   } else if (svgChar === 'Q') {
-    const start = helper.points[0];
-    const cp = helper.points[1] || start;
-    const end = helper.points[2] || cp;
+    const start = points[0];
+    const cp = points[1] || start;
+    const end = points[2] || cp;
     return quadraticCurveTo(start, cp, end, isSplit);
   } else if (svgChar === 'C') {
-    const start = helper.points[0];
-    const cp1 = helper.points[1] || start;
-    const cp2 = helper.points[2] || cp1;
-    const end = helper.points[3] || cp2;
+    const start = points[0];
+    const cp1 = points[1] || start;
+    const cp2 = points[2] || cp1;
+    const end = points[3] || cp2;
     return bezierCurveTo(start, cp1, cp2, end, isSplit);
   } else {
     throw new Error('TODO: implement split for ellpitical arcs');
@@ -693,16 +695,10 @@ function drawCommandToPathHelper(cmd: DrawCommandImpl): PathHelper {
   if (cmd.svgChar === 'L' || cmd.svgChar === 'Z') {
     return createPathHelper(cmd.start, cmd.end);
   } else if (cmd.svgChar === 'C') {
-    const start = cmd.start;
-    const end = cmd.end;
-    const cp1 = cmd.points[1] || start;
-    const cp2 = cmd.points[2] || end;
-    return createPathHelper(start, cp1, cp2, end);
+    return createPathHelper(
+      cmd.points[0], cmd.points[1], cmd.points[2], cmd.points[3]);
   } else if (cmd.svgChar === 'Q') {
-    const start = cmd.start;
-    const end = cmd.end;
-    const cp = cmd.points[1] || end;
-    return createPathHelper(start, cp, end);
+    return createPathHelper(cmd.points[0], cmd.points[1], cmd.points[2]);
   } else if (cmd.svgChar === 'A') {
     // TODO: create an elliptical arc path helper
     throw new Error('Elliptical arcs not yet supported');

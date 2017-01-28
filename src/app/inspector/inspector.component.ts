@@ -96,9 +96,7 @@ export class InspectorComponent implements OnInit, OnDestroy {
             // TODO: update selections
             break;
           case EventType.Split:
-            // TODO: splitting the last close path command crashes the app.
-            // TODO: use splitInHalf
-            pathLayer.pathData = pathLayer.pathData.split(subPathIdx, drawIdx, 0.5);
+            pathLayer.pathData = pathLayer.pathData.splitInHalf(subPathIdx, drawIdx);
             // TODO: update selections
             break;
           case EventType.Unsplit:

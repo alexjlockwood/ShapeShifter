@@ -174,7 +174,8 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
       return false;
     }
     const drawCmd = pathData.subPathCommands[this.subPathIdx].commands[this.drawIdx];
-    return this.drawCommand.canConvertTo(drawCmd.svgChar);
+    return this.drawCommand.svgChar !== drawCmd.svgChar
+      && this.drawCommand.canConvertTo(drawCmd.svgChar);
   }
 
   isSplittable() {

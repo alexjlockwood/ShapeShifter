@@ -47,30 +47,31 @@ export class DrawCommandImpl implements DrawCommand {
   }
 
   // Implements the DrawCommand interface.
-  canConvertTo(ch: SvgChar) {
-    if (this.svgChar === ch) {
-      // Commands already have the same type, so do nothing.
+  canConvertTo(targetChar: SvgChar) {
+    const ch = targetChar;
+    if (this.svgChar === 'M' || ch === 'M') {
       return false;
     }
-    if (this.svgChar === 'M' || ch === 'M') {
-      // Doesn't make sense to convert a move command.
-      return false;
+    if (this.svgChar === ch) {
+      return true;
     }
     switch (this.svgChar) {
       case 'L':
-        // TODO: handle the case where an L can be converted into a Z!
+        // TODO: technically it should be possible to convert L to Z
         return ch === 'Q' || ch === 'C';
       case 'Z':
         return ch === 'L' || ch === 'Q' || ch === 'C';
       case 'Q':
-        // TODO: handle quadratic bezier curves
-        break;
+        // TODO: possible to convert to C?
+        // TODO: possible to convert to A?
+        return ch === 'L' && MathUtil.areCollinear(...this.points) || ch === 'C';
       case 'C':
-        // TODO: handle cubic bezier curves
-        break;
+        // TODO: possible to convert to Q?
+        // TODO: possible to convert to A?
+        return ch === 'L' && MathUtil.areCollinear(...this.points);
       case 'A':
-        // TODO: handle elliptical arcs
-        break;
+        // TODO: convert to one or more cubic bezier curves
+        return ch === 'C';
     }
     return false;
   }
