@@ -93,40 +93,40 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   private initDebugMode() {
-    this.layerStateService.setData(EditorType.Start, SvgLoader.loadVectorLayerFromSvgString(`
-      <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24">
-        <g transform="translate(12,12)">
-          <g transform="scale(0.75,0.75)">
-            <g transform="translate(-12,-12)">
-              <path d="M 0 0 L 12 12 C 13 13 14 14 15 15 C 16 16 17 17 18 18
-                       C 19 19 20 20 21 21 C 22 22 23 23 24 24 L 24 24"
-                       stroke="#000" stroke-width="1" />
-            </g>
-          </g>
-        </g>
-        <g transform="translate(0,9)">
-          <g transform="scale(1.25,1.25)">
-            <path d="M 2,6 C 2,3.79 3.79,2 6,2 C 8.21,2 10,3.79 10,6 C 10,8.21 8.21,10 6,10 C 3.79,10 2,8.21 2,6"
-                     fill="#DB4437"/>
-          </g>
-        </g>
-    </svg>`));
-    this.layerStateService.setData(EditorType.End, SvgLoader.loadVectorLayerFromSvgString(`
-      <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24">
-        <g transform="translate(12,12)">
-          <g transform="scale(0.75,0.75)">
-            <g transform="translate(-12,-12)">
-              <path d="M 0 0 L 4 4 C 11 12 17 12 24 12 L 24 24" stroke="#000" stroke-width="1" />
-            </g>
-          </g>
-        </g>
-        <g transform="translate(0,12)">
-          <g transform="scale(1,1)">
-            <path d="M 2,6 C 2,3.79 3.79,2 6,2 C 8.21,2 10,3.79 10,6 C 10,8.21 8.21,10 6,10 C 3.79,10 2,8.21 2,6"
-                     fill="#DB4437" />
-          </g>
-        </g>
-    </svg>`));
+    // this.layerStateService.setData(EditorType.Start, SvgLoader.loadVectorLayerFromSvgString(`
+    //   <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24">
+    //     <g transform="translate(12,12)">
+    //       <g transform="scale(0.75,0.75)">
+    //         <g transform="translate(-12,-12)">
+    //           <path d="M 0 0 L 12 12 C 13 13 14 14 15 15 C 16 16 17 17 18 18
+    //                    C 19 19 20 20 21 21 C 22 22 23 23 24 24 L 24 24"
+    //                    stroke="#000" stroke-width="1" />
+    //         </g>
+    //       </g>
+    //     </g>
+    //     <g transform="translate(0,9)">
+    //       <g transform="scale(1.25,1.25)">
+    //         <path d="M 2,6 C 2,3.79 3.79,2 6,2 C 8.21,2 10,3.79 10,6 C 10,8.21 8.21,10 6,10 C 3.79,10 2,8.21 2,6"
+    //                  fill="#DB4437"/>
+    //       </g>
+    //     </g>
+    // </svg>`));
+    // this.layerStateService.setData(EditorType.End, SvgLoader.loadVectorLayerFromSvgString(`
+    //   <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24">
+    //     <g transform="translate(12,12)">
+    //       <g transform="scale(0.75,0.75)">
+    //         <g transform="translate(-12,-12)">
+    //           <path d="M 0 0 L 4 4 C 11 12 17 12 24 12 L 24 24" stroke="#000" stroke-width="1" />
+    //         </g>
+    //       </g>
+    //     </g>
+    //     <g transform="translate(0,12)">
+    //       <g transform="scale(1,1)">
+    //         <path d="M 2,6 C 2,3.79 3.79,2 6,2 C 8.21,2 10,3.79 10,6 C 10,8.21 8.21,10 6,10 C 3.79,10 2,8.21 2,6"
+    //                  fill="#DB4437" />
+    //       </g>
+    //     </g>
+    // </svg>`));
     // const groupLayerStart = this.startVectorLayer.children[0] as GroupLayer;
     // groupLayerStart.pivotX = 12;
     // groupLayerStart.pivotY = 12;
@@ -192,5 +192,24 @@ export class AppComponent implements OnInit, OnDestroy {
     // c18.518,0,36.154,1.238,52.876,3.717c7.829,2.146,20.307,4.66,37.391,7.491c1.434-14.17,6.422-26.752,14.963-37.741
     // C421.377,106.059,432.947,99.669,446.47,99.669z"/>
     // </svg>`));
+    this.layerStateService.setData(EditorType.Start, SvgLoader.loadVectorLayerFromSvgString(`
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+      <path
+        stroke="#000"
+        stroke-width="0.2"
+        fill="none"
+        d="M 8.868 7.648 C 8.603 4.784 11.043 3.829 12.475 3.829 C 18.468 3.829 17.407
+        12.103 12.475 12.103 C 18.68 12.103 17.832 21.014 12.528 21.014 C 7.648 21.014 7.86 17.832 7.913 17.089">
+      </path>
+    </svg>`));
+    this.layerStateService.setData(EditorType.End, SvgLoader.loadVectorLayerFromSvgString(`
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+      <path
+        stroke="#000"
+        stroke-width="0.2"
+        fill="none"
+        d="M 15.604 20.908 L 15.604 4.572 L 6.481 17.407 L 18.362 17.407">
+      </path>
+    </svg>`));
   }
 }

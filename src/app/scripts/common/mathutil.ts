@@ -32,6 +32,9 @@ export function areCollinear(...points: Point[]) {
 /** Applies a list of transformation matrices to the specified point. */
 export function transform(point: IPoint, ...matrices: Matrix[]): Point {
   return matrices.reduce((p: Point, m: Matrix) => {
+    // [a c e]   [p.x]
+    // [b d f] * [p.y]
+    // [0 0 1]   [ 1 ]
     return new Point(
       m.a * p.x + m.c * p.y + m.e * 1,
       m.b * p.x + m.d * p.y + m.f * 1,
@@ -44,19 +47,39 @@ export function distance(p1: IPoint, p2: IPoint) {
   return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
 }
 
+/** Returns the floor modulus of the integer argument. */
 export function floorMod(num, maxNum) {
   return ((num % maxNum) + maxNum) % maxNum;
+}
+
+export function flattenTransforms(matricies: Matrix[]) {
+  return matricies.reduce((prev, curr) => curr.dot(prev), new Matrix());
 }
 
 /** An immutable Matrix class that uses the standard SVG transformation matrix notation. */
 export class Matrix {
   constructor(
-    public readonly a = 0,
+    public readonly a = 1,
     public readonly b = 0,
     public readonly c = 0,
-    public readonly d = 0,
+    public readonly d = 1,
     public readonly e = 0,
     public readonly f = 0) { }
+
+  /** Returns the dot product of this 2D transformation matrices with m. */
+  dot(m: Matrix) {
+    // [a c e]   [a' c' e']
+    // [b d f] * [b' d' f']
+    // [0 0 1]   [0  0  1 ]
+    return new Matrix(
+      this.a * m.a + this.c * m.b,
+      this.b * m.a + this.d * m.b,
+      this.a * m.c + this.c * m.d,
+      this.b * m.c + this.d * m.d,
+      this.a * m.e + this.c * m.f + this.e,
+      this.b * m.e + this.d * m.f + this.f,
+    );
+  }
 
   /** Returns the inverse of this transformation matrix. */
   invert() {
@@ -73,7 +96,7 @@ export class Matrix {
 
   getScale() {
     // Given unit vectors A = (0, 1) and B = (1, 0).
-    // After matrix mapping, we got A' and B'. Let theta = the angel b/t A' and B'.
+    // After matrix mapping, we got A' and B'. Let theta = the angle b/t A' and B'.
     // Therefore, the final scale we want is min(|A'| * sin(theta), |B'| * sin(theta)),
     // which is (|A'| * |B'| * sin(theta)) / max (|A'|, |B'|);
     // If max (|A'|, |B'|) = 0, that means either x or y has a scale of 0.

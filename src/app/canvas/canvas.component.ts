@@ -161,8 +161,8 @@ export class CanvasComponent implements OnInit, OnDestroy {
     // The 'attrScale' represents the number of physical pixels per SVG viewport pixel.
     this.attrScale = this.cssScale * devicePixelRatio;
 
-    // TODO: this still doesn't work very well for large viewports and/or on resizing
-    this.pathPointRadius = this.cssScale;
+    // TODO: this still doesn't work very well for small/large viewports and/or on resizing
+    this.pathPointRadius = this.attrScale;
     this.splitPathPointRadius = this.pathPointRadius * 0.8;
     this.draw();
   }
@@ -225,8 +225,10 @@ export class CanvasComponent implements OnInit, OnDestroy {
       ctx.save();
       executePathData(layer, ctx, transforms);
 
+      // TODO confirm this stroke multiplier thing works...
+      const strokeWidthMultiplier = MathUtil.flattenTransforms(transforms).getScale();
       ctx.strokeStyle = ColorUtil.androidToCssColor(layer.strokeColor, layer.strokeAlpha);
-      ctx.lineWidth = layer.strokeWidth;
+      ctx.lineWidth = layer.strokeWidth * strokeWidthMultiplier;
       ctx.fillStyle = ColorUtil.androidToCssColor(layer.fillColor, layer.fillAlpha);
       ctx.lineCap = layer.strokeLinecap;
       ctx.lineJoin = layer.strokeLinejoin;
