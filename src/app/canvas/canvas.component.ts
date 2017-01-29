@@ -236,7 +236,7 @@ export class CanvasComponent implements OnInit, OnDestroy {
       ctx.save();
       executePathData(layer, ctx, transforms);
 
-      // TODO confirm this stroke multiplier thing works...
+      // TODO: confirm this stroke multiplier thing works...
       const strokeWidthMultiplier = MathUtil.flattenTransforms(transforms).getScale();
       ctx.strokeStyle = ColorUtil.androidToCssColor(layer.strokeColor, layer.strokeAlpha);
       ctx.lineWidth = layer.strokeWidth * strokeWidthMultiplier;
@@ -287,154 +287,160 @@ export class CanvasComponent implements OnInit, OnDestroy {
     ctx.restore();
   }
 
-  // Draw any selected paths.
+  // Draw any selected commands.
   private drawSelections(ctx: CanvasRenderingContext2D) {
-    if (this.selectionService.getData(this.editorType).length) {
-      ctx.save();
-      ctx.scale(this.attrScale, this.attrScale);
-      this.vectorLayer.walk((layer, transforms) => {
-        if (!(layer instanceof PathLayer)) {
-          return;
-        }
-        const selections =
-          this.selectionService.getData(this.editorType)
-            .filter(s => s.pathId === layer.id);
-        if (!selections.length) {
-          return;
-        }
-        const drawCommands = selections.map(selection => {
-          const subPathCommands = layer.pathData.subPathCommands;
-          return subPathCommands[selection.subPathIdx].commands[selection.drawIdx];
-        });
-
-        executeDrawCommands(drawCommands, ctx, transforms, true);
-
-        ctx.save();
-        ctx.lineWidth = 6 / this.cssScale;
-        ctx.strokeStyle = '#fff';
-        ctx.lineCap = 'round';
-        ctx.stroke();
-        ctx.strokeStyle = '#2196f3';
-        ctx.lineWidth = 3 / this.cssScale;
-        ctx.stroke();
-        ctx.restore();
-      });
-      ctx.restore();
+    if (!this.selectionService.getData(this.editorType).length) {
+      return;
     }
+    ctx.save();
+    ctx.scale(this.attrScale, this.attrScale);
+    this.vectorLayer.walk((layer, transforms) => {
+      if (!(layer instanceof PathLayer)) {
+        return;
+      }
+      const selections =
+        this.selectionService.getData(this.editorType)
+          .filter(s => s.pathId === layer.id);
+      if (!selections.length) {
+        return;
+      }
+      const drawCommands = selections.map(selection => {
+        const subPathCommands = layer.pathData.subPathCommands;
+        return subPathCommands[selection.subPathIdx].commands[selection.drawIdx];
+      });
+
+      executeDrawCommands(drawCommands, ctx, transforms, true);
+
+      ctx.save();
+      ctx.lineWidth = 6 / this.cssScale;
+      ctx.strokeStyle = '#fff';
+      ctx.lineCap = 'round';
+      ctx.stroke();
+      ctx.strokeStyle = '#2196f3';
+      ctx.lineWidth = 3 / this.cssScale;
+      ctx.stroke();
+      ctx.restore();
+    });
+    ctx.restore();
   }
 
   // Draw any labeled points.
   private drawLabeledPoints(ctx: CanvasRenderingContext2D) {
-    if (this.timelineService.getShouldLabelPoints()
-      && this.editorType !== EditorType.Preview) {
-      const currentHover = this.currentHover;
-      const startingTransforms =
-        [new Matrix(this.attrScale, 0, 0, this.attrScale, 0, 0)];
-      this.vectorLayer.walk((layer, transforms) => {
-        if (!(layer instanceof PathLayer)) {
-          return;
-        }
-
-        const pathId = layer.id;
-        let pathData = layer.pathData;
-        if (currentHover
-          && currentHover.type === HoverType.Split
-          && currentHover.commandId.pathId === pathId) {
-          // If the user is hovering over the split button, then build
-          // a snapshot of what the path would look like after the action
-          // and display the result. Note that after the split action,
-          // the hover's drawIdx can be used to identify the new split point.
-          pathData =
-            layer.pathData.splitInHalf(
-              currentHover.commandId.subPathIdx,
-              currentHover.commandId.drawIdx);
-        }
-
-        // Build a list containing all necessary information needed in
-        // order to draw the labeled points.
-        const subPathCmds = pathData.subPathCommands;
-        const pathDataPointInfo = _.chain(subPathCmds)
-          .map((subPathCmd: SubPathCommand, subPathIdx: number) => {
-            // TODO: do we really want to filter out the close paths here?
-            return _.map(subPathCmd.commands.filter(drawCmd => drawCmd.svgChar !== 'Z'),
-              (drawCmd, drawIdx) => {
-                return {
-                  commandId: { pathId, subPathIdx, drawIdx } as CommandId,
-                  point: _.last(drawCmd.points),
-                  isSplit: drawCmd.isSplit,
-                };
-              });
-          })
-          .flatMap(pointInfo => pointInfo)
-          .value();
-
-        transforms.reverse();
-        ctx.save();
-
-        // Draw the points in reverse order so that larger numbered points
-        // display on top of lower numbered points.
-        for (let i = pathDataPointInfo.length - 1; i >= 0; i--) {
-          const currentPointInfo = pathDataPointInfo[i];
-
-          if (this.activeDragPointId
-            && areCommandIdsEqual(this.activeDragPointId, currentPointInfo.commandId)) {
-            // Skip the currently dragged point, if it exists.
-            continue;
-          }
-
-          let color, radius;
-          if (i === 0) {
-            color = ColorUtil.MOVE_POINT_COLOR;
-            radius = this.pathPointRadius;
-          } else if (currentPointInfo.isSplit) {
-            color = ColorUtil.SPLIT_POINT_COLOR;
-            radius = this.splitPathPointRadius;
-          } else {
-            color = ColorUtil.NORMAL_POINT_COLOR;
-            radius = this.pathPointRadius;
-          }
-
-          if (currentHover) {
-            if (currentHover.type !== HoverType.None
-              && areCommandIdsEqual(currentPointInfo.commandId, currentHover.commandId)) {
-              // TODO: update this number to something more reasonable
-              radius = this.pathPointRadius * 1.25;
-            }
-          }
-
-          const point = MathUtil.transform(currentPointInfo.point, ...transforms);
-          this.drawLabeledPoint(ctx, point, radius, color, (i + 1).toString());
-        }
-
-        ctx.restore();
-      }, startingTransforms);
+    if (!this.timelineService.getShouldLabelPoints()
+      || this.editorType === EditorType.Preview) {
+      return;
     }
+
+    const currentHover = this.currentHover;
+    const startingTransforms =
+      [new Matrix(this.attrScale, 0, 0, this.attrScale, 0, 0)];
+    this.vectorLayer.walk((layer, transforms) => {
+      if (!(layer instanceof PathLayer)) {
+        return;
+      }
+
+      const pathId = layer.id;
+      let pathData = layer.pathData;
+      if (currentHover
+        && currentHover.type === HoverType.Split
+        && currentHover.commandId.pathId === pathId) {
+        // If the user is hovering over the inspector split button, then build
+        // a snapshot of what the path would look like after the action
+        // and display the result. Note that after the split action,
+        // the hover's drawIdx can be used to identify the new split point.
+        pathData =
+          layer.pathData.splitInHalf(
+            currentHover.commandId.subPathIdx,
+            currentHover.commandId.drawIdx);
+      }
+
+      // Build a list containing all necessary information needed in
+      // order to draw the labeled points.
+      const subPathCmds = pathData.subPathCommands;
+      const pathDataPointInfo = _.chain(subPathCmds)
+        .map((subPathCmd: SubPathCommand, subPathIdx: number) => {
+          return _.chain(subPathCmd.commands)
+            // TODO: do we really want to filter out the close paths here?
+            .filter((drawCmd: DrawCommand) => drawCmd.svgChar !== 'Z')
+            .map((drawCmd, drawIdx) => {
+              return {
+                commandId: { pathId, subPathIdx, drawIdx } as CommandId,
+                point: _.last(drawCmd.points),
+                isSplit: drawCmd.isSplit,
+              };
+            })
+            .value();
+        })
+        .flatMap(pointInfo => pointInfo)
+        .value();
+
+      transforms.reverse();
+      ctx.save();
+
+      // Draw the points in reverse order so that larger numbered points
+      // display on top of lower numbered points.
+      for (let i = pathDataPointInfo.length - 1; i >= 0; i--) {
+        const currentPointInfo = pathDataPointInfo[i];
+
+        if (this.activeDragPointId
+          && areCommandIdsEqual(this.activeDragPointId, currentPointInfo.commandId)) {
+          // Skip the currently dragged point, if it exists.
+          // We'll draw that separately next.
+          continue;
+        }
+
+        let color, radius;
+        if (i === 0) {
+          color = ColorUtil.MOVE_POINT_COLOR;
+          radius = this.pathPointRadius;
+        } else if (currentPointInfo.isSplit) {
+          color = ColorUtil.SPLIT_POINT_COLOR;
+          radius = this.splitPathPointRadius;
+        } else {
+          color = ColorUtil.NORMAL_POINT_COLOR;
+          radius = this.pathPointRadius;
+        }
+
+        if (currentHover
+          && currentHover.type !== HoverType.None
+          && areCommandIdsEqual(currentPointInfo.commandId, currentHover.commandId)) {
+          // TODO: update this number to something more reasonable?
+          radius = this.pathPointRadius * 1.25;
+        }
+
+        const point = MathUtil.transform(currentPointInfo.point, ...transforms);
+        this.drawLabeledPoint(ctx, point, radius, color, (i + 1).toString());
+      }
+
+      ctx.restore();
+    }, startingTransforms);
   }
 
   // Draw any actively dragged points along the path.
   private drawDraggingPoints(ctx: CanvasRenderingContext2D) {
-    if (this.activeProjectionOntoPath) {
-      const startingTransforms =
-        [new Matrix(this.attrScale, 0, 0, this.attrScale, 0, 0)];
-      this.vectorLayer.walk((layer, transforms) => {
-        if (layer.id !== this.activeProjectionOntoPath.pathId) {
-          return;
-        }
-        transforms.reverse();
-        ctx.save();
-        const projection = this.activeProjectionOntoPath.projection;
-        let point;
-        if (projection.d < MIN_SNAP_THRESHOLD) {
-          point = new Point(projection.x, projection.y);
-        } else {
-          point = this.activeDragPointLocation;
-        }
-        point = MathUtil.transform(point, ...transforms);
-        this.drawLabeledPoint(
-          ctx, point, this.splitPathPointRadius, ColorUtil.SPLIT_POINT_COLOR);
-        ctx.restore();
-      }, startingTransforms);
+    if (!this.activeProjectionOntoPath) {
+      return;
     }
+    const startingTransforms =
+      [new Matrix(this.attrScale, 0, 0, this.attrScale, 0, 0)];
+    this.vectorLayer.walk((layer, transforms) => {
+      if (layer.id !== this.activeProjectionOntoPath.pathId) {
+        return;
+      }
+      transforms.reverse();
+      ctx.save();
+      const projection = this.activeProjectionOntoPath.projection;
+      let point;
+      if (projection.d < MIN_SNAP_THRESHOLD) {
+        point = new Point(projection.x, projection.y);
+      } else {
+        point = this.activeDragPointLocation;
+      }
+      point = MathUtil.transform(point, ...transforms);
+      this.drawLabeledPoint(
+        ctx, point, this.splitPathPointRadius, ColorUtil.SPLIT_POINT_COLOR);
+      ctx.restore();
+    }, startingTransforms);
   }
 
   // Draw a single labeled point with optional text.
@@ -580,25 +586,24 @@ export class CanvasComponent implements OnInit, OnDestroy {
       transforms.reverse();
       const pathId = layer.id;
       const transformedMousePoint = MathUtil.transform(mousePoint, ...transforms);
-      const minPathPoint =
-        _.chain(layer.pathData.subPathCommands)
-          .map((subPathCmd: SubPathCommand, subPathIdx: number) => {
-            return subPathCmd.commands
-              .map((drawCmd, drawIdx) => {
-                const distance = MathUtil.distance(drawCmd.end, transformedMousePoint);
-                const isSplit = drawCmd.isSplit;
-                return { pathId, subPathIdx, drawIdx, distance, isSplit };
-              })
-              // Filter out non-split commands last to preserve the indices above.
-              .filter(cmdInfo => splitOnly && cmdInfo.isSplit);
-          })
-          .flatMap(pathPoints => pathPoints)
-          // TODO: confirm that using the backingStoreScale here is correct...
-          .filter(pathPoint => pathPoint.distance <= (range / this.attrScale))
-          .reduce((prev, curr) => {
-            return prev && prev.distance < curr.distance ? prev : curr;
-          }, undefined)
-          .value();
+      const minPathPoint = _.chain(layer.pathData.subPathCommands)
+        .map((subPathCmd: SubPathCommand, subPathIdx: number) => {
+          return subPathCmd.commands
+            .map((drawCmd, drawIdx) => {
+              const distance = MathUtil.distance(drawCmd.end, transformedMousePoint);
+              const isSplit = drawCmd.isSplit;
+              return { pathId, subPathIdx, drawIdx, distance, isSplit };
+            })
+            // Filter out non-split commands last to preserve the indices above.
+            .filter(cmdInfo => splitOnly && cmdInfo.isSplit);
+        })
+        .flatMap(pathPoints => pathPoints)
+        // TODO: confirm that using the attrScale here is correct...
+        .filter(pathPoint => pathPoint.distance <= (range / this.attrScale))
+        .reduce((prev, curr) => {
+          return prev && prev.distance < curr.distance ? prev : curr;
+        }, undefined)
+        .value();
       if (minPathPoint) {
         minPathPoints.push(minPathPoint);
       }
@@ -637,6 +642,7 @@ export class CanvasComponent implements OnInit, OnDestroy {
     return projectionOntoPath;
   }
 
+  /** Returns a point in the canvas' coordinate space. */
   private mouseEventToPoint(event: MouseEvent) {
     const canvasOffset = this.canvas.offset();
     const x = (event.pageX - canvasOffset.left) / this.cssScale;
@@ -708,16 +714,17 @@ function executeArcCommand(ctx: CanvasRenderingContext2D, arcArgs: ReadonlyArray
     tempPoint1X, tempPoint1Y] = arcArgs;
 
   if (currentPointX === tempPoint1X && currentPointY === tempPoint1Y) {
-    // degenerate to point
+    // Degenerate to point.
     return;
   }
 
   if (rx === 0 || ry === 0) {
-    // degenerate to line
+    // Degenerate to line.
     ctx.lineTo(tempPoint1X, tempPoint1Y);
     return;
   }
 
+  // Approximate the arc as one or more bezier curves.
   const bezierCoords = arcToBeziers({
     startX: currentPointX,
     startY: currentPointY,
