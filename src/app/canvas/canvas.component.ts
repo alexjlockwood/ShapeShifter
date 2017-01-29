@@ -4,7 +4,7 @@ import {
   ViewChild, ViewChildren, Input, Output, EventEmitter
 } from '@angular/core';
 import {
-  Layer, PathLayer, ClipPathLayer, GroupLayer,
+  Layer, PathLayer, ClipPathLayer, GroupLayer, CommandId,
   VectorLayer, PathCommand, EditorType, SubPathCommand, DrawCommand
 } from '../scripts/model';
 import * as $ from 'jquery';
@@ -15,9 +15,12 @@ import { LayerStateService } from '../services/layerstate.service';
 import { Subscription } from 'rxjs/Subscription';
 import { arcToBeziers } from '../scripts/svg';
 import { SelectionService, Selection } from '../services/selection.service';
-import { HoverStateService, CommandId, HoverType, Hover } from '../services/hoverstate.service';
+import { HoverStateService, HoverType, Hover } from '../services/hoverstate.service';
 
 const ELEMENT_RESIZE_DETECTOR = erd();
+
+// TODO: make this viewport/density-independent
+const MIN_SNAP_THRESHOLD = 1.5;
 
 // TODO: create a parent component that will resize this stuff properly (no flexbox?)
 @Component({
@@ -40,10 +43,15 @@ export class CanvasComponent implements OnInit, OnDestroy {
   private subscriptions: Subscription[] = [];
   private pathPointRadius: number;
   private splitPathPointRadius: number;
-  private activeDragPoint: DragPoint;
-  private activeProjectionOntoPath: ProjectionOntoPath;
   private currentHover: Hover;
   private elementResizeCallback: () => void;
+
+  // If present, the user is in the process of moving a point.
+  private activeDragPointId: CommandId;
+  // Represents the actively dragged point's closest projection onto a path.
+  private activeProjectionOntoPath: ProjectionOntoPath;
+  // Represents the mouse location of the actively dragged point.
+  private activeDragPointLocation: Point;
 
   constructor(
     private elementRef: ElementRef,
@@ -302,12 +310,12 @@ export class CanvasComponent implements OnInit, OnDestroy {
         executeDrawCommands(drawCommands, ctx, transforms, true);
 
         ctx.save();
-        ctx.lineWidth = 6 / this.cssScale; // 2px
+        ctx.lineWidth = 6 / this.cssScale;
         ctx.strokeStyle = '#fff';
         ctx.lineCap = 'round';
         ctx.stroke();
         ctx.strokeStyle = '#2196f3';
-        ctx.lineWidth = 3 / this.cssScale; // 2px
+        ctx.lineWidth = 3 / this.cssScale;
         ctx.stroke();
         ctx.restore();
       });
@@ -368,6 +376,12 @@ export class CanvasComponent implements OnInit, OnDestroy {
         for (let i = pathDataPointInfo.length - 1; i >= 0; i--) {
           const currentPointInfo = pathDataPointInfo[i];
 
+          if (this.activeDragPointId
+            && areCommandIdsEqual(this.activeDragPointId, currentPointInfo.commandId)) {
+            // Skip the currently dragged point, if it exists.
+            continue;
+          }
+
           let color, radius;
           if (i === 0) {
             color = ColorUtil.MOVE_POINT_COLOR;
@@ -382,7 +396,7 @@ export class CanvasComponent implements OnInit, OnDestroy {
 
           if (currentHover) {
             if (currentHover.type !== HoverType.None
-              && _.isEqual(currentPointInfo.commandId, currentHover.commandId)) {
+              && areCommandIdsEqual(currentPointInfo.commandId, currentHover.commandId)) {
               // TODO: update this number to something more reasonable
               radius = this.pathPointRadius * 1.25;
             }
@@ -399,22 +413,23 @@ export class CanvasComponent implements OnInit, OnDestroy {
 
   // Draw any actively dragged points along the path.
   private drawDraggingPoints(ctx: CanvasRenderingContext2D) {
-    // TODO: remove the dragged point from its original location after it has been lifted.
-    // TODO: don't snap to the path until it reaches a certain distance threshold.
-    // TODO: if the point is dropped while not snapped to a path, then revert the change.
-    // TODO: all of the above can easily be done using the split snapshot approach above.
     if (this.activeProjectionOntoPath) {
       const startingTransforms =
         [new Matrix(this.attrScale, 0, 0, this.attrScale, 0, 0)];
       this.vectorLayer.walk((layer, transforms) => {
-        if (layer.id !== this.activeProjectionOntoPath.layerId) {
+        if (layer.id !== this.activeProjectionOntoPath.pathId) {
           return;
         }
         transforms.reverse();
         ctx.save();
         const projection = this.activeProjectionOntoPath.projection;
-        const point =
-          MathUtil.transform({ x: projection.x, y: projection.y }, ...transforms);
+        let point;
+        if (projection.d < MIN_SNAP_THRESHOLD) {
+          point = new Point(projection.x, projection.y);
+        } else {
+          point = this.activeDragPointLocation;
+        }
+        point = MathUtil.transform(point, ...transforms);
         this.drawLabeledPoint(
           ctx, point, this.splitPathPointRadius, ColorUtil.SPLIT_POINT_COLOR);
         ctx.restore();
@@ -477,11 +492,12 @@ export class CanvasComponent implements OnInit, OnDestroy {
       return;
     }
     const mouseDown = this.mouseEventToPoint(event);
-    this.activeDragPoint =
+    this.activeDragPointId =
       this.findPathPointInRange(mouseDown, this.splitPathPointRadius);
-    if (this.activeDragPoint) {
+    if (this.activeDragPointId) {
       this.activeProjectionOntoPath =
-        this.calculateProjectionOntoPath(mouseDown, this.activeDragPoint.layerId);
+        this.calculateProjectionOntoPath(mouseDown, this.activeDragPointId.pathId);
+      this.activeDragPointLocation = mouseDown;
       this.draw();
     }
   }
@@ -492,9 +508,10 @@ export class CanvasComponent implements OnInit, OnDestroy {
       return;
     }
     const mouseMove = this.mouseEventToPoint(event);
-    if (this.activeDragPoint) {
+    if (this.activeDragPointId) {
       this.activeProjectionOntoPath =
-        this.calculateProjectionOntoPath(mouseMove, this.activeDragPoint.layerId);
+        this.calculateProjectionOntoPath(mouseMove, this.activeDragPointId.pathId);
+      this.activeDragPointLocation = mouseMove;
       this.draw();
     }
   }
@@ -504,28 +521,29 @@ export class CanvasComponent implements OnInit, OnDestroy {
       // The user never interacts with the preview canvas.
       return;
     }
-    if (this.activeDragPoint) {
+    if (this.activeDragPointId) {
       const activeLayer =
-        this.vectorLayer.findLayerById(this.activeDragPoint.layerId) as PathLayer;
+        this.vectorLayer.findLayerById(this.activeDragPointId.pathId) as PathLayer;
 
       // Delete the old drag point from the path.
       activeLayer.pathData =
         activeLayer.pathData.unsplit(
-          this.activeDragPoint.subPathIdx, this.activeDragPoint.drawIdx);
+          this.activeDragPointId.subPathIdx, this.activeDragPointId.drawIdx);
 
       // Recalculate the projection in case the unsplit operation shuffled
       // the path indices.
       this.activeProjectionOntoPath =
         this.calculateProjectionOntoPath(
-          this.mouseEventToPoint(event), this.activeDragPoint.layerId);
+          this.mouseEventToPoint(event), this.activeDragPointId.pathId);
 
       // Re-split the path at the projection point.
       activeLayer.pathData = this.activeProjectionOntoPath.split();
 
       // Notify the global layer state service about the change and draw.
       this.layerStateService.setData(this.editorType, this.vectorLayer);
-      this.activeDragPoint = undefined;
+      this.activeDragPointId = undefined;
       this.activeProjectionOntoPath = undefined;
+      this.activeDragPointLocation = undefined;
 
       // TODO: will calling 'setData' make this draw() call unnecessary?
       this.draw();
@@ -537,9 +555,10 @@ export class CanvasComponent implements OnInit, OnDestroy {
       // The user never interacts with the preview canvas.
       return;
     }
-    if (this.activeDragPoint) {
-      this.activeDragPoint = undefined;
+    if (this.activeDragPointId) {
+      this.activeDragPointId = undefined;
       this.activeProjectionOntoPath = undefined;
+      this.activeDragPointLocation = undefined;
       this.draw();
     }
   }
@@ -551,7 +570,7 @@ export class CanvasComponent implements OnInit, OnDestroy {
   private findPathPointInRange(
     mousePoint: Point,
     range: number,
-    splitOnly = true): DragPoint | undefined {
+    splitOnly = true): CommandId | undefined {
 
     const minPathPoints = [];
     this.vectorLayer.walk((layer, transforms) => {
@@ -559,26 +578,27 @@ export class CanvasComponent implements OnInit, OnDestroy {
         return;
       }
       transforms.reverse();
-      const layerId = layer.id;
+      const pathId = layer.id;
       const transformedMousePoint = MathUtil.transform(mousePoint, ...transforms);
-      const minPathPoint = _.chain(layer.pathData.subPathCommands)
-        .map((subPathCmd: SubPathCommand, subPathIdx: number) => {
-          return subPathCmd.commands
-            .map((drawCmd, drawIdx) => {
-              const distance = MathUtil.distance(drawCmd.end, transformedMousePoint);
-              const isSplit = drawCmd.isSplit;
-              return { layerId, subPathIdx, drawIdx, distance, isSplit };
-            })
-            // Filter out non-split commands last to preserve the indices above.
-            .filter(cmdInfo => splitOnly && cmdInfo.isSplit);
-        })
-        .flatMap(pathPoints => pathPoints)
-        // TODO: confirm that using the backingStoreScale here is correct...
-        .filter(pathPoint => pathPoint.distance <= (range / this.attrScale))
-        .reduce((prev, curr) => {
-          return prev && prev.distance < curr.distance ? prev : curr;
-        }, undefined)
-        .value();
+      const minPathPoint =
+        _.chain(layer.pathData.subPathCommands)
+          .map((subPathCmd: SubPathCommand, subPathIdx: number) => {
+            return subPathCmd.commands
+              .map((drawCmd, drawIdx) => {
+                const distance = MathUtil.distance(drawCmd.end, transformedMousePoint);
+                const isSplit = drawCmd.isSplit;
+                return { pathId, subPathIdx, drawIdx, distance, isSplit };
+              })
+              // Filter out non-split commands last to preserve the indices above.
+              .filter(cmdInfo => splitOnly && cmdInfo.isSplit);
+          })
+          .flatMap(pathPoints => pathPoints)
+          // TODO: confirm that using the backingStoreScale here is correct...
+          .filter(pathPoint => pathPoint.distance <= (range / this.attrScale))
+          .reduce((prev, curr) => {
+            return prev && prev.distance < curr.distance ? prev : curr;
+          }, undefined)
+          .value();
       if (minPathPoint) {
         minPathPoints.push(minPathPoint);
       }
@@ -589,17 +609,17 @@ export class CanvasComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Calculates the projection onto the path with the specified layer ID.
+   * Calculates the projection onto the path with the specified path ID.
    * The resulting projection is our way of determining the on-curve point
    * closest to the specified off-curve mouse point.
    */
   private calculateProjectionOntoPath(
     mousePoint: Point,
-    layerId: string): ProjectionOntoPath | undefined {
+    pathId: string): ProjectionOntoPath | undefined {
 
     let projectionOntoPath: ProjectionOntoPath;
     this.vectorLayer.walk((layer, transforms) => {
-      if (!(layer instanceof PathLayer) || layerId !== layer.id) {
+      if (!(layer instanceof PathLayer) || pathId !== layer.id) {
         return;
       }
       transforms.reverse();
@@ -609,7 +629,7 @@ export class CanvasComponent implements OnInit, OnDestroy {
         return;
       }
       projectionOntoPath = {
-        layerId: layer.id,
+        pathId: layer.id,
         projection: projectionInfo.projection,
         split: projectionInfo.split,
       };
@@ -715,16 +735,15 @@ function executeArcCommand(ctx: CanvasRenderingContext2D, arcArgs: ReadonlyArray
   }
 }
 
-/** Contains information about a projection onto a path. */
-interface ProjectionOntoPath {
-  layerId: string;
-  projection: Projection;
-  split: () => PathCommand;
+function areCommandIdsEqual(id1: CommandId, id2: CommandId) {
+  return id1.pathId === id2.pathId
+    && id1.subPathIdx === id2.subPathIdx
+    && id1.drawIdx === id2.drawIdx;
 }
 
-/** Contains information about a dragged point in a path. */
-interface DragPoint {
-  layerId: string;
-  subPathIdx: number;
-  drawIdx: number;
+/** Contains information about a projection onto a path. */
+interface ProjectionOntoPath {
+  pathId: string;
+  projection: Projection;
+  split: () => PathCommand;
 }

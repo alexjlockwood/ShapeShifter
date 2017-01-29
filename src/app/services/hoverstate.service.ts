@@ -4,7 +4,7 @@ import { Subscription } from 'rxjs/Subscription';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { VectorLayer } from '../scripts/model';
 import { Observable } from 'rxjs/Observable';
-import { EditorType } from '../scripts/model';
+import { EditorType, CommandId } from '../scripts/model';
 
 @Injectable()
 export class HoverStateService {
@@ -64,13 +64,4 @@ export enum HoverType {
   Split,
   // The user hovered over the unsplit button in the command inspector.
   Unsplit,
-}
-
-/**
- * Uniquely identifies a command in a vector layer.
- */
-export interface CommandId {
-  readonly pathId: string;
-  readonly subPathIdx: number;
-  readonly drawIdx: number;
 }

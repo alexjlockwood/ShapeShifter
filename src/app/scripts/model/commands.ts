@@ -167,3 +167,12 @@ export interface DrawCommand {
    */
   canConvertTo(ch: SvgChar): boolean;
 }
+
+/**
+ * Uniquely identifies a draw command in a path.
+ */
+export interface CommandId {
+  readonly pathId: string;
+  readonly subPathIdx: number;
+  readonly drawIdx: number;
+}
