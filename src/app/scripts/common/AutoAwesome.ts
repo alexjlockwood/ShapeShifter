@@ -2,84 +2,13 @@ import * as _ from 'lodash';
 import { PathCommand, SubPathCommand, Command } from '../model';
 import { MathUtil } from '.';
 
+// Needleman-Wunsch scoring function constants.
 const MATCH = 1;
 const MISMATCH = -1;
 const INDEL = 0;
 
-/** Represents either a valid object or an empty gap slot. */
-interface Alignment<T> {
-  obj?: T;
-}
-
-/**
- * Aligns two sequences of draw commands using the Needleman-Wunsch algorithm.
- * TODO: make this generic to any object type (not just draw commands)
- */
-function align<T>(
-  from: ReadonlyArray<T>,
-  to: ReadonlyArray<T>,
-  scoringFunction: (t1: T, t2: T) => number) {
-
-  const listA: Alignment<T>[] = from.map(obj => { return { obj }; });
-  const listB: Alignment<T>[] = to.map(obj => { return { obj }; });
-  const originalListA = from;
-  const originalListB = to;
-  const alignedListA: Alignment<T>[] = [];
-  const alignedListB: Alignment<T>[] = [];
-
-  // Add dummy nodes at the first position of each list.
-  listA.unshift(undefined);
-  listB.unshift(undefined);
-
-  // Initialize the scoring matrix.
-  const matrix: number[][] = [];
-  for (let i = 0; i < listA.length; i++) {
-    const row = [];
-    for (let j = 0; j < listB.length; j++) {
-      row.push(i === 0 ? -j : j === 0 ? -i : 0);
-    }
-    matrix.push(row);
-  }
-
-  // Process the scoring matrix.
-  for (let i = 1; i < listA.length; i++) {
-    for (let j = 1; j < listB.length; j++) {
-      const match =
-        matrix[i - 1][j - 1] + scoringFunction(listA[i].obj, listB[j].obj);
-      const ins = matrix[i][j - 1] + INDEL;
-      const del = matrix[i - 1][j] + INDEL;
-      matrix[i][j] = Math.max(match, ins, del);
-    }
-  }
-
-  // Backtracking.
-  let i = listA.length - 1;
-  let j = listB.length - 1;
-
-  while (i > 0 || j > 0) {
-    if (i > 0 && j > 0
-      && matrix[i][j] === matrix[i - 1][j - 1]
-      + scoringFunction(listA[i].obj, listB[j].obj)) {
-      alignedListA.unshift(listA[i--]);
-      alignedListB.unshift(listB[j--]);
-    } else if (i > 0 && matrix[i][j] === matrix[i - 1][j] + INDEL) {
-      alignedListA.unshift(listA[i--]);
-      alignedListB.unshift({});
-    } else {
-      alignedListA.unshift({});
-      alignedListB.unshift(listB[j--]);
-    }
-  }
-
-  return {
-    from: alignedListA,
-    to: alignedListB,
-    score: _.last(_.last(matrix)),
-  };
-}
-
 // TODO: this can still be optimized a lot... work in progress!
-export function autoFix(
+export function fix(
   subPathIdx: number,
   srcFromPath: PathCommand,
   srcToPath: PathCommand) {
@@ -204,5 +133,77 @@ export function autoFix(
   return {
     from: fromPathFinalResult,
     to: toPathFinalResult,
+  };
+}
+
+/** Represents either a valid object or an empty gap slot. */
+interface Alignment<T> {
+  obj?: T;
+}
+
+/**
+ * Aligns two sequences of draw commands using the Needleman-Wunsch algorithm.
+ * TODO: make this generic to any object type (not just draw commands)
+ */
+function align<T>(
+  from: ReadonlyArray<T>,
+  to: ReadonlyArray<T>,
+  scoringFunction: (t1: T, t2: T) => number) {
+
+  const listA: Alignment<T>[] = from.map(obj => { return { obj }; });
+  const listB: Alignment<T>[] = to.map(obj => { return { obj }; });
+  const originalListA = from;
+  const originalListB = to;
+  const alignedListA: Alignment<T>[] = [];
+  const alignedListB: Alignment<T>[] = [];
+
+  // Add dummy nodes at the first position of each list.
+  listA.unshift(undefined);
+  listB.unshift(undefined);
+
+  // Initialize the scoring matrix.
+  const matrix: number[][] = [];
+  for (let i = 0; i < listA.length; i++) {
+    const row = [];
+    for (let j = 0; j < listB.length; j++) {
+      row.push(i === 0 ? -j : j === 0 ? -i : 0);
+    }
+    matrix.push(row);
+  }
+
+  // Process the scoring matrix.
+  for (let i = 1; i < listA.length; i++) {
+    for (let j = 1; j < listB.length; j++) {
+      const match =
+        matrix[i - 1][j - 1] + scoringFunction(listA[i].obj, listB[j].obj);
+      const ins = matrix[i][j - 1] + INDEL;
+      const del = matrix[i - 1][j] + INDEL;
+      matrix[i][j] = Math.max(match, ins, del);
+    }
+  }
+
+  // Backtracking.
+  let i = listA.length - 1;
+  let j = listB.length - 1;
+
+  while (i > 0 || j > 0) {
+    if (i > 0 && j > 0
+      && matrix[i][j] === matrix[i - 1][j - 1]
+      + scoringFunction(listA[i].obj, listB[j].obj)) {
+      alignedListA.unshift(listA[i--]);
+      alignedListB.unshift(listB[j--]);
+    } else if (i > 0 && matrix[i][j] === matrix[i - 1][j] + INDEL) {
+      alignedListA.unshift(listA[i--]);
+      alignedListB.unshift({});
+    } else {
+      alignedListA.unshift({});
+      alignedListB.unshift(listB[j--]);
+    }
+  }
+
+  return {
+    from: alignedListA,
+    to: alignedListB,
+    score: _.last(_.last(matrix)),
   };
 }

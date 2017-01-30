@@ -7,7 +7,7 @@ import { LayerStateService } from '../services/layerstate.service';
 import { SelectionService } from '../services/selection.service';
 import { Subscription } from 'rxjs/Subscription';
 import { InspectorService, EventType, InspectorEvent } from './inspector.service';
-import { VectAlign } from '../scripts/common';
+import { AutoAwesome } from '../scripts/common';
 
 @Component({
   selector: 'app-inspector',
@@ -62,7 +62,7 @@ export class InspectorComponent implements OnInit, OnDestroy {
             const targetVl = this.layerStateService.getData(targetEditorType);
             const fromPathLayer = pathLayer;
             const toPathLayer = targetVl.findLayerById(pathId) as PathLayer;
-            const autoFixResult = VectAlign.autoFix(subPathIdx, fromPathLayer.pathData, toPathLayer.pathData);
+            const autoFixResult = AutoAwesome.fix(subPathIdx, fromPathLayer.pathData, toPathLayer.pathData);
             fromPathLayer.pathData = autoFixResult.from;
             toPathLayer.pathData = autoFixResult.to;
             this.layerStateService.notifyChange(EditorType.Start);
