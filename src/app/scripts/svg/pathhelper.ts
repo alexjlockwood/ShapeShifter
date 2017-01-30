@@ -1,6 +1,7 @@
 import * as _ from 'lodash';
 import * as BezierJs from 'bezier-js';
 import { MathUtil, Point } from '../common';
+import { Projection } from '../model/commands';
 
 export interface PathHelper {
   points: ReadonlyArray<Point>;
@@ -8,13 +9,6 @@ export interface PathHelper {
   project(point: Point): Projection;
   split(t1: number, t2?: number): PathHelper;
   findTimeByDistance(distance: number): number;
-}
-
-export interface Projection {
-  x: number;
-  y: number;
-  t: number;
-  d: number;
 }
 
 interface IPoint { x: number; y: number; };

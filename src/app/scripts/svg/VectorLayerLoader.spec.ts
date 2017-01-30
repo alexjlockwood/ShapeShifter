@@ -1,7 +1,7 @@
-import * as SvgLoader from './svgloader';
-import { VectorLayer, PathLayer } from '../model';
+import * as VectorLayerLoader from './VectorLayerLoader';
+import { VectorLayer, PathLayer } from '../model/layers';
 
-describe('SvgLoader', () => {
+describe('VectorLayerLoader', () => {
   it('convert simple svg to vector layer', () => {
     const simpleSvg = `
       <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24">

@@ -1,5 +1,4 @@
 import { Point } from '../../common';
-import { Projection } from '../../svg';
 import { SubPathCommand, SvgChar } from '.';
 
 /**
@@ -89,4 +88,12 @@ export interface PathCommand {
    * Returns a cloned instance of this path command.
    */
   clone(): PathCommand;
+}
+
+/** Represents a projection onto a path. */
+export interface Projection {
+  x: number;
+  y: number;
+  t: number;
+  d: number;
 }

@@ -1,13 +1,13 @@
 import * as _ from 'lodash';
 import { MathUtil, Point, Matrix, Rect } from '../common';
-import { PathHelper, createPathHelper, Projection } from './pathhelper';
-import { PathCommand, SubPathCommand, Command, SvgChar } from '../model/commands';
-import * as SvgUtil from './svgutil';
-import * as PathParser from './pathparser';
-import { createSubPathCommand } from './subpathcommand';
+import { PathHelper, createPathHelper } from './PathHelper';
+import { PathCommand, SubPathCommand, Command, SvgChar, Projection } from '../model/commands';
+import * as SvgUtil from './SvgUtil';
+import * as PathParser from './PathParser';
+import { createSubPathCommand } from './SubPathCommandImpl';
 import {
   CommandImpl, moveTo, lineTo, quadraticCurveTo, bezierCurveTo, arcTo, closePath
-} from './drawcommand';
+} from './CommandImpl';
 
 export function createPathCommand(path: string): PathCommand {
   return new PathCommandImpl(path);

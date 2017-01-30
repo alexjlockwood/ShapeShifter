@@ -1,9 +1,9 @@
 import { Point, Matrix, MathUtil } from '../common';
-import * as SvgUtil from './svgutil';
+import * as SvgUtil from './SvgUtil';
 import {
   CommandImpl, moveTo, lineTo, quadraticCurveTo, bezierCurveTo, arcTo, closePath
-} from './drawcommand';
-import { Command } from '../model';
+} from './CommandImpl';
+import { Command } from '../model/commands';
 
 /**
  * Takes an SVG path string (i.e. the text specified in the path's 'd' attribute) and returns

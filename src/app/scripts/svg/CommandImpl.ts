@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
 import { Point, Matrix, MathUtil } from '../common';
-import { Command, SvgChar } from '../model';
-import * as SvgUtil from './svgutil';
+import { Command, SvgChar } from '../model/commands';
+import * as SvgUtil from './SvgUtil';
 
 /**
  * Implementation of the DrawCommand interface. Each draw command represents

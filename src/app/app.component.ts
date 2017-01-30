@@ -4,7 +4,7 @@ import {
 } from '@angular/core';
 import { environment } from '../environments/environment';
 import { Layer, VectorLayer, GroupLayer, PathLayer } from './scripts/model';
-import { SvgLoader } from './scripts/svg';
+import { VectorLayerLoader } from './scripts/svg';
 import { Point } from './scripts/common';
 import { EditorType } from './scripts/model';
 import { Subscription } from 'rxjs/Subscription';
@@ -137,12 +137,12 @@ export class AppComponent implements OnInit, OnDestroy {
     //       </g>
     //     </g>
     // </svg>`));
-    this.layerStateService.setData(EditorType.Start, SvgLoader.loadVectorLayerFromSvgString(`
+    this.layerStateService.setData(EditorType.Start, VectorLayerLoader.loadVectorLayerFromSvgString(`
       <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24">
         <path d="M 4 4 L 4 20 L 20 20 L 20 4 L 4 4"
                  stroke="#000" stroke-width="1" />
     </svg>`));
-    this.layerStateService.setData(EditorType.End, SvgLoader.loadVectorLayerFromSvgString(`
+    this.layerStateService.setData(EditorType.End, VectorLayerLoader.loadVectorLayerFromSvgString(`
       <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24">
         <path d="M 4 4 C 4 20 4 20 4 20 L 20 20 L 20 4 L 4 4"
                  stroke="#000" stroke-width="1" />

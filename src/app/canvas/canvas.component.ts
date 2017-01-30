@@ -5,13 +5,12 @@ import {
 } from '@angular/core';
 import {
   Layer, PathLayer, ClipPathLayer, GroupLayer,
-  VectorLayer, PathCommand, EditorType, SubPathCommand, Command
+  VectorLayer, PathCommand, EditorType, SubPathCommand, Command, Projection
 } from '../scripts/model';
 import { Id as CommandId } from '../scripts/model';
 import * as $ from 'jquery';
 import * as erd from 'element-resize-detector';
 import { Point, Matrix, MathUtil, ColorUtil } from '../scripts/common';
-import { Projection } from '../scripts/svg';
 import { TimelineService } from '../timeline/timeline.service';
 import { LayerStateService } from '../services/layerstate.service';
 import { Subscription } from 'rxjs/Subscription';

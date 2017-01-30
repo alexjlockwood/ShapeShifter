@@ -1,4 +1,3 @@
-import * as SvgLoader from './svgloader';
-import { Projection } from './pathhelper';
-export { SvgLoader, Projection };
-export { arcToBeziers } from './svgutil';
+import * as VectorLayerLoader from './VectorLayerLoader';
+export { VectorLayerLoader };
+export { arcToBeziers } from './SvgUtil';

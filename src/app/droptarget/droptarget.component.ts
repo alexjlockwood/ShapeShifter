@@ -6,7 +6,7 @@ import { LayerStateService } from '../services/layerstate.service';
 import { EditorType } from '../scripts/model';
 import * as $ from 'jquery';
 import * as erd from 'element-resize-detector';
-import { SvgLoader } from '../scripts/svg';
+import { VectorLayerLoader } from '../scripts/svg';
 
 const ELEMENT_RESIZE_DETECTOR = erd();
 
@@ -68,7 +68,7 @@ export class DropTargetComponent implements OnInit, OnDestroy {
 
     fileReader.onload = event => {
       const svgText = (event.target as any).result;
-      const vectorLayer = SvgLoader.loadVectorLayerFromSvgString(svgText);
+      const vectorLayer = VectorLayerLoader.loadVectorLayerFromSvgString(svgText);
       this.layerStateService.setData(this.editorType, vectorLayer);
     };
 

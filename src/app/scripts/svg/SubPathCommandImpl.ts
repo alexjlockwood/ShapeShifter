@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 import { Point } from '../common';
-import { PathCommand, SubPathCommand, Command } from '../model';
+import { PathCommand, SubPathCommand, Command } from '../model/commands';
 
 /**
  * Implementation of the SubPathCommand interface. A PathCommand is split up
