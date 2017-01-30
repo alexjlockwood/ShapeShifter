@@ -9,7 +9,8 @@ import {
 } from '../scripts/model';
 import * as $ from 'jquery';
 import * as erd from 'element-resize-detector';
-import { Point, Matrix, Projection, MathUtil, ColorUtil } from '../scripts/common';
+import { Point, Matrix, MathUtil, ColorUtil } from '../scripts/common';
+import { Projection } from '../scripts/svg';
 import { TimelineService } from '../timeline/timeline.service';
 import { LayerStateService } from '../services/layerstate.service';
 import { Subscription } from 'rxjs/Subscription';
@@ -132,7 +133,8 @@ export class CanvasComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    ELEMENT_RESIZE_DETECTOR.removeListener(this.element.parent().get(0), this.elementResizeCallback);
+    // TODO: app crashes when going from morphable to unmorphable
+    // ELEMENT_RESIZE_DETECTOR.removeListener(this.element.parent().get(0), this.elementResizeCallback);
     this.subscriptions.forEach(s => s.unsubscribe());
   }
 
@@ -173,7 +175,7 @@ export class CanvasComponent implements OnInit, OnDestroy {
     this.attrScale = this.cssScale * devicePixelRatio;
 
     // TODO: this still doesn't work very well for small/large viewports and/or on resizing
-    this.pathPointRadius = this.attrScale * 5;
+    this.pathPointRadius = this.attrScale;
     this.splitPathPointRadius = this.pathPointRadius * 0.8;
     this.draw();
   }

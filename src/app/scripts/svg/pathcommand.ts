@@ -1,5 +1,6 @@
 import * as _ from 'lodash';
-import { MathUtil, PathHelper, createPathHelper, Projection, Point, Matrix, Rect } from '../common';
+import { MathUtil, Point, Matrix, Rect } from '../common';
+import { PathHelper, createPathHelper, Projection } from './pathhelper';
 import { PathCommand, SubPathCommand, DrawCommand, SvgChar } from '../model';
 import * as SvgUtil from './svgutil';
 import * as PathParser from './pathparser';
@@ -459,25 +460,26 @@ class CommandWrapper {
   // then a list containing the initial SVG draw command is returned.
   private readonly drawCommands: ReadonlyArray<DrawCommandImpl>;
 
-  // Precondition: the sizes of these arrays should always be identical.
-  private readonly ids: ReadonlyArray<string>;
-  private readonly splits: ReadonlyArray<number>;
-  private readonly svgChars: ReadonlyArray<SvgChar>;
+  // The list of mutations describes how the initial backing draw command
+  // has since been modified. Since the command wrapper always holds a
+  // reference to its initial backing draw command, these modifications
+  // are always reversible.
+  private readonly mutations: ReadonlyArray<Mutation>;
 
   constructor(obj: DrawCommandImpl | ClonedCommandWrapperInfo) {
     if (obj instanceof DrawCommandImpl) {
       this.backingCommand = obj;
       this.pathHelper = drawCommandToPathHelper(obj);
-      this.ids = [_.uniqueId()];
-      this.splits = [1];
-      this.svgChars = [this.backingCommand.svgChar];
+      this.mutations = [{
+        id: _.uniqueId(),
+        t: 1,
+        svgChar: this.backingCommand.svgChar,
+      }];
       this.drawCommands = [obj];
     } else {
       this.backingCommand = obj.backingCommand;
       this.pathHelper = obj.pathHelper;
-      this.ids = obj.ids.slice();
-      this.splits = obj.splits.slice();
-      this.svgChars = obj.svgChars.slice();
+      this.mutations = obj.mutations;
       this.drawCommands = obj.drawCommands.slice();
     }
   }
@@ -486,9 +488,7 @@ class CommandWrapper {
     return new CommandWrapper(_.assign({}, {
       backingCommand: this.backingCommand,
       pathHelper: this.pathHelper,
-      ids: this.ids,
-      splits: this.splits,
-      svgChars: this.svgChars,
+      mutations: this.mutations.slice(),
       drawCommands: this.drawCommands,
     }, overrides));
   }
@@ -510,34 +510,39 @@ class CommandWrapper {
     if (this.backingCommand.svgChar === 'A') {
       throw new Error('TODO: implement split support for elliptical arcs');
     }
-    const ids = this.ids.slice();
-    const splits = this.splits.slice();
-    const svgChars = this.svgChars.slice();
+    const currSplits = this.mutations.map(m => m.t);
+    const currSvgChars = this.mutations.map(m => m.svgChar);
+    const updatedMutations = this.mutations.slice();
     for (const t of ts) {
-      const insertionIdx = _.sortedIndex(splits, t);
-      ids.splice(insertionIdx, 0, _.uniqueId());
-      splits.splice(insertionIdx, 0, t);
-      // TODO: what about if the last command is a Z? then we want the svg char to be L?
-      svgChars.splice(insertionIdx, 0, this.commands[insertionIdx].svgChar);
+      const currIdx = _.sortedIndex(currSplits, t);
+      const id = _.uniqueId();
+      // TODO: what about if the last command is a Z? then we want the svg char to be L!!
+      const svgChar = currSvgChars[currIdx];
+      const mutation = { id, t, svgChar };
+      const insertionIdx =
+        _.sortedIndexBy<Mutation>(updatedMutations, mutation, m => m.t);
+      updatedMutations.splice(insertionIdx, 0, { id, t, svgChar });
     }
-    return this.rebuildCommands(ids, splits, svgChars);
+    return this.rebuildCommands(updatedMutations);
   }
 
   // Each draw command is given a globally unique ID (to improve performance
   // inside *ngFor loops, etc.).
   getIdAtIndex(splitIdx: number) {
-    return this.ids[splitIdx];
+    return this.mutations[splitIdx].id;
   }
 
   splitAtIndex(splitIdx: number, ...ts: number[]) {
-    const tempSplits = [0, ...this.splits];
+    const currSplits = this.mutations.map(m => m.t);
+    const tempSplits = [0, ...currSplits];
     const startSplit = tempSplits[splitIdx];
     const endSplit = tempSplits[splitIdx + 1];
     return this.split(...ts.map(t => MathUtil.lerp(startSplit, endSplit, t)));
   }
 
   splitInHalfAtIndex(splitIndex: number) {
-    const tempSplits = [0, ...this.splits];
+    const currSplits = this.mutations.map(m => m.t);
+    const tempSplits = [0, ...currSplits];
     const startSplit = tempSplits[splitIndex];
     const endSplit = tempSplits[splitIndex + 1];
     const distance = MathUtil.lerp(startSplit, endSplit, 0.5);
@@ -545,39 +550,35 @@ class CommandWrapper {
   }
 
   unsplitAtIndex(splitIdx: number) {
-    const ids = this.ids.slice();
-    const splits = this.splits.slice();
-    const svgChars = this.svgChars.slice();
-    ids.splice(splitIdx, 1);
-    splits.splice(splitIdx, 1);
-    svgChars.splice(splitIdx, 1);
-    return this.rebuildCommands(ids, splits, svgChars);
+    const mutations = this.mutations.slice();
+    mutations.splice(splitIdx, 1);
+    return this.rebuildCommands(mutations);
   }
 
   convertAtIndex(splitIdx: number, svgChar: SvgChar) {
-    const svgChars = this.svgChars.slice();
-    svgChars[splitIdx] = svgChar;
-    return this.rebuildCommands(this.ids.slice(), this.splits.slice(), svgChars);
+    const mutations = this.mutations.slice();
+    mutations[splitIdx] = _.assign({}, mutations[splitIdx], { svgChar });
+    return this.rebuildCommands(mutations);
   }
 
   // TODO: this could be more efficient (avoid recreating draw commands unnecessarily)
-  private rebuildCommands(ids: string[], splits: number[], svgChars: SvgChar[]) {
-    if (splits.length === 1) {
+  private rebuildCommands(mutations: Mutation[]) {
+    if (mutations.length === 1) {
       const drawCommands =
-        [pointsToDrawCommand(svgChars[0], this.pathHelper.points, false)];
-      return this.clone({ splits, svgChars, ids, drawCommands });
+        [pointsToDrawCommand(mutations[0].svgChar, this.pathHelper.points, false)];
+      return this.clone({ mutations, drawCommands });
     }
     const drawCommands = [];
     let prevT = 0;
-    for (let i = 0; i < splits.length; i++) {
-      const currT = splits[i];
+    for (let i = 0; i < mutations.length; i++) {
+      const currT = mutations[i].t;
       const splitPathHelper = this.pathHelper.split(prevT, currT);
-      const isSplit = i !== splits.length - 1;
+      const isSplit = i !== mutations.length - 1;
       drawCommands.push(
-        pointsToDrawCommand(svgChars[i], splitPathHelper.points, isSplit));
+        pointsToDrawCommand(mutations[i].svgChar, splitPathHelper.points, isSplit));
       prevT = currT;
     }
-    return this.clone({ ids, splits, svgChars, drawCommands });
+    return this.clone({ mutations, drawCommands });
   }
 
   get commands() {
@@ -694,6 +695,12 @@ function drawCommandToPathHelper(cmd: DrawCommandImpl): PathHelper {
   return undefined;
 }
 
+interface Mutation {
+  readonly id: string;
+  readonly t: number;
+  readonly svgChar: SvgChar;
+}
+
 // Path command internals that have been cloned.
 interface ClonedPathCommandInfo {
   drawCommands_?: ReadonlyArray<DrawCommandImpl>;
@@ -706,9 +713,7 @@ interface ClonedPathCommandInfo {
 interface ClonedCommandWrapperInfo {
   backingCommand?: DrawCommandImpl;
   pathHelper?: PathHelper;
-  ids?: ReadonlyArray<string>;
-  splits?: ReadonlyArray<number>;
-  svgChars?: ReadonlyArray<SvgChar>;
+  mutations?: ReadonlyArray<Mutation>;
   drawCommands?: ReadonlyArray<DrawCommandImpl>;
 }
 

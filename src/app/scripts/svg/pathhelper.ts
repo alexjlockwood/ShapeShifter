@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 import * as BezierJs from 'bezier-js';
-import { MathUtil, Point } from './';
+import { MathUtil, Point } from '../common';
 
 export interface PathHelper {
   points: ReadonlyArray<Point>;
@@ -190,7 +190,6 @@ class BezierHelper implements PathHelper {
   }
 
   findTimeByDistance(distance: number): number {
-    // TODO: check for degenerate curves?
     const epsilon = 0.001;
     const maxDepth = -100;
 
@@ -213,7 +212,8 @@ class BezierHelper implements PathHelper {
     }
 
     if (step === maxDepth) {
-      throw new Error('could not find the midpoint!');
+      // TODO: handle degenerate curves!!!!!
+      console.warn('could not find the midpoint!');
     }
 
     return distance;

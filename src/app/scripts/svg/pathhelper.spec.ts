@@ -1,6 +1,6 @@
 import { } from 'jasmine';
 import { PathHelper, Projection, createPathHelper } from './pathhelper';
-import { Point } from './mathutil';
+import { Point } from '../common';
 
 describe('PathHelper', () => {
   it('constructor', () => {

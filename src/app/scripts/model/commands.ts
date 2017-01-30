@@ -1,4 +1,5 @@
-import { Point, Projection } from '../common';
+import { Point } from '../common';
+import { Projection } from '../svg';
 
 // The different types of supported SVG commands.
 export type SvgChar = 'M' | 'L' | 'Q' | 'C' | 'A' | 'Z';
@@ -111,7 +112,7 @@ export interface SubPathCommand {
    * Returns the list of points in this sub path in sequential order. The list of
    * points does not include control points.
    */
-  points: ReadonlyArray<{point: Point, isSplit: boolean}>;
+  points: ReadonlyArray<{ point: Point, isSplit: boolean }>;
 }
 
 /**
