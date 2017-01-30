@@ -11,7 +11,7 @@ import { EditorType } from '../scripts/model';
 })
 export class TimelineComponent implements OnInit {
   maxAnimationFractionSliderValue = 1000;
-  animationDuration = 1000;
+  animationDuration = 300;
   isMorphable = false;
 
   private subscriptions: Subscription[] = [];

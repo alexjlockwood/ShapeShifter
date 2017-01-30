@@ -173,7 +173,7 @@ export class CanvasComponent implements OnInit, OnDestroy {
     this.attrScale = this.cssScale * devicePixelRatio;
 
     // TODO: this still doesn't work very well for small/large viewports and/or on resizing
-    this.pathPointRadius = this.attrScale;
+    this.pathPointRadius = this.attrScale * 5;
     this.splitPathPointRadius = this.pathPointRadius * 0.8;
     this.draw();
   }
@@ -383,7 +383,7 @@ export class CanvasComponent implements OnInit, OnDestroy {
         const currentPointInfo = pathDataPointInfo[i];
 
         if (this.activeDragPointId
-          && areCommandIdsEqual(this.activeDragPointId, currentPointInfo.commandId)) {
+          && _.isMatch(this.activeDragPointId, currentPointInfo.commandId)) {
           // Skip the currently dragged point, if it exists.
           // We'll draw that separately next.
           continue;
@@ -403,7 +403,7 @@ export class CanvasComponent implements OnInit, OnDestroy {
 
         if (currentHover
           && currentHover.type !== HoverType.None
-          && areCommandIdsEqual(currentPointInfo.commandId, currentHover.commandId)) {
+          && _.isMatch(currentPointInfo.commandId, currentHover.commandId)) {
           // TODO: update this number to something more reasonable?
           radius = this.pathPointRadius * 1.25;
         }
@@ -740,12 +740,6 @@ function executeArcCommand(ctx: CanvasRenderingContext2D, arcArgs: ReadonlyArray
       bezierCoords[i + 4], bezierCoords[i + 5],
       bezierCoords[i + 6], bezierCoords[i + 7]);
   }
-}
-
-function areCommandIdsEqual(id1: CommandId, id2: CommandId) {
-  return id1.pathId === id2.pathId
-    && id1.subPathIdx === id2.subPathIdx
-    && id1.drawIdx === id2.drawIdx;
 }
 
 /** Contains information about a projection onto a path. */

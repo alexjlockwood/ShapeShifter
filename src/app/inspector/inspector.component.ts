@@ -7,6 +7,7 @@ import { LayerStateService } from '../services/layerstate.service';
 import { SelectionService } from '../services/selection.service';
 import { Subscription } from 'rxjs/Subscription';
 import { InspectorService, EventType, InspectorEvent } from './inspector.service';
+import { VectAlign } from '../scripts/common';
 
 @Component({
   selector: 'app-inspector',
@@ -53,17 +54,20 @@ export class InspectorComponent implements OnInit, OnDestroy {
         const vl = this.layerStateService.getData(this.editorType);
         const pathLayer = vl.findLayerById(pathId) as PathLayer;
         switch (eventType) {
-          case EventType.AutoAlign: {
+          case EventType.AutoFix: {
             const targetEditorType =
               this.editorType === EditorType.End
                 ? EditorType.Start
                 : EditorType.End;
             const targetVl = this.layerStateService.getData(targetEditorType);
-            const targetPathData = (targetVl.findLayerById(pathId) as PathLayer).pathData;
-            if (targetPathData) {
-              pathLayer.pathData = pathLayer.pathData.autoAlign(subPathIdx, targetPathData);
-              // TODO: need to update selections as well (or clear them if that's too hard)
-            }
+            const fromPathLayer = pathLayer;
+            const toPathLayer = targetVl.findLayerById(pathId) as PathLayer;
+            const autoFixResult = VectAlign.autoFix(subPathIdx, fromPathLayer.pathData, toPathLayer.pathData);
+            fromPathLayer.pathData = autoFixResult.from;
+            toPathLayer.pathData = autoFixResult.to;
+            this.layerStateService.notifyChange(EditorType.Start);
+            this.layerStateService.notifyChange(EditorType.End);
+            // TODO: need to update selections as well (or clear them if that's too hard)
           }
             break;
           case EventType.Convert: {

@@ -45,8 +45,8 @@ export class SubPathComponent {
     return this.drawCommandWrappers_;
   }
 
-  onAutoAlignClick() {
-    this.inspectorService.notifyChange(EventType.AutoAlign, {
+  onAutoFixClick() {
+    this.inspectorService.notifyChange(EventType.AutoFix, {
       pathId: this.pathId,
       subPathIdx: this.subPathIdx,
     });

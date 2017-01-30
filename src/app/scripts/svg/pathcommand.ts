@@ -7,8 +7,6 @@ import { createSubPathCommand } from './subpathcommand';
 import {
   DrawCommandImpl, moveTo, lineTo, quadraticCurveTo, bezierCurveTo, arcTo, closePath
 } from './drawcommand';
-import * as VectAlign from './vectalign';
-import { Alignment } from './vectalign';
 
 export function createPathCommand(path: string): PathCommand {
   return new PathCommandImpl(path);
@@ -271,63 +269,6 @@ class PathCommandImpl implements PathCommand {
   }
 
   // Implements the PathCommand interface.
-  autoAlign(subPathIndex: number, toPathCmd: PathCommand): PathCommand {
-    const createFromCmdGroupsFn = (...pathCommands: PathCommand[]): PathCommand[] => {
-      const fromPaths = [];
-      for (const p of pathCommands) {
-        const numFromCmds = p.subPathCommands[subPathIndex].commands.length;
-        for (let i = 0; i < numFromCmds - 1; i++) {
-          fromPaths.push(p.shiftBack(subPathIndex, i));
-        }
-      }
-      return fromPaths;
-    };
-
-    const fromPaths = createFromCmdGroupsFn(this, this.reverse(subPathIndex));
-    const alignments = fromPaths.map(p => {
-      const toCmds = toPathCmd.subPathCommands[subPathIndex].commands;
-      const fromCmds = p.subPathCommands[subPathIndex].commands;
-      return { fromPathCommand: p, alignment: VectAlign.align(fromCmds, toCmds) };
-    });
-
-    const pathAlignment = alignments.reduce((prev, curr) => {
-      const prevScore = prev.alignment.score;
-      const currScore = curr.alignment.score;
-      return prevScore > currScore ? prev : curr;
-    });
-
-    const countGapsFn = (aligns: Alignment[]) => {
-      return aligns.reduce((prev, curr) => {
-        return curr.drawCommand ? prev : prev + 1;
-      }, 0);
-    };
-
-    const numFromGaps = countGapsFn(pathAlignment.alignment.from);
-    const numToGaps = countGapsFn(pathAlignment.alignment.to);
-    if (numToGaps > 0) {
-      // TODO: if the target path contains gaps, we'll probably need to convert
-      return pathAlignment.fromPathCommand;
-    }
-    if (numFromGaps === 0) {
-      // If there are no gaps in the from path command, then we're done.
-      return pathAlignment.fromPathCommand;
-    }
-
-    // TODO: Fill in the empty gaps by adding additional no-op drawing commands.
-    // let currAlignmentIndex = 0;
-    // let currDrawCmdIndex = 0;
-    // let numConsecutiveGaps = 0;
-    // const fromCmds = pathAlignment.alignment.from;
-    // while (currAlignmentIndex < fromCmds.length) {
-    //   if (fromCmds[currAlignmentIndex].drawCommand) {
-    //   }
-    //   currAlignmentIndex++;
-    // }
-
-    return pathAlignment.fromPathCommand;
-  }
-
-  // Implements the PathCommand interface.
   reverse(subPathIdx: number) {
     // TODO(alockwood): add a test for commands with multiple moves but no close paths
     return this.clone({
@@ -430,7 +371,7 @@ class PathCommandImpl implements PathCommand {
     if (numSplits > 1) {
       // For example, it is probably possible for us to perform a split that
       // results in points being added both before and after the shifted pivot point.
-      throw new Error('Confirm this code works with numSplits > 1 before use');
+      // throw new Error('Confirm this code works with numSplits > 1 before use');
     }
 
     const shiftOffsets = this.shiftOffsets_.slice();

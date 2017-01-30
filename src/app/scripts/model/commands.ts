@@ -42,12 +42,6 @@ export interface PathCommand {
   project(point: Point): { projection: Projection, split: () => PathCommand } | undefined;
 
   /**
-   * Attempts an auto-alignment of the sub path command at the specified index.
-   * Returns a new path command object.
-   */
-  autoAlign(subPathIdx: number, toPathCmd: PathCommand): PathCommand;
-
-  /**
    * Reverses the order of the points in the sub path at the specified index.
    * Returns a new path command object.
    */
