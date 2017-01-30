@@ -1,15 +1,15 @@
 import { Point, Matrix, MathUtil } from '../common';
 import * as SvgUtil from './svgutil';
 import {
-  DrawCommandImpl, moveTo, lineTo, quadraticCurveTo, bezierCurveTo, arcTo, closePath
+  CommandImpl, moveTo, lineTo, quadraticCurveTo, bezierCurveTo, arcTo, closePath
 } from './drawcommand';
-import { DrawCommand } from '../model';
+import { Command } from '../model';
 
 /**
  * Takes an SVG path string (i.e. the text specified in the path's 'd' attribute) and returns
  * list of DrawCommands that represent the SVG path's individual sequence of instructions.
  */
-export function parseCommands(pathString: string, matrices?: Matrix[]): DrawCommandImpl[] {
+export function parseCommands(pathString: string, matrices?: Matrix[]): CommandImpl[] {
   let index = 0;
   let currentPoint: Point;
   let currentToken: Token;
@@ -88,7 +88,7 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): DrawComm
     return new Point(x, y);
   };
 
-  const commands: DrawCommandImpl[] = [];
+  const commands: CommandImpl[] = [];
   let currentControlPoint: Point;
   let lastMovePoint: Point;
 
@@ -297,7 +297,7 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): DrawComm
 /**
  * Takes an list of DrawCommands and converts them back into a SVG path string.
  */
-export function commandsToString(commands: ReadonlyArray<DrawCommand>) {
+export function commandsToString(commands: ReadonlyArray<Command>) {
   const tokens = [];
   commands.forEach(cmd => {
     tokens.push(cmd.svgChar);

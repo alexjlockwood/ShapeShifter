@@ -2,7 +2,7 @@ import {
   Component, OnChanges, SimpleChanges, Input, OnInit,
   EventEmitter, Output
 } from '@angular/core';
-import { DrawCommand, SubPathCommand, PathCommand, EditorType } from './../../scripts/model';
+import { Command, SubPathCommand, PathCommand, EditorType } from './../../scripts/model';
 import { InspectorService, EventType } from '../inspector.service';
 
 @Component({
@@ -80,5 +80,5 @@ export class SubPathComponent {
 
 interface DrawCommandWrapper {
   id: string;
-  drawCommand: DrawCommand;
+  drawCommand: Command;
 }

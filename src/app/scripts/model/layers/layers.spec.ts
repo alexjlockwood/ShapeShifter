@@ -1,4 +1,4 @@
-import { Layer, VectorLayer, GroupLayer, PathLayer } from './layers';
+import { Layer, VectorLayer, GroupLayer, PathLayer } from '.';
 
 describe('AbstractLayer', () => {
   const pl1 = new PathLayer('pl1', undefined);

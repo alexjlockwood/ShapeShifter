@@ -3,7 +3,7 @@ import {
   Component, AfterViewInit, OnChanges, Output, OnInit, HostListener,
   SimpleChanges, Input, ViewChild, ElementRef, OnDestroy
 } from '@angular/core';
-import { DrawCommand, EditorType, PathLayer } from '../../scripts/model';
+import { Command, EditorType, PathLayer } from '../../scripts/model';
 import * as $ from 'jquery';
 import { InspectorService, EventType } from '../inspector.service';
 import { LayerStateService } from '../../services/layerstate.service';
@@ -22,7 +22,7 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
   @Input() pathId: string;
   @Input() subPathIdx: number;
   private drawIdx_: number;
-  private drawCommand_: DrawCommand;
+  private drawCommand_: Command;
   @ViewChild('drawCommandIndexCanvas') private drawCommandIndexCanvas: ElementRef;
 
   private isSelected_ = false;
@@ -83,7 +83,7 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   @Input()
-  set drawCommand(drawCommand: DrawCommand) {
+  set drawCommand(drawCommand: Command) {
     this.drawCommand_ = drawCommand;
     this.draw();
   }

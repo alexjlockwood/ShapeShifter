@@ -4,9 +4,10 @@ import {
   ViewChild, ViewChildren, Input, Output, EventEmitter
 } from '@angular/core';
 import {
-  Layer, PathLayer, ClipPathLayer, GroupLayer, CommandId,
-  VectorLayer, PathCommand, EditorType, SubPathCommand, DrawCommand
+  Layer, PathLayer, ClipPathLayer, GroupLayer,
+  VectorLayer, PathCommand, EditorType, SubPathCommand, Command
 } from '../scripts/model';
+import { Id as CommandId } from '../scripts/model';
 import * as $ from 'jquery';
 import * as erd from 'element-resize-detector';
 import { Point, Matrix, MathUtil, ColorUtil } from '../scripts/common';
@@ -362,7 +363,7 @@ export class CanvasComponent implements OnInit, OnDestroy {
         .map((subPathCmd: SubPathCommand, subPathIdx: number) => {
           return _.chain(subPathCmd.commands)
             // TODO: do we really want to filter out the close paths here?
-            .filter((drawCmd: DrawCommand) => drawCmd.svgChar !== 'Z')
+            .filter((drawCmd: Command) => drawCmd.svgChar !== 'Z')
             .map((drawCmd, drawIdx) => {
               return {
                 commandId: { pathId, subPathIdx, drawIdx } as CommandId,
@@ -660,12 +661,12 @@ function executePathData(
   isDrawingSelection?: boolean) {
 
   const drawCommands =
-    _.flatMap(layer.pathData.subPathCommands, s => s.commands as DrawCommand[]);
+    _.flatMap(layer.pathData.subPathCommands, s => s.commands as Command[]);
   executeDrawCommands(drawCommands, ctx, transforms, isDrawingSelection);
 }
 
 function executeDrawCommands(
-  drawCommands: DrawCommand[],
+  drawCommands: Command[],
   ctx: CanvasRenderingContext2D,
   transforms: Matrix[],
   isDrawingSelection?: boolean) {

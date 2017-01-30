@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import { PathCommand, SubPathCommand, DrawCommand } from '../model';
+import { PathCommand, SubPathCommand, Command } from '../model';
 import { MathUtil } from '.';
 
 const MATCH = 1;
@@ -99,7 +99,7 @@ export function autoFix(
   // The scoring function to use to calculate the alignment. Convert-able
   // commands are considered matches. However, the farther away the points
   // are from each other, the lower the score.
-  const getScoreFn = (cmdA: DrawCommand, cmdB: DrawCommand) => {
+  const getScoreFn = (cmdA: Command, cmdB: Command) => {
     if (cmdA.svgChar !== cmdB.svgChar
       && !cmdA.canConvertTo(cmdB.svgChar)
       && !cmdB.canConvertTo(cmdA.svgChar)) {
@@ -129,7 +129,7 @@ export function autoFix(
 
   // For each alignment, determine whether it and its neighbor is a gap.
   interface CmdInfo { isGap: boolean; isNextGap: boolean; nextDrawIdx: number; }
-  const processAlignmentsFn = (alignments: Alignment<DrawCommand>[]) => {
+  const processAlignmentsFn = (alignments: Alignment<Command>[]) => {
     let nextDrawIdx = 0;
     return alignments.map((alignment, i) => {
       const isGap = !alignment.obj;

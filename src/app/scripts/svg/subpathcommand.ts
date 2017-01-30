@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 import { Point } from '../common';
-import { PathCommand, SubPathCommand, DrawCommand } from '../model';
+import { PathCommand, SubPathCommand, Command } from '../model';
 
 /**
  * Implementation of the SubPathCommand interface. A PathCommand is split up
@@ -9,10 +9,10 @@ import { PathCommand, SubPathCommand, DrawCommand } from '../model';
 class SubPathCommandImpl implements SubPathCommand {
 
   // TODO: make sure paths with one M and multiple Zs are treated as multiple sub paths
-  private readonly drawCommands_: ReadonlyArray<DrawCommand>;
+  private readonly drawCommands_: ReadonlyArray<Command>;
   private readonly points_: ReadonlyArray<{ point: Point, isSplit: boolean }>;
 
-  constructor(commands: DrawCommand[]) {
+  constructor(commands: Command[]) {
     this.drawCommands_ = commands;
     this.points_ = _.flatMap(commands, cmd => {
       if (cmd.svgChar === 'Z') {
@@ -23,7 +23,7 @@ class SubPathCommandImpl implements SubPathCommand {
   }
 
   // Implements the SubPathCommand interface.
-  get commands(): ReadonlyArray<DrawCommand> {
+  get commands(): ReadonlyArray<Command> {
     return this.drawCommands_;
   }
 
@@ -47,6 +47,6 @@ class SubPathCommandImpl implements SubPathCommand {
   }
 }
 
-export function createSubPathCommand(...commands: DrawCommand[]): SubPathCommand {
+export function createSubPathCommand(...commands: Command[]): SubPathCommand {
   return new SubPathCommandImpl(commands);
 }

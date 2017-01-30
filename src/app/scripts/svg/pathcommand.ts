@@ -1,12 +1,12 @@
 import * as _ from 'lodash';
 import { MathUtil, Point, Matrix, Rect } from '../common';
 import { PathHelper, createPathHelper, Projection } from './pathhelper';
-import { PathCommand, SubPathCommand, DrawCommand, SvgChar } from '../model';
+import { PathCommand, SubPathCommand, Command, SvgChar } from '../model';
 import * as SvgUtil from './svgutil';
 import * as PathParser from './pathparser';
 import { createSubPathCommand } from './subpathcommand';
 import {
-  DrawCommandImpl, moveTo, lineTo, quadraticCurveTo, bezierCurveTo, arcTo, closePath
+  CommandImpl, moveTo, lineTo, quadraticCurveTo, bezierCurveTo, arcTo, closePath
 } from './drawcommand';
 
 export function createPathCommand(path: string): PathCommand {
@@ -31,7 +31,7 @@ class PathCommandImpl implements PathCommand {
   private readonly reversals_: ReadonlyArray<boolean>;
 
   // TODO: add method to calculate bounds and length
-  constructor(obj: string | DrawCommandImpl[] | ClonedPathCommandInfo) {
+  constructor(obj: string | CommandImpl[] | ClonedPathCommandInfo) {
     if (typeof obj === 'string' || Array.isArray(obj)) {
       if (typeof obj === 'string') {
         this.path_ = obj;
@@ -78,7 +78,7 @@ class PathCommandImpl implements PathCommand {
         subPathCws.length === 1 && _.first(subPathCws).commands.length === 1;
       if (hasOneDrawCmd || !shouldReverseFn(subPathIdx)) {
         // Nothing to do in these two cases.
-        return _.flatMap(subPathCws, cw => cw.commands as DrawCommandImpl[]);
+        return _.flatMap(subPathCws, cw => cw.commands as CommandImpl[]);
       }
 
       // Extract the draw commands from our command wrapper map.
@@ -112,7 +112,7 @@ class PathCommandImpl implements PathCommand {
     };
 
     // TODO: another edge case: closed paths not ending in a Z
-    const maybeShiftCommandsFn = (subPathIdx: number, drawCmds: DrawCommandImpl[]) => {
+    const maybeShiftCommandsFn = (subPathIdx: number, drawCmds: CommandImpl[]) => {
       let shiftOffset = getShiftOffsetFn(subPathIdx);
       if (!shiftOffset
         || drawCmds.length === 1
@@ -213,7 +213,7 @@ class PathCommandImpl implements PathCommand {
       return this;
     }
 
-    const drawCommands: DrawCommandImpl[] = [];
+    const drawCommands: CommandImpl[] = [];
     this.subPathCommands.forEach((s, i) => {
       s.commands.forEach((d, j) => {
         if (d.svgChar === 'A') {
@@ -230,7 +230,7 @@ class PathCommandImpl implements PathCommand {
             args[k] = MathUtil.lerp(d1.args[k], d2.args[k], fraction);
           });
           const points = [new Point(args[0], args[1]), new Point(args[7], args[8])];
-          drawCommands.push(new DrawCommandImpl(d.svgChar, d.isSplit, points, ...args));
+          drawCommands.push(new CommandImpl(d.svgChar, d.isSplit, points, ...args));
         } else {
           const d1 = start.subPathCommands[i].commands[j];
           const d2 = end.subPathCommands[i].commands[j];
@@ -244,7 +244,7 @@ class PathCommandImpl implements PathCommand {
               points.push(new Point(px, py));
             }
           }
-          drawCommands.push(new DrawCommandImpl(d.svgChar, d.isSplit, points));
+          drawCommands.push(new CommandImpl(d.svgChar, d.isSplit, points));
         }
       });
     });
@@ -255,13 +255,14 @@ class PathCommandImpl implements PathCommand {
   // Implements the PathCommand interface.
   project(point: Point): { projection: Projection, split: () => PathCommand } | undefined {
     return _.chain(this.commandWrappers_)
-      .map((subPathCws, cwsIdx) => subPathCws.map((cw, cwIdx) => {
-        const projection = cw.project(point);
-        return {
-          projection,
-          split: () => this.splitCommandWrapper(cwsIdx, cwIdx, projection.t),
-        };
-      }))
+      .map((subPathCws: CommandWrapper[], cwsIdx) =>
+        subPathCws.map((cw: CommandWrapper, cwIdx) => {
+          const projection = cw.project(point);
+          return {
+            projection,
+            split: () => this.splitCommandWrapper(cwsIdx, cwIdx, projection.t),
+          };
+        }))
       .flatMap(projections => projections)
       .filter(obj => !!obj.projection)
       .reduce((prev, curr) => {
@@ -337,7 +338,7 @@ class PathCommandImpl implements PathCommand {
       this.findCommandWrapper(subPathIdx, drawIdx);
     const shiftOffsets =
       this.maybeUpdateShiftOffsetsAfterSplit(subPathIdx, cwIdx, ts.length);
-    const newCw = targetCw.splitAtIndex(splitIdx, ...ts);
+    const newCw = targetCw.splitAtIndex(splitIdx, ts);
     return this.clone({
       commandWrappers_: this.replaceCommandWrapper(subPathIdx, cwIdx, newCw),
       shiftOffsets_: shiftOffsets,
@@ -365,7 +366,7 @@ class PathCommandImpl implements PathCommand {
       this.maybeUpdateShiftOffsetsAfterSplit(cwsIdx, cwIdx, 1);
     const targetCw = this.commandWrappers_[cwsIdx][cwIdx];
     return this.clone({
-      commandWrappers_: this.replaceCommandWrapper(cwsIdx, cwIdx, targetCw.split(t)),
+      commandWrappers_: this.replaceCommandWrapper(cwsIdx, cwIdx, targetCw.split([t])),
       shiftOffsets_: shiftOffsets,
     });
   }
@@ -451,14 +452,14 @@ class PathCommandImpl implements PathCommand {
  */
 class CommandWrapper {
 
-  private readonly backingCommand: DrawCommandImpl;
+  private readonly backingCommand: CommandImpl;
   private readonly pathHelper: PathHelper;
 
   // A command wrapper wraps around the initial SVG draw command and outputs
   // a list of transformed draw commands resulting from splits, unsplits,
   // conversions, etc. If the initial SVG draw command hasn't been modified,
   // then a list containing the initial SVG draw command is returned.
-  private readonly drawCommands: ReadonlyArray<DrawCommandImpl>;
+  private readonly drawCommands: ReadonlyArray<CommandImpl>;
 
   // The list of mutations describes how the initial backing draw command
   // has since been modified. Since the command wrapper always holds a
@@ -466,8 +467,8 @@ class CommandWrapper {
   // are always reversible.
   private readonly mutations: ReadonlyArray<Mutation>;
 
-  constructor(obj: DrawCommandImpl | ClonedCommandWrapperInfo) {
-    if (obj instanceof DrawCommandImpl) {
+  constructor(obj: CommandImpl | ClonedCommandWrapperInfo) {
+    if (obj instanceof CommandImpl) {
       this.backingCommand = obj;
       this.pathHelper = drawCommandToPathHelper(obj);
       this.mutations = [{
@@ -501,7 +502,7 @@ class CommandWrapper {
 
   // Note that the split is performed in relation to the command wrapper's
   // original backing draw command.
-  split(...ts: number[]) {
+  split(ts: number[]) {
     // TODO: add a test for splitting a command with a path length of 0
     // TODO: add a test for the case when t === 1
     if (!ts.length || !this.pathHelper) {
@@ -532,21 +533,21 @@ class CommandWrapper {
     return this.mutations[splitIdx].id;
   }
 
-  splitAtIndex(splitIdx: number, ...ts: number[]) {
+  splitAtIndex(splitIdx: number, ts: number[]) {
     const currSplits = this.mutations.map(m => m.t);
     const tempSplits = [0, ...currSplits];
     const startSplit = tempSplits[splitIdx];
     const endSplit = tempSplits[splitIdx + 1];
-    return this.split(...ts.map(t => MathUtil.lerp(startSplit, endSplit, t)));
+    return this.split(ts.map(t => MathUtil.lerp(startSplit, endSplit, t)));
   }
 
-  splitInHalfAtIndex(splitIndex: number) {
+  splitInHalfAtIndex(splitIdx: number) {
     const currSplits = this.mutations.map(m => m.t);
     const tempSplits = [0, ...currSplits];
-    const startSplit = tempSplits[splitIndex];
-    const endSplit = tempSplits[splitIndex + 1];
+    const startSplit = tempSplits[splitIdx];
+    const endSplit = tempSplits[splitIdx + 1];
     const distance = MathUtil.lerp(startSplit, endSplit, 0.5);
-    return this.split(this.pathHelper.findTimeByDistance(distance));
+    return this.split([this.pathHelper.findTimeByDistance(distance)]);
   }
 
   unsplitAtIndex(splitIdx: number) {
@@ -587,11 +588,11 @@ class CommandWrapper {
 }
 
 // TODO: create multiple sub path cmds for svgs like 'M ... Z ... Z ... Z'
-function createSubPathCommands(...drawCommands: DrawCommand[]) {
+function createSubPathCommands(...drawCommands: Command[]) {
   if (!drawCommands.length) {
     return [];
   }
-  const cmdGroups: DrawCommand[][] = [];
+  const cmdGroups: Command[][] = [];
   let currentCmdList = [];
   for (let i = drawCommands.length - 1; i >= 0; i--) {
     const cmd = drawCommands[i];
@@ -604,7 +605,7 @@ function createSubPathCommands(...drawCommands: DrawCommand[]) {
   return cmdGroups.reverse().map(cmds => createSubPathCommand(...cmds.reverse()));
 }
 
-function createCommandWrappers(commands: ReadonlyArray<DrawCommand>) {
+function createCommandWrappers(commands: ReadonlyArray<Command>) {
   if (commands.length && commands[0].svgChar !== 'M') {
     throw new Error('First command must be a move');
   }
@@ -638,7 +639,7 @@ function pointsToDrawCommand(
   }
 }
 
-function drawCommandToPathHelper(cmd: DrawCommandImpl): PathHelper {
+function drawCommandToPathHelper(cmd: CommandImpl): PathHelper {
   if (cmd.svgChar === 'L' || cmd.svgChar === 'Z') {
     return createPathHelper(cmd.start, cmd.end);
   } else if (cmd.svgChar === 'C') {
@@ -703,7 +704,7 @@ interface Mutation {
 
 // Path command internals that have been cloned.
 interface ClonedPathCommandInfo {
-  drawCommands_?: ReadonlyArray<DrawCommandImpl>;
+  drawCommands_?: ReadonlyArray<CommandImpl>;
   commandWrappers_?: ReadonlyArray<ReadonlyArray<CommandWrapper>>;
   shiftOffsets_?: ReadonlyArray<number>;
   reversals_?: ReadonlyArray<boolean>;
@@ -711,9 +712,9 @@ interface ClonedPathCommandInfo {
 
 // Command wrapper internals that have been cloned.
 interface ClonedCommandWrapperInfo {
-  backingCommand?: DrawCommandImpl;
+  backingCommand?: CommandImpl;
   pathHelper?: PathHelper;
   mutations?: ReadonlyArray<Mutation>;
-  drawCommands?: ReadonlyArray<DrawCommandImpl>;
+  drawCommands?: ReadonlyArray<CommandImpl>;
 }
 

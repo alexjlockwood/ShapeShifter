@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 import { Point, Matrix, MathUtil } from '../common';
-import { DrawCommand, SvgChar } from '../model';
+import { Command, SvgChar } from '../model';
 import * as SvgUtil from './svgutil';
 
 /**
@@ -8,7 +8,7 @@ import * as SvgUtil from './svgutil';
  * a single SVG drawing command (move, line, quadratic curve, bezier curve,
  * elliptical arc, or close path).
  */
-export class DrawCommandImpl implements DrawCommand {
+export class CommandImpl implements Command {
   readonly points: ReadonlyArray<Point>;
   readonly args: ReadonlyArray<number>;
   readonly commandString: string;
@@ -77,7 +77,7 @@ export class DrawCommandImpl implements DrawCommand {
   }
 
   /** Returns a new transformed draw command. */
-  transform(matrices: Matrix[]): DrawCommandImpl {
+  transform(matrices: Matrix[]): CommandImpl {
     if (this.svgChar === 'A') {
       const start = MathUtil.transform(this.start, ...matrices);
       const arc = SvgUtil.transformArc({
@@ -89,7 +89,7 @@ export class DrawCommandImpl implements DrawCommand {
         endX: this.args[7],
         endY: this.args[8],
       }, matrices);
-      return new DrawCommandImpl(
+      return new CommandImpl(
         'A',
         this.isSplit,
         [start, new Point(arc.endX, arc.endY)],
@@ -98,7 +98,7 @@ export class DrawCommandImpl implements DrawCommand {
         arc.xAxisRotation, arc.largeArcFlag, arc.sweepFlag,
         arc.endX, arc.endY);
     } else {
-      return new DrawCommandImpl(
+      return new CommandImpl(
         this.svgChar,
         this.isSplit,
         this.points.map(p => p ? MathUtil.transform(p, ...matrices) : p));
@@ -106,7 +106,7 @@ export class DrawCommandImpl implements DrawCommand {
   }
 
   /** Returns a new reversed draw command. */
-  reverse(): DrawCommandImpl {
+  reverse(): CommandImpl {
     let points = this.points.slice();
     let args = this.args.slice();
     if (this.svgChar === 'A') {
@@ -124,12 +124,12 @@ export class DrawCommandImpl implements DrawCommand {
       points = points.reverse();
       args = pointsToArgs(points);
     }
-    return new DrawCommandImpl(this.svgChar, this.isSplit, points, ...args);
+    return new CommandImpl(this.svgChar, this.isSplit, points, ...args);
   }
 
   /** Returns a new draw command object with its split property toggled. */
   toggleSplit() {
-    return new DrawCommandImpl(this.svgChar, !this.isSplit, this.points, ...this.args);
+    return new CommandImpl(this.svgChar, !this.isSplit, this.points, ...this.args);
   }
 
   toString() {
@@ -144,28 +144,28 @@ function pointsToArgs(points: ReadonlyArray<Point>): number[] {
 }
 
 export function moveTo(start: Point, end: Point, isSplit?: boolean) {
-  return new DrawCommandImpl('M', !!isSplit, [start, end]);
+  return new CommandImpl('M', !!isSplit, [start, end]);
 }
 
 export function lineTo(start: Point, end: Point, isSplit?: boolean) {
-  return new DrawCommandImpl('L', !!isSplit, [start, end]);
+  return new CommandImpl('L', !!isSplit, [start, end]);
 }
 
 export function quadraticCurveTo(start: Point, cp: Point, end: Point, isSplit?: boolean) {
-  return new DrawCommandImpl('Q', !!isSplit, [start, cp, end]);
+  return new CommandImpl('Q', !!isSplit, [start, cp, end]);
 }
 
 export function bezierCurveTo(
   start: Point, cp1: Point, cp2: Point, end: Point, isSplit?: boolean) {
-  return new DrawCommandImpl('C', !!isSplit, [start, cp1, cp2, end]);
+  return new CommandImpl('C', !!isSplit, [start, cp1, cp2, end]);
 }
 
 export function arcTo(start: Point, rx: number, ry: number, xAxisRotation: number,
   largeArcFlag: number, sweepFlag: number, end: Point, isSplit?: boolean) {
-  return new DrawCommandImpl('A', !!isSplit, [start, end],
+  return new CommandImpl('A', !!isSplit, [start, end],
     start.x, start.y, rx, ry, xAxisRotation, largeArcFlag, sweepFlag, end.x, end.y);
 }
 
 export function closePath(start: Point, end: Point, isSplit?: boolean) {
-  return new DrawCommandImpl('Z', !!isSplit, [start, end]);
+  return new CommandImpl('Z', !!isSplit, [start, end]);
 }

@@ -4,7 +4,7 @@ import { Subscription } from 'rxjs/Subscription';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { VectorLayer } from '../scripts/model';
 import { Observable } from 'rxjs/Observable';
-import { EditorType, CommandId } from '../scripts/model';
+import { EditorType, Id as CommandId } from '../scripts/model';
 
 @Injectable()
 export class HoverStateService {
