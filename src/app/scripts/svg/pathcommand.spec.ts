@@ -76,12 +76,25 @@ describe('PathCommand', () => {
     expect(actual.pathString).toEqual(expected.pathString);
   });
 
-  it('multi-split', () => {
-    const actual =
+  it('multi-splits', () => {
+    let actual =
       createPathCommand('M 0 0 L 0 10 L 10 10 L 10 0 L 0 0')
         .split(0, 2, 0.25, 0.5);
-    const expected =
+    let expected =
       createPathCommand('M 0 0 L 0 10 L 2.5 10 L 5 10 L 10 10 L 10 0 L 0 0');
+    expect(actual.pathString).toEqual(expected.pathString);
+
+    actual = createPathCommand('M 4 4 L 4 20 L 20 20 L 20 4 L 4 4')
+      .splitInHalf(0, 4)
+      .shiftForward(0);
+    expected =
+      createPathCommand('M 12 4 L 4 4 L 4 20 L 20 20 L 20 4 L 12 4');
+    expect(actual.pathString).toEqual(expected.pathString);
+
+    actual = actual.split(0, 5, 0.25, 0.5, 0.75);
+    expected =
+      createPathCommand('M 12 4 L 4 4 L 4 20 L 20 20 L 20 4 '
+        + 'L 18 4 L 16 4 L 14 4 L 12 4');
     expect(actual.pathString).toEqual(expected.pathString);
   });
 });
