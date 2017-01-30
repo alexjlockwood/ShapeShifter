@@ -356,8 +356,7 @@ export class CanvasComponent implements OnInit, OnDestroy {
 
       // Build a list containing all necessary information needed in
       // order to draw the labeled points.
-      const subPathCmds = pathData.subPathCommands;
-      const pathDataPointInfo = _.chain(subPathCmds)
+      const pathDataPointInfo = _.chain(pathData.subPathCommands)
         .map((subPathCmd: SubPathCommand, subPathIdx: number) => {
           return _.chain(subPathCmd.commands)
             // TODO: do we really want to filter out the close paths here?

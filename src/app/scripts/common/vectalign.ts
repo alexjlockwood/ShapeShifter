@@ -6,22 +6,26 @@ const MATCH = 1;
 const MISMATCH = -1;
 const INDEL = 0;
 
-/** Represents either a valid draw command or an empty placeholder slot. */
-interface Alignment {
-  drawCommand?: DrawCommand;
+/** Represents either a valid object or an empty gap slot. */
+interface Alignment<T> {
+  obj?: T;
 }
 
 /**
  * Aligns two sequences of draw commands using the Needleman-Wunsch algorithm.
  * TODO: make this generic to any object type (not just draw commands)
  */
-function align(from: ReadonlyArray<DrawCommand>, to: ReadonlyArray<DrawCommand>) {
-  const listA: Alignment[] = from.map(drawCommand => { return { drawCommand }; });
-  const listB: Alignment[] = to.map(drawCommand => { return { drawCommand }; });
+function align<T>(
+  from: ReadonlyArray<T>,
+  to: ReadonlyArray<T>,
+  scoringFunction: (t1: T, t2: T) => number) {
+
+  const listA: Alignment<T>[] = from.map(obj => { return { obj }; });
+  const listB: Alignment<T>[] = to.map(obj => { return { obj }; });
   const originalListA = from;
   const originalListB = to;
-  const alignedListA: Alignment[] = [];
-  const alignedListB: Alignment[] = [];
+  const alignedListA: Alignment<T>[] = [];
+  const alignedListB: Alignment<T>[] = [];
 
   // Add dummy nodes at the first position of each list.
   listA.unshift(undefined);
@@ -37,24 +41,11 @@ function align(from: ReadonlyArray<DrawCommand>, to: ReadonlyArray<DrawCommand>)
     matrix.push(row);
   }
 
-  const getScoreFn = (i: number, j: number) => {
-    const cmdA = listA[i].drawCommand;
-    const cmdB = listB[j].drawCommand;
-    if (cmdA.svgChar !== cmdB.svgChar
-      && !cmdA.canConvertTo(cmdB.svgChar)
-      && !cmdB.canConvertTo(cmdA.svgChar)) {
-      return MISMATCH;
-    }
-    // TODO: if we are going to use distance as part of the scoring function,
-    // the value should be dependent on the SVG's viewport width/height.
-    const distance = Math.max(MATCH, MathUtil.distance(cmdA.end, cmdB.end));
-    return 1 / distance;
-  };
-
   // Process the scoring matrix.
   for (let i = 1; i < listA.length; i++) {
     for (let j = 1; j < listB.length; j++) {
-      const match = matrix[i - 1][j - 1] + getScoreFn(i, j);
+      const match =
+        matrix[i - 1][j - 1] + scoringFunction(listA[i].obj, listB[j].obj);
       const ins = matrix[i][j - 1] + INDEL;
       const del = matrix[i - 1][j] + INDEL;
       matrix[i][j] = Math.max(match, ins, del);
@@ -66,7 +57,9 @@ function align(from: ReadonlyArray<DrawCommand>, to: ReadonlyArray<DrawCommand>)
   let j = listB.length - 1;
 
   while (i > 0 || j > 0) {
-    if (i > 0 && j > 0 && matrix[i][j] === matrix[i - 1][j - 1] + getScoreFn(i, j)) {
+    if (i > 0 && j > 0
+      && matrix[i][j] === matrix[i - 1][j - 1]
+      + scoringFunction(listA[i].obj, listB[j].obj)) {
       alignedListA.unshift(listA[i--]);
       alignedListB.unshift(listB[j--]);
     } else if (i > 0 && matrix[i][j] === matrix[i - 1][j] + INDEL) {
@@ -86,7 +79,11 @@ function align(from: ReadonlyArray<DrawCommand>, to: ReadonlyArray<DrawCommand>)
 }
 
 // TODO: this can still be optimized a lot... work in progress!
-export function autoFix(subPathIdx: number, srcFromPath: PathCommand, srcToPath: PathCommand) {
+export function autoFix(
+  subPathIdx: number,
+  srcFromPath: PathCommand,
+  srcToPath: PathCommand) {
+
   // Create and return a list of reversed and shifted path commands to test.
   const createFromCmdGroupsFn = (...pathCommands: PathCommand[]): PathCommand[] => {
     const fromPaths = [];
@@ -99,13 +96,28 @@ export function autoFix(subPathIdx: number, srcFromPath: PathCommand, srcToPath:
     return fromPaths;
   };
 
+  // The scoring function to use to calculate the alignment. Convert-able
+  // commands are considered matches. However, the farther away the points
+  // are from each other, the lower the score.
+  const getScoreFn = (cmdA: DrawCommand, cmdB: DrawCommand) => {
+    if (cmdA.svgChar !== cmdB.svgChar
+      && !cmdA.canConvertTo(cmdB.svgChar)
+      && !cmdB.canConvertTo(cmdA.svgChar)) {
+      return MISMATCH;
+    }
+    // TODO: if we are going to use distance as part of the scoring function,
+    // the value should be dependent on the SVG's viewport width/height.
+    const distance = Math.max(MATCH, MathUtil.distance(cmdA.end, cmdB.end));
+    return 1 / distance;
+  };
+
   // Align each generated 'from path' with the target 'to path'.
   const fromPaths =
     createFromCmdGroupsFn(srcFromPath, srcFromPath.reverse(subPathIdx));
   const alignmentInfos = fromPaths.map(generatedFromPath => {
     const fromCmds = generatedFromPath.subPathCommands[subPathIdx].commands;
     const toCmds = srcToPath.subPathCommands[subPathIdx].commands;
-    return { generatedFromPath, alignment: align(fromCmds, toCmds) };
+    return { generatedFromPath, alignment: align(fromCmds, toCmds, getScoreFn) };
   });
 
   // Find the alignment with the highest score.
@@ -117,11 +129,11 @@ export function autoFix(subPathIdx: number, srcFromPath: PathCommand, srcToPath:
 
   // For each alignment, determine whether it and its neighbor is a gap.
   interface CmdInfo { isGap: boolean; isNextGap: boolean; nextDrawIdx: number; }
-  const processAlignmentsFn = (alignments: Alignment[]) => {
+  const processAlignmentsFn = (alignments: Alignment<DrawCommand>[]) => {
     let nextDrawIdx = 0;
     return alignments.map((alignment, i) => {
-      const isGap = !alignment.drawCommand;
-      const isNextGap = (i + 1 < alignments.length) && !alignments[i + 1].drawCommand;
+      const isGap = !alignment.obj;
+      const isNextGap = (i + 1 < alignments.length) && !alignments[i + 1].obj;
       if (!isGap) {
         nextDrawIdx++;
       }
@@ -151,16 +163,19 @@ export function autoFix(subPathIdx: number, srcFromPath: PathCommand, srcToPath:
   const fromGapGroups = createGapStreaksFn(fromCmdInfos);
   const toGapGroups = createGapStreaksFn(toCmdInfos);
 
-  // Finally, apply the splits and return the results.
+  // Finally, fill in the gaps by applying batch splits.
   const applySplitsFn = (pathCommand: PathCommand, gapGroups: CmdInfo[][]) => {
     for (let i = gapGroups.length - 1; i >= 0; i--) {
       const gapGroup = gapGroups[i];
       const drawIdx = _.last(gapGroup).nextDrawIdx;
+      const ts = [];
       for (let j = gapGroup.length - 1; j >= 0; j--) {
         const t = (j + 1) / (gapGroup.length + 1);
+        ts.push(t);
         // TODO: perform these splits as a single batch operation
-        pathCommand = pathCommand.split(subPathIdx, drawIdx, t);
+        // pathCommand = pathCommand.split(subPathIdx, drawIdx, t);
       }
+      pathCommand = pathCommand.split(subPathIdx, drawIdx, ...ts);
     }
     return pathCommand;
   };

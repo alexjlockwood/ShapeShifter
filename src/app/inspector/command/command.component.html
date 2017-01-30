@@ -13,7 +13,7 @@
     mdTooltip="Convert"
     mdTooltipPosition="above"
     md-theme="dark"
-    [fxShow]="isConvertable()"
+    *ngIf="isConvertable()"
     fxLayoutAlign="center center"
     (click)="onConvertButtonClick($event)">
     <md-icon class="md-24">build</md-icon>
@@ -23,7 +23,7 @@
     mdTooltipPosition="above"
     md-theme="dark"
     fxLayoutAlign="center center"
-    [fxShow]="isUnsplittable()"
+    *ngIf="isUnsplittable()"
     (mouseenter)="onUnsplitHoverEvent(true)"
     (mouseleave)="onUnsplitHoverEvent(false)"
     (click)="onUnsplitButtonClick($event)">
@@ -33,7 +33,7 @@
     mdTooltip="Add"
     mdTooltipPosition="above"
     md-theme="dark"
-    [fxShow]="isSplittable()"
+    *ngIf="isSplittable()"
     fxLayoutAlign="center center"
     (mouseenter)="onSplitHoverEvent(true)"
     (mouseleave)="onSplitHoverEvent(false)"

@@ -17,7 +17,7 @@
     mdTooltip="Shift back"
     mdTooltipPosition="above"
     md-theme="dark"
-    [disabled]="!subPathCommand.isClosed"
+    *ngIf="subPathCommand.isClosed"
     (click)="onShiftBackClick()">
     <md-icon class="md-24">skip_previous</md-icon>
   </button>
@@ -25,7 +25,7 @@
     mdTooltip="Shift forwards"
     mdTooltipPosition="above"
     md-theme="dark"
-    [disabled]="!subPathCommand.isClosed"
+    *ngIf="subPathCommand.isClosed"
     (click)="onShiftForwardClick()">
     <md-icon class="md-24">skip_next</md-icon>
   </button>

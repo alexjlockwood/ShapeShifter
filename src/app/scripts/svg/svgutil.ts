@@ -270,7 +270,7 @@ export function transformArc(initialArc: EllipticalArc, transformMatrices: Matri
 
     // Finally, transform arc endpoint. This takes care about the
     // translational part which we ignored at the whole math-showdown above.
-    const end = MathUtil.transform({ x: endX, y: endY }, matrix);
+    const end = MathUtil.transform(new Point(endX, endY), matrix);
 
     xAxisRotation = xAxisRotation * 180 / Math.PI;
 

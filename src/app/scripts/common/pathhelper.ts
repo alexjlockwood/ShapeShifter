@@ -35,14 +35,14 @@ export function createPathHelper(...points: IPoint[]): PathHelper {
     return new LineHelper(newPoints[0], newPoints[1]);
   } else if (newPoints.length === 3) {
     // if (MathUtil.areCollinear(...newPoints)) {
-      // TODO: is it possible for the second point to be
-      // smaller/larger than the first/third? does that cause issues?
+    // TODO: is it possible for the second point to be
+    // smaller/larger than the first/third? does that cause issues?
     //  return new LineHelper(newPoints[0], newPoints[2]);
     // }
   } else if (newPoints.length === 4) {
     // if (MathUtil.areCollinear(...newPoints)) {
-      // TODO: is it possible for the second/third points to be
-      // smaller/larger than the first/fourth? does that cause issues?
+    // TODO: is it possible for the second/third points to be
+    // smaller/larger than the first/fourth? does that cause issues?
     //  return new LineHelper(newPoints[0], newPoints[3]);
     // }
   }
@@ -185,7 +185,8 @@ class BezierHelper implements PathHelper {
 
   split(t1: number, t2: number): PathHelper {
     // TODO: return a point helper if t1 === t2?
-    return new BezierHelper(...this.bezierJs.split(t1, t2).points);
+    return new BezierHelper(...this.bezierJs.split(t1, t2).points
+      .map(p => new Point(p.x, p.y)));
   }
 
   findTimeByDistance(distance: number): number {

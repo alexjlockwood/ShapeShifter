@@ -196,6 +196,7 @@ class PathCommandImpl implements PathCommand {
 
   // Implements the PathCommand interface.
   isMorphableWith(pathCommand: PathCommand) {
+    // TODO: this starts returning false after auto-fixing multiple times
     const scmds1 = this.subPathCommands;
     const scmds2 = pathCommand.subPathCommands;
     return scmds1.length === scmds2.length
@@ -294,14 +295,14 @@ class PathCommandImpl implements PathCommand {
 
   private shiftBackInternal(subPathIdx: number, numShifts = 1) {
     return this.shiftInternal(
-      subPathIdx, (offset: number, numCommands: number) => {
+      subPathIdx, (offset, numCommands) => {
         return (offset + numShifts) % (numCommands - 1);
       });
   }
 
   private shiftForwardInternal(subPathIdx: number, numShifts = 1) {
     return this.shiftInternal(
-      subPathIdx, (offset: number, numCommands: number) => {
+      subPathIdx, (offset, numCommands) => {
         return MathUtil.floorMod(offset - numShifts, numCommands - 1);
       });
   }
@@ -325,7 +326,8 @@ class PathCommandImpl implements PathCommand {
 
   // Implements the PathCommand interface.
   split(subPathIdx: number, drawIdx: number, ...ts: number[]) {
-    const { targetCw, cwIdx, splitIdx } = this.findCommandWrapper(subPathIdx, drawIdx);
+    const { targetCw, cwIdx, splitIdx } =
+      this.findCommandWrapper(subPathIdx, drawIdx);
     const shiftOffsets =
       this.maybeUpdateShiftOffsetsAfterSplit(subPathIdx, cwIdx, ts.length);
     const newCw = targetCw.splitAtIndex(splitIdx, ...ts);
@@ -363,15 +365,13 @@ class PathCommandImpl implements PathCommand {
   }
 
   // If 0 <= cwIdx <= shiftOffset, then that means we need to add one to the
-  // shiftoffset to account for the new split point that is about to be inserted.
-  // There should be no need to mod the result, as the split will add a new command
-  // to the sub path anyway.
+  // shift offset to account for the new split point that is about to be inserted.
   private maybeUpdateShiftOffsetsAfterSplit(
     cwsIdx: number, cwIdx: number, numSplits: number) {
     if (numSplits > 1) {
-      // TODO: for example, it is probably possible for us to perform a split that
+      // TODO: for example, it is probably possible to perform a split that
       // results in points being added both before and after the shifted pivot point.
-      throw new Error('Confirm this code works with numSplits > 1 before use');
+      // throw new Error('Confirm this code works with numSplits > 1 before use');
     }
 
     const shiftOffsets = this.shiftOffsets_.slice();
@@ -385,16 +385,18 @@ class PathCommandImpl implements PathCommand {
 
   // Implements the PathCommand interface.
   unsplit(subPathIdx: number, drawIdx: number) {
-    const { targetCw, cwIdx, splitIdx } = this.findCommandWrapper(subPathIdx, drawIdx);
-    const newCw = targetCw.unsplitAtIndex(this.reversals_[subPathIdx] ? splitIdx - 1 : splitIdx);
-    const shiftOffsets = this.shiftOffsets_.slice();
+    const { targetCw, cwIdx, splitIdx } =
+      this.findCommandWrapper(subPathIdx, drawIdx);
+    const newCw =
+      targetCw.unsplitAtIndex(this.reversals_[subPathIdx] ? splitIdx - 1 : splitIdx);
+    const shiftOffsets_ = this.shiftOffsets_.slice();
     const shiftOffset = this.shiftOffsets_[subPathIdx];
     if (shiftOffset && cwIdx <= shiftOffset) {
-      shiftOffsets[subPathIdx] = shiftOffset - 1;
+      shiftOffsets_[subPathIdx] = shiftOffset - 1;
     }
     return this.clone({
       commandWrappers_: this.replaceCommandWrapper(subPathIdx, cwIdx, newCw),
-      shiftOffsets_: shiftOffsets,
+      shiftOffsets_,
     });
   }
 
