@@ -369,9 +369,9 @@ class PathCommandImpl implements PathCommand {
   private maybeUpdateShiftOffsetsAfterSplit(
     cwsIdx: number, cwIdx: number, numSplits: number) {
     if (numSplits > 1) {
-      // For example, it is probably possible for us to perform a split that
+      // TODO: for example, it is probably possible for us to perform a split that
       // results in points being added both before and after the shifted pivot point.
-      // throw new Error('Confirm this code works with numSplits > 1 before use');
+      throw new Error('Confirm this code works with numSplits > 1 before use');
     }
 
     const shiftOffsets = this.shiftOffsets_.slice();

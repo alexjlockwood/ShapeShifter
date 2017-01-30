@@ -38,9 +38,6 @@ function align(from: ReadonlyArray<DrawCommand>, to: ReadonlyArray<DrawCommand>)
   }
 
   const getScoreFn = (i: number, j: number) => {
-    if (i < 1 || j < 1) {
-      throw new Error(`Invalid indices: (${i},${j})`);
-    }
     const cmdA = listA[i].drawCommand;
     const cmdB = listB[j].drawCommand;
     if (cmdA.svgChar !== cmdB.svgChar
@@ -88,6 +85,7 @@ function align(from: ReadonlyArray<DrawCommand>, to: ReadonlyArray<DrawCommand>)
   };
 }
 
+// TODO: this can still be optimized a lot... work in progress!
 export function autoFix(subPathIdx: number, srcFromPath: PathCommand, srcToPath: PathCommand) {
   // Create and return a list of reversed and shifted path commands to test.
   const createFromCmdGroupsFn = (...pathCommands: PathCommand[]): PathCommand[] => {
@@ -157,14 +155,12 @@ export function autoFix(subPathIdx: number, srcFromPath: PathCommand, srcToPath:
   const applySplitsFn = (pathCommand: PathCommand, gapGroups: CmdInfo[][]) => {
     for (let i = gapGroups.length - 1; i >= 0; i--) {
       const gapGroup = gapGroups[i];
-      //const ts = gapGroup.map((_, i) => (i + 1) / (gapGroup.length + 1));
       const drawIdx = _.last(gapGroup).nextDrawIdx;
       for (let j = gapGroup.length - 1; j >= 0; j--) {
         const t = (j + 1) / (gapGroup.length + 1);
-        console.log(`applying split(${subPathIdx}, ${drawIdx}, ${t})`);
+        // TODO: perform these splits as a single batch operation
         pathCommand = pathCommand.split(subPathIdx, drawIdx, t);
       }
-      //break;
     }
     return pathCommand;
   };
@@ -181,6 +177,7 @@ export function autoFix(subPathIdx: number, srcFromPath: PathCommand, srcToPath:
         || !fromDrawCmd.canConvertTo(toDrawCmd.svgChar)) {
         return;
       }
+      // TODO: perform these conversions as a single batch operation
       from = from.convert(subPathIdx, drawIdx, toDrawCmd.svgChar);
     });
     return from;
