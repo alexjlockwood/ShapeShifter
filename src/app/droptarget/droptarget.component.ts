@@ -5,10 +5,9 @@ import {
 import { LayerStateService } from '../services/layerstate.service';
 import { EditorType } from '../scripts/model';
 import * as $ from 'jquery';
-import * as erd from 'element-resize-detector';
 import { VectorLayerLoader } from '../scripts/import';
-
-const ELEMENT_RESIZE_DETECTOR = erd();
+import { CanvasResizeService } from '../services/canvasresize.service';
+import { Subscription } from 'rxjs/Subscription';
 
 @Component({
   selector: 'app-droptarget',
@@ -22,32 +21,30 @@ export class DropTargetComponent implements OnInit, OnDestroy {
   private element: JQuery;
   private fileDropTarget: JQuery;
   private fileInputTarget: JQuery;
-  private componentSize: number;
-  private elementResizeCallback: () => void;
+  private componentSize = 0;
+  private subscriptions: Subscription[] = [];
 
   constructor(
     private elementRef: ElementRef,
+    private canvasResizeService: CanvasResizeService,
     private layerStateService: LayerStateService) { }
 
   ngOnInit() {
     this.element = $(this.elementRef.nativeElement);
     this.fileDropTarget = $(this.fileDropTargetRef.nativeElement);
     this.fileInputTarget = this.element.find('input');
-    this.elementResizeCallback = () => {
-      const componentSize = Math.min(this.element.width(), this.element.parent().height());
-      if (this.componentSize !== componentSize) {
-        this.componentSize = componentSize;
+    this.canvasResizeService.addListener(size => {
+      const containerSize = Math.min(size.width, size.height);
+      if (this.componentSize !== containerSize) {
+        this.componentSize = containerSize;
         this.resize();
       }
-    };
-    this.componentSize = Math.min(this.element.width(), this.element.parent().height());
-    ELEMENT_RESIZE_DETECTOR.listenTo(this.element.parent().get(0), this.elementResizeCallback);
+    });
     this.resize();
   }
 
   ngOnDestroy() {
-    // TODO: app crashes when going from morphable to unmorphable
-    // ELEMENT_RESIZE_DETECTOR.removeListener(this.element.parent().get(0), this.elementResizeCallback);
+    this.subscriptions.forEach(s => s.unsubscribe);
   }
 
   private resize() {

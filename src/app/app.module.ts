@@ -17,6 +17,7 @@ import { TimelineService } from './timeline/timeline.service';
 import { LayerStateService } from './services/layerstate.service';
 import { SelectionService } from './services/selection.service';
 import { HoverStateService } from './services/hoverstate.service';
+import { CanvasResizeService } from './services/canvasresize.service';
 import { DropTargetComponent } from './droptarget/droptarget.component';
 
 import 'hammerjs';
@@ -38,10 +39,14 @@ import 'hammerjs';
     FormsModule,
     HttpModule,
     FlexLayoutModule.forRoot(),
-    MaterialModule.forRoot()
+    MaterialModule.forRoot(),
   ],
   providers: [
-    TimelineService, LayerStateService, SelectionService, HoverStateService,
+    TimelineService,
+    LayerStateService,
+    SelectionService,
+    HoverStateService,
+    CanvasResizeService,
   ],
   bootstrap: [AppComponent]
 })

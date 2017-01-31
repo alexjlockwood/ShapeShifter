@@ -9,20 +9,17 @@ import {
 } from '../scripts/model';
 import { Id as CommandId } from '../scripts/model';
 import * as $ from 'jquery';
-import * as erd from 'element-resize-detector';
 import { Point, Matrix, MathUtil, ColorUtil, SvgUtil } from '../scripts/common';
 import { TimelineService } from '../timeline/timeline.service';
 import { LayerStateService } from '../services/layerstate.service';
 import { Subscription } from 'rxjs/Subscription';
 import { SelectionService, Selection } from '../services/selection.service';
 import { HoverStateService, HoverType, Hover } from '../services/hoverstate.service';
-
-const ELEMENT_RESIZE_DETECTOR = erd();
+import { CanvasResizeService } from '../services/canvasresize.service';
 
 // TODO: make this viewport/density-independent
 const MIN_SNAP_THRESHOLD = 1.5;
 
-// TODO: create a parent component that will resize this stuff properly (no flexbox?)
 @Component({
   selector: 'app-canvas',
   templateUrl: './canvas.component.html',
@@ -33,7 +30,7 @@ export class CanvasComponent implements OnInit, OnDestroy {
   @ViewChild('renderingCanvas') private renderingCanvasRef: ElementRef;
 
   private vectorLayer: VectorLayer;
-  private componentSize: number;
+  private componentSize = 0;
   private element: JQuery;
   private canvas: JQuery;
   private offscreenCanvas: JQuery;
@@ -44,7 +41,6 @@ export class CanvasComponent implements OnInit, OnDestroy {
   private pathPointRadius: number;
   private splitPathPointRadius: number;
   private currentHover: Hover;
-  private elementResizeCallback: () => void;
 
   // If present, the user is in the process of moving a point.
   private activeDragPointId: CommandId;
@@ -55,6 +51,7 @@ export class CanvasComponent implements OnInit, OnDestroy {
 
   constructor(
     private elementRef: ElementRef,
+    private canvasResizeService: CanvasResizeService,
     private hoverStateService: HoverStateService,
     private layerStateService: LayerStateService,
     private timelineService: TimelineService,
@@ -65,15 +62,6 @@ export class CanvasComponent implements OnInit, OnDestroy {
     this.element = $(this.elementRef.nativeElement);
     this.canvas = $(this.renderingCanvasRef.nativeElement);
     this.offscreenCanvas = $(document.createElement('canvas'));
-    this.componentSize = Math.min(this.element.width(), this.element.parent().height());
-    this.elementResizeCallback = () => {
-      const containerSize = Math.min(this.element.width(), this.element.parent().height());
-      if (this.componentSize !== containerSize) {
-        this.componentSize = containerSize;
-        this.resizeAndDraw();
-      }
-    };
-    ELEMENT_RESIZE_DETECTOR.listenTo(this.element.parent().get(0), this.elementResizeCallback);
     this.subscriptions.push(
       this.layerStateService.addListener(
         this.editorType, vl => {
@@ -128,12 +116,17 @@ export class CanvasComponent implements OnInit, OnDestroy {
             this.draw();
           }));
     }
+    this.canvasResizeService.addListener(size => {
+      const containerSize = Math.min(size.width, size.height);
+      if (this.componentSize !== containerSize) {
+        this.componentSize = containerSize;
+        this.resizeAndDraw();
+      }
+    });
     this.resizeAndDraw();
   }
 
   ngOnDestroy() {
-    // TODO: app crashes when going from morphable to unmorphable
-    // ELEMENT_RESIZE_DETECTOR.removeListener(this.element.parent().get(0), this.elementResizeCallback);
     this.subscriptions.forEach(s => s.unsubscribe());
   }
 
