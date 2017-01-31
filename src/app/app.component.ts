@@ -4,7 +4,7 @@ import {
 } from '@angular/core';
 import { environment } from '../environments/environment';
 import { Layer, VectorLayer, GroupLayer, PathLayer } from './scripts/model';
-import { VectorLayerLoader } from './scripts/svg';
+import { VectorLayerLoader } from './scripts/import';
 import { Point } from './scripts/common';
 import { EditorType } from './scripts/model';
 import { Subscription } from 'rxjs/Subscription';

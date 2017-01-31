@@ -1,5 +1,5 @@
-import * as PathParser from './PathParser';
-import { createPathCommand } from './PathCommandImpl';
+import { PathParser } from '../../import';
+import { createPathCommand } from '.';
 
 describe('PathCommand', () => {
   it('reverse line', () => {

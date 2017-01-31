@@ -10,11 +10,10 @@ import {
 import { Id as CommandId } from '../scripts/model';
 import * as $ from 'jquery';
 import * as erd from 'element-resize-detector';
-import { Point, Matrix, MathUtil, ColorUtil } from '../scripts/common';
+import { Point, Matrix, MathUtil, ColorUtil, SvgUtil } from '../scripts/common';
 import { TimelineService } from '../timeline/timeline.service';
 import { LayerStateService } from '../services/layerstate.service';
 import { Subscription } from 'rxjs/Subscription';
-import { arcToBeziers } from '../scripts/svg';
 import { SelectionService, Selection } from '../services/selection.service';
 import { HoverStateService, HoverType, Hover } from '../services/hoverstate.service';
 
@@ -726,7 +725,7 @@ function executeArcCommand(ctx: CanvasRenderingContext2D, arcArgs: ReadonlyArray
   }
 
   // Approximate the arc as one or more bezier curves.
-  const bezierCoords = arcToBeziers({
+  const bezierCoords = SvgUtil.arcToBeziers({
     startX: currentPointX,
     startY: currentPointY,
     rx, ry, xAxisRotation,

@@ -6,7 +6,7 @@ import { LayerStateService } from '../services/layerstate.service';
 import { EditorType } from '../scripts/model';
 import * as $ from 'jquery';
 import * as erd from 'element-resize-detector';
-import { VectorLayerLoader } from '../scripts/svg';
+import { VectorLayerLoader } from '../scripts/import';
 
 const ELEMENT_RESIZE_DETECTOR = erd();
 

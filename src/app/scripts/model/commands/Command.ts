@@ -1,4 +1,4 @@
-import { Point } from '../../common';
+import { Point, Matrix } from '../../common';
 import { SvgChar } from '.';
 
 /**
@@ -47,6 +47,11 @@ export interface Command {
    * that is morphable with the specified SVG command type.
    */
   canConvertTo(ch: SvgChar): boolean;
+
+  /**
+   * Returns a transformed SVG command.
+   */
+  transform(matrices: Matrix[]): Command;
 }
 
 /**

@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
 import * as BezierJs from 'bezier-js';
-import { MathUtil, Point } from '../common';
-import { Projection } from '../model/commands';
+import { MathUtil, Point } from '../../common';
+import { Projection } from '.';
 
 export interface PathHelper {
   points: ReadonlyArray<Point>;

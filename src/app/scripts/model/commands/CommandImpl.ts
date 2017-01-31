@@ -1,10 +1,9 @@
 import * as _ from 'lodash';
-import { Point, Matrix, MathUtil } from '../common';
-import { Command, SvgChar } from '../model/commands';
-import * as SvgUtil from './SvgUtil';
+import { Point, Matrix, MathUtil, SvgUtil } from '../../common';
+import { Command, SvgChar } from '.';
 
 /**
- * Implementation of the DrawCommand interface. Each draw command represents
+ * Implementation of the Command interface. Each draw command represents
  * a single SVG drawing command (move, line, quadratic curve, bezier curve,
  * elliptical arc, or close path).
  */
@@ -36,17 +35,17 @@ export class CommandImpl implements Command {
     }
   }
 
-  // Implements the DrawCommand interface.
+  // Implements the Command interface.
   get start() {
     return _.first(this.points);
   }
 
-  // Implements the DrawCommand interface.
+  // Implements the Command interface.
   get end() {
     return _.last(this.points);
   }
 
-  // Implements the DrawCommand interface.
+  // Implements the Command interface.
   canConvertTo(targetChar: SvgChar) {
     const ch = targetChar;
     if (this.svgChar === 'M' || ch === 'M') {
@@ -76,8 +75,8 @@ export class CommandImpl implements Command {
     return false;
   }
 
-  /** Returns a new transformed draw command. */
-  transform(matrices: Matrix[]): CommandImpl {
+  // Implements the Command interface.
+  transform(matrices: Matrix[]): Command {
     if (this.svgChar === 'A') {
       const start = MathUtil.transform(this.start, ...matrices);
       const arc = SvgUtil.transformArc({

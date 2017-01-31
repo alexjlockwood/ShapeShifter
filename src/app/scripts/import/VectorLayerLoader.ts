@@ -1,8 +1,7 @@
 import { Layer, VectorLayer, GroupLayer, PathLayer, ClipPathLayer } from '../model/layers';
-import { ColorUtil, MathUtil } from '../common';
-import { createPathCommand } from './PathCommandImpl';
-import * as PathParser from './PathParser';
-import * as SvgUtil from './SvgUtil';
+import { createPathCommand } from '../model/commands';
+import { ColorUtil, MathUtil, SvgUtil } from '../common';
+import { PathParser } from '.';
 
 /**
  * Utility function that takes an SVG string as input and returns a VectorLayer model object.
