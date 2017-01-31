@@ -46,7 +46,8 @@ export class DropTargetComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    ELEMENT_RESIZE_DETECTOR.removeListener(this.element.parent().get(0), this.elementResizeCallback);
+    // TODO: app crashes when going from morphable to unmorphable
+    // ELEMENT_RESIZE_DETECTOR.removeListener(this.element.parent().get(0), this.elementResizeCallback);
   }
 
   private resize() {

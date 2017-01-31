@@ -11,10 +11,8 @@ export interface PathHelper {
   findTimeByDistance(distance: number): number;
 }
 
-interface IPoint { x: number; y: number; };
-
 // TODO: create an elliptical arc path helper
-export function createPathHelper(...points: IPoint[]): PathHelper {
+export function createPathHelper(...points: Point[]): PathHelper {
   if (!points.length || 4 < points.length) {
     throw new Error('Invalid number of points: ' + points.length);
   }
@@ -93,12 +91,10 @@ class LineHelper implements PathHelper {
   project({x, y}: Point): Projection {
     const {x: x1, y: y1} = this.points[0];
     const {x: x2, y: y2} = this.points[1];
-    const A = x - x1;
-    const B = y - y1;
-    const C = x2 - x1;
-    const D = y2 - y1;
-    const dot = A * C + B * D;
-    const lenSq = C * C + D * D;
+    const a = x2 - x1;
+    const b = y2 - y1;
+    const dot = (x - x1) * a + (y - y1) * b;
+    const lenSq = a * a + b * b;
     const param = lenSq === 0 ? -1 : dot / lenSq;
     let xx, yy;
     if (param < 0) {
@@ -108,8 +104,8 @@ class LineHelper implements PathHelper {
       xx = x2;
       yy = y2;
     } else {
-      xx = x1 + param * C;
-      yy = y1 + param * D;
+      xx = x1 + param * a;
+      yy = y1 + param * b;
     }
     const dx = x - xx;
     const dy = y - yy;
@@ -122,12 +118,7 @@ class LineHelper implements PathHelper {
     } else {
       dt = 0.5;
     }
-    return {
-      x: xx,
-      y: yy,
-      d: dd,
-      t: dt,
-    };
+    return { x: xx, y: yy, d: dd, t: dt };
   }
 
   split(t1: number, t2: number): PathHelper {
@@ -179,6 +170,7 @@ class BezierHelper implements PathHelper {
 
   split(t1: number, t2: number): PathHelper {
     // TODO: return a point helper if t1 === t2?
+    // TODO: handle degenerate curves (it is possible for points to be undefined)
     return new BezierHelper(...this.bezierJs.split(t1, t2).points
       .map(p => new Point(p.x, p.y)));
   }

@@ -13,7 +13,7 @@ import { LayerStateService } from './services/layerstate.service';
 import { DividerDragEvent } from './splitter/splitter.directive';
 import * as $ from 'jquery';
 
-const debugMode = !environment.production;
+const IS_DEBUG_MODE = false; // !environment.production;
 
 @Component({
   selector: 'app-root',
@@ -78,7 +78,9 @@ export class AppComponent implements OnInit, OnDestroy {
         this.checkAreLayersMorphable();
       }));
 
-    this.initDebugMode();
+    if (IS_DEBUG_MODE) {
+      this.initDebugMode();
+    }
   }
 
   ngOnDestroy() {
