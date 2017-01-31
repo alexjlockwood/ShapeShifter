@@ -13,7 +13,7 @@ import { InspectorService, EventType } from '../inspector.service';
 export class SubPathComponent {
   @Input() editorType: EditorType;
   @Input() pathId: string;
-  @Input() subPathIdx: number;
+  @Input() subIdx: number;
   @Input() pathCommand: PathCommand;
   private subPathCommand_: SubPathCommand;
   private drawCommandWrappers_: DrawCommandWrapper[];
@@ -26,7 +26,7 @@ export class SubPathComponent {
     const dcws = [];
     this.subPathCommand_.commands.forEach((cmd, i) => {
       dcws.push({
-        id: this.pathCommand.getId(this.subPathIdx, i),
+        id: this.pathCommand.getId(this.subIdx, i),
         drawCommand: cmd,
       });
     });
@@ -48,28 +48,28 @@ export class SubPathComponent {
   onAutoFixClick() {
     this.inspectorService.notifyChange(EventType.AutoFix, {
       pathId: this.pathId,
-      subPathIdx: this.subPathIdx,
+      subIdx: this.subIdx,
     });
   }
 
   onReverseClick() {
     this.inspectorService.notifyChange(EventType.Reverse, {
       pathId: this.pathId,
-      subPathIdx: this.subPathIdx,
+      subIdx: this.subIdx,
     });
   }
 
   onShiftBackClick() {
     this.inspectorService.notifyChange(EventType.ShiftBack, {
       pathId: this.pathId,
-      subPathIdx: this.subPathIdx,
+      subIdx: this.subIdx,
     });
   }
 
   onShiftForwardClick() {
     this.inspectorService.notifyChange(EventType.ShiftForward, {
       pathId: this.pathId,
-      subPathIdx: this.subPathIdx,
+      subIdx: this.subIdx,
     });
   }
 

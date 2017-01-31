@@ -20,8 +20,8 @@ import { ColorUtil } from '../../scripts/common';
 export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
   @Input() editorType: EditorType;
   @Input() pathId: string;
-  @Input() subPathIdx: number;
-  private drawIdx_: number;
+  @Input() subIdx: number;
+  private cmdIdx_: number;
   private drawCommand_: Command;
   @ViewChild('drawCommandIndexCanvas') private drawCommandIndexCanvas: ElementRef;
 
@@ -46,8 +46,8 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
   ngOnInit() {
     this.selectionArgs_ = {
       pathId: this.pathId,
-      subPathIdx: this.subPathIdx,
-      drawIdx: this.drawIdx,
+      subIdx: this.subIdx,
+      cmdIdx: this.cmdIdx,
     };
     this.subscription_ = this.selectionService.addListener(this.editorType,
       (selections: Selection[]) => {
@@ -71,15 +71,15 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   @Input()
-  set drawIdx(drawIdx: number) {
-    if (this.drawIdx_ !== drawIdx) {
-      this.drawIdx_ = drawIdx;
+  set cmdIdx(cmdIdx: number) {
+    if (this.cmdIdx_ !== cmdIdx) {
+      this.cmdIdx_ = cmdIdx;
       this.draw();
     }
   }
 
-  get drawIdx() {
-    return this.drawIdx_;
+  get cmdIdx() {
+    return this.cmdIdx_;
   }
 
   @Input()
@@ -106,7 +106,7 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
     const radius = this.commandIndexCanvasSize * this.dpi / 2;
 
     ctx.save();
-    const color = this.drawIdx === 0
+    const color = this.cmdIdx === 0
       ? ColorUtil.MOVE_POINT_COLOR : this.drawCommand.isSplit
         ? ColorUtil.SPLIT_POINT_COLOR : ColorUtil.NORMAL_POINT_COLOR;
     ctx.beginPath();
@@ -116,7 +116,7 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
     ctx.beginPath();
     ctx.fillStyle = 'white';
     ctx.font = radius + 'px Roboto';
-    const text = (this.drawIdx + 1).toString();
+    const text = (this.cmdIdx + 1).toString();
     const textWidth = ctx.measureText(text).width;
     // TODO: is there a better way to get the height?
     const textHeight = ctx.measureText('o').width;
@@ -167,13 +167,13 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
         : EditorType.Start;
     const vl = this.layerStateService.getData(editorType);
     const pathData = (vl.findLayerById(this.pathId) as PathLayer).pathData;
-    if (pathData.subPathCommands.length <= this.subPathIdx) {
+    if (pathData.subPathCommands.length <= this.subIdx) {
       return false;
     }
-    if (pathData.subPathCommands[this.subPathIdx].commands.length <= this.drawIdx) {
+    if (pathData.subPathCommands[this.subIdx].commands.length <= this.cmdIdx) {
       return false;
     }
-    const drawCmd = pathData.subPathCommands[this.subPathIdx].commands[this.drawIdx];
+    const drawCmd = pathData.subPathCommands[this.subIdx].commands[this.cmdIdx];
     return this.drawCommand.svgChar !== drawCmd.svgChar
       && this.drawCommand.canConvertTo(drawCmd.svgChar);
   }
@@ -203,9 +203,9 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private broadcastHoverEvent(isHovering: boolean, hoverType: HoverType) {
     const pathId = this.pathId;
-    const subPathIdx = this.subPathIdx;
-    const drawIdx = this.drawIdx;
-    const commandId = { pathId, subPathIdx, drawIdx };
+    const subIdx = this.subIdx;
+    const cmdIdx = this.cmdIdx;
+    const commandId = { pathId, subIdx, cmdIdx };
     const visibleTo =
       hoverType === HoverType.Command
         ? [EditorType.Start, EditorType.End]
@@ -213,14 +213,14 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
     if (isHovering) {
       this.hoverStateService.setHover({
         type: hoverType,
-        commandId: { pathId, subPathIdx, drawIdx },
+        commandId: { pathId, subIdx, cmdIdx },
         source: this.editorType,
         visibleTo,
       });
     } else if (hoverType !== HoverType.Command && this.isHoveringOverCommand) {
       this.hoverStateService.setHover({
         type: HoverType.Command,
-        commandId: { pathId, subPathIdx, drawIdx },
+        commandId: { pathId, subIdx, cmdIdx },
         source: this.editorType,
         visibleTo: [EditorType.Start, EditorType.End],
       });
@@ -248,8 +248,8 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
   private onCommandButtonClick(eventType: EventType) {
     this.inspectorService.notifyChange(eventType, {
       pathId: this.pathId,
-      subPathIdx: this.subPathIdx,
-      drawIdx: this.drawIdx,
+      subIdx: this.subIdx,
+      cmdIdx: this.cmdIdx,
     });
 
     // This ensures that the parent div won't also receive the same click event.

@@ -57,16 +57,16 @@ export function fix(
   });
 
   // For each alignment, determine whether it and its neighbor is a gap.
-  interface CmdInfo { isGap: boolean; isNextGap: boolean; nextDrawIdx: number; }
+  interface CmdInfo { isGap: boolean; isNextGap: boolean; nextcmdIdx: number; }
   const processAlignmentsFn = (alignments: Alignment<Command>[]) => {
-    let nextDrawIdx = 0;
+    let nextcmdIdx = 0;
     return alignments.map((alignment, i) => {
       const isGap = !alignment.obj;
       const isNextGap = (i + 1 < alignments.length) && !alignments[i + 1].obj;
       if (!isGap) {
-        nextDrawIdx++;
+        nextcmdIdx++;
       }
-      return { isGap, isNextGap, nextDrawIdx } as CmdInfo;
+      return { isGap, isNextGap, nextcmdIdx } as CmdInfo;
     });
   };
 
@@ -96,15 +96,15 @@ export function fix(
   const applySplitsFn = (pathCommand: PathCommand, gapGroups: CmdInfo[][]) => {
     for (let i = gapGroups.length - 1; i >= 0; i--) {
       const gapGroup = gapGroups[i];
-      const drawIdx = _.last(gapGroup).nextDrawIdx;
+      const cmdIdx = _.last(gapGroup).nextcmdIdx;
       const ts = [];
       for (let j = gapGroup.length - 1; j >= 0; j--) {
         const t = (j + 1) / (gapGroup.length + 1);
         ts.push(t);
         // TODO: perform these splits as a single batch operation
-        // pathCommand = pathCommand.split(subPathIdx, drawIdx, t);
+        // pathCommand = pathCommand.split(subIdx, cmdIdx, t);
       }
-      pathCommand = pathCommand.split(subIdx, drawIdx, ...ts);
+      pathCommand = pathCommand.split(subIdx, cmdIdx, ...ts);
     }
     return pathCommand;
   };
@@ -115,14 +115,14 @@ export function fix(
   const convertDrawCmdsFn = (from: PathCommand, to: PathCommand) => {
     const fromDrawCmds = from.subPathCommands[subIdx].commands;
     const toDrawCmds = to.subPathCommands[subIdx].commands;
-    fromDrawCmds.forEach((fromDrawCmd, drawIdx) => {
-      const toDrawCmd = toDrawCmds[drawIdx];
+    fromDrawCmds.forEach((fromDrawCmd, cmdIdx) => {
+      const toDrawCmd = toDrawCmds[cmdIdx];
       if (fromDrawCmd.svgChar === toDrawCmd.svgChar
         || !fromDrawCmd.canConvertTo(toDrawCmd.svgChar)) {
         return;
       }
       // TODO: perform these conversions as a single batch operation
-      from = from.convert(subIdx, drawIdx, toDrawCmd.svgChar);
+      from = from.convert(subIdx, cmdIdx, toDrawCmd.svgChar);
     });
     return from;
   };

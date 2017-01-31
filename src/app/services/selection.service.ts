@@ -10,16 +10,9 @@ import { BaseService } from './base.service';
 
 @Injectable()
 export class SelectionService extends BaseService<Array<Selection>> {
-  private readonly hoverSources = new Map<EditorType, Subject<Hover>>();
-  private readonly hoverStreams = new Map<EditorType, Observable<Hover>>();
 
   constructor() {
     super([]);
-    [EditorType.Start, EditorType.Preview, EditorType.End]
-      .forEach(type => {
-        this.hoverSources.set(type, new Subject<Hover>());
-        this.hoverStreams.set(type, this.hoverSources.get(type).asObservable());
-      });
   }
 
   // TODO: make this API more flexible/generic
@@ -31,14 +24,14 @@ export class SelectionService extends BaseService<Array<Selection>> {
   }
 
   // TODO: clean up this API...
-  reverse(type: EditorType, subPathIdx: number, numCommands: number) {
+  reverse(type: EditorType, subIdx: number, numCommands: number) {
     this.setData(type, this.getData(type).map(sel => {
-      if (sel.subPathIdx !== subPathIdx) {
+      if (sel.subIdx !== subIdx) {
         return sel;
       }
       // TODO: this doesn't quite work yet... but close enough for now.
       // ideally the selected path should stay the same. try it on a plus SVG to reproduce.
-      return _.assign({}, sel, { drawIdx: numCommands - sel.drawIdx - 1 });
+      return _.assign({}, sel, { cmdIdx: numCommands - sel.cmdIdx - 1 });
     }));
     this.notifyChange(type);
   }
@@ -49,30 +42,6 @@ export class SelectionService extends BaseService<Array<Selection>> {
  */
 export interface Selection {
   pathId: string;
-  subPathIdx: number;
-  drawIdx: number;
-}
-
-/**
- * A hover represents a transient action that results as a result of a mouse hover.
- */
-export interface Hover {
-  pathId: string;
-  subPathIdx: number;
-  drawIdx: number;
-  hoverType: HoverType;
-}
-
-/**
- * Describes the different types of hover events.
- */
-export enum HoverType {
-  // The user cleared a hover event.
-  None,
-  // The user hovered over a draw command in the inspector/canvas.
-  Command,
-  // The user hovered over the split button in the command inspector.
-  Split,
-  // The user hovered over the unsplit button in the command inspector.
-  Unsplit,
+  subIdx: number;
+  cmdIdx: number;
 }

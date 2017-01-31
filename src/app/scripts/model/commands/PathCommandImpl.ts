@@ -326,15 +326,15 @@ class PathCommandImpl implements PathCommand {
   }
 
   // Implements the PathCommand interface.
-  getId(subIdx: number, drawIdx: number) {
-    const { targetCw, splitIdx } = this.findCommandWrapper(subIdx, drawIdx);
+  getId(subIdx: number, cmdIdx: number) {
+    const { targetCw, splitIdx } = this.findCommandWrapper(subIdx, cmdIdx);
     return targetCw.getIdAtIndex(splitIdx);
   }
 
   // Implements the PathCommand interface.
-  split(subIdx: number, drawIdx: number, ...ts: number[]) {
+  split(subIdx: number, cmdIdx: number, ...ts: number[]) {
     const { targetCw, cwIdx, splitIdx } =
-      this.findCommandWrapper(subIdx, drawIdx);
+      this.findCommandWrapper(subIdx, cmdIdx);
     const shiftOffsets =
       this.maybeUpdateShiftOffsetsAfterSplit(subIdx, cwIdx, ts.length);
     const newCw = targetCw.splitAtIndex(splitIdx, ts);
@@ -345,9 +345,9 @@ class PathCommandImpl implements PathCommand {
   }
 
   // Implements the PathCommand interface.
-  splitInHalf(subIdx: number, drawIdx: number) {
+  splitInHalf(subIdx: number, cmdIdx: number) {
     const { targetCw, cwIdx, splitIdx } =
-      this.findCommandWrapper(subIdx, drawIdx);
+      this.findCommandWrapper(subIdx, cmdIdx);
     const shiftOffsets =
       this.maybeUpdateShiftOffsetsAfterSplit(subIdx, cwIdx, 1);
     const newCw = targetCw.splitInHalfAtIndex(splitIdx);
@@ -372,7 +372,7 @@ class PathCommandImpl implements PathCommand {
 
   // If 0 <= cwIdx <= shiftOffset, then that means we need to increase the
   // shift offset to account for the new split points that are about to be inserted.
-  // Note that this method assumes all splits will occur within the same drawIdx
+  // Note that this method assumes all splits will occur within the same cmdIdx
   // command. This means that the shift offset will only ever increase by either
   // 'numShifts' or '0', since it will be impossible for splits to be added on
   // both sides of the shift pivot. We could fix that, but it's a lot of
@@ -389,9 +389,9 @@ class PathCommandImpl implements PathCommand {
   }
 
   // Implements the PathCommand interface.
-  unsplit(subIdx: number, drawIdx: number) {
+  unsplit(subIdx: number, cmdIdx: number) {
     const { targetCw, cwIdx, splitIdx } =
-      this.findCommandWrapper(subIdx, drawIdx);
+      this.findCommandWrapper(subIdx, cmdIdx);
     const newCw =
       targetCw.unsplitAtIndex(this.reversals_[subIdx] ? splitIdx - 1 : splitIdx);
     const shiftOffsets_ = this.shiftOffsets_.slice();
@@ -406,28 +406,28 @@ class PathCommandImpl implements PathCommand {
   }
 
   // Implements the PathCommand interface.
-  convert(subIdx: number, drawIdx: number, svgChar: SvgChar): PathCommand {
+  convert(subIdx: number, cmdIdx: number, svgChar: SvgChar): PathCommand {
     const { targetCw, cwIdx, splitIdx } =
-      this.findCommandWrapper(subIdx, drawIdx);
+      this.findCommandWrapper(subIdx, cmdIdx);
     const newCw = targetCw.convertAtIndex(splitIdx, svgChar);
     return this.clone({
       commandWrappers_: this.replaceCommandWrapper(subIdx, cwIdx, newCw),
     });
   }
 
-  private findCommandWrapper(subIdx: number, drawIdx: number) {
+  private findCommandWrapper(subIdx: number, cmdIdx: number) {
     const numCommands = this.subPathCommands_[subIdx].commands.length;
-    if (drawIdx && this.reversals_[subIdx]) {
-      drawIdx = numCommands - drawIdx;
+    if (cmdIdx && this.reversals_[subIdx]) {
+      cmdIdx = numCommands - cmdIdx;
     }
-    drawIdx += this.shiftOffsets_[subIdx];
-    if (drawIdx >= numCommands) {
-      drawIdx -= (numCommands - 1);
+    cmdIdx += this.shiftOffsets_[subIdx];
+    if (cmdIdx >= numCommands) {
+      cmdIdx -= (numCommands - 1);
     }
     let counter = 0, cwIdx = 0;
     for (const targetCw of this.commandWrappers_[subIdx]) {
-      if (counter + targetCw.commands.length > drawIdx) {
-        const splitIdx = drawIdx - counter;
+      if (counter + targetCw.commands.length > cmdIdx) {
+        const splitIdx = cmdIdx - counter;
         return { targetCw, cwIdx, splitIdx };
       }
       counter += targetCw.commands.length;

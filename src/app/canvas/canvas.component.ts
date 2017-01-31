@@ -307,7 +307,7 @@ export class CanvasComponent implements OnInit, OnDestroy {
       }
       const drawCommands = selections.map(selection => {
         const subPathCommands = layer.pathData.subPathCommands;
-        return subPathCommands[selection.subPathIdx].commands[selection.drawIdx];
+        return subPathCommands[selection.subIdx].commands[selection.cmdIdx];
       });
 
       executeDrawCommands(drawCommands, ctx, transforms, true);
@@ -348,23 +348,23 @@ export class CanvasComponent implements OnInit, OnDestroy {
         // If the user is hovering over the inspector split button, then build
         // a snapshot of what the path would look like after the action
         // and display the result. Note that after the split action,
-        // the hover's drawIdx can be used to identify the new split point.
+        // the hover's cmdIdx can be used to identify the new split point.
         pathData =
           layer.pathData.splitInHalf(
-            currentHover.commandId.subPathIdx,
-            currentHover.commandId.drawIdx);
+            currentHover.commandId.subIdx,
+            currentHover.commandId.cmdIdx);
       }
 
       // Build a list containing all necessary information needed in
       // order to draw the labeled points.
       const pathDataPointInfo = _.chain(pathData.subPathCommands)
-        .map((subPathCmd: SubPathCommand, subPathIdx: number) => {
+        .map((subPathCmd: SubPathCommand, subIdx: number) => {
           return _.chain(subPathCmd.commands)
             // TODO: do we really want to filter out the close paths here?
             .filter((drawCmd: Command) => drawCmd.svgChar !== 'Z')
-            .map((drawCmd, drawIdx) => {
+            .map((drawCmd, cmdIdx) => {
               return {
-                commandId: { pathId, subPathIdx, drawIdx } as CommandId,
+                commandId: { pathId, subIdx, cmdIdx } as CommandId,
                 point: _.last(drawCmd.points),
                 isSplit: drawCmd.isSplit,
               };
@@ -534,7 +534,7 @@ export class CanvasComponent implements OnInit, OnDestroy {
       // Delete the old drag point from the path.
       activeLayer.pathData =
         activeLayer.pathData.unsplit(
-          this.activeDragPointId.subPathIdx, this.activeDragPointId.drawIdx);
+          this.activeDragPointId.subIdx, this.activeDragPointId.cmdIdx);
 
       // Recalculate the projection in case the unsplit operation shuffled
       // the path indices.
@@ -587,12 +587,12 @@ export class CanvasComponent implements OnInit, OnDestroy {
       const pathId = layer.id;
       const transformedMousePoint = MathUtil.transformPoint(mousePoint, ...transforms);
       const minPathPoint = _.chain(layer.pathData.subPathCommands)
-        .map((subPathCmd: SubPathCommand, subPathIdx: number) => {
+        .map((subPathCmd: SubPathCommand, subIdx: number) => {
           return subPathCmd.commands
-            .map((drawCmd, drawIdx) => {
+            .map((drawCmd, cmdIdx) => {
               const distance = MathUtil.distance(drawCmd.end, transformedMousePoint);
               const isSplit = drawCmd.isSplit;
-              return { pathId, subPathIdx, drawIdx, distance, isSplit };
+              return { pathId, subIdx, cmdIdx, distance, isSplit };
             })
             // Filter out non-split commands last to preserve the indices above.
             .filter(cmdInfo => splitOnly && cmdInfo.isSplit);

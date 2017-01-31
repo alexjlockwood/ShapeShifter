@@ -22,8 +22,8 @@ export class InspectorService {
     this.inspectorSource.next({
       eventType: eventType,
       pathId: args.pathId,
-      subPathIdx: args.subPathIdx,
-      drawIdx: args.drawIdx,
+      subIdx: args.subIdx,
+      cmdIdx: args.cmdIdx,
     });
   }
 }
@@ -40,8 +40,8 @@ export enum EventType {
 
 export interface InspectorArgs {
   pathId: string;
-  subPathIdx?: number;
-  drawIdx?: number;
+  subIdx?: number;
+  cmdIdx?: number;
 }
 
 export interface InspectorEvent extends InspectorArgs {

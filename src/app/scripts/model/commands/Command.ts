@@ -59,6 +59,6 @@ export interface Command {
  */
 export interface Id {
   readonly pathId: string;
-  readonly subPathIdx: number;
-  readonly drawIdx: number;
+  readonly subIdx: number;
+  readonly cmdIdx: number;
 }

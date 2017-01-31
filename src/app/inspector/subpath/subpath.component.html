@@ -32,14 +32,14 @@
 </div>
 <app-command
   *ngFor="let drawCommandWrapper of drawCommandWrappers;
-    let drawIdx = index;
+    let cmdIdx = index;
     trackBy: trackDrawCommand"
   fxLayout="row"
   fxLayoutAlign="start center"
   [editorType]="editorType"
   [pathId]="pathId"
-  [subPathIdx]="subPathIdx"
-  [drawIdx]="drawIdx"
+  [subIdx]="subIdx"
+  [cmdIdx]="cmdIdx"
   [drawCommand]="drawCommandWrapper.drawCommand">
 </app-command>
 

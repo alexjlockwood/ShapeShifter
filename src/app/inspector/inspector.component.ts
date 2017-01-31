@@ -50,7 +50,7 @@ export class InspectorComponent implements OnInit, OnDestroy {
         }));
     this.subscriptions.push(
       this.inspectorService.addListener((event: InspectorEvent) => {
-        const {eventType, pathId, subPathIdx, drawIdx} = event;
+        const {eventType, pathId, subIdx, cmdIdx} = event;
         const vl = this.layerStateService.getData(this.editorType);
         const pathLayer = vl.findLayerById(pathId) as PathLayer;
         switch (eventType) {
@@ -62,7 +62,7 @@ export class InspectorComponent implements OnInit, OnDestroy {
             const targetVl = this.layerStateService.getData(targetEditorType);
             const fromPathLayer = pathLayer;
             const toPathLayer = targetVl.findLayerById(pathId) as PathLayer;
-            const autoFixResult = AutoAwesome.fix(subPathIdx, fromPathLayer.pathData, toPathLayer.pathData);
+            const autoFixResult = AutoAwesome.fix(subIdx, fromPathLayer.pathData, toPathLayer.pathData);
             fromPathLayer.pathData = autoFixResult.from;
             toPathLayer.pathData = autoFixResult.to;
             this.layerStateService.notifyChange(EditorType.Start);
@@ -78,33 +78,33 @@ export class InspectorComponent implements OnInit, OnDestroy {
             const targetVl = this.layerStateService.getData(targetEditorType);
             const targetPathData = (targetVl.findLayerById(pathId) as PathLayer).pathData;
             const targetSvgChar =
-              targetPathData.subPathCommands[subPathIdx].commands[drawIdx].svgChar;
+              targetPathData.subPathCommands[subIdx].commands[cmdIdx].svgChar;
             if (targetPathData) {
               pathLayer.pathData =
-                pathLayer.pathData.convert(subPathIdx, drawIdx, targetSvgChar);
+                pathLayer.pathData.convert(subIdx, cmdIdx, targetSvgChar);
               // TODO: update selections
             }
           }
             break;
           case EventType.Reverse:
-            pathLayer.pathData = pathLayer.pathData.reverse(subPathIdx);
-            const numCommands = pathLayer.pathData.subPathCommands[subPathIdx].commands.length;
-            this.selectionService.reverse(this.editorType, subPathIdx, numCommands);
+            pathLayer.pathData = pathLayer.pathData.reverse(subIdx);
+            const numCommands = pathLayer.pathData.subPathCommands[subIdx].commands.length;
+            this.selectionService.reverse(this.editorType, subIdx, numCommands);
             break;
           case EventType.ShiftBack:
-            pathLayer.pathData = pathLayer.pathData.shiftBack(subPathIdx);
+            pathLayer.pathData = pathLayer.pathData.shiftBack(subIdx);
             // TODO: update selections
             break;
           case EventType.ShiftForward:
-            pathLayer.pathData = pathLayer.pathData.shiftForward(subPathIdx);
+            pathLayer.pathData = pathLayer.pathData.shiftForward(subIdx);
             // TODO: update selections
             break;
           case EventType.Split:
-            pathLayer.pathData = pathLayer.pathData.splitInHalf(subPathIdx, drawIdx);
+            pathLayer.pathData = pathLayer.pathData.splitInHalf(subIdx, cmdIdx);
             // TODO: update selections
             break;
           case EventType.Unsplit:
-            pathLayer.pathData = pathLayer.pathData.unsplit(subPathIdx, drawIdx);
+            pathLayer.pathData = pathLayer.pathData.unsplit(subIdx, cmdIdx);
             // TODO: update selections
             break;
         }

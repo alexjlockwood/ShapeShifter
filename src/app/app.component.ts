@@ -13,7 +13,7 @@ import { LayerStateService } from './services/layerstate.service';
 import { DividerDragEvent } from './splitter/splitter.directive';
 import * as $ from 'jquery';
 
-const IS_DEBUG_MODE = false; // !environment.production;
+const IS_DEBUG_MODE = !environment.production;
 
 @Component({
   selector: 'app-root',
