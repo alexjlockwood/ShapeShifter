@@ -7,7 +7,7 @@ import { Point } from '../../common';
 export interface SubPathCommand {
 
   /**
-   * The list of children draw commands in this sub path.
+   * The list of children commands in this sub path.
    */
   commands: ReadonlyArray<Command>;
 

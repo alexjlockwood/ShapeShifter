@@ -73,101 +73,102 @@ class PathCommandImpl implements PathCommand {
 
     const maybeReverseCommandsFn = (subIdx: number) => {
       const subPathCws = newCmdWrappers[subIdx];
-      const hasOneDrawCmd =
+      const hasOneCmd =
         subPathCws.length === 1 && _.first(subPathCws).commands.length === 1;
-      if (hasOneDrawCmd || !shouldReverseFn(subIdx)) {
+      if (hasOneCmd || !shouldReverseFn(subIdx)) {
         // Nothing to do in these two cases.
         return _.flatMap(subPathCws, cw => cw.commands as CommandImpl[]);
       }
 
-      // Extract the draw commands from our command wrapper map.
-      const drawCmds = _.flatMap(subPathCws, cw => {
+      // Extract the commands from our command wrapper map.
+      const cmds = _.flatMap(subPathCws, cw => {
         // Consider a segment A ---- B ---- C with AB split and
         // BC non-split. When reversed, we want the user to see
         // C ---- B ---- A w/ CB split and BA non-split.
-        const cmds = cw.commands.slice();
-        if (cmds[0].svgChar === 'M') {
-          return cmds;
+        const cwCmds = cw.commands.slice();
+        if (cwCmds[0].svgChar === 'M') {
+          return cwCmds;
         }
-        cmds[0] = _.first(cmds).toggleSplit();
-        cmds[cmds.length - 1] = _.last(cmds).toggleSplit();
-        return cmds;
+        cwCmds[0] = _.first(cwCmds).toggleSplit();
+        cwCmds[cwCmds.length - 1] = _.last(cwCmds).toggleSplit();
+        return cwCmds;
       });
 
 
       // If the last command is a 'Z', replace it with a line before we reverse.
-      const lastCmd = _.last(drawCmds);
+      const lastCmd = _.last(cmds);
       if (lastCmd.svgChar === 'Z') {
-        drawCmds[drawCmds.length - 1] = lineTo(lastCmd.start, lastCmd.end, lastCmd.isSplit);
+        cmds[cmds.length - 1] = lineTo(lastCmd.start, lastCmd.end, lastCmd.isSplit);
       }
 
-      // Reverse the draw commands.
-      const newDrawCmds = [];
-      for (let i = drawCmds.length - 1; i > 0; i--) {
-        newDrawCmds.push(drawCmds[i].reverse());
+      // Reverse the commands.
+      const newCmds = [];
+      for (let i = cmds.length - 1; i > 0; i--) {
+        newCmds.push(cmds[i].reverse());
       }
-      newDrawCmds.unshift(moveTo(_.first(drawCmds).start, _.first(newDrawCmds).start));
-      return newDrawCmds;
+      newCmds.unshift(moveTo(_.first(cmds).start, _.first(newCmds).start));
+      return newCmds;
     };
 
     // TODO: another edge case: closed paths not ending in a Z
-    const maybeShiftCommandsFn = (subIdx: number, drawCmds: CommandImpl[]) => {
+    const maybeShiftCommandsFn = (subIdx: number, cmds: CommandImpl[]) => {
       let shiftOffset = getShiftOffsetFn(subIdx);
       if (!shiftOffset
-        || drawCmds.length === 1
-        || !_.first(drawCmds).end.equals(_.last(drawCmds).end)) {
+        || cmds.length === 1
+        || !_.first(cmds).end.equals(_.last(cmds).end)) {
         // If there is no shift offset, the sub path is one command long,
         // or if the sub path is not closed, then do nothing.
-        return drawCmds;
+        return cmds;
       }
 
-      const numCommands = drawCmds.length;
+      const numCommands = cmds.length;
       if (shouldReverseFn(subIdx)) {
         shiftOffset *= -1;
         shiftOffset += numCommands - 1;
       }
 
       // If the last command is a 'Z', replace it with a line before we shift.
-      const lastCmd = _.last(drawCmds);
+      const lastCmd = _.last(cmds);
       if (lastCmd.svgChar === 'Z') {
-        drawCmds[numCommands - 1] = lineTo(lastCmd.start, lastCmd.end, lastCmd.isSplit);
+        cmds[numCommands - 1] = lineTo(lastCmd.start, lastCmd.end, lastCmd.isSplit);
       }
 
-      const newDrawCmds = [];
+      const newCmds = [];
 
       // Handle these case separately cause they are annoying and I'm sick of edge cases.
       if (shiftOffset === 1) {
-        newDrawCmds.push(moveTo(_.first(drawCmds).start, drawCmds[1].end));
-        for (let i = 2; i < drawCmds.length; i++) {
-          newDrawCmds.push(drawCmds[i]);
+        newCmds.push(moveTo(_.first(cmds).start, cmds[1].end));
+        for (let i = 2; i < cmds.length; i++) {
+          newCmds.push(cmds[i]);
         }
-        newDrawCmds.push(drawCmds[1]);
-        return newDrawCmds;
+        newCmds.push(cmds[1]);
+        return newCmds;
       } else if (shiftOffset === numCommands - 1) {
-        newDrawCmds.push(moveTo(_.first(drawCmds).start, drawCmds[numCommands - 2].end));
-        newDrawCmds.push(_.last(drawCmds));
-        for (let i = 1; i < drawCmds.length - 1; i++) {
-          newDrawCmds.push(drawCmds[i]);
+        newCmds.push(moveTo(_.first(cmds).start, cmds[numCommands - 2].end));
+        newCmds.push(_.last(cmds));
+        for (let i = 1; i < cmds.length - 1; i++) {
+          newCmds.push(cmds[i]);
         }
-        return newDrawCmds;
+        return newCmds;
       }
 
-      // Shift the sequence of drawing commands. After the shift, the original move
+      // Shift the sequence of commands. After the shift, the original move
       // command will be at index 'numCommands - shiftOffset'.
       for (let i = 0; i < numCommands; i++) {
-        newDrawCmds.push(drawCmds[(i + shiftOffset) % numCommands]);
+        newCmds.push(cmds[(i + shiftOffset) % numCommands]);
       }
 
       // The first start point will either be undefined, or the end point of the previous sub path.
-      const prevMoveCmd = newDrawCmds.splice(numCommands - shiftOffset, 1)[0];
-      newDrawCmds.push(newDrawCmds.shift());
-      newDrawCmds.unshift(moveTo(prevMoveCmd.start, _.last(newDrawCmds).end));
-      return newDrawCmds;
+      const prevMoveCmd = newCmds.splice(numCommands - shiftOffset, 1)[0];
+      newCmds.push(newCmds.shift());
+      newCmds.unshift(moveTo(prevMoveCmd.start, _.last(newCmds).end));
+      return newCmds;
     };
 
     const drawCommands = _.flatMap(newCmdWrappers, (_, subIdx) => {
       return maybeShiftCommandsFn(subIdx, maybeReverseCommandsFn(subIdx));
     });
+    // TODO: using assign here is kinda weird...
     return new PathCommandImpl(_.assign({}, {
       drawCommands_: drawCommands,
       commandWrappers_: newCmdWrappers,
@@ -212,7 +213,7 @@ class PathCommandImpl implements PathCommand {
       return this;
     }
 
-    const drawCommands: CommandImpl[] = [];
+    const commands: CommandImpl[] = [];
     this.subPathCommands.forEach((s, i) => {
       s.commands.forEach((d, j) => {
         if (d.svgChar === 'A') {
@@ -229,7 +230,7 @@ class PathCommandImpl implements PathCommand {
             args[k] = MathUtil.lerp(d1.args[k], d2.args[k], fraction);
           });
           const points = [new Point(args[0], args[1]), new Point(args[7], args[8])];
-          drawCommands.push(new CommandImpl(d.svgChar, d.isSplit, points, ...args));
+          commands.push(new CommandImpl(d.svgChar, d.isSplit, points, ...args));
         } else {
           const d1 = start.subPathCommands[i].commands[j];
           const d2 = end.subPathCommands[i].commands[j];
@@ -243,12 +244,12 @@ class PathCommandImpl implements PathCommand {
               points.push(new Point(px, py));
             }
           }
-          drawCommands.push(new CommandImpl(d.svgChar, d.isSplit, points));
+          commands.push(new CommandImpl(d.svgChar, d.isSplit, points));
         }
       });
     });
 
-    return new PathCommandImpl(drawCommands);
+    return new PathCommandImpl(commands);
   }
 
   // Implements the PathCommand interface.
@@ -444,7 +445,7 @@ class PathCommandImpl implements PathCommand {
 }
 
 /**
- * Contains additional information about each individual draw command so that we can
+ * Contains additional information about each individual command so that we can
  * remember how they should be projected onto and split/unsplit/converted at runtime.
  * PathCommands are immutable, stateless objects that depend on CommandWrappers to
  * remember their state.
@@ -454,22 +455,22 @@ class CommandWrapper {
   private readonly backingCommand: CommandImpl;
   private readonly pathHelper: PathHelper;
 
-  // A command wrapper wraps around the initial SVG draw command and outputs
-  // a list of transformed draw commands resulting from splits, unsplits,
-  // conversions, etc. If the initial SVG draw command hasn't been modified,
-  // then a list containing the initial SVG draw command is returned.
+  // A command wrapper wraps around the initial SVG command and outputs
+  // a list of transformed commands resulting from splits, unsplits,
+  // conversions, etc. If the initial SVG command hasn't been modified,
+  // then a list containing the initial SVG command is returned.
   private readonly drawCommands: ReadonlyArray<CommandImpl>;
 
-  // The list of mutations describes how the initial backing draw command
+  // The list of mutations describes how the initial backing command
   // has since been modified. Since the command wrapper always holds a
-  // reference to its initial backing draw command, these modifications
+  // reference to its initial backing command, these modifications
   // are always reversible.
   private readonly mutations: ReadonlyArray<Mutation>;
 
   constructor(obj: CommandImpl | ClonedCommandWrapperInfo) {
     if (obj instanceof CommandImpl) {
       this.backingCommand = obj;
-      this.pathHelper = drawCommandToPathHelper(obj);
+      this.pathHelper = commandToPathHelper(obj);
       this.mutations = [{
         id: _.uniqueId(),
         t: 1,
@@ -494,13 +495,13 @@ class CommandWrapper {
   }
 
   // Note that the projection is performed in relation to the command wrapper's
-  // original backing draw command.
+  // original backing command.
   project(point: Point): Projection | undefined {
     return this.pathHelper ? this.pathHelper.project(point) : undefined;
   }
 
   // Note that the split is performed in relation to the command wrapper's
-  // original backing draw command.
+  // original backing command.
   split(ts: number[]) {
     // TODO: add a test for splitting a command with a path length of 0
     // TODO: add a test for the case when t === 1
@@ -526,7 +527,7 @@ class CommandWrapper {
     return this.rebuildCommands(updatedMutations);
   }
 
-  // Each draw command is given a globally unique ID (to improve performance
+  // Each command is given a globally unique ID (to improve performance
   // inside *ngFor loops, etc.).
   getIdAtIndex(splitIdx: number) {
     return this.mutations[splitIdx].id;
@@ -561,11 +562,11 @@ class CommandWrapper {
     return this.rebuildCommands(mutations);
   }
 
-  // TODO: this could be more efficient (avoid recreating draw commands unnecessarily)
+  // TODO: this could be more efficient (avoid recreating commands unnecessarily)
   private rebuildCommands(mutations: Mutation[]) {
     if (mutations.length === 1) {
       const drawCommands =
-        [pointsToDrawCommand(mutations[0].svgChar, this.pathHelper.points, false)];
+        [pointsToCommand(mutations[0].svgChar, this.pathHelper.points, false)];
       return this.clone({ mutations, drawCommands });
     }
     const drawCommands = [];
@@ -575,7 +576,7 @@ class CommandWrapper {
       const splitPathHelper = this.pathHelper.split(prevT, currT);
       const isSplit = i !== mutations.length - 1;
       drawCommands.push(
-        pointsToDrawCommand(mutations[i].svgChar, splitPathHelper.points, isSplit));
+        pointsToCommand(mutations[i].svgChar, splitPathHelper.points, isSplit));
       prevT = currT;
     }
     return this.clone({ mutations, drawCommands });
@@ -587,14 +588,14 @@ class CommandWrapper {
 }
 
 // TODO: create multiple sub path cmds for svgs like 'M ... Z ... Z ... Z'
-function createSubPathCommands(...drawCommands: Command[]) {
-  if (!drawCommands.length) {
+function createSubPathCommands(...commands: Command[]) {
+  if (!commands.length) {
     return [];
   }
   const cmdGroups: Command[][] = [];
   let currentCmdList = [];
-  for (let i = drawCommands.length - 1; i >= 0; i--) {
-    const cmd = drawCommands[i];
+  for (let i = commands.length - 1; i >= 0; i--) {
+    const cmd = commands[i];
     currentCmdList.push(cmd);
     if (cmd.svgChar === 'M') {
       cmdGroups.push(currentCmdList);
@@ -611,7 +612,7 @@ function createCommandWrappers(commands: ReadonlyArray<Command>) {
   return commands.map(cmd => new CommandWrapper(cmd));
 }
 
-function pointsToDrawCommand(
+function pointsToCommand(
   svgChar: SvgChar, points: ReadonlyArray<Point>, isSplit: boolean) {
 
   if (svgChar === 'L') {
@@ -638,7 +639,7 @@ function pointsToDrawCommand(
   }
 }
 
-function drawCommandToPathHelper(cmd: CommandImpl): PathHelper {
+function commandToPathHelper(cmd: CommandImpl): PathHelper {
   if (cmd.svgChar === 'L' || cmd.svgChar === 'Z') {
     return createPathHelper(cmd.start, cmd.end);
   } else if (cmd.svgChar === 'C') {

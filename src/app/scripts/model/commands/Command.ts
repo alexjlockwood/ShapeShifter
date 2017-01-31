@@ -2,12 +2,12 @@ import { Point, Matrix } from '../../common';
 import { SvgChar } from '.';
 
 /**
- * Defines the set of SVG drawing command methods that are seen by the inspector/canvas.
+ * Defines the set of SVG command methods that are seen by the inspector/canvas.
  */
 export interface Command {
 
   /**
-   * Returns the SVG character for this draw command.
+   * Returns the SVG character for this command.
    */
   svgChar: SvgChar;
 
@@ -17,7 +17,7 @@ export interface Command {
   commandString: string;
 
   /**
-   * Returns the raw number arguments for this draw command.
+   * Returns the raw number arguments for this command.
    */
   args: ReadonlyArray<number>;
 
