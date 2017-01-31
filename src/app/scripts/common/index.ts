@@ -1,6 +1,6 @@
-import * as ColorUtil from './colorutil';
-import * as MathUtil from './mathutil';
-import * as AutoAwesome from './autoawesome';
+import * as ColorUtil from './ColorUtil';
+import * as MathUtil from './MathUtil';
+import * as AutoAwesome from './AutoAwesome';
 import * as SvgUtil from './SvgUtil';
 export * from './Matrix';
 export * from './Point';

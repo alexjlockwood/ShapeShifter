@@ -1,8 +1,7 @@
 import * as _ from 'lodash';
-import { MathUtil, Point, Matrix, Rect } from '../../common';
+import { MathUtil, Point, Matrix, Rect, SvgUtil } from '../../common';
 import { PathHelper, createPathHelper } from './PathHelper';
 import { PathCommand, SubPathCommand, Command, SvgChar, Projection } from '.';
-import { SvgUtil } from '../../svg';
 import { PathParser } from '../../import';
 import { createSubPathCommand } from './SubPathCommandImpl';
 import {
