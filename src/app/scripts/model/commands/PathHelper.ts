@@ -118,7 +118,12 @@ class LineHelper implements PathHelper {
     } else {
       dt = 0.5;
     }
-    return { x: xx, y: yy, d: dd, t: dt };
+    return {
+      x: xx,
+      y: yy,
+      d: dd,
+      t: dt,
+    };
   }
 
   split(t1: number, t2: number): PathHelper {
