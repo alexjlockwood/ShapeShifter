@@ -1,7 +1,5 @@
 import { Matrix } from '.';
 
-interface IPoint { x: number; y: number; };
-
 /** An immutable point class. */
 export class Point {
   constructor(public readonly x = 0, public readonly y = 0) { }

@@ -1,4 +1,4 @@
-import { Point, Matrix, MathUtil } from '../common';
+import { Point, Matrix, MathUtil } from '.';
 
 export interface EllipticalArc {
   startX?: number;
@@ -128,7 +128,6 @@ export function arcToBeziers(arc: EllipticalArc) {
   return bezierCoords;
 }
 
-
 /*
 * Generate the control points and endpoints for a set of bezier curves that match
 * a circular arc starting from angle 'angleStart' and sweep the angle 'angleExtent'.
@@ -186,7 +185,6 @@ function unitCircleArcToBeziers(angleStart: number, angleExtent: number): number
 
   return coords;
 }
-
 
 // Code adapted from here:
 // https://gist.github.com/alexjlockwood/c037140879806fb4d9820b7e70195494#file-flatten-js-L441-L547
@@ -270,7 +268,7 @@ export function transformArc(initialArc: EllipticalArc, transformMatrices: Matri
 
     // Finally, transform arc endpoint. This takes care about the
     // translational part which we ignored at the whole math-showdown above.
-    const end = MathUtil.transform(new Point(endX, endY), matrix);
+    const end = MathUtil.transformPoint(new Point(endX, endY), matrix);
 
     xAxisRotation = xAxisRotation * 180 / Math.PI;
 

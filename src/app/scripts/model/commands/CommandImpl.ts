@@ -78,7 +78,7 @@ export class CommandImpl implements Command {
   // Implements the Command interface.
   transform(matrices: Matrix[]): Command {
     if (this.svgChar === 'A') {
-      const start = MathUtil.transform(this.start, ...matrices);
+      const start = MathUtil.transformPoint(this.start, ...matrices);
       const arc = SvgUtil.transformArc({
         rx: this.args[2],
         ry: this.args[3],
@@ -100,7 +100,7 @@ export class CommandImpl implements Command {
       return new CommandImpl(
         this.svgChar,
         this.isSplit,
-        this.points.map(p => p ? MathUtil.transform(p, ...matrices) : p));
+        this.points.map(p => p ? MathUtil.transformPoint(p, ...matrices) : p));
     }
   }
 

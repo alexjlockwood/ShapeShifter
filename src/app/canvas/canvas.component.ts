@@ -408,7 +408,7 @@ export class CanvasComponent implements OnInit, OnDestroy {
           radius = this.pathPointRadius * 1.25;
         }
 
-        const point = MathUtil.transform(currentPointInfo.point, ...transforms);
+        const point = MathUtil.transformPoint(currentPointInfo.point, ...transforms);
         this.drawLabeledPoint(ctx, point, radius, color, (i + 1).toString());
       }
 
@@ -436,7 +436,7 @@ export class CanvasComponent implements OnInit, OnDestroy {
       } else {
         point = this.activeDragPointLocation;
       }
-      point = MathUtil.transform(point, ...transforms);
+      point = MathUtil.transformPoint(point, ...transforms);
       this.drawLabeledPoint(
         ctx, point, this.splitPathPointRadius, ColorUtil.SPLIT_POINT_COLOR);
       ctx.restore();
@@ -585,7 +585,7 @@ export class CanvasComponent implements OnInit, OnDestroy {
       }
       transforms.reverse();
       const pathId = layer.id;
-      const transformedMousePoint = MathUtil.transform(mousePoint, ...transforms);
+      const transformedMousePoint = MathUtil.transformPoint(mousePoint, ...transforms);
       const minPathPoint = _.chain(layer.pathData.subPathCommands)
         .map((subPathCmd: SubPathCommand, subPathIdx: number) => {
           return subPathCmd.commands
@@ -628,7 +628,7 @@ export class CanvasComponent implements OnInit, OnDestroy {
         return;
       }
       transforms.reverse();
-      const transformedPoint = MathUtil.transform(mousePoint, ...transforms);
+      const transformedPoint = MathUtil.transformPoint(mousePoint, ...transforms);
       const projectionInfo = layer.pathData.project(transformedPoint);
       if (!projectionInfo) {
         return;

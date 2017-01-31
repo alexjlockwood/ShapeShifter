@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import { PathCommand, SubPathCommand, Command } from '../model';
+import { PathCommand, SubPathCommand, Command } from '../model/commands';
 import { MathUtil } from '.';
 
 // Needleman-Wunsch scoring function constants.
@@ -143,7 +143,6 @@ interface Alignment<T> {
 
 /**
  * Aligns two sequences of draw commands using the Needleman-Wunsch algorithm.
- * TODO: make this generic to any object type (not just draw commands)
  */
 function align<T>(
   from: ReadonlyArray<T>,

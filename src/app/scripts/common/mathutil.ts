@@ -1,5 +1,4 @@
-import { Matrix } from './Matrix';
-import { Point } from './Point';
+import { Matrix, Point } from '.';
 
 /** Returns the floor modulus of the integer argument. */
 export function floorMod(num, maxNum) {
@@ -26,7 +25,7 @@ export function areCollinear(...points: Point[]) {
 }
 
 /** Applies a list of transformation matrices to the specified point. */
-export function transform(point: Point, ...matrices: Matrix[]): Point {
+export function transformPoint(point: Point, ...matrices: Matrix[]): Point {
   return matrices.reduce((p: Point, m: Matrix) => {
     // [a c e]   [p.x]
     // [b d f] * [p.y]
