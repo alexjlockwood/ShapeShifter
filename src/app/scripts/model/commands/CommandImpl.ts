@@ -119,7 +119,7 @@ export class CommandImpl implements Command {
       args[8] = endY;
     } else if (this.svgChar !== 'M' || this.start) {
       // The first move command of an SVG path has an undefined
-      // starting point, so no change is required in that case.
+      // starting point, so no change is required.
       points = points.reverse();
       args = pointsToArgs(points);
     }
