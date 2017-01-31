@@ -9,7 +9,7 @@ const INDEL = 0;
 
 // TODO: this can still be optimized a lot... work in progress!
 export function fix(
-  subPathIdx: number,
+  subIdx: number,
   srcFromPath: PathCommand,
   srcToPath: PathCommand) {
 
@@ -17,9 +17,9 @@ export function fix(
   const createFromCmdGroupsFn = (...pathCommands: PathCommand[]): PathCommand[] => {
     const fromPaths = [];
     for (const p of pathCommands) {
-      const numFromCmds = p.subPathCommands[subPathIdx].commands.length;
+      const numFromCmds = p.subPathCommands[subIdx].commands.length;
       for (let i = 0; i < numFromCmds - 1; i++) {
-        fromPaths.push(p.shiftBack(subPathIdx, i));
+        fromPaths.push(p.shiftBack(subIdx, i));
       }
     }
     return fromPaths;
@@ -42,10 +42,10 @@ export function fix(
 
   // Align each generated 'from path' with the target 'to path'.
   const fromPaths =
-    createFromCmdGroupsFn(srcFromPath, srcFromPath.reverse(subPathIdx));
+    createFromCmdGroupsFn(srcFromPath, srcFromPath.reverse(subIdx));
   const alignmentInfos = fromPaths.map(generatedFromPath => {
-    const fromCmds = generatedFromPath.subPathCommands[subPathIdx].commands;
-    const toCmds = srcToPath.subPathCommands[subPathIdx].commands;
+    const fromCmds = generatedFromPath.subPathCommands[subIdx].commands;
+    const toCmds = srcToPath.subPathCommands[subIdx].commands;
     return { generatedFromPath, alignment: align(fromCmds, toCmds, getScoreFn) };
   });
 
@@ -104,7 +104,7 @@ export function fix(
         // TODO: perform these splits as a single batch operation
         // pathCommand = pathCommand.split(subPathIdx, drawIdx, t);
       }
-      pathCommand = pathCommand.split(subPathIdx, drawIdx, ...ts);
+      pathCommand = pathCommand.split(subIdx, drawIdx, ...ts);
     }
     return pathCommand;
   };
@@ -113,8 +113,8 @@ export function fix(
   const toPathResult = applySplitsFn(srcToPath, toGapGroups);
 
   const convertDrawCmdsFn = (from: PathCommand, to: PathCommand) => {
-    const fromDrawCmds = from.subPathCommands[subPathIdx].commands;
-    const toDrawCmds = to.subPathCommands[subPathIdx].commands;
+    const fromDrawCmds = from.subPathCommands[subIdx].commands;
+    const toDrawCmds = to.subPathCommands[subIdx].commands;
     fromDrawCmds.forEach((fromDrawCmd, drawIdx) => {
       const toDrawCmd = toDrawCmds[drawIdx];
       if (fromDrawCmd.svgChar === toDrawCmd.svgChar
@@ -122,7 +122,7 @@ export function fix(
         return;
       }
       // TODO: perform these conversions as a single batch operation
-      from = from.convert(subPathIdx, drawIdx, toDrawCmd.svgChar);
+      from = from.convert(subIdx, drawIdx, toDrawCmd.svgChar);
     });
     return from;
   };
