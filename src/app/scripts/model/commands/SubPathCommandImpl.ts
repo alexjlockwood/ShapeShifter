@@ -31,14 +31,7 @@ class SubPathCommandImpl implements SubPathCommand {
   get isClosed() {
     const start = this.commands[0].end;
     const end = _.last(this.commands).end;
-    const result = start.equals(end);
-    const nearZero = 0.000001;
-    if (Math.abs(start.x - end.x) < nearZero
-      && Math.abs(start.y - end.y) < nearZero
-      && !result) {
-      console.warn('subpath should probably be closed', start, end);
-    }
-    return result;
+    return start.equals(end);
   }
 
   // Implements the SubPathCommand interface.

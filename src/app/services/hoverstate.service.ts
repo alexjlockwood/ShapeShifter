@@ -8,11 +8,9 @@ import { EditorType, Id as CommandId } from '../scripts/model';
 
 @Injectable()
 export class HoverStateService {
-  readonly source = new Subject<Hover>();
+  private readonly source = new Subject<Hover>();
   readonly stream = this.source.asObservable();
-  private currentHover: Hover = { type: HoverType.None, visibleTo: [] };
-
-  constructor() { }
+  private currentHover: Hover;
 
   getHover() {
     return this.currentHover;
@@ -20,25 +18,13 @@ export class HoverStateService {
 
   setHover(hover: Hover) {
     this.currentHover = hover;
-    this.notifyChange();
+    this.source.next(this.currentHover);
   }
 
   clearHover() {
     if (this.currentHover) {
-      this.setHover({
-        type: HoverType.None,
-        source: this.currentHover.source,
-        visibleTo: this.currentHover.visibleTo,
-      });
+      this.setHover(undefined);
     }
-  }
-
-  notifyChange() {
-    this.source.next(this.currentHover);
-  }
-
-  addListener(type: EditorType, callback: (hover: Hover) => void) {
-    return this.stream.subscribe(callback);
   }
 }
 
@@ -46,19 +32,16 @@ export class HoverStateService {
  * A hover represents a transient action that results as a result of a mouse hover.
  */
 export interface Hover {
-  readonly type: HoverType;
+  readonly type: Type;
   readonly commandId?: CommandId;
   readonly source?: EditorType;
-  readonly visibleTo: Array<EditorType>;
 }
 
 /**
  * Describes the different types of hover events.
  */
-export enum HoverType {
-  // There is no current hover event.
-  None,
-  // The user hovered over a draw command in the inspector/canvas.
+export enum Type {
+  // The user hovered over a command in the inspector/canvas.
   Command,
   // The user hovered over the split button in the command inspector.
   Split,

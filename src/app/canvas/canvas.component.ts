@@ -1,7 +1,6 @@
 import * as _ from 'lodash';
 import {
-  Component, OnInit, OnDestroy, ElementRef, HostListener,
-  ViewChild, ViewChildren, Input, Output, EventEmitter
+  Component, OnInit, OnDestroy, ElementRef, ViewChild, Input
 } from '@angular/core';
 import {
   Layer, PathLayer, ClipPathLayer, GroupLayer,
@@ -14,11 +13,15 @@ import { TimelineService } from '../timeline/timeline.service';
 import { LayerStateService } from '../services/layerstate.service';
 import { Subscription } from 'rxjs/Subscription';
 import { SelectionService, Selection } from '../services/selection.service';
-import { HoverStateService, HoverType, Hover } from '../services/hoverstate.service';
+import { HoverStateService, Type as HoverType, Hover } from '../services/hoverstate.service';
 import { CanvasResizeService } from '../services/canvasresize.service';
 
-// TODO: make this viewport/density-independent
+// TODO: make these viewport/density-independent
 const MIN_SNAP_THRESHOLD = 1.5;
+const TOUCH_SLOP = 1;
+
+// Canvas margin in pixels.
+const CANVAS_MARGIN = 36;
 
 @Component({
   selector: 'app-canvas',
@@ -78,9 +81,19 @@ export class CanvasComponent implements OnInit, OnDestroy {
             this.draw();
           }
         }));
+    this.canvasResizeService.addListener(size => {
+      const width = size.width - CANVAS_MARGIN * 2;
+      const height = size.height - CANVAS_MARGIN * 2;
+      const containerSize = Math.min(width, height);
+      if (this.componentSize !== containerSize) {
+        this.componentSize = containerSize;
+        this.resizeAndDraw();
+      }
+    });
     if (this.editorType === EditorType.Preview) {
+      // Preview canvas specific setup.
       this.subscriptions.push(
-        this.timelineService.addAnimationFractionListener(fraction => {
+        this.timelineService.animationFractionStream.subscribe(fraction => {
           if (!this.vectorLayer) {
             return;
           }
@@ -99,30 +112,32 @@ export class CanvasComponent implements OnInit, OnDestroy {
           this.draw();
         }));
     } else {
+      // Non-preview canvas specific setup.
       this.subscriptions.push(
         this.selectionService.addListener(this.editorType, () => this.draw()));
       this.subscriptions.push(
-        this.timelineService.addShouldLabelPointsListener(() => this.draw()));
+        this.timelineService.shouldLabelPointsStream.subscribe(() => this.draw()));
+      const setCurrentHoverFn = hover => {
+        this.currentHover = hover;
+        this.draw();
+      };
       this.subscriptions.push(
-        this.hoverStateService.stream
-          .map(hover => {
-            if (!_.includes(hover.visibleTo, this.editorType)) {
-              return undefined;
-            }
-            return hover;
-          })
-          .subscribe(hover => {
-            this.currentHover = hover;
-            this.draw();
-          }));
+        this.hoverStateService.stream.subscribe(hover => {
+          if (!hover) {
+            // Clear the current hover.
+            setCurrentHoverFn(undefined);
+            return;
+          }
+          if (hover.source !== this.editorType
+            && (hover.type === HoverType.Split || hover.type === HoverType.Unsplit)) {
+            // If the hover source isn't of this type and the hover type is a split
+            // or an unsplit, then don't draw any hover events to the canvas.
+            setCurrentHoverFn(undefined);
+            return;
+          }
+          setCurrentHoverFn(hover);
+        }));
     }
-    this.canvasResizeService.addListener(size => {
-      const containerSize = Math.min(size.width, size.height);
-      if (this.componentSize !== containerSize) {
-        this.componentSize = containerSize;
-        this.resizeAndDraw();
-      }
-    });
     this.resizeAndDraw();
   }
 
@@ -134,8 +149,6 @@ export class CanvasComponent implements OnInit, OnDestroy {
     if (!this.isViewInit) {
       return;
     }
-
-    // TODO: wrap the canvases in a parent component that resizes its children canvases
     const containerWidth = Math.max(1, this.componentSize);
     const containerHeight = Math.max(1, this.componentSize);
     const containerAspectRatio = containerWidth / containerHeight;
@@ -149,6 +162,10 @@ export class CanvasComponent implements OnInit, OnDestroy {
     } else {
       this.cssScale = containerHeight / vlHeight;
     }
+
+    // The 'attrScale' represents the number of physical pixels per SVG viewport pixel.
+    this.attrScale = this.cssScale * devicePixelRatio;
+
     const cssWidth = vlWidth * this.cssScale;
     const cssHeight = vlHeight * this.cssScale;
     [this.canvas, this.offscreenCanvas].forEach(canvas => {
@@ -163,9 +180,6 @@ export class CanvasComponent implements OnInit, OnDestroy {
         });
     });
 
-    // The 'attrScale' represents the number of physical pixels per SVG viewport pixel.
-    this.attrScale = this.cssScale * devicePixelRatio;
-
     // TODO: this still doesn't work very well for small/large viewports and/or on resizing
     this.pathPointRadius = this.attrScale;
     this.splitPathPointRadius = this.pathPointRadius * 0.8;
@@ -176,7 +190,6 @@ export class CanvasComponent implements OnInit, OnDestroy {
     if (!this.isViewInit || !this.vectorLayer) {
       return;
     }
-
     const ctx =
       (this.canvas.get(0) as HTMLCanvasElement).getContext('2d');
     const offscreenCtx =
@@ -208,7 +221,6 @@ export class CanvasComponent implements OnInit, OnDestroy {
       ctx.restore();
       offscreenCtx.restore();
     }
-
     ctx.restore();
 
     this.drawPixelGrid(ctx);
@@ -332,9 +344,10 @@ export class CanvasComponent implements OnInit, OnDestroy {
       if (!(layer instanceof PathLayer)) {
         return;
       }
+      transforms.reverse();
 
       const pathId = layer.id;
-      let pathData = layer.pathData;
+      let pathCommand = layer.pathData;
       if (currentHover
         && currentHover.type === HoverType.Split
         && currentHover.commandId.pathId === pathId) {
@@ -342,7 +355,7 @@ export class CanvasComponent implements OnInit, OnDestroy {
         // a snapshot of what the path would look like after the action
         // and display the result. Note that after the split action,
         // the hover's cmdIdx can be used to identify the new split point.
-        pathData =
+        pathCommand =
           layer.pathData.splitInHalf(
             currentHover.commandId.subIdx,
             currentHover.commandId.cmdIdx);
@@ -350,59 +363,70 @@ export class CanvasComponent implements OnInit, OnDestroy {
 
       // Build a list containing all necessary information needed in
       // order to draw the labeled points.
-      const pathDataPointInfo = _.chain(pathData.subPathCommands)
-        .map((subPathCmd: SubPathCommand, subIdx: number) => {
-          return _.chain(subPathCmd.commands)
-            // TODO: do we really want to filter out the close paths here?
-            .filter((drawCmd: Command) => drawCmd.svgChar !== 'Z')
-            .map((drawCmd, cmdIdx) => {
-              return {
-                commandId: { pathId, subIdx, cmdIdx } as CommandId,
-                point: _.last(drawCmd.points),
-                isSplit: drawCmd.isSplit,
-              };
-            })
-            .value();
-        })
-        .flatMap(pointInfo => pointInfo)
-        .value();
-
-      transforms.reverse();
-      ctx.save();
-
-      // Draw the points in reverse order so that larger numbered points
-      // display on top of lower numbered points.
-      for (let i = pathDataPointInfo.length - 1; i >= 0; i--) {
-        const currentPointInfo = pathDataPointInfo[i];
-
-        if (this.activeDragPointId
-          && _.isMatch(this.activeDragPointId, currentPointInfo.commandId)) {
+      const pathDataPointInfos =
+        _.chain(pathCommand.subPathCommands)
+          .map((subCmd: SubPathCommand, subIdx: number) => {
+            return subCmd.commands.map((cmd, cmdIdx) => {
+              const commandId = { pathId, subIdx, cmdIdx } as CommandId;
+              const isSplit = cmd.isSplit;
+              const isMove = cmd.svgChar === 'M';
+              const isHover =
+                currentHover && _.isMatch(currentHover.commandId, commandId);
+              const isDrag =
+                this.activeDragPointId && _.isMatch(this.activeDragPointId, commandId);
+              const point = MathUtil.transformPoint(_.last(cmd.points), ...transforms);
+              return { commandId, isSplit, isMove, isHover, isDrag, point };
+            });
+          })
+          .flatMap(pointInfos => pointInfos)
+          .map((pointInfo, i) => _.assign({}, pointInfo, { position: i + 1 }))
           // Skip the currently dragged point, if it exists.
           // We'll draw that separately next.
-          continue;
-        }
+          .filter(pointInfo => !pointInfo.isDrag)
+          .value();
 
+      ctx.save();
+
+      const hoverPoints = [];
+      const splitPoints = [];
+      const movePoints = [];
+      const normalPoints = [];
+
+      for (const pointInfo of pathDataPointInfos) {
+        let pointList;
+        if (pointInfo.isHover) {
+          pointList = hoverPoints;
+        } else if (pointInfo.isSplit) {
+          pointList = splitPoints;
+        } else if (pointInfo.isMove) {
+          pointList = movePoints;
+        } else {
+          pointList = normalPoints;
+        }
+        pointList.push(pointInfo);
+      }
+
+      const drawnPoints =
+        [].concat(normalPoints, movePoints, splitPoints, hoverPoints);
+
+      for (const pointInfo of drawnPoints) {
         let color, radius;
-        if (i === 0) {
+        if (pointInfo.isMove) {
           color = ColorUtil.MOVE_POINT_COLOR;
           radius = this.pathPointRadius;
-        } else if (currentPointInfo.isSplit) {
+        } else if (pointInfo.isSplit) {
           color = ColorUtil.SPLIT_POINT_COLOR;
           radius = this.splitPathPointRadius;
         } else {
           color = ColorUtil.NORMAL_POINT_COLOR;
           radius = this.pathPointRadius;
         }
-
-        if (currentHover
-          && currentHover.type !== HoverType.None
-          && _.isMatch(currentPointInfo.commandId, currentHover.commandId)) {
+        if (pointInfo.isHover) {
           // TODO: update this number to something more reasonable?
           radius = this.pathPointRadius * 1.25;
         }
-
-        const point = MathUtil.transformPoint(currentPointInfo.point, ...transforms);
-        this.drawLabeledPoint(ctx, point, radius, color, (i + 1).toString());
+        this.drawLabeledPoint(
+          ctx, pointInfo.point, radius, color, pointInfo.position);
       }
 
       ctx.restore();
@@ -491,8 +515,7 @@ export class CanvasComponent implements OnInit, OnDestroy {
       return;
     }
     const mouseDown = this.mouseEventToPoint(event);
-    this.activeDragPointId =
-      this.findPathPointInRange(mouseDown, this.splitPathPointRadius);
+    this.activeDragPointId = this.findPathPointIdInRange(mouseDown);
     if (this.activeDragPointId) {
       this.activeProjectionOntoPath =
         this.calculateProjectionOntoPath(mouseDown, this.activeDragPointId.pathId);
@@ -512,6 +535,18 @@ export class CanvasComponent implements OnInit, OnDestroy {
         this.calculateProjectionOntoPath(mouseMove, this.activeDragPointId.pathId);
       this.activeDragPointLocation = mouseMove;
       this.draw();
+      return;
+    }
+
+    const hoverPointId = this.findPathPointIdInRange(mouseMove, false);
+    if (hoverPointId) {
+      this.hoverStateService.setHover({
+        type: HoverType.Command,
+        source: this.editorType,
+        commandId: hoverPointId,
+      });
+    } else {
+      this.hoverStateService.clearHover();
     }
   }
 
@@ -566,9 +601,8 @@ export class CanvasComponent implements OnInit, OnDestroy {
    * Finds the path point closest to the specified mouse point, with a max
    * distance specified by range. By default, non-split path points are ignored.
    */
-  private findPathPointInRange(
+  private findPathPointIdInRange(
     mousePoint: Point,
-    range: number,
     splitOnly = true): CommandId | undefined {
 
     const minPathPoints = [];
@@ -578,25 +612,31 @@ export class CanvasComponent implements OnInit, OnDestroy {
       }
       transforms.reverse();
       const pathId = layer.id;
-      const transformedMousePoint = MathUtil.transformPoint(mousePoint, ...transforms);
-      const minPathPoint = _.chain(layer.pathData.subPathCommands)
-        .map((subPathCmd: SubPathCommand, subIdx: number) => {
-          return subPathCmd.commands
-            .map((drawCmd, cmdIdx) => {
-              const distance = MathUtil.distance(drawCmd.end, transformedMousePoint);
-              const isSplit = drawCmd.isSplit;
-              return { pathId, subIdx, cmdIdx, distance, isSplit };
-            })
-            // Filter out non-split commands last to preserve the indices above.
-            .filter(cmdInfo => splitOnly && cmdInfo.isSplit);
-        })
-        .flatMap(pathPoints => pathPoints)
-        // TODO: confirm that using the attrScale here is correct...
-        .filter(pathPoint => pathPoint.distance <= (range / this.attrScale))
-        .reduce((prev, curr) => {
-          return prev && prev.distance < curr.distance ? prev : curr;
-        }, undefined)
-        .value();
+      const transformedMousePoint =
+        MathUtil.transformPoint(mousePoint, ...transforms);
+      const minPathPoint =
+        _.chain(layer.pathData.subPathCommands)
+          .map((subCmd: SubPathCommand, subIdx: number) => {
+            return subCmd.commands
+              .map((cmd, cmdIdx) => {
+                const distance = MathUtil.distance(cmd.end, transformedMousePoint);
+                const isSplit = cmd.isSplit;
+                return { pathId, subIdx, cmdIdx, distance, isSplit };
+              })
+              .filter(cmdInfo => !splitOnly || cmdInfo.isSplit);
+          })
+          .flatMap(pathPoints => pathPoints)
+          // TODO: confirm that using the attrScale here is correct...?
+          .filter(pathPoint => {
+            const range =
+              pathPoint.isSplit ? this.splitPathPointRadius : this.pathPointRadius;
+            return pathPoint.distance <= (range / this.attrScale);
+          })
+          .reverse()
+          .reduce((prev, curr) => {
+            return prev && prev.distance < curr.distance ? prev : curr;
+          }, undefined)
+          .value();
       if (minPathPoint) {
         minPathPoints.push(minPathPoint);
       }

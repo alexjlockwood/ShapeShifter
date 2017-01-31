@@ -17,18 +17,14 @@ div.animation-container {
   user-select: none;
 }
 
-app-droptarget,
-app-canvas {
-  box-sizing: border-box;
-  padding: 32px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+app-canvas,
+drop-target:first-child {
+  margin-right: 32px;
 }
 
-.canvas-item,
-.canvas-item {
-  flex: 1 1 0;
+app-canvas,
+drop-target:last-child {
+  margin-left: 32px;
 }
 
 div.inspector-container {

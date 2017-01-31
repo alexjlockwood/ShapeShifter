@@ -14,35 +14,31 @@
   <div
     class="animation-container"
     fxLayout="column"
-    fxFlex="1 0 auto">
+    fxFlex>
     <div
       #canvasContainer
+      class="canvas-container"
       fxLayout="row"
-      fxLayoutAlign="space-around center"
-      fxFlex="1 0 auto">
+      fxLayoutAlign="center center"
+      fxFlex>
       <app-canvas
         *ngIf="shouldDisplayStartEditor"
-        class="canvas-item"
         [editorType]="startVectorLayerType">
       </app-canvas>
       <app-droptarget
         *ngIf="!shouldDisplayStartEditor"
-        class="canvas-item"
         [editorType]="startVectorLayerType">
       </app-droptarget>
       <app-canvas
         *ngIf="isMorphable"
-        class="canvas-item"
         [editorType]="previewVectorLayerType">
       </app-canvas>
       <app-canvas
         *ngIf="shouldDisplayEndEditor"
-        class="canvas-item"
         [editorType]="endVectorLayerType">
       </app-canvas>
       <app-droptarget
         *ngIf="!shouldDisplayEndEditor"
-        class="canvas-item"
         [editorType]="endVectorLayerType">
       </app-droptarget>
     </div>

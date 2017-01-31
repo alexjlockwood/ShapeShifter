@@ -8,7 +8,7 @@ import * as $ from 'jquery';
 import { InspectorService, EventType } from '../inspector.service';
 import { LayerStateService } from '../../services/layerstate.service';
 import { SelectionService, Selection } from '../../services/selection.service';
-import { HoverStateService, HoverType } from '../../services/hoverstate.service';
+import { HoverStateService, Type as HoverType } from '../../services/hoverstate.service';
 import { Subscription } from 'rxjs/Subscription';
 import { ColorUtil } from '../../scripts/common';
 
@@ -186,16 +186,19 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
     return this.drawCommand.isSplit;
   }
 
+  // TODO: also add a onConvertHoverEvent?
   onCommandHoverEvent(isHoveringOverCommand: boolean) {
     this.isHoveringOverCommand = isHoveringOverCommand;
     this.broadcastHoverEvent(isHoveringOverCommand, HoverType.Command);
   }
 
+  // TODO: also add a onConvertHoverEvent?
   onUnsplitHoverEvent(isHoveringOverUnsplit: boolean) {
     this.isHoveringOverUnsplit = isHoveringOverUnsplit;
     this.broadcastHoverEvent(isHoveringOverUnsplit, HoverType.Unsplit);
   }
 
+  // TODO: also add a onConvertHoverEvent?
   onSplitHoverEvent(isHoveringOverSplit: boolean) {
     this.isHoveringOverSplit = isHoveringOverSplit;
     this.broadcastHoverEvent(isHoveringOverSplit, HoverType.Split);
@@ -206,23 +209,17 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
     const subIdx = this.subIdx;
     const cmdIdx = this.cmdIdx;
     const commandId = { pathId, subIdx, cmdIdx };
-    const visibleTo =
-      hoverType === HoverType.Command
-        ? [EditorType.Start, EditorType.End]
-        : [this.editorType];
     if (isHovering) {
       this.hoverStateService.setHover({
         type: hoverType,
         commandId: { pathId, subIdx, cmdIdx },
         source: this.editorType,
-        visibleTo,
       });
     } else if (hoverType !== HoverType.Command && this.isHoveringOverCommand) {
       this.hoverStateService.setHover({
         type: HoverType.Command,
         commandId: { pathId, subIdx, cmdIdx },
         source: this.editorType,
-        visibleTo: [EditorType.Start, EditorType.End],
       });
     } else {
       this.hoverStateService.clearHover();

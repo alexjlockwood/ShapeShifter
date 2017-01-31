@@ -9,10 +9,10 @@ export class TimelineService {
 
   private currentAnimationFraction = 0;
   private readonly animationFractionSource = new BehaviorSubject<number>(0);
-  private readonly animationFractionStream = this.animationFractionSource.asObservable();
+  readonly animationFractionStream = this.animationFractionSource.asObservable();
   private shouldLabelPoints = true;
   private readonly shouldLabelPointsSource = new BehaviorSubject<boolean>(true);
-  private readonly shouldLabelPointsStream = this.shouldLabelPointsSource.asObservable();
+  readonly shouldLabelPointsStream = this.shouldLabelPointsSource.asObservable();
 
   /** Returns the current global animation fraction. */
   getAnimationFraction() {
@@ -28,14 +28,6 @@ export class TimelineService {
   /** Broadcasts the current global animation fraction. */
   notifyAnimationFractionChange() {
     this.animationFractionSource.next(this.currentAnimationFraction);
-  }
-
-  /**
-   * Adds a listener to receive animation change events. The caller should
-   * unsubscribe from the returned subscription object when it is destroyed.
-   */
-  addAnimationFractionListener(callback: (fraction: number) => void) {
-    return this.animationFractionStream.subscribe(callback);
   }
 
   /**
