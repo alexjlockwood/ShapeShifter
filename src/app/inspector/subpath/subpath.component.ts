@@ -2,7 +2,8 @@ import {
   Component, OnChanges, SimpleChanges, Input, OnInit,
   EventEmitter, Output
 } from '@angular/core';
-import { Command, SubPathCommand, PathCommand, EditorType } from './../../scripts/model';
+import { Command, SubPathCommand, PathCommand } from './../../scripts/commands';
+import { EditorType } from '../../EditorType';
 import { InspectorService, EventType } from '../inspector.service';
 
 @Component({

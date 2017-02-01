@@ -3,7 +3,8 @@ import {
   Component, AfterViewInit, OnChanges, Output, OnInit, HostListener,
   SimpleChanges, Input, ViewChild, ElementRef, OnDestroy
 } from '@angular/core';
-import { Command, EditorType, PathLayer } from '../../scripts/model';
+import { Command } from '../../scripts/commands';
+import { PathLayer } from '../../scripts/layers';
 import * as $ from 'jquery';
 import { InspectorService, EventType } from '../inspector.service';
 import { LayerStateService } from '../../services/layerstate.service';
@@ -11,6 +12,7 @@ import { SelectionService, Selection } from '../../services/selection.service';
 import { HoverStateService, Type as HoverType } from '../../services/hoverstate.service';
 import { Subscription } from 'rxjs/Subscription';
 import { ColorUtil } from '../../scripts/common';
+import { EditorType } from '../../EditorType';
 
 @Component({
   selector: 'app-command',

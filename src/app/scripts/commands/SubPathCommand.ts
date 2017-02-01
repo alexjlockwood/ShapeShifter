@@ -1,5 +1,5 @@
 import { Command } from '.';
-import { Point } from '../../common';
+import { Point } from '../common';
 
 /**
  * Defines the set of methods that are seen by the sub path inspector/canvas.

@@ -1,5 +1,5 @@
-import { Layer, VectorLayer, GroupLayer, PathLayer, ClipPathLayer } from '../model/layers';
-import { createPathCommand } from '../model/commands';
+import { Layer, VectorLayer, GroupLayer, PathLayer, ClipPathLayer } from '../layers';
+import { createPathCommand } from '../commands';
 import { ColorUtil, MathUtil, SvgUtil } from '../common';
 import { PathParser } from '.';
 

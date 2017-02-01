@@ -1,9 +1,9 @@
 import { Subject } from 'rxjs/Subject';
 import { Subscription } from 'rxjs/Subscription';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
-import { VectorLayer } from '../scripts/model';
+import { VectorLayer } from '../scripts/layers';
 import { Observable } from 'rxjs/Observable';
-import { EditorType } from '../scripts/model';
+import { EditorType } from '../EditorType';
 
 export abstract class BaseService<T> {
   private readonly dataMap = new Map<EditorType, T>();

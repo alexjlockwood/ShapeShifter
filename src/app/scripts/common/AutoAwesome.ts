@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import { PathCommand, SubPathCommand, Command } from '../model/commands';
+import { PathCommand, SubPathCommand, Command } from '../commands';
 import { MathUtil } from '.';
 
 // Needleman-Wunsch scoring function constants.

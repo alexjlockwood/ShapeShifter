@@ -1,5 +1,5 @@
 import * as VectorLayerLoader from './VectorLayerLoader';
-import { VectorLayer, PathLayer } from '../model/layers';
+import { VectorLayer, PathLayer } from '../layers';
 
 describe('VectorLayerLoader', () => {
   it('convert simple svg to vector layer', () => {

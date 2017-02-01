@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import { Point } from '../../common';
+import { Point } from '../common';
 import { PathCommand, SubPathCommand, Command } from '.';
 
 /**

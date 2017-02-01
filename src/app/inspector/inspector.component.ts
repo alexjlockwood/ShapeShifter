@@ -2,7 +2,9 @@ import {
   Component, Input, OnInit, ChangeDetectorRef,
   OnDestroy, NgZone, OnChanges
 } from '@angular/core';
-import { PathLayer, PathCommand, EditorType } from '../scripts/model';
+import { PathLayer } from '../scripts/layers';
+import { PathCommand } from '../scripts/commands';
+import { EditorType } from '../EditorType';
 import { LayerStateService } from '../services/layerstate.service';
 import { SelectionService } from '../services/selection.service';
 import { Subscription } from 'rxjs/Subscription';

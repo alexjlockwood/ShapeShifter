@@ -1,6 +1,6 @@
 import { PathHelper } from '.';
 import { Projection } from '..';
-import { MathUtil, Point } from '../../../common';
+import { MathUtil, Point } from '../../common';
 import { PointHelper } from './PointHelper';
 
 export class LineHelper implements PathHelper {

@@ -1,6 +1,6 @@
 import { } from 'jasmine';
 import { PathHelper, createPathHelper } from './PathHelper';
-import { Point } from '../../../common';
+import { Point } from '../../common';
 import { Projection } from '..';
 
 describe('PathHelper', () => {

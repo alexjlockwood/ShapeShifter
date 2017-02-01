@@ -2,7 +2,7 @@ import { Component, NgZone, OnInit } from '@angular/core';
 import { TimelineService } from './timeline.service';
 import { LayerStateService } from '../services/layerstate.service';
 import { Subscription } from 'rxjs/Subscription';
-import { EditorType } from '../scripts/model';
+import { EditorType } from '../EditorType';
 
 @Component({
   selector: 'app-timeline',

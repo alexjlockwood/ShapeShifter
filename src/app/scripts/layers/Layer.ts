@@ -1,4 +1,4 @@
-import { Matrix } from '../../common';
+import { Matrix } from '../common';
 import { GroupLayer, ClipPathLayer, PathLayer } from '.';
 
 /**

@@ -1,5 +1,5 @@
 import * as XmlSerializer from './XmlSerializer';
-import { Layer, VectorLayer, PathLayer, GroupLayer, ClipPathLayer } from '../model/layers';
+import { Layer, VectorLayer, PathLayer, GroupLayer, ClipPathLayer } from '../layers';
 
 const XMLNS_NS = 'http://www.w3.org/2000/xmlns/';
 const ANDROID_NS = 'http://schemas.android.com/apk/res/android';

@@ -2,9 +2,10 @@ import {
   Component, OnChanges, SimpleChanges,
   Input, Output, OnInit, EventEmitter
 } from '@angular/core';
-import { PathCommand, SubPathCommand, EditorType } from './../../scripts/model';
+import { PathCommand, SubPathCommand } from './../../scripts/commands';
 import { Subscription } from 'rxjs/Subscription';
 import { Observable } from 'rxjs/Observable';
+import { EditorType } from '../../EditorType';
 
 @Component({
   selector: 'app-path',

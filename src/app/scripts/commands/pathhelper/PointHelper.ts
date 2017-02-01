@@ -1,6 +1,6 @@
 import { PathHelper } from '.';
 import { Projection } from '..';
-import { MathUtil, Point } from '../../../common';
+import { MathUtil, Point } from '../../common';
 
 export class PointHelper implements PathHelper {
   private readonly points_: ReadonlyArray<Point>;

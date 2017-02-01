@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 import * as BezierJs from 'bezier-js';
-import { MathUtil, Point } from '../../../common';
+import { MathUtil, Point } from '../../common';
 import { Projection } from '..';
 import { PathHelper } from '.';
 import { PointHelper } from './PointHelper';

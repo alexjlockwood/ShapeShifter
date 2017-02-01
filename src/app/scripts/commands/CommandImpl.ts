@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import { Point, Matrix, MathUtil, SvgUtil } from '../../common';
+import { Point, Matrix, MathUtil, SvgUtil } from '../common';
 import { Command, SvgChar } from '.';
 
 /**

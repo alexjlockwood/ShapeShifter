@@ -1,4 +1,4 @@
-import { Point, Matrix } from '../../common';
+import { Point, Matrix } from '../common';
 import { SvgChar } from '.';
 
 /**

@@ -3,7 +3,7 @@ import {
   OnInit, ElementRef, ViewChild, OnDestroy
 } from '@angular/core';
 import { LayerStateService } from '../services/layerstate.service';
-import { EditorType } from '../scripts/model';
+import { EditorType } from '../EditorType';
 import * as $ from 'jquery';
 import { VectorLayerLoader } from '../scripts/import';
 import { CanvasResizeService } from '../services/canvasresize.service';

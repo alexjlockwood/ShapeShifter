@@ -3,10 +3,10 @@ import {
   ViewChild, OnDestroy, HostListener
 } from '@angular/core';
 import { environment } from '../environments/environment';
-import { Layer, VectorLayer, GroupLayer, PathLayer } from './scripts/model';
+import { Layer, VectorLayer, GroupLayer, PathLayer } from './scripts/layers';
 import { VectorLayerLoader } from './scripts/import';
 import { Point } from './scripts/common';
-import { EditorType } from './scripts/model';
+import { EditorType } from './EditorType';
 import { Subscription } from 'rxjs/Subscription';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { LayerStateService } from './services/layerstate.service';

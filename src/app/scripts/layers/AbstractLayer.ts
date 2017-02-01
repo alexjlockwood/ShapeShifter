@@ -1,6 +1,6 @@
-import { PathCommand } from '..';
+import { PathCommand } from '../commands';
 import { Layer, GroupLayer, ClipPathLayer, PathLayer } from '.';
-import { Matrix } from '../../common';
+import { Matrix } from '../common';
 
 /**
  * Root class for all layer model classes. Primarily for code reuse.

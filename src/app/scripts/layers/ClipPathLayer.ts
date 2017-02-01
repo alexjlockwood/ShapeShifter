@@ -1,4 +1,4 @@
-import { PathCommand } from '..';
+import { PathCommand } from '../commands';
 import { AbstractLayer } from './AbstractLayer';
 
 /**

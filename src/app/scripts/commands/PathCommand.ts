@@ -1,4 +1,4 @@
-import { Point } from '../../common';
+import { Point } from '../common';
 import { SubPathCommand, SvgChar } from '.';
 
 /**

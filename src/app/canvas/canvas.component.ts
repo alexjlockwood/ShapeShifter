@@ -3,10 +3,12 @@ import {
   Component, OnInit, OnDestroy, ElementRef, ViewChild, Input
 } from '@angular/core';
 import {
-  Layer, PathLayer, ClipPathLayer, GroupLayer,
-  VectorLayer, PathCommand, EditorType, SubPathCommand, Command, Projection
-} from '../scripts/model';
-import { Id as CommandId } from '../scripts/model';
+  PathCommand, SubPathCommand, Command, Id as CommandId, Projection
+} from '../scripts/commands';
+import {
+  Layer, PathLayer, ClipPathLayer, GroupLayer, VectorLayer
+} from '../scripts/layers';
+import { EditorType } from '../EditorType';
 import * as $ from 'jquery';
 import { Point, Matrix, MathUtil, ColorUtil, SvgUtil } from '../scripts/common';
 import { TimelineService } from '../timeline/timeline.service';
@@ -515,7 +517,7 @@ export class CanvasComponent implements OnInit, OnDestroy {
       return;
     }
     const mouseDown = this.mouseEventToPoint(event);
-    this.activeDragPointId = this.findPathPointIdInRange(mouseDown);
+    this.activeDragPointId = this.findPathPointId(mouseDown);
     if (this.activeDragPointId) {
       this.activeProjectionOntoPath =
         this.calculateProjectionOntoPath(mouseDown, this.activeDragPointId.pathId);
@@ -529,6 +531,7 @@ export class CanvasComponent implements OnInit, OnDestroy {
       // The user never interacts with the preview canvas.
       return;
     }
+
     const mouseMove = this.mouseEventToPoint(event);
     if (this.activeDragPointId) {
       this.activeProjectionOntoPath =
@@ -538,7 +541,7 @@ export class CanvasComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const hoverPointId = this.findPathPointIdInRange(mouseMove, false);
+    const hoverPointId = this.findPathPointId(mouseMove, false);
     if (hoverPointId) {
       this.hoverStateService.setHover({
         type: HoverType.Command,
@@ -599,9 +602,9 @@ export class CanvasComponent implements OnInit, OnDestroy {
 
   /**
    * Finds the path point closest to the specified mouse point, with a max
-   * distance specified by range. By default, non-split path points are ignored.
+   * distance specified by a radius. By default, non-split path points are ignored.
    */
-  private findPathPointIdInRange(
+  private findPathPointId(
     mousePoint: Point,
     splitOnly = true): CommandId | undefined {
 
@@ -632,6 +635,7 @@ export class CanvasComponent implements OnInit, OnDestroy {
               pathPoint.isSplit ? this.splitPathPointRadius : this.pathPointRadius;
             return pathPoint.distance <= (range / this.attrScale);
           })
+          // Reverse so that points drawn with higher z-orders are preferred.
           .reverse()
           .reduce((prev, curr) => {
             return prev && prev.distance < curr.distance ? prev : curr;
