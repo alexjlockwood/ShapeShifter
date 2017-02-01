@@ -94,16 +94,12 @@ export function fix(
 
   // Fill in the gaps by applying batch splits.
   const applySplitsFn = (pathCommand: PathCommand, gapGroups: CmdInfo[][]) => {
+    // TODO: perform all of these as a single batch operation?
     for (let i = gapGroups.length - 1; i >= 0; i--) {
       const gapGroup = gapGroups[i];
       const cmdIdx = _.last(gapGroup).nextcmdIdx;
-      const ts = [];
-      for (let j = gapGroup.length - 1; j >= 0; j--) {
-        const t = (j + 1) / (gapGroup.length + 1);
-        ts.push(t);
-        // TODO: perform these splits as a single batch operation
-        // pathCommand = pathCommand.split(subIdx, cmdIdx, t);
-      }
+      // TODO: is evenly positioning the split points good enough?
+      const ts = gapGroup.map((_, gapIdx) => (gapIdx + 1) / (gapGroup.length + 1));
       pathCommand = pathCommand.split(subIdx, cmdIdx, ...ts);
     }
     return pathCommand;
@@ -122,7 +118,7 @@ export function fix(
         || !fromDrawCmd.canConvertTo(toDrawCmd.svgChar)) {
         return;
       }
-      // TODO: perform these conversions as a single batch operation
+      // TODO: perform all of these as a single batch operation?
       from = from.convert(subIdx, cmdIdx, toDrawCmd.svgChar);
     });
     return from;

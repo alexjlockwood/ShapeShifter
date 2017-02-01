@@ -58,28 +58,30 @@ export interface PathCommand {
   shiftForward(subIdx: number, numShifts?: number): PathCommand;
 
   /**
-   * Splits the draw command at the specified index.
+   * Splits the command at the specified index.
    * Returns a new path command object.
    */
   split(subIdx: number, cmdIdx: number, ...ts: number[]): PathCommand;
 
-  /** Splits the draw command at the specified index in half. */
+  /**
+   * Splits the command at the specified index in half.
+   */
   splitInHalf(subIdx: number, cmdIdx: number): PathCommand;
 
   /**
-   * Un-splits the draw command at the specified index.
+   * Un-splits the command at the specified index.
    * Returns a new path command object.
    */
   unsplit(subIdx: number, cmdIdx: number): PathCommand;
 
   /**
-   * Convert the draw command at the specified index.
+   * Convert the command at the specified index.
    * Returns a new path command object.
    */
   convert(subIdx: number, cmdIdx: number, svgChar: SvgChar): PathCommand;
 
   /**
-   * Returns the unique id associated with the draw cmomand at the
+   * Returns the unique id associated with the cmomand at the
    * specified index.
    */
   getId(subIdx: number, cmdIdx: number): string;

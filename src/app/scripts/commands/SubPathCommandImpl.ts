@@ -8,7 +8,7 @@ export function newSubPathCommand(...commands: Command[]): SubPathCommand {
 
 /**
  * Implementation of the SubPathCommand interface. A PathCommand is split up
- * into multiple SubPathCommands, each beginning with a 'move to' draw command.
+ * into multiple SubPathCommands, each beginning with a 'move to' command.
  */
 class SubPathCommandImpl implements SubPathCommand {
 
