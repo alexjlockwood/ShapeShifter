@@ -64,10 +64,10 @@
     "karma-remap-istanbul": "^0.4.0",
     "lodash": "^4.17.4",
     "lodash.isundefined": "^3.0.1",
-    "protractor": "~5.0.0",
+    "protractor": "~5.1.0",
     "ts-node": "2.0.0",
     "tslint": "^4.4.2",
     "typescript": "~2.1.5",
-    "webdriver-manager": "11.1.1"
+    "webdriver-manager": "12.0.1"
   }
 }
