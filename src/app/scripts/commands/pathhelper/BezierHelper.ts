@@ -1,7 +1,10 @@
 import * as _ from 'lodash';
 import * as BezierJs from 'bezier-js';
 import { MathUtil, Point } from '../../common';
-import { Projection } from '..';
+import {
+  SvgChar, Projection, newLine, newQuadraticCurve,
+  newBezierCurve, newClosePath, Command
+} from '..';
 import { PathHelper } from '.';
 import { PointHelper } from './PointHelper';
 import { LineHelper } from './LineHelper';
@@ -10,22 +13,20 @@ import { LineHelper } from './LineHelper';
  * A simple typed wrapper class around the amazing bezier-js library.
  */
 export class BezierHelper implements PathHelper {
+  private readonly svgChar: SvgChar;
   private readonly bezierJs;
-  private readonly points_: ReadonlyArray<Point>;
-  private readonly length_: number;
+  private readonly points: ReadonlyArray<Point>;
+  private readonly length: number;
 
-  constructor(...points: Point[]) {
+  constructor(svgChar: SvgChar, ...points: Point[]) {
+    this.svgChar = svgChar;
     this.bezierJs = new BezierJs(points);
-    this.points_ = points;
-    this.length_ = this.bezierJs.length();
-  }
-
-  get points() {
-    return this.points_;
+    this.points = points;
+    this.length = this.bezierJs.length();
   }
 
   pathLength() {
-    return this.length_;
+    return this.length;
   }
 
   project(point: Point): Projection {
@@ -34,10 +35,20 @@ export class BezierHelper implements PathHelper {
   }
 
   split(t1: number, t2: number): PathHelper {
-    // TODO: return a point helper if t1 === t2?
-    // TODO: handle degenerate curves (it is possible for points to be undefined)
-    return new BezierHelper(...this.bezierJs.split(t1, t2).points
-      .map(p => new Point(p.x, p.y)));
+    if (t1 === t2) {
+      const p = this.bezierJs.get(t1);
+      return new PointHelper(this.svgChar, new Point(p.x, p.y));
+    }
+    const splitBezPoints = this.bezierJs.split(t1, t2).points;
+    const points: Point[] = splitBezPoints.map(p => new Point(p.x, p.y));
+    if (MathUtil.areCollinear(...points)) {
+      return new LineHelper(this.svgChar, _.first(points), _.last(points));
+    }
+    return new BezierHelper(this.svgChar, ...points);
+  }
+
+  convert(svgChar: SvgChar) {
+    return new BezierHelper(svgChar, ...this.points);
   }
 
   findTimeByDistance(distance: number): number {
@@ -68,5 +79,17 @@ export class BezierHelper implements PathHelper {
     }
 
     return distance;
+  }
+
+  toCommand(isSplit: boolean): Command {
+    switch (this.svgChar) {
+      case 'Q':
+        return newQuadraticCurve(
+          this.points[0], this.points[1], this.points[2], isSplit);
+      case 'C':
+        return newBezierCurve(
+          this.points[0], this.points[1], this.points[2], this.points[3], isSplit);
+    }
+    throw new Error('Invalid command type: ' + this.svgChar);
   }
 }

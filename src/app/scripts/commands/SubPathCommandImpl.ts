@@ -2,6 +2,10 @@ import * as _ from 'lodash';
 import { Point } from '../common';
 import { PathCommand, SubPathCommand, Command } from '.';
 
+export function newSubPathCommand(...commands: Command[]): SubPathCommand {
+  return new SubPathCommandImpl(commands);
+}
+
 /**
  * Implementation of the SubPathCommand interface. A PathCommand is split up
  * into multiple SubPathCommands, each beginning with a 'move to' draw command.
@@ -40,6 +44,3 @@ class SubPathCommandImpl implements SubPathCommand {
   }
 }
 
-export function createSubPathCommand(...commands: Command[]): SubPathCommand {
-  return new SubPathCommandImpl(commands);
-}

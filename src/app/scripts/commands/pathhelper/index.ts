@@ -1,1 +1,1 @@
-export { PathHelper, createPathHelper } from './PathHelper';
+export { PathHelper, newPathHelper } from './PathHelper';

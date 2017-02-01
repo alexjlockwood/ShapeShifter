@@ -1,7 +1,7 @@
 import { Point, Matrix, MathUtil, SvgUtil } from '../common';
 import {
   // TODO: move these internal methods somewhere else
-  moveTo, lineTo, quadraticCurveTo, bezierCurveTo, arcTo, closePath
+  newMove, newLine, newQuadraticCurve, newBezierCurve, newArc, newClosePath
 } from '../commands/CommandImpl';
 import { Command } from '../commands';
 
@@ -109,10 +109,10 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): Command[
 
           if (isFirstPoint) {
             isFirstPoint = false;
-            commands.push(moveTo(currentPoint, nextPoint));
+            commands.push(newMove(currentPoint, nextPoint));
             lastMovePoint = nextPoint;
           } else {
-            commands.push(lineTo(currentPoint, nextPoint));
+            commands.push(newLine(currentPoint, nextPoint));
           }
 
           currentControlPoint = undefined;
@@ -130,7 +130,7 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): Command[
           const cp1 = consumePoint_(relative);
           const cp2 = consumePoint_(relative);
           const end = consumePoint_(relative);
-          commands.push(bezierCurveTo(currentPoint, cp1, cp2, end));
+          commands.push(newBezierCurve(currentPoint, cp1, cp2, end));
 
           currentControlPoint = cp2;
           currentPoint = end;
@@ -154,7 +154,7 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): Command[
           } else {
             cp1 = cp2;
           }
-          commands.push(bezierCurveTo(currentPoint, cp1, cp2, end));
+          commands.push(newBezierCurve(currentPoint, cp1, cp2, end));
 
           currentControlPoint = cp2;
           currentPoint = end;
@@ -170,7 +170,7 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): Command[
         while (advanceToNextToken_() === Token.Value) {
           const cp = consumePoint_(relative);
           const end = consumePoint_(relative);
-          commands.push(quadraticCurveTo(currentPoint, cp, end));
+          commands.push(newQuadraticCurve(currentPoint, cp, end));
 
           currentControlPoint = cp;
           currentPoint = end;
@@ -193,7 +193,7 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): Command[
           } else {
             cp = end;
           }
-          commands.push(quadraticCurveTo(currentPoint, cp, end));
+          commands.push(newQuadraticCurve(currentPoint, cp, end));
 
           currentControlPoint = cp;
           currentPoint = end;
@@ -208,7 +208,7 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): Command[
 
         while (advanceToNextToken_() === Token.Value) {
           const end = consumePoint_(relative);
-          commands.push(lineTo(currentPoint, end));
+          commands.push(newLine(currentPoint, end));
 
           currentControlPoint = undefined;
           currentPoint = end;
@@ -228,7 +228,7 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): Command[
             x += currentPoint.x;
           }
           const end = new Point(x, y);
-          commands.push(lineTo(currentPoint, end));
+          commands.push(newLine(currentPoint, end));
 
           currentControlPoint = undefined;
           currentPoint = end;
@@ -248,7 +248,7 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): Command[
             y += currentPoint.y;
           }
           const end = new Point(x, y);
-          commands.push(lineTo(currentPoint, end));
+          commands.push(newLine(currentPoint, end));
 
           currentControlPoint = undefined;
           currentPoint = end;
@@ -269,7 +269,7 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): Command[
           const sweepFlag = consumeValue_();
           const tempPoint1 = consumePoint_(relative);
 
-          commands.push(arcTo(
+          commands.push(newArc(
             new Point(currentPoint.x, currentPoint.y),
             rx, ry,
             xAxisRotation, largeArcFlag, sweepFlag,
@@ -285,7 +285,7 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): Command[
         if (!currentPoint) {
           throw new Error('Current point does not exist');
         }
-        commands.push(closePath(currentPoint, lastMovePoint));
+        commands.push(newClosePath(currentPoint, lastMovePoint));
       }
         break;
     }

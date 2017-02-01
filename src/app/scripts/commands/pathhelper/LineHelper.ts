@@ -1,26 +1,29 @@
 import { PathHelper } from '.';
-import { Projection } from '..';
+import {
+  SvgChar, Projection, newLine, newQuadraticCurve,
+  newBezierCurve, newClosePath, Command
+} from '..';
 import { MathUtil, Point } from '../../common';
 import { PointHelper } from './PointHelper';
 
 export class LineHelper implements PathHelper {
-  private readonly points_: ReadonlyArray<Point>;
+  private readonly svgChar: SvgChar;
+  private readonly p1: Point;
+  private readonly p2: Point;
 
-  constructor(p1: Point, p2: Point) {
-    this.points_ = [p1, p2];
-  }
-
-  get points() {
-    return this.points_;
+  constructor(svgChar: SvgChar, p1: Point, p2: Point) {
+    this.svgChar = svgChar;
+    this.p1 = p1;
+    this.p2 = p2;
   }
 
   pathLength() {
-    return MathUtil.distance(this.points[0], this.points[1]);
+    return MathUtil.distance(this.p1, this.p2);
   }
 
   project({x, y}: Point): Projection {
-    const {x: x1, y: y1} = this.points[0];
-    const {x: x2, y: y2} = this.points[1];
+    const {x: x1, y: y1} = this.p1;
+    const {x: x2, y: y2} = this.p2;
     const a = x2 - x1;
     const b = y2 - y1;
     const dot = (x - x1) * a + (y - y1) * b;
@@ -48,17 +51,12 @@ export class LineHelper implements PathHelper {
     } else {
       dt = 0.5;
     }
-    return {
-      x: xx,
-      y: yy,
-      d: dd,
-      t: dt,
-    };
+    return { x: xx, y: yy, d: dd, t: dt };
   }
 
   split(t1: number, t2: number): PathHelper {
-    const {x: x1, y: y1} = this.points[0];
-    const {x: x2, y: y2} = this.points[1];
+    const {x: x1, y: y1} = this.p1;
+    const {x: x2, y: y2} = this.p2;
     const p1 = new Point(
       MathUtil.lerp(x1, x2, t1),
       MathUtil.lerp(y1, y2, t1));
@@ -66,12 +64,40 @@ export class LineHelper implements PathHelper {
       MathUtil.lerp(x1, x2, t2),
       MathUtil.lerp(y1, y2, t2));
     if (p1.equals(p2)) {
-      return new PointHelper(p1);
+      return new PointHelper(this.svgChar, p1);
     }
-    return new LineHelper(p1, p2);
+    return new LineHelper(this.svgChar, p1, p2);
+  }
+
+  convert(svgChar: SvgChar) {
+    return new LineHelper(svgChar, this.p1, this.p2);
   }
 
   findTimeByDistance(distance: number) {
     return distance;
+  }
+
+  toCommand(isSplit: boolean): Command {
+    switch (this.svgChar) {
+      case 'L':
+        return newLine(this.p1, this.p2, isSplit);
+      case 'Q':
+        const cp = new Point(
+          MathUtil.lerp(this.p1.x, this.p2.x, 0.5),
+          MathUtil.lerp(this.p1.y, this.p2.y, 0.5));
+        return newQuadraticCurve(this.p1, cp, this.p2, isSplit);
+      case 'C':
+        const cp1 = new Point(
+          MathUtil.lerp(this.p1.x, this.p2.x, 1 / 3),
+          MathUtil.lerp(this.p1.y, this.p2.y, 1 / 3));
+        const cp2 = new Point(
+          MathUtil.lerp(this.p1.x, this.p2.x, 2 / 3),
+          MathUtil.lerp(this.p1.y, this.p2.y, 2 / 3));
+        return newBezierCurve(
+          this.p1, cp1, cp2, this.p2, isSplit);
+      case 'Z':
+        return newClosePath(this.p1, this.p2, isSplit);
+    }
+    throw new Error('Invalid command type: ' + this.svgChar);
   }
 }

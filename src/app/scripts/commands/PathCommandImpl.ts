@@ -1,14 +1,14 @@
 import * as _ from 'lodash';
 import { MathUtil, Point, Matrix, Rect, SvgUtil } from '../common';
-import { PathHelper, createPathHelper } from './pathhelper';
+import { PathHelper, newPathHelper } from './pathhelper';
 import { PathCommand, SubPathCommand, Command, SvgChar, Projection } from '.';
 import { PathParser } from '../import';
-import { createSubPathCommand } from './SubPathCommandImpl';
+import { newSubPathCommand } from './SubPathCommandImpl';
 import {
-  CommandImpl, moveTo, lineTo, quadraticCurveTo, bezierCurveTo, arcTo, closePath
+  CommandImpl, newMove, newLine, newQuadraticCurve, newBezierCurve, newArc, newClosePath
 } from './CommandImpl';
 
-export function createPathCommand(path: string): PathCommand {
+export function newPathCommand(path: string): PathCommand {
   return new PathCommandImpl(path);
 }
 
@@ -98,7 +98,7 @@ class PathCommandImpl implements PathCommand {
       // If the last command is a 'Z', replace it with a line before we reverse.
       const lastCmd = _.last(cmds);
       if (lastCmd.svgChar === 'Z') {
-        cmds[cmds.length - 1] = lineTo(lastCmd.start, lastCmd.end, lastCmd.isSplit);
+        cmds[cmds.length - 1] = newLine(lastCmd.start, lastCmd.end, lastCmd.isSplit);
       }
 
       // Reverse the commands.
@@ -106,7 +106,7 @@ class PathCommandImpl implements PathCommand {
       for (let i = cmds.length - 1; i > 0; i--) {
         newCmds.push(cmds[i].reverse());
       }
-      newCmds.unshift(moveTo(_.first(cmds).start, _.first(newCmds).start));
+      newCmds.unshift(newMove(_.first(cmds).start, _.first(newCmds).start));
       return newCmds;
     };
 
@@ -130,21 +130,21 @@ class PathCommandImpl implements PathCommand {
       // If the last command is a 'Z', replace it with a line before we shift.
       const lastCmd = _.last(cmds);
       if (lastCmd.svgChar === 'Z') {
-        cmds[numCommands - 1] = lineTo(lastCmd.start, lastCmd.end, lastCmd.isSplit);
+        cmds[numCommands - 1] = newLine(lastCmd.start, lastCmd.end, lastCmd.isSplit);
       }
 
       const newCmds = [];
 
       // Handle these case separately cause they are annoying and I'm sick of edge cases.
       if (shiftOffset === 1) {
-        newCmds.push(moveTo(_.first(cmds).start, cmds[1].end));
+        newCmds.push(newMove(_.first(cmds).start, cmds[1].end));
         for (let i = 2; i < cmds.length; i++) {
           newCmds.push(cmds[i]);
         }
         newCmds.push(cmds[1]);
         return newCmds;
       } else if (shiftOffset === numCommands - 1) {
-        newCmds.push(moveTo(_.first(cmds).start, cmds[numCommands - 2].end));
+        newCmds.push(newMove(_.first(cmds).start, cmds[numCommands - 2].end));
         newCmds.push(_.last(cmds));
         for (let i = 1; i < cmds.length - 1; i++) {
           newCmds.push(cmds[i]);
@@ -161,7 +161,7 @@ class PathCommandImpl implements PathCommand {
       // The first start point will either be undefined, or the end point of the previous sub path.
       const prevMoveCmd = newCmds.splice(numCommands - shiftOffset, 1)[0];
       newCmds.push(newCmds.shift());
-      newCmds.unshift(moveTo(prevMoveCmd.start, _.last(newCmds).end));
+      newCmds.unshift(newMove(prevMoveCmd.start, _.last(newCmds).end));
       return newCmds;
     };
 
@@ -470,7 +470,6 @@ class CommandWrapper {
   constructor(obj: CommandImpl | ClonedCommandWrapperInfo) {
     if (obj instanceof CommandImpl) {
       this.backingCommand = obj;
-      this.pathHelper = commandToPathHelper(obj);
       this.mutations = [{
         id: _.uniqueId(),
         t: 1,
@@ -479,18 +478,17 @@ class CommandWrapper {
       this.drawCommands = [obj];
     } else {
       this.backingCommand = obj.backingCommand;
-      this.pathHelper = obj.pathHelper;
       this.mutations = obj.mutations;
-      this.drawCommands = obj.drawCommands.slice();
+      this.drawCommands = obj.drawCommands;
     }
+    this.pathHelper = newPathHelper(this.backingCommand);
   }
 
   private clone(overrides: ClonedCommandWrapperInfo = {}) {
     return new CommandWrapper(_.assign({}, {
       backingCommand: this.backingCommand,
-      pathHelper: this.pathHelper,
       mutations: this.mutations.slice(),
-      drawCommands: this.drawCommands,
+      drawCommands: this.drawCommands.slice(),
     }, overrides));
   }
 
@@ -565,21 +563,21 @@ class CommandWrapper {
   // TODO: this could be more efficient (avoid recreating commands unnecessarily)
   private rebuildCommands(mutations: Mutation[]) {
     if (mutations.length === 1) {
-      const drawCommands =
-        [pointsToCommand(mutations[0].svgChar, this.pathHelper.points, false)];
-      return this.clone({ mutations, drawCommands });
+      const command = this.pathHelper.convert(mutations[0].svgChar).toCommand(false);
+      return this.clone({ mutations, drawCommands: [command] as CommandImpl[] });
     }
-    const drawCommands = [];
+    const commands = [];
     let prevT = 0;
     for (let i = 0; i < mutations.length; i++) {
       const currT = mutations[i].t;
-      const splitPathHelper = this.pathHelper.split(prevT, currT);
       const isSplit = i !== mutations.length - 1;
-      drawCommands.push(
-        pointsToCommand(mutations[i].svgChar, splitPathHelper.points, isSplit));
+      commands.push(
+        this.pathHelper.split(prevT, currT)
+          .convert(mutations[i].svgChar)
+          .toCommand(isSplit));
       prevT = currT;
     }
-    return this.clone({ mutations, drawCommands });
+    return this.clone({ mutations, drawCommands: commands });
   }
 
   get commands() {
@@ -602,7 +600,7 @@ function createSubPathCommands(...commands: Command[]) {
       currentCmdList = [];
     }
   }
-  return cmdGroups.reverse().map(cmds => createSubPathCommand(...cmds.reverse()));
+  return cmdGroups.reverse().map(cmds => newSubPathCommand(...cmds.reverse()));
 }
 
 function createCommandWrappers(commands: ReadonlyArray<Command>) {
@@ -618,82 +616,25 @@ function pointsToCommand(
   if (svgChar === 'L') {
     const start = points[0];
     const end = points[1] || start;
-    return lineTo(start, end, isSplit);
+    return newLine(start, end, isSplit);
   } else if (svgChar === 'Z') {
     const start = points[0];
     const end = points[1] || start;
-    return closePath(start, end, isSplit);
+    return newClosePath(start, end, isSplit);
   } else if (svgChar === 'Q') {
     const start = points[0];
     const cp = points[1] || start;
     const end = points[2] || cp;
-    return quadraticCurveTo(start, cp, end, isSplit);
+    return newQuadraticCurve(start, cp, end, isSplit);
   } else if (svgChar === 'C') {
     const start = points[0];
     const cp1 = points[1] || start;
     const cp2 = points[2] || cp1;
     const end = points[3] || cp2;
-    return bezierCurveTo(start, cp1, cp2, end, isSplit);
+    return newBezierCurve(start, cp1, cp2, end, isSplit);
   } else {
     throw new Error('TODO: implement split for ellpitical arcs');
   }
-}
-
-function commandToPathHelper(cmd: CommandImpl): PathHelper {
-  if (cmd.svgChar === 'L' || cmd.svgChar === 'Z') {
-    return createPathHelper(cmd.start, cmd.end);
-  } else if (cmd.svgChar === 'C') {
-    return createPathHelper(
-      cmd.points[0], cmd.points[1], cmd.points[2], cmd.points[3]);
-  } else if (cmd.svgChar === 'Q') {
-    return createPathHelper(cmd.points[0], cmd.points[1], cmd.points[2]);
-  } else if (cmd.svgChar === 'A') {
-    // TODO: create an elliptical arc path helper
-    throw new Error('Elliptical arcs not yet supported');
-
-    // const [
-    //   currentPointX, currentPointY,
-    //   rx, ry, xAxisRotation,
-    //   largeArcFlag, sweepFlag,
-    //   endX, endY] = cmd.args;
-
-    // if (currentPointX === endX && currentPointY === endY) {
-    //   // Degenerate to point.
-    //   return createPathHelper({ x: endX, y: endY });
-    // }
-
-    // if (rx === 0 || ry === 0) {
-    //   // Degenerate to line.
-    //   const start = cmd.start;
-    //   const cp = new Point(
-    //     MathUtil.lerp(cmd.end.x, cmd.start.x, 0.5),
-    //     MathUtil.lerp(cmd.end.y, cmd.start.y, 0.5));
-    //   const end = cmd.end;
-    //   return createPathHelper(start, cp, cp, end);
-    // }
-
-    // const bezierCoords = SvgUtil.arcToBeziers({
-    //   startX: currentPointX,
-    //   startY: currentPointY,
-    //   rx, ry, xAxisRotation,
-    //   largeArcFlag, sweepFlag,
-    //   endX, endY,
-    // });
-
-    // const arcBeziers: PathHelper[] = [];
-    // for (let i = 0; i < bezierCoords.length; i += 8) {
-    //   const bez = createPathHelper(
-    //     { x: cmd.start.x, y: cmd.start.y },
-    //     { x: bezierCoords[i + 2], y: bezierCoords[i + 3] },
-    //     { x: bezierCoords[i + 4], y: bezierCoords[i + 5] },
-    //     { x: bezierCoords[i + 6], y: bezierCoords[i + 7] });
-    //   arcBeziers.push(bez);
-    // }
-    // return arcBeziers;
-  }
-
-  // throw new Error('Command type not supported: ' + cmd.svgChar);
-  return undefined;
 }
 
 interface Mutation {
@@ -713,7 +654,6 @@ interface ClonedPathCommandInfo {
 // Command wrapper internals that have been cloned.
 interface ClonedCommandWrapperInfo {
   backingCommand?: CommandImpl;
-  pathHelper?: PathHelper;
   mutations?: ReadonlyArray<Mutation>;
   drawCommands?: ReadonlyArray<CommandImpl>;
 }

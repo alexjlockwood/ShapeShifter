@@ -1,5 +1,5 @@
 import { Layer, VectorLayer, GroupLayer, PathLayer, ClipPathLayer } from '../layers';
-import { createPathCommand } from '../commands';
+import { newPathCommand } from '../commands';
 import { ColorUtil, MathUtil, SvgUtil } from '../common';
 import { PathParser } from '.';
 
@@ -119,7 +119,7 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
       // create a path layer
       return new PathLayer(
         makeFinalNodeIdFn(node, 'path'),
-        createPathCommand(path),
+        newPathCommand(path),
         ('fillColor' in context) ? ColorUtil.svgToAndroidColor(context.fillColor) : undefined,
         ('fillAlpha' in context) ? context.fillAlpha : undefined,
         ('strokeColor' in context) ? ColorUtil.svgToAndroidColor(context.strokeColor) : undefined,

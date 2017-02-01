@@ -1,45 +1,79 @@
 import * as _ from 'lodash';
 import * as BezierJs from 'bezier-js';
 import { MathUtil, Point } from '../../common';
-import { Projection } from '..';
+import { SvgChar, Projection } from '..';
 import { PointHelper } from './PointHelper';
 import { LineHelper } from './LineHelper';
 import { BezierHelper } from './BezierHelper';
+import { Command } from '..';
 
+/**
+ * A wrapper around a backing SVG command that abstracts a lot of the math-y
+ * path-related code from the rest of the application.
+ */
 export interface PathHelper {
-  points: ReadonlyArray<Point>;
   pathLength(): number;
   project(point: Point): Projection;
-  split(t1: number, t2?: number): PathHelper;
+  split(t1: number, t2: number): PathHelper;
+  convert(svgChar: SvgChar): PathHelper;
   findTimeByDistance(distance: number): number;
+  toCommand(isSplit: boolean): Command;
 }
 
 // TODO: create an elliptical arc path helper
-export function createPathHelper(...points: Point[]): PathHelper {
-  if (!points.length || 4 < points.length) {
-    throw new Error('Invalid number of points: ' + points.length);
+export function newPathHelper(cmd: Command): PathHelper | undefined {
+  if (cmd.svgChar === 'M') {
+    return undefined;
   }
-  // TODO: remove duplicate points?
-  // TODO: check if points are collinear?
-  // const newPoints: Point[] = _.uniqWith(
-  //  points.map(p => new Point(p.x, p.y)), (p1, p2) => p1.equals(p2));
-  const newPoints = points.map(p => new Point(p.x, p.y));
-  if (newPoints.length === 1) {
-    return new PointHelper(newPoints[0]);
-  } else if (newPoints.length === 2) {
-    return new LineHelper(newPoints[0], newPoints[1]);
-  } else if (newPoints.length === 3) {
-    // if (MathUtil.areCollinear(...newPoints)) {
-    // TODO: is it possible for the second point to be
-    // smaller/larger than the first/third? does that cause issues?
-    //  return new LineHelper(newPoints[0], newPoints[2]);
-    // }
-  } else if (newPoints.length === 4) {
-    // if (MathUtil.areCollinear(...newPoints)) {
-    // TODO: is it possible for the second/third points to be
-    // smaller/larger than the first/fourth? does that cause issues?
-    //  return new LineHelper(newPoints[0], newPoints[3]);
-    // }
+  const points = cmd.points;
+  if (points.every(p => points[0].equals(p))) {
+    return new PointHelper(cmd.svgChar, points[0]);
   }
-  return new BezierHelper(...newPoints);
+  if (cmd.svgChar === 'L' || cmd.svgChar === 'Z' || MathUtil.areCollinear(...points)) {
+    return new LineHelper(cmd.svgChar, _.first(points), _.last(points));
+  }
+  if (cmd.svgChar === 'Q') {
+    return new BezierHelper(cmd.svgChar, points[0], points[1], points[2]);
+  }
+  if (cmd.svgChar === 'C') {
+    return new BezierHelper(
+      cmd.svgChar, cmd.points[0], cmd.points[1], cmd.points[2], cmd.points[3]);
+  }
+  throw new Error('Invalid command type: ' + cmd.svgChar);
 }
+
+// const [
+//   currentPointX, currentPointY,
+//   rx, ry, xAxisRotation,
+//   largeArcFlag, sweepFlag,
+//   endX, endY] = cmd.args;
+// if (currentPointX === endX && currentPointY === endY) {
+//   // Degenerate to point.
+//   return createPathHelper({ x: endX, y: endY });
+// }
+// if (rx === 0 || ry === 0) {
+//   // Degenerate to line.
+//   const start = cmd.start;
+//   const cp = new Point(
+//     MathUtil.lerp(cmd.end.x, cmd.start.x, 0.5),
+//     MathUtil.lerp(cmd.end.y, cmd.start.y, 0.5));
+//   const end = cmd.end;
+//   return createPathHelper(start, cp, cp, end);
+// }
+// const bezierCoords = SvgUtil.arcToBeziers({
+//   startX: currentPointX,
+//   startY: currentPointY,
+//   rx, ry, xAxisRotation,
+//   largeArcFlag, sweepFlag,
+//   endX, endY,
+// });
+// const arcBeziers: PathHelper[] = [];
+// for (let i = 0; i < bezierCoords.length; i += 8) {
+//   const bez = createPathHelper(
+//     { x: cmd.start.x, y: cmd.start.y },
+//     { x: bezierCoords[i + 2], y: bezierCoords[i + 3] },
+//     { x: bezierCoords[i + 4], y: bezierCoords[i + 5] },
+//     { x: bezierCoords[i + 6], y: bezierCoords[i + 7] });
+//   arcBeziers.push(bez);
+// }
+// return arcBeziers;

@@ -142,29 +142,29 @@ function pointsToArgs(points: ReadonlyArray<Point>): number[] {
   return args;
 }
 
-export function moveTo(start: Point, end: Point, isSplit?: boolean) {
+export function newMove(start: Point, end: Point, isSplit?: boolean) {
   return new CommandImpl('M', !!isSplit, [start, end]);
 }
 
-export function lineTo(start: Point, end: Point, isSplit?: boolean) {
+export function newLine(start: Point, end: Point, isSplit?: boolean) {
   return new CommandImpl('L', !!isSplit, [start, end]);
 }
 
-export function quadraticCurveTo(start: Point, cp: Point, end: Point, isSplit?: boolean) {
+export function newQuadraticCurve(start: Point, cp: Point, end: Point, isSplit?: boolean) {
   return new CommandImpl('Q', !!isSplit, [start, cp, end]);
 }
 
-export function bezierCurveTo(
+export function newBezierCurve(
   start: Point, cp1: Point, cp2: Point, end: Point, isSplit?: boolean) {
   return new CommandImpl('C', !!isSplit, [start, cp1, cp2, end]);
 }
 
-export function arcTo(start: Point, rx: number, ry: number, xAxisRotation: number,
+export function newArc(start: Point, rx: number, ry: number, xAxisRotation: number,
   largeArcFlag: number, sweepFlag: number, end: Point, isSplit?: boolean) {
   return new CommandImpl('A', !!isSplit, [start, end],
     start.x, start.y, rx, ry, xAxisRotation, largeArcFlag, sweepFlag, end.x, end.y);
 }
 
-export function closePath(start: Point, end: Point, isSplit?: boolean) {
+export function newClosePath(start: Point, end: Point, isSplit?: boolean) {
   return new CommandImpl('Z', !!isSplit, [start, end]);
 }

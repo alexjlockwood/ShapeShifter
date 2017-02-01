@@ -1,16 +1,17 @@
 import { PathHelper } from '.';
-import { Projection } from '..';
+import {
+  SvgChar, Projection, newLine, newQuadraticCurve,
+  newBezierCurve, newClosePath, Command
+} from '..';
 import { MathUtil, Point } from '../../common';
 
 export class PointHelper implements PathHelper {
-  private readonly points_: ReadonlyArray<Point>;
+  private readonly svgChar: SvgChar;
+  private readonly point: Point;
 
-  constructor(point: Point) {
-    this.points_ = [point];
-  }
-
-  get points() {
-    return this.points_;
+  constructor(svgChar: SvgChar, point: Point) {
+    this.svgChar = svgChar;
+    this.point = point;
   }
 
   pathLength() {
@@ -18,18 +19,37 @@ export class PointHelper implements PathHelper {
   }
 
   project(point: Point): Projection {
-    const x = this.points[0].x;
-    const y = this.points[0].y;
+    const x = this.point.x;
+    const y = this.point.y;
     const t = 0.5;
-    const d = MathUtil.distance(this.points[0], point);
+    const d = MathUtil.distance(this.point, point);
     return { x, y, t, d };
   }
 
   split(t1: number, t2: number): PathHelper {
-    return new PointHelper(this.points[0]);
+    return new PointHelper(this.svgChar, this.point);
+  }
+
+  convert(svgChar: SvgChar) {
+    return new PointHelper(svgChar, this.point);
   }
 
   findTimeByDistance(distance: number) {
     return distance;
+  }
+
+  toCommand(isSplit: boolean): Command {
+    switch (this.svgChar) {
+      case 'L':
+        return newLine(this.point, this.point, isSplit);
+      case 'Q':
+        return newQuadraticCurve(this.point, this.point, this.point, isSplit);
+      case 'C':
+        return newBezierCurve(
+          this.point, this.point, this.point, this.point, isSplit);
+      case 'Z':
+        return newClosePath(this.point, this.point, isSplit);
+    }
+    throw new Error('Invalid command type: ' + this.svgChar);
   }
 }
