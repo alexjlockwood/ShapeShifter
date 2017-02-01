@@ -26,6 +26,7 @@
         [editorType]="startVectorLayerType">
       </app-canvas>
       <app-droptarget
+        appDropZone
         *ngIf="!shouldDisplayStartEditor"
         [editorType]="startVectorLayerType">
       </app-droptarget>
@@ -38,6 +39,7 @@
         [editorType]="endVectorLayerType">
       </app-canvas>
       <app-droptarget
+        appDropZone
         *ngIf="!shouldDisplayEndEditor"
         [editorType]="endVectorLayerType">
       </app-droptarget>

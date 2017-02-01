@@ -19,6 +19,7 @@ import { SelectionStateService } from './services/selectionstate.service';
 import { HoverStateService } from './services/hoverstate.service';
 import { CanvasResizeService } from './services/canvasresize.service';
 import { DropTargetComponent } from './droptarget/droptarget.component';
+import { DropZoneDirective } from './droptarget/dropzone.directive';
 
 import 'hammerjs';
 
@@ -28,6 +29,7 @@ import 'hammerjs';
     CanvasComponent,
     TimelineComponent,
     DropTargetComponent,
+    DropZoneDirective,
     SplitterDirective,
     InspectorComponent,
     PathComponent,

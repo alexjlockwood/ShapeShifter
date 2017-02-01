@@ -9,6 +9,9 @@ import { VectorLayerLoader } from '../scripts/import';
 import { CanvasResizeService } from '../services/canvasresize.service';
 import { Subscription } from 'rxjs/Subscription';
 
+// Drop target margin in pixels.
+const DROP_TARGET_MARGIN = 36;
+
 @Component({
   selector: 'app-droptarget',
   templateUrl: './droptarget.component.html',
@@ -34,7 +37,9 @@ export class DropTargetComponent implements OnInit, OnDestroy {
     this.fileDropTarget = $(this.fileDropTargetRef.nativeElement);
     this.fileInputTarget = this.element.find('input');
     this.canvasResizeService.addListener(size => {
-      const containerSize = Math.min(size.width, size.height);
+      const width = size.width - DROP_TARGET_MARGIN * 2;
+      const height = size.height - DROP_TARGET_MARGIN * 2;
+      const containerSize = Math.min(width, height);
       if (this.componentSize !== containerSize) {
         this.componentSize = containerSize;
         this.resize();
