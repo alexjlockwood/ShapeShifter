@@ -1,5 +1,5 @@
 import { } from 'jasmine';
-import { PathHelper, createPathHelper } from './PathHelper';
+import { PathHelper, newPathHelper } from './PathHelper';
 import { Point } from '../../common';
 import { Projection } from '..';
 
