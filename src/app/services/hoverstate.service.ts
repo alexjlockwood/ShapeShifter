@@ -7,6 +7,9 @@ import { Observable } from 'rxjs/Observable';
 import { Id as CommandId } from '../scripts/commands';
 import { EditorType } from '../EditorType';
 
+/**
+ * A simple service that broadcasts hover events to all parts of the application.
+ */
 @Injectable()
 export class HoverStateService {
   private readonly source = new Subject<Hover>();

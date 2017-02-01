@@ -15,7 +15,7 @@ import { SubPathComponent } from './inspector/subpath/subpath.component';
 import { CommandComponent } from './inspector/command/command.component';
 import { TimelineService } from './timeline/timeline.service';
 import { LayerStateService } from './services/layerstate.service';
-import { SelectionService } from './services/selection.service';
+import { SelectionStateService } from './services/selectionstate.service';
 import { HoverStateService } from './services/hoverstate.service';
 import { CanvasResizeService } from './services/canvasresize.service';
 import { DropTargetComponent } from './droptarget/droptarget.component';
@@ -44,7 +44,7 @@ import 'hammerjs';
   providers: [
     TimelineService,
     LayerStateService,
-    SelectionService,
+    SelectionStateService,
     HoverStateService,
     CanvasResizeService,
   ],

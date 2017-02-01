@@ -14,7 +14,7 @@ import { Point, Matrix, MathUtil, ColorUtil, SvgUtil } from '../scripts/common';
 import { TimelineService } from '../timeline/timeline.service';
 import { LayerStateService } from '../services/layerstate.service';
 import { Subscription } from 'rxjs/Subscription';
-import { SelectionService, Selection } from '../services/selection.service';
+import { SelectionStateService, Selection } from '../services/selectionstate.service';
 import { HoverStateService, Type as HoverType, Hover } from '../services/hoverstate.service';
 import { CanvasResizeService } from '../services/canvasresize.service';
 
@@ -60,7 +60,7 @@ export class CanvasComponent implements OnInit, OnDestroy {
     private hoverStateService: HoverStateService,
     private layerStateService: LayerStateService,
     private timelineService: TimelineService,
-    private selectionService: SelectionService) { }
+    private selectionStateService: SelectionStateService) { }
 
   ngOnInit() {
     this.isViewInit = true;
@@ -116,7 +116,7 @@ export class CanvasComponent implements OnInit, OnDestroy {
     } else {
       // Non-preview canvas specific setup.
       this.subscriptions.push(
-        this.selectionService.addListener(this.editorType, () => this.draw()));
+        this.selectionStateService.stream.subscribe(() => this.draw()));
       this.subscriptions.push(
         this.timelineService.shouldLabelPointsStream.subscribe(() => this.draw()));
       const setCurrentHoverFn = hover => {
@@ -297,7 +297,10 @@ export class CanvasComponent implements OnInit, OnDestroy {
 
   // Draw any selected commands.
   private drawSelections(ctx: CanvasRenderingContext2D) {
-    if (!this.selectionService.getData(this.editorType).length) {
+    const selections =
+      this.selectionStateService.getSelections()
+        .filter(sel => sel.source === this.editorType);
+    if (!selections.length) {
       return;
     }
     ctx.save();
@@ -306,18 +309,20 @@ export class CanvasComponent implements OnInit, OnDestroy {
       if (!(layer instanceof PathLayer)) {
         return;
       }
-      const selections =
-        this.selectionService.getData(this.editorType)
-          .filter(s => s.pathId === layer.id);
-      if (!selections.length) {
-        return;
-      }
-      const drawCommands = selections.map(selection => {
+
+      const pathSelections =
+        selections.filter(sel => sel.commandId.pathId === layer.id);
+      const selectedCmds = pathSelections.map(selection => {
         const subPathCommands = layer.pathData.subPathCommands;
-        return subPathCommands[selection.subIdx].commands[selection.cmdIdx];
+        return subPathCommands[selection.commandId.subIdx]
+          .commands[selection.commandId.cmdIdx];
       });
 
-      executeDrawCommands(drawCommands, ctx, transforms, true);
+      if (!selectedCmds.length) {
+        return;
+      }
+
+      executeDrawCommands(selectedCmds, ctx, transforms, true);
 
       ctx.save();
       ctx.lineWidth = 6 / this.cssScale;
@@ -679,7 +684,9 @@ export class CanvasComponent implements OnInit, OnDestroy {
     return projectionOntoPath;
   }
 
-  /** Returns a point in the canvas' coordinate space. */
+  /**
+   * Returns a point in the canvas' coordinate space.
+   */
   private mouseEventToPoint(event: MouseEvent) {
     const canvasOffset = this.canvas.offset();
     const x = (event.pageX - canvasOffset.left) / this.cssScale;
@@ -688,7 +695,9 @@ export class CanvasComponent implements OnInit, OnDestroy {
   }
 }
 
-/** Draws an command on the specified canvas context. */
+/**
+ * Draws an command on the specified canvas context.
+ */
 function executePathData(
   layer: PathLayer | ClipPathLayer,
   ctx: CanvasRenderingContext2D,

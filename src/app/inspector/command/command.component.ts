@@ -8,7 +8,7 @@ import { PathLayer } from '../../scripts/layers';
 import * as $ from 'jquery';
 import { InspectorService, EventType } from '../inspector.service';
 import { LayerStateService } from '../../services/layerstate.service';
-import { SelectionService, Selection } from '../../services/selection.service';
+import { SelectionStateService, Selection } from '../../services/selectionstate.service';
 import { HoverStateService, Type as HoverType } from '../../services/hoverstate.service';
 import { Subscription } from 'rxjs/Subscription';
 import { ColorUtil } from '../../scripts/common';
@@ -32,8 +32,7 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
   private isHoveringOverCommand = false;
   private isHoveringOverSplit = false;
   private isHoveringOverUnsplit = false;
-  private subscription_: Subscription;
-  private selectionArgs_: Selection;
+  private subscriptions: Subscription[] = [];
   private isViewInit = false;
   private canvas;
   private commandIndexCanvasSize: number;
@@ -42,19 +41,22 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
   constructor(
     private layerStateService: LayerStateService,
     private hoverStateService: HoverStateService,
-    private selectionService: SelectionService,
+    private selectionStateService: SelectionStateService,
     private inspectorService: InspectorService) { }
 
   ngOnInit() {
-    this.selectionArgs_ = {
-      pathId: this.pathId,
-      subIdx: this.subIdx,
-      cmdIdx: this.cmdIdx,
-    };
-    this.subscription_ = this.selectionService.addListener(this.editorType,
-      (selections: Selection[]) => {
-        this.isSelected = _.some(selections, this.selectionArgs_);
-      });
+    this.subscriptions.push(
+      this.selectionStateService.stream.subscribe(
+        (selections: Selection[]) => {
+          this.isSelected = _.some(selections, {
+            source: this.editorType,
+            commandId: {
+              pathId: this.pathId,
+              subIdx: this.subIdx,
+              cmdIdx: this.cmdIdx,
+            }
+          });
+        }));
   }
 
   ngAfterViewInit() {
@@ -70,6 +72,10 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
       .css({ width, height });
 
     this.draw();
+  }
+
+  ngOnDestroy() {
+    this.subscriptions.forEach(s => s.unsubscribe());
   }
 
   @Input()
@@ -92,10 +98,6 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
 
   get drawCommand() {
     return this.drawCommand_;
-  }
-
-  ngOnDestroy() {
-    this.subscription_.unsubscribe();
   }
 
   private draw() {
@@ -155,10 +157,24 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
     this.isSelected_ = isSelected;
   }
 
-  @HostListener('click')
-  onCommandClick() {
+  onCommandClick(event: MouseEvent) {
+    const selections = this.selectionStateService.getSelections();
+    const appendToList = event.shiftKey || event.metaKey;
+    if (selections.length && selections[0].source !== this.editorType && appendToList) {
+      // If the user is attempting to select something in a different pane in the
+      // middle of a multi-select, do nothing.
+      return;
+    }
+
     // Selecting the last 'Z' command doesn't seem to work...
-    this.selectionService.toggleSelection(this.editorType, this.selectionArgs_);
+    this.selectionStateService.toggle({
+      source: this.editorType,
+      commandId: {
+        pathId: this.pathId,
+        subIdx: this.subIdx,
+        cmdIdx: this.cmdIdx,
+      }
+    }, appendToList);
   }
 
   isConvertable() {

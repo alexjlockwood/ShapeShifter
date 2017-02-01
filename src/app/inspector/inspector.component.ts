@@ -6,7 +6,6 @@ import { PathLayer } from '../scripts/layers';
 import { PathCommand } from '../scripts/commands';
 import { EditorType } from '../EditorType';
 import { LayerStateService } from '../services/layerstate.service';
-import { SelectionService } from '../services/selection.service';
 import { Subscription } from 'rxjs/Subscription';
 import { InspectorService, EventType, InspectorEvent } from './inspector.service';
 import { AutoAwesome } from '../scripts/common';
@@ -28,7 +27,6 @@ export class InspectorComponent implements OnInit, OnDestroy {
 
   constructor(
     private layerStateService: LayerStateService,
-    private selectionService: SelectionService,
     private inspectorService: InspectorService) { }
 
   ngOnInit() {
@@ -69,7 +67,7 @@ export class InspectorComponent implements OnInit, OnDestroy {
             toPathLayer.pathData = autoFixResult.to;
             this.layerStateService.notifyChange(EditorType.Start);
             this.layerStateService.notifyChange(EditorType.End);
-            // TODO: need to update selections as well (or clear them if that's too hard)
+            // TODO: update selections
           }
             break;
           case EventType.Convert: {
@@ -91,7 +89,7 @@ export class InspectorComponent implements OnInit, OnDestroy {
           case EventType.Reverse:
             pathLayer.pathData = pathLayer.pathData.reverse(subIdx);
             const numCommands = pathLayer.pathData.subPathCommands[subIdx].commands.length;
-            this.selectionService.reverse(this.editorType, subIdx, numCommands);
+            // TODO: update selections
             break;
           case EventType.ShiftBack:
             pathLayer.pathData = pathLayer.pathData.shiftBack(subIdx);

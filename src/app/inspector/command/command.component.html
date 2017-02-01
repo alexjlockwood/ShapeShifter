@@ -5,6 +5,7 @@
   fxLayout="row"
   fxLayoutAlign="start center"
   fxFlex
+  (click)="onCommandClick($event)"
   (mouseenter)="onCommandHoverEvent(true)"
   (mouseleave)="onCommandHoverEvent(false)">
   <canvas #drawCommandIndexCanvas class="command-index"></canvas>
