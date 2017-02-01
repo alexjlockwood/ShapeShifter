@@ -610,33 +610,6 @@ function createCommandWrappers(commands: ReadonlyArray<Command>) {
   return commands.map(cmd => new CommandWrapper(cmd));
 }
 
-function pointsToCommand(
-  svgChar: SvgChar, points: ReadonlyArray<Point>, isSplit: boolean) {
-
-  if (svgChar === 'L') {
-    const start = points[0];
-    const end = points[1] || start;
-    return newLine(start, end, isSplit);
-  } else if (svgChar === 'Z') {
-    const start = points[0];
-    const end = points[1] || start;
-    return newClosePath(start, end, isSplit);
-  } else if (svgChar === 'Q') {
-    const start = points[0];
-    const cp = points[1] || start;
-    const end = points[2] || cp;
-    return newQuadraticCurve(start, cp, end, isSplit);
-  } else if (svgChar === 'C') {
-    const start = points[0];
-    const cp1 = points[1] || start;
-    const cp2 = points[2] || cp1;
-    const end = points[3] || cp2;
-    return newBezierCurve(start, cp1, cp2, end, isSplit);
-  } else {
-    throw new Error('TODO: implement split for ellpitical arcs');
-  }
-}
-
 interface Mutation {
   readonly id: string;
   readonly t: number;
