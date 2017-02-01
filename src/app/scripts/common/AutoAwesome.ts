@@ -92,7 +92,7 @@ export function fix(
   const fromGapGroups = createGapStreaksFn(fromCmdInfos);
   const toGapGroups = createGapStreaksFn(toCmdInfos);
 
-  // Finally, fill in the gaps by applying batch splits.
+  // Fill in the gaps by applying batch splits.
   const applySplitsFn = (pathCommand: PathCommand, gapGroups: CmdInfo[][]) => {
     for (let i = gapGroups.length - 1; i >= 0; i--) {
       const gapGroup = gapGroups[i];
@@ -112,6 +112,7 @@ export function fix(
   const fromPathResult = applySplitsFn(alignmentInfo.generatedFromPath, fromGapGroups);
   const toPathResult = applySplitsFn(srcToPath, toGapGroups);
 
+  // Finally, convert the commands before returning the result.
   const convertDrawCmdsFn = (from: PathCommand, to: PathCommand) => {
     const fromDrawCmds = from.subPathCommands[subIdx].commands;
     const toDrawCmds = to.subPathCommands[subIdx].commands;

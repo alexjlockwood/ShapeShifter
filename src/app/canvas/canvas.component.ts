@@ -607,7 +607,7 @@ export class CanvasComponent implements OnInit, OnDestroy {
 
   /**
    * Finds the path point closest to the specified mouse point, with a max
-   * distance specified by a radius. By default, non-split path points are ignored.
+   * distance specified by radius. By default, non-split path points are ignored.
    */
   private findPathPointId(
     mousePoint: Point,
@@ -636,9 +636,9 @@ export class CanvasComponent implements OnInit, OnDestroy {
           .flatMap(pathPoints => pathPoints)
           // TODO: confirm that using the attrScale here is correct...?
           .filter(pathPoint => {
-            const range =
+            const radius =
               pathPoint.isSplit ? this.splitPathPointRadius : this.pathPointRadius;
-            return pathPoint.distance <= (range / this.attrScale);
+            return pathPoint.distance <= (radius / this.attrScale);
           })
           // Reverse so that points drawn with higher z-orders are preferred.
           .reverse()
@@ -650,6 +650,7 @@ export class CanvasComponent implements OnInit, OnDestroy {
         minPathPoints.push(minPathPoint);
       }
     });
+    // TODO: should we reverse here similar to above as well?
     return minPathPoints.reduce((prev, curr) => {
       return prev && prev.distance < curr.distance ? prev : curr;
     }, undefined);
