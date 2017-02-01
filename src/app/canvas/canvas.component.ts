@@ -183,7 +183,7 @@ export class CanvasComponent implements OnInit, OnDestroy {
     });
 
     // TODO: this still doesn't work very well for small/large viewports and/or on resizing
-    this.pathPointRadius = this.attrScale;
+    this.pathPointRadius = this.attrScale * 8;
     this.splitPathPointRadius = this.pathPointRadius * 0.8;
     this.draw();
   }
