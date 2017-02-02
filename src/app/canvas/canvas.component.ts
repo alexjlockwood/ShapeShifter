@@ -553,11 +553,14 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   }
 
   onMouseMove(event: MouseEvent) {
+    const mouseMove = this.mouseEventToPoint(event);
+    const roundedMouseMove = new Point(_.round(mouseMove.x), _.round(mouseMove.y));
+    this.canvasRulers.forEach(r => r.showMouse(roundedMouseMove));
+
     if (this.editorType === EditorType.Preview) {
       // The user never interacts with the preview canvas.
       return;
     }
-    const mouseMove = this.mouseEventToPoint(event);
 
     let isDraggingSplitPoint = false;
     if (this.pointSelector) {
@@ -584,8 +587,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     } else {
       this.hoverStateService.clearHover();
     }
-    const roundedMouseMove = new Point(_.round(mouseMove.x), _.round(mouseMove.y));
-    this.canvasRulers.forEach(r => r.showMouse(roundedMouseMove));
   }
 
   onMouseUp(event: MouseEvent) {
@@ -634,6 +635,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   }
 
   onMouseLeave(event) {
+    this.canvasRulers.forEach(r => r.hideMouse());
+
     if (this.editorType === EditorType.Preview) {
       // The user never interacts with the preview canvas.
       return;
@@ -642,7 +645,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       this.pointSelector.onMouseLeave(this.mouseEventToPoint(event));
       this.draw();
     }
-    this.canvasRulers.forEach(r => r.hideMouse());
   }
 
   /**
