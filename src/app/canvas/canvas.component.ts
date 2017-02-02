@@ -184,7 +184,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     this.pathPointRadius = this.attrScale;
     this.splitPathPointRadius = this.pathPointRadius * 0.8;
     this.draw();
-    // this.canvasRulers.forEach(r => r.draw());
+    this.canvasRulers.forEach(r => r.draw());
   }
 
   private draw() {
@@ -584,6 +584,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     } else {
       this.hoverStateService.clearHover();
     }
+    const roundedMouseMove = new Point(_.round(mouseMove.x), _.round(mouseMove.y));
+    this.canvasRulers.forEach(r => r.showMouse(roundedMouseMove));
   }
 
   onMouseUp(event: MouseEvent) {
@@ -640,6 +642,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       this.pointSelector.onMouseLeave(this.mouseEventToPoint(event));
       this.draw();
     }
+    this.canvasRulers.forEach(r => r.hideMouse());
   }
 
   /**

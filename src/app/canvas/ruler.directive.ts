@@ -4,11 +4,14 @@ import {
 } from '@angular/core';
 import { EditorType } from '../EditorType';
 import { LayerStateService } from '../services/layerstate.service';
+import { CanvasResizeService } from '../services/canvasresize.service';
 import { Point } from '../scripts/common';
 import * as $ from 'jquery';
 import { Subscription } from 'rxjs/Subscription';
 import { VectorLayer } from '../scripts/layers';
 
+const CANVAS_MARGIN = 36;
+const RULER_SIZE = 32;
 const EXTRA_PADDING = 12;
 const GRID_INTERVALS_PX = [1, 2, 4, 8, 16, 24, 48, 100, 100, 250];
 const LABEL_OFFSET = 12;
@@ -25,9 +28,12 @@ export class CanvasRulerDirective implements OnInit, OnDestroy {
   private readonly subscriptions: Subscription[] = [];
   private vlWidth = 0;
   private vlHeight = 0;
+  private width = 0;
+  private height = 0;
 
   constructor(
     private elementRef: ElementRef,
+    private canvasResizeService: CanvasResizeService,
     private layerStateService: LayerStateService) { }
 
   ngOnInit() {
@@ -48,6 +54,18 @@ export class CanvasRulerDirective implements OnInit, OnDestroy {
             this.draw();
           }
         }));
+    this.subscriptions.push(
+      this.canvasResizeService.addListener(size => {
+        const newWidth = size.width;
+        const newHeight = size.height;
+        const didSizeChange =
+          this.width !== newWidth || this.height !== newHeight;
+        if (didSizeChange) {
+          this.width = newWidth;
+          this.height = newHeight;
+          this.draw();
+        }
+      }));
   }
 
   ngOnDestroy() {
@@ -72,7 +90,6 @@ export class CanvasRulerDirective implements OnInit, OnDestroy {
     const height = this.canvas.height();
     this.canvas.attr('width', width * window.devicePixelRatio);
     this.canvas.attr('height', height * window.devicePixelRatio);
-    console.log(this.canvas.width(), this.canvas.height());
 
     const ctx =
       (this.canvas.get(0) as HTMLCanvasElement).getContext('2d');

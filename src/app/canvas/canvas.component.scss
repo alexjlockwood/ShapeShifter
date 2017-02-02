@@ -11,18 +11,18 @@ canvas.rendering-canvas {
 
 $rulerWidth: 32px;
 
-canvas.canvas-ruler {
+.canvas-ruler {
   position: absolute;
 }
 
-canvas.canvas-ruler.orientation-horizontal {
+.orientation-horizontal {
   left: -12px;
   width: calc(100% + 24px);
   top: -$rulerWidth;
   height: $rulerWidth;
 }
 
-canvas.canvas-ruler.orientation-vertical {
+.orientation-vertical {
   top: -12px;
   height: calc(100% + 24px);
   left: -$rulerWidth;
