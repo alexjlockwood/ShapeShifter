@@ -620,12 +620,10 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       } else {
         // If we haven't started dragging a point, then we should select
         // the point instead.
-        console.log(this.selectionStateService.getSelections());
         this.selectionStateService.toggle({
           source: this.editorType,
           commandId: selectedPointId,
         }, event.shiftKey || event.metaKey);
-        console.log(this.selectionStateService.getSelections());
       }
 
       // Draw and complete the gesture.
