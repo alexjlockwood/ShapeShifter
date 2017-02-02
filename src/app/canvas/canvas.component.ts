@@ -1,6 +1,7 @@
 import * as _ from 'lodash';
 import {
-  Component, OnInit, OnDestroy, ElementRef, ViewChild, Input
+  Component, AfterViewInit, OnDestroy, ElementRef, ViewChild,
+  Input, ViewChildren, QueryList
 } from '@angular/core';
 import {
   PathCommand, SubPathCommand, Command, Id as CommandId, Projection
@@ -17,6 +18,8 @@ import { Subscription } from 'rxjs/Subscription';
 import { SelectionStateService, Selection } from '../services/selectionstate.service';
 import { HoverStateService, Type as HoverType, Hover } from '../services/hoverstate.service';
 import { CanvasResizeService } from '../services/canvasresize.service';
+import { CanvasRulerDirective } from './ruler.directive';
+
 
 // TODO: make these viewport/density-independent
 const MIN_SNAP_THRESHOLD = 1.5;
@@ -30,9 +33,10 @@ const CANVAS_MARGIN = 36;
   templateUrl: './canvas.component.html',
   styleUrls: ['./canvas.component.scss']
 })
-export class CanvasComponent implements OnInit, OnDestroy {
+export class CanvasComponent implements AfterViewInit, OnDestroy {
   @Input() editorType: EditorType;
   @ViewChild('renderingCanvas') private renderingCanvasRef: ElementRef;
+  @ViewChildren(CanvasRulerDirective) canvasRulers: QueryList<CanvasRulerDirective>;
 
   private vectorLayer: VectorLayer;
   private componentSize = 0;
@@ -56,7 +60,7 @@ export class CanvasComponent implements OnInit, OnDestroy {
     private timelineService: TimelineService,
     private selectionStateService: SelectionStateService) { }
 
-  ngOnInit() {
+  ngAfterViewInit() {
     this.isViewInit = true;
     this.element = $(this.elementRef.nativeElement);
     this.canvas = $(this.renderingCanvasRef.nativeElement);
@@ -94,8 +98,8 @@ export class CanvasComponent implements OnInit, OnDestroy {
             return;
           }
           // TODO: if vector layer is undefined, then clear the canvas
-          const startLayer = this.layerStateService.getData(EditorType.Start);
-          const endLayer = this.layerStateService.getData(EditorType.End);
+          const startLayer = this.layerStateService.getLayer(EditorType.Start);
+          const endLayer = this.layerStateService.getLayer(EditorType.End);
           this.vectorLayer.walk(layer => {
             if (!(layer instanceof PathLayer)) {
               return;
@@ -177,9 +181,10 @@ export class CanvasComponent implements OnInit, OnDestroy {
     });
 
     // TODO: this still doesn't work very well for small/large viewports and/or on resizing
-    this.pathPointRadius = this.attrScale * 8;
+    this.pathPointRadius = this.attrScale;
     this.splitPathPointRadius = this.pathPointRadius * 0.8;
     this.draw();
+    // this.canvasRulers.forEach(r => r.draw());
   }
 
   private draw() {
@@ -444,7 +449,8 @@ export class CanvasComponent implements OnInit, OnDestroy {
   private drawDraggingPoints(ctx: CanvasRenderingContext2D) {
     if (!this.pointSelector
       || !this.pointSelector.isActive()
-      || !this.pointSelector.isDragging()) {
+      || !this.pointSelector.isDragging()
+      || !this.pointSelector.isSelectedPointSplit) {
       return;
     }
     const activelyDraggedPointId = this.pointSelector.selectedPointId;
@@ -590,30 +596,33 @@ export class CanvasComponent implements OnInit, OnDestroy {
       this.pointSelector.onMouseUp(mouseUp);
 
       const selectedPointId = this.pointSelector.selectedPointId;
-      if (this.pointSelector.isSelectedPointSplit
-        && this.pointSelector.isDragging()) {
-        const activeLayer =
-          this.vectorLayer.findLayerById(selectedPointId.pathId) as PathLayer;
+      if (this.pointSelector.isDragging()) {
+        if (this.pointSelector.isSelectedPointSplit) {
+          const activeLayer =
+            this.vectorLayer.findLayerById(selectedPointId.pathId) as PathLayer;
 
-        // Delete the old drag point from the path.
-        activeLayer.pathData =
-          activeLayer.pathData.unsplit(
-            selectedPointId.subIdx, selectedPointId.cmdIdx);
+          // Delete the old drag point from the path.
+          activeLayer.pathData =
+            activeLayer.pathData.unsplit(
+              selectedPointId.subIdx, selectedPointId.cmdIdx);
 
-        // Re-split the path at the projection point.
-        activeLayer.pathData =
-          this.calculateProjectionOntoPath(
-            mouseUp, selectedPointId.pathId).split();
+          // Re-split the path at the projection point.
+          activeLayer.pathData =
+            this.calculateProjectionOntoPath(
+              mouseUp, selectedPointId.pathId).split();
 
-        // Notify the global layer state service about the change and draw.
-        this.layerStateService.setData(this.editorType, this.vectorLayer);
+          // Notify the global layer state service about the change and draw.
+          this.layerStateService.setLayer(this.editorType, this.vectorLayer);
+        }
       } else {
-        // If we haven't started dragging a split point, then we should select
+        // If we haven't started dragging a point, then we should select
         // the point instead.
+        console.log(this.selectionStateService.getSelections());
         this.selectionStateService.toggle({
           source: this.editorType,
           commandId: selectedPointId,
         }, event.shiftKey || event.metaKey);
+        console.log(this.selectionStateService.getSelections());
       }
 
       // Draw and complete the gesture.
@@ -777,7 +786,9 @@ function executeDrawCommands(
   ctx.restore();
 }
 
-/** Draws an elliptical arc on the specified canvas context. */
+/**
+ * Draws an elliptical arc on the specified canvas context.
+ */
 function executeArcCommand(ctx: CanvasRenderingContext2D, arcArgs: ReadonlyArray<number>) {
   const [currentPointX, currentPointY,
     rx, ry, xAxisRotation,

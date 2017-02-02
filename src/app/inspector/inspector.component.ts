@@ -51,7 +51,7 @@ export class InspectorComponent implements OnInit, OnDestroy {
     this.subscriptions.push(
       this.inspectorService.addListener((event: InspectorEvent) => {
         const {eventType, pathId, subIdx, cmdIdx} = event;
-        const vl = this.layerStateService.getData(this.editorType);
+        const vl = this.layerStateService.getLayer(this.editorType);
         const pathLayer = vl.findLayerById(pathId) as PathLayer;
         switch (eventType) {
           case EventType.AutoFix: {
@@ -59,7 +59,7 @@ export class InspectorComponent implements OnInit, OnDestroy {
               this.editorType === EditorType.End
                 ? EditorType.Start
                 : EditorType.End;
-            const targetVl = this.layerStateService.getData(targetEditorType);
+            const targetVl = this.layerStateService.getLayer(targetEditorType);
             const fromPathLayer = pathLayer;
             const toPathLayer = targetVl.findLayerById(pathId) as PathLayer;
             const autoFixResult = AutoAwesome.fix(subIdx, fromPathLayer.pathData, toPathLayer.pathData);
@@ -75,7 +75,7 @@ export class InspectorComponent implements OnInit, OnDestroy {
               this.editorType === EditorType.End
                 ? EditorType.Start
                 : EditorType.End;
-            const targetVl = this.layerStateService.getData(targetEditorType);
+            const targetVl = this.layerStateService.getLayer(targetEditorType);
             const targetPathData = (targetVl.findLayerById(pathId) as PathLayer).pathData;
             const targetSvgChar =
               targetPathData.subPathCommands[subIdx].commands[cmdIdx].svgChar;

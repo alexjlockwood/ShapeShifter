@@ -183,7 +183,7 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
       this.editorType === EditorType.Start
         ? EditorType.End
         : EditorType.Start;
-    const vl = this.layerStateService.getData(editorType);
+    const vl = this.layerStateService.getLayer(editorType);
     const pathData = (vl.findLayerById(this.pathId) as PathLayer).pathData;
     if (pathData.subPathCommands.length <= this.subIdx) {
       return false;

@@ -20,6 +20,7 @@ import { HoverStateService } from './services/hoverstate.service';
 import { CanvasResizeService } from './services/canvasresize.service';
 import { DropTargetComponent } from './droptarget/droptarget.component';
 import { DropZoneDirective } from './droptarget/dropzone.directive';
+import { CanvasRulerDirective } from './canvas/ruler.directive';
 
 import 'hammerjs';
 
@@ -35,6 +36,7 @@ import 'hammerjs';
     PathComponent,
     SubPathComponent,
     CommandComponent,
+    CanvasRulerDirective,
   ],
   imports: [
     BrowserModule,

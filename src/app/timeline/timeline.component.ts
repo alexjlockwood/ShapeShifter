@@ -41,8 +41,8 @@ export class TimelineComponent implements OnInit {
 
   private checkAreLayersMorphable() {
     this.isMorphable =
-      this.layerStateService.getData(EditorType.Start)
-        .isMorphableWith(this.layerStateService.getData(EditorType.End));
+      this.layerStateService.getLayer(EditorType.Start)
+        .isMorphableWith(this.layerStateService.getLayer(EditorType.End));
   }
 
   get shouldLabelPoints() {

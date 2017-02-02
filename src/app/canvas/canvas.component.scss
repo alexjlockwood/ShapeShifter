@@ -1,6 +1,30 @@
 @import '../styles/material-shadows';
 
-.rendering-canvas {
+div.app-canvas-container {
+  position: relative;
+}
+
+canvas.rendering-canvas {
   background-color: #fff;
   box-shadow: material-shadow(2);
+}
+
+$rulerWidth: 32px;
+
+canvas.canvas-ruler {
+  position: absolute;
+}
+
+canvas.canvas-ruler.orientation-horizontal {
+  left: -12px;
+  width: calc(100% + 24px);
+  top: -$rulerWidth;
+  height: $rulerWidth;
+}
+
+canvas.canvas-ruler.orientation-vertical {
+  top: -12px;
+  height: calc(100% + 24px);
+  left: -$rulerWidth;
+  width: $rulerWidth;
 }

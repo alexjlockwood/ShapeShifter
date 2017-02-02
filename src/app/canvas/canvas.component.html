@@ -1,8 +1,28 @@
-<canvas
-  #renderingCanvas
-  class="rendering-canvas"
-  (mousedown)="onMouseDown($event)"
-  (mouseup)="onMouseUp($event)"
-  (mousemove)="onMouseMove($event)"
-  (mouseleave)="onMouseLeave($event)">
-</canvas>
+<!--<div
+  class="app-canvas-container"
+  fxLayout="row">
+  <canvas
+    appCanvasRuler
+    #horizontalRuler
+    style="flex: 1"
+    class="canvas-ruler orientation-horizontal"
+    [editorType]="editorType"
+    [orientation]="horizontal">
+  </canvas>
+  <canvas
+    appCanvasRuler
+    #verticalRuler
+    style="flex: 1"
+    canvas-ruler="canvas-ruler orientation-vertical"
+    [editorType]="editorType"
+    [orientation]="vertical">
+  </canvas>-->
+  <canvas
+    #renderingCanvas
+    class="rendering-canvas"
+    (mousedown)="onMouseDown($event)"
+    (mouseup)="onMouseUp($event)"
+    (mousemove)="onMouseMove($event)"
+    (mouseleave)="onMouseLeave($event)">
+  </canvas>
+<!--</div>-->
