@@ -60,14 +60,18 @@ export class CommandImpl implements Command {
         return ch === 'Q' || ch === 'C';
       case 'Z':
         return ch === 'L' || ch === 'Q' || ch === 'C';
-      case 'Q':
+      case 'Q': {
         // TODO: possible to convert to C?
         // TODO: possible to convert to A?
-        return ch === 'L' && MathUtil.areCollinear(...this.points) || ch === 'C';
-      case 'C':
+        const uniquePoints = _.uniqWith(this.points, (p1, p2) => p1.equals(p2));
+        return ch === 'L' && uniquePoints.length <= 2 || ch === 'C';
+      }
+      case 'C': {
         // TODO: possible to convert to Q?
         // TODO: possible to convert to A?
-        return ch === 'L' && MathUtil.areCollinear(...this.points);
+        const uniquePoints = _.uniqWith(this.points, (p1, p2) => p1.equals(p2));
+        return ch === 'L' && uniquePoints.length <= 2;
+      }
       case 'A':
         // TODO: convert to one or more cubic bezier curves
         return ch === 'C';

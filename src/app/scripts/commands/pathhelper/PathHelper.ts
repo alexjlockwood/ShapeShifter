@@ -26,10 +26,11 @@ export function newPathHelper(cmd: Command): PathHelper | undefined {
     return undefined;
   }
   const points = cmd.points;
-  if (points.every(p => points[0].equals(p))) {
+  const uniquePoints = _.uniqWith(points, (p1, p2) => p1.equals(p2));
+  if (uniquePoints.length === 1) {
     return new PointHelper(cmd.svgChar, points[0]);
   }
-  if (cmd.svgChar === 'L' || cmd.svgChar === 'Z' || MathUtil.areCollinear(...points)) {
+  if (cmd.svgChar === 'L' || cmd.svgChar === 'Z' || uniquePoints.length === 2) {
     return new LineHelper(cmd.svgChar, _.first(points), _.last(points));
   }
   if (cmd.svgChar === 'Q') {

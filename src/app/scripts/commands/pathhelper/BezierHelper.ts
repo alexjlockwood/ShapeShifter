@@ -41,7 +41,8 @@ export class BezierHelper implements PathHelper {
     }
     const splitBezPoints = this.bezierJs.split(t1, t2).points;
     const points: Point[] = splitBezPoints.map(p => new Point(p.x, p.y));
-    if (MathUtil.areCollinear(...points)) {
+    const uniquePoints = _.uniqWith(points, (p1, p2) => p1.equals(p2));
+    if (uniquePoints.length === 2) {
       return new LineHelper(this.svgChar, _.first(points), _.last(points));
     }
     return new BezierHelper(this.svgChar, ...points);
