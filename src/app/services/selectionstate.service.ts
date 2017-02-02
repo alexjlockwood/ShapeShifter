@@ -10,7 +10,8 @@ import { EditorType } from '../EditorType';
 
 /**
  * A simple service that broadcasts selection events to all parts of the application.
- * TODO: clear selections in an onBlur callback somehow...
+ * TODO: clear selections in an onBlur callback somehow
+ * TODO: investigate the pros and cons of identifying by uniqueId rather than index
  */
 @Injectable()
 export class SelectionStateService {
@@ -18,7 +19,7 @@ export class SelectionStateService {
   readonly stream = this.source.asObservable();
   private selections: Selection[] = [];
 
-  getSelections() {
+  getSelections(): ReadonlyArray<Selection> {
     return this.selections;
   }
 

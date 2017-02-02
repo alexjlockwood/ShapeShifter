@@ -12,6 +12,7 @@ import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { LayerStateService } from './services/layerstate.service';
 import { DividerDragEvent } from './splitter/splitter.directive';
 import { CanvasResizeService } from './services/canvasresize.service';
+import { SelectionStateService } from './services/selectionstate.service';
 import * as $ from 'jquery';
 import * as erd from 'element-resize-detector';
 
@@ -50,12 +51,20 @@ export class AppComponent implements OnInit, OnDestroy {
 
   constructor(
     private layerStateService: LayerStateService,
+    private selectionStateService: SelectionStateService,
     private canvasResizeService: CanvasResizeService) { }
 
   ngOnInit() {
     // Register global key events.
     $(window).on('keydown', event => {
-      if (event.metaKey && event.keyCode === 'Z'.charCodeAt(0)) {
+      if (document.activeElement.matches('input')) {
+        return true;
+      }
+      if (event.keyCode === 8 || event.keyCode === 46) {
+        // In case there's a JS error, never navigate away.
+        event.preventDefault();
+        // this.deleteSelectedSplitPoints();
+      } else if (event.metaKey && event.keyCode === 'Z'.charCodeAt(0)) {
         // Undo/redo (Z key).
         // TODO: implement an undo service to keep track of undo/redo state.
         console.log(event.shiftKey ? 'redo' : 'undo');
@@ -94,6 +103,26 @@ export class AppComponent implements OnInit, OnDestroy {
       this.initDebugMode();
     }
   }
+
+  // TODO: not ready yet... but it's a start
+  // private deleteSelectedSplitPoints() {
+  //   const selections = this.selectionStateService.getSelections();
+  //   for (const selection of selections) {
+  //     const editorType = selection.source;
+  //     const {pathId, subIdx, cmdIdx} = selection.commandId;
+  //     const vectorLayer = this.layerStateService.getData(editorType);
+  //     if (!vectorLayer) {
+  //       continue;
+  //     }
+  //     const pathLayer = vectorLayer.findLayerById(pathId) as PathLayer;
+  //     if (!pathLayer.pathData.subPathCommands[subIdx].commands[cmdIdx].isSplit) {
+  //       continue;
+  //     }
+  //     pathLayer.pathData = pathLayer.pathData.unsplit(subIdx, cmdIdx);
+  //     this.layerStateService.notifyChange(editorType);
+  //   }
+  //   this.selectionStateService.clear();
+  // }
 
   ngOnDestroy() {
     ELEMENT_RESIZE_DETECTOR.removeAllListeners(this.canvasContainer.get(0));

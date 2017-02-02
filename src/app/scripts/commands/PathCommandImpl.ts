@@ -346,6 +346,14 @@ class PathCommandImpl implements PathCommand {
   }
 
   // Implements the PathCommand interface.
+  splitBatch(ops: Array<{ subIdx: number, cmdIdx: number, ts: number[] }>) {
+    if (!ops.length) {
+      return this;
+    }
+    throw new Error('Operation not yet supported');
+  }
+
+  // Implements the PathCommand interface.
   splitInHalf(subIdx: number, cmdIdx: number) {
     const { targetCw, cwIdx, splitIdx } =
       this.findCommandWrapper(subIdx, cmdIdx);
@@ -404,6 +412,14 @@ class PathCommandImpl implements PathCommand {
       commandWrappers_: this.replaceCommandWrapper(subIdx, cwIdx, newCw),
       shiftOffsets_,
     });
+  }
+
+  // Implements the PathCommand interface.
+  unsplitBatch(ops: Array<{ subIdx: number, cmdIdx: number }>) {
+    if (!ops.length) {
+      return this;
+    }
+    throw new Error('Operation not yet supported');
   }
 
   // Implements the PathCommand interface.

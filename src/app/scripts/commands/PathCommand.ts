@@ -64,6 +64,12 @@ export interface PathCommand {
   split(subIdx: number, cmdIdx: number, ...ts: number[]): PathCommand;
 
   /**
+   * Splits the command at the specified indices.
+   * Returns a new path command object.
+   */
+  splitBatch(ops: Array<{subIdx: number, cmdIdx: number, ts: number[]}>): PathCommand;
+
+  /**
    * Splits the command at the specified index in half.
    */
   splitInHalf(subIdx: number, cmdIdx: number): PathCommand;
@@ -73,6 +79,12 @@ export interface PathCommand {
    * Returns a new path command object.
    */
   unsplit(subIdx: number, cmdIdx: number): PathCommand;
+
+  /**
+  * Un-splits the command at the specified incides.
+  * Returns a new path command object.
+  */
+  unsplitBatch(ops: Array<{subIdx: number, cmdIdx: number}>): PathCommand;
 
   /**
    * Convert the command at the specified index.
