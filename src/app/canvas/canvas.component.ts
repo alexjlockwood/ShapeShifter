@@ -20,7 +20,7 @@ import { CanvasResizeService } from '../services/canvasresize.service';
 
 // TODO: make these viewport/density-independent
 const MIN_SNAP_THRESHOLD = 1.5;
-const TOUCH_SLOP = 1;
+const DRAG_TRIGGER_TOUCH_SLOP = 1;
 
 // Canvas margin in pixels.
 const CANVAS_MARGIN = 36;
@@ -42,17 +42,11 @@ export class CanvasComponent implements OnInit, OnDestroy {
   private cssScale: number;
   private attrScale: number;
   private isViewInit: boolean;
-  private subscriptions: Subscription[] = [];
+  private readonly subscriptions: Subscription[] = [];
   private pathPointRadius: number;
   private splitPathPointRadius: number;
   private currentHover: Hover;
-
-  // If present, the user is in the process of moving a point.
-  private activeDragPointId: CommandId;
-  // Represents the actively dragged point's closest projection onto a path.
-  private activeProjectionOntoPath: ProjectionOntoPath;
-  // Represents the mouse location of the actively dragged point.
-  private activeDragPointLocation: Point;
+  private pointSelector: PointSelector;
 
   constructor(
     private elementRef: ElementRef,
@@ -370,6 +364,12 @@ export class CanvasComponent implements OnInit, OnDestroy {
 
       // Build a list containing all necessary information needed in
       // order to draw the labeled points.
+      const activelyDraggedPointId =
+        this.pointSelector
+          && this.pointSelector.isDragging()
+          && this.pointSelector.isSelectedPointSplit
+          ? this.pointSelector.selectedPointId
+          : undefined;
       const pathDataPointInfos =
         _.chain(pathCommand.subPathCommands)
           .map((subCmd: SubPathCommand, subIdx: number) => {
@@ -380,7 +380,7 @@ export class CanvasComponent implements OnInit, OnDestroy {
               const isHover =
                 currentHover && _.isMatch(currentHover.commandId, commandId);
               const isDrag =
-                this.activeDragPointId && _.isMatch(this.activeDragPointId, commandId);
+                activelyDraggedPointId && _.isMatch(activelyDraggedPointId, commandId);
               const point = MathUtil.transformPoint(_.last(cmd.points), ...transforms);
               return { commandId, isSplit, isMove, isHover, isDrag, point };
             });
@@ -442,23 +442,29 @@ export class CanvasComponent implements OnInit, OnDestroy {
 
   // Draw any actively dragged points along the path.
   private drawDraggingPoints(ctx: CanvasRenderingContext2D) {
-    if (!this.activeProjectionOntoPath) {
+    if (!this.pointSelector
+      || !this.pointSelector.isActive()
+      || !this.pointSelector.isDragging()) {
       return;
     }
+    const activelyDraggedPointId = this.pointSelector.selectedPointId;
+    const projectionOntoPath =
+      this.calculateProjectionOntoPath(
+        this.pointSelector.getLastKnownLocation(), activelyDraggedPointId.pathId);
     const startingTransforms =
       [new Matrix(this.attrScale, 0, 0, this.attrScale, 0, 0)];
     this.vectorLayer.walk((layer, transforms) => {
-      if (layer.id !== this.activeProjectionOntoPath.pathId) {
+      if (layer.id !== activelyDraggedPointId.pathId) {
         return;
       }
       transforms.reverse();
       ctx.save();
-      const projection = this.activeProjectionOntoPath.projection;
+      const projection = projectionOntoPath.projection;
       let point;
       if (projection.d < MIN_SNAP_THRESHOLD) {
         point = new Point(projection.x, projection.y);
       } else {
-        point = this.activeDragPointLocation;
+        point = this.pointSelector.getLastKnownLocation();
       }
       point = MathUtil.transformPoint(point, ...transforms);
       this.drawLabeledPoint(
@@ -522,12 +528,21 @@ export class CanvasComponent implements OnInit, OnDestroy {
       return;
     }
     const mouseDown = this.mouseEventToPoint(event);
-    this.activeDragPointId = this.findPathPointId(mouseDown);
-    if (this.activeDragPointId) {
-      this.activeProjectionOntoPath =
-        this.calculateProjectionOntoPath(mouseDown, this.activeDragPointId.pathId);
-      this.activeDragPointLocation = mouseDown;
-      this.draw();
+    const selectedPointId = this.findPathPointId(mouseDown);
+    if (selectedPointId) {
+      // A mouse down event ocurred on top of a point. Create a point selector
+      // and track that sh!at.
+      const selectedCmd =
+        (this.vectorLayer.findLayerById(selectedPointId.pathId) as PathLayer)
+          .pathData
+          .subPathCommands[selectedPointId.subIdx]
+          .commands[selectedPointId.cmdIdx];
+      this.pointSelector =
+        new PointSelector(mouseDown, selectedPointId, selectedCmd.isSplit);
+    } else {
+      // If the mouse down event didn't occur on top of a point, then
+      // clear any existing selections.
+      this.selectionStateService.clear();
     }
   }
 
@@ -536,17 +551,24 @@ export class CanvasComponent implements OnInit, OnDestroy {
       // The user never interacts with the preview canvas.
       return;
     }
-
     const mouseMove = this.mouseEventToPoint(event);
-    if (this.activeDragPointId) {
-      this.activeProjectionOntoPath =
-        this.calculateProjectionOntoPath(mouseMove, this.activeDragPointId.pathId);
-      this.activeDragPointLocation = mouseMove;
-      this.draw();
+
+    let isDraggingSplitPoint = false;
+    if (this.pointSelector) {
+      this.pointSelector.onMouseMove(mouseMove);
+      isDraggingSplitPoint =
+        this.pointSelector.isSelectedPointSplit && this.pointSelector.isDragging();
+      if (isDraggingSplitPoint) {
+        this.draw();
+      }
+    }
+
+    if (isDraggingSplitPoint) {
+      // Don't draw hover events if we are dragging.
       return;
     }
 
-    const hoverPointId = this.findPathPointId(mouseMove, false);
+    const hoverPointId = this.findPathPointId(mouseMove);
     if (hoverPointId) {
       this.hoverStateService.setHover({
         type: HoverType.Command,
@@ -563,32 +585,40 @@ export class CanvasComponent implements OnInit, OnDestroy {
       // The user never interacts with the preview canvas.
       return;
     }
-    if (this.activeDragPointId) {
-      const activeLayer =
-        this.vectorLayer.findLayerById(this.activeDragPointId.pathId) as PathLayer;
+    if (this.pointSelector) {
+      const mouseUp = this.mouseEventToPoint(event);
+      this.pointSelector.onMouseUp(mouseUp);
 
-      // Delete the old drag point from the path.
-      activeLayer.pathData =
-        activeLayer.pathData.unsplit(
-          this.activeDragPointId.subIdx, this.activeDragPointId.cmdIdx);
+      const selectedPointId = this.pointSelector.selectedPointId;
+      if (this.pointSelector.isSelectedPointSplit
+        && this.pointSelector.isDragging()) {
+        const activeLayer =
+          this.vectorLayer.findLayerById(selectedPointId.pathId) as PathLayer;
 
-      // Recalculate the projection in case the unsplit operation shuffled
-      // the path indices.
-      this.activeProjectionOntoPath =
-        this.calculateProjectionOntoPath(
-          this.mouseEventToPoint(event), this.activeDragPointId.pathId);
+        // Delete the old drag point from the path.
+        activeLayer.pathData =
+          activeLayer.pathData.unsplit(
+            selectedPointId.subIdx, selectedPointId.cmdIdx);
 
-      // Re-split the path at the projection point.
-      activeLayer.pathData = this.activeProjectionOntoPath.split();
+        // Re-split the path at the projection point.
+        activeLayer.pathData =
+          this.calculateProjectionOntoPath(
+            mouseUp, selectedPointId.pathId).split();
 
-      // Notify the global layer state service about the change and draw.
-      this.layerStateService.setData(this.editorType, this.vectorLayer);
-      this.activeDragPointId = undefined;
-      this.activeProjectionOntoPath = undefined;
-      this.activeDragPointLocation = undefined;
+        // Notify the global layer state service about the change and draw.
+        this.layerStateService.setData(this.editorType, this.vectorLayer);
+      } else {
+        // If we haven't started dragging a split point, then we should select
+        // the point instead.
+        this.selectionStateService.toggle({
+          source: this.editorType,
+          commandId: selectedPointId,
+        }, event.shiftKey || event.metaKey);
+      }
 
-      // TODO: will calling 'setData' make this draw() call unnecessary?
+      // Draw and complete the gesture.
       this.draw();
+      this.pointSelector = undefined;
     }
   }
 
@@ -597,10 +627,8 @@ export class CanvasComponent implements OnInit, OnDestroy {
       // The user never interacts with the preview canvas.
       return;
     }
-    if (this.activeDragPointId) {
-      this.activeDragPointId = undefined;
-      this.activeProjectionOntoPath = undefined;
-      this.activeDragPointLocation = undefined;
+    if (this.pointSelector) {
+      this.pointSelector.onMouseLeave(this.mouseEventToPoint(event));
       this.draw();
     }
   }
@@ -609,10 +637,7 @@ export class CanvasComponent implements OnInit, OnDestroy {
    * Finds the path point closest to the specified mouse point, with a max
    * distance specified by radius. By default, non-split path points are ignored.
    */
-  private findPathPointId(
-    mousePoint: Point,
-    splitOnly = true): CommandId | undefined {
-
+  private findPathPointId(mousePoint: Point): CommandId | undefined {
     const minPathPoints = [];
     this.vectorLayer.walk((layer, transforms) => {
       if (!(layer instanceof PathLayer)) {
@@ -630,8 +655,7 @@ export class CanvasComponent implements OnInit, OnDestroy {
                 const distance = MathUtil.distance(cmd.end, transformedMousePoint);
                 const isSplit = cmd.isSplit;
                 return { pathId, subIdx, cmdIdx, distance, isSplit };
-              })
-              .filter(cmdInfo => !splitOnly || cmdInfo.isSplit);
+              });
           })
           .flatMap(pathPoints => pathPoints)
           // TODO: confirm that using the attrScale here is correct...?
@@ -794,4 +818,49 @@ interface ProjectionOntoPath {
   pathId: string;
   projection: Projection;
   split: () => PathCommand;
+}
+
+/**
+ * Helper class that tracks information about a user's mouse gesture.
+ */
+class PointSelector {
+  private lastKnownLocation: Point;
+  private isDragTriggered = false;
+  private isGestureActive = true;
+
+  constructor(
+    public readonly mouseDown: Point,
+    public readonly selectedPointId: CommandId,
+    public readonly isSelectedPointSplit: boolean) {
+    this.lastKnownLocation = mouseDown;
+  }
+
+  onMouseMove(mouseMove: Point) {
+    this.lastKnownLocation = mouseMove;
+    const distance = MathUtil.distance(this.mouseDown, mouseMove);
+    if (DRAG_TRIGGER_TOUCH_SLOP < distance) {
+      this.isDragTriggered = true;
+    }
+  }
+
+  onMouseUp(mouseUp: Point) {
+    this.lastKnownLocation = mouseUp;
+    this.isGestureActive = false;
+  }
+
+  onMouseLeave(mouseLeave: Point) {
+    this.lastKnownLocation = mouseLeave;
+  }
+
+  isDragging() {
+    return this.isDragTriggered;
+  }
+
+  isActive() {
+    return this.isGestureActive;
+  }
+
+  getLastKnownLocation() {
+    return this.lastKnownLocation;
+  }
 }

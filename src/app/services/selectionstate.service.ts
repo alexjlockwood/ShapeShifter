@@ -10,12 +10,13 @@ import { EditorType } from '../EditorType';
 
 /**
  * A simple service that broadcasts selection events to all parts of the application.
+ * TODO: clear selections in an onBlur callback somehow...
  */
 @Injectable()
 export class SelectionStateService {
   private readonly source = new BehaviorSubject<Selection[]>([]);
   readonly stream = this.source.asObservable();
-  private readonly selections: Selection[] = [];
+  private selections: Selection[] = [];
 
   getSelections() {
     return this.selections;
@@ -34,6 +35,14 @@ export class SelectionStateService {
     if (!appendToList) {
       _.remove(this.selections, sel => !_.isEqual(selection, sel));
     }
+    this.source.next(this.selections);
+  }
+
+  /**
+   * Clears the current list of selections.
+   */
+  clear() {
+    this.selections = [];
     this.source.next(this.selections);
   }
 }
