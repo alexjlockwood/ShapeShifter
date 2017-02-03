@@ -1,6 +1,6 @@
 import { browser, element, by } from 'protractor';
 
-export class MorpherPage {
+export class ShapeShifterPage {
   navigateTo() {
     return browser.get('/');
   }

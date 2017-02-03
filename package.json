@@ -44,6 +44,7 @@
     "zone.js": "^0.7.2"
   },
   "devDependencies": {
+    "@angular/cli": "1.0.0-beta.30",
     "@angular/compiler-cli": "^2.3.1",
     "@types/es6-promise": "0.0.32",
     "@types/hammerjs": "^2.0.34",
@@ -52,7 +53,6 @@
     "@types/lodash": "^4.14.48",
     "@types/node": "^7.0.0",
     "@types/tinycolor2": "^1.1.0",
-    "angular-cli": "1.0.0-beta.26",
     "codelyzer": "~2.0.0-beta.1",
     "concurrently": "^3.1.0",
     "jasmine-core": "2.5.2",

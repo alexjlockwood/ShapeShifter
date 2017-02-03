@@ -20,7 +20,6 @@ import { HoverStateService, Type as HoverType, Hover } from '../services/hoverst
 import { CanvasResizeService } from '../services/canvasresize.service';
 import { CanvasRulerDirective } from './ruler.directive';
 
-
 // TODO: make these viewport/density-independent
 const MIN_SNAP_THRESHOLD = 1.5;
 const DRAG_TRIGGER_TOUCH_SLOP = 1;
@@ -656,7 +655,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
               });
           })
           .flatMap(pathPoints => pathPoints)
-          // TODO: confirm that using the attrScale here is correct...?
           .filter(pathPoint => {
             const radius =
               pathPoint.isSplit ? this.splitPathPointRadius : this.pathPointRadius;
@@ -728,7 +726,9 @@ function executePathData(
   isDrawingSelection?: boolean) {
 
   const commands =
-    _.flatMap(layer.pathData.subPathCommands, s => s.commands as Command[]);
+    _.flatMap(
+      layer.pathData.subPathCommands,
+      subCmd => subCmd.commands as Command[]);
   executeCommands(commands, ctx, transforms, isDrawingSelection);
 }
 
@@ -780,30 +780,30 @@ function executeArcCommand(
   ctx: CanvasRenderingContext2D,
   arcArgs: ReadonlyArray<number>) {
 
-  const [currentPointX, currentPointY,
+  const [
+    startX, startY,
     rx, ry, xAxisRotation,
     largeArcFlag, sweepFlag,
-    tempPoint1X, tempPoint1Y] = arcArgs;
+    endX, endY
+  ] = arcArgs;
 
-  if (currentPointX === tempPoint1X && currentPointY === tempPoint1Y) {
+  if (startX === endX && startY === endY) {
     // Degenerate to point.
     return;
   }
 
   if (rx === 0 || ry === 0) {
     // Degenerate to line.
-    ctx.lineTo(tempPoint1X, tempPoint1Y);
+    ctx.lineTo(endX, endY);
     return;
   }
 
   // Approximate the arc as one or more bezier curves.
   const bezierCoords = SvgUtil.arcToBeziers({
-    startX: currentPointX,
-    startY: currentPointY,
+    startX, startY,
     rx, ry, xAxisRotation,
     largeArcFlag, sweepFlag,
-    endX: tempPoint1X,
-    endY: tempPoint1Y,
+    endX, endY,
   });
 
   for (let i = 0; i < bezierCoords.length; i += 8) {
