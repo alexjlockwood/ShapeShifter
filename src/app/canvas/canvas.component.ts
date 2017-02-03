@@ -368,6 +368,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       const activelyDraggedPointId =
         this.pointSelector
           && this.pointSelector.isDragging()
+          && this.pointSelector.isActive()
           && this.pointSelector.isSelectedPointSplit
           ? this.pointSelector.selectedPointId
           : undefined;
@@ -563,7 +564,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       isDraggingSplitPoint =
         this.pointSelector.isSelectedPointSplit && this.pointSelector.isDragging();
       if (isDraggingSplitPoint) {
-        this.hoverStateService.clearHover();
         this.draw();
       }
     }
@@ -647,7 +647,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
    */
   private findPathPointId(mousePoint: Point): CommandId | undefined {
     // TODO: prefer finding split points (or modifiable points in general) over others?
-    // TODO: i.e. impossible to move a split point directly on top of the first move command
+    // TODO: i.e. consider a split point directly on top of the first move command
     const minPathPoints = [];
     this.vectorLayer.walk((layer, transforms) => {
       if (!(layer instanceof PathLayer)) {
