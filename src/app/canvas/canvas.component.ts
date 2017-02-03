@@ -339,6 +339,9 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
 
     const currentHover = this.currentHover;
+    const currentSelections =
+      this.selectionStateService.getSelections()
+        .filter(s => s.source === this.editorType);
     this.vectorLayer.walk((layer, transforms) => {
       if (!(layer instanceof PathLayer)) {
         return;
@@ -375,12 +378,13 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
               const commandId = { pathId, subIdx, cmdIdx } as CommandId;
               const isSplit = cmd.isSplit;
               const isMove = cmd.svgChar === 'M';
-              const isHover =
-                currentHover && _.isMatch(currentHover.commandId, commandId);
+              const isHoverOrSelection =
+                currentHover && _.isMatch(currentHover.commandId, commandId)
+                || currentSelections.some(sel => _.isMatch(sel.commandId, commandId));
               const isDrag =
                 activelyDraggedPointId && _.isMatch(activelyDraggedPointId, commandId);
               const point = MathUtil.transformPoint(_.last(cmd.points), ...transforms);
-              return { commandId, isSplit, isMove, isHover, isDrag, point };
+              return { commandId, isSplit, isMove, isHoverOrSelection, isDrag, point };
             });
           })
           .flatMap(pointInfos => pointInfos)
@@ -390,15 +394,15 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           .filter(pointInfo => !pointInfo.isDrag)
           .value();
 
-      const hoverPoints = [];
+      const hoverSelectionPoints = [];
       const splitPoints = [];
       const movePoints = [];
       const normalPoints = [];
 
       for (const pointInfo of pathDataPointInfos) {
         let pointList;
-        if (pointInfo.isHover) {
-          pointList = hoverPoints;
+        if (pointInfo.isHoverOrSelection) {
+          pointList = hoverSelectionPoints;
         } else if (pointInfo.isSplit) {
           pointList = splitPoints;
         } else if (pointInfo.isMove) {
@@ -410,7 +414,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       }
 
       const drawnPoints =
-        [].concat(normalPoints, movePoints, splitPoints, hoverPoints);
+        [].concat(normalPoints, movePoints, splitPoints, hoverSelectionPoints);
 
       for (const pointInfo of drawnPoints) {
         let color, radius;
@@ -424,7 +428,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           color = ColorUtil.NORMAL_POINT_COLOR;
           radius = this.pathPointRadius;
         }
-        if (pointInfo.isHover) {
+        if (pointInfo.isHoverOrSelection) {
           // TODO: update this number to something more reasonable?
           radius = this.pathPointRadius * 1.25;
         }
@@ -472,6 +476,11 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     text?: string) {
 
     ctx.save();
+    ctx.beginPath();
+    ctx.arc(point.x, point.y, radius * 1.075, 0, 2 * Math.PI, false);
+    ctx.fillStyle = '#000';
+    ctx.fill();
+
     ctx.beginPath();
     ctx.arc(point.x, point.y, radius, 0, 2 * Math.PI, false);
     ctx.fillStyle = color;
@@ -554,6 +563,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       isDraggingSplitPoint =
         this.pointSelector.isSelectedPointSplit && this.pointSelector.isDragging();
       if (isDraggingSplitPoint) {
+        this.hoverStateService.clearHover();
         this.draw();
       }
     }
@@ -636,6 +646,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
    * distance specified by radius. By default, non-split path points are ignored.
    */
   private findPathPointId(mousePoint: Point): CommandId | undefined {
+    // TODO: prefer finding split points (or modifiable points in general) over others?
+    // TODO: i.e. impossible to move a split point directly on top of the first move command
     const minPathPoints = [];
     this.vectorLayer.walk((layer, transforms) => {
       if (!(layer instanceof PathLayer)) {

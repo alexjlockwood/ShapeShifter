@@ -4,7 +4,6 @@
   [class.hovering]="isHovering"
   fxLayout="row"
   fxLayoutAlign="start center"
-  fxFlex
   (click)="onCommandClick($event)"
   (mouseenter)="onCommandHoverEvent(true)"
   (mouseleave)="onCommandHoverEvent(false)">
@@ -15,7 +14,6 @@
     mdTooltipPosition="above"
     md-theme="dark"
     *ngIf="isConvertable()"
-    fxLayoutAlign="center center"
     (click)="onConvertButtonClick($event)">
     <md-icon class="md-24">build</md-icon>
   </button>
@@ -23,7 +21,6 @@
     mdTooltip="Delete"
     mdTooltipPosition="above"
     md-theme="dark"
-    fxLayoutAlign="center center"
     *ngIf="isUnsplittable()"
     (mouseenter)="onUnsplitHoverEvent(true)"
     (mouseleave)="onUnsplitHoverEvent(false)"
@@ -35,7 +32,6 @@
     mdTooltipPosition="above"
     md-theme="dark"
     *ngIf="isSplittable()"
-    fxLayoutAlign="center center"
     (mouseenter)="onSplitHoverEvent(true)"
     (mouseleave)="onSplitHoverEvent(false)"
     (click)="onSplitButtonClick($event)">

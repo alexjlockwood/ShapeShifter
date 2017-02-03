@@ -135,8 +135,8 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
       return `${c.svgChar}`;
     } else {
       const p = _.last(c.points);
-      const x = _.round(p.x, 3);
-      const y = _.round(p.y, 3);
+      const x = _.round(p.x, 2);
+      const y = _.round(p.y, 2);
       return `${c.svgChar} ${x}, ${y}`;
     }
   }

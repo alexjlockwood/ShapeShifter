@@ -43,6 +43,11 @@ export class TimelineComponent implements OnInit {
     this.isMorphable =
       this.layerStateService.getLayer(EditorType.Start)
         .isMorphableWith(this.layerStateService.getLayer(EditorType.End));
+    if (this.isMorphable) {
+      this.timelineService.startAutoAnimate();
+    } else {
+      this.timelineService.stopAutoAnimate();
+    }
   }
 
   get shouldLabelPoints() {
