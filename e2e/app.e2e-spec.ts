@@ -1,10 +1,10 @@
-import { MorpherPage } from './app.po';
+import { ShapeShifterPage } from './app.po';
 
 describe('morpher App', function() {
-  let page: MorpherPage;
+  let page: ShapeShifterPage;
 
   beforeEach(() => {
-    page = new MorpherPage();
+    page = new ShapeShifterPage();
   });
 
   it('should display message saying app works', () => {
