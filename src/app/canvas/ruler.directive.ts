@@ -9,8 +9,8 @@ import { Point } from '../scripts/common';
 import * as $ from 'jquery';
 import { Subscription } from 'rxjs/Subscription';
 import { VectorLayer } from '../scripts/layers';
+import { CANVAS_MARGIN } from './canvas.component';
 
-const CANVAS_MARGIN = 36;
 const RULER_SIZE = 32;
 const EXTRA_PADDING = 12;
 const GRID_INTERVALS_PX = [1, 2, 4, 8, 16, 24, 48, 100, 100, 250];
@@ -26,10 +26,9 @@ export class CanvasRulerDirective implements OnInit, OnDestroy {
   private canvas: JQuery;
   private mousePoint: Point;
   private readonly subscriptions: Subscription[] = [];
-  private vlWidth = 0;
-  private vlHeight = 0;
-  private width = 0;
-  private height = 0;
+  private vlWidth = 1;
+  private vlHeight = 1;
+  private componentSize = 1;
 
   constructor(
     private elementRef: ElementRef,
@@ -56,13 +55,11 @@ export class CanvasRulerDirective implements OnInit, OnDestroy {
         }));
     this.subscriptions.push(
       this.canvasResizeService.addListener(size => {
-        const newWidth = size.width;
-        const newHeight = size.height;
-        const didSizeChange =
-          this.width !== newWidth || this.height !== newHeight;
-        if (didSizeChange) {
-          this.width = newWidth;
-          this.height = newHeight;
+        const width = size.width - CANVAS_MARGIN * 2;
+        const height = size.height - CANVAS_MARGIN * 2;
+        const containerSize = Math.min(width, height);
+        if (this.componentSize !== containerSize) {
+          this.componentSize = containerSize;
           this.draw();
         }
       }));
@@ -89,8 +86,25 @@ export class CanvasRulerDirective implements OnInit, OnDestroy {
   // TODO: ruler doesn't align right for 800x600 viewport in a small window
   draw() {
     const isHorizontal = this.orientation === 'horizontal';
-    const width = this.canvas.width();
-    const height = this.canvas.height();
+    const containerWidth = Math.max(1, this.componentSize);
+    const containerHeight = Math.max(1, this.componentSize);
+    const vectorAspectRatio = this.vlWidth / this.vlHeight;
+
+    // The 'cssScale' represents the number of CSS pixels per SVG viewport pixel.
+    let cssScale;
+    if (vectorAspectRatio > 1) {
+      cssScale = containerWidth / this.vlWidth;
+    } else {
+      cssScale = containerHeight / this.vlHeight;
+    }
+
+    // The 'attrScale' represents the number of physical pixels per SVG viewport pixel.
+    const attrScale = cssScale * devicePixelRatio;
+
+    const cssWidth = this.vlWidth * cssScale;
+    const cssHeight = this.vlHeight * cssScale;
+    const width = isHorizontal ? cssWidth + EXTRA_PADDING * 2 : RULER_SIZE;
+    const height = isHorizontal ? RULER_SIZE : cssHeight + EXTRA_PADDING * 2;
     this.canvas.attr('width', width * window.devicePixelRatio);
     this.canvas.attr('height', height * window.devicePixelRatio);
 

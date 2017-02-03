@@ -350,7 +350,18 @@ class PathCommandImpl implements PathCommand {
     if (!ops.length) {
       return this;
     }
-    throw new Error('Operation not yet supported');
+    ops = ops.slice();
+    ops.sort(({subIdx: s1, cmdIdx: c1}, {subIdx: s2, cmdIdx: c2}) => {
+      // Perform higher index splits first so that we don't alter the
+      // indices of the lower index unsplit operations.
+      return s1 !== s2 ? s2 - s1 : c2 - c1;
+    });
+    let result: PathCommand = this;
+    for (const {subIdx, cmdIdx, ts} of ops) {
+      // TODO: do all operations as a single batch instead of individually
+      result = result.split(subIdx, cmdIdx, ...ts);
+    }
+    return result;
   }
 
   // Implements the PathCommand interface.
@@ -434,13 +445,30 @@ class PathCommandImpl implements PathCommand {
   }
 
   // Implements the PathCommand interface.
-  convert(subIdx: number, cmdIdx: number, svgChar: SvgChar): PathCommand {
+  convert(subIdx: number, cmdIdx: number, svgChar: SvgChar) {
     const { targetCw, cwIdx, splitIdx } =
       this.findCommandWrapper(subIdx, cmdIdx);
     const newCw = targetCw.convertAtIndex(splitIdx, svgChar);
     return this.clone({
       commandWrappers_: this.replaceCommandWrapper(subIdx, cwIdx, newCw),
     });
+  }
+
+  // Implements the PathCommand interface.
+  convertBatch(ops: Array<{ subIdx: number, cmdIdx: number, svgChar: SvgChar }>) {
+    if (!ops.length) {
+      return this;
+    }
+    throw new Error('Operation not yet supported');
+  }
+
+  // Implements the PathCommand interface.
+  revert(): PathCommand {
+    return new PathCommandImpl(
+      _.chain(this.commandWrappers_)
+      .flatMap(cws => cws)
+      .map(cw => cw.backingCommand)
+      .value());
   }
 
   private findCommandWrapper(subIdx: number, cmdIdx: number) {
@@ -479,7 +507,7 @@ class PathCommandImpl implements PathCommand {
  */
 class CommandWrapper {
 
-  private readonly backingCommand: CommandImpl;
+  readonly backingCommand: CommandImpl;
   private readonly pathHelper: PathHelper;
 
   // A command wrapper wraps around the initial SVG command and outputs

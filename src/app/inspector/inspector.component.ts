@@ -62,7 +62,7 @@ export class InspectorComponent implements OnInit, OnDestroy {
             const targetVl = this.layerStateService.getLayer(targetEditorType);
             const fromPathLayer = pathLayer;
             const toPathLayer = targetVl.findLayerById(pathId) as PathLayer;
-            const autoFixResult = AutoAwesome.fix(subIdx, fromPathLayer.pathData, toPathLayer.pathData);
+            const autoFixResult = AutoAwesome.fixAll(subIdx, fromPathLayer.pathData, toPathLayer.pathData);
             fromPathLayer.pathData = autoFixResult.from;
             toPathLayer.pathData = autoFixResult.to;
             this.layerStateService.notifyChange(EditorType.Start);

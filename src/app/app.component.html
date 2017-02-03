@@ -52,7 +52,6 @@
     #inspectorContainer
     class="inspector-container"
     fxLayout="column">
-    <!-- TODO: the splitter shouldn't be scrollable -->
     <div
       appSplitter
       class="app-splitter"
@@ -60,6 +59,7 @@
     </div>
     <div
       *ngIf="shouldDisplayStartEditor && shouldDisplayEndEditor"
+      fxFlex
       fxLayout="row"
       fxLayoutAlign="space-around">
       <app-inspector

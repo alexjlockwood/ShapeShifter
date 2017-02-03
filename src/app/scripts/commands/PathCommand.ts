@@ -92,6 +92,12 @@ export interface PathCommand {
    */
   convert(subIdx: number, cmdIdx: number, svgChar: SvgChar): PathCommand;
 
+   /**
+   * Converts the command at the specified indices.
+   * Returns a new path command object.
+   */
+  convertBatch(ops: Array<{subIdx: number, cmdIdx: number, svgChar: SvgChar}>): PathCommand;
+
   /**
    * Returns the unique id associated with the cmomand at the
    * specified index.
@@ -102,6 +108,11 @@ export interface PathCommand {
    * Returns a cloned instance of this path command.
    */
   clone(): PathCommand;
+
+  /**
+   * Returns the initial starting state of this path command.
+   */
+  revert(): PathCommand;
 }
 
 /** Represents a projection onto a path. */

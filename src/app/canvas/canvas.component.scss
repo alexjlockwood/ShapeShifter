@@ -26,14 +26,12 @@
 
   .orientation-horizontal {
     left: -12px;
-    width: calc(100% + 24px);
     top: -$rulerWidth;
     height: $rulerWidth;
   }
 
   .orientation-vertical {
     top: -12px;
-    height: calc(100% + 24px);
     left: -$rulerWidth;
     width: $rulerWidth;
   }

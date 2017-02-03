@@ -8,8 +8,13 @@ import { Command } from '../commands';
 /**
  * Takes an SVG path string (i.e. the text specified in the path's 'd' attribute) and returns
  * list of DrawCommands that represent the SVG path's individual sequence of instructions.
+ * By default, arcs are converted to bezier curves because they make life too complicated.
  */
-export function parseCommands(pathString: string, matrices?: Matrix[]): Command[] {
+export function parseCommands(
+  pathString: string,
+  matrices?: Matrix[],
+  arcToBeziers = true): Command[] {
+
   let index = 0;
   let currentPoint: Point;
   let currentToken: Token;
@@ -118,8 +123,8 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): Command[
           currentControlPoint = undefined;
           currentPoint = nextPoint;
         }
-      }
         break;
+      }
       case 'C':
       case 'c': {
         if (!currentPoint) {
@@ -135,8 +140,8 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): Command[
           currentControlPoint = cp2;
           currentPoint = end;
         }
-      }
         break;
+      }
       case 'S':
       case 's': {
         if (!currentPoint) {
@@ -159,8 +164,8 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): Command[
           currentControlPoint = cp2;
           currentPoint = end;
         }
-      }
         break;
+      }
       case 'Q':
       case 'q': {
         if (!currentPoint) {
@@ -175,8 +180,8 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): Command[
           currentControlPoint = cp;
           currentPoint = end;
         }
-      }
         break;
+      }
       case 'T':
       case 't': {
         if (!currentPoint) {
@@ -198,8 +203,8 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): Command[
           currentControlPoint = cp;
           currentPoint = end;
         }
-      }
         break;
+      }
       case 'L':
       case 'l': {
         if (!currentPoint) {
@@ -213,8 +218,8 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): Command[
           currentControlPoint = undefined;
           currentPoint = end;
         }
-      }
         break;
+      }
       case 'H':
       case 'h': {
         if (!currentPoint) {
@@ -233,8 +238,8 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): Command[
           currentControlPoint = undefined;
           currentPoint = end;
         }
-      }
         break;
+      }
       case 'V':
       case 'v': {
         if (!currentPoint) {
@@ -253,8 +258,8 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): Command[
           currentControlPoint = undefined;
           currentPoint = end;
         }
-      }
         break;
+      }
       case 'A':
       case 'a': {
         if (!currentPoint) {
@@ -269,25 +274,46 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): Command[
           const sweepFlag = consumeValue_();
           const tempPoint1 = consumePoint_(relative);
 
-          commands.push(newArc(
-            new Point(currentPoint.x, currentPoint.y),
-            rx, ry,
-            xAxisRotation, largeArcFlag, sweepFlag,
-            new Point(tempPoint1.x, tempPoint1.y)));
+          if (arcToBeziers) {
+            // Approximate the arc as one or more bezier curves.
+            const startX = currentPoint.x;
+            const startY = currentPoint.y;
+            const endX = tempPoint1.x;
+            const endY = tempPoint1.y;
+            const bezierCoords = SvgUtil.arcToBeziers({
+              startX, startY,
+              rx, ry, xAxisRotation,
+              largeArcFlag, sweepFlag,
+              endX, endY,
+            });
+            for (let i = 0; i < bezierCoords.length; i += 8) {
+              commands.push(newBezierCurve(
+                currentPoint,
+                new Point(bezierCoords[i + 2], bezierCoords[i + 3]),
+                new Point(bezierCoords[i + 4], bezierCoords[i + 5]),
+                new Point(bezierCoords[i + 6], bezierCoords[i + 7])));
+            }
+          } else {
+            commands.push(newArc(
+              new Point(currentPoint.x, currentPoint.y),
+              rx, ry,
+              xAxisRotation, largeArcFlag, sweepFlag,
+              new Point(tempPoint1.x, tempPoint1.y)));
+          }
 
           currentControlPoint = undefined;
           currentPoint = tempPoint1;
+          break;
         }
       }
-        break;
       case 'Z':
       case 'z': {
         if (!currentPoint) {
           throw new Error('Current point does not exist');
         }
         commands.push(newClosePath(currentPoint, lastMovePoint));
-      }
         break;
+      }
     }
   }
 

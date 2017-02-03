@@ -15,8 +15,10 @@ canvas.command-index {
 
 div.command-container.hovering {
   background-color: rgba(0, 0, 0, 0.1);
+  border-radius: 2px;
 }
 
 div.command-container.selected {
   background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 2px;
 }

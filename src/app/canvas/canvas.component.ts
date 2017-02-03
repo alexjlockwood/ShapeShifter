@@ -25,7 +25,7 @@ const MIN_SNAP_THRESHOLD = 1.5;
 const DRAG_TRIGGER_TOUCH_SLOP = 1;
 
 // Canvas margin in pixels.
-const CANVAS_MARGIN = 36;
+export const CANVAS_MARGIN = 36;
 
 @Component({
   selector: 'app-canvas',
@@ -150,13 +150,12 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
     const containerWidth = Math.max(1, this.componentSize);
     const containerHeight = Math.max(1, this.componentSize);
-    const containerAspectRatio = containerWidth / containerHeight;
     const vlWidth = !this.vectorLayer ? 1 : this.vectorLayer.width || 1;
     const vlHeight = !this.vectorLayer ? 1 : this.vectorLayer.height || 1;
     const vectorAspectRatio = vlWidth / vlHeight;
 
     // The 'cssScale' represents the number of CSS pixels per SVG viewport pixel.
-    if (vectorAspectRatio > containerAspectRatio) {
+    if (vectorAspectRatio > 1) {
       this.cssScale = containerWidth / vlWidth;
     } else {
       this.cssScale = containerHeight / vlHeight;

@@ -17,23 +17,6 @@ div.animation-container {
   user-select: none;
 }
 
-.canvas-container {
-  position: relative;
-
-.canvas-ruler {
-      transition: opacity $animTimeFast ease, visibility 0s linear $animTimeFast;
-      opacity: 0;
-      visibility: hidden;
-    }
-
-    &:hover .canvas-ruler {
-      transition: opacity $animTimeFast ease;
-      opacity: 1;
-      visibility: visible;
-    }
-}
-
-
 app-canvas,
 app-droptarget:first-child {
   margin-right: 32px;

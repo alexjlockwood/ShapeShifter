@@ -8,7 +8,7 @@ const MISMATCH = -1;
 const INDEL = 0;
 
 // TODO: this can still be optimized a lot... work in progress!
-export function fix(
+export function fixAll(
   subIdx: number,
   srcFromPath: PathCommand,
   srcToPath: PathCommand) {
@@ -57,16 +57,16 @@ export function fix(
   });
 
   // For each alignment, determine whether it and its neighbor is a gap.
-  interface CmdInfo { isGap: boolean; isNextGap: boolean; nextcmdIdx: number; }
+  interface CmdInfo { isGap: boolean; isNextGap: boolean; nextCmdIdx: number; }
   const processAlignmentsFn = (alignments: Alignment<Command>[]) => {
-    let nextcmdIdx = 0;
+    let nextCmdIdx = 0;
     return alignments.map((alignment, i) => {
       const isGap = !alignment.obj;
       const isNextGap = (i + 1 < alignments.length) && !alignments[i + 1].obj;
       if (!isGap) {
-        nextcmdIdx++;
+        nextCmdIdx++;
       }
-      return { isGap, isNextGap, nextcmdIdx } as CmdInfo;
+      return { isGap, isNextGap, nextCmdIdx } as CmdInfo;
     });
   };
 
@@ -94,21 +94,29 @@ export function fix(
 
   // Fill in the gaps by applying batch splits.
   const applySplitsFn = (pathCommand: PathCommand, gapGroups: CmdInfo[][]) => {
-    // TODO: perform all of these as a single batch operation?
+    const splitOps = [];
     for (let i = gapGroups.length - 1; i >= 0; i--) {
       const gapGroup = gapGroups[i];
-      const cmdIdx = _.last(gapGroup).nextcmdIdx;
+      const cmdIdx = _.last(gapGroup).nextCmdIdx;
       // TODO: is evenly positioning the split points good enough?
       const ts = gapGroup.map((_, gapIdx) => (gapIdx + 1) / (gapGroup.length + 1));
-      pathCommand = pathCommand.split(subIdx, cmdIdx, ...ts);
+      splitOps.push({subIdx, cmdIdx, ts});
     }
-    return pathCommand;
+    return pathCommand.splitBatch(splitOps);
   };
 
   const fromPathResult = applySplitsFn(alignmentInfo.generatedFromPath, fromGapGroups);
   const toPathResult = applySplitsFn(srcToPath, toGapGroups);
 
   // Finally, convert the commands before returning the result.
+  return convertAll(subIdx, fromPathResult, toPathResult);
+}
+
+export function convertAll(
+  subIdx: number,
+  srcFromPath: PathCommand,
+  srcToPath: PathCommand) {
+
   const convertDrawCmdsFn = (from: PathCommand, to: PathCommand) => {
     const fromDrawCmds = from.subPathCommands[subIdx].commands;
     const toDrawCmds = to.subPathCommands[subIdx].commands;
@@ -124,8 +132,8 @@ export function fix(
     return from;
   };
 
-  const toPathFinalResult = convertDrawCmdsFn(toPathResult, fromPathResult);
-  const fromPathFinalResult = convertDrawCmdsFn(fromPathResult, toPathFinalResult);
+  const toPathFinalResult = convertDrawCmdsFn(srcToPath, srcFromPath);
+  const fromPathFinalResult = convertDrawCmdsFn(srcFromPath, toPathFinalResult);
 
   return {
     from: fromPathFinalResult,
