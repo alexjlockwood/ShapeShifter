@@ -57,6 +57,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     // Register global key events.
+    // TODO: unregister this in ngOnDestroy
     $(window).on('keydown', event => {
       if (document.activeElement.matches('input')) {
         return true;
@@ -64,7 +65,7 @@ export class AppComponent implements OnInit, OnDestroy {
       if (event.keyCode === 8 || event.keyCode === 46) {
         // In case there's a JS error, never navigate away.
         event.preventDefault();
-        // this.deleteSelectedSplitPoints();
+        this.deleteSelectedSplitPoints();
       } else if (event.metaKey && event.keyCode === 'Z'.charCodeAt(0)) {
         // Undo/redo (Z key).
         // TODO: implement an undo service to keep track of undo/redo state.
@@ -75,6 +76,16 @@ export class AppComponent implements OnInit, OnDestroy {
         // TODO: start the currently displayed animation
         console.log('spacebar');
         // return false;
+      }
+      return undefined;
+    });
+
+    // TODO: unregister this in ngOnDestroy
+    // TODO: we should check to see if there are any dirty changes first
+    $(window).on('beforeunload', event => {
+      if (!IS_DEBUG_MODE) {
+        return 'You\'ve made changes but haven\'t saved. ' +
+               'Are you sure you want to navigate away?';
       }
       return undefined;
     });
@@ -105,25 +116,37 @@ export class AppComponent implements OnInit, OnDestroy {
     }
   }
 
-  // TODO: not ready yet... but it's a start
-  // private deleteSelectedSplitPoints() {
-  //   const selections = this.selectionStateService.getSelections();
-  //   for (const selection of selections) {
-  //     const editorType = selection.source;
-  //     const {pathId, subIdx, cmdIdx} = selection.commandId;
-  //     const vectorLayer = this.layerStateService.getData(editorType);
-  //     if (!vectorLayer) {
-  //       continue;
-  //     }
-  //     const pathLayer = vectorLayer.findLayerById(pathId) as PathLayer;
-  //     if (!pathLayer.pathData.subPathCommands[subIdx].commands[cmdIdx].isSplit) {
-  //       continue;
-  //     }
-  //     pathLayer.pathData = pathLayer.pathData.unsplit(subIdx, cmdIdx);
-  //     this.layerStateService.notifyChange(editorType);
-  //   }
-  //   this.selectionStateService.clear();
-  // }
+  private deleteSelectedSplitPoints() {
+    const selections = this.selectionStateService.getSelections();
+    if (!selections.length) {
+      return;
+    }
+    // We assume all selections belong to the same editor for now.
+    const editorType = selections[0].source;
+    const unsplitOpsMap: Map<PathLayer, Array<{ subIdx: number, cmdIdx: number }>> = new Map();
+    for (const selection of selections) {
+      const {pathId, subIdx, cmdIdx} = selection.commandId;
+      const vectorLayer = this.layerStateService.getLayer(editorType);
+      if (!vectorLayer) {
+        continue;
+      }
+      const pathLayer = vectorLayer.findLayerById(pathId) as PathLayer;
+      if (!pathLayer.pathData.subPathCommands[subIdx].commands[cmdIdx].isSplit) {
+        continue;
+      }
+      let unsplitOpsForPath = unsplitOpsMap.get(pathLayer);
+      if (!unsplitOpsForPath) {
+        unsplitOpsForPath = [];
+      }
+      unsplitOpsForPath.push({ subIdx, cmdIdx });
+      unsplitOpsMap.set(pathLayer, unsplitOpsForPath);
+    }
+    unsplitOpsMap.forEach((unsplitOps, pathLayer, map) => {
+      pathLayer.pathData = pathLayer.pathData.unsplitBatch(unsplitOps);
+    });
+    this.selectionStateService.clear();
+    this.layerStateService.notifyChange(editorType);
+  }
 
   ngOnDestroy() {
     ELEMENT_RESIZE_DETECTOR.removeAllListeners(this.canvasContainer.get(0));

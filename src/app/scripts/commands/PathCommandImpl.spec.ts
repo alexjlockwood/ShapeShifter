@@ -97,4 +97,19 @@ describe('PathCommand', () => {
         + 'L 18 4 L 16 4 L 14 4 L 12 4');
     expect(actual.pathString).toEqual(expected.pathString);
   });
+
+  it('batch unsplit', () => {
+    let actual =
+      newPathCommand('M 0 0 L 0 10 L 10 10 L 10 0 L 0 0')
+        .split(0, 2, 0.25, 0.5);
+    let expected =
+      newPathCommand('M 0 0 L 0 10 L 2.5 10 L 5 10 L 10 10 L 10 0 L 0 0');
+    expect(actual.pathString).toEqual(expected.pathString);
+
+    actual = newPathCommand('M 0 0 L 0 10 L 2.5 10 L 5 10 L 10 10 L 10 0 L 0 0')
+      .unsplitBatch([{subIdx: 0, cmdIdx: 2}, {subIdx: 0, cmdIdx: 3}]);
+    expected =
+      newPathCommand('M 0 0 L 0 10 L 10 10 L 10 0 L 0 0');
+    expect(actual.pathString).toEqual(expected.pathString);
+  });
 });

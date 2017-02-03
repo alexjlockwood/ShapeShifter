@@ -419,7 +419,18 @@ class PathCommandImpl implements PathCommand {
     if (!ops.length) {
       return this;
     }
-    throw new Error('Operation not yet supported');
+    ops = ops.slice();
+    ops.sort(({subIdx: s1, cmdIdx: c1}, {subIdx: s2, cmdIdx: c2}) => {
+      // Perform higher index unsplits first so that we don't alter the
+      // indices of the lower index unsplit operations.
+      return s1 !== s2 ? s2 - s1 : c2 - c1;
+    });
+    let result: PathCommand = this;
+    for (const {subIdx, cmdIdx} of ops) {
+      // TODO: do all operations as a single batch instead of individually
+      result = result.unsplit(subIdx, cmdIdx);
+    }
+    return result;
   }
 
   // Implements the PathCommand interface.
