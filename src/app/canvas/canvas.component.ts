@@ -181,7 +181,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     });
 
     // TODO: this still doesn't work very well for small/large viewports and/or on resizing
-    this.pathPointRadius = this.attrScale;
+    this.pathPointRadius = 10 / this.cssScale;
     this.splitPathPointRadius = this.pathPointRadius * 0.8;
     this.draw();
     this.canvasRulers.forEach(r => r.draw());
@@ -291,7 +291,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       }
       ctx.restore();
     });
-    ctx.restore();
   }
 
   // Draw any selected commands.
@@ -302,8 +301,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     if (!selections.length) {
       return;
     }
-    ctx.save();
-    ctx.scale(this.attrScale, this.attrScale);
     this.vectorLayer.walk((layer, transforms) => {
       if (!(layer instanceof PathLayer)) {
         return;
@@ -321,7 +318,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         return;
       }
 
-      executeDrawCommands(selectedCmds, ctx, transforms, true);
+      executeCommands(selectedCmds, ctx, transforms, true);
 
       ctx.save();
       ctx.lineWidth = 6 / this.cssScale;
@@ -333,7 +330,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       ctx.stroke();
       ctx.restore();
     });
-    ctx.restore();
   }
 
   // Draw any labeled points.
@@ -344,8 +340,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
 
     const currentHover = this.currentHover;
-    const startingTransforms =
-      [new Matrix(this.attrScale, 0, 0, this.attrScale, 0, 0)];
     this.vectorLayer.walk((layer, transforms) => {
       if (!(layer instanceof PathLayer)) {
         return;
@@ -397,8 +391,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           .filter(pointInfo => !pointInfo.isDrag)
           .value();
 
-      ctx.save();
-
       const hoverPoints = [];
       const splitPoints = [];
       const movePoints = [];
@@ -440,9 +432,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         this.drawLabeledPoint(
           ctx, pointInfo.point, radius, color, pointInfo.position);
       }
-
-      ctx.restore();
-    }, startingTransforms);
+    });
   }
 
   // Draw any actively dragged points along the path.
@@ -457,14 +447,10 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     const projectionOntoPath =
       this.calculateProjectionOntoPath(
         this.pointSelector.getLastKnownLocation(), activelyDraggedPointId.pathId);
-    const startingTransforms =
-      [new Matrix(this.attrScale, 0, 0, this.attrScale, 0, 0)];
     this.vectorLayer.walk((layer, transforms) => {
       if (layer.id !== activelyDraggedPointId.pathId) {
         return;
       }
-      transforms.reverse();
-      ctx.save();
       const projection = projectionOntoPath.projection;
       let point;
       if (projection.d < MIN_SNAP_THRESHOLD) {
@@ -472,11 +458,10 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       } else {
         point = this.pointSelector.getLastKnownLocation();
       }
-      point = MathUtil.transformPoint(point, ...transforms);
+      point = MathUtil.transformPoint(point, ...transforms.reverse());
       this.drawLabeledPoint(
         ctx, point, this.splitPathPointRadius, ColorUtil.SPLIT_POINT_COLOR);
-      ctx.restore();
-    }, startingTransforms);
+    });
   }
 
   // Draw a single labeled point with optional text.
@@ -487,6 +472,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     color: string,
     text?: string) {
 
+    ctx.save();
     ctx.beginPath();
     ctx.arc(point.x, point.y, radius, 0, 2 * Math.PI, false);
     ctx.fillStyle = color;
@@ -502,6 +488,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       ctx.fillText(text, point.x - width / 2, point.y + height / 2);
       ctx.fill();
     }
+    ctx.restore();
   }
 
   // Draw the pixel grid.
@@ -655,10 +642,9 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       if (!(layer instanceof PathLayer)) {
         return;
       }
-      transforms.reverse();
       const pathId = layer.id;
       const transformedMousePoint =
-        MathUtil.transformPoint(mousePoint, ...transforms);
+        MathUtil.transformPoint(mousePoint, ...transforms.reverse());
       const minPathPoint =
         _.chain(layer.pathData.subPathCommands)
           .map((subCmd: SubPathCommand, subIdx: number) => {
@@ -674,7 +660,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           .filter(pathPoint => {
             const radius =
               pathPoint.isSplit ? this.splitPathPointRadius : this.pathPointRadius;
-            return pathPoint.distance <= (radius / this.attrScale);
+            return pathPoint.distance <= radius;
           })
           // Reverse so that points drawn with higher z-orders are preferred.
           .reverse()
@@ -706,8 +692,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       if (!(layer instanceof PathLayer) || pathId !== layer.id) {
         return;
       }
-      transforms.reverse();
-      const transformedPoint = MathUtil.transformPoint(mousePoint, ...transforms);
+      const transformedPoint =
+        MathUtil.transformPoint(mousePoint, ...transforms.reverse());
       const projectionInfo = layer.pathData.project(transformedPoint);
       if (!projectionInfo) {
         return;
@@ -741,58 +727,59 @@ function executePathData(
   transforms: Matrix[],
   isDrawingSelection?: boolean) {
 
-  const drawCommands =
+  const commands =
     _.flatMap(layer.pathData.subPathCommands, s => s.commands as Command[]);
-  executeDrawCommands(drawCommands, ctx, transforms, isDrawingSelection);
+  executeCommands(commands, ctx, transforms, isDrawingSelection);
 }
 
-function executeDrawCommands(
-  drawCommands: Command[],
+function executeCommands(
+  commands: Command[],
   ctx: CanvasRenderingContext2D,
   transforms: Matrix[],
   isDrawingSelection?: boolean) {
 
   ctx.save();
   transforms.forEach(m => ctx.transform(m.a, m.b, m.c, m.d, m.e, m.f));
-
   ctx.beginPath();
-  drawCommands.forEach(d => {
-    const start = d.start;
-    const end = d.end;
+  commands.forEach(cmd => {
+    const start = cmd.start;
+    const end = cmd.end;
 
     // TODO: remove this... or at least only use it for selections?
     // this probably doesn't work for close path commands too?
-    if (isDrawingSelection && d.svgChar !== 'M') {
+    if (isDrawingSelection && cmd.svgChar !== 'M') {
       ctx.moveTo(start.x, start.y);
     }
 
-    if (d.svgChar === 'M') {
+    if (cmd.svgChar === 'M') {
       ctx.moveTo(end.x, end.y);
-    } else if (d.svgChar === 'L') {
+    } else if (cmd.svgChar === 'L') {
       ctx.lineTo(end.x, end.y);
-    } else if (d.svgChar === 'Q') {
+    } else if (cmd.svgChar === 'Q') {
       ctx.quadraticCurveTo(
-        d.points[1].x, d.points[1].y,
-        d.points[2].x, d.points[2].y);
-    } else if (d.svgChar === 'C') {
+        cmd.points[1].x, cmd.points[1].y,
+        cmd.points[2].x, cmd.points[2].y);
+    } else if (cmd.svgChar === 'C') {
       ctx.bezierCurveTo(
-        d.points[1].x, d.points[1].y,
-        d.points[2].x, d.points[2].y,
-        d.points[3].x, d.points[3].y);
-    } else if (d.svgChar === 'Z') {
+        cmd.points[1].x, cmd.points[1].y,
+        cmd.points[2].x, cmd.points[2].y,
+        cmd.points[3].x, cmd.points[3].y);
+    } else if (cmd.svgChar === 'Z') {
       ctx.closePath();
-    } else if (d.svgChar === 'A') {
-      executeArcCommand(ctx, d.args);
+    } else if (cmd.svgChar === 'A') {
+      executeArcCommand(ctx, cmd.args);
     }
   });
-
   ctx.restore();
 }
 
 /**
  * Draws an elliptical arc on the specified canvas context.
  */
-function executeArcCommand(ctx: CanvasRenderingContext2D, arcArgs: ReadonlyArray<number>) {
+function executeArcCommand(
+  ctx: CanvasRenderingContext2D,
+  arcArgs: ReadonlyArray<number>) {
+
   const [currentPointX, currentPointY,
     rx, ry, xAxisRotation,
     largeArcFlag, sweepFlag,

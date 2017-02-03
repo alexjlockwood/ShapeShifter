@@ -65,10 +65,7 @@ export abstract class AbstractLayer implements Layer {
   }
 
   // Implements the Layer interface.
-  walk(
-    beforeFn: (layer: Layer, transforms?: Matrix[]) => void,
-    startingTransforms: Matrix[] = []) {
-
+  walk(beforeFn: (layer: Layer, transforms?: Matrix[]) => void) {
     const visitFn = (layer: Layer, transforms: Matrix[] = []) => {
       transforms = transforms.slice();
       if (layer instanceof GroupLayer) {
@@ -87,6 +84,6 @@ export abstract class AbstractLayer implements Layer {
         layer.children.forEach(l => visitFn(l, transforms));
       }
     };
-    visitFn(this, startingTransforms);
+    visitFn(this);
   }
 }

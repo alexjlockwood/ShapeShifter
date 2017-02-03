@@ -37,7 +37,5 @@ export interface Layer {
    * Walks the layer tree, executing beforeFunc on each node using a
    * preorder traversal.
    */
-  walk(
-    beforeFn: (layer: Layer, transforms?: Matrix[]) => void,
-    startingTransforms?: Matrix[]): void;
+  walk(beforeFn: (layer: Layer, transforms?: Matrix[]) => void): void;
 }

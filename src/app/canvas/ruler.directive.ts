@@ -80,8 +80,10 @@ export class CanvasRulerDirective implements OnInit, OnDestroy {
   }
 
   showMouse(mousePoint: Point) {
-    this.mousePoint = mousePoint;
-    this.draw();
+    if (!this.mousePoint || !this.mousePoint.equals(mousePoint)) {
+      this.mousePoint = mousePoint;
+      this.draw();
+    }
   }
 
   draw() {
