@@ -107,14 +107,19 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
 
     const ctx: CanvasRenderingContext2D =
       (this.canvas.get(0) as HTMLCanvasElement).getContext('2d');
-    const radius = this.commandIndexCanvasSize * this.dpi / 2;
+    const largerRadius = this.commandIndexCanvasSize * this.dpi / 2;
+    const radius = largerRadius * 0.925;
 
     ctx.save();
     const color = this.cmdIdx === 0
       ? ColorUtil.MOVE_POINT_COLOR : this.drawCommand.isSplit
         ? ColorUtil.SPLIT_POINT_COLOR : ColorUtil.NORMAL_POINT_COLOR;
     ctx.beginPath();
-    ctx.arc(radius, radius, radius, 0, 2 * Math.PI, false);
+    ctx.arc(largerRadius, largerRadius, largerRadius, 0, 2 * Math.PI, false);
+    ctx.fillStyle = '#000';
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(largerRadius, largerRadius, radius, 0, 2 * Math.PI, false);
     ctx.fillStyle = color;
     ctx.fill();
     ctx.beginPath();
@@ -124,7 +129,7 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
     const textWidth = ctx.measureText(text).width;
     // TODO: is there a better way to get the height?
     const textHeight = ctx.measureText('o').width;
-    ctx.fillText(text, radius - textWidth / 2, radius + textHeight / 2);
+    ctx.fillText(text, largerRadius - textWidth / 2, largerRadius + textHeight / 2);
     ctx.fill();
     ctx.restore();
   }
