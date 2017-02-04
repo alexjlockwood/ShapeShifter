@@ -1,5 +1,6 @@
 import * as XmlSerializer from './XmlSerializer';
 import { Layer, VectorLayer, PathLayer, GroupLayer, ClipPathLayer } from '../layers';
+import { AnimationTarget } from '../animation';
 
 const XMLNS_NS = 'http://www.w3.org/2000/xmlns/';
 const ANDROID_NS = 'http://schemas.android.com/apk/res/android';
@@ -18,7 +19,10 @@ export function vectorLayerToVectorDrawableXmlString(vectorLayer: VectorLayer) {
 /**
  * Serializes a given VectorLayer and Animation to an animated vector drawable XML file.
  */
-export function vectorLayerAnimationToAvdXmlString(vectorLayer, animation) {
+export function vectorLayerAnimationToAvdXmlString(
+  vectorLayer: VectorLayer,
+  animationTarget: AnimationTarget) {
+
   const xmlDoc = document.implementation.createDocument(null, 'animated-vector', null);
   const rootNode = xmlDoc.documentElement;
   rootNode.setAttributeNS(XMLNS_NS, 'xmlns:android', ANDROID_NS);
@@ -33,17 +37,10 @@ export function vectorLayerAnimationToAvdXmlString(vectorLayer, animation) {
   vectorLayerToXmlNode(vectorLayer, vectorLayerNode, xmlDoc);
   vectorLayerContainerNode.appendChild(vectorLayerNode);
 
-  // Create animation nodes (one per layer).
-  const animBlocksByLayer = {};
-  animation.blocks.forEach(block => {
-    animBlocksByLayer[block.layerId] = animBlocksByLayer[block.layerId] || [];
-    animBlocksByLayer[block.layerId].push(block);
-  });
-
-  for (const layerId in animBlocksByLayer) {
-    if (!animBlocksByLayer.hasOwnProperty(layerId)) {
-      continue;
-    }
+  // TODO: eventually support passing in multiple animation targets?
+  const animationTargets = [animationTarget];
+  for (const target of animationTargets) {
+    const layerId = target.layerId;
     const targetNode = xmlDoc.createElement('target');
     targetNode.setAttributeNS(ANDROID_NS, 'android:name', layerId);
     rootNode.appendChild(targetNode);
@@ -52,37 +49,18 @@ export function vectorLayerAnimationToAvdXmlString(vectorLayer, animation) {
     animationNode.setAttribute('name', 'android:animation');
     targetNode.appendChild(animationNode);
 
-    const blocksForLayer = animBlocksByLayer[layerId];
-    let blockContainerNode = animationNode;
-    let multiBlock = false;
-    if (blocksForLayer.length > 1) {
-      multiBlock = true;
-
-      // <set> for multiple property animations on a single layer
-      blockContainerNode = xmlDoc.createElement('set');
-      blockContainerNode.setAttributeNS(XMLNS_NS, 'xmlns:android', ANDROID_NS);
-      animationNode.appendChild(blockContainerNode);
-    }
-
     const layer = vectorLayer.findLayerById(layerId);
-    const animatableProperties = layer.animatableProperties;
-
-    blocksForLayer.forEach(block => {
-      const blockNode = xmlDoc.createElement('objectAnimator');
-      if (!multiBlock) {
-        blockNode.setAttributeNS(XMLNS_NS, 'xmlns:android', ANDROID_NS);
-      }
-      blockNode.setAttributeNS(ANDROID_NS, 'android:name', layerId);
-      blockNode.setAttributeNS(ANDROID_NS, 'android:propertyName', block.propertyName);
-      conditionalAttr(blockNode, 'android:startOffset', block.startTime, 0);
-      conditionalAttr(blockNode, 'android:duration', block.endTime - block.startTime);
-      conditionalAttr(blockNode, 'android:valueFrom', block.fromValue);
-      conditionalAttr(blockNode, 'android:valueTo', block.toValue);
-      conditionalAttr(blockNode, 'android:valueType',
-        animatableProperties[block.propertyName].animatorValueType);
-      conditionalAttr(blockNode, 'android:interpolator', block.interpolator.androidRef);
-      blockContainerNode.appendChild(blockNode);
-    });
+    const animatorNode = xmlDoc.createElement('objectAnimator');
+    animatorNode.setAttributeNS(XMLNS_NS, 'xmlns:android', ANDROID_NS);
+    animatorNode.setAttributeNS(ANDROID_NS, 'android:name', layerId);
+    animatorNode.setAttributeNS(ANDROID_NS, 'android:propertyName', target.propertyName);
+    // conditionalAttr(animatorNode, 'android:startOffset', target.startTime, 0);
+    conditionalAttr(animatorNode, 'android:duration', target.duration);
+    conditionalAttr(animatorNode, 'android:valueFrom', target.valueFrom);
+    conditionalAttr(animatorNode, 'android:valueTo', target.valueTo);
+    conditionalAttr(animatorNode, 'android:valueType', target.valueType);
+    conditionalAttr(animatorNode, 'android:interpolator', target.interpolator);
+    animationNode.appendChild(animatorNode);
   }
 
   return serializeXmlNode(rootNode);

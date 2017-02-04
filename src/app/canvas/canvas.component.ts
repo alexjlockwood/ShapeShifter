@@ -720,9 +720,10 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
    * Returns a point in the canvas' coordinate space.
    */
   private mouseEventToPoint(event: MouseEvent) {
+    // TODO: how does this.cssScale < 1 affect the rest of the canvas?
     const canvasOffset = this.canvas.offset();
-    const x = (event.pageX - canvasOffset.left) / this.cssScale;
-    const y = (event.pageY - canvasOffset.top) / this.cssScale;
+    const x = (event.pageX - canvasOffset.left) / Math.max(1, this.cssScale);
+    const y = (event.pageY - canvasOffset.top) / Math.max(1, this.cssScale);
     return new Point(x, y);
   }
 }
