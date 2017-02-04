@@ -48,34 +48,24 @@ export class CommandImpl implements Command {
   // Implements the Command interface.
   canConvertTo(targetChar: SvgChar) {
     const ch = targetChar;
-    if (this.svgChar === 'M' || ch === 'M') {
+    if (this.svgChar === 'M' || ch === 'M' || this.svgChar === ch) {
       return false;
-    }
-    if (this.svgChar === ch) {
-      return true;
     }
     switch (this.svgChar) {
       case 'L':
-        // TODO: technically it should be possible to convert L to Z
         return ch === 'Q' || ch === 'C';
       case 'Z':
         return ch === 'L' || ch === 'Q' || ch === 'C';
       case 'Q': {
-        // TODO: possible to convert to C?
-        // TODO: possible to convert to A?
         const uniquePoints = _.uniqWith(this.points, (p1, p2) => p1.equals(p2));
-        return ch === 'L' && uniquePoints.length <= 2 || ch === 'C';
+        return ch === 'C' || ch === 'L' && uniquePoints.length <= 2;
       }
       case 'C': {
-        // TODO: possible to convert to Q?
-        // TODO: possible to convert to A?
         const uniquePoints = _.uniqWith(this.points, (p1, p2) => p1.equals(p2));
         return ch === 'L' && uniquePoints.length <= 2;
       }
-      case 'A':
-        // TODO: convert to one or more cubic bezier curves
-        return ch === 'C';
     }
+    // TODO: add support for 'A' --> 'C' some day?
     return false;
   }
 

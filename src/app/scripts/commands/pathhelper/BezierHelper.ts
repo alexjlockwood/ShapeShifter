@@ -49,6 +49,21 @@ export class BezierHelper implements PathHelper {
   }
 
   convert(svgChar: SvgChar) {
+    if (this.svgChar === 'Q' && svgChar === 'C') {
+      // TODO: double check this math
+      const qcp0 = this.points[0];
+      const qcp1 = this.points[1];
+      const qcp2 = this.points[2];
+      const ccp0 = qcp0;
+      const ccp1 = new Point(
+        qcp0.x + (2 / 3) * (qcp1.x - qcp0.x),
+        qcp0.y + (2 / 3) * (qcp1.y - qcp0.y));
+      const ccp2 = new Point(
+        qcp2.x + (2 / 3) * (qcp1.x - qcp2.x),
+        qcp2.y + (2 / 3) * (qcp1.y - qcp2.y));
+      const ccp3 = qcp2;
+      return new BezierHelper(svgChar, ccp0, ccp1, ccp2, ccp3);
+    }
     return new BezierHelper(svgChar, ...this.points);
   }
 

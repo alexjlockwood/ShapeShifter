@@ -20,9 +20,9 @@ export interface PathHelper {
   toCommand(isSplit: boolean): Command;
 }
 
-// TODO: create an elliptical arc path helper
 export function newPathHelper(cmd: Command): PathHelper | undefined {
   if (cmd.svgChar === 'M') {
+    // TODO: return a noop path helper instead or something?
     return undefined;
   }
   const points = cmd.points;
@@ -40,41 +40,6 @@ export function newPathHelper(cmd: Command): PathHelper | undefined {
     return new BezierHelper(
       cmd.svgChar, cmd.points[0], cmd.points[1], cmd.points[2], cmd.points[3]);
   }
+  // TODO: create an elliptical arc path helper some day?
   throw new Error('Invalid command type: ' + cmd.svgChar);
 }
-
-// const [
-//   currentPointX, currentPointY,
-//   rx, ry, xAxisRotation,
-//   largeArcFlag, sweepFlag,
-//   endX, endY] = cmd.args;
-// if (currentPointX === endX && currentPointY === endY) {
-//   // Degenerate to point.
-//   return createPathHelper({ x: endX, y: endY });
-// }
-// if (rx === 0 || ry === 0) {
-//   // Degenerate to line.
-//   const start = cmd.start;
-//   const cp = new Point(
-//     MathUtil.lerp(cmd.end.x, cmd.start.x, 0.5),
-//     MathUtil.lerp(cmd.end.y, cmd.start.y, 0.5));
-//   const end = cmd.end;
-//   return createPathHelper(start, cp, cp, end);
-// }
-// const bezierCoords = SvgUtil.arcToBeziers({
-//   startX: currentPointX,
-//   startY: currentPointY,
-//   rx, ry, xAxisRotation,
-//   largeArcFlag, sweepFlag,
-//   endX, endY,
-// });
-// const arcBeziers: PathHelper[] = [];
-// for (let i = 0; i < bezierCoords.length; i += 8) {
-//   const bez = createPathHelper(
-//     { x: cmd.start.x, y: cmd.start.y },
-//     { x: bezierCoords[i + 2], y: bezierCoords[i + 3] },
-//     { x: bezierCoords[i + 4], y: bezierCoords[i + 5] },
-//     { x: bezierCoords[i + 6], y: bezierCoords[i + 7] });
-//   arcBeziers.push(bez);
-// }
-// return arcBeziers;

@@ -28,6 +28,7 @@ class PathCommandImpl implements PathCommand {
   private readonly commandWrappers_: ReadonlyArray<ReadonlyArray<CommandWrapper>>;
   private readonly shiftOffsets_: ReadonlyArray<number>;
   private readonly reversals_: ReadonlyArray<boolean>;
+  private readonly pathLength_: number;
 
   // TODO: add method to calculate bounds and length
   constructor(obj: string | CommandImpl[] | PathCommandParams) {
@@ -51,6 +52,12 @@ class PathCommandImpl implements PathCommand {
       this.shiftOffsets_ = obj.shiftOffsets_.slice();
       this.reversals_ = obj.reversals_.slice();
     }
+    // Note that we only return the length of the first sub path due to
+    // https://code.google.com/p/android/issues/detail?id=172547
+    this.pathLength_ =
+      this.commandWrappers_[0]
+        .map(cw => cw.pathLength())
+        .reduce((prev, curr) => prev + curr);
   }
 
   // Implements the PathCommand interface.
@@ -192,7 +199,7 @@ class PathCommandImpl implements PathCommand {
 
   // Implements the PathCommand interface.
   get pathLength(): number {
-    throw new Error('Path length not yet supported');
+    return this.pathLength_;
   }
 
   // Implements the PathCommand interface.
@@ -466,9 +473,9 @@ class PathCommandImpl implements PathCommand {
   revert(): PathCommand {
     return new PathCommandImpl(
       _.chain(this.commandWrappers_)
-      .flatMap(cws => cws)
-      .map(cw => cw.backingCommand)
-      .value());
+        .flatMap(cws => cws)
+        .map(cw => cw.backingCommand)
+        .value());
   }
 
   private findCommandWrapper(subIdx: number, cmdIdx: number) {
@@ -503,16 +510,14 @@ class PathCommandImpl implements PathCommand {
  * Contains additional information about each individual command so that we can
  * remember how they should be projected onto and split/unsplit/converted at runtime.
  * PathCommands are immutable, stateless objects that depend on CommandWrappers to
- * remember their state.
- *
- * TODO: would it be better to just make this class mutable?
+ * remember their mutations. CommandWrappers themselves are also immutable to ensure that
+ * each PathCommand maintains its own unique snapshot of its current mutation state.
  */
 class CommandWrapper {
   readonly backingCommand: CommandImpl;
 
   // Note that the path helper is undefined for move commands.
   private readonly pathHelper: PathHelper;
-  private readonly isMove: boolean;
 
   // A command wrapper wraps around the initial SVG command and outputs
   // a list of transformed commands resulting from splits, unsplits,
@@ -541,7 +546,6 @@ class CommandWrapper {
       this.drawCommands = obj.drawCommands;
     }
     this.pathHelper = newPathHelper(this.backingCommand);
-    this.isMove = this.backingCommand.svgChar === 'M';
   }
 
   private clone(params: CommandWrapperParams = {}) {
@@ -552,12 +556,18 @@ class CommandWrapper {
     }, params));
   }
 
+  pathLength() {
+    const isMove = this.backingCommand.svgChar === 'M';
+    return isMove ? 0 : this.pathHelper.pathLength();
+  }
+
   /**
    * Note that the projection is performed in relation to the command wrapper's
    * original backing command.
    */
   project(point: Point): Projection | undefined {
-    return this.isMove ? undefined : this.pathHelper.project(point);
+    const isMove = this.backingCommand.svgChar === 'M';
+    return isMove ? undefined : this.pathHelper.project(point);
   }
 
   /**
@@ -567,7 +577,7 @@ class CommandWrapper {
   split(ts: number[]) {
     // TODO: add a test for splitting a command with a path length of 0
     // TODO: add a test for the case when t === 1
-    if (!ts.length || this.isMove) {
+    if (!ts.length || this.backingCommand.svgChar === 'M') {
       return this;
     }
     const currSplits = this.mutations.map(m => m.t);
@@ -600,8 +610,7 @@ class CommandWrapper {
    * splitIdx + 1 to ensure the split is done in relation to the mutated command.
    */
   splitAtIndex(splitIdx: number, ts: number[]) {
-    const currSplits = this.mutations.map(m => m.t);
-    const tempSplits = [0, ...currSplits];
+    const tempSplits = [0, ...this.mutations.map(m => m.t)];
     const startSplit = tempSplits[splitIdx];
     const endSplit = tempSplits[splitIdx + 1];
     return this.split(ts.map(t => MathUtil.lerp(startSplit, endSplit, t)));
@@ -612,8 +621,7 @@ class CommandWrapper {
    * equal parts.
    */
   splitInHalfAtIndex(splitIdx: number) {
-    const currSplits = this.mutations.map(m => m.t);
-    const tempSplits = [0, ...currSplits];
+    const tempSplits = [0, ...this.mutations.map(m => m.t)];
     const startSplit = tempSplits[splitIdx];
     const endSplit = tempSplits[splitIdx + 1];
     const distance = MathUtil.lerp(startSplit, endSplit, 0.5);
@@ -694,7 +702,9 @@ interface Mutation {
   readonly svgChar: SvgChar;
 }
 
-// Path command internals that have been cloned.
+/**
+ * Path command internals that have been cloned.
+ */
 interface PathCommandParams {
   drawCommands_?: ReadonlyArray<CommandImpl>;
   commandWrappers_?: ReadonlyArray<ReadonlyArray<CommandWrapper>>;
@@ -702,7 +712,9 @@ interface PathCommandParams {
   reversals_?: ReadonlyArray<boolean>;
 }
 
-// Command wrapper internals that have been cloned.
+/**
+ * Command wrapper internals that have been cloned.
+ */
 interface CommandWrapperParams {
   backingCommand?: CommandImpl;
   mutations?: ReadonlyArray<Mutation>;
