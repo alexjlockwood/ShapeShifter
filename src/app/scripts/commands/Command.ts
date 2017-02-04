@@ -57,7 +57,7 @@ export interface Command {
 /**
  * Uniquely identifies a command's location in an SVG.
  */
-export interface Id {
+export interface Index {
   readonly pathId: string;
   readonly subIdx: number;
   readonly cmdIdx: number;

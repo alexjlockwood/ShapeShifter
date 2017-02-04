@@ -4,7 +4,7 @@ import {
   Input, ViewChildren, QueryList
 } from '@angular/core';
 import {
-  PathCommand, SubPathCommand, Command, Id as CommandId, Projection
+  PathCommand, SubPathCommand, Command, Index as CommandIndex, Projection
 } from '../scripts/commands';
 import {
   Layer, PathLayer, ClipPathLayer, GroupLayer, VectorLayer
@@ -375,7 +375,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         _.chain(pathCommand.subPathCommands)
           .map((subCmd: SubPathCommand, subIdx: number) => {
             return subCmd.commands.map((cmd, cmdIdx) => {
-              const commandId = { pathId, subIdx, cmdIdx } as CommandId;
+              const commandId = { pathId, subIdx, cmdIdx } as CommandIndex;
               const isSplit = cmd.isSplit;
               const isMove = cmd.svgChar === 'M';
               const isHoverOrSelection =
@@ -613,7 +613,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
               mouseUp, selectedPointId.pathId).split();
 
           // Notify the global layer state service about the change and draw.
-          this.layerStateService.setLayer(this.editorType, this.vectorLayer);
+          this.layerStateService.notifyChange(this.editorType);
         }
       } else {
         // If we haven't started dragging a point, then we should select
@@ -648,7 +648,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
    * distance specified by radius. Draggable points are returned with higher
    * priority than non-draggable points.
    */
-  private findPathPointId(mousePoint: Point): CommandId | undefined {
+  private findPathPointId(mousePoint: Point): CommandIndex | undefined {
     const minPathPoints = [];
     this.vectorLayer.walk((layer, transforms) => {
       if (!(layer instanceof PathLayer)) {
@@ -670,7 +670,9 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           .flatMap(pathPoints => pathPoints)
           .filter(pathPoint => {
             const radius =
-              pathPoint.isSplit ? this.splitPathPointRadius : this.pathPointRadius;
+              pathPoint.isSplit
+                ? this.splitPathPointRadius
+                : this.pathPointRadius;
             return pathPoint.distance <= radius;
           })
           // Reverse so that points drawn with higher z-orders are preferred.
@@ -679,13 +681,11 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
             if (!prev) {
               return curr;
             }
-            const { distance: prevDist, isSplit: prevIsSplit } = prev;
-            const { distance: currDist, isSplit: currIsSplit } = curr;
-            if (prevIsSplit !== currIsSplit) {
+            if (prev.isSplit !== curr.isSplit) {
               // Always return split points that are in range before
-              // returning a non-split point. This way we guarantee that
+              // returning non-split points. This way we can guarantee that
               // split points will never be obstructed by non-split points.
-              return prevIsSplit ? prev : curr;
+              return prev.isSplit ? prev : curr;
             }
             return prev.distance < curr.distance ? prev : curr;
           }, undefined)
@@ -694,8 +694,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         minPathPoints.push(minPathPoint);
       }
     });
-    // TODO: should we reverse here similar to above as well?
-    return minPathPoints.reduce((prev, curr) => {
+    // Reverse so that sub paths drawn with higher z-orders are preferred.
+    return minPathPoints.reverse().reduce((prev, curr) => {
       return prev && prev.distance < curr.distance ? prev : curr;
     }, undefined);
   }
@@ -856,7 +856,7 @@ class PointSelector {
 
   constructor(
     public readonly mouseDown: Point,
-    public readonly selectedPointId: CommandId,
+    public readonly selectedPointId: CommandIndex,
     public readonly isSelectedPointSplit: boolean) {
     this.lastKnownLocation = mouseDown;
   }

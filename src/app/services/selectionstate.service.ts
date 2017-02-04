@@ -5,7 +5,7 @@ import { Subscription } from 'rxjs/Subscription';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { VectorLayer } from '../scripts/layers';
 import { Observable } from 'rxjs/Observable';
-import { Id as CommandId } from '../scripts/commands';
+import { Index as CommandIndex } from '../scripts/commands';
 import { EditorType } from '../EditorType';
 
 /**
@@ -29,12 +29,20 @@ export class SelectionStateService {
    * By default, all other selections from the list will be cleared.
    */
   toggle(selection: Selection, appendToList = false) {
+    // Remove all selections that don't match the new selections editor type.
     _.remove(this.selections, sel => sel.source !== selection.source);
-    if (!_.remove(this.selections, selection).length) {
+    const existingSelections = _.remove(this.selections, sel => {
+      // Remove any selections that are equal to the new selection.
+      return areSelectionsEqual(selection, sel);
+    });
+    if (!existingSelections.length) {
+      // If no selections were removed, then add the selection to the list.
       this.selections.push(selection);
     }
     if (!appendToList) {
-      _.remove(this.selections, sel => !_.isEqual(selection, sel));
+      // If we aren't appending multiple selections at a time, then clear
+      // any previous selections from the list.
+      _.remove(this.selections, sel => !areSelectionsEqual(selection, sel));
     }
     this.source.next(this.selections);
   }
@@ -52,6 +60,17 @@ export class SelectionStateService {
  * A selection represents an action that is the result of a mouse click.
  */
 export interface Selection {
-  readonly commandId?: CommandId;
+  readonly commandId?: CommandIndex;
   readonly source?: EditorType;
+}
+
+function areSelectionsEqual(sel1: Selection, sel2: Selection) {
+  if (sel1.source !== sel2.source) {
+    return false;
+  }
+  const id1 = sel1.commandId;
+  const id2 = sel2.commandId;
+  return id1.pathId === id2.pathId
+    && id1.subIdx === id2.subIdx
+    && id1.cmdIdx === id2.cmdIdx;
 }

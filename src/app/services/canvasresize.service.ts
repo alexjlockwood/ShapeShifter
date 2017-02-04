@@ -4,7 +4,7 @@ import { Subscription } from 'rxjs/Subscription';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { VectorLayer } from '../scripts/layers';
 import { Observable } from 'rxjs/Observable';
-import { Id as CommandId } from '../scripts/commands';
+import { Index as CommandIndex } from '../scripts/commands';
 import { EditorType } from '../EditorType';
 
 @Injectable()
