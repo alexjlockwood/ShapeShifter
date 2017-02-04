@@ -467,7 +467,10 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     });
   }
 
-  // Draw a single labeled point with optional text.
+  /**
+   * Draw a single labeled point with optional text.
+   * TODO: move this into a utility module and share with inspector UI
+   */
   private drawLabeledPoint(
     ctx: CanvasRenderingContext2D,
     point: Point,
@@ -642,11 +645,10 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
   /**
    * Finds the path point closest to the specified mouse point, with a max
-   * distance specified by radius. By default, non-split path points are ignored.
+   * distance specified by radius. Draggable points are returned with higher
+   * priority than non-draggable points.
    */
   private findPathPointId(mousePoint: Point): CommandId | undefined {
-    // TODO: prefer finding split points (or modifiable points in general) over others?
-    // TODO: i.e. consider a split point directly on top of the first move command
     const minPathPoints = [];
     this.vectorLayer.walk((layer, transforms) => {
       if (!(layer instanceof PathLayer)) {
@@ -674,7 +676,18 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           // Reverse so that points drawn with higher z-orders are preferred.
           .reverse()
           .reduce((prev, curr) => {
-            return prev && prev.distance < curr.distance ? prev : curr;
+            if (!prev) {
+              return curr;
+            }
+            const { distance: prevDist, isSplit: prevIsSplit } = prev;
+            const { distance: currDist, isSplit: currIsSplit } = curr;
+            if (prevIsSplit !== currIsSplit) {
+              // Always return split points that are in range before
+              // returning a non-split point. This way we guarantee that
+              // split points will never be obstructed by non-split points.
+              return prevIsSplit ? prev : curr;
+            }
+            return prev.distance < curr.distance ? prev : curr;
           }, undefined)
           .value();
       if (minPathPoint) {
