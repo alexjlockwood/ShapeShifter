@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 import { MathUtil, Point } from '../common';
-import { PathHelper, newPathHelper } from './pathhelper';
+import { Mutator, newMutator } from './mutators';
 import { Command, SvgChar, Projection } from '.';
 import { CommandImpl } from './CommandImpl';
 
@@ -15,7 +15,7 @@ export class CommandMutation {
   readonly backingCommand: CommandImpl;
 
   // Note that the path helper is undefined for move commands.
-  private readonly pathHelper: PathHelper;
+  private readonly pathHelper: Mutator;
 
   // A command wrapper wraps around the initial SVG command and outputs
   // a list of transformed commands resulting from splits, unsplits,
@@ -43,7 +43,7 @@ export class CommandMutation {
       this.mutations = obj.mutations;
       this.builtCommands = obj.builtCommands;
     }
-    this.pathHelper = newPathHelper(this.backingCommand);
+    this.pathHelper = newMutator(this.backingCommand);
   }
 
   pathLength() {

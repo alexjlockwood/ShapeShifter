@@ -1,12 +1,12 @@
-import { PathHelper } from '.';
+import { Mutator } from '.';
 import {
   SvgChar, Projection, newLine, newQuadraticCurve,
   newBezierCurve, newClosePath, Command
 } from '..';
 import { MathUtil, Point } from '../../common';
-import { PointHelper } from './PointHelper';
+import { PointMutator } from './PointMutator';
 
-export class LineHelper implements PathHelper {
+export class LineMutator implements Mutator {
   private readonly svgChar: SvgChar;
   private readonly p1: Point;
   private readonly p2: Point;
@@ -54,7 +54,7 @@ export class LineHelper implements PathHelper {
     return { x: xx, y: yy, d: dd, t: dt };
   }
 
-  split(t1: number, t2: number): PathHelper {
+  split(t1: number, t2: number): Mutator {
     const {x: x1, y: y1} = this.p1;
     const {x: x2, y: y2} = this.p2;
     const p1 = new Point(
@@ -64,13 +64,13 @@ export class LineHelper implements PathHelper {
       MathUtil.lerp(x1, x2, t2),
       MathUtil.lerp(y1, y2, t2));
     if (p1.equals(p2)) {
-      return new PointHelper(this.svgChar, p1);
+      return new PointMutator(this.svgChar, p1);
     }
-    return new LineHelper(this.svgChar, p1, p2);
+    return new LineMutator(this.svgChar, p1, p2);
   }
 
   convert(svgChar: SvgChar) {
-    return new LineHelper(svgChar, this.p1, this.p2);
+    return new LineMutator(svgChar, this.p1, this.p2);
   }
 
   findTimeByDistance(distance: number) {
