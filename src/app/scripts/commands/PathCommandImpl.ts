@@ -2,7 +2,7 @@ import * as _ from 'lodash';
 import { MathUtil, Point, Matrix, Rect, SvgUtil } from '../common';
 import { PathHelper, newPathHelper } from './pathhelper';
 import { PathCommand, SubPathCommand, Command, SvgChar, Projection } from '.';
-import { PathParser } from '../import';
+import { PathParser } from '../parsers';
 import { newSubPathCommand } from './SubPathCommandImpl';
 import {
   CommandImpl, newMove, newLine, newQuadraticCurve, newBezierCurve, newArc, newClosePath

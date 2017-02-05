@@ -1,4 +1,4 @@
-import { PathParser } from '../import';
+import { PathParser } from '../parsers';
 import { newPathCommand } from '.';
 
 describe('PathCommand', () => {

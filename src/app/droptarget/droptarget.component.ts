@@ -5,7 +5,7 @@ import {
 import { LayerStateService } from '../services/layerstate.service';
 import { EditorType } from '../EditorType';
 import * as $ from 'jquery';
-import { VectorLayerLoader } from '../scripts/import';
+import { VectorLayerLoader } from '../scripts/parsers';
 import { CanvasResizeService } from '../services/canvasresize.service';
 import { Subscription } from 'rxjs/Subscription';
 
