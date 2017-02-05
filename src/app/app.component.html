@@ -6,17 +6,18 @@
       <md-icon class="shapeshifter-logo" svgIcon="shapeshifter"></md-icon>
       <span>Shape Shifter</span>
       <span fxFlex="1 1 auto"></span>
-      <button
-        md-icon-button
-        mdTooltip="Auto fix"
-        mdTooltipPosition="below"
-        md-theme="light">
-        <md-icon svgIcon="autofix"></md-icon>
-      </button>
       <button md-icon-button [mdMenuTriggerFor]="menu">
         <md-icon>more_vert</md-icon>
       </button>
       <md-menu #menu="mdMenu">
+        <button md-menu-item>
+          <md-icon>create</md-icon>
+          <span>New</span>
+        </button>
+        <button md-menu-item>
+          <md-icon>clear</md-icon>
+          <span>Revert</span>
+        </button>
         <button md-menu-item>
           <md-icon svgIcon="contribute"></md-icon>
           <span>Contribute</span>
@@ -111,25 +112,39 @@
   <div
     #inspectorContainer
     class="inspector-container"
-    fxLayout="column">
-    <div
+    fxLayout="row">
+    <!--<div
       appSplitter
       class="app-splitter"
       (onDividerDrag)="onDividerDrag($event)">
+    </div>-->
+    <div fxLayout="column">
+      <div class="inspector-header">Import SVG 1</div>
+      <div fxFlex style="background-color: #f00;">asdfasdfasdfasdf</div>
     </div>
-    <div
-      *ngIf="shouldDisplayStartEditor && shouldDisplayEndEditor"
-      fxFlex
-      fxLayout="row">
-      <app-inspector
-        [editorType]="startVectorLayerType">
-      </app-inspector>
-      <app-inspector
-        [editorType]="endVectorLayerType">
-      </app-inspector>
-      <span fxFlex="1 1 auto"></span>
-      <app-export>
-      </app-export>
+    <div fxLayout="column">
+      <div class="inspector-header">Import SVG 2</div>
+      <div fxFlex style="background-color: #0f0;">asdfasdfasdfasdf</div>
+    </div>
+    <div fxLayout="column">
+      <div class="inspector-header">Status: morphable</div>
+      <div *ngIf="shouldDisplayStartEditor && shouldDisplayEndEditor"
+        fxFlex
+        fxLayout="row">
+        <app-inspector
+          [editorType]="startVectorLayerType">
+        </app-inspector>
+        <app-inspector
+          [editorType]="endVectorLayerType">
+        </app-inspector>
+      </div>
+    </div>
+    <div fxLayout="column" fxFlex="1 1 auto">
+      <div class="inspector-header"></div>
+    </div>
+    <div>
+      <div class="inspector-header"></div>
+      <app-export></app-export>
     </div>
   </div>
 </div>

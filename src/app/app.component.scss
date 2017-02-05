@@ -1,4 +1,5 @@
 @import './styles/material-colors';
+@import './styles/material-shadows';
 @import './styles/variables';
 
 :host,
@@ -29,7 +30,7 @@ app-droptarget:last-child {
 
 div.inspector-container {
   height: 320px;
-  background-color: material-color('grey', '200');
+  background-color: '#fff';
   overflow: auto;
 }
 
@@ -68,4 +69,15 @@ div.app-splitter:hover {
 
 .light-themed-borderless-icon {
   color: $colorWhiteTextSecondary;
+}
+
+.toolbar-horizontal-spacing {
+  margin-right: 12px;
+}
+
+.inspector-header {
+  background-color: material-color('grey', '100');
+  box-shadow: material-shadow(1);
+  z-index: 1;
+  min-height: 48px;
 }
