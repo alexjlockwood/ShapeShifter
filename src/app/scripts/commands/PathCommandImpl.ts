@@ -7,6 +7,7 @@ import { newSubPathCommand } from './SubPathCommandImpl';
 import {
   CommandImpl, newMove, newLine, newQuadraticCurve, newBezierCurve, newArc, newClosePath
 } from './CommandImpl';
+import { PathCommandState, CommandState } from './PathCommandState';
 
 export function newPathCommand(path: string): PathCommand {
   return new PathCommandImpl(path);
@@ -14,7 +15,8 @@ export function newPathCommand(path: string): PathCommand {
 
 /**
  * Implementation of the PathCommand interface. Represents all of the information
- * associated with a path layer's pathData attribute.
+ * associated with a path layer's pathData attribute. Also provides mechanisms for
+ * splitting/unsplitting/converting/etc. paths in a way that is easily reversible.
  */
 class PathCommandImpl implements PathCommand {
 
@@ -25,7 +27,7 @@ class PathCommandImpl implements PathCommand {
   // TODO: consider an svg that ends with Z and one that doesn't. how to make these morphable?
   private readonly path_: string;
   private readonly subPathCommands_: ReadonlyArray<SubPathCommand>;
-  private readonly commandWrappers_: ReadonlyArray<ReadonlyArray<CommandWrapper>>;
+  private readonly commandWrappers_: PathCommandState;
   private readonly shiftOffsets_: ReadonlyArray<number>;
   private readonly reversals_: ReadonlyArray<boolean>;
   private readonly pathLength_: number;
@@ -42,7 +44,7 @@ class PathCommandImpl implements PathCommand {
         this.subPathCommands_ = createSubPathCommands(...obj);
       }
       this.commandWrappers_ =
-        this.subPathCommands_.map(s => createCommandWrappers(s.commands));
+        this.subPathCommands_.map(s => s.commands.map(c => new CommandState(c)));
       this.shiftOffsets_ = this.subPathCommands_.map(_ => 0);
       this.reversals_ = this.subPathCommands_.map(_ => false);
     } else {
@@ -262,8 +264,8 @@ class PathCommandImpl implements PathCommand {
   // Implements the PathCommand interface.
   project(point: Point): { projection: Projection, split: () => PathCommand } | undefined {
     return _.chain(this.commandWrappers_)
-      .map((subPathCws: CommandWrapper[], cwsIdx) =>
-        subPathCws.map((cw: CommandWrapper, cwIdx) => {
+      .map((subPathCws: CommandState[], cwsIdx) =>
+        subPathCws.map((cw: CommandState, cwIdx) => {
           const projection = cw.project(point);
           return {
             projection,
@@ -288,35 +290,19 @@ class PathCommandImpl implements PathCommand {
 
   // Implements the PathCommand interface.
   shiftBack(subIdx: number, numShifts = 1) {
-    if (this.reversals_[subIdx]) {
-      return this.shiftForwardInternal(subIdx, numShifts);
-    }
-    return this.shiftBackInternal(subIdx, numShifts);
+    return this.reversals_[subIdx]
+      ? this.shift(subIdx, (o, n) =>  MathUtil.floorMod(o - numShifts, n - 1))
+      : this.shift(subIdx, (o, n) => (o + numShifts) % (n - 1));
   }
 
   // Implements the PathCommand interface.
   shiftForward(subIdx: number, numShifts = 1) {
-    if (this.reversals_[subIdx]) {
-      return this.shiftBackInternal(subIdx, numShifts);
-    }
-    return this.shiftForwardInternal(subIdx, numShifts);
+    return this.reversals_[subIdx]
+      ? this.shift(subIdx, (o, n) => (o + numShifts) % (n - 1))
+      : this.shift(subIdx, (o, n) =>  MathUtil.floorMod(o - numShifts, n - 1));
   }
 
-  private shiftBackInternal(subIdx: number, numShifts = 1) {
-    return this.shiftInternal(
-      subIdx, (offset, numCommands) => {
-        return (offset + numShifts) % (numCommands - 1);
-      });
-  }
-
-  private shiftForwardInternal(subIdx: number, numShifts = 1) {
-    return this.shiftInternal(
-      subIdx, (offset, numCommands) => {
-        return MathUtil.floorMod(offset - numShifts, numCommands - 1);
-      });
-  }
-
-  private shiftInternal(
+  private shift(
     subIdx: number,
     calcOffsetFn: (offset: number, numCommands: number) => number) {
 
@@ -499,175 +485,10 @@ class PathCommandImpl implements PathCommand {
     throw new Error('Error retrieving command wrapper');
   }
 
-  private replaceCommandWrapper(cwsIdx: number, cwIdx: number, cw: CommandWrapper) {
+  private replaceCommandWrapper(cwsIdx: number, cwIdx: number, cw: CommandState) {
     const newCws = this.commandWrappers_.map(cws => cws.slice());
     newCws[cwsIdx][cwIdx] = cw;
     return newCws;
-  }
-}
-
-/**
- * Contains additional information about each individual command so that we can
- * remember how they should be projected onto and split/unsplit/converted at runtime.
- * PathCommands are immutable, stateless objects that depend on CommandWrappers to
- * remember their mutations. CommandWrappers themselves are also immutable to ensure that
- * each PathCommand maintains its own unique snapshot of its current mutation state.
- */
-class CommandWrapper {
-  readonly backingCommand: CommandImpl;
-
-  // Note that the path helper is undefined for move commands.
-  private readonly pathHelper: PathHelper;
-
-  // A command wrapper wraps around the initial SVG command and outputs
-  // a list of transformed commands resulting from splits, unsplits,
-  // conversions, etc. If the initial SVG command hasn't been modified,
-  // then a list containing the initial SVG command is returned.
-  private readonly drawCommands: ReadonlyArray<CommandImpl>;
-
-  // The list of mutations describes how the initial backing command
-  // has since been modified. Since the command wrapper always holds a
-  // reference to its initial backing command, these modifications
-  // are always reversible.
-  private readonly mutations: ReadonlyArray<Mutation>;
-
-  constructor(obj: CommandImpl | CommandWrapperParams) {
-    if (obj instanceof CommandImpl) {
-      this.backingCommand = obj;
-      this.mutations = [{
-        id: _.uniqueId(),
-        t: 1,
-        svgChar: this.backingCommand.svgChar,
-      }];
-      this.drawCommands = [obj];
-    } else {
-      this.backingCommand = obj.backingCommand;
-      this.mutations = obj.mutations;
-      this.drawCommands = obj.drawCommands;
-    }
-    this.pathHelper = newPathHelper(this.backingCommand);
-  }
-
-  private clone(params: CommandWrapperParams = {}) {
-    return new CommandWrapper(_.assign({}, {
-      backingCommand: this.backingCommand,
-      mutations: this.mutations.slice(),
-      drawCommands: this.drawCommands.slice(),
-    }, params));
-  }
-
-  pathLength() {
-    const isMove = this.backingCommand.svgChar === 'M';
-    return isMove ? 0 : this.pathHelper.pathLength();
-  }
-
-  /**
-   * Note that the projection is performed in relation to the command wrapper's
-   * original backing command.
-   */
-  project(point: Point): Projection | undefined {
-    const isMove = this.backingCommand.svgChar === 'M';
-    return isMove ? undefined : this.pathHelper.project(point);
-  }
-
-  /**
-   * Note that the split is performed in relation to the command wrapper's
-   * original backing command.
-   */
-  split(ts: number[]) {
-    // TODO: add a test for splitting a command with a path length of 0
-    // TODO: add a test for the case when t === 1
-    if (!ts.length || this.backingCommand.svgChar === 'M') {
-      return this;
-    }
-    const currSplits = this.mutations.map(m => m.t);
-    const currSvgChars = this.mutations.map(m => m.svgChar);
-    const updatedMutations = this.mutations.slice();
-    for (const t of ts) {
-      const currIdx = _.sortedIndex(currSplits, t);
-      const id = _.uniqueId();
-      // TODO: what about if the last command is a Z? then we want the svg char to be L!!
-      const svgChar = currSvgChars[currIdx];
-      const mutation = { id, t, svgChar };
-      const insertionIdx =
-        _.sortedIndexBy<Mutation>(updatedMutations, mutation, m => m.t);
-      updatedMutations.splice(insertionIdx, 0, { id, t, svgChar });
-    }
-    return this.rebuildCommands(updatedMutations);
-  }
-
-  /**
-   * Each command is given a globally unique ID (to improve performance
-   * inside *ngFor loops, etc.).
-   */
-  getIdAtIndex(splitIdx: number) {
-    return this.mutations[splitIdx].id;
-  }
-
-  /**
-   * Inserts the provided t values at the specified split index. The t values
-   * are linearly interpolated between the split values at splitIdx and
-   * splitIdx + 1 to ensure the split is done in relation to the mutated command.
-   */
-  splitAtIndex(splitIdx: number, ts: number[]) {
-    const tempSplits = [0, ...this.mutations.map(m => m.t)];
-    const startSplit = tempSplits[splitIdx];
-    const endSplit = tempSplits[splitIdx + 1];
-    return this.split(ts.map(t => MathUtil.lerp(startSplit, endSplit, t)));
-  }
-
-  /**
-   * Same as splitAtIndex() except the command is split into two approximately
-   * equal parts.
-   */
-  splitInHalfAtIndex(splitIdx: number) {
-    const tempSplits = [0, ...this.mutations.map(m => m.t)];
-    const startSplit = tempSplits[splitIdx];
-    const endSplit = tempSplits[splitIdx + 1];
-    const distance = MathUtil.lerp(startSplit, endSplit, 0.5);
-    return this.split([this.pathHelper.findTimeByDistance(distance)]);
-  }
-
-  /**
-   * Unsplits the command at the specified split index.
-   */
-  unsplitAtIndex(splitIdx: number) {
-    const mutations = this.mutations.slice();
-    mutations.splice(splitIdx, 1);
-    return this.rebuildCommands(mutations);
-  }
-
-  /**
-   * Converts the command at the specified split index.
-   */
-  convertAtIndex(splitIdx: number, svgChar: SvgChar) {
-    const mutations = this.mutations.slice();
-    mutations[splitIdx] = _.assign({}, mutations[splitIdx], { svgChar });
-    return this.rebuildCommands(mutations);
-  }
-
-  // TODO: this could be more efficient (avoid recreating commands unnecessarily)
-  private rebuildCommands(mutations: Mutation[]) {
-    if (mutations.length === 1) {
-      const command = this.pathHelper.convert(mutations[0].svgChar).toCommand(false);
-      return this.clone({ mutations, drawCommands: [command] as CommandImpl[] });
-    }
-    const commands = [];
-    let prevT = 0;
-    for (let i = 0; i < mutations.length; i++) {
-      const currT = mutations[i].t;
-      const isSplit = i !== mutations.length - 1;
-      commands.push(
-        this.pathHelper.split(prevT, currT)
-          .convert(mutations[i].svgChar)
-          .toCommand(isSplit));
-      prevT = currT;
-    }
-    return this.clone({ mutations, drawCommands: commands });
-  }
-
-  get commands() {
-    return this.drawCommands;
   }
 }
 
@@ -689,35 +510,12 @@ function createSubPathCommands(...commands: Command[]) {
   return cmdGroups.reverse().map(cmds => newSubPathCommand(...cmds.reverse()));
 }
 
-function createCommandWrappers(commands: ReadonlyArray<Command>) {
-  if (commands.length && commands[0].svgChar !== 'M') {
-    throw new Error('First command must be a move');
-  }
-  return commands.map(cmd => new CommandWrapper(cmd));
-}
-
-interface Mutation {
-  readonly id: string;
-  readonly t: number;
-  readonly svgChar: SvgChar;
-}
-
 /**
  * Path command internals that have been cloned.
  */
 interface PathCommandParams {
   drawCommands_?: ReadonlyArray<CommandImpl>;
-  commandWrappers_?: ReadonlyArray<ReadonlyArray<CommandWrapper>>;
+  commandWrappers_?: ReadonlyArray<ReadonlyArray<CommandState>>;
   shiftOffsets_?: ReadonlyArray<number>;
   reversals_?: ReadonlyArray<boolean>;
 }
-
-/**
- * Command wrapper internals that have been cloned.
- */
-interface CommandWrapperParams {
-  backingCommand?: CommandImpl;
-  mutations?: ReadonlyArray<Mutation>;
-  drawCommands?: ReadonlyArray<CommandImpl>;
-}
-
