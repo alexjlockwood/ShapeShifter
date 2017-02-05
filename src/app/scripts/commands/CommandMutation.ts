@@ -17,14 +17,14 @@ export class CommandMutation {
   // Note that the path helper is undefined for move commands.
   private readonly pathHelper: Mutator;
 
-  // A command wrapper wraps around the initial SVG command and outputs
+  // A command mutation wraps around the initial SVG command and outputs
   // a list of transformed commands resulting from splits, unsplits,
   // conversions, etc. If the initial SVG command hasn't been modified,
   // then a list containing the initial SVG command is returned.
   private readonly builtCommands: ReadonlyArray<CommandImpl>;
 
   // The list of mutations describes how the initial backing command
-  // has since been modified. Since the command wrapper always holds a
+  // has since been modified. Since the command mutation always holds a
   // reference to its initial backing command, these modifications
   // are always reversible.
   private readonly mutations: ReadonlyArray<Mutation>;
@@ -52,7 +52,7 @@ export class CommandMutation {
   }
 
   /**
-   * Note that the projection is performed in relation to the command wrapper's
+   * Note that the projection is performed in relation to the command mutation's
    * original backing command.
    */
   project(point: Point): Projection | undefined {
@@ -61,7 +61,7 @@ export class CommandMutation {
   }
 
   /**
-   * Note that the split is performed in relation to the command wrapper's
+   * Note that the split is performed in relation to the command mutation's
    * original backing command.
    */
   split(ts: number[]) {
