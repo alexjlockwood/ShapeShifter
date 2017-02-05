@@ -97,7 +97,7 @@ export class BezierHelper implements PathHelper {
     return distance;
   }
 
-  toCommand(isSplit: boolean): Command {
+  toCommand(isSplit: boolean) {
     switch (this.svgChar) {
       case 'Q':
         return newQuadraticCurve(

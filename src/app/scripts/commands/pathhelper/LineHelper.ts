@@ -77,7 +77,7 @@ export class LineHelper implements PathHelper {
     return distance;
   }
 
-  toCommand(isSplit: boolean): Command {
+  toCommand(isSplit: boolean) {
     switch (this.svgChar) {
       case 'L':
         return newLine(this.p1, this.p2, isSplit);

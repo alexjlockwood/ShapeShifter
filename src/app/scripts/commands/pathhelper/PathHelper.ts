@@ -5,7 +5,7 @@ import { SvgChar, Projection } from '..';
 import { PointHelper } from './PointHelper';
 import { LineHelper } from './LineHelper';
 import { BezierHelper } from './BezierHelper';
-import { Command } from '..';
+import { CommandImpl } from '../CommandImpl';
 
 /**
  * A wrapper around a backing SVG command that abstracts a lot of the math-y
@@ -17,10 +17,10 @@ export interface PathHelper {
   split(t1: number, t2: number): PathHelper;
   convert(svgChar: SvgChar): PathHelper;
   findTimeByDistance(distance: number): number;
-  toCommand(isSplit: boolean): Command;
+  toCommand(isSplit: boolean): CommandImpl;
 }
 
-export function newPathHelper(cmd: Command): PathHelper | undefined {
+export function newPathHelper(cmd: CommandImpl): PathHelper | undefined {
   if (cmd.svgChar === 'M') {
     // TODO: return a noop path helper instead or something?
     return undefined;

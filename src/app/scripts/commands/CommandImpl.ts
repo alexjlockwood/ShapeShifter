@@ -2,20 +2,46 @@ import * as _ from 'lodash';
 import { Point, Matrix, MathUtil, SvgUtil } from '../common';
 import { Command, SvgChar } from '.';
 
+export function newMove(start: Point, end: Point, isSplit?: boolean) {
+  return new CommandImpl('M', !!isSplit, [start, end]);
+}
+
+export function newLine(start: Point, end: Point, isSplit?: boolean) {
+  return new CommandImpl('L', !!isSplit, [start, end]);
+}
+
+export function newQuadraticCurve(start: Point, cp: Point, end: Point, isSplit?: boolean) {
+  return new CommandImpl('Q', !!isSplit, [start, cp, end]);
+}
+
+export function newBezierCurve(
+  start: Point, cp1: Point, cp2: Point, end: Point, isSplit?: boolean) {
+  return new CommandImpl('C', !!isSplit, [start, cp1, cp2, end]);
+}
+
+export function newArc(start: Point, rx: number, ry: number, xAxisRotation: number,
+  largeArcFlag: number, sweepFlag: number, end: Point, isSplit?: boolean) {
+  return new CommandImpl('A', !!isSplit, [start, end],
+    start.x, start.y, rx, ry, xAxisRotation, largeArcFlag, sweepFlag, end.x, end.y);
+}
+
+export function newClosePath(start: Point, end: Point, isSplit?: boolean) {
+  return new CommandImpl('Z', !!isSplit, [start, end]);
+}
+
 /**
  * Implementation of the Command interface. Each draw command represents
  * a single SVG drawing command (move, line, quadratic curve, bezier curve,
  * elliptical arc, or close path).
  */
 export class CommandImpl implements Command {
-  readonly points: ReadonlyArray<Point>;
   readonly args: ReadonlyArray<number>;
   readonly commandString: string;
 
   constructor(
     public readonly svgChar: SvgChar,
     public readonly isSplit: boolean,
-    points: ReadonlyArray<Point>,
+    public readonly points: ReadonlyArray<Point>,
     ...args: number[]) {
     this.points = points.slice();
 
@@ -134,31 +160,4 @@ function pointsToArgs(points: ReadonlyArray<Point>): number[] {
   const args = [];
   points.forEach(p => { args.push(p.x); args.push(p.y); });
   return args;
-}
-
-export function newMove(start: Point, end: Point, isSplit?: boolean) {
-  return new CommandImpl('M', !!isSplit, [start, end]);
-}
-
-export function newLine(start: Point, end: Point, isSplit?: boolean) {
-  return new CommandImpl('L', !!isSplit, [start, end]);
-}
-
-export function newQuadraticCurve(start: Point, cp: Point, end: Point, isSplit?: boolean) {
-  return new CommandImpl('Q', !!isSplit, [start, cp, end]);
-}
-
-export function newBezierCurve(
-  start: Point, cp1: Point, cp2: Point, end: Point, isSplit?: boolean) {
-  return new CommandImpl('C', !!isSplit, [start, cp1, cp2, end]);
-}
-
-export function newArc(start: Point, rx: number, ry: number, xAxisRotation: number,
-  largeArcFlag: number, sweepFlag: number, end: Point, isSplit?: boolean) {
-  return new CommandImpl('A', !!isSplit, [start, end],
-    start.x, start.y, rx, ry, xAxisRotation, largeArcFlag, sweepFlag, end.x, end.y);
-}
-
-export function newClosePath(start: Point, end: Point, isSplit?: boolean) {
-  return new CommandImpl('Z', !!isSplit, [start, end]);
 }

@@ -1,12 +1,8 @@
 import * as _ from 'lodash';
-import { MathUtil, Point, Matrix, Rect, SvgUtil } from '../common';
+import { MathUtil, Point } from '../common';
 import { PathHelper, newPathHelper } from './pathhelper';
-import { PathCommand, SubPathCommand, Command, SvgChar, Projection } from '.';
-import { PathParser } from '../parsers';
-import { newSubPathCommand } from './SubPathCommandImpl';
-import {
-  CommandImpl, newMove, newLine, newQuadraticCurve, newBezierCurve, newArc, newClosePath
-} from './CommandImpl';
+import { Command, SvgChar, Projection } from '.';
+import { CommandImpl } from './CommandImpl';
 
 /**
  * Contains additional information about each individual command so that we can
@@ -25,7 +21,7 @@ export class CommandMutation {
   // a list of transformed commands resulting from splits, unsplits,
   // conversions, etc. If the initial SVG command hasn't been modified,
   // then a list containing the initial SVG command is returned.
-  private readonly drawCommands: ReadonlyArray<CommandImpl>;
+  private readonly builtCommands: ReadonlyArray<CommandImpl>;
 
   // The list of mutations describes how the initial backing command
   // has since been modified. Since the command wrapper always holds a
@@ -33,7 +29,7 @@ export class CommandMutation {
   // are always reversible.
   private readonly mutations: ReadonlyArray<Mutation>;
 
-  constructor(obj: CommandImpl | CommandWrapperParams) {
+  constructor(obj: CommandImpl | ConstructorParams) {
     if (obj instanceof CommandImpl) {
       this.backingCommand = obj;
       this.mutations = [{
@@ -41,21 +37,13 @@ export class CommandMutation {
         t: 1,
         svgChar: this.backingCommand.svgChar,
       }];
-      this.drawCommands = [obj];
+      this.builtCommands = [obj];
     } else {
       this.backingCommand = obj.backingCommand;
       this.mutations = obj.mutations;
-      this.drawCommands = obj.drawCommands;
+      this.builtCommands = obj.builtCommands;
     }
     this.pathHelper = newPathHelper(this.backingCommand);
-  }
-
-  private clone(params: CommandWrapperParams = {}) {
-    return new CommandMutation(_.assign({}, {
-      backingCommand: this.backingCommand,
-      mutations: this.mutations.slice(),
-      drawCommands: this.drawCommands.slice(),
-    }, params));
   }
 
   pathLength() {
@@ -152,24 +140,32 @@ export class CommandMutation {
   private rebuildCommands(mutations: Mutation[]) {
     if (mutations.length === 1) {
       const command = this.pathHelper.convert(mutations[0].svgChar).toCommand(false);
-      return this.clone({ mutations, drawCommands: [command] as CommandImpl[] });
+      return new CommandMutation({
+        backingCommand: this.backingCommand,
+        mutations,
+        builtCommands: [command] as CommandImpl[]
+      });
     }
-    const commands = [];
+    const builtCommands: CommandImpl[] = [];
     let prevT = 0;
     for (let i = 0; i < mutations.length; i++) {
       const currT = mutations[i].t;
       const isSplit = i !== mutations.length - 1;
-      commands.push(
+      builtCommands.push(
         this.pathHelper.split(prevT, currT)
           .convert(mutations[i].svgChar)
           .toCommand(isSplit));
       prevT = currT;
     }
-    return this.clone({ mutations, drawCommands: commands });
+    return new CommandMutation({
+      backingCommand: this.backingCommand,
+      mutations,
+      builtCommands,
+    });
   }
 
   get commands() {
-    return this.drawCommands;
+    return this.builtCommands;
   }
 }
 
@@ -179,11 +175,8 @@ interface Mutation {
   readonly svgChar: SvgChar;
 }
 
-/**
- * Command wrapper internals that have been cloned.
- */
-interface CommandWrapperParams {
-  backingCommand?: CommandImpl;
-  mutations?: ReadonlyArray<Mutation>;
-  drawCommands?: ReadonlyArray<CommandImpl>;
+interface ConstructorParams {
+  backingCommand: CommandImpl;
+  mutations: ReadonlyArray<Mutation>;
+  builtCommands: ReadonlyArray<CommandImpl>;
 }

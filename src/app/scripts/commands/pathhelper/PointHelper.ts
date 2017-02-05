@@ -38,7 +38,7 @@ export class PointHelper implements PathHelper {
     return distance;
   }
 
-  toCommand(isSplit: boolean): Command {
+  toCommand(isSplit: boolean) {
     switch (this.svgChar) {
       case 'L':
         return newLine(this.point, this.point, isSplit);
