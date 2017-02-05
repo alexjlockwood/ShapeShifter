@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 import { MathUtil, Point, Matrix, Rect, SvgUtil } from '../common';
-import { PathHelper, newPathHelper } from './pathhelper';
+import { Mutator, newMutator } from './mutators';
 import { PathCommand, SubPathCommand, Command, SvgChar, Projection } from '.';
 import { PathParser } from '../parsers';
 import { newSubPathCommand } from './SubPathCommandImpl';
@@ -44,7 +44,8 @@ class PathCommandImpl implements PathCommand {
         this.subPathCommands_ = createSubPathCommands(...obj);
       }
       this.commandMutationsMap_ =
-        this.subPathCommands_.map(s => s.commands.map(c => new CommandMutation(c)));
+        this.subPathCommands_.map(s =>
+          s.commands.map(c => new CommandMutation(c as CommandImpl)));
       this.shiftOffsets_ = this.subPathCommands_.map(_ => 0);
       this.reversals_ = this.subPathCommands_.map(_ => false);
     } else {
