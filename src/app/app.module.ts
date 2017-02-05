@@ -21,6 +21,7 @@ import { CanvasResizeService } from './services/canvasresize.service';
 import { DropTargetComponent } from './droptarget/droptarget.component';
 import { DropZoneDirective } from './droptarget/dropzone.directive';
 import { CanvasRulerDirective } from './canvas/ruler.directive';
+import { ExportComponent } from './export/export.component';
 
 import 'hammerjs';
 
@@ -37,6 +38,7 @@ import 'hammerjs';
     SubPathComponent,
     CommandComponent,
     CanvasRulerDirective,
+    ExportComponent,
   ],
   imports: [
     BrowserModule,

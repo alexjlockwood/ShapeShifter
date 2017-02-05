@@ -1,8 +1,15 @@
 <div fxLayout="row" class="button-container">
   <button md-icon-button
+    mdTooltip="Add"
+    mdTooltipPosition="above"
+    md-theme="dark">
+    <md-icon class="md-24">add</md-icon>
+  </button>
+  <button md-icon-button
     mdTooltip="Auto fix"
     mdTooltipPosition="above"
     md-theme="dark"
+    *ngIf="false"
     (click)="onAutoFixClick()">
     <md-icon class="md-24">tune</md-icon>
   </button>
@@ -30,14 +37,11 @@
     <md-icon class="md-24">skip_next</md-icon>
   </button>
 </div>
-<div
-  fxLayout="row"
-  fxLayoutWrap="wrap">
+<div fxLayout="column">
 <app-command
   *ngFor="let drawCommandWrapper of drawCommandWrappers;
     let cmdIdx = index;
     trackBy: trackDrawCommand"
-  fxFlex="0 1 calc(50%)"
   [editorType]="editorType"
   [pathId]="pathId"
   [subIdx]="subIdx"

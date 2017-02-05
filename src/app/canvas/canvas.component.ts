@@ -332,10 +332,10 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
   // Draw any labeled points.
   private drawLabeledPoints(ctx: CanvasRenderingContext2D) {
-    if (!this.timelineService.getShouldLabelPoints()
-      || this.editorType === EditorType.Preview) {
-      return;
-    }
+    // if (!this.timelineService.getShouldLabelPoints()
+    //   || this.editorType === EditorType.Preview) {
+    //   return;
+    // }
 
     const currentHover = this.currentHover;
     const currentSelections =

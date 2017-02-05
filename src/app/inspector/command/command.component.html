@@ -13,7 +13,7 @@
     mdTooltip="Convert"
     mdTooltipPosition="above"
     md-theme="dark"
-    *ngIf="isConvertable()"
+    *ngIf="false && isConvertable()"
     (click)="onConvertButtonClick($event)">
     <md-icon class="md-24">build</md-icon>
   </button>
@@ -31,7 +31,7 @@
     mdTooltip="Add"
     mdTooltipPosition="above"
     md-theme="dark"
-    *ngIf="isSplittable()"
+    *ngIf="false && isSplittable()"
     (mouseenter)="onSplitHoverEvent(true)"
     (mouseleave)="onSplitHoverEvent(false)"
     (click)="onSplitButtonClick($event)">

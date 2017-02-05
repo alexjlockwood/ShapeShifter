@@ -15,6 +15,8 @@ import { CanvasResizeService } from './services/canvasresize.service';
 import { SelectionStateService } from './services/selectionstate.service';
 import * as $ from 'jquery';
 import * as erd from 'element-resize-detector';
+import { DomSanitizer } from '@angular/platform-browser';
+import { MdIconRegistry } from '@angular/material';
 
 const IS_DEBUG_MODE = !environment.production;
 
@@ -53,7 +55,15 @@ export class AppComponent implements OnInit, OnDestroy {
   constructor(
     private layerStateService: LayerStateService,
     private selectionStateService: SelectionStateService,
-    private canvasResizeService: CanvasResizeService) { }
+    private canvasResizeService: CanvasResizeService,
+    private mdIconRegistry: MdIconRegistry,
+    private sanitizer: DomSanitizer) {
+
+    mdIconRegistry
+      .addSvgIcon('autofix', sanitizer.bypassSecurityTrustResourceUrl('/assets/autofix.svg'))
+      .addSvgIcon('contribute', sanitizer.bypassSecurityTrustResourceUrl('/assets/contribute.svg'))
+      .addSvgIcon('shapeshifter',  sanitizer.bypassSecurityTrustResourceUrl('/assets/shapeshifter.svg'));
+  }
 
   ngOnInit() {
     // Register global key events.
