@@ -8,8 +8,6 @@ import {
   CommandImpl, newMove, newLine, newQuadraticCurve, newBezierCurve, newArc, newClosePath
 } from './CommandImpl';
 
-export type PathCommandState = ReadonlyArray<ReadonlyArray<CommandState>>;
-
 /**
  * Contains additional information about each individual command so that we can
  * remember how they should be projected onto and split/unsplit/converted at runtime.
@@ -17,7 +15,7 @@ export type PathCommandState = ReadonlyArray<ReadonlyArray<CommandState>>;
  * remember their mutations. CommandWrappers themselves are also immutable to ensure that
  * each PathCommand maintains its own unique snapshot of its current mutation state.
  */
-export class CommandState {
+export class CommandMutation {
   readonly backingCommand: CommandImpl;
 
   // Note that the path helper is undefined for move commands.
@@ -53,7 +51,7 @@ export class CommandState {
   }
 
   private clone(params: CommandWrapperParams = {}) {
-    return new CommandState(_.assign({}, {
+    return new CommandMutation(_.assign({}, {
       backingCommand: this.backingCommand,
       mutations: this.mutations.slice(),
       drawCommands: this.drawCommands.slice(),

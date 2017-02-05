@@ -7,7 +7,7 @@ import { newSubPathCommand } from './SubPathCommandImpl';
 import {
   CommandImpl, newMove, newLine, newQuadraticCurve, newBezierCurve, newArc, newClosePath
 } from './CommandImpl';
-import { PathCommandState, CommandState } from './PathCommandState';
+import { CommandMutation } from './CommandMutation';
 
 export function newPathCommand(path: string): PathCommand {
   return new PathCommandImpl(path);
@@ -27,7 +27,7 @@ class PathCommandImpl implements PathCommand {
   // TODO: consider an svg that ends with Z and one that doesn't. how to make these morphable?
   private readonly path_: string;
   private readonly subPathCommands_: ReadonlyArray<SubPathCommand>;
-  private readonly commandWrappers_: PathCommandState;
+  private readonly commandMutationsMap_: ReadonlyArray<ReadonlyArray<CommandMutation>>;
   private readonly shiftOffsets_: ReadonlyArray<number>;
   private readonly reversals_: ReadonlyArray<boolean>;
   private readonly pathLength_: number;
@@ -43,32 +43,32 @@ class PathCommandImpl implements PathCommand {
         this.path_ = PathParser.commandsToString(obj);
         this.subPathCommands_ = createSubPathCommands(...obj);
       }
-      this.commandWrappers_ =
-        this.subPathCommands_.map(s => s.commands.map(c => new CommandState(c)));
+      this.commandMutationsMap_ =
+        this.subPathCommands_.map(s => s.commands.map(c => new CommandMutation(c)));
       this.shiftOffsets_ = this.subPathCommands_.map(_ => 0);
       this.reversals_ = this.subPathCommands_.map(_ => false);
     } else {
-      this.path_ = PathParser.commandsToString(obj.drawCommands_);
-      this.subPathCommands_ = createSubPathCommands(...obj.drawCommands_);
-      this.commandWrappers_ = obj.commandWrappers_.map(cws => cws.slice());
+      this.path_ = PathParser.commandsToString(obj.commands_);
+      this.subPathCommands_ = createSubPathCommands(...obj.commands_);
+      this.commandMutationsMap_ = obj.commandMutationsMap_.map(cms => cms.slice());
       this.shiftOffsets_ = obj.shiftOffsets_.slice();
       this.reversals_ = obj.reversals_.slice();
     }
     // Note that we only return the length of the first sub path due to
     // https://code.google.com/p/android/issues/detail?id=172547
     this.pathLength_ =
-      this.commandWrappers_[0]
-        .map(cw => cw.pathLength())
+      this.commandMutationsMap_[0]
+        .map(cm => cm.pathLength())
         .reduce((prev, curr) => prev + curr);
   }
 
   // Implements the PathCommand interface.
   clone(params: PathCommandParams = {}) {
     // TODO: only recompute the stuff that we know has changed...
-    const newCmdWrappers =
-      params.commandWrappers_
-        ? params.commandWrappers_
-        : this.commandWrappers_;
+    const newCommandMutationsMap =
+      params.commandMutationsMap_
+        ? params.commandMutationsMap_
+        : this.commandMutationsMap_;
 
     const shouldReverseFn = (subIdx: number) =>
       params.reversals_
@@ -81,26 +81,26 @@ class PathCommandImpl implements PathCommand {
         : this.shiftOffsets_[subIdx];
 
     const maybeReverseCommandsFn = (subIdx: number) => {
-      const subPathCws = newCmdWrappers[subIdx];
+      const subPathCws = newCommandMutationsMap[subIdx];
       const hasOneCmd =
         subPathCws.length === 1 && _.first(subPathCws).commands.length === 1;
       if (hasOneCmd || !shouldReverseFn(subIdx)) {
         // Nothing to do in these two cases.
-        return _.flatMap(subPathCws, cw => cw.commands as CommandImpl[]);
+        return _.flatMap(subPathCws, cm => cm.commands as CommandImpl[]);
       }
 
-      // Extract the commands from our command wrapper map.
-      const cmds = _.flatMap(subPathCws, cw => {
+      // Extract the commands from our command mutation map.
+      const cmds = _.flatMap(subPathCws, cm => {
         // Consider a segment A ---- B ---- C with AB split and
         // BC non-split. When reversed, we want the user to see
         // C ---- B ---- A w/ CB split and BA non-split.
-        const cwCmds = cw.commands.slice();
-        if (cwCmds[0].svgChar === 'M') {
-          return cwCmds;
+        const cmCmds = cm.commands.slice();
+        if (cmCmds[0].svgChar === 'M') {
+          return cmCmds;
         }
-        cwCmds[0] = _.first(cwCmds).toggleSplit();
-        cwCmds[cwCmds.length - 1] = _.last(cwCmds).toggleSplit();
-        return cwCmds;
+        cmCmds[0] = _.first(cmCmds).toggleSplit();
+        cmCmds[cmCmds.length - 1] = _.last(cmCmds).toggleSplit();
+        return cmCmds;
       });
 
 
@@ -142,7 +142,7 @@ class PathCommandImpl implements PathCommand {
         cmds[numCommands - 1] = newLine(lastCmd.start, lastCmd.end, lastCmd.isSplit);
       }
 
-      const newCmds = [];
+      const newCmds: CommandImpl[] = [];
 
       // Handle these case separately cause they are annoying and I'm sick of edge cases.
       if (shiftOffset === 1) {
@@ -167,23 +167,25 @@ class PathCommandImpl implements PathCommand {
         newCmds.push(cmds[(i + shiftOffset) % numCommands]);
       }
 
-      // The first start point will either be undefined, or the end point of the previous sub path.
+      // The first start point will either be undefined,
+      // or the end point of the previous sub path.
       const prevMoveCmd = newCmds.splice(numCommands - shiftOffset, 1)[0];
       newCmds.push(newCmds.shift());
       newCmds.unshift(newMove(prevMoveCmd.start, _.last(newCmds).end));
       return newCmds;
     };
 
-    const drawCommands = _.flatMap(newCmdWrappers, (_, subIdx) => {
+    const reorderedCommands = _.flatMap(newCommandMutationsMap, (_, subIdx) => {
       return maybeShiftCommandsFn(subIdx, maybeReverseCommandsFn(subIdx));
     });
-    // TODO: using assign here is kinda weird...
-    return new PathCommandImpl(_.assign({}, {
-      drawCommands_: drawCommands,
-      commandWrappers_: this.commandWrappers_,
+    const pathCommandParams: PathCommandParams = {
+      commands_: reorderedCommands,
+      commandMutationsMap_: this.commandMutationsMap_,
       shiftOffsets_: this.shiftOffsets_,
       reversals_: this.reversals_,
-    }, params));
+    };
+    // TODO: using assign here is kinda weird...
+    return new PathCommandImpl(_.assign({}, pathCommandParams, params));
   }
 
   get pathString() {
@@ -263,13 +265,13 @@ class PathCommandImpl implements PathCommand {
 
   // Implements the PathCommand interface.
   project(point: Point): { projection: Projection, split: () => PathCommand } | undefined {
-    return _.chain(this.commandWrappers_)
-      .map((subPathCws: CommandState[], cwsIdx) =>
-        subPathCws.map((cw: CommandState, cwIdx) => {
-          const projection = cw.project(point);
+    return _.chain(this.commandMutationsMap_)
+      .map((subPathCws: CommandMutation[], cmsIdx) =>
+        subPathCws.map((cm: CommandMutation, cmIdx) => {
+          const projection = cm.project(point);
           return {
             projection,
-            split: () => this.splitCommandWrapper(cwsIdx, cwIdx, projection.t),
+            split: () => this.splitCommandMutation(cmsIdx, cmIdx, projection.t),
           };
         }))
       .flatMap(projections => projections)
@@ -291,7 +293,7 @@ class PathCommandImpl implements PathCommand {
   // Implements the PathCommand interface.
   shiftBack(subIdx: number, numShifts = 1) {
     return this.reversals_[subIdx]
-      ? this.shift(subIdx, (o, n) =>  MathUtil.floorMod(o - numShifts, n - 1))
+      ? this.shift(subIdx, (o, n) => MathUtil.floorMod(o - numShifts, n - 1))
       : this.shift(subIdx, (o, n) => (o + numShifts) % (n - 1));
   }
 
@@ -299,7 +301,7 @@ class PathCommandImpl implements PathCommand {
   shiftForward(subIdx: number, numShifts = 1) {
     return this.reversals_[subIdx]
       ? this.shift(subIdx, (o, n) => (o + numShifts) % (n - 1))
-      : this.shift(subIdx, (o, n) =>  MathUtil.floorMod(o - numShifts, n - 1));
+      : this.shift(subIdx, (o, n) => MathUtil.floorMod(o - numShifts, n - 1));
   }
 
   private shift(
@@ -321,19 +323,19 @@ class PathCommandImpl implements PathCommand {
 
   // Implements the PathCommand interface.
   getId(subIdx: number, cmdIdx: number) {
-    const { targetCw, splitIdx } = this.findCommandWrapper(subIdx, cmdIdx);
+    const { targetCw, splitIdx } = this.findCommandMutation(subIdx, cmdIdx);
     return targetCw.getIdAtIndex(splitIdx);
   }
 
   // Implements the PathCommand interface.
   split(subIdx: number, cmdIdx: number, ...ts: number[]) {
-    const { targetCw, cwIdx, splitIdx } =
-      this.findCommandWrapper(subIdx, cmdIdx);
+    const { targetCw, cmIdx, splitIdx } =
+      this.findCommandMutation(subIdx, cmdIdx);
     const shiftOffsets =
-      this.maybeUpdateShiftOffsetsAfterSplit(subIdx, cwIdx, ts.length);
+      this.maybeUpdateShiftOffsetsAfterSplit(subIdx, cmIdx, ts.length);
     const newCw = targetCw.splitAtIndex(splitIdx, ts);
     return this.clone({
-      commandWrappers_: this.replaceCommandWrapper(subIdx, cwIdx, newCw),
+      commandMutationsMap_: this.replaceCommandMutation(subIdx, cmIdx, newCw),
       shiftOffsets_: shiftOffsets,
     });
   }
@@ -359,31 +361,31 @@ class PathCommandImpl implements PathCommand {
 
   // Implements the PathCommand interface.
   splitInHalf(subIdx: number, cmdIdx: number) {
-    const { targetCw, cwIdx, splitIdx } =
-      this.findCommandWrapper(subIdx, cmdIdx);
+    const { targetCw, cmIdx, splitIdx } =
+      this.findCommandMutation(subIdx, cmdIdx);
     const shiftOffsets =
-      this.maybeUpdateShiftOffsetsAfterSplit(subIdx, cwIdx, 1);
+      this.maybeUpdateShiftOffsetsAfterSplit(subIdx, cmIdx, 1);
     const newCw = targetCw.splitInHalfAtIndex(splitIdx);
     return this.clone({
-      commandWrappers_: this.replaceCommandWrapper(subIdx, cwIdx, newCw),
+      commandMutationsMap_: this.replaceCommandMutation(subIdx, cmIdx, newCw),
       shiftOffsets_: shiftOffsets,
     });
   }
 
-  // Same as split above, except can be used when the command wrapper indices are known.
+  // Same as split above, except can be used when the command mutation indices are known.
   // This method specifically only handles one t value (since multi-spliting involves
   // recalculating shift indices in weird ways).
-  private splitCommandWrapper(cwsIdx: number, cwIdx: number, t: number) {
+  private splitCommandMutation(cmsIdx: number, cmIdx: number, t: number) {
     const shiftOffsets =
-      this.maybeUpdateShiftOffsetsAfterSplit(cwsIdx, cwIdx, 1);
-    const targetCw = this.commandWrappers_[cwsIdx][cwIdx];
+      this.maybeUpdateShiftOffsetsAfterSplit(cmsIdx, cmIdx, 1);
+    const targetCw = this.commandMutationsMap_[cmsIdx][cmIdx];
     return this.clone({
-      commandWrappers_: this.replaceCommandWrapper(cwsIdx, cwIdx, targetCw.split([t])),
+      commandMutationsMap_: this.replaceCommandMutation(cmsIdx, cmIdx, targetCw.split([t])),
       shiftOffsets_: shiftOffsets,
     });
   }
 
-  // If 0 <= cwIdx <= shiftOffset, then that means we need to increase the
+  // If 0 <= cmIdx <= shiftOffset, then that means we need to increase the
   // shift offset to account for the new split points that are about to be inserted.
   // Note that this method assumes all splits will occur within the same cmdIdx
   // command. This means that the shift offset will only ever increase by either
@@ -391,29 +393,29 @@ class PathCommandImpl implements PathCommand {
   // both sides of the shift pivot. We could fix that, but it's a lot of
   // complicated indexing and I don't think the user will ever need to do this anyway.
   private maybeUpdateShiftOffsetsAfterSplit(
-    cwsIdx: number, cwIdx: number, numSplits: number) {
+    cmsIdx: number, cmIdx: number, numSplits: number) {
 
     const shiftOffsets = this.shiftOffsets_.slice();
-    const shiftOffset = shiftOffsets[cwsIdx];
-    if (shiftOffset && cwIdx <= shiftOffset) {
-      shiftOffsets[cwsIdx] = shiftOffset + numSplits;
+    const shiftOffset = shiftOffsets[cmsIdx];
+    if (shiftOffset && cmIdx <= shiftOffset) {
+      shiftOffsets[cmsIdx] = shiftOffset + numSplits;
     }
     return shiftOffsets;
   }
 
   // Implements the PathCommand interface.
   unsplit(subIdx: number, cmdIdx: number) {
-    const { targetCw, cwIdx, splitIdx } =
-      this.findCommandWrapper(subIdx, cmdIdx);
+    const { targetCw, cmIdx, splitIdx } =
+      this.findCommandMutation(subIdx, cmdIdx);
     const newCw =
       targetCw.unsplitAtIndex(this.reversals_[subIdx] ? splitIdx - 1 : splitIdx);
     const shiftOffsets_ = this.shiftOffsets_.slice();
     const shiftOffset = this.shiftOffsets_[subIdx];
-    if (shiftOffset && cwIdx <= shiftOffset) {
+    if (shiftOffset && cmIdx <= shiftOffset) {
       shiftOffsets_[subIdx] = shiftOffset - 1;
     }
     return this.clone({
-      commandWrappers_: this.replaceCommandWrapper(subIdx, cwIdx, newCw),
+      commandMutationsMap_: this.replaceCommandMutation(subIdx, cmIdx, newCw),
       shiftOffsets_,
     });
   }
@@ -439,11 +441,11 @@ class PathCommandImpl implements PathCommand {
 
   // Implements the PathCommand interface.
   convert(subIdx: number, cmdIdx: number, svgChar: SvgChar) {
-    const { targetCw, cwIdx, splitIdx } =
-      this.findCommandWrapper(subIdx, cmdIdx);
+    const { targetCw, cmIdx, splitIdx } =
+      this.findCommandMutation(subIdx, cmdIdx);
     const newCw = targetCw.convertAtIndex(splitIdx, svgChar);
     return this.clone({
-      commandWrappers_: this.replaceCommandWrapper(subIdx, cwIdx, newCw),
+      commandMutationsMap_: this.replaceCommandMutation(subIdx, cmIdx, newCw),
     });
   }
 
@@ -458,13 +460,13 @@ class PathCommandImpl implements PathCommand {
   // Implements the PathCommand interface.
   revert(): PathCommand {
     return new PathCommandImpl(
-      _.chain(this.commandWrappers_)
-        .flatMap(cws => cws)
-        .map(cw => cw.backingCommand)
+      _.chain(this.commandMutationsMap_)
+        .flatMap(cms => cms)
+        .map(cm => cm.backingCommand)
         .value());
   }
 
-  private findCommandWrapper(subIdx: number, cmdIdx: number) {
+  private findCommandMutation(subIdx: number, cmdIdx: number) {
     const numCommands = this.subPathCommands_[subIdx].commands.length;
     if (cmdIdx && this.reversals_[subIdx]) {
       cmdIdx = numCommands - cmdIdx;
@@ -473,21 +475,21 @@ class PathCommandImpl implements PathCommand {
     if (cmdIdx >= numCommands) {
       cmdIdx -= (numCommands - 1);
     }
-    let counter = 0, cwIdx = 0;
-    for (const targetCw of this.commandWrappers_[subIdx]) {
+    let counter = 0, cmIdx = 0;
+    for (const targetCw of this.commandMutationsMap_[subIdx]) {
       if (counter + targetCw.commands.length > cmdIdx) {
         const splitIdx = cmdIdx - counter;
-        return { targetCw, cwIdx, splitIdx };
+        return { targetCw, cmIdx, splitIdx };
       }
       counter += targetCw.commands.length;
-      cwIdx++;
+      cmIdx++;
     }
-    throw new Error('Error retrieving command wrapper');
+    throw new Error('Error retrieving command mutation');
   }
 
-  private replaceCommandWrapper(cwsIdx: number, cwIdx: number, cw: CommandState) {
-    const newCws = this.commandWrappers_.map(cws => cws.slice());
-    newCws[cwsIdx][cwIdx] = cw;
+  private replaceCommandMutation(cmsIdx: number, cmIdx: number, cm: CommandMutation) {
+    const newCws = this.commandMutationsMap_.map(cms => cms.slice());
+    newCws[cmsIdx][cmIdx] = cm;
     return newCws;
   }
 }
@@ -514,8 +516,8 @@ function createSubPathCommands(...commands: Command[]) {
  * Path command internals that have been cloned.
  */
 interface PathCommandParams {
-  drawCommands_?: ReadonlyArray<CommandImpl>;
-  commandWrappers_?: ReadonlyArray<ReadonlyArray<CommandState>>;
+  commands_?: ReadonlyArray<CommandImpl>;
+  commandMutationsMap_?: ReadonlyArray<ReadonlyArray<CommandMutation>>;
   shiftOffsets_?: ReadonlyArray<number>;
   reversals_?: ReadonlyArray<boolean>;
 }
