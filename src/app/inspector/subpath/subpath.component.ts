@@ -24,7 +24,7 @@ export class SubPathComponent {
   @Input()
   set subPathCommand(subPathCommand: SubPathCommand) {
     this.subPathCommand_ = subPathCommand;
-    const dcws = [];
+    const dcws: DrawCommandWrapper[] = [];
     this.subPathCommand_.commands.forEach((cmd, i) => {
       dcws.push({
         id: this.pathCommand.getId(this.subIdx, i),

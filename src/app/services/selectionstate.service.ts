@@ -60,8 +60,8 @@ export class SelectionStateService {
  * A selection represents an action that is the result of a mouse click.
  */
 export interface Selection {
-  readonly commandId?: CommandIndex;
-  readonly source?: EditorType;
+  readonly commandId: CommandIndex;
+  readonly source: EditorType;
 }
 
 function areSelectionsEqual(sel1: Selection, sel2: Selection) {
