@@ -1,4 +1,5 @@
-<div fxLayout="row" class="button-container">
+<div fxLayout="row"
+  class="button-container">
   <button md-icon-button
     mdTooltip="Add"
     mdTooltipPosition="above"
@@ -38,15 +39,14 @@
   </button>
 </div>
 <div fxLayout="column">
-<app-command
-  *ngFor="let drawCommandWrapper of drawCommandWrappers;
+  <app-command *ngFor="let drawCommandWrapper of drawCommandWrappers;
     let cmdIdx = index;
     trackBy: trackDrawCommand"
-  [editorType]="editorType"
-  [pathId]="pathId"
-  [subIdx]="subIdx"
-  [cmdIdx]="cmdIdx"
-  [drawCommand]="drawCommandWrapper.drawCommand">
-</app-command>
+    [editorType]="editorType"
+    [pathId]="pathId"
+    [subIdx]="subIdx"
+    [cmdIdx]="cmdIdx"
+    [drawCommand]="drawCommandWrapper.drawCommand">
+  </app-command>
 </div>
 

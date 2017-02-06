@@ -30,7 +30,7 @@ app-droptarget:last-child {
 
 div.inspector-container {
   height: 320px;
-  background-color: '#fff';
+  background-color: material-color('grey', '100');
   overflow: auto;
 }
 
@@ -53,31 +53,48 @@ div.app-splitter:hover {
   z-index: 1;
 }
 
+.toolbar-horizontal-spacing {
+  margin-right: 12px;
+}
+
 .shapeshifter-logo {
   width: 40px;
   height: 40px;
   margin-right: 8px;
 }
 
-.timeline-button {
-  margin: 0px 3px;
+.timeline-container {
+  button {
+    margin: 0px 3px;
+  }
+  button[md-mini-fab] {
+    md-icon {
+      color: $colorWhiteTextPrimary;
+    }
+  }
+  button[md-icon-button] {
+    md-icon {
+      color: $colorWhiteTextSecondary;
+    }
+  }
 }
 
-.light-themed-fab-icon {
-  color: $colorWhiteTextPrimary;
+.inspector-panel {
+  box-shadow: 0px 0 0 material-color('grey', '500'), -4px 0 0 material-color('grey', '500');
+  .inspector-panel-header {
+    background-color: material-color('grey', '100');
+    box-shadow: material-shadow(1);
+    min-height: 48px;
+    span {
+      color: $colorBlackTextSecondary;
+      margin: 8px;
+    }
+  }
+  .inspector-panel-body {
+    .inspector-panel-empty-state {
+      margin: 32px;
+      color: $colorBlackTextDisabled;
+    }
+  }
 }
 
-.light-themed-borderless-icon {
-  color: $colorWhiteTextSecondary;
-}
-
-.toolbar-horizontal-spacing {
-  margin-right: 12px;
-}
-
-.inspector-header {
-  background-color: material-color('grey', '100');
-  box-shadow: material-shadow(1);
-  z-index: 1;
-  min-height: 48px;
-}

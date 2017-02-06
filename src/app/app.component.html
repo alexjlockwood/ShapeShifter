@@ -1,116 +1,106 @@
-<div
-  #appContainer
+<div #appContainer
   class="app-container"
   fxLayout="column">
-    <div class="preview-banner" fxLayout="row" fxLayoutAlign="center center">
-      <md-icon class="shapeshifter-logo" svgIcon="shapeshifter"></md-icon>
-      <span>Shape Shifter</span>
-      <span fxFlex="1 1 auto"></span>
-      <button md-icon-button [mdMenuTriggerFor]="menu">
-        <md-icon>more_vert</md-icon>
+  <div class="preview-banner"
+    fxLayout="row"
+    fxLayoutAlign="center center">
+    <md-icon class="shapeshifter-logo"
+      svgIcon="shapeshifter"></md-icon>
+    <span>Shape Shifter</span>
+    <span fxFlex="1 1 auto"></span>
+    <button md-icon-button
+      [mdMenuTriggerFor]="menu">
+      <md-icon>more_vert</md-icon>
+    </button>
+    <md-menu #menu="mdMenu">
+      <button md-menu-item>
+        <md-icon>create</md-icon>
+        <span>New</span>
       </button>
-      <md-menu #menu="mdMenu">
-        <button md-menu-item>
-          <md-icon>create</md-icon>
-          <span>New</span>
-        </button>
-        <button md-menu-item>
-          <md-icon>clear</md-icon>
-          <span>Revert</span>
-        </button>
-        <button md-menu-item>
-          <md-icon svgIcon="contribute"></md-icon>
-          <span>Contribute</span>
-        </button>
-        <button md-menu-item>
-          <md-icon>info</md-icon>
-          <span>About</span>
-        </button>
-      </md-menu>
-    </div>
-  <div
-    class="animation-container"
+      <button md-menu-item>
+        <md-icon>clear</md-icon>
+        <span>Revert</span>
+      </button>
+      <button md-menu-item>
+        <md-icon svgIcon="contribute"></md-icon>
+        <span>Contribute</span>
+      </button>
+      <button md-menu-item>
+        <md-icon>info</md-icon>
+        <span>About</span>
+      </button>
+    </md-menu>
+  </div>
+  <div class="animation-container"
     fxLayout="column"
     fxFlex>
-    <div
-      #canvasContainer
+    <div #canvasContainer
       class="canvas-container"
       fxLayout="row"
       fxLayoutAlign="center center"
       fxFlex>
-      <app-canvas
-        *ngIf="shouldDisplayStartEditor"
+      <app-canvas *ngIf="shouldDisplayStartEditor"
         [editorType]="startVectorLayerType">
       </app-canvas>
-      <app-droptarget
-        appDropZone
+      <app-droptarget appDropZone
         *ngIf="!shouldDisplayStartEditor"
         [editorType]="startVectorLayerType">
       </app-droptarget>
-      <app-canvas
-        *ngIf="isMorphable"
+      <app-canvas *ngIf="isMorphable"
         [editorType]="previewVectorLayerType">
       </app-canvas>
-      <app-canvas
-        *ngIf="shouldDisplayEndEditor"
+      <app-canvas *ngIf="shouldDisplayEndEditor"
         [editorType]="endVectorLayerType">
       </app-canvas>
-      <app-droptarget
-        appDropZone
+      <app-droptarget appDropZone
         *ngIf="!shouldDisplayEndEditor"
         [editorType]="endVectorLayerType">
       </app-droptarget>
     </div>
-    <app-timeline
-      *ngIf="false && shouldDisplayStartEditor && shouldDisplayEndEditor">
+    <app-timeline *ngIf="false && shouldDisplayStartEditor && shouldDisplayEndEditor">
     </app-timeline>
-    <div fxLayout="row" fxLayoutAlight="center center">
+    <div class="timeline-container"
+      fxLayout="row"
+      fxLayoutAlight="center center">
       <span fxFlex="1 1 auto"></span>
-      <button
-        md-icon-button
+      <button md-icon-button
         class="timeline-button"
         mdTooltip="Playback speed"
         mdTooltipPosition="above"
         md-theme="light">
         <md-icon class="light-themed-borderless-icon">slow_motion_video</md-icon>
       </button>
-      <button
-        md-icon-button
-        class="timeline-button"
+      <button md-icon-button
         mdTooltip="Step back"
         mdTooltipPosition="above"
         md-theme="light">
         <md-icon class="light-themed-borderless-icon">fast_rewind</md-icon>
       </button>
-      <button
-        md-mini-fab
+      <button md-mini-fab
         class="timeline-button"
         mdTooltip="Play"
         mdTooltipPosition="above"
         md-theme="dark">
         <md-icon class="light-themed-fab-icon">play_arrow</md-icon>
       </button>
-      <button
-        md-icon-button
+      <button md-icon-button
         class="timeline-button"
         mdTooltip="Step forward"
         mdTooltipPosition="above"
         md-theme="dark">
         <md-icon class="light-themed-borderless-icon">fast_forward</md-icon>
       </button>
-      <button
-        md-icon-button
+      <button md-icon-button
         class="timeline-button"
         mdTooltip="Repeat"
         mdTooltipPosition="above"
         md-theme="light">
         <md-icon class="light-themed-borderless-icon">repeat</md-icon>
       </button>
-      <span fxFlex="1 1 auto"></span>
+      <span fxFlex></span>
     </div>
   </div>
-  <div
-    #inspectorContainer
+  <div #inspectorContainer
     class="inspector-container"
     fxLayout="row">
     <!--<div
@@ -118,33 +108,60 @@
       class="app-splitter"
       (onDividerDrag)="onDividerDrag($event)">
     </div>-->
-    <div fxLayout="column">
-      <div class="inspector-header">Import SVG 1</div>
-      <div fxFlex style="background-color: #f00;">asdfasdfasdfasdf</div>
-    </div>
-    <div fxLayout="column">
-      <div class="inspector-header">Import SVG 2</div>
-      <div fxFlex style="background-color: #0f0;">asdfasdfasdfasdf</div>
-    </div>
-    <div fxLayout="column">
-      <div class="inspector-header">Status: morphable</div>
-      <div *ngIf="shouldDisplayStartEditor && shouldDisplayEndEditor"
-        fxFlex
-        fxLayout="row">
-        <app-inspector
-          [editorType]="startVectorLayerType">
-        </app-inspector>
-        <app-inspector
-          [editorType]="endVectorLayerType">
-        </app-inspector>
+    <div class="inspector-panel"
+      fxLayout="column">
+      <div class="inspector-panel-header"
+        fxLayoutAlign="start center">
+        <span>Start path</span>
+      </div>
+      <div class="inspector-panel-body"
+        fxLayoutAlign="center center"
+        fxFlex>
+        <span class="inspector-panel-empty-state">
+          Drag and drop an SVG file here
+        </span>
       </div>
     </div>
-    <div fxLayout="column" fxFlex="1 1 auto">
-      <div class="inspector-header"></div>
+    <div class="inspector-panel"
+      fxLayout="column">
+      <div class="inspector-panel-header"
+        fxLayoutAlign="start center">
+        <span>End path</span>
+      </div>
+      <div class="inspector-panel-body"
+        fxLayoutAlign="center center"
+        fxFlex>
+        <span class="inspector-panel-empty-state">
+          Drag and drop an SVG file here
+        </span>
+      </div>
     </div>
-    <div>
-      <div class="inspector-header"></div>
+    <div class="inspector-panel"
+      fxLayout="column"
+      fxFlex>
+      <div class="inspector-panel-header"
+        fxLayout="row"
+        fxLayoutAlign="start center">
+        <span>Status: morphable</span>
+        <span fxFlex></span>
+      </div>
+      <div class="inspector-panel-body"
+        fxLayout="row"
+        fxFlex
+        *ngIf="shouldDisplayStartEditor && shouldDisplayEndEditor">
+        <app-inspector [editorType]="startVectorLayerType"></app-inspector>
+        <app-inspector [editorType]="endVectorLayerType"></app-inspector>
+        <span fxFlex></span>
+      </div>
+    </div>
+    <div class="inspector-panel"
+      fxLayout="column">
+      <div class="inspector-panel-header"
+        fxLayoutAlign="start center">
+        <span>Export</span>
+      </div>
       <app-export></app-export>
     </div>
   </div>
 </div>
+

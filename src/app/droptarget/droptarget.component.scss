@@ -5,7 +5,6 @@
   display: flex;
   justify-content: center;
   align-items: center;
-
   input[type="file"] {
     position: absolute;
     left: 0;
@@ -15,8 +14,8 @@
     opacity: 0;
     cursor: pointer;
   }
-
   ::-webkit-file-upload-button {
-    cursor:pointer;
+    cursor: pointer;
   }
 }
+

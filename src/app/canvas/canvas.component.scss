@@ -3,33 +3,27 @@
 
 .app-canvas-container {
   position: relative;
-
   .canvas-ruler {
     position: absolute;
     transition: opacity $animTimeFast ease, visibility 0s linear $animTimeFast;
     opacity: 0;
     visibility: hidden;
   }
-
   &:hover .canvas-ruler {
     transition: opacity $animTimeFast ease;
     opacity: 1;
     visibility: visible;
   }
-
   canvas.rendering-canvas {
     background-color: #fff;
     box-shadow: material-shadow(2);
   }
-
   $rulerWidth: 32px;
-
   .orientation-horizontal {
     left: -12px;
     top: -$rulerWidth;
     height: $rulerWidth;
   }
-
   .orientation-vertical {
     top: -12px;
     left: -$rulerWidth;

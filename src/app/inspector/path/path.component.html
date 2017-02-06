@@ -1,6 +1,5 @@
 <div>
-  <app-subpath
-    *ngFor="let subPathCommand of subPathCommands;
+  <app-subpath *ngFor="let subPathCommand of subPathCommands;
       let subIdx = index;
       trackBy: trackSubPathCommand"
     fxLayout="column"
@@ -11,3 +10,4 @@
     [pathCommand]="pathCommand">
   </app-subpath>
 </div>
+

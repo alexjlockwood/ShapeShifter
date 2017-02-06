@@ -1,5 +1,4 @@
-<div
-  class="command-container"
+<div class="command-container"
   [class.selected]="isSelected"
   [class.hovering]="isHovering"
   fxLayout="row"
@@ -7,8 +6,10 @@
   (click)="onCommandClick($event)"
   (mouseenter)="onCommandHoverEvent(true)"
   (mouseleave)="onCommandHoverEvent(false)">
-  <canvas #drawCommandIndexCanvas class="command-index"></canvas>
-  <span class="command-text" fxFlex>{{ drawCommandEndPointText }}</span>
+  <canvas #drawCommandIndexCanvas
+    class="command-index"></canvas>
+  <span class="command-text"
+    fxFlex>{{ drawCommandEndPointText }}</span>
   <button md-icon-button
     mdTooltip="Convert"
     mdTooltipPosition="above"

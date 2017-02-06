@@ -1,20 +1,17 @@
 <div class="app-canvas-container">
-  <canvas
-    appCanvasRuler
+  <canvas appCanvasRuler
     #horizontalRuler
     class="canvas-ruler orientation-horizontal"
     [editorType]="editorType"
     [orientation]="'horizontal'">
   </canvas>
-  <canvas
-    appCanvasRuler
+  <canvas appCanvasRuler
     #verticalRuler
     class="canvas-ruler orientation-vertical"
     [editorType]="editorType"
     [orientation]="'vertical'">
   </canvas>
-  <canvas
-    #renderingCanvas
+  <canvas #renderingCanvas
     class="rendering-canvas"
     (mousedown)="onMouseDown($event)"
     (mouseup)="onMouseUp($event)"
@@ -22,3 +19,4 @@
     (mouseleave)="onMouseLeave($event)">
   </canvas>
 </div>
+
