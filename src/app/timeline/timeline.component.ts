@@ -2,7 +2,7 @@ import { Component, NgZone, OnInit } from '@angular/core';
 import { TimelineService } from './timeline.service';
 import { LayerStateService } from '../services/layerstate.service';
 import { Subscription } from 'rxjs/Subscription';
-import { EditorType } from '../EditorType';
+import { CanvasType } from '../CanvasType';
 
 @Component({
   selector: 'app-timeline',
@@ -12,7 +12,7 @@ import { EditorType } from '../EditorType';
 export class TimelineComponent implements OnInit {
   maxAnimationFractionSliderValue = 1000;
   animationDuration = 300;
-  isMorphable = false;
+  arePathsMorphable = false;
 
   private subscriptions: Subscription[] = [];
 
@@ -23,44 +23,31 @@ export class TimelineComponent implements OnInit {
 
   ngOnInit() {
     this.subscriptions.push(
-      this.layerStateService.addListener(EditorType.Start, vl => {
-        const shouldDisplayStartEditor = !!vl;
-        if (!vl) {
-          return;
-        }
+      this.layerStateService.addListener(CanvasType.Start, vl => {
         this.checkAreLayersMorphable();
       }));
     this.subscriptions.push(
-      this.layerStateService.addListener(EditorType.End, vl => {
-        if (!vl) {
-          return;
-        }
+      this.layerStateService.addListener(CanvasType.End, vl => {
         this.checkAreLayersMorphable();
       }));
   }
 
   private checkAreLayersMorphable() {
-    this.isMorphable =
-      this.layerStateService.getLayer(EditorType.Start)
-        .isMorphableWith(this.layerStateService.getLayer(EditorType.End));
-    if (this.isMorphable) {
+    const startVl = this.layerStateService.getLayer(CanvasType.Start);
+    const endVl = this.layerStateService.getLayer(CanvasType.End);
+    if (!startVl || !endVl) {
+      this.arePathsMorphable = false;
+      return;
+    }
+    this.arePathsMorphable = startVl.isMorphableWith(endVl);
+    if (this.arePathsMorphable) {
       this.timelineService.startAutoAnimate();
     } else {
       this.timelineService.stopAutoAnimate();
     }
   }
 
-  get shouldLabelPoints() {
-    return this.timelineService.getShouldLabelPoints();
-  }
-
-  // TODO(alockwood): make this update each time the slider is changed
-  onAnimationFractionSliderChanged(sliderValue: number) {
-    const fraction = sliderValue / this.maxAnimationFractionSliderValue;
-    this.timelineService.setAnimationFraction(fraction);
-  }
-
-  onPlayClick() {
+  onPlayPauseClick() {
     let startTimestamp = undefined;
     const onAnimationFrame = (timestamp: number) => {
       if (!startTimestamp) {
@@ -76,13 +63,5 @@ export class TimelineComponent implements OnInit {
       }
     };
     this.ngZone.runOutsideAngular(() => requestAnimationFrame(onAnimationFrame));
-  }
-
-  onLabelPointsCheckboxChanged(shouldLabelPoints: boolean) {
-    this.timelineService.setShouldLabelPoints(shouldLabelPoints);
-  }
-
-  onSnapToGridCheckboxChanged(shouldSnapToGrid: boolean) {
-    // TODO: implement this
   }
 }

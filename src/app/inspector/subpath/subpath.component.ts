@@ -3,7 +3,7 @@ import {
   EventEmitter, Output
 } from '@angular/core';
 import { Command, SubPathCommand, PathCommand } from './../../scripts/commands';
-import { EditorType } from '../../EditorType';
+import { CanvasType } from '../../CanvasType';
 import { InspectorService, EventType } from '../inspector.service';
 
 @Component({
@@ -12,7 +12,7 @@ import { InspectorService, EventType } from '../inspector.service';
   styleUrls: ['./subpath.component.scss']
 })
 export class SubPathComponent {
-  @Input() editorType: EditorType;
+  @Input() canvasType: CanvasType;
   @Input() pathId: string;
   @Input() subIdx: number;
   @Input() pathCommand: PathCommand;

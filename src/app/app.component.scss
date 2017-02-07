@@ -1,7 +1,6 @@
 @import './styles/material-colors';
 @import './styles/material-shadows';
 @import './styles/variables';
-
 :host,
 .app-container {
   position: absolute;
@@ -11,21 +10,20 @@
   bottom: 0;
 }
 
-div.animation-container {
+div.display-container {
   box-sizing: border-box;
   padding: 16px;
   background-color: material-color('blue-grey', '700');
   user-select: none;
 }
 
-app-canvas,
-app-droptarget:first-child {
-  margin-right: 32px;
-}
-
-app-canvas,
-app-droptarget:last-child {
-  margin-left: 32px;
+app-canvas {
+  &:first-child {
+    margin-right: 32px;
+  }
+  &:last-child {
+    margin-left: 32px;
+  }
 }
 
 div.inspector-container {
@@ -41,42 +39,6 @@ div.app-splitter {
 
 div.app-splitter:hover {
   background-color: rgba(0, 0, 0, 0.1);
-}
-
-.preview-banner {
-  padding: 8px 16px;
-  font-size: 18px;
-  line-height: 16px;
-  background-color: material-color('orange', '200');
-  color: rgba(material-color('deep-orange', '900'), .8);
-  box-shadow: material-shadow(1);
-  z-index: 1;
-}
-
-.toolbar-horizontal-spacing {
-  margin-right: 12px;
-}
-
-.shapeshifter-logo {
-  width: 40px;
-  height: 40px;
-  margin-right: 8px;
-}
-
-.timeline-container {
-  button {
-    margin: 0px 3px;
-  }
-  button[md-mini-fab] {
-    md-icon {
-      color: $colorWhiteTextPrimary;
-    }
-  }
-  button[md-icon-button] {
-    md-icon {
-      color: $colorWhiteTextSecondary;
-    }
-  }
 }
 
 .inspector-panel {

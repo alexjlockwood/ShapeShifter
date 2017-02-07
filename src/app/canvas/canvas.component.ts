@@ -9,7 +9,7 @@ import {
 import {
   Layer, PathLayer, ClipPathLayer, GroupLayer, VectorLayer
 } from '../scripts/layers';
-import { EditorType } from '../EditorType';
+import { CanvasType } from '../CanvasType';
 import * as $ from 'jquery';
 import { Point, Matrix, MathUtil, ColorUtil, SvgUtil } from '../scripts/common';
 import { TimelineService } from '../timeline/timeline.service';
@@ -33,7 +33,7 @@ export const CANVAS_MARGIN = 36;
   styleUrls: ['./canvas.component.scss']
 })
 export class CanvasComponent implements AfterViewInit, OnDestroy {
-  @Input() editorType: EditorType;
+  @Input() canvasType: CanvasType;
   @ViewChild('renderingCanvas') private renderingCanvasRef: ElementRef;
   @ViewChildren(CanvasRulerDirective) canvasRulers: QueryList<CanvasRulerDirective>;
 
@@ -66,7 +66,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     this.offscreenCanvas = $(document.createElement('canvas'));
     this.subscriptions.push(
       this.layerStateService.addListener(
-        this.editorType, vl => {
+        this.canvasType, vl => {
           if (!vl) {
             return;
           }
@@ -89,7 +89,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         this.resizeAndDraw();
       }
     });
-    if (this.editorType === EditorType.Preview) {
+    if (this.canvasType === CanvasType.Preview) {
       // Preview canvas specific setup.
       this.subscriptions.push(
         this.timelineService.animationFractionStream.subscribe(fraction => {
@@ -97,8 +97,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
             return;
           }
           // TODO: if vector layer is undefined, then clear the canvas
-          const startLayer = this.layerStateService.getLayer(EditorType.Start);
-          const endLayer = this.layerStateService.getLayer(EditorType.End);
+          const startLayer = this.layerStateService.getLayer(CanvasType.Start);
+          const endLayer = this.layerStateService.getLayer(CanvasType.End);
           this.vectorLayer.walk(layer => {
             if (!(layer instanceof PathLayer)) {
               return;
@@ -127,7 +127,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
             setCurrentHoverFn(undefined);
             return;
           }
-          if (hover.source !== this.editorType
+          if (hover.source !== this.canvasType
             && (hover.type === HoverType.Split || hover.type === HoverType.Unsplit)) {
             // If the hover source isn't of this type and the hover type is a split
             // or an unsplit, then don't draw any hover events to the canvas.
@@ -295,7 +295,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   private drawSelections(ctx: CanvasRenderingContext2D) {
     const selections =
       this.selectionStateService.getSelections()
-        .filter(sel => sel.source === this.editorType);
+        .filter(sel => sel.source === this.canvasType);
     if (!selections.length) {
       return;
     }
@@ -332,15 +332,15 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
   // Draw any labeled points.
   private drawLabeledPoints(ctx: CanvasRenderingContext2D) {
-    // if (!this.timelineService.getShouldLabelPoints()
-    //   || this.editorType === EditorType.Preview) {
-    //   return;
-    // }
+    if (!this.timelineService.getShouldLabelPoints()
+      || this.canvasType === CanvasType.Preview) {
+      return;
+    }
 
     const currentHover = this.currentHover;
     const currentSelections =
       this.selectionStateService.getSelections()
-        .filter(s => s.source === this.editorType);
+        .filter(s => s.source === this.canvasType);
     this.vectorLayer.walk((layer, transforms) => {
       if (!(layer instanceof PathLayer)) {
         return;
@@ -527,7 +527,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   }
 
   onMouseDown(event: MouseEvent) {
-    if (this.editorType === EditorType.Preview) {
+    if (this.canvasType === CanvasType.Preview) {
       // The user never interacts with the preview canvas.
       return;
     }
@@ -555,7 +555,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     const roundedMouseMove = new Point(_.round(mouseMove.x), _.round(mouseMove.y));
     this.canvasRulers.forEach(r => r.showMouse(roundedMouseMove));
 
-    if (this.editorType === EditorType.Preview) {
+    if (this.canvasType === CanvasType.Preview) {
       // The user never interacts with the preview canvas.
       return;
     }
@@ -579,7 +579,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     if (hoverPointId) {
       this.hoverStateService.setHover({
         type: HoverType.Command,
-        source: this.editorType,
+        source: this.canvasType,
         commandId: hoverPointId,
       });
     } else {
@@ -588,7 +588,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   }
 
   onMouseUp(event: MouseEvent) {
-    if (this.editorType === EditorType.Preview) {
+    if (this.canvasType === CanvasType.Preview) {
       // The user never interacts with the preview canvas.
       return;
     }
@@ -613,13 +613,13 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
               mouseUp, selectedPointId.pathId).split();
 
           // Notify the global layer state service about the change and draw.
-          this.layerStateService.notifyChange(this.editorType);
+          this.layerStateService.notifyChange(this.canvasType);
         }
       } else {
         // If we haven't started dragging a point, then we should select
         // the point instead.
         this.selectionStateService.toggle({
-          source: this.editorType,
+          source: this.canvasType,
           commandId: selectedPointId,
         }, event.shiftKey || event.metaKey);
       }
@@ -633,7 +633,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   onMouseLeave(event) {
     this.canvasRulers.forEach(r => r.hideMouse());
 
-    if (this.editorType === EditorType.Preview) {
+    if (this.canvasType === CanvasType.Preview) {
       // The user never interacts with the preview canvas.
       return;
     }

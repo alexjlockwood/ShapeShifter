@@ -1,17 +1,30 @@
 @import '../styles/material-colors';
-
-.timeline-slider {
-  width: 350px;
+@import '../styles/variables';
+// .timeline-slider {
+//   width: 350px;
+// }
+// span.text-is-not-morphable {
+//   color: material-color('red', '600');
+// }
+// span.text-is-morphable {
+//   color: material-color('green', '700');
+// }
+// .timeline-checkbox {
+//   margin-left: 16px;
+// }
+.timeline-container {
+  button {
+    margin: 0px 3px;
+  }
+  button[md-mini-fab] {
+    md-icon {
+      color: $colorWhiteTextPrimary;
+    }
+  }
+  button[md-icon-button] {
+    md-icon {
+      color: $colorWhiteTextSecondary;
+    }
+  }
 }
 
-span.text-is-not-morphable {
-  color: material-color('red', '600');
-}
-
-span.text-is-morphable {
-  color: material-color('green', '700');
-}
-
-.timeline-checkbox {
-  margin-left: 16px;
-}

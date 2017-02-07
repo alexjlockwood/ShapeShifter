@@ -12,7 +12,7 @@ import { SelectionStateService, Selection } from '../../services/selectionstate.
 import { HoverStateService, Type as HoverType } from '../../services/hoverstate.service';
 import { Subscription } from 'rxjs/Subscription';
 import { ColorUtil } from '../../scripts/common';
-import { EditorType } from '../../EditorType';
+import { CanvasType } from '../../CanvasType';
 
 @Component({
   selector: 'app-command',
@@ -20,7 +20,7 @@ import { EditorType } from '../../EditorType';
   styleUrls: ['./command.component.scss']
 })
 export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
-  @Input() editorType: EditorType;
+  @Input() canvasType: CanvasType;
   @Input() pathId: string;
   @Input() subIdx: number;
   private cmdIdx_: number;
@@ -49,7 +49,7 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
       this.selectionStateService.stream.subscribe(
         (selections: Selection[]) => {
           this.isSelected = _.some(selections, {
-            source: this.editorType,
+            source: this.canvasType,
             commandId: {
               pathId: this.pathId,
               subIdx: this.subIdx,
@@ -165,7 +165,7 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
   onCommandClick(event: MouseEvent) {
     const selections = this.selectionStateService.getSelections();
     const appendToList = event.shiftKey || event.metaKey;
-    if (selections.length && selections[0].source !== this.editorType && appendToList) {
+    if (selections.length && selections[0].source !== this.canvasType && appendToList) {
       // If the user is attempting to select something in a different pane in the
       // middle of a multi-select, do nothing.
       return;
@@ -173,7 +173,7 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // Selecting the last 'Z' command doesn't seem to work...
     this.selectionStateService.toggle({
-      source: this.editorType,
+      source: this.canvasType,
       commandId: {
         pathId: this.pathId,
         subIdx: this.subIdx,
@@ -184,11 +184,11 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
 
   isConvertable() {
     // TODO: this API usage is a little bit weird/hacky?
-    const editorType =
-      this.editorType === EditorType.Start
-        ? EditorType.End
-        : EditorType.Start;
-    const vl = this.layerStateService.getLayer(editorType);
+    const canvasType =
+      this.canvasType === CanvasType.Start
+        ? CanvasType.End
+        : CanvasType.Start;
+    const vl = this.layerStateService.getLayer(canvasType);
     const pathData = (vl.findLayerById(this.pathId) as PathLayer).pathData;
     if (pathData.subPathCommands.length <= this.subIdx) {
       return false;
@@ -236,13 +236,13 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
       this.hoverStateService.setHover({
         type: hoverType,
         commandId: { pathId, subIdx, cmdIdx },
-        source: this.editorType,
+        source: this.canvasType,
       });
     } else if (hoverType !== HoverType.Command && this.isHoveringOverCommand) {
       this.hoverStateService.setHover({
         type: HoverType.Command,
         commandId: { pathId, subIdx, cmdIdx },
-        source: this.editorType,
+        source: this.canvasType,
       });
     } else {
       this.hoverStateService.clearHover();

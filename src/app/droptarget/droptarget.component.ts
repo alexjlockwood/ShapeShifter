@@ -3,7 +3,7 @@ import {
   OnInit, ElementRef, ViewChild, OnDestroy
 } from '@angular/core';
 import { LayerStateService } from '../services/layerstate.service';
-import { EditorType } from '../EditorType';
+import { CanvasType } from '../CanvasType';
 import * as $ from 'jquery';
 import { VectorLayerLoader } from '../scripts/parsers';
 import { CanvasResizeService } from '../services/canvasresize.service';
@@ -18,7 +18,7 @@ const DROP_TARGET_MARGIN = 36;
   styleUrls: ['./droptarget.component.scss']
 })
 export class DropTargetComponent implements OnInit, OnDestroy {
-  @Input() editorType: EditorType;
+  @Input() canvasType: CanvasType;
   @ViewChild('fileDropTarget') private fileDropTargetRef: ElementRef;
 
   private element: JQuery;
@@ -72,7 +72,7 @@ export class DropTargetComponent implements OnInit, OnDestroy {
     fileReader.onload = event => {
       const svgText = (event.target as any).result;
       const vectorLayer = VectorLayerLoader.loadVectorLayerFromSvgString(svgText);
-      this.layerStateService.setLayer(this.editorType, vectorLayer);
+      this.layerStateService.setLayer(this.canvasType, vectorLayer);
     };
 
     fileReader.onerror = event => {

@@ -4,7 +4,7 @@ import {
 } from '@angular/core';
 import { PathLayer } from '../scripts/layers';
 import { PathCommand } from '../scripts/commands';
-import { EditorType } from '../EditorType';
+import { CanvasType } from '../CanvasType';
 import { LayerStateService } from '../services/layerstate.service';
 import { Subscription } from 'rxjs/Subscription';
 import { InspectorService, EventType, InspectorEvent } from './inspector.service';
@@ -17,7 +17,7 @@ import { AutoAwesome } from '../scripts/common';
   providers: [InspectorService]
 })
 export class InspectorComponent implements OnInit, OnDestroy {
-  @Input() editorType: EditorType;
+  @Input() canvasType: CanvasType;
 
   // Path commands to use to populate the ngFor loop of path components.
   pathIds: ReadonlyArray<string> = [];
@@ -32,7 +32,7 @@ export class InspectorComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.subscriptions.push(
       this.layerStateService.addListener(
-        this.editorType, vl => {
+        this.canvasType, vl => {
           if (!vl) {
             return;
           }
@@ -51,31 +51,31 @@ export class InspectorComponent implements OnInit, OnDestroy {
     this.subscriptions.push(
       this.inspectorService.addListener((event: InspectorEvent) => {
         const {eventType, pathId, subIdx, cmdIdx} = event;
-        const vl = this.layerStateService.getLayer(this.editorType);
+        const vl = this.layerStateService.getLayer(this.canvasType);
         const pathLayer = vl.findLayerById(pathId) as PathLayer;
         switch (eventType) {
           case EventType.AutoFix: {
-            const targetEditorType =
-              this.editorType === EditorType.End
-                ? EditorType.Start
-                : EditorType.End;
-            const targetVl = this.layerStateService.getLayer(targetEditorType);
+            const targetCanvasType =
+              this.canvasType === CanvasType.End
+                ? CanvasType.Start
+                : CanvasType.End;
+            const targetVl = this.layerStateService.getLayer(targetCanvasType);
             const fromPathLayer = pathLayer;
             const toPathLayer = targetVl.findLayerById(pathId) as PathLayer;
             const autoFixResult = AutoAwesome.fixAll(subIdx, fromPathLayer.pathData, toPathLayer.pathData);
             fromPathLayer.pathData = autoFixResult.from;
             toPathLayer.pathData = autoFixResult.to;
-            this.layerStateService.notifyChange(EditorType.Start);
-            this.layerStateService.notifyChange(EditorType.End);
+            this.layerStateService.notifyChange(CanvasType.Start);
+            this.layerStateService.notifyChange(CanvasType.End);
             // TODO: update selections
           }
             break;
           case EventType.Convert: {
-            const targetEditorType =
-              this.editorType === EditorType.End
-                ? EditorType.Start
-                : EditorType.End;
-            const targetVl = this.layerStateService.getLayer(targetEditorType);
+            const targetCanvasType =
+              this.canvasType === CanvasType.End
+                ? CanvasType.Start
+                : CanvasType.End;
+            const targetVl = this.layerStateService.getLayer(targetCanvasType);
             const targetPathData = (targetVl.findLayerById(pathId) as PathLayer).pathData;
             const targetSvgChar =
               targetPathData.subPathCommands[subIdx].commands[cmdIdx].svgChar;
@@ -108,7 +108,7 @@ export class InspectorComponent implements OnInit, OnDestroy {
             // TODO: update selections
             break;
         }
-        this.layerStateService.notifyChange(this.editorType);
+        this.layerStateService.notifyChange(this.canvasType);
       }));
   }
 

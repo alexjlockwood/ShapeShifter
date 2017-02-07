@@ -6,7 +6,7 @@ import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { VectorLayer } from '../scripts/layers';
 import { Observable } from 'rxjs/Observable';
 import { Index as CommandIndex } from '../scripts/commands';
-import { EditorType } from '../EditorType';
+import { CanvasType } from '../CanvasType';
 
 /**
  * A simple service that broadcasts selection events to all parts of the application.
@@ -61,7 +61,7 @@ export class SelectionStateService {
  */
 export interface Selection {
   readonly commandId: CommandIndex;
-  readonly source: EditorType;
+  readonly source: CanvasType;
 }
 
 function areSelectionsEqual(sel1: Selection, sel2: Selection) {

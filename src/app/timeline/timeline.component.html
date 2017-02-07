@@ -1,4 +1,44 @@
-<div fxLayout="row"
+<div class="timeline-container"
+  fxLayout="row"
+  fxLayoutAlight="center center">
+  <span fxFlex="1 1 auto"></span>
+  <button md-icon-button
+    class="timeline-button"
+    mdTooltip="Slow motion"
+    mdTooltipPosition="above"
+    md-theme="light">
+    <md-icon>slow_motion_video</md-icon>
+  </button>
+  <button md-icon-button
+    mdTooltip="Step back"
+    mdTooltipPosition="above"
+    md-theme="light">
+    <md-icon>fast_rewind</md-icon>
+  </button>
+  <button md-mini-fab
+    class="timeline-button"
+    mdTooltip="Play"
+    mdTooltipPosition="above"
+    md-theme="dark">
+    <md-icon>play_arrow</md-icon>
+  </button>
+  <button md-icon-button
+    class="timeline-button"
+    mdTooltip="Step forward"
+    mdTooltipPosition="above"
+    md-theme="dark">
+    <md-icon>fast_forward</md-icon>
+  </button>
+  <button md-icon-button
+    class="timeline-button"
+    mdTooltip="Repeat"
+    mdTooltipPosition="above"
+    md-theme="light">
+    <md-icon>repeat</md-icon>
+  </button>
+  <span fxFlex></span>
+</div>
+<!--<div fxLayout="row"
   fxLayoutAlign="center center">
   <md-card fxLayout="row"
     fxLayoutAlign="center center">
@@ -18,7 +58,6 @@
       [disabled]="!isMorphable">
       <md-icon class="md-24">play_arrow</md-icon>
     </button>
-    <!-- TODO: use (input) instead. see https://github.com/angular/material2/issues/2296 -->
     <md-slider
       class="timeline-slider"
       min="0"
@@ -34,7 +73,6 @@
       (change)="onLabelPointsCheckboxChanged($event.checked)">
       Label points
     </md-checkbox>
-    <!-- TODO: implement snap to grid functionality -->
     <md-checkbox
       class="timeline-checkbox"
       [disabled]="true"
@@ -43,4 +81,5 @@
       Snap to grid
     </md-checkbox>
   </md-card>
-</div>
+</div>-->
+

@@ -5,7 +5,7 @@ import {
 import { PathCommand, SubPathCommand } from './../../scripts/commands';
 import { Subscription } from 'rxjs/Subscription';
 import { Observable } from 'rxjs/Observable';
-import { EditorType } from '../../EditorType';
+import { CanvasType } from '../../CanvasType';
 
 @Component({
   selector: 'app-path',
@@ -13,7 +13,7 @@ import { EditorType } from '../../EditorType';
   styleUrls: ['./path.component.scss']
 })
 export class PathComponent {
-  @Input() editorType: EditorType;
+  @Input() canvasType: CanvasType;
   @Input() pathId: string;
   @Input() pathCommand: PathCommand;
 

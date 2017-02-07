@@ -1,0 +1,29 @@
+  <div class="toolbar"
+    fxLayout="row"
+    fxLayoutAlign="center center">
+    <md-icon class="toolbar-logo" svgIcon="shapeshifter"></md-icon>
+    <span>Shape Shifter</span>
+    <span fxFlex="1 1 auto"></span>
+    <button md-icon-button
+      [mdMenuTriggerFor]="menu">
+      <md-icon>more_vert</md-icon>
+    </button>
+    <md-menu #menu="mdMenu">
+      <button md-menu-item>
+        <md-icon>create</md-icon>
+        <span>New</span>
+      </button>
+      <button md-menu-item>
+        <md-icon>clear</md-icon>
+        <span>Revert</span>
+      </button>
+      <button md-menu-item>
+        <md-icon svgIcon="contribute"></md-icon>
+        <span>Contribute</span>
+      </button>
+      <button md-menu-item>
+        <md-icon>info</md-icon>
+        <span>About</span>
+      </button>
+    </md-menu>
+  </div>

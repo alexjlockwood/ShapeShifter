@@ -6,7 +6,7 @@ import { environment } from '../environments/environment';
 import { Layer, VectorLayer, GroupLayer, PathLayer } from './scripts/layers';
 import { VectorLayerLoader } from './scripts/parsers';
 import { Point } from './scripts/common';
-import { EditorType } from './EditorType';
+import { CanvasType } from './CanvasType';
 import { Subscription } from 'rxjs/Subscription';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { LayerStateService } from './services/layerstate.service';
@@ -31,9 +31,9 @@ export class AppComponent implements OnInit, OnDestroy {
 
   // TODO: need to warn user about svgs not being structurally identical somehow...
   // TODO: or give the user a way to update the incorrect path id names or something...?
-  startVectorLayerType = EditorType.Start;
-  previewVectorLayerType = EditorType.Preview;
-  endVectorLayerType = EditorType.End;
+  startCanvasType = CanvasType.Start;
+  previewCanvasType = CanvasType.Preview;
+  endCanvasType = CanvasType.End;
   shouldDisplayStartEditor = false;
   shouldDisplayEndEditor = false;
   isStructurallyIdentical = false;
@@ -105,13 +105,13 @@ export class AppComponent implements OnInit, OnDestroy {
     this.inspectorContainer = $(this.inspectorContainerRef.nativeElement);
 
     this.subscriptions.push(
-      this.layerStateService.addListener(EditorType.Start, vl => {
+      this.layerStateService.addListener(CanvasType.Start, vl => {
         this.startLayer = vl;
         this.shouldDisplayStartEditor = !!vl;
         this.checkAreLayersMorphable();
       }));
     this.subscriptions.push(
-      this.layerStateService.addListener(EditorType.End, vl => {
+      this.layerStateService.addListener(CanvasType.End, vl => {
         this.endLayer = vl;
         this.shouldDisplayEndEditor = !!vl;
         this.checkAreLayersMorphable();
@@ -132,11 +132,11 @@ export class AppComponent implements OnInit, OnDestroy {
       return;
     }
     // We assume all selections belong to the same editor for now.
-    const editorType = selections[0].source;
+    const CanvasType = selections[0].source;
     const unsplitOpsMap: Map<PathLayer, Array<{ subIdx: number, cmdIdx: number }>> = new Map();
     for (const selection of selections) {
       const {pathId, subIdx, cmdIdx} = selection.commandId;
-      const vectorLayer = this.layerStateService.getLayer(editorType);
+      const vectorLayer = this.layerStateService.getLayer(CanvasType);
       if (!vectorLayer) {
         continue;
       }
@@ -155,7 +155,7 @@ export class AppComponent implements OnInit, OnDestroy {
       pathLayer.pathData = pathLayer.pathData.unsplitBatch(unsplitOps);
     });
     this.selectionStateService.clear();
-    this.layerStateService.notifyChange(editorType);
+    this.layerStateService.notifyChange(CanvasType);
   }
 
   ngOnDestroy() {
@@ -171,7 +171,7 @@ export class AppComponent implements OnInit, OnDestroy {
     if (this.isMorphable !== isMorphable) {
       this.isMorphable = isMorphable;
       this.updatePaneSizes();
-      this.layerStateService.setLayer(EditorType.Preview, this.startLayer.clone());
+      this.layerStateService.setLayer(CanvasType.Preview, this.startLayer.clone());
     }
   }
 
@@ -193,7 +193,7 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   private initDebugMode() {
-    // this.layerStateService.setLayer(EditorType.Start, VectorLayerLoader.loadVectorLayerFromSvgString(`
+    // this.layerStateService.setLayer(CanvasType.Start, VectorLayerLoader.loadVectorLayerFromSvgString(`
     //   <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24">
     //     <g transform="translate(12,12)">
     //       <g transform="scale(0.75,0.75)">
@@ -211,7 +211,7 @@ export class AppComponent implements OnInit, OnDestroy {
     //       </g>
     //     </g>
     // </svg>`));
-    // this.layerStateService.setLayer(EditorType.End, VectorLayerLoader.loadVectorLayerFromSvgString(`
+    // this.layerStateService.setLayer(CanvasType.End, VectorLayerLoader.loadVectorLayerFromSvgString(`
     //   <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24">
     //     <g transform="translate(12,12)">
     //       <g transform="scale(0.75,0.75)">
@@ -227,12 +227,12 @@ export class AppComponent implements OnInit, OnDestroy {
     //       </g>
     //     </g>
     // </svg>`));
-    // this.layerStateService.setLayer(EditorType.Start, VectorLayerLoader.loadVectorLayerFromSvgString(`
+    // this.layerStateService.setLayer(CanvasType.Start, VectorLayerLoader.loadVectorLayerFromSvgString(`
     //   <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24">
     //     <path d="M 4 4 L 4 20 L 20 20 L 20 4 L 4 4"
     //              stroke="#000" stroke-width="1" />
     // </svg>`));
-    // this.layerStateService.setLayer(EditorType.End, VectorLayerLoader.loadVectorLayerFromSvgString(`
+    // this.layerStateService.setLayer(CanvasType.End, VectorLayerLoader.loadVectorLayerFromSvgString(`
     //   <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24">
     //     <path d="M 4 4 C 4 20 4 20 4 20 L 20 20 L 20 4 L 4 4"
     //              stroke="#000" stroke-width="1" />
@@ -249,7 +249,7 @@ export class AppComponent implements OnInit, OnDestroy {
     // groupLayerEnd.pivotX = 12;
     // groupLayerEnd.pivotY = 12;
     // groupLayerEnd.rotation = 180;
-    // this.layerStateService.setLayer(EditorType.Start, VectorLayerLoader.loadVectorLayerFromSvgString(`
+    // this.layerStateService.setLayer(CanvasType.Start, VectorLayerLoader.loadVectorLayerFromSvgString(`
     //   <svg xmlns="http://www.w3.org/2000/svg"
     //     width="400px" height="400px"
     //     viewBox="0 0 800 600">
@@ -279,7 +279,7 @@ export class AppComponent implements OnInit, OnDestroy {
     // c-7.596-16.742-11.847-26.159-12.762-28.27c-4.868-11.231-8.204-21.133-10.006-29.653c-1.233-6.055-3.064-15.35-5.485-27.804
     // c-2.121-10.296-5.456-18.358-10.015-24.132C155.332,279.36,147.578,260.665,148.802,244.876z"/>
     // </svg>`));
-    // this.layerStateService.setLayer(EditorType.End, VectorLayerLoader.loadVectorLayerFromSvgString(`
+    // this.layerStateService.setLayer(CanvasType.End, VectorLayerLoader.loadVectorLayerFromSvgString(`
     //   <svg xmlns="http://www.w3.org/2000/svg"
     //     width="400px" height="400px"
     //     viewBox="0 0 800 600">
@@ -302,7 +302,7 @@ export class AppComponent implements OnInit, OnDestroy {
     // c18.518,0,36.154,1.238,52.876,3.717c7.829,2.146,20.307,4.66,37.391,7.491c1.434-14.17,6.422-26.752,14.963-37.741
     // C421.377,106.059,432.947,99.669,446.47,99.669z"/>
     // </svg>`));
-    this.layerStateService.setLayer(EditorType.Start, VectorLayerLoader.loadVectorLayerFromSvgString(`
+    this.layerStateService.setLayer(CanvasType.Start, VectorLayerLoader.loadVectorLayerFromSvgString(`
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
       <path
         stroke="#000"
@@ -312,7 +312,7 @@ export class AppComponent implements OnInit, OnDestroy {
         12.103 12.475 12.103 C 18.68 12.103 17.832 21.014 12.528 21.014 C 7.648 21.014 7.86 17.832 7.913 17.089">
       </path>
     </svg>`));
-    this.layerStateService.setLayer(EditorType.End, VectorLayerLoader.loadVectorLayerFromSvgString(`
+    this.layerStateService.setLayer(CanvasType.End, VectorLayerLoader.loadVectorLayerFromSvgString(`
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
       <path
         stroke="#000"

@@ -22,6 +22,7 @@ import { DropTargetComponent } from './droptarget/droptarget.component';
 import { DropZoneDirective } from './droptarget/dropzone.directive';
 import { CanvasRulerDirective } from './canvas/ruler.directive';
 import { ExportComponent } from './export/export.component';
+import { ToolbarComponent } from './toolbar/toolbar.component';
 
 import 'hammerjs';
 
@@ -39,6 +40,7 @@ import 'hammerjs';
     CommandComponent,
     CanvasRulerDirective,
     ExportComponent,
+    ToolbarComponent,
   ],
   imports: [
     BrowserModule,

@@ -5,7 +5,7 @@ import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { VectorLayer } from '../scripts/layers';
 import { Observable } from 'rxjs/Observable';
 import { Index as CommandIndex } from '../scripts/commands';
-import { EditorType } from '../EditorType';
+import { CanvasType } from '../CanvasType';
 
 @Injectable()
 export class CanvasResizeService {

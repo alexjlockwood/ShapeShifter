@@ -2,7 +2,7 @@ import {
   Directive, OnInit, ViewChild, Input,
   ElementRef, OnDestroy
 } from '@angular/core';
-import { EditorType } from '../EditorType';
+import { CanvasType } from '../CanvasType';
 import { LayerStateService } from '../services/layerstate.service';
 import { CanvasResizeService } from '../services/canvasresize.service';
 import { Point } from '../scripts/common';
@@ -21,7 +21,7 @@ const TICK_SIZE = 6;
   selector: '[appCanvasRuler]',
 })
 export class CanvasRulerDirective implements OnInit, OnDestroy {
-  @Input() editorType: EditorType;
+  @Input() canvasType: CanvasType;
   @Input() orientation: Orientation;
   private canvas: JQuery;
   private mousePoint: Point;
@@ -39,7 +39,7 @@ export class CanvasRulerDirective implements OnInit, OnDestroy {
     this.canvas = $(this.elementRef.nativeElement);
     this.subscriptions.push(
       this.layerStateService.addListener(
-        this.editorType, vl => {
+        this.canvasType, vl => {
           if (!vl) {
             return;
           }

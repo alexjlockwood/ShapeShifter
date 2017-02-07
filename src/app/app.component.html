@@ -1,37 +1,8 @@
 <div #appContainer
   class="app-container"
   fxLayout="column">
-  <div class="preview-banner"
-    fxLayout="row"
-    fxLayoutAlign="center center">
-    <md-icon class="shapeshifter-logo"
-      svgIcon="shapeshifter"></md-icon>
-    <span>Shape Shifter</span>
-    <span fxFlex="1 1 auto"></span>
-    <button md-icon-button
-      [mdMenuTriggerFor]="menu">
-      <md-icon>more_vert</md-icon>
-    </button>
-    <md-menu #menu="mdMenu">
-      <button md-menu-item>
-        <md-icon>create</md-icon>
-        <span>New</span>
-      </button>
-      <button md-menu-item>
-        <md-icon>clear</md-icon>
-        <span>Revert</span>
-      </button>
-      <button md-menu-item>
-        <md-icon svgIcon="contribute"></md-icon>
-        <span>Contribute</span>
-      </button>
-      <button md-menu-item>
-        <md-icon>info</md-icon>
-        <span>About</span>
-      </button>
-    </md-menu>
-  </div>
-  <div class="animation-container"
+  <app-toolbar></app-toolbar>
+  <div class="display-container"
     fxLayout="column"
     fxFlex>
     <div #canvasContainer
@@ -40,65 +11,18 @@
       fxLayoutAlign="center center"
       fxFlex>
       <app-canvas *ngIf="shouldDisplayStartEditor"
-        [editorType]="startVectorLayerType">
+        [canvasType]="startCanvasType">
       </app-canvas>
-      <app-droptarget appDropZone
-        *ngIf="!shouldDisplayStartEditor"
-        [editorType]="startVectorLayerType">
-      </app-droptarget>
       <app-canvas *ngIf="isMorphable"
-        [editorType]="previewVectorLayerType">
+        [canvasType]="previewCanvasType">
       </app-canvas>
       <app-canvas *ngIf="shouldDisplayEndEditor"
-        [editorType]="endVectorLayerType">
+        [canvasType]="endCanvasType">
       </app-canvas>
-      <app-droptarget appDropZone
-        *ngIf="!shouldDisplayEndEditor"
-        [editorType]="endVectorLayerType">
-      </app-droptarget>
     </div>
-    <app-timeline *ngIf="false && shouldDisplayStartEditor && shouldDisplayEndEditor">
-    </app-timeline>
-    <div class="timeline-container"
-      fxLayout="row"
-      fxLayoutAlight="center center">
-      <span fxFlex="1 1 auto"></span>
-      <button md-icon-button
-        class="timeline-button"
-        mdTooltip="Playback speed"
-        mdTooltipPosition="above"
-        md-theme="light">
-        <md-icon class="light-themed-borderless-icon">slow_motion_video</md-icon>
-      </button>
-      <button md-icon-button
-        mdTooltip="Step back"
-        mdTooltipPosition="above"
-        md-theme="light">
-        <md-icon class="light-themed-borderless-icon">fast_rewind</md-icon>
-      </button>
-      <button md-mini-fab
-        class="timeline-button"
-        mdTooltip="Play"
-        mdTooltipPosition="above"
-        md-theme="dark">
-        <md-icon class="light-themed-fab-icon">play_arrow</md-icon>
-      </button>
-      <button md-icon-button
-        class="timeline-button"
-        mdTooltip="Step forward"
-        mdTooltipPosition="above"
-        md-theme="dark">
-        <md-icon class="light-themed-borderless-icon">fast_forward</md-icon>
-      </button>
-      <button md-icon-button
-        class="timeline-button"
-        mdTooltip="Repeat"
-        mdTooltipPosition="above"
-        md-theme="light">
-        <md-icon class="light-themed-borderless-icon">repeat</md-icon>
-      </button>
-      <span fxFlex></span>
-    </div>
+    <!--<app-timeline *ngIf="false && shouldDisplayStartEditor && shouldDisplayEndEditor">
+    </app-timeline>-->
+    <app-timeline></app-timeline>
   </div>
   <div #inspectorContainer
     class="inspector-container"
@@ -149,8 +73,8 @@
         fxLayout="row"
         fxFlex
         *ngIf="shouldDisplayStartEditor && shouldDisplayEndEditor">
-        <app-inspector [editorType]="startVectorLayerType"></app-inspector>
-        <app-inspector [editorType]="endVectorLayerType"></app-inspector>
+        <app-inspector [canvasType]="startCanvasType"></app-inspector>
+        <app-inspector [canvasType]="endCanvasType"></app-inspector>
         <span fxFlex></span>
       </div>
     </div>
