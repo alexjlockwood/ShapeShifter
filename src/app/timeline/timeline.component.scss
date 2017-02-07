@@ -12,7 +12,6 @@
 // .timeline-checkbox {
 //   margin-left: 16px;
 // }
-.timeline-container {
   button {
     margin: 0px 3px;
   }
@@ -25,6 +24,9 @@
     md-icon {
       color: $colorWhiteTextSecondary;
     }
+    md-icon.activated {
+      color: material-color('orange', '700');
+    }
   }
-}
+
 

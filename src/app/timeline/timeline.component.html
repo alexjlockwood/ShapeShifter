@@ -1,40 +1,41 @@
-<div class="timeline-container"
+<div
   fxLayout="row"
   fxLayoutAlight="center center">
   <span fxFlex="1 1 auto"></span>
   <button md-icon-button
-    class="timeline-button"
+    [disabled]="!arePathsMorphable"
     mdTooltip="Slow motion"
     mdTooltipPosition="above"
     md-theme="light">
-    <md-icon>slow_motion_video</md-icon>
+    <md-icon [class.activated]="isSlowMotionActivated">slow_motion_video</md-icon>
   </button>
   <button md-icon-button
+    [disabled]="!arePathsMorphable"
     mdTooltip="Step back"
     mdTooltipPosition="above"
     md-theme="light">
     <md-icon>fast_rewind</md-icon>
   </button>
   <button md-mini-fab
-    class="timeline-button"
+    [disabled]="!arePathsMorphable"
     mdTooltip="Play"
     mdTooltipPosition="above"
     md-theme="dark">
-    <md-icon>play_arrow</md-icon>
+    <md-icon>{{ isPlayActivated ? 'pause_arrow' : 'play_arrow' }}</md-icon>
   </button>
   <button md-icon-button
-    class="timeline-button"
+    [disabled]="!arePathsMorphable"
     mdTooltip="Step forward"
     mdTooltipPosition="above"
     md-theme="dark">
     <md-icon>fast_forward</md-icon>
   </button>
   <button md-icon-button
-    class="timeline-button"
+    [disabled]="!arePathsMorphable"
     mdTooltip="Repeat"
     mdTooltipPosition="above"
     md-theme="light">
-    <md-icon>repeat</md-icon>
+    <md-icon [class.activated]="isRepeatActivated">repeat</md-icon>
   </button>
   <span fxFlex></span>
 </div>

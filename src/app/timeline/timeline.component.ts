@@ -13,8 +13,11 @@ export class TimelineComponent implements OnInit {
   maxAnimationFractionSliderValue = 1000;
   animationDuration = 300;
   arePathsMorphable = false;
+  isSlowMotionActivated = false;
+  isPlayActivated = false;
+  isRepeatActivated = false;
 
-  private subscriptions: Subscription[] = [];
+  private readonly subscriptions: Subscription[] = [];
 
   constructor(
     private layerStateService: LayerStateService,
