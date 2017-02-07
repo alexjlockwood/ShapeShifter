@@ -17,11 +17,6 @@ export interface Command {
   commandString: string;
 
   /**
-   * Returns the raw number arguments for this command.
-   */
-  args: ReadonlyArray<number>;
-
-  /**
    * Returns the points for this command.
    */
   points: ReadonlyArray<Point>;

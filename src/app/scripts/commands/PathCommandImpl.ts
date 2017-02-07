@@ -5,7 +5,7 @@ import { PathCommand, SubPathCommand, Command, SvgChar, Projection } from '.';
 import { PathParser } from '../parsers';
 import { newSubPathCommand } from './SubPathCommandImpl';
 import {
-  CommandImpl, newMove, newLine, newQuadraticCurve, newBezierCurve, newArc, newClosePath
+  CommandImpl, newMove, newLine, newQuadraticCurve, newBezierCurve, newClosePath
 } from './CommandImpl';
 import { CommandMutation } from './CommandMutation';
 
@@ -224,43 +224,25 @@ class PathCommandImpl implements PathCommand {
     if (!this.isMorphableWith(start) || !this.isMorphableWith(end)) {
       return this;
     }
-
     const commands: CommandImpl[] = [];
-    this.subPathCommands.forEach((s, i) => {
-      s.commands.forEach((d, j) => {
-        if (d.svgChar === 'A') {
-          const d1 = start.subPathCommands[i].commands[j];
-          const d2 = end.subPathCommands[i].commands[j];
-          const args = d.args.slice();
-          args.forEach((_, k) => {
-            if (k === 5 || k === 6) {
-              // Doesn't make sense to interpolate the large arc and sweep flags.
-              // TODO: confirm this is how arcs are interpolated in android?
-              args[k] = fraction === 0 ? d1.args[k] : d2.args[k];
-              return;
-            }
-            args[k] = MathUtil.lerp(d1.args[k], d2.args[k], fraction);
-          });
-          const points = [new Point(args[0], args[1]), new Point(args[7], args[8])];
-          commands.push(new CommandImpl(d.svgChar, d.isSplit, points, ...args));
-        } else {
-          const d1 = start.subPathCommands[i].commands[j];
-          const d2 = end.subPathCommands[i].commands[j];
-          const points = [];
-          for (let k = 0; k < d1.points.length; k++) {
-            const startPoint = d1.points[k];
-            const endPoint = d2.points[k];
-            if (startPoint && endPoint) {
-              const px = MathUtil.lerp(startPoint.x, endPoint.x, fraction);
-              const py = MathUtil.lerp(startPoint.y, endPoint.y, fraction);
-              points.push(new Point(px, py));
-            }
+    this.subPathCommands.forEach((subCmd, i) => {
+      subCmd.commands.forEach((cmd, j) => {
+        const cmd1 = start.subPathCommands[i].commands[j];
+        const cmd2 = end.subPathCommands[i].commands[j];
+        const points: Point[] = [];
+        for (let k = 0; k < cmd1.points.length; k++) {
+          const p1 = cmd1.points[k];
+          const p2 = cmd2.points[k];
+          if (p1 && p2) {
+            const px = MathUtil.lerp(p1.x, p2.x, fraction);
+            const py = MathUtil.lerp(p1.y, p2.y, fraction);
+            points.push(new Point(px, py));
           }
-          commands.push(new CommandImpl(d.svgChar, d.isSplit, points));
         }
+        commands.push(new CommandImpl(cmd.svgChar, cmd.isSplit, points));
       });
     });
-
+    // TODO: note that this erases all command mutation state... will this be an issue?
     return new PathCommandImpl(commands);
   }
 

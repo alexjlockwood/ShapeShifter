@@ -19,12 +19,6 @@ export function newBezierCurve(
   return new CommandImpl('C', !!isSplit, [start, cp1, cp2, end]);
 }
 
-export function newArc(start: Point, rx: number, ry: number, xAxisRotation: number,
-  largeArcFlag: number, sweepFlag: number, end: Point, isSplit?: boolean) {
-  return new CommandImpl('A', !!isSplit, [start, end],
-    start.x, start.y, rx, ry, xAxisRotation, largeArcFlag, sweepFlag, end.x, end.y);
-}
-
 export function newClosePath(start: Point, end: Point, isSplit?: boolean) {
   return new CommandImpl('Z', !!isSplit, [start, end]);
 }
@@ -35,22 +29,12 @@ export function newClosePath(start: Point, end: Point, isSplit?: boolean) {
  * elliptical arc, or close path).
  */
 export class CommandImpl implements Command {
-  readonly args: ReadonlyArray<number>;
   readonly commandString: string;
 
   constructor(
     public readonly svgChar: SvgChar,
     public readonly isSplit: boolean,
-    public readonly points: ReadonlyArray<Point>,
-    ...args: number[]) {
-    this.points = points.slice();
-
-    if (args) {
-      this.args = args;
-    } else {
-      this.args = pointsToArgs(points);
-    }
-
+    public readonly points: ReadonlyArray<Point>) {
     if (this.svgChar === 'Z') {
       this.commandString = `${this.svgChar}`;
     } else {
@@ -91,73 +75,34 @@ export class CommandImpl implements Command {
         return ch === 'L' && uniquePoints.length <= 2;
       }
     }
-    // TODO: add support for 'A' --> 'C' some day?
     return false;
   }
 
   // Implements the Command interface.
   transform(matrices: Matrix[]): Command {
-    if (this.svgChar === 'A') {
-      const start = MathUtil.transformPoint(this.start, ...matrices);
-      const arc = SvgUtil.transformArc({
-        rx: this.args[2],
-        ry: this.args[3],
-        xAxisRotation: this.args[4],
-        largeArcFlag: this.args[5],
-        sweepFlag: this.args[6],
-        endX: this.args[7],
-        endY: this.args[8],
-      }, matrices);
-      return new CommandImpl(
-        'A',
-        this.isSplit,
-        [start, new Point(arc.endX, arc.endY)],
-        start.x, start.y,
-        arc.rx, arc.ry,
-        arc.xAxisRotation, arc.largeArcFlag, arc.sweepFlag,
-        arc.endX, arc.endY);
-    } else {
-      return new CommandImpl(
-        this.svgChar,
-        this.isSplit,
-        this.points.map(p => p ? MathUtil.transformPoint(p, ...matrices) : p));
-    }
+    return new CommandImpl(
+      this.svgChar,
+      this.isSplit,
+      this.points.map(p => p ? MathUtil.transformPoint(p, ...matrices) : p));
   }
 
   /** Returns a new reversed draw command. */
   reverse(): CommandImpl {
-    let points = this.points.slice();
-    let args = this.args.slice();
-    if (this.svgChar === 'A') {
-      points.reverse();
-      const endX = args[0];
-      const endY = args[1];
-      args[0] = args[7];
-      args[1] = args[8];
-      args[6] = args[6] === 0 ? 1 : 0;
-      args[7] = endX;
-      args[8] = endY;
-    } else if (this.svgChar !== 'M' || this.start) {
-      // The first move command of an SVG path has an undefined
-      // starting point, so no change is required.
-      points = points.reverse();
-      args = pointsToArgs(points);
+    if (this.svgChar !== 'M' || this.start) {
+      const points = this.points.slice().reverse();
+      return new CommandImpl(this.svgChar, this.isSplit, points);
     }
-    return new CommandImpl(this.svgChar, this.isSplit, points, ...args);
+    // The first move command of an SVG path has an undefined
+    // starting point, so no change is required in that case.
+    return this;
   }
 
   /** Returns a new draw command object with its split property toggled. */
   toggleSplit() {
-    return new CommandImpl(this.svgChar, !this.isSplit, this.points, ...this.args);
+    return new CommandImpl(this.svgChar, !this.isSplit, this.points);
   }
 
   toString() {
     return this.commandString;
   }
-}
-
-function pointsToArgs(points: ReadonlyArray<Point>): number[] {
-  const args = [];
-  points.forEach(p => { args.push(p.x); args.push(p.y); });
-  return args;
 }

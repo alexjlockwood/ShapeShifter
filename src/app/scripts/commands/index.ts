@@ -5,5 +5,5 @@ export { Command, Index } from './Command';
 export { newPathCommand } from './PathCommandImpl';
 export {
   newMove, newLine, newQuadraticCurve,
-  newBezierCurve, newArc, newClosePath
+  newBezierCurve, newClosePath
 } from './CommandImpl';

@@ -1,19 +1,18 @@
 import { Point, Matrix, MathUtil, SvgUtil } from '../common';
 import {
   // TODO: move these internal methods somewhere else
-  newMove, newLine, newQuadraticCurve, newBezierCurve, newArc, newClosePath
+  newMove, newLine, newQuadraticCurve, newBezierCurve, newClosePath
 } from '../commands/CommandImpl';
 import { Command } from '../commands';
 
 /**
  * Takes an SVG path string (i.e. the text specified in the path's 'd' attribute) and returns
  * list of DrawCommands that represent the SVG path's individual sequence of instructions.
- * By default, arcs are converted to bezier curves because they make life too complicated.
+ * Arcs are converted to bezier curves because they make life too complicated. :D
  */
 export function parseCommands(
   pathString: string,
-  matrices?: Matrix[],
-  arcToBeziers = true): Command[] {
+  matrices?: Matrix[]): Command[] {
 
   let index = 0;
   let currentPoint: Point;
@@ -274,31 +273,23 @@ export function parseCommands(
           const sweepFlag = consumeValue_();
           const tempPoint1 = consumePoint_(relative);
 
-          if (arcToBeziers) {
-            // Approximate the arc as one or more bezier curves.
-            const startX = currentPoint.x;
-            const startY = currentPoint.y;
-            const endX = tempPoint1.x;
-            const endY = tempPoint1.y;
-            const bezierCoords = SvgUtil.arcToBeziers({
-              startX, startY,
-              rx, ry, xAxisRotation,
-              largeArcFlag, sweepFlag,
-              endX, endY,
-            });
-            for (let i = 0; i < bezierCoords.length; i += 8) {
-              commands.push(newBezierCurve(
-                currentPoint,
-                new Point(bezierCoords[i + 2], bezierCoords[i + 3]),
-                new Point(bezierCoords[i + 4], bezierCoords[i + 5]),
-                new Point(bezierCoords[i + 6], bezierCoords[i + 7])));
-            }
-          } else {
-            commands.push(newArc(
-              new Point(currentPoint.x, currentPoint.y),
-              rx, ry,
-              xAxisRotation, largeArcFlag, sweepFlag,
-              new Point(tempPoint1.x, tempPoint1.y)));
+          // Approximate the arc as one or more bezier curves.
+          const startX = currentPoint.x;
+          const startY = currentPoint.y;
+          const endX = tempPoint1.x;
+          const endY = tempPoint1.y;
+          const bezierCoords = SvgUtil.arcToBeziers({
+            startX, startY,
+            rx, ry, xAxisRotation,
+            largeArcFlag, sweepFlag,
+            endX, endY,
+          });
+          for (let i = 0; i < bezierCoords.length; i += 8) {
+            commands.push(newBezierCurve(
+              currentPoint,
+              new Point(bezierCoords[i + 2], bezierCoords[i + 3]),
+              new Point(bezierCoords[i + 4], bezierCoords[i + 5]),
+              new Point(bezierCoords[i + 6], bezierCoords[i + 7])));
           }
 
           currentControlPoint = undefined;
@@ -327,10 +318,6 @@ export function commandsToString(commands: ReadonlyArray<Command>) {
   const tokens = [];
   commands.forEach(cmd => {
     tokens.push(cmd.svgChar);
-    if (cmd.svgChar === 'A') {
-      tokens.splice(tokens.length, 0, cmd.args.slice(2)); // skip first two arc args
-      return;
-    }
     const isClosePathCommand = cmd.svgChar === 'Z';
     const pointsToNumberListFunc =
       (...points: Point[]) => points.reduce((list, p) => list.concat(p.x, p.y), []);

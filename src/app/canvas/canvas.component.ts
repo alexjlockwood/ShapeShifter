@@ -791,52 +791,9 @@ function executeCommands(
         cmd.points[3].x, cmd.points[3].y);
     } else if (cmd.svgChar === 'Z') {
       ctx.closePath();
-    } else if (cmd.svgChar === 'A') {
-      executeArcCommand(ctx, cmd.args);
     }
   });
   ctx.restore();
-}
-
-/**
- * Draws an elliptical arc on the specified canvas context.
- */
-function executeArcCommand(
-  ctx: CanvasRenderingContext2D,
-  arcArgs: ReadonlyArray<number>) {
-
-  const [
-    startX, startY,
-    rx, ry, xAxisRotation,
-    largeArcFlag, sweepFlag,
-    endX, endY
-  ] = arcArgs;
-
-  if (startX === endX && startY === endY) {
-    // Degenerate to point.
-    return;
-  }
-
-  if (rx === 0 || ry === 0) {
-    // Degenerate to line.
-    ctx.lineTo(endX, endY);
-    return;
-  }
-
-  // Approximate the arc as one or more bezier curves.
-  const bezierCoords = SvgUtil.arcToBeziers({
-    startX, startY,
-    rx, ry, xAxisRotation,
-    largeArcFlag, sweepFlag,
-    endX, endY,
-  });
-
-  for (let i = 0; i < bezierCoords.length; i += 8) {
-    ctx.bezierCurveTo(
-      bezierCoords[i + 2], bezierCoords[i + 3],
-      bezierCoords[i + 4], bezierCoords[i + 5],
-      bezierCoords[i + 6], bezierCoords[i + 7]);
-  }
 }
 
 /** Contains information about a projection onto a path. */
