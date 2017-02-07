@@ -26,18 +26,18 @@ export class TimelineComponent implements OnInit {
 
   ngOnInit() {
     this.subscriptions.push(
-      this.layerStateService.addListener(CanvasType.Start, vl => {
+      this.layerStateService.addVectorLayerListener(CanvasType.Start, vl => {
         this.checkAreLayersMorphable();
       }));
     this.subscriptions.push(
-      this.layerStateService.addListener(CanvasType.End, vl => {
+      this.layerStateService.addVectorLayerListener(CanvasType.End, vl => {
         this.checkAreLayersMorphable();
       }));
   }
 
   private checkAreLayersMorphable() {
-    const startVl = this.layerStateService.getLayer(CanvasType.Start);
-    const endVl = this.layerStateService.getLayer(CanvasType.End);
+    const startVl = this.layerStateService.getVectorLayer(CanvasType.Start);
+    const endVl = this.layerStateService.getVectorLayer(CanvasType.End);
     if (!startVl || !endVl) {
       this.arePathsMorphable = false;
       return;

@@ -188,7 +188,7 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
       this.canvasType === CanvasType.Start
         ? CanvasType.End
         : CanvasType.Start;
-    const vl = this.layerStateService.getLayer(canvasType);
+    const vl = this.layerStateService.getVectorLayer(canvasType);
     const pathData = (vl.findLayerById(this.pathId) as PathLayer).pathData;
     if (pathData.subPathCommands.length <= this.subIdx) {
       return false;

@@ -105,13 +105,13 @@ export class AppComponent implements OnInit, OnDestroy {
     this.inspectorContainer = $(this.inspectorContainerRef.nativeElement);
 
     this.subscriptions.push(
-      this.layerStateService.addListener(CanvasType.Start, vl => {
+      this.layerStateService.addVectorLayerListener(CanvasType.Start, vl => {
         this.startLayer = vl;
         this.shouldDisplayStartEditor = !!vl;
         this.checkAreLayersMorphable();
       }));
     this.subscriptions.push(
-      this.layerStateService.addListener(CanvasType.End, vl => {
+      this.layerStateService.addVectorLayerListener(CanvasType.End, vl => {
         this.endLayer = vl;
         this.shouldDisplayEndEditor = !!vl;
         this.checkAreLayersMorphable();
@@ -136,7 +136,7 @@ export class AppComponent implements OnInit, OnDestroy {
     const unsplitOpsMap: Map<PathLayer, Array<{ subIdx: number, cmdIdx: number }>> = new Map();
     for (const selection of selections) {
       const {pathId, subIdx, cmdIdx} = selection.commandId;
-      const vectorLayer = this.layerStateService.getLayer(CanvasType);
+      const vectorLayer = this.layerStateService.getVectorLayer(CanvasType);
       if (!vectorLayer) {
         continue;
       }
@@ -155,7 +155,7 @@ export class AppComponent implements OnInit, OnDestroy {
       pathLayer.pathData = pathLayer.pathData.unsplitBatch(unsplitOps);
     });
     this.selectionStateService.clear();
-    this.layerStateService.notifyChange(CanvasType);
+    this.layerStateService.notifyVectorLayerChange(CanvasType);
   }
 
   ngOnDestroy() {
@@ -171,7 +171,7 @@ export class AppComponent implements OnInit, OnDestroy {
     if (this.isMorphable !== isMorphable) {
       this.isMorphable = isMorphable;
       this.updatePaneSizes();
-      this.layerStateService.setLayer(CanvasType.Preview, this.startLayer.clone());
+      this.layerStateService.setVectorLayer(CanvasType.Preview, this.startLayer.clone());
     }
   }
 
@@ -302,7 +302,7 @@ export class AppComponent implements OnInit, OnDestroy {
     // c18.518,0,36.154,1.238,52.876,3.717c7.829,2.146,20.307,4.66,37.391,7.491c1.434-14.17,6.422-26.752,14.963-37.741
     // C421.377,106.059,432.947,99.669,446.47,99.669z"/>
     // </svg>`));
-    this.layerStateService.setLayer(CanvasType.Start, VectorLayerLoader.loadVectorLayerFromSvgString(`
+    this.layerStateService.setVectorLayer(CanvasType.Start, VectorLayerLoader.loadVectorLayerFromSvgString(`
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
       <path
         stroke="#000"
@@ -312,7 +312,7 @@ export class AppComponent implements OnInit, OnDestroy {
         12.103 12.475 12.103 C 18.68 12.103 17.832 21.014 12.528 21.014 C 7.648 21.014 7.86 17.832 7.913 17.089">
       </path>
     </svg>`));
-    this.layerStateService.setLayer(CanvasType.End, VectorLayerLoader.loadVectorLayerFromSvgString(`
+    this.layerStateService.setVectorLayer(CanvasType.End, VectorLayerLoader.loadVectorLayerFromSvgString(`
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
       <path
         stroke="#000"

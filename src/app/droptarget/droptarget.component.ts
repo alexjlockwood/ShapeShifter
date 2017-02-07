@@ -72,7 +72,7 @@ export class DropTargetComponent implements OnInit, OnDestroy {
     fileReader.onload = event => {
       const svgText = (event.target as any).result;
       const vectorLayer = VectorLayerLoader.loadVectorLayerFromSvgString(svgText);
-      this.layerStateService.setLayer(this.canvasType, vectorLayer);
+      this.layerStateService.setVectorLayer(this.canvasType, vectorLayer);
     };
 
     fileReader.onerror = event => {

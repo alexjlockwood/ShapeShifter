@@ -38,7 +38,7 @@ export class CanvasRulerDirective implements OnInit, OnDestroy {
   ngOnInit() {
     this.canvas = $(this.elementRef.nativeElement);
     this.subscriptions.push(
-      this.layerStateService.addListener(
+      this.layerStateService.addVectorLayerListener(
         this.canvasType, vl => {
           if (!vl) {
             return;

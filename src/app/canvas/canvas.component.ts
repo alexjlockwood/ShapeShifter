@@ -65,7 +65,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     this.canvas = $(this.renderingCanvasRef.nativeElement);
     this.offscreenCanvas = $(document.createElement('canvas'));
     this.subscriptions.push(
-      this.layerStateService.addListener(
+      this.layerStateService.addVectorLayerListener(
         this.canvasType, vl => {
           if (!vl) {
             return;
@@ -97,8 +97,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
             return;
           }
           // TODO: if vector layer is undefined, then clear the canvas
-          const startLayer = this.layerStateService.getLayer(CanvasType.Start);
-          const endLayer = this.layerStateService.getLayer(CanvasType.End);
+          const startLayer = this.layerStateService.getVectorLayer(CanvasType.Start);
+          const endLayer = this.layerStateService.getVectorLayer(CanvasType.End);
           this.vectorLayer.walk(layer => {
             if (!(layer instanceof PathLayer)) {
               return;
@@ -613,7 +613,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
               mouseUp, selectedPointId.pathId).split();
 
           // Notify the global layer state service about the change and draw.
-          this.layerStateService.notifyChange(this.canvasType);
+          this.layerStateService.notifyVectorLayerChange(this.canvasType);
         }
       } else {
         // If we haven't started dragging a point, then we should select

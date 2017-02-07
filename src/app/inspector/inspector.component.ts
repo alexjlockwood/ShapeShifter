@@ -31,7 +31,7 @@ export class InspectorComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.subscriptions.push(
-      this.layerStateService.addListener(
+      this.layerStateService.addVectorLayerListener(
         this.canvasType, vl => {
           if (!vl) {
             return;
@@ -51,7 +51,7 @@ export class InspectorComponent implements OnInit, OnDestroy {
     this.subscriptions.push(
       this.inspectorService.addListener((event: InspectorEvent) => {
         const {eventType, pathId, subIdx, cmdIdx} = event;
-        const vl = this.layerStateService.getLayer(this.canvasType);
+        const vl = this.layerStateService.getVectorLayer(this.canvasType);
         const pathLayer = vl.findLayerById(pathId) as PathLayer;
         switch (eventType) {
           case EventType.AutoFix: {
@@ -59,14 +59,14 @@ export class InspectorComponent implements OnInit, OnDestroy {
               this.canvasType === CanvasType.End
                 ? CanvasType.Start
                 : CanvasType.End;
-            const targetVl = this.layerStateService.getLayer(targetCanvasType);
+            const targetVl = this.layerStateService.getVectorLayer(targetCanvasType);
             const fromPathLayer = pathLayer;
             const toPathLayer = targetVl.findLayerById(pathId) as PathLayer;
             const autoFixResult = AutoAwesome.fixAll(subIdx, fromPathLayer.pathData, toPathLayer.pathData);
             fromPathLayer.pathData = autoFixResult.from;
             toPathLayer.pathData = autoFixResult.to;
-            this.layerStateService.notifyChange(CanvasType.Start);
-            this.layerStateService.notifyChange(CanvasType.End);
+            this.layerStateService.notifyVectorLayerChange(CanvasType.Start);
+            this.layerStateService.notifyVectorLayerChange(CanvasType.End);
             // TODO: update selections
           }
             break;
@@ -75,7 +75,7 @@ export class InspectorComponent implements OnInit, OnDestroy {
               this.canvasType === CanvasType.End
                 ? CanvasType.Start
                 : CanvasType.End;
-            const targetVl = this.layerStateService.getLayer(targetCanvasType);
+            const targetVl = this.layerStateService.getVectorLayer(targetCanvasType);
             const targetPathData = (targetVl.findLayerById(pathId) as PathLayer).pathData;
             const targetSvgChar =
               targetPathData.subPathCommands[subIdx].commands[cmdIdx].svgChar;
@@ -108,7 +108,7 @@ export class InspectorComponent implements OnInit, OnDestroy {
             // TODO: update selections
             break;
         }
-        this.layerStateService.notifyChange(this.canvasType);
+        this.layerStateService.notifyVectorLayerChange(this.canvasType);
       }));
   }
 
