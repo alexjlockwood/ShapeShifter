@@ -1,37 +1,36 @@
-<div #appContainer
+<div
+  #appContainer
   class="app-container"
   fxLayout="column">
+
+  <!-- Toolbar. -->
   <app-toolbar></app-toolbar>
-  <div class="display-container"
+
+  <div
+    class="display-container"
     fxLayout="column"
     fxFlex>
-    <div #canvasContainer
+
+    <!-- Start/Preview/End canvases. -->
+    <div
+      #canvasContainer
       class="canvas-container"
       fxLayout="row"
       fxLayoutAlign="center center"
       fxFlex>
-      <app-canvas *ngIf="shouldDisplayStartEditor"
-        [canvasType]="startCanvasType">
-      </app-canvas>
-      <app-canvas *ngIf="isMorphable"
-        [canvasType]="previewCanvasType">
-      </app-canvas>
-      <app-canvas *ngIf="shouldDisplayEndEditor"
-        [canvasType]="endCanvasType">
-      </app-canvas>
+      <app-canvas [canvasType]="startCanvasType"></app-canvas>
+      <app-canvas *ngIf="isMorphable" [canvasType]="previewCanvasType"></app-canvas>
+      <app-canvas [canvasType]="endCanvasType"></app-canvas>
     </div>
-    <!--<app-timeline *ngIf="false && shouldDisplayStartEditor && shouldDisplayEndEditor">
-    </app-timeline>-->
+
+    <!-- Timeline controls. -->
     <app-timeline></app-timeline>
   </div>
-  <div #inspectorContainer
+
+  <div
+    #inspectorContainer
     class="inspector-container"
     fxLayout="row">
-    <!--<div
-      appSplitter
-      class="app-splitter"
-      (onDividerDrag)="onDividerDrag($event)">
-    </div>-->
     <div class="inspector-panel"
       fxLayout="column">
       <div class="inspector-panel-header"

@@ -1,9 +1,9 @@
-import { BrowserModule } from '@angular/platform-browser';
+import { BrowserModule, DomSanitizer } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpModule } from '@angular/http';
 import { FlexLayoutModule } from '@angular/flex-layout';
-import { MaterialModule } from '@angular/material';
+import { MaterialModule, MdIconRegistry } from '@angular/material';
 
 import { AppComponent } from './app.component';
 import { CanvasComponent } from './canvas/canvas.component';
@@ -58,4 +58,14 @@ import 'hammerjs';
   ],
   bootstrap: [AppComponent]
 })
-export class AppModule { }
+export class AppModule {
+
+  constructor(
+    private mdIconRegistry: MdIconRegistry,
+    private sanitizer: DomSanitizer) {
+    mdIconRegistry
+      .addSvgIcon('autofix', sanitizer.bypassSecurityTrustResourceUrl('/assets/autofix.svg'))
+      .addSvgIcon('contribute', sanitizer.bypassSecurityTrustResourceUrl('/assets/contribute.svg'))
+      .addSvgIcon('shapeshifter', sanitizer.bypassSecurityTrustResourceUrl('/assets/shapeshifter.svg'));
+  }
+}
