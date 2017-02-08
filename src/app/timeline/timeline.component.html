@@ -5,42 +5,44 @@
     [disabled]="!isTimelineEnabled"
     mdTooltip="Slow motion"
     mdTooltipPosition="above"
-    (click)="setIsSlowMotion(!isSlowMotion)"
+    (click)="setIsSlowMotion(!isSlowMotion())"
     md-theme="light">
-    <md-icon [class.activated]="isSlowMotion">slow_motion_video</md-icon>
+    <md-icon [class.activated]="isSlowMotion()">slow_motion_video</md-icon>
   </button>
   <button md-icon-button
     [disabled]="!isTimelineEnabled"
-    mdTooltip="Step back"
+    mdTooltip="Rewind"
     mdTooltipPosition="above"
     md-theme="light">
-    <md-icon>fast_rewind</md-icon>
+    <md-icon>skip_previous</md-icon>
   </button>
   <button md-mini-fab
     [disabled]="!isTimelineEnabled"
-    mdTooltip="{{ isPlaying ? 'Pause' : 'Play' }}"
+    mdTooltip="{{ isPlaying() ? 'Pause' : 'Play' }}"
     mdTooltipPosition="above"
-    (click)="setIsPlaying(!isPlaying)"
+    (click)="setIsPlaying(!isPlaying())"
     md-theme="dark">
-    <div class="play-pause-icon"
-         [ngClass]="{'can-animate': isTimelineEnabled,
-                   'is-playing': isPlaying}">
+    <div
+      class="play-pause-icon"
+      [ngClass]="{
+        'can-animate': true,
+        'is-playing': isPlaying()}">
     </div>
   </button>
   <button md-icon-button
     [disabled]="!isTimelineEnabled"
-    mdTooltip="Step forward"
+    mdTooltip="Fast forward"
     mdTooltipPosition="above"
     md-theme="dark">
-    <md-icon>fast_forward</md-icon>
+    <md-icon>skip_next</md-icon>
   </button>
   <button md-icon-button
     [disabled]="!isTimelineEnabled"
     mdTooltip="Repeat"
     mdTooltipPosition="above"
-    (click)="setIsRepeating(!isRepeating)"
+    (click)="setIsRepeating(!isRepeating())"
     md-theme="light">
-    <md-icon [class.activated]="isRepeating">repeat</md-icon>
+    <md-icon [class.activated]="isRepeating()">repeat</md-icon>
   </button>
   <span fxFlex></span>
 </div>

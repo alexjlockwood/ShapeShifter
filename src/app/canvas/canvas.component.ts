@@ -12,7 +12,7 @@ import {
 import { CanvasType } from '../CanvasType';
 import * as $ from 'jquery';
 import { Point, Matrix, MathUtil, ColorUtil, SvgUtil } from '../scripts/common';
-import { TimelineService } from '../services/timeline.service';
+import { AnimatorService } from '../services/animator.service';
 import { LayerStateService } from '../services/layerstate.service';
 import { Subscription } from 'rxjs/Subscription';
 import { SelectionStateService, Selection } from '../services/selectionstate.service';
@@ -28,6 +28,8 @@ const DRAG_TRIGGER_TOUCH_SLOP = 1;
 export const CANVAS_MARGIN = 36;
 
 export const DEFAULT_VIEWPORT_SIZE = 24;
+
+const SHOULD_LABEL_POINTS = true;
 
 @Component({
   selector: 'app-canvas',
@@ -60,7 +62,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     private canvasResizeService: CanvasResizeService,
     private hoverStateService: HoverStateService,
     private layerStateService: LayerStateService,
-    private timelineService: TimelineService,
+    private animatorService: AnimatorService,
     private selectionStateService: SelectionStateService) { }
 
   ngAfterViewInit() {
@@ -71,7 +73,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     this.subscriptions.push(
       this.layerStateService.addListener(
         this.canvasType, event => {
-          console.log(event);
+          this.log(event);
           const oldWidth = this.viewportWidth;
           const oldHeight = this.viewportHeight;
           this.vectorLayer = event.vectorLayer;
@@ -98,7 +100,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     if (this.canvasType === CanvasType.Preview) {
       // Preview canvas specific setup.
       this.subscriptions.push(
-        this.timelineService.animationFractionStream.subscribe(fraction => {
+        this.animatorService.animationFractionStream.subscribe(fraction => {
           const startLayer = this.layerStateService.getActivePathLayer(CanvasType.Start);
           const previewLayer = this.layerStateService.getActivePathLayer(CanvasType.Preview);
           const endLayer = this.layerStateService.getActivePathLayer(CanvasType.End);
@@ -115,8 +117,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       // Non-preview canvas specific setup.
       this.subscriptions.push(
         this.selectionStateService.stream.subscribe(() => this.draw()));
-      this.subscriptions.push(
-        this.timelineService.shouldLabelPointsStream.subscribe(() => this.draw()));
       const setCurrentHoverFn = hover => {
         this.currentHover = hover;
         this.draw();
@@ -341,7 +341,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
   // Draw any labeled points.
   private drawLabeledPoints(ctx: CanvasRenderingContext2D) {
-    if (!this.timelineService.getShouldLabelPoints()
+    if (!SHOULD_LABEL_POINTS
       || this.canvasType === CanvasType.Preview) {
       return;
     }
@@ -747,6 +747,13 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     const x = (event.pageX - canvasOffset.left) / this.cssScale;
     const y = (event.pageY - canvasOffset.top) / this.cssScale;
     return new Point(x, y);
+  }
+
+  private log(msg: any) {
+    if (this.canvasType !== CanvasType.Preview) {
+      return;
+    }
+    console.log(msg);
   }
 }
 

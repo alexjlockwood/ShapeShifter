@@ -12,7 +12,7 @@ import { SplitterDirective } from './splitter/splitter.directive';
 import { InspectorComponent } from './inspector/inspector.component';
 import { SubPathComponent } from './inspector/subpath/subpath.component';
 import { CommandComponent } from './inspector/command/command.component';
-import { TimelineService } from './services/timeline.service';
+import { AnimatorService } from './services/animator.service';
 import { LayerStateService } from './services/layerstate.service';
 import { SelectionStateService } from './services/selectionstate.service';
 import { HoverStateService } from './services/hoverstate.service';
@@ -46,7 +46,7 @@ import 'hammerjs';
     MaterialModule.forRoot(),
   ],
   providers: [
-    TimelineService,
+    AnimatorService,
     LayerStateService,
     SelectionStateService,
     HoverStateService,

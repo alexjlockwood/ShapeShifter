@@ -128,6 +128,8 @@ export class AppComponent implements OnInit, OnDestroy {
       if (status === MorphabilityStatus.Morphable) {
         this.layerStateService.setVectorLayer(
           CanvasType.Preview, this.startVectorLayer.clone());
+        this.layerStateService.setActivePathId(
+          CanvasType.Preview, this.layerStateService.getActivePathId(CanvasType.Start));
       }
       this.updateCanvasSizes();
     }
