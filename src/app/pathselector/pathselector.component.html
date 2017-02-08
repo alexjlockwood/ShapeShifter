@@ -25,7 +25,7 @@
     <div
       class="path-selector-listitem"
       [class.selected]="activePathId === pathLayer.id"
-      (click)="toggleActivePathId(pathLayer.id)">
+      (click)="activePathId = pathLayer.id">
       {{pathLayer.id}}
     </div>
   </div>

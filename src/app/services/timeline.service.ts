@@ -7,16 +7,18 @@ import { Observable } from 'rxjs/Observable';
 const AUTO_ANIMATE_INTERVAL = 2000;
 const ANIMATION_DURATION = 1000;
 
+/**
+ * Coordinates and stores information about the currently displayed preview
+ * canvas animation.
+ */
 @Injectable()
 export class TimelineService {
-
   private currentAnimationFraction = 0;
   private readonly animationFractionSource = new BehaviorSubject<number>(0);
   readonly animationFractionStream = this.animationFractionSource.asObservable();
   private shouldLabelPoints = true;
   private readonly shouldLabelPointsSource = new BehaviorSubject<boolean>(true);
   readonly shouldLabelPointsStream = this.shouldLabelPointsSource.asObservable();
-
   private animationLooper: AnimationLooper;
 
   constructor(private ngZone: NgZone) { }
@@ -38,18 +40,24 @@ export class TimelineService {
     }
   }
 
-  /** Returns the current global animation fraction. */
+  /**
+   * Returns the current global animation fraction.
+   */
   getAnimationFraction() {
     return this.currentAnimationFraction;
   }
 
-  /** Sets and broadcasts the current global animation fraction. */
+  /**
+   * Sets and broadcasts the current global animation fraction.
+   */
   setAnimationFraction(fraction: number) {
     this.currentAnimationFraction = fraction;
     this.notifyAnimationFractionChange();
   }
 
-  /** Broadcasts the current global animation fraction. */
+  /**
+   * Broadcasts the current global animation fraction.
+   */
   notifyAnimationFractionChange() {
     this.animationFractionSource.next(this.currentAnimationFraction);
   }
@@ -62,18 +70,24 @@ export class TimelineService {
     return this.shouldLabelPointsStream.subscribe(callback);
   }
 
-  /** Returns the current should label points setting. */
+  /**
+   * Returns the current should label points setting.
+   */
   getShouldLabelPoints() {
     return this.shouldLabelPoints;
   }
 
-  /** Sets and broadcasts the should label points setting. */
+  /**
+   * Sets and broadcasts the should label points setting.
+   */
   setShouldLabelPoints(shouldLabelPoints: boolean) {
     this.shouldLabelPoints = shouldLabelPoints;
     this.notifyShouldLabelPointsChange();
   }
 
-  /** Broadcasts the current should label points setting. */
+  /**
+   * Broadcasts the current should label points setting.
+   */
   notifyShouldLabelPointsChange() {
     this.shouldLabelPointsSource.next(this.shouldLabelPoints);
   }

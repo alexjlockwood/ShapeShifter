@@ -19,7 +19,7 @@
       fxLayoutAlign="center center"
       fxFlex>
       <app-canvas [canvasType]="START_CANVAS"></app-canvas>
-      <app-canvas *ngIf="isMorphable" [canvasType]="PREVIEW_CANVAS"></app-canvas>
+      <app-canvas *ngIf="morphabilityStatus === MORPHABILITY_MORPHABLE" [canvasType]="PREVIEW_CANVAS"></app-canvas>
       <app-canvas [canvasType]="END_CANVAS"></app-canvas>
     </div>
 
@@ -42,7 +42,13 @@
     </div>
     <div class="inspector-panel" fxLayout="column" fxFlex>
       <div class="inspector-panel-header" fxLayout="row" fxLayoutAlign="start center">
-        <span>Status: morphable</span>
+        <span *ngIf="morphabilityStatus !== MORPHABILITY_NONE">Status:
+          <span [ngClass]="{
+            'status-text-unmorphable': morphabilityStatus === MORPHABILITY_UNMORPHABLE,
+            'status-text-morphable': morphabilityStatus === MORPHABILITY_MORPHABLE}">
+            <strong>{{morphabilityStatus === MORPHABILITY_MORPHABLE ? 'Morphable' : 'Unmorphable'}}</strong>
+          </span>
+        </span>
         <span fxFlex></span>
       </div>
       <div class="inspector-panel-body" fxLayout="row" fxFlex>

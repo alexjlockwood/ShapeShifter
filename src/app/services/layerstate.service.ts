@@ -9,7 +9,6 @@ import { CanvasType } from '../CanvasType';
 /**
  * The global state service that is in charge of keeping track of the loaded
  * SVGs, active path layers, and the current morphability status.
- * TODO: handle case where vector layer and/or path layer are cleared
  */
 @Injectable()
 export class LayerStateService {
@@ -31,12 +30,8 @@ export class LayerStateService {
       });
   }
 
-  getVectorLayer(type: CanvasType) {
-    return this.vectorLayerMap.get(type);
-  }
-
   /**
-   * Should only be called by the path selector.
+   * Called by the PathSelectorComponent when a new vector layer is imported.
    */
   setVectorLayer(type: CanvasType, layer: VectorLayer) {
     this.vectorLayerMap.set(type, layer);
@@ -44,12 +39,8 @@ export class LayerStateService {
     this.notifyChange(type);
   }
 
-  getActivePathId(type: CanvasType) {
-    return this.activePathIdMap.get(type);
-  }
-
   /**
-   * Should only be called by the path selector component.
+   * Called by the PathSelectorComponent when a new vector layer path is selected.
    */
   setActivePathId(type: CanvasType, pathId: string) {
     const activePathId = this.getActivePathId(type);
@@ -59,13 +50,21 @@ export class LayerStateService {
     }
   }
 
+  getVectorLayer(type: CanvasType) {
+    return this.vectorLayerMap.get(type);
+  }
+
+  getActivePathId(type: CanvasType) {
+    return this.activePathIdMap.get(type);
+  }
+
   getActivePathLayer(canvasType: CanvasType) {
     const vectorLayer = this.getVectorLayer(canvasType);
-    const pathId = this.getActivePathId(canvasType);
-    if (!vectorLayer || !pathId) {
+    const activePathId = this.getActivePathId(canvasType);
+    if (!vectorLayer || !activePathId) {
       return undefined;
     }
-    return vectorLayer.findLayerById(pathId) as PathLayer;
+    return vectorLayer.findLayerById(activePathId) as PathLayer;
   }
 
   notifyChange(type: CanvasType) {
@@ -81,18 +80,11 @@ export class LayerStateService {
   }
 
   getMorphabilityStatus() {
-    const startVector = this.getVectorLayer(CanvasType.Start);
-    const endVector = this.getVectorLayer(CanvasType.End);
-    if (!startVector || !endVector) {
+    const startPathLayer = this.getActivePathLayer(CanvasType.Start);
+    const endPathLayer = this.getActivePathLayer(CanvasType.End);
+    if (!startPathLayer || !endPathLayer) {
       return MorphabilityStatus.None;
     }
-    const startPathId = this.getActivePathId(CanvasType.Start);
-    const endPathId = this.getActivePathId(CanvasType.End);
-    if (!startPathId || !endPathId) {
-      return MorphabilityStatus.None;
-    }
-    const startPathLayer = startVector.findLayerById(startPathId);
-    const endPathLayer = endVector.findLayerById(endPathId);
     if (startPathLayer.isMorphableWith(endPathLayer)) {
       return MorphabilityStatus.Morphable;
     }

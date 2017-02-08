@@ -18,12 +18,8 @@ div.display-container {
 }
 
 app-canvas {
-  &:first-child {
-    margin-right: 32px;
-  }
-  &:last-child {
-    margin-left: 32px;
-  }
+  margin-left: 24px;
+  margin-right: 24px;
 }
 
 div.inspector-container {
@@ -50,6 +46,12 @@ div.app-splitter:hover {
     span {
       color: $colorBlackTextSecondary;
       margin: 8px;
+    }
+    .status-text-morphable {
+      color: material-color('green', '700');
+    }
+    .status-text-unmorphable {
+      color: material-color('red', '700');
     }
   }
   .inspector-panel-body {

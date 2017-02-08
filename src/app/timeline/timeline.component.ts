@@ -1,8 +1,10 @@
 import { Component, NgZone, OnInit } from '@angular/core';
 import { TimelineService } from '../services/timeline.service';
-import { LayerStateService } from '../services/layerstate.service';
+import { LayerStateService, MorphabilityStatus } from '../services/layerstate.service';
 import { Subscription } from 'rxjs/Subscription';
 import { CanvasType } from '../CanvasType';
+
+const ANIMATION_DURATION = 300;
 
 @Component({
   selector: 'app-timeline',
@@ -10,13 +12,10 @@ import { CanvasType } from '../CanvasType';
   styleUrls: ['./timeline.component.scss']
 })
 export class TimelineComponent implements OnInit {
-  maxAnimationFractionSliderValue = 1000;
-  animationDuration = 300;
-  arePathsMorphable = false;
-  isSlowMotionActivated = false;
+  isTimelineEnabled = false;
+  isSlowMotion = false;
   isPlaying = false;
-  isRepeatActivated = false;
-
+  isRepeating = false;
   private readonly subscriptions: Subscription[] = [];
 
   constructor(
@@ -27,29 +26,37 @@ export class TimelineComponent implements OnInit {
   ngOnInit() {
     this.subscriptions.push(
       this.layerStateService.addListener(CanvasType.Start, event => {
-        // TODO: implement this
-        // this.checkAreLayersMorphable();
+        this.onLayerStateChanged(event.morphabilityStatus);
       }));
     this.subscriptions.push(
       this.layerStateService.addListener(CanvasType.End, event => {
-        // TODO: implement this
-        // this.checkAreLayersMorphable();
+        this.onLayerStateChanged(event.morphabilityStatus);
       }));
   }
 
-  private checkAreLayersMorphable() {
-    const startVl = this.layerStateService.getVectorLayer(CanvasType.Start);
-    const endVl = this.layerStateService.getVectorLayer(CanvasType.End);
-    if (!startVl || !endVl) {
-      this.arePathsMorphable = false;
+  private onLayerStateChanged(morphabilityStatus: MorphabilityStatus) {
+    const isTimelineEnabled = morphabilityStatus === MorphabilityStatus.Morphable;
+    if (this.isTimelineEnabled === isTimelineEnabled) {
       return;
     }
-    this.arePathsMorphable = startVl.isMorphableWith(endVl);
-    if (this.arePathsMorphable) {
-      this.timelineService.startAutoAnimate();
+    this.isTimelineEnabled = isTimelineEnabled;
+    if (this.isTimelineEnabled) {
+      // TODO: enable everything and stuff
     } else {
-      this.timelineService.stopAutoAnimate();
+      // TODO: cancel ongoing animations, reset buttons, etc.
     }
+  }
+
+  setIsSlowMotion(isSlowMotion: boolean) {
+    this.isSlowMotion = isSlowMotion;
+  }
+
+  setIsPlaying(isPlaying: boolean) {
+    this.isPlaying = isPlaying;
+  }
+
+  setIsRepeating(isRepeating: boolean) {
+    this.isRepeating = isRepeating;
   }
 
   onPlayPauseClick() {
@@ -59,8 +66,8 @@ export class TimelineComponent implements OnInit {
         startTimestamp = timestamp;
       }
       const progress = timestamp - startTimestamp;
-      if (progress < this.animationDuration) {
-        this.timelineService.setAnimationFraction(progress / this.animationDuration);
+      if (progress < ANIMATION_DURATION) {
+        this.timelineService.setAnimationFraction(progress / ANIMATION_DURATION);
         requestAnimationFrame(onAnimationFrame);
       } else {
         this.timelineService.setAnimationFraction(1);

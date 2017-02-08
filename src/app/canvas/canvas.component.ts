@@ -71,6 +71,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     this.subscriptions.push(
       this.layerStateService.addListener(
         this.canvasType, event => {
+          console.log(event);
           const oldWidth = this.viewportWidth;
           const oldHeight = this.viewportHeight;
           this.vectorLayer = event.vectorLayer;

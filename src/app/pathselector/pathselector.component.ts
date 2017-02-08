@@ -54,11 +54,6 @@ export class PathSelectorComponent {
     this.layerStateService.setActivePathId(this.canvasType, activePathId);
   }
 
-  toggleActivePathId(activePathId: string) {
-    const oldActivePathId = this.layerStateService.getActivePathId(this.canvasType);
-    this.activePathId = oldActivePathId !== activePathId ? activePathId : undefined;
-  }
-
   trackPathLayer(index: number, item: PathLayer) {
     return item.id;
   }

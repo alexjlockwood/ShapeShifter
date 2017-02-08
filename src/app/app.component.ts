@@ -113,7 +113,7 @@ export class AppComponent implements OnInit, OnDestroy {
     });
 
     if (IS_DEV_MODE) {
-      // this.loadDebugVectorLayers();
+      this.loadDebugVectorLayers();
     }
   }
 

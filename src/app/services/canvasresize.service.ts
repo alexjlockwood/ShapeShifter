@@ -7,12 +7,13 @@ import { Observable } from 'rxjs/Observable';
 import { Index as CommandIndex } from '../scripts/commands';
 import { CanvasType } from '../CanvasType';
 
+/**
+ * A simple service that broadcasts changes in the canvas' size.
+ */
 @Injectable()
 export class CanvasResizeService {
   readonly source = new BehaviorSubject<Size>({ width: 0, height: 0 });
   readonly stream = this.source.asObservable();
-
-  constructor() { }
 
   addListener(callback: (size: Size) => void) {
     return this.stream.subscribe(callback);
