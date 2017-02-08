@@ -22,7 +22,10 @@
     mdTooltipPosition="above"
     (click)="setIsPlaying(!isPlaying)"
     md-theme="dark">
-    <md-icon>{{ isPlaying ? 'pause_arrow' : 'play_arrow' }}</md-icon>
+    <div class="play-pause-icon"
+         [ngClass]="{'can-animate': isTimelineEnabled,
+                   'is-playing': isPlaying}">
+    </div>
   </button>
   <button md-icon-button
     [disabled]="!isTimelineEnabled"
