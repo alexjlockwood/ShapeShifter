@@ -18,10 +18,10 @@
   </button>
   <button md-mini-fab
     [disabled]="!arePathsMorphable"
-    mdTooltip="Play"
+    mdTooltip="{{ isPlaying ? 'Pause' : 'Play' }}"
     mdTooltipPosition="above"
     md-theme="dark">
-    <md-icon>{{ isPlayActivated ? 'pause_arrow' : 'play_arrow' }}</md-icon>
+    <md-icon>{{ isPlaying ? 'pause_arrow' : 'play_arrow' }}</md-icon>
   </button>
   <button md-icon-button
     [disabled]="!arePathsMorphable"
@@ -39,48 +39,3 @@
   </button>
   <span fxFlex></span>
 </div>
-<!--<div fxLayout="row"
-  fxLayoutAlign="center center">
-  <md-card fxLayout="row"
-    fxLayoutAlign="center center">
-    <span>Status:
-      <span [ngClass]="{
-        'text-is-not-morphable': !isMorphable,
-        'text-is-morphable': isMorphable}">
-        <strong>{{isMorphable ? 'Morphable' : 'Unmorphable'}}</strong>
-      </span>
-    </span>
-    <button
-      md-icon-button
-      (click)="onPlayClick()"
-      mdTooltip="Play animation"
-      mdTooltipPosition="above"
-      md-theme="dark"
-      [disabled]="!isMorphable">
-      <md-icon class="md-24">play_arrow</md-icon>
-    </button>
-    <md-slider
-      class="timeline-slider"
-      min="0"
-      [max]="maxAnimationFractionSliderValue"
-      step="1"
-      value="0"
-      (change)="onAnimationFractionSliderChanged($event.value)"
-      [disabled]="!isMorphable">
-    </md-slider>
-    <md-checkbox
-      class="timeline-checkbox"
-      [checked]="shouldLabelPoints"
-      (change)="onLabelPointsCheckboxChanged($event.checked)">
-      Label points
-    </md-checkbox>
-    <md-checkbox
-      class="timeline-checkbox"
-      [disabled]="true"
-      [checked]="false"
-      (change)="onSnapToGridCheckboxChanged($event.checked)">
-      Snap to grid
-    </md-checkbox>
-  </md-card>
-</div>-->
-

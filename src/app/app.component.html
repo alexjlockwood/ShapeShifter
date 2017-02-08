@@ -18,69 +18,41 @@
       fxLayout="row"
       fxLayoutAlign="center center"
       fxFlex>
-      <app-canvas [canvasType]="startCanvasType"></app-canvas>
-      <app-canvas *ngIf="isMorphable" [canvasType]="previewCanvasType"></app-canvas>
-      <app-canvas [canvasType]="endCanvasType"></app-canvas>
+      <app-canvas [canvasType]="START_CANVAS"></app-canvas>
+      <app-canvas *ngIf="isMorphable" [canvasType]="PREVIEW_CANVAS"></app-canvas>
+      <app-canvas [canvasType]="END_CANVAS"></app-canvas>
     </div>
 
     <!-- Timeline controls. -->
     <app-timeline></app-timeline>
   </div>
 
-  <div
-    #inspectorContainer
-    class="inspector-container"
-    fxLayout="row">
-    <div class="inspector-panel"
-      fxLayout="column">
-      <div class="inspector-panel-header"
-        fxLayoutAlign="start center">
+  <div #inspectorContainer class="inspector-container" fxLayout="row">
+    <div class="inspector-panel" fxLayout="column">
+      <div class="inspector-panel-header" fxLayoutAlign="start center">
         <span>Start path</span>
       </div>
-      <div class="inspector-panel-body"
-        fxLayoutAlign="center center"
-        fxFlex>
-        <span class="inspector-panel-empty-state">
-          Drag and drop an SVG file here
-        </span>
-      </div>
+      <app-pathselector fxFlex [canvasType]="START_CANVAS"></app-pathselector>
     </div>
-    <div class="inspector-panel"
-      fxLayout="column">
-      <div class="inspector-panel-header"
-        fxLayoutAlign="start center">
+    <div class="inspector-panel" fxLayout="column">
+      <div class="inspector-panel-header" fxLayoutAlign="start center">
         <span>End path</span>
       </div>
-      <div class="inspector-panel-body"
-        fxLayoutAlign="center center"
-        fxFlex>
-        <span class="inspector-panel-empty-state">
-          Drag and drop an SVG file here
-        </span>
-      </div>
+      <app-pathselector fxFlex [canvasType]="END_CANVAS"></app-pathselector>
     </div>
-    <div class="inspector-panel"
-      fxLayout="column"
-      fxFlex>
-      <div class="inspector-panel-header"
-        fxLayout="row"
-        fxLayoutAlign="start center">
+    <div class="inspector-panel" fxLayout="column" fxFlex>
+      <div class="inspector-panel-header" fxLayout="row" fxLayoutAlign="start center">
         <span>Status: morphable</span>
         <span fxFlex></span>
       </div>
-      <div class="inspector-panel-body"
-        fxLayout="row"
-        fxFlex
-        *ngIf="shouldDisplayStartEditor && shouldDisplayEndEditor">
-        <app-inspector [canvasType]="startCanvasType"></app-inspector>
-        <app-inspector [canvasType]="endCanvasType"></app-inspector>
+      <div class="inspector-panel-body" fxLayout="row" fxFlex>
+        <app-inspector [canvasType]="START_CANVAS"></app-inspector>
+        <app-inspector [canvasType]="END_CANVAS"></app-inspector>
         <span fxFlex></span>
       </div>
     </div>
-    <div class="inspector-panel"
-      fxLayout="column">
-      <div class="inspector-panel-header"
-        fxLayoutAlign="start center">
+    <div class="inspector-panel" fxLayout="column">
+      <div class="inspector-panel-header" fxLayoutAlign="start center">
         <span>Export</span>
       </div>
       <app-export></app-export>

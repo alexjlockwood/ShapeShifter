@@ -2,9 +2,11 @@ import {
   Component, OnChanges, SimpleChanges, Input, OnInit,
   EventEmitter, Output
 } from '@angular/core';
-import { Command, SubPathCommand, PathCommand } from './../../scripts/commands';
+import { LayerStateService } from '../../services/layerstate.service';
+import { Command, SubPathCommand, PathCommand } from '../../scripts/commands';
 import { CanvasType } from '../../CanvasType';
 import { InspectorService, EventType } from '../inspector.service';
+import { VectorLayer, PathLayer } from '../../scripts/layers';
 
 @Component({
   selector: 'app-subpath',
@@ -13,63 +15,54 @@ import { InspectorService, EventType } from '../inspector.service';
 })
 export class SubPathComponent {
   @Input() canvasType: CanvasType;
-  @Input() pathId: string;
   @Input() subIdx: number;
-  @Input() pathCommand: PathCommand;
-  private subPathCommand_: SubPathCommand;
   private drawCommandWrappers_: DrawCommandWrapper[];
 
-  constructor(private inspectorService: InspectorService) { }
+  constructor(
+    private layerStateService: LayerStateService,
+    private inspectorService: InspectorService) { }
 
-  @Input()
-  set subPathCommand(subPathCommand: SubPathCommand) {
-    this.subPathCommand_ = subPathCommand;
+  get pathCommand() {
+    const vectorLayer = this.layerStateService.getVectorLayer(this.canvasType);
+    const pathId = this.layerStateService.getActivePathId(this.canvasType);
+    return (vectorLayer.findLayerById(pathId) as PathLayer).pathData;
+  }
+
+  get subPathCommand() {
+    return this.pathCommand.subPathCommands[this.subIdx];
+  }
+
+  get drawCommandWrappers() {
     const dcws: DrawCommandWrapper[] = [];
-    this.subPathCommand_.commands.forEach((cmd, i) => {
+    this.subPathCommand.commands.forEach((cmd, i) => {
       dcws.push({
         id: this.pathCommand.getId(this.subIdx, i),
         drawCommand: cmd,
       });
     });
-    this.drawCommandWrappers = dcws;
-  }
-
-  get subPathCommand() {
-    return this.subPathCommand_;
-  }
-
-  set drawCommandWrappers(drawCommandWrappers: DrawCommandWrapper[]) {
-    this.drawCommandWrappers_ = drawCommandWrappers;
-  }
-
-  get drawCommandWrappers() {
-    return this.drawCommandWrappers_;
+    return dcws;
   }
 
   onAutoFixClick() {
     this.inspectorService.notifyChange(EventType.AutoFix, {
-      pathId: this.pathId,
       subIdx: this.subIdx,
     });
   }
 
   onReverseClick() {
     this.inspectorService.notifyChange(EventType.Reverse, {
-      pathId: this.pathId,
       subIdx: this.subIdx,
     });
   }
 
   onShiftBackClick() {
     this.inspectorService.notifyChange(EventType.ShiftBack, {
-      pathId: this.pathId,
       subIdx: this.subIdx,
     });
   }
 
   onShiftForwardClick() {
     this.inspectorService.notifyChange(EventType.ShiftForward, {
-      pathId: this.pathId,
       subIdx: this.subIdx,
     });
   }

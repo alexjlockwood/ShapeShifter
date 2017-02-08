@@ -12,13 +12,13 @@ import {
 import { CanvasType } from '../CanvasType';
 import * as $ from 'jquery';
 import { Point, Matrix, MathUtil, ColorUtil, SvgUtil } from '../scripts/common';
-import { TimelineService } from '../timeline/timeline.service';
+import { TimelineService } from '../services/timeline.service';
 import { LayerStateService } from '../services/layerstate.service';
 import { Subscription } from 'rxjs/Subscription';
 import { SelectionStateService, Selection } from '../services/selectionstate.service';
 import { HoverStateService, Type as HoverType, Hover } from '../services/hoverstate.service';
 import { CanvasResizeService } from '../services/canvasresize.service';
-import { CanvasRulerDirective } from './ruler.directive';
+import { CanvasRulerDirective } from './canvasruler.directive';
 
 // TODO: make these viewport/density-independent
 const MIN_SNAP_THRESHOLD = 1.5;
@@ -26,6 +26,8 @@ const DRAG_TRIGGER_TOUCH_SLOP = 1;
 
 // Canvas margin in pixels.
 export const CANVAS_MARGIN = 36;
+
+export const DEFAULT_VIEWPORT_SIZE = 24;
 
 @Component({
   selector: 'app-canvas',
@@ -38,6 +40,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   @ViewChildren(CanvasRulerDirective) canvasRulers: QueryList<CanvasRulerDirective>;
 
   private vectorLayer: VectorLayer;
+  // TODO: make use of this variable (i.e. only show labeled points for active path, etc.)
+  private activePathId: string;
   private componentSize = 0;
   private element: JQuery;
   private canvas: JQuery;
@@ -45,11 +49,11 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   private cssScale: number;
   private attrScale: number;
   private isViewInit: boolean;
-  private readonly subscriptions: Subscription[] = [];
   private pathPointRadius: number;
   private splitPathPointRadius: number;
   private currentHover: Hover;
   private pointSelector: PointSelector;
+  private readonly subscriptions: Subscription[] = [];
 
   constructor(
     private elementRef: ElementRef,
@@ -65,16 +69,17 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     this.canvas = $(this.renderingCanvasRef.nativeElement);
     this.offscreenCanvas = $(document.createElement('canvas'));
     this.subscriptions.push(
-      this.layerStateService.addVectorLayerListener(
-        this.canvasType, vl => {
-          if (!vl) {
-            return;
-          }
-          const oldVl = this.vectorLayer;
-          const didWidthChange = !oldVl || oldVl.width !== vl.width;
-          const didHeightChange = !oldVl || oldVl.height !== vl.height;
-          this.vectorLayer = vl;
-          if (didWidthChange || didHeightChange) {
+      this.layerStateService.addListener(
+        this.canvasType, event => {
+          const oldWidth = this.viewportWidth;
+          const oldHeight = this.viewportHeight;
+          this.vectorLayer = event.vectorLayer;
+          this.activePathId = event.activePathId;
+          const newWidth = this.viewportWidth;
+          const newHeight = this.viewportHeight;
+          const didSizeChange =
+            oldWidth !== newWidth || oldHeight !== newHeight;
+          if (didSizeChange) {
             this.resizeAndDraw();
           } else {
             this.draw();
@@ -93,21 +98,16 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       // Preview canvas specific setup.
       this.subscriptions.push(
         this.timelineService.animationFractionStream.subscribe(fraction => {
-          if (!this.vectorLayer) {
+          const startLayer = this.layerStateService.getActivePathLayer(CanvasType.Start);
+          const previewLayer = this.layerStateService.getActivePathLayer(CanvasType.Preview);
+          const endLayer = this.layerStateService.getActivePathLayer(CanvasType.End);
+          if (!startLayer || !previewLayer || !endLayer) {
+            // TODO: need to cancel animation if something abruptly changes here?
             return;
           }
-          // TODO: if vector layer is undefined, then clear the canvas
-          const startLayer = this.layerStateService.getVectorLayer(CanvasType.Start);
-          const endLayer = this.layerStateService.getVectorLayer(CanvasType.End);
-          this.vectorLayer.walk(layer => {
-            if (!(layer instanceof PathLayer)) {
-              return;
-            }
-            const start = startLayer.findLayerById(layer.id) as PathLayer;
-            const end = endLayer.findLayerById(layer.id) as PathLayer;
-            layer.pathData =
-              layer.pathData.interpolate(start.pathData, end.pathData, fraction);
-          });
+          previewLayer.pathData =
+            previewLayer.pathData.interpolate(
+              startLayer.pathData, endLayer.pathData, fraction);
           this.draw();
         }));
     } else {
@@ -144,28 +144,34 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     this.subscriptions.forEach(s => s.unsubscribe());
   }
 
+  get viewportWidth() {
+    return this.vectorLayer ? this.vectorLayer.width : DEFAULT_VIEWPORT_SIZE;
+  }
+
+  get viewportHeight() {
+    return this.vectorLayer ? this.vectorLayer.height : DEFAULT_VIEWPORT_SIZE;
+  }
+
   private resizeAndDraw() {
     if (!this.isViewInit) {
       return;
     }
     const containerWidth = Math.max(1, this.componentSize);
     const containerHeight = Math.max(1, this.componentSize);
-    const vlWidth = !this.vectorLayer ? 1 : this.vectorLayer.width || 1;
-    const vlHeight = !this.vectorLayer ? 1 : this.vectorLayer.height || 1;
-    const vectorAspectRatio = vlWidth / vlHeight;
+    const vectorAspectRatio = this.viewportWidth / this.viewportHeight;
 
     // The 'cssScale' represents the number of CSS pixels per SVG viewport pixel.
     if (vectorAspectRatio > 1) {
-      this.cssScale = containerWidth / vlWidth;
+      this.cssScale = containerWidth / this.viewportWidth;
     } else {
-      this.cssScale = containerHeight / vlHeight;
+      this.cssScale = containerHeight / this.viewportHeight;
     }
 
     // The 'attrScale' represents the number of physical pixels per SVG viewport pixel.
     this.attrScale = this.cssScale * devicePixelRatio;
 
-    const cssWidth = vlWidth * this.cssScale;
-    const cssHeight = vlHeight * this.cssScale;
+    const cssWidth = this.viewportWidth * this.cssScale;
+    const cssHeight = this.viewportHeight * this.cssScale;
     [this.canvas, this.offscreenCanvas].forEach(canvas => {
       canvas
         .attr({
@@ -186,7 +192,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   }
 
   private draw() {
-    if (!this.isViewInit || !this.vectorLayer) {
+    if (!this.isViewInit) {
       return;
     }
     const ctx =
@@ -196,21 +202,23 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
     ctx.save();
     ctx.scale(this.attrScale, this.attrScale);
-    ctx.clearRect(0, 0, this.vectorLayer.width, this.vectorLayer.height);
+    ctx.clearRect(0, 0, this.viewportWidth, this.viewportHeight);
 
     // TODO: use this offscreen context in the future somehow...
     const currentAlpha = 1;
     if (currentAlpha < 1) {
       offscreenCtx.save();
       offscreenCtx.scale(this.attrScale, this.attrScale);
-      offscreenCtx.clearRect(0, 0, this.vectorLayer.width, this.vectorLayer.height);
+      offscreenCtx.clearRect(0, 0, this.viewportWidth, this.viewportHeight);
     }
 
     const drawingCtx = currentAlpha < 1 ? offscreenCtx : ctx;
-    this.drawVectorLayer(drawingCtx);
-    this.drawSelections(drawingCtx);
-    this.drawLabeledPoints(drawingCtx);
-    this.drawDraggingPoints(drawingCtx);
+    if (this.vectorLayer && this.activePathId) {
+      this.drawVectorLayer(drawingCtx);
+      this.drawSelections(drawingCtx);
+      this.drawLabeledPoints(drawingCtx);
+      this.drawDraggingPoints(drawingCtx);
+    }
 
     if (currentAlpha < 1) {
       ctx.save();
@@ -508,18 +516,18 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     if (this.cssScale > 4) {
       const devicePixelRatio = window.devicePixelRatio || 1;
       ctx.fillStyle = 'rgba(128, 128, 128, .25)';
-      for (let x = 1; x < this.vectorLayer.width; x++) {
+      for (let x = 1; x < this.viewportWidth; x++) {
         ctx.fillRect(
           x * this.attrScale - 0.5 * devicePixelRatio,
           0,
           devicePixelRatio,
-          this.vectorLayer.height * this.attrScale);
+          this.viewportHeight * this.attrScale);
       }
-      for (let y = 1; y < this.vectorLayer.height; y++) {
+      for (let y = 1; y < this.viewportHeight; y++) {
         ctx.fillRect(
           0,
           y * this.attrScale - 0.5 * devicePixelRatio,
-          this.vectorLayer.width * this.attrScale,
+          this.viewportWidth * this.attrScale,
           devicePixelRatio);
       }
     }
@@ -527,8 +535,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   }
 
   onMouseDown(event: MouseEvent) {
-    if (this.canvasType === CanvasType.Preview) {
-      // The user never interacts with the preview canvas.
+    if (this.canvasType === CanvasType.Preview
+      || !this.layerStateService.getActivePathId(this.canvasType)) {
       return;
     }
     const mouseDown = this.mouseEventToPoint(event);
@@ -555,8 +563,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     const roundedMouseMove = new Point(_.round(mouseMove.x), _.round(mouseMove.y));
     this.canvasRulers.forEach(r => r.showMouse(roundedMouseMove));
 
-    if (this.canvasType === CanvasType.Preview) {
-      // The user never interacts with the preview canvas.
+    if (this.canvasType === CanvasType.Preview
+      || !this.layerStateService.getActivePathId(this.canvasType)) {
       return;
     }
 
@@ -588,8 +596,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   }
 
   onMouseUp(event: MouseEvent) {
-    if (this.canvasType === CanvasType.Preview) {
-      // The user never interacts with the preview canvas.
+    const activePathId = this.layerStateService.getActivePathId(this.canvasType);
+    if (this.canvasType === CanvasType.Preview || !activePathId) {
       return;
     }
     if (this.pointSelector) {
@@ -613,7 +621,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
               mouseUp, selectedPointId.pathId).split();
 
           // Notify the global layer state service about the change and draw.
-          this.layerStateService.notifyVectorLayerChange(this.canvasType);
+          this.layerStateService.notifyChange(this.canvasType);
         }
       } else {
         // If we haven't started dragging a point, then we should select
@@ -633,8 +641,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   onMouseLeave(event) {
     this.canvasRulers.forEach(r => r.hideMouse());
 
-    if (this.canvasType === CanvasType.Preview) {
-      // The user never interacts with the preview canvas.
+    if (this.canvasType === CanvasType.Preview
+      || !this.layerStateService.getActivePathId(this.canvasType)) {
       return;
     }
     if (this.pointSelector) {

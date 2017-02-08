@@ -32,7 +32,7 @@
     mdTooltip="Add"
     mdTooltipPosition="above"
     md-theme="dark"
-    *ngIf="false && isSplittable()"
+    *ngIf="isSplittable()"
     (mouseenter)="onSplitHoverEvent(true)"
     (mouseleave)="onSplitHoverEvent(false)"
     (click)="onSplitButtonClick($event)">

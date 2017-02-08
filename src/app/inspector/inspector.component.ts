@@ -2,8 +2,8 @@ import {
   Component, Input, OnInit, ChangeDetectorRef,
   OnDestroy, NgZone, OnChanges
 } from '@angular/core';
-import { PathLayer } from '../scripts/layers';
-import { PathCommand } from '../scripts/commands';
+import { VectorLayer, PathLayer } from '../scripts/layers';
+import { PathCommand, SubPathCommand } from '../scripts/commands';
 import { CanvasType } from '../CanvasType';
 import { LayerStateService } from '../services/layerstate.service';
 import { Subscription } from 'rxjs/Subscription';
@@ -18,12 +18,7 @@ import { AutoAwesome } from '../scripts/common';
 })
 export class InspectorComponent implements OnInit, OnDestroy {
   @Input() canvasType: CanvasType;
-
-  // Path commands to use to populate the ngFor loop of path components.
-  pathIds: ReadonlyArray<string> = [];
-  pathCommands: ReadonlyArray<PathCommand> = [];
-
-  private subscriptions: Subscription[] = [];
+  private readonly subscriptions: Subscription[] = [];
 
   constructor(
     private layerStateService: LayerStateService,
@@ -31,93 +26,70 @@ export class InspectorComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.subscriptions.push(
-      this.layerStateService.addVectorLayerListener(
-        this.canvasType, vl => {
-          if (!vl) {
-            return;
-          }
-          const pathIds: string[] = [];
-          const pathCommands: PathCommand[] = [];
-          vl.walk(layer => {
-            if (!(layer instanceof PathLayer)) {
-              return;
-            }
-            pathIds.push(layer.id);
-            pathCommands.push(layer.pathData);
-          });
-          this.pathIds = pathIds;
-          this.pathCommands = pathCommands;
-        }));
-    this.subscriptions.push(
       this.inspectorService.addListener((event: InspectorEvent) => {
-        const {eventType, pathId, subIdx, cmdIdx} = event;
-        const vl = this.layerStateService.getVectorLayer(this.canvasType);
-        const pathLayer = vl.findLayerById(pathId) as PathLayer;
+        const {eventType, subIdx, cmdIdx} = event;
+        const fromPathLayer = this.layerStateService.getActivePathLayer(this.canvasType);
+        const toCanvasType =
+          this.canvasType === CanvasType.End
+            ? CanvasType.Start
+            : CanvasType.End;
         switch (eventType) {
           case EventType.AutoFix: {
-            const targetCanvasType =
-              this.canvasType === CanvasType.End
-                ? CanvasType.Start
-                : CanvasType.End;
-            const targetVl = this.layerStateService.getVectorLayer(targetCanvasType);
-            const fromPathLayer = pathLayer;
-            const toPathLayer = targetVl.findLayerById(pathId) as PathLayer;
+            const toPathLayer = this.layerStateService.getActivePathLayer(toCanvasType);
             const autoFixResult = AutoAwesome.fixAll(subIdx, fromPathLayer.pathData, toPathLayer.pathData);
             fromPathLayer.pathData = autoFixResult.from;
             toPathLayer.pathData = autoFixResult.to;
-            this.layerStateService.notifyVectorLayerChange(CanvasType.Start);
-            this.layerStateService.notifyVectorLayerChange(CanvasType.End);
+            this.layerStateService.notifyChange(CanvasType.Start);
+            this.layerStateService.notifyChange(CanvasType.End);
             // TODO: update selections
           }
             break;
           case EventType.Convert: {
-            const targetCanvasType =
-              this.canvasType === CanvasType.End
-                ? CanvasType.Start
-                : CanvasType.End;
-            const targetVl = this.layerStateService.getVectorLayer(targetCanvasType);
-            const targetPathData = (targetVl.findLayerById(pathId) as PathLayer).pathData;
+            const toPathLayer = this.layerStateService.getActivePathLayer(toCanvasType);
             const targetSvgChar =
-              targetPathData.subPathCommands[subIdx].commands[cmdIdx].svgChar;
-            if (targetPathData) {
-              pathLayer.pathData =
-                pathLayer.pathData.convert(subIdx, cmdIdx, targetSvgChar);
-              // TODO: update selections
-            }
+              toPathLayer.pathData.subPathCommands[subIdx].commands[cmdIdx].svgChar;
+            fromPathLayer.pathData =
+              fromPathLayer.pathData.convert(subIdx, cmdIdx, targetSvgChar);
+            // TODO: update selections
           }
             break;
           case EventType.Reverse:
-            pathLayer.pathData = pathLayer.pathData.reverse(subIdx);
-            const numCommands = pathLayer.pathData.subPathCommands[subIdx].commands.length;
+            fromPathLayer.pathData = fromPathLayer.pathData.reverse(subIdx);
+            const numCommands = fromPathLayer.pathData.subPathCommands[subIdx].commands.length;
             // TODO: update selections
             break;
           case EventType.ShiftBack:
-            pathLayer.pathData = pathLayer.pathData.shiftBack(subIdx);
+            fromPathLayer.pathData = fromPathLayer.pathData.shiftBack(subIdx);
             // TODO: update selections
             break;
           case EventType.ShiftForward:
-            pathLayer.pathData = pathLayer.pathData.shiftForward(subIdx);
+            fromPathLayer.pathData = fromPathLayer.pathData.shiftForward(subIdx);
             // TODO: update selections
             break;
           case EventType.Split:
-            pathLayer.pathData = pathLayer.pathData.splitInHalf(subIdx, cmdIdx);
+            fromPathLayer.pathData = fromPathLayer.pathData.splitInHalf(subIdx, cmdIdx);
             // TODO: update selections
             break;
           case EventType.Unsplit:
-            pathLayer.pathData = pathLayer.pathData.unsplit(subIdx, cmdIdx);
+            fromPathLayer.pathData = fromPathLayer.pathData.unsplit(subIdx, cmdIdx);
             // TODO: update selections
             break;
         }
-        this.layerStateService.notifyVectorLayerChange(this.canvasType);
+        this.layerStateService.notifyChange(this.canvasType);
       }));
+  }
+
+  get subPathCommands() {
+    const pathLayer = this.layerStateService.getActivePathLayer(this.canvasType);
+    return pathLayer ? pathLayer.pathData.subPathCommands : [];
   }
 
   ngOnDestroy() {
     this.subscriptions.forEach(s => s.unsubscribe());
   }
 
-  trackPathCommand(index: number, item: PathCommand) {
-    // TODO: will need to change this once we support reordering paths
+  trackSubPathCommand(index: number, item: SubPathCommand) {
+    // TODO: will need to change this if/when we support reordering subpaths
     return index;
   }
 }

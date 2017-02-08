@@ -1,9 +1,8 @@
-<app-path *ngFor="let pathCommand of pathCommands;
-    let pathIdx = index;
-    trackBy: trackPathCommand"
+<app-subpath
+  *ngFor="let subPathCommand of subPathCommands;
+    let subIdx = index;
+    trackBy: trackSubPathCommand"
   fxLayout="column"
   [canvasType]="canvasType"
-  [pathId]="pathIds[pathIdx]"
-  [pathCommand]="pathCommand">
-</app-path>
-
+  [subIdx]="subIdx">
+</app-subpath>

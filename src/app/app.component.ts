@@ -9,15 +9,14 @@ import { Point } from './scripts/common';
 import { CanvasType } from './CanvasType';
 import { Subscription } from 'rxjs/Subscription';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
-import { LayerStateService } from './services/layerstate.service';
+import { LayerStateService, MorphabilityStatus } from './services/layerstate.service';
 import { DividerDragEvent } from './splitter/splitter.directive';
 import { CanvasResizeService } from './services/canvasresize.service';
 import { SelectionStateService } from './services/selectionstate.service';
 import * as $ from 'jquery';
 import * as erd from 'element-resize-detector';
 
-const IS_DEBUG_MODE = !environment.production;
-
+const IS_DEV_MODE = !environment.production;
 const ELEMENT_RESIZE_DETECTOR = erd();
 
 @Component({
@@ -29,16 +28,18 @@ export class AppComponent implements OnInit, OnDestroy {
 
   // TODO: need to warn user about svgs not being structurally identical somehow...
   // TODO: or give the user a way to update the incorrect path id names or something...?
-  startCanvasType = CanvasType.Start;
-  previewCanvasType = CanvasType.Preview;
-  endCanvasType = CanvasType.End;
-  shouldDisplayStartEditor = false;
-  shouldDisplayEndEditor = false;
-  isStructurallyIdentical = false;
-  isMorphable = false;
+  START_CANVAS = CanvasType.Start;
+  PREVIEW_CANVAS = CanvasType.Preview;
+  END_CANVAS = CanvasType.End;
+  MORPHABILITY_NONE = MorphabilityStatus.None;
+  MORPHABILITY_UNMORPHABLE = MorphabilityStatus.Unmorphable;
+  MORPHABILITY_MORPHABLE = MorphabilityStatus.Morphable;
+  morphabilityStatus = MorphabilityStatus.None;
 
-  private startLayer: VectorLayer;
-  private endLayer: VectorLayer;
+  private startVectorLayer: VectorLayer;
+  private endVectorLayer: VectorLayer;
+  private startActivePathId: string;
+  private endActivePathId: string;
   private readonly subscriptions: Subscription[] = [];
 
   @ViewChild('appContainer') private appContainerRef: ElementRef;
@@ -83,7 +84,7 @@ export class AppComponent implements OnInit, OnDestroy {
     // TODO: unregister this in ngOnDestroy
     // TODO: we should check to see if there are any dirty changes first
     $(window).on('beforeunload', event => {
-      if (!IS_DEBUG_MODE) {
+      if (!IS_DEV_MODE) {
         return 'You\'ve made changes but haven\'t saved. ' +
           'Are you sure you want to navigate away?';
       }
@@ -95,24 +96,58 @@ export class AppComponent implements OnInit, OnDestroy {
     this.inspectorContainer = $(this.inspectorContainerRef.nativeElement);
 
     this.subscriptions.push(
-      this.layerStateService.addVectorLayerListener(CanvasType.Start, vl => {
-        this.startLayer = vl;
-        this.shouldDisplayStartEditor = !!vl;
-        this.checkAreLayersMorphable();
+      this.layerStateService.addListener(CanvasType.Start, event => {
+        this.startVectorLayer = event.vectorLayer;
+        this.startActivePathId = event.activePathId;
+        this.updateMorphabilityStatus(event.morphabilityStatus);
       }));
     this.subscriptions.push(
-      this.layerStateService.addVectorLayerListener(CanvasType.End, vl => {
-        this.endLayer = vl;
-        this.shouldDisplayEndEditor = !!vl;
-        this.checkAreLayersMorphable();
+      this.layerStateService.addListener(CanvasType.End, event => {
+        this.endVectorLayer = event.vectorLayer;
+        this.endActivePathId = event.activePathId;
+        this.updateMorphabilityStatus(event.morphabilityStatus);
       }));
 
     ELEMENT_RESIZE_DETECTOR.listenTo(this.canvasContainer.get(0), el => {
-      this.updatePaneSizes();
+      this.updateCanvasSizes();
     });
 
-    if (IS_DEBUG_MODE) {
-      this.initDebugMode();
+    if (IS_DEV_MODE) {
+      // this.loadDebugVectorLayers();
+    }
+  }
+
+  ngOnDestroy() {
+    ELEMENT_RESIZE_DETECTOR.removeAllListeners(this.canvasContainer.get(0));
+    this.subscriptions.forEach(s => s.unsubscribe());
+  }
+
+  private updateMorphabilityStatus(status: MorphabilityStatus) {
+    if (this.morphabilityStatus !== status) {
+      this.morphabilityStatus = status;
+      if (status === MorphabilityStatus.Morphable) {
+        this.layerStateService.setVectorLayer(
+          CanvasType.Preview, this.startVectorLayer.clone());
+      }
+      this.updateCanvasSizes();
+    }
+  }
+
+  private updateCanvasSizes() {
+    const numCanvases =
+      this.morphabilityStatus === MorphabilityStatus.Morphable ? 3 : 2;
+    const width = this.canvasContainer.width() / numCanvases;
+    const height = this.canvasContainer.height();
+    if (this.currentPaneWidth !== width || this.currentPaneHeight !== height) {
+      this.currentPaneWidth = width;
+      this.currentPaneHeight = height;
+      this.canvasResizeService.setSize(width, height);
+    }
+  }
+
+  onDividerDrag(event: DividerDragEvent) {
+    if (event.move) {
+      this.inspectorContainer.height(this.appContainer.height() - event.move.y);
     }
   }
 
@@ -122,11 +157,11 @@ export class AppComponent implements OnInit, OnDestroy {
       return;
     }
     // We assume all selections belong to the same editor for now.
-    const CanvasType = selections[0].source;
+    const canvasType = selections[0].source;
     const unsplitOpsMap: Map<PathLayer, Array<{ subIdx: number, cmdIdx: number }>> = new Map();
     for (const selection of selections) {
       const {pathId, subIdx, cmdIdx} = selection.commandId;
-      const vectorLayer = this.layerStateService.getVectorLayer(CanvasType);
+      const vectorLayer = this.layerStateService.getVectorLayer(canvasType);
       if (!vectorLayer) {
         continue;
       }
@@ -145,100 +180,29 @@ export class AppComponent implements OnInit, OnDestroy {
       pathLayer.pathData = pathLayer.pathData.unsplitBatch(unsplitOps);
     });
     this.selectionStateService.clear();
-    this.layerStateService.notifyVectorLayerChange(CanvasType);
+    this.layerStateService.notifyChange(canvasType);
   }
 
-  ngOnDestroy() {
-    ELEMENT_RESIZE_DETECTOR.removeAllListeners(this.canvasContainer.get(0));
-    this.subscriptions.forEach(s => s.unsubscribe());
-  }
-
-  private checkAreLayersMorphable() {
-    if (!this.startLayer || !this.endLayer) {
-      return;
-    }
-    const isMorphable = this.startLayer.isMorphableWith(this.endLayer);
-    if (this.isMorphable !== isMorphable) {
-      this.isMorphable = isMorphable;
-      this.updatePaneSizes();
-      this.layerStateService.setVectorLayer(CanvasType.Preview, this.startLayer.clone());
-    }
-  }
-
-  private updatePaneSizes() {
-    const numPanes = this.isMorphable ? 3 : 2;
-    const width = this.canvasContainer.width() / numPanes;
-    const height = this.canvasContainer.height();
-    if (this.currentPaneWidth !== width || this.currentPaneHeight !== height) {
-      this.currentPaneWidth = width;
-      this.currentPaneHeight = height;
-      this.canvasResizeService.setSize(width, height);
-    }
-  }
-
-  onDividerDrag(event: DividerDragEvent) {
-    if (event.move) {
-      this.inspectorContainer.height(this.appContainer.height() - event.move.y);
-    }
-  }
-
-  private initDebugMode() {
-    // this.layerStateService.setLayer(CanvasType.Start, VectorLayerLoader.loadVectorLayerFromSvgString(`
-    //   <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24">
-    //     <g transform="translate(12,12)">
-    //       <g transform="scale(0.75,0.75)">
-    //         <g transform="translate(-12,-12)">
-    //           <path d="M 0 0 L 12 12 C 13 13 14 14 15 15 C 16 16 17 17 18 18
-    //                    C 19 19 20 20 21 21 C 22 22 23 23 24 24 L 24 24"
-    //                    stroke="#000" stroke-width="1" />
-    //         </g>
-    //       </g>
-    //     </g>
-    //     <g transform="translate(0,9)">
-    //       <g transform="scale(1.25,1.25)">
-    //         <path d="M 2,6 C 2,3.79 3.79,2 6,2 C 8.21,2 10,3.79 10,6 C 10,8.21 8.21,10 6,10 C 3.79,10 2,8.21 2,6"
-    //                  fill="#DB4437"/>
-    //       </g>
-    //     </g>
-    // </svg>`));
-    // this.layerStateService.setLayer(CanvasType.End, VectorLayerLoader.loadVectorLayerFromSvgString(`
-    //   <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24">
-    //     <g transform="translate(12,12)">
-    //       <g transform="scale(0.75,0.75)">
-    //         <g transform="translate(-12,-12)">
-    //           <path d="M 0 0 L 4 4 C 11 12 17 12 24 12 L 24 24" stroke="#000" stroke-width="1" />
-    //         </g>
-    //       </g>
-    //     </g>
-    //     <g transform="translate(0,12)">
-    //       <g transform="scale(1,1)">
-    //         <path d="M 2,6 C 2,3.79 3.79,2 6,2 C 8.21,2 10,3.79 10,6 C 10,8.21 8.21,10 6,10 C 3.79,10 2,8.21 2,6"
-    //                  fill="#DB4437" />
-    //       </g>
-    //     </g>
-    // </svg>`));
-    // this.layerStateService.setLayer(CanvasType.Start, VectorLayerLoader.loadVectorLayerFromSvgString(`
-    //   <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24">
-    //     <path d="M 4 4 L 4 20 L 20 20 L 20 4 L 4 4"
-    //              stroke="#000" stroke-width="1" />
-    // </svg>`));
-    // this.layerStateService.setLayer(CanvasType.End, VectorLayerLoader.loadVectorLayerFromSvgString(`
-    //   <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24">
-    //     <path d="M 4 4 C 4 20 4 20 4 20 L 20 20 L 20 4 L 4 4"
-    //              stroke="#000" stroke-width="1" />
-    // </svg>`));
-    // const groupLayerStart = this.startVectorLayer.children[0] as GroupLayer;
-    // groupLayerStart.pivotX = 12;
-    // groupLayerStart.pivotY = 12;
-    // groupLayerStart.rotation = 180;
-    // const groupLayerPreview = this.previewVectorLayer.children[0] as GroupLayer;
-    // groupLayerPreview.pivotX = 12;
-    // groupLayerPreview.pivotY = 12;
-    // groupLayerPreview.rotation = 180;
-    // const groupLayerEnd = this.endVectorLayer.children[0] as GroupLayer;
-    // groupLayerEnd.pivotX = 12;
-    // groupLayerEnd.pivotY = 12;
-    // groupLayerEnd.rotation = 180;
+  private loadDebugVectorLayers() {
+    this.layerStateService.setVectorLayer(CanvasType.Start, VectorLayerLoader.loadVectorLayerFromSvgString(`
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+      <path
+        stroke="#000"
+        stroke-width="0.2"
+        fill="none"
+        d="M 8.868 7.648 C 8.603 4.784 11.043 3.829 12.475 3.829 C 18.468 3.829 17.407
+        12.103 12.475 12.103 C 18.68 12.103 17.832 21.014 12.528 21.014 C 7.648 21.014 7.86 17.832 7.913 17.089">
+      </path>
+    </svg>`));
+    this.layerStateService.setVectorLayer(CanvasType.End, VectorLayerLoader.loadVectorLayerFromSvgString(`
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+      <path
+        stroke="#000"
+        stroke-width="0.2"
+        fill="none"
+        d="M 15.604 20.908 L 15.604 4.572 L 6.481 17.407 L 18.362 17.407">
+      </path>
+    </svg>`));
     // this.layerStateService.setLayer(CanvasType.Start, VectorLayerLoader.loadVectorLayerFromSvgString(`
     //   <svg xmlns="http://www.w3.org/2000/svg"
     //     width="400px" height="400px"
@@ -292,24 +256,5 @@ export class AppComponent implements OnInit, OnDestroy {
     // c18.518,0,36.154,1.238,52.876,3.717c7.829,2.146,20.307,4.66,37.391,7.491c1.434-14.17,6.422-26.752,14.963-37.741
     // C421.377,106.059,432.947,99.669,446.47,99.669z"/>
     // </svg>`));
-    this.layerStateService.setVectorLayer(CanvasType.Start, VectorLayerLoader.loadVectorLayerFromSvgString(`
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-      <path
-        stroke="#000"
-        stroke-width="0.2"
-        fill="none"
-        d="M 8.868 7.648 C 8.603 4.784 11.043 3.829 12.475 3.829 C 18.468 3.829 17.407
-        12.103 12.475 12.103 C 18.68 12.103 17.832 21.014 12.528 21.014 C 7.648 21.014 7.86 17.832 7.913 17.089">
-      </path>
-    </svg>`));
-    this.layerStateService.setVectorLayer(CanvasType.End, VectorLayerLoader.loadVectorLayerFromSvgString(`
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-      <path
-        stroke="#000"
-        stroke-width="0.2"
-        fill="none"
-        d="M 15.604 20.908 L 15.604 4.572 L 6.481 17.407 L 18.362 17.407">
-      </path>
-    </svg>`));
   }
 }

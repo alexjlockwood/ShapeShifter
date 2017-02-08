@@ -1,5 +1,5 @@
 import { Component, NgZone, OnInit } from '@angular/core';
-import { TimelineService } from './timeline.service';
+import { TimelineService } from '../services/timeline.service';
 import { LayerStateService } from '../services/layerstate.service';
 import { Subscription } from 'rxjs/Subscription';
 import { CanvasType } from '../CanvasType';
@@ -14,7 +14,7 @@ export class TimelineComponent implements OnInit {
   animationDuration = 300;
   arePathsMorphable = false;
   isSlowMotionActivated = false;
-  isPlayActivated = false;
+  isPlaying = false;
   isRepeatActivated = false;
 
   private readonly subscriptions: Subscription[] = [];
@@ -26,12 +26,14 @@ export class TimelineComponent implements OnInit {
 
   ngOnInit() {
     this.subscriptions.push(
-      this.layerStateService.addVectorLayerListener(CanvasType.Start, vl => {
-        this.checkAreLayersMorphable();
+      this.layerStateService.addListener(CanvasType.Start, event => {
+        // TODO: implement this
+        // this.checkAreLayersMorphable();
       }));
     this.subscriptions.push(
-      this.layerStateService.addVectorLayerListener(CanvasType.End, vl => {
-        this.checkAreLayersMorphable();
+      this.layerStateService.addListener(CanvasType.End, event => {
+        // TODO: implement this
+        // this.checkAreLayersMorphable();
       }));
   }
 

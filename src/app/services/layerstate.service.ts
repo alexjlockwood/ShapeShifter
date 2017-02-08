@@ -6,24 +6,28 @@ import { VectorLayer, PathLayer } from '../scripts/layers';
 import { Observable } from 'rxjs/Observable';
 import { CanvasType } from '../CanvasType';
 
+/**
+ * The global state service that is in charge of keeping track of the loaded
+ * SVGs, active path layers, and the current morphability status.
+ * TODO: handle case where vector layer and/or path layer are cleared
+ */
 @Injectable()
 export class LayerStateService {
   private readonly vectorLayerMap = new Map<CanvasType, VectorLayer>();
-  private readonly vectorLayerSources = new Map<CanvasType, Subject<VectorLayer>>();
-  private readonly vectorLayerStreams = new Map<CanvasType, Observable<VectorLayer>>();
-  private readonly pathLayerMap = new Map<CanvasType, PathLayer>();
-  private readonly pathLayerSources = new Map<CanvasType, Subject<PathLayer>>();
-  private readonly pathLayerStreams = new Map<CanvasType, Observable<PathLayer>>();
+  private readonly activePathIdMap = new Map<CanvasType, string>();
+  private readonly eventSources = new Map<CanvasType, Subject<LayerStateEvent>>();
+  private readonly eventStreams = new Map<CanvasType, Observable<LayerStateEvent>>();
 
   constructor() {
     [CanvasType.Start, CanvasType.Preview, CanvasType.End]
       .forEach(type => {
         this.vectorLayerMap.set(type, undefined);
-        this.vectorLayerSources.set(type, new BehaviorSubject<VectorLayer>(undefined));
-        this.vectorLayerStreams.set(type, this.vectorLayerSources.get(type).asObservable());
-        this.pathLayerMap.set(type, undefined);
-        this.pathLayerSources.set(type, new BehaviorSubject<PathLayer>(undefined));
-        this.pathLayerStreams.set(type, this.pathLayerSources.get(type).asObservable());
+        this.eventSources.set(type, new BehaviorSubject<LayerStateEvent>({
+          vectorLayer: undefined,
+          activePathId: undefined,
+          morphabilityStatus: MorphabilityStatus.None,
+        }));
+        this.eventStreams.set(type, this.eventSources.get(type).asObservable());
       });
   }
 
@@ -31,86 +35,80 @@ export class LayerStateService {
     return this.vectorLayerMap.get(type);
   }
 
+  /**
+   * Should only be called by the path selector.
+   */
   setVectorLayer(type: CanvasType, layer: VectorLayer) {
     this.vectorLayerMap.set(type, layer);
-    this.notifyVectorLayerChange(type);
+    this.activePathIdMap.delete(type);
+    this.notifyChange(type);
   }
 
-  notifyVectorLayerChange(type: CanvasType) {
-    this.vectorLayerSources.get(type).next(this.vectorLayerMap.get(type));
+  getActivePathId(type: CanvasType) {
+    return this.activePathIdMap.get(type);
   }
 
-  addVectorLayerListener(type: CanvasType, callback: (layer: VectorLayer) => void) {
-    return this.vectorLayerStreams.get(type).subscribe(callback);
+  /**
+   * Should only be called by the path selector component.
+   */
+  setActivePathId(type: CanvasType, pathId: string) {
+    const activePathId = this.getActivePathId(type);
+    if (activePathId !== pathId) {
+      this.activePathIdMap.set(type, pathId);
+      this.notifyChange(type);
+    }
   }
 
-  getPathLayer(type: CanvasType) {
-    return this.vectorLayerMap.get(type);
+  getActivePathLayer(canvasType: CanvasType) {
+    const vectorLayer = this.getVectorLayer(canvasType);
+    const pathId = this.getActivePathId(canvasType);
+    if (!vectorLayer || !pathId) {
+      return undefined;
+    }
+    return vectorLayer.findLayerById(pathId) as PathLayer;
   }
 
-  setPathLayer(type: CanvasType, layer: PathLayer) {
-    this.pathLayerMap.set(type, layer);
-    this.notifyVectorLayerChange(type);
+  notifyChange(type: CanvasType) {
+    this.eventSources.get(type).next({
+      vectorLayer: this.vectorLayerMap.get(type),
+      activePathId: this.activePathIdMap.get(type),
+      morphabilityStatus: this.getMorphabilityStatus(),
+    });
   }
 
-  notifyPathLayerChange(type: CanvasType) {
-    this.pathLayerSources.get(type).next(this.pathLayerMap.get(type));
+  addListener(type: CanvasType, callback: (layerStateEvent: LayerStateEvent) => void) {
+    return this.eventStreams.get(type).subscribe(callback);
   }
 
-  addPathLayerListener(type: CanvasType, callback: (layer: PathLayer) => void) {
-    return this.pathLayerStreams.get(type).subscribe(callback);
-  }
-
-  forCanvasType(type: CanvasType) {
-    return new TypedLayerStateServiceImpl(this, type);
+  getMorphabilityStatus() {
+    const startVector = this.getVectorLayer(CanvasType.Start);
+    const endVector = this.getVectorLayer(CanvasType.End);
+    if (!startVector || !endVector) {
+      return MorphabilityStatus.None;
+    }
+    const startPathId = this.getActivePathId(CanvasType.Start);
+    const endPathId = this.getActivePathId(CanvasType.End);
+    if (!startPathId || !endPathId) {
+      return MorphabilityStatus.None;
+    }
+    const startPathLayer = startVector.findLayerById(startPathId);
+    const endPathLayer = endVector.findLayerById(endPathId);
+    if (startPathLayer.isMorphableWith(endPathLayer)) {
+      return MorphabilityStatus.Morphable;
+    }
+    return MorphabilityStatus.Unmorphable;
   }
 }
 
-export interface TypedLayerStateService {
-  getVectorLayer(): VectorLayer;
-  setVectorLayer(layer: VectorLayer);
-  notifyVectorLayerChange();
-  addVectorLayerListener(callback: (layer: VectorLayer) => void);
-  getPathLayer();
-  setPathLayer(layer: PathLayer);
-  notifyPathLayerChange();
-  addPathLayerListener(callback: (layer: PathLayer) => void);
+// TODO: also need to handle case where paths are invalid (i.e. unequal # of subpaths)
+export enum MorphabilityStatus {
+  None,
+  Unmorphable,
+  Morphable,
 }
 
-class TypedLayerStateServiceImpl {
-  constructor(
-    private layerStateService: LayerStateService,
-    private canvasType: CanvasType) { }
-
-  getVectorLayer() {
-    return this.layerStateService.getVectorLayer(this.canvasType);
-  }
-
-  setVectorLayer(layer: VectorLayer) {
-    return this.layerStateService.setVectorLayer(this.canvasType, layer);
-  }
-
-  notifyVectorLayerChange() {
-    this.layerStateService.notifyVectorLayerChange(this.canvasType);
-  }
-
-  addVectorLayerListener(callback: (layer: VectorLayer) => void) {
-    return this.layerStateService.addVectorLayerListener(this.canvasType, callback);
-  }
-
-  getPathLayer() {
-    return this.layerStateService.getPathLayer(this.canvasType);
-  }
-
-  setPathLayer(layer: PathLayer) {
-    return this.layerStateService.setPathLayer(this.canvasType, layer);
-  }
-
-  notifyPathLayerChange() {
-    this.layerStateService.notifyPathLayerChange(this.canvasType);
-  }
-
-  addPathLayerListener(callback: (layer: PathLayer) => void) {
-    return this.layerStateService.addPathLayerListener(this.canvasType, callback);
-  }
+export interface LayerStateEvent {
+  vectorLayer: VectorLayer | undefined;
+  activePathId: string | undefined;
+  morphabilityStatus: MorphabilityStatus;
 }

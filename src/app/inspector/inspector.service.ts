@@ -21,7 +21,6 @@ export class InspectorService {
   notifyChange(eventType: EventType, args: InspectorArgs) {
     this.inspectorSource.next({
       eventType: eventType,
-      pathId: args.pathId,
       subIdx: args.subIdx,
       cmdIdx: args.cmdIdx,
     });
@@ -39,8 +38,7 @@ export enum EventType {
 };
 
 export interface InspectorArgs {
-  pathId: string;
-  subIdx?: number;
+  subIdx: number;
   cmdIdx?: number;
 }
 

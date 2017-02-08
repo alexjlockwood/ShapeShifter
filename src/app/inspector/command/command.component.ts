@@ -21,7 +21,6 @@ import { CanvasType } from '../../CanvasType';
 })
 export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
   @Input() canvasType: CanvasType;
-  @Input() pathId: string;
   @Input() subIdx: number;
   private cmdIdx_: number;
   private drawCommand_: Command;
@@ -51,7 +50,7 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
           this.isSelected = _.some(selections, {
             source: this.canvasType,
             commandId: {
-              pathId: this.pathId,
+              pathId: this.layerStateService.getActivePathId(this.canvasType),
               subIdx: this.subIdx,
               cmdIdx: this.cmdIdx,
             }
@@ -175,7 +174,7 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
     this.selectionStateService.toggle({
       source: this.canvasType,
       commandId: {
-        pathId: this.pathId,
+        pathId: this.layerStateService.getActivePathId(this.canvasType),
         subIdx: this.subIdx,
         cmdIdx: this.cmdIdx,
       }
@@ -189,7 +188,8 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
         ? CanvasType.End
         : CanvasType.Start;
     const vl = this.layerStateService.getVectorLayer(canvasType);
-    const pathData = (vl.findLayerById(this.pathId) as PathLayer).pathData;
+    const pathId = this.layerStateService.getActivePathId(this.canvasType);
+    const pathData = (vl.findLayerById(pathId) as PathLayer).pathData;
     if (pathData.subPathCommands.length <= this.subIdx) {
       return false;
     }
@@ -228,7 +228,7 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private broadcastHoverEvent(isHovering: boolean, hoverType: HoverType) {
-    const pathId = this.pathId;
+    const pathId = this.layerStateService.getActivePathId(this.canvasType);
     const subIdx = this.subIdx;
     const cmdIdx = this.cmdIdx;
     const commandId = { pathId, subIdx, cmdIdx };
@@ -267,7 +267,6 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private onCommandButtonClick(eventType: EventType) {
     this.inspectorService.notifyChange(eventType, {
-      pathId: this.pathId,
       subIdx: this.subIdx,
       cmdIdx: this.cmdIdx,
     });

@@ -9,7 +9,7 @@ import { Point } from '../scripts/common';
 import * as $ from 'jquery';
 import { Subscription } from 'rxjs/Subscription';
 import { VectorLayer } from '../scripts/layers';
-import { CANVAS_MARGIN } from './canvas.component';
+import { CANVAS_MARGIN, DEFAULT_VIEWPORT_SIZE } from './canvas.component';
 
 const RULER_SIZE = 32;
 const EXTRA_PADDING = 12;
@@ -26,8 +26,8 @@ export class CanvasRulerDirective implements OnInit, OnDestroy {
   private canvas: JQuery;
   private mousePoint: Point;
   private readonly subscriptions: Subscription[] = [];
-  private vlWidth = 1;
-  private vlHeight = 1;
+  private vlWidth = DEFAULT_VIEWPORT_SIZE;
+  private vlHeight = DEFAULT_VIEWPORT_SIZE;
   private componentSize = 1;
 
   constructor(
@@ -38,8 +38,9 @@ export class CanvasRulerDirective implements OnInit, OnDestroy {
   ngOnInit() {
     this.canvas = $(this.elementRef.nativeElement);
     this.subscriptions.push(
-      this.layerStateService.addVectorLayerListener(
-        this.canvasType, vl => {
+      this.layerStateService.addListener(
+        this.canvasType, event => {
+          const vl = event.vectorLayer;
           if (!vl) {
             return;
           }
