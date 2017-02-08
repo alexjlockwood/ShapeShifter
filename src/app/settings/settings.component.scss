@@ -1,0 +1,26 @@
+@import '../styles/variables';
+
+:host {
+  min-width: 400px;
+}
+
+.settings-container {
+  box-sizing: border-box;
+  padding-left: 16px;
+  padding-right: 16px;
+  padding-top: 24px;
+  padding-bottom: 24px;
+}
+
+form > div {
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+md-select {
+  min-width: 180px;
+}
+
+input:disabled {
+  color: $colorBlackTextDisabled;
+}

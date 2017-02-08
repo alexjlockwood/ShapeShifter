@@ -20,7 +20,7 @@
     [disabled]="!isTimelineEnabled"
     mdTooltip="{{ isPlaying() ? 'Pause' : 'Play' }}"
     mdTooltipPosition="above"
-    (click)="setIsPlaying(!isPlaying())"
+    (click)="onPlayPauseButtonClick()"
     md-theme="dark">
     <div
       class="play-pause-icon"

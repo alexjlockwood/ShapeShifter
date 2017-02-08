@@ -73,7 +73,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     this.subscriptions.push(
       this.layerStateService.addListener(
         this.canvasType, event => {
-          this.log(event);
           const oldWidth = this.viewportWidth;
           const oldHeight = this.viewportHeight;
           this.vectorLayer = event.vectorLayer;
@@ -100,7 +99,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     if (this.canvasType === CanvasType.Preview) {
       // Preview canvas specific setup.
       this.subscriptions.push(
-        this.animatorService.animationFractionStream.subscribe(fraction => {
+        this.animatorService.animatedValueStream.subscribe(fraction => {
           const startLayer = this.layerStateService.getActivePathLayer(CanvasType.Start);
           const previewLayer = this.layerStateService.getActivePathLayer(CanvasType.Preview);
           const endLayer = this.layerStateService.getActivePathLayer(CanvasType.End);
@@ -747,13 +746,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     const x = (event.pageX - canvasOffset.left) / this.cssScale;
     const y = (event.pageY - canvasOffset.top) / this.cssScale;
     return new Point(x, y);
-  }
-
-  private log(msg: any) {
-    if (this.canvasType !== CanvasType.Preview) {
-      return;
-    }
-    console.log(msg);
   }
 }
 

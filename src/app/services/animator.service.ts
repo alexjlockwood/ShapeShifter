@@ -3,27 +3,29 @@ import { Subject } from 'rxjs/Subject';
 import { Subscription } from 'rxjs/Subscription';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Observable } from 'rxjs/Observable';
+import { MathUtil } from '../scripts/common';
 
-const REPEAT_DELAY = 2000;
-const DEFAULT_DURATION = 1000;
-const DEFAULT_PLAYBACK_SPEED = 5;
+const DEFAULT_INTERPOLATOR = (fraction: number) => fraction;
+const MIN_DURATION = 100;
+const DEFAULT_DURATION = 300;
+const MAX_DURATION = 60000;
+const REPEAT_DELAY = 1000;
+const DEFAULT_PLAYBACK_SPEED = 1;
+const SLOW_MOTION_PLAYBACK_SPEED = 5;
+const DEFAULT_IS_REPEATING = false;
+const DEFAULT_IS_PLAYING = false;
 
 /**
  * Coordinates and stores information about the currently displayed preview
  * canvas animation.
+ * TODO: deal with animation being paused midway through
  */
 @Injectable()
 export class AnimatorService {
-  private currentAnimationFraction = 0;
-  private readonly animationFractionSource = new BehaviorSubject<number>(0);
-  readonly animationFractionStream = this.animationFractionSource.asObservable();
+  private readonly animatedValueSource = new BehaviorSubject<number>(0);
+  readonly animatedValueStream = this.animatedValueSource.asObservable();
   private readonly animator: Animator;
-
   private isSlowMotion_ = false;
-  private isPlaying_ = false;
-  private isRepeating_ = false;
-  private duration = DEFAULT_DURATION;
-  private playbackSpeed = 1;
 
   constructor(private ngZone: NgZone) {
     this.animator = new Animator(ngZone);
@@ -33,130 +35,131 @@ export class AnimatorService {
     return this.isSlowMotion_;
   }
 
-  isPlaying() {
-    return this.isPlaying_;
+  setIsSlowMotion(isSlowMotion: boolean) {
+    this.isSlowMotion_ = isSlowMotion;
+    this.animator.setPlaybackSpeed(
+      isSlowMotion ? SLOW_MOTION_PLAYBACK_SPEED : DEFAULT_PLAYBACK_SPEED);
   }
 
   isRepeating() {
-    return this.isRepeating_;
+    return this.animator.isRepeating();
   }
-
-  setIsSlowMotion(isSlowMotion: boolean) {
-    this.isSlowMotion_ = isSlowMotion;
-    this.playbackSpeed = isSlowMotion ? DEFAULT_PLAYBACK_SPEED : 1;
-  }
-
-  rewind() {  }
-
-  setIsPlaying(isPlaying: boolean) {
-    if (this.isPlaying_ !== isPlaying) {
-      this.isPlaying_ = isPlaying;
-      if (isPlaying) {
-        this.animator.start((fraction: number) => {
-          this.currentAnimationFraction = fraction;
-          if (fraction === 1) {
-            this.isPlaying_ = false;
-            this.ngZone.run(() => this.animationFractionSource.next(fraction));
-          } else {
-            this.animationFractionSource.next(this.currentAnimationFraction);
-          }
-        });
-      } else {
-        this.animator.stop();
-      }
-    }
-  }
-
-  fastForward() { }
 
   setIsRepeating(isRepeating: boolean) {
-    this.isRepeating_ = isRepeating;
+    this.animator.setIsRepeating(isRepeating);
   }
 
-  // startAutoAnimate() {
-  //   if (!this.animationLooper) {
-  //     this.animationLooper = new Animator(this.ngZone);
-  //     const timelineService = this;
-  //     this.animationLooper.start((fraction: number) => {
-  //       timelineService.setAnimationFraction(fraction);
-  //     });
-  //   }
-  // }
+  isPlaying() {
+    return this.animator.isPlaying();
+  }
 
-  // stopAutoAnimate() {
-  //   if (this.animationLooper) {
-  //     this.animationLooper.stop();
-  //     this.animationLooper = undefined;
-  //   }
-  // }
+  play() {
+    this.animator.play((fraction: number, value: number) => {
+      if (fraction === 0 || fraction === 1) {
+        // Allow change detection at the start/end of the animation.
+        this.ngZone.run(() => this.animatedValueSource.next(value));
+      } else {
+        // By default the callback is invoked outside the default Angular
+        // zone. Clients receiving this callback should be aware of that.
+        this.animatedValueSource.next(value);
+      }
+    });
+  }
+
+  pause() {
+    this.animator.pause();
+  }
+
+  // TODO: implement this
+  rewind() { }
+
+  // TODO: implement this
+  fastForward() { }
+
+  setDuration(duration: number) {
+    // TODO: remove this once we guarantee the values are sanitized in the settings pane
+    if (!duration) {
+      duration = DEFAULT_DURATION;
+    }
+    duration = MathUtil.clamp(duration, MIN_DURATION, MAX_DURATION);
+    this.animator.setDuration(duration);
+  }
+
+  setInterpolator(interpolatorFn: (fraction: number) => number) {
+    this.animator.setInterpolator(interpolatorFn);
+  }
 }
 
 class Animator {
   private timeoutId: number;
-  private intervalId: number;
   private animationFrameId: number;
-  private shouldRepeat = false;
+
+  private isPlaying_ = DEFAULT_IS_PLAYING;
+  private isRepeating_ = DEFAULT_IS_REPEATING;
+  private playbackSpeed_ = DEFAULT_PLAYBACK_SPEED;
+  private interpolatorFn_ = DEFAULT_INTERPOLATOR;
+  private duration_ = DEFAULT_DURATION;
+
+  private currentAnimatedFraction = 0;
+  private shouldPlayInReverse = false;
 
   constructor(private readonly ngZone: NgZone) { }
 
-  repeat(repeat: boolean) {
-    this.shouldRepeat = true;
-    return this;
+  isPlaying() { return this.isPlaying_; }
+
+  isRepeating() { return this.isRepeating_; }
+
+  setIsRepeating(isRepeating: boolean) { this.isRepeating_ = isRepeating; }
+
+  setPlaybackSpeed(playbackSpeed: number) { this.playbackSpeed_ = playbackSpeed; }
+
+  setInterpolator(fn: (fraction: number) => number) { this.interpolatorFn_ = fn; }
+
+  setDuration(duration: number) { this.duration_ = duration; }
+
+  play(onUpdateFn: (fraction: number, value: number) => void) {
+    this.isPlaying_ = true;
+    this.startAnimation(onUpdateFn);
   }
 
-  start(onUpdateFn: (fraction: number) => void) {
-    if (!this.shouldRepeat) {
-      this.startAnimation(DEFAULT_DURATION, false, onUpdateFn);
-      return;
-    }
-
-    let shouldReverse = false;
-    this.timeoutId = setTimeout(() => {
-      this.intervalId = setInterval(() => {
-        this.startAnimation(DEFAULT_DURATION, shouldReverse, onUpdateFn);
-        shouldReverse = !shouldReverse;
-      }, REPEAT_DELAY);
+  pause() {
+    this.isPlaying_ = false;
+    if (this.timeoutId) {
+      clearTimeout(this.timeoutId);
       this.timeoutId = undefined;
-    }, REPEAT_DELAY - DEFAULT_DURATION);
+    }
+    if (this.animationFrameId) {
+      cancelAnimationFrame(this.animationFrameId);
+      this.animationFrameId = undefined;
+    }
   }
 
-  private startAnimation(
-    duration: number,
-    shouldReverse: boolean,
-    onUpdateFn: (fraction: number) => void) {
-
+  private startAnimation(onUpdateFn: (fraction: number, value: number) => void) {
     let startTimestamp = undefined;
     const onAnimationFrame = (timestamp: number) => {
       if (!startTimestamp) {
         startTimestamp = timestamp;
       }
       const progress = timestamp - startTimestamp;
-      const fraction = Math.min(1, progress / duration);
-      onUpdateFn(shouldReverse ? 1 - fraction : fraction);
-      if (progress < duration) {
+      const shouldPlayInReverse = this.shouldPlayInReverse;
+      if (progress < (this.duration_ * this.playbackSpeed_)) {
         this.animationFrameId = requestAnimationFrame(onAnimationFrame);
       } else {
-        startTimestamp = undefined;
-        this.animationFrameId = undefined;
+        this.shouldPlayInReverse = !this.shouldPlayInReverse;
+        if (this.isRepeating_) {
+          this.timeoutId = setTimeout(() => {
+            this.startAnimation(onUpdateFn);
+          }, REPEAT_DELAY);
+        } else {
+          this.pause();
+        }
       }
+      const fraction = Math.min(1, progress / (this.duration_ * this.playbackSpeed_));
+      const value = this.interpolatorFn_(fraction);
+      onUpdateFn(fraction, shouldPlayInReverse ? 1 - value : value);
     };
     this.ngZone.runOutsideAngular(() => {
       this.animationFrameId = requestAnimationFrame(onAnimationFrame);
     });
-  }
-
-  stop() {
-    if (this.timeoutId) {
-      clearTimeout(this.timeoutId);
-      this.timeoutId = undefined;
-    }
-    if (this.intervalId) {
-      clearInterval(this.intervalId);
-      this.intervalId = undefined;
-    }
-    if (this.animationFrameId) {
-      cancelAnimationFrame(this.animationFrameId);
-      this.animationFrameId = undefined;
-    }
   }
 }

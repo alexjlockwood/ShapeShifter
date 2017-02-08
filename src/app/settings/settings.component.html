@@ -1,0 +1,29 @@
+<div fxLayout="row" class="settings-container">
+<form fxLayout="column">
+  <div>
+  <md-select
+    placeholder="Interpolator"
+    [(ngModel)]="selectedInterpolator"
+    [disabled]="isPlaying()"
+    name="interpolator">
+    <md-option
+      *ngFor="let interpolator of interpolators"
+      [value]="interpolator">
+      {{interpolator.label}}
+    </md-option>
+  </md-select>
+  </div>
+  <div>
+  <md-input-container>
+    <input
+      md-input
+      [disabled]="isPlaying() ? '' : undefined"
+      placeholder="Duration"
+      value="300"
+      name="duration"
+      [(ngModel)]="duration"
+      type="number">
+  </md-input-container>
+  </div>
+</form>
+</div>

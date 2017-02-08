@@ -18,7 +18,7 @@ import { SelectionStateService } from './services/selectionstate.service';
 import { HoverStateService } from './services/hoverstate.service';
 import { CanvasResizeService } from './services/canvasresize.service';
 import { CanvasRulerDirective } from './canvas/canvasruler.directive';
-import { ExportComponent } from './export/export.component';
+import { SettingsComponent } from './settings/settings.component';
 import { ToolbarComponent } from './toolbar/toolbar.component';
 import { PathSelectorComponent } from './pathselector/pathselector.component';
 
@@ -34,7 +34,7 @@ import 'hammerjs';
     SubPathComponent,
     CommandComponent,
     CanvasRulerDirective,
-    ExportComponent,
+    SettingsComponent,
     ToolbarComponent,
     PathSelectorComponent,
   ],

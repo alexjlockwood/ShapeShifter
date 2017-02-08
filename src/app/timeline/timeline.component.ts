@@ -4,8 +4,6 @@ import { LayerStateService, MorphabilityStatus } from '../services/layerstate.se
 import { Subscription } from 'rxjs/Subscription';
 import { CanvasType } from '../CanvasType';
 
-const ANIMATION_DURATION = 300;
-
 @Component({
   selector: 'app-timeline',
   templateUrl: './timeline.component.html',
@@ -33,7 +31,7 @@ export class TimelineComponent implements OnInit {
         this.onLayerStateChanged(event.morphabilityStatus);
       }));
     // TODO: is this necessary to trigger change detection?
-    // this.animatorService.animationFractionStream.subscribe(() => {});
+    this.animatorService.animatedValueStream.subscribe((value: number) => { });
   }
 
   private onLayerStateChanged(morphabilityStatus: MorphabilityStatus) {
@@ -43,7 +41,8 @@ export class TimelineComponent implements OnInit {
     }
     this.isTimelineEnabled = isTimelineEnabled;
     if (!this.isTimelineEnabled) {
-      this.setIsPlaying(false);
+      // TODO: reset instead of pause?
+      this.animatorService.pause();
     }
   }
 
@@ -63,8 +62,12 @@ export class TimelineComponent implements OnInit {
     this.animatorService.setIsSlowMotion(isSlowMotion);
   }
 
-  setIsPlaying(isPlaying: boolean) {
-    this.animatorService.setIsPlaying(isPlaying);
+  onPlayPauseButtonClick() {
+    if (this.isPlaying()) {
+      this.animatorService.pause();
+    } else {
+      this.animatorService.play();
+    }
   }
 
   setIsRepeating(isRepeating: boolean) {
