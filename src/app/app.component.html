@@ -1,47 +1,52 @@
-<div
-  #appContainer
+<div #appContainer
   class="app-container"
   fxLayout="column">
-
   <!-- Toolbar. -->
   <app-toolbar></app-toolbar>
-
-  <div
-    class="display-container"
+  <div class="display-container"
     fxLayout="column"
     fxFlex>
-
     <!-- Start/Preview/End canvases. -->
-    <div
-      #canvasContainer
+    <div #canvasContainer
       class="canvas-container"
       fxLayout="row"
       fxLayoutAlign="center center"
       fxFlex>
       <app-canvas [canvasType]="START_CANVAS"></app-canvas>
-      <app-canvas *ngIf="morphabilityStatus === MORPHABILITY_MORPHABLE" [canvasType]="PREVIEW_CANVAS"></app-canvas>
+      <app-canvas *ngIf="morphabilityStatus === MORPHABILITY_MORPHABLE"
+        [canvasType]="PREVIEW_CANVAS"></app-canvas>
       <app-canvas [canvasType]="END_CANVAS"></app-canvas>
     </div>
-
     <!-- Timeline controls. -->
     <app-timeline></app-timeline>
   </div>
-
-  <div #inspectorContainer class="inspector-container" fxLayout="row">
-    <div class="inspector-panel" fxLayout="column">
-      <div class="inspector-panel-header" fxLayoutAlign="start center">
+  <div #inspectorContainer
+    class="inspector-container"
+    fxLayout="row">
+    <div class="inspector-panel"
+      fxLayout="column">
+      <div class="inspector-panel-header"
+        fxLayoutAlign="start center">
         <span>Start path</span>
       </div>
-      <app-pathselector fxFlex [canvasType]="START_CANVAS"></app-pathselector>
+      <app-pathselector fxFlex
+        [canvasType]="START_CANVAS"></app-pathselector>
     </div>
-    <div class="inspector-panel" fxLayout="column">
-      <div class="inspector-panel-header" fxLayoutAlign="start center">
+    <div class="inspector-panel"
+      fxLayout="column">
+      <div class="inspector-panel-header"
+        fxLayoutAlign="start center">
         <span>End path</span>
       </div>
-      <app-pathselector fxFlex [canvasType]="END_CANVAS"></app-pathselector>
+      <app-pathselector fxFlex
+        [canvasType]="END_CANVAS"></app-pathselector>
     </div>
-    <div class="inspector-panel" fxLayout="column" fxFlex>
-      <div class="inspector-panel-header" fxLayout="row" fxLayoutAlign="start center">
+    <div class="inspector-panel"
+      fxLayout="column"
+      fxFlex>
+      <div class="inspector-panel-header"
+        fxLayout="row"
+        fxLayoutAlign="start center">
         <span *ngIf="morphabilityStatus !== MORPHABILITY_NONE">Status:
           <span [ngClass]="{
             'status-text-unmorphable': morphabilityStatus === MORPHABILITY_UNMORPHABLE,
@@ -51,14 +56,18 @@
         </span>
         <span fxFlex></span>
       </div>
-      <div class="inspector-panel-body" fxLayout="row" fxFlex>
+      <div class="inspector-panel-body"
+        fxLayout="row"
+        fxFlex>
         <app-inspector [canvasType]="START_CANVAS"></app-inspector>
         <app-inspector [canvasType]="END_CANVAS"></app-inspector>
         <span fxFlex></span>
       </div>
     </div>
-    <div class="inspector-panel" fxLayout="column">
-      <div class="inspector-panel-header" fxLayoutAlign="start center">
+    <div class="inspector-panel"
+      fxLayout="column">
+      <div class="inspector-panel-header"
+        fxLayoutAlign="start center">
         <span>Export</span>
       </div>
       <app-export></app-export>

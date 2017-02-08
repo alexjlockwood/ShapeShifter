@@ -1,29 +1,22 @@
-<div
-  *ngIf="!vectorLayer"
+<div *ngIf="!vectorLayer"
   class="path-selector-empty"
   fxLayout="column"
   fxLayoutAlign="center center"
   fxFlex>
-  <input
-    type="file"
+  <input type="file"
     accept=".svg"
     id="input-file-id-{{canvasType}}"
     (change)="onSvgFileChosen($event.srcElement.files)">
-  <label
-    for="input-file-id-{{canvasType}}">
+  <label for="input-file-id-{{canvasType}}">
     Drag + drop an SVG file to get started
   </label>
 </div>
-
-<div
-  *ngIf="!!vectorLayer"
+<div *ngIf="!!vectorLayer"
   class="path-selector-list">
-  <div
-    *ngFor="let pathLayer of pathLayers;
+  <div *ngFor="let pathLayer of pathLayers;
     let idx = index;
     trackBy: trackPathLayer">
-    <div
-      class="path-selector-listitem"
+    <div class="path-selector-listitem"
       [class.selected]="activePathId === pathLayer.id"
       (click)="activePathId = pathLayer.id">
       {{pathLayer.id}}
