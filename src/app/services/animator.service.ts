@@ -19,6 +19,8 @@ const DEFAULT_IS_PLAYING = false;
  * Coordinates and stores information about the currently displayed preview
  * canvas animation.
  * TODO: deal with animation being paused midway through
+ * TODO: test out that playback speed works (i.e. paused midway through)
+ * TODO: implement fast forward and rewind
  */
 @Injectable()
 export class AnimatorService {
