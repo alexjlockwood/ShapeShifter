@@ -2,7 +2,9 @@
   class="app-container"
   fxLayout="column">
   <!-- Toolbar. -->
+  <div class="toolbar-container">
   <app-toolbar></app-toolbar>
+  </div>
   <div class="display-container"
     fxLayout="column"
     fxFlex>
@@ -47,6 +49,8 @@
       <div class="inspector-panel-header"
         fxLayout="row"
         fxLayoutAlign="start center">
+        <span>Points</span>
+        <span fxFlex></span>
         <span *ngIf="morphabilityStatus !== MORPHABILITY_NONE">Status:
           <span [ngClass]="{
             'status-text-unmorphable': morphabilityStatus === MORPHABILITY_UNMORPHABLE,
@@ -54,7 +58,6 @@
             <strong>{{morphabilityStatus === MORPHABILITY_MORPHABLE ? 'Morphable' : 'Unmorphable'}}</strong>
           </span>
         </span>
-        <span fxFlex></span>
       </div>
       <div class="inspector-panel-body"
         fxLayout="row"

@@ -131,7 +131,7 @@ export class CanvasRulerDirective implements OnInit, OnDestroy {
     const spacingRulerPx = spacingArtPx * zoom;
 
     // Text labels.
-    ctx.fillStyle = 'rgba(255,255,255,.3)';
+    ctx.fillStyle = 'rgba(0,0,0,.3)';
     ctx.font = '10px Roboto';
     if (isHorizontal) {
       ctx.textBaseline = 'alphabetic';
@@ -153,7 +153,7 @@ export class CanvasRulerDirective implements OnInit, OnDestroy {
       }
     }
 
-    ctx.fillStyle = 'rgba(255,255,255,.7)';
+    ctx.fillStyle = 'rgba(0,0,0,.7)';
     const mouseX = this.mousePoint ? this.mousePoint.x : -1;
     const mouseY = this.mousePoint ? this.mousePoint.y : -1;
     if (isHorizontal && mouseX >= 0) {

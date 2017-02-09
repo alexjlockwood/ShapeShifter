@@ -72,11 +72,15 @@ export class AnimatorService {
     this.animator.pause();
   }
 
-  // TODO: implement this
-  rewind() { }
+  rewind() {
+    this.animator.pause();
+    this.animatedValueSource.next(0);
+  }
 
-  // TODO: implement this
-  fastForward() { }
+  fastForward() {
+    this.animator.pause();
+    this.animatedValueSource.next(1);
+  }
 
   setDuration(duration: number) {
     // TODO: remove this once we guarantee the values are sanitized in the settings pane

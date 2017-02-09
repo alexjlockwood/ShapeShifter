@@ -1,6 +1,8 @@
 @import './styles/material-colors';
 @import './styles/material-shadows';
 @import './styles/variables';
+@import './styles/theme';
+
 :host,
 .app-container {
   position: absolute;
@@ -10,10 +12,15 @@
   bottom: 0;
 }
 
+div.toolbar-container {
+  position: relative;
+  z-index: 1;
+}
+
 div.display-container {
   box-sizing: border-box;
   padding: 16px;
-  background-color: material-color('blue-grey', '700');
+  background-color: material-color('grey', '300');
   user-select: none;
 }
 
@@ -25,7 +32,6 @@ app-canvas {
 div.inspector-container {
   height: 320px;
   background-color: material-color('grey', '100');
-  overflow: auto;
 }
 
 div.app-splitter {
@@ -48,13 +54,14 @@ div.app-splitter:hover {
       margin: 8px;
     }
     .status-text-morphable {
-      color: material-color('green', '700');
+      color: md-color($app-accent);
     }
     .status-text-unmorphable {
-      color: material-color('red', '700');
+      color: md-color($app-warn);
     }
   }
   .inspector-panel-body {
+    overflow: auto;
     .inspector-panel-empty-state {
       margin: 32px;
       color: $colorBlackTextDisabled;

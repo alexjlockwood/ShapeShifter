@@ -166,6 +166,10 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     } else {
       this.cssScale = containerHeight / this.viewportHeight;
     }
+    // TODO: use this for better large canvas support (but make sure rulers are aligned)
+    // this.cssScale = this.cssScale > 1
+    //   ? Math.floor(this.cssScale)
+    //   : Math.max(.1, this.cssScale);
 
     // The 'attrScale' represents the number of physical pixels per SVG viewport pixel.
     this.attrScale = this.cssScale * devicePixelRatio;

@@ -13,6 +13,7 @@
     [disabled]="!isTimelineEnabled"
     mdTooltip="Rewind"
     mdTooltipPosition="above"
+    (click)="onRewindClick()"
     md-theme="light">
     <md-icon>skip_previous</md-icon>
   </button>
@@ -23,17 +24,20 @@
     (click)="onPlayPauseButtonClick()"
     md-theme="dark">
     <div
+      *ngIf="isTimelineEnabled"
       class="play-pause-icon"
       [ngClass]="{
         'can-animate': true,
         'is-playing': isPlaying()}">
     </div>
+    <md-icon *ngIf="!isTimelineEnabled">play_arrow</md-icon>
   </button>
   <button md-icon-button
     [disabled]="!isTimelineEnabled"
     mdTooltip="Fast forward"
     mdTooltipPosition="above"
-    md-theme="dark">
+    (click)="onFastForwardClick()"
+    md-theme="light">
     <md-icon>skip_next</md-icon>
   </button>
   <button md-icon-button

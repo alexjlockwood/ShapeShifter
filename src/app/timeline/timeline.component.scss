@@ -1,22 +1,17 @@
 @import '../styles/material-colors';
 @import '../styles/variables';
+@import '../styles/theme';
 
 button {
   margin: 0px 3px;
 }
 
-button[md-mini-fab] {
-  md-icon {
-    color: $colorWhiteTextPrimary;
-  }
-}
-
 button[md-icon-button] {
   md-icon {
-    color: $colorWhiteTextSecondary;
+    color: $colorBlackTextSecondary;
   }
   md-icon.activated {
-    color: material-color('orange', '700');
+    color: md-color($app-accent);
   }
 }
 

@@ -1,8 +1,8 @@
 import * as tinycolor from 'tinycolor2';
 
-export const MOVE_POINT_COLOR = '#1976D2';
-export const NORMAL_POINT_COLOR = '#388E3C';
-export const SPLIT_POINT_COLOR = '#9C27B0';
+export const MOVE_POINT_COLOR = '#2962FF'; // Blue A400
+export const NORMAL_POINT_COLOR = '#2962FF'; // Blue A400
+export const SPLIT_POINT_COLOR = '#EF6C00'; // Orange 800
 
 const BRIGHTNESS_THRESHOLD = 130;
 

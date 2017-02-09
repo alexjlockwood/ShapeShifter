@@ -1,18 +1,24 @@
 @import '../styles/material-shadows';
 @import '../styles/material-colors';
 @import '../styles/variables';
+@import '../styles/theme';
 .toolbar {
   padding: 8px 16px;
   font-size: 18px;
   line-height: 16px;
-  background-color: material-color('orange', '200');
-  color: rgba(material-color('deep-orange', '900'), .8);
+  background-color: material-color('blue-grey', '500');
+  color: md-color($app-primary, default-contrast);
   box-shadow: material-shadow(1);
   z-index: 1;
-  .toolbar-logo {
+}
+
+.toolbar-logo {
     width: 40px;
     height: 40px;
     margin-right: 8px;
   }
-}
 
+md-toolbar {
+  background-color: md-color($app-primary);
+  color: md-color($app-primary, default-contrast);
+}

@@ -91,7 +91,10 @@ export class BezierMutator implements Mutator {
 
     if (step === maxDepth) {
       // TODO: handle degenerate curves!!!!!
-      console.warn('could not find the midpoint!');
+      console.warn(
+        'could not find the midpoint for: ',
+        `${this.svgChar} ` + this.points.toString());
+        return 0.5;
     }
 
     return distance;

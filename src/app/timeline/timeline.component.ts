@@ -19,6 +19,7 @@ export class TimelineComponent implements OnInit {
     private ngZone: NgZone) { }
 
   ngOnInit() {
+    // TODO: pause animations when window becomes inactive?
     // document.addEventListener('visibilitychange', function() {
     //   console.log(document.hidden);
     // });
@@ -41,8 +42,7 @@ export class TimelineComponent implements OnInit {
     }
     this.isTimelineEnabled = isTimelineEnabled;
     if (!this.isTimelineEnabled) {
-      // TODO: reset instead of pause?
-      this.animatorService.pause();
+      this.animatorService.rewind();
     }
   }
 
@@ -68,6 +68,14 @@ export class TimelineComponent implements OnInit {
     } else {
       this.animatorService.play();
     }
+  }
+
+  onRewindClick() {
+    this.animatorService.rewind();
+  }
+
+  onFastForwardClick() {
+    this.animatorService.fastForward();
   }
 
   setIsRepeating(isRepeating: boolean) {
