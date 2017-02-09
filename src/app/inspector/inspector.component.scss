@@ -1,6 +1,39 @@
+@import '../styles/variables';
+@import '../styles/theme';
+
 :host {
   box-sizing: border-box;
   padding-bottom: 16px;
   user-select: none;
+}
+
+.inspector-listitem {
+  height: 20px;
+  padding: 2px;
+  cursor: pointer;
+  font-size: 12px;
+  outline: none;
+  color: $colorBlackTextSecondary;
+  border-radius: 2px;
+  button {
+    line-height: 16px;
+    height: 20px;
+    width: 20px;
+    min-height: 20px;
+    md-icon {
+      vertical-align: top;
+      width: 16px;
+      height: 16px;
+      font-size: 16px;
+    }
+  }
+  &.is-hovering {
+    background-color: rgba(0, 0, 0, 0.1);
+  }
+  &.is-selected {
+    background-color: md-color($app-accent);
+    box-shadow: none;
+    color: #fff;
+  }
 }
 

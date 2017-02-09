@@ -1,25 +1,32 @@
-:host {
-  box-sizing: border-box;
-}
-
-canvas.command-index {
-  width: 40px;
-  height: 40px;
-  box-sizing: border-box;
-  padding: 8px;
-}
-
-.command-text {
-  font-size: 14px;
-}
-
-div.command-container.hovering {
-  background-color: rgba(0, 0, 0, 0.1);
+@import '../../styles/variables';
+@import '../../styles/theme';
+.command-container {
+  height: 20px;
+  padding: 2px;
+  cursor: pointer;
+  font-size: 12px;
+  outline: none;
+  color: $colorBlackTextSecondary;
   border-radius: 2px;
-}
-
-div.command-container.selected {
-  background-color: rgba(0, 0, 0, 0.2);
-  border-radius: 2px;
+  button {
+    line-height: 16px;
+    height: 20px;
+    width: 20px;
+    min-height: 20px;
+    md-icon {
+      vertical-align: top;
+      width: 16px;
+      height: 16px;
+      font-size: 16px;
+    }
+  }
+  &.is-hovering {
+    background-color: rgba(0, 0, 0, 0.1);
+  }
+  &.is-selected {
+    background-color: md-color($app-accent);
+    box-shadow: none;
+    color: #fff;
+  }
 }
 

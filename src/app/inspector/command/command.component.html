@@ -1,15 +1,37 @@
 <div class="command-container"
-  [class.selected]="isSelected"
-  [class.hovering]="isHovering"
   fxLayout="row"
   fxLayoutAlign="start center"
+  [class.is-selected]="isSelected()"
+  [class.is-hovering]="isHovering()"
   (click)="onCommandClick($event)"
   (mouseenter)="onCommandHoverEvent(true)"
   (mouseleave)="onCommandHoverEvent(false)">
-  <canvas #drawCommandIndexCanvas
-    class="command-index"></canvas>
-  <span class="command-text"
-    fxFlex>{{ drawCommandEndPointText }}</span>
+  <span>{{ getCommandText() }}</span>
+  <span fxFlex></span>
+  <button md-icon-button
+    mdTooltip="Reverse"
+    mdTooltipPosition="above"
+    md-theme="dark"
+    *ngIf="isReversible()"
+    (click)="onReverseClick()">
+    <md-icon svgIcon="reverse"></md-icon>
+  </button>
+  <button md-icon-button
+    mdTooltip="Shift back"
+    mdTooltipPosition="above"
+    md-theme="dark"
+    *ngIf="isShiftable()"
+    (click)="onShiftBackClick()">
+    <md-icon>skip_previous</md-icon>
+  </button>
+  <button md-icon-button
+    mdTooltip="Shift forwards"
+    mdTooltipPosition="above"
+    md-theme="dark"
+    *ngIf="isShiftable()"
+    (click)="onShiftForwardClick()">
+    <md-icon>skip_next</md-icon>
+  </button>
   <button md-icon-button
     mdTooltip="Convert"
     mdTooltipPosition="above"

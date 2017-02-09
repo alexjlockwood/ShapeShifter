@@ -1,8 +1,34 @@
-<app-subpath *ngFor="let subPathCommand of subPathCommands;
-    let subIdx = index;
-    trackBy: trackSubPathCommand"
-  fxLayout="column"
-  [canvasType]="canvasType"
-  [subIdx]="subIdx">
-</app-subpath>
+<div fxLayout="row">
+  <div *ngFor="let canvasType of [START_CANVAS, END_CANVAS]">
+    <div fxLayout="column"
+      *ngFor="let subPathCommand of getSubPathCommands(canvasType);
+              let subIdx = index;
+              trackBy: trackSubPathCommand">
+      <div fxLayout="row"
+        class="inspector-listitem">
+        <button md-icon-button
+          (click)="setIsExpanded(canvasType, subIdx, !isExpanded(canvasType, subIdx))">
+          <md-icon>{{isExpanded(START_CANVAS, subIdx) ? 'expand_less' : 'expand_more'}}</md-icon>
+        </button>
+        <span fxFlex
+          (click)="setIsExpanded(canvasType, subIdx, !isExpanded(canvasType, subIdx))">
+        {{ getSubPathText(subIdx) }}
+      </span>
+      </div>
+      <div [hidden]="!isExpanded(canvasType, subIdx)">
+        <div fxLayout="column">
+          <app-command [canvasType]="canvasType"
+            [subIdx]="subIdx"
+            [cmdIdx]="cmdIdx"
+            [command]="cw.command"
+            *ngFor="let cw of getCommandWrappers(canvasType, subIdx);
+                    let cmdIdx = index;
+                    trackBy: trackCommand">
+          </app-command>
+        </div>
+      </div>
+    </div>
+  </div>
+  <span fxFlex></span>
+</div>
 

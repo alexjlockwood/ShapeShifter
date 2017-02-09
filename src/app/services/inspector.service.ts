@@ -3,11 +3,10 @@ import { Subject } from 'rxjs/Subject';
 import { Subscription } from 'rxjs/Subscription';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Observable } from 'rxjs/Observable';
+import { CanvasType } from '../CanvasType';
 
 /**
- * This service broadcasts and listens for changes on behalf of each inspector
- * instance. Inspector components get there own instance and share it with their
- * inspector child components.
+ * This service broadcasts and helps centralize inspector-related events.
  */
 @Injectable()
 export class InspectorService {
@@ -18,12 +17,8 @@ export class InspectorService {
     return this.inspectorStream.subscribe(callback);
   }
 
-  notifyChange(eventType: EventType, args: InspectorArgs) {
-    this.inspectorSource.next({
-      eventType: eventType,
-      subIdx: args.subIdx,
-      cmdIdx: args.cmdIdx,
-    });
+  notifyChange(event: InspectorEvent) {
+    this.inspectorSource.next(event);
   }
 }
 
@@ -37,11 +32,9 @@ export enum EventType {
   Unsplit,
 };
 
-export interface InspectorArgs {
+export interface InspectorEvent {
+  eventType: EventType;
+  source: CanvasType;
   subIdx: number;
   cmdIdx?: number;
-}
-
-export interface InspectorEvent extends InspectorArgs {
-  eventType: EventType;
 }

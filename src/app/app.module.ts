@@ -21,6 +21,7 @@ import { CanvasRulerDirective } from './canvas/canvasruler.directive';
 import { SettingsComponent } from './settings/settings.component';
 import { ToolbarComponent } from './toolbar/toolbar.component';
 import { PathSelectorComponent } from './pathselector/pathselector.component';
+import { InspectorService } from './services/inspector.service';
 
 import 'hammerjs';
 
@@ -31,7 +32,6 @@ import 'hammerjs';
     TimelineComponent,
     SplitterDirective,
     InspectorComponent,
-    SubPathComponent,
     CommandComponent,
     CanvasRulerDirective,
     SettingsComponent,
@@ -51,6 +51,7 @@ import 'hammerjs';
     SelectionStateService,
     HoverStateService,
     CanvasResizeService,
+    InspectorService,
   ],
   bootstrap: [AppComponent]
 })

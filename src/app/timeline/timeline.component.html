@@ -23,8 +23,7 @@
     mdTooltipPosition="above"
     (click)="onPlayPauseButtonClick()"
     md-theme="dark">
-    <div
-      *ngIf="isTimelineEnabled"
+    <div *ngIf="isTimelineEnabled"
       class="play-pause-icon"
       [ngClass]="{
         'can-animate': true,

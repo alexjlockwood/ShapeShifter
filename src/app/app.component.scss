@@ -2,7 +2,6 @@
 @import './styles/material-shadows';
 @import './styles/variables';
 @import './styles/theme';
-
 :host,
 .app-container {
   position: absolute;
@@ -70,3 +69,11 @@ div.app-splitter:hover {
   }
 }
 
+button.global-setting {
+  md-icon {
+    color: $colorBlackTextSecondary;
+  }
+  md-icon.activated {
+    color: md-color($app-accent);
+  }
+}

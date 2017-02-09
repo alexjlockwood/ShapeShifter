@@ -6,7 +6,7 @@ import {
 import { Command } from '../../scripts/commands';
 import { PathLayer } from '../../scripts/layers';
 import * as $ from 'jquery';
-import { InspectorService, EventType } from '../inspector.service';
+import { InspectorService, EventType } from '../../services/inspector.service';
 import { LayerStateService } from '../../services/layerstate.service';
 import { SelectionStateService, Selection } from '../../services/selectionstate.service';
 import { HoverStateService, Type as HoverType } from '../../services/hoverstate.service';
@@ -19,12 +19,11 @@ import { CanvasType } from '../../CanvasType';
   templateUrl: './command.component.html',
   styleUrls: ['./command.component.scss']
 })
-export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
+export class CommandComponent implements OnInit, OnDestroy {
   @Input() canvasType: CanvasType;
   @Input() subIdx: number;
-  private cmdIdx_: number;
-  private drawCommand_: Command;
-  @ViewChild('drawCommandIndexCanvas') private drawCommandIndexCanvas: ElementRef;
+  @Input() cmdIdx: number;
+  @Input() command: Command;
 
   private isSelected_ = false;
   private isHovering_ = false;
@@ -32,10 +31,6 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
   private isHoveringOverSplit = false;
   private isHoveringOverUnsplit = false;
   private subscriptions: Subscription[] = [];
-  private isViewInit = false;
-  private canvas;
-  private commandIndexCanvasSize: number;
-  private dpi: number;
 
   constructor(
     private layerStateService: LayerStateService,
@@ -47,117 +42,47 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
     this.subscriptions.push(
       this.selectionStateService.stream.subscribe(
         (selections: Selection[]) => {
-          this.isSelected = _.some(selections, {
+          this.setIsSelected(_.some(selections, {
             source: this.canvasType,
             commandId: {
               pathId: this.layerStateService.getActivePathId(this.canvasType),
               subIdx: this.subIdx,
               cmdIdx: this.cmdIdx,
             }
-          });
+          }));
         }));
-  }
-
-  ngAfterViewInit() {
-    this.isViewInit = true;
-
-    this.canvas = $(this.drawCommandIndexCanvas.nativeElement);
-    this.commandIndexCanvasSize = this.canvas.get(0).getBoundingClientRect().width;
-    const width = this.commandIndexCanvasSize;
-    const height = this.commandIndexCanvasSize;
-    this.dpi = window.devicePixelRatio || 1;
-    this.canvas
-      .attr({ width: width * this.dpi, height: height * this.dpi })
-      .css({ width, height });
-
-    this.draw();
   }
 
   ngOnDestroy() {
     this.subscriptions.forEach(s => s.unsubscribe());
   }
 
-  @Input()
-  set cmdIdx(cmdIdx: number) {
-    if (this.cmdIdx_ !== cmdIdx) {
-      this.cmdIdx_ = cmdIdx;
-      this.draw();
-    }
-  }
-
-  get cmdIdx() {
-    return this.cmdIdx_;
-  }
-
-  @Input()
-  set drawCommand(drawCommand: Command) {
-    this.drawCommand_ = drawCommand;
-    this.draw();
-  }
-
-  get drawCommand() {
-    return this.drawCommand_;
-  }
-
-  private draw() {
-    if (!this.isViewInit) {
-      return;
-    }
-
-    const ctx: CanvasRenderingContext2D =
-      (this.canvas.get(0) as HTMLCanvasElement).getContext('2d');
-    const largerRadius = this.commandIndexCanvasSize * this.dpi / 2;
-    const radius = largerRadius * 0.925;
-
-    ctx.save();
-    const color = this.cmdIdx === 0
-      ? ColorUtil.MOVE_POINT_COLOR : this.drawCommand.isSplit
-        ? ColorUtil.SPLIT_POINT_COLOR : ColorUtil.NORMAL_POINT_COLOR;
-    ctx.beginPath();
-    ctx.arc(largerRadius, largerRadius, largerRadius, 0, 2 * Math.PI, false);
-    ctx.fillStyle = '#000';
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(largerRadius, largerRadius, radius, 0, 2 * Math.PI, false);
-    ctx.fillStyle = color;
-    ctx.fill();
-    ctx.beginPath();
-    ctx.fillStyle = 'white';
-    ctx.font = radius + 'px Roboto';
-    const text = (this.cmdIdx + 1).toString();
-    const textWidth = ctx.measureText(text).width;
-    // TODO: is there a better way to get the height?
-    const textHeight = ctx.measureText('o').width;
-    ctx.fillText(text, largerRadius - textWidth / 2, largerRadius + textHeight / 2);
-    ctx.fill();
-    ctx.restore();
-  }
-
-  get drawCommandEndPointText() {
-    const c = this.drawCommand;
+  // TODO: make these ordered list items instead?
+  getCommandText() {
+    const c = this.command;
     if (c.svgChar === 'Z') {
-      return `${c.svgChar}`;
+      return `${this.cmdIdx + 1}. ${c.svgChar}`;
     } else {
       const p = _.last(c.points);
       const x = _.round(p.x, 2);
       const y = _.round(p.y, 2);
-      return `${c.svgChar} ${x}, ${y}`;
+      return `${this.cmdIdx + 1}. ${c.svgChar} ${x}, ${y}`;
     }
   }
 
-  get isHovering() {
+  isHovering() {
     return this.isHovering_;
   }
 
-  set isHovering(isHovering: boolean) {
+  setIsHovering(isHovering: boolean) {
     this.isHovering_ = isHovering;
   }
 
-  get isSelected() {
+  isSelected() {
     return this.isSelected_;
   }
 
-  set isSelected(isSelected: boolean) {
+  setIsSelected(isSelected: boolean) {
     this.isSelected_ = isSelected;
   }
 
@@ -181,6 +106,48 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
     }, appendToList);
   }
 
+  private getPathCommand() {
+    const vectorLayer = this.layerStateService.getVectorLayer(this.canvasType);
+    const pathId = this.layerStateService.getActivePathId(this.canvasType);
+    return (vectorLayer.findLayerById(pathId) as PathLayer).pathData;
+  }
+
+  onReverseClick() {
+    const subIdx = this.subIdx;
+    this.inspectorService.notifyChange({
+      source: this.canvasType,
+      eventType: EventType.Reverse,
+      subIdx,
+    });
+  }
+
+  onShiftBackClick() {
+    const subIdx = this.subIdx;
+    this.inspectorService.notifyChange({
+      source: this.canvasType,
+      eventType: EventType.ShiftBack,
+      subIdx,
+    });
+  }
+
+  onShiftForwardClick() {
+    const subIdx = this.subIdx;
+    this.inspectorService.notifyChange({
+      source: this.canvasType,
+      eventType: EventType.ShiftForward,
+      subIdx,
+    });
+  }
+
+  isReversible() {
+    return this.cmdIdx === 0
+      && this.getPathCommand().subPathCommands[this.subIdx].commands.length > 1;
+  }
+
+  isShiftable() {
+    return this.getPathCommand().subPathCommands[this.subIdx].isClosed;
+  }
+
   isConvertable() {
     // TODO: this API usage is a little bit weird/hacky?
     const canvasType =
@@ -197,16 +164,16 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
       return false;
     }
     const drawCmd = pathData.subPathCommands[this.subIdx].commands[this.cmdIdx];
-    return this.drawCommand.svgChar !== drawCmd.svgChar
-      && this.drawCommand.canConvertTo(drawCmd.svgChar);
+    return this.command.svgChar !== drawCmd.svgChar
+      && this.command.canConvertTo(drawCmd.svgChar);
   }
 
   isSplittable() {
-    return this.drawCommand.svgChar !== 'M';
+    return this.command.svgChar !== 'M';
   }
 
   isUnsplittable() {
-    return this.drawCommand.isSplit;
+    return this.command.isSplit;
   }
 
   // TODO: also add a onConvertHoverEvent?
@@ -247,10 +214,10 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
     } else {
       this.hoverStateService.clearHover();
     }
-    this.isHovering =
+    this.setIsHovering(
       this.isHoveringOverCommand
       && !this.isHoveringOverSplit
-      && !this.isHoveringOverUnsplit;
+      && !this.isHoveringOverUnsplit);
   }
 
   onConvertButtonClick(event) {
@@ -266,7 +233,9 @@ export class CommandComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private onCommandButtonClick(eventType: EventType) {
-    this.inspectorService.notifyChange(eventType, {
+    this.inspectorService.notifyChange({
+      source: this.canvasType,
+      eventType,
       subIdx: this.subIdx,
       cmdIdx: this.cmdIdx,
     });

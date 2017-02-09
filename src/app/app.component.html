@@ -3,7 +3,7 @@
   fxLayout="column">
   <!-- Toolbar. -->
   <div class="toolbar-container">
-  <app-toolbar></app-toolbar>
+    <app-toolbar></app-toolbar>
   </div>
   <div class="display-container"
     fxLayout="column"
@@ -25,6 +25,7 @@
   <div #inspectorContainer
     class="inspector-container"
     fxLayout="row">
+    <!-- Start path inspector. -->
     <div class="inspector-panel"
       fxLayout="column">
       <div class="inspector-panel-header"
@@ -34,6 +35,7 @@
       <app-pathselector fxFlex
         [canvasType]="START_CANVAS"></app-pathselector>
     </div>
+    <!-- End path inspector. -->
     <div class="inspector-panel"
       fxLayout="column">
       <div class="inspector-panel-header"
@@ -43,6 +45,7 @@
       <app-pathselector fxFlex
         [canvasType]="END_CANVAS"></app-pathselector>
     </div>
+    <!-- Point inspector. -->
     <div class="inspector-panel"
       fxLayout="column"
       fxFlex>
@@ -57,28 +60,32 @@
           </span>
         </span>
         <span fxFlex></span>
-        <md-button-toggle
-          mdTooltip="Add points via canvas"
-          mdTooltipPosition="above"
-          md-theme="dark">
-          <md-icon>add</md-icon>
-        </md-button-toggle>
-        <md-button-toggle
-          mdTooltip="Enable auto fix"
-          mdTooltipPosition="above"
-          md-theme="dark">
-          <md-icon svgIcon="autofix"></md-icon>
-        </md-button-toggle>
+        <!-- TODO: enable/disable these buttons appropriately? -->
+        <button md-icon-button
+          class="global-setting"
+          [disabled]="true"
+          mdTooltip="Add points mode"
+          mdTooltipPosition="above">
+          <!-- TODO: implement this -->
+          <md-icon [class.activated]="false">add</md-icon>
+        </button>
+        <button md-icon-button
+          class="global-setting"
+          [disabled]="true"
+          mdTooltip="Auto fix mode"
+          mdTooltipPosition="above">
+          <!-- TODO: implement this -->
+          <md-icon svgIcon="autofix" [class.activated]="false"></md-icon>
+        </button>
         <span></span>
       </div>
       <div class="inspector-panel-body"
         fxLayout="row"
         fxFlex>
-        <app-inspector [canvasType]="START_CANVAS"></app-inspector>
-        <app-inspector [canvasType]="END_CANVAS"></app-inspector>
-        <span fxFlex></span>
+        <app-inspector></app-inspector>
       </div>
     </div>
+    <!-- Preview panel. -->
     <div class="inspector-panel"
       fxLayout="column">
       <div class="inspector-panel-header"
@@ -89,3 +96,4 @@
     </div>
   </div>
 </div>
+
