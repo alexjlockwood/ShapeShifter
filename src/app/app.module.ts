@@ -60,6 +60,7 @@ export class AppModule {
     private mdIconRegistry: MdIconRegistry,
     private sanitizer: DomSanitizer) {
     mdIconRegistry
+      .addSvgIcon('reverse', sanitizer.bypassSecurityTrustResourceUrl('/assets/reverse.svg'))
       .addSvgIcon('autofix', sanitizer.bypassSecurityTrustResourceUrl('/assets/autofix.svg'))
       .addSvgIcon('contribute', sanitizer.bypassSecurityTrustResourceUrl('/assets/contribute.svg'))
       .addSvgIcon('shapeshifter', sanitizer.bypassSecurityTrustResourceUrl('/assets/shapeshifter.svg'));

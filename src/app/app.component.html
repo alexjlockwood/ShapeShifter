@@ -49,8 +49,6 @@
       <div class="inspector-panel-header"
         fxLayout="row"
         fxLayoutAlign="start center">
-        <span>Points</span>
-        <span fxFlex></span>
         <span *ngIf="morphabilityStatus !== MORPHABILITY_NONE">Status:
           <span [ngClass]="{
             'status-text-unmorphable': morphabilityStatus === MORPHABILITY_UNMORPHABLE,
@@ -58,6 +56,20 @@
             <strong>{{morphabilityStatus === MORPHABILITY_MORPHABLE ? 'Morphable' : 'Unmorphable'}}</strong>
           </span>
         </span>
+        <span fxFlex></span>
+        <md-button-toggle
+          mdTooltip="Add points via canvas"
+          mdTooltipPosition="above"
+          md-theme="dark">
+          <md-icon>add</md-icon>
+        </md-button-toggle>
+        <md-button-toggle
+          mdTooltip="Enable auto fix"
+          mdTooltipPosition="above"
+          md-theme="dark">
+          <md-icon svgIcon="autofix"></md-icon>
+        </md-button-toggle>
+        <span></span>
       </div>
       <div class="inspector-panel-body"
         fxLayout="row"
@@ -71,7 +83,7 @@
       fxLayout="column">
       <div class="inspector-panel-header"
         fxLayoutAlign="start center">
-        <span>Settings</span>
+        <span>Preview</span>
       </div>
       <app-settings></app-settings>
     </div>
