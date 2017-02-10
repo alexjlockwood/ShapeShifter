@@ -83,8 +83,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           this.activePathId = event.activePathId;
           const newWidth = this.viewportWidth;
           const newHeight = this.viewportHeight;
-          const didSizeChange =
-            oldWidth !== newWidth || oldHeight !== newHeight;
+          const didSizeChange = oldWidth !== newWidth || oldHeight !== newHeight;
           if (didSizeChange) {
             this.resizeAndDraw();
           } else {
@@ -94,9 +93,9 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     this.canvasResizeService.addListener(size => {
       const width = size.width - CANVAS_MARGIN * 2;
       const height = size.height - CANVAS_MARGIN * 2;
-      const containerSize = Math.min(width, height);
-      if (this.componentSize !== containerSize) {
-        this.componentSize = containerSize;
+      const componentSize = Math.min(width, height);
+      if (this.componentSize !== componentSize) {
+        this.componentSize = componentSize;
         this.resizeAndDraw();
       }
     });
@@ -111,6 +110,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
             // TODO: need to cancel animation if something abruptly changes here?
             return;
           }
+          // Note that there is no need to broadcast layer state changes
+          // for the preview canvas.
           previewLayer.pathData =
             previewLayer.pathData.interpolate(
               startLayer.pathData, endLayer.pathData, fraction);
@@ -134,7 +135,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           if (!(hover.type === HoverType.Command
             || hover.type === HoverType.Split
             || hover.type === HoverType.Unsplit)) {
-            // TODO: support reverse/shift back/shift forward? it would be easy.
+            // TODO: support reverse/shift back/shift forward? it would be pretty easy...
             setCurrentHoverFn(undefined);
             return;
           }

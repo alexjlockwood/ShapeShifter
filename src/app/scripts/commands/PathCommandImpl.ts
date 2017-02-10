@@ -312,6 +312,10 @@ class PathCommandImpl implements PathCommand {
 
   // Implements the PathCommand interface.
   split(subIdx: number, cmdIdx: number, ...ts: number[]) {
+    if (!ts.length) {
+      console.warn('Attempt to split a path with an empty spread argument');
+      return this;
+    }
     const { targetCw, cmIdx, splitIdx } =
       this.findCommandMutation(subIdx, cmdIdx);
     const shiftOffsets =
@@ -441,7 +445,17 @@ class PathCommandImpl implements PathCommand {
   }
 
   // Implements the PathCommand interface.
-  revert(): PathCommand {
+  unconvert(subIdx: number) {
+    const newCmsMap = this.commandMutationsMap_.map(cms => cms.slice());
+    newCmsMap[subIdx] =
+      newCmsMap[subIdx].map((cm, i) => i === 0 ? cm : cm.unconvert());
+    return this.clone({
+      commandMutationsMap_: newCmsMap,
+    });
+  }
+
+  // Implements the PathCommand interface.
+  revert() {
     return new PathCommandImpl(
       _.chain(this.commandMutationsMap_)
         .flatMap(cms => cms)
@@ -471,9 +485,9 @@ class PathCommandImpl implements PathCommand {
   }
 
   private replaceCommandMutation(cmsIdx: number, cmIdx: number, cm: CommandMutation) {
-    const newCws = this.commandMutationsMap_.map(cms => cms.slice());
-    newCws[cmsIdx][cmIdx] = cm;
-    return newCws;
+    const newCms = this.commandMutationsMap_.map(cms => cms.slice());
+    newCms[cmsIdx][cmIdx] = cm;
+    return newCms;
   }
 }
 

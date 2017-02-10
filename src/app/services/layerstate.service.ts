@@ -5,6 +5,7 @@ import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { VectorLayer, PathLayer } from '../scripts/layers';
 import { Observable } from 'rxjs/Observable';
 import { CanvasType } from '../CanvasType';
+import { PathCommand } from '../scripts/commands';
 
 /**
  * The global state service that is in charge of keeping track of the loaded
@@ -67,9 +68,9 @@ export class LayerStateService {
    * Returns the path layer associated with the currently set
    * active path ID, for the specified canvas type.
    */
-  getActivePathLayer(canvasType: CanvasType): PathLayer | undefined {
-    const vectorLayer = this.getVectorLayer(canvasType);
-    const activePathId = this.getActivePathId(canvasType);
+  getActivePathLayer(type: CanvasType): PathLayer | undefined {
+    const vectorLayer = this.getVectorLayer(type);
+    const activePathId = this.getActivePathId(type);
     if (!vectorLayer || !activePathId) {
       return undefined;
     }

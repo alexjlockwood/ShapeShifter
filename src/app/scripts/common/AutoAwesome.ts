@@ -112,6 +112,10 @@ export function fixAll(
   return convertAll(subIdx, fromPathResult, toPathResult);
 }
 
+/**
+ * Takes two paths with an equal number of commands and makes them compatible
+ * by converting each pair one-by-one.
+ */
 export function convertAll(
   subIdx: number,
   srcFromPath: PathCommand,

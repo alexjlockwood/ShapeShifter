@@ -99,6 +99,12 @@ export interface PathCommand {
   convertBatch(ops: Array<{subIdx: number, cmdIdx: number, svgChar: SvgChar}>): PathCommand;
 
   /**
+   * Reverts any converts previously performed at the specified index.
+   * Returns a new path command object.
+   */
+  unconvert(subIdx: number): PathCommand;
+
+  /**
    * Returns the unique id associated with the cmomand at the
    * specified index.
    */

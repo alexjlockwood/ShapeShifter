@@ -173,6 +173,8 @@ export class AppComponent implements OnInit, OnDestroy {
         12.103 12.475 12.103 C 18.68 12.103 17.832 21.014 12.528 21.014 C 7.648 21.014 7.86 17.832 7.913 17.089">
       </path>
     </svg>`));
+    this.layerStateService.setVectorLayer(CanvasType.Preview,
+      this.layerStateService.getVectorLayer(CanvasType.Start).clone());
     this.layerStateService.setVectorLayer(CanvasType.End, VectorLayerLoader.loadVectorLayerFromSvgString(`
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
       <path

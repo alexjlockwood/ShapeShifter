@@ -136,6 +136,18 @@ export class CommandMutation {
     return this.rebuildCommands(mutations);
   }
 
+  /**
+   * Unconverts any conversions previously performed on this command mutation.
+   */
+  unconvert() {
+    const mutations = this.mutations.slice();
+    const svgChar = this.backingCommand.svgChar;
+    for (let i = 0; i < mutations.length; i++) {
+      mutations[i] = _.assign({}, mutations[i], { svgChar });
+    }
+    return this.rebuildCommands(mutations);
+  }
+
   // TODO: this could be more efficient (avoid recreating commands unnecessarily)
   private rebuildCommands(mutations: Mutation[]) {
     if (mutations.length === 1) {

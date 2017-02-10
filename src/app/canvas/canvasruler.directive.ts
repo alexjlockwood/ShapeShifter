@@ -58,9 +58,9 @@ export class CanvasRulerDirective implements OnInit, OnDestroy {
       this.canvasResizeService.addListener(size => {
         const width = size.width - CANVAS_MARGIN * 2;
         const height = size.height - CANVAS_MARGIN * 2;
-        const containerSize = Math.min(width, height);
-        if (this.componentSize !== containerSize) {
-          this.componentSize = containerSize;
+        const componentSize = Math.min(width, height);
+        if (this.componentSize !== componentSize) {
+          this.componentSize = componentSize;
           this.draw();
         }
       }));
