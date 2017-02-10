@@ -143,7 +143,8 @@ export class InspectorItemComponent implements OnInit, OnDestroy {
   }
 
   isShiftable() {
-    return this.getPathCommand().subPathCommands[this.subIdx].isClosed;
+    return this.cmdIdx === 0
+      && this.getPathCommand().subPathCommands[this.subIdx].isClosed;
   }
 
   // isConvertable() {
@@ -179,14 +180,14 @@ export class InspectorItemComponent implements OnInit, OnDestroy {
     this.broadcastHoverEvent(isHoveringOverCommand, HoverType.Command);
   }
 
-  onUnsplitHoverEvent(isHoveringOverUnsplit: boolean) {
-    this.isHoveringOverUnsplit = isHoveringOverUnsplit;
-    this.broadcastHoverEvent(isHoveringOverUnsplit, HoverType.Unsplit);
-  }
-
   onSplitHoverEvent(isHoveringOverSplit: boolean) {
     this.isHoveringOverSplit = isHoveringOverSplit;
     this.broadcastHoverEvent(isHoveringOverSplit, HoverType.Split);
+  }
+
+  onUnsplitHoverEvent(isHoveringOverUnsplit: boolean) {
+    this.isHoveringOverUnsplit = isHoveringOverUnsplit;
+    this.broadcastHoverEvent(isHoveringOverUnsplit, HoverType.Unsplit);
   }
 
   onReverseHoverEvent(isHoveringOverReverse: boolean) {
@@ -196,12 +197,12 @@ export class InspectorItemComponent implements OnInit, OnDestroy {
 
   onShiftBackHoverEvent(isHoveringOverShiftBack: boolean) {
     this.isHoveringOverShiftBack = isHoveringOverShiftBack;
-    this.broadcastHoverEvent(isHoveringOverShiftBack, HoverType.Split);
+    this.broadcastHoverEvent(isHoveringOverShiftBack, HoverType.ShiftBack);
   }
 
   onShiftForwardHoverEvent(isHoveringOverShiftForward: boolean) {
     this.isHoveringOverShiftForward = isHoveringOverShiftForward;
-    this.broadcastHoverEvent(isHoveringOverShiftForward, HoverType.Split);
+    this.broadcastHoverEvent(isHoveringOverShiftForward, HoverType.ShiftForward);
   }
 
   private broadcastHoverEvent(isHovering: boolean, hoverType: HoverType) {

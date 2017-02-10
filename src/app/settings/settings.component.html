@@ -21,6 +21,9 @@
       [disabled]="isPlaying() ? '' : undefined"
       placeholder="Duration"
       value="300"
+      min="100"
+      max="60000"
+      step="10"
       name="duration"
       [(ngModel)]="duration"
       type="number">

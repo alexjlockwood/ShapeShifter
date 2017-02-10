@@ -2,14 +2,16 @@
 @import '../styles/theme';
 
 :host {
-  min-width: 300px;
   user-select: none;
 }
 
+.subpath-container {
+  box-sizing: border-box;
+  margin-top: 16px;
+  margin-bottom: 16px;
 .subpath-header-listitem {
   box-sizing: border-box;
   height: 20px;
-  padding-top: 16px;
   padding-bottom: 10px;
   padding-left: 4px;
   padding-right: 2px;
@@ -43,4 +45,5 @@
 
 app-inspectoritem {
   margin-left: 20px;
+}
 }
