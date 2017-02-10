@@ -10,7 +10,6 @@ import { CanvasComponent } from './canvas/canvas.component';
 import { TimelineComponent } from './timeline/timeline.component';
 import { SplitterDirective } from './splitter/splitter.directive';
 import { InspectorComponent } from './inspector/inspector.component';
-import { SubPathComponent } from './inspector/subpath/subpath.component';
 import { CommandComponent } from './inspector/command/command.component';
 import { AnimatorService } from './services/animator.service';
 import { LayerStateService } from './services/layerstate.service';
