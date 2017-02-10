@@ -3,10 +3,9 @@ import {
   Component, AfterViewInit, OnChanges, Output, OnInit, HostListener,
   SimpleChanges, Input, ViewChild, ElementRef, OnDestroy
 } from '@angular/core';
-import { Command } from '../../scripts/commands';
+import { PathCommand, Command } from '../../scripts/commands';
 import { PathLayer } from '../../scripts/layers';
 import * as $ from 'jquery';
-import { InspectorService, EventType } from '../../services/inspector.service';
 import { LayerStateService } from '../../services/layerstate.service';
 import { SelectionStateService, Selection } from '../../services/selectionstate.service';
 import { HoverStateService, Type as HoverType } from '../../services/hoverstate.service';
@@ -35,8 +34,7 @@ export class CommandComponent implements OnInit, OnDestroy {
   constructor(
     private layerStateService: LayerStateService,
     private hoverStateService: HoverStateService,
-    private selectionStateService: SelectionStateService,
-    private inspectorService: InspectorService) { }
+    private selectionStateService: SelectionStateService) { }
 
   ngOnInit() {
     this.subscriptions.push(
@@ -96,31 +94,44 @@ export class CommandComponent implements OnInit, OnDestroy {
     return (vectorLayer.findLayerById(pathId) as PathLayer).pathData;
   }
 
-  onReverseClick() {
-    const subIdx = this.subIdx;
-    this.inspectorService.notifyChange({
-      source: this.canvasType,
-      eventType: EventType.Reverse,
-      subIdx,
-    });
+  // TODO: update selections
+  onReverseClick(event: MouseEvent) {
+    const fromPathLayer = this.layerStateService.getActivePathLayer(this.canvasType);
+    this.updatePathLayer(fromPathLayer, fromPathLayer.pathData.reverse(this.subIdx), event);
   }
 
-  onShiftBackClick() {
-    const subIdx = this.subIdx;
-    this.inspectorService.notifyChange({
-      source: this.canvasType,
-      eventType: EventType.ShiftBack,
-      subIdx,
-    });
+  // TODO: update selections
+  onShiftBackClick(event: MouseEvent) {
+    const fromPathLayer = this.layerStateService.getActivePathLayer(this.canvasType);
+    this.updatePathLayer(fromPathLayer, fromPathLayer.pathData.shiftBack(this.subIdx), event);
   }
 
-  onShiftForwardClick() {
-    const subIdx = this.subIdx;
-    this.inspectorService.notifyChange({
-      source: this.canvasType,
-      eventType: EventType.ShiftForward,
-      subIdx,
-    });
+  // TODO: update selections
+  onShiftForwardClick(event: MouseEvent) {
+    const fromPathLayer = this.layerStateService.getActivePathLayer(this.canvasType);
+    this.updatePathLayer(fromPathLayer, fromPathLayer.pathData.shiftForward(this.subIdx), event);
+  }
+
+  // TODO: update selections
+  onSplitButtonClick(event: MouseEvent) {
+    const fromPathLayer = this.layerStateService.getActivePathLayer(this.canvasType);
+    this.updatePathLayer(
+      fromPathLayer, fromPathLayer.pathData.split(this.subIdx, this.cmdIdx), event);
+  }
+
+  // TODO: update selections
+  onUnsplitButtonClick(event: MouseEvent) {
+    const fromPathLayer = this.layerStateService.getActivePathLayer(this.canvasType);
+    this.updatePathLayer(
+      fromPathLayer, fromPathLayer.pathData.unsplit(this.subIdx, this.cmdIdx), event);
+  }
+
+  private updatePathLayer(pathLayer: PathLayer, pathData: PathCommand, event: MouseEvent) {
+    pathLayer.pathData = pathData;
+    this.layerStateService.notifyChange(this.canvasType);
+
+    // This ensures that the parent div won't also receive the same click event.
+    event.cancelBubble = true;
   }
 
   isReversible() {
@@ -132,25 +143,25 @@ export class CommandComponent implements OnInit, OnDestroy {
     return this.getPathCommand().subPathCommands[this.subIdx].isClosed;
   }
 
-  isConvertable() {
-    // TODO: this API usage is a little bit weird/hacky?
-    const canvasType =
-      this.canvasType === CanvasType.Start
-        ? CanvasType.End
-        : CanvasType.Start;
-    const vl = this.layerStateService.getVectorLayer(canvasType);
-    const pathId = this.layerStateService.getActivePathId(this.canvasType);
-    const pathData = (vl.findLayerById(pathId) as PathLayer).pathData;
-    if (pathData.subPathCommands.length <= this.subIdx) {
-      return false;
-    }
-    if (pathData.subPathCommands[this.subIdx].commands.length <= this.cmdIdx) {
-      return false;
-    }
-    const drawCmd = pathData.subPathCommands[this.subIdx].commands[this.cmdIdx];
-    return this.command.svgChar !== drawCmd.svgChar
-      && this.command.canConvertTo(drawCmd.svgChar);
-  }
+  // isConvertable() {
+  //   // TODO: this API usage is a little bit weird/hacky?
+  //   const canvasType =
+  //     this.canvasType === CanvasType.Start
+  //       ? CanvasType.End
+  //       : CanvasType.Start;
+  //   const vl = this.layerStateService.getVectorLayer(canvasType);
+  //   const pathId = this.layerStateService.getActivePathId(this.canvasType);
+  //   const pathData = (vl.findLayerById(pathId) as PathLayer).pathData;
+  //   if (pathData.subPathCommands.length <= this.subIdx) {
+  //     return false;
+  //   }
+  //   if (pathData.subPathCommands[this.subIdx].commands.length <= this.cmdIdx) {
+  //     return false;
+  //   }
+  //   const drawCmd = pathData.subPathCommands[this.subIdx].commands[this.cmdIdx];
+  //   return this.command.svgChar !== drawCmd.svgChar
+  //     && this.command.canConvertTo(drawCmd.svgChar);
+  // }
 
   isSplittable() {
     return this.command.svgChar !== 'M';
@@ -160,19 +171,19 @@ export class CommandComponent implements OnInit, OnDestroy {
     return this.command.isSplit;
   }
 
-  // TODO: also add a onConvertHoverEvent?
+  // TODO: also add similar logic for reverse/shift/unshift?
   onCommandHoverEvent(isHoveringOverCommand: boolean) {
     this.isHoveringOverCommand = isHoveringOverCommand;
     this.broadcastHoverEvent(isHoveringOverCommand, HoverType.Command);
   }
 
-  // TODO: also add a onConvertHoverEvent?
+  // TODO: also add similar logic for reverse/shift/unshift?
   onUnsplitHoverEvent(isHoveringOverUnsplit: boolean) {
     this.isHoveringOverUnsplit = isHoveringOverUnsplit;
     this.broadcastHoverEvent(isHoveringOverUnsplit, HoverType.Unsplit);
   }
 
-  // TODO: also add a onConvertHoverEvent?
+  // TODO: also add similar logic for reverse/shift/unshift?
   onSplitHoverEvent(isHoveringOverSplit: boolean) {
     this.isHoveringOverSplit = isHoveringOverSplit;
     this.broadcastHoverEvent(isHoveringOverSplit, HoverType.Split);
@@ -202,29 +213,5 @@ export class CommandComponent implements OnInit, OnDestroy {
       this.isHoveringOverCommand
       && !this.isHoveringOverSplit
       && !this.isHoveringOverUnsplit;
-  }
-
-  onConvertButtonClick(event) {
-    this.onCommandButtonClick(EventType.Convert);
-  }
-
-  onSplitButtonClick(event) {
-    this.onCommandButtonClick(EventType.Split);
-  }
-
-  onUnsplitButtonClick(event) {
-    this.onCommandButtonClick(EventType.Unsplit);
-  }
-
-  private onCommandButtonClick(eventType: EventType) {
-    this.inspectorService.notifyChange({
-      source: this.canvasType,
-      eventType,
-      subIdx: this.subIdx,
-      cmdIdx: this.cmdIdx,
-    });
-
-    // This ensures that the parent div won't also receive the same click event.
-    event.cancelBubble = true;
   }
 }

@@ -13,7 +13,7 @@
     mdTooltipPosition="above"
     md-theme="dark"
     *ngIf="isReversible()"
-    (click)="onReverseClick()">
+    (click)="onReverseClick($event)">
     <md-icon svgIcon="reverse"></md-icon>
   </button>
   <button md-icon-button
@@ -21,7 +21,7 @@
     mdTooltipPosition="above"
     md-theme="dark"
     *ngIf="isShiftable()"
-    (click)="onShiftBackClick()">
+    (click)="onShiftBackClick($event)">
     <md-icon>skip_previous</md-icon>
   </button>
   <button md-icon-button
@@ -29,16 +29,8 @@
     mdTooltipPosition="above"
     md-theme="dark"
     *ngIf="isShiftable()"
-    (click)="onShiftForwardClick()">
+    (click)="onShiftForwardClick($event)">
     <md-icon>skip_next</md-icon>
-  </button>
-  <button md-icon-button
-    mdTooltip="Convert"
-    mdTooltipPosition="above"
-    md-theme="dark"
-    *ngIf="isConvertable()"
-    (click)="onConvertButtonClick($event)">
-    <md-icon>build</md-icon>
   </button>
   <button md-icon-button
     mdTooltip="Delete"
