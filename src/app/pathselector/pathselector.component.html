@@ -17,9 +17,9 @@
     let idx = index;
     trackBy: trackPathLayer">
     <div class="path-selector-listitem"
-      [class.selected]="activePathId === pathLayer.id"
+      [class.is-selected]="activePathId === pathLayer.id"
       (click)="activePathId = pathLayer.id">
-      {{pathLayer.id}}
+      <span>{{idx + 1}}.</span><span class="path-name-text">{{pathLayer.id}}</span>
     </div>
   </div>
 </div>

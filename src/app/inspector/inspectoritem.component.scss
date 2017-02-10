@@ -1,5 +1,5 @@
-@import '../../styles/variables';
-@import '../../styles/theme';
+@import '../styles/variables';
+@import '../styles/theme';
 .command-container {
   box-sizing: "border-box";
   height: 20px;
@@ -32,6 +32,10 @@
     background-color: md-color($app-accent);
     box-shadow: none;
     color: #fff;
+  }
+  span.command-text {
+    margin-left: 8px;
+    margin-right: 32px;
   }
 }
 

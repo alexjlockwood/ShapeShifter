@@ -6,7 +6,8 @@
   (click)="onCommandClick($event)"
   (mouseenter)="onCommandHoverEvent(true)"
   (mouseleave)="onCommandHoverEvent(false)">
-  <span>{{ getCommandText() }}</span>
+  <span>{{this.cmdIdx + 1}}.</span>
+  <span class="command-text">{{ getCommandText() }}</span>
   <span fxFlex></span>
   <button md-icon-button
     mdTooltip="Reverse"

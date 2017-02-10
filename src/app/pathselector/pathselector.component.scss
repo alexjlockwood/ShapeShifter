@@ -1,4 +1,6 @@
 @import '../styles/variables';
+@import '../styles/theme';
+
 .path-selector-empty {
   position: relative;
   width: 100%;
@@ -28,18 +30,37 @@
 }
 
 .path-selector-list {
+  box-sizing: border-box;
   width: 100%;
   min-width: 180px;
   overflow: auto;
+  padding-top: 6px;
+  padding-left: 4px;
+  padding-right: 8px;
   .path-selector-listitem {
     box-sizing: border-box;
-    padding: 4px;
+    height: 20px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    padding-left: 4px;
+    padding-right: 2px;
+    cursor: pointer;
+    font-size: 12px;
+    outline: none;
     color: $colorBlackTextSecondary;
-    font-size: 14px;
-  }
-  .path-selector-listitem.selected {
-    background-color: rgba(0, 0, 0, 0.2);
     border-radius: 2px;
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.1);
+    }
+    &.is-selected {
+      background-color: md-color($app-accent);
+      box-shadow: none;
+      color: #fff;
+    }
+    span.path-name-text {
+      margin-left: 8px;
+      margin-right: 8px;
+    }
   }
-}
 
+}

@@ -59,12 +59,12 @@ export class InspectorItemComponent implements OnInit, OnDestroy {
   getCommandText() {
     const c = this.command;
     if (c.svgChar === 'Z') {
-      return `${this.cmdIdx + 1}. ${c.svgChar}`;
+      return `${c.svgChar}`;
     } else {
       const p = _.last(c.points);
       const x = _.round(p.x, 2);
       const y = _.round(p.y, 2);
-      return `${this.cmdIdx + 1}. ${c.svgChar} ${x}, ${y}`;
+      return `${c.svgChar} ${x}, ${y}`;
     }
   }
 
@@ -116,7 +116,7 @@ export class InspectorItemComponent implements OnInit, OnDestroy {
   onSplitButtonClick(event: MouseEvent) {
     const fromPathLayer = this.layerStateService.getActivePathLayer(this.canvasType);
     this.updatePathLayer(
-      fromPathLayer, fromPathLayer.pathData.split(this.subIdx, this.cmdIdx), event);
+      fromPathLayer, fromPathLayer.pathData.splitInHalf(this.subIdx, this.cmdIdx), event);
   }
 
   // TODO: update selections

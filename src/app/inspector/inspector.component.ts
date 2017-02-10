@@ -5,92 +5,107 @@ import {
 import { VectorLayer, PathLayer } from '../scripts/layers';
 import { PathCommand, SubPathCommand, Command } from '../scripts/commands';
 import { CanvasType } from '../CanvasType';
-import { LayerStateService } from '../services/layerstate.service';
+import { LayerStateService, LayerStateEvent } from '../services/layerstate.service';
 import { Subscription } from 'rxjs/Subscription';
 import { AutoAwesome } from '../scripts/common';
-
-// Note: this needs to stay in sync with the constants declared in scss.
-const COMMAND_LIST_ITEM_HEIGHT = 20;
 
 @Component({
   selector: 'app-inspector',
   templateUrl: './inspector.component.html',
   styleUrls: ['./inspector.component.scss'],
 })
-export class InspectorComponent {
+export class InspectorComponent implements OnInit, OnDestroy {
   START_CANVAS = CanvasType.Start;
   END_CANVAS = CanvasType.End;
 
-  // TODO: possible for # of subpaths to change?
-  private readonly collapsedSubPathIndices: Set<number> = new Set();
+  subPathCommandItems: SubPathCommandItem[] = [];
+  private readonly subscriptions: Subscription[] = [];
 
   constructor(private layerStateService: LayerStateService) { }
 
-  getSubPathCommands(canvasType: CanvasType) {
-    const pathLayer = this.layerStateService.getActivePathLayer(canvasType);
-    return pathLayer ? pathLayer.pathData.subPathCommands : [];
+  ngOnInit() {
+    [CanvasType.Start, CanvasType.End].forEach(type => {
+      this.subscriptions.push(this.layerStateService.addListener(
+        type, (event: LayerStateEvent) => {
+          this.rebuildSubPathCommandItems();
+        }));
+    });
   }
 
-  private getPathCommand(canvasType: CanvasType) {
+  ngOnDestroy() {
+    this.subscriptions.forEach(s => s.unsubscribe());
+  }
+
+  private rebuildSubPathCommandItems() {
+    const subPathCommandItems: SubPathCommandItem[] = [];
+
+    const startPathCmd = this.getPathCommand(CanvasType.Start);
+    const endPathCmd = this.getPathCommand(CanvasType.End);
+    const numStartSubPaths = startPathCmd ? startPathCmd.subPathCommands.length : 0;
+    const numEndSubPaths = endPathCmd ? endPathCmd.subPathCommands.length : 0;
+    for (let i = 0; i < Math.max(numStartSubPaths, numEndSubPaths); i++) {
+      const startCmdItems: CommandItem[] = [];
+      const endCmdItems: CommandItem[] = [];
+      if (i < numStartSubPaths) {
+        startPathCmd.subPathCommands[i].commands.forEach((command, cmdIdx) => {
+          const id = startPathCmd.getId(i, cmdIdx);
+          startCmdItems.push({ id, command });
+        });
+      }
+      if (i < numEndSubPaths) {
+        endPathCmd.subPathCommands[i].commands.forEach((command, cmdIdx) => {
+          const id = endPathCmd.getId(i, cmdIdx);
+          endCmdItems.push({ id, command });
+        });
+      }
+      const currItems = this.subPathCommandItems;
+      const wasExpanded = i < currItems.length ? currItems[i].isExpanded : true;
+      subPathCommandItems.push(
+        new SubPathCommandItem(i, startCmdItems, endCmdItems, wasExpanded));
+    }
+    this.subPathCommandItems = subPathCommandItems;
+  }
+
+  private getPathCommand(canvasType: CanvasType): PathCommand | undefined {
     const vectorLayer = this.layerStateService.getVectorLayer(canvasType);
+    if (!vectorLayer) {
+      return undefined;
+    }
     const pathId = this.layerStateService.getActivePathId(canvasType);
+    if (!pathId) {
+      return undefined;
+    }
     return (vectorLayer.findLayerById(pathId) as PathLayer).pathData;
   }
 
-  getCommandWrappers(canvasType: CanvasType, subIdx: number) {
-    const cws: CommandWrapper[] = [];
-    const pathCommand = this.getPathCommand(canvasType);
-    pathCommand.subPathCommands[subIdx].commands.forEach((command, cmdIdx) => {
-      const id = pathCommand.getId(subIdx, cmdIdx);
-      cws.push({ id, command });
-    });
-    return cws;
-  }
-
   toggleExpandedState(subIdx: number) {
-    console.log('subIdx=' + subIdx);
-    if (this.collapsedSubPathIndices.has(subIdx)) {
-      this.collapsedSubPathIndices.delete(subIdx);
-    } else {
-      this.collapsedSubPathIndices.add(subIdx);
-    }
+    this.subPathCommandItems[subIdx].isExpanded = !this.isExpanded(subIdx);
   }
 
   isExpanded(subIdx: number) {
-    return !this.collapsedSubPathIndices.has(subIdx);
+    return this.subPathCommandItems[subIdx].isExpanded;
   }
 
-  areStartAndEndPathsLoaded() {
-    return this.layerStateService.getActivePathId(CanvasType.Start)
-      && this.layerStateService.getActivePathId(CanvasType.End);
-  }
-
-  getPlaceholderHeight(canvasType: CanvasType, subIdx: number) {
-    if (!this.layerStateService.getActivePathId(CanvasType.Start)
-      || !this.layerStateService.getActivePathId(CanvasType.End)) {
-      return 0;
-    }
-    const numStart = this.getCommandWrappers(CanvasType.Start, subIdx).length;
-    const numEnd = this.getCommandWrappers(CanvasType.End, subIdx).length;
-    const difference = Math.abs(numStart - numEnd);
-    if ((numStart < numEnd && canvasType === CanvasType.Start)
-      || (numStart > numEnd && canvasType === CanvasType.End)) {
-      return (difference * 20) + 'px';
-    }
-    return 0;
-  }
-
-  trackSubPathCommand(index: number, item: SubPathCommand) {
+  trackSubPathCommand(index: number, item: SubPathCommandItem) {
     // TODO: will need to change this if/when we support reordering subpaths
-    return index;
+    return item.subIdx;
   }
 
-  trackCommand(index: number, item: CommandWrapper) {
+  trackCommand(index: number, item: CommandItem) {
     return item.id;
   }
 }
 
-interface CommandWrapper {
-  id: string;
-  command: Command;
+class SubPathCommandItem {
+  constructor(
+    public readonly subIdx: number,
+    public readonly startCmdItems: CommandItem[] = [],
+    public readonly endCmdItems: CommandItem[] = [],
+    public isExpanded = true) { }
+}
+
+class CommandItem {
+  constructor(
+    public readonly id: string,
+    public readonly command: Command) { }
 }
