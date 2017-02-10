@@ -1,12 +1,9 @@
-import { environment } from '../../environments/environment';
 import { Component, OnInit, Input, OnDestroy } from '@angular/core';
 import { CanvasType } from '../CanvasType';
 import { LayerStateService } from '../services/layerstate.service';
 import { VectorLayerLoader } from '../scripts/parsers';
 import { Subscription } from 'rxjs/Subscription';
 import { VectorLayer, PathLayer } from '../scripts/layers';
-
-const IS_DEV_MODE = !environment.production;
 
 @Component({
   selector: 'app-pathselector',
@@ -16,25 +13,32 @@ const IS_DEV_MODE = !environment.production;
 export class PathSelectorComponent {
   @Input() canvasType: CanvasType;
 
-  private pathLayers_: PathLayer[];
   private readonly subscriptions: Subscription[] = [];
 
   constructor(private layerStateService: LayerStateService) { }
 
-  get vectorLayer() {
+  getVectorLayer() {
     return this.layerStateService.getVectorLayer(this.canvasType);
   }
 
-  set vectorLayer(vectorLayer: VectorLayer) {
+  private setVectorLayer(vectorLayer: VectorLayer) {
     this.layerStateService.setVectorLayer(this.canvasType, vectorLayer);
-    const pathLayers = this.pathLayers;
+    if (this.canvasType === CanvasType.Start) {
+      // The preview vector layer will be identical to both the start and end
+      // vector layers in terms of their structure. During the animation, its
+      // active path command will be interpolated and replaced to create the
+      // animated result.
+      this.layerStateService.setVectorLayer(CanvasType.Preview, vectorLayer.clone());
+    }
+    const pathLayers = this.getPathLayers();
     if (pathLayers.length === 1) {
-      this.layerStateService.setActivePathId(this.canvasType, pathLayers[0].id);
+      // Auto select the first path if only one exists.
+      this.setActivePathId(pathLayers[0].id);
     }
   }
 
-  get pathLayers() {
-    const vectorLayer = this.vectorLayer;
+  getPathLayers() {
+    const vectorLayer = this.getVectorLayer();
     const pathLayers: PathLayer[] = [];
     if (vectorLayer) {
       vectorLayer.walk((layer => {
@@ -46,12 +50,15 @@ export class PathSelectorComponent {
     return pathLayers;
   }
 
-  get activePathId() {
+  getActivePathId() {
     return this.layerStateService.getActivePathId(this.canvasType);
   }
 
-  set activePathId(activePathId: string) {
+  setActivePathId(activePathId: string) {
     this.layerStateService.setActivePathId(this.canvasType, activePathId);
+    if (this.canvasType === CanvasType.Start) {
+      this.layerStateService.setActivePathId(CanvasType.Preview, activePathId);
+    }
   }
 
   trackPathLayer(index: number, item: PathLayer) {
@@ -70,7 +77,7 @@ export class PathSelectorComponent {
 
     fileReader.onload = event => {
       const svgText = (event.target as any).result;
-      this.vectorLayer = VectorLayerLoader.loadVectorLayerFromSvgString(svgText);
+      this.setVectorLayer(VectorLayerLoader.loadVectorLayerFromSvgString(svgText));
     };
 
     fileReader.onerror = event => {

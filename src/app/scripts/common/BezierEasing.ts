@@ -86,7 +86,7 @@ export function create(mX1: number, mY1: number, mX2: number, mY2: number) {
     }
   }
 
-  return function bezierEasingFn(x: number) {
+  return (x: number) => {
     if (mX1 === mY1 && mX2 === mY2) {
       return x; // Linear.
     }

@@ -14,24 +14,25 @@ import { CanvasType } from '../CanvasType';
 export class LayerStateService {
   private readonly vectorLayerMap = new Map<CanvasType, VectorLayer>();
   private readonly activePathIdMap = new Map<CanvasType, string>();
-  private readonly eventSources = new Map<CanvasType, Subject<LayerStateEvent>>();
-  private readonly eventStreams = new Map<CanvasType, Observable<LayerStateEvent>>();
+  private readonly sources = new Map<CanvasType, Subject<Event>>();
+  private readonly streams = new Map<CanvasType, Observable<Event>>();
 
   constructor() {
     [CanvasType.Start, CanvasType.Preview, CanvasType.End]
       .forEach(type => {
         this.vectorLayerMap.set(type, undefined);
-        this.eventSources.set(type, new BehaviorSubject<LayerStateEvent>({
+        this.sources.set(type, new BehaviorSubject<Event>({
           vectorLayer: undefined,
           activePathId: undefined,
           morphabilityStatus: MorphabilityStatus.None,
         }));
-        this.eventStreams.set(type, this.eventSources.get(type).asObservable());
+        this.streams.set(type, this.sources.get(type).asObservable());
       });
   }
 
   /**
    * Called by the PathSelectorComponent when a new vector layer is imported.
+   * The previously set active path ID will be cleared if one exists.
    */
   setVectorLayer(type: CanvasType, layer: VectorLayer) {
     this.vectorLayerMap.set(type, layer);
@@ -40,25 +41,33 @@ export class LayerStateService {
   }
 
   /**
+   * Returns the currently set vector layer for the specified canvas type.
+   */
+  getVectorLayer(type: CanvasType): VectorLayer | undefined {
+    return this.vectorLayerMap.get(type);
+  }
+
+  /**
    * Called by the PathSelectorComponent when a new vector layer path is selected.
    */
   setActivePathId(type: CanvasType, pathId: string) {
     const activePathId = this.getActivePathId(type);
-    if (activePathId !== pathId) {
-      this.activePathIdMap.set(type, pathId);
-      this.notifyChange(type);
-    }
+    this.activePathIdMap.set(type, pathId);
+    this.notifyChange(type);
   }
 
-  getVectorLayer(type: CanvasType) {
-    return this.vectorLayerMap.get(type);
-  }
-
-  getActivePathId(type: CanvasType) {
+  /**
+   * Returns the currently set active path ID for the specified canvas type.
+   */
+  getActivePathId(type: CanvasType): string | undefined {
     return this.activePathIdMap.get(type);
   }
 
-  getActivePathLayer(canvasType: CanvasType) {
+  /**
+   * Returns the path layer associated with the currently set
+   * active path ID, for the specified canvas type.
+   */
+  getActivePathLayer(canvasType: CanvasType): PathLayer | undefined {
     const vectorLayer = this.getVectorLayer(canvasType);
     const activePathId = this.getActivePathId(canvasType);
     if (!vectorLayer || !activePathId) {
@@ -67,19 +76,19 @@ export class LayerStateService {
     return vectorLayer.findLayerById(activePathId) as PathLayer;
   }
 
+  /**
+   * Notify listeners that the layer state associated with the specified
+   * canvas type has changed and that they should update their content.
+   */
   notifyChange(type: CanvasType) {
-    this.eventSources.get(type).next({
+    this.sources.get(type).next({
       vectorLayer: this.vectorLayerMap.get(type),
       activePathId: this.activePathIdMap.get(type),
       morphabilityStatus: this.getMorphabilityStatus(),
     });
   }
 
-  addListener(type: CanvasType, callback: (layerStateEvent: LayerStateEvent) => void) {
-    return this.eventStreams.get(type).subscribe(callback);
-  }
-
-  getMorphabilityStatus() {
+  private getMorphabilityStatus() {
     const startPathLayer = this.getActivePathLayer(CanvasType.Start);
     const endPathLayer = this.getActivePathLayer(CanvasType.End);
     if (!startPathLayer || !endPathLayer) {
@@ -90,6 +99,10 @@ export class LayerStateService {
     }
     return MorphabilityStatus.Unmorphable;
   }
+
+  addListener(type: CanvasType, callback: (layerStateEvent: Event) => void) {
+    return this.streams.get(type).subscribe(callback);
+  }
 }
 
 // TODO: also need to handle case where paths are invalid (i.e. unequal # of subpaths)
@@ -99,7 +112,7 @@ export enum MorphabilityStatus {
   Morphable,
 }
 
-export interface LayerStateEvent {
+export interface Event {
   vectorLayer: VectorLayer | undefined;
   activePathId: string | undefined;
   morphabilityStatus: MorphabilityStatus;

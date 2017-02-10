@@ -5,7 +5,7 @@ import {
 import { VectorLayer, PathLayer } from '../scripts/layers';
 import { PathCommand, SubPathCommand, Command } from '../scripts/commands';
 import { CanvasType } from '../CanvasType';
-import { LayerStateService, LayerStateEvent } from '../services/layerstate.service';
+import { LayerStateService, Event as LayerStateEvent } from '../services/layerstate.service';
 import { Subscription } from 'rxjs/Subscription';
 import { AutoAwesome } from '../scripts/common';
 

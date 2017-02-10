@@ -16,15 +16,6 @@ export interface Layer {
   findLayerById(id: string): Layer | undefined;
 
   /**
-   * Returns true iff this layer is structurally identical with the
-   * specified layer. Two layers are 'structurally identical' if they
-   * have the same structure (i.e. each path has the same number of
-   * parent group layers, each path has a corresponding path with the
-   * same id in the other layer, etc.).
-   */
-  isStructurallyIdenticalWith(layer: Layer): boolean;
-
-  /**
    * Returns true iff this layer is morphable with the specified layer. Two
    * paths are 'morphable' if they have the same number of SVG commands,
    * each in the same order and with the same number of point parameters.

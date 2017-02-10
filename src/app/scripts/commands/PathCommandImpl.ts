@@ -242,7 +242,7 @@ class PathCommandImpl implements PathCommand {
         commands.push(new CommandImpl(cmd.svgChar, cmd.isSplit, points));
       });
     });
-    // TODO: note that this erases all command mutation state... will this be an issue?
+    // TODO: note that this erases all command mutation state... will that be an issue?
     return new PathCommandImpl(commands);
   }
 

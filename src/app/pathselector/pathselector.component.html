@@ -1,4 +1,4 @@
-<div *ngIf="!vectorLayer"
+<div *ngIf="!getVectorLayer()"
   class="path-selector-empty"
   fxLayout="column"
   fxLayoutAlign="center center"
@@ -11,14 +11,14 @@
     Import an SVG file to get started
   </label>
 </div>
-<div *ngIf="!!vectorLayer"
+<div *ngIf="!!getVectorLayer()"
   class="path-selector-list">
-  <div *ngFor="let pathLayer of pathLayers;
+  <div *ngFor="let pathLayer of getPathLayers();
     let idx = index;
     trackBy: trackPathLayer">
     <div class="path-selector-listitem"
-      [class.is-selected]="activePathId === pathLayer.id"
-      (click)="activePathId = pathLayer.id">
+      [class.is-selected]="getActivePathId() === pathLayer.id"
+      (click)="setActivePathId(pathLayer.id)">
       <span>{{idx + 1}}.</span><span class="path-name-text">{{pathLayer.id}}</span>
     </div>
   </div>

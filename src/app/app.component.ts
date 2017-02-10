@@ -9,7 +9,7 @@ import { Point } from './scripts/common';
 import { CanvasType } from './CanvasType';
 import { Subscription } from 'rxjs/Subscription';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
-import { LayerStateService, MorphabilityStatus } from './services/layerstate.service';
+import { LayerStateService, Event as LayerStateEvent, MorphabilityStatus } from './services/layerstate.service';
 import { DividerDragEvent } from './splitter/splitter.directive';
 import { CanvasResizeService } from './services/canvasresize.service';
 import { SelectionStateService } from './services/selectionstate.service';
@@ -36,15 +36,8 @@ export class AppComponent implements OnInit, OnDestroy {
   MORPHABILITY_MORPHABLE = MorphabilityStatus.Morphable;
   morphabilityStatus = MorphabilityStatus.None;
 
-  private startVectorLayer: VectorLayer;
-  private endVectorLayer: VectorLayer;
-  private startActivePathId: string;
-  private endActivePathId: string;
   private readonly subscriptions: Subscription[] = [];
 
-  @ViewChild('appContainer') private appContainerRef: ElementRef;
-  @ViewChild('canvasContainer') private canvasContainerRef: ElementRef;
-  @ViewChild('inspectorContainer') private inspectorContainerRef: ElementRef;
   private appContainer: JQuery;
   private canvasContainer: JQuery;
   private inspectorContainer: JQuery;
@@ -57,59 +50,36 @@ export class AppComponent implements OnInit, OnDestroy {
     private canvasResizeService: CanvasResizeService) { }
 
   ngOnInit() {
-    // Register global key events.
-    // TODO: unregister this in ngOnDestroy
-    $(window).on('keydown', event => {
-      if (document.activeElement.matches('input')) {
-        return true;
+    // TODO: unregister these in ngOnDestroy
+    this.initKeyDownListener();
+    this.initBeforeOnLoadListener();
+
+    const updateCanvasSizes = () => {
+      const numCanvases =
+        this.morphabilityStatus === MorphabilityStatus.Morphable ? 3 : 2;
+      const width = this.canvasContainer.width() / numCanvases;
+      const height = this.canvasContainer.height();
+      if (this.currentPaneWidth !== width || this.currentPaneHeight !== height) {
+        this.currentPaneWidth = width;
+        this.currentPaneHeight = height;
+        this.canvasResizeService.setSize(width, height);
       }
-      if (event.keyCode === 8 || event.keyCode === 46) {
-        // In case there's a JS error, never navigate away.
-        event.preventDefault();
-        this.deleteSelectedSplitPoints();
-      } else if (event.metaKey && event.keyCode === 'Z'.charCodeAt(0)) {
-        // Undo/redo (Z key).
-        // TODO: implement an undo service to keep track of undo/redo state.
-        console.log(event.shiftKey ? 'redo' : 'undo');
-        // return false;
-      } else if (event.keyCode === 32) {
-        // Spacebar.
-        // TODO: start the currently displayed animation
-        console.log('spacebar');
-        // return false;
+    }
+
+    const layerStateListener = (event: LayerStateEvent) => {
+      const status = event.morphabilityStatus;
+      if (this.morphabilityStatus !== status) {
+        this.morphabilityStatus = status;
+        updateCanvasSizes();
       }
-      return undefined;
+    };
+
+    [CanvasType.Start, CanvasType.End].forEach(type => {
+      this.subscriptions.push(this.layerStateService.addListener(type, layerStateListener));
     });
-
-    // TODO: unregister this in ngOnDestroy
-    // TODO: we should check to see if there are any dirty changes first
-    $(window).on('beforeunload', event => {
-      if (!IS_DEV_MODE) {
-        return 'You\'ve made changes but haven\'t saved. ' +
-          'Are you sure you want to navigate away?';
-      }
-      return undefined;
-    });
-
-    this.appContainer = $(this.appContainerRef.nativeElement);
-    this.canvasContainer = $(this.canvasContainerRef.nativeElement);
-    this.inspectorContainer = $(this.inspectorContainerRef.nativeElement);
-
-    this.subscriptions.push(
-      this.layerStateService.addListener(CanvasType.Start, event => {
-        this.startVectorLayer = event.vectorLayer;
-        this.startActivePathId = event.activePathId;
-        this.updateMorphabilityStatus(event.morphabilityStatus);
-      }));
-    this.subscriptions.push(
-      this.layerStateService.addListener(CanvasType.End, event => {
-        this.endVectorLayer = event.vectorLayer;
-        this.endActivePathId = event.activePathId;
-        this.updateMorphabilityStatus(event.morphabilityStatus);
-      }));
 
     ELEMENT_RESIZE_DETECTOR.listenTo(this.canvasContainer.get(0), el => {
-      this.updateCanvasSizes();
+      updateCanvasSizes();
     });
 
     if (IS_DEV_MODE) {
@@ -122,68 +92,73 @@ export class AppComponent implements OnInit, OnDestroy {
     this.subscriptions.forEach(s => s.unsubscribe());
   }
 
-  private updateMorphabilityStatus(status: MorphabilityStatus) {
-    if (this.morphabilityStatus !== status) {
-      this.morphabilityStatus = status;
-      if (status === MorphabilityStatus.Morphable) {
-        this.layerStateService.setVectorLayer(
-          CanvasType.Preview, this.startVectorLayer.clone());
-        this.layerStateService.setActivePathId(
-          CanvasType.Preview, this.layerStateService.getActivePathId(CanvasType.Start));
+  private initKeyDownListener() {
+    // Register global key events.
+    // TODO: unregister this in ngOnDestroy
+    $(window).on('keydown', event => {
+      if (document.activeElement.matches('input')) {
+        return true;
       }
-      this.updateCanvasSizes();
-    }
-  }
-
-  private updateCanvasSizes() {
-    const numCanvases =
-      this.morphabilityStatus === MorphabilityStatus.Morphable ? 3 : 2;
-    const width = this.canvasContainer.width() / numCanvases;
-    const height = this.canvasContainer.height();
-    if (this.currentPaneWidth !== width || this.currentPaneHeight !== height) {
-      this.currentPaneWidth = width;
-      this.currentPaneHeight = height;
-      this.canvasResizeService.setSize(width, height);
-    }
-  }
-
-  onDividerDrag(event: DividerDragEvent) {
-    if (event.move) {
-      this.inspectorContainer.height(this.appContainer.height() - event.move.y);
-    }
-  }
-
-  private deleteSelectedSplitPoints() {
-    const selections = this.selectionStateService.getSelections();
-    if (!selections.length) {
-      return;
-    }
-    // We assume all selections belong to the same editor for now.
-    const canvasType = selections[0].source;
-    const unsplitOpsMap: Map<PathLayer, Array<{ subIdx: number, cmdIdx: number }>> = new Map();
-    for (const selection of selections) {
-      const {pathId, subIdx, cmdIdx} = selection.commandId;
-      const vectorLayer = this.layerStateService.getVectorLayer(canvasType);
-      if (!vectorLayer) {
-        continue;
+      if (event.keyCode === 8 || event.keyCode === 46) {
+        // In case there's a JS error, never navigate away.
+        // TODO: implement and test deleting split points
+        // event.preventDefault();
+        // this.deleteSelectedSplitPoints();
+      } else if (event.metaKey && event.keyCode === 'Z'.charCodeAt(0)) {
+        // Undo/redo (Z key).
+        // TODO: implement an undo service to keep track of undo/redo state.
+        // return false;
+      } else if (event.keyCode === 32) {
+        // Spacebar.
+        // TODO: start the currently displayed animation
+        // return false;
       }
-      const pathLayer = vectorLayer.findLayerById(pathId) as PathLayer;
-      if (!pathLayer.pathData.subPathCommands[subIdx].commands[cmdIdx].isSplit) {
-        continue;
-      }
-      let unsplitOpsForPath = unsplitOpsMap.get(pathLayer);
-      if (!unsplitOpsForPath) {
-        unsplitOpsForPath = [];
-      }
-      unsplitOpsForPath.push({ subIdx, cmdIdx });
-      unsplitOpsMap.set(pathLayer, unsplitOpsForPath);
-    }
-    unsplitOpsMap.forEach((unsplitOps, pathLayer, map) => {
-      pathLayer.pathData = pathLayer.pathData.unsplitBatch(unsplitOps);
+      return undefined;
     });
-    this.selectionStateService.clear();
-    this.layerStateService.notifyChange(canvasType);
   }
+
+  private initBeforeOnLoadListener() {
+    // TODO: we should check to see if there are any dirty changes first
+    $(window).on('beforeunload', event => {
+      if (!IS_DEV_MODE) {
+        return 'You\'ve made changes but haven\'t saved. ' +
+          'Are you sure you want to navigate away?';
+      }
+      return undefined;
+    });
+  }
+
+  // private deleteSelectedSplitPoints() {
+  //   const selections = this.selectionStateService.getSelections();
+  //   if (!selections.length) {
+  //     return;
+  //   }
+  //   // We assume all selections belong to the same editor for now.
+  //   const canvasType = selections[0].source;
+  //   const unsplitOpsMap: Map<PathLayer, Array<{ subIdx: number, cmdIdx: number }>> = new Map();
+  //   for (const selection of selections) {
+  //     const {pathId, subIdx, cmdIdx} = selection.commandId;
+  //     const vectorLayer = this.layerStateService.getVectorLayer(canvasType);
+  //     if (!vectorLayer) {
+  //       continue;
+  //     }
+  //     const pathLayer = vectorLayer.findLayerById(pathId) as PathLayer;
+  //     if (!pathLayer.pathData.subPathCommands[subIdx].commands[cmdIdx].isSplit) {
+  //       continue;
+  //     }
+  //     let unsplitOpsForPath = unsplitOpsMap.get(pathLayer);
+  //     if (!unsplitOpsForPath) {
+  //       unsplitOpsForPath = [];
+  //     }
+  //     unsplitOpsForPath.push({ subIdx, cmdIdx });
+  //     unsplitOpsMap.set(pathLayer, unsplitOpsForPath);
+  //   }
+  //   unsplitOpsMap.forEach((unsplitOps, pathLayer, map) => {
+  //     pathLayer.pathData = pathLayer.pathData.unsplitBatch(unsplitOps);
+  //   });
+  //   this.selectionStateService.clear();
+  //   this.layerStateService.notifyChange(canvasType);
+  // }
 
   private loadDebugVectorLayers() {
     this.layerStateService.setVectorLayer(CanvasType.Start, VectorLayerLoader.loadVectorLayerFromSvgString(`

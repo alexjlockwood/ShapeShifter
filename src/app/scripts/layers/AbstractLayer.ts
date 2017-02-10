@@ -28,30 +28,8 @@ export abstract class AbstractLayer implements Layer {
   }
 
   // Implements the Layer interface.
-  isStructurallyIdenticalWith(layer: Layer) {
-    if (this.constructor !== layer.constructor) {
-      return false;
-    }
-    if (this.id !== layer.id) {
-      // TODO: update svgloader to remove already existing SVG ids? important!!!
-      return false;
-    }
-    // TODO: what about vector layers with differently sized viewports?
-    if (!this.children) {
-      return true;
-    }
-    return this.children.length === layer.children.length
-      && this.children.every((c, i) =>
-        c.isStructurallyIdenticalWith(layer.children[i]));
-  }
-
-  // Implements the Layer interface.
   isMorphableWith(layer: Layer) {
     if (this.constructor !== layer.constructor) {
-      return false;
-    }
-    if (this.id !== layer.id) {
-      // TODO: update svgloader to remove already existing SVG ids? important!!!
       return false;
     }
     if (this instanceof PathLayer) {
