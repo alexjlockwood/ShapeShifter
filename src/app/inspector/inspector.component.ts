@@ -19,7 +19,8 @@ export class InspectorComponent implements OnInit, OnDestroy {
   START_CANVAS = CanvasType.Start;
   END_CANVAS = CanvasType.End;
 
-  private readonly subPathExpansionsMap: Map<CanvasType, boolean[]> = new Map();
+  // TODO: possible for # of subpaths to change?
+  private readonly collapsedSubPathIndices: Set<number> = new Set();
   private readonly subscriptions: Subscription[] = [];
 
   constructor(
@@ -27,9 +28,58 @@ export class InspectorComponent implements OnInit, OnDestroy {
     private inspectorService: InspectorService) { }
 
   ngOnInit() {
-    this.subPathExpansionsMap.set(CanvasType.Start, []);
-    this.subPathExpansionsMap.set(CanvasType.End, []);
-    this.subscriptions.push(this.inspectorService.addListener(this.onInspectorEvent));
+    this.subscriptions.push(this.inspectorService.addListener((event: InspectorEvent) => {
+      const {source, eventType, subIdx, cmdIdx} = event;
+      const fromPathLayer = this.layerStateService.getActivePathLayer(source);
+      const toCanvasType =
+        source === CanvasType.End
+          ? CanvasType.Start
+          : CanvasType.End;
+      switch (eventType) {
+        case EventType.AutoFix: {
+          const toPathLayer = this.layerStateService.getActivePathLayer(toCanvasType);
+          const autoFixResult =
+            AutoAwesome.fixAll(subIdx, fromPathLayer.pathData, toPathLayer.pathData);
+          fromPathLayer.pathData = autoFixResult.from;
+          toPathLayer.pathData = autoFixResult.to;
+          this.layerStateService.notifyChange(CanvasType.Start);
+          this.layerStateService.notifyChange(CanvasType.End);
+          // TODO: update selections
+        }
+          break;
+        case EventType.Convert: {
+          const toPathLayer = this.layerStateService.getActivePathLayer(toCanvasType);
+          const targetSvgChar =
+            toPathLayer.pathData.subPathCommands[subIdx].commands[cmdIdx].svgChar;
+          fromPathLayer.pathData =
+            fromPathLayer.pathData.convert(subIdx, cmdIdx, targetSvgChar);
+          // TODO: update selections
+        }
+          break;
+        case EventType.Reverse:
+          fromPathLayer.pathData = fromPathLayer.pathData.reverse(subIdx);
+          const numCommands = fromPathLayer.pathData.subPathCommands[subIdx].commands.length;
+          // TODO: update selections
+          break;
+        case EventType.ShiftBack:
+          fromPathLayer.pathData = fromPathLayer.pathData.shiftBack(subIdx);
+          // TODO: update selections
+          break;
+        case EventType.ShiftForward:
+          fromPathLayer.pathData = fromPathLayer.pathData.shiftForward(subIdx);
+          // TODO: update selections
+          break;
+        case EventType.Split:
+          fromPathLayer.pathData = fromPathLayer.pathData.splitInHalf(subIdx, cmdIdx);
+          // TODO: update selections
+          break;
+        case EventType.Unsplit:
+          fromPathLayer.pathData = fromPathLayer.pathData.unsplit(subIdx, cmdIdx);
+          // TODO: update selections
+          break;
+      }
+      this.layerStateService.notifyChange(source);
+    }));
   }
 
   ngOnDestroy() {
@@ -39,10 +89,6 @@ export class InspectorComponent implements OnInit, OnDestroy {
   getSubPathCommands(canvasType: CanvasType) {
     const pathLayer = this.layerStateService.getActivePathLayer(canvasType);
     return pathLayer ? pathLayer.pathData.subPathCommands : [];
-  }
-
-  getSubPathText(subIdx: number) {
-    return `Subpath #${subIdx + 1}`;
   }
 
   private getPathCommand(canvasType: CanvasType) {
@@ -61,66 +107,16 @@ export class InspectorComponent implements OnInit, OnDestroy {
     return cws;
   }
 
-  setIsExpanded(canvasType: CanvasType, subIdx: number, isExpanded: boolean) {
-    // TODO: possible for # of subpaths to change?
-    this.subPathExpansionsMap.get(canvasType)[subIdx] = isExpanded;
-  }
-
-  isExpanded(canvasType: CanvasType, subIdx: number) {
-    // TODO: possible for # of subpaths to change?
-    return this.subPathExpansionsMap.get(canvasType)[subIdx];
-  }
-
-  private onInspectorEvent(event: InspectorEvent) {
-    const {source, eventType, subIdx, cmdIdx} = event;
-    const fromPathLayer = this.layerStateService.getActivePathLayer(source);
-    const toCanvasType =
-      source === CanvasType.End
-        ? CanvasType.Start
-        : CanvasType.End;
-    switch (eventType) {
-      case EventType.AutoFix: {
-        const toPathLayer = this.layerStateService.getActivePathLayer(toCanvasType);
-        const autoFixResult = AutoAwesome.fixAll(subIdx, fromPathLayer.pathData, toPathLayer.pathData);
-        fromPathLayer.pathData = autoFixResult.from;
-        toPathLayer.pathData = autoFixResult.to;
-        this.layerStateService.notifyChange(CanvasType.Start);
-        this.layerStateService.notifyChange(CanvasType.End);
-        // TODO: update selections
-      }
-        break;
-      case EventType.Convert: {
-        const toPathLayer = this.layerStateService.getActivePathLayer(toCanvasType);
-        const targetSvgChar =
-          toPathLayer.pathData.subPathCommands[subIdx].commands[cmdIdx].svgChar;
-        fromPathLayer.pathData =
-          fromPathLayer.pathData.convert(subIdx, cmdIdx, targetSvgChar);
-        // TODO: update selections
-      }
-        break;
-      case EventType.Reverse:
-        fromPathLayer.pathData = fromPathLayer.pathData.reverse(subIdx);
-        const numCommands = fromPathLayer.pathData.subPathCommands[subIdx].commands.length;
-        // TODO: update selections
-        break;
-      case EventType.ShiftBack:
-        fromPathLayer.pathData = fromPathLayer.pathData.shiftBack(subIdx);
-        // TODO: update selections
-        break;
-      case EventType.ShiftForward:
-        fromPathLayer.pathData = fromPathLayer.pathData.shiftForward(subIdx);
-        // TODO: update selections
-        break;
-      case EventType.Split:
-        fromPathLayer.pathData = fromPathLayer.pathData.splitInHalf(subIdx, cmdIdx);
-        // TODO: update selections
-        break;
-      case EventType.Unsplit:
-        fromPathLayer.pathData = fromPathLayer.pathData.unsplit(subIdx, cmdIdx);
-        // TODO: update selections
-        break;
+  toggleExpandedState(subIdx: number) {
+    if (this.collapsedSubPathIndices.has(subIdx)) {
+      this.collapsedSubPathIndices.delete(subIdx);
+    } else {
+      this.collapsedSubPathIndices.add(subIdx);
     }
-    this.layerStateService.notifyChange(source);
+  }
+
+  isExpanded(subIdx: number) {
+    return !this.collapsedSubPathIndices.has(subIdx);
   }
 
   trackSubPathCommand(index: number, item: SubPathCommand) {

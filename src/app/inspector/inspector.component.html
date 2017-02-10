@@ -5,17 +5,18 @@
               let subIdx = index;
               trackBy: trackSubPathCommand">
       <div fxLayout="row"
+        fxLayoutAlign="start center"
         class="inspector-listitem">
         <button md-icon-button
-          (click)="setIsExpanded(canvasType, subIdx, !isExpanded(canvasType, subIdx))">
-          <md-icon>{{isExpanded(START_CANVAS, subIdx) ? 'expand_less' : 'expand_more'}}</md-icon>
+          (click)="toggleExpandedState(subIdx)">
+          <md-icon>{{isExpanded(subIdx) ? 'expand_less' : 'expand_more'}}</md-icon>
         </button>
         <span fxFlex
-          (click)="setIsExpanded(canvasType, subIdx, !isExpanded(canvasType, subIdx))">
-        {{ getSubPathText(subIdx) }}
+          (click)="toggleExpandedState(subIdx)">
+        {{ 'Subpath #' + (subIdx + 1) }}
       </span>
       </div>
-      <div [hidden]="!isExpanded(canvasType, subIdx)">
+      <div [hidden]="!isExpanded(subIdx)">
         <div fxLayout="column">
           <app-command [canvasType]="canvasType"
             [subIdx]="subIdx"

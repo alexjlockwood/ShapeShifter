@@ -1,8 +1,8 @@
 <div class="command-container"
   fxLayout="row"
   fxLayoutAlign="start center"
-  [class.is-selected]="isSelected()"
-  [class.is-hovering]="isHovering()"
+  [class.is-selected]="isSelected"
+  [class.is-hovering]="isHovering"
   (click)="onCommandClick($event)"
   (mouseenter)="onCommandHoverEvent(true)"
   (mouseleave)="onCommandHoverEvent(false)">

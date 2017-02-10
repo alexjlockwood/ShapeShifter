@@ -25,8 +25,8 @@ export class CommandComponent implements OnInit, OnDestroy {
   @Input() cmdIdx: number;
   @Input() command: Command;
 
-  private isSelected_ = false;
-  private isHovering_ = false;
+  private isSelected = false;
+  private isHovering = false;
   private isHoveringOverCommand = false;
   private isHoveringOverSplit = false;
   private isHoveringOverUnsplit = false;
@@ -42,14 +42,14 @@ export class CommandComponent implements OnInit, OnDestroy {
     this.subscriptions.push(
       this.selectionStateService.stream.subscribe(
         (selections: Selection[]) => {
-          this.setIsSelected(_.some(selections, {
+          this.isSelected =_.some(selections, {
             source: this.canvasType,
             commandId: {
               pathId: this.layerStateService.getActivePathId(this.canvasType),
               subIdx: this.subIdx,
               cmdIdx: this.cmdIdx,
             }
-          }));
+          });
         }));
   }
 
@@ -68,22 +68,6 @@ export class CommandComponent implements OnInit, OnDestroy {
       const y = _.round(p.y, 2);
       return `${this.cmdIdx + 1}. ${c.svgChar} ${x}, ${y}`;
     }
-  }
-
-  isHovering() {
-    return this.isHovering_;
-  }
-
-  setIsHovering(isHovering: boolean) {
-    this.isHovering_ = isHovering;
-  }
-
-  isSelected() {
-    return this.isSelected_;
-  }
-
-  setIsSelected(isSelected: boolean) {
-    this.isSelected_ = isSelected;
   }
 
   onCommandClick(event: MouseEvent) {
@@ -214,10 +198,10 @@ export class CommandComponent implements OnInit, OnDestroy {
     } else {
       this.hoverStateService.clearHover();
     }
-    this.setIsHovering(
+    this.isHovering =
       this.isHoveringOverCommand
       && !this.isHoveringOverSplit
-      && !this.isHoveringOverUnsplit);
+      && !this.isHoveringOverUnsplit;
   }
 
   onConvertButtonClick(event) {
