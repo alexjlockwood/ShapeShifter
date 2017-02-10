@@ -10,6 +10,9 @@ import { Subscription } from 'rxjs/Subscription';
 import { InspectorService, EventType, InspectorEvent } from '../services/inspector.service';
 import { AutoAwesome } from '../scripts/common';
 
+// Note: this needs to stay in sync with the constants declared in scss.
+const COMMAND_LIST_ITEM_HEIGHT = 20;
+
 @Component({
   selector: 'app-inspector',
   templateUrl: './inspector.component.html',
@@ -117,6 +120,21 @@ export class InspectorComponent implements OnInit, OnDestroy {
 
   isExpanded(subIdx: number) {
     return !this.collapsedSubPathIndices.has(subIdx);
+  }
+
+  getPlaceholderHeight(canvasType: CanvasType, subIdx: number) {
+    if (!this.layerStateService.getActivePathId(CanvasType.Start)
+    || !this.layerStateService.getActivePathId(CanvasType.End)) {
+      return 0;
+    }
+    const numStart = this.getCommandWrappers(CanvasType.Start, subIdx).length;
+    const numEnd = this.getCommandWrappers(CanvasType.End, subIdx).length;
+    const difference = Math.abs(numStart - numEnd);
+    if ((numStart < numEnd && canvasType === CanvasType.Start)
+      || (numStart > numEnd && canvasType === CanvasType.End)) {
+      return (difference * 20) + 'px';
+    }
+    return 0;
   }
 
   trackSubPathCommand(index: number, item: SubPathCommand) {

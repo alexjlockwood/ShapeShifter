@@ -26,6 +26,10 @@
                     let cmdIdx = index;
                     trackBy: trackCommand">
           </app-command>
+          <div
+            *ngIf="getPlaceholderHeight(canvasType, subIdx)"
+            [style.height]="getPlaceholderHeight(canvasType, subIdx, cmdIdx)">
+          </div>
         </div>
       </div>
     </div>
