@@ -40,7 +40,7 @@ import 'hammerjs';
     BrowserModule,
     FormsModule,
     HttpModule,
-    FlexLayoutModule.forRoot(),
+    FlexLayoutModule,
     MaterialModule.forRoot(),
   ],
   providers: [

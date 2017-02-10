@@ -12,7 +12,7 @@
   <button md-icon-button
     mdTooltip="Reverse"
     mdTooltipPosition="above"
-    md-theme="dark"
+    mdTooltipShowDelay="500"
     *ngIf="isReversible()"
     (click)="onReverseClick($event)">
     <md-icon svgIcon="reverse"></md-icon>
@@ -20,7 +20,6 @@
   <button md-icon-button
     mdTooltip="Shift back"
     mdTooltipPosition="above"
-    md-theme="dark"
     *ngIf="isShiftable()"
     (click)="onShiftBackClick($event)">
     <md-icon>skip_previous</md-icon>
@@ -28,7 +27,6 @@
   <button md-icon-button
     mdTooltip="Shift forwards"
     mdTooltipPosition="above"
-    md-theme="dark"
     *ngIf="isShiftable()"
     (click)="onShiftForwardClick($event)">
     <md-icon>skip_next</md-icon>
@@ -36,7 +34,6 @@
   <button md-icon-button
     mdTooltip="Delete"
     mdTooltipPosition="above"
-    md-theme="dark"
     *ngIf="isUnsplittable()"
     (mouseenter)="onUnsplitHoverEvent(true)"
     (mouseleave)="onUnsplitHoverEvent(false)"
@@ -46,7 +43,6 @@
   <button md-icon-button
     mdTooltip="Add"
     mdTooltipPosition="above"
-    md-theme="dark"
     *ngIf="isSplittable()"
     (mouseenter)="onSplitHoverEvent(true)"
     (mouseleave)="onSplitHoverEvent(false)"
