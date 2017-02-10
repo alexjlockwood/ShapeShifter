@@ -2,19 +2,24 @@
   <div *ngFor="let canvasType of [START_CANVAS, END_CANVAS]">
     <div fxLayout="column"
       *ngFor="let subPathCommand of getSubPathCommands(canvasType);
-              let subIdx = index;
-              trackBy: trackSubPathCommand">
-      <div fxLayout="row"
+          let subIdx = index;
+          trackBy: trackSubPathCommand">
+      <div *ngIf="canvasType === START_CANVAS || !areStartAndEndPathsLoaded()"
+        fxLayout="row"
         fxLayoutAlign="start center"
-        class="inspector-listitem">
+        class="subpath-header-listitem">
         <button md-icon-button
           (click)="toggleExpandedState(subIdx)">
           <md-icon>{{isExpanded(subIdx) ? 'expand_less' : 'expand_more'}}</md-icon>
         </button>
-        <span fxFlex
+        <div fxFlex
           (click)="toggleExpandedState(subIdx)">
-        {{ 'Subpath #' + (subIdx + 1) }}
-      </span>
+          {{ 'Subpath #' + (subIdx + 1) }}
+        </div>
+      </div>
+      <div class="subpath-header-listitem"
+        *ngIf="canvasType === END_CANVAS && areStartAndEndPathsLoaded()"
+        (click)="toggleExpandedState(subIdx)">
       </div>
       <div [hidden]="!isExpanded(subIdx)">
         <div fxLayout="column">
@@ -26,8 +31,7 @@
                     let cmdIdx = index;
                     trackBy: trackCommand">
           </app-command>
-          <div
-            *ngIf="getPlaceholderHeight(canvasType, subIdx)"
+          <div *ngIf="getPlaceholderHeight(canvasType, subIdx)"
             [style.height]="getPlaceholderHeight(canvasType, subIdx, cmdIdx)">
           </div>
         </div>

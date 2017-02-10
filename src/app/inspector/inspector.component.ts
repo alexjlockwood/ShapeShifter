@@ -111,6 +111,7 @@ export class InspectorComponent implements OnInit, OnDestroy {
   }
 
   toggleExpandedState(subIdx: number) {
+    console.log('subIdx=' + subIdx);
     if (this.collapsedSubPathIndices.has(subIdx)) {
       this.collapsedSubPathIndices.delete(subIdx);
     } else {
@@ -122,9 +123,14 @@ export class InspectorComponent implements OnInit, OnDestroy {
     return !this.collapsedSubPathIndices.has(subIdx);
   }
 
+  areStartAndEndPathsLoaded() {
+    return this.layerStateService.getActivePathId(CanvasType.Start)
+      && this.layerStateService.getActivePathId(CanvasType.End);
+  }
+
   getPlaceholderHeight(canvasType: CanvasType, subIdx: number) {
     if (!this.layerStateService.getActivePathId(CanvasType.Start)
-    || !this.layerStateService.getActivePathId(CanvasType.End)) {
+      || !this.layerStateService.getActivePathId(CanvasType.End)) {
       return 0;
     }
     const numStart = this.getCommandWrappers(CanvasType.Start, subIdx).length;

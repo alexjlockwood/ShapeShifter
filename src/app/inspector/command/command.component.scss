@@ -1,8 +1,12 @@
 @import '../../styles/variables';
 @import '../../styles/theme';
 .command-container {
+  box-sizing: "border-box";
   height: 20px;
-  padding: 2px;
+  padding-top: 2px;
+  padding-bottom: 2px;
+  padding-left: 4px;
+  padding-right: 2px;
   cursor: pointer;
   font-size: 12px;
   outline: none;

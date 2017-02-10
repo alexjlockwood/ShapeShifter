@@ -30,7 +30,7 @@ export class CommandComponent implements OnInit, OnDestroy {
   private isHoveringOverCommand = false;
   private isHoveringOverSplit = false;
   private isHoveringOverUnsplit = false;
-  private subscriptions: Subscription[] = [];
+  private readonly subscriptions: Subscription[] = [];
 
   constructor(
     private layerStateService: LayerStateService,
@@ -42,7 +42,7 @@ export class CommandComponent implements OnInit, OnDestroy {
     this.subscriptions.push(
       this.selectionStateService.stream.subscribe(
         (selections: Selection[]) => {
-          this.isSelected =_.some(selections, {
+          this.isSelected = _.some(selections, {
             source: this.canvasType,
             commandId: {
               pathId: this.layerStateService.getActivePathId(this.canvasType),
