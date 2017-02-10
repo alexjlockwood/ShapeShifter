@@ -10,7 +10,7 @@ import { CanvasComponent } from './canvas/canvas.component';
 import { TimelineComponent } from './timeline/timeline.component';
 import { SplitterDirective } from './splitter/splitter.directive';
 import { InspectorComponent } from './inspector/inspector.component';
-import { CommandComponent } from './inspector/command/command.component';
+import { InspectorItemComponent } from './inspector/inspectoritem.component';
 import { AnimatorService } from './services/animator.service';
 import { LayerStateService } from './services/layerstate.service';
 import { SelectionStateService } from './services/selectionstate.service';
@@ -30,7 +30,7 @@ import 'hammerjs';
     TimelineComponent,
     SplitterDirective,
     InspectorComponent,
-    CommandComponent,
+    InspectorItemComponent,
     CanvasRulerDirective,
     SettingsComponent,
     ToolbarComponent,
@@ -58,7 +58,6 @@ export class AppModule {
     private mdIconRegistry: MdIconRegistry,
     private sanitizer: DomSanitizer) {
     mdIconRegistry
-      .addSvgIcon('add', sanitizer.bypassSecurityTrustResourceUrl('/assets/add.svg'))
       .addSvgIcon('reverse', sanitizer.bypassSecurityTrustResourceUrl('/assets/reverse.svg'))
       .addSvgIcon('autofix', sanitizer.bypassSecurityTrustResourceUrl('/assets/autofix.svg'))
       .addSvgIcon('contribute', sanitizer.bypassSecurityTrustResourceUrl('/assets/contribute.svg'))

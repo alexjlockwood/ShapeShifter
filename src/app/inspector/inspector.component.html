@@ -23,14 +23,14 @@
       </div>
       <div [hidden]="!isExpanded(subIdx)">
         <div fxLayout="column">
-          <app-command [canvasType]="canvasType"
+          <app-inspectoritem [canvasType]="canvasType"
             [subIdx]="subIdx"
             [cmdIdx]="cmdIdx"
             [command]="cw.command"
             *ngFor="let cw of getCommandWrappers(canvasType, subIdx);
                     let cmdIdx = index;
                     trackBy: trackCommand">
-          </app-command>
+          </app-inspectoritem>
           <div *ngIf="getPlaceholderHeight(canvasType, subIdx)"
             [style.height]="getPlaceholderHeight(canvasType, subIdx, cmdIdx)">
           </div>

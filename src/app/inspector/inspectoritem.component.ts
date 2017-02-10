@@ -3,22 +3,22 @@ import {
   Component, AfterViewInit, OnChanges, Output, OnInit, HostListener,
   SimpleChanges, Input, ViewChild, ElementRef, OnDestroy
 } from '@angular/core';
-import { PathCommand, Command } from '../../scripts/commands';
-import { PathLayer } from '../../scripts/layers';
+import { PathCommand, Command } from '../scripts/commands';
+import { PathLayer } from '../scripts/layers';
 import * as $ from 'jquery';
-import { LayerStateService } from '../../services/layerstate.service';
-import { SelectionStateService, Selection } from '../../services/selectionstate.service';
-import { HoverStateService, Type as HoverType } from '../../services/hoverstate.service';
+import { LayerStateService } from '../services/layerstate.service';
+import { SelectionStateService, Selection } from '../services/selectionstate.service';
+import { HoverStateService, Type as HoverType } from '../services/hoverstate.service';
 import { Subscription } from 'rxjs/Subscription';
-import { ColorUtil } from '../../scripts/common';
-import { CanvasType } from '../../CanvasType';
+import { ColorUtil } from '../scripts/common';
+import { CanvasType } from '../CanvasType';
 
 @Component({
-  selector: 'app-command',
-  templateUrl: './command.component.html',
-  styleUrls: ['./command.component.scss']
+  selector: 'app-inspectoritem',
+  templateUrl: './inspectoritem.component.html',
+  styleUrls: ['./inspectoritem.component.scss']
 })
-export class CommandComponent implements OnInit, OnDestroy {
+export class InspectorItemComponent implements OnInit, OnDestroy {
   @Input() canvasType: CanvasType;
   @Input() subIdx: number;
   @Input() cmdIdx: number;
