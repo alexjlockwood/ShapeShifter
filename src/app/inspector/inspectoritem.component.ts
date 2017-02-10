@@ -24,8 +24,8 @@ export class InspectorItemComponent implements OnInit, OnDestroy {
   @Input() cmdIdx: number;
   @Input() command: Command;
 
-  private isSelected = false;
-  private isHovering = false;
+  isSelected = false;
+  isHovering = false;
   private isHoveringOverCommand = false;
   private isHoveringOverSplit = false;
   private isHoveringOverUnsplit = false;
