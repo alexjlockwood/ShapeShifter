@@ -31,6 +31,10 @@ export const DEFAULT_VIEWPORT_SIZE = 24;
 
 const SHOULD_LABEL_POINTS = true;
 
+const MOVE_POINT_COLOR = '#2962FF'; // Blue A400
+const NORMAL_POINT_COLOR = '#2962FF'; // Blue A400
+const SPLIT_POINT_COLOR = '#EF6C00'; // Orange 800
+
 @Component({
   selector: 'app-canvas',
   templateUrl: './canvas.component.html',
@@ -438,13 +442,13 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       for (const pointInfo of drawnPoints) {
         let color, radius;
         if (pointInfo.isMove) {
-          color = ColorUtil.MOVE_POINT_COLOR;
+          color = MOVE_POINT_COLOR;
           radius = this.pathPointRadius;
         } else if (pointInfo.isSplit) {
-          color = ColorUtil.SPLIT_POINT_COLOR;
+          color = SPLIT_POINT_COLOR;
           radius = this.splitPathPointRadius;
         } else {
-          color = ColorUtil.NORMAL_POINT_COLOR;
+          color = NORMAL_POINT_COLOR;
           radius = this.pathPointRadius;
         }
         if (pointInfo.isHoverOrSelection) {
@@ -482,7 +486,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       }
       point = MathUtil.transformPoint(point, ...transforms.reverse());
       this.drawLabeledPoint(
-        ctx, point, this.splitPathPointRadius, ColorUtil.SPLIT_POINT_COLOR);
+        ctx, point, this.splitPathPointRadius, SPLIT_POINT_COLOR);
     });
   }
 

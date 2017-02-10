@@ -1,9 +1,5 @@
 import * as tinycolor from 'tinycolor2';
 
-export const MOVE_POINT_COLOR = '#2962FF'; // Blue A400
-export const NORMAL_POINT_COLOR = '#2962FF'; // Blue A400
-export const SPLIT_POINT_COLOR = '#EF6C00'; // Orange 800
-
 const BRIGHTNESS_THRESHOLD = 130;
 
 export function parseAndroidColor(val: string): ColorFormats.RGBA | undefined {
