@@ -64,7 +64,7 @@ export class AppComponent implements OnInit, OnDestroy {
         this.currentPaneHeight = height;
         this.canvasResizeService.setSize(width, height);
       }
-    }
+    };
 
     const layerStateListener = (event: LayerStateEvent) => {
       const status = event.morphabilityStatus;
