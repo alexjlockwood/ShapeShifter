@@ -38,11 +38,11 @@ export class AppComponent implements OnInit, OnDestroy {
 
   private readonly subscriptions: Subscription[] = [];
 
-  private appContainer: JQuery;
   private canvasContainer: JQuery;
-  private inspectorContainer: JQuery;
   private currentPaneWidth = 0;
   private currentPaneHeight = 0;
+
+  @ViewChild('canvasContainer') private canvasContainerRef: ElementRef;
 
   constructor(
     private layerStateService: LayerStateService,
@@ -50,6 +50,8 @@ export class AppComponent implements OnInit, OnDestroy {
     private canvasResizeService: CanvasResizeService) { }
 
   ngOnInit() {
+    this.canvasContainer = $(this.canvasContainerRef.nativeElement);
+
     // TODO: unregister these in ngOnDestroy
     this.initKeyDownListener();
     this.initBeforeOnLoadListener();
