@@ -127,6 +127,13 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
             setCurrentHoverFn(undefined);
             return;
           }
+          if (!(hover.type === HoverType.Command
+            || hover.type === HoverType.Split
+            || hover.type === HoverType.Unsplit)) {
+            // TODO: support reverse/shift back/shift forward? it would be easy.
+            setCurrentHoverFn(undefined);
+            return;
+          }
           if (hover.source !== this.canvasType
             && (hover.type === HoverType.Split || hover.type === HoverType.Unsplit)) {
             // If the hover source isn't of this type and the hover type is a split

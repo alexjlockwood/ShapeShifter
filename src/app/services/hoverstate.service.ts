@@ -51,4 +51,10 @@ export enum Type {
   Split,
   // The user hovered over the unsplit button in the command inspector.
   Unsplit,
+  // The user hovered over reverse in the command inspector.
+  Reverse,
+  // The user hovered over shift back in the command inspector.
+  ShiftBack,
+  // The user hovered over shift forward in the command inspector.
+  ShiftForward,
 }

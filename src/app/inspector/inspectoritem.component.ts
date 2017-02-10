@@ -29,6 +29,9 @@ export class InspectorItemComponent implements OnInit, OnDestroy {
   private isHoveringOverCommand = false;
   private isHoveringOverSplit = false;
   private isHoveringOverUnsplit = false;
+  private isHoveringOverReverse = false;
+  private isHoveringOverShiftBack = false;
+  private isHoveringOverShiftForward = false;
   private readonly subscriptions: Subscription[] = [];
 
   constructor(
@@ -171,22 +174,34 @@ export class InspectorItemComponent implements OnInit, OnDestroy {
     return this.command.isSplit;
   }
 
-  // TODO: also add similar logic for reverse/shift/unshift?
   onCommandHoverEvent(isHoveringOverCommand: boolean) {
     this.isHoveringOverCommand = isHoveringOverCommand;
     this.broadcastHoverEvent(isHoveringOverCommand, HoverType.Command);
   }
 
-  // TODO: also add similar logic for reverse/shift/unshift?
   onUnsplitHoverEvent(isHoveringOverUnsplit: boolean) {
     this.isHoveringOverUnsplit = isHoveringOverUnsplit;
     this.broadcastHoverEvent(isHoveringOverUnsplit, HoverType.Unsplit);
   }
 
-  // TODO: also add similar logic for reverse/shift/unshift?
   onSplitHoverEvent(isHoveringOverSplit: boolean) {
     this.isHoveringOverSplit = isHoveringOverSplit;
     this.broadcastHoverEvent(isHoveringOverSplit, HoverType.Split);
+  }
+
+  onReverseHoverEvent(isHoveringOverReverse: boolean) {
+    this.isHoveringOverReverse = isHoveringOverReverse;
+    this.broadcastHoverEvent(isHoveringOverReverse, HoverType.Reverse);
+  }
+
+  onShiftBackHoverEvent(isHoveringOverShiftBack: boolean) {
+    this.isHoveringOverShiftBack = isHoveringOverShiftBack;
+    this.broadcastHoverEvent(isHoveringOverShiftBack, HoverType.Split);
+  }
+
+  onShiftForwardHoverEvent(isHoveringOverShiftForward: boolean) {
+    this.isHoveringOverShiftForward = isHoveringOverShiftForward;
+    this.broadcastHoverEvent(isHoveringOverShiftForward, HoverType.Split);
   }
 
   private broadcastHoverEvent(isHovering: boolean, hoverType: HoverType) {
@@ -212,6 +227,9 @@ export class InspectorItemComponent implements OnInit, OnDestroy {
     this.isHovering =
       this.isHoveringOverCommand
       && !this.isHoveringOverSplit
-      && !this.isHoveringOverUnsplit;
+      && !this.isHoveringOverUnsplit
+      && !this.isHoveringOverReverse
+      && !this.isHoveringOverShiftBack
+      && !this.isHoveringOverShiftForward;
   }
 }

@@ -6,7 +6,7 @@
   (click)="onCommandClick($event)"
   (mouseenter)="onCommandHoverEvent(true)"
   (mouseleave)="onCommandHoverEvent(false)">
-  <span>{{this.cmdIdx + 1}}.</span>
+  <span class="command-number">{{ this.cmdIdx + 1 }}.</span>
   <span class="command-text">{{ getCommandText() }}</span>
   <span fxFlex></span>
   <button md-icon-button
@@ -14,26 +14,35 @@
     mdTooltipPosition="above"
     mdTooltipShowDelay="500"
     *ngIf="isReversible()"
+    (mouseenter)="onReverseHoverEvent(true)"
+    (mouseleave)="onReverseHoverEvent(false)"
     (click)="onReverseClick($event)">
     <md-icon svgIcon="reverse"></md-icon>
   </button>
   <button md-icon-button
     mdTooltip="Shift back"
     mdTooltipPosition="above"
+    mdTooltipShowDelay="500"
     *ngIf="isShiftable()"
+    (mouseenter)="onShiftBackHoverEvent(true)"
+    (mouseleave)="onShiftBackHoverEvent(false)"
     (click)="onShiftBackClick($event)">
     <md-icon>skip_previous</md-icon>
   </button>
   <button md-icon-button
     mdTooltip="Shift forwards"
     mdTooltipPosition="above"
+    mdTooltipShowDelay="500"
     *ngIf="isShiftable()"
+    (mouseenter)="onShiftForwardHoverEvent(true)"
+    (mouseleave)="onShiftForwardHoverEvent(false)"
     (click)="onShiftForwardClick($event)">
     <md-icon>skip_next</md-icon>
   </button>
   <button md-icon-button
     mdTooltip="Delete"
     mdTooltipPosition="above"
+    mdTooltipShowDelay="500"
     *ngIf="isUnsplittable()"
     (mouseenter)="onUnsplitHoverEvent(true)"
     (mouseleave)="onUnsplitHoverEvent(false)"
@@ -43,6 +52,7 @@
   <button md-icon-button
     mdTooltip="Add"
     mdTooltipPosition="above"
+    mdTooltipShowDelay="500"
     *ngIf="isSplittable()"
     (mouseenter)="onSplitHoverEvent(true)"
     (mouseleave)="onSplitHoverEvent(false)"
