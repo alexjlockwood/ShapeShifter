@@ -5,12 +5,19 @@ button {
   margin: 0px 3px;
 }
 
-button[md-icon-button] {
-  md-icon {
-    color: $colorBlackTextSecondary;
+button {
+  &[md-icon-button] {
+    md-icon {
+      color: $colorBlackTextSecondary;
+    }
+    md-icon.activated {
+      color: md-color($app-accent);
+    }
   }
-  md-icon.activated {
-    color: md-color($app-accent);
+  &[md-icon-button][disabled] {
+    md-icon {
+      color: $colorBlackTextDisabled;
+    }
   }
 }
 
