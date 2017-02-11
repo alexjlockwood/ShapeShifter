@@ -8,7 +8,10 @@
       "root": "src",
       "outDir": "dist",
       "assets": [
-        "assets/*.svg",
+        "assets/shapeshifter.svg",
+        "assets/contribute.svg",
+        "assets/reverse.svg",
+        "assets/autofix.svg",
         "favicon.ico"
       ],
       "index": "index.html",
