@@ -111,6 +111,7 @@ export class InspectorItemComponent implements OnInit, OnDestroy {
   // TODO: update selections
   onSplitButtonClick(event: MouseEvent) {
     const fromPathLayer = this.layerStateService.getActivePathLayer(this.canvasType);
+    this.clearSelectionsAndHovers();
     this.replacePathCommand(
       fromPathLayer.pathData.splitInHalf(this.subIdx, this.cmdIdx), event);
   }
@@ -118,8 +119,14 @@ export class InspectorItemComponent implements OnInit, OnDestroy {
   // TODO: update selections
   onUnsplitButtonClick(event: MouseEvent) {
     const fromPathLayer = this.layerStateService.getActivePathLayer(this.canvasType);
+    this.clearSelectionsAndHovers();
     this.replacePathCommand(
       fromPathLayer.pathData.unsplit(this.subIdx, this.cmdIdx), event);
+  }
+
+  private clearSelectionsAndHovers() {
+    this.hoverStateService.clear();
+    this.selectionStateService.clear();
   }
 
   private replacePathCommand(pathCommand: PathCommand, event: MouseEvent) {
@@ -201,7 +208,7 @@ export class InspectorItemComponent implements OnInit, OnDestroy {
         source: this.canvasType,
       });
     } else {
-      this.hoverStateService.clearHover();
+      this.hoverStateService.clear();
     }
     this.isHovering =
       this.isHoveringOverCommand

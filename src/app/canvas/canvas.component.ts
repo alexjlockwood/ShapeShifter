@@ -607,7 +607,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         commandId: hoverPointId,
       });
     } else {
-      this.hoverStateService.clearHover();
+      this.hoverStateService.clear();
     }
   }
 
@@ -642,6 +642,9 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
               mouseUp, selectedPointId.pathId).split();
 
           // Notify the global layer state service about the change and draw.
+          // Clear any existing selections and/or hovers as well.
+          this.hoverStateService.clear();
+          this.selectionStateService.clear();
           this.layerStateService.replaceActivePathCommand(
             this.canvasType, activeLayer.pathData, selectedPointId.subIdx);
         }
