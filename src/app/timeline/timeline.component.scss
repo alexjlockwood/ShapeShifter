@@ -11,7 +11,7 @@ button {
       color: $colorBlackTextSecondary;
     }
     md-icon.activated {
-      color: md-color($app-accent);
+      color: material-color('orange', '800');
     }
   }
   &[md-icon-button][disabled] {
