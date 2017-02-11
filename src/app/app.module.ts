@@ -58,9 +58,9 @@ export class AppModule {
     private mdIconRegistry: MdIconRegistry,
     private sanitizer: DomSanitizer) {
     mdIconRegistry
-      .addSvgIcon('reverse', sanitizer.bypassSecurityTrustResourceUrl('/assets/reverse.svg'))
-      .addSvgIcon('autofix', sanitizer.bypassSecurityTrustResourceUrl('/assets/autofix.svg'))
-      .addSvgIcon('contribute', sanitizer.bypassSecurityTrustResourceUrl('/assets/contribute.svg'))
-      .addSvgIcon('shapeshifter', sanitizer.bypassSecurityTrustResourceUrl('/assets/shapeshifter.svg'));
+      .addSvgIcon('reverse', sanitizer.bypassSecurityTrustResourceUrl('/ShapeShifter/assets/reverse.svg'))
+      .addSvgIcon('autofix', sanitizer.bypassSecurityTrustResourceUrl('/ShapeShifter/assets/autofix.svg'))
+      .addSvgIcon('contribute', sanitizer.bypassSecurityTrustResourceUrl('/ShapeShifter/assets/contribute.svg'))
+      .addSvgIcon('shapeshifter', sanitizer.bypassSecurityTrustResourceUrl('/ShapeShifter/assets/shapeshifter.svg'));
   }
 }
