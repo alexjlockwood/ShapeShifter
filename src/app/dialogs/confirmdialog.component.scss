@@ -1,0 +1,11 @@
+@import '../styles/variables';
+@import '../styles/theme';
+
+button {
+  text-transform: uppercase;
+  color: md-color($app-accent);
+}
+
+md-dialog-content {
+  color: $colorBlackTextSecondary;
+}

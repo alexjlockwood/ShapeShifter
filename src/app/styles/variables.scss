@@ -1,13 +1,13 @@
-// dimensions
+// Dimensions.
 $mobileChromeBreakpoint: 600px;
 
-// borders and seams
+// Borders and seams.
 $thinBorderColor: rgba(#000, .12);
 $thinBorderColorLighter: rgba(#000, .06);
 $thinBorderColorDarker: rgba(#000, .2);
 $thinBorderColorWhite: rgba(#fff, .2);
 
-// colors
+// Colors.
 $colorBlackTextPrimary: rgba(#000, .87);
 $colorBlackTextSecondary: rgba(#000, .54);
 $colorBlackTextDisabled: rgba(#000, .38);
@@ -28,11 +28,11 @@ $colorSelectedAnimationBlock: material-color('blue', '500');
 $colorError: material-color('red', 'a200');
 $colorSuccess: material-color('teal', 'a700');
 
-// animation timings
+// Animation timings.
 $animTimeMedium: .3s;
 $animTimeFast: $animTimeMedium / 2;
 $animTimeVeryFast: $animTimeMedium / 3;
 $animTimeSlow: $animTimeMedium * 1.5;
 
-// fonts
+// Fonts.
 $mdFontFamily: Roboto, 'Helvetica Neue', sans-serif !default;

@@ -151,6 +151,14 @@ export class LayerStateService {
     return MorphabilityStatus.Unmorphable;
   }
 
+  /**
+   * Resets the state of the entire application.
+   */
+  reset() {
+    // TODO: reset layer state, animation state, hover/selection state, etc.
+    console.log('NOT YET IMPLEMENTED');
+  }
+
   addListener(type: CanvasType, callback: (layerStateEvent: Event) => void) {
     return this.streams.get(type).subscribe(callback);
   }
