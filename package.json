@@ -46,6 +46,7 @@
   "devDependencies": {
     "@angular/cli": "1.0.0-beta.31",
     "@angular/compiler-cli": "^2.3.1",
+    "@angular/service-worker": "^1.0.0-beta.3",
     "@types/es6-promise": "0.0.32",
     "@types/hammerjs": "^2.0.34",
     "@types/jasmine": "^2.5.38",
