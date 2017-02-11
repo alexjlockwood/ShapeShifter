@@ -4,7 +4,8 @@
   <button md-icon-button
     [disabled]="!isTimelineEnabled"
     mdTooltip="Slow motion"
-    mdTooltipPosition="above"
+    mdTooltipPosition="below"
+    mdTooltipShowDelay="500"
     (click)="setIsSlowMotion(!isSlowMotion())"
     md-theme="light">
     <md-icon [class.activated]="isSlowMotion()">slow_motion_video</md-icon>
@@ -12,7 +13,8 @@
   <button md-icon-button
     [disabled]="!isTimelineEnabled"
     mdTooltip="Rewind"
-    mdTooltipPosition="above"
+    mdTooltipPosition="below"
+    mdTooltipShowDelay="500"
     (click)="onRewindClick()"
     md-theme="light">
     <md-icon>skip_previous</md-icon>
@@ -20,7 +22,8 @@
   <button md-mini-fab
     [disabled]="!isTimelineEnabled"
     mdTooltip="{{ isPlaying() ? 'Pause' : 'Play' }}"
-    mdTooltipPosition="above"
+    mdTooltipPosition="below"
+    mdTooltipShowDelay="500"
     (click)="onPlayPauseButtonClick()"
     md-theme="dark">
     <div *ngIf="isTimelineEnabled"
@@ -34,7 +37,8 @@
   <button md-icon-button
     [disabled]="!isTimelineEnabled"
     mdTooltip="Fast forward"
-    mdTooltipPosition="above"
+    mdTooltipPosition="below"
+    mdTooltipShowDelay="500"
     (click)="onFastForwardClick()"
     md-theme="light">
     <md-icon>skip_next</md-icon>
@@ -42,7 +46,8 @@
   <button md-icon-button
     [disabled]="!isTimelineEnabled"
     mdTooltip="Repeat"
-    mdTooltipPosition="above"
+    mdTooltipPosition="below"
+    mdTooltipShowDelay="500"
     (click)="setIsRepeating(!isRepeating())"
     md-theme="light">
     <md-icon [class.activated]="isRepeating()">repeat</md-icon>
