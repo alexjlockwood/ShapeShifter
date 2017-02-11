@@ -8,6 +8,8 @@
       "root": "src",
       "outDir": "dist",
       "assets": [
+        "assets/pauseplay-white@2x.png",
+	"assets/playpause-white@2x.png",
         "assets/shapeshifter.svg",
         "assets/contribute.svg",
         "assets/reverse.svg",
