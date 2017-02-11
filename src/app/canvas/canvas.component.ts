@@ -567,9 +567,10 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           .commands[selectedPointId.cmdIdx];
       this.pointSelector =
         new PointSelector(mouseDown, selectedPointId, selectedCmd.isSplit);
-    } else {
+    } else if (!event.shiftKey && !event.metaKey) {
       // If the mouse down event didn't occur on top of a point, then
-      // clear any existing selections.
+      // clear any existing selections, but only if the user isn't in
+      // the middle of selecting multiple points at once.
       this.selectionStateService.clear();
     }
   }

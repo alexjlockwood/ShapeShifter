@@ -9,6 +9,7 @@ import { Point } from './scripts/common';
 import { CanvasType } from './CanvasType';
 import { Subscription } from 'rxjs/Subscription';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+import { HoverStateService } from './services/hoverstate.service';
 import { LayerStateService, Event as LayerStateEvent, MorphabilityStatus } from './services/layerstate.service';
 import { DividerDragEvent } from './splitter/splitter.directive';
 import { CanvasResizeService } from './services/canvasresize.service';
@@ -46,6 +47,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
   constructor(
     private layerStateService: LayerStateService,
+    private hoverStateService: HoverStateService,
     private selectionStateService: SelectionStateService,
     private canvasResizeService: CanvasResizeService) { }
 
@@ -103,9 +105,9 @@ export class AppComponent implements OnInit, OnDestroy {
       }
       if (event.keyCode === 8 || event.keyCode === 46) {
         // In case there's a JS error, never navigate away.
-        // TODO: implement and test deleting split points
-        // event.preventDefault();
-        // this.deleteSelectedSplitPoints();
+        event.preventDefault();
+        this.deleteSelectedSplitPoints();
+        return false;
       } else if (event.metaKey && event.keyCode === 'Z'.charCodeAt(0)) {
         // Undo/redo (Z key).
         // TODO: implement an undo service to keep track of undo/redo state.
@@ -130,37 +132,39 @@ export class AppComponent implements OnInit, OnDestroy {
     });
   }
 
-  // private deleteSelectedSplitPoints() {
-  //   const selections = this.selectionStateService.getSelections();
-  //   if (!selections.length) {
-  //     return;
-  //   }
-  //   // We assume all selections belong to the same editor for now.
-  //   const canvasType = selections[0].source;
-  //   const unsplitOpsMap: Map<PathLayer, Array<{ subIdx: number, cmdIdx: number }>> = new Map();
-  //   for (const selection of selections) {
-  //     const {pathId, subIdx, cmdIdx} = selection.commandId;
-  //     const vectorLayer = this.layerStateService.getVectorLayer(canvasType);
-  //     if (!vectorLayer) {
-  //       continue;
-  //     }
-  //     const pathLayer = vectorLayer.findLayerById(pathId) as PathLayer;
-  //     if (!pathLayer.pathData.subPathCommands[subIdx].commands[cmdIdx].isSplit) {
-  //       continue;
-  //     }
-  //     let unsplitOpsForPath = unsplitOpsMap.get(pathLayer);
-  //     if (!unsplitOpsForPath) {
-  //       unsplitOpsForPath = [];
-  //     }
-  //     unsplitOpsForPath.push({ subIdx, cmdIdx });
-  //     unsplitOpsMap.set(pathLayer, unsplitOpsForPath);
-  //   }
-  //   unsplitOpsMap.forEach((unsplitOps, pathLayer, map) => {
-  //     pathLayer.pathData = pathLayer.pathData.unsplitBatch(unsplitOps);
-  //   });
-  //   this.selectionStateService.clear();
-  //   this.layerStateService.notifyChange(canvasType);
-  // }
+  /**
+   * Deletes any selected split commands when the user clicks the delete key.
+   */
+  private deleteSelectedSplitPoints() {
+    const selections = this.selectionStateService.getSelections();
+    if (!selections.length) {
+      return;
+    }
+    // Preconditions: all selections exist in the same editor and
+    // all selections correspond to the currently active path id.
+    const canvasType = selections[0].source;
+    const activePathLayer = this.layerStateService.getActivePathLayer(canvasType);
+    const unsplitOpsMap: Map<number, Array<{ subIdx: number, cmdIdx: number }>> = new Map();
+    for (const selection of selections) {
+      const {subIdx, cmdIdx} = selection.commandId;
+      if (!activePathLayer.pathData.subPathCommands[subIdx].commands[cmdIdx].isSplit) {
+        continue;
+      }
+      let subIdxOps = unsplitOpsMap.get(subIdx);
+      if (!subIdxOps) {
+        subIdxOps = [];
+      }
+      subIdxOps.push({ subIdx, cmdIdx });
+      unsplitOpsMap.set(subIdx, subIdxOps);
+    }
+    this.hoverStateService.clear();
+    this.selectionStateService.clear();
+    unsplitOpsMap.forEach((ops, idx) => {
+      // TODO: perform these as a single batch instead of inside a loop? (to reduce # of broadcasts)
+      this.layerStateService.replaceActivePathCommand(
+        canvasType, activePathLayer.pathData.unsplitBatch(ops), idx);
+    });
+  }
 
   private loadDebugVectorLayers() {
     this.layerStateService.setVectorLayer(CanvasType.Start, VectorLayerLoader.loadVectorLayerFromSvgString(`

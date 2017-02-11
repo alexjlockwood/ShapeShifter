@@ -30,7 +30,10 @@ export class SelectionStateService {
    */
   toggle(selection: Selection, appendToList = false) {
     // Remove all selections that don't match the new selections editor type.
-    _.remove(this.selections, sel => sel.source !== selection.source);
+    _.remove(this.selections, sel => {
+      return sel.source !== selection.source
+        || sel.commandId.pathId !== selection.commandId.pathId;
+    });
     const existingSelections = _.remove(this.selections, sel => {
       // Remove any selections that are equal to the new selection.
       return areSelectionsEqual(selection, sel);
