@@ -26,7 +26,7 @@ export class ToolbarComponent implements OnInit {
     });
   }
 
-  private onExportClick() {
+  onExportClick() {
     const startVectorLayer = this.layerStateService.getVectorLayer(CanvasType.Start);
     const startLayer = this.layerStateService.getActivePathLayer(CanvasType.Start);
     const fromValue = startLayer.pathData.pathString;
@@ -42,7 +42,7 @@ export class ToolbarComponent implements OnInit {
   }
 
   private downloadFile(content: string, filename: string) {
-    const blob = new Blob([content], {type: 'octet/stream'});;
+    const blob = new Blob([content], {type: 'octet/stream'});
     const url = window.URL.createObjectURL(blob);
     const anchor = $('<a>').hide().appendTo(document.body);
     anchor.attr({ href: url, download: filename });
