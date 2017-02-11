@@ -65,6 +65,7 @@
         <button md-icon-button
           class="global-setting"
           [disabled]="true"
+          fxHide
           mdTooltip="Add points mode"
           mdTooltipPosition="above">
           <!-- TODO: implement this -->
@@ -73,8 +74,9 @@
         <button md-icon-button
           class="global-setting"
           [disabled]="true"
-          mdTooltip="Auto fix mode"
-          mdTooltipPosition="above">
+          mdTooltip="Auto fix"
+          mdTooltipShowDelay="500"
+          mdTooltipPosition="below">
           <!-- TODO: implement this -->
           <md-icon svgIcon="autofix" [class.activated]="false"></md-icon>
         </button>

@@ -5,19 +5,29 @@
     svgIcon="shapeshifter"></md-icon>
   <span>Shape Shifter</span>
   <span fxFlex="1 1 auto"></span>
-  <button md-icon-button
+  <button
+    class="toolbar-action-button"
+    mdTooltip="New"
+    mdTooltipPosition="below"
+    mdTooltipShowDelay="500"
+    md-icon-button>
+    <md-icon>create</md-icon>
+  </button>
+  <button
+    class="toolbar-action-button"
+    mdTooltip="Export"
+    mdTooltipPosition="below"
+    mdTooltipShowDelay="500"
+    md-icon-button>
+    <md-icon>file_download</md-icon>
+  </button>
+  <button
+    class="toolbar-action-button"
+    md-icon-button
     [mdMenuTriggerFor]="menu">
     <md-icon>more_vert</md-icon>
   </button>
   <md-menu #menu="mdMenu">
-    <button md-menu-item>
-      <md-icon>create</md-icon>
-      <span>New</span>
-    </button>
-    <button md-menu-item>
-      <md-icon>file_download</md-icon>
-      <span>Export</span>
-    </button>
     <button md-menu-item>
       <md-icon svgIcon="contribute"></md-icon>
       <span>Contribute</span>
