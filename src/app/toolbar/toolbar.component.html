@@ -9,15 +9,18 @@
     class="toolbar-action-button"
     mdTooltip="New"
     mdTooltipPosition="below"
+    fxHide
     mdTooltipShowDelay="500"
     md-icon-button>
     <md-icon>create</md-icon>
   </button>
   <button
     class="toolbar-action-button"
+    [disabled]="!isMorphable"
     mdTooltip="Export"
     mdTooltipPosition="below"
     mdTooltipShowDelay="500"
+    (click)="onExportClick()"
     md-icon-button>
     <md-icon>file_download</md-icon>
   </button>

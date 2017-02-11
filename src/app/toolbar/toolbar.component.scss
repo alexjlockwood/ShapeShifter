@@ -21,6 +21,13 @@
 md-toolbar {
   background-color: md-color($app-primary);
   color: md-color($app-primary, default-contrast);
+
+}
+
+button[disabled] {
+  md-icon {
+    color: $colorWhiteTextDisabled;
+  }
 }
 
 .toolbar-action-button {
