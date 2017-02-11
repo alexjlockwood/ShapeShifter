@@ -6,6 +6,7 @@ import { VectorLayer, PathLayer } from '../scripts/layers';
 import { Observable } from 'rxjs/Observable';
 import { CanvasType } from '../CanvasType';
 import { PathCommand } from '../scripts/commands';
+import { AutoAwesome } from '../scripts/common';
 
 /**
  * The global state service that is in charge of keeping track of the loaded
@@ -78,10 +79,59 @@ export class LayerStateService {
   }
 
   /**
+   * Replaces the path command at the specified sub path index. The path's previous
+   * conversions will be removed and an attempt to make the path compatible with
+   * its target will be made.
+   */
+  replaceActivePathCommand(type: CanvasType, pathCommand: PathCommand, subIdx: number) {
+    // Remove any existing conversions.
+    pathCommand = pathCommand.unconvert(subIdx);
+
+    const targetType = type === CanvasType.Start ? CanvasType.End : CanvasType.Start;
+    let hasTargetCommandChanged = false;
+
+    const targetActivePathLayer = this.getActivePathLayer(targetType);
+    if (targetActivePathLayer) {
+      const numCommands = pathCommand.subPathCommands[subIdx].commands.length;
+      const numTargetCommands =
+        targetActivePathLayer.pathData.subPathCommands[subIdx].commands.length;
+      if (numCommands === numTargetCommands) {
+        // Only auto convert when the number of commands in both canvases
+        // are equal. Otherwise we'll wait for the user to add more points.
+        const autoConvertResults =
+          AutoAwesome.autoConvert(
+            subIdx, pathCommand, targetActivePathLayer.pathData.unconvert(subIdx));
+        pathCommand = autoConvertResults.from;
+
+        // This is the one case where a change in one canvas type's vector layer
+        // will cause corresponding changes to be made in the target canvas type's
+        // vector layer.
+        targetActivePathLayer.pathData = autoConvertResults.to;
+        hasTargetCommandChanged = true;
+      }
+    }
+    this.getActivePathLayer(type).pathData = pathCommand;
+
+    if (type === CanvasType.Start || hasTargetCommandChanged) {
+      // The start canvas layer has changed, so update the preview layer as well.
+      const activeStartLayer = this.getActivePathLayer(CanvasType.Start);
+      const activePreviewLayer = this.getActivePathLayer(CanvasType.Preview);
+      if (activeStartLayer && activePreviewLayer) {
+        activePreviewLayer.pathData = activeStartLayer.pathData.clone();
+      }
+    }
+
+    this.notifyChange(type);
+    if (hasTargetCommandChanged) {
+      this.notifyChange(targetType);
+    }
+  }
+
+  /**
    * Notify listeners that the layer state associated with the specified
    * canvas type has changed and that they should update their content.
    */
-  notifyChange(type: CanvasType) {
+  private notifyChange(type: CanvasType) {
     this.sources.get(type).next({
       vectorLayer: this.vectorLayerMap.get(type),
       activePathId: this.activePathIdMap.get(type),

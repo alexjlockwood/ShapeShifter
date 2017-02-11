@@ -7,8 +7,15 @@ const MATCH = 1;
 const MISMATCH = -1;
 const INDEL = 0;
 
-// TODO: this can still be optimized a lot... work in progress!
-export function fixAll(
+
+/**
+ * Takes two arbitrary paths, calculates a best-estimate alignment of the two,
+ * and then inserts no-op commands into the alignment gaps to make the two paths
+ * compatible with each other. The paths must have the same number of sub paths.
+ *
+ * TODO: this can still be optimized a lot... work in progress!
+ */
+export function autoFix(
   subIdx: number,
   srcFromPath: PathCommand,
   srcToPath: PathCommand) {
@@ -109,14 +116,14 @@ export function fixAll(
   const toPathResult = applySplitsFn(srcToPath, toGapGroups);
 
   // Finally, convert the commands before returning the result.
-  return convertAll(subIdx, fromPathResult, toPathResult);
+  return autoConvert(subIdx, fromPathResult, toPathResult);
 }
 
 /**
  * Takes two paths with an equal number of commands and makes them compatible
  * by converting each pair one-by-one.
  */
-export function convertAll(
+export function autoConvert(
   subIdx: number,
   srcFromPath: PathCommand,
   srcToPath: PathCommand) {

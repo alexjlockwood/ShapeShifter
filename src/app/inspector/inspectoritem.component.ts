@@ -91,81 +91,49 @@ export class InspectorItemComponent implements OnInit, OnDestroy {
     }, appendToList);
   }
 
-  private getPathCommand() {
-    const vectorLayer = this.layerStateService.getVectorLayer(this.canvasType);
-    const pathId = this.layerStateService.getActivePathId(this.canvasType);
-    return (vectorLayer.findLayerById(pathId) as PathLayer).pathData;
-  }
-
   // TODO: update selections
   onReverseClick(event: MouseEvent) {
     const fromPathLayer = this.layerStateService.getActivePathLayer(this.canvasType);
-    this.replacePathCommand(fromPathLayer, fromPathLayer.pathData.reverse(this.subIdx), event);
+    this.replacePathCommand(fromPathLayer.pathData.reverse(this.subIdx), event);
   }
 
   // TODO: update selections
   onShiftBackClick(event: MouseEvent) {
     const fromPathLayer = this.layerStateService.getActivePathLayer(this.canvasType);
-    this.replacePathCommand(fromPathLayer, fromPathLayer.pathData.shiftBack(this.subIdx), event);
+    this.replacePathCommand(fromPathLayer.pathData.shiftBack(this.subIdx), event);
   }
 
   // TODO: update selections
   onShiftForwardClick(event: MouseEvent) {
     const fromPathLayer = this.layerStateService.getActivePathLayer(this.canvasType);
-    this.replacePathCommand(fromPathLayer, fromPathLayer.pathData.shiftForward(this.subIdx), event);
+    this.replacePathCommand(fromPathLayer.pathData.shiftForward(this.subIdx), event);
   }
 
   // TODO: update selections
   onSplitButtonClick(event: MouseEvent) {
     const fromPathLayer = this.layerStateService.getActivePathLayer(this.canvasType);
     this.replacePathCommand(
-      fromPathLayer, fromPathLayer.pathData.splitInHalf(this.subIdx, this.cmdIdx), event);
+      fromPathLayer.pathData.splitInHalf(this.subIdx, this.cmdIdx), event);
   }
 
   // TODO: update selections
   onUnsplitButtonClick(event: MouseEvent) {
     const fromPathLayer = this.layerStateService.getActivePathLayer(this.canvasType);
     this.replacePathCommand(
-      fromPathLayer, fromPathLayer.pathData.unsplit(this.subIdx, this.cmdIdx), event);
+      fromPathLayer.pathData.unsplit(this.subIdx, this.cmdIdx), event);
   }
 
-  private replacePathCommand(pathLayer: PathLayer, pathCommand: PathCommand, event: MouseEvent) {
-    // Remove any existing conversions.
-    pathCommand = pathCommand.unconvert(this.subIdx);
-
-    const targetCanvasType =
-      this.canvasType === CanvasType.Start ? CanvasType.End : CanvasType.Start;
-    let shouldNotifyTarget = false;
-
-    const targetActivePathLayer = this.layerStateService.getActivePathLayer(targetCanvasType);
-    if (targetActivePathLayer) {
-      const numCommands = pathCommand.subPathCommands[this.subIdx].commands.length;
-      const numTargetCommands =
-        targetActivePathLayer.pathData.subPathCommands[this.subIdx].commands.length;
-      if (numCommands === numTargetCommands) {
-        // Only auto convert when the number of commands in both canvases
-        // are equal. Otherwise we'll wait for the user to add more points.
-        const autoConvertResults =
-          AutoAwesome.convertAll(
-            this.subIdx, pathCommand, targetActivePathLayer.pathData.unconvert(this.subIdx));
-        pathCommand = autoConvertResults.from;
-
-        // This is the one case where a change in one canvas type's vector layer
-        // will cause corresponding changes to be made in the target canvas type's
-        // vector layer.
-        targetActivePathLayer.pathData = autoConvertResults.to;
-        shouldNotifyTarget = true;
-      }
-    }
-
-    pathLayer.pathData = pathCommand;
-    this.layerStateService.notifyChange(this.canvasType);
-    if (shouldNotifyTarget) {
-      this.layerStateService.notifyChange(targetCanvasType);
-    }
+  private replacePathCommand(pathCommand: PathCommand, event: MouseEvent) {
+    this.layerStateService.replaceActivePathCommand(this.canvasType, pathCommand, this.subIdx);
 
     // This ensures that the parent div won't also receive the same click event.
     event.cancelBubble = true;
+  }
+
+  private getPathCommand() {
+    const vectorLayer = this.layerStateService.getVectorLayer(this.canvasType);
+    const pathId = this.layerStateService.getActivePathId(this.canvasType);
+    return (vectorLayer.findLayerById(pathId) as PathLayer).pathData;
   }
 
   isReversible() {
@@ -177,26 +145,6 @@ export class InspectorItemComponent implements OnInit, OnDestroy {
     return this.cmdIdx === 0
       && this.getPathCommand().subPathCommands[this.subIdx].isClosed;
   }
-
-  // isConvertable() {
-  //   // TODO: this API usage is a little bit weird/hacky?
-  //   const canvasType =
-  //     this.canvasType === CanvasType.Start
-  //       ? CanvasType.End
-  //       : CanvasType.Start;
-  //   const vl = this.layerStateService.getVectorLayer(canvasType);
-  //   const pathId = this.layerStateService.getActivePathId(this.canvasType);
-  //   const pathData = (vl.findLayerById(pathId) as PathLayer).pathData;
-  //   if (pathData.subPathCommands.length <= this.subIdx) {
-  //     return false;
-  //   }
-  //   if (pathData.subPathCommands[this.subIdx].commands.length <= this.cmdIdx) {
-  //     return false;
-  //   }
-  //   const drawCmd = pathData.subPathCommands[this.subIdx].commands[this.cmdIdx];
-  //   return this.command.svgChar !== drawCmd.svgChar
-  //     && this.command.canConvertTo(drawCmd.svgChar);
-  // }
 
   isSplittable() {
     return this.command.svgChar !== 'M';

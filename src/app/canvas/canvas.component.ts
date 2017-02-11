@@ -623,6 +623,11 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       const selectedPointId = this.pointSelector.selectedPointId;
       if (this.pointSelector.isDragging()) {
         if (this.pointSelector.isSelectedPointSplit) {
+          if (selectedPointId.pathId !== activePathId) {
+            throw new Error('Attempt to modify the non-active path');
+          }
+
+          // TODO: use layerStateService to get the active path id instead
           const activeLayer =
             this.vectorLayer.findLayerById(selectedPointId.pathId) as PathLayer;
 
@@ -637,7 +642,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
               mouseUp, selectedPointId.pathId).split();
 
           // Notify the global layer state service about the change and draw.
-          this.layerStateService.notifyChange(this.canvasType);
+          this.layerStateService.replaceActivePathCommand(
+            this.canvasType, activeLayer.pathData, selectedPointId.subIdx);
         }
       } else {
         // If we haven't started dragging a point, then we should select
