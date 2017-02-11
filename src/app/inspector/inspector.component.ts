@@ -87,7 +87,6 @@ export class InspectorComponent implements OnInit, OnDestroy {
   }
 
   trackSubPathCommand(index: number, item: SubPathCommandItem) {
-    // TODO: will need to change this if/when we support reordering subpaths
     return item.subIdx;
   }
 

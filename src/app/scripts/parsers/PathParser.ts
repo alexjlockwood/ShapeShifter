@@ -1,8 +1,7 @@
 import { Point, Matrix, MathUtil, SvgUtil } from '../common';
 import {
-  // TODO: move these internal methods somewhere else
   newMove, newLine, newQuadraticCurve, newBezierCurve, newClosePath
-} from '../commands/CommandImpl';
+} from '../commands';
 import { Command } from '../commands';
 
 /**

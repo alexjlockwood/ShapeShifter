@@ -267,7 +267,7 @@ class PathCommandImpl implements PathCommand {
 
   // Implements the PathCommand interface.
   reverse(subIdx: number) {
-    // TODO(alockwood): add a test for commands with multiple moves but no close paths
+    // TODO: add a test for commands with multiple moves but no close paths
     return this.clone({
       reversals_: this.reversals_.map((r, i) => i === subIdx ? !r : r),
     });

@@ -21,7 +21,13 @@
 md-toolbar {
   background-color: md-color($app-primary);
   color: md-color($app-primary, default-contrast);
+}
 
+// Remove link decorations from overflow menu items.
+a:-webkit-any-link {
+  color: inherit;
+  text-decoration: none;
+  cursor: inherit;
 }
 
 button[disabled] {

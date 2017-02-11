@@ -58,7 +58,6 @@ export class InspectorItemComponent implements OnInit, OnDestroy {
     this.subscriptions.forEach(s => s.unsubscribe());
   }
 
-  // TODO: make these ordered list items instead?
   getCommandText() {
     const c = this.command;
     if (c.svgChar === 'Z') {

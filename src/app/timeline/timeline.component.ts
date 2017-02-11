@@ -32,7 +32,7 @@ export class TimelineComponent implements OnInit {
         this.onLayerStateChanged(event.morphabilityStatus);
       }));
     // TODO: is this necessary to trigger change detection?
-    this.animatorService.animatedValueStream.subscribe((value: number) => { });
+    // this.animatorService.animatedValueStream.subscribe((value: number) => { });
   }
 
   private onLayerStateChanged(morphabilityStatus: MorphabilityStatus) {
