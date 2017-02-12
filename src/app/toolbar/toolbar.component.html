@@ -16,7 +16,7 @@
   </button>
   <button md-icon-button
     class="toolbar-action-button"
-    [disabled]="morphabilityStatus !== MORPHABILITY_NONE"
+    [disabled]="morphabilityStatus === MORPHABILITY_NONE"
     (click)="onAutoFixClick()"
     mdTooltip="Auto fix"
     mdTooltipShowDelay="500"

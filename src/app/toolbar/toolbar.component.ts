@@ -16,7 +16,8 @@ import { AnimatorService } from '../services/animator.service';
   styleUrls: ['./toolbar.component.scss']
 })
 export class ToolbarComponent implements OnInit {
-  morphabilityStatus = MorphabilityStatus.None
+  MORPHABILITY_NONE = MorphabilityStatus.None;
+  morphabilityStatus = MorphabilityStatus.None;
 
   constructor(
     private viewContainerRef: ViewContainerRef,
