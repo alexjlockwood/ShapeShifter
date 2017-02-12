@@ -14,14 +14,22 @@
     md-icon-button>
     <md-icon>create</md-icon>
   </button>
-  <button
+  <button md-icon-button
     class="toolbar-action-button"
-    [disabled]="!isMorphable"
+    [disabled]="morphabilityStatus !== MORPHABILITY_NONE"
+    (click)="onAutoFixClick()"
+    mdTooltip="Auto fix"
+    mdTooltipShowDelay="500"
+    mdTooltipPosition="below">
+    <md-icon svgIcon="autofix"></md-icon>
+  </button>
+  <button md-icon-button
+    class="toolbar-action-button"
+    [disabled]="morphabilityStatus !== MORPHABILITY_MORPHABLE"
     mdTooltip="Export"
     mdTooltipPosition="below"
     mdTooltipShowDelay="500"
-    (click)="onExportClick()"
-    md-icon-button>
+    (click)="onExportClick()">
     <md-icon>file_download</md-icon>
   </button>
   <button

@@ -60,16 +60,6 @@
             <strong>{{morphabilityStatus === MORPHABILITY_MORPHABLE ? 'Morphable' : 'Unmorphable'}}</strong>
           </span>
         </span>
-        <span fxFlex></span>
-        <button md-icon-button
-          [disabled]="morphabilityStatus === MORPHABILITY_NONE"
-          (click)="onAutoFixClick()"
-          mdTooltip="Auto fix"
-          mdTooltipShowDelay="500"
-          mdTooltipPosition="below">
-          <md-icon svgIcon="autofix"></md-icon>
-        </button>
-        <span></span>
       </div>
       <div class="inspector-panel-body"
         fxLayout="row"

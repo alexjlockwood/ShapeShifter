@@ -1,6 +1,6 @@
 import * as XmlSerializer from './XmlSerializer';
 import { Layer, VectorLayer, PathLayer, GroupLayer, ClipPathLayer } from '../layers';
-import { AnimationTarget } from '../animation';
+import { AvdTarget } from '../animation';
 
 const XMLNS_NS = 'http://www.w3.org/2000/xmlns/';
 const ANDROID_NS = 'http://schemas.android.com/apk/res/android';
@@ -21,7 +21,7 @@ export function vectorLayerToVectorDrawableXmlString(vectorLayer: VectorLayer) {
  */
 export function vectorLayerAnimationToAvdXmlString(
   vectorLayer: VectorLayer,
-  animationTarget: AnimationTarget) {
+  avdTarget: AvdTarget) {
 
   const xmlDoc = document.implementation.createDocument(null, 'animated-vector', null);
   const rootNode = xmlDoc.documentElement;
@@ -38,7 +38,7 @@ export function vectorLayerAnimationToAvdXmlString(
   vectorLayerContainerNode.appendChild(vectorLayerNode);
 
   // TODO: eventually support passing in multiple animation targets?
-  const animationTargets = [animationTarget];
+  const animationTargets = [avdTarget];
   for (const target of animationTargets) {
     const layerId = target.layerId;
     const targetNode = xmlDoc.createElement('target');

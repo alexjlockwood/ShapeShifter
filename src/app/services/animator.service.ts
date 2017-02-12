@@ -4,8 +4,9 @@ import { Subscription } from 'rxjs/Subscription';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Observable } from 'rxjs/Observable';
 import { MathUtil } from '../scripts/common';
+import { Interpolator, INTERPOLATORS } from '../scripts/animation';
 
-const DEFAULT_INTERPOLATOR = (fraction: number) => fraction;
+const DEFAULT_INTERPOLATOR = INTERPOLATORS[0];
 const MIN_DURATION = 100;
 const DEFAULT_DURATION = 300;
 const MAX_DURATION = 60000;
@@ -89,8 +90,16 @@ export class AnimatorService {
     this.animator.setDuration(duration);
   }
 
-  setInterpolator(interpolatorFn: (fraction: number) => number) {
-    this.animator.setInterpolator(interpolatorFn);
+  getDuration() {
+    return this.animator.getDuration();
+  }
+
+  setInterpolator(interpolator: Interpolator) {
+    this.animator.setInterpolator(interpolator);
+  }
+
+  getInterpolator() {
+    return this.animator.getInterpolator();
   }
 }
 
@@ -101,7 +110,7 @@ class Animator {
   private isPlaying_ = DEFAULT_IS_PLAYING;
   private isRepeating_ = DEFAULT_IS_REPEATING;
   private playbackSpeed_ = DEFAULT_PLAYBACK_SPEED;
-  private interpolatorFn_ = DEFAULT_INTERPOLATOR;
+  private interpolator_ = DEFAULT_INTERPOLATOR;
   private duration_ = DEFAULT_DURATION;
 
   private currentAnimatedFraction = 0;
@@ -117,9 +126,13 @@ class Animator {
 
   setPlaybackSpeed(playbackSpeed: number) { this.playbackSpeed_ = playbackSpeed; }
 
-  setInterpolator(fn: (fraction: number) => number) { this.interpolatorFn_ = fn; }
+  setInterpolator(interpolator: Interpolator) { this.interpolator_ = interpolator; }
 
   setDuration(duration: number) { this.duration_ = duration; }
+
+  getInterpolator() { return this.interpolator_; }
+
+  getDuration() { return this.duration_; }
 
   play(onUpdateFn: (fraction: number, value: number) => void) {
     this.isPlaying_ = true;
@@ -159,7 +172,7 @@ class Animator {
         }
       }
       const fraction = Math.min(1, progress / (this.duration_ * this.playbackSpeed_));
-      const value = this.interpolatorFn_(fraction);
+      const value = this.interpolator_.interpolateFn(fraction);
       onUpdateFn(fraction, shouldPlayInReverse ? 1 - value : value);
     };
     this.ngZone.runOutsideAngular(() => {

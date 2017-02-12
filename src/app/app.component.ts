@@ -14,7 +14,6 @@ import { LayerStateService, Event as LayerStateEvent, MorphabilityStatus } from 
 import { DividerDragEvent } from './splitter/splitter.directive';
 import { CanvasResizeService } from './services/canvasresize.service';
 import { SelectionStateService } from './services/selectionstate.service';
-import { AutoAwesome } from './scripts/common';
 import * as $ from 'jquery';
 import * as erd from 'element-resize-detector';
 
@@ -165,25 +164,6 @@ export class AppComponent implements OnInit, OnDestroy {
       this.layerStateService.replaceActivePathCommand(
         canvasType, activePathLayer.pathData.unsplitBatch(ops), idx);
     });
-  }
-
-  onAutoFixClick() {
-    let resultStartCmd = this.layerStateService.getActivePathLayer(CanvasType.Start).pathData;
-    let resultEndCmd = this.layerStateService.getActivePathLayer(CanvasType.End).pathData;
-    const numSubPaths = resultStartCmd.subPathCommands.length;
-    for (let subIdx = 0; subIdx < numSubPaths; subIdx++) {
-      // Pass the command with the larger subpath as the 'from' command.
-      const numStartCmds = resultStartCmd.subPathCommands[subIdx].commands.length;
-      const numEndCmds = resultEndCmd.subPathCommands[subIdx].commands.length;
-      const fromCmd = numStartCmds >= numEndCmds ? resultStartCmd : resultEndCmd;
-      const toCmd = numStartCmds >= numEndCmds ? resultEndCmd : resultStartCmd;
-      const {from, to} = AutoAwesome.autoFix(subIdx, fromCmd, toCmd);
-      resultStartCmd = numStartCmds >= numEndCmds ? from : to;
-      resultEndCmd = numStartCmds >= numEndCmds ? to : from;
-      // TODO: avoid calling these once-per-subIdx...
-      this.layerStateService.replaceActivePathCommand(CanvasType.Start, resultStartCmd, subIdx);
-      this.layerStateService.replaceActivePathCommand(CanvasType.End, resultEndCmd, subIdx);
-    }
   }
 
   private loadDebugVectorLayers() {
