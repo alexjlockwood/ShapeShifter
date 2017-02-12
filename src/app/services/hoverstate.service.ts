@@ -25,7 +25,7 @@ export class HoverStateService {
     this.source.next(this.currentHover);
   }
 
-  clear() {
+  reset() {
     if (this.currentHover) {
       this.setHover(undefined);
     }

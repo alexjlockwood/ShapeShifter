@@ -155,8 +155,9 @@ export class LayerStateService {
    * Resets the state of the entire application.
    */
   reset() {
-    // TODO: reset layer state, animation state, hover/selection state, etc.
-    console.log('NOT YET IMPLEMENTED');
+    [CanvasType.Start, CanvasType.Preview, CanvasType.End].forEach(type => {
+      this.setVectorLayer(type, undefined);
+    });
   }
 
   addListener(type: CanvasType, callback: (layerStateEvent: Event) => void) {

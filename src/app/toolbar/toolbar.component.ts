@@ -1,14 +1,20 @@
+import * as _ from 'lodash';
+import * as $ from 'jquery';
 import { Component, OnInit, ViewContainerRef } from '@angular/core';
 import {
   LayerStateService, MorphabilityStatus, Event as LayerStateEvent
 } from '../services/layerstate.service';
 import { CanvasType } from '../CanvasType';
 import { AvdSerializer } from '../scripts/parsers';
-import * as $ from 'jquery';
 import { AvdTarget } from '../scripts/animation';
-import { DialogsService } from '../dialogs';
+import { DialogService } from '../dialogs';
 import { AutoAwesome } from '../scripts/common';
 import { AnimatorService } from '../services/animator.service';
+import { SelectionStateService } from '../services/selectionstate.service';
+import { HoverStateService } from '../services/hoverstate.service';
+import { DEMO_SVG_STRING } from './demo';
+import { VectorLayerLoader } from '../scripts/parsers';
+import { PathLayer } from '../scripts/layers';
 
 @Component({
   selector: 'app-toolbar',
@@ -17,13 +23,17 @@ import { AnimatorService } from '../services/animator.service';
 })
 export class ToolbarComponent implements OnInit {
   MORPHABILITY_NONE = MorphabilityStatus.None;
+  MORPHABILITY_UNMORPHABLE = MorphabilityStatus.Unmorphable;
+  MORPHABILITY_MORPHABLE = MorphabilityStatus.Morphable;
   morphabilityStatus = MorphabilityStatus.None;
 
   constructor(
     private viewContainerRef: ViewContainerRef,
     private animatorService: AnimatorService,
+    private hoverStateService: HoverStateService,
+    private selectionStateService: SelectionStateService,
     private layerStateService: LayerStateService,
-    private dialogsService: DialogsService) { }
+    private dialogsService: DialogService) { }
 
   ngOnInit() {
     this.layerStateService.addListener(CanvasType.Start, (event: LayerStateEvent) => {
@@ -36,8 +46,16 @@ export class ToolbarComponent implements OnInit {
 
   onNewClick() {
     this.dialogsService
-      .confirm('Start from scratch?', 'You\'ll lose any unsaved changes.', this.viewContainerRef)
-      .subscribe(res => console.log('TODO: implement this'));
+      .confirm(this.viewContainerRef, 'Start from scratch?', 'You\'ll lose any unsaved changes.')
+      .subscribe(result => {
+        if (!result) {
+          return;
+        }
+        this.animatorService.reset();
+        this.hoverStateService.reset();
+        this.selectionStateService.reset();
+        this.layerStateService.reset();
+      });
   }
 
   onAutoFixClick() {
@@ -77,6 +95,28 @@ export class ToolbarComponent implements OnInit {
         'pathData',
         'pathType'));
     this.downloadFile(xmlStr, `ShapeShifterAvd.xml`);
+  }
+
+  onDemoClick() {
+    const importedVectorLayer = VectorLayerLoader.loadVectorLayerFromSvgString(DEMO_SVG_STRING);
+    this.layerStateService.setVectorLayer(CanvasType.Start, importedVectorLayer);
+    this.layerStateService.setVectorLayer(CanvasType.Preview, importedVectorLayer.clone());
+    this.layerStateService.setVectorLayer(CanvasType.End, importedVectorLayer.clone());
+    const availablePathIds: string[] = [];
+    importedVectorLayer.walk((layer => {
+      if (!(layer instanceof PathLayer)) {
+        return;
+      }
+      availablePathIds.push(layer.id);
+    }));
+    const shuffledPathIds = _.shuffle(availablePathIds);
+    this.layerStateService.setActivePathId(CanvasType.Start, shuffledPathIds[0]);
+    this.layerStateService.setActivePathId(CanvasType.Preview, shuffledPathIds[0]);
+    this.layerStateService.setActivePathId(CanvasType.End, shuffledPathIds[1]);
+  }
+
+  onHelpClick() {
+    this.dialogsService.help(this.viewContainerRef);
   }
 
   private downloadFile(content: string, filename: string) {

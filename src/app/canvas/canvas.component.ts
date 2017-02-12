@@ -257,7 +257,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         ctx.clip();
         return;
       }
-      if (!(layer instanceof PathLayer)) {
+      if (!(layer instanceof PathLayer) || (layer.id !== this.activePathId)) {
         return;
       }
 
@@ -324,7 +324,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       return;
     }
     this.vectorLayer.walk((layer, transforms) => {
-      if (!(layer instanceof PathLayer)) {
+      if (!(layer instanceof PathLayer) || (layer.id !== this.activePathId)) {
         return;
       }
 
@@ -366,7 +366,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       this.selectionStateService.getSelections()
         .filter(s => s.source === this.canvasType);
     this.vectorLayer.walk((layer, transforms) => {
-      if (!(layer instanceof PathLayer)) {
+      if (!(layer instanceof PathLayer) || (layer.id !== this.activePathId)) {
         return;
       }
       transforms.reverse();
@@ -557,7 +557,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
     const mouseDown = this.mouseEventToPoint(event);
     const selectedPointId = this.findPathPointId(mouseDown);
-    if (selectedPointId) {
+    if (selectedPointId && selectedPointId.pathId === this.activePathId) {
       // A mouse down event ocurred on top of a point. Create a point selector
       // and track that sh!at.
       const selectedCmd =
@@ -571,7 +571,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       // If the mouse down event didn't occur on top of a point, then
       // clear any existing selections, but only if the user isn't in
       // the middle of selecting multiple points at once.
-      this.selectionStateService.clear();
+      this.selectionStateService.reset();
     }
   }
 
@@ -580,8 +580,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     const roundedMouseMove = new Point(_.round(mouseMove.x), _.round(mouseMove.y));
     this.canvasRulers.forEach(r => r.showMouse(roundedMouseMove));
 
-    if (this.canvasType === CanvasType.Preview
-      || !this.layerStateService.getActivePathId(this.canvasType)) {
+    if (this.canvasType === CanvasType.Preview || !this.activePathId) {
       return;
     }
 
@@ -608,13 +607,12 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         commandId: hoverPointId,
       });
     } else {
-      this.hoverStateService.clear();
+      this.hoverStateService.reset();
     }
   }
 
   onMouseUp(event: MouseEvent) {
-    const activePathId = this.layerStateService.getActivePathId(this.canvasType);
-    if (this.canvasType === CanvasType.Preview || !activePathId) {
+    if (this.canvasType === CanvasType.Preview || !this.activePathId) {
       return;
     }
     if (this.pointSelector) {
@@ -624,7 +622,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       const selectedPointId = this.pointSelector.selectedPointId;
       if (this.pointSelector.isDragging()) {
         if (this.pointSelector.isSelectedPointSplit) {
-          if (selectedPointId.pathId !== activePathId) {
+          if (selectedPointId.pathId !== this.activePathId) {
             throw new Error('Attempt to modify the non-active path');
           }
 
@@ -644,8 +642,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
           // Notify the global layer state service about the change and draw.
           // Clear any existing selections and/or hovers as well.
-          this.hoverStateService.clear();
-          this.selectionStateService.clear();
+          this.hoverStateService.reset();
+          this.selectionStateService.reset();
           this.layerStateService.replaceActivePathCommand(
             this.canvasType, activeLayer.pathData, selectedPointId.subIdx);
         }
@@ -667,8 +665,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   onMouseLeave(event) {
     this.canvasRulers.forEach(r => r.hideMouse());
 
-    if (this.canvasType === CanvasType.Preview
-      || !this.layerStateService.getActivePathId(this.canvasType)) {
+    if (this.canvasType === CanvasType.Preview || !this.activePathId) {
       return;
     }
     if (this.pointSelector) {

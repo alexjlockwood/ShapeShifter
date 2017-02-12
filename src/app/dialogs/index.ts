@@ -1,3 +1,4 @@
 import { ConfirmDialogComponent } from './confirmdialog.component';
-import { DialogsService } from './dialogs.service';
-export { ConfirmDialogComponent, DialogsService };
+import { HelpDialogComponent } from './helpdialog.component';
+import { DialogService } from './dialog.service';
+export { ConfirmDialogComponent, HelpDialogComponent, DialogService };

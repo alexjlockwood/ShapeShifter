@@ -125,8 +125,8 @@ export class InspectorItemComponent implements OnInit, OnDestroy {
   }
 
   private clearSelectionsAndHovers() {
-    this.hoverStateService.clear();
-    this.selectionStateService.clear();
+    this.hoverStateService.reset();
+    this.selectionStateService.reset();
   }
 
   private replacePathCommand(pathCommand: PathCommand, event: MouseEvent) {
@@ -208,7 +208,7 @@ export class InspectorItemComponent implements OnInit, OnDestroy {
         source: this.canvasType,
       });
     } else {
-      this.hoverStateService.clear();
+      this.hoverStateService.reset();
     }
     this.isHovering =
       this.isHoveringOverCommand

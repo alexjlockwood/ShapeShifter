@@ -6,6 +6,7 @@ import { Observable } from 'rxjs/Observable';
 import { MathUtil } from '../scripts/common';
 import { Interpolator, INTERPOLATORS } from '../scripts/animation';
 
+const DEFAULT_FRACTION = 0;
 const DEFAULT_INTERPOLATOR = INTERPOLATORS[0];
 const MIN_DURATION = 100;
 const DEFAULT_DURATION = 300;
@@ -23,21 +24,19 @@ const DEFAULT_IS_PLAYING = false;
  */
 @Injectable()
 export class AnimatorService {
-  private readonly animatedValueSource = new BehaviorSubject<number>(0);
+  private readonly animatedValueSource = new BehaviorSubject<number>(DEFAULT_FRACTION);
   readonly animatedValueStream = this.animatedValueSource.asObservable();
-  private readonly animator: Animator;
-  private isSlowMotion_ = false;
+  private animator: Animator;
 
   constructor(private ngZone: NgZone) {
     this.animator = new Animator(ngZone);
   }
 
   isSlowMotion() {
-    return this.isSlowMotion_;
+    return this.animator.getPlaybackSpeed() === SLOW_MOTION_PLAYBACK_SPEED;
   }
 
   setIsSlowMotion(isSlowMotion: boolean) {
-    this.isSlowMotion_ = isSlowMotion;
     this.animator.setPlaybackSpeed(
       isSlowMotion ? SLOW_MOTION_PLAYBACK_SPEED : DEFAULT_PLAYBACK_SPEED);
   }
@@ -72,12 +71,12 @@ export class AnimatorService {
   }
 
   rewind() {
-    this.animator.pause();
+    this.animator.rewind();
     this.animatedValueSource.next(0);
   }
 
   fastForward() {
-    this.animator.pause();
+    this.animator.fastForward();
     this.animatedValueSource.next(1);
   }
 
@@ -100,6 +99,11 @@ export class AnimatorService {
 
   getInterpolator() {
     return this.animator.getInterpolator();
+  }
+
+  reset() {
+    this.rewind();
+    this.animator = new Animator(this.ngZone);
   }
 }
 
@@ -134,6 +138,8 @@ class Animator {
 
   getDuration() { return this.duration_; }
 
+  getPlaybackSpeed() { return this.playbackSpeed_; }
+
   play(onUpdateFn: (fraction: number, value: number) => void) {
     this.isPlaying_ = true;
     this.startAnimation(onUpdateFn);
@@ -149,6 +155,18 @@ class Animator {
       cancelAnimationFrame(this.animationFrameId);
       this.animationFrameId = undefined;
     }
+  }
+
+  rewind() {
+    this.pause();
+    this.shouldPlayInReverse = false;
+    this.currentAnimatedFraction = 0;
+  }
+
+  fastForward() {
+    this.pause();
+    this.shouldPlayInReverse = true;
+    this.currentAnimatedFraction = 1;
   }
 
   private startAnimation(onUpdateFn: (fraction: number, value: number) => void) {

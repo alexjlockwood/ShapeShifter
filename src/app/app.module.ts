@@ -19,7 +19,7 @@ import { CanvasResizeService } from './services/canvasresize.service';
 import { CanvasRulerDirective } from './canvas/canvasruler.directive';
 import { SettingsComponent } from './settings/settings.component';
 import { ToolbarComponent } from './toolbar/toolbar.component';
-import { DialogsService, ConfirmDialogComponent } from './dialogs';
+import { DialogService, HelpDialogComponent, ConfirmDialogComponent } from './dialogs';
 import { PathSelectorComponent } from './pathselector/pathselector.component';
 
 import 'hammerjs';
@@ -37,6 +37,7 @@ import 'hammerjs';
     ToolbarComponent,
     PathSelectorComponent,
     ConfirmDialogComponent,
+    HelpDialogComponent,
   ],
   imports: [
     BrowserModule,
@@ -51,10 +52,11 @@ import 'hammerjs';
     SelectionStateService,
     HoverStateService,
     CanvasResizeService,
-    DialogsService,
+    DialogService,
   ],
   entryComponents: [
     ConfirmDialogComponent,
+    HelpDialogComponent,
   ],
   bootstrap: [AppComponent]
 })
@@ -67,6 +69,7 @@ export class AppModule {
       .addSvgIcon('reverse', sanitizer.bypassSecurityTrustResourceUrl('assets/reverse.svg'))
       .addSvgIcon('autofix', sanitizer.bypassSecurityTrustResourceUrl('assets/autofix.svg'))
       .addSvgIcon('contribute', sanitizer.bypassSecurityTrustResourceUrl('assets/contribute.svg'))
+      .addSvgIcon('demo', sanitizer.bypassSecurityTrustResourceUrl('assets/demo.svg'))
       .addSvgIcon('shapeshifter', sanitizer.bypassSecurityTrustResourceUrl('assets/shapeshifter.svg'));
   }
 }

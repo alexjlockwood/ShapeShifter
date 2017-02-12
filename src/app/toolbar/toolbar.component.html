@@ -39,13 +39,19 @@
     <md-icon>more_vert</md-icon>
   </button>
   <md-menu #menu="mdMenu">
+    <button md-menu-item
+      (click)="onDemoClick()">
+      <md-icon svgIcon="demo"></md-icon>
+      <span>Demo</span>
+    </button>
     <a href="https://github.com/alexjlockwood/ShapeShifter">
       <button md-menu-item>
         <md-icon svgIcon="contribute"></md-icon>
         <span>Contribute</span>
       </button>
     </a>
-    <button md-menu-item>
+    <button md-menu-item
+      (click)="onHelpClick()">
       <md-icon>help</md-icon>
       <span>Help</span>
     </button>

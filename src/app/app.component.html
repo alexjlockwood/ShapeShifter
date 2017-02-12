@@ -26,25 +26,13 @@
   <div
     class="inspector-container"
     fxLayout="row">
-    <!-- Start path inspector. -->
-    <div class="inspector-panel"
-      fxLayout="column">
-      <div class="inspector-panel-header"
+
+    <div fxLayout="column" class="inspector-panel">
+       <div class="inspector-panel-header"
         fxLayoutAlign="start center">
-        <span>Start path</span>
+        <span>SVG paths</span>
       </div>
-      <app-pathselector fxFlex
-        [canvasType]="START_CANVAS"></app-pathselector>
-    </div>
-    <!-- End path inspector. -->
-    <div class="inspector-panel"
-      fxLayout="column">
-      <div class="inspector-panel-header"
-        fxLayoutAlign="start center">
-        <span>End path</span>
-      </div>
-      <app-pathselector fxFlex
-        [canvasType]="END_CANVAS"></app-pathselector>
+      <app-pathselector fxFlex></app-pathselector>
     </div>
     <!-- Point inspector. -->
     <div class="inspector-panel"

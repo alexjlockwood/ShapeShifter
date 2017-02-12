@@ -53,7 +53,7 @@ export class SelectionStateService {
   /**
    * Clears the current list of selections.
    */
-  clear() {
+  reset() {
     this.selections = [];
     this.source.next(this.selections);
   }

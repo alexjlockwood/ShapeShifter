@@ -1,17 +1,17 @@
 import { Observable } from 'rxjs/Rx';
-import { ConfirmDialogComponent } from './confirmdialog.component';
+import { ConfirmDialogComponent, HelpDialogComponent } from '.';
 import { MdDialogRef, MdDialog, MdDialogConfig } from '@angular/material';
 import { Injectable, ViewContainerRef } from '@angular/core';
 
 @Injectable()
-export class DialogsService {
+export class DialogService {
 
   constructor(private dialog: MdDialog) { }
 
-  public confirm(
+  confirm(
+    viewContainerRef: ViewContainerRef,
     title: string,
-    message: string,
-    viewContainerRef: ViewContainerRef): Observable<boolean> {
+    message: string): Observable<boolean> {
 
     const config = new MdDialogConfig();
     config.viewContainerRef = viewContainerRef;
@@ -19,5 +19,11 @@ export class DialogsService {
     dialogRef.componentInstance.title = title;
     dialogRef.componentInstance.message = message;
     return dialogRef.afterClosed();
+  }
+
+  help(viewContainerRef: ViewContainerRef) {
+    const config = new MdDialogConfig();
+    config.viewContainerRef = viewContainerRef;
+    return this.dialog.open(HelpDialogComponent, config).afterClosed();
   }
 }
