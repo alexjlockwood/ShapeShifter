@@ -61,24 +61,13 @@
           </span>
         </span>
         <span fxFlex></span>
-        <!-- TODO: enable/disable these buttons appropriately? -->
         <button md-icon-button
-          class="global-setting"
-          [disabled]="true"
-          fxHide
-          mdTooltip="Add points mode"
-          mdTooltipPosition="above">
-          <!-- TODO: implement this -->
-          <md-icon [class.activated]="false">add</md-icon>
-        </button>
-        <button md-icon-button
-          class="global-setting"
-          [disabled]="true"
+          [disabled]="morphabilityStatus === MORPHABILITY_NONE"
+          (click)="onAutoFixClick()"
           mdTooltip="Auto fix"
           mdTooltipShowDelay="500"
           mdTooltipPosition="below">
-          <!-- TODO: implement this -->
-          <md-icon svgIcon="autofix" [class.activated]="false"></md-icon>
+          <md-icon svgIcon="autofix"></md-icon>
         </button>
         <span></span>
       </div>

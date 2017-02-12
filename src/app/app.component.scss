@@ -53,6 +53,16 @@ div.app-splitter:hover {
       color: $colorBlackTextSecondary;
       margin: 8px;
     }
+    button {
+      &[disabled] {
+        md-icon {
+          color: $colorBlackTextDisabled;
+        }
+      }
+      md-icon {
+        color: $colorBlackTextSecondary;
+      }
+    }
     .status-text-morphable {
       color: md-color($app-accent);
     }
@@ -69,16 +79,3 @@ div.app-splitter:hover {
   }
 }
 
-button.global-setting {
-  &[disabled] {
-    md-icon {
-      color: $colorBlackTextDisabled;
-    }
-  }
-  md-icon {
-    color: $colorBlackTextSecondary;
-  }
-  md-icon.activated {
-    color: md-color($app-accent);
-  }
-}

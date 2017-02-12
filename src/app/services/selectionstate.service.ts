@@ -15,7 +15,7 @@ import { CanvasType } from '../CanvasType';
  */
 @Injectable()
 export class SelectionStateService {
-  private readonly source = new BehaviorSubject<Selection[]>([]);
+  private readonly source = new BehaviorSubject<ReadonlyArray<Selection>>([]);
   readonly stream = this.source.asObservable();
   private selections: Selection[] = [];
 
