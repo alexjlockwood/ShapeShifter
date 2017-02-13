@@ -5,7 +5,7 @@
     color="accent"
     placeholder="Interpolator"
     [(ngModel)]="selectedInterpolator"
-    [disabled]="isPlaying()"
+    [disabled]="!isMorphable || isPlaying()"
     name="interpolator">
     <md-option
       *ngFor="let interpolator of interpolators"
@@ -18,7 +18,7 @@
   <md-input-container>
     <input
       md-input
-      [disabled]="isPlaying() ? '' : undefined"
+      [disabled]="!isMorphable || isPlaying() ? '' : undefined"
       placeholder="Duration"
       value="300"
       min="100"
