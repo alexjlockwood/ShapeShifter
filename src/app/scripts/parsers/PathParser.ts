@@ -295,6 +295,7 @@ export function parseCommands(
           currentPoint = tempPoint1;
           break;
         }
+        break;
       }
       case 'Z':
       case 'z': {
