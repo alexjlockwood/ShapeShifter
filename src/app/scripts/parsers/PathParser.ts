@@ -283,6 +283,7 @@ export function parseCommands(
             largeArcFlag, sweepFlag,
             endX, endY,
           });
+
           for (let i = 0; i < bezierCoords.length; i += 8) {
             commands.push(newBezierCurve(
               currentPoint,

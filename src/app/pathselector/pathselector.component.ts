@@ -67,7 +67,6 @@ export class PathSelectorComponent {
 
   // Called when the user picks a file from the file picker.
   onSvgFileChosen(fileList: FileList) {
-    console.log(fileList);
     if (!fileList || !fileList.length) {
       console.warn('Failed to load SVG file');
       return;
@@ -101,7 +100,6 @@ export class PathSelectorComponent {
     }
 
     canvasTypesToFiles.forEach(obj => {
-      console.log(obj);
       const canvasType = obj.canvasType;
       const file = obj.file;
       const fileReader = new FileReader();
@@ -135,7 +133,7 @@ export class PathSelectorComponent {
       fileReader.readAsText(file);
 
       // Clear the value so that the user can import the same
-      // file twice if tehy wish.
+      // file twice if they wish.
       $(this.elementRef).find('input[type="file"]').val(null);
     });
   }
