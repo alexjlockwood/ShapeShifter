@@ -10,6 +10,7 @@ import * as $ from 'jquery';
 import { Subscription } from 'rxjs/Subscription';
 import { VectorLayer } from '../scripts/layers';
 import { CANVAS_MARGIN, DEFAULT_VIEWPORT_SIZE } from './canvas.component';
+import * as _ from 'lodash';
 
 const RULER_SIZE = 32;
 const EXTRA_PADDING = 12;
@@ -137,7 +138,7 @@ export class CanvasRulerDirective implements OnInit, OnDestroy {
       ctx.textBaseline = 'alphabetic';
       ctx.textAlign = 'center';
       for (let x = 0, t = 0;
-        x <= (width - EXTRA_PADDING * 2);
+        round(x) <= round(width - EXTRA_PADDING * 2);
         x += spacingRulerPx, t += spacingArtPx) {
         ctx.fillText(t.toString(), x, height - LABEL_OFFSET);
         ctx.fillRect(x - 0.5, height - TICK_SIZE, 1, TICK_SIZE);
@@ -146,7 +147,7 @@ export class CanvasRulerDirective implements OnInit, OnDestroy {
       ctx.textBaseline = 'middle';
       ctx.textAlign = 'right';
       for (let y = 0, t = 0;
-        y <= (height - EXTRA_PADDING * 2);
+        round(y) <= round(height - EXTRA_PADDING * 2);
         y += spacingRulerPx, t += spacingArtPx) {
         ctx.fillText(t.toString(), width - LABEL_OFFSET, y);
         ctx.fillRect(width - TICK_SIZE, y - 0.5, TICK_SIZE, 1);
@@ -162,6 +163,10 @@ export class CanvasRulerDirective implements OnInit, OnDestroy {
       ctx.fillText(mouseY.toString(), width - LABEL_OFFSET, mouseY * zoom);
     }
   }
+}
+
+function round(n: number) {
+  return _.round(n, 8);
 }
 
 export type Orientation = 'horizontal' | 'vertical';
