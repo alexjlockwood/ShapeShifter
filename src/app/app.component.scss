@@ -30,7 +30,7 @@ app-canvas {
 
 div.inspector-container {
   height: 320px;
-  background-color: material-color('grey', '100');
+  background-color: material-color('grey', '50');
 }
 
 div.app-splitter {
@@ -45,9 +45,9 @@ div.app-splitter:hover {
 .inspector-panel {
   box-shadow: 0px 0 0 material-color('grey', '500'), -4px 0 0 material-color('grey', '500');
   .inspector-panel-header {
-    background-color: material-color('grey', '100');
+    background-color: material-color('grey', '50');
     box-shadow: material-shadow(1);
-    min-height: 48px;
+    min-height: 44px;
     span {
       font-size: 14px;
       color: $colorBlackTextSecondary;
@@ -63,11 +63,13 @@ div.app-splitter:hover {
         color: $colorBlackTextSecondary;
       }
     }
-    .status-text-morphable {
+    span.morphable {
+      margin-left: 2px;
       color: md-color($app-accent);
     }
-    .status-text-unmorphable {
-      color: md-color($app-warn);
+    span.unmorphable {
+      margin-left: 2px;
+      color: material-color('red', '700');
     }
   }
   .inspector-panel-body {

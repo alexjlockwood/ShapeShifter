@@ -98,21 +98,28 @@ export class ToolbarComponent implements OnInit {
   }
 
   onDemoClick() {
-    const importedVectorLayer = VectorLayerLoader.loadVectorLayerFromSvgString(DEMO_SVG_STRING);
-    this.layerStateService.setVectorLayer(CanvasType.Start, importedVectorLayer);
-    this.layerStateService.setVectorLayer(CanvasType.Preview, importedVectorLayer.clone());
-    this.layerStateService.setVectorLayer(CanvasType.End, importedVectorLayer.clone());
-    const availablePathIds: string[] = [];
-    importedVectorLayer.walk((layer => {
-      if (!(layer instanceof PathLayer)) {
-        return;
-      }
-      availablePathIds.push(layer.id);
-    }));
-    const shuffledPathIds = _.shuffle(availablePathIds);
-    this.layerStateService.setActivePathId(CanvasType.Start, shuffledPathIds[0]);
-    this.layerStateService.setActivePathId(CanvasType.Preview, shuffledPathIds[0]);
-    this.layerStateService.setActivePathId(CanvasType.End, shuffledPathIds[1]);
+    this.dialogsService
+      .confirm(this.viewContainerRef, 'Start the demo?', 'You\'ll lose any unsaved changes.')
+      .subscribe(result => {
+        if (!result) {
+          return;
+        }
+        const importedVectorLayer = VectorLayerLoader.loadVectorLayerFromSvgString(DEMO_SVG_STRING);
+        this.layerStateService.setVectorLayer(CanvasType.Start, importedVectorLayer);
+        this.layerStateService.setVectorLayer(CanvasType.Preview, importedVectorLayer.clone());
+        this.layerStateService.setVectorLayer(CanvasType.End, importedVectorLayer.clone());
+        const availablePathIds: string[] = [];
+        importedVectorLayer.walk((layer => {
+          if (!(layer instanceof PathLayer)) {
+            return;
+          }
+          availablePathIds.push(layer.id);
+        }));
+        const shuffledPathIds = _.shuffle(availablePathIds);
+        this.layerStateService.setActivePathId(CanvasType.Start, shuffledPathIds[0]);
+        this.layerStateService.setActivePathId(CanvasType.Preview, shuffledPathIds[0]);
+        this.layerStateService.setActivePathId(CanvasType.End, shuffledPathIds[1]);
+      });
   }
 
   onHelpClick() {

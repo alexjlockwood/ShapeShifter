@@ -55,7 +55,16 @@ export class LayerStateService {
   setActivePathId(type: CanvasType, pathId: string) {
     const activePathId = this.getActivePathId(type);
     this.activePathIdMap.set(type, pathId);
-    this.notifyChange(type);
+    const activePathLayer = this.getActivePathLayer(type);
+    const numSubPaths = activePathLayer.pathData.subPathCommands.length;
+    for (let subIdx = 0; subIdx < numSubPaths; subIdx++) {
+      // TODO: avoid sending multiple notifications like this
+      this.replaceActivePathCommand(type, activePathLayer.pathData, subIdx);
+    }
+    if (!numSubPaths) {
+      // Don't think this will ever happen, but just in case.
+      this.notifyChange(type);
+    }
   }
 
   /**

@@ -26,11 +26,10 @@
   <div
     class="inspector-container"
     fxLayout="row">
-
     <div fxLayout="column" class="inspector-panel">
-       <div class="inspector-panel-header"
+      <div class="inspector-panel-header"
         fxLayoutAlign="start center">
-        <span>SVG paths</span>
+        <span>{{morphabilityStatus === MORPHABILITY_NONE ? '' : 'Select two SVG paths:'}}</span>
       </div>
       <app-pathselector fxFlex></app-pathselector>
     </div>
@@ -43,9 +42,11 @@
         fxLayoutAlign="start center">
         <span *ngIf="morphabilityStatus !== MORPHABILITY_NONE">Status:
           <span [ngClass]="{
-            'status-text-unmorphable': morphabilityStatus === MORPHABILITY_UNMORPHABLE,
-            'status-text-morphable': morphabilityStatus === MORPHABILITY_MORPHABLE}">
-            <strong>{{morphabilityStatus === MORPHABILITY_MORPHABLE ? 'Morphable' : 'Unmorphable'}}</strong>
+            'unmorphable': morphabilityStatus === MORPHABILITY_UNMORPHABLE,
+            'morphable': morphabilityStatus === MORPHABILITY_MORPHABLE}">
+              {{morphabilityStatus === MORPHABILITY_MORPHABLE
+                ? 'looks good!'
+                : 'each pair of subpaths must have the same number of points'}}
           </span>
         </span>
       </div>

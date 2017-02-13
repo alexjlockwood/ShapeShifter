@@ -33,7 +33,7 @@ const SHOULD_LABEL_POINTS = true;
 
 const MOVE_POINT_COLOR = '#2962FF'; // Blue A400
 const NORMAL_POINT_COLOR = '#2962FF'; // Blue A400
-const SPLIT_POINT_COLOR = '#E65100'; // Orange 800
+const SPLIT_POINT_COLOR = '#E65100'; // Orange 900
 
 @Component({
   selector: 'app-canvas',

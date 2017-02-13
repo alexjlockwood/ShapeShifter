@@ -110,8 +110,7 @@ export class CanvasRulerDirective implements OnInit, OnDestroy {
     this.canvas.attr('width', width * window.devicePixelRatio);
     this.canvas.attr('height', height * window.devicePixelRatio);
 
-    const ctx =
-      (this.canvas.get(0) as HTMLCanvasElement).getContext('2d');
+    const ctx = (this.canvas.get(0) as HTMLCanvasElement).getContext('2d');
     ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
     ctx.translate(
       isHorizontal ? EXTRA_PADDING : 0,
