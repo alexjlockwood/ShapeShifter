@@ -1,6 +1,5 @@
 @import '../styles/variables';
 @import '../styles/theme';
-
 .settings-container {
   box-sizing: border-box;
   padding-left: 16px;
@@ -26,3 +25,4 @@ md-input-container {
 input:disabled {
   color: $colorBlackTextDisabled;
 }
+

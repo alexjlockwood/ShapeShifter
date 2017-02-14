@@ -13,7 +13,8 @@
       </div>
     </div>
   </div>
-  <div class="border" *ngIf="getPathList(CANVAS_START).length || getPathList(CANVAS_END).length"></div>
+  <div class="border"
+    *ngIf="getPathList(CANVAS_START).length || getPathList(CANVAS_END).length"></div>
   <div *ngIf="!!getPathList(CANVAS_END).length"
     class="path-selector-list"
     fxFlex>

@@ -1,33 +1,32 @@
-<div fxLayout="row" class="settings-container">
-<form fxLayout="column">
-  <div>
-  <md-select
-    color="accent"
-    placeholder="Interpolator"
-    [(ngModel)]="selectedInterpolator"
-    [disabled]="!isMorphable || isPlaying()"
-    name="interpolator">
-    <md-option
-      *ngFor="let interpolator of interpolators"
-      [value]="interpolator">
-      {{interpolator.label}}
-    </md-option>
-  </md-select>
-  </div>
-  <div>
-  <md-input-container>
-    <input
-      md-input
-      [disabled]="!isMorphable || isPlaying() ? '' : undefined"
-      placeholder="Duration"
-      value="300"
-      min="100"
-      max="60000"
-      step="10"
-      name="duration"
-      [(ngModel)]="duration"
-      type="number">
-  </md-input-container>
-  </div>
-</form>
+<div fxLayout="row"
+  class="settings-container">
+  <form fxLayout="column">
+    <div>
+      <md-select color="accent"
+        placeholder="Interpolator"
+        [(ngModel)]="selectedInterpolator"
+        [disabled]="!isMorphable || isPlaying()"
+        name="interpolator">
+        <md-option *ngFor="let interpolator of interpolators"
+          [value]="interpolator">
+          {{interpolator.label}}
+        </md-option>
+      </md-select>
+    </div>
+    <div>
+      <md-input-container>
+        <input md-input
+          [disabled]="!isMorphable || isPlaying() ? '' : undefined"
+          placeholder="Duration"
+          value="300"
+          min="100"
+          max="60000"
+          step="10"
+          name="duration"
+          [(ngModel)]="duration"
+          type="number">
+      </md-input-container>
+    </div>
+  </form>
 </div>
+
