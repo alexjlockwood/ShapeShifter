@@ -9,9 +9,10 @@ import { MdDialogRef } from '@angular/material';
     <p>{{ message }}</p>
   </md-dialog-content>
   <md-dialog-actions fxLayout="row" fxLayoutGap="8px">
+    <!-- The ordering here matters (it ensures that 'OK' gets focus first). -->
     <span fxFlex></span>
-    <button md-button md-dialog-close>Cancel</button>
-    <button md-button (click)="dialogRef.close(true)">OK</button>
+    <button fxFlexOrder="2" md-button (click)="dialogRef.close(true)">OK</button>
+    <button fxFlexOrder="1" md-button md-dialog-close>Cancel</button>
   </md-dialog-actions>`,
   styleUrls: ['./confirmdialog.component.scss'],
 })

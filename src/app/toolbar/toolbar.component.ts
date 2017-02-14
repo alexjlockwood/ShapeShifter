@@ -46,7 +46,7 @@ export class ToolbarComponent implements OnInit {
 
   onNewClick() {
     this.dialogsService
-      .confirm(this.viewContainerRef, 'Start from scratch?', 'You\'ll lose any unsaved changes.')
+      .confirm(this.viewContainerRef, 'Start over?', 'You\'ll lose any unsaved changes.')
       .subscribe(result => {
         if (!result) {
           return;
@@ -99,7 +99,7 @@ export class ToolbarComponent implements OnInit {
 
   onDemoClick() {
     this.dialogsService
-      .confirm(this.viewContainerRef, 'Start the demo?', 'You\'ll lose any unsaved changes.')
+      .confirm(this.viewContainerRef, 'Continue to the demo?', 'You\'ll lose any unsaved changes.')
       .subscribe(result => {
         if (!result) {
           return;
