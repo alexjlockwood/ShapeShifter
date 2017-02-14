@@ -20,15 +20,16 @@ import { HoverStateService, Type as HoverType, Hover } from '../services/hoverst
 import { CanvasResizeService } from '../services/canvasresize.service';
 import { CanvasRulerDirective } from './canvasruler.directive';
 
-// TODO: make these viewport/density-independent
 const MIN_SNAP_THRESHOLD = 1.5;
 const DRAG_TRIGGER_TOUCH_SLOP = 1;
+const SIZE_TO_POINT_RADIUS_FACTOR = 1 / 50;
+const SPLIT_POINT_RADIUS_FACTOR = 0.8;
+const SELECTED_POINT_RADIUS_FACTOR = 1.25;
+const POINT_BORDER_FACTOR = 1.075;
 
 // Canvas margin in pixels.
 export const CANVAS_MARGIN = 36;
-
 export const DEFAULT_VIEWPORT_SIZE = 24;
-
 const SHOULD_LABEL_POINTS = true;
 
 const MOVE_POINT_COLOR = '#2962FF'; // Blue A400
@@ -200,9 +201,10 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         });
     });
 
-    // TODO: this still doesn't work very well for small/large viewports and/or on resizing
-    this.pathPointRadius = 10 / this.cssScale;
-    this.splitPathPointRadius = this.pathPointRadius * 0.8;
+    const size = Math.min(containerWidth, containerHeight);
+    this.pathPointRadius =
+      size * SIZE_TO_POINT_RADIUS_FACTOR / (Math.max(1, this.cssScale));
+    this.splitPathPointRadius = this.pathPointRadius * SPLIT_POINT_RADIUS_FACTOR;
     this.draw();
     this.canvasRulers.forEach(r => r.draw());
   }
@@ -453,11 +455,13 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           radius = this.pathPointRadius;
         }
         if (pointInfo.isHoverOrSelection) {
-          // TODO: update this number to something more reasonable?
-          radius = this.pathPointRadius * 1.25;
+          radius = this.pathPointRadius * SELECTED_POINT_RADIUS_FACTOR;
         }
-        this.drawLabeledPoint(
-          ctx, pointInfo.point, radius, color, pointInfo.position);
+        const text =
+          this.cssScale > 4 || pointInfo.isHoverOrSelection
+            ? pointInfo.position
+            : undefined;
+        this.drawLabeledPoint(ctx, pointInfo.point, radius, color, text);
       }
     });
   }
@@ -504,7 +508,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
     ctx.save();
     ctx.beginPath();
-    ctx.arc(point.x, point.y, radius * 1.075, 0, 2 * Math.PI, false);
+    ctx.arc(point.x, point.y, radius * POINT_BORDER_FACTOR, 0, 2 * Math.PI, false);
     ctx.fillStyle = '#000';
     ctx.fill();
 
