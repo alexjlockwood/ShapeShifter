@@ -32,7 +32,7 @@ both must have the same number and type of drawing commands. This is problematic
   is often necessary when making two shapes compatible with each other.
 * No easy way to visualize the in-between states of the resulting path morphing animation.
 
-## Features
+## Solution
 
 Shape Shifter attempts to solve these problems by providing the following features:
 
@@ -45,12 +45,22 @@ Shape Shifter attempts to solve these problems by providing the following featur
 * Shape Shifter automatically converts incompatible pairs of SVG commands into a compatible
   format. There's no longer any need to worry about converting `L`s into `Q`s, or `A`s
   into `C`s&mdash;Shape Shifter does this all for you behind-the-scenes!
-* The ability to 'auto fix' paths. Auto fix is based on an adaptation of the
-  [Needleman-Wunsch algorithm][Needleman-Wunsch], which is used in bioinformatics
-  to align protein or nucleotide sequences.
+* Shape Shifter provides a useful utility called *auto fix*, which takes two incompatible
+  paths and attempts to make them compatible in an optimal way. Depending on the complexity
+  of the paths, auto fix may or may not generate a satisfying final result, so further
+  modification may be necessary in order to achieve the animation you're looking for.
 * The ability to export the results to `AnimatedVectorDrawable` format for use in
   Android applications. I'm open to adding support for other export formats as well, so
   feel free to file a [feature request][report-feature-request]!
+
+## How does it work?
+
+Creating Shape Shifter required learning a ton about bezier curves. Perhaps the most
+widely used concepts are [splitting Bezier curves][bezier-splits]
+and [projecting points onto Bezier curves][bezier-projections]
+
+Auto fix is powered by an adaptation of the [Needleman-Wunsch algorithm][Needleman-Wunsch],
+which is used in bioinformatics to align protein or nucleotide sequences.
 
 ## Build instructions
 
@@ -75,3 +85,5 @@ If you want to contribute, you can build and serve the web app locally as follow
   [sketch]: https://www.sketchapp.com/
   [illustrator]: http://www.adobe.com/products/illustrator.html
   [Needleman-Wunsch]: https://en.wikipedia.org/wiki/Needleman%E2%80%93Wunsch_algorithm
+  [bezier-splits]: https://pomax.github.io/bezierinfo/#splitting
+  [bezier-projections]: https://pomax.github.io/bezierinfo/#projections
