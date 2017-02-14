@@ -2,7 +2,7 @@ dist: trusty
 sudo: required
 language: node_js
 node_js:
-  - "5"
+  - "7.3.0"
 os:
   - linux
 env:
@@ -17,4 +17,3 @@ install:
 script:
   - npm run lint
   - npm run test-once
-
