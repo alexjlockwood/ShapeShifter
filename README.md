@@ -14,6 +14,8 @@ This tool currently exports to
 format for Android. That said, I am totally open to adding support for other export formats as well.
 File a [feature request][report-feature-request]!
 
+![Screen capture of tool](art/screencap.gif)
+
 ## Problem
 
 Writing high-quality [path morphing animations][adp-path-morphing]
