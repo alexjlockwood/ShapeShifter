@@ -16,7 +16,7 @@ format for Android. Exporting to web/iOS is a work in progress.
 
 If you want to contribute, you can build and serve the web app locally as follows:
 
-  1. First install [Node.js](https://nodejs.org/) and [npm](https://www.npmjs.com/).
+  1. First install [`Node.js`](https://nodejs.org/) and [`npm`](https://www.npmjs.com/).
 
   2. Clone the repository and in the root directory, run:
 
