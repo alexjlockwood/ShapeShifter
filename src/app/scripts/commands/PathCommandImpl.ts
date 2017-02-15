@@ -209,10 +209,9 @@ class PathCommandImpl implements PathCommand {
 
   // Implements the PathCommand interface.
   isMorphableWith(pathCommand: PathCommand) {
-    // TODO: this starts returning false after auto-fixing multiple times
     const scmds1 = this.subPathCommands;
     const scmds2 = pathCommand.subPathCommands;
-    return scmds1.length === scmds2.length
+    return  scmds1.length === scmds2.length
       && scmds1.every((_, i) =>
         scmds1[i].commands.length === scmds2[i].commands.length
         && scmds1[i].commands.every((__, j) =>

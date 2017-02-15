@@ -72,9 +72,11 @@ export class ToolbarComponent implements OnInit {
       resultStartCmd = numStartCmds >= numEndCmds ? from : to;
       resultEndCmd = numStartCmds >= numEndCmds ? to : from;
       // TODO: avoid calling these once-per-subIdx...
-      this.layerStateService.replaceActivePathCommand(CanvasType.Start, resultStartCmd, subIdx);
-      this.layerStateService.replaceActivePathCommand(CanvasType.End, resultEndCmd, subIdx);
+      this.layerStateService.replaceActivePathCommand(CanvasType.Start, resultStartCmd, subIdx, false);
+      this.layerStateService.replaceActivePathCommand(CanvasType.End, resultEndCmd, subIdx, false);
     }
+    this.layerStateService.notifyChange(CanvasType.Start);
+    this.layerStateService.notifyChange(CanvasType.End);
   }
 
   onExportClick() {
@@ -105,9 +107,9 @@ export class ToolbarComponent implements OnInit {
           return;
         }
         const importedVectorLayer = VectorLayerLoader.loadVectorLayerFromSvgString(DEMO_SVG_STRING);
-        this.layerStateService.setVectorLayer(CanvasType.Start, importedVectorLayer);
-        this.layerStateService.setVectorLayer(CanvasType.Preview, importedVectorLayer.clone());
-        this.layerStateService.setVectorLayer(CanvasType.End, importedVectorLayer.clone());
+        this.layerStateService.setVectorLayer(CanvasType.Preview, importedVectorLayer.clone(), false);
+        this.layerStateService.setVectorLayer(CanvasType.Start, importedVectorLayer, false);
+        this.layerStateService.setVectorLayer(CanvasType.End, importedVectorLayer.clone(), false);
         const availablePathIds: string[] = [];
         importedVectorLayer.walk((layer => {
           if (!(layer instanceof PathLayer)) {
@@ -116,9 +118,12 @@ export class ToolbarComponent implements OnInit {
           availablePathIds.push(layer.id);
         }));
         const shuffledPathIds = _.shuffle(availablePathIds);
-        this.layerStateService.setActivePathId(CanvasType.Start, shuffledPathIds[0]);
-        this.layerStateService.setActivePathId(CanvasType.Preview, shuffledPathIds[0]);
-        this.layerStateService.setActivePathId(CanvasType.End, shuffledPathIds[1]);
+        this.layerStateService.setActivePathId(CanvasType.Preview, shuffledPathIds[0], false);
+        this.layerStateService.setActivePathId(CanvasType.Start, shuffledPathIds[0], false);
+        this.layerStateService.setActivePathId(CanvasType.End, shuffledPathIds[1], false);
+        this.layerStateService.notifyChange(CanvasType.Preview);
+        this.layerStateService.notifyChange(CanvasType.Start);
+        this.layerStateService.notifyChange(CanvasType.End);
       });
   }
 

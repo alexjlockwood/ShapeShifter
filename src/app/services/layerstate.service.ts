@@ -37,10 +37,12 @@ export class LayerStateService {
    * Called by the PathSelectorComponent when a new vector layer is imported.
    * The previously set active path ID will be cleared if one exists.
    */
-  setVectorLayer(type: CanvasType, layer: VectorLayer) {
+  setVectorLayer(type: CanvasType, layer: VectorLayer, shouldNotify = true) {
     this.vectorLayerMap.set(type, layer);
     this.activePathIdMap.delete(type);
-    this.notifyChange(type);
+    if (shouldNotify) {
+      this.notifyChange(type);
+    }
   }
 
   /**
@@ -53,16 +55,16 @@ export class LayerStateService {
   /**
    * Called by the PathSelectorComponent when a new vector layer path is selected.
    */
-  setActivePathId(type: CanvasType, pathId: string) {
+  setActivePathId(type: CanvasType, pathId: string, shouldNotify = true) {
     const activePathId = this.getActivePathId(type);
     this.activePathIdMap.set(type, pathId);
     const activePathLayer = this.getActivePathLayer(type);
     const numSubPaths = activePathLayer.pathData.subPathCommands.length;
     for (let subIdx = 0; subIdx < numSubPaths; subIdx++) {
       // TODO: avoid sending multiple notifications like this
-      this.replaceActivePathCommand(type, activePathLayer.pathData, subIdx);
+      this.replaceActivePathCommand(type, activePathLayer.pathData, subIdx, shouldNotify);
     }
-    if (!numSubPaths) {
+    if (!numSubPaths && shouldNotify) {
       // Don't think this will ever happen, but just in case.
       this.notifyChange(type);
     }
@@ -93,7 +95,7 @@ export class LayerStateService {
    * conversions will be removed and an attempt to make the path compatible with
    * its target will be made.
    */
-  replaceActivePathCommand(type: CanvasType, pathCommand: PathCommand, subIdx: number) {
+  replaceActivePathCommand(type: CanvasType, pathCommand: PathCommand, subIdx: number, shouldNotify = true) {
     // Remove any existing conversions.
     pathCommand = pathCommand.unconvert(subIdx);
 
@@ -131,9 +133,13 @@ export class LayerStateService {
       }
     }
 
-    this.notifyChange(type);
-    if (hasTargetCommandChanged) {
-      this.notifyChange(targetType);
+    if (shouldNotify) {
+      this.notifyChange(type);
+      if (hasTargetCommandChanged) {
+        this.notifyChange(targetType);
+      }
+      // TODO: notifying the preview layer every time could be avoided...
+      this.notifyChange(CanvasType.Preview);
     }
   }
 
@@ -148,7 +154,7 @@ export class LayerStateService {
   /**
    * Updates the active rotation layer with the new rotation value.
    */
-  updateActiveRotationLayer(type: CanvasType, rotation: number) {
+  updateActiveRotationLayer(type: CanvasType, rotation: number, shouldNotify = true) {
     const vectorLayer = this.getVectorLayer(type);
     const activePathLayer = this.getActivePathLayer(type);
     if (!activePathLayer) {
@@ -158,7 +164,9 @@ export class LayerStateService {
       layer.pivotX = vectorLayer.width / 2;
       layer.pivotY = vectorLayer.height / 2;
       layer.rotation = rotation;
-      this.notifyChange(type);
+      if (shouldNotify) {
+        this.notifyChange(type);
+      }
     };
     const activeRotationLayer = this.getActiveRotationLayer(type);
     if (activeRotationLayer) {
@@ -190,7 +198,7 @@ export class LayerStateService {
    * Notify listeners that the layer state associated with the specified
    * canvas type has changed and that they should update their content.
    */
-  private notifyChange(type: CanvasType) {
+  notifyChange(type: CanvasType) {
     this.sources.get(type).next({
       vectorLayer: this.vectorLayerMap.get(type),
       activePathId: this.activePathIdMap.get(type),
@@ -215,7 +223,10 @@ export class LayerStateService {
    */
   reset() {
     [CanvasType.Start, CanvasType.Preview, CanvasType.End].forEach(type => {
-      this.setVectorLayer(type, undefined);
+      this.setVectorLayer(type, undefined, false);
+    });
+    [CanvasType.Start, CanvasType.Preview, CanvasType.End].forEach(type => {
+      this.notifyChange(type);
     });
   }
 

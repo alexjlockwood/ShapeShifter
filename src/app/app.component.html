@@ -38,13 +38,13 @@
       <div class="inspector-panel-header"
         fxLayout="row"
         fxLayoutAlign="start center">
-        <span *ngIf="morphabilityStatus !== MORPHABILITY_NONE">Status:
+        <span *ngIf="morphabilityStatus !== MORPHABILITY_NONE">
           <span [ngClass]="{
             'unmorphable': morphabilityStatus === MORPHABILITY_UNMORPHABLE,
             'morphable': morphabilityStatus === MORPHABILITY_MORPHABLE}">
               {{morphabilityStatus === MORPHABILITY_MORPHABLE
-                ? 'looks good!'
-                : 'each pair of subpaths must have the same number of points'}}
+                ? 'Looks good!'
+                : 'Each pair of subpaths must have the same number of points'}}
           </span>
         </span>
       </div>

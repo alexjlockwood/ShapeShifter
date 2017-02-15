@@ -22,19 +22,22 @@ export class PathSelectorComponent {
     private layerStateService: LayerStateService) { }
 
   private setVectorLayer(canvasType: CanvasType, vectorLayer: VectorLayer) {
-    this.layerStateService.setVectorLayer(canvasType, vectorLayer);
+    const canvasTypes = [canvasType];
     if (canvasType === CanvasType.Start) {
       // The preview vector layer will be identical to both the start and end
       // vector layers in terms of their structure. During the animation, its
       // active path command will be interpolated and replaced to trigger the
       // animated result.
-      this.layerStateService.setVectorLayer(CanvasType.Preview, vectorLayer.clone());
+      this.layerStateService.setVectorLayer(CanvasType.Preview, vectorLayer.clone(), false);
+      canvasTypes.push(CanvasType.Preview);
     }
+    this.layerStateService.setVectorLayer(canvasType, vectorLayer, false);
     const pathLayers = this.getPathList(canvasType);
     if (pathLayers.length === 1) {
       // Auto-select the first path if only one exists.
       this.setActivePathId(canvasType, pathLayers[0].id);
     }
+    canvasTypes.forEach(type => this.layerStateService.notifyChange(type));
   }
 
   getPathList(canvasType: CanvasType) {
@@ -55,10 +58,13 @@ export class PathSelectorComponent {
   }
 
   setActivePathId(canvasType: CanvasType, activePathId: string) {
-    this.layerStateService.setActivePathId(canvasType, activePathId);
+    // Always notify the preview layer in case the morphability status changed.
+    const canvasTypes = [canvasType, CanvasType.Preview];
     if (canvasType === CanvasType.Start) {
-      this.layerStateService.setActivePathId(CanvasType.Preview, activePathId);
+      this.layerStateService.setActivePathId(CanvasType.Preview, activePathId, false);
     }
+    this.layerStateService.setActivePathId(canvasType, activePathId, false);
+    canvasTypes.forEach(type => this.layerStateService.notifyChange(type));
   }
 
   trackPathLayer(index: number, item: PathLayer) {

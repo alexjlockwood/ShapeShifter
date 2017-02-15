@@ -27,6 +27,7 @@ const SIZE_TO_POINT_RADIUS_FACTOR = 1 / 50;
 const SPLIT_POINT_RADIUS_FACTOR = 0.8;
 const SELECTED_POINT_RADIUS_FACTOR = 1.25;
 const POINT_BORDER_FACTOR = 1.075;
+const DISABLED_CANVAS_ALPHA = 0.38;
 
 // Canvas margin in pixels.
 export const CANVAS_MARGIN = 36;
@@ -62,6 +63,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   private pointSelector: PointSelector;
   private shouldLabelPoints = false;
   private shouldDrawCanvas = false;
+  private shouldDisableCanvas = false;
   private readonly subscriptions: Subscription[] = [];
 
   constructor(
@@ -87,6 +89,9 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           this.activePathId = event.activePathId;
           // TODO: clear the preview canvas when things become unmorphable
           this.shouldDrawCanvas = !!this.vectorLayer && !!this.activePathId;
+          if (this.canvasType === CanvasType.Preview && this.shouldDrawCanvas) {
+            this.shouldDisableCanvas = event.morphabilityStatus !== MorphabilityStatus.Morphable;
+          }
           const newWidth = this.viewportWidth;
           const newHeight = this.viewportHeight;
           const didSizeChange = oldWidth !== newWidth || oldHeight !== newHeight;
@@ -242,7 +247,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     ctx.clearRect(0, 0, this.viewportWidth, this.viewportHeight);
 
     // TODO: use this offscreen context in the future somehow...
-    const currentAlpha = 1;
+    const currentAlpha = this.shouldDisableCanvas ? DISABLED_CANVAS_ALPHA : 1;
     if (currentAlpha < 1) {
       offscreenCtx.save();
       offscreenCtx.scale(this.attrScale, this.attrScale);
