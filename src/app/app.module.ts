@@ -20,6 +20,7 @@ import { CanvasRulerDirective } from './canvas/canvasruler.directive';
 import { SettingsComponent } from './settings/settings.component';
 import { ToolbarComponent } from './toolbar/toolbar.component';
 import { DialogService, HelpDialogComponent, ConfirmDialogComponent } from './dialogs';
+import { SettingsService } from './services/settings.service';
 import { PathSelectorComponent } from './pathselector/pathselector.component';
 
 import 'hammerjs';
@@ -53,6 +54,7 @@ import 'hammerjs';
     HoverStateService,
     CanvasResizeService,
     DialogService,
+    SettingsService,
   ],
   entryComponents: [
     ConfirmDialogComponent,

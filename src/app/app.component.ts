@@ -36,6 +36,7 @@ export class AppComponent implements OnInit, OnDestroy {
   MORPHABILITY_UNMORPHABLE = MorphabilityStatus.Unmorphable;
   MORPHABILITY_MORPHABLE = MorphabilityStatus.Morphable;
   morphabilityStatus = MorphabilityStatus.None;
+  wasMorphable = false;
 
   private readonly subscriptions: Subscription[] = [];
 
@@ -59,8 +60,7 @@ export class AppComponent implements OnInit, OnDestroy {
     this.initBeforeOnLoadListener();
 
     const updateCanvasSizes = () => {
-      const numCanvases =
-        this.morphabilityStatus === MorphabilityStatus.Morphable ? 3 : 2;
+      const numCanvases = this.wasMorphable ? 3 : 2;
       const width = this.canvasContainer.width() / numCanvases;
       const height = this.canvasContainer.height();
       if (this.currentPaneWidth !== width || this.currentPaneHeight !== height) {
@@ -72,6 +72,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
     const layerStateListener = (event: LayerStateEvent) => {
       const status = event.morphabilityStatus;
+      this.wasMorphable = this.wasMorphable || status === MorphabilityStatus.Morphable;
       if (this.morphabilityStatus !== status) {
         this.morphabilityStatus = status;
         updateCanvasSizes();

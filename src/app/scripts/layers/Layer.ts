@@ -9,12 +9,12 @@ export interface Layer {
   /**
    * This layers children layers, or undefined if none exist.
    */
-  children: (GroupLayer | ClipPathLayer | PathLayer)[] | undefined;
+  readonly children: (GroupLayer | ClipPathLayer | PathLayer)[] | undefined;
 
   /**
    * A string uniquely identifying this layer in its tree.
    */
-  id: string;
+  readonly id: string;
 
   /**
    * Returns the first descendent layer with the specified ID.

@@ -3,8 +3,13 @@ import { newPathCommand } from '../commands';
 import { ColorUtil, MathUtil, SvgUtil } from '../common';
 import { PathParser } from '.';
 
+// This ID is reserved for the active path layer's parent group layer
+// (i.e. if the user adds a rotation to the path morphing animation).
+export const ROTATION_GROUP_LAYER_ID = 'rotation_group';
+
 /**
- * Utility function that takes an SVG string as input and returns a VectorLayer model object.
+ * Utility function that takes an SVG string as input and
+ * returns a VectorLayer model object.
  */
 export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
   const parser = new DOMParser();
@@ -18,7 +23,9 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
       .replace(/[^\w_]+/g, '');
   };
 
-  const usedIds = {};
+  const usedIds = {
+    ROTATION_GROUP_LAYER_ID: true,
+  };
 
   const makeFinalNodeIdFn = (node, typeIdPrefix: string) => {
     const finalId = getUniqueId(
@@ -52,7 +59,6 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
       }
     };
 
-    // set attributes
     simpleAttrFn('stroke', 'strokeColor');
     simpleAttrFn('stroke-width', 'strokeWidth');
     simpleAttrFn('stroke-linecap', 'strokeLinecap');
@@ -62,14 +68,12 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
     simpleAttrFn('fill', 'fillColor');
     simpleAttrFn('fill-opacity', 'fillAlpha');
 
-    // add transforms
     if (node.transform) {
       const transforms = Array.from(node.transform.baseVal).reverse();
       context.transforms = context.transforms ? context.transforms.slice() : [];
       context.transforms.splice(0, 0, ...transforms);
     }
 
-    // see if this is a path
     let path;
     if (node instanceof SVGPathElement) {
       path = (node.attributes as any).d.value;
@@ -116,7 +120,6 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
         path = PathParser.transformPathString(path, context.transforms.map(t => t.matrix));
       }
 
-      // create a path layer
       return new PathLayer(
         makeFinalNodeIdFn(node, 'path'),
         newPathCommand(path),
@@ -136,7 +139,6 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
         .map(child => nodeToLayerDataFn(child, Object.assign({}, context)))
         .filter(layer => !!layer);
       if (layers && layers.length) {
-        // create a group (there are valid children)
         return new GroupLayer(
           layers,
           makeFinalNodeIdFn(node, 'group'),
@@ -156,7 +158,7 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
     width = documentElement.viewBox.baseVal.width;
     height = documentElement.viewBox.baseVal.height;
 
-    // fake a translate transform for the viewbox
+    // Fake a translate transform for the viewbox.
     docElContext.transforms = [
       {
         matrix: {

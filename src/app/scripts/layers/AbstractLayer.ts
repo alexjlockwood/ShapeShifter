@@ -7,8 +7,8 @@ import { Matrix } from '../common';
  */
 export abstract class AbstractLayer implements Layer {
   constructor(
-    public children: Array<GroupLayer | ClipPathLayer | PathLayer> | undefined,
-    public id: string,
+    public readonly children: Array<GroupLayer | ClipPathLayer | PathLayer> | undefined,
+    public readonly id: string,
   ) { }
 
   // Implements the Layer interface.

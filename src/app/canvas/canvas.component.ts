@@ -13,12 +13,13 @@ import { CanvasType } from '../CanvasType';
 import * as $ from 'jquery';
 import { Point, Matrix, MathUtil, ColorUtil, SvgUtil } from '../scripts/common';
 import { AnimatorService } from '../services/animator.service';
-import { LayerStateService } from '../services/layerstate.service';
+import { LayerStateService, MorphabilityStatus } from '../services/layerstate.service';
 import { Subscription } from 'rxjs/Subscription';
 import { SelectionStateService, Selection } from '../services/selectionstate.service';
 import { HoverStateService, Type as HoverType, Hover } from '../services/hoverstate.service';
 import { CanvasResizeService } from '../services/canvasresize.service';
 import { CanvasRulerDirective } from './canvasruler.directive';
+import { SettingsService } from '../services/settings.service';
 
 const MIN_SNAP_THRESHOLD = 1.5;
 const DRAG_TRIGGER_TOUCH_SLOP = 1;
@@ -30,7 +31,6 @@ const POINT_BORDER_FACTOR = 1.075;
 // Canvas margin in pixels.
 export const CANVAS_MARGIN = 36;
 export const DEFAULT_VIEWPORT_SIZE = 24;
-const SHOULD_LABEL_POINTS = true;
 
 const MOVE_POINT_COLOR = '#2962FF'; // Blue A400
 const NORMAL_POINT_COLOR = '#2962FF'; // Blue A400
@@ -60,6 +60,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   private splitPathPointRadius: number;
   private currentHover: Hover;
   private pointSelector: PointSelector;
+  private shouldLabelPoints = false;
+  private shouldDrawCanvas = false;
   private readonly subscriptions: Subscription[] = [];
 
   constructor(
@@ -68,7 +70,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     private hoverStateService: HoverStateService,
     private layerStateService: LayerStateService,
     private animatorService: AnimatorService,
-    private selectionStateService: SelectionStateService) { }
+    private selectionStateService: SelectionStateService,
+    private settingsService: SettingsService) { }
 
   ngAfterViewInit() {
     this.isViewInit = true;
@@ -82,6 +85,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           const oldHeight = this.viewportHeight;
           this.vectorLayer = event.vectorLayer;
           this.activePathId = event.activePathId;
+          // TODO: clear the preview canvas when things become unmorphable
+          this.shouldDrawCanvas = !!this.vectorLayer && !!this.activePathId;
           const newWidth = this.viewportWidth;
           const newHeight = this.viewportHeight;
           const didSizeChange = oldWidth !== newWidth || oldHeight !== newHeight;
@@ -104,17 +109,33 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       // Preview canvas specific setup.
       this.subscriptions.push(
         this.animatorService.animatedValueStream.subscribe(fraction => {
-          const startLayer = this.layerStateService.getActivePathLayer(CanvasType.Start);
-          const previewLayer = this.layerStateService.getActivePathLayer(CanvasType.Preview);
-          const endLayer = this.layerStateService.getActivePathLayer(CanvasType.End);
-          if (!startLayer || !previewLayer || !endLayer) {
-            // TODO: need to cancel animation if something abruptly changes here?
-            return;
+          let shouldDraw = false;
+          const startPathLayer = this.layerStateService.getActivePathLayer(CanvasType.Start);
+          const previewPathLayer = this.layerStateService.getActivePathLayer(CanvasType.Preview);
+          const endPathLayer = this.layerStateService.getActivePathLayer(CanvasType.End);
+          if (startPathLayer && previewPathLayer && endPathLayer) {
+            // Note that there is no need to broadcast layer state changes
+            // for the preview canvas.
+            previewPathLayer.interpolate(startPathLayer, endPathLayer, fraction);
+            shouldDraw = true;
           }
-          // Note that there is no need to broadcast layer state changes
-          // for the preview canvas.
-          previewLayer.interpolate(startLayer, endLayer, fraction);
-          this.draw();
+          const startGroupLayer = this.layerStateService.getActiveRotationLayer(CanvasType.Start);
+          const previewGroupLayer = this.layerStateService.getActiveRotationLayer(CanvasType.Preview);
+          const endGroupLayer = this.layerStateService.getActiveRotationLayer(CanvasType.End);
+          if (startGroupLayer && previewGroupLayer && endGroupLayer) {
+            previewGroupLayer.interpolate(startGroupLayer, endGroupLayer, fraction);
+            shouldDraw = true;
+          }
+          if (shouldDraw) {
+            this.draw();
+          }
+        }));
+      this.subscriptions.push(
+        this.settingsService.addListener(settings => {
+          if (this.shouldLabelPoints !== settings.shouldLabelPoints) {
+            this.shouldLabelPoints = settings.shouldLabelPoints;
+            this.draw();
+          }
         }));
     } else {
       // Non-preview canvas specific setup.
@@ -229,7 +250,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
 
     const drawingCtx = currentAlpha < 1 ? offscreenCtx : ctx;
-    if (this.vectorLayer && this.activePathId) {
+    if (this.shouldDrawCanvas) {
       this.drawVectorLayer(drawingCtx);
       this.drawSelections(drawingCtx);
       this.drawLabeledPoints(drawingCtx);
@@ -356,8 +377,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
   // Draw any labeled points.
   private drawLabeledPoints(ctx: CanvasRenderingContext2D) {
-    if (!SHOULD_LABEL_POINTS
-      || this.canvasType === CanvasType.Preview) {
+    if (this.canvasType === CanvasType.Preview && !this.shouldLabelPoints) {
       return;
     }
 
@@ -445,7 +465,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         if (pointInfo.isMove) {
           color = MOVE_POINT_COLOR;
           radius = this.pathPointRadius;
-        } else if (pointInfo.isSplit) {
+        } else if (pointInfo.isSplit && this.canvasType !== CanvasType.Preview) {
           color = SPLIT_POINT_COLOR;
           radius = this.splitPathPointRadius;
         } else {

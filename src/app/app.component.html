@@ -14,7 +14,7 @@
       fxLayoutAlign="center center"
       fxFlex>
       <app-canvas [canvasType]="START_CANVAS"></app-canvas>
-      <app-canvas *ngIf="morphabilityStatus === MORPHABILITY_MORPHABLE"
+      <app-canvas *ngIf="wasMorphable"
         [canvasType]="PREVIEW_CANVAS"></app-canvas>
       <app-canvas [canvasType]="END_CANVAS"></app-canvas>
     </div>

@@ -2,11 +2,12 @@ import { Injectable } from '@angular/core';
 import { Subject } from 'rxjs/Subject';
 import { Subscription } from 'rxjs/Subscription';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
-import { VectorLayer, PathLayer } from '../scripts/layers';
+import { Layer, VectorLayer, PathLayer, GroupLayer } from '../scripts/layers';
 import { Observable } from 'rxjs/Observable';
 import { CanvasType } from '../CanvasType';
 import { PathCommand } from '../scripts/commands';
 import { AutoAwesome } from '../scripts/common';
+import { ROTATION_GROUP_LAYER_ID } from '../scripts/parsers';
 
 /**
  * The global state service that is in charge of keeping track of the loaded
@@ -134,6 +135,55 @@ export class LayerStateService {
     if (hasTargetCommandChanged) {
       this.notifyChange(targetType);
     }
+  }
+
+  /**
+   * Returns the active rotation layer, which will always be the immediate parent
+   * of the active path layer.
+   */
+  getActiveRotationLayer(type: CanvasType) {
+    return this.getVectorLayer(type).findLayer(ROTATION_GROUP_LAYER_ID) as GroupLayer;
+  }
+
+  /**
+   * Updates the active rotation layer with the new rotation value.
+   */
+  updateActiveRotationLayer(type: CanvasType, rotation: number) {
+    const vectorLayer = this.getVectorLayer(type);
+    const activePathLayer = this.getActivePathLayer(type);
+    if (!activePathLayer) {
+      return;
+    }
+    const updateRotationLayerFn = (layer: GroupLayer) => {
+      layer.pivotX = vectorLayer.width / 2;
+      layer.pivotY = vectorLayer.height / 2;
+      layer.rotation = rotation;
+      this.notifyChange(type);
+    };
+    const activeRotationLayer = this.getActiveRotationLayer(type);
+    if (activeRotationLayer) {
+      updateRotationLayerFn(activeRotationLayer);
+      return;
+    }
+    const findActivePathLayerParentFn = (current: Layer, parent: Layer) => {
+      if (current === activePathLayer) {
+        return parent;
+      }
+      if (current.children) {
+        for (const child of current.children) {
+          const potentialParent = findActivePathLayerParentFn(child, current);
+          if (potentialParent) {
+            return potentialParent;
+          }
+        }
+      }
+      return undefined;
+    };
+    const newRotationLayer = new GroupLayer([activePathLayer], ROTATION_GROUP_LAYER_ID);
+    const activePathLayerParent = findActivePathLayerParentFn(vectorLayer, undefined);
+    const activePathLayerIndex = activePathLayerParent.children.indexOf(activePathLayer);
+    activePathLayerParent.children[activePathLayerIndex] = newRotationLayer;
+    updateRotationLayerFn(newRotationLayer);
   }
 
   /**
