@@ -6,14 +6,20 @@ import { GroupLayer, ClipPathLayer, PathLayer } from '.';
  */
 export interface Layer {
 
-  /** This layers children layers, or undefined if none exist. */
+  /**
+   * This layers children layers, or undefined if none exist.
+   */
   children: (GroupLayer | ClipPathLayer | PathLayer)[] | undefined;
 
-  /** A string uniquely identifying this layer in its tree. */
+  /**
+   * A string uniquely identifying this layer in its tree.
+   */
   id: string;
 
-  /** Returns the first descendent layer with the specified ID. */
-  findLayerById(id: string): Layer | undefined;
+  /**
+   * Returns the first descendent layer with the specified ID.
+   */
+  findLayer(id: string): Layer | undefined;
 
   /**
    * Returns true iff this layer is morphable with the specified layer. Two
@@ -23,6 +29,11 @@ export interface Layer {
    * each pair of paths are morphable with each other.
    */
   isMorphableWith(layer: Layer): boolean;
+
+  /**
+   * Interpolate this layer between a start and end layer of the same type.
+   */
+  interpolate<T extends Layer>(start: T, end: T, fraction: number): void;
 
   /**
    * Walks the layer tree, executing beforeFunc on each node using a

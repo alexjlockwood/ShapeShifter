@@ -11,4 +11,8 @@ export class ClipPathLayer extends AbstractLayer {
   ) {
     super(undefined, id);
   }
+
+  interpolate(start: ClipPathLayer, end: ClipPathLayer, fraction: number) {
+    this.pathData = this.pathData.interpolate(start.pathData, end.pathData, fraction);
+  }
 }

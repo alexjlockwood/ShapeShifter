@@ -113,9 +113,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           }
           // Note that there is no need to broadcast layer state changes
           // for the preview canvas.
-          previewLayer.pathData =
-            previewLayer.pathData.interpolate(
-              startLayer.pathData, endLayer.pathData, fraction);
+          previewLayer.interpolate(startLayer, endLayer, fraction);
           this.draw();
         }));
     } else {
@@ -565,7 +563,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       // A mouse down event ocurred on top of a point. Create a point selector
       // and track that sh!at.
       const selectedCmd =
-        (this.vectorLayer.findLayerById(selectedPointId.pathId) as PathLayer)
+        (this.vectorLayer.findLayer(selectedPointId.pathId) as PathLayer)
           .pathData
           .subPathCommands[selectedPointId.subIdx]
           .commands[selectedPointId.cmdIdx];
@@ -632,7 +630,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
           // TODO: use layerStateService to get the active path id instead
           const activeLayer =
-            this.vectorLayer.findLayerById(selectedPointId.pathId) as PathLayer;
+            this.vectorLayer.findLayer(selectedPointId.pathId) as PathLayer;
 
           // Delete the old drag point from the path.
           activeLayer.pathData =

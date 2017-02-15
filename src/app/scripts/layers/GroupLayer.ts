@@ -1,5 +1,6 @@
 import { AbstractLayer } from './AbstractLayer';
 import { ClipPathLayer, PathLayer } from '.';
+import { MathUtil } from '../common';
 
 /**
  * Model object that mirrors the VectorDrawable's '<group>' element.
@@ -17,5 +18,15 @@ export class GroupLayer extends AbstractLayer {
     public translateY = 0,
   ) {
     super(children || [], id);
+  }
+
+  interpolate(start: GroupLayer, end: GroupLayer, fraction: number) {
+    this.pivotX = MathUtil.lerp(start.pivotX, end.pivotX, fraction);
+    this.pivotY = MathUtil.lerp(start.pivotY, end.pivotY, fraction);
+    this.rotation = MathUtil.lerp(start.rotation, end.rotation, fraction);
+    this.scaleX = MathUtil.lerp(start.scaleX, end.scaleX, fraction);
+    this.scaleY = MathUtil.lerp(start.scaleY, end.scaleY, fraction);
+    this.translateX = MathUtil.lerp(start.translateX, end.translateX, fraction);
+    this.translateY = MathUtil.lerp(start.translateY, end.translateY, fraction);
   }
 }

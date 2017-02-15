@@ -1,5 +1,6 @@
 import { AbstractLayer } from './AbstractLayer';
 import { Layer, GroupLayer, ClipPathLayer, PathLayer } from '.';
+import { MathUtil } from '../common';
 
 /**
  * Model object that mirrors the VectorDrawable's '<vector>' element.
@@ -14,6 +15,10 @@ export class VectorLayer extends AbstractLayer {
     public alpha = 1,
   ) {
     super(children || [], id);
+  }
+
+  interpolate(start: VectorLayer, end: VectorLayer, fraction: number) {
+    this.alpha = MathUtil.lerp(start.alpha, end.alpha, fraction);
   }
 
   clone(): VectorLayer {

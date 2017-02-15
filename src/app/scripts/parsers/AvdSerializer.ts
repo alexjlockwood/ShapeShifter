@@ -49,7 +49,7 @@ export function vectorLayerAnimationToAvdXmlString(
     animationNode.setAttribute('name', 'android:animation');
     targetNode.appendChild(animationNode);
 
-    const layer = vectorLayer.findLayerById(layerId);
+    const layer = vectorLayer.findLayer(layerId);
     const animatorNode = xmlDoc.createElement('objectAnimator');
     animatorNode.setAttributeNS(XMLNS_NS, 'xmlns:android', ANDROID_NS);
     animatorNode.setAttributeNS(ANDROID_NS, 'android:name', layerId);

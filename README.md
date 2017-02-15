@@ -57,7 +57,7 @@ Shape Shifter attempts to solve these problems by providing the following featur
 
 Creating Shape Shifter required learning a ton about bezier curves. Perhaps the most
 widely used concepts are [splitting Bezier curves][bezier-splits]
-and [projecting points onto Bezier curves][bezier-projections]
+and [projecting points onto Bezier curves][bezier-projections].
 
 Auto fix is powered by an adaptation of the [Needleman-Wunsch algorithm][Needleman-Wunsch],
 which is used in bioinformatics to align protein or nucleotide sequences.

@@ -75,7 +75,7 @@ export class InspectorComponent implements OnInit, OnDestroy {
     if (!pathId) {
       return undefined;
     }
-    return (vectorLayer.findLayerById(pathId) as PathLayer).pathData;
+    return (vectorLayer.findLayer(pathId) as PathLayer).pathData;
   }
 
   toggleExpandedState(subIdx: number) {

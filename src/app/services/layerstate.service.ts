@@ -84,7 +84,7 @@ export class LayerStateService {
     if (!vectorLayer || !activePathId) {
       return undefined;
     }
-    return vectorLayer.findLayerById(activePathId) as PathLayer;
+    return vectorLayer.findLayer(activePathId) as PathLayer;
   }
 
   /**

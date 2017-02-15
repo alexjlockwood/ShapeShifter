@@ -3,22 +3,22 @@ import { Layer, GroupLayer, ClipPathLayer, PathLayer } from '.';
 import { Matrix } from '../common';
 
 /**
- * Root class for all layer model classes. Primarily for code reuse.
+ * Root class for all layer model classes.
  */
 export abstract class AbstractLayer implements Layer {
   constructor(
-    public children: (GroupLayer | ClipPathLayer | PathLayer)[] | undefined,
+    public children: Array<GroupLayer | ClipPathLayer | PathLayer> | undefined,
     public id: string,
   ) { }
 
   // Implements the Layer interface.
-  findLayerById(id: string): Layer | undefined {
+  findLayer(id: string): Layer | undefined {
     if (this.id === id) {
       return this;
     }
     if (this.children) {
       for (const child of this.children) {
-        const layer = child.findLayerById(id);
+        const layer = child.findLayer(id);
         if (layer) {
           return layer;
         }
@@ -28,11 +28,14 @@ export abstract class AbstractLayer implements Layer {
   }
 
   // Implements the Layer interface.
+  abstract interpolate<T extends Layer>(start: T, end: T, fraction: number): void;
+
+  // Implements the Layer interface.
   isMorphableWith(layer: Layer) {
     if (this.constructor !== layer.constructor) {
       return false;
     }
-    if (this instanceof PathLayer) {
+    if (this instanceof PathLayer || this instanceof ClipPathLayer) {
       return this.pathData.isMorphableWith((layer as PathLayer).pathData);
     }
     if (!this.children) {

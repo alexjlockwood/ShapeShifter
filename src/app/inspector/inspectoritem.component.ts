@@ -139,7 +139,7 @@ export class InspectorItemComponent implements OnInit, OnDestroy {
   private getPathCommand() {
     const vectorLayer = this.layerStateService.getVectorLayer(this.canvasType);
     const pathId = this.layerStateService.getActivePathId(this.canvasType);
-    return (vectorLayer.findLayerById(pathId) as PathLayer).pathData;
+    return (vectorLayer.findLayer(pathId) as PathLayer).pathData;
   }
 
   isReversible() {

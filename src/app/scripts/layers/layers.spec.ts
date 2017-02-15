@@ -15,9 +15,9 @@ describe('AbstractLayer', () => {
   const gl4 = new GroupLayer([pl7, pl8], 'gl4');
   const vl = new VectorLayer([gl3, gl4], 'vector');
   it('findLayerById #1', () => {
-    expect(vl.findLayerById('vector')).toEqual(vl);
+    expect(vl.findLayer('vector')).toEqual(vl);
   });
   it('findLayerById #2', () => {
-    expect(vl.findLayerById('pl1').id).toEqual('pl1');
+    expect(vl.findLayer('pl1').id).toEqual('pl1');
   });
 });
