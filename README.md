@@ -6,8 +6,8 @@
 
 -----
 
-Shape Shifter is a simple web-app that greatly simplifies the process of
-creating beautiful [path morphing animations][adp-path-morphing].
+Shape Shifter is a simple web-app that simplifies the process of
+creating SVG-based [path morphing animations][adp-path-morphing].
 
 This tool currently exports to
 [`AnimatedVectorDrawable`](https://developer.android.com/reference/android/graphics/drawable/AnimatedVectorDrawable.html)
