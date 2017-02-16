@@ -8,14 +8,7 @@
       "root": "src",
       "outDir": "dist",
       "assets": [
-        "assets/demoicon.svg",
-        "assets/pauseplay-white.png",
-	      "assets/playpause-white.png",
-        "assets/shapeshifter.svg",
-        "assets/contribute.svg",
-        "assets/reverse.svg",
-        "assets/autofix.svg",
-        "assets/screencap.jpg",
+        "assets",
         "favicon.ico"
       ],
       "index": "index.html",
