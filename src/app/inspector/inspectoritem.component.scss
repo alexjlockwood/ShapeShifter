@@ -2,6 +2,7 @@
 @import '../styles/theme';
 .command-container {
   box-sizing: "border-box";
+  min-width: 240px;
   height: 20px;
   padding-top: 2px;
   padding-bottom: 2px;

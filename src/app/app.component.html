@@ -27,7 +27,7 @@
       class="inspector-panel">
       <div class="inspector-panel-header"
         fxLayoutAlign="start center">
-        <span>{{morphabilityStatus === MORPHABILITY_NONE ? '' : 'Select 2 paths'}}</span>
+        <span>{{morphabilityStatus === MORPHABILITY_NONE ? '' : 'Select 2 SVG paths'}}</span>
       </div>
       <app-pathselector fxFlex></app-pathselector>
     </div>
@@ -44,7 +44,7 @@
             'morphable': morphabilityStatus === MORPHABILITY_MORPHABLE}">
               {{morphabilityStatus === MORPHABILITY_MORPHABLE
                 ? 'Looks good!'
-                : 'Each pair of subpaths must have the same number of points'}}
+                : 'Unmorphable'}}
           </span>
         </span>
       </div>
