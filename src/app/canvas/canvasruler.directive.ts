@@ -8,7 +8,6 @@ import { CanvasResizeService } from '../services/canvasresize.service';
 import { Point } from '../scripts/common';
 import * as $ from 'jquery';
 import { Subscription } from 'rxjs/Subscription';
-import { VectorLayer } from '../scripts/layers';
 import { CANVAS_MARGIN, DEFAULT_VIEWPORT_SIZE } from './canvas.component';
 import * as _ from 'lodash';
 
@@ -42,11 +41,8 @@ export class CanvasRulerDirective implements OnInit, OnDestroy {
       this.layerStateService.addListener(
         this.canvasType, event => {
           const vl = event.vectorLayer;
-          if (!vl) {
-            return;
-          }
-          const newWidth = vl.width;
-          const newHeight = vl.height;
+          const newWidth = vl ? vl.width : DEFAULT_VIEWPORT_SIZE;
+          const newHeight = vl ? vl.height : DEFAULT_VIEWPORT_SIZE;
           const didSizeChange =
             this.vlWidth !== newWidth || this.vlHeight !== newHeight;
           if (didSizeChange) {

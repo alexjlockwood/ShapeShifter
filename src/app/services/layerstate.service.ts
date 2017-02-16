@@ -17,7 +17,7 @@ import { ROTATION_GROUP_LAYER_ID } from '../scripts/parsers';
 export class LayerStateService {
   private readonly vectorLayerMap = new Map<CanvasType, VectorLayer>();
   private readonly activePathIdMap = new Map<CanvasType, string>();
-  private readonly sources = new Map<CanvasType, Subject<Event>>();
+  private readonly sources = new Map<CanvasType, BehaviorSubject<Event>>();
   private readonly streams = new Map<CanvasType, Observable<Event>>();
   private statusSource = new BehaviorSubject<MorphabilityStatus>(MorphabilityStatus.None);
   private statusStream = this.statusSource.asObservable();
@@ -25,11 +25,9 @@ export class LayerStateService {
   constructor() {
     [CanvasType.Start, CanvasType.Preview, CanvasType.End]
       .forEach(type => {
-        this.vectorLayerMap.set(type, undefined);
         this.sources.set(type, new BehaviorSubject<Event>({
           vectorLayer: undefined,
           activePathId: undefined,
-          morphabilityStatus: MorphabilityStatus.None,
         }));
         this.streams.set(type, this.sources.get(type).asObservable());
       });
@@ -150,7 +148,11 @@ export class LayerStateService {
    * of the active path layer.
    */
   getActiveRotationLayer(type: CanvasType) {
-    return this.getVectorLayer(type).findLayer(ROTATION_GROUP_LAYER_ID) as GroupLayer;
+    const vectorLayer = this.getVectorLayer(type);
+    if (!vectorLayer) {
+      return undefined;
+    }
+    return vectorLayer.findLayer(ROTATION_GROUP_LAYER_ID) as GroupLayer;
   }
 
   /**
@@ -204,8 +206,11 @@ export class LayerStateService {
     this.sources.get(type).next({
       vectorLayer: this.vectorLayerMap.get(type),
       activePathId: this.activePathIdMap.get(type),
-      morphabilityStatus: this.getMorphabilityStatus(),
     });
+    const morphabilityStatus = this.getMorphabilityStatus();
+    if (this.statusSource.getValue() !== morphabilityStatus) {
+      this.statusSource.next(morphabilityStatus);
+    }
   }
 
   private getMorphabilityStatus() {
@@ -232,6 +237,10 @@ export class LayerStateService {
   addListener(type: CanvasType, callback: (layerStateEvent: Event) => void) {
     return this.streams.get(type).subscribe(callback);
   }
+
+  getMorphabilityStatusObservable() {
+    return this.statusSource.asObservable();
+  }
 }
 
 // TODO: also need to handle case where paths are invalid (i.e. unequal # of subpaths)
@@ -244,5 +253,4 @@ export enum MorphabilityStatus {
 export interface Event {
   vectorLayer: VectorLayer | undefined;
   activePathId: string | undefined;
-  morphabilityStatus: MorphabilityStatus;
 }

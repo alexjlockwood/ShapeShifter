@@ -16,7 +16,7 @@
   </button>
   <button md-icon-button
     class="toolbar-action-button"
-    [disabled]="morphabilityStatus === MORPHABILITY_NONE"
+    [disabled]="this.morphabilityStatus | async | isEqualTo: MORPHABILITY_NONE"
     (click)="onAutoFixClick()"
     mdTooltip="Auto fix"
     mdTooltipShowDelay="500"
@@ -25,7 +25,7 @@
   </button>
   <button md-icon-button
     class="toolbar-action-button"
-    [disabled]="morphabilityStatus !== MORPHABILITY_MORPHABLE"
+    [disabled]="this.morphabilityStatus | async | isNotEqualTo: MORPHABILITY_MORPHABLE"
     mdTooltip="Export"
     mdTooltipPosition="below"
     mdTooltipShowDelay="500"

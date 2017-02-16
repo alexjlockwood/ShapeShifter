@@ -43,10 +43,11 @@ export class InspectorItemComponent implements OnInit, OnDestroy {
     this.subscriptions.push(
       this.selectionStateService.stream.subscribe(
         (selections: Selection[]) => {
-          this.isSelected = _.some(selections, {
+          const activePathId = this.layerStateService.getActivePathId(this.canvasType);
+          this.isSelected = activePathId && _.some(selections, {
             source: this.canvasType,
             commandId: {
-              pathId: this.layerStateService.getActivePathId(this.canvasType),
+              pathId: activePathId,
               subIdx: this.subIdx,
               cmdIdx: this.cmdIdx,
             }
@@ -125,19 +126,23 @@ export class InspectorItemComponent implements OnInit, OnDestroy {
   }
 
   private getPathCommand() {
-    const vectorLayer = this.layerStateService.getVectorLayer(this.canvasType);
-    const pathId = this.layerStateService.getActivePathId(this.canvasType);
-    return (vectorLayer.findLayer(pathId) as PathLayer).pathData;
+    const pathLayer = this.layerStateService.getActivePathLayer(this.canvasType);
+    if (!pathLayer) {
+      return undefined;
+    }
+    return pathLayer.pathData;
   }
 
   isReversible() {
+    const pathCommand = this.getPathCommand();
     return this.cmdIdx === 0
-      && this.getPathCommand().subPathCommands[this.subIdx].commands.length > 1;
+      && pathCommand && pathCommand.subPathCommands[this.subIdx].commands.length > 1;
   }
 
   isShiftable() {
+    const pathCommand = this.getPathCommand();
     return this.cmdIdx === 0
-      && this.getPathCommand().subPathCommands[this.subIdx].isClosed;
+      && pathCommand && pathCommand.subPathCommands[this.subIdx].isClosed;
   }
 
   isSplittable() {

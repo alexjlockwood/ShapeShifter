@@ -70,18 +70,14 @@ export class AppComponent implements OnInit, OnDestroy {
       }
     };
 
-    const layerStateListener = (event: LayerStateEvent) => {
-      const status = event.morphabilityStatus;
-      this.wasMorphable = this.wasMorphable || status === MorphabilityStatus.Morphable;
-      if (this.morphabilityStatus !== status) {
-        this.morphabilityStatus = status;
-        updateCanvasSizes();
-      }
-    };
-
-    [CanvasType.Start, CanvasType.End].forEach(type => {
-      this.subscriptions.push(this.layerStateService.addListener(type, layerStateListener));
-    });
+    this.subscriptions.push(
+      this.layerStateService.getMorphabilityStatusObservable().subscribe(status => {
+        this.wasMorphable = this.wasMorphable || status === MorphabilityStatus.Morphable;
+        if (this.morphabilityStatus !== status) {
+          this.morphabilityStatus = status;
+          updateCanvasSizes();
+        }
+      }));
 
     ELEMENT_RESIZE_DETECTOR.listenTo(this.canvasContainer.get(0), el => {
       updateCanvasSizes();

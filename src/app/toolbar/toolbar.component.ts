@@ -15,6 +15,7 @@ import { HoverStateService } from '../services/hoverstate.service';
 import { DIGIT_DEMO_SVG_STRING, ANIMALS_DEMO_SVG_STRING } from './demos';
 import { VectorLayerLoader } from '../scripts/parsers';
 import { PathLayer } from '../scripts/layers';
+import { Observable } from 'rxjs/Observable';
 
 @Component({
   selector: 'app-toolbar',
@@ -25,7 +26,7 @@ export class ToolbarComponent implements OnInit {
   MORPHABILITY_NONE = MorphabilityStatus.None;
   MORPHABILITY_UNMORPHABLE = MorphabilityStatus.Unmorphable;
   MORPHABILITY_MORPHABLE = MorphabilityStatus.Morphable;
-  morphabilityStatus = MorphabilityStatus.None;
+  morphabilityStatus: Observable<MorphabilityStatus>;
   private readonly demoMap: Map<string, string> = new Map();
 
   constructor(
@@ -39,12 +40,7 @@ export class ToolbarComponent implements OnInit {
   ngOnInit() {
     this.demoMap.set('Morphing digits', DIGIT_DEMO_SVG_STRING);
     this.demoMap.set('Morphing animals', ANIMALS_DEMO_SVG_STRING);
-    this.layerStateService.addListener(CanvasType.Start, (event: LayerStateEvent) => {
-      this.morphabilityStatus = event.morphabilityStatus;
-    });
-    this.layerStateService.addListener(CanvasType.End, (event: LayerStateEvent) => {
-      this.morphabilityStatus = event.morphabilityStatus;
-    });
+    this.morphabilityStatus = this.layerStateService.getMorphabilityStatusObservable();
   }
 
   onNewClick() {

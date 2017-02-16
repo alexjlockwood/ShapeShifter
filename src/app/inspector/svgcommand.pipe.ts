@@ -2,7 +2,7 @@ import * as _ from 'lodash';
 import { Pipe, PipeTransform } from '@angular/core';
 import { Command } from '../scripts/commands';
 
-@Pipe({ name: 'svgCommand' })
+@Pipe({ name: 'toSvgText' })
 export class SvgCommandPipe implements PipeTransform {
   transform(c: Command): string {
     if (c.svgChar === 'Z') {

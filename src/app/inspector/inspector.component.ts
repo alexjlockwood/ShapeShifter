@@ -39,8 +39,16 @@ export class InspectorComponent implements OnInit, OnDestroy {
   private rebuildSubPathCommandItems() {
     const subPathCommandItems: SubPathCommandItem[] = [];
 
-    const startPathCmd = this.getPathCommand(CanvasType.Start);
-    const endPathCmd = this.getPathCommand(CanvasType.End);
+    const getPathCommandFn = (canvasType: CanvasType) => {
+      const pathLayer = this.layerStateService.getActivePathLayer(canvasType);
+      if (!pathLayer) {
+        return undefined;
+      }
+      return pathLayer.pathData;
+    };
+
+    const startPathCmd = getPathCommandFn(CanvasType.Start);
+    const endPathCmd = getPathCommandFn(CanvasType.End);
     const numStartSubPaths = startPathCmd ? startPathCmd.subPathCommands.length : 0;
     const numEndSubPaths = endPathCmd ? endPathCmd.subPathCommands.length : 0;
     for (let i = 0; i < Math.max(numStartSubPaths, numEndSubPaths); i++) {
@@ -64,18 +72,6 @@ export class InspectorComponent implements OnInit, OnDestroy {
         new SubPathCommandItem(i, startCmdItems, endCmdItems, wasExpanded));
     }
     this.subPathCommandItems = subPathCommandItems;
-  }
-
-  private getPathCommand(canvasType: CanvasType): PathCommand | undefined {
-    const vectorLayer = this.layerStateService.getVectorLayer(canvasType);
-    if (!vectorLayer) {
-      return undefined;
-    }
-    const pathId = this.layerStateService.getActivePathId(canvasType);
-    if (!pathId) {
-      return undefined;
-    }
-    return (vectorLayer.findLayer(pathId) as PathLayer).pathData;
   }
 
   toggleExpandedState(subIdx: number) {

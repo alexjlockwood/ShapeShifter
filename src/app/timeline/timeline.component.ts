@@ -1,4 +1,4 @@
-import { Component, NgZone, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { AnimatorService } from '../services/animator.service';
 import { LayerStateService, MorphabilityStatus } from '../services/layerstate.service';
 import { Subscription } from 'rxjs/Subscription';
@@ -15,35 +15,22 @@ export class TimelineComponent implements OnInit {
 
   constructor(
     private layerStateService: LayerStateService,
-    private animatorService: AnimatorService,
-    private ngZone: NgZone) { }
+    private animatorService: AnimatorService) { }
 
   ngOnInit() {
+    this.subscriptions.push(
+      this.layerStateService.getMorphabilityStatusObservable().subscribe(status => {
+        this.isTimelineEnabled = status === MorphabilityStatus.Morphable;
+        if (!this.isTimelineEnabled) {
+          this.animatorService.rewind();
+        }
+      }));
     // TODO: pause animations when window becomes inactive?
     // document.addEventListener('visibilitychange', function() {
     //   console.log(document.hidden);
     // });
-    this.subscriptions.push(
-      this.layerStateService.addListener(CanvasType.Start, event => {
-        this.onLayerStateChanged(event.morphabilityStatus);
-      }));
-    this.subscriptions.push(
-      this.layerStateService.addListener(CanvasType.End, event => {
-        this.onLayerStateChanged(event.morphabilityStatus);
-      }));
     // TODO: is this necessary to trigger change detection?
     // this.animatorService.animatedValueStream.subscribe((value: number) => { });
-  }
-
-  private onLayerStateChanged(morphabilityStatus: MorphabilityStatus) {
-    const isTimelineEnabled = morphabilityStatus === MorphabilityStatus.Morphable;
-    if (this.isTimelineEnabled === isTimelineEnabled) {
-      return;
-    }
-    this.isTimelineEnabled = isTimelineEnabled;
-    if (!this.isTimelineEnabled) {
-      this.animatorService.rewind();
-    }
   }
 
   isSlowMotion() {

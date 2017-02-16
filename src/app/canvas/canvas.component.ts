@@ -87,11 +87,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           const oldHeight = this.viewportHeight;
           this.vectorLayer = event.vectorLayer;
           this.activePathId = event.activePathId;
-          // TODO: clear the preview canvas when things become unmorphable
           this.shouldDrawLayer = !!this.vectorLayer && !!this.activePathId;
-          if (this.canvasType === CanvasType.Preview && this.shouldDrawLayer) {
-            this.shouldDisableLayer = event.morphabilityStatus !== MorphabilityStatus.Morphable;
-          }
           const newWidth = this.viewportWidth;
           const newHeight = this.viewportHeight;
           const didSizeChange = oldWidth !== newWidth || oldHeight !== newHeight;
@@ -136,6 +132,11 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
             this.shouldLabelPoints = settings.shouldLabelPoints;
             this.draw();
           }
+        }));
+      this.subscriptions.push(
+        this.layerStateService.getMorphabilityStatusObservable().subscribe(status => {
+          this.shouldDisableLayer = status !== MorphabilityStatus.Morphable;
+          this.draw();
         }));
     } else {
       // Non-preview canvas specific setup.

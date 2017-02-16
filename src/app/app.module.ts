@@ -11,6 +11,7 @@ import { TimelineComponent } from './timeline/timeline.component';
 import { SplitterDirective } from './splitter/splitter.directive';
 import { InspectorComponent } from './inspector/inspector.component';
 import { InspectorItemComponent } from './inspector/inspectoritem.component';
+import { SvgCommandPipe } from './inspector/svgcommand.pipe';
 import { AnimatorService } from './services/animator.service';
 import { LayerStateService } from './services/layerstate.service';
 import { SelectionStateService } from './services/selectionstate.service';
@@ -22,7 +23,7 @@ import { ToolbarComponent } from './toolbar/toolbar.component';
 import { DialogService, HelpDialogComponent, ConfirmDialogComponent, DemoDialogComponent } from './dialogs';
 import { SettingsService } from './services/settings.service';
 import { PathSelectorComponent } from './pathselector/pathselector.component';
-import { SvgCommandPipe } from './inspector/svgcommand.pipe';
+import { IsEqualToPipe, IsNotEqualToPipe } from './pipes';
 
 import 'hammerjs';
 
@@ -42,6 +43,8 @@ import 'hammerjs';
     HelpDialogComponent,
     DemoDialogComponent,
     SvgCommandPipe,
+    IsEqualToPipe,
+    IsNotEqualToPipe,
   ],
   imports: [
     BrowserModule,
