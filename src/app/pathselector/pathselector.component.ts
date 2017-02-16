@@ -137,10 +137,6 @@ export class PathSelectorComponent {
       };
 
       fileReader.readAsText(file);
-
-      // Clear the value so that the user can import the same
-      // file twice if they wish.
-      $(this.elementRef).find('input[type="file"]').val(null);
     });
   }
 }

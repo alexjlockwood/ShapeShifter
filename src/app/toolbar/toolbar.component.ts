@@ -12,7 +12,7 @@ import { AutoAwesome } from '../scripts/common';
 import { AnimatorService } from '../services/animator.service';
 import { SelectionStateService } from '../services/selectionstate.service';
 import { HoverStateService } from '../services/hoverstate.service';
-import { DEMO_SVG_STRING } from './demo';
+import { DIGIT_DEMO_SVG_STRING, ANIMALS_DEMO_SVG_STRING } from './demos';
 import { VectorLayerLoader } from '../scripts/parsers';
 import { PathLayer } from '../scripts/layers';
 
@@ -26,6 +26,7 @@ export class ToolbarComponent implements OnInit {
   MORPHABILITY_UNMORPHABLE = MorphabilityStatus.Unmorphable;
   MORPHABILITY_MORPHABLE = MorphabilityStatus.Morphable;
   morphabilityStatus = MorphabilityStatus.None;
+  private readonly demoMap: Map<string, string> = new Map();
 
   constructor(
     private viewContainerRef: ViewContainerRef,
@@ -36,6 +37,8 @@ export class ToolbarComponent implements OnInit {
     private dialogsService: DialogService) { }
 
   ngOnInit() {
+    this.demoMap.set('Morphing digits', DIGIT_DEMO_SVG_STRING);
+    this.demoMap.set('Morphing animals', ANIMALS_DEMO_SVG_STRING);
     this.layerStateService.addListener(CanvasType.Start, (event: LayerStateEvent) => {
       this.morphabilityStatus = event.morphabilityStatus;
     });
@@ -75,6 +78,7 @@ export class ToolbarComponent implements OnInit {
       this.layerStateService.replaceActivePathCommand(CanvasType.Start, resultStartCmd, subIdx, false);
       this.layerStateService.replaceActivePathCommand(CanvasType.End, resultEndCmd, subIdx, false);
     }
+    this.layerStateService.notifyChange(CanvasType.Preview);
     this.layerStateService.notifyChange(CanvasType.Start);
     this.layerStateService.notifyChange(CanvasType.End);
   }
@@ -100,13 +104,15 @@ export class ToolbarComponent implements OnInit {
   }
 
   onDemoClick() {
+    const demoTitles = Array.from(this.demoMap.keys());
     this.dialogsService
-      .confirm(this.viewContainerRef, 'Continue to the demo?', 'You\'ll lose any unsaved changes.')
-      .subscribe(result => {
-        if (!result) {
+      .demo(this.viewContainerRef, demoTitles)
+      .subscribe(selectedDemoTitle => {
+        const selectedSvgString = this.demoMap.get(selectedDemoTitle);
+        if (!selectedSvgString) {
           return;
         }
-        const importedVectorLayer = VectorLayerLoader.loadVectorLayerFromSvgString(DEMO_SVG_STRING);
+        const importedVectorLayer = VectorLayerLoader.loadVectorLayerFromSvgString(selectedSvgString);
         this.layerStateService.setVectorLayer(CanvasType.Preview, importedVectorLayer.clone(), false);
         this.layerStateService.setVectorLayer(CanvasType.Start, importedVectorLayer, false);
         this.layerStateService.setVectorLayer(CanvasType.End, importedVectorLayer.clone(), false);
@@ -127,6 +133,7 @@ export class ToolbarComponent implements OnInit {
       });
   }
 
+  // TODO: display an in-app help dialog instead of redirecting to the GitHub README
   onHelpClick() {
     this.dialogsService.help(this.viewContainerRef);
   }

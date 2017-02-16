@@ -219,15 +219,12 @@ export class LayerStateService {
   }
 
   /**
-   * Resets the state of the entire application.
+   * Resets all existing layer state loaded by the application.
    */
   reset() {
-    [CanvasType.Start, CanvasType.Preview, CanvasType.End].forEach(type => {
-      this.setVectorLayer(type, undefined, false);
-    });
-    [CanvasType.Start, CanvasType.Preview, CanvasType.End].forEach(type => {
-      this.notifyChange(type);
-    });
+    const canvasTypes = [CanvasType.Preview, CanvasType.Start, CanvasType.End];
+    canvasTypes.forEach(type => this.setVectorLayer(type, undefined, false));
+    canvasTypes.forEach(type => this.notifyChange(type));
   }
 
   addListener(type: CanvasType, callback: (layerStateEvent: Event) => void) {

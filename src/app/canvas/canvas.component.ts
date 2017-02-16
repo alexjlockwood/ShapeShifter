@@ -27,7 +27,7 @@ const SIZE_TO_POINT_RADIUS_FACTOR = 1 / 50;
 const SPLIT_POINT_RADIUS_FACTOR = 0.8;
 const SELECTED_POINT_RADIUS_FACTOR = 1.25;
 const POINT_BORDER_FACTOR = 1.075;
-const DISABLED_CANVAS_ALPHA = 0.38;
+const DISABLED_LAYER_ALPHA = 0.38;
 
 // Canvas margin in pixels.
 export const CANVAS_MARGIN = 36;
@@ -62,8 +62,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   private currentHover: Hover;
   private pointSelector: PointSelector;
   private shouldLabelPoints = false;
-  private shouldDrawCanvas = false;
-  private shouldDisableCanvas = false;
+  private shouldDrawLayer = false;
+  private shouldDisableLayer = false;
   private readonly subscriptions: Subscription[] = [];
 
   constructor(
@@ -88,9 +88,9 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           this.vectorLayer = event.vectorLayer;
           this.activePathId = event.activePathId;
           // TODO: clear the preview canvas when things become unmorphable
-          this.shouldDrawCanvas = !!this.vectorLayer && !!this.activePathId;
-          if (this.canvasType === CanvasType.Preview && this.shouldDrawCanvas) {
-            this.shouldDisableCanvas = event.morphabilityStatus !== MorphabilityStatus.Morphable;
+          this.shouldDrawLayer = !!this.vectorLayer && !!this.activePathId;
+          if (this.canvasType === CanvasType.Preview && this.shouldDrawLayer) {
+            this.shouldDisableLayer = event.morphabilityStatus !== MorphabilityStatus.Morphable;
           }
           const newWidth = this.viewportWidth;
           const newHeight = this.viewportHeight;
@@ -114,7 +114,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       // Preview canvas specific setup.
       this.subscriptions.push(
         this.animatorService.animatedValueStream.subscribe(fraction => {
-          let shouldDraw = false;
           const startPathLayer = this.layerStateService.getActivePathLayer(CanvasType.Start);
           const previewPathLayer = this.layerStateService.getActivePathLayer(CanvasType.Preview);
           const endPathLayer = this.layerStateService.getActivePathLayer(CanvasType.End);
@@ -122,18 +121,14 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
             // Note that there is no need to broadcast layer state changes
             // for the preview canvas.
             previewPathLayer.interpolate(startPathLayer, endPathLayer, fraction);
-            shouldDraw = true;
           }
           const startGroupLayer = this.layerStateService.getActiveRotationLayer(CanvasType.Start);
           const previewGroupLayer = this.layerStateService.getActiveRotationLayer(CanvasType.Preview);
           const endGroupLayer = this.layerStateService.getActiveRotationLayer(CanvasType.End);
           if (startGroupLayer && previewGroupLayer && endGroupLayer) {
             previewGroupLayer.interpolate(startGroupLayer, endGroupLayer, fraction);
-            shouldDraw = true;
           }
-          if (shouldDraw) {
-            this.draw();
-          }
+          this.draw();
         }));
       this.subscriptions.push(
         this.settingsService.addListener(settings => {
@@ -226,8 +221,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     });
 
     const size = Math.min(containerWidth, containerHeight);
-    this.pathPointRadius =
-      size * SIZE_TO_POINT_RADIUS_FACTOR / (Math.max(1, this.cssScale));
+    this.pathPointRadius = size * SIZE_TO_POINT_RADIUS_FACTOR / Math.max(2, this.cssScale);
     this.splitPathPointRadius = this.pathPointRadius * SPLIT_POINT_RADIUS_FACTOR;
     this.draw();
     this.canvasRulers.forEach(r => r.draw());
@@ -237,17 +231,14 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     if (!this.isViewInit) {
       return;
     }
-    const ctx =
-      (this.canvas.get(0) as HTMLCanvasElement).getContext('2d');
-    const offscreenCtx =
-      (this.offscreenCanvas.get(0) as HTMLCanvasElement).getContext('2d');
+    const ctx = (this.canvas.get(0) as HTMLCanvasElement).getContext('2d');
+    const offscreenCtx = (this.offscreenCanvas.get(0) as HTMLCanvasElement).getContext('2d');
 
     ctx.save();
     ctx.scale(this.attrScale, this.attrScale);
     ctx.clearRect(0, 0, this.viewportWidth, this.viewportHeight);
 
-    // TODO: use this offscreen context in the future somehow...
-    const currentAlpha = this.shouldDisableCanvas ? DISABLED_CANVAS_ALPHA : 1;
+    const currentAlpha = this.shouldDisableLayer ? DISABLED_LAYER_ALPHA : 1;
     if (currentAlpha < 1) {
       offscreenCtx.save();
       offscreenCtx.scale(this.attrScale, this.attrScale);
@@ -255,7 +246,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
 
     const drawingCtx = currentAlpha < 1 ? offscreenCtx : ctx;
-    if (this.shouldDrawCanvas) {
+    if (this.shouldDrawLayer) {
       this.drawVectorLayer(drawingCtx);
       this.drawSelections(drawingCtx);
       this.drawLabeledPoints(drawingCtx);

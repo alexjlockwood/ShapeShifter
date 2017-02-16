@@ -28,19 +28,29 @@
       </div>
     </div>
   </div>
-  <div *ngIf="!getPathList(CANVAS_START).length || !getPathList(CANVAS_END).length"
+  <div *ngIf="!getPathList(CANVAS_START).length && !getPathList(CANVAS_END).length"
     class="path-selector-empty"
     fxLayout="column"
     fxLayoutAlign="center center"
     fxFlex>
     <input type="file"
       accept=".svg"
-      id="input-file-id"
+      id="start-input-file-id"
       (change)="onSvgFileChosen($event.srcElement.files)"
       multiple>
-    <label for="input-file-id">
-      {{ !getPathList(CANVAS_START).length && !getPathList(CANVAS_END).length ? 'Import two SVGs to get started' : 'Import a second SVG to get started' }}
-    </label>
+    <label for="start-input-file-id">Import 2 SVGs to get started</label>
+  </div>
+  <div *ngIf="!(!!getPathList(CANVAS_START).length && !!getPathList(CANVAS_END).length) && !(!getPathList(CANVAS_START).length && !getPathList(CANVAS_END).length)"
+    class="path-selector-empty"
+    fxLayout="column"
+    fxLayoutAlign="center center"
+    fxFlex>
+    <input type="file"
+      accept=".svg"
+      id="end-input-file-id"
+      (change)="onSvgFileChosen($event.srcElement.files)"
+      multiple>
+    <label for="end-input-file-id">Import a second SVG to get started</label>
   </div>
 </div>
 

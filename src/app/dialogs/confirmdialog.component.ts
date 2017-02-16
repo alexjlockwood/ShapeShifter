@@ -17,8 +17,8 @@ import { MdDialogRef } from '@angular/material';
   styleUrls: ['./confirmdialog.component.scss'],
 })
 export class ConfirmDialogComponent {
-  public title = '';
-  public message = '';
+  title = '';
+  message = '';
 
   constructor(public readonly dialogRef: MdDialogRef<ConfirmDialogComponent>) {}
 }

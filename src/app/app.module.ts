@@ -19,7 +19,7 @@ import { CanvasResizeService } from './services/canvasresize.service';
 import { CanvasRulerDirective } from './canvas/canvasruler.directive';
 import { SettingsComponent } from './settings/settings.component';
 import { ToolbarComponent } from './toolbar/toolbar.component';
-import { DialogService, HelpDialogComponent, ConfirmDialogComponent } from './dialogs';
+import { DialogService, HelpDialogComponent, ConfirmDialogComponent, DemoDialogComponent } from './dialogs';
 import { SettingsService } from './services/settings.service';
 import { PathSelectorComponent } from './pathselector/pathselector.component';
 
@@ -39,6 +39,7 @@ import 'hammerjs';
     PathSelectorComponent,
     ConfirmDialogComponent,
     HelpDialogComponent,
+    DemoDialogComponent,
   ],
   imports: [
     BrowserModule,
@@ -59,6 +60,7 @@ import 'hammerjs';
   entryComponents: [
     ConfirmDialogComponent,
     HelpDialogComponent,
+    DemoDialogComponent,
   ],
   bootstrap: [AppComponent]
 })
