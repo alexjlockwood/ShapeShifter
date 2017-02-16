@@ -19,6 +19,8 @@ export class LayerStateService {
   private readonly activePathIdMap = new Map<CanvasType, string>();
   private readonly sources = new Map<CanvasType, Subject<Event>>();
   private readonly streams = new Map<CanvasType, Observable<Event>>();
+  private statusSource = new BehaviorSubject<MorphabilityStatus>(MorphabilityStatus.None);
+  private statusStream = this.statusSource.asObservable();
 
   constructor() {
     [CanvasType.Start, CanvasType.Preview, CanvasType.End]

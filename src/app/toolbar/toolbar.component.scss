@@ -7,7 +7,7 @@
   font-size: 18px;
   line-height: 16px;
   background-color: material-color('blue-grey', '500');
-  color: md-color($app-primary, default-contrast);
+  color: mat-color($app-primary, default-contrast);
   box-shadow: material-shadow(1);
   z-index: 1;
 }
@@ -19,8 +19,8 @@
 }
 
 md-toolbar {
-  background-color: md-color($app-primary);
-  color: md-color($app-primary, default-contrast);
+  background-color: mat-color($app-primary);
+  color: mat-color($app-primary, default-contrast);
 }
 
 // Remove link decorations from overflow menu items.

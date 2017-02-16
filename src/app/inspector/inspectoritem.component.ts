@@ -58,18 +58,6 @@ export class InspectorItemComponent implements OnInit, OnDestroy {
     this.subscriptions.forEach(s => s.unsubscribe());
   }
 
-  getCommandText() {
-    const c = this.command;
-    if (c.svgChar === 'Z') {
-      return `${c.svgChar}`;
-    } else {
-      const p = _.last(c.points);
-      const x = _.round(p.x, 2);
-      const y = _.round(p.y, 2);
-      return `${c.svgChar} ${x}, ${y}`;
-    }
-  }
-
   onCommandClick(event: MouseEvent) {
     const selections = this.selectionStateService.getSelections();
     const appendToList = event.shiftKey || event.metaKey;

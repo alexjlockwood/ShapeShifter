@@ -7,7 +7,7 @@
   (mouseenter)="onCommandHoverEvent(true)"
   (mouseleave)="onCommandHoverEvent(false)">
   <span class="command-number">{{ this.cmdIdx + 1 }}.</span>
-  <span class="command-text">{{ getCommandText() }}</span>
+  <span class="command-text">this.command | svgCommand</span>
   <span fxFlex></span>
   <button md-icon-button
     mdTooltip="Shift back"

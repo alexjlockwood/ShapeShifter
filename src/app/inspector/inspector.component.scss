@@ -36,7 +36,7 @@
       background-color: rgba(0, 0, 0, 0.1);
     }
     &.is-selected {
-      background-color: md-color($app-accent);
+      background-color: mat-color($app-accent);
       box-shadow: none;
       color: #fff;
     }

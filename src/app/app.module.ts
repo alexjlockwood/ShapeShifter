@@ -22,6 +22,7 @@ import { ToolbarComponent } from './toolbar/toolbar.component';
 import { DialogService, HelpDialogComponent, ConfirmDialogComponent, DemoDialogComponent } from './dialogs';
 import { SettingsService } from './services/settings.service';
 import { PathSelectorComponent } from './pathselector/pathselector.component';
+import { SvgCommandPipe } from './inspector/svgcommand.pipe';
 
 import 'hammerjs';
 
@@ -40,13 +41,14 @@ import 'hammerjs';
     ConfirmDialogComponent,
     HelpDialogComponent,
     DemoDialogComponent,
+    SvgCommandPipe,
   ],
   imports: [
     BrowserModule,
     FormsModule,
     HttpModule,
     FlexLayoutModule,
-    MaterialModule.forRoot(),
+    MaterialModule,
   ],
   providers: [
     AnimatorService,
