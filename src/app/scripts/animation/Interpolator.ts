@@ -11,7 +11,8 @@ const FAST_OUT_SLOW_IN_EASING = BezierEasing.create(.4, 0, .2, 1);
 const FAST_OUT_LINEAR_IN_EASING = BezierEasing.create(.4, 0, 1, 1);
 const LINEAR_OUT_SLOW_IN_EASING = BezierEasing.create(0, 0, .2, 1);
 
-export const INTERPOLATORS: Interpolator[] = [{
+export const INTERPOLATORS: Interpolator[] = [
+  {
     value: 'FAST_OUT_SLOW_IN',
     label: 'Fast out, slow in',
     androidRef: '@android:interpolator/fast_out_slow_in',
@@ -65,5 +66,41 @@ export const INTERPOLATORS: Interpolator[] = [{
     androidRef: '@android:anim/overshoot_interpolator',
     interpolateFn: f => (f - 1) * (f - 1) * ((2 + 1) * (f - 1) + 2) + 1
   },
-  // TODO: add support for bounce, anticipate overshoot, and path interpolators
+  {
+    value: 'BOUNCE',
+    label: 'Bounce',
+    androidRef: '@android:anim/bounce_interpolator',
+    interpolateFn: f => {
+      const bounceFn = t => t * t * 8;
+      f *= 1.1226;
+      if (f < 0.3535) {
+        return bounceFn(f);
+      } else if (f < 0.7408) {
+        return bounceFn(f - 0.54719) + 0.7;
+      } else if (f < 0.9644) {
+        return bounceFn(f - 0.8526) + 0.9;
+      } else {
+        return bounceFn(f - 1.0435) + 0.95;
+      }
+    },
+  },
+  {
+    value: 'ANTICIPATE_OVERSHOOT',
+    label: 'Anticipate overshoot',
+    androidRef: '@android:anim/anticipate_overshoot_interpolator',
+    interpolateFn: f => {
+      const a = (t, s) => {
+        return t * t * ((s + 1) * t - s);
+      };
+      const o = (t, s) => {
+        return t * t * ((s + 1) * t + s);
+      };
+      if (f < 0.5) {
+        return 0.5 * a(f * 2, 2 * 1.5);
+      } else {
+        return 0.5 * (o(f * 2 - 2, 2 * 1.5) + 2.);
+      }
+    },
+  },
+  // TODO: add support for custom path interpolators
 ];
