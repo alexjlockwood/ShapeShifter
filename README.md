@@ -55,7 +55,7 @@ To address these problems, Shape Shifter provides the following features:
 
 ## How does it work?
 
-Pretty much everything in this app is powered by approximated bezier curves behind-the-scenes.
+Pretty much everything in this app is powered behind-the-scenes by approximated bezier curves.
 Check out this excellent [primer on bezier curves][primer-on-bezier-curves]
 if you're curious about the specifics (especially sections 9 and 33, which explain
 how to split and project points onto bezier curves without altering their original appearance).
@@ -81,6 +81,11 @@ If you want to contribute, you can build and serve the web app locally as follow
     ```
     $ ng serve
     ```
+
+## Special thanks
+
+Huge thanks to Nick Butcher and Roman Nurik for all of their help during the
+early stages of this project!
 
   [report-feature-request]: https://github.com/alexjlockwood/ShapeShifter/issues/new
   [adp-path-morphing]: http://www.androiddesignpatterns.com/2016/11/introduction-to-icon-animation-techniques.html#morphing-paths
