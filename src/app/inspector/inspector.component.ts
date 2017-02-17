@@ -7,7 +7,7 @@ import { PathCommand, SubPathCommand, Command } from '../scripts/commands';
 import { CanvasType } from '../CanvasType';
 import { LayerStateService, Event as LayerStateEvent } from '../services/layerstate.service';
 import { Subscription } from 'rxjs/Subscription';
-import { AutoAwesome } from '../scripts/common';
+import { AutoAwesome } from '../scripts/commands';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/combineLatest';
 

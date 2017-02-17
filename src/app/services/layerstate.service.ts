@@ -6,7 +6,7 @@ import { Layer, VectorLayer, PathLayer, GroupLayer } from '../scripts/layers';
 import { Observable } from 'rxjs/Observable';
 import { CanvasType } from '../CanvasType';
 import { PathCommand } from '../scripts/commands';
-import { AutoAwesome } from '../scripts/common';
+import { AutoAwesome } from '../scripts/commands';
 import { ROTATION_GROUP_LAYER_ID } from '../scripts/parsers';
 
 /**

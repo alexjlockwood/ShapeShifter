@@ -8,7 +8,7 @@ import { CanvasType } from '../CanvasType';
 import { AvdSerializer } from '../scripts/parsers';
 import { AvdTarget } from '../scripts/animation';
 import { DialogService } from '../dialogs';
-import { AutoAwesome } from '../scripts/common';
+import { AutoAwesome } from '../scripts/commands';
 import { AnimatorService } from '../services/animator.service';
 import { SelectionStateService } from '../services/selectionstate.service';
 import { HoverStateService } from '../services/hoverstate.service';

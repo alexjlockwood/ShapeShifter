@@ -1,12 +1,11 @@
 import * as _ from 'lodash';
 import { PathCommand, SubPathCommand, Command } from '../commands';
-import { MathUtil } from '.';
+import { MathUtil } from '../common';
 
 // Needleman-Wunsch scoring function constants.
 const MATCH = 1;
 const MISMATCH = -1;
 const INDEL = 0;
-
 
 /**
  * Takes two arbitrary paths, calculates a best-estimate alignment of the two,
@@ -99,13 +98,16 @@ export function autoFix(
   const fromGapGroups = createGapStreaksFn(fromCmdInfos);
   const toGapGroups = createGapStreaksFn(toCmdInfos);
 
-  // Fill in the gaps by applying batch splits.
+  // Fill in the gaps by applying linear subdivide batch splits.
   const applySplitsFn = (pathCommand: PathCommand, gapGroups: CmdInfo[][]) => {
     const splitOps = [];
+    const numPathCommands = pathCommand.subPathCommands[subIdx].commands.length;
     for (let i = gapGroups.length - 1; i >= 0; i--) {
       const gapGroup = gapGroups[i];
-      const cmdIdx = _.last(gapGroup).nextCmdIdx;
-      // TODO: is evenly positioning the split points good enough?
+      // Clamp the index between 1 and numCommands - 1 to account for cases
+      // where the alignment algorithm attempts to append new commands to the
+      // front and back of the sequence.
+      const cmdIdx = MathUtil.clamp(_.last(gapGroup).nextCmdIdx, 1, numPathCommands - 1);
       const ts = gapGroup.map((_, gapIdx) => (gapIdx + 1) / (gapGroup.length + 1));
       splitOps.push({subIdx, cmdIdx, ts});
     }

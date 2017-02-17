@@ -10,7 +10,8 @@ import { LayerStateService } from '../services/layerstate.service';
 import { SelectionStateService, Selection } from '../services/selectionstate.service';
 import { HoverStateService, Type as HoverType } from '../services/hoverstate.service';
 import { Subscription } from 'rxjs/Subscription';
-import { AutoAwesome, ColorUtil } from '../scripts/common';
+import { AutoAwesome } from '../scripts/commands';
+import { ColorUtil } from '../scripts/common';
 import { CanvasType } from '../CanvasType';
 
 @Component({
