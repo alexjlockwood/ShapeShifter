@@ -14,8 +14,8 @@ import { CommandImpl } from './CommandImpl';
 export class CommandMutation {
   readonly backingCommand: CommandImpl;
 
-  // Note that the path helper is undefined for move commands.
-  private readonly pathHelper: Mutator;
+  // Note that the mutator is currently undefined for move commands.
+  private readonly mutator: Mutator;
 
   // A command mutation wraps around the initial SVG command and outputs
   // a list of transformed commands resulting from splits, unsplits,
@@ -43,12 +43,12 @@ export class CommandMutation {
       this.mutations = obj.mutations;
       this.builtCommands = obj.builtCommands;
     }
-    this.pathHelper = newMutator(this.backingCommand);
+    this.mutator = newMutator(this.backingCommand);
   }
 
   pathLength() {
     const isMove = this.backingCommand.svgChar === 'M';
-    return isMove ? 0 : this.pathHelper.pathLength();
+    return isMove ? 0 : this.mutator.pathLength();
   }
 
   /**
@@ -57,7 +57,7 @@ export class CommandMutation {
    */
   project(point: Point): Projection | undefined {
     const isMove = this.backingCommand.svgChar === 'M';
-    return isMove ? undefined : this.pathHelper.project(point);
+    return isMove ? undefined : this.mutator.project(point);
   }
 
   /**
@@ -115,7 +115,7 @@ export class CommandMutation {
     const startSplit = tempSplits[splitIdx];
     const endSplit = tempSplits[splitIdx + 1];
     const distance = MathUtil.lerp(startSplit, endSplit, 0.5);
-    return this.split([this.pathHelper.findTimeByDistance(distance)]);
+    return this.split([this.mutator.findTimeByDistance(distance)]);
   }
 
   /**
@@ -151,7 +151,7 @@ export class CommandMutation {
   // TODO: this could be more efficient (avoid recreating commands unnecessarily)
   private rebuildCommands(mutations: Mutation[]) {
     if (mutations.length === 1) {
-      const command = this.pathHelper.convert(mutations[0].svgChar).toCommand(false);
+      const command = this.mutator.convert(mutations[0].svgChar).toCommand(false);
       return new CommandMutation({
         backingCommand: this.backingCommand,
         mutations,
@@ -164,7 +164,7 @@ export class CommandMutation {
       const currT = mutations[i].t;
       const isSplit = i !== mutations.length - 1;
       builtCommands.push(
-        this.pathHelper.split(prevT, currT)
+        this.mutator.split(prevT, currT)
           .convert(mutations[i].svgChar)
           .toCommand(isSplit));
       prevT = currT;
