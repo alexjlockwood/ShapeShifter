@@ -109,8 +109,8 @@ export class ToolbarComponent implements OnInit {
           return;
         }
         const importedVectorLayer = VectorLayerLoader.loadVectorLayerFromSvgString(selectedSvgString);
-        this.layerStateService.setVectorLayer(CanvasType.Preview, importedVectorLayer.clone(), false);
         this.layerStateService.setVectorLayer(CanvasType.Start, importedVectorLayer, false);
+        this.layerStateService.setVectorLayer(CanvasType.Preview, importedVectorLayer.clone(), false);
         this.layerStateService.setVectorLayer(CanvasType.End, importedVectorLayer.clone(), false);
         const availablePathIds: string[] = [];
         importedVectorLayer.walk((layer => {
