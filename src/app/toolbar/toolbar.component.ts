@@ -6,7 +6,7 @@ import {
 } from '../services/layerstate.service';
 import { CanvasType } from '../CanvasType';
 import { AvdSerializer } from '../scripts/parsers';
-import { AvdTarget } from '../scripts/animation';
+import { AvdTarget, AvdAnimation } from '../scripts/animation';
 import { DialogService } from '../dialogs';
 import { AutoAwesome } from '../scripts/commands';
 import { AnimatorService } from '../services/animator.service';
@@ -14,7 +14,7 @@ import { SelectionStateService } from '../services/selectionstate.service';
 import { HoverStateService } from '../services/hoverstate.service';
 import { DIGIT_DEMO_SVG_STRING, ANIMALS_DEMO_SVG_STRING } from './demos';
 import { VectorLayerLoader } from '../scripts/parsers';
-import { PathLayer } from '../scripts/layers';
+import { VectorLayer, GroupLayer, PathLayer, Layer } from '../scripts/layers';
 import { Observable } from 'rxjs/Observable';
 
 @Component({
@@ -80,23 +80,63 @@ export class ToolbarComponent implements OnInit {
   }
 
   onExportClick() {
-    const startVectorLayer = this.layerStateService.getVectorLayer(CanvasType.Start);
+    const startVectorLayer = this.layerStateService.getVectorLayer(CanvasType.Start).clone();
+    const vectorLayerChildren: Array<PathLayer | GroupLayer> = [];
+    const avdTargets: AvdTarget[] = [];
+    const rotationTarget = this.createRotationAvdTarget();
+    if (rotationTarget) {
+      avdTargets.push(rotationTarget);
+      vectorLayerChildren.push(this.layerStateService.getActiveRotationLayer(CanvasType.Start));
+    } else {
+      avdTargets.push(this.createPathAvdTarget());
+      vectorLayerChildren.push(this.layerStateService.getActivePathLayer(CanvasType.Start));
+    }
+    const outputVectorLayer =
+      new VectorLayer(
+        vectorLayerChildren,
+        startVectorLayer.id,
+        startVectorLayer.width,
+        startVectorLayer.height,
+        startVectorLayer.alpha);
+    const xmlStr = AvdSerializer.vectorLayerAnimationToAvdXmlString(outputVectorLayer, avdTargets);
+    this.downloadFile(xmlStr, `ShapeShifterAvd.xml`);
+  }
+
+  private createRotationAvdTarget() {
+    const startLayer = this.layerStateService.getActiveRotationLayer(CanvasType.Start);
+    const endLayer = this.layerStateService.getActiveRotationLayer(CanvasType.End);
+    if (!startLayer || !endLayer || startLayer.rotation === endLayer.rotation) {
+      return undefined;
+    }
+    const fromValue = startLayer.rotation;
+    const toValue = endLayer.rotation;
+    const duration = this.animatorService.getDuration();
+    const interpolator = this.animatorService.getInterpolator();
+    return new AvdTarget(startLayer.id,
+      new AvdAnimation(
+        fromValue.toString(),
+        toValue.toString(),
+        duration,
+        interpolator.androidRef,
+        'rotation',
+        'floatType'));
+  }
+
+  private createPathAvdTarget() {
     const startLayer = this.layerStateService.getActivePathLayer(CanvasType.Start);
-    const fromValue = startLayer.pathData.pathString;
     const endLayer = this.layerStateService.getActivePathLayer(CanvasType.End);
+    const fromValue = startLayer.pathData.pathString;
     const toValue = endLayer.pathData.pathString;
     const duration = this.animatorService.getDuration();
     const interpolator = this.animatorService.getInterpolator();
-    const xmlStr = AvdSerializer.vectorLayerAnimationToAvdXmlString(startVectorLayer,
-      new AvdTarget(
-        startLayer.id,
+    return new AvdTarget(startLayer.id,
+      new AvdAnimation(
         fromValue,
         toValue,
         duration,
         interpolator.androidRef,
         'pathData',
         'pathType'));
-    this.downloadFile(xmlStr, `ShapeShifterAvd.xml`);
   }
 
   onDemoClick() {

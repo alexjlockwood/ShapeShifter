@@ -21,7 +21,7 @@ export function vectorLayerToVectorDrawableXmlString(vectorLayer: VectorLayer) {
  */
 export function vectorLayerAnimationToAvdXmlString(
   vectorLayer: VectorLayer,
-  avdTarget: AvdTarget) {
+  avdTargets: AvdTarget[]) {
 
   const xmlDoc = document.implementation.createDocument(null, 'animated-vector', null);
   const rootNode = xmlDoc.documentElement;
@@ -37,9 +37,7 @@ export function vectorLayerAnimationToAvdXmlString(
   vectorLayerToXmlNode(vectorLayer, vectorLayerNode, xmlDoc);
   vectorLayerContainerNode.appendChild(vectorLayerNode);
 
-  // TODO: eventually support passing in multiple animation targets?
-  const animationTargets = [avdTarget];
-  for (const target of animationTargets) {
+  for (const target of avdTargets) {
     const layerId = target.layerId;
     const targetNode = xmlDoc.createElement('target');
     targetNode.setAttributeNS(ANDROID_NS, 'android:name', layerId);
@@ -49,17 +47,16 @@ export function vectorLayerAnimationToAvdXmlString(
     animationNode.setAttribute('name', 'android:animation');
     targetNode.appendChild(animationNode);
 
-    const layer = vectorLayer.findLayer(layerId);
+    const animation = target.animation;
     const animatorNode = xmlDoc.createElement('objectAnimator');
     animatorNode.setAttributeNS(XMLNS_NS, 'xmlns:android', ANDROID_NS);
     animatorNode.setAttributeNS(ANDROID_NS, 'android:name', layerId);
-    animatorNode.setAttributeNS(ANDROID_NS, 'android:propertyName', target.propertyName);
-    // conditionalAttr(animatorNode, 'android:startOffset', target.startTime, 0);
-    conditionalAttr(animatorNode, 'android:duration', target.duration);
-    conditionalAttr(animatorNode, 'android:valueFrom', target.valueFrom);
-    conditionalAttr(animatorNode, 'android:valueTo', target.valueTo);
-    conditionalAttr(animatorNode, 'android:valueType', target.valueType);
-    conditionalAttr(animatorNode, 'android:interpolator', target.interpolator);
+    animatorNode.setAttributeNS(ANDROID_NS, 'android:propertyName', animation.propertyName);
+    conditionalAttr(animatorNode, 'android:duration', animation.duration);
+    conditionalAttr(animatorNode, 'android:valueFrom', animation.valueFrom);
+    conditionalAttr(animatorNode, 'android:valueTo', animation.valueTo);
+    conditionalAttr(animatorNode, 'android:valueType', animation.valueType);
+    conditionalAttr(animatorNode, 'android:interpolator', animation.interpolator);
     animationNode.appendChild(animatorNode);
   }
 
@@ -76,7 +73,7 @@ export function vectorLayerToXmlNode(vl: VectorLayer, destinationNode: HTMLEleme
   destinationNode.setAttributeNS(ANDROID_NS, 'android:height', `${vl.height}dp`);
   destinationNode.setAttributeNS(ANDROID_NS, 'android:viewportWidth', `${vl.width}`);
   destinationNode.setAttributeNS(ANDROID_NS, 'android:viewportHeight', `${vl.height}`);
-  destinationNode.setAttributeNS(ANDROID_NS, 'android:alpha', `${vl.alpha}`);
+  conditionalAttr(destinationNode, 'android:alpha', vl.alpha, 1);
 
   walk(vl, (layer, parentNode) => {
     if (layer instanceof VectorLayer) {
