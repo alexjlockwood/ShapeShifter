@@ -1,6 +1,6 @@
 import {
   Component, Input, OnInit, ChangeDetectorRef,
-  OnDestroy, NgZone, OnChanges
+  OnDestroy, NgZone, OnChanges, PipeTransform, Pipe
 } from '@angular/core';
 import { VectorLayer, PathLayer } from '../scripts/layers';
 import { PathCommand, SubPathCommand, Command } from '../scripts/commands';
@@ -8,35 +8,57 @@ import { CanvasType } from '../CanvasType';
 import { LayerStateService, Event as LayerStateEvent } from '../services/layerstate.service';
 import { Subscription } from 'rxjs/Subscription';
 import { AutoAwesome } from '../scripts/common';
+import { Observable } from 'rxjs/Observable';
+import 'rxjs/add/observable/combineLatest';
 
 @Component({
   selector: 'app-inspector',
   templateUrl: './inspector.component.html',
   styleUrls: ['./inspector.component.scss'],
 })
-export class InspectorComponent implements OnInit, OnDestroy {
+export class InspectorComponent implements OnInit {
   START_CANVAS = CanvasType.Start;
   END_CANVAS = CanvasType.End;
 
-  subPathCommandItems: SubPathCommandItem[] = [];
+  subPathCommandItemsObservable: Observable<[string, string]>;
   private readonly subscriptions: Subscription[] = [];
 
   constructor(private layerStateService: LayerStateService) { }
 
   ngOnInit() {
-    [CanvasType.Start, CanvasType.End].forEach(type => {
-      this.subscriptions.push(this.layerStateService.addListener(
-        type, (event: LayerStateEvent) => {
-          this.rebuildSubPathCommandItems();
-        }));
-    });
+    this.subPathCommandItemsObservable = Observable.combineLatest(
+      this.layerStateService.getActivePathIdObservable(CanvasType.Start),
+      this.layerStateService.getActivePathIdObservable(CanvasType.End));
   }
 
-  ngOnDestroy() {
-    this.subscriptions.forEach(s => s.unsubscribe());
+  trackSubPathCommand(index: number, item: SubPathCommandItem) {
+    return item.subIdx;
   }
 
-  private rebuildSubPathCommandItems() {
+  trackCommand(index: number, item: CommandItem) {
+    return item.id;
+  }
+}
+
+class SubPathCommandItem {
+  constructor(
+    public readonly subIdx: number,
+    public readonly startCmdItems: CommandItem[] = [],
+    public readonly endCmdItems: CommandItem[] = [],
+    public isExpanded = true) { }
+}
+
+class CommandItem {
+  constructor(
+    public readonly id: string,
+    public readonly command: Command) { }
+}
+
+@Pipe({ name: 'toSubPathCommandItems' })
+export class SubPathCommandItemsPipe implements PipeTransform {
+  constructor(private layerStateService: LayerStateService) { }
+
+  transform(activePathIds: [string, string]): SubPathCommandItem[] {
     const subPathCommandItems: SubPathCommandItem[] = [];
 
     const getPathCommandFn = (canvasType: CanvasType) => {
@@ -66,41 +88,9 @@ export class InspectorComponent implements OnInit, OnDestroy {
           endCmdItems.push({ id, command });
         });
       }
-      const currItems = this.subPathCommandItems;
-      const wasExpanded = i < currItems.length ? currItems[i].isExpanded : true;
-      subPathCommandItems.push(
-        new SubPathCommandItem(i, startCmdItems, endCmdItems, wasExpanded));
+      // TODO: save the previous expanded state somehow?
+      subPathCommandItems.push(new SubPathCommandItem(i, startCmdItems, endCmdItems));
     }
-    this.subPathCommandItems = subPathCommandItems;
+    return subPathCommandItems;
   }
-
-  toggleExpandedState(subIdx: number) {
-    this.subPathCommandItems[subIdx].isExpanded = !this.isExpanded(subIdx);
-  }
-
-  isExpanded(subIdx: number) {
-    return this.subPathCommandItems[subIdx].isExpanded;
-  }
-
-  trackSubPathCommand(index: number, item: SubPathCommandItem) {
-    return item.subIdx;
-  }
-
-  trackCommand(index: number, item: CommandItem) {
-    return item.id;
-  }
-}
-
-class SubPathCommandItem {
-  constructor(
-    public readonly subIdx: number,
-    public readonly startCmdItems: CommandItem[] = [],
-    public readonly endCmdItems: CommandItem[] = [],
-    public isExpanded = true) { }
-}
-
-class CommandItem {
-  constructor(
-    public readonly id: string,
-    public readonly command: Command) { }
 }

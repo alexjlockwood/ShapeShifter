@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
 import {
   Component, AfterViewInit, OnChanges, Output, OnInit, HostListener,
-  SimpleChanges, Input, ViewChild, ElementRef, OnDestroy
+  SimpleChanges, Input, ViewChild, ElementRef, OnDestroy, Pipe, PipeTransform
 } from '@angular/core';
 import { PathCommand, Command } from '../scripts/commands';
 import { PathLayer } from '../scripts/layers';
@@ -210,5 +210,19 @@ export class InspectorItemComponent implements OnInit, OnDestroy {
       && !this.isHoveringOverReverse
       && !this.isHoveringOverShiftBack
       && !this.isHoveringOverShiftForward;
+  }
+}
+
+@Pipe({ name: 'toSvgText' })
+export class SvgCommandPipe implements PipeTransform {
+  transform(c: Command): string {
+    if (c.svgChar === 'Z') {
+      return `${c.svgChar}`;
+    } else {
+      const p = _.last(c.points);
+      const x = _.round(p.x, 2);
+      const y = _.round(p.y, 2);
+      return `${c.svgChar} ${x}, ${y}`;
+    }
   }
 }

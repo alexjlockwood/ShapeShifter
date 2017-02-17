@@ -38,19 +38,17 @@ export class CanvasRulerDirective implements OnInit, OnDestroy {
   ngOnInit() {
     this.canvas = $(this.elementRef.nativeElement);
     this.subscriptions.push(
-      this.layerStateService.addListener(
-        this.canvasType, event => {
-          const vl = event.vectorLayer;
-          const newWidth = vl ? vl.width : DEFAULT_VIEWPORT_SIZE;
-          const newHeight = vl ? vl.height : DEFAULT_VIEWPORT_SIZE;
-          const didSizeChange =
-            this.vlWidth !== newWidth || this.vlHeight !== newHeight;
-          if (didSizeChange) {
-            this.vlWidth = newWidth;
-            this.vlHeight = newHeight;
-            this.draw();
-          }
-        }));
+      this.layerStateService.getVectorLayerObservable(this.canvasType).subscribe(vl => {
+        const newWidth = vl ? vl.width : DEFAULT_VIEWPORT_SIZE;
+        const newHeight = vl ? vl.height : DEFAULT_VIEWPORT_SIZE;
+        const didSizeChange =
+          this.vlWidth !== newWidth || this.vlHeight !== newHeight;
+        if (didSizeChange) {
+          this.vlWidth = newWidth;
+          this.vlHeight = newHeight;
+          this.draw();
+        }
+      }));
     this.subscriptions.push(
       this.canvasResizeService.addListener(size => {
         const width = size.width - CANVAS_MARGIN * 2;

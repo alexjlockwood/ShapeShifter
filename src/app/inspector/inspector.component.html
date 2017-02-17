@@ -1,17 +1,17 @@
 <div fxLayout="column">
   <div class="subpath-container"
     *ngFor="
-       let subPathCmdItem of subPathCommandItems;
+       let subPathCmdItem of (subPathCommandItemsObservable | async | toSubPathCommandItems);
        trackBy: trackSubPathCommand">
     <div fxLayout="row"
       fxLayoutAlign="start center"
       class="subpath-header-listitem">
       <button md-icon-button
-        (click)="toggleExpandedState(subPathCmdItem.subIdx)">
+        (click)="subPathCmdItem.isExpanded = !subPathCmdItem.isExpanded">
         <md-icon>{{subPathCmdItem.isExpanded ? 'expand_less' : 'expand_more'}}</md-icon>
       </button>
       <div fxFlex
-        (click)="toggleExpandedState(subPathCmdItem.subIdx)">
+        (click)="subPathCmdItem.isExpanded = !subPathCmdItem.isExpanded">
         {{ 'Subpath #' + (subPathCmdItem.subIdx + 1)}}
       </div>
     </div>

@@ -81,22 +81,26 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     this.canvas = $(this.renderingCanvasRef.nativeElement);
     this.offscreenCanvas = $(document.createElement('canvas'));
     this.subscriptions.push(
-      this.layerStateService.addListener(
-        this.canvasType, event => {
-          const oldWidth = this.viewportWidth;
-          const oldHeight = this.viewportHeight;
-          this.vectorLayer = event.vectorLayer;
-          this.activePathId = event.activePathId;
-          this.shouldDrawLayer = !!this.vectorLayer && !!this.activePathId;
-          const newWidth = this.viewportWidth;
-          const newHeight = this.viewportHeight;
-          const didSizeChange = oldWidth !== newWidth || oldHeight !== newHeight;
-          if (didSizeChange) {
-            this.resizeAndDraw();
-          } else {
-            this.draw();
-          }
-        }));
+      this.layerStateService.getVectorLayerObservable(this.canvasType).subscribe(vl => {
+        const oldWidth = this.viewportWidth;
+        const oldHeight = this.viewportHeight;
+        this.vectorLayer = vl;
+        this.shouldDrawLayer = !!this.vectorLayer && !!this.activePathId;
+        const newWidth = this.viewportWidth;
+        const newHeight = this.viewportHeight;
+        const didSizeChange = oldWidth !== newWidth || oldHeight !== newHeight;
+        if (didSizeChange) {
+          this.resizeAndDraw();
+        } else {
+          this.draw();
+        }
+      }));
+    this.subscriptions.push(
+      this.layerStateService.getActivePathIdObservable(this.canvasType).subscribe(activePathId => {
+        this.activePathId = activePathId;
+        this.shouldDrawLayer = !!this.vectorLayer && !!this.activePathId;
+        this.draw();
+      }));
     this.canvasResizeService.addListener(size => {
       const width = size.width - CANVAS_MARGIN * 2;
       const height = size.height - CANVAS_MARGIN * 2;

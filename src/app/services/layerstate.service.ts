@@ -17,19 +17,16 @@ import { ROTATION_GROUP_LAYER_ID } from '../scripts/parsers';
 export class LayerStateService {
   private readonly vectorLayerMap = new Map<CanvasType, VectorLayer>();
   private readonly activePathIdMap = new Map<CanvasType, string>();
-  private readonly sources = new Map<CanvasType, BehaviorSubject<Event>>();
-  private readonly streams = new Map<CanvasType, Observable<Event>>();
+  private readonly vectorLayerSources = new Map<CanvasType, BehaviorSubject<VectorLayer>>();
+  private readonly activePathIdSources = new Map<CanvasType, BehaviorSubject<string>>();
   private statusSource = new BehaviorSubject<MorphabilityStatus>(MorphabilityStatus.None);
   private statusStream = this.statusSource.asObservable();
 
   constructor() {
     [CanvasType.Start, CanvasType.Preview, CanvasType.End]
       .forEach(type => {
-        this.sources.set(type, new BehaviorSubject<Event>({
-          vectorLayer: undefined,
-          activePathId: undefined,
-        }));
-        this.streams.set(type, this.sources.get(type).asObservable());
+        this.vectorLayerSources.set(type, new BehaviorSubject<VectorLayer>(undefined));
+        this.activePathIdSources.set(type, new BehaviorSubject<string>(undefined));
       });
   }
 
@@ -56,7 +53,6 @@ export class LayerStateService {
    * Called by the PathSelectorComponent when a new vector layer path is selected.
    */
   setActivePathId(type: CanvasType, pathId: string, shouldNotify = true) {
-    const activePathId = this.getActivePathId(type);
     this.activePathIdMap.set(type, pathId);
     const activePathLayer = this.getActivePathLayer(type);
     const numSubPaths = activePathLayer.pathData.subPathCommands.length;
@@ -203,10 +199,8 @@ export class LayerStateService {
    * canvas type has changed and that they should update their content.
    */
   notifyChange(type: CanvasType) {
-    this.sources.get(type).next({
-      vectorLayer: this.vectorLayerMap.get(type),
-      activePathId: this.activePathIdMap.get(type),
-    });
+    this.vectorLayerSources.get(type).next(this.vectorLayerMap.get(type));
+    this.activePathIdSources.get(type).next(this.activePathIdMap.get(type));
     const morphabilityStatus = this.getMorphabilityStatus();
     if (this.statusSource.getValue() !== morphabilityStatus) {
       this.statusSource.next(morphabilityStatus);
@@ -234,8 +228,12 @@ export class LayerStateService {
     canvasTypes.forEach(type => this.notifyChange(type));
   }
 
-  addListener(type: CanvasType, callback: (layerStateEvent: Event) => void) {
-    return this.streams.get(type).subscribe(callback);
+  getVectorLayerObservable(type: CanvasType) {
+    return this.vectorLayerSources.get(type);
+  }
+
+  getActivePathIdObservable(type: CanvasType) {
+    return this.activePathIdSources.get(type);
   }
 
   getMorphabilityStatusObservable() {
