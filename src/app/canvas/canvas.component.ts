@@ -113,7 +113,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     if (this.canvasType === CanvasType.Preview) {
       // Preview canvas specific setup.
       this.subscriptions.push(
-        this.animatorService.animatedValueStream.subscribe(fraction => {
+        this.animatorService.getAnimatedValueObservable().subscribe(fraction => {
           const startPathLayer = this.layerStateService.getActivePathLayer(CanvasType.Start);
           const previewPathLayer = this.layerStateService.getActivePathLayer(CanvasType.Preview);
           const endPathLayer = this.layerStateService.getActivePathLayer(CanvasType.End);
@@ -145,13 +145,13 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     } else {
       // Non-preview canvas specific setup.
       this.subscriptions.push(
-        this.selectionStateService.stream.subscribe(() => this.draw()));
+        this.selectionStateService.getSelectionsObservable().subscribe(() => this.draw()));
       const setCurrentHoverFn = hover => {
         this.currentHover = hover;
         this.draw();
       };
       this.subscriptions.push(
-        this.hoverStateService.stream.subscribe(hover => {
+        this.hoverStateService.getHoverObservable().subscribe(hover => {
           if (!hover) {
             // Clear the current hover.
             setCurrentHoverFn(undefined);

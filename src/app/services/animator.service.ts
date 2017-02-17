@@ -25,11 +25,14 @@ const DEFAULT_IS_PLAYING = false;
 @Injectable()
 export class AnimatorService {
   private readonly animatedValueSource = new BehaviorSubject<number>(DEFAULT_FRACTION);
-  readonly animatedValueStream = this.animatedValueSource.asObservable();
   private animator: Animator;
 
   constructor(private ngZone: NgZone) {
     this.animator = new Animator(ngZone);
+  }
+
+  getAnimatedValueObservable() {
+    return this.animatedValueSource.asObservable();
   }
 
   isSlowMotion() {

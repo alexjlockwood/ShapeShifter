@@ -41,7 +41,7 @@ export class InspectorItemComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.subscriptions.push(
-      this.selectionStateService.stream.subscribe(
+      this.selectionStateService.getSelectionsObservable().subscribe(
         (selections: Selection[]) => {
           const activePathId = this.layerStateService.getActivePathId(this.canvasType);
           this.isSelected = activePathId && _.some(selections, {
@@ -79,25 +79,21 @@ export class InspectorItemComponent implements OnInit, OnDestroy {
     }, appendToList);
   }
 
-  // TODO: update selections
   onReverseClick(event: MouseEvent) {
     const fromPathLayer = this.layerStateService.getActivePathLayer(this.canvasType);
     this.replacePathCommand(fromPathLayer.pathData.reverse(this.subIdx), event);
   }
 
-  // TODO: update selections
   onShiftBackClick(event: MouseEvent) {
     const fromPathLayer = this.layerStateService.getActivePathLayer(this.canvasType);
     this.replacePathCommand(fromPathLayer.pathData.shiftBack(this.subIdx), event);
   }
 
-  // TODO: update selections
   onShiftForwardClick(event: MouseEvent) {
     const fromPathLayer = this.layerStateService.getActivePathLayer(this.canvasType);
     this.replacePathCommand(fromPathLayer.pathData.shiftForward(this.subIdx), event);
   }
 
-  // TODO: update selections
   onSplitButtonClick(event: MouseEvent) {
     const fromPathLayer = this.layerStateService.getActivePathLayer(this.canvasType);
     this.clearSelectionsAndHovers();
@@ -105,7 +101,6 @@ export class InspectorItemComponent implements OnInit, OnDestroy {
       fromPathLayer.pathData.splitInHalf(this.subIdx, this.cmdIdx), event);
   }
 
-  // TODO: update selections
   onUnsplitButtonClick(event: MouseEvent) {
     const fromPathLayer = this.layerStateService.getActivePathLayer(this.canvasType);
     this.clearSelectionsAndHovers();

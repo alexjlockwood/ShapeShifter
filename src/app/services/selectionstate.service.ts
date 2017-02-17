@@ -16,11 +16,13 @@ import { CanvasType } from '../CanvasType';
 @Injectable()
 export class SelectionStateService {
   private readonly source = new BehaviorSubject<ReadonlyArray<Selection>>([]);
-  readonly stream = this.source.asObservable();
-  private selections: Selection[] = [];
+
+  getSelectionsObservable() {
+    return this.source.asObservable();
+  }
 
   getSelections(): ReadonlyArray<Selection> {
-    return this.selections;
+    return this.source.getValue();
   }
 
   /**
@@ -30,32 +32,32 @@ export class SelectionStateService {
    */
   toggle(selection: Selection, appendToList = false) {
     // Remove all selections that don't match the new selections editor type.
-    _.remove(this.selections, sel => {
+    const updatedSelections = this.source.getValue().slice();
+    _.remove(updatedSelections, sel => {
       return sel.source !== selection.source
         || sel.commandId.pathId !== selection.commandId.pathId;
     });
-    const existingSelections = _.remove(this.selections, sel => {
+    const existingSelections = _.remove(updatedSelections, sel => {
       // Remove any selections that are equal to the new selection.
       return areSelectionsEqual(selection, sel);
     });
     if (!existingSelections.length) {
       // If no selections were removed, then add the selection to the list.
-      this.selections.push(selection);
+      updatedSelections.push(selection);
     }
     if (!appendToList) {
       // If we aren't appending multiple selections at a time, then clear
       // any previous selections from the list.
-      _.remove(this.selections, sel => !areSelectionsEqual(selection, sel));
+      _.remove(updatedSelections, sel => !areSelectionsEqual(selection, sel));
     }
-    this.source.next(this.selections);
+    this.source.next(updatedSelections);
   }
 
   /**
    * Clears the current list of selections.
    */
   reset() {
-    this.selections = [];
-    this.source.next(this.selections);
+    this.source.next([]);
   }
 }
 

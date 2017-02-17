@@ -12,21 +12,22 @@ import { CanvasType } from '../CanvasType';
  */
 @Injectable()
 export class HoverStateService {
-  private readonly source = new Subject<Hover>();
-  readonly stream = this.source.asObservable();
-  private currentHover: Hover;
+  private readonly source = new BehaviorSubject<Hover>(undefined);
+
+  getHoverObservable() {
+    return this.source.asObservable();
+  }
 
   getHover() {
-    return this.currentHover;
+    return this.source.getValue();
   }
 
   setHover(hover: Hover) {
-    this.currentHover = hover;
-    this.source.next(this.currentHover);
+    this.source.next(hover);
   }
 
   reset() {
-    if (this.currentHover) {
+    if (this.source.getValue()) {
       this.setHover(undefined);
     }
   }
