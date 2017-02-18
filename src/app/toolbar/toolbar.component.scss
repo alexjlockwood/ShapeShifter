@@ -24,7 +24,7 @@ md-toolbar {
 }
 
 // Remove link decorations from overflow menu items.
-a:-webkit-any-link {
+.toolbar-overflow-link-item {
   color: inherit;
   text-decoration: none;
   cursor: inherit;
