@@ -1,0 +1,16 @@
+:host {
+  position: absolute;
+  z-index: 100;
+  left: 0;
+  right: 0;
+  height: 4px;
+  cursor: row-resize;
+}
+
+// TODO: the splitter cursor doesn't always show up as 'row-resize' when dragging
+.highlighted {
+  width: 100%;
+  height: 100%;
+  background-color: rgba(#000, .1);
+  cursor: row-resize;
+}

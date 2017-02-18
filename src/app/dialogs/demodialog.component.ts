@@ -5,13 +5,13 @@ import { MdDialogRef } from '@angular/material';
   selector: 'app-demodialog',
   template: `
   <span md-dialog-title>Choose a demo</span>
-  <md-radio-group class="example-radio-group" [(ngModel)]="selectedDemoTitle">
-    <md-radio-button class="example-radio-button"
+  <md-radio-group class="dialog-radio-group" [(ngModel)]="selectedDemoTitle">
+    <md-radio-button class="dialog-radio-button"
       *ngFor="let demoTitle of demoTitles" [value]="demoTitle">
       {{demoTitle}}
     </md-radio-button>
   </md-radio-group>
-  <md-dialog-actions fxLayout="row" fxLayoutGap="8px">
+  <md-dialog-actions fxLayout="row">
     <!-- The ordering here matters (it ensures that 'OK' gets focus first). -->
     <span fxFlex></span>
     <button fxFlexOrder="2" md-button (click)="dialogRef.close(selectedDemoTitle)">OK</button>

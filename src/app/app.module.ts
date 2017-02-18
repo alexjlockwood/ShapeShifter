@@ -8,7 +8,7 @@ import { MaterialModule, MdIconRegistry } from '@angular/material';
 import { AppComponent } from './app.component';
 import { CanvasComponent } from './canvas/canvas.component';
 import { TimelineComponent } from './timeline/timeline.component';
-import { SplitterDirective } from './splitter/splitter.directive';
+import { SplitterComponent } from './splitter/splitter.component';
 import { InspectorComponent } from './inspector/inspector.component';
 import { InspectorItemComponent, SvgCommandPipe } from './inspector/inspectoritem.component';
 import { AnimatorService } from './services/animator.service';
@@ -32,7 +32,7 @@ import 'hammerjs';
     AppComponent,
     CanvasComponent,
     TimelineComponent,
-    SplitterDirective,
+    SplitterComponent,
     InspectorComponent,
     InspectorItemComponent,
     CanvasRulerDirective,

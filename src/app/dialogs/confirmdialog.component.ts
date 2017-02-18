@@ -8,7 +8,7 @@ import { MdDialogRef } from '@angular/material';
   <md-dialog-content>
     <p>{{ message }}</p>
   </md-dialog-content>
-  <md-dialog-actions fxLayout="row" fxLayoutGap="8px">
+  <md-dialog-actions fxLayout="row">
     <!-- The ordering here matters (it ensures that 'OK' gets focus first). -->
     <span fxFlex></span>
     <button fxFlexOrder="2" md-button (click)="dialogRef.close(true)">OK</button>

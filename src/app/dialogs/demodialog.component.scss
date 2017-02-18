@@ -1,17 +1,23 @@
 @import '../styles/variables';
 @import '../styles/theme';
-
 button {
   text-transform: uppercase;
   color: mat-color($app-accent);
+  &:md-dialog-close {
+    margin-right: 8px;
+  }
 }
 
-// TODO: fix the text alignment here...
-.example-radio-group {
+md-dialog-actions {
+  min-width: 220px;
+}
+
+// TODO: this text should center-align with the radio button
+.dialog-radio-group {
   display: inline-flex;
   flex-direction: column;
 }
 
-.example-radio-button {
+.dialog-radio-button {
   margin-bottom: 16px;
 }

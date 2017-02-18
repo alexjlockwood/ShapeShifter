@@ -84,6 +84,8 @@ export class AppComponent implements OnInit, OnDestroy {
       if (document.activeElement.matches('input')) {
         return true;
       }
+      // TODO: don't do anything if user is also clicking 'meta' or 'shift' key?
+      // TOOD: i.e. meta + R means refresh page so don't rewind?
       const isMorphable =
         this.layerStateService.getMorphabilityStatus() === MorphabilityStatus.Morphable;
       if (event.keyCode === 8 || event.keyCode === 46) {
