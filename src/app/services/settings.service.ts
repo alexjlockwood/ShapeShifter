@@ -11,10 +11,9 @@ import { Observable } from 'rxjs/Observable';
 @Injectable()
 export class SettingsService {
   private readonly source = new BehaviorSubject<Settings>({shouldLabelPoints: false});
-  private readonly stream = this.source.asObservable();
 
-  addListener(callback: (settings: Settings) => void) {
-    return this.stream.subscribe(callback);
+  getSettingsObservable() {
+    return this.source.asObservable();
   }
 
   setShouldLabelPoints(shouldLabelPoints: boolean) {
