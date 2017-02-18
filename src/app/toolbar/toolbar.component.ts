@@ -88,9 +88,9 @@ export class ToolbarComponent implements OnInit {
       avdTargets.push(rotationTarget);
       vectorLayerChildren.push(this.layerStateService.getActiveRotationLayer(CanvasType.Start));
     } else {
-      avdTargets.push(this.createPathAvdTarget());
       vectorLayerChildren.push(this.layerStateService.getActivePathLayer(CanvasType.Start));
     }
+    avdTargets.push(this.createPathAvdTarget());
     const outputVectorLayer =
       new VectorLayer(
         vectorLayerChildren,
