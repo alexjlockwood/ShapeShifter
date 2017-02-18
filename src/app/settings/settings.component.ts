@@ -59,9 +59,12 @@ export class SettingsComponent implements OnInit, OnDestroy {
   // TODO: make these the rotation gets exported as well
   set startRotation(startRotation: number) {
     this.startRotation_ = startRotation;
-    this.layerStateService.updateActiveRotationLayer(CanvasType.Start, startRotation);
-    this.layerStateService.updateActiveRotationLayer(CanvasType.Preview, startRotation);
-    this.layerStateService.updateActiveRotationLayer(CanvasType.End, this.endRotation);
+    this.layerStateService.updateActiveRotationLayer(CanvasType.Start, startRotation, false);
+    this.layerStateService.updateActiveRotationLayer(CanvasType.Preview, startRotation, false);
+    this.layerStateService.updateActiveRotationLayer(CanvasType.End, this.endRotation, false);
+    this.layerStateService.notifyChange(CanvasType.Start);
+    this.layerStateService.notifyChange(CanvasType.Preview);
+    this.layerStateService.notifyChange(CanvasType.End);
   }
 
   get endRotation() {
@@ -72,9 +75,12 @@ export class SettingsComponent implements OnInit, OnDestroy {
   // TODO: make these the rotation gets exported as well
   set endRotation(endRotation: number) {
     this.endRotation_ = endRotation;
-    this.layerStateService.updateActiveRotationLayer(CanvasType.Start, this.startRotation);
-    this.layerStateService.updateActiveRotationLayer(CanvasType.Preview, this.startRotation);
-    this.layerStateService.updateActiveRotationLayer(CanvasType.End, endRotation);
+    this.layerStateService.updateActiveRotationLayer(CanvasType.Start, this.startRotation, false);
+    this.layerStateService.updateActiveRotationLayer(CanvasType.Preview, this.startRotation, false);
+    this.layerStateService.updateActiveRotationLayer(CanvasType.End, endRotation, false);
+    this.layerStateService.notifyChange(CanvasType.Start);
+    this.layerStateService.notifyChange(CanvasType.Preview);
+    this.layerStateService.notifyChange(CanvasType.End);
   }
 
   get shouldLabelPoints() {

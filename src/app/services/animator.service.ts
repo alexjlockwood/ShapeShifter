@@ -11,7 +11,7 @@ const DEFAULT_INTERPOLATOR = INTERPOLATORS[0];
 const MIN_DURATION = 100;
 const DEFAULT_DURATION = 300;
 const MAX_DURATION = 60000;
-const REPEAT_DELAY = 800;
+const REPEAT_DELAY = 750;
 const DEFAULT_PLAYBACK_SPEED = 1;
 const SLOW_MOTION_PLAYBACK_SPEED = 5;
 const DEFAULT_IS_REPEATING = false;
@@ -64,7 +64,7 @@ export class AnimatorService {
     }
   }
 
-  play() {
+  private play() {
     this.animator.play((fraction: number, value: number) => {
       if (fraction === 0 || fraction === 1) {
         // Allow change detection at the start/end of the animation.
@@ -77,7 +77,7 @@ export class AnimatorService {
     });
   }
 
-  pause() {
+  private pause() {
     this.animator.pause();
   }
 
