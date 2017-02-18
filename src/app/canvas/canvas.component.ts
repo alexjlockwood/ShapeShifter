@@ -438,11 +438,11 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
               const isDrag =
                 activelyDraggedPointId && _.isMatch(activelyDraggedPointId, commandId);
               const point = MathUtil.transformPoint(_.last(cmd.points), ...transforms);
-              return { commandId, isSplit, isMove, isHoverOrSelection, isDrag, point };
+              const position = cmdIdx + 1;
+              return { commandId, isSplit, isMove, isHoverOrSelection, isDrag, point, position };
             });
           })
           .flatMap(pointInfos => pointInfos)
-          .map((pointInfo, i) => _.assign({}, pointInfo, { position: i + 1 }))
           // Skip the currently dragged point, if it exists.
           // We'll draw that separately next.
           .filter(pointInfo => !pointInfo.isDrag)
@@ -485,6 +485,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         if (pointInfo.isHoverOrSelection) {
           radius = this.pathPointRadius * SELECTED_POINT_RADIUS_FACTOR;
         }
+        // TODO: figure out when to hide the point text from the user?
         const text =
           this.cssScale > 4 || pointInfo.isHoverOrSelection
             ? pointInfo.position
