@@ -13,10 +13,9 @@ import { CanvasType } from '../CanvasType';
 @Injectable()
 export class CanvasResizeService {
   private readonly source = new BehaviorSubject<Size>({ width: 0, height: 0 });
-  private readonly stream = this.source.asObservable();
 
-  addListener(callback: (size: Size) => void) {
-    return this.stream.subscribe(callback);
+  getCanvasResizeObservable() {
+    return this.source.asObservable();
   }
 
   setSize(width: number, height: number) {

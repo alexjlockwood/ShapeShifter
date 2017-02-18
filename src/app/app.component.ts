@@ -2,6 +2,7 @@ import { Component, OnInit, ViewChild, OnDestroy, ElementRef } from '@angular/co
 import { environment } from '../environments/environment';
 import { CanvasType } from './CanvasType';
 import { Subscription } from 'rxjs/Subscription';
+import { Observable } from 'rxjs/Observable';
 import { LayerStateService, MorphabilityStatus } from './services/layerstate.service';
 import { AnimatorService, CanvasResizeService, HoverStateService, SelectionStateService } from './services';
 import * as $ from 'jquery';
@@ -26,6 +27,7 @@ export class AppComponent implements OnInit, OnDestroy {
   MORPHABILITY_UNMORPHABLE = MorphabilityStatus.Unmorphable;
   MORPHABILITY_MORPHABLE = MorphabilityStatus.Morphable;
   morphabilityStatus = MorphabilityStatus.None;
+  morphabilityStatusTextObservable: Observable<string>;
   wasMorphable = false;
   private readonly subscriptions: Subscription[] = [];
 
@@ -43,6 +45,41 @@ export class AppComponent implements OnInit, OnDestroy {
     private readonly canvasResizeService: CanvasResizeService) { }
 
   ngOnInit() {
+    this.morphabilityStatusTextObservable =
+      this.layerStateService.getMorphabilityStatusObservable()
+        .map(status => {
+          if (status === MorphabilityStatus.Morphable) {
+            return 'looks good!';
+          }
+          if (status === MorphabilityStatus.Unmorphable) {
+            const startId = this.layerStateService.getActivePathId(CanvasType.Start);
+            const endId = this.layerStateService.getActivePathId(CanvasType.End);
+            const startLayer = this.layerStateService.getActivePathLayer(CanvasType.Start);
+            const endLayer = this.layerStateService.getActivePathLayer(CanvasType.End);
+            if (startLayer && endLayer) {
+              const startCommand = startLayer.pathData;
+              const endCommand = endLayer.pathData;
+              if (startCommand.subPathCommands.length === endCommand.subPathCommands.length) {
+                for (let i = 0; i < startCommand.subPathCommands.length; i++) {
+                  const startCmds = startCommand.subPathCommands[i].commands;
+                  const endCmds = endCommand.subPathCommands[i].commands;
+                  if (startCmds.length !== endCmds.length) {
+                    const pathId = startCmds.length < endCmds.length ? startId : endId;
+                    const diff = Math.abs(startCmds.length - endCmds.length);
+                    if (diff === 1) {
+                      return `add 1 point to '${pathId}' in subpath #${i + 1}`;
+                    } else {
+                      return `add ${diff} points to '${pathId}' in subpath #${i + 1}`;
+                    }
+                  }
+                }
+              }
+            }
+            // TODO: better user messaging?
+            return 'unmorphable';
+          }
+          return '';
+        });
     this.initKeyDownListener();
     this.initBeforeOnLoadListener();
 
@@ -51,6 +88,7 @@ export class AppComponent implements OnInit, OnDestroy {
       const numCanvases = this.wasMorphable ? 3 : 2;
       const width = this.canvasContainer.width() / numCanvases;
       const height = this.canvasContainer.height();
+      console.log(width, height);
       if (this.currentPaneWidth !== width || this.currentPaneHeight !== height) {
         this.currentPaneWidth = width;
         this.currentPaneHeight = height;

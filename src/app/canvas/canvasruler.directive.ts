@@ -28,7 +28,8 @@ export class CanvasRulerDirective implements OnInit, OnDestroy {
   private readonly subscriptions: Subscription[] = [];
   private vlWidth = DEFAULT_VIEWPORT_SIZE;
   private vlHeight = DEFAULT_VIEWPORT_SIZE;
-  private componentSize = 1;
+  private componentWidth = 1;
+  private componentHeight = 1;
 
   constructor(
     private elementRef: ElementRef,
@@ -50,12 +51,12 @@ export class CanvasRulerDirective implements OnInit, OnDestroy {
         }
       }));
     this.subscriptions.push(
-      this.canvasResizeService.addListener(size => {
-        const width = size.width - CANVAS_MARGIN * 2;
-        const height = size.height - CANVAS_MARGIN * 2;
-        const componentSize = Math.min(width, height);
-        if (this.componentSize !== componentSize) {
-          this.componentSize = componentSize;
+      this.canvasResizeService.getCanvasResizeObservable().subscribe(size => {
+        const oldWidth = this.componentWidth;
+        const oldHeight = this.componentHeight;
+        this.componentWidth = Math.max(1, size.width - CANVAS_MARGIN * 2);
+        this.componentHeight = Math.max(1, size.height - CANVAS_MARGIN * 2);
+        if (this.componentWidth !== oldWidth || this.componentHeight !== oldHeight) {
           this.draw();
         }
       }));
@@ -82,16 +83,14 @@ export class CanvasRulerDirective implements OnInit, OnDestroy {
   // TODO: ruler doesn't align right for 800x600 viewport in a small window
   draw() {
     const isHorizontal = this.orientation === 'horizontal';
-    const containerWidth = Math.max(1, this.componentSize);
-    const containerHeight = Math.max(1, this.componentSize);
     const vectorAspectRatio = this.vlWidth / this.vlHeight;
 
     // The 'cssScale' represents the number of CSS pixels per SVG viewport pixel.
     let cssScale;
     if (vectorAspectRatio > 1) {
-      cssScale = containerWidth / this.vlWidth;
+      cssScale = this.componentWidth / this.vlWidth;
     } else {
-      cssScale = containerHeight / this.vlHeight;
+      cssScale = this.componentHeight / this.vlHeight;
     }
 
     // The 'attrScale' represents the number of physical pixels per SVG viewport pixel.

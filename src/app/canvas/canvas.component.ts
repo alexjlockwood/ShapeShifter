@@ -50,7 +50,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   private vectorLayer: VectorLayer;
   // TODO: make use of this variable (i.e. only show labeled points for active path, etc.)
   private activePathId: string;
-  private componentSize = 0;
+  private componentWidth = 1;
+  private componentHeight = 1;
   private element: JQuery;
   private canvas: JQuery;
   private offscreenCanvas: JQuery;
@@ -95,12 +96,12 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           this.draw();
         }
       }));
-    this.canvasResizeService.addListener(size => {
-      const width = size.width - CANVAS_MARGIN * 2;
-      const height = size.height - CANVAS_MARGIN * 2;
-      const componentSize = Math.min(width, height);
-      if (this.componentSize !== componentSize) {
-        this.componentSize = componentSize;
+    this.canvasResizeService.getCanvasResizeObservable().subscribe(size => {
+      const oldWidth = this.componentWidth;
+      const oldHeight = this.componentHeight;
+      this.componentWidth = Math.max(1, size.width - CANVAS_MARGIN * 2);
+      this.componentHeight = Math.max(1, size.height - CANVAS_MARGIN * 2);
+      if (this.componentWidth !== oldWidth || this.componentHeight !== oldHeight) {
         this.resizeAndDraw();
       }
     });
@@ -137,7 +138,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           this.draw();
         }));
       this.subscriptions.push(
-        this.settingsService.addListener(settings => {
+        this.settingsService.getSettingsObservable().subscribe(settings => {
           if (this.shouldLabelPoints !== settings.shouldLabelPoints) {
             this.shouldLabelPoints = settings.shouldLabelPoints;
             this.draw();
@@ -205,15 +206,13 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     if (!this.isViewInit) {
       return;
     }
-    const containerWidth = Math.max(1, this.componentSize);
-    const containerHeight = Math.max(1, this.componentSize);
     const vectorAspectRatio = this.viewportWidth / this.viewportHeight;
 
     // The 'cssScale' represents the number of CSS pixels per SVG viewport pixel.
     if (vectorAspectRatio > 1) {
-      this.cssScale = containerWidth / this.viewportWidth;
+      this.cssScale = this.componentWidth / this.viewportWidth;
     } else {
-      this.cssScale = containerHeight / this.viewportHeight;
+      this.cssScale = this.componentHeight / this.viewportHeight;
     }
     // TODO: use this for better large canvas support (but make sure rulers are aligned)
     // this.cssScale = this.cssScale > 1
@@ -237,7 +236,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         });
     });
 
-    const size = Math.min(containerWidth, containerHeight);
+    const size = Math.min(this.componentWidth, this.componentHeight);
     this.pathPointRadius = size * SIZE_TO_POINT_RADIUS_FACTOR / Math.max(2, this.cssScale);
     this.splitPathPointRadius = this.pathPointRadius * SPLIT_POINT_RADIUS_FACTOR;
     this.draw();

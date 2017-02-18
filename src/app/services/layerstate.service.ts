@@ -201,10 +201,7 @@ export class LayerStateService {
   notifyChange(type: CanvasType) {
     this.vectorLayerSources.get(type).next(this.vectorLayerMap.get(type));
     this.activePathIdSources.get(type).next(this.activePathIdMap.get(type));
-    const morphabilityStatus = this.getMorphabilityStatus();
-    if (this.statusSource.getValue() !== morphabilityStatus) {
-      this.statusSource.next(morphabilityStatus);
-    }
+    this.statusSource.next(this.getMorphabilityStatus());
   }
 
   getMorphabilityStatus() {
