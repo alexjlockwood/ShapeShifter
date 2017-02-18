@@ -125,7 +125,9 @@ export class AppComponent implements OnInit, OnDestroy {
   private initBeforeOnLoadListener() {
     // TODO: we should check to see if there are any dirty changes first
     $(window).on('beforeunload', event => {
-      if (!IS_DEV_MODE) {
+      if (!IS_DEV_MODE
+        && (this.layerStateService.getVectorLayer(CanvasType.Start)
+          || this.layerStateService.getVectorLayer(CanvasType.End))) {
         return 'You\'ve made changes but haven\'t saved. ' +
           'Are you sure you want to navigate away?';
       }

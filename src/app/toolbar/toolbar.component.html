@@ -7,6 +7,7 @@
   <span fxFlex="1 1 auto"></span>
   <button
     class="toolbar-action-button"
+    [disabled]="!(isDirtyObservable | async)"
     mdTooltip="New"
     mdTooltipPosition="below"
     mdTooltipShowDelay="500"
@@ -16,7 +17,7 @@
   </button>
   <button md-icon-button
     class="toolbar-action-button"
-    [disabled]="this.morphabilityStatus | async | isEqualTo: MORPHABILITY_NONE"
+    [disabled]="morphabilityStatusObservable | async | isEqualTo: MORPHABILITY_NONE"
     (click)="onAutoFixClick()"
     mdTooltip="Auto fix"
     mdTooltipShowDelay="500"
@@ -25,7 +26,7 @@
   </button>
   <button md-icon-button
     class="toolbar-action-button"
-    [disabled]="this.morphabilityStatus | async | isNotEqualTo: MORPHABILITY_MORPHABLE"
+    [disabled]="morphabilityStatusObservable | async | isNotEqualTo: MORPHABILITY_MORPHABLE"
     mdTooltip="Export"
     mdTooltipPosition="below"
     mdTooltipShowDelay="500"

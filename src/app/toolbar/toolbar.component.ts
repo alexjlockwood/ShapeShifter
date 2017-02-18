@@ -14,6 +14,7 @@ import { DIGIT_DEMO_SVG_STRING, ANIMALS_DEMO_SVG_STRING } from './demos';
 import { VectorLayerLoader } from '../scripts/parsers';
 import { VectorLayer, GroupLayer, PathLayer, Layer } from '../scripts/layers';
 import { Observable } from 'rxjs/Observable';
+import 'rxjs/add/observable/combineLatest';
 
 @Component({
   selector: 'app-toolbar',
@@ -24,7 +25,8 @@ export class ToolbarComponent implements OnInit {
   MORPHABILITY_NONE = MorphabilityStatus.None;
   MORPHABILITY_UNMORPHABLE = MorphabilityStatus.Unmorphable;
   MORPHABILITY_MORPHABLE = MorphabilityStatus.Morphable;
-  morphabilityStatus: Observable<MorphabilityStatus>;
+  morphabilityStatusObservable: Observable<MorphabilityStatus>;
+  isDirtyObservable: Observable<boolean>;
   private readonly demoMap: Map<string, string> = new Map();
 
   constructor(
@@ -38,7 +40,12 @@ export class ToolbarComponent implements OnInit {
   ngOnInit() {
     this.demoMap.set('Morphing digits', DIGIT_DEMO_SVG_STRING);
     this.demoMap.set('Morphing animals', ANIMALS_DEMO_SVG_STRING);
-    this.morphabilityStatus = this.layerStateService.getMorphabilityStatusObservable();
+    this.morphabilityStatusObservable =
+      this.layerStateService.getMorphabilityStatusObservable();
+    this.isDirtyObservable = Observable.combineLatest(
+      this.layerStateService.getVectorLayerObservable(CanvasType.Start),
+      this.layerStateService.getVectorLayerObservable(CanvasType.End),
+      (vl1, vl2) => !!vl1 || !!vl2);
   }
 
   onNewClick() {

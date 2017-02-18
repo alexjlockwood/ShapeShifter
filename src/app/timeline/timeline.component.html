@@ -12,7 +12,7 @@
   </button>
   <button md-icon-button
     [disabled]="morphabilityStatusObservable | async | isNotEqualTo: MORPHABILITY_MORPHABLE"
-    mdTooltip="Rewind (Left arrow)"
+    mdTooltip="Rewind (Left)"
     mdTooltipPosition="below"
     mdTooltipShowDelay="500"
     (click)="onRewindClick()"
@@ -36,7 +36,7 @@
   </button>
   <button md-icon-button
     [disabled]="morphabilityStatusObservable | async | isNotEqualTo: MORPHABILITY_MORPHABLE"
-    mdTooltip="Fast forward (Right arrow)"
+    mdTooltip="Fast forward (Right)"
     mdTooltipPosition="below"
     mdTooltipShowDelay="500"
     (click)="onFastForwardClick()"
