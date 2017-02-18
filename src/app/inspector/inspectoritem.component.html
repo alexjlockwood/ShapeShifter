@@ -10,7 +10,7 @@
   <span class="command-text">{{ this.command | toSvgText }}</span>
   <span fxFlex></span>
   <button md-icon-button
-    mdTooltip="Shift back"
+    mdTooltip="Shift back points"
     mdTooltipPosition="above"
     mdTooltipShowDelay="500"
     *ngIf="isShiftable()"
@@ -20,7 +20,7 @@
     <md-icon>skip_previous</md-icon>
   </button>
   <button md-icon-button
-    mdTooltip="Shift forward"
+    mdTooltip="Shift forward points"
     mdTooltipPosition="above"
     mdTooltipShowDelay="500"
     *ngIf="isShiftable()"
@@ -30,7 +30,7 @@
     <md-icon>skip_next</md-icon>
   </button>
   <button md-icon-button
-    mdTooltip="Reverse"
+    mdTooltip="Reverse points"
     mdTooltipPosition="above"
     mdTooltipShowDelay="500"
     *ngIf="isReversible()"
@@ -40,7 +40,7 @@
     <md-icon svgIcon="reverse"></md-icon>
   </button>
   <button md-icon-button
-    mdTooltip="Delete"
+    mdTooltip="Delete point"
     mdTooltipPosition="above"
     mdTooltipShowDelay="500"
     *ngIf="isUnsplittable()"
@@ -50,7 +50,7 @@
     <md-icon>delete</md-icon>
   </button>
   <button md-icon-button
-    mdTooltip="Add"
+    mdTooltip="Add point"
     mdTooltipPosition="above"
     mdTooltipShowDelay="500"
     *ngIf="isSplittable()"

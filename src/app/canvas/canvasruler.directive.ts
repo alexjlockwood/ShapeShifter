@@ -84,10 +84,11 @@ export class CanvasRulerDirective implements OnInit, OnDestroy {
   draw() {
     const isHorizontal = this.orientation === 'horizontal';
     const vectorAspectRatio = this.vlWidth / this.vlHeight;
+    const containerAspectRatio = this.componentWidth / this.componentHeight;
 
     // The 'cssScale' represents the number of CSS pixels per SVG viewport pixel.
     let cssScale;
-    if (vectorAspectRatio > 1) {
+    if (vectorAspectRatio > containerAspectRatio) {
       cssScale = this.componentWidth / this.vlWidth;
     } else {
       cssScale = this.componentHeight / this.vlHeight;

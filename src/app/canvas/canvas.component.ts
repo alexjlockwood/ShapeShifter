@@ -97,6 +97,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         }
       }));
     this.canvasResizeService.getCanvasResizeObservable().subscribe(size => {
+      console.log('canvas resize service');
       const oldWidth = this.componentWidth;
       const oldHeight = this.componentHeight;
       this.componentWidth = Math.max(1, size.width - CANVAS_MARGIN * 2);
@@ -207,17 +208,14 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       return;
     }
     const vectorAspectRatio = this.viewportWidth / this.viewportHeight;
+    const containerAspectRatio = this.componentWidth / this.componentHeight;
 
     // The 'cssScale' represents the number of CSS pixels per SVG viewport pixel.
-    if (vectorAspectRatio > 1) {
+    if (vectorAspectRatio > containerAspectRatio) {
       this.cssScale = this.componentWidth / this.viewportWidth;
     } else {
       this.cssScale = this.componentHeight / this.viewportHeight;
     }
-    // TODO: use this for better large canvas support (but make sure rulers are aligned)
-    // this.cssScale = this.cssScale > 1
-    //   ? Math.floor(this.cssScale)
-    //   : Math.max(.1, this.cssScale);
 
     // The 'attrScale' represents the number of physical pixels per SVG viewport pixel.
     this.attrScale = this.cssScale * devicePixelRatio;
