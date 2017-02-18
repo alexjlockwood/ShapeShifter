@@ -95,12 +95,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           this.draw();
         }
       }));
-    this.subscriptions.push(
-      this.layerStateService.getActivePathIdObservable(this.canvasType).subscribe(activePathId => {
-        this.activePathId = activePathId;
-        this.shouldDrawLayer = !!this.vectorLayer && !!this.activePathId;
-        this.draw();
-      }));
     this.canvasResizeService.addListener(size => {
       const width = size.width - CANVAS_MARGIN * 2;
       const height = size.height - CANVAS_MARGIN * 2;
@@ -112,22 +106,34 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     });
     if (this.canvasType === CanvasType.Preview) {
       // Preview canvas specific setup.
+      const interpolatePreview = (fraction: number) => {
+        const startPathLayer = this.layerStateService.getActivePathLayer(CanvasType.Start);
+        const previewPathLayer = this.layerStateService.getActivePathLayer(CanvasType.Preview);
+        const endPathLayer = this.layerStateService.getActivePathLayer(CanvasType.End);
+        if (startPathLayer && previewPathLayer && endPathLayer) {
+          // Note that there is no need to broadcast layer state changes
+          // for the preview canvas.
+          previewPathLayer.interpolate(startPathLayer, endPathLayer, fraction);
+        }
+        const startGroupLayer = this.layerStateService.getActiveRotationLayer(CanvasType.Start);
+        const previewGroupLayer = this.layerStateService.getActiveRotationLayer(CanvasType.Preview);
+        const endGroupLayer = this.layerStateService.getActiveRotationLayer(CanvasType.End);
+        if (startGroupLayer && previewGroupLayer && endGroupLayer) {
+          previewGroupLayer.interpolate(startGroupLayer, endGroupLayer, fraction);
+        }
+      };
+      let currentAnimatedFraction = 0;
+      this.subscriptions.push(
+        this.layerStateService.getActivePathIdObservable(this.canvasType).subscribe(activePathId => {
+          this.activePathId = activePathId;
+          this.shouldDrawLayer = !!this.vectorLayer && !!this.activePathId;
+          interpolatePreview(currentAnimatedFraction);
+          this.draw();
+        }));
       this.subscriptions.push(
         this.animatorService.getAnimatedValueObservable().subscribe(fraction => {
-          const startPathLayer = this.layerStateService.getActivePathLayer(CanvasType.Start);
-          const previewPathLayer = this.layerStateService.getActivePathLayer(CanvasType.Preview);
-          const endPathLayer = this.layerStateService.getActivePathLayer(CanvasType.End);
-          if (startPathLayer && previewPathLayer && endPathLayer) {
-            // Note that there is no need to broadcast layer state changes
-            // for the preview canvas.
-            previewPathLayer.interpolate(startPathLayer, endPathLayer, fraction);
-          }
-          const startGroupLayer = this.layerStateService.getActiveRotationLayer(CanvasType.Start);
-          const previewGroupLayer = this.layerStateService.getActiveRotationLayer(CanvasType.Preview);
-          const endGroupLayer = this.layerStateService.getActiveRotationLayer(CanvasType.End);
-          if (startGroupLayer && previewGroupLayer && endGroupLayer) {
-            previewGroupLayer.interpolate(startGroupLayer, endGroupLayer, fraction);
-          }
+          currentAnimatedFraction = fraction;
+          interpolatePreview(fraction);
           this.draw();
         }));
       this.subscriptions.push(
@@ -144,6 +150,12 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         }));
     } else {
       // Non-preview canvas specific setup.
+      this.subscriptions.push(
+        this.layerStateService.getActivePathIdObservable(this.canvasType).subscribe(activePathId => {
+          this.activePathId = activePathId;
+          this.shouldDrawLayer = !!this.vectorLayer && !!this.activePathId;
+          this.draw();
+        }));
       this.subscriptions.push(
         this.selectionStateService.getSelectionsObservable().subscribe(() => this.draw()));
       const setCurrentHoverFn = hover => {
