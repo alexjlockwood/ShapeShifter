@@ -1,9 +1,7 @@
 import * as _ from 'lodash';
 import * as $ from 'jquery';
 import { Component, OnInit, ViewContainerRef } from '@angular/core';
-import {
-  LayerStateService, MorphabilityStatus, Event as LayerStateEvent
-} from '../services/layerstate.service';
+import { LayerStateService, MorphabilityStatus } from '../services';
 import { CanvasType } from '../CanvasType';
 import { AvdSerializer } from '../scripts/parsers';
 import { AvdTarget, AvdAnimation } from '../scripts/animation';

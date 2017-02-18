@@ -6,7 +6,8 @@ import { MdDialogRef } from '@angular/material';
   template: `
   <span md-dialog-title>Choose a demo</span>
   <md-radio-group class="example-radio-group" [(ngModel)]="selectedDemoTitle">
-    <md-radio-button class="example-radio-button" *ngFor="let demoTitle of demoTitles" [value]="demoTitle">
+    <md-radio-button class="example-radio-button"
+      *ngFor="let demoTitle of demoTitles" [value]="demoTitle">
       {{demoTitle}}
     </md-radio-button>
   </md-radio-group>
@@ -19,8 +20,17 @@ import { MdDialogRef } from '@angular/material';
   styleUrls: ['./demodialog.component.scss'],
 })
 export class DemoDialogComponent {
-  demoTitles = [];
+  private demoTitles_: string[] = [];
   selectedDemoTitle: string;
 
   constructor(public readonly dialogRef: MdDialogRef<DemoDialogComponent>) {}
+
+  get demoTitles() {
+    return this.demoTitles_;
+  }
+
+  set demoTitles(demoTitles: string[]) {
+    this.demoTitles_ = demoTitles.slice();
+    this.selectedDemoTitle = demoTitles.length ? demoTitles[0] : undefined;
+  }
 }

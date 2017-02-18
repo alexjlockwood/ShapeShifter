@@ -207,7 +207,7 @@ export class LayerStateService {
     }
   }
 
-  private getMorphabilityStatus() {
+  getMorphabilityStatus() {
     const startPathLayer = this.getActivePathLayer(CanvasType.Start);
     const endPathLayer = this.getActivePathLayer(CanvasType.End);
     if (!startPathLayer || !endPathLayer) {
@@ -246,9 +246,4 @@ export enum MorphabilityStatus {
   None,
   Unmorphable,
   Morphable,
-}
-
-export interface Event {
-  vectorLayer: VectorLayer | undefined;
-  activePathId: string | undefined;
 }

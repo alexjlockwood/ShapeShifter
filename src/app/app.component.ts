@@ -1,19 +1,9 @@
-import {
-  Component, OnInit, AfterViewInit, ElementRef,
-  ViewChild, OnDestroy, HostListener
-} from '@angular/core';
+import { Component, OnInit, ViewChild, OnDestroy, ElementRef } from '@angular/core';
 import { environment } from '../environments/environment';
-import { Layer, VectorLayer, GroupLayer, PathLayer } from './scripts/layers';
-import { VectorLayerLoader } from './scripts/parsers';
-import { Point } from './scripts/common';
 import { CanvasType } from './CanvasType';
 import { Subscription } from 'rxjs/Subscription';
-import { BehaviorSubject } from 'rxjs/BehaviorSubject';
-import { HoverStateService } from './services/hoverstate.service';
-import { LayerStateService, Event as LayerStateEvent, MorphabilityStatus } from './services/layerstate.service';
-import { DividerDragEvent } from './splitter/splitter.directive';
-import { CanvasResizeService } from './services/canvasresize.service';
-import { SelectionStateService } from './services/selectionstate.service';
+import { LayerStateService, MorphabilityStatus } from './services/layerstate.service';
+import { AnimatorService, CanvasResizeService, HoverStateService, SelectionStateService } from './services';
 import * as $ from 'jquery';
 import * as erd from 'element-resize-detector';
 
@@ -37,7 +27,6 @@ export class AppComponent implements OnInit, OnDestroy {
   MORPHABILITY_MORPHABLE = MorphabilityStatus.Morphable;
   morphabilityStatus = MorphabilityStatus.None;
   wasMorphable = false;
-
   private readonly subscriptions: Subscription[] = [];
 
   private canvasContainer: JQuery;
@@ -47,18 +36,17 @@ export class AppComponent implements OnInit, OnDestroy {
   @ViewChild('canvasContainer') private canvasContainerRef: ElementRef;
 
   constructor(
-    private layerStateService: LayerStateService,
-    private hoverStateService: HoverStateService,
-    private selectionStateService: SelectionStateService,
-    private canvasResizeService: CanvasResizeService) { }
+    private readonly layerStateService: LayerStateService,
+    private readonly hoverStateService: HoverStateService,
+    private readonly selectionStateService: SelectionStateService,
+    private readonly animatorService: AnimatorService,
+    private readonly canvasResizeService: CanvasResizeService) { }
 
   ngOnInit() {
-    this.canvasContainer = $(this.canvasContainerRef.nativeElement);
-
-    // TODO: unregister these in ngOnDestroy
     this.initKeyDownListener();
     this.initBeforeOnLoadListener();
 
+    this.canvasContainer = $(this.canvasContainerRef.nativeElement);
     const updateCanvasSizes = () => {
       const numCanvases = this.wasMorphable ? 3 : 2;
       const width = this.canvasContainer.width() / numCanvases;
@@ -87,28 +75,48 @@ export class AppComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     ELEMENT_RESIZE_DETECTOR.removeAllListeners(this.canvasContainer.get(0));
     this.subscriptions.forEach(s => s.unsubscribe());
+    $(window).unbind('keydown');
+    $(window).unbind('beforeunload');
   }
 
   private initKeyDownListener() {
-    // Register global key events.
-    // TODO: unregister this in ngOnDestroy
     $(window).on('keydown', event => {
       if (document.activeElement.matches('input')) {
         return true;
       }
+      const isMorphable =
+        this.layerStateService.getMorphabilityStatus() === MorphabilityStatus.Morphable;
       if (event.keyCode === 8 || event.keyCode === 46) {
         // In case there's a JS error, never navigate away.
         event.preventDefault();
         this.deleteSelectedSplitPoints();
         return false;
-      } else if (event.metaKey && event.keyCode === 'Z'.charCodeAt(0)) {
-        // Undo/redo (Z key).
-        // TODO: implement an undo service to keep track of undo/redo state.
-        // return false;
       } else if (event.keyCode === 32) {
         // Spacebar.
-        // TODO: start the currently displayed animation
-        // return false;
+        if (isMorphable) {
+          this.animatorService.toggle();
+        }
+        return false;
+      } else if (event.keyCode === 37) {
+        // Left arrow.
+        if (isMorphable) {
+          this.animatorService.rewind();
+        }
+      } else if (event.keyCode === 39) {
+        // Right arrow.
+        if (isMorphable) {
+          this.animatorService.fastForward();
+        }
+      } else if (event.keyCode === 82) {
+        // R.
+        if (isMorphable) {
+          this.animatorService.setIsRepeating(!this.animatorService.isRepeating());
+        }
+      } else if (event.keyCode === 83) {
+        // S.
+        if (isMorphable) {
+          this.animatorService.setIsSlowMotion(!this.animatorService.isSlowMotion());
+        }
       }
       return undefined;
     });

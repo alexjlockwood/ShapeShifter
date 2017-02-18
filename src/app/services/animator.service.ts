@@ -27,7 +27,7 @@ export class AnimatorService {
   private readonly animatedValueSource = new BehaviorSubject<number>(DEFAULT_FRACTION);
   private animator: Animator;
 
-  constructor(private ngZone: NgZone) {
+  constructor(private readonly ngZone: NgZone) {
     this.animator = new Animator(ngZone);
   }
 
@@ -54,6 +54,14 @@ export class AnimatorService {
 
   isPlaying() {
     return this.animator.isPlaying();
+  }
+
+  toggle() {
+    if (this.isPlaying()) {
+      this.pause();
+    } else {
+      this.play();
+    }
   }
 
   play() {

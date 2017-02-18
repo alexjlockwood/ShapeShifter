@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { AnimatorService } from '../services/animator.service';
 import { LayerStateService, MorphabilityStatus } from '../services/layerstate.service';
 import { Subscription } from 'rxjs/Subscription';
+import { Observable } from 'rxjs/Observable';
 import { CanvasType } from '../CanvasType';
 
 @Component({
@@ -9,19 +10,22 @@ import { CanvasType } from '../CanvasType';
   templateUrl: './timeline.component.html',
   styleUrls: ['./timeline.component.scss']
 })
-export class TimelineComponent implements OnInit {
-  isTimelineEnabled = false;
+export class TimelineComponent implements OnInit, OnDestroy {
+  MORPHABILITY_NONE = MorphabilityStatus.None;
+  MORPHABILITY_UNMORPHABLE = MorphabilityStatus.Unmorphable;
+  MORPHABILITY_MORPHABLE = MorphabilityStatus.Morphable;
+  morphabilityStatusObservable: Observable<MorphabilityStatus>;
   private readonly subscriptions: Subscription[] = [];
 
   constructor(
-    private layerStateService: LayerStateService,
-    private animatorService: AnimatorService) { }
+    private readonly layerStateService: LayerStateService,
+    private readonly animatorService: AnimatorService) { }
 
   ngOnInit() {
+    this.morphabilityStatusObservable = this.layerStateService.getMorphabilityStatusObservable();
     this.subscriptions.push(
       this.layerStateService.getMorphabilityStatusObservable().subscribe(status => {
-        this.isTimelineEnabled = status === MorphabilityStatus.Morphable;
-        if (!this.isTimelineEnabled) {
+        if (status !== MorphabilityStatus.Morphable) {
           this.animatorService.rewind();
         }
       }));
@@ -31,6 +35,10 @@ export class TimelineComponent implements OnInit {
     // });
     // TODO: is this necessary to trigger change detection?
     // this.animatorService.animatedValueStream.subscribe((value: number) => { });
+  }
+
+  ngOnDestroy() {
+    this.subscriptions.forEach(s => s.unsubscribe());
   }
 
   isSlowMotion() {
@@ -50,11 +58,7 @@ export class TimelineComponent implements OnInit {
   }
 
   onPlayPauseButtonClick() {
-    if (this.isPlaying()) {
-      this.animatorService.pause();
-    } else {
-      this.animatorService.play();
-    }
+    this.animatorService.toggle();
   }
 
   onRewindClick() {
