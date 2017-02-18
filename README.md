@@ -64,6 +64,16 @@ Auto fix is powered by an adaptation of the [Needleman-Wunsch algorithm][Needlem
 which is used in bioinformatics to align protein or nucleotide sequences. Instead of
 aligning DNA base-pairs, Shape Shifter uses the algorithm to align SVG command types instead.
 
+## Bug reports & feature requests
+
+Let me know if you encounter any issues with the app (attach SVG files and/or
+screenshots if you can). Take a look at the list of known issues
+[here](https://github.com/alexjlockwood/ShapeShifter/issues).
+
+I am open to pretty much any feature request, so don't be afraid to ask!
+I'll likely work on the most popular feature requests first. I'm especially
+curious how I can make this web app more useful for iOS and web developers.
+
 ## Build instructions
 
 If you want to contribute, you can build and serve the web app locally as follows:
@@ -84,8 +94,8 @@ If you want to contribute, you can build and serve the web app locally as follow
 
 ## Special thanks
 
-Huge thanks to Nick Butcher and Roman Nurik for all of their help during the
-early stages of this project!
+Huge thanks to [Nick Butcher][nick-butcher-twitter] and [Roman Nurik][roman-nurik-twitter]
+for all of their help during the early stages of this project!
 
   [report-feature-request]: https://github.com/alexjlockwood/ShapeShifter/issues/new
   [adp-path-morphing]: http://www.androiddesignpatterns.com/2016/11/introduction-to-icon-animation-techniques.html#morphing-paths
@@ -93,3 +103,5 @@ early stages of this project!
   [illustrator]: http://www.adobe.com/products/illustrator.html
   [Needleman-Wunsch]: https://en.wikipedia.org/wiki/Needleman%E2%80%93Wunsch_algorithm
   [primer-on-bezier-curves]: https://pomax.github.io/bezierinfo
+  [nick-butcher-twitter]: https://twitter.com/crafty
+  [roman-nurik-twitter]: https://twitter.com/romannurik
