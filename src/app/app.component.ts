@@ -3,10 +3,12 @@ import { environment } from '../environments/environment';
 import { CanvasType } from './CanvasType';
 import { Subscription } from 'rxjs/Subscription';
 import { Observable } from 'rxjs/Observable';
+import { SubPathCommand } from './scripts/commands';
 import { LayerStateService, MorphabilityStatus } from './services/layerstate.service';
 import { AnimatorService, CanvasResizeService, HoverStateService, SelectionStateService } from './services';
 import * as $ from 'jquery';
 import * as erd from 'element-resize-detector';
+import * as _ from 'lodash';
 
 const IS_DEV_MODE = !environment.production;
 const ELEMENT_RESIZE_DETECTOR = erd();
@@ -49,7 +51,17 @@ export class AppComponent implements OnInit, OnDestroy {
       this.layerStateService.getMorphabilityStatusObservable()
         .map(status => {
           if (status === MorphabilityStatus.Morphable) {
-            return 'looks good!';
+            const hasSplitCmd =
+              _.chain([CanvasType.Start, CanvasType.End])
+                .map(type => this.layerStateService.getActivePathLayer(type).pathData)
+                .flatMap(pathCmd => pathCmd.subPathCommands)
+                .flatMap((subCmd: SubPathCommand) => subCmd.commands)
+                .some(cmd => cmd.isSplit)
+                .value();
+            if (hasSplitCmd) {
+              return 'Looks good! Drag the orange points above to alter the animation!';
+            }
+            return 'Looks good!';
           }
           if (status === MorphabilityStatus.Unmorphable) {
             const startId = this.layerStateService.getActivePathId(CanvasType.Start);
@@ -67,16 +79,16 @@ export class AppComponent implements OnInit, OnDestroy {
                     const pathId = startCmds.length < endCmds.length ? startId : endId;
                     const diff = Math.abs(startCmds.length - endCmds.length);
                     if (diff === 1) {
-                      return `add 1 point to '${pathId}' in subpath #${i + 1}`;
+                      return `Add 1 point to '${pathId}' in subpath #${i + 1}`;
                     } else {
-                      return `add ${diff} points to '${pathId}' in subpath #${i + 1}`;
+                      return `Add ${diff} points to '${pathId}' in subpath #${i + 1}`;
                     }
                   }
                 }
               }
             }
             // TODO: better user messaging?
-            return 'unmorphable';
+            return 'Unmorphable';
           }
           return '';
         });
