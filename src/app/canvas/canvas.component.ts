@@ -97,7 +97,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         }
       }));
     this.canvasResizeService.getCanvasResizeObservable().subscribe(size => {
-      console.log('canvas resize service');
       const oldWidth = this.componentWidth;
       const oldHeight = this.componentHeight;
       this.componentWidth = Math.max(1, size.width - CANVAS_MARGIN * 2);

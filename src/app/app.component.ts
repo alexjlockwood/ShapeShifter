@@ -100,7 +100,6 @@ export class AppComponent implements OnInit, OnDestroy {
       const numCanvases = this.wasMorphable ? 3 : 2;
       const width = this.canvasContainer.width() / numCanvases;
       const height = this.canvasContainer.height();
-      console.log(width, height);
       if (this.currentPaneWidth !== width || this.currentPaneHeight !== height) {
         this.currentPaneWidth = width;
         this.currentPaneHeight = height;
