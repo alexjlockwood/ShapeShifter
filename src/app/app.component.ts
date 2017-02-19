@@ -80,9 +80,9 @@ export class AppComponent implements OnInit, OnDestroy {
                 const pathId = startCmds.length < endCmds.length ? startId : endId;
                 const diff = Math.abs(startCmds.length - endCmds.length);
                 if (diff === 1) {
-                  return `Add 1 point to '${pathId}' in subpath #${i + 1}`;
+                  return `Add 1 point to '${pathId}' in subpath #${i + 1} below`;
                 } else {
-                  return `Add ${diff} points to '${pathId}' in subpath #${i + 1}`;
+                  return `Add ${diff} points to '${pathId}' in subpath #${i + 1} below`;
                 }
               }
             }

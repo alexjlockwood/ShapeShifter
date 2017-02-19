@@ -1,5 +1,49 @@
-// TODO: move this into a file and download at runtime?
-export const DIGIT_DEMO_SVG_STRING = `
+// TODO: move these into separate files and download at runtime?
+
+const PLUS_SVG = `
+<svg xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 24 24">
+  <path id="plus"
+    fill="#000"
+    d="M 5,11 L 11,11 L 11,5 L 13,5 L 13,11
+    L 19,11 L 19,13 L 13,13 L 13,19
+    L 11,19 L 11,13 L 5,13 L 5,11">
+  </path>
+</svg>`;
+
+const MINUS_SVG = `
+<svg xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 24 24">
+  <path id="minus"
+    fill="#000"
+    d="M 5,13 L 19,13 L 19,11 L 5,11 L 5,13">
+  </path>
+</svg>`;
+
+const DRAWER_SVG = `
+<svg xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 24 24">
+  <path id="drawer"
+    fill="#000"
+    d="M 21,6 L 21,8 L 3,8 L 3,6 Z
+    M 21,13 L 21,11 L 3,11 L 3,13 Z
+    M 21,16 L 21,18 3,18 L 3,16 L Z">
+  </path>
+</svg>`;
+
+const ARROW_SVG = `
+<svg xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 24 24">
+  <path id="arrow"
+    fill="#000"
+    d="M 12,4 L 10.6,5.4 L 16.17,11 L 19,11 Z
+    M 19,11 L 20,12 L 19,13 L 4,13 L 4,11 Z
+    M 19,13 L 12,20 L 10.6,18.6 L 16.17,13 Z">
+  </path>
+</svg>
+`;
+
+const DIGITS_SVG = `
 <svg xmlns="http://www.w3.org/2000/svg"
   viewBox="0 0 24 24">
   <path id="futura_zero"
@@ -71,8 +115,7 @@ export const DIGIT_DEMO_SVG_STRING = `
   </path>
 </svg>`;
 
-// TODO: create a demo dialog that allows selection between different demos
-export const ANIMALS_DEMO_SVG_STRING = `
+const ANIMALS_SVG = `
 <svg xmlns="http://www.w3.org/2000/svg"
   width="819.2px"
   height="561.298px"
@@ -160,3 +203,9 @@ export const ANIMALS_DEMO_SVG_STRING = `
   </g>
 </svg>
 `;
+
+export const DEMO_MAP = new Map<string, { start: string, end: string }>();
+DEMO_MAP.set('Plus-to-minus icon', { start: PLUS_SVG, end: MINUS_SVG });
+DEMO_MAP.set('Drawer-to-arrow icon', { start: DRAWER_SVG, end: ARROW_SVG });
+DEMO_MAP.set('Morphing digits', { start: DIGITS_SVG, end: DIGITS_SVG });
+DEMO_MAP.set('Morphing animals', { start: ANIMALS_SVG, end: ANIMALS_SVG });

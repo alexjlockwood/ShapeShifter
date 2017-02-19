@@ -10,7 +10,7 @@ import { AutoAwesome } from '../scripts/commands';
 import { AnimatorService } from '../services/animator.service';
 import { SelectionStateService } from '../services/selectionstate.service';
 import { HoverStateService } from '../services/hoverstate.service';
-import { DIGIT_DEMO_SVG_STRING, ANIMALS_DEMO_SVG_STRING } from './demos';
+import { DEMO_MAP } from '../demos';
 import { VectorLayerLoader } from '../scripts/parsers';
 import { VectorLayer, GroupLayer, PathLayer, Layer } from '../scripts/layers';
 import { Observable } from 'rxjs/Observable';
@@ -27,7 +27,6 @@ export class ToolbarComponent implements OnInit {
   MORPHABILITY_MORPHABLE = MorphabilityStatus.Morphable;
   morphabilityStatusObservable: Observable<MorphabilityStatus>;
   isDirtyObservable: Observable<boolean>;
-  private readonly demoMap: Map<string, string> = new Map();
 
   constructor(
     private viewContainerRef: ViewContainerRef,
@@ -38,8 +37,6 @@ export class ToolbarComponent implements OnInit {
     private dialogsService: DialogService) { }
 
   ngOnInit() {
-    this.demoMap.set('Morphing digits', DIGIT_DEMO_SVG_STRING);
-    this.demoMap.set('Morphing animals', ANIMALS_DEMO_SVG_STRING);
     this.morphabilityStatusObservable =
       this.layerStateService.getMorphabilityStatusObservable();
     this.isDirtyObservable = Observable.combineLatest(
@@ -146,29 +143,36 @@ export class ToolbarComponent implements OnInit {
   }
 
   onDemoClick() {
-    const demoTitles = Array.from(this.demoMap.keys());
+    const demoTitles = Array.from(DEMO_MAP.keys());
     this.dialogsService
       .demo(this.viewContainerRef, demoTitles)
       .subscribe(selectedDemoTitle => {
-        const selectedSvgString = this.demoMap.get(selectedDemoTitle);
-        if (!selectedSvgString) {
+        const selectedSvgStrings = DEMO_MAP.get(selectedDemoTitle);
+        if (!selectedSvgStrings) {
           return;
         }
-        const importedVectorLayer = VectorLayerLoader.loadVectorLayerFromSvgString(selectedSvgString);
-        this.layerStateService.setVectorLayer(CanvasType.Start, importedVectorLayer, false);
-        this.layerStateService.setVectorLayer(CanvasType.Preview, importedVectorLayer.clone(), false);
-        this.layerStateService.setVectorLayer(CanvasType.End, importedVectorLayer.clone(), false);
-        const availablePathIds: string[] = [];
-        importedVectorLayer.walk((layer => {
-          if (!(layer instanceof PathLayer)) {
-            return;
+        const importedStartVectorLayer = VectorLayerLoader.loadVectorLayerFromSvgString(selectedSvgStrings.start);
+        const importedEndVectorLayer = VectorLayerLoader.loadVectorLayerFromSvgString(selectedSvgStrings.end);
+        this.layerStateService.setVectorLayer(CanvasType.Start, importedStartVectorLayer.clone(), false);
+        this.layerStateService.setVectorLayer(CanvasType.Preview, importedStartVectorLayer.clone(), false);
+        this.layerStateService.setVectorLayer(CanvasType.End, importedEndVectorLayer.clone(), false);
+        const availableStartPathIds: string[] = [];
+        importedStartVectorLayer.walk((layer => {
+          if (layer instanceof PathLayer) {
+            availableStartPathIds.push(layer.id);
           }
-          availablePathIds.push(layer.id);
         }));
-        const shuffledPathIds = _.shuffle(availablePathIds);
-        this.layerStateService.setActivePathId(CanvasType.Preview, shuffledPathIds[0], false);
-        this.layerStateService.setActivePathId(CanvasType.Start, shuffledPathIds[0], false);
-        this.layerStateService.setActivePathId(CanvasType.End, shuffledPathIds[1], false);
+        const availableEndPathIds: string[] = [];
+        importedEndVectorLayer.walk((layer => {
+          if (layer instanceof PathLayer) {
+            availableEndPathIds.push(layer.id);
+          }
+        }));
+        const shuffledStartPathIds = _.shuffle(availableStartPathIds);
+        const shuffledEndPathIds = _.shuffle(availableEndPathIds);
+        this.layerStateService.setActivePathId(CanvasType.Start, shuffledStartPathIds[0], false);
+        this.layerStateService.setActivePathId(CanvasType.Preview, shuffledStartPathIds[0], false);
+        this.layerStateService.setActivePathId(CanvasType.End, shuffledEndPathIds[0], false);
         this.layerStateService.notifyChange(CanvasType.Preview);
         this.layerStateService.notifyChange(CanvasType.Start);
         this.layerStateService.notifyChange(CanvasType.End);
