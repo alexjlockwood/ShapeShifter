@@ -73,8 +73,9 @@ each path instead. You can view the current implementation of the algorithm in t
 ## Bug reports & feature requests
 
 Let me know if you encounter any issues with the app (attach SVG files and/or
-screenshots if you can). Take a look at the list of known issues
-[here](https://github.com/alexjlockwood/ShapeShifter/issues).
+screenshots if you can). Before you do, take a look at the list of known issues
+[here](https://github.com/alexjlockwood/ShapeShifter/issues) and leave a comment
+on the existing bugs you want to see fixed in a future release!
 
 I am open to pretty much any feature request, so don't be afraid to ask!
 I'll likely work on the most popular feature requests first. **I'm especially
