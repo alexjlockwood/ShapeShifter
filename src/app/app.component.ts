@@ -68,26 +68,25 @@ export class AppComponent implements OnInit, OnDestroy {
             const endId = this.layerStateService.getActivePathId(CanvasType.End);
             const startLayer = this.layerStateService.getActivePathLayer(CanvasType.Start);
             const endLayer = this.layerStateService.getActivePathLayer(CanvasType.End);
-            if (startLayer && endLayer) {
-              const startCommand = startLayer.pathData;
-              const endCommand = endLayer.pathData;
-              if (startCommand.subPathCommands.length === endCommand.subPathCommands.length) {
-                for (let i = 0; i < startCommand.subPathCommands.length; i++) {
-                  const startCmds = startCommand.subPathCommands[i].commands;
-                  const endCmds = endCommand.subPathCommands[i].commands;
-                  if (startCmds.length !== endCmds.length) {
-                    const pathId = startCmds.length < endCmds.length ? startId : endId;
-                    const diff = Math.abs(startCmds.length - endCmds.length);
-                    if (diff === 1) {
-                      return `Add 1 point to '${pathId}' in subpath #${i + 1}`;
-                    } else {
-                      return `Add ${diff} points to '${pathId}' in subpath #${i + 1}`;
-                    }
-                  }
+            const startCommand = startLayer.pathData;
+            const endCommand = endLayer.pathData;
+            if (startCommand.subPathCommands.length !== endCommand.subPathCommands.length) {
+              return 'Unmorphable (<a href="https://github.com/alexjlockwood/ShapeShifter/issues/11" target="_blank">help</a>)';
+            }
+            for (let i = 0; i < startCommand.subPathCommands.length; i++) {
+              const startCmds = startCommand.subPathCommands[i].commands;
+              const endCmds = endCommand.subPathCommands[i].commands;
+              if (startCmds.length !== endCmds.length) {
+                const pathId = startCmds.length < endCmds.length ? startId : endId;
+                const diff = Math.abs(startCmds.length - endCmds.length);
+                if (diff === 1) {
+                  return `Add 1 point to '${pathId}' in subpath #${i + 1}`;
+                } else {
+                  return `Add ${diff} points to '${pathId}' in subpath #${i + 1}`;
                 }
               }
             }
-            // TODO: better user messaging?
+            // The user should never get to this point, but just in case.
             return 'Unmorphable';
           }
           return '';
@@ -109,7 +108,8 @@ export class AppComponent implements OnInit, OnDestroy {
 
     this.subscriptions.push(
       this.layerStateService.getMorphabilityStatusObservable().subscribe(status => {
-        this.wasMorphable = this.wasMorphable || status === MorphabilityStatus.Morphable;
+        this.wasMorphable =
+          status !== MorphabilityStatus.None && (this.wasMorphable || status === MorphabilityStatus.Morphable);
         if (this.morphabilityStatus !== status) {
           this.morphabilityStatus = status;
           updateCanvasSizes();

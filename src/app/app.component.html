@@ -43,8 +43,8 @@
         <span *ngIf="morphabilityStatus !== MORPHABILITY_NONE">
           <span [ngClass]="{
             'unmorphable': morphabilityStatus === MORPHABILITY_UNMORPHABLE,
-            'morphable': morphabilityStatus === MORPHABILITY_MORPHABLE}">
-            {{ morphabilityStatusTextObservable | async }}
+            'morphable': morphabilityStatus === MORPHABILITY_MORPHABLE}"
+            [innerHTML]="morphabilityStatusTextObservable | async">
           </span>
         </span>
       </div>

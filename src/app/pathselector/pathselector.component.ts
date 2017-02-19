@@ -33,8 +33,8 @@ export class PathSelectorComponent {
     }
     this.layerStateService.setVectorLayer(canvasType, vectorLayer, false);
     const pathLayers = this.getPathList(canvasType);
-    if (pathLayers.length === 1) {
-      // Auto-select the first path if only one exists.
+    if (pathLayers.length) {
+      // Auto-select the first path.
       this.setActivePathId(canvasType, pathLayers[0].id);
     }
     canvasTypes.forEach(type => this.layerStateService.notifyChange(type));

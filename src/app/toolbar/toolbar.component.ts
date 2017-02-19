@@ -65,7 +65,8 @@ export class ToolbarComponent implements OnInit {
   onAutoFixClick() {
     let resultStartCmd = this.layerStateService.getActivePathLayer(CanvasType.Start).pathData;
     let resultEndCmd = this.layerStateService.getActivePathLayer(CanvasType.End).pathData;
-    const numSubPaths = resultStartCmd.subPathCommands.length;
+    const numSubPaths =
+      Math.min(resultStartCmd.subPathCommands.length, resultEndCmd.subPathCommands.length);
     for (let subIdx = 0; subIdx < numSubPaths; subIdx++) {
       // Pass the command with the larger subpath as the 'from' command.
       const numStartCmds = resultStartCmd.subPathCommands[subIdx].commands.length;
