@@ -504,24 +504,20 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       return;
     }
     const activelyDraggedPointId = this.pointSelector.selectedPointId;
+    const lastKnownLocation = this.pointSelector.getLastKnownLocation();
     const projectionOntoPath =
-      this.calculateProjectionOntoPath(
-        this.pointSelector.getLastKnownLocation(), activelyDraggedPointId.pathId);
-    this.vectorLayer.walk((layer, transforms) => {
-      if (layer.id !== activelyDraggedPointId.pathId) {
-        return;
-      }
-      const projection = projectionOntoPath.projection;
-      let point;
-      if (projection.d < MIN_SNAP_THRESHOLD) {
-        point = new Point(projection.x, projection.y);
-      } else {
-        point = this.pointSelector.getLastKnownLocation();
-      }
-      point = MathUtil.transformPoint(point, ...transforms.reverse());
-      this.drawLabeledPoint(
-        ctx, point, this.splitPathPointRadius, SPLIT_POINT_COLOR);
-    });
+      this.calculateProjectionOntoPath(lastKnownLocation, activelyDraggedPointId.pathId);
+    const projection = projectionOntoPath.projection;
+    let point;
+    if (projection.d < MIN_SNAP_THRESHOLD) {
+      point = new Point(projection.x, projection.y);
+      point = MathUtil.transformPoint(
+        point, MathUtil.flattenTransforms(this.getTransformsForActiveLayer().reverse()));
+    } else {
+      point = lastKnownLocation;
+    }
+    this.drawLabeledPoint(
+      ctx, point, this.splitPathPointRadius, SPLIT_POINT_COLOR);
   }
 
   /**
@@ -649,8 +645,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       return;
     }
     if (this.pointSelector) {
-      const mouseUp = this.mouseEventToPoint(event);
-      this.pointSelector.onMouseUp(mouseUp);
+      const mousePoint = this.mouseEventToPoint(event);
+      this.pointSelector.onMouseUp(mousePoint);
 
       const selectedPointId = this.pointSelector.selectedPointId;
       if (this.pointSelector.isDragging()) {
@@ -671,7 +667,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           // Re-split the path at the projection point.
           activeLayer.pathData =
             this.calculateProjectionOntoPath(
-              mouseUp, selectedPointId.pathId).split();
+              mousePoint, selectedPointId.pathId).split();
 
           // Notify the global layer state service about the change and draw.
           // Clear any existing selections and/or hovers as well.
@@ -718,9 +714,12 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       if (!(layer instanceof PathLayer)) {
         return;
       }
+      transforms.reverse();
       const pathId = layer.id;
       const transformedMousePoint =
-        MathUtil.transformPoint(mousePoint, ...transforms.reverse());
+        MathUtil.transformPoint(
+          mousePoint,
+          MathUtil.flattenTransforms(transforms).invert());
       const minPathPoint =
         _.chain(layer.pathData.subPathCommands)
           .map((subCmd: SubPathCommand, subIdx: number) => {
@@ -778,9 +777,12 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       if (!(layer instanceof PathLayer) || pathId !== layer.id) {
         return;
       }
-      const transformedPoint =
-        MathUtil.transformPoint(mousePoint, ...transforms.reverse());
-      const projectionInfo = layer.pathData.project(transformedPoint);
+      transforms.reverse();
+      const transformedMousePoint =
+        MathUtil.transformPoint(
+          mousePoint,
+          MathUtil.flattenTransforms(transforms).invert());
+      const projectionInfo = layer.pathData.project(transformedMousePoint);
       if (!projectionInfo) {
         return;
       }
@@ -802,6 +804,30 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     const x = (event.pageX - canvasOffset.left) / this.cssScale;
     const y = (event.pageY - canvasOffset.top) / this.cssScale;
     return new Point(x, y);
+  }
+
+  /**
+   * Transforms a raw mouse point to the active layer's coordinate space.
+   */
+  private pointToActiveLayerCoordinates(point: Point) {
+    const reversedTransforms = this.getTransformsForActiveLayer().reverse();
+    return MathUtil.transformPoint(
+      point, MathUtil.flattenTransforms(reversedTransforms).invert());
+  }
+
+  /**
+   * Returns a list of parent transforms for the active layer. The transforms
+   * are returned in top-down order (i.e. the transform for the active layer's
+   * immediate parent will be the very last matrix in the returned list).
+   */
+  private getTransformsForActiveLayer() {
+    let matrices: Matrix[] = [];
+    this.vectorLayer.walk((layer, transforms) => {
+      if (layer.id === this.activePathId) {
+        matrices = transforms.slice();
+      }
+    });
+    return matrices;
   }
 }
 
