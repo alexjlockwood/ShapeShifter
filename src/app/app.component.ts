@@ -3,7 +3,7 @@ import { environment } from '../environments/environment';
 import { CanvasType } from './CanvasType';
 import { Subscription } from 'rxjs/Subscription';
 import { Observable } from 'rxjs/Observable';
-import { SubPathCommand } from './scripts/commands';
+import { SubPathCommand, Command } from './scripts/commands';
 import { LayerStateService, MorphabilityStatus } from './services/layerstate.service';
 import { AnimatorService, CanvasResizeService, HoverStateService, SelectionStateService } from './services';
 import * as $ from 'jquery';
@@ -51,17 +51,22 @@ export class AppComponent implements OnInit, OnDestroy {
       this.layerStateService.getMorphabilityStatusObservable()
         .map(status => {
           if (status === MorphabilityStatus.Morphable) {
+            const hasClosedPath =
+              _.chain([CanvasType.Start, CanvasType.End])
+                .map(type => this.layerStateService.getActivePathLayer(type).pathData)
+                .flatMap(pathCmd => pathCmd.subPathCommands as SubPathCommand[])
+                .some(subCmd => subCmd.isClosed)
+                .value();
             const hasSplitCmd =
               _.chain([CanvasType.Start, CanvasType.End])
                 .map(type => this.layerStateService.getActivePathLayer(type).pathData)
-                .flatMap(pathCmd => pathCmd.subPathCommands)
-                .flatMap((subCmd: SubPathCommand) => subCmd.commands)
+                .flatMap(pathCmd => pathCmd.subPathCommands as SubPathCommand[])
+                .flatMap(subCmd => subCmd.commands  as Command[])
                 .some(cmd => cmd.isSplit)
                 .value();
-            if (hasSplitCmd) {
-              return 'Looks good! Drag the orange points above to alter the animation!';
-            }
-            return 'Looks good!';
+            return `Looks good! Reverse${hasClosedPath ? '/shift' : ''} `
+              + `the points below ${hasSplitCmd ? 'or drag the orange points above' : ''} `
+              + `to alter the animation!`;
           }
           if (status === MorphabilityStatus.Unmorphable) {
             const startId = this.layerStateService.getActivePathId(CanvasType.Start);
@@ -71,7 +76,8 @@ export class AppComponent implements OnInit, OnDestroy {
             const startCommand = startLayer.pathData;
             const endCommand = endLayer.pathData;
             if (startCommand.subPathCommands.length !== endCommand.subPathCommands.length) {
-              return 'Unmorphable (<a href="https://github.com/alexjlockwood/ShapeShifter/issues/11" target="_blank">help</a>)';
+              return 'Unmorphable '
+                + '(<a href="https://github.com/alexjlockwood/ShapeShifter/issues/11" target="_blank">help</a>)';
             }
             for (let i = 0; i < startCommand.subPathCommands.length; i++) {
               const startCmds = startCommand.subPathCommands[i].commands;
