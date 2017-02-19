@@ -233,8 +233,9 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         });
     });
 
+    // TODO: set a min amount of pixels to use as the radius.
     const size = Math.min(this.componentWidth, this.componentHeight);
-    this.pathPointRadius = size * SIZE_TO_POINT_RADIUS_FACTOR / Math.max(3, this.cssScale);
+    this.pathPointRadius = size * SIZE_TO_POINT_RADIUS_FACTOR / Math.max(2, this.cssScale);
     this.splitPathPointRadius = this.pathPointRadius * SPLIT_POINT_RADIUS_FACTOR;
     this.draw();
     this.canvasRulers.forEach(r => r.draw());
