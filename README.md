@@ -58,7 +58,7 @@ To address these problems, Shape Shifter provides the following features:
 
 ## How does it work?
 
-Pretty much all of the graphics in this app is powered by bezier curve approximations under-the-hood.
+Pretty much all of the graphics in this app are powered by bezier curve approximations under-the-hood.
 I learned most of what I needed to know from this excellent [primer on bezier curves][primer-on-bezier-curves]
 (especially sections 9 and 33, which explain how to split and project points onto bezier
 curves without altering their original appearance). Most of the interesting SVG-related code
