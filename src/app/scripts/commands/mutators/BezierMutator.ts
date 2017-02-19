@@ -68,6 +68,10 @@ export class BezierMutator implements Mutator {
   }
 
   findTimeByDistance(distance: number): number {
+    if (distance === 0 || distance === 1) {
+      return distance;
+    }
+    const originalDistance = distance;
     const epsilon = 0.001;
     const maxDepth = -100;
 
@@ -78,12 +82,10 @@ export class BezierMutator implements Mutator {
       const low = split.left.length();
       const high = split.right.length();
       const diff = low - lowToHighRatio * high;
-
       if (Math.abs(diff) < epsilon) {
         // We found a satisfactory midpoint t value.
         break;
       }
-
       // Jump half the t-distance in the direction of the bias.
       step = step - 1;
       distance += (diff > 0 ? -1 : 1) * Math.pow(2, step);
@@ -94,7 +96,7 @@ export class BezierMutator implements Mutator {
       console.warn(
         'could not find the midpoint for: ',
         `${this.svgChar} ` + this.points.toString());
-        return 0.5;
+      return originalDistance;
     }
 
     return distance;
