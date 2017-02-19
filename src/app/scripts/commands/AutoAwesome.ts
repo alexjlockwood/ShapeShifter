@@ -160,7 +160,7 @@ interface Alignment<T> {
 }
 
 /**
- * Aligns two sequences of draw commands using the Needleman-Wunsch algorithm.
+ * Aligns two sequences of objects using the Needleman-Wunsch algorithm.
  */
 function align<T>(
   from: ReadonlyArray<T>,
