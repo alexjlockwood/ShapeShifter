@@ -21,16 +21,19 @@ File a [feature request][report-feature-request]!
 Writing high-quality [path morphing animations][adp-path-morphing]
 is a tedious and time-consuming task. In order to morph one shape into another,
 the SVG paths describing the two must be *compatible* with each other&mdash;that is,
-both must have the same number and type of drawing commands. This is problematic because:
+they need to have the same number and type of drawing commands. This is problematic because:
 
 * Design tools&mdash;such as [Sketch][sketch] and [Illustrator][illustrator]&mdash;do not easily
-  expose the order of points in a shape, making it difficult to change their order.
+  expose the order of points in a shape, making it difficult to change their order. As a result,
+  engineers will often have to spend time tweaking the raw SVG path strings given to them by
+  designers before they can be morphed, which can take a significant amount of time.
 * Design tools often map to shape primitives not supported in certain platforms
-  (e.g. in Android, circles need to be represented by a sequence of curves and/or arcs,
+  (e.g. circles need to be represented by a sequence of curves and/or arcs,
   not simply by their center point and radius).
 * Design tools cannot place multiple path points in the same location, a technique that
   is often necessary when making two shapes compatible with each other.
-* No easy way to visualize the in-between states of the resulting path morphing animation.
+* Design tools provide no easy way to visualize the in-between states of the desired
+  path morph animation.
 
 ## Features
 
@@ -55,14 +58,17 @@ To address these problems, Shape Shifter provides the following features:
 
 ## How does it work?
 
-Pretty much everything in this app is powered behind-the-scenes by approximated bezier curves.
-Check out this excellent [primer on bezier curves][primer-on-bezier-curves]
-if you're curious about the specifics (especially sections 9 and 33, which explain
-how to split and project points onto bezier curves without altering their original appearance).
+Pretty much all of the graphics in this app is powered by bezier curve approximations under-the-hood.
+I learned most of what I needed to know from this excellent [primer on bezier curves][primer-on-bezier-curves]
+(especially sections 9 and 33, which explain how to split and project points onto bezier
+curves without altering their original appearance). Most of the interesting SVG-related code
+is located under [`src/app/scripts/commands`](https://github.com/alexjlockwood/ShapeShifter/tree/master/src/app/scripts/commands).
 
 Auto fix is powered by an adaptation of the [Needleman-Wunsch algorithm][Needleman-Wunsch],
 which is used in bioinformatics to align protein or nucleotide sequences. Instead of
-aligning DNA base-pairs, Shape Shifter uses the algorithm to align SVG command types instead.
+aligning DNA base-pairs, Shape Shifter aligns the individual SVG commands that make up
+each path instead. You can view the current implementation of the algorithm in the
+[`AutoAwesome.ts`](https://github.com/alexjlockwood/ShapeShifter/blob/master/src/app/scripts/commands/AutoAwesome.ts) file.
 
 ## Bug reports & feature requests
 
@@ -71,8 +77,8 @@ screenshots if you can). Take a look at the list of known issues
 [here](https://github.com/alexjlockwood/ShapeShifter/issues).
 
 I am open to pretty much any feature request, so don't be afraid to ask!
-I'll likely work on the most popular feature requests first. I'm especially
-curious how I can make this web app more useful for iOS and web developers.
+I'll likely work on the most popular feature requests first. **I'm especially
+curious how I can make this web app more useful for iOS and web developers.**
 
 ## Build instructions
 
