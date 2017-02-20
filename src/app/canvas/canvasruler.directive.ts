@@ -126,7 +126,7 @@ export class CanvasRulerDirective implements OnInit, OnDestroy {
 
     // Text labels.
     ctx.fillStyle = 'rgba(0,0,0,.3)';
-    ctx.font = '10px Roboto';
+    ctx.font = '10px Roboto, Helvetica Neue, sans-serif';
     if (isHorizontal) {
       ctx.textBaseline = 'alphabetic';
       ctx.textAlign = 'center';
