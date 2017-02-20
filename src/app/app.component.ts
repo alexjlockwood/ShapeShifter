@@ -64,9 +64,9 @@ export class AppComponent implements OnInit, OnDestroy {
                 .flatMap(subCmd => subCmd.commands  as Command[])
                 .some(cmd => cmd.isSplit)
                 .value();
-            return `Looks good! Reverse${hasClosedPath ? '/shift' : ''} `
+            return `Reverse${hasClosedPath ? '/shift' : ''} `
               + `the points below ${hasSplitCmd ? 'or drag the orange points above' : ''} `
-              + `to alter the animation!`;
+              + `to alter the animation`;
           }
           if (status === MorphabilityStatus.Unmorphable) {
             const startId = this.layerStateService.getActivePathId(CanvasType.Start);
@@ -86,9 +86,9 @@ export class AppComponent implements OnInit, OnDestroy {
                 const pathId = startCmds.length < endCmds.length ? startId : endId;
                 const diff = Math.abs(startCmds.length - endCmds.length);
                 if (diff === 1) {
-                  return `Add 1 point to '${pathId}' in subpath #${i + 1} below`;
+                  return `Add 1 point to <i>${pathId}</i> in subpath #${i + 1} below`;
                 } else {
-                  return `Add ${diff} points to '${pathId}' in subpath #${i + 1} below`;
+                  return `Add ${diff} points to <i>${pathId}</i> in subpath #${i + 1} below`;
                 }
               }
             }
