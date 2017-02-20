@@ -48,6 +48,7 @@
   "devDependencies": {
     "@angular/cli": "^1.0.0-beta.32.3",
     "@angular/compiler-cli": "^2.3.1",
+    "@angular/service-worker": "^1.0.0-beta.3",
     "@types/es6-promise": "0.0.32",
     "@types/hammerjs": "^2.0.34",
     "@types/jasmine": "^2.5.38",
@@ -69,6 +70,7 @@
     "lodash": "^4.17.4",
     "lodash.isundefined": "^3.0.1",
     "protractor": "~5.1.0",
+    "sass-lint": "^1.10.2",
     "ts-node": "2.1.0",
     "tslint": "^4.4.2",
     "typescript": "~2.1.5",
