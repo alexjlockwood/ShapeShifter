@@ -10,7 +10,7 @@ const INDEL = 0;
 /**
  * Takes two arbitrary paths, calculates a best-estimate alignment of the two,
  * and then inserts no-op commands into the alignment gaps to make the two paths
- * compatible with each other. The paths must have the same number of sub paths.
+ * compatible with each other.
  *
  * TODO: this can still be optimized a lot... work in progress!
  */
@@ -20,6 +20,7 @@ export function autoFix(
   srcToPath: PathCommand) {
 
   // Create and return a list of reversed and shifted path commands to test.
+  // TODO: can this be optimized? (this essentially brute-forces all possible permutations)
   const createFromCmdGroupsFn = (...pathCommands: PathCommand[]): PathCommand[] => {
     const fromPaths = [];
     for (const p of pathCommands) {
