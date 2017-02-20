@@ -545,7 +545,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     if (text) {
       ctx.beginPath();
       ctx.fillStyle = 'white';
-      ctx.font = radius + 'px Roboto';
+      ctx.font = radius + 'px Roboto, Helvetica Neue, sans-serif';
       const width = ctx.measureText(text).width;
       // TODO: is there a better way to get the height?
       const height = ctx.measureText('o').width;
