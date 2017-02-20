@@ -1,4 +1,4 @@
-import { OnInit, Component, Output, EventEmitter, ElementRef, HostListener } from '@angular/core';
+import { Component, ElementRef, HostListener } from '@angular/core';
 import { Point } from '../scripts/common';
 import * as $ from 'jquery';
 

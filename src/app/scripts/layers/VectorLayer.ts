@@ -1,5 +1,5 @@
 import { AbstractLayer } from './AbstractLayer';
-import { Layer, GroupLayer, ClipPathLayer, PathLayer } from '.';
+import { GroupLayer, ClipPathLayer, PathLayer } from '.';
 import { MathUtil } from '../common';
 
 /**

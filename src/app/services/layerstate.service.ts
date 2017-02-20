@@ -1,9 +1,6 @@
 import { Injectable } from '@angular/core';
-import { Subject } from 'rxjs/Subject';
-import { Subscription } from 'rxjs/Subscription';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Layer, VectorLayer, PathLayer, GroupLayer } from '../scripts/layers';
-import { Observable } from 'rxjs/Observable';
 import { CanvasType } from '../CanvasType';
 import { PathCommand } from '../scripts/commands';
 import { AutoAwesome } from '../scripts/commands';
@@ -20,7 +17,6 @@ export class LayerStateService {
   private readonly vectorLayerSources = new Map<CanvasType, BehaviorSubject<VectorLayer>>();
   private readonly activePathIdSources = new Map<CanvasType, BehaviorSubject<string>>();
   private readonly statusSource = new BehaviorSubject<MorphabilityStatus>(MorphabilityStatus.None);
-  private readonly statusStream = this.statusSource.asObservable();
 
   constructor() {
     [CanvasType.Start, CanvasType.Preview, CanvasType.End]

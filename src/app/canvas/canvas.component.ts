@@ -6,16 +6,14 @@ import {
 import {
   PathCommand, SubPathCommand, Command, Index as CommandIndex, Projection
 } from '../scripts/commands';
-import {
-  Layer, PathLayer, ClipPathLayer, GroupLayer, VectorLayer
-} from '../scripts/layers';
+import { PathLayer, ClipPathLayer, VectorLayer } from '../scripts/layers';
 import { CanvasType } from '../CanvasType';
 import * as $ from 'jquery';
-import { Point, Matrix, MathUtil, ColorUtil, SvgUtil } from '../scripts/common';
+import { Point, Matrix, MathUtil, ColorUtil } from '../scripts/common';
 import { AnimatorService } from '../services/animator.service';
 import { LayerStateService, MorphabilityStatus } from '../services/layerstate.service';
 import { Subscription } from 'rxjs/Subscription';
-import { SelectionStateService, Selection } from '../services/selectionstate.service';
+import { SelectionStateService } from '../services/selectionstate.service';
 import { HoverStateService, Type as HoverType, Hover } from '../services/hoverstate.service';
 import { CanvasResizeService } from '../services/canvasresize.service';
 import { CanvasRulerDirective } from './canvasruler.directive';
@@ -804,15 +802,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     const x = (event.pageX - canvasOffset.left) / this.cssScale;
     const y = (event.pageY - canvasOffset.top) / this.cssScale;
     return new Point(x, y);
-  }
-
-  /**
-   * Transforms a raw mouse point to the active layer's coordinate space.
-   */
-  private pointToActiveLayerCoordinates(point: Point) {
-    const reversedTransforms = this.getTransformsForActiveLayer().reverse();
-    return MathUtil.transformPoint(
-      point, MathUtil.flattenTransforms(reversedTransforms).invert());
   }
 
   /**

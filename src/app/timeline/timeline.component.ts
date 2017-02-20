@@ -3,7 +3,6 @@ import { AnimatorService } from '../services/animator.service';
 import { LayerStateService, MorphabilityStatus } from '../services/layerstate.service';
 import { Subscription } from 'rxjs/Subscription';
 import { Observable } from 'rxjs/Observable';
-import { CanvasType } from '../CanvasType';
 
 @Component({
   selector: 'app-timeline',

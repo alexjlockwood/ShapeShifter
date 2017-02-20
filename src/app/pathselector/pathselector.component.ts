@@ -1,10 +1,8 @@
-import { Component, OnInit, Input, OnDestroy, ElementRef } from '@angular/core';
+import { Component, ElementRef } from '@angular/core';
 import { CanvasType } from '../CanvasType';
 import { LayerStateService } from '../services/layerstate.service';
 import { VectorLayerLoader } from '../scripts/parsers';
-import { Subscription } from 'rxjs/Subscription';
 import { VectorLayer, PathLayer } from '../scripts/layers';
-import * as $ from 'jquery';
 
 @Component({
   selector: 'app-pathselector',
@@ -14,8 +12,6 @@ import * as $ from 'jquery';
 export class PathSelectorComponent {
   CANVAS_START = CanvasType.Start;
   CANVAS_END = CanvasType.End;
-
-  private readonly subscriptions: Subscription[] = [];
 
   constructor(
     private elementRef: ElementRef,

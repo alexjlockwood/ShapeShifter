@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import { PathCommand, SubPathCommand, Command } from '../commands';
+import { PathCommand, Command } from '../commands';
 import { MathUtil } from '../common';
 
 // Needleman-Wunsch scoring function constants.
@@ -170,8 +170,6 @@ function align<T>(
 
   const listA: Alignment<T>[] = from.map(obj => { return { obj }; });
   const listB: Alignment<T>[] = to.map(obj => { return { obj }; });
-  const originalListA = from;
-  const originalListB = to;
   const alignedListA: Alignment<T>[] = [];
   const alignedListB: Alignment<T>[] = [];
 

@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 import { Point } from '../common';
-import { PathCommand, SubPathCommand, Command } from '.';
+import { SubPathCommand, Command } from '.';
 
 export function newSubPathCommand(...commands: Command[]): SubPathCommand {
   return new SubPathCommandImpl(commands);

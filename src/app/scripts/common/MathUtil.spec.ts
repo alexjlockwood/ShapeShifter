@@ -1,4 +1,4 @@
-import { } from 'jasmine';
+import 'jasmine';
 import { Point, Matrix, MathUtil } from '.';
 
 describe('Point', () => {

@@ -1,7 +1,6 @@
-import * as _ from 'lodash';
-import { Layer, VectorLayer, GroupLayer, PathLayer, ClipPathLayer } from '../layers';
+import { VectorLayer, GroupLayer, PathLayer, ClipPathLayer } from '../layers';
 import { newPathCommand } from '../commands';
-import { ColorUtil, MathUtil, SvgUtil } from '../common';
+import { ColorUtil } from '../common';
 import { PathParser } from '.';
 
 // This ID is reserved for the active path layer's parent group layer

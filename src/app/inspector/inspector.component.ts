@@ -1,13 +1,7 @@
-import {
-  Component, Input, OnInit, ChangeDetectorRef,
-  OnDestroy, NgZone, OnChanges, PipeTransform, Pipe
-} from '@angular/core';
-import { VectorLayer, PathLayer } from '../scripts/layers';
-import { PathCommand, SubPathCommand, Command } from '../scripts/commands';
+import { Component, OnInit, PipeTransform, Pipe } from '@angular/core';
+import { Command } from '../scripts/commands';
 import { CanvasType } from '../CanvasType';
-import { LayerStateService } from '../services/layerstate.service';
-import { Subscription } from 'rxjs/Subscription';
-import { AutoAwesome } from '../scripts/commands';
+import { LayerStateService } from '../services';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/combineLatest';
 
@@ -19,9 +13,7 @@ import 'rxjs/add/observable/combineLatest';
 export class InspectorComponent implements OnInit {
   START_CANVAS = CanvasType.Start;
   END_CANVAS = CanvasType.End;
-
   subPathCommandItemsObservable: Observable<[string, string]>;
-  private readonly subscriptions: Subscription[] = [];
 
   constructor(private layerStateService: LayerStateService) { }
 

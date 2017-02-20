@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import { Point, Matrix, MathUtil, SvgUtil } from '../common';
+import { Point, Matrix, MathUtil } from '../common';
 import { Command, SvgChar } from '.';
 
 export function newMove(start: Point, end: Point, isSplit?: boolean) {

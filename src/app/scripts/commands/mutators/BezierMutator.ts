@@ -1,10 +1,7 @@
 import * as _ from 'lodash';
 import * as BezierJs from 'bezier-js';
-import { MathUtil, Point } from '../../common';
-import {
-  SvgChar, Projection, newLine, newQuadraticCurve,
-  newBezierCurve, newClosePath, Command
-} from '..';
+import { Point } from '../../common';
+import { SvgChar, Projection, newQuadraticCurve, newBezierCurve } from '..';
 import { Mutator } from '.';
 import { PointMutator } from './PointMutator';
 import { LineMutator } from './LineMutator';

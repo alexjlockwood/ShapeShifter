@@ -12,7 +12,7 @@ import { SelectionStateService } from '../services/selectionstate.service';
 import { HoverStateService } from '../services/hoverstate.service';
 import { DEMO_MAP } from '../demos';
 import { VectorLayerLoader } from '../scripts/parsers';
-import { VectorLayer, GroupLayer, PathLayer, Layer } from '../scripts/layers';
+import { VectorLayer, GroupLayer, PathLayer } from '../scripts/layers';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/combineLatest';
 

@@ -1,6 +1,5 @@
 import * as _ from 'lodash';
-import * as BezierJs from 'bezier-js';
-import { MathUtil, Point } from '../../common';
+import { Point } from '../../common';
 import { SvgChar, Projection } from '..';
 import { PointMutator } from './PointMutator';
 import { LineMutator } from './LineMutator';

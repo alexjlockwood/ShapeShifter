@@ -1,4 +1,3 @@
-import { PathCommand } from '../commands';
 import { Layer, GroupLayer, ClipPathLayer, PathLayer } from '.';
 import { Matrix } from '../common';
 

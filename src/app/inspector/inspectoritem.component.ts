@@ -1,17 +1,12 @@
 import * as _ from 'lodash';
 import {
-  Component, AfterViewInit, OnChanges, Output, OnInit, HostListener,
-  SimpleChanges, Input, ViewChild, ElementRef, OnDestroy, Pipe, PipeTransform
+  Component, OnInit, Input, OnDestroy, Pipe, PipeTransform
 } from '@angular/core';
 import { PathCommand, Command } from '../scripts/commands';
-import { PathLayer } from '../scripts/layers';
-import * as $ from 'jquery';
 import { LayerStateService } from '../services/layerstate.service';
 import { SelectionStateService, Selection } from '../services/selectionstate.service';
 import { HoverStateService, Type as HoverType } from '../services/hoverstate.service';
 import { Subscription } from 'rxjs/Subscription';
-import { AutoAwesome } from '../scripts/commands';
-import { ColorUtil } from '../scripts/common';
 import { CanvasType } from '../CanvasType';
 
 @Component({
@@ -183,7 +178,6 @@ export class InspectorItemComponent implements OnInit, OnDestroy {
     const pathId = this.layerStateService.getActivePathId(this.canvasType);
     const subIdx = this.subIdx;
     const cmdIdx = this.cmdIdx;
-    const commandId = { pathId, subIdx, cmdIdx };
     if (isHovering) {
       this.hoverStateService.setHover({
         type: hoverType,

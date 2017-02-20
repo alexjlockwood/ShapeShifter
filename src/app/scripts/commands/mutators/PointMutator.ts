@@ -1,7 +1,7 @@
 import { Mutator } from '.';
 import {
   SvgChar, Projection, newLine, newQuadraticCurve,
-  newBezierCurve, newClosePath, Command
+  newBezierCurve, newClosePath
 } from '..';
 import { MathUtil, Point } from '../../common';
 

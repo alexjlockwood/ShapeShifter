@@ -1,5 +1,3 @@
-import { Interpolator } from '.';
-
 /**
  * The names of the currently supported animatable properties.
  */

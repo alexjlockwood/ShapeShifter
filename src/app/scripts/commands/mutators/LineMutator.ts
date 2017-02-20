@@ -1,8 +1,5 @@
 import { Mutator } from '.';
-import {
-  SvgChar, Projection, newLine, newQuadraticCurve,
-  newBezierCurve, newClosePath, Command
-} from '..';
+import { SvgChar, Projection, newLine, newQuadraticCurve, newBezierCurve, newClosePath } from '..';
 import { MathUtil, Point } from '../../common';
 import { PointMutator } from './PointMutator';
 

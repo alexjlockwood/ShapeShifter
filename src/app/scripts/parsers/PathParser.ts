@@ -1,4 +1,4 @@
-import { Point, Matrix, MathUtil, SvgUtil } from '../common';
+import { Point, Matrix, SvgUtil } from '../common';
 import {
   newMove, newLine, newQuadraticCurve, newBezierCurve, newClosePath
 } from '../commands';

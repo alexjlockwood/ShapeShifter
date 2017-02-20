@@ -1,7 +1,4 @@
-import {
-  Directive, OnInit, ViewChild, Input,
-  ElementRef, OnDestroy
-} from '@angular/core';
+import { Directive, OnInit, Input, ElementRef, OnDestroy } from '@angular/core';
 import { CanvasType } from '../CanvasType';
 import { LayerStateService } from '../services/layerstate.service';
 import { CanvasResizeService } from '../services/canvasresize.service';
@@ -93,9 +90,6 @@ export class CanvasRulerDirective implements OnInit, OnDestroy {
     } else {
       cssScale = this.componentHeight / this.vlHeight;
     }
-
-    // The 'attrScale' represents the number of physical pixels per SVG viewport pixel.
-    const attrScale = cssScale * devicePixelRatio;
 
     const cssWidth = this.vlWidth * cssScale;
     const cssHeight = this.vlHeight * cssScale;

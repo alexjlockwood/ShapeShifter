@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
 import { MathUtil, Point } from '../common';
 import { Mutator, newMutator } from './mutators';
-import { Command, SvgChar, Projection } from '.';
+import { SvgChar, Projection } from '.';
 import { CommandImpl } from './CommandImpl';
 
 /**

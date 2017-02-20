@@ -1,12 +1,9 @@
 import * as _ from 'lodash';
-import { MathUtil, Point, Matrix, Rect, SvgUtil } from '../common';
-import { Mutator, newMutator } from './mutators';
+import { MathUtil, Point } from '../common';
 import { PathCommand, SubPathCommand, Command, SvgChar, Projection } from '.';
 import { PathParser } from '../parsers';
 import { newSubPathCommand } from './SubPathCommandImpl';
-import {
-  CommandImpl, newMove, newLine, newQuadraticCurve, newBezierCurve, newClosePath
-} from './CommandImpl';
+import { CommandImpl, newMove, newLine } from './CommandImpl';
 import { CommandMutation } from './CommandMutation';
 
 export function newPathCommand(path: string): PathCommand {
@@ -211,7 +208,7 @@ class PathCommandImpl implements PathCommand {
   isMorphableWith(pathCommand: PathCommand) {
     const scmds1 = this.subPathCommands;
     const scmds2 = pathCommand.subPathCommands;
-    return  scmds1.length === scmds2.length
+    return scmds1.length === scmds2.length
       && scmds1.every((_, i) =>
         scmds1[i].commands.length === scmds2[i].commands.length
         && scmds1[i].commands.every((__, j) =>

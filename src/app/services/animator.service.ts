@@ -1,8 +1,5 @@
 import { Injectable, NgZone } from '@angular/core';
-import { Subject } from 'rxjs/Subject';
-import { Subscription } from 'rxjs/Subscription';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
-import { Observable } from 'rxjs/Observable';
 import { MathUtil } from '../scripts/common';
 import { Interpolator, INTERPOLATORS } from '../scripts/animation';
 
