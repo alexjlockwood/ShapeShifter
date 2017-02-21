@@ -79,16 +79,16 @@ class PathCommandImpl implements PathCommand {
         : this.shiftOffsets_[subIdx];
 
     const maybeReverseCommandsFn = (subIdx: number) => {
-      const subPathCws = newCommandMutationsMap[subIdx];
+      const subPathCms = newCommandMutationsMap[subIdx];
       const hasOneCmd =
-        subPathCws.length === 1 && _.first(subPathCws).commands.length === 1;
+        subPathCms.length === 1 && _.first(subPathCms).commands.length === 1;
       if (hasOneCmd || !shouldReverseFn(subIdx)) {
         // Nothing to do in these two cases.
-        return _.flatMap(subPathCws, cm => cm.commands as CommandImpl[]);
+        return _.flatMap(subPathCms, cm => cm.commands as CommandImpl[]);
       }
 
       // Extract the commands from our command mutation map.
-      const cmds = _.flatMap(subPathCws, cm => {
+      const cmds = _.flatMap(subPathCms, cm => {
         // Consider a segment A ---- B ---- C with AB split and
         // BC non-split. When reversed, we want the user to see
         // C ---- B ---- A w/ CB split and BA non-split.
@@ -245,8 +245,8 @@ class PathCommandImpl implements PathCommand {
   // Implements the PathCommand interface.
   project(point: Point): { projection: Projection, split: () => PathCommand } | undefined {
     return _.chain(this.commandMutationsMap_)
-      .map((subPathCws: CommandMutation[], cmsIdx) =>
-        subPathCws.map((cm: CommandMutation, cmIdx) => {
+      .map((subPathCms: CommandMutation[], cmsIdx) =>
+        subPathCms.map((cm: CommandMutation, cmIdx) => {
           const projection = cm.project(point);
           return {
             projection,
