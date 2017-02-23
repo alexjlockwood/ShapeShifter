@@ -108,7 +108,7 @@ If you want to contribute, you can build and serve the web app locally as follow
 ## Special thanks
 
 Huge thanks to [Nick Butcher][nick-butcher-twitter], [Roman Nurik][roman-nurik-twitter],
-and [Steph Yim][steph-yim-twitter] for all of their help during the early stages of this project!
+and [Steph Yim][steph-yim-website] for all of their help during the early stages of this project!
 
   [report-feature-request]: https://github.com/alexjlockwood/ShapeShifter/issues/new
   [adp-path-morphing]: http://www.androiddesignpatterns.com/2016/11/introduction-to-icon-animation-techniques.html#morphing-paths
@@ -118,4 +118,4 @@ and [Steph Yim][steph-yim-twitter] for all of their help during the early stages
   [primer-on-bezier-curves]: https://pomax.github.io/bezierinfo
   [nick-butcher-twitter]: https://twitter.com/crafty
   [roman-nurik-twitter]: https://twitter.com/romannurik
-  [steph-yim-twitter]: https://twitter.com/nstepheyim
+  [steph-yim-website]: http://stephanieyim.com

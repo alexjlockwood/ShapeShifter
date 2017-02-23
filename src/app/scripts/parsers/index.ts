@@ -1,5 +1,5 @@
-import * as VectorLayerLoader from './VectorLayerLoader';
-import { ROTATION_GROUP_LAYER_ID } from './VectorLayerLoader';
+import * as SvgLoader from './SvgLoader';
+import { ROTATION_GROUP_LAYER_ID } from './SvgLoader';
 import * as PathParser from './PathParser';
 import * as AvdSerializer from './AvdSerializer';
-export { VectorLayerLoader, PathParser, AvdSerializer, ROTATION_GROUP_LAYER_ID };
+export { SvgLoader, PathParser, AvdSerializer, ROTATION_GROUP_LAYER_ID };

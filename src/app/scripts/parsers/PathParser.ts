@@ -14,10 +14,9 @@ export function parseCommands(
   matrices?: Matrix[]): Command[] {
 
   let index = 0;
-  let currentPoint: Point;
   let currentToken: Token;
 
-  const advanceToNextToken_: (() => Token) = () => {
+  const advanceToNextTokenFn: (() => Token) = () => {
     while (index < pathString.length) {
       const c = pathString.charAt(index);
       if ('a' <= c && c <= 'z') {
@@ -33,16 +32,16 @@ export function parseCommands(
     return (currentToken = Token.EOF);
   };
 
-  const consumeCommand_ = () => {
-    advanceToNextToken_();
+  const consumeCommandFn = () => {
+    advanceToNextTokenFn();
     if (currentToken !== Token.RelativeCommand && currentToken !== Token.AbsoluteCommand) {
       throw new Error('Expected command');
     }
     return pathString.charAt(index++);
   };
 
-  const consumeValue_ = () => {
-    advanceToNextToken_();
+  const consumeValueFn = () => {
+    advanceToNextTokenFn();
     if (currentToken !== Token.Value) {
       throw new Error('Expected value');
     }
@@ -81,10 +80,12 @@ export function parseCommands(
     return parseFloat(str);
   };
 
-  const consumePoint_ = (relative: boolean): Point => {
-    let x = consumeValue_();
-    let y = consumeValue_();
-    if (relative) {
+  let currentPoint: Point;
+
+  const consumePointFn = (isRelative: boolean): Point => {
+    let x = consumeValueFn();
+    let y = consumeValueFn();
+    if (isRelative) {
       x += currentPoint.x;
       y += currentPoint.y;
     }
@@ -96,19 +97,15 @@ export function parseCommands(
   let lastMovePoint: Point;
 
   while (index < pathString.length) {
-    const commandChar = consumeCommand_();
-    const relative = currentToken === Token.RelativeCommand;
+    const commandChar = consumeCommandFn();
+    const isRelative = currentToken === Token.RelativeCommand;
 
     switch (commandChar) {
       case 'M':
       case 'm': {
-        if (relative && !currentPoint) {
-          throw new Error('Current point must be set for a relative command');
-        }
-
         let isFirstPoint = true;
-        while (advanceToNextToken_() === Token.Value) {
-          const nextPoint = consumePoint_(relative);
+        while (advanceToNextTokenFn() === Token.Value) {
+          const nextPoint = consumePointFn(isRelative && !!currentPoint);
 
           if (isFirstPoint) {
             isFirstPoint = false;
@@ -129,10 +126,10 @@ export function parseCommands(
           throw new Error('Current point does not exist');
         }
 
-        while (advanceToNextToken_() === Token.Value) {
-          const cp1 = consumePoint_(relative);
-          const cp2 = consumePoint_(relative);
-          const end = consumePoint_(relative);
+        while (advanceToNextTokenFn() === Token.Value) {
+          const cp1 = consumePointFn(isRelative);
+          const cp2 = consumePointFn(isRelative);
+          const end = consumePointFn(isRelative);
           commands.push(newBezierCurve(currentPoint, cp1, cp2, end));
 
           currentControlPoint = cp2;
@@ -146,10 +143,10 @@ export function parseCommands(
           throw new Error('Current point does not exist');
         }
 
-        while (advanceToNextToken_() === Token.Value) {
+        while (advanceToNextTokenFn() === Token.Value) {
           let cp1;
-          const cp2 = consumePoint_(relative);
-          const end = consumePoint_(relative);
+          const cp2 = consumePointFn(isRelative);
+          const end = consumePointFn(isRelative);
           if (currentControlPoint) {
             const x = currentPoint.x + (currentPoint.x - currentControlPoint.x);
             const y = currentPoint.y + (currentPoint.y - currentControlPoint.y);
@@ -170,9 +167,9 @@ export function parseCommands(
           throw new Error('Current point does not exist');
         }
 
-        while (advanceToNextToken_() === Token.Value) {
-          const cp = consumePoint_(relative);
-          const end = consumePoint_(relative);
+        while (advanceToNextTokenFn() === Token.Value) {
+          const cp = consumePointFn(isRelative);
+          const end = consumePointFn(isRelative);
           commands.push(newQuadraticCurve(currentPoint, cp, end));
 
           currentControlPoint = cp;
@@ -186,9 +183,9 @@ export function parseCommands(
           throw new Error('Current point does not exist');
         }
 
-        while (advanceToNextToken_() === Token.Value) {
+        while (advanceToNextTokenFn() === Token.Value) {
           let cp;
-          const end = consumePoint_(relative);
+          const end = consumePointFn(isRelative);
           if (currentControlPoint) {
             const x = currentPoint.x + (currentPoint.x - currentControlPoint.x);
             const y = currentPoint.y + (currentPoint.y - currentControlPoint.y);
@@ -209,8 +206,8 @@ export function parseCommands(
           throw new Error('Current point does not exist');
         }
 
-        while (advanceToNextToken_() === Token.Value) {
-          const end = consumePoint_(relative);
+        while (advanceToNextTokenFn() === Token.Value) {
+          const end = consumePointFn(isRelative);
           commands.push(newLine(currentPoint, end));
 
           currentControlPoint = undefined;
@@ -224,10 +221,10 @@ export function parseCommands(
           throw new Error('Current point does not exist');
         }
 
-        while (advanceToNextToken_() === Token.Value) {
-          let x = consumeValue_();
+        while (advanceToNextTokenFn() === Token.Value) {
+          let x = consumeValueFn();
           const y = currentPoint.y;
-          if (relative) {
+          if (isRelative) {
             x += currentPoint.x;
           }
           const end = new Point(x, y);
@@ -244,10 +241,10 @@ export function parseCommands(
           throw new Error('Current point does not exist');
         }
 
-        while (advanceToNextToken_() === Token.Value) {
+        while (advanceToNextTokenFn() === Token.Value) {
           const x = currentPoint.x;
-          let y = consumeValue_();
-          if (relative) {
+          let y = consumeValueFn();
+          if (isRelative) {
             y += currentPoint.y;
           }
           const end = new Point(x, y);
@@ -264,13 +261,13 @@ export function parseCommands(
           throw new Error('Current point does not exist');
         }
 
-        while (advanceToNextToken_() === Token.Value) {
-          const rx = consumeValue_();
-          const ry = consumeValue_();
-          const xAxisRotation = consumeValue_();
-          const largeArcFlag = consumeValue_();
-          const sweepFlag = consumeValue_();
-          const tempPoint1 = consumePoint_(relative);
+        while (advanceToNextTokenFn() === Token.Value) {
+          const rx = consumeValueFn();
+          const ry = consumeValueFn();
+          const xAxisRotation = consumeValueFn();
+          const largeArcFlag = consumeValueFn();
+          const sweepFlag = consumeValueFn();
+          const tempPoint1 = consumePointFn(isRelative);
 
           // Approximate the arc as one or more bezier curves.
           const startX = currentPoint.x;
@@ -304,6 +301,8 @@ export function parseCommands(
           throw new Error('Current point does not exist');
         }
         commands.push(newClosePath(currentPoint, lastMovePoint));
+        currentControlPoint = undefined;
+        currentPoint = lastMovePoint;
         break;
       }
     }

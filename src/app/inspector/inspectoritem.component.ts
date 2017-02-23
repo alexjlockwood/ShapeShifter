@@ -110,7 +110,7 @@ export class InspectorItemComponent implements OnInit, OnDestroy {
   }
 
   private replacePathCommand(pathCommand: PathCommand, event: MouseEvent) {
-    this.layerStateService.replaceActivePathCommand(this.canvasType, pathCommand, this.subIdx);
+    this.layerStateService.updateActivePathCommand(this.canvasType, pathCommand, this.subIdx);
 
     // This ensures that the parent div won't also receive the same click event.
     event.cancelBubble = true;

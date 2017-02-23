@@ -11,7 +11,7 @@ import { AnimatorService } from '../services/animator.service';
 import { SelectionStateService } from '../services/selectionstate.service';
 import { HoverStateService } from '../services/hoverstate.service';
 import { DEMO_MAP } from '../demos';
-import { VectorLayerLoader } from '../scripts/parsers';
+import { SvgLoader } from '../scripts/parsers';
 import { VectorLayer, GroupLayer, PathLayer } from '../scripts/layers';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/combineLatest';
@@ -74,8 +74,8 @@ export class ToolbarComponent implements OnInit {
       resultStartCmd = numStartCmds >= numEndCmds ? from : to;
       resultEndCmd = numStartCmds >= numEndCmds ? to : from;
       // TODO: avoid calling these once-per-subIdx...
-      this.layerStateService.replaceActivePathCommand(CanvasType.Start, resultStartCmd, subIdx, false);
-      this.layerStateService.replaceActivePathCommand(CanvasType.End, resultEndCmd, subIdx, false);
+      this.layerStateService.updateActivePathCommand(CanvasType.Start, resultStartCmd, subIdx, false);
+      this.layerStateService.updateActivePathCommand(CanvasType.End, resultEndCmd, subIdx, false);
     }
     this.layerStateService.notifyChange(CanvasType.Preview);
     this.layerStateService.notifyChange(CanvasType.Start);
@@ -151,8 +151,8 @@ export class ToolbarComponent implements OnInit {
         if (!selectedSvgStrings) {
           return;
         }
-        const importedStartVectorLayer = VectorLayerLoader.loadVectorLayerFromSvgString(selectedSvgStrings.start);
-        const importedEndVectorLayer = VectorLayerLoader.loadVectorLayerFromSvgString(selectedSvgStrings.end);
+        const importedStartVectorLayer = SvgLoader.loadVectorLayerFromSvgString(selectedSvgStrings.start);
+        const importedEndVectorLayer = SvgLoader.loadVectorLayerFromSvgString(selectedSvgStrings.end);
         this.layerStateService.setVectorLayer(CanvasType.Start, importedStartVectorLayer.clone(), false);
         this.layerStateService.setVectorLayer(CanvasType.Preview, importedStartVectorLayer.clone(), false);
         this.layerStateService.setVectorLayer(CanvasType.End, importedEndVectorLayer.clone(), false);

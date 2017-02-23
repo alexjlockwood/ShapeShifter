@@ -53,11 +53,10 @@ export class LayerStateService {
     const activePathLayer = this.getActivePathLayer(type);
     const numSubPaths = activePathLayer.pathData.subPathCommands.length;
     for (let subIdx = 0; subIdx < numSubPaths; subIdx++) {
-      // TODO: avoid sending multiple notifications like this
-      this.replaceActivePathCommand(type, activePathLayer.pathData, subIdx, shouldNotify);
+      // Attempt to make each corresponding pair of subpaths compatible with each other.
+      this.updateActivePathCommand(type, activePathLayer.pathData, subIdx, false);
     }
-    if (!numSubPaths && shouldNotify) {
-      // Don't think this will ever happen, but just in case.
+    if (shouldNotify) {
       this.notifyChange(type);
     }
   }
@@ -83,40 +82,50 @@ export class LayerStateService {
   }
 
   /**
-   * Replaces the path command at the specified sub path index. The path's previous
+   * Updates the path command at the specified sub path index. The path's previous
    * conversions will be removed and an attempt to make the path compatible with
-   * its target will be made.
+   * its opposite path layer will be made.
    */
-  replaceActivePathCommand(type: CanvasType, pathCommand: PathCommand, subIdx: number, shouldNotify = true) {
-    // Remove any existing conversions.
+  updateActivePathCommand(
+    type: CanvasType,
+    pathCommand: PathCommand,
+    subIdx: number,
+    shouldNotify = true) {
+
+    // Remove any existing conversions from the subpath.
     pathCommand = pathCommand.unconvert(subIdx);
 
-    const targetType = type === CanvasType.Start ? CanvasType.End : CanvasType.Start;
-    let hasTargetCommandChanged = false;
+    const oppositeCanvasType =
+      type === CanvasType.Start
+        ? CanvasType.End
+        : CanvasType.Start;
+    let hasOppositeCanvasTypeChanged = false;
 
-    const targetActivePathLayer = this.getActivePathLayer(targetType);
-    if (targetActivePathLayer) {
+    // TODO: allow paths with differing numbers of subpaths to be morphed
+    const oppositeActivePathLayer = this.getActivePathLayer(oppositeCanvasType);
+    if (oppositeActivePathLayer
+      && subIdx < oppositeActivePathLayer.pathData.subPathCommands.length) {
       const numCommands = pathCommand.subPathCommands[subIdx].commands.length;
-      const numTargetCommands =
-        targetActivePathLayer.pathData.subPathCommands[subIdx].commands.length;
-      if (numCommands === numTargetCommands) {
+      const numOppositeCommands =
+        oppositeActivePathLayer.pathData.subPathCommands[subIdx].commands.length;
+      if (numCommands === numOppositeCommands) {
         // Only auto convert when the number of commands in both canvases
         // are equal. Otherwise we'll wait for the user to add more points.
         const autoConvertResults =
           AutoAwesome.autoConvert(
-            subIdx, pathCommand, targetActivePathLayer.pathData.unconvert(subIdx));
+            subIdx, pathCommand, oppositeActivePathLayer.pathData.unconvert(subIdx));
         pathCommand = autoConvertResults.from;
 
         // This is the one case where a change in one canvas type's vector layer
-        // will cause corresponding changes to be made in the target canvas type's
+        // will cause corresponding changes to be made in the opposite canvas type's
         // vector layer.
-        targetActivePathLayer.pathData = autoConvertResults.to;
-        hasTargetCommandChanged = true;
+        oppositeActivePathLayer.pathData = autoConvertResults.to;
+        hasOppositeCanvasTypeChanged = true;
       }
     }
     this.getActivePathLayer(type).pathData = pathCommand;
 
-    if (type === CanvasType.Start || hasTargetCommandChanged) {
+    if (type === CanvasType.Start || hasOppositeCanvasTypeChanged) {
       // The start canvas layer has changed, so update the preview layer as well.
       const activeStartLayer = this.getActivePathLayer(CanvasType.Start);
       const activePreviewLayer = this.getActivePathLayer(CanvasType.Preview);
@@ -127,8 +136,8 @@ export class LayerStateService {
 
     if (shouldNotify) {
       this.notifyChange(type);
-      if (hasTargetCommandChanged) {
-        this.notifyChange(targetType);
+      if (hasOppositeCanvasTypeChanged) {
+        this.notifyChange(oppositeCanvasType);
       }
       // TODO: notifying the preview layer every time could be avoided...
       this.notifyChange(CanvasType.Preview);
