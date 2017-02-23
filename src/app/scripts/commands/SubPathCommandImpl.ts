@@ -13,11 +13,11 @@ export function newSubPathCommand(...commands: Command[]): SubPathCommand {
 class SubPathCommandImpl implements SubPathCommand {
 
   // TODO: make sure paths with one M and multiple Zs are treated as multiple sub paths
-  private readonly drawCommands_: ReadonlyArray<Command>;
+  private readonly commands_: ReadonlyArray<Command>;
   private readonly points_: ReadonlyArray<{ point: Point, isSplit: boolean }>;
 
   constructor(commands: Command[]) {
-    this.drawCommands_ = commands;
+    this.commands_ = commands;
     this.points_ = _.flatMap(commands, cmd => {
       if (cmd.svgChar === 'Z') {
         return [];
@@ -28,7 +28,7 @@ class SubPathCommandImpl implements SubPathCommand {
 
   // Implements the SubPathCommand interface.
   get commands(): ReadonlyArray<Command> {
-    return this.drawCommands_;
+    return this.commands_;
   }
 
   // Implements the SubPathCommand interface.
