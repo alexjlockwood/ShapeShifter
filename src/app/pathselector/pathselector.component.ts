@@ -1,7 +1,7 @@
 import { Component, ElementRef } from '@angular/core';
 import { CanvasType } from '../CanvasType';
 import { LayerStateService } from '../services/layerstate.service';
-import { VectorLayerLoader } from '../scripts/parsers';
+import { SvgLoader } from '../scripts/parsers';
 import { VectorLayer, PathLayer } from '../scripts/layers';
 
 @Component({
@@ -109,7 +109,7 @@ export class PathSelectorComponent {
       fileReader.onload = event => {
         const svgText = (event.target as any).result;
         this.setVectorLayer(
-          canvasType, VectorLayerLoader.loadVectorLayerFromSvgString(svgText));
+          canvasType, SvgLoader.loadVectorLayerFromSvgString(svgText));
       };
 
       fileReader.onerror = event => {

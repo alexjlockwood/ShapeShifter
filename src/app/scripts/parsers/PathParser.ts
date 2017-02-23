@@ -301,6 +301,7 @@ export function parseCommands(
           throw new Error('Current point does not exist');
         }
         commands.push(newClosePath(currentPoint, lastMovePoint));
+        currentControlPoint = undefined;
         currentPoint = lastMovePoint;
         break;
       }
