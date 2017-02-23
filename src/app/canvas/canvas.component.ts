@@ -671,7 +671,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           // Clear any existing selections and/or hovers as well.
           this.hoverStateService.reset();
           this.selectionStateService.reset();
-          this.layerStateService.replaceActivePathCommand(
+          this.layerStateService.updateActivePathCommand(
             this.canvasType, activeLayer.pathData, selectedPointId.subIdx);
         }
       } else {

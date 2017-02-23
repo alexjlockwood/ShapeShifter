@@ -221,7 +221,7 @@ export class AppComponent implements OnInit, OnDestroy {
     this.selectionStateService.reset();
     unsplitOpsMap.forEach((ops, idx) => {
       // TODO: perform these as a single batch instead of inside a loop? (to reduce # of broadcasts)
-      this.layerStateService.replaceActivePathCommand(
+      this.layerStateService.updateActivePathCommand(
         canvasType, activePathLayer.pathData.unsplitBatch(ops), idx);
     });
   }

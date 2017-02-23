@@ -74,8 +74,8 @@ export class ToolbarComponent implements OnInit {
       resultStartCmd = numStartCmds >= numEndCmds ? from : to;
       resultEndCmd = numStartCmds >= numEndCmds ? to : from;
       // TODO: avoid calling these once-per-subIdx...
-      this.layerStateService.replaceActivePathCommand(CanvasType.Start, resultStartCmd, subIdx, false);
-      this.layerStateService.replaceActivePathCommand(CanvasType.End, resultEndCmd, subIdx, false);
+      this.layerStateService.updateActivePathCommand(CanvasType.Start, resultStartCmd, subIdx, false);
+      this.layerStateService.updateActivePathCommand(CanvasType.End, resultEndCmd, subIdx, false);
     }
     this.layerStateService.notifyChange(CanvasType.Preview);
     this.layerStateService.notifyChange(CanvasType.Start);
