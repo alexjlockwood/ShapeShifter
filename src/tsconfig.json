@@ -15,7 +15,7 @@
       "../node_modules/@types"
     ],
     "noImplicitReturns": true,
-    "noImplicitThis": true,
+    "noImplicitThis": false,
     "pretty": true,
     "types": [
       "hammerjs",

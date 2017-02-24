@@ -28,6 +28,9 @@
     "@angular/router": "^3.3.1",
     "bezier-js": "^2.0.1",
     "core-js": "^2.4.1",
+    "css-select": "^1.3.0-rc0",
+    "css-select-base-adapter": "^0.1.0",
+    "csso": "~2.3.1",
     "element-resize-detector": "^1.1.10",
     "hammerjs": "^2.0.8",
     "jquery": "^3.1.1",
@@ -41,8 +44,12 @@
     "lodash.some": "^4.6.0",
     "lodash.sortedindex": "^4.1.0",
     "rxjs": "^5.0.1",
+    "sax": "~1.2.1",
+    "specificity": "^0.3.0",
+    "stable": "^0.1.5",
     "tinycolor2": "^1.4.1",
     "ts-helpers": "^1.1.1",
+    "whet.extend": "~0.9.9",
     "zone.js": "^0.7.2"
   },
   "devDependencies": {

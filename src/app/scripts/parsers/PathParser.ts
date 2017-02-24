@@ -291,7 +291,6 @@ export function parseCommands(
 
           currentControlPoint = undefined;
           currentPoint = tempPoint1;
-          break;
         }
         break;
       }
