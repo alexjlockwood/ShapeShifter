@@ -1,10 +1,9 @@
 import * as baseCssAdapter from 'css-select-base-adapter';
-//require('object.assign').shim(); // for node v0.1x support
 
 /**
-  * DOMUtils API for SVGO AST (used by css-select)
-  */
-var svgoCssSelectAdapterMin = {
+ * DOMUtils API for SVGO AST (used by css-select).
+ */
+const svgoCssSelectAdapterMin = {
 
   // is the node a tag?
   // isTag: ( node:Node ) => isTag:Boolean
@@ -43,7 +42,7 @@ var svgoCssSelectAdapterMin = {
   // returns null when attribute doesn't exist
   getAttributeValue: function(elem, name) {
     return elem.hasAttr(name) ? elem.attr(name).value : null;
-  }
+  },
 };
 
 // use base adapter for default implementation

@@ -2,8 +2,7 @@ import { VectorLayer, GroupLayer, PathLayer, ClipPathLayer } from '../layers';
 import { newPathCommand } from '../commands';
 import { ColorUtil } from '../common';
 import { PathParser } from '.';
-import * as Svgo from './svgo';
-import { svgToJs } from './svg2js';
+import { Svgo } from './svgo';
 
 // This ID is reserved for the active path layer's parent group layer
 // (i.e. if the user adds a rotation to the path morphing animation).
@@ -13,7 +12,10 @@ export const ROTATION_GROUP_LAYER_ID = 'rotation_group';
  * Utility function that takes an SVG string as input and
  * returns a VectorLayer model object.
  */
-export function loadVectorLayerFromSvgStringWithCallback(svgString: string, callback: (vl: VectorLayer) => void) {
+export function loadVectorLayerFromSvgStringWithCallback(
+  svgString: string,
+  callback: (vl: VectorLayer) => void) {
+
   Svgo.optimize(svgString, (optimizedSvgString: string) => {
     console.log(optimizedSvgString);
     callback(loadVectorLayerFromSvgString(optimizedSvgString));
