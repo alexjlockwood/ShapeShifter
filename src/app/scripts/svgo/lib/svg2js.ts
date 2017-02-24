@@ -3,7 +3,7 @@ import { JSAPI } from './jsAPI';
 
 const entityDeclaration = /<!ENTITY\s+(\S+)\s+(?:'([^\']+)'|"([^\"]+)")\s*>/g;
 
-var config = {
+const config = {
   strict: true,
   trim: false,
   normalize: true,
@@ -19,83 +19,70 @@ var config = {
  * @param {Function} callback
  */
 export function svgToJs(data, callback) {
-
-  var sax = SAX.parser(config.strict, config),
-    root = new (JSAPI as any)({ elem: '#document' }),
-    current = root,
-    stack = [root],
-    textContext = null,
-    parsingError = false;
+  const sax = SAX.parser(config.strict, config);
+  const root = new (JSAPI as any)({ elem: '#document' });
+  let current = root;
+  const stack = [root];
+  let textContext = null;
+  let parsingError = false;
 
   function pushToContent(content) {
-
     content = new (JSAPI as any)(content, current);
-
     (current.content = current.content || []).push(content);
-
     return content;
-
   }
 
   sax.ondoctype = function (doctype) {
-
     pushToContent({
       doctype: doctype
     });
-
-    var subsetStart = doctype.indexOf('['),
-      entityMatch;
-
+    const subsetStart = doctype.indexOf('[');
+    let entityMatch;
     if (subsetStart >= 0) {
       entityDeclaration.lastIndex = subsetStart;
-
       while ((entityMatch = entityDeclaration.exec(data)) != null) {
         sax.ENTITIES[entityMatch[1]] = entityMatch[2] || entityMatch[3];
       }
     }
   };
 
-  sax.onprocessinginstruction = function (data) {
-
+  sax.onprocessinginstruction = function (d) {
     pushToContent({
-      processinginstruction: data
+      processinginstruction: d
     });
-
   };
 
   sax.oncomment = function (comment) {
-
     pushToContent({
       comment: comment.trim()
     });
-
   };
 
   sax.oncdata = function (cdata) {
-
     pushToContent({
       cdata: cdata
     });
-
   };
 
-  sax.onopentag = function (data) {
-
-    var elem: any = {
-      elem: data.name,
-      prefix: data.prefix,
-      local: data.local
+  sax.onopentag = function (d) {
+    let elem: any = {
+      elem: d.name,
+      prefix: d.prefix,
+      local: d.local
     };
 
-    if (Object.keys(data.attributes).length) {
+    if (Object.keys(d.attributes).length) {
       elem.attrs = {};
 
-      for (var name in data.attributes) {
+      for (const name in d.attributes) {
+        if (!d.attributes.hasOwnProperty(name)) {
+          continue;
+        }
         elem.attrs[name] = {
-          name: name,
-          value: data.attributes[name].value,
-          prefix: data.attributes[name].prefix,
-          local: data.attributes[name].local
+          name,
+          value: d.attributes[name].value,
+          prefix: d.attributes[name].prefix,
+          local: d.attributes[name].local
         };
       }
     }
@@ -104,59 +91,45 @@ export function svgToJs(data, callback) {
     current = elem;
 
     // Save info about <text> tag to prevent trimming of meaningful whitespace
-    if (data.name == 'text' && !data.prefix) {
+    if (d.name === 'text' && !d.prefix) {
       textContext = current;
     }
-
     stack.push(elem);
-
   };
 
   sax.ontext = function (text) {
-
     if (/\S/.test(text) || textContext) {
-
-      if (!textContext)
+      if (!textContext) {
         text = text.trim();
-
-      pushToContent({
-        text: text
-      });
-
+      }
+      pushToContent({ text });
     }
-
   };
 
   sax.onclosetag = function () {
-
-    var last = stack.pop();
+    const last = stack.pop();
 
     // Trim text inside <text> tag.
-    if (last == textContext) {
+    if (last === textContext) {
       trim(textContext);
       textContext = null;
     }
     current = stack[stack.length - 1];
-
   };
 
   sax.onerror = function (e) {
-
     e.message = 'Error in parsing SVG: ' + e.message;
     if (e.message.indexOf('Unexpected end') < 0) {
       throw e;
     }
-
   };
 
   sax.onend = function () {
-
     if (!this.error) {
       callback(root);
     } else {
       callback({ error: this.error.message });
     }
-
   };
 
   try {
@@ -165,22 +138,29 @@ export function svgToJs(data, callback) {
     callback({ error: e.message });
     parsingError = true;
   }
-  if (!parsingError) sax.close();
-
-  function trim(elem) {
-    if (!elem.content) return elem;
-
-    var start = elem.content[0],
-      end = elem.content[elem.content.length - 1];
-
-    while (start && start.content && !start.text) start = start.content[0];
-    if (start && start.text) start.text = start.text.replace(/^\s+/, '');
-
-    while (end && end.content && !end.text) end = end.content[end.content.length - 1];
-    if (end && end.text) end.text = end.text.replace(/\s+$/, '');
-
-    return elem;
-
+  if (!parsingError) {
+    sax.close();
   }
 
+  function trim(elem) {
+    if (!elem.content) {
+      return elem;
+    }
+    let start = elem.content[0];
+    let end = elem.content[elem.content.length - 1];
+
+    while (start && start.content && !start.text) {
+      start = start.content[0];
+    }
+    if (start && start.text) {
+      start.text = start.text.replace(/^\s+/, '');
+    }
+    while (end && end.content && !end.text) {
+      end = end.content[end.content.length - 1];
+    }
+    if (end && end.text) {
+      end.text = end.text.replace(/\s+$/, '');
+    }
+    return elem;
+  }
 };
