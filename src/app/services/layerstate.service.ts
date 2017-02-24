@@ -51,7 +51,7 @@ export class LayerStateService {
   setActivePathId(type: CanvasType, pathId: string, shouldNotify = true) {
     this.activePathIdMap.set(type, pathId);
     const activePathLayer = this.getActivePathLayer(type);
-    const numSubPaths = activePathLayer.pathData.subPathCommands.length;
+    const numSubPaths = activePathLayer.pathData.getSubPaths().length;
     for (let subIdx = 0; subIdx < numSubPaths; subIdx++) {
       // Attempt to make each corresponding pair of subpaths compatible with each other.
       this.updateActivePathCommand(type, activePathLayer.pathData, subIdx, false);
@@ -104,10 +104,10 @@ export class LayerStateService {
     // TODO: allow paths with differing numbers of subpaths to be morphed
     const oppositeActivePathLayer = this.getActivePathLayer(oppositeCanvasType);
     if (oppositeActivePathLayer
-      && subIdx < oppositeActivePathLayer.pathData.subPathCommands.length) {
-      const numCommands = pathCommand.subPathCommands[subIdx].commands.length;
+      && subIdx < oppositeActivePathLayer.pathData.getSubPaths().length) {
+      const numCommands = pathCommand.getSubPaths()[subIdx].getCommands().length;
       const numOppositeCommands =
-        oppositeActivePathLayer.pathData.subPathCommands[subIdx].commands.length;
+        oppositeActivePathLayer.pathData.getSubPaths()[subIdx].getCommands().length;
       if (numCommands === numOppositeCommands) {
         // Only auto convert when the number of commands in both canvases
         // are equal. Otherwise we'll wait for the user to add more points.

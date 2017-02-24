@@ -127,13 +127,13 @@ export class InspectorItemComponent implements OnInit, OnDestroy {
   isReversible() {
     const pathCommand = this.getPathCommand();
     return this.cmdIdx === 0
-      && pathCommand && pathCommand.subPathCommands[this.subIdx].commands.length > 1;
+      && pathCommand && pathCommand.getSubPaths()[this.subIdx].getCommands().length > 1;
   }
 
   isShiftable() {
     const pathCommand = this.getPathCommand();
     return this.cmdIdx === 0
-      && pathCommand && pathCommand.subPathCommands[this.subIdx].isClosed;
+      && pathCommand && pathCommand.getSubPaths()[this.subIdx].isClosed();
   }
 
   isSplittable() {

@@ -24,7 +24,7 @@ export function autoFix(
   const createFromCmdGroupsFn = (...pathCommands: PathCommand[]): PathCommand[] => {
     const fromPaths = [];
     for (const p of pathCommands) {
-      const numFromCmds = p.subPathCommands[subIdx].commands.length;
+      const numFromCmds = p.getSubPaths()[subIdx].getCommands().length;
       for (let i = 0; i < numFromCmds - 1; i++) {
         fromPaths.push(p.shiftBack(subIdx, i));
       }
@@ -51,8 +51,8 @@ export function autoFix(
   const fromPaths =
     createFromCmdGroupsFn(srcFromPath, srcFromPath.reverse(subIdx));
   const alignmentInfos = fromPaths.map(generatedFromPath => {
-    const fromCmds = generatedFromPath.subPathCommands[subIdx].commands;
-    const toCmds = srcToPath.subPathCommands[subIdx].commands;
+    const fromCmds = generatedFromPath.getSubPaths()[subIdx].getCommands();
+    const toCmds = srcToPath.getSubPaths()[subIdx].getCommands();
     return { generatedFromPath, alignment: align(fromCmds, toCmds, getScoreFn) };
   });
 
@@ -102,7 +102,7 @@ export function autoFix(
   // Fill in the gaps by applying linear subdivide batch splits.
   const applySplitsFn = (pathCommand: PathCommand, gapGroups: CmdInfo[][]) => {
     const splitOps = [];
-    const numPathCommands = pathCommand.subPathCommands[subIdx].commands.length;
+    const numPathCommands = pathCommand.getSubPaths()[subIdx].getCommands().length;
     for (let i = gapGroups.length - 1; i >= 0; i--) {
       const gapGroup = gapGroups[i];
       // Clamp the index between 1 and numCommands - 1 to account for cases
@@ -131,23 +131,23 @@ export function autoConvert(
   srcFromPath: PathCommand,
   srcToPath: PathCommand) {
 
-  const convertDrawCmdsFn = (from: PathCommand, to: PathCommand) => {
-    const fromDrawCmds = from.subPathCommands[subIdx].commands;
-    const toDrawCmds = to.subPathCommands[subIdx].commands;
-    fromDrawCmds.forEach((fromDrawCmd, cmdIdx) => {
-      const toDrawCmd = toDrawCmds[cmdIdx];
-      if (fromDrawCmd.svgChar === toDrawCmd.svgChar
-        || !fromDrawCmd.canConvertTo(toDrawCmd.svgChar)) {
+  const convertCmdsFn = (from: PathCommand, to: PathCommand) => {
+    const fromCmds = from.getSubPaths()[subIdx].getCommands();
+    const toCmds = to.getSubPaths()[subIdx].getCommands();
+    fromCmds.forEach((fromCmd, cmdIdx) => {
+      const toCmd = toCmds[cmdIdx];
+      if (fromCmd.svgChar === toCmd.svgChar
+        || !fromCmd.canConvertTo(toCmd.svgChar)) {
         return;
       }
       // TODO: perform all of these as a single batch operation?
-      from = from.convert(subIdx, cmdIdx, toDrawCmd.svgChar);
+      from = from.convert(subIdx, cmdIdx, toCmd.svgChar);
     });
     return from;
   };
 
-  const toPathFinalResult = convertDrawCmdsFn(srcToPath, srcFromPath);
-  const fromPathFinalResult = convertDrawCmdsFn(srcFromPath, toPathFinalResult);
+  const toPathFinalResult = convertCmdsFn(srcToPath, srcFromPath);
+  const fromPathFinalResult = convertCmdsFn(srcFromPath, toPathFinalResult);
 
   return {
     from: fromPathFinalResult,

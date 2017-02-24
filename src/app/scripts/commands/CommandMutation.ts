@@ -7,8 +7,8 @@ import { CommandImpl } from './CommandImpl';
 /**
  * Contains additional information about each individual command so that we can
  * remember how they should be projected onto and split/unsplit/converted at runtime.
- * PathCommands are immutable, stateless objects that depend on CommandWrappers to
- * remember their mutations. CommandWrappers themselves are also immutable to ensure that
+ * PathCommands are immutable, stateless objects that depend on this class to
+ * remember their mutations. CommandMutations themselves are also immutable to ensure that
  * each PathCommand maintains its own unique snapshot of its current mutation state.
  */
 export class CommandMutation {
@@ -176,7 +176,7 @@ export class CommandMutation {
     });
   }
 
-  get commands() {
+  getCommands() {
     return this.builtCommands;
   }
 }

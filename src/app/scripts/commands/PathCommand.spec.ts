@@ -121,16 +121,16 @@ describe('PathCommand', () => {
     expect(actual.pathString).toEqual(expected.pathString);
 
     actual = actual.convert(0, 2, 'C').convert(0, 4, 'C');
-    let actualSvgChars = actual.subPathCommands[0].commands.map(cmd => cmd.svgChar);
+    let actualSvgChars = actual.getSubPaths()[0].getCommands().map(cmd => cmd.svgChar);
     let expectedSvgChars = ['M', 'C', 'C', 'C', 'C'];
     expect(actualSvgChars).toEqual(expectedSvgChars);
 
     actual = actual.reverse(0);
-    actualSvgChars = actual.subPathCommands[0].commands.map(cmd => cmd.svgChar);
+    actualSvgChars = actual.getSubPaths()[0].getCommands().map(cmd => cmd.svgChar);
     expectedSvgChars = ['M', 'C', 'C', 'C', 'C'];
 
     actual = actual.unconvert(0);
-    actualSvgChars = actual.subPathCommands[0].commands.map(cmd => cmd.svgChar);
+    actualSvgChars = actual.getSubPaths()[0].getCommands().map(cmd => cmd.svgChar);
     expectedSvgChars = ['M', 'L', 'C', 'L', 'C'];
   });
 });

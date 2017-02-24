@@ -54,14 +54,14 @@ export class AppComponent implements OnInit, OnDestroy {
             const hasClosedPath =
               _.chain([CanvasType.Start, CanvasType.End])
                 .map(type => this.layerStateService.getActivePathLayer(type).pathData)
-                .flatMap(pathCmd => pathCmd.subPathCommands as SubPathCommand[])
-                .some(subCmd => subCmd.isClosed)
+                .flatMap(pathCmd => pathCmd.getSubPaths())
+                .some(subCmd => subCmd.isClosed())
                 .value();
             const hasSplitCmd =
               _.chain([CanvasType.Start, CanvasType.End])
                 .map(type => this.layerStateService.getActivePathLayer(type).pathData)
-                .flatMap(pathCmd => pathCmd.subPathCommands as SubPathCommand[])
-                .flatMap(subCmd => subCmd.commands  as Command[])
+                .flatMap(pathCmd => pathCmd.getSubPaths() as SubPathCommand[])
+                .flatMap(subCmd => subCmd.getCommands())
                 .some(cmd => cmd.isSplit)
                 .value();
             return `Reverse${hasClosedPath ? '/shift' : ''} `
@@ -75,13 +75,13 @@ export class AppComponent implements OnInit, OnDestroy {
             const endLayer = this.layerStateService.getActivePathLayer(CanvasType.End);
             const startCommand = startLayer.pathData;
             const endCommand = endLayer.pathData;
-            if (startCommand.subPathCommands.length !== endCommand.subPathCommands.length) {
+            if (startCommand.getSubPaths().length !== endCommand.getSubPaths().length) {
               return 'Unmorphable '
                 + '(<a href="https://github.com/alexjlockwood/ShapeShifter/issues/11" target="_blank">help</a>)';
             }
-            for (let i = 0; i < startCommand.subPathCommands.length; i++) {
-              const startCmds = startCommand.subPathCommands[i].commands;
-              const endCmds = endCommand.subPathCommands[i].commands;
+            for (let i = 0; i < startCommand.getSubPaths().length; i++) {
+              const startCmds = startCommand.getSubPaths()[i].getCommands();
+              const endCmds = endCommand.getSubPaths()[i].getCommands();
               if (startCmds.length !== endCmds.length) {
                 const pathId = startCmds.length < endCmds.length ? startId : endId;
                 const diff = Math.abs(startCmds.length - endCmds.length);
@@ -207,7 +207,7 @@ export class AppComponent implements OnInit, OnDestroy {
     const unsplitOpsMap: Map<number, Array<{ subIdx: number, cmdIdx: number }>> = new Map();
     for (const selection of selections) {
       const {subIdx, cmdIdx} = selection.commandId;
-      if (!activePathLayer.pathData.subPathCommands[subIdx].commands[cmdIdx].isSplit) {
+      if (!activePathLayer.pathData.getSubPaths()[subIdx].getCommands()[cmdIdx].isSplit) {
         continue;
       }
       let subIdxOps = unsplitOpsMap.get(subIdx);

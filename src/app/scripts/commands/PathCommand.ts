@@ -7,11 +7,6 @@ import { SubPathCommand, SvgChar } from '.';
 export interface PathCommand {
 
   /**
-   * Returns the list of sub path commands in this path.
-   */
-  subPathCommands: ReadonlyArray<SubPathCommand>;
-
-  /**
    * Returns the length of the path.
    */
   pathLength: number;
@@ -20,6 +15,11 @@ export interface PathCommand {
    * Returns the path's SVG path string.
    */
   pathString: string;
+
+ /**
+   * Returns the list of sub path commands in this path.
+   */
+  getSubPaths(): ReadonlyArray<SubPathCommand>;
 
   /**
    * Interpolates this path between a start and end path using the specified fraction.
@@ -67,7 +67,7 @@ export interface PathCommand {
    * Splits the command at the specified indices.
    * Returns a new path command object.
    */
-  splitBatch(ops: Array<{subIdx: number, cmdIdx: number, ts: number[]}>): PathCommand;
+  splitBatch(ops: Array<{ subIdx: number, cmdIdx: number, ts: number[] }>): PathCommand;
 
   /**
    * Splits the command at the specified index in half.
@@ -81,10 +81,10 @@ export interface PathCommand {
   unsplit(subIdx: number, cmdIdx: number): PathCommand;
 
   /**
-  * Un-splits the command at the specified incides.
-  * Returns a new path command object.
-  */
-  unsplitBatch(ops: Array<{subIdx: number, cmdIdx: number}>): PathCommand;
+   * Un-splits the command at the specified incides.
+   * Returns a new path command object.
+   */
+  unsplitBatch(ops: Array<{ subIdx: number, cmdIdx: number }>): PathCommand;
 
   /**
    * Convert the command at the specified index.
@@ -92,11 +92,11 @@ export interface PathCommand {
    */
   convert(subIdx: number, cmdIdx: number, svgChar: SvgChar): PathCommand;
 
-   /**
+  /**
    * Converts the command at the specified indices.
    * Returns a new path command object.
    */
-  convertBatch(ops: Array<{subIdx: number, cmdIdx: number, svgChar: SvgChar}>): PathCommand;
+  convertBatch(ops: Array<{ subIdx: number, cmdIdx: number, svgChar: SvgChar }>): PathCommand;
 
   /**
    * Reverts any converts previously performed at the specified index.

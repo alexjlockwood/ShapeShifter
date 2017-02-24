@@ -360,9 +360,9 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       const pathSelections =
         selections.filter(sel => sel.commandId.pathId === layer.id);
       const selectedCmds = pathSelections.map(selection => {
-        const subPathCommands = layer.pathData.subPathCommands;
+        const subPathCommands = layer.pathData.getSubPaths();
         return subPathCommands[selection.commandId.subIdx]
-          .commands[selection.commandId.cmdIdx];
+          .getCommands()[selection.commandId.cmdIdx];
       });
 
       if (!selectedCmds.length) {
@@ -424,9 +424,9 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           ? this.pointSelector.selectedPointId
           : undefined;
       const pathDataPointInfos =
-        _.chain(pathCommand.subPathCommands)
+        _.chain(pathCommand.getSubPaths())
           .map((subCmd: SubPathCommand, subIdx: number) => {
-            return subCmd.commands.map((cmd, cmdIdx) => {
+            return subCmd.getCommands().map((cmd, cmdIdx) => {
               const commandId = { pathId, subIdx, cmdIdx } as CommandIndex;
               const isSplit = cmd.isSplit;
               const isMove = cmd.svgChar === 'M';
@@ -590,8 +590,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       const selectedCmd =
         (this.vectorLayer.findLayer(selectedPointId.pathId) as PathLayer)
           .pathData
-          .subPathCommands[selectedPointId.subIdx]
-          .commands[selectedPointId.cmdIdx];
+          .getSubPaths()[selectedPointId.subIdx]
+          .getCommands()[selectedPointId.cmdIdx];
       this.pointSelector =
         new PointSelector(mouseDown, selectedPointId, selectedCmd.isSplit);
     } else if (!event.shiftKey && !event.metaKey) {
@@ -719,9 +719,9 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           mousePoint,
           MathUtil.flattenTransforms(transforms).invert());
       const minPathPoint =
-        _.chain(layer.pathData.subPathCommands)
+        _.chain(layer.pathData.getSubPaths())
           .map((subCmd: SubPathCommand, subIdx: number) => {
-            return subCmd.commands
+            return subCmd.getCommands()
               .map((cmd, cmdIdx) => {
                 const distance = MathUtil.distance(cmd.end, transformedMousePoint);
                 const isSplit = cmd.isSplit;
@@ -831,8 +831,8 @@ function executePathData(
 
   const commands =
     _.flatMap(
-      layer.pathData.subPathCommands,
-      subCmd => subCmd.commands as Command[]);
+      layer.pathData.getSubPaths(),
+      subCmd => subCmd.getCommands() as Command[]);
   executeCommands(commands, ctx, transforms, isDrawingSelection);
 }
 

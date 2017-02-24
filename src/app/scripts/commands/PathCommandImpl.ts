@@ -23,7 +23,7 @@ class PathCommandImpl implements PathCommand {
   // TODO: reversing a path with a close path with identical start/end points doesn't work
   // TODO: consider an svg that ends with Z and one that doesn't. how to make these morphable?
   private readonly path_: string;
-  private readonly subPathCommands_: ReadonlyArray<SubPathCommand>;
+  private readonly subPaths: ReadonlyArray<SubPathCommand>;
   private readonly commandMutationsMap_: ReadonlyArray<ReadonlyArray<CommandMutation>>;
   private readonly shiftOffsets_: ReadonlyArray<number>;
   private readonly reversals_: ReadonlyArray<boolean>;
@@ -34,20 +34,18 @@ class PathCommandImpl implements PathCommand {
     if (typeof obj === 'string' || Array.isArray(obj)) {
       if (typeof obj === 'string') {
         this.path_ = obj;
-        this.subPathCommands_ =
-          createSubPathCommands(...PathParser.parseCommands(obj));
+        this.subPaths = createSubPathCommands(...PathParser.parseCommands(obj));
       } else {
         this.path_ = PathParser.commandsToString(obj);
-        this.subPathCommands_ = createSubPathCommands(...obj);
+        this.subPaths = createSubPathCommands(...obj);
       }
       this.commandMutationsMap_ =
-        this.subPathCommands_.map(s =>
-          s.commands.map(c => new CommandMutation(c as CommandImpl)));
-      this.shiftOffsets_ = this.subPathCommands_.map(_ => 0);
-      this.reversals_ = this.subPathCommands_.map(_ => false);
+        this.subPaths.map(s => s.getCommands().map(c => new CommandMutation(c as CommandImpl)));
+      this.shiftOffsets_ = this.subPaths.map(_ => 0);
+      this.reversals_ = this.subPaths.map(_ => false);
     } else {
       this.path_ = PathParser.commandsToString(obj.commands_);
-      this.subPathCommands_ = createSubPathCommands(...obj.commands_);
+      this.subPaths = createSubPathCommands(...obj.commands_);
       this.commandMutationsMap_ = obj.commandMutationsMap_.map(cms => cms.slice());
       this.shiftOffsets_ = obj.shiftOffsets_.slice();
       this.reversals_ = obj.reversals_.slice();
@@ -81,10 +79,10 @@ class PathCommandImpl implements PathCommand {
     const maybeReverseCommandsFn = (subIdx: number) => {
       const subPathCms = newCommandMutationsMap[subIdx];
       const hasOneCmd =
-        subPathCms.length === 1 && _.first(subPathCms).commands.length === 1;
+        subPathCms.length === 1 && _.first(subPathCms).getCommands().length === 1;
       if (hasOneCmd || !shouldReverseFn(subIdx)) {
         // Nothing to do in these two cases.
-        return _.flatMap(subPathCms, cm => cm.commands as CommandImpl[]);
+        return _.flatMap(subPathCms, cm => cm.getCommands() as CommandImpl[]);
       }
 
       // Extract the commands from our command mutation map.
@@ -92,7 +90,7 @@ class PathCommandImpl implements PathCommand {
         // Consider a segment A ---- B ---- C with AB split and
         // BC non-split. When reversed, we want the user to see
         // C ---- B ---- A w/ CB split and BA non-split.
-        const cmCmds = cm.commands.slice();
+        const cmCmds = cm.getCommands().slice();
         if (cmCmds[0].svgChar === 'M') {
           return cmCmds;
         }
@@ -100,7 +98,6 @@ class PathCommandImpl implements PathCommand {
         cmCmds[cmCmds.length - 1] = _.last(cmCmds).toggleSplit();
         return cmCmds;
       });
-
 
       // If the last command is a 'Z', replace it with a line before we reverse.
       const lastCmd = _.last(cmds);
@@ -195,8 +192,8 @@ class PathCommandImpl implements PathCommand {
   }
 
   // Implements the PathCommand interface.
-  get subPathCommands() {
-    return this.subPathCommands_;
+  getSubPaths() {
+    return this.subPaths;
   }
 
   // Implements the PathCommand interface.
@@ -206,13 +203,13 @@ class PathCommandImpl implements PathCommand {
 
   // Implements the PathCommand interface.
   isMorphableWith(pathCommand: PathCommand) {
-    const scmds1 = this.subPathCommands;
-    const scmds2 = pathCommand.subPathCommands;
+    const scmds1 = this.getSubPaths();
+    const scmds2 = pathCommand.getSubPaths();
     return scmds1.length === scmds2.length
       && scmds1.every((_, i) =>
-        scmds1[i].commands.length === scmds2[i].commands.length
-        && scmds1[i].commands.every((__, j) =>
-          scmds1[i].commands[j].svgChar === scmds2[i].commands[j].svgChar));
+        scmds1[i].getCommands().length === scmds2[i].getCommands().length
+        && scmds1[i].getCommands().every((__, j) =>
+          scmds1[i].getCommands()[j].svgChar === scmds2[i].getCommands()[j].svgChar));
   }
 
   // Implements the PathCommand interface.
@@ -221,10 +218,10 @@ class PathCommandImpl implements PathCommand {
       return this;
     }
     const commands: CommandImpl[] = [];
-    this.subPathCommands.forEach((subCmd, i) => {
-      subCmd.commands.forEach((cmd, j) => {
-        const cmd1 = start.subPathCommands[i].commands[j];
-        const cmd2 = end.subPathCommands[i].commands[j];
+    this.getSubPaths().forEach((subCmd, i) => {
+      subCmd.getCommands().forEach((cmd, j) => {
+        const cmd1 = start.getSubPaths()[i].getCommands()[j];
+        const cmd2 = end.getSubPaths()[i].getCommands()[j];
         const points: Point[] = [];
         for (let k = 0; k < cmd1.points.length; k++) {
           const p1 = cmd1.points[k];
@@ -289,8 +286,8 @@ class PathCommandImpl implements PathCommand {
 
     // TODO: add a test for cmds with multiple moves but no close paths
     // TODO: add a test for cmds ending with a Z with the same end point as its prev cmd
-    const numCommands = this.subPathCommands_[subIdx].commands.length;
-    if (numCommands <= 1 || !this.subPathCommands_[subIdx].isClosed) {
+    const numCommands = this.getSubPaths()[subIdx].getCommands().length;
+    if (numCommands <= 1 || !this.getSubPaths()[subIdx].isClosed()) {
       return this;
     }
     return this.clone({
@@ -460,7 +457,7 @@ class PathCommandImpl implements PathCommand {
   }
 
   private findCommandMutation(subIdx: number, cmdIdx: number) {
-    const numCommands = this.subPathCommands_[subIdx].commands.length;
+    const numCommands = this.getSubPaths()[subIdx].getCommands().length;
     if (cmdIdx && this.reversals_[subIdx]) {
       cmdIdx = numCommands - cmdIdx;
     }
@@ -470,11 +467,11 @@ class PathCommandImpl implements PathCommand {
     }
     let counter = 0, cmIdx = 0;
     for (const targetCw of this.commandMutationsMap_[subIdx]) {
-      if (counter + targetCw.commands.length > cmdIdx) {
+      if (counter + targetCw.getCommands().length > cmdIdx) {
         const splitIdx = cmdIdx - counter;
         return { targetCw, cmIdx, splitIdx };
       }
-      counter += targetCw.commands.length;
+      counter += targetCw.getCommands().length;
       cmIdx++;
     }
     throw new Error('Error retrieving command mutation');
