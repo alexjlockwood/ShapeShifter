@@ -14,33 +14,21 @@ class SubPathCommandImpl implements SubPathCommand {
 
   // TODO: make sure paths with one M and multiple Zs are treated as multiple sub paths
   private readonly commands_: ReadonlyArray<Command>;
-  private readonly points_: ReadonlyArray<{ point: Point, isSplit: boolean }>;
 
   constructor(commands: Command[]) {
-    this.commands_ = commands;
-    this.points_ = _.flatMap(commands, cmd => {
-      if (cmd.svgChar === 'Z') {
-        return [];
-      }
-      return [{ point: _.last(cmd.points), isSplit: !!cmd.isSplit }];
-    });
+    this.commands_ = commands.slice();
   }
 
   // Implements the SubPathCommand interface.
-  get commands(): ReadonlyArray<Command> {
+  get commands() {
     return this.commands_;
   }
 
   // Implements the SubPathCommand interface.
   get isClosed() {
-    const start = this.commands[0].end;
+    const start = _.first(this.commands).end;
     const end = _.last(this.commands).end;
     return start.equals(end);
-  }
-
-  // Implements the SubPathCommand interface.
-  get points() {
-    return this.points_;
   }
 }
 
