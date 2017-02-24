@@ -63,11 +63,11 @@ export class ToolbarComponent implements OnInit {
     let resultStartCmd = this.layerStateService.getActivePathLayer(CanvasType.Start).pathData;
     let resultEndCmd = this.layerStateService.getActivePathLayer(CanvasType.End).pathData;
     const numSubPaths =
-      Math.min(resultStartCmd.subPathCommands.length, resultEndCmd.subPathCommands.length);
+      Math.min(resultStartCmd.getSubPaths().length, resultEndCmd.getSubPaths().length);
     for (let subIdx = 0; subIdx < numSubPaths; subIdx++) {
       // Pass the command with the larger subpath as the 'from' command.
-      const numStartCmds = resultStartCmd.subPathCommands[subIdx].commands.length;
-      const numEndCmds = resultEndCmd.subPathCommands[subIdx].commands.length;
+      const numStartCmds = resultStartCmd.getSubPaths()[subIdx].getCommands().length;
+      const numEndCmds = resultEndCmd.getSubPaths()[subIdx].getCommands().length;
       const fromCmd = numStartCmds >= numEndCmds ? resultStartCmd : resultEndCmd;
       const toCmd = numStartCmds >= numEndCmds ? resultEndCmd : resultStartCmd;
       const {from, to} = AutoAwesome.autoFix(subIdx, fromCmd, toCmd);

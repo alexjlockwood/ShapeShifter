@@ -176,7 +176,7 @@ export class CommandMutation {
     });
   }
 
-  get commands() {
+  getCommands() {
     return this.builtCommands;
   }
 }

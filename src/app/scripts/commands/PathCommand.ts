@@ -7,11 +7,6 @@ import { SubPathCommand, SvgChar } from '.';
 export interface PathCommand {
 
   /**
-   * Returns the list of sub path commands in this path.
-   */
-  subPathCommands: ReadonlyArray<SubPathCommand>;
-
-  /**
    * Returns the length of the path.
    */
   pathLength: number;
@@ -20,6 +15,11 @@ export interface PathCommand {
    * Returns the path's SVG path string.
    */
   pathString: string;
+
+ /**
+   * Returns the list of sub path commands in this path.
+   */
+  getSubPaths(): ReadonlyArray<SubPathCommand>;
 
   /**
    * Interpolates this path between a start and end path using the specified fraction.

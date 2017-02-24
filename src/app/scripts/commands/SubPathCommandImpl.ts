@@ -20,14 +20,14 @@ class SubPathCommandImpl implements SubPathCommand {
   }
 
   // Implements the SubPathCommand interface.
-  get commands() {
+  getCommands() {
     return this.commands_;
   }
 
   // Implements the SubPathCommand interface.
-  get isClosed() {
-    const start = _.first(this.commands).end;
-    const end = _.last(this.commands).end;
+  isClosed() {
+    const start = _.first(this.getCommands()).end;
+    const end = _.last(this.getCommands()).end;
     return start.equals(end);
   }
 }

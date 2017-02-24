@@ -63,19 +63,19 @@ export class SubPathCommandItemsPipe implements PipeTransform {
 
     const startPathCmd = getPathCommandFn(CanvasType.Start);
     const endPathCmd = getPathCommandFn(CanvasType.End);
-    const numStartSubPaths = startPathCmd ? startPathCmd.subPathCommands.length : 0;
-    const numEndSubPaths = endPathCmd ? endPathCmd.subPathCommands.length : 0;
+    const numStartSubPaths = startPathCmd ? startPathCmd.getSubPaths().length : 0;
+    const numEndSubPaths = endPathCmd ? endPathCmd.getSubPaths().length : 0;
     for (let i = 0; i < Math.max(numStartSubPaths, numEndSubPaths); i++) {
       const startCmdItems: CommandItem[] = [];
       const endCmdItems: CommandItem[] = [];
       if (i < numStartSubPaths) {
-        startPathCmd.subPathCommands[i].commands.forEach((command, cmdIdx) => {
+        startPathCmd.getSubPaths()[i].getCommands().forEach((command, cmdIdx) => {
           const id = startPathCmd.getId(i, cmdIdx);
           startCmdItems.push({ id, command });
         });
       }
       if (i < numEndSubPaths) {
-        endPathCmd.subPathCommands[i].commands.forEach((command, cmdIdx) => {
+        endPathCmd.getSubPaths()[i].getCommands().forEach((command, cmdIdx) => {
           const id = endPathCmd.getId(i, cmdIdx);
           endCmdItems.push({ id, command });
         });

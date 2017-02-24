@@ -9,10 +9,10 @@ export interface SubPathCommand {
   /**
    * The list of children commands in this sub path.
    */
-  commands: ReadonlyArray<Command>;
+  getCommands(): ReadonlyArray<Command>;
 
   /**
    * Returns true iff the sub path's start point is equal to its end point.
    */
-  isClosed: boolean;
+  isClosed(): boolean;
 }
