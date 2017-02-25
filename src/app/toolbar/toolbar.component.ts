@@ -10,7 +10,7 @@ import { AutoAwesome } from '../scripts/commands';
 import { AnimatorService } from '../services/animator.service';
 import { SelectionStateService } from '../services/selectionstate.service';
 import { HoverStateService } from '../services/hoverstate.service';
-import { DEMO_MAP } from '../demos';
+import { DEMO_MAP } from '../scripts/demos';
 import { SvgLoader } from '../scripts/parsers';
 import { VectorLayer, GroupLayer, PathLayer } from '../scripts/layers';
 import { Observable } from 'rxjs/Observable';
