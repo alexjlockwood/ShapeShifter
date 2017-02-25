@@ -116,7 +116,7 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
 
     let path;
     if (node instanceof SVGPathElement) {
-      path = (node.attributes as any).d.value;
+      path = node.attributes ? (node.attributes as any).d.value : '';
 
     } else if (node instanceof SVGRectElement) {
       const l = lengthPxFn(node.x),
