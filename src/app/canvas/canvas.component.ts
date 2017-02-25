@@ -431,7 +431,9 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
               const isSplit = cmd.isSplit;
               const isMove = cmd.svgChar === 'M';
               const isHoverOrSelection =
-                currentHover && _.isMatch(currentHover.commandId, commandId)
+                (currentHover
+                  && currentHover.commandId.subIdx === subIdx
+                  && currentHover.commandId.cmdIdx === cmdIdx)
                 || currentSelections.some(sel => _.isMatch(sel.commandId, commandId));
               const isDrag =
                 activelyDraggedPointId && _.isMatch(activelyDraggedPointId, commandId);
@@ -709,7 +711,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   private findPathPointId(mousePoint: Point): CommandIndex | undefined {
     const minPathPoints = [];
     this.vectorLayer.walk((layer, transforms) => {
-      if (!(layer instanceof PathLayer)) {
+      if (!(layer instanceof PathLayer) || (layer.id !== this.activePathId)) {
         return;
       }
       transforms.reverse();
