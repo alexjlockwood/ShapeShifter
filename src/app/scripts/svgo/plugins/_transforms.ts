@@ -1,3 +1,5 @@
+/* tslint:disable */
+
 var regTransformTypes = /matrix|translate|scale|rotate|skewX|skewY/,
   regTransformSplit = /\s*(matrix|translate|scale|rotate|skewX|skewY)\s*\(\s*(.+?)\s*\)[\s,]*/,
   regNumericValues = /[-+]?(?:\d*\.\d+|\d+\.?)(?:[eE][-+]?\d+)?/g;
@@ -77,7 +79,7 @@ export function transformsMultiply(transforms) {
  *
  * @type {Object}
  */
-export const mth = {
+export var mth = {
 
   rad: function (deg) {
     return deg * Math.PI / 180;

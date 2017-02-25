@@ -1,3 +1,5 @@
+/* tslint:disable */
+
 import * as collections from './_collections';
 import { Plugin } from './Plugin';
 
@@ -7,6 +9,7 @@ export const moveGroupAttrsToElems: Plugin = {
 };
 
 const pathElems = collections.pathElems.concat(['g', 'text']);
+const referencesProps = collections.referencesProps;
 
 /**
  * Move group attrs to the content elements.
@@ -25,19 +28,22 @@ const pathElems = collections.pathElems.concat(['g', 'text']);
  * @param {Object} item current iteration item
  * @return {Boolean} if false, item will be filtered out
  */
-function moveGroupAttrsToElemsFn(item) {
+export function moveGroupAttrsToElemsFn(item) {
+
   // move group transform attr to content's pathElems
-  if (item.isElem('g')
-    && item.hasAttr('transform')
-    && !item.isEmpty()
-    && !item.someAttr(function (attr) {
-      return ~collections.referencesProps.indexOf(attr.name) && ~attr.value.indexOf('url(');
-    })
-    && item.content.every(function (inner) {
+  if (
+    item.isElem('g') &&
+    item.hasAttr('transform') &&
+    !item.isEmpty() &&
+    !item.someAttr(function (attr) {
+      return ~referencesProps.indexOf(attr.name) && ~attr.value.indexOf('url(');
+    }) &&
+    item.content.every(function (inner) {
       return inner.isElem(pathElems) && !inner.hasAttr('id');
-    })) {
+    })
+  ) {
     item.content.forEach(function (inner) {
-      const attr = item.attr('transform');
+      var attr = item.attr('transform');
       if (inner.hasAttr('transform')) {
         inner.attr('transform').value = attr.value + ' ' + inner.attr('transform').value;
       } else {
@@ -49,6 +55,8 @@ function moveGroupAttrsToElemsFn(item) {
         });
       }
     });
+
     item.removeAttr('transform');
   }
+
 };

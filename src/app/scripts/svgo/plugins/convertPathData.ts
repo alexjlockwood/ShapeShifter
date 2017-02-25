@@ -1,4 +1,6 @@
-import * as collections from './_collections';// require('./_collections.js').pathElems;
+/* tslint:disable */
+
+import * as collections from './_collections';
 import * as paths from './_paths';
 import * as tools from './_tools';
 import { Plugin } from './Plugin';
@@ -34,16 +36,11 @@ let hasMarkerMid;
  * @param {Object} item current iteration item
  * @param {Object} params plugin params
  * @return {Boolean} if false, item will be filtered out
- *
- * @author Kir Belevich
  */
-function convertPathDataFn(item, params = {
+export function convertPathDataFn(item, params = {
   applyTransforms: true,
   applyTransformsStroked: true,
-  makeArcs: {
-    threshold: 2.5, // coefficient of rounding error
-    tolerance: 0.5  // percentage of radius
-  },
+  makeArcs: undefined, // {threshold: 2.5, tolerance: 0.5 },
   straightCurves: true,
   lineShorthands: true,
   curveSmoothShorthands: true,
@@ -55,9 +52,7 @@ function convertPathDataFn(item, params = {
   leadingZero: true,
   negativeExtraSpace: true
 }) {
-
   if (item.isElem(pathElems) && item.hasAttr('d')) {
-
     precision = params.floatPrecision;
     error = precision !== false ? +Math.pow(.1, precision).toFixed(precision) : 1e-2;
     roundData = precision > 0 && precision < 20 ? strongRound : round;
@@ -72,23 +67,17 @@ function convertPathDataFn(item, params = {
     // TODO: get rid of functions returns
     if (data.length) {
       convertToRelative(data);
-
       if (params.applyTransforms) {
         data = applyTransforms(item, data, params);
       }
-
       data = filters(data, params);
-
       if (params.utilizeAbsolute) {
         data = convertToMixed(data, params);
       }
-
       js2path(item, data, params);
     }
-
   }
-
-};
+}
 
 /**
  * Convert absolute path data coordinates to relative.
@@ -891,7 +880,6 @@ function findCircle(curve) {
     return Math.abs(getDistance(getCubicBezierPoint(curve, point), center) - radius) <= tolerance;
   }))
     return { center: center, radius: radius };
-
   return undefined;
 }
 
@@ -918,6 +906,7 @@ function isArc(curve, circle) {
  * @param {Array} curve
  * @return {Boolean}
  */
+
 function isArcPrev(curve, circle) {
   return isArc(curve, {
     center: [circle.center[0] + curve[4], circle.center[1] + curve[5]],
@@ -931,11 +920,13 @@ function isArcPrev(curve, circle) {
  * @param {Object} relCircle
  * @return {Number} angle
  */
+
 function findArcAngle(curve, relCircle) {
   var x1 = -relCircle.center[0],
     y1 = -relCircle.center[1],
     x2 = curve[4] - relCircle.center[0],
     y2 = curve[5] - relCircle.center[1];
+
   return Math.acos(
     (x1 * x2 + y1 * y2) /
     Math.sqrt((x1 * x1 + y1 * y1) * (x2 * x2 + y2 * y2))
@@ -949,6 +940,7 @@ function findArcAngle(curve, relCircle) {
  * @param {Array} pathData
  * @return {String}
  */
+
 function data2Path(params, pathData) {
   return pathData.reduce(function (pathString, item) {
     return pathString += item.instruction + (item.data ? cleanupOutData(roundData(item.data.slice()), params) : '');

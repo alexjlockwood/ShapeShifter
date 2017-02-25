@@ -17,7 +17,6 @@ export function loadVectorLayerFromSvgStringWithCallback(
   callback: (vl: VectorLayer) => void) {
 
   Svgo.optimize(svgString, (optimizedSvgString: string) => {
-    console.log(optimizedSvgString);
     callback(loadVectorLayerFromSvgString(optimizedSvgString));
   });
 }

@@ -1,3 +1,5 @@
+/* tslint:disable */
+
 import * as EXTEND from 'whet.extend';
 
 const EOL = '\n';
@@ -52,28 +54,31 @@ const textElem = [
 
 /**
  * Convert SVG-as-JS object to SVG (XML) string.
+ *
  * @param {Object} data input data
  * @param {Object} config config
+ *
  * @return {Object} output data
  */
 export function jsToSvg(data, config) {
+
   return new JS2SVG(config).convert(data);
-}
+
+};
 
 function JS2SVG(config) {
+
   if (config) {
     this.config = EXTEND(true, {}, defaults, config);
   } else {
     this.config = defaults;
   }
 
-  const indent = this.config.indent;
-  if (typeof indent === 'number' && !isNaN(indent)) {
+  var indent = this.config.indent;
+  if (typeof indent == 'number' && !isNaN(indent)) {
     this.config.indent = '';
-    for (let i = indent; i > 0; i--) {
-      this.config.indent += ' ';
-    }
-  } else if (typeof indent !== 'string') {
+    for (var i = indent; i-- > 0;) this.config.indent += ' ';
+  } else if (typeof indent != 'string') {
     this.config.indent = '    ';
   }
 
@@ -90,6 +95,7 @@ function JS2SVG(config) {
 
   this.indentLevel = 0;
   this.textContext = null;
+
 }
 
 function encodeEntity(char) {
@@ -98,15 +104,21 @@ function encodeEntity(char) {
 
 /**
  * Start conversion.
+ *
  * @param {Object} data input data
+ *
  * @return {String}
  */
-JS2SVG.prototype.convert = function(data) {
-  let svg = '';
+JS2SVG.prototype.convert = function (data) {
+
+  var svg = '';
 
   if (data.content) {
+
     this.indentLevel++;
+
     data.content.forEach(function (item) {
+
       if (item.elem) {
         svg += this.createElem(item);
       } else if (item.text) {
@@ -120,9 +132,13 @@ JS2SVG.prototype.convert = function(data) {
       } else if (item.cdata) {
         svg += this.createCDATA(item.cdata);
       }
+
     }, this);
+
   }
+
   this.indentLevel--;
+
   return {
     data: svg,
     info: {
@@ -130,103 +146,138 @@ JS2SVG.prototype.convert = function(data) {
       height: this.height
     }
   };
+
 };
 
 /**
  * Create indent string in accordance with the current node level.
+ *
  * @return {String}
  */
-JS2SVG.prototype.createIndent = function() {
-  let indent = '';
+JS2SVG.prototype.createIndent = function () {
+
+  var indent = '';
+
   if (this.config.pretty && !this.textContext) {
-    for (let i = 1; i < this.indentLevel; i++) {
+    for (var i = 1; i < this.indentLevel; i++) {
       indent += this.config.indent;
     }
   }
+
   return indent;
+
 };
 
 /**
  * Create doctype tag.
+ *
  * @param {String} doctype doctype body string
+ *
  * @return {String}
  */
-JS2SVG.prototype.createDoctype = function(doctype) {
-  return this.config.doctypeStart + doctype + this.config.doctypeEnd;
+JS2SVG.prototype.createDoctype = function (doctype) {
+
+  return this.config.doctypeStart +
+    doctype +
+    this.config.doctypeEnd;
+
 };
 
 /**
  * Create XML Processing Instruction tag.
+ *
  * @param {Object} instruction instruction object
+ *
  * @return {String}
  */
-JS2SVG.prototype.createProcInst = function(instruction) {
-  return this.config.procInstStart
-    + instruction.name
-    + ' '
-    + instruction.body
-    + this.config.procInstEnd;
+JS2SVG.prototype.createProcInst = function (instruction) {
+
+  return this.config.procInstStart +
+    instruction.name +
+    ' ' +
+    instruction.body +
+    this.config.procInstEnd;
+
 };
 
 /**
  * Create comment tag.
+ *
  * @param {String} comment comment body
+ *
  * @return {String}
  */
-JS2SVG.prototype.createComment = function(comment) {
-  return this.config.commentStart
-    + comment
-    + this.config.commentEnd;
+JS2SVG.prototype.createComment = function (comment) {
+
+  return this.config.commentStart +
+    comment +
+    this.config.commentEnd;
+
 };
 
 /**
  * Create CDATA section.
+ *
  * @param {String} cdata CDATA body
+ *
  * @return {String}
  */
-JS2SVG.prototype.createCDATA = function(cdata) {
-  return this.createIndent()
-    + this.config.cdataStart
-    + cdata
-    + this.config.cdataEnd;
+JS2SVG.prototype.createCDATA = function (cdata) {
+
+  return this.createIndent() +
+    this.config.cdataStart +
+    cdata +
+    this.config.cdataEnd;
+
 };
 
 /**
  * Create element tag.
+ *
  * @param {Object} data element object
+ *
  * @return {String}
  */
-JS2SVG.prototype.createElem = function(data) {
-  if (data.isElem('svg') && data.hasAttr('width') && data.hasAttr('height')) {
+JS2SVG.prototype.createElem = function (data) {
+
+  // beautiful injection for obtaining SVG information :)
+  if (
+    data.isElem('svg') &&
+    data.hasAttr('width') &&
+    data.hasAttr('height')
+  ) {
     this.width = data.attr('width').value;
     this.height = data.attr('height').value;
   }
+
+  // empty element and short tag
   if (data.isEmpty()) {
     if (this.config.useShortTags) {
-      return this.createIndent()
-        + this.config.tagShortStart
-        + data.elem
-        + this.createAttrs(data)
-        + this.config.tagShortEnd;
+      return this.createIndent() +
+        this.config.tagShortStart +
+        data.elem +
+        this.createAttrs(data) +
+        this.config.tagShortEnd;
     } else {
-      return this.createIndent()
-        + this.config.tagShortStart
-        + data.elem
-        + this.createAttrs(data)
-        + this.config.tagOpenEnd
-        + this.config.tagCloseStart
-        + data.elem
-        + this.config.tagCloseEnd;
+      return this.createIndent() +
+        this.config.tagShortStart +
+        data.elem +
+        this.createAttrs(data) +
+        this.config.tagOpenEnd +
+        this.config.tagCloseStart +
+        data.elem +
+        this.config.tagCloseEnd;
     }
+    // non-empty element
   } else {
-    let tagOpenStart = this.config.tagOpenStart;
-    let tagOpenEnd = this.config.tagOpenEnd;
-    let tagCloseStart = this.config.tagCloseStart;
-    let tagCloseEnd = this.config.tagCloseEnd;
-    let openIndent = this.createIndent();
-    let textIndent = '';
-    let processedData = '';
-    let dataEnd = '';
+    var tagOpenStart = this.config.tagOpenStart,
+      tagOpenEnd = this.config.tagOpenEnd,
+      tagCloseStart = this.config.tagCloseStart,
+      tagCloseEnd = this.config.tagCloseEnd,
+      openIndent = this.createIndent(),
+      textIndent = '',
+      processedData = '',
+      dataEnd = '';
 
     if (this.textContext) {
       tagOpenStart = defaults.tagOpenStart;
@@ -243,56 +294,72 @@ JS2SVG.prototype.createElem = function(data) {
 
     processedData += this.convert(data).data;
 
-    if (this.textContext === data) {
+    if (this.textContext == data) {
       this.textContext = null;
-      if (this.config.pretty) {
-        dataEnd = EOL;
-      }
+      if (this.config.pretty) dataEnd = EOL;
     }
-    return openIndent
-      + tagOpenStart
-      + data.elem
-      + this.createAttrs(data)
-      + tagOpenEnd
-      + textIndent
-      + processedData
-      + dataEnd
-      + this.createIndent()
-      + tagCloseStart
-      + data.elem
-      + tagCloseEnd;
+
+    return openIndent +
+      tagOpenStart +
+      data.elem +
+      this.createAttrs(data) +
+      tagOpenEnd +
+      textIndent +
+      processedData +
+      dataEnd +
+      this.createIndent() +
+      tagCloseStart +
+      data.elem +
+      tagCloseEnd;
+
   }
+
 };
 
 /**
  * Create element attributes.
+ *
  * @param {Object} elem attributes object
+ *
  * @return {String}
  */
-JS2SVG.prototype.createAttrs = function(elem) {
-  let attrs = '';
+JS2SVG.prototype.createAttrs = function (elem) {
+
+  var attrs = '';
+
   elem.eachAttr(function (attr) {
+
     if (attr.value !== undefined) {
-      attrs += ' '
-        + attr.name
-        + this.config.attrStart
-        + String(attr.value).replace(this.config.regValEntities, this.config.encodeEntity)
-        + this.config.attrEnd;
-    } else {
-      attrs += ' ' + attr.name;
+      attrs += ' ' +
+        attr.name +
+        this.config.attrStart +
+        String(attr.value).replace(this.config.regValEntities, this.config.encodeEntity) +
+        this.config.attrEnd;
     }
+    else {
+      attrs += ' ' +
+        attr.name;
+    }
+
+
   }, this);
+
   return attrs;
+
 };
 
 /**
  * Create text node.
+ *
  * @param {String} text text
+ *
  * @return {String}
  */
-JS2SVG.prototype.createText = function(text) {
-  return this.createIndent()
-    + this.config.textStart
-    + text.replace(this.config.regEntities, this.config.encodeEntity)
-    + (this.textContext ? '' : this.config.textEnd);
+JS2SVG.prototype.createText = function (text) {
+
+  return this.createIndent() +
+    this.config.textStart +
+    text.replace(this.config.regEntities, this.config.encodeEntity) +
+    (this.textContext ? '' : this.config.textEnd);
+
 };

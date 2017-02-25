@@ -5,15 +5,17 @@ import { inlineStyles } from './plugins/inlineStyles';
 import { convertStyleToAttrs } from './plugins/convertStyleToAttrs';
 import { moveGroupAttrsToElems } from './plugins/moveGroupAttrsToElems';
 import { convertPathData } from './plugins/convertPathData';
+import { removeDoctype } from './plugins/removeDoctype';
+import { removeEditorsNSData } from './plugins/removeEditorsNSData';
 
 // The complete list is available here: https://github.com/svg/svgo/blob/master/.svgo.yml
 const svgoPlugins = {
-  // removeDoctype: require('svgo/plugins/removeDoctype'),
+  removeDoctype,
   // removeXMLProcInst: require('svgo/plugins/removeXMLProcInst'),
   // removeComments: require('svgo/plugins/removeComments'),
   // removeMetadata: require('svgo/plugins/removeMetadata'),
   // removeXMLNS: require('svgo/plugins/removeXMLNS'), // disabled
-  // removeEditorsNSData: require('svgo/plugins/removeEditorsNSData'),
+  removeEditorsNSData,
   // cleanupAttrs: require('svgo/plugins/cleanupAttrs'),
   inlineStyles,
   // minifyStyles: require('svgo/plugins/minifyStyles'),

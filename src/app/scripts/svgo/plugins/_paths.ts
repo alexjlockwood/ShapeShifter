@@ -1,3 +1,5 @@
+/* tslint:disable */
+
 import * as collections from './_collections';
 import * as transforms from './_transforms';
 import * as tools from './_tools';
@@ -178,9 +180,8 @@ export function applyTransforms(elem, path, params) {
   if (!elem.hasAttr('transform') || !elem.attr('transform').value ||
     elem.someAttr(function (attr) {
       return ~referencesProps.indexOf(attr.name) && ~attr.value.indexOf('url(');
-    })) {
+    }))
     return path;
-  }
 
   var matrix = transformsMultiply(transform2js(elem.attr('transform').value)),
     stroke = elem.computedAttr('stroke'),
@@ -832,7 +833,7 @@ function convexHull(points) {
   var lower = [],
     minY = 0,
     bottom = 0;
-  for (let i = 0; i < points.length; i++) {
+  for (var i = 0; i < points.length; i++) {
     while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], points[i]) <= 0) {
       lower.pop();
     }

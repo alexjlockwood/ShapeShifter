@@ -1,6 +1,8 @@
-import * as specificity from 'specificity';
+/* tslint:disable */
+
 import * as stable from 'stable';
 import * as csso from 'csso';
+import * as specificity from 'csso/lib/compressor/restructure/prepare/specificity';
 import { Plugin } from './Plugin';
 
 export const inlineStyles: Plugin = {
@@ -9,63 +11,60 @@ export const inlineStyles: Plugin = {
 };
 
 /**
- * Moves + merges styles from style elements to element styles
- *
- * Options
- *   onlyMatchedOnce (default: true)
- *     inline only selectors that match once
- *
- *   removeMatchedSelectors (default: true)
- *     clean up matched selectors,
- *     leave selectors that hadn't matched
- *
- *   useMqs (default: ['screen'])
- *     what mediaqueries to be used,
- *     non-mediaquery styles are always used
- *
- *   usePseudoClasses (default: [])
- *     what pseudo-classes to be used,
- *     non-pseudo-class styles are always used
- *
- * @param {Object} root (document)
- * @param {Object} params plugin params
- */
-function inlineStylesFn(
-  document,
-  onlyMatchedOnce = false,
-  removeMatchedSelectors = true,
-  useMqs = ['screen'],
-  usePseudoClasses = []) {
-  console.log(document);
-
+  * Moves + merges styles from style elements to element styles
+  *
+  * Options
+  *   onlyMatchedOnce (default: true)
+  *     inline only selectors that match once
+  *
+  *   removeMatchedSelectors (default: true)
+  *     clean up matched selectors,
+  *     leave selectors that hadn't matched
+  *
+  *   useMqs (default: ['screen'])
+  *     what mediaqueries to be used,
+  *     non-mediaquery styles are always used
+  *
+  *   usePseudoClasses (default: [])
+  *     what pseudo-classes to be used,
+  *     non-pseudo-class styles are always used
+  *
+  * @param {Object} root (document)
+  * @param {Object} params plugin params
+  */
+export function inlineStylesFn(document, opts = {
+  onlyMatchedOnce: false,
+  removeMatchedSelectors: true,
+  useMqs: ['screen'],
+  usePseudoClasses: []
+}) {
   // collect <style/>s
-  const styleEls = document.querySelectorAll('style');
+  var styleEls = document.querySelectorAll('style');
 
-  const styleItems = [];
-  const selectorItems = [];
-  for (const styleElIndex in styleEls) {
-    if (!styleEls.hasOwnProperty(styleElIndex)) {
-      continue;
-    }
+  var styleItems = [],
+    selectorItems = [];
+  for (var styleElIndex in styleEls) {
+    var styleEl = styleEls[styleElIndex];
 
-    const styleEl = styleEls[styleElIndex];
     if (styleEl.isEmpty()) {
       // skip empty <style/>s
       continue;
     }
-    const cssStr = styleEl.content[0].text || styleEl.content[0].cdata || [];
+    var cssStr = styleEl.content[0].text || styleEl.content[0].cdata || [];
 
     // collect <style/>s and their css ast
-    const cssAst = csso.parse(cssStr, { context: 'stylesheet' });
-    styleItems.push({ styleEl, cssAst });
+    var cssAst = csso.parse(cssStr, { context: 'stylesheet' });
+    styleItems.push({
+      styleEl: styleEl,
+      cssAst: cssAst
+    });
 
     // collect css selectors and their containing ruleset
-    let curAtruleExpNode = null;
-    let curPseudoClassItem = null;
-    let curPseudoClassList = null;
+    var curAtruleExpNode = null,
+      curPseudoClassItem = null,
+      curPseudoClassList = null;
+    csso.walk(cssAst, function (node, item, list) {
 
-    interface Context { ruleset: any; }
-    csso.walk(cssAst, function (this: Context, node, item, list) {
       // media query blocks
       // "look-behind the SimpleSelector", AtruleExpression node comes _before_ the affected SimpleSelector
       if (node.type === 'AtruleExpression') { // marks the beginning of an Atrule
@@ -88,7 +87,7 @@ function inlineStylesFn(
         // Selector group ('Selector' in csso) consisting of simple selectors ('SimpleSelector' in csso), separated by comma.
         // <Selector>: <'SimpleSelector'>, <'SimpleSelector'>, ...
 
-        const curSelectorItem = {
+        var curSelectorItem = {
           simpleSelectorItem: item,
           rulesetNode: this.ruleset,
           atRuleExpNode: curAtruleExpNode,
@@ -102,22 +101,24 @@ function inlineStylesFn(
         curPseudoClassItem = null;
         curPseudoClassList = null;
       }
+
     });
   }
 
+
   // filter for mediaqueries to be used or without any mediaquery
-  const selectorItemsMqs = selectorItems.filter(function (selectorItem) {
+  var selectorItemsMqs = selectorItems.filter(function (selectorItem) {
     if (selectorItem.atRuleExpNode === null) {
       return true;
     }
-    const mqStr = csso.translate(selectorItem.atRuleExpNode);
-    return useMqs.indexOf(mqStr) > -1;
+    var mqStr = csso.translate(selectorItem.atRuleExpNode);
+    return opts.useMqs.indexOf(mqStr) > -1;
   });
 
   // filter for pseudo classes to be used or not using a pseudo class
-  const selectorItemsPseudoClasses = selectorItemsMqs.filter(function (selectorItem) {
+  var selectorItemsPseudoClasses = selectorItemsMqs.filter(function (selectorItem) {
     return (selectorItem.pseudoClassItem === null ||
-      usePseudoClasses.indexOf(selectorItem.pseudoClassItem.data.name) > -1);
+      opts.usePseudoClasses.indexOf(selectorItem.pseudoClassItem.data.name) > -1);
   });
 
   // remove PseudoClass from its SimpleSelector for proper matching
@@ -128,101 +129,88 @@ function inlineStylesFn(
     selectorItem.pseudoClassList.remove(selectorItem.pseudoClassItem);
   });
 
+  // stable-sort css selectors by their specificity
+  var selectorItemsSorted = stable(selectorItemsPseudoClasses, function (itemA, itemB) {
+    return compareSimpleSelectorNode(itemA.simpleSelectorItem.data, itemB.simpleSelectorItem.data);
+  }).reverse(); // last declaration applies last (final)
+
   // compile css selector strings
   selectorItemsPseudoClasses.map(function (selectorItem) {
     selectorItem.selectorStr = csso.translate(selectorItem.simpleSelectorItem.data);
   });
 
-  // stable-sort css selectors by their specificity
-  const selectorItemsSorted = stable(selectorItemsPseudoClasses, function (itemA, itemB) {
-    return specificity.compare(itemA.selectorStr, itemB.selectorStr);
-  }).reverse(); // last declaration applies last (final)
-
   // apply <style/> styles to matched elements
-  for (const selectorItemIndex in selectorItemsSorted) {
-    if (!selectorItemsSorted.hasOwnProperty(selectorItemIndex)) {
-      continue;
-    }
-
-    const selectorItem = selectorItemsSorted[selectorItemIndex];
-    let selectedEls = undefined;
+  for (var selectorItemIndex in selectorItemsSorted) {
+    var selectorItem = selectorItemsSorted[selectorItemIndex],
+      selectedEls = null;
     try {
       selectedEls = document.querySelectorAll(selectorItem.selectorStr);
     } catch (e) {
-      if (e.constructor === SyntaxError) {
+      if (e.constructor == SyntaxError) {
         console.warn('Syntax error when trying to select \n\n' + selectorItem.selectorStr + '\n\n, skipped.');
         continue;
       }
       throw e;
     }
 
-    if (onlyMatchedOnce && selectedEls !== null && selectedEls.length > 1) {
+    if (opts.onlyMatchedOnce && selectedEls !== null && selectedEls.length > 1) {
       // skip selectors that match more than once if option onlyMatchedOnce is enabled
       continue;
     }
 
-    for (const selectedElIndex in selectedEls) {
-      if (!selectedEls.hasOwnProperty(selectedElIndex)) {
-        continue;
-      }
-      const selectedEl = selectedEls[selectedElIndex];
+    for (var selectedElIndex in selectedEls) {
+      var selectedEl = selectedEls[selectedElIndex];
 
       // empty defaults in case there is no style attribute
-      let elInlineStyleAttr = { name: 'style', value: '', prefix: '', local: 'style' };
-      let elInlineStyles = '';
+      var elInlineStyleAttr = { name: 'style', value: '', prefix: '', local: 'style' },
+        elInlineStyles = '';
 
       if (selectedEl.hasAttr('style')) {
         elInlineStyleAttr = selectedEl.attr('style');
         elInlineStyles = elInlineStyleAttr.value;
       }
-      const inlineCssAst = csso.parse(elInlineStyles, { context: 'block' });
+      var inlineCssAst = csso.parse(elInlineStyles, { context: 'block' });
 
       // merge element(inline) styles + matching <style/> styles
-      const newInlineCssAst = csso.parse('', { context: 'block' }); // for an empty css ast (in block context)
+      var newInlineCssAst = csso.parse('', { context: 'block' }); // for an empty css ast (in block context)
 
-      const mergedDeclarations = [];
-      const _fetchDeclarations = function (node, item) {
+      var mergedDeclarations = [];
+      var _fetchDeclarations = function (node, item) {
         if (node.type === 'Declaration') {
           mergedDeclarations.push(item);
         }
       };
-      const itemRulesetNodeCloned = csso.clone(selectorItem.rulesetNode);
+      var itemRulesetNodeCloned = csso.clone(selectorItem.rulesetNode);
       // clone to prevent leaking declaration references (csso.translate(...))
       csso.walk(itemRulesetNodeCloned, _fetchDeclarations);
       csso.walk(inlineCssAst, _fetchDeclarations);
 
       // sort by !important(ce)
-      const mergedDeclarationsSorted = stable(mergedDeclarations, function (declarationA, declarationB) {
-        const declarationAScore = ~~declarationA.data.value.important;
-        const declarationBScore = ~~declarationB.data.value.important;
+      var mergedDeclarationsSorted = stable(mergedDeclarations, function (declarationA, declarationB) {
+        var declarationAScore = ~~declarationA.data.value.important, // (cast boolean to number)
+          declarationBScore = ~~declarationB.data.value.important; //  "
         return (declarationAScore - declarationBScore);
       });
 
       // to css
-      for (const mergedDeclarationsSortedIndex in mergedDeclarationsSorted) {
-        if (!mergedDeclarationsSorted.hasOwnProperty(mergedDeclarationsSortedIndex)) {
-          continue;
-        }
-        const declaration = mergedDeclarationsSorted[mergedDeclarationsSortedIndex];
+      for (var mergedDeclarationsSortedIndex in mergedDeclarationsSorted) {
+        var declaration = mergedDeclarationsSorted[mergedDeclarationsSortedIndex];
         newInlineCssAst.declarations.insert(declaration);
       }
-      const newCss = csso.translate(newInlineCssAst);
+      var newCss = csso.translate(newInlineCssAst);
 
       elInlineStyleAttr.value = newCss;
       selectedEl.addAttr(elInlineStyleAttr);
     }
 
-    if (removeMatchedSelectors && selectedEls !== null && selectedEls.length > 0) {
+    if (opts.removeMatchedSelectors && selectedEls !== null && selectedEls.length > 0) {
       // clean up matching simple selectors if option removeMatchedSelectors is enabled
       selectorItem.rulesetNode.selector.selectors.remove(selectorItem.simpleSelectorItem);
     }
   }
 
-  let styleItem: any = {};
-  for (const styleItemIndex in styleItems) {
-    if (!styleItems.hasOwnProperty(styleItemIndex)) {
-      continue;
-    }
+  var styleItem: any = {};
+  for (let styleItemIndex in styleItems) {
     styleItem = styleItems[styleItemIndex];
 
     csso.walk(styleItem.cssAst, function (node, item, list) {
@@ -244,15 +232,16 @@ function inlineStylesFn(
 
     if (styleItem.cssAst.rules.isEmpty()) {
       // clean up now emtpy <style/>s
-      const styleParentEl = styleItem.styleEl.parentNode;
+      var styleParentEl = styleItem.styleEl.parentNode;
       styleParentEl.spliceContent(styleParentEl.content.indexOf(styleItem.styleEl), 1);
 
       if (styleParentEl.elem === 'defs' &&
         styleParentEl.content.length === 0) {
         // also clean up now empty <def/>s
-        const defsParentEl = styleParentEl.parentNode;
+        var defsParentEl = styleParentEl.parentNode;
         defsParentEl.spliceContent(defsParentEl.content.indexOf(styleParentEl), 1);
       }
+
       continue;
     }
 
@@ -262,3 +251,22 @@ function inlineStylesFn(
 
   return document;
 };
+
+// extracted from https://github.com/keeganstreet/specificity/blob/master/specificity.js#L211
+function compareSpecificity(aSpecificity, bSpecificity) {
+  for (var i = 0; i < 4; i += 1) {
+    if (aSpecificity[i] < bSpecificity[i]) {
+      return -1;
+    } else if (aSpecificity[i] > bSpecificity[i]) {
+      return 1;
+    }
+  }
+
+  return 0;
+}
+
+function compareSimpleSelectorNode(aSimpleSelectorNode, bSimpleSelectorNode) {
+  var aSpecificity = specificity(aSimpleSelectorNode),
+    bSpecificity = specificity(bSimpleSelectorNode);
+  return compareSpecificity(aSpecificity, bSpecificity);
+}

@@ -1,3 +1,5 @@
+/* tslint:disable */
+
 export function intersectArrays(a, b) {
   return a.filter(function (n) {
     return b.indexOf(n) > -1;

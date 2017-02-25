@@ -10,7 +10,11 @@ export const elemsGroups = {
   textContent: ['altGlyph', 'altGlyphDef', 'altGlyphItem', 'glyph', 'glyphRef', 'textPath', 'text', 'tref', 'tspan'],
   textContentChild: ['altGlyph', 'textPath', 'tref', 'tspan'],
   lightSource: ['feDiffuseLighting', 'feSpecularLighting', 'feDistantLight', 'fePointLight', 'feSpotLight'],
-  filterPrimitive: ['feBlend', 'feColorMatrix', 'feComponentTransfer', 'feComposite', 'feConvolveMatrix', 'feDiffuseLighting', 'feDisplacementMap', 'feFlood', 'feGaussianBlur', 'feImage', 'feMerge', 'feMorphology', 'feOffset', 'feSpecularLighting', 'feTile', 'feTurbulence']
+  filterPrimitive: [
+    'feBlend', 'feColorMatrix', 'feComponentTransfer', 'feComposite', 'feConvolveMatrix', 'feDiffuseLighting',
+    'feDisplacementMap', 'feFlood', 'feGaussianBlur', 'feImage', 'feMerge', 'feMorphology', 'feOffset',
+    'feSpecularLighting', 'feTile', 'feTurbulence'
+  ],
 };
 
 export const pathElems = ['path', 'glyph', 'missing-glyph'];
@@ -24,7 +28,9 @@ export const attrsGroups = {
   animationValue: ['calcMode', 'values', 'keyTimes', 'keySplines', 'from', 'to', 'by'],
   conditionalProcessing: ['requiredFeatures', 'requiredExtensions', 'systemLanguage'],
   core: ['id', 'tabindex', 'xml:base', 'xml:lang', 'xml:space'],
-  graphicalEvent: ['onfocusin', 'onfocusout', 'onactivate', 'onclick', 'onmousedown', 'onmouseup', 'onmouseover', 'onmousemove', 'onmouseout', 'onload'],
+  graphicalEvent: [
+    'onfocusin', 'onfocusout', 'onactivate', 'onclick', 'onmousedown', 'onmouseup', 'onmouseover', 'onmousemove', 'onmouseout', 'onload'
+  ],
   presentation: [
     'alignment-baseline',
     'baseline-shift',
