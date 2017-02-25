@@ -94,7 +94,7 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
     }
 
     const simpleAttrFn = (nodeAttr, contextAttr) => {
-      if (node.attributes[nodeAttr]) {
+      if (node.attributes && node.attributes[nodeAttr]) {
         context[contextAttr] = node.attributes[nodeAttr].value;
       }
     };
@@ -160,12 +160,19 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
         path = PathParser.transformPathString(path, context.transforms.map(t => t.matrix));
       }
 
+      let fillColor =
+        ('fillColor' in context) ? ColorUtil.svgToAndroidColor(context.fillColor) : undefined;
+      const strokeColor =
+        ('strokeColor' in context) ? ColorUtil.svgToAndroidColor(context.strokeColor) : undefined;
+      if (!fillColor && !strokeColor) {
+        fillColor = '#000';
+      }
       return new PathLayer(
         makeFinalNodeIdFn(node, 'path'),
         newPathCommand(path),
-        ('fillColor' in context) ? ColorUtil.svgToAndroidColor(context.fillColor) : undefined,
+        fillColor,
         ('fillAlpha' in context) ? context.fillAlpha : undefined,
-        ('strokeColor' in context) ? ColorUtil.svgToAndroidColor(context.strokeColor) : undefined,
+        strokeColor,
         ('strokeAlpha' in context) ? context.strokeAlpha : undefined,
         context.strokeWidth || undefined,
         context.strokeLinecap || undefined,
