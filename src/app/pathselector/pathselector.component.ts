@@ -108,7 +108,7 @@ export class PathSelectorComponent {
       fileReader.onload = event => {
         const svgText = (event.target as any).result;
         SvgLoader.loadVectorLayerFromSvgStringWithCallback(svgText, vectorLayer => {
-          this.setVectorLayer(canvasType, vectorLayer)
+          this.setVectorLayer(canvasType, vectorLayer);
         });
       };
 

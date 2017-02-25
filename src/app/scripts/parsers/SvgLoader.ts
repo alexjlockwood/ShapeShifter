@@ -3,6 +3,9 @@ import { newPathCommand } from '../commands';
 import { ColorUtil } from '../common';
 import { PathParser } from '.';
 import { Svgo } from '../svgo';
+import { environment } from '../../../environments/environment';
+
+const IS_DEV_MODE = !environment.production;
 
 // This ID is reserved for the active path layer's parent group layer
 // (i.e. if the user adds a rotation to the path morphing animation).
@@ -16,9 +19,14 @@ export function loadVectorLayerFromSvgStringWithCallback(
   svgString: string,
   callback: (vl: VectorLayer) => void) {
 
-  Svgo.optimize(svgString, (optimizedSvgString: string) => {
-    callback(loadVectorLayerFromSvgString(optimizedSvgString));
-  });
+  // TODO: enable svgo for production builds
+  if (IS_DEV_MODE) {
+    Svgo.optimize(svgString, (optimizedSvgString: string) => {
+      callback(loadVectorLayerFromSvgString(optimizedSvgString));
+    });
+  } else {
+    callback(loadVectorLayerFromSvgString(svgString));
+  }
 }
 
 export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
