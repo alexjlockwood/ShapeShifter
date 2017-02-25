@@ -170,12 +170,11 @@ export class ToolbarComponent implements OnInit {
         }));
         const shuffledStartPathIds = _.shuffle(availableStartPathIds);
         const shuffledEndPathIds = _.shuffle(availableEndPathIds);
-        this.layerStateService.setActivePathId(CanvasType.Start, shuffledStartPathIds[0], false);
-        this.layerStateService.setActivePathId(CanvasType.Preview, shuffledStartPathIds[0], false);
-        this.layerStateService.setActivePathId(CanvasType.End, shuffledEndPathIds[0], false);
-        this.layerStateService.notifyChange(CanvasType.Preview);
-        this.layerStateService.notifyChange(CanvasType.Start);
-        this.layerStateService.notifyChange(CanvasType.End);
+        this.layerStateService.setActivePathIds([
+          { type: CanvasType.Preview, pathId: shuffledStartPathIds[0] },
+          { type: CanvasType.Start, pathId: shuffledStartPathIds[0] },
+          { type: CanvasType.End, pathId: shuffledEndPathIds[0] },
+        ]);
       });
   }
 

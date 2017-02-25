@@ -55,12 +55,11 @@ export class PathSelectorComponent {
 
   setActivePathId(canvasType: CanvasType, activePathId: string) {
     // Always notify the preview layer in case the morphability status changed.
-    const canvasTypes = [canvasType, CanvasType.Preview];
+    const ids = [{ type: canvasType, pathId: activePathId }];
     if (canvasType === CanvasType.Start) {
-      this.layerStateService.setActivePathId(CanvasType.Preview, activePathId, false);
+      ids.push({ type: CanvasType.Preview, pathId: activePathId });
     }
-    this.layerStateService.setActivePathId(canvasType, activePathId, false);
-    canvasTypes.forEach(type => this.layerStateService.notifyChange(type));
+    this.layerStateService.setActivePathIds(ids);
   }
 
   trackPathLayer(index: number, item: PathLayer) {
