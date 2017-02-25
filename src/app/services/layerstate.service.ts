@@ -48,16 +48,18 @@ export class LayerStateService {
   /**
    * Called by the PathSelectorComponent when a new vector layer path is selected.
    */
-  setActivePathId(type: CanvasType, pathId: string, shouldNotify = true) {
-    this.activePathIdMap.set(type, pathId);
-    const activePathLayer = this.getActivePathLayer(type);
-    const numSubPaths = activePathLayer.pathData.getSubPaths().length;
-    for (let subIdx = 0; subIdx < numSubPaths; subIdx++) {
-      // Attempt to make each corresponding pair of subpaths compatible with each other.
-      this.updateActivePathCommand(type, activePathLayer.pathData, subIdx, false);
-    }
+  setActivePathIds(ids: Array<{ type: CanvasType, pathId: string }>, shouldNotify = true) {
+    ids.forEach(id => this.activePathIdMap.set(id.type, id.pathId));
+    ids.forEach(id => {
+      const activePathLayer = this.getActivePathLayer(id.type);
+      const numSubPaths = activePathLayer.pathData.getSubPaths().length;
+      for (let subIdx = 0; subIdx < numSubPaths; subIdx++) {
+        // Attempt to make each corresponding pair of subpaths compatible with each other.
+        this.updateActivePathCommand(id.type, activePathLayer.pathData, subIdx, false);
+      }
+    });
     if (shouldNotify) {
-      this.notifyChange(type);
+      ids.forEach(id => this.notifyChange(id.type));
     }
   }
 
