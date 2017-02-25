@@ -143,8 +143,19 @@ function inlineStylesFn(
     if (!selectorItemsSorted.hasOwnProperty(selectorItemIndex)) {
       continue;
     }
+
     const selectorItem = selectorItemsSorted[selectorItemIndex];
-    const selectedEls = document.querySelectorAll(selectorItem.selectorStr);
+    let selectedEls = undefined;
+    try {
+      selectedEls = document.querySelectorAll(selectorItem.selectorStr);
+    } catch (e) {
+      if (e.constructor === SyntaxError) {
+        console.warn('Syntax error when trying to select \n\n' + selectorItem.selectorStr + '\n\n, skipped.');
+        continue;
+      }
+      throw e;
+    }
+
     if (onlyMatchedOnce && selectedEls !== null && selectedEls.length > 1) {
       // skip selectors that match more than once if option onlyMatchedOnce is enabled
       continue;
