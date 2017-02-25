@@ -3,7 +3,6 @@
 import * as collections from './_collections';
 import * as paths from './_paths';
 import * as tools from './_tools';
-import { Plugin } from './Plugin';
 
 const pathElems = collections.pathElems;
 const path2js = paths.path2js;
@@ -11,9 +10,25 @@ const js2path = paths.js2path;
 const applyTransforms = paths.applyTransforms;
 const cleanupOutData = tools.cleanupOutData;
 
-export const convertPathData: Plugin = {
+export const convertPathData = {
+  active: true,
   type: 'perItem',
   fn: convertPathDataFn,
+  params: {
+    applyTransforms: true,
+    applyTransformsStroked: true,
+    makeArcs: undefined, // {threshold: 2.5, tolerance: 0.5 },
+    straightCurves: true,
+    lineShorthands: true,
+    curveSmoothShorthands: true,
+    floatPrecision: 3,
+    transformPrecision: 5,
+    removeUseless: true,
+    collapseRepeated: true,
+    utilizeAbsolute: true,
+    leadingZero: true,
+    negativeExtraSpace: true
+  },
 };
 
 let roundData;
@@ -37,21 +52,7 @@ let hasMarkerMid;
  * @param {Object} params plugin params
  * @return {Boolean} if false, item will be filtered out
  */
-export function convertPathDataFn(item, params = {
-  applyTransforms: true,
-  applyTransformsStroked: true,
-  makeArcs: undefined, // {threshold: 2.5, tolerance: 0.5 },
-  straightCurves: true,
-  lineShorthands: true,
-  curveSmoothShorthands: true,
-  floatPrecision: 3,
-  transformPrecision: 5,
-  removeUseless: true,
-  collapseRepeated: true,
-  utilizeAbsolute: true,
-  leadingZero: true,
-  negativeExtraSpace: true
-}) {
+export function convertPathDataFn(item, params) {
   if (item.isElem(pathElems) && item.hasAttr('d')) {
     precision = params.floatPrecision;
     error = precision !== false ? +Math.pow(.1, precision).toFixed(precision) : 1e-2;

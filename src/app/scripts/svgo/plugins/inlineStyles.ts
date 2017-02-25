@@ -3,11 +3,17 @@
 import * as stable from 'stable';
 import * as csso from 'csso';
 import * as specificity from 'csso/lib/compressor/restructure/prepare/specificity';
-import { Plugin } from './Plugin';
 
-export const inlineStyles: Plugin = {
+export const inlineStyles = {
+  active: true,
   type: 'full',
   fn: inlineStylesFn,
+  params: {
+    onlyMatchedOnce: false,
+    removeMatchedSelectors: true,
+    useMqs: ['screen'],
+    usePseudoClasses: []
+  },
 };
 
 /**
@@ -32,12 +38,7 @@ export const inlineStyles: Plugin = {
   * @param {Object} root (document)
   * @param {Object} params plugin params
   */
-export function inlineStylesFn(document, opts = {
-  onlyMatchedOnce: false,
-  removeMatchedSelectors: true,
-  useMqs: ['screen'],
-  usePseudoClasses: []
-}) {
+export function inlineStylesFn(document, params) {
   // collect <style/>s
   var styleEls = document.querySelectorAll('style');
 
@@ -101,7 +102,6 @@ export function inlineStylesFn(document, opts = {
         curPseudoClassItem = null;
         curPseudoClassList = null;
       }
-
     });
   }
 
@@ -112,13 +112,13 @@ export function inlineStylesFn(document, opts = {
       return true;
     }
     var mqStr = csso.translate(selectorItem.atRuleExpNode);
-    return opts.useMqs.indexOf(mqStr) > -1;
+    return params.useMqs.indexOf(mqStr) > -1;
   });
 
   // filter for pseudo classes to be used or not using a pseudo class
   var selectorItemsPseudoClasses = selectorItemsMqs.filter(function (selectorItem) {
     return (selectorItem.pseudoClassItem === null ||
-      opts.usePseudoClasses.indexOf(selectorItem.pseudoClassItem.data.name) > -1);
+      params.usePseudoClasses.indexOf(selectorItem.pseudoClassItem.data.name) > -1);
   });
 
   // remove PseudoClass from its SimpleSelector for proper matching
@@ -153,7 +153,7 @@ export function inlineStylesFn(document, opts = {
       throw e;
     }
 
-    if (opts.onlyMatchedOnce && selectedEls !== null && selectedEls.length > 1) {
+    if (params.onlyMatchedOnce && selectedEls !== null && selectedEls.length > 1) {
       // skip selectors that match more than once if option onlyMatchedOnce is enabled
       continue;
     }
@@ -203,7 +203,7 @@ export function inlineStylesFn(document, opts = {
       selectedEl.addAttr(elInlineStyleAttr);
     }
 
-    if (opts.removeMatchedSelectors && selectedEls !== null && selectedEls.length > 0) {
+    if (params.removeMatchedSelectors && selectedEls !== null && selectedEls.length > 0) {
       // clean up matching simple selectors if option removeMatchedSelectors is enabled
       selectorItem.rulesetNode.selector.selectors.remove(selectorItem.simpleSelectorItem);
     }

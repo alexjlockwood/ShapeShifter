@@ -1,12 +1,13 @@
 /* tslint:disable */
 
 import * as EXTEND from 'whet.extend';
-import { Plugin } from './Plugin';
 import * as collections from './_collections';
 
-export const convertStyleToAttrs: Plugin = {
+export const convertStyleToAttrs = {
+  active: true,
   type: 'perItem',
   fn: convertStyleToAttrsFn,
+  params: undefined,
 };
 
 const stylingProps = collections.attrsGroups.presentation;

@@ -86,13 +86,10 @@ function perItem(data, plugins, reverse = false) {
  * @return {Object} output data
  */
 function full(data, plugins) {
-
   plugins.forEach(function (plugin) {
     if (plugin.active) {
       data = plugin.fn(data, plugin.params);
     }
   });
-
   return data;
-
 }

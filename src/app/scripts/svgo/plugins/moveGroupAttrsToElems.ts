@@ -1,11 +1,12 @@
 /* tslint:disable */
 
 import * as collections from './_collections';
-import { Plugin } from './Plugin';
 
-export const moveGroupAttrsToElems: Plugin = {
+export const moveGroupAttrsToElems = {
+  active: true,
   type: 'perItem',
   fn: moveGroupAttrsToElemsFn,
+  params: undefined,
 };
 
 const pathElems = collections.pathElems.concat(['g', 'text']);

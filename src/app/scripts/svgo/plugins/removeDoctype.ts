@@ -1,10 +1,10 @@
 /* tslint:disable */
 
-import { Plugin } from './Plugin';
-
-export const removeDoctype: Plugin = {
+export const removeDoctype = {
+  active: true,
   type: 'perItem',
   fn: removeDoctypeFn,
+  params: undefined,
 };
 
 /**
