@@ -440,7 +440,8 @@ class PathCommandImpl implements PathCommand {
     if (cmdIdx >= numCommands) {
       cmdIdx -= (numCommands - 1);
     }
-    let counter = 0, cmIdx = 0;
+    let counter = 0;
+    let cmIdx = 0;
     for (const targetCm of this.commandMutationsMap[subIdx]) {
       if (counter + targetCm.getCommands().length > cmdIdx) {
         const splitIdx = cmdIdx - counter;
@@ -463,22 +464,39 @@ class PathCommandImpl implements PathCommand {
   }
 }
 
-// TODO: create multiple sub path cmds for svgs like 'M ... Z ... Z ... Z'
 function createSubPathCommands(...commands: Command[]) {
-  if (!commands.length) {
+  if (!commands.length || commands[0].svgChar !== 'M') {
+    // TODO: is this case actually possible? should we insert 'M 0 0' instead?
     return [];
   }
-  const cmdGroups: Command[][] = [];
-  let currentCmdList = [];
-  for (let i = commands.length - 1; i >= 0; i--) {
+  let lastSeenMove: Command;
+  let currentCmdList: Command[] = [];
+  const subPathCmds: SubPathCommand[] = [];
+  for (let i = 0; i < commands.length; i++) {
     const cmd = commands[i];
-    currentCmdList.push(cmd);
     if (cmd.svgChar === 'M') {
-      cmdGroups.push(currentCmdList);
+      lastSeenMove = cmd;
+      if (currentCmdList.length) {
+        subPathCmds.push(newSubPathCommand(currentCmdList));
+        currentCmdList = [];
+      } else {
+        currentCmdList.push(cmd);
+      }
+      continue;
+    }
+    if (!currentCmdList.length) {
+      currentCmdList.push(lastSeenMove);
+    }
+    currentCmdList.push(cmd);
+    if (cmd.svgChar === 'Z') {
+      subPathCmds.push(newSubPathCommand(currentCmdList));
       currentCmdList = [];
     }
   }
-  return cmdGroups.reverse().map(cmds => newSubPathCommand(...cmds.reverse()));
+  if (currentCmdList.length) {
+    subPathCmds.push(newSubPathCommand(currentCmdList));
+  }
+  return subPathCmds;
 }
 
 /**

@@ -2,8 +2,9 @@ import * as _ from 'lodash';
 import { Point } from '../common';
 import { SubPathCommand, Command } from '.';
 
-export function newSubPathCommand(...commands: Command[]): SubPathCommand {
-  return new SubPathCommandImpl(commands);
+export function newSubPathCommand(commands: Command[]): SubPathCommand {
+  // Precondition: must have exactly 1 move command and at most 1 closepath command.
+  return new SubPathCommandImpl(commands.slice());
 }
 
 /**
@@ -11,17 +12,15 @@ export function newSubPathCommand(...commands: Command[]): SubPathCommand {
  * into multiple SubPathCommands, each beginning with a 'move to' command.
  */
 class SubPathCommandImpl implements SubPathCommand {
+  private readonly commands: ReadonlyArray<Command>;
 
-  // TODO: make sure paths with one M and multiple Zs are treated as multiple sub paths
-  private readonly commands_: ReadonlyArray<Command>;
-
-  constructor(commands: Command[]) {
-    this.commands_ = commands.slice();
+  constructor(commands: ReadonlyArray<Command>) {
+    this.commands = commands;
   }
 
   // Implements the SubPathCommand interface.
   getCommands() {
-    return this.commands_;
+    return this.commands;
   }
 
   // Implements the SubPathCommand interface.

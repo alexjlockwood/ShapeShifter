@@ -1,4 +1,5 @@
-import { newPathCommand } from '.';
+import { SvgChar, newPathCommand } from '.';
+import * as _ from 'lodash';
 
 describe('PathCommand', () => {
   it('reverse line', () => {
@@ -170,4 +171,40 @@ describe('PathCommand', () => {
     const expected = newPathCommand('M 0 0 L 0 0 L 0 0 L 0 0 L 0 0');
     expect(actual.getPathData()).toEqual(expected.getPathData());
   });
+
+  it('parse complex subpaths', () => {
+    const svgChars: SvgChar[][] = [
+      ['M', 'L', 'Z'],
+      ['M', 'L', 'L', 'Z'],
+      ['M', 'L'],
+      ['M', 'L', 'L', 'Z'],
+      ['L', 'Z'],
+      ['L', 'L', 'Z'],
+      ['M', 'L', 'L'],
+      ['M', 'Z'],
+      ['M'],
+    ];
+    const pathCmd = newSimplePathCommand(..._.flatten(svgChars));
+    const actual = pathCmd.getSubPaths().map(subPathCmd => {
+      return subPathCmd.getCommands().map(cmd => cmd.svgChar);
+    });
+    const expected: SvgChar[][] = [
+      ['M', 'L', 'Z'],
+      ['M', 'L', 'L', 'Z'],
+      ['M', 'L'],
+      ['M', 'L', 'L', 'Z'],
+      ['M', 'L', 'Z'],
+      ['M', 'L', 'L', 'Z'],
+      ['M', 'L', 'L'],
+      ['M', 'Z'],
+      ['M'],
+    ];
+    expect(actual).toEqual(expected);
+  });
 });
+
+function newSimplePathCommand(...svgChars: SvgChar[]) {
+  return newPathCommand(svgChars.map(svgChar => {
+    return svgChar === 'Z' ? 'Z' : `${svgChar} 0 0`;
+  }).join(' '));
+}
