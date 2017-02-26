@@ -321,13 +321,13 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         // difference in length between the total path length and the visible
         // trimmed path length.
         ctx.setLineDash([
-          shownFraction * layer.pathData.pathLength,
-          (1 - shownFraction + 0.001) * layer.pathData.pathLength
+          shownFraction * layer.pathData.getPathLength(),
+          (1 - shownFraction + 0.001) * layer.pathData.getPathLength()
         ]);
         // The amount to offset the path is equal to the trimPathStart plus
         // trimPathOffset. We mod the result because the trimmed path
         // should wrap around once it reaches 1.
-        ctx.lineDashOffset = layer.pathData.pathLength
+        ctx.lineDashOffset = layer.pathData.getPathLength()
           * (1 - ((layer.trimPathStart + layer.trimPathOffset) % 1));
       } else {
         ctx.setLineDash([]);

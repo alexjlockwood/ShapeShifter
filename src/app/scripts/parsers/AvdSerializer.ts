@@ -82,7 +82,7 @@ export function vectorLayerToXmlNode(vl: VectorLayer, destinationNode: HTMLEleme
     } else if (layer instanceof PathLayer) {
       const node = xmlDoc.createElement('path');
       conditionalAttr(node, 'android:name', layer.id);
-      conditionalAttr(node, 'android:pathData', layer.pathData.pathString);
+      conditionalAttr(node, 'android:pathData', layer.pathData.getPathData());
       conditionalAttr(node, 'android:fillColor', layer.fillColor, '');
       conditionalAttr(node, 'android:fillAlpha', layer.fillAlpha, 1);
       conditionalAttr(node, 'android:strokeColor', layer.strokeColor, '');
@@ -100,7 +100,7 @@ export function vectorLayerToXmlNode(vl: VectorLayer, destinationNode: HTMLEleme
     } else if (layer instanceof ClipPathLayer) {
       const node = xmlDoc.createElement('clip-path');
       conditionalAttr(node, 'android:name', layer.id);
-      conditionalAttr(node, 'android:pathData', layer.pathData.pathString);
+      conditionalAttr(node, 'android:pathData', layer.pathData.getPathData());
       parentNode.appendChild(node);
       return parentNode;
 

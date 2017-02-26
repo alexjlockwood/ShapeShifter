@@ -128,8 +128,8 @@ export class ToolbarComponent implements OnInit {
   private createPathAvdTarget() {
     const startLayer = this.layerStateService.getActivePathLayer(CanvasType.Start);
     const endLayer = this.layerStateService.getActivePathLayer(CanvasType.End);
-    const fromValue = startLayer.pathData.pathString;
-    const toValue = endLayer.pathData.pathString;
+    const fromValue = startLayer.pathData.getPathData();
+    const toValue = endLayer.pathData.getPathData();
     const duration = this.animatorService.getDuration();
     const interpolator = this.animatorService.getInterpolator();
     return new AvdTarget(startLayer.id,

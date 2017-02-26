@@ -9,12 +9,12 @@ export interface PathCommand {
   /**
    * Returns the length of the path.
    */
-  pathLength: number;
+  getPathLength(): number;
 
   /**
    * Returns the path's SVG path string.
    */
-  pathString: string;
+  getPathData(): string;
 
  /**
    * Returns the list of sub path commands in this path.
