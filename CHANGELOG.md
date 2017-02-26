@@ -1,4 +1,4 @@
-## v0.1.1 (2017-02-27)
+# v0.1.1 (2017-02-27)
 
 ### Features
 
@@ -6,7 +6,7 @@
   Design tools are notorious for outputting bloated SVG source code with tons of unnecessary
   commands, so the simplified SVGs should be much easier to work with.
 * Selection/hover events in one canvas are now mirroed in the other canvas, making it easier
-  to understand which points map where.
+  to understand which points animate where.
   ([#30](https://github.com/alexjlockwood/ShapeShifter/issues/30))
   ([265608d](https://github.com/alexjlockwood/ShapeShifter/commit/265608d))
 
@@ -38,6 +38,6 @@
   ([#38](https://github.com/alexjlockwood/ShapeShifter/issues/32))
   ([361be34](https://github.com/alexjlockwood/ShapeShifter/commit/361be34))
 
-## v0.1.0 (2017-02-20)
+# v0.1.0 (2017-02-20)
 
 * Initial release!
