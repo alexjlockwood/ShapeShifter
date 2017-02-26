@@ -3,8 +3,9 @@
 ### Features
 
 * Imported SVGs are now preprocessed and simplified using [svgo](https://github.com/svg/svgo).
-  Design tools are notorious for outputting bloated SVG source code with tons of unnecessary
-  commands, so the simplified SVGs should be much easier to work with.
+  Design tools often output bloated SVG source code with tons of unnecessary
+  commands, so simplifying the SVGs beforehand should make them
+  much easier to work with.
 * Selection/hover events in one canvas are now mirroed in the other canvas, making it easier
   to understand which points animate where.
   ([#30](https://github.com/alexjlockwood/ShapeShifter/issues/30))
@@ -15,6 +16,8 @@
 * SVG importer is much better at importing SVGs with `<style>` tags and/or inline
   `style` attributes.
 * SVG importer is much better at detecting and assigning inherited attributes to children nodes.
+  ([#20](https://github.com/alexjlockwood/ShapeShifter/issues/20))
+  ([158497f](https://github.com/alexjlockwood/ShapeShifter/commit/158497f))
 * SVG paths beginning with a relative `m` command are now imported correctly.
   ([#22](https://github.com/alexjlockwood/ShapeShifter/issues/22))
   ([158497f](https://github.com/alexjlockwood/ShapeShifter/commit/158497f))
