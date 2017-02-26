@@ -149,7 +149,6 @@ export function inlineStylesFn(document, params) {
       throw e;
     }
 
-
     if (params.onlyMatchedOnce && selectedEls !== null && selectedEls.length > 1) {
       // skip selectors that match more than once if option onlyMatchedOnce is enabled
       continue;

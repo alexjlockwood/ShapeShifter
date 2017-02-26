@@ -135,8 +135,20 @@ describe('PathCommand', () => {
   });
 
   it('split close path', () => {
-    const actual = newPathCommand('M 0 0 L 0 10 L 10 10 Z').split(0, 3, 0.5);
-    const expected = newPathCommand('M 0 0 L 0 10 L 10 10 L 5 5 Z');
+    let actual = newPathCommand('M 0 0 L 0 10 L 10 10 Z').split(0, 3, 0.5);
+    let expected = newPathCommand('M 0 0 L 0 10 L 10 10 L 5 5 Z');
+    expect(actual.getPathData()).toEqual(expected.getPathData());
+
+    actual = newPathCommand('M 0 0 L 0 10 L 10 10 Z').splitInHalf(0, 3);
+    expected = newPathCommand('M 0 0 L 0 10 L 10 10 L 5 5 Z');
+    expect(actual.getPathData()).toEqual(expected.getPathData());
+
+    actual = newPathCommand('M 8 8 L 16 8 L 16 16 L 8 16 L 8 8 Z').split(0, 5, 0.5);
+    expected = newPathCommand('M 8 8 L 16 8 L 16 16 L 8 16 L 8 8 L 8 8 Z');
+    expect(actual.getPathData()).toEqual(expected.getPathData());
+
+    actual = newPathCommand('M 8 8 L 16 8 L 16 16 L 8 16 L 8 8 Z').splitInHalf(0, 5);
+    expected = newPathCommand('M 8 8 L 16 8 L 16 16 L 8 16 L 8 8 L 8 8 Z');
     expect(actual.getPathData()).toEqual(expected.getPathData());
   });
 

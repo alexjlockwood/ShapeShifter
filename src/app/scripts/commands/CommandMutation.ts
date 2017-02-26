@@ -145,8 +145,13 @@ export class CommandMutation {
    * Unconverts all conversions previously performed on this command mutation.
    */
   unconvertAll() {
-    const svgChar = this.backingCommand.svgChar;
-    return this.rebuildCommands(this.mutations.map(mutation => {
+    const backingSvgChar = this.backingCommand.svgChar;
+    return this.rebuildCommands(this.mutations.map((mutation, i) => {
+      let svgChar = backingSvgChar;
+      if (backingSvgChar === 'Z' && i !== this.mutations.length - 1) {
+        // Force convert the split closepath command back into a line.
+        svgChar = 'L';
+      }
       return _.assign({}, mutation, { svgChar });
     }));
   }
@@ -170,8 +175,7 @@ export class CommandMutation {
         this.mutator.split(prevT, currT)
           .convert(mutations[i].svgChar)
           .toCommand();
-      const isSplit = i === mutations.length - 1;
-      if (isSplit) {
+      if (i !== mutations.length - 1) {
         command = command.toggleSplit();
       }
       builtCommands.push(command);

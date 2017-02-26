@@ -12,11 +12,6 @@ export interface Command {
   svgChar: SvgChar;
 
   /**
-   * A human-readable representation of this command.
-   */
-  commandString: string;
-
-  /**
    * Returns the points for this command.
    */
   points: ReadonlyArray<Point>;

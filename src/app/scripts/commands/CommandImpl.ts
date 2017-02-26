@@ -2,25 +2,25 @@ import * as _ from 'lodash';
 import { Point, Matrix, MathUtil } from '../common';
 import { Command, SvgChar } from '.';
 
-export function newMove(start: Point, end: Point, isSplit?: boolean) {
-  return new CommandImpl('M', !!isSplit, [start, end]);
+export function newMove(start: Point, end: Point, isSplit = false) {
+  return new CommandImpl('M', isSplit, [start, end]);
 }
 
-export function newLine(start: Point, end: Point, isSplit?: boolean) {
-  return new CommandImpl('L', !!isSplit, [start, end]);
+export function newLine(start: Point, end: Point, isSplit = false) {
+  return new CommandImpl('L', isSplit, [start, end]);
 }
 
-export function newQuadraticCurve(start: Point, cp: Point, end: Point, isSplit?: boolean) {
-  return new CommandImpl('Q', !!isSplit, [start, cp, end]);
+export function newQuadraticCurve(start: Point, cp: Point, end: Point, isSplit = false) {
+  return new CommandImpl('Q', isSplit, [start, cp, end]);
 }
 
 export function newBezierCurve(
-  start: Point, cp1: Point, cp2: Point, end: Point, isSplit?: boolean) {
-  return new CommandImpl('C', !!isSplit, [start, cp1, cp2, end]);
+  start: Point, cp1: Point, cp2: Point, end: Point, isSplit = false) {
+  return new CommandImpl('C', isSplit, [start, cp1, cp2, end]);
 }
 
-export function newClosePath(start: Point, end: Point, isSplit?: boolean) {
-  return new CommandImpl('Z', !!isSplit, [start, end]);
+export function newClosePath(start: Point, end: Point, isSplit = false) {
+  return new CommandImpl('Z', isSplit, [start, end]);
 }
 
 /**
@@ -29,21 +29,11 @@ export function newClosePath(start: Point, end: Point, isSplit?: boolean) {
  * elliptical arc, or close path).
  */
 export class CommandImpl implements Command {
-  readonly commandString: string;
 
   constructor(
     public readonly svgChar: SvgChar,
     public readonly isSplit: boolean,
-    public readonly points: ReadonlyArray<Point>) {
-    if (this.svgChar === 'Z') {
-      this.commandString = `${this.svgChar}`;
-    } else {
-      const p = _.last(this.points);
-      const x = _.round(p.x, 3);
-      const y = _.round(p.y, 3);
-      this.commandString = `${this.svgChar} ${x}, ${y}`;
-    }
-  }
+    public readonly points: ReadonlyArray<Point>) { }
 
   // Implements the Command interface.
   get start() {
@@ -103,6 +93,13 @@ export class CommandImpl implements Command {
   }
 
   toString() {
-    return this.commandString;
+    if (this.svgChar === 'Z') {
+      return `${this.svgChar}`;
+    } else {
+      const p = _.last(this.points);
+      const x = _.round(p.x, 3);
+      const y = _.round(p.y, 3);
+      return `${this.svgChar} ${x}, ${y}`;
+    }
   }
 }
