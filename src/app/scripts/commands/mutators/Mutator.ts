@@ -11,12 +11,12 @@ import { CommandImpl } from '../CommandImpl';
  * path-related code from the rest of the application.
  */
 export interface Mutator {
-  pathLength(): number;
+  getPathLength(): number;
   project(point: Point): Projection;
   split(t1: number, t2: number): Mutator;
   convert(svgChar: SvgChar): Mutator;
   findTimeByDistance(distance: number): number;
-  toCommand(isSplit: boolean): CommandImpl;
+  toCommand(): CommandImpl;
 }
 
 export function newMutator(cmd: CommandImpl): Mutator | undefined {

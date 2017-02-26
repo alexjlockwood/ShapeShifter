@@ -3,6 +3,7 @@ import { MathUtil, Point } from '../common';
 import { Mutator, newMutator } from './mutators';
 import { SvgChar, Projection } from '.';
 import { CommandImpl } from './CommandImpl';
+import { newLine } from '../commands';
 
 /**
  * Contains additional information about each individual command so that we can
@@ -38,17 +39,18 @@ export class CommandMutation {
         svgChar: this.backingCommand.svgChar,
       }];
       this.builtCommands = [obj];
+      this.mutator = newMutator(this.backingCommand);
     } else {
       this.backingCommand = obj.backingCommand;
       this.mutations = obj.mutations;
       this.builtCommands = obj.builtCommands;
+      this.mutator = obj.mutator;
     }
-    this.mutator = newMutator(this.backingCommand);
   }
 
-  pathLength() {
+  getPathLength() {
     const isMove = this.backingCommand.svgChar === 'M';
-    return isMove ? 0 : this.mutator.pathLength();
+    return isMove ? 0 : this.mutator.getPathLength();
   }
 
   /**
@@ -65,8 +67,6 @@ export class CommandMutation {
    * original backing command.
    */
   split(ts: number[]) {
-    // TODO: add a test for splitting a command with a path length of 0
-    // TODO: add a test for the case when t === 1
     if (!ts.length || this.backingCommand.svgChar === 'M') {
       return this;
     }
@@ -74,14 +74,19 @@ export class CommandMutation {
     const currSvgChars = this.mutations.map(m => m.svgChar);
     const updatedMutations = this.mutations.slice();
     for (const t of ts) {
-      const currIdx = _.sortedIndex(currSplits, t);
       const id = _.uniqueId();
-      // TODO: what about if the last command is a Z? then we want the svg char to be L!!
-      const svgChar = currSvgChars[currIdx];
+      const svgChar = currSvgChars[_.sortedIndex(currSplits, t)];
       const mutation = { id, t, svgChar };
       const insertionIdx =
         _.sortedIndexBy<Mutation>(updatedMutations, mutation, m => m.t);
       updatedMutations.splice(insertionIdx, 0, { id, t, svgChar });
+    }
+    for (let i = 0; i < updatedMutations.length - 1; i++) {
+      const mutation = updatedMutations[i];
+      if (mutation.svgChar === 'Z') {
+        // Force convert the split closepath command into a line.
+        updatedMutations[i] = _.assign({}, mutation, { svgChar: 'L' });
+      }
     }
     return this.rebuildCommands(updatedMutations);
   }
@@ -137,42 +142,46 @@ export class CommandMutation {
   }
 
   /**
-   * Unconverts any conversions previously performed on this command mutation.
+   * Unconverts all conversions previously performed on this command mutation.
    */
-  unconvert() {
-    const mutations = this.mutations.slice();
+  unconvertAll() {
     const svgChar = this.backingCommand.svgChar;
-    for (let i = 0; i < mutations.length; i++) {
-      mutations[i] = _.assign({}, mutations[i], { svgChar });
-    }
-    return this.rebuildCommands(mutations);
+    return this.rebuildCommands(this.mutations.map(mutation => {
+      return _.assign({}, mutation, { svgChar });
+    }));
   }
 
   // TODO: this could be more efficient (avoid recreating commands unnecessarily)
   private rebuildCommands(mutations: Mutation[]) {
     if (mutations.length === 1) {
-      const command = this.mutator.convert(mutations[0].svgChar).toCommand(false);
+      const command = this.mutator.convert(mutations[0].svgChar).toCommand();
       return new CommandMutation({
         backingCommand: this.backingCommand,
         mutations,
-        builtCommands: [command] as CommandImpl[]
+        builtCommands: [command],
+        mutator: this.mutator,
       });
     }
     const builtCommands: CommandImpl[] = [];
     let prevT = 0;
     for (let i = 0; i < mutations.length; i++) {
       const currT = mutations[i].t;
-      const isSplit = i !== mutations.length - 1;
-      builtCommands.push(
+      let command =
         this.mutator.split(prevT, currT)
           .convert(mutations[i].svgChar)
-          .toCommand(isSplit));
+          .toCommand();
+      const isSplit = i === mutations.length - 1;
+      if (isSplit) {
+        command = command.toggleSplit();
+      }
+      builtCommands.push(command);
       prevT = currT;
     }
     return new CommandMutation({
       backingCommand: this.backingCommand,
       mutations,
       builtCommands,
+      mutator: this.mutator,
     });
   }
 
@@ -191,4 +200,5 @@ interface ConstructorParams {
   backingCommand: CommandImpl;
   mutations: ReadonlyArray<Mutation>;
   builtCommands: ReadonlyArray<CommandImpl>;
+  mutator: Mutator;
 }

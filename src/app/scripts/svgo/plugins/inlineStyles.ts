@@ -134,24 +134,21 @@ export function inlineStylesFn(document, params) {
     return compareSimpleSelectorNode(itemA.simpleSelectorItem.data, itemB.simpleSelectorItem.data);
   }).reverse(); // last declaration applies last (final)
 
-  // compile css selector strings
-  selectorItemsPseudoClasses.map(function (selectorItem) {
-    selectorItem.selectorStr = csso.translate(selectorItem.simpleSelectorItem.data);
-  });
-
   // apply <style/> styles to matched elements
   for (var selectorItemIndex in selectorItemsSorted) {
     var selectorItem = selectorItemsSorted[selectorItemIndex],
+      selectorStr = csso.translate(selectorItem.simpleSelectorItem.data),
       selectedEls = null;
     try {
-      selectedEls = document.querySelectorAll(selectorItem.selectorStr);
+      selectedEls = document.querySelectorAll(selectorStr);
     } catch (e) {
       if (e.constructor == SyntaxError) {
-        console.warn('Syntax error when trying to select \n\n' + selectorItem.selectorStr + '\n\n, skipped.');
+        console.warn('Syntax error when trying to select \n\n' + selectorStr + '\n\n, skipped.');
         continue;
       }
       throw e;
     }
+
 
     if (params.onlyMatchedOnce && selectedEls !== null && selectedEls.length > 1) {
       // skip selectors that match more than once if option onlyMatchedOnce is enabled

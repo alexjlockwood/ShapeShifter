@@ -14,7 +14,7 @@ export class LineMutator implements Mutator {
     this.p2 = p2;
   }
 
-  pathLength() {
+  getPathLength() {
     return MathUtil.distance(this.p1, this.p2);
   }
 
@@ -74,15 +74,15 @@ export class LineMutator implements Mutator {
     return distance;
   }
 
-  toCommand(isSplit: boolean) {
+  toCommand() {
     switch (this.svgChar) {
       case 'L':
-        return newLine(this.p1, this.p2, isSplit);
+        return newLine(this.p1, this.p2);
       case 'Q':
         const cp = new Point(
           MathUtil.lerp(this.p1.x, this.p2.x, 0.5),
           MathUtil.lerp(this.p1.y, this.p2.y, 0.5));
-        return newQuadraticCurve(this.p1, cp, this.p2, isSplit);
+        return newQuadraticCurve(this.p1, cp, this.p2);
       case 'C':
         const cp1 = new Point(
           MathUtil.lerp(this.p1.x, this.p2.x, 1 / 3),
@@ -90,10 +90,9 @@ export class LineMutator implements Mutator {
         const cp2 = new Point(
           MathUtil.lerp(this.p1.x, this.p2.x, 2 / 3),
           MathUtil.lerp(this.p1.y, this.p2.y, 2 / 3));
-        return newBezierCurve(
-          this.p1, cp1, cp2, this.p2, isSplit);
+        return newBezierCurve(this.p1, cp1, cp2, this.p2);
       case 'Z':
-        return newClosePath(this.p1, this.p2, isSplit);
+        return newClosePath(this.p1, this.p2);
     }
     throw new Error('Invalid command type: ' + this.svgChar);
   }

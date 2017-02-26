@@ -14,7 +14,7 @@ export class PointMutator implements Mutator {
     this.point = point;
   }
 
-  pathLength() {
+  getPathLength() {
     return 0;
   }
 
@@ -38,17 +38,17 @@ export class PointMutator implements Mutator {
     return distance;
   }
 
-  toCommand(isSplit: boolean) {
+  toCommand() {
     switch (this.svgChar) {
       case 'L':
-        return newLine(this.point, this.point, isSplit);
+        return newLine(this.point, this.point);
       case 'Q':
-        return newQuadraticCurve(this.point, this.point, this.point, isSplit);
+        return newQuadraticCurve(this.point, this.point, this.point);
       case 'C':
         return newBezierCurve(
-          this.point, this.point, this.point, this.point, isSplit);
+          this.point, this.point, this.point, this.point);
       case 'Z':
-        return newClosePath(this.point, this.point, isSplit);
+        return newClosePath(this.point, this.point);
     }
     throw new Error('Invalid command type: ' + this.svgChar);
   }

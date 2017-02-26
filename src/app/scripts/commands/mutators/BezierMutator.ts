@@ -22,7 +22,7 @@ export class BezierMutator implements Mutator {
     this.length = this.bezierJs.length();
   }
 
-  pathLength() {
+  getPathLength() {
     return this.length;
   }
 
@@ -91,7 +91,7 @@ export class BezierMutator implements Mutator {
     if (step === maxDepth) {
       // TODO: handle degenerate curves!!!!!
       console.warn(
-        'could not find the midpoint for: ',
+        'Could not find the midpoint for: ',
         `${this.svgChar} ` + this.points.toString());
       return originalDistance;
     }
@@ -99,14 +99,14 @@ export class BezierMutator implements Mutator {
     return distance;
   }
 
-  toCommand(isSplit: boolean) {
+  toCommand() {
     switch (this.svgChar) {
       case 'Q':
         return newQuadraticCurve(
-          this.points[0], this.points[1], this.points[2], isSplit);
+          this.points[0], this.points[1], this.points[2]);
       case 'C':
         return newBezierCurve(
-          this.points[0], this.points[1], this.points[2], this.points[3], isSplit);
+          this.points[0], this.points[1], this.points[2], this.points[3]);
     }
     throw new Error('Invalid command type: ' + this.svgChar);
   }
