@@ -13,6 +13,9 @@ export function parseCommands(
   pathString: string,
   matrices?: Matrix[]): Command[] {
 
+  // Trim surrounding whitespace.
+  pathString = pathString.trim();
+
   let index = 0;
   let currentToken: Token;
 

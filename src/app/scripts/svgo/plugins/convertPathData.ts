@@ -21,8 +21,8 @@ export const convertPathData = {
     straightCurves: true,
     lineShorthands: true,
     curveSmoothShorthands: true,
-    floatPrecision: 3,
-    transformPrecision: 5,
+    floatPrecision: 10, // 3
+    transformPrecision: 10, // 5
     removeUseless: true,
     collapseRepeated: true,
     utilizeAbsolute: true,
