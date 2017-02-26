@@ -27,8 +27,10 @@ const SELECTED_POINT_RADIUS_FACTOR = 1.25;
 const POINT_BORDER_FACTOR = 1.075;
 const DISABLED_LAYER_ALPHA = 0.38;
 
-// Canvas margin in pixels.
+// Canvas margin in css pixels.
 export const CANVAS_MARGIN = 36;
+
+// Default viewport size in viewport pixels.
 export const DEFAULT_VIEWPORT_SIZE = 24;
 
 const MOVE_POINT_COLOR = '#2962FF'; // Blue A400
@@ -52,8 +54,10 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   private vectorLayer: VectorLayer;
   // TODO: make use of this variable (i.e. only show labeled points for active path, etc.)
   private activePathId: string;
-  private componentWidth = 1;
-  private componentHeight = 1;
+  private cssContainerWidth = 1;
+  private cssContainerHeight = 1;
+  private vlWidth = DEFAULT_VIEWPORT_SIZE;
+  private vlHeight = DEFAULT_VIEWPORT_SIZE;
   private element: JQuery;
   private canvas: JQuery;
   private offscreenCanvas: JQuery;
@@ -85,13 +89,13 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     this.offscreenCanvas = $(document.createElement('canvas'));
     this.subscriptions.push(
       this.layerStateService.getVectorLayerObservable(this.canvasType).subscribe(vl => {
-        const oldWidth = this.viewportWidth;
-        const oldHeight = this.viewportHeight;
         this.vectorLayer = vl;
         this.shouldDrawLayer = !!this.vectorLayer && !!this.activePathId;
-        const newWidth = this.viewportWidth;
-        const newHeight = this.viewportHeight;
-        const didSizeChange = oldWidth !== newWidth || oldHeight !== newHeight;
+        const newWidth = vl ? vl.width : DEFAULT_VIEWPORT_SIZE;
+        const newHeight = vl ? vl.height : DEFAULT_VIEWPORT_SIZE;
+        const didSizeChange = this.vlWidth !== newWidth || this.vlHeight !== newHeight;
+        this.vlWidth = newWidth;
+        this.vlHeight = newHeight;
         if (didSizeChange) {
           this.resizeAndDraw();
         } else {
@@ -99,11 +103,11 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         }
       }));
     this.canvasResizeService.getCanvasResizeObservable().subscribe(size => {
-      const oldWidth = this.componentWidth;
-      const oldHeight = this.componentHeight;
-      this.componentWidth = Math.max(1, size.width - CANVAS_MARGIN * 2);
-      this.componentHeight = Math.max(1, size.height - CANVAS_MARGIN * 2);
-      if (this.componentWidth !== oldWidth || this.componentHeight !== oldHeight) {
+      const oldWidth = this.cssContainerWidth;
+      const oldHeight = this.cssContainerHeight;
+      this.cssContainerWidth = Math.max(1, size.width - CANVAS_MARGIN * 2);
+      this.cssContainerHeight = Math.max(1, size.height - CANVAS_MARGIN * 2);
+      if (this.cssContainerWidth !== oldWidth || this.cssContainerHeight !== oldHeight) {
         this.resizeAndDraw();
       }
     });
@@ -196,33 +200,25 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     this.subscriptions.forEach(s => s.unsubscribe());
   }
 
-  get viewportWidth() {
-    return this.vectorLayer ? this.vectorLayer.width : DEFAULT_VIEWPORT_SIZE;
-  }
-
-  get viewportHeight() {
-    return this.vectorLayer ? this.vectorLayer.height : DEFAULT_VIEWPORT_SIZE;
-  }
-
   private resizeAndDraw() {
     if (!this.isViewInit) {
       return;
     }
-    const vectorAspectRatio = this.viewportWidth / this.viewportHeight;
-    const containerAspectRatio = this.componentWidth / this.componentHeight;
+    const vectorAspectRatio = this.vlWidth / this.vlHeight;
+    const containerAspectRatio = this.cssContainerWidth / this.cssContainerHeight;
 
     // The 'cssScale' represents the number of CSS pixels per SVG viewport pixel.
     if (vectorAspectRatio > containerAspectRatio) {
-      this.cssScale = this.componentWidth / this.viewportWidth;
+      this.cssScale = this.cssContainerWidth / this.vlWidth;
     } else {
-      this.cssScale = this.componentHeight / this.viewportHeight;
+      this.cssScale = this.cssContainerHeight / this.vlHeight;
     }
 
     // The 'attrScale' represents the number of physical pixels per SVG viewport pixel.
     this.attrScale = this.cssScale * devicePixelRatio;
 
-    const cssWidth = this.viewportWidth * this.cssScale;
-    const cssHeight = this.viewportHeight * this.cssScale;
+    const cssWidth = this.vlWidth * this.cssScale;
+    const cssHeight = this.vlHeight * this.cssScale;
     [this.canvas, this.offscreenCanvas].forEach(canvas => {
       canvas
         .attr({
@@ -236,7 +232,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     });
 
     // TODO: set a min amount of pixels to use as the radius.
-    const size = Math.min(this.componentWidth, this.componentHeight);
+    const size = Math.min(this.cssContainerWidth, this.cssContainerHeight);
     this.pathPointRadius = size * SIZE_TO_POINT_RADIUS_FACTOR / Math.max(2, this.cssScale);
     this.splitPathPointRadius = this.pathPointRadius * SPLIT_POINT_RADIUS_FACTOR;
     this.draw();
@@ -251,16 +247,21 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     const offscreenCtx = (this.offscreenCanvas.get(0) as HTMLCanvasElement).getContext('2d');
 
     ctx.save();
+
+    // Scale the canvas so that everything from this point forward is drawn
+    // in terms of viewport coordinates.
     ctx.scale(this.attrScale, this.attrScale);
-    ctx.clearRect(0, 0, this.viewportWidth, this.viewportHeight);
+    ctx.clearRect(0, 0, this.vlWidth, this.vlHeight);
 
     const currentAlpha = this.shouldDisableLayer ? DISABLED_LAYER_ALPHA : 1;
     if (currentAlpha < 1) {
       offscreenCtx.save();
       offscreenCtx.scale(this.attrScale, this.attrScale);
-      offscreenCtx.clearRect(0, 0, this.viewportWidth, this.viewportHeight);
+      offscreenCtx.clearRect(0, 0, this.vlWidth, this.vlHeight);
     }
 
+    // If the canvas is disabled, draw the layer to an offscreen canvas
+    // so that we can draw it translucently below.
     const drawingCtx = currentAlpha < 1 ? offscreenCtx : ctx;
     if (this.shouldDrawLayer) {
       this.drawVectorLayer(drawingCtx);
@@ -272,6 +273,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     if (currentAlpha < 1) {
       ctx.save();
       ctx.globalAlpha = currentAlpha;
+      // Bring the canvas back to its original coordinates before
+      // drawing the offscreen canvas contents.
       ctx.scale(1 / this.attrScale, 1 / this.attrScale);
       ctx.drawImage(offscreenCtx.canvas, 0, 0);
       ctx.restore();
@@ -279,7 +282,11 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
     ctx.restore();
 
-    this.drawPixelGrid(ctx);
+    // Note that we do not draw the pixel grid in viewport coordinates
+    // as we do above.
+    if (this.cssScale > 4) {
+      this.drawPixelGrid(ctx);
+    }
   }
 
   // Draw the layers to the canvas.
@@ -558,23 +565,21 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   // Draw the pixel grid.
   private drawPixelGrid(ctx: CanvasRenderingContext2D) {
     ctx.save();
-    if (this.cssScale > 4) {
-      const devicePixelRatio = window.devicePixelRatio || 1;
-      ctx.fillStyle = 'rgba(128, 128, 128, .25)';
-      for (let x = 1; x < this.viewportWidth; x++) {
-        ctx.fillRect(
-          x * this.attrScale - 0.5 * devicePixelRatio,
-          0,
-          devicePixelRatio,
-          this.viewportHeight * this.attrScale);
-      }
-      for (let y = 1; y < this.viewportHeight; y++) {
-        ctx.fillRect(
-          0,
-          y * this.attrScale - 0.5 * devicePixelRatio,
-          this.viewportWidth * this.attrScale,
-          devicePixelRatio);
-      }
+    const devicePixelRatio = window.devicePixelRatio || 1;
+    ctx.fillStyle = 'rgba(128, 128, 128, .25)';
+    for (let x = 1; x < this.vlWidth; x++) {
+      ctx.fillRect(
+        x * this.attrScale - 0.5 * devicePixelRatio,
+        0,
+        devicePixelRatio,
+        this.vlHeight * this.attrScale);
+    }
+    for (let y = 1; y < this.vlHeight; y++) {
+      ctx.fillRect(
+        0,
+        y * this.attrScale - 0.5 * devicePixelRatio,
+        this.vlWidth * this.attrScale,
+        devicePixelRatio);
     }
     ctx.restore();
   }
@@ -605,14 +610,13 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   }
 
   onMouseMove(event: MouseEvent) {
-    const mouseMove = this.mouseEventToPoint(event);
-    const roundedMouseMove = new Point(_.round(mouseMove.x), _.round(mouseMove.y));
-    this.canvasRulers.forEach(r => r.showMouse(roundedMouseMove));
+    this.showRuler(event);
 
     if (this.canvasType === CanvasType.Preview || !this.activePathId) {
       return;
     }
 
+    const mouseMove = this.mouseEventToPoint(event);
     let isDraggingSplitPoint = false;
     if (this.pointSelector) {
       this.pointSelector.onMouseMove(mouseMove);
@@ -795,11 +799,17 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     return projectionOntoPath;
   }
 
+  private showRuler(event: MouseEvent) {
+    const canvasOffset = this.canvas.offset();
+    const x = (event.pageX - canvasOffset.left) / Math.max(1, this.cssScale);
+    const y = (event.pageY - canvasOffset.top) / Math.max(1, this.cssScale);
+    this.canvasRulers.forEach(r => r.showMouse(new Point(_.round(x), _.round(y))));
+  }
+
   /**
-   * Returns a point in the canvas' coordinate space.
+   * Converts a mouse point's CSS coordinates into vector layer viewport coordinates.
    */
   private mouseEventToPoint(event: MouseEvent) {
-    // TODO: cssScale < 1 causes weird ruler alignment issues
     const canvasOffset = this.canvas.offset();
     const x = (event.pageX - canvasOffset.left) / this.cssScale;
     const y = (event.pageY - canvasOffset.top) / this.cssScale;

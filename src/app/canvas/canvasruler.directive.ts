@@ -8,7 +8,9 @@ import { Subscription } from 'rxjs/Subscription';
 import { CANVAS_MARGIN, DEFAULT_VIEWPORT_SIZE } from './canvas.component';
 import * as _ from 'lodash';
 
+// Ruler size in css pixels.
 const RULER_SIZE = 32;
+// Extra ruler padding in css pixels.
 const EXTRA_PADDING = 12;
 const GRID_INTERVALS_PX = [1, 2, 4, 8, 16, 24, 48, 100, 100, 250];
 const LABEL_OFFSET = 12;
@@ -25,8 +27,9 @@ export class CanvasRulerDirective implements OnInit, OnDestroy {
   private readonly subscriptions: Subscription[] = [];
   private vlWidth = DEFAULT_VIEWPORT_SIZE;
   private vlHeight = DEFAULT_VIEWPORT_SIZE;
-  private componentWidth = 1;
-  private componentHeight = 1;
+  private cssContainerWidth = 1;
+  private cssContainerHeight = 1;
+  private cssScale: number;
 
   constructor(
     private elementRef: ElementRef,
@@ -39,8 +42,7 @@ export class CanvasRulerDirective implements OnInit, OnDestroy {
       this.layerStateService.getVectorLayerObservable(this.canvasType).subscribe(vl => {
         const newWidth = vl ? vl.width : DEFAULT_VIEWPORT_SIZE;
         const newHeight = vl ? vl.height : DEFAULT_VIEWPORT_SIZE;
-        const didSizeChange =
-          this.vlWidth !== newWidth || this.vlHeight !== newHeight;
+        const didSizeChange = this.vlWidth !== newWidth || this.vlHeight !== newHeight;
         if (didSizeChange) {
           this.vlWidth = newWidth;
           this.vlHeight = newHeight;
@@ -49,11 +51,11 @@ export class CanvasRulerDirective implements OnInit, OnDestroy {
       }));
     this.subscriptions.push(
       this.canvasResizeService.getCanvasResizeObservable().subscribe(size => {
-        const oldWidth = this.componentWidth;
-        const oldHeight = this.componentHeight;
-        this.componentWidth = Math.max(1, size.width - CANVAS_MARGIN * 2);
-        this.componentHeight = Math.max(1, size.height - CANVAS_MARGIN * 2);
-        if (this.componentWidth !== oldWidth || this.componentHeight !== oldHeight) {
+        const oldWidth = this.cssContainerWidth;
+        const oldHeight = this.cssContainerHeight;
+        this.cssContainerWidth = Math.max(1, size.width - CANVAS_MARGIN * 2);
+        this.cssContainerHeight = Math.max(1, size.height - CANVAS_MARGIN * 2);
+        if (this.cssContainerWidth !== oldWidth || this.cssContainerHeight !== oldHeight) {
           this.draw();
         }
       }));
@@ -70,6 +72,9 @@ export class CanvasRulerDirective implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * Show the current mouse point, passed as an argument in viewport coordinates.
+   */
   showMouse(mousePoint: Point) {
     if (!this.mousePoint || !this.mousePoint.equals(mousePoint)) {
       this.mousePoint = mousePoint;
@@ -81,20 +86,21 @@ export class CanvasRulerDirective implements OnInit, OnDestroy {
   draw() {
     const isHorizontal = this.orientation === 'horizontal';
     const vectorAspectRatio = this.vlWidth / this.vlHeight;
-    const containerAspectRatio = this.componentWidth / this.componentHeight;
+    const containerAspectRatio = this.cssContainerWidth / this.cssContainerHeight;
 
     // The 'cssScale' represents the number of CSS pixels per SVG viewport pixel.
-    let cssScale;
     if (vectorAspectRatio > containerAspectRatio) {
-      cssScale = this.componentWidth / this.vlWidth;
+      this.cssScale = this.cssContainerWidth / this.vlWidth;
     } else {
-      cssScale = this.componentHeight / this.vlHeight;
+      this.cssScale = this.cssContainerHeight / this.vlHeight;
     }
 
-    const cssWidth = this.vlWidth * cssScale;
-    const cssHeight = this.vlHeight * cssScale;
+    const cssWidth = this.vlWidth * this.cssScale;
+    const cssHeight = this.vlHeight * this.cssScale;
     const width = isHorizontal ? cssWidth + EXTRA_PADDING * 2 : RULER_SIZE;
     const height = isHorizontal ? RULER_SIZE : cssHeight + EXTRA_PADDING * 2;
+    this.canvas.css('width', width);
+    this.canvas.css('height', height);
     this.canvas.attr('width', width * window.devicePixelRatio);
     this.canvas.attr('height', height * window.devicePixelRatio);
 
