@@ -35,6 +35,10 @@ const MOVE_POINT_COLOR = '#2962FF'; // Blue A400
 const NORMAL_POINT_COLOR = '#2962FF'; // Blue A400
 const SPLIT_POINT_COLOR = '#E65100'; // Orange 900
 
+const POINT_BORDER_COLOR = '#000';
+const SELECTION_OUTER_COLOR = '#fff';
+const SELECTION_INNER_COLOR = '#2196f3';
+
 @Component({
   selector: 'app-canvas',
   templateUrl: './canvas.component.html',
@@ -346,9 +350,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
   // Draw any selected commands.
   private drawSelections(ctx: CanvasRenderingContext2D) {
-    const selections =
-      this.selectionStateService.getSelections()
-        .filter(sel => sel.source === this.canvasType);
+    const selections = this.selectionStateService.getSelections()
+      .filter(sel => sel.source === this.canvasType);
     if (!selections.length) {
       return;
     }
@@ -373,10 +376,10 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
       ctx.save();
       ctx.lineWidth = 6 / this.cssScale;
-      ctx.strokeStyle = '#fff';
+      ctx.strokeStyle = SELECTION_OUTER_COLOR;
       ctx.lineCap = 'round';
       ctx.stroke();
-      ctx.strokeStyle = '#2196f3';
+      ctx.strokeStyle = SELECTION_INNER_COLOR;
       ctx.lineWidth = 3 / this.cssScale;
       ctx.stroke();
       ctx.restore();
@@ -520,10 +523,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       ctx, point, this.splitPathPointRadius, SPLIT_POINT_COLOR);
   }
 
-  /**
-   * Draw a single labeled point with optional text.
-   * TODO: move this into a utility module and share with inspector UI
-   */
+  // Draws a labeled point with optional text.
   private drawLabeledPoint(
     ctx: CanvasRenderingContext2D,
     point: Point,
@@ -534,7 +534,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     ctx.save();
     ctx.beginPath();
     ctx.arc(point.x, point.y, radius * POINT_BORDER_FACTOR, 0, 2 * Math.PI, false);
-    ctx.fillStyle = '#000';
+    ctx.fillStyle = POINT_BORDER_COLOR;
     ctx.fill();
 
     ctx.beginPath();
