@@ -23,6 +23,7 @@
   isn't specified. (#28) (b706eb3)
 * Fixed crash that sometimes occurred when switching between paths with different
   numbers of subpaths. (#21) (158497f)
+* Align rulers properly for SVGs with large viewports. (#38) (361be34)
 
 ## v0.1.0 (2017-02-20)
 
