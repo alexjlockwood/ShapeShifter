@@ -4,21 +4,23 @@
 
 * Imported SVGs are now preprocessed and simplified using [svgo](https://github.com/svg/svgo).
   Design tools often output bloated SVG source code with tons of unnecessary
-  commands, so simplifying the SVGs beforehand should make them
+  commands, so simplifying these SVGs beforehand will make them
   much easier to work with.
-* Selection/hover events in one canvas are now mirroed in the other canvas, making it easier
-  to understand which points animate where.
+* Selection/hover events in one canvas are now mirrored in the other canvas, making it easier
+  to understand which points will animate where.
   ([#30](https://github.com/alexjlockwood/ShapeShifter/issues/30))
   ([265608d](https://github.com/alexjlockwood/ShapeShifter/commit/265608d))
 
 ### Bug fixes
 
-* SVG importer is much better at importing SVGs with `<style>` tags and/or inline
-  `style` attributes.
-* SVG importer is much better at detecting and assigning inherited attributes to children nodes.
+* SVG importer can now properly parse SVGs containing `<style>`
+  tags and/or inline `style` attributes.
+* SVG importer now correctly detects inherited attributes set on
+  `<svg>` and/or `<g>` nodes and properly assigns them to their
+  children `<path>` nodes.
   ([#20](https://github.com/alexjlockwood/ShapeShifter/issues/20))
   ([158497f](https://github.com/alexjlockwood/ShapeShifter/commit/158497f))
-* SVG paths beginning with a relative `m` command are now imported correctly.
+* SVG paths that begin with a relative `m` command are now imported correctly.
   ([#22](https://github.com/alexjlockwood/ShapeShifter/issues/22))
   ([158497f](https://github.com/alexjlockwood/ShapeShifter/commit/158497f))
 * SVG paths with trailing whitespace are now imported correctly.
@@ -37,7 +39,7 @@
   numbers of subpaths.
   ([#21](https://github.com/alexjlockwood/ShapeShifter/issues/2132))
   ([158497f](https://github.com/alexjlockwood/ShapeShifter/commit/158497f))
-* Align rulers properly for SVGs with large viewports.
+* Canvas rulers are now aligned properly for SVGs with large viewports.
   ([#38](https://github.com/alexjlockwood/ShapeShifter/issues/32))
   ([361be34](https://github.com/alexjlockwood/ShapeShifter/commit/361be34))
 
