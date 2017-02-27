@@ -1,4 +1,4 @@
-# v0.1.1 (2017-02-27)
+# [v0.1.1](https://github.com/alexjlockwood/ShapeShifter/compare/v0.1...v0.1.1) (2017-02-27)
 
 ### Features
 
@@ -43,6 +43,6 @@
   ([#38](https://github.com/alexjlockwood/ShapeShifter/issues/32))
   ([361be34](https://github.com/alexjlockwood/ShapeShifter/commit/361be34))
 
-# v0.1.0 (2017-02-20)
+# v0.1 (2017-02-20)
 
 * Initial release!
