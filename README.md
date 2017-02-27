@@ -1,6 +1,7 @@
 # Shape Shifter
 
 [![Build Status](https://travis-ci.org/alexjlockwood/ShapeShifter.svg?branch=master)](https://travis-ci.org/alexjlockwood/ShapeShifter)
+[![Coverage Status](https://coveralls.io/repos/github/alexjlockwood/ShapeShifter/badge.svg?branch=master)](https://coveralls.io/github/alexjlockwood/ShapeShifter?branch=master)
 
 **[Go to Live Version](https://alexjlockwood.github.io/ShapeShifter/)**
 
