@@ -16,6 +16,7 @@
 
 * SVG importer can now properly parse SVGs containing `<style>`
   tags and/or inline `style` attributes.
+  ([#14](https://github.com/alexjlockwood/ShapeShifter/issues/14))
 * SVG importer now correctly detects inherited attributes set on
   `<svg>` and/or `<g>` nodes and properly assigns them to their
   children `<path>` nodes.
