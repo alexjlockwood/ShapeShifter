@@ -13,8 +13,8 @@
     "test-once": "./node_modules/@angular/cli/bin/ng test --single-run --code-coverage",
     "build": "ng build -prod --base-href /ShapeShifter/",
     "deploy": "ng build -prod --base-href /ShapeShifter/ && ngh",
-    "coveralls": "cat ./coverage/coverage.lcov | ./node_modules/coveralls/bin/coveralls.js",
-    "codacy": "cat ./coverage/coverage.lcov | ./node_modules/.bin/codacy-coverage -p ."
+    "coveralls": "cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
+    "codacy": "cat ./coverage/lcov.info | ./node_modules/.bin/codacy-coverage -p ."
   },
   "private": true,
   "dependencies": {
