@@ -6,6 +6,7 @@
   Design tools often output bloated SVG source code with tons of unnecessary
   commands, so simplifying these SVGs beforehand will make them
   much easier to work with.
+  ([#15](https://github.com/alexjlockwood/ShapeShifter/issues/15))
 * Selection/hover events in one canvas are now mirrored in the other canvas, making it easier
   to understand which points will animate where.
   ([#30](https://github.com/alexjlockwood/ShapeShifter/issues/30))
