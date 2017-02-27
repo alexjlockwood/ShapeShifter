@@ -12,7 +12,9 @@
     "e2e": "protractor",
     "test-once": "./node_modules/@angular/cli/bin/ng test --single-run",
     "build": "ng build -prod --base-href /ShapeShifter/",
-    "deploy": "ng build -prod --base-href /ShapeShifter/ && ngh"
+    "deploy": "ng build -prod --base-href /ShapeShifter/ && ngh",
+    "coveralls": "cat ./coverage/coverage.lcov | ./node_modules/coveralls/bin/coveralls.js",
+    "codacy": "cat ./coverage/coverage.lcov | ./node_modules/.bin/codacy-coverage -p ."
   },
   "private": true,
   "dependencies": {
@@ -54,8 +56,10 @@
     "@types/node": "^7.0.0",
     "@types/tinycolor2": "^1.1.0",
     "angular-cli-ghpages": "^0.5.0",
+    "codacy-coverage": "^2.0.1",
     "codelyzer": "~3.0.0-beta.0",
     "concurrently": "^3.1.0",
+    "coveralls": "^2.11.16",
     "jasmine-core": "2.5.2",
     "jasmine-spec-reporter": "3.2.0",
     "karma": "1.5.0",
