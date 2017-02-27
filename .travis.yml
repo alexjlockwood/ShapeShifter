@@ -13,7 +13,11 @@ env:
 before_script:
   - sh -e /etc/init.d/xvfb start
 install:
+  - npm install -g angular-cli
   - npm install
 script:
-  - npm run lint
-  - npm run test-once
+  - ng lint
+  - ng test --no-watch --code-coverage
+after_success:
+  - npm run coveralls
+  - npm run codacy
