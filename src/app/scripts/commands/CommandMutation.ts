@@ -201,8 +201,8 @@ interface Mutation {
 }
 
 interface ConstructorParams {
-  backingCommand: CommandImpl;
-  mutations: ReadonlyArray<Mutation>;
-  builtCommands: ReadonlyArray<CommandImpl>;
-  mutator: Mutator;
+  readonly backingCommand: CommandImpl;
+  readonly mutations: ReadonlyArray<Mutation>;
+  readonly builtCommands: ReadonlyArray<CommandImpl>;
+  readonly mutator: Mutator;
 }

@@ -502,8 +502,8 @@ function createSubPathCommands(...commands: Command[]) {
  * Path command internals that have been cloned.
  */
 interface PathCommandParams {
-  commands?: ReadonlyArray<CommandImpl>;
-  commandMutationsMap?: ReadonlyArray<ReadonlyArray<CommandMutation>>;
-  shiftOffsets?: ReadonlyArray<number>;
-  reversals?: ReadonlyArray<boolean>;
+  readonly commands?: ReadonlyArray<CommandImpl>;
+  readonly commandMutationsMap?: ReadonlyArray<ReadonlyArray<CommandMutation>>;
+  readonly shiftOffsets?: ReadonlyArray<number>;
+  readonly reversals?: ReadonlyArray<boolean>;
 }
