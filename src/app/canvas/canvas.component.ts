@@ -874,36 +874,6 @@ function findPathLayerPoint(
     .value();
 }
 
-/**
- * Calculates the projection onto the path with the specified path ID.
- * The resulting projection is our way of determining the on-curve point
- * closest to the specified off-curve mouse point.
- */
-function calculateProjectionOntoPath(
-  vectorLayer: VectorLayer,
-  pathId: string,
-  mousePoint: Point): ProjectionOntoPath | undefined {
-
-  const pathLayer = vectorLayer.findLayer(pathId) as PathLayer;
-  if (!pathLayer) {
-    return undefined;
-  }
-  const transforms = getTransformsForLayer(vectorLayer, pathId).reverse();
-  const transformedMousePoint =
-    MathUtil.transformPoint(
-      mousePoint,
-      MathUtil.flattenTransforms(transforms).invert());
-  const projectionInfo = pathLayer.pathData.project(transformedMousePoint);
-  if (!projectionInfo) {
-    return undefined;
-  }
-  return {
-    pathId: pathLayer.id,
-    projection: projectionInfo.projection,
-    split: projectionInfo.split,
-  };
-}
-
 function executeCommands(
   commands: Command[],
   ctx: CanvasRenderingContext2D,
@@ -943,7 +913,39 @@ function executeCommands(
   ctx.restore();
 }
 
-/** Contains information about a projection onto a path. */
+/**
+ * Calculates the projection onto the path with the specified path ID.
+ * The resulting projection is our way of determining the on-curve point
+ * closest to the specified off-curve mouse point.
+ */
+function calculateProjectionOntoPath(
+  vectorLayer: VectorLayer,
+  pathId: string,
+  mousePoint: Point): ProjectionOntoPath | undefined {
+
+  const pathLayer = vectorLayer.findLayer(pathId) as PathLayer;
+  if (!pathLayer) {
+    return undefined;
+  }
+  const transforms = getTransformsForLayer(vectorLayer, pathId).reverse();
+  const transformedMousePoint =
+    MathUtil.transformPoint(
+      mousePoint,
+      MathUtil.flattenTransforms(transforms).invert());
+  const projectionInfo = pathLayer.pathData.project(transformedMousePoint);
+  if (!projectionInfo) {
+    return undefined;
+  }
+  return {
+    pathId: pathLayer.id,
+    projection: projectionInfo.projection,
+    split: projectionInfo.split,
+  };
+}
+
+/**
+ * Contains information about a projection onto a path.
+ */
 interface ProjectionOntoPath {
   pathId: string;
   projection: Projection;
