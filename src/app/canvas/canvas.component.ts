@@ -93,29 +93,31 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     this.canvas = $(this.renderingCanvasRef.nativeElement);
     this.offscreenCanvas = $(document.createElement('canvas'));
     this.subscriptions.push(
-      this.layerStateService.getVectorLayerObservable(this.canvasType).subscribe(vl => {
-        this.vectorLayer = vl;
-        this.shouldDrawLayer = !!this.vectorLayer && !!this.activePathId;
-        const newWidth = vl ? vl.width : DEFAULT_VIEWPORT_SIZE;
-        const newHeight = vl ? vl.height : DEFAULT_VIEWPORT_SIZE;
-        const didSizeChange = this.vlWidth !== newWidth || this.vlHeight !== newHeight;
-        this.vlWidth = newWidth;
-        this.vlHeight = newHeight;
-        if (didSizeChange) {
+      this.layerStateService.getVectorLayerObservable(this.canvasType)
+        .subscribe(vl => {
+          this.vectorLayer = vl;
+          this.shouldDrawLayer = !!this.vectorLayer && !!this.activePathId;
+          const newWidth = vl ? vl.width : DEFAULT_VIEWPORT_SIZE;
+          const newHeight = vl ? vl.height : DEFAULT_VIEWPORT_SIZE;
+          const didSizeChange = this.vlWidth !== newWidth || this.vlHeight !== newHeight;
+          this.vlWidth = newWidth;
+          this.vlHeight = newHeight;
+          if (didSizeChange) {
+            this.resizeAndDraw();
+          } else {
+            this.draw();
+          }
+        }));
+    this.canvasResizeService.getCanvasResizeObservable()
+      .subscribe(size => {
+        const oldWidth = this.cssContainerWidth;
+        const oldHeight = this.cssContainerHeight;
+        this.cssContainerWidth = Math.max(1, size.width - CANVAS_MARGIN * 2);
+        this.cssContainerHeight = Math.max(1, size.height - CANVAS_MARGIN * 2);
+        if (this.cssContainerWidth !== oldWidth || this.cssContainerHeight !== oldHeight) {
           this.resizeAndDraw();
-        } else {
-          this.draw();
         }
-      }));
-    this.canvasResizeService.getCanvasResizeObservable().subscribe(size => {
-      const oldWidth = this.cssContainerWidth;
-      const oldHeight = this.cssContainerHeight;
-      this.cssContainerWidth = Math.max(1, size.width - CANVAS_MARGIN * 2);
-      this.cssContainerHeight = Math.max(1, size.height - CANVAS_MARGIN * 2);
-      if (this.cssContainerWidth !== oldWidth || this.cssContainerHeight !== oldHeight) {
-        this.resizeAndDraw();
-      }
-    });
+      });
     if (this.canvasType === CanvasType.Preview) {
       // Preview canvas specific setup.
       const interpolatePreview = (fraction: number) => {
