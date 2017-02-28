@@ -119,84 +119,97 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     if (this.canvasType === CanvasType.Preview) {
       // Preview canvas specific setup.
       const interpolatePreview = (fraction: number) => {
-        const startPathLayer = this.layerStateService.getActivePathLayer(CanvasType.Start);
-        const previewPathLayer = this.layerStateService.getActivePathLayer(CanvasType.Preview);
-        const endPathLayer = this.layerStateService.getActivePathLayer(CanvasType.End);
+        const startPathLayer =
+          this.layerStateService.getActivePathLayer(CanvasType.Start);
+        const previewPathLayer =
+          this.layerStateService.getActivePathLayer(CanvasType.Preview);
+        const endPathLayer =
+          this.layerStateService.getActivePathLayer(CanvasType.End);
         if (startPathLayer && previewPathLayer && endPathLayer) {
           // Note that there is no need to broadcast layer state changes
           // for the preview canvas.
           previewPathLayer.interpolate(startPathLayer, endPathLayer, fraction);
         }
-        const startGroupLayer = this.layerStateService.getActiveRotationLayer(CanvasType.Start);
-        const previewGroupLayer = this.layerStateService.getActiveRotationLayer(CanvasType.Preview);
-        const endGroupLayer = this.layerStateService.getActiveRotationLayer(CanvasType.End);
+        const startGroupLayer =
+          this.layerStateService.getActiveRotationLayer(CanvasType.Start);
+        const previewGroupLayer =
+          this.layerStateService.getActiveRotationLayer(CanvasType.Preview);
+        const endGroupLayer =
+          this.layerStateService.getActiveRotationLayer(CanvasType.End);
         if (startGroupLayer && previewGroupLayer && endGroupLayer) {
           previewGroupLayer.interpolate(startGroupLayer, endGroupLayer, fraction);
         }
       };
       let currentAnimatedFraction = 0;
       this.subscriptions.push(
-        this.layerStateService.getActivePathIdObservable(this.canvasType).subscribe(activePathId => {
-          this.activePathId = activePathId;
-          this.shouldDrawLayer = !!this.vectorLayer && !!this.activePathId;
-          interpolatePreview(currentAnimatedFraction);
-          this.draw();
-        }));
-      this.subscriptions.push(
-        this.animatorService.getAnimatedValueObservable().subscribe(fraction => {
-          currentAnimatedFraction = fraction;
-          interpolatePreview(fraction);
-          this.draw();
-        }));
-      this.subscriptions.push(
-        this.settingsService.getSettingsObservable().subscribe(settings => {
-          if (this.shouldLabelPoints !== settings.shouldLabelPoints) {
-            this.shouldLabelPoints = settings.shouldLabelPoints;
+        this.layerStateService.getActivePathIdObservable(this.canvasType)
+          .subscribe(activePathId => {
+            this.activePathId = activePathId;
+            this.shouldDrawLayer = !!this.vectorLayer && !!this.activePathId;
+            interpolatePreview(currentAnimatedFraction);
             this.draw();
-          }
-        }));
+          }));
       this.subscriptions.push(
-        this.layerStateService.getMorphabilityStatusObservable().subscribe(status => {
-          this.shouldDisableLayer = status !== MorphabilityStatus.Morphable;
-          this.draw();
-        }));
+        this.animatorService.getAnimatedValueObservable()
+          .subscribe(fraction => {
+            currentAnimatedFraction = fraction;
+            interpolatePreview(fraction);
+            this.draw();
+          }));
+      this.subscriptions.push(
+        this.settingsService.getSettingsObservable()
+          .subscribe(settings => {
+            if (this.shouldLabelPoints !== settings.shouldLabelPoints) {
+              this.shouldLabelPoints = settings.shouldLabelPoints;
+              this.draw();
+            }
+          }));
+      this.subscriptions.push(
+        this.layerStateService.getMorphabilityStatusObservable()
+          .subscribe(status => {
+            this.shouldDisableLayer = status !== MorphabilityStatus.Morphable;
+            this.draw();
+          }));
     } else {
       // Non-preview canvas specific setup.
       this.subscriptions.push(
-        this.layerStateService.getActivePathIdObservable(this.canvasType).subscribe(activePathId => {
-          this.activePathId = activePathId;
-          this.shouldDrawLayer = !!this.vectorLayer && !!this.activePathId;
-          this.draw();
-        }));
+        this.layerStateService.getActivePathIdObservable(this.canvasType)
+          .subscribe(activePathId => {
+            this.activePathId = activePathId;
+            this.shouldDrawLayer = !!this.vectorLayer && !!this.activePathId;
+            this.draw();
+          }));
       this.subscriptions.push(
-        this.selectionStateService.getSelectionsObservable().subscribe(() => this.draw()));
+        this.selectionStateService.getSelectionsObservable()
+          .subscribe(() => this.draw()));
       const setCurrentHoverFn = hover => {
         this.currentHover = hover;
         this.draw();
       };
       this.subscriptions.push(
-        this.hoverStateService.getHoverObservable().subscribe(hover => {
-          if (!hover) {
-            // Clear the current hover.
-            setCurrentHoverFn(undefined);
-            return;
-          }
-          if (!(hover.type === HoverType.Command
-            || hover.type === HoverType.Split
-            || hover.type === HoverType.Unsplit)) {
-            // TODO: support reverse/shift back/shift forward? it would be pretty easy...
-            setCurrentHoverFn(undefined);
-            return;
-          }
-          if (hover.source !== this.canvasType
-            && (hover.type === HoverType.Split || hover.type === HoverType.Unsplit)) {
-            // If the hover source isn't of this type and the hover type is a split
-            // or an unsplit, then don't draw any hover events to the canvas.
-            setCurrentHoverFn(undefined);
-            return;
-          }
-          setCurrentHoverFn(hover);
-        }));
+        this.hoverStateService.getHoverObservable()
+          .subscribe(hover => {
+            if (!hover) {
+              // Clear the current hover.
+              setCurrentHoverFn(undefined);
+              return;
+            }
+            if (!(hover.type === HoverType.Command
+              || hover.type === HoverType.Split
+              || hover.type === HoverType.Unsplit)) {
+              // TODO: support reverse/shift back/shift forward? it would be pretty easy...
+              setCurrentHoverFn(undefined);
+              return;
+            }
+            if (hover.source !== this.canvasType
+              && (hover.type === HoverType.Split || hover.type === HoverType.Unsplit)) {
+              // If the hover source isn't of this type and the hover type is a split
+              // or an unsplit, then don't draw any hover events to the canvas.
+              setCurrentHoverFn(undefined);
+              return;
+            }
+            setCurrentHoverFn(hover);
+          }));
     }
     this.resizeAndDraw();
   }
@@ -238,7 +251,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
     // TODO: set a min amount of pixels to use as the radius.
     const size = Math.min(this.cssContainerWidth, this.cssContainerHeight);
-    this.pathPointRadius = size * SIZE_TO_POINT_RADIUS_FACTOR / Math.max(2, this.cssScale);
+    this.pathPointRadius =
+      size * SIZE_TO_POINT_RADIUS_FACTOR / Math.max(2, this.cssScale);
     this.draw();
     this.canvasRulers.forEach(r => r.draw());
   }
@@ -248,7 +262,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       return;
     }
     const ctx = (this.canvas.get(0) as HTMLCanvasElement).getContext('2d');
-    const offscreenCtx = (this.offscreenCanvas.get(0) as HTMLCanvasElement).getContext('2d');
+    const offscreenCtx =
+      (this.offscreenCanvas.get(0) as HTMLCanvasElement).getContext('2d');
 
     ctx.save();
 
@@ -304,7 +319,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     if (this.canvasType === CanvasType.Preview && !this.shouldLabelPoints) {
       return;
     }
-    const activePathLayer = this.layerStateService.getActivePathLayer(this.canvasType);
+    const activePathLayer =
+      this.layerStateService.getActivePathLayer(this.canvasType);
     if (!activePathLayer) {
       return;
     }
@@ -339,7 +355,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         && this.pointSelector.isSelectedPointSplit()
         ? this.pointSelector.getSelectedPointId()
         : undefined;
-    const transforms = getTransformsForLayer(this.vectorLayer, activePathLayer.id).reverse();
+    const transforms =
+      getTransformsForLayer(this.vectorLayer, activePathLayer.id).reverse();
     const pathDataPointInfos =
       _.chain(pathCommand.getSubPaths())
         .map((subCmd: SubPathCommand, subIdx: number) => {
@@ -496,7 +513,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
     const mouseDown = this.mouseEventToPoint(event);
     const selectedPointId =
-      findPathLayerPoint(this.vectorLayer, this.activePathId, mouseDown, this.pathPointRadius);
+      findPathLayerPoint(
+        this.vectorLayer, this.activePathId, mouseDown, this.pathPointRadius);
     if (selectedPointId && selectedPointId.pathId === this.activePathId) {
       // A mouse down event ocurred on top of a point. Create a point selector
       // and track that sh!at.
@@ -539,7 +557,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
 
     const hoverPointId =
-      findPathLayerPoint(this.vectorLayer, this.activePathId, mouseMove, this.pathPointRadius);
+      findPathLayerPoint(
+        this.vectorLayer, this.activePathId, mouseMove, this.pathPointRadius);
     if (hoverPointId) {
       this.hoverStateService.setHover({
         type: HoverType.Command,
@@ -712,8 +731,8 @@ function drawPathLayer(
 }
 
 /**
-  * Draws any selected commands to the canvas.
-  */
+ * Draws any selected commands to the canvas.
+ */
 function drawSelections(
   ctx: CanvasRenderingContext2D,
   vectorLayer: VectorLayer,
