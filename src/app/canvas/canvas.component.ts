@@ -638,7 +638,6 @@ function drawPathLayer(
 
   const executeCommandsFn = (
     layer: PathLayer | ClipPathLayer,
-    ctx: CanvasRenderingContext2D,
     transforms: Matrix[]) => {
 
     const cmds = _.flatMap(
@@ -650,7 +649,7 @@ function drawPathLayer(
   vectorLayer.walk(layer => {
     const transforms = getTransformsForLayer(vectorLayer, layer.id);
     if (layer instanceof ClipPathLayer) {
-      executeCommandsFn(layer, ctx, transforms);
+      executeCommandsFn(layer, transforms);
       ctx.clip();
       return;
     }
@@ -663,7 +662,7 @@ function drawPathLayer(
 
     // TODO: update layer.pathData.length so that it reflects scale transforms
     ctx.save();
-    executeCommandsFn(layer, ctx, transforms);
+    executeCommandsFn(layer, transforms);
 
     // TODO: confirm this stroke multiplier thing works...
     const strokeWidthMultiplier = MathUtil.flattenTransforms(transforms).getScale();
@@ -730,11 +729,11 @@ function drawSelections(
   const groupedSelectedCmds =
     _.chain(selections)
       .groupBy(selection => selection.commandId.pathId)
-      .mapValues((selections: Selection[], pathId: string) => {
+      .mapValues((values: Selection[], pathId: string) => {
         const selectedCmds: Command[] = [];
         const pathLayer = vectorLayer.findLayer(pathId) as PathLayer;
         if (pathLayer) {
-          selectedCmds.push(...selections.map(
+          selectedCmds.push(...values.map(
             selection => pathLayer.pathData
               .getSubPaths()[selection.commandId.subIdx]
               .getCommands()[selection.commandId.cmdIdx]));
@@ -875,7 +874,7 @@ function calculateProjectionOntoPath(
       MathUtil.flattenTransforms(transforms).invert());
   const projectionInfo = pathLayer.pathData.project(transformedMousePoint);
   if (!projectionInfo) {
-    undefined;
+    return undefined;
   }
   return {
     pathId: pathLayer.id,
@@ -883,7 +882,6 @@ function calculateProjectionOntoPath(
     split: projectionInfo.split,
   };
 }
-
 
 function executeCommands(
   commands: Command[],
