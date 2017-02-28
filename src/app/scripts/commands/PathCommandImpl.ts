@@ -472,8 +472,7 @@ function createSubPathCommands(...commands: Command[]) {
   let lastSeenMove: Command;
   let currentCmdList: Command[] = [];
   const subPathCmds: SubPathCommand[] = [];
-  for (let i = 0; i < commands.length; i++) {
-    const cmd = commands[i];
+  for (const cmd of commands) {
     if (cmd.svgChar === 'M') {
       lastSeenMove = cmd;
       if (currentCmdList.length) {
