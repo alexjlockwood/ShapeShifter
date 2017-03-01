@@ -1,7 +1,9 @@
 # Shape Shifter
 
-[![Build Status](https://travis-ci.org/alexjlockwood/ShapeShifter.svg?branch=master)](https://travis-ci.org/alexjlockwood/ShapeShifter)
-[![Coverage Status](https://coveralls.io/repos/github/alexjlockwood/ShapeShifter/badge.svg?branch=master)](https://coveralls.io/github/alexjlockwood/ShapeShifter?branch=master)
+[![Build Status][travis-badge]][travis-badge-url]
+[![Dependency Status][david-badge]][david-badge-url]
+[![devDependency Status][david-dev-badge]][david-dev-badge-url]
+[![Coverage Status][coveralls-badge]][coveralls-badge-url]
 
 **[Go to Live Version](https://alexjlockwood.github.io/ShapeShifter/)**
 
@@ -120,3 +122,11 @@ and [Steph Yim][steph-yim-website] for all of their help during the early stages
   [nick-butcher-twitter]: https://twitter.com/crafty
   [roman-nurik-twitter]: https://twitter.com/romannurik
   [steph-yim-website]: http://stephanieyim.com
+  [travis-badge]: https://travis-ci.org/alexjlockwood/ShapeShifter.svg?branch=master
+  [travis-badge-url]: https://travis-ci.org/alexjlockwood/ShapeShifter
+  [david-badge]: https://david-dm.org/alexjlockwood/ShapeShifter.svg
+  [david-badge-url]: https://david-dm.org/alexjlockwood/ShapeShifter
+  [david-dev-badge]: https://david-dm.org/alexjlockwood/ShapeShifter/dev-status.svg
+  [david-dev-badge-url]: https://david-dm.org/alexjlockwood/ShapeShifter?type=dev
+  [coveralls-badge]: https://coveralls.io/repos/github/alexjlockwood/ShapeShifter/badge.svg?branch=master
+  [coveralls-badge-url]: https://coveralls.io/github/alexjlockwood/ShapeShifter?branch=master

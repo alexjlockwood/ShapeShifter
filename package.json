@@ -1,6 +1,6 @@
 {
-  "name": "shape-shifter",
-  "version": "0.0.0",
+  "name": "shapeshifter",
+  "version": "0.1.1",
   "license": "MIT",
   "angular-cli": {},
   "scripts": {
@@ -45,7 +45,7 @@
     "zone.js": "^0.7.2"
   },
   "devDependencies": {
-    "@angular/cli": "^1.0.0-beta.32.3",
+    "@angular/cli": "^1.0.0-rc.0",
     "@angular/compiler-cli": "^2.3.1",
     "@types/es6-promise": "0.0.32",
     "@types/hammerjs": "^2.0.34",
