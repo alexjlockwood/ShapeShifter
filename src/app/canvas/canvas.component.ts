@@ -4,7 +4,7 @@ import {
   Input, ViewChildren, QueryList
 } from '@angular/core';
 import {
-  PathCommand, SubPathCommand, Command, Index as CommandIndex, Projection
+  Path, SubPath, Command, Index as CommandIndex, Projection
 } from '../scripts/commands';
 import { PathLayer, ClipPathLayer, VectorLayer, GroupLayer, Layer } from '../scripts/layers';
 import { CanvasType } from '../CanvasType';
@@ -334,7 +334,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
     // TODO: avoid performing this split operation on each display frame
     const pathId = activePathLayer.id;
-    let pathCommand = activePathLayer.pathData;
+    let path = activePathLayer.pathData;
     if (currentHover
       && currentHover.type === HoverType.Split
       && currentHover.commandId.pathId === pathId) {
@@ -342,7 +342,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       // a snapshot of what the path would look like after the action
       // and display the result. Note that after the split action,
       // the hover's cmdIdx can be used to identify the new split point.
-      pathCommand =
+      path =
         activePathLayer.pathData.splitInHalf(
           currentHover.commandId.subIdx,
           currentHover.commandId.cmdIdx);
@@ -360,8 +360,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     const transforms =
       getTransformsForLayer(this.vectorLayer, activePathLayer.id).reverse();
     const pathDataPointInfos =
-      _.chain(pathCommand.getSubPaths())
-        .map((subCmd: SubPathCommand, subIdx: number) => {
+      _.chain(path.getSubPaths())
+        .map((subCmd: SubPath, subIdx: number) => {
           return subCmd.getCommands().map((cmd, cmdIdx) => {
             const commandId = { pathId, subIdx, cmdIdx } as CommandIndex;
             const isSplit = cmd.isSplit;
@@ -601,7 +601,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           // Clear any existing selections and/or hovers as well.
           this.hoverStateService.reset();
           this.selectionStateService.reset();
-          this.layerStateService.updateActivePathCommand(
+          this.layerStateService.updateActivePath(
             this.canvasType, activeLayer.pathData, selectedPointId.subIdx);
         }
       } else {
@@ -843,7 +843,7 @@ function findPathLayerPoint(
       mousePoint,
       MathUtil.flattenTransforms(transforms).invert());
   return _.chain(pathLayer.pathData.getSubPaths())
-    .map((subCmd: SubPathCommand, subIdx: number) => {
+    .map((subCmd: SubPath, subIdx: number) => {
       return subCmd.getCommands()
         .map((cmd, cmdIdx) => {
           const distance = MathUtil.distance(cmd.end, transformedMousePoint);
@@ -949,7 +949,7 @@ function calculateProjectionOntoPath(
 interface ProjectionOntoPath {
   pathId: string;
   projection: Projection;
-  split: () => PathCommand;
+  split: () => Path;
 }
 
 /**

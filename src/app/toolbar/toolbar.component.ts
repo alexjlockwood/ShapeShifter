@@ -74,8 +74,8 @@ export class ToolbarComponent implements OnInit {
       resultStartCmd = numStartCmds >= numEndCmds ? from : to;
       resultEndCmd = numStartCmds >= numEndCmds ? to : from;
       // TODO: avoid calling these once-per-subIdx...
-      this.layerStateService.updateActivePathCommand(CanvasType.Start, resultStartCmd, subIdx, false);
-      this.layerStateService.updateActivePathCommand(CanvasType.End, resultEndCmd, subIdx, false);
+      this.layerStateService.updateActivePath(CanvasType.Start, resultStartCmd, subIdx, false);
+      this.layerStateService.updateActivePath(CanvasType.End, resultEndCmd, subIdx, false);
     }
     this.layerStateService.notifyChange(CanvasType.Preview);
     this.layerStateService.notifyChange(CanvasType.Start);
@@ -128,8 +128,8 @@ export class ToolbarComponent implements OnInit {
   private createPathAvdTarget() {
     const startLayer = this.layerStateService.getActivePathLayer(CanvasType.Start);
     const endLayer = this.layerStateService.getActivePathLayer(CanvasType.End);
-    const fromValue = startLayer.pathData.getPathData();
-    const toValue = endLayer.pathData.getPathData();
+    const fromValue = startLayer.pathData.getPathString();
+    const toValue = endLayer.pathData.getPathString();
     const duration = this.animatorService.getDuration();
     const interpolator = this.animatorService.getInterpolator();
     return new AvdTarget(startLayer.id,

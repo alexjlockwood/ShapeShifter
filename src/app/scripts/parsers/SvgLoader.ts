@@ -1,5 +1,5 @@
 import { VectorLayer, GroupLayer, PathLayer, ClipPathLayer } from '../layers';
-import { newPathCommand } from '../commands';
+import { newPath } from '../commands';
 import { ColorUtil } from '../common';
 import { PathParser } from '.';
 import { Svgo } from '../svgo';
@@ -180,7 +180,7 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
       }
       return new PathLayer(
         makeFinalNodeIdFn(node, 'path'),
-        newPathCommand(path),
+        newPath(path),
         fillColor,
         ('fillAlpha' in context) ? context.fillAlpha : undefined,
         strokeColor,

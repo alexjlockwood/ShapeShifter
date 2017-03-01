@@ -3,7 +3,7 @@ import { environment } from '../environments/environment';
 import { CanvasType } from './CanvasType';
 import { Subscription } from 'rxjs/Subscription';
 import { Observable } from 'rxjs/Observable';
-import { SubPathCommand, Command } from './scripts/commands';
+import { SubPath, Command } from './scripts/commands';
 import { LayerStateService, MorphabilityStatus } from './services/layerstate.service';
 import { AnimatorService, CanvasResizeService, HoverStateService, SelectionStateService } from './services';
 import * as $ from 'jquery';
@@ -60,7 +60,7 @@ export class AppComponent implements OnInit, OnDestroy {
             const hasSplitCmd =
               _.chain([CanvasType.Start, CanvasType.End])
                 .map(type => this.layerStateService.getActivePathLayer(type).pathData)
-                .flatMap(pathCmd => pathCmd.getSubPaths() as SubPathCommand[])
+                .flatMap(pathCmd => pathCmd.getSubPaths() as SubPath[])
                 .flatMap(subCmd => subCmd.getCommands())
                 .some(cmd => cmd.isSplit)
                 .value();
@@ -221,7 +221,7 @@ export class AppComponent implements OnInit, OnDestroy {
     this.selectionStateService.reset();
     unsplitOpsMap.forEach((ops, idx) => {
       // TODO: perform these as a single batch instead of inside a loop? (to reduce # of broadcasts)
-      this.layerStateService.updateActivePathCommand(
+      this.layerStateService.updateActivePath(
         canvasType, activePathLayer.pathData.unsplitBatch(ops), idx);
     });
   }

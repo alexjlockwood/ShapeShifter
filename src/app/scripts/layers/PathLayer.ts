@@ -1,4 +1,4 @@
-import { PathCommand } from '../commands';
+import { Path } from '../commands';
 import { AbstractLayer } from './AbstractLayer';
 import { ColorUtil, MathUtil } from '../common';
 
@@ -8,7 +8,7 @@ import { ColorUtil, MathUtil } from '../common';
 export class PathLayer extends AbstractLayer {
   constructor(
     id: string,
-    public pathData: PathCommand,
+    public pathData: Path,
     public fillColor?: string,
     public fillAlpha = 1,
     public strokeColor?: string,

@@ -2,7 +2,7 @@ import * as _ from 'lodash';
 import {
   Component, OnInit, Input, OnDestroy, Pipe, PipeTransform
 } from '@angular/core';
-import { PathCommand, Command } from '../scripts/commands';
+import { Path, Command } from '../scripts/commands';
 import { LayerStateService } from '../services/layerstate.service';
 import { SelectionStateService, Selection } from '../services/selectionstate.service';
 import { HoverStateService, Type as HoverType } from '../services/hoverstate.service';
@@ -77,30 +77,30 @@ export class InspectorItemComponent implements OnInit, OnDestroy {
 
   onReverseClick(event: MouseEvent) {
     const fromPathLayer = this.layerStateService.getActivePathLayer(this.canvasType);
-    this.replacePathCommand(fromPathLayer.pathData.reverse(this.subIdx), event);
+    this.replacePath(fromPathLayer.pathData.reverse(this.subIdx), event);
   }
 
   onShiftBackClick(event: MouseEvent) {
     const fromPathLayer = this.layerStateService.getActivePathLayer(this.canvasType);
-    this.replacePathCommand(fromPathLayer.pathData.shiftBack(this.subIdx), event);
+    this.replacePath(fromPathLayer.pathData.shiftBack(this.subIdx), event);
   }
 
   onShiftForwardClick(event: MouseEvent) {
     const fromPathLayer = this.layerStateService.getActivePathLayer(this.canvasType);
-    this.replacePathCommand(fromPathLayer.pathData.shiftForward(this.subIdx), event);
+    this.replacePath(fromPathLayer.pathData.shiftForward(this.subIdx), event);
   }
 
   onSplitButtonClick(event: MouseEvent) {
     const fromPathLayer = this.layerStateService.getActivePathLayer(this.canvasType);
     this.clearSelectionsAndHovers();
-    this.replacePathCommand(
+    this.replacePath(
       fromPathLayer.pathData.splitInHalf(this.subIdx, this.cmdIdx), event);
   }
 
   onUnsplitButtonClick(event: MouseEvent) {
     const fromPathLayer = this.layerStateService.getActivePathLayer(this.canvasType);
     this.clearSelectionsAndHovers();
-    this.replacePathCommand(
+    this.replacePath(
       fromPathLayer.pathData.unsplit(this.subIdx, this.cmdIdx), event);
   }
 
@@ -109,14 +109,14 @@ export class InspectorItemComponent implements OnInit, OnDestroy {
     this.selectionStateService.reset();
   }
 
-  private replacePathCommand(pathCommand: PathCommand, event: MouseEvent) {
-    this.layerStateService.updateActivePathCommand(this.canvasType, pathCommand, this.subIdx);
+  private replacePath(path: Path, event: MouseEvent) {
+    this.layerStateService.updateActivePath(this.canvasType, path, this.subIdx);
 
     // This ensures that the parent div won't also receive the same click event.
     event.cancelBubble = true;
   }
 
-  private getPathCommand() {
+  private getPath() {
     const pathLayer = this.layerStateService.getActivePathLayer(this.canvasType);
     if (!pathLayer) {
       return undefined;
@@ -125,15 +125,13 @@ export class InspectorItemComponent implements OnInit, OnDestroy {
   }
 
   isReversible() {
-    const pathCommand = this.getPathCommand();
-    return this.cmdIdx === 0
-      && pathCommand && pathCommand.getSubPaths()[this.subIdx].getCommands().length > 1;
+    const path = this.getPath();
+    return this.cmdIdx === 0 && path && path.getSubPaths()[this.subIdx].getCommands().length > 1;
   }
 
   isShiftable() {
-    const pathCommand = this.getPathCommand();
-    return this.cmdIdx === 0
-      && pathCommand && pathCommand.getSubPaths()[this.subIdx].isClosed();
+    const path = this.getPath();
+    return this.cmdIdx === 0 && path && path.getSubPaths()[this.subIdx].isClosed();
   }
 
   isSplittable() {

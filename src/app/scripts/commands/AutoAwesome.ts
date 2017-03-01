@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import { PathCommand, Command } from '../commands';
+import { Path, Command } from '../commands';
 import { MathUtil } from '../common';
 
 // Needleman-Wunsch scoring function constants.
@@ -16,14 +16,14 @@ const INDEL = 0;
  */
 export function autoFix(
   subIdx: number,
-  srcFromPath: PathCommand,
-  srcToPath: PathCommand) {
+  srcFromPath: Path,
+  srcToPath: Path) {
 
-  // Create and return a list of reversed and shifted path commands to test.
+  // Create and return a list of reversed and shifted paths to test.
   // TODO: can this be optimized? (this essentially brute-forces all possible permutations)
-  const createFromCmdGroupsFn = (...pathCommands: PathCommand[]): PathCommand[] => {
+  const createFromCmdGroupsFn = (...paths: Path[]): Path[] => {
     const fromPaths = [];
-    for (const p of pathCommands) {
+    for (const p of paths) {
       const numFromCmds = p.getSubPaths()[subIdx].getCommands().length;
       for (let i = 0; i < numFromCmds - 1; i++) {
         fromPaths.push(p.shiftBack(subIdx, i));
@@ -100,19 +100,19 @@ export function autoFix(
   const toGapGroups = createGapStreaksFn(toCmdInfos);
 
   // Fill in the gaps by applying linear subdivide batch splits.
-  const applySplitsFn = (pathCommand: PathCommand, gapGroups: CmdInfo[][]) => {
+  const applySplitsFn = (path: Path, gapGroups: CmdInfo[][]) => {
     const splitOps = [];
-    const numPathCommands = pathCommand.getSubPaths()[subIdx].getCommands().length;
+    const numPaths = path.getSubPaths()[subIdx].getCommands().length;
     for (let i = gapGroups.length - 1; i >= 0; i--) {
       const gapGroup = gapGroups[i];
       // Clamp the index between 1 and numCommands - 1 to account for cases
       // where the alignment algorithm attempts to append new commands to the
       // front and back of the sequence.
-      const cmdIdx = MathUtil.clamp(_.last(gapGroup).nextCmdIdx, 1, numPathCommands - 1);
+      const cmdIdx = MathUtil.clamp(_.last(gapGroup).nextCmdIdx, 1, numPaths - 1);
       const ts = gapGroup.map((_, gapIdx) => (gapIdx + 1) / (gapGroup.length + 1));
-      splitOps.push({subIdx, cmdIdx, ts});
+      splitOps.push({ subIdx, cmdIdx, ts });
     }
-    return pathCommand.splitBatch(splitOps);
+    return path.splitBatch(splitOps);
   };
 
   const fromPathResult = applySplitsFn(alignmentInfo.generatedFromPath, fromGapGroups);
@@ -128,10 +128,10 @@ export function autoFix(
  */
 export function autoConvert(
   subIdx: number,
-  srcFromPath: PathCommand,
-  srcToPath: PathCommand) {
+  srcFromPath: Path,
+  srcToPath: Path) {
 
-  const convertCmdsFn = (from: PathCommand, to: PathCommand) => {
+  const convertCmdsFn = (from: Path, to: Path) => {
     const fromCmds = from.getSubPaths()[subIdx].getCommands();
     const toCmds = to.getSubPaths()[subIdx].getCommands();
     fromCmds.forEach((fromCmd, cmdIdx) => {

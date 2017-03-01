@@ -1,8 +1,8 @@
 export { SvgChar } from './SvgChar';
-export { PathCommand, Projection } from './PathCommand';
-export { SubPathCommand } from './SubPathCommand';
+export { Path, Projection } from './Path';
+export { SubPath } from './SubPath';
 export { Command, Index } from './Command';
-export { newPathCommand } from './PathCommandImpl';
+export { newPath } from './PathImpl';
 import * as AutoAwesome from './AutoAwesome';
 export { AutoAwesome };
 export {

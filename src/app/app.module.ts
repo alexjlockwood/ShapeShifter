@@ -23,7 +23,7 @@ import { DialogService, HelpDialogComponent, ConfirmDialogComponent, DemoDialogC
 import { SettingsService } from './services/settings.service';
 import { PathSelectorComponent } from './pathselector/pathselector.component';
 import { IsEqualToPipe, IsNotEqualToPipe } from './pipes';
-import { SubPathCommandItemsPipe } from './inspector/inspector.component';
+import { SubPathItemsPipe } from './inspector/inspector.component';
 
 import 'hammerjs';
 
@@ -45,7 +45,7 @@ import 'hammerjs';
     SvgCommandPipe,
     IsEqualToPipe,
     IsNotEqualToPipe,
-    SubPathCommandItemsPipe,
+    SubPathItemsPipe,
   ],
   imports: [
     BrowserModule,

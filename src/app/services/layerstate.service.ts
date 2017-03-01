@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Layer, VectorLayer, PathLayer, GroupLayer } from '../scripts/layers';
 import { CanvasType } from '../CanvasType';
-import { PathCommand } from '../scripts/commands';
+import { Path } from '../scripts/commands';
 import { AutoAwesome } from '../scripts/commands';
 import { ROTATION_GROUP_LAYER_ID } from '../scripts/parsers';
 
@@ -55,7 +55,7 @@ export class LayerStateService {
       const numSubPaths = activePathLayer.pathData.getSubPaths().length;
       for (let subIdx = 0; subIdx < numSubPaths; subIdx++) {
         // Attempt to make each corresponding pair of subpaths compatible with each other.
-        this.updateActivePathCommand(id.type, activePathLayer.pathData, subIdx, false);
+        this.updateActivePath(id.type, activePathLayer.pathData, subIdx, false);
       }
     });
     if (shouldNotify) {
@@ -88,14 +88,14 @@ export class LayerStateService {
    * conversions will be removed and an attempt to make the path compatible with
    * its opposite path layer will be made.
    */
-  updateActivePathCommand(
+  updateActivePath(
     type: CanvasType,
-    pathCommand: PathCommand,
+    path: Path,
     subIdx: number,
     shouldNotify = true) {
 
     // Remove any existing conversions from the subpath.
-    pathCommand = pathCommand.unconvert(subIdx);
+    path = path.unconvert(subIdx);
 
     const oppositeCanvasType =
       type === CanvasType.Start
@@ -107,7 +107,7 @@ export class LayerStateService {
     const oppositeActivePathLayer = this.getActivePathLayer(oppositeCanvasType);
     if (oppositeActivePathLayer
       && subIdx < oppositeActivePathLayer.pathData.getSubPaths().length) {
-      const numCommands = pathCommand.getSubPaths()[subIdx].getCommands().length;
+      const numCommands = path.getSubPaths()[subIdx].getCommands().length;
       const numOppositeCommands =
         oppositeActivePathLayer.pathData.getSubPaths()[subIdx].getCommands().length;
       if (numCommands === numOppositeCommands) {
@@ -115,8 +115,8 @@ export class LayerStateService {
         // are equal. Otherwise we'll wait for the user to add more points.
         const autoConvertResults =
           AutoAwesome.autoConvert(
-            subIdx, pathCommand, oppositeActivePathLayer.pathData.unconvert(subIdx));
-        pathCommand = autoConvertResults.from;
+            subIdx, path, oppositeActivePathLayer.pathData.unconvert(subIdx));
+        path = autoConvertResults.from;
 
         // This is the one case where a change in one canvas type's vector layer
         // will cause corresponding changes to be made in the opposite canvas type's
@@ -125,7 +125,7 @@ export class LayerStateService {
         hasOppositeCanvasTypeChanged = true;
       }
     }
-    this.getActivePathLayer(type).pathData = pathCommand;
+    this.getActivePathLayer(type).pathData = path;
 
     if (type === CanvasType.Start || hasOppositeCanvasTypeChanged) {
       // The start canvas layer has changed, so update the preview layer as well.

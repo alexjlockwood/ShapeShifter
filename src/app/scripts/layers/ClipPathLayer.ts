@@ -1,4 +1,4 @@
-import { PathCommand } from '../commands';
+import { Path } from '../commands';
 import { AbstractLayer } from './AbstractLayer';
 
 /**
@@ -7,7 +7,7 @@ import { AbstractLayer } from './AbstractLayer';
 export class ClipPathLayer extends AbstractLayer {
   constructor(
     id: string,
-    public pathData: PathCommand,
+    public pathData: Path,
   ) {
     super(undefined, id);
   }

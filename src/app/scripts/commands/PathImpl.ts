@@ -1,47 +1,45 @@
 import * as _ from 'lodash';
 import { MathUtil, Point } from '../common';
-import { PathCommand, SubPathCommand, Command, SvgChar, Projection } from '.';
+import { Path, SubPath, Command, SvgChar, Projection } from '.';
 import { PathParser } from '../parsers';
-import { newSubPathCommand } from './SubPathCommandImpl';
+import { newSubPath } from './SubPathImpl';
 import { CommandImpl, newMove, newLine } from './CommandImpl';
 import { CommandMutation } from './CommandMutation';
 
-export function newPathCommand(path: string): PathCommand {
-  return new PathCommandImpl(path);
+export function newPath(path: string): Path {
+  return new PathImpl(path);
 }
 
 /**
- * Implementation of the PathCommand interface. Represents all of the information
+ * Implementation of the Path interface. Represents all of the information
  * associated with a path layer's pathData attribute. Also provides mechanisms for
  * splitting/unsplitting/converting/etc. paths in a way that is easily reversible.
  */
-class PathCommandImpl implements PathCommand {
+class PathImpl implements Path {
 
-  // TODO: forbid multi-closepath cases
-  // TODO: reversing a path with a close path with identical start/end points doesn't work
-  private readonly pathData: string;
-  private readonly subPaths: ReadonlyArray<SubPathCommand>;
+  private readonly pathString: string;
+  private readonly subPaths: ReadonlyArray<SubPath>;
   private readonly commandMutationsMap: ReadonlyArray<ReadonlyArray<CommandMutation>>;
   private readonly shiftOffsets: ReadonlyArray<number>;
   private readonly reversals: ReadonlyArray<boolean>;
   private readonly pathLength: number;
 
-  constructor(obj: string | CommandImpl[] | PathCommandParams) {
+  constructor(obj: string | CommandImpl[] | PathParams) {
     if (typeof obj === 'string' || Array.isArray(obj)) {
       if (typeof obj === 'string') {
-        this.pathData = obj;
-        this.subPaths = createSubPathCommands(...PathParser.parseCommands(obj));
+        this.pathString = obj;
+        this.subPaths = createSubPaths(...PathParser.parseCommands(obj));
       } else {
-        this.pathData = PathParser.commandsToString(obj);
-        this.subPaths = createSubPathCommands(...obj);
+        this.pathString = PathParser.commandsToString(obj);
+        this.subPaths = createSubPaths(...obj);
       }
       this.commandMutationsMap =
         this.subPaths.map(s => s.getCommands().map(c => new CommandMutation(c as CommandImpl)));
       this.shiftOffsets = this.subPaths.map(_ => 0);
       this.reversals = this.subPaths.map(_ => false);
     } else {
-      this.pathData = PathParser.commandsToString(obj.commands);
-      this.subPaths = createSubPathCommands(...obj.commands);
+      this.pathString = PathParser.commandsToString(obj.commands);
+      this.subPaths = createSubPaths(...obj.commands);
       this.commandMutationsMap = obj.commandMutationsMap.map(cms => cms.slice());
       this.shiftOffsets = obj.shiftOffsets.slice();
       this.reversals = obj.reversals.slice();
@@ -54,8 +52,8 @@ class PathCommandImpl implements PathCommand {
         .reduce((prev, curr) => prev + curr);
   }
 
-  // Implements the PathCommand interface.
-  clone(params: PathCommandParams = {}) {
+  // Implements the Path interface.
+  clone(params: PathParams = {}) {
     // TODO: only recompute the stuff that we know has changed...
     const newCommandMutationsMap =
       params.commandMutationsMap
@@ -169,35 +167,35 @@ class PathCommandImpl implements PathCommand {
     const reorderedCommands = _.flatMap(newCommandMutationsMap, (_, subIdx) => {
       return maybeShiftCommandsFn(subIdx, maybeReverseCommandsFn(subIdx));
     });
-    const pathCommandParams: PathCommandParams = {
+    const pathParams: PathParams = {
       commands: reorderedCommands,
       commandMutationsMap: this.commandMutationsMap,
       shiftOffsets: this.shiftOffsets,
       reversals: this.reversals,
     };
     // TODO: using assign here is kinda weird...
-    return new PathCommandImpl(_.assign({}, pathCommandParams, params));
+    return new PathImpl(_.assign({}, pathParams, params));
   }
 
-  // Implements the PathCommand interface.
-  getPathData() {
-    return this.pathData;
+  // Implements the Path interface.
+  getPathString() {
+    return this.pathString;
   }
 
-  // Implements the PathCommand interface.
+  // Implements the Path interface.
   getSubPaths() {
     return this.subPaths;
   }
 
-  // Implements the PathCommand interface.
+  // Implements the Path interface.
   getPathLength() {
     return this.pathLength;
   }
 
-  // Implements the PathCommand interface.
-  isMorphableWith(pathCommand: PathCommand) {
+  // Implements the Path interface.
+  isMorphableWith(path: Path) {
     const scmds1 = this.getSubPaths();
-    const scmds2 = pathCommand.getSubPaths();
+    const scmds2 = path.getSubPaths();
     return scmds1.length === scmds2.length
       && scmds1.every((_, i) =>
         scmds1[i].getCommands().length === scmds2[i].getCommands().length
@@ -205,8 +203,8 @@ class PathCommandImpl implements PathCommand {
           scmds1[i].getCommands()[j].svgChar === scmds2[i].getCommands()[j].svgChar));
   }
 
-  // Implements the PathCommand interface.
-  interpolate(start: PathCommand, end: PathCommand, fraction: number): PathCommand {
+  // Implements the Path interface.
+  interpolate(start: Path, end: Path, fraction: number): Path {
     if (!this.isMorphableWith(start) || !this.isMorphableWith(end)) {
       return this;
     }
@@ -229,11 +227,11 @@ class PathCommandImpl implements PathCommand {
       });
     });
     // TODO: note that this erases all command mutation state... will that be an issue?
-    return new PathCommandImpl(commands);
+    return new PathImpl(commands);
   }
 
-  // Implements the PathCommand interface.
-  project(point: Point): { projection: Projection, split: () => PathCommand } | undefined {
+  // Implements the Path interface.
+  project(point: Point): { projection: Projection, split: () => Path } | undefined {
     return _.chain(this.commandMutationsMap)
       .map((subPathCms: CommandMutation[], cmsIdx) =>
         subPathCms.map((cm: CommandMutation, cmIdx) => {
@@ -251,7 +249,7 @@ class PathCommandImpl implements PathCommand {
       .value();
   }
 
-  // Implements the PathCommand interface.
+  // Implements the Path interface.
   reverse(subIdx: number) {
     // TODO: add a test for commands with multiple moves but no close paths
     return this.clone({
@@ -259,14 +257,14 @@ class PathCommandImpl implements PathCommand {
     });
   }
 
-  // Implements the PathCommand interface.
+  // Implements the Path interface.
   shiftBack(subIdx: number, numShifts = 1) {
     return this.reversals[subIdx]
       ? this.shift(subIdx, (o, n) => MathUtil.floorMod(o - numShifts, n - 1))
       : this.shift(subIdx, (o, n) => (o + numShifts) % (n - 1));
   }
 
-  // Implements the PathCommand interface.
+  // Implements the Path interface.
   shiftForward(subIdx: number, numShifts = 1) {
     return this.reversals[subIdx]
       ? this.shift(subIdx, (o, n) => (o + numShifts) % (n - 1))
@@ -290,13 +288,13 @@ class PathCommandImpl implements PathCommand {
     });
   }
 
-  // Implements the PathCommand interface.
+  // Implements the Path interface.
   getId(subIdx: number, cmdIdx: number) {
     const { targetCm, splitIdx } = this.findCommandMutation(subIdx, cmdIdx);
     return targetCm.getIdAtIndex(splitIdx);
   }
 
-  // Implements the PathCommand interface.
+  // Implements the Path interface.
   split(subIdx: number, cmdIdx: number, ...ts: number[]) {
     if (!ts.length) {
       console.warn('Attempt to split a path with an empty spread argument');
@@ -309,7 +307,7 @@ class PathCommandImpl implements PathCommand {
     return this.clone({ commandMutationsMap, shiftOffsets });
   }
 
-  // Implements the PathCommand interface.
+  // Implements the Path interface.
   splitBatch(ops: Array<{ subIdx: number, cmdIdx: number, ts: number[] }>) {
     if (!ops.length) {
       return this;
@@ -320,7 +318,7 @@ class PathCommandImpl implements PathCommand {
       // indices of the lower index unsplit operations.
       return s1 !== s2 ? s2 - s1 : c2 - c1;
     });
-    let result: PathCommand = this;
+    let result: Path = this;
     for (const {subIdx, cmdIdx, ts} of ops) {
       // TODO: do all operations as a single batch instead of individually
       result = result.split(subIdx, cmdIdx, ...ts);
@@ -328,7 +326,7 @@ class PathCommandImpl implements PathCommand {
     return result;
   }
 
-  // Implements the PathCommand interface.
+  // Implements the Path interface.
   splitInHalf(subIdx: number, cmdIdx: number) {
     const { targetCm, cmIdx, splitIdx } = this.findCommandMutation(subIdx, cmdIdx);
     const shiftOffsets = this.maybeUpdateShiftOffsetsAfterSplit(subIdx, cmIdx, 1);
@@ -364,7 +362,7 @@ class PathCommandImpl implements PathCommand {
     return shiftOffsets;
   }
 
-  // Implements the PathCommand interface.
+  // Implements the Path interface.
   unsplit(subIdx: number, cmdIdx: number) {
     const { targetCm, cmIdx, splitIdx } = this.findCommandMutation(subIdx, cmdIdx);
     const commandMutationsMap =
@@ -386,7 +384,7 @@ class PathCommandImpl implements PathCommand {
     return shiftOffsets;
   }
 
-  // Implements the PathCommand interface.
+  // Implements the Path interface.
   unsplitBatch(ops: Array<{ subIdx: number, cmdIdx: number }>) {
     if (!ops.length) {
       return this;
@@ -397,7 +395,7 @@ class PathCommandImpl implements PathCommand {
       // indices of the lower index unsplit operations.
       return s1 !== s2 ? s2 - s1 : c2 - c1;
     });
-    let result: PathCommand = this;
+    let result: Path = this;
     for (const {subIdx, cmdIdx} of ops) {
       // TODO: do all operations as a single batch instead of individually
       result = result.unsplit(subIdx, cmdIdx);
@@ -405,7 +403,7 @@ class PathCommandImpl implements PathCommand {
     return result;
   }
 
-  // Implements the PathCommand interface.
+  // Implements the Path interface.
   convert(subIdx: number, cmdIdx: number, svgChar: SvgChar) {
     const { targetCm, cmIdx, splitIdx } = this.findCommandMutation(subIdx, cmdIdx);
     const commandMutationsMap =
@@ -414,7 +412,7 @@ class PathCommandImpl implements PathCommand {
     return this.clone({ commandMutationsMap });
   }
 
-  // Implements the PathCommand interface.
+  // Implements the Path interface.
   unconvert(subIdx: number) {
     const commandMutationsMap = this.commandMutationsMap.map(cms => cms.slice());
     commandMutationsMap[subIdx] =
@@ -422,9 +420,9 @@ class PathCommandImpl implements PathCommand {
     return this.clone({ commandMutationsMap });
   }
 
-  // Implements the PathCommand interface.
+  // Implements the Path interface.
   revert() {
-    return new PathCommandImpl(
+    return new PathImpl(
       _.chain(this.commandMutationsMap)
         .flatMap(cms => cms)
         .map(cm => cm.backingCommand)
@@ -460,23 +458,23 @@ class PathCommandImpl implements PathCommand {
   }
 
   toString() {
-    return this.pathData;
+    return this.pathString;
   }
 }
 
-function createSubPathCommands(...commands: Command[]) {
+function createSubPaths(...commands: Command[]) {
   if (!commands.length || commands[0].svgChar !== 'M') {
     // TODO: is this case actually possible? should we insert 'M 0 0' instead?
     return [];
   }
   let lastSeenMove: Command;
   let currentCmdList: Command[] = [];
-  const subPathCmds: SubPathCommand[] = [];
+  const subPathCmds: SubPath[] = [];
   for (const cmd of commands) {
     if (cmd.svgChar === 'M') {
       lastSeenMove = cmd;
       if (currentCmdList.length) {
-        subPathCmds.push(newSubPathCommand(currentCmdList));
+        subPathCmds.push(newSubPath(currentCmdList));
         currentCmdList = [];
       } else {
         currentCmdList.push(cmd);
@@ -488,20 +486,20 @@ function createSubPathCommands(...commands: Command[]) {
     }
     currentCmdList.push(cmd);
     if (cmd.svgChar === 'Z') {
-      subPathCmds.push(newSubPathCommand(currentCmdList));
+      subPathCmds.push(newSubPath(currentCmdList));
       currentCmdList = [];
     }
   }
   if (currentCmdList.length) {
-    subPathCmds.push(newSubPathCommand(currentCmdList));
+    subPathCmds.push(newSubPath(currentCmdList));
   }
   return subPathCmds;
 }
 
 /**
- * Path command internals that have been cloned.
+ * Path internals that have been cloned.
  */
-interface PathCommandParams {
+interface PathParams {
   readonly commands?: ReadonlyArray<CommandImpl>;
   readonly commandMutationsMap?: ReadonlyArray<ReadonlyArray<CommandMutation>>;
   readonly shiftOffsets?: ReadonlyArray<number>;

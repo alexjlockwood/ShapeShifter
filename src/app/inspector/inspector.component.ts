@@ -13,17 +13,17 @@ import 'rxjs/add/observable/combineLatest';
 export class InspectorComponent implements OnInit {
   START_CANVAS = CanvasType.Start;
   END_CANVAS = CanvasType.End;
-  subPathCommandItemsObservable: Observable<[string, string]>;
+  subPathItemsObservable: Observable<[string, string]>;
 
   constructor(private layerStateService: LayerStateService) { }
 
   ngOnInit() {
-    this.subPathCommandItemsObservable = Observable.combineLatest(
+    this.subPathItemsObservable = Observable.combineLatest(
       this.layerStateService.getActivePathIdObservable(CanvasType.Start),
       this.layerStateService.getActivePathIdObservable(CanvasType.End));
   }
 
-  trackSubPathCommand(index: number, item: SubPathCommandItem) {
+  trackSubPath(index: number, item: SubPathItem) {
     return item.subIdx;
   }
 
@@ -32,7 +32,7 @@ export class InspectorComponent implements OnInit {
   }
 }
 
-class SubPathCommandItem {
+class SubPathItem {
   constructor(
     public readonly subIdx: number,
     public readonly startCmdItems: CommandItem[] = [],
@@ -46,14 +46,14 @@ class CommandItem {
     public readonly command: Command) { }
 }
 
-@Pipe({ name: 'toSubPathCommandItems' })
-export class SubPathCommandItemsPipe implements PipeTransform {
+@Pipe({ name: 'toSubPathItems' })
+export class SubPathItemsPipe implements PipeTransform {
   constructor(private layerStateService: LayerStateService) { }
 
-  transform(activePathIds: [string, string]): SubPathCommandItem[] {
-    const subPathCommandItems: SubPathCommandItem[] = [];
+  transform(activePathIds: [string, string]): SubPathItem[] {
+    const subPathItems: SubPathItem[] = [];
 
-    const getPathCommandFn = (canvasType: CanvasType) => {
+    const getPathFn = (canvasType: CanvasType) => {
       const pathLayer = this.layerStateService.getActivePathLayer(canvasType);
       if (!pathLayer) {
         return undefined;
@@ -61,8 +61,8 @@ export class SubPathCommandItemsPipe implements PipeTransform {
       return pathLayer.pathData;
     };
 
-    const startPathCmd = getPathCommandFn(CanvasType.Start);
-    const endPathCmd = getPathCommandFn(CanvasType.End);
+    const startPathCmd = getPathFn(CanvasType.Start);
+    const endPathCmd = getPathFn(CanvasType.End);
     const numStartSubPaths = startPathCmd ? startPathCmd.getSubPaths().length : 0;
     const numEndSubPaths = endPathCmd ? endPathCmd.getSubPaths().length : 0;
     for (let i = 0; i < Math.max(numStartSubPaths, numEndSubPaths); i++) {
@@ -81,8 +81,8 @@ export class SubPathCommandItemsPipe implements PipeTransform {
         });
       }
       // TODO: save the previous expanded state somehow?
-      subPathCommandItems.push(new SubPathCommandItem(i, startCmdItems, endCmdItems));
+      subPathItems.push(new SubPathItem(i, startCmdItems, endCmdItems));
     }
-    return subPathCommandItems;
+    return subPathItems;
   }
 }

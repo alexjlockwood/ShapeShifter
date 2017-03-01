@@ -1,38 +1,27 @@
 <div fxLayout="row" fxLayoutWrap fxLayoutGap="8px">
-  <div class="subpath-container"
-    *ngFor="
-       let subPathCmdItem of (subPathCommandItemsObservable | async | toSubPathCommandItems);
-       trackBy: trackSubPathCommand">
-    <div fxLayout="row"
-      fxLayoutAlign="start center"
-      class="subpath-header-listitem">
-      <button md-icon-button
-        (click)="subPathCmdItem.isExpanded = !subPathCmdItem.isExpanded">
+  <div class="subpath-container" *ngFor="
+       let subPathCmdItem of (subPathItemsObservable | async | toSubPathItems);
+       trackBy: trackSubPath">
+    <div fxLayout="row" fxLayoutAlign="start center" class="subpath-header-listitem">
+      <button md-icon-button (click)="subPathCmdItem.isExpanded = !subPathCmdItem.isExpanded">
         <md-icon>{{subPathCmdItem.isExpanded ? 'expand_less' : 'expand_more'}}</md-icon>
       </button>
-      <div fxFlex
-        (click)="subPathCmdItem.isExpanded = !subPathCmdItem.isExpanded">
+      <div fxFlex (click)="subPathCmdItem.isExpanded = !subPathCmdItem.isExpanded">
         {{ 'Subpath #' + (subPathCmdItem.subIdx + 1)}}
       </div>
     </div>
     <div [hidden]="!subPathCmdItem.isExpanded">
       <div fxLayout="row">
         <div fxLayout="column">
-          <app-inspectoritem [canvasType]="START_CANVAS"
-            [subIdx]="subPathCmdItem.subIdx"
-            [cmdIdx]="cmdIdx"
-            [command]="cmdItem.command"
-            *ngFor="let cmdItem of subPathCmdItem.startCmdItems;
+          <app-inspectoritem [canvasType]="START_CANVAS" [subIdx]="subPathCmdItem.subIdx"
+            [cmdIdx]="cmdIdx" [command]="cmdItem.command" *ngFor="let cmdItem of subPathCmdItem.startCmdItems;
                     let cmdIdx = index;
                     trackBy: trackCommand">
           </app-inspectoritem>
         </div>
         <div fxLayout="column">
-          <app-inspectoritem [canvasType]="END_CANVAS"
-            [subIdx]="subPathCmdItem.subIdx"
-            [cmdIdx]="cmdIdx"
-            [command]="cmdItem.command"
-            *ngFor="let cmdItem of subPathCmdItem.endCmdItems;
+          <app-inspectoritem [canvasType]="END_CANVAS" [subIdx]="subPathCmdItem.subIdx"
+            [cmdIdx]="cmdIdx" [command]="cmdItem.command" *ngFor="let cmdItem of subPathCmdItem.endCmdItems;
                     let cmdIdx = index;
                     trackBy: trackCommand">
           </app-inspectoritem>
@@ -42,4 +31,3 @@
   </div>
   <span fxFlex></span>
 </div>
-
