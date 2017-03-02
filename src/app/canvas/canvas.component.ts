@@ -70,6 +70,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   private isViewInit: boolean;
   private pathPointRadius: number;
   private currentHover: Hover;
+  private currentHoverSplitPreviewPath: Path;
   private shouldLabelPoints = false;
   private shouldDrawLayer = false;
   private shouldDisableLayer = false;
@@ -184,8 +185,24 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       this.subscriptions.push(
         this.selectionStateService.getSelectionsObservable()
           .subscribe(() => this.draw()));
-      const setCurrentHoverFn = hover => {
+      const updateCurrentHoverFn = (hover: Hover) => {
         this.currentHover = hover;
+        if (hover
+          && hover.type === HoverType.Split
+          && hover.commandId.pathId === this.activePathId) {
+          // If the user is hovering over the inspector split button, then build
+          // a snapshot of what the path would look like after the action
+          // and display the result. Note that after the split action,
+          // the hover's cmdIdx can be used to identify the new split point.
+          const activePathLayer =
+            this.layerStateService.getActivePathLayer(this.canvasType);
+          this.currentHoverSplitPreviewPath =
+            activePathLayer.pathData.splitInHalf(
+              hover.commandId.subIdx,
+              hover.commandId.cmdIdx);
+        } else {
+          this.currentHoverSplitPreviewPath = undefined;
+        }
         this.draw();
       };
       this.subscriptions.push(
@@ -193,24 +210,24 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           .subscribe(hover => {
             if (!hover) {
               // Clear the current hover.
-              setCurrentHoverFn(undefined);
+              updateCurrentHoverFn(undefined);
               return;
             }
             if (!(hover.type === HoverType.Command
               || hover.type === HoverType.Split
               || hover.type === HoverType.Unsplit)) {
               // TODO: support reverse/shift back/shift forward? it would be pretty easy...
-              setCurrentHoverFn(undefined);
+              updateCurrentHoverFn(undefined);
               return;
             }
             if (hover.source !== this.canvasType
               && (hover.type === HoverType.Split || hover.type === HoverType.Unsplit)) {
               // If the hover source isn't of this type and the hover type is a split
               // or an unsplit, then don't draw any hover events to the canvas.
-              setCurrentHoverFn(undefined);
+              updateCurrentHoverFn(undefined);
               return;
             }
-            setCurrentHoverFn(hover);
+            updateCurrentHoverFn(hover);
           }));
     }
     this.resizeAndDraw();
@@ -327,25 +344,10 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       return;
     }
 
-    const currentHover = this.currentHover;
-    const currentSelections =
-      this.selectionStateService.getSelections()
-        .filter(s => s.source === this.canvasType);
-
-    // TODO: avoid performing this split operation on each display frame
     const pathId = activePathLayer.id;
     let path = activePathLayer.pathData;
-    if (currentHover
-      && currentHover.type === HoverType.Split
-      && currentHover.commandId.pathId === pathId) {
-      // If the user is hovering over the inspector split button, then build
-      // a snapshot of what the path would look like after the action
-      // and display the result. Note that after the split action,
-      // the hover's cmdIdx can be used to identify the new split point.
-      path =
-        activePathLayer.pathData.splitInHalf(
-          currentHover.commandId.subIdx,
-          currentHover.commandId.cmdIdx);
+    if (this.currentHoverSplitPreviewPath) {
+      path = this.currentHoverSplitPreviewPath;
     }
 
     // Build a list containing all necessary information needed in
@@ -359,6 +361,9 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         : undefined;
     const transforms =
       getTransformsForLayer(this.vectorLayer, activePathLayer.id).reverse();
+    const currentSelections =
+      this.selectionStateService.getSelections()
+        .filter(s => s.source === this.canvasType);
     const pathDataPointInfos =
       _.chain(path.getSubPaths())
         .map((subCmd: SubPath, subIdx: number) => {
@@ -367,9 +372,9 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
             const isSplit = cmd.isSplit;
             const isMove = cmd.svgChar === 'M';
             const isHoverOrSelection =
-              (currentHover
-                && currentHover.commandId.subIdx === subIdx
-                && currentHover.commandId.cmdIdx === cmdIdx)
+              (this.currentHover
+                && this.currentHover.commandId.subIdx === subIdx
+                && this.currentHover.commandId.cmdIdx === cmdIdx)
               || currentSelections.some(sel => _.isMatch(sel.commandId, commandId));
             const isDrag =
               activelyDraggedPointId && _.isMatch(activelyDraggedPointId, commandId);
@@ -583,7 +588,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       const selectedPointId = this.pointSelector.getSelectedPointId();
       if (this.pointSelector.isDragging()) {
         if (this.pointSelector.isSelectedPointSplit()) {
-          // TODO: use layerStateService to get the active path id instead
           const activeLayer =
             this.vectorLayer.findLayer(selectedPointId.pathId) as PathLayer;
 
