@@ -1,7 +1,7 @@
 {
   "name": "shapeshifter",
   "version": "0.1.1",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "angular-cli": {},
   "scripts": {
     "ng": "ng",
