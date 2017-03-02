@@ -1,10 +1,10 @@
 /* tslint:disable */
 
-export function intersectArrays(a, b) {
-  return a.filter(function (n) {
-    return b.indexOf(n) > -1;
-  });
-};
+// export function intersectArrays(a, b) {
+//   return a.filter(function (n) {
+//     return b.indexOf(n) > -1;
+//   });
+// };
 
 export function cleanupOutData(data, params) {
 
