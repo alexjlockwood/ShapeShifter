@@ -33,10 +33,12 @@ function vectorLayerToSvgNode(vl: VectorLayer, destinationNode: HTMLElement, xml
       conditionalAttr(node, 'id', layer.id);
       conditionalAttr(node, 'd', layer.pathData.getPathString());
       if (layer.fillColor) {
+        // TODO: is it necessary to specify fill 'none'?
         conditionalAttr(node, 'fill', ColorUtil.androidToCssColor(layer.fillColor), '');
       }
       conditionalAttr(node, 'fill-opacity', layer.fillAlpha, 1);
       if (layer.strokeColor) {
+        // TODO: is it necessary to specify stroke 'none'?
         conditionalAttr(node, 'stroke', ColorUtil.androidToCssColor(layer.strokeColor), '');
       }
       conditionalAttr(node, 'stroke-opacity', layer.strokeAlpha, 1);
