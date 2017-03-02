@@ -59,11 +59,3 @@ export function androidToCssColor(androidColor: string | undefined, multAlpha = 
   const d = parseAndroidColor(androidColor);
   return `rgba(${d.r},${d.g},${d.b},${(d.a * multAlpha / 255).toFixed(2)})`;
 }
-
-export function isAndroidColorDark(androidColor: string | undefined) {
-  if (!androidColor) {
-    return false;
-  }
-  const d = parseAndroidColor(androidColor);
-  return ((30 * d.r + 59 * d.g + 11 * d.b) / 100) <= BRIGHTNESS_THRESHOLD;
-}

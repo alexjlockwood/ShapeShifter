@@ -67,7 +67,7 @@ export function vectorLayerAnimationToAvdXmlString(
  * Helper method that serializes a VectorLayer to a destinationNode in an xmlDoc.
  * The destinationNode should be a <vector> node.
  */
-export function vectorLayerToXmlNode(vl: VectorLayer, destinationNode: HTMLElement, xmlDoc: Document) {
+function vectorLayerToXmlNode(vl: VectorLayer, destinationNode: HTMLElement, xmlDoc: Document) {
   destinationNode.setAttributeNS(XMLNS_NS, 'xmlns:android', ANDROID_NS);
   destinationNode.setAttributeNS(ANDROID_NS, 'android:width', `${vl.width}dp`);
   destinationNode.setAttributeNS(ANDROID_NS, 'android:height', `${vl.height}dp`);

@@ -3,7 +3,7 @@ import * as $ from 'jquery';
 import { Component, OnInit, ViewContainerRef } from '@angular/core';
 import { LayerStateService, MorphabilityStatus } from '../services';
 import { CanvasType } from '../CanvasType';
-import { AvdSerializer } from '../scripts/parsers';
+import { AvdSerializer, SvgSerializer } from '../scripts/parsers';
 import { AvdTarget, AvdAnimation } from '../scripts/animation';
 import { DialogService } from '../dialogs';
 import { AutoAwesome } from '../scripts/commands';
@@ -15,6 +15,7 @@ import { SvgLoader } from '../scripts/parsers';
 import { VectorLayer, GroupLayer, PathLayer } from '../scripts/layers';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/combineLatest';
+import * as JSZip from 'jszip';
 
 @Component({
   selector: 'app-toolbar',
@@ -70,7 +71,7 @@ export class ToolbarComponent implements OnInit {
       const numEndCmds = resultEndCmd.getSubPaths()[subIdx].getCommands().length;
       const fromCmd = numStartCmds >= numEndCmds ? resultStartCmd : resultEndCmd;
       const toCmd = numStartCmds >= numEndCmds ? resultEndCmd : resultStartCmd;
-      const {from, to} = AutoAwesome.autoFix(subIdx, fromCmd, toCmd);
+      const { from, to } = AutoAwesome.autoFix(subIdx, fromCmd, toCmd);
       resultStartCmd = numStartCmds >= numEndCmds ? from : to;
       resultEndCmd = numStartCmds >= numEndCmds ? to : from;
       // TODO: avoid calling these once-per-subIdx...
@@ -84,25 +85,50 @@ export class ToolbarComponent implements OnInit {
 
   onExportClick() {
     const startVectorLayer = this.layerStateService.getVectorLayer(CanvasType.Start).clone();
-    const vectorLayerChildren: Array<PathLayer | GroupLayer> = [];
+    const endVectorLayer = this.layerStateService.getVectorLayer(CanvasType.End).clone();
+    const startVectorLayerChildren: Array<PathLayer | GroupLayer> = [];
+    const endVectorLayerChildren: Array<PathLayer | GroupLayer> = [];
     const avdTargets: AvdTarget[] = [];
     const rotationTarget = this.createRotationAvdTarget();
     if (rotationTarget) {
       avdTargets.push(rotationTarget);
-      vectorLayerChildren.push(this.layerStateService.getActiveRotationLayer(CanvasType.Start));
+      startVectorLayerChildren.push(this.layerStateService.getActiveRotationLayer(CanvasType.Start));
+      endVectorLayerChildren.push(this.layerStateService.getActiveRotationLayer(CanvasType.End));
     } else {
-      vectorLayerChildren.push(this.layerStateService.getActivePathLayer(CanvasType.Start));
+      startVectorLayerChildren.push(this.layerStateService.getActivePathLayer(CanvasType.Start));
+      endVectorLayerChildren.push(this.layerStateService.getActivePathLayer(CanvasType.End));
     }
     avdTargets.push(this.createPathAvdTarget());
-    const outputVectorLayer =
+    const startOutputVectorLayer =
       new VectorLayer(
-        vectorLayerChildren,
+        startVectorLayerChildren,
         startVectorLayer.id,
         startVectorLayer.width,
         startVectorLayer.height,
         startVectorLayer.alpha);
-    const xmlStr = AvdSerializer.vectorLayerAnimationToAvdXmlString(outputVectorLayer, avdTargets);
-    this.downloadFile(xmlStr, `ShapeShifterAvd.xml`);
+    const endOutputVectorLayer =
+      new VectorLayer(
+        endVectorLayerChildren,
+        endVectorLayer.id,
+        endVectorLayer.width,
+        endVectorLayer.height,
+        endVectorLayer.alpha);
+    const zip = new JSZip();
+    const android = zip.folder('android');
+    const avd = AvdSerializer.vectorLayerAnimationToAvdXmlString(startOutputVectorLayer, avdTargets);
+    android.file('AnimatedVectorDrawable.xml', avd);
+    const startVD = AvdSerializer.vectorLayerToVectorDrawableXmlString(startOutputVectorLayer);
+    android.file('StartVectorDrawable.xml', startVD);
+    const endVD = AvdSerializer.vectorLayerToVectorDrawableXmlString(startOutputVectorLayer);
+    android.file('EndVectorDrawable.xml', endVD);
+    const web = zip.folder('web');
+    const startSvg = SvgSerializer.vectorLayerToSvgString(startOutputVectorLayer);
+    web.file('StartSvg.svg', startSvg);
+    const endSvg = SvgSerializer.vectorLayerToSvgString(endOutputVectorLayer);
+    web.file('EndSvg.svg', endSvg);
+    zip.generateAsync({ type: 'blob' }).then(content => {
+      downloadFile(content, `ShapeShifter.zip`);
+    });
   }
 
   private createRotationAvdTarget() {
@@ -182,13 +208,12 @@ export class ToolbarComponent implements OnInit {
   onHelpClick() {
     this.dialogsService.help(this.viewContainerRef);
   }
+}
 
-  private downloadFile(content: string, filename: string) {
-    const blob = new Blob([content], { type: 'octet/stream' });
-    const url = window.URL.createObjectURL(blob);
-    const anchor = $('<a>').hide().appendTo(document.body);
-    anchor.attr({ href: url, download: filename });
-    anchor.get(0).click();
-    window.URL.revokeObjectURL(url);
-  }
+function downloadFile(content: Blob, fileName: string) {
+  const url = window.URL.createObjectURL(content);
+  const anchor = $('<a>').hide().appendTo(document.body);
+  anchor.attr({ href: url, download: fileName });
+  anchor.get(0).click();
+  window.URL.revokeObjectURL(url);
 }
