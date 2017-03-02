@@ -14,8 +14,7 @@
     "main": "main.ts",
     "polyfills": "polyfills.ts",
     "test": "test.ts",
-    "tsconfig": "tsconfig.app.json",
-    "testTsconfig": "tsconfig.spec.json",
+    "tsconfig": "tsconfig.json",
     "prefix": "app",
     "styles": [
       "styles.scss"
@@ -33,13 +32,12 @@
     }
   },
   "lint": [{
-      "project": "src/tsconfig.app.json"
+      "files": "src/**/*.ts",
+      "project": "src/tsconfig.json"
     },
     {
-      "project": "src/tsconfig.spec.json"
-    },
-    {
-      "project": "e2e/tsconfig.e2e.json"
+      "files": "e2e/**/*.ts",
+      "project": "e2e/tsconfig.json"
     }
   ],
   "test": {
@@ -49,6 +47,9 @@
   },
   "defaults": {
     "styleExt": "scss",
-    "component": {}
+    "component": {
+      "inlineTemplate": false,
+      "spec": false
+    }
   }
 }
