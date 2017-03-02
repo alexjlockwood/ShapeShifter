@@ -1,6 +1,6 @@
 import { ShapeShifterPage } from './app.po';
 
-describe('morpher App', function() {
+describe('morpher App', function () {
   let page: ShapeShifterPage;
 
   beforeEach(() => {
