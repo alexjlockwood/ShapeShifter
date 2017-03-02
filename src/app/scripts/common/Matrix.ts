@@ -16,12 +16,12 @@ export class Matrix {
     // [b d f] * [b' d' f']
     // [0 0 1]   [0  0  1 ]
     return new Matrix(
-      this.a * m.a + this.c * m.b,
-      this.b * m.a + this.d * m.b,
-      this.a * m.c + this.c * m.d,
-      this.b * m.c + this.d * m.d,
-      this.a * m.e + this.c * m.f + this.e,
-      this.b * m.e + this.d * m.f + this.f,
+      (this.a * m.a + this.c * m.b) || 0,
+      (this.b * m.a + this.d * m.b) || 0,
+      (this.a * m.c + this.c * m.d) || 0,
+      (this.b * m.c + this.d * m.d) || 0,
+      (this.a * m.e + this.c * m.f + this.e) || 0,
+      (this.b * m.e + this.d * m.f + this.f) || 0,
     );
   }
 
@@ -29,12 +29,12 @@ export class Matrix {
   invert() {
     const m = this;
     return new Matrix(
-      m.d / (m.a * m.d - m.b * m.c),
-      m.b / (m.b * m.c - m.a * m.d),
-      m.c / (m.b * m.c - m.a * m.d),
-      m.a / (m.a * m.d - m.b * m.c),
-      (m.d * m.e - m.c * m.f) / (m.b * m.c - m.a * m.d),
-      (m.b * m.e - m.a * m.f) / (m.a * m.d - m.b * m.c),
+      (m.d / (m.a * m.d - m.b * m.c)) || 0,
+      (m.b / (m.b * m.c - m.a * m.d)) || 0,
+      (m.c / (m.b * m.c - m.a * m.d)) || 0,
+      (m.a / (m.a * m.d - m.b * m.c)) || 0,
+      ((m.d * m.e - m.c * m.f) / (m.b * m.c - m.a * m.d)) || 0,
+      ((m.b * m.e - m.a * m.f) / (m.a * m.d - m.b * m.c)) || 0,
     );
   }
 
