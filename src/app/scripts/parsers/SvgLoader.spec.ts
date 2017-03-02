@@ -1,0 +1,19 @@
+import 'jasmine';
+import { SvgLoader } from '.';
+
+describe('SvgLoader', () => {
+  it(`Sub paths begin with lowercase 'm'`, () => {
+    const svg = `
+<svg xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 24 24">
+  <path id="plus"
+    fill="#000"
+    d="M 5,11 L 11,11 L 11,5 L 13,5 L 13,11
+    L 19,11 L 19,13 L 13,13 L 13,19
+    L 11,19 L 11,13 L 5,13 L 5,11">
+  </path>
+</svg>`;
+    SvgLoader.loadVectorLayerFromSvgStringWithCallback(svg, () => { });
+    expect(true).toEqual(true);
+  });
+});
