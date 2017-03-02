@@ -9,15 +9,14 @@ export class PathLayer extends AbstractLayer {
   constructor(
     id: string,
     public pathData: Path,
-    public fillColor?: string,
+    public fillColor: string = undefined,
     public fillAlpha = 1,
-    public strokeColor?: string,
+    public strokeColor: string = undefined,
     public strokeAlpha = 1,
     public strokeWidth = 0,
     public strokeLinecap = 'butt',
     public strokeLinejoin = 'miter',
     public strokeMiterLimit = 4,
-    // Trim paths are not currently used, but may be useful in the future.
     public trimPathStart = 0,
     public trimPathEnd = 1,
     public trimPathOffset = 0,

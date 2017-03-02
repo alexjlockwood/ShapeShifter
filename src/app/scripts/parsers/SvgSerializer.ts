@@ -41,6 +41,7 @@ function vectorLayerToSvgNode(vl: VectorLayer, destinationNode: HTMLElement, xml
       }
       conditionalAttr(node, 'stroke-opacity', layer.strokeAlpha, 1);
       conditionalAttr(node, 'stroke-width', layer.strokeWidth, 0);
+      // TODO: support exporting trim paths to SVG
       // conditionalAttr(node, 'android:trimPathStart', layer.trimPathStart, 0);
       // conditionalAttr(node, 'android:trimPathEnd', layer.trimPathEnd, 1);
       // conditionalAttr(node, 'android:trimPathOffset', layer.trimPathOffset, 0);
@@ -50,31 +51,37 @@ function vectorLayerToSvgNode(vl: VectorLayer, destinationNode: HTMLElement, xml
       parentNode.appendChild(node);
       return parentNode;
 
-    } /* else if (layer instanceof ClipPathLayer) {
-      const node = xmlDoc.createElement('clip-path');
-      conditionalAttr(node, '', layer.id);
-      conditionalAttr(node, 'android:pathData', layer.pathData.getPathString());
-      parentNode.appendChild(node);
-      return parentNode;
-
-    } */ else if (layer instanceof GroupLayer) {
+    } else if (layer instanceof GroupLayer) {
       const node = xmlDoc.createElement('g');
       conditionalAttr(node, 'id', layer.id);
-      // conditionalAttr(node, 'android:pivotX', layer.pivotX, 0);
-      // conditionalAttr(node, 'android:pivotY', layer.pivotY, 0);
-      // conditionalAttr(node, 'android:translateX', layer.translateX, 0);
-      // conditionalAttr(node, 'android:translateY', layer.translateY, 0);
-      // conditionalAttr(node, 'android:scaleX', layer.scaleX, 1);
-      // conditionalAttr(node, 'android:scaleY', layer.scaleY, 1);
-      // conditionalAttr(node, 'android:rotation', layer.rotation, 0);
-      node.setAttributeNS(null, 'transform', `rotate(${layer.rotation} ${layer.pivotX} ${layer.pivotY})`);
+      const transformValues: string[] = [];
+      if (layer.scaleX !== 1 || layer.scaleY !== 1) {
+        transformValues.push(`scale(${layer.scaleX} ${layer.scaleY}`);
+      }
+      if (layer.rotation) {
+        transformValues.push(`rotate(${layer.rotation} ${layer.pivotX} ${layer.pivotY})`);
+      }
+      if (layer.translateX || layer.translateY) {
+        transformValues.push(`translate(${layer.translateX} ${layer.translateY})`);
+      }
+      if (transformValues.length) {
+        node.setAttributeNS(null, 'transform', transformValues.join(' '));
+      }
       parentNode.appendChild(node);
       return node;
     }
+    // TODO: support exporting clip paths to SVG
+    /* else if (layer instanceof ClipPathLayer) {
+    const node = xmlDoc.createElement('clip-path');
+    conditionalAttr(node, '', layer.id);
+    conditionalAttr(node, 'android:pathData', layer.pathData.getPathString());
+    parentNode.appendChild(node);
+    return parentNode;
+    }*/
   }, destinationNode);
 }
 
-function conditionalAttr(node, attr, value, skipValue?) {
+function conditionalAttr(node: HTMLElement, attr, value, skipValue?) {
   if (value !== undefined
     && value !== null
     && (skipValue === undefined || value !== skipValue)) {
@@ -82,7 +89,7 @@ function conditionalAttr(node, attr, value, skipValue?) {
   }
 }
 
-function serializeXmlNode(xmlNode) {
+function serializeXmlNode(xmlNode: HTMLElement) {
   return XmlSerializer.serializeToString(xmlNode, { indent: 4, multiAttributeIndent: 4 });
 }
 

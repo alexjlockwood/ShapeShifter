@@ -4,12 +4,12 @@ export function serializeToString(node, options): string {
   return removeInvalidCharacters(nodeTreeToXHTML(node, options));
 }
 
-function removeInvalidCharacters(content) {
+function removeInvalidCharacters(content: string) {
   // See http://www.w3.org/TR/xml/#NT-Char for valid XML 1.0 characters.
   return content.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, '');
 };
 
-function serializeAttributeValue(value) {
+function serializeAttributeValue(value: string) {
   return value
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -18,7 +18,7 @@ function serializeAttributeValue(value) {
     .replace(/'/g, '&apos;');
 }
 
-function serializeTextContent(content) {
+function serializeTextContent(content: string) {
   return content
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
