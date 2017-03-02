@@ -4,7 +4,7 @@ import { Component, OnInit, ViewContainerRef } from '@angular/core';
 import { LayerStateService, MorphabilityStatus } from '../services';
 import { CanvasType } from '../CanvasType';
 import { AvdSerializer, SvgSerializer } from '../scripts/parsers';
-import { AvdTarget, AvdAnimation } from '../scripts/animation';
+import { AvdTarget, AvdAnimation, ValueType, PropertyName } from '../scripts/animation';
 import { DialogService } from '../dialogs';
 import { AutoAwesome } from '../scripts/commands';
 import { AnimatorService } from '../services/animator.service';
@@ -142,13 +142,13 @@ export class ToolbarComponent implements OnInit {
     const duration = this.animatorService.getDuration();
     const interpolator = this.animatorService.getInterpolator();
     return new AvdTarget(startLayer.id,
-      new AvdAnimation(
+      [new AvdAnimation(
         fromValue.toString(),
         toValue.toString(),
         duration,
         interpolator.androidRef,
         'rotation',
-        'floatType'));
+        'floatType')]);
   }
 
   private createPathAvdTarget() {
@@ -158,14 +158,40 @@ export class ToolbarComponent implements OnInit {
     const toValue = endLayer.pathData.getPathString();
     const duration = this.animatorService.getDuration();
     const interpolator = this.animatorService.getInterpolator();
-    return new AvdTarget(startLayer.id,
-      new AvdAnimation(
-        fromValue,
-        toValue,
-        duration,
-        interpolator.androidRef,
+    const createAvdAnimation = (from: string, to: string, propertyName: PropertyName, valueType: ValueType) => {
+      return new AvdAnimation(from, to, duration, interpolator.androidRef, propertyName, valueType);
+    };
+    const avdAnimations: AvdAnimation[] = [];
+    avdAnimations.push(
+      createAvdAnimation(
+        startLayer.pathData.getPathString(),
+        endLayer.pathData.getPathString(),
         'pathData',
         'pathType'));
+    if (startLayer.fillColor && endLayer.fillColor && startLayer.fillColor !== endLayer.fillColor) {
+      avdAnimations.push(
+        createAvdAnimation(startLayer.fillColor, endLayer.fillColor, 'fillColor', 'colorType'));
+    }
+    if (startLayer.strokeColor && endLayer.strokeColor && startLayer.strokeColor !== endLayer.strokeColor) {
+      avdAnimations.push(
+        createAvdAnimation(startLayer.strokeColor, endLayer.strokeColor, 'strokeColor', 'colorType'));
+    }
+    if (startLayer.fillAlpha !== endLayer.fillAlpha) {
+      avdAnimations.push(
+        createAvdAnimation(
+          startLayer.fillAlpha.toString(), endLayer.fillAlpha.toString(), 'fillAlpha', 'floatType'));
+    }
+    if (startLayer.strokeAlpha !== endLayer.strokeAlpha) {
+      avdAnimations.push(
+        createAvdAnimation(
+          startLayer.strokeAlpha.toString(), endLayer.strokeAlpha.toString(), 'strokeAlpha', 'floatType'));
+    }
+    if (startLayer.strokeWidth !== endLayer.strokeWidth) {
+      avdAnimations.push(
+        createAvdAnimation(
+          startLayer.strokeWidth.toString(), endLayer.strokeWidth.toString(), 'strokeWidth', 'floatType'));
+    }
+    return new AvdTarget(startLayer.id, avdAnimations);
   }
 
   onDemoClick() {

@@ -47,17 +47,29 @@ export function vectorLayerAnimationToAvdXmlString(
     animationNode.setAttribute('name', 'android:animation');
     targetNode.appendChild(animationNode);
 
-    const animation = target.animation;
-    const animatorNode = xmlDoc.createElement('objectAnimator');
-    animatorNode.setAttributeNS(XMLNS_NS, 'xmlns:android', ANDROID_NS);
-    animatorNode.setAttributeNS(ANDROID_NS, 'android:name', layerId);
-    animatorNode.setAttributeNS(ANDROID_NS, 'android:propertyName', animation.propertyName);
-    conditionalAttr(animatorNode, 'android:duration', animation.duration);
-    conditionalAttr(animatorNode, 'android:valueFrom', animation.valueFrom);
-    conditionalAttr(animatorNode, 'android:valueTo', animation.valueTo);
-    conditionalAttr(animatorNode, 'android:valueType', animation.valueType);
-    conditionalAttr(animatorNode, 'android:interpolator', animation.interpolator);
-    animationNode.appendChild(animatorNode);
+    const animations = target.animations;
+    let animationContainerNode = animationNode;
+    if (animations.length > 1) {
+      // <set> for multiple property animations on a single layer
+      animationContainerNode = xmlDoc.createElement('set');
+      animationContainerNode.setAttributeNS(XMLNS_NS, 'xmlns:android', ANDROID_NS);
+      animationNode.appendChild(animationContainerNode);
+    }
+
+    for (const animation of animations) {
+      const animatorNode = xmlDoc.createElement('objectAnimator');
+      if (animations.length === 1) {
+        animatorNode.setAttributeNS(XMLNS_NS, 'xmlns:android', ANDROID_NS);
+      }
+      animatorNode.setAttributeNS(XMLNS_NS, 'xmlns:android', ANDROID_NS);
+      animatorNode.setAttributeNS(ANDROID_NS, 'android:propertyName', animation.propertyName);
+      conditionalAttr(animatorNode, 'android:duration', animation.duration);
+      conditionalAttr(animatorNode, 'android:valueFrom', animation.valueFrom);
+      conditionalAttr(animatorNode, 'android:valueTo', animation.valueTo);
+      conditionalAttr(animatorNode, 'android:valueType', animation.valueType);
+      conditionalAttr(animatorNode, 'android:interpolator', animation.interpolator);
+      animationContainerNode.appendChild(animatorNode);
+    }
   }
 
   return serializeXmlNode(rootNode);

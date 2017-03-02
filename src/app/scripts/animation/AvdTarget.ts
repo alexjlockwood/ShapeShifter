@@ -1,12 +1,19 @@
 /**
  * The names of the currently supported animatable properties.
  */
-export type PropertyName = 'pathData' | 'rotation';
+export type PropertyName =
+  'pathData'
+  | 'rotation'
+  | 'fillColor'
+  | 'strokeColor'
+  | 'fillAlpha'
+  | 'strokeAlpha'
+  | 'strokeWidth';
 
 /**
  * The currently supported animatable value types.
  */
-export type ValueType = 'pathType' | 'floatType';
+export type ValueType = 'pathType' | 'floatType' | 'colorType';
 
 /**
  * An AvdTarget assigns a group of animations to a particular layer in the vector.
@@ -14,7 +21,7 @@ export type ValueType = 'pathType' | 'floatType';
 export class AvdTarget {
   constructor(
     public readonly layerId: string,
-    public readonly animation: AvdAnimation) { }
+    public readonly animations: AvdAnimation[]) { }
 }
 
 /**
