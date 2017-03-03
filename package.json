@@ -27,6 +27,7 @@
     "@angular/platform-browser": "^2.3.1",
     "@angular/platform-browser-dynamic": "^2.3.1",
     "@angular/router": "^3.3.1",
+    "@angular/service-worker": "^1.0.0-beta.5",
     "bezier-js": "^2.0.1",
     "core-js": "^2.4.1",
     "css-select": "^1.3.0-rc0",
