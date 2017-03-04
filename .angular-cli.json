@@ -8,6 +8,7 @@
     "outDir": "dist",
     "assets": [
       "assets",
+      "manifest.json",
       "favicon.ico"
     ],
     "index": "index.html",

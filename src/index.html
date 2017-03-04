@@ -1,7 +1,9 @@
 <!doctype html>
 <html>
+
 <head>
   <meta charset="utf-8">
+  <meta name="theme-color" content="#607d8b">
 
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:site" content="@alexjlockwood">
@@ -10,34 +12,51 @@
   <meta name="twitter:description" content="Shape Shifter is a web-app that simplifies the process of creating SVG-based path morphing animations.">
   <meta name="twitter:image" content="https://alexjlockwood.github.io/ShapeShifter/assets/screencap.jpg">
 
-  <meta property="og:description" content="Shape Shifter is a web-app that simplifies the process of creating SVG-based path morphing animations." />
+  <meta property="og:description" content="Shape Shifter is a web-app that simplifies the process of creating SVG-based path morphing animations."
+  />
   <meta property="og:locale" content="en_US" />
   <meta property="og:title" content="Shape Shifter" />
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://alexjlockwood.github.io/ShapeShifter" />
+  <meta property="og:url" content="https://alexjlockwood.github.io/ShapeShifter"
+  />
   <meta property="og:site_name" content="Shape Shifter" />
-  <meta property="og:image" content="https://alexjlockwood.github.io/ShapeShifter/assets/screencap.jpg" />
+  <meta property="og:image" content="https://alexjlockwood.github.io/ShapeShifter/assets/screencap.jpg"
+  />
 
   <title>Shape Shifter</title>
-  <meta name="description" content="Shape Shifter is a web-app that simplifies the process of creating SVG-based path morphing animations." />
+  <meta name="description" content="Shape Shifter is a web-app that simplifies the process of creating SVG-based path morphing animations."
+  />
   <base href="/">
 
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
+    rel="stylesheet">
+  <link rel="manifest" href="manifest.json">
 
   <script>
-  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+    (function (i, s, o, g, r, a, m) {
+      i['GoogleAnalyticsObject'] = r;
+      i[r] = i[r] || function () {
+        (i[r].q = i[r].q || []).push(arguments)
+      }, i[r].l = 1 * new Date();
+      a = s.createElement(o),
+        m = s.getElementsByTagName(o)[0];
+      a.async = 1;
+      a.src = g;
+      m.parentNode.insertBefore(a, m)
+    })(window, document, 'script',
+      'https://www.google-analytics.com/analytics.js', 'ga'
+    );
 
-  ga('create', 'UA-92075411-1', 'auto');
-  ga('send', 'pageview');
+    ga('create', 'UA-92075411-1', 'auto');
+    ga('send', 'pageview');
+
   </script>
 </head>
+
 <body>
   <app-root></app-root>
 </body>
-</html>
 
+</html>
