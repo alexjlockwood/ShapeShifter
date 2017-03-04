@@ -1,54 +1,38 @@
-<div fxLayout="row"
-  class="path-selector-container">
-  <div *ngIf="!!getPathList(CANVAS_START).length"
-    class="path-selector-list"
+<div fxLayout="row" class="path-selector-container">
+  <div *ngIf="!!getPathList(CANVAS_START).length" class="path-selector-list"
     fxFlex>
     <div *ngFor="let pathLayer of getPathList(CANVAS_START);
     let idx = index;
     trackBy: trackPathLayer">
-      <div class="path-selector-listitem"
-        [class.is-selected]="getActivePathId(CANVAS_START) === pathLayer.id"
+      <div class="path-selector-listitem" [class.is-selected]="getActivePathId(CANVAS_START) === pathLayer.id"
         (click)="setActivePathId(CANVAS_START, pathLayer.id)">
         <span>{{idx + 1}}.</span><span class="path-name-text">{{pathLayer.id}}</span>
       </div>
     </div>
   </div>
-  <div class="border"
-    *ngIf="getPathList(CANVAS_START).length || getPathList(CANVAS_END).length"></div>
-  <div *ngIf="!!getPathList(CANVAS_END).length"
-    class="path-selector-list"
+  <div class="border" *ngIf="getPathList(CANVAS_START).length || getPathList(CANVAS_END).length"></div>
+  <div *ngIf="!!getPathList(CANVAS_END).length" class="path-selector-list"
     fxFlex>
     <div *ngFor="let pathLayer of getPathList(CANVAS_END);
     let idx = index;
     trackBy: trackPathLayer">
-      <div class="path-selector-listitem"
-        [class.is-selected]="getActivePathId(CANVAS_END) === pathLayer.id"
+      <div class="path-selector-listitem" [class.is-selected]="getActivePathId(CANVAS_END) === pathLayer.id"
         (click)="setActivePathId(CANVAS_END, pathLayer.id)">
         <span>{{idx + 1}}.</span><span class="path-name-text">{{pathLayer.id}}</span>
       </div>
     </div>
   </div>
   <div *ngIf="!getPathList(CANVAS_START).length && !getPathList(CANVAS_END).length"
-    class="path-selector-empty"
-    fxLayout="column"
-    fxLayoutAlign="center center"
+    class="path-selector-empty" fxLayout="column" fxLayoutAlign="center center"
     fxFlex>
-    <input type="file"
-      accept=".svg"
-      id="start-input-file-id"
-      (change)="onSvgFileChosen($event.srcElement.files)"
+    <input type="file" accept=".svg" id="start-input-file-id" (change)="onSvgFileChosen(($event.srcElement || $event.target).files)"
       multiple>
     <label for="start-input-file-id">Import 2 SVGs to get started<br>(or load a demo in the top right menu)</label>
   </div>
   <div *ngIf="!(!!getPathList(CANVAS_START).length && !!getPathList(CANVAS_END).length) && !(!getPathList(CANVAS_START).length && !getPathList(CANVAS_END).length)"
-    class="path-selector-empty"
-    fxLayout="column"
-    fxLayoutAlign="center center"
+    class="path-selector-empty" fxLayout="column" fxLayoutAlign="center center"
     fxFlex>
-    <input type="file"
-      accept=".svg"
-      id="end-input-file-id"
-      (change)="onSvgFileChosen($event.srcElement.files)"
+    <input type="file" accept=".svg" id="end-input-file-id" (change)="onSvgFileChosen(($event.srcElement || $event.target).files)"
       multiple>
     <label for="end-input-file-id">Import a second SVG to get started</label>
   </div>
