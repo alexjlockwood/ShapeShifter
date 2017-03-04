@@ -1,13 +1,13 @@
 import * as _ from 'lodash';
 import { MathUtil, Point } from '../common';
 import { Path, SubPath, Command, SvgChar, Projection } from '.';
-import { PathParser } from '../parsers';
+import * as PathParser from './PathParser';
 import { newSubPath } from './SubPathImpl';
 import { CommandImpl, newMove, newLine } from './CommandImpl';
 import { CommandMutation } from './CommandMutation';
 
-export function newPath(path: string): Path {
-  return new PathImpl(path);
+export function newPath(obj: string | Command[]): Path {
+  return new PathImpl(obj);
 }
 
 /**
@@ -16,7 +16,6 @@ export function newPath(path: string): Path {
  * splitting/unsplitting/converting/etc. paths in a way that is easily reversible.
  */
 class PathImpl implements Path {
-
   private readonly pathString: string;
   private readonly subPaths: ReadonlyArray<SubPath>;
   private readonly commandMutationsMap: ReadonlyArray<ReadonlyArray<CommandMutation>>;
@@ -24,7 +23,7 @@ class PathImpl implements Path {
   private readonly reversals: ReadonlyArray<boolean>;
   private readonly pathLength: number;
 
-  constructor(obj: string | CommandImpl[] | PathParams) {
+  constructor(obj: string | Command[] | PathParams) {
     if (typeof obj === 'string' || Array.isArray(obj)) {
       if (typeof obj === 'string') {
         this.pathString = obj;
@@ -313,13 +312,13 @@ class PathImpl implements Path {
       return this;
     }
     ops = ops.slice();
-    ops.sort(({subIdx: s1, cmdIdx: c1}, {subIdx: s2, cmdIdx: c2}) => {
+    ops.sort(({ subIdx: s1, cmdIdx: c1 }, { subIdx: s2, cmdIdx: c2 }) => {
       // Perform higher index splits first so that we don't alter the
       // indices of the lower index unsplit operations.
       return s1 !== s2 ? s2 - s1 : c2 - c1;
     });
     let result: Path = this;
-    for (const {subIdx, cmdIdx, ts} of ops) {
+    for (const { subIdx, cmdIdx, ts } of ops) {
       // TODO: do all operations as a single batch instead of individually
       result = result.split(subIdx, cmdIdx, ...ts);
     }
@@ -390,13 +389,13 @@ class PathImpl implements Path {
       return this;
     }
     ops = ops.slice();
-    ops.sort(({subIdx: s1, cmdIdx: c1}, {subIdx: s2, cmdIdx: c2}) => {
+    ops.sort(({ subIdx: s1, cmdIdx: c1 }, { subIdx: s2, cmdIdx: c2 }) => {
       // Perform higher index unsplits first so that we don't alter the
       // indices of the lower index unsplit operations.
       return s1 !== s2 ? s2 - s1 : c2 - c1;
     });
     let result: Path = this;
-    for (const {subIdx, cmdIdx} of ops) {
+    for (const { subIdx, cmdIdx } of ops) {
       // TODO: do all operations as a single batch instead of individually
       result = result.unsplit(subIdx, cmdIdx);
     }

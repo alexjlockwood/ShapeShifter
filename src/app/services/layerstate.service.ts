@@ -4,7 +4,7 @@ import { Layer, VectorLayer, PathLayer, GroupLayer } from '../scripts/layers';
 import { CanvasType } from '../CanvasType';
 import { Path } from '../scripts/commands';
 import { AutoAwesome } from '../scripts/commands';
-import { ROTATION_GROUP_LAYER_ID } from '../scripts/parsers';
+import { ROTATION_GROUP_LAYER_ID } from '../scripts/import';
 
 /**
  * The global state service that is in charge of keeping track of the loaded

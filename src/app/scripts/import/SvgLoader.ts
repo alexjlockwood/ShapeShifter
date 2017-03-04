@@ -1,7 +1,7 @@
+import * as _ from 'lodash';
 import { VectorLayer, GroupLayer, PathLayer, ClipPathLayer } from '../layers';
 import { newPath } from '../commands';
-import { ColorUtil } from '../common';
-import { PathParser } from '.';
+import { ColorUtil, Matrix } from '../common';
 import { Svgo } from '../svgo';
 import { environment } from '../../../environments/environment';
 
@@ -167,20 +167,23 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
     }
 
     if (path) {
+      let pathData = newPath(path);
       if (context.transforms && context.transforms.length) {
-        path = PathParser.transformPathString(path, context.transforms.map(t => t.matrix));
+        const transforms = context.transforms.map(t => t.matrix as Matrix);
+        pathData = newPath(
+          _.chain(pathData.getSubPaths())
+            .flatMap(subPath => subPath.getCommands())
+            .map(command => command.transform(transforms))
+            .value());
       }
 
-      let fillColor =
-        ('fillColor' in context) ? ColorUtil.svgToAndroidColor(context.fillColor) : undefined;
+      const fillColor =
+        ('fillColor' in context) ? ColorUtil.svgToAndroidColor(context.fillColor) : '#ff000000';
       const strokeColor =
         ('strokeColor' in context) ? ColorUtil.svgToAndroidColor(context.strokeColor) : undefined;
-      if (!fillColor && !strokeColor) {
-        fillColor = '#000';
-      }
       return new PathLayer(
         makeFinalNodeIdFn(node, 'path'),
-        newPath(path),
+        pathData,
         fillColor,
         ('fillAlpha' in context) ? context.fillAlpha : undefined,
         strokeColor,

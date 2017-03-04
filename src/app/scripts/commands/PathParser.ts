@@ -326,13 +326,7 @@ export function commandsToString(commands: ReadonlyArray<Command>) {
     const args = pointsToNumberListFunc(...(isClosePathCommand ? [] : cmd.points.slice(1)));
     tokens.splice(tokens.length, 0, ...args.map(n => Number(n.toFixed(3)).toString()));
   });
-
   return tokens.join(' ');
-}
-
-/** Transforms the provided path string. */
-export function transformPathString(pathString: string, matrices: Matrix[]): string {
-  return commandsToString(parseCommands(pathString, matrices));
 }
 
 const enum Token {

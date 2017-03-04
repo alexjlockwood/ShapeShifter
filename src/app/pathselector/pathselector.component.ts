@@ -1,7 +1,7 @@
 import { Component, ElementRef } from '@angular/core';
 import { CanvasType } from '../CanvasType';
 import { LayerStateService } from '../services/layerstate.service';
-import { SvgLoader } from '../scripts/parsers';
+import { SvgLoader } from '../scripts/import';
 import { VectorLayer, PathLayer } from '../scripts/layers';
 
 @Component({

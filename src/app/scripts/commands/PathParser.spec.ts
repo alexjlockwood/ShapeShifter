@@ -1,6 +1,6 @@
 import 'jasmine';
-import { PathParser } from '.';
-import { Command } from '../commands';
+import * as PathParser from './PathParser';
+import { Command } from '.';
 
 describe('PathParser', () => {
   it(`Sub paths begin with lowercase 'm'`, () => {

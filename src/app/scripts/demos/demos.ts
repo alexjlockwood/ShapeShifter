@@ -46,8 +46,12 @@ const DIGITS_SVG = `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
   <path id="futura_zero" stroke="#000" stroke-width="0.2" fill="none" d="M6.125 12c0-4.224 2.38-8.678 5.875-8.678 3.514 0 5.952 4.416 5.952 8.678 0 4.224-2.438 8.487-5.952 8.487-3.494 0-5.875-4.224-5.875-8.487"/>
   <path id="futura_one" stroke="#000" stroke-width="0.2" fill="none" d="M10 4h3v17"/>
-  <path id="futura_two" stroke="#000" stroke-width="0.2" fill="none" d="M7.86 8.285c.32-6.153 9.23-5.94 9.388.106 0 1.805-1.538 3.927-3.872 6.47-1.485 1.7-3.606 3.503-5.41 5.837h9.547"/>
-  <path id="futura_three" stroke="#000" stroke-width="0.2" fill="none" d="M8.868 7.648c-.265-2.864 2.175-3.82 3.607-3.82 5.993 0 4.932 8.275 0 8.275 6.205 0 5.357 8.91.053 8.91-4.88 0-4.668-3.18-4.615-3.924"/>
+  <g transform="translate(-0.724, 0)">
+    <path id="futura_two" stroke="#000" stroke-width="0.2" fill="none" d="M7.86 8.285c.32-6.153 9.23-5.94 9.388.106 0 1.805-1.538 3.927-3.872 6.47-1.485 1.7-3.606 3.503-5.41 5.837h9.547"/>
+  </g>
+  <g transform="translate(-0.48, 0)">
+    <path id="futura_three" stroke="#000" stroke-width="0.2" fill="none" d="M8.868 7.648c-.265-2.864 2.175-3.82 3.607-3.82 5.993 0 4.932 8.275 0 8.275 6.205 0 5.357 8.91.053 8.91-4.88 0-4.668-3.18-4.615-3.924"/>
+  </g>
   <path id="futura_four" stroke="#000" stroke-width="0.2" fill="none" d="M15.604 20.908V4.572L6.48 17.407h11.882"/>
   <path id="futura_five" stroke="#000" stroke-width="0.2" fill="none" d="M17.407 4.042h-5.834l-2.015 6.152c2.652-1.273 7.743.743 7.743 5.41-.53 5.728-8.166 7.32-10.606 2.652"/>
   <path id="futura_six" stroke="#000" stroke-width="0.2" fill="none" d="M13.59 4.042C9.45 10.3 7.01 11.68 6.8 15.286c.636 8.333 11.88 7 11.35 0-.743-6.365-8.168-6.577-10.555-2.758"/>
