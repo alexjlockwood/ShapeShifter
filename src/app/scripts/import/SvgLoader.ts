@@ -181,17 +181,21 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
         ('fillColor' in context) ? ColorUtil.svgToAndroidColor(context.fillColor) : '#ff000000';
       const strokeColor =
         ('strokeColor' in context) ? ColorUtil.svgToAndroidColor(context.strokeColor) : undefined;
+      const fillAlpha = ('fillAlpha' in context) ? context.fillAlpha : 1;
+      const strokeWidth = ('strokeWidth' in context) ? context.strokeWidth : 1;
+      const strokeAlpha = ('strokeAlpha' in context) ? context.strokeAlpha : 1;
+      const strokeMiterLimit = ('strokeMiterLimit' in context) ? context.strokeMiterLimit : 4;
       return new PathLayer(
         makeFinalNodeIdFn(node, 'path'),
         pathData,
         fillColor,
-        ('fillAlpha' in context) ? context.fillAlpha : undefined,
+        fillAlpha,
         strokeColor,
-        ('strokeAlpha' in context) ? context.strokeAlpha : undefined,
-        context.strokeWidth || undefined,
-        context.strokeLinecap || undefined,
-        context.strokeLinejoin || undefined,
-        context.strokeMiterLimit || undefined,
+        strokeAlpha,
+        strokeWidth,
+        context.strokeLinecap || 'butt',
+        context.strokeLinejoin || 'miter',
+        strokeMiterLimit,
       );
     }
 
