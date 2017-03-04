@@ -291,7 +291,10 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     ctx.scale(this.attrScale, this.attrScale);
     ctx.clearRect(0, 0, this.vlWidth, this.vlHeight);
 
-    const currentAlpha = this.shouldDisableLayer ? DISABLED_LAYER_ALPHA : 1;
+    let currentAlpha = this.shouldDisableLayer ? DISABLED_LAYER_ALPHA : 1;
+    if (this.shouldDrawLayer) {
+      currentAlpha *= this.vectorLayer.alpha;
+    }
     if (currentAlpha < 1) {
       offscreenCtx.save();
       offscreenCtx.scale(this.attrScale, this.attrScale);

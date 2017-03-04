@@ -189,13 +189,13 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
         makeFinalNodeIdFn(node, 'path'),
         pathData,
         fillColor,
-        fillAlpha,
+        Number(fillAlpha),
         strokeColor,
-        strokeAlpha,
-        strokeWidth,
+        Number(strokeAlpha),
+        Number(strokeWidth),
         context.strokeLinecap || 'butt',
         context.strokeLinejoin || 'miter',
-        strokeMiterLimit,
+        Number(strokeMiterLimit),
       );
     }
 
@@ -244,7 +244,12 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
   const childrenLayers = rootLayer ? rootLayer.children : undefined;
   const alpha = documentElement.getAttribute('opacity') || undefined;
 
-  return new VectorLayer(childrenLayers, id, width, height, alpha);
+  return new VectorLayer(
+    childrenLayers,
+    id,
+    Number(width || 24),
+    Number(height || 24),
+    Number(alpha || 1));
 }
 
 function getUniqueId(prefix = '', objectById = (_) => undefined, targetObject?) {
