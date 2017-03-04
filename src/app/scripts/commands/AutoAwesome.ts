@@ -131,28 +131,24 @@ export function autoConvert(
   srcFromPath: Path,
   srcToPath: Path) {
 
-  const convertCmdsFn = (from: Path, to: Path) => {
-    const fromCmds = from.getSubPaths()[subIdx].getCommands();
-    const toCmds = to.getSubPaths()[subIdx].getCommands();
-    fromCmds.forEach((fromCmd, cmdIdx) => {
-      const toCmd = toCmds[cmdIdx];
-      if (fromCmd.svgChar === toCmd.svgChar
-        || !fromCmd.canConvertTo(toCmd.svgChar)) {
-        return;
-      }
+  const fromCmds = srcFromPath.getSubPaths()[subIdx].getCommands();
+  const toCmds = srcToPath.getSubPaths()[subIdx].getCommands();
+  let from = srcFromPath;
+  let to = srcToPath;
+  fromCmds.forEach((fromCmd, cmdIdx) => {
+    const toCmd = toCmds[cmdIdx];
+    if (fromCmd.svgChar === toCmd.svgChar) {
+      return;
+    }
+    if (fromCmd.canConvertTo(toCmd.svgChar)) {
       // TODO: perform all of these as a single batch operation?
       from = from.convert(subIdx, cmdIdx, toCmd.svgChar);
-    });
-    return from;
-  };
-
-  const toPathFinalResult = convertCmdsFn(srcToPath, srcFromPath);
-  const fromPathFinalResult = convertCmdsFn(srcFromPath, toPathFinalResult);
-
-  return {
-    from: fromPathFinalResult,
-    to: toPathFinalResult,
-  };
+    } else if (toCmd.canConvertTo(fromCmd.svgChar)) {
+      // TODO: perform all of these as a single batch operation?
+      to = to.convert(subIdx, cmdIdx, fromCmd.svgChar);
+    }
+  });
+  return { from, to };
 }
 
 /** Represents either a valid object or an empty gap slot. */

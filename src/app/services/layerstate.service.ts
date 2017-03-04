@@ -104,7 +104,8 @@ export class LayerStateService {
     let hasOppositeCanvasTypeChanged = false;
 
     // TODO: allow paths with differing numbers of subpaths to be morphed
-    const oppositeActivePathLayer = this.getActivePathLayer(oppositeCanvasType);
+    const oppositeActivePathLayer =
+      type === CanvasType.Preview ? undefined : this.getActivePathLayer(oppositeCanvasType);
     if (oppositeActivePathLayer
       && subIdx < oppositeActivePathLayer.pathData.getSubPaths().length) {
       const numCommands = path.getSubPaths()[subIdx].getCommands().length;

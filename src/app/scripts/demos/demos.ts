@@ -1,4 +1,4 @@
-// TODO: move these into separate files and download at runtime?
+/* tslint:disable */
 
 const PLUS_SVG = `
 <svg xmlns="http://www.w3.org/2000/svg"
@@ -40,79 +40,20 @@ const ARROW_SVG = `
     M 19,11 L 20,12 L 19,13 L 4,13 L 4,11 Z
     M 19,13 L 12,20 L 10.6,18.6 L 16.17,13 Z">
   </path>
-</svg>
-`;
+</svg>`;
 
 const DIGITS_SVG = `
-<svg xmlns="http://www.w3.org/2000/svg"
-  viewBox="0 0 24 24">
-  <path id="futura_zero"
-    stroke="#000"
-    stroke-width="0.2"
-    fill="none"
-    d="M 6.125 12 C 6.125 7.776 8.506 3.322 12 3.322 C 15.514 3.322 17.952 7.738 17.952 12
-       C 17.952 16.224 15.514 20.487 12 20.487 C 8.506 20.487 6.125 16.263 6.125 12">
-  </path>
-  <path id="futura_one"
-    stroke="#000"
-    stroke-width="0.2"
-    fill="none"
-    d="M 10 4 L 13 4 L 13 21">
-  </path>
-  <path id="futura_two"
-    stroke="#000"
-    stroke-width="0.2"
-    fill="none"
-    d="M 7.86 8.285 C 8.179 2.132 17.089 2.344 17.248 8.391 C 17.248 10.194 15.71 12.316 13.376 14.861
-       C 11.891 16.559 9.77 18.362 7.966 20.696 C 7.966 20.696 17.513 20.696 17.513 20.696">
-  </path>
-  <path id="futura_three"
-    stroke="#000"
-    stroke-width="0.2"
-    fill="none"
-    d="M 8.868 7.648 C 8.603 4.784 11.043 3.829 12.475 3.829 C 18.468 3.829 17.407 12.103 12.475 12.103
-       C 18.68 12.103 17.832 21.014 12.528 21.014 C 7.648 21.014 7.86 17.832 7.913 17.089">
-  </path>
-  <path id="futura_four"
-    stroke="#000"
-    stroke-width="0.2"
-    fill="none"
-    d="M 15.604 20.908 L 15.604 4.572 L 6.481 17.407 L 18.362 17.407">
-  </path>
-  <path id="futura_five"
-    stroke="#000"
-    stroke-width="0.2"
-    fill="none"
-    d="M 17.407 4.042 L 11.573 4.042 L 9.558 10.194
-       C 12.21 8.921 17.301 10.937 17.301 15.604 C 16.771 21.332 9.133 22.923 6.693 18.256">
-  </path>
-  <path id="futura_six"
-    stroke="#000"
-    stroke-width="0.2"
-    fill="none"
-    d="M 13.589 4.042 C 9.451 10.3 7.012 11.679 6.8 15.286
-       C 7.436 23.619 18.68 22.287 18.15 15.286 C 17.407 8.921 9.982 8.709 7.595 12.528">
-  </path>
-  <path id="futura_seven"
-    stroke="#000"
-    stroke-width="0.2"
-    fill="none"
-    d="M 6.906 4.148 L 18.68 4.148 L 6.8 21.12">
-  </path>
-  <path id="futura_eight"
-    stroke="#000"
-    stroke-width="0.2"
-    fill="none"
-    d="M 12 12 C 5.953 11.894 5.953 3.832 12 3.832 C 17.622 3.832 17.622 12 12 12
-    C 5.953 12 5.105 20.805 12 20.805 C 17.622 20.805 17.622 12 12 12">
-  </path>
-  <path id="futura_nine"
-    stroke="#000"
-    stroke-width="0.2"
-    fill="none"
-    d="M 17.46 12.528 C 15.074 16.347 7.648 16.134 6.906 9.77 C 6.375 2.769 17.619 1.071 18.256 9.77
-       C 18.044 13.376 15.604 14.755 11.467 21.014 L 11.467 21.014">
-  </path>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <path id="futura_zero" stroke="#000" stroke-width="0.2" fill="none" d="M6.125 12c0-4.224 2.38-8.678 5.875-8.678 3.514 0 5.952 4.416 5.952 8.678 0 4.224-2.438 8.487-5.952 8.487-3.494 0-5.875-4.224-5.875-8.487"/>
+  <path id="futura_one" stroke="#000" stroke-width="0.2" fill="none" d="M10 4h3v17"/>
+  <path id="futura_two" stroke="#000" stroke-width="0.2" fill="none" d="M7.86 8.285c.32-6.153 9.23-5.94 9.388.106 0 1.805-1.538 3.927-3.872 6.47-1.485 1.7-3.606 3.503-5.41 5.837h9.547"/>
+  <path id="futura_three" stroke="#000" stroke-width="0.2" fill="none" d="M8.868 7.648c-.265-2.864 2.175-3.82 3.607-3.82 5.993 0 4.932 8.275 0 8.275 6.205 0 5.357 8.91.053 8.91-4.88 0-4.668-3.18-4.615-3.924"/>
+  <path id="futura_four" stroke="#000" stroke-width="0.2" fill="none" d="M15.604 20.908V4.572L6.48 17.407h11.882"/>
+  <path id="futura_five" stroke="#000" stroke-width="0.2" fill="none" d="M17.407 4.042h-5.834l-2.015 6.152c2.652-1.273 7.743.743 7.743 5.41-.53 5.728-8.166 7.32-10.606 2.652"/>
+  <path id="futura_six" stroke="#000" stroke-width="0.2" fill="none" d="M13.59 4.042C9.45 10.3 7.01 11.68 6.8 15.286c.636 8.333 11.88 7 11.35 0-.743-6.365-8.168-6.577-10.555-2.758"/>
+  <path id="futura_seven" stroke="#000" stroke-width="0.2" fill="none" d="M6.906 4.148H18.68L6.8 21.12"/>
+  <path id="futura_eight" stroke="#000" stroke-width="0.2" fill="none" d="M12 12c-6.047-.106-6.047-8.168 0-8.168 5.622 0 5.622 8.168 0 8.168-6.047 0-6.895 8.805 0 8.805 5.622 0 5.622-8.805 0-8.805"/>
+  <path id="futura_nine" stroke="#000" stroke-width="0.2" fill="none" d="M17.46 12.528c-2.386 3.82-9.812 3.606-10.554-2.758-.53-7 10.713-8.7 11.35 0-.212 3.606-2.652 4.985-6.79 11.244"/>
 </svg>`;
 
 const ANIMALS_SVG = `
@@ -201,8 +142,7 @@ const ANIMALS_SVG = `
 	c20.506,0,40.037,1.371,58.554,4.116c8.67,2.377,22.488,5.161,41.406,8.295c1.588-15.692,7.112-29.625,16.57-41.794
 	C422.642,72.367,435.454,65.291,450.43,65.291z" />
   </g>
-</svg>
-`;
+</svg>`;
 
 export const DEMO_MAP = new Map<string, { start: string, end: string }>();
 DEMO_MAP.set('Plus-to-minus icon', { start: PLUS_SVG, end: MINUS_SVG });
