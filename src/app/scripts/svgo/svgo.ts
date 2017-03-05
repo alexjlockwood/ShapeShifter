@@ -14,13 +14,17 @@ import { removeHiddenElems } from './plugins/removeHiddenElems';
 import { removeUselessDefs } from './plugins/removeUselessDefs';
 import { removeEditorsNSData } from './plugins/removeEditorsNSData';
 import { cleanupNumericValues } from './plugins/cleanupNumericValues';
+import { convertTransforms } from './plugins/convertTransforms';
+import { removeComments } from './plugins/removeComments';
+import { removeMetadata } from './plugins/removeMetadata';
+import { removeUnknownsAndDefaults } from './plugins/removeUnknownsAndDefaults';
 
 // The complete list is available here: https://github.com/svg/svgo/blob/master/.svgo.yml
 const svgoPlugins = {
   removeDoctype,
   // removeXMLProcInst: require('svgo/plugins/removeXMLProcInst'),
-  // removeComments: require('svgo/plugins/removeComments'),
-  // removeMetadata: require('svgo/plugins/removeMetadata'),
+  removeComments,
+  removeMetadata,
   // removeXMLNS: require('svgo/plugins/removeXMLNS'), // disabled
   removeEditorsNSData,
   // cleanupAttrs: require('svgo/plugins/cleanupAttrs'),
@@ -33,7 +37,7 @@ const svgoPlugins = {
   cleanupNumericValues,
   // cleanupListOfValues: require('svgo/plugins/cleanupListOfValues'),
   // convertColors: require('svgo/plugins/convertColors'),
-  // removeUnknownsAndDefaults: require('svgo/plugins/removeUnknownsAndDefaults'),
+  removeUnknownsAndDefaults,
   // removeNonInheritableGroupAttrs: require('svgo/plugins/removeNonInheritableGroupAttrs'),
   // removeUselessStrokeAndFill: require('svgo/plugins/removeUselessStrokeAndFill'),
   // removeViewBox: require('svgo/plugins/removeViewBox'), // disabled
@@ -45,7 +49,7 @@ const svgoPlugins = {
   moveGroupAttrsToElems,
   collapseGroups,
   convertPathData,
-  // convertTransform: require('svgo/plugins/convertTransform'),
+  convertTransforms,
   // removeEmptyAttrs: require('svgo/plugins/removeEmptyAttrs'),
   removeEmptyContainers,
   mergePaths,
