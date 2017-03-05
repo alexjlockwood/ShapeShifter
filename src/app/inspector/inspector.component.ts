@@ -1,4 +1,4 @@
-import { Component, OnInit, PipeTransform, Pipe } from '@angular/core';
+import { Component, OnInit, PipeTransform, Pipe, ChangeDetectionStrategy } from '@angular/core';
 import { Command } from '../scripts/commands';
 import { CanvasType } from '../CanvasType';
 import { LayerStateService } from '../services';
@@ -9,6 +9,7 @@ import 'rxjs/add/observable/combineLatest';
   selector: 'app-inspector',
   templateUrl: './inspector.component.html',
   styleUrls: ['./inspector.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class InspectorComponent implements OnInit {
   START_CANVAS = CanvasType.Start;

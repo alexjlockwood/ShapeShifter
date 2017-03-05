@@ -135,7 +135,6 @@ class Animator {
   private timeoutId: number;
   private animationFrameId: number;
 
-  private isRepeating_ = DEFAULT_IS_REPEATING;
   private playbackSpeed_ = DEFAULT_IS_SLOW_MOTION ? SLOW_MOTION_PLAYBACK_SPEED : DEFAULT_PLAYBACK_SPEED;
   private interpolator_ = DEFAULT_INTERPOLATOR;
   private duration_ = DEFAULT_DURATION;
@@ -217,7 +216,7 @@ class Animator {
         this.animationFrameId = requestAnimationFrame(onAnimationFrame);
       } else {
         this.shouldPlayInReverse = !this.shouldPlayInReverse;
-        if (this.isRepeating_) {
+        if (this.isRepeating()) {
           this.timeoutId = setTimeout(() => {
             this.startAnimation(onUpdateFn);
           }, REPEAT_DELAY);

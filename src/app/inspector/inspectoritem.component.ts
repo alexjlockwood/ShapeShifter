@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 import {
-  Component, OnInit, Input, OnDestroy, Pipe, PipeTransform
+  Component, OnInit, Input, OnDestroy, Pipe, PipeTransform, ChangeDetectionStrategy
 } from '@angular/core';
 import { Path, Command } from '../scripts/commands';
 import { LayerStateService } from '../services/layerstate.service';
@@ -12,7 +12,8 @@ import { CanvasType } from '../CanvasType';
 @Component({
   selector: 'app-inspectoritem',
   templateUrl: './inspectoritem.component.html',
-  styleUrls: ['./inspectoritem.component.scss']
+  styleUrls: ['./inspectoritem.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class InspectorItemComponent implements OnInit, OnDestroy {
   @Input() canvasType: CanvasType;
