@@ -1,67 +1,41 @@
-<div fxLayout="row"
-  class="settings-container">
+<div fxLayout="row" class="settings-container">
   <form fxLayout="column">
     <div>
-      <md-select color="accent"
-        placeholder="Interpolator"
-        [(ngModel)]="selectedInterpolator"
-        [disabled]="!isMorphable || isPlaying()"
+      <md-select color="accent" placeholder="Interpolator" [(ngModel)]="selectedInterpolator"
+        [disabled]="(shouldDisableSettingsObservable | async) ? '' : undefined"
         name="interpolator">
-        <md-option *ngFor="let interpolator of interpolators"
-          [value]="interpolator">
+        <md-option *ngFor="let interpolator of interpolators" [value]="interpolator">
           {{interpolator.label}}
         </md-option>
       </md-select>
     </div>
     <div fxLayout="row" fxLayoutGap="16px">
       <md-input-container fxFlex>
-        <input mdInput
-          [disabled]="!isMorphable || isPlaying() ? '' : undefined"
-          placeholder="Duration"
-          value="300"
-          min="100"
-          max="60000"
-          step="10"
-          name="duration"
-          [(ngModel)]="duration"
-          type="number">
+        <input mdInput [disabled]="(shouldDisableSettingsObservable | async) ? '' : undefined"
+          placeholder="Duration" value="300" min="100" max="60000"
+          step="10" name="duration" [(ngModel)]="duration" type="number">
       </md-input-container>
       <div fxFlex></div>
     </div>
     <div fxLayout="row" fxLayoutGap="16px">
       <md-input-container fxFlex>
-        <input mdInput
-          [disabled]="!isMorphable || isPlaying() ? '' : undefined"
-          placeholder="Start rotation"
-          value="0"
-          min="-720"
-          max="720"
-          step="10"
-          name="startRotation"
-          [(ngModel)]="startRotation"
+        <input mdInput [disabled]="(shouldDisableSettingsObservable | async) ? '' : undefined"
+          placeholder="Start rotation" value="0" min="-720" max="720"
+          step="10" name="startRotation" [(ngModel)]="startRotation"
           type="number">
       </md-input-container>
       <md-input-container fxFlex>
-        <input mdInput
-          [disabled]="!isMorphable || isPlaying() ? '' : undefined"
-          placeholder="End rotation"
-          value="0"
-          min="-720"
-          max="720"
-          step="10"
-          name="endRotation"
-          [(ngModel)]="endRotation"
+        <input mdInput [disabled]="(shouldDisableSettingsObservable | async) ? '' : undefined"
+          placeholder="End rotation" value="0" min="-720" max="720"
+          step="10" name="endRotation" [(ngModel)]="endRotation"
           type="number">
       </md-input-container>
     </div>
     <div>
-      <md-checkbox
-        [disabled]="!isMorphable || isPlaying() ? '' : undefined"
-        name="shouldLabelPoints"
-        [(ngModel)]="shouldLabelPoints">
+      <md-checkbox [disabled]="(shouldDisableSettingsObservable | async) ? '' : undefined"
+        name="shouldLabelPoints" [(ngModel)]="shouldLabelPoints">
         Show labeled points
       </md-checkbox>
     </div>
   </form>
 </div>
-

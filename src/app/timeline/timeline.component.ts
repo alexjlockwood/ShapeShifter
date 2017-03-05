@@ -8,14 +8,16 @@ import { Observable } from 'rxjs/Observable';
   selector: 'app-timeline',
   templateUrl: './timeline.component.html',
   styleUrls: ['./timeline.component.scss'],
-  // TODO: need to send out an 'isPlayingChanged()' notification before this can be enabled
-  // changeDetection: ChangeDetectionStrategy.OnPush,
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TimelineComponent implements OnInit, OnDestroy {
   MORPHABILITY_NONE = MorphabilityStatus.None;
   MORPHABILITY_UNMORPHABLE = MorphabilityStatus.Unmorphable;
   MORPHABILITY_MORPHABLE = MorphabilityStatus.Morphable;
   morphabilityStatusObservable: Observable<MorphabilityStatus>;
+  isAnimationSlowMotionObservable: Observable<boolean>;
+  isAnimationPlayingObservable: Observable<boolean>;
+  isAnimationRepeatingObservable: Observable<boolean>;
   private readonly subscriptions: Subscription[] = [];
 
   constructor(
@@ -23,6 +25,12 @@ export class TimelineComponent implements OnInit, OnDestroy {
     private readonly animatorService: AnimatorService) { }
 
   ngOnInit() {
+    this.isAnimationSlowMotionObservable = this.animatorService.getAnimatorSettingsObservable()
+      .map((value: { isSlowMotion: boolean }) => value.isSlowMotion);
+    this.isAnimationPlayingObservable = this.animatorService.getAnimatorSettingsObservable()
+      .map((value: { isPlaying: boolean }) => value.isPlaying);
+    this.isAnimationRepeatingObservable = this.animatorService.getAnimatorSettingsObservable()
+      .map((value: { isRepeating: boolean }) => value.isRepeating);
     this.morphabilityStatusObservable = this.layerStateService.getMorphabilityStatusObservable();
     this.subscriptions.push(
       this.layerStateService.getMorphabilityStatusObservable().subscribe(status => {
@@ -34,8 +42,6 @@ export class TimelineComponent implements OnInit, OnDestroy {
     // document.addEventListener('visibilitychange', function() {
     //   console.log(document.hidden);
     // });
-    // TODO: is this necessary to trigger change detection?
-    // this.animatorService.animatedValueStream.subscribe((value: number) => { });
   }
 
   ngOnDestroy() {
@@ -44,10 +50,6 @@ export class TimelineComponent implements OnInit, OnDestroy {
 
   isSlowMotion() {
     return this.animatorService.isSlowMotion();
-  }
-
-  isPlaying() {
-    return this.animatorService.isPlaying();
   }
 
   isRepeating() {

@@ -2,6 +2,7 @@ import { Injectable, NgZone } from '@angular/core';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { MathUtil } from '../scripts/common';
 import { Interpolator, INTERPOLATORS } from '../scripts/animation';
+import * as _ from 'lodash';
 
 const DEFAULT_FRACTION = 0;
 const DEFAULT_INTERPOLATOR = INTERPOLATORS[0];
@@ -9,6 +10,7 @@ const MIN_DURATION = 100;
 const DEFAULT_DURATION = 300;
 const MAX_DURATION = 60000;
 const REPEAT_DELAY = 750;
+const DEFAULT_IS_SLOW_MOTION = false;
 const DEFAULT_PLAYBACK_SPEED = 1;
 const SLOW_MOTION_PLAYBACK_SPEED = 5;
 const DEFAULT_IS_REPEATING = false;
@@ -32,13 +34,16 @@ export class AnimatorService {
     return this.animatedValueSource.asObservable();
   }
 
+  getAnimatorSettingsObservable() {
+    return this.animator.getAnimatorSettingsObservable();
+  }
+
   isSlowMotion() {
-    return this.animator.getPlaybackSpeed() === SLOW_MOTION_PLAYBACK_SPEED;
+    return this.animator.isSlowMotion();
   }
 
   setIsSlowMotion(isSlowMotion: boolean) {
-    this.animator.setPlaybackSpeed(
-      isSlowMotion ? SLOW_MOTION_PLAYBACK_SPEED : DEFAULT_PLAYBACK_SPEED);
+    this.animator.setIsSlowMotion(isSlowMotion);
   }
 
   isRepeating() {
@@ -115,13 +120,23 @@ export class AnimatorService {
   }
 }
 
+interface Settings {
+  isSlowMotion: boolean;
+  isPlaying: boolean;
+  isRepeating: boolean;
+}
+
 class Animator {
+  private readonly animatorSettingsSource = new BehaviorSubject<Settings>({
+    isSlowMotion: DEFAULT_IS_SLOW_MOTION,
+    isPlaying: DEFAULT_IS_PLAYING,
+    isRepeating: DEFAULT_IS_REPEATING,
+  });
   private timeoutId: number;
   private animationFrameId: number;
 
-  private isPlaying_ = DEFAULT_IS_PLAYING;
   private isRepeating_ = DEFAULT_IS_REPEATING;
-  private playbackSpeed_ = DEFAULT_PLAYBACK_SPEED;
+  private playbackSpeed_ = DEFAULT_IS_SLOW_MOTION ? SLOW_MOTION_PLAYBACK_SPEED : DEFAULT_PLAYBACK_SPEED;
   private interpolator_ = DEFAULT_INTERPOLATOR;
   private duration_ = DEFAULT_DURATION;
 
@@ -130,13 +145,24 @@ class Animator {
 
   constructor(private readonly ngZone: NgZone) { }
 
-  isPlaying() { return this.isPlaying_; }
+  getAnimatorSettingsObservable() {
+    return this.animatorSettingsSource.asObservable();
+  }
 
-  isRepeating() { return this.isRepeating_; }
+  isPlaying() { return this.animatorSettingsSource.getValue().isPlaying; }
 
-  setIsRepeating(isRepeating: boolean) { this.isRepeating_ = isRepeating; }
+  isRepeating() { return this.animatorSettingsSource.getValue().isRepeating; }
 
-  setPlaybackSpeed(playbackSpeed: number) { this.playbackSpeed_ = playbackSpeed; }
+  setIsRepeating(isRepeating: boolean) {
+    this.animatorSettingsSource.next(
+      _.assign({}, this.animatorSettingsSource.getValue(), { isRepeating }));
+  }
+
+  setIsSlowMotion(isSlowMotion: boolean) {
+    this.animatorSettingsSource.next(
+      _.assign({}, this.animatorSettingsSource.getValue(), { isSlowMotion }));
+    this.playbackSpeed_ = isSlowMotion ? SLOW_MOTION_PLAYBACK_SPEED : DEFAULT_PLAYBACK_SPEED;
+  }
 
   setInterpolator(interpolator: Interpolator) { this.interpolator_ = interpolator; }
 
@@ -146,15 +172,15 @@ class Animator {
 
   getDuration() { return this.duration_; }
 
-  getPlaybackSpeed() { return this.playbackSpeed_; }
+  isSlowMotion() { return this.animatorSettingsSource.getValue().isSlowMotion; }
 
   play(onUpdateFn: (fraction: number, value: number) => void) {
-    this.isPlaying_ = true;
     this.startAnimation(onUpdateFn);
+    this.animatorSettingsSource.next(
+      _.assign({}, this.animatorSettingsSource.getValue(), { isPlaying: true }));
   }
 
   pause() {
-    this.isPlaying_ = false;
     if (this.timeoutId) {
       clearTimeout(this.timeoutId);
       this.timeoutId = undefined;
@@ -163,6 +189,8 @@ class Animator {
       cancelAnimationFrame(this.animationFrameId);
       this.animationFrameId = undefined;
     }
+    this.animatorSettingsSource.next(
+      _.assign({}, this.animatorSettingsSource.getValue(), { isPlaying: false }));
   }
 
   rewind() {

@@ -4,22 +4,20 @@ import { Interpolator, INTERPOLATORS } from '../scripts/animation';
 import { LayerStateService, MorphabilityStatus } from '../services/layerstate.service';
 import { CanvasType } from '../CanvasType';
 import { SettingsService } from '../services/settings.service';
-import { Subscription } from 'rxjs/Subscription';
+import { Observable } from 'rxjs/Observable';
+import 'rxjs/add/observable/combineLatest';
 
 @Component({
   selector: 'app-settings',
   templateUrl: './settings.component.html',
   styleUrls: ['./settings.component.scss'],
-  // TODO: need to send out an 'isPlayingChanged()' notification before this can be enabled
-  // TODO: also need to properly listen for morphability changed events
-  // changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SettingsComponent implements OnInit, OnDestroy {
+export class SettingsComponent implements OnInit {
   interpolators = INTERPOLATORS;
-  isMorphable = false;
   private startRotation_ = 0;
   private endRotation_ = 0;
-  private readonly subscriptions: Subscription[] = [];
+  shouldDisableSettingsObservable: Observable<boolean>;
 
   constructor(
     private animatorService: AnimatorService,
@@ -27,14 +25,12 @@ export class SettingsComponent implements OnInit, OnDestroy {
     private settingsService: SettingsService) { }
 
   ngOnInit() {
-    this.subscriptions.push(
-      this.layerStateService.getMorphabilityStatusObservable().subscribe(status => {
-        this.isMorphable = status === MorphabilityStatus.Morphable;
-      }));
-  }
-
-  ngOnDestroy() {
-    this.subscriptions.forEach(s => s.unsubscribe());
+    this.shouldDisableSettingsObservable = Observable.combineLatest(
+      this.animatorService.getAnimatorSettingsObservable(),
+      this.layerStateService.getMorphabilityStatusObservable())
+      .map((value: [{ isPlaying: boolean }, MorphabilityStatus]) => {
+        return value[0].isPlaying || value[1] !== MorphabilityStatus.Morphable;
+      });
   }
 
   get selectedInterpolator() {
@@ -92,9 +88,5 @@ export class SettingsComponent implements OnInit, OnDestroy {
 
   set shouldLabelPoints(shouldLabelPoints: boolean) {
     this.settingsService.setShouldLabelPoints(shouldLabelPoints);
-  }
-
-  isPlaying() {
-    return this.animatorService.isPlaying();
   }
 }
