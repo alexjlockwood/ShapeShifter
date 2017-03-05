@@ -130,7 +130,7 @@ describe('Path', () => {
     actualSvgChars = actual.getSubPaths()[0].getCommands().map(cmd => cmd.svgChar);
     expectedSvgChars = ['M', 'C', 'C', 'C', 'C'];
 
-    actual = actual.unconvert(0);
+    actual = actual.unconvertSubpath(0);
     actualSvgChars = actual.getSubPaths()[0].getCommands().map(cmd => cmd.svgChar);
     expectedSvgChars = ['M', 'L', 'C', 'L', 'C'];
   });

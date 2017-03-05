@@ -409,10 +409,10 @@ class PathImpl implements Path {
   }
 
   // Implements the Path interface.
-  unconvert(subIdx: number) {
+  unconvertSubpath(subIdx: number) {
     const commandMutationsMap = this.commandMutationsMap.map(cms => cms.slice());
     commandMutationsMap[subIdx] =
-      commandMutationsMap[subIdx].map((cm, i) => i === 0 ? cm : cm.unconvertAll());
+      commandMutationsMap[subIdx].map((cm, i) => i === 0 ? cm : cm.unconvertSubpath());
     return this.clone({ commandMutationsMap });
   }
 
@@ -425,6 +425,11 @@ class PathImpl implements Path {
         .value());
   }
 
+  /**
+   * Finds and returns the command mutation at the specified indices.
+   * @param subIdx the client-visible subpath index
+   * @param cmdIdx the client-visible command index
+   */
   private findCommandMutation(subIdx: number, cmdIdx: number) {
     const numCommands = this.getSubPaths()[subIdx].getCommands().length;
     if (cmdIdx && this.reversals[subIdx]) {
@@ -451,6 +456,16 @@ class PathImpl implements Path {
     const newCms = this.commandMutationsMap.map(cms => cms.slice());
     newCms[subIdx][cmIdx] = cm;
     return newCms;
+  }
+
+  // Implements the Path interface.
+  splitSubpath(
+    subIdx: number,
+    split1: { cmdIdx: number, t: number },
+    split2?: { cmdIdx: number, t: number }) {
+
+    // Not yet implemented.
+    return this;
   }
 }
 

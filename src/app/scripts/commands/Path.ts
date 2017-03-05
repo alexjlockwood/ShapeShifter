@@ -91,7 +91,7 @@ export interface Path {
    * Reverts any converts previously performed at the specified index.
    * Returns a new path object.
    */
-  unconvert(subIdx: number): Path;
+  unconvertSubpath(subIdx: number): Path;
 
   /**
    * Returns the unique id associated with the cmomand at the specified index.
@@ -107,6 +107,16 @@ export interface Path {
    * Returns the initial starting state of this path.
    */
   revert(): Path;
+
+  /**
+   * Splits the subpath at the specified command index and t value. A second
+   * split argument must be specified if the sub path is a filled path.
+   * Returns a new path object.
+   */
+  splitSubpath(
+    subIdx: number,
+    split1: { cmdIdx: number, t: number },
+    split2?: { cmdIdx: number, t: number }): Path;
 }
 
 /** Represents a projection onto a path. */

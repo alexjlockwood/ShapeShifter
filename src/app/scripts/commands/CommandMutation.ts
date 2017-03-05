@@ -150,7 +150,7 @@ export class CommandMutation {
   /**
    * Unconverts all conversions previously performed on this command mutation.
    */
-  unconvertAll() {
+  unconvertSubpath() {
     const backingSvgChar = this.backingCommand.svgChar;
     return this.rebuildCommands(this.mutations.map((mutation, i) => {
       let svgChar = backingSvgChar;
