@@ -285,11 +285,13 @@ export function parseCommands(
           });
 
           for (let i = 0; i < bezierCoords.length; i += 8) {
+            const endPoint = new Point(bezierCoords[i + 6], bezierCoords[i + 7]);
             commands.push(newBezierCurve(
               currentPoint,
               new Point(bezierCoords[i + 2], bezierCoords[i + 3]),
               new Point(bezierCoords[i + 4], bezierCoords[i + 5]),
-              new Point(bezierCoords[i + 6], bezierCoords[i + 7])));
+              endPoint));
+            currentPoint = endPoint;
           }
 
           currentControlPoint = undefined;

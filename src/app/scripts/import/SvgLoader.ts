@@ -162,8 +162,8 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
         cy = lengthPxFn(node.cy),
         rx = lengthPxFn(node.rx),
         ry = lengthPxFn(node.ry);
-      path = `M ${cx},${cy - ry} A ${rx} ${ry} 0 1 0 ${cx},${cy + ry} ` +
-        `A ${rx} ${ry} 0 1 0 ${cx},${cy - ry} Z`;
+      path = `M ${cx},${cy - ry} A ${rx} ${ry} 0 1 0 ${cx},${cy + ry} `
+        + `A ${rx} ${ry} 0 1 0 ${cx},${cy - ry} Z`;
     }
 
     if (path) {
