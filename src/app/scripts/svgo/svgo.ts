@@ -5,8 +5,15 @@ import { inlineStyles } from './plugins/inlineStyles';
 import { convertStyleToAttrs } from './plugins/convertStyleToAttrs';
 import { moveGroupAttrsToElems } from './plugins/moveGroupAttrsToElems';
 import { convertPathData } from './plugins/convertPathData';
+import { mergePaths } from './plugins/mergePaths';
 import { removeDoctype } from './plugins/removeDoctype';
+import { collapseGroups } from './plugins/collapseGroups';
+import { convertShapeToPath } from './plugins/convertShapeToPath';
+import { removeEmptyContainers } from './plugins/removeEmptyContainers';
+import { removeHiddenElems } from './plugins/removeHiddenElems';
+import { removeUselessDefs } from './plugins/removeUselessDefs';
 import { removeEditorsNSData } from './plugins/removeEditorsNSData';
+import { cleanupNumericValues } from './plugins/cleanupNumericValues';
 
 // The complete list is available here: https://github.com/svg/svgo/blob/master/.svgo.yml
 const svgoPlugins = {
@@ -22,8 +29,8 @@ const svgoPlugins = {
   convertStyleToAttrs,
   // cleanupIDs: require('svgo/plugins/cleanupIDs'),
   // removeRasterImages: require('svgo/plugins/removeRasterImages'), // disabled
-  // removeUselessDefs: require('svgo/plugins/removeUselessDefs'),
-  // cleanupNumericValues: require('svgo/plugins/cleanupNumericValues'),
+  removeUselessDefs,
+  cleanupNumericValues,
   // cleanupListOfValues: require('svgo/plugins/cleanupListOfValues'),
   // convertColors: require('svgo/plugins/convertColors'),
   // removeUnknownsAndDefaults: require('svgo/plugins/removeUnknownsAndDefaults'),
@@ -31,17 +38,17 @@ const svgoPlugins = {
   // removeUselessStrokeAndFill: require('svgo/plugins/removeUselessStrokeAndFill'),
   // removeViewBox: require('svgo/plugins/removeViewBox'), // disabled
   // cleanupEnableBackground: require('svgo/plugins/cleanupEnableBackground'),
-  // removeHiddenElems: require('svgo/plugins/removeHiddenElems'),
+  removeHiddenElems,
   // removeEmptyText: require('svgo/plugins/removeEmptyText'),
-  // convertShapeToPath: require('svgo/plugins/convertShapeToPath'),
+  convertShapeToPath,
   // moveElemsAttrsToGroup: require('svgo/plugins/moveElemsAttrsToGroup'),
   moveGroupAttrsToElems,
-  // collapseGroups: require('svgo/plugins/collapseGroups'),
+  collapseGroups,
   convertPathData,
   // convertTransform: require('svgo/plugins/convertTransform'),
   // removeEmptyAttrs: require('svgo/plugins/removeEmptyAttrs'),
-  // removeEmptyContainers: require('svgo/plugins/removeEmptyContainers'),
-  // mergePaths: require('svgo/plugins/mergePaths'),
+  removeEmptyContainers,
+  mergePaths,
   // removeUnusedNS: require('svgo/plugins/removeUnusedNS'),
   // transformsWithOnePath: require('svgo/plugins/transformsWithOnePath'), // disabled
   // sortAttrs: require('svgo/plugins/sortAttrs'),

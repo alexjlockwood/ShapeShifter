@@ -38,7 +38,7 @@ export const inlineStyles = {
   * @param {Object} root (document)
   * @param {Object} params plugin params
   */
-export function inlineStylesFn(document, params) {
+function inlineStylesFn(document, params) {
   // collect <style/>s
   var styleEls = document.querySelectorAll('style');
 

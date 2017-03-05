@@ -52,7 +52,7 @@ let hasMarkerMid;
  * @param {Object} params plugin params
  * @return {Boolean} if false, item will be filtered out
  */
-export function convertPathDataFn(item, params) {
+function convertPathDataFn(item, params) {
   if (item.isElem(pathElems) && item.hasAttr('d')) {
     precision = params.floatPrecision;
     error = precision !== false ? +Math.pow(.1, precision).toFixed(precision) : 1e-2;

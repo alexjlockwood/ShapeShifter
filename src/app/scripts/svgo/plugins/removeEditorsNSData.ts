@@ -24,7 +24,7 @@ var editorNamespaces = collections.editorNamespaces,
  * @param {Object} params plugin params
  * @return {Boolean} if false, item will be filtered out
  */
-export function removeEditorsNSDataFn(item, params) {
+function removeEditorsNSDataFn(item, params) {
   if (Array.isArray(params.additionalNamespaces)) {
     editorNamespaces = editorNamespaces.concat(params.additionalNamespaces);
   }

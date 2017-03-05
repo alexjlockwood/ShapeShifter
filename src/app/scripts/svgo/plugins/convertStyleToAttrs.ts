@@ -50,7 +50,7 @@ var rEscape = '\\\\(?:[0-9a-f]{1,6}\\s?|\\r\\n|.)',                 // Like \" o
  * @param {Object} item current iteration item
  * @return {Boolean} if false, item will be filtered out
  */
-export function convertStyleToAttrsFn(item) {
+function convertStyleToAttrsFn(item) {
   if (item.elem && item.hasAttr('style')) {
     // ['opacity: 1', 'color: #000']
     var styleValue = item.attr('style').value,

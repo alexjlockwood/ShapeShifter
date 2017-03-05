@@ -29,7 +29,7 @@ const referencesProps = collections.referencesProps;
  * @param {Object} item current iteration item
  * @return {Boolean} if false, item will be filtered out
  */
-export function moveGroupAttrsToElemsFn(item) {
+function moveGroupAttrsToElemsFn(item) {
 
   // move group transform attr to content's pathElems
   if (

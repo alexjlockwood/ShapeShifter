@@ -30,7 +30,7 @@ export const removeDoctype = {
  * @param {Object} item current iteration item
  * @return {Boolean} if false, item will be filtered out
  */
-export function removeDoctypeFn(item) {
+function removeDoctypeFn(item) {
   if (item.doctype) {
     return false;
   }
