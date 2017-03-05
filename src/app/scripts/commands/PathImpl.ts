@@ -16,12 +16,12 @@ export function newPath(obj: string | Command[]): Path {
  * splitting/unsplitting/converting/etc. paths in a way that is easily reversible.
  */
 class PathImpl implements Path {
-  private readonly pathString: string;
   private readonly subPaths: ReadonlyArray<SubPath>;
   private readonly commandMutationsMap: ReadonlyArray<ReadonlyArray<CommandMutation>>;
   private readonly shiftOffsets: ReadonlyArray<number>;
   private readonly reversals: ReadonlyArray<boolean>;
-  private readonly pathLength: number;
+  private pathString: string;
+  private pathLength: number;
 
   constructor(obj: string | Command[] | PathParams) {
     if (typeof obj === 'string' || Array.isArray(obj)) {
@@ -29,7 +29,6 @@ class PathImpl implements Path {
         this.pathString = obj;
         this.subPaths = createSubPaths(...PathParser.parseCommands(obj));
       } else {
-        this.pathString = PathParser.commandsToString(obj);
         this.subPaths = createSubPaths(...obj);
       }
       this.commandMutationsMap =
@@ -37,18 +36,11 @@ class PathImpl implements Path {
       this.shiftOffsets = this.subPaths.map(_ => 0);
       this.reversals = this.subPaths.map(_ => false);
     } else {
-      this.pathString = PathParser.commandsToString(obj.commands);
       this.subPaths = createSubPaths(...obj.commands);
       this.commandMutationsMap = obj.commandMutationsMap.map(cms => cms.slice());
       this.shiftOffsets = obj.shiftOffsets.slice();
       this.reversals = obj.reversals.slice();
     }
-    // Note that we only return the length of the first sub path due to
-    // https://code.google.com/p/android/issues/detail?id=172547
-    this.pathLength =
-      this.commandMutationsMap[0]
-        .map(cm => cm.getPathLength())
-        .reduce((prev, curr) => prev + curr);
   }
 
   // Implements the Path interface.
@@ -178,6 +170,11 @@ class PathImpl implements Path {
 
   // Implements the Path interface.
   getPathString() {
+    if (_.isUndefined(this.pathString)) {
+      const commands =
+        _.flatMap(this.getSubPaths(), subPath => subPath.getCommands() as Command[]);
+      this.pathString = PathParser.commandsToString(commands);
+    }
     return this.pathString;
   }
 
@@ -188,6 +185,11 @@ class PathImpl implements Path {
 
   // Implements the Path interface.
   getPathLength() {
+    if (_.isUndefined(this.pathLength)) {
+      // Note that we only return the length of the first sub path due to
+      // https://code.google.com/p/android/issues/detail?id=172547
+      this.pathLength = _.sum(this.commandMutationsMap[0].map(cm => cm.getPathLength()));
+    }
     return this.pathLength;
   }
 
@@ -225,7 +227,6 @@ class PathImpl implements Path {
         commands.push(new CommandImpl(cmd.svgChar, cmd.isSplit, points));
       });
     });
-    // TODO: note that this erases all command mutation state... will that be an issue?
     return new PathImpl(commands);
   }
 
@@ -454,10 +455,6 @@ class PathImpl implements Path {
     const newCms = this.commandMutationsMap.map(cms => cms.slice());
     newCms[subIdx][cmIdx] = cm;
     return newCms;
-  }
-
-  toString() {
-    return this.pathString;
   }
 }
 

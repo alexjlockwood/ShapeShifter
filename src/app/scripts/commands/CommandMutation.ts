@@ -16,7 +16,7 @@ export class CommandMutation {
   readonly backingCommand: CommandImpl;
 
   // Note that the mutator is currently undefined for move commands.
-  private readonly mutator: Mutator;
+  private mutator_: Mutator;
 
   // A command mutation wraps around the initial SVG command and outputs
   // a list of transformed commands resulting from splits, unsplits,
@@ -39,13 +39,19 @@ export class CommandMutation {
         svgChar: this.backingCommand.svgChar,
       }];
       this.builtCommands = [obj];
-      this.mutator = newMutator(this.backingCommand);
     } else {
       this.backingCommand = obj.backingCommand;
       this.mutations = obj.mutations;
       this.builtCommands = obj.builtCommands;
-      this.mutator = obj.mutator;
+      this.mutator_ = obj.mutator_;
     }
+  }
+
+  private get mutator() {
+    if (!this.mutator_) {
+      this.mutator_ = newMutator(this.backingCommand);
+    }
+    return this.mutator_;
   }
 
   getPathLength() {
@@ -164,7 +170,7 @@ export class CommandMutation {
         backingCommand: this.backingCommand,
         mutations,
         builtCommands: [command],
-        mutator: this.mutator,
+        mutator_: this.mutator_,
       });
     }
     const builtCommands: CommandImpl[] = [];
@@ -185,7 +191,7 @@ export class CommandMutation {
       backingCommand: this.backingCommand,
       mutations,
       builtCommands,
-      mutator: this.mutator,
+      mutator_: this.mutator_,
     });
   }
 
@@ -204,5 +210,5 @@ interface ConstructorParams {
   readonly backingCommand: CommandImpl;
   readonly mutations: ReadonlyArray<Mutation>;
   readonly builtCommands: ReadonlyArray<CommandImpl>;
-  readonly mutator: Mutator;
+  readonly mutator_: Mutator;
 }
