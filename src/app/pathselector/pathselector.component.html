@@ -25,14 +25,14 @@
   <div *ngIf="!getPathList(CANVAS_START).length && !getPathList(CANVAS_END).length"
     class="path-selector-empty" fxLayout="column" fxLayoutAlign="center center"
     fxFlex>
-    <input type="file" accept=".svg" id="start-input-file-id" (change)="onSvgFileChosen(($event.srcElement || $event.target).files)"
+    <input type="file" accept=".svg" id="start-input-file-id" (change)="onSvgFileChosen(($event.target || $event.srcElement).files)"
       multiple>
     <label for="start-input-file-id">Import 2 SVGs to get started<br>(or load a demo in the top right menu)</label>
   </div>
   <div *ngIf="!(!!getPathList(CANVAS_START).length && !!getPathList(CANVAS_END).length) && !(!getPathList(CANVAS_START).length && !getPathList(CANVAS_END).length)"
     class="path-selector-empty" fxLayout="column" fxLayoutAlign="center center"
     fxFlex>
-    <input type="file" accept=".svg" id="end-input-file-id" (change)="onSvgFileChosen(($event.srcElement || $event.target).files)"
+    <input type="file" accept=".svg" id="end-input-file-id" (change)="onSvgFileChosen(($event.target || $event.srcElement).files)"
       multiple>
     <label for="end-input-file-id">Import a second SVG to get started</label>
   </div>
