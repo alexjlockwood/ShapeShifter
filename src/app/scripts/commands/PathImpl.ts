@@ -209,7 +209,7 @@ class PathImpl implements Path {
     if (!this.isMorphableWith(start) || !this.isMorphableWith(end)) {
       return this;
     }
-    const commands: CommandImpl[] = [];
+    const commands: Command[] = [];
     this.getSubPaths().forEach((subCmd, i) => {
       subCmd.getCommands().forEach((cmd, j) => {
         const cmd1 = start.getSubPaths()[i].getCommands()[j];
