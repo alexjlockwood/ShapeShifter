@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, OnDestroy, ElementRef } from '@angular/core';
+import { Component, OnInit, ViewChild, AfterViewInit, OnDestroy, ElementRef } from '@angular/core';
 import { environment } from '../environments/environment';
 import { CanvasType } from './CanvasType';
 import { Subscription } from 'rxjs/Subscription';
@@ -9,16 +9,18 @@ import { AnimatorService, CanvasResizeService, HoverStateService, SelectionState
 import * as $ from 'jquery';
 import * as erd from 'element-resize-detector';
 import * as _ from 'lodash';
+import { MdSnackBar, MdSnackBarConfig } from '@angular/material';
 
 const IS_DEV_MODE = !environment.production;
 const ELEMENT_RESIZE_DETECTOR = erd();
+const STORAGE_KEY_FIRST_TIME_USER = 'storage_key_first_time_user';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
-export class AppComponent implements OnInit, OnDestroy {
+export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // TODO: need to warn user about svgs not being structurally identical somehow...
   // TODO: or give the user a way to update the incorrect path id names or something...?
@@ -40,6 +42,7 @@ export class AppComponent implements OnInit, OnDestroy {
   @ViewChild('canvasContainer') private canvasContainerRef: ElementRef;
 
   constructor(
+    private readonly snackBar: MdSnackBar,
     private readonly layerStateService: LayerStateService,
     private readonly hoverStateService: HoverStateService,
     private readonly selectionStateService: SelectionStateService,
@@ -127,6 +130,16 @@ export class AppComponent implements OnInit, OnDestroy {
     });
   }
 
+  ngAfterViewInit() {
+    const isFirstTimeUser = window.localStorage.getItem(STORAGE_KEY_FIRST_TIME_USER);
+    if (!isFirstTimeUser) {
+      window.localStorage.setItem(STORAGE_KEY_FIRST_TIME_USER, 'true');
+      setTimeout(() => {
+        this.snackBar.open('Ready to work offline', 'Dismiss', { duration: 5000 });
+      });
+    }
+  }
+
   ngOnDestroy() {
     ELEMENT_RESIZE_DETECTOR.removeAllListeners(this.canvasContainer.get(0));
     this.subscriptions.forEach(s => s.unsubscribe());
@@ -206,7 +219,7 @@ export class AppComponent implements OnInit, OnDestroy {
     const activePathLayer = this.layerStateService.getActivePathLayer(canvasType);
     const unsplitOpsMap: Map<number, Array<{ subIdx: number, cmdIdx: number }>> = new Map();
     for (const selection of selections) {
-      const {subIdx, cmdIdx} = selection.commandId;
+      const { subIdx, cmdIdx } = selection.commandId;
       if (!activePathLayer.pathData.getSubPaths()[subIdx].getCommands()[cmdIdx].isSplit) {
         continue;
       }
