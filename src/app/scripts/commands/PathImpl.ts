@@ -99,7 +99,6 @@ class PathImpl implements Path {
       return newCmds;
     };
 
-    // TODO: another edge case: closed paths not ending in a Z
     const maybeShiftCommandsFn = (subIdx: number, cmds: CommandImpl[]) => {
       let shiftOffset = getShiftOffsetFn(subIdx);
       if (!shiftOffset
@@ -251,7 +250,6 @@ class PathImpl implements Path {
 
   // Implements the Path interface.
   reverse(subIdx: number) {
-    // TODO: add a test for commands with multiple moves but no close paths
     return this.clone({
       reversals: this.reversals.map((r, i) => i === subIdx ? !r : r),
     });
@@ -275,8 +273,6 @@ class PathImpl implements Path {
     subIdx: number,
     calcOffsetFn: (offset: number, numCommands: number) => number) {
 
-    // TODO: add a test for cmds with multiple moves but no close paths
-    // TODO: add a test for cmds ending with a Z with the same end point as its prev cmd
     const numCommands = this.getSubPaths()[subIdx].getCommands().length;
     if (numCommands <= 1 || !this.getSubPaths()[subIdx].isClosed()) {
       return this;

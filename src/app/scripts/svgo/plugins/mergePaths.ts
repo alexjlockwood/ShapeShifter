@@ -22,8 +22,6 @@ const intersects = paths.intersects;
  *
  * @param {Object} item current iteration item
  * @return {Boolean} if false, item will be filtered out
- *
- * @author Kir Belevich, Lev Solntsev
  */
 function mergePathsFn(item, params) {
 
