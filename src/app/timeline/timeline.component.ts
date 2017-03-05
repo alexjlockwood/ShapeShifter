@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { AnimatorService } from '../services/animator.service';
 import { LayerStateService, MorphabilityStatus } from '../services/layerstate.service';
 import { Subscription } from 'rxjs/Subscription';
@@ -7,7 +7,9 @@ import { Observable } from 'rxjs/Observable';
 @Component({
   selector: 'app-timeline',
   templateUrl: './timeline.component.html',
-  styleUrls: ['./timeline.component.scss']
+  styleUrls: ['./timeline.component.scss'],
+  // TODO: need to send out an 'isPlayingChanged()' notification before this can be enabled
+  // changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TimelineComponent implements OnInit, OnDestroy {
   MORPHABILITY_NONE = MorphabilityStatus.None;

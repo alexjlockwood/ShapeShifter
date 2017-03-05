@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { AnimatorService } from '../services/animator.service';
 import { Interpolator, INTERPOLATORS } from '../scripts/animation';
 import { LayerStateService, MorphabilityStatus } from '../services/layerstate.service';
@@ -9,7 +9,10 @@ import { Subscription } from 'rxjs/Subscription';
 @Component({
   selector: 'app-settings',
   templateUrl: './settings.component.html',
-  styleUrls: ['./settings.component.scss']
+  styleUrls: ['./settings.component.scss'],
+  // TODO: need to send out an 'isPlayingChanged()' notification before this can be enabled
+  // TODO: also need to properly listen for morphability changed events
+  // changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SettingsComponent implements OnInit, OnDestroy {
   interpolators = INTERPOLATORS;

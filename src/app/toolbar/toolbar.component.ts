@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 import * as $ from 'jquery';
-import { Component, OnInit, ViewContainerRef } from '@angular/core';
+import { Component, OnInit, ViewContainerRef, ChangeDetectionStrategy } from '@angular/core';
 import { LayerStateService, MorphabilityStatus } from '../services';
 import { CanvasType } from '../CanvasType';
 import { AvdSerializer, SvgSerializer } from '../scripts/export';
@@ -20,7 +20,8 @@ import * as JSZip from 'jszip';
 @Component({
   selector: 'app-toolbar',
   templateUrl: './toolbar.component.html',
-  styleUrls: ['./toolbar.component.scss']
+  styleUrls: ['./toolbar.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ToolbarComponent implements OnInit {
   MORPHABILITY_NONE = MorphabilityStatus.None;

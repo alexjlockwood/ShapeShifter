@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
 import {
   Component, AfterViewInit, OnDestroy, ElementRef, ViewChild,
-  Input, ViewChildren, QueryList
+  Input, ViewChildren, QueryList, ChangeDetectionStrategy
 } from '@angular/core';
 import {
   Path, SubPath, Command, Index as CommandIndex, Projection
@@ -48,7 +48,8 @@ const SELECTION_INNER_COLOR = '#2196f3';
 @Component({
   selector: 'app-canvas',
   templateUrl: './canvas.component.html',
-  styleUrls: ['./canvas.component.scss']
+  styleUrls: ['./canvas.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CanvasComponent implements AfterViewInit, OnDestroy {
   @Input() canvasType: CanvasType;
