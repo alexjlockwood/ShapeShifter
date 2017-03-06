@@ -12,10 +12,11 @@
 [Shape Shifter](https://alexjlockwood.github.io/ShapeShifter/) is a web-app that simplifies the process of
 creating SVG-based [path morphing animations][adp-path-morphing].
 
-This tool currently exports to SVG for web and
+This tool currently exports to standalone SVGs for web and
 [`AnimatedVectorDrawable`](https://developer.android.com/reference/android/graphics/drawable/AnimatedVectorDrawable.html)
-format for Android. That said, I am totally open to adding support for other export formats as well.
-File a [feature request][report-feature-request]!
+format for Android. I am totally open to adding support for other export formats as well, so
+if you have a format that you'd like to see added in the future,
+file a [feature request][report-feature-request]!
 
 ![Screen capture of tool](art/screencap.gif)
 
