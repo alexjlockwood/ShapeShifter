@@ -19,13 +19,12 @@
   ([#51](https://github.com/alexjlockwood/ShapeShifter/issues/51))
   ([500a4f8](https://github.com/alexjlockwood/ShapeShifter/commit/500a4f8))
   ([0dabb5f](https://github.com/alexjlockwood/ShapeShifter/commit/0dabb5f))
-* Added additional SVG preprocessing that will attempt to merge multiple `<path>`
-  elements into a single `<path>` element with multiple subpaths. Shape Shifter currently
-  doesn't support morphing multiple `<path>`s at a time, so this enhancement should make
+* SVG import now makes a best effort attempt to merge multiple `<path>`
+  elements into a single `<path>` containing multiple subpaths. Shape Shifter currently
+  only supports morphing one `<path>` element at a time, but this enhancement should make
   that less likely to be an issue in the meantime.
 
 ### Bug fixes
-
 
 * Fixed SVG import crash in Firefox.
   ([#69](https://github.com/alexjlockwood/ShapeShifter/issues/69))
