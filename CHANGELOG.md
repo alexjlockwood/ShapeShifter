@@ -1,3 +1,45 @@
+# [v0.1.2](https://github.com/alexjlockwood/ShapeShifter/compare/v0.1.1...v0.1.2) (2017-03-06)
+
+### Features
+
+* Shape Shifter now works offline! A cached version of the app will be saved in
+  Chrome's cache so that it can be used without an internet connection.
+  ([#61](https://github.com/alexjlockwood/ShapeShifter/issues/61))
+  ([50e694e](https://github.com/alexjlockwood/ShapeShifter/commit/50e694e))
+  ([d770fce](https://github.com/alexjlockwood/ShapeShifter/commit/d770fce))
+* SVGs matching the final start and end state canvases are now exported for use on the web.
+  ([#43](https://github.com/alexjlockwood/ShapeShifter/issues/43))
+* `VectorDrawable`s matching the final start and end state canvases are now exported for
+  use in Android apps.
+  ([#52](https://github.com/alexjlockwood/ShapeShifter/issues/52))
+* Exported `AnimatedVectorDrawable`s will now automatically animate differences
+  in each path's `fillColor`, `strokeColor`, `fillAlpha`, `strokeAlpha`, and `strokeWidth`.
+  ([#51](https://github.com/alexjlockwood/ShapeShifter/issues/51))
+  ([500a4f8](https://github.com/alexjlockwood/ShapeShifter/commit/500a4f8))
+  ([0dabb5f](https://github.com/alexjlockwood/ShapeShifter/commit/0dabb5f))
+
+### Bug fixes
+
+
+* Fixed SVG import crash in Firefox.
+  ([#69](https://github.com/alexjlockwood/ShapeShifter/issues/69))
+  ([d0d95b6](https://github.com/alexjlockwood/ShapeShifter/commit/d0d95b6))
+* Fixed SVG import bug that caused `<circle>` and `<ellipse>` tags to be parsed incorrectly.
+  ([#71](https://github.com/alexjlockwood/ShapeShifter/issues/71))
+  ([a487576](https://github.com/alexjlockwood/ShapeShifter/commit/a487576))
+* SVG `stroke-width` and `stroke-miterlimit` are now imported with default values
+  of `1` and `4` respectively.
+  ([#66](https://github.com/alexjlockwood/ShapeShifter/issues/66))
+  ([1d47cef](https://github.com/alexjlockwood/ShapeShifter/commit/1d47cef))
+  ([50e694e](https://github.com/alexjlockwood/ShapeShifter/commit/50e694e))
+* Fixed bug that would sometimes cause the morphable paths to be displayed as unmorphable.
+  ([#50](https://github.com/alexjlockwood/ShapeShifter/issues/50))
+  ([0e3d45d](https://github.com/alexjlockwood/ShapeShifter/commit/0e3d45d))
+* SVG `fill` color is now imported as `black` by default.
+  ([0debebe](https://github.com/alexjlockwood/ShapeShifter/commit/0debebe))
+* Fixed scaling bug in Safari when importing the 'morphing animals' demo.
+  ([5a7a5bd](https://github.com/alexjlockwood/ShapeShifter/commit/5a7a5bd))
+
 # [v0.1.1](https://github.com/alexjlockwood/ShapeShifter/compare/v0.1...v0.1.1) (2017-02-27)
 
 ### Features
