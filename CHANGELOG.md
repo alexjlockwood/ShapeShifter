@@ -37,7 +37,7 @@
   ([#66](https://github.com/alexjlockwood/ShapeShifter/issues/66))
   ([1d47cef](https://github.com/alexjlockwood/ShapeShifter/commit/1d47cef))
   ([50e694e](https://github.com/alexjlockwood/ShapeShifter/commit/50e694e))
-* Fixed bug that would sometimes cause the morphable paths to be displayed as unmorphable.
+* Fixed bug that would sometimes cause morphable paths to be displayed as unmorphable.
   ([#50](https://github.com/alexjlockwood/ShapeShifter/issues/50))
   ([0e3d45d](https://github.com/alexjlockwood/ShapeShifter/commit/0e3d45d))
 * SVG `fill` color is now imported as `black` by default.
