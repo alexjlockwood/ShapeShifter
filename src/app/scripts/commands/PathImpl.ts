@@ -99,7 +99,7 @@ class PathImpl implements Path {
       return newCmds;
     };
 
-    const maybeShiftCommandsFn = (subIdx: number, cmds: CommandImpl[]) => {
+    const maybeShiftCommandsFn = (subIdx: number, cmds: Command[]) => {
       let shiftOffset = getShiftOffsetFn(subIdx);
       if (!shiftOffset
         || cmds.length === 1
@@ -118,10 +118,11 @@ class PathImpl implements Path {
       // If the last command is a 'Z', replace it with a line before we shift.
       const lastCmd = _.last(cmds);
       if (lastCmd.svgChar === 'Z') {
+        // TODO: avoid this... replacing the 'Z' can cause undesireable side effects.
         cmds[numCommands - 1] = newLine(lastCmd.start, lastCmd.end, lastCmd.isSplit);
       }
 
-      const newCmds: CommandImpl[] = [];
+      const newCmds: Command[] = [];
 
       // Handle these case separately cause they are annoying and I'm sick of edge cases.
       if (shiftOffset === 1) {
@@ -507,7 +508,7 @@ function createSubPaths(...commands: Command[]) {
  * Path internals that have been cloned.
  */
 interface PathParams {
-  readonly commands?: ReadonlyArray<CommandImpl>;
+  readonly commands?: ReadonlyArray<Command>;
   readonly commandMutationsMap?: ReadonlyArray<ReadonlyArray<CommandMutation>>;
   readonly shiftOffsets?: ReadonlyArray<number>;
   readonly reversals?: ReadonlyArray<boolean>;
