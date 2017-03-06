@@ -131,12 +131,14 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngAfterViewInit() {
-    const isFirstTimeUser = window.localStorage.getItem(STORAGE_KEY_FIRST_TIME_USER);
-    if (!isFirstTimeUser) {
-      window.localStorage.setItem(STORAGE_KEY_FIRST_TIME_USER, 'true');
-      setTimeout(() => {
-        this.snackBar.open('Ready to work offline', 'Dismiss', { duration: 5000 });
-      });
+    if ('serviceWorker' in navigator) {
+      const isFirstTimeUser = window.localStorage.getItem(STORAGE_KEY_FIRST_TIME_USER);
+      if (!isFirstTimeUser) {
+        window.localStorage.setItem(STORAGE_KEY_FIRST_TIME_USER, 'true');
+        setTimeout(() => {
+          this.snackBar.open('Ready to work offline', 'Dismiss', { duration: 5000 });
+        });
+      }
     }
   }
 
