@@ -4,7 +4,7 @@
 
 * Shape Shifter now works offline! A cached version of the app will be saved in
   your browser's cache so that it can be used without an internet connection.
-  Note that currently only Chrome and Firefox are
+  Note that currently only Chrome, Firefox, and Opera are
   [supported](http://caniuse.com/#feat=serviceworkers).
   ([#61](https://github.com/alexjlockwood/ShapeShifter/issues/61))
   ([50e694e](https://github.com/alexjlockwood/ShapeShifter/commit/50e694e))
