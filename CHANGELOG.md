@@ -19,13 +19,12 @@
   ([#51](https://github.com/alexjlockwood/ShapeShifter/issues/51))
   ([500a4f8](https://github.com/alexjlockwood/ShapeShifter/commit/500a4f8))
   ([0dabb5f](https://github.com/alexjlockwood/ShapeShifter/commit/0dabb5f))
-* Added additional SVG preprocessing that will attempt to merge multiple `<path>`
-  elements into a single `<path>` element with multiple subpaths. Shape Shifter currently
-  doesn't support morphing multiple `<path>`s at a time, so this enhancement should make
+* SVG import now makes a best effort attempt to merge multiple `<path>`
+  elements into a single `<path>` containing multiple subpaths. Shape Shifter currently
+  only supports morphing one `<path>` element at a time, but this enhancement should make
   that less likely to be an issue in the meantime.
 
 ### Bug fixes
-
 
 * Fixed SVG import crash in Firefox.
   ([#69](https://github.com/alexjlockwood/ShapeShifter/issues/69))
@@ -38,7 +37,7 @@
   ([#66](https://github.com/alexjlockwood/ShapeShifter/issues/66))
   ([1d47cef](https://github.com/alexjlockwood/ShapeShifter/commit/1d47cef))
   ([50e694e](https://github.com/alexjlockwood/ShapeShifter/commit/50e694e))
-* Fixed bug that would sometimes cause the morphable paths to be displayed as unmorphable.
+* Fixed bug that would sometimes cause morphable paths to be displayed as unmorphable.
   ([#50](https://github.com/alexjlockwood/ShapeShifter/issues/50))
   ([0e3d45d](https://github.com/alexjlockwood/ShapeShifter/commit/0e3d45d))
 * SVG `fill` color is now imported as `black` by default.
