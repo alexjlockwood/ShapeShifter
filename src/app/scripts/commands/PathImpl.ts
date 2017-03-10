@@ -242,14 +242,14 @@ class PathImpl implements Path {
   }
 
   // Implements the Path interface.
-  project(point: Point): { projection: Projection, split: () => Path } | undefined {
+  project(point: Point): { projection: Projection, splitFn: () => Path } | undefined {
     return _.chain(this.commandMutationsMap)
       .map((subPathCms: CommandMutation[], cmsIdx) =>
         subPathCms.map((cm: CommandMutation, cmIdx) => {
           const projection = cm.project(point);
           return {
             projection,
-            split: () => this.splitCommandMutation(cmsIdx, cmIdx, projection.t),
+            splitFn: () => this.splitCommandMutation(cmsIdx, cmIdx, projection.t),
           };
         }))
       .flatMap(projections => projections)

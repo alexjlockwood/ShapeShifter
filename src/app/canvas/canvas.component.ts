@@ -948,7 +948,7 @@ function calculateProjectionOntoPath(
   return {
     pathId: pathLayer.id,
     projection: projectionInfo.projection,
-    split: projectionInfo.split,
+    split: projectionInfo.splitFn,
   };
 }
 

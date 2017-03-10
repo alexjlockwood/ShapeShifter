@@ -42,7 +42,7 @@ export interface Path {
    * Also returns a 'split' function that can be used to split the path at the returned
    * projection point. Returns undefined if no point is found.
    */
-  project(point: Point): { projection: Projection, split: () => Path } | undefined;
+  project(point: Point): { projection: Projection, splitFn: () => Path } | undefined;
 
   /**
    * Reverses the order of the points in the sub path at the specified index.
