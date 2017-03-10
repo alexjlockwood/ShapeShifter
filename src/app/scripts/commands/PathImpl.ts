@@ -87,7 +87,11 @@ class PathImpl implements Path {
       // If the last command is a 'Z', replace it with a line before we reverse.
       const lastCmd = _.last(cmds);
       if (lastCmd.svgChar === 'Z') {
-        cmds[cmds.length - 1] = newLine(lastCmd.start, lastCmd.end, lastCmd.isSplit);
+        let lineCmd = newLine(lastCmd.start, lastCmd.end);
+        if (lastCmd.isSplit) {
+          lineCmd = lineCmd.toggleSplit();
+        }
+        cmds[cmds.length - 1] = lineCmd;
       }
 
       // Reverse the commands.
@@ -119,7 +123,11 @@ class PathImpl implements Path {
       const lastCmd = _.last(cmds);
       if (lastCmd.svgChar === 'Z') {
         // TODO: avoid this... replacing the 'Z' can cause undesireable side effects.
-        cmds[numCommands - 1] = newLine(lastCmd.start, lastCmd.end, lastCmd.isSplit);
+        let lineCmd = newLine(lastCmd.start, lastCmd.end);
+        if (lastCmd.isSplit) {
+          lineCmd = lineCmd.toggleSplit();
+        }
+        cmds[numCommands - 1] = lineCmd;
       }
 
       const newCmds: Command[] = [];
@@ -171,9 +179,7 @@ class PathImpl implements Path {
   // Implements the Path interface.
   getPathString() {
     if (_.isUndefined(this.pathString)) {
-      const commands =
-        _.flatMap(this.getSubPaths(), subPath => subPath.getCommands() as Command[]);
-      this.pathString = PathParser.commandsToString(commands);
+      this.pathString = PathParser.commandsToString(this.getCommands());
     }
     return this.pathString;
   }
@@ -181,6 +187,11 @@ class PathImpl implements Path {
   // Implements the Path interface.
   getSubPaths() {
     return this.subPaths;
+  }
+
+  // Implements the Path interface.
+  getCommands(): ReadonlyArray<Command> {
+    return _.flatMap(this.getSubPaths(), subPath => subPath.getCommands() as Command[]);
   }
 
   // Implements the Path interface.
@@ -224,7 +235,7 @@ class PathImpl implements Path {
             points.push(new Point(px, py));
           }
         }
-        commands.push(new CommandImpl(cmd.svgChar, cmd.isSplit, points));
+        commands.push(new CommandImpl(cmd.svgChar, points, cmd.isSplit));
       });
     });
     return new PathImpl(commands);

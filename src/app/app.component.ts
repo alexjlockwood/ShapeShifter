@@ -57,14 +57,13 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
             const hasClosedPath =
               _.chain([CanvasType.Start, CanvasType.End])
                 .map(type => this.layerStateService.getActivePathLayer(type).pathData)
-                .flatMap(pathCmd => pathCmd.getSubPaths())
-                .some(subCmd => subCmd.isClosed())
+                .flatMap(path => path.getSubPaths())
+                .some(subPath => subPath.isClosed())
                 .value();
             const hasSplitCmd =
               _.chain([CanvasType.Start, CanvasType.End])
                 .map(type => this.layerStateService.getActivePathLayer(type).pathData)
-                .flatMap(pathCmd => pathCmd.getSubPaths() as SubPath[])
-                .flatMap(subCmd => subCmd.getCommands())
+                .flatMap(path => path.getCommands() as Command[])
                 .some(cmd => cmd.isSplit)
                 .value();
             return `Reverse${hasClosedPath ? '/shift' : ''} `

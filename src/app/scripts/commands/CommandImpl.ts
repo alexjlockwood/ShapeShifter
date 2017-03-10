@@ -2,25 +2,25 @@ import * as _ from 'lodash';
 import { Point, Matrix, MathUtil } from '../common';
 import { Command, SvgChar } from '.';
 
-export function newMove(start: Point, end: Point, isSplit = false) {
-  return new CommandImpl('M', isSplit, [start, end]);
+export function newMove(start: Point, end: Point) {
+  return new CommandImpl('M', [start, end]);
 }
 
-export function newLine(start: Point, end: Point, isSplit = false) {
-  return new CommandImpl('L', isSplit, [start, end]);
+export function newLine(start: Point, end: Point) {
+  return new CommandImpl('L', [start, end]);
 }
 
-export function newQuadraticCurve(start: Point, cp: Point, end: Point, isSplit = false) {
-  return new CommandImpl('Q', isSplit, [start, cp, end]);
+export function newQuadraticCurve(start: Point, cp: Point, end: Point) {
+  return new CommandImpl('Q', [start, cp, end]);
 }
 
 export function newBezierCurve(
-  start: Point, cp1: Point, cp2: Point, end: Point, isSplit = false) {
-  return new CommandImpl('C', isSplit, [start, cp1, cp2, end]);
+  start: Point, cp1: Point, cp2: Point, end: Point) {
+  return new CommandImpl('C', [start, cp1, cp2, end]);
 }
 
-export function newClosePath(start: Point, end: Point, isSplit = false) {
-  return new CommandImpl('Z', isSplit, [start, end]);
+export function newClosePath(start: Point, end: Point) {
+  return new CommandImpl('Z', [start, end]);
 }
 
 /**
@@ -32,8 +32,8 @@ export class CommandImpl implements Command {
 
   constructor(
     public readonly svgChar: SvgChar,
-    public readonly isSplit: boolean,
-    public readonly points: ReadonlyArray<Point>) { }
+    public readonly points: ReadonlyArray<Point>,
+    public readonly isSplit = false) { }
 
   // Implements the Command interface.
   get start() {
@@ -72,15 +72,15 @@ export class CommandImpl implements Command {
   transform(matrices: Matrix[]): Command {
     return new CommandImpl(
       this.svgChar,
-      this.isSplit,
-      this.points.map(p => p ? MathUtil.transformPoint(p, ...matrices) : p));
+      this.points.map(p => p ? MathUtil.transformPoint(p, ...matrices) : p),
+      this.isSplit);
   }
 
   /** Returns a new reversed draw command. */
   reverse(): CommandImpl {
     if (this.svgChar !== 'M' || this.start) {
       const points = this.points.slice().reverse();
-      return new CommandImpl(this.svgChar, this.isSplit, points);
+      return new CommandImpl(this.svgChar, points, this.isSplit);
     }
     // The first move command of an SVG path has an undefined
     // starting point, so no change is required in that case.
@@ -89,7 +89,7 @@ export class CommandImpl implements Command {
 
   /** Returns a new draw command object with its split property toggled. */
   toggleSplit() {
-    return new CommandImpl(this.svgChar, !this.isSplit, this.points);
+    return new CommandImpl(this.svgChar, this.points, !this.isSplit);
   }
 
   toString() {

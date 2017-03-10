@@ -1,5 +1,5 @@
 import { Point } from '../common';
-import { SubPath, SvgChar } from '.';
+import { SubPath, Command, SvgChar } from '.';
 
 /**
  * Defines the set of methods that are seen by the UI.
@@ -20,6 +20,11 @@ export interface Path {
    * Returns the list of SubPaths in this path.
    */
   getSubPaths(): ReadonlyArray<SubPath>;
+
+  /**
+   * Returns the list of Commands in this path.
+   */
+  getCommands(): ReadonlyArray<Command>;
 
   /**
    * Interpolates this path between a start and end path using the specified fraction.
