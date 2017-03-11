@@ -90,6 +90,10 @@ export class ToolbarComponent implements OnInit {
     const startVectorLayerChildren: Array<PathLayer | GroupLayer> = [];
     const endVectorLayerChildren: Array<PathLayer | GroupLayer> = [];
     const avdTargets: AvdTarget[] = [];
+    const alphaTarget = this.createAlphaAvdTarget();
+    if (alphaTarget) {
+      avdTargets.push(alphaTarget);
+    }
     const rotationTarget = this.createRotationAvdTarget();
     if (rotationTarget) {
       avdTargets.push(rotationTarget);
@@ -130,6 +134,26 @@ export class ToolbarComponent implements OnInit {
     zip.generateAsync({ type: 'blob' }).then(content => {
       downloadFile(content, `ShapeShifter.zip`);
     });
+  }
+
+  private createAlphaAvdTarget() {
+    const startLayer = this.layerStateService.getVectorLayer(CanvasType.Start);
+    const endLayer = this.layerStateService.getVectorLayer(CanvasType.End);
+    if (startLayer.alpha === endLayer.alpha) {
+      return undefined;
+    }
+    const fromValue = startLayer.alpha;
+    const toValue = endLayer.alpha;
+    const duration = this.animatorService.getDuration();
+    const interpolator = this.animatorService.getInterpolator();
+    return new AvdTarget(startLayer.id,
+      [new AvdAnimation(
+        fromValue.toString(),
+        toValue.toString(),
+        duration,
+        interpolator.androidRef,
+        'alpha',
+        'floatType')]);
   }
 
   private createRotationAvdTarget() {
