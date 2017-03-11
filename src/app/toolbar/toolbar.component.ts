@@ -254,11 +254,6 @@ export class ToolbarComponent implements OnInit {
         ]);
       });
   }
-
-  // TODO: display an in-app help dialog instead of redirecting to the GitHub README
-  onHelpClick() {
-    this.dialogsService.help(this.viewContainerRef);
-  }
 }
 
 function downloadFile(content: Blob, fileName: string) {

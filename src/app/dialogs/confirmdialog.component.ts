@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { MdDialogRef } from '@angular/material';
 
 @Component({
@@ -15,10 +15,11 @@ import { MdDialogRef } from '@angular/material';
     <button fxFlexOrder="1" md-button md-dialog-close>Cancel</button>
   </md-dialog-actions>`,
   styleUrls: ['./confirmdialog.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ConfirmDialogComponent {
   title = '';
   message = '';
 
-  constructor(public readonly dialogRef: MdDialogRef<ConfirmDialogComponent>) {}
+  constructor(public readonly dialogRef: MdDialogRef<ConfirmDialogComponent>) { }
 }

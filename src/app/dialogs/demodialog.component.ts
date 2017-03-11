@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { MdDialogRef } from '@angular/material';
 
 @Component({
@@ -18,12 +18,13 @@ import { MdDialogRef } from '@angular/material';
     <button fxFlexOrder="1" md-button md-dialog-close>Cancel</button>
   </md-dialog-actions>`,
   styleUrls: ['./demodialog.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DemoDialogComponent {
   private demoTitles_: string[] = [];
   selectedDemoTitle: string;
 
-  constructor(public readonly dialogRef: MdDialogRef<DemoDialogComponent>) {}
+  constructor(public readonly dialogRef: MdDialogRef<DemoDialogComponent>) { }
 
   get demoTitles() {
     return this.demoTitles_;
