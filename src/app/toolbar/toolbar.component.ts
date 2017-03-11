@@ -128,6 +128,7 @@ export class ToolbarComponent implements OnInit {
         endVectorLayer.height,
         endVectorLayer.alpha);
     const zip = new JSZip();
+    zip.file('README.txt', createExportReadme());
     const android = zip.folder('android');
     const avd = AvdSerializer.vectorLayerAnimationToAvdXmlString(startOutputVectorLayer, avdTargets);
     android.file('AnimatedVectorDrawable.xml', avd);
@@ -282,4 +283,45 @@ function downloadFile(content: Blob, fileName: string) {
   anchor.attr({ href: url, download: fileName });
   anchor.get(0).click();
   window.URL.revokeObjectURL(url);
+}
+
+function createExportReadme() {
+  return `=== Files exported by Shape Shifter ===
+
+This archive contains the following:
+
+web/
+  - StartSvg.svg
+  - EndSvg.svg
+
+android/
+  - StartVectorDrawable.xml
+  - EndVectorDrawable.xml
+  - AnimatedVectorDrawable.xml
+
+If you have an export format that you'd like to see added, please file
+a feature request using the link below!
+
+Further reading:
+
+  - Shape Shifter live version:
+    https://alexjlockwood.github.io/ShapeShifter
+
+  - Shape Shifter source code:
+    https://github.com/alexjlockwood/ShapeShifter
+
+  - File a feature request:
+    https://github.com/alexjlockwood/ShapeShifter/issues
+
+  - Introduction to Icon Animations blog post:
+    http://www.androiddesignpatterns.com/2016/11/introduction-to-icon-animation-techniques.html
+
+  - Animated Vector Drawable sample Android application:
+    https://github.com/alexjlockwood/adp-delightful-details
+
+  - VectorDrawable & AnimatedVectorDrawable developer training docs:
+    https://developer.android.com/guide/topics/graphics/vector-drawable-resources.html
+
+(c) 2017 Alex Lockwood
+`;
 }
