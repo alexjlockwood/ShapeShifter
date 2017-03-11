@@ -17,6 +17,8 @@ import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/combineLatest';
 import * as JSZip from 'jszip';
 
+declare const ga: Function;
+
 @Component({
   selector: 'app-toolbar',
   templateUrl: './toolbar.component.html',
@@ -48,6 +50,8 @@ export class ToolbarComponent implements OnInit {
   }
 
   onNewClick() {
+    ga('send', 'event', 'General', 'New click');
+
     this.dialogsService
       .confirm(this.viewContainerRef, 'Start over?', 'You\'ll lose any unsaved changes.')
       .subscribe(result => {
@@ -62,6 +66,8 @@ export class ToolbarComponent implements OnInit {
   }
 
   onAutoFixClick() {
+    ga('send', 'event', 'General', 'Auto fix click');
+
     let resultStartCmd = this.layerStateService.getActivePathLayer(CanvasType.Start).pathData;
     let resultEndCmd = this.layerStateService.getActivePathLayer(CanvasType.End).pathData;
     const numSubPaths =
@@ -82,9 +88,12 @@ export class ToolbarComponent implements OnInit {
     this.layerStateService.notifyChange(CanvasType.Preview);
     this.layerStateService.notifyChange(CanvasType.Start);
     this.layerStateService.notifyChange(CanvasType.End);
+
   }
 
   onExportClick() {
+    ga('send', 'event', 'Export', 'Export click');
+
     const startVectorLayer = this.layerStateService.getVectorLayer(CanvasType.Start).clone();
     const endVectorLayer = this.layerStateService.getVectorLayer(CanvasType.End).clone();
     const startVectorLayerChildren: Array<PathLayer | GroupLayer> = [];
@@ -220,6 +229,8 @@ export class ToolbarComponent implements OnInit {
   }
 
   onDemoClick() {
+    ga('send', 'event', 'Demos', 'Demos dialog shown');
+
     const demoTitles = Array.from(DEMO_MAP.keys());
     this.dialogsService
       .demo(this.viewContainerRef, demoTitles)
@@ -228,6 +239,7 @@ export class ToolbarComponent implements OnInit {
         if (!selectedSvgStrings) {
           return;
         }
+        ga('send', 'event', 'Demos', 'Demo selected', selectedDemoTitle);
         const importedStartVectorLayer = SvgLoader.loadVectorLayerFromSvgString(selectedSvgStrings.start);
         const importedEndVectorLayer = SvgLoader.loadVectorLayerFromSvgString(selectedSvgStrings.end);
         this.layerStateService.setVectorLayer(CanvasType.Start, importedStartVectorLayer.clone(), false);
@@ -253,6 +265,14 @@ export class ToolbarComponent implements OnInit {
           { type: CanvasType.End, pathId: shuffledEndPathIds[0] },
         ]);
       });
+  }
+
+  onSendFeedbackClick() {
+    ga('send', 'event', 'Miscellaneous', 'Send feedback click');
+  }
+
+  onAboutClick() {
+    ga('send', 'event', 'Miscellaneous', 'About click');
   }
 }
 

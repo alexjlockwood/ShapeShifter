@@ -8,6 +8,8 @@ import { SvgLoader } from '../scripts/import';
 import { VectorLayer, PathLayer } from '../scripts/layers';
 import { Observable } from 'rxjs/Observable';
 
+declare const ga: Function;
+
 @Component({
   selector: 'app-pathselector',
   templateUrl: './pathselector.component.html',
