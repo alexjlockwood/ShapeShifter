@@ -56,7 +56,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   @ViewChild('renderingCanvas') private renderingCanvasRef: ElementRef;
   @ViewChildren(CanvasRulerDirective) canvasRulers: QueryList<CanvasRulerDirective>;
 
-  private vectorLayer: VectorLayer;
   // TODO: make use of this variable (i.e. only show labeled points for active path, etc.)
   private activePathId: string;
   private cssContainerWidth = 1;
@@ -97,8 +96,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     this.subscriptions.push(
       this.layerStateService.getVectorLayerObservable(this.canvasType)
         .subscribe(vl => {
-          this.vectorLayer = vl;
-          this.shouldDrawLayer = !!this.vectorLayer && !!this.activePathId;
+          this.shouldDrawLayer = !!vl && !!this.activePathId;
           const newWidth = vl ? vl.width : DEFAULT_VIEWPORT_SIZE;
           const newHeight = vl ? vl.height : DEFAULT_VIEWPORT_SIZE;
           const didSizeChange = this.vlWidth !== newWidth || this.vlHeight !== newHeight;
@@ -236,6 +234,10 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
   ngOnDestroy() {
     this.subscriptions.forEach(s => s.unsubscribe());
+  }
+
+  get vectorLayer() {
+    return this.layerStateService.getVectorLayer(this.canvasType);
   }
 
   private resizeAndDraw() {

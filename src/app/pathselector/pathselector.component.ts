@@ -59,7 +59,9 @@ export class PathSelectorComponent {
     // Always notify the preview layer in case the morphability status changed.
     const ids = [{ type: canvasType, pathId: activePathId }];
     if (canvasType === CanvasType.Start) {
-      ids.push({ type: CanvasType.Preview, pathId: activePathId });
+      // Set the preview layer id before the start/end layer id to ensure
+      // that auto-conversion runs properly.
+      ids.unshift({ type: CanvasType.Preview, pathId: activePathId });
     }
     this.layerStateService.setActivePathIds(ids);
   }
