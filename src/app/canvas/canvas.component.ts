@@ -56,8 +56,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   @ViewChild('renderingCanvas') private renderingCanvasRef: ElementRef;
   @ViewChildren(CanvasRulerDirective) canvasRulers: QueryList<CanvasRulerDirective>;
 
-  // TODO: make use of this variable (i.e. only show labeled points for active path, etc.)
-  private activePathId: string;
   private cssContainerWidth = 1;
   private cssContainerHeight = 1;
   private vlWidth = DEFAULT_VIEWPORT_SIZE;
@@ -72,7 +70,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   private currentHover: Hover;
   private currentHoverSplitPreviewPath: Path;
   private shouldLabelPoints = false;
-  private shouldDrawLayer = false;
   private shouldDisableLayer = false;
   private readonly subscriptions: Subscription[] = [];
 
@@ -96,7 +93,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     this.subscriptions.push(
       this.layerStateService.getVectorLayerObservable(this.canvasType)
         .subscribe(vl => {
-          this.shouldDrawLayer = !!vl && !!this.activePathId;
           const newWidth = vl ? vl.width : DEFAULT_VIEWPORT_SIZE;
           const newHeight = vl ? vl.height : DEFAULT_VIEWPORT_SIZE;
           const didSizeChange = this.vlWidth !== newWidth || this.vlHeight !== newHeight;
@@ -146,8 +142,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       this.subscriptions.push(
         this.layerStateService.getActivePathIdObservable(this.canvasType)
           .subscribe(activePathId => {
-            this.activePathId = activePathId;
-            this.shouldDrawLayer = !!this.vectorLayer && !!this.activePathId;
             interpolatePreview(currentAnimatedFraction);
             this.draw();
           }));
@@ -177,8 +171,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       this.subscriptions.push(
         this.layerStateService.getActivePathIdObservable(this.canvasType)
           .subscribe(activePathId => {
-            this.activePathId = activePathId;
-            this.shouldDrawLayer = !!this.vectorLayer && !!this.activePathId;
             this.draw();
           }));
       this.subscriptions.push(
@@ -236,8 +228,16 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     this.subscriptions.forEach(s => s.unsubscribe());
   }
 
-  get vectorLayer() {
+  private get vectorLayer() {
     return this.layerStateService.getVectorLayer(this.canvasType);
+  }
+
+  private get activePathId() {
+    return this.layerStateService.getActivePathId(this.canvasType);
+  }
+
+  private get shouldDrawLayer() {
+    return !!this.vectorLayer && !!this.activePathId;
   }
 
   private resizeAndDraw() {
