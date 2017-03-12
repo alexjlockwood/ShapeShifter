@@ -303,7 +303,6 @@ JSAPI.prototype.addAttr = function (attr) {
   this.attrs = this.attrs || {};
   this.attrs[attr.name] = attr;
   return this.attrs[attr.name];
-
 };
 
 /**

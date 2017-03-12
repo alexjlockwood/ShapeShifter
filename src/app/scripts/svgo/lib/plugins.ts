@@ -10,9 +10,7 @@
  * @return {Object} output data
  */
 export function executePlugins(data, plugins) {
-
   plugins.forEach(function (group) {
-
     switch (group[0].type) {
       case 'perItem':
         data = perItem(data, group);
@@ -24,12 +22,9 @@ export function executePlugins(data, plugins) {
         data = full(data, group);
         break;
     }
-
   });
-
   return data;
-
-};
+}
 
 /**
  * Direct or reverse per-item loop.
@@ -40,42 +35,30 @@ export function executePlugins(data, plugins) {
  * @return {Object} output data
  */
 function perItem(data, plugins, reverse = false) {
-
   function monkeys(items) {
-
     items.content = items.content.filter(function (item) {
-
-      // reverse pass
+      // Reverse pass.
       if (reverse && item.content) {
         monkeys(item);
       }
-
-      // main filter
+      // Main filter.
       var filter = true;
-
       for (var i = 0; filter && i < plugins.length; i++) {
         var plugin = plugins[i];
-
         if (plugin.active && plugin.fn(item, plugin.params) === false) {
           filter = false;
         }
       }
-
-      // direct pass
+      // Direct pass.
       if (!reverse && item.content) {
         monkeys(item);
       }
-
       return filter;
-
     });
-
     return items;
 
   }
-
   return monkeys(data);
-
 }
 
 /**

@@ -246,7 +246,7 @@ function inlineStylesFn(document, params) {
   }
 
   return document;
-};
+}
 
 // extracted from https://github.com/keeganstreet/specificity/blob/master/specificity.js#L211
 function compareSpecificity(aSpecificity, bSpecificity) {

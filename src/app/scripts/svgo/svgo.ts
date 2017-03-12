@@ -36,7 +36,7 @@ const svgoPlugins = {
   inlineStyles,
   // minifyStyles: require('svgo/plugins/minifyStyles'),
   convertStyleToAttrs,
-  // replaceUseElems,
+  replaceUseElems,
   // cleanupIDs: require('svgo/plugins/cleanupIDs'),
   // removeRasterImages: require('svgo/plugins/removeRasterImages'), // disabled
   removeUselessDefs,

@@ -36,10 +36,11 @@ function removeUselessStrokeAndFillFn(item, params) {
     const fill = params.fill && !item.computedAttr('fill', 'none');
 
     // remove stroke*
-    if (params.stroke && (!stroke
-      || stroke == 'none'
-      || item.computedAttr('stroke-opacity', '0')
-      || item.computedAttr('stroke-width', '0'))) {
+    if (params.stroke
+      && (!stroke
+        || stroke == 'none'
+        || item.computedAttr('stroke-opacity', '0')
+        || item.computedAttr('stroke-width', '0'))) {
       const parentStroke = item.parentNode.computedAttr('stroke');
       const declineStroke = parentStroke && parentStroke != 'none';
 
