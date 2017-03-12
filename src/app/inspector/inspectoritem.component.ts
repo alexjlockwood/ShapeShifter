@@ -1,12 +1,12 @@
 import * as _ from 'lodash';
 import {
-  Component, OnInit, Input, OnDestroy, Pipe, PipeTransform, ChangeDetectionStrategy
+  Component, OnInit, Input, Pipe, PipeTransform, ChangeDetectionStrategy
 } from '@angular/core';
 import { Path, Command } from '../scripts/commands';
 import { LayerStateService } from '../services/layerstate.service';
 import { SelectionStateService, Selection } from '../services/selectionstate.service';
 import { HoverStateService, Type as HoverType } from '../services/hoverstate.service';
-import { Subscription } from 'rxjs/Subscription';
+import { Observable } from 'rxjs/Observable';
 import { CanvasType } from '../CanvasType';
 
 @Component({
@@ -15,13 +15,13 @@ import { CanvasType } from '../CanvasType';
   styleUrls: ['./inspectoritem.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class InspectorItemComponent implements OnInit, OnDestroy {
+export class InspectorItemComponent implements OnInit {
   @Input() canvasType: CanvasType;
   @Input() subIdx: number;
   @Input() cmdIdx: number;
   @Input() command: Command;
 
-  isSelected = false;
+  isSelectedObservable: Observable<boolean>;
   isHovering = false;
   private isHoveringOverCommand = false;
   private isHoveringOverSplit = false;
@@ -29,7 +29,6 @@ export class InspectorItemComponent implements OnInit, OnDestroy {
   private isHoveringOverReverse = false;
   private isHoveringOverShiftBack = false;
   private isHoveringOverShiftForward = false;
-  private readonly subscriptions: Subscription[] = [];
 
   constructor(
     private layerStateService: LayerStateService,
@@ -37,11 +36,11 @@ export class InspectorItemComponent implements OnInit, OnDestroy {
     private selectionStateService: SelectionStateService) { }
 
   ngOnInit() {
-    this.subscriptions.push(
-      this.selectionStateService.getSelectionsObservable().subscribe(
-        (selections: Selection[]) => {
+    this.isSelectedObservable =
+      this.selectionStateService.getSelectionsObservable()
+        .map((selections: Selection[]) => {
           const activePathId = this.layerStateService.getActivePathId(this.canvasType);
-          this.isSelected = activePathId && _.some(selections, {
+          return activePathId && _.some(selections, {
             source: this.canvasType,
             commandId: {
               pathId: activePathId,
@@ -49,11 +48,7 @@ export class InspectorItemComponent implements OnInit, OnDestroy {
               cmdIdx: this.cmdIdx,
             }
           });
-        }));
-  }
-
-  ngOnDestroy() {
-    this.subscriptions.forEach(s => s.unsubscribe());
+        });
   }
 
   onCommandClick(event: MouseEvent) {
