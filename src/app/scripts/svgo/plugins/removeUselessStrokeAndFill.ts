@@ -9,7 +9,7 @@ export const removeUselessStrokeAndFill = {
   params: {
     stroke: true,
     fill: true,
-    removeNone: false,
+    removeNone: true,
     hasStyleOrScript: false
   },
 };

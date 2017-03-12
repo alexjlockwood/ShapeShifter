@@ -19,4 +19,4 @@ function removeEmptyAttrsFn(item) {
       }
     });
   }
-};
+}

@@ -1,5 +1,3 @@
-/* tslint:disable */
-
 export const removeDoctype = {
   active: true,
   type: 'perItem',
@@ -35,4 +33,4 @@ function removeDoctypeFn(item) {
     return false;
   }
   return undefined;
-};
+}
