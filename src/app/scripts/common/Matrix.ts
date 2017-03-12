@@ -25,16 +25,24 @@ export class Matrix {
     );
   }
 
-  /** Returns the inverse of this transformation matrix. */
-  invert() {
+  /**
+   * Returns the inverse of this transformation matrix or undefined if the
+   * matrix is not invertible.
+   */
+  invert(): Matrix | undefined {
     const m = this;
+    let det = m.a * m.d - m.b * m.c;
+    if (!det) {
+      return undefined;
+    }
+    det = 1 / det;
     return new Matrix(
-      (m.d / (m.a * m.d - m.b * m.c)) || 0,
-      (m.b / (m.b * m.c - m.a * m.d)) || 0,
-      (m.c / (m.b * m.c - m.a * m.d)) || 0,
-      (m.a / (m.a * m.d - m.b * m.c)) || 0,
-      ((m.d * m.e - m.c * m.f) / (m.b * m.c - m.a * m.d)) || 0,
-      ((m.b * m.e - m.a * m.f) / (m.a * m.d - m.b * m.c)) || 0,
+      (m.d * det) || 0,
+      (-m.b * det) || 0,
+      (-m.c * det) || 0,
+      (m.a * det) || 0,
+      ((m.c * m.f - m.d * m.e) * det) || 0,
+      ((m.b * m.e - m.a * m.f) * det) || 0,
     );
   }
 

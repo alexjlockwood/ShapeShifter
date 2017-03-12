@@ -1,5 +1,7 @@
 import { Matrix, Point } from '.';
 
+const EPSILON = 1e-8;
+
 /** Returns the floor modulus of the integer argument. */
 export function floorMod(num, maxNum) {
   return ((num % maxNum) + maxNum) % maxNum;
@@ -10,6 +12,7 @@ export function lerp(a: number, b: number, t: number) {
   return a + (b - a) * t;
 }
 
+/** Clamps the specified number between a min and max value. */
 export function clamp(num: number, min: number, max: number) {
   if (num < min) {
     return min;
@@ -25,12 +28,12 @@ export function areCollinear(...points: Point[]) {
   if (points.length < 3) {
     return true;
   }
-  const {x: a, y: b} = points[0];
-  const {x: m, y: n} = points[1];
-  return points.every(({x, y}: Point) => {
+  const { x: a, y: b } = points[0];
+  const { x: m, y: n } = points[1];
+  return points.every(({ x, y }: Point) => {
     // The points are collinear if the area of the triangle they form
     // is equal (or in this case close to) zero.
-    return a * (n - y) + m * (y - b) + x * (b - n) < 1e-8;
+    return a * (n - y) + m * (y - b) + x * (b - n) < EPSILON;
   });
 }
 
@@ -52,6 +55,7 @@ export function distance(p1: Point, p2: Point) {
   return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
 }
 
+/** Flattens the transformation matrices into a single matrix. */
 export function flattenTransforms(matricies: Matrix[]) {
   return matricies.reduce((prev, curr) => curr.dot(prev), new Matrix());
 }
