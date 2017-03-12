@@ -1,8 +1,10 @@
 import * as _ from 'lodash';
-import { MathUtil, Point } from '../common';
+import { MathUtil, Point, Matrix } from '../common';
 import { Mutator, newMutator } from './mutators';
 import { SvgChar, Projection } from '.';
 import { CommandImpl } from './CommandImpl';
+
+const IDENTITY = new Matrix();
 
 /**
  * Contains additional information about each individual command so that we can
@@ -12,7 +14,9 @@ import { CommandImpl } from './CommandImpl';
  * that each Path maintains its own unique snapshot of its current mutation state.
  */
 export class CommandMutation {
-  readonly backingCommand: CommandImpl;
+  private readonly backingCommand: CommandImpl;
+  private readonly transformedBackingCommand: CommandImpl;
+  private readonly backingSvgChar: SvgChar;
 
   // A lazily-initialized mutator that will do all of the math-y stuff for us.
   private mutator_: Mutator;
@@ -29,6 +33,9 @@ export class CommandMutation {
   // are always reversible.
   private readonly mutations: ReadonlyArray<Mutation>;
 
+  // The transformation matrix used to transform this command mutation.
+  private readonly transforms: ReadonlyArray<Matrix>;
+
   constructor(obj: CommandImpl | ConstructorParams) {
     if (obj instanceof CommandImpl) {
       this.backingCommand = obj;
@@ -37,29 +44,36 @@ export class CommandMutation {
         t: 1,
         svgChar: this.backingCommand.svgChar,
       }];
+      this.transforms = [IDENTITY];
       this.builtCommands = [obj];
     } else {
       this.backingCommand = obj.backingCommand;
       this.mutations = obj.mutations;
+      this.transforms = obj.transforms;
       this.builtCommands = obj.builtCommands;
       this.mutator_ = obj.mutator_;
     }
+    this.transformedBackingCommand = this.backingCommand.transform(this.transforms);
+    this.backingSvgChar = this.backingCommand.svgChar;
   }
 
   private get mutator() {
     if (!this.mutator_) {
-      this.mutator_ = newMutator(this.backingCommand);
+      this.mutator_ = newMutator(this.transformedBackingCommand);
     }
     return this.mutator_;
   }
 
+  /**
+   * Returns the transformed backing command's path length.
+   */
   getPathLength() {
     return this.mutator.getPathLength();
   }
 
   /**
    * Note that the projection is performed in relation to the command mutation's
-   * original backing command.
+   * transformed backing command.
    */
   project(point: Point): Projection | undefined {
     return this.mutator.project(point);
@@ -67,10 +81,10 @@ export class CommandMutation {
 
   /**
    * Note that the split is performed in relation to the command mutation's
-   * original backing command.
+   * transformed backing command.
    */
   split(ts: number[]) {
-    if (!ts.length || this.backingCommand.svgChar === 'M') {
+    if (!ts.length || this.backingSvgChar === 'M') {
       return this;
     }
     const currSplits = this.mutations.map(m => m.t);
@@ -159,15 +173,42 @@ export class CommandMutation {
     }));
   }
 
+  /**
+   * Transforms this command mutation using the specified transformation matrices.
+   */
+  transform(transforms: Matrix[]) {
+    return this.rebuildCommands(
+      this.mutations, [].concat(transforms, this.transforms));
+  }
+
+  /**
+   * Reverts this command mutation back to its original state.
+   */
+  revert() {
+    return this.rebuildCommands([{
+      id: _.last(this.mutations).id,
+      t: 1,
+      svgChar: this.backingCommand.svgChar,
+    }], [IDENTITY]);
+  }
+
   // TODO: this could be more efficient (avoid recreating commands unnecessarily)
-  private rebuildCommands(mutations: Mutation[]) {
+  private rebuildCommands(mutations: ReadonlyArray<Mutation>, transforms = this.transforms) {
+    // Reset the mutator if the command has been transformed. The cloned CommandMutation
+    // will lazily re-initialize the mutator when necessary.
+    const haveTransformsChanged = this.transforms.length !== transforms.length
+      || this.transforms.some((m, i) => !m.equals(transforms[i]));
+    const transformedMutator =
+      haveTransformsChanged
+        ? newMutator(this.backingCommand.transform(transforms))
+        : this.mutator;
     if (mutations.length === 1) {
-      const command = this.mutator.convert(mutations[0].svgChar).toCommand();
       return new CommandMutation({
         backingCommand: this.backingCommand,
         mutations,
-        builtCommands: [command],
-        mutator_: this.mutator_,
+        transforms,
+        builtCommands: [transformedMutator.convert(mutations[0].svgChar).toCommand()],
+        mutator_: transformedMutator,
       });
     }
     const builtCommands: CommandImpl[] = [];
@@ -175,7 +216,8 @@ export class CommandMutation {
     for (let i = 0; i < mutations.length; i++) {
       const currT = mutations[i].t;
       let command =
-        this.mutator.split(prevT, currT)
+        transformedMutator
+          .split(prevT, currT)
           .convert(mutations[i].svgChar)
           .toCommand();
       if (i !== mutations.length - 1) {
@@ -187,8 +229,9 @@ export class CommandMutation {
     return new CommandMutation({
       backingCommand: this.backingCommand,
       mutations,
+      transforms,
       builtCommands,
-      mutator_: this.mutator_,
+      mutator_: transformedMutator,
     });
   }
 
@@ -206,6 +249,7 @@ interface Mutation {
 interface ConstructorParams {
   readonly backingCommand: CommandImpl;
   readonly mutations: ReadonlyArray<Mutation>;
+  readonly transforms: ReadonlyArray<Matrix>;
   readonly builtCommands: ReadonlyArray<CommandImpl>;
   readonly mutator_: Mutator;
 }

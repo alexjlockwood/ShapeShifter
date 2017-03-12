@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import { MathUtil, Point } from '../common';
+import { MathUtil, Point, Matrix } from '../common';
 import { Path, SubPath, Command, SvgChar, Projection } from '.';
 import * as PathParser from './PathParser';
 import { newSubPath } from './SubPathImpl';
@@ -26,7 +26,6 @@ class PathImpl implements Path {
   constructor(obj: string | Command[] | PathParams) {
     if (typeof obj === 'string' || Array.isArray(obj)) {
       if (typeof obj === 'string') {
-        this.pathString = obj;
         this.subPaths = createSubPaths(...PathParser.parseCommands(obj));
       } else {
         this.subPaths = createSubPaths(...obj);
@@ -191,7 +190,7 @@ class PathImpl implements Path {
 
   // Implements the Path interface.
   getCommands(): ReadonlyArray<Command> {
-    return _.flatMap(this.getSubPaths(), subPath => subPath.getCommands() as Command[]);
+    return _.flatMap(this.subPaths, subPath => subPath.getCommands() as Command[]);
   }
 
   // Implements the Path interface.
@@ -217,6 +216,7 @@ class PathImpl implements Path {
     if (!this.isMorphableWith(start) || !this.isMorphableWith(end)) {
       return this;
     }
+    // TODO: is this overkill? might be smart to make this more memory efficient.
     return new PathImpl(
       _.zipWith<Command>(
         start.getCommands(),
@@ -432,11 +432,18 @@ class PathImpl implements Path {
 
   // Implements the Path interface.
   revert() {
-    return new PathImpl(
-      _.chain(this.commandMutationsMap)
-        .flatMap(cms => cms)
-        .map(cm => cm.backingCommand)
-        .value());
+    return this.clone({
+      commandMutationsMap: this.commandMutationsMap.map(cms => cms.map(cm => cm.revert())),
+      shiftOffsets: this.subPaths.map(_ => 0),
+      reversals: this.subPaths.map(_ => false),
+    });
+  }
+
+  // Implements the Path interface.
+  transform(transforms: Matrix[]) {
+    const commandMutationsMap =
+      this.commandMutationsMap.map(cms => cms.map(cm => cm.transform(transforms)));
+    return this.clone({ commandMutationsMap });
   }
 
   /**
@@ -470,16 +477,6 @@ class PathImpl implements Path {
     const newCms = this.commandMutationsMap.map(cms => cms.slice());
     newCms[subIdx][cmIdx] = cm;
     return newCms;
-  }
-
-  // Implements the Path interface.
-  splitSubpath(
-    subIdx: number,
-    split1: { cmdIdx: number, t: number },
-    split2?: { cmdIdx: number, t: number }) {
-
-    // Not yet implemented.
-    return this;
   }
 }
 

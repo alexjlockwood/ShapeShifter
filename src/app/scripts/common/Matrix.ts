@@ -1,7 +1,34 @@
 import { MathUtil, Point } from '.';
 
-/** An immutable Matrix class that uses the standard SVG transformation matrix notation. */
+const EPSILON = 1e-8;
+
+/**
+ * An immutable Matrix class that uses the standard SVG transformation
+ * matrix notation.
+ */
 export class Matrix {
+
+  static flatten(...matrices: Matrix[]) {
+    return MathUtil.flattenTransforms(matrices);
+  }
+
+  static fromRotation(degrees: number) {
+    const cosr = Math.cos(degrees * Math.PI / 180);
+    const sinr = Math.sin(degrees * Math.PI / 180);
+    return new Matrix(cosr, sinr, -sinr, cosr, 0, 0);
+  }
+
+  static fromScaling(scaleX: number, scaleY: number) {
+    return new Matrix(scaleX, 0, 0, scaleY, 0, 0);
+  }
+
+  static fromTranslation(translateX: number, translateY: number) {
+    return new Matrix(1, 0, 0, 1, translateX, translateY);
+  }
+
+  /**
+   * Note that the default no-args constructor creates the identity matrix.
+   */
   constructor(
     public readonly a = 1,
     public readonly b = 0,
@@ -10,7 +37,9 @@ export class Matrix {
     public readonly e = 0,
     public readonly f = 0) { }
 
-  /** Returns the dot product of this 2D transformation matrices with m. */
+  /**
+   * Returns the dot product of this 2D transformation matrices with m.
+   */
   dot(m: Matrix) {
     // [a c e]   [a' c' e']
     // [b d f] * [b' d' f']
@@ -66,5 +95,17 @@ export class Matrix {
     const crossProduct = vecA.y * vecB.x - vecA.x * vecB.y;
     const maxScale = Math.max(scaleX, scaleY);
     return maxScale > 0 ? Math.abs(crossProduct) / maxScale : 0;
+  }
+
+  /**
+   * Returns true if the matrix is approximately equal to this matrix.
+   */
+  equals(m: Matrix) {
+    return Math.abs(this.a - m.a) < EPSILON
+      && Math.abs(this.b - m.b) < EPSILON
+      && Math.abs(this.c - m.c) < EPSILON
+      && Math.abs(this.d - m.d) < EPSILON
+      && Math.abs(this.e - m.e) < EPSILON
+      && Math.abs(this.f - m.f) < EPSILON;
   }
 }

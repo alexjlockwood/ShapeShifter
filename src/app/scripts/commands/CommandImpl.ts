@@ -69,7 +69,7 @@ export class CommandImpl implements Command {
   }
 
   // Implements the Command interface.
-  transform(matrices: Matrix[]): Command {
+  transform(matrices: ReadonlyArray<Matrix>) {
     return new CommandImpl(
       this.svgChar,
       this.points.map(p => p ? MathUtil.transformPoint(p, ...matrices) : p),

@@ -809,14 +809,12 @@ function getTransformsForLayer(vectorLayer: VectorLayer, layerId: string) {
         if (!(layer instanceof GroupLayer)) {
           return [];
         }
-        const cosr = Math.cos(layer.rotation * Math.PI / 180);
-        const sinr = Math.sin(layer.rotation * Math.PI / 180);
         return [
-          new Matrix(1, 0, 0, 1, layer.pivotX, layer.pivotY),
-          new Matrix(1, 0, 0, 1, layer.translateX, layer.translateY),
-          new Matrix(cosr, sinr, -sinr, cosr, 0, 0),
-          new Matrix(layer.scaleX, 0, 0, layer.scaleY, 0, 0),
-          new Matrix(1, 0, 0, 1, -layer.pivotX, -layer.pivotY),
+          Matrix.fromTranslation(layer.pivotX, layer.pivotY),
+          Matrix.fromTranslation(layer.translateX, layer.translateY),
+          Matrix.fromRotation(layer.rotation),
+          Matrix.fromScaling(layer.scaleX, layer.scaleY),
+          Matrix.fromTranslation(-layer.pivotX, -layer.pivotY),
         ];
       });
     }

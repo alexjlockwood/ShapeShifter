@@ -1,4 +1,4 @@
-import { Point } from '../common';
+import { Point, Matrix } from '../common';
 import { SubPath, Command, SvgChar } from '.';
 
 /**
@@ -114,14 +114,10 @@ export interface Path {
   revert(): Path;
 
   /**
-   * Splits the subpath at the specified command index and t value. A second
-   * split argument must be specified if the sub path is a filled path.
+   * Transforms the path using the specified transformation matrices.
    * Returns a new path object.
    */
-  splitSubpath(
-    subIdx: number,
-    split1: { cmdIdx: number, t: number },
-    split2?: { cmdIdx: number, t: number }): Path;
+  transform(transforms: Matrix[]): Path;
 }
 
 /** Represents a projection onto a path. */

@@ -1,4 +1,5 @@
 import { SvgChar, newPath } from '.';
+import { Matrix } from '../common';
 import * as _ from 'lodash';
 
 describe('Path', () => {
@@ -200,6 +201,61 @@ describe('Path', () => {
       ['M'],
     ];
     expect(actual).toEqual(expected);
+  });
+});
+
+// TODO: test multiple transformations at a time
+// TODO: test that reversals and stuff still work
+// TODO: test that splits and conversions and stuff still work
+// TODO: test that reversals/shifts/splits/etc. are reverted properly, not just transforms
+describe('Path transformations:', () => {
+  const INITIAL = newPath('M -4 -8 h 8 v 16 h -8 v -16');
+
+  it('empty list of transforms', () => {
+    const actual = INITIAL.transform([]);
+    const expected = INITIAL;
+    expect(actual.getPathString()).toEqual(expected.getPathString());
+  });
+
+  it('identity', () => {
+    const actual = INITIAL.transform([new Matrix()]);
+    const expected = INITIAL;
+    expect(actual.getPathString()).toEqual(expected.getPathString());
+  });
+
+  it('translate', () => {
+    const actual = INITIAL.transform([Matrix.fromTranslation(4, 8)]);
+    const expected = newPath('M 0 0 h 8 v 16 h -8 v -16');
+    expect(actual.getPathString()).toEqual(expected.getPathString());
+  });
+
+  it('rotate 90 degrees', () => {
+    const actual = INITIAL.transform([Matrix.fromRotation(90)]);
+    const expected = newPath('M 8 -4 v 8 h -16 v -8 h 16');
+    expect(actual.getPathString()).toEqual(expected.getPathString());
+  });
+
+  it('rotate 180 degrees', () => {
+    const actual = INITIAL.transform([Matrix.fromRotation(180)]);
+    const expected = newPath('M 4 8 h -8 v -16 h 8 v 16');
+    expect(actual.getPathString()).toEqual(expected.getPathString());
+  });
+
+  it('scale down 50%', () => {
+    const actual = INITIAL.transform([Matrix.fromScaling(0.5, 0.5)]);
+    const expected = newPath('M -2 -4 h 4 v 8 h -4 v -8');
+    expect(actual.getPathString()).toEqual(expected.getPathString());
+  });
+
+  it('revert transformations', () => {
+    const actual = INITIAL.transform([
+      Matrix.fromTranslation(1, 2),
+      Matrix.fromScaling(2, 3),
+      Matrix.fromRotation(34),
+      Matrix.fromTranslation(3, 4),
+    ]).revert();
+    const expected = INITIAL;
+    expect(actual.getPathString()).toEqual(expected.getPathString());
   });
 });
 
