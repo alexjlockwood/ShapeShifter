@@ -21,6 +21,8 @@ import { removeUnknownsAndDefaults } from './plugins/removeUnknownsAndDefaults';
 import { removeEmptyText } from './plugins/removeEmptyText';
 import { removeEmptyAttrs } from './plugins/removeEmptyAttrs';
 import { removeNonInheritableGroupAttrs } from './plugins/removeNonInheritableGroupAttrs';
+import { replaceUseElems } from './plugins/replaceUseElems';
+import { removeUselessStrokeAndFill } from './plugins/removeUselessStrokeAndFill';
 
 // The complete list is available here: https://github.com/svg/svgo/blob/master/.svgo.yml
 const svgoPlugins = {
@@ -34,6 +36,7 @@ const svgoPlugins = {
   inlineStyles,
   // minifyStyles: require('svgo/plugins/minifyStyles'),
   convertStyleToAttrs,
+  // replaceUseElems,
   // cleanupIDs: require('svgo/plugins/cleanupIDs'),
   // removeRasterImages: require('svgo/plugins/removeRasterImages'), // disabled
   removeUselessDefs,
@@ -42,7 +45,7 @@ const svgoPlugins = {
   // convertColors: require('svgo/plugins/convertColors'),
   removeUnknownsAndDefaults,
   removeNonInheritableGroupAttrs,
-  // removeUselessStrokeAndFill: require('svgo/plugins/removeUselessStrokeAndFill'),
+  removeUselessStrokeAndFill,
   // removeViewBox: require('svgo/plugins/removeViewBox'), // disabled
   // cleanupEnableBackground: require('svgo/plugins/cleanupEnableBackground'),
   removeHiddenElems,

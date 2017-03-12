@@ -201,7 +201,6 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
     ];
   }
 
-  extractDefsMapFn(doc.documentElement);
   const rootLayer = nodeToLayerDataFn(documentElement, docElContext);
   const id = makeFinalNodeIdFn(documentElement, 'vector');
   const childrenLayers = rootLayer ? rootLayer.children : undefined;
