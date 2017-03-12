@@ -5,25 +5,43 @@ import { HttpModule } from '@angular/http';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { MaterialModule, MdIconRegistry } from '@angular/material';
 
+// Components & directives.
 import { AppComponent } from './app.component';
 import { CanvasComponent } from './canvas/canvas.component';
-import { TimelineComponent } from './timeline/timeline.component';
-import { SplitterComponent } from './splitter/splitter.component';
-import { InspectorComponent } from './inspector/inspector.component';
-import { InspectorItemComponent, SvgCommandPipe } from './inspector/inspectoritem.component';
-import { AnimatorService } from './services/animator.service';
-import { LayerStateService } from './services/layerstate.service';
-import { SelectionStateService } from './services/selectionstate.service';
-import { HoverStateService } from './services/hoverstate.service';
-import { CanvasResizeService } from './services/canvasresize.service';
 import { CanvasRulerDirective } from './canvas/canvasruler.directive';
-import { SettingsComponent } from './settings/settings.component';
-import { ToolbarComponent } from './toolbar/toolbar.component';
-import { DialogService, HelpDialogComponent, ConfirmDialogComponent, DemoDialogComponent } from './dialogs';
-import { SettingsService } from './services/settings.service';
+import { InspectorComponent } from './inspector/inspector.component';
+import { InspectorItemComponent } from './inspector/inspectoritem.component';
 import { PathSelectorComponent } from './pathselector/pathselector.component';
-import { IsEqualToPipe, IsNotEqualToPipe } from './pipes';
+import { SettingsComponent } from './settings/settings.component';
+import { SplitterComponent } from './splitter/splitter.component';
+import { TimelineComponent } from './timeline/timeline.component';
+import { ToolbarComponent } from './toolbar/toolbar.component';
+
+// Services.
+import {
+  AnimatorService,
+  CanvasResizeService,
+  HoverStateService,
+  LayerStateService,
+  SelectionStateService,
+  SettingsService,
+} from './services';
+
+// Dialogs.
+import {
+  ConfirmDialogComponent,
+  DemoDialogComponent,
+  DialogService,
+} from './dialogs';
+
+// Pipes.
+import {
+  IsEqualToPipe,
+  IsNotEqualToPipe,
+} from './pipes';
+import { PathLayerListPipe } from './pathselector/pathselector.component';
 import { SubPathItemsPipe } from './inspector/inspector.component';
+import { SvgCommandPipe } from './inspector/inspectoritem.component';
 
 import 'hammerjs';
 
@@ -40,12 +58,12 @@ import 'hammerjs';
     ToolbarComponent,
     PathSelectorComponent,
     ConfirmDialogComponent,
-    HelpDialogComponent,
     DemoDialogComponent,
     SvgCommandPipe,
     IsEqualToPipe,
     IsNotEqualToPipe,
     SubPathItemsPipe,
+    PathLayerListPipe,
   ],
   imports: [
     BrowserModule,
@@ -65,7 +83,6 @@ import 'hammerjs';
   ],
   entryComponents: [
     ConfirmDialogComponent,
-    HelpDialogComponent,
     DemoDialogComponent,
   ],
   bootstrap: [AppComponent]

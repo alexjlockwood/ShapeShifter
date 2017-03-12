@@ -1,5 +1,5 @@
 import { Point } from '../common';
-import { SubPath, SvgChar } from '.';
+import { SubPath, Command, SvgChar } from '.';
 
 /**
  * Defines the set of methods that are seen by the UI.
@@ -22,6 +22,11 @@ export interface Path {
   getSubPaths(): ReadonlyArray<SubPath>;
 
   /**
+   * Returns the list of Commands in this path.
+   */
+  getCommands(): ReadonlyArray<Command>;
+
+  /**
    * Interpolates this path between a start and end path using the specified fraction.
    * Does nothing if the paths are not morphable with each other.
    */
@@ -37,7 +42,7 @@ export interface Path {
    * Also returns a 'split' function that can be used to split the path at the returned
    * projection point. Returns undefined if no point is found.
    */
-  project(point: Point): { projection: Projection, split: () => Path } | undefined;
+  project(point: Point): { projection: Projection, splitFn: () => Path } | undefined;
 
   /**
    * Reverses the order of the points in the sub path at the specified index.

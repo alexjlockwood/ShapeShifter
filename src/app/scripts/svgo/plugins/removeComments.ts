@@ -1,5 +1,3 @@
-/* tslint:disable */
-
 export const removeComments = {
   active: true,
   type: 'perItem',
@@ -18,9 +16,8 @@ export const removeComments = {
  * @return {Boolean} if false, item will be filtered out
  */
 function removeCommentsFn(item) {
-
   if (item.comment && item.comment.charAt(0) !== '!') {
     return false;
   }
   return undefined;
-};
+}

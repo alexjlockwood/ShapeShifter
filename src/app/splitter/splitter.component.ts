@@ -1,4 +1,4 @@
-import { Component, ElementRef, HostListener } from '@angular/core';
+import { Component, ElementRef, HostListener, ChangeDetectionStrategy } from '@angular/core';
 import { Point } from '../scripts/common';
 import * as $ from 'jquery';
 
@@ -8,7 +8,8 @@ const MIN_PARENT_HEIGHT = 40;
 @Component({
   selector: 'app-splitter',
   templateUrl: './splitter.component.html',
-  styleUrls: ['./splitter.component.scss']
+  styleUrls: ['./splitter.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SplitterComponent {
   private downPoint: Point;

@@ -8,7 +8,8 @@ export type PropertyName =
   | 'strokeColor'
   | 'fillAlpha'
   | 'strokeAlpha'
-  | 'strokeWidth';
+  | 'strokeWidth'
+  | 'alpha';
 
 /**
  * The currently supported animatable value types.

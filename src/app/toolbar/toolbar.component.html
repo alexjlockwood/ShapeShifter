@@ -1,58 +1,40 @@
-<div class="toolbar"
-  fxLayout="row"
-  fxLayoutAlign="center center">
-  <md-icon class="toolbar-logo"
-    svgIcon="shapeshifter"></md-icon>
+<div class="toolbar" fxLayout="row" fxLayoutAlign="center center">
+  <md-icon class="toolbar-logo" svgIcon="shapeshifter"></md-icon>
   <span>Shape Shifter</span>
   <span fxFlex="1 1 auto"></span>
-  <button
-    class="toolbar-action-button"
-    [disabled]="!(isDirtyObservable | async)"
-    mdTooltip="New"
-    mdTooltipPosition="below"
-    mdTooltipShowDelay="500"
-    (click)="onNewClick()"
-    md-icon-button>
+  <button class="toolbar-action-button" [disabled]="!(isDirtyObservable | async)"
+    mdTooltip="New" mdTooltipPosition="below" mdTooltipShowDelay="500"
+    (click)="onNewClick()" md-icon-button>
     <md-icon>create</md-icon>
   </button>
-  <button md-icon-button
-    class="toolbar-action-button"
-    [disabled]="morphabilityStatusObservable | async | isEqualTo: MORPHABILITY_NONE"
-    (click)="onAutoFixClick()"
-    mdTooltip="Auto fix"
-    mdTooltipShowDelay="500"
+  <button md-icon-button class="toolbar-action-button" [disabled]="morphabilityStatusObservable | async | isEqualTo: MORPHABILITY_NONE"
+    (click)="onAutoFixClick()" mdTooltip="Auto fix" mdTooltipShowDelay="500"
     mdTooltipPosition="below">
     <md-icon svgIcon="autofix"></md-icon>
   </button>
-  <button md-icon-button
-    class="toolbar-action-button"
-    [disabled]="morphabilityStatusObservable | async | isNotEqualTo: MORPHABILITY_MORPHABLE"
-    mdTooltip="Export"
-    mdTooltipPosition="below"
-    mdTooltipShowDelay="500"
+  <button md-icon-button class="toolbar-action-button" [disabled]="morphabilityStatusObservable | async | isNotEqualTo: MORPHABILITY_MORPHABLE"
+    mdTooltip="Export" mdTooltipPosition="below" mdTooltipShowDelay="500"
     (click)="onExportClick()">
     <md-icon>file_download</md-icon>
   </button>
-  <button
-    class="toolbar-action-button"
-    md-icon-button
-    [mdMenuTriggerFor]="menu">
+  <button class="toolbar-action-button" md-icon-button [mdMenuTriggerFor]="menu">
     <md-icon>more_vert</md-icon>
   </button>
   <md-menu #menu="mdMenu">
-    <button md-menu-item
-      (click)="onDemoClick()">
+    <button md-menu-item (click)="onDemoClick()">
       <md-icon class="material-icons" svgIcon="demoicon"></md-icon>
       <span>Demos</span>
     </button>
-    <a href="https://github.com/alexjlockwood/ShapeShifter/issues" target="_blank" class="toolbar-overflow-link-item">
-      <button md-menu-item>
+    <a href="https://github.com/alexjlockwood/ShapeShifter/issues"
+      target="_blank" class="toolbar-overflow-link-item">
+      <button md-menu-item (click)="onSendFeedbackClick()">
         <md-icon>bug_report</md-icon>
         <span>Send feedback</span>
       </button>
     </a>
-    <a href="https://github.com/alexjlockwood/ShapeShifter/blob/master/README.md" target="_blank" class="toolbar-overflow-link-item">
-      <button md-menu-item>
+    <a href="https://github.com/alexjlockwood/ShapeShifter/blob/master/README.md"
+      target="_blank" class="toolbar-overflow-link-item">
+      <button md-menu-item (click)="onAboutClick()">
         <md-icon>info</md-icon>
         <span>About</span>
       </button>

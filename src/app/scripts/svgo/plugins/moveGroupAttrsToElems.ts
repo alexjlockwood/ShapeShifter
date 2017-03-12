@@ -1,5 +1,3 @@
-/* tslint:disable */
-
 import * as collections from './_collections';
 
 export const moveGroupAttrsToElems = {
@@ -30,21 +28,18 @@ const referencesProps = collections.referencesProps;
  * @return {Boolean} if false, item will be filtered out
  */
 function moveGroupAttrsToElemsFn(item) {
-
-  // move group transform attr to content's pathElems
-  if (
-    item.isElem('g') &&
-    item.hasAttr('transform') &&
-    !item.isEmpty() &&
-    !item.someAttr(function (attr) {
+  // Move group transform attr to content's pathElems.
+  if (item.isElem('g')
+    && item.hasAttr('transform')
+    && !item.isEmpty()
+    && !item.someAttr(function (attr) {
       return ~referencesProps.indexOf(attr.name) && ~attr.value.indexOf('url(');
-    }) &&
-    item.content.every(function (inner) {
-      return inner.isElem(pathElems) && !inner.hasAttr('id');
     })
-  ) {
+    && item.content.every(function (inner) {
+      return inner.isElem(pathElems) && !inner.hasAttr('id');
+    })) {
     item.content.forEach(function (inner) {
-      var attr = item.attr('transform');
+      const attr = item.attr('transform');
       if (inner.hasAttr('transform')) {
         inner.attr('transform').value = attr.value + ' ' + inner.attr('transform').value;
       } else {
@@ -52,12 +47,10 @@ function moveGroupAttrsToElemsFn(item) {
           'name': attr.name,
           'local': attr.local,
           'prefix': attr.prefix,
-          'value': attr.value
+          'value': attr.value,
         });
       }
     });
-
     item.removeAttr('transform');
   }
-
-};
+}

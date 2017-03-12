@@ -87,7 +87,11 @@ class PathImpl implements Path {
       // If the last command is a 'Z', replace it with a line before we reverse.
       const lastCmd = _.last(cmds);
       if (lastCmd.svgChar === 'Z') {
-        cmds[cmds.length - 1] = newLine(lastCmd.start, lastCmd.end, lastCmd.isSplit);
+        let lineCmd = newLine(lastCmd.start, lastCmd.end);
+        if (lastCmd.isSplit) {
+          lineCmd = lineCmd.toggleSplit();
+        }
+        cmds[cmds.length - 1] = lineCmd;
       }
 
       // Reverse the commands.
@@ -119,7 +123,11 @@ class PathImpl implements Path {
       const lastCmd = _.last(cmds);
       if (lastCmd.svgChar === 'Z') {
         // TODO: avoid this... replacing the 'Z' can cause undesireable side effects.
-        cmds[numCommands - 1] = newLine(lastCmd.start, lastCmd.end, lastCmd.isSplit);
+        let lineCmd = newLine(lastCmd.start, lastCmd.end);
+        if (lastCmd.isSplit) {
+          lineCmd = lineCmd.toggleSplit();
+        }
+        cmds[numCommands - 1] = lineCmd;
       }
 
       const newCmds: Command[] = [];
@@ -171,9 +179,7 @@ class PathImpl implements Path {
   // Implements the Path interface.
   getPathString() {
     if (_.isUndefined(this.pathString)) {
-      const commands =
-        _.flatMap(this.getSubPaths(), subPath => subPath.getCommands() as Command[]);
-      this.pathString = PathParser.commandsToString(commands);
+      this.pathString = PathParser.commandsToString(this.getCommands());
     }
     return this.pathString;
   }
@@ -181,6 +187,11 @@ class PathImpl implements Path {
   // Implements the Path interface.
   getSubPaths() {
     return this.subPaths;
+  }
+
+  // Implements the Path interface.
+  getCommands(): ReadonlyArray<Command> {
+    return _.flatMap(this.getSubPaths(), subPath => subPath.getCommands() as Command[]);
   }
 
   // Implements the Path interface.
@@ -195,13 +206,10 @@ class PathImpl implements Path {
 
   // Implements the Path interface.
   isMorphableWith(path: Path) {
-    const scmds1 = this.getSubPaths();
-    const scmds2 = path.getSubPaths();
-    return scmds1.length === scmds2.length
-      && scmds1.every((_, i) =>
-        scmds1[i].getCommands().length === scmds2[i].getCommands().length
-        && scmds1[i].getCommands().every((__, j) =>
-          scmds1[i].getCommands()[j].svgChar === scmds2[i].getCommands()[j].svgChar));
+    const cmds1 = this.getCommands();
+    const cmds2 = path.getCommands();
+    return cmds1.length === cmds2.length
+      && cmds1.every((cmd1, i) => cmd1.svgChar === cmds2[i].svgChar);
   }
 
   // Implements the Path interface.
@@ -209,36 +217,41 @@ class PathImpl implements Path {
     if (!this.isMorphableWith(start) || !this.isMorphableWith(end)) {
       return this;
     }
-    const commands: Command[] = [];
-    this.getSubPaths().forEach((subCmd, i) => {
-      subCmd.getCommands().forEach((cmd, j) => {
-        const cmd1 = start.getSubPaths()[i].getCommands()[j];
-        const cmd2 = end.getSubPaths()[i].getCommands()[j];
-        const points: Point[] = [];
-        for (let k = 0; k < cmd1.points.length; k++) {
-          const p1 = cmd1.points[k];
-          const p2 = cmd2.points[k];
-          if (p1 && p2) {
-            const px = MathUtil.lerp(p1.x, p2.x, fraction);
-            const py = MathUtil.lerp(p1.y, p2.y, fraction);
-            points.push(new Point(px, py));
-          }
-        }
-        commands.push(new CommandImpl(cmd.svgChar, cmd.isSplit, points));
-      });
-    });
-    return new PathImpl(commands);
+    return new PathImpl(
+      _.zipWith<Command>(
+        start.getCommands(),
+        this.getCommands(),
+        end.getCommands(),
+        (startCmd: Command, currCmd: Command, endCmd: Command) => {
+          return new CommandImpl(
+            currCmd.svgChar,
+            _.zipWith<Point>(
+              startCmd.points,
+              currCmd.points,
+              endCmd.points,
+              (startPt: Point, currPt: Point, endPt: Point) => {
+                if (!startPt || !currPt || !endPt) {
+                  // The 'start' point of the first Move command in a path
+                  // will be undefined. Skip it.
+                  return undefined;
+                }
+                return new Point(
+                  MathUtil.lerp(startPt.x, endPt.x, fraction),
+                  MathUtil.lerp(startPt.y, endPt.y, fraction));
+              }),
+            currCmd.isSplit);
+        }));
   }
 
   // Implements the Path interface.
-  project(point: Point): { projection: Projection, split: () => Path } | undefined {
+  project(point: Point): { projection: Projection, splitFn: () => Path } | undefined {
     return _.chain(this.commandMutationsMap)
       .map((subPathCms: CommandMutation[], cmsIdx) =>
         subPathCms.map((cm: CommandMutation, cmIdx) => {
           const projection = cm.project(point);
           return {
             projection,
-            split: () => this.splitCommandMutation(cmsIdx, cmIdx, projection.t),
+            splitFn: () => this.splitCommandMutation(cmsIdx, cmIdx, projection.t),
           };
         }))
       .flatMap(projections => projections)

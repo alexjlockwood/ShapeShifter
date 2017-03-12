@@ -1,5 +1,5 @@
 import { Observable } from 'rxjs/Rx';
-import { ConfirmDialogComponent, HelpDialogComponent, DemoDialogComponent } from '.';
+import { ConfirmDialogComponent, DemoDialogComponent } from '.';
 import { MdDialog, MdDialogConfig } from '@angular/material';
 import { Injectable, ViewContainerRef } from '@angular/core';
 
@@ -27,11 +27,5 @@ export class DialogService {
     const dialogRef = this.dialog.open(DemoDialogComponent, config);
     dialogRef.componentInstance.demoTitles = demoTitles;
     return dialogRef.afterClosed();
-  }
-
-  help(viewContainerRef: ViewContainerRef) {
-    const config = new MdDialogConfig();
-    config.viewContainerRef = viewContainerRef;
-    return this.dialog.open(HelpDialogComponent, config).afterClosed();
   }
 }

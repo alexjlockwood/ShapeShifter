@@ -1,21 +1,36 @@
-import { Component, ElementRef } from '@angular/core';
+import {
+  Component, ElementRef, ChangeDetectionStrategy,
+  Pipe, PipeTransform
+} from '@angular/core';
 import { CanvasType } from '../CanvasType';
 import { LayerStateService } from '../services/layerstate.service';
 import { SvgLoader } from '../scripts/import';
 import { VectorLayer, PathLayer } from '../scripts/layers';
+import { Observable } from 'rxjs/Observable';
+
+declare const ga: Function;
 
 @Component({
   selector: 'app-pathselector',
   templateUrl: './pathselector.component.html',
-  styleUrls: ['./pathselector.component.scss']
+  styleUrls: ['./pathselector.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PathSelectorComponent {
   CANVAS_START = CanvasType.Start;
   CANVAS_END = CanvasType.End;
 
+  private readonly startVectorLayerObservable: Observable<VectorLayer>;
+  private readonly endVectorLayerObservable: Observable<VectorLayer>;
+
   constructor(
     private elementRef: ElementRef,
-    private layerStateService: LayerStateService) { }
+    private layerStateService: LayerStateService) {
+    this.startVectorLayerObservable =
+      this.layerStateService.getVectorLayerObservable(CanvasType.Start);
+    this.endVectorLayerObservable =
+      this.layerStateService.getVectorLayerObservable(CanvasType.End);
+  }
 
   private setVectorLayer(canvasType: CanvasType, vectorLayer: VectorLayer) {
     const canvasTypes = [canvasType];
@@ -28,25 +43,12 @@ export class PathSelectorComponent {
       canvasTypes.push(CanvasType.Preview);
     }
     this.layerStateService.setVectorLayer(canvasType, vectorLayer, false);
-    const pathLayers = this.getPathList(canvasType);
+    const pathLayers = getPathLayerList(this.layerStateService.getVectorLayer(canvasType));
     if (pathLayers.length) {
       // Auto-select the first path.
       this.setActivePathId(canvasType, pathLayers[0].id);
     }
     canvasTypes.forEach(type => this.layerStateService.notifyChange(type));
-  }
-
-  getPathList(canvasType: CanvasType) {
-    const vectorLayer = this.layerStateService.getVectorLayer(canvasType);
-    const pathLayers: PathLayer[] = [];
-    if (vectorLayer) {
-      vectorLayer.walk((layer => {
-        if (layer instanceof PathLayer) {
-          pathLayers.push(layer);
-        }
-      }));
-    }
-    return pathLayers;
   }
 
   getActivePathId(canvasType: CanvasType) {
@@ -57,7 +59,9 @@ export class PathSelectorComponent {
     // Always notify the preview layer in case the morphability status changed.
     const ids = [{ type: canvasType, pathId: activePathId }];
     if (canvasType === CanvasType.Start) {
-      ids.push({ type: CanvasType.Preview, pathId: activePathId });
+      // Set the preview layer id before the start/end layer id to ensure
+      // that auto-conversion runs properly.
+      ids.unshift({ type: CanvasType.Preview, pathId: activePathId });
     }
     this.layerStateService.setActivePathIds(ids);
   }
@@ -81,7 +85,7 @@ export class PathSelectorComponent {
     const canvasTypes = [CanvasType.Start, CanvasType.End];
     const availableEmptyListSlots: CanvasType[] = [];
     for (let i = 0; i < canvasTypes.length; i++) {
-      if (!this.getPathList(canvasTypes[i]).length) {
+      if (!getPathLayerList(this.layerStateService.getVectorLayer(canvasTypes[i])).length) {
         availableEmptyListSlots.push(canvasTypes[i]);
       }
     }
@@ -135,4 +139,25 @@ export class PathSelectorComponent {
       fileReader.readAsText(file);
     });
   }
+}
+
+@Pipe({ name: 'toPathLayerList' })
+export class PathLayerListPipe implements PipeTransform {
+  constructor(private layerStateService: LayerStateService) { }
+
+  transform(vectorLayer: VectorLayer | undefined): PathLayer[] {
+    return getPathLayerList(vectorLayer);
+  }
+}
+
+function getPathLayerList(vectorLayer: VectorLayer | undefined) {
+  const pathLayers: PathLayer[] = [];
+  if (vectorLayer) {
+    vectorLayer.walk((layer => {
+      if (layer instanceof PathLayer) {
+        pathLayers.push(layer);
+      }
+    }));
+  }
+  return pathLayers;
 }

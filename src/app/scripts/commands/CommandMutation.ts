@@ -3,19 +3,18 @@ import { MathUtil, Point } from '../common';
 import { Mutator, newMutator } from './mutators';
 import { SvgChar, Projection } from '.';
 import { CommandImpl } from './CommandImpl';
-import { newLine } from '../commands';
 
 /**
  * Contains additional information about each individual command so that we can
  * remember how they should be projected onto and split/unsplit/converted at runtime.
  * Paths are immutable, stateless objects that depend on this class to
- * remember their mutations. CommandMutations themselves are also immutable to ensure that
- * each Path maintains its own unique snapshot of its current mutation state.
+ * remember their mutations. CommandMutations themselves are also immutable to ensure
+ * that each Path maintains its own unique snapshot of its current mutation state.
  */
 export class CommandMutation {
   readonly backingCommand: CommandImpl;
 
-  // Note that the mutator is currently undefined for move commands.
+  // A lazily-initialized mutator that will do all of the math-y stuff for us.
   private mutator_: Mutator;
 
   // A command mutation wraps around the initial SVG command and outputs
@@ -55,8 +54,7 @@ export class CommandMutation {
   }
 
   getPathLength() {
-    const isMove = this.backingCommand.svgChar === 'M';
-    return isMove ? 0 : this.mutator.getPathLength();
+    return this.mutator.getPathLength();
   }
 
   /**
@@ -64,8 +62,7 @@ export class CommandMutation {
    * original backing command.
    */
   project(point: Point): Projection | undefined {
-    const isMove = this.backingCommand.svgChar === 'M';
-    return isMove ? undefined : this.mutator.project(point);
+    return this.mutator.project(point);
   }
 
   /**

@@ -17,6 +17,8 @@ import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/combineLatest';
 import * as JSZip from 'jszip';
 
+declare const ga: Function;
+
 @Component({
   selector: 'app-toolbar',
   templateUrl: './toolbar.component.html',
@@ -48,6 +50,8 @@ export class ToolbarComponent implements OnInit {
   }
 
   onNewClick() {
+    ga('send', 'event', 'General', 'New click');
+
     this.dialogsService
       .confirm(this.viewContainerRef, 'Start over?', 'You\'ll lose any unsaved changes.')
       .subscribe(result => {
@@ -62,6 +66,8 @@ export class ToolbarComponent implements OnInit {
   }
 
   onAutoFixClick() {
+    ga('send', 'event', 'General', 'Auto fix click');
+
     let resultStartCmd = this.layerStateService.getActivePathLayer(CanvasType.Start).pathData;
     let resultEndCmd = this.layerStateService.getActivePathLayer(CanvasType.End).pathData;
     const numSubPaths =
@@ -82,14 +88,21 @@ export class ToolbarComponent implements OnInit {
     this.layerStateService.notifyChange(CanvasType.Preview);
     this.layerStateService.notifyChange(CanvasType.Start);
     this.layerStateService.notifyChange(CanvasType.End);
+
   }
 
   onExportClick() {
+    ga('send', 'event', 'Export', 'Export click');
+
     const startVectorLayer = this.layerStateService.getVectorLayer(CanvasType.Start).clone();
     const endVectorLayer = this.layerStateService.getVectorLayer(CanvasType.End).clone();
     const startVectorLayerChildren: Array<PathLayer | GroupLayer> = [];
     const endVectorLayerChildren: Array<PathLayer | GroupLayer> = [];
     const avdTargets: AvdTarget[] = [];
+    const alphaTarget = this.createAlphaAvdTarget();
+    if (alphaTarget) {
+      avdTargets.push(alphaTarget);
+    }
     const rotationTarget = this.createRotationAvdTarget();
     if (rotationTarget) {
       avdTargets.push(rotationTarget);
@@ -115,6 +128,7 @@ export class ToolbarComponent implements OnInit {
         endVectorLayer.height,
         endVectorLayer.alpha);
     const zip = new JSZip();
+    zip.file('README.txt', createExportReadme());
     const android = zip.folder('android');
     const avd = AvdSerializer.vectorLayerAnimationToAvdXmlString(startOutputVectorLayer, avdTargets);
     android.file('AnimatedVectorDrawable.xml', avd);
@@ -130,6 +144,26 @@ export class ToolbarComponent implements OnInit {
     zip.generateAsync({ type: 'blob' }).then(content => {
       downloadFile(content, `ShapeShifter.zip`);
     });
+  }
+
+  private createAlphaAvdTarget() {
+    const startLayer = this.layerStateService.getVectorLayer(CanvasType.Start);
+    const endLayer = this.layerStateService.getVectorLayer(CanvasType.End);
+    if (startLayer.alpha === endLayer.alpha) {
+      return undefined;
+    }
+    const fromValue = startLayer.alpha;
+    const toValue = endLayer.alpha;
+    const duration = this.animatorService.getDuration();
+    const interpolator = this.animatorService.getInterpolator();
+    return new AvdTarget(startLayer.id,
+      [new AvdAnimation(
+        fromValue.toString(),
+        toValue.toString(),
+        duration,
+        interpolator.androidRef,
+        'alpha',
+        'floatType')]);
   }
 
   private createRotationAvdTarget() {
@@ -196,6 +230,8 @@ export class ToolbarComponent implements OnInit {
   }
 
   onDemoClick() {
+    ga('send', 'event', 'Demos', 'Demos dialog shown');
+
     const demoTitles = Array.from(DEMO_MAP.keys());
     this.dialogsService
       .demo(this.viewContainerRef, demoTitles)
@@ -204,6 +240,7 @@ export class ToolbarComponent implements OnInit {
         if (!selectedSvgStrings) {
           return;
         }
+        ga('send', 'event', 'Demos', 'Demo selected', selectedDemoTitle);
         const importedStartVectorLayer = SvgLoader.loadVectorLayerFromSvgString(selectedSvgStrings.start);
         const importedEndVectorLayer = SvgLoader.loadVectorLayerFromSvgString(selectedSvgStrings.end);
         this.layerStateService.setVectorLayer(CanvasType.Start, importedStartVectorLayer.clone(), false);
@@ -231,9 +268,12 @@ export class ToolbarComponent implements OnInit {
       });
   }
 
-  // TODO: display an in-app help dialog instead of redirecting to the GitHub README
-  onHelpClick() {
-    this.dialogsService.help(this.viewContainerRef);
+  onSendFeedbackClick() {
+    ga('send', 'event', 'Miscellaneous', 'Send feedback click');
+  }
+
+  onAboutClick() {
+    ga('send', 'event', 'Miscellaneous', 'About click');
   }
 }
 
@@ -243,4 +283,45 @@ function downloadFile(content: Blob, fileName: string) {
   anchor.attr({ href: url, download: fileName });
   anchor.get(0).click();
   window.URL.revokeObjectURL(url);
+}
+
+function createExportReadme() {
+  return `=== Files exported by Shape Shifter ===
+
+This archive contains the following:
+
+web/
+  - StartSvg.svg
+  - EndSvg.svg
+
+android/
+  - StartVectorDrawable.xml
+  - EndVectorDrawable.xml
+  - AnimatedVectorDrawable.xml
+
+If you have an export format that you'd like to see added, please file
+a feature request using the link below!
+
+Further reading:
+
+  - Shape Shifter live version:
+    https://alexjlockwood.github.io/ShapeShifter
+
+  - Shape Shifter source code:
+    https://github.com/alexjlockwood/ShapeShifter
+
+  - File a feature request:
+    https://github.com/alexjlockwood/ShapeShifter/issues
+
+  - Introduction to Icon Animations blog post:
+    http://www.androiddesignpatterns.com/2016/11/introduction-to-icon-animation-techniques.html
+
+  - Animated Vector Drawable sample Android application:
+    https://github.com/alexjlockwood/adp-delightful-details
+
+  - VectorDrawable & AnimatedVectorDrawable developer training docs:
+    https://developer.android.com/guide/topics/graphics/vector-drawable-resources.html
+
+(c) 2017 Alex Lockwood
+`;
 }

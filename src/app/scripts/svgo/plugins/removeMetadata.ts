@@ -1,5 +1,3 @@
-/* tslint:disable */
-
 export const removeMetadata = {
   active: true,
   type: 'perItem',
@@ -16,7 +14,5 @@ export const removeMetadata = {
  * @return {Boolean} if false, item will be filtered out
  */
 function removeMetadataFn(item) {
-
   return !item.isElem('metadata');
-
-};
+}

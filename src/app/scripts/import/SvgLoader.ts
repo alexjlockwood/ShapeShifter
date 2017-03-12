@@ -55,29 +55,6 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
     return svgLength.valueInSpecifiedUnits;
   };
 
-  // Construct a map of elements contained within <defs> tags, mapping
-  // their IDs to the element nodes.
-  const defsChildMap = new Map();
-  const extractDefsMapFn = (node: Node) => {
-    if (!node) {
-      return;
-    }
-    for (let i = 0; i < node.childNodes.length; i++) {
-      const child = node.childNodes[i];
-      if (child instanceof SVGDefsElement) {
-        for (let j = 0; j < child.childNodes.length; j++) {
-          const defs = child.childNodes[j];
-          if (defs.nodeType !== Node.TEXT_NODE
-            && defs.nodeType !== Node.COMMENT_NODE) {
-            defsChildMap.set((defs as any).id, defs);
-          }
-        }
-      } else {
-        extractDefsMapFn(child);
-      }
-    }
-  };
-
   const nodeToLayerDataFn = (node, context): GroupLayer | ClipPathLayer | PathLayer => {
     if (!node) {
       return undefined;
@@ -85,23 +62,9 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
 
     if (node.nodeType === Node.TEXT_NODE
       || node.nodeType === Node.COMMENT_NODE
-      || node instanceof SVGDefsElement) {
+      || node instanceof SVGDefsElement
+      || node instanceof SVGUseElement) {
       return undefined;
-    }
-
-    // If the node is a <use> element, then replace it with the element
-    // contained in the defs map constructed above.
-    if (node instanceof SVGUseElement) {
-      // TODO: apparently xlink:href is deprecated... figure out what to do about that
-      let defChildId = node.getAttributeNS('http://www.w3.org/1999/xlink', 'href');
-      // TODO: can we assume the href is formatted like '#idNameGoesHere'?
-      defChildId = defChildId.substring(1);
-      const replacementNode = defsChildMap.get(defChildId);
-      if (!replacementNode) {
-        return undefined;
-      }
-      node = replacementNode.cloneNode(true);
-      node.id = defChildId;
     }
 
     const simpleAttrFn = (nodeAttr, contextAttr) => {
@@ -238,7 +201,6 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
     ];
   }
 
-  extractDefsMapFn(doc.documentElement);
   const rootLayer = nodeToLayerDataFn(documentElement, docElContext);
   const id = makeFinalNodeIdFn(documentElement, 'vector');
   const childrenLayers = rootLayer ? rootLayer.children : undefined;

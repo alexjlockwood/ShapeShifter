@@ -4,6 +4,7 @@ import { SvgChar, Projection } from '..';
 import { PointMutator } from './PointMutator';
 import { LineMutator } from './LineMutator';
 import { BezierMutator } from './BezierMutator';
+import { MoveMutator } from './MoveMutator';
 import { CommandImpl } from '../CommandImpl';
 
 /**
@@ -12,17 +13,16 @@ import { CommandImpl } from '../CommandImpl';
  */
 export interface Mutator {
   getPathLength(): number;
-  project(point: Point): Projection;
+  project(point: Point): Projection | undefined;
   split(t1: number, t2: number): Mutator;
   convert(svgChar: SvgChar): Mutator;
   findTimeByDistance(distance: number): number;
   toCommand(): CommandImpl;
 }
 
-export function newMutator(cmd: CommandImpl): Mutator | undefined {
+export function newMutator(cmd: CommandImpl): Mutator {
   if (cmd.svgChar === 'M') {
-    // TODO: return a noop path helper instead or something?
-    return undefined;
+    return new MoveMutator(cmd.start, cmd.end);
   }
   const points = cmd.points;
   const uniquePoints = _.uniqWith(points, (p1, p2) => p1.equals(p2));

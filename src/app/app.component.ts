@@ -1,4 +1,7 @@
-import { Component, OnInit, ViewChild, AfterViewInit, OnDestroy, ElementRef } from '@angular/core';
+import {
+  Component, OnInit, ViewChild, AfterViewInit,
+  OnDestroy, ElementRef, ChangeDetectionStrategy
+} from '@angular/core';
 import { environment } from '../environments/environment';
 import { CanvasType } from './CanvasType';
 import { Subscription } from 'rxjs/Subscription';
@@ -18,7 +21,8 @@ const STORAGE_KEY_FIRST_TIME_USER = 'storage_key_first_time_user';
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss']
+  styleUrls: ['./app.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
@@ -57,14 +61,13 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
             const hasClosedPath =
               _.chain([CanvasType.Start, CanvasType.End])
                 .map(type => this.layerStateService.getActivePathLayer(type).pathData)
-                .flatMap(pathCmd => pathCmd.getSubPaths())
-                .some(subCmd => subCmd.isClosed())
+                .flatMap(path => path.getSubPaths())
+                .some(subPath => subPath.isClosed())
                 .value();
             const hasSplitCmd =
               _.chain([CanvasType.Start, CanvasType.End])
                 .map(type => this.layerStateService.getActivePathLayer(type).pathData)
-                .flatMap(pathCmd => pathCmd.getSubPaths() as SubPath[])
-                .flatMap(subCmd => subCmd.getCommands())
+                .flatMap(path => path.getCommands() as Command[])
                 .some(cmd => cmd.isSplit)
                 .value();
             return `Reverse${hasClosedPath ? '/shift' : ''} `
