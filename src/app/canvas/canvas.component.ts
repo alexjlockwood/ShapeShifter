@@ -4,7 +4,7 @@ import {
   Input, ViewChildren, QueryList, ChangeDetectionStrategy
 } from '@angular/core';
 import {
-  Path, SubPath, Command, Index as CommandIndex, Projection
+  Path, SubPath, Command, Index as CommandIndex, ProjectionResult
 } from '../scripts/commands';
 import { PathLayer, ClipPathLayer, VectorLayer, GroupLayer, Layer } from '../scripts/layers';
 import { CanvasType } from '../CanvasType';
@@ -851,36 +851,25 @@ function findPathLayerPoint(
     MathUtil.transformPoint(
       mousePoint,
       MathUtil.flattenTransforms(transforms).invert());
-  return _.chain(pathLayer.pathData.getSubPaths())
-    .map((subCmd: SubPath, subIdx: number) => {
-      return subCmd.getCommands()
-        .map((cmd, cmdIdx) => {
-          const distance = MathUtil.distance(cmd.end, transformedMousePoint);
-          const isSplit = cmd.isSplit;
-          return { pathId, subIdx, cmdIdx, distance, isSplit };
-        });
-    })
-    .flatMap(pathPoints => pathPoints)
-    .filter(pathPoint => {
-      const radius =
-        pathPoint.isSplit ? pointRadius * SPLIT_POINT_RADIUS_FACTOR : pointRadius;
-      return pathPoint.distance <= radius;
-    })
-    // Reverse so that points drawn with higher z-orders are preferred.
-    .reverse()
-    .reduce((prev, curr) => {
-      if (!prev) {
-        return curr;
-      }
-      if (prev.isSplit !== curr.isSplit) {
-        // Always return split points that are in range before
-        // returning non-split points. This way we can guarantee that
-        // split points will never be obstructed by non-split points.
-        return prev.isSplit ? prev : curr;
-      }
-      return prev.distance < curr.distance ? prev : curr;
-    }, undefined)
-    .value();
+  const isPointInRangeFn = (distance: number, isSplit: boolean) => {
+    return distance <= (isSplit ? pointRadius * SPLIT_POINT_RADIUS_FACTOR : pointRadius);
+  };
+  // const isStrokeInRangeFn = pathLayer.fillColor || !pathLayer.strokeColor
+  //   ? undefined
+  //   : (distance: number) => {
+  //     return distance <= pathLayer.strokeWidth / 2;
+  //   };
+  const hitResult = pathLayer.pathData.hitTest(transformedMousePoint, {
+    isPointInRangeFn,
+  });
+  if (hitResult.isHit) {
+    return {
+      pathId: pathLayer.id,
+      subIdx: hitResult.subIdx,
+      cmdIdx: hitResult.cmdIdx,
+    };
+  }
+  return undefined;
 }
 
 function executeCommands(
@@ -957,7 +946,7 @@ function calculateProjectionOntoPath(
  */
 interface ProjectionOntoPath {
   pathId: string;
-  projection: Projection;
+  projection: ProjectionResult;
   splitFn: () => Path;
 }
 

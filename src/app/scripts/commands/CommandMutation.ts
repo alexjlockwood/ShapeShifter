@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
 import { MathUtil, Point, Matrix } from '../common';
 import { Mutator, newMutator } from './mutators';
-import { SvgChar, Projection } from '.';
+import { SvgChar, ProjectionResult } from '.';
 import { CommandImpl } from './CommandImpl';
 
 const IDENTITY = new Matrix();
@@ -75,7 +75,7 @@ export class CommandMutation {
    * Note that the projection is performed in relation to the command mutation's
    * transformed backing command.
    */
-  project(point: Point): Projection | undefined {
+  project(point: Point): ProjectionResult | undefined {
     return this.mutator.project(point);
   }
 

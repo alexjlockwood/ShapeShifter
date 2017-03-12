@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
 import * as BezierJs from 'bezier-js';
 import { Point } from '../../common';
-import { SvgChar, Projection, newQuadraticCurve, newBezierCurve } from '..';
+import { SvgChar, ProjectionResult, newQuadraticCurve, newBezierCurve } from '..';
 import { Mutator } from '.';
 import { PointMutator } from './PointMutator';
 import { LineMutator } from './LineMutator';
@@ -26,7 +26,7 @@ export class BezierMutator implements Mutator {
     return this.length;
   }
 
-  project(point: Point): Projection {
+  project(point: Point): ProjectionResult {
     const proj = this.bezierJs.project(point);
     return { x: proj.x, y: proj.y, t: proj.t, d: proj.d };
   }

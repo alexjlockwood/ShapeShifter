@@ -1,8 +1,8 @@
-/** A simple rectangle container class. */
+/** An immutable rectangle container class. */
 export class Rect {
   constructor(
-    public l = 0,
-    public t = 0,
-    public r = 0,
-    public b = 0) { }
+    public readonly l = 0,
+    public readonly t = 0,
+    public readonly r = 0,
+    public readonly b = 0) { }
 }

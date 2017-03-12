@@ -1,5 +1,5 @@
 import { Mutator } from '.';
-import { SvgChar, Projection, newMove } from '..';
+import { SvgChar, ProjectionResult, newMove } from '..';
 import { MathUtil, Point } from '../../common';
 
 export class MoveMutator implements Mutator {
@@ -15,7 +15,7 @@ export class MoveMutator implements Mutator {
     return 0;
   }
 
-  project(point: Point): Projection | undefined {
+  project(point: Point): ProjectionResult | undefined {
     return undefined;
   }
 

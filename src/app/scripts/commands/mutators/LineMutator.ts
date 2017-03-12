@@ -1,5 +1,5 @@
 import { Mutator } from '.';
-import { SvgChar, Projection, newLine, newQuadraticCurve, newBezierCurve, newClosePath } from '..';
+import { SvgChar, ProjectionResult, newLine, newQuadraticCurve, newBezierCurve, newClosePath } from '..';
 import { MathUtil, Point } from '../../common';
 import { PointMutator } from './PointMutator';
 
@@ -18,9 +18,9 @@ export class LineMutator implements Mutator {
     return MathUtil.distance(this.p1, this.p2);
   }
 
-  project({x, y}: Point): Projection {
-    const {x: x1, y: y1} = this.p1;
-    const {x: x2, y: y2} = this.p2;
+  project({ x, y }: Point): ProjectionResult {
+    const { x: x1, y: y1 } = this.p1;
+    const { x: x2, y: y2 } = this.p2;
     const a = x2 - x1;
     const b = y2 - y1;
     const dot = (x - x1) * a + (y - y1) * b;
@@ -52,8 +52,8 @@ export class LineMutator implements Mutator {
   }
 
   split(t1: number, t2: number): Mutator {
-    const {x: x1, y: y1} = this.p1;
-    const {x: x2, y: y2} = this.p2;
+    const { x: x1, y: y1 } = this.p1;
+    const { x: x2, y: y2 } = this.p2;
     const p1 = new Point(
       MathUtil.lerp(x1, x2, t1),
       MathUtil.lerp(y1, y2, t1));

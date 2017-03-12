@@ -1,6 +1,6 @@
 import { Mutator } from '.';
 import {
-  SvgChar, Projection, newLine, newQuadraticCurve,
+  SvgChar, ProjectionResult, newLine, newQuadraticCurve,
   newBezierCurve, newClosePath
 } from '..';
 import { MathUtil, Point } from '../../common';
@@ -18,7 +18,7 @@ export class PointMutator implements Mutator {
     return 0;
   }
 
-  project(point: Point): Projection {
+  project(point: Point): ProjectionResult {
     const x = this.point.x;
     const y = this.point.y;
     const t = 0.5;

@@ -1,10 +1,13 @@
 import * as _ from 'lodash';
 import { MathUtil, Point, Matrix } from '../common';
-import { Path, SubPath, Command, SvgChar, Projection } from '.';
+import {
+  Path, SubPath, Command, SvgChar, ProjectionResult, HitResult, HitOptions
+} from '.';
 import * as PathParser from './PathParser';
 import { newSubPath } from './SubPathImpl';
 import { CommandImpl, newMove, newLine } from './CommandImpl';
 import { CommandMutation } from './CommandMutation';
+
 
 export function newPath(obj: string | Command[]): Path {
   return new PathImpl(obj);
@@ -244,7 +247,7 @@ class PathImpl implements Path {
   }
 
   // Implements the Path interface.
-  project(point: Point): { projection: Projection, splitFn: () => Path } | undefined {
+  project(point: Point): { projection: ProjectionResult, splitFn: () => Path } | undefined {
     return _.chain(this.commandMutationsMap)
       .map((subPathCms: CommandMutation[], cmsIdx) =>
         subPathCms.map((cm: CommandMutation, cmIdx) => {
@@ -477,6 +480,80 @@ class PathImpl implements Path {
     const newCms = this.commandMutationsMap.map(cms => cms.slice());
     newCms[subIdx][cmIdx] = cm;
     return newCms;
+  }
+
+  hitTest(point: Point, opts: HitOptions) {
+    if (opts.isPointInRangeFn) {
+      // First search for in-range path points.
+      const pointResult =
+        _.chain(this.getSubPaths())
+          .map((subPath: SubPath, subIdx: number) => {
+            return subPath.getCommands()
+              .map((cmd, cmdIdx) => {
+                const distance = MathUtil.distance(cmd.end, point);
+                const isSplit = cmd.isSplit;
+                return { subIdx, cmdIdx, distance, isSplit };
+              });
+          })
+          .flatMap(pathPoints => pathPoints)
+          .filter(pathPoint => opts.isPointInRangeFn(pathPoint.distance, pathPoint.isSplit))
+          // Reverse so that points drawn with higher z-orders are preferred.
+          .reverse()
+          .reduce((prev, curr) => {
+            if (!prev) {
+              return curr;
+            }
+            if (prev.isSplit !== curr.isSplit) {
+              // Always return split points that are in range before
+              // returning non-split points. This way we can guarantee that
+              // split points will never be obstructed by non-split points.
+              return prev.isSplit ? prev : curr;
+            }
+            return prev.distance < curr.distance ? prev : curr;
+          }, undefined)
+          .value();
+      if (pointResult) {
+        return {
+          isHit: true,
+          subIdx: pointResult.subIdx,
+          cmdIdx: pointResult.cmdIdx,
+        };
+      }
+    }
+
+    if (opts.isStrokeInRangeFn) {
+      // If the shortest distance from the point to the path is less than half
+      // the stroke width, then select the path.
+      const minProjectionResult =
+        _.chain(this.commandMutationsMap)
+          .map((cms: CommandMutation[], cmsIdx: number) => {
+            return cms.map((cm, cmIdx) => {
+              // TODO: also return the cmdIdx so the client can split
+              return {
+                subIdx: cmsIdx,
+                projection: cm.project(point),
+              };
+            });
+          })
+          .flatMap(projections => projections)
+          .filter(projection => !!projection)
+          .reduce((prev, curr) => {
+            if (!prev) {
+              return curr;
+            }
+            return prev.projection.d < curr.projection.d ? prev : curr;
+          }, undefined)
+          .value();
+      return {
+        isHit: !!minProjectionResult,
+        subIdx: minProjectionResult ? minProjectionResult.subIdx : undefined,
+      };
+    }
+
+    // TODO: handle fill path case
+    return {
+      isHit: false,
+    };
   }
 }
 

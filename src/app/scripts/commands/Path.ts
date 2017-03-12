@@ -42,7 +42,7 @@ export interface Path {
    * Also returns a 'split' function that can be used to split the path at the returned
    * projection point. Returns undefined if no point is found.
    */
-  project(point: Point): { projection: Projection, splitFn: () => Path } | undefined;
+  project(point: Point): { projection: ProjectionResult, splitFn: () => Path } | undefined;
 
   /**
    * Reverses the order of the points in the sub path at the specified index.
@@ -118,10 +118,15 @@ export interface Path {
    * Returns a new path object.
    */
   transform(transforms: Matrix[]): Path;
+
+  /**
+   * Performs a hit test on the path and returns a HitResult.
+   */
+  hitTest(point: Point, opts: HitOptions): HitResult;
 }
 
 /** Represents a projection onto a path. */
-export interface Projection {
+export interface ProjectionResult {
   /** The x-coordinate of the point on the path. */
   x: number;
   /** The y-coordinate of the point on the path. */
@@ -130,4 +135,17 @@ export interface Projection {
   t: number;
   /** The distance of the source point to the point on the path. */
   d: number;
+}
+
+/** Represents the options for a hit test. */
+export interface HitOptions {
+  isStrokeInRangeFn?: (distance: number) => boolean;
+  isPointInRangeFn?: (distance: number, isSplit: boolean) => boolean;
+}
+
+/** Represents the result of a hit test. */
+export interface HitResult {
+  isHit: boolean;
+  subIdx?: number;
+  cmdIdx?: number;
 }

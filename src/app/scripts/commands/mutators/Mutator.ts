@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 import { Point } from '../../common';
-import { SvgChar, Projection } from '..';
+import { SvgChar, ProjectionResult } from '..';
 import { PointMutator } from './PointMutator';
 import { LineMutator } from './LineMutator';
 import { BezierMutator } from './BezierMutator';
@@ -13,7 +13,7 @@ import { CommandImpl } from '../CommandImpl';
  */
 export interface Mutator {
   getPathLength(): number;
-  project(point: Point): Projection | undefined;
+  project(point: Point): ProjectionResult | undefined;
   split(t1: number, t2: number): Mutator;
   convert(svgChar: SvgChar): Mutator;
   findTimeByDistance(distance: number): number;
