@@ -12,7 +12,7 @@ export const replaceUseElems = {
  * @param {Object} params plugin params
  */
 function replaceUseElemsFn(document, params) {
-  const defsElems = document.querySelectorAll('defs');
+  const defsElems = document.querySelectorAll('defs') || [];
 
   const queryReferencedElementFn = function (selector: string) {
     for (const defs of defsElems) {
@@ -26,7 +26,8 @@ function replaceUseElemsFn(document, params) {
 
   // TODO: handle the case where a 'use' element references another 'use'
   // TODO: handle the circular dependency that could potentially result as well
-  for (const use of document.querySelectorAll('use')) {
+  const useElems = document.querySelectorAll('use') || [];
+  for (const use of useElems) {
     if (!use.hasAttr('xlink:href')) {
       continue;
     }
