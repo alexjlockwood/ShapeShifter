@@ -31,7 +31,7 @@ function replaceUseElemsFn(document, params) {
       continue;
     }
     const refElem = queryReferencedElementFn(use.attr('xlink:href').value);
-    if (!refElem || refElem.isElem('symbol')) {
+    if (!refElem) {
       continue;
     }
     use.removeAttr('xlink:href');
@@ -77,11 +77,12 @@ function replaceUseElemsFn(document, params) {
     if (x || y) {
       let transform = `translate(${x} ${y})`;
       if (use.hasAttr('transform')) {
-        transform = use.attr('transform') + ' ' + transform;
+        transform = use.attr('transform').value + ' ' + transform;
       }
       addAttrFn(use, 'transform', transform);
     }
-    use.content = refElem.content;
+    use.content = [refElem];
+    refElem.parentNode = use;
     use.renameElem('g');
   }
 
