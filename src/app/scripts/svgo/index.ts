@@ -1,2 +1,2 @@
-import * as Svgo from './Svgo';
+import * as Svgo from './svgo';
 export { Svgo };
