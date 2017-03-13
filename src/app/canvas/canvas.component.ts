@@ -527,8 +527,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
     const mouseDown = this.mouseEventToPoint(event);
     const selectedPointId =
-      findPathLayerPoint(
-        this.vectorLayer, this.activePathId, mouseDown, this.pathPointRadius);
+      performHitTest(
+        this.vectorLayer, this.activePathId, mouseDown, this.pathPointRadius, false);
     if (selectedPointId && selectedPointId.pathId === this.activePathId) {
       // A mouse down event ocurred on top of a point. Create a point selector
       // and track that sh!at.
@@ -571,8 +571,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
 
     const hoverPointId =
-      findPathLayerPoint(
-        this.vectorLayer, this.activePathId, mouseMove, this.pathPointRadius);
+      performHitTest(
+        this.vectorLayer, this.activePathId, mouseMove, this.pathPointRadius, true);
     if (hoverPointId) {
       this.hoverStateService.setHover({
         type: HoverType.Command,
@@ -835,12 +835,15 @@ function getTransformsForLayer(vectorLayer: VectorLayer, layerId: string) {
  * Finds the path point closest to the specified mouse point, with a max
  * distance specified by radius. Draggable points are returned with higher
  * priority than non-draggable points. Returns undefined if no point is found.
+ * If a point is not found, then a hit test for one of the path's subpaths
+ * will be performed as well.
  */
-function findPathLayerPoint(
+function performHitTest(
   vectorLayer: VectorLayer,
   pathId: string,
   mousePoint: Point,
-  pointRadius: number): CommandIndex | undefined {
+  pointRadius: number,
+  hitTestPointsOnly: boolean): CommandIndex | undefined {
 
   const pathLayer = vectorLayer.findLayer(pathId) as PathLayer;
   if (!pathLayer) {
@@ -854,15 +857,21 @@ function findPathLayerPoint(
   const isPointInRangeFn = (distance: number, isSplit: boolean) => {
     return distance <= (isSplit ? pointRadius * SPLIT_POINT_RADIUS_FACTOR : pointRadius);
   };
-  // const isStrokeInRangeFn = pathLayer.fillColor || !pathLayer.strokeColor
-  //   ? undefined
-  //   : (distance: number) => {
-  //     return distance <= pathLayer.strokeWidth / 2;
-  //   };
+  const isStrokeInRangeFn = pathLayer.fillColor || !pathLayer.strokeColor
+    ? undefined
+    : (distance: number) => {
+      return distance <= pathLayer.strokeWidth / 2;
+    };
   const hitResult = pathLayer.pathData.hitTest(transformedMousePoint, {
     isPointInRangeFn,
+    isStrokeInRangeFn,
+    hitTestPointsOnly,
   });
   if (hitResult.isHit) {
+    if (hitResult.cmdIdx === undefined) {
+      // TODO: select the entire subpath...
+      return undefined;
+    }
     return {
       pathId: pathLayer.id,
       subIdx: hitResult.subIdx,

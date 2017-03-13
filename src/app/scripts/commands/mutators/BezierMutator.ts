@@ -2,7 +2,7 @@ import * as _ from 'lodash';
 import * as BezierJs from 'bezier-js';
 import { Point } from '../../common';
 import { SvgChar, ProjectionResult, newQuadraticCurve, newBezierCurve } from '..';
-import { Mutator } from '.';
+import { Mutator, BBox, Line } from '.';
 import { PointMutator } from './PointMutator';
 import { LineMutator } from './LineMutator';
 
@@ -13,7 +13,8 @@ export class BezierMutator implements Mutator {
   private readonly svgChar: SvgChar;
   private readonly bezierJs;
   private readonly points: ReadonlyArray<Point>;
-  private readonly length: number;
+  private length: number;
+  private bbox: BBox;
 
   constructor(svgChar: SvgChar, ...points: Point[]) {
     this.svgChar = svgChar;
@@ -23,6 +24,9 @@ export class BezierMutator implements Mutator {
   }
 
   getPathLength() {
+    if (this.length === undefined) {
+      this.length = this.bezierJs.length();
+    }
     return this.length;
   }
 
@@ -109,5 +113,20 @@ export class BezierMutator implements Mutator {
           this.points[0], this.points[1], this.points[2], this.points[3]);
     }
     throw new Error('Invalid command type: ' + this.svgChar);
+  }
+
+  getBoundingBox() {
+    if (this.bbox === undefined) {
+      const bbox = this.bezierJs.bbox();
+      this.bbox = {
+        x: { min: bbox.x.min, max: bbox.x.max },
+        y: { min: bbox.y.min, max: bbox.y.max },
+      };
+    }
+    return this.bbox;
+  }
+
+  intersects(line: Line) {
+    return this.bezierJs.intersects(line);
   }
 }

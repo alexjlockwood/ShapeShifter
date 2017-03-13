@@ -1,4 +1,4 @@
-import { Mutator } from '.';
+import { Mutator, BBox, Line } from '.';
 import { SvgChar, ProjectionResult, newMove } from '..';
 import { MathUtil, Point } from '../../common';
 
@@ -33,5 +33,15 @@ export class MoveMutator implements Mutator {
 
   toCommand() {
     return newMove(this.startPoint, this.endPoint);
+  }
+
+  getBoundingBox() {
+    const x = { min: Infinity, max: -Infinity };
+    const y = { min: Infinity, max: -Infinity };
+    return { x, y } as BBox;
+  }
+
+  intersects(line: Line) {
+    return [];
   }
 }

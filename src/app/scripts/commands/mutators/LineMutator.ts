@@ -1,4 +1,4 @@
-import { Mutator } from '.';
+import { Mutator, BBox, Line } from '.';
 import { SvgChar, ProjectionResult, newLine, newQuadraticCurve, newBezierCurve, newClosePath } from '..';
 import { MathUtil, Point } from '../../common';
 import { PointMutator } from './PointMutator';
@@ -95,5 +95,35 @@ export class LineMutator implements Mutator {
         return newClosePath(this.p1, this.p2);
     }
     throw new Error('Invalid command type: ' + this.svgChar);
+  }
+
+  getBoundingBox() {
+    const minx = Math.min(this.p1.x, this.p2.x);
+    const miny = Math.min(this.p1.y, this.p2.y);
+    const maxx = Math.max(this.p1.x, this.p2.x);
+    const maxy = Math.max(this.p1.y, this.p2.y);
+    const x = { min: minx, max: maxx };
+    const y = { min: miny, max: maxy };
+    return { x, y } as BBox;
+  }
+
+  // TODO: test this
+  intersects(line: Line) {
+    // Check to see if the line from (a,b) to (c,d) intersects
+    // with the line from (p,q) to (r,s).
+    const { x: a, y: b } = this.p1;
+    const { x: c, y: d } = this.p2;
+    const { p1: { x: p, y: q }, p2: { x: r, y: s } } = line;
+    const det = (c - a) * (s - q) - (r - p) * (d - b);
+    if (det === 0) {
+      // Then the two lines are parallel. In our case it is fine to
+      // return an empty list, even though the lines may technically
+      // be collinear.
+      return [];
+    } else {
+      const t = ((s - q) * (r - a) + (p - r) * (s - b)) / det;
+      const u = ((b - d) * (r - a) + (c - a) * (s - b)) / det;
+      return (0 <= t && t <= 1) && (0 <= u && u <= 1) ? [t] : [];
+    }
   }
 }

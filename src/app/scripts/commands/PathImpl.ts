@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import { MathUtil, Point, Matrix } from '../common';
+import { MathUtil, Point, Matrix, Rect } from '../common';
 import {
   Path, SubPath, Command, SvgChar, ProjectionResult, HitResult, HitOptions
 } from '.';
@@ -7,7 +7,6 @@ import * as PathParser from './PathParser';
 import { newSubPath } from './SubPathImpl';
 import { CommandImpl, newMove, newLine } from './CommandImpl';
 import { CommandMutation } from './CommandMutation';
-
 
 export function newPath(obj: string | Command[]): Path {
   return new PathImpl(obj);
@@ -482,43 +481,46 @@ class PathImpl implements Path {
     return newCms;
   }
 
+  // TODO: make it possible to only perform hit test on the points
   hitTest(point: Point, opts: HitOptions) {
-    if (opts.isPointInRangeFn) {
-      // First search for in-range path points.
-      const pointResult =
-        _.chain(this.getSubPaths())
-          .map((subPath: SubPath, subIdx: number) => {
-            return subPath.getCommands()
-              .map((cmd, cmdIdx) => {
-                const distance = MathUtil.distance(cmd.end, point);
-                const isSplit = cmd.isSplit;
-                return { subIdx, cmdIdx, distance, isSplit };
-              });
-          })
-          .flatMap(pathPoints => pathPoints)
-          .filter(pathPoint => opts.isPointInRangeFn(pathPoint.distance, pathPoint.isSplit))
-          // Reverse so that points drawn with higher z-orders are preferred.
-          .reverse()
-          .reduce((prev, curr) => {
-            if (!prev) {
-              return curr;
-            }
-            if (prev.isSplit !== curr.isSplit) {
-              // Always return split points that are in range before
-              // returning non-split points. This way we can guarantee that
-              // split points will never be obstructed by non-split points.
-              return prev.isSplit ? prev : curr;
-            }
-            return prev.distance < curr.distance ? prev : curr;
-          }, undefined)
-          .value();
-      if (pointResult) {
-        return {
-          isHit: true,
-          subIdx: pointResult.subIdx,
-          cmdIdx: pointResult.cmdIdx,
-        };
-      }
+    // First search for in-range path points.
+    const pointResult =
+      _.chain(this.getSubPaths())
+        .map((subPath: SubPath, subIdx: number) => {
+          return subPath.getCommands()
+            .map((cmd, cmdIdx) => {
+              const distance = MathUtil.distance(cmd.end, point);
+              const isSplit = cmd.isSplit;
+              return { subIdx, cmdIdx, distance, isSplit };
+            });
+        })
+        .flatMap(pathPoints => pathPoints)
+        .filter(pathPoint => opts.isPointInRangeFn(pathPoint.distance, pathPoint.isSplit))
+        // Reverse so that points drawn with higher z-orders are preferred.
+        .reverse()
+        .reduce((prev, curr) => {
+          if (!prev) {
+            return curr;
+          }
+          if (prev.isSplit !== curr.isSplit) {
+            // Always return split points that are in range before
+            // returning non-split points. This way we can guarantee that
+            // split points will never be obstructed by non-split points.
+            return prev.isSplit ? prev : curr;
+          }
+          return prev.distance < curr.distance ? prev : curr;
+        }, undefined)
+        .value();
+
+    if (pointResult) {
+      // Then the hit occurred on top of a command point.
+      return {
+        isHit: true,
+        subIdx: pointResult.subIdx,
+        cmdIdx: pointResult.cmdIdx,
+      };
+    } else if (opts.hitTestPointsOnly) {
+      return { isHit: false };
     }
 
     if (opts.isStrokeInRangeFn) {
@@ -535,8 +537,12 @@ class PathImpl implements Path {
               };
             });
           })
-          .flatMap(projections => projections)
-          .filter(projection => !!projection)
+          .flatMap(results => results)
+          // TODO: also check to see if the hit occurred at a stroke-linejoin vertex
+          // TODO: take stroke width scaling into account as well?
+          .filter(result => !!result.projection && opts.isStrokeInRangeFn(result.projection.d))
+          // Reverse so that strokes drawn with higher z-orders are preferred.
+          .reverse()
           .reduce((prev, curr) => {
             if (!prev) {
               return curr;
@@ -550,11 +556,64 @@ class PathImpl implements Path {
       };
     }
 
-    // TODO: handle fill path case
+    let hitSubIdx: number = undefined;
+
+    // Search from right to left so that higher z-order subpaths are found first.
+    _.forEachRight(this.commandMutationsMap, (cms: CommandMutation[], cmsIdx: number) => {
+      const isClosed =
+        cms[0].getCommands()[0].end.equals((_.last(_.last(cms).getCommands())).end);
+      if (!isClosed) {
+        // If this happens, the SVG is probably not going to render properly at all,
+        // but we'll check anyway just to be safe.
+        return true;
+      }
+      const bounds = createBoundingBox(...cms);
+      if (!bounds.contains(point)) {
+        // Nothing to see here. Check the next subpath.
+        return true;
+      }
+      // The point is inside the subpath's bounding box. Next, we will
+      // use the 'even-odd rule' to determine if the filled path has been hit.
+      // We create a line from the mouse point to a point we know that is not
+      // inside the path (in this case, we use a coordinate outside the path's
+      // bounded box). A hit has occured if and only if the number of
+      // intersections between the line and the path is odd.
+      const line = { p1: point, p2: new Point(bounds.r + 1, bounds.b + 1) };
+      const numIntersections = _.sum(cms.map(cm => cm.intersects(line).length));
+      if (numIntersections % 2 !== 0) {
+        hitSubIdx = cmsIdx;
+      }
+      return hitSubIdx === undefined;
+    });
+
     return {
-      isHit: false,
+      isHit: hitSubIdx !== undefined,
+      subIdx: hitSubIdx,
     };
   }
+}
+
+// TODO: cache this?
+function createBoundingBox(...cms: CommandMutation[]) {
+  const bounds = new Rect(Infinity, Infinity, -Infinity, -Infinity);
+
+  const expandBoundsFn = (x: number, y: number) => {
+    bounds.l = Math.min(x, bounds.l);
+    bounds.t = Math.min(y, bounds.t);
+    bounds.r = Math.max(x, bounds.r);
+    bounds.b = Math.max(y, bounds.b);
+  };
+
+  const expandBoundsForCommandMutationFn = (cm: CommandMutation) => {
+    const bbox = cm.getBoundingBox();
+    expandBoundsFn(bbox.x.min, bbox.y.min);
+    expandBoundsFn(bbox.x.max, bbox.y.min);
+    expandBoundsFn(bbox.x.min, bbox.y.max);
+    expandBoundsFn(bbox.x.max, bbox.y.max);
+  };
+
+  cms.forEach(cm => expandBoundsForCommandMutationFn(cm));
+  return bounds;
 }
 
 function createSubPaths(...commands: Command[]) {

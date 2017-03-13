@@ -1,8 +1,14 @@
-/** An immutable rectangle container class. */
+import { Point } from '.';
+
+/** A simple rectangle container class. */
 export class Rect {
   constructor(
-    public readonly l = 0,
-    public readonly t = 0,
-    public readonly r = 0,
-    public readonly b = 0) { }
+    public l = 0,
+    public t = 0,
+    public r = 0,
+    public b = 0) { }
+
+  contains(p: Point) {
+    return this.l <= p.x && p.x < this.r && this.t <= p.y && p.y < this.b;
+  }
 }

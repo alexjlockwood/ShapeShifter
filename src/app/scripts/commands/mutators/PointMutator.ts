@@ -1,4 +1,4 @@
-import { Mutator } from '.';
+import { Mutator, BBox, Line } from '.';
 import {
   SvgChar, ProjectionResult, newLine, newQuadraticCurve,
   newBezierCurve, newClosePath
@@ -18,15 +18,15 @@ export class PointMutator implements Mutator {
     return 0;
   }
 
-  project(point: Point): ProjectionResult {
+  project(point: Point) {
     const x = this.point.x;
     const y = this.point.y;
     const t = 0.5;
     const d = MathUtil.distance(this.point, point);
-    return { x, y, t, d };
+    return { x, y, t, d } as ProjectionResult;
   }
 
-  split(t1: number, t2: number): Mutator {
+  split(t1: number, t2: number) {
     return new PointMutator(this.svgChar, this.point);
   }
 
@@ -51,5 +51,16 @@ export class PointMutator implements Mutator {
         return newClosePath(this.point, this.point);
     }
     throw new Error('Invalid command type: ' + this.svgChar);
+  }
+
+  getBoundingBox() {
+    const x = { min: this.point.x, max: this.point.x };
+    const y = { min: this.point.y, max: this.point.y };
+    return { x, y } as BBox;
+  }
+
+  intersects(line: Line) {
+    const areCollinear = MathUtil.areCollinear(line.p1, this.point, line.p2);
+    return areCollinear ? [0.5] : [];
   }
 }

@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 import { MathUtil, Point, Matrix } from '../common';
-import { Mutator, newMutator } from './mutators';
+import { Mutator, newMutator, BBox, Line } from './mutators';
 import { SvgChar, ProjectionResult } from '.';
 import { CommandImpl } from './CommandImpl';
 
@@ -237,6 +237,14 @@ export class CommandMutation {
 
   getCommands() {
     return this.builtCommands;
+  }
+
+  getBoundingBox() {
+    return this.mutator.getBoundingBox();
+  }
+
+  intersects(line: Line) {
+    return this.mutator.intersects(line);
   }
 }
 

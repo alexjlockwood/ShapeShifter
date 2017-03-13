@@ -1,5 +1,6 @@
 import { Point, Matrix } from '../common';
 import { SubPath, Command, SvgChar } from '.';
+import { ProjectionResult } from './mutators';
 
 /**
  * Defines the set of methods that are seen by the UI.
@@ -125,22 +126,11 @@ export interface Path {
   hitTest(point: Point, opts: HitOptions): HitResult;
 }
 
-/** Represents a projection onto a path. */
-export interface ProjectionResult {
-  /** The x-coordinate of the point on the path. */
-  x: number;
-  /** The y-coordinate of the point on the path. */
-  y: number;
-  /** The t-value of the point on the path. */
-  t: number;
-  /** The distance of the source point to the point on the path. */
-  d: number;
-}
-
 /** Represents the options for a hit test. */
 export interface HitOptions {
   isStrokeInRangeFn?: (distance: number) => boolean;
   isPointInRangeFn?: (distance: number, isSplit: boolean) => boolean;
+  hitTestPointsOnly?: boolean;
 }
 
 /** Represents the result of a hit test. */

@@ -1,1 +1,1 @@
-export { Mutator, newMutator } from './Mutator';
+export { Mutator, newMutator, ProjectionResult, BBox, Line } from './Mutator';

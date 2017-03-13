@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 import { Point } from '../../common';
-import { SvgChar, ProjectionResult } from '..';
+import { SvgChar } from '..';
 import { PointMutator } from './PointMutator';
 import { LineMutator } from './LineMutator';
 import { BezierMutator } from './BezierMutator';
@@ -18,6 +18,8 @@ export interface Mutator {
   convert(svgChar: SvgChar): Mutator;
   findTimeByDistance(distance: number): number;
   toCommand(): CommandImpl;
+  getBoundingBox(): BBox;
+  intersects(line: Line): number[];
 }
 
 export function newMutator(cmd: CommandImpl): Mutator {
@@ -41,4 +43,33 @@ export function newMutator(cmd: CommandImpl): Mutator {
   }
   // TODO: create an elliptical arc path helper some day?
   throw new Error('Invalid command type: ' + cmd.svgChar);
+}
+
+/** Represents a projection onto a path. */
+export interface ProjectionResult {
+  /** The x-coordinate of the point on the path. */
+  x: number;
+  /** The y-coordinate of the point on the path. */
+  y: number;
+  /** The t-value of the point on the path. */
+  t: number;
+  /** The distance of the source point to the point on the path. */
+  d: number;
+}
+
+/** Represents a rectangular bounding box. */
+export interface BBox {
+  x: MinMax;
+  y: MinMax;
+}
+
+interface MinMax {
+  min: number;
+  max: number;
+}
+
+/** Represents a 2D line. */
+export interface Line {
+  p1: Point;
+  p2: Point;
 }
