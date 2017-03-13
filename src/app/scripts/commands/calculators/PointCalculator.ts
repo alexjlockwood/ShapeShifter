@@ -1,11 +1,11 @@
-import { Mutator, BBox, Line } from '.';
+import { Calculator, BBox, Line } from '.';
 import {
   SvgChar, ProjectionResult, newLine, newQuadraticCurve,
   newBezierCurve, newClosePath
 } from '..';
 import { MathUtil, Point } from '../../common';
 
-export class PointMutator implements Mutator {
+export class PointCalculator implements Calculator {
   private readonly svgChar: SvgChar;
   private readonly point: Point;
 
@@ -27,11 +27,11 @@ export class PointMutator implements Mutator {
   }
 
   split(t1: number, t2: number) {
-    return new PointMutator(this.svgChar, this.point);
+    return new PointCalculator(this.svgChar, this.point);
   }
 
   convert(svgChar: SvgChar) {
-    return new PointMutator(svgChar, this.point);
+    return new PointCalculator(svgChar, this.point);
   }
 
   findTimeByDistance(distance: number) {

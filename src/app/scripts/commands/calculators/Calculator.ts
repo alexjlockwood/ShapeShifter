@@ -1,44 +1,44 @@
 import * as _ from 'lodash';
 import { Point } from '../../common';
 import { SvgChar } from '..';
-import { PointMutator } from './PointMutator';
-import { LineMutator } from './LineMutator';
-import { BezierMutator } from './BezierMutator';
-import { MoveMutator } from './MoveMutator';
+import { PointCalculator } from './PointCalculator';
+import { LineCalculator } from './LineCalculator';
+import { BezierCalculator } from './BezierCalculator';
+import { MoveCalculator } from './MoveCalculator';
 import { CommandImpl } from '../CommandImpl';
 
 /**
  * A wrapper around a backing SVG command that abstracts a lot of the math-y
  * path-related code from the rest of the application.
  */
-export interface Mutator {
+export interface Calculator {
   getPathLength(): number;
   project(point: Point): ProjectionResult | undefined;
-  split(t1: number, t2: number): Mutator;
-  convert(svgChar: SvgChar): Mutator;
+  split(t1: number, t2: number): Calculator;
+  convert(svgChar: SvgChar): Calculator;
   findTimeByDistance(distance: number): number;
   toCommand(): CommandImpl;
   getBoundingBox(): BBox;
   intersects(line: Line): number[];
 }
 
-export function newMutator(cmd: CommandImpl): Mutator {
+export function newCalculator(cmd: CommandImpl): Calculator {
   if (cmd.svgChar === 'M') {
-    return new MoveMutator(cmd.start, cmd.end);
+    return new MoveCalculator(cmd.start, cmd.end);
   }
   const points = cmd.points;
   const uniquePoints = _.uniqWith(points, (p1, p2) => p1.equals(p2));
   if (uniquePoints.length === 1) {
-    return new PointMutator(cmd.svgChar, points[0]);
+    return new PointCalculator(cmd.svgChar, points[0]);
   }
   if (cmd.svgChar === 'L' || cmd.svgChar === 'Z' || uniquePoints.length === 2) {
-    return new LineMutator(cmd.svgChar, _.first(points), _.last(points));
+    return new LineCalculator(cmd.svgChar, _.first(points), _.last(points));
   }
   if (cmd.svgChar === 'Q') {
-    return new BezierMutator(cmd.svgChar, points[0], points[1], points[2]);
+    return new BezierCalculator(cmd.svgChar, points[0], points[1], points[2]);
   }
   if (cmd.svgChar === 'C') {
-    return new BezierMutator(
+    return new BezierCalculator(
       cmd.svgChar, cmd.points[0], cmd.points[1], cmd.points[2], cmd.points[3]);
   }
   // TODO: create an elliptical arc path helper some day?

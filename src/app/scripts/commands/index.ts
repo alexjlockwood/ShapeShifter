@@ -1,5 +1,5 @@
 import * as AutoAwesome from './AutoAwesome';
-import { ProjectionResult } from './mutators';
+import { ProjectionResult } from './calculators';
 export { ProjectionResult };
 export { AutoAwesome };
 export { SvgChar } from './SvgChar';

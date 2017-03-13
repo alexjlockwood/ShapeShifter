@@ -1,8 +1,8 @@
-import { Mutator, BBox, Line } from '.';
+import { Calculator, BBox, Line } from '.';
 import { SvgChar, ProjectionResult, newMove } from '..';
 import { MathUtil, Point } from '../../common';
 
-export class MoveMutator implements Mutator {
+export class MoveCalculator implements Calculator {
   private readonly startPoint: Point | undefined;
   private readonly endPoint: Point;
 
@@ -19,7 +19,7 @@ export class MoveMutator implements Mutator {
     return undefined;
   }
 
-  split(t1: number, t2: number): Mutator {
+  split(t1: number, t2: number): Calculator {
     return this;
   }
 

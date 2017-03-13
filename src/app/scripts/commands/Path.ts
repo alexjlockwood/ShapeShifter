@@ -1,6 +1,6 @@
 import { Point, Matrix } from '../common';
 import { SubPath, Command, SvgChar } from '.';
-import { ProjectionResult } from './mutators';
+import { ProjectionResult } from './calculators';
 
 /**
  * Defines the set of methods that are seen by the UI.

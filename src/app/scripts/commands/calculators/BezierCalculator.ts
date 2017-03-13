@@ -2,14 +2,14 @@ import * as _ from 'lodash';
 import * as BezierJs from 'bezier-js';
 import { Point } from '../../common';
 import { SvgChar, ProjectionResult, newQuadraticCurve, newBezierCurve } from '..';
-import { Mutator, BBox, Line } from '.';
-import { PointMutator } from './PointMutator';
-import { LineMutator } from './LineMutator';
+import { Calculator, BBox, Line } from '.';
+import { PointCalculator } from './PointCalculator';
+import { LineCalculator } from './LineCalculator';
 
 /**
  * A simple typed wrapper class around the amazing bezier-js library.
  */
-export class BezierMutator implements Mutator {
+export class BezierCalculator implements Calculator {
   private readonly svgChar: SvgChar;
   private readonly bezierJs;
   private readonly points: ReadonlyArray<Point>;
@@ -35,18 +35,18 @@ export class BezierMutator implements Mutator {
     return { x: proj.x, y: proj.y, t: proj.t, d: proj.d };
   }
 
-  split(t1: number, t2: number): Mutator {
+  split(t1: number, t2: number): Calculator {
     if (t1 === t2) {
       const p = this.bezierJs.get(t1);
-      return new PointMutator(this.svgChar, new Point(p.x, p.y));
+      return new PointCalculator(this.svgChar, new Point(p.x, p.y));
     }
     const splitBezPoints = this.bezierJs.split(t1, t2).points;
     const points: Point[] = splitBezPoints.map(p => new Point(p.x, p.y));
     const uniquePoints = _.uniqWith(points, (p1, p2) => p1.equals(p2));
     if (uniquePoints.length === 2) {
-      return new LineMutator(this.svgChar, _.first(points), _.last(points));
+      return new LineCalculator(this.svgChar, _.first(points), _.last(points));
     }
-    return new BezierMutator(this.svgChar, ...points);
+    return new BezierCalculator(this.svgChar, ...points);
   }
 
   convert(svgChar: SvgChar) {
@@ -63,9 +63,9 @@ export class BezierMutator implements Mutator {
         qcp2.x + (2 / 3) * (qcp1.x - qcp2.x),
         qcp2.y + (2 / 3) * (qcp1.y - qcp2.y));
       const ccp3 = qcp2;
-      return new BezierMutator(svgChar, ccp0, ccp1, ccp2, ccp3);
+      return new BezierCalculator(svgChar, ccp0, ccp1, ccp2, ccp3);
     }
-    return new BezierMutator(svgChar, ...this.points);
+    return new BezierCalculator(svgChar, ...this.points);
   }
 
   findTimeByDistance(distance: number): number {

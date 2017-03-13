@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 import { MathUtil, Point, Matrix } from '../common';
-import { Mutator, newMutator, BBox, Line } from './mutators';
+import { Calculator, newCalculator, BBox, Line } from './calculators';
 import { SvgChar, ProjectionResult } from '.';
 import { CommandImpl } from './CommandImpl';
 
@@ -18,8 +18,8 @@ export class CommandMutation {
   private readonly transformedBackingCommand: CommandImpl;
   private readonly backingSvgChar: SvgChar;
 
-  // A lazily-initialized mutator that will do all of the math-y stuff for us.
-  private mutator_: Mutator;
+  // A lazily-initialized Calculator that will do all of the math-y stuff for us.
+  private Calculator_: Calculator;
 
   // A command mutation wraps around the initial SVG command and outputs
   // a list of transformed commands resulting from splits, unsplits,
@@ -51,24 +51,24 @@ export class CommandMutation {
       this.mutations = obj.mutations;
       this.transforms = obj.transforms;
       this.builtCommands = obj.builtCommands;
-      this.mutator_ = obj.mutator_;
+      this.Calculator_ = obj.Calculator_;
     }
     this.transformedBackingCommand = this.backingCommand.transform(this.transforms);
     this.backingSvgChar = this.backingCommand.svgChar;
   }
 
-  private get mutator() {
-    if (!this.mutator_) {
-      this.mutator_ = newMutator(this.transformedBackingCommand);
+  private get Calculator() {
+    if (!this.Calculator_) {
+      this.Calculator_ = newCalculator(this.transformedBackingCommand);
     }
-    return this.mutator_;
+    return this.Calculator_;
   }
 
   /**
    * Returns the transformed backing command's path length.
    */
   getPathLength() {
-    return this.mutator.getPathLength();
+    return this.Calculator.getPathLength();
   }
 
   /**
@@ -76,7 +76,7 @@ export class CommandMutation {
    * transformed backing command.
    */
   project(point: Point): ProjectionResult | undefined {
-    return this.mutator.project(point);
+    return this.Calculator.project(point);
   }
 
   /**
@@ -137,7 +137,7 @@ export class CommandMutation {
     const startSplit = tempSplits[splitIdx];
     const endSplit = tempSplits[splitIdx + 1];
     const distance = MathUtil.lerp(startSplit, endSplit, 0.5);
-    return this.split([this.mutator.findTimeByDistance(distance)]);
+    return this.split([this.Calculator.findTimeByDistance(distance)]);
   }
 
   /**
@@ -194,21 +194,21 @@ export class CommandMutation {
 
   // TODO: this could be more efficient (avoid recreating commands unnecessarily)
   private rebuildCommands(mutations: ReadonlyArray<Mutation>, transforms = this.transforms) {
-    // Reset the mutator if the command has been transformed. The cloned CommandMutation
-    // will lazily re-initialize the mutator when necessary.
+    // Reset the Calculator if the command has been transformed. The cloned CommandMutation
+    // will lazily re-initialize the Calculator when necessary.
     const haveTransformsChanged = this.transforms.length !== transforms.length
       || this.transforms.some((m, i) => !m.equals(transforms[i]));
-    const transformedMutator =
+    const transformedCalculator =
       haveTransformsChanged
-        ? newMutator(this.backingCommand.transform(transforms))
-        : this.mutator;
+        ? newCalculator(this.backingCommand.transform(transforms))
+        : this.Calculator;
     if (mutations.length === 1) {
       return new CommandMutation({
         backingCommand: this.backingCommand,
         mutations,
         transforms,
-        builtCommands: [transformedMutator.convert(mutations[0].svgChar).toCommand()],
-        mutator_: transformedMutator,
+        builtCommands: [transformedCalculator.convert(mutations[0].svgChar).toCommand()],
+        Calculator_: transformedCalculator,
       });
     }
     const builtCommands: CommandImpl[] = [];
@@ -216,7 +216,7 @@ export class CommandMutation {
     for (let i = 0; i < mutations.length; i++) {
       const currT = mutations[i].t;
       let command =
-        transformedMutator
+        transformedCalculator
           .split(prevT, currT)
           .convert(mutations[i].svgChar)
           .toCommand();
@@ -231,7 +231,7 @@ export class CommandMutation {
       mutations,
       transforms,
       builtCommands,
-      mutator_: transformedMutator,
+      Calculator_: transformedCalculator,
     });
   }
 
@@ -240,11 +240,11 @@ export class CommandMutation {
   }
 
   getBoundingBox() {
-    return this.mutator.getBoundingBox();
+    return this.Calculator.getBoundingBox();
   }
 
   intersects(line: Line) {
-    return this.mutator.intersects(line);
+    return this.Calculator.intersects(line);
   }
 }
 
@@ -259,5 +259,5 @@ interface ConstructorParams {
   readonly mutations: ReadonlyArray<Mutation>;
   readonly transforms: ReadonlyArray<Matrix>;
   readonly builtCommands: ReadonlyArray<CommandImpl>;
-  readonly mutator_: Mutator;
+  readonly Calculator_: Calculator;
 }

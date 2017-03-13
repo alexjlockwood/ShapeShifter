@@ -1,9 +1,9 @@
-import { Mutator, BBox, Line } from '.';
+import { Calculator, BBox, Line } from '.';
 import { SvgChar, ProjectionResult, newLine, newQuadraticCurve, newBezierCurve, newClosePath } from '..';
 import { MathUtil, Point } from '../../common';
-import { PointMutator } from './PointMutator';
+import { PointCalculator } from './PointCalculator';
 
-export class LineMutator implements Mutator {
+export class LineCalculator implements Calculator {
   private readonly svgChar: SvgChar;
   private readonly p1: Point;
   private readonly p2: Point;
@@ -51,7 +51,7 @@ export class LineMutator implements Mutator {
     return { x: xx, y: yy, d: dd, t: dt };
   }
 
-  split(t1: number, t2: number): Mutator {
+  split(t1: number, t2: number): Calculator {
     const { x: x1, y: y1 } = this.p1;
     const { x: x2, y: y2 } = this.p2;
     const p1 = new Point(
@@ -61,13 +61,13 @@ export class LineMutator implements Mutator {
       MathUtil.lerp(x1, x2, t2),
       MathUtil.lerp(y1, y2, t2));
     if (p1.equals(p2)) {
-      return new PointMutator(this.svgChar, p1);
+      return new PointCalculator(this.svgChar, p1);
     }
-    return new LineMutator(this.svgChar, p1, p2);
+    return new LineCalculator(this.svgChar, p1, p2);
   }
 
   convert(svgChar: SvgChar) {
-    return new LineMutator(svgChar, this.p1, this.p2);
+    return new LineCalculator(svgChar, this.p1, this.p2);
   }
 
   findTimeByDistance(distance: number) {
