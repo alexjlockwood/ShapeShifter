@@ -6,7 +6,7 @@ import { CanvasType } from '../CanvasType';
 import { AvdSerializer, SvgSerializer } from '../scripts/export';
 import { AvdTarget, AvdAnimation, ValueType, PropertyName } from '../scripts/animation';
 import { DialogService } from '../dialogs';
-import { AutoAwesome } from '../scripts/commands';
+import { AutoAwesome } from '../scripts/autoawesome';
 import { AnimatorService } from '../services/animator.service';
 import { SelectionStateService } from '../services/selectionstate.service';
 import { HoverStateService } from '../services/hoverstate.service';

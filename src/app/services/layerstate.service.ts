@@ -3,7 +3,7 @@ import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Layer, VectorLayer, PathLayer, GroupLayer } from '../scripts/layers';
 import { CanvasType } from '../CanvasType';
 import { Path } from '../scripts/commands';
-import { AutoAwesome } from '../scripts/commands';
+import { AutoAwesome } from '../scripts/autoawesome';
 import { ROTATION_GROUP_LAYER_ID } from '../scripts/import';
 
 /**
