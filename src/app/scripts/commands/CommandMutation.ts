@@ -18,8 +18,8 @@ export class CommandMutation {
   private readonly transformedBackingCommand: CommandImpl;
   private readonly backingSvgChar: SvgChar;
 
-  // A lazily-initialized Calculator that will do all of the math-y stuff for us.
-  private Calculator_: Calculator;
+  // A lazily-initialized calculator that will do all of the math-y stuff for us.
+  private calculator_: Calculator;
 
   // A command mutation wraps around the initial SVG command and outputs
   // a list of transformed commands resulting from splits, unsplits,
@@ -51,24 +51,24 @@ export class CommandMutation {
       this.mutations = obj.mutations;
       this.transforms = obj.transforms;
       this.builtCommands = obj.builtCommands;
-      this.Calculator_ = obj.Calculator_;
+      this.calculator_ = obj.calculator;
     }
     this.transformedBackingCommand = this.backingCommand.transform(this.transforms);
     this.backingSvgChar = this.backingCommand.svgChar;
   }
 
-  private get Calculator() {
-    if (!this.Calculator_) {
-      this.Calculator_ = newCalculator(this.transformedBackingCommand);
+  private get calculator() {
+    if (!this.calculator_) {
+      this.calculator_ = newCalculator(this.transformedBackingCommand);
     }
-    return this.Calculator_;
+    return this.calculator_;
   }
 
   /**
    * Returns the transformed backing command's path length.
    */
   getPathLength() {
-    return this.Calculator.getPathLength();
+    return this.calculator.getPathLength();
   }
 
   /**
@@ -76,7 +76,7 @@ export class CommandMutation {
    * transformed backing command.
    */
   project(point: Point): ProjectionResult | undefined {
-    return this.Calculator.project(point);
+    return this.calculator.project(point);
   }
 
   /**
@@ -137,7 +137,7 @@ export class CommandMutation {
     const startSplit = tempSplits[splitIdx];
     const endSplit = tempSplits[splitIdx + 1];
     const distance = MathUtil.lerp(startSplit, endSplit, 0.5);
-    return this.split([this.Calculator.findTimeByDistance(distance)]);
+    return this.split([this.calculator.findTimeByDistance(distance)]);
   }
 
   /**
@@ -194,21 +194,21 @@ export class CommandMutation {
 
   // TODO: this could be more efficient (avoid recreating commands unnecessarily)
   private rebuildCommands(mutations: ReadonlyArray<Mutation>, transforms = this.transforms) {
-    // Reset the Calculator if the command has been transformed. The cloned CommandMutation
-    // will lazily re-initialize the Calculator when necessary.
+    // Reset the calculator if the command has been transformed. The cloned CommandMutation
+    // will lazily re-initialize the calculator when necessary.
     const haveTransformsChanged = this.transforms.length !== transforms.length
       || this.transforms.some((m, i) => !m.equals(transforms[i]));
     const transformedCalculator =
       haveTransformsChanged
         ? newCalculator(this.backingCommand.transform(transforms))
-        : this.Calculator;
+        : this.calculator;
     if (mutations.length === 1) {
       return new CommandMutation({
         backingCommand: this.backingCommand,
         mutations,
         transforms,
         builtCommands: [transformedCalculator.convert(mutations[0].svgChar).toCommand()],
-        Calculator_: transformedCalculator,
+        calculator: transformedCalculator,
       });
     }
     const builtCommands: CommandImpl[] = [];
@@ -231,7 +231,7 @@ export class CommandMutation {
       mutations,
       transforms,
       builtCommands,
-      Calculator_: transformedCalculator,
+      calculator: transformedCalculator,
     });
   }
 
@@ -240,11 +240,11 @@ export class CommandMutation {
   }
 
   getBoundingBox() {
-    return this.Calculator.getBoundingBox();
+    return this.calculator.getBoundingBox();
   }
 
   intersects(line: Line) {
-    return this.Calculator.intersects(line);
+    return this.calculator.intersects(line);
   }
 }
 
@@ -259,5 +259,5 @@ interface ConstructorParams {
   readonly mutations: ReadonlyArray<Mutation>;
   readonly transforms: ReadonlyArray<Matrix>;
   readonly builtCommands: ReadonlyArray<CommandImpl>;
-  readonly Calculator_: Calculator;
+  readonly calculator: Calculator;
 }
