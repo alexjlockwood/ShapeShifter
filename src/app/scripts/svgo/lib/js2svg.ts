@@ -61,9 +61,7 @@ const textElem = [
  * @return {Object} output data
  */
 export function jsToSvg(data, config) {
-
   return new JS2SVG(config).convert(data);
-
 };
 
 function JS2SVG(config) {

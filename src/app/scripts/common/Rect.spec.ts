@@ -1,8 +1,8 @@
 import 'jasmine';
 import { Rect } from '.';
 
-describe('Rect tests', () => {
-  it('Rect', () => {
+describe('Rect', () => {
+  it('Rect construct', () => {
     let rect = new Rect();
     expect(rect.l).toBe(0);
     expect(rect.t).toBe(0);

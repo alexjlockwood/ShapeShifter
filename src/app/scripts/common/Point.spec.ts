@@ -1,8 +1,8 @@
 import 'jasmine';
 import { Point } from '.';
 
-describe('Point tests', () => {
-  it('Point', () => {
+describe('Point', () => {
+  it('Point construct', () => {
     let point = new Point();
     expect(point.x).toBe(0);
     expect(point.y).toBe(0);

@@ -1,8 +1,8 @@
 import 'jasmine';
 import { Matrix } from '.';
 
-describe('Matrix tests', () => {
-  it('Matrix', () => {
+describe('Matrix', () => {
+  it('Matrix construct', () => {
     let matrix = new Matrix();
     expect(matrix.a).toBe(1);
     expect(matrix.b).toBe(0);

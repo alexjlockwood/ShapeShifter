@@ -2,7 +2,7 @@ import 'jasmine';
 import { SvgLoader } from '.';
 
 describe('SvgLoader', () => {
-  it(`Sub paths begin with lowercase 'm'`, () => {
+  it(`SvgLoader sanity test`, () => {
     const svg = `
 <svg xmlns="http://www.w3.org/2000/svg"
   viewBox="0 0 24 24">
