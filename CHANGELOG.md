@@ -1,3 +1,13 @@
+# [v0.1.3](https://github.com/alexjlockwood/ShapeShifter/compare/v0.1.2...v0.1.3) (2017-03-13)
+
+### Features
+
+* asdf
+
+### Bug fixes
+
+* asdf
+
 # [v0.1.2](https://github.com/alexjlockwood/ShapeShifter/compare/v0.1.1...v0.1.2) (2017-03-06)
 
 ### Features
