@@ -165,10 +165,20 @@ class PathImpl implements Path {
     };
 
     const subPathOrdering = params.subPathOrdering || this.subPathOrdering;
-    const reorderedCommands = _.flatMap(newCommandMutationsMap, (_, subIdx) => {
-      const reorderedSubIdx = this.subPathOrdering[subIdx];
-      return maybeShiftCommandsFn(reorderedSubIdx, maybeReverseCommandsFn(reorderedSubIdx));
+    const subPathCmds = newCommandMutationsMap.map((_, subIdx) => {
+      return maybeShiftCommandsFn(subIdx, maybeReverseCommandsFn(subIdx));
     });
+    const reorderedSubPathCmds = [];
+    for (let i = 0; i < subPathCmds.length; i++) {
+      for (let j = 0; j < subPathOrdering.length; j++) {
+        const reorderIdx = subPathOrdering[j];
+        if (i === reorderIdx) {
+          reorderedSubPathCmds.push(subPathCmds[j]);
+          break;
+        }
+      }
+    }
+    const reorderedCommands = _.flatMap(reorderedSubPathCmds, cmds => cmds);
     reorderedCommands.forEach((cmd, i) => {
       if (cmd.svgChar === 'M') {
         if (i === 0 && cmd.start) {
@@ -301,8 +311,8 @@ class PathImpl implements Path {
     subIdx: number,
     calcOffsetFn: (offset: number, numCommands: number) => number) {
 
-    const numCommands = this.getSubPaths()[subIdx].getCommands().length;
-    if (numCommands <= 1 || !this.getSubPaths()[subIdx].isClosed()) {
+    const numCommands = this.subPaths[subIdx].getCommands().length;
+    if (numCommands <= 1 || !this.subPaths[subIdx].isClosed()) {
       return this;
     }
     return this.clone({
@@ -437,7 +447,7 @@ class PathImpl implements Path {
   }
 
   // Implements the Path interface.
-  unconvertSubpath(subIdx: number) {
+  unconvertSubPath(subIdx: number) {
     const commandMutationsMap = this.commandMutationsMap.map(cms => cms.slice());
     commandMutationsMap[subIdx] =
       commandMutationsMap[subIdx].map((cm, i) => i === 0 ? cm : cm.unconvertSubpath());
@@ -466,7 +476,7 @@ class PathImpl implements Path {
    * @param cmdIdx the client-visible command index
    */
   private findCommandMutation(subIdx: number, cmdIdx: number) {
-    const numCommands = this.getSubPaths()[subIdx].getCommands().length;
+    const numCommands = this.subPaths[subIdx].getCommands().length;
     if (cmdIdx && this.reversals[subIdx]) {
       cmdIdx = numCommands - cmdIdx;
     }
@@ -497,7 +507,7 @@ class PathImpl implements Path {
   hitTest(point: Point, opts: HitOptions) {
     // First search for in-range path points.
     const pointResult =
-      _.chain(this.getSubPaths())
+      _.chain(this.subPaths)
         .map((subPath: SubPath, subIdx: number) => {
           return subPath.getCommands()
             .map((cmd, cmdIdx) => {
@@ -604,7 +614,7 @@ class PathImpl implements Path {
     };
   }
 
-  moveSubpath(fromSubIdx: number, toSubIdx: number) {
+  moveSubPath(fromSubIdx: number, toSubIdx: number) {
     const subPathOrdering = this.subPathOrdering.slice();
     subPathOrdering.splice(toSubIdx, 0, subPathOrdering.splice(fromSubIdx, 1)[0]);
     return this.clone({ subPathOrdering });

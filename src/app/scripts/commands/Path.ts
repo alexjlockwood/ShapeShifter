@@ -94,13 +94,13 @@ export interface Path {
   convert(subIdx: number, cmdIdx: number, svgChar: SvgChar): Path;
 
   /**
-   * Reverts any converts previously performed at the specified index.
+   * Reverts any conversions previously performed in the specified sub path.
    * Returns a new path object.
    */
-  unconvertSubpath(subIdx: number): Path;
+  unconvertSubPath(subIdx: number): Path;
 
   /**
-   * Returns the unique id associated with the cmomand at the specified index.
+   * Returns the unique id associated with the command at the specified index.
    */
   getId(subIdx: number, cmdIdx: number): string;
 
@@ -128,7 +128,7 @@ export interface Path {
   /**
    * Moves a subpath from one index to another. Returns a new path object.
    */
-  moveSubpath(fromSubIdx: number, toSubIdx: number): Path;
+  moveSubPath(fromSubIdx: number, toSubIdx: number): Path;
 }
 
 /** Represents the options for a hit test. */
