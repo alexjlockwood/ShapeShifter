@@ -2,7 +2,7 @@ import * as _ from 'lodash';
 import { Point } from '../common';
 import { SubPath, Command } from '.';
 
-export function newSubPath(commands: Command[]): SubPath {
+export function newSubPath(commands: ReadonlyArray<Command>): SubPath {
   // Precondition: must have exactly 1 move command and at most 1 closepath command.
   return new SubPathImpl(commands.slice());
 }

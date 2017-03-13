@@ -77,7 +77,7 @@ export class CommandImpl implements Command {
   }
 
   /** Returns a new reversed draw command. */
-  reverse(): CommandImpl {
+  reverse() {
     if (this.svgChar !== 'M' || this.start) {
       const points = this.points.slice().reverse();
       return new CommandImpl(this.svgChar, points, this.isSplit);

@@ -124,6 +124,11 @@ export interface Path {
    * Performs a hit test on the path and returns a HitResult.
    */
   hitTest(point: Point, opts: HitOptions): HitResult;
+
+  /**
+   * Moves a subpath from one index to another. Returns a new path object.
+   */
+  moveSubpath(fromSubIdx: number, toSubIdx: number): Path;
 }
 
 /** Represents the options for a hit test. */

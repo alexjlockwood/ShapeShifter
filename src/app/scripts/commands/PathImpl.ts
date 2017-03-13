@@ -22,6 +22,7 @@ class PathImpl implements Path {
   private readonly commandMutationsMap: ReadonlyArray<ReadonlyArray<CommandMutation>>;
   private readonly shiftOffsets: ReadonlyArray<number>;
   private readonly reversals: ReadonlyArray<boolean>;
+  private readonly subPathOrdering: ReadonlyArray<number>;
   private pathString: string;
   private pathLength: number;
 
@@ -36,21 +37,20 @@ class PathImpl implements Path {
         this.subPaths.map(s => s.getCommands().map(c => new CommandMutation(c as CommandImpl)));
       this.shiftOffsets = this.subPaths.map(_ => 0);
       this.reversals = this.subPaths.map(_ => false);
+      this.subPathOrdering = this.subPaths.map((_, i) => i);
     } else {
       this.subPaths = createSubPaths(...obj.commands);
       this.commandMutationsMap = obj.commandMutationsMap.map(cms => cms.slice());
       this.shiftOffsets = obj.shiftOffsets.slice();
       this.reversals = obj.reversals.slice();
+      this.subPathOrdering = obj.subPathOrdering.slice();
     }
   }
 
   // Implements the Path interface.
   clone(params: PathParams = {}) {
     // TODO: only recompute the stuff that we know has changed...
-    const newCommandMutationsMap =
-      params.commandMutationsMap
-        ? params.commandMutationsMap
-        : this.commandMutationsMap;
+    const newCommandMutationsMap = params.commandMutationsMap || this.commandMutationsMap;
 
     const shouldReverseFn = (subIdx: number) =>
       params.reversals
@@ -164,14 +164,26 @@ class PathImpl implements Path {
       return newCmds;
     };
 
+    const subPathOrdering = params.subPathOrdering || this.subPathOrdering;
     const reorderedCommands = _.flatMap(newCommandMutationsMap, (_, subIdx) => {
-      return maybeShiftCommandsFn(subIdx, maybeReverseCommandsFn(subIdx));
+      const reorderedSubIdx = this.subPathOrdering[subIdx];
+      return maybeShiftCommandsFn(reorderedSubIdx, maybeReverseCommandsFn(reorderedSubIdx));
+    });
+    reorderedCommands.forEach((cmd, i) => {
+      if (cmd.svgChar === 'M') {
+        if (i === 0 && cmd.start) {
+          reorderedCommands[i] = newMove(undefined, cmd.end);
+        } else if (i !== 0 && !cmd.start) {
+          reorderedCommands[i] = newMove(reorderedCommands[i - 1].end, cmd.end);
+        }
+      }
     });
     const pathParams: PathParams = {
       commands: reorderedCommands,
       commandMutationsMap: this.commandMutationsMap,
       shiftOffsets: this.shiftOffsets,
       reversals: this.reversals,
+      subPathOrdering: this.subPathOrdering,
     };
     // TODO: using assign here is kinda weird...
     return new PathImpl(_.assign({}, pathParams, params));
@@ -591,6 +603,12 @@ class PathImpl implements Path {
       subIdx: hitSubIdx,
     };
   }
+
+  moveSubpath(fromSubIdx: number, toSubIdx: number) {
+    const subPathOrdering = this.subPathOrdering.slice();
+    subPathOrdering.splice(toSubIdx, 0, subPathOrdering.splice(fromSubIdx, 1)[0]);
+    return this.clone({ subPathOrdering });
+  }
 }
 
 // TODO: cache this?
@@ -658,4 +676,5 @@ interface PathParams {
   readonly commandMutationsMap?: ReadonlyArray<ReadonlyArray<CommandMutation>>;
   readonly shiftOffsets?: ReadonlyArray<number>;
   readonly reversals?: ReadonlyArray<boolean>;
+  readonly subPathOrdering?: ReadonlyArray<number>;
 }
