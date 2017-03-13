@@ -2,11 +2,36 @@
 
 ### Features
 
-* asdf
+* Exported `AnimatedVectorDrawable`s will now automatically animate differences
+  in the `<vector>` tag's `alpha` property.
+  ([#68](https://github.com/alexjlockwood/ShapeShifter/issues/68))
+  ([82281e0](https://github.com/alexjlockwood/ShapeShifter/commit/82281e0))
 
 ### Bug fixes
 
-* asdf
+* SVG import is now much better at understanding `<defs>` and `<use>` tags.
+  ([#13](https://github.com/alexjlockwood/ShapeShifter/issues/13))
+  ([0a94a0b](https://github.com/alexjlockwood/ShapeShifter/commit/0a94a0b))
+* SVG import now strips away invisible paths with no `fill` or `stroke` colors.
+  ([5d4fc31](https://github.com/alexjlockwood/ShapeShifter/commit/5d4fc31))
+* SVG import now correctly parses `<rect>` shapes containing `rx` and/or
+  `ry` attributes.
+  ([#3](https://github.com/alexjlockwood/ShapeShifter/issues/3))
+  ([96d0f1d](https://github.com/alexjlockwood/ShapeShifter/commit/96d0f1d))
+* Added a `README.txt` file to exported zip files with details on
+  the archive's contents.
+  ([#73](https://github.com/alexjlockwood/ShapeShifter/issues/73))
+  ([7a27f90](https://github.com/alexjlockwood/ShapeShifter/commit/7a27f90))
+* Switched over to Angular 2's `OnPush` change detection strategy, which should
+  increase overall application performance.
+  ([#74](https://github.com/alexjlockwood/ShapeShifter/issues/74))
+  ([281e6e4](https://github.com/alexjlockwood/ShapeShifter/commit/281e6e4))
+* Fixed a couple of miscellaneous bugs that occurred when switching between
+  different SVG paths.
+  ([#75](https://github.com/alexjlockwood/ShapeShifter/issues/75))
+  ([#76](https://github.com/alexjlockwood/ShapeShifter/issues/75))
+  ([6560b60](https://github.com/alexjlockwood/ShapeShifter/commit/6560b60))
+  ([7a4e49f](https://github.com/alexjlockwood/ShapeShifter/commit/7a4e49f))
 
 # [v0.1.2](https://github.com/alexjlockwood/ShapeShifter/compare/v0.1.1...v0.1.2) (2017-03-06)
 
