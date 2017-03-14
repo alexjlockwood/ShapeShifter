@@ -451,6 +451,7 @@ class PathImpl implements Path {
       commandMutationsMap: this.commandMutationsMap.map(cms => cms.map(cm => cm.revert())),
       shiftOffsets: this.subPaths.map(_ => 0),
       reversals: this.subPaths.map(_ => false),
+      subPathOrdering: this.subPathOrdering.map((_, i) => i),
     });
   }
 
