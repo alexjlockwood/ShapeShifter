@@ -161,7 +161,13 @@ class PathImpl implements Path {
     });
     const reorderedSubPathCmds = [];
     for (let i = 0; i < subPathCmds.length; i++) {
-      reorderedSubPathCmds.push(subPathCmds[this.toCmsIdx(i)]);
+      for (let j = 0; j < newSubPathOrdering.length; j++) {
+        const reorderIdx = newSubPathOrdering[j];
+        if (i === reorderIdx) {
+          reorderedSubPathCmds.push(subPathCmds[j]);
+          break;
+        }
+      }
     }
     const reorderedCommands = _.flatMap(reorderedSubPathCmds, cmds => cmds);
     reorderedCommands.forEach((cmd, i) => {
