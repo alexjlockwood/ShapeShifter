@@ -31,6 +31,8 @@ describe('SVGO plugins', () => {
 
   beforeEach(() => {
     convertPathData.params.floatPrecision = 3;
+    convertPathData.params.transformPrecision = 5;
+    convertPathData.params.makeArcs = { threshold: 2.5, tolerance: 0.5 };
     convertTransforms.params.floatPrecision = 3;
     convertTransforms.params.transformPrecision = 5;
   });
@@ -431,8 +433,7 @@ describe('SVGO plugins', () => {
 </svg>`);
     });
 
-    // Disabled. ShapeShifter never converts bezier curves to arcs.
-    xit('#14', () => {
+    it('#14', () => {
       runTest(convertPathData, `
 <svg xmlns="http://www.w3.org/2000/svg">
     <path d="M0 0L0 0c2.761 0 5 2.239 5 5"/>
@@ -457,9 +458,8 @@ describe('SVGO plugins', () => {
 </svg>`);
     });
 
-    // Disabled. ShapeShifter never converts bezier curves to arcs.
-    xit('#15', () => {
-      convertPathData.params.floatPrecision = 0;
+    it('#15', () => {
+      convertPathData.params.floatPrecision = 2;
       runTest(convertPathData, `
 <svg xmlns="http://www.w3.org/2000/svg">
     <path d="M.49 8.8c-.3-.75-.44-1.55-.44-2.35 0-3.54 2.88-6.43 6.43-6.43 3.53 0 6.42 2.88 6.42 6.43 0 .8-.15 1.6-.43 2.35"/>
@@ -472,8 +472,7 @@ describe('SVGO plugins', () => {
 </svg>`);
     });
 
-    // Disabled. ShapeShifter never converts bezier curves to arcs.
-    xit('#16', () => {
+    it('#16', () => {
       convertPathData.params.floatPrecision = 0;
       runTest(convertPathData, `
 <svg xmlns="http://www.w3.org/2000/svg">
