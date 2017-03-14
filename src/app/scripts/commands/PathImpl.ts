@@ -596,7 +596,7 @@ class PathImpl implements Path {
           // Nothing to see here. Check the next subpath.
           return true;
         }
-        // The point is inside the subpath's bounding box. Next, we will
+        // The point is inside the subpath's bounding box, so next, we will
         // use the 'even-odd rule' to determine if the filled path has been hit.
         // We create a line from the mouse point to a point we know that is not
         // inside the path (in this case, we use a coordinate outside the path's
