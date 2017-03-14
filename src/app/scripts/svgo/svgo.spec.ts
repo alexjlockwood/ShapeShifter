@@ -43,7 +43,6 @@ describe('SVGO plugins', function () {
   });
 
   it('convertPathData', () => {
-
     runTest(convertPathData, `
 <svg xmlns="http://www.w3.org/2000/svg">
     <path d="m100,200 300,400 z m100,200 L 300,400"/>
@@ -187,6 +186,29 @@ describe('SVGO plugins', function () {
     <g transform="rotate(45)"/>
 </svg>
 `);
+  });
+
+  it('inlineStyles', () => {
+    const before = `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 258.12 225.88">
+  <style>
+    .cls-7 {
+      only-cls-7: 1;
+    }
+    .cls-7,
+    .cls-8 {
+      cls-7-and-8: 1;
+    }
+  </style>
+  <path class="cls-7"/>
+  <path d="M172.44 18.6c6.51-4.94 13 3.16 13 3.16l-14.57 10.09s-7.02-6.77 1.57-13.25z" class="cls-8"/>
+</svg>`;
+    const after = `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 258.12 225.88">
+    <path class="cls-7" style="only-cls-7:1;cls-7-and-8:1"/>
+    <path d="M172.44 18.6c6.51-4.94 13 3.16 13 3.16l-14.57 10.09s-7.02-6.77 1.57-13.25z" class="cls-8" style="cls-7-and-8:1"/>
+</svg>`;
+    runTest(inlineStyles, before, after);
   });
 });
 
