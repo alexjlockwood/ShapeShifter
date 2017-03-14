@@ -192,7 +192,23 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
         if (isMorphable) {
           this.animatorService.setIsSlowMotion(!this.animatorService.isSlowMotion());
         }
-      }
+      } /* else if (event.keyCode === 220) {
+        // Used for debugging purposes.
+        const activePath = this.layerStateService.getActivePathLayer(CanvasType.Start);
+        if (activePath) {
+          const path = activePath.pathData;
+          const indices = _.shuffle(path.getSubPaths().map((_, i) => i));
+          if (indices.length > 1) {
+            for (let i = 0; i < indices.length; i++) {
+              this.layerStateService.updateActivePath(
+                CanvasType.Start,
+                path.moveSubPath(indices[0], indices[1]),
+                indices[i],
+                i === indices.length - 1);
+            }
+          }
+        }
+      } */
       return undefined;
     });
   }
