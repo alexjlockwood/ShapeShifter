@@ -5,7 +5,7 @@ import * as _ from 'lodash';
 describe('Path', () => {
 
   describe('constructor', () => {
-    it('parse complex subpaths', () => {
+    it('parse compound paths', () => {
       const svgChars: SvgChar[][] = [
         ['M', 'L', 'Z'],
         ['M', 'L', 'L', 'Z'],
