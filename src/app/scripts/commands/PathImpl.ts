@@ -467,14 +467,15 @@ class PathImpl implements Path {
    * @param cmdIdx the client-visible command index
    */
   private findCommandMutation(subIdx: number, cmdIdx: number) {
-    const numCommands = this.subPaths[subIdx].getCommands().length;
     const cmsIdx = this.subPathOrdering[subIdx];
+    const numCommandsInSubPath =
+      _.sum(this.commandMutationsMap[cmsIdx].map(cm => cm.getCommands().length));
     if (cmdIdx && this.reversals[cmsIdx]) {
-      cmdIdx = numCommands - cmdIdx;
+      cmdIdx = numCommandsInSubPath - cmdIdx;
     }
     cmdIdx += this.shiftOffsets[cmsIdx];
-    if (cmdIdx >= numCommands) {
-      cmdIdx -= (numCommands - 1);
+    if (cmdIdx >= numCommandsInSubPath) {
+      cmdIdx -= (numCommandsInSubPath - 1);
     }
     let counter = 0;
     let cmIdx = 0;
