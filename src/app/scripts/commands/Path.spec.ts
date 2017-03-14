@@ -321,7 +321,7 @@ describe('Path', () => {
       checkPathsEqual(actual, expected);
     });
 
-    it('move single sub path, then reverse/shift, then move the sub path again', () => {
+    it('move single sub path, then reverse/shift/split, then move the sub path again', () => {
       let actual = INITIAL.moveSubPath(0, 1);
       let expected = newPath([subPath1, subPath0, subPath2].join(' '));
       checkPathsEqual(actual, expected);
@@ -330,12 +330,20 @@ describe('Path', () => {
       expected = newPath(['M 3 1 L 2 1 L 1 1 L 3 1', subPath0, subPath2].join(' '));
       checkPathsEqual(actual, expected);
 
-      actual = actual.shiftBack(0).reverse(0);
-      expected = newPath(['M 2 1 L 3 1 L 1 1 L 2 1', subPath0, subPath2].join(' '));
+      actual = actual.splitInHalf(0, 1);
+      expected = newPath(['M 3 1 L 2.5 1 L 2 1 L 1 1 L 3 1', subPath0, subPath2].join(' '));
+      checkPathsEqual(actual, expected);
+
+      actual = actual.shiftForward(0).reverse(0);
+      expected = newPath(['M 1 1 L 2 1 L 2.5 1 L 3 1 L 1 1', subPath0, subPath2].join(' '));
       checkPathsEqual(actual, expected);
 
       actual = actual.moveSubPath(2, 0).moveSubPath(2, 0).moveSubPath(2, 1);
-      expected = newPath([subPath0, 'M 2 1 L 3 1 L 1 1 L 2 1', subPath2].join(' '));
+      expected = newPath([subPath0, 'M 1 1 L 2 1 L 2.5 1 L 3 1 L 1 1', subPath2].join(' '));
+      checkPathsEqual(actual, expected);
+
+      actual = actual.unsplit(1, 2);
+      expected = newPath([subPath0, `M 1 1 L 2 1 L 3 1 L 1 1`, subPath2].join(' '));
       checkPathsEqual(actual, expected);
     });
   });
