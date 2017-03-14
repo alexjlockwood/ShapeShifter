@@ -501,7 +501,7 @@ describe('SVGO plugins', () => {
   });
 
   describe('convertTransforms', () => {
-    it('#xxx', () => {
+    it('#1', () => {
       runTest(convertTransforms, `
 <svg xmlns="http://www.w3.org/2000/svg">
     <g transform="matrix(0.707 -0.707 0.707 0.707 255.03 111.21)"/>
@@ -541,6 +541,83 @@ describe('SVGO plugins', () => {
     <g transform="scale(-1 1) rotate(45)"/>
     <g transform="rotate(135)"/>
     <g transform="rotate(45)"/>
+</svg>`);
+    });
+
+    it('#2', () => {
+      runTest(convertTransforms, `
+<svg xmlns="http://www.w3.org/2000/svg">
+    <g transform="translate(50 0) scale(2 2)"/>
+    <g transform="translate(50) scale(2 2)"/>
+    <g transform="translate(10 20) rotate(45) translate(-10-20)"/>
+    <g transform="scale(2) translate(10 20) rotate(45) translate(-10-20)"/>
+    <g transform="rotate(15) scale(2 1)"/>
+    <g transform="scale(2 1) rotate(15)"/>
+    <g transform="translate(10 20) rotate(45) translate(-10-20) scale(2)"/>
+    <g transform="translate(15, 3) translate(13) rotate(47 39.885486 39.782373)"/>
+</svg>
+`, `
+<svg xmlns="http://www.w3.org/2000/svg">
+    <g transform="matrix(2 0 0 2 50 0)"/>
+    <g transform="matrix(2 0 0 2 50 0)"/>
+    <g transform="rotate(45 10 20)"/>
+    <g transform="rotate(45 20 40) scale(2)"/>
+    <g transform="rotate(15) scale(2 1)"/>
+    <g transform="scale(2 1) rotate(15)"/>
+    <g transform="rotate(45 10 20) scale(2)"/>
+    <g transform="rotate(47 50.436 73.48)"/>
+</svg>`);
+    });
+
+    it('#3', () => {
+      runTest(convertTransforms, `
+<svg xmlns="http://www.w3.org/2000/svg">
+    <g transform="matrix(1 0 0 1 50 100)"/>
+    <g transform="matrix(0.5 0 0 2 0 0)"/>
+    <g transform="matrix(.707-.707.707.707 0 0)"/>
+    <g transform="matrix(1 0 0.466 1 0 0)"/>
+    <g transform="matrix(1 0.466 0 1 0 0)"/>
+    <g transform="matrix(1 0 0 1 50 90) matrix(1 0 0 1 60 20) matrix(1 0 0 1 20 40)"/>
+</svg>
+`, `
+<svg xmlns="http://www.w3.org/2000/svg">
+    <g transform="translate(50 100)"/>
+    <g transform="scale(.5 2)"/>
+    <g transform="rotate(-45)"/>
+    <g transform="skewX(24.99)"/>
+    <g transform="skewY(24.99)"/>
+    <g transform="translate(130 150)"/>
+</svg>`);
+    });
+
+    it('#4', () => {
+      runTest(convertTransforms, `
+<svg xmlns="http://www.w3.org/2000/svg">
+    <g transform=""/>
+    <g transform="translate(0)"/>
+    <g transform="translate(0 0)"/>
+    <g transform="translate(0 50)"/>
+    <g transform="scale(1)"/>
+    <g transform="scale(1 2)"/>
+    <g transform="rotate(0)"/>
+    <g transform="rotate(0 100 100)"/>
+    <g transform="skewX(0)"/>
+    <g transform="skewY(0)"/>
+    <g transform="translate(0,-100) translate(0,100)"/>
+</svg>
+`, `
+<svg xmlns="http://www.w3.org/2000/svg">
+    <g/>
+    <g/>
+    <g/>
+    <g transform="translate(0 50)"/>
+    <g/>
+    <g transform="scale(1 2)"/>
+    <g/>
+    <g/>
+    <g/>
+    <g/>
+    <g/>
 </svg>`);
     });
   });
