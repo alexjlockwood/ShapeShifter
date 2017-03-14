@@ -75,8 +75,26 @@ export class CommandMutation {
    * Note that the projection is performed in relation to the command mutation's
    * transformed backing command.
    */
-  project(point: Point): ProjectionResult | undefined {
-    return this.calculator.project(point);
+  project(point: Point): { projectionResult: ProjectionResult, splitIdx: number } | undefined {
+    const projectionResult = this.calculator.project(point);
+    if (!projectionResult) {
+      return undefined;
+    }
+    // Count the number of t values that are less than the projection.
+    const splitIdx =
+      _.chain(this.mutations)
+        .map(mutation => mutation.t < projectionResult.t ? 1 : 0)
+        .sum()
+        .value();
+    const tempSplits = [0, ...this.mutations.map(m => m.t)];
+    const startSplit = tempSplits[splitIdx];
+    const endSplit = tempSplits[splitIdx + 1];
+    // Update the t value so that it is in relation to the client-visible subIdx and cmdIdx.
+    projectionResult.t = MathUtil.lerp(startSplit, endSplit, projectionResult.t);
+    return {
+      projectionResult,
+      splitIdx,
+    };
   }
 
   /**

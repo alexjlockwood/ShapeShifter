@@ -40,10 +40,9 @@ export interface Path {
 
   /**
    * Calculates the point on this path that is closest to the specified point argument.
-   * Also returns a 'split' function that can be used to split the path at the returned
-   * projection point. Returns undefined if no point is found.
+   * Returns undefined if no point is found.
    */
-  project(point: Point): { projection: ProjectionResult, splitFn: () => Path } | undefined;
+  project(point: Point): { projection: ProjectionResult, subIdx: number, cmdIdx: number } | undefined;
 
   /**
    * Reverses the order of the points in the sub path at the specified index.

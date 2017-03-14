@@ -22,8 +22,11 @@ export function newPath(obj: string | Command[]): Path {
 class PathImpl implements Path {
   private readonly subPaths: ReadonlyArray<SubPath>;
   private readonly commandMutationsMap: ReadonlyArray<ReadonlyArray<CommandMutation>>;
-  private readonly shiftOffsets: ReadonlyArray<number>;
+  // Maps internal cmsIdx values to the subpath's current reversal state.
   private readonly reversals: ReadonlyArray<boolean>;
+  // Maps internal cmsIdx values to the subpath's current shift offsetstate.
+  private readonly shiftOffsets: ReadonlyArray<number>;
+  // Maps client-visible subIdx values to internal cmsIdx values.
   private readonly subPathOrdering: ReadonlyArray<number>;
   private pathString: string;
   private pathLength: number;
@@ -158,13 +161,7 @@ class PathImpl implements Path {
     });
     const reorderedSubPathCmds = [];
     for (let i = 0; i < subPathCmds.length; i++) {
-      for (let j = 0; j < newSubPathOrdering.length; j++) {
-        const reorderIdx = newSubPathOrdering[j];
-        if (i === reorderIdx) {
-          reorderedSubPathCmds.push(subPathCmds[j]);
-          break;
-        }
-      }
+      reorderedSubPathCmds.push(subPathCmds[this.toCmsIdx(i)]);
     }
     const reorderedCommands = _.flatMap(reorderedSubPathCmds, cmds => cmds);
     reorderedCommands.forEach((cmd, i) => {
@@ -254,22 +251,35 @@ class PathImpl implements Path {
   }
 
   // Implements the Path interface.
-  project(point: Point): { projection: ProjectionResult, splitFn: () => Path } | undefined {
-    return _.chain(this.commandMutationsMap as CommandMutation[][])
-      .map((subPathCms, cmsIdx) =>
-        subPathCms.map((cm, cmIdx) => {
-          const projection = cm.project(point);
-          return {
-            projection,
-            splitFn: () => this.splitCommandMutation(cmsIdx, cmIdx, projection.t),
-          };
-        }))
-      .flatMap(projections => projections)
-      .filter(obj => !!obj.projection)
-      .reduce((prev, curr) => {
-        return prev && prev.projection.d < curr.projection.d ? prev : curr;
-      }, undefined)
-      .value();
+  project(point: Point): { projection: ProjectionResult, subIdx: number, cmdIdx: number } | undefined {
+    const minProjectionResultInfo =
+      _.chain(this.commandMutationsMap as CommandMutation[][])
+        .map((subPathCms, cmsIdx) =>
+          subPathCms.map((cm, cmIdx) => {
+            const projection = cm.project(point);
+            return {
+              cmsIdx,
+              cmIdx,
+              splitIdx: projection ? projection.splitIdx : 0,
+              projection: projection ? projection.projectionResult : undefined,
+            };
+          }))
+        .flatMap(projections => projections)
+        .filter(obj => !!obj.projection)
+        .reduce((prev, curr) => {
+          return prev && prev.projection.d < curr.projection.d ? prev : curr;
+        }, undefined)
+        .value();
+    if (!minProjectionResultInfo) {
+      return undefined;
+    }
+    const cmsIdx = minProjectionResultInfo.cmsIdx;
+    const cmIdx = minProjectionResultInfo.cmIdx;
+    const splitIdx = minProjectionResultInfo.splitIdx;
+    const projection = minProjectionResultInfo.projection;
+    const subIdx = this.toSubIdx(cmsIdx);
+    const cmdIdx = this.toCmdIdx(cmsIdx, cmIdx, splitIdx);
+    return { projection, subIdx, cmdIdx };
   }
 
   // Implements the Path interface.
@@ -355,17 +365,6 @@ class PathImpl implements Path {
     const shiftOffsets = this.maybeUpdateShiftOffsetsAfterSplit(cmsIdx, cmIdx, 1);
     const commandMutationsMap =
       this.replaceCommandMutation(cmsIdx, cmIdx, targetCm.splitInHalfAtIndex(splitIdx));
-    return this.clone({ commandMutationsMap, shiftOffsets });
-  }
-
-  // Same as split above, except can be used when the command mutation indices are known.
-  // This method specifically only handles one t value (since multi-spliting involves
-  // recalculating shift indices in weird ways).
-  private splitCommandMutation(cmsIdx: number, cmIdx: number, t: number) {
-    const shiftOffsets = this.maybeUpdateShiftOffsetsAfterSplit(cmsIdx, cmIdx, 1);
-    const targetCm = this.commandMutationsMap[cmsIdx][cmIdx];
-    const commandMutationsMap =
-      this.replaceCommandMutation(cmsIdx, cmIdx, targetCm.split([t]));
     return this.clone({ commandMutationsMap, shiftOffsets });
   }
 
@@ -538,45 +537,18 @@ class PathImpl implements Path {
       return { isHit: false };
     }
 
-    const findCmsIdxFromSubIdxFn = (subIdx: number) => {
-      for (let i = 0; i < this.subPathOrdering.length; i++) {
-        if (this.subPathOrdering[i] === subIdx) {
-          return i;
-        }
-      }
-      throw new Error('Invalid subIdx: ' + subIdx);
-    };
+
     if (opts.isStrokeInRangeFn) {
       // If the shortest distance from the point to the path is less than half
       // the stroke width, then select the path.
-      const minProjectionResult =
-        _.chain(this.subPaths as SubPath[])
-          .map((subPath, subIdx) => this.commandMutationsMap[findCmsIdxFromSubIdxFn(subIdx)])
-          .map((cms, cmsIdx) => {
-            return cms.map((cm, cmIdx) => {
-              // TODO: also return the cmdIdx so the client can split
-              return {
-                cmsIdx,
-                projection: cm.project(point),
-              };
-            });
-          })
-          .flatMap(results => results)
-          // TODO: also check to see if the hit occurred at a stroke-linejoin vertex
-          // TODO: take stroke width scaling into account as well?
-          .filter(result => !!result.projection && opts.isStrokeInRangeFn(result.projection.d))
-          // Reverse so that strokes drawn with higher z-orders are preferred.
-          .reverse()
-          .reduce((prev, curr) => {
-            if (!prev) {
-              return curr;
-            }
-            return prev.projection.d < curr.projection.d ? prev : curr;
-          }, undefined)
-          .value();
+
+      // TODO: also check to see if the hit occurred at a stroke-linejoin vertex
+      // TODO: take stroke width scaling into account as well?
+      const result = this.project(point);
+      const isHit = result && opts.isStrokeInRangeFn(result.projection.d);
       return {
-        isHit: !!minProjectionResult,
-        subIdx: minProjectionResult ? this.subPathOrdering[minProjectionResult.cmsIdx] : undefined,
+        isHit,
+        subIdx: isHit ? result.subIdx : undefined,
       };
     }
 
@@ -584,7 +556,7 @@ class PathImpl implements Path {
 
     // Search from right to left so that higher z-order subpaths are found first.
     _.chain(this.subPaths as SubPath[])
-      .map((subPath, subIdx) => this.commandMutationsMap[findCmsIdxFromSubIdxFn(subIdx)])
+      .map((subPath, subIdx) => this.commandMutationsMap[this.toCmsIdx(subIdx)])
       .forEachRight((cms, cmsIdx) => {
         const isClosed =
           cms[0].getCommands()[0].end.equals((_.last(_.last(cms).getCommands())).end);
@@ -627,6 +599,26 @@ class PathImpl implements Path {
     const subPathOrdering = this.subPathOrdering.slice();
     subPathOrdering.splice(toSubIdx, 0, subPathOrdering.splice(fromSubIdx, 1)[0]);
     return this.clone({ subPathOrdering });
+  }
+
+  private toCmsIdx(subIdx: number) {
+    return this.subPathOrdering[subIdx];
+  }
+
+  private toSubIdx(cmsIdx: number) {
+    for (let i = 0; i < this.subPathOrdering.length; i++) {
+      if (this.subPathOrdering[i] === cmsIdx) {
+        return i;
+      }
+    }
+    throw new Error('Invalid cmsIdx: ' + cmsIdx);
+  }
+
+  private toCmdIdx(cmsIdx: number, cmIdx: number, splitIdx: number) {
+    return splitIdx + _.chain(this.commandMutationsMap[cmsIdx])
+      .map((cm, i) => i < cmIdx ? cm.getCommands().length : 0)
+      .sum()
+      .value();
   }
 }
 

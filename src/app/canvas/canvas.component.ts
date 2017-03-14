@@ -943,10 +943,14 @@ function calculateProjectionOntoPath(
   if (!projectionInfo) {
     return undefined;
   }
+  const splitFn = () => {
+    return pathLayer.pathData.split(
+      projectionInfo.subIdx, projectionInfo.cmdIdx, projectionInfo.projection.t);
+  };
   return {
     pathId: pathLayer.id,
     projection: projectionInfo.projection,
-    splitFn: projectionInfo.splitFn,
+    splitFn,
   };
 }
 
