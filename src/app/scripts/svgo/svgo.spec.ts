@@ -27,6 +27,9 @@ import { removeNonInheritableGroupAttrs } from './plugins/removeNonInheritableGr
 import { replaceUseElems } from './plugins/replaceUseElems';
 import { removeUselessStrokeAndFill } from './plugins/removeUselessStrokeAndFill';
 
+convertTransforms.params.floatPrecision = 3;
+convertTransforms.params.transformPrecision = 5;
+
 describe('SVGO plugins', function () {
 
   it('removeDoctype', () => {
@@ -105,7 +108,8 @@ describe('SVGO plugins', function () {
     <path d="M8.6 6.4L5.4 9.5l3.2 3.1-.7.8L4 9.5l3.9-3.9zM5 10V9h10v1z"/>
     <path d="M561.214 392.766a48.107 95.08 10.132 1 1-94.083-20.365 48.107 95.079 10.132 1 1 94.082 20.365z"/>
     <path d="M-1.26-1.4a6.53 1.8-15.2 1 1 12.55-3.44"/>
-</svg>`, `
+</svg>
+`, `
 <svg xmlns="http://www.w3.org/2000/svg">
     <path d="M100 0v100l70-50zm70 50l70-50v100z"/>
     <path transform="" d="M0 0v100l70-50zm70 50l70-50v100z"/>
@@ -143,8 +147,6 @@ describe('SVGO plugins', function () {
   });
 
   it('convertTransforms', () => {
-    convertTransforms.params.floatPrecision = 3;
-    convertTransforms.params.transformPrecision = 5;
     runTest(convertTransforms, `
 <svg xmlns="http://www.w3.org/2000/svg">
     <g transform="matrix(0.707 -0.707 0.707 0.707 255.03 111.21)"/>
@@ -184,12 +186,11 @@ describe('SVGO plugins', function () {
     <g transform="scale(-1 1) rotate(45)"/>
     <g transform="rotate(135)"/>
     <g transform="rotate(45)"/>
-</svg>
-`);
+</svg>`);
   });
 
   it('inlineStyles', () => {
-    const before = `
+    runTest(inlineStyles, `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 258.12 225.88">
   <style>
     .cls-7 {
@@ -202,13 +203,132 @@ describe('SVGO plugins', function () {
   </style>
   <path class="cls-7"/>
   <path d="M172.44 18.6c6.51-4.94 13 3.16 13 3.16l-14.57 10.09s-7.02-6.77 1.57-13.25z" class="cls-8"/>
-</svg>`;
-    const after = `
+</svg>
+`, `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 258.12 225.88">
     <path class="cls-7" style="only-cls-7:1;cls-7-and-8:1"/>
     <path d="M172.44 18.6c6.51-4.94 13 3.16 13 3.16l-14.57 10.09s-7.02-6.77 1.57-13.25z" class="cls-8" style="cls-7-and-8:1"/>
-</svg>`;
-    runTest(inlineStyles, before, after);
+</svg>`);
+  });
+
+  describe('mergePaths', function () {
+    it('#1', () => {
+      runTest(mergePaths, `
+<svg xmlns="http://www.w3.org/2000/svg">
+    <path d="M 0,0 z"/>
+    <path d="M 10,10 z"/>
+    <path d="M 20,20 l 10,10 M 30,0 c 10,0 20,10 20,20"/>
+    <path d="M 30,30 z"/>
+    <path d="M 30,30 z" fill="#f00"/>
+    <path d="M 40,40 z"/>
+    <path d="m 50,50 0,10 20,30 40,0"/>
+</svg>
+`, `
+<svg xmlns="http://www.w3.org/2000/svg">
+    <path d="M0 0zM10 10zM20 20l10 10M30 0c10 0 20 10 20 20M30 30z"/>
+    <path d="M 30,30 z" fill="#f00"/>
+    <path d="M40 40zM50 50l0 10 20 30 40 0"/>
+</svg>`);
+    });
+
+    it('#2', () => {
+      runTest(mergePaths, `
+<svg xmlns="http://www.w3.org/2000/svg">
+    <path d="M 0,0 z" fill="#fff" stroke="#333"/>
+    <path d="M 10,10 z" fill="#fff" stroke="#333"/>
+    <path d="M 20,20" fill="#fff" stroke="#333"/>
+    <path d="M 30,30 z" fill="#fff" stroke="#333"/>
+    <path d="M 30,30 z" fill="#f00"/>
+    <path d="M 40,40 z"/>
+    <path d="m 50,50 z"/>
+    <path d="M 40,40"/>
+    <path d="m 50,50"/>
+    <path d="M 40,40 z" fill="#fff" stroke="#333"/>
+    <path d="m 50,50 z" fill="#fff" stroke="#333"/>
+    <path d="M 40,40" fill="#fff" stroke="#333"/>
+    <path d="m 50,50" fill="#fff" stroke="#333"/>
+    <path d="m 50,50 z" fill="#fff" stroke="#333"/>
+    <path d="M0 0v100h100V0z" fill="red"/>
+    <path d="M200 0v100h100V0z" fill="red"/>
+    <path d="M0 0v100h100V0z" fill="blue"/>
+    <path d="M200 0v100h100V0zM0 200h100v100H0z" fill="blue"/>
+</svg>
+`, `
+<svg xmlns="http://www.w3.org/2000/svg">
+    <path d="M0 0zM10 10zM30 30z" fill="#fff" stroke="#333"/>
+    <path d="M 30,30 z" fill="#f00"/>
+    <path d="M40 40zM50 50zM50 50"/>
+    <path d="M40 40zM50 50zM50 50z" fill="#fff" stroke="#333"/>
+    <path d="M0 0v100h100V0zM200 0v100h100V0z" fill="red"/>
+    <path d="M0 0v100h100V0zM200 0v100h100V0zM0 200h100v100H0z" fill="blue"/>
+</svg>`);
+    });
+
+    it('#3', () => {
+      runTest(mergePaths, `
+<svg xmlns="http://www.w3.org/2000/svg">
+    <path d="M30 0L0 40H60z"/>
+    <path d="M0 10H60L30 50z"/>
+    <path d="M0 0V50L50 0"/>
+    <path d="M0 60L50 10V60"/>
+    <g>
+        <path d="M100 0a50 50 0 0 1 0 100"/>
+        <path d="M25 25H75V75H25z"/>
+        <path d="M135 85H185V135H135z"/>
+    </g>
+    <g>
+        <path d="M10 14H7v1h3v-1z"/>
+        <path d="M9 21H8v1h1v-1z"/>
+    </g>
+    <g>
+        <path d="M30 32.705V40h10.42L30 32.705z"/>
+        <path d="M46.25 34.928V30h-7.04l7.04 4.928z"/>
+    </g>
+    <g>
+        <path d="M20 20H60L100 30"/>
+        <path d="M20 20L50 30H100"/>
+    </g>
+</svg>
+`, `
+<svg xmlns="http://www.w3.org/2000/svg">
+    <path d="M30 0L0 40H60z"/>
+    <path d="M0 10H60L30 50z"/>
+    <path d="M0 0V50L50 0M0 60L50 10V60"/>
+    <g>
+        <path d="M100 0a50 50 0 0 1 0 100M25 25H75V75H25z"/>
+        <path d="M135 85H185V135H135z"/>
+    </g>
+    <g>
+        <path d="M10 14H7v1h3v-1zM9 21H8v1h1v-1z"/>
+    </g>
+    <g>
+        <path d="M30 32.705V40h10.42L30 32.705zM46.25 34.928V30h-7.04l7.04 4.928z"/>
+    </g>
+    <g>
+        <path d="M20 20H60L100 30M20 20L50 30H100"/>
+    </g>
+</svg>`);
+    });
+
+    it('#4', () => {
+      runTest(mergePaths, `
+<svg xmlns="http://www.w3.org/2000/svg">
+    <path d="M320 60c17.466-8.733 33.76-12.78 46.593-12.484 12.856.297 22.254 4.936 26.612 12.484 4.358 7.548 3.676 18.007-2.494 29.29-6.16 11.26-17.812 23.348-34.107 34.107-16.26 10.735-37.164 20.14-60.72 26.613C272.356 156.473 246.178 160 220 160c-26.18 0-52.357-3.527-75.882-9.99-23.557-6.472-44.462-15.878-60.72-26.613-16.296-10.76-27.95-22.846-34.11-34.108-6.17-11.283-6.85-21.742-2.493-29.29 4.358-7.548 13.756-12.187 26.612-12.484C86.24 47.22 102.535 51.266 120 60c17.426 8.713 36.024 22.114 53.407 39.28C190.767 116.42 206.91 137.33 220 160c13.09 22.67 23.124 47.106 29.29 70.71 6.173 23.638 8.48 46.445 7.313 65.893-1.17 19.49-5.812 35.627-12.485 46.592C237.432 354.18 228.716 360 220 360s-17.432-5.82-24.118-16.805c-6.673-10.965-11.315-27.1-12.485-46.592-1.167-19.448 1.14-42.255 7.314-65.892 6.166-23.604 16.2-48.04 29.29-70.71 13.09-22.67 29.233-43.58 46.593-60.72C283.976 82.113 302.573 68.712 320 60z"/>
+    <path d="M280 320l100-173.2h200l100 173.2-100 173.2h-200"/>
+    <g>
+        <path d="M706.69 299.29c-.764-11.43-6.036-56.734-16.338-71.32 0 0 9.997 14.14 11.095 76.806l5.243-5.486z"/>
+        <path d="M705.16 292.54c-5.615-35.752-25.082-67.015-25.082-67.015 7.35 15.128 20.257 53.835 23.64 77.45l2.33-2.24-.888-8.195z"/>
+    </g>
+</svg>
+`, `
+<svg xmlns="http://www.w3.org/2000/svg">
+    <path d="M320 60c17.466-8.733 33.76-12.78 46.593-12.484 12.856.297 22.254 4.936 26.612 12.484 4.358 7.548 3.676 18.007-2.494 29.29-6.16 11.26-17.812 23.348-34.107 34.107-16.26 10.735-37.164 20.14-60.72 26.613C272.356 156.473 246.178 160 220 160c-26.18 0-52.357-3.527-75.882-9.99-23.557-6.472-44.462-15.878-60.72-26.613-16.296-10.76-27.95-22.846-34.11-34.108-6.17-11.283-6.85-21.742-2.493-29.29 4.358-7.548 13.756-12.187 26.612-12.484C86.24 47.22 102.535 51.266 120 60c17.426 8.713 36.024 22.114 53.407 39.28C190.767 116.42 206.91 137.33 220 160c13.09 22.67 23.124 47.106 29.29 70.71 6.173 23.638 8.48 46.445 7.313 65.893-1.17 19.49-5.812 35.627-12.485 46.592C237.432 354.18 228.716 360 220 360s-17.432-5.82-24.118-16.805c-6.673-10.965-11.315-27.1-12.485-46.592-1.167-19.448 1.14-42.255 7.314-65.892 6.166-23.604 16.2-48.04 29.29-70.71 13.09-22.67 29.233-43.58 46.593-60.72C283.976 82.113 302.573 68.712 320 60zM280 320l100-173.2h200l100 173.2-100 173.2h-200"/>
+    <g>
+        <path d="M706.69 299.29c-.764-11.43-6.036-56.734-16.338-71.32 0 0 9.997 14.14 11.095 76.806l5.243-5.486z"/>
+        <path d="M705.16 292.54c-5.615-35.752-25.082-67.015-25.082-67.015 7.35 15.128 20.257 53.835 23.64 77.45l2.33-2.24-.888-8.195z"/>
+    </g>
+</svg>`);
+    });
   });
 });
 
