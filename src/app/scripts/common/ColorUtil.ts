@@ -1,7 +1,5 @@
 import * as tinycolor from 'tinycolor2';
 
-const BRIGHTNESS_THRESHOLD = 130;
-
 export function parseAndroidColor(val: string): ColorFormats.RGBA | undefined {
   val = (val || '').replace(/^\s*#?|\s*$/g, '');
   const dict: ColorFormats.RGBA = { a: 0, r: 0, g: 0, b: 0 };
@@ -49,7 +47,9 @@ export function svgToAndroidColor(color: string): string | undefined {
     return undefined;
   }
   const colorInstance = tinycolor(color);
-  return '#' + colorInstance.toHex8().substr(6) + colorInstance.toHex();
+  const colorHex = colorInstance.toHex();
+  const alphaHex = colorInstance.toHex8().substr(6);
+  return '#' + (alphaHex !== 'ff' ? alphaHex : '') + colorHex;
 }
 
 export function androidToCssColor(androidColor: string | undefined, multAlpha = 1): string {
