@@ -255,9 +255,9 @@ class PathImpl implements Path {
 
   // Implements the Path interface.
   project(point: Point): { projection: ProjectionResult, splitFn: () => Path } | undefined {
-    return _.chain(this.commandMutationsMap)
-      .map((subPathCms: CommandMutation[], cmsIdx) =>
-        subPathCms.map((cm: CommandMutation, cmIdx) => {
+    return _.chain(this.commandMutationsMap as CommandMutation[][])
+      .map((subPathCms, cmsIdx) =>
+        subPathCms.map((cm, cmIdx) => {
           const projection = cm.project(point);
           return {
             projection,
@@ -495,12 +495,11 @@ class PathImpl implements Path {
     return newCms;
   }
 
-  // TODO: make it possible to only perform hit test on the points
   hitTest(point: Point, opts: HitOptions) {
     // First search for in-range path points.
     const pointResult =
-      _.chain(this.subPaths)
-        .map((subPath: SubPath, subIdx: number) => {
+      _.chain(this.subPaths as SubPath[])
+        .map((subPath, subIdx) => {
           return subPath.getCommands()
             .map((cmd, cmdIdx) => {
               const distance = MathUtil.distance(cmd.end, point);
@@ -549,9 +548,9 @@ class PathImpl implements Path {
       // If the shortest distance from the point to the path is less than half
       // the stroke width, then select the path.
       const minProjectionResult =
-        _.chain(this.subPaths)
+        _.chain(this.subPaths as SubPath[])
           .map((subPath, subIdx) => this.commandMutationsMap[findCmsIdxFromSubIdxFn(subIdx)])
-          .map((cms: CommandMutation[], cmsIdx: number) => {
+          .map((cms, cmsIdx) => {
             return cms.map((cm, cmIdx) => {
               // TODO: also return the cmdIdx so the client can split
               return {
@@ -582,9 +581,9 @@ class PathImpl implements Path {
     let hitCmsIdx: number = undefined;
 
     // Search from right to left so that higher z-order subpaths are found first.
-    _.chain(this.subPaths)
+    _.chain(this.subPaths as SubPath[])
       .map((subPath, subIdx) => this.commandMutationsMap[findCmsIdxFromSubIdxFn(subIdx)])
-      .forEachRight((cms: CommandMutation[], cmsIdx: number) => {
+      .forEachRight((cms, cmsIdx) => {
         const isClosed =
           cms[0].getCommands()[0].end.equals((_.last(_.last(cms).getCommands())).end);
         if (!isClosed) {

@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 import { VectorLayer, GroupLayer, PathLayer, ClipPathLayer } from '../layers';
-import { newPath } from '../commands';
+import { newPath, SubPath, Command } from '../commands';
 import { ColorUtil, Matrix } from '../common';
 import { Svgo } from '../svgo';
 import { environment } from '../../../environments/environment';
@@ -134,8 +134,8 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
       if (context.transforms && context.transforms.length) {
         const transforms = context.transforms.map(t => t.matrix as Matrix);
         pathData = newPath(
-          _.chain(pathData.getSubPaths())
-            .flatMap(subPath => subPath.getCommands())
+          _.chain(pathData.getSubPaths() as SubPath[])
+            .flatMap(subPath => subPath.getCommands() as Command[])
             .map(command => command.transform(transforms))
             .value());
       }
