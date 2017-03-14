@@ -610,9 +610,13 @@ class PathImpl implements Path {
         return hitCmsIdx === undefined;
       });
 
+    if (hitCmsIdx === undefined) {
+      return { isHit: false };
+    }
+
     const hitSubIdx = this.subPathOrdering[hitCmsIdx];
     return {
-      isHit: hitSubIdx !== undefined,
+      isHit: true,
       subIdx: hitSubIdx,
     };
   }
