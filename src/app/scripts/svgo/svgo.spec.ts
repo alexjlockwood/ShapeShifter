@@ -27,7 +27,7 @@ import { removeNonInheritableGroupAttrs } from './plugins/removeNonInheritableGr
 import { replaceUseElems } from './plugins/replaceUseElems';
 import { removeUselessStrokeAndFill } from './plugins/removeUselessStrokeAndFill';
 
-describe('SVGO plugins', function () {
+describe('SVGO plugins', () => {
 
   beforeEach(() => {
     convertPathData.params.floatPrecision = 3;
@@ -35,8 +35,9 @@ describe('SVGO plugins', function () {
     convertTransforms.params.transformPrecision = 5;
   });
 
-  it('removeDoctype', () => {
-    runTest(removeDoctype, `
+  describe('removeDoctype', () => {
+    it('#1', () => {
+      runTest(removeDoctype, `
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <svg xmlns="http://www.w3.org/2000/svg">
     test
@@ -44,11 +45,11 @@ describe('SVGO plugins', function () {
 `, `
 <svg xmlns="http://www.w3.org/2000/svg">
     test
-</svg>
-`);
+</svg>`);
+    });
   });
 
-  describe('convertPathData', function () {
+  describe('convertPathData', () => {
     it('#1', () => {
       runTest(convertPathData, `
 <svg xmlns="http://www.w3.org/2000/svg">
@@ -499,8 +500,9 @@ describe('SVGO plugins', function () {
     });
   });
 
-  it('convertTransforms', () => {
-    runTest(convertTransforms, `
+  describe('convertTransforms', () => {
+    it('#xxx', () => {
+      runTest(convertTransforms, `
 <svg xmlns="http://www.w3.org/2000/svg">
     <g transform="matrix(0.707 -0.707 0.707 0.707 255.03 111.21)"/>
     <g transform="matrix(1 0 0 1 50 90),matrix(0.707 -0.707 0.707 0.707 0 0) ,matrix(1 0 0 1 130 160)"/>
@@ -540,10 +542,12 @@ describe('SVGO plugins', function () {
     <g transform="rotate(135)"/>
     <g transform="rotate(45)"/>
 </svg>`);
+    });
   });
 
-  it('inlineStyles', () => {
-    runTest(inlineStyles, `
+  describe('inlineStyles', () => {
+    it('#xxx', () => {
+      runTest(inlineStyles, `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 258.12 225.88">
   <style>
     .cls-7 {
@@ -562,9 +566,10 @@ describe('SVGO plugins', function () {
     <path class="cls-7" style="only-cls-7:1;cls-7-and-8:1"/>
     <path d="M172.44 18.6c6.51-4.94 13 3.16 13 3.16l-14.57 10.09s-7.02-6.77 1.57-13.25z" class="cls-8" style="cls-7-and-8:1"/>
 </svg>`);
+    });
   });
 
-  describe('mergePaths', function () {
+  describe('mergePaths', () => {
     it('#1', () => {
       runTest(mergePaths, `
 <svg xmlns="http://www.w3.org/2000/svg">
