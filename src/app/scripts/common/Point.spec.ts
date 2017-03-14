@@ -2,7 +2,7 @@ import 'jasmine';
 import { Point } from '.';
 
 describe('Point', () => {
-  it('Point construct', () => {
+  it('constructor', () => {
     let point = new Point();
     expect(point.x).toBe(0);
     expect(point.y).toBe(0);

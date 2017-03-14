@@ -2,7 +2,7 @@ import 'jasmine';
 import { Rect } from '.';
 
 describe('Rect', () => {
-  it('Rect construct', () => {
+  it('constructor', () => {
     let rect = new Rect();
     expect(rect.l).toBe(0);
     expect(rect.t).toBe(0);

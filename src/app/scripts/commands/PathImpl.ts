@@ -16,6 +16,8 @@ export function newPath(obj: string | Command[]): Path {
  * Implementation of the Path interface. Represents all of the information
  * associated with a path layer's pathData attribute. Also provides mechanisms for
  * splitting/unsplitting/converting/etc. paths in a way that is easily reversible.
+ *
+ * TODO: create a better API for converting between client-visible and internal indices
  */
 class PathImpl implements Path {
   private readonly subPaths: ReadonlyArray<SubPath>;
@@ -49,24 +51,17 @@ class PathImpl implements Path {
 
   // Implements the Path interface.
   clone(params: PathParams = {}) {
-    // TODO: only recompute the stuff that we know has changed...
+    // TODO: this method could probably be more efficient.
     const newCommandMutationsMap = params.commandMutationsMap || this.commandMutationsMap;
+    const newReversals = params.reversals || this.reversals;
+    const newShiftOffsets = params.shiftOffsets || this.shiftOffsets;
+    const newSubPathOrdering = params.subPathOrdering || this.subPathOrdering;
 
-    const shouldReverseFn = (subIdx: number) =>
-      params.reversals
-        ? params.reversals[subIdx]
-        : this.reversals[subIdx];
-
-    const getShiftOffsetFn = (subIdx: number) =>
-      params.shiftOffsets
-        ? params.shiftOffsets[subIdx]
-        : this.shiftOffsets[subIdx];
-
-    const maybeReverseCommandsFn = (subIdx: number) => {
-      const subPathCms = newCommandMutationsMap[subIdx];
+    const maybeReverseCommandsFn = (cmsIdx: number) => {
+      const subPathCms = newCommandMutationsMap[cmsIdx];
       const hasOneCmd =
-        subPathCms.length === 1 && _.first(subPathCms).getCommands().length === 1;
-      if (hasOneCmd || !shouldReverseFn(subIdx)) {
+        subPathCms.length === 1 && subPathCms[0].getCommands().length === 1;
+      if (hasOneCmd || !newReversals[cmsIdx]) {
         // Nothing to do in these two cases.
         return _.flatMap(subPathCms, cm => cm.getCommands() as CommandImpl[]);
       }
@@ -80,19 +75,16 @@ class PathImpl implements Path {
         if (cmCmds[0].svgChar === 'M') {
           return cmCmds;
         }
-        cmCmds[0] = _.first(cmCmds).toggleSplit();
-        cmCmds[cmCmds.length - 1] = _.last(cmCmds).toggleSplit();
+        cmCmds[0] = cmCmds[0].toggleSplit();
+        cmCmds[cmCmds.length - 1] = cmCmds[cmCmds.length - 1].toggleSplit();
         return cmCmds;
       });
 
       // If the last command is a 'Z', replace it with a line before we reverse.
       const lastCmd = _.last(cmds);
       if (lastCmd.svgChar === 'Z') {
-        let lineCmd = newLine(lastCmd.start, lastCmd.end);
-        if (lastCmd.isSplit) {
-          lineCmd = lineCmd.toggleSplit();
-        }
-        cmds[cmds.length - 1] = lineCmd;
+        const lineCmd = newLine(lastCmd.start, lastCmd.end);
+        cmds[cmds.length - 1] = lastCmd.isSplit ? lineCmd.toggleSplit() : lineCmd;
       }
 
       // Reverse the commands.
@@ -100,12 +92,12 @@ class PathImpl implements Path {
       for (let i = cmds.length - 1; i > 0; i--) {
         newCmds.push(cmds[i].reverse());
       }
-      newCmds.unshift(newMove(_.first(cmds).start, _.first(newCmds).start));
+      newCmds.unshift(newMove(cmds[0].start, newCmds[0].start));
       return newCmds;
     };
 
-    const maybeShiftCommandsFn = (subIdx: number, cmds: Command[]) => {
-      let shiftOffset = getShiftOffsetFn(subIdx);
+    const maybeShiftCommandsFn = (cmsIdx: number, cmds: Command[]) => {
+      let shiftOffset = newShiftOffsets[cmsIdx];
       if (!shiftOffset
         || cmds.length === 1
         || !_.first(cmds).end.equals(_.last(cmds).end)) {
@@ -115,7 +107,7 @@ class PathImpl implements Path {
       }
 
       const numCommands = cmds.length;
-      if (shouldReverseFn(subIdx)) {
+      if (newReversals[cmsIdx]) {
         shiftOffset *= -1;
         shiftOffset += numCommands - 1;
       }
@@ -123,26 +115,23 @@ class PathImpl implements Path {
       // If the last command is a 'Z', replace it with a line before we shift.
       const lastCmd = _.last(cmds);
       if (lastCmd.svgChar === 'Z') {
-        // TODO: avoid this... replacing the 'Z' can cause undesireable side effects.
-        let lineCmd = newLine(lastCmd.start, lastCmd.end);
-        if (lastCmd.isSplit) {
-          lineCmd = lineCmd.toggleSplit();
-        }
-        cmds[numCommands - 1] = lineCmd;
+        // TODO: replacing the 'Z' messes up certain stroke-linejoin values
+        const lineCmd = newLine(lastCmd.start, lastCmd.end);
+        cmds[numCommands - 1] = lastCmd.isSplit ? lineCmd.toggleSplit() : lineCmd;
       }
 
       const newCmds: Command[] = [];
 
       // Handle these case separately cause they are annoying and I'm sick of edge cases.
       if (shiftOffset === 1) {
-        newCmds.push(newMove(_.first(cmds).start, cmds[1].end));
+        newCmds.push(newMove(cmds[0].start, cmds[1].end));
         for (let i = 2; i < cmds.length; i++) {
           newCmds.push(cmds[i]);
         }
         newCmds.push(cmds[1]);
         return newCmds;
       } else if (shiftOffset === numCommands - 1) {
-        newCmds.push(newMove(_.first(cmds).start, cmds[numCommands - 2].end));
+        newCmds.push(newMove(cmds[0].start, cmds[numCommands - 2].end));
         newCmds.push(_.last(cmds));
         for (let i = 1; i < cmds.length - 1; i++) {
           newCmds.push(cmds[i]);
@@ -164,14 +153,13 @@ class PathImpl implements Path {
       return newCmds;
     };
 
-    const subPathOrdering = params.subPathOrdering || this.subPathOrdering;
-    const subPathCmds = newCommandMutationsMap.map((_, subIdx) => {
-      return maybeShiftCommandsFn(subIdx, maybeReverseCommandsFn(subIdx));
+    const subPathCmds = newCommandMutationsMap.map((_, cmsIdx) => {
+      return maybeShiftCommandsFn(cmsIdx, maybeReverseCommandsFn(cmsIdx));
     });
     const reorderedSubPathCmds = [];
     for (let i = 0; i < subPathCmds.length; i++) {
-      for (let j = 0; j < subPathOrdering.length; j++) {
-        const reorderIdx = subPathOrdering[j];
+      for (let j = 0; j < newSubPathOrdering.length; j++) {
+        const reorderIdx = newSubPathOrdering[j];
         if (i === reorderIdx) {
           reorderedSubPathCmds.push(subPathCmds[j]);
           break;
@@ -188,20 +176,18 @@ class PathImpl implements Path {
         }
       }
     });
-    const pathParams: PathParams = {
+    return new PathImpl({
       commands: reorderedCommands,
-      commandMutationsMap: this.commandMutationsMap,
-      shiftOffsets: this.shiftOffsets,
-      reversals: this.reversals,
-      subPathOrdering: this.subPathOrdering,
-    };
-    // TODO: using assign here is kinda weird...
-    return new PathImpl(_.assign({}, pathParams, params));
+      commandMutationsMap: newCommandMutationsMap,
+      reversals: newReversals,
+      shiftOffsets: newShiftOffsets,
+      subPathOrdering: newSubPathOrdering,
+    });
   }
 
   // Implements the Path interface.
   getPathString() {
-    if (_.isUndefined(this.pathString)) {
+    if (this.pathString === undefined) {
       this.pathString = PathParser.commandsToString(this.getCommands());
     }
     return this.pathString;
@@ -219,7 +205,7 @@ class PathImpl implements Path {
 
   // Implements the Path interface.
   getPathLength() {
-    if (_.isUndefined(this.pathLength)) {
+    if (this.pathLength === undefined) {
       // Note that we only return the length of the first sub path due to
       // https://code.google.com/p/android/issues/detail?id=172547
       this.pathLength = _.sum(this.commandMutationsMap[0].map(cm => cm.getPathLength()));
@@ -288,21 +274,22 @@ class PathImpl implements Path {
 
   // Implements the Path interface.
   reverse(subIdx: number) {
+    const cmsIdx = this.subPathOrdering[subIdx];
     return this.clone({
-      reversals: this.reversals.map((r, i) => i === subIdx ? !r : r),
+      reversals: this.reversals.map((r, i) => i === cmsIdx ? !r : r),
     });
   }
 
   // Implements the Path interface.
   shiftBack(subIdx: number, numShifts = 1) {
-    return this.reversals[subIdx]
+    return this.reversals[this.subPathOrdering[subIdx]]
       ? this.shift(subIdx, (o, n) => MathUtil.floorMod(o - numShifts, n - 1))
       : this.shift(subIdx, (o, n) => (o + numShifts) % (n - 1));
   }
 
   // Implements the Path interface.
   shiftForward(subIdx: number, numShifts = 1) {
-    return this.reversals[subIdx]
+    return this.reversals[this.subPathOrdering[subIdx]]
       ? this.shift(subIdx, (o, n) => (o + numShifts) % (n - 1))
       : this.shift(subIdx, (o, n) => MathUtil.floorMod(o - numShifts, n - 1));
   }
@@ -315,9 +302,10 @@ class PathImpl implements Path {
     if (numCommands <= 1 || !this.subPaths[subIdx].isClosed()) {
       return this;
     }
+    const cmsIdx = this.subPathOrdering[subIdx];
     return this.clone({
       shiftOffsets: this.shiftOffsets.map((offset, i) => {
-        return i === subIdx ? calcOffsetFn(offset, numCommands) : offset;
+        return i === cmsIdx ? calcOffsetFn(offset, numCommands) : offset;
       }),
     });
   }
@@ -334,10 +322,10 @@ class PathImpl implements Path {
       console.warn('Attempt to split a path with an empty spread argument');
       return this;
     }
-    const { targetCm, cmIdx, splitIdx } = this.findCommandMutation(subIdx, cmdIdx);
-    const shiftOffsets = this.maybeUpdateShiftOffsetsAfterSplit(subIdx, cmIdx, ts.length);
+    const { targetCm, cmsIdx, cmIdx, splitIdx } = this.findCommandMutation(subIdx, cmdIdx);
+    const shiftOffsets = this.maybeUpdateShiftOffsetsAfterSplit(cmsIdx, cmIdx, ts.length);
     const commandMutationsMap =
-      this.replaceCommandMutation(subIdx, cmIdx, targetCm.splitAtIndex(splitIdx, ts));
+      this.replaceCommandMutation(cmsIdx, cmIdx, targetCm.splitAtIndex(splitIdx, ts));
     return this.clone({ commandMutationsMap, shiftOffsets });
   }
 
@@ -347,9 +335,10 @@ class PathImpl implements Path {
       return this;
     }
     ops = ops.slice();
+    // TODO: should  we need to sort by subIdx or cmsIdx here?
     ops.sort(({ subIdx: s1, cmdIdx: c1 }, { subIdx: s2, cmdIdx: c2 }) => {
       // Perform higher index splits first so that we don't alter the
-      // indices of the lower index unsplit operations.
+      // indices of the lower index split operations.
       return s1 !== s2 ? s2 - s1 : c2 - c1;
     });
     let result: Path = this;
@@ -362,21 +351,21 @@ class PathImpl implements Path {
 
   // Implements the Path interface.
   splitInHalf(subIdx: number, cmdIdx: number) {
-    const { targetCm, cmIdx, splitIdx } = this.findCommandMutation(subIdx, cmdIdx);
-    const shiftOffsets = this.maybeUpdateShiftOffsetsAfterSplit(subIdx, cmIdx, 1);
+    const { targetCm, cmsIdx, cmIdx, splitIdx } = this.findCommandMutation(subIdx, cmdIdx);
+    const shiftOffsets = this.maybeUpdateShiftOffsetsAfterSplit(cmsIdx, cmIdx, 1);
     const commandMutationsMap =
-      this.replaceCommandMutation(subIdx, cmIdx, targetCm.splitInHalfAtIndex(splitIdx));
+      this.replaceCommandMutation(cmsIdx, cmIdx, targetCm.splitInHalfAtIndex(splitIdx));
     return this.clone({ commandMutationsMap, shiftOffsets });
   }
 
   // Same as split above, except can be used when the command mutation indices are known.
   // This method specifically only handles one t value (since multi-spliting involves
   // recalculating shift indices in weird ways).
-  private splitCommandMutation(subIdx: number, cmIdx: number, t: number) {
-    const shiftOffsets = this.maybeUpdateShiftOffsetsAfterSplit(subIdx, cmIdx, 1);
-    const targetCm = this.commandMutationsMap[subIdx][cmIdx];
+  private splitCommandMutation(cmsIdx: number, cmIdx: number, t: number) {
+    const shiftOffsets = this.maybeUpdateShiftOffsetsAfterSplit(cmsIdx, cmIdx, 1);
+    const targetCm = this.commandMutationsMap[cmsIdx][cmIdx];
     const commandMutationsMap =
-      this.replaceCommandMutation(subIdx, cmIdx, targetCm.split([t]));
+      this.replaceCommandMutation(cmsIdx, cmIdx, targetCm.split([t]));
     return this.clone({ commandMutationsMap, shiftOffsets });
   }
 
@@ -387,33 +376,33 @@ class PathImpl implements Path {
   // 'numShifts' or '0', since it will be impossible for splits to be added on
   // both sides of the shift pivot. We could fix that, but it's a lot of
   // complicated indexing and I don't think the user will ever need to do this anyway.
-  private maybeUpdateShiftOffsetsAfterSplit(subIdx: number, cmIdx: number, numSplits: number) {
+  private maybeUpdateShiftOffsetsAfterSplit(cmsIdx: number, cmIdx: number, numSplits: number) {
     const shiftOffsets = this.shiftOffsets.slice();
-    const shiftOffset = shiftOffsets[subIdx];
+    const shiftOffset = shiftOffsets[cmsIdx];
     if (shiftOffset && cmIdx <= shiftOffset) {
-      shiftOffsets[subIdx] = shiftOffset + numSplits;
+      shiftOffsets[cmsIdx] = shiftOffset + numSplits;
     }
     return shiftOffsets;
   }
 
   // Implements the Path interface.
   unsplit(subIdx: number, cmdIdx: number) {
-    const { targetCm, cmIdx, splitIdx } = this.findCommandMutation(subIdx, cmdIdx);
+    const { targetCm, cmsIdx, cmIdx, splitIdx } = this.findCommandMutation(subIdx, cmdIdx);
     const commandMutationsMap =
       this.replaceCommandMutation(
-        subIdx,
+        cmsIdx,
         cmIdx,
-        targetCm.unsplitAtIndex(this.reversals[subIdx] ? splitIdx - 1 : splitIdx));
-    const shiftOffsets = this.maybeUpdateShiftOffsetsAfterUnsplit(subIdx, cmIdx);
+        targetCm.unsplitAtIndex(this.reversals[cmsIdx] ? splitIdx - 1 : splitIdx));
+    const shiftOffsets = this.maybeUpdateShiftOffsetsAfterUnsplit(cmsIdx, cmIdx);
     return this.clone({ commandMutationsMap, shiftOffsets });
   }
 
   // Subtracts the shift offset by 1 after an unsplit operation if necessary.
-  private maybeUpdateShiftOffsetsAfterUnsplit(subIdx: number, cmIdx: number) {
+  private maybeUpdateShiftOffsetsAfterUnsplit(cmsIdx: number, cmIdx: number) {
     const shiftOffsets = this.shiftOffsets.slice();
-    const shiftOffset = this.shiftOffsets[subIdx];
+    const shiftOffset = this.shiftOffsets[cmsIdx];
     if (shiftOffset && cmIdx <= shiftOffset) {
-      shiftOffsets[subIdx] = shiftOffset - 1;
+      shiftOffsets[cmsIdx] = shiftOffset - 1;
     }
     return shiftOffsets;
   }
@@ -424,6 +413,7 @@ class PathImpl implements Path {
       return this;
     }
     ops = ops.slice();
+    // TODO: should  we need to sort by subIdx or cmsIdx here?
     ops.sort(({ subIdx: s1, cmdIdx: c1 }, { subIdx: s2, cmdIdx: c2 }) => {
       // Perform higher index unsplits first so that we don't alter the
       // indices of the lower index unsplit operations.
@@ -439,18 +429,19 @@ class PathImpl implements Path {
 
   // Implements the Path interface.
   convert(subIdx: number, cmdIdx: number, svgChar: SvgChar) {
-    const { targetCm, cmIdx, splitIdx } = this.findCommandMutation(subIdx, cmdIdx);
+    const { targetCm, cmsIdx, cmIdx, splitIdx } = this.findCommandMutation(subIdx, cmdIdx);
     const commandMutationsMap =
       this.replaceCommandMutation(
-        subIdx, cmIdx, targetCm.convertAtIndex(splitIdx, svgChar));
+        cmsIdx, cmIdx, targetCm.convertAtIndex(splitIdx, svgChar));
     return this.clone({ commandMutationsMap });
   }
 
   // Implements the Path interface.
   unconvertSubPath(subIdx: number) {
     const commandMutationsMap = this.commandMutationsMap.map(cms => cms.slice());
-    commandMutationsMap[subIdx] =
-      commandMutationsMap[subIdx].map((cm, i) => i === 0 ? cm : cm.unconvertSubpath());
+    const cmsIdx = this.subPathOrdering[subIdx];
+    commandMutationsMap[cmsIdx] =
+      commandMutationsMap[cmsIdx].map((cm, i) => i === 0 ? cm : cm.unconvertSubpath());
     return this.clone({ commandMutationsMap });
   }
 
@@ -477,19 +468,20 @@ class PathImpl implements Path {
    */
   private findCommandMutation(subIdx: number, cmdIdx: number) {
     const numCommands = this.subPaths[subIdx].getCommands().length;
-    if (cmdIdx && this.reversals[subIdx]) {
+    const cmsIdx = this.subPathOrdering[subIdx];
+    if (cmdIdx && this.reversals[cmsIdx]) {
       cmdIdx = numCommands - cmdIdx;
     }
-    cmdIdx += this.shiftOffsets[subIdx];
+    cmdIdx += this.shiftOffsets[cmsIdx];
     if (cmdIdx >= numCommands) {
       cmdIdx -= (numCommands - 1);
     }
     let counter = 0;
     let cmIdx = 0;
-    for (const targetCm of this.commandMutationsMap[subIdx]) {
+    for (const targetCm of this.commandMutationsMap[cmsIdx]) {
       if (counter + targetCm.getCommands().length > cmdIdx) {
         const splitIdx = cmdIdx - counter;
-        return { targetCm, cmIdx, splitIdx };
+        return { targetCm, cmsIdx, cmIdx, splitIdx };
       }
       counter += targetCm.getCommands().length;
       cmIdx++;
@@ -497,9 +489,9 @@ class PathImpl implements Path {
     throw new Error('Error retrieving command mutation');
   }
 
-  private replaceCommandMutation(subIdx: number, cmIdx: number, cm: CommandMutation) {
+  private replaceCommandMutation(cmsIdx: number, cmIdx: number, cm: CommandMutation) {
     const newCms = this.commandMutationsMap.map(cms => cms.slice());
-    newCms[subIdx][cmIdx] = cm;
+    newCms[cmsIdx][cmIdx] = cm;
     return newCms;
   }
 
@@ -545,16 +537,25 @@ class PathImpl implements Path {
       return { isHit: false };
     }
 
+    const findCmsIdxFromSubIdxFn = (subIdx: number) => {
+      for (let i = 0; i < this.subPathOrdering.length; i++) {
+        if (this.subPathOrdering[i] === subIdx) {
+          return i;
+        }
+      }
+      throw new Error('Invalid subIdx: ' + subIdx);
+    };
     if (opts.isStrokeInRangeFn) {
       // If the shortest distance from the point to the path is less than half
       // the stroke width, then select the path.
       const minProjectionResult =
-        _.chain(this.commandMutationsMap)
+        _.chain(this.subPaths)
+          .map((subPath, subIdx) => this.commandMutationsMap[findCmsIdxFromSubIdxFn(subIdx)])
           .map((cms: CommandMutation[], cmsIdx: number) => {
             return cms.map((cm, cmIdx) => {
               // TODO: also return the cmdIdx so the client can split
               return {
-                subIdx: cmsIdx,
+                cmsIdx,
                 projection: cm.project(point),
               };
             });
@@ -574,40 +575,43 @@ class PathImpl implements Path {
           .value();
       return {
         isHit: !!minProjectionResult,
-        subIdx: minProjectionResult ? minProjectionResult.subIdx : undefined,
+        subIdx: minProjectionResult ? this.subPathOrdering[minProjectionResult.cmsIdx] : undefined,
       };
     }
 
-    let hitSubIdx: number = undefined;
+    let hitCmsIdx: number = undefined;
 
     // Search from right to left so that higher z-order subpaths are found first.
-    _.forEachRight(this.commandMutationsMap, (cms: CommandMutation[], cmsIdx: number) => {
-      const isClosed =
-        cms[0].getCommands()[0].end.equals((_.last(_.last(cms).getCommands())).end);
-      if (!isClosed) {
-        // If this happens, the SVG is probably not going to render properly at all,
-        // but we'll check anyway just to be safe.
-        return true;
-      }
-      const bounds = createBoundingBox(...cms);
-      if (!bounds.contains(point)) {
-        // Nothing to see here. Check the next subpath.
-        return true;
-      }
-      // The point is inside the subpath's bounding box. Next, we will
-      // use the 'even-odd rule' to determine if the filled path has been hit.
-      // We create a line from the mouse point to a point we know that is not
-      // inside the path (in this case, we use a coordinate outside the path's
-      // bounded box). A hit has occured if and only if the number of
-      // intersections between the line and the path is odd.
-      const line = { p1: point, p2: new Point(bounds.r + 1, bounds.b + 1) };
-      const numIntersections = _.sum(cms.map(cm => cm.intersects(line).length));
-      if (numIntersections % 2 !== 0) {
-        hitSubIdx = cmsIdx;
-      }
-      return hitSubIdx === undefined;
-    });
+    _.chain(this.subPaths)
+      .map((subPath, subIdx) => this.commandMutationsMap[findCmsIdxFromSubIdxFn(subIdx)])
+      .forEachRight((cms: CommandMutation[], cmsIdx: number) => {
+        const isClosed =
+          cms[0].getCommands()[0].end.equals((_.last(_.last(cms).getCommands())).end);
+        if (!isClosed) {
+          // If this happens, the SVG is probably not going to render properly at all,
+          // but we'll check anyway just to be safe.
+          return true;
+        }
+        const bounds = createBoundingBox(...cms);
+        if (!bounds.contains(point)) {
+          // Nothing to see here. Check the next subpath.
+          return true;
+        }
+        // The point is inside the subpath's bounding box. Next, we will
+        // use the 'even-odd rule' to determine if the filled path has been hit.
+        // We create a line from the mouse point to a point we know that is not
+        // inside the path (in this case, we use a coordinate outside the path's
+        // bounded box). A hit has occured if and only if the number of
+        // intersections between the line and the path is odd.
+        const line = { p1: point, p2: new Point(bounds.r + 1, bounds.b + 1) };
+        const numIntersections = _.sum(cms.map(cm => cm.intersects(line).length));
+        if (numIntersections % 2 !== 0) {
+          hitCmsIdx = cmsIdx;
+        }
+        return hitCmsIdx === undefined;
+      });
 
+    const hitSubIdx = this.subPathOrdering[hitCmsIdx];
     return {
       isHit: hitSubIdx !== undefined,
       subIdx: hitSubIdx,
