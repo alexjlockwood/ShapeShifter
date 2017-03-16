@@ -11,16 +11,21 @@ import { LineCalculator } from './LineCalculator';
  */
 export class BezierCalculator implements Calculator {
   private readonly svgChar: SvgChar;
-  private readonly bezierJs;
   private readonly points: ReadonlyArray<Point>;
   private length: number;
   private bbox: BBox;
+  private bezierJs_;
 
   constructor(svgChar: SvgChar, ...points: Point[]) {
     this.svgChar = svgChar;
-    this.bezierJs = new BezierJs(points);
     this.points = points;
-    this.length = this.bezierJs.length();
+  }
+
+  get bezierJs() {
+    if (this.bezierJs_ === undefined) {
+      this.bezierJs_ = new BezierJs(this.points);
+    }
+    return this.bezierJs_;
   }
 
   getPathLength() {
