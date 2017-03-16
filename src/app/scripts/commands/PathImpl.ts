@@ -6,7 +6,7 @@ import {
 import * as PathParser from './PathParser';
 import { newSubPath } from './SubPathImpl';
 import { CommandImpl, newMove, newLine } from './CommandImpl';
-import { CommandMutation } from './CommandMutation';
+import { CommandState } from './CommandState';
 
 export function newPath(obj: string | Command[]): Path {
   return new PathImpl(obj);
@@ -19,43 +19,43 @@ export function newPath(obj: string | Command[]): Path {
  */
 class PathImpl implements Path {
   private readonly subPaths: ReadonlyArray<SubPath>;
-  private readonly pathMutation: PathMutation;
+  private readonly pathState: PathState;
   private pathString: string;
   private pathLength: number;
 
-  constructor(obj: string | Command[] | { subPaths: SubPath[], pathMutation: PathMutation }) {
+  constructor(obj: string | Command[] | { subPaths: SubPath[], pathMutation: PathState }) {
     if (typeof obj === 'string' || Array.isArray(obj)) {
       this.subPaths =
         createSubPaths(...(typeof obj === 'string' ? PathParser.parseCommands(obj) : obj));
-      this.pathMutation = new PathMutation(this.subPaths);
+      this.pathState = new PathState(this.subPaths);
     } else {
       this.subPaths = obj.subPaths;
-      this.pathMutation = obj.pathMutation;
+      this.pathState = obj.pathMutation;
     }
   }
 
   // TODO: get rid of this
   get commandMutationsMap() {
-    return this.pathMutation.commandMutationsMap;
+    return this.pathState.commandMutationsMap;
   }
 
   // TODO: get rid of this
   get reversals() {
-    return this.pathMutation.reversals;
+    return this.pathState.reversals;
   }
 
   // TODO: get rid of this
   get shiftOffsets() {
-    return this.pathMutation.shiftOffsets;
+    return this.pathState.shiftOffsets;
   }
 
   // TODO: get rid of this
   get subPathOrdering() {
-    return this.pathMutation.subPathOrdering;
+    return this.pathState.subPathOrdering;
   }
 
   // Implements the Path interface.
-  clone(pm?: PathMutation) {
+  clone(pm?: PathState) {
     const commandMutationsMap = pm ? pm.commandMutationsMap : this.commandMutationsMap;
     const reversals = pm ? pm.reversals : this.reversals;
     const shiftOffsets = pm ? pm.shiftOffsets : this.shiftOffsets;
@@ -182,7 +182,7 @@ class PathImpl implements Path {
     });
     return new PathImpl({
       subPaths: createSubPaths(...reorderedCommands),
-      pathMutation: new PathMutation({
+      pathMutation: new PathState({
         commandMutationsMap,
         reversals,
         shiftOffsets,
@@ -263,7 +263,7 @@ class PathImpl implements Path {
   // TODO: write tests
   project(point: Point): { projection: ProjectionResult, subIdx: number, cmdIdx: number } | undefined {
     const minProjectionResultInfo =
-      _.chain(this.commandMutationsMap as CommandMutation[][])
+      _.chain(this.commandMutationsMap as CommandState[][])
         .map((subPathCms, cmsIdx) =>
           subPathCms.map((cm, cmIdx) => {
             const projection = cm.project(point);
@@ -295,7 +295,7 @@ class PathImpl implements Path {
   // Implements the Path interface.
   reverse(subIdx: number) {
     return this.clone(
-      this.pathMutation.mutate()
+      this.pathState.mutate()
         .reverseSubPath(subIdx)
         .build());
   }
@@ -303,7 +303,7 @@ class PathImpl implements Path {
   // Implements the Path interface.
   shiftBack(subIdx: number, numShifts = 1) {
     return this.clone(
-      this.pathMutation.mutate()
+      this.pathState.mutate()
         .shiftSubPathBack(subIdx, numShifts)
         .build());
   }
@@ -311,7 +311,7 @@ class PathImpl implements Path {
   // Implements the Path interface.
   shiftForward(subIdx: number, numShifts = 1) {
     return this.clone(
-      this.pathMutation.mutate()
+      this.pathState.mutate()
         .shiftSubPathForward(subIdx, numShifts)
         .build());
   }
@@ -336,7 +336,7 @@ class PathImpl implements Path {
       return this;
     }
     return this.clone(
-      this.pathMutation.mutate()
+      this.pathState.mutate()
         .splitCommand(subIdx, cmdIdx, ...ts)
         .build());
   }
@@ -364,7 +364,7 @@ class PathImpl implements Path {
   // Implements the Path interface.
   splitInHalf(subIdx: number, cmdIdx: number) {
     return this.clone(
-      this.pathMutation.mutate()
+      this.pathState.mutate()
         .splitCommandInHalf(subIdx, cmdIdx)
         .build());
   }
@@ -372,7 +372,7 @@ class PathImpl implements Path {
   // Implements the Path interface.
   unsplit(subIdx: number, cmdIdx: number) {
     return this.clone(
-      this.pathMutation.mutate()
+      this.pathState.mutate()
         .unsplitCommand(subIdx, cmdIdx)
         .build());
   }
@@ -400,14 +400,14 @@ class PathImpl implements Path {
   // Implements the Path interface.
   convert(subIdx: number, cmdIdx: number, svgChar: SvgChar) {
     return this.clone(
-      this.pathMutation.mutate()
+      this.pathState.mutate()
         .convertCommand(subIdx, cmdIdx, svgChar)
         .build());
   }
 
   // Implements the Path interface.
   unconvertSubPath(subIdx: number) {
-    return this.clone(this.pathMutation.mutate()
+    return this.clone(this.pathState.mutate()
       .unconvertSubPath(subIdx)
       .build());
   }
@@ -415,7 +415,7 @@ class PathImpl implements Path {
   // Implements the Path interface.
   revert() {
     return this.clone(
-      this.pathMutation.mutate()
+      this.pathState.mutate()
         .revert()
         .build());
   }
@@ -423,7 +423,7 @@ class PathImpl implements Path {
   // Implements the Path interface.
   transform(transforms: Matrix[]) {
     return this.clone(
-      this.pathMutation.mutate()
+      this.pathState.mutate()
         .transformPath(transforms)
         .build());
   }
@@ -530,7 +530,7 @@ class PathImpl implements Path {
 
   moveSubPath(fromSubIdx: number, toSubIdx: number) {
     return this.clone(
-      this.pathMutation.mutate()
+      this.pathState.mutate()
         .moveSubPath(fromSubIdx, toSubIdx)
         .build());
   }
@@ -557,7 +557,7 @@ class PathImpl implements Path {
 }
 
 // TODO: cache this?
-function createBoundingBox(...cms: CommandMutation[]) {
+function createBoundingBox(...cms: CommandState[]) {
   const bounds = new Rect(Infinity, Infinity, -Infinity, -Infinity);
 
   const expandBoundsFn = (x: number, y: number) => {
@@ -567,7 +567,7 @@ function createBoundingBox(...cms: CommandMutation[]) {
     bounds.b = Math.max(y, bounds.b);
   };
 
-  const expandBoundsForCommandMutationFn = (cm: CommandMutation) => {
+  const expandBoundsForCommandMutationFn = (cm: CommandState) => {
     const bbox = cm.getBoundingBox();
     expandBoundsFn(bbox.x.min, bbox.y.min);
     expandBoundsFn(bbox.x.max, bbox.y.min);
@@ -614,7 +614,7 @@ function createSubPaths(...commands: Command[]) {
 }
 
 interface MutationState {
-  readonly commandMutationsMap?: ReadonlyArray<ReadonlyArray<CommandMutation>>;
+  readonly commandMutationsMap?: ReadonlyArray<ReadonlyArray<CommandState>>;
   // Maps internal cmsIdx values to the subpath's current reversal state.
   readonly reversals?: ReadonlyArray<boolean>;
   // Maps internal cmsIdx values to the subpath's current shift offset state.
@@ -630,8 +630,8 @@ interface MutationState {
 // to CommandState as well and then create a similar mutation builder
 // like below. This approach seems promising... and it will be important
 // to have a good design for when we implement subpath splitting.
-class PathMutation {
-  readonly commandMutationsMap: ReadonlyArray<ReadonlyArray<CommandMutation>>;
+class PathState {
+  readonly commandMutationsMap: ReadonlyArray<ReadonlyArray<CommandState>>;
   readonly reversals: ReadonlyArray<boolean>;
   readonly shiftOffsets: ReadonlyArray<number>;
   readonly subPathOrdering: ReadonlyArray<number>;
@@ -640,7 +640,7 @@ class PathMutation {
     if (Array.isArray(obj)) {
       const subPaths = obj as ReadonlyArray<SubPath>;
       this.commandMutationsMap =
-        subPaths.map(s => s.getCommands().map(c => new CommandMutation(c as CommandImpl)));
+        subPaths.map(s => s.getCommands().map(c => new CommandState(c as CommandImpl)));
       this.shiftOffsets = subPaths.map(_ => 0);
       this.reversals = subPaths.map(_ => false);
       this.subPathOrdering = subPaths.map((_, i) => i);
@@ -654,22 +654,23 @@ class PathMutation {
   }
 
   mutate() {
-    return new PathMutator(this);
+    return new PathMutator(
+      this.commandMutationsMap.map(cms => cms.slice()),
+      this.reversals.slice(),
+      this.shiftOffsets.slice(),
+      this.subPathOrdering.slice(),
+    );
   }
 }
 
 class PathMutator {
-  private readonly commandMutationsMap: CommandMutation[][];
-  private readonly reversals: boolean[];
-  private readonly shiftOffsets: number[];
-  private readonly subPathOrdering: number[];
 
-  constructor(pm: PathMutation) {
-    this.commandMutationsMap = pm.commandMutationsMap.map(cms => cms.slice());
-    this.reversals = pm.reversals.slice();
-    this.shiftOffsets = pm.shiftOffsets.slice();
-    this.subPathOrdering = pm.subPathOrdering.slice();
-  }
+  constructor(
+    private readonly commandMutationsMap: CommandState[][],
+    private readonly reversals: boolean[],
+    private readonly shiftOffsets: number[],
+    private readonly subPathOrdering: number[],
+  ) { }
 
   private getMutationState() {
     return {
@@ -815,10 +816,9 @@ class PathMutator {
   }
 
   build() {
-    return new PathMutation(this.getMutationState());
+    return new PathState(this.getMutationState());
   }
 }
-
 
 /**
  * Finds and returns the command mutation at the specified indices.
