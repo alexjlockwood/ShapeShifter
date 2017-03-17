@@ -81,43 +81,47 @@ export class PathState {
   }
 
   hitTest(point: Point, opts: HitOptions) {
-    // First search for in-range path points.
-    const pointResult =
-      _.chain(this.subPaths as SubPath[])
-        .map((subPath, subIdx) => {
-          return subPath.getCommands()
-            .map((cmd, cmdIdx) => {
-              const distance = MathUtil.distance(cmd.end, point);
-              const isSplit = cmd.isSplit;
-              return { subIdx, cmdIdx, distance, isSplit };
-            });
-        })
-        .flatMap(pathPoints => pathPoints)
-        .filter(pathPoint => opts.isPointInRangeFn(pathPoint.distance, pathPoint.isSplit))
-        // Reverse so that points drawn with higher z-orders are preferred.
-        .reverse()
-        .reduce((prev, curr) => {
-          if (!prev) {
-            return curr;
-          }
-          if (prev.isSplit !== curr.isSplit) {
-            // Always return split points that are in range before
-            // returning non-split points. This way we can guarantee that
-            // split points will never be obstructed by non-split points.
-            return prev.isSplit ? prev : curr;
-          }
-          return prev.distance < curr.distance ? prev : curr;
-        }, undefined)
-        .value();
+    if (opts.isPointInRangeFn) {
+      // First search for in-range path points.
+      const pointResult =
+        _.chain(this.subPaths as SubPath[])
+          .map((subPath, subIdx) => {
+            return subPath.getCommands()
+              .map((cmd, cmdIdx) => {
+                const distance = MathUtil.distance(cmd.end, point);
+                const isSplit = cmd.isSplit;
+                return { subIdx, cmdIdx, distance, isSplit };
+              });
+          })
+          .flatMap(pathPoints => pathPoints)
+          .filter(pathPoint => opts.isPointInRangeFn(pathPoint.distance, pathPoint.isSplit))
+          // Reverse so that points drawn with higher z-orders are preferred.
+          .reverse()
+          .reduce((prev, curr) => {
+            if (!prev) {
+              return curr;
+            }
+            if (prev.isSplit !== curr.isSplit) {
+              // Always return split points that are in range before
+              // returning non-split points. This way we can guarantee that
+              // split points will never be obstructed by non-split points.
+              return prev.isSplit ? prev : curr;
+            }
+            return prev.distance < curr.distance ? prev : curr;
+          }, undefined)
+          .value();
 
-    if (pointResult) {
-      // Then the hit occurred on top of a command point.
-      return {
-        isHit: true,
-        subIdx: pointResult.subIdx,
-        cmdIdx: pointResult.cmdIdx,
-      };
-    } else if (opts.hitTestPointsOnly) {
+      if (pointResult) {
+        // Then the hit occurred on top of a command point.
+        return {
+          isHit: true,
+          subIdx: pointResult.subIdx,
+          cmdIdx: pointResult.cmdIdx,
+        };
+      }
+    }
+
+    if (opts.hitTestPointsOnly) {
       return { isHit: false };
     }
 

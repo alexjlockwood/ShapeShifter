@@ -228,7 +228,7 @@ export class PathImpl implements Path {
 
   // Implements the Path interface.
   // TODO: write tests
-  hitTest(point: Point, opts: HitOptions) {
+  hitTest(point: Point, opts: HitOptions = {}) {
     return this.ps.hitTest(point, opts);
   }
 

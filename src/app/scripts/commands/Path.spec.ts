@@ -360,6 +360,21 @@ describe('Path', () => {
       });
     });
   });
+
+  // describe('#hitTest', () => {
+  //   const TESTS_HIT_TEST_FILL = [
+  //     [new Point(5, 5), 'M 0 0 L 0 10 L 10 10 L 10 0 L 0 0', true],
+  //   ];
+
+  //   TESTS_HIT_TEST_FILL.forEach(a => {
+  //     const point = a[0] as Point;
+  //     const path = newPath(a[1] as string);
+  //     it(`hit test for '(${point.x},${point.y})' on fill path '${a[1]}' yields '${a[2]}'`, () => {
+  //       const hitResult = path.hitTest(point);
+  //       expect(hitResult.isHit).toEqual(true);
+  //     });
+  //   });
+  // });
 });
 
 function checkPathsEqual(actual: Path, expected: Path) {
