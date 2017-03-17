@@ -67,7 +67,6 @@ export class CommandMutator {
    * Unsplits the command at the specified split index.
    */
   unsplitAtIndex(splitIdx: number) {
-    console.info(this.mutations);
     this.mutations.splice(splitIdx, 1);
     return this;
   }
