@@ -91,42 +91,6 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
     let path;
     if (node instanceof SVGPathElement) {
       path = node.attributes ? (node.attributes as any).d.value : '';
-
-    } else if (node instanceof SVGRectElement) {
-      const l = lengthPxFn(node.x),
-        t = lengthPxFn(node.y),
-        r = l + lengthPxFn(node.width),
-        b = t + lengthPxFn(node.height);
-      // TODO: need to handle corner radii as well (rx/ry)
-      path = `M ${l},${t} ${r},${t} ${r},${b} ${l},${b} Z`;
-
-    } else if (node instanceof SVGLineElement) {
-      const x1 = lengthPxFn(node.x1),
-        y1 = lengthPxFn(node.y1),
-        x2 = lengthPxFn(node.x2),
-        y2 = lengthPxFn(node.y2);
-      path = `M ${x1},${y1} ${x2},${y2} Z`;
-
-    } else if (node instanceof SVGPolygonElement || node instanceof SVGPolylineElement) {
-      path = 'M ' + Array.from((node.points as any)).map((pt: any) => pt.x + ',' + pt.y).join(' ');
-      if (node instanceof SVGPolygonElement) {
-        path += ' Z';
-      }
-
-    } else if (node instanceof SVGCircleElement) {
-      const cx = lengthPxFn(node.cx),
-        cy = lengthPxFn(node.cy),
-        r = lengthPxFn(node.r);
-      path = `M ${cx},${cy - r} A ${r} ${r} 0 1 0 ${cx},${cy + r} `
-        + `A ${r} ${r} 0 1 0 ${cx},${cy - r} Z`;
-
-    } else if (node instanceof SVGEllipseElement) {
-      const cx = lengthPxFn(node.cx),
-        cy = lengthPxFn(node.cy),
-        rx = lengthPxFn(node.rx),
-        ry = lengthPxFn(node.ry);
-      path = `M ${cx},${cy - ry} A ${rx} ${ry} 0 1 0 ${cx},${cy + ry} `
-        + `A ${rx} ${ry} 0 1 0 ${cx},${cy - ry} Z`;
     }
 
     if (path) {

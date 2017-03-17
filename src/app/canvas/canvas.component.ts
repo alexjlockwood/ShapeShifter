@@ -367,7 +367,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         ? this.pointSelector.getSelectedPointId()
         : undefined;
     const transforms =
-      getTransformsForLayer(this.vectorLayer, activePathLayer.id).reverseSubPath();
+      getTransformsForLayer(this.vectorLayer, activePathLayer.id).reverse();
     const currentSelections =
       this.selectionStateService.getSelections()
         .filter(s => s.source === this.canvasType);
@@ -459,7 +459,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       point = new Point(projection.x, projection.y);
       point = MathUtil.transformPoint(
         point, MathUtil.flattenTransforms(
-          getTransformsForLayer(this.vectorLayer, this.activePathId).reverseSubPath()));
+          getTransformsForLayer(this.vectorLayer, this.activePathId).reverse()));
     } else {
       point = lastKnownLocation;
     }
@@ -803,7 +803,7 @@ function drawSelections(
  * immediate parent will be the very last matrix in the returned list). This
  * function returns undefined if the layer is not found in the vector layer.
  */
-function getTransformsForLayer(vectorLayer: VectorLayer, layerId: string) {
+function getTransformsForLayer(vectorLayer: VectorLayer, layerId: string): Matrix[] {
   const getTransformsFn = (parents: Layer[], current: Layer) => {
     if (current.id === layerId) {
       return _.flatMap(parents, layer => {
@@ -850,7 +850,7 @@ function performHitTest(
   if (!pathLayer) {
     return undefined;
   }
-  const transforms = getTransformsForLayer(vectorLayer, pathId).reverseSubPath();
+  const transforms = getTransformsForLayer(vectorLayer, pathId).reverse();
   const transformedMousePoint =
     MathUtil.transformPoint(
       mousePoint,
@@ -935,7 +935,7 @@ function calculateProjectionOntoPath(
   if (!pathLayer) {
     return undefined;
   }
-  const transforms = getTransformsForLayer(vectorLayer, pathId).reverseSubPath();
+  const transforms = getTransformsForLayer(vectorLayer, pathId).reverse();
   const transformedMousePoint =
     MathUtil.transformPoint(
       mousePoint,
