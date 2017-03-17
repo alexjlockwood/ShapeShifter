@@ -1,6 +1,7 @@
 import { Point, Matrix } from '../common';
 import { SubPath, Command, SvgChar } from '.';
 import { ProjectionResult } from './calculators';
+import { PathMutator } from './state';
 
 /**
  * Defines the set of methods that are seen by the UI.
@@ -45,58 +46,14 @@ export interface Path {
   project(point: Point): { projection: ProjectionResult, subIdx: number, cmdIdx: number } | undefined;
 
   /**
-   * Reverses the order of the points in the sub path at the specified index.
-   * Returns a new path object.
-   */
-  reverse(subIdx: number): Path;
-
-  /**
-   * Shifts back the order of the points in the sub path at the specified index.
-   * Returns a new path object.
-   */
-  shiftBack(subIdx: number, numShifts?: number): Path;
-
-  /**
-   * Shifts forward the order of the points in the sub path at the specified index.
-   * Returns a new path object.
-   */
-  shiftForward(subIdx: number, numShifts?: number): Path;
-
-  /**
-   * Splits the path at the specified index. Returns a new path object.
-   */
-  split(subIdx: number, cmdIdx: number, ...ts: number[]): Path;
-
-  /**
    * Splits the path at the specified indices. Returns a new path object.
    */
   splitBatch(ops: Array<{ subIdx: number, cmdIdx: number, ts: number[] }>): Path;
 
   /**
-   * Splits the path at the specified index in half.
-   */
-  splitInHalf(subIdx: number, cmdIdx: number): Path;
-
-  /**
-   * Un-splits the path at the specified index. Returns a new path object.
-   */
-  unsplit(subIdx: number, cmdIdx: number): Path;
-
-  /**
    * Un-splits the path at the specified incides. Returns a new path object.
    */
   unsplitBatch(ops: Array<{ subIdx: number, cmdIdx: number }>): Path;
-
-  /**
-   * Convert the path at the specified index. Returns a new path object.
-   */
-  convert(subIdx: number, cmdIdx: number, svgChar: SvgChar): Path;
-
-  /**
-   * Reverts any conversions previously performed in the specified sub path.
-   * Returns a new path object.
-   */
-  unconvertSubPath(subIdx: number): Path;
 
   /**
    * Returns the unique id associated with the command at the specified index.
@@ -109,25 +66,11 @@ export interface Path {
   clone(): Path;
 
   /**
-   * Returns the initial starting state of this path.
-   */
-  revert(): Path;
-
-  /**
-   * Transforms the path using the specified transformation matrices.
-   * Returns a new path object.
-   */
-  transform(transforms: Matrix[]): Path;
-
-  /**
    * Performs a hit test on the path and returns a HitResult.
    */
   hitTest(point: Point, opts?: HitOptions): HitResult;
 
-  /**
-   * Moves a subpath from one index to another. Returns a new path object.
-   */
-  moveSubPath(fromSubIdx: number, toSubIdx: number): Path;
+  mutate(): PathMutator;
 }
 
 /** Represents the options for a hit test. */

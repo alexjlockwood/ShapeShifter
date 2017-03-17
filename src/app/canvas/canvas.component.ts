@@ -188,9 +188,9 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           const activePathLayer =
             this.layerStateService.getActivePathLayer(this.canvasType);
           this.currentHoverSplitPreviewPath =
-            activePathLayer.pathData.splitInHalf(
-              hover.commandId.subIdx,
-              hover.commandId.cmdIdx);
+            activePathLayer.pathData.mutate()
+              .splitCommandInHalf(hover.commandId.subIdx, hover.commandId.cmdIdx)
+              .build();
         } else {
           this.currentHoverSplitPreviewPath = undefined;
         }
@@ -367,7 +367,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         ? this.pointSelector.getSelectedPointId()
         : undefined;
     const transforms =
-      getTransformsForLayer(this.vectorLayer, activePathLayer.id).reverse();
+      getTransformsForLayer(this.vectorLayer, activePathLayer.id).reverseSubPath();
     const currentSelections =
       this.selectionStateService.getSelections()
         .filter(s => s.source === this.canvasType);
@@ -459,7 +459,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       point = new Point(projection.x, projection.y);
       point = MathUtil.transformPoint(
         point, MathUtil.flattenTransforms(
-          getTransformsForLayer(this.vectorLayer, this.activePathId).reverse()));
+          getTransformsForLayer(this.vectorLayer, this.activePathId).reverseSubPath()));
     } else {
       point = lastKnownLocation;
     }
@@ -600,8 +600,9 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
           // Delete the old drag point from the path.
           activeLayer.pathData =
-            activeLayer.pathData.unsplit(
-              selectedPointId.subIdx, selectedPointId.cmdIdx);
+            activeLayer.pathData.mutate()
+              .unsplitCommand(selectedPointId.subIdx, selectedPointId.cmdIdx)
+              .build();
 
           // Re-split the path at the projection point.
           activeLayer.pathData =
@@ -849,7 +850,7 @@ function performHitTest(
   if (!pathLayer) {
     return undefined;
   }
-  const transforms = getTransformsForLayer(vectorLayer, pathId).reverse();
+  const transforms = getTransformsForLayer(vectorLayer, pathId).reverseSubPath();
   const transformedMousePoint =
     MathUtil.transformPoint(
       mousePoint,
@@ -934,22 +935,23 @@ function calculateProjectionOntoPath(
   if (!pathLayer) {
     return undefined;
   }
-  const transforms = getTransformsForLayer(vectorLayer, pathId).reverse();
+  const transforms = getTransformsForLayer(vectorLayer, pathId).reverseSubPath();
   const transformedMousePoint =
     MathUtil.transformPoint(
       mousePoint,
       MathUtil.flattenTransforms(transforms).invert());
-  const projectionInfo = pathLayer.pathData.project(transformedMousePoint);
-  if (!projectionInfo) {
+  const projInfo = pathLayer.pathData.project(transformedMousePoint);
+  if (!projInfo) {
     return undefined;
   }
   const splitFn = () => {
-    return pathLayer.pathData.split(
-      projectionInfo.subIdx, projectionInfo.cmdIdx, projectionInfo.projection.t);
+    return pathLayer.pathData.mutate()
+      .splitCommand(projInfo.subIdx, projInfo.cmdIdx, projInfo.projection.t)
+      .build();
   };
   return {
     pathId: pathLayer.id,
-    projection: projectionInfo.projection,
+    projection: projInfo.projection,
     splitFn,
   };
 }

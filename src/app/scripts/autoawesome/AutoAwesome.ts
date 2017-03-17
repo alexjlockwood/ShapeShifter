@@ -26,7 +26,7 @@ export function autoFix(
     for (const p of paths) {
       const numFromCmds = p.getSubPaths()[subIdx].getCommands().length;
       for (let i = 0; i < numFromCmds - 1; i++) {
-        fromPaths.push(p.shiftBack(subIdx, i));
+        fromPaths.push(p.mutate().shiftSubPathBack(subIdx, i).build());
       }
     }
     return fromPaths;
@@ -49,7 +49,9 @@ export function autoFix(
 
   // Align each generated 'from path' with the target 'to path'.
   const fromPaths =
-    createFromCmdGroupsFn(srcFromPath, srcFromPath.reverse(subIdx));
+    createFromCmdGroupsFn(srcFromPath, srcFromPath.mutate()
+      .reverseSubPath(subIdx)
+      .build());
   const alignmentInfos = fromPaths.map(generatedFromPath => {
     const fromCmds = generatedFromPath.getSubPaths()[subIdx].getCommands();
     const toCmds = srcToPath.getSubPaths()[subIdx].getCommands();
@@ -142,10 +144,10 @@ export function autoConvert(
     }
     if (fromCmd.canConvertTo(toCmd.svgChar)) {
       // TODO: perform all of these as a single batch operation?
-      from = from.convert(subIdx, cmdIdx, toCmd.svgChar);
+      from = from.mutate().convertCommand(subIdx, cmdIdx, toCmd.svgChar).build();
     } else if (toCmd.canConvertTo(fromCmd.svgChar)) {
       // TODO: perform all of these as a single batch operation?
-      to = to.convert(subIdx, cmdIdx, fromCmd.svgChar);
+      to = to.mutate().convertCommand(subIdx, cmdIdx, fromCmd.svgChar).build();
     }
   });
   return { from, to };

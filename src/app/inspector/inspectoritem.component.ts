@@ -73,31 +73,42 @@ export class InspectorItemComponent implements OnInit {
 
   onReverseClick(event: MouseEvent) {
     const fromPathLayer = this.layerStateService.getActivePathLayer(this.canvasType);
-    this.replacePath(fromPathLayer.pathData.reverse(this.subIdx), event);
+    this.replacePath(fromPathLayer.pathData.mutate().reverseSubPath(this.subIdx).build(), event);
   }
 
   onShiftBackClick(event: MouseEvent) {
     const fromPathLayer = this.layerStateService.getActivePathLayer(this.canvasType);
-    this.replacePath(fromPathLayer.pathData.shiftBack(this.subIdx), event);
+    this.replacePath(fromPathLayer.pathData.mutate()
+      .shiftSubPathBack(this.subIdx)
+      .build(),
+      event);
   }
 
   onShiftForwardClick(event: MouseEvent) {
     const fromPathLayer = this.layerStateService.getActivePathLayer(this.canvasType);
-    this.replacePath(fromPathLayer.pathData.shiftForward(this.subIdx), event);
+    this.replacePath(fromPathLayer.pathData.mutate().
+      shiftSubPathForward(this.subIdx)
+      .build(),
+      event);
   }
 
   onSplitButtonClick(event: MouseEvent) {
     const fromPathLayer = this.layerStateService.getActivePathLayer(this.canvasType);
     this.clearSelectionsAndHovers();
     this.replacePath(
-      fromPathLayer.pathData.splitInHalf(this.subIdx, this.cmdIdx), event);
+      fromPathLayer.pathData.mutate()
+        .splitCommandInHalf(this.subIdx, this.cmdIdx)
+        .build(),
+      event);
   }
 
   onUnsplitButtonClick(event: MouseEvent) {
     const fromPathLayer = this.layerStateService.getActivePathLayer(this.canvasType);
     this.clearSelectionsAndHovers();
-    this.replacePath(
-      fromPathLayer.pathData.unsplit(this.subIdx, this.cmdIdx), event);
+    this.replacePath(fromPathLayer.pathData.mutate()
+      .unsplitCommand(this.subIdx, this.cmdIdx)
+      .build(),
+      event);
   }
 
   private clearSelectionsAndHovers() {

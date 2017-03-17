@@ -108,21 +108,21 @@ export class PathImpl implements Path {
   }
 
   // Implements the Path interface.
-  reverse(subIdx: number) {
+  reverseSubPath(subIdx: number) {
     return this.mutate()
       .reverseSubPath(subIdx)
       .build();
   }
 
   // Implements the Path interface.
-  shiftBack(subIdx: number, numShifts = 1) {
+  shiftSubPathBack(subIdx: number, numShifts = 1) {
     return this.mutate()
       .shiftSubPathBack(subIdx, numShifts)
       .build();
   }
 
   // Implements the Path interface.
-  shiftForward(subIdx: number, numShifts = 1) {
+  shiftSubPathForward(subIdx: number, numShifts = 1) {
     return this.mutate()
       .shiftSubPathForward(subIdx, numShifts)
       .build();
@@ -159,16 +159,9 @@ export class PathImpl implements Path {
     let result: Path = this;
     for (const { subIdx, cmdIdx, ts } of ops) {
       // TODO: do all operations as a single batch instead of individually
-      result = result.split(subIdx, cmdIdx, ...ts);
+      result = result.mutate().splitCommand(subIdx, cmdIdx, ...ts).build();
     }
     return result;
-  }
-
-  // Implements the Path interface.
-  splitInHalf(subIdx: number, cmdIdx: number) {
-    return this.mutate()
-      .splitCommandInHalf(subIdx, cmdIdx)
-      .build();
   }
 
   // Implements the Path interface.
@@ -193,7 +186,7 @@ export class PathImpl implements Path {
     let result: Path = this;
     for (const { subIdx, cmdIdx } of ops) {
       // TODO: do all operations as a single batch instead of individually
-      result = result.unsplit(subIdx, cmdIdx);
+      result = result.mutate().unsplitCommand(subIdx, cmdIdx).build();
     }
     return result;
   }
@@ -209,13 +202,6 @@ export class PathImpl implements Path {
   unconvertSubPath(subIdx: number) {
     return this.mutate()
       .unconvertSubPath(subIdx)
-      .build();
-  }
-
-  // Implements the Path interface.
-  revert() {
-    return this.mutate()
-      .revert()
       .build();
   }
 

@@ -1,7 +1,7 @@
 import { CommandState } from './CommandState';
 import { PathState, findCommandMutation } from './PathState';
 import * as _ from 'lodash';
-import { SubPath, SvgChar, Command } from '..';
+import { Path, SubPath, SvgChar, Command } from '..';
 import { PathImpl } from '../PathImpl';
 import { CommandImpl, newMove, newLine } from '../CommandImpl';
 import { MathUtil, Matrix } from '../../common';
@@ -35,10 +35,13 @@ export class PathMutator {
     return this;
   }
 
-  toggleReversedAt(subIdx: number) {
-    const isReversed = this.reversals[this.subPathOrdering[subIdx]];
-    this.reversals[this.subPathOrdering[subIdx]] = !isReversed;
-    return this;
+  /**
+   * Reverses the order of the points in the sub path at the specified index.
+   * Returns a new path object.
+   */
+  reverseSubPath(subIdx: number) {
+    const cmsIdx = this.subPathOrdering[subIdx];
+    return this.setReversedAt(subIdx, !this.reversals[cmsIdx]);
   }
 
   setShiftOffsetAt(subIdx: number, shiftOffset: number) {
@@ -46,19 +49,21 @@ export class PathMutator {
     return this;
   }
 
-  reverseSubPath(subIdx: number) {
-    const cmsIdx = this.subPathOrdering[subIdx];
-    this.reversals[cmsIdx] = !this.reversals[cmsIdx];
-    return this;
-  }
-
-  shiftSubPathBack(subIdx: number, numShifts: number) {
+  /**
+   * Shifts back the order of the points in the sub path at the specified index.
+   * Returns a new path object.
+   */
+  shiftSubPathBack(subIdx: number, numShifts = 1) {
     return this.reversals[this.subPathOrdering[subIdx]]
       ? this.shift(subIdx, (o, n) => MathUtil.floorMod(o - numShifts, n - 1))
       : this.shift(subIdx, (o, n) => (o + numShifts) % (n - 1));
   }
 
-  shiftSubPathForward(subIdx: number, numShifts: number) {
+  /**
+   * Shifts forward the order of the points in the sub path at the specified index.
+   * Returns a new path object.
+   */
+  shiftSubPathForward(subIdx: number, numShifts = 1) {
     return this.reversals[this.subPathOrdering[subIdx]]
       ? this.shift(subIdx, (o, n) => (o + numShifts) % (n - 1))
       : this.shift(subIdx, (o, n) => MathUtil.floorMod(o - numShifts, n - 1));
@@ -77,6 +82,9 @@ export class PathMutator {
     return this;
   }
 
+  /**
+   * Splits the command using the specified t values.
+   */
   splitCommand(subIdx: number, cmdIdx: number, ...ts: number[]) {
     const { targetCm, cmsIdx, cmIdx, splitIdx } =
       findCommandMutation(subIdx, cmdIdx, this.getMutationState());
@@ -86,6 +94,9 @@ export class PathMutator {
     return this;
   }
 
+  /**
+   * Splits the command into two approximately equal parts.
+   */
   splitCommandInHalf(subIdx: number, cmdIdx: number) {
     const { targetCm, cmsIdx, cmIdx, splitIdx } =
       findCommandMutation(subIdx, cmdIdx, this.getMutationState());
@@ -109,6 +120,9 @@ export class PathMutator {
     }
   }
 
+  /**
+   * Un-splits the path at the specified index. Returns a new path object.
+   */
   unsplitCommand(subIdx: number, cmdIdx: number) {
     const { targetCm, cmsIdx, cmIdx, splitIdx } =
       findCommandMutation(subIdx, cmdIdx, this.getMutationState());
@@ -124,6 +138,9 @@ export class PathMutator {
     return this;
   }
 
+  /**
+   * Convert the path at the specified index. Returns a new path object.
+   */
   convertCommand(subIdx: number, cmdIdx: number, svgChar: SvgChar) {
     const { targetCm, cmsIdx, cmIdx, splitIdx } =
       findCommandMutation(subIdx, cmdIdx, this.getMutationState());
@@ -132,6 +149,10 @@ export class PathMutator {
     return this;
   }
 
+  /**
+   * Reverts any conversions previously performed in the specified sub path.
+   * Returns a new path object.
+   */
   unconvertSubPath(subIdx: number) {
     const cmsIdx = this.subPathOrdering[subIdx];
     this.commandMutationsMap[cmsIdx] =
@@ -140,6 +161,10 @@ export class PathMutator {
     return this;
   }
 
+  /**
+   * Transforms the path using the specified transformation matrices.
+   * Returns a new path object.
+   */
   transformPath(transforms: Matrix[]) {
     this.commandMutationsMap.forEach((cms, i) => {
       cms.forEach((cm, j) => {
@@ -149,11 +174,17 @@ export class PathMutator {
     return this;
   }
 
+  /**
+   * Moves a subpath from one index to another. Returns a new path object.
+   */
   moveSubPath(fromSubIdx: number, toSubIdx: number) {
     this.subPathOrdering.splice(toSubIdx, 0, this.subPathOrdering.splice(fromSubIdx, 1)[0]);
     return this;
   }
 
+  /**
+   * Returns the initial starting state of this path.
+   */
   revert() {
     this.commandMutationsMap.forEach((cms, i) => {
       cms.forEach((cm, j) => {
@@ -166,7 +197,7 @@ export class PathMutator {
     return this;
   }
 
-  build() {
+  build(): Path {
     const commandMutationsMap = this.commandMutationsMap;
     const reversals = this.reversals;
     const shiftOffsets = this.shiftOffsets;
@@ -205,7 +236,7 @@ export class PathMutator {
       // Reverse the commands.
       const newCmds = [];
       for (let i = cmds.length - 1; i > 0; i--) {
-        newCmds.push(cmds[i].reverse());
+        newCmds.push(cmds[i].reverseSubPath());
       }
       newCmds.unshift(newMove(cmds[0].start, newCmds[0].start));
       return newCmds;

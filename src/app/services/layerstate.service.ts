@@ -95,7 +95,7 @@ export class LayerStateService {
     shouldNotify = true) {
 
     // Remove any existing conversions from the subpath.
-    path = path.unconvertSubPath(subIdx);
+    path = path.mutate().unconvertSubPath(subIdx).build();
 
     const oppositeCanvasType =
       type === CanvasType.Start
@@ -116,7 +116,9 @@ export class LayerStateService {
         // are equal. Otherwise we'll wait for the user to add more points.
         const autoConvertResults =
           AutoAwesome.autoConvert(
-            subIdx, path, oppositeActivePathLayer.pathData.unconvertSubPath(subIdx));
+            subIdx, path, oppositeActivePathLayer.pathData.mutate()
+              .unconvertSubPath(subIdx)
+              .build());
         path = autoConvertResults.from;
 
         // This is the one case where a change in one canvas type's vector layer
