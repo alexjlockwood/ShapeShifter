@@ -6,26 +6,25 @@ import { PathMutator } from './PathMutator';
 import { MathUtil, Matrix, Point, Rect } from '../../common';
 
 export class PathState {
-  private readonly subPaths: ReadonlyArray<SubPath>;
+  readonly subPaths: ReadonlyArray<SubPath>;
   readonly commandMutationsMap: ReadonlyArray<ReadonlyArray<CommandState>>;
   readonly reversals: ReadonlyArray<boolean>;
   readonly shiftOffsets: ReadonlyArray<number>;
   readonly subPathOrdering: ReadonlyArray<number>;
 
-  constructor(obj: ReadonlyArray<SubPath> | MutationState) {
-    if (Array.isArray(obj)) {
-      this.subPaths = obj as ReadonlyArray<SubPath>;
+  constructor(subPaths: ReadonlyArray<SubPath>, ms?: MutationState) {
+    this.subPaths = subPaths;
+    if (ms) {
+      this.commandMutationsMap = ms.commandMutationsMap.map(cms => cms.slice());
+      this.reversals = ms.reversals.slice();
+      this.shiftOffsets = ms.shiftOffsets.slice();
+      this.subPathOrdering = ms.subPathOrdering.slice();
+    } else {
       this.commandMutationsMap =
         this.subPaths.map(s => s.getCommands().map(c => new CommandState(c as CommandImpl)));
       this.shiftOffsets = this.subPaths.map(_ => 0);
       this.reversals = this.subPaths.map(_ => false);
       this.subPathOrdering = this.subPaths.map((_, i) => i);
-    } else {
-      const ms = obj as MutationState;
-      this.commandMutationsMap = ms.commandMutationsMap.map(cms => cms.slice());
-      this.reversals = ms.reversals.slice();
-      this.shiftOffsets = ms.shiftOffsets.slice();
-      this.subPathOrdering = ms.subPathOrdering.slice();
     }
   }
 
@@ -169,7 +168,8 @@ export class PathState {
           hitCmsIdx = cmsIdx;
         }
         return hitCmsIdx === undefined;
-      });
+      })
+      .value();
 
     if (hitCmsIdx === undefined) {
       return { isHit: false };

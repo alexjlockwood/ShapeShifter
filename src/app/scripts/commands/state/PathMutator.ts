@@ -7,12 +7,14 @@ import { CommandImpl, newMove, newLine } from '../CommandImpl';
 import { MathUtil, Matrix } from '../../common';
 
 export class PathMutator {
+  private readonly subPaths: ReadonlyArray<SubPath>;
   private readonly commandMutationsMap: CommandState[][];
   private readonly reversals: boolean[];
   private readonly shiftOffsets: number[];
   private readonly subPathOrdering: number[];
 
   constructor(ps: PathState) {
+    this.subPaths = ps.subPaths;
     this.commandMutationsMap = ps.commandMutationsMap.map(cms => cms.slice());
     this.reversals = ps.reversals.slice();
     this.shiftOffsets = ps.shiftOffsets.slice();
@@ -291,7 +293,7 @@ export class PathMutator {
     });
     return new PathImpl({
       commands: reorderedCommands,
-      pathState: new PathState({
+      pathState: new PathState(this.subPaths, {
         commandMutationsMap,
         reversals,
         shiftOffsets,

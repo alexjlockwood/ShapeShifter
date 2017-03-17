@@ -361,6 +361,7 @@ describe('Path', () => {
     });
   });
 
+  // TODO: figure out why this is failing
   // describe('#hitTest', () => {
   //   const TESTS_HIT_TEST_FILL = [
   //     [new Point(5, 5), 'M 0 0 L 0 10 L 10 10 L 10 0 L 0 0', true],
