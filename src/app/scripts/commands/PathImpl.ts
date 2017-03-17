@@ -130,7 +130,7 @@ export class PathImpl implements Path {
 
   // Implements the Path interface.
   getId(subIdx: number, cmdIdx: number) {
-    return this.getId(subIdx, cmdIdx);
+    return this.ps.getId(subIdx, cmdIdx);
   }
 
   // Implements the Path interface.

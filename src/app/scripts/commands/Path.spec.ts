@@ -1,5 +1,5 @@
-import { SvgChar, newPath, Path } from '.';
-import { Matrix } from '../common';
+import { SvgChar, newPath, Path, Command } from '.';
+import { Matrix, Point } from '../common';
 import * as _ from 'lodash';
 
 describe('Path', () => {
@@ -149,10 +149,8 @@ describe('Path', () => {
         newPath('M 0 0 L 0 10 L 2.5 10 L 5 10 L 10 10 L 10 0 L 0 0');
       checkPathsEqual(actual, expected);
 
-      actual = newPath('M 0 0 L 0 10 L 2.5 10 L 5 10 L 10 10 L 10 0 L 0 0')
-        .unsplitBatch([{ subIdx: 0, cmdIdx: 2 }, { subIdx: 0, cmdIdx: 3 }]);
-      expected =
-        newPath('M 0 0 L 0 10 L 10 10 L 10 0 L 0 0');
+      actual = actual.unsplitBatch([{ subIdx: 0, cmdIdx: 2 }, { subIdx: 0, cmdIdx: 3 }]);
+      expected = newPath('M 0 0 L 0 10 L 10 10 L 10 0 L 0 0');
       checkPathsEqual(actual, expected);
     });
 
@@ -222,7 +220,7 @@ describe('Path', () => {
   // TODO: test that reversals and stuff still work
   // TODO: test that splits and conversions and stuff still work
   // TODO: test that reversals/shifts/splits/etc. are reverted properly, not just transforms
-  describe('transform', () => {
+  describe('#transform', () => {
     const INITIAL = newPath('M -4 -8 h 8 v 16 h -8 v -16');
 
     it('empty list of transforms', () => {
@@ -347,8 +345,51 @@ describe('Path', () => {
       checkPathsEqual(actual, expected);
     });
   });
+
+  describe('#project', () => {
+    const TESTS_PROJECT = [
+      [new Point(5, 5), 'M 0 0 L 10 10', { subIdx: 0, cmdIdx: 1, projection: { x: 5, y: 5, d: 0, t: 0.5 } }],
+    ];
+
+    TESTS_PROJECT.forEach(a => {
+      const point = a[0] as Point;
+      const path = a[1] as string;
+      it(`projecting '(${point.x},${point.y})' onto '${path}' yields ${JSON.stringify(a[2])}`, () => {
+        const result = newPath(path).project(point);
+        expect(result).toEqual(a[2]);
+      });
+    });
+  });
 });
 
 function checkPathsEqual(actual: Path, expected: Path) {
   expect(actual.getPathString()).toEqual(expected.getPathString());
+  checkCommandsEqual(actual.getCommands(), expected.getCommands());
+}
+
+function checkCommandsEqual(actual: ReadonlyArray<Command>, expected: ReadonlyArray<Command>) {
+  expect(actual.length).toEqual(expected.length);
+  for (let i = 0; i < actual.length; i++) {
+    const a = actual[i];
+    const e = expected[i];
+    expect(a.svgChar).toEqual(e.svgChar);
+    expect(a.points.length).toEqual(e.points.length);
+    for (let j = 0; j < a.points.length; j++) {
+      const ap = a.points[j];
+      const ep = e.points[j];
+      if (!ap || !ep) {
+        expect(ap).toEqual(undefined);
+        expect(ep).toEqual(undefined);
+      } else {
+        expect(_.round(ap.x, 8)).toEqual(ep.x);
+        expect(_.round(ap.y, 8)).toEqual(ep.y);
+      }
+    }
+  }
+}
+
+function equals(p: Point) {
+  const diffX = Math.abs(this.x - p.x);
+  const diffY = Math.abs(this.y - p.y);
+  return diffX < 1e-8 && diffY < 1e-8;
 }

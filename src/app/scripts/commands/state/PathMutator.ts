@@ -114,12 +114,10 @@ export class PathMutator {
     this.commandMutationsMap[cmsIdx][cmIdx] =
       targetCm.mutate().unsplitAtIndex(isSubPathReversed ? splitIdx - 1 : splitIdx).build();
     const shiftOffset = this.shiftOffsets[cmsIdx];
-    let shiftOffsets = undefined;
     if (shiftOffset && cmIdx <= shiftOffset) {
       // Subtract the shift offset by 1 to ensure that the unsplit operation
       // doesn't alter the positions of the path points.
-      shiftOffsets = this.shiftOffsets.slice();
-      shiftOffsets[cmsIdx] = shiftOffset - 1;
+      this.shiftOffsets[cmsIdx] = shiftOffset - 1;
     }
     return this;
   }

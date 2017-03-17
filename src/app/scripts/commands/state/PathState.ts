@@ -178,10 +178,6 @@ export class PathState {
     };
   }
 
-  mutate() {
-    return new PathMutator(this);
-  }
-
   private toCmsIdx(subIdx: number) {
     return this.subPathOrdering[subIdx];
   }
