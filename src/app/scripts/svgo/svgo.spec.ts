@@ -764,6 +764,80 @@ describe('SVGO plugins', () => {
 </svg>`);
     });
   });
+
+  describe('convertShapeToPath', () => {
+    it('#1', () => {
+      runTest(convertShapeToPath, `
+<svg xmlns="http://www.w3.org/2000/svg">
+    <rect width="100%"/>
+    <rect width="100%" height="100%"/>
+    <rect x="25%" y="25%" width="50%" height="50%"/>
+    <rect x="25pt" y="25pt" width="50pt" height="50pt"/>
+    <rect x="10" y="10" width="50" height="50" rx="4"/>
+    <rect x="0" y="0" width="20" height="20" ry="5"/>
+    <rect width="32" height="32"/>
+    <rect x="20" y="10" width="50" height="40"/>
+    <rect fill="#666" x="10" y="10" width="10" height="10"/>
+</svg>
+`, `
+<svg xmlns="http://www.w3.org/2000/svg">
+    <rect width="100%"/>
+    <rect width="100%" height="100%"/>
+    <rect x="25%" y="25%" width="50%" height="50%"/>
+    <rect x="25pt" y="25pt" width="50pt" height="50pt"/>
+    <path d="M 14 10 H 56 A 4 4 0 0 1 60 14 V 56 A 4 4 0 0 1 56 60 H 14 A 4 4 0 0 1 10 56 V 14 A 4 4 0 0 1 14 10"/>
+    <path d="M 5 0 H 15 A 5 5 0 0 1 20 5 V 15 A 5 5 0 0 1 15 20 H 5 A 5 5 0 0 1 0 15 V 5 A 5 5 0 0 1 5 0"/>
+    <path d="M 0 0 H 32 V 32 H 0 Z"/>
+    <path d="M 20 10 H 70 V 50 H 20 Z"/>
+    <path fill="#666" d="M 10 10 H 20 V 20 H 10 Z"/>
+</svg>
+`);
+    });
+
+    it('#2', () => {
+      runTest(convertShapeToPath, `
+<svg xmlns="http://www.w3.org/2000/svg">
+    <line x2="100%" y2="100%"/>
+    <line x1="24" y2="24"/>
+    <line x1="10" y1="10" x2="50" y2="20"/>
+    <line stroke="#000" x1="10" y1="10" x2="50" y2="20"/>
+</svg>
+`, `
+<svg xmlns="http://www.w3.org/2000/svg">
+    <line x2="100%" y2="100%"/>
+    <path d="M 24 0 L 0 24"/>
+    <path d="M 10 10 L 50 20"/>
+    <path stroke="#000" d="M 10 10 L 50 20"/>
+</svg>
+`);
+    });
+
+    it('#3', () => {
+      runTest(convertShapeToPath, `
+<svg xmlns="http://www.w3.org/2000/svg">
+    <polyline points="10,10 20"/>
+    <polyline points="10,80 20,50 50,20 80,10"/>
+    <polyline points="20 ,10  50    40 30.5-1e-1 , 20 10"/>
+    <polyline stroke="#000" points="10,10 20,20 10,20"/>
+    <polygon points="10,10 20"/>
+    <polygon points="10,80 20,50 50,20 80,10"/>
+    <polygon points="20 10  50 40 30,20"/>
+    <polygon stroke="#000" points="10,10 20,20 10,20"/>
+    <polygon stroke="none" points="10,10 20,20 10,20"/>
+</svg>
+`, `
+<svg xmlns="http://www.w3.org/2000/svg">
+    <path d="M10 80L20 50 50 20 80 10"/>
+    <path d="M20 10L50 40 30.5 -0.1 20 10"/>
+    <path stroke="#000" d="M10 10L20 20 10 20"/>
+    <path d="M10 80L20 50 50 20 80 10z"/>
+    <path d="M20 10L50 40 30 20z"/>
+    <path stroke="#000" d="M10 10L20 20 10 20z"/>
+    <path stroke="none" d="M10 10L20 20 10 20z"/>
+</svg>
+`);
+    });
+  });
 });
 
 function runTest(plugin, svgText: string, expectedSvgText: string) {

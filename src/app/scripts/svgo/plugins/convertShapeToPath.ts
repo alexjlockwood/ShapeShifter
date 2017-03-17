@@ -65,11 +65,11 @@ function convertShapeToPathFn(item) {
     } else {
       pathData = `M ${x + rx} ${y} `
         + `H ${x + width - rx} `
-        + `A ${rx} ${ry} 0 0 1 ${x + width} ${y + ry}`
+        + `A ${rx} ${ry} 0 0 1 ${x + width} ${y + ry} `
         + `V ${y + height - ry} `
-        + `A ${rx} ${ry} 0 0 1 ${x + width - rx} ${y + height}`
+        + `A ${rx} ${ry} 0 0 1 ${x + width - rx} ${y + height} `
         + `H ${x + rx} `
-        + `A ${rx} ${ry} 0 0 1 ${x} ${y + height - ry}`
+        + `A ${rx} ${ry} 0 0 1 ${x} ${y + height - ry} `
         + `V ${y + ry} `
         + `A ${rx} ${ry} 0 0 1 ${x + rx} ${y}`;
     }

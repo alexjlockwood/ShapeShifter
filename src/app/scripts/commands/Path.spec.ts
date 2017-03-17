@@ -221,45 +221,45 @@ describe('Path', () => {
   // TODO: test that splits and conversions and stuff still work
   // TODO: test that reversals/shifts/splits/etc. are reverted properly, not just transforms
   describe('#transform', () => {
-    const INITIAL = newPath('M -4 -8 h 8 v 16 h -8 v -16');
+    const PATH = newPath('M -4 -8 h 8 v 16 h -8 v -16');
 
     it('empty list of transforms', () => {
-      const actual = INITIAL.transform([]);
-      const expected = INITIAL;
+      const actual = PATH.transform([]);
+      const expected = PATH;
       checkPathsEqual(actual, expected);
     });
 
     it('identity', () => {
-      const actual = INITIAL.transform([new Matrix()]);
-      const expected = INITIAL;
+      const actual = PATH.transform([new Matrix()]);
+      const expected = PATH;
       checkPathsEqual(actual, expected);
     });
 
     it('translate', () => {
-      const actual = INITIAL.transform([Matrix.fromTranslation(4, 8)]);
+      const actual = PATH.transform([Matrix.fromTranslation(4, 8)]);
       const expected = newPath('M 0 0 h 8 v 16 h -8 v -16');
       checkPathsEqual(actual, expected);
     });
 
     it('rotate 90 degrees', () => {
-      const actual = INITIAL.transform([Matrix.fromRotation(90)]);
+      const actual = PATH.transform([Matrix.fromRotation(90)]);
       const expected = newPath('M 8 -4 v 8 h -16 v -8 h 16');
       checkPathsEqual(actual, expected);
     });
 
     it('rotate 180 degrees', () => {
-      const actual = INITIAL.transform([Matrix.fromRotation(180)]);
+      const actual = PATH.transform([Matrix.fromRotation(180)]);
       const expected = newPath('M 4 8 h -8 v -16 h 8 v 16');
       checkPathsEqual(actual, expected);
     });
 
-    it('scale down 50%', () => {
-      const actual = INITIAL.transform([Matrix.fromScaling(0.5, 0.5)]);
+    it('scale 50%', () => {
+      const actual = PATH.transform([Matrix.fromScaling(0.5, 0.5)]);
       const expected = newPath('M -2 -4 h 4 v 8 h -4 v -8');
       checkPathsEqual(actual, expected);
     });
 
-    it('transform w/ inverse', () => {
+    it('transform and invert', () => {
       const m1 = Matrix.flatten(
         Matrix.fromTranslation(1, 2),
         Matrix.fromScaling(2, 3),
@@ -267,19 +267,19 @@ describe('Path', () => {
         Matrix.fromTranslation(3, 4),
       );
       const m2 = m1.invert();
-      const actual = INITIAL.transform([m1, m2]);
-      const expected = INITIAL;
+      const actual = PATH.transform([m1, m2]);
+      const expected = PATH;
       checkPathsEqual(actual, expected);
     });
 
     it('revert transformations', () => {
-      const actual = INITIAL.transform([
+      const actual = PATH.transform([
         Matrix.fromTranslation(1, 2),
         Matrix.fromScaling(2, 3),
         Matrix.fromRotation(34),
         Matrix.fromTranslation(3, 4),
       ]).revert();
-      const expected = INITIAL;
+      const expected = PATH;
       checkPathsEqual(actual, expected);
     });
   });
