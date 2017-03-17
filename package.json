@@ -5,12 +5,12 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "build": "ng build -prod --base-href /ShapeShifter/",
+    "build": "ng build -prod,
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e",
     "test-once": "./node_modules/@angular/cli/bin/ng test --single-run --code-coverage",
-    "deploy": "ng build -prod --base-href /ShapeShifter/ && ngh",
+    "deploy": "ng build -prod && ngh",
     "coveralls": "cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js"
   },
   "private": true,
