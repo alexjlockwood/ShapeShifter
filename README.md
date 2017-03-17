@@ -5,7 +5,7 @@
 [![devDependency Status][david-dev-badge]][david-dev-badge-url]
 [![Coverage Status][coveralls-badge]][coveralls-badge-url]
 
-**[Go to Live Version](https://alexjlockwood.github.io/ShapeShifter/)**
+**[Go to Live Version](https://shapeshifter.design)**
 
 -----
 
