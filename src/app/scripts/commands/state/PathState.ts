@@ -163,7 +163,10 @@ export class PathState {
         // bounded box). A hit has occured if and only if the number of
         // intersections between the line and the path is odd.
         const line = { p1: point, p2: new Point(bounds.r + 1, bounds.b + 1) };
-        const numIntersections = _.sum(cms.map(cm => cm.intersects(line).length));
+        // Filter out t=0 values since they will be accounted for by
+        // neighboring t=1 values.
+        const numIntersections =
+          _.sum(cms.map(cm => cm.intersects(line).filter(t => t).length));
         if (numIntersections % 2 !== 0) {
           hitCmsIdx = cmsIdx;
         }
@@ -237,6 +240,9 @@ function createBoundingBox(...cms: CommandState[]) {
   const bounds = new Rect(Infinity, Infinity, -Infinity, -Infinity);
 
   const expandBoundsFn = (x: number, y: number) => {
+    if (isNaN(x) || isNaN(y)) {
+      return;
+    }
     bounds.l = Math.min(x, bounds.l);
     bounds.t = Math.min(y, bounds.t);
     bounds.r = Math.max(x, bounds.r);

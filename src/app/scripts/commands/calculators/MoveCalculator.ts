@@ -36,8 +36,8 @@ export class MoveCalculator implements Calculator {
   }
 
   getBoundingBox() {
-    const x = { min: Infinity, max: -Infinity };
-    const y = { min: Infinity, max: -Infinity };
+    const x = { min: NaN, max: NaN };
+    const y = { min: NaN, max: NaN };
     return { x, y } as BBox;
   }
 
