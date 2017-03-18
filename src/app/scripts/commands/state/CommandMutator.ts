@@ -5,7 +5,10 @@ import { SvgChar, ProjectionResult } from '..';
 import { CommandImpl } from '../CommandImpl';
 import { CommandState, Mutation } from './CommandState';
 
-export class CommandMutator {
+/**
+ * A builder class for creating new mutated CommandState objects.
+ */
+export class CommandStateMutator {
 
   constructor(
     private readonly backingCommand: CommandImpl,

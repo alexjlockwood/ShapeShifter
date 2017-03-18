@@ -7,6 +7,9 @@ import { CommandImpl, newMove, newLine } from '../CommandImpl';
 import { MathUtil, Matrix } from '../../common';
 import * as PathUtil from './PathUtil';
 
+/**
+ * A builder class for creating new mutated Path objects.
+ */
 export class PathMutator {
   private readonly subPaths: ReadonlyArray<SubPath>;
   private readonly commandMutationsMap: CommandState[][];
@@ -31,18 +34,13 @@ export class PathMutator {
     };
   }
 
-  setReversedAt(subIdx: number, isReversed: boolean) {
-    this.reversals[this.subPathOrdering[subIdx]] = isReversed;
-    return this;
-  }
-
   /**
    * Reverses the order of the points in the sub path at the specified index.
-   * Returns a new path object.
    */
   reverseSubPath(subIdx: number) {
     const cmsIdx = this.subPathOrdering[subIdx];
-    return this.setReversedAt(subIdx, !this.reversals[cmsIdx]);
+    this.reversals[this.subPathOrdering[subIdx]] = !this.reversals[cmsIdx];
+    return this;
   }
 
   setShiftOffsetAt(subIdx: number, shiftOffset: number) {
@@ -52,7 +50,6 @@ export class PathMutator {
 
   /**
    * Shifts back the order of the points in the sub path at the specified index.
-   * Returns a new path object.
    */
   shiftSubPathBack(subIdx: number, numShifts = 1) {
     return this.reversals[this.subPathOrdering[subIdx]]
@@ -62,7 +59,6 @@ export class PathMutator {
 
   /**
    * Shifts forward the order of the points in the sub path at the specified index.
-   * Returns a new path object.
    */
   shiftSubPathForward(subIdx: number, numShifts = 1) {
     return this.reversals[this.subPathOrdering[subIdx]]
@@ -152,7 +148,6 @@ export class PathMutator {
 
   /**
    * Reverts any conversions previously performed in the specified sub path.
-   * Returns a new path object.
    */
   unconvertSubPath(subIdx: number) {
     const cmsIdx = this.subPathOrdering[subIdx];
@@ -164,7 +159,6 @@ export class PathMutator {
 
   /**
    * Adds transforms on the path using the specified transformation matrices.
-   * Returns a new path object.
    */
   addTransforms(transforms: Matrix[]) {
     this.commandMutationsMap.forEach((cms, i) => {
@@ -177,7 +171,6 @@ export class PathMutator {
 
   /**
    * Sets transforms on the path using the specified transformation matrices.
-   * Returns a new path object.
    */
   setTransforms(transforms: Matrix[]) {
     this.commandMutationsMap.forEach((cms, i) => {
@@ -211,6 +204,9 @@ export class PathMutator {
     return this;
   }
 
+  /**
+   * Builds a new mutated path.
+   */
   build(): Path {
     const commandMutationsMap = this.commandMutationsMap;
     const reversals = this.reversals;

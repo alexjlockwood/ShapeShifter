@@ -3,7 +3,7 @@ import { MathUtil, Point, Matrix } from '../../common';
 import { Calculator, newCalculator, BBox, Line } from '../calculators';
 import { SvgChar, ProjectionResult } from '..';
 import { CommandImpl } from '../CommandImpl';
-import { CommandMutator } from './CommandMutator';
+import { CommandStateMutator } from './CommandMutator';
 
 /**
  * Contains additional information about each individual command so that we can
@@ -101,7 +101,7 @@ export class CommandState {
   }
 
   mutate() {
-    return new CommandMutator(
+    return new CommandStateMutator(
       this.backingCommand,
       this.mutations.slice(),
       this.transforms.slice(),
