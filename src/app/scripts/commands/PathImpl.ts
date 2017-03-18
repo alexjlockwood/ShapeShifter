@@ -230,7 +230,7 @@ export class PathImpl implements Path {
   }
 }
 
-function createSubPaths(...commands: Command[]) {
+export function createSubPaths(...commands: Command[]) {
   if (!commands.length || commands[0].svgChar !== 'M') {
     // TODO: is this case actually possible? should we insert 'M 0 0' instead?
     return [];

@@ -2,7 +2,7 @@ import { CommandState } from './CommandState';
 import { PathState, findCommandMutation } from './PathState';
 import * as _ from 'lodash';
 import { Path, SubPath, SvgChar, Command } from '..';
-import { PathImpl } from '../PathImpl';
+import { PathImpl, createSubPaths } from '../PathImpl';
 import { CommandImpl, newMove, newLine } from '../CommandImpl';
 import { MathUtil, Matrix } from '../../common';
 
@@ -324,7 +324,7 @@ export class PathMutator {
     });
     return new PathImpl({
       commands: reorderedCommands,
-      pathState: new PathState(this.subPaths, {
+      pathState: new PathState(createSubPaths(...reorderedCommands), {
         commandMutationsMap,
         reversals,
         shiftOffsets,
