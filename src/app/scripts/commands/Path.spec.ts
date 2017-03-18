@@ -71,13 +71,13 @@ describe('Path', () => {
       checkPathsEqual(actual, expected);
 
       actual = actual.mutate()
-        .shiftSubPathBack(0)
+        .shiftSubPathForward(0)
         .build();
       expected = newPath('M 5 11 L 5 13 L 19 13 L 19 11 L 5 11');
       checkPathsEqual(actual, expected);
 
       actual = actual.mutate()
-        .shiftSubPathForward(0)
+        .shiftSubPathBack(0)
         .build();
       expected = newPath('M 19 11 L 5 11 L 5 13 L 19 13 Z');
       checkPathsEqual(actual, expected);
@@ -134,7 +134,7 @@ describe('Path', () => {
       let expected = newPath('M 0 0 L 10 0 L 10 10 L 0 10 L 0 0');
       checkPathsEqual(actual, expected);
 
-      actual = actual.mutate().shiftSubPathBack(0).build();
+      actual = actual.mutate().shiftSubPathForward(0).build();
       expected = newPath('M 10 0 L 10 10 L 0 10 L 0 0 L 10 0');
       checkPathsEqual(actual, expected);
     });
@@ -152,7 +152,7 @@ describe('Path', () => {
       actual = newPath('M 4 4 L 4 20 L 20 20 L 20 4 L 4 4')
         .mutate()
         .splitCommandInHalf(0, 4)
-        .shiftSubPathForward(0)
+        .shiftSubPathBack(0)
         .build();
       expected =
         newPath('M 12 4 L 4 4 L 4 20 L 20 20 L 20 4 L 12 4');
@@ -370,7 +370,7 @@ describe('Path', () => {
       let expected = newPath([subPath1, subPath0, subPath2].join(' '));
       checkPathsEqual(actual, expected);
 
-      actual = actual.mutate().reverseSubPath(0).shiftSubPathBack(0).build();
+      actual = actual.mutate().reverseSubPath(0).shiftSubPathForward(0).build();
       expected = newPath(['M 3 1 L 2 1 L 1 1 L 3 1', subPath0, subPath2].join(' '));
       checkPathsEqual(actual, expected);
 
@@ -378,7 +378,7 @@ describe('Path', () => {
       expected = newPath(['M 3 1 L 2.5 1 L 2 1 L 1 1 L 3 1', subPath0, subPath2].join(' '));
       checkPathsEqual(actual, expected);
 
-      actual = actual.mutate().shiftSubPathForward(0).reverseSubPath(0).build();
+      actual = actual.mutate().shiftSubPathBack(0).reverseSubPath(0).build();
       expected = newPath(['M 1 1 L 2 1 L 2.5 1 L 3 1 L 1 1', subPath0, subPath2].join(' '));
       checkPathsEqual(actual, expected);
 

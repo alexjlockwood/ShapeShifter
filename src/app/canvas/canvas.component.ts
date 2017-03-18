@@ -605,9 +605,12 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
               .build();
 
           // Re-split the path at the projection point.
-          activeLayer.pathData =
+          const projOntoPath =
             calculateProjectionOntoPath(this.vectorLayer, this.activePathId, mousePoint)
-              .splitFn();
+          const pathData = activeLayer.pathData.mutate()
+            .splitCommand(projOntoPath.subIdx, projOntoPath.cmdIdx, projOntoPath.projection.t)
+            .build();
+          activeLayer.pathData = pathData;
 
           // Notify the global layer state service about the change and draw.
           // Clear any existing selections and/or hovers as well.
@@ -944,15 +947,10 @@ function calculateProjectionOntoPath(
   if (!projInfo) {
     return undefined;
   }
-  const splitFn = () => {
-    return pathLayer.pathData.mutate()
-      .splitCommand(projInfo.subIdx, projInfo.cmdIdx, projInfo.projection.t)
-      .build();
-  };
   return {
-    pathId: pathLayer.id,
+    subIdx: projInfo.subIdx,
+    cmdIdx: projInfo.cmdIdx,
     projection: projInfo.projection,
-    splitFn,
   };
 }
 
@@ -960,9 +958,9 @@ function calculateProjectionOntoPath(
  * Contains information about a projection onto a path.
  */
 interface ProjectionOntoPath {
-  pathId: string;
+  subIdx: number;
+  cmdIdx: number;
   projection: ProjectionResult;
-  splitFn: () => Path;
 }
 
 /**

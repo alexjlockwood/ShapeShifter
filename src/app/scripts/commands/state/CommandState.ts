@@ -92,7 +92,8 @@ export class CommandState {
     const startSplit = tempSplits[splitIdx];
     const endSplit = tempSplits[splitIdx + 1];
     // Update the t value so that it is in relation to the client-visible subIdx and cmdIdx.
-    projectionResult.t = MathUtil.lerp(startSplit, endSplit, projectionResult.t);
+    projectionResult.t =
+      startSplit === endSplit ? 0 : (projectionResult.t - startSplit) / (endSplit - startSplit);
     return {
       projectionResult,
       splitIdx,

@@ -9,6 +9,7 @@ export class PathState {
   readonly subPaths: ReadonlyArray<SubPath>;
   readonly commandMutationsMap: ReadonlyArray<ReadonlyArray<CommandState>>;
   readonly reversals: ReadonlyArray<boolean>;
+  // Note that a shift offset value of 'x' means 'perform x number of shift back ops'.
   readonly shiftOffsets: ReadonlyArray<number>;
   readonly subPathOrdering: ReadonlyArray<number>;
 
@@ -199,10 +200,27 @@ export class PathState {
   }
 
   private toCmdIdx(cmsIdx: number, cmIdx: number, splitIdx: number) {
-    return splitIdx + _.chain(this.commandMutationsMap[cmsIdx])
+    const numCmds = _.chain(this.commandMutationsMap[cmsIdx])
+      .map((cm, i) => cm.getCommands().length)
+      .sum()
+      .value();
+    let cmdIdx = splitIdx + _.chain(this.commandMutationsMap[cmsIdx])
       .map((cm, i) => i < cmIdx ? cm.getCommands().length : 0)
       .sum()
       .value();
+    let shiftOffset = this.shiftOffsets[cmsIdx];
+    if (this.reversals[cmsIdx]) {
+      cmdIdx = numCmds - cmdIdx;
+      shiftOffset *= -1;
+      shiftOffset += numCmds - 1;
+    }
+    if (shiftOffset) {
+      cmdIdx += numCmds - shiftOffset - 1;
+      if (cmdIdx >= numCmds) {
+        cmdIdx = cmdIdx - numCmds + 1;
+      }
+    }
+    return cmdIdx;
   }
 }
 

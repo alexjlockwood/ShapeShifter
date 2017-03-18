@@ -101,47 +101,14 @@ export class PathImpl implements Path {
   }
 
   // Implements the Path interface.
-  // TODO: write tests
   project(point: Point):
     { projection: ProjectionResult, subIdx: number, cmdIdx: number } | undefined {
     return this.ps.project(point);
   }
 
   // Implements the Path interface.
-  reverseSubPath(subIdx: number) {
-    return this.mutate()
-      .reverseSubPath(subIdx)
-      .build();
-  }
-
-  // Implements the Path interface.
-  shiftSubPathBack(subIdx: number, numShifts = 1) {
-    return this.mutate()
-      .shiftSubPathBack(subIdx, numShifts)
-      .build();
-  }
-
-  // Implements the Path interface.
-  shiftSubPathForward(subIdx: number, numShifts = 1) {
-    return this.mutate()
-      .shiftSubPathForward(subIdx, numShifts)
-      .build();
-  }
-
-  // Implements the Path interface.
   getId(subIdx: number, cmdIdx: number) {
     return this.ps.getId(subIdx, cmdIdx);
-  }
-
-  // Implements the Path interface.
-  split(subIdx: number, cmdIdx: number, ...ts: number[]) {
-    if (!ts.length) {
-      console.warn('Attempt to split a path with an empty spread argument');
-      return this;
-    }
-    return this.mutate()
-      .splitCommand(subIdx, cmdIdx, ...ts)
-      .build();
   }
 
   // Implements the Path interface.
@@ -165,13 +132,6 @@ export class PathImpl implements Path {
   }
 
   // Implements the Path interface.
-  unsplit(subIdx: number, cmdIdx: number) {
-    return this.mutate()
-      .unsplitCommand(subIdx, cmdIdx)
-      .build();
-  }
-
-  // Implements the Path interface.
   unsplitBatch(ops: Array<{ subIdx: number, cmdIdx: number }>) {
     if (!ops.length) {
       return this;
@@ -192,37 +152,8 @@ export class PathImpl implements Path {
   }
 
   // Implements the Path interface.
-  convert(subIdx: number, cmdIdx: number, svgChar: SvgChar) {
-    return this.mutate()
-      .convertCommand(subIdx, cmdIdx, svgChar)
-      .build();
-  }
-
-  // Implements the Path interface.
-  unconvertSubPath(subIdx: number) {
-    return this.mutate()
-      .unconvertSubPath(subIdx)
-      .build();
-  }
-
-  // Implements the Path interface.
-  transform(transforms: Matrix[]) {
-    return this.mutate()
-      .transformPath(transforms)
-      .build();
-  }
-
-  // Implements the Path interface.
-  // TODO: write tests
   hitTest(point: Point, opts: HitOptions = {}) {
     return this.ps.hitTest(point, opts);
-  }
-
-  // Implements the Path interface.
-  moveSubPath(fromSubIdx: number, toSubIdx: number) {
-    return this.mutate()
-      .moveSubPath(fromSubIdx, toSubIdx)
-      .build();
   }
 
   mutate() {
