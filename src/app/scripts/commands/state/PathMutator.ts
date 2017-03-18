@@ -163,13 +163,26 @@ export class PathMutator {
   }
 
   /**
-   * Transforms the path using the specified transformation matrices.
+   * Adds transforms on the path using the specified transformation matrices.
    * Returns a new path object.
    */
-  transformPath(transforms: Matrix[]) {
+  addTransforms(transforms: Matrix[]) {
     this.commandMutationsMap.forEach((cms, i) => {
       cms.forEach((cm, j) => {
-        this.commandMutationsMap[i][j] = cm.mutate().transform(transforms).build();
+        this.commandMutationsMap[i][j] = cm.mutate().addTransforms(transforms).build();
+      });
+    });
+    return this;
+  }
+
+  /**
+   * Sets transforms on the path using the specified transformation matrices.
+   * Returns a new path object.
+   */
+  setTransforms(transforms: Matrix[]) {
+    this.commandMutationsMap.forEach((cms, i) => {
+      cms.forEach((cm, j) => {
+        this.commandMutationsMap[i][j] = cm.mutate().setTransforms(transforms).build();
       });
     });
     return this;

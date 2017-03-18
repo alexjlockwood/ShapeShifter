@@ -5,6 +5,7 @@ import { LayerStateService, MorphabilityStatus } from '../services/layerstate.se
 import { CanvasType } from '../CanvasType';
 import { SettingsService } from '../services/settings.service';
 import { Observable } from 'rxjs/Observable';
+import { Matrix } from '../scripts/common';
 import 'rxjs/add/observable/combineLatest';
 
 @Component({
@@ -15,8 +16,7 @@ import 'rxjs/add/observable/combineLatest';
 })
 export class SettingsComponent implements OnInit {
   interpolators = INTERPOLATORS;
-  private startRotation_ = 0;
-  private endRotation_ = 0;
+  private rotation_ = 0;
   shouldDisableSettingsObservable: Observable<boolean>;
 
   constructor(
@@ -50,33 +50,31 @@ export class SettingsComponent implements OnInit {
     this.animatorService.setDuration(duration);
   }
 
-  get startRotation() {
-    return this.startRotation_;
+  get rotation() {
+    return this.rotation_;
   }
 
   // TODO: remove the layer if both attributes are set to 0?
   // TODO: make these the rotation gets exported as well
-  set startRotation(startRotation: number) {
-    this.startRotation_ = startRotation;
-    this.layerStateService.updateActiveRotationLayer(CanvasType.Start, startRotation, false);
-    this.layerStateService.updateActiveRotationLayer(CanvasType.Preview, startRotation, false);
-    this.layerStateService.updateActiveRotationLayer(CanvasType.End, this.endRotation, false);
-    this.layerStateService.notifyChange(CanvasType.Start);
-    this.layerStateService.notifyChange(CanvasType.Preview);
-    this.layerStateService.notifyChange(CanvasType.End);
-  }
+  set rotation(rotation: number) {
+    this.rotation_ = rotation;
 
-  get endRotation() {
-    return this.endRotation_;
-  }
-
-  // TODO: remove the layer if both attributes are set to 0?
-  // TODO: make these the rotation gets exported as well
-  set endRotation(endRotation: number) {
-    this.endRotation_ = endRotation;
-    this.layerStateService.updateActiveRotationLayer(CanvasType.Start, this.startRotation, false);
-    this.layerStateService.updateActiveRotationLayer(CanvasType.Preview, this.startRotation, false);
-    this.layerStateService.updateActiveRotationLayer(CanvasType.End, endRotation, false);
+    const activeEndVectorLayer = this.layerStateService.getVectorLayer(CanvasType.End);
+    const width = activeEndVectorLayer.width;
+    const height = activeEndVectorLayer.height;
+    const transforms = [
+      Matrix.fromTranslation(-width / 2, -height / 2),
+      Matrix.fromRotation(-this.rotation),
+      Matrix.fromTranslation(width / 2, height / 2),
+    ];
+    const activeEndPathLayer = this.layerStateService.getActivePathLayer(CanvasType.End);
+    activeEndPathLayer.pathData =
+      activeEndPathLayer.pathData.mutate()
+        .setTransforms(transforms)
+        .build();
+    this.layerStateService.updateActiveRotationLayer(CanvasType.Start, 0, false);
+    this.layerStateService.updateActiveRotationLayer(CanvasType.Preview, 0, false);
+    this.layerStateService.updateActiveRotationLayer(CanvasType.End, this.rotation, false);
     this.layerStateService.notifyChange(CanvasType.Start);
     this.layerStateService.notifyChange(CanvasType.Preview);
     this.layerStateService.notifyChange(CanvasType.End);

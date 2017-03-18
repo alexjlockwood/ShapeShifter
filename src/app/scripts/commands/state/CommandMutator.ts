@@ -96,13 +96,23 @@ export class CommandMutator {
   }
 
   /**
-   * Transforms this command mutation using the specified transformation matrices.
+   * Adds transforms to this command mutation using the specified transformation matrices.
    */
-  transform(transforms: Matrix[]) {
-    this.transforms = [].concat(transforms, this.transforms);
+  addTransforms(transforms: Matrix[]) {
+    this.transforms = [Matrix.flatten(...[].concat(transforms, this.transforms))];
     this.calculator = newCalculator(this.backingCommand.transform(this.transforms));
     return this;
   }
+
+  /**
+   * Sets transforms to this command mutation using the specified transformation matrices.
+   */
+  setTransforms(transforms: Matrix[]) {
+    this.transforms = [Matrix.flatten(...transforms)];
+    this.calculator = newCalculator(this.backingCommand.transform(this.transforms));
+    return this;
+  }
+
 
   /**
    * Reverts this command mutation back to its original state.

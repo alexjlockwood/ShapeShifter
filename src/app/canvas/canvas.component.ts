@@ -606,7 +606,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
           // Re-split the path at the projection point.
           const projOntoPath =
-            calculateProjectionOntoPath(this.vectorLayer, this.activePathId, mousePoint)
+            calculateProjectionOntoPath(this.vectorLayer, this.activePathId, mousePoint);
           const pathData = activeLayer.pathData.mutate()
             .splitCommand(projOntoPath.subIdx, projOntoPath.cmdIdx, projOntoPath.projection.t)
             .build();

@@ -266,37 +266,37 @@ describe('Path', () => {
     const PATH = newPath('M -4 -8 h 8 v 16 h -8 v -16');
 
     it('empty list of transforms', () => {
-      const actual = PATH.mutate().transformPath([]).build();
+      const actual = PATH.mutate().addTransforms([]).build();
       const expected = PATH;
       checkPathsEqual(actual, expected);
     });
 
     it('identity', () => {
-      const actual = PATH.mutate().transformPath([new Matrix()]).build();
+      const actual = PATH.mutate().addTransforms([new Matrix()]).build();
       const expected = PATH;
       checkPathsEqual(actual, expected);
     });
 
     it('translate', () => {
-      const actual = PATH.mutate().transformPath([Matrix.fromTranslation(4, 8)]).build();
+      const actual = PATH.mutate().addTransforms([Matrix.fromTranslation(4, 8)]).build();
       const expected = newPath('M 0 0 h 8 v 16 h -8 v -16');
       checkPathsEqual(actual, expected);
     });
 
     it('rotate 90 degrees', () => {
-      const actual = PATH.mutate().transformPath([Matrix.fromRotation(90)]).build();
+      const actual = PATH.mutate().addTransforms([Matrix.fromRotation(90)]).build();
       const expected = newPath('M 8 -4 v 8 h -16 v -8 h 16');
       checkPathsEqual(actual, expected);
     });
 
     it('rotate 180 degrees', () => {
-      const actual = PATH.mutate().transformPath([Matrix.fromRotation(180)]).build();
+      const actual = PATH.mutate().addTransforms([Matrix.fromRotation(180)]).build();
       const expected = newPath('M 4 8 h -8 v -16 h 8 v 16');
       checkPathsEqual(actual, expected);
     });
 
     it('scale 50%', () => {
-      const actual = PATH.mutate().transformPath([Matrix.fromScaling(0.5, 0.5)]).build();
+      const actual = PATH.mutate().addTransforms([Matrix.fromScaling(0.5, 0.5)]).build();
       const expected = newPath('M -2 -4 h 4 v 8 h -4 v -8');
       checkPathsEqual(actual, expected);
     });
@@ -309,13 +309,13 @@ describe('Path', () => {
         Matrix.fromTranslation(3, 4),
       );
       const m2 = m1.invert();
-      const actual = PATH.mutate().transformPath([m1, m2]).build();
+      const actual = PATH.mutate().addTransforms([m1, m2]).build();
       const expected = PATH;
       checkPathsEqual(actual, expected);
     });
 
     it('revert transformations', () => {
-      const actual = PATH.mutate().transformPath([
+      const actual = PATH.mutate().addTransforms([
         Matrix.fromTranslation(1, 2),
         Matrix.fromScaling(2, 3),
         Matrix.fromRotation(34),
