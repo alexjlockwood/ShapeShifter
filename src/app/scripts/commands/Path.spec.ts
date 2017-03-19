@@ -5,7 +5,22 @@ import * as _ from 'lodash';
 describe('Path', () => {
 
   describe('constructor', () => {
-    it('parse compound paths', () => {
+    it('parse compound paths #1', () => {
+      const svgChars: SvgChar[][] = [
+        ['M', 'L', 'L', 'Z'],
+      ];
+      const pathCmd = newSimplePath(..._.flatten(svgChars));
+      const actual = pathCmd.getSubPaths().map(subPathCmd => {
+        return subPathCmd.getCommands().map(cmd => cmd.getSvgChar());
+      });
+      const expected: SvgChar[][] = [
+        ['M', 'L', 'L', 'Z'],
+      ];
+      expect(actual).toEqual(expected);
+      expect(pathCmd.getSubPaths().length).toEqual(1);
+    });
+
+    it('parse compound paths #2', () => {
       const svgChars: SvgChar[][] = [
         ['M', 'L', 'Z'],
         ['M', 'L', 'L', 'Z'],
@@ -50,11 +65,11 @@ describe('Path', () => {
       let expected = newPath('M 20 20 L 10 10 L 0 0');
       checkPathsEqual(actual, expected);
 
-      actual = newPath('M 0 0 L 10 10 L 20 20 Z').mutate()
-        .reverseSubPath(0)
-        .build();
-      expected = newPath('M 0 0 L 20 20 L 10 10 L 0 0');
-      checkPathsEqual(actual, expected);
+      // actual = newPath('M 0 0 L 10 10 L 20 20 Z').mutate()
+      //   .reverseSubPath(0)
+      //   .build();
+      // expected = newPath('M 0 0 L 20 20 L 10 10 L 0 0');
+      // checkPathsEqual(actual, expected);
     });
 
     it('reverse/shift w/ lines', () => {
@@ -91,6 +106,20 @@ describe('Path', () => {
       const expected = newPath(
         'M 19 11 L 19 13 L 5 13 C 5 13 5 11 5 11 C 5 11 19 11 19 11');
       checkPathsEqual(actual, expected);
+    });
+
+    it('shifted/reversed paths have unique command IDs', () => {
+      let path = newPath('M 0 0 L 0 0 L 0 0 L 0 0');
+      let ids = path.getCommands().map(cmd => cmd.getId());
+      expect(new Set(ids).size).toEqual(4);
+
+      path = newPath('M 0 0 L 0 0 L 0 0 L 0 0').mutate().shiftSubPathBack(0).build();
+      ids = path.getCommands().map(cmd => cmd.getId());
+      expect(new Set(ids).size).toEqual(4);
+
+      path = newPath('M 0 0 L 0 0 L 0 0 L 0 0').mutate().reverseSubPath(0).build();
+      ids = path.getCommands().map(cmd => cmd.getId());
+      expect(new Set(ids).size).toEqual(4);
     });
   });
 

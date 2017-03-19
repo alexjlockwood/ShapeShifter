@@ -4,7 +4,6 @@ import { newSubPath } from './SubPathImpl';
 import { CommandState } from './CommandState';
 import { MathUtil, Point, Rect } from '../common';
 import * as PathParser from './PathParser';
-import { findCommandMutation } from './PathMutator';
 
 export class PathState {
   readonly subPaths: ReadonlyArray<SubPath>;
@@ -35,22 +34,36 @@ export class PathState {
       shiftOffsets ? shiftOffsets.slice() : subPaths.map(_ => 0);
     this.subPathOrdering =
       subPathOrdering ? subPathOrdering.slice() : subPaths.map((_, i) => i);
-    const getIdFn = (subIdx: number, cmdIdx: number) => {
-      // TODO: the IDs should probably just be properties of the path/subpath/command objects...
-      const { targetCm, splitIdx } = findCommandMutation(subIdx, cmdIdx, {
-        commandMutationsMap: this.commandMutationsMap,
-        reversals: this.reversals,
-        shiftOffsets: this.shiftOffsets,
-        subPathOrdering: this.subPathOrdering,
-      });
-      return targetCm.getIdAtIndex(splitIdx);
-    };
     this.commands = _.flatMap(subPaths, (subPath, subIdx) => {
       return subPath.getCommands().map((cmd, cmdIdx) => {
-        return cmd.mutate().setId(getIdFn(subIdx, cmdIdx)).build();
+        return cmd.mutate().setId(this.findCommandMutation(subIdx, cmdIdx)).build();
       });
     });
     this.subPaths = createSubPaths(...this.commands);
+  }
+
+  private findCommandMutation(subIdx: number, cmdIdx: number) {
+    const cmsIdx = this.subPathOrdering[subIdx];
+    const subPathCms = this.commandMutationsMap[cmsIdx];
+    const numCommandsInSubPath = _.sum(subPathCms.map(cm => cm.getCommands().length));
+    if (cmdIdx && this.reversals[cmsIdx]) {
+      cmdIdx = numCommandsInSubPath - cmdIdx;
+    }
+    cmdIdx += this.shiftOffsets[cmsIdx];
+    if (cmdIdx >= numCommandsInSubPath) {
+      // Note that subtracting numCommandsInSubPath is intentional here
+      // (as opposed to subtracting numCommandsInSubPath - 1).
+      cmdIdx -= numCommandsInSubPath;
+    }
+    let counter = 0;
+    for (const targetCm of subPathCms) {
+      if (counter + targetCm.getCommands().length > cmdIdx) {
+        const splitIdx = cmdIdx - counter;
+        return targetCm.getIdAtIndex(splitIdx);
+      }
+      counter += targetCm.getCommands().length;
+    }
+    throw new Error('Error retrieving command mutation');
   }
 
   getPathLength() {

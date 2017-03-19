@@ -23,15 +23,6 @@ export class PathMutator {
     this.subPathOrdering = ps.subPathOrdering.slice();
   }
 
-  private getMutationState() {
-    return {
-      commandMutationsMap: this.commandMutationsMap,
-      reversals: this.reversals,
-      shiftOffsets: this.shiftOffsets,
-      subPathOrdering: this.subPathOrdering,
-    };
-  }
-
   /**
    * Reverses the order of the points in the sub path at the specified index.
    */
@@ -77,7 +68,7 @@ export class PathMutator {
    */
   splitCommand(subIdx: number, cmdIdx: number, ...ts: number[]) {
     const { targetCm, cmsIdx, cmIdx, splitIdx } =
-      findCommandMutation(subIdx, cmdIdx, this.getMutationState());
+      this.findCommandMutation(subIdx, cmdIdx);
     this.maybeUpdateShiftOffsetsAfterSplit(cmsIdx, cmIdx, ts.length);
     this.commandMutationsMap[cmsIdx][cmIdx] =
       targetCm.mutate().splitAtIndex(splitIdx, ts).build();
@@ -88,8 +79,7 @@ export class PathMutator {
    * Splits the command into two approximately equal parts.
    */
   splitCommandInHalf(subIdx: number, cmdIdx: number) {
-    const { targetCm, cmsIdx, cmIdx, splitIdx } =
-      findCommandMutation(subIdx, cmdIdx, this.getMutationState());
+    const { targetCm, cmsIdx, cmIdx, splitIdx } = this.findCommandMutation(subIdx, cmdIdx);
     this.maybeUpdateShiftOffsetsAfterSplit(cmsIdx, cmIdx, 1);
     this.commandMutationsMap[cmsIdx][cmIdx] =
       targetCm.mutate().splitInHalfAtIndex(splitIdx).build();
@@ -114,8 +104,7 @@ export class PathMutator {
    * Un-splits the path at the specified index. Returns a new path object.
    */
   unsplitCommand(subIdx: number, cmdIdx: number) {
-    const { targetCm, cmsIdx, cmIdx, splitIdx } =
-      findCommandMutation(subIdx, cmdIdx, this.getMutationState());
+    const { targetCm, cmsIdx, cmIdx, splitIdx } = this.findCommandMutation(subIdx, cmdIdx);
     const isSubPathReversed = this.reversals[cmsIdx];
     this.commandMutationsMap[cmsIdx][cmIdx] =
       targetCm.mutate().unsplitAtIndex(isSubPathReversed ? splitIdx - 1 : splitIdx).build();
@@ -132,8 +121,7 @@ export class PathMutator {
    * Convert the path at the specified index. Returns a new path object.
    */
   convertCommand(subIdx: number, cmdIdx: number, svgChar: SvgChar) {
-    const { targetCm, cmsIdx, cmIdx, splitIdx } =
-      findCommandMutation(subIdx, cmdIdx, this.getMutationState());
+    const { targetCm, cmsIdx, cmIdx, splitIdx } = this.findCommandMutation(subIdx, cmdIdx);
     this.commandMutationsMap[cmsIdx][cmIdx] =
       targetCm.mutate().convertAtIndex(splitIdx, svgChar).build();
     return this;
@@ -250,6 +238,32 @@ export class PathMutator {
         subPathOrdering,
       ));
   }
+
+  private findCommandMutation(subIdx: number, cmdIdx: number) {
+    const cmsIdx = this.subPathOrdering[subIdx];
+    const subPathCms = this.commandMutationsMap[cmsIdx];
+    const numCommandsInSubPath = _.sum(subPathCms.map(cm => cm.getCommands().length));
+    if (cmdIdx && this.reversals[cmsIdx]) {
+      cmdIdx = numCommandsInSubPath - cmdIdx;
+    }
+    cmdIdx += this.shiftOffsets[cmsIdx];
+    let cmdIdIdx = cmdIdx;
+    if (cmdIdx >= numCommandsInSubPath) {
+      cmdIdx -= numCommandsInSubPath - 1;
+      cmdIdIdx -= numCommandsInSubPath;
+    }
+    let counter = 0;
+    let cmIdx = 0;
+    for (const targetCm of subPathCms) {
+      if (counter + targetCm.getCommands().length > cmdIdx) {
+        const splitIdx = cmdIdx - counter;
+        return { targetCm, cmsIdx, cmIdx, splitIdx };
+      }
+      counter += targetCm.getCommands().length;
+      cmIdx++;
+    }
+    throw new Error('Error retrieving command mutation');
+  }
 }
 
 function reverseAndShiftCommands(
@@ -284,16 +298,9 @@ function reverseCommands(
     if (cmCmds[0].getSvgChar() === 'M') {
       return cmCmds;
     }
-    cmCmds[0] =
-      cmCmds[0]
-        .mutate()
-        .toggleSplit()
-        .build();
+    cmCmds[0] = cmCmds[0].mutate().toggleSplit().build();
     cmCmds[cmCmds.length - 1] =
-      cmCmds[cmCmds.length - 1]
-        .mutate()
-        .toggleSplit()
-        .build();
+      cmCmds[cmCmds.length - 1].mutate().toggleSplit().build();
     return cmCmds;
   });
 
@@ -301,7 +308,10 @@ function reverseCommands(
   const lastCmd = _.last(cmds);
   if (lastCmd.getSvgChar() === 'Z') {
     cmds[cmds.length - 1] =
-      lastCmd.mutate().setPoints(...lastCmd.getPoints()).build();
+      lastCmd.mutate()
+        .setSvgChar('L')
+        .setPoints(...lastCmd.getPoints())
+        .build();
   }
 
   // Reverse the commands.
@@ -389,39 +399,3 @@ function shiftCommands(
       .build());
   return newCmds;
 };
-
-/**
- * Finds and returns the command mutation at the specified indices.
- * @param subIdx the client-visible subpath index
- * @param cmdIdx the client-visible command index
- */
-export function findCommandMutation(subIdx: number, cmdIdx: number, ms: MutationState) {
-  const cmsIdx = ms.subPathOrdering[subIdx];
-  const subPathCms = ms.commandMutationsMap[cmsIdx];
-  const numCommandsInSubPath = _.sum(subPathCms.map(cm => cm.getCommands().length));
-  if (cmdIdx && ms.reversals[cmsIdx]) {
-    cmdIdx = numCommandsInSubPath - cmdIdx;
-  }
-  cmdIdx += ms.shiftOffsets[cmsIdx];
-  if (cmdIdx >= numCommandsInSubPath) {
-    cmdIdx -= numCommandsInSubPath;
-  }
-  let counter = 0;
-  let cmIdx = 0;
-  for (const targetCm of subPathCms) {
-    if (counter + targetCm.getCommands().length > cmdIdx) {
-      const splitIdx = cmdIdx - counter;
-      return { targetCm, cmsIdx, cmIdx, splitIdx };
-    }
-    counter += targetCm.getCommands().length;
-    cmIdx++;
-  }
-  throw new Error('Error retrieving command mutation');
-}
-
-interface MutationState {
-  readonly commandMutationsMap?: ReadonlyArray<ReadonlyArray<CommandState>>;
-  readonly reversals?: ReadonlyArray<boolean>;
-  readonly shiftOffsets?: ReadonlyArray<number>;
-  readonly subPathOrdering?: ReadonlyArray<number>;
-}
