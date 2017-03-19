@@ -30,8 +30,8 @@ describe('PathParser', () => {
 });
 
 function commandToString(c: Command) {
-  if (c.svgChar === 'Z') {
+  if (c.getSvgChar() === 'Z') {
     return 'Z';
   }
-  return `${c.svgChar} ${c.end.x} ${c.end.y}`;
+  return `${c.getSvgChar()} ${c.getEnd().x} ${c.getEnd().y}`;
 }

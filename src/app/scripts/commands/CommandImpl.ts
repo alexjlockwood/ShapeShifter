@@ -2,6 +2,10 @@ import * as _ from 'lodash';
 import { Point, Matrix, MathUtil } from '../common';
 import { Command, SvgChar } from '.';
 
+export function newCommand(svgChar: SvgChar, points: ReadonlyArray<Point>) {
+  return new CommandImpl(svgChar, points);
+}
+
 /**
  * Implementation of the Command interface. Each draw command represents
  * a single SVG drawing command (move, line, quadratic curve, bezier curve,
@@ -10,10 +14,16 @@ import { Command, SvgChar } from '.';
 class CommandImpl implements Command {
 
   constructor(
-    public readonly svgChar: SvgChar,
-    public readonly points: ReadonlyArray<Point>,
-    public readonly isSplit = false,
+    private readonly svgChar: SvgChar,
+    private readonly points: ReadonlyArray<Point>,
+    private readonly isSplit_ = false,
+    private readonly id = _.uniqueId(),
   ) { }
+
+  // Implements the Command interface.
+  getId() {
+    return this.id;
+  }
 
   // Implements the Command interface.
   getSvgChar() {
@@ -25,13 +35,17 @@ class CommandImpl implements Command {
     return this.points;
   }
 
+  isSplit() {
+    return this.isSplit_;
+  }
+
   // Implements the Command interface.
-  get start() {
+  getStart() {
     return _.first(this.points);
   }
 
   // Implements the Command interface.
-  get end() {
+  getEnd() {
     return _.last(this.points);
   }
 
@@ -63,7 +77,8 @@ class CommandImpl implements Command {
     return new CommandBuilder(
       this.svgChar,
       this.points.slice(),
-      this.isSplit,
+      this.isSplit(),
+      this.id,
     );
   }
 
@@ -86,7 +101,18 @@ export class CommandBuilder {
     private svgChar: SvgChar,
     private points: Point[],
     private isSplit = false,
+    private id = '',
   ) { }
+
+  setSvgChar(svgChar: SvgChar) {
+    this.svgChar = svgChar;
+    return this;
+  }
+
+  setId(id: string) {
+    this.id = id;
+    return this;
+  }
 
   setPoints(...points: Point[]) {
     this.points = points;
@@ -117,6 +143,7 @@ export class CommandBuilder {
       this.svgChar,
       this.points.map(p => p ? MathUtil.transformPoint(p, ...this.transforms) : p),
       this.isSplit,
+      this.id || _.uniqueId(),
     );
   }
 }

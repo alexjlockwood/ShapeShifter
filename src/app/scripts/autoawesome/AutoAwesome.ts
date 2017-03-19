@@ -36,14 +36,14 @@ export function autoFix(
   // commands are considered matches. However, the farther away the points
   // are from each other, the lower the score.
   const getScoreFn = (cmdA: Command, cmdB: Command) => {
-    if (cmdA.svgChar !== cmdB.svgChar
-      && !cmdA.canConvertTo(cmdB.svgChar)
-      && !cmdB.canConvertTo(cmdA.svgChar)) {
+    if (cmdA.getSvgChar() !== cmdB.getSvgChar()
+      && !cmdA.canConvertTo(cmdB.getSvgChar())
+      && !cmdB.canConvertTo(cmdA.getSvgChar())) {
       return MISMATCH;
     }
     // TODO: if we are going to use distance as part of the scoring function,
     // the value should be dependent on the SVG's viewport width/height.
-    const distance = Math.max(MATCH, MathUtil.distance(cmdA.end, cmdB.end));
+    const distance = Math.max(MATCH, MathUtil.distance(cmdA.getEnd(), cmdB.getEnd()));
     return 1 / distance;
   };
 
@@ -139,15 +139,15 @@ export function autoConvert(
   let to = srcToPath;
   fromCmds.forEach((fromCmd, cmdIdx) => {
     const toCmd = toCmds[cmdIdx];
-    if (fromCmd.svgChar === toCmd.svgChar) {
+    if (fromCmd.getSvgChar() === toCmd.getSvgChar()) {
       return;
     }
-    if (fromCmd.canConvertTo(toCmd.svgChar)) {
+    if (fromCmd.canConvertTo(toCmd.getSvgChar())) {
       // TODO: perform all of these as a single batch operation?
-      from = from.mutate().convertCommand(subIdx, cmdIdx, toCmd.svgChar).build();
-    } else if (toCmd.canConvertTo(fromCmd.svgChar)) {
+      from = from.mutate().convertCommand(subIdx, cmdIdx, toCmd.getSvgChar()).build();
+    } else if (toCmd.canConvertTo(fromCmd.getSvgChar())) {
       // TODO: perform all of these as a single batch operation?
-      to = to.mutate().convertCommand(subIdx, cmdIdx, fromCmd.svgChar).build();
+      to = to.mutate().convertCommand(subIdx, cmdIdx, fromCmd.getSvgChar()).build();
     }
   });
   return { from, to };

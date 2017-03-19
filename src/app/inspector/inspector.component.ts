@@ -28,23 +28,17 @@ export class InspectorComponent implements OnInit {
     return item.subIdx;
   }
 
-  trackCommand(index: number, item: CommandItem) {
-    return item.id;
+  trackCommand(index: number, item: Command) {
+    return item.getId();
   }
 }
 
 class SubPathItem {
   constructor(
     public readonly subIdx: number,
-    public readonly startCmdItems: CommandItem[] = [],
-    public readonly endCmdItems: CommandItem[] = [],
+    public readonly startCmdItems: Command[] = [],
+    public readonly endCmdItems: Command[] = [],
     public isExpanded = true) { }
-}
-
-class CommandItem {
-  constructor(
-    public readonly id: string,
-    public readonly command: Command) { }
 }
 
 @Pipe({ name: 'toSubPathItems' })
@@ -67,18 +61,16 @@ export class SubPathItemsPipe implements PipeTransform {
     const numStartSubPaths = startPathCmd ? startPathCmd.getSubPaths().length : 0;
     const numEndSubPaths = endPathCmd ? endPathCmd.getSubPaths().length : 0;
     for (let i = 0; i < Math.max(numStartSubPaths, numEndSubPaths); i++) {
-      const startCmdItems: CommandItem[] = [];
-      const endCmdItems: CommandItem[] = [];
+      const startCmdItems: Command[] = [];
+      const endCmdItems: Command[] = [];
       if (i < numStartSubPaths) {
-        startPathCmd.getSubPaths()[i].getCommands().forEach((command, cmdIdx) => {
-          const id = startPathCmd.getId(i, cmdIdx);
-          startCmdItems.push({ id, command });
+        startPathCmd.getSubPaths()[i].getCommands().forEach(command => {
+          startCmdItems.push(command);
         });
       }
       if (i < numEndSubPaths) {
-        endPathCmd.getSubPaths()[i].getCommands().forEach((command, cmdIdx) => {
-          const id = endPathCmd.getId(i, cmdIdx);
-          endCmdItems.push({ id, command });
+        endPathCmd.getSubPaths()[i].getCommands().forEach(command => {
+          endCmdItems.push(command);
         });
       }
       // TODO: save the previous expanded state somehow?

@@ -19,7 +19,7 @@ describe('Path', () => {
       ];
       const pathCmd = newSimplePath(..._.flatten(svgChars));
       const actual = pathCmd.getSubPaths().map(subPathCmd => {
-        return subPathCmd.getCommands().map(cmd => cmd.svgChar);
+        return subPathCmd.getCommands().map(cmd => cmd.getSvgChar());
       });
       const expected: SvgChar[][] = [
         ['M', 'L', 'Z'],
@@ -244,16 +244,16 @@ describe('Path', () => {
       expect(actual.getPathString()).toEqual(expected.getPathString());
 
       actual = actual.mutate().convertCommand(0, 2, 'C').convertCommand(0, 4, 'C').build();
-      let actualSvgChars = actual.getSubPaths()[0].getCommands().map(cmd => cmd.svgChar);
+      let actualSvgChars = actual.getSubPaths()[0].getCommands().map(cmd => cmd.getSvgChar());
       let expectedSvgChars = ['M', 'C', 'C', 'C', 'C'];
       expect(actualSvgChars).toEqual(expectedSvgChars);
 
       actual = actual.mutate().reverseSubPath(0).build();
-      actualSvgChars = actual.getSubPaths()[0].getCommands().map(cmd => cmd.svgChar);
+      actualSvgChars = actual.getSubPaths()[0].getCommands().map(cmd => cmd.getSvgChar());
       expectedSvgChars = ['M', 'C', 'C', 'C', 'C'];
 
       actual = actual.mutate().unconvertSubPath(0).build();
-      actualSvgChars = actual.getSubPaths()[0].getCommands().map(cmd => cmd.svgChar);
+      actualSvgChars = actual.getSubPaths()[0].getCommands().map(cmd => cmd.getSvgChar());
       expectedSvgChars = ['M', 'L', 'C', 'L', 'C'];
     });
   });
@@ -434,11 +434,11 @@ function checkCommandsEqual(actual: ReadonlyArray<Command>, expected: ReadonlyAr
   for (let i = 0; i < actual.length; i++) {
     const a = actual[i];
     const e = expected[i];
-    expect(a.svgChar).toEqual(e.svgChar);
-    expect(a.points.length).toEqual(e.points.length);
-    for (let j = 0; j < a.points.length; j++) {
-      const ap = a.points[j];
-      const ep = e.points[j];
+    expect(a.getSvgChar()).toEqual(e.getSvgChar());
+    expect(a.getPoints().length).toEqual(e.getPoints().length);
+    for (let j = 0; j < a.getPoints().length; j++) {
+      const ap = a.getPoints()[j];
+      const ep = e.getPoints()[j];
       if (!ap || !ep) {
         expect(ap).toEqual(undefined);
         expect(ep).toEqual(undefined);

@@ -68,7 +68,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
               _.chain([CanvasType.Start, CanvasType.End])
                 .map(type => this.layerStateService.getActivePathLayer(type).pathData)
                 .flatMap(path => path.getCommands() as Command[])
-                .some((cmd: Command) => cmd.isSplit)
+                .some((cmd: Command) => cmd.isSplit())
                 .value();
             return `Reverse${hasClosedPath ? '/shift' : ''} `
               + `the points below ${hasSplitCmd ? 'or drag the orange points above' : ''} `
@@ -241,7 +241,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     const unsplitOpsMap: Map<number, Array<{ subIdx: number, cmdIdx: number }>> = new Map();
     for (const selection of selections) {
       const { subIdx, cmdIdx } = selection.commandId;
-      if (!activePathLayer.pathData.getSubPaths()[subIdx].getCommands()[cmdIdx].isSplit) {
+      if (!activePathLayer.pathData.getSubPaths()[subIdx].getCommands()[cmdIdx].isSplit()) {
         continue;
       }
       let subIdxOps = unsplitOpsMap.get(subIdx);

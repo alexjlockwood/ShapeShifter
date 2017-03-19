@@ -22,26 +22,27 @@ export interface Calculator {
 }
 
 export function newCalculator(cmd: Command): Calculator {
-  if (cmd.svgChar === 'M') {
-    return new MoveCalculator(cmd.start, cmd.end);
+  const points = cmd.getPoints();
+  if (cmd.getSvgChar() === 'M') {
+    return new MoveCalculator(cmd.getId(), points[0], points[1]);
   }
-  const points = cmd.points;
   const uniquePoints = _.uniqWith(points, (p1, p2) => p1.equals(p2));
   if (uniquePoints.length === 1) {
-    return new PointCalculator(cmd.svgChar, points[0]);
+    return new PointCalculator(cmd.getId(), cmd.getSvgChar(), points[0]);
   }
-  if (cmd.svgChar === 'L' || cmd.svgChar === 'Z' || uniquePoints.length === 2) {
-    return new LineCalculator(cmd.svgChar, _.first(points), _.last(points));
+  if (cmd.getSvgChar() === 'L' || cmd.getSvgChar() === 'Z' || uniquePoints.length === 2) {
+    return new LineCalculator(cmd.getId(), cmd.getSvgChar(), _.first(points), _.last(points));
   }
-  if (cmd.svgChar === 'Q') {
-    return new BezierCalculator(cmd.svgChar, points[0], points[1], points[2]);
+  if (cmd.getSvgChar() === 'Q') {
+    return new BezierCalculator(cmd.getId(), cmd.getSvgChar(), points[0], points[1], points[2]);
   }
-  if (cmd.svgChar === 'C') {
+  if (cmd.getSvgChar() === 'C') {
+    const pts = cmd.getPoints();
     return new BezierCalculator(
-      cmd.svgChar, cmd.points[0], cmd.points[1], cmd.points[2], cmd.points[3]);
+      cmd.getId(), cmd.getSvgChar(), pts[0], pts[1], pts[2], pts[3]);
   }
   // TODO: create an elliptical arc path helper some day?
-  throw new Error('Invalid command type: ' + cmd.svgChar);
+  throw new Error('Invalid command type: ' + cmd.getSvgChar());
 }
 
 /** Represents a projection onto a path. */

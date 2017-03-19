@@ -142,11 +142,11 @@ export class InspectorItemComponent implements OnInit {
   }
 
   isSplittable() {
-    return this.command.svgChar !== 'M';
+    return this.command.getSvgChar() !== 'M';
   }
 
   isUnsplittable() {
-    return this.command.isSplit;
+    return this.command.isSplit();
   }
 
   onCommandHoverEvent(isHoveringOverCommand: boolean) {
@@ -211,13 +211,13 @@ export class InspectorItemComponent implements OnInit {
 @Pipe({ name: 'toSvgText' })
 export class SvgCommandPipe implements PipeTransform {
   transform(c: Command): string {
-    if (c.svgChar === 'Z') {
-      return `${c.svgChar}`;
+    if (c.getSvgChar() === 'Z') {
+      return `${c.getSvgChar()}`;
     } else {
-      const p = _.last(c.points);
+      const p = _.last(c.getPoints());
       const x = _.round(p.x, 2);
       const y = _.round(p.y, 2);
-      return `${c.svgChar} ${x}, ${y}`;
+      return `${c.getSvgChar()} ${x}, ${y}`;
     }
   }
 }

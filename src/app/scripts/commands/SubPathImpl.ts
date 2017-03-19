@@ -24,8 +24,8 @@ class SubPathImpl implements SubPath {
 
   // Implements the SubPath interface.
   isClosed() {
-    const start = _.first(this.getCommands()).end;
-    const end = _.last(this.getCommands()).end;
+    const start = _.first(this.getCommands()).getEnd();
+    const end = _.last(this.getCommands()).getEnd();
     return start.equals(end);
   }
 }

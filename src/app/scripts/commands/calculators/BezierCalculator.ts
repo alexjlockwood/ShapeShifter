@@ -10,14 +10,16 @@ import { LineCalculator } from './LineCalculator';
  * A simple typed wrapper class around the amazing bezier-js library.
  */
 export class BezierCalculator implements Calculator {
-  private readonly svgChar: SvgChar;
   private readonly points: ReadonlyArray<Point>;
   private length: number;
   private bbox: BBox;
   private bezierJs_;
 
-  constructor(svgChar: SvgChar, ...points: Point[]) {
-    this.svgChar = svgChar;
+  constructor(
+    private readonly id: string,
+    private readonly svgChar: SvgChar,
+    ...points: Point[],
+  ) {
     this.points = points;
   }
 
@@ -43,15 +45,15 @@ export class BezierCalculator implements Calculator {
   split(t1: number, t2: number): Calculator {
     if (t1 === t2) {
       const p = this.bezierJs.get(t1);
-      return new PointCalculator(this.svgChar, new Point(p.x, p.y));
+      return new PointCalculator(this.id, this.svgChar, new Point(p.x, p.y));
     }
     const splitBezPoints = this.bezierJs.split(t1, t2).points;
     const points: Point[] = splitBezPoints.map(p => new Point(p.x, p.y));
     const uniquePoints = _.uniqWith(points, (p1, p2) => p1.equals(p2));
     if (uniquePoints.length === 2) {
-      return new LineCalculator(this.svgChar, _.first(points), _.last(points));
+      return new LineCalculator(this.id, this.svgChar, _.first(points), _.last(points));
     }
-    return new BezierCalculator(this.svgChar, ...points);
+    return new BezierCalculator(this.id, this.svgChar, ...points);
   }
 
   convert(svgChar: SvgChar) {
@@ -68,9 +70,9 @@ export class BezierCalculator implements Calculator {
         qcp2.x + (2 / 3) * (qcp1.x - qcp2.x),
         qcp2.y + (2 / 3) * (qcp1.y - qcp2.y));
       const ccp3 = qcp2;
-      return new BezierCalculator(svgChar, ccp0, ccp1, ccp2, ccp3);
+      return new BezierCalculator(this.id, svgChar, ccp0, ccp1, ccp2, ccp3);
     }
-    return new BezierCalculator(svgChar, ...this.points);
+    return new BezierCalculator(this.id, svgChar, ...this.points);
   }
 
   findTimeByDistance(distance: number): number {
@@ -112,7 +114,7 @@ export class BezierCalculator implements Calculator {
     if (this.svgChar !== 'Q' && this.svgChar !== 'C') {
       throw new Error('Invalid command type: ' + this.svgChar);
     }
-    return new CommandBuilder(this.svgChar, this.points.slice()).build();
+    return new CommandBuilder(this.svgChar, this.points.slice()).setId(this.id).build();
   }
 
   getBoundingBox() {

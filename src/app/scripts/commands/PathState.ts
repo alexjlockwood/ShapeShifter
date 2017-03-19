@@ -8,6 +8,7 @@ import { findCommandMutation } from './PathMutator';
 
 export class PathState {
   readonly subPaths: ReadonlyArray<SubPath>;
+  readonly commands: ReadonlyArray<Command>;
 
   constructor(
     private readonly obj: string | Command[],
@@ -21,36 +22,62 @@ export class PathState {
     // Maps client-visible subIdx values to internal cmsIdx values.
     public readonly subPathOrdering?: ReadonlyArray<number>,
   ) {
-    this.subPaths =
-      createSubPaths(...(typeof obj === 'string' ? PathParser.parseCommands(obj) : obj));
+    // TODO: make this more efficient
+    const commands = (typeof obj === 'string' ? PathParser.parseCommands(obj) : obj);
+    const hasDuplicatesFn = cmds => {
+      const set = new Set();
+      for (const cmd of commands) {
+        set.add(cmd.getId());
+      }
+      return set.size !== cmds.length;
+    };
+    if (!hasDuplicatesFn(commands)) {
+      console.log('=== 1 no duplicate commands');
+    } else {
+      console.log('=== 1 duplicate commands');
+    }
+    const subPaths = createSubPaths(...commands);
+    //console.log('before', commandMutationsMap);
     this.commandMutationsMap =
       commandMutationsMap
         ? commandMutationsMap.map(cms => cms.slice())
-        : this.subPaths.map(s => s.getCommands().map(c => new CommandState(c)));
+        : subPaths.map(s => s.getCommands().map(c => new CommandState(c)));
+    //console.log('after', this.commandMutationsMap);
     this.reversals =
-      reversals ? reversals.slice() : this.subPaths.map(_ => false);
+      reversals ? reversals.slice() : subPaths.map(_ => false);
     this.shiftOffsets =
-      shiftOffsets ? shiftOffsets.slice() : this.subPaths.map(_ => 0);
+      shiftOffsets ? shiftOffsets.slice() : subPaths.map(_ => 0);
     this.subPathOrdering =
-      subPathOrdering ? subPathOrdering.slice() : this.subPaths.map((_, i) => i);
+      subPathOrdering ? subPathOrdering.slice() : subPaths.map((_, i) => i);
+    const getIdFn = (subIdx: number, cmdIdx: number) => {
+      // TODO: the IDs should probably just be properties of the path/subpath/command objects...
+      const { targetCm, splitIdx } = findCommandMutation(subIdx, cmdIdx, {
+        commandMutationsMap: this.commandMutationsMap,
+        reversals: this.reversals,
+        shiftOffsets: this.shiftOffsets,
+        subPathOrdering: this.subPathOrdering,
+      });
+      const id = targetCm.getIdAtIndex(splitIdx);
+      //console.log(`getIdFn(${subIdx}, ${cmdIdx})=${id}`, targetCm, splitIdx);
+      return id;
+    };
+    this.commands = _.flatMap(subPaths, (subPath, subIdx) => {
+      return subPath.getCommands().map((cmd, cmdIdx) => {
+        return cmd.mutate().setId(getIdFn(subIdx, cmdIdx)).build();
+      });
+    });
+    if (!hasDuplicatesFn(this.commands)) {
+      console.log('=== 2 no duplicate commands');
+    } else {
+      console.log('=== 2 duplicate commands');
+    }
+    this.subPaths = createSubPaths(...this.commands);
   }
 
   getPathLength() {
     // Note that we only return the length of the first sub path due to
     // https://code.google.com/p/android/issues/detail?id=172547
     return _.sum(this.commandMutationsMap[0].map(cm => cm.getPathLength()));
-  }
-
-  getId(subIdx: number, cmdIdx: number) {
-    // TODO: the IDs should probably just be properties of the path/subpath/command objects...
-    // TODO: remove this command mutation logic somewhere else
-    const { targetCm, splitIdx } = findCommandMutation(subIdx, cmdIdx, {
-      commandMutationsMap: this.commandMutationsMap,
-      reversals: this.reversals,
-      shiftOffsets: this.shiftOffsets,
-      subPathOrdering: this.subPathOrdering,
-    });
-    return targetCm.getIdAtIndex(splitIdx);
   }
 
   project(point: Point):
@@ -94,8 +121,8 @@ export class PathState {
           .map((subPath, subIdx) => {
             return subPath.getCommands()
               .map((cmd, cmdIdx) => {
-                const distance = MathUtil.distance(cmd.end, point);
-                const isSplit = cmd.isSplit;
+                const distance = MathUtil.distance(cmd.getEnd(), point);
+                const isSplit = cmd.isSplit();
                 return { subIdx, cmdIdx, distance, isSplit };
               });
           })
@@ -152,7 +179,7 @@ export class PathState {
       .map((subPath, subIdx) => this.commandMutationsMap[this.toCmsIdx(subIdx)])
       .forEachRight((cms, cmsIdx) => {
         const isClosed =
-          cms[0].getCommands()[0].end.equals((_.last(_.last(cms).getCommands())).end);
+          cms[0].getCommands()[0].getEnd().equals((_.last(_.last(cms).getCommands())).getEnd());
         if (!isClosed) {
           // If this happens, the SVG is probably not going to render properly at all,
           // but we'll check anyway just to be safe.
@@ -257,7 +284,7 @@ function createBoundingBox(...cms: CommandState[]) {
 }
 
 function createSubPaths(...commands: Command[]) {
-  if (!commands.length || commands[0].svgChar !== 'M') {
+  if (!commands.length || commands[0].getSvgChar() !== 'M') {
     // TODO: is this case actually possible? should we insert 'M 0 0' instead?
     return [];
   }
@@ -265,7 +292,7 @@ function createSubPaths(...commands: Command[]) {
   let currentCmdList: Command[] = [];
   const subPathCmds: SubPath[] = [];
   for (const cmd of commands) {
-    if (cmd.svgChar === 'M') {
+    if (cmd.getSvgChar() === 'M') {
       lastSeenMove = cmd;
       if (currentCmdList.length) {
         subPathCmds.push(newSubPath(currentCmdList));
@@ -279,7 +306,7 @@ function createSubPaths(...commands: Command[]) {
       currentCmdList.push(lastSeenMove);
     }
     currentCmdList.push(cmd);
-    if (cmd.svgChar === 'Z') {
+    if (cmd.getSvgChar() === 'Z') {
       subPathCmds.push(newSubPath(currentCmdList));
       currentCmdList = [];
     }

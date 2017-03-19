@@ -14,14 +14,14 @@
       <div fxLayout="row">
         <div fxLayout="column">
           <app-inspectoritem [canvasType]="START_CANVAS" [subIdx]="subPathCmdItem.subIdx"
-            [cmdIdx]="cmdIdx" [command]="cmdItem.command" *ngFor="let cmdItem of subPathCmdItem.startCmdItems;
+            [cmdIdx]="cmdIdx" [command]="command" *ngFor="let command of subPathCmdItem.startCmdItems;
                     let cmdIdx = index;
                     trackBy: trackCommand">
           </app-inspectoritem>
         </div>
         <div fxLayout="column">
           <app-inspectoritem [canvasType]="END_CANVAS" [subIdx]="subPathCmdItem.subIdx"
-            [cmdIdx]="cmdIdx" [command]="cmdItem.command" *ngFor="let cmdItem of subPathCmdItem.endCmdItems;
+            [cmdIdx]="cmdIdx" [command]="command" *ngFor="let command of subPathCmdItem.endCmdItems;
                     let cmdIdx = index;
                     trackBy: trackCommand">
           </app-inspectoritem>

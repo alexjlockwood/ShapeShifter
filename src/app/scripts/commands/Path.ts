@@ -56,11 +56,6 @@ export interface Path {
   unsplitBatch(ops: Array<{ subIdx: number, cmdIdx: number }>): Path;
 
   /**
-   * Returns the unique id associated with the command at the specified index.
-   */
-  getId(subIdx: number, cmdIdx: number): string;
-
-  /**
    * Returns a cloned instance of this path.
    */
   clone(): Path;

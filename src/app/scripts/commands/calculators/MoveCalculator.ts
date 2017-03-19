@@ -3,13 +3,12 @@ import { SvgChar, ProjectionResult, CommandBuilder } from '..';
 import { Point } from '../../common';
 
 export class MoveCalculator implements Calculator {
-  private readonly startPoint: Point | undefined;
-  private readonly endPoint: Point;
 
-  constructor(startPoint: Point | undefined, endPoint: Point) {
-    this.startPoint = startPoint;
-    this.endPoint = endPoint;
-  }
+  constructor(
+    private readonly id: string,
+    private readonly startPoint: Point | undefined,
+    private readonly endPoint: Point,
+  ) { }
 
   getPathLength() {
     return 0;
@@ -32,7 +31,7 @@ export class MoveCalculator implements Calculator {
   }
 
   toCommand() {
-    return new CommandBuilder('M', [this.startPoint, this.endPoint]).build();
+    return new CommandBuilder('M', [this.startPoint, this.endPoint]).setId(this.id).build();
   }
 
   getBoundingBox() {

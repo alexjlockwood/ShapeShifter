@@ -25,15 +25,16 @@ export class CommandState {
     // reference to its initial backing command, these modifications
     // are always reversible.
     private readonly mutations: ReadonlyArray<Mutation> = [{
-      id: _.uniqueId(),
+      id: backingCommand.getId(),
       t: 1,
-      svgChar: backingCommand.svgChar,
+      svgChar: backingCommand.getSvgChar(),
     }],
     // The transformation matricies used to transform this command state object.
     private readonly transforms: ReadonlyArray<Matrix> = [new Matrix()],
     // The calculator that will do all of the math-y stuff for us.
     private readonly calculator: Calculator = newCalculator(backingCommand),
-  ) { }
+  ) {
+  }
 
   getCommands() {
     return this.commands;
@@ -139,25 +140,24 @@ class CommandStateMutator {
   }
 
   private split(ts: number[]) {
-    if (!ts.length || this.backingCommand.svgChar === 'M') {
+    if (!ts.length || this.backingCommand.getSvgChar() === 'M') {
       return this;
     }
     const currSplits = this.mutations.map(m => m.t);
     const currSvgChars = this.mutations.map(m => m.svgChar);
-    const updatedMutations = this.mutations;
     for (const t of ts) {
       const id = _.uniqueId();
       const svgChar = currSvgChars[_.sortedIndex(currSplits, t)];
       const mutation = { id, t, svgChar };
       const insertionIdx =
-        _.sortedIndexBy<Mutation>(updatedMutations, mutation, m => m.t);
-      updatedMutations.splice(insertionIdx, 0, { id, t, svgChar });
+        _.sortedIndexBy<Mutation>(this.mutations, mutation, m => m.t);
+      this.mutations.splice(insertionIdx, 0, { id, t, svgChar });
     }
-    for (let i = 0; i < updatedMutations.length - 1; i++) {
-      const mutation = updatedMutations[i];
+    for (let i = 0; i < this.mutations.length - 1; i++) {
+      const mutation = this.mutations[i];
       if (mutation.svgChar === 'Z') {
         // Force convert the split closepath command into a line.
-        updatedMutations[i] = _.assign({}, mutation, { svgChar: 'L' });
+        this.mutations[i] = _.assign({}, mutation, { svgChar: 'L' });
       }
     }
     return this;
@@ -183,7 +183,7 @@ class CommandStateMutator {
    * Unconverts all conversions previously performed on this command mutation.
    */
   unconvertSubpath() {
-    const backingSvgChar = this.backingCommand.svgChar;
+    const backingSvgChar = this.backingCommand.getSvgChar();
     this.mutations = this.mutations.map((mutation, i) => {
       let svgChar = backingSvgChar;
       if (backingSvgChar === 'Z' && i !== this.mutations.length - 1) {
@@ -208,7 +208,10 @@ class CommandStateMutator {
   setTransforms(transforms: Matrix[]) {
     this.transforms = [Matrix.flatten(...transforms)];
     this.calculator =
-      newCalculator(this.backingCommand.mutate().transform(this.transforms).build());
+      newCalculator(
+        this.backingCommand.mutate()
+          .transform(this.transforms)
+          .build());
     return this;
   }
 
@@ -219,7 +222,7 @@ class CommandStateMutator {
     this.mutations = [{
       id: _.last(this.mutations).id,
       t: 1,
-      svgChar: this.backingCommand.svgChar,
+      svgChar: this.backingCommand.getSvgChar(),
     }];
     this.transforms = [new Matrix()];
     this.calculator = newCalculator(this.backingCommand);
@@ -234,20 +237,27 @@ class CommandStateMutator {
     const builtCommands: Command[] = [];
     if (this.mutations.length === 1) {
       builtCommands.push(
-        this.calculator.convert(this.mutations[0].svgChar).toCommand());
+        this.calculator
+          .convert(this.mutations[0].svgChar)
+          .toCommand()
+          .mutate()
+          .setId(this.mutations[0].id)
+          .build());
     } else {
       let prevT = 0;
       for (let i = 0; i < this.mutations.length; i++) {
         const currT = this.mutations[i].t;
-        let command =
+        const commandBuilder =
           this.calculator
             .split(prevT, currT)
             .convert(this.mutations[i].svgChar)
-            .toCommand();
+            .toCommand()
+            .mutate()
+            .setId(this.mutations[i].id);
         if (i !== this.mutations.length - 1) {
-          command = command.mutate().toggleSplit().build();
+          commandBuilder.toggleSplit();
         }
-        builtCommands.push(command);
+        builtCommands.push(commandBuilder.build());
         prevT = currT;
       }
     }

@@ -227,13 +227,13 @@ export class PathMutator {
     const reorderedCommands: Command[] =
       _.flatMap(reorderedSubPathCmds, cmds => cmds);
     reorderedCommands.forEach((cmd, i) => {
-      if (cmd.svgChar === 'M') {
-        if (i === 0 && cmd.start) {
+      if (cmd.getSvgChar() === 'M') {
+        if (i === 0 && cmd.getStart()) {
           reorderedCommands[i] =
-            new CommandBuilder('M', [undefined, cmd.end]).build();
-        } else if (i !== 0 && !cmd.start) {
+            new CommandBuilder('M', [undefined, cmd.getEnd()]).build();
+        } else if (i !== 0 && !cmd.getStart()) {
           reorderedCommands[i] =
-            new CommandBuilder('M', [reorderedCommands[i - 1].end, cmd.end]).build();
+            new CommandBuilder('M', [reorderedCommands[i - 1].getEnd(), cmd.getEnd()]).build();
         }
       }
     });
@@ -255,7 +255,8 @@ function reverseAndShiftCommands(
   cmsIdx: number) {
 
   const reversedCmds = reverseCommands(commandMutationsMap, reversals, cmsIdx);
-  return shiftCommands(reversedCmds, reversals, shiftOffsets, cmsIdx);
+  const shiftCmds = shiftCommands(reversedCmds, reversals, shiftOffsets, cmsIdx);
+  return shiftCmds;
 }
 
 function reverseCommands(
@@ -277,22 +278,27 @@ function reverseCommands(
     // BC non-split. When reversed, we want the user to see
     // C ---- B ---- A w/ CB split and BA non-split.
     const cmCmds = cm.getCommands().slice();
-    if (cmCmds[0].svgChar === 'M') {
+    if (cmCmds[0].getSvgChar() === 'M') {
       return cmCmds;
     }
-    cmCmds[0] = cmCmds[0].mutate().toggleSplit().build();
+    cmCmds[0] =
+      cmCmds[0]
+        .mutate()
+        .toggleSplit()
+        .build();
     cmCmds[cmCmds.length - 1] =
-      cmCmds[cmCmds.length - 1].mutate().toggleSplit().build();
+      cmCmds[cmCmds.length - 1]
+        .mutate()
+        .toggleSplit()
+        .build();
     return cmCmds;
   });
 
   // If the last command is a 'Z', replace it with a line before we reverse.
   const lastCmd = _.last(cmds);
-  if (lastCmd.svgChar === 'Z') {
-    const lineCmd =
-      new CommandBuilder('L', [lastCmd.start, lastCmd.end]).build();
+  if (lastCmd.getSvgChar() === 'Z') {
     cmds[cmds.length - 1] =
-      lastCmd.isSplit ? lineCmd.mutate().toggleSplit().build() : lineCmd;
+      lastCmd.mutate().setPoints(...lastCmd.getPoints()).build();
   }
 
   // Reverse the commands.
@@ -300,7 +306,10 @@ function reverseCommands(
   for (let i = cmds.length - 1; i > 0; i--) {
     newCmds.push(cmds[i].mutate().reverse().build());
   }
-  newCmds.unshift(new CommandBuilder('M', [cmds[0].start, newCmds[0].start]).build());
+  newCmds.unshift(
+    cmds[0].mutate()
+      .setPoints(cmds[0].getStart(), newCmds[0].getStart())
+      .build());
   return newCmds;
 };
 
@@ -313,7 +322,7 @@ function shiftCommands(
   let shiftOffset = shiftOffsets[cmsIdx];
   if (!shiftOffset
     || cmds.length === 1
-    || !_.first(cmds).end.equals(_.last(cmds).end)) {
+    || !_.first(cmds).getEnd().equals(_.last(cmds).getEnd())) {
     // If there is no shift offset, the sub path is one command long,
     // or if the sub path is not closed, then do nothing.
     return cmds;
@@ -327,18 +336,23 @@ function shiftCommands(
 
   // If the last command is a 'Z', replace it with a line before we shift.
   const lastCmd = _.last(cmds);
-  if (lastCmd.svgChar === 'Z') {
+  if (lastCmd.getSvgChar() === 'Z') {
     // TODO: replacing the 'Z' messes up certain stroke-linejoin values
-    const lineCmd = new CommandBuilder('L', [lastCmd.start, lastCmd.end]).build();
     cmds[numCommands - 1] =
-      lastCmd.isSplit ? lineCmd.mutate().toggleSplit().build() : lineCmd;
+      lastCmd.mutate()
+        .setSvgChar('L')
+        .setPoints(...lastCmd.getPoints())
+        .build();
   }
 
   const newCmds: Command[] = [];
 
   // Handle these case separately cause they are annoying and I'm sick of edge cases.
   if (shiftOffset === 1) {
-    newCmds.push(new CommandBuilder('M', [cmds[0].start, cmds[1].end]).build());
+    newCmds.push(
+      cmds[0].mutate()
+        .setPoints(cmds[0].getStart(), cmds[1].getEnd())
+        .build());
     for (let i = 2; i < cmds.length; i++) {
       newCmds.push(cmds[i]);
     }
@@ -346,7 +360,9 @@ function shiftCommands(
     return newCmds;
   } else if (shiftOffset === numCommands - 1) {
     newCmds.push(
-      new CommandBuilder('M', [cmds[0].start, cmds[numCommands - 2].end]).build());
+      cmds[0].mutate()
+        .setPoints(cmds[0].getStart(), cmds[numCommands - 2].getEnd())
+        .build());
     newCmds.push(_.last(cmds));
     for (let i = 1; i < cmds.length - 1; i++) {
       newCmds.push(cmds[i]);
@@ -365,7 +381,9 @@ function shiftCommands(
   const prevMoveCmd = newCmds.splice(numCommands - shiftOffset, 1)[0];
   newCmds.push(newCmds.shift());
   newCmds.unshift(
-    new CommandBuilder('M', [prevMoveCmd.start, _.last(newCmds).end]).build());
+    cmds[0].mutate()
+      .setPoints(prevMoveCmd.getStart(), _.last(newCmds).getEnd())
+      .build());
   return newCmds;
 };
 

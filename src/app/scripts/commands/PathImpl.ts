@@ -23,6 +23,7 @@ export class PathImpl implements Path {
     } else {
       this.ps = obj;
     }
+    console.log(this.getCommands().map(cmd => cmd.getId()));
   }
 
   // Implements the Path interface.
@@ -44,8 +45,8 @@ export class PathImpl implements Path {
   }
 
   // Implements the Path interface.
-  getCommands(): ReadonlyArray<Command> {
-    return _.flatMap(this.ps.subPaths, subPath => subPath.getCommands() as Command[]);
+  getCommands() {
+    return this.ps.commands;
   }
 
   // Implements the Path interface.
@@ -58,7 +59,7 @@ export class PathImpl implements Path {
     const cmds1 = this.getCommands();
     const cmds2 = path.getCommands();
     return cmds1.length === cmds2.length && cmds1.every((cmd1, i) =>
-      cmd1.svgChar === cmds2[i].svgChar);
+      cmd1.getSvgChar() === cmds2[i].getSvgChar());
   }
 
   // Implements the Path interface.
@@ -75,9 +76,9 @@ export class PathImpl implements Path {
         (startCmd: Command, currCmd: Command, endCmd: Command) => {
           return currCmd.mutate()
             .setPoints(..._.zipWith<Point>(
-              startCmd.points,
-              currCmd.points,
-              endCmd.points,
+              startCmd.getPoints(),
+              currCmd.getPoints(),
+              endCmd.getPoints(),
               (startPt: Point, currPt: Point, endPt: Point) => {
                 if (!startPt || !currPt || !endPt) {
                   // The 'start' point of the first Move command in a path
@@ -96,11 +97,6 @@ export class PathImpl implements Path {
   project(point: Point):
     { projection: ProjectionResult, subIdx: number, cmdIdx: number } | undefined {
     return this.ps.project(point);
-  }
-
-  // Implements the Path interface.
-  getId(subIdx: number, cmdIdx: number) {
-    return this.ps.getId(subIdx, cmdIdx);
   }
 
   // Implements the Path interface.

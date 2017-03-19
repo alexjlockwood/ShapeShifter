@@ -6,7 +6,7 @@ export class PointCalculator implements Calculator {
   private readonly svgChar: SvgChar;
   private readonly point: Point;
 
-  constructor(svgChar: SvgChar, point: Point) {
+  constructor(private readonly id: string, svgChar: SvgChar, point: Point) {
     this.svgChar = svgChar;
     this.point = point;
   }
@@ -24,11 +24,11 @@ export class PointCalculator implements Calculator {
   }
 
   split(t1: number, t2: number) {
-    return new PointCalculator(this.svgChar, this.point);
+    return new PointCalculator(this.id, this.svgChar, this.point);
   }
 
   convert(svgChar: SvgChar) {
-    return new PointCalculator(svgChar, this.point);
+    return new PointCalculator(this.id, svgChar, this.point);
   }
 
   findTimeByDistance(distance: number) {
@@ -51,7 +51,7 @@ export class PointCalculator implements Calculator {
       default:
         throw new Error('Invalid command type: ' + this.svgChar);
     }
-    return new CommandBuilder(this.svgChar, points).build();
+    return new CommandBuilder(this.svgChar, points).setId(this.id).build();
   }
 
   getBoundingBox() {

@@ -4,15 +4,13 @@ import { MathUtil, Point } from '../../common';
 import { PointCalculator } from './PointCalculator';
 
 export class LineCalculator implements Calculator {
-  private readonly svgChar: SvgChar;
-  private readonly p1: Point;
-  private readonly p2: Point;
 
-  constructor(svgChar: SvgChar, p1: Point, p2: Point) {
-    this.svgChar = svgChar;
-    this.p1 = p1;
-    this.p2 = p2;
-  }
+  constructor(
+    private readonly id: string,
+    private readonly svgChar: SvgChar,
+    private readonly p1: Point,
+    private readonly p2: Point,
+  ) { }
 
   getPathLength() {
     return MathUtil.distance(this.p1, this.p2);
@@ -61,13 +59,13 @@ export class LineCalculator implements Calculator {
       MathUtil.lerp(x1, x2, t2),
       MathUtil.lerp(y1, y2, t2));
     if (p1.equals(p2)) {
-      return new PointCalculator(this.svgChar, p1);
+      return new PointCalculator(this.id, this.svgChar, p1);
     }
-    return new LineCalculator(this.svgChar, p1, p2);
+    return new LineCalculator(this.id, this.svgChar, p1, p2);
   }
 
   convert(svgChar: SvgChar) {
-    return new LineCalculator(svgChar, this.p1, this.p2);
+    return new LineCalculator(this.id, svgChar, this.p1, this.p2);
   }
 
   findTimeByDistance(distance: number) {
@@ -99,7 +97,7 @@ export class LineCalculator implements Calculator {
       default:
         throw new Error('Invalid command type: ' + this.svgChar);
     }
-    return new CommandBuilder(this.svgChar, points).build();
+    return new CommandBuilder(this.svgChar, points).setId(this.id).build();
   }
 
   getBoundingBox() {

@@ -376,8 +376,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         .map((subCmd, subIdx) => {
           return subCmd.getCommands().map((cmd, cmdIdx) => {
             const commandId = { pathId, subIdx, cmdIdx } as CommandIndex;
-            const isSplit = cmd.isSplit;
-            const isMove = cmd.svgChar === 'M';
+            const isSplit = cmd.isSplit();
+            const isMove = cmd.getSvgChar() === 'M';
             const isHoverOrSelection =
               (this.currentHover
                 && this.currentHover.commandId.subIdx === subIdx
@@ -385,7 +385,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
               || currentSelections.some(sel => _.isMatch(sel.commandId, commandId));
             const isDrag =
               activelyDraggedPointId && _.isMatch(activelyDraggedPointId, commandId);
-            const point = MathUtil.transformPoint(_.last(cmd.points), ...transforms);
+            const point = MathUtil.transformPoint(_.last(cmd.getPoints()), ...transforms);
             const position = cmdIdx + 1;
             return { commandId, isSplit, isMove, isHoverOrSelection, isDrag, point, position };
           });
@@ -538,7 +538,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           .getSubPaths()[selectedPointId.subIdx]
           .getCommands()[selectedPointId.cmdIdx];
       this.pointSelector =
-        new PointSelector(mouseDown, selectedPointId, selectedCmd.isSplit);
+        new PointSelector(mouseDown, selectedPointId, selectedCmd.isSplit());
     } else if (!event.shiftKey && !event.metaKey) {
       // If the mouse down event didn't occur on top of a point, then
       // clear any existing selections, but only if the user isn't in
@@ -895,29 +895,29 @@ function executeCommands(
   transforms.forEach(m => ctx.transform(m.a, m.b, m.c, m.d, m.e, m.f));
   ctx.beginPath();
   commands.forEach(cmd => {
-    const start = cmd.start;
-    const end = cmd.end;
+    const start = cmd.getStart();
+    const end = cmd.getEnd();
 
     // TODO: remove this... or at least only use it for selections?
     // this probably doesn't work for close path commands too?
-    if (isDrawingSelection && cmd.svgChar !== 'M') {
+    if (isDrawingSelection && cmd.getSvgChar() !== 'M') {
       ctx.moveTo(start.x, start.y);
     }
 
-    if (cmd.svgChar === 'M') {
+    if (cmd.getSvgChar() === 'M') {
       ctx.moveTo(end.x, end.y);
-    } else if (cmd.svgChar === 'L') {
+    } else if (cmd.getSvgChar() === 'L') {
       ctx.lineTo(end.x, end.y);
-    } else if (cmd.svgChar === 'Q') {
+    } else if (cmd.getSvgChar() === 'Q') {
       ctx.quadraticCurveTo(
-        cmd.points[1].x, cmd.points[1].y,
-        cmd.points[2].x, cmd.points[2].y);
-    } else if (cmd.svgChar === 'C') {
+        cmd.getPoints()[1].x, cmd.getPoints()[1].y,
+        cmd.getPoints()[2].x, cmd.getPoints()[2].y);
+    } else if (cmd.getSvgChar() === 'C') {
       ctx.bezierCurveTo(
-        cmd.points[1].x, cmd.points[1].y,
-        cmd.points[2].x, cmd.points[2].y,
-        cmd.points[3].x, cmd.points[3].y);
-    } else if (cmd.svgChar === 'Z') {
+        cmd.getPoints()[1].x, cmd.getPoints()[1].y,
+        cmd.getPoints()[2].x, cmd.getPoints()[2].y,
+        cmd.getPoints()[3].x, cmd.getPoints()[3].y);
+    } else if (cmd.getSvgChar() === 'Z') {
       ctx.closePath();
     }
   });

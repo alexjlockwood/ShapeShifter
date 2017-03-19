@@ -1,5 +1,6 @@
 import { Point, Matrix, SvgUtil } from '../common';
-import { Command, CommandBuilder } from '../commands';
+import { Command } from '.';
+import { newCommand } from './CommandImpl';
 
 /**
  * Takes an SVG path string (i.e. the text specified in the path's 'd' attribute) and returns
@@ -309,7 +310,7 @@ export function parseCommands(
     }
   }
 
-  return matrices ? commands.map(cmd => cmd.mutate().transform(matrices).build()) : commands;
+  return matrices ? commands.map(cmd => cmd.mutate().setId(cmd.getId()).transform(matrices).build()) : commands;
 }
 
 /**
@@ -318,11 +319,11 @@ export function parseCommands(
 export function commandsToString(commands: ReadonlyArray<Command>) {
   const tokens = [];
   commands.forEach(cmd => {
-    tokens.push(cmd.svgChar);
-    const isClosePathCommand = cmd.svgChar === 'Z';
+    tokens.push(cmd.getSvgChar());
+    const isClosePathCommand = cmd.getSvgChar() === 'Z';
     const pointsToNumberListFunc =
       (...points: Point[]) => points.reduce((list, p) => list.concat(p.x, p.y), []);
-    const args = pointsToNumberListFunc(...(isClosePathCommand ? [] : cmd.points.slice(1)));
+    const args = pointsToNumberListFunc(...(isClosePathCommand ? [] : cmd.getPoints().slice(1)));
     tokens.splice(tokens.length, 0, ...args.map(n => Number(n.toFixed(3)).toString()));
   });
   return tokens.join(' ');
@@ -336,22 +337,22 @@ const enum Token {
 }
 
 function newMove(start: Point, end: Point) {
-  return new CommandBuilder('M', [start, end]).build();
+  return newCommand('M', [start, end]);
 }
 
 function newLine(start: Point, end: Point) {
-  return new CommandBuilder('L', [start, end]).build();
+  return newCommand('L', [start, end]);
 }
 
 function newQuadraticCurve(start: Point, cp: Point, end: Point) {
-  return new CommandBuilder('Q', [start, cp, end]).build();
+  return newCommand('Q', [start, cp, end]);
 }
 
 function newBezierCurve(
   start: Point, cp1: Point, cp2: Point, end: Point) {
-  return new CommandBuilder('C', [start, cp1, cp2, end]).build();
+  return newCommand('C', [start, cp1, cp2, end]);
 }
 
 function newClosePath(start: Point, end: Point) {
-  return new CommandBuilder('Z', [start, end]).build();
+  return newCommand('Z', [start, end]);
 }
