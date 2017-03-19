@@ -70,6 +70,9 @@ export interface Path {
    */
   hitTest(point: Point, opts?: HitOptions): HitResult;
 
+  /**
+   * Creates a builder that can create a mutated Path object.
+   */
   mutate(): PathMutator;
 }
 

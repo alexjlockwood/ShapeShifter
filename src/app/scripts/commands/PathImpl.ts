@@ -157,6 +157,7 @@ export class PathImpl implements Path {
     return this.ps.hitTest(point, opts);
   }
 
+  // Implements the Path interface.
   mutate() {
     return new PathMutator(this.ps);
   }
