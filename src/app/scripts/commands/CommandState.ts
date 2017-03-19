@@ -33,8 +33,7 @@ export class CommandState {
     private readonly transforms: ReadonlyArray<Matrix> = [new Matrix()],
     // The calculator that will do all of the math-y stuff for us.
     private readonly calculator: Calculator = newCalculator(backingCommand),
-  ) {
-  }
+  ) { }
 
   getCommands() {
     return this.commands;

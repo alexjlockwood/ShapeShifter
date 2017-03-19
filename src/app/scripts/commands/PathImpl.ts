@@ -23,7 +23,6 @@ export class PathImpl implements Path {
     } else {
       this.ps = obj;
     }
-    console.log(this.getCommands().map(cmd => cmd.getId()));
   }
 
   // Implements the Path interface.
@@ -75,6 +74,8 @@ export class PathImpl implements Path {
         end.getCommands(),
         (startCmd: Command, currCmd: Command, endCmd: Command) => {
           return currCmd.mutate()
+            // TODO: avoid re-generating unique ids on each animation frame.
+            .setId('')
             .setPoints(..._.zipWith<Point>(
               startCmd.getPoints(),
               currCmd.getPoints(),

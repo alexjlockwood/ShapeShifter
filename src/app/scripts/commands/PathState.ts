@@ -24,25 +24,11 @@ export class PathState {
   ) {
     // TODO: make this more efficient
     const commands = (typeof obj === 'string' ? PathParser.parseCommands(obj) : obj);
-    const hasDuplicatesFn = cmds => {
-      const set = new Set();
-      for (const cmd of commands) {
-        set.add(cmd.getId());
-      }
-      return set.size !== cmds.length;
-    };
-    if (!hasDuplicatesFn(commands)) {
-      console.log('=== 1 no duplicate commands');
-    } else {
-      console.log('=== 1 duplicate commands');
-    }
     const subPaths = createSubPaths(...commands);
-    //console.log('before', commandMutationsMap);
     this.commandMutationsMap =
       commandMutationsMap
         ? commandMutationsMap.map(cms => cms.slice())
         : subPaths.map(s => s.getCommands().map(c => new CommandState(c)));
-    //console.log('after', this.commandMutationsMap);
     this.reversals =
       reversals ? reversals.slice() : subPaths.map(_ => false);
     this.shiftOffsets =
@@ -57,20 +43,13 @@ export class PathState {
         shiftOffsets: this.shiftOffsets,
         subPathOrdering: this.subPathOrdering,
       });
-      const id = targetCm.getIdAtIndex(splitIdx);
-      //console.log(`getIdFn(${subIdx}, ${cmdIdx})=${id}`, targetCm, splitIdx);
-      return id;
+      return targetCm.getIdAtIndex(splitIdx);
     };
     this.commands = _.flatMap(subPaths, (subPath, subIdx) => {
       return subPath.getCommands().map((cmd, cmdIdx) => {
         return cmd.mutate().setId(getIdFn(subIdx, cmdIdx)).build();
       });
     });
-    if (!hasDuplicatesFn(this.commands)) {
-      console.log('=== 2 no duplicate commands');
-    } else {
-      console.log('=== 2 duplicate commands');
-    }
     this.subPaths = createSubPaths(...this.commands);
   }
 

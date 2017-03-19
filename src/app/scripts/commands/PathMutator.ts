@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import { SvgChar, SubPath, Command, CommandBuilder } from '.';
+import { SvgChar, SubPath, Command } from '.';
 import { PathImpl } from './PathImpl';
 import { CommandState } from './CommandState';
 import { MathUtil, Matrix } from '../common';
@@ -230,10 +230,14 @@ export class PathMutator {
       if (cmd.getSvgChar() === 'M') {
         if (i === 0 && cmd.getStart()) {
           reorderedCommands[i] =
-            new CommandBuilder('M', [undefined, cmd.getEnd()]).build();
+            cmd.mutate()
+              .setPoints(undefined, cmd.getEnd())
+              .build();
         } else if (i !== 0 && !cmd.getStart()) {
           reorderedCommands[i] =
-            new CommandBuilder('M', [reorderedCommands[i - 1].getEnd(), cmd.getEnd()]).build();
+            cmd.mutate()
+              .setPoints(reorderedCommands[i - 1].getEnd(), cmd.getEnd())
+              .build();
         }
       }
     });
@@ -255,8 +259,7 @@ function reverseAndShiftCommands(
   cmsIdx: number) {
 
   const reversedCmds = reverseCommands(commandMutationsMap, reversals, cmsIdx);
-  const shiftCmds = shiftCommands(reversedCmds, reversals, shiftOffsets, cmsIdx);
-  return shiftCmds;
+  return shiftCommands(reversedCmds, reversals, shiftOffsets, cmsIdx);
 }
 
 function reverseCommands(
@@ -401,7 +404,7 @@ export function findCommandMutation(subIdx: number, cmdIdx: number, ms: Mutation
   }
   cmdIdx += ms.shiftOffsets[cmsIdx];
   if (cmdIdx >= numCommandsInSubPath) {
-    cmdIdx -= (numCommandsInSubPath - 1);
+    cmdIdx -= numCommandsInSubPath;
   }
   let counter = 0;
   let cmIdx = 0;
