@@ -38,7 +38,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   PREVIEW_CANVAS = CanvasType.Preview;
   END_CANVAS = CanvasType.End;
 
-  SELECt_POINTS_MODE = CanvasMode.SelectPoints;
+  SELECT_POINTS_MODE = CanvasMode.SelectPoints;
   ADD_POINTS_MODE = CanvasMode.AddPoints;
   PAIR_SUBPATHS_MODE = CanvasMode.PairSubPaths;
   SPLIT_SUBPATHS_MODE = CanvasMode.SplitSubPaths;
