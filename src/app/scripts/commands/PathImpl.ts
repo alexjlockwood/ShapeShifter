@@ -1,13 +1,8 @@
 import * as _ from 'lodash';
-import { MathUtil, Point, Matrix, Rect } from '../common';
-import {
-  Path, SubPath, Command, SvgChar, ProjectionResult, HitResult, HitOptions
-} from '.';
+import { MathUtil, Point } from '../common';
+import { Path, Command, ProjectionResult, HitOptions } from '.';
+import { PathState, PathMutator } from './PathState';
 import * as PathParser from './PathParser';
-import { newSubPath } from './SubPathImpl';
-import { CommandImpl, newMove, newLine } from './CommandImpl';
-import { PathState, CommandState } from './state';
-import { PathMutator } from './PathMutator';
 
 export function newPath(obj: string | Command[]): Path {
   return new PathImpl(obj);
@@ -18,18 +13,14 @@ export function newPath(obj: string | Command[]): Path {
  * associated with a path layer's pathData attribute.
  */
 export class PathImpl implements Path {
-  private readonly subPaths: ReadonlyArray<SubPath>;
   private readonly ps: PathState;
   private pathString: string;
 
-  constructor(obj: string | Command[] | { commands: Command[], pathState: PathState }) {
+  constructor(obj: string | Command[] | PathState) {
     if (typeof obj === 'string' || Array.isArray(obj)) {
-      this.subPaths =
-        createSubPaths(...(typeof obj === 'string' ? PathParser.parseCommands(obj) : obj));
-      this.ps = new PathState(this.subPaths);
+      this.ps = new PathState(obj);
     } else {
-      this.subPaths = createSubPaths(...obj.commands);
-      this.ps = obj.pathState;
+      this.ps = obj;
     }
   }
 
@@ -48,12 +39,12 @@ export class PathImpl implements Path {
 
   // Implements the Path interface.
   getSubPaths() {
-    return this.subPaths;
+    return this.ps.subPaths;
   }
 
   // Implements the Path interface.
   getCommands(): ReadonlyArray<Command> {
-    return _.flatMap(this.subPaths, subPath => subPath.getCommands() as Command[]);
+    return _.flatMap(this.ps.subPaths, subPath => subPath.getCommands() as Command[]);
   }
 
   // Implements the Path interface.
@@ -81,9 +72,8 @@ export class PathImpl implements Path {
         this.getCommands(),
         end.getCommands(),
         (startCmd: Command, currCmd: Command, endCmd: Command) => {
-          return new CommandImpl(
-            currCmd.svgChar,
-            _.zipWith<Point>(
+          return currCmd.mutate()
+            .setPoints(..._.zipWith<Point>(
               startCmd.points,
               currCmd.points,
               endCmd.points,
@@ -96,8 +86,8 @@ export class PathImpl implements Path {
                 return new Point(
                   MathUtil.lerp(startPt.x, endPt.x, fraction),
                   MathUtil.lerp(startPt.y, endPt.y, fraction));
-              }),
-            currCmd.isSplit);
+              }))
+            .build();
         }));
   }
 
@@ -124,12 +114,12 @@ export class PathImpl implements Path {
       // indices of the lower index split operations.
       return s1 !== s2 ? s2 - s1 : c2 - c1;
     });
-    let result: Path = this;
+    const mutator = this.mutate();
     for (const { subIdx, cmdIdx, ts } of ops) {
       // TODO: do all operations as a single batch instead of individually
-      result = result.mutate().splitCommand(subIdx, cmdIdx, ...ts).build();
+      mutator.splitCommand(subIdx, cmdIdx, ...ts);
     }
-    return result;
+    return mutator.build();
   }
 
   // Implements the Path interface.
@@ -144,12 +134,12 @@ export class PathImpl implements Path {
       // indices of the lower index unsplit operations.
       return s1 !== s2 ? s2 - s1 : c2 - c1;
     });
-    let result: Path = this;
+    const mutator = this.mutate();
     for (const { subIdx, cmdIdx } of ops) {
       // TODO: do all operations as a single batch instead of individually
-      result = result.mutate().unsplitCommand(subIdx, cmdIdx).build();
+      mutator.unsplitCommand(subIdx, cmdIdx);
     }
-    return result;
+    return mutator.build();
   }
 
   // Implements the Path interface.
@@ -161,38 +151,4 @@ export class PathImpl implements Path {
   mutate() {
     return new PathMutator(this.ps);
   }
-}
-
-export function createSubPaths(...commands: Command[]) {
-  if (!commands.length || commands[0].svgChar !== 'M') {
-    // TODO: is this case actually possible? should we insert 'M 0 0' instead?
-    return [];
-  }
-  let lastSeenMove: Command;
-  let currentCmdList: Command[] = [];
-  const subPathCmds: SubPath[] = [];
-  for (const cmd of commands) {
-    if (cmd.svgChar === 'M') {
-      lastSeenMove = cmd;
-      if (currentCmdList.length) {
-        subPathCmds.push(newSubPath(currentCmdList));
-        currentCmdList = [];
-      } else {
-        currentCmdList.push(cmd);
-      }
-      continue;
-    }
-    if (!currentCmdList.length) {
-      currentCmdList.push(lastSeenMove);
-    }
-    currentCmdList.push(cmd);
-    if (cmd.svgChar === 'Z') {
-      subPathCmds.push(newSubPath(currentCmdList));
-      currentCmdList = [];
-    }
-  }
-  if (currentCmdList.length) {
-    subPathCmds.push(newSubPath(currentCmdList));
-  }
-  return subPathCmds;
 }

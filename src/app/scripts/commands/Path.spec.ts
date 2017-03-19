@@ -450,8 +450,3 @@ function checkCommandsEqual(actual: ReadonlyArray<Command>, expected: ReadonlyAr
   }
 }
 
-function equals(p: Point) {
-  const diffX = Math.abs(this.x - p.x);
-  const diffY = Math.abs(this.y - p.y);
-  return diffX < 1e-8 && diffY < 1e-8;
-}

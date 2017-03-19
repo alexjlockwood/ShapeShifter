@@ -100,7 +100,7 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
         pathData = newPath(
           _.chain(pathData.getSubPaths() as SubPath[])
             .flatMap(subPath => subPath.getCommands() as Command[])
-            .map(command => command.transform(transforms))
+            .map(command => command.mutate().transform(transforms).build())
             .value());
       }
 

@@ -1,11 +1,10 @@
 import * as _ from 'lodash';
 import { Point } from '../../common';
-import { SvgChar } from '..';
+import { SvgChar, Command } from '..';
 import { PointCalculator } from './PointCalculator';
 import { LineCalculator } from './LineCalculator';
 import { BezierCalculator } from './BezierCalculator';
 import { MoveCalculator } from './MoveCalculator';
-import { CommandImpl } from '../CommandImpl';
 
 /**
  * A wrapper around a backing SVG command that abstracts a lot of the math-y
@@ -17,12 +16,12 @@ export interface Calculator {
   split(t1: number, t2: number): Calculator;
   convert(svgChar: SvgChar): Calculator;
   findTimeByDistance(distance: number): number;
-  toCommand(): CommandImpl;
+  toCommand(): Command;
   getBoundingBox(): BBox;
   intersects(line: Line): number[];
 }
 
-export function newCalculator(cmd: CommandImpl): Calculator {
+export function newCalculator(cmd: Command): Calculator {
   if (cmd.svgChar === 'M') {
     return new MoveCalculator(cmd.start, cmd.end);
   }

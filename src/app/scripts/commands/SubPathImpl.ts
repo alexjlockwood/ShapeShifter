@@ -1,5 +1,4 @@
 import * as _ from 'lodash';
-import { Point } from '../common';
 import { SubPath, Command } from '.';
 
 export function newSubPath(commands: ReadonlyArray<Command>): SubPath {

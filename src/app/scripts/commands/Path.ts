@@ -1,5 +1,5 @@
-import { Point, Matrix } from '../common';
-import { SubPath, Command, SvgChar } from '.';
+import { Point } from '../common';
+import { SubPath, Command } from '.';
 import { ProjectionResult } from './calculators';
 import { PathMutator } from './state';
 

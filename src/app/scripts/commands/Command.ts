@@ -1,5 +1,6 @@
-import { Point, Matrix } from '../common';
+import { Point } from '../common';
 import { SvgChar } from '.';
+import { CommandBuilder } from '.';
 
 /**
  * Defines the set of SVG command methods that are seen by the inspector/canvas.
@@ -49,9 +50,9 @@ export interface Command {
   canConvertTo(ch: SvgChar): boolean;
 
   /**
-   * Returns a transformed SVG command.
+   * Returns a builder to construct a mutated Command.
    */
-  transform(matrices: Matrix[]): Command;
+  mutate(): CommandBuilder;
 }
 
 /**

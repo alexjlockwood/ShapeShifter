@@ -1,6 +1,6 @@
 import { Calculator, BBox, Line } from '.';
-import { SvgChar, ProjectionResult, newMove } from '..';
-import { MathUtil, Point } from '../../common';
+import { SvgChar, ProjectionResult, CommandBuilder } from '..';
+import { Point } from '../../common';
 
 export class MoveCalculator implements Calculator {
   private readonly startPoint: Point | undefined;
@@ -32,7 +32,7 @@ export class MoveCalculator implements Calculator {
   }
 
   toCommand() {
-    return newMove(this.startPoint, this.endPoint);
+    return new CommandBuilder('M', [this.startPoint, this.endPoint]).build();
   }
 
   getBoundingBox() {

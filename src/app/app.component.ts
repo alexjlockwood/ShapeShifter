@@ -12,7 +12,7 @@ import { AnimatorService, CanvasResizeService, HoverStateService, SelectionState
 import * as $ from 'jquery';
 import * as erd from 'element-resize-detector';
 import * as _ from 'lodash';
-import { MdSnackBar, MdSnackBarConfig } from '@angular/material';
+import { MdSnackBar } from '@angular/material';
 
 const IS_DEV_MODE = !environment.production;
 const ELEMENT_RESIZE_DETECTOR = erd();
@@ -260,3 +260,4 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 }
+

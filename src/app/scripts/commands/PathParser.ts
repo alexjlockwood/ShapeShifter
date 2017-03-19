@@ -1,8 +1,5 @@
 import { Point, Matrix, SvgUtil } from '../common';
-import {
-  newMove, newLine, newQuadraticCurve, newBezierCurve, newClosePath
-} from '../commands';
-import { Command } from '../commands';
+import { Command, CommandBuilder } from '../commands';
 
 /**
  * Takes an SVG path string (i.e. the text specified in the path's 'd' attribute) and returns
@@ -312,7 +309,7 @@ export function parseCommands(
     }
   }
 
-  return matrices ? commands.map(cmd => cmd.transform(matrices)) : commands;
+  return matrices ? commands.map(cmd => cmd.mutate().transform(matrices).build()) : commands;
 }
 
 /**
@@ -336,4 +333,25 @@ const enum Token {
   RelativeCommand,
   Value,
   EOF,
+}
+
+function newMove(start: Point, end: Point) {
+  return new CommandBuilder('M', [start, end]).build();
+}
+
+function newLine(start: Point, end: Point) {
+  return new CommandBuilder('L', [start, end]).build();
+}
+
+function newQuadraticCurve(start: Point, cp: Point, end: Point) {
+  return new CommandBuilder('Q', [start, cp, end]).build();
+}
+
+function newBezierCurve(
+  start: Point, cp1: Point, cp2: Point, end: Point) {
+  return new CommandBuilder('C', [start, cp1, cp2, end]).build();
+}
+
+function newClosePath(start: Point, end: Point) {
+  return new CommandBuilder('Z', [start, end]).build();
 }

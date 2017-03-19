@@ -1,5 +1,5 @@
 import { Calculator, BBox, Line } from '.';
-import { SvgChar, ProjectionResult, newLine, newQuadraticCurve, newBezierCurve, newClosePath } from '..';
+import { SvgChar, ProjectionResult, CommandBuilder } from '..';
 import { MathUtil, Point } from '../../common';
 import { PointCalculator } from './PointCalculator';
 
@@ -75,14 +75,18 @@ export class LineCalculator implements Calculator {
   }
 
   toCommand() {
+    let points;
     switch (this.svgChar) {
       case 'L':
-        return newLine(this.p1, this.p2);
+      case 'Z':
+        points = [this.p1, this.p2];
+        break;
       case 'Q':
         const cp = new Point(
           MathUtil.lerp(this.p1.x, this.p2.x, 0.5),
           MathUtil.lerp(this.p1.y, this.p2.y, 0.5));
-        return newQuadraticCurve(this.p1, cp, this.p2);
+        points = [this.p1, cp, this.p2];
+        break;
       case 'C':
         const cp1 = new Point(
           MathUtil.lerp(this.p1.x, this.p2.x, 1 / 3),
@@ -90,11 +94,12 @@ export class LineCalculator implements Calculator {
         const cp2 = new Point(
           MathUtil.lerp(this.p1.x, this.p2.x, 2 / 3),
           MathUtil.lerp(this.p1.y, this.p2.y, 2 / 3));
-        return newBezierCurve(this.p1, cp1, cp2, this.p2);
-      case 'Z':
-        return newClosePath(this.p1, this.p2);
+        points = [this.p1, cp1, cp2, this.p2];
+        break;
+      default:
+        throw new Error('Invalid command type: ' + this.svgChar);
     }
-    throw new Error('Invalid command type: ' + this.svgChar);
+    return new CommandBuilder(this.svgChar, points).build();
   }
 
   getBoundingBox() {

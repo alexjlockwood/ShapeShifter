@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
 import * as BezierJs from 'bezier-js';
 import { Point } from '../../common';
-import { SvgChar, ProjectionResult, newQuadraticCurve, newBezierCurve } from '..';
+import { SvgChar, ProjectionResult, CommandBuilder } from '..';
 import { Calculator, BBox, Line } from '.';
 import { PointCalculator } from './PointCalculator';
 import { LineCalculator } from './LineCalculator';
@@ -109,15 +109,10 @@ export class BezierCalculator implements Calculator {
   }
 
   toCommand() {
-    switch (this.svgChar) {
-      case 'Q':
-        return newQuadraticCurve(
-          this.points[0], this.points[1], this.points[2]);
-      case 'C':
-        return newBezierCurve(
-          this.points[0], this.points[1], this.points[2], this.points[3]);
+    if (this.svgChar !== 'Q' && this.svgChar !== 'C') {
+      throw new Error('Invalid command type: ' + this.svgChar);
     }
-    throw new Error('Invalid command type: ' + this.svgChar);
+    return new CommandBuilder(this.svgChar, this.points.slice()).build();
   }
 
   getBoundingBox() {

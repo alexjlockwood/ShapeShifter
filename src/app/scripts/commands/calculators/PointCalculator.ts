@@ -1,8 +1,5 @@
 import { Calculator, BBox, Line } from '.';
-import {
-  SvgChar, ProjectionResult, newLine, newQuadraticCurve,
-  newBezierCurve, newClosePath
-} from '..';
+import { SvgChar, ProjectionResult, CommandBuilder } from '..';
 import { MathUtil, Point } from '../../common';
 
 export class PointCalculator implements Calculator {
@@ -39,18 +36,22 @@ export class PointCalculator implements Calculator {
   }
 
   toCommand() {
+    let points;
     switch (this.svgChar) {
       case 'L':
-        return newLine(this.point, this.point);
-      case 'Q':
-        return newQuadraticCurve(this.point, this.point, this.point);
-      case 'C':
-        return newBezierCurve(
-          this.point, this.point, this.point, this.point);
       case 'Z':
-        return newClosePath(this.point, this.point);
+        points = [this.point, this.point];
+        break;
+      case 'Q':
+        points = [this.point, this.point, this.point];
+        break;
+      case 'C':
+        points = [this.point, this.point, this.point, this.point];
+        break;
+      default:
+        throw new Error('Invalid command type: ' + this.svgChar);
     }
-    throw new Error('Invalid command type: ' + this.svgChar);
+    return new CommandBuilder(this.svgChar, points).build();
   }
 
   getBoundingBox() {

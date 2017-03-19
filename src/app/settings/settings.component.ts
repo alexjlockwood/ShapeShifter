@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { AnimatorService } from '../services/animator.service';
 import { Interpolator, INTERPOLATORS } from '../scripts/animation';
 import { LayerStateService, MorphabilityStatus } from '../services/layerstate.service';

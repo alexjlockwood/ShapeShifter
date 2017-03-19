@@ -1,5 +1,4 @@
 import { Layer, GroupLayer, ClipPathLayer, PathLayer } from '.';
-import { Matrix } from '../common';
 
 /**
  * Root class for all layer model classes.
