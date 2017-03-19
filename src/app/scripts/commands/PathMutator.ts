@@ -68,7 +68,7 @@ export class PathMutator {
    */
   splitCommand(subIdx: number, cmdIdx: number, ...ts: number[]) {
     const { targetCm, cmsIdx, cmIdx, splitIdx } =
-      this.findCommandMutation(subIdx, cmdIdx);
+      this.findCommandStateInfo(subIdx, cmdIdx);
     this.maybeUpdateShiftOffsetsAfterSplit(cmsIdx, cmIdx, ts.length);
     this.commandMutationsMap[cmsIdx][cmIdx] =
       targetCm.mutate().splitAtIndex(splitIdx, ts).build();
@@ -79,7 +79,7 @@ export class PathMutator {
    * Splits the command into two approximately equal parts.
    */
   splitCommandInHalf(subIdx: number, cmdIdx: number) {
-    const { targetCm, cmsIdx, cmIdx, splitIdx } = this.findCommandMutation(subIdx, cmdIdx);
+    const { targetCm, cmsIdx, cmIdx, splitIdx } = this.findCommandStateInfo(subIdx, cmdIdx);
     this.maybeUpdateShiftOffsetsAfterSplit(cmsIdx, cmIdx, 1);
     this.commandMutationsMap[cmsIdx][cmIdx] =
       targetCm.mutate().splitInHalfAtIndex(splitIdx).build();
@@ -104,7 +104,7 @@ export class PathMutator {
    * Un-splits the path at the specified index. Returns a new path object.
    */
   unsplitCommand(subIdx: number, cmdIdx: number) {
-    const { targetCm, cmsIdx, cmIdx, splitIdx } = this.findCommandMutation(subIdx, cmdIdx);
+    const { targetCm, cmsIdx, cmIdx, splitIdx } = this.findCommandStateInfo(subIdx, cmdIdx);
     const isSubPathReversed = this.reversals[cmsIdx];
     this.commandMutationsMap[cmsIdx][cmIdx] =
       targetCm.mutate().unsplitAtIndex(isSubPathReversed ? splitIdx - 1 : splitIdx).build();
@@ -121,7 +121,7 @@ export class PathMutator {
    * Convert the path at the specified index. Returns a new path object.
    */
   convertCommand(subIdx: number, cmdIdx: number, svgChar: SvgChar) {
-    const { targetCm, cmsIdx, cmIdx, splitIdx } = this.findCommandMutation(subIdx, cmdIdx);
+    const { targetCm, cmsIdx, cmIdx, splitIdx } = this.findCommandStateInfo(subIdx, cmdIdx);
     this.commandMutationsMap[cmsIdx][cmIdx] =
       targetCm.mutate().convertAtIndex(splitIdx, svgChar).build();
     return this;
@@ -239,7 +239,7 @@ export class PathMutator {
       ));
   }
 
-  private findCommandMutation(subIdx: number, cmdIdx: number) {
+  private findCommandStateInfo(subIdx: number, cmdIdx: number) {
     const cmsIdx = this.subPathOrdering[subIdx];
     const subPathCms = this.commandMutationsMap[cmsIdx];
     const numCommandsInSubPath = _.sum(subPathCms.map(cm => cm.getCommands().length));
@@ -247,17 +247,16 @@ export class PathMutator {
       cmdIdx = numCommandsInSubPath - cmdIdx;
     }
     cmdIdx += this.shiftOffsets[cmsIdx];
-    let cmdIdIdx = cmdIdx;
     if (cmdIdx >= numCommandsInSubPath) {
+      // Note that subtracting (numCommandsInSubPath - 1) is intentional here
+      // (as opposed to subtracting numCommandsInSubPath).
       cmdIdx -= numCommandsInSubPath - 1;
-      cmdIdIdx -= numCommandsInSubPath;
     }
     let counter = 0;
     let cmIdx = 0;
     for (const targetCm of subPathCms) {
       if (counter + targetCm.getCommands().length > cmdIdx) {
-        const splitIdx = cmdIdx - counter;
-        return { targetCm, cmsIdx, cmIdx, splitIdx };
+        return { targetCm, cmsIdx, cmIdx, splitIdx: cmdIdx - counter };
       }
       counter += targetCm.getCommands().length;
       cmIdx++;

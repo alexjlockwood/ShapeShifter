@@ -36,13 +36,13 @@ export class PathState {
       subPathOrdering ? subPathOrdering.slice() : subPaths.map((_, i) => i);
     this.commands = _.flatMap(subPaths, (subPath, subIdx) => {
       return subPath.getCommands().map((cmd, cmdIdx) => {
-        return cmd.mutate().setId(this.findCommandMutation(subIdx, cmdIdx)).build();
+        return cmd.mutate().setId(this.findCommandStateId(subIdx, cmdIdx)).build();
       });
     });
     this.subPaths = createSubPaths(...this.commands);
   }
 
-  private findCommandMutation(subIdx: number, cmdIdx: number) {
+  private findCommandStateId(subIdx: number, cmdIdx: number) {
     const cmsIdx = this.subPathOrdering[subIdx];
     const subPathCms = this.commandMutationsMap[cmsIdx];
     const numCommandsInSubPath = _.sum(subPathCms.map(cm => cm.getCommands().length));
