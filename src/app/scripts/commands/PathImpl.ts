@@ -6,7 +6,8 @@ import {
 import * as PathParser from './PathParser';
 import { newSubPath } from './SubPathImpl';
 import { CommandImpl, newMove, newLine } from './CommandImpl';
-import { PathState, CommandState, PathMutator } from './state';
+import { PathState, CommandState } from './state';
+import { PathMutator } from './PathMutator';
 
 export function newPath(obj: string | Command[]): Path {
   return new PathImpl(obj);

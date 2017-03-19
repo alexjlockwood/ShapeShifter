@@ -2,7 +2,6 @@ import * as _ from 'lodash';
 import { SubPath, SvgChar, ProjectionResult, HitOptions, HitResult } from '..';
 import { CommandImpl } from '../CommandImpl';
 import { CommandState } from './CommandState';
-import { PathMutator } from './PathMutator';
 import { MathUtil, Matrix, Point, Rect } from '../../common';
 
 export class PathState {

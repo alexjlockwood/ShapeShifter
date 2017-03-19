@@ -102,9 +102,7 @@ export class CommandStateMutator {
    * Adds transforms to this command mutation using the specified transformation matrices.
    */
   addTransforms(transforms: Matrix[]) {
-    this.transforms = [Matrix.flatten(...[].concat(transforms, this.transforms))];
-    this.calculator = newCalculator(this.backingCommand.transform(this.transforms));
-    return this;
+    return this.setTransforms([].concat(transforms, this.transforms));
   }
 
   /**
@@ -115,7 +113,6 @@ export class CommandStateMutator {
     this.calculator = newCalculator(this.backingCommand.transform(this.transforms));
     return this;
   }
-
 
   /**
    * Reverts this command mutation back to its original state.
@@ -131,9 +128,10 @@ export class CommandStateMutator {
     return this;
   }
 
+  /**
+   * Builds a new command state object.
+   */
   build() {
-    // Reset the calculator if the command has been transformed. The cloned CommandMutation
-    // will lazily re-initialize the calculator when necessary.
     if (this.mutations.length === 1) {
       return new CommandState({
         backingCommand: this.backingCommand,

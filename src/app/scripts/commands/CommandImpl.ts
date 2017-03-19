@@ -33,7 +33,16 @@ export class CommandImpl implements Command {
   constructor(
     public readonly svgChar: SvgChar,
     public readonly points: ReadonlyArray<Point>,
-    public readonly isSplit = false) { }
+    public readonly isSplit = false,
+  ) { }
+
+  getSvgChar() {
+    return this.svgChar;
+  }
+
+  getPoints() {
+    return this.points;
+  }
 
   // Implements the Command interface.
   get start() {
@@ -73,11 +82,12 @@ export class CommandImpl implements Command {
     return new CommandImpl(
       this.svgChar,
       this.points.map(p => p ? MathUtil.transformPoint(p, ...matrices) : p),
-      this.isSplit);
+      this.isSplit,
+    );
   }
 
   /** Returns a new reversed draw command. */
-  reverseSubPath() {
+  reverse() {
     if (this.svgChar !== 'M' || this.start) {
       const points = this.points.slice().reverse();
       return new CommandImpl(this.svgChar, points, this.isSplit);

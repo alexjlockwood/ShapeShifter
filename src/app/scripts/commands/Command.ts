@@ -33,6 +33,16 @@ export interface Command {
   isSplit: boolean;
 
   /**
+   * Returns the SVG character for this command.
+   */
+  getSvgChar(): SvgChar;
+
+  /**
+   * Returns the points for this command.
+   */
+  getPoints(): ReadonlyArray<Point>;
+
+  /**
    * Returns true iff this command can be converted into a new command
    * that is morphable with the specified SVG command type.
    */

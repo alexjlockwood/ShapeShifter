@@ -50,7 +50,7 @@ function reverseCommands(
   // Reverse the commands.
   const newCmds = [];
   for (let i = cmds.length - 1; i > 0; i--) {
-    newCmds.push(cmds[i].reverseSubPath());
+    newCmds.push(cmds[i].reverse());
   }
   newCmds.unshift(newMove(cmds[0].start, newCmds[0].start));
   return newCmds;

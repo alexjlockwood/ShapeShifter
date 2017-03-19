@@ -3,7 +3,7 @@ import { MathUtil, Point, Matrix } from '../../common';
 import { Calculator, newCalculator, BBox, Line } from '../calculators';
 import { SvgChar, ProjectionResult } from '..';
 import { CommandImpl } from '../CommandImpl';
-import { CommandStateMutator } from './CommandMutator';
+import { CommandStateMutator } from './CommandStateMutator';
 
 /**
  * Contains additional information about each individual command so that we can
@@ -26,12 +26,12 @@ export class CommandState {
   private readonly commands: ReadonlyArray<CommandImpl>;
 
   // The list of mutations describes how the initial backing command
-  // has since been modified. Since the command mutation always holds a
+  // has since been modified. Since the command state always holds a
   // reference to its initial backing command, these modifications
   // are always reversible.
   private readonly mutations: ReadonlyArray<Mutation>;
 
-  // The transformation matrix used to transform this command state object.
+  // The transformation matricies used to transform this command state object.
   private readonly transforms: ReadonlyArray<Matrix>;
 
   constructor(obj: CommandImpl | ConstructorParams) {
