@@ -1,7 +1,8 @@
 import * as _ from 'lodash';
 import { MathUtil, Point } from '../common';
 import { Path, Command, ProjectionResult, HitOptions } from '.';
-import { PathState, PathMutator } from './PathState';
+import { PathState } from './PathState';
+import { PathMutator } from './PathMutator';
 import * as PathParser from './PathParser';
 
 export function newPath(obj: string | Command[]): Path {

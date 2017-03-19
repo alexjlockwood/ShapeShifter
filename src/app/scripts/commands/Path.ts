@@ -1,7 +1,7 @@
 import { Point } from '../common';
 import { SubPath, Command } from '.';
 import { ProjectionResult } from './calculators';
-import { PathMutator } from './state';
+import { PathMutator } from './PathMutator';
 
 /**
  * Defines the set of methods that are seen by the UI.
