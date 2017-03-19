@@ -6,7 +6,7 @@ import { BehaviorSubject } from 'rxjs/BehaviorSubject';
  */
 @Injectable()
 export class SettingsService {
-  private readonly source = new BehaviorSubject<Settings>({shouldLabelPoints: false});
+  private readonly source = new BehaviorSubject<Settings>({ shouldLabelPoints: false });
 
   getSettingsObservable() {
     return this.source.asObservable();

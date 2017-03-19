@@ -1,45 +1,31 @@
-<div class="app-container"
-  fxLayout="column">
+<div class="app-container" fxLayout="column">
   <!-- Toolbar. -->
   <div class="toolbar-container">
     <app-toolbar></app-toolbar>
   </div>
-  <div class="display-container"
-    fxLayout="column"
-    fxFlex>
+  <div class="display-container" fxLayout="column" fxFlex>
     <!-- Start/Preview/End canvases. -->
-    <div #canvasContainer
-      class="canvas-container"
-      fxLayout="row"
-      fxLayoutAlign="center center"
-      fxFlex>
+    <div #canvasContainer class="canvas-container" fxLayout="row"
+      fxLayoutAlign="center center" fxFlex>
       <app-canvas [canvasType]="START_CANVAS"></app-canvas>
-      <app-canvas *ngIf="wasMorphable"
-        [canvasType]="PREVIEW_CANVAS"></app-canvas>
+      <app-canvas *ngIf="wasMorphable" [canvasType]="PREVIEW_CANVAS"></app-canvas>
       <app-canvas [canvasType]="END_CANVAS"></app-canvas>
     </div>
     <!-- Timeline controls. -->
     <app-timeline></app-timeline>
   </div>
-  <div class="inspector-container"
-    fxLayout="row">
+  <div class="inspector-container" fxLayout="row">
     <app-splitter></app-splitter>
     <!-- SVG importer and/or path selector. -->
-    <div fxLayout="column"
-      class="inspector-panel">
-      <div class="inspector-panel-header"
-        fxLayoutAlign="start center">
+    <div fxLayout="column" class="inspector-panel">
+      <div class="inspector-panel-header" fxLayoutAlign="start center">
         <span>{{morphabilityStatus === MORPHABILITY_NONE ? '' : 'Select 2 SVG paths'}}</span>
       </div>
       <app-pathselector fxFlex></app-pathselector>
     </div>
     <!-- Point inspector. -->
-    <div class="inspector-panel"
-      fxLayout="column"
-      fxFlex>
-      <div class="inspector-panel-header"
-        fxLayout="row"
-        fxLayoutAlign="start center">
+    <div class="inspector-panel" fxLayout="column" fxFlex>
+      <div class="inspector-panel-header" fxLayout="row" fxLayoutAlign="start center">
         <span *ngIf="morphabilityStatus !== MORPHABILITY_NONE">
           <span [ngClass]="{
             'unmorphable': morphabilityStatus === MORPHABILITY_UNMORPHABLE,
@@ -47,22 +33,42 @@
             [innerHTML]="morphabilityStatusTextObservable | async">
           </span>
         </span>
+        <span fxFlex></span>
+        <button *ngIf="IS_DEV_MODE" md-icon-button [disabled]="morphabilityStatus === MORPHABILITY_NONE"
+          mdTooltip="Split subpaths" mdTooltipPosition="below"
+          mdTooltipShowDelay="500" (click)="canvasModeService.setCanvasMode(SPLIT_SUBPATHS_MODE)"
+          md-theme="light">
+          <md-icon [class.activated]="(canvasModeObservable | async) === SPLIT_SUBPATHS_MODE">content_cut</md-icon>
+        </button>
+        <button *ngIf="IS_DEV_MODE" md-icon-button [disabled]="morphabilityStatus === MORPHABILITY_NONE"
+          mdTooltip="Pair subpaths" mdTooltipPosition="below" mdTooltipShowDelay="500"
+          (click)="canvasModeService.setCanvasMode(PAIR_SUBPATHS_MODE)"
+          md-theme="light">
+          <md-icon [class.activated]="(canvasModeObservable | async) === PAIR_SUBPATHS_MODE">compare_arrows</md-icon>
+        </button>
+        <button *ngIf="IS_DEV_MODE" md-icon-button [disabled]="morphabilityStatus === MORPHABILITY_NONE"
+          mdTooltip="Add points" mdTooltipPosition="below" mdTooltipShowDelay="500"
+          (click)="canvasModeService.setCanvasMode(ADD_POINTS_MODE)"
+          md-theme="light">
+          <md-icon [class.activated]="(canvasModeObservable | async) === ADD_POINTS_MODE">add_circle_outline</md-icon>
+        </button>
+        <button *ngIf="IS_DEV_MODE" md-icon-button [disabled]="morphabilityStatus === MORPHABILITY_NONE"
+          mdTooltip="Select points" mdTooltipPosition="below" mdTooltipShowDelay="500"
+          (click)="canvasModeService.setCanvasMode(SELECT_POINTS_MODE)"
+          md-theme="light">
+          <md-icon [class.activated]="(canvasModeObservable | async) === SELECT_POINTS_MODE" class="material-icons" svgIcon="cursor_default"></md-icon>
+        </button>
       </div>
-      <div class="inspector-panel-body"
-        fxLayout="row"
-        fxFlex>
+      <div class="inspector-panel-body" fxLayout="row" fxFlex>
         <app-inspector></app-inspector>
       </div>
     </div>
     <!-- Preview panel. -->
-    <div class="inspector-panel"
-      fxLayout="column">
-      <div class="inspector-panel-header"
-        fxLayoutAlign="start center">
+    <div class="inspector-panel" fxLayout="column">
+      <div class="inspector-panel-header" fxLayoutAlign="start center">
         <span>Preview</span>
       </div>
       <app-settings class="inspector-panel-body"></app-settings>
     </div>
   </div>
 </div>
-

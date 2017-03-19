@@ -25,6 +25,7 @@ import {
   LayerStateService,
   SelectionStateService,
   SettingsService,
+  CanvasModeService,
 } from './services';
 
 // Dialogs.
@@ -80,6 +81,7 @@ import 'hammerjs';
     CanvasResizeService,
     DialogService,
     SettingsService,
+    CanvasModeService,
   ],
   entryComponents: [
     ConfirmDialogComponent,
@@ -97,6 +99,7 @@ export class AppModule {
       .addSvgIcon('autofix', sanitizer.bypassSecurityTrustResourceUrl('assets/autofix.svg'))
       .addSvgIcon('contribute', sanitizer.bypassSecurityTrustResourceUrl('assets/contribute.svg'))
       .addSvgIcon('shapeshifter', sanitizer.bypassSecurityTrustResourceUrl('assets/shapeshifter.svg'))
+      .addSvgIcon('cursor_default', sanitizer.bypassSecurityTrustResourceUrl('assets/cursor-default.svg'))
       .addSvgIcon('demoicon', sanitizer.bypassSecurityTrustResourceUrl('assets/demoicon.svg'));
   }
 }

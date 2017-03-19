@@ -45,6 +45,8 @@ div.app-splitter:hover {
 .inspector-panel {
   box-shadow: 0px 0 0 material-color('grey', '500'), -4px 0 0 material-color('grey', '500');
   .inspector-panel-header {
+    padding-left: 8px;
+    padding-right: 8px;
     background-color: material-color('grey', '50');
     box-shadow: material-shadow(1);
     min-height: 40px;
@@ -54,13 +56,18 @@ div.app-splitter:hover {
       margin: 8px;
     }
     button {
-      &[disabled] {
+      &[md-icon-button] {
+        md-icon {
+          color: $colorBlackTextSecondary;
+        }
+        md-icon.activated {
+          color: material-color('orange', '900');
+        }
+      }
+      &[md-icon-button][disabled] {
         md-icon {
           color: $colorBlackTextDisabled;
         }
-      }
-      md-icon {
-        color: $colorBlackTextSecondary;
       }
     }
     span.morphable {
@@ -80,4 +87,3 @@ div.app-splitter:hover {
     }
   }
 }
-

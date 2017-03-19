@@ -7,14 +7,21 @@ import { CanvasType } from './CanvasType';
 import { Subscription } from 'rxjs/Subscription';
 import { Observable } from 'rxjs/Observable';
 import { SubPath, Command } from './scripts/commands';
-import { LayerStateService, MorphabilityStatus } from './services/layerstate.service';
-import { AnimatorService, CanvasResizeService, HoverStateService, SelectionStateService } from './services';
+import {
+  AnimatorService,
+  CanvasResizeService,
+  HoverStateService,
+  SelectionStateService,
+  CanvasModeService,
+  CanvasMode,
+  LayerStateService,
+  MorphabilityStatus,
+} from './services';
 import * as $ from 'jquery';
 import * as erd from 'element-resize-detector';
 import * as _ from 'lodash';
 import { MdSnackBar } from '@angular/material';
 
-const IS_DEV_MODE = !environment.production;
 const ELEMENT_RESIZE_DETECTOR = erd();
 const STORAGE_KEY_FIRST_TIME_USER = 'storage_key_first_time_user';
 
@@ -25,18 +32,27 @@ const STORAGE_KEY_FIRST_TIME_USER = 'storage_key_first_time_user';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
+  IS_DEV_MODE = !environment.production;
 
-  // TODO: need to warn user about svgs not being structurally identical somehow...
-  // TODO: or give the user a way to update the incorrect path id names or something...?
   START_CANVAS = CanvasType.Start;
   PREVIEW_CANVAS = CanvasType.Preview;
   END_CANVAS = CanvasType.End;
+
+  SELECt_POINTS_MODE = CanvasMode.SelectPoints;
+  ADD_POINTS_MODE = CanvasMode.AddPoints;
+  PAIR_SUBPATHS_MODE = CanvasMode.PairSubPaths;
+  SPLIT_SUBPATHS_MODE = CanvasMode.SplitSubPaths;
+
   MORPHABILITY_NONE = MorphabilityStatus.None;
   MORPHABILITY_UNMORPHABLE = MorphabilityStatus.Unmorphable;
   MORPHABILITY_MORPHABLE = MorphabilityStatus.Morphable;
+
   morphabilityStatus = MorphabilityStatus.None;
   morphabilityStatusTextObservable: Observable<string>;
   wasMorphable = false;
+
+  canvasModeObservable: Observable<CanvasMode>;
+
   private readonly subscriptions: Subscription[] = [];
 
   private canvasContainer: JQuery;
@@ -51,9 +67,11 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     private readonly hoverStateService: HoverStateService,
     private readonly selectionStateService: SelectionStateService,
     private readonly animatorService: AnimatorService,
-    private readonly canvasResizeService: CanvasResizeService) { }
+    private readonly canvasResizeService: CanvasResizeService,
+    private readonly canvasModeService: CanvasModeService) { }
 
   ngOnInit() {
+    this.canvasModeObservable = this.canvasModeService.getCanvasModeObservable();
     this.morphabilityStatusTextObservable =
       this.layerStateService.getMorphabilityStatusObservable()
         .map(status => {
@@ -128,6 +146,14 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
         }
       }));
 
+    this.subscriptions.push(
+      this.canvasModeService.getCanvasModeObservable().subscribe(canvasMode => {
+        if (canvasMode !== CanvasMode.SelectPoints) {
+          // Clear all current selections if we are leaving selection mode.
+          this.selectionStateService.reset();
+        }
+      }));
+
     ELEMENT_RESIZE_DETECTOR.listenTo(this.canvasContainer.get(0), el => {
       updateCanvasSizes();
     });
@@ -164,7 +190,10 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       if (event.keyCode === 8 || event.keyCode === 46) {
         // In case there's a JS error, never navigate away.
         event.preventDefault();
-        this.deleteSelectedSplitPoints();
+        if (this.canvasModeService.getCanvasMode() === CanvasMode.SelectPoints) {
+          // Can only delete points in selection mode.
+          this.deleteSelectedSplitPoints();
+        }
         return false;
       } else if (event.keyCode === 32) {
         // Spacebar.
@@ -216,7 +245,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   private initBeforeOnLoadListener() {
     // TODO: we should check to see if there are any dirty changes first
     $(window).on('beforeunload', event => {
-      if (!IS_DEV_MODE
+      if (!this.IS_DEV_MODE
         && (this.layerStateService.getVectorLayer(CanvasType.Start)
           || this.layerStateService.getVectorLayer(CanvasType.End))) {
         return 'You\'ve made changes but haven\'t saved. ' +
