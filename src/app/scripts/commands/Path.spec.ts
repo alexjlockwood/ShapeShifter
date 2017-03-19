@@ -65,11 +65,11 @@ describe('Path', () => {
       let expected = newPath('M 20 20 L 10 10 L 0 0');
       checkPathsEqual(actual, expected);
 
-      // actual = newPath('M 0 0 L 10 10 L 20 20 Z').mutate()
-      //   .reverseSubPath(0)
-      //   .build();
-      // expected = newPath('M 0 0 L 20 20 L 10 10 L 0 0');
-      // checkPathsEqual(actual, expected);
+      actual = newPath('M 0 0 L 10 10 L 20 20 Z').mutate()
+        .reverseSubPath(0)
+        .build();
+      expected = newPath('M 0 0 L 20 20 L 10 10 L 0 0');
+      checkPathsEqual(actual, expected);
     });
 
     it('reverse/shift w/ lines', () => {
