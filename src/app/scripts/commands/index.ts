@@ -5,3 +5,4 @@ export { SubPath } from './SubPath';
 export { Command, Index } from './Command';
 export { newPath } from './PathImpl';
 export { CommandBuilder } from './CommandImpl';
+export { PathMutator } from './PathMutator';

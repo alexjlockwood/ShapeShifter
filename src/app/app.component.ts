@@ -22,6 +22,7 @@ import * as erd from 'element-resize-detector';
 import * as _ from 'lodash';
 import { MdSnackBar } from '@angular/material';
 
+const IS_DEV_MODE = !environment.production;
 const ELEMENT_RESIZE_DETECTOR = erd();
 const STORAGE_KEY_FIRST_TIME_USER = 'storage_key_first_time_user';
 
@@ -32,7 +33,7 @@ const STORAGE_KEY_FIRST_TIME_USER = 'storage_key_first_time_user';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
-  IS_DEV_MODE = !environment.production;
+  ARE_CANVAS_MODES_ENABLED = IS_DEV_MODE && false;
 
   START_CANVAS = CanvasType.Start;
   PREVIEW_CANVAS = CanvasType.Preview;
@@ -245,7 +246,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   private initBeforeOnLoadListener() {
     // TODO: we should check to see if there are any dirty changes first
     $(window).on('beforeunload', event => {
-      if (!this.IS_DEV_MODE
+      if (!IS_DEV_MODE
         && (this.layerStateService.getVectorLayer(CanvasType.Start)
           || this.layerStateService.getVectorLayer(CanvasType.End))) {
         return 'You\'ve made changes but haven\'t saved. ' +

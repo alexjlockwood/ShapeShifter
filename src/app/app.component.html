@@ -34,26 +34,26 @@
           </span>
         </span>
         <span fxFlex></span>
-        <button *ngIf="IS_DEV_MODE" md-icon-button [disabled]="morphabilityStatus === MORPHABILITY_NONE"
-          mdTooltip="Split subpaths" mdTooltipPosition="below"
+        <button *ngIf="ARE_CANVAS_MODES_ENABLED" md-icon-button [disabled]="morphabilityStatus === MORPHABILITY_NONE"
+          mdTooltip="Split subpaths" mdTooltipPosition="above"
           mdTooltipShowDelay="500" (click)="canvasModeService.setCanvasMode(SPLIT_SUBPATHS_MODE)"
           md-theme="light">
           <md-icon [class.activated]="(canvasModeObservable | async) === SPLIT_SUBPATHS_MODE">content_cut</md-icon>
         </button>
-        <button *ngIf="IS_DEV_MODE" md-icon-button [disabled]="morphabilityStatus === MORPHABILITY_NONE"
-          mdTooltip="Pair subpaths" mdTooltipPosition="below" mdTooltipShowDelay="500"
+        <button *ngIf="ARE_CANVAS_MODES_ENABLED" md-icon-button [disabled]="morphabilityStatus === MORPHABILITY_NONE"
+          mdTooltip="Pair subpaths" mdTooltipPosition="above" mdTooltipShowDelay="500"
           (click)="canvasModeService.setCanvasMode(PAIR_SUBPATHS_MODE)"
           md-theme="light">
           <md-icon [class.activated]="(canvasModeObservable | async) === PAIR_SUBPATHS_MODE">compare_arrows</md-icon>
         </button>
-        <button *ngIf="IS_DEV_MODE" md-icon-button [disabled]="morphabilityStatus === MORPHABILITY_NONE"
-          mdTooltip="Add points" mdTooltipPosition="below" mdTooltipShowDelay="500"
+        <button *ngIf="ARE_CANVAS_MODES_ENABLED" md-icon-button [disabled]="morphabilityStatus === MORPHABILITY_NONE"
+          mdTooltip="Add points" mdTooltipPosition="above" mdTooltipShowDelay="500"
           (click)="canvasModeService.setCanvasMode(ADD_POINTS_MODE)"
           md-theme="light">
           <md-icon [class.activated]="(canvasModeObservable | async) === ADD_POINTS_MODE">add_circle_outline</md-icon>
         </button>
-        <button *ngIf="IS_DEV_MODE" md-icon-button [disabled]="morphabilityStatus === MORPHABILITY_NONE"
-          mdTooltip="Select points" mdTooltipPosition="below" mdTooltipShowDelay="500"
+        <button *ngIf="ARE_CANVAS_MODES_ENABLED" md-icon-button [disabled]="morphabilityStatus === MORPHABILITY_NONE"
+          mdTooltip="Select points" mdTooltipPosition="above" mdTooltipShowDelay="500"
           (click)="canvasModeService.setCanvasMode(SELECT_POINTS_MODE)"
           md-theme="light">
           <md-icon [class.activated]="(canvasModeObservable | async) === SELECT_POINTS_MODE" class="material-icons" svgIcon="cursor_default"></md-icon>
