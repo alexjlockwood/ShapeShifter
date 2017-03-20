@@ -36,7 +36,7 @@ describe('Path', () => {
         actual: 'MLCQLZMZ',
         expected: ['MLCQLZMZ', 2],
       },
-      // TODO: fix this test (SVGO probably makes this impossible, but just in case...)
+      // TODO: fix this test (SVGO probably makes it impossible, but just in case...)
       // {
       //   desc: 'construct a Path w/ multiple moveto commands',
       //   actual: 'MMMMMLLLLL',
@@ -84,7 +84,7 @@ describe('Path', () => {
   });
 
   describe('mutating Path objects', () => {
-    type PathOp = 'RV' | 'SB' | 'SF' | 'S' | 'SIH' | 'US' | 'CV' | 'UCV' | 'T' | 'RT';
+    type PathOp = 'RV' | 'SB' | 'SF' | 'S' | 'SIH' | 'US' | 'CV' | 'UCV' | 'T' | 'RT' | 'M';
 
     function mutatePath(pathString: string, pathOpsString: string) {
       const A = pathOpsString.split(' ');
@@ -136,6 +136,10 @@ describe('Path', () => {
             break;
           case 'RT': // Revert.
             mutator.revert();
+            break;
+          case 'M': // Move subpath.
+            mutator.moveSubPath(+A[i + 1], +A[i + 2]);
+            i += 2;
             break;
           default:
             throw new Error('Invalid path op: ' + op);
@@ -258,6 +262,51 @@ describe('Path', () => {
         'M 0 0 L 0 10 L 10 10 Z',
         'SIH 0 3',
         'M 0 0 L 0 10 L 10 10 L 5 5 Z',
+      ),
+      makeTest(
+        'M 0 0 L 0 0 L 1 1',
+        'M 0 0',
+        'M 0 0 L 0 0 L 1 1',
+      ),
+      makeTest(
+        'M 0 0 L 0 0 L 1 1 M 1 1 L 2 1 L 3 1 L 1 1 M 2 2 L 4 2 L 8 2',
+        'M 0 1',
+        'M 1 1 L 2 1 L 3 1 L 1 1 M 0 0 L 0 0 L 1 1 M 2 2 L 4 2 L 8 2',
+      ),
+      makeTest(
+        'M 0 0 L 0 0 L 1 1 M 1 1 L 2 1 L 3 1 L 1 1 M 2 2 L 4 2 L 8 2',
+        'M 0 1 M 1 0 M 1 2 M 2 1',
+        'M 0 0 L 0 0 L 1 1 M 1 1 L 2 1 L 3 1 L 1 1 M 2 2 L 4 2 L 8 2',
+      ),
+      makeTest(
+        'M 0 0 L 0 0 L 1 1 M 1 1 L 2 1 L 3 1 L 1 1 M 2 2 L 4 2 L 8 2',
+        'M 0 1 RV 0',
+        'M 1 1 L 3 1 L 2 1 L 1 1 M 0 0 L 0 0 L 1 1 M 2 2 L 4 2 L 8 2',
+      ),
+      makeTest(
+        'M 0 0 L 0 0 L 1 1 M 1 1 L 2 1 L 3 1 L 1 1 M 2 2 L 4 2 L 8 2',
+        'M 0 1 RV 0 SF 0',
+        'M 3 1 L 2 1 L 1 1 L 3 1 M 0 0 L 0 0 L 1 1 M 2 2 L 4 2 L 8 2',
+      ),
+      makeTest(
+        'M 0 0 L 0 0 L 1 1 M 1 1 L 2 1 L 3 1 L 1 1 M 2 2 L 4 2 L 8 2',
+        'M 0 1 RV 0 SF 0 SIH 0 1',
+        'M 3 1 L 2.5 1 L 2 1 L 1 1 L 3 1 M 0 0 L 0 0 L 1 1 M 2 2 L 4 2 L 8 2',
+      ),
+      makeTest(
+        'M 0 0 L 0 0 L 1 1 M 1 1 L 2 1 L 3 1 L 1 1 M 2 2 L 4 2 L 8 2',
+        'M 0 1 RV 0 SF 0 SIH 0 1 SB 0 RV 0',
+        'M 1 1 L 2 1 L 2.5 1 L 3 1 L 1 1 M 0 0 L 0 0 L 1 1 M 2 2 L 4 2 L 8 2',
+      ),
+      makeTest(
+        'M 0 0 L 0 0 L 1 1 M 1 1 L 2 1 L 3 1 L 1 1 M 2 2 L 4 2 L 8 2',
+        'M 0 1 RV 0 SF 0 SIH 0 1 SB 0 RV 0 M 2 0 M 2 0 M 2 1',
+        'M 0 0 L 0 0 L 1 1 M 1 1 L 2 1 L 2.5 1 L 3 1 L 1 1 M 2 2 L 4 2 L 8 2',
+      ),
+      makeTest(
+        'M 0 0 L 0 0 L 1 1 M 1 1 L 2 1 L 3 1 L 1 1 M 2 2 L 4 2 L 8 2',
+        'M 0 1 RV 0 SF 0 SIH 0 1 SB 0 RV 0 M 2 0 M 2 0 M 2 1 US 1 2',
+        'M 0 0 L 0 0 L 1 1 M 1 1 L 2 1 L 3 1 L 1 1 M 2 2 L 4 2 L 8 2',
       ),
     ];
 
@@ -391,72 +440,6 @@ describe('Path', () => {
         Matrix.fromTranslation(3, 4),
       ]).revert().build();
       const expected = PATH;
-      checkPathsEqual(actual, expected);
-    });
-  });
-
-  describe('move sub paths', () => {
-    const subPath0 = 'M 0 0 L 0 0 L 1 1';
-    const subPath1 = 'M 1 1 L 2 1 L 3 1 L 1 1';
-    const subPath2 = 'M 2 2 L 4 2 L 8 2';
-    const INITIAL = newPath([subPath0, subPath1, subPath2].join(' '));
-
-    it('move sub path to same location', () => {
-      const actual = INITIAL.mutate().moveSubPath(0, 0).build();
-      const expected = INITIAL;
-      checkPathsEqual(actual, expected);
-    });
-
-    it('move single sub path', () => {
-      const actual = INITIAL.mutate().moveSubPath(0, 1).build();
-      const expected = newPath([subPath1, subPath0, subPath2].join(' '));
-      checkPathsEqual(actual, expected);
-    });
-
-    it('move sub path and then move back to same location', () => {
-      const actual = INITIAL.mutate()
-        .moveSubPath(0, 1)
-        .moveSubPath(1, 0)
-        .moveSubPath(1, 2)
-        .moveSubPath(2, 1)
-        .build();
-      const expected = INITIAL;
-      checkPathsEqual(actual, expected);
-    });
-
-    it('move single sub path and then reverse', () => {
-      let actual = INITIAL.mutate().moveSubPath(0, 1).build();
-      let expected = newPath([subPath1, subPath0, subPath2].join(' '));
-      checkPathsEqual(actual, expected);
-
-      actual = actual.mutate().reverseSubPath(0).build();
-      expected = newPath(['M 1 1 L 3 1 L 2 1 L 1 1', subPath0, subPath2].join(' '));
-      checkPathsEqual(actual, expected);
-    });
-
-    it('move single sub path, then reverse/shift/split, then move the sub path again', () => {
-      let actual = INITIAL.mutate().moveSubPath(0, 1).build();
-      let expected = newPath([subPath1, subPath0, subPath2].join(' '));
-      checkPathsEqual(actual, expected);
-
-      actual = actual.mutate().reverseSubPath(0).shiftSubPathForward(0).build();
-      expected = newPath(['M 3 1 L 2 1 L 1 1 L 3 1', subPath0, subPath2].join(' '));
-      checkPathsEqual(actual, expected);
-
-      actual = actual.mutate().splitCommandInHalf(0, 1).build();
-      expected = newPath(['M 3 1 L 2.5 1 L 2 1 L 1 1 L 3 1', subPath0, subPath2].join(' '));
-      checkPathsEqual(actual, expected);
-
-      actual = actual.mutate().shiftSubPathBack(0).reverseSubPath(0).build();
-      expected = newPath(['M 1 1 L 2 1 L 2.5 1 L 3 1 L 1 1', subPath0, subPath2].join(' '));
-      checkPathsEqual(actual, expected);
-
-      actual = actual.mutate().moveSubPath(2, 0).moveSubPath(2, 0).moveSubPath(2, 1).build();
-      expected = newPath([subPath0, 'M 1 1 L 2 1 L 2.5 1 L 3 1 L 1 1', subPath2].join(' '));
-      checkPathsEqual(actual, expected);
-
-      actual = actual.mutate().unsplitCommand(1, 2).build();
-      expected = newPath([subPath0, `M 1 1 L 2 1 L 3 1 L 1 1`, subPath2].join(' '));
       checkPathsEqual(actual, expected);
     });
   });
