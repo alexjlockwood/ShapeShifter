@@ -1,4 +1,4 @@
-import { SvgChar, newPath, Path, Command, PathMutator } from '.';
+import { SvgChar, newPath, Path, Command } from '.';
 import { Matrix, Point } from '../common';
 import * as _ from 'lodash';
 
