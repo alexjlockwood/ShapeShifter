@@ -26,7 +26,7 @@ export function newCalculator(cmd: Command): Calculator {
   if (cmd.getSvgChar() === 'M') {
     return new MoveCalculator(cmd.getId(), points[0], points[1]);
   }
-  const uniquePoints = _.uniqWith(points, (p1, p2) => p1.equals(p2));
+  const uniquePoints: Point[] = _.uniqWith(points, (p1: Point, p2: Point) => p1.equals(p2));
   if (uniquePoints.length === 1) {
     return new PointCalculator(cmd.getId(), cmd.getSvgChar(), points[0]);
   }

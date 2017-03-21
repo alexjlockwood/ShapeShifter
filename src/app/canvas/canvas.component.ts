@@ -396,13 +396,21 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         .filter(pointInfo => !pointInfo.isDrag)
         .value();
 
-    const hoverSelectionPoints = [];
-    const splitPoints = [];
-    const movePoints = [];
-    const normalPoints = [];
+    interface PointInfo {
+      isMove: boolean;
+      isSplit: boolean;
+      isHoverOrSelection: boolean;
+      point: Point;
+      position: number;
+    }
+
+    const hoverSelectionPoints: PointInfo[] = [];
+    const splitPoints: PointInfo[] = [];
+    const movePoints: PointInfo[] = [];
+    const normalPoints: PointInfo[] = [];
 
     for (const pointInfo of pathDataPointInfos) {
-      let pointList;
+      let pointList: PointInfo[];
       if (pointInfo.isHoverOrSelection) {
         pointList = hoverSelectionPoints;
       } else if (pointInfo.isSplit) {
@@ -415,7 +423,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       pointList.push(pointInfo);
     }
 
-    const drawnPoints =
+    const drawnPoints: PointInfo[] =
       [].concat(normalPoints, movePoints, splitPoints, hoverSelectionPoints);
 
     for (const pointInfo of drawnPoints) {
@@ -438,7 +446,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         this.cssScale > 4 || pointInfo.isHoverOrSelection
           ? pointInfo.position
           : undefined;
-      this.drawLabeledPoint(ctx, pointInfo.point, radius, color, text);
+      this.drawLabeledPoint(ctx, pointInfo.point, radius, color, '' + text);
     }
   }
 
@@ -634,7 +642,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  onMouseLeave(event) {
+  onMouseLeave(event: MouseEvent) {
     this.canvasRulers.forEach(r => r.hideMouse());
 
     if (this.canvasType === CanvasType.Preview || !this.activePathId) {
@@ -806,8 +814,8 @@ function drawSelections(
  * immediate parent will be the very last matrix in the returned list). This
  * function returns undefined if the layer is not found in the vector layer.
  */
-function getTransformsForLayer(vectorLayer: VectorLayer, layerId: string): Matrix[] {
-  const getTransformsFn = (parents: Layer[], current: Layer) => {
+function getTransformsForLayer(vectorLayer: VectorLayer, layerId: string) {
+  const getTransformsFn = (parents: Layer[], current: Layer): Matrix[] => {
     if (current.id === layerId) {
       return _.flatMap(parents, layer => {
         if (!(layer instanceof GroupLayer)) {

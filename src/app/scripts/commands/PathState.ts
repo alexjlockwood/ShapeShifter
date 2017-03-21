@@ -225,11 +225,11 @@ export class PathState {
   }
 
   private toCmdIdx(cmsIdx: number, cmIdx: number, splitIdx: number) {
-    const numCmds = _.chain(this.commandMutationsMap[cmsIdx])
+    const numCmds = _.chain(this.commandMutationsMap[cmsIdx] as CommandState[])
       .map((cm, i) => cm.getCommands().length)
       .sum()
       .value();
-    let cmdIdx = splitIdx + _.chain(this.commandMutationsMap[cmsIdx])
+    let cmdIdx = splitIdx + _.chain(this.commandMutationsMap[cmsIdx] as CommandState[])
       .map((cm, i) => i < cmIdx ? cm.getCommands().length : 0)
       .sum()
       .value();

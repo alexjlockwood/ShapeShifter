@@ -63,7 +63,7 @@ export class CommandState {
     // Count the number of t values that are less than the projection.
     const splitIdx =
       _.chain(this.mutations)
-        .map(mutation => mutation.t < projectionResult.t ? 1 : 0)
+        .map((mutation: Mutation) => mutation.t < projectionResult.t ? 1 : 0)
         .sum()
         .value();
     const tempSplits = [0, ...this.mutations.map(m => m.t)];

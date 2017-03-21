@@ -13,7 +13,7 @@ export class BezierCalculator implements Calculator {
   private readonly points: ReadonlyArray<Point>;
   private length: number;
   private bbox: BBox;
-  private bezierJs_;
+  private bezierJs_: any;
 
   constructor(
     private readonly id: string,
@@ -44,12 +44,12 @@ export class BezierCalculator implements Calculator {
 
   split(t1: number, t2: number): Calculator {
     if (t1 === t2) {
-      const p = this.bezierJs.get(t1);
+      const p: { x: number, y: number } = this.bezierJs.get(t1);
       return new PointCalculator(this.id, this.svgChar, new Point(p.x, p.y));
     }
-    const splitBezPoints = this.bezierJs.split(t1, t2).points;
+    const splitBezPoints: Array<{ x: number, y: number }> = this.bezierJs.split(t1, t2).points;
     const points: Point[] = splitBezPoints.map(p => new Point(p.x, p.y));
-    const uniquePoints = _.uniqWith(points, (p1, p2) => p1.equals(p2));
+    const uniquePoints: Point[] = _.uniqWith(points, (p1: Point, p2: Point) => p1.equals(p2));
     if (uniquePoints.length === 2) {
       return new LineCalculator(this.id, this.svgChar, _.first(points), _.last(points));
     }

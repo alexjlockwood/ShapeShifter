@@ -3,7 +3,7 @@ import { Matrix, Point } from '.';
 const EPSILON = 1e-8;
 
 /** Returns the floor modulus of the integer argument. */
-export function floorMod(num, maxNum) {
+export function floorMod(num: number, maxNum: number) {
   return ((num % maxNum) + maxNum) % maxNum;
 }
 

@@ -40,7 +40,7 @@ export class MoveCalculator implements Calculator {
     return { x, y } as BBox;
   }
 
-  intersects(line: Line) {
+  intersects(line: Line): number[] {
     return [];
   }
 }

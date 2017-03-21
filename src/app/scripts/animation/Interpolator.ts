@@ -71,7 +71,7 @@ export const INTERPOLATORS: Interpolator[] = [
     label: 'Bounce',
     androidRef: '@android:anim/bounce_interpolator',
     interpolateFn: f => {
-      const bounceFn = t => t * t * 8;
+      const bounceFn = (t: number) => t * t * 8;
       f *= 1.1226;
       if (f < 0.3535) {
         return bounceFn(f);
@@ -89,10 +89,10 @@ export const INTERPOLATORS: Interpolator[] = [
     label: 'Anticipate overshoot',
     androidRef: '@android:anim/anticipate_overshoot_interpolator',
     interpolateFn: f => {
-      const a = (t, s) => {
+      const a = (t: number, s: number) => {
         return t * t * ((s + 1) * t - s);
       };
-      const o = (t, s) => {
+      const o = (t: number, s: number) => {
         return t * t * ((s + 1) * t + s);
       };
       if (f < 0.5) {

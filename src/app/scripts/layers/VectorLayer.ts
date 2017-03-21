@@ -23,7 +23,7 @@ export class VectorLayer extends AbstractLayer {
 
   clone(): VectorLayer {
     const cloneFn =
-      (layer: GroupLayer | ClipPathLayer | PathLayer | VectorLayer) => {
+      (layer: GroupLayer | ClipPathLayer | PathLayer): GroupLayer | ClipPathLayer | PathLayer => {
         if (layer instanceof GroupLayer) {
           return new GroupLayer(
             layer.children.map(child => cloneFn(child)),
@@ -35,9 +35,6 @@ export class VectorLayer extends AbstractLayer {
             layer.scaleY,
             layer.translateX,
             layer.translateY);
-        }
-        if (layer instanceof ClipPathLayer) {
-          return new ClipPathLayer(layer.id, layer.pathData.clone());
         }
         if (layer instanceof PathLayer) {
           return new PathLayer(
@@ -55,13 +52,16 @@ export class VectorLayer extends AbstractLayer {
             layer.trimPathEnd,
             layer.trimPathOffset);
         }
-        return new VectorLayer(
-          layer.children.map(child => cloneFn(child)),
-          layer.id,
-          layer.width,
-          layer.height,
-          layer.alpha);
+        if (layer instanceof ClipPathLayer) {
+          return new ClipPathLayer(layer.id, layer.pathData.clone());
+        }
+        throw new Error('Unknown layer type');
       };
-    return cloneFn(this);
+    return new VectorLayer(
+      this.children.map(child => cloneFn(child)),
+      this.id,
+      this.width,
+      this.height,
+      this.alpha);
   }
 }

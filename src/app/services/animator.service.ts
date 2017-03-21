@@ -205,19 +205,19 @@ class Animator {
   }
 
   private startAnimation(onUpdateFn: (fraction: number, value: number) => void) {
-    let startTimestamp = undefined;
-    const onAnimationFrame = (timestamp: number) => {
+    let startTimestamp: number = undefined;
+    const onAnimationFrameFn = (timestamp: number) => {
       if (!startTimestamp) {
         startTimestamp = timestamp;
       }
       const progress = timestamp - startTimestamp;
       const shouldPlayInReverse = this.shouldPlayInReverse;
       if (progress < (this.duration_ * this.playbackSpeed_)) {
-        this.animationFrameId = requestAnimationFrame(onAnimationFrame);
+        this.animationFrameId = requestAnimationFrame(onAnimationFrameFn);
       } else {
         this.shouldPlayInReverse = !this.shouldPlayInReverse;
         if (this.isRepeating()) {
-          this.timeoutId = setTimeout(() => {
+          this.timeoutId = window.setTimeout(() => {
             this.startAnimation(onUpdateFn);
           }, REPEAT_DELAY);
         } else {
@@ -229,7 +229,7 @@ class Animator {
       onUpdateFn(fraction, shouldPlayInReverse ? 1 - value : value);
     };
     this.ngZone.runOutsideAngular(() => {
-      this.animationFrameId = requestAnimationFrame(onAnimationFrame);
+      this.animationFrameId = requestAnimationFrame(onAnimationFrameFn);
     });
   }
 }
