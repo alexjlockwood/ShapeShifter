@@ -86,4 +86,5 @@ function removeUselessStrokeAndFillFn(item, params) {
       return false;
     }
   }
-};
+  return undefined;
+}

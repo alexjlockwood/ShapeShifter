@@ -1,4 +1,3 @@
-import * as _ from 'lodash';
 import { MathUtil, Point } from '../common';
 import { Path, Command, ProjectionResult, HitOptions } from '.';
 import { PathState } from './PathState';

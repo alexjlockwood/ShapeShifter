@@ -12,6 +12,8 @@
     "outDir": "../out-tsc/app",
     "target": "es5",
     "module": "es2015",
+    "pretty": true,
+    "noImplicitReturns": true,
     "baseUrl": "",
     "types": []
   },
