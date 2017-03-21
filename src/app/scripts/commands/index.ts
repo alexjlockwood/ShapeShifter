@@ -1,3 +1,5 @@
+import * as PathUtil from './PathUtil';
+export { PathUtil };
 export { ProjectionResult } from './calculators';
 export { SvgChar } from './SvgChar';
 export { Path, HitOptions, HitResult } from './Path';

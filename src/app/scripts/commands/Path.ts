@@ -46,16 +46,6 @@ export interface Path {
   project(point: Point): { projection: ProjectionResult, subIdx: number, cmdIdx: number } | undefined;
 
   /**
-   * Splits the path at the specified indices. Returns a new path object.
-   */
-  splitBatch(ops: Array<{ subIdx: number, cmdIdx: number, ts: number[] }>): Path;
-
-  /**
-   * Un-splits the path at the specified incides. Returns a new path object.
-   */
-  unsplitBatch(ops: Array<{ subIdx: number, cmdIdx: number }>): Path;
-
-  /**
    * Returns a cloned instance of this path.
    */
   clone(): Path;

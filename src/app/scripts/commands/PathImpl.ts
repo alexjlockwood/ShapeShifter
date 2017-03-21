@@ -101,46 +101,6 @@ export class PathImpl implements Path {
   }
 
   // Implements the Path interface.
-  splitBatch(ops: Array<{ subIdx: number, cmdIdx: number, ts: number[] }>) {
-    if (!ops.length) {
-      return this;
-    }
-    ops = ops.slice();
-    // TODO: should  we need to sort by subIdx or cmsIdx here?
-    ops.sort(({ subIdx: s1, cmdIdx: c1 }, { subIdx: s2, cmdIdx: c2 }) => {
-      // Perform higher index splits first so that we don't alter the
-      // indices of the lower index split operations.
-      return s1 !== s2 ? s2 - s1 : c2 - c1;
-    });
-    const mutator = this.mutate();
-    for (const { subIdx, cmdIdx, ts } of ops) {
-      // TODO: do all operations as a single batch instead of individually
-      mutator.splitCommand(subIdx, cmdIdx, ...ts);
-    }
-    return mutator.build();
-  }
-
-  // Implements the Path interface.
-  unsplitBatch(ops: Array<{ subIdx: number, cmdIdx: number }>) {
-    if (!ops.length) {
-      return this;
-    }
-    ops = ops.slice();
-    // TODO: should  we need to sort by subIdx or cmsIdx here?
-    ops.sort(({ subIdx: s1, cmdIdx: c1 }, { subIdx: s2, cmdIdx: c2 }) => {
-      // Perform higher index unsplits first so that we don't alter the
-      // indices of the lower index unsplit operations.
-      return s1 !== s2 ? s2 - s1 : c2 - c1;
-    });
-    const mutator = this.mutate();
-    for (const { subIdx, cmdIdx } of ops) {
-      // TODO: do all operations as a single batch instead of individually
-      mutator.unsplitCommand(subIdx, cmdIdx);
-    }
-    return mutator.build();
-  }
-
-  // Implements the Path interface.
   hitTest(point: Point, opts: HitOptions = {}) {
     return this.ps.hitTest(point, opts);
   }

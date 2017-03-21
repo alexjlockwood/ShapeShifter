@@ -6,7 +6,7 @@ import { environment } from '../environments/environment';
 import { CanvasType } from './CanvasType';
 import { Subscription } from 'rxjs/Subscription';
 import { Observable } from 'rxjs/Observable';
-import { SubPath, Command } from './scripts/commands';
+import { SubPath, Command, PathUtil } from './scripts/commands';
 import {
   AnimatorService,
   CanvasResizeService,
@@ -285,8 +285,12 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     this.selectionStateService.reset();
     unsplitOpsMap.forEach((ops, idx) => {
       // TODO: perform these as a single batch instead of inside a loop? (to reduce # of broadcasts)
-      this.layerStateService.updateActivePath(
-        canvasType, activePathLayer.pathData.unsplitBatch(ops), idx);
+      PathUtil.sortPathOps(ops);
+      const mutator = activePathLayer.pathData.mutate();
+      for (const op of ops) {
+        mutator.unsplitCommand(op.subIdx, op.cmdIdx);
+      }
+      this.layerStateService.updateActivePath(canvasType, mutator.build(), idx);
     });
   }
 }

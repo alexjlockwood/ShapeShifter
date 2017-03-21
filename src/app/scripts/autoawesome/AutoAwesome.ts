@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import { Path, Command } from '../commands';
+import { Path, Command, PathUtil } from '../commands';
 import { MathUtil } from '../common';
 
 // Needleman-Wunsch scoring function constants.
@@ -103,7 +103,7 @@ export function autoFix(
 
   // Fill in the gaps by applying linear subdivide batch splits.
   const applySplitsFn = (path: Path, gapGroups: CmdInfo[][]) => {
-    const splitOps = [];
+    const splitOps: { subIdx: number, cmdIdx: number, ts: number[] }[] = [];
     const numPaths = path.getSubPaths()[subIdx].getCommands().length;
     for (let i = gapGroups.length - 1; i >= 0; i--) {
       const gapGroup = gapGroups[i];
@@ -114,7 +114,12 @@ export function autoFix(
       const ts = gapGroup.map((_, gapIdx) => (gapIdx + 1) / (gapGroup.length + 1));
       splitOps.push({ subIdx, cmdIdx, ts });
     }
-    return path.splitBatch(splitOps);
+    PathUtil.sortPathOps(splitOps);
+    const mutator = path.mutate();
+    for (const { cmdIdx, ts } of splitOps) {
+      mutator.splitCommand(subIdx, cmdIdx, ...ts);
+    }
+    return mutator.build();
   };
 
   const fromPathResult = applySplitsFn(alignmentInfo.generatedFromPath, fromGapGroups);
