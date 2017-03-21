@@ -21,8 +21,10 @@ import * as $ from 'jquery';
 import * as erd from 'element-resize-detector';
 import * as _ from 'lodash';
 import { MdSnackBar } from '@angular/material';
+import { DemoUtil, DEMO_MAP } from './scripts/demos';
 
 const IS_DEV_MODE = !environment.production;
+const AUTO_LOAD_DEMO = IS_DEV_MODE && true;
 const ELEMENT_RESIZE_DETECTOR = erd();
 const STORAGE_KEY_FIRST_TIME_USER = 'storage_key_first_time_user';
 
@@ -33,7 +35,7 @@ const STORAGE_KEY_FIRST_TIME_USER = 'storage_key_first_time_user';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
-  ARE_CANVAS_MODES_ENABLED = IS_DEV_MODE && false;
+  ARE_CANVAS_MODES_ENABLED = IS_DEV_MODE && true;
 
   START_CANVAS = CanvasType.Start;
   PREVIEW_CANVAS = CanvasType.Preview;
@@ -169,6 +171,11 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
           this.snackBar.open('Ready to work offline', 'Dismiss', { duration: 5000 });
         });
       }
+    }
+    if (AUTO_LOAD_DEMO) {
+      setTimeout(() => {
+        DemoUtil.loadDemo(this.layerStateService, DEMO_MAP.get('Morphing animals'));
+      });
     }
   }
 

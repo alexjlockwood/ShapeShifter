@@ -1,2 +1,3 @@
-import { DEMO_MAP } from './demos';
-export { DEMO_MAP };
+import * as DemoUtil from './DemoUtil';
+export { DemoUtil };
+export { DEMO_MAP } from './Demos';

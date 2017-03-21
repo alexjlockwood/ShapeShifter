@@ -10,8 +10,7 @@ import { AutoAwesome } from '../scripts/autoawesome';
 import { AnimatorService } from '../services/animator.service';
 import { SelectionStateService } from '../services/selectionstate.service';
 import { HoverStateService } from '../services/hoverstate.service';
-import { DEMO_MAP } from '../scripts/demos';
-import { SvgLoader } from '../scripts/import';
+import { DemoUtil, DEMO_MAP } from '../scripts/demos';
 import { VectorLayer, GroupLayer, PathLayer } from '../scripts/layers';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/combineLatest';
@@ -231,7 +230,6 @@ export class ToolbarComponent implements OnInit {
 
   onDemoClick() {
     ga('send', 'event', 'Demos', 'Demos dialog shown');
-
     const demoTitles = Array.from(DEMO_MAP.keys());
     this.dialogsService
       .demo(this.viewContainerRef, demoTitles)
@@ -241,30 +239,7 @@ export class ToolbarComponent implements OnInit {
           return;
         }
         ga('send', 'event', 'Demos', 'Demo selected', selectedDemoTitle);
-        const importedStartVectorLayer = SvgLoader.loadVectorLayerFromSvgString(selectedSvgStrings.start);
-        const importedEndVectorLayer = SvgLoader.loadVectorLayerFromSvgString(selectedSvgStrings.end);
-        this.layerStateService.setVectorLayer(CanvasType.Start, importedStartVectorLayer.clone(), false);
-        this.layerStateService.setVectorLayer(CanvasType.Preview, importedStartVectorLayer.clone(), false);
-        this.layerStateService.setVectorLayer(CanvasType.End, importedEndVectorLayer.clone(), false);
-        const availableStartPathIds: string[] = [];
-        importedStartVectorLayer.walk((layer => {
-          if (layer instanceof PathLayer) {
-            availableStartPathIds.push(layer.id);
-          }
-        }));
-        const availableEndPathIds: string[] = [];
-        importedEndVectorLayer.walk((layer => {
-          if (layer instanceof PathLayer) {
-            availableEndPathIds.push(layer.id);
-          }
-        }));
-        const shuffledStartPathIds = _.shuffle(availableStartPathIds);
-        const shuffledEndPathIds = _.shuffle(availableEndPathIds);
-        this.layerStateService.setActivePathIds([
-          { type: CanvasType.Preview, pathId: shuffledStartPathIds[0] },
-          { type: CanvasType.Start, pathId: shuffledStartPathIds[0] },
-          { type: CanvasType.End, pathId: shuffledEndPathIds[0] },
-        ]);
+        DemoUtil.loadDemo(this.layerStateService, selectedSvgStrings);
       });
   }
 
