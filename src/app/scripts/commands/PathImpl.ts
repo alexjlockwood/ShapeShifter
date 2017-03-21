@@ -26,11 +26,6 @@ export class PathImpl implements Path {
   }
 
   // Implements the Path interface.
-  clone() {
-    return this.mutate().build();
-  }
-
-  // Implements the Path interface.
   getPathString() {
     if (this.pathString === undefined) {
       this.pathString = PathParser.commandsToString(this.getCommands());
@@ -66,32 +61,26 @@ export class PathImpl implements Path {
     if (!this.isMorphableWith(start) || !this.isMorphableWith(end)) {
       return this;
     }
-    // TODO: is this overkill? might be smart to make this more memory efficient.
-    return new PathImpl(
-      _.zipWith<Command>(
-        start.getCommands(),
-        this.getCommands(),
-        end.getCommands(),
-        (startCmd: Command, currCmd: Command, endCmd: Command) => {
-          return currCmd.mutate()
-            // TODO: avoid re-generating unique ids on each animation frame.
-            .setId('')
-            .setPoints(..._.zipWith<Point>(
-              startCmd.getPoints(),
-              currCmd.getPoints(),
-              endCmd.getPoints(),
-              (startPt: Point, currPt: Point, endPt: Point) => {
-                if (!startPt || !currPt || !endPt) {
-                  // The 'start' point of the first Move command in a path
-                  // will be undefined. Skip it.
-                  return undefined;
-                }
-                return new Point(
-                  MathUtil.lerp(startPt.x, endPt.x, fraction),
-                  MathUtil.lerp(startPt.y, endPt.y, fraction));
-              }))
-            .build();
-        }));
+    const newCommands: Command[] = [];
+    this.getCommands().forEach((currCmd, i) => {
+      const startCmd = start.getCommands()[i];
+      const endCmd = end.getCommands()[i];
+      const points: Point[] = [];
+      for (let j = 0; j < currCmd.getPoints().length; j++) {
+        const p1 = startCmd.getPoints()[j];
+        const p2 = endCmd.getPoints()[j];
+        if (p1 && p2) {
+          // The 'start' point of the first Move command in a path
+          // will be undefined. Skip it.
+          const px = MathUtil.lerp(p1.x, p2.x, fraction);
+          const py = MathUtil.lerp(p1.y, p2.y, fraction);
+          points.push(new Point(px, py));
+        }
+      }
+      // TODO: avoid re-generating unique ids on each animation frame.
+      newCommands.push(currCmd.mutate().setId('').setPoints(...points).build());
+    });
+    return new PathImpl(newCommands);
   }
 
   // Implements the Path interface.
@@ -108,5 +97,10 @@ export class PathImpl implements Path {
   // Implements the Path interface.
   mutate() {
     return new PathMutator(this.ps);
+  }
+
+  // Implements the Path interface.
+  clone() {
+    return this.mutate().build();
   }
 }
