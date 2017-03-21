@@ -444,9 +444,9 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       // TODO: figure out when to hide the point text from the user?
       const text =
         this.cssScale > 4 || pointInfo.isHoverOrSelection
-          ? pointInfo.position
+          ? pointInfo.position.toString()
           : undefined;
-      this.drawLabeledPoint(ctx, pointInfo.point, radius, color, '' + text);
+      this.drawLabeledPoint(ctx, pointInfo.point, radius, color, text);
     }
   }
 

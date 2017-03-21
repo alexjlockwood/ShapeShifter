@@ -74,6 +74,8 @@ export class PathImpl implements Path {
           const px = MathUtil.lerp(p1.x, p2.x, fraction);
           const py = MathUtil.lerp(p1.y, p2.y, fraction);
           points.push(new Point(px, py));
+        } else {
+          points.push(undefined);
         }
       }
       // TODO: avoid re-generating unique ids on each animation frame.
