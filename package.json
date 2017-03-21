@@ -45,11 +45,11 @@
     "zone.js": "^0.8.0"
   },
   "devDependencies": {
-    "@angular/cli": "1.0.0-rc.2",
+    "@angular/cli": "1.0.0-rc.4",
     "@angular/compiler-cli": "^2.4.9",
     "@types/es6-promise": "0.0.32",
     "@types/hammerjs": "^2.0.34",
-    "@types/jasmine": "2.5.45",
+    "@types/jasmine": "2.5.46",
     "@types/jquery": "^2.0.41",
     "@types/jszip": "0.0.32",
     "@types/lodash": "^4.14.55",
@@ -64,15 +64,15 @@
     "karma": "~1.5.0",
     "karma-chrome-launcher": "~2.0.0",
     "karma-cli": "~1.0.1",
-    "karma-coverage-istanbul-reporter": "^0.3.0",
+    "karma-coverage-istanbul-reporter": "^1.0.0",
     "karma-jasmine": "~1.1.0",
     "karma-jasmine-html-reporter": "^0.2.2",
     "karma-remap-istanbul": "^0.6.0",
     "protractor": "~5.1.1",
     "sass-lint": "^1.10.2",
-    "ts-node": "~2.1.0",
+    "ts-node": "~3.0.0",
     "tslint": "~4.5.1",
     "typescript": "~2.2.1",
-    "webdriver-manager": "12.0.3"
+    "webdriver-manager": "12.0.4"
   }
 }
