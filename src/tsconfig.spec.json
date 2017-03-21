@@ -13,8 +13,8 @@
     "module": "commonjs",
     "target": "es6",
     "baseUrl": "",
-    "pretty": true,
     "noImplicitReturns": true,
+    "pretty": true,
     "types": [
       "jasmine",
       "node"
