@@ -18,12 +18,14 @@ export class PathState {
     // Maps internal cmsIdx values to the subpath's current shift offset state.
     // Note that a shift offset value of 'x' means 'perform x number of shift back ops'.
     public readonly shiftOffsets?: ReadonlyArray<number>,
+    // Maps internal cmsIdx values to internal subpath IDs.
+    public readonly subPathIds?: ReadonlyArray<string>,
     // Maps client-visible subIdx values to internal cmsIdx values.
     public readonly subPathOrdering?: ReadonlyArray<number>,
   ) {
-    // TODO: make this more efficient
+    // TODO: avoid constructing the subpaths twice
     const commands = (typeof obj === 'string' ? PathParser.parseCommands(obj) : obj);
-    const subPaths = createSubPaths(...commands);
+    const subPaths = createSubPaths(commands);
     this.commandMutationsMap =
       commandMutationsMap
         ? commandMutationsMap.map(cms => cms.slice())
@@ -32,6 +34,8 @@ export class PathState {
       reversals ? reversals.slice() : subPaths.map(_ => false);
     this.shiftOffsets =
       shiftOffsets ? shiftOffsets.slice() : subPaths.map(_ => 0);
+    this.subPathIds =
+      subPathIds ? subPathIds.slice() : subPaths.map(s => _.uniqueId());
     this.subPathOrdering =
       subPathOrdering ? subPathOrdering.slice() : subPaths.map((_, i) => i);
     this.commands = _.flatMap(subPaths, (subPath, subIdx) => {
@@ -39,7 +43,10 @@ export class PathState {
         return cmd.mutate().setId(this.findCommandStateId(subIdx, cmdIdx)).build();
       });
     });
-    this.subPaths = createSubPaths(...this.commands);
+    this.subPaths =
+      createSubPaths(
+        this.commands,
+        this.subPathIds.map((_, i) => this.subPathIds[this.subPathOrdering[i]]));
   }
 
   private findCommandStateId(subIdx: number, cmdIdx: number) {
@@ -191,8 +198,8 @@ export class PathState {
         const line = { p1: point, p2: new Point(bounds.r + 1, bounds.b + 1) };
         // Filter out t=0 values since they will be accounted for by
         // neighboring t=1 values.
-        const numIntersections =
-          _.sum(cms.map(cm => cm.intersects(line).filter(t => t).length));
+        const intersectionResults = cms.map(cm => cm.intersects(line).filter(t => !!t));
+        const numIntersections = _.sum(intersectionResults.map(ts => ts.length));
         if (numIntersections % 2 !== 0) {
           hitCmsIdx = cmsIdx;
         }
@@ -275,19 +282,24 @@ function createBoundingBox(...cms: CommandState[]) {
   return bounds;
 }
 
-function createSubPaths(...commands: Command[]) {
+function createSubPaths(commands: ReadonlyArray<Command>, subPathIds: string[] = []) {
   if (!commands.length || commands[0].getSvgChar() !== 'M') {
     // TODO: is this case actually possible? should we insert 'M 0 0' instead?
     return [];
   }
-  let lastSeenMove: Command;
+
   let currentCmdList: Command[] = [];
+  const getNextSubPathFn = () => {
+    return newSubPath(subPathIds.length ? subPathIds.shift() : '', currentCmdList);
+  };
+
+  let lastSeenMove: Command;
   const subPathCmds: SubPath[] = [];
   for (const cmd of commands) {
     if (cmd.getSvgChar() === 'M') {
       lastSeenMove = cmd;
       if (currentCmdList.length) {
-        subPathCmds.push(newSubPath(currentCmdList));
+        subPathCmds.push(getNextSubPathFn());
         currentCmdList = [];
       } else {
         currentCmdList.push(cmd);
@@ -299,12 +311,12 @@ function createSubPaths(...commands: Command[]) {
     }
     currentCmdList.push(cmd);
     if (cmd.getSvgChar() === 'Z') {
-      subPathCmds.push(newSubPath(currentCmdList));
+      subPathCmds.push(getNextSubPathFn());
       currentCmdList = [];
     }
   }
   if (currentCmdList.length) {
-    subPathCmds.push(newSubPath(currentCmdList));
+    subPathCmds.push(getNextSubPathFn());
   }
   return subPathCmds;
 }

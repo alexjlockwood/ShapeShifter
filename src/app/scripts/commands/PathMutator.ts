@@ -13,6 +13,7 @@ export class PathMutator {
   private readonly commandMutationsMap: CommandState[][];
   private readonly reversals: boolean[];
   private readonly shiftOffsets: number[];
+  private readonly subPathIds: ReadonlyArray<string>;
   private readonly subPathOrdering: number[];
 
   constructor(ps: PathState) {
@@ -20,6 +21,7 @@ export class PathMutator {
     this.commandMutationsMap = ps.commandMutationsMap.map(cms => cms.slice());
     this.reversals = ps.reversals.slice();
     this.shiftOffsets = ps.shiftOffsets.slice();
+    this.subPathIds = ps.subPathIds.slice();
     this.subPathOrdering = ps.subPathOrdering.slice();
   }
 
@@ -192,6 +194,7 @@ export class PathMutator {
     const commandMutationsMap = this.commandMutationsMap;
     const reversals = this.reversals;
     const shiftOffsets = this.shiftOffsets;
+    const subPathIds = this.subPathIds;
     const subPathOrdering = this.subPathOrdering;
 
     const subPathCmds = commandMutationsMap.map((_, cmsIdx) => {
@@ -235,6 +238,7 @@ export class PathMutator {
         commandMutationsMap,
         reversals,
         shiftOffsets,
+        subPathIds,
         subPathOrdering,
       ));
   }

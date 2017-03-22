@@ -1,12 +1,17 @@
 import { Command } from '.';
 
 /**
- * Defines the set of methods that are seen by the UI.
+ * Defines a set of commands that begins with a single move to command.
  */
 export interface SubPath {
 
   /**
-   * The list of commands in this sub path.
+   * Returns a unique ID for this subpath.
+   */
+  getId(): string;
+
+  /**
+   * The list of commands in this subpath.
    */
   getCommands(): ReadonlyArray<Command>;
 

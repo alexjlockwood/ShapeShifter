@@ -4,7 +4,7 @@ import { ProjectionResult } from './calculators';
 import { PathMutator } from './PathMutator';
 
 /**
- * Defines the set of methods that are seen by the UI.
+ * Defines a set of sub paths with numerous methods to perform important calculations.
  */
 export interface Path {
 

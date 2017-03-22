@@ -1,5 +1,7 @@
 /* tslint:disable */
 
+import { environment } from '../../../environments/environment';
+
 const PLUS_SVG = `
 <svg xmlns="http://www.w3.org/2000/svg"
   viewBox="0 0 24 24">
@@ -69,3 +71,20 @@ DEMO_MAP.set('Plus-to-minus icon', { start: PLUS_SVG, end: MINUS_SVG });
 DEMO_MAP.set('Drawer-to-arrow icon', { start: DRAWER_SVG, end: ARROW_SVG });
 DEMO_MAP.set('Morphing digits', { start: DIGITS_SVG, end: DIGITS_SVG });
 DEMO_MAP.set('Morphing animals', { start: ANIMALS_SVG, end: ANIMALS_SVG });
+
+// TODO: remove these until shape shifter supports splitting subpaths
+if (!environment.production) {
+  const PLAY_SVG = `
+<svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24" fill="#000000">
+    <path d="M8 5v14l11-7z"/>
+</svg>
+`;
+
+  const PAUSE_SVG = `
+<svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24" fill="#000000">
+    <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+</svg>
+`;
+
+  DEMO_MAP.set('Play-to-pause icon', { start: PLAY_SVG, end: PAUSE_SVG });
+}

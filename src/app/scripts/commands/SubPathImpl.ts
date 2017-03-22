@@ -1,20 +1,24 @@
 import * as _ from 'lodash';
 import { SubPath, Command } from '.';
 
-export function newSubPath(commands: ReadonlyArray<Command>): SubPath {
+export function newSubPath(id: string, commands: ReadonlyArray<Command>): SubPath {
   // Precondition: must have exactly 1 move command and at most 1 closepath command.
-  return new SubPathImpl(commands.slice());
+  return new SubPathImpl(id, commands.slice());
 }
 
 /**
- * Implementation of the SubPath interface. A Path is split up into multiple
- * SubPaths, each beginning with a 'move to' command.
+ * Implementation of the SubPath interface.
  */
 class SubPathImpl implements SubPath {
-  private readonly commands: ReadonlyArray<Command>;
 
-  constructor(commands: ReadonlyArray<Command>) {
-    this.commands = commands;
+  constructor(
+    private readonly id: string,
+    private readonly commands: ReadonlyArray<Command>,
+  ) { }
+
+  // Implements the SubPath interface.
+  getId() {
+    return this.id;
   }
 
   // Implements the SubPath interface.

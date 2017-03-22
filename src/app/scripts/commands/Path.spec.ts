@@ -315,11 +315,6 @@ describe('Path', () => {
         'CV 0 1 C UCV 0',
         'M 0 0 L 3 3',
       ),
-      // makeTest(
-      //   '',
-      //   '',
-      //   '',
-      // ),
     ];
 
     for (const test of MUTATION_TESTS) {
@@ -360,6 +355,35 @@ describe('Path', () => {
 
       path = newPath('M 0 0 L 0 0 L 0 0 L 0 0').mutate().reverseSubPath(0).build();
       extractPathIdsFn(path, 4, 15);
+    });
+  });
+
+  describe('assigning subpath IDs', () => {
+    const SUBPATH_ID_TESTS = [
+      { desc: 'id set on single-subpath path', path: 'M 0 0 L 0 0 L 0 0 L 0 0 L 0 0 L 0 0', expected: 1 },
+      { desc: 'id set on two-subpath path', path: 'M 0 0 L 0 0 M 0 0 L 0 0 L 0 0 L 0 0', expected: 2 },
+      { desc: 'id set on three-subpath path', path: 'M 0 0 L 0 0 M 0 0 L 0 0 M 0 0 L 0 0', expected: 3 },
+    ];
+
+    const countUniqueSubPathIdsFn = (pathString: string) => {
+      return new Set(newPath(pathString).getSubPaths().map(s => s.getId())).size;
+    };
+
+    for (const test of SUBPATH_ID_TESTS) {
+      it(test.desc, () => {
+        expect(countUniqueSubPathIdsFn(test.path)).toEqual(test.expected);
+      });
+    }
+
+    it('subpath IDs persist correctly after mutations', () => {
+      const path = newPath('M 0 0 L 0 0 M 0 0 L 0 0 M 0 0 L 0 0');
+      const subPathIds = path.getSubPaths().map(s => s.getId());
+      const updatedPath = path.mutate().moveSubPath(0, 1).build();
+      const updatedSubPathIds = updatedPath.getSubPaths().map(s => s.getId());
+      expect(updatedSubPathIds).toEqual([subPathIds[1], subPathIds[0], subPathIds[2]]);
+      const revertedPath = updatedPath.mutate().revert().build();
+      const revertedSubPathIds = revertedPath.getSubPaths().map(s => s.getId());
+      expect(revertedSubPathIds).toEqual(subPathIds);
     });
   });
 
@@ -450,14 +474,22 @@ describe('Path', () => {
     const TESTS_HIT_TEST_FILL = [
       [new Point(5, 5), 'M 4 4 h 2 v 2 h -2 v -2', true],
       [new Point(5, 5), 'M 4 4 Q 5 4 6 4 Q 6 5 6 6 Q 5 6 4 6 Q 4 5 4 4', true],
+      [new Point(16, 7), 'M6 19h4V5H6v14zm8-14v14h4V5h-4z', true],
+      [new Point(16, 12), 'M6 19h4V5H6v14zm8-14v14h4V5h-4z', true],
+      [new Point(16, 17), 'M6 19h4V5H6v14zm8-14v14h4V5h-4z', true],
+      [new Point(0, 0), 'M6 19h4V5H6v14zm8-14v14h4V5h-4z', false],
+      [new Point(0, 12), 'M6 19h4V5H6v14zm8-14v14h4V5h-4z', false],
+      [new Point(12, 12), 'M6 19h4V5H6v14zm8-14v14h4V5h-4z', false],
+      [new Point(12, 0), 'M6 19h4V5H6v14zm8-14v14h4V5h-4z', false],
+      [new Point(24, 24), 'M6 19h4V5H6v14zm8-14v14h4V5h-4z', false],
+      [new Point(19, 20), 'M6 19h4V5H6v14zm8-14v14h4V5h-4z', false],
     ];
 
     TESTS_HIT_TEST_FILL.forEach(a => {
       const point = a[0] as Point;
       const path = newPath(a[1] as string);
       it(`hit test for '(${point.x},${point.y})' on fill path '${a[1]}' yields '${a[2]}'`, () => {
-        const hitResult = path.hitTest(point);
-        expect(hitResult.isHit).toEqual(true);
+        expect(path.hitTest(point).isHit).toEqual(a[2] as boolean);
       });
     });
   });

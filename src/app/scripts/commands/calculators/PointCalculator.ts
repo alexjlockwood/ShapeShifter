@@ -1,5 +1,6 @@
 import { Calculator, BBox, Line } from '.';
-import { SvgChar, ProjectionResult, CommandBuilder } from '..';
+import { SvgChar, ProjectionResult } from '..';
+import { CommandBuilder } from '../CommandImpl';
 import { MathUtil, Point } from '../../common';
 
 export class PointCalculator implements Calculator {
@@ -61,7 +62,6 @@ export class PointCalculator implements Calculator {
   }
 
   intersects(line: Line) {
-    const areCollinear = MathUtil.areCollinear(line.p1, this.point, line.p2);
-    return areCollinear ? [0.5] : [];
+    return [];
   }
 }
