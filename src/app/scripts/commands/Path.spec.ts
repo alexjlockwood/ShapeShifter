@@ -1,4 +1,4 @@
-import { SvgChar, newPath, Path, Command } from '.';
+import { SvgChar, newPath, Path, Command, ProjectionOntoPath } from '.';
 import { Matrix, Point } from '../common';
 import * as _ from 'lodash';
 
@@ -60,8 +60,8 @@ describe('Path', () => {
         const actualSvgChars = _.flatMap(actualPath.getSubPaths(), subPath => {
           return subPath.getCommands().map(cmd => cmd.getSvgChar());
         }).join('');
-        expect(actualSvgChars).toEqual(test.expected[0]);
-        expect(actualPath.getSubPaths().length).toEqual(test.expected[1]);
+        expect(actualSvgChars).toEqual(test.expected[0] as string);
+        expect(actualPath.getSubPaths().length).toEqual(test.expected[1] as number);
       });
     }
   });
@@ -78,13 +78,13 @@ describe('Path', () => {
     for (const test of TESTS) {
       it(`subpath #${test[1]} in '${test[0]}' is ${test[2] ? 'closed' : 'open'}`, () => {
         const path = newPath(test[0] as string);
-        expect(path.getSubPaths()[test[1] as number].isClosed()).toEqual(test[2]);
+        expect(path.getSubPaths()[test[1] as number].isClosed()).toEqual(test[2] as boolean);
       });
     }
   });
 
   describe('mutating Path objects', () => {
-    type PathOp = 'RV' | 'SB' | 'SF' | 'S' | 'SIH' | 'US' | 'CV' | 'UCV' | 'T' | 'RT' | 'M';
+    type PathOp = 'RV' | 'SB' | 'SF' | 'S' | 'SIH' | 'US' | 'CV' | 'UCV' | 'RT' | 'M';
 
     function mutatePath(pathString: string, pathOpsString: string) {
       const A = pathOpsString.split(' ');
@@ -130,9 +130,6 @@ describe('Path', () => {
           case 'UCV': // Unconvert.
             mutator.unconvertSubPath(+A[i + 1]);
             i += 1;
-            break;
-          case 'T': // Transform.
-            // TODO: write this
             break;
           case 'RT': // Revert.
             mutator.revert();
@@ -308,6 +305,21 @@ describe('Path', () => {
         'M 0 1 RV 0 SF 0 SIH 0 1 SB 0 RV 0 M 2 0 M 2 0 M 2 1 US 1 2',
         'M 0 0 L 0 0 L 1 1 M 1 1 L 2 1 L 3 1 L 1 1 M 2 2 L 4 2 L 8 2',
       ),
+      makeTest(
+        'M 0 0 L 3 3',
+        'CV 0 1 C',
+        'M 0 0 C 1 1 2 2 3 3',
+      ),
+      makeTest(
+        'M 0 0 L 3 3',
+        'CV 0 1 C UCV 0',
+        'M 0 0 L 3 3',
+      ),
+      // makeTest(
+      //   '',
+      //   '',
+      //   '',
+      // ),
     ];
 
     for (const test of MUTATION_TESTS) {
@@ -348,31 +360,6 @@ describe('Path', () => {
 
       path = newPath('M 0 0 L 0 0 L 0 0 L 0 0').mutate().reverseSubPath(0).build();
       extractPathIdsFn(path, 4, 15);
-    });
-  });
-
-  // TODO: convert these into automated tests above.
-  describe('convert/unconvert', () => {
-    it('unconvert command', () => {
-      let actual =
-        newPath('M 0 0 L 1 1 C 2 2 2 2 2 2 L 3 3 C 4 4 4 4 4 4')
-          .mutate().reverseSubPath(0).build();
-      const expected =
-        newPath('M 4 4 C 4 4 4 4 3 3 L 2 2 C 2 2 2 2 1 1 L 0 0');
-      expect(actual.getPathString()).toEqual(expected.getPathString());
-
-      actual = actual.mutate().convertCommand(0, 2, 'C').convertCommand(0, 4, 'C').build();
-      let actualSvgChars = actual.getSubPaths()[0].getCommands().map(cmd => cmd.getSvgChar());
-      let expectedSvgChars = ['M', 'C', 'C', 'C', 'C'];
-      expect(actualSvgChars).toEqual(expectedSvgChars);
-
-      actual = actual.mutate().reverseSubPath(0).build();
-      actualSvgChars = actual.getSubPaths()[0].getCommands().map(cmd => cmd.getSvgChar());
-      expectedSvgChars = ['M', 'C', 'C', 'C', 'C'];
-
-      actual = actual.mutate().unconvertSubPath(0).build();
-      actualSvgChars = actual.getSubPaths()[0].getCommands().map(cmd => cmd.getSvgChar());
-      expectedSvgChars = ['M', 'L', 'C', 'L', 'C'];
     });
   });
 
@@ -454,7 +441,7 @@ describe('Path', () => {
       const path = a[1] as string;
       it(`projecting '(${point.x},${point.y})' onto '${path}' yields ${JSON.stringify(a[2])}`, () => {
         const result = newPath(path).project(point);
-        expect(result).toEqual(a[2]);
+        expect(result).toEqual(a[2] as ProjectionOntoPath);
       });
     });
   });

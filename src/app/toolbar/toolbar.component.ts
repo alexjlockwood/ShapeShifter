@@ -136,6 +136,10 @@ export class ToolbarComponent implements OnInit {
           return;
         }
         ga('send', 'event', 'Demos', 'Demo selected', selectedDemoTitle);
+        this.animatorService.reset();
+        this.hoverStateService.reset();
+        this.selectionStateService.reset();
+        this.layerStateService.reset();
         DemoUtil.loadDemo(this.layerStateService, selectedSvgStrings);
       });
   }

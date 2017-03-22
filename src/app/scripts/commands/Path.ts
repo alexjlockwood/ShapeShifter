@@ -43,7 +43,7 @@ export interface Path {
    * Calculates the point on this path that is closest to the specified point argument.
    * Returns undefined if no point is found.
    */
-  project(point: Point): { projection: ProjectionResult, subIdx: number, cmdIdx: number } | undefined;
+  project(point: Point): ProjectionOntoPath | undefined;
 
   /**
    * Returns a cloned instance of this path.
@@ -73,4 +73,10 @@ export interface HitResult {
   isHit: boolean;
   subIdx?: number;
   cmdIdx?: number;
+}
+
+export interface ProjectionOntoPath {
+  subIdx: number;
+  cmdIdx: number;
+  projection: ProjectionResult;
 }
