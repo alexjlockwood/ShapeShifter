@@ -172,9 +172,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     }
     if (AUTO_LOAD_DEMO) {
-      setTimeout(() => {
-        DemoUtil.loadDemo(this.layerStateService, DEMO_MAP.get('Drawer-to-arrow icon'));
-      });
+      this.autoLoadDemo();
     }
   }
 
@@ -261,6 +259,12 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
           'Are you sure you want to navigate away?';
       }
       return undefined;
+    });
+  }
+
+  private autoLoadDemo() {
+    setTimeout(() => {
+      DemoUtil.loadDemo(this.layerStateService, DEMO_MAP.get('Play-to-pause icon'));
     });
   }
 }
