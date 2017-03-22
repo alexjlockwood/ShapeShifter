@@ -200,7 +200,10 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
         event.preventDefault();
         if (this.canvasModeService.getCanvasMode() === CanvasMode.SelectPoints) {
           // Can only delete points in selection mode.
-          this.deleteSelectedSplitPoints();
+          PathUtil.deleteSelectedSplitPoints(
+            this.layerStateService,
+            this.selectionStateService,
+            this.hoverStateService);
         }
         return false;
       } else if (event.keyCode === 32) {
@@ -260,44 +263,6 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
           'Are you sure you want to navigate away?';
       }
       return undefined;
-    });
-  }
-
-  /**
-   * Deletes any selected split commands when the user clicks the delete key.
-   */
-  private deleteSelectedSplitPoints() {
-    const selections = this.selectionStateService.getSelections();
-    if (!selections.length) {
-      return;
-    }
-    // Preconditions: all selections exist in the same editor and
-    // all selections correspond to the currently active path id.
-    const canvasType = selections[0].source;
-    const activePathLayer = this.layerStateService.getActivePathLayer(canvasType);
-    const unsplitOpsMap: Map<number, Array<{ subIdx: number, cmdIdx: number }>> = new Map();
-    for (const selection of selections) {
-      const { subIdx, cmdIdx } = selection.commandId;
-      if (!activePathLayer.pathData.getSubPaths()[subIdx].getCommands()[cmdIdx].isSplit()) {
-        continue;
-      }
-      let subIdxOps = unsplitOpsMap.get(subIdx);
-      if (!subIdxOps) {
-        subIdxOps = [];
-      }
-      subIdxOps.push({ subIdx, cmdIdx });
-      unsplitOpsMap.set(subIdx, subIdxOps);
-    }
-    this.hoverStateService.reset();
-    this.selectionStateService.reset();
-    unsplitOpsMap.forEach((ops, idx) => {
-      // TODO: perform these as a single batch instead of inside a loop? (to reduce # of broadcasts)
-      PathUtil.sortPathOps(ops);
-      const mutator = activePathLayer.pathData.mutate();
-      for (const op of ops) {
-        mutator.unsplitCommand(op.subIdx, op.cmdIdx);
-      }
-      this.layerStateService.updateActivePath(canvasType, mutator.build(), idx);
     });
   }
 }

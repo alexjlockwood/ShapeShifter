@@ -1,17 +1,22 @@
 import * as _ from 'lodash';
 import * as $ from 'jquery';
 import { Component, OnInit, ViewContainerRef, ChangeDetectionStrategy } from '@angular/core';
-import { LayerStateService, MorphabilityStatus } from '../services';
+import {
+  LayerStateService,
+  MorphabilityStatus,
+  HoverStateService,
+  AnimatorService,
+  SelectionStateService,
+  CanvasModeService,
+} from '../services';
 import { CanvasType } from '../CanvasType';
 import { AvdSerializer, SvgSerializer } from '../scripts/export';
 import { AvdTarget, AvdAnimation, ValueType, PropertyName } from '../scripts/animation';
 import { DialogService } from '../dialogs';
 import { AutoAwesome } from '../scripts/autoawesome';
-import { AnimatorService } from '../services/animator.service';
-import { SelectionStateService } from '../services/selectionstate.service';
-import { HoverStateService } from '../services/hoverstate.service';
 import { DemoUtil, DEMO_MAP } from '../scripts/demos';
 import { VectorLayer, GroupLayer, PathLayer } from '../scripts/layers';
+import { PathUtil, Command } from '../scripts/commands';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/combineLatest';
 import * as JSZip from 'jszip';
@@ -29,15 +34,18 @@ export class ToolbarComponent implements OnInit {
   MORPHABILITY_UNMORPHABLE = MorphabilityStatus.Unmorphable;
   MORPHABILITY_MORPHABLE = MorphabilityStatus.Morphable;
   morphabilityStatusObservable: Observable<MorphabilityStatus>;
+  isActionModeEnabledObservable: Observable<boolean>;
+  getToolbarTextObservable: Observable<string>;
   isDirtyObservable: Observable<boolean>;
 
   constructor(
-    private viewContainerRef: ViewContainerRef,
-    private animatorService: AnimatorService,
-    private hoverStateService: HoverStateService,
-    private selectionStateService: SelectionStateService,
-    private layerStateService: LayerStateService,
-    private dialogsService: DialogService) { }
+    private readonly viewContainerRef: ViewContainerRef,
+    private readonly animatorService: AnimatorService,
+    private readonly canvasModeService: CanvasModeService,
+    private readonly hoverStateService: HoverStateService,
+    private readonly selectionStateService: SelectionStateService,
+    private readonly layerStateService: LayerStateService,
+    private readonly dialogService: DialogService) { }
 
   ngOnInit() {
     this.morphabilityStatusObservable =
@@ -46,12 +54,34 @@ export class ToolbarComponent implements OnInit {
       this.layerStateService.getVectorLayerObservable(CanvasType.Start),
       this.layerStateService.getVectorLayerObservable(CanvasType.End),
       (vl1, vl2) => !!vl1 || !!vl2);
+    this.isActionModeEnabledObservable =
+      this.selectionStateService.getSelectionsObservable()
+        .map(selections => {
+          return PathUtil.getNumSelectedPoints(
+            this.layerStateService,
+            selections,
+            cmd => cmd.isSplit()) > 0;
+        });
+    this.getToolbarTextObservable =
+      this.selectionStateService.getSelectionsObservable()
+        .map(selections => {
+          const numPointsSelected =
+            PathUtil.getNumSelectedPoints(
+              this.layerStateService,
+              selections,
+              cmd => cmd.isSplit());
+          if (numPointsSelected > 0) {
+            return `${numPointsSelected} deletable point${numPointsSelected === 1 ? '' : 's'} selected`;
+          } else {
+            return 'Shape Shifter';
+          }
+        });
   }
 
   onNewClick() {
     ga('send', 'event', 'General', 'New click');
 
-    this.dialogsService
+    this.dialogService
       .confirm(this.viewContainerRef, 'Start over?', 'You\'ll lose any unsaved changes.')
       .subscribe(result => {
         if (!result) {
@@ -228,10 +258,15 @@ export class ToolbarComponent implements OnInit {
     return new AvdTarget(startLayer.id, avdAnimations);
   }
 
+  onDeleteSelectedPointsClick() {
+    PathUtil.deleteSelectedSplitPoints(
+      this.layerStateService, this.selectionStateService, this.hoverStateService);
+  }
+
   onDemoClick() {
     ga('send', 'event', 'Demos', 'Demos dialog shown');
     const demoTitles = Array.from(DEMO_MAP.keys());
-    this.dialogsService
+    this.dialogService
       .demo(this.viewContainerRef, demoTitles)
       .subscribe(selectedDemoTitle => {
         const selectedSvgStrings = DEMO_MAP.get(selectedDemoTitle);

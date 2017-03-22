@@ -1,21 +1,29 @@
-<div class="toolbar" fxLayout="row" fxLayoutAlign="center center">
+<div class="toolbar" fxLayout="row" fxLayoutAlign="center center"
+  [class.action-mode-disabled]="!(isActionModeEnabledObservable | async)"
+  [class.action-mode-enabled]="isActionModeEnabledObservable | async">
   <md-icon class="toolbar-logo" svgIcon="shapeshifter"></md-icon>
-  <span>Shape Shifter</span>
+  <span>{{getToolbarTextObservable | async}}</span>
   <span fxFlex="1 1 auto"></span>
   <button class="toolbar-action-button" [disabled]="!(isDirtyObservable | async)"
-    mdTooltip="New" mdTooltipPosition="below" mdTooltipShowDelay="500"
-    (click)="onNewClick()" md-icon-button>
+    *ngIf="!(isActionModeEnabledObservable | async)" mdTooltip="New"
+    mdTooltipPosition="below" mdTooltipShowDelay="500" (click)="onNewClick()"
+    md-icon-button>
     <md-icon>create</md-icon>
   </button>
   <button md-icon-button class="toolbar-action-button" [disabled]="morphabilityStatusObservable | async | isEqualTo: MORPHABILITY_NONE"
     (click)="onAutoFixClick()" mdTooltip="Auto fix" mdTooltipShowDelay="500"
-    mdTooltipPosition="below">
+    *ngIf="!(isActionModeEnabledObservable | async)" mdTooltipPosition="below">
     <md-icon svgIcon="autofix"></md-icon>
   </button>
   <button md-icon-button class="toolbar-action-button" [disabled]="morphabilityStatusObservable | async | isNotEqualTo: MORPHABILITY_MORPHABLE"
     mdTooltip="Export" mdTooltipPosition="below" mdTooltipShowDelay="500"
-    (click)="onExportClick()">
+    *ngIf="!(isActionModeEnabledObservable | async)" (click)="onExportClick()">
     <md-icon>file_download</md-icon>
+  </button>
+  <button md-icon-button class="toolbar-action-button" mdTooltip="Delete selected points"
+    mdTooltipPosition="below" *ngIf="isActionModeEnabledObservable | async"
+    mdTooltipShowDelay="500" (click)="onDeleteSelectedPointsClick()">
+    <md-icon>delete</md-icon>
   </button>
   <button class="toolbar-action-button" md-icon-button [mdMenuTriggerFor]="menu">
     <md-icon>more_vert</md-icon>
