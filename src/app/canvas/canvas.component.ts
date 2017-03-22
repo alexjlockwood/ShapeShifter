@@ -14,19 +14,22 @@ import { PathLayer, ClipPathLayer, VectorLayer, GroupLayer, Layer } from '../scr
 import { CanvasType } from '../CanvasType';
 import * as $ from 'jquery';
 import { Point, Matrix, MathUtil, ColorUtil } from '../scripts/common';
-import { LayerStateService, MorphabilityStatus } from '../services/layerstate.service';
 import { Subscription } from 'rxjs/Subscription';
-import { SelectionStateService, Selection } from '../services/selectionstate.service';
 import { HoverStateService, Type as HoverType, Hover } from '../services/hoverstate.service';
 import {
   AnimatorService,
   CanvasResizeService,
   CanvasModeService,
   CanvasMode,
+  SelectionStateService,
+  Selection,
+  LayerStateService,
+  MorphabilityStatus,
 } from '../services';
 import { CanvasRulerDirective } from './canvasruler.directive';
 import { SettingsService } from '../services/settings.service';
 
+// TODO: need to update this value... doesn't work for large viewports very well
 const MIN_SNAP_THRESHOLD = 1.5;
 const DRAG_TRIGGER_TOUCH_SLOP = 1;
 const SIZE_TO_POINT_RADIUS_FACTOR = 1 / 50;
@@ -195,6 +198,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       this.subscriptions.push(
         this.canvasModeService.getCanvasModeObservable()
           .subscribe(canvasMode => {
+            this.selectionStateService.reset();
+            this.hoverStateService.reset();
             this.pointSelector = undefined;
             this.shouldCreatePointOnMouseUp = false;
             this.lastKnownMouseLocation = undefined;
@@ -258,6 +263,13 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
   private get activePathId() {
     return this.layerStateService.getActivePathId(this.canvasType);
+  }
+
+  private get activePath() {
+    if (!this.activePathId) {
+      return undefined;
+    }
+    return this.layerStateService.getActivePathLayer(this.canvasType).pathData;
   }
 
   private get shouldDrawLayer() {
@@ -374,29 +386,27 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     if (this.canvasType === CanvasType.Preview && !this.shouldLabelPoints) {
       return;
     }
-    const activePathLayer =
-      this.layerStateService.getActivePathLayer(this.canvasType);
-    if (!activePathLayer) {
+    const pathId = this.activePathId;
+    if (!pathId) {
       return;
     }
 
-    const pathId = activePathLayer.id;
-    let path = activePathLayer.pathData;
+    let path = this.activePath;
     if (this.currentHoverSplitPreviewPath) {
       path = this.currentHoverSplitPreviewPath;
     }
 
     // Build a list containing all necessary information needed in
     // order to draw the labeled points.
-    const activelyDraggedPointId =
+    const activelyDraggedCommandIndex =
       this.pointSelector
         && this.pointSelector.isDragging()
         && this.pointSelector.isMousePressedDown()
         && this.pointSelector.isSelectedPointSplit()
-        ? this.pointSelector.getSelectedPointId()
+        ? this.pointSelector.getSelectedCommandIndex()
         : undefined;
     const transforms =
-      getTransformsForLayer(this.vectorLayer, activePathLayer.id).reverse();
+      getTransformsForLayer(this.vectorLayer, this.activePathId).reverse();
     const currentSelections =
       this.selectionStateService.getSelections()
         .filter(s => s.source === this.canvasType);
@@ -413,7 +423,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
                 && this.currentHover.commandId.cmdIdx === cmdIdx)
               || currentSelections.some(sel => _.isMatch(sel.commandId, commandId));
             const isDrag =
-              activelyDraggedPointId && _.isMatch(activelyDraggedPointId, commandId);
+              activelyDraggedCommandIndex && _.isMatch(activelyDraggedCommandIndex, commandId);
             const point = MathUtil.transformPoint(_.last(cmd.getPoints()), ...transforms);
             const position = cmdIdx + 1;
             return { commandId, isSplit, isMove, isHoverOrSelection, isDrag, point, position };
@@ -591,19 +601,19 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     this.lastKnownMouseLocation = mouseDown;
 
     if (this.canvasMode === CanvasMode.SelectPoints) {
-      const selectedPointId =
-        performHitTest(
-          this.vectorLayer, this.activePathId, mouseDown, this.pathPointRadius, false);
-      if (selectedPointId && selectedPointId.pathId === this.activePathId) {
+      const selectedCommandIndex =
+        performPointHitTest(
+          this.vectorLayer, this.activePathId, mouseDown, this.pathPointRadius);
+      if (selectedCommandIndex) {
         // A mouse down event ocurred on top of a point. Create a point selector
         // and track that sh!at.
         const selectedCmd =
-          (this.vectorLayer.findLayer(selectedPointId.pathId) as PathLayer)
+          (this.vectorLayer.findLayer(this.activePathId) as PathLayer)
             .pathData
-            .getSubPaths()[selectedPointId.subIdx]
-            .getCommands()[selectedPointId.cmdIdx];
+            .getSubPaths()[selectedCommandIndex.subIdx]
+            .getCommands()[selectedCommandIndex.cmdIdx];
         this.pointSelector =
-          new PointSelector(mouseDown, selectedPointId, selectedCmd.isSplit());
+          new PointSelector(mouseDown, selectedCommandIndex, selectedCmd.isSplit());
       } else if (!event.shiftKey && !event.metaKey) {
         // If the mouse down event didn't occur on top of a point, then
         // clear any existing selections, but only if the user isn't in
@@ -622,6 +632,49 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
       // TODO: avoid redrawing on every frame... often times it will be unnecessary
       this.draw();
+    } else if (this.canvasMode === CanvasMode.PairSubPaths) {
+      const selectedSubIdx =
+        performSubPathHitTest(this.vectorLayer, this.activePathId, mouseDown);
+      if (selectedSubIdx !== undefined) {
+        const selections = this.selectionStateService.getSelections();
+        const oppositeCanvasType =
+          this.canvasType === CanvasType.Start ? CanvasType.End : CanvasType.Start;
+        this.selectionStateService.reset();
+        if (selections.length && selections[0].source !== this.canvasType) {
+          // TODO: this UX should be improved before release...
+          // TODO: keep the subpaths selected until all have been paired?
+          // Then a subpath is currently selected in the canvas, so pair
+          // the two selected subpaths together.
+          const activePath = this.activePath;
+          const oppositeActivePath =
+            this.layerStateService.getActivePathLayer(oppositeCanvasType).pathData;
+          const currSelectedSubIdx = selectedSubIdx;
+          const oppositeSelectedSubIdx = selections[0].commandId.subIdx;
+          this.layerStateService.updateActivePath(
+            this.canvasType,
+            activePath.mutate().moveSubPath(currSelectedSubIdx, 0).build(),
+            false);
+          this.layerStateService.updateActivePath(
+            oppositeCanvasType,
+            oppositeActivePath.mutate().moveSubPath(oppositeSelectedSubIdx, 0).build(),
+            false);
+          this.layerStateService.notifyChange(CanvasType.Preview);
+          this.layerStateService.notifyChange(CanvasType.Start);
+          this.layerStateService.notifyChange(CanvasType.End);
+        } else if (!selections.length || selections[0].source === oppositeCanvasType) {
+          const subPath = this.activePath.getSubPaths()[selectedSubIdx];
+          for (let cmdIdx = 0; cmdIdx < subPath.getCommands().length; cmdIdx++) {
+            this.selectionStateService.toggle({
+              commandId: {
+                pathId: this.activePathId,
+                subIdx: selectedSubIdx,
+                cmdIdx
+              },
+              source: this.canvasType
+            }, true);
+          }
+        }
+      }
     }
   }
 
@@ -651,14 +704,14 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         return;
       }
 
-      const hoverPointId =
-        performHitTest(
-          this.vectorLayer, this.activePathId, mouseMove, this.pathPointRadius, true);
-      if (hoverPointId) {
+      const hoverCommandIndex =
+        performPointHitTest(
+          this.vectorLayer, this.activePathId, mouseMove, this.pathPointRadius);
+      if (hoverCommandIndex) {
         this.hoverStateService.setHover({
           type: HoverType.Command,
           source: this.canvasType,
-          commandId: hoverPointId,
+          commandId: hoverCommandIndex,
         });
       } else {
         this.hoverStateService.reset();
@@ -681,16 +734,16 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       if (this.pointSelector) {
         this.pointSelector.onMouseUp(mouseUp);
 
-        const selectedPointId = this.pointSelector.getSelectedPointId();
+        const selectedCommandIndex = this.pointSelector.getSelectedCommandIndex();
         if (this.pointSelector.isDragging()) {
           if (this.pointSelector.isSelectedPointSplit()) {
             const activeLayer =
-              this.vectorLayer.findLayer(selectedPointId.pathId) as PathLayer;
+              this.vectorLayer.findLayer(this.activePathId) as PathLayer;
 
             // Delete the old drag point from the path.
             activeLayer.pathData =
               activeLayer.pathData.mutate()
-                .unsplitCommand(selectedPointId.subIdx, selectedPointId.cmdIdx)
+                .unsplitCommand(selectedCommandIndex.subIdx, selectedCommandIndex.cmdIdx)
                 .build();
 
             // Re-split the path at the projection point.
@@ -705,15 +758,14 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
             // Clear any existing selections and/or hovers as well.
             this.hoverStateService.reset();
             this.selectionStateService.reset();
-            this.layerStateService.updateActivePath(
-              this.canvasType, activeLayer.pathData, selectedPointId.subIdx);
+            this.layerStateService.updateActivePath(this.canvasType, activeLayer.pathData);
           }
         } else {
           // If we haven't started dragging a point, then we should select
           // the point instead.
           this.selectionStateService.toggle({
             source: this.canvasType,
-            commandId: selectedPointId,
+            commandId: selectedCommandIndex,
           }, event.shiftKey || event.metaKey);
         }
 
@@ -733,8 +785,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           const splitPath = activePathLayer.pathData.mutate()
             .splitCommand(projectionOntoPath.subIdx, projectionOntoPath.cmdIdx, projection.t)
             .build();
-          this.layerStateService.updateActivePath(
-            this.canvasType, splitPath, projectionOntoPath.subIdx);
+          this.layerStateService.updateActivePath(this.canvasType, splitPath);
         }
         this.shouldCreatePointOnMouseUp = false;
       }
@@ -795,14 +846,8 @@ function drawPathLayer(
   vectorLayer: VectorLayer,
   shouldDrawPathLayerFn: (layer: PathLayer) => boolean) {
 
-  const executeCommandsFn = (
-    layer: PathLayer | ClipPathLayer,
-    transforms: Matrix[]) => {
-
-    const cmds = _.flatMap(
-      layer.pathData.getSubPaths(),
-      subCmd => subCmd.getCommands() as Command[]);
-    executeCommands(cmds, ctx, transforms);
+  const executeCommandsFn = (layer: PathLayer | ClipPathLayer, transforms: Matrix[]) => {
+    executeCommands(layer.pathData.getCommands(), ctx, transforms);
   };
 
   vectorLayer.walk(layer => {
@@ -965,12 +1010,11 @@ function getTransformsForLayer(vectorLayer: VectorLayer, layerId: string) {
  * If a point is not found, then a hit test for one of the path's subpaths
  * will be performed as well.
  */
-function performHitTest(
+function performPointHitTest(
   vectorLayer: VectorLayer,
   pathId: string,
   mousePoint: Point,
-  pointRadius: number,
-  hitTestPointsOnly: boolean): CommandIndex | undefined {
+  pointRadius: number): CommandIndex | undefined {
 
   const pathLayer = vectorLayer.findLayer(pathId) as PathLayer;
   if (!pathLayer) {
@@ -984,32 +1028,49 @@ function performHitTest(
   const isPointInRangeFn = (distance: number, isSplit: boolean) => {
     return distance <= (isSplit ? pointRadius * SPLIT_POINT_RADIUS_FACTOR : pointRadius);
   };
+  const hitResult = pathLayer.pathData.hitTest(transformedMousePoint, {
+    isPointInRangeFn,
+    hitTestPointsOnly: true,
+  });
+  if (!hitResult.isHit) {
+    return undefined;
+  }
+  return {
+    pathId: pathLayer.id,
+    subIdx: hitResult.subIdx,
+    cmdIdx: hitResult.cmdIdx,
+  };
+}
+
+function performSubPathHitTest(
+  vectorLayer: VectorLayer,
+  pathId: string,
+  mousePoint: Point): number | undefined {
+
+  const pathLayer = vectorLayer.findLayer(pathId) as PathLayer;
+  if (!pathLayer) {
+    return undefined;
+  }
+  const transforms = getTransformsForLayer(vectorLayer, pathId).reverse();
+  const transformedMousePoint =
+    MathUtil.transformPoint(
+      mousePoint,
+      MathUtil.flattenTransforms(transforms).invert());
   const isStrokeInRangeFn = pathLayer.fillColor || !pathLayer.strokeColor
     ? undefined
     : (distance: number) => {
       return distance <= pathLayer.strokeWidth / 2;
     };
-  const hitResult = pathLayer.pathData.hitTest(transformedMousePoint, {
-    isPointInRangeFn,
-    isStrokeInRangeFn,
-    hitTestPointsOnly,
-  });
-  if (hitResult.isHit) {
-    if (hitResult.cmdIdx === undefined) {
-      // TODO: select the entire subpath...
-      return undefined;
-    }
-    return {
-      pathId: pathLayer.id,
-      subIdx: hitResult.subIdx,
-      cmdIdx: hitResult.cmdIdx,
-    };
+  const hitResult =
+    pathLayer.pathData.hitTest(transformedMousePoint, { isStrokeInRangeFn, });
+  if (!hitResult.isHit) {
+    return undefined;
   }
-  return undefined;
+  return hitResult.subIdx;
 }
 
 function executeCommands(
-  commands: Command[],
+  commands: ReadonlyArray<Command>,
   ctx: CanvasRenderingContext2D,
   transforms: Matrix[],
   isDrawingSelection = false) {
@@ -1021,9 +1082,8 @@ function executeCommands(
     const start = cmd.getStart();
     const end = cmd.getEnd();
 
-    // TODO: remove this... or at least only use it for selections?
-    // this probably doesn't work for close path commands too?
     if (isDrawingSelection && cmd.getSvgChar() !== 'M') {
+      // TODO: optimize things by only doing move commands when needed?
       ctx.moveTo(start.x, start.y);
     }
 
@@ -1041,7 +1101,13 @@ function executeCommands(
         cmd.getPoints()[2].x, cmd.getPoints()[2].y,
         cmd.getPoints()[3].x, cmd.getPoints()[3].y);
     } else if (cmd.getSvgChar() === 'Z') {
-      ctx.closePath();
+      if (isDrawingSelection) {
+        // Selections are broken up line segments, so we need to use
+        // lines instead of closepath commands here.
+        ctx.lineTo(end.x, end.y);
+      } else {
+        ctx.closePath();
+      }
     }
   });
   ctx.restore();
@@ -1086,7 +1152,7 @@ class PointSelector {
 
   constructor(
     private readonly mouseDown: Point,
-    private readonly selectedPointId: CommandIndex,
+    private readonly selectedCommandIndex: CommandIndex,
     private readonly selectedPointSplit: boolean,
   ) { }
 
@@ -1111,8 +1177,8 @@ class PointSelector {
     return this.isMouseDown;
   }
 
-  getSelectedPointId() {
-    return this.selectedPointId;
+  getSelectedCommandIndex() {
+    return this.selectedCommandIndex;
   }
 
   isSelectedPointSplit() {

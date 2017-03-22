@@ -2,10 +2,8 @@ import { Component, OnInit, ViewContainerRef, ChangeDetectionStrategy } from '@a
 import {
   LayerStateService,
   MorphabilityStatus,
-  HoverStateService,
   AnimatorService,
   SelectionStateService,
-  CanvasModeService,
 } from '../services';
 import { CanvasType } from '../CanvasType';
 import { ExportUtil } from '../scripts/export';
@@ -30,14 +28,14 @@ export class ToolbarComponent implements OnInit {
   MORPHABILITY_MORPHABLE = MorphabilityStatus.Morphable;
   morphabilityStatusObservable: Observable<MorphabilityStatus>;
   isActionModeEnabledObservable: Observable<boolean>;
+  // This boolean is used to ensure the toolbar transition doesn't run on page load.
+  hasActionModeBeenEnabled = false;
   getToolbarTextObservable: Observable<string>;
   isDirtyObservable: Observable<boolean>;
 
   constructor(
     private readonly viewContainerRef: ViewContainerRef,
     private readonly animatorService: AnimatorService,
-    private readonly canvasModeService: CanvasModeService,
-    private readonly hoverStateService: HoverStateService,
     private readonly selectionStateService: SelectionStateService,
     private readonly layerStateService: LayerStateService,
     private readonly dialogService: DialogService) { }
@@ -52,10 +50,15 @@ export class ToolbarComponent implements OnInit {
     this.isActionModeEnabledObservable =
       this.selectionStateService.getSelectionsObservable()
         .map(selections => {
-          return PathUtil.getNumSelectedPoints(
-            this.layerStateService,
-            selections,
-            cmd => cmd.isSplit()) > 0;
+          const shouldEnable =
+            PathUtil.getNumSelectedPoints(
+              this.layerStateService,
+              selections,
+              cmd => cmd.isSplit()) > 0;
+          if (shouldEnable) {
+            this.hasActionModeBeenEnabled = true;
+          }
+          return shouldEnable;
         });
     this.getToolbarTextObservable =
       this.selectionStateService.getSelectionsObservable()
@@ -82,9 +85,6 @@ export class ToolbarComponent implements OnInit {
         if (!result) {
           return;
         }
-        this.animatorService.reset();
-        this.hoverStateService.reset();
-        this.selectionStateService.reset();
         this.layerStateService.reset();
       });
   }
@@ -105,14 +105,12 @@ export class ToolbarComponent implements OnInit {
       const { from, to } = AutoAwesome.autoFix(subIdx, fromCmd, toCmd);
       resultStartCmd = numStartCmds >= numEndCmds ? from : to;
       resultEndCmd = numStartCmds >= numEndCmds ? to : from;
-      // TODO: avoid calling these once-per-subIdx...
-      this.layerStateService.updateActivePath(CanvasType.Start, resultStartCmd, subIdx, false);
-      this.layerStateService.updateActivePath(CanvasType.End, resultEndCmd, subIdx, false);
     }
+    this.layerStateService.updateActivePath(CanvasType.Start, resultStartCmd, false);
+    this.layerStateService.updateActivePath(CanvasType.End, resultEndCmd, false);
     this.layerStateService.notifyChange(CanvasType.Preview);
     this.layerStateService.notifyChange(CanvasType.Start);
     this.layerStateService.notifyChange(CanvasType.End);
-
   }
 
   onExportClick() {
@@ -121,8 +119,7 @@ export class ToolbarComponent implements OnInit {
   }
 
   onDeleteSelectedPointsClick() {
-    PathUtil.deleteSelectedSplitPoints(
-      this.layerStateService, this.selectionStateService, this.hoverStateService);
+    PathUtil.deleteSelectedSplitPoints(this.layerStateService, this.selectionStateService);
   }
 
   onDemoClick() {
@@ -136,9 +133,6 @@ export class ToolbarComponent implements OnInit {
           return;
         }
         ga('send', 'event', 'Demos', 'Demo selected', selectedDemoTitle);
-        this.animatorService.reset();
-        this.hoverStateService.reset();
-        this.selectionStateService.reset();
         this.layerStateService.reset();
         DemoUtil.loadDemo(this.layerStateService, selectedSvgStrings);
       });

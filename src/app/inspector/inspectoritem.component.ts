@@ -9,6 +9,7 @@ import { HoverStateService, Type as HoverType } from '../services/hoverstate.ser
 import { Observable } from 'rxjs/Observable';
 import { CanvasType } from '../CanvasType';
 
+// TODO: these need to be canvas-mode-aware
 @Component({
   selector: 'app-inspectoritem',
   templateUrl: './inspectoritem.component.html',
@@ -117,7 +118,7 @@ export class InspectorItemComponent implements OnInit {
   }
 
   private replacePath(path: Path, event: MouseEvent) {
-    this.layerStateService.updateActivePath(this.canvasType, path, this.subIdx);
+    this.layerStateService.updateActivePath(this.canvasType, path);
 
     // This ensures that the parent div won't also receive the same click event.
     event.cancelBubble = true;

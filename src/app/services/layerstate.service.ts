@@ -5,6 +5,11 @@ import { CanvasType } from '../CanvasType';
 import { Path } from '../scripts/commands';
 import { AutoAwesome } from '../scripts/autoawesome';
 import { ROTATION_GROUP_LAYER_ID } from '../scripts/import';
+import { SelectionStateService } from './selectionstate.service';
+import { HoverStateService } from './hoverstate.service';
+import { AnimatorService } from './animator.service';
+import { CanvasModeService } from './canvasmode.service';
+
 
 /**
  * The global state service that is in charge of keeping track of the loaded
@@ -18,7 +23,12 @@ export class LayerStateService {
   private readonly activePathIdSources = new Map<CanvasType, BehaviorSubject<string>>();
   private readonly statusSource = new BehaviorSubject<MorphabilityStatus>(MorphabilityStatus.None);
 
-  constructor() {
+  constructor(
+    private readonly selectionStateService: SelectionStateService,
+    private readonly hoverStateService: HoverStateService,
+    private readonly animatorService: AnimatorService,
+    private readonly canvasModeService: CanvasModeService,
+  ) {
     [CanvasType.Start, CanvasType.Preview, CanvasType.End]
       .forEach(type => {
         this.vectorLayerSources.set(type, new BehaviorSubject<VectorLayer>(undefined));
@@ -49,14 +59,16 @@ export class LayerStateService {
    * Called by the PathSelectorComponent when a new vector layer path is selected.
    */
   setActivePathIds(ids: Array<{ type: CanvasType, pathId: string }>, shouldNotify = true) {
+    this.canvasModeService.reset();
+    this.selectionStateService.reset();
+    this.hoverStateService.reset();
+    // TODO: resetting the animator service strangely breaks things here... not sure why.
+    // this.animatorService.reset();
     ids.forEach(id => this.activePathIdMap.set(id.type, id.pathId));
     ids.forEach(id => {
       const activePathLayer = this.getActivePathLayer(id.type);
-      const numSubPaths = activePathLayer.pathData.getSubPaths().length;
-      for (let subIdx = 0; subIdx < numSubPaths; subIdx++) {
-        // Attempt to make each corresponding pair of subpaths compatible with each other.
-        this.updateActivePath(id.type, activePathLayer.pathData, subIdx, false);
-      }
+      // Attempt to make each corresponding pair of subpaths compatible with each other.
+      this.updateActivePath(id.type, activePathLayer.pathData, false);
     });
     if (shouldNotify) {
       ids.forEach(id => this.notifyChange(id.type));
@@ -91,11 +103,14 @@ export class LayerStateService {
   updateActivePath(
     type: CanvasType,
     path: Path,
-    subIdx: number,
     shouldNotify = true) {
 
-    // Remove any existing conversions from the subpath.
-    path = path.mutate().unconvertSubPath(subIdx).build();
+    // Remove any existing conversions from the path.
+    const pathMutator = path.mutate();
+    path.getSubPaths().forEach((_, subIdx) => {
+      pathMutator.unconvertSubPath(subIdx);
+    });
+    path = pathMutator.build();
 
     const oppositeCanvasType =
       type === CanvasType.Start
@@ -103,31 +118,34 @@ export class LayerStateService {
         : CanvasType.Start;
     let hasOppositeCanvasTypeChanged = false;
 
-    // TODO: allow paths with differing numbers of subpaths to be morphed
     const oppositeActivePathLayer =
       type === CanvasType.Preview ? undefined : this.getActivePathLayer(oppositeCanvasType);
-    if (oppositeActivePathLayer
-      && subIdx < oppositeActivePathLayer.pathData.getSubPaths().length) {
-      const numCommands = path.getSubPaths()[subIdx].getCommands().length;
-      const numOppositeCommands =
-        oppositeActivePathLayer.pathData.getSubPaths()[subIdx].getCommands().length;
-      if (numCommands === numOppositeCommands) {
-        // Only auto convert when the number of commands in both canvases
-        // are equal. Otherwise we'll wait for the user to add more points.
-        const autoConvertResults =
-          AutoAwesome.autoConvert(
-            subIdx, path, oppositeActivePathLayer.pathData.mutate()
-              .unconvertSubPath(subIdx)
-              .build());
-        path = autoConvertResults.from;
+    if (oppositeActivePathLayer) {
+      const numSubPaths = path.getSubPaths().length;
+      const numOppositeSubPaths = oppositeActivePathLayer.pathData.getSubPaths().length;
+      for (let subIdx = 0; subIdx < Math.min(numSubPaths, numOppositeSubPaths); subIdx++) {
+        const numCommands = path.getSubPaths()[subIdx].getCommands().length;
+        const numOppositeCommands =
+          oppositeActivePathLayer.pathData.getSubPaths()[subIdx].getCommands().length;
+        if (numCommands === numOppositeCommands) {
+          // Only auto convert when the number of commands in both canvases
+          // are equal. Otherwise we'll wait for the user to add more points.
+          const autoConvertResults =
+            AutoAwesome.autoConvert(
+              subIdx, path, oppositeActivePathLayer.pathData.mutate()
+                .unconvertSubPath(subIdx)
+                .build());
+          path = autoConvertResults.from;
 
-        // This is the one case where a change in one canvas type's vector layer
-        // will cause corresponding changes to be made in the opposite canvas type's
-        // vector layer.
-        oppositeActivePathLayer.pathData = autoConvertResults.to;
-        hasOppositeCanvasTypeChanged = true;
+          // This is the one case where a change in one canvas type's vector layer
+          // will cause corresponding changes to be made in the opposite canvas type's
+          // vector layer.
+          oppositeActivePathLayer.pathData = autoConvertResults.to;
+          hasOppositeCanvasTypeChanged = true;
+        }
       }
     }
+
     this.getActivePathLayer(type).pathData = path;
 
     if (type === CanvasType.Start || hasOppositeCanvasTypeChanged) {
@@ -230,6 +248,10 @@ export class LayerStateService {
    * Resets all existing layer state loaded by the application.
    */
   reset() {
+    this.canvasModeService.reset();
+    this.selectionStateService.reset();
+    this.hoverStateService.reset();
+    this.animatorService.reset();
     const canvasTypes = [CanvasType.Preview, CanvasType.Start, CanvasType.End];
     canvasTypes.forEach(type => this.setVectorLayer(type, undefined, false));
     canvasTypes.forEach(type => this.notifyChange(type));

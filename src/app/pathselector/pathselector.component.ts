@@ -3,7 +3,12 @@ import {
   Pipe, PipeTransform
 } from '@angular/core';
 import { CanvasType } from '../CanvasType';
-import { LayerStateService } from '../services/layerstate.service';
+import {
+  AnimatorService,
+  LayerStateService,
+  HoverStateService,
+  SelectionStateService,
+} from '../services';
 import { SvgLoader } from '../scripts/import';
 import { VectorLayer, PathLayer } from '../scripts/layers';
 import { Observable } from 'rxjs/Observable';
@@ -24,8 +29,12 @@ export class PathSelectorComponent {
   private readonly endVectorLayerObservable: Observable<VectorLayer>;
 
   constructor(
-    private elementRef: ElementRef,
-    private layerStateService: LayerStateService) {
+    private readonly elementRef: ElementRef,
+    private readonly layerStateService: LayerStateService,
+    private readonly selectionStateService: SelectionStateService,
+    private readonly hoverStateService: HoverStateService,
+    private readonly animatorService: AnimatorService,
+  ) {
     this.startVectorLayerObservable =
       this.layerStateService.getVectorLayerObservable(CanvasType.Start);
     this.endVectorLayerObservable =

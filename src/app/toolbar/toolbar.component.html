@@ -1,6 +1,6 @@
-<div class="toolbar" fxLayout="row" fxLayoutAlign="center center"
-  [class.action-mode-disabled]="!(isActionModeEnabledObservable | async)"
-  [class.action-mode-enabled]="isActionModeEnabledObservable | async">
+<div class="toolbar action-mode-disabled" fxLayout="row" fxLayoutAlign="center center"
+  [class.action-mode-disabled]="hasActionModeBeenEnabled && !(isActionModeEnabledObservable | async)"
+  [class.action-mode-enabled]="hasActionModeBeenEnabled && isActionModeEnabledObservable | async">
   <md-icon class="toolbar-logo" svgIcon="shapeshifter"></md-icon>
   <span>{{getToolbarTextObservable | async}}</span>
   <span fxFlex="1 1 auto"></span>

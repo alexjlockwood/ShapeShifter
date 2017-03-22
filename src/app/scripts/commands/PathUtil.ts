@@ -3,7 +3,6 @@ import {
   SelectionStateService,
   Selection,
   LayerStateService,
-  HoverStateService,
 } from '../../services';
 import { Command } from '.';
 
@@ -24,8 +23,7 @@ export function sortPathOps(ops: Array<{ subIdx: number, cmdIdx: number }>) {
  */
 export function deleteSelectedSplitPoints(
   lss: LayerStateService,
-  sss: SelectionStateService,
-  hss: HoverStateService) {
+  sss: SelectionStateService) {
 
   const selections = sss.getSelections();
   if (!selections.length) {
@@ -48,17 +46,16 @@ export function deleteSelectedSplitPoints(
     subIdxOps.push({ subIdx, cmdIdx });
     unsplitOpsMap.set(subIdx, subIdxOps);
   }
-  hss.reset();
   sss.reset();
+  const mutator = activePathLayer.pathData.mutate();
   unsplitOpsMap.forEach((ops, idx) => {
     // TODO: perform these as a single batch instead of inside a loop? (to reduce # of broadcasts)
     sortPathOps(ops);
-    const mutator = activePathLayer.pathData.mutate();
     for (const op of ops) {
       mutator.unsplitCommand(op.subIdx, op.cmdIdx);
     }
-    lss.updateActivePath(canvasType, mutator.build(), idx);
   });
+  lss.updateActivePath(canvasType, mutator.build());
 }
 
 /**

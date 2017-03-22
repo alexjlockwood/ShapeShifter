@@ -10,7 +10,6 @@ import { SubPath, Command, PathUtil } from './scripts/commands';
 import {
   AnimatorService,
   CanvasResizeService,
-  HoverStateService,
   SelectionStateService,
   CanvasModeService,
   CanvasMode,
@@ -28,6 +27,7 @@ const AUTO_LOAD_DEMO = IS_DEV_MODE && true;
 const ELEMENT_RESIZE_DETECTOR = erd();
 const STORAGE_KEY_FIRST_TIME_USER = 'storage_key_first_time_user';
 
+// TODO: hide/disable pair subpaths mode if there is only one subpath each
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
@@ -67,7 +67,6 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   constructor(
     private readonly snackBar: MdSnackBar,
     private readonly layerStateService: LayerStateService,
-    private readonly hoverStateService: HoverStateService,
     private readonly selectionStateService: SelectionStateService,
     private readonly animatorService: AnimatorService,
     private readonly canvasResizeService: CanvasResizeService,
@@ -174,7 +173,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     }
     if (AUTO_LOAD_DEMO) {
       setTimeout(() => {
-        DemoUtil.loadDemo(this.layerStateService, DEMO_MAP.get('Morphing digits'));
+        DemoUtil.loadDemo(this.layerStateService, DEMO_MAP.get('Drawer-to-arrow icon'));
       });
     }
   }
@@ -202,8 +201,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
           // Can only delete points in selection mode.
           PathUtil.deleteSelectedSplitPoints(
             this.layerStateService,
-            this.selectionStateService,
-            this.hoverStateService);
+            this.selectionStateService);
         }
         return false;
       } else if (event.keyCode === 32) {
