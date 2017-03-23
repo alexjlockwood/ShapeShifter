@@ -25,7 +25,6 @@ export function clamp(num: number, min: number, max: number) {
 
 /** Returns true if the points are collinear. */
 export function areCollinear(...points: Point[]) {
-  console.log(points.length);
   if (points.length < 3) {
     return true;
   }
@@ -34,7 +33,6 @@ export function areCollinear(...points: Point[]) {
   return points.every(({ x, y }: Point) => {
     // The points are collinear if the area of the triangle they form
     // is equal to (or in this case, close to) zero.
-    console.log(a * (n - y) + m * (y - b) + x * (b - n), EPSILON);
     return Math.abs(a * (n - y) + m * (y - b) + x * (b - n)) < EPSILON;
   });
 }

@@ -1,4 +1,5 @@
 import { Command } from '.';
+import { SubPathBuilder } from './SubPathImpl';
 
 /**
  * Defines a set of commands that begins with a single move to command.
@@ -19,4 +20,14 @@ export interface SubPath {
    * Returns true iff the sub path's start point is equal to its end point.
    */
   isClosed(): boolean;
+
+  /**
+   * Returns true iff this sub path was created to collapse to a single point.
+   */
+  isCollapsing(): boolean;
+
+  /**
+   * Returns a builder to construct a mutated SubPath.
+   */
+  mutate(): SubPathBuilder;
 }

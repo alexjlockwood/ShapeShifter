@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 import { SubPath, Command, ProjectionResult, HitOptions } from '.';
-import { newSubPath } from './SubPathImpl';
+import { createSubPaths } from './SubPathImpl';
 import { CommandState } from './CommandState';
 import { MathUtil, Point, Rect } from '../common';
 import * as PathParser from './PathParser';
@@ -22,8 +22,9 @@ export class PathState {
     public readonly subPathIds?: ReadonlyArray<string>,
     // Maps client-visible subIdx values to internal cmsIdx values.
     public readonly subPathOrdering?: ReadonlyArray<number>,
+    // The number of collapsing subpaths appended to the end of the command mutation map.
+    public readonly numCollapsingSubPaths = 0,
   ) {
-    // TODO: avoid constructing the subpaths twice
     const commands = (typeof obj === 'string' ? PathParser.parseCommands(obj) : obj);
     const subPaths = createSubPaths(commands);
     this.commandMutationsMap =
@@ -38,15 +39,17 @@ export class PathState {
       subPathIds ? subPathIds.slice() : subPaths.map(s => _.uniqueId());
     this.subPathOrdering =
       subPathOrdering ? subPathOrdering.slice() : subPaths.map((_, i) => i);
-    this.commands = _.flatMap(subPaths, (subPath, subIdx) => {
-      return subPath.getCommands().map((cmd, cmdIdx) => {
+    this.subPaths = subPaths.map((subPath, subIdx) => {
+      const cmsIdx = this.subPathOrdering[subIdx];
+      const id = this.subPathIds[cmsIdx];
+      const cmds = subPath.getCommands().map((cmd, cmdIdx) => {
         return cmd.mutate().setId(this.findCommandStateId(subIdx, cmdIdx)).build();
       });
+      const isCollapsing =
+        this.commandMutationsMap.length - this.numCollapsingSubPaths <= cmsIdx;
+      return subPath.mutate().setId(id).setCommands(cmds).setIsCollapsing(isCollapsing).build();
     });
-    this.subPaths =
-      createSubPaths(
-        this.commands,
-        this.subPathIds.map((_, i) => this.subPathIds[this.subPathOrdering[i]]));
+    this.commands = _.flatMap(this.subPaths, subPath => subPath.getCommands() as Command[]);
   }
 
   private findCommandStateId(subIdx: number, cmdIdx: number) {
@@ -280,43 +283,4 @@ function createBoundingBox(...cms: CommandState[]) {
 
   cms.forEach(cm => expandBoundsForCommandMutationFn(cm));
   return bounds;
-}
-
-function createSubPaths(commands: ReadonlyArray<Command>, subPathIds: string[] = []) {
-  if (!commands.length || commands[0].getSvgChar() !== 'M') {
-    // TODO: is this case actually possible? should we insert 'M 0 0' instead?
-    return [];
-  }
-
-  let currentCmdList: Command[] = [];
-  const getNextSubPathFn = () => {
-    return newSubPath(subPathIds.length ? subPathIds.shift() : '', currentCmdList);
-  };
-
-  let lastSeenMove: Command;
-  const subPathCmds: SubPath[] = [];
-  for (const cmd of commands) {
-    if (cmd.getSvgChar() === 'M') {
-      lastSeenMove = cmd;
-      if (currentCmdList.length) {
-        subPathCmds.push(getNextSubPathFn());
-        currentCmdList = [];
-      } else {
-        currentCmdList.push(cmd);
-      }
-      continue;
-    }
-    if (!currentCmdList.length) {
-      currentCmdList.push(lastSeenMove);
-    }
-    currentCmdList.push(cmd);
-    if (cmd.getSvgChar() === 'Z') {
-      subPathCmds.push(getNextSubPathFn());
-      currentCmdList = [];
-    }
-  }
-  if (currentCmdList.length) {
-    subPathCmds.push(getNextSubPathFn());
-  }
-  return subPathCmds;
 }

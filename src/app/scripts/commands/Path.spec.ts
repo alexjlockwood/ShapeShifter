@@ -84,7 +84,7 @@ describe('Path', () => {
   });
 
   describe('mutating Path objects', () => {
-    type PathOp = 'RV' | 'SB' | 'SF' | 'S' | 'SIH' | 'US' | 'CV' | 'UCV' | 'RT' | 'M';
+    type PathOp = 'RV' | 'SB' | 'SF' | 'S' | 'SIH' | 'US' | 'CV' | 'UCV' | 'RT' | 'M' | 'AC' | 'DC';
 
     function mutatePath(pathString: string, pathOpsString: string) {
       const A = pathOpsString.split(' ');
@@ -137,6 +137,13 @@ describe('Path', () => {
           case 'M': // Move subpath.
             mutator.moveSubPath(+A[i + 1], +A[i + 2]);
             i += 2;
+            break;
+          case 'AC': // Add collapsing sub path.
+            mutator.addCollapsingSubPath(new Point(+A[i + 1], +A[i + 2]), +A[i + 3]);
+            i += 3;
+            break;
+          case 'DC': // Delete collapsing sub paths.
+            mutator.deleteCollapsingSubPaths();
             break;
           default:
             throw new Error('Invalid path op: ' + op);
@@ -266,6 +273,16 @@ describe('Path', () => {
         'M 0 0 L 0 0 L 1 1',
       ),
       makeTest(
+        'M 0 0 L 0 0 L 0 0 M 1 1 L 1 1 L 1 1 M 2 2 L 2 2 L 2 2',
+        'M 0 1',
+        'M 1 1 L 1 1 L 1 1 M 0 0 L 0 0 L 0 0 M 2 2 L 2 2 L 2 2',
+      ),
+      makeTest(
+        'M 0 0 L 0 0 L 1 1 M 1 1 L 1 1 L 1 1 M 2 2 L 2 2 L 2 2',
+        'M 0 1',
+        'M 1 1 L 1 1 L 1 1 M 0 0 L 0 0 L 1 1 M 2 2 L 2 2 L 2 2',
+      ),
+      makeTest(
         'M 0 0 L 0 0 L 1 1 M 1 1 L 2 1 L 3 1 L 1 1 M 2 2 L 4 2 L 8 2',
         'M 0 1',
         'M 1 1 L 2 1 L 3 1 L 1 1 M 0 0 L 0 0 L 1 1 M 2 2 L 4 2 L 8 2',
@@ -314,6 +331,31 @@ describe('Path', () => {
         'M 0 0 L 3 3',
         'CV 0 1 C UCV 0',
         'M 0 0 L 3 3',
+      ),
+      makeTest(
+        'M 0 0 L 3 3',
+        'AC 5 5 10',
+        `M 0 0 L 3 3 M 5 5${' L 5 5'.repeat(9)}`,
+      ),
+      makeTest(
+        'M 0 0 L 3 3',
+        'AC 5 5 5 AC 3 4 6',
+        `M 0 0 L 3 3 M 5 5${' L 5 5'.repeat(4)} M 3 4${' L 3 4'.repeat(5)}`,
+      ),
+      makeTest(
+        'M 1 1 L 3 3 L 1 1',
+        'AC 5 5 5 AC 3 4 6 M 0 1',
+        `M 5 5${' L 5 5'.repeat(4)} M 1 1 L 3 3 L 1 1 M 3 4${' L 3 4'.repeat(5)}`,
+      ),
+      makeTest(
+        'M 1 1 L 3 3 L 1 1',
+        'AC 5 5 5 AC 3 4 6 M 0 1 DC',
+        `M 1 1 L 3 3 L 1 1`,
+      ),
+      makeTest(
+        'M 1 1 L 3 3 L 1 1',
+        'AC 5 5 5 AC 3 4 6 M 0 1 RT',
+        `M 1 1 L 3 3 L 1 1`,
       ),
     ];
 
