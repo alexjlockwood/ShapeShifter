@@ -4,6 +4,7 @@ import { CanvasType } from '../../CanvasType';
 import { AvdSerializer, SvgSerializer } from '.';
 import { AvdTarget, AvdAnimation, PropertyName, ValueType } from '../animation';
 import * as JSZip from 'jszip';
+import * as $ from 'jquery';
 
 export function exportCurrentState(lss: LayerStateService, as: AnimatorService) {
   const startVectorLayer = lss.getVectorLayer(CanvasType.Start).clone();

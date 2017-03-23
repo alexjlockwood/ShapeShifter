@@ -9,7 +9,7 @@ import { SelectionStateService } from './selectionstate.service';
 import { HoverStateService } from './hoverstate.service';
 import { AnimatorService } from './animator.service';
 import { CanvasModeService } from './canvasmode.service';
-
+import { Point } from '../scripts/common';
 
 /**
  * The global state service that is in charge of keeping track of the loaded
@@ -121,9 +121,27 @@ export class LayerStateService {
     const oppositeActivePathLayer =
       type === CanvasType.Preview ? undefined : this.getActivePathLayer(oppositeCanvasType);
     if (oppositeActivePathLayer) {
+      const oppositePath = oppositeActivePathLayer.pathData;
       const numSubPaths = path.getSubPaths().length;
-      const numOppositeSubPaths = oppositeActivePathLayer.pathData.getSubPaths().length;
-      for (let subIdx = 0; subIdx < Math.min(numSubPaths, numOppositeSubPaths); subIdx++) {
+      const numOppositeSubPaths = oppositePath.getSubPaths().length;
+      if (numSubPaths !== numOppositeSubPaths) {
+        const pathToChange = numSubPaths < numOppositeSubPaths ? path : oppositePath;
+        const oppositePathToChange = numSubPaths < numOppositeSubPaths ? oppositePath : path;
+        const minIdx = Math.min(numSubPaths, numOppositeSubPaths);
+        const maxIdx = Math.max(numSubPaths, numOppositeSubPaths);
+        const mutator = pathToChange.mutate();
+        for (let i = minIdx; i < maxIdx; i++) {
+          const pole = oppositePathToChange.getPoleOfInaccessibility(i);
+          mutator.addCollapsingSubPath(
+            pole, oppositePathToChange.getSubPaths()[i].getCommands().length);
+        }
+        if (numSubPaths < numOppositeSubPaths) {
+          path = mutator.build();
+        } else {
+          oppositeActivePathLayer.pathData = mutator.build();
+        }
+      }
+      for (let subIdx = 0; subIdx < Math.max(numSubPaths, numOppositeSubPaths); subIdx++) {
         const numCommands = path.getSubPaths()[subIdx].getCommands().length;
         const numOppositeCommands =
           oppositeActivePathLayer.pathData.getSubPaths()[subIdx].getCommands().length;

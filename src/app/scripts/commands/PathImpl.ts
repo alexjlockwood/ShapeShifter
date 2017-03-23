@@ -96,6 +96,11 @@ export class PathImpl implements Path {
   }
 
   // Implements the Path interface.
+  getPoleOfInaccessibility(subIdx: number) {
+    return this.ps.getPoleOfInaccessibility(subIdx);
+  }
+
+  // Implements the Path interface.
   mutate() {
     return new PathMutator(this.ps);
   }

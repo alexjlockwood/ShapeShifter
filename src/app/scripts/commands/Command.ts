@@ -1,6 +1,6 @@
 import { Point } from '../common';
 import { SvgChar } from '.';
-import { CommandBuilder } from '.';
+import { CommandBuilder } from './CommandImpl';
 
 /**
  * Defines the set of SVG command methods that are seen by the inspector/canvas.

@@ -4,6 +4,7 @@ import { createSubPaths } from './SubPathImpl';
 import { CommandState } from './CommandState';
 import { MathUtil, Point, Rect } from '../common';
 import * as PathParser from './PathParser';
+import * as polylabel from 'polylabel';
 
 export class PathState {
   readonly subPaths: ReadonlyArray<SubPath>;
@@ -219,6 +220,28 @@ export class PathState {
       isHit: true,
       subIdx: hitSubIdx,
     };
+  }
+
+  // TODO: move this math stuff into the calculators module
+  // TODO: approximate bezier curves by splitting them up into line segments
+  // TODO: write tests for this stuff
+  getPoleOfInaccessibility(subIdx: number) {
+    const cmds = this.subPaths[subIdx].getCommands().slice(1);
+    const polygon = _.flatMap(cmds, cmd => {
+      const { x: p1x, y: p1y } = cmd.getStart();
+      const { x: p2x, y: p2y } = cmd.getEnd();
+      if (p1x === p2x && p1y === p2y) {
+        return [];
+      }
+      return [[p1x, p1y], [p2x, p2y]];
+    });
+    if (cmds.length && !this.subPaths[subIdx].isClosed()) {
+      const { x: p1x, y: p1y } = cmds[0].getStart();
+      const { x: p2x, y: p2y } = _.last(cmds).getEnd();
+      polygon.push(...[[p1x, p1y], [p2x, p2y]]);
+    }
+    const pole = polylabel([polygon]);
+    return new Point(pole[0], pole[1]);
   }
 
   private toCmsIdx(subIdx: number) {

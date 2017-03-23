@@ -56,6 +56,11 @@ export interface Path {
   hitTest(point: Point, opts?: HitOptions): HitResult;
 
   /**
+   * Returns the pole of inaccessibility for the specified subpath index.
+   */
+  getPoleOfInaccessibility(subIdx: number): Point;
+
+  /**
    * Creates a builder that can create a mutated Path object.
    */
   mutate(): PathMutator;
