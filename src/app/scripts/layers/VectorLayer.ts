@@ -48,6 +48,7 @@ export class VectorLayer extends AbstractLayer {
             layer.strokeLinecap,
             layer.strokeLinejoin,
             layer.strokeMiterLimit,
+            layer.fillType,
             layer.trimPathStart,
             layer.trimPathEnd,
             layer.trimPathOffset);

@@ -17,6 +17,7 @@ export class PathLayer extends AbstractLayer {
     public strokeLinecap = 'butt',
     public strokeLinejoin = 'miter',
     public strokeMiterLimit = 4,
+    public fillType = 'nonZero',
     public trimPathStart = 0,
     public trimPathEnd = 1,
     public trimPathOffset = 0,

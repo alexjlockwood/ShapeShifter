@@ -106,6 +106,7 @@ function vectorLayerToXmlNode(vl: VectorLayer, destinationNode: HTMLElement, xml
       conditionalAttr(node, 'android:strokeLineCap', layer.strokeLinecap, 'butt');
       conditionalAttr(node, 'android:strokeLineJoin', layer.strokeLinejoin, 'miter');
       conditionalAttr(node, 'android:strokeMiterLimit', layer.strokeMiterLimit, 4);
+      conditionalAttr(node, 'android:fillType', layer.fillType, 'nonZero');
       parentNode.appendChild(node);
       return parentNode;
 

@@ -50,6 +50,9 @@ function vectorLayerToSvgNode(vl: VectorLayer, destinationNode: HTMLElement, xml
       conditionalAttr(node, 'stroke-linecap', layer.strokeLinecap, 'butt');
       conditionalAttr(node, 'stroke-linejoin', layer.strokeLinejoin, 'miter');
       conditionalAttr(node, 'stroke-miterlimit', layer.strokeMiterLimit, 4);
+      const fillRule =
+        !layer.fillType || layer.fillType === 'nonZero' ? 'nonzero' : 'evenodd';
+      conditionalAttr(node, 'fill-rule', fillRule, 'nonzero');
       parentNode.appendChild(node);
       return parentNode;
 

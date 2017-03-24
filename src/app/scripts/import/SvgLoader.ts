@@ -80,6 +80,7 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
     simpleAttrFn('stroke-opacity', 'strokeAlpha');
     simpleAttrFn('fill', 'fillColor');
     simpleAttrFn('fill-opacity', 'fillAlpha');
+    simpleAttrFn('fill-rule', 'fillType');
 
     if (node.transform) {
       const transforms = Array.from(node.transform.baseVal).reverse();
@@ -111,6 +112,10 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
       const strokeWidth = ('strokeWidth' in context) ? context.strokeWidth : 1;
       const strokeAlpha = ('strokeAlpha' in context) ? context.strokeAlpha : 1;
       const strokeMiterLimit = ('strokeMiterLimit' in context) ? context.strokeMiterLimit : 4;
+      const fillRuleToFillTypeFn = (fillRule: string) => {
+        return fillRule === 'evenodd' ? 'evenOdd' : 'nonZero';
+      };
+      const fillType = ('fillType' in context) ? fillRuleToFillTypeFn(context.fillType) : 'nonZero';
       return new PathLayer(
         makeFinalNodeIdFn(node, 'path'),
         pathData,
@@ -122,6 +127,7 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
         context.strokeLinecap || 'butt',
         context.strokeLinejoin || 'miter',
         Number(strokeMiterLimit),
+        fillType,
       );
     }
 
