@@ -1,5 +1,5 @@
 import * as XmlSerializer from './XmlSerializer';
-import { Layer, VectorLayer, PathLayer, GroupLayer, ClipPathLayer } from '../layers';
+import { Layer, VectorLayer, PathLayer, GroupLayer } from '../layers';
 import { ColorUtil } from '../common';
 
 const XMLNS_NS = 'http://www.w3.org/2000/xmlns/';

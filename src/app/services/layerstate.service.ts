@@ -9,7 +9,6 @@ import { SelectionStateService } from './selectionstate.service';
 import { HoverStateService } from './hoverstate.service';
 import { AnimatorService } from './animator.service';
 import { CanvasModeService } from './canvasmode.service';
-import { Point } from '../scripts/common';
 
 /**
  * The global state service that is in charge of keeping track of the loaded

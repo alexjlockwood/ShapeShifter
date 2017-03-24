@@ -3,7 +3,6 @@ import { VectorLayer, GroupLayer, PathLayer, ClipPathLayer } from '../layers';
 import { newPath, SubPath, Command } from '../commands';
 import { ColorUtil, Matrix } from '../common';
 import { Svgo } from '../svgo';
-import { environment } from '../../../environments/environment';
 
 // This ID is reserved for the active path layer's parent group layer
 // (i.e. if the user adds a rotation to the path morphing animation).

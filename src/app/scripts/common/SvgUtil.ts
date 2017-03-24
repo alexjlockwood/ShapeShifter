@@ -1,5 +1,3 @@
-import { Point, Matrix, MathUtil } from '.';
-
 export interface EllipticalArc {
   startX?: number;
   startY?: number;
