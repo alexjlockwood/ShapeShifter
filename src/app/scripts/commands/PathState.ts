@@ -41,19 +41,24 @@ export class PathState {
     this.subPathOrdering =
       subPathOrdering ? subPathOrdering.slice() : subPaths.map((_, i) => i);
     this.subPaths = subPaths.map((subPath, subIdx) => {
-      const cmsIdx = this.subPathOrdering[subIdx];
-      const id = this.subPathIds[cmsIdx];
       const cmds = subPath.getCommands().map((cmd, cmdIdx) => {
-        return cmd.mutate().setId(this.findCommandStateId(subIdx, cmdIdx)).build();
+        return cmd.mutate()
+          .setId(this.findCommandStateId(subIdx, cmdIdx, subPaths))
+          .build();
       });
+      const cmsIdx = this.subPathOrdering[subIdx];
       const isCollapsing =
         this.commandMutationsMap.length - this.numCollapsingSubPaths <= cmsIdx;
-      return subPath.mutate().setId(id).setCommands(cmds).setIsCollapsing(isCollapsing).build();
+      return subPath.mutate()
+        .setId(this.subPathIds[cmsIdx])
+        .setCommands(cmds)
+        .setIsCollapsing(isCollapsing)
+        .build();
     });
     this.commands = _.flatMap(this.subPaths, subPath => subPath.getCommands() as Command[]);
   }
 
-  private findCommandStateId(subIdx: number, cmdIdx: number) {
+  private findCommandStateId(subIdx: number, cmdIdx: number, subPaths?: SubPath[]) {
     const cmsIdx = this.subPathOrdering[subIdx];
     const subPathCms = this.commandMutationsMap[cmsIdx];
     const numCommandsInSubPath = _.sum(subPathCms.map(cm => cm.getCommands().length));

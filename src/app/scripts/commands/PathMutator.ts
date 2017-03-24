@@ -276,13 +276,8 @@ export class PathMutator {
       );
     });
     const reorderedSubPathCmds: Command[][] = [];
-    for (let i = 0; i < subPathCmds.length; i++) {
-      for (let j = 0; j < subPathOrdering.length; j++) {
-        if (subPathOrdering[j] === i) {
-          reorderedSubPathCmds.push(subPathCmds[j]);
-          break;
-        }
-      }
+    for (let i = 0; i < subPathOrdering.length; i++) {
+      reorderedSubPathCmds.push(subPathCmds[subPathOrdering[i]]);
     }
     const reorderedCommands: Command[] =
       _.flatMap(reorderedSubPathCmds, cmds => cmds);
