@@ -24,10 +24,15 @@ const DEFAULT_IS_PLAYING = false;
 @Injectable()
 export class AnimatorService {
   private readonly animatedValueSource = new BehaviorSubject<number>(DEFAULT_FRACTION);
+  private readonly animatorSettingsSource = new BehaviorSubject<Settings>({
+    isSlowMotion: DEFAULT_IS_SLOW_MOTION,
+    isPlaying: DEFAULT_IS_PLAYING,
+    isRepeating: DEFAULT_IS_REPEATING,
+  });
   private animator: Animator;
 
   constructor(private readonly ngZone: NgZone) {
-    this.animator = new Animator(ngZone);
+    this.animator = new Animator(ngZone, this.animatorSettingsSource);
   }
 
   getAnimatedValueObservable() {
@@ -35,7 +40,7 @@ export class AnimatorService {
   }
 
   getAnimatorSettingsObservable() {
-    return this.animator.getAnimatorSettingsObservable();
+    return this.animatorSettingsSource.asObservable();
   }
 
   isSlowMotion() {
@@ -116,7 +121,7 @@ export class AnimatorService {
 
   reset() {
     this.rewind();
-    this.animator = new Animator(this.ngZone);
+    this.animator = new Animator(this.ngZone, this.animatorSettingsSource);
   }
 }
 
@@ -127,11 +132,6 @@ interface Settings {
 }
 
 class Animator {
-  private readonly animatorSettingsSource = new BehaviorSubject<Settings>({
-    isSlowMotion: DEFAULT_IS_SLOW_MOTION,
-    isPlaying: DEFAULT_IS_PLAYING,
-    isRepeating: DEFAULT_IS_REPEATING,
-  });
   private timeoutId: number;
   private animationFrameId: number;
 
@@ -142,11 +142,10 @@ class Animator {
   private currentAnimatedFraction = 0;
   private shouldPlayInReverse = false;
 
-  constructor(private readonly ngZone: NgZone) { }
-
-  getAnimatorSettingsObservable() {
-    return this.animatorSettingsSource.asObservable();
-  }
+  constructor(
+    private readonly ngZone: NgZone,
+    private readonly animatorSettingsSource: BehaviorSubject<Settings>
+  ) { }
 
   isPlaying() { return this.animatorSettingsSource.getValue().isPlaying; }
 

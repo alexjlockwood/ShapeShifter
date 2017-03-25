@@ -22,22 +22,28 @@ export class TimelineComponent implements OnInit, OnDestroy {
 
   constructor(
     private readonly layerStateService: LayerStateService,
-    private readonly animatorService: AnimatorService) { }
+    private readonly animatorService: AnimatorService,
+  ) { }
 
   ngOnInit() {
-    this.isAnimationSlowMotionObservable = this.animatorService.getAnimatorSettingsObservable()
-      .map((value: { isSlowMotion: boolean }) => value.isSlowMotion);
-    this.isAnimationPlayingObservable = this.animatorService.getAnimatorSettingsObservable()
-      .map((value: { isPlaying: boolean }) => value.isPlaying);
-    this.isAnimationRepeatingObservable = this.animatorService.getAnimatorSettingsObservable()
-      .map((value: { isRepeating: boolean }) => value.isRepeating);
-    this.morphabilityStatusObservable = this.layerStateService.getMorphabilityStatusObservable();
+    this.isAnimationSlowMotionObservable =
+      this.animatorService.getAnimatorSettingsObservable()
+        .map((value: { isSlowMotion: boolean }) => value.isSlowMotion);
+    this.isAnimationPlayingObservable =
+      this.animatorService.getAnimatorSettingsObservable()
+        .map((value: { isPlaying: boolean }) => value.isPlaying);
+    this.isAnimationRepeatingObservable =
+      this.animatorService.getAnimatorSettingsObservable()
+        .map((value: { isRepeating: boolean }) => value.isRepeating);
+    this.morphabilityStatusObservable =
+      this.layerStateService.getMorphabilityStatusObservable();
     this.subscriptions.push(
-      this.layerStateService.getMorphabilityStatusObservable().subscribe(status => {
-        if (status !== MorphabilityStatus.Morphable) {
-          this.animatorService.rewind();
-        }
-      }));
+      this.layerStateService.getMorphabilityStatusObservable()
+        .subscribe(status => {
+          if (status !== MorphabilityStatus.Morphable) {
+            this.animatorService.rewind();
+          }
+        }));
     // TODO: pause animations when window becomes inactive?
     // document.addEventListener('visibilitychange', function() {
     //   console.log(document.hidden);

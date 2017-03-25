@@ -31,7 +31,7 @@ export class PathMutator {
    */
   reverseSubPath(subIdx: number) {
     const cmsIdx = this.subPathOrdering[subIdx];
-    this.reversals[this.subPathOrdering[subIdx]] = !this.reversals[cmsIdx];
+    this.reversals[cmsIdx] = !this.reversals[cmsIdx];
     return this;
   }
 
