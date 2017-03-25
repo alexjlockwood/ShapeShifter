@@ -909,7 +909,12 @@ function drawPathLayer(
       ctx.stroke();
     }
     if (layer.fillColor) {
-      ctx.fill();
+      if (layer.fillType === 'evenOdd') {
+        // Note that SVG doesn't use a capital 'O' like VectorDrawables do.
+        ctx.fill('evenodd');
+      } else {
+        ctx.fill();
+      }
     }
     ctx.restore();
   });
