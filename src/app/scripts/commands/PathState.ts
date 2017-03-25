@@ -5,6 +5,7 @@ import { CommandState } from './CommandState';
 import { MathUtil, Point, Rect } from '../common';
 import * as PathParser from './PathParser';
 import * as polylabel from 'polylabel';
+import { SubPathState } from './SubPathState';
 
 export class PathState {
   readonly subPaths: ReadonlyArray<SubPath>;
@@ -12,8 +13,8 @@ export class PathState {
 
   constructor(
     private readonly obj: string | Command[],
-    // Maps internal cmsIdx values to the subpath's current reversal state.
-    public readonly commandMutationsMap?: ReadonlyArray<ReadonlyArray<CommandState>>,
+    // Maps internal cmsIdx values to each subpath's current state.
+    public readonly subPathStates?: ReadonlyArray<SubPathState>,
     // Maps internal cmsIdx values to the subpath's current reversal state.
     public readonly reversals?: ReadonlyArray<boolean>,
     // Maps internal cmsIdx values to the subpath's current shift offset state.
@@ -28,10 +29,10 @@ export class PathState {
   ) {
     const commands = (typeof obj === 'string' ? PathParser.parseCommands(obj) : obj);
     const subPaths = createSubPaths(commands);
-    this.commandMutationsMap =
-      commandMutationsMap
-        ? commandMutationsMap.map(cms => cms.slice())
-        : subPaths.map(s => s.getCommands().map(c => new CommandState(c)));
+    this.subPathStates =
+      subPathStates
+        ? subPathStates.map(sps => sps.clone())
+        : subPaths.map(s => new SubPathState(s.getCommands().map(c => new CommandState(c))));
     this.reversals =
       reversals ? reversals.slice() : subPaths.map(_ => false);
     this.shiftOffsets =
@@ -48,7 +49,7 @@ export class PathState {
       });
       const cmsIdx = this.subPathOrdering[subIdx];
       const isCollapsing =
-        this.commandMutationsMap.length - this.numCollapsingSubPaths <= cmsIdx;
+        this.subPathStates.length - this.numCollapsingSubPaths <= cmsIdx;
       return subPath.mutate()
         .setId(this.subPathIds[cmsIdx])
         .setCommands(cmds)
@@ -62,8 +63,9 @@ export class PathState {
 
   private findCommandStateId(subIdx: number, cmdIdx: number, subPaths?: SubPath[]) {
     const cmsIdx = this.subPathOrdering[subIdx];
-    const subPathCms = this.commandMutationsMap[cmsIdx];
-    const numCommandsInSubPath = _.sum(subPathCms.map(cm => cm.getCommands().length));
+    const sps = this.subPathStates[cmsIdx];
+    const numCommandsInSubPath =
+      _.sum(sps.commandStates.map(cm => cm.getCommands().length));
     if (cmdIdx && this.reversals[cmsIdx]) {
       cmdIdx = numCommandsInSubPath - cmdIdx;
     }
@@ -74,7 +76,7 @@ export class PathState {
       cmdIdx -= numCommandsInSubPath;
     }
     let counter = 0;
-    for (const targetCm of subPathCms) {
+    for (const targetCm of sps.commandStates) {
       if (counter + targetCm.getCommands().length > cmdIdx) {
         const splitIdx = cmdIdx - counter;
         return targetCm.getIdAtIndex(splitIdx);
@@ -87,7 +89,8 @@ export class PathState {
   getPathLength() {
     // Note that we only return the length of the first sub path due to
     // https://code.google.com/p/android/issues/detail?id=172547
-    return _.sum(this.commandMutationsMap[0].map(cm => cm.getPathLength()));
+    const sps = this.subPathStates[0];
+    return _.sum(sps.commandStates.map(cm => cm.getPathLength()));
   }
 
   project(point: Point):
@@ -98,7 +101,7 @@ export class PathState {
         .filter(subPath => !subPath.isCollapsing())
         .map((subPath, subIdx) => {
           const cmsIdx = this.subPathOrdering[subIdx];
-          return this.commandMutationsMap[cmsIdx]
+          return this.subPathStates[cmsIdx].commandStates
             .map((cm, cmIdx) => {
               const projection = cm.project(point);
               return {
@@ -189,10 +192,13 @@ export class PathState {
     // Search from right to left so that higher z-order subpaths are found first.
     _.chain(this.subPaths as SubPath[])
       .filter(subPath => !subPath.isCollapsing())
-      .map((subPath, subIdx) => this.commandMutationsMap[this.toCmsIdx(subIdx)])
+      .map((subPath, subIdx) => {
+        return this.subPathStates[this.toCmsIdx(subIdx)].commandStates;
+      })
       .forEachRight((cms, cmsIdx) => {
-        const isClosed =
-          cms[0].getCommands()[0].getEnd().equals((_.last(_.last(cms).getCommands())).getEnd());
+        const firstCmd = cms[0].getCommands()[0];
+        const lastCmd = _.last(_.last(cms).getCommands());
+        const isClosed = firstCmd.getEnd().equals(lastCmd.getEnd());
         if (!isClosed) {
           // If this happens, the SVG is probably not going to render properly at all,
           // but we'll check anyway just to be safe.
@@ -268,14 +274,17 @@ export class PathState {
   }
 
   private toCmdIdx(cmsIdx: number, cmIdx: number, splitIdx: number) {
-    const numCmds = _.chain(this.commandMutationsMap[cmsIdx] as CommandState[])
-      .map((cm, i) => cm.getCommands().length)
-      .sum()
-      .value();
-    let cmdIdx = splitIdx + _.chain(this.commandMutationsMap[cmsIdx] as CommandState[])
-      .map((cm, i) => i < cmIdx ? cm.getCommands().length : 0)
-      .sum()
-      .value();
+    const commandStates = this.subPathStates[cmsIdx].commandStates;
+    const numCmds =
+      _.chain(commandStates)
+        .map((cm: CommandState, i) => cm.getCommands().length)
+        .sum()
+        .value();
+    let cmdIdx = splitIdx
+      + _.chain(commandStates)
+        .map((cm: CommandState, i) => i < cmIdx ? cm.getCommands().length : 0)
+        .sum()
+        .value();
     let shiftOffset = this.shiftOffsets[cmsIdx];
     if (this.reversals[cmsIdx]) {
       cmdIdx = numCmds - cmdIdx;

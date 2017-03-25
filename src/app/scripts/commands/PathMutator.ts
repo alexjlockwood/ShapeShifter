@@ -5,12 +5,13 @@ import { PathImpl } from './PathImpl';
 import { CommandState } from './CommandState';
 import { MathUtil, Matrix, Point } from '../common';
 import { PathState } from './PathState';
+import { SubPathState } from './SubPathState';
 
 /**
  * A builder class for creating new mutated Path objects.
  */
 export class PathMutator {
-  private readonly commandMutationsMap: CommandState[][];
+  private readonly subPathStates: SubPathState[];
   private readonly reversals: boolean[];
   private readonly shiftOffsets: number[];
   private readonly subPathIds: string[];
@@ -18,7 +19,7 @@ export class PathMutator {
   private numCollapsingSubPaths: number;
 
   constructor(ps: PathState) {
-    this.commandMutationsMap = ps.commandMutationsMap.map(cms => cms.slice());
+    this.subPathStates = ps.subPathStates.map(sps => sps.clone());
     this.reversals = ps.reversals.slice();
     this.shiftOffsets = ps.shiftOffsets.slice();
     this.subPathIds = ps.subPathIds.slice();
@@ -55,7 +56,7 @@ export class PathMutator {
 
   private shift(subIdx: number, calcOffsetFn: (offset: number, numCommands: number) => number) {
     const cmsIdx = this.subPathOrdering[subIdx];
-    const subPathCms = this.commandMutationsMap[cmsIdx];
+    const subPathCms = this.subPathStates[cmsIdx].commandStates;
     const numCommandsInSubPath = _.sum(subPathCms.map(cm => cm.getCommands().length));
     if (numCommandsInSubPath <= 1) {
       // TODO: also return here if the sub path is closed just to be safe?
@@ -73,8 +74,9 @@ export class PathMutator {
     const { targetCm, cmsIdx, cmIdx, splitIdx } =
       this.findCommandStateInfo(subIdx, cmdIdx);
     this.maybeUpdateShiftOffsetsAfterSplit(cmsIdx, cmIdx, ts.length);
-    this.commandMutationsMap[cmsIdx][cmIdx] =
-      targetCm.mutate().splitAtIndex(splitIdx, ts).build();
+    const commandStates = this.subPathStates[cmsIdx].commandStates.slice();
+    commandStates[cmIdx] = targetCm.mutate().splitAtIndex(splitIdx, ts).build();
+    this.subPathStates[cmsIdx] = new SubPathState(commandStates);
     return this;
   }
 
@@ -84,8 +86,9 @@ export class PathMutator {
   splitCommandInHalf(subIdx: number, cmdIdx: number) {
     const { targetCm, cmsIdx, cmIdx, splitIdx } = this.findCommandStateInfo(subIdx, cmdIdx);
     this.maybeUpdateShiftOffsetsAfterSplit(cmsIdx, cmIdx, 1);
-    this.commandMutationsMap[cmsIdx][cmIdx] =
-      targetCm.mutate().splitInHalfAtIndex(splitIdx).build();
+    const commandStates = this.subPathStates[cmsIdx].commandStates.slice();
+    commandStates[cmIdx] = targetCm.mutate().splitInHalfAtIndex(splitIdx).build();
+    this.subPathStates[cmsIdx] = new SubPathState(commandStates);
     return this;
   }
 
@@ -109,8 +112,12 @@ export class PathMutator {
   unsplitCommand(subIdx: number, cmdIdx: number) {
     const { targetCm, cmsIdx, cmIdx, splitIdx } = this.findCommandStateInfo(subIdx, cmdIdx);
     const isSubPathReversed = this.reversals[cmsIdx];
-    this.commandMutationsMap[cmsIdx][cmIdx] =
-      targetCm.mutate().unsplitAtIndex(isSubPathReversed ? splitIdx - 1 : splitIdx).build();
+    const commandStates = this.subPathStates[cmsIdx].commandStates.slice();
+    commandStates[cmIdx] = targetCm.mutate()
+      .unsplitAtIndex(isSubPathReversed ? splitIdx - 1 : splitIdx)
+      .build();
+    this.subPathStates[cmsIdx] = new SubPathState(commandStates);
+
     const shiftOffset = this.shiftOffsets[cmsIdx];
     if (shiftOffset && cmIdx <= shiftOffset) {
       // Subtract the shift offset by 1 to ensure that the unsplit operation
@@ -125,8 +132,9 @@ export class PathMutator {
    */
   convertCommand(subIdx: number, cmdIdx: number, svgChar: SvgChar) {
     const { targetCm, cmsIdx, cmIdx, splitIdx } = this.findCommandStateInfo(subIdx, cmdIdx);
-    this.commandMutationsMap[cmsIdx][cmIdx] =
-      targetCm.mutate().convertAtIndex(splitIdx, svgChar).build();
+    const commandStates = this.subPathStates[cmsIdx].commandStates.slice();
+    commandStates[cmIdx] = targetCm.mutate().convertAtIndex(splitIdx, svgChar).build();
+    this.subPathStates[cmsIdx] = new SubPathState(commandStates);
     return this;
   }
 
@@ -135,9 +143,9 @@ export class PathMutator {
    */
   unconvertSubPath(subIdx: number) {
     const cmsIdx = this.subPathOrdering[subIdx];
-    this.commandMutationsMap[cmsIdx] =
-      this.commandMutationsMap[cmsIdx].map((cm, i) =>
-        i === 0 ? cm : cm.mutate().unconvertSubpath().build());
+    this.subPathStates[cmsIdx] =
+      new SubPathState(this.subPathStates[cmsIdx].commandStates.map((cm, i) =>
+        i === 0 ? cm : cm.mutate().unconvertSubpath().build()));
     return this;
   }
 
@@ -145,10 +153,12 @@ export class PathMutator {
    * Adds transforms on the path using the specified transformation matrices.
    */
   addTransforms(transforms: Matrix[]) {
-    this.commandMutationsMap.forEach((cms, i) => {
-      cms.forEach((cm, j) => {
-        this.commandMutationsMap[i][j] = cm.mutate().addTransforms(transforms).build();
-      });
+    this.subPathStates.forEach((cms, cmsIdx) => {
+      this.subPathStates[cmsIdx] =
+        new SubPathState(
+          cms.commandStates.map(cm => {
+            return cm.mutate().addTransforms(transforms).build();
+          }));
     });
     return this;
   }
@@ -157,10 +167,12 @@ export class PathMutator {
    * Sets transforms on the path using the specified transformation matrices.
    */
   setTransforms(transforms: Matrix[]) {
-    this.commandMutationsMap.forEach((cms, i) => {
-      cms.forEach((cm, j) => {
-        this.commandMutationsMap[i][j] = cm.mutate().setTransforms(transforms).build();
-      });
+    this.subPathStates.forEach((cms, cmsIdx) => {
+      this.subPathStates[cmsIdx] =
+        new SubPathState(
+          cms.commandStates.map(cm => {
+            return cm.mutate().setTransforms(transforms).build();
+          }));
     });
     return this;
   }
@@ -177,11 +189,11 @@ export class PathMutator {
    * Adds a collapsing subpath to the path.
    */
   addCollapsingSubPath(point: Point, numCommands: number) {
-    const numSubPathsBeforeAdd = this.commandMutationsMap.length;
+    const numSubPathsBeforeAdd = this.subPathStates.length;
     const prevCmd =
       _.last(
         reverseAndShiftCommands(
-          this.commandMutationsMap,
+          this.subPathStates,
           this.reversals,
           this.shiftOffsets,
           numSubPathsBeforeAdd - 1));
@@ -190,7 +202,7 @@ export class PathMutator {
     for (let i = 1; i < numCommands; i++) {
       cms.push(new CommandState(newCommand('L', [point, point])));
     }
-    this.commandMutationsMap.push(cms);
+    this.subPathStates.push(new SubPathState(cms));
     this.reversals.push(false);
     this.shiftOffsets.push(0);
     this.subPathOrdering.push(numSubPathsBeforeAdd);
@@ -203,7 +215,7 @@ export class PathMutator {
    * Deletes all collapsing subpaths from the path.
    */
   deleteCollapsingSubPaths() {
-    const numSubPathsBeforeDelete = this.commandMutationsMap.length;
+    const numSubPathsBeforeDelete = this.subPathStates.length;
     const cmsIdxToSubIdxMap: number[] = [];
     const toSubIdxFn = (cmsIdx: number) => {
       for (let subIdx = 0; subIdx < this.subPathOrdering.length; subIdx++) {
@@ -222,7 +234,7 @@ export class PathMutator {
     function deleteCollapsingSubPathInfoFn<T>(arr: T[]) {
       arr.splice(numSubPathsAfterDelete, numCollapsingSubPathsBeforeDelete);
     }
-    deleteCollapsingSubPathInfoFn(this.commandMutationsMap);
+    deleteCollapsingSubPathInfoFn(this.subPathStates);
     deleteCollapsingSubPathInfoFn(this.reversals);
     deleteCollapsingSubPathInfoFn(this.shiftOffsets);
     deleteCollapsingSubPathInfoFn(this.subPathIds);
@@ -245,10 +257,12 @@ export class PathMutator {
    */
   revert() {
     this.deleteCollapsingSubPaths();
-    this.commandMutationsMap.forEach((cms, i) => {
-      cms.forEach((cm, j) => {
-        this.commandMutationsMap[i][j] = cm.mutate().revert().build();
-      });
+    this.subPathStates.forEach((cms, cmsIdx) => {
+      this.subPathStates[cmsIdx] =
+        new SubPathState(
+          cms.commandStates.map(cm => {
+            return cm.mutate().revert().build();
+          }));
     });
     this.reversals.forEach((_, i) => this.reversals[i] = false);
     this.shiftOffsets.forEach((_, i) => this.shiftOffsets[i] = 0);
@@ -260,7 +274,7 @@ export class PathMutator {
    * Builds a new mutated path.
    */
   build() {
-    const commandMutationsMap = this.commandMutationsMap;
+    const commandMutationsMap = this.subPathStates;
     const reversals = this.reversals;
     const shiftOffsets = this.shiftOffsets;
     const subPathIds = this.subPathIds;
@@ -307,7 +321,7 @@ export class PathMutator {
 
   private findCommandStateInfo(subIdx: number, cmdIdx: number) {
     const cmsIdx = this.subPathOrdering[subIdx];
-    const subPathCms = this.commandMutationsMap[cmsIdx];
+    const subPathCms = this.subPathStates[cmsIdx].commandStates;
     const numCommandsInSubPath = _.sum(subPathCms.map(cm => cm.getCommands().length));
     if (cmdIdx && this.reversals[cmsIdx]) {
       cmdIdx = numCommandsInSubPath - cmdIdx;
@@ -332,7 +346,7 @@ export class PathMutator {
 }
 
 function reverseAndShiftCommands(
-  commandMutationsMap: ReadonlyArray<ReadonlyArray<CommandState>>,
+  commandMutationsMap: ReadonlyArray<SubPathState>,
   reversals: ReadonlyArray<boolean>,
   shiftOffsets: ReadonlyArray<number>,
   cmsIdx: number) {
@@ -342,11 +356,11 @@ function reverseAndShiftCommands(
 }
 
 function reverseCommands(
-  commandMutationsMap: ReadonlyArray<ReadonlyArray<CommandState>>,
+  commandMutationsMap: ReadonlyArray<SubPathState>,
   reversals: ReadonlyArray<boolean>,
   cmsIdx: number) {
 
-  const subPathCms = commandMutationsMap[cmsIdx];
+  const subPathCms = commandMutationsMap[cmsIdx].commandStates;
   const hasOneCmd =
     subPathCms.length === 1 && subPathCms[0].getCommands().length === 1;
   if (hasOneCmd || !reversals[cmsIdx]) {
