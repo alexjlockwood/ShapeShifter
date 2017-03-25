@@ -1,4 +1,4 @@
-import { Path } from '../commands';
+import { Path, PathUtil } from '../commands';
 import { AbstractLayer } from './AbstractLayer';
 
 /**
@@ -13,6 +13,6 @@ export class ClipPathLayer extends AbstractLayer {
   }
 
   interpolate(start: ClipPathLayer, end: ClipPathLayer, fraction: number) {
-    this.pathData = this.pathData.interpolate(start.pathData, end.pathData, fraction);
+    this.pathData = PathUtil.interpolate(start.pathData, end.pathData, fraction);
   }
 }

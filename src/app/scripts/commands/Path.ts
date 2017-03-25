@@ -29,12 +29,6 @@ export interface Path {
   getCommands(): ReadonlyArray<Command>;
 
   /**
-   * Interpolates this path between a start and end path using the specified fraction.
-   * Does nothing if the paths are not morphable with each other.
-   */
-  interpolate(start: Path, end: Path, fraction: number): Path;
-
-  /**
    * Returns true iff this path is morphable with the specified path.
    */
   isMorphableWith(path: Path): boolean;

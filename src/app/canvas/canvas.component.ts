@@ -412,8 +412,9 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         .filter(s => s.source === this.canvasType);
     const pathDataPointInfos =
       _.chain(path.getSubPaths() as SubPath[])
-        .map((subCmd, subIdx) => {
-          return subCmd.getCommands().map((cmd, cmdIdx) => {
+        .filter(subPath => !subPath.isCollapsing())
+        .map((subPath, subIdx) => {
+          return subPath.getCommands().map((cmd, cmdIdx) => {
             const commandId = { pathId, subIdx, cmdIdx } as CommandIndex;
             const isSplit = cmd.isSplit();
             const isMove = cmd.getSvgChar() === 'M';

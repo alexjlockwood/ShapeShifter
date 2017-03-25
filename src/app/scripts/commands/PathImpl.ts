@@ -1,4 +1,4 @@
-import { MathUtil, Point } from '../common';
+import { Point } from '../common';
 import { Path, Command, ProjectionResult, HitOptions } from '.';
 import { PathState } from './PathState';
 import { PathMutator } from './PathMutator';
@@ -53,35 +53,6 @@ export class PathImpl implements Path {
     const cmds2 = path.getCommands();
     return cmds1.length === cmds2.length && cmds1.every((cmd1, i) =>
       cmd1.getSvgChar() === cmds2[i].getSvgChar());
-  }
-
-  // Implements the Path interface.
-  interpolate(start: Path, end: Path, fraction: number): Path {
-    if (!this.isMorphableWith(start) || !this.isMorphableWith(end)) {
-      return this;
-    }
-    const newCommands: Command[] = [];
-    this.getCommands().forEach((currCmd, i) => {
-      const startCmd = start.getCommands()[i];
-      const endCmd = end.getCommands()[i];
-      const points: Point[] = [];
-      for (let j = 0; j < currCmd.getPoints().length; j++) {
-        const p1 = startCmd.getPoints()[j];
-        const p2 = endCmd.getPoints()[j];
-        if (p1 && p2) {
-          // The 'start' point of the first Move command in a path
-          // will be undefined. Skip it.
-          const px = MathUtil.lerp(p1.x, p2.x, fraction);
-          const py = MathUtil.lerp(p1.y, p2.y, fraction);
-          points.push(new Point(px, py));
-        } else {
-          points.push(undefined);
-        }
-      }
-      // TODO: avoid re-generating unique ids on each animation frame.
-      newCommands.push(currCmd.mutate().setId('').setPoints(...points).build());
-    });
-    return new PathImpl(newCommands);
   }
 
   // Implements the Path interface.

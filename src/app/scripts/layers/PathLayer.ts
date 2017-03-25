@@ -1,4 +1,4 @@
-import { Path } from '../commands';
+import { Path, PathUtil } from '../commands';
 import { AbstractLayer } from './AbstractLayer';
 import { ColorUtil, MathUtil } from '../common';
 
@@ -26,7 +26,7 @@ export class PathLayer extends AbstractLayer {
   }
 
   interpolate(start: PathLayer, end: PathLayer, fraction: number) {
-    this.pathData = this.pathData.interpolate(start.pathData, end.pathData, fraction);
+    this.pathData = PathUtil.interpolate(start.pathData, end.pathData, fraction);
     if (start.fillColor && end.fillColor) {
       this.fillColor = this.lerpColor(start.fillColor, end.fillColor, fraction);
     }
