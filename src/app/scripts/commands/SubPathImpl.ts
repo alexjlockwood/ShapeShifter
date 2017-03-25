@@ -10,6 +10,8 @@ class SubPathImpl implements SubPath {
     private readonly commands: ReadonlyArray<Command>,
     private readonly id = _.uniqueId(),
     private readonly isCollapsing_ = false,
+    private readonly isReversed_ = false,
+    private readonly shiftOffset = 0,
   ) { }
 
   // Implements the SubPath interface.
@@ -28,6 +30,16 @@ class SubPathImpl implements SubPath {
   }
 
   // Implements the SubPath interface.
+  isReversed() {
+    return this.isReversed_;
+  }
+
+  // Implements the SubPath interface.
+  getShiftOffset() {
+    return this.shiftOffset;
+  }
+
+  // Implements the SubPath interface.
   isClosed() {
     const start = _.first(this.getCommands()).getEnd();
     const end = _.last(this.getCommands()).getEnd();
@@ -36,7 +48,13 @@ class SubPathImpl implements SubPath {
 
   // Implements the SubPath interface.
   mutate() {
-    return new SubPathBuilder(this.commands, this.id, this.isCollapsing_);
+    return new SubPathBuilder(
+      this.commands,
+      this.id,
+      this.isCollapsing_,
+      this.isReversed_,
+      this.shiftOffset,
+    );
   }
 }
 
@@ -86,6 +104,8 @@ export class SubPathBuilder {
     private commands: ReadonlyArray<Command>,
     private id: string,
     private isCollapsing: boolean,
+    private isReversed: boolean,
+    private shiftOffset: number,
   ) { }
 
   setCommands(commands: Command[]) {
@@ -103,11 +123,23 @@ export class SubPathBuilder {
     return this;
   }
 
+  setIsReversed(isReversed: boolean) {
+    this.isReversed = isReversed;
+    return this;
+  }
+
+  setShiftOffset(shiftOffset: number) {
+    this.shiftOffset = shiftOffset;
+    return this;
+  }
+
   build() {
     return new SubPathImpl(
       this.commands.slice(),
       this.id,
       this.isCollapsing,
+      this.isReversed,
+      this.shiftOffset,
     );
   }
 }

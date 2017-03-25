@@ -7,7 +7,7 @@ import { SvgChar, Command, ProjectionResult } from '.';
  * Contains additional information about each individual command so that we can
  * remember how they should be projected onto and split/unsplit/converted at runtime.
  * Paths are immutable, stateless objects that depend on this class to
- * remember their mutations. CommandMutations themselves are also immutable to ensure
+ * remember their mutations. CommandState objects themselves are also immutable to ensure
  * that each Path maintains its own unique snapshot of its current mutation state.
  */
 export class CommandState {
@@ -94,14 +94,6 @@ export interface Mutation {
   readonly svgChar: SvgChar;
 }
 
-interface ConstructorParams {
-  readonly backingCommand: Command;
-  readonly mutations: ReadonlyArray<Mutation>;
-  readonly transforms: ReadonlyArray<Matrix>;
-  readonly commands: ReadonlyArray<Command>;
-  readonly calculator: Calculator;
-}
-
 /**
  * A builder class for creating new mutated CommandState objects.
  */
@@ -179,7 +171,8 @@ class CommandStateMutator {
   }
 
   /**
-   * Unconverts all conversions previously performed on this command mutation.
+   * Unconverts all conversions previously performed on this
+   * command state object.
    */
   unconvertSubpath() {
     const backingSvgChar = this.backingCommand.getSvgChar();
@@ -195,14 +188,16 @@ class CommandStateMutator {
   }
 
   /**
-   * Adds transforms to this command mutation using the specified transformation matrices.
+   * Adds transforms to this command state object using the
+   * specified transformation matrices.
    */
   addTransforms(transforms: Matrix[]) {
     return this.setTransforms([].concat(transforms, this.transforms));
   }
 
   /**
-   * Sets transforms to this command mutation using the specified transformation matrices.
+   * Sets transforms to this command state object using the
+   * specified transformation matrices.
    */
   setTransforms(transforms: Matrix[]) {
     this.transforms = [Matrix.flatten(...transforms)];
@@ -215,7 +210,7 @@ class CommandStateMutator {
   }
 
   /**
-   * Reverts this command mutation back to its original state.
+   * Reverts this command state object back to its original state.
    */
   revert() {
     this.mutations = [{

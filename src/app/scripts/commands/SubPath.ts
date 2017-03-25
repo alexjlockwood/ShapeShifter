@@ -27,6 +27,16 @@ export interface SubPath {
   isCollapsing(): boolean;
 
   /**
+   * Returns true iff this sub path has been reversed.
+   */
+  isReversed(): boolean;
+
+  /**
+   * Returns the shift offset of this sub path.
+   */
+  getShiftOffset(): number;
+
+  /**
    * Returns a builder to construct a mutated SubPath.
    */
   mutate(): SubPathBuilder;

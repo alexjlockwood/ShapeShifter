@@ -53,6 +53,8 @@ export class PathState {
         .setId(this.subPathIds[cmsIdx])
         .setCommands(cmds)
         .setIsCollapsing(isCollapsing)
+        .setIsReversed(this.reversals[cmsIdx])
+        .setShiftOffset(this.shiftOffsets[cmsIdx])
         .build();
     });
     this.commands = _.flatMap(this.subPaths, subPath => subPath.getCommands() as Command[]);
