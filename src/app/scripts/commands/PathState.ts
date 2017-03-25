@@ -94,17 +94,21 @@ export class PathState {
     { projection: ProjectionResult, subIdx: number, cmdIdx: number } | undefined {
 
     const minProjectionResultInfo =
-      _.chain(this.commandMutationsMap as CommandState[][])
-        .map((subPathCms, cmsIdx) =>
-          subPathCms.map((cm, cmIdx) => {
-            const projection = cm.project(point);
-            return {
-              cmsIdx,
-              cmIdx,
-              splitIdx: projection ? projection.splitIdx : 0,
-              projection: projection ? projection.projectionResult : undefined,
-            };
-          }))
+      _.chain(this.subPaths as SubPath[])
+        .filter(subPath => !subPath.isCollapsing())
+        .map((subPath, subIdx) => {
+          const cmsIdx = this.subPathOrdering[subIdx];
+          return this.commandMutationsMap[cmsIdx]
+            .map((cm, cmIdx) => {
+              const projection = cm.project(point);
+              return {
+                cmsIdx,
+                cmIdx,
+                splitIdx: projection ? projection.splitIdx : 0,
+                projection: projection ? projection.projectionResult : undefined,
+              };
+            });
+        })
         .flatMap(projections => projections)
         .filter(obj => !!obj.projection)
         .reduce((prev, curr) => {
@@ -128,6 +132,7 @@ export class PathState {
       // First search for in-range path points.
       const pointResult =
         _.chain(this.subPaths as SubPath[])
+          .filter(subPath => !subPath.isCollapsing())
           .map((subPath, subIdx) => {
             return subPath.getCommands()
               .map((cmd, cmdIdx) => {
@@ -169,9 +174,6 @@ export class PathState {
     }
 
     if (opts.isStrokeInRangeFn) {
-      // If the shortest distance from the point to the path is less than half
-      // the stroke width, then select the path.
-
       // TODO: also check to see if the hit occurred at a stroke-linejoin vertex
       // TODO: take stroke width scaling into account as well?
       const result = this.project(point);
@@ -186,6 +188,7 @@ export class PathState {
 
     // Search from right to left so that higher z-order subpaths are found first.
     _.chain(this.subPaths as SubPath[])
+      .filter(subPath => !subPath.isCollapsing())
       .map((subPath, subIdx) => this.commandMutationsMap[this.toCmsIdx(subIdx)])
       .forEachRight((cms, cmsIdx) => {
         const isClosed =
