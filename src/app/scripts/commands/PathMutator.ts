@@ -300,34 +300,54 @@ export class PathMutator {
     start: { cmdIdx: number, t: number },
     end: { cmdIdx: number, t: number }) {
 
+    // TODO: figure out what to do with this!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // TODO: figure out what to do with this!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // TODO: figure out what to do with this!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // TODO: figure out what to do with this!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // TODO: figure out what to do with this!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // TODO: figure out what to do with this!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // TODO: figure out what to do with this!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // TODO: figure out what to do with this!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // TODO: figure out what to do with this!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // TODO: figure out what to do with this!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     return this;
   }
 
   unsplitSubPath(subIdx: number) {
-    const cmsIdx = this.subPathOrdering[subIdx];
-    let counter = 0;
-    const recurseFn = (grandParent: SubPathState, splitState: SubPathState) => {
-      if (!splitState.splitSubPaths.length) {
-        if (counter === cmsIdx) {
-          counter++;
-          return;
-        }
-        counter++;
-        return;
-      }
-      for (let i = 0; i < grandParent.splitSubPaths.length; i++) {
-        for (let j = 0; j < grandParent.splitSubPaths[i].splitSubPaths.length; j++) {
-          recurseFn(
-            grandParent.splitSubPaths[i],
-            grandParent.splitSubPaths[i].splitSubPaths[j]);
-        }
-      }
-    };
-    this.subPathStateMap.forEach(state => {
-      state.splitSubPaths.forEach(s => {
-        recurseFn(state, s);
-      });
-    })
+    // TODO: figure out what to do with this!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // TODO: figure out what to do with this!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // TODO: figure out what to do with this!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // TODO: figure out what to do with this!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // TODO: figure out what to do with this!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // TODO: figure out what to do with this!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // TODO: figure out what to do with this!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // TODO: figure out what to do with this!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // TODO: figure out what to do with this!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // TODO: figure out what to do with this!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // const cmsIdx = this.subPathOrdering[subIdx];
+    // let counter = 0;
+    // const recurseFn = (grandParent: SubPathState, splitState: SubPathState) => {
+    //   if (!splitState.splitSubPaths.length) {
+    //     if (counter === cmsIdx) {
+    //       counter++;
+    //       return;
+    //     }
+    //     counter++;
+    //     return;
+    //   }
+    //   for (let i = 0; i < grandParent.splitSubPaths.length; i++) {
+    //     for (let j = 0; j < grandParent.splitSubPaths[i].splitSubPaths.length; j++) {
+    //       recurseFn(
+    //         grandParent.splitSubPaths[i],
+    //         grandParent.splitSubPaths[i].splitSubPaths[j]);
+    //     }
+    //   }
+    // };
+    // this.subPathStateMap.forEach(state => {
+    //   state.splitSubPaths.forEach(s => {
+    //     recurseFn(state, s);
+    //   });
+    // });
     return this;
   }
 
