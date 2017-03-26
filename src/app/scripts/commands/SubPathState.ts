@@ -21,15 +21,12 @@ export class SubPathState {
   }
 
   mutate() {
-    if (this.splitSubPaths.length) {
-      throw new Error('Attempt to mutate a split sub path');
-    }
     return new SubPathStateMutator(
       this.commandStates.slice(),
       this.isReversed,
       this.shiftOffset,
       this.id,
-      this.splitSubPaths.slice(),
+      this.splitSubPaths.map(s => s.clone()),
     );
   }
 
@@ -37,13 +34,11 @@ export class SubPathState {
     return this.mutate().build();
   }
 
-  toSubPaths() {
+  toSubPaths(): SubPath[] {
     if (!this.splitSubPaths.length) {
       return createSubPaths(reverseAndShiftCommands(this));
     }
-    const subPaths: SubPath[] = [];
-    this.splitSubPaths.forEach(state => subPaths.push(...state.toSubPaths()));
-    return subPaths;
+    return _.flatMap(this.splitSubPaths, s => s.toSubPaths());
   }
 }
 
@@ -227,4 +222,52 @@ function shiftCommands(subPathState: SubPathState, cmds: Command[]) {
       .setPoints(prevMoveCmd.getStart(), _.last(newCmds).getEnd())
       .build());
   return newCmds;
+}
+
+export function findSubPathState(map: ReadonlyArray<SubPathState>, cmsIdx: number) {
+  let subPathState: SubPathState;
+  let counter = 0;
+  (function recurseFn(states: ReadonlyArray<SubPathState>) {
+    for (const state of states) {
+      if (!state.isSplit()) {
+        if (counter === cmsIdx) {
+          subPathState = state;
+          return;
+        }
+        counter++;
+        continue;
+      }
+      recurseFn(state.splitSubPaths);
+    }
+  })(map);
+  return subPathState;
+}
+
+export function countSubPathStates(map: ReadonlyArray<SubPathState>): number {
+  let counter = 0;
+  const recurseFn = (states: ReadonlyArray<SubPathState>) => {
+    states.forEach(state => {
+      if (!state.isSplit()) {
+        counter++;
+        return;
+      }
+      recurseFn(state.splitSubPaths);
+    });
+  };
+  recurseFn(map);
+  return counter;
+}
+
+export function flattenSubPathStates(map: ReadonlyArray<SubPathState>) {
+  const subPathStates: SubPathState[] = [];
+  (function recurseFn(states: ReadonlyArray<SubPathState>) {
+    states.forEach(state => {
+      if (!state.isSplit()) {
+        subPathStates.push(state);
+        return;
+      }
+      recurseFn(state.splitSubPaths);
+    });
+  })(map);
+  return subPathStates;
 }
