@@ -84,7 +84,42 @@ describe('Path', () => {
   });
 
   describe('mutating Path objects', () => {
-    type PathOp = 'RV' | 'SB' | 'SF' | 'S' | 'SIH' | 'US' | 'CV' | 'UCV' | 'RT' | 'M' | 'AC' | 'DC';
+    it('command IDs persist correctly after mutations', () => {
+      const totalIds = new Set();
+      const extractPathIdsFn =
+        (path: Path, expectedSize: number, expectedTotalSize: number) => {
+          const ids = path.getCommands().map(cmd => cmd.getId());
+          ids.forEach(id => totalIds.add(id));
+          expect(new Set(ids).size).toEqual(expectedSize);
+          expect(totalIds.size).toEqual(expectedTotalSize);
+        };
+
+      // Creating a new path generates 4 new ids.
+      let path = newPath('M 0 0 L 0 0 L 0 0 L 0 0');
+      extractPathIdsFn(path, 4, 4);
+
+      // Reversing/shifting an existing path generates no new ids.
+      path = path.mutate()
+        .shiftSubPathBack(0)
+        .reverseSubPath(0)
+        .shiftSubPathForward(0)
+        .build();
+      extractPathIdsFn(path, 4, 4);
+
+      // Splitting an existing path generates no new ids.
+      path = path.mutate().splitCommand(0, 2, 0.25, 0.5, 0.75).build();
+      extractPathIdsFn(path, 7, 7);
+
+      // Creating new paths generate new IDs.
+      path = newPath('M 0 0 L 0 0 L 0 0 L 0 0').mutate().shiftSubPathBack(0).build();
+      extractPathIdsFn(path, 4, 11);
+
+      path = newPath('M 0 0 L 0 0 L 0 0 L 0 0').mutate().reverseSubPath(0).build();
+      extractPathIdsFn(path, 4, 15);
+    });
+
+    type PathOp =
+      'RV' | 'SB' | 'SF' | 'S' | 'SIH' | 'US' | 'CV' | 'UCV' | 'RT' | 'M' | 'AC' | 'DC' | 'SSSP';
 
     function mutatePath(pathString: string, pathOpsString: string) {
       const A = pathOpsString.split(' ');
@@ -144,6 +179,10 @@ describe('Path', () => {
             break;
           case 'DC': // Delete collapsing sub paths.
             mutator.deleteCollapsingSubPaths();
+            break;
+          case 'SSSP':
+            mutator.splitStrokedSubPath(+A[i + 1], +A[i + 2]);
+            i += 2;
             break;
           default:
             throw new Error('Invalid path op: ' + op);
@@ -388,6 +427,11 @@ describe('Path', () => {
         + 'C 10 20.333 10 18.667 10 17 C 9.333 17 8.667 17 8 17 C 8 14.667 8 12.333 8 10 C 8 8.34 9.34 7 11 7 C 12.66 7 14 8.34 14 10 '
         + 'C 15.17 10.49 15.99 11.66 16 13 L 16 13',
       ),
+      makeTest(
+        'M 0 0 L 10 0 L 20 0 L 30 0',
+        'SSSP 0 1',
+        'M 0 0 L 10 0 M 10 0 L 20 0 L 30 0',
+      ),
     ];
 
     for (const test of MUTATION_TESTS) {
@@ -395,40 +439,6 @@ describe('Path', () => {
         checkPathsEqual(mutatePath(test.actual, test.ops), newPath(test.expected));
       });
     }
-
-    it('command IDs persist correctly after mutations', () => {
-      const totalIds = new Set();
-      const extractPathIdsFn =
-        (path: Path, expectedSize: number, expectedTotalSize: number) => {
-          const ids = path.getCommands().map(cmd => cmd.getId());
-          ids.forEach(id => totalIds.add(id));
-          expect(new Set(ids).size).toEqual(expectedSize);
-          expect(totalIds.size).toEqual(expectedTotalSize);
-        };
-
-      // Creating a new path generates 4 new ids.
-      let path = newPath('M 0 0 L 0 0 L 0 0 L 0 0');
-      extractPathIdsFn(path, 4, 4);
-
-      // Reversing/shifting an existing path generates no new ids.
-      path = path.mutate()
-        .shiftSubPathBack(0)
-        .reverseSubPath(0)
-        .shiftSubPathForward(0)
-        .build();
-      extractPathIdsFn(path, 4, 4);
-
-      // Splitting an existing path generates no new ids.
-      path = path.mutate().splitCommand(0, 2, 0.25, 0.5, 0.75).build();
-      extractPathIdsFn(path, 7, 7);
-
-      // Creating new paths generate new IDs.
-      path = newPath('M 0 0 L 0 0 L 0 0 L 0 0').mutate().shiftSubPathBack(0).build();
-      extractPathIdsFn(path, 4, 11);
-
-      path = newPath('M 0 0 L 0 0 L 0 0 L 0 0').mutate().reverseSubPath(0).build();
-      extractPathIdsFn(path, 4, 15);
-    });
   });
 
   describe('assigning subpath IDs', () => {

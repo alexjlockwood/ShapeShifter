@@ -14,14 +14,7 @@ export class PathState {
   constructor(
     private readonly obj: string | Command[],
     // Maps internal cmsIdx values to each subpath's current state.
-    public readonly subPathStates?: ReadonlyArray<SubPathState>,
-    // Maps internal cmsIdx values to the subpath's current reversal state.
-    public readonly reversals?: ReadonlyArray<boolean>,
-    // Maps internal cmsIdx values to the subpath's current shift offset state.
-    // Note that a shift offset value of 'x' means 'perform x number of shift back ops'.
-    public readonly shiftOffsets?: ReadonlyArray<number>,
-    // Maps internal cmsIdx values to internal subpath IDs.
-    public readonly subPathIds?: ReadonlyArray<string>,
+    public readonly subPathStateTree?: ReadonlyArray<SubPathState>,
     // Maps client-visible subIdx values to internal cmsIdx values.
     public readonly subPathOrdering?: ReadonlyArray<number>,
     // The number of collapsing subpaths appended to the end of the command mutation map.
@@ -29,47 +22,56 @@ export class PathState {
   ) {
     const commands = (typeof obj === 'string' ? PathParser.parseCommands(obj) : obj);
     const subPaths = createSubPaths(commands);
-    this.subPathStates =
-      subPathStates
-        ? subPathStates.map(sps => sps.clone())
+    this.subPathStateTree =
+      subPathStateTree
+        ? subPathStateTree.map(sps => sps.clone())
         : subPaths.map(s => new SubPathState(s.getCommands().map(c => new CommandState(c))));
-    this.reversals =
-      reversals ? reversals.slice() : subPaths.map(_ => false);
-    this.shiftOffsets =
-      shiftOffsets ? shiftOffsets.slice() : subPaths.map(_ => 0);
-    this.subPathIds =
-      subPathIds ? subPathIds.slice() : subPaths.map(s => _.uniqueId());
     this.subPathOrdering =
       subPathOrdering ? subPathOrdering.slice() : subPaths.map((_, i) => i);
     this.subPaths = subPaths.map((subPath, subIdx) => {
       const cmds = subPath.getCommands().map((cmd, cmdIdx) => {
         return cmd.mutate()
-          .setId(this.findCommandStateId(subIdx, cmdIdx, subPaths))
+          .setId(this.findCommandStateId(subIdx, cmdIdx))
           .build();
       });
       const cmsIdx = this.subPathOrdering[subIdx];
       const isCollapsing =
         this.subPathStates.length - this.numCollapsingSubPaths <= cmsIdx;
       return subPath.mutate()
-        .setId(this.subPathIds[cmsIdx])
+        .setId(this.subPathStates[cmsIdx].id)
         .setCommands(cmds)
         .setIsCollapsing(isCollapsing)
-        .setIsReversed(this.reversals[cmsIdx])
-        .setShiftOffset(this.shiftOffsets[cmsIdx])
+        .setIsReversed(this.subPathStates[cmsIdx].isReversed)
+        .setShiftOffset(this.subPathStates[cmsIdx].shiftOffset)
         .build();
     });
     this.commands = _.flatMap(this.subPaths, subPath => subPath.getCommands() as Command[]);
   }
 
-  private findCommandStateId(subIdx: number, cmdIdx: number, subPaths?: SubPath[]) {
+  private get subPathStates(): ReadonlyArray<SubPathState> {
+    const subPathStates: SubPathState[] = [];
+    const recurseFn = (states: ReadonlyArray<SubPathState>) => {
+      states.forEach(state => {
+        if (!state.isSplit()) {
+          subPathStates.push(state);
+          return;
+        }
+        recurseFn(state.splitSubPaths);
+      });
+    };
+    recurseFn(this.subPathStateTree);
+    return subPathStates;
+  }
+
+  private findCommandStateId(subIdx: number, cmdIdx: number) {
     const cmsIdx = this.subPathOrdering[subIdx];
     const sps = this.subPathStates[cmsIdx];
     const numCommandsInSubPath =
       _.sum(sps.commandStates.map(cm => cm.getCommands().length));
-    if (cmdIdx && this.reversals[cmsIdx]) {
+    if (cmdIdx && this.subPathStates[cmsIdx].isReversed) {
       cmdIdx = numCommandsInSubPath - cmdIdx;
     }
-    cmdIdx += this.shiftOffsets[cmsIdx];
+    cmdIdx += this.subPathStates[cmsIdx].shiftOffset;
     if (cmdIdx >= numCommandsInSubPath) {
       // Note that subtracting numCommandsInSubPath is intentional here
       // (as opposed to subtracting numCommandsInSubPath - 1).
@@ -285,8 +287,8 @@ export class PathState {
         .map((cm: CommandState, i) => i < cmIdx ? cm.getCommands().length : 0)
         .sum()
         .value();
-    let shiftOffset = this.shiftOffsets[cmsIdx];
-    if (this.reversals[cmsIdx]) {
+    let shiftOffset = this.subPathStates[cmsIdx].shiftOffset;
+    if (this.subPathStates[cmsIdx].isReversed) {
       cmdIdx = numCmds - cmdIdx;
       shiftOffset *= -1;
       shiftOffset += numCmds - 1;
