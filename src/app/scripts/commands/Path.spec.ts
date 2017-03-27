@@ -118,8 +118,8 @@ describe('Path', () => {
       extractPathIdsFn(path, 4, 15);
     });
 
-    type PathOp =
-      'RV' | 'SB' | 'SF' | 'S' | 'SIH' | 'US' | 'CV' | 'UCV' | 'RT' | 'M' | 'AC' | 'DC' | 'SSSP';
+    type PathOp = 'RV' | 'SB' | 'SF' | 'S' | 'SIH' | 'US' | 'CV'
+      | 'UCV' | 'RT' | 'M' | 'AC' | 'DC' | 'SSSP' | 'SFSP' | 'USSP';
 
     function mutatePath(pathString: string, pathOpsString: string) {
       const A = pathOpsString.split(' ');
@@ -180,9 +180,20 @@ describe('Path', () => {
           case 'DC': // Delete collapsing sub paths.
             mutator.deleteCollapsingSubPaths();
             break;
-          case 'SSSP':
+          case 'SSSP': // Split stroked sub path.
             mutator.splitStrokedSubPath(+A[i + 1], +A[i + 2]);
             i += 2;
+            break;
+          case 'SFSP': // Split filled sub path.
+            mutator.splitFilledSubPath(
+              +A[i + 1],
+              { cmdIdx: +A[i + 2], t: +A[i + 3] },
+              { cmdIdx: +A[i + 4], t: +A[i + 5] });
+            i += 5;
+            break;
+          case 'USSP': // Unsplit sub path.
+            mutator.unsplitSubPath(+A[i + 1]);
+            i += 1;
             break;
           default:
             throw new Error('Invalid path op: ' + op);
@@ -428,10 +439,66 @@ describe('Path', () => {
         + 'C 15.17 10.49 15.99 11.66 16 13 L 16 13',
       ),
       makeTest(
-        'M 0 0 L 10 0 L 20 0 L 30 0',
+        'M 0 0 L 1 1 L 2 2 L 3 3 L 4 4 L 5 5 M 0 0 L 10 10 L 20 20 L 30 30 L 40 40 L 50 50',
         'SSSP 0 1',
-        'M 0 0 L 10 0 M 10 0 L 20 0 L 30 0',
+        'M 0 0 L 1 1 M 1 1 L 2 2 L 3 3 L 4 4 L 5 5 M 0 0 L 10 10 L 20 20 L 30 30 L 40 40 L 50 50',
       ),
+      makeTest(
+        'M 0 0 L 1 1 L 2 2 L 3 3 L 4 4 L 5 5 M 0 0 L 10 10 L 20 20 L 30 30 L 40 40 L 50 50',
+        'SSSP 0 1 USSP 0',
+        'M 0 0 L 1 1 L 2 2 L 3 3 L 4 4 L 5 5 M 0 0 L 10 10 L 20 20 L 30 30 L 40 40 L 50 50',
+      ),
+      makeTest(
+        'M 0 0 L 1 1 L 2 2 L 3 3 L 4 4 L 5 5 M 0 0 L 10 10 L 20 20 L 30 30 L 40 40 L 50 50',
+        'SSSP 0 1 M 0 1',
+        'M 1 1 L 2 2 L 3 3 L 4 4 L 5 5 M 0 0 L 1 1 M 0 0 L 10 10 L 20 20 L 30 30 L 40 40 L 50 50',
+      ),
+      makeTest(
+        'M 0 0 L 1 1 L 2 2 L 3 3 L 4 4 L 5 5 M 0 0 L 10 10 L 20 20 L 30 30 L 40 40 L 50 50',
+        'SSSP 0 1 M 0 1 USSP 1',
+        'M 0 0 L 1 1 L 2 2 L 3 3 L 4 4 L 5 5 M 0 0 L 10 10 L 20 20 L 30 30 L 40 40 L 50 50',
+      ),
+      makeTest(
+        'M 0 0 L 1 1 L 2 2 L 3 3 L 4 4 L 5 5 M 0 0 L 10 10 L 20 20 L 30 30 L 40 40 L 50 50',
+        'SSSP 0 1 USSP 1',
+        'M 0 0 L 1 1 L 2 2 L 3 3 L 4 4 L 5 5 M 0 0 L 10 10 L 20 20 L 30 30 L 40 40 L 50 50',
+      ),
+      makeTest(
+        'M 0 0 L 1 1 L 2 2 L 3 3 L 4 4 L 5 5 M 0 0 L 10 10 L 20 20 L 30 30 L 40 40 L 50 50',
+        'SSSP 0 1 SSSP 2 2',
+        'M 0 0 L 1 1 M 1 1 L 2 2 L 3 3 L 4 4 L 5 5 M 0 0 L 10 10 L 20 20 M 20 20 L 30 30 L 40 40 L 50 50',
+      ),
+      makeTest(
+        'M 0 0 L 10 10 L 20 20 L 30 30 L 40 40 L 50 50',
+        'SIH 0 4 SSSP 0 4',
+        'M 0 0 L 10 10 L 20 20 L 30 30 L 35 35 M 35 35 L 40 40 L 50 50',
+      ),
+      makeTest(
+        'M 0 0 L 10 10 L 20 20 L 30 30 L 40 40 L 50 50',
+        'SIH 0 4 SSSP 0 4 M 0 1 S 0 1 0.6',
+        'M 35 35 L 38 38 L 40 40 L 50 50 M 0 0 L 10 10 L 20 20 L 30 30 L 35 35',
+      ),
+      makeTest(
+        'M 0 0 L 10 10 L 20 20 L 30 30 L 40 40 L 50 50',
+        'SIH 0 4 SSSP 0 4 M 0 1 S 0 1 0.6 USSP 0',
+        'M 0 0 L 10 10 L 20 20 L 30 30 L 35 35 L 38 38 L 40 40 L 50 50',
+      ),
+      makeTest(
+        'M 0 0 L 10 10 L 20 20 L 30 30 L 40 40 L 50 50',
+        'SIH 0 4 SSSP 0 4 M 0 1 S 0 1 0.6 RV 0 S 0 2 0.5',
+        'M 50 50 L 40 40 L 39 39 L 38 38 L 35 35 M 0 0 L 10 10 L 20 20 L 30 30 L 35 35',
+      ),
+      makeTest(
+        'M 50 50 L 40 40 L 39 39 L 38 38 L 35 35 M 0 0 L 10 10 L 20 20 L 30 30 L 35 35',
+        'SSSP 0 3',
+        'M 50 50 L 40 40 L 39 39 L 38 38 M 38 38 L 35 35 M 0 0 L 10 10 L 20 20 L 30 30 L 35 35',
+      ),
+      // TODO: fix this test... it fails because it doesn't handle nested reversals properly (I think).
+      // makeTest(
+      //   'M 0 0 L 10 10 L 20 20 L 30 30 L 40 40 L 50 50',
+      //   'SIH 0 4 SSSP 0 4 M 0 1 S 0 1 0.6 RV 0 S 0 2 0.5 SSSP 0 3',
+      //   'M 50 50 L 40 40 L 39 39 L 38 38 M 38 38 L 35 35 M 0 0 L 10 10 L 20 20 L 30 30 L 35 35',
+      // ),
     ];
 
     for (const test of MUTATION_TESTS) {

@@ -6,6 +6,7 @@ import { createSubPaths } from './SubPathImpl';
 export class SubPathState {
 
   constructor(
+    // TODO: make this a ReadonlyArray and avoid the hackery in PathMutator
     public readonly commandStates: ReadonlyArray<CommandState>,
     public readonly isReversed = false,
     // A shift offset value of 'x' means 'perform x shift back ops'.
@@ -13,7 +14,8 @@ export class SubPathState {
     public readonly id = _.uniqueId(),
     // Either empty if this sub path is not split, or an array of size 2
     // containing this sub path's split children.
-    public readonly splitSubPaths: ReadonlyArray<SubPathState> = [],
+    // TODO: make this a ReadonlyArray and avoid the hackery in PathMutator
+    public readonly splitSubPaths: SubPathState[] = [],
   ) { }
 
   isSplit() {
@@ -30,7 +32,7 @@ export class SubPathState {
     );
   }
 
-  clone() {
+  clone(): SubPathState {
     return this.mutate().build();
   }
 
@@ -38,7 +40,11 @@ export class SubPathState {
     if (!this.splitSubPaths.length) {
       return createSubPaths(reverseAndShiftCommands(this));
     }
-    return _.flatMap(this.splitSubPaths, s => s.toSubPaths());
+    const subPaths: SubPath[] = [];
+    for (const splitSubPath of this.splitSubPaths) {
+      subPaths.push(...splitSubPath.toSubPaths());
+    }
+    return subPaths;
   }
 }
 
@@ -230,11 +236,10 @@ export function findSubPathState(map: ReadonlyArray<SubPathState>, cmsIdx: numbe
   (function recurseFn(states: ReadonlyArray<SubPathState>) {
     for (const state of states) {
       if (!state.isSplit()) {
-        if (counter === cmsIdx) {
+        if (counter++ === cmsIdx) {
           subPathState = state;
           return;
         }
-        counter++;
         continue;
       }
       recurseFn(state.splitSubPaths);
@@ -245,7 +250,7 @@ export function findSubPathState(map: ReadonlyArray<SubPathState>, cmsIdx: numbe
 
 export function countSubPathStates(map: ReadonlyArray<SubPathState>): number {
   let counter = 0;
-  const recurseFn = (states: ReadonlyArray<SubPathState>) => {
+  (function recurseFn(states: ReadonlyArray<SubPathState>) {
     states.forEach(state => {
       if (!state.isSplit()) {
         counter++;
@@ -253,8 +258,7 @@ export function countSubPathStates(map: ReadonlyArray<SubPathState>): number {
       }
       recurseFn(state.splitSubPaths);
     });
-  };
-  recurseFn(map);
+  })(map);
   return counter;
 }
 

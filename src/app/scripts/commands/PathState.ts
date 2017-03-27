@@ -24,7 +24,7 @@ export class PathState {
     const subPaths = createSubPaths(commands);
     this.subPathStateMap =
       subPathStateMap
-        ? subPathStateMap.map(sps => sps.clone())
+        ? subPathStateMap.map(s => s.clone())
         : subPaths.map(s => new SubPathState(s.getCommands().map(c => new CommandState(c))));
     this.subPathOrdering =
       subPathOrdering ? subPathOrdering.slice() : subPaths.map((_, i) => i);
