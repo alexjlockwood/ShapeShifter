@@ -493,12 +493,36 @@ describe('Path', () => {
         'SSSP 0 3',
         'M 50 50 L 40 40 L 39 39 L 38 38 M 38 38 L 35 35 M 0 0 L 10 10 L 20 20 L 30 30 L 35 35',
       ),
-      // TODO: fix this test... it fails because it doesn't handle nested reversals properly (I think).
-      // makeTest(
-      //   'M 0 0 L 10 10 L 20 20 L 30 30 L 40 40 L 50 50',
-      //   'SIH 0 4 SSSP 0 4 M 0 1 S 0 1 0.6 RV 0 S 0 2 0.5 SSSP 0 3',
-      //   'M 50 50 L 40 40 L 39 39 L 38 38 M 38 38 L 35 35 M 0 0 L 10 10 L 20 20 L 30 30 L 35 35',
-      // ),
+      makeTest(
+        'M 0 0 L 10 10 L 20 20 L 30 30',
+        'RV 0 SSSP 0 2',
+        'M 30 30 L 20 20 L 10 10 M 10 10 L 0 0',
+      ),
+      makeTest(
+        'M 0 0 L 10 10 L 20 20 L 30 30',
+        'RV 0 SSSP 0 2 USSP 0',
+        'M 30 30 L 20 20 L 10 10 L 0 0',
+      ),
+      makeTest(
+        'M 0 0 L 10 10 L 20 20 L 30 30',
+        'RV 0 SSSP 0 2 USSP 1',
+        'M 30 30 L 20 20 L 10 10 L 0 0',
+      ),
+      makeTest(
+        'M 0 0 L 10 10 L 20 20 L 30 30',
+        'RV 0 SSSP 0 2 RV 0 RV 1',
+        'M 10 10 L 20 20 L 30 30 M 0 0 L 10 10',
+      ),
+      makeTest(
+        'M 0 0 L 10 10 L 20 20 L 30 30',
+        'RV 0 SSSP 0 2 RV 0 RV 1 S 1 1 0.7',
+        'M 10 10 L 20 20 L 30 30 M 0 0 L 7 7 L 10 10',
+      ),
+      makeTest(
+        'M 0 0 L 10 10 L 20 20 L 30 30',
+        'RV 0 SSSP 0 2 RV 0 RV 1 S 1 1 0.7',
+        'M 10 10 L 20 20 L 30 30 M 0 0 L 7 7 L 10 10',
+      ),
     ];
 
     for (const test of MUTATION_TESTS) {

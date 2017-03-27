@@ -14,7 +14,7 @@ export class CommandState {
 
   constructor(
     // The original un-mutated command.
-    public readonly backingCommand: Command,
+    private readonly backingCommand: Command,
     // A command state object wraps around the initial SVG command and outputs
     // a list of transformed commands resulting from splits, unsplits,
     // conversions, etc. If the initial SVG command hasn't been modified,
@@ -24,7 +24,7 @@ export class CommandState {
     // has since been modified. Since the command state always holds a
     // reference to its initial backing command, these modifications
     // are always reversible.
-    public readonly mutations: ReadonlyArray<Mutation> = [{
+    private readonly mutations: ReadonlyArray<Mutation> = [{
       id: backingCommand.getId(),
       t: 1,
       svgChar: backingCommand.getSvgChar(),
@@ -33,9 +33,30 @@ export class CommandState {
     private readonly transforms: ReadonlyArray<Matrix> = [new Matrix()],
     // The calculator that will do all of the math-y stuff for us.
     private readonly calculator: Calculator = newCalculator(backingCommand),
-    public readonly minT = 0,
-    public readonly maxT = 1,
+    private readonly minT = 0,
+    private readonly maxT = 1,
+    private readonly isReversed = false,
   ) { }
+
+  getId() {
+    return this.backingCommand.getId();
+  }
+
+  getBackingCommand() {
+    return this.backingCommand;
+  }
+
+  getMutations() {
+    return this.mutations;
+  }
+
+  getMinT() {
+    return this.minT;
+  }
+
+  getMaxT() {
+    return this.maxT;
+  }
 
   getCommands() {
     return this.commands;
@@ -57,6 +78,7 @@ export class CommandState {
     return this.calculator.getPathLength();
   }
 
+  // TODO: need to return a reversed 't' value when reversed?
   project(point: Point): { projectionResult: ProjectionResult, splitIdx: number } | undefined {
     const projectionResult = this.calculator.project(point);
     if (!projectionResult) {
@@ -88,12 +110,13 @@ export class CommandState {
       this.calculator,
       this.minT,
       this.maxT,
+      this.isReversed,
     );
   }
 
   fork(splitIdx: number) {
-    const left = this.mutate().forkLeft(splitIdx).build();
-    const right = this.mutate().forkRight(splitIdx).build();
+    const left = this.mutate().sliceLeft(splitIdx).build();
+    const right = this.mutate().sliceRight(splitIdx).build();
     return { left, right };
   }
 }
@@ -110,31 +133,41 @@ export interface Mutation {
 class CommandStateMutator {
 
   constructor(
-    private readonly backingCommand: Command,
+    private backingCommand: Command,
     private mutations: Mutation[],
     private transforms: Matrix[],
     private calculator: Calculator,
     private minT: number,
     private maxT: number,
+    private isReversed: boolean,
   ) { }
 
-  forkLeft(splitIdx: number) {
+  /**
+   * Slices this command state object at the specified index, discarding
+   * anything to the right.
+   */
+  sliceLeft(splitIdx: number) {
     this.maxT = this.mutations[splitIdx].t;
     this.mutations = this.mutations.slice(0, splitIdx + 1).map(m => _.clone(m));
     return this;
   }
 
-  forkRight(splitIdx: number) {
+  /**
+   * Slices this command state object at the specified index, discarding
+   * anything to the left.
+   */
+  sliceRight(splitIdx: number) {
     this.minT = this.mutations[splitIdx].t;
     this.mutations = this.mutations.slice(splitIdx + 1).map(m => _.clone(m));
     return this;
   }
 
+  // TODO: kill this? better for unsplit to revert back to the subpath's initial state?
   merge(cs: CommandState) {
-    this.minT = Math.min(this.minT, cs.minT);
-    this.maxT = Math.max(this.maxT, cs.maxT);
+    this.minT = Math.min(this.minT, cs.getMinT());
+    this.maxT = Math.max(this.maxT, cs.getMaxT());
     const mutationIds = new Set<string>(this.mutations.map(m => m.id));
-    const otherMutations = cs.mutations.map(m => _.clone(m));
+    const otherMutations = cs.getMutations().map(m => _.clone(m));
     for (const mut of otherMutations) {
       if (mutationIds.has(mut.id)) {
         console.warn('merged command states have conflicting ids', this, cs);
@@ -146,11 +179,25 @@ class CommandStateMutator {
   }
 
   /**
+   * Reverses the information stored by this command state object.
+   */
+  reverse() {
+    this.isReversed = !this.isReversed;
+    this.mutations = this.mutations.reverse();
+    this.backingCommand = this.backingCommand.mutate().reverse().build();
+    this.calculator = newCalculator(this.backingCommand);
+    return this;
+  }
+
+  /**
    * Inserts the provided t values at the specified split index. The t values
    * are linearly interpolated between the split values at splitIdx and
    * splitIdx + 1 to ensure the split is done in relation to the mutated command.
    */
   splitAtIndex(splitIdx: number, ts: number[]) {
+    if (this.isReversed) {
+      ts = ts.map(t => MathUtil.lerp(this.maxT, this.minT, t));
+    }
     const tempSplits = [this.minT, ...this.mutations.map(m => m.t)];
     const startSplit = tempSplits[splitIdx];
     const endSplit = tempSplits[splitIdx + 1];
@@ -292,6 +339,7 @@ class CommandStateMutator {
       this.calculator,
       this.minT,
       this.maxT,
+      this.isReversed
     );
   }
 }

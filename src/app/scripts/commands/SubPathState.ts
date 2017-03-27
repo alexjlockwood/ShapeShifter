@@ -6,7 +6,6 @@ import { createSubPaths } from './SubPathImpl';
 export class SubPathState {
 
   constructor(
-    // TODO: make this a ReadonlyArray and avoid the hackery in PathMutator
     public readonly commandStates: ReadonlyArray<CommandState>,
     public readonly isReversed = false,
     // A shift offset value of 'x' means 'perform x shift back ops'.
@@ -72,7 +71,11 @@ class SubPathStateMutator {
   }
 
   reverse() {
-    this.isReversed = !this.isReversed;
+    return this.setIsReversed(!this.isReversed);
+  }
+
+  setIsReversed(isReversed: boolean) {
+    this.isReversed = isReversed;
     return this;
   }
 
@@ -139,6 +142,7 @@ function reverseCommands(subPathState: SubPathState) {
   });
 
   // If the last command is a 'Z', replace it with a line before we reverse.
+  // TODO: replacing the 'Z' messes up certain stroke-linejoin values
   const lastCmd = _.last(cmds);
   if (lastCmd.getSvgChar() === 'Z') {
     cmds[cmds.length - 1] =
@@ -264,8 +268,8 @@ export function countSubPathStates(map: ReadonlyArray<SubPathState>): number {
 
 export function flattenSubPathStates(map: ReadonlyArray<SubPathState>) {
   const subPathStates: SubPathState[] = [];
-  (function recurseFn(states: ReadonlyArray<SubPathState>) {
-    states.forEach(state => {
+  (function recurseFn(currentLevel: ReadonlyArray<SubPathState>) {
+    currentLevel.forEach(state => {
       if (!state.isSplit()) {
         subPathStates.push(state);
         return;

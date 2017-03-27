@@ -247,41 +247,51 @@ export class PathMutator {
 
   /**
    * Splits a stroked sub path using the specified indices.
+   * A 'moveTo' command will be inserted after the command at 'cmdIdx'.
    */
   splitStrokedSubPath(subIdx: number, cmdIdx: number) {
-    const { targetCm, cmsIdx, cmIdx, splitIdx } =
-      this.findCommandStateInfo(subIdx, cmdIdx);
+    const cmsIdx = this.subPathOrdering[subIdx];
+    const sps = this.findSubPathState(cmsIdx);
+    let css = sps.commandStates;
+    if (sps.isReversed) {
+      const revCss = [
+        new CommandState(
+          newCommand('M', [
+            css[0].getBackingCommand().getStart(),
+            _.last(css).getBackingCommand().getEnd(),
+          ])).mutate().reverse().build(),
+      ];
+      for (let i = css.length - 1; i > 0; i--) {
+        revCss.push(css[i].mutate().reverse().build());
+      }
+      css = revCss;
+    }
     const startCommandStates: CommandState[] = [];
     const endCommandStates: CommandState[] = [];
-    const sps = this.findSubPathState(cmsIdx);
-    const commandStates = sps.commandStates;
-    for (let i = 0; i < commandStates.length; i++) {
+    const { cmIdx, splitIdx } = this.findCommandStateIndices(css, cmdIdx);
+    for (let i = 0; i < css.length; i++) {
       if (i < cmIdx) {
-        startCommandStates.push(commandStates[i]);
+        startCommandStates.push(css[i]);
       } else if (cmIdx < i) {
-        endCommandStates.push(commandStates[i]);
+        endCommandStates.push(css[i]);
       } else {
-        const splitPoint = commandStates[i].getCommands()[splitIdx].getEnd();
-        const { left, right } = commandStates[i].fork(splitIdx);
+        const splitPoint = css[i].getCommands()[splitIdx].getEnd();
+        const { left, right } = css[i].fork(splitIdx);
         startCommandStates.push(left);
-        endCommandStates.push(new CommandState(newCommand('M', [splitPoint, splitPoint])));
+        let endMoveCs = new CommandState(newCommand('M', [splitPoint, splitPoint]));
+        if (sps.isReversed) {
+          endMoveCs = endMoveCs.mutate().reverse().build();
+        }
+        endCommandStates.push(endMoveCs);
         if (right.getCommands().length) {
           endCommandStates.push(right);
         }
       }
     }
-    const splitSubPaths = [
+    const splitSubPaths: SubPathState[] = [
       // TODO: should/could one of these sub paths share the same ID as the parent?
-      sps.mutate()
-        .setCommandStates(startCommandStates)
-        .setSplitSubPaths([])
-        .setId(_.uniqueId())
-        .build(),
-      sps.mutate()
-        .setCommandStates(endCommandStates)
-        .setSplitSubPaths([])
-        .setId(_.uniqueId())
-        .build(),
+      new SubPathState(startCommandStates),
+      new SubPathState(endCommandStates),
     ];
     this.setSubPathState(
       sps.mutate()
@@ -323,13 +333,27 @@ export class PathMutator {
               const cs1 = _.last(css1);
               const cs2 = css2[1];
               const middle: CommandState[] = [];
-              if (cs1.backingCommand.getId() === cs2.backingCommand.getId()) {
+              if (cs1.getId() === cs2.getId()) {
                 middle.push(cs1.mutate().merge(css2[1]).build());
               } else {
                 middle.push(cs1);
                 middle.push(cs2);
               }
-              const css = [].concat(head, middle, tail);
+              // TODO: share this code with splitStrokedSubPath above
+              let css = [].concat(head, middle, tail);
+              if (p.isReversed) {
+                const revCss = [
+                  new CommandState(
+                    newCommand('M', [
+                      css[0].getBackingCommand().getStart(),
+                      _.last(css).getBackingCommand().getEnd(),
+                    ])),
+                ];
+                for (let j = css.length - 1; j > 0; j--) {
+                  revCss.push(css[j].mutate().reverse().build());
+                }
+                css = revCss;
+              }
               updatedParentNode =
                 p.mutate().setCommandStates(css).setSplitSubPaths([]).build();
               return;
@@ -484,6 +508,19 @@ export class PathMutator {
     for (const targetCm of subPathCms) {
       if (counter + targetCm.getCommands().length > cmdIdx) {
         return { targetCm, cmsIdx, cmIdx, splitIdx: cmdIdx - counter };
+      }
+      counter += targetCm.getCommands().length;
+      cmIdx++;
+    }
+    throw new Error('Error retrieving command mutation');
+  }
+
+  private findCommandStateIndices(css: ReadonlyArray<CommandState>, cmdIdx: number) {
+    let counter = 0;
+    let cmIdx = 0;
+    for (const targetCm of css) {
+      if (counter + targetCm.getCommands().length > cmdIdx) {
+        return { cmIdx, splitIdx: cmdIdx - counter };
       }
       counter += targetCm.getCommands().length;
       cmIdx++;
