@@ -91,7 +91,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   // down event occurred close enough to the path to allow a
   // a point to be created on the next mouse up event (assuming
   // the mouse's location is still within range of the path).
-  private shouldCreatePointOnMouseUp = false;
+  private shouldPerformActionOnMouseUp = false;
   // The last known location of the mouse.
   private lastKnownMouseLocation: Point | undefined;
 
@@ -144,7 +144,10 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           this.layerStateService.getActivePathLayer(CanvasType.Preview);
         const endPathLayer =
           this.layerStateService.getActivePathLayer(CanvasType.End);
-        if (startPathLayer && previewPathLayer && endPathLayer) {
+        if (startPathLayer
+          && previewPathLayer
+          && endPathLayer
+          && startPathLayer.isMorphableWith(endPathLayer)) {
           // Note that there is no need to broadcast layer state changes
           // for the preview canvas.
           previewPathLayer.interpolate(startPathLayer, endPathLayer, fraction);
@@ -201,7 +204,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
             this.selectionStateService.reset();
             this.hoverStateService.reset();
             this.pointSelector = undefined;
-            this.shouldCreatePointOnMouseUp = false;
+            this.shouldPerformActionOnMouseUp = false;
             this.lastKnownMouseLocation = undefined;
             this.draw();
           }));
@@ -520,10 +523,13 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
   // Draw a preview of the newly added point (add points mode only).
   private drawAddPointPreview(ctx: CanvasRenderingContext2D) {
-    if (this.canvasMode !== CanvasMode.AddPoints || !this.lastKnownMouseLocation) {
+    if ((this.canvasMode !== CanvasMode.AddPoints
+      && this.canvasMode !== CanvasMode.SplitSubPaths)
+      || !this.lastKnownMouseLocation) {
       return;
     }
     // TODO: reuse this code
+    // TODO: perform/save these calculations in a mouse event instead (to avoid extra overhead)?
     const projectionOntoPath =
       calculateProjectionOntoPath(
         this.vectorLayer, this.activePathId, this.lastKnownMouseLocation);
@@ -621,16 +627,13 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         // the middle of selecting multiple points at once.
         this.selectionStateService.reset();
       }
-    } else if (this.canvasMode === CanvasMode.AddPoints) {
+    } else if (this.canvasMode === CanvasMode.AddPoints
+      || this.canvasMode === CanvasMode.SplitSubPaths) {
       const projectionOntoPath =
         calculateProjectionOntoPath(
           this.vectorLayer, this.activePathId, this.lastKnownMouseLocation);
-
-      // Create a new point if the mouse down event occurred
-      // close to the path's outer boundaries.
       const projection = projectionOntoPath.projection;
-      this.shouldCreatePointOnMouseUp = projection.d < MIN_SNAP_THRESHOLD;
-
+      this.shouldPerformActionOnMouseUp = projection.d < MIN_SNAP_THRESHOLD;
       // TODO: avoid redrawing on every frame... often times it will be unnecessary
       this.draw();
     } else if (this.canvasMode === CanvasMode.PairSubPaths) {
@@ -717,7 +720,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       } else {
         this.hoverStateService.reset();
       }
-    } else if (this.canvasMode === CanvasMode.AddPoints) {
+    } else if (this.canvasMode === CanvasMode.AddPoints
+      || this.canvasMode === CanvasMode.SplitSubPaths) {
       // TODO: avoid redrawing on every frame... often times it will be unnecessary
       this.draw();
     }
@@ -774,21 +778,28 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         this.draw();
         this.pointSelector = undefined;
       }
-    } else if (this.canvasMode === CanvasMode.AddPoints) {
-      if (this.shouldCreatePointOnMouseUp) {
+    } else if (this.canvasMode === CanvasMode.AddPoints
+      || this.canvasMode === CanvasMode.SplitSubPaths) {
+      if (this.shouldPerformActionOnMouseUp) {
         const projectionOntoPath =
           calculateProjectionOntoPath(
             this.vectorLayer, this.activePathId, this.lastKnownMouseLocation);
-        const projection = projectionOntoPath.projection;
+        const { subIdx, cmdIdx, projection } = projectionOntoPath;
         if (projection.d < MIN_SNAP_THRESHOLD) {
           // We're in range, so split the path!
           const activePathLayer = this.layerStateService.getActivePathLayer(this.canvasType);
-          const splitPath = activePathLayer.pathData.mutate()
-            .splitCommand(projectionOntoPath.subIdx, projectionOntoPath.cmdIdx, projection.t)
-            .build();
-          this.layerStateService.updateActivePath(this.canvasType, splitPath);
+          const pathMutator = activePathLayer.pathData.mutate()
+            .splitCommand(subIdx, cmdIdx, projection.t);
+          if (this.canvasMode === CanvasMode.SplitSubPaths) {
+            if (activePathLayer.isFilled()) {
+              // TODO: implement support for splitting fill paths
+            } else if (activePathLayer.isStroked()) {
+              pathMutator.splitStrokedSubPath(subIdx, cmdIdx);
+            }
+          }
+          this.layerStateService.updateActivePath(this.canvasType, pathMutator.build());
         }
-        this.shouldCreatePointOnMouseUp = false;
+        this.shouldPerformActionOnMouseUp = false;
       }
       // TODO: avoid redrawing on every frame... often times it will be unnecessary
       this.draw();
@@ -811,11 +822,12 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         this.pointSelector.onMouseLeave(mouseLeave);
         this.draw();
       }
-    } else if (this.canvasMode === CanvasMode.AddPoints) {
-      // If the user clicks to create a point but the mouse leaves the
+    } else if (this.canvasMode === CanvasMode.AddPoints
+      || this.canvasMode === CanvasMode.SplitSubPaths) {
+      // If the user clicks to perform an action but the mouse leaves the
       // canvas before mouse up is registered, then just cancel the event.
       // This way we can avoid some otherwise confusing behavior.
-      this.shouldCreatePointOnMouseUp = false;
+      this.shouldPerformActionOnMouseUp = false;
       // TODO: avoid redrawing on every frame... often times it will be unnecessary
       this.draw();
     }
@@ -904,12 +916,12 @@ function drawPathLayer(
     } else {
       ctx.setLineDash([]);
     }
-    if (layer.strokeColor
+    if (layer.isStroked()
       && layer.strokeWidth
       && layer.trimPathStart !== layer.trimPathEnd) {
       ctx.stroke();
     }
-    if (layer.fillColor) {
+    if (layer.isFilled()) {
       if (layer.fillType === 'evenOdd') {
         // Note that SVG doesn't use a capital 'O' like VectorDrawables do.
         ctx.fill('evenodd');
@@ -1062,11 +1074,11 @@ function performSubPathHitTest(
     MathUtil.transformPoint(
       mousePoint,
       MathUtil.flattenTransforms(transforms).invert());
-  const isStrokeInRangeFn = pathLayer.fillColor || !pathLayer.strokeColor
-    ? undefined
-    : (distance: number) => {
+  const isStrokeInRangeFn = pathLayer.isStroked()
+    ? (distance: number) => {
       return distance <= pathLayer.strokeWidth / 2;
-    };
+    }
+    : undefined;
   const hitResult =
     pathLayer.pathData.hitTest(transformedMousePoint, { isStrokeInRangeFn, });
   if (!hitResult.isHit) {

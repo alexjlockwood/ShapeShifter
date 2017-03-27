@@ -25,6 +25,14 @@ export class PathLayer extends AbstractLayer {
     super(undefined, id);
   }
 
+  isStroked() {
+    return !!this.strokeColor;
+  }
+
+  isFilled() {
+    return !!this.fillColor;
+  }
+
   interpolate(start: PathLayer, end: PathLayer, fraction: number) {
     this.pathData = PathUtil.interpolate(start.pathData, end.pathData, fraction);
     if (start.fillColor && end.fillColor) {

@@ -264,7 +264,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private autoLoadDemo() {
     setTimeout(() => {
-      DemoUtil.loadDemo(this.layerStateService, DEMO_MAP.get('Play-to-pause icon'));
+      DemoUtil.loadDemo(this.layerStateService, DEMO_MAP.get('Morphing digits'));
     });
   }
 }

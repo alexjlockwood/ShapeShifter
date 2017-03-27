@@ -238,9 +238,6 @@ export class PathState {
     const polygon = _.flatMap(cmds, cmd => {
       const { x: p1x, y: p1y } = cmd.getStart();
       const { x: p2x, y: p2y } = cmd.getEnd();
-      if (p1x === p2x && p1y === p2y) {
-        return [];
-      }
       return [[p1x, p1y], [p2x, p2y]];
     });
     if (cmds.length && !this.subPaths[subIdx].isClosed()) {
