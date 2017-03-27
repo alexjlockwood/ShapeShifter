@@ -523,6 +523,12 @@ describe('Path', () => {
         'RV 0 SSSP 0 2 RV 0 RV 1 S 1 1 0.7',
         'M 10 10 L 20 20 L 30 30 M 0 0 L 7 7 L 10 10',
       ),
+      // Deleting nonexistent collapsing subpaths after splitting a stroked subpath has no effect.
+      makeTest(
+        'M 0 0 L 10 10 L 20 20 L 30 30',
+        'SSSP 0 2 AC 5 5 5 DC DC',
+        'M 0 0 L 10 10 L 20 20 M 20 20 L 30 30',
+      ),
     ];
 
     for (const test of MUTATION_TESTS) {

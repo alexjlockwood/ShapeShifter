@@ -425,7 +425,9 @@ export class PathMutator {
     function deleteCollapsingSubPathInfoFn<T>(arr: T[]) {
       arr.splice(numSubPathsAfterDelete, numCollapsingSubPathsBeforeDelete);
     }
-    deleteCollapsingSubPathInfoFn(this.subPathStateMap);
+    for (let i = 0; i < numCollapsingSubPathsBeforeDelete; i++) {
+      this.subPathStateMap.pop();
+    }
     deleteCollapsingSubPathInfoFn(cmsIdxToSubIdxMap);
     this.subPathOrdering.splice(0, this.subPathOrdering.length);
     for (let subIdx = 0; subIdx < numSubPathsBeforeDelete; subIdx++) {

@@ -104,12 +104,12 @@ export class LayerStateService {
     path: Path,
     shouldNotify = true) {
 
-    // Remove any existing conversions from the path.
+    // Remove any existing conversions and collapsing sub paths from the path.
     const pathMutator = path.mutate();
     path.getSubPaths().forEach((_, subIdx) => {
       pathMutator.unconvertSubPath(subIdx);
     });
-    path = pathMutator.build();
+    path = pathMutator.deleteCollapsingSubPaths().build();
 
     const oppositeCanvasType =
       type === CanvasType.Start
@@ -120,7 +120,8 @@ export class LayerStateService {
     const oppositeActivePathLayer =
       type === CanvasType.Preview ? undefined : this.getActivePathLayer(oppositeCanvasType);
     if (oppositeActivePathLayer) {
-      const oppositePath = oppositeActivePathLayer.pathData;
+      const oppositePath =
+        oppositeActivePathLayer.pathData.mutate().deleteCollapsingSubPaths().build();
       const numSubPaths = path.getSubPaths().length;
       const numOppositeSubPaths = oppositePath.getSubPaths().length;
       if (numSubPaths !== numOppositeSubPaths) {
