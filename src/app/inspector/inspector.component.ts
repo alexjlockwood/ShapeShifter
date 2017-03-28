@@ -68,15 +68,17 @@ export class SubPathItemsPipe implements PipeTransform {
       endPathCmd ? endPathCmd.getSubPaths().filter(s => !s.isCollapsing()) : [];
     const numStartSubPaths = startSubPaths.length;
     const numEndSubPaths = endSubPaths.length;
-    const maxSubPaths = numStartSubPaths < numEndSubPaths ? endSubPaths : startSubPaths;
-    const idsToUse = maxSubPaths ? maxSubPaths.map(s => s.getId()) : [];
     for (let i = 0; i < Math.max(numStartSubPaths, numEndSubPaths); i++) {
       const startCmdItems: Command[] = [];
       const endCmdItems: Command[] = [];
+      let id = '';
       if (i < numStartSubPaths) {
+        id += startSubPaths[i].getId();
         startCmdItems.push(...startSubPaths[i].getCommands());
       }
+      id += ',';
       if (i < numEndSubPaths) {
+        id += endSubPaths[i].getId();
         endCmdItems.push(...endSubPaths[i].getCommands());
       }
       subPathItems.push(
@@ -84,7 +86,7 @@ export class SubPathItemsPipe implements PipeTransform {
           i,
           startSubPaths[i],
           endSubPaths[i],
-          idsToUse[i],
+          id,
           startCmdItems,
           endCmdItems));
     }

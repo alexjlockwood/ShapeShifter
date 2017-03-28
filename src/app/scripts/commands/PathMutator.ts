@@ -320,6 +320,7 @@ export class PathMutator {
   }
 
   // TODO: need to distinguish between stroked and filled sub paths here?
+  // TODO: delete the initial split cmdIdx as well if one exists
   unsplitSubPath(subIdx: number) {
     const cmsIdx = this.subPathOrdering[subIdx];
     let counter = 0;
@@ -338,16 +339,19 @@ export class PathMutator {
           recurseFn(state);
         }
       })(parent);
-      (function updateParentFn(states: SubPathState[]) {
-        for (let i = 0; i < states.length; i++) {
-          const state = states[i];
-          if (state.id === updatedParentNode.id) {
-            states[i] = updatedParentNode;
-            return;
+      if (updatedParentNode) {
+        (function updateParentFn(states: SubPathState[]) {
+          for (let i = 0; i < states.length; i++) {
+            const state = states[i];
+            if (state.id === updatedParentNode.id) {
+              states[i] = updatedParentNode;
+              return;
+            }
+            updateParentFn(state.splitSubPaths);
           }
-          updateParentFn(state.splitSubPaths);
-        }
-      })(this.subPathStateMap);
+        })(this.subPathStateMap);
+        break;
+      }
     }
     this.subPathOrdering.splice(subIdx, 1);
     for (let i = 0; i < this.subPathOrdering.length; i++) {
