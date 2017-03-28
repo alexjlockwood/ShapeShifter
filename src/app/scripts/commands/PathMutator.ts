@@ -325,37 +325,7 @@ export class PathMutator {
           const state = p.splitSubPaths[i];
           if (!state.isSplit()) {
             if (counter++ === cmsIdx) {
-              const itemsToRemove = p.splitSubPaths;
-              const css1 = itemsToRemove[0].commandStates;
-              const css2 = itemsToRemove[1].commandStates;
-              const head = css1.slice(0, css1.length - 1);
-              const tail = css2.slice(2, css2.length);
-              const cs1 = _.last(css1);
-              const cs2 = css2[1];
-              const middle: CommandState[] = [];
-              if (cs1.getId() === cs2.getId()) {
-                middle.push(cs1.mutate().merge(css2[1]).build());
-              } else {
-                middle.push(cs1);
-                middle.push(cs2);
-              }
-              // TODO: share this code with splitStrokedSubPath above
-              let css = [].concat(head, middle, tail);
-              if (p.isReversed) {
-                const revCss = [
-                  new CommandState(
-                    newCommand('M', [
-                      css[0].getBackingCommand().getStart(),
-                      _.last(css).getBackingCommand().getEnd(),
-                    ])),
-                ];
-                for (let j = css.length - 1; j > 0; j--) {
-                  revCss.push(css[j].mutate().reverse().build());
-                }
-                css = revCss;
-              }
-              updatedParentNode =
-                p.mutate().setCommandStates(css).setSplitSubPaths([]).build();
+              updatedParentNode = p.mutate().setSplitSubPaths([]).build();
               return;
             }
             continue;

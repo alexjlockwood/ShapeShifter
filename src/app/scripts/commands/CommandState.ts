@@ -46,18 +46,6 @@ export class CommandState {
     return this.backingCommand;
   }
 
-  getMutations() {
-    return this.mutations;
-  }
-
-  getMinT() {
-    return this.minT;
-  }
-
-  getMaxT() {
-    return this.maxT;
-  }
-
   getCommands() {
     return this.commands;
   }
@@ -78,6 +66,11 @@ export class CommandState {
     return this.calculator.getPathLength();
   }
 
+  // TODO: need to return a reversed 't' value when reversed?
+  // TODO: need to return a reversed 't' value when reversed?
+  // TODO: need to return a reversed 't' value when reversed?
+  // TODO: need to return a reversed 't' value when reversed?
+  // TODO: need to return a reversed 't' value when reversed?
   // TODO: need to return a reversed 't' value when reversed?
   project(point: Point): { projectionResult: ProjectionResult, splitIdx: number } | undefined {
     const projectionResult = this.calculator.project(point);
@@ -159,22 +152,6 @@ class CommandStateMutator {
   sliceRight(splitIdx: number) {
     this.minT = this.mutations[splitIdx].t;
     this.mutations = this.mutations.slice(splitIdx + 1).map(m => _.clone(m));
-    return this;
-  }
-
-  // TODO: kill this? better for unsplit to revert back to the subpath's initial state?
-  merge(cs: CommandState) {
-    this.minT = Math.min(this.minT, cs.getMinT());
-    this.maxT = Math.max(this.maxT, cs.getMaxT());
-    const mutationIds = new Set<string>(this.mutations.map(m => m.id));
-    const otherMutations = cs.getMutations().map(m => _.clone(m));
-    for (const mut of otherMutations) {
-      if (mutationIds.has(mut.id)) {
-        console.warn('merged command states have conflicting ids', this, cs);
-      }
-      const insertionIdx = _.sortedIndexBy<Mutation>(this.mutations, mut, m => m.t);
-      this.mutations.splice(insertionIdx, 0, mut);
-    }
     return this;
   }
 
@@ -306,6 +283,7 @@ class CommandStateMutator {
     }];
     this.transforms = [new Matrix()];
     this.calculator = newCalculator(this.backingCommand);
+    this.isReversed = false;
     return this;
   }
 
