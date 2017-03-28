@@ -70,7 +70,9 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     private readonly selectionStateService: SelectionStateService,
     private readonly animatorService: AnimatorService,
     private readonly canvasResizeService: CanvasResizeService,
-    private readonly canvasModeService: CanvasModeService) { }
+    // This is public so that it can be accessed by the template.
+    public readonly canvasModeService: CanvasModeService,
+  ) { }
 
   ngOnInit() {
     this.canvasModeObservable = this.canvasModeService.getCanvasModeObservable();
