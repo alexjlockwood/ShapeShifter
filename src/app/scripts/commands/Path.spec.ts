@@ -505,6 +505,11 @@ describe('Path', () => {
       ),
       makeTest(
         'M 0 0 L 10 10 L 20 20 L 30 30',
+        'RV 0 SSSP 0 2 RV 1',
+        'M 30 30 L 20 20 L 10 10 M 0 0 L 10 10',
+      ),
+      makeTest(
+        'M 0 0 L 10 10 L 20 20 L 30 30',
         'RV 0 SSSP 0 2 RV 0 RV 1',
         'M 10 10 L 20 20 L 30 30 M 0 0 L 10 10',
       ),
@@ -524,18 +529,16 @@ describe('Path', () => {
         'SSSP 0 2 AC 5 5 5 DC DC',
         'M 0 0 L 10 10 L 20 20 M 20 20 L 30 30',
       ),
-      // TODO: figure out why this test fails
-      // makeTest(
-      //   'M 0 0 L 1 1 L 2 2',
-      //   'RV 0 S 0 2 0.6',
-      //   'M 2 2 L 1 1 L 0.4 0.4 L 0 0'
-      // ),
-      // TODO: figure out why this test fails
-      // makeTest(
-      //   'M 7 8 C 7 2 16 2 16 8 C 16 10 14 12 12 14',
-      //   'RV 0 SIH 0 2 SSSP 0 2',
-      //   'M 12 14 C 14 12 16 10 16 8 C 16 5 13.75 3.5 11.5 3.5 C 9.25 3.5 7 5 7 8'
-      // ),
+      makeTest(
+        'M 0 0 L 1 1 L 2 2',
+        'RV 0 S 0 2 0.8 S 0 2 0.25 S 0 3 0.75 SSSP 0 3',
+        'M 2 2 L 1 1 L 0.8 0.8 L 0.35 0.35 M 0.35 0.35 L 0.2 0.2 L 0 0'
+      ),
+      makeTest(
+        'M 7 8 C 7 2 16 2 16 8 C 16 10 14 12 12 14',
+        'RV 0 SIH 0 2 SSSP 0 2',
+        'M 12 14 C 14 12 16 10 16 8 C 16 5 13.75 3.5 11.5 3.5 M 11.5 3.5 C 9.25 3.5 7 5 7 8'
+      ),
     ];
 
     for (const test of MUTATION_TESTS) {

@@ -1,6 +1,7 @@
 import * as _ from 'lodash';
 import { Point, Matrix, MathUtil } from '../common';
 import { Command, SvgChar } from '.';
+import { environment } from '../../../environments/environment';
 
 export function newCommand(svgChar: SvgChar, points: ReadonlyArray<Point>) {
   return new CommandImpl(svgChar, points);
@@ -12,13 +13,16 @@ export function newCommand(svgChar: SvgChar, points: ReadonlyArray<Point>) {
  * or close path).
  */
 class CommandImpl implements Command {
+  private readonly debugString: string;
 
   constructor(
     private readonly svgChar: SvgChar,
     private readonly points: ReadonlyArray<Point>,
     private readonly isSplit_ = false,
     private readonly id = _.uniqueId(),
-  ) { }
+  ) {
+    this.debugString = environment.production ? '' : this.toString();
+  }
 
   // Implements the Command interface.
   getId() {

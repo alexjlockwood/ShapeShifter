@@ -140,8 +140,8 @@ class CommandStateMutator {
    * anything to the right.
    */
   sliceLeft(splitIdx: number) {
-    this.maxT = this.mutations[splitIdx].t;
     this.mutations = this.mutations.slice(0, splitIdx + 1).map(m => _.clone(m));
+    this.maxT = _.last(this.mutations).t;
     return this;
   }
 
@@ -160,9 +160,13 @@ class CommandStateMutator {
    */
   reverse() {
     this.isReversed = !this.isReversed;
-    this.mutations = this.mutations.reverse();
     this.backingCommand = this.backingCommand.mutate().reverse().build();
     this.calculator = newCalculator(this.backingCommand);
+    const lastMutation = this.mutations.pop();
+    this.mutations = this.mutations.map(m => {
+      return _.assign({}, m, { t: MathUtil.lerp(this.maxT, this.minT, m.t) });
+    }).reverse();
+    this.mutations.push(lastMutation);
     return this;
   }
 
@@ -275,7 +279,7 @@ class CommandStateMutator {
   revert() {
     this.mutations = [{
       id: _.last(this.mutations).id,
-      t: this.maxT,
+      t: _.last(this.mutations).t,
       svgChar: this.backingCommand.getSvgChar(),
     }];
     this.transforms = [new Matrix()];

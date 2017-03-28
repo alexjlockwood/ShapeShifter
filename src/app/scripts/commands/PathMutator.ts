@@ -262,8 +262,8 @@ export class PathMutator {
       const revCss = [
         new CommandState(
           newCommand('M', [
-            css[0].getBackingCommand().getStart(),
-            _.last(css).getBackingCommand().getEnd(),
+            css[0].getCommands()[0].getStart(),
+            _.last(_.last(css).getCommands()).getEnd(),
           ])).mutate().reverse().build(),
       ];
       for (let i = css.length - 1; i > 0; i--) {
@@ -282,7 +282,6 @@ export class PathMutator {
       } else {
         const splitPoint = css[i].getCommands()[splitIdx].getEnd();
         const { left, right } = css[i].fork(splitIdx);
-        console.info('left', left, 'right', right);
         startCommandStates.push(left);
         let endMoveCs = new CommandState(newCommand('M', [splitPoint, splitPoint]));
         if (sps.isReversed) {
