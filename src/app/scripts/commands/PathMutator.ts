@@ -388,9 +388,9 @@ export class PathMutator {
    */
   addCollapsingSubPath(point: Point, numCommands: number) {
     const numSubPathsBeforeAdd = countSubPathStates(this.subPathStateMap);
-    const prevSubPath =
-      _.last(this.findSubPathState(numSubPathsBeforeAdd - 1).toSubPaths());
-    const prevCmd = _.last(prevSubPath.getCommands());
+    const prevSubPathCommands =
+      _.last(this.findSubPathState(numSubPathsBeforeAdd - 1).toSubPathCommands());
+    const prevCmd = _.last(prevSubPathCommands);
     const cms: CommandState[] =
       [new CommandState(newCommand('M', [prevCmd.getEnd(), point]))];
     for (let i = 1; i < numCommands; i++) {
@@ -463,7 +463,7 @@ export class PathMutator {
     const numCollapsingSubPaths = this.numCollapsingSubPaths;
 
     const subPathCmds = subPathStates.map(sps => {
-      return _.flatMap(sps.toSubPaths(), subPath => subPath.getCommands() as Command[]);
+      return _.flatMap(sps.toSubPathCommands(), commands => commands);
     });
     const reorderedSubPathCmds: Command[][] = [];
     for (let i = 0; i < subPathOrdering.length; i++) {

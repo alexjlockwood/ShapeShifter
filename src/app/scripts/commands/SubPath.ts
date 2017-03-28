@@ -27,6 +27,11 @@ export interface SubPath {
   isCollapsing(): boolean;
 
   /**
+   * Returns true iff this sub path was created as a result of a split.
+   */
+  isSplit(): boolean;
+
+  /**
    * Returns true iff this sub path has been reversed.
    */
   isReversed(): boolean;

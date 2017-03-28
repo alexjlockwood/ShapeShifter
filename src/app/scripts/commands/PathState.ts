@@ -5,7 +5,12 @@ import { CommandState } from './CommandState';
 import { MathUtil, Point, Rect } from '../common';
 import * as PathParser from './PathParser';
 import * as polylabel from 'polylabel';
-import { SubPathState, findSubPathState, countSubPathStates } from './SubPathState';
+import {
+  SubPathState,
+  findSubPathState,
+  countSubPathStates,
+  isSubPathSplit,
+} from './SubPathState';
 
 export class PathState {
   readonly subPaths: ReadonlyArray<SubPath>;
@@ -37,13 +42,15 @@ export class PathState {
       const cmsIdx = this.subPathOrdering[subIdx];
       const isCollapsing =
         countSubPathStates(this.subPathStateMap) - this.numCollapsingSubPaths <= cmsIdx;
-      const sps = this.findSubPathState(cmsIdx);
+      const sps = findSubPathState(this.subPathStateMap, cmsIdx);
+      const isSplit = isSubPathSplit(this.subPathStateMap, cmsIdx);
       return subPath.mutate()
         .setId(sps.id)
         .setCommands(cmds)
         .setIsCollapsing(isCollapsing)
         .setIsReversed(sps.isReversed)
         .setShiftOffset(sps.shiftOffset)
+        .setIsSplit(isSplit)
         .build();
     });
     this.commands = _.flatMap(this.subPaths, subPath => subPath.getCommands() as Command[]);

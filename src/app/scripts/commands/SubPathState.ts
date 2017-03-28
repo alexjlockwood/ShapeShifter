@@ -1,7 +1,6 @@
 import * as _ from 'lodash';
 import { CommandState } from './CommandState';
-import { SubPath, Command } from '.';
-import { createSubPaths } from './SubPathImpl';
+import { Command } from '.';
 
 export class SubPathState {
 
@@ -35,15 +34,15 @@ export class SubPathState {
     return this.mutate().build();
   }
 
-  toSubPaths(): SubPath[] {
+  toSubPathCommands(): Command[][] {
     if (!this.splitSubPaths.length) {
-      return createSubPaths(reverseAndShiftCommands(this));
+      return [reverseAndShiftCommands(this)];
     }
-    const subPaths: SubPath[] = [];
+    const subPathCommands: Command[][] = [];
     for (const splitSubPath of this.splitSubPaths) {
-      subPaths.push(...splitSubPath.toSubPaths());
+      subPathCommands.push(...splitSubPath.toSubPathCommands());
     }
-    return subPaths;
+    return subPathCommands;
   }
 }
 
@@ -250,6 +249,24 @@ export function findSubPathState(map: ReadonlyArray<SubPathState>, cmsIdx: numbe
     }
   })(map);
   return subPathState;
+}
+
+export function isSubPathSplit(map: ReadonlyArray<SubPathState>, cmsIdx: number) {
+  let isSubPathSplit = false;
+  let counter = 0;
+  (function recurseFn(states: ReadonlyArray<SubPathState>, isSplit = false) {
+    for (const state of states) {
+      if (!state.isSplit()) {
+        if (counter++ === cmsIdx) {
+          isSubPathSplit = isSplit;
+          return;
+        }
+        continue;
+      }
+      recurseFn(state.splitSubPaths, true);
+    }
+  })(map);
+  return isSubPathSplit;
 }
 
 export function countSubPathStates(map: ReadonlyArray<SubPathState>): number {
