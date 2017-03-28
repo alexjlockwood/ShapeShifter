@@ -1,5 +1,5 @@
 import { Component, OnInit, PipeTransform, Pipe, ChangeDetectionStrategy } from '@angular/core';
-import { Command } from '../scripts/commands';
+import { SubPath, Command } from '../scripts/commands';
 import { CanvasType } from '../CanvasType';
 import { LayerStateService } from '../services';
 import { Observable } from 'rxjs/Observable';
@@ -16,7 +16,7 @@ export class InspectorComponent implements OnInit {
   END_CANVAS = CanvasType.End;
   subPathItemsObservable: Observable<[string, string]>;
 
-  constructor(private layerStateService: LayerStateService) { }
+  constructor(private readonly layerStateService: LayerStateService) { }
 
   ngOnInit() {
     this.subPathItemsObservable = Observable.combineLatest(
@@ -37,6 +37,8 @@ export class InspectorComponent implements OnInit {
 class SubPathItem {
   constructor(
     public readonly subIdx: number,
+    public readonly startSubPath: SubPath,
+    public readonly endSubPath: SubPath,
     public readonly subPathItemId: string,
     public readonly startCmdItems: Command[] = [],
     public readonly endCmdItems: Command[] = [],
@@ -60,20 +62,31 @@ export class SubPathItemsPipe implements PipeTransform {
 
     const startPathCmd = getPathFn(CanvasType.Start);
     const endPathCmd = getPathFn(CanvasType.End);
-    const numStartSubPaths = startPathCmd ? startPathCmd.getSubPaths().length : 0;
-    const numEndSubPaths = endPathCmd ? endPathCmd.getSubPaths().length : 0;
-    const maxPath = numStartSubPaths < numEndSubPaths ? endPathCmd : startPathCmd;
-    const idsToUse = maxPath ? maxPath.getSubPaths().map(s => s.getId()) : [];
+    const startSubPaths =
+      startPathCmd ? startPathCmd.getSubPaths().filter(s => !s.isCollapsing()) : [];
+    const endSubPaths =
+      endPathCmd ? endPathCmd.getSubPaths().filter(s => !s.isCollapsing()) : [];
+    const numStartSubPaths = startSubPaths.length;
+    const numEndSubPaths = endSubPaths.length;
+    const maxSubPaths = numStartSubPaths < numEndSubPaths ? endSubPaths : startSubPaths;
+    const idsToUse = maxSubPaths ? maxSubPaths.map(s => s.getId()) : [];
     for (let i = 0; i < Math.max(numStartSubPaths, numEndSubPaths); i++) {
       const startCmdItems: Command[] = [];
       const endCmdItems: Command[] = [];
       if (i < numStartSubPaths) {
-        startCmdItems.push(...startPathCmd.getSubPaths()[i].getCommands());
+        startCmdItems.push(...startSubPaths[i].getCommands());
       }
       if (i < numEndSubPaths) {
-        endCmdItems.push(...endPathCmd.getSubPaths()[i].getCommands());
+        endCmdItems.push(...endSubPaths[i].getCommands());
       }
-      subPathItems.push(new SubPathItem(i, idsToUse[i], startCmdItems, endCmdItems));
+      subPathItems.push(
+        new SubPathItem(
+          i,
+          startSubPaths[i],
+          endSubPaths[i],
+          idsToUse[i],
+          startCmdItems,
+          endCmdItems));
     }
     return subPathItems;
   }

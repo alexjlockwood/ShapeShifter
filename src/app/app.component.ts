@@ -95,8 +95,6 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
               + `to alter the animation`;
           }
           if (status === MorphabilityStatus.Unmorphable) {
-            const startId = this.layerStateService.getActivePathId(CanvasType.Start);
-            const endId = this.layerStateService.getActivePathId(CanvasType.End);
             const startLayer = this.layerStateService.getActivePathLayer(CanvasType.Start);
             const endLayer = this.layerStateService.getActivePathLayer(CanvasType.End);
             const startCommand = startLayer.pathData;
@@ -109,12 +107,12 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
               const startCmds = startCommand.getSubPaths()[i].getCommands();
               const endCmds = endCommand.getSubPaths()[i].getCommands();
               if (startCmds.length !== endCmds.length) {
-                const pathId = startCmds.length < endCmds.length ? startId : endId;
+                const pathLetter = startCmds.length < endCmds.length ? 'a' : 'b';
                 const diff = Math.abs(startCmds.length - endCmds.length);
                 if (diff === 1) {
-                  return `Add 1 point to <i>${pathId}</i> in <i>subpath #${i + 1}</i>`;
+                  return `Add 1 point to <i>subpath #${i + 1}${pathLetter}</i>`;
                 } else {
-                  return `Add ${diff} points to <i>${pathId}</i> in <i>subpath #${i + 1}</i>`;
+                  return `Add ${diff} points to <i>subpath #${i + 1}${pathLetter}</i>`;
                 }
               }
             }

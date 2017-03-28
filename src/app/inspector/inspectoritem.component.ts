@@ -32,9 +32,9 @@ export class InspectorItemComponent implements OnInit {
   private isHoveringOverShiftForward = false;
 
   constructor(
-    private layerStateService: LayerStateService,
-    private hoverStateService: HoverStateService,
-    private selectionStateService: SelectionStateService) { }
+    private readonly layerStateService: LayerStateService,
+    private readonly hoverStateService: HoverStateService,
+    private readonly selectionStateService: SelectionStateService) { }
 
   ngOnInit() {
     this.isSelectedObservable =
@@ -87,8 +87,8 @@ export class InspectorItemComponent implements OnInit {
 
   onShiftForwardClick(event: MouseEvent) {
     const fromPathLayer = this.layerStateService.getActivePathLayer(this.canvasType);
-    this.replacePath(fromPathLayer.pathData.mutate().
-      shiftSubPathForward(this.subIdx)
+    this.replacePath(fromPathLayer.pathData.mutate()
+      .shiftSubPathForward(this.subIdx)
       .build(),
       event);
   }

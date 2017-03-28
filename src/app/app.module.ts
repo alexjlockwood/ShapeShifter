@@ -12,6 +12,7 @@ import { CanvasComponent } from './canvas/canvas.component';
 import { CanvasRulerDirective } from './canvas/canvasruler.directive';
 import { InspectorComponent } from './inspector/inspector.component';
 import { InspectorItemComponent } from './inspector/inspectoritem.component';
+import { InspectorSubPathComponent } from './inspector/inspectorsubpath.component';
 import { PathSelectorComponent } from './pathselector/pathselector.component';
 import { SettingsComponent } from './settings/settings.component';
 import { SplitterComponent } from './splitter/splitter.component';
@@ -55,6 +56,7 @@ import 'hammerjs';
     SplitterComponent,
     InspectorComponent,
     InspectorItemComponent,
+    InspectorSubPathComponent,
     CanvasRulerDirective,
     SettingsComponent,
     ToolbarComponent,
