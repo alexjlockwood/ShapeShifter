@@ -120,8 +120,9 @@ export class LayerStateService {
     const oppositeActivePathLayer =
       type === CanvasType.Preview ? undefined : this.getActivePathLayer(oppositeCanvasType);
     if (oppositeActivePathLayer) {
-      const oppositePath =
+      oppositeActivePathLayer.pathData =
         oppositeActivePathLayer.pathData.mutate().deleteCollapsingSubPaths().build();
+      const oppositePath = oppositeActivePathLayer.pathData;
       const numSubPaths = path.getSubPaths().length;
       const numOppositeSubPaths = oppositePath.getSubPaths().length;
       if (numSubPaths !== numOppositeSubPaths) {
