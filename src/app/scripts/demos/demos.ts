@@ -48,9 +48,7 @@ const DIGITS_SVG = `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
   <path id="futura_zero" stroke="#000" stroke-width="0.2" fill="none" d="M6.125 12c0-4.224 2.38-8.678 5.875-8.678 3.514 0 5.952 4.416 5.952 8.678 0 4.224-2.438 8.487-5.952 8.487-3.494 0-5.875-4.224-5.875-8.487"/>
   <path id="futura_one" stroke="#000" stroke-width="0.2" fill="none" d="M10 4h3v17"/>
-  <g transform="translate(-0.724, 0)">
-    <path id="futura_two" stroke="#000" stroke-width="0.2" fill="none" d="M7.86 8.285c.32-6.153 9.23-5.94 9.388.106 0 1.805-1.538 3.927-3.872 6.47-1.485 1.7-3.606 3.503-5.41 5.837h9.547"/>
-  </g>
+  <path id="futura_two" stroke="#000" stroke-width="0.2" fill="none" d="M 7.136 8.285 C 7.456 2.132 16.366 2.345 16.524 8.391 C 16.524 10.196 14.986 12.318 12.652 14.861 C 11.167 16.561 9.046 18.364 7.242 20.698 C 10.424 20.698 13.607 20.698 16.789 20.698"/>
   <g transform="translate(-0.48, 0)">
     <path id="futura_three" stroke="#000" stroke-width="0.2" fill="none" d="M8.868 7.648c-.265-2.864 2.175-3.82 3.607-3.82 5.993 0 4.932 8.275 0 8.275 6.205 0 5.357 8.91.053 8.91-4.88 0-4.668-3.18-4.615-3.924"/>
   </g>
