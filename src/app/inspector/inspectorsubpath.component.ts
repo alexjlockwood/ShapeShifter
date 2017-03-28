@@ -1,4 +1,3 @@
-import * as _ from 'lodash';
 import {
   Component, OnInit, Input, ChangeDetectionStrategy
 } from '@angular/core';
