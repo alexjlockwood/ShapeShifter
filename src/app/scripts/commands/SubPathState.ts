@@ -12,8 +12,7 @@ export class SubPathState {
     public readonly id = _.uniqueId(),
     // Either empty if this sub path is not split, or an array of size 2
     // containing this sub path's split children.
-    // TODO: make this a ReadonlyArray and avoid the hackery in PathMutator
-    public readonly splitSubPaths: SubPathState[] = [],
+    public readonly splitSubPaths: ReadonlyArray<SubPathState> = [],
   ) { }
 
   isSplit() {
@@ -26,6 +25,7 @@ export class SubPathState {
       this.isReversed,
       this.shiftOffset,
       this.id,
+      // TODO: cloning shouldn't be necessary if SubPathState is immutable
       this.splitSubPaths.map(s => s.clone()),
     );
   }
@@ -56,7 +56,7 @@ class SubPathStateMutator {
     private isReversed: boolean,
     private shiftOffset: number,
     private id: string,
-    private splitSubPaths: SubPathState[],
+    private splitSubPaths: ReadonlyArray<SubPathState>,
   ) { }
 
   setCommandStates(commandStates: CommandState[]) {
@@ -65,6 +65,9 @@ class SubPathStateMutator {
   }
 
   setCommandState(commandState: CommandState, index: number) {
+    if (!this.commandStates || this.commandStates.length <= index) {
+      throw new Error('Attempt to set a CommandState object using an invalid index');
+    }
     this.commandStates[index] = commandState;
     return this;
   }

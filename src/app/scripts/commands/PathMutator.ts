@@ -340,16 +340,21 @@ export class PathMutator {
         }
       })(parent);
       if (updatedParentNode) {
-        (function updateParentFn(states: SubPathState[]) {
+        const newSubPathStateMap = (function updateParentFn(states: SubPathState[]) {
           for (let i = 0; i < states.length; i++) {
             const state = states[i];
             if (state.id === updatedParentNode.id) {
               states[i] = updatedParentNode;
-              return;
+              return states;
             }
-            updateParentFn(state.splitSubPaths);
+            states[i] =
+              states[i].mutate()
+                .setSplitSubPaths(updateParentFn(state.splitSubPaths.slice()))
+                .build();
           }
-        })(this.subPathStateMap);
+          return states;
+        })(this.subPathStateMap.slice());
+        this.subPathStateMap.forEach((_, i) => this.subPathStateMap[i] = newSubPathStateMap[i]);
         break;
       }
     }

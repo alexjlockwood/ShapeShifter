@@ -539,6 +539,9 @@ describe('Path', () => {
         'RV 0 SIH 0 2 SSSP 0 2',
         'M 12 14 C 14 12 16 10 16 8 C 16 5 13.75 3.5 11.5 3.5 M 11.5 3.5 C 9.25 3.5 7 5 7 8'
       ),
+      // TODO: add tests for shift offsets
+      // TODO: add more tests for compound paths
+      // TODO: test reverting split subpath operations
     ];
 
     for (const test of MUTATION_TESTS) {
