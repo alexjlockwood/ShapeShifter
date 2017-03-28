@@ -100,9 +100,15 @@ export class PathState {
         .filter(subPath => !subPath.isCollapsing())
         .map((subPath, subIdx) => {
           const cmsIdx = this.subPathOrdering[subIdx];
-          return this.findSubPathState(cmsIdx).commandStates
+          const sps = this.findSubPathState(cmsIdx);
+          return sps.commandStates
             .map((cm, cmIdx) => {
               const projection = cm.project(point);
+              if (projection && sps.isReversed) {
+                const t = projection.projectionResult.t;
+                // TODO: use minT/maxT values?
+                projection.projectionResult.t = 1 - t;
+              }
               return {
                 cmsIdx,
                 cmIdx,

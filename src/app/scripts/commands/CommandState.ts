@@ -172,9 +172,6 @@ class CommandStateMutator {
    * splitIdx + 1 to ensure the split is done in relation to the mutated command.
    */
   splitAtIndex(splitIdx: number, ts: number[]) {
-    if (this.isReversed) {
-      ts = ts.map(t => MathUtil.lerp(this.maxT, this.minT, t));
-    }
     const tempSplits = [this.minT, ...this.mutations.map(m => m.t)];
     const startSplit = tempSplits[splitIdx];
     const endSplit = tempSplits[splitIdx + 1];

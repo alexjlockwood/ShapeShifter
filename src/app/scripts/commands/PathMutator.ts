@@ -103,6 +103,11 @@ export class PathMutator {
       this.findCommandStateInfo(subIdx, cmdIdx);
     const shiftOffset =
       this.getUpdatedShiftOffsetsAfterSplit(cmsIdx, cmIdx, ts.length);
+    const sps = this.findSubPathState(cmsIdx);
+    if (sps.isReversed) {
+      // TODO: use minT/maxT?
+      ts = ts.map(t => 1 - t);
+    }
     this.setSubPathState(
       this.findSubPathState(cmsIdx).mutate()
         .setShiftOffset(shiftOffset)
@@ -277,6 +282,7 @@ export class PathMutator {
       } else {
         const splitPoint = css[i].getCommands()[splitIdx].getEnd();
         const { left, right } = css[i].fork(splitIdx);
+        console.info('left', left, 'right', right);
         startCommandStates.push(left);
         let endMoveCs = new CommandState(newCommand('M', [splitPoint, splitPoint]));
         if (sps.isReversed) {
