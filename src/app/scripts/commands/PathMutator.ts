@@ -243,37 +243,13 @@ export class PathMutator {
    * Splits a stroked sub path using the specified indices.
    * A 'moveTo' command will be inserted after the command at 'cmdIdx'.
    */
-  // TODO: unsplittable state isn't getting reset after splits properly
   splitStrokedSubPath(subIdx: number, cmdIdx: number) {
     const cmsIdx = this.subPathOrdering[subIdx];
     const sps = this.findSubPathState(cmsIdx);
-    let css = sps.commandStates;
-    if (sps.isReversed) {
-      const revCss = [
-        new CommandState(
-          newCommand('M', [
-            css[0].getCommands()[0].getStart(),
-            _.last(_.last(css).getCommands()).getEnd(),
-          ])),
-      ];
-      for (let i = css.length - 1; i > 0; i--) {
-        revCss.push(css[i].mutate().reverse().build());
-      }
-      css = revCss;
-    }
+    const css = shiftAndReverseCommandStates(sps.commandStates, sps.isReversed, sps.shiftOffset);
+    const { cmIdx, splitIdx } = this.findCommandStateIndices(css, cmdIdx);
     const startCommandStates: CommandState[] = [];
     const endCommandStates: CommandState[] = [];
-    // const numCommandsInSubPath = _.sum(css.map(cs => cs.getCommands().length));
-    // if (sps.isReversed) {
-    //   cmdIdx = numCommandsInSubPath - cmdIdx;
-    // }
-    // cmdIdx += sps.shiftOffset;
-    // if (cmdIdx >= numCommandsInSubPath) {
-    //   // Note that subtracting (numCommandsInSubPath - 1) is intentional here
-    //   // (as opposed to subtracting numCommandsInSubPath).
-    //   cmdIdx -= numCommandsInSubPath - 1;
-    // }
-    const { cmIdx, splitIdx } = this.findCommandStateIndices(css, cmdIdx);
     for (let i = 0; i < css.length; i++) {
       if (i < cmIdx) {
         startCommandStates.push(css[i]);
@@ -288,7 +264,7 @@ export class PathMutator {
           endMoveCs = endMoveCs.mutate().reverse().build();
         }
         endCommandStates.push(endMoveCs);
-        if (right.getCommands().length) {
+        if (right) {
           endCommandStates.push(right);
         }
       }
@@ -555,3 +531,94 @@ function replaceSubPathStateInternal(
   })(map.slice());
 }
 
+function shiftAndReverseCommandStates(
+  source: ReadonlyArray<CommandState>,
+  isReversed: boolean,
+  shiftOffset: number) {
+
+  return shiftCommandStates(reverseCommandStates(source, isReversed), isReversed, shiftOffset);
+}
+
+function reverseCommandStates(source: ReadonlyArray<CommandState>, isReversed: boolean) {
+  let css = source.slice();
+  if (isReversed) {
+    const revCss = [
+      new CommandState(
+        newCommand('M', [
+          css[0].getCommands()[0].getStart(),
+          _.last(_.last(css).getCommands()).getEnd(),
+        ])),
+    ];
+    for (let i = css.length - 1; i > 0; i--) {
+      revCss.push(css[i].mutate().reverse().build());
+    }
+    css = revCss;
+  }
+  return css;
+}
+
+function shiftCommandStates(
+  source: ReadonlyArray<CommandState>,
+  isReversed: boolean,
+  shiftOffset: number) {
+
+  if (!shiftOffset || source.length === 1) {
+    return source;
+  }
+  const css = source.slice();
+
+  // TODO: test closepaths
+  // TODO: test closepaths
+  // TODO: test closepaths
+  // TODO: test closepaths
+  // TODO: test closepaths
+  // TODO: test closepaths
+  // TODO: test closepaths
+
+  // If the last command is a 'Z', replace it with a line before we shift.
+  // TODO: replacing the 'Z' messes up certain stroke-linejoin values
+  css[css.length - 1] = _.last(css).mutate().forceConvertClosepathsToLines().build();
+
+  const numCommands = _.sum(css.map(cs => cs.getCommands().length));
+  if (isReversed) {
+    shiftOffset *= -1;
+    shiftOffset += numCommands - 1;
+  }
+  const newCss: CommandState[] = [];
+
+  let counter = 0;
+  let targetCsIdx: number = undefined;
+  let targetSplitIdx: number = undefined;
+  let targetCs: CommandState = undefined;
+  for (let i = 0; i < css.length; i++) {
+    const cs = css[i];
+    const size = cs.getCommands().length;
+    if (counter + size <= shiftOffset) {
+      counter += size;
+      continue;
+    }
+    targetCs = cs;
+    targetCsIdx = i;
+    targetSplitIdx = shiftOffset - counter;
+    break;
+  }
+
+  newCss.push(
+    new CommandState(
+      newCommand('M', [
+        css[0].getCommands()[0].getStart(),
+        targetCs.getCommands()[targetSplitIdx].getEnd(),
+      ])));
+  const { left, right } = targetCs.fork(targetSplitIdx);
+  if (right) {
+    newCss.push(right);
+  }
+  for (let i = targetCsIdx + 1; i < css.length; i++) {
+    newCss.push(css[i]);
+  }
+  for (let i = 1; i < targetCsIdx; i++) {
+    newCss.push(css[i]);
+  }
+  newCss.push(left);
+  return newCss;
+}

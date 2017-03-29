@@ -37,10 +37,6 @@ export class CommandState {
     private readonly maxT = 1,
   ) { }
 
-  getBackingCommand() {
-    return this.backingCommand;
-  }
-
   getCommands() {
     return this.commands;
   }
@@ -103,7 +99,10 @@ export class CommandState {
 
   fork(splitIdx: number) {
     const left = this.mutate().sliceLeft(splitIdx).build();
-    const right = this.mutate().sliceRight(splitIdx).build();
+    let right = undefined;
+    if (this.isSplitAtIndex(splitIdx)) {
+      right = this.mutate().sliceRight(splitIdx).build();
+    }
     return { left, right };
   }
 
@@ -262,6 +261,23 @@ class CommandStateMutator {
       const { id, t } = mutation;
       return { id, t, svgChar };
     });
+    return this;
+  }
+
+  /**
+   * Converts closepath commands to lines. This method irreversibly builds
+   * a new backing command to use.
+   */
+  forceConvertClosepathsToLines() {
+    if (this.backingCommand.getSvgChar() === 'Z') {
+      this.backingCommand = this.calculator.convert('L').toCommand();
+      this.calculator = newCalculator(this.backingCommand);
+      this.mutations = this.mutations.map(m => {
+        const { id, t, svgChar } = m;
+        const newSvgChar = svgChar === 'Z' ? 'L' : svgChar;
+        return { id, t, svgChar: newSvgChar };
+      });
+    }
     return this;
   }
 
