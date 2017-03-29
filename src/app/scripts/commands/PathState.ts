@@ -10,6 +10,7 @@ import {
   findSubPathState,
   countSubPathStates,
   isSubPathSplit,
+  isSubPathUnsplittable,
 } from './SubPathState';
 
 export class PathState {
@@ -44,6 +45,7 @@ export class PathState {
         countSubPathStates(this.subPathStateMap) - this.numCollapsingSubPaths <= cmsIdx;
       const sps = findSubPathState(this.subPathStateMap, cmsIdx);
       const isSplit = isSubPathSplit(this.subPathStateMap, cmsIdx);
+      const isUnsplittable = isSubPathUnsplittable(this.subPathStateMap, cmsIdx);
       return subPath.mutate()
         .setId(sps.id)
         .setCommands(cmds)
@@ -51,7 +53,7 @@ export class PathState {
         .setIsReversed(sps.isReversed)
         .setShiftOffset(sps.shiftOffset)
         .setIsSplit(isSplit)
-        .setIsUnsplittable(sps.isUnsplittable)
+        .setIsUnsplittable(isUnsplittable)
         .build();
     });
     this.commands = _.flatMap(this.subPaths, subPath => subPath.getCommands() as Command[]);

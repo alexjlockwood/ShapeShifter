@@ -13,12 +13,7 @@ export class SubPathState {
     // Either empty if this sub path is not split, or an array of size 2
     // containing this sub path's split children.
     public readonly splitSubPaths: ReadonlyArray<SubPathState> = [],
-    public readonly isUnsplittable = false,
   ) { }
-
-  isSplit() {
-    return !!this.splitSubPaths.length;
-  }
 
   mutate() {
     return new SubPathStateMutator(
@@ -27,7 +22,6 @@ export class SubPathState {
       this.shiftOffset,
       this.id,
       this.splitSubPaths.slice(),
-      this.isUnsplittable,
     );
   }
 
@@ -62,7 +56,6 @@ class SubPathStateMutator {
     private shiftOffset: number,
     private id: string,
     private splitSubPaths: ReadonlyArray<SubPathState>,
-    private isUnsplittable: boolean,
   ) { }
 
   setCommandStates(commandStates: CommandState[]) {
@@ -102,17 +95,11 @@ class SubPathStateMutator {
     return this;
   }
 
-  setIsUnsplittable(isUnsplittable: boolean) {
-    this.isUnsplittable = isUnsplittable;
-    return this;
-  }
-
   revert() {
     this.commandStates = this.commandStates.map(cs => cs.mutate().revert().build());
     this.isReversed = false;
     this.shiftOffset = 0;
     this.splitSubPaths = [];
-    this.isUnsplittable = false;
     return this;
   }
 
@@ -123,7 +110,6 @@ class SubPathStateMutator {
       this.shiftOffset,
       this.id,
       this.splitSubPaths,
-      this.isUnsplittable,
     );
   }
 }
@@ -249,60 +235,18 @@ function shiftCommands(subPathState: SubPathState, cmds: Command[]) {
 }
 
 export function findSubPathState(map: ReadonlyArray<SubPathState>, cmsIdx: number) {
-  let subPathState: SubPathState;
-  let counter = 0;
-  (function recurseFn(states: ReadonlyArray<SubPathState>) {
-    for (const state of states) {
-      if (!state.isSplit()) {
-        if (counter++ === cmsIdx) {
-          subPathState = state;
-          return;
-        }
-        continue;
-      }
-      recurseFn(state.splitSubPaths);
-    }
-  })(map);
-  return subPathState;
-}
-
-export function isSubPathSplit(map: ReadonlyArray<SubPathState>, cmsIdx: number) {
-  let isSubPathSplit = false;
-  let counter = 0;
-  (function recurseFn(states: ReadonlyArray<SubPathState>, isSplit = false) {
-    for (const state of states) {
-      if (!state.isSplit()) {
-        if (counter++ === cmsIdx) {
-          isSubPathSplit = isSplit;
-          return;
-        }
-        continue;
-      }
-      recurseFn(state.splitSubPaths, true);
-    }
-  })(map);
-  return isSubPathSplit;
+  return flattenSubPathStates(map)[cmsIdx];
 }
 
 export function countSubPathStates(map: ReadonlyArray<SubPathState>): number {
-  let counter = 0;
-  (function recurseFn(states: ReadonlyArray<SubPathState>) {
-    states.forEach(state => {
-      if (!state.isSplit()) {
-        counter++;
-        return;
-      }
-      recurseFn(state.splitSubPaths);
-    });
-  })(map);
-  return counter;
+  return flattenSubPathStates(map).length;
 }
 
 export function flattenSubPathStates(map: ReadonlyArray<SubPathState>) {
   const subPathStates: SubPathState[] = [];
   (function recurseFn(currentLevel: ReadonlyArray<SubPathState>) {
     currentLevel.forEach(state => {
-      if (!state.isSplit()) {
+      if (!state.splitSubPaths.length) {
         subPathStates.push(state);
         return;
       }
@@ -310,4 +254,26 @@ export function flattenSubPathStates(map: ReadonlyArray<SubPathState>) {
     });
   })(map);
   return subPathStates;
+}
+
+export function isSubPathSplit(map: ReadonlyArray<SubPathState>, cmsIdx: number) {
+  return !!findSubPathState(map, cmsIdx).splitSubPaths.length;
+}
+
+export function isSubPathUnsplittable(map: ReadonlyArray<SubPathState>, cmsIdx: number) {
+  // Construct an array of parent nodes (one per leaf... meaning there will be duplicates).
+  const subPathStatesParents: SubPathState[] = [];
+  (function recurseFn(currentLevel: ReadonlyArray<SubPathState>, parent?: SubPathState) {
+    currentLevel.forEach(state => {
+      if (!state.splitSubPaths.length) {
+        subPathStatesParents.push(parent);
+        return;
+      }
+      recurseFn(state.splitSubPaths, state);
+    });
+  })(map);
+  const parent = subPathStatesParents[cmsIdx];
+  return parent
+    && parent.splitSubPaths.length
+    && parent.splitSubPaths.every(s => !s.splitSubPaths.length);
 }

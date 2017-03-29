@@ -106,6 +106,13 @@ export class CommandState {
     const right = this.mutate().sliceRight(splitIdx).build();
     return { left, right };
   }
+
+  /**
+   * Returns true iff the command at the specified index is split.
+   */
+  isSplitAtIndex(splitIdx: number) {
+    return splitIdx !== this.mutations.length - 1;
+  }
 }
 
 export interface Mutation {
@@ -216,8 +223,19 @@ class CommandStateMutator {
    * Unsplits the command at the specified split index.
    */
   unsplitAtIndex(splitIdx: number) {
+    if (!this.isSplitAtIndex(splitIdx)) {
+      console.warn('Attempt to unsplit a non-split command');
+      return this;
+    }
     this.mutations.splice(splitIdx, 1);
     return this;
+  }
+
+  /**
+   * Returns true iff the command at the specified index is split.
+   */
+  private isSplitAtIndex(splitIdx: number) {
+    return splitIdx !== this.mutations.length - 1;
   }
 
   /**

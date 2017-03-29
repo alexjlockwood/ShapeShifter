@@ -33,7 +33,7 @@ export class PathMutator {
   private setSubPathState(state: SubPathState, cmsIdx: number) {
     let counter = 0;
     const setStateFn = (node: SubPathState) => {
-      if (!node.isSplit()) {
+      if (!node.splitSubPaths.length) {
         return (counter++ === cmsIdx) ? state : node;
       }
       return node.mutate()
@@ -306,15 +306,10 @@ export class PathMutator {
     }
     const splitSubPaths: SubPathState[] = [
       // TODO: should/could one of these sub paths share the same ID as the parent?
-      new SubPathState(startCommandStates).mutate().setIsUnsplittable(true).build(),
-      new SubPathState(endCommandStates).mutate().setIsUnsplittable(true).build(),
+      new SubPathState(startCommandStates),
+      new SubPathState(endCommandStates),
     ];
-    this.setSubPathState(
-      sps.mutate()
-        .setSplitSubPaths(splitSubPaths)
-        .setIsUnsplittable(false)
-        .build(),
-      cmsIdx);
+    this.setSubPathState(sps.mutate().setSplitSubPaths(splitSubPaths).build(), cmsIdx);
     this.subPathOrdering.push(this.subPathOrdering.length);
     return this;
   }
@@ -338,10 +333,10 @@ export class PathMutator {
     let counter = 0;
     let updatedParentNode = undefined;
     for (const parent of this.subPathStateMap) {
-      (function recurseFn(p: SubPathState, level = 0) {
+      (function recurseFn(p: SubPathState) {
         for (let i = 0; i < p.splitSubPaths.length; i++) {
           const state = p.splitSubPaths[i];
-          if (!state.isSplit()) {
+          if (!state.splitSubPaths.length) {
             if (counter++ === cmsIdx) {
               const firstSplitSubPath = p.splitSubPaths[0];
               const splitCmdId =
@@ -356,18 +351,20 @@ export class PathMutator {
                   break;
                 }
               }
-              const unsplitCs = p.commandStates[csIdx].mutate().unsplitAtIndex(splitIdx).build();
+              let unsplitCs = p.commandStates[csIdx];
+              if (unsplitCs.isSplitAtIndex(splitIdx)) {
+                unsplitCs = unsplitCs.mutate().unsplitAtIndex(splitIdx).build();
+              }
               updatedParentNode =
                 p.mutate()
                   .setSplitSubPaths([])
-                  .setIsUnsplittable(level !== 0)
                   .setCommandState(unsplitCs, csIdx)
                   .build();
               return;
             }
             continue;
           }
-          recurseFn(state, level++);
+          recurseFn(state);
         }
       })(parent);
       if (updatedParentNode) {
