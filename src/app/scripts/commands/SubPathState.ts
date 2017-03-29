@@ -13,6 +13,7 @@ export class SubPathState {
     // Either empty if this sub path is not split, or an array of size 2
     // containing this sub path's split children.
     public readonly splitSubPaths: ReadonlyArray<SubPathState> = [],
+    public readonly isUnsplittable = false,
   ) { }
 
   isSplit() {
@@ -25,9 +26,13 @@ export class SubPathState {
       this.isReversed,
       this.shiftOffset,
       this.id,
-      // TODO: cloning shouldn't be necessary if SubPathState is immutable
-      this.splitSubPaths.map(s => s.clone()),
+      this.splitSubPaths.slice(),
+      this.isUnsplittable,
     );
+  }
+
+  revert(): SubPathState {
+    return this.mutate().revert().build();
   }
 
   clone(): SubPathState {
@@ -57,6 +62,7 @@ class SubPathStateMutator {
     private shiftOffset: number,
     private id: string,
     private splitSubPaths: ReadonlyArray<SubPathState>,
+    private isUnsplittable: boolean,
   ) { }
 
   setCommandStates(commandStates: CommandState[]) {
@@ -96,11 +102,17 @@ class SubPathStateMutator {
     return this;
   }
 
+  setIsUnsplittable(isDeletable: boolean) {
+    this.isUnsplittable = isDeletable;
+    return this;
+  }
+
   revert() {
     this.commandStates = this.commandStates.map(cs => cs.mutate().revert().build());
     this.isReversed = false;
     this.shiftOffset = 0;
     this.splitSubPaths = [];
+    this.isUnsplittable = false;
     return this;
   }
 
@@ -111,6 +123,7 @@ class SubPathStateMutator {
       this.shiftOffset,
       this.id,
       this.splitSubPaths,
+      this.isUnsplittable,
     );
   }
 }
@@ -167,7 +180,6 @@ function reverseCommands(subPathState: SubPathState) {
 }
 
 function shiftCommands(subPathState: SubPathState, cmds: Command[]) {
-
   let shiftOffset = subPathState.shiftOffset;
   if (!shiftOffset
     || cmds.length === 1

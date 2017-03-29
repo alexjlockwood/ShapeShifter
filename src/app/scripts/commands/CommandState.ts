@@ -35,7 +35,6 @@ export class CommandState {
     private readonly calculator: Calculator = newCalculator(backingCommand),
     private readonly minT = 0,
     private readonly maxT = 1,
-    private readonly isReversed = false,
   ) { }
 
   getId() {
@@ -103,7 +102,6 @@ export class CommandState {
       this.calculator,
       this.minT,
       this.maxT,
-      this.isReversed,
     );
   }
 
@@ -132,7 +130,6 @@ class CommandStateMutator {
     private calculator: Calculator,
     private minT: number,
     private maxT: number,
-    private isReversed: boolean,
   ) { }
 
   /**
@@ -159,12 +156,12 @@ class CommandStateMutator {
    * Reverses the information stored by this command state object.
    */
   reverse() {
-    this.isReversed = !this.isReversed;
     this.backingCommand = this.backingCommand.mutate().reverse().build();
     this.calculator = newCalculator(this.backingCommand);
     const lastMutation = this.mutations.pop();
     this.mutations = this.mutations.map(m => {
-      return _.assign({}, m, { t: MathUtil.lerp(this.maxT, this.minT, m.t) });
+      const { id, svgChar } = m;
+      return { id, svgChar, t: MathUtil.lerp(this.maxT, this.minT, m.t) };
     }).reverse();
     this.mutations.push(lastMutation);
     return this;
@@ -230,7 +227,8 @@ class CommandStateMutator {
    * Converts the command at the specified split index.
    */
   convertAtIndex(splitIdx: number, svgChar: SvgChar) {
-    this.mutations[splitIdx] = _.assign({}, this.mutations[splitIdx], { svgChar });
+    const { id, t } = this.mutations[splitIdx];
+    this.mutations[splitIdx] = { id, t, svgChar };
     return this;
   }
 
@@ -246,7 +244,8 @@ class CommandStateMutator {
         // Force convert the split closepath command back into a line.
         svgChar = 'L';
       }
-      return _.assign({}, mutation, { svgChar });
+      const { id, t } = mutation;
+      return { id, t, svgChar };
     });
     return this;
   }
@@ -284,7 +283,6 @@ class CommandStateMutator {
     }];
     this.transforms = [new Matrix()];
     this.calculator = newCalculator(this.backingCommand);
-    this.isReversed = false;
     return this;
   }
 
@@ -318,7 +316,6 @@ class CommandStateMutator {
       this.calculator,
       this.minT,
       this.maxT,
-      this.isReversed
     );
   }
 }

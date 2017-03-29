@@ -51,6 +51,7 @@ export class PathState {
         .setIsReversed(sps.isReversed)
         .setShiftOffset(sps.shiftOffset)
         .setIsSplit(isSplit)
+        .setIsUnsplittable(sps.isUnsplittable)
         .build();
     });
     this.commands = _.flatMap(this.subPaths, subPath => subPath.getCommands() as Command[]);

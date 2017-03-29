@@ -21,7 +21,7 @@ export class PathMutator {
   private numCollapsingSubPaths: number;
 
   constructor(ps: PathState) {
-    this.subPathStateMap = ps.subPathStateMap.map(s => s.clone());
+    this.subPathStateMap = ps.subPathStateMap.slice();
     this.subPathOrdering = ps.subPathOrdering.slice();
     this.numCollapsingSubPaths = ps.numCollapsingSubPaths;
   }
@@ -264,7 +264,7 @@ export class PathMutator {
           newCommand('M', [
             css[0].getCommands()[0].getStart(),
             _.last(_.last(css).getCommands()).getEnd(),
-          ])).mutate().reverse().build(),
+          ])),
       ];
       for (let i = css.length - 1; i > 0; i--) {
         revCss.push(css[i].mutate().reverse().build());
@@ -273,6 +273,16 @@ export class PathMutator {
     }
     const startCommandStates: CommandState[] = [];
     const endCommandStates: CommandState[] = [];
+    // const numCommandsInSubPath = _.sum(css.map(cs => cs.getCommands().length));
+    // if (sps.isReversed) {
+    //   cmdIdx = numCommandsInSubPath - cmdIdx;
+    // }
+    // cmdIdx += sps.shiftOffset;
+    // if (cmdIdx >= numCommandsInSubPath) {
+    //   // Note that subtracting (numCommandsInSubPath - 1) is intentional here
+    //   // (as opposed to subtracting numCommandsInSubPath).
+    //   cmdIdx -= numCommandsInSubPath - 1;
+    // }
     const { cmIdx, splitIdx } = this.findCommandStateIndices(css, cmdIdx);
     for (let i = 0; i < css.length; i++) {
       if (i < cmIdx) {
@@ -295,12 +305,13 @@ export class PathMutator {
     }
     const splitSubPaths: SubPathState[] = [
       // TODO: should/could one of these sub paths share the same ID as the parent?
-      new SubPathState(startCommandStates),
-      new SubPathState(endCommandStates),
+      new SubPathState(startCommandStates).mutate().setIsUnsplittable(true).build(),
+      new SubPathState(endCommandStates).mutate().setIsUnsplittable(true).build(),
     ];
     this.setSubPathState(
       sps.mutate()
         .setSplitSubPaths(splitSubPaths)
+        .setIsUnsplittable(false)
         .build(),
       cmsIdx);
     this.subPathOrdering.push(this.subPathOrdering.length);
@@ -326,34 +337,46 @@ export class PathMutator {
     let counter = 0;
     let updatedParentNode = undefined;
     for (const parent of this.subPathStateMap) {
-      (function recurseFn(p: SubPathState) {
+      (function recurseFn(p: SubPathState, level = 0) {
         for (let i = 0; i < p.splitSubPaths.length; i++) {
           const state = p.splitSubPaths[i];
           if (!state.isSplit()) {
             if (counter++ === cmsIdx) {
-              updatedParentNode = p.mutate().setSplitSubPaths([]).build();
+              updatedParentNode =
+                p.mutate()
+                  .setSplitSubPaths([])
+                  .setIsUnsplittable(level !== 0)
+                  .build();
               return;
             }
             continue;
           }
-          recurseFn(state);
+          recurseFn(state, level++);
         }
       })(parent);
       if (updatedParentNode) {
-        const newSubPathStateMap = (function updateParentFn(states: SubPathState[]) {
-          for (let i = 0; i < states.length; i++) {
-            const state = states[i];
-            if (state.id === updatedParentNode.id) {
-              states[i] = updatedParentNode;
-              return states;
+        const newSubPathStateMap =
+          (function updateParentFn(states: SubPathState[]) {
+            if (states.length === 0) {
+              return undefined;
             }
-            states[i] =
-              states[i].mutate()
-                .setSplitSubPaths(updateParentFn(state.splitSubPaths.slice()))
-                .build();
-          }
-          return states;
-        })(this.subPathStateMap.slice());
+            for (let i = 0; i < states.length; i++) {
+              const state = states[i];
+              if (state.id === updatedParentNode.id) {
+                states[i] = updatedParentNode;
+                return states;
+              }
+              const recurseStates = updateParentFn(state.splitSubPaths.slice());
+              if (recurseStates) {
+                states[i] =
+                  states[i].mutate()
+                    .setSplitSubPaths(recurseStates)
+                    .build();
+                return states;
+              }
+            }
+            return undefined;
+          })(this.subPathStateMap.slice());
         this.subPathStateMap.forEach((_, i) => this.subPathStateMap[i] = newSubPathStateMap[i]);
         break;
       }
@@ -432,9 +455,10 @@ export class PathMutator {
   revert() {
     this.deleteCollapsingSubPaths();
     this.subPathStateMap.forEach((sps, i) => {
-      this.subPathStateMap[i] = sps.mutate().revert().build();
+      this.subPathStateMap[i] = sps.revert();
     });
-    this.subPathOrdering.forEach((_, i) => this.subPathOrdering[i] = i);
+    this.subPathOrdering.splice(0, this.subPathOrdering.length);
+    this.subPathStateMap.forEach((_, i) => this.subPathOrdering.push(i));
     return this;
   }
 

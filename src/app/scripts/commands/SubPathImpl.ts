@@ -13,6 +13,7 @@ class SubPathImpl implements SubPath {
     private readonly isReversed_ = false,
     private readonly shiftOffset = 0,
     private readonly isSplit_ = false,
+    private readonly isUnsplittable_ = false,
   ) { }
 
   // Implements the SubPath interface.
@@ -46,6 +47,11 @@ class SubPathImpl implements SubPath {
   }
 
   // Implements the SubPath interface.
+  isUnsplittable() {
+    return this.isUnsplittable_;
+  }
+
+  // Implements the SubPath interface.
   isClosed() {
     const start = _.first(this.getCommands()).getEnd();
     const end = _.last(this.getCommands()).getEnd();
@@ -61,6 +67,7 @@ class SubPathImpl implements SubPath {
       this.isReversed_,
       this.shiftOffset,
       this.isSplit_,
+      this.isUnsplittable_,
     );
   }
 }
@@ -114,6 +121,7 @@ export class SubPathBuilder {
     private isReversed: boolean,
     private shiftOffset: number,
     private isSplit: boolean,
+    private isUnsplittable: boolean,
   ) { }
 
   setCommands(commands: Command[]) {
@@ -146,6 +154,11 @@ export class SubPathBuilder {
     return this;
   }
 
+  setIsUnsplittable(isUnsplittable: boolean) {
+    this.isUnsplittable = isUnsplittable;
+    return this;
+  }
+
   build() {
     return new SubPathImpl(
       this.commands.slice(),
@@ -154,6 +167,7 @@ export class SubPathBuilder {
       this.isReversed,
       this.shiftOffset,
       this.isSplit,
+      this.isUnsplittable,
     );
   }
 }

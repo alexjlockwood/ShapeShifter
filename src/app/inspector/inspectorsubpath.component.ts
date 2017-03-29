@@ -70,7 +70,7 @@ export class InspectorSubPathComponent implements OnInit {
 
   isUnsplittable() {
     const path = this.getPath();
-    return path && this.subPath && this.subPath.isSplit();
+    return path && this.subPath && this.subPath.isUnsplittable();
   }
 
   canSubPathBeMovedUp() {

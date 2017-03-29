@@ -32,6 +32,11 @@ export interface SubPath {
   isSplit(): boolean;
 
   /**
+   * Returns true iff this sub path can be unsplit.
+   */
+  isUnsplittable(): boolean;
+
+  /**
    * Returns true iff this sub path has been reversed.
    */
   isReversed(): boolean;

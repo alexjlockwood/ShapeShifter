@@ -484,6 +484,26 @@ describe('Path', () => {
         'M 50 50 L 40 40 L 39 39 L 38 38 L 35 35 M 0 0 L 10 10 L 20 20 L 30 30 L 35 35',
       ),
       makeTest(
+        'M 0 0 L 10 10 L 20 20 L 30 30 L 40 40 L 50 50',
+        'SIH 0 4 SSSP 0 4 M 0 1 S 0 1 0.6 RV 0 S 0 2 0.5 RT',
+        'M 0 0 L 10 10 L 20 20 L 30 30 L 40 40 L 50 50',
+      ),
+      makeTest(
+        'M 0 0 L 10 10 L 20 20 L 30 30 L 40 40 L 50 50',
+        'SIH 0 4 SSSP 0 4 M 0 1 S 0 1 0.6 RV 0 S 0 2 0.5 RT '
+        + 'SIH 0 4 SSSP 0 4 M 0 1 S 0 1 0.6 RV 0 S 0 2 0.5 RT '
+        + 'SIH 0 4 SSSP 0 4 M 0 1 S 0 1 0.6 RT',
+        'M 0 0 L 10 10 L 20 20 L 30 30 L 40 40 L 50 50',
+      ),
+      makeTest(
+        'M 0 0 L 10 10 L 20 20 L 30 30 L 40 40 L 50 50',
+        'SIH 0 4 SSSP 0 4 M 0 1 S 0 1 0.6 RV 0 S 0 2 0.5 RT '
+        + 'SIH 0 4 SSSP 0 4 M 0 1 S 0 1 0.6 RV 0 S 0 2 0.5 RT '
+        + 'SIH 0 4 SSSP 0 4 M 0 1 S 0 1 0.6 RT '
+        + 'SIH 0 4 SSSP 0 4',
+        'M 0 0 L 10 10 L 20 20 L 30 30 L 35 35 M 35 35 L 40 40 L 50 50',
+      ),
+      makeTest(
         'M 50 50 L 40 40 L 39 39 L 38 38 L 35 35 M 0 0 L 10 10 L 20 20 L 30 30 L 35 35',
         'SSSP 0 3',
         'M 50 50 L 40 40 L 39 39 L 38 38 M 38 38 L 35 35 M 0 0 L 10 10 L 20 20 L 30 30 L 35 35',
@@ -539,9 +559,19 @@ describe('Path', () => {
         'RV 0 SIH 0 2 SSSP 0 2',
         'M 12 14 C 14 12 16 10 16 8 C 16 5 13.75 3.5 11.5 3.5 M 11.5 3.5 C 9.25 3.5 7 5 7 8'
       ),
+      makeTest(
+        'M 7 8 C 7 2 16 2 16 8 C 16 10 14 12 12 14',
+        'RV 0 SIH 0 2 SSSP 0 2 RT',
+        'M 7 8 C 7 2 16 2 16 8 C 16 10 14 12 12 14'
+      ),
+      // TODO: figure out how to fix this test
+      // makeTest(
+      //   'M 1 1 h 1 v 1 M 5 5 L 10 10 L 15 5 L 10 0 L 5 5',
+      //   'RV 1 SF 1 SIH 1 2 SSSP 1 2',
+      //   'M 1 1 h 1 v 1 M 10 0 L 15 5 L 17.5 7.5 M 17.5 7.5 L 10 10 L 5 5 L 10 0'
+      // ),
       // TODO: add tests for shift offsets
       // TODO: add more tests for compound paths
-      // TODO: test reverting split subpath operations
     ];
 
     for (const test of MUTATION_TESTS) {

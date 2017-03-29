@@ -219,10 +219,22 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           // the hover's cmdIdx can be used to identify the new split point.
           const activePathLayer =
             this.layerStateService.getActivePathLayer(this.canvasType);
-          this.currentHoverSplitPreviewPath =
-            activePathLayer.pathData.mutate()
-              .splitCommandInHalf(hover.commandId.subIdx, hover.commandId.cmdIdx)
-              .build();
+          // TODO: it is possible for this to crash... need to reproduce somehow
+          const beforePath = activePathLayer.pathData;
+          try {
+            this.currentHoverSplitPreviewPath =
+              activePathLayer.pathData.mutate()
+                .splitCommandInHalf(hover.commandId.subIdx, hover.commandId.cmdIdx)
+                .build();
+          } catch (e) {
+            console.error(e);
+            console.error(
+              'Attempt to split command in half',
+              hover.commandId.subIdx,
+              hover.commandId.cmdIdx,
+              beforePath);
+            throw e;
+          }
         } else {
           this.currentHoverSplitPreviewPath = undefined;
         }

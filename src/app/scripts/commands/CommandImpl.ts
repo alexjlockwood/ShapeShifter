@@ -21,6 +21,9 @@ class CommandImpl implements Command {
     private readonly isSplit_ = false,
     private readonly id = _.uniqueId(),
   ) {
+    if (svgChar === undefined) {
+      throw new Error('Attempt to set an undefined svgChar');
+    }
     this.debugString = environment.production ? '' : this.toString();
   }
 
