@@ -102,8 +102,8 @@ class SubPathStateMutator {
     return this;
   }
 
-  setIsUnsplittable(isDeletable: boolean) {
-    this.isUnsplittable = isDeletable;
+  setIsUnsplittable(isUnsplittable: boolean) {
+    this.isUnsplittable = isUnsplittable;
     return this;
   }
 
