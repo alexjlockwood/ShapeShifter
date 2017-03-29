@@ -209,7 +209,8 @@ class CommandStateMutator {
       const mutation = this.mutations[i];
       if (mutation.svgChar === 'Z') {
         // Force convert the split closepath command into a line.
-        this.mutations[i] = _.assign({}, mutation, { svgChar: 'L' });
+        const { id, t } = mutation;
+        this.mutations[i] = { id, t, svgChar: 'L' };
       }
     }
     return this;
