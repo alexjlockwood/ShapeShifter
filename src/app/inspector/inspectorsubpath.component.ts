@@ -47,10 +47,17 @@ export class InspectorSubPathComponent implements OnInit {
 
   onUnsplitButtonClick(event: MouseEvent) {
     const fromPathLayer = this.layerStateService.getActivePathLayer(this.canvasType);
-    this.replacePath(fromPathLayer.pathData.mutate()
-      .unsplitSubPath(this.subIdx)
-      .build(),
-      event);
+    if (fromPathLayer.isFilled()) {
+      this.replacePath(fromPathLayer.pathData.mutate()
+        .unsplitFilledSubPath(this.subIdx)
+        .build(),
+        event);
+    } else if (fromPathLayer.isStroked()) {
+      this.replacePath(fromPathLayer.pathData.mutate()
+        .unsplitStrokedSubPath(this.subIdx)
+        .build(),
+        event);
+    }
   }
 
   private replacePath(path: Path, event: MouseEvent) {

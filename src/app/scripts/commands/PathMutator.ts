@@ -280,20 +280,10 @@ export class PathMutator {
   }
 
   /**
-   * Splits a filled sub path using the specified indices.
+   * Unsplits the stroked sub path at the specified index. The sub path's sibling
+   * will be unsplit as well.
    */
-  splitFilledSubPath(
-    subIdx: number,
-    start: { cmdIdx: number, t: number },
-    end: { cmdIdx: number, t: number }) {
-
-    // TODO: implement this
-    return this;
-  }
-
-  // TODO: need to distinguish between stroked and filled sub paths here?
-  // TODO: delete the initial split cmdIdx as well if one exists
-  unsplitSubPath(subIdx: number) {
+  unsplitStrokedSubPath(subIdx: number) {
     const cmsIdx = this.subPathOrdering[subIdx];
     const parent = findSubPathStateParent(this.subPathStateMap, cmsIdx);
     const firstSplitSubPath = parent.splitSubPaths[0];
@@ -322,6 +312,80 @@ export class PathMutator {
         this.subPathOrdering[i]--;
       }
     }
+    return this;
+  }
+
+  /**
+   * Splits a filled sub path using the specified indices.
+   */
+  splitFilledSubPath(subIdx: number, startCmdIdx: number, endCmdIdx: number) {
+
+    const cmsIdx = this.subPathOrdering[subIdx];
+    const sps = this.findSubPathState(cmsIdx);
+    const css = shiftAndReverseCommandStates(sps.commandStates, sps.isReversed, sps.shiftOffset);
+    let start = this.findCommandStateIndices(css, startCmdIdx);
+    let end = this.findCommandStateIndices(css, endCmdIdx);
+    if (start.cmIdx > end.cmIdx
+      || (start.cmIdx === end.cmIdx && start.splitIdx > end.cmIdx)) {
+      const temp = start;
+      start = end;
+      end = temp;
+    }
+
+    // firstLeft is the left portion of the first split segment (to use in the first split path).
+    // secondLeft is the left portion of the second split segment (to use in the second split path).
+    // firstRight is the right portion of the first split segment (to use in the second split path).
+    // secondRight is the right portion of the second split segment (to use in the first split path).
+    const { left: firstLeft, right: firstRight } = css[start.cmIdx].fork(start.splitIdx);
+    const { left: secondLeft, right: secondRight } = css[end.cmIdx].fork(end.splitIdx);
+    const startSplitPoint = firstLeft.getCommands()[start.splitIdx].getEnd();
+    const endSplitPoint = secondLeft.getCommands()[end.splitIdx].getEnd();
+    const startLine = new CommandState(newCommand('L', [startSplitPoint, endSplitPoint]));
+    const endLine = new CommandState(newCommand('L', [endSplitPoint, startSplitPoint]));
+
+    const startCommandStates: CommandState[] = [];
+    for (let i = 0; i < css.length; i++) {
+      if (i < start.cmIdx || end.cmIdx < i) {
+        startCommandStates.push(css[i]);
+      } else if (i === start.cmIdx) {
+        startCommandStates.push(firstLeft);
+        startCommandStates.push(startLine);
+      } else if (i === end.cmIdx && secondRight) {
+        startCommandStates.push(secondRight);
+      }
+    }
+
+    const endCommandStates: CommandState[] = [];
+    for (let i = 0; i < css.length; i++) {
+      if (i === start.cmIdx) {
+        endCommandStates.push(new CommandState(newCommand('M', [startSplitPoint, startSplitPoint])));
+        if (firstRight) {
+          endCommandStates.push(firstRight);
+        }
+      } else if (start.cmIdx < i && i < end.cmIdx) {
+        endCommandStates.push(css[i]);
+      } else if (i === end.cmIdx) {
+        endCommandStates.push(secondLeft);
+        endCommandStates.push(endLine);
+      }
+    }
+
+    const splitSubPaths: SubPathState[] = [
+      // TODO: should/could one of these sub paths share the same ID as the parent?
+      new SubPathState(startCommandStates),
+      new SubPathState(endCommandStates),
+    ];
+    this.setSubPathState(sps.mutate().setSplitSubPaths(splitSubPaths).build(), cmsIdx);
+    this.subPathOrdering.push(this.subPathOrdering.length);
+    return this;
+  }
+
+  /**
+   * Unsplits the stroked sub path at the specified index. The sub path's sibling
+   * will be unsplit as well.
+   */
+  unsplitFilledSubPath(subIdx: number) {
+    // TODO: implement this
     return this;
   }
 

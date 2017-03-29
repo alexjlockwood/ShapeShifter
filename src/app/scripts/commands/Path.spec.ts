@@ -185,14 +185,11 @@ describe('Path', () => {
             i += 2;
             break;
           case 'SFSP': // Split filled sub path.
-            mutator.splitFilledSubPath(
-              +A[i + 1],
-              { cmdIdx: +A[i + 2], t: +A[i + 3] },
-              { cmdIdx: +A[i + 4], t: +A[i + 5] });
-            i += 5;
+            mutator.splitFilledSubPath(+A[i + 1], +A[i + 2], +A[i + 3]);
+            i += 3;
             break;
           case 'USSP': // Unsplit sub path.
-            mutator.unsplitSubPath(+A[i + 1]);
+            mutator.unsplitStrokedSubPath(+A[i + 1]);
             i += 1;
             break;
           default:
@@ -564,14 +561,18 @@ describe('Path', () => {
         'RV 0 SIH 0 2 SSSP 0 2 RT',
         'M 7 8 C 7 2 16 2 16 8 C 16 10 14 12 12 14'
       ),
-      // TODO: figure out how to fix this test
-      // makeTest(
-      //   'M 1 1 h 1 v 1 M 5 5 L 10 10 L 15 5 L 10 0 L 5 5',
-      //   'RV 1 SF 1 SIH 1 2 SSSP 1 2',
-      //   'M 1 1 h 1 v 1 M 10 0 L 15 5 L 17.5 7.5 M 17.5 7.5 L 10 10 L 5 5 L 10 0'
-      // ),
+      makeTest(
+        'M 1 1 L 2 1 L 2 2 M 5 5 L 5 10 L 10 10 L 10 5 L 5 5',
+        'RV 1 SF 1 SIH 1 2 SSSP 1 2',
+        'M 1 1 L 2 1 L 2 2 M 10 5 L 10 10 L 7.5 10 M 7.5 10 L 5 10 L 5 5 L 10 5'
+      ),
       // TODO: add tests for shift offsets
       // TODO: add more tests for compound paths
+      makeTest(
+        'M 8 5 L 8 19 L 19 12 L 8 5',
+        'SIH 0 1 SFSP 0 1 3',
+        'M 8 5 L 8 12 L 19 12 L 8 5 M 8 12 L 8 19 L 19 12 L 8 12'
+      ),
     ];
 
     for (const test of MUTATION_TESTS) {
