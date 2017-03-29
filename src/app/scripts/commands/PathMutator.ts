@@ -16,8 +16,8 @@ import {
  * A builder class for creating new mutated Path objects.
  */
 export class PathMutator {
-  private readonly subPathStateMap: SubPathState[];
-  private readonly subPathOrdering: number[];
+  private subPathStateMap: SubPathState[];
+  private subPathOrdering: number[];
   private numCollapsingSubPaths: number;
 
   constructor(ps: PathState) {
@@ -31,18 +31,7 @@ export class PathMutator {
   }
 
   private setSubPathState(state: SubPathState, cmsIdx: number) {
-    let counter = 0;
-    const setStateFn = (node: SubPathState) => {
-      if (!node.splitSubPaths.length) {
-        return (counter++ === cmsIdx) ? state : node;
-      }
-      return node.mutate()
-        .setSplitSubPaths(node.splitSubPaths.map(s => setStateFn(s)))
-        .build();
-    };
-    this.subPathStateMap.forEach((s, i) => {
-      this.subPathStateMap[i] = setStateFn(s);
-    });
+    this.subPathStateMap = replaceSubPathStateLeaf(this.subPathStateMap, cmsIdx, state);
   }
 
   /**
@@ -330,70 +319,27 @@ export class PathMutator {
   // TODO: delete the initial split cmdIdx as well if one exists
   unsplitSubPath(subIdx: number) {
     const cmsIdx = this.subPathOrdering[subIdx];
-    let counter = 0;
-    let updatedParentNode = undefined;
-    for (const parent of this.subPathStateMap) {
-      (function recurseFn(p: SubPathState) {
-        for (let i = 0; i < p.splitSubPaths.length; i++) {
-          const state = p.splitSubPaths[i];
-          if (!state.splitSubPaths.length) {
-            if (counter++ === cmsIdx) {
-              const firstSplitSubPath = p.splitSubPaths[0];
-              const splitCmdId =
-                _.last(_.last(firstSplitSubPath.commandStates).getCommands()).getId();
-              let csIdx = -1;
-              let splitIdx = -1;
-              for (csIdx = 0; csIdx < p.commandStates.length; csIdx++) {
-                const cs = p.commandStates[csIdx];
-                const csIds = cs.getCommands().map((_, idx) => cs.getIdAtIndex(idx));
-                splitIdx = csIds.indexOf(splitCmdId);
-                if (splitIdx >= 0) {
-                  break;
-                }
-              }
-              let unsplitCs = p.commandStates[csIdx];
-              if (unsplitCs.isSplitAtIndex(splitIdx)) {
-                unsplitCs = unsplitCs.mutate().unsplitAtIndex(splitIdx).build();
-              }
-              updatedParentNode =
-                p.mutate()
-                  .setSplitSubPaths([])
-                  .setCommandState(unsplitCs, csIdx)
-                  .build();
-              return;
-            }
-            continue;
-          }
-          recurseFn(state);
-        }
-      })(parent);
-      if (updatedParentNode) {
-        const newSubPathStateMap =
-          (function updateParentFn(states: SubPathState[]) {
-            if (states.length === 0) {
-              return undefined;
-            }
-            for (let i = 0; i < states.length; i++) {
-              const state = states[i];
-              if (state.id === updatedParentNode.id) {
-                states[i] = updatedParentNode;
-                return states;
-              }
-              const recurseStates = updateParentFn(state.splitSubPaths.slice());
-              if (recurseStates) {
-                states[i] =
-                  states[i].mutate()
-                    .setSplitSubPaths(recurseStates)
-                    .build();
-                return states;
-              }
-            }
-            return undefined;
-          })(this.subPathStateMap.slice());
-        this.subPathStateMap.forEach((_, i) => this.subPathStateMap[i] = newSubPathStateMap[i]);
+    const parent = findSubPathStateParent(this.subPathStateMap, cmsIdx);
+    const firstSplitSubPath = parent.splitSubPaths[0];
+    const splitCmdId =
+      _.last(_.last(firstSplitSubPath.commandStates).getCommands()).getId();
+    let csIdx = -1;
+    let splitIdx = -1;
+    for (csIdx = 0; csIdx < parent.commandStates.length; csIdx++) {
+      const cs = parent.commandStates[csIdx];
+      const csIds = cs.getCommands().map((_, idx) => cs.getIdAtIndex(idx));
+      splitIdx = csIds.indexOf(splitCmdId);
+      if (splitIdx >= 0) {
         break;
       }
     }
+    const parentMutator = parent.mutate().setSplitSubPaths([]);
+    if (parent.commandStates[csIdx].isSplitAtIndex(splitIdx)) {
+      const unsplitCs = parent.commandStates[csIdx].mutate().unsplitAtIndex(splitIdx).build();
+      parentMutator.setCommandState(unsplitCs, csIdx);
+    }
+    const updatedParentNode = parentMutator.build();
+    this.subPathStateMap = replaceSubPathStateParent(this.subPathStateMap, cmsIdx, updatedParentNode);
     this.subPathOrdering.splice(subIdx, 1);
     for (let i = 0; i < this.subPathOrdering.length; i++) {
       if (cmsIdx < this.subPathOrdering[i]) {
@@ -467,11 +413,8 @@ export class PathMutator {
    */
   revert() {
     this.deleteCollapsingSubPaths();
-    this.subPathStateMap.forEach((sps, i) => {
-      this.subPathStateMap[i] = sps.revert();
-    });
-    this.subPathOrdering.splice(0, this.subPathOrdering.length);
-    this.subPathStateMap.forEach((_, i) => this.subPathOrdering.push(i));
+    this.subPathStateMap = this.subPathStateMap.map(sps => sps.revert());
+    this.subPathOrdering = this.subPathStateMap.map((_, i) => i);
     return this;
   }
 
@@ -551,3 +494,64 @@ export class PathMutator {
     throw new Error('Error retrieving command mutation');
   }
 }
+
+function findSubPathStateParent(map: ReadonlyArray<SubPathState>, cmsIdx: number) {
+  const subPathStateParents: SubPathState[] = [];
+  (function recurseFn(currentLevel: ReadonlyArray<SubPathState>, parent?: SubPathState) {
+    currentLevel.forEach(state => {
+      if (!state.splitSubPaths.length) {
+        subPathStateParents.push(parent);
+        return;
+      }
+      recurseFn(state.splitSubPaths, state);
+    });
+  })(map);
+  return subPathStateParents[cmsIdx];
+}
+
+function replaceSubPathStateParent(
+  map: ReadonlyArray<SubPathState>,
+  cmsIdx: number,
+  replacement: SubPathState) {
+
+  return replaceSubPathStateInternal(map, findSubPathStateParent(map, cmsIdx), replacement);
+}
+
+function replaceSubPathStateLeaf(
+  map: ReadonlyArray<SubPathState>,
+  cmsIdx: number,
+  replacement: SubPathState) {
+
+  return replaceSubPathStateInternal(map, findSubPathState(map, cmsIdx), replacement);
+}
+
+function replaceSubPathStateInternal(
+  map: ReadonlyArray<SubPathState>,
+  target: SubPathState,
+  replacement: SubPathState) {
+
+  return (function replaceParentFn(states: SubPathState[]) {
+    if (states.length === 0) {
+      // Return undefined to signal that the parent was not found.
+      return undefined;
+    }
+    for (let i = 0; i < states.length; i++) {
+      const currentState = states[i];
+      if (currentState === target) {
+        states[i] = replacement;
+        return states;
+      }
+      const recurseStates = replaceParentFn(currentState.splitSubPaths.slice());
+      if (recurseStates) {
+        states[i] =
+          currentState.mutate()
+            .setSplitSubPaths(recurseStates)
+            .build();
+        return states;
+      }
+    }
+    // Return undefined to signal that the parent was not found.
+    return undefined;
+  })(map.slice());
+}
+
