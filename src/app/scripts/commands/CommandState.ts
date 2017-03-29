@@ -41,6 +41,14 @@ export class CommandState {
     return this.commands;
   }
 
+  getMinT() {
+    return this.minT;
+  }
+
+  getMaxT() {
+    return this.maxT;
+  }
+
   getBoundingBox() {
     return this.calculator.getBoundingBox();
   }
@@ -251,6 +259,7 @@ class CommandStateMutator {
    * command state object.
    */
   unconvertSubpath() {
+    console.info('before unconvert', this);
     const backingSvgChar = this.backingCommand.getSvgChar();
     this.mutations = this.mutations.map((mutation, i) => {
       let svgChar = backingSvgChar;
@@ -261,6 +270,7 @@ class CommandStateMutator {
       const { id, t } = mutation;
       return { id, t, svgChar };
     });
+    console.info('after unconvert', this);
     return this;
   }
 

@@ -94,6 +94,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   private shouldPerformActionOnMouseUp = false;
   // The last known location of the mouse.
   private lastKnownMouseLocation: Point | undefined;
+  private initialFilledSubPathProjectionOntoPath: ProjectionOntoPath | undefined;
 
   constructor(
     private readonly elementRef: ElementRef,
@@ -206,6 +207,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
             this.pointSelector = undefined;
             this.shouldPerformActionOnMouseUp = false;
             this.lastKnownMouseLocation = undefined;
+            this.initialFilledSubPathProjectionOntoPath = undefined;
             this.draw();
           }));
       const updateCurrentHoverFn = (hover: Hover) => {
@@ -800,16 +802,45 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         if (projection.d < MIN_SNAP_THRESHOLD) {
           // We're in range, so split the path!
           const activePathLayer = this.layerStateService.getActivePathLayer(this.canvasType);
-          const pathMutator = activePathLayer.pathData.mutate()
-            .splitCommand(subIdx, cmdIdx, projection.t);
-          if (this.canvasMode === CanvasMode.SplitSubPaths) {
+          const pathMutator = activePathLayer.pathData.mutate();
+          if (this.canvasMode === CanvasMode.AddPoints) {
+            pathMutator.splitCommand(subIdx, cmdIdx, projection.t);
+          } else if (this.canvasMode === CanvasMode.SplitSubPaths) {
             if (activePathLayer.isFilled()) {
-              // TODO: implement support for splitting fill paths
+              if (!this.initialFilledSubPathProjectionOntoPath) {
+                this.initialFilledSubPathProjectionOntoPath = projectionOntoPath;
+              } else if (this.initialFilledSubPathProjectionOntoPath.subIdx !== projectionOntoPath.subIdx) {
+                // TODO: don't allow other subIdx values to be returned by the above projection...
+                this.initialFilledSubPathProjectionOntoPath = undefined;
+              } else {
+                let firstCmdIdx = this.initialFilledSubPathProjectionOntoPath.cmdIdx;
+                let firstT = this.initialFilledSubPathProjectionOntoPath.projection.t;
+                let secondCmdIdx = projectionOntoPath.cmdIdx;
+                let secondT = projectionOntoPath.projection.t;
+                if (firstCmdIdx > secondCmdIdx
+                  || firstCmdIdx === secondCmdIdx && firstT > secondT) {
+                  const temp = { firstCmdIdx, firstT };
+                  firstCmdIdx = secondCmdIdx;
+                  firstT = secondT;
+                  secondCmdIdx = temp.firstCmdIdx;
+                  secondT = temp.firstT;
+                }
+                console.info(projectionOntoPath, firstCmdIdx, secondCmdIdx, firstT, secondT);
+                pathMutator
+                  .splitCommand(projectionOntoPath.subIdx, firstCmdIdx, firstT)
+                  .splitCommand(projectionOntoPath.subIdx, secondCmdIdx + 1, secondT)
+                  .splitFilledSubPath(projectionOntoPath.subIdx, firstCmdIdx, secondCmdIdx + 1);
+                this.initialFilledSubPathProjectionOntoPath = undefined;
+              }
             } else if (activePathLayer.isStroked()) {
-              pathMutator.splitStrokedSubPath(subIdx, cmdIdx);
+              pathMutator
+                .splitCommand(subIdx, cmdIdx, projection.t)
+                .splitStrokedSubPath(subIdx, cmdIdx);
             }
           }
           this.layerStateService.updateActivePath(this.canvasType, pathMutator.build());
+        } else {
+          this.initialFilledSubPathProjectionOntoPath = undefined;
         }
         this.shouldPerformActionOnMouseUp = false;
       }
@@ -840,6 +871,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       // canvas before mouse up is registered, then just cancel the event.
       // This way we can avoid some otherwise confusing behavior.
       this.shouldPerformActionOnMouseUp = false;
+      this.initialFilledSubPathProjectionOntoPath = undefined;
       // TODO: avoid redrawing on every frame... often times it will be unnecessary
       this.draw();
     }

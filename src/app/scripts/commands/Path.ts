@@ -4,7 +4,8 @@ import { ProjectionResult } from './calculators';
 import { PathMutator } from './PathMutator';
 
 /**
- * Defines a set of sub paths with numerous methods to perform important calculations.
+ * A compound path that contains all of the information associated with a
+ * PathLayer's pathData attribute.
  */
 export interface Path {
 
@@ -40,11 +41,6 @@ export interface Path {
   project(point: Point): ProjectionOntoPath | undefined;
 
   /**
-   * Returns a cloned instance of this path.
-   */
-  clone(): Path;
-
-  /**
    * Performs a hit test on the path and returns a HitResult.
    */
   hitTest(point: Point, opts?: HitOptions): HitResult;
@@ -58,6 +54,16 @@ export interface Path {
    * Creates a builder that can create a mutated Path object.
    */
   mutate(): PathMutator;
+
+  /**
+   * Returns a cloned instance of this path.
+   */
+  clone(): Path;
+
+  /**
+   * Returns a Path representing its initial unmutated state.
+   */
+  revert(): Path;
 }
 
 /** Represents the options for a hit test. */

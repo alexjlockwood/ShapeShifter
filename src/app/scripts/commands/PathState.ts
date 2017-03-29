@@ -109,8 +109,7 @@ export class PathState {
               const projection = cm.project(point);
               if (projection && sps.isReversed) {
                 const t = projection.projectionResult.t;
-                // TODO: use minT/maxT values?
-                projection.projectionResult.t = 1 - t;
+                projection.projectionResult.t = MathUtil.lerp(cm.getMaxT(), cm.getMinT(), t);
               }
               return {
                 cmsIdx,
@@ -122,6 +121,8 @@ export class PathState {
         })
         .flatMap(projections => projections)
         .filter(obj => !!obj.projection)
+        // Reverse so that commands drawn with higher z-orders are preferred.
+        .reverse()
         .reduce((prev, curr) => {
           return prev && prev.projection.d < curr.projection.d ? prev : curr;
         }, undefined)

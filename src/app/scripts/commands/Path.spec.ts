@@ -1,6 +1,8 @@
 import { SvgChar, newPath, Path, Command, ProjectionOntoPath } from '.';
-import { Matrix, Point } from '../common';
+import { Matrix, Point, MathUtil } from '../common';
 import * as _ from 'lodash';
+
+const lerp = MathUtil.lerp;
 
 describe('Path', () => {
 
@@ -549,29 +551,54 @@ describe('Path', () => {
       makeTest(
         'M 0 0 L 1 1 L 2 2',
         'RV 0 S 0 2 0.8 S 0 2 0.25 S 0 3 0.75 SSSP 0 3',
-        'M 2 2 L 1 1 L 0.8 0.8 L 0.35 0.35 M 0.35 0.35 L 0.2 0.2 L 0 0'
+        'M 2 2 L 1 1 L 0.8 0.8 L 0.35 0.35 M 0.35 0.35 L 0.2 0.2 L 0 0',
       ),
       makeTest(
         'M 7 8 C 7 2 16 2 16 8 C 16 10 14 12 12 14',
         'RV 0 SIH 0 2 SSSP 0 2',
-        'M 12 14 C 14 12 16 10 16 8 C 16 5 13.75 3.5 11.5 3.5 M 11.5 3.5 C 9.25 3.5 7 5 7 8'
+        'M 12 14 C 14 12 16 10 16 8 C 16 5 13.75 3.5 11.5 3.5 M 11.5 3.5 C 9.25 3.5 7 5 7 8',
       ),
       makeTest(
         'M 7 8 C 7 2 16 2 16 8 C 16 10 14 12 12 14',
         'RV 0 SIH 0 2 SSSP 0 2 RT',
-        'M 7 8 C 7 2 16 2 16 8 C 16 10 14 12 12 14'
+        'M 7 8 C 7 2 16 2 16 8 C 16 10 14 12 12 14',
       ),
       makeTest(
         'M 1 1 L 2 1 L 2 2 M 5 5 L 5 10 L 10 10 L 10 5 L 5 5',
         'RV 1 SF 1 SIH 1 2 SSSP 1 2',
-        'M 1 1 L 2 1 L 2 2 M 10 5 L 10 10 L 7.5 10 M 7.5 10 L 5 10 L 5 5 L 10 5'
+        'M 1 1 L 2 1 L 2 2 M 10 5 L 10 10 L 7.5 10 M 7.5 10 L 5 10 L 5 5 L 10 5',
       ),
       // TODO: add tests for shift offsets
       // TODO: add more tests for compound paths
       makeTest(
         'M 8 5 L 8 19 L 19 12 L 8 5',
         'SIH 0 1 SFSP 0 1 3',
-        'M 8 5 L 8 12 L 19 12 L 8 5 M 8 12 L 8 19 L 19 12 L 8 12'
+        'M 8 5 L 8 12 L 19 12 L 8 5 M 8 12 L 8 19 L 19 12 L 8 12',
+      ),
+      makeTest(
+        'M 8 5 L 8 19 L 19 12 L 8 5',
+        'SIH 0 1 SIH 0 4 SFSP 0 1 4',
+        'M 8 5 L 8 12 L 13.5 8.5 L 8 5 M 8 12 L 8 19 L 19 12 L 13.5 8.5 L 8 12',
+      ),
+      makeTest(
+        'M 8 5 L 8 19 L 19 12 Z',
+        'SIH 0 1 SIH 0 4 SFSP 0 1 4',
+        'M 8 5 L 8 12 L 13.5 8.5 L 8 5 M 8 12 L 8 19 L 19 12 L 13.5 8.5 L 8 12',
+      ),
+      makeTest(
+        'M 8 5 L 8 19 L 19 12 Z',
+        'AC 5 5 1 S 0 1 0.4 S 0 4 0.6 SFSP 0 1 4 UCV 0 UCV 1 UCV 2 DC',
+        'M 8 5 L 8 10.6 L 12.4 7.8 L 8 5 M 8 10.6 L 8 19 L 19 12 L 12.4 7.8 L 8 10.6',
+      ),
+      makeTest(
+        'M 8 5 L 8 19 L 19 12 L 8 5',
+        'SIH 0 1 SFSP 0 1 3 S 0 3 0.4',
+        `M 8 5 L 8 12 L 19 12 L ${lerp(19, 8, 0.4)} ${lerp(12, 5, 0.4)} L 8 5 M 8 12 L 8 19 L 19 12 L 8 12`,
+      ),
+      makeTest(
+        'M 8 5 L 8 19 L 19 12 L 8 5',
+        'SIH 0 1 S 0 3 1 SFSP 0 1 3',
+        `M 8 5 L 8 12 L 19 12 L 19 12 L 8 5 M 8 12 L 8 19 L 19 12 L 8 12`,
       ),
     ];
 

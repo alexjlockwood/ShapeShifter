@@ -1,5 +1,5 @@
 import { Point } from '../common';
-import { Path, Command, ProjectionResult, HitOptions } from '.';
+import { Path, Command, ProjectionOntoPath, HitOptions } from '.';
 import { PathState } from './PathState';
 import { PathMutator } from './PathMutator';
 import * as PathParser from './PathParser';
@@ -9,12 +9,12 @@ export function newPath(obj: string | Command[]): Path {
 }
 
 /**
- * Implementation of the Path interface. Represents all of the information
- * associated with a path layer's pathData attribute.
+ * Implementation of the Path interface.
  */
 export class PathImpl implements Path {
   private readonly ps: PathState;
   private pathString: string;
+  private poleOfInaccessibility: Point;
 
   constructor(obj: string | Command[] | PathState) {
     if (typeof obj === 'string' || Array.isArray(obj)) {
@@ -56,8 +56,7 @@ export class PathImpl implements Path {
   }
 
   // Implements the Path interface.
-  project(point: Point):
-    { projection: ProjectionResult, subIdx: number, cmdIdx: number } | undefined {
+  project(point: Point): ProjectionOntoPath | undefined {
     return this.ps.project(point);
   }
 
@@ -68,7 +67,10 @@ export class PathImpl implements Path {
 
   // Implements the Path interface.
   getPoleOfInaccessibility(subIdx: number) {
-    return this.ps.getPoleOfInaccessibility(subIdx);
+    if (!this.poleOfInaccessibility) {
+      this.poleOfInaccessibility = this.ps.getPoleOfInaccessibility(subIdx);
+    }
+    return this.poleOfInaccessibility;
   }
 
   // Implements the Path interface.
@@ -79,5 +81,10 @@ export class PathImpl implements Path {
   // Implements the Path interface.
   clone() {
     return this.mutate().build();
+  }
+
+  // Implements the Path interface.
+  revert() {
+    return this.mutate().revert().build();
   }
 }

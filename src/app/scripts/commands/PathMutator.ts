@@ -319,10 +319,10 @@ export class PathMutator {
    * Splits a filled sub path using the specified indices.
    */
   splitFilledSubPath(subIdx: number, startCmdIdx: number, endCmdIdx: number) {
-
     const cmsIdx = this.subPathOrdering[subIdx];
     const sps = this.findSubPathState(cmsIdx);
     const css = shiftAndReverseCommandStates(sps.commandStates, sps.isReversed, sps.shiftOffset);
+    console.info('after shift/reverse command states', css);
     let start = this.findCommandStateIndices(css, startCmdIdx);
     let end = this.findCommandStateIndices(css, endCmdIdx);
     if (start.cmIdx > end.cmIdx
@@ -375,6 +375,8 @@ export class PathMutator {
       new SubPathState(startCommandStates),
       new SubPathState(endCommandStates),
     ];
+    console.info('start commands!', startCommandStates);
+    console.info('end commands!', endCommandStates);
     this.setSubPathState(sps.mutate().setSplitSubPaths(splitSubPaths).build(), cmsIdx);
     this.subPathOrdering.push(this.subPathOrdering.length);
     return this;
@@ -385,6 +387,7 @@ export class PathMutator {
    * will be unsplit as well.
    */
   unsplitFilledSubPath(subIdx: number) {
+
     // TODO: implement this
     return this;
   }
@@ -435,7 +438,7 @@ export class PathMutator {
       this.subPathStateMap.pop();
     }
     deleteCollapsingSubPathInfoFn(cmsIdxToSubIdxMap);
-    this.subPathOrdering.splice(0, this.subPathOrdering.length);
+    this.subPathOrdering = [];
     for (let subIdx = 0; subIdx < numSubPathsBeforeDelete; subIdx++) {
       for (let i = 0; i < cmsIdxToSubIdxMap.length; i++) {
         if (cmsIdxToSubIdxMap[i] === subIdx) {
@@ -600,11 +603,24 @@ function shiftAndReverseCommandStates(
   isReversed: boolean,
   shiftOffset: number) {
 
-  return shiftCommandStates(reverseCommandStates(source, isReversed), isReversed, shiftOffset);
+  const css = source.slice();
+
+  // TODO: test closepaths
+  // TODO: test closepaths
+  // TODO: test closepaths
+  // TODO: test closepaths
+  // TODO: test closepaths
+  // TODO: test closepaths
+  // TODO: test closepaths
+
+  // If the last command is a 'Z', replace it with a line before we shift.
+  // TODO: replacing the 'Z' messes up certain stroke-linejoin values
+  css[css.length - 1] = _.last(css).mutate().forceConvertClosepathsToLines().build();
+
+  return shiftCommandStates(reverseCommandStates(css, isReversed), isReversed, shiftOffset);
 }
 
-function reverseCommandStates(source: ReadonlyArray<CommandState>, isReversed: boolean) {
-  let css = source.slice();
+function reverseCommandStates(css: CommandState[], isReversed: boolean) {
   if (isReversed) {
     const revCss = [
       new CommandState(
@@ -622,26 +638,13 @@ function reverseCommandStates(source: ReadonlyArray<CommandState>, isReversed: b
 }
 
 function shiftCommandStates(
-  source: ReadonlyArray<CommandState>,
+  css: CommandState[],
   isReversed: boolean,
   shiftOffset: number) {
 
-  if (!shiftOffset || source.length === 1) {
-    return source;
+  if (!shiftOffset || css.length === 1) {
+    return css;
   }
-  const css = source.slice();
-
-  // TODO: test closepaths
-  // TODO: test closepaths
-  // TODO: test closepaths
-  // TODO: test closepaths
-  // TODO: test closepaths
-  // TODO: test closepaths
-  // TODO: test closepaths
-
-  // If the last command is a 'Z', replace it with a line before we shift.
-  // TODO: replacing the 'Z' messes up certain stroke-linejoin values
-  css[css.length - 1] = _.last(css).mutate().forceConvertClosepathsToLines().build();
 
   const numCommands = _.sum(css.map(cs => cs.getCommands().length));
   if (isReversed) {
