@@ -254,6 +254,7 @@ export class PathMutator {
    * Splits a stroked sub path using the specified indices.
    * A 'moveTo' command will be inserted after the command at 'cmdIdx'.
    */
+  // TODO: unsplittable state isn't getting reset after splits properly
   splitStrokedSubPath(subIdx: number, cmdIdx: number) {
     const cmsIdx = this.subPathOrdering[subIdx];
     const sps = this.findSubPathState(cmsIdx);
@@ -342,10 +343,25 @@ export class PathMutator {
           const state = p.splitSubPaths[i];
           if (!state.isSplit()) {
             if (counter++ === cmsIdx) {
+              const firstSplitSubPath = p.splitSubPaths[0];
+              const splitCmdId =
+                _.last(_.last(firstSplitSubPath.commandStates).getCommands()).getId();
+              let csIdx = -1;
+              let splitIdx = -1;
+              for (csIdx = 0; csIdx < p.commandStates.length; csIdx++) {
+                const cs = p.commandStates[csIdx];
+                const csIds = cs.getCommands().map((_, idx) => cs.getIdAtIndex(idx));
+                splitIdx = csIds.indexOf(splitCmdId);
+                if (splitIdx >= 0) {
+                  break;
+                }
+              }
+              const unsplitCs = p.commandStates[csIdx].mutate().unsplitAtIndex(splitIdx).build();
               updatedParentNode =
                 p.mutate()
                   .setSplitSubPaths([])
                   .setIsUnsplittable(level !== 0)
+                  .setCommandState(unsplitCs, csIdx)
                   .build();
               return;
             }

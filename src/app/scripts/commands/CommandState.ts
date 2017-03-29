@@ -37,10 +37,6 @@ export class CommandState {
     private readonly maxT = 1,
   ) { }
 
-  getId() {
-    return this.backingCommand.getId();
-  }
-
   getBackingCommand() {
     return this.backingCommand;
   }
