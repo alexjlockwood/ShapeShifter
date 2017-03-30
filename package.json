@@ -45,8 +45,6 @@
     "sax": "~1.2.2",
     "stable": "^0.1.5",
     "tinycolor2": "^1.4.1",
-    "ts-helpers": "^1.1.2",
-    "typescript": "^2.2.2",
     "whet.extend": "~0.9.9",
     "zone.js": "^0.8.0"
   },
@@ -55,7 +53,7 @@
     "@angular/compiler-cli": "^4.0.0",
     "@types/es6-promise": "0.0.32",
     "@types/hammerjs": "^2.0.34",
-    "@types/jasmine": "2.5.46",
+    "@types/jasmine": "2.5.47",
     "@types/jquery": "^2.0.41",
     "@types/jszip": "0.0.32",
     "@types/lodash": "^4.14.55",
@@ -77,7 +75,7 @@
     "protractor": "~5.1.1",
     "sass-lint": "^1.10.2",
     "ts-node": "~3.0.0",
-    "tslint": "~4.5.1",
+    "tslint": "~5.0.0",
     "typescript": "~2.2.1",
     "webdriver-manager": "12.0.4"
   }
