@@ -463,8 +463,8 @@ export class PathMutator {
   private findCommandStateInfo(subIdx: number, cmdIdx: number) {
     const spsIdx = this.subPathOrdering[subIdx];
     const sps = this.findSubPathState(spsIdx);
-    const subPathCms = sps.commandStates;
-    const numCommandsInSubPath = _.sum(subPathCms.map(cm => cm.getCommands().length));
+    const subPathCss = sps.commandStates;
+    const numCommandsInSubPath = _.sum(subPathCss.map(cm => cm.getCommands().length));
     if (cmdIdx && sps.isReversed) {
       cmdIdx = numCommandsInSubPath - cmdIdx;
     }
@@ -476,7 +476,7 @@ export class PathMutator {
     }
     let counter = 0;
     let csIdx = 0;
-    for (const targetCs of subPathCms) {
+    for (const targetCs of subPathCss) {
       if (counter + targetCs.getCommands().length > cmdIdx) {
         return { targetCs, spsIdx, csIdx, splitIdx: cmdIdx - counter };
       }
@@ -675,16 +675,16 @@ function reverseAndShiftCommands(subPathState: SubPathState) {
 }
 
 function reverseCommands(subPathState: SubPathState) {
-  const subPathCms = subPathState.commandStates;
+  const subPathCss = subPathState.commandStates;
   const hasOneCmd =
-    subPathCms.length === 1 && subPathCms[0].getCommands().length === 1;
+    subPathCss.length === 1 && subPathCss[0].getCommands().length === 1;
   if (hasOneCmd || !subPathState.isReversed) {
     // Nothing to do in these two cases.
-    return _.flatMap(subPathCms, cm => cm.getCommands() as Command[]);
+    return _.flatMap(subPathCss, cm => cm.getCommands() as Command[]);
   }
 
   // Extract the commands from our command mutation map.
-  const cmds = _.flatMap(subPathCms, cm => {
+  const cmds = _.flatMap(subPathCss, cm => {
     // Consider a segment A ---- B ---- C with AB split and
     // BC non-split. When reversed, we want the user to see
     // C ---- B ---- A w/ CB split and BA non-split.
