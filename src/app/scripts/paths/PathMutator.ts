@@ -11,7 +11,7 @@ import {
 } from './SubPathState';
 
 /**
- * A builder class for creating new mutated Path objects.
+ * A builder class for creating mutated Path objects.
  */
 export class PathMutator {
   // A tree of sub path state objects, including collapsing sub paths.
@@ -86,7 +86,6 @@ export class PathMutator {
       this.getUpdatedShiftOffsetsAfterSplit(spsIdx, csIdx, ts.length);
     const sps = this.findSubPathState(spsIdx);
     if (sps.isReversed()) {
-      // TODO: use minT/maxT?
       ts = ts.map(t => 1 - t);
     }
     this.setSubPathState(

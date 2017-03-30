@@ -85,6 +85,120 @@ describe('Path', () => {
     }
   });
 
+
+  type PathOp = 'RV' | 'SB' | 'SF' | 'S' | 'SIH' | 'US' | 'CV' | 'UCV' | 'RT' | 'M'
+    | 'AC' | 'DC' | 'SSSP' | 'SFSP' | 'USSSP' | 'USFSP' | 'T';
+
+  function mutatePath(pathString: string, pathOpsString: string) {
+    const A = pathOpsString.split(' ');
+    const mutator = newPath(pathString).mutate();
+    for (let i = 0; i < A.length; i++) {
+      const op = A[i] as PathOp;
+      switch (op) {
+        case 'RV': // Reverse.
+          mutator.reverseSubPath(+A[i + 1]);
+          i += 1;
+          break;
+        case 'SB': // Shift back.
+          mutator.shiftSubPathBack(+A[i + 1]);
+          i += 1;
+          break;
+        case 'SF': // Shift forward.
+          mutator.shiftSubPathForward(+A[i + 1]);
+          i += 1;
+          break;
+        case 'S': // Split.
+          const subIdx = +A[i + 1];
+          const cmdIdx = +A[i + 2];
+          const args = [+A[i + 3]];
+          i += 3;
+          while (!isNaN(+A[i + 1]) && i < A.length) {
+            args.push(+A[i + 1]);
+            i++;
+          }
+          mutator.splitCommand(subIdx, cmdIdx, ...args);
+          break;
+        case 'SIH': // Split in half.
+          mutator.splitCommandInHalf(+A[i + 1], +A[i + 2]);
+          i += 2;
+          break;
+        case 'US': // Unsplit.
+          mutator.unsplitCommand(+A[i + 1], +A[i + 2]);
+          i += 2;
+          break;
+        case 'CV': // Convert.
+          mutator.convertCommand(+A[i + 1], +A[i + 2], A[i + 3] as SvgChar);
+          i += 3;
+          break;
+        case 'UCV': // Unconvert.
+          mutator.unconvertSubPath(+A[i + 1]);
+          i += 1;
+          break;
+        case 'RT': // Revert.
+          mutator.revert();
+          break;
+        case 'M': // Move subpath.
+          mutator.moveSubPath(+A[i + 1], +A[i + 2]);
+          i += 2;
+          break;
+        case 'AC': // Add collapsing sub path.
+          mutator.addCollapsingSubPath(new Point(+A[i + 1], +A[i + 2]), +A[i + 3]);
+          i += 3;
+          break;
+        case 'DC': // Delete collapsing sub paths.
+          mutator.deleteCollapsingSubPaths();
+          break;
+        case 'SSSP': // Split stroked sub path.
+          mutator.splitStrokedSubPath(+A[i + 1], +A[i + 2]);
+          i += 2;
+          break;
+        case 'SFSP': // Split filled sub path.
+          mutator.splitFilledSubPath(+A[i + 1], +A[i + 2], +A[i + 3]);
+          i += 3;
+          break;
+        case 'USSSP': // Unsplit stroked sub path.
+          mutator.unsplitStrokedSubPath(+A[i + 1]);
+          i += 1;
+          break;
+        case 'USFSP': // Unsplit stroked sub path.
+          mutator.unsplitStrokedSubPath(+A[i + 1]);
+          i += 1;
+          break;
+        case 'T': // Transform.
+          const isTransformOpFn = (token: string) => {
+            token = (token || '').toLowerCase();
+            return new Set(['scale', 'rotate', 'translate']).has(token);
+          };
+          while (isTransformOpFn(A[i + 1])) {
+            const transformOp = A[i + 1];
+            let matrix: Matrix;
+            switch (transformOp) {
+              case 'scale':
+                matrix = Matrix.fromScaling(+A[i + 2], +A[i + 3]);
+                i += 3;
+                break;
+              case 'rotate':
+                matrix = Matrix.fromRotation(+A[i + 2]);
+                i += 2;
+                break;
+              case 'translate':
+                matrix = Matrix.fromTranslation(+A[i + 2], +A[i + 3]);
+                i += 3;
+                break;
+
+              default:
+                throw new Error('Invalid transform op: ' + transformOp);
+            }
+            mutator.addTransforms([matrix]);
+          }
+          break;
+        default:
+          throw new Error('Invalid path op: ' + op);
+      }
+    }
+    return mutator.build();
+  }
+
   describe('mutating Path objects', () => {
     it('command IDs persist correctly after mutations', () => {
       const totalIds = new Set();
@@ -119,119 +233,6 @@ describe('Path', () => {
       path = newPath('M 0 0 L 0 0 L 0 0 L 0 0').mutate().reverseSubPath(0).build();
       extractPathIdsFn(path, 4, 15);
     });
-
-    type PathOp = 'RV' | 'SB' | 'SF' | 'S' | 'SIH' | 'US' | 'CV' | 'UCV' | 'RT' | 'M'
-      | 'AC' | 'DC' | 'SSSP' | 'SFSP' | 'USSSP' | 'USFSP' | 'T';
-
-    function mutatePath(pathString: string, pathOpsString: string) {
-      const A = pathOpsString.split(' ');
-      const mutator = newPath(pathString).mutate();
-      for (let i = 0; i < A.length; i++) {
-        const op = A[i] as PathOp;
-        switch (op) {
-          case 'RV': // Reverse.
-            mutator.reverseSubPath(+A[i + 1]);
-            i += 1;
-            break;
-          case 'SB': // Shift back.
-            mutator.shiftSubPathBack(+A[i + 1]);
-            i += 1;
-            break;
-          case 'SF': // Shift forward.
-            mutator.shiftSubPathForward(+A[i + 1]);
-            i += 1;
-            break;
-          case 'S': // Split.
-            const subIdx = +A[i + 1];
-            const cmdIdx = +A[i + 2];
-            const args = [+A[i + 3]];
-            i += 3;
-            while (!isNaN(+A[i + 1]) && i < A.length) {
-              args.push(+A[i + 1]);
-              i++;
-            }
-            mutator.splitCommand(subIdx, cmdIdx, ...args);
-            break;
-          case 'SIH': // Split in half.
-            mutator.splitCommandInHalf(+A[i + 1], +A[i + 2]);
-            i += 2;
-            break;
-          case 'US': // Unsplit.
-            mutator.unsplitCommand(+A[i + 1], +A[i + 2]);
-            i += 2;
-            break;
-          case 'CV': // Convert.
-            mutator.convertCommand(+A[i + 1], +A[i + 2], A[i + 3] as SvgChar);
-            i += 3;
-            break;
-          case 'UCV': // Unconvert.
-            mutator.unconvertSubPath(+A[i + 1]);
-            i += 1;
-            break;
-          case 'RT': // Revert.
-            mutator.revert();
-            break;
-          case 'M': // Move subpath.
-            mutator.moveSubPath(+A[i + 1], +A[i + 2]);
-            i += 2;
-            break;
-          case 'AC': // Add collapsing sub path.
-            mutator.addCollapsingSubPath(new Point(+A[i + 1], +A[i + 2]), +A[i + 3]);
-            i += 3;
-            break;
-          case 'DC': // Delete collapsing sub paths.
-            mutator.deleteCollapsingSubPaths();
-            break;
-          case 'SSSP': // Split stroked sub path.
-            mutator.splitStrokedSubPath(+A[i + 1], +A[i + 2]);
-            i += 2;
-            break;
-          case 'SFSP': // Split filled sub path.
-            mutator.splitFilledSubPath(+A[i + 1], +A[i + 2], +A[i + 3]);
-            i += 3;
-            break;
-          case 'USSSP': // Unsplit stroked sub path.
-            mutator.unsplitStrokedSubPath(+A[i + 1]);
-            i += 1;
-            break;
-          case 'USFSP': // Unsplit stroked sub path.
-            mutator.unsplitStrokedSubPath(+A[i + 1]);
-            i += 1;
-            break;
-          case 'T': // Transform.
-            const isTransformOpFn = (token: string) => {
-              token = (token || '').toLowerCase();
-              return new Set(['scale', 'rotate', 'translate']).has(token);
-            };
-            while (isTransformOpFn(A[i + 1])) {
-              const transformOp = A[i + 1];
-              let matrix: Matrix;
-              switch (transformOp) {
-                case 'scale':
-                  matrix = Matrix.fromScaling(+A[i + 2], +A[i + 3]);
-                  i += 3;
-                  break;
-                case 'rotate':
-                  matrix = Matrix.fromRotation(+A[i + 2]);
-                  i += 2;
-                  break;
-                case 'translate':
-                  matrix = Matrix.fromTranslation(+A[i + 2], +A[i + 3]);
-                  i += 3;
-                  break;
-
-                default:
-                  throw new Error('Invalid transform op: ' + transformOp);
-              }
-              mutator.addTransforms([matrix]);
-            }
-            break;
-          default:
-            throw new Error('Invalid path op: ' + op);
-        }
-      }
-      return mutator.build();
-    }
 
     function makeTest(actual: string, ops: string, expected: string) {
       return { actual, ops, expected };
@@ -749,16 +750,31 @@ describe('Path', () => {
 
   // TODO: add more projection tests for split subpaths
   describe('#project', () => {
-    const TESTS_PROJECT = [
-      [new Point(5, 5), 'M 0 0 L 10 10', { subIdx: 0, cmdIdx: 1, projection: { x: 5, y: 5, d: 0, t: 0.5 } }],
+    const TESTS_PROJECT: Array<{ point: Point, path: string | Path, proj: ProjectionOntoPath }> = [
+      {
+        point: new Point(5, 5),
+        path: 'M 0 0 L 10 10',
+        proj: { subIdx: 0, cmdIdx: 1, projection: { x: 5, y: 5, d: 0, t: 0.5 } },
+      },
+      {
+        point: new Point(24, 12),
+        path: mutatePath('M 8 5 L 8 19 L 19 12 Z', 'SIH 0 2 S 0 1 0.5 SFSP 0 1 4 US 1 2'),
+        proj: { subIdx: 0, cmdIdx: 2, projection: { x: 19, y: 12, d: 5, t: 1 } },
+      },
+      {
+        point: new Point(7, 16.9),
+        path: mutatePath('M 8 5 L 8 19 L 19 12 Z', 'S 0 1 0.5 SFSP 0 1 3'),
+        proj: { subIdx: 1, cmdIdx: 1, projection: { x: 8, y: 16.9, d: 1, t: 0.7 } },
+      },
     ];
 
     TESTS_PROJECT.forEach(a => {
-      const point = a[0] as Point;
-      const path = a[1] as string;
-      it(`projecting '(${point.x},${point.y})' onto '${path}' yields ${JSON.stringify(a[2])}`, () => {
-        const result = newPath(path).project(point);
-        expect(result).toEqual(a[2] as ProjectionOntoPath);
+      const point = a.point as Point;
+      const path = (typeof a.path === 'string') ? newPath(a.path) : a.path;
+      it(`projecting '(${point.x},${point.y})' onto '${path.getPathString()}' yields ${JSON.stringify(a.proj)}`, () => {
+        const result = path.project(point);
+        result.projection.t = _.round(result.projection.t, 10);
+        expect(result).toEqual(a.proj as ProjectionOntoPath);
       });
     });
   });

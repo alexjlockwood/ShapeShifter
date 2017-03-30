@@ -60,6 +60,13 @@ export class CommandState {
     if (!projectionResult) {
       return undefined;
     }
+    const projT = projectionResult.t;
+    if (projT < this.minT || this.maxT < projT) {
+      // If this happens, then the projection is being mapped to some other
+      // split command segment.
+      // TODO: recompute the projection so that it properly returned the correct value...
+      return undefined;
+    }
     // Count the number of t values that are less than the projection.
     const splitIdx = _.sum(this.mutations.map(m => m.t < projectionResult.t ? 1 : 0));
     const tempSplits = [this.minT, ...this.mutations.map(m => m.t)];

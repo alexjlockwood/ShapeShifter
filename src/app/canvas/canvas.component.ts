@@ -756,28 +756,47 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         const selectedCommandIndex = this.pointSelector.getSelectedCommandIndex();
         if (this.pointSelector.isDragging()) {
           if (this.pointSelector.isSelectedPointSplit()) {
-            const activeLayer =
-              this.vectorLayer.findLayer(this.activePathId) as PathLayer;
-
-            // Delete the old drag point from the path.
-            activeLayer.pathData =
-              activeLayer.pathData.mutate()
-                .unsplitCommand(selectedCommandIndex.subIdx, selectedCommandIndex.cmdIdx)
-                .build();
-
-            // Re-split the path at the projection point.
             const projOntoPath =
               calculateProjectionOntoPath(this.vectorLayer, this.activePathId, mouseUp);
-            const pathData = activeLayer.pathData.mutate()
-              .splitCommand(projOntoPath.subIdx, projOntoPath.cmdIdx, projOntoPath.projection.t)
-              .build();
-            activeLayer.pathData = pathData;
 
-            // Notify the global layer state service about the change and draw.
-            // Clear any existing selections and/or hovers as well.
-            this.hoverStateService.reset();
-            this.selectionStateService.reset();
-            this.layerStateService.updateActivePath(this.canvasType, activeLayer.pathData);
+            // TODO: Make this user experience better. There could be other subIdxs that we could use.
+            const { subIdx: newSubIdx, cmdIdx: newCmdIdx } = projOntoPath;
+            const { subIdx: oldSubIdx, cmdIdx: oldCmdIdx } = this.pointSelector.getSelectedCommandIndex();
+            if (newSubIdx === oldSubIdx) {
+              const startingPath = this.layerStateService.getActivePathLayer(this.canvasType).pathData;
+              let pathMutator = startingPath.mutate();
+
+              // Note that the order is important here, as it preserves the command indices.
+              if (newCmdIdx > oldCmdIdx) {
+                pathMutator.splitCommand(newSubIdx, newCmdIdx, projOntoPath.projection.t);
+                pathMutator.unsplitCommand(oldSubIdx, oldCmdIdx);
+              } else if (newCmdIdx < oldCmdIdx) {
+                pathMutator.unsplitCommand(oldSubIdx, oldCmdIdx);
+                pathMutator.splitCommand(newSubIdx, newCmdIdx, projOntoPath.projection.t);
+              } else {
+                // Unsplitting will cause the projection t value to change, so recalculate the
+                // projection before the split.
+                // TODO: improve this API somehow...
+                const tempPath = pathMutator.unsplitCommand(oldSubIdx, oldCmdIdx).build();
+                const tempProjOntoPath =
+                  calculateProjectionOntoPath(this.vectorLayer, this.activePathId, mouseUp);
+                if (oldSubIdx === tempProjOntoPath.subIdx) {
+                  pathMutator.splitCommand(
+                    tempProjOntoPath.subIdx, tempProjOntoPath.cmdIdx, tempProjOntoPath.projection.t);
+                } else {
+                  // If for some reason the projection subIdx changes after the unsplit, we have no
+                  // choice but to give up.
+                  // TODO: Make this user experience better. There could be other subIdxs that we could use.
+                  pathMutator = startingPath.mutate();
+                }
+              }
+
+              // Notify the global layer state service about the change and draw.
+              // Clear any existing selections and/or hovers as well.
+              this.hoverStateService.reset();
+              this.selectionStateService.reset();
+              this.layerStateService.updateActivePath(this.canvasType, pathMutator.build());
+            }
           }
         } else {
           // If we haven't started dragging a point, then we should select
