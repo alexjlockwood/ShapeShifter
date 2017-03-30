@@ -4,11 +4,7 @@ import { Calculator, newCalculator, Line } from './calculators';
 import { SvgChar, Command, ProjectionResult } from '.';
 
 /**
- * Contains additional information about each individual command so that we can
- * remember how they should be projected onto and split/unsplit/converted at runtime.
- * Paths are immutable, stateless objects that depend on this class to
- * remember their mutations. CommandState objects themselves are also immutable to ensure
- * that each Path maintains its own unique snapshot of its current mutation state.
+ * Container class that encapsulates a Command's underlying state.
  */
 export class CommandState {
 
@@ -23,7 +19,7 @@ export class CommandState {
     // The list of mutations describes how the initial backing command
     // has since been modified. Since the command state always holds a
     // reference to its initial backing command, these modifications
-    // are always reversible.
+    // can be reversed simply by removing mutations from the list.
     private readonly mutations: ReadonlyArray<Mutation> = [{
       id: backingCommand.getId(),
       t: 1,
@@ -33,7 +29,9 @@ export class CommandState {
     private readonly transforms: ReadonlyArray<Matrix> = [new Matrix()],
     // The calculator that will do all of the math-y stuff for us.
     private readonly calculator: Calculator = newCalculator(backingCommand),
+    // The lower bound T value (may be > 0 for split subpaths).
     private readonly minT = 0,
+    // The upper bound T value (may be < 1 for split subpaths).
     private readonly maxT = 1,
   ) { }
 
@@ -63,11 +61,7 @@ export class CommandState {
       return undefined;
     }
     // Count the number of t values that are less than the projection.
-    const splitIdx =
-      _.chain(this.mutations)
-        .map((mutation: Mutation) => mutation.t < projectionResult.t ? 1 : 0)
-        .sum()
-        .value();
+    const splitIdx = _.sum(this.mutations.map(m => m.t < projectionResult.t ? 1 : 0));
     const tempSplits = [this.minT, ...this.mutations.map(m => m.t)];
     const startSplit = tempSplits[splitIdx];
     const endSplit = tempSplits[splitIdx + 1];
@@ -78,17 +72,6 @@ export class CommandState {
       projectionResult,
       splitIdx,
     };
-  }
-
-  mutate() {
-    return new CommandStateMutator(
-      this.backingCommand,
-      this.mutations.slice(),
-      this.transforms.slice(),
-      this.calculator,
-      this.minT,
-      this.maxT,
-    );
   }
 
   fork(splitIdx: number) {
@@ -105,6 +88,17 @@ export class CommandState {
    */
   isSplitAtIndex(splitIdx: number) {
     return splitIdx !== this.mutations.length - 1;
+  }
+
+  mutate() {
+    return new CommandStateMutator(
+      this.backingCommand,
+      this.mutations.slice(),
+      this.transforms.slice(),
+      this.calculator,
+      this.minT,
+      this.maxT,
+    );
   }
 }
 

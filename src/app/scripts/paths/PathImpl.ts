@@ -6,14 +6,14 @@ import { PathState } from './PathState';
 import { PathMutator } from './PathMutator';
 import * as PathParser from './PathParser';
 
-export function newPath(obj: string | Command[]): Path {
+export function newPath(obj: string | Command[] | PathState): Path {
   return new PathImpl(obj);
 }
 
 /**
  * Implementation of the Path interface.
  */
-export class PathImpl implements Path {
+class PathImpl implements Path {
   private readonly ps: PathState;
   private pathString: string;
   private poleOfInaccessibility: Point;

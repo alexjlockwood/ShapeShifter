@@ -1,7 +1,6 @@
 import * as _ from 'lodash';
-import { SvgChar, Command } from '.';
+import { SvgChar, Command, newPath } from '.';
 import { newCommand } from './CommandImpl';
-import { PathImpl } from './PathImpl';
 import { CommandState } from './CommandState';
 import { MathUtil, Matrix, Point } from '../common';
 import { PathState } from './PathState';
@@ -27,14 +26,6 @@ export class PathMutator {
     this.numCollapsingSubPaths = ps.numCollapsingSubPaths;
   }
 
-  private findSubPathState(spsIdx: number) {
-    return findSubPathState(this.subPathStateMap, spsIdx);
-  }
-
-  private setSubPathState(state: SubPathState, spsIdx: number) {
-    this.subPathStateMap = replaceSubPathStateLeaf(this.subPathStateMap, spsIdx, state);
-  }
-
   /**
    * Reverses the order of the points in the sub path at the specified index.
    */
@@ -50,7 +41,7 @@ export class PathMutator {
    */
   shiftSubPathBack(subIdx: number, numShifts = 1) {
     const spsIdx = this.subPathOrdering[subIdx];
-    return this.findSubPathState(spsIdx).isReversed
+    return this.findSubPathState(spsIdx).isReversed()
       ? this.shift(subIdx, (o, n) => (o + numShifts) % (n - 1))
       : this.shift(subIdx, (o, n) => MathUtil.floorMod(o - numShifts, n - 1));
   }
@@ -60,7 +51,7 @@ export class PathMutator {
    */
   shiftSubPathForward(subIdx: number, numShifts = 1) {
     const spsIdx = this.subPathOrdering[subIdx];
-    return this.findSubPathState(spsIdx).isReversed
+    return this.findSubPathState(spsIdx).isReversed()
       ? this.shift(subIdx, (o, n) => MathUtil.floorMod(o - numShifts, n - 1))
       : this.shift(subIdx, (o, n) => (o + numShifts) % (n - 1));
   }
@@ -69,14 +60,14 @@ export class PathMutator {
     const spsIdx = this.subPathOrdering[subIdx];
     const sps = this.findSubPathState(spsIdx);
     const numCommandsInSubPath =
-      _.sum(sps.commandStates.map(cm => cm.getCommands().length));
+      _.sum(sps.getCommandStates().map(cm => cm.getCommands().length));
     if (numCommandsInSubPath <= 1) {
       // TODO: also return here if the sub path is closed just to be safe?
       return this;
     }
     this.setSubPathState(
       sps.mutate()
-        .setShiftOffset(calcOffsetFn(sps.shiftOffset, numCommandsInSubPath))
+        .setShiftOffset(calcOffsetFn(sps.getShiftOffset(), numCommandsInSubPath))
         .build(),
       spsIdx);
     return this;
@@ -90,11 +81,11 @@ export class PathMutator {
       throw new Error('Must specify at least one t value');
     }
     const { targetCs, spsIdx, csIdx, splitIdx } =
-      this.findCommandStateInfo(subIdx, cmdIdx);
+      this.findReversedAndShiftedInternalIndices(subIdx, cmdIdx);
     const shiftOffset =
       this.getUpdatedShiftOffsetsAfterSplit(spsIdx, csIdx, ts.length);
     const sps = this.findSubPathState(spsIdx);
-    if (sps.isReversed) {
+    if (sps.isReversed()) {
       // TODO: use minT/maxT?
       ts = ts.map(t => 1 - t);
     }
@@ -112,7 +103,7 @@ export class PathMutator {
    */
   splitCommandInHalf(subIdx: number, cmdIdx: number) {
     const { targetCs, spsIdx, csIdx, splitIdx } =
-      this.findCommandStateInfo(subIdx, cmdIdx);
+      this.findReversedAndShiftedInternalIndices(subIdx, cmdIdx);
     const shiftOffset =
       this.getUpdatedShiftOffsetsAfterSplit(spsIdx, csIdx, 1);
     this.setSubPathState(
@@ -133,10 +124,10 @@ export class PathMutator {
   // complicated indexing and I don't think the user will ever need to do this anyway.
   private getUpdatedShiftOffsetsAfterSplit(spsIdx: number, csIdx: number, numSplits: number) {
     const sps = this.findSubPathState(spsIdx);
-    if (sps.shiftOffset && csIdx <= sps.shiftOffset) {
-      return sps.shiftOffset + numSplits;
+    if (sps.getShiftOffset() && csIdx <= sps.getShiftOffset()) {
+      return sps.getShiftOffset() + numSplits;
     }
-    return sps.shiftOffset;
+    return sps.getShiftOffset();
   }
 
   /**
@@ -144,8 +135,8 @@ export class PathMutator {
    */
   unsplitCommand(subIdx: number, cmdIdx: number) {
     const { targetCs, spsIdx, csIdx, splitIdx } =
-      this.findCommandStateInfo(subIdx, cmdIdx);
-    const isSubPathReversed = this.findSubPathState(spsIdx).isReversed;
+      this.findReversedAndShiftedInternalIndices(subIdx, cmdIdx);
+    const isSubPathReversed = this.findSubPathState(spsIdx).isReversed();
     this.setSubPathState(
       this.findSubPathState(spsIdx).mutate()
         .setCommandState(targetCs.mutate()
@@ -153,7 +144,7 @@ export class PathMutator {
           .build(), csIdx)
         .build(),
       spsIdx);
-    const shiftOffset = this.findSubPathState(spsIdx).shiftOffset;
+    const shiftOffset = this.findSubPathState(spsIdx).getShiftOffset();
     if (shiftOffset && csIdx <= shiftOffset) {
       // Subtract the shift offset by 1 to ensure that the unsplit operation
       // doesn't alter the positions of the path points.
@@ -171,7 +162,7 @@ export class PathMutator {
    */
   convertCommand(subIdx: number, cmdIdx: number, svgChar: SvgChar) {
     const { targetCs, spsIdx, csIdx, splitIdx } =
-      this.findCommandStateInfo(subIdx, cmdIdx);
+      this.findReversedAndShiftedInternalIndices(subIdx, cmdIdx);
     this.setSubPathState(
       this.findSubPathState(spsIdx).mutate()
         .setCommandState(targetCs.mutate()
@@ -189,7 +180,7 @@ export class PathMutator {
     const spsIdx = this.subPathOrdering[subIdx];
     const sps = this.findSubPathState(spsIdx);
     const commandStates =
-      sps.commandStates.map((cs, csIdx) => {
+      sps.getCommandStates().map((cs, csIdx) => {
         return csIdx === 0 ? cs : cs.mutate().unconvertSubpath().build();
       });
     this.setSubPathState(sps.mutate().setCommandStates(commandStates).build(), spsIdx);
@@ -216,7 +207,7 @@ export class PathMutator {
       const sps = subPathStates[spsIdx];
       this.setSubPathState(
         sps.mutate()
-          .setCommandStates(sps.commandStates.map(cs => applyFn(cs)))
+          .setCommandStates(sps.getCommandStates().map(cs => applyFn(cs)))
           .build(),
         spsIdx);
     }
@@ -238,8 +229,8 @@ export class PathMutator {
   splitStrokedSubPath(subIdx: number, cmdIdx: number) {
     const spsIdx = this.subPathOrdering[subIdx];
     const sps = this.findSubPathState(spsIdx);
-    const css = shiftAndReverseCommandStates(sps.commandStates, sps.isReversed, sps.shiftOffset);
-    const { csIdx, splitIdx } = this.findCommandStateIndices(css, cmdIdx);
+    const css = shiftAndReverseCommandStates(sps.getCommandStates(), sps.isReversed(), sps.getShiftOffset());
+    const { csIdx, splitIdx } = this.findInternalIndices(css, cmdIdx);
     const startCommandStates: CommandState[] = [];
     const endCommandStates: CommandState[] = [];
     for (let i = 0; i < css.length; i++) {
@@ -252,7 +243,7 @@ export class PathMutator {
         const { left, right } = css[i].fork(splitIdx);
         startCommandStates.push(left);
         let endMoveCs = new CommandState(newCommand('M', [splitPoint, splitPoint]));
-        if (sps.isReversed) {
+        if (sps.isReversed()) {
           endMoveCs = endMoveCs.mutate().reverse().build();
         }
         endCommandStates.push(endMoveCs);
@@ -278,13 +269,13 @@ export class PathMutator {
   unsplitStrokedSubPath(subIdx: number) {
     const spsIdx = this.subPathOrdering[subIdx];
     const parent = findSubPathStateParent(this.subPathStateMap, spsIdx);
-    const firstSplitSubPath = parent.splitSubPaths[0];
+    const firstSplitSubPath = parent.getSplitSubPaths()[0];
     const splitCmdId =
-      _.last(_.last(firstSplitSubPath.commandStates).getCommands()).getId();
+      _.last(_.last(firstSplitSubPath.getCommandStates()).getCommands()).getId();
     let csIdx = -1;
     let splitIdx = -1;
-    for (csIdx = 0; csIdx < parent.commandStates.length; csIdx++) {
-      const cs = parent.commandStates[csIdx];
+    for (csIdx = 0; csIdx < parent.getCommandStates().length; csIdx++) {
+      const cs = parent.getCommandStates()[csIdx];
       const csIds = cs.getCommands().map((_, idx) => cs.getIdAtIndex(idx));
       splitIdx = csIds.indexOf(splitCmdId);
       if (splitIdx >= 0) {
@@ -292,12 +283,13 @@ export class PathMutator {
       }
     }
     const parentMutator = parent.mutate().setSplitSubPaths([]);
-    if (parent.commandStates[csIdx].isSplitAtIndex(splitIdx)) {
-      const unsplitCs = parent.commandStates[csIdx].mutate().unsplitAtIndex(splitIdx).build();
+    if (parent.getCommandStates()[csIdx].isSplitAtIndex(splitIdx)) {
+      const unsplitCs = parent.getCommandStates()[csIdx].mutate().unsplitAtIndex(splitIdx).build();
       parentMutator.setCommandState(unsplitCs, csIdx);
     }
     const updatedParentNode = parentMutator.build();
-    this.subPathStateMap = replaceSubPathStateParent(this.subPathStateMap, spsIdx, updatedParentNode);
+    this.subPathStateMap =
+      replaceSubPathStateParent(this.subPathStateMap, spsIdx, updatedParentNode);
     this.subPathOrdering.splice(subIdx, 1);
     for (let i = 0; i < this.subPathOrdering.length; i++) {
       if (spsIdx < this.subPathOrdering[i]) {
@@ -313,9 +305,9 @@ export class PathMutator {
   splitFilledSubPath(subIdx: number, startCmdIdx: number, endCmdIdx: number) {
     const spsIdx = this.subPathOrdering[subIdx];
     const sps = this.findSubPathState(spsIdx);
-    const css = shiftAndReverseCommandStates(sps.commandStates, sps.isReversed, sps.shiftOffset);
-    let start = this.findCommandStateIndices(css, startCmdIdx);
-    let end = this.findCommandStateIndices(css, endCmdIdx);
+    const css = shiftAndReverseCommandStates(sps.getCommandStates(), sps.isReversed(), sps.getShiftOffset());
+    let start = this.findInternalIndices(css, startCmdIdx);
+    let end = this.findInternalIndices(css, endCmdIdx);
     if (start.csIdx > end.csIdx
       || (start.csIdx === end.csIdx && start.splitIdx > end.csIdx)) {
       const temp = start;
@@ -451,47 +443,47 @@ export class PathMutator {
    * Builds a new mutated path.
    */
   build() {
-    return new PathImpl(
+    return newPath(
       new PathState(
-        _.flatMap(this.buildOrderedSubPathCommands(), cmds => cmds),
+        _.flatten(this.buildOrderedSubPathCommands()),
         this.subPathStateMap,
         this.subPathOrdering,
         this.numCollapsingSubPaths,
       ));
   }
 
-  private findCommandStateInfo(subIdx: number, cmdIdx: number) {
+  private findSubPathState(spsIdx: number) {
+    return findSubPathState(this.subPathStateMap, spsIdx);
+  }
+
+  private setSubPathState(state: SubPathState, spsIdx: number) {
+    this.subPathStateMap = replaceSubPathStateLeaf(this.subPathStateMap, spsIdx, state);
+  }
+
+  private findReversedAndShiftedInternalIndices(subIdx: number, cmdIdx: number) {
     const spsIdx = this.subPathOrdering[subIdx];
     const sps = this.findSubPathState(spsIdx);
-    const subPathCss = sps.commandStates;
-    const numCommandsInSubPath = _.sum(subPathCss.map(cm => cm.getCommands().length));
-    if (cmdIdx && sps.isReversed) {
+    const css = sps.getCommandStates();
+    const numCommandsInSubPath = _.sum(css.map(cm => cm.getCommands().length));
+    if (cmdIdx && sps.isReversed()) {
       cmdIdx = numCommandsInSubPath - cmdIdx;
     }
-    cmdIdx += sps.shiftOffset;
+    cmdIdx += sps.getShiftOffset();
     if (cmdIdx >= numCommandsInSubPath) {
       // Note that subtracting (numCommandsInSubPath - 1) is intentional here
       // (as opposed to subtracting numCommandsInSubPath).
       cmdIdx -= numCommandsInSubPath - 1;
     }
-    let counter = 0;
-    let csIdx = 0;
-    for (const targetCs of subPathCss) {
-      if (counter + targetCs.getCommands().length > cmdIdx) {
-        return { targetCs, spsIdx, csIdx, splitIdx: cmdIdx - counter };
-      }
-      counter += targetCs.getCommands().length;
-      csIdx++;
-    }
-    throw new Error('Error retrieving command mutation');
+    const { targetCs, csIdx, splitIdx } = this.findInternalIndices(css, cmdIdx);
+    return { targetCs, spsIdx, csIdx, splitIdx };
   }
 
-  private findCommandStateIndices(css: ReadonlyArray<CommandState>, cmdIdx: number) {
+  private findInternalIndices(css: ReadonlyArray<CommandState>, cmdIdx: number) {
     let counter = 0;
     let csIdx = 0;
     for (const targetCs of css) {
       if (counter + targetCs.getCommands().length > cmdIdx) {
-        return { csIdx, splitIdx: cmdIdx - counter };
+        return { targetCs, csIdx, splitIdx: cmdIdx - counter };
       }
       counter += targetCs.getCommands().length;
       csIdx++;
@@ -522,11 +514,11 @@ function findSubPathStateParent(map: ReadonlyArray<SubPathState>, spsIdx: number
   const subPathStateParents: SubPathState[] = [];
   (function recurseFn(currentLevel: ReadonlyArray<SubPathState>, parent?: SubPathState) {
     currentLevel.forEach(state => {
-      if (!state.splitSubPaths.length) {
+      if (!state.getSplitSubPaths().length) {
         subPathStateParents.push(parent);
         return;
       }
-      recurseFn(state.splitSubPaths, state);
+      recurseFn(state.getSplitSubPaths(), state);
     });
   })(map);
   return subPathStateParents[spsIdx];
@@ -564,7 +556,7 @@ function replaceSubPathStateInternal(
         states[i] = replacement;
         return states;
       }
-      const recurseStates = replaceParentFn(currentState.splitSubPaths.slice());
+      const recurseStates = replaceParentFn(currentState.getSplitSubPaths().slice());
       if (recurseStates) {
         states[i] =
           currentState.mutate()
@@ -667,10 +659,10 @@ function reverseAndShiftCommands(subPathState: SubPathState) {
 }
 
 function reverseCommands(subPathState: SubPathState) {
-  const subPathCss = subPathState.commandStates;
+  const subPathCss = subPathState.getCommandStates();
   const hasOneCmd =
     subPathCss.length === 1 && subPathCss[0].getCommands().length === 1;
-  if (hasOneCmd || !subPathState.isReversed) {
+  if (hasOneCmd || !subPathState.isReversed()) {
     // Nothing to do in these two cases.
     return _.flatMap(subPathCss, cm => cm.getCommands() as Command[]);
   }
@@ -714,7 +706,7 @@ function reverseCommands(subPathState: SubPathState) {
 }
 
 function shiftCommands(subPathState: SubPathState, cmds: Command[]) {
-  let shiftOffset = subPathState.shiftOffset;
+  let shiftOffset = subPathState.getShiftOffset();
   if (!shiftOffset
     || cmds.length === 1
     || !_.first(cmds).getEnd().equals(_.last(cmds).getEnd())) {
@@ -724,7 +716,7 @@ function shiftCommands(subPathState: SubPathState, cmds: Command[]) {
   }
 
   const numCommands = cmds.length;
-  if (subPathState.isReversed) {
+  if (subPathState.isReversed()) {
     shiftOffset *= -1;
     shiftOffset += numCommands - 1;
   }

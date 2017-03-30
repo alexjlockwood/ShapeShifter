@@ -8,8 +8,6 @@ import * as polylabel from 'polylabel';
 import {
   SubPathState,
   findSubPathState,
-  isSubPathSplit,
-  isSubPathUnsplittable,
 } from './SubPathState';
 
 /**
@@ -49,11 +47,11 @@ export class PathState {
       const isSplit = isSubPathSplit(this.subPathStateMap, spsIdx);
       const isUnsplittable = isSubPathUnsplittable(this.subPathStateMap, spsIdx);
       return subPath.mutate()
-        .setId(sps.id)
+        .setId(sps.getId())
         .setCommands(cmds)
         .setIsCollapsing(isCollapsing)
-        .setIsReversed(sps.isReversed)
-        .setShiftOffset(sps.shiftOffset)
+        .setIsReversed(sps.isReversed())
+        .setShiftOffset(sps.getShiftOffset())
         .setIsSplit(isSplit)
         .setIsUnsplittable(isUnsplittable)
         .build();
@@ -68,18 +66,18 @@ export class PathState {
   private findCommandStateId(subIdx: number, cmdIdx: number) {
     const sps = this.findSubPathState(this.subPathOrdering[subIdx]);
     const numCommandsInSubPath =
-      _.sum(sps.commandStates.map(cs => cs.getCommands().length));
-    if (cmdIdx && sps.isReversed) {
+      _.sum(sps.getCommandStates().map(cs => cs.getCommands().length));
+    if (cmdIdx && sps.isReversed()) {
       cmdIdx = numCommandsInSubPath - cmdIdx;
     }
-    cmdIdx += sps.shiftOffset;
+    cmdIdx += sps.getShiftOffset();
     if (cmdIdx >= numCommandsInSubPath) {
       // Note that subtracting numCommandsInSubPath is intentional here
       // (as opposed to subtracting numCommandsInSubPath - 1).
       cmdIdx -= numCommandsInSubPath;
     }
     let counter = 0;
-    for (const cs of sps.commandStates) {
+    for (const cs of sps.getCommandStates()) {
       if (counter + cs.getCommands().length > cmdIdx) {
         return cs.getIdAtIndex(cmdIdx - counter);
       }
@@ -92,7 +90,7 @@ export class PathState {
     // Note that we only return the length of the first sub path due to
     // https://code.google.com/p/android/issues/detail?id=172547
     const sps = this.findSubPathState(this.subPathOrdering[0]);
-    return _.sum(sps.commandStates.map(cs => cs.getPathLength()));
+    return _.sum(sps.getCommandStates().map(cs => cs.getPathLength()));
   }
 
   project(point: Point): ProjectionOntoPath | undefined {
@@ -102,10 +100,10 @@ export class PathState {
         .map((subPath, subIdx) => {
           const spsIdx = this.subPathOrdering[subIdx];
           const sps = this.findSubPathState(spsIdx);
-          return sps.commandStates
+          return sps.getCommandStates()
             .map((cs, csIdx) => {
               const projection = cs.project(point);
-              if (projection && sps.isReversed) {
+              if (projection && sps.isReversed()) {
                 const t = projection.projectionResult.t;
                 projection.projectionResult.t = 1 - t;
               }
@@ -197,7 +195,7 @@ export class PathState {
     _.chain(this.subPaths as SubPath[])
       .filter(subPath => !subPath.isCollapsing())
       .map((subPath, subIdx) => {
-        return this.findSubPathState(this.toSpsIdx(subIdx)).commandStates;
+        return this.findSubPathState(this.toSpsIdx(subIdx)).getCommandStates();
       })
       .forEachRight((css, spsIdx) => {
         const firstCmd = css[0].getCommands()[0];
@@ -276,7 +274,7 @@ export class PathState {
 
   private toCmdIdx(spsIdx: number, csIdx: number, splitIdx: number) {
     const sps = this.findSubPathState(spsIdx);
-    const commandStates = sps.commandStates;
+    const commandStates = sps.getCommandStates();
     const numCmds =
       _.chain(commandStates)
         .map((cs: CommandState, i) => cs.getCommands().length)
@@ -287,8 +285,8 @@ export class PathState {
         .map((cs: CommandState, i) => i < csIdx ? cs.getCommands().length : 0)
         .sum()
         .value();
-    let shiftOffset = sps.shiftOffset;
-    if (sps.isReversed) {
+    let shiftOffset = sps.getShiftOffset();
+    if (sps.isReversed()) {
       cmdIdx = numCmds - cmdIdx;
       shiftOffset *= -1;
       shiftOffset += numCmds - 1;
@@ -327,4 +325,26 @@ function createBoundingBox(...css: CommandState[]) {
 
   css.forEach(cs => expandBoundsForCommandMutationFn(cs));
   return bounds;
+}
+
+function isSubPathSplit(map: ReadonlyArray<SubPathState>, spsIdx: number) {
+  return !!findSubPathState(map, spsIdx).getSplitSubPaths().length;
+}
+
+function isSubPathUnsplittable(map: ReadonlyArray<SubPathState>, spsIdx: number) {
+  // Construct an array of parent nodes (one per leaf... meaning there will be duplicates).
+  const subPathStatesParents: SubPathState[] = [];
+  (function recurseFn(currentLevel: ReadonlyArray<SubPathState>, parent?: SubPathState) {
+    currentLevel.forEach(state => {
+      if (!state.getSplitSubPaths().length) {
+        subPathStatesParents.push(parent);
+        return;
+      }
+      recurseFn(state.getSplitSubPaths(), state);
+    });
+  })(map);
+  const parent = subPathStatesParents[spsIdx];
+  return parent
+    && parent.getSplitSubPaths().length
+    && parent.getSplitSubPaths().every(s => !s.getSplitSubPaths().length);
 }
