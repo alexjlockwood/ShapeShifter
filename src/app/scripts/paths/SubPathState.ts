@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import { CommandState } from './pathstate';
+import { CommandState } from './CommandState';
 
 export class SubPathState {
 

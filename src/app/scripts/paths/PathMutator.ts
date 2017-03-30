@@ -2,7 +2,7 @@ import * as _ from 'lodash';
 import { SvgChar, Command } from '.';
 import { newCommand } from './CommandImpl';
 import { PathImpl } from './PathImpl';
-import { CommandState } from './pathstate';
+import { CommandState } from './CommandState';
 import { MathUtil, Matrix, Point } from '../common';
 import { PathState } from './PathState';
 import {
