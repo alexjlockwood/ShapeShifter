@@ -121,7 +121,7 @@ describe('Path', () => {
     });
 
     type PathOp = 'RV' | 'SB' | 'SF' | 'S' | 'SIH' | 'US' | 'CV' | 'UCV' | 'RT' | 'M'
-      | 'AC' | 'DC' | 'SSSP' | 'SFSP' | 'USSP' | 'T';
+      | 'AC' | 'DC' | 'SSSP' | 'SFSP' | 'USSSP' | 'USFSP' | 'T';
 
     function mutatePath(pathString: string, pathOpsString: string) {
       const A = pathOpsString.split(' ');
@@ -190,7 +190,11 @@ describe('Path', () => {
             mutator.splitFilledSubPath(+A[i + 1], +A[i + 2], +A[i + 3]);
             i += 3;
             break;
-          case 'USSP': // Unsplit sub path.
+          case 'USSSP': // Unsplit stroked sub path.
+            mutator.unsplitStrokedSubPath(+A[i + 1]);
+            i += 1;
+            break;
+          case 'USFSP': // Unsplit stroked sub path.
             mutator.unsplitStrokedSubPath(+A[i + 1]);
             i += 1;
             break;
@@ -450,10 +454,6 @@ describe('Path', () => {
         'M 0 0 L 3 3',
       ),
       // Transform paths.
-      // TODO: test multiple transformations at a time
-      // TODO: test that reversals and stuff still work
-      // TODO: test that splits and conversions and stuff still work
-      // TODO: test that reversals/shifts/splits/etc. are reverted properly, not just transforms
       makeTest(
         'M-4-8h8v16h-8v-16',
         'T translate 4 8',
@@ -510,7 +510,7 @@ describe('Path', () => {
         'AC 3 4 2',
         'M 1 1 L 2 2 L 3 3 M 10 10 L 20 20 L 30 30 M 3 4 L 3 4',
       ),
-      // Split stroked sub paths.
+      // Split/unsplit stroked sub paths.
       makeTest(
         'M 0 0 L 1 1 L 2 2 L 3 3 L 4 4 L 5 5 M 0 0 L 10 10 L 20 20 L 30 30 L 40 40 L 50 50',
         'SSSP 0 1',
@@ -518,7 +518,7 @@ describe('Path', () => {
       ),
       makeTest(
         'M 0 0 L 1 1 L 2 2 L 3 3 L 4 4 L 5 5 M 0 0 L 10 10 L 20 20 L 30 30 L 40 40 L 50 50',
-        'SSSP 0 1 USSP 0',
+        'SSSP 0 1 USSSP 0',
         'M 0 0 L 1 1 L 2 2 L 3 3 L 4 4 L 5 5 M 0 0 L 10 10 L 20 20 L 30 30 L 40 40 L 50 50',
       ),
       makeTest(
@@ -528,12 +528,12 @@ describe('Path', () => {
       ),
       makeTest(
         'M 0 0 L 1 1 L 2 2 L 3 3 L 4 4 L 5 5 M 0 0 L 10 10 L 20 20 L 30 30 L 40 40 L 50 50',
-        'SSSP 0 1 M 0 1 USSP 1',
+        'SSSP 0 1 M 0 1 USSSP 1',
         'M 0 0 L 1 1 L 2 2 L 3 3 L 4 4 L 5 5 M 0 0 L 10 10 L 20 20 L 30 30 L 40 40 L 50 50',
       ),
       makeTest(
         'M 0 0 L 1 1 L 2 2 L 3 3 L 4 4 L 5 5 M 0 0 L 10 10 L 20 20 L 30 30 L 40 40 L 50 50',
-        'SSSP 0 1 USSP 1',
+        'SSSP 0 1 USSSP 1',
         'M 0 0 L 1 1 L 2 2 L 3 3 L 4 4 L 5 5 M 0 0 L 10 10 L 20 20 L 30 30 L 40 40 L 50 50',
       ),
       makeTest(
@@ -588,12 +588,12 @@ describe('Path', () => {
       ),
       makeTest(
         'M 0 0 L 10 10 L 20 20 L 30 30',
-        'RV 0 SSSP 0 2 USSP 0',
+        'RV 0 SSSP 0 2 USSSP 0',
         'M 30 30 L 20 20 L 10 10 L 0 0',
       ),
       makeTest(
         'M 0 0 L 10 10 L 20 20 L 30 30',
-        'RV 0 SSSP 0 2 USSP 1',
+        'RV 0 SSSP 0 2 USSSP 1',
         'M 30 30 L 20 20 L 10 10 L 0 0',
       ),
       makeTest(
@@ -642,7 +642,7 @@ describe('Path', () => {
         'RV 1 SF 1 SIH 1 2 SSSP 1 2',
         'M 1 1 L 2 1 L 2 2 M 10 5 L 10 10 L 7.5 10 M 7.5 10 L 5 10 L 5 5 L 10 5',
       ),
-      // Split filled sub paths.
+      // Split/unsplit filled sub paths.
       makeTest(
         'M 8 5 L 8 19 L 19 12 L 8 5',
         'SIH 0 1 SFSP 0 1 3',
@@ -678,13 +678,37 @@ describe('Path', () => {
         'SIH 0 1 S 0 3 1 SFSP 0 1 3',
         'M 8 5 L 8 12 L 19 12 L 19 12 L 8 5 M 8 12 L 8 19 L 19 12 L 8 12',
       ),
-      // TODO: add tests for shift offsets
-      // TODO: add more tests for compound paths
       makeTest(
         'M 8 5 L 8 19 L 19 12 L 8 5',
         'SIH 0 1 S 0 3 1 SFSP 0 1 3',
         'M 8 5 L 8 12 L 19 12 L 19 12 L 8 5 M 8 12 L 8 19 L 19 12 L 8 12',
       ),
+      makeTest(
+        'M0 0L0 0v10h10v-10h-10',
+        'SFSP 0 1 3',
+        'M 0 0 L 0 0 L 10 10 L 10 0 L 0 0 M 0 0 L 0 10 L 10 10 L 0 0',
+      ),
+      makeTest(
+        'M0 0L0 0v10h10v-10h-10',
+        'SFSP 0 1 3 USFSP 0',
+        'M0 0L0 0v10h10v-10h-10',
+      ),
+      makeTest(
+        'M0 0L0 0v10h10v-10h-10',
+        'SFSP 0 1 3 SF 1 RV 1 USFSP 0',
+        'M0 0L0 0v10h10v-10h-10',
+      ),
+      makeTest(
+        'M0 0L0 0v10h10v-10h-10',
+        'SFSP 0 1 3 RV 0 SF 1 SF 1 USFSP 1',
+        'M0 0L0 0v10h10v-10h-10',
+      ),
+      // TODO: add tests for shift offsets w/ split sub paths
+      // TODO: add more tests for compound paths w/ split sub paths
+      // TODO: better tests for multiple transforms at a time
+      // TODO: test that reversals and shifts still work after transforms
+      // TODO: test that splits and conversions and stuff still work after transforms
+      // TODO: test that reversals/shifts/splits/etc. are reverted properly, not just transforms
     ];
 
     for (const test of MUTATION_TESTS) {
