@@ -838,7 +838,185 @@ describe('SVGO plugins', () => {
 `);
     });
   });
+
+  describe('convertStyleToAttrs', () => {
+    it('#1', () => {
+      runTest(convertStyleToAttrs, `
+<svg xmlns="http://www.w3.org/2000/svg">
+    <g style="fill:#000;"/>
+    <g style="font-family:'Helvetica Neue'"/>
+    <g style="    fill:#000; color: #fff  ;  "/>
+</svg>
+`, `
+<svg xmlns="http://www.w3.org/2000/svg">
+    <g fill="#000"/>
+    <g font-family="Helvetica Neue"/>
+    <g fill="#000" color="#fff"/>
+</svg>
+`);
+    });
+    it('#2', () => {
+      runTest(convertStyleToAttrs, `
+<svg xmlns="http://www.w3.org/2000/svg">
+    <g style="    fill:#000; c\olor: #fff; /**/illegal-'declaration/*'; -webkit-blah: 123  ; -webkit-trolo: 'lolo'; illegal2*/"/>
+    <g style="font:15px serif"/>
+</svg>
+`, `
+<svg xmlns="http://www.w3.org/2000/svg">
+    <g style="-webkit-blah:123;-webkit-trolo:'lolo'" fill="#000" color="#fff"/>
+    <g style="font:15px serif"/>
+</svg>
+`);
+    });
+    it('#3', () => {
+      runTest(convertStyleToAttrs, `
+<svg xmlns="http://www.w3.org/2000/svg">
+    <g style="background/*-image*/:url(data:image/png;base64,iVBORw...)"/>
+    <g style="fill:url(data:image/png;base64,iVBORw...)"/>
+</svg>
+`, `
+<svg xmlns="http://www.w3.org/2000/svg">
+    <g style="background:url(data:image/png;base64,iVBORw...)"/>
+    <g fill="url(data:image/png;base64,iVBORw...)"/>
+</svg>
+`);
+    });
+  });
+
+  describe('removeUselessStrokeAndFill', () => {
+    it('#1', () => {
+      removeUselessStrokeAndFill.params.removeNone = false;
+      runTest(removeUselessStrokeAndFill, `
+<svg xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <g id="test">
+            <rect stroke-dashoffset="5" width="100" height="100"/>
+        </g>
+    </defs>
+    <circle fill="red" stroke-width="6" stroke-dashoffset="5" cx="60" cy="60" r="50"/>
+    <circle fill="red" stroke="#000" stroke-width="6" stroke-dashoffset="5" stroke-opacity="0" cx="60" cy="60" r="50"/>
+    <circle fill="red" stroke="#000" stroke-width="0" stroke-dashoffset="5" cx="60" cy="60" r="50"/>
+    <circle fill="red" stroke="#000" stroke-width="6" stroke-dashoffset="5" cx="60" cy="60" r="50"/>
+    <g stroke="#000" stroke-width="6">
+        <circle fill="red" stroke="red" stroke-width="0" stroke-dashoffset="5" cx="60" cy="60" r="50"/>
+        <circle fill="red" stroke-dashoffset="5" cx="60" cy="60" r="50"/>
+    </g>
+    <g stroke="#000">
+        <circle fill="red" stroke-width="0" stroke-dashoffset="5" cx="60" cy="60" r="50"/>
+        <circle fill="red" stroke="none" stroke-dashoffset="5" cx="60" cy="60" r="50"/>
+    </g>
+</svg>
+  `, `
+<svg xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <g id="test">
+            <rect stroke-dashoffset="5" width="100" height="100"/>
+        </g>
+    </defs>
+    <circle fill="red" cx="60" cy="60" r="50"/>
+    <circle fill="red" cx="60" cy="60" r="50"/>
+    <circle fill="red" cx="60" cy="60" r="50"/>
+    <circle fill="red" stroke="#000" stroke-width="6" stroke-dashoffset="5" cx="60" cy="60" r="50"/>
+    <g stroke="#000" stroke-width="6">
+        <circle fill="red" cx="60" cy="60" r="50" stroke="none"/>
+        <circle fill="red" stroke-dashoffset="5" cx="60" cy="60" r="50"/>
+    </g>
+    <g stroke="#000">
+        <circle fill="red" cx="60" cy="60" r="50" stroke="none"/>
+        <circle fill="red" cx="60" cy="60" r="50" stroke="none"/>
+    </g>
+</svg>
+`);
+    });
+    it('#2', () => {
+      removeUselessStrokeAndFill.params.removeNone = false;
+      runTest(removeUselessStrokeAndFill, `
+<svg xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <g id="test">
+            <rect fill-opacity=".5" width="100" height="100"/>
+        </g>
+    </defs>
+    <circle fill="none" fill-rule="evenodd" cx="60" cy="60" r="50"/>
+    <circle fill="red" fill-opacity="0" cx="90" cy="90" r="50"/>
+    <circle fill-opacity="0" fill-rule="evenodd" cx="90" cy="60" r="50"/>
+    <circle fill="red" fill-opacity=".5" cx="60" cy="60" r="50"/>
+    <g fill="none">
+        <circle fill-opacity=".5" cx="60" cy="60" r="50"/>
+    </g>
+</svg>
+`, `
+<svg xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <g id="test">
+            <rect fill-opacity=".5" width="100" height="100"/>
+        </g>
+    </defs>
+    <circle fill="none" cx="60" cy="60" r="50"/>
+    <circle fill="none" cx="90" cy="90" r="50"/>
+    <circle cx="90" cy="60" r="50" fill="none"/>
+    <circle fill="red" fill-opacity=".5" cx="60" cy="60" r="50"/>
+    <g fill="none">
+        <circle cx="60" cy="60" r="50"/>
+    </g>
+</svg>
+`);
+    });
+    it('#3', () => {
+      removeUselessStrokeAndFill.params.removeNone = false;
+      runTest(removeUselessStrokeAndFill, `
+<svg xmlns="http://www.w3.org/2000/svg">
+    <style>
+        …
+    </style>
+    <circle fill="none" fill-rule="evenodd" cx="60" cy="60" r="50"/>
+    <circle fill-opacity="0" fill-rule="evenodd" cx="90" cy="60" r="50"/>
+    <circle fill="red" stroke-width="6" stroke-dashoffset="5" cx="60" cy="60" r="50"/>
+    <circle fill="red" stroke="#000" stroke-width="6" stroke-dashoffset="5" stroke-opacity="0" cx="60" cy="60" r="50"/>
+</svg>
+`, `
+<svg xmlns="http://www.w3.org/2000/svg">
+    <style>
+        …
+    </style>
+    <circle fill="none" fill-rule="evenodd" cx="60" cy="60" r="50"/>
+    <circle fill-opacity="0" fill-rule="evenodd" cx="90" cy="60" r="50"/>
+    <circle fill="red" stroke-width="6" stroke-dashoffset="5" cx="60" cy="60" r="50"/>
+    <circle fill="red" stroke="#000" stroke-width="6" stroke-dashoffset="5" stroke-opacity="0" cx="60" cy="60" r="50"/>
+</svg>
+`);
+    });
+    it('#4', () => {
+      removeUselessStrokeAndFill.params.removeNone = false;
+      runTest(removeUselessStrokeAndFill, `
+<svg xmlns="http://www.w3.org/2000/svg">
+    <style>
+        …
+    </style>
+    <circle fill="none" fill-rule="evenodd" cx="60" cy="60" r="50"/>
+    <circle fill-opacity="0" fill-rule="evenodd" cx="90" cy="60" r="50"/>
+    <circle fill="red" stroke-width="6" stroke-dashoffset="5" cx="60" cy="60" r="50"/>
+    <circle fill="red" stroke="#000" stroke-width="6" stroke-dashoffset="5" stroke-opacity="0" cx="60" cy="60" r="50"/>
+</svg>
+`, `
+<svg xmlns="http://www.w3.org/2000/svg">
+    <style>
+        …
+    </style>
+    <circle fill="none" fill-rule="evenodd" cx="60" cy="60" r="50"/>
+    <circle fill-opacity="0" fill-rule="evenodd" cx="90" cy="60" r="50"/>
+    <circle fill="red" stroke-width="6" stroke-dashoffset="5" cx="60" cy="60" r="50"/>
+    <circle fill="red" stroke="#000" stroke-width="6" stroke-dashoffset="5" stroke-opacity="0" cx="60" cy="60" r="50"/>
+</svg>
+`);
+    });
+  });
 });
+
+
+// { "removeNone": true }
+
+
 
 function runTest(plugin, svgText: string, expectedSvgText: string) {
   optimize(svgText, plugin, optimized => {

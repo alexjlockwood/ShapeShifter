@@ -585,14 +585,6 @@ function shiftAndReverseCommandStates(
 
   const css = source.slice();
 
-  // TODO: test closepaths
-  // TODO: test closepaths
-  // TODO: test closepaths
-  // TODO: test closepaths
-  // TODO: test closepaths
-  // TODO: test closepaths
-  // TODO: test closepaths
-
   // If the last command is a 'Z', replace it with a line before we shift.
   // TODO: replacing the 'Z' messes up certain stroke-linejoin values
   css[css.length - 1] = _.last(css).mutate().forceConvertClosepathsToLines().build();
