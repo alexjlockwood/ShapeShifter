@@ -68,7 +68,7 @@ export class PathState {
   private findCommandStateId(subIdx: number, cmdIdx: number) {
     const sps = this.findSubPathState(this.subPathOrdering[subIdx]);
     const numCommandsInSubPath =
-      _.sum(sps.commandStates.map(cm => cm.getCommands().length));
+      _.sum(sps.commandStates.map(cs => cs.getCommands().length));
     if (cmdIdx && sps.isReversed) {
       cmdIdx = numCommandsInSubPath - cmdIdx;
     }
@@ -199,16 +199,16 @@ export class PathState {
       .map((subPath, subIdx) => {
         return this.findSubPathState(this.toSpsIdx(subIdx)).commandStates;
       })
-      .forEachRight((cms, spsIdx) => {
-        const firstCmd = cms[0].getCommands()[0];
-        const lastCmd = _.last(_.last(cms).getCommands());
+      .forEachRight((css, spsIdx) => {
+        const firstCmd = css[0].getCommands()[0];
+        const lastCmd = _.last(_.last(css).getCommands());
         const isClosed = firstCmd.getEnd().equals(lastCmd.getEnd());
         if (!isClosed) {
           // If this happens, the SVG is probably not going to render properly at all,
           // but we'll check anyway just to be safe.
           return true;
         }
-        const bounds = createBoundingBox(...cms);
+        const bounds = createBoundingBox(...css);
         if (!bounds.contains(point)) {
           // Nothing to see here. Check the next subpath.
           return true;
@@ -222,7 +222,7 @@ export class PathState {
         const line = { p1: point, p2: new Point(bounds.r + 1, bounds.b + 1) };
         // Filter out t=0 values since they will be accounted for by
         // neighboring t=1 values.
-        const intersectionResults = cms.map(cm => cm.intersects(line).filter(t => !!t));
+        const intersectionResults = css.map(cm => cm.intersects(line).filter(t => !!t));
         const numIntersections = _.sum(intersectionResults.map(ts => ts.length));
         if (numIntersections % 2 !== 0) {
           hitSpsIdx = spsIdx;
