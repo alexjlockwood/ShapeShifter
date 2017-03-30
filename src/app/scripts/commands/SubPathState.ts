@@ -23,11 +23,11 @@ export class SubPathState {
     );
   }
 
-  revert(): SubPathState {
+  revert() {
     return this.mutate().revert().build();
   }
 
-  clone(): SubPathState {
+  clone() {
     return this.mutate().build();
   }
 }

@@ -41,14 +41,6 @@ export class CommandState {
     return this.commands;
   }
 
-  getMinT() {
-    return this.minT;
-  }
-
-  getMaxT() {
-    return this.maxT;
-  }
-
   getBoundingBox() {
     return this.calculator.getBoundingBox();
   }
@@ -65,12 +57,6 @@ export class CommandState {
     return this.calculator.getPathLength();
   }
 
-  // TODO: need to return a reversed 't' value when reversed?
-  // TODO: need to return a reversed 't' value when reversed?
-  // TODO: need to return a reversed 't' value when reversed?
-  // TODO: need to return a reversed 't' value when reversed?
-  // TODO: need to return a reversed 't' value when reversed?
-  // TODO: need to return a reversed 't' value when reversed?
   project(point: Point): { projectionResult: ProjectionResult, splitIdx: number } | undefined {
     const projectionResult = this.calculator.project(point);
     if (!projectionResult) {
@@ -97,7 +83,7 @@ export class CommandState {
   mutate() {
     return new CommandStateMutator(
       this.backingCommand,
-      this.mutations.map(m => _.clone(m)),
+      this.mutations.slice(),
       this.transforms.slice(),
       this.calculator,
       this.minT,
@@ -122,7 +108,7 @@ export class CommandState {
   }
 }
 
-export interface Mutation {
+interface Mutation {
   readonly id: string;
   readonly t: number;
   readonly svgChar: SvgChar;

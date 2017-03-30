@@ -128,10 +128,7 @@ export class PathState {
     if (!minProjectionResultInfo) {
       return undefined;
     }
-    const spsIdx = minProjectionResultInfo.spsIdx;
-    const csIdx = minProjectionResultInfo.csIdx;
-    const splitIdx = minProjectionResultInfo.splitIdx;
-    const projection = minProjectionResultInfo.projection;
+    const { spsIdx, csIdx, splitIdx, projection } = minProjectionResultInfo;
     const subIdx = this.toSubIdx(spsIdx);
     const cmdIdx = this.toCmdIdx(spsIdx, csIdx, splitIdx);
     return { projection, subIdx, cmdIdx };
