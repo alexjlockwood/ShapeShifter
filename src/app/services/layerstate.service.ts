@@ -220,7 +220,7 @@ export class LayerStateService {
       updateRotationLayerFn(activeRotationLayer);
       return;
     }
-    const findActivePathLayerParentFn = (current: Layer, parent: Layer) => {
+    const findActivePathLayerParentFn = (current: Layer, parent: Layer): Layer => {
       if (current === activePathLayer) {
         return parent;
       }

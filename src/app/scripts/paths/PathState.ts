@@ -275,16 +275,9 @@ export class PathState {
   private toCmdIdx(spsIdx: number, csIdx: number, splitIdx: number) {
     const sps = this.findSubPathState(spsIdx);
     const commandStates = sps.getCommandStates();
-    const numCmds =
-      _.chain(commandStates)
-        .map((cs: CommandState, i) => cs.getCommands().length)
-        .sum()
-        .value();
-    let cmdIdx = splitIdx
-      + _.chain(commandStates)
-        .map((cs: CommandState, i) => i < csIdx ? cs.getCommands().length : 0)
-        .sum()
-        .value();
+    const numCmds = _.sum(commandStates.map(cs => cs.getCommands().length));
+    let cmdIdx =
+      splitIdx + _.sum(commandStates.map((cs, i) => i < csIdx ? cs.getCommands().length : 0));
     let shiftOffset = sps.getShiftOffset();
     if (sps.isReversed()) {
       cmdIdx = numCmds - cmdIdx;

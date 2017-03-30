@@ -1,5 +1,5 @@
 import { Point, Matrix, SvgUtil } from '../common';
-import { Command } from '.';
+import { Command, SvgChar } from '.';
 import { newCommand } from './CommandImpl';
 
 /**
@@ -317,14 +317,14 @@ export function parseCommands(
  * Takes an list of DrawCommands and converts them back into a SVG path string.
  */
 export function commandsToString(commands: ReadonlyArray<Command>) {
-  const tokens = [];
+  const tokens: SvgChar[] = [];
   commands.forEach(cmd => {
     tokens.push(cmd.getSvgChar());
     const isClosePathCommand = cmd.getSvgChar() === 'Z';
     const pointsToNumberListFunc =
       (...points: Point[]) => points.reduce((list, p) => list.concat(p.x, p.y), []);
     const args = pointsToNumberListFunc(...(isClosePathCommand ? [] : cmd.getPoints().slice(1)));
-    tokens.splice(tokens.length, 0, ...args.map(n => Number(n.toFixed(3)).toString()));
+    tokens.splice(tokens.length, 0, ...args.map(n => Number(n.toFixed(3)).toString() as SvgChar));
   });
   return tokens.join(' ');
 }

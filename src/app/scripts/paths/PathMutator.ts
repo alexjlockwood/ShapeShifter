@@ -388,9 +388,8 @@ export class PathMutator {
         mutator.setCommandState(unsplitCs, csIdx);
       }
     }
-    const newParent = mutator.build();
     this.subPathStateMap =
-      replaceSubPathStateParent(this.subPathStateMap, spsIdx, newParent);
+      replaceSubPathStateParent(this.subPathStateMap, spsIdx, mutator.build());
     this.updateOrderingAfterUnsplitSubPath(subIdx);
   }
 

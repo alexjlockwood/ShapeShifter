@@ -747,6 +747,7 @@ describe('Path', () => {
     });
   });
 
+  // TODO: add more projection tests for split subpaths
   describe('#project', () => {
     const TESTS_PROJECT = [
       [new Point(5, 5), 'M 0 0 L 10 10', { subIdx: 0, cmdIdx: 1, projection: { x: 5, y: 5, d: 0, t: 0.5 } }],
@@ -762,6 +763,7 @@ describe('Path', () => {
     });
   });
 
+  // TODO: add more projection tests for split subpaths
   describe('#hitTest', () => {
     const TESTS_HIT_TEST_FILL = [
       [new Point(5, 5), 'M4 4h2v2h-2v-2', true],
