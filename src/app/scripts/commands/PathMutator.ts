@@ -385,16 +385,16 @@ export class PathMutator {
    * Adds a collapsing subpath to the path.
    */
   addCollapsingSubPath(point: Point, numCommands: number) {
-    const numSubPathsBeforeAdd = this.subPathOrdering.length;
-    const orderedSubPathCmds =
-      buildOrderedSubPathCommands(this.subPathStateMap, this.subPathOrdering);
-    const prevCmd = _.last(_.last(orderedSubPathCmds));
-    const css: CommandState[] =
+    const numSubPathsBeforeAdd = flattenSubPathStates(this.subPathStateMap).length;
+    const prevSubPathCommands =
+      _.last(spsToCommands(this.findSubPathState(numSubPathsBeforeAdd - 1)));
+    const prevCmd = _.last(prevSubPathCommands);
+    const cms: CommandState[] =
       [new CommandState(newCommand('M', [prevCmd.getEnd(), point]))];
     for (let i = 1; i < numCommands; i++) {
-      css.push(new CommandState(newCommand('L', [point, point])));
+      cms.push(new CommandState(newCommand('L', [point, point])));
     }
-    this.subPathStateMap.push(new SubPathState(css));
+    this.subPathStateMap.push(new SubPathState(cms));
     this.subPathOrdering.push(numSubPathsBeforeAdd);
     this.numCollapsingSubPaths++;
     return this;
@@ -454,15 +454,36 @@ export class PathMutator {
    * Builds a new mutated path.
    */
   build() {
-    const orderedSubPathCmds =
-      buildOrderedSubPathCommands(this.subPathStateMap, this.subPathOrdering);
-    const orderedCmds: Command[] = _.flatMap(orderedSubPathCmds, cmds => cmds);
+    const subPathStates = flattenSubPathStates(this.subPathStateMap);
+    const subPathOrdering = this.subPathOrdering;
+    const numCollapsingSubPaths = this.numCollapsingSubPaths;
+
+    const subPathCmds = subPathStates.map(sps => {
+      return _.flatMap(spsToCommands(sps), commands => commands);
+    });
+    const reorderedSubPathCmds: Command[][] = [];
+    for (let i = 0; i < subPathOrdering.length; i++) {
+      reorderedSubPathCmds.push(subPathCmds[subPathOrdering[i]]);
+    }
+    const reorderedCommands: Command[] = _.flatMap(reorderedSubPathCmds, cmds => cmds);
+    reorderedCommands.forEach((cmd, i) => {
+      if (i === 0) {
+        if (cmd.getStart()) {
+          reorderedCommands[i] =
+            cmd.mutate().setPoints(undefined, cmd.getEnd()).build();
+        }
+      } else {
+        const pts = cmd.getPoints().slice();
+        pts[0] = reorderedCommands[i - 1].getEnd();
+        reorderedCommands[i] = cmd.mutate().setPoints(...pts).build();
+      }
+    });
     return new PathImpl(
       new PathState(
-        orderedCmds,
+        reorderedCommands,
         this.subPathStateMap,
-        this.subPathOrdering,
-        this.numCollapsingSubPaths,
+        subPathOrdering,
+        numCollapsingSubPaths,
       ));
   }
 
@@ -658,32 +679,17 @@ function shiftCommandStates(
   return newCss;
 }
 
-export function buildOrderedSubPathCommands(
-  spsMap: ReadonlyArray<SubPathState>,
-  subPathOrdering: ReadonlyArray<number>): Command[][] {
-
-  const recurseFn = (sps: SubPathState) => {
+export function spsToCommands(subPathState: SubPathState): Command[][] {
+  return (function recurseFn(sps: SubPathState) {
     if (!sps.splitSubPaths.length) {
       return [reverseAndShiftCommands(sps)];
     }
-    return sps.splitSubPaths.map(splitSps => recurseFn(splitSps));
-  };
-  const spsCmds = spsMap.map(sps => _.flatMap(recurseFn(sps), commands => commands));
-  const subPathCmds = subPathOrdering.map((_, spsIdx) => spsCmds[spsIdx]);
-  subPathCmds.forEach((subCmds, subIdx) => {
-    const cmd = subCmds[0];
-    if (subIdx === 0) {
-      if (cmd.getStart()) {
-        subCmds[0] =
-          cmd.mutate().setPoints(undefined, cmd.getEnd()).build();
-      }
-    } else {
-      const pts = cmd.getPoints().slice();
-      pts[0] = subCmds[subIdx - 1].getEnd();
-      subCmds[subIdx] = cmd.mutate().setPoints(...pts).build();
+    const subPathCommands: Command[][] = [];
+    for (const splitSubPath of sps.splitSubPaths) {
+      subPathCommands.push(...recurseFn(splitSubPath));
     }
-  });
-  return subPathCmds;
+    return subPathCommands;
+  })(subPathState);
 }
 
 function reverseAndShiftCommands(subPathState: SubPathState) {
