@@ -240,7 +240,7 @@ export class PathMutator {
         endCommandStates.push(css[i]);
       } else {
         const splitPoint = css[i].getCommands()[splitIdx].getEnd();
-        const { left, right } = css[i].fork(splitIdx);
+        const { left, right } = css[i].slice(splitIdx);
         startCommandStates.push(left);
         let endMoveCs = new CommandState(newCommand('M', [splitPoint, splitPoint]));
         if (sps.isReversed()) {
@@ -319,8 +319,8 @@ export class PathMutator {
     // secondLeft is the left portion of the second split segment (to use in the second split path).
     // firstRight is the right portion of the first split segment (to use in the second split path).
     // secondRight is the right portion of the second split segment (to use in the first split path).
-    const { left: firstLeft, right: firstRight } = css[start.csIdx].fork(start.splitIdx);
-    const { left: secondLeft, right: secondRight } = css[end.csIdx].fork(end.splitIdx);
+    const { left: firstLeft, right: firstRight } = css[start.csIdx].slice(start.splitIdx);
+    const { left: secondLeft, right: secondRight } = css[end.csIdx].slice(end.splitIdx);
     const startSplitPoint = firstLeft.getCommands()[start.splitIdx].getEnd();
     const endSplitPoint = secondLeft.getCommands()[end.splitIdx].getEnd();
     const startLine = new CommandState(newCommand('L', [startSplitPoint, endSplitPoint]));
@@ -640,7 +640,7 @@ function shiftCommandStates(
         css[0].getCommands()[0].getStart(),
         targetCs.getCommands()[targetSplitIdx].getEnd(),
       ])));
-  const { left, right } = targetCs.fork(targetSplitIdx);
+  const { left, right } = targetCs.slice(targetSplitIdx);
   if (right) {
     newCss.push(right);
   }

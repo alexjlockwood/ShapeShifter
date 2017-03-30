@@ -74,7 +74,10 @@ export class CommandState {
     };
   }
 
-  fork(splitIdx: number) {
+  /**
+   * Slices the command state object into two parts. Useful for subpath splitting.
+   */
+  slice(splitIdx: number) {
     const left = this.mutate().sliceLeft(splitIdx).build();
     let right = undefined;
     if (this.isSplitAtIndex(splitIdx)) {

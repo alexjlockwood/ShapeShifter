@@ -11,6 +11,8 @@ import { MathUtil, Point } from '../common';
 
 /**
  * Interpolates between a start and end path using the specified fraction.
+ *
+ * TODO: make it possible to create 'stateless' paths (to save memory on animation frames).
  */
 export function interpolate(start: Path, end: Path, fraction: number) {
   if (!start.isMorphableWith(end)) {
