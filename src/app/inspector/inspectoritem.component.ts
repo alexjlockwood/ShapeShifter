@@ -39,7 +39,7 @@ export class InspectorItemComponent implements OnInit {
   ngOnInit() {
     this.isSelectedObservable =
       this.selectionStateService.getSelectionsObservable()
-        .map((selections: Selection[]) => {
+        .map(selections => {
           const activePathId = this.layerStateService.getActivePathId(this.canvasType);
           return activePathId && _.some(selections, {
             source: this.canvasType,

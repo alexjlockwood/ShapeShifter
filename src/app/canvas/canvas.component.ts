@@ -79,9 +79,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   private isViewInit: boolean;
   private pathPointRadius: number;
   private currentHover: Hover;
-  private currentHoverSplitPreviewPath: Path;
-  private shouldLabelPoints = false;
-  private shouldDisableLayer = false;
+  private currentHoverPreviewPath: Path;
   private readonly subscriptions: Subscription[] = [];
 
   // If present, then the user is in selection mode and a
@@ -166,7 +164,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       let currentAnimatedFraction = 0;
       this.subscriptions.push(
         this.layerStateService.getActivePathIdObservable(this.canvasType)
-          .subscribe(activePathId => {
+          .subscribe(() => {
             interpolatePreview(currentAnimatedFraction);
             this.draw();
           }));
@@ -179,29 +177,21 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           }));
       this.subscriptions.push(
         this.settingsService.getSettingsObservable()
-          .subscribe(settings => {
-            if (this.shouldLabelPoints !== settings.shouldLabelPoints) {
-              this.shouldLabelPoints = settings.shouldLabelPoints;
-              this.draw();
-            }
-          }));
+          .subscribe(() => this.draw()));
       this.subscriptions.push(
         this.layerStateService.getMorphabilityStatusObservable()
-          .subscribe(status => {
-            this.shouldDisableLayer = status !== MorphabilityStatus.Morphable;
-            this.draw();
-          }));
+          .subscribe(() => this.draw()));
     } else {
       // Non-preview canvas specific setup.
       this.subscriptions.push(
         this.layerStateService.getActivePathIdObservable(this.canvasType)
-          .subscribe(_ => this.draw()));
+          .subscribe(() => this.draw()));
       this.subscriptions.push(
         this.selectionStateService.getSelectionsObservable()
           .subscribe(() => this.draw()));
       this.subscriptions.push(
         this.canvasModeService.getCanvasModeObservable()
-          .subscribe(canvasMode => {
+          .subscribe(() => {
             this.selectionStateService.reset();
             this.hoverStateService.reset();
             this.pointSelector = undefined;
@@ -210,36 +200,34 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
             this.initialFilledSubPathProjectionOntoPath = undefined;
             this.draw();
           }));
-      const updateCurrentHoverFn = (hover: Hover) => {
+      const updateCurrentHoverFn = (hover: Hover | undefined) => {
         this.currentHover = hover;
-        if (hover
-          && hover.type === HoverType.Split
-          && hover.commandId.pathId === this.activePathId) {
+        let previewPath: Path = undefined;
+        if (hover) {
           // If the user is hovering over the inspector split button, then build
           // a snapshot of what the path would look like after the action
-          // and display the result. Note that after the split action,
-          // the hover's cmdIdx can be used to identify the new split point.
-          const activePathLayer =
-            this.layerStateService.getActivePathLayer(this.canvasType);
-          // TODO: it is possible for this to crash... need to reproduce somehow
-          const beforePath = activePathLayer.pathData;
-          try {
-            this.currentHoverSplitPreviewPath =
-              activePathLayer.pathData.mutate()
-                .splitCommandInHalf(hover.commandId.subIdx, hover.commandId.cmdIdx)
-                .build();
-          } catch (e) {
-            console.error(e);
-            console.error(
-              'Attempt to split command in half',
-              hover.commandId.subIdx,
-              hover.commandId.cmdIdx,
-              beforePath);
-            throw e;
+          // and display the result.
+          const mutator = this.activePath.mutate();
+          const { subIdx, cmdIdx } = hover.commandId;
+          switch (hover.type) {
+            case HoverType.Split:
+              previewPath = mutator.splitCommandInHalf(subIdx, cmdIdx).build();
+              break;
+            case HoverType.Unsplit:
+              previewPath = mutator.unsplitCommand(subIdx, cmdIdx).build();
+              break;
+            case HoverType.Reverse:
+              previewPath = mutator.reverseSubPath(subIdx).build();
+              break;
+            case HoverType.ShiftForward:
+              previewPath = mutator.shiftSubPathForward(subIdx).build();
+              break;
+            case HoverType.ShiftBack:
+              previewPath = mutator.shiftSubPathBack(subIdx).build();
+              break;
           }
-        } else {
-          this.currentHoverSplitPreviewPath = undefined;
         }
+        this.currentHoverPreviewPath = previewPath;
         this.draw();
       };
       this.subscriptions.push(
@@ -250,17 +238,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
               updateCurrentHoverFn(undefined);
               return;
             }
-            if (!(hover.type === HoverType.Command
-              || hover.type === HoverType.Split
-              || hover.type === HoverType.Unsplit)) {
-              // TODO: support reverse/shift back/shift forward? it would be pretty easy...
-              updateCurrentHoverFn(undefined);
-              return;
-            }
-            if (hover.source !== this.canvasType
-              && (hover.type === HoverType.Split || hover.type === HoverType.Unsplit)) {
-              // If the hover source isn't of this type and the hover type is a split
-              // or an unsplit, then don't draw any hover events to the canvas.
+            if (hover.source !== this.canvasType && hover.type !== HoverType.Command) {
               updateCurrentHoverFn(undefined);
               return;
             }
@@ -283,10 +261,9 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   }
 
   private get activePath() {
-    if (!this.activePathId) {
-      return undefined;
-    }
-    return this.layerStateService.getActivePathLayer(this.canvasType).pathData;
+    return this.activePathId
+      ? this.layerStateService.getActivePathLayer(this.canvasType).pathData
+      : undefined;
   }
 
   private get shouldDrawLayer() {
@@ -295,6 +272,20 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
   private get canvasMode() {
     return this.canvasModeService.getCanvasMode();
+  }
+
+  private get shouldDisableLayer() {
+    return this.canvasType === CanvasType.Preview
+      && this.layerStateService.getMorphabilityStatus() !== MorphabilityStatus.Morphable;
+  }
+
+  private get shouldLabelPoints() {
+    return this.canvasType !== CanvasType.Preview
+      || this.settingsService.shouldLabelPoints();
+  }
+
+  private get shouldAcceptMouseEvents() {
+    return this.canvasType !== CanvasType.Preview && this.activePathId;
   }
 
   private resizeAndDraw() {
@@ -409,8 +400,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
 
     let path = this.activePath;
-    if (this.currentHoverSplitPreviewPath) {
-      path = this.currentHoverSplitPreviewPath;
+    if (this.currentHoverPreviewPath) {
+      path = this.currentHoverPreviewPath;
     }
 
     // Build a list containing all necessary information needed in
@@ -614,7 +605,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   }
 
   onMouseDown(event: MouseEvent) {
-    if (this.canvasType === CanvasType.Preview || !this.activePathId) {
+    if (!this.shouldAcceptMouseEvents) {
       return;
     }
 
@@ -629,8 +620,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         // A mouse down event ocurred on top of a point. Create a point selector
         // and track that sh!at.
         const selectedCmd =
-          (this.vectorLayer.findLayer(this.activePathId) as PathLayer)
-            .pathData
+          this.activePath
             .getSubPaths()[selectedCommandIndex.subIdx]
             .getCommands()[selectedCommandIndex.cmdIdx];
         this.pointSelector =
@@ -699,7 +689,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   onMouseMove(event: MouseEvent) {
     this.showRuler(event);
 
-    if (this.canvasType === CanvasType.Preview || !this.activePathId) {
+    if (!this.shouldAcceptMouseEvents) {
       return;
     }
 
@@ -742,7 +732,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   }
 
   onMouseUp(event: MouseEvent) {
-    if (this.canvasType === CanvasType.Preview || !this.activePathId) {
+    if (!this.shouldAcceptMouseEvents) {
       return;
     }
 
@@ -763,7 +753,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
             const { subIdx: newSubIdx, cmdIdx: newCmdIdx } = projOntoPath;
             const { subIdx: oldSubIdx, cmdIdx: oldCmdIdx } = this.pointSelector.getSelectedCommandIndex();
             if (newSubIdx === oldSubIdx) {
-              const startingPath = this.layerStateService.getActivePathLayer(this.canvasType).pathData;
+              const activeLayer = this.layerStateService.getActivePathLayer(this.canvasType);
+              const startingPath = activeLayer.pathData;
               let pathMutator = startingPath.mutate();
 
               // Note that the order is important here, as it preserves the command indices.
@@ -776,8 +767,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
               } else {
                 // Unsplitting will cause the projection t value to change, so recalculate the
                 // projection before the split.
-                // TODO: improve this API somehow...
-                const tempPath = pathMutator.unsplitCommand(oldSubIdx, oldCmdIdx).build();
+                // TODO: improve this API somehow... having to set the active layer here is kind of hacky
+                activeLayer.pathData = pathMutator.unsplitCommand(oldSubIdx, oldCmdIdx).build();
                 const tempProjOntoPath =
                   calculateProjectionOntoPath(this.vectorLayer, this.activePathId, mouseUp);
                 if (oldSubIdx === tempProjOntoPath.subIdx) {
@@ -870,7 +861,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   onMouseLeave(event: MouseEvent) {
     this.canvasRulers.forEach(r => r.hideMouse());
 
-    if (this.canvasType === CanvasType.Preview || !this.activePathId) {
+    if (!this.shouldAcceptMouseEvents) {
       return;
     }
 
@@ -1201,7 +1192,8 @@ function executeCommands(
 function calculateProjectionOntoPath(
   vectorLayer: VectorLayer,
   pathId: string,
-  mousePoint: Point): ProjectionOntoPath | undefined {
+  mousePoint: Point,
+  overridePath?: Path): ProjectionOntoPath | undefined {
 
   const pathLayer = vectorLayer.findLayer(pathId) as PathLayer;
   if (!pathLayer) {
