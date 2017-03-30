@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
-import { Index as CommandIndex } from '../scripts/commands';
+import { Index as CommandIndex } from '../scripts/paths';
 import { CanvasType } from '../CanvasType';
 
 /**

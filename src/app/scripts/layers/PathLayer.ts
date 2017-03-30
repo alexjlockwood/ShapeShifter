@@ -1,4 +1,4 @@
-import { Path, PathUtil } from '../commands';
+import { Path, PathUtil } from '../paths';
 import { AbstractLayer } from './AbstractLayer';
 import { ColorUtil, MathUtil } from '../common';
 

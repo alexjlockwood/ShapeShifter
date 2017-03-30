@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
 import { SubPath, Command, ProjectionOntoPath, HitOptions, HitResult } from '.';
 import { createSubPaths } from './SubPathImpl';
-import { CommandState } from './CommandState';
+import { CommandState } from './pathstate';
 import { MathUtil, Point, Rect } from '../common';
 import * as PathParser from './PathParser';
 import * as polylabel from 'polylabel';

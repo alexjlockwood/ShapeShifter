@@ -1,5 +1,5 @@
 import { Component, OnInit, PipeTransform, Pipe, ChangeDetectionStrategy } from '@angular/core';
-import { SubPath, Command } from '../scripts/commands';
+import { SubPath, Command } from '../scripts/paths';
 import { CanvasType } from '../CanvasType';
 import { LayerStateService } from '../services';
 import { Observable } from 'rxjs/Observable';

@@ -2,7 +2,7 @@ import * as _ from 'lodash';
 import {
   Component, OnInit, Input, Pipe, PipeTransform, ChangeDetectionStrategy
 } from '@angular/core';
-import { Path, Command } from '../scripts/commands';
+import { Path, Command } from '../scripts/paths';
 import { LayerStateService } from '../services/layerstate.service';
 import { SelectionStateService, Selection } from '../services/selectionstate.service';
 import { HoverStateService, Type as HoverType } from '../services/hoverstate.service';

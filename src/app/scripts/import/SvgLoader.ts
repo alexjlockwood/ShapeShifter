@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 import { VectorLayer, GroupLayer, PathLayer, ClipPathLayer } from '../layers';
-import { newPath, SubPath, Command } from '../commands';
+import { newPath, SubPath, Command } from '../paths';
 import { ColorUtil, Matrix } from '../common';
 import { Svgo } from '../svgo';
 

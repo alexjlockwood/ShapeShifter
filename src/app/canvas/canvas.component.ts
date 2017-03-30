@@ -9,7 +9,7 @@ import {
   Command,
   Index as CommandIndex,
   ProjectionOntoPath,
-} from '../scripts/commands';
+} from '../scripts/paths';
 import { PathLayer, ClipPathLayer, VectorLayer, GroupLayer, Layer } from '../scripts/layers';
 import { CanvasType } from '../CanvasType';
 import * as $ from 'jquery';

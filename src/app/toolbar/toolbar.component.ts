@@ -10,7 +10,7 @@ import { ExportUtil } from '../scripts/export';
 import { DialogService } from '../dialogs';
 import { AutoAwesome } from '../scripts/autoawesome';
 import { DemoUtil, DEMO_MAP } from '../scripts/demos';
-import { PathUtil } from '../scripts/commands';
+import { PathUtil } from '../scripts/paths';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/combineLatest';
 

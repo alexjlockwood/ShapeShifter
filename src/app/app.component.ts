@@ -6,7 +6,7 @@ import { environment } from '../environments/environment';
 import { CanvasType } from './CanvasType';
 import { Subscription } from 'rxjs/Subscription';
 import { Observable } from 'rxjs/Observable';
-import { SubPath, Command, PathUtil } from './scripts/commands';
+import { SubPath, Command, PathUtil } from './scripts/paths';
 import {
   AnimatorService,
   CanvasResizeService,
