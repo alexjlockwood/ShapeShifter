@@ -1,5 +1,7 @@
 import { Point } from '../common';
-import { Path, Command, ProjectionOntoPath, HitOptions } from '.';
+import {
+  Path, Command, ProjectionOntoPath, HitOptions, HitResult
+} from '.';
 import { PathState } from './PathState';
 import { PathMutator } from './PathMutator';
 import * as PathParser from './PathParser';
@@ -61,7 +63,7 @@ export class PathImpl implements Path {
   }
 
   // Implements the Path interface.
-  hitTest(point: Point, opts: HitOptions = {}) {
+  hitTest(point: Point, opts: HitOptions = {}): HitResult {
     return this.ps.hitTest(point, opts);
   }
 

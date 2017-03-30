@@ -825,7 +825,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
                   secondCmdIdx = temp.firstCmdIdx;
                   secondT = temp.firstT;
                 }
-                console.info(projectionOntoPath, firstCmdIdx, secondCmdIdx, firstT, secondT);
                 pathMutator
                   .splitCommand(projectionOntoPath.subIdx, firstCmdIdx, firstT)
                   .splitCommand(projectionOntoPath.subIdx, secondCmdIdx + 1, secondT)

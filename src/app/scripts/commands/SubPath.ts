@@ -2,7 +2,8 @@ import { Command } from '.';
 import { SubPathBuilder } from './SubPathImpl';
 
 /**
- * Defines a set of commands that begins with a single move to command.
+ * Represents a string of Commands, beginning with a 'moveTo' command and ending
+ * with either a 'closepath' command or the next 'moveTo' command.
  */
 export interface SubPath {
 

@@ -598,8 +598,14 @@ describe('Path', () => {
       makeTest(
         'M 8 5 L 8 19 L 19 12 L 8 5',
         'SIH 0 1 S 0 3 1 SFSP 0 1 3',
-        `M 8 5 L 8 12 L 19 12 L 19 12 L 8 5 M 8 12 L 8 19 L 19 12 L 8 12`,
+        'M 8 5 L 8 12 L 19 12 L 19 12 L 8 5 M 8 12 L 8 19 L 19 12 L 8 12',
       ),
+      // TODO: fix this test
+      // makeTest(
+      //   'M 1 1 L 2 2 L 3 3 M 10 10 L 20 20 L 30 30',
+      //   'M 0 1 AC 3 4 1',
+      //   'M 10 10 L 20 20 L 30 30 M 1 1 L 2 2 L 3 3 M 3 4 L 3 4',
+      // ),
     ];
 
     for (const test of MUTATION_TESTS) {

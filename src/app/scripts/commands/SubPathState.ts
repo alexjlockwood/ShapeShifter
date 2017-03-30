@@ -7,7 +7,6 @@ export class SubPathState {
   constructor(
     public readonly commandStates: ReadonlyArray<CommandState>,
     public readonly isReversed = false,
-    // A shift offset value of 'x' means 'perform x shift back ops'.
     public readonly shiftOffset = 0,
     public readonly id = _.uniqueId(),
     // Either empty if this sub path is not split, or an array of size 2
@@ -31,17 +30,6 @@ export class SubPathState {
 
   clone(): SubPathState {
     return this.mutate().build();
-  }
-
-  toSubPathCommands(): Command[][] {
-    if (!this.splitSubPaths.length) {
-      return [reverseAndShiftCommands(this)];
-    }
-    const subPathCommands: Command[][] = [];
-    for (const splitSubPath of this.splitSubPaths) {
-      subPathCommands.push(...splitSubPath.toSubPathCommands());
-    }
-    return subPathCommands;
   }
 }
 
@@ -238,10 +226,6 @@ export function findSubPathState(map: ReadonlyArray<SubPathState>, cmsIdx: numbe
   return flattenSubPathStates(map)[cmsIdx];
 }
 
-export function countSubPathStates(map: ReadonlyArray<SubPathState>): number {
-  return flattenSubPathStates(map).length;
-}
-
 export function flattenSubPathStates(map: ReadonlyArray<SubPathState>) {
   const subPathStates: SubPathState[] = [];
   (function recurseFn(currentLevel: ReadonlyArray<SubPathState>) {
@@ -276,4 +260,16 @@ export function isSubPathUnsplittable(map: ReadonlyArray<SubPathState>, cmsIdx: 
   return parent
     && parent.splitSubPaths.length
     && parent.splitSubPaths.every(s => !s.splitSubPaths.length);
+}
+
+
+export function toSubPathCommands(): Command[][] {
+  if (!this.splitSubPaths.length) {
+    return [reverseAndShiftCommands(this)];
+  }
+  const subPathCommands: Command[][] = [];
+  for (const splitSubPath of this.splitSubPaths) {
+    subPathCommands.push(...splitSubPath.toSubPathCommands());
+  }
+  return subPathCommands;
 }

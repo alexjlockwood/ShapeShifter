@@ -3,20 +3,21 @@ import { SvgChar } from '.';
 import { CommandBuilder } from './CommandImpl';
 
 /**
- * Defines the set of SVG command methods that are seen by the inspector/canvas.
+ * Represents an individual SVG command. These are the essential building blocks
+ * of all Paths and SubPath objects.
  */
 export interface Command {
+
+  /**
+   * Returns the unique ID for this command.
+   */
+  getId(): string;
 
   /**
    * Returns true iff the command was created as a result of being split.
    * Only split commands are able to be editted and deleted via the inspector/canvas.
    */
   isSplit(): boolean;
-
-  /**
-   * Returns the unique ID for this command.
-   */
-  getId(): string;
 
   /**
    * Returns the SVG character for this command.
@@ -53,6 +54,7 @@ export interface Command {
 /**
  * Uniquely identifies a command's location in an SVG.
  */
+// TODO: remove this
 export interface Index {
   readonly pathId: string;
   readonly subIdx: number;

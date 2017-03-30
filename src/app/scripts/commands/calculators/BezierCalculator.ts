@@ -39,8 +39,8 @@ export class BezierCalculator implements Calculator {
   }
 
   project(point: Point): ProjectionResult {
-    const proj = this.bezierJs.project(point);
-    return { x: proj.x, y: proj.y, t: proj.t, d: proj.d };
+    const { x, y, t, d } = this.bezierJs.project(point);
+    return { x, y, t, d };
   }
 
   split(t1: number, t2: number): Calculator {
