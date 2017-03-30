@@ -385,17 +385,14 @@ export class PathMutator {
    * Adds a collapsing subpath to the path.
    */
   addCollapsingSubPath(point: Point, numCommands: number) {
-    const numSubPathsBeforeAdd = flattenSubPathStates(this.subPathStateMap).length;
-    const prevSubPathCommands =
-      _.last(spsToCommands(this.findSubPathState(numSubPathsBeforeAdd - 1)));
-    const prevCmd = _.last(prevSubPathCommands);
-    const cms: CommandState[] =
-      [new CommandState(newCommand('M', [prevCmd.getEnd(), point]))];
+    const prevCmd =
+      _.last(this.buildOrderedSubPathCommands()[this.subPathOrdering.length - 1]);
+    const css = [new CommandState(newCommand('M', [prevCmd.getEnd(), point]))];
     for (let i = 1; i < numCommands; i++) {
-      cms.push(new CommandState(newCommand('L', [point, point])));
+      css.push(new CommandState(newCommand('L', [point, point])));
     }
-    this.subPathStateMap.push(new SubPathState(cms));
-    this.subPathOrdering.push(numSubPathsBeforeAdd);
+    this.subPathStateMap.push(new SubPathState(css));
+    this.subPathOrdering.push(this.subPathOrdering.length);
     this.numCollapsingSubPaths++;
     return this;
   }
@@ -454,36 +451,12 @@ export class PathMutator {
    * Builds a new mutated path.
    */
   build() {
-    const subPathStates = flattenSubPathStates(this.subPathStateMap);
-    const subPathOrdering = this.subPathOrdering;
-    const numCollapsingSubPaths = this.numCollapsingSubPaths;
-
-    const subPathCmds = subPathStates.map(sps => {
-      return _.flatMap(spsToCommands(sps), commands => commands);
-    });
-    const reorderedSubPathCmds: Command[][] = [];
-    for (let i = 0; i < subPathOrdering.length; i++) {
-      reorderedSubPathCmds.push(subPathCmds[subPathOrdering[i]]);
-    }
-    const reorderedCommands: Command[] = _.flatMap(reorderedSubPathCmds, cmds => cmds);
-    reorderedCommands.forEach((cmd, i) => {
-      if (i === 0) {
-        if (cmd.getStart()) {
-          reorderedCommands[i] =
-            cmd.mutate().setPoints(undefined, cmd.getEnd()).build();
-        }
-      } else {
-        const pts = cmd.getPoints().slice();
-        pts[0] = reorderedCommands[i - 1].getEnd();
-        reorderedCommands[i] = cmd.mutate().setPoints(...pts).build();
-      }
-    });
     return new PathImpl(
       new PathState(
-        reorderedCommands,
+        _.flatMap(this.buildOrderedSubPathCommands(), cmds => cmds),
         this.subPathStateMap,
-        subPathOrdering,
-        numCollapsingSubPaths,
+        this.subPathOrdering,
+        this.numCollapsingSubPaths,
       ));
   }
 
@@ -524,6 +497,24 @@ export class PathMutator {
       csIdx++;
     }
     throw new Error('Error retrieving command mutation');
+  }
+
+  private buildOrderedSubPathCommands() {
+    const subPathCmds = flattenSubPathStates(this.subPathStateMap)
+      .map(sps => _.flatMap(reverseAndShiftCommands(sps), cmds => cmds));
+    const orderedSubPathCmds = this.subPathOrdering.map((_, subIdx) => {
+      return subPathCmds[this.subPathOrdering[subIdx]];
+    });
+    return orderedSubPathCmds.map((subCmds, subIdx) => {
+      const cmd = subCmds[0];
+      if (subIdx === 0 && cmd.getStart()) {
+        subCmds[0] = cmd.mutate().setPoints(undefined, cmd.getEnd()).build();
+      } else if (subIdx !== 0) {
+        const start = _.last(orderedSubPathCmds[subIdx - 1]).getEnd();
+        subCmds[0] = cmd.mutate().setPoints(start, cmd.getEnd()).build();
+      }
+      return subCmds;
+    });
   }
 }
 
@@ -677,19 +668,6 @@ function shiftCommandStates(
   }
   newCss.push(left);
   return newCss;
-}
-
-export function spsToCommands(subPathState: SubPathState): Command[][] {
-  return (function recurseFn(sps: SubPathState) {
-    if (!sps.splitSubPaths.length) {
-      return [reverseAndShiftCommands(sps)];
-    }
-    const subPathCommands: Command[][] = [];
-    for (const splitSubPath of sps.splitSubPaths) {
-      subPathCommands.push(...recurseFn(splitSubPath));
-    }
-    return subPathCommands;
-  })(subPathState);
 }
 
 function reverseAndShiftCommands(subPathState: SubPathState) {

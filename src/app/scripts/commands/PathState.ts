@@ -103,11 +103,11 @@ export class PathState {
           const spsIdx = this.subPathOrdering[subIdx];
           const sps = this.findSubPathState(spsIdx);
           return sps.commandStates
-            .map((cm, csIdx) => {
-              const projection = cm.project(point);
+            .map((cs, csIdx) => {
+              const projection = cs.project(point);
               if (projection && sps.isReversed) {
                 const t = projection.projectionResult.t;
-                projection.projectionResult.t = MathUtil.lerp(cm.getMaxT(), cm.getMinT(), t);
+                projection.projectionResult.t = 1 - t;
               }
               return {
                 spsIdx,
@@ -282,12 +282,12 @@ export class PathState {
     const commandStates = sps.commandStates;
     const numCmds =
       _.chain(commandStates)
-        .map((cm: CommandState, i) => cm.getCommands().length)
+        .map((cs: CommandState, i) => cs.getCommands().length)
         .sum()
         .value();
     let cmdIdx = splitIdx
       + _.chain(commandStates)
-        .map((cm: CommandState, i) => i < csIdx ? cm.getCommands().length : 0)
+        .map((cs: CommandState, i) => i < csIdx ? cs.getCommands().length : 0)
         .sum()
         .value();
     let shiftOffset = sps.shiftOffset;
@@ -307,7 +307,7 @@ export class PathState {
 }
 
 // TODO: cache this?
-function createBoundingBox(...cms: CommandState[]) {
+function createBoundingBox(...css: CommandState[]) {
   const bounds = new Rect(Infinity, Infinity, -Infinity, -Infinity);
 
   const expandBoundsFn = (x: number, y: number) => {
@@ -320,14 +320,14 @@ function createBoundingBox(...cms: CommandState[]) {
     bounds.b = Math.max(y, bounds.b);
   };
 
-  const expandBoundsForCommandMutationFn = (cm: CommandState) => {
-    const bbox = cm.getBoundingBox();
+  const expandBoundsForCommandMutationFn = (cs: CommandState) => {
+    const bbox = cs.getBoundingBox();
     expandBoundsFn(bbox.x.min, bbox.y.min);
     expandBoundsFn(bbox.x.max, bbox.y.min);
     expandBoundsFn(bbox.x.min, bbox.y.max);
     expandBoundsFn(bbox.x.max, bbox.y.max);
   };
 
-  cms.forEach(cm => expandBoundsForCommandMutationFn(cm));
+  css.forEach(cs => expandBoundsForCommandMutationFn(cs));
   return bounds;
 }
