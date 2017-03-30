@@ -14,7 +14,7 @@ import {
  * A builder class for creating new mutated Path objects.
  */
 export class PathMutator {
-  // Maps spsIdx --> SubPathState leaf object.
+  // A tree of sub path state objects, including collapsing sub paths.
   private subPathStateMap: SubPathState[];
   // Maps subIdx --> spsIdx.
   private subPathOrdering: number[];
