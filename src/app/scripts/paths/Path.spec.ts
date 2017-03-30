@@ -120,8 +120,8 @@ describe('Path', () => {
       extractPathIdsFn(path, 4, 15);
     });
 
-    type PathOp = 'RV' | 'SB' | 'SF' | 'S' | 'SIH' | 'US' | 'CV'
-      | 'UCV' | 'RT' | 'M' | 'AC' | 'DC' | 'SSSP' | 'SFSP' | 'USSP';
+    type PathOp = 'RV' | 'SB' | 'SF' | 'S' | 'SIH' | 'US' | 'CV' | 'UCV' | 'RT' | 'M'
+      | 'AC' | 'DC' | 'SSSP' | 'SFSP' | 'USSP' | 'T';
 
     function mutatePath(pathString: string, pathOpsString: string) {
       const A = pathOpsString.split(' ');
@@ -194,6 +194,34 @@ describe('Path', () => {
             mutator.unsplitStrokedSubPath(+A[i + 1]);
             i += 1;
             break;
+          case 'T': // Transform.
+            const isTransformOpFn = (token: string) => {
+              token = (token || '').toLowerCase();
+              return new Set(['scale', 'rotate', 'translate']).has(token);
+            };
+            while (isTransformOpFn(A[i + 1])) {
+              const transformOp = A[i + 1];
+              let matrix: Matrix;
+              switch (transformOp) {
+                case 'scale':
+                  matrix = Matrix.fromScaling(+A[i + 2], +A[i + 3]);
+                  i += 3;
+                  break;
+                case 'rotate':
+                  matrix = Matrix.fromRotation(+A[i + 2]);
+                  i += 2;
+                  break;
+                case 'translate':
+                  matrix = Matrix.fromTranslation(+A[i + 2], +A[i + 3]);
+                  i += 3;
+                  break;
+
+                default:
+                  throw new Error('Invalid transform op: ' + transformOp);
+              }
+              mutator.addTransforms([matrix]);
+            }
+            break;
           default:
             throw new Error('Invalid path op: ' + op);
         }
@@ -206,6 +234,7 @@ describe('Path', () => {
     }
 
     const MUTATION_TESTS = [
+      // Reverse/shift commands.
       makeTest(
         'M 0 0 10 10 20 20',
         'RV 0',
@@ -246,6 +275,7 @@ describe('Path', () => {
         'RV 0',
         'M 19 11 L 19 13 L 5 13 C 5 13 5 11 5 11 C 5 11 19 11 19 11',
       ),
+      // Split commands.
       makeTest(
         'M 0 0 L 10 10 L 20 20',
         'S 0 1 0.5',
@@ -316,6 +346,7 @@ describe('Path', () => {
         'SIH 0 3',
         'M 0 0 L 0 10 L 10 10 L 5 5 Z',
       ),
+      // Move sub paths.
       makeTest(
         'M 0 0 L 0 0 L 1 1',
         'M 0 0',
@@ -372,39 +403,9 @@ describe('Path', () => {
         'M 0 0 L 0 0 L 1 1 M 1 1 L 2 1 L 3 1 L 1 1 M 2 2 L 4 2 L 8 2',
       ),
       makeTest(
-        'M 0 0 L 3 3',
-        'CV 0 1 C',
-        'M 0 0 C 1 1 2 2 3 3',
-      ),
-      makeTest(
-        'M 0 0 L 3 3',
-        'CV 0 1 C UCV 0',
-        'M 0 0 L 3 3',
-      ),
-      makeTest(
-        'M 0 0 L 3 3',
-        'AC 5 5 10',
-        `M 0 0 L 3 3 M 5 5${' L 5 5'.repeat(9)}`,
-      ),
-      makeTest(
-        'M 0 0 L 3 3',
-        'AC 5 5 5 AC 3 4 6',
-        `M 0 0 L 3 3 M 5 5${' L 5 5'.repeat(4)} M 3 4${' L 3 4'.repeat(5)}`,
-      ),
-      makeTest(
-        'M 1 1 L 3 3 L 1 1',
-        'AC 5 5 5 AC 3 4 6 M 0 1',
-        `M 5 5${' L 5 5'.repeat(4)} M 1 1 L 3 3 L 1 1 M 3 4${' L 3 4'.repeat(5)}`,
-      ),
-      makeTest(
-        'M 1 1 L 3 3 L 1 1',
-        'AC 5 5 5 AC 3 4 6 M 0 1 DC',
-        `M 1 1 L 3 3 L 1 1`,
-      ),
-      makeTest(
-        'M 1 1 L 3 3 L 1 1',
-        'AC 5 5 5 AC 3 4 6 M 0 1 RT',
-        `M 1 1 L 3 3 L 1 1`,
+        'M 1 1 L 2 2 L 3 3 M 10 10 L 20 20 L 30 30',
+        'M 0 1 AC 3 4 2',
+        'M 10 10 L 20 20 L 30 30 M 1 1 L 2 2 L 3 3 M 3 4 L 3 4',
       ),
       makeTest(
         'M 0 0 L 0 0 M 1 1 L 1 1 M 2 2 L 2 2 M 3 3 L 3 3 M 4 4 L 4 4 L 4 4',
@@ -437,6 +438,79 @@ describe('Path', () => {
         + 'C 10 20.333 10 18.667 10 17 C 9.333 17 8.667 17 8 17 C 8 14.667 8 12.333 8 10 C 8 8.34 9.34 7 11 7 C 12.66 7 14 8.34 14 10 '
         + 'C 15.17 10.49 15.99 11.66 16 13 L 16 13',
       ),
+      // Convert/unconvert commands.
+      makeTest(
+        'M 0 0 L 3 3',
+        'CV 0 1 C',
+        'M 0 0 C 1 1 2 2 3 3',
+      ),
+      makeTest(
+        'M 0 0 L 3 3',
+        'CV 0 1 C UCV 0',
+        'M 0 0 L 3 3',
+      ),
+      // Transform paths.
+      // TODO: test multiple transformations at a time
+      // TODO: test that reversals and stuff still work
+      // TODO: test that splits and conversions and stuff still work
+      // TODO: test that reversals/shifts/splits/etc. are reverted properly, not just transforms
+      makeTest(
+        'M-4-8h8v16h-8v-16',
+        'T translate 4 8',
+        'M0 0h8v16h-8v-16',
+      ),
+      makeTest(
+        'M-4-8h8v16h-8v-16',
+        'T rotate 90',
+        'M 8 -4 v 8 h -16 v -8 h 16',
+      ),
+      makeTest(
+        'M-4-8h8v16h-8v-16',
+        'T rotate 180',
+        'M 4 8 h -8 v -16 h 8 v 16',
+      ),
+      makeTest(
+        'M-4-8h8v16h-8v-16',
+        'T scale 0.5 0.5',
+        'M -2 -4 h 4 v 8 h -4 v -8',
+      ),
+      makeTest(
+        'M-4-8h8v16h-8v-16',
+        'T translate 1 2 scale 2 3 rotate 34 translate 3 4 RT',
+        'M-4-8h8v16h-8v-16',
+      ),
+      // Add/delete collapsing sub paths.
+      makeTest(
+        'M 0 0 L 3 3',
+        'AC 5 5 10',
+        `M 0 0 L 3 3 M 5 5${' L 5 5'.repeat(9)}`,
+      ),
+      makeTest(
+        'M 0 0 L 3 3',
+        'AC 5 5 5 AC 3 4 6',
+        `M 0 0 L 3 3 M 5 5${' L 5 5'.repeat(4)} M 3 4${' L 3 4'.repeat(5)}`,
+      ),
+      makeTest(
+        'M 1 1 L 3 3 L 1 1',
+        'AC 5 5 5 AC 3 4 6 M 0 1',
+        `M 5 5${' L 5 5'.repeat(4)} M 1 1 L 3 3 L 1 1 M 3 4${' L 3 4'.repeat(5)}`,
+      ),
+      makeTest(
+        'M 1 1 L 3 3 L 1 1',
+        'AC 5 5 5 AC 3 4 6 M 0 1 DC',
+        `M 1 1 L 3 3 L 1 1`,
+      ),
+      makeTest(
+        'M 1 1 L 3 3 L 1 1',
+        'AC 5 5 5 AC 3 4 6 M 0 1 RT',
+        `M 1 1 L 3 3 L 1 1`,
+      ),
+      makeTest(
+        'M 1 1 L 2 2 L 3 3 M 10 10 L 20 20 L 30 30',
+        'AC 3 4 2',
+        'M 1 1 L 2 2 L 3 3 M 10 10 L 20 20 L 30 30 M 3 4 L 3 4',
+      ),
+      // Split stroked sub paths.
       makeTest(
         'M 0 0 L 1 1 L 2 2 L 3 3 L 4 4 L 5 5 M 0 0 L 10 10 L 20 20 L 30 30 L 40 40 L 50 50',
         'SSSP 0 1',
@@ -568,11 +642,15 @@ describe('Path', () => {
         'RV 1 SF 1 SIH 1 2 SSSP 1 2',
         'M 1 1 L 2 1 L 2 2 M 10 5 L 10 10 L 7.5 10 M 7.5 10 L 5 10 L 5 5 L 10 5',
       ),
-      // TODO: add tests for shift offsets
-      // TODO: add more tests for compound paths
+      // Split filled sub paths.
       makeTest(
         'M 8 5 L 8 19 L 19 12 L 8 5',
         'SIH 0 1 SFSP 0 1 3',
+        'M 8 5 L 8 12 L 19 12 L 8 5 M 8 12 L 8 19 L 19 12 L 8 12',
+      ),
+      makeTest(
+        'M 8 5 L 8 19 L 19 12 L 8 5',
+        'SIH 0 1 SFSP 0 3 1',
         'M 8 5 L 8 12 L 19 12 L 8 5 M 8 12 L 8 19 L 19 12 L 8 12',
       ),
       makeTest(
@@ -600,15 +678,12 @@ describe('Path', () => {
         'SIH 0 1 S 0 3 1 SFSP 0 1 3',
         'M 8 5 L 8 12 L 19 12 L 19 12 L 8 5 M 8 12 L 8 19 L 19 12 L 8 12',
       ),
+      // TODO: add tests for shift offsets
+      // TODO: add more tests for compound paths
       makeTest(
-        'M 1 1 L 2 2 L 3 3 M 10 10 L 20 20 L 30 30',
-        'AC 3 4 2',
-        'M 1 1 L 2 2 L 3 3 M 10 10 L 20 20 L 30 30 M 3 4 L 3 4',
-      ),
-      makeTest(
-        'M 1 1 L 2 2 L 3 3 M 10 10 L 20 20 L 30 30',
-        'M 0 1 AC 3 4 2',
-        'M 10 10 L 20 20 L 30 30 M 1 1 L 2 2 L 3 3 M 3 4 L 3 4',
+        'M 8 5 L 8 19 L 19 12 L 8 5',
+        'SIH 0 1 S 0 3 1 SFSP 0 1 3',
+        'M 8 5 L 8 12 L 19 12 L 19 12 L 8 5 M 8 12 L 8 19 L 19 12 L 8 12',
       ),
     ];
 
@@ -648,74 +723,6 @@ describe('Path', () => {
     });
   });
 
-  // TODO: test multiple transformations at a time
-  // TODO: test that reversals and stuff still work
-  // TODO: test that splits and conversions and stuff still work
-  // TODO: test that reversals/shifts/splits/etc. are reverted properly, not just transforms
-  describe('#transform', () => {
-    const PATH = newPath('M -4 -8 h 8 v 16 h -8 v -16');
-
-    it('empty list of transforms', () => {
-      const actual = PATH.mutate().addTransforms([]).build();
-      const expected = PATH;
-      checkPathsEqual(actual, expected);
-    });
-
-    it('identity', () => {
-      const actual = PATH.mutate().addTransforms([new Matrix()]).build();
-      const expected = PATH;
-      checkPathsEqual(actual, expected);
-    });
-
-    it('translate', () => {
-      const actual = PATH.mutate().addTransforms([Matrix.fromTranslation(4, 8)]).build();
-      const expected = newPath('M 0 0 h 8 v 16 h -8 v -16');
-      checkPathsEqual(actual, expected);
-    });
-
-    it('rotate 90 degrees', () => {
-      const actual = PATH.mutate().addTransforms([Matrix.fromRotation(90)]).build();
-      const expected = newPath('M 8 -4 v 8 h -16 v -8 h 16');
-      checkPathsEqual(actual, expected);
-    });
-
-    it('rotate 180 degrees', () => {
-      const actual = PATH.mutate().addTransforms([Matrix.fromRotation(180)]).build();
-      const expected = newPath('M 4 8 h -8 v -16 h 8 v 16');
-      checkPathsEqual(actual, expected);
-    });
-
-    it('scale 50%', () => {
-      const actual = PATH.mutate().addTransforms([Matrix.fromScaling(0.5, 0.5)]).build();
-      const expected = newPath('M -2 -4 h 4 v 8 h -4 v -8');
-      checkPathsEqual(actual, expected);
-    });
-
-    it('transform and invert', () => {
-      const m1 = Matrix.flatten(
-        Matrix.fromTranslation(1, 2),
-        Matrix.fromScaling(2, 3),
-        Matrix.fromRotation(34),
-        Matrix.fromTranslation(3, 4),
-      );
-      const m2 = m1.invert();
-      const actual = PATH.mutate().addTransforms([m1, m2]).build();
-      const expected = PATH;
-      checkPathsEqual(actual, expected);
-    });
-
-    it('revert transformations', () => {
-      const actual = PATH.mutate().addTransforms([
-        Matrix.fromTranslation(1, 2),
-        Matrix.fromScaling(2, 3),
-        Matrix.fromRotation(34),
-        Matrix.fromTranslation(3, 4),
-      ]).revert().build();
-      const expected = PATH;
-      checkPathsEqual(actual, expected);
-    });
-  });
-
   describe('#project', () => {
     const TESTS_PROJECT = [
       [new Point(5, 5), 'M 0 0 L 10 10', { subIdx: 0, cmdIdx: 1, projection: { x: 5, y: 5, d: 0, t: 0.5 } }],
@@ -733,8 +740,8 @@ describe('Path', () => {
 
   describe('#hitTest', () => {
     const TESTS_HIT_TEST_FILL = [
-      [new Point(5, 5), 'M 4 4 h 2 v 2 h -2 v -2', true],
-      [new Point(5, 5), 'M 4 4 Q 5 4 6 4 Q 6 5 6 6 Q 5 6 4 6 Q 4 5 4 4', true],
+      [new Point(5, 5), 'M4 4h2v2h-2v-2', true],
+      [new Point(5, 5), 'M4 4Q 5 4 6 4 Q6 5 6 6 Q5 6 4 6 Q4 5 4 4', true],
       [new Point(16, 7), 'M6 19h4V5H6v14zm8-14v14h4V5h-4z', true],
       [new Point(16, 12), 'M6 19h4V5H6v14zm8-14v14h4V5h-4z', true],
       [new Point(16, 17), 'M6 19h4V5H6v14zm8-14v14h4V5h-4z', true],
