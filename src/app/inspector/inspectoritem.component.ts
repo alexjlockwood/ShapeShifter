@@ -3,13 +3,11 @@ import {
   Component, OnInit, Input, Pipe, PipeTransform, ChangeDetectionStrategy
 } from '@angular/core';
 import { Path, Command } from '../scripts/paths';
-import { } from '../services/layerstate.service';
 import {
   HoverService,
   HoverType,
   StateService,
   SelectionService,
-  Selection,
 } from '../services';
 import { Observable } from 'rxjs/Observable';
 import { CanvasType } from '../CanvasType';
@@ -50,7 +48,6 @@ export class InspectorItemComponent implements OnInit {
           return activePathId && _.some(selections, {
             source: this.canvasType,
             commandId: {
-              pathId: activePathId,
               subIdx: this.subIdx,
               cmdIdx: this.cmdIdx,
             }
@@ -186,7 +183,6 @@ export class InspectorItemComponent implements OnInit {
   }
 
   private broadcastHoverEvent(isHovering: boolean, hoverType: HoverType) {
-    const pathId = this.stateService.getActivePathId(this.canvasType);
     const subIdx = this.subIdx;
     const cmdIdx = this.cmdIdx;
     if (isHovering) {

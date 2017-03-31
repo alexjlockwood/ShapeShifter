@@ -43,7 +43,7 @@ export interface Path {
   /**
    * Performs a hit test on the path and returns a HitResult.
    */
-  hitTest(point: Point, opts?: HitOptions): HitResult;
+  hitTest(point: Point, opts: HitOptions): HitResult;
 
   /**
    * Returns the pole of inaccessibility for the specified subpath index.
@@ -68,20 +68,21 @@ export interface Path {
 
 /** Represents the options for a hit test. */
 export interface HitOptions {
-  isStrokeInRangeFn?: (distance: number) => boolean;
-  isPointInRangeFn?: (distance: number, isSplit: boolean) => boolean;
-  hitTestPointsOnly?: boolean;
+  isPointInRangeFn?: (distance: number, cmd?: Command) => boolean;
+  isSegmentInRangeFn?: (distance: number, cmd?: Command) => boolean;
+  findFilledSubPathsInRange?: boolean;
 }
 
 /** Represents the result of a hit test. */
 export interface HitResult {
-  isHit: boolean;
-  subIdx?: number;
-  cmdIdx?: number;
+  readonly isHit: boolean;
+  readonly endPointHits?: Array<{ subIdx: number, cmdIdx: number, projection: ProjectionResult }>;
+  readonly segmentHits?: Array<{ subIdx: number, cmdIdx: number, projection: ProjectionResult }>;
+  readonly subPathHits?: Array<{ subIdx: number }>;
 }
 
 export interface ProjectionOntoPath {
-  subIdx: number;
-  cmdIdx: number;
-  projection: ProjectionResult;
+  readonly subIdx: number;
+  readonly cmdIdx: number;
+  readonly projection: ProjectionResult;
 }

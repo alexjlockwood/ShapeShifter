@@ -63,7 +63,7 @@ class PathImpl implements Path {
   }
 
   // Implements the Path interface.
-  hitTest(point: Point, opts: HitOptions = {}): HitResult {
+  hitTest(point: Point, opts: HitOptions): HitResult {
     return this.ps.hitTest(point, opts);
   }
 

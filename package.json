@@ -75,7 +75,7 @@
     "protractor": "~5.1.1",
     "sass-lint": "^1.10.2",
     "ts-node": "~3.0.0",
-    "tslint": "~5.0.0",
+    "tslint": "~4.5.1",
     "typescript": "~2.2.1",
     "webdriver-manager": "12.0.4"
   }

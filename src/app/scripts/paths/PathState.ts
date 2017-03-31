@@ -1,5 +1,12 @@
 import * as _ from 'lodash';
-import { SubPath, Command, ProjectionOntoPath, HitOptions, HitResult } from '.';
+import {
+  SubPath,
+  Command,
+  ProjectionResult,
+  ProjectionOntoPath,
+  HitOptions,
+  HitResult
+} from '.';
 import { createSubPaths } from './SubPathImpl';
 import { CommandState } from './CommandState';
 import { MathUtil, Point, Rect } from '../common';
@@ -133,111 +140,114 @@ export class PathState {
   }
 
   hitTest(point: Point, opts: HitOptions): HitResult {
+    interface CommandHit {
+      subIdx: number;
+      cmdIdx: number;
+      projection: ProjectionResult;
+    }
+    const endPointHits: CommandHit[] = [];
+    const segmentHits: CommandHit[] = [];
+    const subPathHits: Array<{ subIdx: number }> = [];
+
     if (opts.isPointInRangeFn) {
-      // First search for in-range path points.
-      const pointResult =
+      endPointHits.push(...
         _.chain(this.subPaths as SubPath[])
           .filter(subPath => !subPath.isCollapsing())
           .map((subPath, subIdx) => {
             return subPath.getCommands()
               .map((cmd, cmdIdx) => {
-                const distance = MathUtil.distance(cmd.getEnd(), point);
-                const isSplit = cmd.isSplit();
-                return { subIdx, cmdIdx, distance, isSplit };
+                const { x, y } = cmd.getEnd();
+                const d = MathUtil.distance(cmd.getEnd(), point);
+                const t = 1;
+                const projection = { x, y, d, t };
+                return { subIdx, cmdIdx, projection, cmd };
               });
           })
-          .flatMap(pathPoints => pathPoints)
-          .filter(pathPoint => opts.isPointInRangeFn(pathPoint.distance, pathPoint.isSplit))
-          // Reverse so that points drawn with higher z-orders are preferred.
-          .reverse()
-          .reduce((prev, curr) => {
-            if (!prev) {
-              return curr;
-            }
-            if (prev.isSplit !== curr.isSplit) {
-              // Always return split points that are in range before
-              // returning non-split points. This way we can guarantee that
-              // split points will never be obstructed by non-split points.
-              return prev.isSplit ? prev : curr;
-            }
-            return prev.distance < curr.distance ? prev : curr;
-          }, undefined)
-          .value();
-
-      if (pointResult) {
-        // Then the hit occurred on top of a command point.
-        return {
-          isHit: true,
-          subIdx: pointResult.subIdx,
-          cmdIdx: pointResult.cmdIdx,
-        };
-      }
+          .flatMap(pointInfos => pointInfos)
+          .filter(pointInfo => opts.isPointInRangeFn(pointInfo.projection.d, pointInfo.cmd))
+          .map(pointInfo => {
+            const { subIdx, cmdIdx, projection } = pointInfo;
+            return { subIdx, cmdIdx, projection };
+          })
+          .value()
+      );
     }
 
-    if (opts.hitTestPointsOnly) {
-      return { isHit: false };
-    }
-
-    if (opts.isStrokeInRangeFn) {
+    if (opts.isSegmentInRangeFn) {
       // TODO: also check to see if the hit occurred at a stroke-linejoin vertex
       // TODO: take stroke width scaling into account as well?
-      const result = this.project(point);
-      const isHit = result && opts.isStrokeInRangeFn(result.projection.d);
-      return {
-        isHit,
-        subIdx: isHit ? result.subIdx : undefined,
-      };
+      segmentHits.push(...
+        _.chain(this.subPaths as SubPath[])
+          .filter(subPath => !subPath.isCollapsing())
+          .map((subPath, subIdx) => {
+            const spsIdx = this.subPathOrdering[subIdx];
+            const sps = this.findSubPathState(spsIdx);
+            // We iterate by csIdx here to improve performance (since cmdIdx
+            // values can correspond to split points).
+            return sps.getCommandStates()
+              .map((cs, csIdx) => {
+                const projectionResultWithSplitIdx = cs.project(point);
+                if (!projectionResultWithSplitIdx) {
+                  return {} as {
+                    subIdx: number,
+                    cmdIdx: number,
+                    projection: ProjectionResult,
+                    splitIdx: number,
+                  };
+                }
+                const { projectionResult, splitIdx } = projectionResultWithSplitIdx;
+                if (sps.isReversed()) {
+                  projectionResult.t = 1 - projectionResult.t;
+                }
+                const cmdIdx = this.toCmdIdx(spsIdx, csIdx, splitIdx);
+                return { subIdx, cmdIdx, projection: projectionResult };
+              });
+          })
+          .flatMap(projectionInfos => projectionInfos)
+          .filter(obj => {
+            if (!obj.projection) {
+              return false;
+            }
+            const cmd = this.subPaths[obj.subIdx].getCommands()[obj.cmdIdx];
+            return opts.isSegmentInRangeFn(obj.projection.d, cmd);
+          })
+          .value()
+      );
     }
 
-    let hitSpsIdx: number = undefined;
-
-    // Search from right to left so that higher z-order subpaths are found first.
-    _.chain(this.subPaths as SubPath[])
-      .filter(subPath => !subPath.isCollapsing())
-      .map((subPath, subIdx) => {
-        return this.findSubPathState(this.toSpsIdx(subIdx)).getCommandStates();
-      })
-      .forEachRight((css, spsIdx) => {
-        const firstCmd = css[0].getCommands()[0];
-        const lastCmd = _.last(_.last(css).getCommands());
-        const isClosed = firstCmd.getEnd().equals(lastCmd.getEnd());
-        if (!isClosed) {
-          // If this happens, the SVG is probably not going to render properly at all,
-          // but we'll check anyway just to be safe.
-          return true;
-        }
-        const bounds = createBoundingBox(...css);
-        if (!bounds.contains(point)) {
-          // Nothing to see here. Check the next subpath.
-          return true;
-        }
-        // The point is inside the subpath's bounding box, so next, we will
-        // use the 'even-odd rule' to determine if the filled path has been hit.
-        // We create a line from the mouse point to a point we know that is not
-        // inside the path (in this case, we use a coordinate outside the path's
-        // bounded box). A hit has occured if and only if the number of
-        // intersections between the line and the path is odd.
-        const line = { p1: point, p2: new Point(bounds.r + 1, bounds.b + 1) };
-        // Filter out t=0 values since they will be accounted for by
-        // neighboring t=1 values.
-        const intersectionResults = css.map(cm => cm.intersects(line).filter(t => !!t));
-        const numIntersections = _.sum(intersectionResults.map(ts => ts.length));
-        if (numIntersections % 2 !== 0) {
-          hitSpsIdx = spsIdx;
-        }
-        return hitSpsIdx === undefined;
-      })
-      .value();
-
-    if (hitSpsIdx === undefined) {
-      return { isHit: false };
+    if (opts.findFilledSubPathsInRange) {
+      subPathHits.push(...
+        _.chain(this.subPaths as SubPath[])
+          .filter(subPath => subPath.isClosed() && !subPath.isCollapsing())
+          .flatMap((subPath, subIdx) => {
+            const css = this.findSubPathState(this.toSpsIdx(subIdx)).getCommandStates();
+            const bounds = createBoundingBox(...css);
+            if (!bounds.contains(point)) {
+              // Nothing to see here. Check the next subpath.
+              return [] as Array<{ subIdx: number }>;
+            }
+            // The point is inside the subpath's bounding box, so next, we will
+            // use the 'even-odd rule' to determine if the filled path has been hit.
+            // We create a line from the mouse point to a point we know that is not
+            // inside the path (in this case, we use a coordinate outside the path's
+            // bounded box). A hit has occured if and only if the number of
+            // intersections between the line and the path is odd.
+            const line = { p1: point, p2: new Point(bounds.r + 1, bounds.b + 1) };
+            // Filter out t=0 values since they will be accounted for by
+            // neighboring t=1 values.
+            const intersectionResults = css.map(cm => cm.intersects(line).filter(t => !!t));
+            const numIntersections = _.sum(intersectionResults.map(ts => ts.length));
+            if (numIntersections % 2 === 0) {
+              // Nothing to see here. Check the next subpath.
+              return [] as Array<{ subIdx: number }>;
+            }
+            return [{ subIdx }];
+          })
+          .value()
+      );
     }
-
-    const hitSubIdx = this.subPathOrdering[hitSpsIdx];
-    return {
-      isHit: true,
-      subIdx: hitSubIdx,
-    };
+    const isHit = !!endPointHits.length || !!segmentHits.length || !!subPathHits.length;
+    return { isHit, endPointHits, segmentHits, subPathHits };
   }
 
   // TODO: move this math stuff into the calculators module

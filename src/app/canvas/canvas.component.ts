@@ -278,17 +278,17 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     return this.canvasType !== CanvasType.Preview && this.activePathId;
   }
 
-  private showPenCursor() {
-    this.canvas.css({ cursor: 'url(/assets/penaddcursorsmall.png) 5 0, auto' });
-  }
+  // private showPenCursor() {
+  //   this.canvas.css({ cursor: 'url(/assets/penaddcursorsmall.png) 5 0, auto' });
+  // }
 
-  private showSelectCursor() {
-    this.canvas.css({ cursor: 'url(/assets/cursorpointselectsmall.png) auto' });
-  }
+  // private showSelectCursor() {
+  //   this.canvas.css({ cursor: 'url(/assets/cursorpointselectsmall.png) auto' });
+  // }
 
-  private resetCursor() {
-    this.canvas.css({ cursor: '' });
-  }
+  // private resetCursor() {
+  //   this.canvas.css({ cursor: '' });
+  // }
 
   private resizeAndDraw() {
     if (!this.isViewInit) {
@@ -1008,9 +1008,9 @@ function drawSelections(
     _.chain(selections)
       // TODO: change pathId if we ever need to draw > 1 path at a time.
       .groupBy(selection => pathId)
-      .mapValues((values: Selection[], pathId: string) => {
+      .mapValues((values: Selection[], id: string) => {
         const selectedCmds: Command[] = [];
-        const pathLayer = vectorLayer.findLayer(pathId) as PathLayer;
+        const pathLayer = vectorLayer.findLayer(id) as PathLayer;
         if (pathLayer) {
           selectedCmds.push(...values.map(
             selection => pathLayer.pathData
@@ -1100,20 +1100,17 @@ function performPointHitTest(
     MathUtil.transformPoint(
       mousePoint,
       MathUtil.flattenTransforms(transforms).invert());
-  const isPointInRangeFn = (distance: number, isSplit: boolean) => {
-    return distance <= (isSplit ? pointRadius * SPLIT_POINT_RADIUS_FACTOR : pointRadius);
+  const isPointInRangeFn = (distance: number, cmd: Command) => {
+    return distance <= (cmd.isSplit()
+      ? pointRadius * SPLIT_POINT_RADIUS_FACTOR
+      : pointRadius);
   };
-  const hitResult = pathLayer.pathData.hitTest(transformedMousePoint, {
-    isPointInRangeFn,
-    hitTestPointsOnly: true,
-  });
-  if (!hitResult.isHit) {
+  const hitResult =
+    pathLayer.pathData.hitTest(transformedMousePoint, { isPointInRangeFn });
+  if (!hitResult.endPointHits.length) {
     return undefined;
   }
-  return {
-    subIdx: hitResult.subIdx,
-    cmdIdx: hitResult.cmdIdx,
-  };
+  return _.last(hitResult.endPointHits);
 }
 
 function performSubPathHitTest(
@@ -1130,17 +1127,25 @@ function performSubPathHitTest(
     MathUtil.transformPoint(
       mousePoint,
       MathUtil.flattenTransforms(transforms).invert());
-  const isStrokeInRangeFn = pathLayer.isStroked()
-    ? (distance: number) => {
+  let isSegmentInRangeFn: (distance: number, cmd?: Command) => boolean;
+  let findFilledSubPathsInRange: boolean;
+  if (pathLayer.isStroked()) {
+    isSegmentInRangeFn = (distance: number) => {
       return distance <= pathLayer.strokeWidth / 2;
-    }
-    : undefined;
+    };
+  } else if (pathLayer.isFilled()) {
+    findFilledSubPathsInRange = true;
+  }
   const hitResult =
-    pathLayer.pathData.hitTest(transformedMousePoint, { isStrokeInRangeFn, });
+    pathLayer.pathData.hitTest(
+      transformedMousePoint, { isSegmentInRangeFn, findFilledSubPathsInRange });
   if (!hitResult.isHit) {
     return undefined;
   }
-  return hitResult.subIdx;
+  if (hitResult.segmentHits.length) {
+    return _.last(hitResult.segmentHits).subIdx;
+  }
+  return _.last(hitResult.subPathHits).subIdx;
 }
 
 function executeCommands(
