@@ -12,7 +12,7 @@ import { CanvasType } from '../CanvasType';
 export class SelectionService {
   private readonly source = new BehaviorSubject<ReadonlyArray<Selection>>([]);
 
-  observe() {
+  asObservable() {
     return this.source.asObservable();
   }
 

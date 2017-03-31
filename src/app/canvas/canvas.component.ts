@@ -124,7 +124,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           }
         }));
     this.subscriptions.push(
-      this.canvasResizeService.getCanvasResizeObservable()
+      this.canvasResizeService.asObservable()
         .subscribe(size => {
           const oldWidth = this.cssContainerWidth;
           const oldHeight = this.cssContainerHeight;
@@ -178,10 +178,10 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         this.stateService.getActivePathIdObservable(this.canvasType)
           .subscribe(() => this.draw()));
       this.subscriptions.push(
-        this.selectionService.observe()
+        this.selectionService.asObservable()
           .subscribe(() => this.draw()));
       this.subscriptions.push(
-        this.appModeService.observe().subscribe(() => {
+        this.appModeService.asObservable().subscribe(() => {
           this.selectionService.reset();
           this.hoverService.reset();
           this.pointSelector = undefined;
@@ -221,7 +221,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         this.draw();
       };
       this.subscriptions.push(
-        this.hoverService.observe().subscribe(hover => {
+        this.hoverService.asObservable().subscribe(hover => {
           if (!hover) {
             // Clear the current hover.
             updateCurrentHoverFn(undefined);

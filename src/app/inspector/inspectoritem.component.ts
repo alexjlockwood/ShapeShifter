@@ -44,7 +44,7 @@ export class InspectorItemComponent implements OnInit {
 
   ngOnInit() {
     this.isSelectedObservable =
-      this.selectionService.observe()
+      this.selectionService.asObservable()
         .map(selections => {
           const activePathId = this.stateService.getActivePathId(this.canvasType);
           return activePathId && _.some(selections, {

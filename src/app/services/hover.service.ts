@@ -9,7 +9,7 @@ import { CanvasType } from '../CanvasType';
 export class HoverService {
   private readonly source = new BehaviorSubject<Hover>(undefined);
 
-  observe() {
+  asObservable() {
     return this.source.asObservable();
   }
 

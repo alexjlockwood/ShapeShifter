@@ -75,7 +75,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   ) { }
 
   ngOnInit() {
-    this.appModeObservable = this.appModeService.observe();
+    this.appModeObservable = this.appModeService.asObservable();
     this.morphabilityStatusTextObservable =
       this.stateService.getMorphabilityStatusObservable()
         .map(status => {
@@ -149,7 +149,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       }));
 
     this.subscriptions.push(
-      this.appModeService.observe().subscribe(appMode => {
+      this.appModeService.asObservable().subscribe(appMode => {
         if (appMode !== AppMode.SelectPoints) {
           // Clear all current selections if we are leaving selection mode.
           this.selectionService.reset();

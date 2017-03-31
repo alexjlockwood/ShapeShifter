@@ -8,7 +8,7 @@ import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 export class CanvasResizeService {
   private readonly source = new BehaviorSubject<Size>({ width: 0, height: 0 });
 
-  getCanvasResizeObservable() {
+  asObservable() {
     return this.source.asObservable();
   }
 

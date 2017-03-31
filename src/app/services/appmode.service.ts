@@ -29,7 +29,7 @@ export class AppModeService {
     return this.source.getValue();
   }
 
-  observe() {
+  asObservable() {
     return this.source.asObservable();
   }
 

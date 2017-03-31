@@ -52,7 +52,7 @@ export class CanvasRulerDirective implements OnInit, OnDestroy {
         }
       }));
     this.subscriptions.push(
-      this.canvasResizeService.getCanvasResizeObservable().subscribe(size => {
+      this.canvasResizeService.asObservable().subscribe(size => {
         const oldWidth = this.cssContainerWidth;
         const oldHeight = this.cssContainerHeight;
         this.cssContainerWidth = Math.max(1, size.width - CANVAS_MARGIN * 2);
