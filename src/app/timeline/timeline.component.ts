@@ -1,6 +1,9 @@
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
-import { AnimatorService } from '../services/animator.service';
-import { LayerStateService, MorphabilityStatus } from '../services/layerstate.service';
+import {
+  AnimatorService,
+  LayerStateService,
+  MorphabilityStatus,
+} from '../services';
 import { Subscription } from 'rxjs/Subscription';
 import { Observable } from 'rxjs/Observable';
 

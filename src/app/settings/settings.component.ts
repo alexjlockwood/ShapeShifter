@@ -1,9 +1,12 @@
 import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
-import { AnimatorService } from '../services/animator.service';
 import { Interpolator, INTERPOLATORS } from '../scripts/animation';
-import { LayerStateService, MorphabilityStatus } from '../services/layerstate.service';
+import {
+  AnimatorService,
+  LayerStateService,
+  MorphabilityStatus,
+  SettingsService,
+} from '../services';
 import { CanvasType } from '../CanvasType';
-import { SettingsService } from '../services/settings.service';
 import { Observable } from 'rxjs/Observable';
 import { Matrix } from '../scripts/common';
 import 'rxjs/add/observable/combineLatest';

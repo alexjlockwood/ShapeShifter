@@ -14,7 +14,7 @@ import { CanvasType } from '../CanvasType';
 import * as $ from 'jquery';
 import { Point, Matrix, MathUtil, ColorUtil } from '../scripts/common';
 import { Subscription } from 'rxjs/Subscription';
-import { HoverStateService, Type as HoverType, Hover } from '../services/hoverstate.service';
+import { HoverStateService, HoverType, Hover } from '../services';
 import {
   AnimatorService,
   CanvasResizeService,

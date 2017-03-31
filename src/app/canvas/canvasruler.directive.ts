@@ -1,12 +1,14 @@
+import * as _ from 'lodash';
+import * as $ from 'jquery';
 import { Directive, OnInit, Input, ElementRef, OnDestroy } from '@angular/core';
 import { CanvasType } from '../CanvasType';
-import { LayerStateService } from '../services/layerstate.service';
-import { CanvasResizeService } from '../services/canvasresize.service';
+import {
+  LayerStateService,
+  CanvasResizeService,
+} from '../services';
 import { Point } from '../scripts/common';
-import * as $ from 'jquery';
 import { Subscription } from 'rxjs/Subscription';
 import { CANVAS_MARGIN, DEFAULT_VIEWPORT_SIZE } from './canvas.component';
-import * as _ from 'lodash';
 
 // Ruler size in css pixels.
 const RULER_SIZE = 32;

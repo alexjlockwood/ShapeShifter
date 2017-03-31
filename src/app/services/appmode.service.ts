@@ -1,7 +1,9 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
-import { SelectionStateService } from './selectionstate.service';
-import { HoverStateService } from './hoverstate.service';
+
+// Note that importing these from '.' causes runtime errors.
+import { SelectionStateService } from './selection.service';
+import { HoverStateService } from './hover.service';
 
 /**
  * A simple service that broadcasts changes to the current app mode.

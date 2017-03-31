@@ -32,7 +32,7 @@ export class HoverStateService {
  * A hover represents a transient action that results as a result of a mouse hover.
  */
 export interface Hover {
-  readonly type: Type;
+  readonly type: HoverType;
   readonly commandId: { subIdx: number, cmdIdx: number };
   readonly source: CanvasType;
 }
@@ -40,7 +40,7 @@ export interface Hover {
 /**
  * Describes the different types of hover events.
  */
-export enum Type {
+export enum HoverType {
   // The user hovered over a command in the inspector/canvas.
   Command,
   // The user hovered over the split button in the command inspector.

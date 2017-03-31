@@ -9,8 +9,8 @@ import { ROTATION_GROUP_LAYER_ID } from '../scripts/import';
 // Note that importing these from '.' causes runtime errors.
 import { AppModeService } from './appmode.service';
 import { AnimatorService } from './animator.service';
-import { HoverStateService } from './hoverstate.service';
-import { SelectionStateService } from './selectionstate.service';
+import { HoverStateService } from './hover.service';
+import { SelectionStateService } from './selection.service';
 
 /**
  * The global state service that is in charge of keeping track of the loaded
