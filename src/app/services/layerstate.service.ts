@@ -5,10 +5,12 @@ import { CanvasType } from '../CanvasType';
 import { Path } from '../scripts/paths';
 import { AutoAwesome } from '../scripts/autoawesome';
 import { ROTATION_GROUP_LAYER_ID } from '../scripts/import';
-import { SelectionStateService } from './selectionstate.service';
-import { HoverStateService } from './hoverstate.service';
+
+// Note that importing these from '.' causes runtime errors.
+import { AppModeService } from './appmode.service';
 import { AnimatorService } from './animator.service';
-import { CanvasModeService } from './canvasmode.service';
+import { HoverStateService } from './hoverstate.service';
+import { SelectionStateService } from './selectionstate.service';
 
 /**
  * The global state service that is in charge of keeping track of the loaded
@@ -26,7 +28,7 @@ export class LayerStateService {
     private readonly selectionStateService: SelectionStateService,
     private readonly hoverStateService: HoverStateService,
     private readonly animatorService: AnimatorService,
-    private readonly canvasModeService: CanvasModeService,
+    private readonly appModeService: AppModeService,
   ) {
     [CanvasType.Start, CanvasType.Preview, CanvasType.End]
       .forEach(type => {
@@ -58,7 +60,7 @@ export class LayerStateService {
    * Called by the PathSelectorComponent when a new vector layer path is selected.
    */
   setActivePathIds(ids: Array<{ type: CanvasType, pathId: string }>, shouldNotify = true) {
-    this.canvasModeService.reset();
+    this.appModeService.reset();
     this.selectionStateService.reset();
     this.hoverStateService.reset();
     // TODO: resetting the animator service strangely breaks things here... not sure why.
@@ -267,7 +269,7 @@ export class LayerStateService {
    * Resets all existing layer state loaded by the application.
    */
   reset() {
-    this.canvasModeService.reset();
+    this.appModeService.reset();
     this.selectionStateService.reset();
     this.hoverStateService.reset();
     this.animatorService.reset();

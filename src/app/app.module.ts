@@ -27,7 +27,7 @@ import {
   LayerStateService,
   SelectionStateService,
   SettingsService,
-  CanvasModeService,
+  AppModeService,
 } from './services';
 
 // Dialogs.
@@ -85,7 +85,7 @@ import 'hammerjs';
     CanvasResizeService,
     DialogService,
     SettingsService,
-    CanvasModeService,
+    AppModeService,
   ],
   entryComponents: [
     ConfirmDialogComponent,

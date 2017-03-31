@@ -18,8 +18,8 @@ import { HoverStateService, Type as HoverType, Hover } from '../services/hoverst
 import {
   AnimatorService,
   CanvasResizeService,
-  CanvasModeService,
-  CanvasMode,
+  AppModeService,
+  AppMode,
   SelectionStateService,
   Selection,
   LayerStateService,
@@ -95,7 +95,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
   constructor(
     private readonly elementRef: ElementRef,
-    private readonly canvasModeService: CanvasModeService,
+    private readonly appModeService: AppModeService,
     private readonly canvasResizeService: CanvasResizeService,
     private readonly hoverStateService: HoverStateService,
     private readonly layerStateService: LayerStateService,
@@ -180,7 +180,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         this.selectionStateService.observe()
           .subscribe(() => this.draw()));
       this.subscriptions.push(
-        this.canvasModeService.getCanvasModeObservable().subscribe(() => {
+        this.appModeService.observe().subscribe(() => {
           this.selectionStateService.reset();
           this.hoverStateService.reset();
           this.pointSelector = undefined;
@@ -259,8 +259,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     return this.vectorLayer && this.activePathId;
   }
 
-  private get canvasMode() {
-    return this.canvasModeService.getCanvasMode();
+  private get appMode() {
+    return this.appModeService.getAppMode();
   }
 
   private get shouldDisableLayer() {
@@ -505,7 +505,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
   // Draw any actively dragged points along the path (selection mode only).
   private drawDraggingPoints(ctx: CanvasRenderingContext2D) {
-    if (this.canvasMode !== CanvasMode.SelectPoints
+    if (this.appMode !== AppMode.SelectPoints
       || !this.lastKnownMouseLocation
       || !this.pointSelector
       || !this.pointSelector.isMousePressedDown()
@@ -533,8 +533,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
   // Draw a preview of the newly added point (add points mode only).
   private drawAddPointPreview(ctx: CanvasRenderingContext2D) {
-    if ((this.canvasMode !== CanvasMode.AddPoints
-      && this.canvasMode !== CanvasMode.SplitSubPaths)
+    if ((this.appMode !== AppMode.AddPoints
+      && this.appMode !== AppMode.SplitSubPaths)
       || !this.lastKnownMouseLocation) {
       return;
     }
@@ -617,7 +617,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     const mouseDown = this.mouseEventToPoint(event);
     this.lastKnownMouseLocation = mouseDown;
 
-    if (this.canvasMode === CanvasMode.SelectPoints) {
+    if (this.appMode === AppMode.SelectPoints) {
       const selectedCommandIndex =
         performPointHitTest(
           this.vectorLayer, this.activePathId, mouseDown, this.pathPointRadius);
@@ -636,8 +636,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         // the middle of selecting multiple points at once.
         this.selectionStateService.reset();
       }
-    } else if (this.canvasMode === CanvasMode.AddPoints
-      || this.canvasMode === CanvasMode.SplitSubPaths) {
+    } else if (this.appMode === AppMode.AddPoints
+      || this.appMode === AppMode.SplitSubPaths) {
       const projectionOntoPath =
         calculateProjectionOntoPath(
           this.vectorLayer, this.activePathId, this.lastKnownMouseLocation);
@@ -645,7 +645,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       this.shouldPerformActionOnMouseUp = projection.d < MIN_SNAP_THRESHOLD;
       // TODO: avoid redrawing on every frame... often times it will be unnecessary
       this.draw();
-    } else if (this.canvasMode === CanvasMode.PairSubPaths) {
+    } else if (this.appMode === AppMode.PairSubPaths) {
       const selectedSubIdx =
         performSubPathHitTest(this.vectorLayer, this.activePathId, mouseDown);
       if (selectedSubIdx !== undefined) {
@@ -697,7 +697,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     const mouseMove = this.mouseEventToPoint(event);
     this.lastKnownMouseLocation = mouseMove;
 
-    if (this.canvasMode === CanvasMode.SelectPoints) {
+    if (this.appMode === AppMode.SelectPoints) {
       let isDraggingSplitPoint = false;
       if (this.pointSelector) {
         this.pointSelector.onMouseMove(mouseMove);
@@ -725,8 +725,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       } else {
         this.hoverStateService.reset();
       }
-    } else if (this.canvasMode === CanvasMode.AddPoints
-      || this.canvasMode === CanvasMode.SplitSubPaths) {
+    } else if (this.appMode === AppMode.AddPoints
+      || this.appMode === AppMode.SplitSubPaths) {
       // TODO: avoid redrawing on every frame... often times it will be unnecessary
       this.draw();
     }
@@ -740,7 +740,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     const mouseUp = this.mouseEventToPoint(event);
     this.lastKnownMouseLocation = mouseUp;
 
-    if (this.canvasMode === CanvasMode.SelectPoints) {
+    if (this.appMode === AppMode.SelectPoints) {
       if (this.pointSelector) {
         this.pointSelector.onMouseUp(mouseUp);
 
@@ -803,8 +803,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         this.draw();
         this.pointSelector = undefined;
       }
-    } else if (this.canvasMode === CanvasMode.AddPoints
-      || this.canvasMode === CanvasMode.SplitSubPaths) {
+    } else if (this.appMode === AppMode.AddPoints
+      || this.appMode === AppMode.SplitSubPaths) {
       if (this.shouldPerformActionOnMouseUp) {
         const projectionOntoPath =
           calculateProjectionOntoPath(
@@ -814,9 +814,9 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           // We're in range, so split the path!
           const activePathLayer = this.layerStateService.getActivePathLayer(this.canvasType);
           const pathMutator = activePathLayer.pathData.mutate();
-          if (this.canvasMode === CanvasMode.AddPoints) {
+          if (this.appMode === AppMode.AddPoints) {
             pathMutator.splitCommand(subIdx, cmdIdx, projection.t);
-          } else if (this.canvasMode === CanvasMode.SplitSubPaths) {
+          } else if (this.appMode === AppMode.SplitSubPaths) {
             if (activePathLayer.isFilled()) {
               if (!this.initialFilledSubPathProjectionOntoPath) {
                 this.initialFilledSubPathProjectionOntoPath = projectionOntoPath;
@@ -869,14 +869,14 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     const mouseLeave = this.mouseEventToPoint(event);
     this.lastKnownMouseLocation = mouseLeave;
 
-    if (this.canvasMode === CanvasMode.SelectPoints) {
+    if (this.appMode === AppMode.SelectPoints) {
       // TODO: how to handle the case where the mouse leaves and re-enters mid-gesture?
       if (this.pointSelector) {
         this.pointSelector.onMouseLeave(mouseLeave);
         this.draw();
       }
-    } else if (this.canvasMode === CanvasMode.AddPoints
-      || this.canvasMode === CanvasMode.SplitSubPaths) {
+    } else if (this.appMode === AppMode.AddPoints
+      || this.appMode === AppMode.SplitSubPaths) {
       // If the user clicks to perform an action but the mouse leaves the
       // canvas before mouse up is registered, then just cancel the event.
       // This way we can avoid some otherwise confusing behavior.

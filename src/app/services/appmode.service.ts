@@ -4,39 +4,39 @@ import { SelectionStateService } from './selectionstate.service';
 import { HoverStateService } from './hoverstate.service';
 
 /**
- * A simple service that broadcasts changes to the current canvas mode.
+ * A simple service that broadcasts changes to the current app mode.
  */
 @Injectable()
-export class CanvasModeService {
-  private readonly source = new BehaviorSubject<CanvasMode>(CanvasMode.SelectPoints);
+export class AppModeService {
+  private readonly source = new BehaviorSubject<AppMode>(AppMode.SelectPoints);
 
   constructor(
     private readonly selectionStateService: SelectionStateService,
     private readonly hoverStateService: HoverStateService,
   ) { }
 
-  setCanvasMode(canvasMode: CanvasMode) {
-    if (this.getCanvasMode() !== canvasMode) {
+  setAppMode(appMode: AppMode) {
+    if (this.getAppMode() !== appMode) {
       this.selectionStateService.reset();
       this.hoverStateService.reset();
-      this.source.next(canvasMode);
+      this.source.next(appMode);
     }
   }
 
-  getCanvasMode() {
+  getAppMode() {
     return this.source.getValue();
   }
 
-  getCanvasModeObservable() {
+  observe() {
     return this.source.asObservable();
   }
 
   reset() {
-    this.setCanvasMode(CanvasMode.SelectPoints);
+    this.setAppMode(AppMode.SelectPoints);
   }
 }
 
-export enum CanvasMode {
+export enum AppMode {
   SelectPoints,
   AddPoints,
   PairSubPaths,

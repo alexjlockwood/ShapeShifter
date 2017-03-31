@@ -11,8 +11,8 @@ import {
   AnimatorService,
   CanvasResizeService,
   SelectionStateService,
-  CanvasModeService,
-  CanvasMode,
+  AppModeService,
+  AppMode,
   LayerStateService,
   MorphabilityStatus,
 } from './services';
@@ -41,10 +41,10 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   PREVIEW_CANVAS = CanvasType.Preview;
   END_CANVAS = CanvasType.End;
 
-  SELECT_POINTS_MODE = CanvasMode.SelectPoints;
-  ADD_POINTS_MODE = CanvasMode.AddPoints;
-  PAIR_SUBPATHS_MODE = CanvasMode.PairSubPaths;
-  SPLIT_SUBPATHS_MODE = CanvasMode.SplitSubPaths;
+  SELECT_POINTS_MODE = AppMode.SelectPoints;
+  ADD_POINTS_MODE = AppMode.AddPoints;
+  PAIR_SUBPATHS_MODE = AppMode.PairSubPaths;
+  SPLIT_SUBPATHS_MODE = AppMode.SplitSubPaths;
 
   MORPHABILITY_NONE = MorphabilityStatus.None;
   MORPHABILITY_UNMORPHABLE = MorphabilityStatus.Unmorphable;
@@ -54,7 +54,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   morphabilityStatusTextObservable: Observable<string>;
   wasMorphable = false;
 
-  canvasModeObservable: Observable<CanvasMode>;
+  appModeObservable: Observable<AppMode>;
 
   private readonly subscriptions: Subscription[] = [];
 
@@ -71,11 +71,11 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     private readonly animatorService: AnimatorService,
     private readonly canvasResizeService: CanvasResizeService,
     // This is public so that it can be accessed by the template.
-    public readonly canvasModeService: CanvasModeService,
+    public readonly appModeService: AppModeService,
   ) { }
 
   ngOnInit() {
-    this.canvasModeObservable = this.canvasModeService.getCanvasModeObservable();
+    this.appModeObservable = this.appModeService.observe();
     this.morphabilityStatusTextObservable =
       this.layerStateService.getMorphabilityStatusObservable()
         .map(status => {
@@ -149,8 +149,8 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       }));
 
     this.subscriptions.push(
-      this.canvasModeService.getCanvasModeObservable().subscribe(canvasMode => {
-        if (canvasMode !== CanvasMode.SelectPoints) {
+      this.appModeService.observe().subscribe(appMode => {
+        if (appMode !== AppMode.SelectPoints) {
           // Clear all current selections if we are leaving selection mode.
           this.selectionStateService.reset();
         }
@@ -195,7 +195,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       if (event.keyCode === 8 || event.keyCode === 46) {
         // In case there's a JS error, never navigate away.
         event.preventDefault();
-        if (this.canvasModeService.getCanvasMode() === CanvasMode.SelectPoints) {
+        if (this.appModeService.getAppMode() === AppMode.SelectPoints) {
           // Can only delete points in selection mode.
           PathUtil.deleteSelectedSplitPoints(
             this.layerStateService,
