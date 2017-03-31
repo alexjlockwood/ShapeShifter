@@ -65,7 +65,6 @@ export class InspectorItemComponent implements OnInit {
     this.selectionStateService.toggle({
       source: this.canvasType,
       commandId: {
-        pathId: this.layerStateService.getActivePathId(this.canvasType),
         subIdx: this.subIdx,
         cmdIdx: this.cmdIdx,
       }
