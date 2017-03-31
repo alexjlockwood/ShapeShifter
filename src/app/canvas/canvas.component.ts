@@ -7,7 +7,6 @@ import {
   Path,
   SubPath,
   Command,
-  Index as CommandIndex,
   ProjectionOntoPath,
 } from '../scripts/paths';
 import { PathLayer, ClipPathLayer, VectorLayer, GroupLayer, Layer } from '../scripts/layers';
@@ -137,37 +136,28 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     if (this.canvasType === CanvasType.Preview) {
       // Preview canvas specific setup.
       const interpolatePreview = (fraction: number) => {
-        const startPathLayer =
-          this.layerStateService.getActivePathLayer(CanvasType.Start);
-        const previewPathLayer =
-          this.layerStateService.getActivePathLayer(CanvasType.Preview);
-        const endPathLayer =
-          this.layerStateService.getActivePathLayer(CanvasType.End);
-        if (startPathLayer
-          && previewPathLayer
-          && endPathLayer
+        const startPathLayer = this.layerStateService.getActivePathLayer(CanvasType.Start);
+        const previewPathLayer = this.layerStateService.getActivePathLayer(CanvasType.Preview);
+        const endPathLayer = this.layerStateService.getActivePathLayer(CanvasType.End);
+        if (startPathLayer && previewPathLayer && endPathLayer
           && startPathLayer.isMorphableWith(endPathLayer)) {
           // Note that there is no need to broadcast layer state changes
           // for the preview canvas.
           previewPathLayer.interpolate(startPathLayer, endPathLayer, fraction);
         }
-        const startGroupLayer =
-          this.layerStateService.getActiveRotationLayer(CanvasType.Start);
-        const previewGroupLayer =
-          this.layerStateService.getActiveRotationLayer(CanvasType.Preview);
-        const endGroupLayer =
-          this.layerStateService.getActiveRotationLayer(CanvasType.End);
+        const startGroupLayer = this.layerStateService.getActiveRotationLayer(CanvasType.Start);
+        const previewGroupLayer = this.layerStateService.getActiveRotationLayer(CanvasType.Preview);
+        const endGroupLayer = this.layerStateService.getActiveRotationLayer(CanvasType.End);
         if (startGroupLayer && previewGroupLayer && endGroupLayer) {
           previewGroupLayer.interpolate(startGroupLayer, endGroupLayer, fraction);
         }
       };
       let currentAnimatedFraction = 0;
       this.subscriptions.push(
-        this.layerStateService.getActivePathIdObservable(this.canvasType)
-          .subscribe(() => {
-            interpolatePreview(currentAnimatedFraction);
-            this.draw();
-          }));
+        this.layerStateService.getActivePathIdObservable(this.canvasType).subscribe(() => {
+          interpolatePreview(currentAnimatedFraction);
+          this.draw();
+        }));
       this.subscriptions.push(
         this.animatorService.getAnimatedValueObservable()
           .subscribe(fraction => {
@@ -187,19 +177,18 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         this.layerStateService.getActivePathIdObservable(this.canvasType)
           .subscribe(() => this.draw()));
       this.subscriptions.push(
-        this.selectionStateService.getSelectionsObservable()
+        this.selectionStateService.observe()
           .subscribe(() => this.draw()));
       this.subscriptions.push(
-        this.canvasModeService.getCanvasModeObservable()
-          .subscribe(() => {
-            this.selectionStateService.reset();
-            this.hoverStateService.reset();
-            this.pointSelector = undefined;
-            this.shouldPerformActionOnMouseUp = false;
-            this.lastKnownMouseLocation = undefined;
-            this.initialFilledSubPathProjectionOntoPath = undefined;
-            this.draw();
-          }));
+        this.canvasModeService.getCanvasModeObservable().subscribe(() => {
+          this.selectionStateService.reset();
+          this.hoverStateService.reset();
+          this.pointSelector = undefined;
+          this.shouldPerformActionOnMouseUp = false;
+          this.lastKnownMouseLocation = undefined;
+          this.initialFilledSubPathProjectionOntoPath = undefined;
+          this.draw();
+        }));
       const updateCurrentHoverFn = (hover: Hover | undefined) => {
         this.currentHover = hover;
         let previewPath: Path = undefined;
@@ -231,19 +220,19 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         this.draw();
       };
       this.subscriptions.push(
-        this.hoverStateService.getHoverObservable()
-          .subscribe(hover => {
-            if (!hover) {
-              // Clear the current hover.
-              updateCurrentHoverFn(undefined);
-              return;
-            }
-            if (hover.source !== this.canvasType && hover.type !== HoverType.Command) {
-              updateCurrentHoverFn(undefined);
-              return;
-            }
-            updateCurrentHoverFn(hover);
-          }));
+        this.hoverStateService.observe().subscribe(hover => {
+          if (!hover) {
+            // Clear the current hover.
+            updateCurrentHoverFn(undefined);
+            return;
+          }
+          if (hover.source !== this.canvasType
+            && hover.type !== HoverType.Command) {
+            updateCurrentHoverFn(undefined);
+            return;
+          }
+          updateCurrentHoverFn(hover);
+        }));
     }
     this.resizeAndDraw();
   }
@@ -267,7 +256,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   }
 
   private get shouldDrawLayer() {
-    return !!this.vectorLayer && !!this.activePathId;
+    return this.vectorLayer && this.activePathId;
   }
 
   private get canvasMode() {
@@ -286,6 +275,18 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
   private get shouldAcceptMouseEvents() {
     return this.canvasType !== CanvasType.Preview && this.activePathId;
+  }
+
+  private showPenCursor() {
+    this.canvas.css({ cursor: 'url(/assets/penaddcursorsmall.png) 5 0, auto' });
+  }
+
+  private showSelectCursor() {
+    this.canvas.css({ cursor: 'url(/assets/cursorpointselectsmall.png) auto' });
+  }
+
+  private resetCursor() {
+    this.canvas.css({ cursor: '' });
   }
 
   private resizeAndDraw() {
@@ -360,11 +361,15 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       drawPathLayer(drawingCtx, this.vectorLayer, layer => layer.id === this.activePathId);
       const selections =
         this.selectionStateService.getSelections().filter(selection => {
-          return selection.source === this.canvasType
-            && selection.commandId.pathId === this.activePathId;
+          return selection.source === this.canvasType;
         });
       drawSelections(
-        drawingCtx, this.vectorLayer, selections, SELECTION_LINE_WIDTH / this.cssScale);
+        drawingCtx,
+        this.vectorLayer,
+        this.activePathId,
+        selections,
+        SELECTION_LINE_WIDTH / this.cssScale,
+      );
       this.drawLabeledPoints(drawingCtx);
       this.drawDraggingPoints(drawingCtx);
       this.drawAddPointPreview(drawingCtx);
@@ -423,7 +428,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         .filter(subPath => !subPath.isCollapsing())
         .map((subPath, subIdx) => {
           return subPath.getCommands().map((cmd, cmdIdx) => {
-            const commandId = { pathId, subIdx, cmdIdx } as CommandIndex;
+            const commandId = { subIdx, cmdIdx };
             const isSplit = cmd.isSplit();
             const isMove = cmd.getSvgChar() === 'M';
             const isHoverOrSelection =
@@ -673,11 +678,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           const subPath = this.activePath.getSubPaths()[selectedSubIdx];
           for (let cmdIdx = 0; cmdIdx < subPath.getCommands().length; cmdIdx++) {
             this.selectionStateService.toggle({
-              commandId: {
-                pathId: this.activePathId,
-                subIdx: selectedSubIdx,
-                cmdIdx
-              },
+              commandId: { subIdx: selectedSubIdx, cmdIdx },
               source: this.canvasType
             }, true);
           }
@@ -992,6 +993,7 @@ function drawPathLayer(
 function drawSelections(
   ctx: CanvasRenderingContext2D,
   vectorLayer: VectorLayer,
+  pathId: string,
   selections: Selection[],
   lineWidth: number) {
 
@@ -1003,7 +1005,8 @@ function drawSelections(
   // correct order below.
   const groupedSelectedCmds =
     _.chain(selections)
-      .groupBy(selection => selection.commandId.pathId)
+      // TODO: change pathId if we ever need to draw > 1 path at a time.
+      .groupBy(selection => pathId)
       .mapValues((values: Selection[], pathId: string) => {
         const selectedCmds: Command[] = [];
         const pathLayer = vectorLayer.findLayer(pathId) as PathLayer;
@@ -1085,7 +1088,7 @@ function performPointHitTest(
   vectorLayer: VectorLayer,
   pathId: string,
   mousePoint: Point,
-  pointRadius: number): CommandIndex | undefined {
+  pointRadius: number): { subIdx: number, cmdIdx: number } | undefined {
 
   const pathLayer = vectorLayer.findLayer(pathId) as PathLayer;
   if (!pathLayer) {
@@ -1107,7 +1110,6 @@ function performPointHitTest(
     return undefined;
   }
   return {
-    pathId: pathLayer.id,
     subIdx: hitResult.subIdx,
     cmdIdx: hitResult.cmdIdx,
   };
@@ -1224,7 +1226,7 @@ class PointSelector {
 
   constructor(
     private readonly mouseDown: Point,
-    private readonly selectedCommandIndex: CommandIndex,
+    private readonly selectedCommandIndex: { subIdx: number, cmdIdx: number },
     private readonly selectedPointSplit: boolean,
   ) { }
 

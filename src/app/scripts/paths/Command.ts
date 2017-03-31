@@ -50,13 +50,3 @@ export interface Command {
    */
   mutate(): CommandBuilder;
 }
-
-/**
- * Uniquely identifies a command's location in an SVG.
- */
-// TODO: remove this
-export interface Index {
-  readonly pathId: string;
-  readonly subIdx: number;
-  readonly cmdIdx: number;
-}

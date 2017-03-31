@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
-import { Index as CommandIndex } from '../scripts/paths';
 import { CanvasType } from '../CanvasType';
 
 /**
@@ -10,7 +9,7 @@ import { CanvasType } from '../CanvasType';
 export class HoverStateService {
   private readonly source = new BehaviorSubject<Hover>(undefined);
 
-  getHoverObservable() {
+  observe() {
     return this.source.asObservable();
   }
 
@@ -34,8 +33,8 @@ export class HoverStateService {
  */
 export interface Hover {
   readonly type: Type;
-  readonly commandId?: CommandIndex;
-  readonly source?: CanvasType;
+  readonly commandId: { subIdx: number, cmdIdx: number };
+  readonly source: CanvasType;
 }
 
 /**

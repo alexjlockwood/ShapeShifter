@@ -48,7 +48,7 @@ export class ToolbarComponent implements OnInit {
       this.layerStateService.getVectorLayerObservable(CanvasType.End),
       (vl1, vl2) => !!vl1 || !!vl2);
     this.isActionModeEnabledObservable =
-      this.selectionStateService.getSelectionsObservable()
+      this.selectionStateService.observe()
         .map(selections => {
           const shouldEnable =
             PathUtil.getNumSelectedPoints(
@@ -61,7 +61,7 @@ export class ToolbarComponent implements OnInit {
           return shouldEnable;
         });
     this.getToolbarTextObservable =
-      this.selectionStateService.getSelectionsObservable()
+      this.selectionStateService.observe()
         .map(selections => {
           const numPointsSelected =
             PathUtil.getNumSelectedPoints(

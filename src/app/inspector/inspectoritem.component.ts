@@ -38,7 +38,7 @@ export class InspectorItemComponent implements OnInit {
 
   ngOnInit() {
     this.isSelectedObservable =
-      this.selectionStateService.getSelectionsObservable()
+      this.selectionStateService.observe()
         .map(selections => {
           const activePathId = this.layerStateService.getActivePathId(this.canvasType);
           return activePathId && _.some(selections, {
@@ -187,13 +187,13 @@ export class InspectorItemComponent implements OnInit {
     if (isHovering) {
       this.hoverStateService.setHover({
         type: hoverType,
-        commandId: { pathId, subIdx, cmdIdx },
+        commandId: { subIdx, cmdIdx },
         source: this.canvasType,
       });
     } else if (hoverType !== HoverType.Command && this.isHoveringOverCommand) {
       this.hoverStateService.setHover({
         type: HoverType.Command,
-        commandId: { pathId, subIdx, cmdIdx },
+        commandId: { subIdx, cmdIdx },
         source: this.canvasType,
       });
     } else {
