@@ -2,7 +2,7 @@ import {
   Component, OnInit, Input, ChangeDetectionStrategy
 } from '@angular/core';
 import { Path, SubPath } from '../scripts/paths';
-import { LayerStateService } from '../services';
+import { StateService } from '../services';
 import { CanvasType } from '../CanvasType';
 
 // TODO: these need to be canvas-mode-aware
@@ -19,7 +19,7 @@ export class InspectorSubPathComponent implements OnInit {
   @Input() subPath: SubPath;
   private subPathText_ = '';
 
-  constructor(private readonly layerStateService: LayerStateService) { }
+  constructor(private readonly stateService: StateService) { }
 
   ngOnInit() {
     this.subPathText_ = `Subpath #${this.subIdx + 1}${this.canvasType === CanvasType.Start ? 'a' : 'b'}`;
@@ -30,7 +30,7 @@ export class InspectorSubPathComponent implements OnInit {
   }
 
   onMoveSubPathUpClick(event: MouseEvent) {
-    const fromPathLayer = this.layerStateService.getActivePathLayer(this.canvasType);
+    const fromPathLayer = this.stateService.getActivePathLayer(this.canvasType);
     this.replacePath(fromPathLayer.pathData.mutate()
       .moveSubPath(this.subIdx, this.subIdx - 1)
       .build(),
@@ -38,7 +38,7 @@ export class InspectorSubPathComponent implements OnInit {
   }
 
   onMoveSubPathDownClick(event: MouseEvent) {
-    const fromPathLayer = this.layerStateService.getActivePathLayer(this.canvasType);
+    const fromPathLayer = this.stateService.getActivePathLayer(this.canvasType);
     this.replacePath(fromPathLayer.pathData.mutate()
       .moveSubPath(this.subIdx, this.subIdx + 1)
       .build(),
@@ -46,7 +46,7 @@ export class InspectorSubPathComponent implements OnInit {
   }
 
   onUnsplitButtonClick(event: MouseEvent) {
-    const fromPathLayer = this.layerStateService.getActivePathLayer(this.canvasType);
+    const fromPathLayer = this.stateService.getActivePathLayer(this.canvasType);
     if (fromPathLayer.isFilled()) {
       this.replacePath(fromPathLayer.pathData.mutate()
         .unsplitFilledSubPath(this.subIdx)
@@ -61,14 +61,14 @@ export class InspectorSubPathComponent implements OnInit {
   }
 
   private replacePath(path: Path, event: MouseEvent) {
-    this.layerStateService.updateActivePath(this.canvasType, path);
+    this.stateService.updateActivePath(this.canvasType, path);
 
     // This ensures that the parent div won't also receive the same click event.
     event.cancelBubble = true;
   }
 
   private getPath() {
-    const pathLayer = this.layerStateService.getActivePathLayer(this.canvasType);
+    const pathLayer = this.stateService.getActivePathLayer(this.canvasType);
     if (!pathLayer) {
       return undefined;
     }

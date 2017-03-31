@@ -2,7 +2,7 @@ import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { Interpolator, INTERPOLATORS } from '../scripts/animation';
 import {
   AnimatorService,
-  LayerStateService,
+  StateService,
   MorphabilityStatus,
   SettingsService,
 } from '../services';
@@ -23,14 +23,15 @@ export class SettingsComponent implements OnInit {
   shouldDisableSettingsObservable: Observable<boolean>;
 
   constructor(
-    private animatorService: AnimatorService,
-    private layerStateService: LayerStateService,
-    private settingsService: SettingsService) { }
+    private readonly animatorService: AnimatorService,
+    private readonly stateService: StateService,
+    private readonly settingsService: SettingsService,
+  ) { }
 
   ngOnInit() {
     this.shouldDisableSettingsObservable = Observable.combineLatest(
       this.animatorService.getAnimatorSettingsObservable(),
-      this.layerStateService.getMorphabilityStatusObservable())
+      this.stateService.getMorphabilityStatusObservable())
       .map((value: [{ isPlaying: boolean }, MorphabilityStatus]) => {
         return value[0].isPlaying || value[1] !== MorphabilityStatus.Morphable;
       });
@@ -62,7 +63,7 @@ export class SettingsComponent implements OnInit {
   set rotation(rotation: number) {
     this.rotation_ = rotation;
 
-    const activeEndVectorLayer = this.layerStateService.getVectorLayer(CanvasType.End);
+    const activeEndVectorLayer = this.stateService.getVectorLayer(CanvasType.End);
     const width = activeEndVectorLayer.width;
     const height = activeEndVectorLayer.height;
     const transforms = [
@@ -70,17 +71,17 @@ export class SettingsComponent implements OnInit {
       Matrix.fromRotation(-this.rotation),
       Matrix.fromTranslation(width / 2, height / 2),
     ];
-    const activeEndPathLayer = this.layerStateService.getActivePathLayer(CanvasType.End);
+    const activeEndPathLayer = this.stateService.getActivePathLayer(CanvasType.End);
     activeEndPathLayer.pathData =
       activeEndPathLayer.pathData.mutate()
         .setTransforms(transforms)
         .build();
-    this.layerStateService.updateActiveRotationLayer(CanvasType.Start, 0, false);
-    this.layerStateService.updateActiveRotationLayer(CanvasType.Preview, 0, false);
-    this.layerStateService.updateActiveRotationLayer(CanvasType.End, this.rotation, false);
-    this.layerStateService.notifyChange(CanvasType.Start);
-    this.layerStateService.notifyChange(CanvasType.Preview);
-    this.layerStateService.notifyChange(CanvasType.End);
+    this.stateService.updateActiveRotationLayer(CanvasType.Start, 0, false);
+    this.stateService.updateActiveRotationLayer(CanvasType.Preview, 0, false);
+    this.stateService.updateActiveRotationLayer(CanvasType.End, this.rotation, false);
+    this.stateService.notifyChange(CanvasType.Start);
+    this.stateService.notifyChange(CanvasType.Preview);
+    this.stateService.notifyChange(CanvasType.End);
   }
 
   get shouldLabelPoints() {

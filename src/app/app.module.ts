@@ -23,9 +23,9 @@ import { ToolbarComponent } from './toolbar/toolbar.component';
 import {
   AnimatorService,
   CanvasResizeService,
-  HoverStateService,
-  LayerStateService,
-  SelectionStateService,
+  HoverService,
+  StateService,
+  SelectionService,
   SettingsService,
   AppModeService,
 } from './services';
@@ -79,9 +79,9 @@ import 'hammerjs';
   ],
   providers: [
     AnimatorService,
-    LayerStateService,
-    SelectionStateService,
-    HoverStateService,
+    StateService,
+    SelectionService,
+    HoverService,
     CanvasResizeService,
     DialogService,
     SettingsService,

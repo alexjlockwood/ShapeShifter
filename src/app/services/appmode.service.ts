@@ -2,8 +2,8 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 
 // Note that importing these from '.' causes runtime errors.
-import { SelectionStateService } from './selection.service';
-import { HoverStateService } from './hover.service';
+import { SelectionService } from './selection.service';
+import { HoverService } from './hover.service';
 
 /**
  * A simple service that broadcasts changes to the current app mode.
@@ -13,14 +13,14 @@ export class AppModeService {
   private readonly source = new BehaviorSubject<AppMode>(AppMode.SelectPoints);
 
   constructor(
-    private readonly selectionStateService: SelectionStateService,
-    private readonly hoverStateService: HoverStateService,
+    private readonly selectionService: SelectionService,
+    private readonly hoverService: HoverService,
   ) { }
 
   setAppMode(appMode: AppMode) {
     if (this.getAppMode() !== appMode) {
-      this.selectionStateService.reset();
-      this.hoverStateService.reset();
+      this.selectionService.reset();
+      this.hoverService.reset();
       this.source.next(appMode);
     }
   }

@@ -1,8 +1,8 @@
 import * as _ from 'lodash';
 import {
-  SelectionStateService,
+  SelectionService,
   Selection,
-  LayerStateService,
+  StateService,
 } from '../../services';
 import { newCommand } from './CommandImpl';
 import { newPath } from './PathImpl';
@@ -57,8 +57,8 @@ export function sortPathOps(ops: Array<{ subIdx: number, cmdIdx: number }>) {
  * Deletes any currently selected split points.
  */
 export function deleteSelectedSplitPoints(
-  lss: LayerStateService,
-  sss: SelectionStateService) {
+  lss: StateService,
+  sss: SelectionService) {
 
   const selections = sss.getSelections();
   if (!selections.length) {
@@ -97,7 +97,7 @@ export function deleteSelectedSplitPoints(
  * Calculates the number of selected points.
  */
 export function getNumSelectedPoints(
-  lss: LayerStateService,
+  lss: StateService,
   selections: ReadonlyArray<Selection>,
   predicateFn = (cmd: Command) => true) {
 

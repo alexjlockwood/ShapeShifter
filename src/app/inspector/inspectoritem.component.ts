@@ -5,10 +5,10 @@ import {
 import { Path, Command } from '../scripts/paths';
 import { } from '../services/layerstate.service';
 import {
-  HoverStateService,
+  HoverService,
   HoverType,
-  LayerStateService,
-  SelectionStateService,
+  StateService,
+  SelectionService,
   Selection,
 } from '../services';
 import { Observable } from 'rxjs/Observable';
@@ -37,15 +37,16 @@ export class InspectorItemComponent implements OnInit {
   private isHoveringOverShiftForward = false;
 
   constructor(
-    private readonly layerStateService: LayerStateService,
-    private readonly hoverStateService: HoverStateService,
-    private readonly selectionStateService: SelectionStateService) { }
+    private readonly stateService: StateService,
+    private readonly hoverService: HoverService,
+    private readonly selectionService: SelectionService,
+  ) { }
 
   ngOnInit() {
     this.isSelectedObservable =
-      this.selectionStateService.observe()
+      this.selectionService.observe()
         .map(selections => {
-          const activePathId = this.layerStateService.getActivePathId(this.canvasType);
+          const activePathId = this.stateService.getActivePathId(this.canvasType);
           return activePathId && _.some(selections, {
             source: this.canvasType,
             commandId: {
@@ -58,7 +59,7 @@ export class InspectorItemComponent implements OnInit {
   }
 
   onCommandClick(event: MouseEvent) {
-    const selections = this.selectionStateService.getSelections();
+    const selections = this.selectionService.getSelections();
     const appendToList = event.shiftKey || event.metaKey;
     if (selections.length && selections[0].source !== this.canvasType && appendToList) {
       // If the user is attempting to select something in a different pane in the
@@ -67,7 +68,7 @@ export class InspectorItemComponent implements OnInit {
     }
 
     // Selecting the last 'Z' command doesn't seem to work...
-    this.selectionStateService.toggle({
+    this.selectionService.toggle({
       source: this.canvasType,
       commandId: {
         subIdx: this.subIdx,
@@ -77,12 +78,12 @@ export class InspectorItemComponent implements OnInit {
   }
 
   onReverseClick(event: MouseEvent) {
-    const fromPathLayer = this.layerStateService.getActivePathLayer(this.canvasType);
+    const fromPathLayer = this.stateService.getActivePathLayer(this.canvasType);
     this.replacePath(fromPathLayer.pathData.mutate().reverseSubPath(this.subIdx).build(), event);
   }
 
   onShiftBackClick(event: MouseEvent) {
-    const fromPathLayer = this.layerStateService.getActivePathLayer(this.canvasType);
+    const fromPathLayer = this.stateService.getActivePathLayer(this.canvasType);
     this.replacePath(fromPathLayer.pathData.mutate()
       .shiftSubPathBack(this.subIdx)
       .build(),
@@ -90,7 +91,7 @@ export class InspectorItemComponent implements OnInit {
   }
 
   onShiftForwardClick(event: MouseEvent) {
-    const fromPathLayer = this.layerStateService.getActivePathLayer(this.canvasType);
+    const fromPathLayer = this.stateService.getActivePathLayer(this.canvasType);
     this.replacePath(fromPathLayer.pathData.mutate()
       .shiftSubPathForward(this.subIdx)
       .build(),
@@ -98,7 +99,7 @@ export class InspectorItemComponent implements OnInit {
   }
 
   onSplitButtonClick(event: MouseEvent) {
-    const fromPathLayer = this.layerStateService.getActivePathLayer(this.canvasType);
+    const fromPathLayer = this.stateService.getActivePathLayer(this.canvasType);
     this.clearSelectionsAndHovers();
     this.replacePath(
       fromPathLayer.pathData.mutate()
@@ -108,7 +109,7 @@ export class InspectorItemComponent implements OnInit {
   }
 
   onUnsplitButtonClick(event: MouseEvent) {
-    const fromPathLayer = this.layerStateService.getActivePathLayer(this.canvasType);
+    const fromPathLayer = this.stateService.getActivePathLayer(this.canvasType);
     this.clearSelectionsAndHovers();
     this.replacePath(fromPathLayer.pathData.mutate()
       .unsplitCommand(this.subIdx, this.cmdIdx)
@@ -117,19 +118,19 @@ export class InspectorItemComponent implements OnInit {
   }
 
   private clearSelectionsAndHovers() {
-    this.hoverStateService.reset();
-    this.selectionStateService.reset();
+    this.hoverService.reset();
+    this.selectionService.reset();
   }
 
   private replacePath(path: Path, event: MouseEvent) {
-    this.layerStateService.updateActivePath(this.canvasType, path);
+    this.stateService.updateActivePath(this.canvasType, path);
 
     // This ensures that the parent div won't also receive the same click event.
     event.cancelBubble = true;
   }
 
   private getPath() {
-    const pathLayer = this.layerStateService.getActivePathLayer(this.canvasType);
+    const pathLayer = this.stateService.getActivePathLayer(this.canvasType);
     if (!pathLayer) {
       return undefined;
     }
@@ -185,23 +186,23 @@ export class InspectorItemComponent implements OnInit {
   }
 
   private broadcastHoverEvent(isHovering: boolean, hoverType: HoverType) {
-    const pathId = this.layerStateService.getActivePathId(this.canvasType);
+    const pathId = this.stateService.getActivePathId(this.canvasType);
     const subIdx = this.subIdx;
     const cmdIdx = this.cmdIdx;
     if (isHovering) {
-      this.hoverStateService.setHover({
+      this.hoverService.setHover({
         type: hoverType,
         commandId: { subIdx, cmdIdx },
         source: this.canvasType,
       });
     } else if (hoverType !== HoverType.Command && this.isHoveringOverCommand) {
-      this.hoverStateService.setHover({
+      this.hoverService.setHover({
         type: HoverType.Command,
         commandId: { subIdx, cmdIdx },
         source: this.canvasType,
       });
     } else {
-      this.hoverStateService.reset();
+      this.hoverService.reset();
     }
     this.isHovering =
       this.isHoveringOverCommand

@@ -10,10 +10,10 @@ import { SubPath, Command, PathUtil } from './scripts/paths';
 import {
   AnimatorService,
   CanvasResizeService,
-  SelectionStateService,
+  SelectionService,
   AppModeService,
   AppMode,
-  LayerStateService,
+  StateService,
   MorphabilityStatus,
 } from './services';
 import * as $ from 'jquery';
@@ -66,8 +66,8 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
   constructor(
     private readonly snackBar: MdSnackBar,
-    private readonly layerStateService: LayerStateService,
-    private readonly selectionStateService: SelectionStateService,
+    private readonly stateService: StateService,
+    private readonly selectionService: SelectionService,
     private readonly animatorService: AnimatorService,
     private readonly canvasResizeService: CanvasResizeService,
     // This is public so that it can be accessed by the template.
@@ -77,18 +77,18 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   ngOnInit() {
     this.appModeObservable = this.appModeService.observe();
     this.morphabilityStatusTextObservable =
-      this.layerStateService.getMorphabilityStatusObservable()
+      this.stateService.getMorphabilityStatusObservable()
         .map(status => {
           if (status === MorphabilityStatus.Morphable) {
             const hasClosedPath =
               _.chain([CanvasType.Start, CanvasType.End])
-                .map(type => this.layerStateService.getActivePathLayer(type).pathData)
+                .map(type => this.stateService.getActivePathLayer(type).pathData)
                 .flatMap(path => path.getSubPaths() as SubPath[])
                 .some((subPath: SubPath) => subPath.isClosed())
                 .value();
             const hasSplitCmd =
               _.chain([CanvasType.Start, CanvasType.End])
-                .map(type => this.layerStateService.getActivePathLayer(type).pathData)
+                .map(type => this.stateService.getActivePathLayer(type).pathData)
                 .flatMap(path => path.getCommands() as Command[])
                 .some((cmd: Command) => cmd.isSplit())
                 .value();
@@ -97,8 +97,8 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
               + `to alter the animation`;
           }
           if (status === MorphabilityStatus.Unmorphable) {
-            const startLayer = this.layerStateService.getActivePathLayer(CanvasType.Start);
-            const endLayer = this.layerStateService.getActivePathLayer(CanvasType.End);
+            const startLayer = this.stateService.getActivePathLayer(CanvasType.Start);
+            const endLayer = this.stateService.getActivePathLayer(CanvasType.End);
             const startCommand = startLayer.pathData;
             const endCommand = endLayer.pathData;
             if (startCommand.getSubPaths().length !== endCommand.getSubPaths().length) {
@@ -139,7 +139,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     };
 
     this.subscriptions.push(
-      this.layerStateService.getMorphabilityStatusObservable().subscribe(status => {
+      this.stateService.getMorphabilityStatusObservable().subscribe(status => {
         this.wasMorphable =
           status !== MorphabilityStatus.None && (this.wasMorphable || status === MorphabilityStatus.Morphable);
         if (this.morphabilityStatus !== status) {
@@ -152,7 +152,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       this.appModeService.observe().subscribe(appMode => {
         if (appMode !== AppMode.SelectPoints) {
           // Clear all current selections if we are leaving selection mode.
-          this.selectionStateService.reset();
+          this.selectionService.reset();
         }
       }));
 
@@ -191,15 +191,15 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       // TODO: don't do anything if user is also clicking 'meta' or 'shift' key?
       // TOOD: i.e. meta + R means refresh page so don't rewind?
       const isMorphable =
-        this.layerStateService.getMorphabilityStatus() === MorphabilityStatus.Morphable;
+        this.stateService.getMorphabilityStatus() === MorphabilityStatus.Morphable;
       if (event.keyCode === 8 || event.keyCode === 46) {
         // In case there's a JS error, never navigate away.
         event.preventDefault();
         if (this.appModeService.getAppMode() === AppMode.SelectPoints) {
           // Can only delete points in selection mode.
           PathUtil.deleteSelectedSplitPoints(
-            this.layerStateService,
-            this.selectionStateService);
+            this.stateService,
+            this.selectionService);
         }
         return false;
       } else if (event.keyCode === 32) {
@@ -237,8 +237,8 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     // TODO: we should check to see if there are any dirty changes first
     $(window).on('beforeunload', event => {
       if (!IS_DEV_MODE
-        && (this.layerStateService.getVectorLayer(CanvasType.Start)
-          || this.layerStateService.getVectorLayer(CanvasType.End))) {
+        && (this.stateService.getVectorLayer(CanvasType.Start)
+          || this.stateService.getVectorLayer(CanvasType.End))) {
         return 'You\'ve made changes but haven\'t saved. ' +
           'Are you sure you want to navigate away?';
       }
@@ -248,7 +248,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private autoLoadDemo() {
     setTimeout(() => {
-      DemoUtil.loadDemo(this.layerStateService, DEMO_MAP.get('Play-to-pause icon'));
+      DemoUtil.loadDemo(this.stateService, DEMO_MAP.get('Play-to-pause icon'));
     });
   }
 }

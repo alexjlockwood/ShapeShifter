@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import {
   AnimatorService,
-  LayerStateService,
+  StateService,
   MorphabilityStatus,
 } from '../services';
 import { Subscription } from 'rxjs/Subscription';
@@ -24,7 +24,7 @@ export class TimelineComponent implements OnInit, OnDestroy {
   private readonly subscriptions: Subscription[] = [];
 
   constructor(
-    private readonly layerStateService: LayerStateService,
+    private readonly stateService: StateService,
     private readonly animatorService: AnimatorService,
   ) { }
 
@@ -39,9 +39,9 @@ export class TimelineComponent implements OnInit, OnDestroy {
       this.animatorService.getAnimatorSettingsObservable()
         .map((value: { isRepeating: boolean }) => value.isRepeating);
     this.morphabilityStatusObservable =
-      this.layerStateService.getMorphabilityStatusObservable();
+      this.stateService.getMorphabilityStatusObservable();
     this.subscriptions.push(
-      this.layerStateService.getMorphabilityStatusObservable()
+      this.stateService.getMorphabilityStatusObservable()
         .subscribe(status => {
           if (status !== MorphabilityStatus.Morphable) {
             this.animatorService.rewind();

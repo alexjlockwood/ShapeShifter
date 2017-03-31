@@ -1,4 +1,4 @@
-import { LayerStateService, AnimatorService } from '../../services';
+import { StateService, AnimatorService } from '../../services';
 import { PathLayer, GroupLayer, VectorLayer } from '../layers';
 import { CanvasType } from '../../CanvasType';
 import { AvdSerializer, SvgSerializer } from '.';
@@ -6,7 +6,7 @@ import { AvdTarget, AvdAnimation, PropertyName, ValueType } from '../animation';
 import * as JSZip from 'jszip';
 import * as $ from 'jquery';
 
-export function exportCurrentState(lss: LayerStateService, as: AnimatorService) {
+export function exportCurrentState(lss: StateService, as: AnimatorService) {
   const startVectorLayer = lss.getVectorLayer(CanvasType.Start).clone();
   const endVectorLayer = lss.getVectorLayer(CanvasType.End).clone();
   const startVectorLayerChildren: Array<PathLayer | GroupLayer> = [];
@@ -59,7 +59,7 @@ export function exportCurrentState(lss: LayerStateService, as: AnimatorService) 
   });
 }
 
-function createAlphaAvdTarget(lss: LayerStateService, as: AnimatorService) {
+function createAlphaAvdTarget(lss: StateService, as: AnimatorService) {
   const startLayer = lss.getVectorLayer(CanvasType.Start);
   const endLayer = lss.getVectorLayer(CanvasType.End);
   if (startLayer.alpha === endLayer.alpha) {
@@ -79,7 +79,7 @@ function createAlphaAvdTarget(lss: LayerStateService, as: AnimatorService) {
       'floatType')]);
 }
 
-function createRotationAvdTarget(lss: LayerStateService, as: AnimatorService) {
+function createRotationAvdTarget(lss: StateService, as: AnimatorService) {
   const startLayer = lss.getActiveRotationLayer(CanvasType.Start);
   const endLayer = lss.getActiveRotationLayer(CanvasType.End);
   if (!startLayer || !endLayer || startLayer.rotation === endLayer.rotation) {
@@ -99,7 +99,7 @@ function createRotationAvdTarget(lss: LayerStateService, as: AnimatorService) {
       'floatType')]);
 }
 
-function createPathAvdTarget(lss: LayerStateService, as: AnimatorService) {
+function createPathAvdTarget(lss: StateService, as: AnimatorService) {
   const startLayer = lss.getActivePathLayer(CanvasType.Start);
   const endLayer = lss.getActivePathLayer(CanvasType.End);
   const duration = as.getDuration();

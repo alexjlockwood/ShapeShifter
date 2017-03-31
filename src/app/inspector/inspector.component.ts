@@ -1,7 +1,7 @@
 import { Component, OnInit, PipeTransform, Pipe, ChangeDetectionStrategy } from '@angular/core';
 import { SubPath, Command } from '../scripts/paths';
 import { CanvasType } from '../CanvasType';
-import { LayerStateService } from '../services';
+import { StateService } from '../services';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/combineLatest';
 
@@ -16,12 +16,12 @@ export class InspectorComponent implements OnInit {
   END_CANVAS = CanvasType.End;
   subPathItemsObservable: Observable<[string, string]>;
 
-  constructor(private readonly layerStateService: LayerStateService) { }
+  constructor(private readonly stateService: StateService) { }
 
   ngOnInit() {
     this.subPathItemsObservable = Observable.combineLatest(
-      this.layerStateService.getActivePathIdObservable(CanvasType.Start),
-      this.layerStateService.getActivePathIdObservable(CanvasType.End));
+      this.stateService.getActivePathIdObservable(CanvasType.Start),
+      this.stateService.getActivePathIdObservable(CanvasType.End));
   }
 
   trackSubPath(index: number, item: SubPathItem) {
@@ -47,13 +47,13 @@ class SubPathItem {
 
 @Pipe({ name: 'toSubPathItems' })
 export class SubPathItemsPipe implements PipeTransform {
-  constructor(private layerStateService: LayerStateService) { }
+  constructor(private stateService: StateService) { }
 
   transform(activePathIds: [string, string]): SubPathItem[] {
     const subPathItems: SubPathItem[] = [];
 
     const getPathFn = (canvasType: CanvasType) => {
-      const pathLayer = this.layerStateService.getActivePathLayer(canvasType);
+      const pathLayer = this.stateService.getActivePathLayer(canvasType);
       if (!pathLayer) {
         return undefined;
       }

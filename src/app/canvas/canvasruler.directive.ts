@@ -3,7 +3,7 @@ import * as $ from 'jquery';
 import { Directive, OnInit, Input, ElementRef, OnDestroy } from '@angular/core';
 import { CanvasType } from '../CanvasType';
 import {
-  LayerStateService,
+  StateService,
   CanvasResizeService,
 } from '../services';
 import { Point } from '../scripts/common';
@@ -34,14 +34,14 @@ export class CanvasRulerDirective implements OnInit, OnDestroy {
   private cssScale: number;
 
   constructor(
-    private elementRef: ElementRef,
-    private canvasResizeService: CanvasResizeService,
-    private layerStateService: LayerStateService) { }
+    private readonly elementRef: ElementRef,
+    private readonly canvasResizeService: CanvasResizeService,
+    private readonly stateService: StateService) { }
 
   ngOnInit() {
     this.canvas = $(this.elementRef.nativeElement);
     this.subscriptions.push(
-      this.layerStateService.getVectorLayerObservable(this.canvasType).subscribe(vl => {
+      this.stateService.getVectorLayerObservable(this.canvasType).subscribe(vl => {
         const newWidth = vl ? vl.width : DEFAULT_VIEWPORT_SIZE;
         const newHeight = vl ? vl.height : DEFAULT_VIEWPORT_SIZE;
         const didSizeChange = this.vlWidth !== newWidth || this.vlHeight !== newHeight;

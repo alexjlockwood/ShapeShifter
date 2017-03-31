@@ -2,9 +2,9 @@ import * as _ from 'lodash';
 import { CanvasType } from '../../CanvasType';
 import { SvgLoader } from '../import';
 import { PathLayer } from '../layers';
-import { LayerStateService } from '../../services';
+import { StateService } from '../../services';
 
-export function loadDemo(lss: LayerStateService, selectedSvgStrings: { start: string, end: string }) {
+export function loadDemo(lss: StateService, selectedSvgStrings: { start: string, end: string }) {
   const importedStartVectorLayer = SvgLoader.loadVectorLayerFromSvgString(selectedSvgStrings.start);
   const importedEndVectorLayer = SvgLoader.loadVectorLayerFromSvgString(selectedSvgStrings.end);
   lss.setVectorLayer(CanvasType.Start, importedStartVectorLayer.clone(), false);

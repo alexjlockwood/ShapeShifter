@@ -6,7 +6,7 @@ import { CanvasType } from '../CanvasType';
  * A simple service that broadcasts hover events to all parts of the application.
  */
 @Injectable()
-export class HoverStateService {
+export class HoverService {
   private readonly source = new BehaviorSubject<Hover>(undefined);
 
   observe() {

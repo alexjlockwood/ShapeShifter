@@ -9,15 +9,15 @@ import { ROTATION_GROUP_LAYER_ID } from '../scripts/import';
 // Note that importing these from '.' causes runtime errors.
 import { AppModeService } from './appmode.service';
 import { AnimatorService } from './animator.service';
-import { HoverStateService } from './hover.service';
-import { SelectionStateService } from './selection.service';
+import { HoverService } from './hover.service';
+import { SelectionService } from './selection.service';
 
 /**
  * The global state service that is in charge of keeping track of the loaded
  * SVGs, active path layers, and the current morphability status.
  */
 @Injectable()
-export class LayerStateService {
+export class StateService {
   private readonly vectorLayerMap = new Map<CanvasType, VectorLayer>();
   private readonly activePathIdMap = new Map<CanvasType, string>();
   private readonly vectorLayerSources = new Map<CanvasType, BehaviorSubject<VectorLayer>>();
@@ -25,8 +25,8 @@ export class LayerStateService {
   private readonly statusSource = new BehaviorSubject<MorphabilityStatus>(MorphabilityStatus.None);
 
   constructor(
-    private readonly selectionStateService: SelectionStateService,
-    private readonly hoverStateService: HoverStateService,
+    private readonly selectionService: SelectionService,
+    private readonly hoverService: HoverService,
     private readonly animatorService: AnimatorService,
     private readonly appModeService: AppModeService,
   ) {
@@ -61,8 +61,8 @@ export class LayerStateService {
    */
   setActivePathIds(ids: Array<{ type: CanvasType, pathId: string }>, shouldNotify = true) {
     this.appModeService.reset();
-    this.selectionStateService.reset();
-    this.hoverStateService.reset();
+    this.selectionService.reset();
+    this.hoverService.reset();
     // TODO: resetting the animator service strangely breaks things here... not sure why.
     // this.animatorService.reset();
     ids.forEach(id => this.activePathIdMap.set(id.type, id.pathId));
@@ -270,8 +270,8 @@ export class LayerStateService {
    */
   reset() {
     this.appModeService.reset();
-    this.selectionStateService.reset();
-    this.hoverStateService.reset();
+    this.selectionService.reset();
+    this.hoverService.reset();
     this.animatorService.reset();
     const canvasTypes = [CanvasType.Preview, CanvasType.Start, CanvasType.End];
     canvasTypes.forEach(type => this.setVectorLayer(type, undefined, false));

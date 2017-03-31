@@ -9,7 +9,7 @@ import { CanvasType } from '../CanvasType';
  * TODO: investigate the pros and cons of identifying by uniqueId rather than index
  */
 @Injectable()
-export class SelectionStateService {
+export class SelectionService {
   private readonly source = new BehaviorSubject<ReadonlyArray<Selection>>([]);
 
   observe() {

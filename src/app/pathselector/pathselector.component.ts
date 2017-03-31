@@ -3,7 +3,7 @@ import {
   Pipe, PipeTransform
 } from '@angular/core';
 import { CanvasType } from '../CanvasType';
-import { LayerStateService, } from '../services';
+import { StateService, } from '../services';
 import { SvgLoader } from '../scripts/import';
 import { VectorLayer, PathLayer } from '../scripts/layers';
 import { Observable } from 'rxjs/Observable';
@@ -25,12 +25,12 @@ export class PathSelectorComponent {
 
   constructor(
     private readonly elementRef: ElementRef,
-    private readonly layerStateService: LayerStateService,
+    private readonly stateService: StateService,
   ) {
     this.startVectorLayerObservable =
-      this.layerStateService.getVectorLayerObservable(CanvasType.Start);
+      this.stateService.getVectorLayerObservable(CanvasType.Start);
     this.endVectorLayerObservable =
-      this.layerStateService.getVectorLayerObservable(CanvasType.End);
+      this.stateService.getVectorLayerObservable(CanvasType.End);
   }
 
   private setVectorLayer(canvasType: CanvasType, vectorLayer: VectorLayer) {
@@ -40,20 +40,20 @@ export class PathSelectorComponent {
       // vector layers in terms of their structure. During the animation, its
       // active path command will be interpolated and replaced to trigger the
       // animated result.
-      this.layerStateService.setVectorLayer(CanvasType.Preview, vectorLayer.clone(), false);
+      this.stateService.setVectorLayer(CanvasType.Preview, vectorLayer.clone(), false);
       canvasTypes.push(CanvasType.Preview);
     }
-    this.layerStateService.setVectorLayer(canvasType, vectorLayer, false);
-    const pathLayers = getPathLayerList(this.layerStateService.getVectorLayer(canvasType));
+    this.stateService.setVectorLayer(canvasType, vectorLayer, false);
+    const pathLayers = getPathLayerList(this.stateService.getVectorLayer(canvasType));
     if (pathLayers.length) {
       // Auto-select the first path.
       this.setActivePathId(canvasType, pathLayers[0].id);
     }
-    canvasTypes.forEach(type => this.layerStateService.notifyChange(type));
+    canvasTypes.forEach(type => this.stateService.notifyChange(type));
   }
 
   getActivePathId(canvasType: CanvasType) {
-    return this.layerStateService.getActivePathId(canvasType);
+    return this.stateService.getActivePathId(canvasType);
   }
 
   setActivePathId(canvasType: CanvasType, activePathId: string) {
@@ -64,7 +64,7 @@ export class PathSelectorComponent {
       // that auto-conversion runs properly.
       ids.unshift({ type: CanvasType.Preview, pathId: activePathId });
     }
-    this.layerStateService.setActivePathIds(ids);
+    this.stateService.setActivePathIds(ids);
   }
 
   trackPathLayer(index: number, item: PathLayer) {
@@ -86,7 +86,7 @@ export class PathSelectorComponent {
     const canvasTypes = [CanvasType.Start, CanvasType.End];
     const availableEmptyListSlots: CanvasType[] = [];
     for (let i = 0; i < canvasTypes.length; i++) {
-      if (!getPathLayerList(this.layerStateService.getVectorLayer(canvasTypes[i])).length) {
+      if (!getPathLayerList(this.stateService.getVectorLayer(canvasTypes[i])).length) {
         availableEmptyListSlots.push(canvasTypes[i]);
       }
     }
@@ -144,7 +144,7 @@ export class PathSelectorComponent {
 
 @Pipe({ name: 'toPathLayerList' })
 export class PathLayerListPipe implements PipeTransform {
-  constructor(private layerStateService: LayerStateService) { }
+  constructor(private stateService: StateService) { }
 
   transform(vectorLayer: VectorLayer | undefined): PathLayer[] {
     return getPathLayerList(vectorLayer);
