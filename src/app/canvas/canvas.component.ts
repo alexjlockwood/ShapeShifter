@@ -98,7 +98,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
   // The last known location of the mouse.
   private lastKnownMouseLocation: Point | undefined;
-  private initialFilledSubPathProjectionOntoPath: ProjectionOntoPath | undefined;
+  private initialFilledSubPathProjOntoPath: ProjectionOntoPath | undefined;
 
   // TODO: use this somehow in the UI?
   private disabledSubPathIndices: number[] = [];
@@ -121,16 +121,21 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     this.overlayCanvas = $(this.overlayCanvasRef.nativeElement);
     this.offscreenLayerCanvas = $(document.createElement('canvas'));
     this.offscreenSubPathCanvas = $(document.createElement('canvas'));
-    this.renderingCtx = (this.renderingCanvas.get(0) as HTMLCanvasElement).getContext('2d');
-    this.overlayCtx = (this.overlayCanvas.get(0) as HTMLCanvasElement).getContext('2d');
-    this.offscreenLayerCtx = (this.offscreenLayerCanvas.get(0) as HTMLCanvasElement).getContext('2d');
-    this.offscreenSubPathCtx = (this.offscreenSubPathCanvas.get(0) as HTMLCanvasElement).getContext('2d');
+    this.renderingCtx =
+      (this.renderingCanvas.get(0) as HTMLCanvasElement).getContext('2d');
+    this.overlayCtx =
+      (this.overlayCanvas.get(0) as HTMLCanvasElement).getContext('2d');
+    this.offscreenLayerCtx =
+      (this.offscreenLayerCanvas.get(0) as HTMLCanvasElement).getContext('2d');
+    this.offscreenSubPathCtx =
+      (this.offscreenSubPathCanvas.get(0) as HTMLCanvasElement).getContext('2d');
     this.subscriptions.push(
       this.stateService.getVectorLayerObservable(this.canvasType)
         .subscribe(vl => {
           const newWidth = vl ? vl.width : DEFAULT_VIEWPORT_SIZE;
           const newHeight = vl ? vl.height : DEFAULT_VIEWPORT_SIZE;
-          const didSizeChange = this.vlWidth !== newWidth || this.vlHeight !== newHeight;
+          const didSizeChange =
+            this.vlWidth !== newWidth || this.vlHeight !== newHeight;
           this.vlWidth = newWidth;
           this.vlHeight = newHeight;
           if (didSizeChange) {
@@ -146,7 +151,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           const oldHeight = this.cssContainerHeight;
           this.cssContainerWidth = Math.max(1, size.width - CANVAS_MARGIN * 2);
           this.cssContainerHeight = Math.max(1, size.height - CANVAS_MARGIN * 2);
-          if (this.cssContainerWidth !== oldWidth || this.cssContainerHeight !== oldHeight) {
+          if (this.cssContainerWidth !== oldWidth
+            || this.cssContainerHeight !== oldHeight) {
             this.resizeAndDraw();
           }
         }));
@@ -211,12 +217,12 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
             this.pointSelector = undefined;
             this.shouldPerformActionOnMouseUp = false;
             this.lastKnownMouseLocation = undefined;
-            this.initialFilledSubPathProjectionOntoPath = undefined;
+            this.initialFilledSubPathProjOntoPath = undefined;
             this.draw();
           }));
       const updateCurrentHoverFn = (hover: Hover | undefined) => {
         let previewPath: Path = undefined;
-        if (hover) {
+        if (this.shouldDrawLayers && hover) {
           // If the user is hovering over the inspector split button, then build
           // a snapshot of what the path would look like after the action
           // and display the result.
@@ -929,7 +935,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         return;
       }
 
-      const hitResult = this.performHitTest(mouseMove, { noSegments: true });
+      const hitResult = this.performHitTest(mouseMove);
       if (hitResult.isHit) {
         if (hitResult.endPointHits.length) {
           const endPointInfos = hitResult.endPointHits.map(index => {
@@ -1047,10 +1053,10 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     } else if (this.appMode === AppMode.AddPoints
       || this.appMode === AppMode.SplitSubPaths) {
       if (this.shouldPerformActionOnMouseUp) {
-        const projectionOntoPath =
+        const projOntoPath =
           calculateProjectionOntoPath(
             this.vectorLayer, this.activePathId, this.lastKnownMouseLocation);
-        const { subIdx, cmdIdx, projection } = projectionOntoPath;
+        const { subIdx, cmdIdx, projection } = projOntoPath;
         if (projection.d < MIN_SNAP_THRESHOLD) {
           // We're in range, so split the path!
           const activePathLayer = this.stateService.getActivePathLayer(this.canvasType);
@@ -1059,16 +1065,16 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
             pathMutator.splitCommand(subIdx, cmdIdx, projection.t);
           } else if (this.appMode === AppMode.SplitSubPaths) {
             if (activePathLayer.isFilled()) {
-              if (!this.initialFilledSubPathProjectionOntoPath) {
-                this.initialFilledSubPathProjectionOntoPath = projectionOntoPath;
-              } else if (this.initialFilledSubPathProjectionOntoPath.subIdx !== projectionOntoPath.subIdx) {
+              if (!this.initialFilledSubPathProjOntoPath) {
+                this.initialFilledSubPathProjOntoPath = projOntoPath;
+              } else if (this.initialFilledSubPathProjOntoPath.subIdx !== projOntoPath.subIdx) {
                 // TODO: don't allow other subIdx values to be returned by the above projection...
-                this.initialFilledSubPathProjectionOntoPath = undefined;
+                this.initialFilledSubPathProjOntoPath = undefined;
               } else {
-                let firstCmdIdx = this.initialFilledSubPathProjectionOntoPath.cmdIdx;
-                let firstT = this.initialFilledSubPathProjectionOntoPath.projection.t;
-                let secondCmdIdx = projectionOntoPath.cmdIdx;
-                let secondT = projectionOntoPath.projection.t;
+                let firstCmdIdx = this.initialFilledSubPathProjOntoPath.cmdIdx;
+                let firstT = this.initialFilledSubPathProjOntoPath.projection.t;
+                let secondCmdIdx = projOntoPath.cmdIdx;
+                let secondT = projOntoPath.projection.t;
                 if (firstCmdIdx > secondCmdIdx
                   || firstCmdIdx === secondCmdIdx && firstT > secondT) {
                   const temp = { firstCmdIdx, firstT };
@@ -1078,10 +1084,10 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
                   secondT = temp.firstT;
                 }
                 pathMutator
-                  .splitCommand(projectionOntoPath.subIdx, firstCmdIdx, firstT)
-                  .splitCommand(projectionOntoPath.subIdx, secondCmdIdx + 1, secondT)
-                  .splitFilledSubPath(projectionOntoPath.subIdx, firstCmdIdx, secondCmdIdx + 1);
-                this.initialFilledSubPathProjectionOntoPath = undefined;
+                  .splitCommand(projOntoPath.subIdx, firstCmdIdx, firstT)
+                  .splitCommand(projOntoPath.subIdx, secondCmdIdx + 1, secondT)
+                  .splitFilledSubPath(projOntoPath.subIdx, firstCmdIdx, secondCmdIdx + 1);
+                this.initialFilledSubPathProjOntoPath = undefined;
               }
             } else if (activePathLayer.isStroked()) {
               pathMutator
@@ -1091,7 +1097,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           }
           this.stateService.updateActivePath(this.canvasType, pathMutator.build());
         } else {
-          this.initialFilledSubPathProjectionOntoPath = undefined;
+          this.initialFilledSubPathProjOntoPath = undefined;
         }
         this.shouldPerformActionOnMouseUp = false;
       }
@@ -1121,7 +1127,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       // canvas before mouse up is registered, then just cancel the event.
       // This way we can avoid some otherwise confusing behavior.
       this.shouldPerformActionOnMouseUp = false;
-      this.initialFilledSubPathProjectionOntoPath = undefined;
+      this.initialFilledSubPathProjOntoPath = undefined;
       // TODO: avoid redrawing on every frame... often times it will be unnecessary
       this.draw();
     }
@@ -1129,7 +1135,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
   private performHitTest(
     mousePoint: Point,
-    opts?: { noPoints?: boolean, noSegments?: boolean, noSubPaths?: boolean, }): HitResult {
+    opts: { noPoints?: boolean, noSegments?: boolean, noSubPaths?: boolean } = {}): HitResult {
 
     const transformMatrix =
       Matrix.flatten(...this.getTransformsForActiveLayer().reverse()).invert();
