@@ -30,7 +30,7 @@ export class SettingsComponent implements OnInit {
 
   ngOnInit() {
     this.shouldDisableSettingsObservable = Observable.combineLatest(
-      this.animatorService.getAnimatorSettingsObservable(),
+      this.animatorService.getTimelineObservable(),
       this.stateService.getMorphabilityStatusObservable())
       .map((value: [{ isPlaying: boolean }, MorphabilityStatus]) => {
         return value[0].isPlaying || value[1] !== MorphabilityStatus.Morphable;

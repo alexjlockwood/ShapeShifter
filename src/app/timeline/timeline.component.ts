@@ -30,13 +30,13 @@ export class TimelineComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.isAnimationSlowMotionObservable =
-      this.animatorService.getAnimatorSettingsObservable()
+      this.animatorService.getTimelineObservable()
         .map((value: { isSlowMotion: boolean }) => value.isSlowMotion);
     this.isAnimationPlayingObservable =
-      this.animatorService.getAnimatorSettingsObservable()
+      this.animatorService.getTimelineObservable()
         .map((value: { isPlaying: boolean }) => value.isPlaying);
     this.isAnimationRepeatingObservable =
-      this.animatorService.getAnimatorSettingsObservable()
+      this.animatorService.getTimelineObservable()
         .map((value: { isRepeating: boolean }) => value.isRepeating);
     this.morphabilityStatusObservable =
       this.stateService.getMorphabilityStatusObservable();

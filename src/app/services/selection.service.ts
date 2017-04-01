@@ -26,13 +26,21 @@ export class SelectionService {
    * By default, all other selections from the list will be cleared.
    */
   toggle(selection: Selection, appendToList = false) {
-    // Remove all selections that don't match the new selections editor type.
     const updatedSelections = this.source.getValue().slice();
-    _.remove(updatedSelections, sel => {
-      return sel.source !== selection.source;
-    });
+    // Remove all selections that don't match the new selections editor type.
+    _.remove(updatedSelections, sel => sel.source !== selection.source);
+    if (selection.type === SelectionType.SubPath) {
+      // Remove all selections that aren't from the selected subpath.
+      _.remove(updatedSelections, sel => {
+        return sel.index.subIdx !== selection.index.subIdx;
+      });
+    }
     const existingSelections = _.remove(updatedSelections, sel => {
       // Remove any selections that are equal to the new selection.
+      if (selection.type === SelectionType.SubPath) {
+        // Toggling a subpath will also toggle all of its commands.
+        return selection.index.subIdx === sel.index.subIdx;
+      }
       return areSelectionsEqual(selection, sel);
     });
     if (!existingSelections.length) {
@@ -59,12 +67,23 @@ export class SelectionService {
  * A selection represents an action that is the result of a mouse click.
  */
 export interface Selection {
-  readonly index: { subIdx: number, cmdIdx: number };
+  readonly type: SelectionType;
+  readonly index: { subIdx: number, cmdIdx?: number };
   readonly source: CanvasType;
 }
 
+/**
+ * Describes the different types of selection events.
+ */
+export enum SelectionType {
+  // The user selected an entire subpath.
+  SubPath,
+  // The user selected an individual command in the subpath.
+  Command,
+}
+
 function areSelectionsEqual(sel1: Selection, sel2: Selection) {
-  if (sel1.source !== sel2.source) {
+  if (sel1.source !== sel2.source || sel1.type !== sel2.type) {
     return false;
   }
   const id1 = sel1.index;

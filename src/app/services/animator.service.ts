@@ -24,7 +24,7 @@ const DEFAULT_IS_PLAYING = false;
 @Injectable()
 export class AnimatorService {
   private readonly animatedValueSource = new BehaviorSubject<number>(DEFAULT_FRACTION);
-  private readonly animatorSettingsSource = new BehaviorSubject<Settings>({
+  private readonly timelineSource = new BehaviorSubject<Settings>({
     isSlowMotion: DEFAULT_IS_SLOW_MOTION,
     isPlaying: DEFAULT_IS_PLAYING,
     isRepeating: DEFAULT_IS_REPEATING,
@@ -32,15 +32,19 @@ export class AnimatorService {
   private animator: Animator;
 
   constructor(private readonly ngZone: NgZone) {
-    this.animator = new Animator(ngZone, this.animatorSettingsSource);
+    this.animator = new Animator(ngZone, this.timelineSource);
   }
 
   getAnimatedValueObservable() {
     return this.animatedValueSource.asObservable();
   }
 
-  getAnimatorSettingsObservable() {
-    return this.animatorSettingsSource.asObservable();
+  getTimelineObservable() {
+    return this.timelineSource.asObservable();
+  }
+
+  getAnimatedValue() {
+    return this.animatedValueSource.getValue();
   }
 
   isSlowMotion() {
@@ -121,7 +125,7 @@ export class AnimatorService {
 
   reset() {
     this.rewind();
-    this.animator = new Animator(this.ngZone, this.animatorSettingsSource);
+    this.animator = new Animator(this.ngZone, this.timelineSource);
   }
 }
 
