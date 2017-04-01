@@ -76,8 +76,8 @@ export interface HitOptions {
 /** Represents the result of a hit test. */
 export interface HitResult {
   readonly isHit: boolean;
-  readonly endPointHits?: Array<{ subIdx: number, cmdIdx: number, projection: ProjectionResult }>;
-  readonly segmentHits?: Array<{ subIdx: number, cmdIdx: number, projection: ProjectionResult }>;
+  readonly endPointHits?: ProjectionOntoPath[];
+  readonly segmentHits?: ProjectionOntoPath[];
   readonly subPathHits?: Array<{ subIdx: number }>;
 }
 

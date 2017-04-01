@@ -5,8 +5,12 @@
   <canvas appCanvasRuler #verticalRuler class="canvas-ruler orientation-vertical"
     [canvasType]="canvasType" [orientation]="'vertical'">
   </canvas>
-  <canvas #renderingCanvas class="rendering-canvas" (mousedown)="onMouseDown($event)"
+  <div #canvasContainer class="canvas-container" (mousedown)="onMouseDown($event)"
     (mouseup)="onMouseUp($event)" (mousemove)="onMouseMove($event)"
     (mouseleave)="onMouseLeave($event)">
-  </canvas>
+    <canvas #renderingCanvas class="rendering-canvas">
+    </canvas>
+    <canvas #overlayCanvas class="overlay-canvas">
+    </canvas>
+  </div>
 </div>

@@ -13,9 +13,19 @@
     opacity: 1;
     visibility: visible;
   }
-  canvas.rendering-canvas {
-    background-color: #fff;
-    box-shadow: material-shadow(2);
+  .canvas-container {
+    position: relative;
+    canvas.rendering-canvas {
+      position: absolute;
+      background-color: #fff;
+      box-shadow: material-shadow(2);
+      z-index: 1;
+    }
+    canvas.overlay-canvas {
+      position: absolute;
+      background-color: transparent;
+      z-index: 2;
+    }
   }
   $rulerWidth: 32px;
   .orientation-horizontal {

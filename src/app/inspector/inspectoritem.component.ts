@@ -47,7 +47,7 @@ export class InspectorItemComponent implements OnInit {
           const activePathId = this.stateService.getActivePathId(this.canvasType);
           return activePathId && _.some(selections, {
             source: this.canvasType,
-            commandId: {
+            index: {
               subIdx: this.subIdx,
               cmdIdx: this.cmdIdx,
             }
@@ -67,7 +67,7 @@ export class InspectorItemComponent implements OnInit {
     // Selecting the last 'Z' command doesn't seem to work...
     this.selectionService.toggle({
       source: this.canvasType,
-      commandId: {
+      index: {
         subIdx: this.subIdx,
         cmdIdx: this.cmdIdx,
       }
@@ -188,13 +188,13 @@ export class InspectorItemComponent implements OnInit {
     if (isHovering) {
       this.hoverService.setHover({
         type: hoverType,
-        commandId: { subIdx, cmdIdx },
+        index: { subIdx, cmdIdx },
         source: this.canvasType,
       });
     } else if (hoverType !== HoverType.Command && this.isHoveringOverCommand) {
       this.hoverService.setHover({
         type: HoverType.Command,
-        commandId: { subIdx, cmdIdx },
+        index: { subIdx, cmdIdx },
         source: this.canvasType,
       });
     } else {

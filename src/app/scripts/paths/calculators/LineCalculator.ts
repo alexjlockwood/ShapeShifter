@@ -113,6 +113,11 @@ export class LineCalculator implements Calculator {
 
   // TODO: test this
   intersects(line: Line) {
+    if (this.p1.equals(this.p2)) {
+      // Points can't be intersected.
+      return [];
+    }
+
     // Check to see if the line from (a,b) to (c,d) intersects
     // with the line from (p,q) to (r,s).
     const { x: a, y: b } = this.p1;

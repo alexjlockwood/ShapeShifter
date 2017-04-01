@@ -140,13 +140,8 @@ export class PathState {
   }
 
   hitTest(point: Point, opts: HitOptions): HitResult {
-    interface CommandHit {
-      subIdx: number;
-      cmdIdx: number;
-      projection: ProjectionResult;
-    }
-    const endPointHits: CommandHit[] = [];
-    const segmentHits: CommandHit[] = [];
+    const endPointHits: ProjectionOntoPath[] = [];
+    const segmentHits: ProjectionOntoPath[] = [];
     const subPathHits: Array<{ subIdx: number }> = [];
 
     if (opts.isPointInRangeFn) {
@@ -233,9 +228,7 @@ export class PathState {
             // bounded box). A hit has occured if and only if the number of
             // intersections between the line and the path is odd.
             const line = { p1: point, p2: new Point(bounds.r + 1, bounds.b + 1) };
-            // Filter out t=0 values since they will be accounted for by
-            // neighboring t=1 values.
-            const intersectionResults = css.map(cm => cm.intersects(line).filter(t => !!t));
+            const intersectionResults = css.map(cs => cs.intersects(line));
             const numIntersections = _.sum(intersectionResults.map(ts => ts.length));
             if (numIntersections % 2 === 0) {
               // Nothing to see here. Check the next subpath.

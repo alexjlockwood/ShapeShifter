@@ -133,6 +133,10 @@ export class BezierCalculator implements Calculator {
   }
 
   intersects(line: Line) {
+    if (this.points[0].equals(_.last(this.points))) {
+      // Points can't be intersected.
+      return [];
+    }
     return this.bezierJs.intersects(line);
   }
 }

@@ -793,11 +793,15 @@ describe('Path', () => {
       [new Point(12, 0), 'M6 19h4V5H6v14zm8-14v14h4V5h-4z', false],
       [new Point(24, 24), 'M6 19h4V5H6v14zm8-14v14h4V5h-4z', false],
       [new Point(19, 20), 'M6 19h4V5H6v14zm8-14v14h4V5h-4z', false],
+      [new Point(14, 10), mutatePath('M8 5L8 19L19 12L8 5', 'SIH 0 1 SFSP 0 1 3'), true],
+      [new Point(17, 6), mutatePath('M8 5L8 19L19 12L8 5', 'SIH 0 1 SFSP 0 1 3'), false],
+      [new Point(11, 9), mutatePath('M8 5L8 19L19 12L8 5', 'SIH 0 1 SFSP 0 1 3'), true],
+      [new Point(11, 9), mutatePath('M8 5L8 19L19 12L8 5', 'SIH 0 1 S 0 3 1 SFSP 0 1 3'), true],
     ];
 
     TESTS_HIT_TEST_FILL.forEach(a => {
       const point = a[0] as Point;
-      const path = newPath(a[1] as string);
+      const path = (typeof a[1] === 'string') ? newPath(a[1] as string) : a[1] as Path;
       it(`hit test for '(${point.x},${point.y})' on fill path '${a[1]}' yields '${a[2]}'`, () => {
         expect(path.hitTest(point, { findFilledSubPathsInRange: true }).isHit).toEqual(a[2] as boolean);
       });

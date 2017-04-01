@@ -59,7 +59,7 @@ export class SelectionService {
  * A selection represents an action that is the result of a mouse click.
  */
 export interface Selection {
-  readonly commandId: { subIdx: number, cmdIdx: number };
+  readonly index: { subIdx: number, cmdIdx: number };
   readonly source: CanvasType;
 }
 
@@ -67,7 +67,7 @@ function areSelectionsEqual(sel1: Selection, sel2: Selection) {
   if (sel1.source !== sel2.source) {
     return false;
   }
-  const id1 = sel1.commandId;
-  const id2 = sel2.commandId;
+  const id1 = sel1.index;
+  const id2 = sel2.index;
   return id1.subIdx === id2.subIdx && id1.cmdIdx === id2.cmdIdx;
 }

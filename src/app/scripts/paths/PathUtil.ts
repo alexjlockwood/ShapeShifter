@@ -70,7 +70,7 @@ export function deleteSelectedSplitPoints(
   const activePathLayer = lss.getActivePathLayer(canvasType);
   const unsplitOpsMap: Map<number, Array<{ subIdx: number, cmdIdx: number }>> = new Map();
   for (const selection of selections) {
-    const { subIdx, cmdIdx } = selection.commandId;
+    const { subIdx, cmdIdx } = selection.index;
     if (!activePathLayer.pathData.getSubPaths()[subIdx].getCommands()[cmdIdx].isSplit()) {
       continue;
     }
@@ -110,7 +110,7 @@ export function getNumSelectedPoints(
   const canvasType = selections[0].source;
   const activePath = lss.getActivePathLayer(canvasType).pathData;
   return _.sum(selections.map(s => {
-    const { subIdx, cmdIdx } = s.commandId;
+    const { subIdx, cmdIdx } = s.index;
     const cmd = activePath.getSubPaths()[subIdx].getCommands()[cmdIdx];
     return predicateFn(cmd) ? 1 : 0;
   }));

@@ -12,6 +12,9 @@ export class Point {
    * Returns true if the point is approximately equal to this point.
    */
   equals(p: Point) {
+    if (!p) {
+      return false;
+    }
     const diffX = Math.abs(this.x - p.x);
     const diffY = Math.abs(this.y - p.y);
     return diffX < EPSILON && diffY < EPSILON;

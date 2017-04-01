@@ -1,32 +1,29 @@
 import * as _ from 'lodash';
+import * as $ from 'jquery';
 import {
   Component, AfterViewInit, OnDestroy, ElementRef, ViewChild,
   Input, ViewChildren, QueryList, ChangeDetectionStrategy
 } from '@angular/core';
 import {
-  Path,
-  SubPath,
-  Command,
-  ProjectionOntoPath,
+  Path, SubPath, Command, ProjectionOntoPath, HitResult
 } from '../scripts/paths';
-import { PathLayer, ClipPathLayer, VectorLayer, GroupLayer, Layer } from '../scripts/layers';
+import {
+  PathLayer, ClipPathLayer,
+  VectorLayer, GroupLayer, Layer
+} from '../scripts/layers';
 import { CanvasType } from '../CanvasType';
-import * as $ from 'jquery';
 import { Point, Matrix, MathUtil, ColorUtil } from '../scripts/common';
 import { Subscription } from 'rxjs/Subscription';
-import { HoverService, HoverType, Hover } from '../services';
 import {
   AnimatorService,
   CanvasResizeService,
-  AppModeService,
-  AppMode,
+  AppModeService, AppMode,
   SelectionService,
-  Selection,
-  StateService,
-  MorphabilityStatus,
+  StateService, MorphabilityStatus,
+  HoverService, HoverType, Hover,
+  SettingsService,
 } from '../services';
 import { CanvasRulerDirective } from './canvasruler.directive';
-import { SettingsService } from '../services/settings.service';
 
 // TODO: need to update this value... doesn't work for large viewports very well
 const MIN_SNAP_THRESHOLD = 1.5;
@@ -35,7 +32,7 @@ const SIZE_TO_POINT_RADIUS_FACTOR = 1 / 50;
 const SPLIT_POINT_RADIUS_FACTOR = 0.8;
 const SELECTED_POINT_RADIUS_FACTOR = 1.25;
 const POINT_BORDER_FACTOR = 1.075;
-const DISABLED_LAYER_ALPHA = 0.38;
+const DISABLED_ALPHA = 0.38;
 
 // Canvas margin in css pixels.
 export const CANVAS_MARGIN = 36;
@@ -63,35 +60,48 @@ const SELECTION_INNER_COLOR = '#2196f3';
 })
 export class CanvasComponent implements AfterViewInit, OnDestroy {
   @Input() canvasType: CanvasType;
+  @ViewChild('canvasContainer') private canvasContainerRef: ElementRef;
   @ViewChild('renderingCanvas') private renderingCanvasRef: ElementRef;
+  @ViewChild('overlayCanvas') private overlayCanvasRef: ElementRef;
   @ViewChildren(CanvasRulerDirective) canvasRulers: QueryList<CanvasRulerDirective>;
+
+  private canvasContainer: JQuery;
+  private renderingCanvas: JQuery;
+  private overlayCanvas: JQuery;
+  private offscreenLayerCanvas: JQuery;
+  private offscreenSubPathCanvas: JQuery;
+  private renderingCtx: CanvasRenderingContext2D;
+  private overlayCtx: CanvasRenderingContext2D;
+  private offscreenLayerCtx: CanvasRenderingContext2D;
+  private offscreenSubPathCtx: CanvasRenderingContext2D;
 
   private cssContainerWidth = 1;
   private cssContainerHeight = 1;
   private vlWidth = DEFAULT_VIEWPORT_SIZE;
   private vlHeight = DEFAULT_VIEWPORT_SIZE;
-  private element: JQuery;
-  private canvas: JQuery;
-  private offscreenCanvas: JQuery;
   private cssScale: number;
   private attrScale: number;
   private isViewInit: boolean;
   private pathPointRadius: number;
-  private currentHover: Hover;
   private currentHoverPreviewPath: Path;
   private readonly subscriptions: Subscription[] = [];
 
   // If present, then the user is in selection mode and a
   // mouse gesture is currently in progress.
   private pointSelector: PointSelector | undefined;
+
   // If true, then the user is in add points mode and a mouse
   // down event occurred close enough to the path to allow a
   // a point to be created on the next mouse up event (assuming
   // the mouse's location is still within range of the path).
   private shouldPerformActionOnMouseUp = false;
+
   // The last known location of the mouse.
   private lastKnownMouseLocation: Point | undefined;
   private initialFilledSubPathProjectionOntoPath: ProjectionOntoPath | undefined;
+
+  // TODO: use this somehow in the UI?
+  private disabledSubPathIndices: number[] = [];
 
   constructor(
     private readonly elementRef: ElementRef,
@@ -106,9 +116,15 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
   ngAfterViewInit() {
     this.isViewInit = true;
-    this.element = $(this.elementRef.nativeElement);
-    this.canvas = $(this.renderingCanvasRef.nativeElement);
-    this.offscreenCanvas = $(document.createElement('canvas'));
+    this.canvasContainer = $(this.canvasContainerRef.nativeElement);
+    this.renderingCanvas = $(this.renderingCanvasRef.nativeElement);
+    this.overlayCanvas = $(this.overlayCanvasRef.nativeElement);
+    this.offscreenLayerCanvas = $(document.createElement('canvas'));
+    this.offscreenSubPathCanvas = $(document.createElement('canvas'));
+    this.renderingCtx = (this.renderingCanvas.get(0) as HTMLCanvasElement).getContext('2d');
+    this.overlayCtx = (this.overlayCanvas.get(0) as HTMLCanvasElement).getContext('2d');
+    this.offscreenLayerCtx = (this.offscreenLayerCanvas.get(0) as HTMLCanvasElement).getContext('2d');
+    this.offscreenSubPathCtx = (this.offscreenSubPathCanvas.get(0) as HTMLCanvasElement).getContext('2d');
     this.subscriptions.push(
       this.stateService.getVectorLayerObservable(this.canvasType)
         .subscribe(vl => {
@@ -152,13 +168,20 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         if (startGroupLayer && previewGroupLayer && endGroupLayer) {
           previewGroupLayer.interpolate(startGroupLayer, endGroupLayer, fraction);
         }
+        const startVectorLayer = this.stateService.getVectorLayer(CanvasType.Start);
+        const previewVectorLayer = this.stateService.getVectorLayer(CanvasType.Preview);
+        const endVectorLayer = this.stateService.getVectorLayer(CanvasType.End);
+        if (startVectorLayer && previewVectorLayer && endVectorLayer) {
+          previewVectorLayer.interpolate(startVectorLayer, endVectorLayer, fraction);
+        }
       };
       let currentAnimatedFraction = 0;
       this.subscriptions.push(
-        this.stateService.getActivePathIdObservable(this.canvasType).subscribe(() => {
-          interpolatePreview(currentAnimatedFraction);
-          this.draw();
-        }));
+        this.stateService.getActivePathIdObservable(this.canvasType)
+          .subscribe(() => {
+            interpolatePreview(currentAnimatedFraction);
+            this.draw();
+          }));
       this.subscriptions.push(
         this.animatorService.getAnimatedValueObservable()
           .subscribe(fraction => {
@@ -179,26 +202,26 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           .subscribe(() => this.draw()));
       this.subscriptions.push(
         this.selectionService.asObservable()
-          .subscribe(() => this.draw()));
+          .subscribe(() => this.drawOverlays()));
       this.subscriptions.push(
-        this.appModeService.asObservable().subscribe(() => {
-          this.selectionService.reset();
-          this.hoverService.reset();
-          this.pointSelector = undefined;
-          this.shouldPerformActionOnMouseUp = false;
-          this.lastKnownMouseLocation = undefined;
-          this.initialFilledSubPathProjectionOntoPath = undefined;
-          this.draw();
-        }));
+        this.appModeService.asObservable()
+          .subscribe(() => {
+            this.selectionService.reset();
+            this.hoverService.reset();
+            this.pointSelector = undefined;
+            this.shouldPerformActionOnMouseUp = false;
+            this.lastKnownMouseLocation = undefined;
+            this.initialFilledSubPathProjectionOntoPath = undefined;
+            this.draw();
+          }));
       const updateCurrentHoverFn = (hover: Hover | undefined) => {
-        this.currentHover = hover;
         let previewPath: Path = undefined;
         if (hover) {
           // If the user is hovering over the inspector split button, then build
           // a snapshot of what the path would look like after the action
           // and display the result.
           const mutator = this.activePath.mutate();
-          const { subIdx, cmdIdx } = hover.commandId;
+          const { subIdx, cmdIdx } = hover.index;
           switch (hover.type) {
             case HoverType.Split:
               previewPath = mutator.splitCommandInHalf(subIdx, cmdIdx).build();
@@ -218,22 +241,23 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           }
         }
         this.currentHoverPreviewPath = previewPath;
-        this.draw();
+        this.drawOverlays();
       };
       this.subscriptions.push(
-        this.hoverService.asObservable().subscribe(hover => {
-          if (!hover) {
-            // Clear the current hover.
-            updateCurrentHoverFn(undefined);
-            return;
-          }
-          if (hover.source !== this.canvasType
-            && hover.type !== HoverType.Command) {
-            updateCurrentHoverFn(undefined);
-            return;
-          }
-          updateCurrentHoverFn(hover);
-        }));
+        this.hoverService.asObservable()
+          .subscribe(hover => {
+            if (!hover) {
+              // Clear the current hover.
+              updateCurrentHoverFn(undefined);
+              return;
+            }
+            if (hover.source !== this.canvasType
+              && hover.type !== HoverType.Command) {
+              updateCurrentHoverFn(undefined);
+              return;
+            }
+            updateCurrentHoverFn(hover);
+          }));
     }
     this.resizeAndDraw();
   }
@@ -250,14 +274,24 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     return this.stateService.getActivePathId(this.canvasType);
   }
 
+  private get activePathLayer() {
+    return this.activePathId
+      ? this.stateService.getActivePathLayer(this.canvasType)
+      : undefined;
+  }
+
   private get activePath() {
     return this.activePathId
       ? this.stateService.getActivePathLayer(this.canvasType).pathData
       : undefined;
   }
 
-  private get shouldDrawLayer() {
+  private get shouldDrawLayers() {
     return this.vectorLayer && this.activePathId;
+  }
+
+  private get currentHover() {
+    return this.hoverService.getHover();
   }
 
   private get appMode() {
@@ -274,8 +308,12 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       || this.settingsService.shouldLabelPoints();
   }
 
-  private get shouldAcceptMouseEvents() {
+  private get shouldProcessMouseEvents() {
     return this.canvasType !== CanvasType.Preview && this.activePathId;
+  }
+
+  private getTransformsForActiveLayer() {
+    return getTransformsForLayer(this.vectorLayer, this.activePathId);
   }
 
   // private showPenCursor() {
@@ -289,6 +327,47 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   // private resetCursor() {
   //   this.canvas.css({ cursor: '' });
   // }
+
+  // Scale the canvas so that everything from this point forward is drawn
+  // in terms of the SVG's viewport coordinates.
+  private transformToViewportCoords = (ctx: CanvasRenderingContext2D) => {
+    ctx.scale(this.attrScale, this.attrScale);
+    ctx.clearRect(0, 0, this.vlWidth, this.vlHeight);
+  }
+
+  private drawTranslucentOffscreenCtx(
+    ctx: CanvasRenderingContext2D,
+    offscreenCtx: CanvasRenderingContext2D,
+    alpha: number) {
+
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    // Bring the canvas back to its original coordinates before
+    // drawing the offscreen canvas contents.
+    ctx.scale(1 / this.attrScale, 1 / this.attrScale);
+    ctx.drawImage(offscreenCtx.canvas, 0, 0);
+    ctx.restore();
+  }
+
+  /**
+   * Converts a mouse point's CSS coordinates into vector layer viewport coordinates.
+   */
+  private mouseEventToPoint(event: MouseEvent) {
+    const canvasOffset = this.canvasContainer.offset();
+    const x = (event.pageX - canvasOffset.left) / this.cssScale;
+    const y = (event.pageY - canvasOffset.top) / this.cssScale;
+    return new Point(x, y);
+  }
+
+  /**
+   * Sends a signal that the canvas rulers should be redrawn.
+   */
+  private showRuler(event: MouseEvent) {
+    const canvasOffset = this.canvasContainer.offset();
+    const x = (event.pageX - canvasOffset.left) / Math.max(1, this.cssScale);
+    const y = (event.pageY - canvasOffset.top) / Math.max(1, this.cssScale);
+    this.canvasRulers.forEach(r => r.showMouse(new Point(_.round(x), _.round(y))));
+  }
 
   private resizeAndDraw() {
     if (!this.isViewInit) {
@@ -307,9 +386,16 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     // The 'attrScale' represents the number of physical pixels per SVG viewport pixel.
     this.attrScale = this.cssScale * devicePixelRatio;
 
+    const canvases = [
+      this.canvasContainer,
+      this.renderingCanvas,
+      this.overlayCanvas,
+      this.offscreenLayerCanvas,
+      this.offscreenSubPathCanvas,
+    ];
     const cssWidth = this.vlWidth * this.cssScale;
     const cssHeight = this.vlHeight * this.cssScale;
-    [this.canvas, this.offscreenCanvas].forEach(canvas => {
+    canvases.forEach(canvas => {
       canvas
         .attr({
           width: cssWidth * devicePixelRatio,
@@ -333,75 +419,226 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     if (!this.isViewInit) {
       return;
     }
-    const ctx = (this.canvas.get(0) as HTMLCanvasElement).getContext('2d');
-    const offscreenCtx =
-      (this.offscreenCanvas.get(0) as HTMLCanvasElement).getContext('2d');
 
-    ctx.save();
+    this.renderingCtx.save();
+    this.transformToViewportCoords(this.renderingCtx);
 
-    // Scale the canvas so that everything from this point forward is drawn
-    // in terms of viewport coordinates.
-    ctx.scale(this.attrScale, this.attrScale);
-    ctx.clearRect(0, 0, this.vlWidth, this.vlHeight);
-
-    const currentAlpha = this.shouldDisableLayer ? DISABLED_LAYER_ALPHA : 1;
-    // TODO: draw vector layer's alpha property w/o fading out selections/points
-    // if (this.shouldDrawLayer) {
-    //   currentAlpha *= this.vectorLayer.alpha;
-    // }
+    const layerAlpha = this.vectorLayer ? this.vectorLayer.alpha : 1;
+    const currentAlpha = (this.shouldDisableLayer ? DISABLED_ALPHA : 1) * layerAlpha;
     if (currentAlpha < 1) {
-      offscreenCtx.save();
-      offscreenCtx.scale(this.attrScale, this.attrScale);
-      offscreenCtx.clearRect(0, 0, this.vlWidth, this.vlHeight);
+      this.offscreenLayerCtx.save();
+      this.transformToViewportCoords(this.offscreenLayerCtx);
     }
 
     // If the canvas is disabled, draw the layer to an offscreen canvas
-    // so that we can draw it translucently below.
-    const drawingCtx = currentAlpha < 1 ? offscreenCtx : ctx;
-    if (this.shouldDrawLayer) {
-      drawPathLayer(drawingCtx, this.vectorLayer, layer => layer.id === this.activePathId);
-      const selections =
-        this.selectionService.getSelections().filter(selection => {
-          return selection.source === this.canvasType;
-        });
-      drawSelections(
-        drawingCtx,
-        this.vectorLayer,
-        this.activePathId,
-        selections,
-        SELECTION_LINE_WIDTH / this.cssScale,
-      );
-      this.drawLabeledPoints(drawingCtx);
-      this.drawDraggingPoints(drawingCtx);
-      this.drawAddPointPreview(drawingCtx);
+    // so that we can draw it translucently w/o affecting the rest of
+    // the layer's appearance.
+    const layerCtx = currentAlpha < 1 ? this.offscreenLayerCtx : this.renderingCtx;
+    if (this.shouldDrawLayers) {
+      const hasDisabledSubPaths = !!this.disabledSubPathIndices.length;
+      const subPathCtx = hasDisabledSubPaths ? this.offscreenSubPathCtx : layerCtx;
+      if (hasDisabledSubPaths) {
+        subPathCtx.save();
+        this.transformToViewportCoords(subPathCtx);
+      }
+
+      // Draw any disabled subpaths.
+      this.drawPaths(subPathCtx, layer => {
+        if (layer.id !== this.activePathId) {
+          return [];
+        }
+        return _.flatMap(layer.pathData.getSubPaths() as SubPath[],
+          (subPath, subIdx) => {
+            return this.disabledSubPathIndices.indexOf(subIdx) >= 0
+              ? subPath.getCommands() as Command[] : [];
+          });
+      });
+      if (hasDisabledSubPaths) {
+        this.drawTranslucentOffscreenCtx(layerCtx, subPathCtx, DISABLED_ALPHA);
+        subPathCtx.restore();
+      }
+
+      // Draw any enabled subpaths.
+      this.drawPaths(layerCtx, layer => {
+        if (layer.id !== this.activePathId) {
+          return [];
+        }
+        return _.flatMap(layer.pathData.getSubPaths() as SubPath[],
+          (subPath, subIdx) => {
+            return this.disabledSubPathIndices.indexOf(subIdx) >= 0
+              ? [] : subPath.getCommands() as Command[];
+          });
+      });
     }
 
     if (currentAlpha < 1) {
-      ctx.save();
-      ctx.globalAlpha = currentAlpha;
-      // Bring the canvas back to its original coordinates before
-      // drawing the offscreen canvas contents.
-      ctx.scale(1 / this.attrScale, 1 / this.attrScale);
-      ctx.drawImage(offscreenCtx.canvas, 0, 0);
-      ctx.restore();
-      offscreenCtx.restore();
+      this.drawTranslucentOffscreenCtx(
+        this.renderingCtx, this.offscreenLayerCtx, currentAlpha);
+      this.offscreenLayerCtx.restore();
     }
-    ctx.restore();
+    this.renderingCtx.restore();
 
-    // Note that we do not draw the pixel grid in viewport coordinates
-    // as we do above.
-    if (this.cssScale > 4) {
-      this.drawPixelGrid(ctx);
+    this.drawOverlays();
+  }
+
+  // Draws any PathLayers to the canvas.
+  private drawPaths(
+    ctx: CanvasRenderingContext2D,
+    extractDrawingCommandsFn: (layer: PathLayer) => ReadonlyArray<Command>,
+  ) {
+    this.vectorLayer.walk(layer => {
+      if (layer instanceof ClipPathLayer) {
+        // TODO: our SVG importer doesn't import clip paths... so this will never happen (yet)
+        const transforms = getTransformsForLayer(this.vectorLayer, layer.id);
+        executeCommands(ctx, layer.pathData.getCommands(), transforms);
+        ctx.clip();
+        return;
+      }
+      if (!(layer instanceof PathLayer)) {
+        return;
+      }
+      const commands = extractDrawingCommandsFn(layer);
+      if (!commands.length) {
+        return;
+      }
+
+      ctx.save();
+
+      const transforms = getTransformsForLayer(this.vectorLayer, layer.id);
+      executeCommands(ctx, commands, transforms);
+
+      // TODO: confirm this stroke multiplier thing works...
+      const strokeWidthMultiplier = MathUtil.flattenTransforms(transforms).getScale();
+      ctx.strokeStyle = ColorUtil.androidToCssColor(layer.strokeColor, layer.strokeAlpha);
+      ctx.lineWidth = layer.strokeWidth * strokeWidthMultiplier;
+      ctx.fillStyle = ColorUtil.androidToCssColor(layer.fillColor, layer.fillAlpha);
+      ctx.lineCap = layer.strokeLinecap;
+      ctx.lineJoin = layer.strokeLinejoin;
+      ctx.miterLimit = layer.strokeMiterLimit;
+
+      // TODO: update layer.pathData.length so that it reflects scale transforms
+      if (layer.trimPathStart !== 0
+        || layer.trimPathEnd !== 1
+        || layer.trimPathOffset !== 0) {
+        // Calculate the visible fraction of the trimmed path. If trimPathStart
+        // is greater than trimPathEnd, then the result should be the combined
+        // length of the two line segments: [trimPathStart,1] and [0,trimPathEnd].
+        let shownFraction = layer.trimPathEnd - layer.trimPathStart;
+        if (layer.trimPathStart > layer.trimPathEnd) {
+          shownFraction += 1;
+        }
+        // Calculate the dash array. The first array element is the length of
+        // the trimmed path and the second element is the gap, which is the
+        // difference in length between the total path length and the visible
+        // trimmed path length.
+        ctx.setLineDash([
+          shownFraction * layer.pathData.getPathLength(),
+          (1 - shownFraction + 0.001) * layer.pathData.getPathLength()
+        ]);
+        // The amount to offset the path is equal to the trimPathStart plus
+        // trimPathOffset. We mod the result because the trimmed path
+        // should wrap around once it reaches 1.
+        ctx.lineDashOffset = layer.pathData.getPathLength()
+          * (1 - ((layer.trimPathStart + layer.trimPathOffset) % 1));
+      } else {
+        ctx.setLineDash([]);
+      }
+      if (layer.isStroked()
+        && layer.strokeWidth
+        && layer.trimPathStart !== layer.trimPathEnd) {
+        ctx.stroke();
+      }
+      if (layer.isFilled()) {
+        if (layer.fillType === 'evenOdd') {
+          // Unlike VectorDrawables, SVGs spell 'evenodd' with a lowercase 'o'.
+          ctx.fill('evenodd');
+        } else {
+          ctx.fill();
+        }
+      }
+      ctx.restore();
+    });
+  }
+
+  // Draw labeled points, highlights, selections, the pixel grid, etc.
+  private drawOverlays() {
+    if (!this.isViewInit) {
+      return;
     }
+    this.overlayCtx.save();
+    this.transformToViewportCoords(this.overlayCtx);
+    if (this.shouldDrawLayers) {
+      // TODO: figure out what to do with selections
+      // const selections =
+      //   this.selectionService.getSelections()
+      //     .filter(selection => selection.source === this.canvasType);
+      // drawSelections(
+      //   this.overlayCtx,
+      //   this.vectorLayer,
+      //   this.activePathId,
+      //   selections,
+      //   SELECTION_LINE_WIDTH / this.cssScale,
+      // );
+      this.drawHighlights(this.overlayCtx);
+      this.drawLabeledPoints(this.overlayCtx);
+      this.drawDraggingPoints(this.overlayCtx);
+      this.drawAddPointPreview(this.overlayCtx);
+    }
+    this.overlayCtx.restore();
+
+    // Note that the pixel grid is not drawn in viewport coordinates like above.
+    if (this.cssScale > 4) {
+      this.overlayCtx.save();
+      this.overlayCtx.fillStyle = 'rgba(128, 128, 128, .25)';
+      const devicePixelRatio = window.devicePixelRatio || 1;
+      for (let x = 1; x < this.vlWidth; x++) {
+        this.overlayCtx.fillRect(
+          x * this.attrScale - 0.5 * devicePixelRatio,
+          0,
+          devicePixelRatio,
+          this.vlHeight * this.attrScale);
+      }
+      for (let y = 1; y < this.vlHeight; y++) {
+        this.overlayCtx.fillRect(
+          0,
+          y * this.attrScale - 0.5 * devicePixelRatio,
+          this.vlWidth * this.attrScale,
+          devicePixelRatio);
+      }
+      this.overlayCtx.restore();
+    }
+  }
+
+  // Draw any highlighted subpaths.
+  private drawHighlights(ctx: CanvasRenderingContext2D) {
+    if (this.canvasType === CanvasType.Preview
+      || !this.activePathId
+      || !this.currentHover
+      || this.currentHover.type !== HoverType.SubPath) {
+      return;
+    }
+
+    const transforms = this.getTransformsForActiveLayer();
+    const subPath = this.activePath.getSubPaths()[this.currentHover.index.subIdx];
+    executeCommands(ctx, subPath.getCommands(), transforms);
+
+    const lineWidth = SELECTION_LINE_WIDTH / this.cssScale;
+    ctx.save();
+    ctx.lineWidth = lineWidth;
+    ctx.strokeStyle = SELECTION_OUTER_COLOR;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+    ctx.strokeStyle = SELECTION_INNER_COLOR;
+    ctx.lineWidth = lineWidth / 2;
+    ctx.stroke();
+    ctx.restore();
   }
 
   // Draw any labeled points.
   private drawLabeledPoints(ctx: CanvasRenderingContext2D) {
-    if (this.canvasType === CanvasType.Preview && !this.shouldLabelPoints) {
-      return;
-    }
-    const pathId = this.activePathId;
-    if (!pathId) {
+    if (this.canvasType === CanvasType.Preview
+      && !this.shouldLabelPoints
+      || !this.activePathId) {
       return;
     }
 
@@ -434,9 +671,9 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
             const isMove = cmd.getSvgChar() === 'M';
             const isHoverOrSelection =
               (this.currentHover
-                && this.currentHover.commandId.subIdx === subIdx
-                && this.currentHover.commandId.cmdIdx === cmdIdx)
-              || currentSelections.some(sel => _.isMatch(sel.commandId, commandId));
+                && this.currentHover.index.subIdx === subIdx
+                && this.currentHover.index.cmdIdx === cmdIdx)
+              || currentSelections.some(sel => _.isMatch(sel.index, commandId));
             const isDrag =
               activelyDraggedCommandIndex && _.isMatch(activelyDraggedCommandIndex, commandId);
             const point = MathUtil.transformPoint(_.last(cmd.getPoints()), ...transforms);
@@ -588,30 +825,9 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     ctx.restore();
   }
 
-  // Draw the pixel grid.
-  private drawPixelGrid(ctx: CanvasRenderingContext2D) {
-    ctx.save();
-    const devicePixelRatio = window.devicePixelRatio || 1;
-    ctx.fillStyle = 'rgba(128, 128, 128, .25)';
-    for (let x = 1; x < this.vlWidth; x++) {
-      ctx.fillRect(
-        x * this.attrScale - 0.5 * devicePixelRatio,
-        0,
-        devicePixelRatio,
-        this.vlHeight * this.attrScale);
-    }
-    for (let y = 1; y < this.vlHeight; y++) {
-      ctx.fillRect(
-        0,
-        y * this.attrScale - 0.5 * devicePixelRatio,
-        this.vlWidth * this.attrScale,
-        devicePixelRatio);
-    }
-    ctx.restore();
-  }
-
   onMouseDown(event: MouseEvent) {
-    if (!this.shouldAcceptMouseEvents) {
+    this.showRuler(event);
+    if (!this.shouldProcessMouseEvents) {
       return;
     }
 
@@ -663,7 +879,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           const oppositeActivePath =
             this.stateService.getActivePathLayer(oppositeCanvasType).pathData;
           const currSelectedSubIdx = selectedSubIdx;
-          const oppositeSelectedSubIdx = selections[0].commandId.subIdx;
+          const oppositeSelectedSubIdx = selections[0].index.subIdx;
           this.stateService.updateActivePath(
             this.canvasType,
             activePath.mutate().moveSubPath(currSelectedSubIdx, 0).build(),
@@ -679,7 +895,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           const subPath = this.activePath.getSubPaths()[selectedSubIdx];
           for (let cmdIdx = 0; cmdIdx < subPath.getCommands().length; cmdIdx++) {
             this.selectionService.toggle({
-              commandId: { subIdx: selectedSubIdx, cmdIdx },
+              index: { subIdx: selectedSubIdx, cmdIdx },
               source: this.canvasType
             }, true);
           }
@@ -690,8 +906,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
   onMouseMove(event: MouseEvent) {
     this.showRuler(event);
-
-    if (!this.shouldAcceptMouseEvents) {
+    if (!this.shouldProcessMouseEvents) {
       return;
     }
 
@@ -714,15 +929,39 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         return;
       }
 
-      const hoverCommandIndex =
-        performPointHitTest(
-          this.vectorLayer, this.activePathId, mouseMove, this.pathPointRadius);
-      if (hoverCommandIndex) {
-        this.hoverService.setHover({
-          type: HoverType.Command,
-          source: this.canvasType,
-          commandId: hoverCommandIndex,
-        });
+      const hitResult = this.performHitTest(mouseMove, { noSegments: true });
+      if (hitResult.isHit) {
+        if (hitResult.endPointHits.length) {
+          const endPointInfos = hitResult.endPointHits.map(index => {
+            const { subIdx, cmdIdx } = index;
+            const cmd = this.activePath.getSubPaths()[subIdx].getCommands()[cmdIdx];
+            return { index, cmd };
+          });
+          const lastSplitIndex =
+            _.findLastIndex(endPointInfos, cmdInfo => cmdInfo.cmd.isSplit());
+          const hoverIndex =
+            endPointInfos[lastSplitIndex < 0 ? endPointInfos.length - 1 : lastSplitIndex].index;
+          this.hoverService.setHover({
+            type: HoverType.Command,
+            source: this.canvasType,
+            index: hoverIndex,
+          });
+        } else if (hitResult.subPathHits.length) {
+          const subPathInfos = hitResult.subPathHits.map(index => {
+            const { subIdx } = index;
+            const subPath = this.activePath.getSubPaths()[subIdx];
+            return { index, subPath };
+          });
+          const lastSplitIndex =
+            _.findLastIndex(subPathInfos, subPathInfo => subPathInfo.subPath.isSplit());
+          const hoverIndex =
+            subPathInfos[lastSplitIndex < 0 ? subPathInfos.length - 1 : lastSplitIndex].index;
+          this.hoverService.setHover({
+            type: HoverType.SubPath,
+            source: this.canvasType,
+            index: hoverIndex,
+          });
+        }
       } else {
         this.hoverService.reset();
       }
@@ -734,7 +973,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   }
 
   onMouseUp(event: MouseEvent) {
-    if (!this.shouldAcceptMouseEvents) {
+    this.showRuler(event);
+    if (!this.shouldProcessMouseEvents) {
       return;
     }
 
@@ -796,7 +1036,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           // the point instead.
           this.selectionService.toggle({
             source: this.canvasType,
-            commandId: selectedCommandIndex,
+            index: selectedCommandIndex,
           }, event.shiftKey || event.metaKey);
         }
 
@@ -862,8 +1102,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
   onMouseLeave(event: MouseEvent) {
     this.canvasRulers.forEach(r => r.hideMouse());
-
-    if (!this.shouldAcceptMouseEvents) {
+    if (!this.shouldProcessMouseEvents) {
       return;
     }
 
@@ -888,160 +1127,89 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  private showRuler(event: MouseEvent) {
-    const canvasOffset = this.canvas.offset();
-    const x = (event.pageX - canvasOffset.left) / Math.max(1, this.cssScale);
-    const y = (event.pageY - canvasOffset.top) / Math.max(1, this.cssScale);
-    this.canvasRulers.forEach(r => r.showMouse(new Point(_.round(x), _.round(y))));
+  private performHitTest(
+    mousePoint: Point,
+    opts?: { noPoints?: boolean, noSegments?: boolean, noSubPaths?: boolean, }): HitResult {
+
+    const transformMatrix =
+      Matrix.flatten(...this.getTransformsForActiveLayer().reverse()).invert();
+    const transformedMousePoint = MathUtil.transformPoint(mousePoint, transformMatrix);
+    let isPointInRangeFn: (distance: number, cmd: Command) => boolean;
+    if (!opts.noPoints) {
+      isPointInRangeFn = (distance, cmd) => {
+        const multiplyFactor = cmd.isSplit() ? SPLIT_POINT_RADIUS_FACTOR : 1;
+        return distance <= this.pathPointRadius * multiplyFactor;
+      };
+    }
+    let isSegmentInRangeFn: (distance: number, cmd: Command) => boolean;
+    if (this.activePathLayer.isStroked() && !opts.noSegments) {
+      isSegmentInRangeFn = distance => {
+        return distance <= this.activePathLayer.strokeWidth / 2;
+      };
+    }
+    const findFilledSubPathsInRange = this.activePathLayer.isFilled() && !opts.noSubPaths;
+    return this.activePath.hitTest(transformedMousePoint, {
+      isPointInRangeFn,
+      isSegmentInRangeFn,
+      findFilledSubPathsInRange,
+    });
   }
-
-  /**
-   * Converts a mouse point's CSS coordinates into vector layer viewport coordinates.
-   */
-  private mouseEventToPoint(event: MouseEvent) {
-    const canvasOffset = this.canvas.offset();
-    const x = (event.pageX - canvasOffset.left) / this.cssScale;
-    const y = (event.pageY - canvasOffset.top) / this.cssScale;
-    return new Point(x, y);
-  }
-}
-
-/**
- * Draws the specified layer ID to the canvas.
- */
-function drawPathLayer(
-  ctx: CanvasRenderingContext2D,
-  vectorLayer: VectorLayer,
-  shouldDrawPathLayerFn: (layer: PathLayer) => boolean) {
-
-  const executeCommandsFn = (layer: PathLayer | ClipPathLayer, transforms: Matrix[]) => {
-    executeCommands(layer.pathData.getCommands(), ctx, transforms);
-  };
-
-  vectorLayer.walk(layer => {
-    const transforms = getTransformsForLayer(vectorLayer, layer.id);
-    if (layer instanceof ClipPathLayer) {
-      executeCommandsFn(layer, transforms);
-      ctx.clip();
-      return;
-    }
-    if (!(layer instanceof PathLayer)) {
-      return;
-    }
-    if (!shouldDrawPathLayerFn(layer)) {
-      return;
-    }
-
-    // TODO: update layer.pathData.length so that it reflects scale transforms
-    ctx.save();
-    executeCommandsFn(layer, transforms);
-
-    // TODO: confirm this stroke multiplier thing works...
-    const strokeWidthMultiplier = MathUtil.flattenTransforms(transforms).getScale();
-    ctx.strokeStyle = ColorUtil.androidToCssColor(layer.strokeColor, layer.strokeAlpha);
-    ctx.lineWidth = layer.strokeWidth * strokeWidthMultiplier;
-    ctx.fillStyle = ColorUtil.androidToCssColor(layer.fillColor, layer.fillAlpha);
-    ctx.lineCap = layer.strokeLinecap;
-    ctx.lineJoin = layer.strokeLinejoin;
-    ctx.miterLimit = layer.strokeMiterLimit || 4;
-
-    if (layer.trimPathStart !== 0
-      || layer.trimPathEnd !== 1
-      || layer.trimPathOffset !== 0) {
-      // Calculate the visible fraction of the trimmed path. If trimPathStart
-      // is greater than trimPathEnd, then the result should be the combined
-      // length of the two line segments: [trimPathStart,1] and [0,trimPathEnd].
-      let shownFraction = layer.trimPathEnd - layer.trimPathStart;
-      if (layer.trimPathStart > layer.trimPathEnd) {
-        shownFraction += 1;
-      }
-      // Calculate the dash array. The first array element is the length of
-      // the trimmed path and the second element is the gap, which is the
-      // difference in length between the total path length and the visible
-      // trimmed path length.
-      ctx.setLineDash([
-        shownFraction * layer.pathData.getPathLength(),
-        (1 - shownFraction + 0.001) * layer.pathData.getPathLength()
-      ]);
-      // The amount to offset the path is equal to the trimPathStart plus
-      // trimPathOffset. We mod the result because the trimmed path
-      // should wrap around once it reaches 1.
-      ctx.lineDashOffset = layer.pathData.getPathLength()
-        * (1 - ((layer.trimPathStart + layer.trimPathOffset) % 1));
-    } else {
-      ctx.setLineDash([]);
-    }
-    if (layer.isStroked()
-      && layer.strokeWidth
-      && layer.trimPathStart !== layer.trimPathEnd) {
-      ctx.stroke();
-    }
-    if (layer.isFilled()) {
-      if (layer.fillType === 'evenOdd') {
-        // Note that SVG doesn't use a capital 'O' like VectorDrawables do.
-        ctx.fill('evenodd');
-      } else {
-        ctx.fill();
-      }
-    }
-    ctx.restore();
-  });
 }
 
 /**
  * Draws any selected commands to the canvas.
  */
-function drawSelections(
-  ctx: CanvasRenderingContext2D,
-  vectorLayer: VectorLayer,
-  pathId: string,
-  selections: Selection[],
-  lineWidth: number) {
+// function drawSelections(
+//   ctx: CanvasRenderingContext2D,
+//   vectorLayer: VectorLayer,
+//   pathId: string,
+//   selections: Selection[],
+//   lineWidth: number) {
 
-  if (!selections.length) {
-    return;
-  }
+//   if (!selections.length) {
+//     return;
+//   }
 
-  // Group the selections by path ID so we can draw them in their
-  // correct order below.
-  const groupedSelectedCmds =
-    _.chain(selections)
-      // TODO: change pathId if we ever need to draw > 1 path at a time.
-      .groupBy(selection => pathId)
-      .mapValues((values: Selection[], id: string) => {
-        const selectedCmds: Command[] = [];
-        const pathLayer = vectorLayer.findLayer(id) as PathLayer;
-        if (pathLayer) {
-          selectedCmds.push(...values.map(
-            selection => pathLayer.pathData
-              .getSubPaths()[selection.commandId.subIdx]
-              .getCommands()[selection.commandId.cmdIdx]));
-        }
-        return selectedCmds;
-      })
-      .value();
+//   // Group the selections by path ID so we can draw them in their
+//   // correct order below.
+//   const groupedSelectedCmds =
+//     _.chain(selections)
+//       // TODO: change pathId if we ever need to draw > 1 path at a time.
+//       .groupBy(selection => pathId)
+//       .mapValues((values: Selection[], id: string) => {
+//         const selectedCmds: Command[] = [];
+//         const pathLayer = vectorLayer.findLayer(id) as PathLayer;
+//         if (pathLayer) {
+//           selectedCmds.push(...values.map(
+//             selection => pathLayer.pathData
+//               .getSubPaths()[selection.index.subIdx]
+//               .getCommands()[selection.index.cmdIdx]));
+//         }
+//         return selectedCmds;
+//       })
+//       .value();
 
-  // Draw the selections while walking the vector layer to ensure
-  // the proper z-order is displayed.
-  vectorLayer.walk(layer => {
-    const selectedCmds = groupedSelectedCmds[layer.id];
-    if (!selectedCmds) {
-      return;
-    }
-    const transforms = getTransformsForLayer(vectorLayer, layer.id);
-    executeCommands(selectedCmds, ctx, transforms, true);
+//   // Draw the selections while walking the vector layer to ensure
+//   // the proper z-order is displayed.
+//   vectorLayer.walk(layer => {
+//     const selectedCmds = groupedSelectedCmds[layer.id];
+//     if (!selectedCmds) {
+//       return;
+//     }
+//     const transforms = getTransformsForLayer(vectorLayer, layer.id);
+//     executeCommands(selectedCmds, ctx, transforms, true);
 
-    ctx.save();
-    ctx.lineWidth = lineWidth;
-    ctx.strokeStyle = SELECTION_OUTER_COLOR;
-    ctx.lineCap = 'round';
-    ctx.stroke();
-    ctx.strokeStyle = SELECTION_INNER_COLOR;
-    ctx.lineWidth = lineWidth / 2;
-    ctx.stroke();
-    ctx.restore();
-  });
-}
+//     ctx.save();
+//     ctx.lineWidth = lineWidth;
+//     ctx.strokeStyle = SELECTION_OUTER_COLOR;
+//     ctx.lineCap = 'round';
+//     ctx.stroke();
+//     ctx.strokeStyle = SELECTION_INNER_COLOR;
+//     ctx.lineWidth = lineWidth / 2;
+//     ctx.stroke();
+//     ctx.restore();
+//   });
+// }
 
 /**
  * Returns a list of parent transforms for the specified layer ID. The transforms
@@ -1148,23 +1316,20 @@ function performSubPathHitTest(
   return _.last(hitResult.subPathHits).subIdx;
 }
 
+// Note that this function currently only supports contiguous sequences of commands.
 function executeCommands(
-  commands: ReadonlyArray<Command>,
   ctx: CanvasRenderingContext2D,
-  transforms: Matrix[],
-  isDrawingSelection = false) {
+  commands: ReadonlyArray<Command>,
+  transforms: Matrix[]) {
 
   ctx.save();
   transforms.forEach(m => ctx.transform(m.a, m.b, m.c, m.d, m.e, m.f));
   ctx.beginPath();
+
+  let previousEndPoint: Point;
   commands.forEach(cmd => {
     const start = cmd.getStart();
     const end = cmd.getEnd();
-
-    if (isDrawingSelection && cmd.getSvgChar() !== 'M') {
-      // TODO: optimize things by only doing move commands when needed?
-      ctx.moveTo(start.x, start.y);
-    }
 
     if (cmd.getSvgChar() === 'M') {
       ctx.moveTo(end.x, end.y);
@@ -1180,14 +1345,16 @@ function executeCommands(
         cmd.getPoints()[2].x, cmd.getPoints()[2].y,
         cmd.getPoints()[3].x, cmd.getPoints()[3].y);
     } else if (cmd.getSvgChar() === 'Z') {
-      if (isDrawingSelection) {
-        // Selections are broken up line segments, so we need to use
-        // lines instead of closepath commands here.
-        ctx.lineTo(end.x, end.y);
-      } else {
+      if (start.equals(previousEndPoint)) {
         ctx.closePath();
+      } else {
+        // This is mainly to support the case where the list of commands
+        // is size one and contains only a closepath command.
+        ctx.moveTo(start.x, start.y);
+        ctx.lineTo(end.x, end.y);
       }
     }
+    previousEndPoint = end;
   });
   ctx.restore();
 }

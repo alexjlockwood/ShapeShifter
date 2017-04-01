@@ -44,7 +44,7 @@ export class CommandState {
   }
 
   intersects(line: Line) {
-    return this.calculator.intersects(line);
+    return this.calculator.intersects(line).filter(t => this.minT < t && t <= this.maxT);
   }
 
   getIdAtIndex(splitIdx: number) {
