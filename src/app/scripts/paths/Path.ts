@@ -70,15 +70,18 @@ export interface Path {
 export interface HitOptions {
   isPointInRangeFn?: (distance: number, cmd?: Command) => boolean;
   isSegmentInRangeFn?: (distance: number, cmd?: Command) => boolean;
-  findFilledSubPathsInRange?: boolean;
+  findShapesInRange?: boolean;
 }
 
 /** Represents the result of a hit test. */
 export interface HitResult {
   readonly isHit: boolean;
-  readonly endPointHits?: ProjectionOntoPath[];
-  readonly segmentHits?: ProjectionOntoPath[];
-  readonly subPathHits?: Array<{ subIdx: number }>;
+  readonly isEndPointHit: boolean;
+  readonly isSegmentHit: boolean;
+  readonly isShapeHit: boolean;
+  readonly endPointHits?: ReadonlyArray<ProjectionOntoPath>;
+  readonly segmentHits?: ReadonlyArray<ProjectionOntoPath>;
+  readonly shapeHits?: Array<{ subIdx: number }>;
 }
 
 export interface ProjectionOntoPath {

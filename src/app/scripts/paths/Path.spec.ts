@@ -803,7 +803,7 @@ describe('Path', () => {
       const point = a[0] as Point;
       const path = (typeof a[1] === 'string') ? newPath(a[1] as string) : a[1] as Path;
       it(`hit test for '(${point.x},${point.y})' on fill path '${a[1]}' yields '${a[2]}'`, () => {
-        expect(path.hitTest(point, { findFilledSubPathsInRange: true }).isHit).toEqual(a[2] as boolean);
+        expect(path.hitTest(point, { findShapesInRange: true }).isHit).toEqual(a[2] as boolean);
       });
     });
   });

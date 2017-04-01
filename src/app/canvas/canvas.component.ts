@@ -89,7 +89,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
   // If present, then the user is in selection mode and a
   // mouse gesture is currently in progress.
-  private pointSelector: PointSelector | undefined;
+  private pointDragger: PointDragger | undefined;
 
   // If true, then the user is in add points mode and a mouse
   // down event occurred close enough to the path to allow a
@@ -201,7 +201,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         () => {
           this.selectionService.reset();
           this.hoverService.reset();
-          this.pointSelector = undefined;
+          this.pointDragger = undefined;
           this.shouldPerformActionOnMouseUp = false;
           this.lastKnownMouseLocation = undefined;
           this.initialFilledSubPathProjOntoPath = undefined;
@@ -725,11 +725,11 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       }));
 
     const draggedCommandIndex =
-      this.pointSelector
-        && this.pointSelector.isDragging()
-        && this.pointSelector.isMousePressedDown()
-        && this.pointSelector.isSelectedPointSplit()
-        ? this.pointSelector.getSelectedCommandIndex()
+      this.pointDragger
+        && this.pointDragger.isDragging()
+        && this.pointDragger.isMousePressedDown()
+        && this.pointDragger.isSelectedPointSplit()
+        ? this.pointDragger.getSelectedCommandIndex()
         : undefined;
     const transforms = this.transformsForActiveLayer.reverse();
     for (const pointInfo of pathDataPointInfos) {
@@ -759,10 +759,10 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   private drawDraggingPoints(ctx: Context) {
     if (this.appMode !== AppMode.SelectPoints
       || !this.lastKnownMouseLocation
-      || !this.pointSelector
-      || !this.pointSelector.isMousePressedDown()
-      || !this.pointSelector.isDragging()
-      || !this.pointSelector.isSelectedPointSplit()) {
+      || !this.pointDragger
+      || !this.pointDragger.isMousePressedDown()
+      || !this.pointDragger.isDragging()
+      || !this.pointDragger.isSelectedPointSplit()) {
       return;
     }
     // TODO: reuse this code
@@ -849,75 +849,88 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     const mouseDown = this.mouseEventToPoint(event);
     this.lastKnownMouseLocation = mouseDown;
 
+    let hitTestOpts: HitTestOpts;
+    switch (this.appMode) {
+      case AppMode.AddPoints:
+      case AppMode.SplitSubPaths:
+        hitTestOpts = { noPoints: true, noShapes: true };
+        break;
+    }
+    const hitResult = this.performHitTest(mouseDown, hitTestOpts);
+
     if (this.appMode === AppMode.SelectPoints) {
-      const selectedCommandIndex =
-        performPointHitTest(
-          this.vectorLayer, this.activePathId, mouseDown, this.largePointRadius);
-      if (selectedCommandIndex) {
+      if (hitResult.isEndPointHit) {
         // A mouse down event ocurred on top of a point. Create a point selector
         // and track that sh!at.
+        const hitPointIndex = _.last(hitResult.endPointHits);
         const selectedCmd =
           this.activePath
-            .getSubPaths()[selectedCommandIndex.subIdx]
-            .getCommands()[selectedCommandIndex.cmdIdx];
-        this.pointSelector =
-          new PointSelector(mouseDown, selectedCommandIndex, selectedCmd.isSplit());
-      } else if (!event.shiftKey && !event.metaKey) {
-        // If the mouse down event didn't occur on top of a point, then
-        // clear any existing selections, but only if the user isn't in
-        // the middle of selecting multiple points at once.
-        this.selectionService.reset();
+            .getSubPaths()[hitPointIndex.subIdx]
+            .getCommands()[hitPointIndex.cmdIdx];
+        this.pointDragger =
+          new PointDragger(mouseDown, hitPointIndex, selectedCmd.isSplit());
       }
-    } else if (this.appMode === AppMode.AddPoints
-      || this.appMode === AppMode.SplitSubPaths) {
-      const projectionOntoPath =
-        calculateProjectionOntoPath(
-          this.vectorLayer, this.activePathId, this.lastKnownMouseLocation);
-      const projection = projectionOntoPath.projection;
-      this.shouldPerformActionOnMouseUp = projection.d < MIN_SNAP_THRESHOLD;
-      // TODO: avoid redrawing on every frame... often times it will be unnecessary
-      this.draw();
-    } else if (this.appMode === AppMode.PairSubPaths) {
-      const selectedSubIdx =
-        performSubPathHitTest(this.vectorLayer, this.activePathId, mouseDown);
-      if (selectedSubIdx !== undefined) {
-        const selections = this.selectionService.getSelections();
-        const oppositeCanvasType =
-          this.canvasType === CanvasType.Start ? CanvasType.End : CanvasType.Start;
-        this.selectionService.reset();
-        if (selections.length && selections[0].source !== this.canvasType) {
-          // TODO: this UX should be improved before release...
-          // TODO: keep the subpaths selected until all have been paired?
-          // Then a subpath is currently selected in the canvas, so pair
-          // the two selected subpaths together.
-          const activePath = this.activePath;
-          const oppositeActivePath =
-            this.stateService.getActivePathLayer(oppositeCanvasType).pathData;
-          const currSelectedSubIdx = selectedSubIdx;
-          const oppositeSelectedSubIdx = selections[0].index.subIdx;
-          this.stateService.updateActivePath(
-            this.canvasType,
-            activePath.mutate().moveSubPath(currSelectedSubIdx, 0).build(),
-            false);
-          this.stateService.updateActivePath(
-            oppositeCanvasType,
-            oppositeActivePath.mutate().moveSubPath(oppositeSelectedSubIdx, 0).build(),
-            false);
-          this.stateService.notifyChange(CanvasType.Preview);
-          this.stateService.notifyChange(CanvasType.Start);
-          this.stateService.notifyChange(CanvasType.End);
-        } else if (!selections.length || selections[0].source === oppositeCanvasType) {
-          const subPath = this.activePath.getSubPaths()[selectedSubIdx];
-          for (let cmdIdx = 0; cmdIdx < subPath.getCommands().length; cmdIdx++) {
-            this.selectionService.toggle({
-              type: SelectionType.Command,
-              index: { subIdx: selectedSubIdx, cmdIdx },
-              source: this.canvasType
-            }, true);
-          }
-        }
-      }
+      // else if (!event.shiftKey && !event.metaKey) {
+      //   // If the mouse down event didn't occur on top of a point, then
+      //   // clear any existing selections, but only if the user isn't in
+      //   // the middle of selecting multiple points at once.
+      //   this.selectionService.reset();
+      // }
+      return;
     }
+
+    if (this.appMode === AppMode.AddPoints || this.appMode === AppMode.SplitSubPaths) {
+      if (hitResult.isSegmentHit) {
+        const projection = _.last(hitResult.segmentHits).projection;
+        this.shouldPerformActionOnMouseUp = projection.d < MIN_SNAP_THRESHOLD;
+      }
+      // TODO: track the previous hit result so we can avoid redrawing on every frame
+      this.draw();
+      return;
+    }
+
+    // TODO: hook this up with the UI
+    // if (this.appMode === AppMode.PairSubPaths) {
+    //   const selectedSubIdx =
+    //     performSubPathHitTest(this.vectorLayer, this.activePathId, mouseDown);
+    //   if (selectedSubIdx !== undefined) {
+    //     const selections = this.selectionService.getSelections();
+    //     const oppositeCanvasType =
+    //       this.canvasType === CanvasType.Start ? CanvasType.End : CanvasType.Start;
+    //     this.selectionService.reset();
+    //     if (selections.length && selections[0].source !== this.canvasType) {
+    //       // TODO: this UX should be improved before release...
+    //       // TODO: keep the subpaths selected until all have been paired?
+    //       // Then a subpath is currently selected in the canvas, so pair
+    //       // the two selected subpaths together.
+    //       const activePath = this.activePath;
+    //       const oppositeActivePath =
+    //         this.stateService.getActivePathLayer(oppositeCanvasType).pathData;
+    //       const currSelectedSubIdx = selectedSubIdx;
+    //       const oppositeSelectedSubIdx = selections[0].index.subIdx;
+    //       this.stateService.updateActivePath(
+    //         this.canvasType,
+    //         activePath.mutate().moveSubPath(currSelectedSubIdx, 0).build(),
+    //         false);
+    //       this.stateService.updateActivePath(
+    //         oppositeCanvasType,
+    //         oppositeActivePath.mutate().moveSubPath(oppositeSelectedSubIdx, 0).build(),
+    //         false);
+    //       this.stateService.notifyChange(CanvasType.Preview);
+    //       this.stateService.notifyChange(CanvasType.Start);
+    //       this.stateService.notifyChange(CanvasType.End);
+    //     } else if (!selections.length || selections[0].source === oppositeCanvasType) {
+    //       const subPath = this.activePath.getSubPaths()[selectedSubIdx];
+    //       for (let cmdIdx = 0; cmdIdx < subPath.getCommands().length; cmdIdx++) {
+    //         this.selectionService.toggle({
+    //           type: SelectionType.Command,
+    //           index: { subIdx: selectedSubIdx, cmdIdx },
+    //           source: this.canvasType
+    //         }, true);
+    //       }
+    //     }
+    //   }
+    // }
   }
 
   // MOUSE MOVE
@@ -932,10 +945,10 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
     if (this.appMode === AppMode.SelectPoints) {
       let isDraggingSplitPoint = false;
-      if (this.pointSelector) {
-        this.pointSelector.onMouseMove(mouseMove);
+      if (this.pointDragger) {
+        this.pointDragger.onMouseMove(mouseMove);
         isDraggingSplitPoint =
-          this.pointSelector.isSelectedPointSplit() && this.pointSelector.isDragging();
+          this.pointDragger.isSelectedPointSplit() && this.pointDragger.isDragging();
         if (isDraggingSplitPoint) {
           this.draw();
           // TODO: while dragging, draw the highlighted segment when snapping to a new loation
@@ -945,44 +958,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
 
     const hitResult = this.performHitTest(mouseMove);
-    if (hitResult.isHit) {
-      if (hitResult.endPointHits.length) {
-        const endPointInfos = hitResult.endPointHits.map(index => {
-          const { subIdx, cmdIdx } = index;
-          const cmd = this.activePath.getSubPaths()[subIdx].getCommands()[cmdIdx];
-          return { index, cmd };
-        });
-        const lastSplitIndex =
-          _.findLastIndex(endPointInfos, cmdInfo => cmdInfo.cmd.isSplit());
-        const hoverIndex =
-          endPointInfos[lastSplitIndex < 0 ? endPointInfos.length - 1 : lastSplitIndex].index;
-        this.hoverService.setHover({
-          type: HoverType.Command,
-          source: this.canvasType,
-          index: hoverIndex,
-        });
-      } else if (hitResult.subPathHits.length) {
-        const subPathInfos = hitResult.subPathHits.map(index => {
-          const { subIdx } = index;
-          const subPath = this.activePath.getSubPaths()[subIdx];
-          return { index, subPath };
-        });
-        const lastSplitIndex =
-          _.findLastIndex(subPathInfos, subPathInfo => subPathInfo.subPath.isSplit());
-        const hoverIndex =
-          subPathInfos[lastSplitIndex < 0 ? subPathInfos.length - 1 : lastSplitIndex].index;
-        this.hoverService.setHover({
-          type: HoverType.SubPath,
-          source: this.canvasType,
-          index: hoverIndex,
-        });
-      }
-    } else {
-      this.hoverService.reset();
-    }
-
-
-    // TODO: avoid redrawing when possible
+    this.processHitResult(hitResult);
+    // TODO: track the previous hit result so we can avoid redrawing on every frame
     this.draw();
   }
 
@@ -997,18 +974,16 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     this.lastKnownMouseLocation = mouseUp;
 
     if (this.appMode === AppMode.SelectPoints) {
-      if (this.pointSelector) {
-        this.pointSelector.onMouseUp(mouseUp);
+      if (this.pointDragger) {
+        this.pointDragger.onMouseUp(mouseUp);
 
-        const selectedCommandIndex = this.pointSelector.getSelectedCommandIndex();
-        if (this.pointSelector.isDragging()) {
-          if (this.pointSelector.isSelectedPointSplit()) {
+        const selectedCommandIndex = this.pointDragger.getSelectedCommandIndex();
+        if (this.pointDragger.isDragging()) {
+          if (this.pointDragger.isSelectedPointSplit()) {
             const projOntoPath =
               calculateProjectionOntoPath(this.vectorLayer, this.activePathId, mouseUp);
-
-            // TODO: Make this user experience better. There could be other subIdxs that we could use.
             const { subIdx: newSubIdx, cmdIdx: newCmdIdx } = projOntoPath;
-            const { subIdx: oldSubIdx, cmdIdx: oldCmdIdx } = this.pointSelector.getSelectedCommandIndex();
+            const { subIdx: oldSubIdx, cmdIdx: oldCmdIdx } = this.pointDragger.getSelectedCommandIndex();
             if (newSubIdx === oldSubIdx) {
               const activeLayer = this.stateService.getActivePathLayer(this.canvasType);
               const startingPath = activeLayer.pathData;
@@ -1048,7 +1023,12 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           }
         } else {
           // If we haven't started dragging a point, then we should select
-          // the point instead.
+          // the subpath and point instead.
+          this.selectionService.toggle({
+            type: SelectionType.SubPath,
+            source: this.canvasType,
+            index: { subIdx: selectedCommandIndex.subIdx },
+          });
           this.selectionService.toggle({
             type: SelectionType.Command,
             source: this.canvasType,
@@ -1058,10 +1038,15 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
         // Draw and complete the gesture.
         this.draw();
-        this.pointSelector = undefined;
+        this.pointDragger = undefined;
       }
-    } else if (this.appMode === AppMode.AddPoints
-      || this.appMode === AppMode.SplitSubPaths) {
+      return;
+    }
+
+    let hitTestOpts: HitTestOpts;
+    const hitResult = this.performHitTest(mouseUp, hitTestOpts);
+
+    if (this.appMode === AppMode.AddPoints || this.appMode === AppMode.SplitSubPaths) {
       if (this.shouldPerformActionOnMouseUp) {
         const projOntoPath =
           calculateProjectionOntoPath(
@@ -1127,8 +1112,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
     if (this.appMode === AppMode.SelectPoints) {
       // TODO: how to handle the case where the mouse leaves and re-enters mid-gesture?
-      if (this.pointSelector) {
-        this.pointSelector.onMouseLeave(mouseLeave);
+      if (this.pointDragger) {
+        this.pointDragger.onMouseLeave(mouseLeave);
         this.draw();
       }
     } else if (this.appMode === AppMode.AddPoints
@@ -1143,10 +1128,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  private performHitTest(
-    mousePoint: Point,
-    opts: { noPoints?: boolean, noSegments?: boolean, noSubPaths?: boolean } = {}) {
-
+  private performHitTest(mousePoint: Point, opts: HitTestOpts = {}) {
     const transformMatrix =
       Matrix.flatten(...this.transformsForActiveLayer.reverse()).invert();
     const transformedMousePoint = MathUtil.transformPoint(mousePoint, transformMatrix);
@@ -1158,17 +1140,55 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       };
     }
     let isSegmentInRangeFn: (distance: number, cmd: Command) => boolean;
-    if (this.activePathLayer.isStroked() && !opts.noSegments) {
+    if (!opts.noSegments) {
       isSegmentInRangeFn = distance => {
         return distance <= this.activePathLayer.strokeWidth / 2;
       };
     }
-    const findFilledSubPathsInRange = this.activePathLayer.isFilled() && !opts.noSubPaths;
+    const findShapesInRange = this.activePathLayer.isFilled() && !opts.noShapes;
     return this.activePath.hitTest(transformedMousePoint, {
       isPointInRangeFn,
       isSegmentInRangeFn,
-      findFilledSubPathsInRange,
+      findShapesInRange,
     });
+  }
+
+  private processHitResult(hitResult: HitResult) {
+    if (hitResult.isHit) {
+      if (hitResult.endPointHits.length) {
+        const endPointInfos = hitResult.endPointHits.map(index => {
+          const { subIdx, cmdIdx } = index;
+          const cmd = this.activePath.getSubPaths()[subIdx].getCommands()[cmdIdx];
+          return { index, cmd };
+        });
+        const lastSplitIndex =
+          _.findLastIndex(endPointInfos, cmdInfo => cmdInfo.cmd.isSplit());
+        const hoverIndex =
+          endPointInfos[lastSplitIndex < 0 ? endPointInfos.length - 1 : lastSplitIndex].index;
+        this.hoverService.setHover({
+          type: HoverType.Command,
+          source: this.canvasType,
+          index: hoverIndex,
+        });
+      } else if (hitResult.shapeHits.length) {
+        const subPathInfos = hitResult.shapeHits.map(index => {
+          const { subIdx } = index;
+          const subPath = this.activePath.getSubPaths()[subIdx];
+          return { index, subPath };
+        });
+        const lastSplitIndex =
+          _.findLastIndex(subPathInfos, subPathInfo => subPathInfo.subPath.isSplit());
+        const hoverIndex =
+          subPathInfos[lastSplitIndex < 0 ? subPathInfos.length - 1 : lastSplitIndex].index;
+        this.hoverService.setHover({
+          type: HoverType.SubPath,
+          source: this.canvasType,
+          index: hoverIndex,
+        });
+      }
+    } else {
+      this.hoverService.reset();
+    }
   }
 }
 
@@ -1207,41 +1227,6 @@ function getTransformsForLayer(vectorLayer: VectorLayer, layerId: string) {
   return getTransformsFn([], vectorLayer);
 }
 
-/**
- * Finds the path point closest to the specified mouse point, with a max
- * distance specified by radius. Draggable points are returned with higher
- * priority than non-draggable points. Returns undefined if no point is found.
- * If a point is not found, then a hit test for one of the path's subpaths
- * will be performed as well.
- */
-function performPointHitTest(
-  vectorLayer: VectorLayer,
-  pathId: string,
-  mousePoint: Point,
-  pointRadius: number): { subIdx: number, cmdIdx: number } | undefined {
-
-  const pathLayer = vectorLayer.findLayer(pathId) as PathLayer;
-  if (!pathLayer) {
-    return undefined;
-  }
-  const transforms = getTransformsForLayer(vectorLayer, pathId).reverse();
-  const transformedMousePoint =
-    MathUtil.transformPoint(
-      mousePoint,
-      MathUtil.flattenTransforms(transforms).invert());
-  const isPointInRangeFn = (distance: number, cmd: Command) => {
-    return distance <= (cmd.isSplit()
-      ? pointRadius * SPLIT_POINT_RADIUS_FACTOR
-      : pointRadius);
-  };
-  const hitResult =
-    pathLayer.pathData.hitTest(transformedMousePoint, { isPointInRangeFn });
-  if (!hitResult.endPointHits.length) {
-    return undefined;
-  }
-  return _.last(hitResult.endPointHits);
-}
-
 function performSubPathHitTest(
   vectorLayer: VectorLayer,
   pathId: string,
@@ -1257,24 +1242,22 @@ function performSubPathHitTest(
       mousePoint,
       MathUtil.flattenTransforms(transforms).invert());
   let isSegmentInRangeFn: (distance: number, cmd?: Command) => boolean;
-  let findFilledSubPathsInRange: boolean;
   if (pathLayer.isStroked()) {
     isSegmentInRangeFn = (distance: number) => {
       return distance <= pathLayer.strokeWidth / 2;
     };
-  } else if (pathLayer.isFilled()) {
-    findFilledSubPathsInRange = true;
   }
+  const findShapesInRange = pathLayer.isFilled();
   const hitResult =
     pathLayer.pathData.hitTest(
-      transformedMousePoint, { isSegmentInRangeFn, findFilledSubPathsInRange });
+      transformedMousePoint, { isSegmentInRangeFn, findShapesInRange });
   if (!hitResult.isHit) {
     return undefined;
   }
   if (hitResult.segmentHits.length) {
     return _.last(hitResult.segmentHits).subIdx;
   }
-  return _.last(hitResult.subPathHits).subIdx;
+  return _.last(hitResult.shapeHits).subIdx;
 }
 
 // Note that this function currently only supports contiguous sequences of commands.
@@ -1354,7 +1337,7 @@ function calculateProjectionOntoPath(
 /**
  * Helper class that tracks information about a user's mouse gesture.
  */
-class PointSelector {
+class PointDragger {
   private isDragTriggered = false;
   private isMouseDown = true;
 
@@ -1392,4 +1375,10 @@ class PointSelector {
   isSelectedPointSplit() {
     return this.selectedPointSplit;
   }
+}
+
+interface HitTestOpts {
+  noPoints?: boolean;
+  noSegments?: boolean;
+  noShapes?: boolean;
 }

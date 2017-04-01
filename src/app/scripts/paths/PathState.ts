@@ -142,7 +142,7 @@ export class PathState {
   hitTest(point: Point, opts: HitOptions): HitResult {
     const endPointHits: ProjectionOntoPath[] = [];
     const segmentHits: ProjectionOntoPath[] = [];
-    const subPathHits: Array<{ subIdx: number }> = [];
+    const shapeHits: Array<{ subIdx: number }> = [];
 
     if (opts.isPointInRangeFn) {
       endPointHits.push(...
@@ -210,8 +210,8 @@ export class PathState {
       );
     }
 
-    if (opts.findFilledSubPathsInRange) {
-      subPathHits.push(...
+    if (opts.findShapesInRange) {
+      shapeHits.push(...
         _.chain(this.subPaths as SubPath[])
           .filter(subPath => subPath.isClosed() && !subPath.isCollapsing())
           .flatMap((subPath, subIdx) => {
@@ -239,8 +239,19 @@ export class PathState {
           .value()
       );
     }
-    const isHit = !!endPointHits.length || !!segmentHits.length || !!subPathHits.length;
-    return { isHit, endPointHits, segmentHits, subPathHits };
+    const isEndPointHit = !!endPointHits.length;
+    const isSegmentHit = !!segmentHits.length;
+    const isShapeHit = !!shapeHits.length;
+    const isHit = isEndPointHit || isSegmentHit || isShapeHit;
+    return {
+      isHit,
+      isEndPointHit,
+      isSegmentHit,
+      isShapeHit,
+      endPointHits,
+      segmentHits,
+      shapeHits,
+    };
   }
 
   // TODO: move this math stuff into the calculators module
