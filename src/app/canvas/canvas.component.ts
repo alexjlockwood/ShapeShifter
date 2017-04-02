@@ -25,9 +25,9 @@ import {
 import { CanvasRulerDirective } from './canvasruler.directive';
 import { Observable } from 'rxjs/Observable';
 import { Subscription } from 'rxjs/Subscription';
-import { PointCreator } from './PointCreator';
+import { SegmentSplitter } from './PointCreator';
 import { PointSelector } from './PointSelector';
-import { SubPathSplitter } from './SubPathSplitter';
+import { ShapeSplitter } from './SubPathSplitter';
 
 const SPLIT_POINT_RADIUS_FACTOR = 0.8;
 const SELECTED_POINT_RADIUS_FACTOR = 1.25;
@@ -83,8 +83,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   private attrScale: number;
   private currentHoverPreviewPath: Path;
   private pointSelector: PointSelector | undefined;
-  private pointCreator: PointCreator | undefined;
-  private subPathSplitter: SubPathSplitter | undefined;
+  private segmentSplitter: SegmentSplitter | undefined;
+  private shapeSplitter: ShapeSplitter | undefined;
   private readonly subscriptions: Subscription[] = [];
 
   // TODO: use this somehow in the UI?
@@ -183,7 +183,10 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       this.subscribeTo(
         this.appModeService.asObservable(),
         () => {
-          if (this.appMode === AppMode.AddPoints) {
+          if (this.appMode === AppMode.AddPoints
+            || (this.appMode === AppMode.SplitSubPaths
+              && this.activePathLayer
+              && this.activePathLayer.isStroked())) {
             this.showPenCursor();
             const subIdxs = new Set<number>();
             for (const s of this.selectionService.getSelections()) {
@@ -191,17 +194,25 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
             }
             const toArray = Array.from(subIdxs);
             const restrictToSubIdx = toArray.length ? toArray[0] : undefined;
-            this.pointCreator = new PointCreator(this, restrictToSubIdx);
+            this.segmentSplitter = new SegmentSplitter(this, restrictToSubIdx);
           } else {
             this.resetCursor();
-            this.pointCreator = undefined;
+            this.segmentSplitter = undefined;
           }
           if (this.appMode === AppMode.SelectPoints) {
             this.pointSelector = new PointSelector(this);
           } else {
             this.pointSelector = undefined;
           }
-          this.subPathSplitter = undefined;
+          if (this.appMode === AppMode.SplitSubPaths
+            && this.activePathLayer
+            && this.activePathLayer.isFilled()) {
+            this.showPenCursor();
+            this.shapeSplitter = new ShapeSplitter(this);
+          } else {
+            this.resetCursor();
+            this.shapeSplitter = undefined;
+          }
           if (this.appMode !== AppMode.AddPoints) {
             this.selectionService.reset();
           }
@@ -398,10 +409,12 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       };
     }
     const findShapesInRange = this.activePathLayer.isFilled() && !opts.noShapes;
+    const restrictToSubIdx = opts.restrictToSubIdx;
     return this.activePath.hitTest(transformedMousePoint, {
       isPointInRangeFn,
       isSegmentInRangeFn,
       findShapesInRange,
+      restrictToSubIdx,
     });
   }
 
@@ -709,6 +722,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       this.drawLabeledPoints(this.overlayCtx);
       this.drawDraggingPoints(this.overlayCtx);
       this.drawAddPointPreview(this.overlayCtx);
+      this.drawSplitShapePreview(this.overlayCtx);
     }
     this.overlayCtx.restore();
 
@@ -910,12 +924,12 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
   private drawHighlightedAddPointSegment(ctx: Context) {
     if (this.appMode !== AppMode.AddPoints
-      || !this.pointCreator
-      || !this.pointCreator.getLastKnownMouseLocation()) {
+      || !this.segmentSplitter
+      || !this.segmentSplitter.getLastKnownMouseLocation()) {
       return;
     }
     let point;
-    const projectionOntoPath = this.pointCreator.getProjectionOntoPath();
+    const projectionOntoPath = this.segmentSplitter.getProjectionOntoPath();
     if (projectionOntoPath) {
       const projection = projectionOntoPath.projection;
       if (projection && projection.d < this.minSnapThreshold) {
@@ -939,13 +953,12 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  // Draw any actively dragged points along the path (selection mode only).
   private drawAddPointPreview(ctx: Context) {
-    if (this.appMode !== AppMode.AddPoints || !this.pointCreator) {
+    if (this.appMode !== AppMode.AddPoints || !this.segmentSplitter) {
       return;
     }
     let point;
-    const projectionOntoPath = this.pointCreator.getProjectionOntoPath();
+    const projectionOntoPath = this.segmentSplitter.getProjectionOntoPath();
     if (projectionOntoPath) {
       const projection = projectionOntoPath.projection;
       if (projection && projection.d < this.minSnapThreshold) {
@@ -955,6 +968,75 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     if (point) {
       this.drawLabeledPoint(
         ctx, point, this.largePointRadius * SPLIT_POINT_RADIUS_FACTOR, SPLIT_POINT_COLOR);
+    }
+  }
+
+  private drawSplitShapePreview(ctx: Context) {
+    if (this.appMode !== AppMode.SplitSubPaths || !this.shapeSplitter) {
+      return;
+    }
+    const proj1 = this.shapeSplitter.getInitialProjectionOntoPath();
+    if (proj1) {
+      const proj2 = this.shapeSplitter.getFinalProjectionOntoPath();
+      const startPoint =
+        this.pathPointToDrawingCoords(new Point(proj1.projection.x, proj1.projection.y));
+      let endPoint: Point;
+      if (proj2) {
+        endPoint = this.pathPointToDrawingCoords(new Point(proj2.projection.x, proj2.projection.y));
+      } else {
+        endPoint = this.shapeSplitter.getLastKnownMouseLocation();
+      }
+
+      const subPathCmds = this.activePath.getSubPath(proj1.subIdx).getCommands();
+      const transforms = this.transformsForActiveLayer;
+
+      executeCommands(ctx, subPathCmds, transforms);
+      ctx.save();
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = 'dashed';
+      ctx.strokeStyle = HIGHLIGHT_COLOR;
+      ctx.lineWidth = this.highlightLineWidth / 3;
+      ctx.stroke();
+      ctx.restore();
+
+      ctx.save();
+      transforms.forEach(m => ctx.transform(m.a, m.b, m.c, m.d, m.e, m.f));
+      ctx.beginPath();
+      ctx.moveTo(startPoint.x, startPoint.y);
+      ctx.lineTo(endPoint.x, endPoint.y);
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = SPLIT_POINT_COLOR;
+      ctx.lineWidth = this.highlightLineWidth / 2;
+      ctx.stroke();
+      ctx.restore();
+
+      this.drawLabeledPoint(
+        ctx, startPoint, this.largePointRadius * SPLIT_POINT_RADIUS_FACTOR, SPLIT_POINT_COLOR);
+    } else {
+      let point;
+      const projectionOntoPath = this.shapeSplitter.getCurrentProjectionOntoPath();
+      if (projectionOntoPath) {
+        const projection = projectionOntoPath.projection;
+        if (projection && projection.d < this.minSnapThreshold) {
+          point = this.pathPointToDrawingCoords(new Point(projection.x, projection.y));
+        }
+      }
+      if (point) {
+        const { subIdx, cmdIdx } = projectionOntoPath;
+        const command = this.activePath.getCommand(subIdx, cmdIdx);
+        const transforms = this.transformsForActiveLayer;
+        executeCommands(ctx, [command], transforms);
+
+        const lineWidth = this.highlightLineWidth;
+        ctx.save();
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = SPLIT_POINT_COLOR;
+        ctx.lineWidth = lineWidth / 2;
+        ctx.stroke();
+        ctx.restore();
+        this.drawLabeledPoint(
+          ctx, point, this.largePointRadius * SPLIT_POINT_RADIUS_FACTOR, SPLIT_POINT_COLOR);
+      }
     }
   }
 
@@ -994,9 +1076,13 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     if (this.appMode === AppMode.SelectPoints) {
       this.pointSelector.onMouseDown(mouseDown, event.shiftKey || event.metaKey);
     } else if (this.appMode === AppMode.AddPoints) {
-      this.pointCreator.onMouseDown(mouseDown);
+      this.segmentSplitter.onMouseDown(mouseDown);
     } else if (this.appMode === AppMode.SplitSubPaths) {
-      // TODO: implement this
+      if (this.activePathLayer.isStroked()) {
+        this.segmentSplitter.onMouseDown(mouseDown);
+      } else {
+        this.shapeSplitter.onMouseDown(mouseDown);
+      }
     }
   }
 
@@ -1010,7 +1096,13 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     if (this.appMode === AppMode.SelectPoints) {
       this.pointSelector.onMouseMove(mouseMove);
     } else if (this.appMode === AppMode.AddPoints) {
-      this.pointCreator.onMouseMove(mouseMove);
+      this.segmentSplitter.onMouseMove(mouseMove);
+    } else if (this.appMode === AppMode.SplitSubPaths) {
+      if (this.activePathLayer.isStroked()) {
+        this.segmentSplitter.onMouseMove(mouseMove);
+      } else {
+        this.shapeSplitter.onMouseMove(mouseMove);
+      }
     }
   }
 
@@ -1024,7 +1116,13 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     if (this.appMode === AppMode.SelectPoints) {
       this.pointSelector.onMouseUp(mouseUp);
     } else if (this.appMode === AppMode.AddPoints) {
-      this.pointCreator.onMouseUp(mouseUp);
+      this.segmentSplitter.onMouseUp(mouseUp);
+    } else if (this.appMode === AppMode.SplitSubPaths) {
+      if (this.activePathLayer.isStroked()) {
+        this.segmentSplitter.onMouseUp(mouseUp);
+      } else {
+        this.shapeSplitter.onMouseUp(mouseUp);
+      }
     }
   }
 
@@ -1038,7 +1136,13 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       // TODO: how to handle the case where the mouse leaves and re-enters mid-gesture?
       this.pointSelector.onMouseLeave(mouseLeave);
     } else if (this.appMode === AppMode.AddPoints) {
-      this.pointCreator.onMouseLeave(mouseLeave);
+      this.segmentSplitter.onMouseLeave(mouseLeave);
+    } else if (this.appMode === AppMode.SplitSubPaths) {
+      if (this.activePathLayer.isStroked()) {
+        this.segmentSplitter.onMouseLeave(mouseLeave);
+      } else {
+        this.shapeSplitter.onMouseLeave(mouseLeave);
+      }
     }
   }
 
@@ -1173,4 +1277,5 @@ interface HitTestOpts {
   noPoints?: boolean;
   noSegments?: boolean;
   noShapes?: boolean;
+  restrictToSubIdx?: number;
 }

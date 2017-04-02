@@ -145,19 +145,23 @@ export class PathState {
     return { projection, subIdx, cmdIdx };
   }
 
-  hitTest(point: Point, opts: HitOptions): HitResult {
+  hitTest(point: Point, opts: HitOptions = {}): HitResult {
     const endPointHits: ProjectionOntoPath[] = [];
     const segmentHits: ProjectionOntoPath[] = [];
     const shapeHits: Array<{ subIdx: number }> = [];
 
+    const restrictToSubIdx = opts.restrictToSubIdx;
     if (opts.isPointInRangeFn) {
       endPointHits.push(...
         _.chain(this.subPaths as SubPath[])
-          // Filtering these out is OK because they are always appended
-          // to the end of the path and therefore don't affect the position
-          // of the subIdxs.
-          .filter(subPath => !subPath.isCollapsing())
-          .map((subPath, subIdx) => {
+          .map((subPath, subIdx) => { return { subPath, subIdx }; })
+          .filter(obj => {
+            const { subPath, subIdx } = obj;
+            return !subPath.isCollapsing()
+              && (restrictToSubIdx === undefined || restrictToSubIdx === subIdx);
+          })
+          .map(obj => {
+            const { subPath, subIdx } = obj;
             return subPath.getCommands()
               .map((cmd, cmdIdx) => {
                 const { x, y } = cmd.getEnd();
@@ -182,11 +186,14 @@ export class PathState {
       // TODO: take stroke width scaling into account as well?
       segmentHits.push(...
         _.chain(this.subPaths as SubPath[])
-          // Filtering these out is OK because they are always appended
-          // to the end of the path and therefore don't affect the position
-          // of the subIdxs.
-          .filter(subPath => !subPath.isCollapsing())
-          .map((subPath, subIdx) => {
+          .map((subPath, subIdx) => { return { subPath, subIdx }; })
+          .filter(obj => {
+            const { subPath, subIdx } = obj;
+            return !subPath.isCollapsing()
+              && (restrictToSubIdx === undefined || restrictToSubIdx === subIdx);
+          })
+          .map(obj => {
+            const { subIdx } = obj;
             const spsIdx = this.subPathOrdering[subIdx];
             const sps = this.findSubPathState(spsIdx);
             // We iterate by csIdx here to improve performance (since cmdIdx
@@ -225,10 +232,12 @@ export class PathState {
     if (opts.findShapesInRange) {
       shapeHits.push(...
         _.chain(this.subPaths as SubPath[])
-          .map((subPath, subIdx) => { return { subPath, subIdx } })
+          .map((subPath, subIdx) => { return { subPath, subIdx }; })
           .filter(obj => {
-            const { subPath } = obj;
-            return subPath.isClosed() && !subPath.isCollapsing();
+            const { subPath, subIdx } = obj;
+            return subPath.isClosed()
+              && !subPath.isCollapsing()
+              && (restrictToSubIdx === undefined || restrictToSubIdx === subIdx);
           })
           .flatMap(obj => {
             const { subIdx } = obj;

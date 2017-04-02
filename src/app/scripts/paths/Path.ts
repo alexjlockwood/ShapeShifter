@@ -81,6 +81,7 @@ export interface HitOptions {
   isPointInRangeFn?: (distance: number, cmd?: Command) => boolean;
   isSegmentInRangeFn?: (distance: number, cmd?: Command) => boolean;
   findShapesInRange?: boolean;
+  restrictToSubIdx?: number;
 }
 
 /** Represents the result of a hit test. */

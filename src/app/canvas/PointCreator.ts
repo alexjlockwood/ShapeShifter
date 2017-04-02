@@ -8,9 +8,9 @@ import {
 } from '../services';
 
 /**
- * Helper class that can be used to create a point.
+ * Helper class that can be used to split a segment.
  */
-export class PointCreator {
+export class SegmentSplitter {
   private readonly stateService: StateService;
   private readonly appModeService: AppModeService;
   private readonly canvasType: CanvasType;
@@ -32,21 +32,28 @@ export class PointCreator {
     if (this.projectionOntoPath) {
       const projection = this.projectionOntoPath.projection;
       if (projection.d < this.component.minSnapThreshold) {
-        // We're in range, so split the path!
+        // We're in range, so split the segment!
         const { subIdx, cmdIdx } = this.projectionOntoPath;
-        this.component.stateService.updateActivePath(
-          this.canvasType,
-          activePathLayer.pathData.mutate()
-            .splitCommand(subIdx, cmdIdx, projection.t)
-            .build());
+        if (this.appModeService.getAppMode() === AppMode.AddPoints) {
+          const pathMutator =
+            activePathLayer.pathData.mutate()
+              .splitCommand(subIdx, cmdIdx, projection.t);
+          if (this.appModeService.getAppMode() === AppMode.SplitSubPaths
+            && this.component.activePathLayer.isStroked()) {
+            pathMutator.splitStrokedSubPath(subIdx, cmdIdx);
+          }
+          this.component.stateService.updateActivePath(
+            this.canvasType, pathMutator.build());
+        }
         return;
       }
     }
     if (!activePathLayer.isStroked()) {
+      const restrictToSubIdx = this.restrictToSubIdx;
       const hitResult =
         this.component.performHitTest(
           mouseDown,
-          { noPoints: true, noSegments: true });
+          { noPoints: true, noSegments: true, restrictToSubIdx });
       if (hitResult.isHit) {
         return;
       }

@@ -18,9 +18,9 @@ export class PointSelector {
   private readonly canvasType: CanvasType;
   private draggableSplitIndex: { subIdx: number, cmdIdx: number };
   private projectionOntoPath: ProjectionOntoPath;
-  private initialMouseDown: Point;
   private isDragTriggered_ = false;
   private lastKnownMouseLocation: Point;
+  private initialMouseDown: Point;
 
   constructor(private readonly component: CanvasComponent) {
     this.stateService = component.stateService;
@@ -30,8 +30,8 @@ export class PointSelector {
   }
 
   onMouseDown(mouseDown: Point, isShiftOrMetaPressed: boolean) {
-    this.lastKnownMouseLocation = mouseDown;
     this.initialMouseDown = mouseDown;
+    this.lastKnownMouseLocation = mouseDown;
 
     const hitResult = this.performHitTest(mouseDown);
     if (hitResult.isEndPointHit) {
@@ -166,8 +166,8 @@ export class PointSelector {
   }
 
   private reset() {
-    this.projectionOntoPath = undefined;
     this.initialMouseDown = undefined;
+    this.projectionOntoPath = undefined;
     this.draggableSplitIndex = undefined;
     this.isDragTriggered_ = false;
     this.lastKnownMouseLocation = undefined;
