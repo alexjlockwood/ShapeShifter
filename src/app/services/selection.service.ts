@@ -16,8 +16,51 @@ export class SelectionService {
     return this.source.asObservable();
   }
 
-  getSelections(): ReadonlyArray<Selection> {
+  getSelections() {
     return this.source.getValue();
+  }
+
+  getSelectedSubPaths() {
+    return this.getSelections()
+      .filter(s => s.type === SelectionType.SubPath)
+      .map(s => s.index.subIdx);
+  }
+
+  getSelectedSubPathCommands(subIdx: number) {
+    return this.getSelections()
+      .filter(s => s.type === SelectionType.Command)
+      .map(s => s.index.subIdx);
+  }
+
+  isSubPathSelected(subIdx: number) {
+    return this.getSelections().some(s => {
+      return s.type === SelectionType.SubPath
+        && s.index.subIdx === subIdx;
+    });
+  }
+
+  isCommandSelected(subIdx: number, cmdIdx: number) {
+    return this.getSelections().some(s => {
+      return s.type === SelectionType.Command
+        && s.index.subIdx === subIdx
+        && s.index.cmdIdx === cmdIdx;
+    });
+  }
+
+  toggleSubPath(source: CanvasType, subIdx: number) {
+    this.toggle({
+      type: SelectionType.SubPath,
+      index: { subIdx },
+      source,
+    });
+  }
+
+  toggleCommand(source: CanvasType, subIdx: number, cmdIdx: number, appendToList = false) {
+    this.toggle({
+      type: SelectionType.Command,
+      index: { subIdx, cmdIdx },
+      source,
+    });
   }
 
   /**
@@ -27,7 +70,7 @@ export class SelectionService {
    */
   toggle(selection: Selection, appendToList = false) {
     const updatedSelections = this.source.getValue().slice();
-    // Remove all selections that don't match the new selections editor type.
+    // Remove all selections that don't match the new selections canvas type.
     _.remove(updatedSelections, sel => sel.source !== selection.source);
     if (selection.type === SelectionType.SubPath) {
       // Remove all selections that aren't from the selected subpath.

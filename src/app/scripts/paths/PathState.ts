@@ -100,10 +100,11 @@ export class PathState {
     return _.sum(sps.getCommandStates().map(cs => cs.getPathLength()));
   }
 
-  project(point: Point): ProjectionOntoPath | undefined {
+  project(point: Point, allowedSubIdx?: number): ProjectionOntoPath | undefined {
     const minProjectionResultInfo =
       _.chain(this.subPaths as SubPath[])
-        .filter(subPath => !subPath.isCollapsing())
+        .filter((subPath, idx) =>
+          !subPath.isCollapsing() && (allowedSubIdx === undefined || allowedSubIdx === idx))
         .map((subPath, subIdx) => {
           const spsIdx = this.subPathOrdering[subIdx];
           const sps = this.findSubPathState(spsIdx);

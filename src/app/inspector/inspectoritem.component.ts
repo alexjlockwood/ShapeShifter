@@ -8,6 +8,7 @@ import {
   HoverType,
   StateService,
   SelectionService,
+  SelectionType,
 } from '../services';
 import { Observable } from 'rxjs/Observable';
 import { CanvasType } from '../CanvasType';
@@ -46,6 +47,7 @@ export class InspectorItemComponent implements OnInit {
         .map(selections => {
           const activePathId = this.stateService.getActivePathId(this.canvasType);
           return activePathId && _.some(selections, {
+            type: SelectionType.Command,
             source: this.canvasType,
             index: {
               subIdx: this.subIdx,
@@ -56,16 +58,16 @@ export class InspectorItemComponent implements OnInit {
   }
 
   onCommandClick(event: MouseEvent) {
-    const selections = this.selectionService.getSelections();
+    const selections =
+      this.selectionService.getSelections().filter(s => s.type === SelectionType.Command);
     const appendToList = event.shiftKey || event.metaKey;
     if (selections.length && selections[0].source !== this.canvasType && appendToList) {
       // If the user is attempting to select something in a different pane in the
       // middle of a multi-select, do nothing.
       return;
     }
-
-    // Selecting the last 'Z' command doesn't seem to work...
     this.selectionService.toggle({
+      type: SelectionType.Command,
       source: this.canvasType,
       index: {
         subIdx: this.subIdx,

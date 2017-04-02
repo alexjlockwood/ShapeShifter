@@ -1,6 +1,7 @@
 import * as _ from 'lodash';
 import {
   SelectionService,
+  SelectionType,
   Selection,
   StateService,
 } from '../../services';
@@ -100,6 +101,8 @@ export function getNumSelectedPoints(
   lss: StateService,
   selections: ReadonlyArray<Selection>,
   predicateFn = (cmd: Command) => true) {
+
+  selections = selections.filter(s => s.type === SelectionType.Command);
 
   if (!selections.length) {
     return 0;

@@ -38,7 +38,7 @@ export interface Path {
    * Calculates the point on this path that is closest to the specified point argument.
    * Returns undefined if no point is found.
    */
-  project(point: Point): ProjectionOntoPath | undefined;
+  project(point: Point, allowedSubIdx?: number): ProjectionOntoPath | undefined;
 
   /**
    * Performs a hit test on the path and returns a HitResult.

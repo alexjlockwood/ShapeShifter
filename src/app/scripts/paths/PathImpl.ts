@@ -58,8 +58,8 @@ class PathImpl implements Path {
   }
 
   // Implements the Path interface.
-  project(point: Point): ProjectionOntoPath | undefined {
-    return this.ps.project(point);
+  project(point: Point, allowedSubIdx?: number): ProjectionOntoPath | undefined {
+    return this.ps.project(point, allowedSubIdx);
   }
 
   // Implements the Path interface.
