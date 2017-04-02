@@ -750,7 +750,7 @@ describe('Path', () => {
 
   // TODO: add more projection tests for split subpaths
   describe('#project', () => {
-    const TESTS_PROJECT: Array<{ point: Point, path: string | Path, proj: ProjectionOntoPath }> = [
+    const TESTS_PROJECT: Array<{ point: Point, path: string | Path, proj: ProjectionOntoPath, subIdx?: number }> = [
       {
         point: new Point(5, 5),
         path: 'M 0 0 L 10 10',
@@ -766,13 +766,30 @@ describe('Path', () => {
         path: mutatePath('M 8 5 L 8 19 L 19 12 Z', 'S 0 1 0.5 SFSP 0 1 3'),
         proj: { subIdx: 1, cmdIdx: 1, projection: { x: 8, y: 16.9, d: 1, t: 0.7 } },
       },
+      {
+        point: new Point(3, 12),
+        path: 'M 18 19 18 15 14 5 14 19 18 19 M 10 19 10 5 6 5 6 19 10 19',
+        proj: { subIdx: 1, cmdIdx: 3, projection: { x: 6, y: 12, d: 3, t: 0.5 } },
+      },
+      {
+        point: new Point(3, 12),
+        path: 'M 18 19 18 15 14 5 14 19 18 19 M 10 19 10 5 6 5 6 19 10 19',
+        proj: { subIdx: 1, cmdIdx: 3, projection: { x: 6, y: 12, d: 3, t: 0.5 } },
+        subIdx: 1,
+      },
+      {
+        point: new Point(21, 12),
+        path: 'M 18 19 18 15 14 5 14 19 18 19 M 10 19 10 5 6 5 6 19 10 19',
+        proj: { subIdx: 1, cmdIdx: 1, projection: { x: 10, y: 12, d: 11, t: 0.5 } },
+        subIdx: 1,
+      }
     ];
 
     TESTS_PROJECT.forEach(a => {
       const point = a.point as Point;
       const path = (typeof a.path === 'string') ? newPath(a.path) : a.path;
       it(`projecting '(${point.x},${point.y})' onto '${path.getPathString()}' yields ${JSON.stringify(a.proj)}`, () => {
-        const result = path.project(point);
+        const result = path.project(point, a.subIdx);
         result.projection.t = _.round(result.projection.t, 10);
         expect(result).toEqual(a.proj as ProjectionOntoPath);
       });

@@ -100,12 +100,17 @@ export class PathState {
     return _.sum(sps.getCommandStates().map(cs => cs.getPathLength()));
   }
 
-  project(point: Point, allowedSubIdx?: number): ProjectionOntoPath | undefined {
+  project(point: Point, restrictToSubIdx?: number): ProjectionOntoPath | undefined {
     const minProjectionResultInfo =
       _.chain(this.subPaths as SubPath[])
-        .filter((subPath, idx) =>
-          !subPath.isCollapsing() && (allowedSubIdx === undefined || allowedSubIdx === idx))
-        .map((subPath, subIdx) => {
+        .map((subPath, subIdx) => { return { subPath, subIdx }; })
+        .filter(obj => {
+          const { subPath, subIdx } = obj;
+          return !subPath.isCollapsing()
+            && (restrictToSubIdx === undefined || restrictToSubIdx === subIdx);
+        })
+        .map(obj => {
+          const { subIdx } = obj;
           const spsIdx = this.subPathOrdering[subIdx];
           const sps = this.findSubPathState(spsIdx);
           return sps.getCommandStates()
@@ -148,6 +153,9 @@ export class PathState {
     if (opts.isPointInRangeFn) {
       endPointHits.push(...
         _.chain(this.subPaths as SubPath[])
+          // Filtering these out is OK because they are always appended
+          // to the end of the path and therefore don't affect the position
+          // of the subIdxs.
           .filter(subPath => !subPath.isCollapsing())
           .map((subPath, subIdx) => {
             return subPath.getCommands()
@@ -174,6 +182,9 @@ export class PathState {
       // TODO: take stroke width scaling into account as well?
       segmentHits.push(...
         _.chain(this.subPaths as SubPath[])
+          // Filtering these out is OK because they are always appended
+          // to the end of the path and therefore don't affect the position
+          // of the subIdxs.
           .filter(subPath => !subPath.isCollapsing())
           .map((subPath, subIdx) => {
             const spsIdx = this.subPathOrdering[subIdx];
@@ -214,8 +225,13 @@ export class PathState {
     if (opts.findShapesInRange) {
       shapeHits.push(...
         _.chain(this.subPaths as SubPath[])
-          .filter(subPath => subPath.isClosed() && !subPath.isCollapsing())
-          .flatMap((subPath, subIdx) => {
+          .map((subPath, subIdx) => { return { subPath, subIdx } })
+          .filter(obj => {
+            const { subPath } = obj;
+            return subPath.isClosed() && !subPath.isCollapsing();
+          })
+          .flatMap(obj => {
+            const { subIdx } = obj;
             const css = this.findSubPathState(this.toSpsIdx(subIdx)).getCommandStates();
             const bounds = createBoundingBox(...css);
             if (!bounds.contains(point)) {

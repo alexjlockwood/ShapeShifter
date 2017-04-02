@@ -148,14 +148,6 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
         }
       }));
 
-    this.subscriptions.push(
-      this.appModeService.asObservable().subscribe(appMode => {
-        if (appMode !== AppMode.SelectPoints) {
-          // Clear all current selections if we are leaving selection mode.
-          this.selectionService.reset();
-        }
-      }));
-
     ELEMENT_RESIZE_DETECTOR.listenTo(this.canvasContainer.get(0), el => {
       updateCanvasSizes();
     });

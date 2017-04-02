@@ -20,9 +20,10 @@ export class SelectionService {
     return this.source.getValue();
   }
 
-  getSelectedSubPaths() {
+  getSelectedSubPaths(canvasType: CanvasType) {
     return this.getSelections()
-      .filter(s => s.type === SelectionType.SubPath)
+      .filter(s => s.type === SelectionType.SubPath
+        && s.source === canvasType)
       .map(s => s.index.subIdx);
   }
 
@@ -32,9 +33,10 @@ export class SelectionService {
       .map(s => s.index.subIdx);
   }
 
-  isSubPathSelected(subIdx: number) {
+  isSubPathSelected(canvasType: CanvasType, subIdx: number) {
     return this.getSelections().some(s => {
       return s.type === SelectionType.SubPath
+        && s.source === canvasType
         && s.index.subIdx === subIdx;
     });
   }
@@ -45,6 +47,10 @@ export class SelectionService {
         && s.index.subIdx === subIdx
         && s.index.cmdIdx === cmdIdx;
     });
+  }
+
+  setSelections(selections: Selection[]) {
+    this.source.next(selections);
   }
 
   toggleSubPath(source: CanvasType, subIdx: number) {
@@ -102,7 +108,7 @@ export class SelectionService {
    * Clears the current list of selections.
    */
   reset() {
-    this.source.next([]);
+    this.setSelections([]);
   }
 }
 

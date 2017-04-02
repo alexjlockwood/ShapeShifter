@@ -3,7 +3,8 @@
        let subPathCmdItem of (subPathItemsObservable | async | toSubPathItems);
        trackBy: trackSubPath">
     <div fxLayout="row">
-      <div fxLayout="column">
+      <div class="subpath-border" [class.is-selected]="subPathCmdItem.isStartSubPathSelected"
+        fxLayout="column">
         <app-inspectorsubpath [canvasType]="START_CANVAS" [subIdx]="subPathCmdItem.subIdx"
           [subPath]="subPathCmdItem.startSubPath">
         </app-inspectorsubpath>
@@ -13,7 +14,8 @@
                     trackBy: trackCommand">
         </app-inspectoritem>
       </div>
-      <div fxLayout="column">
+      <div class="subpath-border" [class.is-selected]="subPathCmdItem.isEndSubPathSelected"
+        fxLayout="column">
         <app-inspectorsubpath [canvasType]="END_CANVAS" [subIdx]="subPathCmdItem.subIdx"
           [subPath]="subPathCmdItem.endSubPath">
         </app-inspectorsubpath>

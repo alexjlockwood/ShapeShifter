@@ -1,7 +1,7 @@
 import { Component, OnInit, PipeTransform, Pipe, ChangeDetectionStrategy } from '@angular/core';
 import { SubPath, Command } from '../scripts/paths';
 import { CanvasType } from '../CanvasType';
-import { StateService } from '../services';
+import { StateService, SelectionService, Selection } from '../services';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/combineLatest';
 
@@ -14,14 +14,20 @@ import 'rxjs/add/observable/combineLatest';
 export class InspectorComponent implements OnInit {
   START_CANVAS = CanvasType.Start;
   END_CANVAS = CanvasType.End;
-  subPathItemsObservable: Observable<[string, string]>;
+  subPathItemsObservable: Observable<[[string, string], ReadonlyArray<Selection>]>;
 
-  constructor(private readonly stateService: StateService) { }
+  constructor(
+    private readonly stateService: StateService,
+    private readonly selectionService: SelectionService,
+  ) { }
 
   ngOnInit() {
-    this.subPathItemsObservable = Observable.combineLatest(
-      this.stateService.getActivePathIdObservable(CanvasType.Start),
-      this.stateService.getActivePathIdObservable(CanvasType.End));
+    this.subPathItemsObservable =
+      Observable.combineLatest(
+        Observable.combineLatest(
+          this.stateService.getActivePathIdObservable(CanvasType.Start),
+          this.stateService.getActivePathIdObservable(CanvasType.End)),
+        this.selectionService.asObservable());
   }
 
   trackSubPath(index: number, item: SubPathItem) {
@@ -41,14 +47,20 @@ class SubPathItem {
     public readonly endSubPath: SubPath,
     public readonly subPathItemId: string,
     public readonly startCmdItems: Command[] = [],
-    public readonly endCmdItems: Command[] = []) { }
+    public readonly endCmdItems: Command[] = [],
+    public readonly isStartSubPathSelected = false,
+    public readonly isEndSubPathSelected = false,
+  ) { }
 }
 
 @Pipe({ name: 'toSubPathItems' })
 export class SubPathItemsPipe implements PipeTransform {
-  constructor(private stateService: StateService) { }
+  constructor(
+    private readonly stateService: StateService,
+    private readonly selectionService: SelectionService,
+  ) { }
 
-  transform(activePathIds: [string, string]): SubPathItem[] {
+  transform(items: [[string, string], { startSelections: number[], endSelections: number[] }]): SubPathItem[] {
     const subPathItems: SubPathItem[] = [];
 
     const getPathFn = (canvasType: CanvasType) => {
@@ -80,6 +92,10 @@ export class SubPathItemsPipe implements PipeTransform {
         id += endSubPaths[i].getId();
         endCmdItems.push(...endSubPaths[i].getCommands());
       }
+      const isStartSubPathSelected =
+        this.selectionService.isSubPathSelected(CanvasType.Start, i);
+      const isEndSubPathSelected =
+        this.selectionService.isSubPathSelected(CanvasType.End, i);
       subPathItems.push(
         new SubPathItem(
           i,
@@ -87,7 +103,10 @@ export class SubPathItemsPipe implements PipeTransform {
           endSubPaths[i],
           id,
           startCmdItems,
-          endCmdItems));
+          endCmdItems,
+          isStartSubPathSelected || isEndSubPathSelected,
+          isStartSubPathSelected || isEndSubPathSelected,
+        ));
     }
     return subPathItems;
   }

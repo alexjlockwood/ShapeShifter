@@ -40,8 +40,18 @@ class PathImpl implements Path {
   }
 
   // Implements the Path interface.
+  getSubPath(subIdx: number) {
+    return this.getSubPaths()[subIdx];
+  }
+
+  // Implements the Path interface.
   getCommands() {
     return this.ps.commands;
+  }
+
+  // Implements the Path interface.
+  getCommand(subIdx: number, cmdIdx: number) {
+    return this.getSubPath(subIdx).getCommands()[cmdIdx];
   }
 
   // Implements the Path interface.
@@ -58,8 +68,8 @@ class PathImpl implements Path {
   }
 
   // Implements the Path interface.
-  project(point: Point, allowedSubIdx?: number): ProjectionOntoPath | undefined {
-    return this.ps.project(point, allowedSubIdx);
+  project(point: Point, restrictToSubIdx?: number): ProjectionOntoPath | undefined {
+    return this.ps.project(point, restrictToSubIdx);
   }
 
   // Implements the Path interface.
