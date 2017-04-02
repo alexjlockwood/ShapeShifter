@@ -41,8 +41,7 @@ class SubPathItem {
     public readonly endSubPath: SubPath,
     public readonly subPathItemId: string,
     public readonly startCmdItems: Command[] = [],
-    public readonly endCmdItems: Command[] = [],
-    public isExpanded = true) { }
+    public readonly endCmdItems: Command[] = []) { }
 }
 
 @Pipe({ name: 'toSubPathItems' })
