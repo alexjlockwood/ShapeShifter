@@ -287,11 +287,15 @@ export class PathMutator {
     const startSplitPoint = startSplitCmd.getEnd();
     const endSplitCmd = secondLeft.getCommands()[end.splitIdx];
     const endSplitPoint = endSplitCmd.getEnd();
-    const startLine = new CommandState(newCommand('L', [startSplitPoint, endSplitPoint]));
+    const startLineCmd = newCommand('L', [startSplitPoint, endSplitPoint]).mutate()
+      .setIsSubPathSplitPoint(true)
+      .build();
+    const startLine = new CommandState(startLineCmd);
 
     // The last command in the second path shares an ID with the parent's second split location.
     const endLineCmd = newCommand('L', [endSplitPoint, startSplitPoint]).mutate()
       .setId(endSplitCmd.getId())
+      .setIsSubPathSplitPoint(true)
       .build();
     const endLine = new CommandState(endLineCmd);
 

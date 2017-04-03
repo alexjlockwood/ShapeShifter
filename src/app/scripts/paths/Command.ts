@@ -20,6 +20,11 @@ export interface Command {
   isSplit(): boolean;
 
   /**
+   * Returns true iff the command was created as a result of a subpath split.
+   */
+  isSubPathSplitPoint(): boolean;
+
+  /**
    * Returns the SVG character for this command.
    */
   getSvgChar(): SvgChar;

@@ -717,8 +717,10 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     this.overlayCtx.save();
     this.setupCtxWithViewportCoords(this.overlayCtx);
     if (this.shouldDrawLayers) {
+      this.drawSplitSubPathHighlights(this.overlayCtx);
       this.drawHighlights(this.overlayCtx);
       this.drawHighlightedAddPointSegment(this.overlayCtx);
+      this.drawHighlightedSplitShapeSegment(this.overlayCtx);
       this.drawLabeledPoints(this.overlayCtx);
       this.drawDraggingPoints(this.overlayCtx);
       this.drawAddPointPreview(this.overlayCtx);
@@ -749,6 +751,46 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
   }
 
+  private drawSplitSubPathHighlights(ctx: Context) {
+    if (this.canvasType === CanvasType.Preview || !this.activePathId) {
+      return;
+    }
+
+    const selectedSubIdxs: Set<number> = new Set<number>();
+    if (this.currentHover) {
+      selectedSubIdxs.add(this.currentHover.index.subIdx);
+    }
+
+    for (const sel of this.selectionService.getSelections()) {
+      selectedSubIdxs.add(sel.index.subIdx);
+    }
+
+    // TODO: make this more efficient by executing them in batches!!!
+    // TODO: make this more efficient by executing them in batches!!!
+    // TODO: make this more efficient by executing them in batches!!!
+    // TODO: make this more efficient by executing them in batches!!!
+    // TODO: make this more efficient by executing them in batches!!!
+    const subPaths = this.activePath.getSubPaths()
+      .filter(subPath => !subPath.isCollapsing());
+    const transforms = this.transformsForActiveLayer;
+    for (const subPath of subPaths) {
+      const cmds = subPath.getCommands();
+      for (let i = 0; i < cmds.length; i++) {
+        const cmd = cmds[i];
+        if (!cmd.isSubPathSplitPoint()) {
+          continue;
+        }
+        executeCommands(ctx, [cmd], transforms);
+        ctx.save();
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = SPLIT_POINT_COLOR;
+        ctx.lineWidth = this.highlightLineWidth / 3;
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+  }
+
   // Draw any highlighted subpaths.
   private drawHighlights(ctx: Context) {
     if (this.canvasType === CanvasType.Preview
@@ -772,11 +814,18 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
     const transforms = this.transformsForActiveLayer;
     for (const subPath of subPaths) {
-      executeCommands(ctx, subPath.getCommands(), transforms);
-
+      let highlightColor = HIGHLIGHT_COLOR;
+      const cmds = subPath.getCommands();
+      for (const cmd of cmds) {
+        if (cmd.isSubPathSplitPoint()) {
+          highlightColor = SPLIT_POINT_COLOR;
+          break;
+        }
+      }
+      executeCommands(ctx, cmds, transforms);
       ctx.save();
       ctx.lineCap = 'round';
-      ctx.strokeStyle = HIGHLIGHT_COLOR;
+      ctx.strokeStyle = highlightColor;
       ctx.lineWidth = this.highlightLineWidth / 2;
       ctx.stroke();
       ctx.restore();
@@ -953,6 +1002,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
   }
 
+
   private drawAddPointPreview(ctx: Context) {
     if (this.appMode !== AppMode.AddPoints || !this.segmentSplitter) {
       return;
@@ -971,7 +1021,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  private drawSplitShapePreview(ctx: Context) {
+  private drawHighlightedSplitShapeSegment(ctx: Context) {
     if (this.appMode !== AppMode.SplitSubPaths || !this.shapeSplitter) {
       return;
     }
@@ -991,13 +1041,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       const transforms = this.transformsForActiveLayer;
 
       executeCommands(ctx, subPathCmds, transforms);
-      ctx.save();
-      ctx.lineCap = 'round';
-      ctx.strokeStyle = 'dashed';
-      ctx.strokeStyle = HIGHLIGHT_COLOR;
-      ctx.lineWidth = this.highlightLineWidth / 3;
-      ctx.stroke();
-      ctx.restore();
 
       ctx.save();
       transforms.forEach(m => ctx.transform(m.a, m.b, m.c, m.d, m.e, m.f));
@@ -1009,9 +1052,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       ctx.lineWidth = this.highlightLineWidth / 2;
       ctx.stroke();
       ctx.restore();
-
-      this.drawLabeledPoint(
-        ctx, startPoint, this.largePointRadius * SPLIT_POINT_RADIUS_FACTOR, SPLIT_POINT_COLOR);
     } else {
       let point;
       const projectionOntoPath = this.shapeSplitter.getCurrentProjectionOntoPath();
@@ -1034,6 +1074,41 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         ctx.lineWidth = lineWidth / 2;
         ctx.stroke();
         ctx.restore();
+      }
+    }
+  }
+
+  private drawSplitShapePreview(ctx: Context) {
+    if (this.appMode !== AppMode.SplitSubPaths || !this.shapeSplitter) {
+      return;
+    }
+    const proj1 = this.shapeSplitter.getInitialProjectionOntoPath();
+    if (proj1) {
+      const proj2 = this.shapeSplitter.getFinalProjectionOntoPath();
+      const startPoint =
+        this.pathPointToDrawingCoords(new Point(proj1.projection.x, proj1.projection.y));
+      let endPoint: Point;
+      if (proj2) {
+        endPoint = this.pathPointToDrawingCoords(new Point(proj2.projection.x, proj2.projection.y));
+      } else {
+        endPoint = this.shapeSplitter.getLastKnownMouseLocation();
+      }
+      this.drawLabeledPoint(
+        ctx, startPoint, this.largePointRadius * SPLIT_POINT_RADIUS_FACTOR, SPLIT_POINT_COLOR);
+      if (this.shapeSplitter.willFinalProjectionOntoPathCreateSplitPoint()) {
+        this.drawLabeledPoint(
+          ctx, endPoint, this.largePointRadius * SPLIT_POINT_RADIUS_FACTOR, SPLIT_POINT_COLOR);
+      }
+    } else {
+      let point;
+      const projectionOntoPath = this.shapeSplitter.getCurrentProjectionOntoPath();
+      if (projectionOntoPath) {
+        const projection = projectionOntoPath.projection;
+        if (projection && projection.d < this.minSnapThreshold) {
+          point = this.pathPointToDrawingCoords(new Point(projection.x, projection.y));
+        }
+      }
+      if (point) {
         this.drawLabeledPoint(
           ctx, point, this.largePointRadius * SPLIT_POINT_RADIUS_FACTOR, SPLIT_POINT_COLOR);
       }

@@ -33,6 +33,8 @@ export class CommandState {
     private readonly minT = 0,
     // The upper bound T value (may be < 1 for split subpaths).
     private readonly maxT = 1,
+    // Indicates whether the command state marks the beginning/end of a subpath split.
+    private readonly isSubPathSplitPoint = backingCommand.isSubPathSplitPoint(),
   ) { }
 
   getCommands() {
@@ -108,6 +110,7 @@ export class CommandState {
       this.calculator,
       this.minT,
       this.maxT,
+      this.isSubPathSplitPoint,
     );
   }
 }
@@ -130,6 +133,7 @@ class CommandStateMutator {
     private calculator: Calculator,
     private minT: number,
     private maxT: number,
+    private readonly isSubPathSplitPoint: boolean,
   ) { }
 
   /**
@@ -331,8 +335,10 @@ class CommandStateMutator {
           .toCommand()
           .mutate()
           .setId(this.mutations[i].id);
-      if (i !== this.mutations.length - 1) {
-        commandBuilder.toggleSplit();
+      if (i === this.mutations.length - 1) {
+        commandBuilder.setIsSubPathSplitPoint(this.isSubPathSplitPoint);
+      } else {
+        commandBuilder.setIsSplit(true);
       }
       builtCommands.push(commandBuilder.build());
       prevT = currT;

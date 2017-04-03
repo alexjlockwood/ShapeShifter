@@ -126,7 +126,7 @@ export class PointSelector {
         this.stateService.updateActivePath(this.canvasType, pathMutator.build());
       }
     } else if (this.draggableSplitIndex) {
-      const hitResult = this.component.performHitTest(mouseUp);
+      const hitResult = this.performHitTest(mouseUp);
       this.component.checkForSelections(hitResult);
     }
 

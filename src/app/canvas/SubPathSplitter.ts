@@ -68,7 +68,13 @@ export class ShapeSplitter {
 
     if (this.hitResult.isEndPointHit) {
       this.finalProjectionOntoPath = this.currentProjectionOntoPath;
-      this.doesFinalPointExist = true;
+      const { subIdx, cmdIdx } = this.currentProjectionOntoPath;
+      if (subIdx !== this.initialProjectionOntoPath.subIdx
+        || cmdIdx !== this.initialProjectionOntoPath.cmdIdx) {
+        this.doesFinalPointExist = true;
+      } else {
+        this.doesFinalPointExist = false;
+      }
     } else if (this.currentProjectionOntoPath) {
       const projection = this.currentProjectionOntoPath.projection;
       if (projection.d < this.component.minSnapThreshold) {
@@ -95,47 +101,66 @@ export class ShapeSplitter {
         this.finalProjectionOntoPath = this.currentProjectionOntoPath;
       }
     }
-    if (this.finalProjectionOntoPath
-      && this.initialProjectionOntoPath.subIdx === this.finalProjectionOntoPath.subIdx
-      && this.initialProjectionOntoPath.cmdIdx !== this.finalProjectionOntoPath.cmdIdx) {
-      if (this.initialProjectionOntoPath.subIdx > this.finalProjectionOntoPath.subIdx
-        || this.initialProjectionOntoPath.cmdIdx > this.finalProjectionOntoPath.cmdIdx) {
-        const t1 = this.initialProjectionOntoPath;
-        this.initialProjectionOntoPath = this.finalProjectionOntoPath;
-        this.finalProjectionOntoPath = t1;
-        const t2 = this.doesInitialPointExist;
-        this.doesFinalPointExist = this.doesInitialPointExist;
-        this.doesFinalPointExist = t2;
-      }
-      const activeLayer = this.component.activePathLayer;
-      const pathMutator = activeLayer.pathData.mutate();
-      if (!this.doesInitialPointExist) {
-        pathMutator.splitCommand(
-          this.initialProjectionOntoPath.subIdx,
-          this.initialProjectionOntoPath.cmdIdx,
-          this.initialProjectionOntoPath.projection.t);
-      }
-      let offset = 0;
-      if (!this.doesFinalPointExist) {
-        if (!this.doesInitialPointExist) {
-          offset++;
+    if (this.finalProjectionOntoPath) {
+      this.doesFinalPointExist = this.hitResult.isEndPointHit;
+      const initProj = this.initialProjectionOntoPath;
+      const finalProj = this.finalProjectionOntoPath;
+      const { cmdIdx: initCmdIdx } = initProj;
+      const { cmdIdx: finalCmdIdx } = finalProj;
+      if (initProj.subIdx === finalProj.subIdx
+        && initProj.cmdIdx !== finalProj.cmdIdx) {
+        const activeLayer = this.component.activePathLayer;
+        const pathMutator = activeLayer.pathData.mutate();
+        let lastCmdOffset = 0;
+        if (!this.doesInitialPointExist || !this.doesFinalPointExist) {
+          if (initProj.cmdIdx > finalProj.cmdIdx) {
+            if (!this.doesInitialPointExist) {
+              pathMutator.splitCommand(
+                initProj.subIdx,
+                initProj.cmdIdx,
+                initProj.projection.t);
+            }
+            if (!this.doesFinalPointExist) {
+              pathMutator.splitCommand(
+                finalProj.subIdx,
+                finalProj.cmdIdx,
+                finalProj.projection.t);
+              lastCmdOffset++;
+            }
+          } else {
+            if (!this.doesFinalPointExist) {
+              pathMutator.splitCommand(
+                finalProj.subIdx,
+                finalProj.cmdIdx,
+                finalProj.projection.t);
+              if (!this.doesInitialPointExist) {
+                lastCmdOffset++;
+              }
+            }
+            if (!this.doesInitialPointExist) {
+              pathMutator.splitCommand(
+                initProj.subIdx,
+                initProj.cmdIdx,
+                initProj.projection.t);
+            }
+          }
         }
-        pathMutator.splitCommand(
-          this.finalProjectionOntoPath.subIdx,
-          this.finalProjectionOntoPath.cmdIdx + offset,
-          this.finalProjectionOntoPath.projection.t);
+        const subIdx = initProj.subIdx;
+        const startingCmdIdx = initCmdIdx > finalCmdIdx
+          ? finalProj.cmdIdx
+          : initProj.cmdIdx;
+        const endingCmdIdx = initCmdIdx > finalCmdIdx
+          ? initProj.cmdIdx + lastCmdOffset
+          : finalProj.cmdIdx + lastCmdOffset;
+        this.component.stateService.updateActivePath(
+          this.component.canvasType,
+          pathMutator
+            .splitFilledSubPath(subIdx, startingCmdIdx, endingCmdIdx)
+            .build());
+        this.reset();
+        this.component.drawOverlays();
       }
-      const subIdx = this.initialProjectionOntoPath.subIdx;
-      const startingCmdIdx = this.initialProjectionOntoPath.cmdIdx;
-      const endingCmdIdx = this.finalProjectionOntoPath.cmdIdx + offset;
-      this.component.stateService.updateActivePath(
-        this.component.canvasType,
-        pathMutator
-          .splitFilledSubPath(subIdx, startingCmdIdx, endingCmdIdx)
-          .build());
     }
-    this.reset();
-    this.component.drawOverlays();
   }
 
   onMouseLeave(mouseMove: Point) {
@@ -183,6 +208,10 @@ export class ShapeSplitter {
 
   getFinalProjectionOntoPath() {
     return this.finalProjectionOntoPath;
+  }
+
+  willFinalProjectionOntoPathCreateSplitPoint() {
+    return !this.doesFinalPointExist;
   }
 
   getLastKnownMouseLocation() {
