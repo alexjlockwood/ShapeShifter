@@ -362,8 +362,7 @@ class CommandStateMutator {
           .mutate()
           .setId(this.mutations[i].id);
       if (i === this.mutations.length - 1) {
-        commandBuilder.setIsSubPathSplitSegment(
-          this.isSubPathSplitSegment_ || this.isParentSubPathSplitSegment_);
+        commandBuilder.setIsSubPathSplitSegment(this.isSubPathSplitSegment_);
       } else {
         commandBuilder.setIsSplit(true);
       }

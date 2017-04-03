@@ -48,6 +48,8 @@ const MIN_SNAP_THRESHOLD = 12;
 const MEDIUM_POINT_RADIUS = 8;
 // The radius of a small point in css pixels.
 const SMALL_POINT_RADIUS = MEDIUM_POINT_RADIUS / 1.7;
+// The size of a dashed outline in css pixels.
+const DASH_SIZE = 20;
 
 const NORMAL_POINT_COLOR = '#2962FF'; // Blue A400
 const SPLIT_POINT_COLOR = '#E65100'; // Orange 900
@@ -341,6 +343,10 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
   private get highlightLineWidth() {
     return HIGHLIGHT_LINE_WIDTH / this.cssScale;
+  }
+
+  private get lineDashLength() {
+    return DASH_SIZE / this.cssScale;
   }
 
   get minSnapThreshold() {
@@ -970,26 +976,29 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       || !this.segmentSplitter.getLastKnownMouseLocation()) {
       return;
     }
-    let point;
     const projectionOntoPath = this.segmentSplitter.getProjectionOntoPath();
-    if (projectionOntoPath) {
-      const projection = projectionOntoPath.projection;
-      if (projection && projection.d < this.minSnapThreshold) {
-        point = this.pathPointToDrawingCoords(new Point(projection.x, projection.y));
-      }
+    if (!projectionOntoPath) {
+      return;
     }
-
-    if (point) {
+    const transforms = this.transformsForActiveLayer;
+    const projection = projectionOntoPath.projection;
+    if (projection.d < this.minSnapThreshold) {
       const { subIdx, cmdIdx } = projectionOntoPath;
-      const command = this.activePath.getCommand(subIdx, cmdIdx);
-      const transforms = this.transformsForActiveLayer;
-      executeCommands(ctx, [command], transforms);
-
-      const lineWidth = this.highlightLineWidth;
+      executeCommands(ctx, [this.activePath.getCommand(subIdx, cmdIdx)], transforms);
       ctx.save();
       ctx.lineCap = 'round';
       ctx.strokeStyle = SPLIT_POINT_COLOR;
-      ctx.lineWidth = lineWidth / 2;
+      ctx.lineWidth = this.highlightLineWidth / 2;
+      ctx.setLineDash([]);
+      ctx.stroke();
+      ctx.restore();
+    } else {
+      executeCommands(ctx, this.activePath.getCommands(), transforms);
+      ctx.save();
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = SPLIT_POINT_COLOR;
+      ctx.lineWidth = this.highlightLineWidth / 1.3;
+      ctx.setLineDash([this.lineDashLength / 1.5, this.lineDashLength / 1.5]);
       ctx.stroke();
       ctx.restore();
     }
@@ -1233,6 +1242,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           type: SelectionType.SubPath,
         }]);
         this.appModeService.setAppMode(AppMode.AddPoints);
+        this.drawOverlays();
       }
     }
   }

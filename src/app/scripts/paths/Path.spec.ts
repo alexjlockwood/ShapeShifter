@@ -87,7 +87,7 @@ describe('Path', () => {
 
 
   type PathOp = 'RV' | 'SB' | 'SF' | 'S' | 'SIH' | 'US' | 'CV' | 'UCV' | 'RT' | 'M'
-    | 'AC' | 'DC' | 'SSSP' | 'SFSP' | 'USSSP' | 'USFSP' | 'T';
+    | 'AC' | 'DC' | 'SSSP' | 'SFSP' | 'DSPSS' | 'USSSP' | 'USFSP' | 'T';
 
   function mutatePath(pathString: string, pathOpsString: string) {
     const A = pathOpsString.split(' ');
@@ -155,6 +155,10 @@ describe('Path', () => {
         case 'SFSP': // Split filled sub path.
           mutator.splitFilledSubPath(+A[i + 1], +A[i + 2], +A[i + 3]);
           i += 3;
+          break;
+        case 'DSPSS': // Delete sub path split segment.
+          mutator.deleteSubPathSplitSegment(+A[i + 1], +A[i + 2]);
+          i += 2;
           break;
         case 'USSSP': // Unsplit stroked sub path.
           mutator.unsplitStrokedSubPath(+A[i + 1]);
@@ -713,6 +717,22 @@ describe('Path', () => {
         'M 0 0 L 0 10 L 10 10 L 10 0 L 0 0',
         'SIH 0 3 SIH 0 1 SFSP 0 1 4 SIH 1 4 SIH 1 2 SFSP 1 2 5',
         'M 0 0 L 0 5 L 10 5 L 10 0 L 0 0 M 0 5 L 0 10 L 5 10 L 5 5 L 0 5 M 5 10 L 10 10 L 10 5 L 5 5 L 5 10'
+      ),
+      // Delete sub path split segment.
+      makeTest(
+        'M 0 0 L 0 10 L 10 10 L 10 0 L 0 0',
+        'SIH 0 3 SIH 0 1 SFSP 0 1 4 DSPSS 0 1',
+        'M 0 0 L 0 10 L 10 10 L 10 0 L 0 0'
+      ),
+      makeTest(
+        'M 0 0 L 0 10 L 10 10 L 10 0 L 0 0',
+        'SIH 0 3 SIH 0 1 SFSP 0 1 4 SIH 1 4 SIH 1 2 SFSP 1 2 5 DSPSS 1 2',
+        'M 0 0 L 0 5 L 10 5 L 10 0 L 0 0 M 0 5 L 0 10 L 10 10 L 10 5 L 0 5'
+      ),
+      makeTest(
+        'M 0 0 L 0 10 L 10 10 L 10 0 L 0 0',
+        'SIH 0 3 SIH 0 1 SFSP 0 1 4 SIH 1 4 SIH 1 2 SFSP 1 2 5 DSPSS 2 1',
+        'M 0 0 L 0 5 L 10 5 L 10 0 L 0 0 M 0 5 L 0 10 L 10 10 L 10 5 L 0 5'
       ),
       // TODO: add tests for shift offsets w/ split sub paths
       // TODO: add more tests for compound paths w/ split sub paths

@@ -376,7 +376,7 @@ export class PathMutator {
     const parent = findSubPathStateParent(this.subPathStateMap, this.subPathOrdering[subIdx]);
     const splitCmdId =
       _.last(_.last(parent.getSplitSubPaths()[0].getCommandStates()).getCommands()).getId();
-    this.updateParentAfterUnsplitSubPath(subIdx, splitCmdId);
+    this.replaceParentAfterUnsplitSubPath(subIdx, [], splitCmdId);
     return this;
   }
 
@@ -384,20 +384,66 @@ export class PathMutator {
    * Unsplits the stroked sub path at the specified index. The sub path's sibling
    * will be unsplit as well.
    */
+  // TODO: deprecate this in favor of deleteSubPathSplitSegment() below?
   unsplitFilledSubPath(subIdx: number) {
     const parent = findSubPathStateParent(this.subPathStateMap, this.subPathOrdering[subIdx]);
+    const firstSplitSubPath = parent.getSplitSubPaths()[0];
     const secondSplitSubPath = parent.getSplitSubPaths()[1];
-    const firstSplitCmdId = secondSplitSubPath.getCommandStates()[0].getCommands()[0].getId();
-    const secondSplitCmdId =
-      _.last(_.last(secondSplitSubPath.getCommandStates()).getCommands()).getId();
-    this.updateParentAfterUnsplitSubPath(subIdx, firstSplitCmdId, secondSplitCmdId);
+    const flattenedSps = flattenSubPathStates(this.subPathStateMap);
+    const firstSpsIdx = flattenedSps.indexOf(firstSplitSubPath);
+    const secondSpsIdx = flattenedSps.indexOf(secondSplitSubPath);
+    const firstSubIdx = this.toSubIdx(firstSpsIdx);
+    const secondSubIdx = this.toSubIdx(secondSpsIdx);
+    this.deleteSubPathSplitSegment(firstSubIdx, secondSubIdx);
     return this;
   }
 
-  private updateParentAfterUnsplitSubPath(subIdx: number, ...splitCmdIds: string[]) {
+  /**
+   * Deletes the sub path split segment that created the specified two subpaths.
+   */
+  deleteSubPathSplitSegment(firstSubIdx: number, secondSubIdx: number) {
+    const firstSpsIdx = this.subPathOrdering[firstSubIdx];
+    const secondSpsIdx = this.subPathOrdering[secondSubIdx];
+    const firstSps = this.findSubPathState(firstSpsIdx);
+    const secondSps = this.findSubPathState(secondSpsIdx);
+    const parent = findSubPathStateParent(this.subPathStateMap, firstSpsIdx);
+    let firstSpsParentIdx = parent.getSplitSubPaths().indexOf(firstSps);
+    let secondSpsParentIdx = parent.getSplitSubPaths().indexOf(secondSps);
+    if (firstSpsParentIdx > secondSpsParentIdx) {
+      const temp = firstSpsParentIdx;
+      firstSpsParentIdx = secondSpsParentIdx;
+      secondSpsParentIdx = temp;
+    }
+    if (firstSpsParentIdx < 0
+      || secondSpsParentIdx < 0
+      || (Math.abs(firstSpsParentIdx - secondSpsParentIdx) !== 2
+        && Math.abs(firstSpsParentIdx - secondSpsParentIdx) !== 1)) {
+      console.warn('invalid indicies into parent', firstSpsParentIdx, secondSpsParentIdx);
+    }
+    const secondSplitSubPath = parent.getSplitSubPaths()[secondSpsParentIdx];
+    const firstSplitCmdId = secondSplitSubPath.getCommandStates()[0].getCommands()[0].getId();
+    const secondSplitCmdId =
+      _.last(_.last(secondSplitSubPath.getCommandStates()).getCommands()).getId();
+    const splitCmdIds = [firstSplitCmdId, secondSplitCmdId];
+    let updatedSplitSubPaths: SubPathState[] = [];
+    if (parent.getSplitSubPaths().length > 2) {
+      const splits = parent.getSplitSubPaths().slice();
+      splits.slice(firstSpsParentIdx + 1, 1);
+      updatedSplitSubPaths = splits;
+    }
+    this.replaceParentAfterUnsplitSubPath(
+      firstSubIdx, updatedSplitSubPaths, ...splitCmdIds);
+    return this;
+  }
+
+  private replaceParentAfterUnsplitSubPath(
+    subIdx: number,
+    updatedParentSplitSubPaths: SubPathState[],
+    ...splitCmdIds: string[]) {
+
     const spsIdx = this.subPathOrdering[subIdx];
     const parent = findSubPathStateParent(this.subPathStateMap, spsIdx);
-    const mutator = parent.mutate().setSplitSubPaths([]);
+    const mutator = parent.mutate().setSplitSubPaths(updatedParentSplitSubPaths);
     for (const id of splitCmdIds) {
       let csIdx = 0, splitIdx = -1;
       for (; csIdx < parent.getCommandStates().length; csIdx++) {
@@ -568,6 +614,15 @@ export class PathMutator {
       return subCmds;
     });
   }
+
+  private toSubIdx(spsIdx: number) {
+    for (let i = 0; i < this.subPathOrdering.length; i++) {
+      if (this.subPathOrdering[i] === spsIdx) {
+        return i;
+      }
+    }
+    throw new Error('Invalid spsIdx: ' + spsIdx);
+  };
 }
 
 function findSubPathStateParent(map: ReadonlyArray<SubPathState>, spsIdx: number) {
