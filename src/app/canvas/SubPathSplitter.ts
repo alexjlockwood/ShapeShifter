@@ -169,7 +169,6 @@ export class ShapeSplitter {
           pathMutator
             .splitFilledSubPath(subIdx, startingCmdIdx, endingCmdIdx)
             .build());
-        console.info('splitFilledSubPath', subIdx, startingCmdIdx, endingCmdIdx);
         this.reset();
         this.component.drawOverlays();
       }
