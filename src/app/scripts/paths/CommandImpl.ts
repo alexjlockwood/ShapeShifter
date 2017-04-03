@@ -20,7 +20,7 @@ class CommandImpl implements Command {
     private readonly points: ReadonlyArray<Point>,
     private readonly isSplit_ = false,
     private readonly id = _.uniqueId(),
-    private readonly isSubPathSplitPoint_ = false,
+    private readonly isSubPathSplitSegment_ = false,
   ) {
     if (svgChar === undefined) {
       throw new Error('Attempt to set an undefined svgChar');
@@ -48,8 +48,8 @@ class CommandImpl implements Command {
   }
 
   // Implements the Command interface.
-  isSubPathSplitPoint() {
-    return this.isSubPathSplitPoint_;
+  isSubPathSplitSegment() {
+    return this.isSubPathSplitSegment_;
   }
 
   // Implements the Command interface.
@@ -94,7 +94,7 @@ class CommandImpl implements Command {
       this.points.slice(),
       this.isSplit(),
       this.id,
-      this.isSubPathSplitPoint_,
+      this.isSubPathSplitSegment_,
     );
   }
 
@@ -118,7 +118,7 @@ export class CommandBuilder {
     private points: Point[],
     private isSplit = false,
     private id = '',
-    private isSubPathSplitPoint = false,
+    private isSubPathSplitSegment = false,
   ) { }
 
   setSvgChar(svgChar: SvgChar) {
@@ -145,8 +145,8 @@ export class CommandBuilder {
     return this;
   }
 
-  setIsSubPathSplitPoint(isSubPathSplitPoint: boolean) {
-    this.isSubPathSplitPoint = isSubPathSplitPoint;
+  setIsSubPathSplitSegment(isSubPathSplitSegment: boolean) {
+    this.isSubPathSplitSegment = isSubPathSplitSegment;
     return this;
   }
 
@@ -170,7 +170,7 @@ export class CommandBuilder {
       this.points.map(p => p ? MathUtil.transformPoint(p, ...this.transforms) : p),
       this.isSplit,
       this.id || _.uniqueId(),
-      this.isSubPathSplitPoint,
+      this.isSubPathSplitSegment,
     );
   }
 }

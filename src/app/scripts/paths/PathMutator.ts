@@ -288,14 +288,14 @@ export class PathMutator {
     const endSplitCmd = secondLeft.getCommands()[end.splitIdx];
     const endSplitPoint = endSplitCmd.getEnd();
     const startLineCmd = newCommand('L', [startSplitPoint, endSplitPoint]).mutate()
-      .setIsSubPathSplitPoint(true)
+      .setIsSubPathSplitSegment(true)
       .build();
     const startLine = new CommandState(startLineCmd);
 
     // The last command in the second path shares an ID with the parent's second split location.
     const endLineCmd = newCommand('L', [endSplitPoint, startSplitPoint]).mutate()
       .setId(endSplitCmd.getId())
-      .setIsSubPathSplitPoint(true)
+      .setIsSubPathSplitSegment(true)
       .build();
     const endLine = new CommandState(endLineCmd);
 
@@ -336,9 +336,36 @@ export class PathMutator {
       new SubPathState(startCommandStates),
       new SubPathState(endCommandStates),
     ];
-    this.setSubPathState(sps.mutate().setSplitSubPaths(splitSubPaths).build(), spsIdx);
+    this.insertSubPathState(sps.mutate().setSplitSubPaths(splitSubPaths).build(), spsIdx);
     this.subPathOrdering.push(this.subPathOrdering.length);
     return this;
+  }
+
+  private insertSubPathState(newState: SubPathState, spsIdx: number) {
+    const target = findSubPathState(this.subPathStateMap, spsIdx);
+    this.subPathStateMap = (function replaceParentFn(states: SubPathState[]) {
+      if (states.length === 0) {
+        // Return undefined to signal that the parent was not found.
+        return undefined;
+      }
+      for (let i = 0; i < states.length; i++) {
+        const currentState = states[i];
+        if (currentState === target) {
+          states.splice(i, 0, newState);
+          return states;
+        }
+        const recurseStates = replaceParentFn(currentState.getSplitSubPaths().slice());
+        if (recurseStates) {
+          states[i] =
+            currentState.mutate()
+              .setSplitSubPaths(recurseStates)
+              .build();
+          return states;
+        }
+      }
+      // Return undefined to signal that the parent was not found.
+      return undefined;
+    })(this.subPathStateMap.slice());
   }
 
   /**

@@ -34,7 +34,11 @@ export class CommandState {
     // The upper bound T value (may be < 1 for split subpaths).
     private readonly maxT = 1,
     // Indicates whether the command state marks the beginning/end of a subpath split.
-    private readonly isSubPathSplitPoint = backingCommand.isSubPathSplitPoint(),
+    // In other words, this is true iff the segment was cut using the subpath splitter.
+    private readonly isSubPathSplitSegment_ = backingCommand.isSubPathSplitSegment(),
+    // Indicates whether the command state's parent (if one exists) was a subpath
+    // split segment.
+    private readonly isParentSubPathSplitSegment_ = false,
   ) { }
 
   getCommands() {
@@ -102,6 +106,22 @@ export class CommandState {
     return splitIdx !== this.mutations.length - 1;
   }
 
+  /**
+   * Returns true iff this command state object was created as a result
+   * of a subpath split.
+   */
+  isSubPathSplitSegment() {
+    return this.isSubPathSplitSegment_;
+  }
+
+  /**
+   * Returns true iff this command's parent (if one exists) is a subpath
+   * split segment.
+   */
+  isParentSubPathSplitSegment() {
+    return this.isParentSubPathSplitSegment_;
+  }
+
   mutate() {
     return new CommandStateMutator(
       this.backingCommand,
@@ -110,7 +130,8 @@ export class CommandState {
       this.calculator,
       this.minT,
       this.maxT,
-      this.isSubPathSplitPoint,
+      this.isSubPathSplitSegment_,
+      this.isParentSubPathSplitSegment_,
     );
   }
 }
@@ -133,7 +154,8 @@ class CommandStateMutator {
     private calculator: Calculator,
     private minT: number,
     private maxT: number,
-    private readonly isSubPathSplitPoint: boolean,
+    private isSubPathSplitSegment_: boolean,
+    private isParentSubPathSplitSegment_: boolean,
   ) { }
 
   /**
@@ -143,6 +165,8 @@ class CommandStateMutator {
   sliceLeft(splitIdx: number) {
     this.mutations = this.mutations.slice(0, splitIdx + 1).map(m => _.clone(m));
     this.maxT = _.last(this.mutations).t;
+    this.isSubPathSplitSegment_ = false;
+    this.isParentSubPathSplitSegment_ = true;
     return this;
   }
 
@@ -153,6 +177,8 @@ class CommandStateMutator {
   sliceRight(splitIdx: number) {
     this.minT = this.mutations[splitIdx].t;
     this.mutations = this.mutations.slice(splitIdx + 1).map(m => _.clone(m));
+    this.isSubPathSplitSegment_ = false;
+    this.isParentSubPathSplitSegment_ = true;
     return this;
   }
 
@@ -336,7 +362,8 @@ class CommandStateMutator {
           .mutate()
           .setId(this.mutations[i].id);
       if (i === this.mutations.length - 1) {
-        commandBuilder.setIsSubPathSplitPoint(this.isSubPathSplitPoint);
+        commandBuilder.setIsSubPathSplitSegment(
+          this.isSubPathSplitSegment_ || this.isParentSubPathSplitSegment_);
       } else {
         commandBuilder.setIsSplit(true);
       }
@@ -351,6 +378,8 @@ class CommandStateMutator {
       this.calculator,
       this.minT,
       this.maxT,
+      this.isSubPathSplitSegment_,
+      this.isParentSubPathSplitSegment_,
     );
   }
 }

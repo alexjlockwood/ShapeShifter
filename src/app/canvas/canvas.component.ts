@@ -770,7 +770,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       const cmds = subPath.getCommands();
       for (let i = 0; i < cmds.length; i++) {
         const cmd = cmds[i];
-        if (!cmd.isSubPathSplitPoint()) {
+        if (!cmd.isSubPathSplitSegment()) {
           continue;
         }
         executeCommands(ctx, [cmd], transforms);
@@ -810,7 +810,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       let highlightColor = HIGHLIGHT_COLOR;
       const cmds = subPath.getCommands();
       for (const cmd of cmds) {
-        if (cmd.isSubPathSplitPoint()) {
+        if (cmd.isSubPathSplitSegment()) {
           highlightColor = SPLIT_POINT_COLOR;
           break;
         }

@@ -6,6 +6,10 @@ import { AppModeService, AppMode, } from '../services';
 
 /**
  * Helper class that can be used to split a filled subpath.
+ *
+ * TODO: split the following SVG horizontally in half then vertically in half:
+ *
+ * M 0 0 L 0 10 L 10 10 L 10 0 L 0 0
  */
 export class ShapeSplitter {
   private readonly appModeService: AppModeService;
