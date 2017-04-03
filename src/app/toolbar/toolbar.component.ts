@@ -1,16 +1,20 @@
+import * as _ from 'lodash';
 import { Component, OnInit, ViewContainerRef, ChangeDetectionStrategy } from '@angular/core';
 import {
   StateService,
   MorphabilityStatus,
   AnimatorService,
   SelectionService,
+  Selection,
+  SelectionType,
 } from '../services';
+import { deleteSelectedSplitPoints } from '../services/selection.service';
 import { CanvasType } from '../CanvasType';
 import { ExportUtil } from '../scripts/export';
 import { DialogService } from '../dialogs';
 import { AutoAwesome } from '../scripts/autoawesome';
 import { DemoUtil, DEMO_MAP } from '../scripts/demos';
-import { PathUtil } from '../scripts/paths';
+import { Command } from '../scripts/paths';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/combineLatest';
 
@@ -52,7 +56,7 @@ export class ToolbarComponent implements OnInit {
       this.selectionService.asObservable()
         .map(selections => {
           const shouldEnable =
-            PathUtil.getNumSelectedPoints(
+            this.getNumSelectedPoints(
               this.stateService,
               selections,
               cmd => cmd.isSplit()) > 0;
@@ -65,7 +69,7 @@ export class ToolbarComponent implements OnInit {
       this.selectionService.asObservable()
         .map(selections => {
           const numPointsSelected =
-            PathUtil.getNumSelectedPoints(
+            this.getNumSelectedPoints(
               this.stateService,
               selections,
               cmd => cmd.isSplit());
@@ -75,6 +79,28 @@ export class ToolbarComponent implements OnInit {
             return 'Shape Shifter';
           }
         });
+  }
+
+  private getNumSelectedPoints(
+    lss: StateService,
+    selections: ReadonlyArray<Selection>,
+    predicateFn = (cmd: Command) => true) {
+
+    selections = selections.filter(s => s.type === SelectionType.Point);
+
+    if (!selections.length) {
+      return 0;
+    }
+
+    // Preconditions: all selections exist in the same editor and
+    // all selections correspond to the currently active path id.
+    const canvasType = selections[0].source;
+    const activePath = lss.getActivePathLayer(canvasType).pathData;
+    return _.sum(selections.map(s => {
+      const { subIdx, cmdIdx } = s;
+      const cmd = activePath.getSubPaths()[subIdx].getCommands()[cmdIdx];
+      return predicateFn(cmd) ? 1 : 0;
+    }));
   }
 
   onNewClick() {
@@ -120,7 +146,7 @@ export class ToolbarComponent implements OnInit {
   }
 
   onDeleteSelectedPointsClick() {
-    PathUtil.deleteSelectedSplitPoints(this.stateService, this.selectionService);
+    deleteSelectedSplitPoints(this.stateService, this.selectionService);
   }
 
   onDemoClick() {

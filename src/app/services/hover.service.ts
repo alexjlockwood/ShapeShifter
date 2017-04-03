@@ -21,6 +21,18 @@ export class HoverService {
     this.source.next(hover);
   }
 
+  setPoint(source: CanvasType, subIdx: number, cmdIdx: number) {
+    this.setHover({ type: HoverType.Point, source, subIdx, cmdIdx });
+  }
+
+  setSegment(source: CanvasType, subIdx: number, cmdIdx: number) {
+    this.setHover({ type: HoverType.Segment, source, subIdx, cmdIdx });
+  }
+
+  setSubPath(source: CanvasType, subIdx: number) {
+    this.setHover({ type: HoverType.SubPath, source, subIdx });
+  }
+
   reset() {
     if (this.source.getValue()) {
       this.setHover(undefined);
@@ -29,12 +41,13 @@ export class HoverService {
 }
 
 /**
- * A hover represents a transient action that results as a result of a mouse hover.
+ * A hover represents a transient action that results from a mouse movement.
  */
 export interface Hover {
   readonly type: HoverType;
-  readonly index: { subIdx: number, cmdIdx?: number };
   readonly source: CanvasType;
+  readonly subIdx: number;
+  readonly cmdIdx?: number;
 }
 
 /**
@@ -43,8 +56,10 @@ export interface Hover {
 export enum HoverType {
   // The user hovered over a subpath in the inspector/canvas.
   SubPath,
-  // The user hovered over a command in the inspector/canvas.
-  Command,
+  // The user hovered over a segment in the inspector/canvas
+  Segment,
+  // The user hovered over a point in the inspector/canvas.
+  Point,
   // The user hovered over the split button in the command inspector.
   Split,
   // The user hovered over the unsplit button in the command inspector.

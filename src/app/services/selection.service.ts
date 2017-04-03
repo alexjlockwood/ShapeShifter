@@ -2,11 +2,12 @@ import * as _ from 'lodash';
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { CanvasType } from '../CanvasType';
+import { StateService } from './state.service';
+// import { PathUtil } from '../scripts/paths';
 
 /**
  * A simple service that broadcasts selection events to all parts of the application.
  * TODO: clear selections in an onBlur callback somehow
- * TODO: investigate the pros and cons of identifying by uniqueId rather than index
  */
 @Injectable()
 export class SelectionService {
@@ -22,30 +23,29 @@ export class SelectionService {
 
   getSelectedSubPaths(canvasType: CanvasType) {
     return this.getSelections()
-      .filter(s => s.type === SelectionType.SubPath
-        && s.source === canvasType)
-      .map(s => s.index.subIdx);
+      .filter(s => s.type === SelectionType.SubPath && s.source === canvasType)
+      .map(s => s.subIdx);
   }
 
   getSelectedSubPathCommands(subIdx: number) {
     return this.getSelections()
-      .filter(s => s.type === SelectionType.Command)
-      .map(s => s.index.subIdx);
+      .filter(s => s.type === SelectionType.Point)
+      .map(s => s.subIdx);
   }
 
   isSubPathSelected(canvasType: CanvasType, subIdx: number) {
     return this.getSelections().some(s => {
       return s.type === SelectionType.SubPath
         && s.source === canvasType
-        && s.index.subIdx === subIdx;
+        && s.subIdx === subIdx;
     });
   }
 
   isCommandSelected(subIdx: number, cmdIdx: number) {
     return this.getSelections().some(s => {
-      return s.type === SelectionType.Command
-        && s.index.subIdx === subIdx
-        && s.index.cmdIdx === cmdIdx;
+      return s.type === SelectionType.Point
+        && s.subIdx === subIdx
+        && s.cmdIdx === cmdIdx;
     });
   }
 
@@ -54,19 +54,11 @@ export class SelectionService {
   }
 
   toggleSubPath(source: CanvasType, subIdx: number) {
-    this.toggle({
-      type: SelectionType.SubPath,
-      index: { subIdx },
-      source,
-    });
+    this.toggle({ type: SelectionType.SubPath, source, subIdx, });
   }
 
   toggleCommand(source: CanvasType, subIdx: number, cmdIdx: number, appendToList = false) {
-    this.toggle({
-      type: SelectionType.Command,
-      index: { subIdx, cmdIdx },
-      source,
-    });
+    this.toggle({ type: SelectionType.Point, source, subIdx, cmdIdx });
   }
 
   /**
@@ -81,14 +73,14 @@ export class SelectionService {
     if (selection.type === SelectionType.SubPath) {
       // Remove all selections that aren't from the selected subpath.
       _.remove(updatedSelections, sel => {
-        return sel.index.subIdx !== selection.index.subIdx;
+        return sel.subIdx !== selection.subIdx;
       });
     }
     const existingSelections = _.remove(updatedSelections, sel => {
       // Remove any selections that are equal to the new selection.
       if (selection.type === SelectionType.SubPath) {
         // Toggling a subpath will also toggle all of its commands.
-        return selection.index.subIdx === sel.index.subIdx;
+        return selection.subIdx === sel.subIdx;
       }
       return areSelectionsEqual(selection, sel);
     });
@@ -117,8 +109,9 @@ export class SelectionService {
  */
 export interface Selection {
   readonly type: SelectionType;
-  readonly index: { subIdx: number, cmdIdx?: number };
   readonly source: CanvasType;
+  readonly subIdx: number;
+  readonly cmdIdx?: number;
 }
 
 /**
@@ -127,15 +120,56 @@ export interface Selection {
 export enum SelectionType {
   // The user selected an entire subpath.
   SubPath,
-  // The user selected an individual command in the subpath.
-  Command,
+  // The user selected an individual segment in a subpath.
+  Segment,
+  // The user selected an individual point in a subpath.
+  Point,
 }
 
 function areSelectionsEqual(sel1: Selection, sel2: Selection) {
-  if (sel1.source !== sel2.source || sel1.type !== sel2.type) {
-    return false;
-  }
-  const id1 = sel1.index;
-  const id2 = sel2.index;
-  return id1.subIdx === id2.subIdx && id1.cmdIdx === id2.cmdIdx;
+  return sel1.source === sel2.source
+    && sel1.type === sel2.type
+    && sel1.subIdx === sel2.subIdx
+    && sel1.cmdIdx === sel2.cmdIdx;
+}
+
+/**
+ * Deletes any currently selected split points.
+ * TODO: rewrite this according to the new selection rules!
+ */
+export function deleteSelectedSplitPoints(
+  lss: StateService,
+  sss: SelectionService) {
+
+  // const selections = sss.getSelections();
+  // if (!selections.length) {
+  //   return;
+  // }
+  // // Preconditions: all selections exist in the same editor and
+  // // all selections correspond to the currently active path id.
+  // const canvasType = selections[0].source;
+  // const activePathLayer = lss.getActivePathLayer(canvasType);
+  // const unsplitOpsMap: Map<number, Array<{ subIdx: number, cmdIdx: number }>> = new Map();
+  // for (const selection of selections) {
+  //   const { subIdx, cmdIdx } = selection;
+  //   if (!activePathLayer.pathData.getSubPaths()[subIdx].getCommands()[cmdIdx].isSplit()) {
+  //     continue;
+  //   }
+  //   let subIdxOps = unsplitOpsMap.get(subIdx);
+  //   if (!subIdxOps) {
+  //     subIdxOps = [];
+  //   }
+  //   subIdxOps.push({ subIdx, cmdIdx });
+  //   unsplitOpsMap.set(subIdx, subIdxOps);
+  // }
+  // sss.reset();
+  // const mutator = activePathLayer.pathData.mutate();
+  // unsplitOpsMap.forEach((ops, idx) => {
+  //   // TODO: perform these as a single batch instead of inside a loop? (to reduce # of broadcasts)
+  //   PathUtil.sortPathOps(ops);
+  //   for (const op of ops) {
+  //     mutator.unsplitCommand(op.subIdx, op.cmdIdx);
+  //   }
+  // });
+  // lss.updateActivePath(canvasType, mutator.build());
 }

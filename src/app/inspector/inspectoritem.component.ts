@@ -47,7 +47,7 @@ export class InspectorItemComponent implements OnInit {
         .map(selections => {
           const activePathId = this.stateService.getActivePathId(this.canvasType);
           return activePathId && _.some(selections, {
-            type: SelectionType.Command,
+            type: SelectionType.Point,
             source: this.canvasType,
             index: {
               subIdx: this.subIdx,
@@ -59,7 +59,7 @@ export class InspectorItemComponent implements OnInit {
 
   onCommandClick(event: MouseEvent) {
     const selections =
-      this.selectionService.getSelections().filter(s => s.type === SelectionType.Command);
+      this.selectionService.getSelections().filter(s => s.type === SelectionType.Point);
     const appendToList = event.shiftKey || event.metaKey;
     if (selections.length && selections[0].source !== this.canvasType && appendToList) {
       // If the user is attempting to select something in a different pane in the
@@ -67,12 +67,10 @@ export class InspectorItemComponent implements OnInit {
       return;
     }
     this.selectionService.toggle({
-      type: SelectionType.Command,
+      type: SelectionType.Point,
       source: this.canvasType,
-      index: {
-        subIdx: this.subIdx,
-        cmdIdx: this.cmdIdx,
-      }
+      subIdx: this.subIdx,
+      cmdIdx: this.cmdIdx,
     }, appendToList);
   }
 
@@ -156,7 +154,7 @@ export class InspectorItemComponent implements OnInit {
 
   onCommandHoverEvent(isHoveringOverCommand: boolean) {
     this.isHoveringOverCommand = isHoveringOverCommand;
-    this.broadcastHoverEvent(isHoveringOverCommand, HoverType.Command);
+    this.broadcastHoverEvent(isHoveringOverCommand, HoverType.Point);
   }
 
   onSplitHoverEvent(isHoveringOverSplit: boolean) {
@@ -184,19 +182,21 @@ export class InspectorItemComponent implements OnInit {
     this.broadcastHoverEvent(isHoveringOverShiftForward, HoverType.ShiftForward);
   }
 
-  private broadcastHoverEvent(isHovering: boolean, hoverType: HoverType) {
+  private broadcastHoverEvent(isHovering: boolean, type: HoverType) {
     const subIdx = this.subIdx;
     const cmdIdx = this.cmdIdx;
     if (isHovering) {
       this.hoverService.setHover({
-        type: hoverType,
-        index: { subIdx, cmdIdx },
+        type,
+        subIdx,
+        cmdIdx,
         source: this.canvasType,
       });
-    } else if (hoverType !== HoverType.Command && this.isHoveringOverCommand) {
+    } else if (type !== HoverType.Point && this.isHoveringOverCommand) {
       this.hoverService.setHover({
-        type: HoverType.Command,
-        index: { subIdx, cmdIdx },
+        type: HoverType.Point,
+        subIdx,
+        cmdIdx,
         source: this.canvasType,
       });
     } else {

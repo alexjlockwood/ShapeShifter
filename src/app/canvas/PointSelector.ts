@@ -1,5 +1,6 @@
+import * as _ from 'lodash';
 import { CanvasComponent } from './canvas.component';
-import { ProjectionOntoPath } from '../scripts/paths';
+import { ProjectionOntoPath, HitResult } from '../scripts/paths';
 import { Point, MathUtil } from '../scripts/common';
 import { CanvasType } from '../CanvasType';
 import {
@@ -36,25 +37,26 @@ export class PointSelector {
     const hitResult = this.performHitTest(mouseDown);
     if (hitResult.isEndPointHit) {
       const { subIdx, cmdIdx } =
-        this.component.findHitCommandIndex(hitResult.endPointHits);
+        this.findHitCommandIndex(hitResult.endPointHits);
       const selectedCmd = this.component.activePath.getCommand(subIdx, cmdIdx);
       if (selectedCmd.isSplit()) {
         this.draggableSplitIndex = { subIdx, cmdIdx };
         this.component.showSelectCursor();
       } else {
         this.selectionService.toggle({
-          type: SelectionType.Command,
+          type: SelectionType.Point,
           source: this.canvasType,
-          index: { subIdx, cmdIdx },
+          subIdx,
+          cmdIdx,
         }, isShiftOrMetaPressed);
       }
     } else if (hitResult.isSegmentHit || hitResult.isShapeHit) {
       const hits = hitResult.isShapeHit ? hitResult.shapeHits : hitResult.segmentHits;
-      const { subIdx } = this.component.findHitSubPathIndex(hits);
+      const { subIdx } = this.findHitSubPathIndex(hits);
       this.selectionService.toggle({
         type: SelectionType.SubPath,
         source: this.canvasType,
-        index: { subIdx },
+        subIdx,
       }, true);
     } else if (!isShiftOrMetaPressed) {
       // If the mouse down event didn't result in a hit, then
@@ -127,7 +129,7 @@ export class PointSelector {
       }
     } else if (this.draggableSplitIndex) {
       const hitResult = this.performHitTest(mouseUp);
-      this.component.checkForSelections(hitResult);
+      this.checkForSelections(hitResult);
     }
 
     this.checkForHovers(mouseUp);
@@ -144,25 +146,6 @@ export class PointSelector {
   private performHitTest(mousePoint: Point) {
     const noSegments = !this.component.activePathLayer.isStroked();
     return this.component.performHitTest(mousePoint, { noSegments });
-  }
-
-  private checkForHovers(mousePoint: Point) {
-    const hitResult = this.performHitTest(mousePoint);
-    this.component.checkForHovers(hitResult);
-    if (!this.draggableSplitIndex) {
-      const hover = this.hoverService.getHover();
-      if (!this.draggableSplitIndex && hover && hover.type === HoverType.Command) {
-        const { subIdx, cmdIdx } = hover.index;
-        const cmd = this.component.activePath.getCommand(subIdx, cmdIdx);
-        if (cmd.isSplit()) {
-          this.component.showSelectCursor();
-        } else {
-          this.component.resetCursor();
-        }
-      } else {
-        this.component.resetCursor();
-      }
-    }
   }
 
   private reset() {
@@ -188,5 +171,86 @@ export class PointSelector {
 
   getLastKnownMouseLocation() {
     return this.lastKnownMouseLocation;
+  }
+
+  private checkForHovers(mousePoint: Point) {
+    const hitResult = this.performHitTest(mousePoint);
+    if (!hitResult.isHit) {
+      this.hoverService.reset();
+    } else if (hitResult.isEndPointHit) {
+      const { subIdx, cmdIdx } = this.findHitCommandIndex(hitResult.endPointHits);
+      this.hoverService.setHover({
+        type: HoverType.Point,
+        source: this.canvasType,
+        subIdx,
+        cmdIdx,
+      });
+    } else if (hitResult.isSegmentHit || hitResult.isShapeHit) {
+      const hits = hitResult.isShapeHit ? hitResult.shapeHits : hitResult.segmentHits;
+      const { subIdx } = this.findHitSubPathIndex(hits);
+      this.hoverService.setHover({
+        type: HoverType.SubPath,
+        source: this.canvasType,
+        subIdx,
+      });
+    }
+    if (!this.draggableSplitIndex) {
+      const hover = this.hoverService.getHover();
+      if (!this.draggableSplitIndex && hover && hover.type === HoverType.Point) {
+        const { subIdx, cmdIdx } = hover;
+        const cmd = this.component.activePath.getCommand(subIdx, cmdIdx);
+        if (cmd.isSplit()) {
+          this.component.showSelectCursor();
+        } else {
+          this.component.resetCursor();
+        }
+      } else {
+        this.component.resetCursor();
+      }
+    }
+  }
+
+  private checkForSelections(hitResult: HitResult) {
+    if (!hitResult.isHit) {
+      this.selectionService.reset();
+    } else if (hitResult.isEndPointHit) {
+      const { subIdx, cmdIdx } = this.findHitCommandIndex(hitResult.endPointHits);
+      this.selectionService.toggle({
+        type: SelectionType.Point,
+        source: this.canvasType,
+        subIdx,
+        cmdIdx,
+      });
+    } else if (hitResult.isSegmentHit || hitResult.isShapeHit) {
+      const hits = hitResult.isShapeHit ? hitResult.shapeHits : hitResult.segmentHits;
+      const { subIdx } = this.findHitSubPathIndex(hits);
+      this.selectionService.toggle({
+        type: SelectionType.SubPath,
+        source: this.canvasType,
+        subIdx,
+      });
+    }
+  }
+
+  private findHitCommandIndex(hits: ReadonlyArray<{ subIdx: number, cmdIdx: number }>) {
+    const endPointInfos = hits.map(index => {
+      const { subIdx, cmdIdx } = index;
+      const cmd = this.component.activePath.getSubPaths()[subIdx].getCommands()[cmdIdx];
+      return { index, cmd };
+    });
+    const lastSplitIndex =
+      _.findLastIndex(endPointInfos, cmdInfo => cmdInfo.cmd.isSplit());
+    return endPointInfos[lastSplitIndex < 0 ? endPointInfos.length - 1 : lastSplitIndex].index;
+  }
+
+  private findHitSubPathIndex(hits: ReadonlyArray<{ subIdx: number }>) {
+    const subPathInfos = hits.map(index => {
+      const { subIdx } = index;
+      const subPath = this.component.activePath.getSubPaths()[subIdx];
+      return { index, subPath };
+    });
+    const lastSplitIndex =
+      _.findLastIndex(subPathInfos, subPathInfo => subPathInfo.subPath.isSplit());
+    return subPathInfos[lastSplitIndex < 0 ? subPathInfos.length - 1 : lastSplitIndex].index;
   }
 }

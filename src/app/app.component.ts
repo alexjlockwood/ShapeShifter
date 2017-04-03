@@ -6,7 +6,7 @@ import { environment } from '../environments/environment';
 import { CanvasType } from './CanvasType';
 import { Subscription } from 'rxjs/Subscription';
 import { Observable } from 'rxjs/Observable';
-import { SubPath, Command, PathUtil } from './scripts/paths';
+import { SubPath, Command } from './scripts/paths';
 import {
   AnimatorService,
   CanvasResizeService,
@@ -16,6 +16,7 @@ import {
   StateService,
   MorphabilityStatus,
 } from './services';
+import { deleteSelectedSplitPoints } from './services/selection.service';
 import * as $ from 'jquery';
 import * as erd from 'element-resize-detector';
 import * as _ from 'lodash';
@@ -189,7 +190,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
         event.preventDefault();
         if (this.appModeService.getAppMode() === AppMode.SelectPoints) {
           // Can only delete points in selection mode.
-          PathUtil.deleteSelectedSplitPoints(
+          deleteSelectedSplitPoints(
             this.stateService,
             this.selectionService);
         }

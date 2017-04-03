@@ -196,7 +196,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
             this.showPenCursor();
             const subIdxs = new Set<number>();
             for (const s of this.selectionService.getSelections()) {
-              subIdxs.add(s.index.subIdx);
+              subIdxs.add(s.subIdx);
             }
             const toArray = Array.from(subIdxs);
             const restrictToSubIdx = toArray.length ? toArray[0] : undefined;
@@ -231,8 +231,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           // a snapshot of what the path would look like after the action
           // and display the result.
           const mutator = this.activePath.mutate();
-          const { subIdx, cmdIdx } = hover.index;
-          switch (hover.type) {
+          const { type, subIdx, cmdIdx } = hover;
+          switch (type) {
             case HoverType.Split:
               previewPath = mutator.splitCommandInHalf(subIdx, cmdIdx).build();
               break;
@@ -262,7 +262,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
             return;
           }
           if (hover.source !== this.canvasType
-            && hover.type !== HoverType.Command) {
+            && hover.type !== HoverType.Point) {
             updateCurrentHoverFn(undefined);
             return;
           }
@@ -424,82 +424,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       findShapesInRange,
       restrictToSubIdx,
     });
-  }
-
-  checkForHovers(hitResult: HitResult) {
-    if (!hitResult.isHit) {
-      this.hoverService.reset();
-      return true;
-    }
-    if (hitResult.isEndPointHit) {
-      const index = this.findHitCommandIndex(hitResult.endPointHits);
-      this.hoverService.setHover({
-        type: HoverType.Command,
-        source: this.canvasType,
-        index,
-      });
-      return true;
-    }
-    if (hitResult.isSegmentHit || hitResult.isShapeHit) {
-      const hits = hitResult.isShapeHit ? hitResult.shapeHits : hitResult.segmentHits;
-      const index = this.findHitSubPathIndex(hits);
-      this.hoverService.setHover({
-        type: HoverType.SubPath,
-        source: this.canvasType,
-        index: { subIdx: index.subIdx },
-      });
-      return true;
-    }
-    return false;
-  }
-
-  checkForSelections(hitResult: HitResult) {
-    if (!hitResult.isHit) {
-      this.selectionService.reset();
-      return true;
-    }
-    if (hitResult.isEndPointHit) {
-      const index = this.findHitCommandIndex(hitResult.endPointHits);
-      this.selectionService.toggle({
-        type: SelectionType.Command,
-        source: this.canvasType,
-        index,
-      });
-      return true;
-    }
-    if (hitResult.isSegmentHit || hitResult.isShapeHit) {
-      const hits = hitResult.isShapeHit ? hitResult.shapeHits : hitResult.segmentHits;
-      const index = this.findHitSubPathIndex(hits);
-      this.selectionService.toggle({
-        type: SelectionType.SubPath,
-        source: this.canvasType,
-        index,
-      });
-      return true;
-    }
-    return false;
-  }
-
-  findHitCommandIndex(hits: ReadonlyArray<{ subIdx: number, cmdIdx: number }>) {
-    const endPointInfos = hits.map(index => {
-      const { subIdx, cmdIdx } = index;
-      const cmd = this.activePath.getSubPaths()[subIdx].getCommands()[cmdIdx];
-      return { index, cmd };
-    });
-    const lastSplitIndex =
-      _.findLastIndex(endPointInfos, cmdInfo => cmdInfo.cmd.isSplit());
-    return endPointInfos[lastSplitIndex < 0 ? endPointInfos.length - 1 : lastSplitIndex].index;
-  }
-
-  findHitSubPathIndex(hits: ReadonlyArray<{ subIdx: number }>) {
-    const subPathInfos = hits.map(index => {
-      const { subIdx } = index;
-      const subPath = this.activePath.getSubPaths()[subIdx];
-      return { index, subPath };
-    });
-    const lastSplitIndex =
-      _.findLastIndex(subPathInfos, subPathInfo => subPathInfo.subPath.isSplit());
-    return subPathInfos[lastSplitIndex < 0 ? subPathInfos.length - 1 : lastSplitIndex].index;
   }
 
   /**
@@ -800,11 +724,11 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
     const selectedSubIdxs: Set<number> = new Set<number>();
     if (this.currentHover) {
-      selectedSubIdxs.add(this.currentHover.index.subIdx);
+      selectedSubIdxs.add(this.currentHover.subIdx);
     }
 
     for (const sel of this.selectionService.getSelections()) {
-      selectedSubIdxs.add(sel.index.subIdx);
+      selectedSubIdxs.add(sel.subIdx);
     }
 
     const subPaths = Array.from(selectedSubIdxs)
@@ -862,7 +786,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         .value();
 
     const currSelections = this.selectionService.getSelections().map(sel => {
-      return { type: sel.type, subIdx: sel.index.subIdx, cmdIdx: sel.index.cmdIdx };
+      return { type: sel.type, subIdx: sel.subIdx, cmdIdx: sel.cmdIdx };
     });
     const selectedSubPathIndices = _.flatMap(currSelections, sel => {
       return sel.type === SelectionType.SubPath ? [sel.subIdx] : [];
@@ -901,16 +825,16 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
     const isPointInfoHoveringFn = (pointInfo: PointInfo) => {
       const hover = this.currentHover;
-      return hover && pointInfo.subIdx === hover.index.subIdx;
+      return hover && pointInfo.subIdx === hover.subIdx;
     };
 
     const removedHoverCommands =
       _.remove(pathDataPointInfos, pointInfo => {
         const hover = this.currentHover;
         return hover
-          && hover.type === HoverType.Command
-          && pointInfo.subIdx === hover.index.subIdx
-          && pointInfo.cmdIdx === hover.index.cmdIdx;
+          && hover.type === HoverType.Point
+          && pointInfo.subIdx === hover.subIdx
+          && pointInfo.cmdIdx === hover.cmdIdx;
       });
     pathDataPointInfos.push(
       ..._.remove(pathDataPointInfos, pointInfo => {
@@ -937,7 +861,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       if (isPointInfoHoveringFn(pointInfo) || isPointInfoSelectedFn(pointInfo)) {
         radius = this.mediumPointRadius * SELECTED_POINT_RADIUS_FACTOR;
         if ((isPointInfoHoveringFn(pointInfo)
-          && pointInfo.cmdIdx === this.currentHover.index.cmdIdx)
+          && pointInfo.cmdIdx === this.currentHover.cmdIdx)
           || this.selectionService.isCommandSelected(pointInfo.subIdx, pointInfo.cmdIdx)) {
           radius *= (1 / SPLIT_POINT_RADIUS_FACTOR);
         }
@@ -1003,7 +927,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       ctx.restore();
     }
   }
-
 
   private drawAddPointPreview(ctx: Context) {
     if (this.appMode !== AppMode.AddPoints || !this.segmentSplitter) {
@@ -1235,9 +1158,9 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       if (hitResult.isHit) {
         const hits =
           [].concat(hitResult.segmentHits, hitResult.shapeHits, hitResult.endPointHits);
-        const lastHit = _.last(hits);
+        const { subIdx } = _.last(hits);
         this.selectionService.setSelections([{
-          index: { subIdx: lastHit.subIdx },
+          subIdx,
           source: this.canvasType,
           type: SelectionType.SubPath,
         }]);
