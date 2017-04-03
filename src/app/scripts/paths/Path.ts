@@ -1,6 +1,6 @@
 import { Point } from '../common';
 import { SubPath, Command } from '.';
-import { ProjectionResult } from './calculators';
+import { Projection } from './calculators';
 import { PathMutator } from './PathMutator';
 
 /**
@@ -98,5 +98,5 @@ export interface HitResult {
 export interface ProjectionOntoPath {
   readonly subIdx: number;
   readonly cmdIdx: number;
-  readonly projection: ProjectionResult;
+  readonly projection: Projection;
 }

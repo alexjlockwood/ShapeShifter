@@ -2,7 +2,7 @@ import * as _ from 'lodash';
 import {
   SubPath,
   Command,
-  ProjectionResult,
+  Projection,
   ProjectionOntoPath,
   HitOptions,
   HitResult
@@ -205,7 +205,7 @@ export class PathState {
                   return {} as {
                     subIdx: number,
                     cmdIdx: number,
-                    projection: ProjectionResult,
+                    projection: Projection,
                     splitIdx: number,
                   };
                 }

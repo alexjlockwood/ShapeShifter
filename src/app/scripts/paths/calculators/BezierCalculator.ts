@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
 import * as BezierJs from 'bezier-js';
 import { Point } from '../../common';
-import { SvgChar, ProjectionResult } from '..';
+import { SvgChar, Projection } from '..';
 import { CommandBuilder } from '../CommandImpl';
 import { Calculator, BBox, Line } from '.';
 import { PointCalculator } from './PointCalculator';
@@ -38,7 +38,7 @@ export class BezierCalculator implements Calculator {
     return this.length;
   }
 
-  project(point: Point): ProjectionResult {
+  project(point: Point): Projection {
     const { x, y, t, d } = this.bezierJs.project(point);
     return { x, y, t, d };
   }

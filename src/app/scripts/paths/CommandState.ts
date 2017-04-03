@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
 import { MathUtil, Point, Matrix } from '../common';
 import { Calculator, newCalculator, Line } from './calculators';
-import { SvgChar, Command, ProjectionResult } from '.';
+import { SvgChar, Command, Projection } from '.';
 
 /**
  * Container class that encapsulates a Command's underlying state.
@@ -61,7 +61,7 @@ export class CommandState {
     return this.calculator.getPathLength();
   }
 
-  project(point: Point): { projectionResult: ProjectionResult, splitIdx: number } | undefined {
+  project(point: Point): { projectionResult: Projection, splitIdx: number } | undefined {
     const projectionResult = this.calculator.project(point);
     if (!projectionResult) {
       return undefined;
@@ -71,6 +71,7 @@ export class CommandState {
       // If this happens, then the projection is being mapped to some other
       // split command segment.
       // TODO: recompute the projection so that it properly returned the correct value...
+      console.warn('Failed to compute projection for CommandState');
       return undefined;
     }
     // Count the number of t values that are less than the projection.

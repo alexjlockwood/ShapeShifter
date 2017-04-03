@@ -12,7 +12,7 @@ import { MoveCalculator } from './MoveCalculator';
  */
 export interface Calculator {
   getPathLength(): number;
-  project(point: Point): ProjectionResult | undefined;
+  project(point: Point): Projection | undefined;
   split(t1: number, t2: number): Calculator;
   convert(svgChar: SvgChar): Calculator;
   findTimeByDistance(distance: number): number;
@@ -46,7 +46,7 @@ export function newCalculator(cmd: Command): Calculator {
 }
 
 /** Represents a projection onto a path. */
-export interface ProjectionResult {
+export interface Projection {
   /** The x-coordinate of the point on the path. */
   x: number;
   /** The y-coordinate of the point on the path. */

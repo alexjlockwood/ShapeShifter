@@ -1,1 +1,1 @@
-export { Calculator, newCalculator, ProjectionResult, BBox, Line } from './Calculator';
+export { Calculator, newCalculator, Projection, BBox, Line } from './Calculator';

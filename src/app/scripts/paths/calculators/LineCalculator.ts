@@ -1,5 +1,5 @@
 import { Calculator, BBox, Line } from '.';
-import { SvgChar, ProjectionResult } from '..';
+import { SvgChar, Projection } from '..';
 import { CommandBuilder } from '../CommandImpl';
 import { MathUtil, Point } from '../../common';
 import { PointCalculator } from './PointCalculator';
@@ -17,7 +17,7 @@ export class LineCalculator implements Calculator {
     return MathUtil.distance(this.p1, this.p2);
   }
 
-  project({ x, y }: Point): ProjectionResult {
+  project({ x, y }: Point): Projection {
     const { x: x1, y: y1 } = this.p1;
     const { x: x2, y: y2 } = this.p2;
     const a = x2 - x1;

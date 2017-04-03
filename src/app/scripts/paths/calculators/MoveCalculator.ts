@@ -1,5 +1,5 @@
 import { Calculator, BBox, Line } from '.';
-import { SvgChar, ProjectionResult } from '..';
+import { SvgChar, Projection } from '..';
 import { CommandBuilder } from '../CommandImpl';
 import { Point } from '../../common';
 
@@ -15,7 +15,7 @@ export class MoveCalculator implements Calculator {
     return 0;
   }
 
-  project(point: Point): ProjectionResult | undefined {
+  project(point: Point): Projection | undefined {
     return undefined;
   }
 
