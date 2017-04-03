@@ -44,6 +44,10 @@ const HIGHLIGHT_LINE_WIDTH = 6;
 const DRAG_TRIGGER_TOUCH_SLOP = 6;
 // The minimum distance between a point and a path that causes a snap.
 const MIN_SNAP_THRESHOLD = 12;
+// The radius of a medium point in css pixels.
+const MEDIUM_POINT_RADIUS = 8;
+// The radius of a small point in css pixels.
+const SMALL_POINT_RADIUS = MEDIUM_POINT_RADIUS / 1.7;
 
 const NORMAL_POINT_COLOR = '#2962FF'; // Blue A400
 const SPLIT_POINT_COLOR = '#E65100'; // Orange 900
@@ -196,10 +200,10 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
             const restrictToSubIdx = toArray.length ? toArray[0] : undefined;
             this.segmentSplitter = new SegmentSplitter(this, restrictToSubIdx);
           } else {
-            this.resetCursor();
             this.segmentSplitter = undefined;
           }
           if (this.appMode === AppMode.SelectPoints) {
+            this.resetCursor();
             this.pointSelector = new PointSelector(this);
           } else {
             this.pointSelector = undefined;
@@ -210,7 +214,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
             this.showPenCursor();
             this.shapeSplitter = new ShapeSplitter(this);
           } else {
-            this.resetCursor();
             this.shapeSplitter = undefined;
           }
           if (this.appMode !== AppMode.AddPoints) {
@@ -329,12 +332,11 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   }
 
   private get smallPointRadius() {
-    return this.largePointRadius / 1.75;
+    return SMALL_POINT_RADIUS / this.cssScale;
   }
 
-  private get largePointRadius() {
-    const size = Math.min(this.cssContainerWidth, this.cssContainerHeight);
-    return (size / 60) / Math.max(2, this.cssScale);
+  private get mediumPointRadius() {
+    return MEDIUM_POINT_RADIUS / this.cssScale;
   }
 
   private get highlightLineWidth() {
@@ -399,7 +401,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     if (!opts.noPoints) {
       isPointInRangeFn = (distance, cmd) => {
         const multiplyFactor = cmd.isSplit() ? SPLIT_POINT_RADIUS_FACTOR : 1;
-        return distance <= this.largePointRadius * multiplyFactor;
+        return distance <= this.mediumPointRadius * multiplyFactor;
       };
     }
     let isSegmentInRangeFn: (distance: number, cmd: Command) => boolean;
@@ -756,15 +758,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       return;
     }
 
-    const selectedSubIdxs: Set<number> = new Set<number>();
-    if (this.currentHover) {
-      selectedSubIdxs.add(this.currentHover.index.subIdx);
-    }
-
-    for (const sel of this.selectionService.getSelections()) {
-      selectedSubIdxs.add(sel.index.subIdx);
-    }
-
     // TODO: make this more efficient by executing them in batches!!!
     // TODO: make this more efficient by executing them in batches!!!
     // TODO: make this more efficient by executing them in batches!!!
@@ -936,7 +929,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       let radius = this.smallPointRadius;
       let text: string = undefined;
       if (isPointInfoHoveringFn(pointInfo) || isPointInfoSelectedFn(pointInfo)) {
-        radius = this.largePointRadius * SELECTED_POINT_RADIUS_FACTOR;
+        radius = this.mediumPointRadius * SELECTED_POINT_RADIUS_FACTOR;
         if ((isPointInfoHoveringFn(pointInfo)
           && pointInfo.cmdIdx === this.currentHover.index.cmdIdx)
           || this.selectionService.isCommandSelected(pointInfo.subIdx, pointInfo.cmdIdx)) {
@@ -968,7 +961,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       point = this.pointSelector.getLastKnownMouseLocation();
     }
     this.drawLabeledPoint(
-      ctx, point, this.largePointRadius * SPLIT_POINT_RADIUS_FACTOR, SPLIT_POINT_COLOR);
+      ctx, point, this.mediumPointRadius * SPLIT_POINT_RADIUS_FACTOR, SPLIT_POINT_COLOR);
   }
 
   private drawHighlightedAddPointSegment(ctx: Context) {
@@ -1017,7 +1010,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
     if (point) {
       this.drawLabeledPoint(
-        ctx, point, this.largePointRadius * SPLIT_POINT_RADIUS_FACTOR, SPLIT_POINT_COLOR);
+        ctx, point, this.mediumPointRadius * SPLIT_POINT_RADIUS_FACTOR, SPLIT_POINT_COLOR);
     }
   }
 
@@ -1094,10 +1087,10 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         endPoint = this.shapeSplitter.getLastKnownMouseLocation();
       }
       this.drawLabeledPoint(
-        ctx, startPoint, this.largePointRadius * SPLIT_POINT_RADIUS_FACTOR, SPLIT_POINT_COLOR);
+        ctx, startPoint, this.mediumPointRadius * SPLIT_POINT_RADIUS_FACTOR, SPLIT_POINT_COLOR);
       if (this.shapeSplitter.willFinalProjectionOntoPathCreateSplitPoint()) {
         this.drawLabeledPoint(
-          ctx, endPoint, this.largePointRadius * SPLIT_POINT_RADIUS_FACTOR, SPLIT_POINT_COLOR);
+          ctx, endPoint, this.mediumPointRadius * SPLIT_POINT_RADIUS_FACTOR, SPLIT_POINT_COLOR);
       }
     } else {
       let point;
@@ -1110,7 +1103,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       }
       if (point) {
         this.drawLabeledPoint(
-          ctx, point, this.largePointRadius * SPLIT_POINT_RADIUS_FACTOR, SPLIT_POINT_COLOR);
+          ctx, point, this.mediumPointRadius * SPLIT_POINT_RADIUS_FACTOR, SPLIT_POINT_COLOR);
       }
     }
   }
