@@ -734,6 +734,21 @@ describe('Path', () => {
         'SIH 0 3 SIH 0 1 SFSP 0 1 4 SIH 1 4 SIH 1 2 SFSP 1 2 5 DSPSS 2 1',
         'M 0 0 L 0 5 L 10 5 L 10 0 L 0 0 M 0 5 L 0 10 L 10 10 L 10 5 L 0 5'
       ),
+      makeTest(
+        'M 0 0 L 0 15 L 15 15 L 15 0 L 0 0',
+        `S 0 3 ${2 / 3} S 0 3 0.5 S 0 1 ${2 / 3} S 0 1 0.5 SFSP 0 1 6`,
+        `M 0 0 L 0 5 L 15 5 L 15 0 L 0 0 M 0 5 L 0 10 L 0 15 L 15 15 L 15 10 L 15 5 L 0 5`
+      ),
+      makeTest(
+        'M 0 0 L 0 15 L 15 15 L 15 0 L 0 0',
+        `S 0 3 ${2 / 3} S 0 3 0.5 S 0 1 ${2 / 3} S 0 1 0.5 SFSP 0 1 6 SFSP 1 1 4`,
+        `M 0 0 L 0 5 L 15 5 L 15 0 L 0 0 M 0 5 L 0 10 L 15 10 L 15 5 L 0 5 M 0 10 L 0 15 L 15 15 L 15 10 L 0 10`
+      ),
+      makeTest(
+        'M 0 0 L 0 15 L 15 15 L 15 0 L 0 0',
+        `S 0 3 ${2 / 3} S 0 3 0.5 S 0 1 ${2 / 3} S 0 1 0.5 SFSP 0 1 6 SFSP 1 1 4 DSPSS 1 2`,
+        `M 0 0 L 0 5 L 15 5 L 15 0 L 0 0 M 0 5 L 0 15 L 15 15 L 15 5 L 0 5`
+      ),
       // TODO: add tests for shift offsets w/ split sub paths
       // TODO: add more tests for compound paths w/ split sub paths
       // TODO: better tests for multiple transforms at a time
