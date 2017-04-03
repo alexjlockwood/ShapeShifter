@@ -4,9 +4,7 @@ import {
   Component, AfterViewInit, OnDestroy, ElementRef, ViewChild,
   Input, ViewChildren, QueryList, ChangeDetectionStrategy
 } from '@angular/core';
-import {
-  Path, SubPath, Command, HitResult
-} from '../scripts/paths';
+import { Path, SubPath, Command } from '../scripts/paths';
 import {
   PathLayer, ClipPathLayer,
   VectorLayer, GroupLayer, Layer
