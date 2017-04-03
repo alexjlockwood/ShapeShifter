@@ -119,13 +119,18 @@ export class ShapeSplitter {
                 initProj.subIdx,
                 initProj.cmdIdx,
                 initProj.projection.t);
+              if (!this.doesFinalPointExist) {
+                lastCmdOffset++;
+              }
             }
             if (!this.doesFinalPointExist) {
               pathMutator.splitCommand(
                 finalProj.subIdx,
                 finalProj.cmdIdx,
                 finalProj.projection.t);
-              lastCmdOffset++;
+              if (this.doesInitialPointExist) {
+                lastCmdOffset++;
+              }
             }
           } else {
             if (!this.doesFinalPointExist) {
@@ -142,6 +147,9 @@ export class ShapeSplitter {
                 initProj.subIdx,
                 initProj.cmdIdx,
                 initProj.projection.t);
+              if (this.doesFinalPointExist) {
+                lastCmdOffset++;
+              }
             }
           }
         }
