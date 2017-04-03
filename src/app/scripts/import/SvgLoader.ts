@@ -151,7 +151,9 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
   let width = lengthPxFn(documentElement.width);
   let height = lengthPxFn(documentElement.height);
 
-  if (documentElement.viewBox) {
+  if (documentElement.viewBox
+    && (!!documentElement.viewBox.baseVal.width
+      || !!documentElement.viewBox.baseVal.height)) {
     width = documentElement.viewBox.baseVal.width;
     height = documentElement.viewBox.baseVal.height;
 
