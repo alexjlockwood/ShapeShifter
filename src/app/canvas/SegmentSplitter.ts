@@ -2,10 +2,7 @@ import { CanvasComponent } from './canvas.component';
 import { ProjectionOntoPath } from '../scripts/paths';
 import { Point } from '../scripts/common';
 import { CanvasType } from '../CanvasType';
-import {
-  StateService,
-  AppModeService, AppMode,
-} from '../services';
+import { StateService, AppModeService, AppMode, } from '../services';
 
 /**
  * Helper class that can be used to split a segment.
@@ -49,7 +46,7 @@ export class SegmentSplitter {
       }
     }
     if (!activePathLayer.isStroked()) {
-      const restrictToSubIdx = this.restrictToSubIdx;
+      const restrictToSubIdx = [this.restrictToSubIdx];
       const hitResult =
         this.component.performHitTest(
           mouseDown,

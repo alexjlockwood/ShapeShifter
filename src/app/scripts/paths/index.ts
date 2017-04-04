@@ -1,6 +1,6 @@
 import * as PathUtil from './PathUtil';
 export { PathUtil };
-export { Projection } from './calculators';
+export { Projection, Line } from './calculators';
 export { SvgChar } from './SvgChar';
 export { Path, HitOptions, HitResult, ProjectionOntoPath } from './Path';
 export { SubPath } from './SubPath';

@@ -1,6 +1,5 @@
 import { Point } from '../common';
-import { SubPath, Command } from '.';
-import { Projection } from './calculators';
+import { SubPath, Command, Line, Projection } from '.';
 import { PathMutator } from './PathMutator';
 
 /**
@@ -56,6 +55,11 @@ export interface Path {
   hitTest(point: Point, opts: HitOptions): HitResult;
 
   /**
+   * Returns the number of intersection points of this path with the specified line segment.
+   */
+  intersects(line: Line): number;
+
+  /**
    * Returns the pole of inaccessibility for the specified subpath index.
    */
   getPoleOfInaccessibility(subIdx: number): Point;
@@ -81,7 +85,7 @@ export interface HitOptions {
   isPointInRangeFn?: (distance: number, cmd?: Command) => boolean;
   isSegmentInRangeFn?: (distance: number, cmd?: Command) => boolean;
   findShapesInRange?: boolean;
-  restrictToSubIdx?: number;
+  restrictToSubIdx?: number[];
 }
 
 /** Represents the result of a hit test. */

@@ -5,7 +5,8 @@ import {
   Projection,
   ProjectionOntoPath,
   HitOptions,
-  HitResult
+  HitResult,
+  Line,
 } from '.';
 import { createSubPaths } from './SubPathImpl';
 import { CommandState } from './CommandState';
@@ -149,16 +150,17 @@ export class PathState {
     const endPointHits: ProjectionOntoPath[] = [];
     const segmentHits: ProjectionOntoPath[] = [];
     const shapeHits: Array<{ subIdx: number }> = [];
+    const defaultRestrictToSubIdx = this.subPaths.map((_, i) => i);
+    const restrictToSubIdxSet =
+      new Set<number>(opts.restrictToSubIdx || defaultRestrictToSubIdx);
 
-    const restrictToSubIdx = opts.restrictToSubIdx;
     if (opts.isPointInRangeFn) {
       endPointHits.push(...
         _.chain(this.subPaths as SubPath[])
           .map((subPath, subIdx) => { return { subPath, subIdx }; })
           .filter(obj => {
             const { subPath, subIdx } = obj;
-            return !subPath.isCollapsing()
-              && (restrictToSubIdx === undefined || restrictToSubIdx === subIdx);
+            return !subPath.isCollapsing() && restrictToSubIdxSet.has(subIdx);
           })
           .map(obj => {
             const { subPath, subIdx } = obj;
@@ -189,8 +191,7 @@ export class PathState {
           .map((subPath, subIdx) => { return { subPath, subIdx }; })
           .filter(obj => {
             const { subPath, subIdx } = obj;
-            return !subPath.isCollapsing()
-              && (restrictToSubIdx === undefined || restrictToSubIdx === subIdx);
+            return !subPath.isCollapsing() && restrictToSubIdxSet.has(subIdx);
           })
           .map(obj => {
             const { subIdx } = obj;
@@ -236,8 +237,7 @@ export class PathState {
           .filter(obj => {
             const { subPath, subIdx } = obj;
             return subPath.isClosed()
-              && !subPath.isCollapsing()
-              && (restrictToSubIdx === undefined || restrictToSubIdx === subIdx);
+              && !subPath.isCollapsing() && restrictToSubIdxSet.has(subIdx);
           })
           .flatMap(obj => {
             const { subIdx } = obj;
@@ -278,6 +278,18 @@ export class PathState {
       segmentHits,
       shapeHits,
     };
+  }
+
+  intersects(line: Line) {
+    return _.chain(this.subPaths as SubPath[])
+      .map((subPath, subIdx) => {
+        const css = this.findSubPathState(this.toSpsIdx(subIdx)).getCommandStates();
+        const intersectionResults = css.map(cs => cs.intersects(line));
+        const numIntersections = _.sum(intersectionResults.map(ts => ts.length));
+        return numIntersections;
+      })
+      .sum()
+      .value();
   }
 
   // TODO: move this math stuff into the calculators module

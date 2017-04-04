@@ -12,7 +12,7 @@ import {
 /**
  * Helper class that tracks information about a user's mouse gesture.
  */
-export class PointSelector {
+export class PathSelector {
   private readonly stateService: StateService;
   private readonly selectionService: SelectionService;
   private readonly hoverService: HoverService;

@@ -270,6 +270,7 @@ export class PathMutator {
     const css = shiftAndReverseCommandStates(sps.getCommandStates(), sps.isReversed(), sps.getShiftOffset());
     let start = this.findInternalIndices(css, startCmdIdx);
     let end = this.findInternalIndices(css, endCmdIdx);
+
     if (start.csIdx > end.csIdx
       || (start.csIdx === end.csIdx && start.splitIdx > end.csIdx)) {
       const temp = start;
@@ -336,6 +337,7 @@ export class PathMutator {
       new SubPathState(startCommandStates),
       new SubPathState(endCommandStates),
     ];
+
     this.insertSubPathState(sps.mutate().setSplitSubPaths(splitSubPaths).build(), spsIdx);
     this.subPathOrdering.push(this.subPathOrdering.length);
     return this;
@@ -351,7 +353,7 @@ export class PathMutator {
       for (let i = 0; i < states.length; i++) {
         const currentState = states[i];
         if (currentState === target) {
-          states.splice(i, 0, newState);
+          states.splice(i, 1, newState);
           return states;
         }
         const recurseStates = replaceParentFn(currentState.getSplitSubPaths().slice());
