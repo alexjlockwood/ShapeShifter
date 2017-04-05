@@ -310,6 +310,11 @@ describe('Path', () => {
         'RV 0 SIH 0 1',
         'M 20 20 L 15 15 L 10 10 L 0 0',
       ),
+      makeTest(
+        'M 20 22 L 4 22 L 4 2 L 6 2 L 6 14 L 8 14 L 8 2 L 10 2 L 10 14 Z',
+        'S 0 2 0.5',
+        'M 20 22 L 4 22 L 4 12 L 4 2 L 6 2 L 6 14 L 8 14 L 8 2 L 10 2 L 10 14 Z',
+      ),
       // Split at t=0.
       makeTest(
         'M 0 0 L 0 10 L 10 10',
@@ -837,6 +842,11 @@ describe('Path', () => {
         path: 'M 18 19 18 15 14 5 14 19 18 19 M 10 19 10 5 6 5 6 19 10 19',
         proj: { subIdx: 1, cmdIdx: 1, projection: { x: 10, y: 12, d: 11, t: 0.5 } },
         subIdx: 1,
+      },
+      {
+        point: new Point(4, 12),
+        path: 'M 20 22 L 4 22 L 4 2 L 6 2 L 6 14 L 8 14 L 8 2 L 10 2 L 10 14 Z',
+        proj: { subIdx: 0, cmdIdx: 2, projection: { x: 4, y: 12, d: 0, t: 0.5 } },
       }
     ];
 
@@ -871,11 +881,30 @@ describe('Path', () => {
       [new Point(11, 9), mutatePath('M8 5L8 19L19 12L8 5', 'SIH 0 1 S 0 3 1 SFSP 0 1 3'), true],
     ];
 
+    const TESTS_HIT_TEST_STROKE = [
+      [new Point(4, 12), 'M 20 22 L 4 22 L 4 2 L 6 2 L 6 14 L 8 14 L 8 2 L 10 2 L 10 14 Z', 1, true],
+      [new Point(2, 12), 'M 20 22 L 4 22 L 4 2 L 6 2 L 6 14 L 8 14 L 8 2 L 10 2 L 10 14 Z', 1, false],
+      [new Point(6, 16), 'M 20 22 L 4 22 L 4 2 L 6 2 L 6 14 L 8 14 L 8 2 L 10 2 L 10 14 Z', 1, false],
+    ];
+
     TESTS_HIT_TEST_FILL.forEach(a => {
       const point = a[0] as Point;
       const path = (typeof a[1] === 'string') ? newPath(a[1] as string) : a[1] as Path;
       it(`hit test for '(${point.x},${point.y})' on fill path '${a[1]}' yields '${a[2]}'`, () => {
-        expect(path.hitTest(point, { findShapesInRange: true }).isHit).toEqual(a[2] as boolean);
+        expect(path.hitTest(point, { findShapesInRange: true }).isShapeHit).toEqual(a[2] as boolean);
+      });
+    });
+
+    TESTS_HIT_TEST_STROKE.forEach(a => {
+      const point = a[0] as Point;
+      const path = newPath(a[1] as string);
+      it(`hit test for '(${point.x},${point.y})' on stroke path '${a[1]}' yields '${a[3]}'`, () => {
+        const hitResult = path.hitTest(point, {
+          isSegmentInRangeFn: dist => {
+            return dist < a[2];
+          }
+        });
+        expect(hitResult.isSegmentHit).toEqual(a[3] as boolean);
       });
     });
   });

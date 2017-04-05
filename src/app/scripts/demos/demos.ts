@@ -80,7 +80,7 @@ if (!environment.production) {
 
   const PAUSE_SVG = `
 <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24" fill="#000000">
-<g transform="translate(12,12) rotate(-90) translate(-12,-12)">
+<g transform="translate(12,12) rotate(-90) translate(-12,-12) translate(2,0)">
     <path d="M 0 20 v -16 h 20 v 2 h -12 v 2 h 12 v 2 h -12 Z"/></g>
 </svg>
 `;

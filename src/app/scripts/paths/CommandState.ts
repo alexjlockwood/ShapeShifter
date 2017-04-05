@@ -61,12 +61,12 @@ export class CommandState {
     return this.calculator.getPathLength();
   }
 
-  project(point: Point): { projectionResult: Projection, splitIdx: number } | undefined {
-    const projectionResult = this.calculator.project(point);
-    if (!projectionResult) {
+  project(point: Point): { projection: Projection, splitIdx: number } | undefined {
+    const projection = this.calculator.project(point);
+    if (!projection) {
       return undefined;
     }
-    const projT = projectionResult.t;
+    const projT = projection.t;
     if (projT < this.minT || this.maxT < projT) {
       // If this happens, then the projection is being mapped to some other
       // split command segment.
@@ -75,15 +75,15 @@ export class CommandState {
       return undefined;
     }
     // Count the number of t values that are less than the projection.
-    const splitIdx = _.sum(this.mutations.map(m => m.t < projectionResult.t ? 1 : 0));
+    const splitIdx = _.sum(this.mutations.map(m => m.t < projection.t ? 1 : 0));
     const tempSplits = [this.minT, ...this.mutations.map(m => m.t)];
     const startSplit = tempSplits[splitIdx];
     const endSplit = tempSplits[splitIdx + 1];
     // Update the t value so that it is in relation to the client-visible subIdx and cmdIdx.
-    projectionResult.t =
-      startSplit === endSplit ? 0 : (projectionResult.t - startSplit) / (endSplit - startSplit);
+    projection.t =
+      startSplit === endSplit ? 0 : (projection.t - startSplit) / (endSplit - startSplit);
     return {
-      projectionResult,
+      projection,
       splitIdx,
     };
   }

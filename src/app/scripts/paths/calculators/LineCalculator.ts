@@ -1,8 +1,11 @@
+import * as _ from 'lodash';
 import { Calculator, BBox, Line } from '.';
 import { SvgChar, Projection } from '..';
 import { CommandBuilder } from '../CommandImpl';
 import { MathUtil, Point } from '../../common';
 import { PointCalculator } from './PointCalculator';
+
+const ROUNDING_PRECISION = 10;
 
 export class LineCalculator implements Calculator {
 
@@ -23,8 +26,8 @@ export class LineCalculator implements Calculator {
     const a = x2 - x1;
     const b = y2 - y1;
     const dot = (x - x1) * a + (y - y1) * b;
-    const lenSq = a * a + b * b;
-    const param = lenSq === 0 ? -1 : dot / lenSq;
+    const lenSq = round(a * a + b * b);
+    const param = lenSq === 0 ? -1 : round(dot / lenSq);
     let xx, yy;
     if (param < 0) {
       xx = x1;
@@ -40,14 +43,18 @@ export class LineCalculator implements Calculator {
     const dy = y - yy;
     const dd = Math.sqrt(dx * dx + dy * dy);
     let dt;
-    if (x2 !== x1) {
+    const rx1 = round(x1);
+    const rx2 = round(x2);
+    const ry1 = round(y1);
+    const ry2 = round(y2);
+    if (rx2 !== rx1) {
       dt = (xx - x1) / (x2 - x1);
-    } else if (y2 !== y1) {
+    } else if (ry2 !== ry1) {
       dt = (yy - y1) / (y2 - y1);
     } else {
       dt = 0.5;
     }
-    return { x: xx, y: yy, d: dd, t: dt };
+    return { x: round(xx), y: round(yy), d: round(dd), t: round(dt) };
   }
 
   split(t1: number, t2: number): Calculator {
@@ -123,16 +130,20 @@ export class LineCalculator implements Calculator {
     const { x: a, y: b } = this.p1;
     const { x: c, y: d } = this.p2;
     const { p1: { x: p, y: q }, p2: { x: r, y: s } } = line;
-    const det = (c - a) * (s - q) - (r - p) * (d - b);
+    const det = round((c - a) * (s - q) - (r - p) * (d - b));
     if (det === 0) {
       // Then the two lines are parallel. In our case it is fine to
       // return an empty list, even though the lines may technically
       // be collinear.
       return [];
     } else {
-      const t = ((s - q) * (r - a) + (p - r) * (s - b)) / det;
-      const u = ((b - d) * (r - a) + (c - a) * (s - b)) / det;
+      const t = round(((s - q) * (r - a) + (p - r) * (s - b)) / det);
+      const u = round(((b - d) * (r - a) + (c - a) * (s - b)) / det);
       return (0 <= t && t <= 1) && (0 <= u && u <= 1) ? [t] : [];
     }
   }
+}
+
+function round(num: number) {
+  return _.round(num, ROUNDING_PRECISION);
 }

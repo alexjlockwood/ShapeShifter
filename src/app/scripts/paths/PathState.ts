@@ -116,16 +116,16 @@ export class PathState {
           const sps = this.findSubPathState(spsIdx);
           return sps.getCommandStates()
             .map((cs, csIdx) => {
-              const projection = cs.project(point);
-              if (projection && sps.isReversed()) {
-                const t = projection.projectionResult.t;
-                projection.projectionResult.t = 1 - t;
+              const csProjection = cs.project(point);
+              if (csProjection && sps.isReversed()) {
+                const t = csProjection.projection.t;
+                csProjection.projection.t = 1 - t;
               }
               return {
                 spsIdx,
                 csIdx,
-                splitIdx: projection ? projection.splitIdx : 0,
-                projection: projection ? projection.projectionResult : undefined,
+                splitIdx: csProjection ? csProjection.splitIdx : 0,
+                projection: csProjection ? csProjection.projection : undefined,
               };
             });
         })
@@ -210,12 +210,12 @@ export class PathState {
                     splitIdx: number,
                   };
                 }
-                const { projectionResult, splitIdx } = projectionResultWithSplitIdx;
+                const { projection, splitIdx } = projectionResultWithSplitIdx;
                 if (sps.isReversed()) {
-                  projectionResult.t = 1 - projectionResult.t;
+                  projection.t = 1 - projection.t;
                 }
                 const cmdIdx = this.toCmdIdx(spsIdx, csIdx, splitIdx);
-                return { subIdx, cmdIdx, projection: projectionResult };
+                return { subIdx, cmdIdx, projection };
               });
           })
           .flatMap(projectionInfos => projectionInfos)
