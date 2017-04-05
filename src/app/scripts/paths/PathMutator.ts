@@ -416,12 +416,6 @@ export class PathMutator {
       firstSpsParentIdx = secondSpsParentIdx;
       secondSpsParentIdx = temp;
     }
-    if (firstSpsParentIdx < 0
-      || secondSpsParentIdx < 0
-      || (Math.abs(firstSpsParentIdx - secondSpsParentIdx) !== 2
-        && Math.abs(firstSpsParentIdx - secondSpsParentIdx) !== 1)) {
-      console.warn('invalid indicies into parent', firstSpsParentIdx, secondSpsParentIdx);
-    }
     const secondSplitSubPath = parent.getSplitSubPaths()[secondSpsParentIdx];
     const firstSplitCmdId = secondSplitSubPath.getCommandStates()[0].getCommands()[0].getId();
     const secondSplitCmdId =
@@ -455,9 +449,6 @@ export class PathMutator {
         if (splitIdx >= 0) {
           break;
         }
-      }
-      if (splitIdx < 0) {
-        throw new Error('Failed to find command indices');
       }
       if (parent.getCommandStates()[csIdx].isSplitAtIndex(splitIdx)) {
         // Delete the split point that created the sub path.

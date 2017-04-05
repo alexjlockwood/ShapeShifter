@@ -11,7 +11,7 @@ export class SubPathState {
     private readonly isReversed_ = false,
     private readonly shiftOffset = 0,
     private readonly id = _.uniqueId(),
-    // Either empty if this sub path is not split, or an array of size 2
+    // Either empty if this sub path is not split, or an array
     // containing this sub path's split children.
     private readonly splitSubPaths: ReadonlyArray<SubPathState> = [],
   ) { }

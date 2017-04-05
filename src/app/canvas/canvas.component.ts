@@ -389,7 +389,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     this.canvasContainer.css({ cursor: 'url(/assets/penaddcursorsmall.png) 5 0, auto' });
   }
 
-  showSelectCursor() {
+  showPointerCursor() {
     this.canvasContainer.css({ cursor: 'pointer' });
   }
 
@@ -647,14 +647,11 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     this.overlayCtx.save();
     this.setupCtxWithViewportCoords(this.overlayCtx);
     if (this.shouldDrawLayers) {
-      this.drawSplitSubPathHighlights(this.overlayCtx);
       this.drawHighlights(this.overlayCtx);
-      this.drawHighlightedAddPointSegment(this.overlayCtx);
-      this.drawHighlightedSplitShapeSegment(this.overlayCtx);
       this.drawLabeledPoints(this.overlayCtx);
-      this.drawDraggingPoints(this.overlayCtx);
-      this.drawAddPointPreview(this.overlayCtx);
-      this.drawSplitShapePreview(this.overlayCtx);
+      this.drawSelectPointsDraggingPoints(this.overlayCtx);
+      this.drawAddPointPreviewPoint(this.overlayCtx);
+      this.drawSplitSubPathPreviewPoints(this.overlayCtx);
     }
     this.overlayCtx.restore();
 
@@ -681,56 +678,79 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  private drawSplitSubPathHighlights(ctx: Context) {
+  // Draw any highlighted subpaths.
+  private drawHighlights(ctx: Context) {
     if (this.canvasType === CanvasType.Preview || !this.activePathId) {
       return;
     }
 
-    // TODO: make this more efficient by executing them in batches!!!
-    // TODO: make this more efficient by executing them in batches!!!
-    // TODO: make this more efficient by executing them in batches!!!
-    // TODO: make this more efficient by executing them in batches!!!
-    // TODO: make this more efficient by executing them in batches!!!
-    const subPaths = this.activePath.getSubPaths()
-      .filter(subPath => !subPath.isCollapsing());
-    const transforms = this.transformsForActiveLayer;
-    for (const subPath of subPaths) {
-      const cmds = subPath.getCommands();
-      for (let i = 0; i < cmds.length; i++) {
-        const cmd = cmds[i];
-        if (!cmd.isSubPathSplitSegment()) {
-          continue;
+    if (this.appMode === AppMode.SelectPoints) {
+      this.drawSelectPointHighlights(ctx);
+    }
+
+    if (this.appMode === AppMode.AddPoints) {
+      this.drawAddPointHighlights(ctx);
+    }
+
+    if (this.appMode === AppMode.SelectPoints
+      || this.appMode === AppMode.AddPoints
+      || this.appMode === AppMode.SplitSubPaths) {
+      // TODO: make this more efficient by executing them in batches!!!
+      // TODO: make this more efficient by executing them in batches!!!
+      // TODO: make this more efficient by executing them in batches!!!
+      // TODO: make this more efficient by executing them in batches!!!
+      // TODO: make this more efficient by executing them in batches!!!
+      // Draw any existing split shape segments to the canvas.
+      const subPaths = this.activePath.getSubPaths()
+        .filter(subPath => !subPath.isCollapsing());
+      const transforms = this.transformsForActiveLayer;
+      for (let subIdx = 0; subIdx < subPaths.length; subIdx++) {
+        const subPath = subPaths[subIdx];
+        const cmds = subPath.getCommands();
+        for (let cmdIdx = 0; cmdIdx < cmds.length; cmdIdx++) {
+          const cmd = cmds[cmdIdx];
+          if (!cmd.isSubPathSplitSegment()) {
+            continue;
+          }
+          let lineWidth = this.highlightLineWidth / 3;
+          const isSelected =
+            this.selectionService.isSegmentSelected(subIdx, cmdIdx, this.canvasType);
+          const isHoverSegment =
+            this.currentHover
+            && this.currentHover.type === HoverType.Segment
+            && this.currentHover.subIdx === subIdx
+            && this.currentHover.cmdIdx === cmdIdx;
+          if (isSelected || isHoverSegment) {
+            lineWidth = this.highlightLineWidth / 2;
+          }
+          executeCommands(ctx, [cmd], transforms);
+          ctx.save();
+          ctx.lineCap = 'round';
+          ctx.strokeStyle = SPLIT_POINT_COLOR;
+          ctx.lineWidth = lineWidth;
+          ctx.stroke();
+          ctx.restore();
         }
-        executeCommands(ctx, [cmd], transforms);
-        ctx.save();
-        ctx.lineCap = 'round';
-        ctx.strokeStyle = SPLIT_POINT_COLOR;
-        ctx.lineWidth = this.highlightLineWidth / 3;
-        ctx.stroke();
-        ctx.restore();
+      }
+
+      if (this.appMode === AppMode.SplitSubPaths) {
+        this.drawSplitPointHighlights(ctx);
       }
     }
   }
 
-  // Draw any highlighted subpaths.
-  private drawHighlights(ctx: Context) {
-    if (this.canvasType === CanvasType.Preview
-      || this.appMode !== AppMode.SelectPoints
-      || !this.activePathId) {
-      return;
-    }
+  private drawSelectPointHighlights(ctx: Context) {
+    const selectedSubIdxs: Set<number> = new Set<number>(
+      this.selectionService.getSelections()
+        .filter(s => s.type !== SelectionType.Segment)
+        .map(s => s.subIdx));
 
-    const selectedSubIdxs: Set<number> = new Set<number>();
-    if (this.currentHover) {
+    if (this.currentHover && this.currentHover.type !== HoverType.Segment) {
       selectedSubIdxs.add(this.currentHover.subIdx);
     }
 
-    for (const sel of this.selectionService.getSelections()) {
-      selectedSubIdxs.add(sel.subIdx);
-    }
-
     const subPaths = Array.from(selectedSubIdxs)
-      .map(subIdx => this.activePath.getSubPaths()[subIdx])
+      .map(subIdx => this.activePath.getSubPath(subIdx))
       .filter(subPath => !subPath.isCollapsing());
 
     const transforms = this.transformsForActiveLayer;
@@ -739,6 +759,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       const cmds = subPath.getCommands();
       for (const cmd of cmds) {
         if (cmd.isSubPathSplitSegment()) {
+          // If the subpath has been split, we'll draw the highlight in orange.
           highlightColor = SPLIT_POINT_COLOR;
           break;
         }
@@ -750,6 +771,94 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       ctx.lineWidth = this.highlightLineWidth / 2;
       ctx.stroke();
       ctx.restore();
+    }
+  }
+
+  private drawAddPointHighlights(ctx: Context) {
+    if (!this.segmentSplitter) {
+      return;
+    }
+    const projectionOntoPath = this.segmentSplitter.getProjectionOntoPath();
+    if (!projectionOntoPath) {
+      return;
+    }
+    const transforms = this.transformsForActiveLayer;
+    const projection = projectionOntoPath.projection;
+    if (projection.d < this.minSnapThreshold) {
+      const { subIdx, cmdIdx } = projectionOntoPath;
+      executeCommands(ctx, [this.activePath.getCommand(subIdx, cmdIdx)], transforms);
+      ctx.save();
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = SPLIT_POINT_COLOR;
+      ctx.lineWidth = this.highlightLineWidth / 2;
+      ctx.setLineDash([]);
+      ctx.stroke();
+      ctx.restore();
+    } else {
+      executeCommands(ctx, this.activePath.getCommands(), transforms);
+      ctx.save();
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = SPLIT_POINT_COLOR;
+      ctx.lineWidth = this.highlightLineWidth / 1.3;
+      ctx.setLineDash([this.lineDashLength / 1.5, this.lineDashLength / 1.5]);
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  private drawSplitPointHighlights(ctx: Context) {
+    if (!this.shapeSplitter) {
+      return;
+    }
+    // Draw the split shape preview line.
+    const proj1 = this.shapeSplitter.getInitialProjectionOntoPath();
+    const proj2 = this.shapeSplitter.getFinalProjectionOntoPath();
+    const transforms = this.transformsForActiveLayer;
+    if (proj1) {
+      const startPoint =
+        this.pathPointToDrawingCoords(new Point(proj1.projection.x, proj1.projection.y));
+      let endPoint: Point;
+      if (proj2) {
+        endPoint = this.pathPointToDrawingCoords(new Point(proj2.projection.x, proj2.projection.y));
+      } else {
+        endPoint = this.shapeSplitter.getLastKnownMouseLocation();
+      }
+
+      const subPathCmds = this.activePath.getSubPath(proj1.subIdx).getCommands();
+      executeCommands(ctx, subPathCmds, transforms);
+
+      ctx.save();
+      transforms.forEach(m => ctx.transform(m.a, m.b, m.c, m.d, m.e, m.f));
+      ctx.beginPath();
+      ctx.moveTo(startPoint.x, startPoint.y);
+      ctx.lineTo(endPoint.x, endPoint.y);
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = SPLIT_POINT_COLOR;
+      ctx.lineWidth = this.highlightLineWidth / 2;
+      ctx.stroke();
+      ctx.restore();
+    }
+    if (!proj1 || proj2) {
+      let point;
+      const projectionOntoPath = this.shapeSplitter.getCurrentProjectionOntoPath();
+      if (projectionOntoPath) {
+        const projection = projectionOntoPath.projection;
+        if (projection && projection.d < this.minSnapThreshold) {
+          point = this.pathPointToDrawingCoords(new Point(projection.x, projection.y));
+        }
+      }
+      if (point) {
+        const { subIdx, cmdIdx } = projectionOntoPath;
+        const command = this.activePath.getCommand(subIdx, cmdIdx);
+        executeCommands(ctx, [command], transforms);
+
+        ctx.save();
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = SPLIT_POINT_COLOR;
+        ctx.lineWidth = this.highlightLineWidth / 2;
+        ctx.stroke();
+        ctx.restore();
+      }
     }
   }
 
@@ -823,7 +932,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
     const isPointInfoHoveringFn = (pointInfo: PointInfo) => {
       const hover = this.currentHover;
-      return hover && pointInfo.subIdx === hover.subIdx;
+      return hover && hover.type !== HoverType.Segment && pointInfo.subIdx === hover.subIdx;
     };
 
     const removedHoverCommands =
@@ -860,7 +969,10 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         radius = this.mediumPointRadius * SELECTED_POINT_RADIUS_FACTOR;
         if ((isPointInfoHoveringFn(pointInfo)
           && pointInfo.cmdIdx === this.currentHover.cmdIdx)
-          || this.selectionService.isCommandSelected(pointInfo.subIdx, pointInfo.cmdIdx)) {
+          || this.selectionService.isPointSelected(
+            CanvasType.Start, pointInfo.subIdx, pointInfo.cmdIdx)
+          || this.selectionService.isPointSelected(
+            CanvasType.End, pointInfo.subIdx, pointInfo.cmdIdx)) {
           radius *= (1 / SPLIT_POINT_RADIUS_FACTOR);
         }
         text = (cmdIdx + 1).toString();
@@ -875,7 +987,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   }
 
   // Draw any actively dragged points along the path (selection mode only).
-  private drawDraggingPoints(ctx: Context) {
+  private drawSelectPointsDraggingPoints(ctx: Context) {
     if (this.appMode !== AppMode.SelectPoints
       || !this.pathSelector
       || !this.pathSelector.isDragTriggered()) {
@@ -892,41 +1004,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       ctx, point, this.mediumPointRadius * SPLIT_POINT_RADIUS_FACTOR, SPLIT_POINT_COLOR);
   }
 
-  private drawHighlightedAddPointSegment(ctx: Context) {
-    if (this.appMode !== AppMode.AddPoints
-      || !this.segmentSplitter
-      || !this.segmentSplitter.getLastKnownMouseLocation()) {
-      return;
-    }
-    const projectionOntoPath = this.segmentSplitter.getProjectionOntoPath();
-    if (!projectionOntoPath) {
-      return;
-    }
-    const transforms = this.transformsForActiveLayer;
-    const projection = projectionOntoPath.projection;
-    if (projection.d < this.minSnapThreshold) {
-      const { subIdx, cmdIdx } = projectionOntoPath;
-      executeCommands(ctx, [this.activePath.getCommand(subIdx, cmdIdx)], transforms);
-      ctx.save();
-      ctx.lineCap = 'round';
-      ctx.strokeStyle = SPLIT_POINT_COLOR;
-      ctx.lineWidth = this.highlightLineWidth / 2;
-      ctx.setLineDash([]);
-      ctx.stroke();
-      ctx.restore();
-    } else {
-      executeCommands(ctx, this.activePath.getCommands(), transforms);
-      ctx.save();
-      ctx.lineCap = 'round';
-      ctx.strokeStyle = SPLIT_POINT_COLOR;
-      ctx.lineWidth = this.highlightLineWidth / 1.3;
-      ctx.setLineDash([this.lineDashLength / 1.5, this.lineDashLength / 1.5]);
-      ctx.stroke();
-      ctx.restore();
-    }
-  }
-
-  private drawAddPointPreview(ctx: Context) {
+  private drawAddPointPreviewPoint(ctx: Context) {
     if (this.appMode !== AppMode.AddPoints || !this.segmentSplitter) {
       return;
     }
@@ -944,64 +1022,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  private drawHighlightedSplitShapeSegment(ctx: Context) {
-    if (this.appMode !== AppMode.SplitSubPaths || !this.shapeSplitter) {
-      return;
-    }
-    const proj1 = this.shapeSplitter.getInitialProjectionOntoPath();
-    if (proj1) {
-      const proj2 = this.shapeSplitter.getFinalProjectionOntoPath();
-      const startPoint =
-        this.pathPointToDrawingCoords(new Point(proj1.projection.x, proj1.projection.y));
-      let endPoint: Point;
-      if (proj2) {
-        endPoint = this.pathPointToDrawingCoords(new Point(proj2.projection.x, proj2.projection.y));
-      } else {
-        endPoint = this.shapeSplitter.getLastKnownMouseLocation();
-      }
-
-      const subPathCmds = this.activePath.getSubPath(proj1.subIdx).getCommands();
-      const transforms = this.transformsForActiveLayer;
-
-      executeCommands(ctx, subPathCmds, transforms);
-
-      ctx.save();
-      transforms.forEach(m => ctx.transform(m.a, m.b, m.c, m.d, m.e, m.f));
-      ctx.beginPath();
-      ctx.moveTo(startPoint.x, startPoint.y);
-      ctx.lineTo(endPoint.x, endPoint.y);
-      ctx.lineCap = 'round';
-      ctx.strokeStyle = SPLIT_POINT_COLOR;
-      ctx.lineWidth = this.highlightLineWidth / 2;
-      ctx.stroke();
-      ctx.restore();
-    } else {
-      let point;
-      const projectionOntoPath = this.shapeSplitter.getCurrentProjectionOntoPath();
-      if (projectionOntoPath) {
-        const projection = projectionOntoPath.projection;
-        if (projection && projection.d < this.minSnapThreshold) {
-          point = this.pathPointToDrawingCoords(new Point(projection.x, projection.y));
-        }
-      }
-      if (point) {
-        const { subIdx, cmdIdx } = projectionOntoPath;
-        const command = this.activePath.getCommand(subIdx, cmdIdx);
-        const transforms = this.transformsForActiveLayer;
-        executeCommands(ctx, [command], transforms);
-
-        const lineWidth = this.highlightLineWidth;
-        ctx.save();
-        ctx.lineCap = 'round';
-        ctx.strokeStyle = SPLIT_POINT_COLOR;
-        ctx.lineWidth = lineWidth / 2;
-        ctx.stroke();
-        ctx.restore();
-      }
-    }
-  }
-
-  private drawSplitShapePreview(ctx: Context) {
+  private drawSplitSubPathPreviewPoints(ctx: Context) {
     if (this.appMode !== AppMode.SplitSubPaths || !this.shapeSplitter) {
       return;
     }
@@ -1039,7 +1060,13 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   }
 
   // Draws a labeled point with optional text.
-  private drawLabeledPoint(ctx: Context, point: Point, radius: number, color: string, text?: string) {
+  private drawLabeledPoint(
+    ctx: Context,
+    point: Point,
+    radius: number,
+    color: string,
+    text?: string) {
+
     ctx.save();
     ctx.beginPath();
     ctx.arc(point.x, point.y, radius * POINT_BORDER_FACTOR, 0, 2 * Math.PI, false);
@@ -1112,7 +1139,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
     const mouseUp = this.mouseEventToPoint(event);
     if (this.appMode === AppMode.SelectPoints) {
-      this.pathSelector.onMouseUp(mouseUp);
+      this.pathSelector.onMouseUp(mouseUp, event.shiftKey || event.metaKey);
     } else if (this.appMode === AppMode.AddPoints) {
       this.segmentSplitter.onMouseUp(mouseUp);
     } else if (this.appMode === AppMode.SplitSubPaths) {

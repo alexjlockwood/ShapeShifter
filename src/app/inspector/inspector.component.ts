@@ -93,9 +93,9 @@ export class SubPathItemsPipe implements PipeTransform {
         endCmdItems.push(...endSubPaths[i].getCommands());
       }
       const isStartSubPathSelected =
-        this.selectionService.isSubPathSelected(CanvasType.Start, i);
+        this.selectionService.isSubPathIndexSelected(CanvasType.Start, i);
       const isEndSubPathSelected =
-        this.selectionService.isSubPathSelected(CanvasType.End, i);
+        this.selectionService.isSubPathIndexSelected(CanvasType.End, i);
       subPathItems.push(
         new SubPathItem(
           i,

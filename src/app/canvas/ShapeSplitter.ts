@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 import { CanvasComponent } from './canvas.component';
-import { ProjectionOntoPath, HitResult, Line } from '../scripts/paths';
+import { ProjectionOntoPath, HitResult } from '../scripts/paths';
 import { Point } from '../scripts/common';
 import { AppModeService, AppMode, } from '../services';
 
@@ -87,10 +87,10 @@ export class ShapeSplitter {
     let finalProjInfo: ProjInfo;
     for (const p1 of this.initProjInfos) {
       for (const p2 of this.finalProjInfos) {
-        const { proj: { subIdx: subIdx1, cmdIdx: cmdIdx1 } } = p1;
-        const { proj: { subIdx: subIdx2, cmdIdx: cmdIdx2 } } = p2;
+        const { proj: { subIdx: subIdx1, cmdIdx: cmdIdx1, projection: { x: x1, y: y1 } } } = p1;
+        const { proj: { subIdx: subIdx2, cmdIdx: cmdIdx2, projection: { x: x2, y: y2 } } } = p2;
         if (subIdx1 === subIdx2) {
-          if (cmdIdx1 === cmdIdx2) {
+          if (cmdIdx1 === cmdIdx2 || (x1 === x2 && y1 === y2)) {
             continue;
           }
           initProjInfo = p1;
@@ -138,25 +138,18 @@ export class ShapeSplitter {
           }
         }
       }
-      const line: Line = {
-        p1: new Point(initProjInfo.proj.projection.x, initProjInfo.proj.projection.y),
-        p2: new Point(finalProjInfo.proj.projection.x, finalProjInfo.proj.projection.y)
-      };
-      const numIntersections = this.component.activePath.intersects(line);
-      if (numIntersections < 3) {
-        // TODO: some bugs with this path: M 0 20 v -16 h 20 v 2 h -12 v 2 h 12 v 2 h -12 Z
-        // TODO: is it possible for there to be 1 or 2 intersections and be invalid?
-        // TODO: how should we deal with collinear intersections? (i.e. drawing a line across the same line)
-        const startingCmdIdx = initCmdIdx > finalCmdIdx ? finalCmdIdx : initCmdIdx;
-        const endingCmdIdx = initCmdIdx > finalCmdIdx ? initCmdIdx + lastCmdOffset : finalCmdIdx + lastCmdOffset;
-        this.component.stateService.updateActivePath(
-          this.component.canvasType,
-          pathMutator
-            .splitFilledSubPath(initSubIdx, startingCmdIdx, endingCmdIdx)
-            .build());
-      }
-      this.reset();
+      // TODO: some bugs with this path: M 0 20 v -16 h 20 v 2 h -12 v 2 h 12 v 2 h -12 Z
+      // TODO: is it possible for there to be 1 or 2 intersections and be invalid?
+      // TODO: how should we deal with collinear intersections? (i.e. drawing a line across the same line)
+      const startingCmdIdx = initCmdIdx > finalCmdIdx ? finalCmdIdx : initCmdIdx;
+      const endingCmdIdx = initCmdIdx > finalCmdIdx ? initCmdIdx + lastCmdOffset : finalCmdIdx + lastCmdOffset;
+      this.component.stateService.updateActivePath(
+        this.component.canvasType,
+        pathMutator
+          .splitFilledSubPath(initSubIdx, startingCmdIdx, endingCmdIdx)
+          .build());
     }
+    this.reset();
     this.component.drawOverlays();
   }
 

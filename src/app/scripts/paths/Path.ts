@@ -26,7 +26,7 @@ export interface Path {
   /**
    * Returns the subpath at the specified index.
    */
-  getSubPath(subIdx: number);
+  getSubPath(subIdx: number): SubPath;
 
   /**
    * Returns the list of Commands in this path.
@@ -36,7 +36,7 @@ export interface Path {
   /**
    * Returns the command at the specified index.
    */
-  getCommand(subIdx: number, cmdIdx: number);
+  getCommand(subIdx: number, cmdIdx: number): Command;
 
   /**
    * Returns true iff this path is morphable with the specified path.
