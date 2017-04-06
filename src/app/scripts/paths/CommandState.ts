@@ -71,7 +71,7 @@ export class CommandState {
       // If this happens, then the projection is being mapped to some other
       // split command segment.
       // TODO: recompute the projection so that it properly returned the correct value...
-      console.warn('Failed to compute projection for CommandState');
+      // console.warn('Failed to compute projection for CommandState');
       return undefined;
     }
     // Count the number of t values that are less than the projection.

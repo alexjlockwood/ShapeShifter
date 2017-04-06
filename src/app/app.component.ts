@@ -36,7 +36,8 @@ const STORAGE_KEY_FIRST_TIME_USER = 'storage_key_first_time_user';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
-  ARE_CANVAS_MODES_ENABLED = IS_DEV_MODE && true;
+  // TODO: implement a better mechanism for swapping sub paths
+  IS_PAIR_SUB_PATHS_MODE_ENABLED = false;
 
   START_CANVAS = CanvasType.Start;
   PREVIEW_CANVAS = CanvasType.Preview;
@@ -102,10 +103,6 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
             const endLayer = this.stateService.getActivePathLayer(CanvasType.End);
             const startCommand = startLayer.pathData;
             const endCommand = endLayer.pathData;
-            if (startCommand.getSubPaths().length !== endCommand.getSubPaths().length) {
-              return 'Unmorphable '
-                + '(<a href="https://github.com/alexjlockwood/ShapeShifter/issues/11" target="_blank">help</a>)';
-            }
             for (let i = 0; i < startCommand.getSubPaths().length; i++) {
               const startCmds = startCommand.getSubPaths()[i].getCommands();
               const endCmds = endCommand.getSubPaths()[i].getCommands();
