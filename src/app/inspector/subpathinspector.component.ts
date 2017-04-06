@@ -2,20 +2,30 @@ import {
   Component, OnInit, Input, ChangeDetectionStrategy
 } from '@angular/core';
 import { Path, SubPath } from '../scripts/paths';
-import { StateService, SelectionService, HoverService } from '../services';
+import {
+  StateService, SelectionService, SelectionType, HoverService, HoverType
+} from '../services';
 import { CanvasType } from '../CanvasType';
 
 // TODO: these need to be canvas-mode-aware
 @Component({
-  selector: 'app-inspectorsubpath',
-  templateUrl: './inspectorsubpath.component.html',
-  styleUrls: ['./inspectoritem.component.scss'],
+  selector: 'app-subpathinspector',
+  templateUrl: './subpathinspector.component.html',
+  styleUrls: ['./subpathinspector.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class InspectorSubPathComponent implements OnInit {
+export class SubpathInspectorComponent implements OnInit {
+  START_CANVAS = CanvasType.Start;
+  END_CANVAS = CanvasType.End;
+
   @Input() canvasType: CanvasType;
   @Input() subIdx: number;
   @Input() subPath: SubPath;
+  isHovering = false;
+  private isHoveringOverDeleteSubPath = false;
+  private isHoveringOverSubPath = false;
+  private isHoveringOverMoveSubPathUp = false;
+  private isHoveringOverMoveSubPathDown = false;
   private subPathText_ = '';
 
   constructor(
@@ -25,11 +35,24 @@ export class InspectorSubPathComponent implements OnInit {
   ) { }
 
   ngOnInit() {
-    this.subPathText_ = `Subpath #${this.subIdx + 1}${this.canvasType === CanvasType.Start ? 'a' : 'b'}`;
+    this.subPathText_ =
+      `Subpath #${this.subIdx + 1}${this.canvasType === CanvasType.Start ? 'a' : 'b'}`;
   }
 
   get subPathText() {
     return this.subPath ? this.subPathText_ : '';
+  }
+
+  onSubPathClick(event: MouseEvent) {
+    const selections =
+      this.selectionService.getSelections().filter(s => s.type === SelectionType.SubPath);
+    const appendToList = event.shiftKey || event.metaKey;
+    if (selections.length && selections[0].source !== this.canvasType && appendToList) {
+      // If the user is attempting to select something in a different pane in the
+      // middle of a multi-select, do nothing.
+      return;
+    }
+    this.selectionService.toggleSubPath(this.canvasType, this.subIdx, appendToList);
   }
 
   onMoveSubPathUpClick(event: MouseEvent) {
@@ -99,5 +122,49 @@ export class InspectorSubPathComponent implements OnInit {
   canSubPathBeMovedDown() {
     const path = this.getPath();
     return path && this.subPath && this.subIdx !== path.getSubPaths().filter(s => !s.isCollapsing()).length - 1;
+  }
+
+  onSubPathHoverEvent(isHoveringOverSubPath: boolean) {
+    this.isHoveringOverSubPath = isHoveringOverSubPath;
+    this.broadcastHoverEvent(isHoveringOverSubPath, HoverType.SubPath);
+  }
+
+  onDeleteSubPathHoverEvent(isHoveringOverDeleteSubPath: boolean) {
+    this.isHoveringOverDeleteSubPath = isHoveringOverDeleteSubPath;
+    this.broadcastHoverEvent(isHoveringOverDeleteSubPath, HoverType.SubPath);
+  }
+
+  onMoveSubPathUpHoverEvent(isHoveringOverMoveSubPathUp: boolean) {
+    this.isHoveringOverMoveSubPathUp = isHoveringOverMoveSubPathUp;
+    this.broadcastHoverEvent(isHoveringOverMoveSubPathUp, HoverType.SubPath);
+  }
+
+  onMoveSubPathDownHoverEvent(isHoveringOverMoveSubPathDown: boolean) {
+    this.isHoveringOverMoveSubPathDown = isHoveringOverMoveSubPathDown;
+    this.broadcastHoverEvent(isHoveringOverMoveSubPathDown, HoverType.Reverse);
+  }
+
+  private broadcastHoverEvent(isHovering: boolean, type: HoverType) {
+    const subIdx = this.subIdx;
+    if (isHovering) {
+      this.hoverService.setHover({
+        type,
+        subIdx,
+        source: this.canvasType,
+      });
+    } else if (type !== HoverType.Point && this.isHoveringOverSubPath) {
+      this.hoverService.setHover({
+        type: HoverType.Point,
+        subIdx,
+        source: this.canvasType,
+      });
+    } else {
+      this.hoverService.reset();
+    }
+    this.isHovering =
+      this.isHoveringOverSubPath
+      && !this.isHoveringOverDeleteSubPath
+      && !this.isHoveringOverMoveSubPathUp
+      && !this.isHoveringOverMoveSubPathDown;
   }
 }

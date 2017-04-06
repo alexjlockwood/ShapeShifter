@@ -10,9 +10,9 @@ import { MaterialModule, MdIconRegistry } from '@angular/material';
 import { AppComponent } from './app.component';
 import { CanvasComponent } from './canvas/canvas.component';
 import { CanvasRulerDirective } from './canvas/canvasruler.directive';
-import { InspectorComponent } from './inspector/inspector.component';
-import { InspectorItemComponent } from './inspector/inspectoritem.component';
-import { InspectorSubPathComponent } from './inspector/inspectorsubpath.component';
+import { PathInspectorComponent } from './inspector/pathinspector.component';
+import { CommandInspectorComponent } from './inspector/commandinspector.component';
+import { SubpathInspectorComponent } from './inspector/subpathinspector.component';
 import { PathSelectorComponent } from './pathselector/pathselector.component';
 import { SettingsComponent } from './settings/settings.component';
 import { SplitterComponent } from './splitter/splitter.component';
@@ -43,8 +43,8 @@ import {
   IsNotEqualToPipe,
 } from './pipes';
 import { PathLayerListPipe } from './pathselector/pathselector.component';
-import { SubPathItemsPipe } from './inspector/inspector.component';
-import { SvgCommandPipe } from './inspector/inspectoritem.component';
+import { SubPathItemsPipe } from './inspector/pathinspector.component';
+import { SvgCommandPipe } from './inspector/commandinspector.component';
 
 import 'hammerjs';
 
@@ -54,9 +54,9 @@ import 'hammerjs';
     CanvasComponent,
     TimelineComponent,
     SplitterComponent,
-    InspectorComponent,
-    InspectorItemComponent,
-    InspectorSubPathComponent,
+    PathInspectorComponent,
+    CommandInspectorComponent,
+    SubpathInspectorComponent,
     CanvasRulerDirective,
     SettingsComponent,
     ToolbarComponent,

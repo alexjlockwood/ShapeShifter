@@ -9,18 +9,19 @@ import {
   StateService,
   SelectionService,
   SelectionType,
+  Selection,
 } from '../services';
 import { Observable } from 'rxjs/Observable';
 import { CanvasType } from '../CanvasType';
 
 // TODO: these need to be canvas-mode-aware
 @Component({
-  selector: 'app-inspectoritem',
-  templateUrl: './inspectoritem.component.html',
-  styleUrls: ['./inspectoritem.component.scss'],
+  selector: 'app-commandinspector',
+  templateUrl: './commandinspector.component.html',
+  styleUrls: ['./commandinspector.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class InspectorItemComponent implements OnInit {
+export class CommandInspectorComponent implements OnInit {
   @Input() canvasType: CanvasType;
   @Input() subIdx: number;
   @Input() cmdIdx: number;
@@ -49,11 +50,9 @@ export class InspectorItemComponent implements OnInit {
           return activePathId && _.some(selections, {
             type: SelectionType.Point,
             source: this.canvasType,
-            index: {
-              subIdx: this.subIdx,
-              cmdIdx: this.cmdIdx,
-            }
-          });
+            subIdx: this.subIdx,
+            cmdIdx: this.cmdIdx,
+          } as Selection);
         });
   }
 

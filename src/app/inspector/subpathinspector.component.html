@@ -1,0 +1,25 @@
+<!-- TODO: avoid code reuse here... subpath item shouldnt use pointer cursor -->
+<div class="subpathitem-container" (mouseenter)="onSubPathHoverEvent(true)"
+  (mouseleave)="onSubPathHoverEvent(false)" (click)="onSubPathClick($event)"
+  [class.is-hovering]="isHovering" fxLayout="row" fxLayoutAlign="start center">
+  <strong><span class="subpath-text">{{subPathText}}</span></strong>
+  <span fxFlex></span>
+  <button md-icon-button mdTooltip="Delete subpath" mdTooltipPosition="above"
+    mdTooltipShowDelay="500" (mouseenter)="onDeleteSubPathHoverEvent(true)"
+    (mouseleave)="onDeleteSubPathHoverEvent(false)" *ngIf="isUnsplittable()"
+    (click)="onUnsplitButtonClick($event)">
+    <md-icon>delete</md-icon>
+  </button>
+  <button md-icon-button mdTooltip="{{'Swap with subpath #' + this.subIdx + (canvasType === START_CANVAS ? 'a' : 'b')}}"
+    mdTooltipPosition="above" mdTooltipShowDelay="500" *ngIf="canSubPathBeMovedUp()"
+    (mouseenter)="onMoveSubPathUpHoverEvent(true)" (mouseleave)="onMoveSubPathUpHoverEvent(false)"
+    (click)="onMoveSubPathUpClick($event)">
+    <md-icon>arrow_upward</md-icon>
+  </button>
+  <button md-icon-button mdTooltip="{{'Swap with subpath #' + (this.subIdx + 2) + (canvasType === START_CANVAS ? 'a' : 'b')}}"
+    mdTooltipPosition="above" mdTooltipShowDelay="500" *ngIf="canSubPathBeMovedDown()"
+    (mouseenter)="onMoveSubPathDownHoverEvent(true)" (mouseleave)="onMoveSubPathDownHoverEvent(false)"
+    (click)="onMoveSubPathDownClick($event)">
+    <md-icon>arrow_downward</md-icon>
+  </button>
+</div>

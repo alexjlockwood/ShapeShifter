@@ -1,24 +1,27 @@
 import { Component, OnInit, PipeTransform, Pipe, ChangeDetectionStrategy } from '@angular/core';
 import { SubPath, Command } from '../scripts/paths';
 import { CanvasType } from '../CanvasType';
-import { StateService, SelectionService, Selection } from '../services';
+import {
+  StateService, SelectionService, Selection, AppModeService, AppMode
+} from '../services';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/combineLatest';
 
 @Component({
-  selector: 'app-inspector',
-  templateUrl: './inspector.component.html',
-  styleUrls: ['./inspector.component.scss'],
+  selector: 'app-pathinspector',
+  templateUrl: './pathinspector.component.html',
+  styleUrls: ['./pathinspector.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class InspectorComponent implements OnInit {
+export class PathInspectorComponent implements OnInit {
   START_CANVAS = CanvasType.Start;
-  END_CANVAS = CanvasType.End;
   subPathItemsObservable: Observable<[string, string, ReadonlyArray<Selection>]>;
+  shouldShowDetailsObservable: Observable<boolean>;
 
   constructor(
     private readonly stateService: StateService,
     private readonly selectionService: SelectionService,
+    private readonly appModeService: AppModeService,
   ) { }
 
   ngOnInit() {
@@ -27,6 +30,10 @@ export class InspectorComponent implements OnInit {
         this.stateService.getActivePathIdObservable(CanvasType.Start),
         this.stateService.getActivePathIdObservable(CanvasType.End),
         this.selectionService.asObservable());
+    this.shouldShowDetailsObservable =
+      this.appModeService.asObservable().map(appMode => {
+        return appMode === AppMode.SelectPoints || appMode === AppMode.AddPoints;
+      });
   }
 
   trackSubPath(index: number, item: SubPathItem) {
@@ -38,7 +45,6 @@ export class InspectorComponent implements OnInit {
   }
 }
 
-// TODO: save the previous expanded state somehow?
 class SubPathItem {
   constructor(
     public readonly subIdx: number,
