@@ -66,12 +66,7 @@ export class InspectorItemComponent implements OnInit {
       // middle of a multi-select, do nothing.
       return;
     }
-    this.selectionService.toggle({
-      type: SelectionType.Point,
-      source: this.canvasType,
-      subIdx: this.subIdx,
-      cmdIdx: this.cmdIdx,
-    }, appendToList);
+    this.selectionService.togglePoint(this.canvasType, this.subIdx, this.cmdIdx, appendToList);
   }
 
   onReverseClick(event: MouseEvent) {

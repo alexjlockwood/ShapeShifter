@@ -2,7 +2,7 @@ import {
   Component, OnInit, Input, ChangeDetectionStrategy
 } from '@angular/core';
 import { Path, SubPath } from '../scripts/paths';
-import { StateService } from '../services';
+import { StateService, SelectionService, HoverService } from '../services';
 import { CanvasType } from '../CanvasType';
 
 // TODO: these need to be canvas-mode-aware
@@ -18,7 +18,11 @@ export class InspectorSubPathComponent implements OnInit {
   @Input() subPath: SubPath;
   private subPathText_ = '';
 
-  constructor(private readonly stateService: StateService) { }
+  constructor(
+    private readonly stateService: StateService,
+    private readonly hoverService: HoverService,
+    private readonly selectionService: SelectionService,
+  ) { }
 
   ngOnInit() {
     this.subPathText_ = `Subpath #${this.subIdx + 1}${this.canvasType === CanvasType.Start ? 'a' : 'b'}`;
@@ -30,6 +34,7 @@ export class InspectorSubPathComponent implements OnInit {
 
   onMoveSubPathUpClick(event: MouseEvent) {
     const fromPathLayer = this.stateService.getActivePathLayer(this.canvasType);
+    this.clearSelectionsAndHovers();
     this.replacePath(fromPathLayer.pathData.mutate()
       .moveSubPath(this.subIdx, this.subIdx - 1)
       .build(),
@@ -38,6 +43,7 @@ export class InspectorSubPathComponent implements OnInit {
 
   onMoveSubPathDownClick(event: MouseEvent) {
     const fromPathLayer = this.stateService.getActivePathLayer(this.canvasType);
+    this.clearSelectionsAndHovers();
     this.replacePath(fromPathLayer.pathData.mutate()
       .moveSubPath(this.subIdx, this.subIdx + 1)
       .build(),
@@ -46,6 +52,7 @@ export class InspectorSubPathComponent implements OnInit {
 
   onUnsplitButtonClick(event: MouseEvent) {
     const fromPathLayer = this.stateService.getActivePathLayer(this.canvasType);
+    this.clearSelectionsAndHovers();
     if (fromPathLayer.isFilled()) {
       this.replacePath(fromPathLayer.pathData.mutate()
         .unsplitFilledSubPath(this.subIdx)
@@ -57,6 +64,11 @@ export class InspectorSubPathComponent implements OnInit {
         .build(),
         event);
     }
+  }
+
+  private clearSelectionsAndHovers() {
+    this.hoverService.reset();
+    this.selectionService.reset();
   }
 
   private replacePath(path: Path, event: MouseEvent) {

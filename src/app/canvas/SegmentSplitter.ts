@@ -31,12 +31,13 @@ export class SegmentSplitter {
       if (projection.d < this.component.minSnapThreshold) {
         // We're in range, so split the segment!
         const { subIdx, cmdIdx } = this.projectionOntoPath;
-        if (this.appModeService.getAppMode() === AppMode.AddPoints) {
+        const isSplitPathMode = this.appModeService.getAppMode() === AppMode.SplitSubPaths
+          && this.component.activePathLayer.isStroked();
+        if (this.appModeService.getAppMode() === AppMode.AddPoints || isSplitPathMode) {
           const pathMutator =
             activePathLayer.pathData.mutate()
               .splitCommand(subIdx, cmdIdx, projection.t);
-          if (this.appModeService.getAppMode() === AppMode.SplitSubPaths
-            && this.component.activePathLayer.isStroked()) {
+          if (isSplitPathMode) {
             pathMutator.splitStrokedSubPath(subIdx, cmdIdx);
           }
           this.component.stateService.updateActivePath(

@@ -1005,7 +1005,10 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   }
 
   private drawAddPointPreviewPoint(ctx: Context) {
-    if (this.appMode !== AppMode.AddPoints || !this.segmentSplitter) {
+    if (this.appMode !== AppMode.AddPoints
+      && this.appMode !== AppMode.SplitSubPaths
+      && !this.activePathLayer.isStroked()
+      || !this.segmentSplitter) {
       return;
     }
     let point;
