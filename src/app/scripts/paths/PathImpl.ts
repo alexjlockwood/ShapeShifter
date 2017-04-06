@@ -104,12 +104,6 @@ class PathImpl implements Path {
   }
 
   // Implements the Path interface.
-  getConnectedSplitSegments(subIdx: number, cmdIdx: number) {
-    return this.ps.getConnectedSplitSegments(subIdx, cmdIdx);
-  }
-
-
-  // Implements the Path interface.
   mutate() {
     return new PathMutator(this.ps);
   }

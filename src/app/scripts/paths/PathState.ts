@@ -285,16 +285,6 @@ export class PathState {
     return new Point(pole[0], pole[1]);
   }
 
-  getConnectedSplitSegments(subIdx: number, cmdIdx: number) {
-    const cmds: Command[] = [];
-    const { sps, cs, splitIdx } = this.findCommandStateInfo(subIdx, cmdIdx);
-    if (!cs.isSubPathSplitSegment()) {
-      return cmds;
-    }
-
-    return cmds;
-  }
-
   private findSubPathState(spsIdx: number) {
     return findSubPathState(this.subPathStateMap, spsIdx);
   }

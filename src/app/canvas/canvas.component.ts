@@ -723,12 +723,10 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           if (isSelected || isHoverSegment) {
             lineWidth = this.highlightLineWidth / 2;
           }
-          const color =
-            subPath.isUnsplittable() ? SPLIT_POINT_COLOR : NORMAL_POINT_COLOR;
           executeCommands(ctx, [cmd], transforms);
           ctx.save();
           ctx.lineCap = 'round';
-          ctx.strokeStyle = color;
+          ctx.strokeStyle = SPLIT_POINT_COLOR;
           ctx.lineWidth = lineWidth;
           ctx.stroke();
           ctx.restore();

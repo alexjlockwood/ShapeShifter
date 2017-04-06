@@ -14,7 +14,7 @@ import 'rxjs/add/observable/combineLatest';
 export class InspectorComponent implements OnInit {
   START_CANVAS = CanvasType.Start;
   END_CANVAS = CanvasType.End;
-  subPathItemsObservable: Observable<[[string, string], ReadonlyArray<Selection>]>;
+  subPathItemsObservable: Observable<[string, string, ReadonlyArray<Selection>]>;
 
   constructor(
     private readonly stateService: StateService,
@@ -24,9 +24,8 @@ export class InspectorComponent implements OnInit {
   ngOnInit() {
     this.subPathItemsObservable =
       Observable.combineLatest(
-        Observable.combineLatest(
-          this.stateService.getActivePathIdObservable(CanvasType.Start),
-          this.stateService.getActivePathIdObservable(CanvasType.End)),
+        this.stateService.getActivePathIdObservable(CanvasType.Start),
+        this.stateService.getActivePathIdObservable(CanvasType.End),
         this.selectionService.asObservable());
   }
 
@@ -60,7 +59,7 @@ export class SubPathItemsPipe implements PipeTransform {
     private readonly selectionService: SelectionService,
   ) { }
 
-  transform(items: [[string, string], { startSelections: number[], endSelections: number[] }]): SubPathItem[] {
+  transform(items: [string, string, ReadonlyArray<Selection>]): SubPathItem[] {
     const subPathItems: SubPathItem[] = [];
 
     const getPathFn = (canvasType: CanvasType) => {
@@ -92,10 +91,7 @@ export class SubPathItemsPipe implements PipeTransform {
         id += endSubPaths[i].getId();
         endCmdItems.push(...endSubPaths[i].getCommands());
       }
-      const isStartSubPathSelected =
-        this.selectionService.isSubPathIndexSelected(CanvasType.Start, i);
-      const isEndSubPathSelected =
-        this.selectionService.isSubPathIndexSelected(CanvasType.End, i);
+      const isSubPathSelected = this.selectionService.isSubPathIndexSelected(i);
       subPathItems.push(
         new SubPathItem(
           i,
@@ -104,8 +100,8 @@ export class SubPathItemsPipe implements PipeTransform {
           id,
           startCmdItems,
           endCmdItems,
-          isStartSubPathSelected || isEndSubPathSelected,
-          isStartSubPathSelected || isEndSubPathSelected,
+          isSubPathSelected,
+          isSubPathSelected,
         ));
     }
     return subPathItems;

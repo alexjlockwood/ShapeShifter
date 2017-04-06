@@ -72,7 +72,7 @@ export class SelectionService {
     _.remove(selections, sel => sel.type !== SelectionType.SubPath);
     this.toggleInternal(
       selections,
-      { type: SelectionType.SubPath, source, subIdx, },
+      { type: SelectionType.SubPath, source, subIdx },
       appendToList);
   }
 
