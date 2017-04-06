@@ -6,7 +6,6 @@ import { StateService } from '../services';
 import { CanvasType } from '../CanvasType';
 
 // TODO: these need to be canvas-mode-aware
-// TODO: fix the way we handle collapsing sub paths. right now things are kinda hacky...
 @Component({
   selector: 'app-inspectorsubpath',
   templateUrl: './inspectorsubpath.component.html',
