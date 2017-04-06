@@ -57,14 +57,6 @@ export class TimelineComponent implements OnInit, OnDestroy {
     this.subscriptions.forEach(s => s.unsubscribe());
   }
 
-  isSlowMotion() {
-    return this.animatorService.isSlowMotion();
-  }
-
-  isRepeating() {
-    return this.animatorService.isRepeating();
-  }
-
   setIsSlowMotion(isSlowMotion: boolean) {
     this.animatorService.setIsSlowMotion(isSlowMotion);
   }

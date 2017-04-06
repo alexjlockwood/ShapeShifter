@@ -125,6 +125,11 @@ export class AnimatorService {
 
   reset() {
     this.rewind();
+    this.timelineSource.next({
+      isPlaying: false,
+      isSlowMotion: false,
+      isRepeating: false,
+    });
     this.animator = new Animator(this.ngZone, this.timelineSource);
   }
 }

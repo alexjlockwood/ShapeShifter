@@ -13,7 +13,7 @@ import {
  * Helper class that tracks information about a user's mouse gesture, allowing
  * for the selection of path points, segments, and shapes.
  */
-export class PathSelector {
+export class CanvasSelector {
   private readonly stateService: StateService;
   private readonly selectionService: SelectionService;
   private readonly hoverService: HoverService;
@@ -150,8 +150,8 @@ export class PathSelector {
       }
     }
 
-    this.checkForHovers(mouseUp);
     this.reset();
+    this.checkForHovers(mouseUp);
     this.component.draw();
   }
 
