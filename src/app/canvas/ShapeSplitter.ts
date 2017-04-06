@@ -2,13 +2,19 @@ import * as _ from 'lodash';
 import { CanvasComponent } from './canvas.component';
 import { ProjectionOntoPath, HitResult } from '../scripts/paths';
 import { Point } from '../scripts/common';
-import { AppModeService, AppMode, } from '../services';
+import {
+  AppModeService, AppMode,
+  SelectionService,
+  HoverService,
+} from '../services';
 
 /**
  * Helper class that can be used to split a filled subpath.
  */
 export class ShapeSplitter {
   private readonly appModeService: AppModeService;
+  private readonly selectionService: SelectionService;
+  private readonly hoverService: HoverService;
   private initProjInfos: ProjInfo[] = [];
   private currProjInfos: ProjInfo[] = [];
   private finalProjInfos: ProjInfo[] = [];
@@ -17,6 +23,8 @@ export class ShapeSplitter {
 
   constructor(private readonly component: CanvasComponent) {
     this.appModeService = component.appModeService;
+    this.selectionService = component.selectionService;
+    this.hoverService = component.hoverService;
   }
 
   onMouseDown(mouseDown: Point) {
@@ -54,7 +62,6 @@ export class ShapeSplitter {
   onMouseUp(mouseUp: Point) {
     this.finalProjInfos = [];
     this.lastKnownMouseLocation = mouseUp;
-    this.hitResult = this.component.performHitTest(mouseUp);
     if (!this.initProjInfos.length) {
       this.component.drawOverlays();
       return;
@@ -138,6 +145,12 @@ export class ShapeSplitter {
           }
         }
       }
+
+      // TODO: make sure the inspector doesn't set hovers/selections while a split is in process...
+      this.hoverService.reset();
+      this.selectionService.reset();
+      this.reset();
+
       // TODO: some bugs with this path: M 0 20 v -16 h 20 v 2 h -12 v 2 h 12 v 2 h -12 Z
       // TODO: is it possible for there to be 1 or 2 intersections and be invalid?
       // TODO: how should we deal with collinear intersections? (i.e. drawing a line across the same line)
@@ -149,7 +162,6 @@ export class ShapeSplitter {
           .splitFilledSubPath(initSubIdx, startingCmdIdx, endingCmdIdx)
           .build());
     }
-    this.reset();
     this.component.drawOverlays();
   }
 

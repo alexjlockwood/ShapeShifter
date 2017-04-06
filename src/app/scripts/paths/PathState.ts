@@ -44,8 +44,9 @@ export class PathState {
     this.subPathOrdering = subPathOrdering || subPaths.map((_, i) => i);
     this.subPaths = subPaths.map((subPath, subIdx) => {
       const cmds = subPath.getCommands().map((cmd, cmdIdx) => {
+        const { cs, splitIdx } = this.findCommandStateInfo(subIdx, cmdIdx);
         return cmd.mutate()
-          .setId(this.findCommandStateId(subIdx, cmdIdx))
+          .setId(cs.getIdAtIndex(splitIdx))
           .build();
       });
       const spsIdx = this.subPathOrdering[subIdx];
@@ -65,33 +66,6 @@ export class PathState {
         .build();
     });
     this.commands = _.flatMap(this.subPaths, subPath => subPath.getCommands() as Command[]);
-  }
-
-  private findSubPathState(spsIdx: number) {
-    return findSubPathState(this.subPathStateMap, spsIdx);
-  }
-
-  private findCommandStateId(subIdx: number, cmdIdx: number) {
-    const sps = this.findSubPathState(this.subPathOrdering[subIdx]);
-    const numCommandsInSubPath =
-      _.sum(sps.getCommandStates().map(cs => cs.getCommands().length));
-    if (cmdIdx && sps.isReversed()) {
-      cmdIdx = numCommandsInSubPath - cmdIdx;
-    }
-    cmdIdx += sps.getShiftOffset();
-    if (cmdIdx >= numCommandsInSubPath) {
-      // Note that subtracting numCommandsInSubPath is intentional here
-      // (as opposed to subtracting numCommandsInSubPath - 1).
-      cmdIdx -= numCommandsInSubPath;
-    }
-    let counter = 0;
-    for (const cs of sps.getCommandStates()) {
-      if (counter + cs.getCommands().length > cmdIdx) {
-        return cs.getIdAtIndex(cmdIdx - counter);
-      }
-      counter += cs.getCommands().length;
-    }
-    throw new Error('Error retrieving command mutation');
   }
 
   getPathLength() {
@@ -309,6 +283,43 @@ export class PathState {
     }
     const pole = polylabel([polygon]);
     return new Point(pole[0], pole[1]);
+  }
+
+  getConnectedSplitSegments(subIdx: number, cmdIdx: number) {
+    const cmds: Command[] = [];
+    const { sps, cs, splitIdx } = this.findCommandStateInfo(subIdx, cmdIdx);
+    if (!cs.isSubPathSplitSegment()) {
+      return cmds;
+    }
+
+    return cmds;
+  }
+
+  private findSubPathState(spsIdx: number) {
+    return findSubPathState(this.subPathStateMap, spsIdx);
+  }
+
+  private findCommandStateInfo(subIdx: number, cmdIdx: number) {
+    const sps = this.findSubPathState(this.subPathOrdering[subIdx]);
+    const numCommandsInSubPath =
+      _.sum(sps.getCommandStates().map(cs => cs.getCommands().length));
+    if (cmdIdx && sps.isReversed()) {
+      cmdIdx = numCommandsInSubPath - cmdIdx;
+    }
+    cmdIdx += sps.getShiftOffset();
+    if (cmdIdx >= numCommandsInSubPath) {
+      // Note that subtracting numCommandsInSubPath is intentional here
+      // (as opposed to subtracting numCommandsInSubPath - 1).
+      cmdIdx -= numCommandsInSubPath;
+    }
+    let counter = 0;
+    for (const cs of sps.getCommandStates()) {
+      if (counter + cs.getCommands().length > cmdIdx) {
+        return { sps, cs, splitIdx: cmdIdx - counter };
+      }
+      counter += cs.getCommands().length;
+    }
+    throw new Error('Error retrieving command mutation');
   }
 
   private toSpsIdx(subIdx: number) {

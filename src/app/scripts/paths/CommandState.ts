@@ -93,7 +93,7 @@ export class CommandState {
    */
   slice(splitIdx: number) {
     const left = this.mutate().sliceLeft(splitIdx).build();
-    let right = undefined;
+    let right: CommandState = undefined;
     if (this.isSplitAtIndex(splitIdx)) {
       right = this.mutate().sliceRight(splitIdx).build();
     }
@@ -166,8 +166,7 @@ class CommandStateMutator {
   sliceLeft(splitIdx: number) {
     this.mutations = this.mutations.slice(0, splitIdx + 1).map(m => _.clone(m));
     this.maxT = _.last(this.mutations).t;
-    this.isSubPathSplitSegment_ = false;
-    this.isParentSubPathSplitSegment_ = true;
+    this.isParentSubPathSplitSegment_ = this.isSubPathSplitSegment_;
     return this;
   }
 
@@ -178,8 +177,7 @@ class CommandStateMutator {
   sliceRight(splitIdx: number) {
     this.minT = this.mutations[splitIdx].t;
     this.mutations = this.mutations.slice(splitIdx + 1).map(m => _.clone(m));
-    this.isSubPathSplitSegment_ = false;
-    this.isParentSubPathSplitSegment_ = true;
+    this.isParentSubPathSplitSegment_ = this.isSubPathSplitSegment_;
     return this;
   }
 
@@ -361,10 +359,9 @@ class CommandStateMutator {
           .convert(this.mutations[i].svgChar)
           .toCommand()
           .mutate()
-          .setId(this.mutations[i].id);
-      if (i === this.mutations.length - 1) {
-        commandBuilder.setIsSubPathSplitSegment(this.isSubPathSplitSegment_);
-      } else {
+          .setId(this.mutations[i].id)
+          .setIsSubPathSplitSegment(this.isSubPathSplitSegment_);
+      if (i !== this.mutations.length - 1) {
         commandBuilder.setIsSplit(true);
       }
       builtCommands.push(commandBuilder.build());

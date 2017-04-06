@@ -41,6 +41,12 @@ class PathImpl implements Path {
 
   // Implements the Path interface.
   getSubPath(subIdx: number) {
+    const numSubPaths = this.getSubPaths().length;
+    if (subIdx < 0 || numSubPaths <= subIdx) {
+      console.error(this);
+      throw new Error(`Subpath index out of bounds: `
+        + `subIdx=${subIdx} numSubPaths=${numSubPaths}`);
+    }
     return this.getSubPaths()[subIdx];
   }
 
@@ -51,7 +57,14 @@ class PathImpl implements Path {
 
   // Implements the Path interface.
   getCommand(subIdx: number, cmdIdx: number) {
-    return this.getSubPath(subIdx).getCommands()[cmdIdx];
+    const subPath = this.getSubPath(subIdx);
+    const numCommands = subPath.getCommands().length;
+    if (cmdIdx < 0 || numCommands <= cmdIdx) {
+      console.error(this);
+      throw new Error(`Command index out of bounds: `
+        + `subIdx=${subIdx} cmdIdx=${cmdIdx}, numCommands=${numCommands}`);
+    }
+    return subPath.getCommands()[cmdIdx];
   }
 
   // Implements the Path interface.
@@ -89,6 +102,12 @@ class PathImpl implements Path {
     }
     return this.poleOfInaccessibility;
   }
+
+  // Implements the Path interface.
+  getConnectedSplitSegments(subIdx: number, cmdIdx: number) {
+    return this.ps.getConnectedSplitSegments(subIdx, cmdIdx);
+  }
+
 
   // Implements the Path interface.
   mutate() {

@@ -251,7 +251,7 @@ export class PathMutator {
         }
       }
     }
-    const splitSubPaths: SubPathState[] = [
+    const splitSubPaths = [
       // TODO: should/could one of these sub paths share the same ID as the parent?
       new SubPathState(startCommandStates),
       new SubPathState(endCommandStates),
@@ -263,6 +263,32 @@ export class PathMutator {
 
   /**
    * Splits a filled sub path using the specified indices.
+   *
+   * Consider the following filled subpath:
+   *
+   * 2-------------------3
+   * |                   |
+   * |                   |
+   * |                   |
+   * 1                   4
+   * |                   |
+   * |                   |
+   * |                   |
+   * 0-------------------5
+   *
+   * Splitting the filled sub path with startCmdIdx=1 and endCmdIdx=4
+   * results in the following split subpaths:
+   *
+   * *-------------------*    1-------->>>--------2
+   * |                   |    |                   |
+   * |                   |    ↑                   ↓
+   * |                   |    |                   |
+   * 1-------->>>--------2    0--------<<<--------3
+   * |                   |    |                   |
+   * ↑                   ↓    |                   |
+   * |                   |    |                   |
+   * 0--------<<<--------3    *-------------------*
+   *
    */
   splitFilledSubPath(subIdx: number, startCmdIdx: number, endCmdIdx: number) {
     const spsIdx = this.subPathOrdering[subIdx];
@@ -288,17 +314,17 @@ export class PathMutator {
     const startSplitPoint = startSplitCmd.getEnd();
     const endSplitCmd = secondLeft.getCommands()[end.splitIdx];
     const endSplitPoint = endSplitCmd.getEnd();
-    const startLineCmd = newCommand('L', [startSplitPoint, endSplitPoint]).mutate()
-      .setIsSubPathSplitSegment(true)
-      .build();
-    const startLine = new CommandState(startLineCmd);
+    const startLine = new CommandState(
+      newCommand('L', [startSplitPoint, endSplitPoint]).mutate()
+        .setIsSubPathSplitSegment(true)
+        .build());
 
     // The last command in the second path shares an ID with the parent's second split location.
-    const endLineCmd = newCommand('L', [endSplitPoint, startSplitPoint]).mutate()
-      .setId(endSplitCmd.getId())
-      .setIsSubPathSplitSegment(true)
-      .build();
-    const endLine = new CommandState(endLineCmd);
+    const endLine = new CommandState(
+      newCommand('L', [endSplitPoint, startSplitPoint]).mutate()
+        .setId(endSplitCmd.getId())
+        .setIsSubPathSplitSegment(true)
+        .build());
 
     const startCommandStates: CommandState[] = [];
     for (let i = 0; i < css.length; i++) {
@@ -332,7 +358,7 @@ export class PathMutator {
       }
     }
 
-    const splitSubPaths: SubPathState[] = [
+    const splitSubPaths = [
       // TODO: should/could one of these sub paths share the same ID as the parent?
       new SubPathState(startCommandStates),
       new SubPathState(endCommandStates),

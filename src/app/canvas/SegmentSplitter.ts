@@ -2,13 +2,19 @@ import { CanvasComponent } from './canvas.component';
 import { ProjectionOntoPath } from '../scripts/paths';
 import { Point } from '../scripts/common';
 import { CanvasType } from '../CanvasType';
-import { StateService, AppModeService, AppMode, } from '../services';
+import {
+  StateService, AppModeService, AppMode,
+  HoverService,
+  SelectionService,
+} from '../services';
 
 /**
  * Helper class that can be used to split a segment.
  */
 export class SegmentSplitter {
   private readonly stateService: StateService;
+  private readonly selectionService: SelectionService;
+  private readonly hoverService: HoverService;
   private readonly appModeService: AppModeService;
   private readonly canvasType: CanvasType;
   private projectionOntoPath: ProjectionOntoPath;
@@ -19,6 +25,8 @@ export class SegmentSplitter {
     private readonly restrictToSubIdx?: number,
   ) {
     this.stateService = component.stateService;
+    this.hoverService = component.hoverService;
+    this.selectionService = component.selectionService;
     this.appModeService = component.appModeService;
     this.canvasType = component.canvasType;
   }
@@ -40,6 +48,12 @@ export class SegmentSplitter {
           if (isSplitPathMode) {
             pathMutator.splitStrokedSubPath(subIdx, cmdIdx);
           }
+
+          // TODO: make sure the inspector doesn't set hovers/selections while a split is in process...
+          this.hoverService.reset();
+          this.selectionService.reset();
+          this.projectionOntoPath = undefined;
+
           this.component.stateService.updateActivePath(
             this.canvasType, pathMutator.build());
         }

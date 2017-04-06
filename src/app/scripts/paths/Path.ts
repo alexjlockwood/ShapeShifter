@@ -60,6 +60,11 @@ export interface Path {
   intersects(line: Line): number;
 
   /**
+   * Returns a list of connected split segments.
+   */
+  getConnectedSplitSegments(subIdx: number, cmdIdx: number): ReadonlyArray<Command>;
+
+  /**
    * Returns the pole of inaccessibility for the specified subpath index.
    */
   getPoleOfInaccessibility(subIdx: number): Point;
