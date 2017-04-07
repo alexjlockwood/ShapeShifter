@@ -190,7 +190,6 @@ export class ShapeSplitter {
       const allowedSubIdxs =
         new Set<number>(this.initProjInfos.map(projInfo => projInfo.proj.subIdx));
       _.remove(this.finalProjInfos, projInfo => !allowedSubIdxs.has(projInfo.proj.subIdx));
-
     }
   }
 
