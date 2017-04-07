@@ -76,4 +76,12 @@ export class TimelineComponent implements OnInit, OnDestroy {
   setIsRepeating(isRepeating: boolean) {
     this.animatorService.setIsRepeating(isRepeating);
   }
+
+  isSlowMotion() {
+    return this.animatorService.isSlowMotion();
+  }
+
+  isRepeating() {
+    return this.animatorService.isRepeating();
+  }
 }
