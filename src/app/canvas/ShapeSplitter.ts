@@ -72,6 +72,9 @@ export class ShapeSplitter {
       projInfos.sort((p1, p2) => {
         const { proj: proj1, isEndPt: isEndPt1 } = p1;
         const { proj: proj2, isEndPt: isEndPt2 } = p2;
+        if (isEndPt1 !== isEndPt2) {
+          return isEndPt1 ? -1 : 1;
+        }
         if (proj1.projection.d !== proj2.projection.d) {
           return proj1.projection.d - proj2.projection.d;
         }
@@ -81,12 +84,10 @@ export class ShapeSplitter {
         if (proj1.cmdIdx !== proj2.cmdIdx) {
           return proj1.cmdIdx - proj2.cmdIdx;
         }
-        if (isEndPt1 !== isEndPt2) {
-          return isEndPt1 ? -1 : 1;
-        }
         return 0;
       });
     };
+
     sortProjInfosFn(this.initProjInfos);
     sortProjInfosFn(this.finalProjInfos);
 
@@ -94,10 +95,10 @@ export class ShapeSplitter {
     let finalProjInfo: ProjInfo;
     for (const p1 of this.initProjInfos) {
       for (const p2 of this.finalProjInfos) {
-        const { proj: { subIdx: subIdx1, cmdIdx: cmdIdx1, projection: { x: x1, y: y1 } } } = p1;
-        const { proj: { subIdx: subIdx2, cmdIdx: cmdIdx2, projection: { x: x2, y: y2 } } } = p2;
+        const { proj: { subIdx: subIdx1, cmdIdx: cmdIdx1 } } = p1;
+        const { proj: { subIdx: subIdx2, cmdIdx: cmdIdx2 } } = p2;
         if (subIdx1 === subIdx2) {
-          if (cmdIdx1 === cmdIdx2 || (x1 === x2 && y1 === y2)) {
+          if (cmdIdx1 === cmdIdx2) {
             continue;
           }
           initProjInfo = p1;
@@ -155,7 +156,8 @@ export class ShapeSplitter {
       // TODO: is it possible for there to be 1 or 2 intersections and be invalid?
       // TODO: how should we deal with collinear intersections? (i.e. drawing a line across the same line)
       const startingCmdIdx = initCmdIdx > finalCmdIdx ? finalCmdIdx : initCmdIdx;
-      const endingCmdIdx = initCmdIdx > finalCmdIdx ? initCmdIdx + lastCmdOffset : finalCmdIdx + lastCmdOffset;
+      const endingCmdIdx =
+        initCmdIdx > finalCmdIdx ? initCmdIdx + lastCmdOffset : finalCmdIdx + lastCmdOffset;
       this.component.stateService.updateActivePath(
         this.component.canvasType,
         pathMutator

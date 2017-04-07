@@ -95,7 +95,13 @@ export class ToolbarComponent implements OnInit {
     // Preconditions: all selections exist in the same editor and
     // all selections correspond to the currently active path id.
     const canvasType = selections[0].source;
-    const activePath = lss.getActivePathLayer(canvasType).pathData;
+    const activePathLayer = lss.getActivePathLayer(canvasType);
+    if (!activePathLayer) {
+      console.warn('Attempt to fetch selections with no active path layer', selections);
+      return 0;
+    }
+
+    const activePath = activePathLayer.pathData;
     return _.sum(selections.map(s => {
       const { subIdx, cmdIdx } = s;
       const cmd = activePath.getSubPaths()[subIdx].getCommands()[cmdIdx];

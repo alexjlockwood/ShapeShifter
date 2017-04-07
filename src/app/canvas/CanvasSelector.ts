@@ -5,8 +5,9 @@ import { Point, MathUtil } from '../scripts/common';
 import { CanvasType } from '../CanvasType';
 import {
   StateService,
-  SelectionService, SelectionType,
-  HoverService, HoverType,
+  SelectionService,
+  HoverService,
+  HoverType,
 } from '../services';
 
 /**
@@ -142,11 +143,7 @@ export class CanvasSelector {
       } else if (hitResult.isSegmentHit || hitResult.isShapeHit) {
         const hits = hitResult.isShapeHit ? hitResult.shapeHits : hitResult.segmentHits;
         const { subIdx } = this.findHitSubPath(hits);
-        this.selectionService.toggle({
-          type: SelectionType.SubPath,
-          source: this.canvasType,
-          subIdx,
-        });
+        this.selectionService.toggleSubPath(this.canvasType, subIdx);
       }
     }
 

@@ -15,6 +15,7 @@ import 'rxjs/add/observable/combineLatest';
 })
 export class PathInspectorComponent implements OnInit {
   START_CANVAS = CanvasType.Start;
+  END_CANVAS = CanvasType.End;
   subPathItemsObservable: Observable<[string, string, ReadonlyArray<Selection>]>;
   shouldShowDetailsObservable: Observable<boolean>;
 

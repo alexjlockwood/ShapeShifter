@@ -1175,27 +1175,28 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   }
 
   onDoubleClick(event: MouseEvent) {
-    this.canvasRulers.forEach(r => r.hideMouse());
-    if (!this.shouldProcessMouseEvents) {
-      return;
-    }
-    const mouseEvent = this.mouseEventToPoint(event);
-    if (this.appMode === AppMode.SelectPoints) {
-      const noSegments = !this.activePathLayer.isStroked();
-      const hitResult = this.performHitTest(mouseEvent, { noSegments });
-      if (hitResult.isHit) {
-        const hits =
-          [].concat(hitResult.segmentHits, hitResult.shapeHits, hitResult.endPointHits);
-        const { subIdx } = _.last(hits);
-        this.selectionService.setSelections([{
-          subIdx,
-          source: this.canvasType,
-          type: SelectionType.SubPath,
-        }]);
-        this.appModeService.setAppMode(AppMode.AddPoints);
-        this.drawOverlays();
-      }
-    }
+    // TODO: reenable this?
+    // this.canvasRulers.forEach(r => r.hideMouse());
+    // if (!this.shouldProcessMouseEvents) {
+    //   return;
+    // }
+    // const mouseEvent = this.mouseEventToPoint(event);
+    // if (this.appMode === AppMode.SelectPoints) {
+    //   const noSegments = !this.activePathLayer.isStroked();
+    //   const hitResult = this.performHitTest(mouseEvent, { noSegments });
+    //   if (hitResult.isHit) {
+    //     const hits =
+    //       [].concat(hitResult.segmentHits, hitResult.shapeHits, hitResult.endPointHits);
+    //     const { subIdx } = _.last(hits);
+    //     this.selectionService.setSelections([{
+    //       subIdx,
+    //       source: this.canvasType,
+    //       type: SelectionType.SubPath,
+    //     }]);
+    //     this.appModeService.setAppMode(AppMode.AddPoints);
+    //     this.drawOverlays();
+    //   }
+    // }
   }
 
   /**

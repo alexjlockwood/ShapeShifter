@@ -63,7 +63,7 @@ export class SelectionService {
     });
   }
 
-  setSelections(selections: Selection[]) {
+  private setSelections(selections: Selection[]) {
     this.source.next(selections);
   }
 
@@ -99,10 +99,6 @@ export class SelectionService {
    * removed from the list. Otherwise, it will be added to the list of selections.
    * By default, all other selections from the list will be cleared.
    */
-  toggle(selection: Selection, appendToList = false) {
-    this.toggleInternal(this.getSelections().slice(), selection, appendToList);
-  }
-
   private toggleInternal(
     selections: Selection[],
     selection: Selection,
@@ -168,7 +164,6 @@ function areSelectionsEqual(sel1: Selection, sel2: Selection) {
 
 /**
  * Deletes any currently selected split points.
- * TODO: rewrite this according to the new selection rules!
  */
 export function deleteSelectedSplitPoints(
   lss: StateService,
