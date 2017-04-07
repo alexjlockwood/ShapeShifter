@@ -146,7 +146,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         }));
     if (this.canvasType === CanvasType.Preview) {
       // Preview canvas specific setup.
-      const interpolatePreview = () => {
+      const interpolatePreviewFn = () => {
         const fraction = this.animatorService.getAnimatedValue();
         const startPathLayer = this.stateService.getActivePathLayer(CanvasType.Start);
         const previewPathLayer = this.stateService.getActivePathLayer(CanvasType.Preview);
@@ -173,10 +173,10 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       };
       this.subscribeTo(
         this.stateService.getActivePathIdObservable(this.canvasType),
-        () => interpolatePreview());
+        () => interpolatePreviewFn());
       this.subscribeTo(
         this.animatorService.getAnimatedValueObservable(),
-        () => interpolatePreview());
+        () => interpolatePreviewFn());
       this.subscribeTo(this.settingsService.getSettingsObservable());
       this.subscribeTo(this.stateService.getMorphabilityStatusObservable());
     } else {
@@ -346,7 +346,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     return DASH_SIZE / this.cssScale;
   }
 
-  get minSnapThreshold() {
+  private get minSnapThreshold() {
     return MIN_SNAP_THRESHOLD / this.cssScale;
   }
 
@@ -360,7 +360,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       Matrix.flatten(...this.transformsForActiveLayer.reverse()));
   }
 
-  showPenCursor() {
+  private showPenCursor() {
     this.canvasContainer.css({ cursor: 'url(/assets/penaddcursorsmall.png) 5 0, auto' });
   }
 
@@ -641,7 +641,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       const devicePixelRatio = window.devicePixelRatio || 1;
       for (let x = 1; x < this.vlSize.width; x++) {
         this.overlayCtx.fillRect(
-          x * this.attrScale - 0.5 * devicePixelRatio,
+          x * this.attrScale - devicePixelRatio / 2,
           0,
           devicePixelRatio,
           this.vlSize.height * this.attrScale);
@@ -649,7 +649,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       for (let y = 1; y < this.vlSize.height; y++) {
         this.overlayCtx.fillRect(
           0,
-          y * this.attrScale - 0.5 * devicePixelRatio,
+          y * this.attrScale - devicePixelRatio / 2,
           this.vlSize.width * this.attrScale,
           devicePixelRatio);
       }
@@ -664,11 +664,9 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
 
     if (this.appMode === AppMode.SelectPoints) {
-      this.drawSelectPointHighlights(ctx);
-    }
-
-    if (this.appMode === AppMode.AddPoints) {
-      this.drawAddPointHighlights(ctx);
+      this.drawSelectPointsModeHighlightedSegments(ctx);
+    } else if (this.appMode === AppMode.AddPoints) {
+      this.drawAddPointsModeHighlightedSegments(ctx);
     }
 
     if (this.appMode === AppMode.SelectPoints
@@ -713,12 +711,12 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       }
 
       if (this.appMode === AppMode.SplitSubPaths) {
-        this.drawSplitPointHighlights(ctx);
+        this.drawSplitSubPathsModeDragLine(ctx);
       }
     }
   }
 
-  private drawSelectPointHighlights(ctx: Context) {
+  private drawSelectPointsModeHighlightedSegments(ctx: Context) {
     const selectedSubIdxs: Set<number> = new Set<number>(
       this.selectionService.getSelections()
         .filter(s => s.type !== SelectionType.Segment)
@@ -753,7 +751,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  private drawAddPointHighlights(ctx: Context) {
+  private drawAddPointsModeHighlightedSegments(ctx: Context) {
     if (!this.segmentSplitter) {
       return;
     }
@@ -785,7 +783,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  private drawSplitPointHighlights(ctx: Context) {
+  private drawSplitSubPathsModeDragLine(ctx: Context) {
     if (!this.shapeSplitter) {
       return;
     }
