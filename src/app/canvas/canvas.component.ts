@@ -342,6 +342,14 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     return HIGHLIGHT_LINE_WIDTH / this.cssScale;
   }
 
+  private get selectedSegmentLineWidth() {
+    return HIGHLIGHT_LINE_WIDTH / this.cssScale / 2;
+  }
+
+  private get unselectedSegmentLineWidth() {
+    return HIGHLIGHT_LINE_WIDTH / this.cssScale / 3;
+  }
+
   private get lineDashLength() {
     return DASH_SIZE / this.cssScale;
   }
@@ -548,7 +556,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       if (layer instanceof ClipPathLayer) {
         // TODO: our SVG importer doesn't import clip paths... so this will never happen (yet)
         const transforms = LayerUtil.getTransformsForLayer(this.vectorLayer, layer.id);
-        executeCommands(ctx, layer.pathData.getCommands(), transforms);
+        this.executeCommands(ctx, layer.pathData.getCommands(), transforms);
         ctx.clip();
         return;
       }
@@ -563,7 +571,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       ctx.save();
 
       const transforms = LayerUtil.getTransformsForLayer(this.vectorLayer, layer.id);
-      executeCommands(ctx, commands, transforms);
+      this.executeCommands(ctx, commands, transforms);
 
       // TODO: confirm this stroke multiplier thing works...
       const strokeWidthMultiplier = MathUtil.flattenTransforms(transforms).getScale();
@@ -629,8 +637,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       this.drawHighlights(this.overlayCtx);
       this.drawLabeledPoints(this.overlayCtx);
       this.drawSelectPointsDraggingPoints(this.overlayCtx);
-      this.drawAddPointPreviewPoint(this.overlayCtx);
-      this.drawSplitSubPathPreviewPoints(this.overlayCtx);
+      this.drawFloatingPreviewPoint(this.overlayCtx);
+      this.drawFloatingSplitFilledPathPreviewPoints(this.overlayCtx);
     }
     this.overlayCtx.restore();
 
@@ -662,61 +670,29 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     if (this.canvasType === CanvasType.Preview || !this.activePathId) {
       return;
     }
-
     if (this.appMode === AppMode.SelectPoints) {
-      this.drawSelectPointsModeHighlightedSegments(ctx);
-    } else if (this.appMode === AppMode.AddPoints) {
-      this.drawAddPointsModeHighlightedSegments(ctx);
+      this.drawHighlightedSelectedSegments(ctx);
+    }
+    if (this.appMode === AppMode.AddPoints) {
+      this.drawHighlightedAddPointModeSegments(ctx);
     }
 
-    if (this.appMode === AppMode.SelectPoints
-      || this.appMode === AppMode.AddPoints
-      || this.appMode === AppMode.SplitSubPaths) {
-      // TODO: make this more efficient by executing them in batches!!!
-      // TODO: make this more efficient by executing them in batches!!!
-      // TODO: make this more efficient by executing them in batches!!!
-      // TODO: make this more efficient by executing them in batches!!!
-      // TODO: make this more efficient by executing them in batches!!!
-      // Draw any existing split shape segments to the canvas.
-      const subPaths = this.activePath.getSubPaths()
-        .filter(subPath => !subPath.isCollapsing());
-      const transforms = this.transformsForActiveLayer;
-      for (let subIdx = 0; subIdx < subPaths.length; subIdx++) {
-        const subPath = subPaths[subIdx];
-        const cmds = subPath.getCommands();
-        for (let cmdIdx = 0; cmdIdx < cmds.length; cmdIdx++) {
-          const cmd = cmds[cmdIdx];
-          if (!cmd.isSubPathSplitSegment()) {
-            continue;
-          }
-          let lineWidth = this.highlightLineWidth / 3;
-          const isSelected =
-            this.selectionService.isSegmentSelected(subIdx, cmdIdx, this.canvasType);
-          const isHoverSegment =
-            this.currentHover
-            && this.currentHover.type === HoverType.Segment
-            && this.currentHover.subIdx === subIdx
-            && this.currentHover.cmdIdx === cmdIdx;
-          if (isSelected || isHoverSegment) {
-            lineWidth = this.highlightLineWidth / 2;
-          }
-          executeCommands(ctx, [cmd], transforms);
-          ctx.save();
-          ctx.lineCap = 'round';
-          ctx.strokeStyle = SPLIT_POINT_COLOR;
-          ctx.lineWidth = lineWidth;
-          ctx.stroke();
-          ctx.restore();
-        }
-      }
+    // Draw any existing split shape segments to the canvas.
+    const cmds =
+      _.chain(this.activePath.getSubPaths() as SubPath[])
+        .filter(s => !s.isCollapsing())
+        .flatMap(s => s.getCommands() as Command[])
+        .filter(c => c.isSubPathSplitSegment())
+        .value();
+    this.executeCommands(ctx, cmds);
+    this.executeHighlights(ctx, SPLIT_POINT_COLOR, this.unselectedSegmentLineWidth);
 
-      if (this.appMode === AppMode.SplitSubPaths) {
-        this.drawSplitSubPathsModeDragLine(ctx);
-      }
+    if (this.appMode === AppMode.SplitSubPaths) {
+      this.drawSplitSubPathsModeDragSegment(ctx);
     }
   }
 
-  private drawSelectPointsModeHighlightedSegments(ctx: Context) {
+  private drawHighlightedSelectedSegments(ctx: Context) {
     const selectedSubIdxs: Set<number> = new Set<number>(
       this.selectionService.getSelections()
         .filter(s => s.type !== SelectionType.Segment)
@@ -730,28 +706,16 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       .map(subIdx => this.activePath.getSubPath(subIdx))
       .filter(subPath => !subPath.isCollapsing());
 
-    const transforms = this.transformsForActiveLayer;
     for (const subPath of subPaths) {
-      let highlightColor = HIGHLIGHT_COLOR;
       const cmds = subPath.getCommands();
-      for (const cmd of cmds) {
-        if (cmd.isSubPathSplitSegment()) {
-          // If the subpath has been split, we'll draw the highlight in orange.
-          highlightColor = SPLIT_POINT_COLOR;
-          break;
-        }
-      }
-      executeCommands(ctx, cmds, transforms);
-      ctx.save();
-      ctx.lineCap = 'round';
-      ctx.strokeStyle = highlightColor;
-      ctx.lineWidth = this.highlightLineWidth / 2;
-      ctx.stroke();
-      ctx.restore();
+      const isSplitSubPath = cmds.some(c => c.isSubPathSplitSegment());
+      const highlightColor = isSplitSubPath ? SPLIT_POINT_COLOR : HIGHLIGHT_COLOR;
+      this.executeCommands(ctx, cmds);
+      this.executeHighlights(ctx, highlightColor, this.selectedSegmentLineWidth);
     }
   }
 
-  private drawAddPointsModeHighlightedSegments(ctx: Context) {
+  private drawHighlightedAddPointModeSegments(ctx: Context) {
     if (!this.segmentSplitter) {
       return;
     }
@@ -759,82 +723,49 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     if (!projectionOntoPath) {
       return;
     }
-    const transforms = this.transformsForActiveLayer;
     const projection = projectionOntoPath.projection;
-    if (projection.d < this.minSnapThreshold) {
-      const { subIdx, cmdIdx } = projectionOntoPath;
-      executeCommands(ctx, [this.activePath.getCommand(subIdx, cmdIdx)], transforms);
-      ctx.save();
-      ctx.lineCap = 'round';
-      ctx.strokeStyle = SPLIT_POINT_COLOR;
-      ctx.lineWidth = this.highlightLineWidth / 2;
-      ctx.setLineDash([]);
-      ctx.stroke();
-      ctx.restore();
-    } else {
-      executeCommands(ctx, this.activePath.getCommands(), transforms);
-      ctx.save();
-      ctx.lineCap = 'round';
-      ctx.strokeStyle = SPLIT_POINT_COLOR;
-      ctx.lineWidth = this.highlightLineWidth / 1.3;
-      ctx.setLineDash([this.lineDashLength / 1.5, this.lineDashLength / 1.5]);
-      ctx.stroke();
-      ctx.restore();
-    }
+    const { subIdx, cmdIdx } = projectionOntoPath;
+    const commands =
+      projection.d < this.minSnapThreshold
+        ? [this.activePath.getCommand(subIdx, cmdIdx)]
+        : this.activePath.getCommands();
+    this.executeCommands(ctx, commands);
+    this.executeHighlights(ctx, SPLIT_POINT_COLOR, this.selectedSegmentLineWidth);
   }
 
-  private drawSplitSubPathsModeDragLine(ctx: Context) {
+  private drawSplitSubPathsModeDragSegment(ctx: Context) {
     if (!this.shapeSplitter) {
       return;
     }
-    // Draw the split shape preview line.
     const proj1 = this.shapeSplitter.getInitialProjectionOntoPath();
     const proj2 = this.shapeSplitter.getFinalProjectionOntoPath();
-    const transforms = this.transformsForActiveLayer;
     if (proj1) {
+      // Draw a line from the starting projection to the final projection (or
+      // to the last known mouse location, if one doesn't exist).
       const startPoint =
         this.pathPointToDrawingCoords(new Point(proj1.projection.x, proj1.projection.y));
-      let endPoint: Point;
-      if (proj2) {
-        endPoint = this.pathPointToDrawingCoords(new Point(proj2.projection.x, proj2.projection.y));
-      } else {
-        endPoint = this.shapeSplitter.getLastKnownMouseLocation();
-      }
-
-      const subPathCmds = this.activePath.getSubPath(proj1.subIdx).getCommands();
-      executeCommands(ctx, subPathCmds, transforms);
-
+      const endPoint = proj2
+        ? this.pathPointToDrawingCoords(new Point(proj2.projection.x, proj2.projection.y))
+        : this.shapeSplitter.getLastKnownMouseLocation();
       ctx.save();
-      transforms.forEach(m => ctx.transform(m.a, m.b, m.c, m.d, m.e, m.f));
+      this.transformsForActiveLayer.forEach(m => ctx.transform(m.a, m.b, m.c, m.d, m.e, m.f));
       ctx.beginPath();
       ctx.moveTo(startPoint.x, startPoint.y);
       ctx.lineTo(endPoint.x, endPoint.y);
-      ctx.lineCap = 'round';
-      ctx.strokeStyle = SPLIT_POINT_COLOR;
-      ctx.lineWidth = this.highlightLineWidth / 2;
-      ctx.stroke();
       ctx.restore();
+      this.executeHighlights(ctx, SPLIT_POINT_COLOR, this.selectedSegmentLineWidth);
     }
     if (!proj1 || proj2) {
-      let point;
+      // Highlight the segment as the user hovers over it.
       const projectionOntoPath = this.shapeSplitter.getCurrentProjectionOntoPath();
       if (projectionOntoPath) {
         const projection = projectionOntoPath.projection;
         if (projection && projection.d < this.minSnapThreshold) {
-          point = this.pathPointToDrawingCoords(new Point(projection.x, projection.y));
+          const { subIdx, cmdIdx } = projectionOntoPath;
+          const cmds = [this.activePath.getCommand(subIdx, cmdIdx)];
+          this.executeCommands(ctx, cmds);
+          this.executeHighlights(ctx, SPLIT_POINT_COLOR, this.selectedSegmentLineWidth);
         }
-      }
-      if (point) {
-        const { subIdx, cmdIdx } = projectionOntoPath;
-        const command = this.activePath.getCommand(subIdx, cmdIdx);
-        executeCommands(ctx, [command], transforms);
-
-        ctx.save();
-        ctx.lineCap = 'round';
-        ctx.strokeStyle = SPLIT_POINT_COLOR;
-        ctx.lineWidth = this.highlightLineWidth / 2;
-        ctx.stroke();
-        ctx.restore();
       }
     }
   }
@@ -959,116 +890,84 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       }
       const point = MathUtil.transformPoint(_.last(cmd.getPoints()), ...transforms);
       const color = cmd.isSplit() ? SPLIT_POINT_COLOR : NORMAL_POINT_COLOR;
-      this.drawLabeledPoint(ctx, point, radius, color, text);
+      this.executeLabeledPoint(ctx, point, radius, color, text);
     }
   }
 
-  // Draw any actively dragged points along the path (selection mode only).
+  // Draw any actively dragged points along the path (select points mode).
   private drawSelectPointsDraggingPoints(ctx: Context) {
     if (this.appMode !== AppMode.SelectPoints
       || !this.canvasSelector
       || !this.canvasSelector.isDragTriggered()) {
       return;
     }
-    let point;
-    const projection = this.canvasSelector.getProjectionOntoPath().projection;
-    if (projection && projection.d < this.minSnapThreshold) {
-      point = this.pathPointToDrawingCoords(new Point(projection.x, projection.y));
-    } else {
-      point = this.canvasSelector.getLastKnownMouseLocation();
-    }
-    this.drawLabeledPoint(
-      ctx, point, this.mediumPointRadius * SPLIT_POINT_RADIUS_FACTOR, SPLIT_POINT_COLOR);
+    const { x, y, d } = this.canvasSelector.getProjectionOntoPath().projection;
+    const point =
+      d < this.minSnapThreshold
+        ? this.pathPointToDrawingCoords(new Point(x, y))
+        : this.canvasSelector.getLastKnownMouseLocation();
+    this.executeLabeledPoint(
+      ctx,
+      point,
+      this.mediumPointRadius *
+      SPLIT_POINT_RADIUS_FACTOR, SPLIT_POINT_COLOR);
   }
 
-  private drawAddPointPreviewPoint(ctx: Context) {
+  // Draw a floating point preview over the canvas (add points mode
+  // or split subpaths mode for stroked paths).
+  private drawFloatingPreviewPoint(ctx: Context) {
     if (this.appMode !== AppMode.AddPoints
       && this.appMode !== AppMode.SplitSubPaths
       && !this.activePathLayer.isStroked()
-      || !this.segmentSplitter) {
+      || !this.segmentSplitter
+      || !this.segmentSplitter.getProjectionOntoPath()) {
       return;
     }
-    let point;
-    const projectionOntoPath = this.segmentSplitter.getProjectionOntoPath();
-    if (projectionOntoPath) {
-      const projection = projectionOntoPath.projection;
-      if (projection && projection.d < this.minSnapThreshold) {
-        point = this.pathPointToDrawingCoords(new Point(projection.x, projection.y));
-      }
-    }
-    if (point) {
-      this.drawLabeledPoint(
-        ctx, point, this.mediumPointRadius * SPLIT_POINT_RADIUS_FACTOR, SPLIT_POINT_COLOR);
+    const { x, y, d } = this.segmentSplitter.getProjectionOntoPath().projection;
+    if (d < this.minSnapThreshold) {
+      this.executeLabeledPoint(
+        ctx,
+        this.pathPointToDrawingCoords(new Point(x, y)),
+        this.mediumPointRadius * SPLIT_POINT_RADIUS_FACTOR,
+        SPLIT_POINT_COLOR);
     }
   }
 
-  private drawSplitSubPathPreviewPoints(ctx: Context) {
-    if (this.appMode !== AppMode.SplitSubPaths || !this.shapeSplitter) {
+  // Draw the floating points on top of the drag line in split filled subpath mode.
+  private drawFloatingSplitFilledPathPreviewPoints(ctx: Context) {
+    if (this.appMode !== AppMode.SplitSubPaths
+      || !this.shapeSplitter
+      || !this.shapeSplitter.getCurrentProjectionOntoPath()) {
       return;
     }
     const proj1 = this.shapeSplitter.getInitialProjectionOntoPath();
     if (proj1) {
       const proj2 = this.shapeSplitter.getFinalProjectionOntoPath();
-      const startPoint =
-        this.pathPointToDrawingCoords(new Point(proj1.projection.x, proj1.projection.y));
-      let endPoint: Point;
-      if (proj2) {
-        endPoint = this.pathPointToDrawingCoords(new Point(proj2.projection.x, proj2.projection.y));
-      } else {
-        endPoint = this.shapeSplitter.getLastKnownMouseLocation();
-      }
-      this.drawLabeledPoint(
-        ctx, startPoint, this.mediumPointRadius * SPLIT_POINT_RADIUS_FACTOR, SPLIT_POINT_COLOR);
+      this.executeLabeledPoint(
+        ctx,
+        this.pathPointToDrawingCoords(new Point(proj1.projection.x, proj1.projection.y)),
+        this.mediumPointRadius * SPLIT_POINT_RADIUS_FACTOR,
+        SPLIT_POINT_COLOR);
       if (this.shapeSplitter.willFinalProjectionOntoPathCreateSplitPoint()) {
-        this.drawLabeledPoint(
-          ctx, endPoint, this.mediumPointRadius * SPLIT_POINT_RADIUS_FACTOR, SPLIT_POINT_COLOR);
+        const endPoint = proj2
+          ? this.pathPointToDrawingCoords(new Point(proj2.projection.x, proj2.projection.y))
+          : this.shapeSplitter.getLastKnownMouseLocation();
+        this.executeLabeledPoint(
+          ctx,
+          endPoint,
+          this.mediumPointRadius * SPLIT_POINT_RADIUS_FACTOR,
+          SPLIT_POINT_COLOR);
       }
     } else {
-      let point;
-      const projectionOntoPath = this.shapeSplitter.getCurrentProjectionOntoPath();
-      if (projectionOntoPath) {
-        const projection = projectionOntoPath.projection;
-        if (projection && projection.d < this.minSnapThreshold) {
-          point = this.pathPointToDrawingCoords(new Point(projection.x, projection.y));
-        }
-      }
-      if (point) {
-        this.drawLabeledPoint(
-          ctx, point, this.mediumPointRadius * SPLIT_POINT_RADIUS_FACTOR, SPLIT_POINT_COLOR);
+      const { x, y, d } = this.shapeSplitter.getCurrentProjectionOntoPath().projection;
+      if (d < this.minSnapThreshold) {
+        this.executeLabeledPoint(
+          ctx,
+          this.pathPointToDrawingCoords(new Point(x, y)),
+          this.mediumPointRadius * SPLIT_POINT_RADIUS_FACTOR,
+          SPLIT_POINT_COLOR);
       }
     }
-  }
-
-  // Draws a labeled point with optional text.
-  private drawLabeledPoint(
-    ctx: Context,
-    point: Point,
-    radius: number,
-    color: string,
-    text?: string) {
-
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(point.x, point.y, radius * POINT_BORDER_FACTOR, 0, 2 * Math.PI, false);
-    ctx.fillStyle = POINT_BORDER_COLOR;
-    ctx.fill();
-
-    ctx.beginPath();
-    ctx.arc(point.x, point.y, radius, 0, 2 * Math.PI, false);
-    ctx.fillStyle = color;
-    ctx.fill();
-
-    if (text) {
-      ctx.beginPath();
-      ctx.fillStyle = POINT_TEXT_COLOR;
-      ctx.font = radius + 'px Roboto, Helvetica Neue, sans-serif';
-      const width = ctx.measureText(text).width;
-      // TODO: is there a better way to get the height?
-      const height = ctx.measureText('o').width;
-      ctx.fillText(text, point.x - width / 2, point.y + height / 2);
-      ctx.fill();
-    }
-    ctx.restore();
   }
 
   // MOUSE DOWN
@@ -1178,16 +1077,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   }
 
   /**
-   * Sends a signal that the canvas rulers should be redrawn.
-   */
-  private showRuler(event: MouseEvent) {
-    const canvasOffset = this.canvasContainer.offset();
-    const x = (event.pageX - canvasOffset.left) / Math.max(1, this.cssScale);
-    const y = (event.pageY - canvasOffset.top) / Math.max(1, this.cssScale);
-    this.canvasRulers.forEach(r => r.showMouse(new Point(_.round(x), _.round(y))));
-  }
-
-  /**
    * Converts a mouse point's CSS coordinates into vector layer viewport coordinates.
    */
   private mouseEventToPoint(event: MouseEvent) {
@@ -1196,54 +1085,108 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     const y = (event.pageY - canvasOffset.top) / this.cssScale;
     return new Point(x, y);
   }
-}
 
-// Note that this function currently only supports contiguous sequences of commands.
-function executeCommands(
-  ctx: Context,
-  commands: ReadonlyArray<Command>,
-  transforms: Matrix[]) {
+  private executeCommands(
+    ctx: Context,
+    commands: ReadonlyArray<Command>,
+    transforms = this.transformsForActiveLayer) {
 
-  ctx.save();
-  transforms.forEach(m => ctx.transform(m.a, m.b, m.c, m.d, m.e, m.f));
-  ctx.beginPath();
+    ctx.save();
+    transforms.forEach(m => ctx.transform(m.a, m.b, m.c, m.d, m.e, m.f));
+    ctx.beginPath();
 
-  if (commands.length === 1 && commands[0].getSvgChar() !== 'M') {
-    // Special handling for the case where we only want to draw
-    // a single segment of the path.
-    ctx.moveTo(commands[0].getStart().x, commands[0].getStart().y);
+    if (commands.length === 1 && commands[0].getSvgChar() !== 'M') {
+      ctx.moveTo(commands[0].getStart().x, commands[0].getStart().y);
+    }
+
+    let previousEndPoint: Point;
+    commands.forEach(cmd => {
+      const start = cmd.getStart();
+      const end = cmd.getEnd();
+
+      if (start && !start.equals(previousEndPoint)) {
+        // This is to support the case where the list of commands
+        // is size fragmented.
+        ctx.moveTo(start.x, start.y);
+      }
+
+      if (cmd.getSvgChar() === 'M') {
+        ctx.moveTo(end.x, end.y);
+      } else if (cmd.getSvgChar() === 'L') {
+        ctx.lineTo(end.x, end.y);
+      } else if (cmd.getSvgChar() === 'Q') {
+        ctx.quadraticCurveTo(
+          cmd.getPoints()[1].x, cmd.getPoints()[1].y,
+          cmd.getPoints()[2].x, cmd.getPoints()[2].y);
+      } else if (cmd.getSvgChar() === 'C') {
+        ctx.bezierCurveTo(
+          cmd.getPoints()[1].x, cmd.getPoints()[1].y,
+          cmd.getPoints()[2].x, cmd.getPoints()[2].y,
+          cmd.getPoints()[3].x, cmd.getPoints()[3].y);
+      } else if (cmd.getSvgChar() === 'Z') {
+        if (start.equals(previousEndPoint)) {
+          ctx.closePath();
+        } else {
+          // This is to support the case where the list of commands
+          // is size fragmented.
+          ctx.lineTo(end.x, end.y);
+        }
+      }
+      previousEndPoint = end;
+    });
+    ctx.restore();
   }
 
-  let previousEndPoint: Point;
-  commands.forEach(cmd => {
-    const start = cmd.getStart();
-    const end = cmd.getEnd();
-    if (cmd.getSvgChar() === 'M') {
-      ctx.moveTo(end.x, end.y);
-    } else if (cmd.getSvgChar() === 'L') {
-      ctx.lineTo(end.x, end.y);
-    } else if (cmd.getSvgChar() === 'Q') {
-      ctx.quadraticCurveTo(
-        cmd.getPoints()[1].x, cmd.getPoints()[1].y,
-        cmd.getPoints()[2].x, cmd.getPoints()[2].y);
-    } else if (cmd.getSvgChar() === 'C') {
-      ctx.bezierCurveTo(
-        cmd.getPoints()[1].x, cmd.getPoints()[1].y,
-        cmd.getPoints()[2].x, cmd.getPoints()[2].y,
-        cmd.getPoints()[3].x, cmd.getPoints()[3].y);
-    } else if (cmd.getSvgChar() === 'Z') {
-      if (start.equals(previousEndPoint)) {
-        ctx.closePath();
-      } else {
-        // This is mainly to support the case where the list of commands
-        // is size one and contains only a closepath command.
-        ctx.moveTo(start.x, start.y);
-        ctx.lineTo(end.x, end.y);
-      }
+  private executeHighlights(ctx: Context, color: string, lineWidth: number) {
+    ctx.save();
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = color;
+    ctx.lineWidth = lineWidth;
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // Draws a labeled point with optional text.
+  private executeLabeledPoint(
+    ctx: Context,
+    point: Point,
+    radius: number,
+    color: string,
+    text?: string) {
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(point.x, point.y, radius * POINT_BORDER_FACTOR, 0, 2 * Math.PI, false);
+    ctx.fillStyle = POINT_BORDER_COLOR;
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(point.x, point.y, radius, 0, 2 * Math.PI, false);
+    ctx.fillStyle = color;
+    ctx.fill();
+
+    if (text) {
+      ctx.beginPath();
+      ctx.fillStyle = POINT_TEXT_COLOR;
+      ctx.font = radius + 'px Roboto, Helvetica Neue, sans-serif';
+      const width = ctx.measureText(text).width;
+      // TODO: is there a better way to get the height?
+      const height = ctx.measureText('o').width;
+      ctx.fillText(text, point.x - width / 2, point.y + height / 2);
+      ctx.fill();
     }
-    previousEndPoint = end;
-  });
-  ctx.restore();
+    ctx.restore();
+  }
+
+  /**
+   * Sends a signal that the canvas rulers should be redrawn.
+   */
+  private showRuler(event: MouseEvent) {
+    const canvasOffset = this.canvasContainer.offset();
+    const x = (event.pageX - canvasOffset.left) / Math.max(1, this.cssScale);
+    const y = (event.pageY - canvasOffset.top) / Math.max(1, this.cssScale);
+    this.canvasRulers.forEach(r => r.showMouse(new Point(_.round(x), _.round(y))));
+  }
 }
 
 interface HitTestOpts {

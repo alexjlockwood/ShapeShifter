@@ -71,18 +71,13 @@ export class SegmentSplitter {
 
   onMouseUp(mouseUp: Point) {
     this.lastKnownMouseLocation = mouseUp;
-    this.currProjInfo = this.findProjInfo(mouseUp);
     this.component.drawOverlays();
   }
 
   onMouseLeave(mouseLeave) {
     this.lastKnownMouseLocation = mouseLeave;
-    this.currProjInfo = this.findProjInfo(mouseLeave);
+    this.currProjInfo = undefined;
     this.component.drawOverlays();
-  }
-
-  getSelectedSubIdx() {
-    return this.restrictToSubIdx;
   }
 
   getProjectionOntoPath() {
