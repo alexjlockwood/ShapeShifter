@@ -74,7 +74,7 @@ export class ToolbarComponent implements OnInit {
               selections,
               cmd => cmd.isSplit());
           if (numPointsSelected > 0) {
-            return `${numPointsSelected} deletable point${numPointsSelected === 1 ? '' : 's'} selected`;
+            return `${numPointsSelected} split point${numPointsSelected === 1 ? '' : 's'} selected`;
           } else {
             return 'Shape Shifter';
           }
@@ -97,7 +97,6 @@ export class ToolbarComponent implements OnInit {
     const canvasType = selections[0].source;
     const activePathLayer = lss.getActivePathLayer(canvasType);
     if (!activePathLayer) {
-      console.warn('Attempt to fetch selections with no active path layer', selections);
       return 0;
     }
 
