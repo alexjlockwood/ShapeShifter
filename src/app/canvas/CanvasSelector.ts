@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
 import { CanvasComponent } from './canvas.component';
 import { ProjectionOntoPath } from '../scripts/paths';
-import { Point, MathUtil } from '../scripts/common';
+import { Point, MathUtil, Matrix } from '../scripts/common';
 import { CanvasType } from '../CanvasType';
 import {
   StateService,
@@ -9,6 +9,7 @@ import {
   HoverService,
   HoverType,
 } from '../services';
+import { LayerUtil } from '../scripts/layers';
 
 /**
  * Helper class that tracks information about a user's mouse gesture, allowing
@@ -82,7 +83,7 @@ export class CanvasSelector {
     }
     if (this.isDragTriggered_) {
       this.projectionOntoPath =
-        this.component.calculateProjectionOntoPath(
+        this.calculateProjectionOntoPath(
           mouseMove, this.currentDraggableSplitIndex.subIdx);
     } else {
       this.checkForHovers(mouseMove);
@@ -115,7 +116,7 @@ export class CanvasSelector {
           // projection before the split.
           // TODO: improve this API somehow... having to set the active layer here is kind of hacky
           activeLayer.pathData = pathMutator.unsplitCommand(oldSubIdx, oldCmdIdx).build();
-          const tempProjOntoPath = this.component.calculateProjectionOntoPath(mouseUp);
+          const tempProjOntoPath = this.calculateProjectionOntoPath(mouseUp);
           if (oldSubIdx === tempProjOntoPath.subIdx) {
             pathMutator.splitCommand(
               tempProjOntoPath.subIdx, tempProjOntoPath.cmdIdx, tempProjOntoPath.projection.t);
@@ -261,5 +262,31 @@ export class CanvasSelector {
     });
     const lastSplitIndex = _.findLastIndex(infos, info => info.cmd.isSplit());
     return infos[lastSplitIndex < 0 ? infos.length - 1 : lastSplitIndex];
+  }
+
+  /**
+  * Calculates the projection onto the path with the specified path ID.
+  * The resulting projection is our way of determining the on-curve point
+  * closest to the specified off-curve mouse point.
+  */
+  private calculateProjectionOntoPath(mousePoint: Point, restrictToSubIdx?: number) {
+    const transforms =
+      LayerUtil.getTransformsForLayer(
+        this.component.stateService.getVectorLayer(this.canvasType),
+        this.component.stateService.getActivePathId(this.canvasType)).reverse();
+    const transformedMousePoint =
+      MathUtil.transformPoint(
+        mousePoint,
+        Matrix.flatten(...transforms).invert());
+    const projInfo =
+      this.component.activePath.project(transformedMousePoint, restrictToSubIdx);
+    if (!projInfo) {
+      return undefined;
+    }
+    return {
+      subIdx: projInfo.subIdx,
+      cmdIdx: projInfo.cmdIdx,
+      projection: projInfo.projection,
+    };
   }
 }

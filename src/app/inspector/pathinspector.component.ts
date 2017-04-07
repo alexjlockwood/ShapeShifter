@@ -7,6 +7,9 @@ import {
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/combineLatest';
 
+// TODO: determine if we should disable this in some cases...
+const SHOULD_SHOW_DETAILS = true;
+
 @Component({
   selector: 'app-pathinspector',
   templateUrl: './pathinspector.component.html',
@@ -33,6 +36,9 @@ export class PathInspectorComponent implements OnInit {
         this.selectionService.asObservable());
     this.shouldShowDetailsObservable =
       this.appModeService.asObservable().map(appMode => {
+        if (SHOULD_SHOW_DETAILS) {
+          return true;
+        }
         return appMode === AppMode.SelectPoints || appMode === AppMode.AddPoints;
       });
   }

@@ -6,8 +6,7 @@ import {
 } from '@angular/core';
 import { Path, SubPath, Command } from '../scripts/paths';
 import {
-  PathLayer, ClipPathLayer,
-  VectorLayer, GroupLayer, Layer
+  PathLayer, ClipPathLayer, LayerUtil
 } from '../scripts/layers';
 import { CanvasType } from '../CanvasType';
 import { Point, Matrix, MathUtil, ColorUtil } from '../scripts/common';
@@ -328,7 +327,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   }
 
   private get transformsForActiveLayer() {
-    return getTransformsForLayer(this.vectorLayer, this.activePathId);
+    return LayerUtil.getTransformsForLayer(this.vectorLayer, this.activePathId);
   }
 
   private get smallPointRadius() {
@@ -353,30 +352,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
   get dragTriggerTouchSlop() {
     return DRAG_TRIGGER_TOUCH_SLOP / this.cssScale;
-  }
-
-  /**
-   * Calculates the projection onto the path with the specified path ID.
-   * The resulting projection is our way of determining the on-curve point
-   * closest to the specified off-curve mouse point.
-   */
-  calculateProjectionOntoPath(mousePoint: Point, restrictToSubIdx?: number) {
-    const transforms =
-      getTransformsForLayer(this.vectorLayer, this.activePathId).reverse();
-    const transformedMousePoint =
-      MathUtil.transformPoint(
-        mousePoint,
-        MathUtil.flattenTransforms(transforms).invert());
-    const projInfo =
-      this.activePathLayer.pathData.project(transformedMousePoint, restrictToSubIdx);
-    if (!projInfo) {
-      return undefined;
-    }
-    return {
-      subIdx: projInfo.subIdx,
-      cmdIdx: projInfo.cmdIdx,
-      projection: projInfo.projection,
-    };
   }
 
   private pathPointToDrawingCoords(mousePoint: Point) {
@@ -411,7 +386,11 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     let isSegmentInRangeFn: (distance: number, cmd: Command) => boolean;
     if (!opts.noSegments) {
       isSegmentInRangeFn = distance => {
-        return distance <= this.activePathLayer.strokeWidth / 2;
+        let maxDistance = this.minSnapThreshold;
+        if (this.activePathLayer.isStroked()) {
+          maxDistance = Math.max(maxDistance, this.activePathLayer.strokeWidth / 2);
+        }
+        return distance <= maxDistance;
       };
     }
     const findShapesInRange = this.activePathLayer.isFilled() && !opts.noShapes;
@@ -568,7 +547,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     this.vectorLayer.walk(layer => {
       if (layer instanceof ClipPathLayer) {
         // TODO: our SVG importer doesn't import clip paths... so this will never happen (yet)
-        const transforms = getTransformsForLayer(this.vectorLayer, layer.id);
+        const transforms = LayerUtil.getTransformsForLayer(this.vectorLayer, layer.id);
         executeCommands(ctx, layer.pathData.getCommands(), transforms);
         ctx.clip();
         return;
@@ -583,7 +562,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
       ctx.save();
 
-      const transforms = getTransformsForLayer(this.vectorLayer, layer.id);
+      const transforms = LayerUtil.getTransformsForLayer(this.vectorLayer, layer.id);
       executeCommands(ctx, commands, transforms);
 
       // TODO: confirm this stroke multiplier thing works...
@@ -1154,6 +1133,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
   }
 
+  // MOUSE LEAVE
   onMouseLeave(event: MouseEvent) {
     this.canvasRulers.forEach(r => r.hideMouse());
     if (!this.shouldProcessMouseEvents) {
@@ -1218,41 +1198,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     const y = (event.pageY - canvasOffset.top) / this.cssScale;
     return new Point(x, y);
   }
-}
-
-/**
- * Returns a list of parent transforms for the specified layer ID. The transforms
- * are returned in top-down order (i.e. the transform for the layer's
- * immediate parent will be the very last matrix in the returned list). This
- * function returns undefined if the layer is not found in the vector layer.
- */
-function getTransformsForLayer(vectorLayer: VectorLayer, layerId: string) {
-  const getTransformsFn = (parents: Layer[], current: Layer): Matrix[] => {
-    if (current.id === layerId) {
-      return _.flatMap(parents, layer => {
-        if (!(layer instanceof GroupLayer)) {
-          return [];
-        }
-        return [
-          Matrix.fromTranslation(layer.pivotX, layer.pivotY),
-          Matrix.fromTranslation(layer.translateX, layer.translateY),
-          Matrix.fromRotation(layer.rotation),
-          Matrix.fromScaling(layer.scaleX, layer.scaleY),
-          Matrix.fromTranslation(-layer.pivotX, -layer.pivotY),
-        ];
-      });
-    }
-    if (current.children) {
-      for (const child of current.children) {
-        const transforms = getTransformsFn(parents.concat([current]), child);
-        if (transforms) {
-          return transforms;
-        }
-      }
-    }
-    return undefined;
-  };
-  return getTransformsFn([], vectorLayer);
 }
 
 // Note that this function currently only supports contiguous sequences of commands.
