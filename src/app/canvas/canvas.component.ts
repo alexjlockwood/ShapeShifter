@@ -82,8 +82,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   private cssContainerWidth = 1;
   private cssContainerHeight = 1;
   private vlSize = { width: DEFAULT_VIEWPORT_SIZE, height: DEFAULT_VIEWPORT_SIZE };
-  private cssScale: number;
-  private attrScale: number;
   private currentHoverPreviewPath: Path;
   private canvasSelector: CanvasSelector | undefined;
   private segmentSplitter: SegmentSplitter | undefined;
@@ -280,6 +278,27 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     this.subscriptions.push(observable.subscribe(callbackFn));
   }
 
+  /**
+   * The 'attrScale' represents the number of physical pixels per SVG viewport pixel.
+   */
+  private get attrScale() {
+    return this.cssScale * devicePixelRatio;
+  }
+
+  /**
+   * The 'cssScale' represents the number of CSS pixels per SVG viewport pixel.
+   */
+  private get cssScale() {
+    const { width: vlWidth, height: vlHeight } = this.vlSize;
+    const vectorAspectRatio = vlWidth / vlHeight;
+    const containerAspectRatio = this.cssContainerWidth / this.cssContainerHeight;
+    if (vectorAspectRatio > containerAspectRatio) {
+      return this.cssContainerWidth / vlWidth;
+    } else {
+      return this.cssContainerHeight / vlHeight;
+    }
+  }
+
   private get vectorLayer() {
     return this.stateService.getVectorLayer(this.canvasType);
   }
@@ -418,20 +437,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     if (!this.isViewInit) {
       return;
     }
-    const { width: vlWidth, height: vlHeight } = this.vlSize;
-    const vectorAspectRatio = vlWidth / vlHeight;
-    const containerAspectRatio = this.cssContainerWidth / this.cssContainerHeight;
-
-    // The 'cssScale' represents the number of CSS pixels per SVG viewport pixel.
-    if (vectorAspectRatio > containerAspectRatio) {
-      this.cssScale = this.cssContainerWidth / vlWidth;
-    } else {
-      this.cssScale = this.cssContainerHeight / vlHeight;
-    }
-
-    // The 'attrScale' represents the number of physical pixels per SVG viewport pixel.
-    this.attrScale = this.cssScale * devicePixelRatio;
-
     const canvases = [
       this.canvasContainer,
       this.renderingCanvas,
@@ -439,20 +444,18 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       this.offscreenLayerCanvas,
       this.offscreenSubPathCanvas,
     ];
-    const cssWidth = vlWidth * this.cssScale;
-    const cssHeight = vlHeight * this.cssScale;
+    const { width: vlWidth, height: vlHeight } = this.vlSize;
     canvases.forEach(canvas => {
       canvas
         .attr({
-          width: cssWidth * devicePixelRatio,
-          height: cssHeight * devicePixelRatio,
+          width: vlWidth * this.attrScale,
+          height: vlHeight * this.attrScale,
         })
         .css({
-          width: cssWidth,
-          height: cssHeight,
+          width: vlWidth * this.cssScale,
+          height: vlHeight * this.cssScale,
         });
     });
-
     this.draw();
     this.canvasRulers.forEach(r => r.draw());
   }
@@ -723,10 +726,9 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     if (!projectionOntoPath) {
       return;
     }
-    const projection = projectionOntoPath.projection;
-    const { subIdx, cmdIdx } = projectionOntoPath;
+    const { subIdx, cmdIdx, projection: { d } } = projectionOntoPath;
     const commands =
-      projection.d < this.minSnapThreshold
+      d < this.minSnapThreshold
         ? [this.activePath.getCommand(subIdx, cmdIdx)]
         : this.activePath.getCommands();
     this.executeCommands(ctx, commands);
@@ -772,9 +774,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
   // Draw any labeled points.
   private drawLabeledPoints(ctx: Context) {
-    if (this.canvasType === CanvasType.Preview
-      && !this.shouldLabelPoints
-      || !this.activePathId) {
+    if (this.canvasType === CanvasType.Preview && !this.shouldLabelPoints) {
       return;
     }
 
@@ -794,7 +794,9 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         .filter(subPath => !subPath.isCollapsing())
         .map((subPath, subIdx) => {
           return subPath.getCommands()
-            .map((cmd, cmdIdx) => { return { cmd, subIdx, cmdIdx }; });
+            .map((cmd, cmdIdx) => {
+              return { cmd, subIdx, cmdIdx };
+            });
         })
         .flatMap(pointInfos => pointInfos)
         .reverse()
@@ -803,15 +805,14 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     const currSelections = this.selectionService.getSelections().map(sel => {
       return { type: sel.type, subIdx: sel.subIdx, cmdIdx: sel.cmdIdx };
     });
-    const selectedSubPathIndices = _.flatMap(currSelections, sel => {
-      return sel.type === SelectionType.SubPath ? [sel.subIdx] : [];
-    });
+    const selectedSubPathIndices =
+      _.flatMap(currSelections, sel => {
+        return sel.type === SelectionType.SubPath ? [sel.subIdx] : [];
+      });
 
     const isPointInfoSelectedFn = (pointInfo: PointInfo) => {
       const { subIdx, cmdIdx } = pointInfo;
-      const isSubPathSelected =
-        selectedSubPathIndices.indexOf(subIdx) >= 0;
-      if (isSubPathSelected) {
+      if (selectedSubPathIndices.indexOf(subIdx) >= 0) {
         return true;
       }
       return _.findIndex(currSelections, sel => {
@@ -822,14 +823,11 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     const removedSelectedCommands =
       _.remove(pathDataPointInfos, pointInfo => {
         const { subIdx, cmdIdx } = pointInfo;
-        const isSubPathSelected =
-          selectedSubPathIndices.indexOf(subIdx) >= 0;
-        if (isSubPathSelected) {
+        if (selectedSubPathIndices.indexOf(subIdx) >= 0) {
           return true;
         }
         return _.findIndex(currSelections, sel => {
-          return sel.subIdx === subIdx
-            && sel.cmdIdx === cmdIdx;
+          return sel.subIdx === subIdx && sel.cmdIdx === cmdIdx;
         }) >= 0;
       });
     pathDataPointInfos.push(
@@ -858,8 +856,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     pathDataPointInfos.push(...removedHoverCommands);
 
     const draggedCommandIndex =
-      this.canvasSelector
-        && this.canvasSelector.isDragTriggered()
+      this.canvasSelector && this.canvasSelector.isDragTriggered()
         ? this.canvasSelector.getDraggableSplitIndex()
         : undefined;
     const transforms = this.transformsForActiveLayer.reverse();
@@ -935,9 +932,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
   // Draw the floating points on top of the drag line in split filled subpath mode.
   private drawFloatingSplitFilledPathPreviewPoints(ctx: Context) {
-    if (this.appMode !== AppMode.SplitSubPaths
-      || !this.shapeSplitter
-      || !this.shapeSplitter.getCurrentProjectionOntoPath()) {
+    if (this.appMode !== AppMode.SplitSubPaths || !this.shapeSplitter) {
       return;
     }
     const proj1 = this.shapeSplitter.getInitialProjectionOntoPath();
@@ -958,7 +953,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           this.mediumPointRadius * SPLIT_POINT_RADIUS_FACTOR,
           SPLIT_POINT_COLOR);
       }
-    } else {
+    } else if (this.shapeSplitter.getCurrentProjectionOntoPath()) {
       const { x, y, d } = this.shapeSplitter.getCurrentProjectionOntoPath().projection;
       if (d < this.minSnapThreshold) {
         this.executeLabeledPoint(
