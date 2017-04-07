@@ -20,8 +20,9 @@ export class PathSelectorComponent {
   CANVAS_START = CanvasType.Start;
   CANVAS_END = CanvasType.End;
 
-  private readonly startVectorLayerObservable: Observable<VectorLayer>;
-  private readonly endVectorLayerObservable: Observable<VectorLayer>;
+  // These are public because they are accessed via the HTML template.
+  readonly startVectorLayerObservable: Observable<VectorLayer>;
+  readonly endVectorLayerObservable: Observable<VectorLayer>;
 
   constructor(
     private readonly elementRef: ElementRef,
