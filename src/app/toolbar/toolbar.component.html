@@ -25,10 +25,10 @@
     mdTooltipShowDelay="500" (click)="onDeleteSelectedPointsClick()">
     <md-icon>delete</md-icon>
   </button>
-  <button class="toolbar-action-button" md-icon-button [mdMenuTriggerFor]="menu">
+  <button class="toolbar-action-button" md-icon-button [mdMenuTriggerFor]="overflowMenu">
     <md-icon>more_vert</md-icon>
   </button>
-  <md-menu #menu="mdMenu">
+  <md-menu #overflowMenu="mdMenu">
     <button md-menu-item (click)="onDemoClick()">
       <md-icon class="material-icons" svgIcon="demoicon"></md-icon>
       <span>Demos</span>

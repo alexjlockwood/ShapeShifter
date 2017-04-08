@@ -51,17 +51,37 @@ div.app-splitter:hover {
     box-shadow: material-shadow(1);
     min-height: 40px;
     span {
+      font-weight: 400;
       font-size: 14px;
       color: $colorBlackTextSecondary;
-      margin: 8px;
+      margin: 4px;
     }
     button {
       &[md-icon-button] {
         md-icon {
           color: $colorBlackTextSecondary;
+          font-size: 20px;
         }
         md-icon.activated {
           color: material-color('orange', '900');
+        }
+        md-icon.svg-button {
+          width: 20px;
+          height: 20px;
+        }
+        input[type="file"] {
+          position: absolute;
+          left: 0;
+          top: 0;
+          right: 0;
+          bottom: 0;
+          opacity: 0;
+          cursor: pointer;
+          width: 100%;
+          height: 100%;
+        }
+         ::-webkit-file-upload-button {
+          cursor: pointer;
         }
       }
       &[md-icon-button][disabled] {
