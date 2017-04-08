@@ -117,8 +117,9 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     this.offscreenLayerCtx = getCtxFn(this.offscreenLayerCanvas);
     this.offscreenSubPathCtx = getCtxFn(this.offscreenSubPathCanvas);
     this.subscriptions.push(
-      this.stateService.getVectorLayerObservable(this.canvasType)
-        .subscribe(vl => {
+      this.stateService.getActivePathIdObservable(this.canvasType)
+        .subscribe(pathId => {
+          const vl = this.stateService.getVectorLayerByPathId(pathId);
           const newWidth = vl ? vl.width : DEFAULT_VIEWPORT_SIZE;
           const newHeight = vl ? vl.height : DEFAULT_VIEWPORT_SIZE;
           const didSizeChange =

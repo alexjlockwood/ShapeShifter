@@ -15,16 +15,16 @@ export const ROTATION_GROUP_LAYER_ID = 'rotation_group';
 export function loadVectorLayerFromSvgStringWithCallback(
   svgString: string,
   callback: (vl: VectorLayer) => void,
-  existingLayerIds = new Set<string>()) {
+  existingLayerIds: ReadonlyArray<string>) {
 
   Svgo.optimize(svgString, (optimizedSvgString: string) => {
-    callback(loadVectorLayerFromSvgString(optimizedSvgString));
+    callback(loadVectorLayerFromSvgString(optimizedSvgString, existingLayerIds));
   });
 }
 
 export function loadVectorLayerFromSvgString(
   svgString: string,
-  existingLayerIds = new Set<string>()): VectorLayer {
+  existingLayerIds: ReadonlyArray<string>): VectorLayer {
 
   const parser = new DOMParser();
   const doc = parser.parseFromString(svgString, 'image/svg+xml');

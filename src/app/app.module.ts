@@ -42,7 +42,6 @@ import {
   IsEqualToPipe,
   IsNotEqualToPipe,
 } from './pipes';
-import { PathLayerListPipe } from './pathselector/pathselector.component';
 import { SubPathItemsPipe } from './inspector/pathinspector.component';
 import { SvgCommandPipe } from './inspector/commandinspector.component';
 
@@ -67,7 +66,6 @@ import 'hammerjs';
     IsEqualToPipe,
     IsNotEqualToPipe,
     SubPathItemsPipe,
-    PathLayerListPipe,
   ],
   imports: [
     BrowserModule,

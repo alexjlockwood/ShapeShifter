@@ -1,3 +1,4 @@
+@import '../styles/material-colors';
 @import '../styles/variables';
 @import '../styles/theme';
 :host {
@@ -38,35 +39,33 @@
     outline: none;
     color: $colorBlackTextSecondary;
     border-radius: 2px;
-    &:hover {
-      background-color: rgba(0, 0, 0, 0.1);
-    }
-    &.is-selected {
-      background-color: mat-color($app-accent);
-      box-shadow: none;
-      color: #fff;
-    }
     span.path-name-text {
       margin-left: 8px;
       margin-right: 8px;
     }
-  }
-  button {
-    line-height: 16px;
-    height: 20px;
-    width: 20px;
-    min-height: 20px;
-    md-icon {
-      line-height: normal;
-      vertical-align: top;
-      width: 16px;
-      height: 16px;
-      font-size: 16px;
+    button {
+      line-height: 16px;
+      height: 20px;
+      width: 20px;
+      min-height: 20px;
+      &[md-icon-button] {
+        md-icon {
+          color: $colorBlackTextSecondary;
+          line-height: normal;
+          vertical-align: top;
+          width: 16px;
+          height: 16px;
+          font-size: 16px;
+        }
+        md-icon.activated {
+          color: material-color('orange', '900');
+        }
+      }
+      &[md-icon-button][disabled] {
+        md-icon {
+          color: $colorBlackTextDisabled;
+        }
+      }
     }
   }
-}
-
-.border {
-  width: 2px;
-  background-color: $colorBlackTextVeryLight;
 }

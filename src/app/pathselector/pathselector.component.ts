@@ -1,11 +1,10 @@
 import {
-  Component, ChangeDetectionStrategy,
-  Pipe, PipeTransform
+  Component, ChangeDetectionStrategy, OnInit
 } from '@angular/core';
 import { CanvasType } from '../CanvasType';
 import { StateService, } from '../services';
 import { SvgLoader } from '../scripts/import';
-import { VectorLayer, PathLayer } from '../scripts/layers';
+import { VectorLayer } from '../scripts/layers';
 import { Observable } from 'rxjs/Observable';
 
 declare const ga: Function;
@@ -16,57 +15,66 @@ declare const ga: Function;
   styleUrls: ['./pathselector.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PathSelectorComponent {
+export class PathSelectorComponent implements OnInit {
   CANVAS_START = CanvasType.Start;
   CANVAS_END = CanvasType.End;
 
   // These are public because they are accessed via the HTML template.
-  readonly startVectorLayerObservable: Observable<VectorLayer>;
-  readonly endVectorLayerObservable: Observable<VectorLayer>;
+  existingPathIdsObservable: Observable<ReadonlyArray<string>>;
+  startActivePathIdObservable: Observable<string>;
+  endActivePathIdObservable: Observable<string>;
 
-  constructor(private readonly stateService: StateService) {
-    this.startVectorLayerObservable =
-      this.stateService.getVectorLayerObservable(CanvasType.Start);
-    this.endVectorLayerObservable =
-      this.stateService.getVectorLayerObservable(CanvasType.End);
+  constructor(private readonly stateService: StateService) { }
+
+  ngOnInit() {
+    this.existingPathIdsObservable =
+      this.stateService.getExistingPathIdsObservable();
+    this.startActivePathIdObservable =
+      this.stateService.getActivePathIdObservable(CanvasType.Start);
+    this.endActivePathIdObservable =
+      this.stateService.getActivePathIdObservable(CanvasType.End);
   }
 
-  private setVectorLayer(canvasType: CanvasType, vectorLayer: VectorLayer) {
-    const canvasTypes = [canvasType];
-    if (canvasType === CanvasType.Start) {
-      // The preview vector layer will be identical to both the start and end
-      // vector layers in terms of their structure. During the animation, its
-      // active path command will be interpolated and replaced to trigger the
-      // animated result.
-      this.stateService.setVectorLayer(CanvasType.Preview, vectorLayer.clone(), false);
-      canvasTypes.push(CanvasType.Preview);
-    }
-    this.stateService.setVectorLayer(canvasType, vectorLayer, false);
-    const pathLayers = getPathLayerList(this.stateService.getVectorLayer(canvasType));
-    if (pathLayers.length) {
-      // Auto-select the first path.
-      this.setActivePathId(canvasType, pathLayers[0].id);
-    }
-    canvasTypes.forEach(type => this.stateService.notifyChange(type));
-  }
+  // private addVectorLayer(vectorLayer: VectorLayer) {
+  //   const canvasTypes = [canvasType];
+  //   if (canvasType === CanvasType.Start) {
+  //     // The preview vector layer will be identical to both the start and end
+  //     // vector layers in terms of their structure. During the animation, its
+  //     // active path command will be interpolated and replaced to trigger the
+  //     // animated result.
+  //     this.stateService.setVectorLayer(CanvasType.Preview, vectorLayer.clone(), false);
+  //     canvasTypes.push(CanvasType.Preview);
+  //   }
+  //   this.stateService.setVectorLayer(canvasType, vectorLayer, false);
+  //   const pathLayers = getPathLayerList(this.stateService.getVectorLayer(canvasType));
+  //   //if (pathLayers.length) {
+  //   // TODO: Auto-select the first path.
+  //   //this.setActivePathId(canvasType, pathLayers[0].id);
+  //   //}
+  //   canvasTypes.forEach(type => this.stateService.notifyChange(type));
+  // }
 
   getActivePathId(canvasType: CanvasType) {
     return this.stateService.getActivePathId(canvasType);
   }
 
-  setActivePathId(canvasType: CanvasType, activePathId: string) {
+  setStartActivePathId(activePathId: string) {
     // Always notify the preview layer in case the morphability status changed.
-    const ids = [{ type: canvasType, pathId: activePathId }];
-    if (canvasType === CanvasType.Start) {
-      // Set the preview layer id before the start/end layer id to ensure
-      // that auto-conversion runs properly.
-      ids.unshift({ type: CanvasType.Preview, pathId: activePathId });
-    }
+    const ids = [{ type: CanvasType.Start, pathId: activePathId }];
+    // Set the preview layer id before the start/end layer id to ensure
+    // that auto-conversion runs properly.
+    ids.unshift({ type: CanvasType.Preview, pathId: activePathId });
+    console.info(ids);
+    console.info(this.stateService);
     this.stateService.setActivePathIds(ids);
   }
 
-  trackPathLayer(index: number, item: PathLayer) {
-    return item.id;
+  setEndActivePathId(activePathId: string) {
+    // Always notify the preview layer in case the morphability status changed.
+    const ids = [{ type: CanvasType.End, pathId: activePathId }];
+    console.info(ids);
+    console.info(this.stateService);
+    this.stateService.setActivePathIds(ids);
   }
 
   // Called when the user picks a file from the file picker.
@@ -81,37 +89,18 @@ export class PathSelectorComponent {
       files.push(fileList[i]);
     }
 
-    const canvasTypes = [CanvasType.Start, CanvasType.End];
-    const availableEmptyListSlots: CanvasType[] = [];
-    for (let i = 0; i < canvasTypes.length; i++) {
-      if (!getPathLayerList(this.stateService.getVectorLayer(canvasTypes[i])).length) {
-        availableEmptyListSlots.push(canvasTypes[i]);
-      }
-    }
-
-    interface CanvasTypeToFile {
-      canvasType: CanvasType;
-      file: File;
-    }
-    const canvasTypesToFiles: CanvasTypeToFile[] = [];
-    const numIterations =
-      Math.min(files.length, availableEmptyListSlots.length);
-    for (let i = 0; i < numIterations; i++) {
-      canvasTypesToFiles.push({
-        canvasType: availableEmptyListSlots[i],
-        file: files[i],
-      });
-    }
-
-    canvasTypesToFiles.forEach(obj => {
-      const canvasType = obj.canvasType;
-      const file = obj.file;
+    const vectorLayers: VectorLayer[] = [];
+    for (const file of files) {
       const fileReader = new FileReader();
 
       fileReader.onload = event => {
         const svgText = (event.target as any).result;
         SvgLoader.loadVectorLayerFromSvgStringWithCallback(svgText, vectorLayer => {
-          this.setVectorLayer(canvasType, vectorLayer);
+          vectorLayers.push(vectorLayer);
+          if (vectorLayers.length === files.length) {
+            // TODO: what if an error happens? import the vector layers that succeeded?
+            this.stateService.addVectorLayers(vectorLayers);
+          }
         }, this.stateService.getExistingPathIds());
       };
 
@@ -136,27 +125,6 @@ export class PathSelectorComponent {
       };
 
       fileReader.readAsText(file);
-    });
+    }
   }
-}
-
-@Pipe({ name: 'toPathLayerList' })
-export class PathLayerListPipe implements PipeTransform {
-  constructor(private stateService: StateService) { }
-
-  transform(vectorLayer: VectorLayer | undefined): PathLayer[] {
-    return getPathLayerList(vectorLayer);
-  }
-}
-
-function getPathLayerList(vectorLayer: VectorLayer | undefined) {
-  const pathLayers: PathLayer[] = [];
-  if (vectorLayer) {
-    vectorLayer.walk((layer => {
-      if (layer instanceof PathLayer) {
-        pathLayers.push(layer);
-      }
-    }));
-  }
-  return pathLayers;
 }

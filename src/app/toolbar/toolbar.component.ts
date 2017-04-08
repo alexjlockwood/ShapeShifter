@@ -48,10 +48,8 @@ export class ToolbarComponent implements OnInit {
   ngOnInit() {
     this.morphabilityStatusObservable =
       this.stateService.getMorphabilityStatusObservable();
-    this.isDirtyObservable = Observable.combineLatest(
-      this.stateService.getVectorLayerObservable(CanvasType.Start),
-      this.stateService.getVectorLayerObservable(CanvasType.End),
-      (vl1, vl2) => !!vl1 || !!vl2);
+    this.isDirtyObservable =
+      this.stateService.getExistingPathIdsObservable().map(ids => !!ids.length);
     this.isActionModeEnabledObservable =
       this.selectionService.asObservable()
         .map(selections => {

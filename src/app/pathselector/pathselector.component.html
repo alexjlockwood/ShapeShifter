@@ -1,43 +1,25 @@
-<div *ngIf="!!(startVectorLayerObservable | async | toPathLayerList).length"
-  class="path-selector-list">
-  <div *ngFor="let pathLayer of (startVectorLayerObservable | async | toPathLayerList);
-    let idx = index;
-    trackBy: trackPathLayer">
+<div *ngIf="!!(existingPathIdsObservable | async).length" class="path-selector-list">
+  <div *ngFor="let pathLayerId of (existingPathIdsObservable | async);
+    let idx = index;">
     <div class="path-selector-listitem" fxLayout="row">
-      <span class="path-name-text">{{ pathLayer.id }}</span>
+      <span class="path-name-text">{{ pathLayerId }}</span>
       <span fxFlex></span>
-      <button md-icon-button mdTooltip="asdf" mdTooltipPosition="above"
-        mdTooltipShowDelay="500">
-          <md-icon>skip_next</md-icon>
+      <button md-icon-button mdTooltip="Set start path" mdTooltipPosition="above"
+        mdTooltipShowDelay="500" (click)="setStartActivePathId(pathLayerId)">
+        <md-icon [class.activated]="(startActivePathIdObservable | async) === pathLayerId">arrow_back</md-icon>
+      </button>
+      <button md-icon-button mdTooltip="Set end path" mdTooltipPosition="above"
+        mdTooltipShowDelay="500" (click)="setEndActivePathId(pathLayerId)">
+        <md-icon [class.activated]="(endActivePathIdObservable | async) === pathLayerId">arrow_forward</md-icon>
         </button>
-      <button md-icon-button mdTooltip="fdsa" mdTooltipPosition="above"
+      <button md-icon-button mdTooltip="Delete path" mdTooltipPosition="above"
         mdTooltipShowDelay="500">
-          <md-icon>skip_next</md-icon>
-        </button>
+        <md-icon>delete</md-icon>
+      </button>
     </div>
   </div>
 </div>
-<!--<div class="border" *ngIf="(startVectorLayerObservable | async | toPathLayerList).length || (endVectorLayerObservable | async | toPathLayerList).length"></div>-->
-<!--<div *ngIf="!!(endVectorLayerObservable | async | toPathLayerList).length"
-    class="path-selector-list" fxFlex>
-    <div *ngFor="let pathLayer of (endVectorLayerObservable | async | toPathLayerList);
-    let idx = index;
-    trackBy: trackPathLayer">
-      <div class="path-selector-listitem" [class.is-selected]="getActivePathId(CANVAS_END) === pathLayer.id"
-        (click)="setActivePathId(CANVAS_END, pathLayer.id)">
-        <span>{{idx + 1}}.</span><span class="path-name-text">{{pathLayer.id}}</span>
-      </div>
-    </div>
-  </div>-->
-<div *ngIf="!(startVectorLayerObservable | async | toPathLayerList).length && !(endVectorLayerObservable | async | toPathLayerList).length"
-  class="path-selector-empty" fxLayout="column" fxLayoutAlign="center center"
-  fxFlexFill>
+<div *ngIf="!(existingPathIdsObservable | async).length" class="path-selector-empty"
+  fxLayout="column" fxLayoutAlign="center center" fxFlexFill>
   <span>Import 2 SVGs to get started<br>(or load a demo in the top right menu)</span>
 </div>
-<!--<div *ngIf="!(!!(startVectorLayerObservable | async | toPathLayerList).length && !!(endVectorLayerObservable | async | toPathLayerList).length) && !(!(startVectorLayerObservable | async | toPathLayerList).length && !(endVectorLayerObservable | async | toPathLayerList).length)"
-    class="path-selector-empty" fxLayout="column" fxLayoutAlign="center center"
-    fxFlex>
-    <input type="file" accept=".svg" id="end-input-file-id" (change)="onSvgFileChosen(($event.target || $event.srcElement).files)"
-      multiple>
-    <label for="end-input-file-id">Import a second SVG to get started</label>
-  </div>-->

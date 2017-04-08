@@ -18,12 +18,14 @@ import { SelectionService } from './selection.service';
  */
 @Injectable()
 export class StateService {
-  private readonly vectorLayerMap = new Map<CanvasType, VectorLayer>();
+  private readonly stateMap = new Map<string, VectorLayer>();
   private readonly activePathIdMap = new Map<CanvasType, string>();
-  private readonly vectorLayerSources = new Map<CanvasType, BehaviorSubject<VectorLayer>>();
+
+  private readonly existingPathIdsSource = new BehaviorSubject<ReadonlyArray<string>>([]);
+  // private readonly vectorLayerMap = new Map<CanvasType, VectorLayer>();
+  // private readonly vectorLayerSources = new Map<CanvasType, BehaviorSubject<VectorLayer>>();
   private readonly activePathIdSources = new Map<CanvasType, BehaviorSubject<string>>();
   private readonly statusSource = new BehaviorSubject<MorphabilityStatus>(MorphabilityStatus.None);
-  private readonly stateMap = new Map<string, VectorLayer>();
 
   constructor(
     private readonly selectionService: SelectionService,
@@ -33,66 +35,67 @@ export class StateService {
   ) {
     [CanvasType.Start, CanvasType.Preview, CanvasType.End]
       .forEach(type => {
-        this.vectorLayerSources.set(type, new BehaviorSubject<VectorLayer>(undefined));
+        // this.vectorLayerSources.set(type, new BehaviorSubject<VectorLayer>(undefined));
         this.activePathIdSources.set(type, new BehaviorSubject<string>(undefined));
       });
   }
 
   /**
-   * Imports all PathLayers in the specified VectorLayer into the application's state map.
+   * Imports all paths in the specified VectorLayer into the application's state map.
    */
-  importVectorLayer(vectorLayer: VectorLayer) {
-    (function recurseFn(layer: Layer) {
-      if (layer instanceof PathLayer) {
-        if (this.stateMap.has(layer.id)) {
-          console.warn('Ignoring attempt to add path to state map', this.stateMap, vectorLayer);
-          return;
-        }
-        this.stateMap.set(layer.id, vectorLayer.clone());
-        return;
-      }
-      if (layer.children) {
-        layer.children.forEach(l => recurseFn(l));
-      }
-    })(vectorLayer);
-  }
-
-  /**
-   * Returns a set of all existing path ids.
-   */
-  getExistingPathIds() {
-    const existingIds = new Set<string>();
-    this.stateMap.forEach(vl => {
+  addVectorLayers(vectorLayers: VectorLayer[], clearExistingState = false) {
+    if (clearExistingState) {
+      this.stateMap.clear();
+      this.activePathIdMap.clear();
+    }
+    for (const vl of vectorLayers) {
+      const stateMap = this.stateMap;
       (function recurseFn(layer: Layer) {
         if (layer instanceof PathLayer) {
-          existingIds.add(layer.id);
+          if (stateMap.has(layer.id)) {
+            console.warn(
+              'Ignoring attempt to add path ID to state map', stateMap, vl, layer.id);
+            return;
+          }
+          stateMap.set(layer.id, vl.clone());
           return;
         }
         if (layer.children) {
           layer.children.forEach(l => recurseFn(l));
         }
       })(vl);
-    });
-    return existingIds;
+    }
+    this.existingPathIdsSource.next(Array.from(this.stateMap.keys()));
+  }
+
+  /**
+   * Returns a set of all existing path ids.
+   */
+  getExistingPathIds() {
+    return this.existingPathIdsSource.getValue();
   }
 
   /**
    * Called by the PathSelectorComponent when a new vector layer is imported.
    * The previously set active path ID will be cleared if one exists.
    */
-  setVectorLayer(type: CanvasType, layer: VectorLayer, shouldNotify = true) {
-    this.vectorLayerMap.set(type, layer);
-    this.activePathIdMap.delete(type);
-    if (shouldNotify) {
-      this.notifyChange(type);
-    }
-  }
+  // setVectorLayer(type: CanvasType, layer: VectorLayer, shouldNotify = true) {
+  //   this.vectorLayerMap.set(type, layer);
+  //   this.activePathIdMap.delete(type);
+  //   if (shouldNotify) {
+  //     this.notifyChange(type);
+  //   }
+  // }
 
   /**
    * Returns the currently set vector layer for the specified canvas type.
    */
   getVectorLayer(type: CanvasType): VectorLayer | undefined {
-    return this.vectorLayerMap.get(type);
+    const pathId = this.getActivePathId(type);
+    if (!pathId) {
+      return undefined;
+    }
+    return this.stateMap.get(pathId).clone();
   }
 
   /**
@@ -120,6 +123,10 @@ export class StateService {
    */
   getActivePathId(type: CanvasType): string | undefined {
     return this.activePathIdMap.get(type);
+  }
+
+  getVectorLayerByPathId(pathId: string): VectorLayer {
+    return this.stateMap.get(pathId);
   }
 
   /**
@@ -287,7 +294,14 @@ export class StateService {
    * canvas type has changed and that they should update their content.
    */
   notifyChange(type: CanvasType) {
-    this.vectorLayerSources.get(type).next(this.vectorLayerMap.get(type));
+    // TODO: need to broadcast existing path ids change?
+    // TODO: need to broadcast existing path ids change?
+    // TODO: need to broadcast existing path ids change?
+    // TODO: need to broadcast existing path ids change?
+    // TODO: need to broadcast existing path ids change?
+    // TODO: need to broadcast existing path ids change?
+    console.info('notifyChange');
+    // this.vectorLayerSources.get(type).next(this.vectorLayerMap.get(type));
     this.activePathIdSources.get(type).next(this.activePathIdMap.get(type));
     this.statusSource.next(this.getMorphabilityStatus());
   }
@@ -313,12 +327,18 @@ export class StateService {
     this.hoverService.reset();
     this.animatorService.reset();
     const canvasTypes = [CanvasType.Preview, CanvasType.Start, CanvasType.End];
-    canvasTypes.forEach(type => this.setVectorLayer(type, undefined, false));
+    // canvasTypes.forEach(type => this.setVectorLayer(type, undefined, false));
+    this.stateMap.clear();
+    this.activePathIdMap.clear();
     canvasTypes.forEach(type => this.notifyChange(type));
   }
 
-  getVectorLayerObservable(type: CanvasType) {
-    return this.vectorLayerSources.get(type);
+  // getVectorLayerObservable(type: CanvasType) {
+  //   return this.vectorLayerSources.get(type);
+  // }
+
+  getExistingPathIdsObservable() {
+    return this.existingPathIdsSource.asObservable();
   }
 
   getActivePathIdObservable(type: CanvasType) {

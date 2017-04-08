@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import { Layer, VectorLayer, GroupLayer } from '.';
+import { Layer, VectorLayer, GroupLayer, PathLayer } from '.';
 import { Matrix } from '../common';
 
 /**
@@ -35,4 +35,21 @@ export function getTransformsForLayer(vectorLayer: VectorLayer, layerId: string)
     return undefined;
   };
   return getTransformsFn([], vectorLayer);
+}
+
+/**
+ * Returns a list of all path IDs in this VectorLayer.
+ */
+export function findExistingPathIds(vectorLayer: VectorLayer) {
+  const ids: string[] = [];
+  (function recurseFn(layer: Layer) {
+    if (layer instanceof PathLayer) {
+      ids.push(layer.id);
+      return;
+    }
+    if (layer.children) {
+      layer.children.forEach(l => recurseFn(l));
+    }
+  })(vectorLayer);
+  return ids;
 }
