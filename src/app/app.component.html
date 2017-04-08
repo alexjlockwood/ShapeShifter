@@ -28,9 +28,9 @@
           </button>
         </div>
       </div>
-      <app-pathselector fxFlex></app-pathselector>
+      <app-pathselector fxFlexFill></app-pathselector>
     </div>
-    <!-- Point inspector. -->
+    <!-- Path inspector. -->
     <div class="inspector-panel" fxLayout="column" fxFlex>
       <div class="inspector-panel-header" fxLayout="row" fxLayoutAlign="start center">
         <span *ngIf="morphabilityStatus !== MORPHABILITY_NONE">
@@ -63,16 +63,14 @@
           <md-icon [class.activated]="(appModeObservable | async) === SPLIT_SUBPATHS_MODE">content_cut</md-icon>
         </button>
       </div>
-      <div class="inspector-panel-body" fxLayout="row" fxFlex>
-        <app-pathinspector></app-pathinspector>
-      </div>
+      <app-pathinspector fxFlexFill></app-pathinspector>
     </div>
     <!-- Preview panel. -->
     <div class="inspector-panel" fxLayout="column">
       <div class="inspector-panel-header" fxLayoutAlign="start center">
         <span>Preview</span>
       </div>
-      <app-settings class="inspector-panel-body"></app-settings>
+      <app-settings fxFlexFill></app-settings>
     </div>
   </div>
 </div>

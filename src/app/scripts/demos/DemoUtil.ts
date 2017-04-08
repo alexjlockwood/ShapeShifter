@@ -5,8 +5,8 @@ import { PathLayer } from '../layers';
 import { StateService } from '../../services';
 
 export function loadDemo(lss: StateService, selectedSvgStrings: { start: string, end: string }) {
-  const importedStartVectorLayer = SvgLoader.loadVectorLayerFromSvgString(selectedSvgStrings.start);
-  const importedEndVectorLayer = SvgLoader.loadVectorLayerFromSvgString(selectedSvgStrings.end);
+  const importedStartVectorLayer = SvgLoader.loadVectorLayerFromSvgString(selectedSvgStrings.start, lss.getExistingPathIds());
+  const importedEndVectorLayer = SvgLoader.loadVectorLayerFromSvgString(selectedSvgStrings.end, lss.getExistingPathIds());
   lss.setVectorLayer(CanvasType.Start, importedStartVectorLayer.clone(), false);
   lss.setVectorLayer(CanvasType.Preview, importedStartVectorLayer.clone(), false);
   lss.setVectorLayer(CanvasType.End, importedEndVectorLayer.clone(), false);

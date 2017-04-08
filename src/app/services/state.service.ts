@@ -23,6 +23,7 @@ export class StateService {
   private readonly vectorLayerSources = new Map<CanvasType, BehaviorSubject<VectorLayer>>();
   private readonly activePathIdSources = new Map<CanvasType, BehaviorSubject<string>>();
   private readonly statusSource = new BehaviorSubject<MorphabilityStatus>(MorphabilityStatus.None);
+  private readonly stateMap = new Map<string, VectorLayer>();
 
   constructor(
     private readonly selectionService: SelectionService,
@@ -35,6 +36,44 @@ export class StateService {
         this.vectorLayerSources.set(type, new BehaviorSubject<VectorLayer>(undefined));
         this.activePathIdSources.set(type, new BehaviorSubject<string>(undefined));
       });
+  }
+
+  /**
+   * Imports all PathLayers in the specified VectorLayer into the application's state map.
+   */
+  importVectorLayer(vectorLayer: VectorLayer) {
+    (function recurseFn(layer: Layer) {
+      if (layer instanceof PathLayer) {
+        if (this.stateMap.has(layer.id)) {
+          console.warn('Ignoring attempt to add path to state map', this.stateMap, vectorLayer);
+          return;
+        }
+        this.stateMap.set(layer.id, vectorLayer.clone());
+        return;
+      }
+      if (layer.children) {
+        layer.children.forEach(l => recurseFn(l));
+      }
+    })(vectorLayer);
+  }
+
+  /**
+   * Returns a set of all existing path ids.
+   */
+  getExistingPathIds() {
+    const existingIds = new Set<string>();
+    this.stateMap.forEach(vl => {
+      (function recurseFn(layer: Layer) {
+        if (layer instanceof PathLayer) {
+          existingIds.add(layer.id);
+          return;
+        }
+        if (layer.children) {
+          layer.children.forEach(l => recurseFn(l));
+        }
+      })(vl);
+    });
+    return existingIds;
   }
 
   /**

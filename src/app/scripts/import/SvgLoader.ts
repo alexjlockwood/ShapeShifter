@@ -14,14 +14,18 @@ export const ROTATION_GROUP_LAYER_ID = 'rotation_group';
  */
 export function loadVectorLayerFromSvgStringWithCallback(
   svgString: string,
-  callback: (vl: VectorLayer) => void) {
+  callback: (vl: VectorLayer) => void,
+  existingLayerIds = new Set<string>()) {
 
   Svgo.optimize(svgString, (optimizedSvgString: string) => {
     callback(loadVectorLayerFromSvgString(optimizedSvgString));
   });
 }
 
-export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
+export function loadVectorLayerFromSvgString(
+  svgString: string,
+  existingLayerIds = new Set<string>()): VectorLayer {
+
   const parser = new DOMParser();
   const doc = parser.parseFromString(svgString, 'image/svg+xml');
 
@@ -33,16 +37,16 @@ export function loadVectorLayerFromSvgString(svgString: string): VectorLayer {
       .replace(/[^\w_]+/g, '');
   };
 
-  const usedIds = {
-    ROTATION_GROUP_LAYER_ID: true,
-  };
+  // TODO: how should we protect against duplicate ids in separate vector layers?
+  const usedIds = new Set<string>(existingLayerIds);
+  usedIds.add(ROTATION_GROUP_LAYER_ID);
 
   const makeFinalNodeIdFn = (node, typeIdPrefix: string) => {
     const finalId = getUniqueId(
       sanitizeIdFn(node.id || typeIdPrefix),
-      id => usedIds[id],
+      id => usedIds.has(id),
     );
-    usedIds[finalId] = true;
+    usedIds.add(finalId);
     return finalId;
   };
 

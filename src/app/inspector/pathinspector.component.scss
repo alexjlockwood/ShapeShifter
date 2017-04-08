@@ -2,6 +2,11 @@
 @import '../styles/theme';
 :host {
   user-select: none;
+  overflow-y: auto;
+}
+
+.path-container {
+  padding-bottom: 48px;
 }
 
 .subpath-container {

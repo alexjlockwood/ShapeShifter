@@ -1,5 +1,5 @@
 import {
-  Component, ElementRef, ChangeDetectionStrategy,
+  Component, ChangeDetectionStrategy,
   Pipe, PipeTransform
 } from '@angular/core';
 import { CanvasType } from '../CanvasType';
@@ -24,10 +24,7 @@ export class PathSelectorComponent {
   readonly startVectorLayerObservable: Observable<VectorLayer>;
   readonly endVectorLayerObservable: Observable<VectorLayer>;
 
-  constructor(
-    private readonly elementRef: ElementRef,
-    private readonly stateService: StateService,
-  ) {
+  constructor(private readonly stateService: StateService) {
     this.startVectorLayerObservable =
       this.stateService.getVectorLayerObservable(CanvasType.Start);
     this.endVectorLayerObservable =
@@ -115,7 +112,7 @@ export class PathSelectorComponent {
         const svgText = (event.target as any).result;
         SvgLoader.loadVectorLayerFromSvgStringWithCallback(svgText, vectorLayer => {
           this.setVectorLayer(canvasType, vectorLayer);
-        });
+        }, this.stateService.getExistingPathIds());
       };
 
       fileReader.onerror = event => {
