@@ -24,7 +24,8 @@
           <button md-icon-button (click)="addPathsFromSvg()" mdTooltip="Add paths from SVG"
             mdTooltipPosition="above" mdTooltipShowDelay="500">
             <md-icon class="svg-button" svgIcon="addpaths"></md-icon>
-            <input id="addPathsFromSvgButton" type="file" accept=".svg">
+            <input id="addPathsFromSvgButton" type="file" accept=".svg"
+             (change)="onSvgFilesPicked(($event.target || $event.srcElement).files)" multiple>
           </button>
         </div>
       </div>

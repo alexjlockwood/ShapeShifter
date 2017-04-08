@@ -21,8 +21,7 @@
 
 .path-selector-list {
   box-sizing: border-box;
-  min-width: 180px;
-  max-width: 200px;
+  width: 200px;
   padding-top: 6px;
   padding-left: 4px;
   padding-right: 8px;
@@ -39,6 +38,14 @@
     outline: none;
     color: $colorBlackTextSecondary;
     border-radius: 2px;
+    &.is-hovering {
+      background-color: rgba(0, 0, 0, 0.1);
+    }
+    &.is-selected {
+      background-color: mat-color($app-accent);
+      box-shadow: none;
+      color: #fff;
+    }
     span.path-name-text {
       margin-left: 8px;
       margin-right: 8px;
@@ -50,7 +57,6 @@
       min-height: 20px;
       &[md-icon-button] {
         md-icon {
-          color: $colorBlackTextSecondary;
           line-height: normal;
           vertical-align: top;
           width: 16px;

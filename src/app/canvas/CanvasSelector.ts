@@ -262,7 +262,7 @@ export class CanvasSelector {
   private calculateProjectionOntoPath(mousePoint: Point, restrictToSubIdx?: number) {
     const transforms =
       LayerUtil.getTransformsForLayer(
-        this.component.stateService.getVectorLayer(this.canvasType),
+        this.component.vectorLayer,
         this.component.stateService.getActivePathId(this.canvasType)).reverse();
     const transformedMousePoint =
       MathUtil.transformPoint(

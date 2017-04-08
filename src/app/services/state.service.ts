@@ -20,10 +20,7 @@ import { SelectionService } from './selection.service';
 export class StateService {
   private readonly stateMap = new Map<string, VectorLayer>();
   private readonly activePathIdMap = new Map<CanvasType, string>();
-
   private readonly existingPathIdsSource = new BehaviorSubject<ReadonlyArray<string>>([]);
-  // private readonly vectorLayerMap = new Map<CanvasType, VectorLayer>();
-  // private readonly vectorLayerSources = new Map<CanvasType, BehaviorSubject<VectorLayer>>();
   private readonly activePathIdSources = new Map<CanvasType, BehaviorSubject<string>>();
   private readonly statusSource = new BehaviorSubject<MorphabilityStatus>(MorphabilityStatus.None);
 
@@ -35,7 +32,6 @@ export class StateService {
   ) {
     [CanvasType.Start, CanvasType.Preview, CanvasType.End]
       .forEach(type => {
-        // this.vectorLayerSources.set(type, new BehaviorSubject<VectorLayer>(undefined));
         this.activePathIdSources.set(type, new BehaviorSubject<string>(undefined));
       });
   }
@@ -69,52 +65,66 @@ export class StateService {
   }
 
   /**
-   * Returns a set of all existing path ids.
+   * Returns a list of all path IDs in this VectorLayer.
    */
   getExistingPathIds() {
-    return this.existingPathIdsSource.getValue();
+    const ids: string[] = [];
+    this.stateMap.forEach(vl => {
+      (function recurseFn(layer: Layer) {
+        if (layer instanceof PathLayer) {
+          ids.push(layer.id);
+          return;
+        }
+        if (layer.children) {
+          layer.children.forEach(l => recurseFn(l));
+        }
+      })(vl);
+    });
+    return ids;
   }
-
-  /**
-   * Called by the PathSelectorComponent when a new vector layer is imported.
-   * The previously set active path ID will be cleared if one exists.
-   */
-  // setVectorLayer(type: CanvasType, layer: VectorLayer, shouldNotify = true) {
-  //   this.vectorLayerMap.set(type, layer);
-  //   this.activePathIdMap.delete(type);
-  //   if (shouldNotify) {
-  //     this.notifyChange(type);
-  //   }
-  // }
 
   /**
    * Returns the currently set vector layer for the specified canvas type.
    */
-  getVectorLayer(type: CanvasType): VectorLayer | undefined {
-    const pathId = this.getActivePathId(type);
-    if (!pathId) {
-      return undefined;
-    }
-    return this.stateMap.get(pathId).clone();
+  getVectorLayer(canvasType: CanvasType): VectorLayer | undefined {
+    return this.getVectorLayerByPathId(this.getActivePathId(canvasType));
+  }
+
+  /**
+   * Returns the specified path's parent VectorLayer.
+   */
+  getVectorLayerByPathId(pathId: string) {
+    return this.stateMap.get(pathId);
   }
 
   /**
    * Called by the PathSelectorComponent when a new vector layer path is selected.
    */
-  setActivePathIds(ids: Array<{ type: CanvasType, pathId: string }>, shouldNotify = true) {
+  setActivePathId(canvasType: CanvasType, pathId: string, shouldNotify = true) {
     this.appModeService.reset();
     this.selectionService.reset();
     this.hoverService.reset();
+
     // TODO: resetting the animator service strangely breaks things here... not sure why.
     // this.animatorService.reset();
-    ids.forEach(id => this.activePathIdMap.set(id.type, id.pathId));
-    ids.forEach(id => {
-      const activePathLayer = this.getActivePathLayer(id.type);
-      // Attempt to make each corresponding pair of subpaths compatible with each other.
-      this.updateActivePath(id.type, activePathLayer.pathData, false);
-    });
+
+    const setActivePathIdFn = (type: CanvasType) => {
+      this.activePathIdMap.set(type, pathId);
+      if (type !== CanvasType.Preview) {
+        // Attempt to make the start and end subpaths compatible with each other.
+        this.updateActivePath(type, this.getActivePathLayer(type).pathData, false /* shouldNotify */);
+      }
+    };
+
+    const notifyTypes = [canvasType];
+    if (canvasType === CanvasType.Start) {
+      setActivePathIdFn(CanvasType.Preview);
+      notifyTypes.unshift(CanvasType.Preview);
+    }
+    setActivePathIdFn(canvasType);
+
     if (shouldNotify) {
-      ids.forEach(id => this.notifyChange(id.type));
+      notifyTypes.forEach(type => this.notifyChange(type));
     }
   }
 
@@ -123,10 +133,6 @@ export class StateService {
    */
   getActivePathId(type: CanvasType): string | undefined {
     return this.activePathIdMap.get(type);
-  }
-
-  getVectorLayerByPathId(pathId: string): VectorLayer {
-    return this.stateMap.get(pathId);
   }
 
   /**
@@ -216,7 +222,7 @@ export class StateService {
     this.getActivePathLayer(type).pathData = path;
 
     if (type === CanvasType.Start || hasOppositeCanvasTypeChanged) {
-      // The start canvas layer has changed, so update the preview layer as well.
+      // A canvas layer has changed, so update the preview layer as well.
       const activeStartLayer = this.getActivePathLayer(CanvasType.Start);
       const activePreviewLayer = this.getActivePathLayer(CanvasType.Preview);
       if (activeStartLayer && activePreviewLayer) {
@@ -294,14 +300,6 @@ export class StateService {
    * canvas type has changed and that they should update their content.
    */
   notifyChange(type: CanvasType) {
-    // TODO: need to broadcast existing path ids change?
-    // TODO: need to broadcast existing path ids change?
-    // TODO: need to broadcast existing path ids change?
-    // TODO: need to broadcast existing path ids change?
-    // TODO: need to broadcast existing path ids change?
-    // TODO: need to broadcast existing path ids change?
-    console.info('notifyChange');
-    // this.vectorLayerSources.get(type).next(this.vectorLayerMap.get(type));
     this.activePathIdSources.get(type).next(this.activePathIdMap.get(type));
     this.statusSource.next(this.getMorphabilityStatus());
   }
@@ -326,16 +324,10 @@ export class StateService {
     this.selectionService.reset();
     this.hoverService.reset();
     this.animatorService.reset();
-    const canvasTypes = [CanvasType.Preview, CanvasType.Start, CanvasType.End];
-    // canvasTypes.forEach(type => this.setVectorLayer(type, undefined, false));
     this.stateMap.clear();
     this.activePathIdMap.clear();
-    canvasTypes.forEach(type => this.notifyChange(type));
+    [CanvasType.Preview, CanvasType.Start, CanvasType.End].forEach(type => this.notifyChange(type));
   }
-
-  // getVectorLayerObservable(type: CanvasType) {
-  //   return this.vectorLayerSources.get(type);
-  // }
 
   getExistingPathIdsObservable() {
     return this.existingPathIdsSource.asObservable();
@@ -350,7 +342,6 @@ export class StateService {
   }
 }
 
-// TODO: also need to handle case where paths are invalid (i.e. unequal # of subpaths)
 export enum MorphabilityStatus {
   None,
   Unmorphable,

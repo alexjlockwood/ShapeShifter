@@ -6,7 +6,7 @@ import {
 } from '@angular/core';
 import { Path, SubPath, Command } from '../scripts/paths';
 import {
-  PathLayer, ClipPathLayer, LayerUtil
+  PathLayer, ClipPathLayer, LayerUtil, VectorLayer
 } from '../scripts/layers';
 import { CanvasType } from '../CanvasType';
 import { Point, Matrix, MathUtil, ColorUtil } from '../scripts/common';
@@ -69,6 +69,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   @ViewChild('overlayCanvas') private overlayCanvasRef: ElementRef;
   @ViewChildren(CanvasRulerDirective) canvasRulers: QueryList<CanvasRulerDirective>;
 
+  private vectorLayer_: VectorLayer;
   private canvasContainer: JQuery;
   private renderingCanvas: JQuery;
   private overlayCanvas: JQuery;
@@ -125,6 +126,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           const didSizeChange =
             this.vlSize.width !== newWidth || this.vlSize.height !== newHeight;
           this.vlSize = { width: newWidth, height: newHeight };
+          this.vectorLayer_ = vl ? vl.clone() : vl;
           if (didSizeChange) {
             this.resizeAndDraw();
           } else {
@@ -163,7 +165,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           previewGroupLayer.interpolate(startGroupLayer, endGroupLayer, fraction);
         }
         const startVectorLayer = this.stateService.getVectorLayer(CanvasType.Start);
-        const previewVectorLayer = this.stateService.getVectorLayer(CanvasType.Preview);
+        const previewVectorLayer = this.vectorLayer;
         const endVectorLayer = this.stateService.getVectorLayer(CanvasType.End);
         if (startVectorLayer && previewVectorLayer && endVectorLayer) {
           previewVectorLayer.interpolate(startVectorLayer, endVectorLayer, fraction);
@@ -300,8 +302,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  private get vectorLayer() {
-    return this.stateService.getVectorLayer(this.canvasType);
+  get vectorLayer() {
+    return this.vectorLayer_;
   }
 
   private get activePathId() {

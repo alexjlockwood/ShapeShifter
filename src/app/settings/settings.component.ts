@@ -59,7 +59,7 @@ export class SettingsComponent implements OnInit {
   }
 
   // TODO: remove the layer if both attributes are set to 0?
-  // TODO: make these the rotation gets exported as well
+  // TODO: avoid mutating the vector layers directly... maybe make them immutable
   set rotation(rotation: number) {
     this.rotation_ = rotation;
 

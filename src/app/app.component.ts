@@ -1,11 +1,17 @@
+import * as $ from 'jquery';
+import * as erd from 'element-resize-detector';
+import * as _ from 'lodash';
 import {
   Component, OnInit, ViewChild, AfterViewInit,
   OnDestroy, ElementRef, ChangeDetectionStrategy
 } from '@angular/core';
+import { MdSnackBar } from '@angular/material';
 import { environment } from '../environments/environment';
-import { CanvasType } from './CanvasType';
 import { Subscription } from 'rxjs/Subscription';
 import { Observable } from 'rxjs/Observable';
+import { CanvasType } from './CanvasType';
+import { VectorLayer } from './scripts/layers';
+import { SvgLoader } from './scripts/import';
 import { SubPath, Command } from './scripts/paths';
 import {
   AnimatorService,
@@ -17,10 +23,6 @@ import {
   MorphabilityStatus,
 } from './services';
 import { deleteSelectedSplitPoints } from './services/selection.service';
-import * as $ from 'jquery';
-import * as erd from 'element-resize-detector';
-import * as _ from 'lodash';
-import { MdSnackBar } from '@angular/material';
 import { DemoUtil, DEMO_MAP } from './scripts/demos';
 
 const IS_DEV_MODE = !environment.production;
@@ -236,8 +238,66 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
+  // Proxies a button click to the <input> tag that opens the file picker.
   addPathsFromSvg() {
     $('#addPathsFromSvgButton').click();
+  }
+
+  // Called when the user picks a file from the file picker.
+  onSvgFilesPicked(fileList: FileList) {
+    if (!fileList || !fileList.length) {
+      console.warn('Failed to load SVG file');
+      return;
+    }
+
+    const files: File[] = [];
+    for (let i = 0; i < fileList.length; i++) {
+      files.push(fileList[i]);
+    }
+
+    let numCallbacks = 0;
+    const vectorLayers: VectorLayer[] = [];
+    const maybeAddVectorLayersFn = () => {
+      numCallbacks++;
+      if (numCallbacks === files.length) {
+        this.stateService.addVectorLayers(vectorLayers);
+      }
+    };
+
+    for (const file of files) {
+      const fileReader = new FileReader();
+
+      fileReader.onload = event => {
+        const svgText = (event.target as any).result;
+        SvgLoader.loadVectorLayerFromSvgStringWithCallback(svgText, vectorLayer => {
+          vectorLayers.push(vectorLayer);
+          maybeAddVectorLayersFn();
+        }, this.stateService.getExistingPathIds());
+      };
+
+      fileReader.onerror = event => {
+        const target = event.target as any;
+        switch (target.error.code) {
+          case target.error.NOT_FOUND_ERR:
+            alert('File not found!');
+            break;
+          case target.error.NOT_READABLE_ERR:
+            alert('File is not readable');
+            break;
+          case target.error.ABORT_ERR:
+            break;
+          default:
+            alert('An error occurred reading this file.');
+        }
+        maybeAddVectorLayersFn();
+      };
+
+      fileReader.onabort = event => {
+        alert('File read cancelled');
+      };
+
+      fileReader.readAsText(file);
+    }
   }
 
   private autoLoadDemo() {

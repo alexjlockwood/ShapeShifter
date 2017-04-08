@@ -1,11 +1,11 @@
 import {
-  Component, ChangeDetectionStrategy, OnInit
+  Component, ChangeDetectionStrategy, OnInit, ViewChildren, QueryList, OnDestroy
 } from '@angular/core';
 import { CanvasType } from '../CanvasType';
 import { StateService, } from '../services';
-import { SvgLoader } from '../scripts/import';
-import { VectorLayer } from '../scripts/layers';
 import { Observable } from 'rxjs/Observable';
+import { MdMenuTrigger } from '@angular/material';
+import { Subscription } from 'rxjs/Subscription';
 
 declare const ga: Function;
 
@@ -15,116 +15,66 @@ declare const ga: Function;
   styleUrls: ['./pathselector.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PathSelectorComponent implements OnInit {
-  CANVAS_START = CanvasType.Start;
-  CANVAS_END = CanvasType.End;
+export class PathSelectorComponent implements OnInit, OnDestroy {
+  @ViewChildren(MdMenuTrigger) menuTriggers: QueryList<MdMenuTrigger>;
 
   // These are public because they are accessed via the HTML template.
   existingPathIdsObservable: Observable<ReadonlyArray<string>>;
   startActivePathIdObservable: Observable<string>;
   endActivePathIdObservable: Observable<string>;
 
+  private isHoveringOverListItem = new Map<string, boolean>();
+  private isHoveringOverOverflow = new Map<string, boolean>();
+
+  private readonly subscriptions: Subscription[] = [];
+
   constructor(private readonly stateService: StateService) { }
 
   ngOnInit() {
-    this.existingPathIdsObservable =
-      this.stateService.getExistingPathIdsObservable();
-    this.startActivePathIdObservable =
-      this.stateService.getActivePathIdObservable(CanvasType.Start);
-    this.endActivePathIdObservable =
-      this.stateService.getActivePathIdObservable(CanvasType.End);
+    this.startActivePathIdObservable = this.stateService.getActivePathIdObservable(CanvasType.Start);
+    this.endActivePathIdObservable = this.stateService.getActivePathIdObservable(CanvasType.End);
+    this.existingPathIdsObservable = this.stateService.getExistingPathIdsObservable();
+    this.existingPathIdsObservable.subscribe(() => {
+      this.isHoveringOverListItem.clear();
+      this.isHoveringOverOverflow.clear();
+    });
   }
 
-  // private addVectorLayer(vectorLayer: VectorLayer) {
-  //   const canvasTypes = [canvasType];
-  //   if (canvasType === CanvasType.Start) {
-  //     // The preview vector layer will be identical to both the start and end
-  //     // vector layers in terms of their structure. During the animation, its
-  //     // active path command will be interpolated and replaced to trigger the
-  //     // animated result.
-  //     this.stateService.setVectorLayer(CanvasType.Preview, vectorLayer.clone(), false);
-  //     canvasTypes.push(CanvasType.Preview);
-  //   }
-  //   this.stateService.setVectorLayer(canvasType, vectorLayer, false);
-  //   const pathLayers = getPathLayerList(this.stateService.getVectorLayer(canvasType));
-  //   //if (pathLayers.length) {
-  //   // TODO: Auto-select the first path.
-  //   //this.setActivePathId(canvasType, pathLayers[0].id);
-  //   //}
-  //   canvasTypes.forEach(type => this.stateService.notifyChange(type));
-  // }
-
-  getActivePathId(canvasType: CanvasType) {
-    return this.stateService.getActivePathId(canvasType);
+  ngOnDestroy() {
+    this.subscriptions.forEach(s => s.unsubscribe());
   }
 
-  setStartActivePathId(activePathId: string) {
-    // Always notify the preview layer in case the morphability status changed.
-    const ids = [{ type: CanvasType.Start, pathId: activePathId }];
-    // Set the preview layer id before the start/end layer id to ensure
-    // that auto-conversion runs properly.
-    ids.unshift({ type: CanvasType.Preview, pathId: activePathId });
-    console.info(ids);
-    console.info(this.stateService);
-    this.stateService.setActivePathIds(ids);
+  onSetStartPathIdClick(pathId: string) {
+    this.stateService.setActivePathId(CanvasType.Start, pathId);
   }
 
-  setEndActivePathId(activePathId: string) {
-    // Always notify the preview layer in case the morphability status changed.
-    const ids = [{ type: CanvasType.End, pathId: activePathId }];
-    console.info(ids);
-    console.info(this.stateService);
-    this.stateService.setActivePathIds(ids);
+  onSetEndPathIdClick(pathId: string) {
+    this.stateService.setActivePathId(CanvasType.End, pathId);
   }
 
-  // Called when the user picks a file from the file picker.
-  onSvgFileChosen(fileList: FileList) {
-    if (!fileList || !fileList.length) {
-      console.warn('Failed to load SVG file');
-      return;
-    }
+  onDeletePathClick(pathId: string) {
+    // TODO: implement this
+  }
 
-    const files: File[] = [];
-    for (let i = 0; i < Math.min(2, fileList.length); i++) {
-      files.push(fileList[i]);
-    }
+  onListItemClick(position: number) {
+    this.menuTriggers.toArray()[position].openMenu();
+    event.cancelBubble = true;
+  }
 
-    const vectorLayers: VectorLayer[] = [];
-    for (const file of files) {
-      const fileReader = new FileReader();
+  onOverflowButtonClick(event: MouseEvent) {
+    // This ensures that the parent div won't also receive the same click event.
+    event.cancelBubble = true;
+  }
 
-      fileReader.onload = event => {
-        const svgText = (event.target as any).result;
-        SvgLoader.loadVectorLayerFromSvgStringWithCallback(svgText, vectorLayer => {
-          vectorLayers.push(vectorLayer);
-          if (vectorLayers.length === files.length) {
-            // TODO: what if an error happens? import the vector layers that succeeded?
-            this.stateService.addVectorLayers(vectorLayers);
-          }
-        }, this.stateService.getExistingPathIds());
-      };
+  onListItemHoverEvent(pathId: string, isHovering: boolean) {
+    this.isHoveringOverListItem.set(pathId, isHovering);
+  }
 
-      fileReader.onerror = event => {
-        const target = event.target as any;
-        switch (target.error.code) {
-          case target.error.NOT_FOUND_ERR:
-            alert('File not found!');
-            break;
-          case target.error.NOT_READABLE_ERR:
-            alert('File is not readable');
-            break;
-          case target.error.ABORT_ERR:
-            break;
-          default:
-            alert('An error occurred reading this file.');
-        }
-      };
+  onOverflowHoverEvent(pathId: string, isHovering: boolean) {
+    this.isHoveringOverOverflow.set(pathId, isHovering);
+  }
 
-      fileReader.onabort = event => {
-        alert('File read cancelled');
-      };
-
-      fileReader.readAsText(file);
-    }
+  isHovering(pathId: string) {
+    return this.isHoveringOverListItem.get(pathId) && !this.isHoveringOverOverflow.get(pathId);
   }
 }
