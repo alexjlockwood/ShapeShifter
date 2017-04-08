@@ -22,10 +22,14 @@ export function autoFix(
   // Create and return a list of reversed and shifted paths to test.
   // TODO: can this be optimized? (this essentially brute-forces all possible permutations)
   const createFromCmdGroupsFn = (...paths: Path[]): Path[] => {
-    const fromPaths = [];
+    const fromPaths: Path[] = [];
     for (const p of paths) {
+      fromPaths.push(p);
+      if (!p.getSubPath(subIdx).isClosed()) {
+        continue;
+      }
       const numFromCmds = p.getSubPaths()[subIdx].getCommands().length;
-      for (let i = 0; i < numFromCmds - 1; i++) {
+      for (let i = 1; i < numFromCmds - 1; i++) {
         fromPaths.push(p.mutate().shiftSubPathBack(subIdx, i).build());
       }
     }

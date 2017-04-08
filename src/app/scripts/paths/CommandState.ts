@@ -250,7 +250,7 @@ class CommandStateMutator {
    */
   unsplitAtIndex(splitIdx: number) {
     if (!this.isSplitAtIndex(splitIdx)) {
-      console.warn('Attempt to unsplit a non-split command');
+      console.warn('Ignoring attempt to unsplit a non-split command', this);
       return this;
     }
     this.mutations.splice(splitIdx, 1);

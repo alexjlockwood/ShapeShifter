@@ -62,7 +62,14 @@ export class PathMutator {
     const numCommandsInSubPath =
       _.sum(sps.getCommandStates().map(cm => cm.getCommands().length));
     if (numCommandsInSubPath <= 1) {
-      // TODO: also return here if the sub path is closed just to be safe?
+      return this;
+    }
+    const firstCmd = sps.getCommandStates()[0].getCommands()[0];
+    const lastCmd = _.last(_.last(sps.getCommandStates()).getCommands());
+    if (!firstCmd.getEnd().equals(lastCmd.getEnd())) {
+      // TODO: in some cases there may be rounding errors that cause a closed subpath
+      // to show up as non-closed. is there anything we can do to alleviate this?
+      console.warn('Ignoring attempt to shift a non-closed subpath');
       return this;
     }
     this.setSubPathState(
