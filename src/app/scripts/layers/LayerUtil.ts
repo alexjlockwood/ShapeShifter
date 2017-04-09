@@ -129,6 +129,7 @@ export function adjustVectorLayerDimensions(vl1: VectorLayer, vl2: VectorLayer) 
 
 /**
  * Returns a list of all path IDs in this VectorLayer.
+ * TODO: make this ignore deleted path IDs that are still in the vector layer
  */
 export function getAllIds(
   vls: VectorLayer[],

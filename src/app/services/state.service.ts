@@ -30,6 +30,8 @@ export class StateService {
   private readonly activePathIdSources = new Map<CanvasType, BehaviorSubject<string>>();
   // Observable that broadcast changes to the current morphability status.
   private readonly statusSource = new BehaviorSubject<MorphabilityStatus>(MorphabilityStatus.None);
+  // Set that keeps track our list of deleted path IDs.
+  private readonly deletedPathIds = new Set<string>();
 
   constructor(
     private readonly selectionService: SelectionService,
@@ -58,6 +60,7 @@ export class StateService {
             console.warn('Ignoring attempt to add duplicate path ID', pathMap, vl, layer.id);
             return;
           }
+          // TODO: is it necessary to clone here? just to be safe?
           pathMap.set(layer.id, vl.clone());
           return;
         }
@@ -294,8 +297,33 @@ export class StateService {
     this.statusSource.next(this.getMorphabilityStatus());
   }
 
+  /**
+   * Returns a list of imported VectorLayers.
+   */
   getImportedVectorLayers() {
     return Array.from(this.importedPathMap.values());
+  }
+
+  /**
+   * Deletes the path with the specified ID.
+   */
+  deletePathId(pathId: string) {
+    this.deletedPathIds.add(pathId);
+    this.importedPathMap.delete(pathId);
+    const notifyTypes: CanvasType[] = [];
+    [CanvasType.Start, CanvasType.Preview, CanvasType.End]
+      .forEach(type => {
+        const activeStartPathId = this.activePathIdMap.get(type);
+        if (activeStartPathId === pathId) {
+          this.activePathIdMap.delete(type);
+          this.activeLayerMap.delete(type);
+          notifyTypes.push(type);
+        }
+      });
+    for (const type of notifyTypes) {
+      this.notifyChange(type);
+    }
+    this.existingPathIdsSource.next(Array.from(this.importedPathMap.keys()));
   }
 
   getMorphabilityStatus() {
@@ -323,6 +351,7 @@ export class StateService {
     this.activeLayerMap.clear();
     this.activePathIdSources.forEach(source => source.next(undefined));
     this.statusSource.next(MorphabilityStatus.None);
+    this.deletedPathIds.clear();
     [CanvasType.Preview, CanvasType.Start, CanvasType.End].forEach(type => this.notifyChange(type));
   }
 

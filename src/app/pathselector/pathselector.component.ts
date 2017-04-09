@@ -44,16 +44,19 @@ export class PathSelectorComponent implements OnInit, OnDestroy {
     this.subscriptions.forEach(s => s.unsubscribe());
   }
 
+  // TODO: remember state of previously modified paths
   onSetStartPathIdClick(pathId: string) {
     this.stateService.setActivePathId(CanvasType.Start, pathId);
   }
 
+  // TODO: remember state of previously modified paths
   onSetEndPathIdClick(pathId: string) {
     this.stateService.setActivePathId(CanvasType.End, pathId);
   }
 
   onDeletePathClick(pathId: string) {
-    // TODO: implement this
+    // TODO: show a dialog to confirm?
+    this.stateService.deletePathId(pathId);
   }
 
   onListItemClick(event: MouseEvent, position: number) {
