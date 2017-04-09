@@ -126,3 +126,24 @@ export function adjustVectorLayerDimensions(vl1: VectorLayer, vl2: VectorLayer) 
   vl2.height = newHeight;
   return { vl1, vl2 };
 }
+
+/**
+ * Returns a list of all path IDs in this VectorLayer.
+ */
+export function getAllIds(
+  vls: VectorLayer[],
+  predicateFn = (layer: Layer) => { return true; }) {
+
+  const ids: string[] = [];
+  vls.forEach(vl => {
+    (function recurseFn(layer: Layer) {
+      if (predicateFn(layer)) {
+        ids.push(layer.id);
+      }
+      if (layer.children) {
+        layer.children.forEach(l => recurseFn(l));
+      }
+    })(vl);
+  });
+  return ids;
+};

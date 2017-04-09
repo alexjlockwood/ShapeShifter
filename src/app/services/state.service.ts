@@ -22,14 +22,12 @@ export class StateService {
   private readonly importedPathMap = new Map<string, VectorLayer>();
   // Observable that broadcasts changes to the current list of imported path IDs.
   private readonly existingPathIdsSource = new BehaviorSubject<ReadonlyArray<string>>([]);
-
   // Maps CanvasTypes to the currently active path ID.
   private readonly activePathIdMap = new Map<CanvasType, string>();
   // Maps CanvasTypes to a copy of the active path ID's parent VectorLayer.
   private readonly activeLayerMap = new Map<CanvasType, VectorLayer>();
   // Observable that broadcasts changes to the currently active path ID for each CanvasType.
   private readonly activePathIdSources = new Map<CanvasType, BehaviorSubject<string>>();
-
   // Observable that broadcast changes to the current morphability status.
   private readonly statusSource = new BehaviorSubject<MorphabilityStatus>(MorphabilityStatus.None);
 
@@ -296,8 +294,8 @@ export class StateService {
     this.statusSource.next(this.getMorphabilityStatus());
   }
 
-  getExistingPathIds() {
-    return this.existingPathIdsSource.getValue();
+  getImportedVectorLayers() {
+    return Array.from(this.importedPathMap.values());
   }
 
   getMorphabilityStatus() {

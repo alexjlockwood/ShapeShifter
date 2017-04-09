@@ -13,7 +13,7 @@ describe('SvgLoader', () => {
     L 11,19 L 11,13 L 5,13 L 5,11">
   </path>
 </svg>`;
-    SvgLoader.loadVectorLayerFromSvgStringWithCallback(svg, () => { });
+    SvgLoader.loadVectorLayerFromSvgStringWithCallback(svg, () => { }, []);
     expect(true).toEqual(true);
   });
 });

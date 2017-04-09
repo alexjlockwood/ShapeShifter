@@ -10,7 +10,7 @@ import { environment } from '../environments/environment';
 import { Subscription } from 'rxjs/Subscription';
 import { Observable } from 'rxjs/Observable';
 import { CanvasType } from './CanvasType';
-import { VectorLayer, Layer, PathLayer } from './scripts/layers';
+import { VectorLayer, PathLayer, LayerUtil } from './scripts/layers';
 import { SvgLoader } from './scripts/import';
 import { SubPath, Command } from './scripts/paths';
 import {
@@ -266,25 +266,6 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       files.push(fileList[i]);
     }
 
-    /**
-     * Returns a list of all path IDs in this VectorLayer.
-     */
-    const getPathIdsFn = (vls: VectorLayer[]) => {
-      const ids: string[] = [];
-      vls.forEach(vl => {
-        (function recurseFn(layer: Layer) {
-          if (layer instanceof PathLayer) {
-            ids.push(layer.id);
-            return;
-          }
-          if (layer.children) {
-            layer.children.forEach(l => recurseFn(l));
-          }
-        })(vl);
-      });
-      return ids;
-    };
-
     let numCallbacks = 0;
     let numErrors = 0;
     const vls: VectorLayer[] = [];
@@ -296,7 +277,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
           'Dismiss',
           { duration: 5000 });
       } else if (numCallbacks === files.length) {
-        const importedPathIds = getPathIdsFn(vls);
+        const importedPathIds = LayerUtil.getAllIds(vls, l => l instanceof PathLayer);
         const numImportedPaths = importedPathIds.length;
         this.stateService.addVectorLayers(vls);
         const canvasTypesToCheck =
@@ -317,6 +298,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     };
 
+    const currentIds = LayerUtil.getAllIds(this.stateService.getImportedVectorLayers());
     for (const file of files) {
       const fileReader = new FileReader();
 
@@ -324,8 +306,9 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
         const svgText = (event.target as any).result;
         SvgLoader.loadVectorLayerFromSvgStringWithCallback(svgText, vectorLayer => {
           vls.push(vectorLayer);
+          currentIds.push(...LayerUtil.getAllIds([vectorLayer]));
           maybeAddVectorLayersFn();
-        }, this.stateService.getExistingPathIds());
+        }, currentIds);
       };
 
       fileReader.onerror = event => {
