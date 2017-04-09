@@ -1,3 +1,47 @@
+# v0.2.0 (coming soon)
+
+### Features
+
+* It is now possible to morph paths with different numbers of subpaths! Here's
+  a rundown of the new features that make it possible:
+    * *Unmatched subpaths are automatically collapsed to a point.* For example,
+      consider a play and pause icon. The play icon consists of a single
+      triangular subpath and the pause icon consists of two rectangular subpaths.
+      By default ShapeShifter will morph the play icon subpath into the pause icon's
+      first subpath. The remaining pause icon subpath will animate out of view by
+      collapsing itself down to a point until it is no longer visible.
+    * *The ability to reorder subpaths.* For example, if you wanted the play icon subpath
+      to morph into the second pause icon subpath instead of the first, it is now possible
+      to adjust the Z-order of the pause bar's subpaths in order to achieve that.
+    * *The ability to split stroked subpaths.* For example, if you want to morph
+      a stroked path with one subpath into a stroked path with two subpaths, you can
+      achieve this by splitting the subpath into two. Splitting a stroked subpath
+      is effectively the same as inserting a 'moveTo' command into the SVG's path data.
+    * *The ability to split filled subpaths.* For example, if you want to morph
+      a play icon into a pause icon, you could cut the play icon in half so that the
+      top part of the triangle morphs into the first pause bar and the bottom part
+      of the triangle morphs into the second.
+* The ability to add new split points by clicking on the canvas directly.
+* The ability to morph paths with different SVG viewport dimensions. For example,
+  if you want to morph path `A` with `viewBox="0 0 18 24"` into path `B` with
+  `viewBox="0 0 40 48"`,  ShapeShifter will respond by:
+    1. Scaling path `A` by a factor of `48 / 24 = 2` (so that its new viewBox
+       becomes `"0 0 36 48"`), and
+    2. Translating path `A` horizontally by `(40 - 36) / 2 = 2` (so that its
+       new viewBox can become `"0 0 40 48"`, just like path `B`).
+* A simpler UI for adjusting an animation's rotation. Thanks to
+  [Jake Archibald](https://twitter.com/jaffathecake) and
+  [Roman Nurik](https://twitter.com/romannurik) for the idea!
+* The ability to add and delete new SVG paths even after the initial import.
+  Clicking on an empty canvas will now open the file picker to import a new
+  SVG as well.
+* Snap-to-existing-point detection in the canvas while dragging and adding
+  new points.
+
+### Bug fixes
+
+* Too many to list. :)
+
 # [v0.1.3](https://github.com/alexjlockwood/ShapeShifter/compare/v0.1.2...v0.1.3) (2017-03-13)
 
 ### Features
