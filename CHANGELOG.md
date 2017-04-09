@@ -10,17 +10,18 @@
       By default ShapeShifter will morph the play icon subpath into the pause icon's
       first subpath. The remaining pause icon subpath will animate out of view by
       collapsing itself down to a point until it is no longer visible.
-    * *The ability to reorder subpaths.* For example, if you wanted the play icon subpath
-      to morph into the second pause icon subpath instead of the first, it is now possible
-      to adjust the Z-order of the pause bar's subpaths in order to achieve that.
+    * *The ability to reorder subpaths.* For example, if you wanted to morph the
+      play icon subpath into the second pause icon subpath instead of the first,
+      it is now possible to adjust the Z-order of the pause bar's subpaths in order
+      to achieve that.
     * *The ability to split stroked subpaths.* For example, if you want to morph
       a stroked path with one subpath into a stroked path with two subpaths, you can
-      achieve this by splitting the subpath into two. Splitting a stroked subpath
+      achieve this by splitting the first subpath into two. Splitting a stroked subpath
       is effectively the same as inserting a 'moveTo' command into the SVG's path data.
     * *The ability to split filled subpaths.* For example, if you want to morph
-      a play icon into a pause icon, you could cut the play icon in half so that the
-      top part of the triangle morphs into the first pause bar and the bottom part
-      of the triangle morphs into the second.
+      a play icon into a pause icon, you can now achieve this by cutting the play
+      icon into two (i.e. so that the top part of the triangle morphs into the
+      first pause bar and the bottom part of the triangle morphs into the second).
 * The ability to add new split points by clicking on the canvas directly.
 * The ability to morph paths with different SVG viewport dimensions. For example,
   if you want to morph path `A` with `viewBox="0 0 18 24"` into path `B` with
