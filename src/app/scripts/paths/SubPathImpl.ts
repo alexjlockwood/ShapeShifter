@@ -159,7 +159,7 @@ export class SubPathBuilder {
     return this;
   }
 
-  build() {
+  build(): SubPath {
     return new SubPathImpl(
       this.commands.slice(),
       this.id,

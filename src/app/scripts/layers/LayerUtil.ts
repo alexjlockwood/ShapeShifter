@@ -1,6 +1,9 @@
 import * as _ from 'lodash';
-import { Layer, VectorLayer, GroupLayer, PathLayer } from '.';
+import { Layer, VectorLayer, GroupLayer, PathLayer, ClipPathLayer } from '.';
+import { newPath } from '../paths';
 import { Matrix } from '../common';
+
+const PRECISION = 8;
 
 /**
  * Returns a list of parent transforms for the specified layer ID. The transforms
@@ -38,18 +41,86 @@ export function getTransformsForLayer(vectorLayer: VectorLayer, layerId: string)
 }
 
 /**
- * Returns a list of all path IDs in this VectorLayer.
+ * Makes two vector layers with possibly different viewports compatible with each other.
  */
-export function findExistingPathIds(vectorLayer: VectorLayer) {
-  const ids: string[] = [];
-  (function recurseFn(layer: Layer) {
-    if (layer instanceof PathLayer) {
-      ids.push(layer.id);
-      return;
-    }
-    if (layer.children) {
-      layer.children.forEach(l => recurseFn(l));
-    }
-  })(vectorLayer);
-  return ids;
+export function adjustVectorLayerDimensions(vl1: VectorLayer, vl2: VectorLayer) {
+  if (!vl1 || !vl2) {
+    return { vl1, vl2 };
+  }
+
+  vl1 = vl1.clone();
+  vl2 = vl2.clone();
+
+  let { width: w1, height: h1 } = vl1;
+  let { width: w2, height: h2 } = vl2;
+  const isMaxDimenFn = (n: number) => {
+    return Math.max(w1, h1, w2, h2, n) === n;
+  };
+
+  let scale1 = 1, scale2 = 1;
+  if (isMaxDimenFn(w1)) {
+    scale2 = w1 / w2;
+  } else if (isMaxDimenFn(h1)) {
+    scale2 = h1 / h2;
+  } else if (isMaxDimenFn(w2)) {
+    scale1 = w2 / w1;
+  } else {
+    scale1 = h2 / h1;
+  }
+
+  if (isMaxDimenFn(w1) || isMaxDimenFn(h1)) {
+    w1 = _.round(w1, PRECISION);
+    h1 = _.round(h1, PRECISION);
+    w2 = _.round(w2 * scale2, PRECISION);
+    h2 = _.round(h2 * scale2, PRECISION);
+  } else {
+    w1 = _.round(w1 * scale1, PRECISION);
+    h1 = _.round(h1 * scale1, PRECISION);
+    w2 = _.round(w2, PRECISION);
+    h2 = _.round(h2, PRECISION);
+  }
+
+  let tx1 = 0, ty1 = 0, tx2 = 0, ty2 = 0;
+  if (w1 > w2) {
+    tx2 = (w1 - w2) / 2;
+  } else if (w1 < w2) {
+    tx1 = (w2 - w1) / 2;
+  } else if (h1 > h2) {
+    ty2 = (h1 - h2) / 2;
+  } else if (h1 < h2) {
+    ty1 = (h2 - h1) / 2;
+  }
+
+  const transformLayerFn = (vl: VectorLayer, transforms: Matrix[]) => {
+    (function recurseFn(layer: Layer) {
+      if (layer instanceof PathLayer || layer instanceof ClipPathLayer) {
+        layer.pathData = newPath(layer.pathData.getCommands().map(cmd => {
+          return cmd.mutate().transform(transforms).build();
+        }));
+        return;
+      }
+      if (layer.children) {
+        layer.children.forEach(l => {
+          recurseFn(l);
+        });
+      }
+    })(vl);
+  };
+
+  transformLayerFn(vl1, [
+    Matrix.fromScaling(scale1, scale1),
+    Matrix.fromTranslation(tx1, ty1),
+  ]);
+  transformLayerFn(vl2, [
+    Matrix.fromScaling(scale2, scale2),
+    Matrix.fromTranslation(tx2, ty2),
+  ]);
+
+  const newWidth = Math.max(w1, w2);
+  const newHeight = Math.max(h1, h2);
+  vl1.width = newWidth;
+  vl2.width = newWidth;
+  vl1.height = newHeight;
+  vl2.height = newHeight;
+  return { vl1, vl2 };
 }

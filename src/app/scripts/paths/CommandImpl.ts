@@ -164,7 +164,7 @@ export class CommandBuilder {
     return this;
   }
 
-  build() {
+  build(): Command {
     return new CommandImpl(
       this.svgChar,
       this.points.map(p => p ? MathUtil.transformPoint(p, ...this.transforms) : p),

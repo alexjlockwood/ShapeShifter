@@ -42,8 +42,8 @@ export class CanvasRulerDirective implements OnInit, OnDestroy {
     this.canvas = $(this.elementRef.nativeElement);
     this.subscriptions.push(
       this.stateService.getActivePathIdObservable(this.canvasType)
-        .subscribe(pathId => {
-          const vl = this.stateService.getVectorLayerByPathId(pathId);
+        .subscribe(() => {
+          const vl = this.stateService.getVectorLayer(this.canvasType);
           const newWidth = vl ? vl.width : DEFAULT_VIEWPORT_SIZE;
           const newHeight = vl ? vl.height : DEFAULT_VIEWPORT_SIZE;
           const didSizeChange = this.vlWidth !== newWidth || this.vlHeight !== newHeight;

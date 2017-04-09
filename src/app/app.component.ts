@@ -10,7 +10,7 @@ import { environment } from '../environments/environment';
 import { Subscription } from 'rxjs/Subscription';
 import { Observable } from 'rxjs/Observable';
 import { CanvasType } from './CanvasType';
-import { VectorLayer } from './scripts/layers';
+import { VectorLayer, Layer, PathLayer } from './scripts/layers';
 import { SvgLoader } from './scripts/import';
 import { SubPath, Command } from './scripts/paths';
 import {
@@ -255,12 +255,42 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       files.push(fileList[i]);
     }
 
+    /**
+     * Returns a list of all path IDs in this VectorLayer.
+     */
+    const countPathIdsFn = (vls: VectorLayer[]) => {
+      const ids = new Set<string>();
+      vls.forEach(vl => {
+        (function recurseFn(layer: Layer) {
+          if (layer instanceof PathLayer) {
+            ids.add(layer.id);
+            return;
+          }
+          if (layer.children) {
+            layer.children.forEach(l => recurseFn(l));
+          }
+        })(vl);
+      });
+      return ids.size;
+    };
+
     let numCallbacks = 0;
-    const vectorLayers: VectorLayer[] = [];
+    let numErrors = 0;
+    const vls: VectorLayer[] = [];
     const maybeAddVectorLayersFn = () => {
       numCallbacks++;
-      if (numCallbacks === files.length) {
-        this.stateService.addVectorLayers(vectorLayers);
+      if (numErrors === files.length) {
+        this.snackBar.open(
+          `There was a problem importing the paths from SVG`,
+          'Dismiss',
+          { duration: 5000 });
+      } else if (numCallbacks === files.length) {
+        this.stateService.addVectorLayers(vls);
+        const numNewPaths = countPathIdsFn(vls);
+        this.snackBar.open(
+          `Imported ${numNewPaths} path${numNewPaths === 1 ? '' : 's'} from SVG`,
+          'Dismiss',
+          { duration: 2000 });
       }
     };
 
@@ -270,7 +300,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       fileReader.onload = event => {
         const svgText = (event.target as any).result;
         SvgLoader.loadVectorLayerFromSvgStringWithCallback(svgText, vectorLayer => {
-          vectorLayers.push(vectorLayer);
+          vls.push(vectorLayer);
           maybeAddVectorLayersFn();
         }, this.stateService.getExistingPathIds());
       };
@@ -279,7 +309,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
         const target = event.target as any;
         switch (target.error.code) {
           case target.error.NOT_FOUND_ERR:
-            alert('File not found!');
+            alert('File not found');
             break;
           case target.error.NOT_READABLE_ERR:
             alert('File is not readable');
@@ -287,8 +317,9 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
           case target.error.ABORT_ERR:
             break;
           default:
-            alert('An error occurred reading this file.');
+            alert('An error occurred reading this file');
         }
+        numErrors++;
         maybeAddVectorLayersFn();
       };
 

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
-import { Layer, VectorLayer, PathLayer, GroupLayer } from '../scripts/layers';
+import { Layer, VectorLayer, PathLayer, GroupLayer, LayerUtil } from '../scripts/layers';
 import { CanvasType } from '../CanvasType';
 import { Path } from '../scripts/paths';
 import { AutoAwesome } from '../scripts/autoawesome';
@@ -18,10 +18,19 @@ import { SelectionService } from './selection.service';
  */
 @Injectable()
 export class StateService {
-  private readonly stateMap = new Map<string, VectorLayer>();
-  private readonly activePathIdMap = new Map<CanvasType, string>();
+  // Maps path IDs to their parent VectorLayers.
+  private readonly importedPathMap = new Map<string, VectorLayer>();
+  // Observable that broadcasts changes to the current list of imported path IDs.
   private readonly existingPathIdsSource = new BehaviorSubject<ReadonlyArray<string>>([]);
+
+  // Maps CanvasTypes to the currently active path ID.
+  private readonly activePathIdMap = new Map<CanvasType, string>();
+  // Maps CanvasTypes to a copy of the active path ID's parent VectorLayer.
+  private readonly activeLayerMap = new Map<CanvasType, VectorLayer>();
+  // Observable that broadcasts changes to the currently active path ID for each CanvasType.
   private readonly activePathIdSources = new Map<CanvasType, BehaviorSubject<string>>();
+
+  // Observable that broadcast changes to the current morphability status.
   private readonly statusSource = new BehaviorSubject<MorphabilityStatus>(MorphabilityStatus.None);
 
   constructor(
@@ -37,23 +46,21 @@ export class StateService {
   }
 
   /**
-   * Imports all paths in the specified VectorLayer into the application's state map.
+   * Imports all paths in the given VectorLayers into the application's state.
    */
   addVectorLayers(vectorLayers: VectorLayer[], clearExistingState = false) {
     if (clearExistingState) {
-      this.stateMap.clear();
-      this.activePathIdMap.clear();
+      this.reset();
     }
     for (const vl of vectorLayers) {
-      const stateMap = this.stateMap;
+      const pathMap = this.importedPathMap;
       (function recurseFn(layer: Layer) {
         if (layer instanceof PathLayer) {
-          if (stateMap.has(layer.id)) {
-            console.warn(
-              'Ignoring attempt to add path ID to state map', stateMap, vl, layer.id);
+          if (pathMap.has(layer.id)) {
+            console.warn('Ignoring attempt to add duplicate path ID', pathMap, vl, layer.id);
             return;
           }
-          stateMap.set(layer.id, vl.clone());
+          pathMap.set(layer.id, vl.clone());
           return;
         }
         if (layer.children) {
@@ -61,46 +68,33 @@ export class StateService {
         }
       })(vl);
     }
-    this.existingPathIdsSource.next(Array.from(this.stateMap.keys()));
-  }
-
-  /**
-   * Returns a list of all path IDs in this VectorLayer.
-   */
-  getExistingPathIds() {
-    const ids: string[] = [];
-    this.stateMap.forEach(vl => {
-      (function recurseFn(layer: Layer) {
-        if (layer instanceof PathLayer) {
-          ids.push(layer.id);
-          return;
-        }
-        if (layer.children) {
-          layer.children.forEach(l => recurseFn(l));
-        }
-      })(vl);
-    });
-    return ids;
+    this.existingPathIdsSource.next(Array.from(this.importedPathMap.keys()));
   }
 
   /**
    * Returns the currently set vector layer for the specified canvas type.
    */
-  getVectorLayer(canvasType: CanvasType): VectorLayer | undefined {
-    return this.getVectorLayerByPathId(this.getActivePathId(canvasType));
+  getVectorLayer(canvasType: CanvasType) {
+    return this.activeLayerMap.get(canvasType);
   }
 
   /**
-   * Returns the specified path's parent VectorLayer.
+   * Returns the currently set active path ID for the specified canvas type.
    */
-  getVectorLayerByPathId(pathId: string) {
-    return this.stateMap.get(pathId);
+  getActivePathId(type: CanvasType): string | undefined {
+    return this.activePathIdMap.get(type);
   }
 
   /**
    * Called by the PathSelectorComponent when a new vector layer path is selected.
    */
   setActivePathId(canvasType: CanvasType, pathId: string, shouldNotify = true) {
+    if (this.getActivePathId(canvasType) === pathId) {
+      if (shouldNotify) {
+        this.notifyChange(canvasType);
+      }
+      return;
+    }
     this.appModeService.reset();
     this.selectionService.reset();
     this.hoverService.reset();
@@ -109,30 +103,28 @@ export class StateService {
     // this.animatorService.reset();
 
     const setActivePathIdFn = (type: CanvasType) => {
-      this.activePathIdMap.set(type, pathId);
-      if (type !== CanvasType.Preview) {
-        // Attempt to make the start and end subpaths compatible with each other.
-        this.updateActivePath(type, this.getActivePathLayer(type).pathData, false /* shouldNotify */);
+      if (type === CanvasType.Start) {
+        this.activePathIdMap.set(CanvasType.Preview, pathId);
       }
+      this.activePathIdMap.set(type, pathId);
+      const vl = this.importedPathMap.get(pathId);
+      this.activeLayerMap.set(type, vl ? vl.clone() : vl);
+      const { vl1: startVl, vl2: endVl } =
+        LayerUtil.adjustVectorLayerDimensions(
+          this.importedPathMap.get(this.getActivePathId(CanvasType.Start)),
+          this.importedPathMap.get(this.getActivePathId(CanvasType.End)));
+      this.activeLayerMap.set(CanvasType.Start, startVl);
+      this.activeLayerMap.set(CanvasType.Preview, startVl ? startVl.clone() : startVl);
+      this.activeLayerMap.set(CanvasType.End, endVl);
+      // Attempt to make the start and end subpaths compatible with each other.
+      this.updateActivePath(type, this.getActivePathLayer(type).pathData, false /* shouldNotify */);
     };
 
-    const notifyTypes = [canvasType];
-    if (canvasType === CanvasType.Start) {
-      setActivePathIdFn(CanvasType.Preview);
-      notifyTypes.unshift(CanvasType.Preview);
-    }
     setActivePathIdFn(canvasType);
 
     if (shouldNotify) {
-      notifyTypes.forEach(type => this.notifyChange(type));
+      [CanvasType.Preview, CanvasType.Start, CanvasType.End].forEach(type => this.notifyChange(type));
     }
-  }
-
-  /**
-   * Returns the currently set active path ID for the specified canvas type.
-   */
-  getActivePathId(type: CanvasType): string | undefined {
-    return this.activePathIdMap.get(type);
   }
 
   /**
@@ -171,41 +163,41 @@ export class StateService {
         : CanvasType.Start;
     let hasOppositeCanvasTypeChanged = false;
 
-    const oppositeActivePathLayer =
+    const oppActivePathLayer =
       type === CanvasType.Preview ? undefined : this.getActivePathLayer(oppositeCanvasType);
-    if (oppositeActivePathLayer) {
-      oppositeActivePathLayer.pathData =
-        oppositeActivePathLayer.pathData.mutate().deleteCollapsingSubPaths().build();
-      const oppositePath = oppositeActivePathLayer.pathData;
+    if (oppActivePathLayer) {
+      oppActivePathLayer.pathData =
+        oppActivePathLayer.pathData.mutate().deleteCollapsingSubPaths().build();
+      const oppPath = oppActivePathLayer.pathData;
       const numSubPaths = path.getSubPaths().length;
-      const numOppositeSubPaths = oppositePath.getSubPaths().length;
-      if (numSubPaths !== numOppositeSubPaths) {
-        const pathToChange = numSubPaths < numOppositeSubPaths ? path : oppositePath;
-        const oppositePathToChange = numSubPaths < numOppositeSubPaths ? oppositePath : path;
-        const minIdx = Math.min(numSubPaths, numOppositeSubPaths);
-        const maxIdx = Math.max(numSubPaths, numOppositeSubPaths);
+      const numOppSubPaths = oppPath.getSubPaths().length;
+      if (numSubPaths !== numOppSubPaths) {
+        const pathToChange = numSubPaths < numOppSubPaths ? path : oppPath;
+        const oppPathToChange = numSubPaths < numOppSubPaths ? oppPath : path;
+        const minIdx = Math.min(numSubPaths, numOppSubPaths);
+        const maxIdx = Math.max(numSubPaths, numOppSubPaths);
         const mutator = pathToChange.mutate();
         for (let i = minIdx; i < maxIdx; i++) {
-          const pole = oppositePathToChange.getPoleOfInaccessibility(i);
+          const pole = oppPathToChange.getPoleOfInaccessibility(i);
           mutator.addCollapsingSubPath(
-            pole, oppositePathToChange.getSubPaths()[i].getCommands().length);
+            pole, oppPathToChange.getSubPaths()[i].getCommands().length);
         }
-        if (numSubPaths < numOppositeSubPaths) {
+        if (numSubPaths < numOppSubPaths) {
           path = mutator.build();
         } else {
-          oppositeActivePathLayer.pathData = mutator.build();
+          oppActivePathLayer.pathData = mutator.build();
         }
       }
-      for (let subIdx = 0; subIdx < Math.max(numSubPaths, numOppositeSubPaths); subIdx++) {
+      for (let subIdx = 0; subIdx < Math.max(numSubPaths, numOppSubPaths); subIdx++) {
         const numCommands = path.getSubPaths()[subIdx].getCommands().length;
         const numOppositeCommands =
-          oppositeActivePathLayer.pathData.getSubPaths()[subIdx].getCommands().length;
+          oppActivePathLayer.pathData.getSubPaths()[subIdx].getCommands().length;
         if (numCommands === numOppositeCommands) {
           // Only auto convert when the number of commands in both canvases
           // are equal. Otherwise we'll wait for the user to add more points.
           const autoConvertResults =
             AutoAwesome.autoConvert(
-              subIdx, path, oppositeActivePathLayer.pathData.mutate()
+              subIdx, path, oppActivePathLayer.pathData.mutate()
                 .unconvertSubPath(subIdx)
                 .build());
           path = autoConvertResults.from;
@@ -213,7 +205,7 @@ export class StateService {
           // This is the one case where a change in one canvas type's vector layer
           // will cause corresponding changes to be made in the opposite canvas type's
           // vector layer.
-          oppositeActivePathLayer.pathData = autoConvertResults.to;
+          oppActivePathLayer.pathData = autoConvertResults.to;
           hasOppositeCanvasTypeChanged = true;
         }
       }
@@ -304,6 +296,10 @@ export class StateService {
     this.statusSource.next(this.getMorphabilityStatus());
   }
 
+  getExistingPathIds() {
+    return this.existingPathIdsSource.getValue();
+  }
+
   getMorphabilityStatus() {
     const startPathLayer = this.getActivePathLayer(CanvasType.Start);
     const endPathLayer = this.getActivePathLayer(CanvasType.End);
@@ -324,8 +320,11 @@ export class StateService {
     this.selectionService.reset();
     this.hoverService.reset();
     this.animatorService.reset();
-    this.stateMap.clear();
+    this.importedPathMap.clear();
     this.activePathIdMap.clear();
+    this.activeLayerMap.clear();
+    this.activePathIdSources.forEach(source => source.next(undefined));
+    this.statusSource.next(MorphabilityStatus.None);
     [CanvasType.Preview, CanvasType.Start, CanvasType.End].forEach(type => this.notifyChange(type));
   }
 

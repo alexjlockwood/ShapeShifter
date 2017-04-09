@@ -5,9 +5,7 @@ import {
   Input, ViewChildren, QueryList, ChangeDetectionStrategy
 } from '@angular/core';
 import { Path, SubPath, Command } from '../scripts/paths';
-import {
-  PathLayer, ClipPathLayer, LayerUtil, VectorLayer
-} from '../scripts/layers';
+import { PathLayer, ClipPathLayer, LayerUtil } from '../scripts/layers';
 import { CanvasType } from '../CanvasType';
 import { Point, Matrix, MathUtil, ColorUtil } from '../scripts/common';
 import {
@@ -69,7 +67,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   @ViewChild('overlayCanvas') private overlayCanvasRef: ElementRef;
   @ViewChildren(CanvasRulerDirective) canvasRulers: QueryList<CanvasRulerDirective>;
 
-  private vectorLayer_: VectorLayer;
   private canvasContainer: JQuery;
   private renderingCanvas: JQuery;
   private overlayCanvas: JQuery;
@@ -117,22 +114,21 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     this.overlayCtx = getCtxFn(this.overlayCanvas);
     this.offscreenLayerCtx = getCtxFn(this.offscreenLayerCanvas);
     this.offscreenSubPathCtx = getCtxFn(this.offscreenSubPathCanvas);
-    this.subscriptions.push(
-      this.stateService.getActivePathIdObservable(this.canvasType)
-        .subscribe(pathId => {
-          const vl = this.stateService.getVectorLayerByPathId(pathId);
-          const newWidth = vl ? vl.width : DEFAULT_VIEWPORT_SIZE;
-          const newHeight = vl ? vl.height : DEFAULT_VIEWPORT_SIZE;
-          const didSizeChange =
-            this.vlSize.width !== newWidth || this.vlSize.height !== newHeight;
-          this.vlSize = { width: newWidth, height: newHeight };
-          this.vectorLayer_ = vl ? vl.clone() : vl;
-          if (didSizeChange) {
-            this.resizeAndDraw();
-          } else {
-            this.draw();
-          }
-        }));
+    this.subscribeTo(
+      this.stateService.getActivePathIdObservable(this.canvasType),
+      () => {
+        const vl = this.stateService.getVectorLayer(this.canvasType);
+        const newWidth = vl ? vl.width : DEFAULT_VIEWPORT_SIZE;
+        const newHeight = vl ? vl.height : DEFAULT_VIEWPORT_SIZE;
+        const didSizeChange =
+          this.vlSize.width !== newWidth || this.vlSize.height !== newHeight;
+        this.vlSize = { width: newWidth, height: newHeight };
+        if (didSizeChange) {
+          this.resizeAndDraw();
+        } else {
+          this.draw();
+        }
+      });
     this.subscriptions.push(
       this.canvasResizeService.asObservable()
         .subscribe(size => {
@@ -165,7 +161,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           previewGroupLayer.interpolate(startGroupLayer, endGroupLayer, fraction);
         }
         const startVectorLayer = this.stateService.getVectorLayer(CanvasType.Start);
-        const previewVectorLayer = this.vectorLayer;
+        const previewVectorLayer = this.stateService.getVectorLayer(CanvasType.Preview);
         const endVectorLayer = this.stateService.getVectorLayer(CanvasType.End);
         if (startVectorLayer && previewVectorLayer && endVectorLayer) {
           previewVectorLayer.interpolate(startVectorLayer, endVectorLayer, fraction);
@@ -303,7 +299,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   }
 
   get vectorLayer() {
-    return this.vectorLayer_;
+    return this.stateService.getVectorLayer(this.canvasType);
   }
 
   private get activePathId() {
