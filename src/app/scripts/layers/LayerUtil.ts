@@ -91,30 +91,32 @@ export function adjustVectorLayerDimensions(vl1: VectorLayer, vl2: VectorLayer) 
     ty1 = (h2 - h1) / 2;
   }
 
-  const transformLayerFn = (vl: VectorLayer, transforms: Matrix[]) => {
-    (function recurseFn(layer: Layer) {
-      if (layer instanceof PathLayer || layer instanceof ClipPathLayer) {
-        layer.pathData = newPath(layer.pathData.getCommands().map(cmd => {
-          return cmd.mutate().transform(transforms).build();
-        }));
-        return;
-      }
-      if (layer.children) {
-        layer.children.forEach(l => {
-          recurseFn(l);
-        });
-      }
-    })(vl);
-  };
+  const transformLayerFn =
+    (vl: VectorLayer, scale: number, tx: number, ty: number) => {
+      const transforms = [
+        Matrix.fromScaling(scale, scale),
+        Matrix.fromTranslation(tx, ty),
+      ];
+      (function recurseFn(layer: Layer) {
+        if (layer instanceof PathLayer || layer instanceof ClipPathLayer) {
+          if (layer instanceof PathLayer && layer.isStroked()) {
+            layer.strokeWidth *= scale;
+          }
+          layer.pathData = newPath(layer.pathData.getCommands().map(cmd => {
+            return cmd.mutate().transform(transforms).build();
+          }));
+          return;
+        }
+        if (layer.children) {
+          layer.children.forEach(l => {
+            recurseFn(l);
+          });
+        }
+      })(vl);
+    };
 
-  transformLayerFn(vl1, [
-    Matrix.fromScaling(scale1, scale1),
-    Matrix.fromTranslation(tx1, ty1),
-  ]);
-  transformLayerFn(vl2, [
-    Matrix.fromScaling(scale2, scale2),
-    Matrix.fromTranslation(tx2, ty2),
-  ]);
+  transformLayerFn(vl1, scale1, tx1, ty1);
+  transformLayerFn(vl2, scale2, tx2, ty2);
 
   const newWidth = Math.max(w1, w2);
   const newHeight = Math.max(h1, h2);
