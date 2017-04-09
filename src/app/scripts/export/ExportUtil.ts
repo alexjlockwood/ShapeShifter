@@ -44,16 +44,16 @@ export function exportCurrentState(lss: StateService, as: AnimatorService) {
   zip.file('README.txt', createExportReadme());
   const android = zip.folder('android');
   const avd = AvdSerializer.vectorLayerAnimationToAvdXmlString(startOutputVectorLayer, avdTargets);
-  android.file('AnimatedVectorDrawable.xml', avd);
+  android.file('animated_vector_drawable.xml', avd);
   const startVD = AvdSerializer.vectorLayerToVectorDrawableXmlString(startOutputVectorLayer);
-  android.file('StartVectorDrawable.xml', startVD);
+  android.file('start_vector_drawable.xml', startVD);
   const endVD = AvdSerializer.vectorLayerToVectorDrawableXmlString(startOutputVectorLayer);
-  android.file('EndVectorDrawable.xml', endVD);
+  android.file('end_vector_drawable.xml', endVD);
   const web = zip.folder('web');
   const startSvg = SvgSerializer.vectorLayerToSvgString(startOutputVectorLayer);
-  web.file('StartSvg.svg', startSvg);
+  web.file('start.svg', startSvg);
   const endSvg = SvgSerializer.vectorLayerToSvgString(endOutputVectorLayer);
-  web.file('EndSvg.svg', endSvg);
+  web.file('end.svg', endSvg);
   zip.generateAsync({ type: 'blob' }).then(content => {
     downloadFile(content, `ShapeShifter.zip`);
   });
@@ -146,12 +146,12 @@ function createExportReadme() {
 This archive contains the following:
 
 web/
-  - StartSvg.svg
-  - EndSvg.svg
+  - start.svg
+  - end.svg
 
 android/
-  - StartVectorDrawable.xml
-  - EndVectorDrawable.xml
+  - start_vector_drawable.xml
+  - end_vector_drawable.xml
   - AnimatedVectorDrawable.xml
 
 If you have an export format that you'd like to see added, please file
