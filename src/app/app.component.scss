@@ -43,6 +43,7 @@ div.app-splitter:hover {
 }
 
 .inspector-panel {
+  height: 100%;
   box-shadow: 0px 0 0 material-color('grey', '500'), -4px 0 0 material-color('grey', '500');
   .inspector-panel-header {
     padding-left: 8px;
