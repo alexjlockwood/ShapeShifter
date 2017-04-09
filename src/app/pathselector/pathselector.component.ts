@@ -56,7 +56,7 @@ export class PathSelectorComponent implements OnInit, OnDestroy {
     // TODO: implement this
   }
 
-  onListItemClick(position: number) {
+  onListItemClick(event: MouseEvent, position: number) {
     this.menuTriggers.toArray()[position].openMenu();
     event.cancelBubble = true;
   }
