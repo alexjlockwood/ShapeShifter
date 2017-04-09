@@ -385,7 +385,9 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     return DRAG_TRIGGER_TOUCH_SLOP / this.cssScale;
   }
 
-  private pathPointToDrawingCoords(mousePoint: Point) {
+  // Takes a path point and transforms it so that its coordinates are in terms
+  // of the VectorLayer's viewport coordinates.
+  private applyGroupTransforms(mousePoint: Point) {
     return MathUtil.transformPoint(
       mousePoint,
       Matrix.flatten(...this.transformsForActiveLayer.reverse()));
@@ -581,7 +583,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       this.executeCommands(ctx, commands, transforms);
 
       // TODO: confirm this stroke multiplier thing works...
-      const strokeWidthMultiplier = MathUtil.flattenTransforms(transforms).getScale();
+      const strokeWidthMultiplier = Matrix.flatten(...transforms).getScale();
       ctx.strokeStyle = ColorUtil.androidToCssColor(layer.strokeColor, layer.strokeAlpha);
       ctx.lineWidth = layer.strokeWidth * strokeWidthMultiplier;
       ctx.fillStyle = ColorUtil.androidToCssColor(layer.fillColor, layer.fillAlpha);
@@ -642,6 +644,9 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     this.setupCtxWithViewportCoords(this.overlayCtx);
     if (this.shouldDrawLayers) {
       this.drawHighlights(this.overlayCtx);
+      this.overlayCtx.restore();
+      // Draw points in terms of physical pixels, not viewport pixels.
+      this.overlayCtx.save();
       this.drawLabeledPoints(this.overlayCtx);
       this.drawSelectPointsDraggingPoints(this.overlayCtx);
       this.drawFloatingPreviewPoint(this.overlayCtx);
@@ -749,12 +754,11 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       // Draw a line from the starting projection to the final projection (or
       // to the last known mouse location, if one doesn't exist).
       const startPoint =
-        this.pathPointToDrawingCoords(new Point(proj1.projection.x, proj1.projection.y));
+        this.applyGroupTransforms(new Point(proj1.projection.x, proj1.projection.y));
       const endPoint = proj2
-        ? this.pathPointToDrawingCoords(new Point(proj2.projection.x, proj2.projection.y))
+        ? this.applyGroupTransforms(new Point(proj2.projection.x, proj2.projection.y))
         : this.shapeSplitter.getLastKnownMouseLocation();
       ctx.save();
-      this.transformsForActiveLayer.forEach(m => ctx.transform(m.a, m.b, m.c, m.d, m.e, m.f));
       ctx.beginPath();
       ctx.moveTo(startPoint.x, startPoint.y);
       ctx.lineTo(endPoint.x, endPoint.y);
@@ -863,7 +867,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       this.canvasSelector && this.canvasSelector.isDragTriggered()
         ? this.canvasSelector.getDraggableSplitIndex()
         : undefined;
-    const transforms = this.transformsForActiveLayer.reverse();
     for (const pointInfo of pathDataPointInfos) {
       const { cmd, subIdx, cmdIdx } = pointInfo;
       if (draggedCommandIndex
@@ -882,16 +885,16 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
             CanvasType.Start, pointInfo.subIdx, pointInfo.cmdIdx)
           || this.selectionService.isPointSelected(
             CanvasType.End, pointInfo.subIdx, pointInfo.cmdIdx)) {
-          radius *= (1 / SPLIT_POINT_RADIUS_FACTOR);
+          radius /= SPLIT_POINT_RADIUS_FACTOR;
         }
         text = (cmdIdx + 1).toString();
       }
       if (pointInfo.cmd.isSplit()) {
         radius *= SPLIT_POINT_RADIUS_FACTOR;
       }
-      const point = MathUtil.transformPoint(_.last(cmd.getPoints()), ...transforms);
       const color = cmd.isSplit() ? SPLIT_POINT_COLOR : NORMAL_POINT_COLOR;
-      this.executeLabeledPoint(ctx, point, radius, color, text);
+      this.executeLabeledPoint(
+        ctx, this.applyGroupTransforms(_.last(cmd.getPoints())), radius, color, text);
     }
   }
 
@@ -905,7 +908,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     const { x, y, d } = this.canvasSelector.getProjectionOntoPath().projection;
     const point =
       d < this.minSnapThreshold
-        ? this.pathPointToDrawingCoords(new Point(x, y))
+        ? this.applyGroupTransforms(new Point(x, y))
         : this.canvasSelector.getLastKnownMouseLocation();
     this.executeLabeledPoint(
       ctx,
@@ -928,7 +931,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     if (d < this.minSnapThreshold) {
       this.executeLabeledPoint(
         ctx,
-        this.pathPointToDrawingCoords(new Point(x, y)),
+        this.applyGroupTransforms(new Point(x, y)),
         this.mediumPointRadius * SPLIT_POINT_RADIUS_FACTOR,
         SPLIT_POINT_COLOR);
     }
@@ -944,12 +947,12 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       const proj2 = this.shapeSplitter.getFinalProjectionOntoPath();
       this.executeLabeledPoint(
         ctx,
-        this.pathPointToDrawingCoords(new Point(proj1.projection.x, proj1.projection.y)),
+        this.applyGroupTransforms(new Point(proj1.projection.x, proj1.projection.y)),
         this.mediumPointRadius * SPLIT_POINT_RADIUS_FACTOR,
         SPLIT_POINT_COLOR);
       if (this.shapeSplitter.willFinalProjectionOntoPathCreateSplitPoint()) {
         const endPoint = proj2
-          ? this.pathPointToDrawingCoords(new Point(proj2.projection.x, proj2.projection.y))
+          ? this.applyGroupTransforms(new Point(proj2.projection.x, proj2.projection.y))
           : this.shapeSplitter.getLastKnownMouseLocation();
         this.executeLabeledPoint(
           ctx,
@@ -962,7 +965,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       if (d < this.minSnapThreshold) {
         this.executeLabeledPoint(
           ctx,
-          this.pathPointToDrawingCoords(new Point(x, y)),
+          this.applyGroupTransforms(new Point(x, y)),
           this.mediumPointRadius * SPLIT_POINT_RADIUS_FACTOR,
           SPLIT_POINT_COLOR);
       }
@@ -1134,6 +1137,13 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     radius: number,
     color: string,
     text?: string) {
+
+    // Convert the point and the radius to physical pixel coordinates.
+    // We do this to avoid fractional font sizes less than 1px, which
+    // show up OK on Chrome but not on Firefox or Safari.
+    point = MathUtil.transformPoint(
+      point, Matrix.fromScaling(this.attrScale, this.attrScale));
+    radius *= this.attrScale;
 
     ctx.save();
     ctx.beginPath();

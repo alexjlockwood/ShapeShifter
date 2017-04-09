@@ -10,7 +10,7 @@
       </md-select>
     </div>
     <div fxLayout="row" fxLayoutGap="16px">
-      <md-input-container>
+      <md-input-container fxFlex>
         <input mdInput [disabled]="(shouldDisableSettingsObservable | async) ? '' : undefined"
           placeholder="Duration" value="300" min="100" max="60000"
           step="10" name="duration" [(ngModel)]="duration" type="number">

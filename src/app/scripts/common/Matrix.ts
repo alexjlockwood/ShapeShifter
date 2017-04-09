@@ -9,7 +9,7 @@ const EPSILON = 1e-8;
 export class Matrix {
 
   static flatten(...matrices: Matrix[]) {
-    return MathUtil.flattenTransforms(matrices);
+    return matrices.reduce((prev, curr) => curr.dot(prev), new Matrix());
   }
 
   static fromRotation(degrees: number) {
