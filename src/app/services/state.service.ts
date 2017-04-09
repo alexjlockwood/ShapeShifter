@@ -30,8 +30,6 @@ export class StateService {
   private readonly activePathIdSources = new Map<CanvasType, BehaviorSubject<string>>();
   // Observable that broadcast changes to the current morphability status.
   private readonly statusSource = new BehaviorSubject<MorphabilityStatus>(MorphabilityStatus.None);
-  // Set that keeps track our list of deleted path IDs.
-  private readonly deletedPathIds = new Set<string>();
 
   constructor(
     private readonly selectionService: SelectionService,
@@ -308,7 +306,6 @@ export class StateService {
    * Deletes the path with the specified ID.
    */
   deletePathId(pathId: string) {
-    this.deletedPathIds.add(pathId);
     this.importedPathMap.delete(pathId);
     const notifyTypes: CanvasType[] = [];
     [CanvasType.Start, CanvasType.Preview, CanvasType.End]
@@ -351,7 +348,7 @@ export class StateService {
     this.activeLayerMap.clear();
     this.activePathIdSources.forEach(source => source.next(undefined));
     this.statusSource.next(MorphabilityStatus.None);
-    this.deletedPathIds.clear();
+    this.existingPathIdsSource.next([]);
     [CanvasType.Preview, CanvasType.Start, CanvasType.End].forEach(type => this.notifyChange(type));
   }
 
