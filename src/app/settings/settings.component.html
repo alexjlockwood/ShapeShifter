@@ -1,12 +1,14 @@
 <div fxFlexFill class="settings-container">
   <form fxLayout="column">
-    <md-select color="accent" placeholder="Interpolator" [(ngModel)]="selectedInterpolator"
-      [disabled]="(shouldDisableSettingsObservable | async) ? '' : undefined"
-      name="interpolator">
-      <md-option *ngFor="let interpolator of interpolators" [value]="interpolator">
-        {{interpolator.label}}
-      </md-option>
-    </md-select>
+    <div>
+      <md-select color="accent" placeholder="Interpolator" [(ngModel)]="selectedInterpolator"
+        [disabled]="(shouldDisableSettingsObservable | async) ? '' : undefined"
+        name="interpolator">
+        <md-option *ngFor="let interpolator of interpolators" [value]="interpolator">
+          {{interpolator.label}}
+        </md-option>
+      </md-select>
+    </div>
     <div fxLayout="row" fxLayoutGap="16px">
       <md-input-container fxFlex>
         <input mdInput [disabled]="(shouldDisableSettingsObservable | async) ? '' : undefined"
@@ -19,9 +21,11 @@
           name="rotation" [(ngModel)]="rotation" type="number">
       </md-input-container>
     </div>
-    <md-checkbox [disabled]="(shouldDisableSettingsObservable | async) ? '' : undefined"
-      name="shouldLabelPoints" [(ngModel)]="shouldLabelPoints">
-      Show labeled points
-    </md-checkbox>
+    <div>
+      <md-checkbox [disabled]="(shouldDisableSettingsObservable | async) ? '' : undefined"
+        name="shouldLabelPoints" [(ngModel)]="shouldLabelPoints">
+        Show labeled points
+      </md-checkbox>
+    </div>
   </form>
 </div>

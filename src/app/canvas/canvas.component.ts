@@ -16,6 +16,7 @@ import {
   StateService, MorphabilityStatus,
   HoverService, HoverType, Hover,
   SettingsService,
+  FilePickerService,
 } from '../services';
 import { CanvasRulerDirective } from './canvasruler.directive';
 import { Observable } from 'rxjs/Observable';
@@ -98,6 +99,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     private readonly animatorService: AnimatorService,
     readonly selectionService: SelectionService,
     private readonly settingsService: SettingsService,
+    private readonly filePickerService: FilePickerService,
   ) { }
 
   ngAfterViewInit() {
@@ -214,6 +216,9 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           }
           if (this.appMode !== AppMode.AddPoints) {
             this.selectionService.reset();
+          }
+          if (!this.activePathId) {
+            this.showPointerCursor();
           }
           this.hoverService.reset();
           this.draw();
@@ -1045,29 +1050,11 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  onDoubleClick(event: MouseEvent) {
-    // TODO: reenable this?
-    // this.canvasRulers.forEach(r => r.hideMouse());
-    // if (!this.shouldProcessMouseEvents) {
-    //   return;
-    // }
-    // const mouseEvent = this.mouseEventToPoint(event);
-    // if (this.appMode === AppMode.SelectPoints) {
-    //   const noSegments = !this.activePathLayer.isStroked();
-    //   const hitResult = this.performHitTest(mouseEvent, { noSegments });
-    //   if (hitResult.isHit) {
-    //     const hits =
-    //       [].concat(hitResult.segmentHits, hitResult.shapeHits, hitResult.endPointHits);
-    //     const { subIdx } = _.last(hits);
-    //     this.selectionService.setSelections([{
-    //       subIdx,
-    //       source: this.canvasType,
-    //       type: SelectionType.SubPath,
-    //     }]);
-    //     this.appModeService.setAppMode(AppMode.AddPoints);
-    //     this.drawOverlays();
-    //   }
-    // }
+  onClick(event: MouseEvent) {
+    if (this.activePathId) {
+      return;
+    }
+    this.filePickerService.showFilePicker(this.canvasType);
   }
 
   /**

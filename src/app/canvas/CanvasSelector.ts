@@ -203,28 +203,16 @@ export class CanvasSelector {
       });
       this.component.showPointerCursor();
     } else if (hitResult.isSegmentHit || hitResult.isShapeHit) {
-      if (this.component.activePathLayer.isFilled() && hitResult.isSegmentHit) {
-        const { subIdx, cmdIdx, cmd } = this.findHitSegment(hitResult.segmentHits);
-        if (cmd.isSubPathSplitSegment()) {
-          this.hoverService.setHover({
-            type: HoverType.Segment,
-            source: this.canvasType,
-            subIdx,
-            cmdIdx
-          });
-        }
-        this.component.resetCursor();
-      } else {
-        const hits = hitResult.isShapeHit ? hitResult.shapeHits : hitResult.segmentHits;
-        const { subIdx } = this.findHitSubPath(hits);
-        this.hoverService.setHover({
-          type: HoverType.SubPath,
-          source: this.canvasType,
-          subIdx,
-        });
-        this.component.resetCursor();
-      }
+      const hits = hitResult.isShapeHit ? hitResult.shapeHits : hitResult.segmentHits;
+      const { subIdx } = this.findHitSubPath(hits);
+      this.hoverService.setHover({
+        type: HoverType.SubPath,
+        source: this.canvasType,
+        subIdx,
+      });
+      this.component.resetCursor();
     }
+    // TODO: add ability to hover over/select individual segments
   }
 
   private findHitSubPath(hits: ReadonlyArray<{ subIdx: number }>) {

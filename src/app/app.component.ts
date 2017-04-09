@@ -21,6 +21,7 @@ import {
   AppMode,
   StateService,
   MorphabilityStatus,
+  FilePickerService,
 } from './services';
 import { deleteSelectedSplitPoints } from './services/selection.service';
 import { DemoUtil, DEMO_MAP } from './scripts/demos';
@@ -66,10 +67,13 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   private currentPaneWidth = 0;
   private currentPaneHeight = 0;
 
+  private pendingFilePickerCanvasType: CanvasType;
+
   @ViewChild('canvasContainer') private canvasContainerRef: ElementRef;
 
   constructor(
     private readonly snackBar: MdSnackBar,
+    private readonly filePickerService: FilePickerService,
     private readonly stateService: StateService,
     private readonly selectionService: SelectionService,
     private readonly animatorService: AnimatorService,
@@ -147,6 +151,10 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
           updateCanvasSizes();
         }
       }));
+
+    this.subscriptions.push(
+      this.filePickerService.asObservable()
+        .subscribe((canvasType: CanvasType) => this.addPathsFromSvg(canvasType)));
 
     ELEMENT_RESIZE_DETECTOR.listenTo(this.canvasContainer.get(0), el => {
       updateCanvasSizes();
@@ -239,12 +247,15 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   // Proxies a button click to the <input> tag that opens the file picker.
-  addPathsFromSvg() {
+  addPathsFromSvg(canvasType?: CanvasType) {
+    this.pendingFilePickerCanvasType = canvasType;
     $('#addPathsFromSvgButton').click();
   }
 
   // Called when the user picks a file from the file picker.
   onSvgFilesPicked(fileList: FileList) {
+    const pendingCanvasType = this.pendingFilePickerCanvasType;
+    this.pendingFilePickerCanvasType = undefined;
     if (!fileList || !fileList.length) {
       console.warn('Failed to load SVG file');
       return;
@@ -258,12 +269,12 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     /**
      * Returns a list of all path IDs in this VectorLayer.
      */
-    const countPathIdsFn = (vls: VectorLayer[]) => {
-      const ids = new Set<string>();
+    const getPathIdsFn = (vls: VectorLayer[]) => {
+      const ids: string[] = [];
       vls.forEach(vl => {
         (function recurseFn(layer: Layer) {
           if (layer instanceof PathLayer) {
-            ids.add(layer.id);
+            ids.push(layer.id);
             return;
           }
           if (layer.children) {
@@ -271,7 +282,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
           }
         })(vl);
       });
-      return ids.size;
+      return ids;
     };
 
     let numCallbacks = 0;
@@ -281,16 +292,28 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       numCallbacks++;
       if (numErrors === files.length) {
         this.snackBar.open(
-          `There was a problem importing the paths from SVG`,
+          `Couldn't import the paths from SVG.`,
           'Dismiss',
           { duration: 5000 });
       } else if (numCallbacks === files.length) {
+        const importedPathIds = getPathIdsFn(vls);
+        const numImportedPaths = importedPathIds.length;
         this.stateService.addVectorLayers(vls);
-        const numNewPaths = countPathIdsFn(vls);
+        const canvasTypesToCheck =
+          pendingCanvasType === undefined
+            ? [CanvasType.Start, CanvasType.End]
+            : [pendingCanvasType];
+        for (const canvasType of canvasTypesToCheck) {
+          const activePathId = this.stateService.getActivePathId(canvasType);
+          if (activePathId) {
+            continue;
+          }
+          this.stateService.setActivePathId(canvasType, importedPathIds.shift());
+        }
         this.snackBar.open(
-          `Imported ${numNewPaths} path${numNewPaths === 1 ? '' : 's'} from SVG`,
+          `Imported ${numImportedPaths} path${numImportedPaths === 1 ? '' : 's'}`,
           'Dismiss',
-          { duration: 2000 });
+          { duration: 2750 });
       }
     };
 

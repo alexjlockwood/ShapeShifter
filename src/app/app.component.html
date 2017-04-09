@@ -20,7 +20,7 @@
     <div fxLayout="column" class="inspector-panel">
       <div class="inspector-panel-header" fxLayout="row" fxLayoutAlign="start center">
         <div fxFlex fxLayoutAlign="end center">
-          <span fxFlex>SVG paths</span>
+          <span fxFlex>Paths</span>
           <button md-icon-button (click)="addPathsFromSvg()" mdTooltip="Add paths from SVG"
             mdTooltipPosition="above" mdTooltipShowDelay="500">
             <md-icon class="svg-button" svgIcon="addpaths"></md-icon>
@@ -45,7 +45,7 @@
         <button md-icon-button [disabled]="morphabilityStatus === MORPHABILITY_NONE"
           mdTooltip="Select points" mdTooltipPosition="above" mdTooltipShowDelay="500"
           (click)="appModeService.setAppMode(SELECT_POINTS_MODE)">
-          <md-icon class="svg-button" [class.activated]="(appModeObservable | async) === SELECT_POINTS_MODE" svgIcon="cursor_default"></md-icon>
+          <md-icon class="svg-button" [class.activated]="(appModeObservable | async) === SELECT_POINTS_MODE" svgIcon="selectioncursor"></md-icon>
         </button>
         <button md-icon-button [disabled]="morphabilityStatus === MORPHABILITY_NONE"
           mdTooltip="Add points" mdTooltipPosition="above" mdTooltipShowDelay="500"

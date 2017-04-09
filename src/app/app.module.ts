@@ -28,6 +28,7 @@ import {
   SelectionService,
   SettingsService,
   AppModeService,
+  FilePickerService,
 } from './services';
 
 // Dialogs.
@@ -84,6 +85,7 @@ import 'hammerjs';
     DialogService,
     SettingsService,
     AppModeService,
+    FilePickerService,
   ],
   entryComponents: [
     ConfirmDialogComponent,
@@ -101,8 +103,8 @@ export class AppModule {
       .addSvgIcon('autofix', sanitizer.bypassSecurityTrustResourceUrl('assets/autofix.svg'))
       .addSvgIcon('contribute', sanitizer.bypassSecurityTrustResourceUrl('assets/contribute.svg'))
       .addSvgIcon('shapeshifter', sanitizer.bypassSecurityTrustResourceUrl('assets/shapeshifter.svg'))
-      .addSvgIcon('cursor_default', sanitizer.bypassSecurityTrustResourceUrl('assets/cursor-default.svg'))
       .addSvgIcon('addpaths', sanitizer.bypassSecurityTrustResourceUrl('assets/addpaths.svg'))
+      .addSvgIcon('selectioncursor', sanitizer.bypassSecurityTrustResourceUrl('assets/selectioncursor.svg'))
       .addSvgIcon('demoicon', sanitizer.bypassSecurityTrustResourceUrl('assets/demoicon.svg'));
   }
 }
