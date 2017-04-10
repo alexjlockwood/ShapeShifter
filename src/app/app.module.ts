@@ -39,10 +39,6 @@ import {
 } from './dialogs';
 
 // Pipes.
-import {
-  IsEqualToPipe,
-  IsNotEqualToPipe,
-} from './pipes';
 import { SubPathItemsPipe } from './inspector/pathinspector.component';
 import { SvgCommandPipe } from './inspector/commandinspector.component';
 
@@ -64,8 +60,6 @@ import 'hammerjs';
     ConfirmDialogComponent,
     DemoDialogComponent,
     SvgCommandPipe,
-    IsEqualToPipe,
-    IsNotEqualToPipe,
     SubPathItemsPipe,
   ],
   imports: [
