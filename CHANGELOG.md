@@ -1,4 +1,4 @@
-# v0.2.0 (coming soon)
+# [v0.2.0](https://github.com/alexjlockwood/ShapeShifter/compare/v0.1.3...v0.2.0) (2017-04-10)
 
 ### Features
 
