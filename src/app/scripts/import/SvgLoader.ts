@@ -1,12 +1,10 @@
 import * as _ from 'lodash';
+import * as ModelUtil from './ModelUtil';
 import { VectorLayer, GroupLayer, PathLayer, ClipPathLayer } from '../layers';
 import { newPath, SubPath, Command } from '../paths';
 import { ColorUtil, Matrix } from '../common';
 import { Svgo } from '../svgo';
-
-// This ID is reserved for the active path layer's parent group layer
-// (i.e. if the user adds a rotation to the path morphing animation).
-export const ROTATION_GROUP_LAYER_ID = 'rotation_group';
+import { ROTATION_GROUP_LAYER_ID } from '.';
 
 /**
  * Utility function that takes an SVG string as input and
@@ -42,7 +40,7 @@ export function loadVectorLayerFromSvgString(
   usedIds.add(ROTATION_GROUP_LAYER_ID);
 
   const makeFinalNodeIdFn = (node, typeIdPrefix: string) => {
-    const finalId = getUniqueId(
+    const finalId = ModelUtil.getUniqueId(
       sanitizeIdFn(node.id || typeIdPrefix),
       id => usedIds.has(id),
     );
@@ -187,17 +185,4 @@ export function loadVectorLayerFromSvgString(
     Number(width || 24),
     Number(height || 24),
     Number(alpha || 1));
-}
-
-function getUniqueId(prefix = '', objectById = (_) => undefined, targetObject?) {
-  let n = 0;
-  const idFn = () => prefix + (n ? `_${n}` : '');
-  while (true) {
-    const o = objectById(idFn());
-    if (!o || o === targetObject) {
-      break;
-    }
-    n++;
-  }
-  return idFn();
 }
