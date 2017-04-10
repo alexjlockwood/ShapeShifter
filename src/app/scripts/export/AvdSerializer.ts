@@ -21,7 +21,7 @@ export function vectorLayerToVectorDrawableXmlString(vectorLayer: VectorLayer) {
  */
 export function vectorLayerAnimationToAvdXmlString(
   vectorLayer: VectorLayer,
-  avdTargets: AvdTarget[]) {
+  avdTargets: ReadonlyArray<AvdTarget>) {
 
   const xmlDoc = document.implementation.createDocument(null, 'animated-vector', null);
   const rootNode = xmlDoc.documentElement;
