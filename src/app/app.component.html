@@ -21,12 +21,25 @@
       <div class="inspector-panel-header" fxLayout="row" fxLayoutAlign="start center">
         <div fxFlex fxLayoutAlign="end center">
           <span fxFlex>Paths</span>
-          <button md-icon-button (click)="addPathsFromSvg()" mdTooltip="Add paths from SVG"
-            mdTooltipPosition="above" mdTooltipShowDelay="500">
+          <button md-icon-button [mdMenuTriggerFor]="addPathsMenu">
             <md-icon class="svg-button" svgIcon="addpaths"></md-icon>
-            <input id="addPathsFromSvgButton" type="file" accept=".svg"
-             (change)="onSvgFilesPicked(($event.target || $event.srcElement).files)" multiple>
           </button>
+          <md-menu #addPathsMenu="mdMenu">
+            <button md-menu-item (click)="addPathsFromSvg()">
+              Add paths from SVG
+              <div>
+                <input id="addPathsFromSvgButton" type="file" accept=".svg"
+                  (change)="onSvgFilesPicked(($event.target || $event.srcElement).files)" multiple>
+              </div>
+            </button>
+            <button md-menu-item (click)="addPathsFromXml()">
+              Add paths from Vector Drawable
+              <div>
+                <input id="addPathsFromXmlButton" type="file" accept=".xml"
+                  (change)="onXmlFilesPicked(($event.target || $event.srcElement).files)" multiple>
+              </div>
+            </button>
+          </md-menu>
         </div>
       </div>
       <app-pathselector fxFlexFill></app-pathselector>

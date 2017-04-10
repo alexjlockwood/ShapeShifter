@@ -70,6 +70,13 @@ div.app-splitter:hover {
           width: 20px;
           height: 20px;
         }
+      }
+      &[md-icon-button][disabled] {
+        md-icon {
+          color: $colorBlackTextDisabled;
+        }
+      }
+      &[md-menu-item] {
         input[type="file"] {
           position: absolute;
           left: 0;
@@ -83,11 +90,6 @@ div.app-splitter:hover {
         }
          ::-webkit-file-upload-button {
           cursor: pointer;
-        }
-      }
-      &[md-icon-button][disabled] {
-        md-icon {
-          color: $colorBlackTextDisabled;
         }
       }
     }

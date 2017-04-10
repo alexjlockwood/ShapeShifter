@@ -10,19 +10,19 @@
       <button md-icon-button (click)="onOverflowButtonClick($event)"
         (mouseenter)="onOverflowHoverEvent(pathId, true)" (mouseleave)="onOverflowHoverEvent(pathId, false)"
         [mdMenuTriggerFor]="pathSelectorOverflow">
-          <md-icon>more_vert</md-icon>
-        </button>
+        <md-icon>more_vert</md-icon>
+      </button>
       <md-menu #pathSelectorOverflow="mdMenu">
         <button md-menu-item (click)="onSetStartPathIdClick(pathId)"
           *ngIf="(startActivePathIdObservable | async) !== pathId">
-        <span>Set start path</span>
-      </button>
+          <span>Set start path</span>
+        </button>
         <button md-menu-item (click)="onSetEndPathIdClick(pathId)" *ngIf="(endActivePathIdObservable | async) !== pathId">
-        <span>Set end path</span>
-      </button>
+          <span>Set end path</span>
+        </button>
         <button md-menu-item (click)="onDeletePathClick(pathId)">
-        <span>Delete</span>
-      </button>
+          <span>Delete</span>
+        </button>
       </md-menu>
     </div>
   </div>

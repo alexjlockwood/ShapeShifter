@@ -11,7 +11,7 @@ import { Subscription } from 'rxjs/Subscription';
 import { Observable } from 'rxjs/Observable';
 import { CanvasType } from './CanvasType';
 import { VectorLayer, PathLayer, LayerUtil } from './scripts/layers';
-import { SvgLoader } from './scripts/import';
+import { SvgLoader, VectorDrawableLoader } from './scripts/import';
 import { SubPath, Command } from './scripts/paths';
 import {
   AnimatorService,
@@ -309,6 +309,89 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
           currentIds.push(...LayerUtil.getAllIds([vectorLayer]));
           maybeAddVectorLayersFn();
         }, currentIds);
+      };
+
+      fileReader.onerror = event => {
+        const target = event.target as any;
+        switch (target.error.code) {
+          case target.error.NOT_FOUND_ERR:
+            alert('File not found');
+            break;
+          case target.error.NOT_READABLE_ERR:
+            alert('File is not readable');
+            break;
+          case target.error.ABORT_ERR:
+            break;
+          default:
+            alert('An error occurred reading this file');
+        }
+        numErrors++;
+        maybeAddVectorLayersFn();
+      };
+
+      fileReader.onabort = event => {
+        alert('File read cancelled');
+      };
+
+      fileReader.readAsText(file);
+    }
+  }
+
+  // Proxies a button click to the <input> tag that opens the file picker.
+  addPathsFromXml(canvasType?: CanvasType) {
+    $('#addPathsFromXmlButton').click();
+  }
+
+  // Called when the user picks a file from the file picker.
+  onXmlFilesPicked(fileList: FileList) {
+    if (!fileList || !fileList.length) {
+      console.warn('Failed to load XML file');
+      return;
+    }
+
+    const files: File[] = [];
+    for (let i = 0; i < fileList.length; i++) {
+      files.push(fileList[i]);
+    }
+
+    let numCallbacks = 0;
+    let numErrors = 0;
+    const vls: VectorLayer[] = [];
+    const maybeAddVectorLayersFn = () => {
+      numCallbacks++;
+      if (numErrors === files.length) {
+        this.snackBar.open(
+          `Couldn't import the paths from XML.`,
+          'Dismiss',
+          { duration: 5000 });
+      } else if (numCallbacks === files.length) {
+        const importedPathIds = LayerUtil.getAllIds(vls, l => l instanceof PathLayer);
+        const numImportedPaths = importedPathIds.length;
+        this.stateService.addVectorLayers(vls);
+        for (const canvasType of [CanvasType.Start, CanvasType.End]) {
+          const activePathId = this.stateService.getActivePathId(canvasType);
+          if (activePathId) {
+            continue;
+          }
+          this.stateService.setActivePathId(canvasType, importedPathIds.shift());
+        }
+        this.snackBar.open(
+          `Imported ${numImportedPaths} path${numImportedPaths === 1 ? '' : 's'}`,
+          'Dismiss',
+          { duration: 2750 });
+      }
+    };
+
+    const currentIds = LayerUtil.getAllIds(this.stateService.getImportedVectorLayers());
+    for (const file of files) {
+      const fileReader = new FileReader();
+
+      fileReader.onload = event => {
+        const xmlText = (event.target as any).result;
+        const vectorLayer = VectorDrawableLoader.loadVectorLayerFromXmlString(xmlText, currentIds);
+        vls.push(vectorLayer);
+        currentIds.push(...LayerUtil.getAllIds([vectorLayer]));
+        maybeAddVectorLayersFn();
       };
 
       fileReader.onerror = event => {
