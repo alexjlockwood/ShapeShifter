@@ -2,9 +2,10 @@
 
 ### Features
 
+* Shape Shifter has a brand new landing page: https://shapeshifter.design
 * It is now possible to morph paths with different numbers of subpaths! Here's
   a rundown of the new features that make it possible:
-    * *Unmatched subpaths are automatically collapsed to a point.* For example,
+    * *Unmatched subpaths are automatically animated down to a point.* For example,
       consider a play and pause icon. The play icon consists of a single
       triangular subpath and the pause icon consists of two rectangular subpaths.
       By default ShapeShifter will morph the play icon subpath into the pause icon's
@@ -36,8 +37,7 @@
 * The ability to add and delete new SVG paths even after the initial import.
   Clicking on an empty canvas will now open the file picker to import a new
   SVG as well.
-* Snap-to-existing-point detection in the canvas while dragging and adding
-  new points.
+* Snap-to-point detection in the canvas while dragging and adding new points.
 
 ### Bug fixes
 
