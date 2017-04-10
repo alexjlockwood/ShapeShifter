@@ -23,7 +23,7 @@
     "@angular/flex-layout": "^2.0.0-rc.1",
     "@angular/forms": "^4.0.0",
     "@angular/http": "^4.0.0",
-    "@angular/material": "^2.0.0-beta.2",
+    "@angular/material": "2.0.0-beta.2",
     "@angular/platform-browser": "^4.0.0",
     "@angular/platform-browser-dynamic": "^4.0.0",
     "@angular/platform-server": "^4.0.0",
