@@ -10,12 +10,12 @@ import { Subscription } from 'rxjs/Subscription';
 declare const ga: Function;
 
 @Component({
-  selector: 'app-pathselector',
-  templateUrl: './pathselector.component.html',
-  styleUrls: ['./pathselector.component.scss'],
+  selector: 'app-vectorviewer',
+  templateUrl: './vectorviewer.component.html',
+  styleUrls: ['./vectorviewer.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PathSelectorComponent implements OnInit, OnDestroy {
+export class VectorViewerComponent implements OnInit, OnDestroy {
   @ViewChildren(MdMenuTrigger) menuTriggers: QueryList<MdMenuTrigger>;
 
   // These are public because they are accessed via the HTML template.

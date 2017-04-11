@@ -13,7 +13,7 @@ import { CanvasRulerDirective } from './canvas/canvasruler.directive';
 import { PathInspectorComponent } from './inspector/pathinspector.component';
 import { CommandInspectorComponent } from './inspector/commandinspector.component';
 import { SubpathInspectorComponent } from './inspector/subpathinspector.component';
-import { PathSelectorComponent } from './pathselector/pathselector.component';
+import { VectorViewerComponent } from './viewer/vectorviewer.component';
 import { SettingsComponent } from './settings/settings.component';
 import { SplitterComponent } from './splitter/splitter.component';
 import { TimelineComponent } from './timeline/timeline.component';
@@ -56,7 +56,7 @@ import 'hammerjs';
     CanvasRulerDirective,
     SettingsComponent,
     ToolbarComponent,
-    PathSelectorComponent,
+    VectorViewerComponent,
     ConfirmDialogComponent,
     DemoDialogComponent,
     SvgCommandPipe,
