@@ -12,7 +12,7 @@ import { deleteSelectedSplitPoints } from '../services/selection.service';
 import { CanvasType } from '../CanvasType';
 import { ExportUtil } from '../scripts/export';
 import { DialogService } from '../dialogs';
-import { AutoAwesome } from '../scripts/autoawesome';
+import { AutoAwesome } from '../scripts/algorithms';
 import { DemoUtil, DEMO_MAP } from '../scripts/demos';
 import { Command } from '../scripts/paths';
 import { Observable } from 'rxjs/Observable';

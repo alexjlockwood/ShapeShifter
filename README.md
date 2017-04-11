@@ -72,7 +72,7 @@ Auto fix is powered by an adaptation of the [Needleman-Wunsch algorithm][Needlem
 which is used in bioinformatics to align protein or nucleotide sequences. Instead of
 aligning DNA base-pairs, Shape Shifter aligns the individual SVG commands that make up
 each path instead. You can view the current implementation of the algorithm in the
-[`AutoAwesome.ts`](https://github.com/alexjlockwood/ShapeShifter/blob/master/src/app/scripts/autoawesome/AutoAwesome.ts) file.
+[`AutoAwesome.ts`](https://github.com/alexjlockwood/ShapeShifter/blob/master/src/app/scripts/algorithms/AutoAwesome.ts) file.
 
 ## Bug reports & feature requests
 

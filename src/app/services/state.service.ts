@@ -3,7 +3,7 @@ import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Layer, VectorLayer, PathLayer, GroupLayer, LayerUtil } from '../scripts/layers';
 import { CanvasType } from '../CanvasType';
 import { Path } from '../scripts/paths';
-import { AutoAwesome } from '../scripts/autoawesome';
+import { AutoAwesome } from '../scripts/algorithms';
 import { ROTATION_GROUP_LAYER_ID } from '../scripts/import';
 
 // Note that importing these from '.' causes runtime errors.
