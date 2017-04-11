@@ -1,0 +1,59 @@
+@import '../styles/material-colors';
+@import '../styles/material-shadows';
+@import '../styles/variables';
+@import '../styles/theme';
+ul {
+  margin: 0;
+  padding: 0;
+}
+
+li {
+  list-style: none;
+}
+
+.lt-listitem {
+  box-sizing: border-box;
+  height: 20px;
+  padding-top: 2px;
+  padding-bottom: 2px;
+  padding-left: 4px;
+  padding-right: 2px;
+  cursor: pointer;
+  font-size: 13px;
+  outline: none;
+  color: $colorBlackTextSecondary;
+  border-radius: 2px;
+  &.is-selected {
+    background-color: mat-color($app-accent);
+    box-shadow: none;
+    color: #fff;
+  }
+  span.lt-layer-id-text {
+    flex: 1 1 0;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  md-icon {
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
+  }
+  button {
+    line-height: 16px;
+    height: 20px;
+    width: 20px;
+    min-height: 20px;
+    &[md-icon-button] {
+      md-icon {
+        line-height: normal;
+        vertical-align: top;
+      }
+    }
+  }
+}
+
+.lt-children {
+  padding: 0;
+  margin: 0 0 0 20px;
+}

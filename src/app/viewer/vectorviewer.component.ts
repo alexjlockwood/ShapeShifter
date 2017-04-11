@@ -6,6 +6,7 @@ import { StateService, } from '../services';
 import { Observable } from 'rxjs/Observable';
 import { MdMenuTrigger } from '@angular/material';
 import { Subscription } from 'rxjs/Subscription';
+import { VectorLayer } from '../scripts/layers';
 
 declare const ga: Function;
 
@@ -22,6 +23,7 @@ export class VectorViewerComponent implements OnInit, OnDestroy {
   existingPathIdsObservable: Observable<ReadonlyArray<string>>;
   startActivePathIdObservable: Observable<string>;
   endActivePathIdObservable: Observable<string>;
+  vectorLayersObservable: Observable<ReadonlyArray<VectorLayer>>;
 
   private isHoveringOverListItem = new Map<string, boolean>();
   private isHoveringOverOverflow = new Map<string, boolean>();
@@ -38,6 +40,7 @@ export class VectorViewerComponent implements OnInit, OnDestroy {
       this.isHoveringOverListItem.clear();
       this.isHoveringOverOverflow.clear();
     });
+    this.vectorLayersObservable = this.stateService.getVectorLayersObservable();
   }
 
   ngOnDestroy() {

@@ -1,0 +1,183 @@
+.slt-layer {
+  box-sizing: border-box;
+  line-height: 20px;
+  height: 20px;
+}
+
+.slt-property {
+  line-height: 24px;
+  height: 24px;
+}
+
+.slt-properties {
+  margin: 4px 0;
+  &:empty {
+    display: none;
+  }
+}
+
+.slt-layers {
+  width: 300px;
+  box-shadow: material-shadow(2);
+  position: relative;
+  z-index: 3;
+  user-select: none;
+  flex: 0 0 auto;
+  md-icon {
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
+  }
+  @mixin layer-list-button {
+    margin: 0;
+    padding: 2px;
+    height: 20px;
+    width: 20px;
+    line-height: 16px;
+    min-height: 20px;
+    md-icon {
+      vertical-align: top;
+    }
+  }
+  .slt-layers-list-scroller {
+    position: relative;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -ms-overflow-style: none;
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+  .slt-layers-list {
+    padding-left: 8px;
+  }
+  .slt-children {
+    padding: 0;
+    margin: 0 0 0 20px;
+  }
+  .slt-layer {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 2px;
+    font-size: 12px;
+    cursor: pointer;
+    color: $colorBlackTextSecondary;
+    outline: none;
+    border-radius: 2px 0 0 2px;
+    &:focus {
+      box-shadow: 0 0 0 1px $colorFocusBorder inset;
+    }
+    &.is-selected {
+      background-color: $colorSelection;
+      box-shadow: none;
+      &,
+      & md-icon {
+        color: #fff;
+      }
+    }
+    md-icon {
+      flex: 0 0 auto;
+      margin-right: 4px;
+    }
+  }
+  .slt-layer:hover,
+  .slt-layer.is-selected {
+    .slt-layer-action-button {
+      opacity: 1;
+    }
+  }
+  .slt-layer-expanded-toggle {
+    @include layer-list-button;
+    visibility: hidden;
+    &.is-visible {
+      visibility: visible;
+    }
+  }
+  .slt-layer-id {
+    flex: 1 1 0;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .slt-layer-add-property-menu {
+    padding: 0;
+    display: flex;
+  }
+  .slt-layer-action-button {
+    @include layer-list-button;
+    opacity: .2;
+  }
+  md-menu {
+    display: flex;
+  }
+  .slt-layer-more-actions {
+    opacity: 0;
+  }
+  .slt-layer-visibility-toggle {
+    &.is-checked {
+      opacity: 0;
+    }
+    &:not(.is-checked) {
+      opacity: .7;
+    }
+  }
+  .slt-layer-type-group {
+    font-weight: 500;
+  }
+  .slt-properties {
+    margin-left: 40px; // indent by both the icon (20px) and expand toggle (20px)
+    margin-right: -2px; // hide inset shadow
+    padding-right: 2px; // offset margin
+    box-shadow: 0 0 0 1px $thinBorderColor inset;
+    border-radius: 2px;
+  }
+  .slt-property {
+    color: $colorBlackTextSecondary;
+    padding-left: 8px;
+    font-size: 12px;
+    &:not(:last-child) {
+      box-shadow: 0 -1px 0 $thinBorderColor inset;
+    }
+    .slt-property-name {
+      flex: 1 1 0;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .md-button {
+      @include layer-list-button;
+      margin: 2px;
+    }
+    md-icon {
+      color: $colorBlackTextDisabled;
+    }
+  }
+  .slt-layers-list-drag-indicator {
+    position: absolute;
+    height: 2px;
+    left: 0;
+    right: 0;
+    margin-top: -1px;
+    background-color: $colorPrimary400;
+    pointer-events: none;
+    &::before {
+      position: absolute;
+      content: '';
+      left: -4px;
+      top: -3px;
+      height: 8px;
+      width: 8px;
+      background-color: $colorPrimary400;
+      border-radius: 50%;
+    }
+  }
+}
+
+.slt-layers-empty {
+  padding: 32px;
+  text-align: center;
+  font-size: 14px;
+  line-height: 20px;
+  color: $colorBlackTextDisabled;
+}
