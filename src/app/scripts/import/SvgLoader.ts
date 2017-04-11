@@ -16,7 +16,16 @@ export function loadVectorLayerFromSvgStringWithCallback(
   existingLayerIds: ReadonlyArray<string>) {
 
   Svgo.optimize(svgString, (optimizedSvgString: string) => {
-    callback(loadVectorLayerFromSvgString(optimizedSvgString, existingLayerIds));
+    if (!optimizedSvgString) {
+      callback(undefined);
+      return;
+    }
+    try {
+      callback(loadVectorLayerFromSvgString(optimizedSvgString, existingLayerIds));
+    } catch (e) {
+      console.error('Shape Shifter failed to parse the optimized SVG string', optimizedSvgString, e);
+      callback(undefined);
+    }
   });
 }
 

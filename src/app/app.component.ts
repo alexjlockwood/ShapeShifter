@@ -273,7 +273,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       numCallbacks++;
       if (numErrors === files.length) {
         this.snackBar.open(
-          `Couldn't import the paths from SVG.`,
+          `Couldn't import paths from SVG.`,
           'Dismiss',
           { duration: 5000 });
       } else if (numCallbacks === files.length) {
@@ -305,6 +305,11 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       fileReader.onload = event => {
         const svgText = (event.target as any).result;
         SvgLoader.loadVectorLayerFromSvgStringWithCallback(svgText, vectorLayer => {
+          if (!vectorLayer) {
+            numErrors++;
+            maybeAddVectorLayersFn();
+            return;
+          }
           vls.push(vectorLayer);
           currentIds.push(...LayerUtil.getAllIds([vectorLayer]));
           maybeAddVectorLayersFn();

@@ -91,8 +91,8 @@ const batchedSvgoPlugins = (() => {
 export function optimize(svgText: string, callback: (optimizedSvgText: string) => void) {
   svgToJs(svgText, svgJs => {
     if (svgJs.error) {
-      console.warn('Failed to parse the specified SVG string.');
-      callback(svgText);
+      console.warn('Svgo failed to parse the specified SVG string', svgJs.error);
+      callback(undefined);
       return;
     }
     callback(jsToSvg(executePlugins(svgJs, batchedSvgoPlugins), {
