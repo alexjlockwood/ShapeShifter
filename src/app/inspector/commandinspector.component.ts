@@ -71,6 +71,7 @@ export class CommandInspectorComponent implements OnInit {
   onReverseClick(event: MouseEvent) {
     const fromPathLayer = this.stateService.getActivePathLayer(this.canvasType);
     this.replacePath(fromPathLayer.pathData.mutate().reverseSubPath(this.subIdx).build(), event);
+    this.broadcastHoverEvent(true, HoverType.Reverse);
   }
 
   onShiftBackClick(event: MouseEvent) {
@@ -79,6 +80,7 @@ export class CommandInspectorComponent implements OnInit {
       .shiftSubPathBack(this.subIdx)
       .build(),
       event);
+    this.broadcastHoverEvent(true, HoverType.ShiftBack);
   }
 
   onShiftForwardClick(event: MouseEvent) {
@@ -87,6 +89,8 @@ export class CommandInspectorComponent implements OnInit {
       .shiftSubPathForward(this.subIdx)
       .build(),
       event);
+    this.broadcastHoverEvent(true, HoverType.ShiftForward);
+
   }
 
   onSplitButtonClick(event: MouseEvent) {

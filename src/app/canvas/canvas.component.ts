@@ -221,6 +221,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
             this.showPointerCursor();
           }
           this.hoverService.reset();
+          this.currentHoverPreviewPath = undefined;
           this.draw();
         });
       const updateCurrentHoverFn = (hover: Hover | undefined) => {
