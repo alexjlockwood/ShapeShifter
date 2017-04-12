@@ -11,7 +11,7 @@ li {
   list-style: none;
 }
 
-.lt-listitem {
+.lt-layer {
   box-sizing: border-box;
   height: 20px;
   padding-top: 2px;
@@ -19,7 +19,7 @@ li {
   padding-left: 4px;
   padding-right: 2px;
   cursor: pointer;
-  font-size: 13px;
+  font-size: 12px;
   outline: none;
   color: $colorBlackTextSecondary;
   border-radius: 2px;
@@ -33,11 +33,12 @@ li {
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
+    margin-left: 4px;
   }
   md-icon {
     width: 16px;
     height: 16px;
-    font-size: 16px;
+    font-size: 16px; // margin-right: 4px;
   }
   button {
     line-height: 16px;
@@ -51,6 +52,11 @@ li {
       }
     }
   }
+}
+
+.lt-layer-type-group,
+.lt-layer-type-vector {
+  font-weight: 500;
 }
 
 .lt-children {

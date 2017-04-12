@@ -104,10 +104,10 @@ export class AppModule {
       .addSvgIcon('contribute', sanitizer.bypassSecurityTrustResourceUrl('assets/contribute.svg'))
       .addSvgIcon('shapeshifter', sanitizer.bypassSecurityTrustResourceUrl('assets/shapeshifter.svg'))
       .addSvgIcon('importlayers', sanitizer.bypassSecurityTrustResourceUrl('assets/importlayers.svg'))
-      .addSvgIcon('clippathlayer', sanitizer.bypassSecurityTrustResourceUrl('assets/clippathlayer.svg'))
-      .addSvgIcon('grouplayer', sanitizer.bypassSecurityTrustResourceUrl('assets/grouplayer.svg'))
-      .addSvgIcon('pathlayer', sanitizer.bypassSecurityTrustResourceUrl('assets/pathlayer.svg'))
-      .addSvgIcon('vectorlayer', sanitizer.bypassSecurityTrustResourceUrl('assets/vectorlayer.svg'))
+      .addSvgIcon('clippath', sanitizer.bypassSecurityTrustResourceUrl('assets/clippath.svg'))
+      .addSvgIcon('group', sanitizer.bypassSecurityTrustResourceUrl('assets/group.svg'))
+      .addSvgIcon('path', sanitizer.bypassSecurityTrustResourceUrl('assets/path.svg'))
+      .addSvgIcon('vector', sanitizer.bypassSecurityTrustResourceUrl('assets/vector.svg'))
       .addSvgIcon('selectioncursor', sanitizer.bypassSecurityTrustResourceUrl('assets/selectioncursor.svg'))
       .addSvgIcon('demoicon', sanitizer.bypassSecurityTrustResourceUrl('assets/demoicon.svg'));
   }

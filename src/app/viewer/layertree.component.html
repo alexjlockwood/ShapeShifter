@@ -1,8 +1,9 @@
-<div fxLayout="row" class="lt-listitem" fxLayout="row" fxLayoutAlign="start center"
-  [class.is-selected]="false">
-  <button md-icon-button>
+<div fxLayout="row" class="lt-layer lt-layer-type-{{getLayerTypeName()}}"
+  fxLayout="row" fxLayoutAlign="start center" [class.is-selected]="false">
+  <button md-icon-button *ngIf="this.layer.isVectorLayer()">
     <md-icon>chevron_right</md-icon>
   </button>
+  <md-icon svgIcon="{{getLayerTypeName()}}"></md-icon>
   <span class="lt-layer-id-text" fxFlex>{{layer.id}}</span>
   <button md-icon-button>
     <md-icon>more_vert</md-icon>
@@ -14,8 +15,8 @@
     <md-icon>delete</md-icon>
   </button>
 </div>
-<ul *ngIf="layer.children" class="lt-children">
-  <li *ngFor="let child of layer.children; trackBy: trackLayer">
+<ul *ngIf="this.children" class="lt-children">
+  <li *ngFor="let child of this.children; trackBy: trackLayer">
     <app-layertree [layer]="child"></app-layertree>
   </li>
 </ul>
