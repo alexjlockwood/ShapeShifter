@@ -188,7 +188,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   // TOOD: i.e. meta + R means refresh page so don't rewind
   private initKeyCodeListeners() {
     const getAppModeShortcutFn = (event: JQueryEventObject) => {
-      if (event.metaKey) {
+      if (navigator.appVersion.indexOf('Mac') >= 0 ? event.metaKey : event.ctrlKey) {
         if (event.shiftKey) {
           return AppMode.SplitSubPaths;
         }
@@ -288,13 +288,11 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   getAddPointsKeyboardShortcut() {
-    const metaKey = navigator.appVersion.indexOf('Mac') >= 0 ? '⌘' : '⌃';
-    return `${metaKey}`;
+    return navigator.appVersion.indexOf('Mac') >= 0 ? '⌘' : 'Ctrl';
   }
 
   getSplitSubPathsKeyboardShortcut() {
-    const metaKey = navigator.appVersion.indexOf('Mac') >= 0 ? '⌘' : '⌃';
-    return `⇧${metaKey}`;
+    return navigator.appVersion.indexOf('Mac') >= 0 ? '⌘⇧' : 'Ctrl + Shift';
   }
 
   // Proxies a button click to the <input> tag that opens the file picker.
