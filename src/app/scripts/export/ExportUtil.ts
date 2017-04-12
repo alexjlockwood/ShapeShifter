@@ -3,6 +3,7 @@ import { PathLayer, GroupLayer, VectorLayer } from '../layers';
 import { CanvasType } from '../../CanvasType';
 import { AvdSerializer, SvgSerializer } from '.';
 import * as CssKeyframesSerializer from './CssKeyframesSerializer';
+import * as JsSerializer from './JsSerializer';
 import {
   AvdTarget, AvdAnimation, AvdPropertyName, AvdValueType,
   SvgTarget, SvgAnimation, SvgPropertyName,
@@ -13,7 +14,8 @@ import * as JSZip from 'jszip';
 import * as $ from 'jquery';
 
 // TODO: release this when it is ready and tested
-const SHOULD_EXPORT_CSS_KEYFRAMES = !environment.production && false;
+const SHOULD_EXPORT_CSS_KEYFRAMES = !environment.production && true;
+const SHOULD_EXPORT_JS_SCRIPT = !environment.production && true;
 
 export function exportCurrentState(lss: StateService, as: AnimatorService) {
   const startVlChildren: Array<PathLayer | GroupLayer> = [];
@@ -117,9 +119,6 @@ export function exportCurrentState(lss: StateService, as: AnimatorService) {
   const startSvg = SvgSerializer.vectorLayerToSvgString(startOutputVectorLayer);
   const endSvg = SvgSerializer.vectorLayerToSvgString(endOutputVectorLayer);
 
-  // Create CSS keyframes HTML file.
-  const cssKeyframesHtml = CssKeyframesSerializer.svgAnimationToHtml(startSvg, svgTargets);
-
   const zip = new JSZip();
   zip.file('README.txt', createExportReadme());
   const android = zip.folder('android');
@@ -133,7 +132,14 @@ export function exportCurrentState(lss: StateService, as: AnimatorService) {
   web.file('start.svg', startSvg);
   web.file('end.svg', endSvg);
   if (SHOULD_EXPORT_CSS_KEYFRAMES) {
-    web.file('index.html', cssKeyframesHtml);
+    // Create CSS keyframes HTML file.
+    const cssKeyframesHtml = CssKeyframesSerializer.svgAnimationToHtml(startSvg, svgTargets);
+    web.file('keyframes.html', cssKeyframesHtml);
+  }
+  if (SHOULD_EXPORT_JS_SCRIPT) {
+    // Create JS animation loop HTML file.
+    const jsLoopHtml = JsSerializer.svgAnimationToScript(startSvg, svgTargets);
+    web.file('jsloop.html', jsLoopHtml);
   }
   zip.generateAsync({ type: 'blob' }).then(content => {
     downloadFile(content, `ShapeShifter.zip`);
@@ -276,8 +282,8 @@ function createPathSvgTarget(
   const svgAnimations: SvgAnimation[] = [];
   svgAnimations.push(
     createSvgAnimation(
-      `path('${startLayer.pathData.getPathString()}')`,
-      `path('${endLayer.pathData.getPathString()}')`,
+      `${startLayer.pathData.getPathString()}`,
+      `${endLayer.pathData.getPathString()}`,
       'd'));
   if (startLayer.fillColor && endLayer.fillColor && startLayer.fillColor !== endLayer.fillColor) {
     svgAnimations.push(

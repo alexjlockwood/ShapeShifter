@@ -40,12 +40,16 @@ function createCssAnimation(layerId: string, duration: number, interpolator: str
 
 function svgTargetToCssKeyframes(layerId: string, svgTarget: SvgTarget) {
   const fromProps: string[] = [];
-  for (const anim of svgTarget.animations) {
-    fromProps.push(`${anim.propertyName}: ${anim.valueFrom}`);
-  }
   const toProps: string[] = [];
   for (const anim of svgTarget.animations) {
-    toProps.push(`${anim.propertyName}: ${anim.valueTo}`);
+    let valueFrom = anim.valueFrom;
+    let valueTo = anim.valueTo;
+    if (anim.propertyName === 'd') {
+      valueFrom = `path('${valueFrom}')`;
+      valueTo = `path('${valueTo}')`;
+    }
+    fromProps.push(`${anim.propertyName}: ${valueFrom}`);
+    toProps.push(`${anim.propertyName}: ${valueTo}`);
   }
   return `
     @keyframes ${layerId}_anim {
