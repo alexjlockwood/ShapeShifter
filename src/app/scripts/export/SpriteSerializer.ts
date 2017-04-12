@@ -1,4 +1,4 @@
-import { SvgTarget } from '../animation';
+// import { SvgTarget } from '../animation';
 
 export function createHtml() {
   return `<html>
@@ -18,31 +18,29 @@ export function createSvg() {
 
 }
 
-function svgTargetToCssKeyframes(layerId: string, svgTarget: SvgTarget) {
-  const fromProps: string[] = [];
-  const toProps: string[] = [];
-  for (const anim of svgTarget.animations) {
-    let valueFrom = anim.valueFrom;
-    let valueTo = anim.valueTo;
-    if (anim.propertyName === 'd') {
-      valueFrom = `path('${valueFrom}')`;
-      valueTo = `path('${valueTo}')`;
-    }
-    fromProps.push(`${anim.propertyName}: ${valueFrom}`);
-    toProps.push(`${anim.propertyName}: ${valueTo}`);
-  }
-  return `
-    @keyframes ${layerId}_anim {
-      from {
-        ${fromProps.join(';\n      ')}
-      }
-      to {
-        ${toProps.join(';\n      ')}
-      }
-    }`;
-}
-
-
+// function svgTargetToCssKeyframes(layerId: string, svgTarget: SvgTarget) {
+//   const fromProps: string[] = [];
+//   const toProps: string[] = [];
+//   for (const anim of svgTarget.animations) {
+//     let valueFrom = anim.valueFrom;
+//     let valueTo = anim.valueTo;
+//     if (anim.propertyName === 'd') {
+//       valueFrom = `path('${valueFrom}')`;
+//       valueTo = `path('${valueTo}')`;
+//     }
+//     fromProps.push(`${anim.propertyName}: ${valueFrom}`);
+//     toProps.push(`${anim.propertyName}: ${valueTo}`);
+//   }
+//   return `
+//     @keyframes ${layerId}_anim {
+//       from {
+//         ${fromProps.join(';\n      ')}
+//       }
+//       to {
+//         ${toProps.join(';\n      ')}
+//       }
+//     }`;
+// }
 
 // @-webkit-keyframes play50 {
 //   0% {
