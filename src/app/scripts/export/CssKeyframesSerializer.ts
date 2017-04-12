@@ -1,6 +1,7 @@
 import { SvgTarget } from '../animation';
 
-export function svgAnimationToHtml(startSvg: string, svgTargets: SvgTarget[]) {
+// TODO: add css prefixes to support all browsers
+export function svgAnimationToHtml(svg: string, svgTargets: SvgTarget[]) {
   // We assume here that the same duration and interpolator will be used for all targets.
   const duration = svgTargets[0].animations[0].duration;
   const interpolator = svgTargets[0].animations[0].interpolator;
@@ -9,14 +10,23 @@ export function svgAnimationToHtml(startSvg: string, svgTargets: SvgTarget[]) {
   return `<!DOCTYPE html>
 <html>
 <head>
-  <title>Shape Shifter CSS transition</title>
+  <title>Shape Shifter animation (CSS)</title>
   <style>
+    body {
+      position: absolute;
+      margin: auto;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      width: 50%;
+    }
     ${keyframes.join('\n')}
     ${animations.join('\n')}
   </style>
 </head>
 <body>
-  ${startSvg}
+  ${svg}
 </body>
 </html>
 `;
@@ -24,7 +34,7 @@ export function svgAnimationToHtml(startSvg: string, svgTargets: SvgTarget[]) {
 
 function createCssAnimation(layerId: string, duration: number, interpolator: string) {
   return `#${layerId} {
-  animation: ${layerId}_animation ${duration}ms alternate infinite ${interpolator};
+  animation: ${layerId}_anim ${duration}ms ${interpolator} forwards;
 }`;
 }
 
@@ -37,13 +47,14 @@ function svgTargetToCssKeyframes(layerId: string, svgTarget: SvgTarget) {
   for (const anim of svgTarget.animations) {
     toProps.push(`${anim.propertyName}: ${anim.valueTo}`);
   }
-  return `@keyframes ${layerId}_animation {
-from {
-  ${fromProps.join(';\n    ')}
-}
-to {
-  ${toProps.join(';\n    ')}
-}
-}`;
+  return `
+    @keyframes ${layerId}_anim {
+      from {
+        ${fromProps.join(';\n      ')}
+      }
+      to {
+        ${toProps.join(';\n      ')}
+      }
+    }`;
 }
 
