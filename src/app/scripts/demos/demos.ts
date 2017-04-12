@@ -56,7 +56,7 @@ const ANIMALS_SVG = `
 const PLAY_PAUSE_SVG = `
 <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24" fill="#000000">
     <path id="play" d="M 8 5 L 8 19 L 19 12 L 8 5"/>
-        <path id="pause" d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+    <path id="pause" d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
 </svg>
 `;
 
