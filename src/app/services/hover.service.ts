@@ -55,7 +55,7 @@ export interface Hover {
  */
 export enum HoverType {
   // The user hovered over a subpath in the inspector/canvas.
-  SubPath,
+  SubPath = 1,
   // The user hovered over a segment in the inspector/canvas
   Segment,
   // The user hovered over a point in the inspector/canvas.

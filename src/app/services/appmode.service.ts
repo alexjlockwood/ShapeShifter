@@ -28,7 +28,7 @@ export class AppModeService {
 }
 
 export enum AppMode {
-  SelectPoints,
+  SelectPoints = 1,
   AddPoints,
   PairSubPaths,
   SplitSubPaths,

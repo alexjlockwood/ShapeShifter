@@ -1,3 +1,5 @@
 export enum CanvasType {
-  Start, Preview, End
+  Start = 1,
+  Preview,
+  End
 }

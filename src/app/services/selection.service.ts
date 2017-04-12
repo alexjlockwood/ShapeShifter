@@ -148,7 +148,7 @@ export interface Selection {
  */
 export enum SelectionType {
   // The user selected an entire subpath.
-  SubPath,
+  SubPath = 1,
   // The user selected an individual segment in a subpath.
   Segment,
   // The user selected an individual point in a subpath.

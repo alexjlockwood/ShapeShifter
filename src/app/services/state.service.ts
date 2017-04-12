@@ -366,7 +366,7 @@ export class StateService {
 }
 
 export enum MorphabilityStatus {
-  None,
+  None = 1,
   Unmorphable,
   Morphable,
 }

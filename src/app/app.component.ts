@@ -68,6 +68,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   private currentPaneHeight = 0;
 
   private pendingFilePickerCanvasType: CanvasType;
+  private isAppModeKeyboardShortcutActive = false;
 
   @ViewChild('canvasContainer') private canvasContainerRef: ElementRef;
 
@@ -127,7 +128,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
           }
           return '';
         });
-    this.initKeyDownListener();
+    this.initKeyCodeListeners();
     this.initBeforeOnLoadListener();
 
     this.canvasContainer = $(this.canvasContainerRef.nativeElement);
@@ -180,16 +181,34 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     ELEMENT_RESIZE_DETECTOR.removeAllListeners(this.canvasContainer.get(0));
     this.subscriptions.forEach(s => s.unsubscribe());
     $(window).unbind('keydown');
+    $(window).unbind('keyup');
     $(window).unbind('beforeunload');
   }
 
-  private initKeyDownListener() {
+  // TOOD: i.e. meta + R means refresh page so don't rewind
+  private initKeyCodeListeners() {
+    const getAppModeShortcutFn = (event: JQueryEventObject) => {
+      if (event.metaKey) {
+        if (event.shiftKey) {
+          return AppMode.SplitSubPaths;
+        }
+        return AppMode.AddPoints;
+      }
+      return undefined;
+    };
+
     $(window).on('keydown', event => {
       if (document.activeElement.matches('input')) {
+        // Ignore shortcuts when an input element has focus.
         return true;
       }
-      // TODO: don't do anything if user is also clicking 'meta' or 'shift' key?
-      // TOOD: i.e. meta + R means refresh page so don't rewind?
+
+      const newAppMode = getAppModeShortcutFn(event);
+      if (newAppMode) {
+        this.isAppModeKeyboardShortcutActive = true;
+        this.appModeService.setAppMode(newAppMode);
+      }
+
       const isMorphable =
         this.stateService.getMorphabilityStatus() === MorphabilityStatus.Morphable;
       if (event.keyCode === 8 || event.keyCode === 46) {
@@ -202,31 +221,53 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
             this.selectionService);
         }
         return false;
-      } else if (event.keyCode === 32) {
+      }
+      if (event.keyCode === 32) {
         // Spacebar.
         if (isMorphable) {
           this.animatorService.toggle();
         }
         return false;
-      } else if (event.keyCode === 37) {
+      }
+      if (event.keyCode === 37) {
         // Left arrow.
         if (isMorphable) {
           this.animatorService.rewind();
         }
-      } else if (event.keyCode === 39) {
+        return false;
+      }
+      if (event.keyCode === 39) {
         // Right arrow.
         if (isMorphable) {
           this.animatorService.fastForward();
         }
-      } else if (event.keyCode === 82) {
+        return false;
+      }
+      if (event.keyCode === 82) {
         // R.
         if (isMorphable) {
           this.animatorService.setIsRepeating(!this.animatorService.isRepeating());
         }
-      } else if (event.keyCode === 83) {
+        return false;
+      }
+      if (event.keyCode === 83) {
         // S.
         if (isMorphable) {
           this.animatorService.setIsSlowMotion(!this.animatorService.isSlowMotion());
+        }
+        return false;
+      }
+      return undefined;
+    });
+
+    $(window).on('keyup', event => {
+      if (this.isAppModeKeyboardShortcutActive) {
+        const newAppMode = getAppModeShortcutFn(event);
+        if (newAppMode) {
+          this.appModeService.setAppMode(newAppMode);
+        } else {
+          this.appModeService.setAppMode(AppMode.SelectPoints);
+          this.isAppModeKeyboardShortcutActive = false;
         }
       }
       return undefined;
@@ -244,6 +285,16 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       }
       return undefined;
     });
+  }
+
+  getAddPointsKeyboardShortcut() {
+    const metaKey = navigator.appVersion.indexOf('Mac') >= 0 ? '⌘' : '⌃';
+    return `${metaKey}`;
+  }
+
+  getSplitSubPathsKeyboardShortcut() {
+    const metaKey = navigator.appVersion.indexOf('Mac') >= 0 ? '⌘' : '⌃';
+    return `⇧${metaKey}`;
   }
 
   // Proxies a button click to the <input> tag that opens the file picker.

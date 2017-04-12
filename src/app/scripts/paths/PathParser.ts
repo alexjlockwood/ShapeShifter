@@ -330,7 +330,7 @@ export function commandsToString(commands: ReadonlyArray<Command>) {
 }
 
 const enum Token {
-  AbsoluteCommand,
+  AbsoluteCommand = 1,
   RelativeCommand,
   Value,
   EOF,
