@@ -1,14 +1,9 @@
+import * as _ from 'lodash';
 import { Injectable, NgZone } from '@angular/core';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
-import { MathUtil } from '../scripts/common';
-import { Interpolator, INTERPOLATORS } from '../scripts/animation';
-import * as _ from 'lodash';
+import { SettingsService } from './settings.service';
 
 const DEFAULT_FRACTION = 0;
-const DEFAULT_INTERPOLATOR = INTERPOLATORS[0];
-const MIN_DURATION = 100;
-const DEFAULT_DURATION = 300;
-const MAX_DURATION = 60000;
 const REPEAT_DELAY = 750;
 const DEFAULT_IS_SLOW_MOTION = false;
 const DEFAULT_PLAYBACK_SPEED = 1;
@@ -24,23 +19,26 @@ const DEFAULT_IS_PLAYING = false;
 @Injectable()
 export class AnimatorService {
   private readonly animatedValueSource = new BehaviorSubject<number>(DEFAULT_FRACTION);
-  private readonly timelineSource = new BehaviorSubject<Settings>({
+  private readonly animatorSettingsSource = new BehaviorSubject<AnimatorSettings>({
     isSlowMotion: DEFAULT_IS_SLOW_MOTION,
     isPlaying: DEFAULT_IS_PLAYING,
     isRepeating: DEFAULT_IS_REPEATING,
   });
   private animator: Animator;
 
-  constructor(private readonly ngZone: NgZone) {
-    this.animator = new Animator(ngZone, this.timelineSource);
+  constructor(
+    private readonly ngZone: NgZone,
+    private readonly settingsService: SettingsService,
+  ) {
+    this.animator = new Animator(ngZone, this.settingsService, this.animatorSettingsSource);
   }
 
   getAnimatedValueObservable() {
     return this.animatedValueSource.asObservable();
   }
 
-  getTimelineObservable() {
-    return this.timelineSource.asObservable();
+  getAnimatorSettingsObservable() {
+    return this.animatorSettingsSource.asObservable();
   }
 
   getAnimatedValue() {
@@ -102,39 +100,18 @@ export class AnimatorService {
     this.animatedValueSource.next(1);
   }
 
-  setDuration(duration: number) {
-    // TODO: remove this once we guarantee the values are sanitized in the settings pane
-    if (!duration) {
-      duration = DEFAULT_DURATION;
-    }
-    duration = MathUtil.clamp(duration, MIN_DURATION, MAX_DURATION);
-    this.animator.setDuration(duration);
-  }
-
-  getDuration() {
-    return this.animator.getDuration();
-  }
-
-  setInterpolator(interpolator: Interpolator) {
-    this.animator.setInterpolator(interpolator);
-  }
-
-  getInterpolator() {
-    return this.animator.getInterpolator();
-  }
-
   reset() {
     this.rewind();
-    this.timelineSource.next({
+    this.animatorSettingsSource.next({
       isPlaying: false,
       isSlowMotion: false,
       isRepeating: false,
     });
-    this.animator = new Animator(this.ngZone, this.timelineSource);
+    this.animator = new Animator(this.ngZone, this.settingsService, this.animatorSettingsSource);
   }
 }
 
-interface Settings {
+interface AnimatorSettings {
   isSlowMotion: boolean;
   isPlaying: boolean;
   isRepeating: boolean;
@@ -145,15 +122,13 @@ class Animator {
   private animationFrameId: number;
 
   private playbackSpeed_ = DEFAULT_IS_SLOW_MOTION ? SLOW_MOTION_PLAYBACK_SPEED : DEFAULT_PLAYBACK_SPEED;
-  private interpolator_ = DEFAULT_INTERPOLATOR;
-  private duration_ = DEFAULT_DURATION;
-
   private currentAnimatedFraction = 0;
   private shouldPlayInReverse = false;
 
   constructor(
     private readonly ngZone: NgZone,
-    private readonly animatorSettingsSource: BehaviorSubject<Settings>
+    private readonly settingsService,
+    private readonly animatorSettingsSource: BehaviorSubject<AnimatorSettings>,
   ) { }
 
   isPlaying() { return this.animatorSettingsSource.getValue().isPlaying; }
@@ -171,13 +146,9 @@ class Animator {
     this.playbackSpeed_ = isSlowMotion ? SLOW_MOTION_PLAYBACK_SPEED : DEFAULT_PLAYBACK_SPEED;
   }
 
-  setInterpolator(interpolator: Interpolator) { this.interpolator_ = interpolator; }
+  getInterpolator() { return this.settingsService.getInterpolator(); }
 
-  setDuration(duration: number) { this.duration_ = duration; }
-
-  getInterpolator() { return this.interpolator_; }
-
-  getDuration() { return this.duration_; }
+  getDuration() { return this.settingsService.getDuration(); }
 
   isSlowMotion() { return this.animatorSettingsSource.getValue().isSlowMotion; }
 
@@ -220,7 +191,7 @@ class Animator {
       }
       const progress = timestamp - startTimestamp;
       const shouldPlayInReverse = this.shouldPlayInReverse;
-      if (progress < (this.duration_ * this.playbackSpeed_)) {
+      if (progress < (this.getDuration() * this.playbackSpeed_)) {
         this.animationFrameId = requestAnimationFrame(onAnimationFrameFn);
       } else {
         this.shouldPlayInReverse = !this.shouldPlayInReverse;
@@ -232,8 +203,8 @@ class Animator {
           this.pause();
         }
       }
-      const fraction = Math.min(1, progress / (this.duration_ * this.playbackSpeed_));
-      const value = this.interpolator_.interpolateFn(fraction);
+      const fraction = Math.min(1, progress / (this.getDuration() * this.playbackSpeed_));
+      const value = this.getInterpolator().interpolateFn(fraction);
       onUpdateFn(fraction, shouldPlayInReverse ? 1 - value : value);
     };
     this.ngZone.runOutsideAngular(() => {

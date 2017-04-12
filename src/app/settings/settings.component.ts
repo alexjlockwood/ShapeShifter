@@ -6,9 +6,7 @@ import {
   MorphabilityStatus,
   SettingsService,
 } from '../services';
-import { CanvasType } from '../CanvasType';
 import { Observable } from 'rxjs/Observable';
-import { Matrix } from '../scripts/common';
 import 'rxjs/add/observable/combineLatest';
 
 @Component({
@@ -18,8 +16,7 @@ import 'rxjs/add/observable/combineLatest';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SettingsComponent implements OnInit {
-  interpolators = INTERPOLATORS;
-  private rotation_ = 0;
+  readonly INTERPOLATORS = INTERPOLATORS;
   shouldDisableSettingsObservable: Observable<boolean>;
 
   constructor(
@@ -30,58 +27,39 @@ export class SettingsComponent implements OnInit {
 
   ngOnInit() {
     this.shouldDisableSettingsObservable = Observable.combineLatest(
-      this.animatorService.getTimelineObservable(),
+      this.animatorService.getAnimatorSettingsObservable(),
       this.stateService.getMorphabilityStatusObservable())
       .map((value: [{ isPlaying: boolean }, MorphabilityStatus]) => {
         return value[0].isPlaying || value[1] !== MorphabilityStatus.Morphable;
       });
+    // We subscribe here to ensure that Angular 2 change detection works properly.
+    this.settingsService.getCanvasSettingsObservable().subscribe(() => { });
+    this.settingsService.getAnimationSettingsObservable().subscribe(() => { });
+    this.settingsService.getRotationObservable().subscribe(() => { });
   }
 
   get selectedInterpolator() {
-    return this.animatorService.getInterpolator();
+    return this.settingsService.getInterpolator();
   }
 
   set selectedInterpolator(interpolator: Interpolator) {
-    this.animatorService.setInterpolator(interpolator);
+    this.settingsService.setInterpolator(interpolator);
   }
 
   get duration() {
-    return this.animatorService.getDuration();
+    return this.settingsService.getDuration();
   }
 
-  // TODO: validate this input (i.e. between min/max values)
   set duration(duration: number) {
-    this.animatorService.setDuration(duration);
+    this.settingsService.setDuration(duration);
   }
 
   get rotation() {
-    return this.rotation_;
+    return this.settingsService.getRotation();
   }
 
-  // TODO: remove the layer if both attributes are set to 0?
-  // TODO: avoid mutating the vector layers directly... maybe make them immutable
   set rotation(rotation: number) {
-    this.rotation_ = rotation;
-
-    const activeEndVectorLayer = this.stateService.getVectorLayer(CanvasType.End);
-    const width = activeEndVectorLayer.width;
-    const height = activeEndVectorLayer.height;
-    const transforms = [
-      Matrix.fromTranslation(-width / 2, -height / 2),
-      Matrix.fromRotation(-this.rotation),
-      Matrix.fromTranslation(width / 2, height / 2),
-    ];
-    const activeEndPathLayer = this.stateService.getActivePathLayer(CanvasType.End);
-    activeEndPathLayer.pathData =
-      activeEndPathLayer.pathData.mutate()
-        .setTransforms(transforms)
-        .build();
-    this.stateService.updateActiveRotationLayer(CanvasType.Start, 0, false);
-    this.stateService.updateActiveRotationLayer(CanvasType.Preview, 0, false);
-    this.stateService.updateActiveRotationLayer(CanvasType.End, this.rotation, false);
-    this.stateService.notifyChange(CanvasType.Start);
-    this.stateService.notifyChange(CanvasType.Preview);
-    this.stateService.notifyChange(CanvasType.End);
+    this.settingsService.setRotation(rotation);
   }
 
   get shouldLabelPoints() {

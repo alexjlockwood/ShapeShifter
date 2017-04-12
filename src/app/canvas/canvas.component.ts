@@ -163,7 +163,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       this.subscribeTo(
         this.animatorService.getAnimatedValueObservable(),
         () => interpolatePreviewFn());
-      this.subscribeTo(this.settingsService.getSettingsObservable());
+      this.subscribeTo(this.settingsService.getCanvasSettingsObservable());
       this.subscribeTo(this.stateService.getMorphabilityStatusObservable());
     } else {
       // Non-preview canvas specific setup.

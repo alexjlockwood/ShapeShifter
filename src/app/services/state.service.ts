@@ -5,12 +5,14 @@ import { CanvasType } from '../CanvasType';
 import { Path } from '../scripts/paths';
 import { AutoAwesome } from '../scripts/algorithms';
 import { ROTATION_GROUP_LAYER_ID } from '../scripts/import';
+import { Matrix } from '../scripts/common';
 
 // Note that importing these from '.' causes runtime errors.
 import { AppModeService } from './appmode.service';
 import { AnimatorService } from './animator.service';
 import { HoverService } from './hover.service';
 import { SelectionService } from './selection.service';
+import { SettingsService } from './settings.service';
 
 /**
  * The global state service that is in charge of keeping track of the loaded
@@ -36,11 +38,19 @@ export class StateService {
     private readonly hoverService: HoverService,
     private readonly animatorService: AnimatorService,
     private readonly appModeService: AppModeService,
+    private readonly settingsService: SettingsService,
   ) {
-    [CanvasType.Start, CanvasType.Preview, CanvasType.End]
-      .forEach(type => {
-        this.activePathIdSources.set(type, new BehaviorSubject<string>(undefined));
-      });
+    [CanvasType.Start, CanvasType.Preview, CanvasType.End].forEach(type => {
+      this.activePathIdSources.set(type, new BehaviorSubject<string>(undefined));
+    });
+    settingsService.getRotationObservable().subscribe(rotation => {
+      this.updateActiveRotationLayer(CanvasType.Start, 0, false /* shouldNotify */);
+      this.updateActiveRotationLayer(CanvasType.Preview, 0, false /* shouldNotify */);
+      this.updateActiveRotationLayer(CanvasType.End, rotation, false /* shouldNotify */);
+      this.notifyChange(CanvasType.Start);
+      this.notifyChange(CanvasType.Preview);
+      this.notifyChange(CanvasType.End);
+    });
   }
 
   /**
@@ -97,9 +107,7 @@ export class StateService {
     this.appModeService.reset();
     this.selectionService.reset();
     this.hoverService.reset();
-
-    // TODO: resetting the animator service strangely breaks things here... not sure why.
-    // this.animatorService.reset();
+    this.animatorService.reset();
 
     const setActivePathIdFn = (type: CanvasType) => {
       if (type === CanvasType.Start) {
@@ -116,7 +124,12 @@ export class StateService {
       this.activeLayerMap.set(CanvasType.Preview, startVl ? startVl.clone() : startVl);
       this.activeLayerMap.set(CanvasType.End, endVl);
       // Attempt to make the start and end subpaths compatible with each other.
-      this.updateActivePath(type, this.getActivePathLayer(type).pathData, false /* shouldNotify */);
+      this.updateActivePath(
+        type, this.getActivePathLayer(type).pathData, false /* shouldNotify */);
+      this.updateActiveRotationLayer(CanvasType.Start, 0, false /* shouldNotify */);
+      this.updateActiveRotationLayer(CanvasType.Preview, 0, false /* shouldNotify */);
+      this.updateActiveRotationLayer(
+        CanvasType.End, this.settingsService.getRotation(), false /* shouldNotify */);
     };
 
     setActivePathIdFn(canvasType);
@@ -246,12 +259,22 @@ export class StateService {
   /**
    * Updates the active rotation layer with the new rotation value.
    */
-  updateActiveRotationLayer(type: CanvasType, rotation: number, shouldNotify = true) {
+  private updateActiveRotationLayer(type: CanvasType, rotation: number, shouldNotify = true) {
     const vectorLayer = this.getVectorLayer(type);
     const activePathLayer = this.getActivePathLayer(type);
     if (!activePathLayer) {
       return;
     }
+    const { width, height } = vectorLayer;
+    const transforms = [
+      Matrix.fromTranslation(-width / 2, -height / 2),
+      Matrix.fromRotation(-rotation),
+      Matrix.fromTranslation(width / 2, height / 2),
+    ];
+    this.updateActivePath(
+      type,
+      activePathLayer.pathData.mutate().setTransforms(transforms).build(),
+      shouldNotify);
     const updateRotationLayerFn = (layer: GroupLayer) => {
       layer.pivotX = vectorLayer.width / 2;
       layer.pivotY = vectorLayer.height / 2;
@@ -342,6 +365,7 @@ export class StateService {
     this.appModeService.reset();
     this.selectionService.reset();
     this.hoverService.reset();
+    this.settingsService.reset();
     this.animatorService.reset();
     this.importedPathMap.clear();
     this.activePathIdMap.clear();
