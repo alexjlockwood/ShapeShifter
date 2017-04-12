@@ -1,4 +1,4 @@
-<div fxLayout="row" fxLayoutWrap fxLayoutGap="8px" class="path-container">
+<div fxLayout="column" class="path-container">
   <div class="subpath-container" *ngFor="
        let subPathCmdItem of (subPathItemsObservable | async | toSubPathItems);
        trackBy: trackSubPath">

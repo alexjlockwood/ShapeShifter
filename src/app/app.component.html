@@ -6,6 +6,7 @@
   <div class="display-container" fxLayout="column" fxFlex>
     <!-- Start/Preview/End canvases. -->
     <div #canvasContainer class="canvas-container" fxLayout="row"
+      [class.show-pen-cursor]="(appModeObservable | async) !== SELECT_POINTS_MODE"
       fxLayoutAlign="center center" fxFlex>
       <app-canvas [canvasType]="START_CANVAS"></app-canvas>
       <app-canvas *ngIf="wasMorphable" [canvasType]="PREVIEW_CANVAS"></app-canvas>

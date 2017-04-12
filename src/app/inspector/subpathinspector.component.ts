@@ -44,15 +44,7 @@ export class SubpathInspectorComponent implements OnInit {
   }
 
   onSubPathClick(event: MouseEvent) {
-    const selections =
-      this.selectionService.getSelections().filter(s => s.type === SelectionType.SubPath);
-    const appendToList = event.shiftKey || event.metaKey;
-    if (selections.length && selections[0].source !== this.canvasType && appendToList) {
-      // If the user is attempting to select something in a different pane in the
-      // middle of a multi-select, do nothing.
-      return;
-    }
-    this.selectionService.toggleSubPath(this.canvasType, this.subIdx, appendToList);
+    this.selectionService.toggleSubPath(this.canvasType, this.subIdx);
   }
 
   onMoveSubPathUpClick(event: MouseEvent) {

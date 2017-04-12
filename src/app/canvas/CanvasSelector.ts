@@ -6,6 +6,7 @@ import { CanvasType } from '../CanvasType';
 import {
   StateService,
   SelectionService,
+  SelectionType,
   HoverService,
   HoverType,
 } from '../services';
@@ -52,19 +53,51 @@ export class CanvasSelector {
       return;
     }
 
-    if (this.component.activePathLayer.isFilled() && hitResult.isSegmentHit) {
-      const { subIdx, cmdIdx, cmd } = this.findHitSegment(hitResult.segmentHits);
-      if (cmd.isSubPathSplitSegment()) {
-        this.selectionService.toggleSegment(
-          this.canvasType, subIdx, cmdIdx, isShiftOrMetaPressed);
-        return;
-      }
-    }
+    // TODO: add ability to select individual segments so they can be deleted
+    // if (this.component.activePathLayer.isFilled() && hitResult.isSegmentHit) {
+    //   const { subIdx, cmdIdx, cmd } = this.findHitSegment(hitResult.segmentHits);
+    //   if (cmd.isSubPathSplitSegment()) {
+    //     this.selectionService.toggleSegment(
+    //       this.canvasType, subIdx, cmdIdx, isShiftOrMetaPressed);
+    //     return;
+    //   }
+    // }
 
     if (hitResult.isSegmentHit || hitResult.isShapeHit) {
       const hits = hitResult.isShapeHit ? hitResult.shapeHits : hitResult.segmentHits;
-      const { subIdx } = this.findHitSubPath(hits);
-      this.selectionService.toggleSubPath(this.canvasType, subIdx, isShiftOrMetaPressed);
+      let { subIdx } = this.findHitSubPath(hits);
+      const oppSubPathSelections =
+        this.selectionService.getSelections()
+          .filter(s => {
+            return s.source !== this.canvasType
+              && s.type === SelectionType.SubPath
+              && s.subIdx !== subIdx;
+          });
+      if (oppSubPathSelections.length) {
+        let { source: fromSource, subIdx: fromSubIdx } = oppSubPathSelections[0];
+        let toSource = this.canvasType;
+        let toSubIdx = subIdx;
+        const numFromSubPaths =
+          this.stateService.getActivePathLayer(fromSource).pathData.getSubPaths()
+            .filter(s => !s.isCollapsing()).length;
+        if (toSubIdx >= numFromSubPaths) {
+          const tempFromSource = fromSource;
+          fromSource = toSource;
+          toSource = tempFromSource;
+          const tempFromSubIdx = fromSubIdx;
+          fromSubIdx = toSubIdx;
+          toSubIdx = tempFromSubIdx;
+        }
+        this.hoverService.reset();
+        this.selectionService.reset();
+        this.stateService.updateActivePath(
+          fromSource,
+          this.stateService.getActivePathLayer(fromSource).pathData.mutate()
+            .moveSubPath(fromSubIdx, toSubIdx)
+            .build());
+        subIdx = toSubIdx;
+      }
+      this.selectionService.toggleSubPath(this.canvasType, subIdx);
     } else if (!isShiftOrMetaPressed) {
       // If the mouse down event didn't result in a hit, then
       // clear any existing selections, but only if the user isn't in
@@ -224,14 +257,14 @@ export class CanvasSelector {
     return infos[lastSplitIndex < 0 ? infos.length - 1 : lastSplitIndex];
   }
 
-  private findHitSegment(hits: ReadonlyArray<{ subIdx: number, cmdIdx: number }>) {
-    const infos = hits.map(index => {
-      const { subIdx, cmdIdx } = index;
-      return { subIdx, cmdIdx, cmd: this.component.activePath.getCommand(subIdx, cmdIdx) };
-    });
-    const lastSplitIndex = _.findLastIndex(infos, info => info.cmd.isSubPathSplitSegment());
-    return infos[lastSplitIndex < 0 ? infos.length - 1 : lastSplitIndex];
-  }
+  // private findHitSegment(hits: ReadonlyArray<{ subIdx: number, cmdIdx: number }>) {
+  //   const infos = hits.map(index => {
+  //     const { subIdx, cmdIdx } = index;
+  //     return { subIdx, cmdIdx, cmd: this.component.activePath.getCommand(subIdx, cmdIdx) };
+  //   });
+  //   const lastSplitIndex = _.findLastIndex(infos, info => info.cmd.isSubPathSplitSegment());
+  //   return infos[lastSplitIndex < 0 ? infos.length - 1 : lastSplitIndex];
+  // }
 
   private findHitPoint(hits: ReadonlyArray<{ subIdx: number, cmdIdx: number }>) {
     const infos = hits.map(index => {

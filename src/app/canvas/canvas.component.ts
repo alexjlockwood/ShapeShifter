@@ -189,7 +189,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
             || (this.appMode === AppMode.SplitSubPaths
               && this.activePathLayer
               && this.activePathLayer.isStroked())) {
-            this.showPenCursor();
             const subIdxs = new Set<number>();
             for (const s of this.selectionService.getSelections()) {
               subIdxs.add(s.subIdx);
@@ -201,7 +200,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
             this.segmentSplitter = undefined;
           }
           if (this.appMode === AppMode.SelectPoints) {
-            this.resetCursor();
             this.canvasSelector = new CanvasSelector(this);
           } else {
             this.canvasSelector = undefined;
@@ -209,7 +207,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           if (this.appMode === AppMode.SplitSubPaths
             && this.activePathLayer
             && this.activePathLayer.isFilled()) {
-            this.showPenCursor();
             this.shapeSplitter = new ShapeSplitter(this);
           } else {
             this.shapeSplitter = undefined;
@@ -221,6 +218,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
             this.showPointerCursor();
           }
           this.hoverService.reset();
+          this.resetCursor();
           this.currentHoverPreviewPath = undefined;
           this.draw();
         });
@@ -392,10 +390,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     return MathUtil.transformPoint(
       mousePoint,
       Matrix.flatten(...this.transformsForActiveLayer.reverse()));
-  }
-
-  private showPenCursor() {
-    this.canvasContainer.css({ cursor: 'url(/assets/penaddcursorsmall.png) 5 0, auto' });
   }
 
   showPointerCursor() {
@@ -683,10 +677,9 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     if (this.canvasType === CanvasType.Preview || !this.activePathId) {
       return;
     }
-    if (this.appMode === AppMode.SelectPoints) {
+    if (this.canvasSelector) {
       this.drawHighlightedSelectedSegments(ctx);
-    }
-    if (this.appMode === AppMode.AddPoints) {
+    } else if (this.segmentSplitter) {
       this.drawHighlightedAddPointModeSegments(ctx);
     }
 
@@ -700,7 +693,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     this.executeCommands(ctx, cmds);
     this.executeHighlights(ctx, SPLIT_POINT_COLOR, this.unselectedSegmentLineWidth);
 
-    if (this.appMode === AppMode.SplitSubPaths) {
+    if (this.shapeSplitter) {
       this.drawSplitSubPathsModeDragSegment(ctx);
     }
   }
