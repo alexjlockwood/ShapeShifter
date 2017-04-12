@@ -3,7 +3,7 @@ import { SvgTarget } from '../animation';
 export function svgAnimationToScript(svg: string, svgTargets: SvgTarget[]) {
   // We assume here that the same duration and interpolator will be used for all targets.
   const duration = svgTargets[0].animations[0].duration;
-  const interpolator = svgTargets[0].animations[0].interpolator;
+  // const interpolator = svgTargets[0].animations[0].interpolator;
   // const animations = svgTargets.map(target => createCssAnimation(target.layerId, duration, interpolator));
   // const keyframes = svgTargets.map(target => svgTargetToCssKeyframes(target.layerId, target));
   return `<!DOCTYPE html>
@@ -189,13 +189,13 @@ function createBezierEasing(mX1, mY1, mX2, mY2) {
 }`;
 }
 
-function interpolatePath(startPath: string, endPath: string) {
-  const start = startPath.split(' ');
-  const end = endPath.split(' ');
-  return start.map((c: any, i) => isNaN(c) ? c : (+end[i] - +start[i]).toString()).join(' ');
-}
+// function interpolatePath(startPath: string, endPath: string) {
+//   const start = startPath.split(' ');
+//   const end = endPath.split(' ');
+//   return start.map((c: any, i) => isNaN(c) ? c : (+end[i] - +start[i]).toString()).join(' ');
+// }
 
-function createBezierEasing(mX1, mY1, mX2, mY2) {
-  return `
-`;
-}
+// function createBezierEasing(mX1, mY1, mX2, mY2) {
+//   return `
+// `;
+// }
