@@ -10,16 +10,4 @@
     (click)="onUnsplitButtonClick($event)">
     <md-icon>delete</md-icon>
   </button>
-  <button md-icon-button mdTooltip="{{'Swap with subpath #' + this.subIdx + (canvasType === START_CANVAS ? 'a' : 'b')}}"
-    mdTooltipPosition="above" mdTooltipShowDelay="500" *ngIf="canSubPathBeMovedUp()"
-    (mouseenter)="onMoveSubPathUpHoverEvent(true)" (mouseleave)="onMoveSubPathUpHoverEvent(false)"
-    (click)="onMoveSubPathUpClick($event)">
-    <md-icon>arrow_upward</md-icon>
-  </button>
-  <button md-icon-button mdTooltip="{{'Swap with subpath #' + (this.subIdx + 2) + (canvasType === START_CANVAS ? 'a' : 'b')}}"
-    mdTooltipPosition="above" mdTooltipShowDelay="500" *ngIf="canSubPathBeMovedDown()"
-    (mouseenter)="onMoveSubPathDownHoverEvent(true)" (mouseleave)="onMoveSubPathDownHoverEvent(false)"
-    (click)="onMoveSubPathDownClick($event)">
-    <md-icon>arrow_downward</md-icon>
-  </button>
 </div>

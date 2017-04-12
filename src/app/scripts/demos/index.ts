@@ -1,3 +1,3 @@
 import * as DemoUtil from './DemoUtil';
 export { DemoUtil };
-export { DEMO_MAP } from './Demos';
+export { DEMO_MAP } from './demos';

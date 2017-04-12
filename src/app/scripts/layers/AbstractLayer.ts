@@ -29,7 +29,7 @@ export abstract class AbstractLayer implements Layer {
   abstract interpolate<T extends Layer>(start: T, end: T, fraction: number): void;
 
   // Implements the Layer interface.
-  isMorphableWith(layer: Layer): boolean {
+  isMorphableWith(layer: Layer) {
     if (this.constructor !== layer.constructor) {
       return false;
     }

@@ -147,26 +147,13 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       // Preview canvas specific setup.
       const interpolatePreviewFn = () => {
         const fraction = this.animatorService.getAnimatedValue();
-        const startPathLayer = this.stateService.getActivePathLayer(CanvasType.Start);
-        const previewPathLayer = this.stateService.getActivePathLayer(CanvasType.Preview);
-        const endPathLayer = this.stateService.getActivePathLayer(CanvasType.End);
-        if (startPathLayer && previewPathLayer && endPathLayer
-          && startPathLayer.isMorphableWith(endPathLayer)) {
-          // Note that there is no need to broadcast layer state changes
-          // for the preview canvas.
-          previewPathLayer.interpolate(startPathLayer, endPathLayer, fraction);
-        }
-        const startGroupLayer = this.stateService.getActiveRotationLayer(CanvasType.Start);
-        const previewGroupLayer = this.stateService.getActiveRotationLayer(CanvasType.Preview);
-        const endGroupLayer = this.stateService.getActiveRotationLayer(CanvasType.End);
-        if (startGroupLayer && previewGroupLayer && endGroupLayer) {
-          previewGroupLayer.interpolate(startGroupLayer, endGroupLayer, fraction);
-        }
-        const startVectorLayer = this.stateService.getVectorLayer(CanvasType.Start);
-        const previewVectorLayer = this.stateService.getVectorLayer(CanvasType.Preview);
-        const endVectorLayer = this.stateService.getVectorLayer(CanvasType.End);
-        if (startVectorLayer && previewVectorLayer && endVectorLayer) {
-          previewVectorLayer.interpolate(startVectorLayer, endVectorLayer, fraction);
+        const startVl = this.stateService.getVectorLayer(CanvasType.Start);
+        const previewVl = this.stateService.getVectorLayer(CanvasType.Preview);
+        const endVl = this.stateService.getVectorLayer(CanvasType.End);
+        if (startVl && previewVl && endVl
+          && startVl.isMorphableWith(previewVl)
+          && previewVl.isMorphableWith(endVl)) {
+          LayerUtil.deepInterpolate(startVl, previewVl, endVl, fraction);
         }
         this.draw();
       };

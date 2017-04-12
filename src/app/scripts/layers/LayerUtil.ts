@@ -148,3 +148,26 @@ export function getAllIds(
   });
   return ids;
 };
+
+/**
+ * Interpolates the properties of the specified layer and all of its children.
+ * The specified layers are assumed to be structurally compatible with each other.
+ */
+export function deepInterpolate<T extends Layer>(start: T, preview: T, end: T, fraction: number) {
+  if (!start.isMorphableWith(preview) || !preview.isMorphableWith(end)) {
+    console.warn('Attempt to interpolate incompatible layers', start, preview, end);
+    return;
+  }
+  const layers = [start, preview, end];
+  if (layers.every(l => l instanceof PathLayer)
+    || layers.every(l => l instanceof ClipPathLayer)
+    || layers.every(l => l instanceof GroupLayer)
+    || layers.every(l => l instanceof VectorLayer)) {
+    preview.interpolate(start, end, fraction);
+  }
+  if (layers.every(l => !!l.children)) {
+    preview.children.forEach((p, i) => {
+      return deepInterpolate(start.children[i], p, end.children[i], fraction);
+    });
+  }
+}
