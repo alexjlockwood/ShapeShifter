@@ -6,7 +6,7 @@
   <div class="display-container" fxLayout="column" fxFlex>
     <!-- Start/Preview/End canvases. -->
     <div #canvasContainer class="canvas-container" fxLayout="row"
-      [class.show-pen-cursor]="(appModeObservable | async) !== SELECT_POINTS_MODE"
+      [class.show-pen-cursor]="(appModeObservable | async) !== SELECTION_MODE"
       fxLayoutAlign="center center" fxFlex>
       <app-canvas [canvasType]="START_CANVAS"></app-canvas>
       <app-canvas *ngIf="wasMorphable" [canvasType]="PREVIEW_CANVAS"></app-canvas>
@@ -59,24 +59,18 @@
         <span fxFlex></span>
         <button md-icon-button [disabled]="morphabilityStatus === MORPHABILITY_NONE"
           mdTooltip="Select points" mdTooltipPosition="above" mdTooltipShowDelay="500"
-          (click)="appModeService.setAppMode(SELECT_POINTS_MODE)">
-          <md-icon class="svg-button" [class.activated]="(appModeObservable | async) === SELECT_POINTS_MODE" svgIcon="selectioncursor"></md-icon>
+          (click)="appModeService.setAppMode(SELECTION_MODE)">
+          <md-icon class="svg-button" [class.activated]="(appModeObservable | async) === SELECTION_MODE" svgIcon="selectioncursor"></md-icon>
         </button>
         <button md-icon-button [disabled]="morphabilityStatus === MORPHABILITY_NONE"
-          mdTooltip="Add points ({{getAddPointsKeyboardShortcut()}})"
-          mdTooltipPosition="above" mdTooltipShowDelay="500" (click)="appModeService.setAppMode(ADD_POINTS_MODE)">
-          <md-icon [class.activated]="(appModeObservable | async) === ADD_POINTS_MODE">add_circle_outline</md-icon>
+          mdTooltip="Add points ({{getSplitCommandsKeyboardShortcut()}})"
+          mdTooltipPosition="above" mdTooltipShowDelay="500" (click)="appModeService.setAppMode(SPLIT_COMMANDS_MODE)">
+          <md-icon [class.activated]="(appModeObservable | async) === SPLIT_COMMANDS_MODE">add_circle_outline</md-icon>
         </button>
         <button md-icon-button [disabled]="morphabilityStatus === MORPHABILITY_NONE"
           mdTooltip="Split subpaths ({{getSplitSubPathsKeyboardShortcut()}})"
           mdTooltipPosition="above" mdTooltipShowDelay="500" (click)="appModeService.setAppMode(SPLIT_SUBPATHS_MODE)">
           <md-icon [class.activated]="(appModeObservable | async) === SPLIT_SUBPATHS_MODE">content_cut</md-icon>
-        </button>
-        <button *ngIf="IS_PAIR_SUB_PATHS_MODE_ENABLED" md-icon-button
-          [disabled]="morphabilityStatus === MORPHABILITY_NONE"
-          mdTooltip="Pair subpaths" mdTooltipPosition="above" mdTooltipShowDelay="500"
-          (click)="appModeService.setAppMode(PAIR_SUBPATHS_MODE)">
-          <md-icon [class.activated]="(appModeObservable | async) === PAIR_SUBPATHS_MODE">compare_arrows</md-icon>
         </button>
       </div>
       <app-pathinspector fxFlexFill></app-pathinspector>

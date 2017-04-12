@@ -44,7 +44,7 @@ export class ShapeSplitter {
       return;
     }
     this.component.drawOverlays();
-    this.appModeService.setAppMode(AppMode.SelectPoints);
+    this.appModeService.setAppMode(AppMode.Selection);
   }
 
   onMouseMove(mouseMove: Point) {

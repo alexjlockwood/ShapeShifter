@@ -39,7 +39,7 @@ export class SegmentSplitter {
       const { proj: { subIdx, cmdIdx, projection }, isEndPt } = this.currProjInfo;
       const appMode = this.appModeService.getAppMode();
       const pathMutator = activePathLayer.pathData.mutate();
-      if (appMode === AppMode.AddPoints) {
+      if (appMode === AppMode.SplitCommands) {
         pathMutator.splitCommand(subIdx, cmdIdx, projection.t);
       } else if (appMode === AppMode.SplitSubPaths) {
         if (!isEndPt) {
@@ -59,7 +59,7 @@ export class SegmentSplitter {
       return;
     }
 
-    this.appModeService.setAppMode(AppMode.SelectPoints);
+    this.appModeService.setAppMode(AppMode.Selection);
     this.component.drawOverlays();
   }
 

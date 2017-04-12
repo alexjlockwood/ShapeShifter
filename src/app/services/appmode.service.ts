@@ -6,7 +6,7 @@ import { BehaviorSubject } from 'rxjs/BehaviorSubject';
  */
 @Injectable()
 export class AppModeService {
-  private readonly source = new BehaviorSubject<AppMode>(AppMode.SelectPoints);
+  private readonly source = new BehaviorSubject<AppMode>(AppMode.Selection);
 
   setAppMode(appMode: AppMode) {
     if (this.getAppMode() !== appMode) {
@@ -23,13 +23,12 @@ export class AppModeService {
   }
 
   reset() {
-    this.setAppMode(AppMode.SelectPoints);
+    this.setAppMode(AppMode.Selection);
   }
 }
 
 export enum AppMode {
-  SelectPoints = 1,
-  AddPoints,
-  PairSubPaths,
+  Selection = 1,
+  SplitCommands,
   SplitSubPaths,
 }

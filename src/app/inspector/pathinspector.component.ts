@@ -39,7 +39,7 @@ export class PathInspectorComponent implements OnInit {
         if (SHOULD_SHOW_DETAILS) {
           return true;
         }
-        return appMode === AppMode.SelectPoints || appMode === AppMode.AddPoints;
+        return appMode === AppMode.Selection || appMode === AppMode.SplitCommands;
       });
   }
 

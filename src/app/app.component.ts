@@ -31,7 +31,6 @@ const AUTO_LOAD_DEMO = IS_DEV_MODE && true;
 const ELEMENT_RESIZE_DETECTOR = erd();
 const STORAGE_KEY_FIRST_TIME_USER = 'storage_key_first_time_user';
 
-// TODO: hide/disable pair subpaths mode if there is only one subpath each
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
@@ -39,16 +38,13 @@ const STORAGE_KEY_FIRST_TIME_USER = 'storage_key_first_time_user';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
-  // TODO: implement a better mechanism for swapping sub paths
-  IS_PAIR_SUB_PATHS_MODE_ENABLED = false;
 
   START_CANVAS = CanvasType.Start;
   PREVIEW_CANVAS = CanvasType.Preview;
   END_CANVAS = CanvasType.End;
 
-  SELECT_POINTS_MODE = AppMode.SelectPoints;
-  ADD_POINTS_MODE = AppMode.AddPoints;
-  PAIR_SUBPATHS_MODE = AppMode.PairSubPaths;
+  SELECTION_MODE = AppMode.Selection;
+  SPLIT_COMMANDS_MODE = AppMode.SplitCommands;
   SPLIT_SUBPATHS_MODE = AppMode.SplitSubPaths;
 
   MORPHABILITY_NONE = MorphabilityStatus.None;
@@ -192,7 +188,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
         if (event.shiftKey) {
           return AppMode.SplitSubPaths;
         }
-        return AppMode.AddPoints;
+        return AppMode.SplitCommands;
       }
       return undefined;
     };
@@ -214,7 +210,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       if (event.keyCode === 8 || event.keyCode === 46) {
         // In case there's a JS error, never navigate away.
         event.preventDefault();
-        if (this.appModeService.getAppMode() === AppMode.SelectPoints) {
+        if (this.appModeService.getAppMode() === AppMode.Selection) {
           // Can only delete points in selection mode.
           deleteSelectedSplitPoints(
             this.stateService,
@@ -266,7 +262,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
         if (newAppMode) {
           this.appModeService.setAppMode(newAppMode);
         } else {
-          this.appModeService.setAppMode(AppMode.SelectPoints);
+          this.appModeService.setAppMode(AppMode.Selection);
           this.isAppModeKeyboardShortcutActive = false;
         }
       }
@@ -287,7 +283,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  getAddPointsKeyboardShortcut() {
+  getSplitCommandsKeyboardShortcut() {
     return navigator.appVersion.indexOf('Mac') >= 0 ? '⌘' : 'Ctrl';
   }
 

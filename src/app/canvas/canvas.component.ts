@@ -185,7 +185,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       this.subscribeTo(
         this.appModeService.asObservable(),
         () => {
-          if (this.appMode === AppMode.AddPoints
+          if (this.appMode === AppMode.SplitCommands
             || (this.appMode === AppMode.SplitSubPaths
               && this.activePathLayer
               && this.activePathLayer.isStroked())) {
@@ -199,7 +199,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           } else {
             this.segmentSplitter = undefined;
           }
-          if (this.appMode === AppMode.SelectPoints) {
+          if (this.appMode === AppMode.Selection) {
             this.canvasSelector = new CanvasSelector(this);
           } else {
             this.canvasSelector = undefined;
@@ -211,7 +211,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           } else {
             this.shapeSplitter = undefined;
           }
-          if (this.appMode !== AppMode.AddPoints) {
+          if (this.appMode !== AppMode.SplitCommands) {
             this.selectionService.reset();
           }
           if (!this.activePathId) {
@@ -892,9 +892,9 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  // Draw any actively dragged points along the path (select points mode).
+  // Draw any actively dragged points along the path (selection mode).
   private drawSelectPointsDraggingPoints(ctx: Context) {
-    if (this.appMode !== AppMode.SelectPoints
+    if (this.appMode !== AppMode.Selection
       || !this.canvasSelector
       || !this.canvasSelector.isDragTriggered()) {
       return;
@@ -911,10 +911,10 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       SPLIT_POINT_RADIUS_FACTOR, SPLIT_POINT_COLOR);
   }
 
-  // Draw a floating point preview over the canvas (add points mode
+  // Draw a floating point preview over the canvas (split commands mode
   // or split subpaths mode for stroked paths).
   private drawFloatingPreviewPoint(ctx: Context) {
-    if (this.appMode !== AppMode.AddPoints
+    if (this.appMode !== AppMode.SplitCommands
       && this.appMode !== AppMode.SplitSubPaths
       && !this.activePathLayer.isStroked()
       || !this.segmentSplitter
@@ -973,9 +973,9 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       return;
     }
     const mouseDown = this.mouseEventToPoint(event);
-    if (this.appMode === AppMode.SelectPoints) {
+    if (this.appMode === AppMode.Selection) {
       this.canvasSelector.onMouseDown(mouseDown, event.shiftKey || event.metaKey);
-    } else if (this.appMode === AppMode.AddPoints) {
+    } else if (this.appMode === AppMode.SplitCommands) {
       this.segmentSplitter.onMouseDown(mouseDown);
     } else if (this.appMode === AppMode.SplitSubPaths) {
       if (this.activePathLayer.isStroked()) {
@@ -993,9 +993,9 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       return;
     }
     const mouseMove = this.mouseEventToPoint(event);
-    if (this.appMode === AppMode.SelectPoints) {
+    if (this.appMode === AppMode.Selection) {
       this.canvasSelector.onMouseMove(mouseMove);
-    } else if (this.appMode === AppMode.AddPoints) {
+    } else if (this.appMode === AppMode.SplitCommands) {
       this.segmentSplitter.onMouseMove(mouseMove);
     } else if (this.appMode === AppMode.SplitSubPaths) {
       if (this.activePathLayer.isStroked()) {
@@ -1013,9 +1013,9 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       return;
     }
     const mouseUp = this.mouseEventToPoint(event);
-    if (this.appMode === AppMode.SelectPoints) {
+    if (this.appMode === AppMode.Selection) {
       this.canvasSelector.onMouseUp(mouseUp, event.shiftKey || event.metaKey);
-    } else if (this.appMode === AppMode.AddPoints) {
+    } else if (this.appMode === AppMode.SplitCommands) {
       this.segmentSplitter.onMouseUp(mouseUp);
     } else if (this.appMode === AppMode.SplitSubPaths) {
       if (this.activePathLayer.isStroked()) {
@@ -1033,10 +1033,10 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       return;
     }
     const mouseLeave = this.mouseEventToPoint(event);
-    if (this.appMode === AppMode.SelectPoints) {
+    if (this.appMode === AppMode.Selection) {
       // TODO: how to handle the case where the mouse leaves and re-enters mid-gesture?
       this.canvasSelector.onMouseLeave(mouseLeave);
-    } else if (this.appMode === AppMode.AddPoints) {
+    } else if (this.appMode === AppMode.SplitCommands) {
       this.segmentSplitter.onMouseLeave(mouseLeave);
     } else if (this.appMode === AppMode.SplitSubPaths) {
       if (this.activePathLayer.isStroked()) {
