@@ -8,10 +8,24 @@ const SVG_NS = 'http://www.w3.org/2000/svg';
 /**
  * Serializes an VectorLayer to a vector drawable XML file.
  */
-export function vectorLayerToSvgString(vectorLayer: VectorLayer) {
+export function vectorLayerToSvgString(
+  vectorLayer: VectorLayer, width?: number, height?: number, x?: number, y?: number) {
+
   const xmlDoc = document.implementation.createDocument(null, 'svg', null);
   const rootNode = xmlDoc.documentElement;
   vectorLayerToSvgNode(vectorLayer, rootNode, xmlDoc);
+  if (width !== undefined) {
+    rootNode.setAttributeNS(null, 'width', width.toString() + 'px');
+  }
+  if (height !== undefined) {
+    rootNode.setAttributeNS(null, 'height', height.toString() + 'px');
+  }
+  if (x !== undefined) {
+    rootNode.setAttributeNS(null, 'x', x.toString() + 'px');
+  }
+  if (y !== undefined) {
+    rootNode.setAttributeNS(null, 'y', y.toString() + 'px');
+  }
   return serializeXmlNode(rootNode);
 }
 

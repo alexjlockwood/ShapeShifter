@@ -1,9 +1,10 @@
-import { StateService, AnimatorService } from '../../services';
+import { StateService, SettingsService } from '../../services';
 import { PathLayer, GroupLayer, VectorLayer } from '../layers';
 import { CanvasType } from '../../CanvasType';
 import { AvdSerializer, SvgSerializer } from '.';
 import * as CssKeyframesSerializer from './CssKeyframesSerializer';
 import * as JsSerializer from './JsSerializer';
+import * as SpriteSerializer from './SpriteSerializer';
 import {
   AvdTarget, AvdAnimation, AvdPropertyName, AvdValueType,
   SvgTarget, SvgAnimation, SvgPropertyName,
@@ -16,39 +17,43 @@ import * as $ from 'jquery';
 // TODO: release this when it is ready and tested
 const SHOULD_EXPORT_CSS_KEYFRAMES = !environment.production && true;
 const SHOULD_EXPORT_JS_SCRIPT = !environment.production && true;
+const SHOULD_EXPORT_SVG_SPRITE = !environment.production && true;
 
-export function exportCurrentState(lss: StateService, as: AnimatorService) {
+export function exportCurrentState(stateService: StateService, settingsService: SettingsService) {
+  const duration = settingsService.getDuration();
+  const interpolator = settingsService.getInterpolator();
+
   const startVlChildren: Array<PathLayer | GroupLayer> = [];
   const endVlChildren: Array<PathLayer | GroupLayer> = [];
 
   // Create AvdTargets.
   const avdTargets: AvdTarget[] = [];
-  const startVl = lss.getVectorLayer(CanvasType.Start);
-  const endVl = lss.getVectorLayer(CanvasType.End);
+  const startVl = stateService.getVectorLayer(CanvasType.Start);
+  const endVl = stateService.getVectorLayer(CanvasType.End);
 
   // Create vector layer target.
   const alphaTarget =
     createAlphaAvdTarget(
       startVl,
       endVl,
-      as.getDuration(),
-      as.getInterpolator().androidRef);
+      duration,
+      interpolator.androidRef);
   if (alphaTarget) {
     avdTargets.push(alphaTarget);
   }
 
-  const startGl = lss.getActiveRotationLayer(CanvasType.Start);
-  const endGl = lss.getActiveRotationLayer(CanvasType.End);
+  const startGl = stateService.getActiveRotationLayer(CanvasType.Start);
+  const endGl = stateService.getActiveRotationLayer(CanvasType.End);
 
   // Create rotation layer target.
   const rotationTarget =
     createRotationAvdTarget(
       startGl,
       endGl,
-      as.getDuration(),
-      as.getInterpolator().androidRef);
-  const startPl = lss.getActivePathLayer(CanvasType.Start);
-  const endPl = lss.getActivePathLayer(CanvasType.End);
+      duration,
+      interpolator.androidRef);
+  const startPl = stateService.getActivePathLayer(CanvasType.Start);
+  const endPl = stateService.getActivePathLayer(CanvasType.End);
   if (rotationTarget) {
     avdTargets.push(rotationTarget);
     startVlChildren.push(startGl);
@@ -63,8 +68,8 @@ export function exportCurrentState(lss: StateService, as: AnimatorService) {
     createPathAvdTarget(
       startPl,
       endPl,
-      as.getDuration(),
-      as.getInterpolator().androidRef));
+      duration,
+      interpolator.androidRef));
 
   // Create VectorLayers.
   const startOutputVectorLayer =
@@ -90,7 +95,7 @@ export function exportCurrentState(lss: StateService, as: AnimatorService) {
     createOpacitySvgTarget(
       startVl,
       endVl,
-      as.getDuration(),
+      duration,
       'ease-in-out');
   if (opacitySvgTarget) {
     svgTargets.push(opacitySvgTarget);
@@ -101,7 +106,7 @@ export function exportCurrentState(lss: StateService, as: AnimatorService) {
     createRotationSvgTarget(
       startGl,
       endGl,
-      as.getDuration(),
+      duration,
       'ease-in-out');
   if (rotationSvgTarget) {
     svgTargets.push(rotationSvgTarget);
@@ -112,7 +117,7 @@ export function exportCurrentState(lss: StateService, as: AnimatorService) {
     createPathSvgTarget(
       startPl,
       endPl,
-      as.getDuration(),
+      duration,
       'ease-in-out'));
 
   // Create SVGs.
@@ -124,10 +129,10 @@ export function exportCurrentState(lss: StateService, as: AnimatorService) {
   const android = zip.folder('android');
   const avd = AvdSerializer.vectorLayerAnimationToAvdXmlString(startOutputVectorLayer, avdTargets);
   android.file('animated_vector_drawable.xml', avd);
-  const startVD = AvdSerializer.vectorLayerToVectorDrawableXmlString(startOutputVectorLayer);
-  android.file('start_vector_drawable.xml', startVD);
-  const endVD = AvdSerializer.vectorLayerToVectorDrawableXmlString(startOutputVectorLayer);
-  android.file('end_vector_drawable.xml', endVD);
+  const startVd = AvdSerializer.vectorLayerToVectorDrawableXmlString(startOutputVectorLayer);
+  android.file('start_vector_drawable.xml', startVd);
+  const endVd = AvdSerializer.vectorLayerToVectorDrawableXmlString(startOutputVectorLayer);
+  android.file('end_vector_drawable.xml', endVd);
   const web = zip.folder('web');
   web.file('start.svg', startSvg);
   web.file('end.svg', endSvg);
@@ -140,6 +145,16 @@ export function exportCurrentState(lss: StateService, as: AnimatorService) {
     // Create JS animation loop HTML file.
     const jsLoopHtml = JsSerializer.svgAnimationToScript(startSvg, svgTargets);
     web.file('jsloop.html', jsLoopHtml);
+  }
+  if (SHOULD_EXPORT_SVG_SPRITE) {
+    const svgSprite =
+      SpriteSerializer.createSvg(startVl, endVl, duration, interpolator, startVl.width, startVl.height);
+    const cssSprite =
+      SpriteSerializer.createCss(startVl.width, startVl.height, duration);
+    const htmlSprite = SpriteSerializer.createHtml('svgsprite.svg', 'svgsprite.css');
+    web.file('svgsprite.html', htmlSprite);
+    web.file('svgsprite.css', cssSprite);
+    web.file('svgsprite.svg', svgSprite);
   }
   zip.generateAsync({ type: 'blob' }).then(content => {
     downloadFile(content, `ShapeShifter.zip`);

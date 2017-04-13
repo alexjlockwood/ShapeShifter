@@ -1,105 +1,91 @@
-// import { SvgTarget } from '../animation';
+import * as _ from 'lodash';
+import { SvgSerializer } from '.';
+import { Interpolator } from '../animation';
+import { VectorLayer, LayerUtil } from '../layers';
 
-export function createHtml() {
+const MILLIS_BETWEEN_FRAMES = 40;
+
+export function createHtml(svgFileName: string, cssFileName: string) {
   return `<html>
 <body>
-  <div class="shapeshifter play" style="background-image: url(svgsprite.svg)" data-iteration="infinite"></div>
-  <style>@import "svgsprite.css" all;</style>
+  <div class="shapeshifter play" style="background-image: url(${svgFileName})" data-iteration="infinite"></div>
+  <style>@import "${cssFileName}" all;</style>
 </body>
 </html>
 `;
 }
 
-export function createCss() {
-
+export function createCss(width: number, height: number, duration: number) {
+  const numSteps = _.round(duration / MILLIS_BETWEEN_FRAMES);
+  const prefixes = ['-webkit-', '-moz-', '-o-', ''];
+  const animationDurations = prefixes.map(prefix => {
+    return `  ${prefix}animation-duration: ${duration}ms;`;
+  }).join('\n');
+  const animationTimings = prefixes.map(prefix => {
+    return `  ${prefix}animation-timing-function: steps(${numSteps - 1});`;
+  }).join('\n');
+  const iterationCounts = prefixes.map(prefix => {
+    return `  ${prefix}animation-iteration-count: infinite;`;
+  }).join('\n');
+  const fillModes = prefixes.map(prefix => {
+    return `  ${prefix}animation-fill-mode: both;`;
+  }).join('\n');
+  const animationNames = prefixes.map(prefix => {
+    return `  ${prefix}animation-name: play${numSteps};`;
+  }).join('\n');
+  return createKeyframes(width, duration) + `
+.shapeshifter {
+${animationDurations}
+${animationTimings}
+  width: ${width}px;
+  height: ${height}px;
+  background-repeat: no-repeat;
+}
+.shapeshifter[data-iteration="infinite"] {
+${iterationCounts}
+${fillModes}
+}
+.shapeshifter.play {
+${animationNames}
+}
+`;
 }
 
-export function createSvg() {
-
+function createKeyframes(width: number, duration: number) {
+  const numSteps = _.round(duration / MILLIS_BETWEEN_FRAMES);
+  return ['@-webkit-', '@-moz-', '@-o-', '@'].map(prefix => {
+    return `${prefix}keyframes play${numSteps} {
+  0% {
+    background-position: -${width}px 0px;
+  }
+  100% {
+    background-position: -${numSteps * width}px 0px;
+  }
+}`;
+  }).join('\n');
 }
 
-// function svgTargetToCssKeyframes(layerId: string, svgTarget: SvgTarget) {
-//   const fromProps: string[] = [];
-//   const toProps: string[] = [];
-//   for (const anim of svgTarget.animations) {
-//     let valueFrom = anim.valueFrom;
-//     let valueTo = anim.valueTo;
-//     if (anim.propertyName === 'd') {
-//       valueFrom = `path('${valueFrom}')`;
-//       valueTo = `path('${valueTo}')`;
-//     }
-//     fromProps.push(`${anim.propertyName}: ${valueFrom}`);
-//     toProps.push(`${anim.propertyName}: ${valueTo}`);
-//   }
-//   return `
-//     @keyframes ${layerId}_anim {
-//       from {
-//         ${fromProps.join(';\n      ')}
-//       }
-//       to {
-//         ${toProps.join(';\n      ')}
-//       }
-//     }`;
-// }
+export function createSvg(
+  start: VectorLayer,
+  end: VectorLayer,
+  duration: number,
+  interpolator: Interpolator,
+  width: number,
+  height: number) {
 
-// @-webkit-keyframes play50 {
-//   0% {
-//     background-position: -128px 0px;
-//   }
-//   100% {
-//     background-position: -6400px 0px;
-//   }
-// }
-// @-moz-keyframes play50 {
-//   0% {
-//     background-position: -128px 0px;
-//   }
-//   100% {
-//     background-position: -6400px 0px;
-//   }
-// }
-// @-o-keyframes play50 {
-//   0% {
-//     background-position: -128px 0px;
-//   }
-//   100% {
-//     background-position: -6400px 0px;
-//   }
-// }
-// @keyframes play50 {
-//   0% {
-//     background-position: -128px 0px;
-//   }
-//   100% {
-//     background-position: -6400px 0px;
-//   }
-// }
-// .ai {
-//   -webkit-animation-duration: 2s;
-//   -moz-animation-duration: 2s;
-//   -o-animation-duration: 2s;
-//   animation-duration: 2s;
-//   -webkit-animation-timing-function: steps(49);
-//   -moz-animation-timing-function: steps(49);
-//   -o-animation-timing-function: steps(49);
-//   animation-timing-function: steps(49);
-//   width: 128px;
-//   height: 128px;
-//   background-repeat: no-repeat;
-// }
-// .ai[data-iteration="infinite"] {
-//   -webkit-animation-iteration-count: infinite;
-//   -moz-animation-iteration-count: infinite;
-//   -o-animation-iteration-count: infinite;
-//   animation-iteration-count: infinite;
-//   -webkit-animation-fill-mode: both;
-//   -moz-animation-fill-mode: both;
-//   -o-animation-fill-mode: both;
-//   animation-fill-mode: both;
-// }
-// .ai.play {
-//   -webkit-animation-name: play50;
-//   -moz-animation-name: play50;
-//   -o-animation-name: play50;
-//   animation-name: play50;
-// }
+  const preview = start.clone();
+  const numSteps = _.round(duration / MILLIS_BETWEEN_FRAMES);
+  const svgs: string[] = [];
+  for (let i = 0; i < numSteps; i++) {
+    const fraction = interpolator.interpolateFn(i / numSteps);
+    LayerUtil.deepInterpolate(start, preview, end, fraction);
+    svgs.push(SvgSerializer.vectorLayerToSvgString(preview, width, height, width * i, 0));
+  }
+  const totalWidth = width * numSteps;
+  return `<?xml version="1.0" encoding="utf-8"?>
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${totalWidth} ${height} width="${totalWidth}px" height="${height}px">
+${svgs.join('\n')}
+</svg>
+`;
+}
+

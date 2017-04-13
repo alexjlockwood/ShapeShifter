@@ -3,7 +3,7 @@ import { Component, OnInit, ViewContainerRef, ChangeDetectionStrategy } from '@a
 import {
   StateService,
   MorphabilityStatus,
-  AnimatorService,
+  SettingsService,
   SelectionService,
   Selection,
   SelectionType,
@@ -39,7 +39,7 @@ export class ToolbarComponent implements OnInit {
 
   constructor(
     private readonly viewContainerRef: ViewContainerRef,
-    private readonly animatorService: AnimatorService,
+    private readonly settingsService: SettingsService,
     private readonly selectionService: SelectionService,
     private readonly stateService: StateService,
     private readonly dialogService: DialogService,
@@ -145,7 +145,7 @@ export class ToolbarComponent implements OnInit {
 
   onExportClick() {
     ga('send', 'event', 'Export', 'Export click');
-    ExportUtil.exportCurrentState(this.stateService, this.animatorService);
+    ExportUtil.exportCurrentState(this.stateService, this.settingsService);
   }
 
   onDeleteSelectedPointsClick() {
