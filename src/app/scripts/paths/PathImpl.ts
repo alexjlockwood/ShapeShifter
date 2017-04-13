@@ -16,7 +16,6 @@ export function newPath(obj: string | Command[] | PathState): Path {
 class PathImpl implements Path {
   private readonly ps: PathState;
   private pathString: string;
-  private poleOfInaccessibility: Point;
 
   constructor(obj: string | Command[] | PathState) {
     if (typeof obj === 'string' || Array.isArray(obj)) {
@@ -97,10 +96,7 @@ class PathImpl implements Path {
 
   // Implements the Path interface.
   getPoleOfInaccessibility(subIdx: number) {
-    if (!this.poleOfInaccessibility) {
-      this.poleOfInaccessibility = this.ps.getPoleOfInaccessibility(subIdx);
-    }
-    return this.poleOfInaccessibility;
+    return this.ps.getPoleOfInaccessibility(subIdx);
   }
 
   // Implements the Path interface.
