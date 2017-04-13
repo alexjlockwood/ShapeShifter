@@ -53,7 +53,7 @@
           <span [ngClass]="{
             'unmorphable': morphabilityStatus === MORPHABILITY_UNMORPHABLE,
             'morphable': morphabilityStatus === MORPHABILITY_MORPHABLE}"
-            [innerHTML]="morphabilityStatusTextObservable | async">
+            [innerHTML]="statusTextObservable | async">
           </span>
         </span>
         <span fxFlex></span>

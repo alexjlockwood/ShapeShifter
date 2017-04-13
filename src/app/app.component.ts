@@ -17,6 +17,7 @@ import {
   AnimatorService,
   CanvasResizeService,
   SelectionService,
+  SelectionType,
   AppModeService,
   AppMode,
   StateService,
@@ -25,6 +26,7 @@ import {
 } from './services';
 import { deleteSelectedSplitPoints } from './services/selection.service';
 import { DemoUtil, DEMO_MAP } from './scripts/demos';
+import 'rxjs/add/observable/combineLatest';
 
 const IS_DEV_MODE = !environment.production;
 const AUTO_LOAD_DEMO = IS_DEV_MODE && true;
@@ -52,7 +54,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   MORPHABILITY_MORPHABLE = MorphabilityStatus.Morphable;
 
   morphabilityStatus = MorphabilityStatus.None;
-  morphabilityStatusTextObservable: Observable<string>;
+  statusTextObservable: Observable<string>;
   wasMorphable = false;
 
   appModeObservable: Observable<AppMode>;
@@ -81,49 +83,88 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngOnInit() {
     this.appModeObservable = this.appModeService.asObservable();
-    this.morphabilityStatusTextObservable =
-      this.stateService.getMorphabilityStatusObservable()
-        .map(status => {
-          if (status === MorphabilityStatus.Morphable) {
-            const hasClosedPath =
-              _.chain([CanvasType.Start, CanvasType.End])
-                .map(type => this.stateService.getActivePathLayer(type).pathData)
-                .flatMap(path => path.getSubPaths() as SubPath[])
-                .some((subPath: SubPath) => subPath.isClosed())
-                .value();
-            const hasSplitCmd =
-              _.chain([CanvasType.Start, CanvasType.End])
-                .map(type => this.stateService.getActivePathLayer(type).pathData)
-                .flatMap(path => path.getCommands() as Command[])
-                .some((cmd: Command) => cmd.isSplit())
-                .value();
-            return `Reverse${hasClosedPath ? '/shift' : ''} `
-              + `the points below ${hasSplitCmd ? 'or drag the orange points above' : ''} `
-              + `to alter the animation`;
+    this.statusTextObservable =
+      Observable.combineLatest(
+        this.stateService.getMorphabilityStatusObservable(),
+        this.selectionService.asObservable(),
+        this.appModeService.asObservable(),
+      ).map(obj => {
+        const [status, selections, appMode] = obj;
+        const startLayer = this.stateService.getActivePathLayer(CanvasType.Start);
+        const endLayer = this.stateService.getActivePathLayer(CanvasType.End);
+        if (!startLayer || !endLayer) {
+          // TODO: should we display a message here? does this ever even happen? just to be safe...
+          return '';
+        }
+
+        if (appMode === AppMode.SplitSubPaths) {
+          // TODO: show better user messaging when attempting to morph btw stroked and fill paths
+          if (startLayer.isFilled() && endLayer.isFilled()) {
+            return 'Draw a line across a subpath to split it into 2';
+          } else if (startLayer.isStroked() && endLayer.isStroked()) {
+            return 'Choose a point along a subpath to split it into 2';
           }
-          if (status === MorphabilityStatus.Unmorphable) {
-            const startLayer = this.stateService.getActivePathLayer(CanvasType.Start);
-            const endLayer = this.stateService.getActivePathLayer(CanvasType.End);
-            const startCommand = startLayer.pathData;
-            const endCommand = endLayer.pathData;
-            for (let i = 0; i < startCommand.getSubPaths().length; i++) {
-              const startCmds = startCommand.getSubPaths()[i].getCommands();
-              const endCmds = endCommand.getSubPaths()[i].getCommands();
-              if (startCmds.length !== endCmds.length) {
-                const pathLetter = startCmds.length < endCmds.length ? 'a' : 'b';
-                const diff = Math.abs(startCmds.length - endCmds.length);
-                if (diff === 1) {
-                  return `Add 1 point to <i>subpath #${i + 1}${pathLetter}</i>`;
-                } else {
-                  return `Add ${diff} points to <i>subpath #${i + 1}${pathLetter}</i>`;
-                }
+        }
+
+        if (appMode === AppMode.Selection) {
+          const subPathSelections = selections.filter(s => s.type === SelectionType.SubPath);
+          if (subPathSelections.length) {
+            const { source, subIdx } = subPathSelections[0];
+            const startPath = startLayer.pathData;
+            const endPath = endLayer.pathData;
+            const isSourceStart = source === CanvasType.Start;
+            const oppSubPaths =
+              (isSourceStart ? endPath : startPath).getSubPaths().filter(s => !s.isCollapsing());
+            const numOppSubPaths = oppSubPaths.length;
+            const numAvailableOppSubPaths = numOppSubPaths - (subIdx < numOppSubPaths ? 1 : 0);
+            const sourceSubPathName = `<i>Subpath #${subIdx + 1}${isSourceStart ? 'a' : 'b'}</i>`;
+            if (!numAvailableOppSubPaths) {
+              return `${sourceSubPathName} selected`;
+            }
+            const direction = isSourceStart ? 'right' : 'left';
+            return `${sourceSubPathName} selected. `
+              + `Select a second subpath on the ${direction} to alter the animation.`;
+          }
+        }
+
+        if (status === MorphabilityStatus.Morphable) {
+          const hasClosedPath =
+            _.chain([CanvasType.Start, CanvasType.End])
+              .map(type => this.stateService.getActivePathLayer(type).pathData)
+              .flatMap(path => path.getSubPaths() as SubPath[])
+              .some((subPath: SubPath) => subPath.isClosed() && !subPath.isCollapsing())
+              .value();
+          const hasSplitCmd =
+            _.chain([CanvasType.Start, CanvasType.End])
+              .map(type => this.stateService.getActivePathLayer(type).pathData)
+              .flatMap(path => path.getCommands() as Command[])
+              .some((cmd: Command) => cmd.isSplit())
+              .value();
+          return `Reverse${hasClosedPath ? '/shift' : ''} `
+            + `the points below ${hasSplitCmd ? 'or drag the orange points above' : ''} `
+            + `to alter the animation`;
+        }
+        if (status === MorphabilityStatus.Unmorphable) {
+          const startCommand = startLayer.pathData;
+          const endCommand = endLayer.pathData;
+          for (let i = 0; i < startCommand.getSubPaths().length; i++) {
+            const startCmds = startCommand.getSubPaths()[i].getCommands();
+            const endCmds = endCommand.getSubPaths()[i].getCommands();
+            if (startCmds.length !== endCmds.length) {
+              const pathLetter = startCmds.length < endCmds.length ? 'a' : 'b';
+              const diff = Math.abs(startCmds.length - endCmds.length);
+              if (diff === 1) {
+                return `Add 1 point to <i>subpath #${i + 1}${pathLetter}</i>`;
+              } else {
+                return `Add ${diff} points to <i>subpath #${i + 1}${pathLetter}</i>`;
               }
             }
-            // The user should never get to this point, but just in case.
-            return 'Unmorphable';
           }
-          return '';
-        });
+          // The user should never get to this point, but just in case.
+          return 'Unmorphable';
+        }
+        return '';
+      });
     this.initKeyCodeListeners();
     this.initBeforeOnLoadListener();
 
@@ -181,11 +222,10 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     $(window).unbind('beforeunload');
   }
 
-  // TOOD: i.e. meta + R means refresh page so don't rewind
   private initKeyCodeListeners() {
     const getAppModeShortcutFn = (event: JQueryEventObject) => {
-      if (navigator.appVersion.indexOf('Mac') >= 0 ? event.metaKey : event.ctrlKey) {
-        if (event.shiftKey) {
+      if (this.isMacOs() ? event.metaKey : event.ctrlKey) {
+        if (event.altKey) {
           return AppMode.SplitSubPaths;
         }
         return AppMode.SplitCommands;
@@ -239,7 +279,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
         }
         return false;
       }
-      if (event.keyCode === 82) {
+      if (event.keyCode === 82 && !event.ctrlKey && !event.metaKey) {
         // R.
         if (isMorphable) {
           this.animatorService.setIsRepeating(!this.animatorService.isRepeating());
@@ -284,11 +324,15 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   getSplitCommandsKeyboardShortcut() {
-    return navigator.appVersion.indexOf('Mac') >= 0 ? '⌘' : 'Ctrl';
+    return this.isMacOs() ? '⌘' : 'Ctrl';
   }
 
   getSplitSubPathsKeyboardShortcut() {
-    return navigator.appVersion.indexOf('Mac') >= 0 ? '⌘⇧' : 'Ctrl + Shift';
+    return this.isMacOs() ? '⌘⌥' : 'Ctrl + Alt';
+  }
+
+  private isMacOs() {
+    return navigator.appVersion.indexOf('Mac') >= 0;
   }
 
   // Proxies a button click to the <input> tag that opens the file picker.
