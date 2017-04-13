@@ -146,7 +146,9 @@ export class ToolbarComponent implements OnInit {
 
   onExportClick() {
     ga('send', 'event', 'Export', 'Export click');
-    ExportUtil.exportCurrentState(this.stateService, this.settingsService);
+    const duration = this.settingsService.getDuration();
+    const interpolator = this.settingsService.getInterpolator();
+    ExportUtil.generateZip(this.stateService, duration, interpolator);
   }
 
   onDeleteSelectedPointsClick() {

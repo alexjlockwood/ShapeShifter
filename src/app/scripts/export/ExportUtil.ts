@@ -1,27 +1,28 @@
-import { StateService, SettingsService } from '../../services';
+import * as JSZip from 'jszip';
+import * as $ from 'jquery';
+import * as KeyframesSerializer from './KeyframesSerializer';
+import * as JsSerializer from './JsSerializer';
+import * as SpriteSerializer from './SpriteSerializer';
+import { environment } from '../../../environments/environment';
+import { StateService } from '../../services';
 import { PathLayer, GroupLayer, VectorLayer } from '../layers';
 import { CanvasType } from '../../CanvasType';
 import { AvdSerializer, SvgSerializer } from '.';
-import * as CssKeyframesSerializer from './CssKeyframesSerializer';
-import * as JsSerializer from './JsSerializer';
-import * as SpriteSerializer from './SpriteSerializer';
+import { ColorUtil } from '../common';
 import {
   AvdTarget, AvdAnimation, AvdPropertyName, AvdValueType,
-  SvgTarget, SvgAnimation, SvgPropertyName,
+  SvgTarget, SvgAnimation, SvgPropertyName, Interpolator,
 } from '../animation';
-import { environment } from '../../../environments/environment';
-import { ColorUtil } from '../common';
-import * as JSZip from 'jszip';
-import * as $ from 'jquery';
 
 // TODO: release this when it is ready and tested
 const SHOULD_EXPORT_CSS_KEYFRAMES = !environment.production && true;
-const SHOULD_EXPORT_JS_SCRIPT = !environment.production && true;
+const SHOULD_EXPORT_JS_SCRIPT = !environment.production && false;
 const SHOULD_EXPORT_SVG_SPRITE = !environment.production && true;
 
-export function exportCurrentState(stateService: StateService, settingsService: SettingsService) {
-  const duration = settingsService.getDuration();
-  const interpolator = settingsService.getInterpolator();
+export function generateZip(
+  stateService: StateService,
+  duration: number,
+  interpolator: Interpolator) {
 
   const startVlChildren: Array<PathLayer | GroupLayer> = [];
   const endVlChildren: Array<PathLayer | GroupLayer> = [];
@@ -72,14 +73,14 @@ export function exportCurrentState(stateService: StateService, settingsService: 
       interpolator.androidRef));
 
   // Create VectorLayers.
-  const startOutputVectorLayer =
+  const startOutVl =
     new VectorLayer(
       startVlChildren,
       startVl.id,
       startVl.width,
       startVl.height,
       startVl.alpha);
-  const endOutputVectorLayer =
+  const endOutVl =
     new VectorLayer(
       endVlChildren,
       endVl.id,
@@ -120,44 +121,48 @@ export function exportCurrentState(stateService: StateService, settingsService: 
       duration,
       'ease-in-out'));
 
-  // Create SVGs.
-  const startSvg = SvgSerializer.vectorLayerToSvgString(startOutputVectorLayer);
-  const endSvg = SvgSerializer.vectorLayerToSvgString(endOutputVectorLayer);
+  // Create compatible SVGs (note that we intentionally don't run SVGO on these).
+  const startSvg = SvgSerializer.vectorLayerToSvgString(startOutVl, startOutVl.width, startOutVl.height);
+  const endSvg = SvgSerializer.vectorLayerToSvgString(endOutVl, endOutVl.width, endOutVl.height);
 
   const zip = new JSZip();
   zip.file('README.txt', createExportReadme());
   const android = zip.folder('android');
-  const avd = AvdSerializer.vectorLayerAnimationToAvdXmlString(startOutputVectorLayer, avdTargets);
+  const avd = AvdSerializer.vectorLayerAnimationToAvdXmlString(startOutVl, avdTargets);
   android.file('animated_vector_drawable.xml', avd);
-  const startVd = AvdSerializer.vectorLayerToVectorDrawableXmlString(startOutputVectorLayer);
+  const startVd = AvdSerializer.vectorLayerToVectorDrawableXmlString(startOutVl);
   android.file('start_vector_drawable.xml', startVd);
-  const endVd = AvdSerializer.vectorLayerToVectorDrawableXmlString(startOutputVectorLayer);
+  const endVd = AvdSerializer.vectorLayerToVectorDrawableXmlString(endOutVl);
   android.file('end_vector_drawable.xml', endVd);
   const web = zip.folder('web');
-  web.file('start.svg', startSvg);
-  web.file('end.svg', endSvg);
+  const svg = web.folder('svg');
+  svg.file('start.svg', startSvg);
+  svg.file('end.svg', endSvg);
   if (SHOULD_EXPORT_CSS_KEYFRAMES) {
-    // Create CSS keyframes HTML file.
-    const cssKeyframesHtml = CssKeyframesSerializer.svgAnimationToHtml(startSvg, svgTargets);
-    web.file('keyframes.html', cssKeyframesHtml);
+    // Create a CSS keyframe animation.
+    const keyframes = web.folder('keyframes');
+    keyframes.file('keyframes.html', KeyframesSerializer.createHtml(startSvg, 'keyframes.css'));
+    keyframes.file('keyframes.css', KeyframesSerializer.createCss(svgTargets));
   }
   if (SHOULD_EXPORT_JS_SCRIPT) {
     // Create JS animation loop HTML file.
     const jsLoopHtml = JsSerializer.svgAnimationToScript(startSvg, svgTargets);
-    web.file('jsloop.html', jsLoopHtml);
+    web.folder('js').file('animation.html', jsLoopHtml);
   }
   if (SHOULD_EXPORT_SVG_SPRITE) {
+    // Create an svg sprite animation.
     const svgSprite =
-      SpriteSerializer.createSvg(startVl, endVl, duration, interpolator, startVl.width, startVl.height);
+      SpriteSerializer.createSvg(startVl, endVl, duration, interpolator);
     const cssSprite =
       SpriteSerializer.createCss(startVl.width, startVl.height, duration);
-    const htmlSprite = SpriteSerializer.createHtml('svgsprite.svg', 'svgsprite.css');
-    web.file('svgsprite.html', htmlSprite);
-    web.file('svgsprite.css', cssSprite);
-    web.file('svgsprite.svg', svgSprite);
+    const htmlSprite = SpriteSerializer.createHtml('sprite.svg', 'sprite.css');
+    const sprite = web.folder('sprite');
+    sprite.file('sprite.html', htmlSprite);
+    sprite.file('sprite.css', cssSprite);
+    sprite.file('sprite.svg', svgSprite);
   }
   zip.generateAsync({ type: 'blob' }).then(content => {
-    downloadFile(content, `ShapeShifter.zip`);
+    downloadFile(content, 'ShapeShifter.zip');
   });
 }
 

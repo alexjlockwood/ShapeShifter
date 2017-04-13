@@ -1,12 +1,15 @@
 import { SvgSerializer } from '.';
 import { Interpolator } from '../animation';
 import { VectorLayer, LayerUtil } from '../layers';
+import { Svgo } from '../svgo';
 
 export function createHtml(svgFileName: string, cssFileName: string) {
   return `<html>
+<head>
+  <link rel="stylesheet" type="text/css" href="${cssFileName}"/>
+</head>
 <body>
-  <div class="shapeshifter play" style="background-image: url(${svgFileName})" data-iteration="infinite"></div>
-  <style>@import "${cssFileName}" all;</style>
+  <div class="shapeshifter play" style="background-image: url(${svgFileName})"></div>
 </body>
 </html>
 `;
@@ -21,12 +24,6 @@ export function createCss(width: number, height: number, duration: number) {
   const animationTimings = prefixes.map(prefix => {
     return `  ${prefix}animation-timing-function: steps(${numSteps});`;
   }).join('\n');
-  const iterationCounts = prefixes.map(prefix => {
-    return `  ${prefix}animation-iteration-count: infinite;`;
-  }).join('\n');
-  const fillModes = prefixes.map(prefix => {
-    return `  ${prefix}animation-fill-mode: both;`;
-  }).join('\n');
   const animationNames = prefixes.map(prefix => {
     return `  ${prefix}animation-name: play${numSteps};`;
   }).join('\n');
@@ -37,10 +34,6 @@ ${animationTimings}
   width: ${width}px;
   height: ${height}px;
   background-repeat: no-repeat;
-}
-.shapeshifter[data-iteration="infinite"] {
-${iterationCounts}
-${fillModes}
 }
 .shapeshifter.play {
 ${animationNames}
@@ -66,24 +59,26 @@ export function createSvg(
   start: VectorLayer,
   end: VectorLayer,
   duration: number,
-  interpolator: Interpolator,
-  width: number,
-  height: number) {
+  interpolator: Interpolator) {
 
   const preview = start.clone();
   const numSteps = getNumSteps(duration);
   const svgs: string[] = [];
+  const { width, height } = preview;
   for (let i = 0; i < numSteps; i++) {
     const fraction = interpolator.interpolateFn(i / numSteps);
     LayerUtil.deepInterpolate(start, preview, end, fraction);
     svgs.push(SvgSerializer.vectorLayerToSvgString(preview, width, height, width * i, 0));
   }
   const totalWidth = width * numSteps;
-  return `<?xml version="1.0" encoding="utf-8"?>
-<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${totalWidth} ${height}" width="${totalWidth}px" height="${height}px">
+  let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${totalWidth} ${height}" width="${totalWidth}px" height="${height}px">
 ${svgs.join('\n')}
 </svg>
 `;
+  Svgo.optimize(svg, optimizedSvgText => {
+    svg = optimizedSvgText;
+  });
+  return svg;
 }
 
 function getNumSteps(durationMillis: number) {
