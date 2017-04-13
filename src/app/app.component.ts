@@ -160,8 +160,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
               }
             }
           }
-          // The user should never get to this point, but just in case.
-          return 'Unmorphable';
+          // The user should never get to this point, but fallthrough just in case.
         }
         return '';
       });
