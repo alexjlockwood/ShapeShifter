@@ -16,7 +16,7 @@ import { SettingsService } from './settings.service';
 
 /**
  * The global state service that is in charge of keeping track of the loaded
- * SVGs, active path layers, and the current morphability status.
+ * SVGs, active path layers, and the current morph status.
  */
 @Injectable()
 export class StateService {
@@ -30,8 +30,8 @@ export class StateService {
   private readonly activeLayerMap = new Map<CanvasType, VectorLayer>();
   // Observable that broadcasts changes to the currently active path ID for each CanvasType.
   private readonly activePathIdSources = new Map<CanvasType, BehaviorSubject<string>>();
-  // Observable that broadcast changes to the current morphability status.
-  private readonly statusSource = new BehaviorSubject<MorphabilityStatus>(MorphabilityStatus.None);
+  // Observable that broadcast changes to the current morph status.
+  private readonly statusSource = new BehaviorSubject<MorphStatus>(MorphStatus.None);
 
   constructor(
     private readonly selectionService: SelectionService,
@@ -315,7 +315,7 @@ export class StateService {
    */
   notifyChange(type: CanvasType) {
     this.activePathIdSources.get(type).next(this.activePathIdMap.get(type));
-    this.statusSource.next(this.getMorphabilityStatus());
+    this.statusSource.next(this.getMorphStatus());
   }
 
   /**
@@ -346,16 +346,16 @@ export class StateService {
     this.existingPathIdsSource.next(Array.from(this.importedPathMap.keys()));
   }
 
-  getMorphabilityStatus() {
+  getMorphStatus() {
     const startPathLayer = this.getActivePathLayer(CanvasType.Start);
     const endPathLayer = this.getActivePathLayer(CanvasType.End);
     if (!startPathLayer || !endPathLayer) {
-      return MorphabilityStatus.None;
+      return MorphStatus.None;
     }
     if (startPathLayer.isMorphableWith(endPathLayer)) {
-      return MorphabilityStatus.Morphable;
+      return MorphStatus.Morphable;
     }
-    return MorphabilityStatus.Unmorphable;
+    return MorphStatus.Unmorphable;
   }
 
   /**
@@ -371,7 +371,7 @@ export class StateService {
     this.activePathIdMap.clear();
     this.activeLayerMap.clear();
     this.activePathIdSources.forEach(source => source.next(undefined));
-    this.statusSource.next(MorphabilityStatus.None);
+    this.statusSource.next(MorphStatus.None);
     this.existingPathIdsSource.next([]);
     [CanvasType.Preview, CanvasType.Start, CanvasType.End].forEach(type => this.notifyChange(type));
   }
@@ -384,12 +384,12 @@ export class StateService {
     return this.activePathIdSources.get(type);
   }
 
-  getMorphabilityStatusObservable() {
+  getMorphStatusObservable() {
     return this.statusSource.asObservable();
   }
 }
 
-export enum MorphabilityStatus {
+export enum MorphStatus {
   None = 1,
   Unmorphable,
   Morphable,

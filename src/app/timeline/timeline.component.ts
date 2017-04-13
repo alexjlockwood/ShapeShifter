@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/
 import {
   AnimatorService,
   StateService,
-  MorphabilityStatus,
+  MorphStatus,
 } from '../services';
 import { Subscription } from 'rxjs/Subscription';
 import { Observable } from 'rxjs/Observable';
@@ -14,10 +14,11 @@ import { Observable } from 'rxjs/Observable';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TimelineComponent implements OnInit, OnDestroy {
-  MORPHABILITY_NONE = MorphabilityStatus.None;
-  MORPHABILITY_UNMORPHABLE = MorphabilityStatus.Unmorphable;
-  MORPHABILITY_MORPHABLE = MorphabilityStatus.Morphable;
-  morphabilityStatusObservable: Observable<MorphabilityStatus>;
+  readonly MORPH_NONE = MorphStatus.None;
+  readonly MORPH_UNMORPHABLE = MorphStatus.Unmorphable;
+  readonly MORPH_MORPHABLE = MorphStatus.Morphable;
+
+  morphStatusObservable: Observable<MorphStatus>;
   isAnimationSlowMotionObservable: Observable<boolean>;
   isAnimationPlayingObservable: Observable<boolean>;
   isAnimationRepeatingObservable: Observable<boolean>;
@@ -38,12 +39,12 @@ export class TimelineComponent implements OnInit, OnDestroy {
     this.isAnimationRepeatingObservable =
       this.animatorService.getAnimatorSettingsObservable()
         .map((value: { isRepeating: boolean }) => value.isRepeating);
-    this.morphabilityStatusObservable =
-      this.stateService.getMorphabilityStatusObservable();
+    this.morphStatusObservable =
+      this.stateService.getMorphStatusObservable();
     this.subscriptions.push(
-      this.stateService.getMorphabilityStatusObservable()
+      this.stateService.getMorphStatusObservable()
         .subscribe(status => {
-          if (status !== MorphabilityStatus.Morphable) {
+          if (status !== MorphStatus.Morphable) {
             this.animatorService.rewind();
           }
         }));

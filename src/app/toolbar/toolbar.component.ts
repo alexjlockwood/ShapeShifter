@@ -2,7 +2,7 @@ import * as _ from 'lodash';
 import { Component, OnInit, ViewContainerRef, ChangeDetectionStrategy } from '@angular/core';
 import {
   StateService,
-  MorphabilityStatus,
+  MorphStatus,
   SettingsService,
   SelectionService,
   Selection,
@@ -27,10 +27,11 @@ declare const ga: Function;
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ToolbarComponent implements OnInit {
-  MORPHABILITY_NONE = MorphabilityStatus.None;
-  MORPHABILITY_UNMORPHABLE = MorphabilityStatus.Unmorphable;
-  MORPHABILITY_MORPHABLE = MorphabilityStatus.Morphable;
-  morphabilityStatusObservable: Observable<MorphabilityStatus>;
+  readonly MORPH_NONE = MorphStatus.None;
+  readonly MORPH_UNMORPHABLE = MorphStatus.Unmorphable;
+  readonly MORPH_MORPHABLE = MorphStatus.Morphable;
+
+  morphStatusObservable: Observable<MorphStatus>;
   isActionModeEnabledObservable: Observable<boolean>;
   // This boolean is used to ensure the toolbar transition doesn't run on page load.
   hasActionModeBeenEnabled = false;
@@ -46,8 +47,8 @@ export class ToolbarComponent implements OnInit {
   ) { }
 
   ngOnInit() {
-    this.morphabilityStatusObservable =
-      this.stateService.getMorphabilityStatusObservable();
+    this.morphStatusObservable =
+      this.stateService.getMorphStatusObservable();
     this.isDirtyObservable =
       this.stateService.getExistingPathIdsObservable().map(ids => !!ids.length);
     this.isActionModeEnabledObservable =

@@ -10,12 +10,12 @@
     md-icon-button>
     <md-icon>create</md-icon>
   </button>
-  <button md-icon-button class="toolbar-action-button" [disabled]="(morphabilityStatusObservable | async) === MORPHABILITY_NONE"
+  <button md-icon-button class="toolbar-action-button" [disabled]="(morphStatusObservable | async) === MORPH_NONE"
     (click)="onAutoFixClick()" mdTooltip="Auto fix" mdTooltipShowDelay="500"
     *ngIf="!(isActionModeEnabledObservable | async)" mdTooltipPosition="below">
     <md-icon svgIcon="autofix"></md-icon>
   </button>
-  <button md-icon-button class="toolbar-action-button" [disabled]="(morphabilityStatusObservable | async) !== MORPHABILITY_MORPHABLE"
+  <button md-icon-button class="toolbar-action-button" [disabled]="(morphStatusObservable | async) !== MORPH_MORPHABLE"
     mdTooltip="Export" mdTooltipPosition="below" mdTooltipShowDelay="500"
     *ngIf="!(isActionModeEnabledObservable | async)" (click)="onExportClick()">
     <md-icon>file_download</md-icon>

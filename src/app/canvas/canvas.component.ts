@@ -13,7 +13,7 @@ import {
   CanvasResizeService,
   AppModeService, AppMode,
   SelectionService, SelectionType,
-  StateService, MorphabilityStatus,
+  StateService, MorphStatus,
   HoverService, HoverType, Hover,
   SettingsService,
   FilePickerService,
@@ -164,7 +164,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         this.animatorService.getAnimatedValueObservable(),
         () => interpolatePreviewFn());
       this.subscribeTo(this.settingsService.getCanvasSettingsObservable());
-      this.subscribeTo(this.stateService.getMorphabilityStatusObservable());
+      this.subscribeTo(this.stateService.getMorphStatusObservable());
     } else {
       // Non-preview canvas specific setup.
       this.subscribeTo(this.stateService.getActivePathIdObservable(this.canvasType));
@@ -323,7 +323,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
   private get shouldDisableLayer() {
     return this.canvasType === CanvasType.Preview
-      && this.stateService.getMorphabilityStatus() !== MorphabilityStatus.Morphable;
+      && this.stateService.getMorphStatus() !== MorphStatus.Morphable;
   }
 
   private get shouldLabelPoints() {
@@ -1035,6 +1035,10 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   }
 
   onClick(event: MouseEvent) {
+    // TODO: is this hacky? should we be using onBlur() to reset the app mode?
+    // This ensures that parents won't also receive the same click event.
+    event.cancelBubble = true;
+
     if (this.activePathId) {
       return;
     }

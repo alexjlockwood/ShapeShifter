@@ -3,7 +3,7 @@ import { Interpolator, INTERPOLATORS } from '../scripts/animation';
 import {
   AnimatorService,
   StateService,
-  MorphabilityStatus,
+  MorphStatus,
   SettingsService,
 } from '../services';
 import { Observable } from 'rxjs/Observable';
@@ -28,9 +28,9 @@ export class SettingsComponent implements OnInit {
   ngOnInit() {
     this.shouldDisableSettingsObservable = Observable.combineLatest(
       this.animatorService.getAnimatorSettingsObservable(),
-      this.stateService.getMorphabilityStatusObservable())
-      .map((value: [{ isPlaying: boolean }, MorphabilityStatus]) => {
-        return value[0].isPlaying || value[1] !== MorphabilityStatus.Morphable;
+      this.stateService.getMorphStatusObservable())
+      .map((value: [{ isPlaying: boolean }, MorphStatus]) => {
+        return value[0].isPlaying || value[1] !== MorphStatus.Morphable;
       });
     // We subscribe here to ensure that Angular 2 change detection works properly.
     this.settingsService.getCanvasSettingsObservable().subscribe(() => { });

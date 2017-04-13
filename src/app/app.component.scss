@@ -56,6 +56,9 @@ div.app-splitter:hover {
       font-size: 14px;
       color: $colorBlackTextSecondary;
       margin: 4px;
+      box-decoration-break: clone;
+      -webkit-box-decoration-break: clone;
+      -o-box-decoration-break: clone;
     }
     button {
       &[md-icon-button] {

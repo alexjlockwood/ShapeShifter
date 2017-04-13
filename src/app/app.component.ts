@@ -21,7 +21,7 @@ import {
   AppModeService,
   AppMode,
   StateService,
-  MorphabilityStatus,
+  MorphStatus,
   FilePickerService,
 } from './services';
 import { deleteSelectedSplitPoints } from './services/selection.service';
@@ -40,24 +40,21 @@ const STORAGE_KEY_FIRST_TIME_USER = 'storage_key_first_time_user';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
+  readonly START_CANVAS = CanvasType.Start;
+  readonly PREVIEW_CANVAS = CanvasType.Preview;
+  readonly END_CANVAS = CanvasType.End;
 
-  START_CANVAS = CanvasType.Start;
-  PREVIEW_CANVAS = CanvasType.Preview;
-  END_CANVAS = CanvasType.End;
+  readonly SELECTION_MODE = AppMode.Selection;
+  readonly SPLIT_COMMANDS_MODE = AppMode.SplitCommands;
+  readonly SPLIT_SUBPATHS_MODE = AppMode.SplitSubPaths;
 
-  SELECTION_MODE = AppMode.Selection;
-  SPLIT_COMMANDS_MODE = AppMode.SplitCommands;
-  SPLIT_SUBPATHS_MODE = AppMode.SplitSubPaths;
-
-  MORPHABILITY_NONE = MorphabilityStatus.None;
-  MORPHABILITY_UNMORPHABLE = MorphabilityStatus.Unmorphable;
-  MORPHABILITY_MORPHABLE = MorphabilityStatus.Morphable;
-
-  morphabilityStatus = MorphabilityStatus.None;
-  statusTextObservable: Observable<string>;
-  wasMorphable = false;
+  readonly MORPH_NONE = MorphStatus.None;
+  readonly MORPH_UNMORPHABLE = MorphStatus.Unmorphable;
+  readonly MORPH_MORPHABLE = MorphStatus.Morphable;
 
   appModeObservable: Observable<AppMode>;
+  statusTextObservable: Observable<string>;
+  wasMorphable = false;
 
   private readonly subscriptions: Subscription[] = [];
 
@@ -85,7 +82,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     this.appModeObservable = this.appModeService.asObservable();
     this.statusTextObservable =
       Observable.combineLatest(
-        this.stateService.getMorphabilityStatusObservable(),
+        this.stateService.getMorphStatusObservable(),
         this.selectionService.asObservable(),
         this.appModeService.asObservable(),
       ).map(obj => {
@@ -93,7 +90,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
         const startLayer = this.stateService.getActivePathLayer(CanvasType.Start);
         const endLayer = this.stateService.getActivePathLayer(CanvasType.End);
         if (!startLayer || !endLayer) {
-          // TODO: should we display a message here? does this ever even happen? just to be safe...
+          // TODO: should we display a message here? does this ever even happen?
           return '';
         }
 
@@ -123,11 +120,11 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
             }
             const direction = isSourceStart ? 'right' : 'left';
             return `${sourceSubPathName} selected. `
-              + `Select a second subpath on the ${direction} to alter the animation.`;
+              + `Choose a corresponding subpath on the ${direction} to customize the animation.`;
           }
         }
 
-        if (status === MorphabilityStatus.Morphable) {
+        if (status === MorphStatus.Morphable) {
           const hasClosedPath =
             _.chain([CanvasType.Start, CanvasType.End])
               .map(type => this.stateService.getActivePathLayer(type).pathData)
@@ -142,9 +139,9 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
               .value();
           return `Reverse${hasClosedPath ? '/shift' : ''} `
             + `the points below ${hasSplitCmd ? 'or drag the orange points above' : ''} `
-            + `to alter the animation`;
+            + `to customize the animation`;
         }
-        if (status === MorphabilityStatus.Unmorphable) {
+        if (status === MorphStatus.Unmorphable) {
           const startCommand = startLayer.pathData;
           const endCommand = endLayer.pathData;
           for (let i = 0; i < startCommand.getSubPaths().length; i++) {
@@ -180,13 +177,10 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     };
 
     this.subscriptions.push(
-      this.stateService.getMorphabilityStatusObservable().subscribe(status => {
+      this.stateService.getMorphStatusObservable().subscribe(status => {
         this.wasMorphable =
-          status !== MorphabilityStatus.None && (this.wasMorphable || status === MorphabilityStatus.Morphable);
-        if (this.morphabilityStatus !== status) {
-          this.morphabilityStatus = status;
-          updateCanvasSizes();
-        }
+          status !== MorphStatus.None && (this.wasMorphable || status === MorphStatus.Morphable);
+        updateCanvasSizes();
       }));
 
     this.subscriptions.push(
@@ -221,6 +215,15 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     $(window).unbind('beforeunload');
   }
 
+  get morphStatus() {
+    return this.stateService.getMorphStatus();
+  }
+
+  onCanvasContainerClick() {
+    // TODO: is this hacky? should we be using onBlur() to reset the app mode?
+    this.appModeService.setAppMode(AppMode.Selection);
+  }
+
   private initKeyCodeListeners() {
     const getAppModeShortcutFn = (event: JQueryEventObject) => {
       if (this.isMacOs() ? event.metaKey : event.ctrlKey) {
@@ -244,8 +247,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
         this.appModeService.setAppMode(newAppMode);
       }
 
-      const isMorphable =
-        this.stateService.getMorphabilityStatus() === MorphabilityStatus.Morphable;
+      const isMorphable = this.stateService.getMorphStatus() === MorphStatus.Morphable;
       if (event.keyCode === 8 || event.keyCode === 46) {
         // In case there's a JS error, never navigate away.
         event.preventDefault();
