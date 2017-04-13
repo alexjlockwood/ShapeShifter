@@ -1,3 +1,4 @@
+import * as _ from 'lodash';
 import { Point } from '../common';
 import {
   Path, Command, ProjectionOntoPath, HitOptions, HitResult, Line
@@ -5,6 +6,7 @@ import {
 import { PathState } from './PathState';
 import { PathMutator } from './PathMutator';
 import * as PathParser from './PathParser';
+import { environment } from '../../../environments/environment';
 
 export function newPath(obj: string | Command[] | PathState): Path {
   return new PathImpl(obj);
@@ -22,6 +24,19 @@ class PathImpl implements Path {
       this.ps = new PathState(obj);
     } else {
       this.ps = obj;
+    }
+    if (!environment.production) {
+      const allIds = this.getCommands().map(c => c.getId());
+      const uniqueIds = new Set<string>(allIds);
+      const numCommands = allIds.length;
+      if (uniqueIds.size !== numCommands) {
+        const dumpInfo = this.getSubPaths().map((s, subIdx) => {
+          return s.getCommands().map((c, cmdIdx) => {
+            return { subIdx, cmdIdx, id: c.getId() };
+          });
+        });
+        console.warn('duplicate IDs found!', this, _.flatten(dumpInfo));
+      }
     }
   }
 
