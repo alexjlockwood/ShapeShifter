@@ -1,9 +1,6 @@
-import * as _ from 'lodash';
 import { SvgSerializer } from '.';
 import { Interpolator } from '../animation';
 import { VectorLayer, LayerUtil } from '../layers';
-
-const MILLIS_BETWEEN_FRAMES = 40;
 
 export function createHtml(svgFileName: string, cssFileName: string) {
   return `<html>
@@ -16,13 +13,13 @@ export function createHtml(svgFileName: string, cssFileName: string) {
 }
 
 export function createCss(width: number, height: number, duration: number) {
-  const numSteps = _.round(duration / MILLIS_BETWEEN_FRAMES);
+  const numSteps = getNumSteps(duration);
   const prefixes = ['-webkit-', '-moz-', '-o-', ''];
   const animationDurations = prefixes.map(prefix => {
     return `  ${prefix}animation-duration: ${duration}ms;`;
   }).join('\n');
   const animationTimings = prefixes.map(prefix => {
-    return `  ${prefix}animation-timing-function: steps(${numSteps - 1});`;
+    return `  ${prefix}animation-timing-function: steps(${numSteps});`;
   }).join('\n');
   const iterationCounts = prefixes.map(prefix => {
     return `  ${prefix}animation-iteration-count: infinite;`;
@@ -52,11 +49,11 @@ ${animationNames}
 }
 
 function createKeyframes(width: number, duration: number) {
-  const numSteps = _.round(duration / MILLIS_BETWEEN_FRAMES);
+  const numSteps = getNumSteps(duration);
   return ['@-webkit-', '@-moz-', '@-o-', '@'].map(prefix => {
     return `${prefix}keyframes play${numSteps} {
   0% {
-    background-position: -${width}px 0px;
+    background-position: 0px 0px;
   }
   100% {
     background-position: -${numSteps * width}px 0px;
@@ -74,7 +71,7 @@ export function createSvg(
   height: number) {
 
   const preview = start.clone();
-  const numSteps = _.round(duration / MILLIS_BETWEEN_FRAMES);
+  const numSteps = getNumSteps(duration);
   const svgs: string[] = [];
   for (let i = 0; i < numSteps; i++) {
     const fraction = interpolator.interpolateFn(i / numSteps);
@@ -83,9 +80,12 @@ export function createSvg(
   }
   const totalWidth = width * numSteps;
   return `<?xml version="1.0" encoding="utf-8"?>
-<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${totalWidth} ${height} width="${totalWidth}px" height="${height}px">
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${totalWidth} ${height}" width="${totalWidth}px" height="${height}px">
 ${svgs.join('\n')}
 </svg>
 `;
 }
 
+function getNumSteps(durationMillis: number) {
+  return Math.floor(durationMillis / 48);
+}
