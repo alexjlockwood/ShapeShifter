@@ -167,36 +167,26 @@ export class PathState {
             const { subPath, subIdx } = obj;
             return !subPath.isCollapsing() && restrictToSubIdxSet.has(subIdx);
           })
-          .map(obj => {
+          .flatMap(obj => {
             const { subIdx } = obj;
             const spsIdx = this.subPathOrdering[subIdx];
             const sps = this.findSubPathState(spsIdx);
             // We iterate by csIdx here to improve performance (since cmdIdx
-            // values can correspond to split points).
-            return sps.getCommandStates()
-              .map((cs, csIdx) => {
-                const projectionResultWithSplitIdx = cs.project(point);
-                if (!projectionResultWithSplitIdx) {
-                  return {} as {
-                    subIdx: number,
-                    cmdIdx: number,
-                    projection: Projection,
-                    splitIdx: number,
-                  };
-                }
-                const { projection, splitIdx } = projectionResultWithSplitIdx;
-                if (sps.isReversed()) {
-                  projection.t = 1 - projection.t;
-                }
-                const cmdIdx = this.toCmdIdx(spsIdx, csIdx, splitIdx);
-                return { subIdx, cmdIdx, projection };
-              });
+            // values can be split points).
+            return _.flatMap(sps.getCommandStates(), (cs, csIdx) => {
+              const projectionWithSplitIdx = cs.project(point);
+              if (!projectionWithSplitIdx) {
+                return [] as ProjectionOntoPath[];
+              }
+              const { projection, splitIdx } = projectionWithSplitIdx;
+              if (sps.isReversed()) {
+                projection.t = 1 - projection.t;
+              }
+              const cmdIdx = this.toCmdIdx(spsIdx, csIdx, splitIdx);
+              return [{ subIdx, cmdIdx, projection }];
+            });
           })
-          .flatMap(projectionInfos => projectionInfos)
           .filter(obj => {
-            if (!obj.projection) {
-              return false;
-            }
             const cmd = this.subPaths[obj.subIdx].getCommands()[obj.cmdIdx];
             return opts.isSegmentInRangeFn(obj.projection.d, cmd);
           })
