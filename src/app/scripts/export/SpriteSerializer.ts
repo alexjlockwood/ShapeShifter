@@ -65,7 +65,7 @@ export function createSvg(
   const numSteps = getNumSteps(duration);
   const svgs: string[] = [];
   const { width, height } = preview;
-  for (let i = 0; i < numSteps; i++) {
+  for (let i = 0; i <= numSteps; i++) {
     const fraction = interpolator.interpolateFn(i / numSteps);
     LayerUtil.deepInterpolate(start, preview, end, fraction);
     svgs.push(SvgSerializer.vectorLayerToSvgString(preview, width, height, width * i, 0));
@@ -82,5 +82,5 @@ ${svgs.join('\n')}
 }
 
 function getNumSteps(durationMillis: number) {
-  return Math.floor(durationMillis / 48);
+  return Math.ceil(durationMillis / 48);
 }
