@@ -337,33 +337,41 @@ function createPathSvgTarget(
   return new SvgTarget(startLayer.id, svgAnimations);
 }
 
-
+// TODO: also export the original SVG files?
 function createExportReadme() {
-  return `=== Files exported by Shape Shifter ===
+  return `=== Assets exported by Shape Shifter (https://shapeshifter.design) ===
 
-This archive contains the following:
-
-web/
-  - start.svg
-  - end.svg
+This archive contains the following directories:
 
 android/
-  - start_vector_drawable.xml
-  - end_vector_drawable.xml
-  - AnimatedVectorDrawable.xml
+  - Contains an AnimatedVectorDrawable resource file that plays the
+    the generated animation.
+  - Also contains two VectorDrawable resource files that can be used separately
+    as standalone drawable assets.
+  - Check out the 'further reading' section below to learn more about how to
+    use VectorDrawables and AnimatedVectorDrawables in your Android app.
+
+web/
+  svg/
+    - Contains two standalone SVG files representing the start and end state of
+      the generated animation.
+  sprite/
+    - TODO: write this
+  keyframes/
+    - TODO: write this
 
 If you have an export format that you'd like to see added, please file
 a feature request using the link below!
 
 Further reading:
 
-  - Shape Shifter live version:
-    https://alexjlockwood.github.io/ShapeShifter
+  - Shape Shifter landing page:
+    https://shapeshifter.design
 
   - Shape Shifter source code:
     https://github.com/alexjlockwood/ShapeShifter
 
-  - File a feature request:
+  - File a bug or feature request here:
     https://github.com/alexjlockwood/ShapeShifter/issues
 
   - Introduction to Icon Animations blog post:
