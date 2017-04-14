@@ -6,7 +6,7 @@ import { AbstractLayer } from './AbstractLayer';
  */
 export class ClipPathLayer extends AbstractLayer {
   constructor(
-    id: string,
+    readonly id: string,
     public pathData: Path,
   ) {
     super(undefined, id);

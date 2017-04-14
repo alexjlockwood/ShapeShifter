@@ -7,8 +7,8 @@ import { MathUtil } from '../common';
  */
 export class GroupLayer extends AbstractLayer {
   constructor(
-    children: Array<GroupLayer | ClipPathLayer | PathLayer>,
-    id: string,
+    readonly children: Array<GroupLayer | ClipPathLayer | PathLayer>,
+    readonly id: string,
     public pivotX = 0,
     public pivotY = 0,
     public rotation = 0,

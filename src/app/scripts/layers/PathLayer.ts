@@ -7,11 +7,11 @@ import { ColorUtil, MathUtil } from '../common';
  */
 export class PathLayer extends AbstractLayer {
   constructor(
-    id: string,
+    readonly id: string,
     public pathData: Path,
-    public fillColor: string = undefined,
+    public fillColor?: string,
     public fillAlpha = 1,
-    public strokeColor: string = undefined,
+    public strokeColor?: string,
     public strokeAlpha = 1,
     public strokeWidth = 0,
     public strokeLinecap = 'butt',

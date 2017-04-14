@@ -8,10 +8,10 @@ import { MathUtil } from '../common';
 export class VectorLayer extends AbstractLayer {
 
   constructor(
-    children: Array<GroupLayer | ClipPathLayer | PathLayer>,
-    id: string,
-    public width = 0,
-    public height = 0,
+    readonly children: Array<GroupLayer | ClipPathLayer | PathLayer>,
+    readonly id: string,
+    public width = 24,
+    public height = 24,
     public alpha = 1,
   ) {
     super(children || [], id);

@@ -115,14 +115,16 @@ export function loadVectorLayerFromSvgString(
             .value());
       }
 
+      // Set the default values as specified by the SVG spec. Note that some of these default
+      // values are different than the default values used by VectorDrawables.
       const fillColor =
-        ('fillColor' in context) ? ColorUtil.svgToAndroidColor(context.fillColor) : '#ff000000';
+        ('fillColor' in context) ? ColorUtil.svgToAndroidColor(context.fillColor) : '#000';
       const strokeColor =
         ('strokeColor' in context) ? ColorUtil.svgToAndroidColor(context.strokeColor) : undefined;
-      const fillAlpha = ('fillAlpha' in context) ? context.fillAlpha : 1;
-      const strokeWidth = ('strokeWidth' in context) ? context.strokeWidth : 1;
-      const strokeAlpha = ('strokeAlpha' in context) ? context.strokeAlpha : 1;
-      const strokeMiterLimit = ('strokeMiterLimit' in context) ? context.strokeMiterLimit : 4;
+      const fillAlpha = ('fillAlpha' in context) ? Number(context.fillAlpha) : 1;
+      const strokeWidth = ('strokeWidth' in context) ? Number(context.strokeWidth) : 1;
+      const strokeAlpha = ('strokeAlpha' in context) ? Number(context.strokeAlpha) : 1;
+      const strokeMiterLimit = ('strokeMiterLimit' in context) ? Number(context.strokeMiterLimit) : 4;
       const fillRuleToFillTypeFn = (fillRule: string) => {
         return fillRule === 'evenodd' ? 'evenOdd' : 'nonZero';
       };
@@ -131,13 +133,13 @@ export function loadVectorLayerFromSvgString(
         makeFinalNodeIdFn(node, 'path'),
         pathData,
         fillColor,
-        Number(fillAlpha),
+        fillAlpha,
         strokeColor,
-        Number(strokeAlpha),
-        Number(strokeWidth),
+        strokeAlpha,
+        strokeWidth,
         context.strokeLinecap || 'butt',
         context.strokeLinejoin || 'miter',
-        Number(strokeMiterLimit),
+        strokeMiterLimit,
         fillType,
       );
     }
@@ -159,8 +161,8 @@ export function loadVectorLayerFromSvgString(
 
   const docElContext: any = {};
   const documentElement: any = doc.documentElement;
-  let width = lengthPxFn(documentElement.width);
-  let height = lengthPxFn(documentElement.height);
+  let width = lengthPxFn(documentElement.width) || undefined;
+  let height = lengthPxFn(documentElement.height) || undefined;
 
   if (documentElement.viewBox
     && (!!documentElement.viewBox.baseVal.width
@@ -191,7 +193,8 @@ export function loadVectorLayerFromSvgString(
   return new VectorLayer(
     childrenLayers,
     id,
-    Number(width || 24),
-    Number(height || 24),
-    Number(alpha || 1));
+    width === undefined ? undefined : Number(width),
+    height === undefined ? undefined : Number(height),
+    alpha === undefined ? undefined : Number(alpha),
+  );
 }
