@@ -2,7 +2,6 @@ import * as _ from 'lodash';
 import {
   SubPath,
   Command,
-  Projection,
   ProjectionOntoPath,
   HitOptions,
   HitResult,

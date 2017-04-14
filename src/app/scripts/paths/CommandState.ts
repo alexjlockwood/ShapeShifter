@@ -41,6 +41,10 @@ export class CommandState {
     private readonly isParentSubPathSplitSegment_ = false,
   ) { }
 
+  getId() {
+    return this.backingCommand.getId();
+  }
+
   getCommands() {
     return this.commands;
   }

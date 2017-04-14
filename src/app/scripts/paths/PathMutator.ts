@@ -321,17 +321,28 @@ export class PathMutator {
     const startSplitPoint = startSplitCmd.getEnd();
     const endSplitCmd = secondLeft.getCommands()[end.splitIdx];
     const endSplitPoint = endSplitCmd.getEnd();
-    const startLine = new CommandState(
-      newCommand('L', [startSplitPoint, endSplitPoint]).mutate()
-        .setIsSubPathSplitSegment(true)
-        .build());
 
     // The last command in the second path shares an ID with the parent's second split location.
-    const endLine = new CommandState(
+    // Essentially we give the backing command an identical ID as the line below.
+    // However, we specify a new unique ID in its mutation list to ensure that it
+    // doesn't output a command with an identical ID as in the line below as well.
+    const endLineCmd =
       newCommand('L', [endSplitPoint, startSplitPoint]).mutate()
         .setId(endSplitCmd.getId())
         .setIsSubPathSplitSegment(true)
-        .build());
+        .build();
+    const endLineMutations = [{ id: _.uniqueId(), t: 1, svgChar: endLineCmd.getSvgChar() }];
+    const endLine = new CommandState(endLineCmd, [endLineCmd], endLineMutations);
+
+    // Give the start line's backing command the same ID as the end line so that we can
+    // later determine which split segments were added together.
+    const startLineCmd =
+      newCommand('L', [startSplitPoint, endSplitPoint]).mutate()
+        .setId(endSplitCmd.getId())
+        .setIsSubPathSplitSegment(true)
+        .build();
+    const startLineMutations = [{ id: _.uniqueId(), t: 1, svgChar: startLineCmd.getSvgChar() }];
+    const startLine = new CommandState(startLineCmd, [startLineCmd], startLineMutations);
 
     const startCommandStates: CommandState[] = [];
     for (let i = 0; i < css.length; i++) {
@@ -353,7 +364,9 @@ export class PathMutator {
           newCommand('M', [startSplitPoint, startSplitPoint]).mutate()
             .setId(startSplitCmd.getId())
             .build();
-        endCommandStates.push(new CommandState(moveCmd));
+        endCommandStates.push(
+          new CommandState(
+            moveCmd, [moveCmd], [{ id: _.uniqueId(), t: 1, svgChar: endLineCmd.getSvgChar() }]));
         if (firstRight) {
           endCommandStates.push(firstRight);
         }
@@ -450,9 +463,8 @@ export class PathMutator {
       secondSpsParentIdx = temp;
     }
     const secondSplitSubPath = parent.getSplitSubPaths()[secondSpsParentIdx];
-    const firstSplitCmdId = secondSplitSubPath.getCommandStates()[0].getCommands()[0].getId();
-    const secondSplitCmdId =
-      _.last(_.last(secondSplitSubPath.getCommandStates()).getCommands()).getId();
+    const firstSplitCmdId = secondSplitSubPath.getCommandStates()[0].getId();
+    const secondSplitCmdId = _.last(secondSplitSubPath.getCommandStates()).getId();
     const splitCmdIds = [firstSplitCmdId, secondSplitCmdId];
     let updatedSplitSubPaths: SubPathState[] = [];
     if (parent.getSplitSubPaths().length > 2) {
