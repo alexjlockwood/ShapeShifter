@@ -42,6 +42,8 @@ export class CanvasSelector {
     if (hitResult.isSegmentHit) {
       for (const hit of hitResult.segmentHits) {
         const { subIdx, cmdIdx } = hit;
+        this.hoverService.reset();
+        this.selectionService.reset();
         this.component.stateService.updateActivePath(
           this.canvasType, this.component.activePath.mutate().removeSubPathSplitSegment(subIdx, cmdIdx).build());
         return;
