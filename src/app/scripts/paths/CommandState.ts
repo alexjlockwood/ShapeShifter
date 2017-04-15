@@ -11,6 +11,8 @@ export class CommandState {
   constructor(
     // The original un-mutated command.
     private readonly backingCommand: Command,
+    // An id that is used when unsplitting a split segment.
+    private readonly splitSegmentId = '',
     // A command state object wraps around the initial SVG command and outputs
     // a list of transformed commands resulting from splits, unsplits,
     // conversions, etc. If the initial SVG command hasn't been modified,
@@ -127,9 +129,14 @@ export class CommandState {
     return this.isParentSubPathSplitSegment_;
   }
 
+  getSplitSegmentId() {
+    return this.splitSegmentId;
+  }
+
   mutate() {
     return new CommandStateMutator(
       this.backingCommand,
+      this.splitSegmentId,
       this.mutations.slice(),
       this.transforms.slice(),
       this.calculator,
@@ -154,6 +161,7 @@ class CommandStateMutator {
 
   constructor(
     private backingCommand: Command,
+    private splitSegmentId: string,
     private mutations: Mutation[],
     private transforms: Matrix[],
     private calculator: Calculator,
@@ -373,6 +381,7 @@ class CommandStateMutator {
     }
     return new CommandState(
       this.backingCommand,
+      this.splitSegmentId,
       builtCommands,
       this.mutations,
       this.transforms,
