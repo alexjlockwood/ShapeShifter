@@ -13,10 +13,7 @@ ${svgText}
 `;
 }
 
-export function createCss(svgTargets: SvgTarget[]) {
-  // We assume here that the same duration and interpolator will be used for all targets.
-  const duration = svgTargets[0].animations[0].duration;
-  const interpolator = svgTargets[0].animations[0].interpolator;
+export function createCss(svgTargets: SvgTarget[], duration: number, interpolator: string) {
   const animations = svgTargets.map(target => createCssAnimation(target.layerId, duration, interpolator));
   const keyframes = svgTargets.map(target => svgTargetToCssKeyframes(target.layerId, target));
   return `
@@ -45,13 +42,13 @@ function svgTargetToCssKeyframes(layerId: string, svgTarget: SvgTarget) {
     toProps.push(`${anim.propertyName}: ${valueTo}`);
   }
   return `
-    @keyframes ${layerId}_animation {
-      from {
-        ${fromProps.join(';\n      ')}
-      }
-      to {
-        ${toProps.join(';\n      ')}
-      }
-    }`;
+@keyframes ${layerId}_animation {
+  from {
+    ${fromProps.join(';\n      ')}
+  }
+  to {
+    ${toProps.join(';\n      ')}
+  }
+}`;
 }
 

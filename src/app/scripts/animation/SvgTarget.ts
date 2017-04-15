@@ -4,6 +4,7 @@
 export type SvgPropertyName =
   'd'
   | 'transform'
+  | 'transform-origin'
   | 'fill'
   | 'stroke'
   | 'fill-opacity'

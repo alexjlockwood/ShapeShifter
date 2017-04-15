@@ -36,10 +36,11 @@ export function vectorLayerToSvgString(
 function vectorLayerToSvgNode(vl: VectorLayer, destinationNode: HTMLElement, xmlDoc: Document) {
   destinationNode.setAttributeNS(XMLNS_NS, 'xmlns', SVG_NS);
   destinationNode.setAttributeNS(null, 'viewBox', `0 0 ${vl.width} ${vl.height}`);
-  conditionalAttr(destinationNode, 'opacity', vl.alpha, 1);
 
   walk(vl, (layer, parentNode) => {
     if (layer instanceof VectorLayer) {
+      conditionalAttr(destinationNode, 'id', vl.id, '');
+      conditionalAttr(destinationNode, 'opacity', vl.alpha, 1);
       return parentNode;
 
     } else if (layer instanceof PathLayer) {

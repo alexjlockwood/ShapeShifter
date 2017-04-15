@@ -1,7 +1,6 @@
 import * as JSZip from 'jszip';
 import * as $ from 'jquery';
 import * as KeyframesSerializer from './KeyframesSerializer';
-import * as JsSerializer from './JsSerializer';
 import * as SpriteSerializer from './SpriteSerializer';
 import { environment } from '../../../environments/environment';
 import { StateService } from '../../services';
@@ -14,9 +13,7 @@ import {
   SvgTarget, SvgAnimation, SvgPropertyName, Interpolator,
 } from '../animation';
 
-// TODO: release this when it is ready and tested
 const SHOULD_EXPORT_CSS_KEYFRAMES = !environment.production && true;
-const SHOULD_EXPORT_JS_SCRIPT = !environment.production && false;
 const SHOULD_EXPORT_SVG_SPRITE = !environment.production && true;
 
 export function generateZip(
@@ -97,7 +94,7 @@ export function generateZip(
       startVl,
       endVl,
       duration,
-      'ease-in-out');
+      interpolator.webRef);
   if (opacitySvgTarget) {
     svgTargets.push(opacitySvgTarget);
   }
@@ -108,7 +105,7 @@ export function generateZip(
       startGl,
       endGl,
       duration,
-      'ease-in-out');
+      interpolator.webRef);
   if (rotationSvgTarget) {
     svgTargets.push(rotationSvgTarget);
   }
@@ -119,7 +116,7 @@ export function generateZip(
       startPl,
       endPl,
       duration,
-      'ease-in-out'));
+      interpolator.webRef));
 
   // Create compatible SVGs (note that we intentionally don't run SVGO on these).
   const startSvg = SvgSerializer.vectorLayerToSvgString(startOutVl, startOutVl.width, startOutVl.height);
@@ -142,12 +139,7 @@ export function generateZip(
     // Create a CSS keyframe animation.
     const keyframes = web.folder('keyframes');
     keyframes.file('keyframes.html', KeyframesSerializer.createHtml(startSvg, 'keyframes.css'));
-    keyframes.file('keyframes.css', KeyframesSerializer.createCss(svgTargets));
-  }
-  if (SHOULD_EXPORT_JS_SCRIPT) {
-    // Create JS animation loop HTML file.
-    const jsLoopHtml = JsSerializer.svgAnimationToScript(startSvg, svgTargets);
-    web.folder('js').file('animation.html', jsLoopHtml);
+    keyframes.file('keyframes.css', KeyframesSerializer.createCss(svgTargets, duration, interpolator.webRef));
   }
   if (SHOULD_EXPORT_SVG_SPRITE) {
     // Create an svg sprite animation.
@@ -279,15 +271,25 @@ function createRotationSvgTarget(
   if (!startLayer || !endLayer || startLayer.rotation === endLayer.rotation) {
     return undefined;
   }
-  const fromValue = startLayer.rotation;
-  const toValue = endLayer.rotation;
-  return new SvgTarget(startLayer.id,
-    [new SvgAnimation(
-      `rotate(${fromValue.toString()})`,
-      `rotate(${toValue.toString()})`,
+  // TODO: pivotX/pivotY can technically be animatable... although ShapeShifter
+  // currently doesn't make it possible.
+  const svgAnimations: SvgAnimation[] = [];
+  svgAnimations.push(
+    new SvgAnimation(
+      `rotate(${startLayer.rotation}deg)`,
+      `rotate(${endLayer.rotation}deg)`,
       duration,
       interpolator,
-      'transform')]);
+      'transform'));
+  // TODO: check to see if this animates properly if/when we ever support animating pivot points
+  svgAnimations.push(
+    new SvgAnimation(
+      `${startLayer.pivotX}px ${startLayer.pivotY}px`,
+      `${endLayer.pivotX}px ${endLayer.pivotY}px`,
+      duration,
+      interpolator,
+      'transform-origin'));
+  return new SvgTarget(startLayer.id, svgAnimations);
 }
 
 function createPathSvgTarget(
