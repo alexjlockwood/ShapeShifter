@@ -286,26 +286,30 @@ export class PathMutator {
    * Splitting the filled sub path with startCmdIdx=1 and endCmdIdx=4
    * results in the following split subpaths:
    *
-   * *-------------------*    1-------->>>--------2
-   * |                   |    |                   |
-   * |                   |    ↑                   ↓
-   * |                   |    |                   |
+   * xxxxxxxxxxxxxxxxxxxxx    1-------->>>--------2
+   * x                   x    |                   |
+   * x                   x    ↑                   ↓
+   * x                   x    |                   |
    * 1-------->>>--------2    0--------<<<--------3
-   * |                   |    |                   |
-   * ↑                   ↓    |                   |
-   * |                   |    |                   |
-   * 0--------<<<--------3    *-------------------*
+   * |                   |    x                   x
+   * ↑                   ↓    x                   x
+   * |                   |    x                   x
+   * 0--------<<<--------3    xxxxxxxxxxxxxxxxxxxxx
    *
    */
   splitFilledSubPath(subIdx: number, startCmdIdx: number, endCmdIdx: number) {
     const spsIdx = this.subPathOrdering[subIdx];
     const sps = this.findSubPathState(spsIdx);
-    const css = shiftAndReverseCommandStates(sps.getCommandStates(), sps.isReversed(), sps.getShiftOffset());
+    const css =
+      shiftAndReverseCommandStates(
+        sps.getCommandStates(),
+        sps.isReversed(),
+        sps.getShiftOffset());
     let start = this.findInternalIndices(css, startCmdIdx);
     let end = this.findInternalIndices(css, endCmdIdx);
 
-    if (start.csIdx > end.csIdx
-      || (start.csIdx === end.csIdx && start.splitIdx > end.csIdx)) {
+    // Make sure the start index appears before the end index in the path.
+    if (start.csIdx > end.csIdx || (start.csIdx === end.csIdx && start.splitIdx > end.csIdx)) {
       const temp = start;
       start = end;
       end = temp;
@@ -322,23 +326,33 @@ export class PathMutator {
     const endSplitCmd = secondLeft.getCommands()[end.splitIdx];
     const endSplitPoint = endSplitCmd.getEnd();
 
-    // The last command in the second path shares an ID with the parent's second split location.
-    // Essentially we give the backing command an identical ID as the line below.
-    // However, we specify a new unique ID in its mutation list to ensure that it
-    // doesn't output a command with an identical ID as in the line below as well.
+    // TODO: write comment!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // TODO: write comment!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // TODO: write comment!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // TODO: write comment!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // TODO: write comment!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     const endLineCmd =
       newCommand('L', [endSplitPoint, startSplitPoint]).mutate()
         .setIsSubPathSplitSegment(true)
         .build();
-    const endLine = new CommandState(endLineCmd, endSplitCmd.getId());
+    const endLine =
+      new CommandState(endLineCmd).mutate()
+        .setSplitCommandId(endSplitCmd.getId())
+        .build();
 
-    // Give the start line's backing command the same ID as the end line so that we can
-    // later determine which split segments were added together.
+    // TODO: write comment!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // TODO: write comment!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // TODO: write comment!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // TODO: write comment!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // TODO: write comment!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     const startLineCmd =
       newCommand('L', [startSplitPoint, endSplitPoint]).mutate()
         .setIsSubPathSplitSegment(true)
         .build();
-    const startLine = new CommandState(startLineCmd, endSplitCmd.getId());
+    const startLine =
+      new CommandState(startLineCmd).mutate()
+        .setSplitCommandId(endSplitCmd.getId())
+        .build();
 
     const startCommandStates: CommandState[] = [];
     for (let i = 0; i < css.length; i++) {
@@ -357,7 +371,10 @@ export class PathMutator {
       if (i === start.csIdx) {
         // The first move command shares an ID with the parent's first split location.
         const moveCmd = newCommand('M', [startSplitPoint, startSplitPoint]);
-        endCommandStates.push(new CommandState(moveCmd, startSplitCmd.getId()));
+        endCommandStates.push(
+          new CommandState(moveCmd).mutate()
+            .setSplitCommandId(startSplitCmd.getId())
+            .build());
         if (firstRight) {
           endCommandStates.push(firstRight);
         }
@@ -369,19 +386,38 @@ export class PathMutator {
       }
     }
 
-    const splitSubPaths = [
-      // TODO: should/could one of these sub paths share the same ID as the parent?
-      new SubPathState(startCommandStates),
-      new SubPathState(endCommandStates),
-    ];
+    const splitBackingCommandIds = [css[start.csIdx].getId(), css[end.csIdx].getId()];
+    const newStates: SubPathState[] = [];
+    if (this.subPathStateMap.indexOf(sps) >= 0
+      || splitBackingCommandIds.every(id => sps.getSplitBackingCommandIds().indexOf(id) < 0)) {
+      console.info('add new level', splitBackingCommandIds, sps, sps.getSplitBackingCommandIds());
+      const startSplitSubPath =
+        new SubPathState(startCommandStates).mutate()
+          .setSplitBackingCommandIds(splitBackingCommandIds)
+          .build();
+      const endSplitSubPath =
+        new SubPathState(endCommandStates).mutate()
+          .setSplitBackingCommandIds(splitBackingCommandIds)
+          .build();
+      newStates.push(
+        sps.mutate()
+          .setSplitSubPaths([startSplitSubPath, endSplitSubPath])
+          .build());
+    } else {
+      console.info('add to existing level', splitBackingCommandIds, sps, sps.getSplitBackingCommandIds());
+      const startSplitSubPath =
+        new SubPathState(startCommandStates).mutate()
+          .setSplitBackingCommandIds(splitBackingCommandIds)
+          .build();
+      const endSplitSubPath =
+        new SubPathState(endCommandStates).mutate()
+          .setSplitBackingCommandIds(splitBackingCommandIds)
+          .build();
+      newStates.push(startSplitSubPath);
+      newStates.push(endSplitSubPath);
+    }
 
-    this.insertSubPathState(sps.mutate().setSplitSubPaths(splitSubPaths).build(), spsIdx);
-    this.subPathOrdering.push(this.subPathOrdering.length);
-    return this;
-  }
-
-  private insertSubPathState(newState: SubPathState, spsIdx: number) {
-    const target = findSubPathState(this.subPathStateMap, spsIdx);
+    // Insert the new SubPathStates into the tree.
     this.subPathStateMap = (function replaceParentFn(states: SubPathState[]) {
       if (states.length === 0) {
         // Return undefined to signal that the parent was not found.
@@ -389,8 +425,8 @@ export class PathMutator {
       }
       for (let i = 0; i < states.length; i++) {
         const currentState = states[i];
-        if (currentState === target) {
-          states.splice(i, 1, newState);
+        if (currentState === sps) {
+          states.splice(i, 1, ...newStates);
           return states;
         }
         const recurseStates = replaceParentFn(currentState.getSplitSubPaths().slice());
@@ -405,6 +441,9 @@ export class PathMutator {
       // Return undefined to signal that the parent was not found.
       return undefined;
     })(this.subPathStateMap.slice());
+
+    this.subPathOrdering.push(this.subPathOrdering.length);
+    return this;
   }
 
   /**
@@ -454,13 +493,16 @@ export class PathMutator {
       secondSpsParentIdx = temp;
     }
     const secondSplitSubPath = parent.getSplitSubPaths()[secondSpsParentIdx];
-    const firstSplitCmdId = secondSplitSubPath.getCommandStates()[0].getSplitSegmentId();
-    const secondSplitCmdId = _.last(secondSplitSubPath.getCommandStates()).getSplitSegmentId();
+    const firstSplitCmdId = secondSplitSubPath.getCommandStates()[0].getSplitCommandId();
+    const secondSplitCmdId = _.last(secondSplitSubPath.getCommandStates()).getSplitCommandId();
     const splitCmdIds = [firstSplitCmdId, secondSplitCmdId];
     let updatedSplitSubPaths: SubPathState[] = [];
     if (parent.getSplitSubPaths().length > 2) {
       const splits = parent.getSplitSubPaths().slice();
-      splits.slice(firstSpsParentIdx + 1, 1);
+      // TODO: this method could potentially work. we just need to somehow replace
+      // the deleted subpath with the unsplit equivalent. right now replacing the subpath
+      // like this causes certain parts of the path to become deleted forever
+      splits.splice(Math.min(1, firstSpsParentIdx), 1);
       updatedSplitSubPaths = splits;
     }
     this.replaceParentAfterUnsplitSubPath(
@@ -472,6 +514,8 @@ export class PathMutator {
     subIdx: number,
     updatedParentSplitSubPaths: SubPathState[],
     ...splitCmdIds: string[]) {
+    console.info(
+      'replaceParentAfterUnsplitSubPath', subIdx, updatedParentSplitSubPaths, splitCmdIds);
 
     const spsIdx = this.subPathOrdering[subIdx];
     const parent = findSubPathStateParent(this.subPathStateMap, spsIdx);
@@ -486,7 +530,9 @@ export class PathMutator {
           break;
         }
       }
-      if (parent.getCommandStates()[csIdx].isSplitAtIndex(splitIdx)) {
+      console.info(parent.getCommandStates());
+      if (csIdx < parent.getCommandStates().length
+        && parent.getCommandStates()[csIdx].isSplitAtIndex(splitIdx)) {
         // Delete the split point that created the sub path.
         const unsplitCs =
           parent.getCommandStates()[csIdx].mutate().unsplitAtIndex(splitIdx).build();

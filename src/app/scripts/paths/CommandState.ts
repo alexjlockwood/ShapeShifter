@@ -11,8 +11,6 @@ export class CommandState {
   constructor(
     // The original un-mutated command.
     private readonly backingCommand: Command,
-    // An id that is used when unsplitting a split segment.
-    private readonly splitSegmentId = '',
     // A command state object wraps around the initial SVG command and outputs
     // a list of transformed commands resulting from splits, unsplits,
     // conversions, etc. If the initial SVG command hasn't been modified,
@@ -41,6 +39,7 @@ export class CommandState {
     // Indicates whether the command state's parent (if one exists) was a subpath
     // split segment.
     private readonly isParentSubPathSplitSegment_ = false,
+    private readonly splitCommandId = '',
   ) { }
 
   getId() {
@@ -129,14 +128,13 @@ export class CommandState {
     return this.isParentSubPathSplitSegment_;
   }
 
-  getSplitSegmentId() {
-    return this.splitSegmentId;
+  getSplitCommandId() {
+    return this.splitCommandId;
   }
 
   mutate() {
     return new CommandStateMutator(
       this.backingCommand,
-      this.splitSegmentId,
       this.mutations.slice(),
       this.transforms.slice(),
       this.calculator,
@@ -144,6 +142,7 @@ export class CommandState {
       this.maxT,
       this.isSubPathSplitSegment_,
       this.isParentSubPathSplitSegment_,
+      this.splitCommandId,
     );
   }
 }
@@ -161,7 +160,6 @@ class CommandStateMutator {
 
   constructor(
     private backingCommand: Command,
-    private splitSegmentId: string,
     private mutations: Mutation[],
     private transforms: Matrix[],
     private calculator: Calculator,
@@ -169,6 +167,7 @@ class CommandStateMutator {
     private maxT: number,
     private isSubPathSplitSegment_: boolean,
     private isParentSubPathSplitSegment_: boolean,
+    private splitCommandId: string,
   ) { }
 
   /**
@@ -190,6 +189,11 @@ class CommandStateMutator {
     this.minT = this.mutations[splitIdx].t;
     this.mutations = this.mutations.slice(splitIdx + 1).map(m => _.clone(m));
     this.isParentSubPathSplitSegment_ = this.isSubPathSplitSegment_;
+    return this;
+  }
+
+  setSplitCommandId(id: string) {
+    this.splitCommandId = id;
     return this;
   }
 
@@ -381,7 +385,6 @@ class CommandStateMutator {
     }
     return new CommandState(
       this.backingCommand,
-      this.splitSegmentId,
       builtCommands,
       this.mutations,
       this.transforms,
@@ -390,6 +393,7 @@ class CommandStateMutator {
       this.maxT,
       this.isSubPathSplitSegment_,
       this.isParentSubPathSplitSegment_,
+      this.splitCommandId,
     );
   }
 }

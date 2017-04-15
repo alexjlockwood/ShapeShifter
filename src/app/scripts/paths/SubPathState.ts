@@ -5,6 +5,9 @@ import { CommandState } from './CommandState';
  * Container class that encapsulates a SubPath's underlying state.
  */
 export class SubPathState {
+  private readonly backingCommandIds: ReadonlyArray<string>;
+  private readonly splitCommandIds: ReadonlyArray<string>;
+  private readonly commandIds: ReadonlyArray<string>;
 
   constructor(
     private readonly commandStates: ReadonlyArray<CommandState>,
@@ -14,7 +17,16 @@ export class SubPathState {
     // Either empty if this sub path is not split, or an array
     // containing this sub path's split children.
     private readonly splitSubPaths: ReadonlyArray<SubPathState> = [],
-  ) { }
+    private readonly splitBackingCommandIds: ReadonlyArray<string> = [],
+  ) {
+    this.backingCommandIds = commandStates.map(cs => cs.getId());
+    this.splitCommandIds = commandStates.map(cs => cs.getSplitCommandId());
+    this.commandIds = commandStates.map(cs => cs.getCommands().map(c => c.getId()).join(' '));
+  }
+
+  getSplitBackingCommandIds() {
+    return this.splitBackingCommandIds;
+  }
 
   getId() {
     return this.id;
@@ -51,6 +63,7 @@ export class SubPathState {
       this.shiftOffset,
       this.id,
       this.splitSubPaths.slice(),
+      this.splitBackingCommandIds.slice(),
     );
   }
 }
@@ -66,7 +79,13 @@ class SubPathStateMutator {
     private shiftOffset: number,
     private id: string,
     private splitSubPaths: ReadonlyArray<SubPathState>,
+    private splitBackingCommandIds: ReadonlyArray<string>,
   ) { }
+
+  setSplitBackingCommandIds(ids: string[]) {
+    this.splitBackingCommandIds = ids.slice();
+    return this;
+  }
 
   setCommandStates(commandStates: CommandState[]) {
     this.commandStates = commandStates.slice();
@@ -110,6 +129,7 @@ class SubPathStateMutator {
     this.isReversed = false;
     this.shiftOffset = 0;
     this.splitSubPaths = [];
+    this.splitBackingCommandIds = [];
     return this;
   }
 
@@ -120,6 +140,7 @@ class SubPathStateMutator {
       this.shiftOffset,
       this.id,
       this.splitSubPaths,
+      this.splitBackingCommandIds,
     );
   }
 }

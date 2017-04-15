@@ -1040,6 +1040,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     event.cancelBubble = true;
 
     if (this.activePathId) {
+      console.info(this.activePath);
       return;
     }
     this.filePickerService.showFilePicker(this.canvasType);
