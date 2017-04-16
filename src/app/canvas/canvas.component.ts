@@ -1041,6 +1041,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
     if (this.activePathId) {
       console.info(this.activePath);
+      const points = _.flatten(this.activePath.getCommands().map(c => c.getPoints().slice()));
+      console.info(points);
       return;
     }
     this.filePickerService.showFilePicker(this.canvasType);

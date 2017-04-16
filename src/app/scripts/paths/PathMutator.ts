@@ -404,7 +404,6 @@ export class PathMutator {
           .setSplitSubPaths([startSplitSubPath, endSplitSubPath])
           .build());
     } else {
-      console.info('add to existing level', splitBackingCommandIds, sps, sps.getSplitBackingCommandIds());
       const startSplitSubPath =
         new SubPathState(startCommandStates).mutate()
           .setSplitBackingCommandIds(splitBackingCommandIds)
@@ -499,10 +498,70 @@ export class PathMutator {
     let updatedSplitSubPaths: SubPathState[] = [];
     if (parent.getSplitSubPaths().length > 2) {
       const splits = parent.getSplitSubPaths().slice();
-      // TODO: this method could potentially work. we just need to somehow replace
-      // the deleted subpath with the unsplit equivalent. right now replacing the subpath
-      // like this causes certain parts of the path to become deleted forever
-      splits.splice(Math.min(1, firstSpsParentIdx), 1);
+      const firstSplitSps = splits[firstSpsParentIdx];
+      const secondSplitSps = splits[firstSpsParentIdx + 1];
+      const firstParentBackingCommand =
+        _.find(parent.getCommandStates(),
+          cs => firstSplitSps.getSplitBackingCommandIds()[0] === cs.getId());
+      const secondParentBackingCommand =
+        _.find(parent.getCommandStates(),
+          cs => firstSplitSps.getSplitBackingCommandIds()[1] === cs.getId());
+      const firstSplitCss = firstSplitSps.getCommandStates();
+      const secondSplitCss = secondSplitSps.getCommandStates();
+
+      const newCss: CommandState[] = [];
+      let cs: CommandState;
+      let i = 0;
+      for (; i < firstSplitCss.length; i++) {
+        cs = firstSplitCss[i];
+        if (cs.getId() === firstParentBackingCommand.getId()) {
+          break;
+        }
+        newCss.push(cs);
+        console.info(newCss.slice());
+      }
+      const firstParentBackingCommandIdx = i;
+      if (cs.getId() === secondSplitCss[1].getId()) {
+        newCss.push(secondSplitCss[1].mergePrevious(cs));
+        console.info(newCss.slice());
+      } else {
+        newCss.push(cs);
+        console.info(newCss.slice());
+        newCss.push(secondSplitCss[1]);
+        console.info(newCss.slice());
+      }
+      for (i = 2; i < secondSplitCss.length; i++) {
+        cs = secondSplitCss[i];
+        if (cs.getId() === secondParentBackingCommand.getId()) {
+          break;
+        }
+        newCss.push(cs);
+        console.info(newCss.slice());
+      }
+      i = _.findIndex(firstSplitCss, c => c.getId() === secondParentBackingCommand.getId());
+      if (i >= 0) {
+        newCss.push(
+          firstSplitCss[i].mergePrevious(cs).mutate()
+            .setIsSubPathSplitSegment(secondParentBackingCommand.isSubPathSplitSegment())
+            .build());
+        console.info(newCss.slice());
+      } else {
+        console.info('firstSplitCss', firstSplitCss);
+        console.info('newCss', newCss.slice());
+        i = firstParentBackingCommandIdx + 1;
+        // i = _.findLastIndex(
+        //   firstSplitCss, c => c.getSplitCommandId() === _.last(secondSplitCss).getId());
+        console.info(i);
+        newCss.push(
+          cs.mutate()
+            .setIsSubPathSplitSegment(secondParentBackingCommand.isSubPathSplitSegment())
+            .build());
+      }
+      for (i = i + 1; i < firstSplitCss.length; i++) {
+        newCss.push(firstSplitCss[i]);
+        console.info(newCss.slice());
+      }
+      splits.splice(firstSpsParentIdx, 2, new SubPathState(newCss.slice()));
       updatedSplitSubPaths = splits;
     }
     this.replaceParentAfterUnsplitSubPath(
@@ -530,7 +589,6 @@ export class PathMutator {
           break;
         }
       }
-      console.info(parent.getCommandStates());
       if (csIdx < parent.getCommandStates().length
         && parent.getCommandStates()[csIdx].isSplitAtIndex(splitIdx)) {
         // Delete the split point that created the sub path.
@@ -541,6 +599,7 @@ export class PathMutator {
     }
     this.subPathStateMap =
       replaceSubPathStateParent(this.subPathStateMap, spsIdx, mutator.build());
+    console.info(this.subPathStateMap);
     this.updateOrderingAfterUnsplitSubPath(subIdx);
   }
 
