@@ -63,10 +63,10 @@ const ANIMALS_SVGS = [`
 
 const PLAY_PAUSE_SVGS = [`
 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-  <path d="M 1 1 L 1 11 L 11 11 L 11 1 L 1 1"/>
+  <path d="M 4 4 h 16 v 16 h -16 v -16"/>
 </svg>`, `
 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-  <path d="M 4 4 v 16 h 16 v-16 h-16"/>
+  <path d="M 4 4 h 16 v 16 h -16 v -16"/>
 </svg>`];
 
 // Note that the titles are currently used as Google Analytics tracking labels.

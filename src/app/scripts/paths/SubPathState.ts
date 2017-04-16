@@ -19,8 +19,8 @@ export class SubPathState {
     private readonly splitSubPaths: ReadonlyArray<SubPathState> = [],
     private readonly splitBackingCommandIds: ReadonlyArray<string> = [],
   ) {
-    this.backingCommandIds = commandStates.map(cs => cs.getId());
-    this.splitCommandIds = commandStates.map(cs => cs.getSplitCommandId());
+    this.backingCommandIds = commandStates.map(cs => cs.getBackingCommandId());
+    this.splitCommandIds = commandStates.map(cs => cs.getSplitSegmentId());
     this.commandIds = commandStates.map(cs => cs.getCommands().map(c => c.getId()).join(' '));
   }
 

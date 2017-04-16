@@ -35,11 +35,15 @@ export class CommandState {
     private readonly maxT = 1,
     // Indicates whether the command state marks the beginning/end of a subpath split.
     // In other words, this is true iff the segment was cut using the subpath splitter.
+    // TODO: can this be inferred by the existence of split/source command id below?
     private readonly isSplitSegment_ = backingCommand.isSplitSegment(),
-    private readonly splitCommandId = '',
+    // When a filled subpath is split, we assign a 'split command id' to the two
+    // lines that are created (so that during unsplit operations we can identify
+    // which segments were added together).
+    private readonly splitSegmentId = '',
   ) { }
 
-  getId() {
+  getBackingCommandId() {
     return this.backingCommand.getId();
   }
 
@@ -106,7 +110,7 @@ export class CommandState {
    * Merges two previously sliced command state objects into one.
    */
   merge(cs: CommandState) {
-    if (this.getId() !== cs.getId()) {
+    if (this.getBackingCommandId() !== cs.getBackingCommandId()) {
       throw new Error('Attempt to merge command state objects with unequal backing IDs');
     }
     if (this.minT < cs.minT) {
@@ -133,8 +137,8 @@ export class CommandState {
     return this.isSplitSegment_;
   }
 
-  getSplitCommandId() {
-    return this.splitCommandId;
+  getSplitSegmentId() {
+    return this.splitSegmentId;
   }
 
   mutate() {
@@ -146,7 +150,7 @@ export class CommandState {
       this.minT,
       this.maxT,
       this.isSplitSegment_,
-      this.splitCommandId,
+      this.splitSegmentId,
     );
   }
 }
@@ -203,7 +207,7 @@ class CommandStateMutator {
     return this;
   }
 
-  setSplitCommandId(id: string) {
+  setSplitSegmentId(id: string) {
     this.splitSegmentId = id;
     return this;
   }

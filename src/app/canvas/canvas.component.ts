@@ -1034,10 +1034,29 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
   }
 
+  private x = true;
   onClick(event: MouseEvent) {
     // TODO: is this hacky? should we be using onBlur() to reset the app mode?
     // This ensures that parents won't also receive the same click event.
     event.cancelBubble = true;
+
+    if (!this.x) {
+      this.hoverService.reset();
+      this.selectionService.reset();
+      this.stateService.updateActivePath(this.canvasType,
+        this.activePath.mutate()
+          .splitCommand(0, 3, 0.5)
+          .splitCommand(0, 1, 0.5)
+          .splitFilledSubPath(0, 1, 4)
+          .splitCommand(1, 4, 5 / 8)
+          .splitCommand(1, 1, 3 / 4)
+          .splitFilledSubPath(1, 1, 5)
+          .splitCommand(1, 3, 0.5)
+          .splitCommand(1, 2, 0.5)
+          .splitFilledSubPath(1, 2, 4)
+          .build());
+      this.x = !this.x;
+    }
 
     if (this.activePathId) {
       console.info(this.activePath);

@@ -345,7 +345,7 @@ export class PathMutator {
         .build();
     const endLine =
       new CommandState(endLineCmd).mutate()
-        .setSplitCommandId(endSplitCmd.getId())
+        .setSplitSegmentId(endSplitCmd.getId())
         .build();
 
     // TODO: write comment!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -359,7 +359,7 @@ export class PathMutator {
         .build();
     const startLine =
       new CommandState(startLineCmd).mutate()
-        .setSplitCommandId(endSplitCmd.getId())
+        .setSplitSegmentId(endSplitCmd.getId())
         .build();
 
     // TODO: mutiple split segments can still have the same source segment id...
@@ -384,7 +384,7 @@ export class PathMutator {
         const moveCmd = newCommand('M', [startSplitPoint, startSplitPoint]);
         endCommandStates.push(
           new CommandState(moveCmd).mutate()
-            .setSplitCommandId(startSplitCmd.getId())
+            .setSplitSegmentId(startSplitCmd.getId())
             .build());
         if (firstRight) {
           endCommandStates.push(firstRight);
@@ -397,7 +397,7 @@ export class PathMutator {
       }
     }
 
-    const splitBackingCommandIds = [targetCss[startCsIdx].getId(), targetCss[endCsIdx].getId()];
+    const splitBackingCommandIds = [targetCss[startCsIdx].getBackingCommandId(), targetCss[endCsIdx].getBackingCommandId()];
     const newStates: SubPathState[] = [];
     if (this.subPathStateMap.indexOf(targetSps) >= 0
       || splitBackingCommandIds.every(id => targetSps.getSplitBackingCommandIds().indexOf(id) < 0)) {
@@ -505,11 +505,11 @@ export class PathMutator {
     const { targetCs } =
       this.findReversedAndShiftedInternalIndices(subIdx, cmdIdx);
 
-    const splitCommandId = targetCs.getSplitCommandId();
+    const splitCommandId = targetCs.getSplitSegmentId();
     const findSpsParentFn = (states: ReadonlyArray<SubPathState>): SubPathState => {
       for (const state of states) {
         for (const sps of state.getSplitSubPaths()) {
-          if (sps.getCommandStates().some(cs => cs.getSplitCommandId() === splitCommandId)) {
+          if (sps.getCommandStates().some(cs => cs.getSplitSegmentId() === splitCommandId)) {
             return state;
           }
           const parent = findSpsParentFn([sps]);
@@ -522,7 +522,7 @@ export class PathMutator {
     };
     const parent = findSpsParentFn(this.subPathStateMap);
     const firstSpsIdx = _.findIndex(parent.getSplitSubPaths(), sps => {
-      return sps.getCommandStates().some(cs => cs.getSplitCommandId() === splitCommandId);
+      return sps.getCommandStates().some(cs => cs.getSplitSegmentId() === splitCommandId);
     });
     const firstSps = parent.getSplitSubPaths()[firstSpsIdx];
     const secondSps = parent.getSplitSubPaths()[firstSpsIdx + 1];
@@ -543,8 +543,8 @@ export class PathMutator {
       secondSpsParentIdx = temp;
     }
     const secondSplitSubPath = parent.getSplitSubPaths()[secondSpsParentIdx];
-    const firstSplitCmdId = secondSplitSubPath.getCommandStates()[0].getSplitCommandId();
-    const secondSplitCmdId = _.last(secondSplitSubPath.getCommandStates()).getSplitCommandId();
+    const firstSplitCmdId = secondSplitSubPath.getCommandStates()[0].getSplitSegmentId();
+    const secondSplitCmdId = _.last(secondSplitSubPath.getCommandStates()).getSplitSegmentId();
     const splitCmdIds = [firstSplitCmdId, secondSplitCmdId];
     let updatedSplitSubPaths: SubPathState[] = [];
     const splits = parent.getSplitSubPaths().slice();
@@ -560,10 +560,10 @@ export class PathMutator {
     if (parent.getSplitSubPaths().length > 2) {
       const firstParentBackingCommand =
         _.find(parent.getCommandStates(),
-          cs => firstSplitSps.getSplitBackingCommandIds()[0] === cs.getId());
+          cs => firstSplitSps.getSplitBackingCommandIds()[0] === cs.getBackingCommandId());
       const secondParentBackingCommand =
         _.find(parent.getCommandStates(),
-          cs => firstSplitSps.getSplitBackingCommandIds()[1] === cs.getId());
+          cs => firstSplitSps.getSplitBackingCommandIds()[1] === cs.getBackingCommandId());
       const firstSplitCss = firstSplitSps.getCommandStates();
       const secondSplitCss = secondSplitSps.getCommandStates();
 
@@ -572,13 +572,13 @@ export class PathMutator {
       let i = 0;
       for (; i < firstSplitCss.length; i++) {
         cs = firstSplitCss[i];
-        if (cs.getId() === firstParentBackingCommand.getId()) {
+        if (cs.getBackingCommandId() === firstParentBackingCommand.getBackingCommandId()) {
           break;
         }
         newCss.push(cs);
       }
       const firstParentBackingCommandIdx = i;
-      if (cs.getId() === secondSplitCss[1].getId()) {
+      if (cs.getBackingCommandId() === secondSplitCss[1].getBackingCommandId()) {
         newCss.push(secondSplitCss[1].merge(cs));
       } else {
         newCss.push(cs);
@@ -586,12 +586,12 @@ export class PathMutator {
       }
       for (i = 2; i < secondSplitCss.length; i++) {
         cs = secondSplitCss[i];
-        if (cs.getId() === secondParentBackingCommand.getId()) {
+        if (cs.getBackingCommandId() === secondParentBackingCommand.getBackingCommandId()) {
           break;
         }
         newCss.push(cs);
       }
-      i = _.findIndex(firstSplitCss, c => c.getId() === secondParentBackingCommand.getId());
+      i = _.findIndex(firstSplitCss, c => c.getBackingCommandId() === secondParentBackingCommand.getBackingCommandId());
       if (i >= 0) {
         newCss.push(
           firstSplitCss[i].merge(cs).mutate()
