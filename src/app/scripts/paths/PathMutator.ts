@@ -380,7 +380,11 @@ export class PathMutator {
     const endCommandStates: CommandState[] = [];
     for (let i = 0; i < targetCss.length; i++) {
       if (i === startCsIdx) {
-        // The first move command shares an ID with the parent's first split location.
+        // TODO: write comment!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        // TODO: write comment!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        // TODO: write comment!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        // TODO: write comment!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        // TODO: write comment!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         const moveCmd = newCommand('M', [startSplitPoint, startSplitPoint]);
         endCommandStates.push(
           new CommandState(moveCmd).mutate()
@@ -397,59 +401,64 @@ export class PathMutator {
       }
     }
 
-    const splitBackingCommandIds = [targetCss[startCsIdx].getBackingCommandId(), targetCss[endCsIdx].getBackingCommandId()];
+    const splitBackingCmdIds = [
+      targetCss[startCsIdx].getBackingCommandId(),
+      targetCss[endCsIdx].getBackingCommandId(),
+    ];
+    const splitSubPaths = [
+      new SubPathState(startCommandStates).mutate()
+        .setSplitBackingCommandIds(splitBackingCmdIds)
+        .build(),
+      new SubPathState(endCommandStates).mutate()
+        .setSplitBackingCommandIds(splitBackingCmdIds)
+        .build(),
+    ]
     const newStates: SubPathState[] = [];
-    if (this.subPathStateMap.indexOf(targetSps) >= 0
-      || splitBackingCommandIds.every(id => targetSps.getSplitBackingCommandIds().indexOf(id) < 0)) {
-      const startSplitSubPath =
-        new SubPathState(startCommandStates).mutate()
-          .setSplitBackingCommandIds(splitBackingCommandIds)
-          .build();
-      const endSplitSubPath =
-        new SubPathState(endCommandStates).mutate()
-          .setSplitBackingCommandIds(splitBackingCommandIds)
-          .build();
+    const splitSegCssIds =
+      targetSps.getCommandStates()
+        .filter(cs => !!cs.getSplitSegmentId())
+        .map(cs => cs.getBackingCommandId());
+    if (this.subPathStateMap.includes(targetSps)
+      || splitBackingCmdIds.some(id => splitSegCssIds.includes(id))) {
+      // If we are at the first level of the tree or if one of the new
+      // split edges is a split segment, then add a new level of the tree
+      // (if the already existing split segment is deleted, we want to
+      // delete the split segment we are creating right now as well).
       newStates.push(
         targetSps.mutate()
-          .setSplitSubPaths([startSplitSubPath, endSplitSubPath])
+          .setSplitSubPaths(splitSubPaths)
           .build());
     } else {
-      const startSplitSubPath =
-        new SubPathState(startCommandStates).mutate()
-          .setSplitBackingCommandIds(splitBackingCommandIds)
-          .build();
-      const endSplitSubPath =
-        new SubPathState(endCommandStates).mutate()
-          .setSplitBackingCommandIds(splitBackingCommandIds)
-          .build();
-      newStates.push(startSplitSubPath);
-      newStates.push(endSplitSubPath);
+      // Otherwise insert the sub paths in the current level of the tree.
+      newStates.push(...splitSubPaths);
     }
 
     // Insert the new SubPathStates into the tree.
-    this.subPathStateMap = (function replaceParentFn(states: SubPathState[]) {
-      if (states.length === 0) {
+    this.subPathStateMap =
+      (function replaceParentFn(states: SubPathState[]) {
+        if (!states.length) {
+          // Return undefined to signal that the parent was not found.
+          return undefined;
+        }
+        for (let i = 0; i < states.length; i++) {
+          const currentState = states[i];
+          if (currentState === targetSps) {
+            states.splice(i, 1, ...newStates);
+            return states;
+          }
+          const recurseStates =
+            replaceParentFn(currentState.getSplitSubPaths().slice());
+          if (recurseStates) {
+            states[i] =
+              currentState.mutate()
+                .setSplitSubPaths(recurseStates)
+                .build();
+            return states;
+          }
+        }
         // Return undefined to signal that the parent was not found.
         return undefined;
-      }
-      for (let i = 0; i < states.length; i++) {
-        const currentState = states[i];
-        if (currentState === targetSps) {
-          states.splice(i, 1, ...newStates);
-          return states;
-        }
-        const recurseStates = replaceParentFn(currentState.getSplitSubPaths().slice());
-        if (recurseStates) {
-          states[i] =
-            currentState.mutate()
-              .setSplitSubPaths(recurseStates)
-              .build();
-          return states;
-        }
-      }
-      // Return undefined to signal that the parent was not found.
-      return undefined;
-    })(this.subPathStateMap.slice());
+      })(this.subPathStateMap.slice());
 
     this.subPathOrdering.push(this.subPathOrdering.length);
     return this;
