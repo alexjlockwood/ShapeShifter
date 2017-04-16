@@ -298,32 +298,40 @@ export class PathMutator {
    *
    */
   splitFilledSubPath(subIdx: number, startCmdIdx: number, endCmdIdx: number) {
-    const spsIdx = this.subPathOrdering[subIdx];
-    const sps = this.findSubPathState(spsIdx);
-    const css =
+    const targetSps = this.findSubPathState(this.subPathOrdering[subIdx]);
+    const targetCss =
       shiftAndReverseCommandStates(
-        sps.getCommandStates(),
-        sps.isReversed(),
-        sps.getShiftOffset());
-    let start = this.findInternalIndices(css, startCmdIdx);
-    let end = this.findInternalIndices(css, endCmdIdx);
+        targetSps.getCommandStates(),
+        targetSps.isReversed(),
+        targetSps.getShiftOffset());
 
-    // Make sure the start index appears before the end index in the path.
-    if (start.csIdx > end.csIdx || (start.csIdx === end.csIdx && start.splitIdx > end.csIdx)) {
-      const temp = start;
-      start = end;
-      end = temp;
-    }
+    const findInternalIndicesFn = () => {
+      let s = this.findInternalIndices(targetCss, startCmdIdx);
+      let e = this.findInternalIndices(targetCss, endCmdIdx);
+      if (s.csIdx > e.csIdx || (s.csIdx === e.csIdx && s.splitIdx > e.csIdx)) {
+        // Make sure the start index appears before the end index in the path.
+        const temp = s;
+        s = e;
+        e = temp;
+      }
+      return {
+        startCsIdx: s.csIdx,
+        startSplitIdx: s.splitIdx,
+        endCsIdx: e.csIdx,
+        endSplitIdx: e.splitIdx
+      };
+    };
 
-    // firstLeft is the left portion of the first split segment (to use in the first split path).
-    // secondLeft is the left portion of the second split segment (to use in the second split path).
-    // firstRight is the right portion of the first split segment (to use in the second split path).
-    // secondRight is the right portion of the second split segment (to use in the first split path).
-    const { left: firstLeft, right: firstRight } = css[start.csIdx].slice(start.splitIdx);
-    const { left: secondLeft, right: secondRight } = css[end.csIdx].slice(end.splitIdx);
-    const startSplitCmd = firstLeft.getCommands()[start.splitIdx];
+    // firstLeft: left portion of the 1st split segment (used in the 1st split path).
+    // secondLeft: left portion of the 2nd split segment (used in the 2nd split path).
+    // firstRight: right portion of the 1st split segment (used in the 2nd split path).
+    // secondRight: right portion of the 2nd split segment (used in the 1st split path).
+    const { startCsIdx, startSplitIdx, endCsIdx, endSplitIdx } = findInternalIndicesFn();
+    const { left: firstLeft, right: firstRight } = targetCss[startCsIdx].slice(startSplitIdx);
+    const { left: secondLeft, right: secondRight } = targetCss[endCsIdx].slice(endSplitIdx);
+    const startSplitCmd = firstLeft.getCommands()[startSplitIdx];
     const startSplitPoint = startSplitCmd.getEnd();
-    const endSplitCmd = secondLeft.getCommands()[end.splitIdx];
+    const endSplitCmd = secondLeft.getCommands()[endSplitIdx];
     const endSplitPoint = endSplitCmd.getEnd();
 
     // TODO: write comment!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -355,20 +363,20 @@ export class PathMutator {
         .build();
 
     const startCommandStates: CommandState[] = [];
-    for (let i = 0; i < css.length; i++) {
-      if (i < start.csIdx || end.csIdx < i) {
-        startCommandStates.push(css[i]);
-      } else if (i === start.csIdx) {
+    for (let i = 0; i < targetCss.length; i++) {
+      if (i < startCsIdx || endCsIdx < i) {
+        startCommandStates.push(targetCss[i]);
+      } else if (i === startCsIdx) {
         startCommandStates.push(firstLeft);
         startCommandStates.push(startLine);
-      } else if (i === end.csIdx && secondRight) {
+      } else if (i === endCsIdx && secondRight) {
         startCommandStates.push(secondRight);
       }
     }
 
     const endCommandStates: CommandState[] = [];
-    for (let i = 0; i < css.length; i++) {
-      if (i === start.csIdx) {
+    for (let i = 0; i < targetCss.length; i++) {
+      if (i === startCsIdx) {
         // The first move command shares an ID with the parent's first split location.
         const moveCmd = newCommand('M', [startSplitPoint, startSplitPoint]);
         endCommandStates.push(
@@ -378,19 +386,19 @@ export class PathMutator {
         if (firstRight) {
           endCommandStates.push(firstRight);
         }
-      } else if (start.csIdx < i && i < end.csIdx) {
-        endCommandStates.push(css[i]);
-      } else if (i === end.csIdx) {
+      } else if (startCsIdx < i && i < endCsIdx) {
+        endCommandStates.push(targetCss[i]);
+      } else if (i === endCsIdx) {
         endCommandStates.push(secondLeft);
         endCommandStates.push(endLine);
       }
     }
 
-    const splitBackingCommandIds = [css[start.csIdx].getId(), css[end.csIdx].getId()];
+    const splitBackingCommandIds = [targetCss[startCsIdx].getId(), targetCss[endCsIdx].getId()];
     const newStates: SubPathState[] = [];
-    if (this.subPathStateMap.indexOf(sps) >= 0
-      || splitBackingCommandIds.every(id => sps.getSplitBackingCommandIds().indexOf(id) < 0)) {
-      console.info('add new level', splitBackingCommandIds, sps, sps.getSplitBackingCommandIds());
+    if (this.subPathStateMap.indexOf(targetSps) >= 0
+      || splitBackingCommandIds.every(id => targetSps.getSplitBackingCommandIds().indexOf(id) < 0)) {
+      console.info('add new level', splitBackingCommandIds, targetSps, targetSps.getSplitBackingCommandIds());
       const startSplitSubPath =
         new SubPathState(startCommandStates).mutate()
           .setSplitBackingCommandIds(splitBackingCommandIds)
@@ -400,7 +408,7 @@ export class PathMutator {
           .setSplitBackingCommandIds(splitBackingCommandIds)
           .build();
       newStates.push(
-        sps.mutate()
+        targetSps.mutate()
           .setSplitSubPaths([startSplitSubPath, endSplitSubPath])
           .build());
     } else {
@@ -424,7 +432,7 @@ export class PathMutator {
       }
       for (let i = 0; i < states.length; i++) {
         const currentState = states[i];
-        if (currentState === sps) {
+        if (currentState === targetSps) {
           states.splice(i, 1, ...newStates);
           return states;
         }
