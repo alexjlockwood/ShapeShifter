@@ -39,6 +39,16 @@ export class CanvasSelector {
     this.lastKnownMouseLocation = mouseDown;
 
     const hitResult = this.performHitTest(mouseDown);
+    if (hitResult.isSegmentHit) {
+      for (const hit of hitResult.segmentHits) {
+        const { subIdx, cmdIdx } = hit;
+        this.hoverService.reset();
+        this.selectionService.reset();
+        this.component.stateService.updateActivePath(
+          this.canvasType, this.component.activePath.mutate().removeSubPathSplitSegment(subIdx, cmdIdx).build());
+        return;
+      }
+    }
     if (hitResult.isEndPointHit) {
       const { subIdx, cmdIdx, cmd } = this.findHitPoint(hitResult.endPointHits);
       if (cmd.isSplit()) {
@@ -54,14 +64,14 @@ export class CanvasSelector {
     }
 
     // TODO: add ability to select individual segments so they can be deleted
-    // if (this.component.activePathLayer.isFilled() && hitResult.isSegmentHit) {
-    //   const { subIdx, cmdIdx, cmd } = this.findHitSegment(hitResult.segmentHits);
-    //   if (cmd.isSubPathSplitSegment()) {
-    //     this.selectionService.toggleSegment(
-    //       this.canvasType, subIdx, cmdIdx, isShiftOrMetaPressed);
-    //     return;
-    //   }
-    // }
+    if (this.component.activePathLayer.isFilled() && hitResult.isSegmentHit) {
+      const { subIdx, cmdIdx, cmd } = this.findHitSegment(hitResult.segmentHits);
+      if (cmd.isSubPathSplitSegment()) {
+        this.selectionService.toggleSegment(
+          this.canvasType, subIdx, cmdIdx, isShiftOrMetaPressed);
+        return;
+      }
+    }
 
     if (hitResult.isSegmentHit || hitResult.isShapeHit) {
       const hits = hitResult.isShapeHit ? hitResult.shapeHits : hitResult.segmentHits;
@@ -257,14 +267,14 @@ export class CanvasSelector {
     return infos[lastSplitIndex < 0 ? infos.length - 1 : lastSplitIndex];
   }
 
-  // private findHitSegment(hits: ReadonlyArray<{ subIdx: number, cmdIdx: number }>) {
-  //   const infos = hits.map(index => {
-  //     const { subIdx, cmdIdx } = index;
-  //     return { subIdx, cmdIdx, cmd: this.component.activePath.getCommand(subIdx, cmdIdx) };
-  //   });
-  //   const lastSplitIndex = _.findLastIndex(infos, info => info.cmd.isSubPathSplitSegment());
-  //   return infos[lastSplitIndex < 0 ? infos.length - 1 : lastSplitIndex];
-  // }
+  private findHitSegment(hits: ReadonlyArray<{ subIdx: number, cmdIdx: number }>) {
+    const infos = hits.map(index => {
+      const { subIdx, cmdIdx } = index;
+      return { subIdx, cmdIdx, cmd: this.component.activePath.getCommand(subIdx, cmdIdx) };
+    });
+    const lastSplitIndex = _.findLastIndex(infos, info => info.cmd.isSubPathSplitSegment());
+    return infos[lastSplitIndex < 0 ? infos.length - 1 : lastSplitIndex];
+  }
 
   private findHitPoint(hits: ReadonlyArray<{ subIdx: number, cmdIdx: number }>) {
     const infos = hits.map(index => {
