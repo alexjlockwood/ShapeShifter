@@ -794,9 +794,24 @@ describe('Path', () => {
         'M 0 0 L 5 0 L 5 20 L 0 20 L 0 0 M 5 0 L 20 0 L 20 20 L 5 20 L 5 0',
       ),
       makeTest(
-        'M 4 4 h 20 v 20 h -20 v -20',
+        'M 4 4 h 16 v 16 h -16 v -16',
         `SIH 0 3 SIH 0 1 SFSP 0 1 4 S 1 4 0.625 S 1 1 0.75 SFSP 1 1 5 SIH 1 3 SIH 1 2 SFSP 1 2 4 DSPSS 3 4`,
-        'M 4 4 h 20 v 20 h -20 v -20',
+        'M 4 4 h 16 v 16 h -16 v -16',
+      ),
+      makeTest(
+        'M 4 4 h 16 v 16 h -16 v -16',
+        'SIH 0 3 SIH 0 1 SFSP 0 1 4 S 1 4 0.625 S 1 1 0.75 SFSP 1 1 5 SIH 1 3 SIH 1 2 SFSP 1 2 4 DSPSS 0 1',
+        'M 4 4 h 16 v 16 h -16 v -16',
+      ),
+      makeTest(
+        'M 4 4 h 16 v 16 h -16 v -16',
+        'SIH 0 3 SIH 0 1 SFSP 0 1 4 S 1 4 0.625 SFSP 1 1 4 SIH 1 3 SIH 1 2 SFSP 1 2 4 SFSP 3 1 3 DSPSS 3 2',
+        'M 4 4 L 12 4 L 12 20 L 4 20 L 4 4 M 12 4 L 20 4 L 20 20 L 12 12 L 12 4 M 20 20 L 12 20 L 12 12 L 20 20',
+      ),
+      makeTest(
+        'M 4 4 h 16 v 16 h -16 v -16',
+        'SIH 0 3 SIH 0 1 SFSP 0 1 4 SIH 0 4 SIH 0 3 SFSP 0 3 5',
+        'M 4 4 L 20 4 L 20 20 L 8 20 L 4 12 L 4 4 M 4 20 L 8 20 L 4 12 L 4 20',
       ),
       // TODO: add tests for shift offsets w/ split sub paths
       // TODO: add more tests for compound paths w/ split sub paths
