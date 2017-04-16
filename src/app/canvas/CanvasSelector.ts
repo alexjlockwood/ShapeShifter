@@ -45,7 +45,10 @@ export class CanvasSelector {
         this.hoverService.reset();
         this.selectionService.reset();
         this.component.stateService.updateActivePath(
-          this.canvasType, this.component.activePath.mutate().removeSubPathSplitSegment(subIdx, cmdIdx).build());
+          this.canvasType,
+          this.component.activePath.mutate()
+            .removeSubPathSplitSegment(subIdx, cmdIdx)
+            .build());
         return;
       }
     }
