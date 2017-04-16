@@ -189,7 +189,6 @@ describe('Path', () => {
                 matrix = Matrix.fromTranslation(+A[i + 2], +A[i + 3]);
                 i += 3;
                 break;
-
               default:
                 throw new Error('Invalid transform op: ' + transformOp);
             }
@@ -768,6 +767,16 @@ describe('Path', () => {
         'M 8 5 L 8 19 L 19 12 L 8 5',
         'SIH 0 3 SIH 0 1 SFSP 0 1 4 SB 0 SB 0 SIH 0 2 SIH 0 1 SFSP 0 1 3 RT',
         'M 8 5 L 8 19 L 19 12 L 8 5',
+      ),
+      makeTest(
+        'M 0 0 h 20 v 20 h -20 v -20',
+        'S 0 3 0.75 S 0 1 0.25 SFSP 0 1 4 S 1 3 0.5 S 1 1 0.5 SFSP 1 1 4',
+        'M 0 0 L 5 0 L 5 20 L 0 20 L 0 0 M 5 0 L 12.5 0 L 12.5 20 L 5 20 L 5 0 M 12.5 0 L 20 0 L 20 20 L 12.5 20 L 12.5 0',
+      ),
+      makeTest(
+        'M 0 0 h 20 v 20 h -20 v -20',
+        'S 0 3 0.75 S 0 1 0.25 SFSP 0 1 4 S 1 3 0.5 S 1 1 0.5 SFSP 1 1 4 DSPSS 1 2',
+        'M 0 0 L 5 0 L 5 20 L 0 20 L 0 0 M 5 0 L 20 0 L 20 20 L 5 20 L 5 0',
       ),
       // TODO: add tests for shift offsets w/ split sub paths
       // TODO: add more tests for compound paths w/ split sub paths
