@@ -17,7 +17,7 @@ export interface Command {
    * Returns true iff the command was created as a result of being split.
    * Only split commands are able to be editted and deleted via the inspector/canvas.
    */
-  isSplit(): boolean;
+  isSplitPoint(): boolean;
 
   /**
    * Returns true iff the command was created as a result of a subpath split.

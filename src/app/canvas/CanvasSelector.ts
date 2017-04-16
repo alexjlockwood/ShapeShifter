@@ -58,7 +58,7 @@ export class CanvasSelector {
     }
     if (hitResult.isEndPointHit) {
       const { subIdx, cmdIdx, cmd } = this.findHitPoint(hitResult.endPointHits);
-      if (cmd.isSplit()) {
+      if (cmd.isSplitPoint()) {
         // Then a click has occurred on top of a split point.
         // Don't select the point yet because the user might want
         // to drag it to a different location.
@@ -288,7 +288,7 @@ export class CanvasSelector {
       const { subIdx, cmdIdx } = index;
       return { subIdx, cmdIdx, cmd: this.component.activePath.getCommand(subIdx, cmdIdx) };
     });
-    const lastSplitIndex = _.findLastIndex(infos, info => info.cmd.isSplit());
+    const lastSplitIndex = _.findLastIndex(infos, info => info.cmd.isSplitPoint());
     return infos[lastSplitIndex < 0 ? infos.length - 1 : lastSplitIndex];
   }
 

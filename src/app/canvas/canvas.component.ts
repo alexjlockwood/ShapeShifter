@@ -394,7 +394,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     let isPointInRangeFn: (distance: number, cmd: Command) => boolean;
     if (!opts.noPoints) {
       isPointInRangeFn = (distance, cmd) => {
-        const multiplyFactor = cmd.isSplit() ? SPLIT_POINT_RADIUS_FACTOR : 1;
+        const multiplyFactor = cmd.isSplitPoint() ? SPLIT_POINT_RADIUS_FACTOR : 1;
         return distance <= this.mediumPointRadius * multiplyFactor;
       };
     }
@@ -870,10 +870,10 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         }
         text = (cmdIdx + 1).toString();
       }
-      if (pointInfo.cmd.isSplit()) {
+      if (pointInfo.cmd.isSplitPoint()) {
         radius *= SPLIT_POINT_RADIUS_FACTOR;
       }
-      const color = cmd.isSplit() ? SPLIT_POINT_COLOR : NORMAL_POINT_COLOR;
+      const color = cmd.isSplitPoint() ? SPLIT_POINT_COLOR : NORMAL_POINT_COLOR;
       this.executeLabeledPoint(
         ctx, this.applyGroupTransforms(_.last(cmd.getPoints())), radius, color, text);
     }

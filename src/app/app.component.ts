@@ -135,7 +135,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
             _.chain([CanvasType.Start, CanvasType.End])
               .map(type => this.stateService.getActivePathLayer(type).pathData)
               .flatMap(path => path.getCommands() as Command[])
-              .some((cmd: Command) => cmd.isSplit())
+              .some((cmd: Command) => cmd.isSplitPoint())
               .value();
           return `Reverse${hasClosedPath ? '/shift' : ''} `
             + `the points below ${hasSplitCmd ? 'or drag the orange points above' : ''} `

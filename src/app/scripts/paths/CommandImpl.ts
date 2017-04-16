@@ -43,7 +43,7 @@ class CommandImpl implements Command {
     return this.points;
   }
 
-  isSplit() {
+  isSplitPoint() {
     return this.isSplit_;
   }
 
@@ -92,7 +92,7 @@ class CommandImpl implements Command {
     return new CommandBuilder(
       this.svgChar,
       this.points.slice(),
-      this.isSplit(),
+      this.isSplitPoint(),
       this.id,
       this.isSplitSegment_,
     );
@@ -137,10 +137,10 @@ export class CommandBuilder {
   }
 
   toggleSplit() {
-    return this.setIsSplit(!this.isSplit);
+    return this.setIsSplitPoint(!this.isSplit);
   }
 
-  setIsSplit(isSplit: boolean) {
+  setIsSplitPoint(isSplit: boolean) {
     this.isSplit = isSplit;
     return this;
   }

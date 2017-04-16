@@ -58,7 +58,7 @@ export class ToolbarComponent implements OnInit {
             this.getNumSelectedPoints(
               this.stateService,
               selections,
-              cmd => cmd.isSplit()) > 0;
+              cmd => cmd.isSplitPoint()) > 0;
           if (shouldEnable) {
             this.hasActionModeBeenEnabled = true;
           }
@@ -71,7 +71,7 @@ export class ToolbarComponent implements OnInit {
             this.getNumSelectedPoints(
               this.stateService,
               selections,
-              cmd => cmd.isSplit());
+              cmd => cmd.isSplitPoint());
           if (numPointsSelected > 0) {
             return `${numPointsSelected} split point${numPointsSelected === 1 ? '' : 's'} selected`;
           } else {

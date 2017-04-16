@@ -305,7 +305,7 @@ export class PathMutator {
         targetSps.isReversed(),
         targetSps.getShiftOffset());
 
-    const findInternalIndicesFn = () => {
+    const findTargetSplitIdxs = () => {
       let s = this.findInternalIndices(targetCss, startCmdIdx);
       let e = this.findInternalIndices(targetCss, endCmdIdx);
       if (s.csIdx > e.csIdx || (s.csIdx === e.csIdx && s.splitIdx > e.csIdx)) {
@@ -326,7 +326,7 @@ export class PathMutator {
     // secondLeft: left portion of the 2nd split segment (used in the 2nd split path).
     // firstRight: right portion of the 1st split segment (used in the 2nd split path).
     // secondRight: right portion of the 2nd split segment (used in the 1st split path).
-    const { startCsIdx, startSplitIdx, endCsIdx, endSplitIdx } = findInternalIndicesFn();
+    const { startCsIdx, startSplitIdx, endCsIdx, endSplitIdx } = findTargetSplitIdxs();
     const { left: firstLeft, right: firstRight } = targetCss[startCsIdx].slice(startSplitIdx);
     const { left: secondLeft, right: secondRight } = targetCss[endCsIdx].slice(endSplitIdx);
     const startSplitCmd = firstLeft.getCommands()[startSplitIdx];

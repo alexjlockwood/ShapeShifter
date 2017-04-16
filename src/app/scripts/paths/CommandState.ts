@@ -396,7 +396,7 @@ class CommandStateMutator {
           .toCommand()
           .mutate()
           .setId(this.mutations[i].id)
-          .setIsSplit(i !== this.mutations.length - 1)
+          .setIsSplitPoint(i !== this.mutations.length - 1)
           .setIsSplitSegment(this.isSplitSegment_)
           .build());
       prevT = currT;

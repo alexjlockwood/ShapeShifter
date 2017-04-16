@@ -178,7 +178,7 @@ export function deleteSelectedSplitPoints(
   const unsplitOpsMap: Map<number, Array<{ subIdx: number, cmdIdx: number }>> = new Map();
   for (const selection of selections) {
     const { subIdx, cmdIdx } = selection;
-    if (!activePathLayer.pathData.getSubPaths()[subIdx].getCommands()[cmdIdx].isSplit()) {
+    if (!activePathLayer.pathData.getSubPaths()[subIdx].getCommands()[cmdIdx].isSplitPoint()) {
       continue;
     }
     let subIdxOps = unsplitOpsMap.get(subIdx);

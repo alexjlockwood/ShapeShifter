@@ -147,7 +147,7 @@ export class CommandInspectorComponent implements OnInit {
   }
 
   isUnsplittable() {
-    return this.command.isSplit();
+    return this.command.isSplitPoint();
   }
 
   onCommandHoverEvent(isHoveringOverCommand: boolean) {
