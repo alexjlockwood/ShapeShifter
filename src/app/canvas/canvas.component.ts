@@ -675,7 +675,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       _.chain(this.activePath.getSubPaths() as SubPath[])
         .filter(s => !s.isCollapsing())
         .flatMap(s => s.getCommands() as Command[])
-        .filter(c => c.isSubPathSplitSegment())
+        .filter(c => c.isSplitSegment())
         .value();
     this.executeCommands(ctx, cmds);
     this.executeHighlights(ctx, SPLIT_POINT_COLOR, this.unselectedSegmentLineWidth);
@@ -701,7 +701,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
     for (const subPath of subPaths) {
       const cmds = subPath.getCommands();
-      const isSplitSubPath = cmds.some(c => c.isSubPathSplitSegment());
+      const isSplitSubPath = cmds.some(c => c.isSplitSegment());
       const highlightColor = isSplitSubPath ? SPLIT_POINT_COLOR : HIGHLIGHT_COLOR;
       this.executeCommands(ctx, cmds);
       this.executeHighlights(ctx, highlightColor, this.selectedSegmentLineWidth);

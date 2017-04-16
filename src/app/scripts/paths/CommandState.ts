@@ -35,7 +35,7 @@ export class CommandState {
     private readonly maxT = 1,
     // Indicates whether the command state marks the beginning/end of a subpath split.
     // In other words, this is true iff the segment was cut using the subpath splitter.
-    private readonly isSubPathSplitSegment_ = backingCommand.isSubPathSplitSegment(),
+    private readonly isSplitSegment_ = backingCommand.isSplitSegment(),
     private readonly splitCommandId = '',
   ) { }
 
@@ -102,7 +102,16 @@ export class CommandState {
     return { left, right };
   }
 
-  mergePrevious(cs: CommandState) {
+  /**
+   * Merges two previously sliced command state objects into one.
+   */
+  merge(cs: CommandState) {
+    if (this.getId() !== cs.getId()) {
+      throw new Error('Attempt to merge command state objects with unequal backing IDs');
+    }
+    if (this.minT < cs.minT) {
+      console.warn('Merging command states out of order', this, cs);
+    }
     return this.mutate()
       .setMutations(cs.mutations.slice(0, cs.mutations.length - 1).concat(this.mutations.slice()))
       .setMinT(cs.minT)
@@ -120,8 +129,8 @@ export class CommandState {
    * Returns true iff this command state object was created as a result
    * of a subpath split.
    */
-  isSubPathSplitSegment() {
-    return this.isSubPathSplitSegment_;
+  isSplitSegment() {
+    return this.isSplitSegment_;
   }
 
   getSplitCommandId() {
@@ -136,7 +145,7 @@ export class CommandState {
       this.calculator,
       this.minT,
       this.maxT,
-      this.isSubPathSplitSegment_,
+      this.isSplitSegment_,
       this.splitCommandId,
     );
   }
@@ -160,8 +169,8 @@ class CommandStateMutator {
     private calculator: Calculator,
     private minT: number,
     private maxT: number,
-    private isSubPathSplitSegment_: boolean,
-    private splitCommandId: string,
+    private isSplitSegment_: boolean,
+    private splitSegmentId: string,
   ) { }
 
   /**
@@ -195,12 +204,12 @@ class CommandStateMutator {
   }
 
   setSplitCommandId(id: string) {
-    this.splitCommandId = id;
+    this.splitSegmentId = id;
     return this;
   }
 
-  setIsSubPathSplitSegment(isSubPathSplitSegment: boolean) {
-    this.isSubPathSplitSegment_ = isSubPathSplitSegment;
+  setIsSplitSegment(isSubPathSplitSegment: boolean) {
+    this.isSplitSegment_ = isSubPathSplitSegment;
     return this;
   }
 
@@ -376,18 +385,16 @@ class CommandStateMutator {
     let prevT = this.minT;
     for (let i = 0; i < this.mutations.length; i++) {
       const currT = this.mutations[i].t;
-      const commandBuilder =
+      builtCommands.push(
         this.calculator
           .split(prevT, currT)
           .convert(this.mutations[i].svgChar)
           .toCommand()
           .mutate()
           .setId(this.mutations[i].id)
-          .setIsSubPathSplitSegment(this.isSubPathSplitSegment_);
-      if (i !== this.mutations.length - 1) {
-        commandBuilder.setIsSplit(true);
-      }
-      builtCommands.push(commandBuilder.build());
+          .setIsSplit(i !== this.mutations.length - 1)
+          .setIsSplitSegment(this.isSplitSegment_)
+          .build());
       prevT = currT;
     }
     return new CommandState(
@@ -398,8 +405,8 @@ class CommandStateMutator {
       this.calculator,
       this.minT,
       this.maxT,
-      this.isSubPathSplitSegment_,
-      this.splitCommandId,
+      this.isSplitSegment_,
+      this.splitSegmentId,
     );
   }
 }

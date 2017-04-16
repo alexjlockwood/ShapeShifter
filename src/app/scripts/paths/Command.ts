@@ -22,7 +22,7 @@ export interface Command {
   /**
    * Returns true iff the command was created as a result of a subpath split.
    */
-  isSubPathSplitSegment(): boolean;
+  isSplitSegment(): boolean;
 
   /**
    * Returns the SVG character for this command.
