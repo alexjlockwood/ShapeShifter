@@ -4,10 +4,4 @@
   [class.is-hovering]="isHovering" fxLayout="row" fxLayoutAlign="start center">
   <strong><span class="subpath-text">{{subPathText}}</span></strong>
   <span fxFlex></span>
-  <button md-icon-button mdTooltip="Delete subpath" mdTooltipPosition="above"
-    mdTooltipShowDelay="500" (mouseenter)="onDeleteSubPathHoverEvent(true)"
-    (mouseleave)="onDeleteSubPathHoverEvent(false)" *ngIf="isUnsplittable()"
-    (click)="onUnsplitButtonClick($event)">
-    <md-icon>delete</md-icon>
-  </button>
 </div>

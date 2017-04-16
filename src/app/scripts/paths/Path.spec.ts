@@ -725,17 +725,22 @@ describe('Path', () => {
       // Delete sub path split segment.
       makeTest(
         'M 0 0 L 0 10 L 10 10 L 10 0 L 0 0',
-        'SIH 0 3 SIH 0 1 SFSP 0 1 4 DSPSS 0 1',
+        'SIH 0 3 SIH 0 1 SFSP 0 1 4 DSPSS 0 2',
         'M 0 0 L 0 10 L 10 10 L 10 0 L 0 0'
       ),
       makeTest(
         'M 0 0 L 0 10 L 10 10 L 10 0 L 0 0',
-        'SIH 0 3 SIH 0 1 SFSP 0 1 4 SIH 1 4 SIH 1 2 SFSP 1 2 5 DSPSS 1 2',
+        'SIH 0 3 SIH 0 1 SFSP 0 1 4 DSPSS 1 4',
+        'M 0 0 L 0 10 L 10 10 L 10 0 L 0 0'
+      ),
+      makeTest(
+        'M 0 0 L 0 10 L 10 10 L 10 0 L 0 0',
+        'SIH 0 3 SIH 0 1 SFSP 0 1 4 SIH 1 4 SIH 1 2 SFSP 1 2 5 DSPSS 1 3',
         'M 0 0 L 0 5 L 10 5 L 10 0 L 0 0 M 0 5 L 0 10 L 10 10 L 10 5 L 0 5'
       ),
       makeTest(
         'M 0 0 L 0 10 L 10 10 L 10 0 L 0 0',
-        'SIH 0 3 SIH 0 1 SFSP 0 1 4 SIH 1 4 SIH 1 2 SFSP 1 2 5 DSPSS 2 1',
+        'SIH 0 3 SIH 0 1 SFSP 0 1 4 SIH 1 4 SIH 1 2 SFSP 1 2 5 DSPSS 2 4',
         'M 0 0 L 0 5 L 10 5 L 10 0 L 0 0 M 0 5 L 0 10 L 10 10 L 10 5 L 0 5'
       ),
       makeTest(
@@ -751,6 +756,11 @@ describe('Path', () => {
       makeTest(
         'M 0 0 L 0 15 L 15 15 L 15 0 L 0 0',
         `S 0 3 ${2 / 3} S 0 3 0.5 S 0 1 ${2 / 3} S 0 1 0.5 SFSP 0 1 6 SFSP 1 1 4 DSPSS 1 2`,
+        `M 0 0 L 0 5 L 15 5 L 15 0 L 0 0 M 0 5 L 0 15 L 15 15 L 15 5 L 0 5`
+      ),
+      makeTest(
+        'M 0 0 L 0 15 L 15 15 L 15 0 L 0 0',
+        `S 0 3 ${2 / 3} S 0 3 0.5 S 0 1 ${2 / 3} S 0 1 0.5 SFSP 0 1 6 SFSP 1 1 4 DSPSS 2 4`,
         `M 0 0 L 0 5 L 15 5 L 15 0 L 0 0 M 0 5 L 0 15 L 15 15 L 15 5 L 0 5`
       ),
       makeTest(
@@ -776,6 +786,11 @@ describe('Path', () => {
       makeTest(
         'M 0 0 h 20 v 20 h -20 v -20',
         'S 0 3 0.75 S 0 1 0.25 SFSP 0 1 4 S 1 3 0.5 S 1 1 0.5 SFSP 1 1 4 DSPSS 1 2',
+        'M 0 0 L 5 0 L 5 20 L 0 20 L 0 0 M 5 0 L 20 0 L 20 20 L 5 20 L 5 0',
+      ),
+      makeTest(
+        'M 0 0 h 20 v 20 h -20 v -20',
+        'S 0 3 0.75 S 0 1 0.25 SFSP 0 1 4 S 1 3 0.5 S 1 1 0.5 SFSP 1 1 4 DSPSS 2 4',
         'M 0 0 L 5 0 L 5 20 L 0 20 L 0 0 M 5 0 L 20 0 L 20 20 L 5 20 L 5 0',
       ),
       // TODO: add tests for shift offsets w/ split sub paths

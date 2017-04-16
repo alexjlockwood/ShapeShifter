@@ -47,7 +47,7 @@ export class CanvasSelector {
         this.component.stateService.updateActivePath(
           this.canvasType,
           this.component.activePath.mutate()
-            .removeSubPathSplitSegment(subIdx, cmdIdx)
+            .deleteSubPathSplitSegment(subIdx, cmdIdx)
             .build());
         return;
       }
