@@ -1034,41 +1034,12 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  private x = false;
   onClick(event: MouseEvent) {
     // TODO: is this hacky? should we be using onBlur() to reset the app mode?
     // This ensures that parents won't also receive the same click event.
     event.cancelBubble = true;
 
-    if (!this.x) {
-      this.hoverService.reset();
-      this.selectionService.reset();
-      this.stateService.updateActivePath(this.canvasType,
-        this.activePath.mutate()
-          .splitCommand(0, 3, 0.5)
-          .splitCommand(0, 1, 0.5)
-          .splitFilledSubPath(0, 1, 4)
-          .splitCommand(1, 4, 5 / 8)
-          .splitFilledSubPath(1, 1, 4)
-          .splitCommand(1, 3, 0.5)
-          .splitCommand(1, 2, 0.5)
-          .splitFilledSubPath(1, 2, 4)
-          //.splitFilledSubPath(3, 1, 3)
-          // ---
-          // .splitCommandInHalf(0, 3)
-          // .splitCommandInHalf(0, 1)
-          // .splitFilledSubPath(0, 1, 4)
-          // .splitCommandInHalf(0, 4)
-          // .splitCommandInHalf(0, 3)
-          // .splitFilledSubPath(0, 3, 5)
-          .build());
-      this.x = !this.x;
-    }
-
     if (this.activePathId) {
-      console.info(this.activePath);
-      const points = _.flatten(this.activePath.getCommands().map(c => c.getPoints().slice()));
-      console.info(points);
       return;
     }
     this.filePickerService.showFilePicker(this.canvasType);

@@ -557,41 +557,24 @@ export class PathMutator {
       for (; i < firstSplitCss.length; i++) {
         cs = firstSplitCss[i];
         if (cs.getBackingId() === firstParentBackingCommand.getBackingId()) {
-          // TODO: PRETTY SURE THIS IS WRONG
-          // TODO: PRETTY SURE THIS IS WRONG
-          // TODO: PRETTY SURE THIS IS WRONG
-          // TODO: PRETTY SURE THIS IS WRONG
-          // TODO: PRETTY SURE THIS IS WRONG
-          // TODO: PRETTY SURE THIS IS WRONG
-          // TODO: PRETTY SURE THIS IS WRONG
-          // TODO: PRETTY SURE THIS IS WRONG
-          // TODO: PRETTY SURE THIS IS WRONG
-          // (need to continue until we reach the end of 'firstLeft'... and similar below)
-          // (i.e. there could be split points in between the location of the split subpath
-          // line segment and the beginning of the backing command).
+          // TODO: should we delete splits that were added to the split backing cmd like we do now?
           break;
         }
         newCss.push(cs);
       }
       const firstParentBackingCommandIdx = i;
+      console.info('before', newCss);
       if (cs.getBackingId() === secondSplitCss[1].getBackingId()) {
         newCss.push(secondSplitCss[1].merge(cs));
       } else {
         newCss.push(cs);
         newCss.push(secondSplitCss[1]);
       }
+      console.info('after', newCss);
       for (i = 2; i < secondSplitCss.length; i++) {
         cs = secondSplitCss[i];
         if (cs.getBackingId() === secondParentBackingCommand.getBackingId()) {
-          // TODO: PRETTY SURE THIS IS WRONG
-          // TODO: PRETTY SURE THIS IS WRONG
-          // TODO: PRETTY SURE THIS IS WRONG
-          // TODO: PRETTY SURE THIS IS WRONG
-          // TODO: PRETTY SURE THIS IS WRONG
-          // TODO: PRETTY SURE THIS IS WRONG
-          // TODO: PRETTY SURE THIS IS WRONG
-          // TODO: PRETTY SURE THIS IS WRONG
-          // TODO: PRETTY SURE THIS IS WRON
+          // TODO: should we delete splits that were added to the split backing cmd like we do now?
           break;
         }
         newCss.push(cs);
@@ -604,8 +587,6 @@ export class PathMutator {
             .build());
       } else {
         i = firstParentBackingCommandIdx + 1;
-        // i = _.findLastIndex(
-        //   firstSplitCss, c => c.getSplitCommandId() === _.last(secondSplitCss).getId());
         newCss.push(
           cs.mutate()
             .setIsSplitSegment(secondParentBackingCommand.isSplitSegment())
