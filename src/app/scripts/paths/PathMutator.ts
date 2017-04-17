@@ -355,8 +355,7 @@ export class PathMutator {
     const endLineCmd = newCommand('L', [endSplitPoint, startSplitPoint]);
     const endLine =
       new CommandState(endLineCmd).mutate()
-        .setSplitSegmentId(splitSegmentId)
-        .setPrevSplitState(secondLeft)
+        .setSplitSegmentInfo(splitSegmentId, secondLeft)
         .build();
 
     // TODO: write comment!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -367,7 +366,7 @@ export class PathMutator {
     const startLineCmd = newCommand('L', [startSplitPoint, endSplitPoint]);
     const startLine =
       new CommandState(startLineCmd).mutate()
-        .setSplitSegmentId(splitSegmentId)
+        .setSplitSegmentInfo(splitSegmentId, firstLeft)
         .build();
 
     const startCommandStates: CommandState[] = [];
@@ -393,8 +392,7 @@ export class PathMutator {
         const moveCmd = newCommand('M', [startSplitPoint, startSplitPoint]);
         endCommandStates.push(
           new CommandState(moveCmd).mutate()
-            .setSplitSegmentId(_.uniqueId())
-            .setPrevSplitState(firstLeft)
+            .setSplitSegmentInfo(_.uniqueId(), firstLeft)
             .build());
         if (firstRight) {
           endCommandStates.push(firstRight);
@@ -542,9 +540,9 @@ export class PathMutator {
     let updatedSplitSubPaths: SubPathState[] = [];
     if (parent.getSplitSubPaths().length > 2) {
       const firstParentBackingId =
-        secondSplitSubPath.getCommandStates()[0].getPrevSplitState().getBackingId();
+        secondSplitSubPath.getCommandStates()[0].getParentState().getBackingId();
       const secondParentBackingId =
-        _.last(secondSplitSubPath.getCommandStates()).getPrevSplitState().getBackingId();
+        _.last(secondSplitSubPath.getCommandStates()).getParentState().getBackingId();
       const firstParentBackingCommand =
         _.find(parent.getCommandStates(), cs => firstParentBackingId === cs.getBackingId());
       const secondParentBackingCommand =
@@ -599,9 +597,9 @@ export class PathMutator {
     }
     const mutator = parent.mutate().setSplitSubPaths(updatedSplitSubPaths);
     const firstSplitSegId =
-      _.last(secondSplitSubPath.getCommandStates()[0].getPrevSplitState().getCommands()).getId();
+      _.last(secondSplitSubPath.getCommandStates()[0].getParentState().getCommands()).getId();
     const secondSplitSegId =
-      _.last(_.last(secondSplitSubPath.getCommandStates()).getPrevSplitState().getCommands()).getId();
+      _.last(_.last(secondSplitSubPath.getCommandStates()).getParentState().getCommands()).getId();
     for (const id of [firstSplitSegId, secondSplitSegId]) {
       let csIdx = 0, splitIdx = -1;
       for (; csIdx < parent.getCommandStates().length; csIdx++) {

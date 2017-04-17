@@ -37,7 +37,7 @@ export class CommandState {
     // lines that are created (so that during unsplit operations we can identify
     // which segments were added together).
     private readonly splitSegmentId = '',
-    private readonly prevSplitState: CommandState = undefined,
+    private readonly parentState: CommandState = undefined,
   ) { }
 
   getBackingId() {
@@ -130,8 +130,8 @@ export class CommandState {
     return this.splitSegmentId;
   }
 
-  getPrevSplitState() {
-    return this.prevSplitState;
+  getParentState() {
+    return this.parentState;
   }
 
   mutate() {
@@ -143,7 +143,7 @@ export class CommandState {
       this.minT,
       this.maxT,
       this.splitSegmentId,
-      this.prevSplitState,
+      this.parentState,
     );
   }
 }
@@ -167,7 +167,7 @@ class CommandStateMutator {
     private minT: number,
     private maxT: number,
     private splitSegmentId: string,
-    private prevSplitState: CommandState,
+    private parentState: CommandState,
   ) { }
 
   /**
@@ -200,13 +200,8 @@ class CommandStateMutator {
     return this;
   }
 
-  setSplitSegmentId(id: string) {
+  setSplitSegmentInfo(id: string, parentState: CommandState) {
     this.splitSegmentId = id;
-    return this;
-  }
-
-  setPrevSplitState(cs: CommandState) {
-    this.prevSplitState = cs;
     return this;
   }
 
@@ -403,7 +398,7 @@ class CommandStateMutator {
       this.minT,
       this.maxT,
       this.splitSegmentId,
-      this.prevSplitState,
+      this.parentState,
     );
   }
 }
