@@ -9,6 +9,9 @@ import {
   findSubPathState,
   flattenSubPathStates,
 } from './SubPathState';
+import { environment } from '../../../environments/environment';
+
+const ENABLE_LOGS = !environment.production && true;
 
 /**
  * A builder class for creating mutated Path objects.
@@ -298,6 +301,9 @@ export class PathMutator {
    *
    */
   splitFilledSubPath(subIdx: number, startCmdIdx: number, endCmdIdx: number) {
+    if (ENABLE_LOGS) {
+      console.info('splitFilledSubPath', subIdx, startCmdIdx, endCmdIdx);
+    }
     const targetSps = this.findSubPathState(this.subPathOrdering[subIdx]);
     const targetCss =
       shiftAndReverseCommandStates(
@@ -503,12 +509,15 @@ export class PathMutator {
    * Deletes the sub path split segment with the specified index.
    */
   deleteSubPathSplitSegment(subIdx: number, cmdIdx: number) {
+    if (ENABLE_LOGS) {
+      console.info('deleteSubPathSplitSegment', subIdx, cmdIdx);
+    }
     const { targetCs } = this.findReversedAndShiftedInternalIndices(subIdx, cmdIdx);
-    const splitCommandId = targetCs.getSplitSegmentId();
+    const splitSegmentId = targetCs.getSplitSegmentId();
     const findSpsParentFn = (states: ReadonlyArray<SubPathState>): SubPathState => {
       for (const state of states) {
         for (const sps of state.getSplitSubPaths()) {
-          if (sps.getCommandStates().some(cs => cs.getSplitSegmentId() === splitCommandId)) {
+          if (sps.getCommandStates().some(cs => cs.getSplitSegmentId() === splitSegmentId)) {
             return state;
           }
           const parent = findSpsParentFn([sps]);
@@ -521,10 +530,10 @@ export class PathMutator {
     };
     const parent = findSpsParentFn(this.subPathStateMap);
     const firstSpsIdx = _.findIndex(parent.getSplitSubPaths(), sps => {
-      return sps.getCommandStates().some(cs => cs.getSplitSegmentId() === splitCommandId);
+      return sps.getCommandStates().some(cs => cs.getSplitSegmentId() === splitSegmentId);
     });
     const secondSpsIdx = _.findLastIndex(parent.getSplitSubPaths(), sps => {
-      return sps.getCommandStates().some(cs => cs.getSplitSegmentId() === splitCommandId);
+      return sps.getCommandStates().some(cs => cs.getSplitSegmentId() === splitSegmentId);
     });
     const firstSplitSubPath = parent.getSplitSubPaths()[firstSpsIdx];
     const secondSplitSubPath = parent.getSplitSubPaths()[secondSpsIdx];
@@ -553,6 +562,10 @@ export class PathMutator {
       let i = 0;
       for (; i < firstSplitCss.length; i++) {
         cs = firstSplitCss[i];
+        if (i + 1 < firstSplitCss.length
+          && firstSplitCss[i + 1].getSplitSegmentId() === splitSegmentId) {
+          break;
+        }
         if (cs.getBackingId() === firstParentBackingCommand.getBackingId()) {
           // TODO: should we delete splits that were added to the split backing cmd like we do now?
           break;
@@ -708,13 +721,15 @@ export class PathMutator {
    * Builds a new mutated path.
    */
   build() {
-    return newPath(
+    const path = newPath(
       new PathState(
         _.flatten(this.buildOrderedSubPathCommands()),
         this.subPathStateMap,
         this.subPathOrdering,
         this.numCollapsingSubPaths,
       ));
+    console.info(path.getPathString());
+    return path;
   }
 
   private findSubPathState(spsIdx: number) {

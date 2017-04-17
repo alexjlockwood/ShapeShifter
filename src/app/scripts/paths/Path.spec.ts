@@ -1,8 +1,9 @@
-import { SvgChar, newPath, Path, Command, ProjectionOntoPath } from '.';
-import { Matrix, Point, MathUtil } from '../common';
+import { SvgChar, newPath, Path, Command, ProjectionOntoPath, PathUtil } from '.';
+import { Point, MathUtil } from '../common';
 import * as _ from 'lodash';
 
 const lerp = MathUtil.lerp;
+const fromPathOpString = PathUtil.fromPathOpString;
 
 describe('Path', () => {
 
@@ -84,123 +85,6 @@ describe('Path', () => {
       });
     }
   });
-
-
-  type PathOp = 'RV' | 'SB' | 'SF' | 'S' | 'SIH' | 'US' | 'CV' | 'UCV' | 'RT' | 'M'
-    | 'AC' | 'DC' | 'SSSP' | 'SFSP' | 'DSPSS' | 'USSSP' | 'USFSP' | 'T';
-
-  function mutatePath(pathString: string, pathOpsString: string) {
-    const A = pathOpsString.split(' ');
-    const mutator = newPath(pathString).mutate();
-    for (let i = 0; i < A.length; i++) {
-      const op = A[i] as PathOp;
-      switch (op) {
-        case 'RV': // Reverse.
-          mutator.reverseSubPath(+A[i + 1]);
-          i += 1;
-          break;
-        case 'SB': // Shift back.
-          mutator.shiftSubPathBack(+A[i + 1]);
-          i += 1;
-          break;
-        case 'SF': // Shift forward.
-          mutator.shiftSubPathForward(+A[i + 1]);
-          i += 1;
-          break;
-        case 'S': // Split.
-          const subIdx = +A[i + 1];
-          const cmdIdx = +A[i + 2];
-          const args = [+A[i + 3]];
-          i += 3;
-          while (!isNaN(+A[i + 1]) && i < A.length) {
-            args.push(+A[i + 1]);
-            i++;
-          }
-          mutator.splitCommand(subIdx, cmdIdx, ...args);
-          break;
-        case 'SIH': // Split in half.
-          mutator.splitCommandInHalf(+A[i + 1], +A[i + 2]);
-          i += 2;
-          break;
-        case 'US': // Unsplit.
-          mutator.unsplitCommand(+A[i + 1], +A[i + 2]);
-          i += 2;
-          break;
-        case 'CV': // Convert.
-          mutator.convertCommand(+A[i + 1], +A[i + 2], A[i + 3] as SvgChar);
-          i += 3;
-          break;
-        case 'UCV': // Unconvert.
-          mutator.unconvertSubPath(+A[i + 1]);
-          i += 1;
-          break;
-        case 'RT': // Revert.
-          mutator.revert();
-          break;
-        case 'M': // Move subpath.
-          mutator.moveSubPath(+A[i + 1], +A[i + 2]);
-          i += 2;
-          break;
-        case 'AC': // Add collapsing sub path.
-          mutator.addCollapsingSubPath(new Point(+A[i + 1], +A[i + 2]), +A[i + 3]);
-          i += 3;
-          break;
-        case 'DC': // Delete collapsing sub paths.
-          mutator.deleteCollapsingSubPaths();
-          break;
-        case 'SSSP': // Split stroked sub path.
-          mutator.splitStrokedSubPath(+A[i + 1], +A[i + 2]);
-          i += 2;
-          break;
-        case 'SFSP': // Split filled sub path.
-          mutator.splitFilledSubPath(+A[i + 1], +A[i + 2], +A[i + 3]);
-          i += 3;
-          break;
-        case 'DSPSS': // Delete sub path split segment.
-          mutator.deleteSubPathSplitSegment(+A[i + 1], +A[i + 2]);
-          i += 2;
-          break;
-        case 'USSSP': // Unsplit stroked sub path.
-          mutator.unsplitStrokedSubPath(+A[i + 1]);
-          i += 1;
-          break;
-        case 'USFSP': // Unsplit stroked sub path.
-          mutator.unsplitStrokedSubPath(+A[i + 1]);
-          i += 1;
-          break;
-        case 'T': // Transform.
-          const isTransformOpFn = (token: string) => {
-            token = (token || '').toLowerCase();
-            return new Set(['scale', 'rotate', 'translate']).has(token);
-          };
-          while (isTransformOpFn(A[i + 1])) {
-            const transformOp = A[i + 1];
-            let matrix: Matrix;
-            switch (transformOp) {
-              case 'scale':
-                matrix = Matrix.fromScaling(+A[i + 2], +A[i + 3]);
-                i += 3;
-                break;
-              case 'rotate':
-                matrix = Matrix.fromRotation(+A[i + 2]);
-                i += 2;
-                break;
-              case 'translate':
-                matrix = Matrix.fromTranslation(+A[i + 2], +A[i + 3]);
-                i += 3;
-                break;
-              default:
-                throw new Error('Invalid transform op: ' + transformOp);
-            }
-            mutator.addTransforms([matrix]);
-          }
-          break;
-        default:
-          throw new Error('Invalid path op: ' + op);
-      }
-    }
-    return mutator.build();
-  }
 
   describe('mutating Path objects', () => {
     it('command IDs persist correctly after mutations', () => {
@@ -813,6 +697,31 @@ describe('Path', () => {
         'SIH 0 3 SIH 0 1 SFSP 0 1 4 SIH 0 4 SIH 0 3 SFSP 0 3 5 DSPSS 0 2',
         'M 4 4 L 20 4 L 20 20 L 8 20 L 4 12 L 4 4 M 8 20 L 4 20 L 4 12 L 8 20',
       ),
+      makeTest(
+        'M 4 4 h 16 v 16 h -16 v -16',
+        'SIH 0 4 SIH 0 1 SFSP 0 1 5 SIH 0 2 SFSP 0 2 4',
+        'M 4 4 L 12 4 L 8 8 L 4 4 M 8 8 L 4 12 L 4 4 L 8 8 M 12 4 L 20 4 L 20 20 L 4 20 L 4 12 L 12 4',
+      ),
+      makeTest(
+        'M 4 4 h 16 v 16 h -16 v -16',
+        'SIH 0 4 SIH 0 1 SFSP 0 1 5 SIH 0 2 SFSP 0 2 4 SIH 0 1 SFSP 0 1 3',
+        'M 4 4 L 8 4 L 8 8 L 4 4 M 8 4 L 12 4 L 8 8 L 8 4 M 8 8 L 4 12 L 4 4 L 8 8 M 12 4 L 20 4 L 20 20 L 4 20 L 4 12 L 12 4',
+      ),
+      makeTest(
+        'M 4 4 h 16 v 16 h -16 v -16',
+        'SIH 0 4 SIH 0 1 SFSP 0 1 5 SIH 0 2 SFSP 0 2 4 SIH 0 1 SFSP 0 1 3 DSPSS 0 2',
+        'M 4 4 L 12 4 L 8 8 L 4 4 M 8 8 L 4 12 L 4 4 L 8 8 M 12 4 L 20 4 L 20 20 L 4 20 L 4 12 L 12 4',
+      ),
+      makeTest(
+        'M 4 4 h 16 v 16 h -16 v -16',
+        'SIH 0 4 SIH 0 1 SFSP 0 1 5 SIH 0 2 SFSP 0 2 4 SIH 0 1 SFSP 0 1 3 DSPSS 1 3',
+        'M 4 4 L 12 4 L 8 8 L 4 4 M 8 8 L 4 12 L 4 4 L 8 8 M 12 4 L 20 4 L 20 20 L 4 20 L 4 12 L 12 4',
+      ),
+      makeTest(
+        'M 4 4 h 16 v 16 h -16 v -16',
+        'SIH 0 4 SIH 0 1 SFSP 0 1 5 SIH 0 2 SFSP 0 2 4 SIH 0 1 SFSP 0 1 3 DSPSS 0 3',
+        'M 4 4 L 8 4 L 8 8 L 4 12 L 4 4 M 8 4 L 12 4 L 8 8 L 8 4 M 12 4 L 20 4 L 20 20 L 4 20 L 4 12 L 12 4',
+      ),
       // TODO: determine if this is the right behavior
       // makeTest(
       //   'M 4 4 h 16 v 16 h -16 v -16',
@@ -829,7 +738,7 @@ describe('Path', () => {
 
     for (const test of MUTATION_TESTS) {
       it(`[${test.ops}] '${test.actual}' → '${test.expected}'`, () => {
-        checkPathsEqual(mutatePath(test.actual, test.ops), newPath(test.expected));
+        checkPathsEqual(fromPathOpString(test.actual, test.ops), newPath(test.expected));
       });
     }
   });
@@ -873,12 +782,12 @@ describe('Path', () => {
       },
       {
         point: new Point(24, 12),
-        path: mutatePath('M 8 5 L 8 19 L 19 12 Z', 'SIH 0 2 S 0 1 0.5 SFSP 0 1 4 US 1 2'),
+        path: fromPathOpString('M 8 5 L 8 19 L 19 12 Z', 'SIH 0 2 S 0 1 0.5 SFSP 0 1 4 US 1 2'),
         proj: { subIdx: 0, cmdIdx: 2, projection: { x: 19, y: 12, d: 5, t: 1 } },
       },
       {
         point: new Point(7, 16.9),
-        path: mutatePath('M 8 5 L 8 19 L 19 12 Z', 'S 0 1 0.5 SFSP 0 1 3'),
+        path: fromPathOpString('M 8 5 L 8 19 L 19 12 Z', 'S 0 1 0.5 SFSP 0 1 3'),
         proj: { subIdx: 1, cmdIdx: 1, projection: { x: 8, y: 16.9, d: 1, t: 0.7 } },
       },
       {
@@ -930,10 +839,10 @@ describe('Path', () => {
       [new Point(12, 0), 'M6 19h4V5H6v14zm8-14v14h4V5h-4z', false],
       [new Point(24, 24), 'M6 19h4V5H6v14zm8-14v14h4V5h-4z', false],
       [new Point(19, 20), 'M6 19h4V5H6v14zm8-14v14h4V5h-4z', false],
-      [new Point(14, 10), mutatePath('M8 5L8 19L19 12L8 5', 'SIH 0 1 SFSP 0 1 3'), true],
-      [new Point(17, 6), mutatePath('M8 5L8 19L19 12L8 5', 'SIH 0 1 SFSP 0 1 3'), false],
-      [new Point(11, 9), mutatePath('M8 5L8 19L19 12L8 5', 'SIH 0 1 SFSP 0 1 3'), true],
-      [new Point(11, 9), mutatePath('M8 5L8 19L19 12L8 5', 'SIH 0 1 S 0 3 1 SFSP 0 1 3'), true],
+      [new Point(14, 10), fromPathOpString('M8 5L8 19L19 12L8 5', 'SIH 0 1 SFSP 0 1 3'), true],
+      [new Point(17, 6), fromPathOpString('M8 5L8 19L19 12L8 5', 'SIH 0 1 SFSP 0 1 3'), false],
+      [new Point(11, 9), fromPathOpString('M8 5L8 19L19 12L8 5', 'SIH 0 1 SFSP 0 1 3'), true],
+      [new Point(11, 9), fromPathOpString('M8 5L8 19L19 12L8 5', 'SIH 0 1 S 0 3 1 SFSP 0 1 3'), true],
     ];
 
     const TESTS_HIT_TEST_STROKE = [

@@ -32,7 +32,7 @@ class PathImpl implements Path {
       if (uniqueIds.size !== numCommands) {
         const dumpInfo = this.getSubPaths().map((s, subIdx) => {
           return s.getCommands().map((c, cmdIdx) => {
-            return { subIdx, cmdIdx, id: c.getId() };
+            return { subIdx, cmdIdx, id: c.getId(), isDup: allIds.filter(id => id === c.getId()).length > 1 };
           });
         });
         console.warn('duplicate IDs found!', this, _.flatten(dumpInfo));
