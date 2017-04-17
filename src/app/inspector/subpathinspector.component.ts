@@ -1,7 +1,7 @@
 import {
   Component, OnInit, Input, ChangeDetectionStrategy
 } from '@angular/core';
-import { Path, SubPath } from '../scripts/paths';
+import { SubPath } from '../scripts/paths';
 import {
   StateService, SelectionService, HoverService, HoverType
 } from '../services';
