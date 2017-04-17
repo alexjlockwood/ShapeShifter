@@ -346,7 +346,6 @@ export class PathMutator {
         .build();
     const endLine =
       new CommandState(endLineCmd).mutate()
-        //.setSplitSegmentId(endSplitCmd.getId())
         .setSplitSegmentId(splitSegmentId)
         .setPrevSplitState(secondLeft)
         .build();
@@ -362,7 +361,6 @@ export class PathMutator {
         .build();
     const startLine =
       new CommandState(startLineCmd).mutate()
-        //.setSplitSegmentId(endSplitCmd.getId())
         .setSplitSegmentId(splitSegmentId)
         .build();
 
@@ -389,7 +387,6 @@ export class PathMutator {
         const moveCmd = newCommand('M', [startSplitPoint, startSplitPoint]);
         endCommandStates.push(
           new CommandState(moveCmd).mutate()
-            //.setSplitSegmentId(startSplitCmd.getId())
             .setSplitSegmentId(_.uniqueId())
             .setPrevSplitState(firstLeft)
             .build());
@@ -563,14 +560,12 @@ export class PathMutator {
         newCss.push(cs);
       }
       const firstParentBackingCommandIdx = i;
-      console.info('before', newCss);
       if (cs.getBackingId() === secondSplitCss[1].getBackingId()) {
         newCss.push(secondSplitCss[1].merge(cs));
       } else {
         newCss.push(cs);
         newCss.push(secondSplitCss[1]);
       }
-      console.info('after', newCss);
       for (i = 2; i < secondSplitCss.length; i++) {
         cs = secondSplitCss[i];
         if (cs.getBackingId() === secondParentBackingCommand.getBackingId()) {
