@@ -1035,7 +1035,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  // private isFirstClick = false;
+  // private isFirstClick = true;
   onClick(event: MouseEvent) {
     // TODO: is this hacky? should we be using onBlur() to reset the app mode?
     // This ensures that parents won't also receive the same click event.
@@ -1048,7 +1048,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     //     this.canvasType,
     //     PathUtil.fromPathOpString(
     //       'M 4 4 h 16 v 16 h -16 v -16',
-    //       'SIH 0 4 SIH 0 1 SFSP 0 1 5 SIH 0 2 SFSP 0 2 4 SIH 0 1 SFSP 0 1 3',
+    //       'SIH 0 4 SIH 0 2 SFSP 0 2 5 SIH 0 3 SIH 0 1 SFSP 0 1 4 SIH 1 3 SIH 1 1 SFSP 1 1 4',
     //     ));
     //   this.isFirstClick = false;
     // }

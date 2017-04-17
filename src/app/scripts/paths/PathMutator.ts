@@ -352,10 +352,7 @@ export class PathMutator {
     // TODO: write comment!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     // TODO: write comment!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     const splitSegmentId = _.uniqueId();
-    const endLineCmd =
-      newCommand('L', [endSplitPoint, startSplitPoint]).mutate()
-        .setIsSplitSegment(true)
-        .build();
+    const endLineCmd = newCommand('L', [endSplitPoint, startSplitPoint]);
     const endLine =
       new CommandState(endLineCmd).mutate()
         .setSplitSegmentId(splitSegmentId)
@@ -367,10 +364,7 @@ export class PathMutator {
     // TODO: write comment!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     // TODO: write comment!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     // TODO: write comment!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    const startLineCmd =
-      newCommand('L', [startSplitPoint, endSplitPoint]).mutate()
-        .setIsSplitSegment(true)
-        .build();
+    const startLineCmd = newCommand('L', [startSplitPoint, endSplitPoint]);
     const startLine =
       new CommandState(startLineCmd).mutate()
         .setSplitSegmentId(splitSegmentId)
@@ -418,10 +412,20 @@ export class PathMutator {
       new SubPathState(endCommandStates),
     ];
     const newStates: SubPathState[] = [];
-    const splitSegCssIds =
-      targetSps.getCommandStates()
+    const parent = findSubPathStateParent(this.subPathStateMap, this.subPathOrdering[subIdx]);
+    const parentSplitSegIds =
+      _.chain((parent ? parent.getCommandStates() : []) as CommandState[])
+        .flatMap(css => css)
         .filter(cs => !!cs.getSplitSegmentId())
-        .map(cs => cs.getBackingId());
+        .map(cs => cs.getBackingId())
+        .value();
+    const splitSegCssIds =
+      _.chain(targetSps.getCommandStates() as CommandState[])
+        .filter(cs => !!cs.getSplitSegmentId() && !parentSplitSegIds.includes(cs.getBackingId()))
+        .map(cs => cs.getBackingId())
+        .value();
+    // Checking for the existence of 'firstRight' and 'secondRight' ensures that
+    // paths connected to the end point of a deleted split segment will still be kept.
     if (this.subPathStateMap.includes(targetSps)
       || (firstRight && splitSegCssIds.includes(firstLeft.getBackingId()))
       || (secondRight && splitSegCssIds.includes(secondLeft.getBackingId()))) {
@@ -580,16 +584,10 @@ export class PathMutator {
       }
       i = _.findIndex(firstSplitCss, c => c.getBackingId() === secondParentBackingCommand.getBackingId());
       if (i >= 0) {
-        newCss.push(
-          firstSplitCss[i].merge(cs).mutate()
-            .setIsSplitSegment(secondParentBackingCommand.isSplitSegment())
-            .build());
+        newCss.push(firstSplitCss[i].merge(cs));
       } else {
         i = firstParentBackingCommandIdx + 1;
-        newCss.push(
-          cs.mutate()
-            .setIsSplitSegment(secondParentBackingCommand.isSplitSegment())
-            .build());
+        newCss.push(cs);
       }
       for (i = i + 1; i < firstSplitCss.length; i++) {
         newCss.push(firstSplitCss[i]);

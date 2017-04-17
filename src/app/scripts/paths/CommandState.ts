@@ -33,10 +33,6 @@ export class CommandState {
     private readonly minT = 0,
     // The upper bound T value (may be < 1 for split subpaths).
     private readonly maxT = 1,
-    // Indicates whether the command state marks the beginning/end of a subpath split.
-    // In other words, this is true iff the segment was cut using the subpath splitter.
-    // TODO: can this be inferred by the existence of split/source command id below?
-    private readonly isSplitSegment_ = backingCommand.isSplitSegment(),
     // When a filled subpath is split, we assign a 'split command id' to the two
     // lines that are created (so that during unsplit operations we can identify
     // which segments were added together).
@@ -130,14 +126,6 @@ export class CommandState {
     return splitIdx !== this.mutations.length - 1;
   }
 
-  /**
-   * Returns true iff this command state object was created as a result
-   * of a subpath split.
-   */
-  isSplitSegment() {
-    return this.isSplitSegment_;
-  }
-
   getSplitSegmentId() {
     return this.splitSegmentId;
   }
@@ -154,7 +142,6 @@ export class CommandState {
       this.calculator,
       this.minT,
       this.maxT,
-      this.isSplitSegment_,
       this.splitSegmentId,
       this.prevSplitState,
     );
@@ -179,7 +166,6 @@ class CommandStateMutator {
     private calculator: Calculator,
     private minT: number,
     private maxT: number,
-    private isSplitSegment_: boolean,
     private splitSegmentId: string,
     private prevSplitState: CommandState,
   ) { }
@@ -211,11 +197,6 @@ class CommandStateMutator {
 
   setMinT(minT: number) {
     this.minT = minT;
-    return this;
-  }
-
-  setIsSplitSegment(isSubPathSplitSegment: boolean) {
-    this.isSplitSegment_ = isSubPathSplitSegment;
     return this;
   }
 
@@ -409,7 +390,7 @@ class CommandStateMutator {
           .mutate()
           .setId(this.mutations[i].id)
           .setIsSplitPoint(i !== this.mutations.length - 1)
-          .setIsSplitSegment(this.isSplitSegment_)
+          .setIsSplitSegment(!!this.splitSegmentId)
           .build());
       prevT = currT;
     }
@@ -421,7 +402,6 @@ class CommandStateMutator {
       this.calculator,
       this.minT,
       this.maxT,
-      this.isSplitSegment_,
       this.splitSegmentId,
       this.prevSplitState,
     );
