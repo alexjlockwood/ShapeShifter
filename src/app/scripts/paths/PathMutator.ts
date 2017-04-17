@@ -8,10 +8,11 @@ import {
   SubPathState,
   findSubPathState,
   flattenSubPathStates,
+  findSplitSegmentParentNode,
 } from './SubPathState';
 import { environment } from '../../../environments/environment';
 
-const ENABLE_LOGS = !environment.production && true;
+const ENABLE_LOGS = !environment.production && false;
 
 /**
  * A builder class for creating mutated Path objects.
@@ -518,21 +519,7 @@ export class PathMutator {
     LOG('deleteSubPathSplitSegment', subIdx, cmdIdx);
     const { targetCs } = this.findReversedAndShiftedInternalIndices(subIdx, cmdIdx);
     const splitSegmentId = targetCs.getSplitSegmentId();
-    const findSpsParentFn = (states: ReadonlyArray<SubPathState>): SubPathState => {
-      for (const state of states) {
-        for (const sps of state.getSplitSubPaths()) {
-          if (sps.getCommandStates().some(cs => cs.getSplitSegmentId() === splitSegmentId)) {
-            return state;
-          }
-          const parent = findSpsParentFn([sps]);
-          if (parent) {
-            return parent;
-          }
-        }
-      }
-      return undefined;
-    };
-    const parent = findSpsParentFn(this.subPathStateMap);
+    const parent = findSplitSegmentParentNode(this.subPathStateMap, splitSegmentId);
     const firstSpsIdx = _.findIndex(parent.getSplitSubPaths(), sps => {
       return sps.getCommandStates().some(cs => cs.getSplitSegmentId() === splitSegmentId);
     });
@@ -612,36 +599,33 @@ export class PathMutator {
       splits.splice(secondSpsIdx, 1);
       updatedSplitSubPaths = splits;
     }
-    const fn = () => {
-      const mutator = parent.mutate().setSplitSubPaths(updatedSplitSubPaths);
-      const firstSplitSegId =
-        _.last(secondSplitSubPath.getCommandStates()[0].getPrevSplitState().getCommands()).getId();
-      const secondSplitSegId =
-        _.last(_.last(secondSplitSubPath.getCommandStates()).getPrevSplitState().getCommands()).getId();
-      for (const id of [firstSplitSegId, secondSplitSegId]) {
-        let csIdx = 0, splitIdx = -1;
-        for (; csIdx < parent.getCommandStates().length; csIdx++) {
-          const cs = parent.getCommandStates()[csIdx];
-          const csIds = cs.getCommands().map((_, idx) => cs.getIdAtIndex(idx));
-          splitIdx = csIds.indexOf(id);
-          if (splitIdx >= 0) {
-            break;
-          }
-        }
-        if (splitIdx >= 0 && parent.getCommandStates()[csIdx].isSplitAtIndex(splitIdx)) {
-          // Delete the split point that created the sub path.
-          const unsplitCs =
-            parent.getCommandStates()[csIdx].mutate().unsplitAtIndex(splitIdx).build();
-          mutator.setCommandState(unsplitCs, csIdx);
+    const mutator = parent.mutate().setSplitSubPaths(updatedSplitSubPaths);
+    const firstSplitSegId =
+      _.last(secondSplitSubPath.getCommandStates()[0].getPrevSplitState().getCommands()).getId();
+    const secondSplitSegId =
+      _.last(_.last(secondSplitSubPath.getCommandStates()).getPrevSplitState().getCommands()).getId();
+    for (const id of [firstSplitSegId, secondSplitSegId]) {
+      let csIdx = 0, splitIdx = -1;
+      for (; csIdx < parent.getCommandStates().length; csIdx++) {
+        const cs = parent.getCommandStates()[csIdx];
+        const csIds = cs.getCommands().map((_, idx) => cs.getIdAtIndex(idx));
+        splitIdx = csIds.indexOf(id);
+        if (splitIdx >= 0) {
+          break;
         }
       }
-      this.subPathStateMap =
-        replaceSubPathStateInternal(this.subPathStateMap, parent, mutator.build());
-      for (const idx of deletedSubIdxs) {
-        this.updateOrderingAfterUnsplitSubPath(idx);
+      if (splitIdx >= 0 && parent.getCommandStates()[csIdx].isSplitAtIndex(splitIdx)) {
+        // Delete the split point that created the sub path.
+        const unsplitCs =
+          parent.getCommandStates()[csIdx].mutate().unsplitAtIndex(splitIdx).build();
+        mutator.setCommandState(unsplitCs, csIdx);
       }
-    };
-    fn();
+    }
+    this.subPathStateMap =
+      replaceSubPathStateInternal(this.subPathStateMap, parent, mutator.build());
+    for (const idx of deletedSubIdxs) {
+      this.updateOrderingAfterUnsplitSubPath(idx);
+    }
     return this;
   }
 

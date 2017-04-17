@@ -58,18 +58,18 @@
         </span>
         <span fxFlex></span>
         <button md-icon-button [disabled]="morphStatus === MORPH_NONE"
-          mdTooltip="Select points" mdTooltipPosition="above" mdTooltipShowDelay="500"
+          mdTooltip="Select points (S)" mdTooltipPosition="above"
           (click)="appModeService.setAppMode(SELECTION_MODE)">
           <md-icon class="svg-button" [class.activated]="(appModeObservable | async) === SELECTION_MODE" svgIcon="selectioncursor"></md-icon>
         </button>
         <button md-icon-button [disabled]="morphStatus === MORPH_NONE"
-          mdTooltip="Add points ({{getSplitCommandsKeyboardShortcut()}})"
-          mdTooltipPosition="above" mdTooltipShowDelay="500" (click)="appModeService.setAppMode(SPLIT_COMMANDS_MODE)">
+          mdTooltip="Add points (A)" mdTooltipPosition="above"
+          (click)="appModeService.setAppMode(SPLIT_COMMANDS_MODE)">
           <md-icon [class.activated]="(appModeObservable | async) === SPLIT_COMMANDS_MODE">add_circle_outline</md-icon>
         </button>
         <button md-icon-button [disabled]="morphStatus === MORPH_NONE"
-          mdTooltip="Split subpaths ({{getSplitSubPathsKeyboardShortcut()}})"
-          mdTooltipPosition="above" mdTooltipShowDelay="500" (click)="appModeService.setAppMode(SPLIT_SUBPATHS_MODE)">
+          mdTooltip="Split subpaths (C)" mdTooltipPosition="above"
+          (click)="appModeService.setAppMode(SPLIT_SUBPATHS_MODE)">
           <md-icon [class.activated]="(appModeObservable | async) === SPLIT_SUBPATHS_MODE">content_cut</md-icon>
         </button>
       </div>

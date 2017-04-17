@@ -69,60 +69,65 @@ export class SelectionService {
 
   toggleSubPath(source: CanvasType, subIdx: number) {
     const selections = this.getSelections().slice();
-    _.remove(selections, sel => sel.type !== SelectionType.SubPath);
-    this.toggleInternal(
+    _.remove(selections, sel => sel.type !== SelectionType.SubPath && sel.source !== source);
+    this.toggleSelections(
       selections,
-      { type: SelectionType.SubPath, source, subIdx });
+      [{ type: SelectionType.SubPath, source, subIdx }]);
   }
 
-  toggleSegment(source: CanvasType, subIdx: number, cmdIdx: number, appendToList = false) {
+  toggleSegments(
+    source: CanvasType,
+    segments: Array<{ subIdx: number, cmdIdx: number }>,
+    appendToList = false) {
+
     const selections = this.getSelections().slice();
     _.remove(selections, sel => sel.type !== SelectionType.Segment);
-    this.toggleInternal(
+    this.toggleSelections(
       selections,
-      { type: SelectionType.Segment, source, subIdx, cmdIdx },
+      segments.map(seg => {
+        const { subIdx, cmdIdx } = seg;
+        return { type: SelectionType.Segment, source, subIdx, cmdIdx };
+      }),
       appendToList);
   }
 
   togglePoint(source: CanvasType, subIdx: number, cmdIdx: number, appendToList = false) {
     const selections = this.getSelections().slice();
-    _.remove(selections, sel => sel.type !== SelectionType.Point);
-    this.toggleInternal(
+    _.remove(selections, sel => sel.type !== SelectionType.Point && sel.source !== source);
+    this.toggleSelections(
       selections,
-      { type: SelectionType.Point, source, subIdx, cmdIdx },
+      [{ type: SelectionType.Point, source, subIdx, cmdIdx }],
       appendToList);
   }
 
   /**
-   * Toggles the specified selection. If the selection exists, it will be
-   * removed from the list. Otherwise, it will be added to the list of selections.
-   * By default, all other selections from the list will be cleared.
-   */
-  private toggleInternal(
-    selections: Selection[],
-    selection: Selection,
+    * Toggles the specified selections. If a selection exists, all selections will be
+    * removed from the list. Otherwise, they will be added to the list of selections.
+    * By default, all other selections from the list will be cleared.
+    */
+  private toggleSelections(
+    currentSelections: Selection[],
+    newSelections: Selection[],
     appendToList = false) {
 
-    const updatedSelections = selections.slice();
-    _.remove(updatedSelections, sel => {
-      // Discard any selections that don't match the source canvas type.
-      return sel.source !== selection.source;
+    const matchingSelections = _.remove(currentSelections, currSel => {
+      // Remove any selections that are equal to a new selection.
+      return newSelections.some(newSel => areSelectionsEqual(newSel, currSel));
     });
-    const existingSelections = _.remove(updatedSelections, sel => {
-      // Remove any selections that are equal to the new selection.
-      return areSelectionsEqual(selection, sel);
-    });
-    if (!existingSelections.length) {
-      // If no selections were removed, then add the selection to the list.
-      updatedSelections.push(selection);
+    if (!matchingSelections.length) {
+      // If no selections were removed, then add all of the selections to the list.
+      currentSelections.push(...newSelections);
     }
     if (!appendToList) {
       // If we aren't appending multiple selections at a time, then clear
       // any previous selections from the list.
-      _.remove(updatedSelections, sel => !areSelectionsEqual(selection, sel));
+      _.remove(currentSelections, currSel => {
+        return newSelections.every(newSel => !areSelectionsEqual(currSel, newSel));
+      });
     }
-    this.source.next(updatedSelections);
+    this.source.next(currentSelections);
   }
+
 
   /**
    * Clears the current list of selections.

@@ -15,6 +15,8 @@ import * as polylabel from 'polylabel';
 import {
   SubPathState,
   findSubPathState,
+  findSplitSegmentParentNode,
+  flattenSubPathStates,
 } from './SubPathState';
 
 /**
@@ -272,6 +274,33 @@ export class PathState {
     }
     const pole = polylabel([polygon]);
     return new Point(pole[0], pole[1]);
+  }
+
+  getConnectedSplitSegments(subIdx: number, cmdIdx: number) {
+    const splitSegmentCmd = this.subPaths[subIdx].getCommands()[cmdIdx];
+    if (!splitSegmentCmd.isSplitSegment) {
+      return [];
+    }
+    const state = findSubPathState(this.subPathStateMap, this.subPathOrdering[subIdx]);
+    const targetCs = _.find(state.getCommandStates(), cs => {
+      return cs.getCommands().map(c => c.getId()).includes(splitSegmentCmd.getId());
+    });
+    const splitSegmentId = targetCs.getSplitSegmentId();
+    const parent = findSplitSegmentParentNode(this.subPathStateMap, splitSegmentId);
+    return _.chain(flattenSubPathStates(parent.getSplitSubPaths()))
+      .flatMap(sps => sps.getCommandStates() as CommandState[])
+      .flatMap(cs => cs.getCommands() as Command[])
+      .filter(cmd => cmd.isSplitSegment())
+      .map(cmd => {
+        const sIdx = _.findIndex(this.subPaths, s => {
+          return s.getCommands().map(c => c.getId()).includes(cmd.getId());
+        });
+        const cIdx = _.findIndex(this.subPaths[subIdx].getCommands(), c => {
+          return c.getId() === cmd.getId();
+        });
+        return { subIdx: sIdx, cmdIdx: cIdx };
+      })
+      .value();
   }
 
   private findSubPathState(spsIdx: number) {

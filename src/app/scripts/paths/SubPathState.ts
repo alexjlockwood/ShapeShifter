@@ -152,3 +152,21 @@ export function flattenSubPathStates(map: ReadonlyArray<SubPathState>) {
   })(map);
   return subPathStates;
 }
+
+export function findSplitSegmentParentNode(
+  states: ReadonlyArray<SubPathState>,
+  splitSegmentId: string): SubPathState {
+
+  for (const state of states) {
+    for (const sps of state.getSplitSubPaths()) {
+      if (sps.getCommandStates().some(cs => cs.getSplitSegmentId() === splitSegmentId)) {
+        return state;
+      }
+      const parent = findSplitSegmentParentNode([sps], splitSegmentId);
+      if (parent) {
+        return parent;
+      }
+    }
+  }
+  return undefined;
+};

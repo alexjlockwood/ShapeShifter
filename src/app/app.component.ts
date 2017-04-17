@@ -63,7 +63,6 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   private currentPaneHeight = 0;
 
   private pendingFilePickerCanvasType: CanvasType;
-  private isAppModeKeyboardShortcutActive = false;
 
   @ViewChild('canvasContainer') private canvasContainerRef: ElementRef;
 
@@ -225,28 +224,13 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private initKeyCodeListeners() {
-    const getAppModeShortcutFn = (event: JQueryEventObject) => {
-      if (this.isMacOs() ? event.metaKey : event.ctrlKey) {
-        if (event.altKey) {
-          return AppMode.SplitSubPaths;
-        }
-        return AppMode.SplitCommands;
-      }
-      return undefined;
-    };
-
     $(window).on('keydown', event => {
       if (document.activeElement.matches('input')) {
         // Ignore shortcuts when an input element has focus.
         return true;
       }
 
-      const newAppMode = getAppModeShortcutFn(event);
-      if (newAppMode) {
-        this.isAppModeKeyboardShortcutActive = true;
-        this.appModeService.setAppMode(newAppMode);
-      }
-
+      const isMorphStatusNone = this.stateService.getMorphStatus() === MorphStatus.None;
       const isMorphable = this.stateService.getMorphStatus() === MorphStatus.Morphable;
       if (event.keyCode === 8 || event.keyCode === 46) {
         // In case there's a JS error, never navigate away.
@@ -287,25 +271,33 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
         }
         return false;
       }
-      if (event.keyCode === 83) {
-        // S.
+      if (event.keyCode === 84) {
+        // T.
         if (isMorphable) {
           this.animatorService.setIsSlowMotion(!this.animatorService.isSlowMotion());
         }
         return false;
       }
-      return undefined;
-    });
-
-    $(window).on('keyup', event => {
-      if (this.isAppModeKeyboardShortcutActive) {
-        const newAppMode = getAppModeShortcutFn(event);
-        if (newAppMode) {
-          this.appModeService.setAppMode(newAppMode);
-        } else {
+      if (event.keyCode === 83) {
+        // S.
+        if (!isMorphStatusNone) {
           this.appModeService.setAppMode(AppMode.Selection);
-          this.isAppModeKeyboardShortcutActive = false;
         }
+        return false;
+      }
+      if (event.keyCode === 65) {
+        // A.
+        if (!isMorphStatusNone) {
+          this.appModeService.setAppMode(AppMode.SplitCommands);
+        }
+        return false;
+      }
+      if (event.keyCode === 67) {
+        // C.
+        if (!isMorphStatusNone) {
+          this.appModeService.setAppMode(AppMode.SplitSubPaths);
+        }
+        return false;
       }
       return undefined;
     });
@@ -322,18 +314,6 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       }
       return undefined;
     });
-  }
-
-  getSplitCommandsKeyboardShortcut() {
-    return this.isMacOs() ? '⌘' : 'Ctrl';
-  }
-
-  getSplitSubPathsKeyboardShortcut() {
-    return this.isMacOs() ? '⌘⌥' : 'Ctrl + Alt';
-  }
-
-  private isMacOs() {
-    return navigator.appVersion.indexOf('Mac') >= 0;
   }
 
   // Proxies a button click to the <input> tag that opens the file picker.

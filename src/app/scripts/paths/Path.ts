@@ -65,6 +65,11 @@ export interface Path {
   getPoleOfInaccessibility(subIdx: number): Point;
 
   /**
+   * Returns a list of all descendant split segments.
+   */
+  getConnectedSplitSegments(subIdx: number, cmdIdx: number): ReadonlyArray<Index>;
+
+  /**
    * Creates a builder that can create a mutated Path object.
    */
   mutate(): PathMutator;
@@ -99,8 +104,11 @@ export interface HitResult {
   readonly shapeHits?: Array<{ subIdx: number }>;
 }
 
-export interface ProjectionOntoPath {
+interface Index {
   readonly subIdx: number;
   readonly cmdIdx: number;
+}
+
+export interface ProjectionOntoPath extends Index {
   readonly projection: Projection;
 }

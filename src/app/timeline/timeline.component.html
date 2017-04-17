@@ -1,7 +1,7 @@
 <div fxLayout="row" fxLayoutAlight="center center">
   <span fxFlex="1 1 auto"></span>
   <button md-icon-button [disabled]="(morphStatusObservable | async) !== MORPH_MORPHABLE"
-    mdTooltip="Slow motion (S)" mdTooltipPosition="below" mdTooltipShowDelay="500"
+    mdTooltip="Slow motion (T)" mdTooltipPosition="below" mdTooltipShowDelay="500"
     (click)="setIsSlowMotion(!isSlowMotion())" md-theme="light">
     <md-icon [class.activated]="isAnimationSlowMotionObservable | async">slow_motion_video</md-icon>
   </button>

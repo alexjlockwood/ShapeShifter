@@ -39,23 +39,6 @@ export class CanvasSelector {
     this.lastKnownMouseLocation = mouseDown;
 
     const hitResult = this.performHitTest(mouseDown);
-    if (hitResult.isSegmentHit) {
-      for (const hit of hitResult.segmentHits) {
-        const { subIdx, cmdIdx } = hit;
-        const cmd = this.component.activePath.getCommand(subIdx, cmdIdx);
-        if (!cmd.isSplitSegment()) {
-          return;
-        }
-        this.hoverService.reset();
-        this.selectionService.reset();
-        this.component.stateService.updateActivePath(
-          this.canvasType,
-          this.component.activePath.mutate()
-            .deleteSubPathSplitSegment(subIdx, cmdIdx)
-            .build());
-        return;
-      }
-    }
     if (hitResult.isEndPointHit) {
       const { subIdx, cmdIdx, cmd } = this.findHitPoint(hitResult.endPointHits);
       if (cmd.isSplitPoint()) {
@@ -70,12 +53,13 @@ export class CanvasSelector {
       return;
     }
 
-    // TODO: add ability to select individual segments so they can be deleted
     if (this.component.activePathLayer.isFilled() && hitResult.isSegmentHit) {
       const { subIdx, cmdIdx, cmd } = this.findHitSegment(hitResult.segmentHits);
       if (cmd.isSplitSegment()) {
-        this.selectionService.toggleSegment(
-          this.canvasType, subIdx, cmdIdx, isShiftOrMetaPressed);
+        const connectedSplitSegments =
+          this.component.activePath.getConnectedSplitSegments(subIdx, cmdIdx);
+        this.selectionService.toggleSegments(
+          this.canvasType, connectedSplitSegments.slice(), isShiftOrMetaPressed);
         return;
       }
     }
