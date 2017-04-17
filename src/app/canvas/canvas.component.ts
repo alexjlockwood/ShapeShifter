@@ -4,7 +4,7 @@ import {
   Component, AfterViewInit, OnDestroy, ElementRef, ViewChild,
   Input, ViewChildren, QueryList, ChangeDetectionStrategy
 } from '@angular/core';
-import { Path, SubPath, Command, PathUtil } from '../scripts/paths';
+import { Path, SubPath, Command } from '../scripts/paths';
 import { PathLayer, ClipPathLayer, LayerUtil } from '../scripts/layers';
 import { CanvasType } from '../CanvasType';
 import { Point, Matrix, MathUtil, ColorUtil } from '../scripts/common';
@@ -24,6 +24,7 @@ import { Subscription } from 'rxjs/Subscription';
 import { SegmentSplitter } from './SegmentSplitter';
 import { CanvasSelector } from './CanvasSelector';
 import { ShapeSplitter } from './ShapeSplitter';
+// import { PathUtil } from '../scripts/paths';
 
 const SPLIT_POINT_RADIUS_FACTOR = 0.8;
 const SELECTED_POINT_RADIUS_FACTOR = 1.25;
@@ -1034,23 +1035,23 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  private isFirstClick = true;
+  // private isFirstClick = false;
   onClick(event: MouseEvent) {
     // TODO: is this hacky? should we be using onBlur() to reset the app mode?
     // This ensures that parents won't also receive the same click event.
     event.cancelBubble = true;
 
-    if (this.isFirstClick) {
-      this.selectionService.reset();
-      this.hoverService.reset();
-      this.stateService.updateActivePath(
-        this.canvasType,
-        PathUtil.fromPathOpString(
-          'M 4 4 h 16 v 16 h -16 v -16',
-          'SIH 0 4 SIH 0 1 SFSP 0 1 5 SIH 0 2 SFSP 0 2 4 SIH 0 1 SFSP 0 1 3',
-        ));
-      this.isFirstClick = false;
-    }
+    // if (this.isFirstClick) {
+    //   this.selectionService.reset();
+    //   this.hoverService.reset();
+    //   this.stateService.updateActivePath(
+    //     this.canvasType,
+    //     PathUtil.fromPathOpString(
+    //       'M 4 4 h 16 v 16 h -16 v -16',
+    //       'SIH 0 4 SIH 0 1 SFSP 0 1 5 SIH 0 2 SFSP 0 2 4 SIH 0 1 SFSP 0 1 3',
+    //     ));
+    //   this.isFirstClick = false;
+    // }
 
     if (this.activePathId) {
       return;
