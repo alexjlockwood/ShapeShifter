@@ -41,9 +41,10 @@ export class CommandState {
     // lines that are created (so that during unsplit operations we can identify
     // which segments were added together).
     private readonly splitSegmentId = '',
+    private readonly prevSplitState: CommandState = undefined,
   ) { }
 
-  getBackingCommandId() {
+  getBackingId() {
     return this.backingCommand.getId();
   }
 
@@ -110,7 +111,7 @@ export class CommandState {
    * Merges two previously sliced command state objects into one.
    */
   merge(cs: CommandState) {
-    if (this.getBackingCommandId() !== cs.getBackingCommandId()) {
+    if (this.getBackingId() !== cs.getBackingId()) {
       throw new Error('Attempt to merge command state objects with unequal backing IDs');
     }
     if (this.minT < cs.minT) {
@@ -141,6 +142,10 @@ export class CommandState {
     return this.splitSegmentId;
   }
 
+  getPrevSplitState() {
+    return this.prevSplitState;
+  }
+
   mutate() {
     return new CommandStateMutator(
       this.backingCommand,
@@ -151,6 +156,7 @@ export class CommandState {
       this.maxT,
       this.isSplitSegment_,
       this.splitSegmentId,
+      this.prevSplitState,
     );
   }
 }
@@ -175,6 +181,7 @@ class CommandStateMutator {
     private maxT: number,
     private isSplitSegment_: boolean,
     private splitSegmentId: string,
+    private prevSplitState: CommandState,
   ) { }
 
   /**
@@ -207,13 +214,18 @@ class CommandStateMutator {
     return this;
   }
 
+  setIsSplitSegment(isSubPathSplitSegment: boolean) {
+    this.isSplitSegment_ = isSubPathSplitSegment;
+    return this;
+  }
+
   setSplitSegmentId(id: string) {
     this.splitSegmentId = id;
     return this;
   }
 
-  setIsSplitSegment(isSubPathSplitSegment: boolean) {
-    this.isSplitSegment_ = isSubPathSplitSegment;
+  setPrevSplitState(cs: CommandState) {
+    this.prevSplitState = cs;
     return this;
   }
 
@@ -411,6 +423,7 @@ class CommandStateMutator {
       this.maxT,
       this.isSplitSegment_,
       this.splitSegmentId,
+      this.prevSplitState,
     );
   }
 }

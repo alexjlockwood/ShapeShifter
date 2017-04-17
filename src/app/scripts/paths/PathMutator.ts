@@ -339,13 +339,16 @@ export class PathMutator {
     // TODO: write comment!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     // TODO: write comment!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     // TODO: write comment!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    const splitSegmentId = _.uniqueId();
     const endLineCmd =
       newCommand('L', [endSplitPoint, startSplitPoint]).mutate()
         .setIsSplitSegment(true)
         .build();
     const endLine =
       new CommandState(endLineCmd).mutate()
-        .setSplitSegmentId(endSplitCmd.getId())
+        //.setSplitSegmentId(endSplitCmd.getId())
+        .setSplitSegmentId(splitSegmentId)
+        .setPrevSplitState(secondLeft)
         .build();
 
     // TODO: write comment!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -359,7 +362,8 @@ export class PathMutator {
         .build();
     const startLine =
       new CommandState(startLineCmd).mutate()
-        .setSplitSegmentId(endSplitCmd.getId())
+        //.setSplitSegmentId(endSplitCmd.getId())
+        .setSplitSegmentId(splitSegmentId)
         .build();
 
     // TODO: mutiple split segments can still have the same source segment id...
@@ -388,7 +392,9 @@ export class PathMutator {
         const moveCmd = newCommand('M', [startSplitPoint, startSplitPoint]);
         endCommandStates.push(
           new CommandState(moveCmd).mutate()
-            .setSplitSegmentId(startSplitCmd.getId())
+            //.setSplitSegmentId(startSplitCmd.getId())
+            .setSplitSegmentId(_.uniqueId())
+            .setPrevSplitState(firstLeft)
             .build());
         if (firstRight) {
           endCommandStates.push(firstRight);
@@ -401,25 +407,18 @@ export class PathMutator {
       }
     }
 
-    const splitBackingCmdIds = [
-      targetCss[startCsIdx].getBackingCommandId(),
-      targetCss[endCsIdx].getBackingCommandId(),
-    ];
     const splitSubPaths = [
-      new SubPathState(startCommandStates).mutate()
-        .setSplitBackingCommandIds(splitBackingCmdIds)
-        .build(),
-      new SubPathState(endCommandStates).mutate()
-        .setSplitBackingCommandIds(splitBackingCmdIds)
-        .build(),
-    ]
+      new SubPathState(startCommandStates),
+      new SubPathState(endCommandStates),
+    ];
     const newStates: SubPathState[] = [];
     const splitSegCssIds =
       targetSps.getCommandStates()
         .filter(cs => !!cs.getSplitSegmentId())
-        .map(cs => cs.getBackingCommandId());
+        .map(cs => cs.getBackingId());
     if (this.subPathStateMap.includes(targetSps)
-      || splitBackingCmdIds.some(id => splitSegCssIds.includes(id))) {
+      || (firstRight && splitSegCssIds.includes(firstLeft.getBackingId()))
+      || (secondRight && splitSegCssIds.includes(secondLeft.getBackingId()))) {
       // If we are at the first level of the tree or if one of the new
       // split edges is a split segment, then add a new level of the tree
       // (if the already existing split segment is deleted, we want to
@@ -506,14 +505,11 @@ export class PathMutator {
     this.updateOrderingAfterUnsplitSubPath(subIdx);
   }
 
-
   /**
    * Deletes the sub path split segment with the specified index.
    */
   deleteSubPathSplitSegment(subIdx: number, cmdIdx: number) {
-    const { targetCs } =
-      this.findReversedAndShiftedInternalIndices(subIdx, cmdIdx);
-
+    const { targetCs } = this.findReversedAndShiftedInternalIndices(subIdx, cmdIdx);
     const splitCommandId = targetCs.getSplitSegmentId();
     const findSpsParentFn = (states: ReadonlyArray<SubPathState>): SubPathState => {
       for (const state of states) {
@@ -533,61 +529,43 @@ export class PathMutator {
     const firstSpsIdx = _.findIndex(parent.getSplitSubPaths(), sps => {
       return sps.getCommandStates().some(cs => cs.getSplitSegmentId() === splitCommandId);
     });
-    const firstSps = parent.getSplitSubPaths()[firstSpsIdx];
-    const secondSps = parent.getSplitSubPaths()[firstSpsIdx + 1];
-    return this.deleteSubPathSplitSegmentInternal(
-      parent,
-      firstSps,
-      secondSps);
-  }
-
-  private deleteSubPathSplitSegmentInternal(
-    parent: SubPathState, firstSps: SubPathState, secondSps: SubPathState) {
-
-    let firstSpsParentIdx = parent.getSplitSubPaths().indexOf(firstSps);
-    let secondSpsParentIdx = parent.getSplitSubPaths().indexOf(secondSps);
-    if (firstSpsParentIdx > secondSpsParentIdx) {
-      const temp = firstSpsParentIdx;
-      firstSpsParentIdx = secondSpsParentIdx;
-      secondSpsParentIdx = temp;
-    }
-    const secondSplitSubPath = parent.getSplitSubPaths()[secondSpsParentIdx];
-    const firstSplitCmdId = secondSplitSubPath.getCommandStates()[0].getSplitSegmentId();
-    const secondSplitCmdId = _.last(secondSplitSubPath.getCommandStates()).getSplitSegmentId();
-    const splitCmdIds = [firstSplitCmdId, secondSplitCmdId];
-    let updatedSplitSubPaths: SubPathState[] = [];
-    const splits = parent.getSplitSubPaths().slice();
-    const firstSplitSps = splits[firstSpsParentIdx];
-    const secondSplitSps = splits[firstSpsParentIdx + 1];
+    const secondSpsIdx = _.findLastIndex(parent.getSplitSubPaths(), sps => {
+      return sps.getCommandStates().some(cs => cs.getSplitSegmentId() === splitCommandId);
+    });
+    const firstSplitSubPath = parent.getSplitSubPaths()[firstSpsIdx];
+    const secondSplitSubPath = parent.getSplitSubPaths()[secondSpsIdx];
     const deletedSps =
-      flattenSubPathStates([firstSplitSps]).concat(flattenSubPathStates([secondSplitSps]));
+      flattenSubPathStates([firstSplitSubPath])
+        .concat(flattenSubPathStates([secondSplitSubPath]));
     const flattenedSps = flattenSubPathStates(this.subPathStateMap);
-    const deletedSubIdxs =
-      deletedSps.map(sps => this.subPathOrdering[flattenedSps.indexOf(sps)]);
+    const deletedSubIdxs = deletedSps.map(sps => this.subPathOrdering[flattenedSps.indexOf(sps)]);
     deletedSubIdxs.shift();
     deletedSubIdxs.sort((a, b) => b - a);
+    let updatedSplitSubPaths: SubPathState[] = [];
     if (parent.getSplitSubPaths().length > 2) {
+      const firstParentBackingId =
+        secondSplitSubPath.getCommandStates()[0].getPrevSplitState().getBackingId();
+      const secondParentBackingId =
+        _.last(secondSplitSubPath.getCommandStates()).getPrevSplitState().getBackingId();
       const firstParentBackingCommand =
-        _.find(parent.getCommandStates(),
-          cs => firstSplitSps.getSplitBackingCommandIds()[0] === cs.getBackingCommandId());
+        _.find(parent.getCommandStates(), cs => firstParentBackingId === cs.getBackingId());
       const secondParentBackingCommand =
-        _.find(parent.getCommandStates(),
-          cs => firstSplitSps.getSplitBackingCommandIds()[1] === cs.getBackingCommandId());
-      const firstSplitCss = firstSplitSps.getCommandStates();
-      const secondSplitCss = secondSplitSps.getCommandStates();
+        _.find(parent.getCommandStates(), cs => secondParentBackingId === cs.getBackingId());
+      const firstSplitCss = firstSplitSubPath.getCommandStates();
+      const secondSplitCss = secondSplitSubPath.getCommandStates();
 
       const newCss: CommandState[] = [];
       let cs: CommandState;
       let i = 0;
       for (; i < firstSplitCss.length; i++) {
         cs = firstSplitCss[i];
-        if (cs.getBackingCommandId() === firstParentBackingCommand.getBackingCommandId()) {
+        if (cs.getBackingId() === firstParentBackingCommand.getBackingId()) {
           break;
         }
         newCss.push(cs);
       }
       const firstParentBackingCommandIdx = i;
-      if (cs.getBackingCommandId() === secondSplitCss[1].getBackingCommandId()) {
+      if (cs.getBackingId() === secondSplitCss[1].getBackingId()) {
         newCss.push(secondSplitCss[1].merge(cs));
       } else {
         newCss.push(cs);
@@ -595,12 +573,12 @@ export class PathMutator {
       }
       for (i = 2; i < secondSplitCss.length; i++) {
         cs = secondSplitCss[i];
-        if (cs.getBackingCommandId() === secondParentBackingCommand.getBackingCommandId()) {
+        if (cs.getBackingId() === secondParentBackingCommand.getBackingId()) {
           break;
         }
         newCss.push(cs);
       }
-      i = _.findIndex(firstSplitCss, c => c.getBackingCommandId() === secondParentBackingCommand.getBackingCommandId());
+      i = _.findIndex(firstSplitCss, c => c.getBackingId() === secondParentBackingCommand.getBackingId());
       if (i >= 0) {
         newCss.push(
           firstSplitCss[i].merge(cs).mutate()
@@ -618,12 +596,18 @@ export class PathMutator {
       for (i = i + 1; i < firstSplitCss.length; i++) {
         newCss.push(firstSplitCss[i]);
       }
-      splits.splice(firstSpsParentIdx, 2, new SubPathState(newCss.slice()));
+      const splits = parent.getSplitSubPaths().slice();
+      splits[firstSpsIdx] = new SubPathState(newCss.slice());
+      splits.splice(secondSpsIdx, 1);
       updatedSplitSubPaths = splits;
     }
     const fn = () => {
       const mutator = parent.mutate().setSplitSubPaths(updatedSplitSubPaths);
-      for (const id of splitCmdIds) {
+      const firstSplitSegId =
+        _.last(secondSplitSubPath.getCommandStates()[0].getPrevSplitState().getCommands()).getId();
+      const secondSplitSegId =
+        _.last(_.last(secondSplitSubPath.getCommandStates()).getPrevSplitState().getCommands()).getId();
+      for (const id of [firstSplitSegId, secondSplitSegId]) {
         let csIdx = 0, splitIdx = -1;
         for (; csIdx < parent.getCommandStates().length; csIdx++) {
           const cs = parent.getCommandStates()[csIdx];
@@ -642,8 +626,8 @@ export class PathMutator {
       }
       this.subPathStateMap =
         replaceSubPathStateInternal(this.subPathStateMap, parent, mutator.build());
-      for (const subIdx of deletedSubIdxs) {
-        this.updateOrderingAfterUnsplitSubPath(subIdx);
+      for (const idx of deletedSubIdxs) {
+        this.updateOrderingAfterUnsplitSubPath(idx);
       }
     };
     fn();
@@ -833,7 +817,7 @@ function replaceSubPathStateInternal(
   replacement: SubPathState) {
 
   return (function replaceParentFn(states: SubPathState[]) {
-    if (states.length === 0) {
+    if (!states.length) {
       // Return undefined to signal that the parent was not found.
       return undefined;
     }
