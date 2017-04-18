@@ -202,6 +202,7 @@ class CommandStateMutator {
 
   setSplitSegmentInfo(id: string, parentState: CommandState) {
     this.splitSegmentId = id;
+    this.parentState = parentState;
     return this;
   }
 
