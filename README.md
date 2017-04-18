@@ -4,6 +4,7 @@
 [![Dependency Status][david-badge]][david-badge-url]
 [![devDependency Status][david-dev-badge]][david-dev-badge-url]
 [![Coverage Status][coveralls-badge]][coveralls-badge-url]
+[![GitHub Stats](https://img.shields.io/badge/github-stats-ff5500.svg)](http://githubstats.com/alexjlockwood/ShapeShifter)
 
 **[Go to Live Version](https://shapeshifter.design)**
 
