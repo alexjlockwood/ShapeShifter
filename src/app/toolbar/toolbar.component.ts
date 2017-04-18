@@ -30,12 +30,17 @@ export class ToolbarComponent implements OnInit {
   readonly MORPH_UNMORPHABLE = MorphStatus.Unmorphable;
   readonly MORPH_MORPHABLE = MorphStatus.Morphable;
 
-  morphStatusObservable: Observable<MorphStatus>;
-  isActionModeEnabledObservable: Observable<boolean>;
+  readonly ACTION_MODE_SUBPATH = ActionMode.SubPath;
+  readonly ACTION_MODE_SEGMENT = ActionMode.Segment;
+  readonly ACTION_MODE_POINT = ActionMode.Point;
+
   // This boolean is used to ensure the toolbar transition doesn't run on page load.
   hasActionModeBeenEnabled = false;
-  getToolbarTextObservable: Observable<string>;
+
+  morphStatusObservable: Observable<MorphStatus>;
   isDirtyObservable: Observable<boolean>;
+  toolbarTextObservable: Observable<string>;
+  actionModeObservable: Observable<ActionMode>;
 
   constructor(
     private readonly viewContainerRef: ViewContainerRef,
@@ -50,25 +55,33 @@ export class ToolbarComponent implements OnInit {
       this.stateService.getMorphStatusObservable();
     this.isDirtyObservable =
       this.stateService.getExistingPathIdsObservable().map(ids => !!ids.length);
-    this.isActionModeEnabledObservable =
+    this.actionModeObservable =
       this.selectionService.asObservable()
         .map(selections => {
-          const shouldEnable = this.getNumSelectedSegments(selections) > 0
-            || this.getNumSelectedPoints(selections) > 0;
-          if (shouldEnable) {
+          let actionMode = ActionMode.Disabled;
+          if (this.getNumSelectedSubPaths(selections) > 0) {
+            actionMode = ActionMode.SubPath;
+          } else if (this.getNumSelectedSegments(selections) > 0) {
+            actionMode = ActionMode.Segment;
+          } else if (this.getNumSelectedPoints(selections) > 0) {
+            actionMode = ActionMode.Point;
+          }
+          if (actionMode !== ActionMode.Disabled) {
             this.hasActionModeBeenEnabled = true;
           }
-          return shouldEnable;
+          return actionMode;
         });
-    this.getToolbarTextObservable =
+    this.toolbarTextObservable =
       this.selectionService.asObservable()
         .map(selections => {
+          const numSubPaths = this.getNumSelectedSubPaths(selections);
+          const subStr = `${numSubPaths} subpath${numSubPaths === 1 ? '' : 's'}`;
           const numSegments = this.getNumSelectedSegments(selections);
           const segStr = `${numSegments} split segment${numSegments === 1 ? '' : 's'}`;
           const numPoints = this.getNumSelectedPoints(selections);
           const ptStr = `${numPoints} split point${numPoints === 1 ? '' : 's'}`;
-          if (numSegments > 0 && numPoints > 0) {
-            return `${segStr}, ${ptStr} selected`;
+          if (numSubPaths > 0) {
+            return `${subStr} selected`;
           } else if (numSegments > 0) {
             return `${segStr} selected`;
           } else if (numPoints > 0) {
@@ -77,6 +90,21 @@ export class ToolbarComponent implements OnInit {
             return '';
           }
         });
+  }
+
+  private getNumSelectedSubPaths(selections: ReadonlyArray<Selection>) {
+    selections = selections.filter(s => s.type === SelectionType.SubPath);
+    if (!selections.length) {
+      return 0;
+    }
+    // Preconditions: all selections exist in the same editor and
+    // all selections correspond to the currently active path id.
+    const canvasType = selections[0].source;
+    const activePathLayer = this.stateService.getActivePathLayer(canvasType);
+    if (!activePathLayer) {
+      return 0;
+    }
+    return selections.length;
   }
 
   private getNumSelectedSegments(selections: ReadonlyArray<Selection>) {
@@ -94,7 +122,7 @@ export class ToolbarComponent implements OnInit {
     const activePath = activePathLayer.pathData;
     return _.sumBy(selections, s => {
       return activePath.getCommand(s.subIdx, s.cmdIdx).isSplitSegment() ? 1 : 0;
-    });
+    }) / 2;
   }
 
   private getNumSelectedPoints(selections: ReadonlyArray<Selection>) {
@@ -192,3 +220,9 @@ export class ToolbarComponent implements OnInit {
   }
 }
 
+enum ActionMode {
+  Disabled,
+  SubPath,
+  Segment,
+  Point,
+}

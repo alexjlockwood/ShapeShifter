@@ -1,36 +1,92 @@
 <div class="toolbar action-mode-disabled" fxLayout="row" fxLayoutAlign="center center"
-  [class.action-mode-disabled]="hasActionModeBeenEnabled && !(isActionModeEnabledObservable | async)"
-  [class.action-mode-enabled]="hasActionModeBeenEnabled && isActionModeEnabledObservable | async">
-  <md-icon *ngIf="!(isActionModeEnabledObservable | async)" class="toolbar-logo"
+  [class.action-mode-disabled]="hasActionModeBeenEnabled && !(actionModeObservable | async)"
+  [class.action-mode-enabled]="hasActionModeBeenEnabled && (actionModeObservable | async)">
+
+  <!-- Shape Shifter logo. -->
+  <md-icon *ngIf="!(actionModeObservable | async)" class="toolbar-logo"
     svgIcon="shapeshifter"></md-icon>
-  <button md-icon-button *ngIf="isActionModeEnabledObservable | async"
-    class="action-mode-close-icon" (click)="onCloseActionModeClick()">
+
+  <!-- Action mode close button. -->
+  <button md-icon-button *ngIf="actionModeObservable | async" class="action-mode-close-icon"
+    (click)="onCloseActionModeClick()">
     <md-icon>close</md-icon>
   </button>
-  <span *ngIf="!(isActionModeEnabledObservable | async)">Shape Shifter</span>
-  <span *ngIf="(isActionModeEnabledObservable | async)">{{getToolbarTextObservable | async}}</span>
+
+  <!-- Toolbar text. -->
+  <span *ngIf="!(actionModeObservable | async)">Shape Shifter</span>
+  <span *ngIf="(actionModeObservable | async)">{{toolbarTextObservable | async}}</span>
+
   <span fxFlex="1 1 auto"></span>
+
+  <!-- Default mode buttons. -->
   <button class="toolbar-action-button" [disabled]="!(isDirtyObservable | async)"
-    *ngIf="!(isActionModeEnabledObservable | async)" mdTooltip="New"
-    mdTooltipPosition="below" mdTooltipShowDelay="500" (click)="onNewClick()"
-    md-icon-button>
+    *ngIf="!(actionModeObservable | async)" mdTooltip="New" mdTooltipPosition="below"
+    mdTooltipShowDelay="500" (click)="onNewClick()" md-icon-button>
     <md-icon>create</md-icon>
   </button>
   <button md-icon-button class="toolbar-action-button" [disabled]="(morphStatusObservable | async) === MORPH_NONE"
     (click)="onAutoFixClick()" mdTooltip="Auto fix" mdTooltipShowDelay="500"
-    *ngIf="!(isActionModeEnabledObservable | async)" mdTooltipPosition="below">
+    *ngIf="!(actionModeObservable | async)" mdTooltipPosition="below">
     <md-icon svgIcon="autofix"></md-icon>
   </button>
   <button md-icon-button class="toolbar-action-button" [disabled]="(morphStatusObservable | async) !== MORPH_MORPHABLE"
     mdTooltip="Export" mdTooltipPosition="below" mdTooltipShowDelay="500"
-    *ngIf="!(isActionModeEnabledObservable | async)" (click)="onExportClick()">
+    *ngIf="!(actionModeObservable | async)" (click)="onExportClick()">
     <md-icon>file_download</md-icon>
   </button>
+
+  <!-- SubPath mode. -->
   <button md-icon-button class="toolbar-action-button" mdTooltip="Delete selected points"
-    mdTooltipPosition="below" *ngIf="isActionModeEnabledObservable | async"
+    mdTooltipPosition="below" *ngIf="(actionModeObservable | async) === ACTION_MODE_SUBPATH"
+    mdTooltipShowDelay="500">
+    <md-icon>add</md-icon>
+  </button>
+  <button md-icon-button class="toolbar-action-button" mdTooltip="Delete selected points"
+    mdTooltipPosition="below" *ngIf="(actionModeObservable | async) === ACTION_MODE_SUBPATH"
+    mdTooltipShowDelay="500">
+    <md-icon svgIcon="reverse"></md-icon>
+  </button>
+  <button md-icon-button class="toolbar-action-button" mdTooltip="Delete selected points"
+    mdTooltipPosition="below" *ngIf="(actionModeObservable | async) === ACTION_MODE_SUBPATH"
+    mdTooltipShowDelay="500">
+    <md-icon>content_cut</md-icon>
+  </button>
+  <button md-icon-button class="toolbar-action-button" mdTooltip="Delete selected points"
+    mdTooltipPosition="below" *ngIf="(actionModeObservable | async) === ACTION_MODE_SUBPATH"
+    mdTooltipShowDelay="500">
+    <md-icon>delete</md-icon>
+  </button>
+
+  <!-- Segment mode. -->
+  <button md-icon-button class="toolbar-action-button" mdTooltip="Delete selected points"
+    mdTooltipPosition="below" *ngIf="(actionModeObservable | async) === ACTION_MODE_SEGMENT"
+    mdTooltipShowDelay="500">
+    <md-icon>add</md-icon>
+  </button>
+  <button md-icon-button class="toolbar-action-button" mdTooltip="Delete selected points"
+    mdTooltipPosition="below" *ngIf="(actionModeObservable | async) === ACTION_MODE_SEGMENT"
+    mdTooltipShowDelay="500">
+    <md-icon>delete</md-icon>
+  </button>
+
+  <!-- Point mode. -->
+  <button md-icon-button class="toolbar-action-button" mdTooltip="Delete selected points"
+    mdTooltipPosition="below" *ngIf="(actionModeObservable | async) === ACTION_MODE_POINT"
+    mdTooltipShowDelay="500">
+    <md-icon>add</md-icon>
+  </button>
+  <button md-icon-button class="toolbar-action-button" mdTooltip="Delete selected points"
+    mdTooltipPosition="below" *ngIf="(actionModeObservable | async) === ACTION_MODE_POINT"
     mdTooltipShowDelay="500" (click)="onDeleteSelectedPointsClick()">
     <md-icon>delete</md-icon>
   </button>
+  <button md-icon-button class="toolbar-action-button" mdTooltip="Delete selected points"
+    mdTooltipPosition="below" *ngIf="(actionModeObservable | async) === ACTION_MODE_POINT"
+    mdTooltipShowDelay="500">
+    <md-icon>looks_one</md-icon>
+  </button>
+
+  <!-- Overflow menu buttons. -->
   <button class="toolbar-action-button" md-icon-button [mdMenuTriggerFor]="overflowMenu">
     <md-icon>more_vert</md-icon>
   </button>
