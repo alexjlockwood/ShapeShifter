@@ -22,7 +22,7 @@ import { CanvasRulerDirective } from './canvasruler.directive';
 import { Observable } from 'rxjs/Observable';
 import { Subscription } from 'rxjs/Subscription';
 import { SegmentSplitter } from './SegmentSplitter';
-import { CanvasSelector } from './CanvasSelector';
+import { SelectionHelper } from './SelectionHelper';
 import { ShapeSplitter } from './ShapeSplitter';
 // import { PathUtil } from '../scripts/paths';
 
@@ -83,7 +83,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   private cssContainerHeight = 1;
   private vlSize = { width: DEFAULT_VIEWPORT_SIZE, height: DEFAULT_VIEWPORT_SIZE };
   private currentHoverPreviewPath: Path;
-  private canvasSelector: CanvasSelector | undefined;
+  private selectionHelper: SelectionHelper | undefined;
   private segmentSplitter: SegmentSplitter | undefined;
   private shapeSplitter: ShapeSplitter | undefined;
   private readonly subscriptions: Subscription[] = [];
@@ -188,9 +188,9 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
             this.segmentSplitter = undefined;
           }
           if (this.appMode === AppMode.Selection) {
-            this.canvasSelector = new CanvasSelector(this);
+            this.selectionHelper = new SelectionHelper(this);
           } else {
-            this.canvasSelector = undefined;
+            this.selectionHelper = undefined;
           }
           if (this.appMode === AppMode.SplitSubPaths
             && this.activePathLayer
@@ -665,7 +665,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     if (this.canvasType === CanvasType.Preview || !this.activePathId) {
       return;
     }
-    if (this.canvasSelector) {
+    if (this.selectionHelper) {
       this.drawHighlightedSelectedSegments(ctx);
     } else if (this.segmentSplitter) {
       this.drawHighlightedAddPointModeSegments(ctx);
@@ -846,8 +846,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     pathDataPointInfos.push(...removedHoverCommands);
 
     const draggedCommandIndex =
-      this.canvasSelector && this.canvasSelector.isDragTriggered()
-        ? this.canvasSelector.getDraggableSplitIndex()
+      this.selectionHelper && this.selectionHelper.isDragTriggered()
+        ? this.selectionHelper.getDraggableSplitIndex()
         : undefined;
     for (const pointInfo of pathDataPointInfos) {
       const { cmd, subIdx, cmdIdx } = pointInfo;
@@ -883,15 +883,15 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   // Draw any actively dragged points along the path (selection mode).
   private drawSelectPointsDraggingPoints(ctx: Context) {
     if (this.appMode !== AppMode.Selection
-      || !this.canvasSelector
-      || !this.canvasSelector.isDragTriggered()) {
+      || !this.selectionHelper
+      || !this.selectionHelper.isDragTriggered()) {
       return;
     }
-    const { x, y, d } = this.canvasSelector.getProjectionOntoPath().projection;
+    const { x, y, d } = this.selectionHelper.getProjectionOntoPath().projection;
     const point =
       d < this.minSnapThreshold
         ? this.applyGroupTransforms(new Point(x, y))
-        : this.canvasSelector.getLastKnownMouseLocation();
+        : this.selectionHelper.getLastKnownMouseLocation();
     this.executeLabeledPoint(
       ctx,
       point,
@@ -962,7 +962,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
     const mouseDown = this.mouseEventToPoint(event);
     if (this.appMode === AppMode.Selection) {
-      this.canvasSelector.onMouseDown(mouseDown, event.shiftKey || event.metaKey);
+      this.selectionHelper.onMouseDown(mouseDown, event.shiftKey || event.metaKey);
     } else if (this.appMode === AppMode.SplitCommands) {
       this.segmentSplitter.onMouseDown(mouseDown);
     } else if (this.appMode === AppMode.SplitSubPaths) {
@@ -982,7 +982,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
     const mouseMove = this.mouseEventToPoint(event);
     if (this.appMode === AppMode.Selection) {
-      this.canvasSelector.onMouseMove(mouseMove);
+      this.selectionHelper.onMouseMove(mouseMove);
     } else if (this.appMode === AppMode.SplitCommands) {
       this.segmentSplitter.onMouseMove(mouseMove);
     } else if (this.appMode === AppMode.SplitSubPaths) {
@@ -1002,7 +1002,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
     const mouseUp = this.mouseEventToPoint(event);
     if (this.appMode === AppMode.Selection) {
-      this.canvasSelector.onMouseUp(mouseUp, event.shiftKey || event.metaKey);
+      this.selectionHelper.onMouseUp(mouseUp, event.shiftKey || event.metaKey);
     } else if (this.appMode === AppMode.SplitCommands) {
       this.segmentSplitter.onMouseUp(mouseUp);
     } else if (this.appMode === AppMode.SplitSubPaths) {
@@ -1023,7 +1023,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     const mouseLeave = this.mouseEventToPoint(event);
     if (this.appMode === AppMode.Selection) {
       // TODO: how to handle the case where the mouse leaves and re-enters mid-gesture?
-      this.canvasSelector.onMouseLeave(mouseLeave);
+      this.selectionHelper.onMouseLeave(mouseLeave);
     } else if (this.appMode === AppMode.SplitCommands) {
       this.segmentSplitter.onMouseLeave(mouseLeave);
     } else if (this.appMode === AppMode.SplitSubPaths) {

@@ -16,7 +16,7 @@ import { LayerUtil } from '../scripts/layers';
  * Helper class that tracks information about a user's mouse gesture, allowing
  * for the selection of path points, segments, and shapes.
  */
-export class CanvasSelector {
+export class SelectionHelper {
   private readonly stateService: StateService;
   private readonly selectionService: SelectionService;
   private readonly hoverService: HoverService;
