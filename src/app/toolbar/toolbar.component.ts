@@ -100,11 +100,9 @@ export class ToolbarComponent implements OnInit {
     }
 
     const activePath = activePathLayer.pathData;
-    return _.sum(selections.map(s => {
-      const { subIdx, cmdIdx } = s;
-      const cmd = activePath.getSubPaths()[subIdx].getCommands()[cmdIdx];
-      return predicateFn(cmd) ? 1 : 0;
-    }));
+    return _.sumBy(selections, s => {
+      return predicateFn(activePath.getCommand(s.subIdx, s.cmdIdx)) ? 1 : 0;
+    });
   }
 
   onNewClick() {

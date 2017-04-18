@@ -73,7 +73,7 @@ export class PathState {
     // Note that we only return the length of the first sub path due to
     // https://code.google.com/p/android/issues/detail?id=172547
     const sps = this.findSubPathState(this.subPathOrdering[0]);
-    return _.sum(sps.getCommandStates().map(cs => cs.getPathLength()));
+    return _.sumBy(sps.getCommandStates(), cs => cs.getPathLength());
   }
 
   project(point: Point, restrictToSubIdx?: number): ProjectionOntoPath | undefined {
@@ -220,7 +220,7 @@ export class PathState {
             // intersections between the line and the path is odd.
             const line = { p1: point, p2: new Point(bounds.r + 1, bounds.b + 1) };
             const intersectionResults = css.map(cs => cs.intersects(line));
-            const numIntersections = _.sum(intersectionResults.map(ts => ts.length));
+            const numIntersections = _.sumBy(intersectionResults, ts => ts.length);
             if (numIntersections % 2 === 0) {
               // Nothing to see here. Check the next subpath.
               return [] as Array<{ subIdx: number }>;
@@ -246,15 +246,11 @@ export class PathState {
   }
 
   intersects(line: Line) {
-    return _.chain(this.subPaths as SubPath[])
-      .map((subPath, subIdx) => {
-        const css = this.findSubPathState(this.toSpsIdx(subIdx)).getCommandStates();
-        const intersectionResults = css.map(cs => cs.intersects(line));
-        const numIntersections = _.sum(intersectionResults.map(ts => ts.length));
-        return numIntersections;
-      })
-      .sum()
-      .value();
+    return _.sumBy(this.subPaths, (subPath, subIdx) => {
+      const css = this.findSubPathState(this.toSpsIdx(subIdx)).getCommandStates();
+      const intersectionResults = css.map(cs => cs.intersects(line));
+      return _.sumBy(intersectionResults, ts => ts.length);
+    });
   }
 
   // TODO: move this math stuff into the calculators module
@@ -310,7 +306,7 @@ export class PathState {
   private findCommandStateInfo(subIdx: number, cmdIdx: number) {
     const sps = this.findSubPathState(this.subPathOrdering[subIdx]);
     const numCommandsInSubPath =
-      _.sum(sps.getCommandStates().map(cs => cs.getCommands().length));
+      _.sumBy(sps.getCommandStates(), cs => cs.getCommands().length);
     if (cmdIdx && sps.isReversed()) {
       cmdIdx = numCommandsInSubPath - cmdIdx;
     }
@@ -346,7 +342,7 @@ export class PathState {
   private toCmdIdx(spsIdx: number, csIdx: number, splitIdx: number) {
     const sps = this.findSubPathState(spsIdx);
     const commandStates = sps.getCommandStates();
-    const numCmds = _.sum(commandStates.map(cs => cs.getCommands().length));
+    const numCmds = _.sumBy(commandStates, cs => cs.getCommands().length);
     let cmdIdx =
       splitIdx + _.sum(commandStates.map((cs, i) => i < csIdx ? cs.getCommands().length : 0));
     let shiftOffset = sps.getShiftOffset();

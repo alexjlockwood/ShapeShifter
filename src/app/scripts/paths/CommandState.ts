@@ -78,7 +78,7 @@ export class CommandState {
       return undefined;
     }
     // Count the number of t values that are less than the projection.
-    const splitIdx = _.sum(this.mutations.map(m => m.t < projection.t ? 1 : 0));
+    const splitIdx = _.sumBy(this.mutations, m => m.t < projection.t ? 1 : 0);
     const tempSplits = [this.minT, ...this.mutations.map(m => m.t)];
     const startSplit = tempSplits[splitIdx];
     const endSplit = tempSplits[splitIdx + 1];

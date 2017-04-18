@@ -67,7 +67,7 @@ export class PathMutator {
     const spsIdx = this.subPathOrdering[subIdx];
     const sps = this.findSubPathState(spsIdx);
     const numCommandsInSubPath =
-      _.sum(sps.getCommandStates().map(cm => cm.getCommands().length));
+      _.sumBy(sps.getCommandStates(), cs => cs.getCommands().length);
     if (numCommandsInSubPath <= 1) {
       return this;
     }
@@ -726,7 +726,7 @@ export class PathMutator {
     const spsIdx = this.subPathOrdering[subIdx];
     const sps = this.findSubPathState(spsIdx);
     const css = sps.getCommandStates();
-    const numCommandsInSubPath = _.sum(css.map(cm => cm.getCommands().length));
+    const numCommandsInSubPath = _.sumBy(css, cs => cs.getCommands().length);
     if (cmdIdx && sps.isReversed()) {
       cmdIdx = numCommandsInSubPath - cmdIdx;
     }
@@ -804,8 +804,8 @@ function replaceSubPathStateLeaf(
 
 function replaceSubPathStateInternal(
   map: ReadonlyArray<SubPathState>,
-  target: SubPathState,
-  replacement: SubPathState) {
+  spsToReplace: SubPathState,
+  spsReplacement: SubPathState) {
 
   return (function replaceParentFn(states: SubPathState[]) {
     if (!states.length) {
@@ -814,8 +814,8 @@ function replaceSubPathStateInternal(
     }
     for (let i = 0; i < states.length; i++) {
       const currentState = states[i];
-      if (currentState === target) {
-        states[i] = replacement;
+      if (currentState === spsToReplace) {
+        states[i] = spsReplacement;
         return states;
       }
       const recurseStates = replaceParentFn(currentState.getSplitSubPaths().slice());
@@ -872,7 +872,7 @@ function shiftCommandStates(
     return css;
   }
 
-  const numCommands = _.sum(css.map(cs => cs.getCommands().length));
+  const numCommands = _.sumBy(css, cs => cs.getCommands().length);
   if (isReversed) {
     shiftOffset *= -1;
     shiftOffset += numCommands - 1;
