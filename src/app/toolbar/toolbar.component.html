@@ -1,8 +1,14 @@
 <div class="toolbar action-mode-disabled" fxLayout="row" fxLayoutAlign="center center"
   [class.action-mode-disabled]="hasActionModeBeenEnabled && !(isActionModeEnabledObservable | async)"
   [class.action-mode-enabled]="hasActionModeBeenEnabled && isActionModeEnabledObservable | async">
-  <md-icon class="toolbar-logo" svgIcon="shapeshifter"></md-icon>
-  <span>{{getToolbarTextObservable | async}}</span>
+  <md-icon *ngIf="!(isActionModeEnabledObservable | async)" class="toolbar-logo"
+    svgIcon="shapeshifter"></md-icon>
+  <button md-icon-button *ngIf="isActionModeEnabledObservable | async"
+    class="action-mode-close-icon" (click)="onCloseActionModeClick()">
+    <md-icon>close</md-icon>
+  </button>
+  <span *ngIf="!(isActionModeEnabledObservable | async)">Shape Shifter</span>
+  <span *ngIf="(isActionModeEnabledObservable | async)">{{getToolbarTextObservable | async}}</span>
   <span fxFlex="1 1 auto"></span>
   <button class="toolbar-action-button" [disabled]="!(isDirtyObservable | async)"
     *ngIf="!(isActionModeEnabledObservable | async)" mdTooltip="New"

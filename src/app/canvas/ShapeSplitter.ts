@@ -73,15 +73,19 @@ export class ShapeSplitter {
         const { proj: proj1, isEndPt: isEndPt1 } = p1;
         const { proj: proj2, isEndPt: isEndPt2 } = p2;
         if (isEndPt1 !== isEndPt2) {
+          // Prefer snapping to existing end points first...
           return isEndPt1 ? -1 : 1;
         }
         if (proj1.projection.d !== proj2.projection.d) {
+          // Then take into account the distance to the new point...
           return proj1.projection.d - proj2.projection.d;
         }
         if (proj1.subIdx !== proj2.subIdx) {
+          // Then prefer sub paths with higher z-orders...
           return proj1.subIdx - proj2.subIdx;
         }
         if (proj1.cmdIdx !== proj2.cmdIdx) {
+          // And then finally commands with higher z-orders.
           return proj1.cmdIdx - proj2.cmdIdx;
         }
         return 0;

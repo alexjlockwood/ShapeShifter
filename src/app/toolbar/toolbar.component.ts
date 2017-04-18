@@ -74,7 +74,7 @@ export class ToolbarComponent implements OnInit {
           } else if (numPoints > 0) {
             return `${ptStr} selected`;
           } else {
-            return 'Shape Shifter';
+            return '';
           }
         });
   }
@@ -113,6 +113,10 @@ export class ToolbarComponent implements OnInit {
     return _.sumBy(selections, s => {
       return activePath.getCommand(s.subIdx, s.cmdIdx).isSplitPoint() ? 1 : 0;
     });
+  }
+
+  onCloseActionModeClick() {
+    this.selectionService.reset();
   }
 
   onNewClick() {
