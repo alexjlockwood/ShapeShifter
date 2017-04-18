@@ -37,7 +37,8 @@ export class CommandState {
     // lines that are created (so that during unsplit operations we can identify
     // which segments were added together).
     private readonly splitSegmentId = '',
-    private readonly parentState: CommandState = undefined,
+    // The parent command state object (i.e. the one that created the new split segment).
+    private readonly parentCommandState: CommandState = undefined,
   ) { }
 
   getBackingId() {
@@ -130,8 +131,8 @@ export class CommandState {
     return this.splitSegmentId;
   }
 
-  getParentState() {
-    return this.parentState;
+  getParentCommandState() {
+    return this.parentCommandState;
   }
 
   mutate() {
@@ -143,7 +144,7 @@ export class CommandState {
       this.minT,
       this.maxT,
       this.splitSegmentId,
-      this.parentState,
+      this.parentCommandState,
     );
   }
 }
@@ -167,7 +168,7 @@ class CommandStateMutator {
     private minT: number,
     private maxT: number,
     private splitSegmentId: string,
-    private parentState: CommandState,
+    private parentCommandState: CommandState,
   ) { }
 
   /**
@@ -200,9 +201,13 @@ class CommandStateMutator {
     return this;
   }
 
-  setSplitSegmentInfo(id: string, parentState: CommandState) {
+  /**
+   * Sets this command state object as a split segment with a unique ID.
+   * The parent state object represents the origin command state.
+   */
+  setSplitSegmentInfo(parentCommandState: CommandState, id: string) {
     this.splitSegmentId = id;
-    this.parentState = parentState;
+    this.parentCommandState = parentCommandState;
     return this;
   }
 
@@ -386,7 +391,7 @@ class CommandStateMutator {
           .mutate()
           .setId(this.mutations[i].id)
           .setIsSplitPoint(i !== this.mutations.length - 1)
-          .setIsSplitSegment(!!this.splitSegmentId)
+          .setIsSplitSegment(!!this.parentCommandState)
           .build());
       prevT = currT;
     }
@@ -399,7 +404,7 @@ class CommandStateMutator {
       this.minT,
       this.maxT,
       this.splitSegmentId,
-      this.parentState,
+      this.parentCommandState,
     );
   }
 }

@@ -84,7 +84,7 @@ class SubPathStateMutator {
     return this;
   }
 
-  setCommandState(commandState: CommandState, index: number) {
+  setCommandState(index: number, commandState: CommandState) {
     if (!this.commandStates || this.commandStates.length <= index) {
       throw new Error('Attempt to set a CommandState object using an invalid index');
     }

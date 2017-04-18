@@ -53,7 +53,7 @@ export class PathState {
       const spsIdx = this.subPathOrdering[subIdx];
       const isCollapsing =
         this.subPathOrdering.length - this.numCollapsingSubPaths <= spsIdx;
-      const sps = findSubPathState(this.subPathStateMap, spsIdx);
+      const sps = this.findSubPathState(subIdx);
       const isSplit = isSubPathSplit(this.subPathStateMap, spsIdx);
       const isUnsplittable = isSubPathUnsplittable(this.subPathStateMap, spsIdx);
       return subPath.mutate()
@@ -72,7 +72,7 @@ export class PathState {
   getPathLength() {
     // Note that we only return the length of the first sub path due to
     // https://code.google.com/p/android/issues/detail?id=172547
-    const sps = this.findSubPathState(this.subPathOrdering[0]);
+    const sps = this.findSubPathState(0);
     return _.sumBy(sps.getCommandStates(), cs => cs.getPathLength());
   }
 
@@ -87,8 +87,7 @@ export class PathState {
         })
         .map(obj => {
           const { subIdx } = obj;
-          const spsIdx = this.subPathOrdering[subIdx];
-          const sps = this.findSubPathState(spsIdx);
+          const sps = this.findSubPathState(subIdx);
           return sps.getCommandStates()
             .map((cs, csIdx) => {
               const csProjection = cs.project(point);
@@ -97,7 +96,7 @@ export class PathState {
                 csProjection.projection.t = 1 - t;
               }
               return {
-                spsIdx,
+                spsIdx: this.subPathOrdering[subIdx],
                 csIdx,
                 splitIdx: csProjection ? csProjection.splitIdx : 0,
                 projection: csProjection ? csProjection.projection : undefined,
@@ -116,7 +115,7 @@ export class PathState {
       return undefined;
     }
     const { spsIdx, csIdx, splitIdx, projection } = minProjectionResultInfo;
-    const subIdx = this.toSubIdx(spsIdx);
+    const subIdx = this.subPathOrdering.indexOf(spsIdx);
     const cmdIdx = this.toCmdIdx(spsIdx, csIdx, splitIdx);
     return { projection, subIdx, cmdIdx };
   }
@@ -171,7 +170,7 @@ export class PathState {
           .flatMap(obj => {
             const { subIdx } = obj;
             const spsIdx = this.subPathOrdering[subIdx];
-            const sps = this.findSubPathState(spsIdx);
+            const sps = this.findSubPathState(subIdx);
             // We iterate by csIdx here to improve performance (since cmdIdx
             // values can be split points).
             return _.flatMap(sps.getCommandStates(), (cs, csIdx) => {
@@ -206,7 +205,7 @@ export class PathState {
           })
           .flatMap(obj => {
             const { subIdx } = obj;
-            const css = this.findSubPathState(this.toSpsIdx(subIdx)).getCommandStates();
+            const css = this.findSubPathState(subIdx).getCommandStates();
             const bounds = createBoundingBox(...css);
             if (!bounds.contains(point)) {
               // Nothing to see here. Check the next subpath.
@@ -247,7 +246,7 @@ export class PathState {
 
   intersects(line: Line) {
     return _.sumBy(this.subPaths, (subPath, subIdx) => {
-      const css = this.findSubPathState(this.toSpsIdx(subIdx)).getCommandStates();
+      const css = this.findSubPathState(subIdx).getCommandStates();
       const intersectionResults = css.map(cs => cs.intersects(line));
       return _.sumBy(intersectionResults, ts => ts.length);
     });
@@ -296,15 +295,18 @@ export class PathState {
         });
         return { subIdx: sIdx, cmdIdx: cIdx };
       })
+      .filter(index => {
+        return index.subIdx >= 0 && index.cmdIdx >= 0;
+      })
       .value();
   }
 
-  private findSubPathState(spsIdx: number) {
-    return findSubPathState(this.subPathStateMap, spsIdx);
+  private findSubPathState(subIdx: number) {
+    return findSubPathState(this.subPathStateMap, this.subPathOrdering[subIdx]);
   }
 
   private findCommandStateInfo(subIdx: number, cmdIdx: number) {
-    const sps = this.findSubPathState(this.subPathOrdering[subIdx]);
+    const sps = this.findSubPathState(subIdx);
     const numCommandsInSubPath =
       _.sumBy(sps.getCommandStates(), cs => cs.getCommands().length);
     if (cmdIdx && sps.isReversed()) {
@@ -326,21 +328,8 @@ export class PathState {
     throw new Error('Error retrieving command mutation');
   }
 
-  private toSpsIdx(subIdx: number) {
-    return this.subPathOrdering[subIdx];
-  }
-
-  private toSubIdx(spsIdx: number) {
-    for (let i = 0; i < this.subPathOrdering.length; i++) {
-      if (this.subPathOrdering[i] === spsIdx) {
-        return i;
-      }
-    }
-    throw new Error('Invalid spsIdx: ' + spsIdx);
-  }
-
   private toCmdIdx(spsIdx: number, csIdx: number, splitIdx: number) {
-    const sps = this.findSubPathState(spsIdx);
+    const sps = this.findSubPathState(this.subPathOrdering.indexOf(spsIdx));
     const commandStates = sps.getCommandStates();
     const numCmds = _.sumBy(commandStates, cs => cs.getCommands().length);
     let cmdIdx =

@@ -39,17 +39,6 @@ export class CanvasSelector {
     this.lastKnownMouseLocation = mouseDown;
 
     const hitResult = this.performHitTest(mouseDown);
-    if (hitResult.isSegmentHit) {
-      this.selectionService.reset();
-      this.hoverService.reset();
-      const { subIdx, cmdIdx } = hitResult.segmentHits[0];
-      this.stateService.updateActivePath(
-        this.canvasType,
-        this.component.activePath.mutate()
-          .deleteSubPathSplitSegment(subIdx, cmdIdx)
-          .build());
-      return;
-    }
     if (hitResult.isEndPointHit) {
       const { subIdx, cmdIdx, cmd } = this.findHitPoint(hitResult.endPointHits);
       if (cmd.isSplitPoint()) {
@@ -70,7 +59,7 @@ export class CanvasSelector {
         const connectedSplitSegments =
           this.component.activePath.getConnectedSplitSegments(subIdx, cmdIdx);
         this.selectionService.toggleSegments(
-          this.canvasType, connectedSplitSegments.slice(), isShiftOrMetaPressed);
+          this.canvasType, connectedSplitSegments, isShiftOrMetaPressed);
         return;
       }
     }

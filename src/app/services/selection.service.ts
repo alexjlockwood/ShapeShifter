@@ -77,7 +77,7 @@ export class SelectionService {
 
   toggleSegments(
     source: CanvasType,
-    segments: Array<{ subIdx: number, cmdIdx: number }>,
+    segments: ReadonlyArray<{ subIdx: number, cmdIdx: number }>,
     appendToList = false) {
 
     const selections = this.getSelections().slice();

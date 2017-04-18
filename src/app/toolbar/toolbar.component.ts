@@ -14,7 +14,6 @@ import { ExportUtil } from '../scripts/export';
 import { DialogService } from '../dialogs';
 import { AutoAwesome } from '../scripts/algorithms';
 import { DemoUtil, DEMO_MAP } from '../scripts/demos';
-import { Command } from '../scripts/paths';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/combineLatest';
 
@@ -54,11 +53,8 @@ export class ToolbarComponent implements OnInit {
     this.isActionModeEnabledObservable =
       this.selectionService.asObservable()
         .map(selections => {
-          const shouldEnable =
-            this.getNumSelectedPoints(
-              this.stateService,
-              selections,
-              cmd => cmd.isSplitPoint()) > 0;
+          const shouldEnable = this.getNumSelectedSegments(selections) > 0
+            || this.getNumSelectedPoints(selections) > 0;
           if (shouldEnable) {
             this.hasActionModeBeenEnabled = true;
           }
@@ -67,41 +63,55 @@ export class ToolbarComponent implements OnInit {
     this.getToolbarTextObservable =
       this.selectionService.asObservable()
         .map(selections => {
-          const numPointsSelected =
-            this.getNumSelectedPoints(
-              this.stateService,
-              selections,
-              cmd => cmd.isSplitPoint());
-          if (numPointsSelected > 0) {
-            return `${numPointsSelected} split point${numPointsSelected === 1 ? '' : 's'} selected`;
+          const numSegments = this.getNumSelectedSegments(selections);
+          const segStr = `${numSegments} split segment${numSegments === 1 ? '' : 's'}`;
+          const numPoints = this.getNumSelectedPoints(selections);
+          const ptStr = `${numPoints} split point${numPoints === 1 ? '' : 's'}`;
+          if (numSegments > 0 && numPoints > 0) {
+            return `${segStr}, ${ptStr} selected`;
+          } else if (numSegments > 0) {
+            return `${segStr} selected`;
+          } else if (numPoints > 0) {
+            return `${ptStr} selected`;
           } else {
             return 'Shape Shifter';
           }
         });
   }
 
-  private getNumSelectedPoints(
-    lss: StateService,
-    selections: ReadonlyArray<Selection>,
-    predicateFn = (cmd: Command) => true) {
-
-    selections = selections.filter(s => s.type === SelectionType.Point);
-
+  private getNumSelectedSegments(selections: ReadonlyArray<Selection>) {
+    selections = selections.filter(s => s.type === SelectionType.Segment);
     if (!selections.length) {
       return 0;
     }
-
     // Preconditions: all selections exist in the same editor and
     // all selections correspond to the currently active path id.
     const canvasType = selections[0].source;
-    const activePathLayer = lss.getActivePathLayer(canvasType);
+    const activePathLayer = this.stateService.getActivePathLayer(canvasType);
     if (!activePathLayer) {
       return 0;
     }
-
     const activePath = activePathLayer.pathData;
     return _.sumBy(selections, s => {
-      return predicateFn(activePath.getCommand(s.subIdx, s.cmdIdx)) ? 1 : 0;
+      return activePath.getCommand(s.subIdx, s.cmdIdx).isSplitSegment() ? 1 : 0;
+    });
+  }
+
+  private getNumSelectedPoints(selections: ReadonlyArray<Selection>) {
+    selections = selections.filter(s => s.type === SelectionType.Point);
+    if (!selections.length) {
+      return 0;
+    }
+    // Preconditions: all selections exist in the same editor and
+    // all selections correspond to the currently active path id.
+    const canvasType = selections[0].source;
+    const activePathLayer = this.stateService.getActivePathLayer(canvasType);
+    if (!activePathLayer) {
+      return 0;
+    }
+    const activePath = activePathLayer.pathData;
+    return _.sumBy(selections, s => {
+      return activePath.getCommand(s.subIdx, s.cmdIdx).isSplitPoint() ? 1 : 0;
     });
   }
 

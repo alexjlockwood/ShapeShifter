@@ -18,7 +18,7 @@ class CommandImpl implements Command {
   constructor(
     private readonly svgChar: SvgChar,
     private readonly points: ReadonlyArray<Point>,
-    private readonly isSplit_ = false,
+    private readonly isSplitPoint_ = false,
     private readonly id = _.uniqueId(),
     private readonly isSplitSegment_ = false,
   ) {
@@ -44,7 +44,7 @@ class CommandImpl implements Command {
   }
 
   isSplitPoint() {
-    return this.isSplit_;
+    return this.isSplitPoint_;
   }
 
   // Implements the Command interface.
@@ -116,7 +116,7 @@ export class CommandBuilder {
   constructor(
     private svgChar: SvgChar,
     private points: Point[],
-    private isSplit = false,
+    private isSplitPoint = false,
     private id = '',
     private isSplitSegment = false,
   ) { }
@@ -136,17 +136,17 @@ export class CommandBuilder {
     return this;
   }
 
-  toggleSplit() {
-    return this.setIsSplitPoint(!this.isSplit);
+  toggleSplitPoint() {
+    return this.setIsSplitPoint(!this.isSplitPoint);
   }
 
-  setIsSplitPoint(isSplit: boolean) {
-    this.isSplit = isSplit;
+  setIsSplitPoint(isSplitPoint: boolean) {
+    this.isSplitPoint = isSplitPoint;
     return this;
   }
 
-  setIsSplitSegment(isSubPathSplitSegment: boolean) {
-    this.isSplitSegment = isSubPathSplitSegment;
+  setIsSplitSegment(isSplitSegment: boolean) {
+    this.isSplitSegment = isSplitSegment;
     return this;
   }
 
@@ -168,7 +168,7 @@ export class CommandBuilder {
     return new CommandImpl(
       this.svgChar,
       this.points.map(p => p ? MathUtil.transformPoint(p, ...this.transforms) : p),
-      this.isSplit,
+      this.isSplitPoint,
       this.id || _.uniqueId(),
       this.isSplitSegment,
     );
