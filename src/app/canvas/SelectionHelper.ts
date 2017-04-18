@@ -21,7 +21,10 @@ export class SelectionHelper {
   private readonly selectionService: SelectionService;
   private readonly hoverService: HoverService;
   private readonly canvasType: CanvasType;
-  private currentDraggableSplitIndex: { subIdx: number, cmdIdx: number };
+
+  // Holds a reference to the currently selected split point, which
+  // may or may not begin to drag.
+  private currentDraggableSplitIndex: { subIdx: number, cmdIdx: number } | undefined;
   private projectionOntoPath: ProjectionOntoPath;
   private isDragTriggered_ = false;
   private lastKnownMouseLocation: Point;
@@ -56,6 +59,8 @@ export class SelectionHelper {
     if (this.component.activePathLayer.isFilled() && hitResult.isSegmentHit) {
       const { subIdx, cmdIdx, cmd } = this.findHitSegment(hitResult.segmentHits);
       if (cmd.isSplitSegment()) {
+        // The user has selected a split segment, so also select any connected
+        // segments associated with it.
         const connectedSplitSegments =
           this.component.activePath.getConnectedSplitSegments(subIdx, cmdIdx);
         this.selectionService.toggleSegments(
@@ -223,6 +228,10 @@ export class SelectionHelper {
   }
 
   private checkForHovers(mousePoint: Point) {
+    if (this.currentDraggableSplitIndex) {
+      // Don't broadcast new hover events if a point has been selected.
+      return;
+    }
     const hitResult = this.performHitTest(mousePoint);
     if (!hitResult.isHit) {
       this.hoverService.reset();

@@ -69,13 +69,13 @@ const PLAY_PAUSE_SVGS = [`
   <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
 </svg>`];
 
-// const DEBUG_SVGS = [`
-// <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-//   <path d="M 4 4 h 16 v 16 h -16 v -16"/>
-// </svg>`, `
-// <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-//   <path d="M 4 4 h 16 v 16 h -16 v -16"/>
-// </svg>`];
+const DEBUG_SVGS = [`
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+  <path d="M 4 4 h 8 v 8 h -8 v -8 M 12.25 4 h 8 v 8 h -8 v -8"/>
+</svg>`, `
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+  <path d="M 4 4 h 16 v 16 h -16 v -16"/>
+</svg>`];
 
 // Note that the titles are currently used as Google Analytics tracking labels.
 export const DEMO_MAP = new Map<string, ReadonlyArray<string>>();
@@ -84,4 +84,6 @@ DEMO_MAP.set('Drawer-to-arrow icon', DRAWER_ARROW_SVGS);
 DEMO_MAP.set('Morphing digits', DIGITS_SVGS);
 DEMO_MAP.set('Morphing animals', ANIMALS_SVGS);
 DEMO_MAP.set('Play-to-pause icon', PLAY_PAUSE_SVGS);
-
+if (!environment.production) {
+  DEMO_MAP.set('Debug demos', DEBUG_SVGS);
+}
