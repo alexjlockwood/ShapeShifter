@@ -486,7 +486,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         }
         return _.flatMap(layer.pathData.getSubPaths() as SubPath[],
           (subPath, subIdx) => {
-            return this.disabledSubPathIndices.indexOf(subIdx) >= 0
+            return this.disabledSubPathIndices.includes(subIdx)
               ? subPath.getCommands() as Command[] : [];
           });
       });
@@ -502,7 +502,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         }
         return _.flatMap(layer.pathData.getSubPaths() as SubPath[],
           (subPath, subIdx) => {
-            return this.disabledSubPathIndices.indexOf(subIdx) >= 0
+            return this.disabledSubPathIndices.includes(subIdx)
               ? [] : subPath.getCommands() as Command[];
           });
       });
@@ -802,23 +802,21 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
     const isPointInfoSelectedFn = (pointInfo: PointInfo) => {
       const { subIdx, cmdIdx } = pointInfo;
-      if (selectedSubPathIndices.indexOf(subIdx) >= 0) {
+      if (selectedSubPathIndices.includes(subIdx)) {
         return true;
       }
-      return _.findIndex(currSelections, sel => {
-        return sel.subIdx === subIdx;
-      }) >= 0;
+      return !!_.find(currSelections, sel => sel.subIdx === subIdx);
     };
 
     const removedSelectedCommands =
       _.remove(pathDataPointInfos, pointInfo => {
         const { subIdx, cmdIdx } = pointInfo;
-        if (selectedSubPathIndices.indexOf(subIdx) >= 0) {
+        if (selectedSubPathIndices.includes(subIdx)) {
           return true;
         }
-        return _.findIndex(currSelections, sel => {
+        return !!_.find(currSelections, sel => {
           return sel.subIdx === subIdx && sel.cmdIdx === cmdIdx;
-        }) >= 0;
+        });
       });
     pathDataPointInfos.push(
       ..._.remove(pathDataPointInfos, pointInfo => {
@@ -828,7 +826,9 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
     const isPointInfoHoveringFn = (pointInfo: PointInfo) => {
       const hover = this.currentHover;
-      return hover && hover.type !== HoverType.Segment && pointInfo.subIdx === hover.subIdx;
+      return hover
+        && hover.type !== HoverType.Segment
+        && pointInfo.subIdx === hover.subIdx;
     };
 
     const removedHoverCommands =
