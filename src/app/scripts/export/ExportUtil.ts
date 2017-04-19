@@ -143,15 +143,21 @@ export function generateZip(
   }
   if (SHOULD_EXPORT_SVG_SPRITE) {
     // Create an svg sprite animation.
-    const svgSprite =
-      SpriteSerializer.createSvg(startVl, endVl, duration, interpolator);
-    const cssSprite =
-      SpriteSerializer.createCss(startVl.width, startVl.height, duration);
-    const htmlSprite = SpriteSerializer.createHtml('sprite.svg', 'sprite.css');
+    // TODO: round widths/heights to nearest pixel to avoid weird offses
     const sprite = web.folder('sprite');
-    sprite.file('sprite.html', htmlSprite);
-    sprite.file('sprite.css', cssSprite);
-    sprite.file('sprite.svg', svgSprite);
+    [30, 60].forEach(fps => {
+      const numSteps = Math.ceil(duration / 1000 * fps);
+      const svgSprite =
+        SpriteSerializer.createSvg(startVl, endVl, interpolator, numSteps);
+      const cssSprite =
+        SpriteSerializer.createCss(startVl.width, startVl.height, duration, numSteps);
+      const fileName = `sprite_${fps}fps`;
+      const htmlSprite = SpriteSerializer.createHtml(`${fileName}.svg`, `${fileName}.css`);
+      const spriteFolder = sprite.folder(`${fps}fps`);
+      spriteFolder.file(`${fileName}.html`, htmlSprite);
+      spriteFolder.file(`${fileName}.css`, cssSprite);
+      spriteFolder.file(`${fileName}.svg`, svgSprite);
+    });
   }
   zip.generateAsync({ type: 'blob' }).then(content => {
     downloadFile(content, 'ShapeShifter.zip');

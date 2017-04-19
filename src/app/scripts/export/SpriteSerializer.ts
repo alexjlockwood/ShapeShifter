@@ -15,8 +15,7 @@ export function createHtml(svgFileName: string, cssFileName: string) {
 `;
 }
 
-export function createCss(width: number, height: number, duration: number) {
-  const numSteps = getNumSteps(duration);
+export function createCss(width: number, height: number, duration: number, numSteps: number) {
   const prefixes = ['-webkit-', '-moz-', '-o-', ''];
   const animationDurations = prefixes.map(prefix => {
     return `  ${prefix}animation-duration: ${duration}ms;`;
@@ -27,7 +26,7 @@ export function createCss(width: number, height: number, duration: number) {
   const animationNames = prefixes.map(prefix => {
     return `  ${prefix}animation-name: play${numSteps};`;
   }).join('\n');
-  return createKeyframes(width, duration) + `
+  return createKeyframes(width, numSteps) + `
 .shapeshifter {
 ${animationDurations}
 ${animationTimings}
@@ -41,8 +40,7 @@ ${animationNames}
 `;
 }
 
-function createKeyframes(width: number, duration: number) {
-  const numSteps = getNumSteps(duration);
+function createKeyframes(width: number, numSteps: number) {
   return ['@-webkit-', '@-moz-', '@-o-', '@'].map(prefix => {
     return `${prefix}keyframes play${numSteps} {
   0% {
@@ -58,11 +56,10 @@ function createKeyframes(width: number, duration: number) {
 export function createSvg(
   start: VectorLayer,
   end: VectorLayer,
-  duration: number,
-  interpolator: Interpolator) {
+  interpolator: Interpolator,
+  numSteps: number) {
 
   const preview = start.clone();
-  const numSteps = getNumSteps(duration);
   const svgs: string[] = [];
   const { width, height } = preview;
   for (let i = 0; i <= numSteps; i++) {
@@ -79,8 +76,4 @@ ${svgs.join('\n')}
     svg = optimizedSvgText;
   });
   return svg;
-}
-
-function getNumSteps(durationMillis: number) {
-  return Math.ceil(durationMillis / 48);
 }
