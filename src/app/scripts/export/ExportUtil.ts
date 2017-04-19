@@ -15,6 +15,7 @@ import {
 
 // TODO: also export the original SVG files?
 // TODO: add css prefixes to keyframes generation to support all browsers
+// TODO: generate non-cubic-bezier interpolators correctly
 const SHOULD_EXPORT_CSS_KEYFRAMES = !environment.production && true;
 // TODO: round widths/heights to nearest pixel to avoid weird offses
 const SHOULD_EXPORT_SVG_SPRITE = !environment.production && true;

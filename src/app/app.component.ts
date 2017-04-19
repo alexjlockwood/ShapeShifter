@@ -220,6 +220,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
   onCanvasContainerClick() {
     // TODO: is this hacky? should we be using onBlur() to reset the app mode?
+    this.selectionService.reset();
     this.appModeService.setAppMode(AppMode.Selection);
   }
 
