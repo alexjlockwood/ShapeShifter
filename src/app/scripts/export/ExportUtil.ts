@@ -13,7 +13,10 @@ import {
   SvgTarget, SvgAnimation, SvgPropertyName, Interpolator,
 } from '../animation';
 
+// TODO: also export the original SVG files?
+// TODO: add css prefixes to keyframes generation to support all browsers
 const SHOULD_EXPORT_CSS_KEYFRAMES = !environment.production && true;
+// TODO: round widths/heights to nearest pixel to avoid weird offses
 const SHOULD_EXPORT_SVG_SPRITE = !environment.production && true;
 
 export function generateZip(
@@ -143,7 +146,6 @@ export function generateZip(
   }
   if (SHOULD_EXPORT_SVG_SPRITE) {
     // Create an svg sprite animation.
-    // TODO: round widths/heights to nearest pixel to avoid weird offses
     const sprite = web.folder('sprite');
     [30, 60].forEach(fps => {
       const numSteps = Math.ceil(duration / 1000 * fps);
