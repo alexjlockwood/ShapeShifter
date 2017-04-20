@@ -1,30 +1,29 @@
-<div *ngIf="{ selectionInfo: selectionInfoObservable | async, morphStatus: morphStatusObservable | async } as observableData"
-  class="toolbar action-mode-disabled" fxLayout="row" fxLayoutAlign="center center"
-  [class.action-mode-enabled]="hasActionModeBeenEnabled && observableData.selectionInfo.getNumSelections() > 0"
-  [class.action-mode-disabled]="hasActionModeBeenEnabled && observableData.selectionInfo.getNumSelections() === 0">
+<div *ngIf="(toolbarObservable | async) as toolbarData" fxLayout="row"
+  fxLayoutAlign="center center" class="toolbar action-mode-disabled"
+  [class.action-mode-enabled]="hasActionModeBeenEnabled && shouldShowActionMode()"
+  [class.action-mode-disabled]="hasActionModeBeenEnabled && !shouldShowActionMode()">
 
   <ng-container *ngIf="{
-      numSelections: observableData.selectionInfo.getNumSelections(),
-      numSubPaths: observableData.selectionInfo.getNumSubPaths(),
-      numSegments: observableData.selectionInfo.getNumSegments(),
-      numPoints: observableData.selectionInfo.getNumPoints(),
-      isMorphStatusNone: observableData.morphStatus === MORPH_NONE,
-      isMorphStatusMorphable: observableData.morphStatus === MORPH_MORPHABLE,
-      toolbarTitle: observableData.selectionInfo.getToolbarTitle(),
-      showPairSubPaths: observableData.selectionInfo.getNumSubPaths() === 1,
-      showReverseSubPaths: observableData.selectionInfo.getNumSubPaths() > 0,
-      showDeleteSubPaths: observableData.selectionInfo.getNumSplitSubPaths() > 0,
-      showDeleteSegments: observableData.selectionInfo.getNumSegments() > 0,
-      showShiftToFirstPosition: observableData.selectionInfo.shouldShowShiftToFirstPosition(),
-      showDeletePoints: observableData.selectionInfo.getNumSplitPoints() > 0
+      showActionMode: shouldShowActionMode(),
+      numSubPaths: toolbarData.getNumSubPaths(),
+      numSegments: toolbarData.getNumSegments(),
+      numPoints: toolbarData.getNumPoints(),
+      toolbarTitle: toolbarData.getToolbarTitle(),
+      showAddPoints: toolbarData.getNumSubPaths() > 0 || !toolbarData.isSelectionMode(),
+      showSplitSubPaths: toolbarData.getNumSubPaths() > 0 || !toolbarData.isSelectionMode(),
+      showMorphSubPaths: toolbarData.getNumSubPaths() === 1 || !toolbarData.isSelectionMode(),
+      showReverseSubPaths: toolbarData.getNumSubPaths() === 1,
+      showDeleteSubPaths: toolbarData.getNumSplitSubPaths() > 0,
+      showDeleteSegments: toolbarData.getNumSegments() > 0,
+      showSetFirstPosition: toolbarData.shouldShowSetFirstPosition(),
+      showDeletePoints: toolbarData.getNumSplitPoints() > 0
     } as data">
 
     <!-- Shape Shifter logo. -->
-    <md-icon *ngIf="data.numSelections === 0" class="toolbar-logo"
-      svgIcon="shapeshifter"></md-icon>
+    <md-icon *ngIf="!data.showActionMode" class="toolbar-logo" svgIcon="shapeshifter"></md-icon>
 
     <!-- Action mode close button. -->
-    <button md-icon-button *ngIf="data.numSelections > 0" class="action-mode-close-icon"
+    <button md-icon-button *ngIf="data.showActionMode" class="action-mode-close-icon"
       (click)="onCloseActionModeClick()">
       <md-icon>close</md-icon>
     </button>
@@ -36,30 +35,43 @@
 
     <!-- Default mode buttons. -->
     <button md-icon-button class="toolbar-action-button" [disabled]="!(isDirtyObservable | async)"
-      *ngIf="data.numSelections === 0" mdTooltip="New" mdTooltipPosition="below"
+      *ngIf="!data.showActionMode" mdTooltip="New" mdTooltipPosition="below"
       mdTooltipShowDelay="300" (click)="onNewClick()">
       <md-icon>create</md-icon>
     </button>
-    <button md-icon-button class="toolbar-action-button" [disabled]="isMorphStatusNone"
+    <button md-icon-button class="toolbar-action-button" [disabled]="(morphStatusObservable | async) === MORPH_NONE"
       (click)="onAutoFixClick()" mdTooltip="Auto fix" mdTooltipShowDelay="300"
-      *ngIf="data.numSelections === 0" mdTooltipPosition="below">
+      *ngIf="!data.showActionMode" mdTooltipPosition="below">
       <md-icon svgIcon="autofix"></md-icon>
     </button>
-    <button md-icon-button class="toolbar-action-button" [disabled]="!isMorphStatusMorphable"
+    <button md-icon-button class="toolbar-action-button" [disabled]="(morphStatusObservable | async) !== MORPH_MORPHABLE"
       mdTooltip="Export" mdTooltipPosition="below" mdTooltipShowDelay="300"
-      *ngIf="data.numSelections === 0" (click)="onExportClick()">
+      *ngIf="!data.showActionMode" (click)="onExportClick()">
       <md-icon>file_download</md-icon>
     </button>
 
     <!-- SubPath mode. -->
+    <button md-icon-button class="toolbar-action-button" mdTooltip="Add points"
+      mdTooltipPosition="below" *ngIf="data.showAddPoints" mdTooltipShowDelay="300"
+      (click)="onAddPointsClick()" [class.activated]="toolbarData.isAddPointsMode()">
+      <md-icon>add_circle_outline</md-icon>
+    </button>
+    <button md-icon-button class="toolbar-action-button" mdTooltip="Split subpaths"
+      mdTooltipPosition="below" *ngIf="data.showSplitSubPaths"
+      mdTooltipShowDelay="300" (click)="onSplitSubPathsClick()"
+      [class.activated]="toolbarData.isSplitSubPathsMode()">
+      <md-icon>content_cut</md-icon>
+    </button>
     <button md-icon-button class="toolbar-action-button" mdTooltip="Morph subpaths"
-      mdTooltipPosition="below" *ngIf="data.showPairSubPaths" mdTooltipShowDelay="300"
-      (click)="onPairWithSubPathsClick()">
+      mdTooltipPosition="below" *ngIf="data.showMorphSubPaths"
+      mdTooltipShowDelay="300" (click)="onMorphSubPathsClick()">
       <md-icon>compare_arrows</md-icon>
     </button>
     <button md-icon-button class="toolbar-action-button" mdTooltip="Reverse points"
       mdTooltipPosition="below" *ngIf="data.showReverseSubPaths"
-      mdTooltipShowDelay="300" (click)="onReversePointsClick()">
+      mdTooltipShowDelay="300" (click)="onReversePointsClick()"
+      (mouseenter)="onReversePointsHover(true)" (mouseleave)="onReversePointsHover(false)"
+      [disabled]="!toolbarData.isSelectionMode()">
       <md-icon svgIcon="reverse"></md-icon>
     </button>
     <!-- TODO: determine how we want to support deleting subpaths here -->
@@ -80,8 +92,9 @@
 
     <!-- Point mode. -->
     <button md-icon-button class="toolbar-action-button" mdTooltip="Set first position"
-      mdTooltipPosition="below" mdTooltipShowDelay="300" *ngIf="data.showShiftToFirstPosition"
-      (click)="onShiftPointToFirstPositionClick()">
+      mdTooltipPosition="below" mdTooltipShowDelay="300" *ngIf="data.showSetFirstPosition"
+      (click)="onSetFirstPositionClick()" (mouseenter)="onSetFirstPositionHover(true)"
+      (mouseleave)="onSetFirstPositionHover(false)">
       <md-icon>looks_one</md-icon>
     </button>
     <button md-icon-button class="toolbar-action-button" mdTooltipPosition="below"

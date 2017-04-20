@@ -43,8 +43,8 @@ export class ShapeSplitter {
       this.component.drawOverlays();
       return;
     }
-    this.component.drawOverlays();
     this.appModeService.setAppMode(AppMode.Selection);
+    this.component.drawOverlays();
   }
 
   onMouseMove(mouseMove: Point) {
@@ -152,8 +152,8 @@ export class ShapeSplitter {
       }
 
       // TODO: make sure the inspector doesn't set hovers/selections while a split is in process...
-      this.hoverService.reset();
-      this.selectionService.reset();
+      this.hoverService.resetAndNotify();
+      this.selectionService.resetAndNotify();
 
       // TODO: some bugs with this path: M 0 20 v -16 h 20 v 2 h -12 v 2 h 12 v 2 h -12 Z
       // TODO: is it possible for there to be 1 or 2 intersections and be invalid?

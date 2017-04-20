@@ -29,9 +29,17 @@
   cursor: inherit;
 }
 
-button[disabled] {
+button {
+  &[md-icon-button][disabled] {
+    md-icon {
+      color: $colorWhiteTextDisabled;
+    }
+  }
+}
+
+button.activated {
   md-icon {
-    color: $colorWhiteTextDisabled;
+    color: mat-color(mat-palette($mat-orange, 500));
   }
 }
 

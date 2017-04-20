@@ -33,7 +33,7 @@ export class HoverService {
     this.setHover({ type: HoverType.SubPath, source, subIdx });
   }
 
-  reset() {
+  resetAndNotify() {
     if (this.source.getValue()) {
       this.setHover(undefined);
     }
@@ -70,4 +70,6 @@ export enum HoverType {
   ShiftBack,
   // The user hovered over shift forward in the command inspector.
   ShiftForward,
+  // The user hovered over the shift to first position button in the toolbar.
+  ShiftToFirstPosition,
 }

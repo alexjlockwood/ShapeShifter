@@ -51,7 +51,7 @@ export class SelectionHelper {
         this.currentDraggableSplitIndex = { subIdx, cmdIdx };
       } else {
         // Then a click has occurred on top of a non-split point.
-        this.selectionService.togglePoint(this.canvasType, subIdx, cmdIdx, isShiftOrMetaPressed);
+        this.selectionService.togglePoint(this.canvasType, subIdx, cmdIdx, isShiftOrMetaPressed).notify();
       }
       return;
     }
@@ -64,7 +64,7 @@ export class SelectionHelper {
         const connectedSplitSegments =
           this.component.activePath.getConnectedSplitSegments(subIdx, cmdIdx);
         this.selectionService.toggleSegments(
-          this.canvasType, connectedSplitSegments, isShiftOrMetaPressed);
+          this.canvasType, connectedSplitSegments, isShiftOrMetaPressed).notify();
         return;
       }
     }
@@ -103,12 +103,12 @@ export class SelectionHelper {
       //       .build());
       //   subIdx = toSubIdx;
       // }
-      this.selectionService.toggleSubPath(this.canvasType, subIdx, isShiftOrMetaPressed);
+      this.selectionService.toggleSubPath(this.canvasType, subIdx, isShiftOrMetaPressed).notify();
     } else if (!isShiftOrMetaPressed) {
       // If the mouse down event didn't result in a hit, then
       // clear any existing selections, but only if the user isn't in
       // the middle of selecting multiple points at once.
-      this.selectionService.reset();
+      this.selectionService.resetAndNotify();
     }
   }
 
@@ -169,21 +169,23 @@ export class SelectionHelper {
 
         // Notify the global layer state service about the change and draw.
         // Clear any existing selections and/or hovers as well.
-        this.hoverService.reset();
-        this.selectionService.reset();
+        this.hoverService.resetAndNotify();
+        this.selectionService.resetAndNotify();
         this.stateService.updateActivePath(this.canvasType, pathMutator.build());
       }
     } else if (this.currentDraggableSplitIndex) {
       const hitResult = this.performHitTest(mouseUp);
       if (!hitResult.isHit) {
-        this.selectionService.reset();
+        this.selectionService.resetAndNotify();
       } else if (hitResult.isEndPointHit) {
         const { subIdx, cmdIdx } = this.findHitPoint(hitResult.endPointHits);
-        this.selectionService.togglePoint(this.canvasType, subIdx, cmdIdx, isShiftOrMetaPressed);
+        this.selectionService
+          .togglePoint(this.canvasType, subIdx, cmdIdx, isShiftOrMetaPressed)
+          .notify();
       } else if (hitResult.isSegmentHit || hitResult.isShapeHit) {
         const hits = hitResult.isShapeHit ? hitResult.shapeHits : hitResult.segmentHits;
         const { subIdx } = this.findHitSubPath(hits);
-        this.selectionService.toggleSubPath(this.canvasType, subIdx);
+        this.selectionService.toggleSubPath(this.canvasType, subIdx).notify();
       }
     }
 
@@ -234,7 +236,7 @@ export class SelectionHelper {
     }
     const hitResult = this.performHitTest(mousePoint);
     if (!hitResult.isHit) {
-      this.hoverService.reset();
+      this.hoverService.resetAndNotify();
       this.component.resetCursor();
     } else if (hitResult.isEndPointHit) {
       const { subIdx, cmdIdx } = this.findHitPoint(hitResult.endPointHits);

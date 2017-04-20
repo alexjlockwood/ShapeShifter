@@ -56,8 +56,8 @@
             [innerHTML]="statusTextObservable | async">
           </span>
         </span>
-        <span fxFlex></span>
-        <button md-icon-button [disabled]="morphStatus === MORPH_NONE"
+        <!--<span fxFlex></span>-->
+        <!--<button md-icon-button [disabled]="morphStatus === MORPH_NONE"
           mdTooltip="Select points (S)" mdTooltipPosition="above"
           (click)="appModeService.setAppMode(SELECTION_MODE)">
           <md-icon class="svg-button" [class.activated]="(appModeObservable | async) === SELECTION_MODE" svgIcon="selectioncursor"></md-icon>
@@ -71,7 +71,7 @@
           mdTooltip="Split subpaths (C)" mdTooltipPosition="above"
           (click)="appModeService.setAppMode(SPLIT_SUBPATHS_MODE)">
           <md-icon [class.activated]="(appModeObservable | async) === SPLIT_SUBPATHS_MODE">content_cut</md-icon>
-        </button>
+        </button>-->
       </div>
       <app-pathinspector fxFlexFill></app-pathinspector>
     </div>

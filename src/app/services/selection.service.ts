@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 import { Injectable } from '@angular/core';
-import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+import { Subject } from 'rxjs/Subject';
 import { CanvasType } from '../CanvasType';
 import { StateService } from './state.service';
 import { PathUtil } from '../scripts/paths';
@@ -11,14 +11,15 @@ import { PathUtil } from '../scripts/paths';
  */
 @Injectable()
 export class SelectionService {
-  private readonly source = new BehaviorSubject<ReadonlyArray<Selection>>([]);
+  private readonly source = new Subject<ReadonlyArray<Selection>>();
+  private selections: ReadonlyArray<Selection> = [];
 
   asObservable() {
     return this.source.asObservable();
   }
 
   getSelections() {
-    return this.source.getValue();
+    return this.selections;
   }
 
   getSubPathSelections() {
@@ -55,10 +56,6 @@ export class SelectionService {
     });
   }
 
-  private setSelections(selections: Selection[]) {
-    this.source.next(selections);
-  }
-
   toggleSubPath(source: CanvasType, subIdx: number, appendToList = false) {
     // TODO: support multi-selection for subpaths
     appendToList = false;
@@ -69,6 +66,7 @@ export class SelectionService {
       selections,
       [{ type: SelectionType.SubPath, source, subIdx }],
       appendToList);
+    return this;
   }
 
   toggleSegments(
@@ -88,6 +86,7 @@ export class SelectionService {
         return { type: SelectionType.Segment, source, subIdx, cmdIdx };
       }),
       appendToList);
+    return this;
   }
 
   togglePoint(source: CanvasType, subIdx: number, cmdIdx: number, appendToList = false) {
@@ -97,6 +96,7 @@ export class SelectionService {
       selections,
       [{ type: SelectionType.Point, source, subIdx, cmdIdx }],
       appendToList);
+    return this;
   }
 
   /**
@@ -124,15 +124,26 @@ export class SelectionService {
         return newSelections.every(newSel => !areSelectionsEqual(currSel, newSel));
       });
     }
-    this.source.next(currentSelections);
+    this.selections = currentSelections;
   }
 
+  /**
+   * Clears the current list of selections without notifying any observers.
+   */
+  reset() {
+    this.selections = [];
+    return this;
+  }
 
   /**
    * Clears the current list of selections.
    */
-  reset() {
-    this.setSelections([]);
+  resetAndNotify() {
+    this.reset().notify();
+  }
+
+  notify() {
+    this.source.next(this.selections);
   }
 }
 
@@ -180,7 +191,7 @@ export function deleteSelectedSplitSegments(
   // Preconditions: all selections exist in the same editor.
   const { source, subIdx, cmdIdx } = selections[0];
   const activePathLayer = stateService.getActivePathLayer(source);
-  selectionService.reset();
+  selectionService.resetAndNotify();
   const mutator = activePathLayer.pathData.mutate();
   mutator.deleteSubPathSplitSegment(subIdx, cmdIdx);
   stateService.updateActivePath(source, mutator.build());
@@ -214,7 +225,7 @@ export function deleteSelectedSplitPoints(
     subIdxOps.push({ subIdx, cmdIdx });
     unsplitOpsMap.set(subIdx, subIdxOps);
   }
-  sss.reset();
+  sss.resetAndNotify();
   const mutator = activePathLayer.pathData.mutate();
   unsplitOpsMap.forEach((ops, idx) => {
     // TODO: perform these as a single batch instead of inside a loop? (to reduce # of broadcasts)

@@ -8,6 +8,9 @@ import {
   Selection,
   SelectionType,
   HoverService,
+  HoverType,
+  AppModeService,
+  AppMode,
 } from '../services';
 import {
   deleteSelectedSplitSegments,
@@ -39,7 +42,7 @@ export class ToolbarComponent implements OnInit {
 
   morphStatusObservable: Observable<MorphStatus>;
   isDirtyObservable: Observable<boolean>;
-  selectionInfoObservable: Observable<SelectionInfo>;
+  toolbarObservable: Observable<ToolbarData>;
 
   constructor(
     private readonly viewContainerRef: ViewContainerRef,
@@ -47,6 +50,7 @@ export class ToolbarComponent implements OnInit {
     private readonly selectionService: SelectionService,
     private readonly hoverService: HoverService,
     private readonly stateService: StateService,
+    private readonly appModeService: AppModeService,
     private readonly dialogService: DialogService,
   ) { }
 
@@ -54,20 +58,25 @@ export class ToolbarComponent implements OnInit {
     this.morphStatusObservable = this.stateService.getMorphStatusObservable();
     this.isDirtyObservable =
       this.stateService.getExistingPathIdsObservable().map(ids => !!ids.length);
-    this.selectionInfoObservable =
-      this.selectionService.asObservable()
-        .map(selections => {
-          const selectionInfo = new SelectionInfo(this.stateService, selections);
-          if (selectionInfo.getNumSelections() > 0) {
-            this.hasActionModeBeenEnabled = true;
-          }
-          return selectionInfo;
-        });
+    const combinedObservable =
+      Observable.combineLatest(
+        this.selectionService.asObservable(),
+        this.appModeService.asObservable());
+    this.toolbarObservable = combinedObservable.map(() => {
+      const selections = this.selectionService.getSelections();
+      const appMode = this.appModeService.getAppMode();
+      const selectionInfo =
+        new ToolbarData(this.stateService, appMode, selections);
+      if (selectionInfo.getNumSelections() > 0) {
+        this.hasActionModeBeenEnabled = true;
+      }
+      return selectionInfo;
+    });
   }
 
-  onCloseActionModeClick() {
-    this.hoverService.reset();
-    this.selectionService.reset();
+  shouldShowActionMode() {
+    return this.selectionService.getSelections().length
+      || this.appModeService.getAppMode() !== AppMode.Selection;
   }
 
   onNewClick() {
@@ -142,8 +151,40 @@ export class ToolbarComponent implements OnInit {
   // TODO: support multi select/multi delete
   // TODO: implement pair subpaths mode
   // TODO: add points, split subpaths, etc. modes in action mode?
+  // TODO: implement hover hints (similar to inspector)
+  // TODO: need to improve how points are selected/enlarged in the canvas...
 
-  onPairWithSubPathsClick() {
+  onCloseActionModeClick() {
+    this.hoverService.resetAndNotify();
+    this.selectionService.resetAndNotify();
+    this.appModeService.setAppMode(AppMode.Selection);
+  }
+
+  onAddPointsClick() {
+    // TODO: prefer already selected subpaths over others when creating new points?
+    const appMode = this.appModeService.getAppMode();
+    this.appModeService.setAppMode(
+      appMode === AppMode.SplitCommands ? AppMode.Selection : AppMode.SplitCommands);
+  }
+
+  onSplitSubPathsClick() {
+    // TODO: prefer already selected subpaths over others when splitting new subpaths?
+    const appMode = this.appModeService.getAppMode();
+    this.appModeService.setAppMode(
+      appMode === AppMode.SplitSubPaths ? AppMode.Selection : AppMode.SplitSubPaths);
+  }
+
+  onMorphSubPathsClick() {
+    // TODO: implement this
+  }
+
+  onReversePointsHover(isHovering: boolean) {
+    const { source, subIdx } = this.selectionService.getSubPathSelections()[0];
+    if (isHovering) {
+      this.hoverService.setHover({ source, subIdx, type: HoverType.Reverse });
+    } else {
+      this.hoverService.resetAndNotify();
+    }
   }
 
   onReversePointsClick() {
@@ -154,7 +195,7 @@ export class ToolbarComponent implements OnInit {
       pathMutator.reverseSubPath(subIdx);
     }
     this.stateService.updateActivePath(source, pathMutator.build());
-    this.selectionService.reset();
+    this.hoverService.resetAndNotify();
   }
 
   onDeleteSubPathsClick() {
@@ -165,7 +206,18 @@ export class ToolbarComponent implements OnInit {
     deleteSelectedSplitSegments(this.stateService, this.selectionService);
   }
 
-  onShiftPointToFirstPositionClick() {
+  onSetFirstPositionHover(isHovering: boolean) {
+    const { source, subIdx, cmdIdx } = this.selectionService.getPointSelections()[0];
+    if (isHovering) {
+      this.hoverService.setHover({
+        source, subIdx, cmdIdx, type: HoverType.ShiftToFirstPosition,
+      });
+    } else {
+      this.hoverService.resetAndNotify();
+    }
+  }
+
+  onSetFirstPositionClick() {
     const { source, subIdx, cmdIdx } = this.selectionService.getPointSelections()[0];
     const activePath = this.stateService.getActivePathLayer(source).pathData;
     this.stateService.updateActivePath(
@@ -173,7 +225,7 @@ export class ToolbarComponent implements OnInit {
       activePath.mutate()
         .shiftSubPathForward(subIdx, cmdIdx)
         .build());
-    this.selectionService.reset();
+    this.selectionService.resetAndNotify();
   }
 
   onDeletePointsClick() {
@@ -181,15 +233,19 @@ export class ToolbarComponent implements OnInit {
   }
 }
 
-class SelectionInfo {
+class ToolbarData {
   private readonly subPaths: ReadonlyArray<number> = [];
   private readonly segments: ReadonlyArray<{ subIdx: number, cmdIdx: number }> = [];
   private readonly points: ReadonlyArray<{ subIdx: number, cmdIdx: number }> = [];
   private readonly numSplitSubPaths: number;
   private readonly numSplitPoints: number;
-  private readonly showShiftToFirstPosition_: boolean;
+  private readonly showSetFirstPosition: boolean;
 
-  constructor(stateService: StateService, selections: ReadonlyArray<Selection>) {
+  constructor(
+    stateService: StateService,
+    private readonly appMode: AppMode,
+    selections: ReadonlyArray<Selection>,
+  ) {
     // Precondition: assume all selections are for the same canvas type
     if (!selections.length) {
       return;
@@ -232,7 +288,7 @@ class SelectionInfo {
       const { subIdx, cmdIdx } = s;
       return activePath.getCommand(subIdx, cmdIdx).isSplitPoint() ? 1 : 0;
     });
-    this.showShiftToFirstPosition_ = this.points.length === 1
+    this.showSetFirstPosition = this.points.length === 1
       && this.points[0].cmdIdx
       && activePath.getSubPath(this.points[0].subIdx).isClosed();
   }
@@ -267,9 +323,10 @@ class SelectionInfo {
       return `${segStr} selected`;
     } else if (numPoints > 0) {
       return `${ptStr} selected`;
-    } else {
-      return 'Shape Shifter';
+    } else if (this.shouldShowActionMode()) {
+      return '';
     }
+    return 'Shape Shifter';
   }
 
   getNumSplitSubPaths() {
@@ -280,7 +337,23 @@ class SelectionInfo {
     return this.numSplitPoints || 0;
   }
 
-  shouldShowShiftToFirstPosition() {
-    return this.showShiftToFirstPosition_ || false;
+  shouldShowSetFirstPosition() {
+    return this.showSetFirstPosition || false;
+  }
+
+  shouldShowActionMode() {
+    return this.getNumSelections() > 0 || !this.isSelectionMode();
+  }
+
+  isSelectionMode() {
+    return this.appMode === AppMode.Selection;
+  }
+
+  isAddPointsMode() {
+    return this.appMode === AppMode.SplitCommands;
+  }
+
+  isSplitSubPathsMode() {
+    return this.appMode === AppMode.SplitSubPaths;
   }
 }

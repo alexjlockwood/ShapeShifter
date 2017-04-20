@@ -65,7 +65,7 @@ export class CommandInspectorComponent implements OnInit {
       // middle of a multi-select, do nothing.
       return;
     }
-    this.selectionService.togglePoint(this.canvasType, this.subIdx, this.cmdIdx, appendToList);
+    this.selectionService.togglePoint(this.canvasType, this.subIdx, this.cmdIdx, appendToList).notify();
   }
 
   onReverseClick(event: MouseEvent) {
@@ -113,8 +113,8 @@ export class CommandInspectorComponent implements OnInit {
   }
 
   private clearSelectionsAndHovers() {
-    this.hoverService.reset();
-    this.selectionService.reset();
+    this.hoverService.resetAndNotify();
+    this.selectionService.resetAndNotify();
   }
 
   private replacePath(path: Path, event: MouseEvent) {
@@ -198,7 +198,7 @@ export class CommandInspectorComponent implements OnInit {
         source: this.canvasType,
       });
     } else {
-      this.hoverService.reset();
+      this.hoverService.resetAndNotify();
     }
     this.isHovering =
       this.isHoveringOverCommand

@@ -49,8 +49,8 @@ export class SegmentSplitter {
       }
 
       // TODO: make sure the inspector doesn't set hovers/selections while a split is in process...
-      this.hoverService.reset();
-      this.selectionService.reset();
+      this.hoverService.resetAndNotify();
+      this.selectionService.resetAndNotify();
       this.currProjInfo = undefined;
 
       this.component.stateService.updateActivePath(

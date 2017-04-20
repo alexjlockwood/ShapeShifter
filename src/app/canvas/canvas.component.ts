@@ -199,13 +199,9 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           } else {
             this.shapeSplitter = undefined;
           }
-          if (this.appMode !== AppMode.SplitCommands) {
-            this.selectionService.reset();
-          }
           if (!this.activePathId) {
             this.showPointerCursor();
           }
-          this.hoverService.reset();
           this.resetCursor();
           this.currentHoverPreviewPath = undefined;
           this.draw();
@@ -233,6 +229,9 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
               break;
             case HoverType.ShiftBack:
               previewPath = mutator.shiftSubPathBack(subIdx).build();
+              break;
+            case HoverType.ShiftToFirstPosition:
+              previewPath = mutator.shiftSubPathForward(subIdx, cmdIdx).build();
               break;
           }
         }

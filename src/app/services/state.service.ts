@@ -105,8 +105,8 @@ export class StateService {
       return;
     }
     this.appModeService.reset();
-    this.selectionService.reset();
-    this.hoverService.reset();
+    this.selectionService.resetAndNotify();
+    this.hoverService.resetAndNotify();
     this.animatorService.reset();
 
     const setActivePathIdFn = (type: CanvasType) => {
@@ -363,8 +363,8 @@ export class StateService {
    */
   reset() {
     this.appModeService.reset();
-    this.selectionService.reset();
-    this.hoverService.reset();
+    this.selectionService.resetAndNotify();
+    this.hoverService.resetAndNotify();
     this.settingsService.reset();
     this.animatorService.reset();
     this.importedPathMap.clear();

@@ -87,7 +87,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
         this.selectionService.asObservable(),
         this.appModeService.asObservable(),
       ).map(obj => {
-        const [status, selections, appMode] = obj;
+        const [status, , appMode] = obj;
         const startLayer = this.stateService.getActivePathLayer(CanvasType.Start);
         const endLayer = this.stateService.getActivePathLayer(CanvasType.End);
         if (!startLayer || !endLayer) {
@@ -222,8 +222,8 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
   onCanvasContainerClick() {
     // TODO: is this hacky? should we be using onBlur() to reset the app mode?
-    this.hoverService.reset();
-    this.selectionService.reset();
+    this.hoverService.resetAndNotify();
+    this.selectionService.resetAndNotify();
     this.appModeService.setAppMode(AppMode.Selection);
   }
 
@@ -282,27 +282,27 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
         }
         return false;
       }
-      if (event.keyCode === 83) {
-        // S.
-        if (!isMorphStatusNone) {
-          this.appModeService.setAppMode(AppMode.Selection);
-        }
-        return false;
-      }
-      if (event.keyCode === 65) {
-        // A.
-        if (!isMorphStatusNone) {
-          this.appModeService.setAppMode(AppMode.SplitCommands);
-        }
-        return false;
-      }
-      if (event.keyCode === 67) {
-        // C.
-        if (!isMorphStatusNone) {
-          this.appModeService.setAppMode(AppMode.SplitSubPaths);
-        }
-        return false;
-      }
+      // if (event.keyCode === 83) {
+      //   // S.
+      //   if (!isMorphStatusNone) {
+      //     this.appModeService.setAppMode(AppMode.Selection);
+      //   }
+      //   return false;
+      // }
+      // if (event.keyCode === 65) {
+      //   // A.
+      //   if (!isMorphStatusNone) {
+      //     this.appModeService.setAppMode(AppMode.SplitCommands);
+      //   }
+      //   return false;
+      // }
+      // if (event.keyCode === 67) {
+      //   // C.
+      //   if (!isMorphStatusNone) {
+      //     this.appModeService.setAppMode(AppMode.SplitSubPaths);
+      //   }
+      //   return false;
+      // }
       return undefined;
     });
   }

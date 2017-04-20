@@ -41,7 +41,7 @@ export class SubpathInspectorComponent implements OnInit {
   }
 
   onSubPathClick(event: MouseEvent) {
-    this.selectionService.toggleSubPath(this.canvasType, this.subIdx);
+    this.selectionService.toggleSubPath(this.canvasType, this.subIdx).notify();
   }
 
   onSubPathHoverEvent(isHoveringOverSubPath: boolean) {
@@ -64,7 +64,7 @@ export class SubpathInspectorComponent implements OnInit {
         source: this.canvasType,
       });
     } else {
-      this.hoverService.reset();
+      this.hoverService.resetAndNotify();
     }
     this.isHovering = this.isHoveringOverSubPath;
   }
