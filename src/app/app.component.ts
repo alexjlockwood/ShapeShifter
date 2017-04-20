@@ -23,6 +23,7 @@ import {
   StateService,
   MorphStatus,
   FilePickerService,
+  HoverService,
 } from './services';
 import { deleteSelectedSplitPoints } from './services/selection.service';
 import { DemoUtil, DEMO_MAP } from './scripts/demos';
@@ -71,6 +72,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     private readonly filePickerService: FilePickerService,
     private readonly stateService: StateService,
     private readonly selectionService: SelectionService,
+    private readonly hoverService: HoverService,
     private readonly animatorService: AnimatorService,
     private readonly canvasResizeService: CanvasResizeService,
     // This is public so that it can be accessed by the template.
@@ -220,6 +222,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
   onCanvasContainerClick() {
     // TODO: is this hacky? should we be using onBlur() to reset the app mode?
+    this.hoverService.reset();
     this.selectionService.reset();
     this.appModeService.setAppMode(AppMode.Selection);
   }

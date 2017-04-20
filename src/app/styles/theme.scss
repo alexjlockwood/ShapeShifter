@@ -5,7 +5,7 @@
 @include mat-core();
 // Define the palettes for your theme using the Material Design palettes available in palette.scss
 // (imported above). For each palette, you can optionally specify a default, lighter, and darker hue.
-$app-primary: mat-palette($mat-blue-grey, 700);
+$app-primary: mat-palette($mat-blue-grey, 500);
 $app-accent: mat-palette($mat-blue, A400);
 // The warn palette is optional (defaults to red).
 $app-warn: mat-palette($mat-red);

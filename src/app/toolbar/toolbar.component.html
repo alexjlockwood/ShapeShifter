@@ -1,123 +1,107 @@
-<div class="toolbar action-mode-disabled" fxLayout="row" fxLayoutAlign="center center"
-  [class.action-mode-disabled]="hasActionModeBeenEnabled && !(actionModeObservable | async)"
-  [class.action-mode-enabled]="hasActionModeBeenEnabled && (actionModeObservable | async)">
+<div *ngIf="{ selectionInfo: selectionInfoObservable | async, morphStatus: morphStatusObservable | async } as observableData"
+  class="toolbar action-mode-disabled" fxLayout="row" fxLayoutAlign="center center"
+  [class.action-mode-enabled]="hasActionModeBeenEnabled && observableData.selectionInfo.getNumSelections() > 0"
+  [class.action-mode-disabled]="hasActionModeBeenEnabled && observableData.selectionInfo.getNumSelections() === 0">
 
-  <!-- Shape Shifter logo. -->
-  <md-icon *ngIf="!(actionModeObservable | async)" class="toolbar-logo"
-    svgIcon="shapeshifter"></md-icon>
+  <ng-container *ngIf="{
+      numSelections: observableData.selectionInfo.getNumSelections(),
+      numSubPaths: observableData.selectionInfo.getNumSubPaths(),
+      numSegments: observableData.selectionInfo.getNumSegments(),
+      numPoints: observableData.selectionInfo.getNumPoints(),
+      isMorphStatusNone: observableData.morphStatus === MORPH_NONE,
+      isMorphStatusMorphable: observableData.morphStatus === MORPH_MORPHABLE,
+      toolbarTitle: observableData.selectionInfo.getToolbarTitle()
+    } as data">
 
-  <!-- Action mode close button. -->
-  <button md-icon-button *ngIf="actionModeObservable | async" class="action-mode-close-icon"
-    (click)="onCloseActionModeClick()">
-    <md-icon>close</md-icon>
-  </button>
+    <!-- Shape Shifter logo. -->
+    <md-icon *ngIf="data.numSelections === 0" class="toolbar-logo"
+      svgIcon="shapeshifter"></md-icon>
 
-  <!-- Toolbar text. -->
-  <span *ngIf="!(actionModeObservable | async)">Shape Shifter</span>
-  <span *ngIf="(actionModeObservable | async)">{{toolbarTextObservable | async}}</span>
-
-  <span fxFlex="1 1 auto"></span>
-
-  <!-- Default mode buttons. -->
-  <button class="toolbar-action-button" [disabled]="!(isDirtyObservable | async)"
-    *ngIf="!(actionModeObservable | async)" mdTooltip="New" mdTooltipPosition="below"
-    mdTooltipShowDelay="500" (click)="onNewClick()" md-icon-button>
-    <md-icon>create</md-icon>
-  </button>
-  <button md-icon-button class="toolbar-action-button" [disabled]="(morphStatusObservable | async) === MORPH_NONE"
-    (click)="onAutoFixClick()" mdTooltip="Auto fix" mdTooltipShowDelay="500"
-    *ngIf="!(actionModeObservable | async)" mdTooltipPosition="below">
-    <md-icon svgIcon="autofix"></md-icon>
-  </button>
-  <button md-icon-button class="toolbar-action-button" [disabled]="(morphStatusObservable | async) !== MORPH_MORPHABLE"
-    mdTooltip="Export" mdTooltipPosition="below" mdTooltipShowDelay="500"
-    *ngIf="!(actionModeObservable | async)" (click)="onExportClick()">
-    <md-icon>file_download</md-icon>
-  </button>
-
-  <!-- SubPath mode. -->
-  <button md-icon-button class="toolbar-action-button" mdTooltip="Delete selected points"
-    mdTooltipPosition="below" *ngIf="(actionModeObservable | async) === ACTION_MODE_SUBPATH"
-    mdTooltipShowDelay="500">
-    <md-icon>add_circle_outline</md-icon>
-  </button>
-  <button md-icon-button class="toolbar-action-button" mdTooltip="Delete selected points"
-    mdTooltipPosition="below" *ngIf="(actionModeObservable | async) === ACTION_MODE_SUBPATH"
-    mdTooltipShowDelay="500">
-    <md-icon svgIcon="reverse"></md-icon>
-  </button>
-  <button md-icon-button class="toolbar-action-button" mdTooltip="Delete selected points"
-    mdTooltipPosition="below" *ngIf="(actionModeObservable | async) === ACTION_MODE_SUBPATH"
-    mdTooltipShowDelay="500">
-    <md-icon>content_cut</md-icon>
-  </button>
-  <button md-icon-button class="toolbar-action-button" mdTooltip="Delete selected points"
-    mdTooltipPosition="below" *ngIf="(actionModeObservable | async) === ACTION_MODE_SUBPATH"
-    mdTooltipShowDelay="500">
-    <md-icon>compare_arrows</md-icon>
-  </button>
-  <button md-icon-button class="toolbar-action-button" mdTooltip="Delete selected points"
-    mdTooltipPosition="below" *ngIf="(actionModeObservable | async) === ACTION_MODE_SUBPATH"
-    mdTooltipShowDelay="500">
-    <md-icon>delete</md-icon>
-  </button>
-
-  <!-- Segment mode. -->
-  <button md-icon-button class="toolbar-action-button" mdTooltip="Delete selected points"
-    mdTooltipPosition="below" *ngIf="(actionModeObservable | async) === ACTION_MODE_SEGMENT"
-    mdTooltipShowDelay="500">
-    <md-icon>add_circle_outline</md-icon>
-  </button>
-  <button md-icon-button class="toolbar-action-button" mdTooltip="Delete selected points"
-    mdTooltipPosition="below" *ngIf="(actionModeObservable | async) === ACTION_MODE_SEGMENT"
-    mdTooltipShowDelay="500">
-    <md-icon>content_cut</md-icon>
-  </button>
-  <button md-icon-button class="toolbar-action-button" mdTooltip="Delete selected points"
-    mdTooltipPosition="below" *ngIf="(actionModeObservable | async) === ACTION_MODE_SEGMENT"
-    mdTooltipShowDelay="500">
-    <md-icon>delete</md-icon>
-  </button>
-
-  <!-- Point mode. -->
-  <button md-icon-button class="toolbar-action-button" mdTooltip="Delete selected points"
-    mdTooltipPosition="below" *ngIf="(actionModeObservable | async) === ACTION_MODE_POINT"
-    mdTooltipShowDelay="500">
-    <md-icon>add_circle_outline</md-icon>
-  </button>
-  <button md-icon-button class="toolbar-action-button" mdTooltip="Delete selected points"
-    mdTooltipPosition="below" *ngIf="(actionModeObservable | async) === ACTION_MODE_POINT"
-    mdTooltipShowDelay="500" (click)="onDeleteSelectedPointsClick()">
-    <md-icon>delete</md-icon>
-  </button>
-  <button md-icon-button class="toolbar-action-button" mdTooltip="Delete selected points"
-    mdTooltipPosition="below" *ngIf="(actionModeObservable | async) === ACTION_MODE_POINT"
-    mdTooltipShowDelay="500">
-    <md-icon>looks_one</md-icon>
-  </button>
-
-  <!-- Overflow menu buttons. -->
-  <button class="toolbar-action-button" md-icon-button [mdMenuTriggerFor]="overflowMenu">
-    <md-icon>more_vert</md-icon>
-  </button>
-  <md-menu #overflowMenu="mdMenu">
-    <button md-menu-item (click)="onDemoClick()">
-      <md-icon class="material-icons" svgIcon="demoicon"></md-icon>
-      <span>Demos</span>
+    <!-- Action mode close button. -->
+    <button md-icon-button *ngIf="data.numSelections > 0" class="action-mode-close-icon"
+      (click)="onCloseActionModeClick()">
+      <md-icon>close</md-icon>
     </button>
-    <a href="https://github.com/alexjlockwood/ShapeShifter/issues"
-      target="_blank" class="toolbar-overflow-link-item">
-      <button md-menu-item (click)="onSendFeedbackClick()">
-        <md-icon>bug_report</md-icon>
-        <span>Send feedback</span>
+
+    <!-- Toolbar text. -->
+    <span>{{data.toolbarTitle}}</span>
+
+    <span fxFlex="1 1 auto"></span>
+
+    <!-- Default mode buttons. -->
+    <button md-icon-button class="toolbar-action-button" [disabled]="!(isDirtyObservable | async)"
+      *ngIf="data.numSelections === 0" mdTooltip="New" mdTooltipPosition="below"
+      mdTooltipShowDelay="300" (click)="onNewClick()">
+      <md-icon>create</md-icon>
+    </button>
+    <button md-icon-button class="toolbar-action-button" [disabled]="isMorphStatusNone"
+      (click)="onAutoFixClick()" mdTooltip="Auto fix" mdTooltipShowDelay="300"
+      *ngIf="data.numSelections === 0" mdTooltipPosition="below">
+      <md-icon svgIcon="autofix"></md-icon>
+    </button>
+    <button md-icon-button class="toolbar-action-button" [disabled]="!isMorphStatusMorphable"
+      mdTooltip="Export" mdTooltipPosition="below" mdTooltipShowDelay="300"
+      *ngIf="data.numSelections === 0" (click)="onExportClick()">
+      <md-icon>file_download</md-icon>
+    </button>
+
+    <!-- SubPath mode. -->
+    <button md-icon-button class="toolbar-action-button" mdTooltip="Pair with subpath"
+      mdTooltipPosition="below" *ngIf="data.numSubPaths === 1"
+      mdTooltipShowDelay="300">
+      <md-icon>compare_arrows</md-icon>
+    </button>
+    <button md-icon-button class="toolbar-action-button" mdTooltip="Reverse point order"
+      mdTooltipPosition="below" *ngIf="data.numSubPaths > 0" mdTooltipShowDelay="300">
+      <md-icon svgIcon="reverse"></md-icon>
+    </button>
+    <button md-icon-button class="toolbar-action-button" mdTooltipPosition="below"
+      mdTooltip="Delete subpath{{data.numSubPaths === 1 ? '' : 's'}}"
+      mdTooltipShowDelay="300" *ngIf="data.numSubPaths > 0">
+      <md-icon>delete</md-icon>
+    </button>
+
+    <!-- Segment mode. -->
+    <button md-icon-button class="toolbar-action-button" mdTooltipPosition="below"
+      mdTooltip="Delete segment{{data.numSegments === 1 ? '' : 's'}}"
+      mdTooltipShowDelay="300" *ngIf="data.numSegments > 0">
+      <md-icon>delete</md-icon>
+    </button>
+
+    <!-- Point mode. -->
+    <button md-icon-button class="toolbar-action-button" mdTooltip="Shift to first position"
+      mdTooltipPosition="below" mdTooltipShowDelay="300" *ngIf="data.numPoints > 0">
+      <md-icon>looks_one</md-icon>
+    </button>
+    <button md-icon-button class="toolbar-action-button" mdTooltipPosition="below"
+      mdTooltip="Delete point{{data.numPoints === 1 ? '' : 's'}}"
+      mdTooltipShowDelay="300" *ngIf="data.numPoints > 0" (click)="onDeleteSelectedPointsClick()">
+      <md-icon>delete</md-icon>
+    </button>
+
+    <!-- Overflow menu buttons. -->
+    <button class="toolbar-action-button" md-icon-button [mdMenuTriggerFor]="overflowMenu">
+      <md-icon>more_vert</md-icon>
+    </button>
+    <md-menu #overflowMenu="mdMenu">
+      <button md-menu-item (click)="onDemoClick()">
+        <md-icon class="material-icons" svgIcon="demoicon"></md-icon>
+        <span>Demos</span>
       </button>
-    </a>
-    <a href="https://github.com/alexjlockwood/ShapeShifter/blob/master/README.md"
-      target="_blank" class="toolbar-overflow-link-item">
-      <button md-menu-item (click)="onAboutClick()">
-        <md-icon>info</md-icon>
-        <span>About</span>
-      </button>
-    </a>
-  </md-menu>
+      <a href="https://github.com/alexjlockwood/ShapeShifter/issues"
+        target="_blank" class="toolbar-overflow-link-item">
+        <button md-menu-item (click)="onSendFeedbackClick()">
+          <md-icon>bug_report</md-icon>
+          <span>Send feedback</span>
+        </button>
+      </a>
+      <a href="https://github.com/alexjlockwood/ShapeShifter/blob/master/README.md"
+        target="_blank" class="toolbar-overflow-link-item">
+        <button md-menu-item (click)="onAboutClick()">
+          <md-icon>info</md-icon>
+          <span>About</span>
+        </button>
+      </a>
+    </md-menu>
+  </ng-container>
 </div>

@@ -6,7 +6,7 @@
   padding: 8px 16px;
   font-size: 18px;
   line-height: 16px;
-  background-color: material-color('blue-grey', '500');
+  background-color: mat-color($app-primary);
   color: mat-color($app-primary, default-contrast);
   box-shadow: material-shadow(1);
   z-index: 1;
@@ -20,11 +20,6 @@
 
 .action-mode-close-icon {
   margin-right: 8px;
-}
-
-md-toolbar {
-  background-color: mat-color($app-primary);
-  color: mat-color($app-primary, default-contrast);
 }
 
 // Remove link decorations from overflow menu items.
@@ -49,7 +44,6 @@ button[disabled] {
   animation-duration: 200ms;
   animation-timing-function: ease-out;
   animation-fill-mode: forwards;
-  /* or: backwards, both, none */
 }
 
 .action-mode-enabled {
@@ -61,7 +55,7 @@ button[disabled] {
 
 @keyframes actionModeEnabled {
   0% {
-    background-color: mat-color($mat-blue-grey, 500);
+    background-color: mat-color($app-primary);
     color: mat-color($app-primary, default-contrast);
   }
   100% {
@@ -76,7 +70,7 @@ button[disabled] {
     color: mat-color(mat-palette($mat-grey, 100), default-contrast);
   }
   100% {
-    background-color: mat-color($mat-blue-grey, 500);
+    background-color: mat-color($app-primary);
     color: mat-color($app-primary, default-contrast);
   }
 }

@@ -14,6 +14,8 @@ import { ExportUtil } from '../scripts/export';
 import { DialogService } from '../dialogs';
 import { AutoAwesome } from '../scripts/algorithms';
 import { DemoUtil, DEMO_MAP } from '../scripts/demos';
+import { PathLayer } from '../scripts/layers';
+import { Path } from '../scripts/paths';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/combineLatest';
 
@@ -30,17 +32,13 @@ export class ToolbarComponent implements OnInit {
   readonly MORPH_UNMORPHABLE = MorphStatus.Unmorphable;
   readonly MORPH_MORPHABLE = MorphStatus.Morphable;
 
-  readonly ACTION_MODE_SUBPATH = ActionMode.SubPath;
-  readonly ACTION_MODE_SEGMENT = ActionMode.Segment;
-  readonly ACTION_MODE_POINT = ActionMode.Point;
-
   // This boolean is used to ensure the toolbar transition doesn't run on page load.
   hasActionModeBeenEnabled = false;
 
   morphStatusObservable: Observable<MorphStatus>;
   isDirtyObservable: Observable<boolean>;
   toolbarTextObservable: Observable<string>;
-  actionModeObservable: Observable<ActionMode>;
+  selectionInfoObservable: Observable<SelectionInfo>;
 
   constructor(
     private readonly viewContainerRef: ViewContainerRef,
@@ -51,96 +49,18 @@ export class ToolbarComponent implements OnInit {
   ) { }
 
   ngOnInit() {
-    this.morphStatusObservable =
-      this.stateService.getMorphStatusObservable();
+    this.morphStatusObservable = this.stateService.getMorphStatusObservable();
     this.isDirtyObservable =
       this.stateService.getExistingPathIdsObservable().map(ids => !!ids.length);
-    this.actionModeObservable =
+    this.selectionInfoObservable =
       this.selectionService.asObservable()
         .map(selections => {
-          let actionMode = ActionMode.Disabled;
-          if (this.getNumSelectedSubPaths(selections) > 0) {
-            actionMode = ActionMode.SubPath;
-          } else if (this.getNumSelectedSegments(selections) > 0) {
-            actionMode = ActionMode.Segment;
-          } else if (this.getNumSelectedPoints(selections) > 0) {
-            actionMode = ActionMode.Point;
-          }
-          if (actionMode !== ActionMode.Disabled) {
+          const selectionInfo = new SelectionInfo(this.stateService, selections);
+          if (selectionInfo.getNumSelections() > 0) {
             this.hasActionModeBeenEnabled = true;
           }
-          return actionMode;
+          return selectionInfo;
         });
-    this.toolbarTextObservable =
-      this.selectionService.asObservable()
-        .map(selections => {
-          const numSubPaths = this.getNumSelectedSubPaths(selections);
-          const subStr = `${numSubPaths} subpath${numSubPaths === 1 ? '' : 's'}`;
-          const numSegments = this.getNumSelectedSegments(selections);
-          const segStr = `${numSegments} split segment${numSegments === 1 ? '' : 's'}`;
-          const numPoints = this.getNumSelectedPoints(selections);
-          const ptStr = `${numPoints} split point${numPoints === 1 ? '' : 's'}`;
-          if (numSubPaths > 0) {
-            return `${subStr} selected`;
-          } else if (numSegments > 0) {
-            return `${segStr} selected`;
-          } else if (numPoints > 0) {
-            return `${ptStr} selected`;
-          } else {
-            return '';
-          }
-        });
-  }
-
-  private getNumSelectedSubPaths(selections: ReadonlyArray<Selection>) {
-    selections = selections.filter(s => s.type === SelectionType.SubPath);
-    if (!selections.length) {
-      return 0;
-    }
-    // Preconditions: all selections exist in the same editor and
-    // all selections correspond to the currently active path id.
-    const canvasType = selections[0].source;
-    const activePathLayer = this.stateService.getActivePathLayer(canvasType);
-    if (!activePathLayer) {
-      return 0;
-    }
-    return selections.length;
-  }
-
-  private getNumSelectedSegments(selections: ReadonlyArray<Selection>) {
-    selections = selections.filter(s => s.type === SelectionType.Segment);
-    if (!selections.length) {
-      return 0;
-    }
-    // Preconditions: all selections exist in the same editor and
-    // all selections correspond to the currently active path id.
-    const canvasType = selections[0].source;
-    const activePathLayer = this.stateService.getActivePathLayer(canvasType);
-    if (!activePathLayer) {
-      return 0;
-    }
-    const activePath = activePathLayer.pathData;
-    return _.sumBy(selections, s => {
-      return activePath.getCommand(s.subIdx, s.cmdIdx).isSplitSegment() ? 1 : 0;
-    }) / 2;
-  }
-
-  private getNumSelectedPoints(selections: ReadonlyArray<Selection>) {
-    selections = selections.filter(s => s.type === SelectionType.Point);
-    if (!selections.length) {
-      return 0;
-    }
-    // Preconditions: all selections exist in the same editor and
-    // all selections correspond to the currently active path id.
-    const canvasType = selections[0].source;
-    const activePathLayer = this.stateService.getActivePathLayer(canvasType);
-    if (!activePathLayer) {
-      return 0;
-    }
-    const activePath = activePathLayer.pathData;
-    return _.sumBy(selections, s => {
-      return activePath.getCommand(s.subIdx, s.cmdIdx).isSplitPoint() ? 1 : 0;
-    });
   }
 
   onCloseActionModeClick() {
@@ -220,9 +140,80 @@ export class ToolbarComponent implements OnInit {
   }
 }
 
-enum ActionMode {
-  Disabled,
-  SubPath,
-  Segment,
-  Point,
+class SelectionInfo {
+  private readonly subPaths: ReadonlyArray<number> = [];
+  private readonly segments: ReadonlyArray<{ subIdx: number, cmdIdx: number }> = [];
+  private readonly points: ReadonlyArray<{ subIdx: number, cmdIdx: number }> = [];
+
+  constructor(stateService: StateService, selections: ReadonlyArray<Selection>) {
+    // Precondition: assume all selections are for the same canvas type
+    if (!selections.length) {
+      return;
+    }
+    const canvasType = selections[0].source;
+    const activePathLayer = stateService.getActivePathLayer(canvasType);
+    if (!activePathLayer) {
+      return;
+    }
+    const activePath = activePathLayer.pathData;
+    this.subPaths =
+      selections
+        .filter(s => s.type === SelectionType.SubPath)
+        .map(s => s.subIdx);
+    this.segments =
+      _.chain(selections as Selection[])
+        .filter(s => {
+          const { subIdx, cmdIdx } = s;
+          return s.type === SelectionType.Segment
+            && activePathLayer.isFilled()
+            && activePath.getCommand(subIdx, cmdIdx).isSplitSegment();
+        })
+        .flatMap(s => {
+          // TODO: also include connected segments as well.
+          const { subIdx, cmdIdx } = s;
+          return [{ subIdx, cmdIdx }];
+        })
+        .value();
+    this.points =
+      selections.filter(s => s.type === SelectionType.Point)
+        .map(s => {
+          const { subIdx, cmdIdx } = s;
+          return { subIdx, cmdIdx };
+        });
+  }
+
+  getNumSelections() {
+    return this.subPaths.length + this.segments.length + this.points.length;
+  }
+
+  getNumSubPaths() {
+    return this.subPaths.length;
+  }
+
+  getNumSegments() {
+    // Divide by 2 to account for paired split segments.
+    return this.segments.length / 2;
+  }
+
+  getNumPoints() {
+    return this.points.length;
+  }
+
+  getToolbarTitle() {
+    const numSubPaths = this.getNumSubPaths();
+    const subStr = `${numSubPaths} subpath${numSubPaths === 1 ? '' : 's'}`;
+    const numSegments = this.getNumSegments();
+    const segStr = `${numSegments} segment${numSegments === 1 ? '' : 's'}`;
+    const numPoints = this.getNumPoints();
+    const ptStr = `${numPoints} point${numPoints === 1 ? '' : 's'}`;
+    if (numSubPaths > 0) {
+      return `${subStr} selected`;
+    } else if (numSegments > 0) {
+      return `${segStr} selected`;
+    } else if (numPoints > 0) {
+      return `${ptStr} selected`;
+    } else {
+      return 'Shape Shifter';
+    }
+  }
 }
