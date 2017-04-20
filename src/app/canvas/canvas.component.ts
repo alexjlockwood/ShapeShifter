@@ -200,6 +200,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
             this.shapeSplitter = undefined;
           }
           if (!this.activePathId) {
+            // Use a pointer cursor over the canvas so the user knows
+            // they can click to upload an SVG.
             this.showPointerCursor();
           }
           this.resetCursor();
@@ -630,13 +632,13 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       // Draw points in terms of physical pixels, not viewport pixels.
       this.overlayCtx.save();
       this.drawLabeledPoints(this.overlayCtx);
-      this.drawSelectPointsDraggingPoints(this.overlayCtx);
+      this.drawDraggingPoints(this.overlayCtx);
       this.drawFloatingPreviewPoint(this.overlayCtx);
       this.drawFloatingSplitFilledPathPreviewPoints(this.overlayCtx);
     }
     this.overlayCtx.restore();
 
-    // Note that the pixel grid is not drawn in viewport coordinates like above.
+    // Draw the pixel grid in terms of physical pixels, not viewport pixels.
     if (this.cssScale > 4) {
       this.overlayCtx.save();
       this.overlayCtx.fillStyle = 'rgba(128, 128, 128, .25)';
@@ -659,15 +661,46 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  // Draw any highlighted subpaths.
+  // Draw any highlighted segments.
   private drawHighlights(ctx: Context) {
-    if (this.canvasType === CanvasType.Preview || !this.activePathId) {
+    if (this.canvasType === CanvasType.Preview) {
       return;
     }
     if (this.selectionHelper) {
-      this.drawHighlightedSelectedSegments(ctx);
-    } else if (this.segmentSplitter) {
-      this.drawHighlightedAddPointModeSegments(ctx);
+      // Draw any highlighted segments. A segment will be highlighted if
+      // there is a subpath/point selection/hover that shares the same subIdx.
+      const selectedSubIdxs: Set<number> =
+        new Set<number>(
+          this.selectionService.getSelections()
+            .filter(s => s.type !== SelectionType.Segment)
+            .map(s => s.subIdx));
+
+      if (this.currentHover && this.currentHover.type !== HoverType.Segment) {
+        selectedSubIdxs.add(this.currentHover.subIdx);
+      }
+
+      const subPaths =
+        Array.from(selectedSubIdxs)
+          .map(subIdx => this.activePath.getSubPath(subIdx))
+          .filter(subPath => !subPath.isCollapsing());
+
+      for (const subPath of subPaths) {
+        const cmds = subPath.getCommands();
+        const isSplitSubPath = cmds.some(c => c.isSplitSegment());
+        const highlightColor = isSplitSubPath ? SPLIT_POINT_COLOR : HIGHLIGHT_COLOR;
+        this.executeCommands(ctx, cmds);
+        this.executeHighlights(ctx, highlightColor, this.selectedSegmentLineWidth);
+      }
+    } else if (this.segmentSplitter && this.segmentSplitter.getProjectionOntoPath()) {
+      // Highlight the segment as the user hovers over it.
+      const { subIdx, cmdIdx, projection: { d } } =
+        this.segmentSplitter.getProjectionOntoPath();
+      const commands =
+        d < this.minSnapThreshold
+          ? [this.activePath.getCommand(subIdx, cmdIdx)]
+          : this.activePath.getCommands();
+      this.executeCommands(ctx, commands);
+      this.executeHighlights(ctx, SPLIT_POINT_COLOR, this.selectedSegmentLineWidth);
     }
 
     // Draw any existing split shape segments to the canvas.
@@ -681,81 +714,34 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     this.executeHighlights(ctx, SPLIT_POINT_COLOR, this.unselectedSegmentLineWidth);
 
     if (this.shapeSplitter) {
-      this.drawSplitSubPathsModeDragSegment(ctx);
-    }
-  }
-
-  private drawHighlightedSelectedSegments(ctx: Context) {
-    const selectedSubIdxs: Set<number> = new Set<number>(
-      this.selectionService.getSelections()
-        .filter(s => s.type !== SelectionType.Segment)
-        .map(s => s.subIdx));
-
-    if (this.currentHover && this.currentHover.type !== HoverType.Segment) {
-      selectedSubIdxs.add(this.currentHover.subIdx);
-    }
-
-    const subPaths = Array.from(selectedSubIdxs)
-      .map(subIdx => this.activePath.getSubPath(subIdx))
-      .filter(subPath => !subPath.isCollapsing());
-
-    for (const subPath of subPaths) {
-      const cmds = subPath.getCommands();
-      const isSplitSubPath = cmds.some(c => c.isSplitSegment());
-      const highlightColor = isSplitSubPath ? SPLIT_POINT_COLOR : HIGHLIGHT_COLOR;
-      this.executeCommands(ctx, cmds);
-      this.executeHighlights(ctx, highlightColor, this.selectedSegmentLineWidth);
-    }
-  }
-
-  private drawHighlightedAddPointModeSegments(ctx: Context) {
-    if (!this.segmentSplitter) {
-      return;
-    }
-    const projectionOntoPath = this.segmentSplitter.getProjectionOntoPath();
-    if (!projectionOntoPath) {
-      return;
-    }
-    const { subIdx, cmdIdx, projection: { d } } = projectionOntoPath;
-    const commands =
-      d < this.minSnapThreshold
-        ? [this.activePath.getCommand(subIdx, cmdIdx)]
-        : this.activePath.getCommands();
-    this.executeCommands(ctx, commands);
-    this.executeHighlights(ctx, SPLIT_POINT_COLOR, this.selectedSegmentLineWidth);
-  }
-
-  private drawSplitSubPathsModeDragSegment(ctx: Context) {
-    if (!this.shapeSplitter) {
-      return;
-    }
-    const proj1 = this.shapeSplitter.getInitialProjectionOntoPath();
-    const proj2 = this.shapeSplitter.getFinalProjectionOntoPath();
-    if (proj1) {
-      // Draw a line from the starting projection to the final projection (or
-      // to the last known mouse location, if one doesn't exist).
-      const startPoint =
-        this.applyGroupTransforms(new Point(proj1.projection.x, proj1.projection.y));
-      const endPoint = proj2
-        ? this.applyGroupTransforms(new Point(proj2.projection.x, proj2.projection.y))
-        : this.shapeSplitter.getLastKnownMouseLocation();
-      ctx.save();
-      ctx.beginPath();
-      ctx.moveTo(startPoint.x, startPoint.y);
-      ctx.lineTo(endPoint.x, endPoint.y);
-      ctx.restore();
-      this.executeHighlights(ctx, SPLIT_POINT_COLOR, this.selectedSegmentLineWidth);
-    }
-    if (!proj1 || proj2) {
-      // Highlight the segment as the user hovers over it.
-      const projectionOntoPath = this.shapeSplitter.getCurrentProjectionOntoPath();
-      if (projectionOntoPath) {
-        const projection = projectionOntoPath.projection;
-        if (projection && projection.d < this.minSnapThreshold) {
-          const { subIdx, cmdIdx } = projectionOntoPath;
-          const cmds = [this.activePath.getCommand(subIdx, cmdIdx)];
-          this.executeCommands(ctx, cmds);
-          this.executeHighlights(ctx, SPLIT_POINT_COLOR, this.selectedSegmentLineWidth);
+      // If we are splitting a filled subpath, draw the in progress drag segment.
+      const proj1 = this.shapeSplitter.getInitialProjectionOntoPath();
+      const proj2 = this.shapeSplitter.getFinalProjectionOntoPath();
+      if (proj1) {
+        // Draw a line from the starting projection to the final projection (or
+        // to the last known mouse location, if one doesn't exist).
+        const startPoint =
+          this.applyGroupTransforms(new Point(proj1.projection.x, proj1.projection.y));
+        const endPoint = proj2
+          ? this.applyGroupTransforms(new Point(proj2.projection.x, proj2.projection.y))
+          : this.shapeSplitter.getLastKnownMouseLocation();
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(startPoint.x, startPoint.y);
+        ctx.lineTo(endPoint.x, endPoint.y);
+        ctx.restore();
+        this.executeHighlights(ctx, SPLIT_POINT_COLOR, this.selectedSegmentLineWidth);
+      }
+      if (!proj1 || proj2) {
+        // Highlight the segment as the user hovers over it.
+        const projectionOntoPath = this.shapeSplitter.getCurrentProjectionOntoPath();
+        if (projectionOntoPath) {
+          const projection = projectionOntoPath.projection;
+          if (projection && projection.d < this.minSnapThreshold) {
+            const { subIdx, cmdIdx } = projectionOntoPath;
+            this.executeCommands(ctx, [this.activePath.getCommand(subIdx, cmdIdx)]);
+            this.executeHighlights(ctx, SPLIT_POINT_COLOR, this.selectedSegmentLineWidth);
+          }
         }
       }
     }
@@ -778,109 +764,88 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       cmdIdx: number;
     }
 
-    const pathDataPointInfos: PointInfo[] =
+    const pointInfos =
       _.chain(path.getSubPaths() as SubPath[])
         .filter(subPath => !subPath.isCollapsing())
         .map((subPath, subIdx) => {
           return subPath.getCommands()
             .map((cmd, cmdIdx) => {
-              return { cmd, subIdx, cmdIdx };
+              return { cmd, subIdx, cmdIdx } as PointInfo;
             });
         })
-        .flatMap(pointInfos => pointInfos)
+        .flatMap(pis => pis)
         .reverse()
         .value();
 
-    const currSelections = this.selectionService.getSelections().map(sel => {
-      return { type: sel.type, subIdx: sel.subIdx, cmdIdx: sel.cmdIdx };
-    });
-    const selectedSubPathIndices =
-      _.flatMap(currSelections, sel => {
-        return sel.type === SelectionType.SubPath ? [sel.subIdx] : [];
+    const selectedPointInfos =
+      _.remove(pointInfos, ({ subIdx, cmdIdx }: PointInfo) => {
+        return this.selectionService.getSubPathSelections().some(s => s.subIdx === subIdx)
+          || _.find(this.selectionService.getSelections(), s => {
+            return s.subIdx === subIdx && s.cmdIdx === cmdIdx;
+          });
       });
-
-    const isPointInfoSelectedFn = (pointInfo: PointInfo) => {
-      const { subIdx, cmdIdx } = pointInfo;
-      if (selectedSubPathIndices.includes(subIdx)) {
-        return true;
-      }
-      return !!_.find(currSelections, sel => sel.subIdx === subIdx);
+    const isPointInfoSelectedFn = ({ subIdx, cmdIdx }: PointInfo) => {
+      return this.selectionService.getSubPathSelections().some(s => s.subIdx === subIdx)
+        || _.find(this.selectionService.getSelections(), s => s.subIdx === subIdx);
     };
+    pointInfos.push(..._.remove(pointInfos, pi => isPointInfoSelectedFn(pi)));
+    pointInfos.push(...selectedPointInfos);
 
-    const removedSelectedCommands =
-      _.remove(pathDataPointInfos, pointInfo => {
-        const { subIdx, cmdIdx } = pointInfo;
-        if (selectedSubPathIndices.includes(subIdx)) {
-          return true;
-        }
-        return !!_.find(currSelections, sel => {
-          return sel.subIdx === subIdx && sel.cmdIdx === cmdIdx;
-        });
-      });
-    pathDataPointInfos.push(
-      ..._.remove(pathDataPointInfos, pointInfo => {
-        return isPointInfoSelectedFn(pointInfo);
-      }));
-    pathDataPointInfos.push(...removedSelectedCommands);
-
-    const isPointInfoHoveringFn = (pointInfo: PointInfo) => {
-      const hover = this.currentHover;
-      return hover
-        && hover.type !== HoverType.Segment
-        && pointInfo.subIdx === hover.subIdx;
-    };
-
-    const removedHoverCommands =
-      _.remove(pathDataPointInfos, pointInfo => {
+    const hoveringPointInfos =
+      _.remove(pointInfos, ({ subIdx, cmdIdx }: PointInfo) => {
         const hover = this.currentHover;
         return hover
           && hover.type === HoverType.Point
-          && pointInfo.subIdx === hover.subIdx
-          && pointInfo.cmdIdx === hover.cmdIdx;
+          && hover.subIdx === subIdx
+          && hover.cmdIdx === cmdIdx;
       });
-    pathDataPointInfos.push(
-      ..._.remove(pathDataPointInfos, pointInfo => {
-        return isPointInfoHoveringFn(pointInfo);
-      }));
-    pathDataPointInfos.push(...removedHoverCommands);
+    const isPointInfoHoveringFn = ({ subIdx }: PointInfo) => {
+      const hover = this.currentHover;
+      return hover
+        && hover.type !== HoverType.Segment
+        && hover.subIdx === subIdx;
+    };
+    pointInfos.push(..._.remove(pointInfos, pi => isPointInfoHoveringFn(pi)));
+    pointInfos.push(...hoveringPointInfos);
 
-    const draggedCommandIndex =
+    const draggingIndex =
       this.selectionHelper && this.selectionHelper.isDragTriggered()
         ? this.selectionHelper.getDraggableSplitIndex()
         : undefined;
-    for (const pointInfo of pathDataPointInfos) {
-      const { cmd, subIdx, cmdIdx } = pointInfo;
-      if (draggedCommandIndex
-        && subIdx === draggedCommandIndex.subIdx
-        && cmdIdx === draggedCommandIndex.cmdIdx) {
+    for (const { cmd, subIdx, cmdIdx } of pointInfos) {
+      if (draggingIndex
+        && subIdx === draggingIndex.subIdx
+        && cmdIdx === draggingIndex.cmdIdx) {
         // Skip the currently dragged point. We'll draw that next.
         continue;
       }
       let radius = this.smallPointRadius;
       let text: string = undefined;
-      if (isPointInfoHoveringFn(pointInfo) || isPointInfoSelectedFn(pointInfo)) {
+      const isHovering = isPointInfoHoveringFn({ cmd, subIdx, cmdIdx });
+      const isSelected = isPointInfoSelectedFn({ cmd, subIdx, cmdIdx });
+      if (isSelected || isHovering) {
         radius = this.mediumPointRadius * SELECTED_POINT_RADIUS_FACTOR;
-        if ((isPointInfoHoveringFn(pointInfo)
-          && pointInfo.cmdIdx === this.currentHover.cmdIdx)
-          || this.selectionService.isPointSelected(
-            CanvasType.Start, pointInfo.subIdx, pointInfo.cmdIdx)
-          || this.selectionService.isPointSelected(
-            CanvasType.End, pointInfo.subIdx, pointInfo.cmdIdx)) {
+        if ((isHovering && cmdIdx === this.currentHover.cmdIdx)
+          || this.selectionService.isPointSelected(CanvasType.Start, subIdx, cmdIdx)
+          || this.selectionService.isPointSelected(CanvasType.End, subIdx, cmdIdx)) {
           radius /= SPLIT_POINT_RADIUS_FACTOR;
         }
         text = (cmdIdx + 1).toString();
       }
-      if (pointInfo.cmd.isSplitPoint()) {
+      let color: string;
+      if (cmd.isSplitPoint()) {
         radius *= SPLIT_POINT_RADIUS_FACTOR;
+        color = SPLIT_POINT_COLOR;
+      } else {
+        color = NORMAL_POINT_COLOR;
       }
-      const color = cmd.isSplitPoint() ? SPLIT_POINT_COLOR : NORMAL_POINT_COLOR;
       this.executeLabeledPoint(
         ctx, this.applyGroupTransforms(_.last(cmd.getPoints())), radius, color, text);
     }
   }
 
-  // Draw any actively dragged points along the path (selection mode).
-  private drawSelectPointsDraggingPoints(ctx: Context) {
+  // Draw any actively dragged points along the path in selection mode.
+  private drawDraggingPoints(ctx: Context) {
     if (this.appMode !== AppMode.Selection
       || !this.selectionHelper
       || !this.selectionHelper.isDragTriggered()) {
@@ -898,8 +863,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       SPLIT_POINT_RADIUS_FACTOR, SPLIT_POINT_COLOR);
   }
 
-  // Draw a floating point preview over the canvas (split commands mode
-  // or split subpaths mode for stroked paths).
+  // Draw a floating point preview over the canvas in split commands mode
+  // and split subpaths mode for stroked paths.
   private drawFloatingPreviewPoint(ctx: Context) {
     if (this.appMode !== AppMode.SplitCommands
       && this.appMode !== AppMode.SplitSubPaths
