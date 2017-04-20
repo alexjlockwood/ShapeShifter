@@ -6,27 +6,27 @@
   <span class="command-text">{{ this.command | toSvgText }}</span>
   <span fxFlex></span>
   <button md-icon-button mdTooltip="Shift back points" mdTooltipPosition="above"
-    mdTooltipShowDelay="500" *ngIf="isShiftable()" (mouseenter)="onShiftBackHoverEvent(true)"
+    mdTooltipShowDelay="300" *ngIf="isShiftable()" (mouseenter)="onShiftBackHoverEvent(true)"
     (mouseleave)="onShiftBackHoverEvent(false)" (click)="onShiftBackClick($event)">
     <md-icon>skip_previous</md-icon>
   </button>
   <button md-icon-button mdTooltip="Shift forward points" mdTooltipPosition="above"
-    mdTooltipShowDelay="500" *ngIf="isShiftable()" (mouseenter)="onShiftForwardHoverEvent(true)"
+    mdTooltipShowDelay="300" *ngIf="isShiftable()" (mouseenter)="onShiftForwardHoverEvent(true)"
     (mouseleave)="onShiftForwardHoverEvent(false)" (click)="onShiftForwardClick($event)">
     <md-icon>skip_next</md-icon>
   </button>
   <button md-icon-button mdTooltip="Reverse points" mdTooltipPosition="above"
-    mdTooltipShowDelay="500" *ngIf="isReversible()" (mouseenter)="onReverseHoverEvent(true)"
+    mdTooltipShowDelay="300" *ngIf="isReversible()" (mouseenter)="onReverseHoverEvent(true)"
     (mouseleave)="onReverseHoverEvent(false)" (click)="onReverseClick($event)">
     <md-icon svgIcon="reverse"></md-icon>
   </button>
   <button md-icon-button mdTooltip="Delete point" mdTooltipPosition="above"
-    mdTooltipShowDelay="500" *ngIf="isUnsplittable()" (mouseenter)="onUnsplitHoverEvent(true)"
+    mdTooltipShowDelay="300" *ngIf="isUnsplittable()" (mouseenter)="onUnsplitHoverEvent(true)"
     (mouseleave)="onUnsplitHoverEvent(false)" (click)="onUnsplitButtonClick($event)">
     <md-icon>delete</md-icon>
   </button>
   <button md-icon-button mdTooltip="Add point" mdTooltipPosition="above"
-    mdTooltipShowDelay="500" *ngIf="isSplittable()" (mouseenter)="onSplitHoverEvent(true)"
+    mdTooltipShowDelay="300" *ngIf="isSplittable()" (mouseenter)="onSplitHoverEvent(true)"
     (mouseleave)="onSplitHoverEvent(false)" (click)="onSplitButtonClick($event)">
     <md-icon>add</md-icon>
   </button>

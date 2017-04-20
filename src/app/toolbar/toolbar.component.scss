@@ -59,15 +59,15 @@ button[disabled] {
     color: mat-color($app-primary, default-contrast);
   }
   100% {
-    background-color: mat-color($mat-grey, 100);
-    color: mat-color(mat-palette($mat-grey, 100), default-contrast);
+    background-color: mat-color($app-accent);
+    color: mat-color($app-accent, default-contrast);
   }
 }
 
 @keyframes actionModeDisabled {
   0% {
-    background-color: mat-color($mat-grey, 100);
-    color: mat-color(mat-palette($mat-grey, 100), default-contrast);
+    background-color: mat-color($app-accent);
+    color: mat-color($app-accent, default-contrast);
   }
   100% {
     background-color: mat-color($app-primary);
