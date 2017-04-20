@@ -21,13 +21,16 @@ export class SelectionService {
     return this.source.getValue();
   }
 
-  getSelectedSubPathIndices(restrictToCanvasType?: CanvasType) {
-    return this.getSelections()
-      .filter(s => {
-        return s.type === SelectionType.SubPath
-          && (restrictToCanvasType === undefined || s.source === restrictToCanvasType);
-      })
-      .map(s => s.subIdx);
+  getSubPathSelections() {
+    return this.getSelections().filter(s => s.type === SelectionType.SubPath);
+  }
+
+  getSegmentSelections() {
+    return this.getSelections().filter(s => s.type === SelectionType.Segment);
+  }
+
+  getPointSelections() {
+    return this.getSelections().filter(s => s.type === SelectionType.Point);
   }
 
   isSubPathIndexSelected(subIdx: number, restrictToCanvasType?: CanvasType) {
@@ -38,17 +41,6 @@ export class SelectionService {
           || areSelectionsEqual(selection, { type, source: CanvasType.End, subIdx });
       }
       return areSelectionsEqual(selection, { type, source: restrictToCanvasType, subIdx });
-    });
-  }
-
-  isSegmentSelected(subIdx: number, cmdIdx: number, restrictToCanvasType?: CanvasType) {
-    return this.getSelections().some(selection => {
-      const type = SelectionType.Segment;
-      if (restrictToCanvasType === undefined) {
-        return areSelectionsEqual(selection, { type, source: CanvasType.Start, subIdx, cmdIdx })
-          || areSelectionsEqual(selection, { type, source: CanvasType.End, subIdx, cmdIdx });
-      }
-      return areSelectionsEqual(selection, { type, source: restrictToCanvasType, subIdx, cmdIdx });
     });
   }
 
@@ -67,18 +59,25 @@ export class SelectionService {
     this.source.next(selections);
   }
 
-  toggleSubPath(source: CanvasType, subIdx: number) {
+  toggleSubPath(source: CanvasType, subIdx: number, appendToList = false) {
+    // TODO: support multi-selection for subpaths
+    appendToList = false;
+
     const selections = this.getSelections().slice();
     _.remove(selections, sel => sel.type !== SelectionType.SubPath && sel.source !== source);
     this.toggleSelections(
       selections,
-      [{ type: SelectionType.SubPath, source, subIdx }]);
+      [{ type: SelectionType.SubPath, source, subIdx }],
+      appendToList);
   }
 
   toggleSegments(
     source: CanvasType,
     segments: ReadonlyArray<{ subIdx: number, cmdIdx: number }>,
     appendToList = false) {
+
+    // TODO: support multi-selection for segments
+    appendToList = false;
 
     const selections = this.getSelections().slice();
     _.remove(selections, sel => sel.type !== SelectionType.Segment);
@@ -165,6 +164,28 @@ function areSelectionsEqual(sel1: Selection, sel2: Selection) {
     && sel1.subIdx === sel2.subIdx
     && sel1.cmdIdx === sel2.cmdIdx;
 }
+
+/**
+ * Deletes any currently selected segments.
+ */
+export function deleteSelectedSplitSegments(
+  stateService: StateService,
+  selectionService: SelectionService) {
+
+  // TODO: support deleting multiple segments at a time
+  const selections = selectionService.getSelections();
+  if (!selections.length) {
+    return;
+  }
+  // Preconditions: all selections exist in the same editor.
+  const { source, subIdx, cmdIdx } = selections[0];
+  const activePathLayer = stateService.getActivePathLayer(source);
+  selectionService.reset();
+  const mutator = activePathLayer.pathData.mutate();
+  mutator.deleteSubPathSplitSegment(subIdx, cmdIdx);
+  stateService.updateActivePath(source, mutator.build());
+}
+
 
 /**
  * Deletes any currently selected split points.

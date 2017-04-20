@@ -79,31 +79,31 @@ export class SelectionHelper {
               && s.type === SelectionType.SubPath
               && s.subIdx !== subIdx;
           });
-      if (oppSubPathSelections.length) {
-        let { source: fromSource, subIdx: fromSubIdx } = oppSubPathSelections[0];
-        let toSource = this.canvasType;
-        let toSubIdx = subIdx;
-        const numFromSubPaths =
-          this.stateService.getActivePathLayer(fromSource).pathData.getSubPaths()
-            .filter(s => !s.isCollapsing()).length;
-        if (toSubIdx >= numFromSubPaths) {
-          const tempFromSource = fromSource;
-          fromSource = toSource;
-          toSource = tempFromSource;
-          const tempFromSubIdx = fromSubIdx;
-          fromSubIdx = toSubIdx;
-          toSubIdx = tempFromSubIdx;
-        }
-        this.hoverService.reset();
-        this.selectionService.reset();
-        this.stateService.updateActivePath(
-          fromSource,
-          this.stateService.getActivePathLayer(fromSource).pathData.mutate()
-            .moveSubPath(fromSubIdx, toSubIdx)
-            .build());
-        subIdx = toSubIdx;
-      }
-      this.selectionService.toggleSubPath(this.canvasType, subIdx);
+      // if (oppSubPathSelections.length) {
+      //   let { source: fromSource, subIdx: fromSubIdx } = oppSubPathSelections[0];
+      //   let toSource = this.canvasType;
+      //   let toSubIdx = subIdx;
+      //   const numFromSubPaths =
+      //     this.stateService.getActivePathLayer(fromSource).pathData.getSubPaths()
+      //       .filter(s => !s.isCollapsing()).length;
+      //   if (toSubIdx >= numFromSubPaths) {
+      //     const tempFromSource = fromSource;
+      //     fromSource = toSource;
+      //     toSource = tempFromSource;
+      //     const tempFromSubIdx = fromSubIdx;
+      //     fromSubIdx = toSubIdx;
+      //     toSubIdx = tempFromSubIdx;
+      //   }
+      //   this.hoverService.reset();
+      //   this.selectionService.reset();
+      //   this.stateService.updateActivePath(
+      //     fromSource,
+      //     this.stateService.getActivePathLayer(fromSource).pathData.mutate()
+      //       .moveSubPath(fromSubIdx, toSubIdx)
+      //       .build());
+      //   subIdx = toSubIdx;
+      // }
+      this.selectionService.toggleSubPath(this.canvasType, subIdx, isShiftOrMetaPressed);
     } else if (!isShiftOrMetaPressed) {
       // If the mouse down event didn't result in a hit, then
       // clear any existing selections, but only if the user isn't in

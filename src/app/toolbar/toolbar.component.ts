@@ -7,8 +7,12 @@ import {
   SelectionService,
   Selection,
   SelectionType,
+  HoverService,
 } from '../services';
-import { deleteSelectedSplitPoints } from '../services/selection.service';
+import {
+  deleteSelectedSplitSegments,
+  deleteSelectedSplitPoints,
+} from '../services/selection.service';
 import { CanvasType } from '../CanvasType';
 import { ExportUtil } from '../scripts/export';
 import { DialogService } from '../dialogs';
@@ -35,13 +39,13 @@ export class ToolbarComponent implements OnInit {
 
   morphStatusObservable: Observable<MorphStatus>;
   isDirtyObservable: Observable<boolean>;
-  toolbarTextObservable: Observable<string>;
   selectionInfoObservable: Observable<SelectionInfo>;
 
   constructor(
     private readonly viewContainerRef: ViewContainerRef,
     private readonly settingsService: SettingsService,
     private readonly selectionService: SelectionService,
+    private readonly hoverService: HoverService,
     private readonly stateService: StateService,
     private readonly dialogService: DialogService,
   ) { }
@@ -62,6 +66,7 @@ export class ToolbarComponent implements OnInit {
   }
 
   onCloseActionModeClick() {
+    this.hoverService.reset();
     this.selectionService.reset();
   }
 
@@ -87,8 +92,8 @@ export class ToolbarComponent implements OnInit {
       Math.min(resultStartCmd.getSubPaths().length, resultEndCmd.getSubPaths().length);
     for (let subIdx = 0; subIdx < numSubPaths; subIdx++) {
       // Pass the command with the larger subpath as the 'from' command.
-      const numStartCmds = resultStartCmd.getSubPaths()[subIdx].getCommands().length;
-      const numEndCmds = resultEndCmd.getSubPaths()[subIdx].getCommands().length;
+      const numStartCmds = resultStartCmd.getSubPath(subIdx).getCommands().length;
+      const numEndCmds = resultEndCmd.getSubPath(subIdx).getCommands().length;
       const fromCmd = numStartCmds >= numEndCmds ? resultStartCmd : resultEndCmd;
       const toCmd = numStartCmds >= numEndCmds ? resultEndCmd : resultStartCmd;
       const { from, to } = AutoAwesome.autoFix(subIdx, fromCmd, toCmd);
@@ -133,28 +138,45 @@ export class ToolbarComponent implements OnInit {
     ga('send', 'event', 'Miscellaneous', 'About click');
   }
 
+  // TODO: need to also support keyboard deletions
+  // TODO: support multi select/multi delete
+  // TODO: implement pair subpaths mode
+  // TODO: add points, split subpaths, etc. modes in action mode?
+
   onPairWithSubPathsClick() {
-    console.log('onPairWithSubPathsClick()');
   }
 
   onReversePointsClick() {
-    console.log('onReversePointsClick()');
+    const selections = this.selectionService.getSubPathSelections();
+    const { source } = selections[0];
+    const pathMutator = this.stateService.getActivePathLayer(source).pathData.mutate();
+    for (const { subIdx } of this.selectionService.getSubPathSelections()) {
+      pathMutator.reverseSubPath(subIdx);
+    }
+    this.stateService.updateActivePath(source, pathMutator.build());
+    this.selectionService.reset();
   }
 
   onDeleteSubPathsClick() {
-    console.log('onDeleteSubPathsClick()');
+    // deleteSelectedSplitSubPaths(this.stateService, this.selectionService);
   }
 
   onDeleteSegmentsClick() {
-    console.log('onDeleteSegmentsClick()');
+    deleteSelectedSplitSegments(this.stateService, this.selectionService);
   }
 
   onShiftPointToFirstPositionClick() {
-    console.log('onShiftPointToFirstPositionClick()');
+    const { source, subIdx, cmdIdx } = this.selectionService.getPointSelections()[0];
+    const activePath = this.stateService.getActivePathLayer(source).pathData;
+    this.stateService.updateActivePath(
+      source,
+      activePath.mutate()
+        .shiftSubPathForward(subIdx, cmdIdx)
+        .build());
+    this.selectionService.reset();
   }
 
   onDeletePointsClick() {
-    console.log('onDeletePointsClick');
     deleteSelectedSplitPoints(this.stateService, this.selectionService);
   }
 }
@@ -163,6 +185,9 @@ class SelectionInfo {
   private readonly subPaths: ReadonlyArray<number> = [];
   private readonly segments: ReadonlyArray<{ subIdx: number, cmdIdx: number }> = [];
   private readonly points: ReadonlyArray<{ subIdx: number, cmdIdx: number }> = [];
+  private readonly numSplitSubPaths: number;
+  private readonly numSplitPoints: number;
+  private readonly showShiftToFirstPosition_: boolean;
 
   constructor(stateService: StateService, selections: ReadonlyArray<Selection>) {
     // Precondition: assume all selections are for the same canvas type
@@ -199,6 +224,17 @@ class SelectionInfo {
           const { subIdx, cmdIdx } = s;
           return { subIdx, cmdIdx };
         });
+
+    this.numSplitSubPaths = _.sumBy(this.subPaths, subIdx => {
+      return activePath.getSubPath(subIdx).isUnsplittable() ? 1 : 0;
+    });
+    this.numSplitPoints = _.sumBy(this.points, s => {
+      const { subIdx, cmdIdx } = s;
+      return activePath.getCommand(subIdx, cmdIdx).isSplitPoint() ? 1 : 0;
+    });
+    this.showShiftToFirstPosition_ = this.points.length === 1
+      && this.points[0].cmdIdx
+      && activePath.getSubPath(this.points[0].subIdx).isClosed();
   }
 
   getNumSelections() {
@@ -234,5 +270,17 @@ class SelectionInfo {
     } else {
       return 'Shape Shifter';
     }
+  }
+
+  getNumSplitSubPaths() {
+    return this.numSplitSubPaths || 0;
+  }
+
+  getNumSplitPoints() {
+    return this.numSplitPoints || 0;
+  }
+
+  shouldShowShiftToFirstPosition() {
+    return this.showShiftToFirstPosition_ || false;
   }
 }
