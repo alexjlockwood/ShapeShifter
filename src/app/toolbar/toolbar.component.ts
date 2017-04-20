@@ -14,8 +14,6 @@ import { ExportUtil } from '../scripts/export';
 import { DialogService } from '../dialogs';
 import { AutoAwesome } from '../scripts/algorithms';
 import { DemoUtil, DEMO_MAP } from '../scripts/demos';
-import { PathLayer } from '../scripts/layers';
-import { Path } from '../scripts/paths';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/combineLatest';
 
@@ -111,10 +109,6 @@ export class ToolbarComponent implements OnInit {
     ExportUtil.generateZip(this.stateService, duration, interpolator);
   }
 
-  onDeleteSelectedPointsClick() {
-    deleteSelectedSplitPoints(this.stateService, this.selectionService);
-  }
-
   onDemoClick() {
     ga('send', 'event', 'Demos', 'Demos dialog shown');
     const demoTitles = Array.from(DEMO_MAP.keys());
@@ -137,6 +131,31 @@ export class ToolbarComponent implements OnInit {
 
   onAboutClick() {
     ga('send', 'event', 'Miscellaneous', 'About click');
+  }
+
+  onPairWithSubPathsClick() {
+    console.log('onPairWithSubPathsClick()');
+  }
+
+  onReversePointsClick() {
+    console.log('onReversePointsClick()');
+  }
+
+  onDeleteSubPathsClick() {
+    console.log('onDeleteSubPathsClick()');
+  }
+
+  onDeleteSegmentsClick() {
+    console.log('onDeleteSegmentsClick()');
+  }
+
+  onShiftPointToFirstPositionClick() {
+    console.log('onShiftPointToFirstPositionClick()');
+  }
+
+  onDeletePointsClick() {
+    console.log('onDeletePointsClick');
+    deleteSelectedSplitPoints(this.stateService, this.selectionService);
   }
 }
 

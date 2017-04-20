@@ -48,34 +48,36 @@
     <!-- SubPath mode. -->
     <button md-icon-button class="toolbar-action-button" mdTooltip="Pair with subpath"
       mdTooltipPosition="below" *ngIf="data.numSubPaths === 1"
-      mdTooltipShowDelay="300">
+      mdTooltipShowDelay="300" (click)="onPairWithSubPathsClick()">
       <md-icon>compare_arrows</md-icon>
     </button>
-    <button md-icon-button class="toolbar-action-button" mdTooltip="Reverse point order"
-      mdTooltipPosition="below" *ngIf="data.numSubPaths > 0" mdTooltipShowDelay="300">
+    <button md-icon-button class="toolbar-action-button" mdTooltip="Reverse points"
+      mdTooltipPosition="below" *ngIf="data.numSubPaths > 0" mdTooltipShowDelay="300"
+      (click)="onReversePointsClick()">
       <md-icon svgIcon="reverse"></md-icon>
     </button>
     <button md-icon-button class="toolbar-action-button" mdTooltipPosition="below"
       mdTooltip="Delete subpath{{data.numSubPaths === 1 ? '' : 's'}}"
-      mdTooltipShowDelay="300" *ngIf="data.numSubPaths > 0">
+      mdTooltipShowDelay="300" *ngIf="data.numSubPaths > 0" (click)="onDeleteSubPathsClick()">
       <md-icon>delete</md-icon>
     </button>
 
     <!-- Segment mode. -->
     <button md-icon-button class="toolbar-action-button" mdTooltipPosition="below"
       mdTooltip="Delete segment{{data.numSegments === 1 ? '' : 's'}}"
-      mdTooltipShowDelay="300" *ngIf="data.numSegments > 0">
+      mdTooltipShowDelay="300" *ngIf="data.numSegments > 0" (click)="onDeleteSegmentsClick()">
       <md-icon>delete</md-icon>
     </button>
 
     <!-- Point mode. -->
     <button md-icon-button class="toolbar-action-button" mdTooltip="Shift to first position"
-      mdTooltipPosition="below" mdTooltipShowDelay="300" *ngIf="data.numPoints > 0">
+      mdTooltipPosition="below" mdTooltipShowDelay="300" *ngIf="data.numPoints === 1"
+      (click)="onShiftPointToFirstPositionClick()">
       <md-icon>looks_one</md-icon>
     </button>
     <button md-icon-button class="toolbar-action-button" mdTooltipPosition="below"
       mdTooltip="Delete point{{data.numPoints === 1 ? '' : 's'}}"
-      mdTooltipShowDelay="300" *ngIf="data.numPoints > 0" (click)="onDeleteSelectedPointsClick()">
+      mdTooltipShowDelay="300" *ngIf="data.numPoints > 0" (click)="onDeletePointsClick()">
       <md-icon>delete</md-icon>
     </button>
 
