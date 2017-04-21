@@ -73,7 +73,7 @@ export class SubPathState {
 /**
  * Builder class for creating new SubPathState objects.
  */
-class SubPathStateMutator {
+export class SubPathStateMutator {
 
   constructor(
     private commandStates: CommandState[],

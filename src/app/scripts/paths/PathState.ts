@@ -55,7 +55,7 @@ export class PathState {
         this.subPathOrdering.length - this.numCollapsingSubPaths <= spsIdx;
       const sps = this.findSubPathState(subIdx);
       const isSplit = isSubPathSplit(this.subPathStateMap, spsIdx);
-      const isUnsplittable = isSubPathUnsplittable(this.subPathStateMap, spsIdx);
+      const isUnsplittable = !this.subPathStateMap.includes(sps);
       return subPath.mutate()
         .setId(sps.getId())
         .setCommands(cmds)
@@ -378,22 +378,4 @@ function createBoundingBox(...css: CommandState[]) {
 
 function isSubPathSplit(map: ReadonlyArray<SubPathState>, spsIdx: number) {
   return !!findSubPathState(map, spsIdx).getSplitSubPaths().length;
-}
-
-function isSubPathUnsplittable(map: ReadonlyArray<SubPathState>, spsIdx: number) {
-  // Construct an array of parent nodes (one per leaf... meaning there will be duplicates).
-  const subPathStatesParents: SubPathState[] = [];
-  (function recurseFn(currentLevel: ReadonlyArray<SubPathState>, parent?: SubPathState) {
-    currentLevel.forEach(state => {
-      if (!state.getSplitSubPaths().length) {
-        subPathStatesParents.push(parent);
-        return;
-      }
-      recurseFn(state.getSplitSubPaths(), state);
-    });
-  })(map);
-  const parent = subPathStatesParents[spsIdx];
-  return parent
-    && parent.getSplitSubPaths().length
-    && parent.getSplitSubPaths().every(s => !s.getSplitSubPaths().length);
 }

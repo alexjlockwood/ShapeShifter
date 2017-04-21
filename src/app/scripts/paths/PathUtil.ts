@@ -48,7 +48,7 @@ export function sortPathOps(ops: Array<{ subIdx: number, cmdIdx: number }>) {
 }
 
 type PathOp = 'RV' | 'SB' | 'SF' | 'S' | 'SIH' | 'US' | 'CV' | 'UCV' | 'RT' | 'M'
-  | 'AC' | 'DC' | 'SSSP' | 'SFSP' | 'DSPSS' | 'DSSSP' | 'USFSP' | 'T';
+  | 'AC' | 'DC' | 'SSSP' | 'SFSP' | 'DFSP' | 'DSPSS' | 'DSSSP' | 'USFSP' | 'T';
 
 export function fromPathOpString(pathString: string, pathOpsString: string) {
   const A = pathOpsString.split(' ');
