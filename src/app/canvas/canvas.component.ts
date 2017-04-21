@@ -823,7 +823,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       let text: string = undefined;
       const isHovering = isPointInfoHoveringFn({ cmd, subIdx, cmdIdx });
       const isSelected = isPointInfoSelectedFn({ cmd, subIdx, cmdIdx });
-      if (isSelected || isHovering) {
+      if ((isSelected || isHovering) && this.selectionHelper) {
         radius = this.mediumPointRadius * SELECTED_POINT_RADIUS_FACTOR;
         if ((isHovering && cmdIdx === this.currentHover.cmdIdx)
           || this.selectionService.isPointSelected(CanvasType.Start, subIdx, cmdIdx)

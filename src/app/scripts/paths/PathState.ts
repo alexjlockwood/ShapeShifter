@@ -27,7 +27,7 @@ export class PathState {
   readonly commands: ReadonlyArray<Command>;
 
   constructor(
-    private readonly obj: string | Command[],
+    readonly obj: string | Command[],
     // Maps internal spsIdx indices to SubPathState objects. The last 'numCollapsingSubPaths'
     // indices hold references to the collapsing sub paths.
     public readonly subPathStateMap?: ReadonlyArray<SubPathState>,

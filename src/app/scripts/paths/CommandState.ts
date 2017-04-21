@@ -86,10 +86,7 @@ export class CommandState {
     // Update the t value so that it is in relation to the client-visible subIdx and cmdIdx.
     projection.t =
       startSplit === endSplit ? 0 : (projection.t - startSplit) / (endSplit - startSplit);
-    return {
-      projection,
-      splitIdx,
-    };
+    return { projection, splitIdx };
   }
 
   /**
@@ -383,6 +380,8 @@ class CommandStateMutator {
     let prevT = this.minT;
     for (let i = 0; i < this.mutations.length; i++) {
       const currT = this.mutations[i].t;
+      const isSplitSegment =
+        this.mutations[i].svgChar !== 'M' && !!this.parentCommandState;
       builtCommands.push(
         this.calculator
           .split(prevT, currT)
@@ -391,7 +390,7 @@ class CommandStateMutator {
           .mutate()
           .setId(this.mutations[i].id)
           .setIsSplitPoint(i !== this.mutations.length - 1)
-          .setIsSplitSegment(!!this.parentCommandState)
+          .setIsSplitSegment(isSplitSegment)
           .build());
       prevT = currT;
     }
