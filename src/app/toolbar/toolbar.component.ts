@@ -302,8 +302,7 @@ class ToolbarData {
   }
 
   getNumSegments() {
-    // Divide by 2 to account for paired split segments.
-    return this.segments.length / 2;
+    return this.segments.length;
   }
 
   getNumPoints() {
