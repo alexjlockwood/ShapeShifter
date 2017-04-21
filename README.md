@@ -94,21 +94,21 @@ If you want to contribute, you can build and serve the web app locally as follow
 
   2. Install the Angular client with:
 
-
-    npm install -g @angular/cli
-
+     ```
+     npm install -g @angular/cli
+     ```
 
   3. Clone the repository and in the root directory, run:
 
-
-    npm install
-
+     ```
+     npm install
+     ```
 
   4. To build and serve the web app locally, run:
 
-
-    ng serve
-
+     ```
+     ng serve
+     ```
 
 ## Special thanks
 
