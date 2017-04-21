@@ -64,7 +64,8 @@
     </button>
     <button md-icon-button class="toolbar-action-button" mdTooltip="Morph subpaths (M)"
       mdTooltipPosition="below" *ngIf="data.showMorphSubPaths"
-      mdTooltipShowDelay="300" (click)="onMorphSubPathsClick()">
+      mdTooltipShowDelay="300" (click)="onMorphSubPathsClick()"
+      [class.activated]="toolbarData.isMorphSubPathsMode()">
       <md-icon>compare_arrows</md-icon>
     </button>
     <button md-icon-button class="toolbar-action-button" mdTooltip="Reverse points (R)"

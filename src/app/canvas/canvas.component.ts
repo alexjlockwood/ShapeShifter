@@ -187,7 +187,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           } else {
             this.segmentSplitter = undefined;
           }
-          if (this.appMode === AppMode.Selection) {
+          if (this.appMode === AppMode.Selection || this.appMode === AppMode.MorphSubPaths) {
             this.selectionHelper = new SelectionHelper(this);
           } else {
             this.selectionHelper = undefined;
@@ -823,7 +823,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       let text: string = undefined;
       const isHovering = isPointInfoHoveringFn({ cmd, subIdx, cmdIdx });
       const isSelected = isPointInfoSelectedFn({ cmd, subIdx, cmdIdx });
-      if ((isSelected || isHovering) && this.selectionHelper) {
+      if ((isSelected || isHovering) && this.appMode === AppMode.Selection) {
         radius = this.mediumPointRadius * SELECTED_POINT_RADIUS_FACTOR;
         if ((isHovering && cmdIdx === this.currentHover.cmdIdx)
           || this.selectionService.isPointSelected(CanvasType.Start, subIdx, cmdIdx)
@@ -925,7 +925,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       return;
     }
     const mouseDown = this.mouseEventToPoint(event);
-    if (this.appMode === AppMode.Selection) {
+    if (this.appMode === AppMode.Selection || this.appMode === AppMode.MorphSubPaths) {
       this.selectionHelper.onMouseDown(mouseDown, event.shiftKey || event.metaKey);
     } else if (this.appMode === AppMode.SplitCommands) {
       this.segmentSplitter.onMouseDown(mouseDown);
@@ -945,7 +945,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       return;
     }
     const mouseMove = this.mouseEventToPoint(event);
-    if (this.appMode === AppMode.Selection) {
+    if (this.appMode === AppMode.Selection || this.appMode === AppMode.MorphSubPaths) {
       this.selectionHelper.onMouseMove(mouseMove);
     } else if (this.appMode === AppMode.SplitCommands) {
       this.segmentSplitter.onMouseMove(mouseMove);
@@ -965,7 +965,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       return;
     }
     const mouseUp = this.mouseEventToPoint(event);
-    if (this.appMode === AppMode.Selection) {
+    if (this.appMode === AppMode.Selection || this.appMode === AppMode.MorphSubPaths) {
       this.selectionHelper.onMouseUp(mouseUp, event.shiftKey || event.metaKey);
     } else if (this.appMode === AppMode.SplitCommands) {
       this.segmentSplitter.onMouseUp(mouseUp);
@@ -985,7 +985,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       return;
     }
     const mouseLeave = this.mouseEventToPoint(event);
-    if (this.appMode === AppMode.Selection) {
+    if (this.appMode === AppMode.Selection || this.appMode === AppMode.MorphSubPaths) {
       // TODO: how to handle the case where the mouse leaves and re-enters mid-gesture?
       this.selectionHelper.onMouseLeave(mouseLeave);
     } else if (this.appMode === AppMode.SplitCommands) {

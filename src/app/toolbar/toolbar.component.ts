@@ -176,7 +176,9 @@ export class ToolbarComponent implements OnInit {
   }
 
   onMorphSubPathsClick() {
-    // TODO: implement this
+    const appMode = this.appModeService.getAppMode();
+    this.appModeService.setAppMode(
+      appMode === AppMode.MorphSubPaths ? AppMode.Selection : AppMode.MorphSubPaths);
   }
 
   onReversePointsHover(isHovering: boolean) {
@@ -355,5 +357,9 @@ class ToolbarData {
 
   isSplitSubPathsMode() {
     return this.appMode === AppMode.SplitSubPaths;
+  }
+
+  isMorphSubPathsMode() {
+    return this.appMode === AppMode.MorphSubPaths;
   }
 }

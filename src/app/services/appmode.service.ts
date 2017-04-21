@@ -31,4 +31,5 @@ export enum AppMode {
   Selection = 1,
   SplitCommands,
   SplitSubPaths,
+  MorphSubPaths,
 }
