@@ -6,7 +6,6 @@ import { CanvasType } from '../CanvasType';
 import {
   StateService,
   SelectionService,
-  SelectionType,
   HoverService,
   HoverType,
 } from '../services';
