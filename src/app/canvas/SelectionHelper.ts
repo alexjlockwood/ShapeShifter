@@ -71,14 +71,14 @@ export class SelectionHelper {
 
     if (hitResult.isSegmentHit || hitResult.isShapeHit) {
       const hits = hitResult.isShapeHit ? hitResult.shapeHits : hitResult.segmentHits;
-      let { subIdx } = this.findHitSubPath(hits);
-      const oppSubPathSelections =
-        this.selectionService.getSelections()
-          .filter(s => {
-            return s.source !== this.canvasType
-              && s.type === SelectionType.SubPath
-              && s.subIdx !== subIdx;
-          });
+      const { subIdx } = this.findHitSubPath(hits);
+      // const oppSubPathSelections =
+      //   this.selectionService.getSelections()
+      //     .filter(s => {
+      //       return s.source !== this.canvasType
+      //         && s.type === SelectionType.SubPath
+      //         && s.subIdx !== subIdx;
+      //     });
       // if (oppSubPathSelections.length) {
       //   let { source: fromSource, subIdx: fromSubIdx } = oppSubPathSelections[0];
       //   let toSource = this.canvasType;

@@ -17,7 +17,6 @@ import {
   AnimatorService,
   CanvasResizeService,
   SelectionService,
-  SelectionType,
   AppModeService,
   AppMode,
   StateService,
@@ -234,7 +233,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
         return true;
       }
 
-      const isMorphStatusNone = this.stateService.getMorphStatus() === MorphStatus.None;
+      // const isMorphStatusNone = this.stateService.getMorphStatus() === MorphStatus.None;
       const isMorphable = this.stateService.getMorphStatus() === MorphStatus.Morphable;
       if (event.keyCode === 8 || event.keyCode === 46) {
         // In case there's a JS error, never navigate away.
