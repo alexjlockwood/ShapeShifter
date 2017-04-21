@@ -170,6 +170,7 @@ export class SelectionHelper {
         // Clear any existing selections and/or hovers as well.
         this.hoverService.resetAndNotify();
         this.selectionService.resetAndNotify();
+        this.reset();
         this.stateService.updateActivePath(this.canvasType, pathMutator.build());
       }
     } else if (this.currentDraggableSplitIndex) {

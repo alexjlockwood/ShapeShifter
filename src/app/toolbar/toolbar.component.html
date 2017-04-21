@@ -51,23 +51,23 @@
     </button>
 
     <!-- SubPath mode. -->
-    <button md-icon-button class="toolbar-action-button" mdTooltip="Add points"
+    <button md-icon-button class="toolbar-action-button" mdTooltip="Add points (A)"
       mdTooltipPosition="below" *ngIf="data.showAddPoints" mdTooltipShowDelay="300"
       (click)="onAddPointsClick()" [class.activated]="toolbarData.isAddPointsMode()">
       <md-icon>add_circle_outline</md-icon>
     </button>
-    <button md-icon-button class="toolbar-action-button" mdTooltip="Split subpaths"
+    <button md-icon-button class="toolbar-action-button" mdTooltip="Split subpaths (S)"
       mdTooltipPosition="below" *ngIf="data.showSplitSubPaths"
       mdTooltipShowDelay="300" (click)="onSplitSubPathsClick()"
       [class.activated]="toolbarData.isSplitSubPathsMode()">
       <md-icon>content_cut</md-icon>
     </button>
-    <button md-icon-button class="toolbar-action-button" mdTooltip="Morph subpaths"
+    <button md-icon-button class="toolbar-action-button" mdTooltip="Morph subpaths (M)"
       mdTooltipPosition="below" *ngIf="data.showMorphSubPaths"
       mdTooltipShowDelay="300" (click)="onMorphSubPathsClick()">
       <md-icon>compare_arrows</md-icon>
     </button>
-    <button md-icon-button class="toolbar-action-button" mdTooltip="Reverse points"
+    <button md-icon-button class="toolbar-action-button" mdTooltip="Reverse points (R)"
       mdTooltipPosition="below" *ngIf="data.showReverseSubPaths"
       mdTooltipShowDelay="300" (click)="onReversePointsClick()"
       (mouseenter)="onReversePointsHover(true)" (mouseleave)="onReversePointsHover(false)"
@@ -76,7 +76,7 @@
     </button>
     <!-- TODO: determine how we want to support deleting subpaths here -->
     <button md-icon-button class="toolbar-action-button" mdTooltipPosition="below"
-      mdTooltip="Delete subpath{{data.numSubPaths === 1 ? '' : 's'}}"
+      mdTooltip="Delete subpath{{data.numSubPaths === 1 ? '' : 's'}} (D)"
       mdTooltipShowDelay="300" *ngIf="data.showDeleteSubPaths"
       (click)="onDeleteSubPathsClick()">
       <md-icon>delete</md-icon>
@@ -84,21 +84,21 @@
 
     <!-- Segment mode. -->
     <button md-icon-button class="toolbar-action-button" mdTooltipPosition="below"
-      mdTooltip="Delete segment{{data.numSegments === 1 ? '' : 's'}}"
+      mdTooltip="Delete segment{{data.numSegments === 1 ? '' : 's'}} (D)"
       mdTooltipShowDelay="300" *ngIf="data.showDeleteSegments"
       (click)="onDeleteSegmentsClick()">
       <md-icon>delete</md-icon>
     </button>
 
     <!-- Point mode. -->
-    <button md-icon-button class="toolbar-action-button" mdTooltip="Set first position"
+    <button md-icon-button class="toolbar-action-button" mdTooltip="Set first position (F)"
       mdTooltipPosition="below" mdTooltipShowDelay="300" *ngIf="data.showSetFirstPosition"
       (click)="onSetFirstPositionClick()" (mouseenter)="onSetFirstPositionHover(true)"
       (mouseleave)="onSetFirstPositionHover(false)">
       <md-icon>looks_one</md-icon>
     </button>
     <button md-icon-button class="toolbar-action-button" mdTooltipPosition="below"
-      mdTooltip="Delete point{{data.numPoints === 1 ? '' : 's'}}"
+      mdTooltip="Delete point{{data.numPoints === 1 ? '' : 's'}} (D)"
       mdTooltipShowDelay="300" *ngIf="data.showDeletePoints" (click)="onDeletePointsClick()">
       <md-icon>delete</md-icon>
     </button>

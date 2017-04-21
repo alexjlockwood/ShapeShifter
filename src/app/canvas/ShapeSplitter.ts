@@ -154,6 +154,7 @@ export class ShapeSplitter {
       // TODO: make sure the inspector doesn't set hovers/selections while a split is in process...
       this.hoverService.resetAndNotify();
       this.selectionService.resetAndNotify();
+      this.reset();
 
       // TODO: some bugs with this path: M 0 20 v -16 h 20 v 2 h -12 v 2 h 12 v 2 h -12 Z
       // TODO: is it possible for there to be 1 or 2 intersections and be invalid?
@@ -167,7 +168,6 @@ export class ShapeSplitter {
           .splitFilledSubPath(initSubIdx, startingCmdIdx, endingCmdIdx)
           .build());
     }
-    this.reset();
     this.component.drawOverlays();
   }
 
