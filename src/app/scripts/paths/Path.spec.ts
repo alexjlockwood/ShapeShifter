@@ -411,7 +411,7 @@ describe('Path', () => {
       ),
       makeTest(
         'M 0 0 L 1 1 L 2 2 L 3 3 L 4 4 L 5 5 M 0 0 L 10 10 L 20 20 L 30 30 L 40 40 L 50 50',
-        'SSSP 0 1 USSSP 0',
+        'SSSP 0 1 DSSSP 0',
         'M 0 0 L 1 1 L 2 2 L 3 3 L 4 4 L 5 5 M 0 0 L 10 10 L 20 20 L 30 30 L 40 40 L 50 50',
       ),
       makeTest(
@@ -421,12 +421,12 @@ describe('Path', () => {
       ),
       makeTest(
         'M 0 0 L 1 1 L 2 2 L 3 3 L 4 4 L 5 5 M 0 0 L 10 10 L 20 20 L 30 30 L 40 40 L 50 50',
-        'SSSP 0 1 M 0 1 USSSP 1',
+        'SSSP 0 1 M 0 1 DSSSP 1',
         'M 0 0 L 1 1 L 2 2 L 3 3 L 4 4 L 5 5 M 0 0 L 10 10 L 20 20 L 30 30 L 40 40 L 50 50',
       ),
       makeTest(
         'M 0 0 L 1 1 L 2 2 L 3 3 L 4 4 L 5 5 M 0 0 L 10 10 L 20 20 L 30 30 L 40 40 L 50 50',
-        'SSSP 0 1 USSSP 1',
+        'SSSP 0 1 DSSSP 1',
         'M 0 0 L 1 1 L 2 2 L 3 3 L 4 4 L 5 5 M 0 0 L 10 10 L 20 20 L 30 30 L 40 40 L 50 50',
       ),
       makeTest(
@@ -481,12 +481,12 @@ describe('Path', () => {
       ),
       makeTest(
         'M 0 0 L 10 10 L 20 20 L 30 30',
-        'RV 0 SSSP 0 2 USSSP 0',
+        'RV 0 SSSP 0 2 DSSSP 0',
         'M 30 30 L 20 20 L 10 10 L 0 0',
       ),
       makeTest(
         'M 0 0 L 10 10 L 20 20 L 30 30',
-        'RV 0 SSSP 0 2 USSSP 1',
+        'RV 0 SSSP 0 2 DSSSP 1',
         'M 30 30 L 20 20 L 10 10 L 0 0',
       ),
       makeTest(

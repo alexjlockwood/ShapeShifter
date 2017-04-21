@@ -77,7 +77,7 @@
     <!-- TODO: determine how we want to support deleting subpaths here -->
     <button md-icon-button class="toolbar-action-button" mdTooltipPosition="below"
       mdTooltip="Delete subpath{{data.numSubPaths === 1 ? '' : 's'}}"
-      mdTooltipShowDelay="300" *ngIf="data.showDeleteSubPaths && false"
+      mdTooltipShowDelay="300" *ngIf="data.showDeleteSubPaths"
       (click)="onDeleteSubPathsClick()">
       <md-icon>delete</md-icon>
     </button>

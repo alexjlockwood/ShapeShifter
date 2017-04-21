@@ -71,5 +71,5 @@ export enum HoverType {
   // The user hovered over shift forward in the command inspector.
   ShiftForward,
   // The user hovered over the shift to first position button in the toolbar.
-  ShiftToFirstPosition,
+  SetFirstPosition,
 }

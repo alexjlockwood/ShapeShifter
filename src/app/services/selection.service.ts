@@ -177,13 +177,39 @@ function areSelectionsEqual(sel1: Selection, sel2: Selection) {
 }
 
 /**
- * Deletes any currently selected segments.
+ * Deletes any currently selected subpaths.
  */
-export function deleteSelectedSplitSegments(
+export function deleteSelectedSplitSubPath(
   stateService: StateService,
   selectionService: SelectionService) {
 
-  // TODO: support deleting multiple segments at a time
+  // TODO: support deleting multiple subpaths at a time?
+  const selections = selectionService.getSubPathSelections();
+  if (!selections.length) {
+    return;
+  }
+  // Preconditions: all selections exist in the same editor.
+  const { source, subIdx } = selections[0];
+  const activePathLayer = stateService.getActivePathLayer(source);
+  selectionService.resetAndNotify();
+  const mutator = activePathLayer.pathData.mutate();
+  if (activePathLayer.isStroked()) {
+    mutator.deleteStrokedSubPath(subIdx);
+  } else if (activePathLayer.isFilled()) {
+    mutator.deleteFilledSubPath(subIdx);
+  }
+  stateService.updateActivePath(source, mutator.build());
+}
+
+/**
+ * Deletes any currently selected segments. This function should only be
+ * called for split filled subpaths.
+ */
+export function deleteSelectedSplitSegment(
+  stateService: StateService,
+  selectionService: SelectionService) {
+
+  // TODO: support deleting multiple segments at a time?
   const selections = selectionService.getSelections();
   if (!selections.length) {
     return;
@@ -197,25 +223,24 @@ export function deleteSelectedSplitSegments(
   stateService.updateActivePath(source, mutator.build());
 }
 
-
 /**
  * Deletes any currently selected split points.
  */
 export function deleteSelectedSplitPoints(
-  lss: StateService,
-  sss: SelectionService) {
+  stateService: StateService,
+  selectionService: SelectionService) {
 
-  const selections = sss.getSelections();
+  const selections = selectionService.getPointSelections();
   if (!selections.length) {
     return;
   }
   // Preconditions: all selections exist in the same editor.
   const canvasType = selections[0].source;
-  const activePathLayer = lss.getActivePathLayer(canvasType);
+  const activePathLayer = stateService.getActivePathLayer(canvasType);
   const unsplitOpsMap: Map<number, Array<{ subIdx: number, cmdIdx: number }>> = new Map();
   for (const selection of selections) {
     const { subIdx, cmdIdx } = selection;
-    if (!activePathLayer.pathData.getSubPaths()[subIdx].getCommands()[cmdIdx].isSplitPoint()) {
+    if (!activePathLayer.pathData.getCommand(subIdx, cmdIdx).isSplitPoint()) {
       continue;
     }
     let subIdxOps = unsplitOpsMap.get(subIdx);
@@ -225,14 +250,13 @@ export function deleteSelectedSplitPoints(
     subIdxOps.push({ subIdx, cmdIdx });
     unsplitOpsMap.set(subIdx, subIdxOps);
   }
-  sss.resetAndNotify();
+  selectionService.resetAndNotify();
   const mutator = activePathLayer.pathData.mutate();
   unsplitOpsMap.forEach((ops, idx) => {
-    // TODO: perform these as a single batch instead of inside a loop? (to reduce # of broadcasts)
     PathUtil.sortPathOps(ops);
     for (const op of ops) {
       mutator.unsplitCommand(op.subIdx, op.cmdIdx);
     }
   });
-  lss.updateActivePath(canvasType, mutator.build());
+  stateService.updateActivePath(canvasType, mutator.build());
 }

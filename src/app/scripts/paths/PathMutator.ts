@@ -276,7 +276,7 @@ export class PathMutator {
   }
 
   /**
-   * Splits a filled sub path using the specified indices.
+   * Splits a filled subpath using the specified indices.
    *
    * Consider the following filled subpath:
    *
@@ -290,7 +290,7 @@ export class PathMutator {
    * |                   |
    * 0-------------------5
    *
-   * Splitting the filled sub path with startCmdIdx=1 and endCmdIdx=4
+   * Splitting the filled subpath with startCmdIdx=1 and endCmdIdx=4
    * results in the following split subpaths:
    *
    * xxxxxxxxxxxxxxxxxxxxx    1-------->>>--------2
@@ -431,41 +431,29 @@ export class PathMutator {
   }
 
   /**
-   * Unsplits the stroked sub path at the specified index. The sub path's sibling
-   * will be unsplit as well.
+   * Deletes the stroked subpath at the specified index. The subpath's sibling
+   * will be deleted as well.
    */
-  unsplitStrokedSubPath(subIdx: number) {
+  deleteStrokedSubPath(subIdx: number) {
     LOG('unsplitStrokedSubPath', subIdx);
     const parent = this.findSubPathStateParent(subIdx);
     const splitCmdId =
       _.last(_.last(parent.getSplitSubPaths()[0].getCommandStates()).getCommands()).getId();
-    this.replaceParentAfterUnsplitSubPath(subIdx, [], [splitCmdId]);
-    return this;
-  }
-
-  private replaceParentAfterUnsplitSubPath(
-    subIdx: number,
-    updatedParentSplitSubPaths: SubPathState[],
-    splitCmdIds: string[]) {
-
-    const parent = this.findSubPathStateParent(subIdx);
-    const mutator = parent.mutate().setSplitSubPaths(updatedParentSplitSubPaths);
-    for (const id of splitCmdIds) {
-      let csIdx = 0, splitIdx = -1;
-      for (; csIdx < parent.getCommandStates().length; csIdx++) {
-        const cs = parent.getCommandStates()[csIdx];
-        const csIds = cs.getCommands().map((_, idx) => cs.getIdAtIndex(idx));
-        splitIdx = csIds.indexOf(id);
-        if (splitIdx >= 0) {
-          break;
-        }
+    const mutator = parent.mutate().setSplitSubPaths([]);
+    let csIdx = 0, splitIdx = -1;
+    for (; csIdx < parent.getCommandStates().length; csIdx++) {
+      const cs = parent.getCommandStates()[csIdx];
+      const csIds = cs.getCommands().map((_, idx) => cs.getIdAtIndex(idx));
+      splitIdx = csIds.indexOf(splitCmdId);
+      if (splitIdx >= 0) {
+        break;
       }
-      if (splitIdx >= 0 && parent.getCommandStates()[csIdx].isSplitAtIndex(splitIdx)) {
-        // Delete the split point that created the sub path.
-        const unsplitCs =
-          parent.getCommandStates()[csIdx].mutate().unsplitAtIndex(splitIdx).build();
-        mutator.setCommandState(csIdx, unsplitCs);
-      }
+    }
+    if (splitIdx >= 0 && parent.getCommandStates()[csIdx].isSplitAtIndex(splitIdx)) {
+      // Delete the split point that created the sub path.
+      const unsplitCs =
+        parent.getCommandStates()[csIdx].mutate().unsplitAtIndex(splitIdx).build();
+      mutator.setCommandState(csIdx, unsplitCs);
     }
     this.subPathStateMap =
       replaceSubPathStateNode(
@@ -473,6 +461,26 @@ export class PathMutator {
         this.findSubPathStateParent(subIdx),
         (states, i) => states[i] = mutator.build());
     this.updateOrderingAfterUnsplitSubPath(subIdx);
+    return this;
+  }
+
+  /**
+  * Deletes the filled subpath at the specified index. The subpath's siblings
+  * will be deleted as well.
+  */
+  deleteFilledSubPath(subIdx: number) {
+    LOG('deleteFilledSubPath', subIdx);
+    // TODO: write tests
+    // const parent = this.findSubPathStateParent(subIdx);
+    // const firstSplitSubPath = parent.getSplitSubPaths()[0];
+    // const secondSplitSubPath = parent.getSplitSubPaths()[1];
+    // const flattenedSps = flattenSubPathStates(this.subPathStateMap);
+    // const firstSpsIdx = flattenedSps.indexOf(firstSplitSubPath);
+    // const secondSpsIdx = flattenedSps.indexOf(secondSplitSubPath);
+    // const firstSubIdx = this.subPathOrdering.indexOf(firstSpsIdx);
+    // const secondSubIdx = this.subPathOrdering.indexOf(secondSpsIdx);
+    // this.deleteSubPathSplitSegment(firstSubIdx, secondSubIdx);
+    return this;
   }
 
   /**

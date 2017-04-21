@@ -13,7 +13,8 @@ import {
   AppMode,
 } from '../services';
 import {
-  deleteSelectedSplitSegments,
+  deleteSelectedSplitSubPath,
+  deleteSelectedSplitSegment,
   deleteSelectedSplitPoints,
 } from '../services/selection.service';
 import { CanvasType } from '../CanvasType';
@@ -150,7 +151,7 @@ export class ToolbarComponent implements OnInit {
   // TODO: need to also support keyboard deletions
   // TODO: support multi select/multi delete
   // TODO: implement pair subpaths mode
-  // TODO: add points, split subpaths, etc. modes in action mode?
+  // TODO: shift ops in action mode?
   // TODO: implement hover hints (similar to inspector)
   // TODO: need to improve how points are selected/enlarged in the canvas...
 
@@ -199,18 +200,18 @@ export class ToolbarComponent implements OnInit {
   }
 
   onDeleteSubPathsClick() {
-    // deleteSelectedSplitSubPaths(this.stateService, this.selectionService);
+    deleteSelectedSplitSubPath(this.stateService, this.selectionService);
   }
 
   onDeleteSegmentsClick() {
-    deleteSelectedSplitSegments(this.stateService, this.selectionService);
+    deleteSelectedSplitSegment(this.stateService, this.selectionService);
   }
 
   onSetFirstPositionHover(isHovering: boolean) {
     const { source, subIdx, cmdIdx } = this.selectionService.getPointSelections()[0];
     if (isHovering) {
       this.hoverService.setHover({
-        source, subIdx, cmdIdx, type: HoverType.ShiftToFirstPosition,
+        source, subIdx, cmdIdx, type: HoverType.SetFirstPosition,
       });
     } else {
       this.hoverService.resetAndNotify();

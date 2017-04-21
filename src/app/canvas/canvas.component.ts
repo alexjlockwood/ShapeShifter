@@ -232,7 +232,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
             case HoverType.ShiftBack:
               previewPath = mutator.shiftSubPathBack(subIdx).build();
               break;
-            case HoverType.ShiftToFirstPosition:
+            case HoverType.SetFirstPosition:
               previewPath = mutator.shiftSubPathForward(subIdx, cmdIdx).build();
               break;
           }

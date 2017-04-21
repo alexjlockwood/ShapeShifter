@@ -257,7 +257,6 @@ export class SelectionHelper {
       });
       this.component.resetCursor();
     }
-    // TODO: add ability to hover over/select individual segments
   }
 
   private findHitSubPath(hits: ReadonlyArray<{ subIdx: number }>) {
