@@ -87,7 +87,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
         this.selectionService.asObservable(),
         this.appModeService.asObservable(),
       ).map(obj => {
-        const [status, ,] = obj;
+        const status = obj[0];
         const startLayer = this.stateService.getActivePathLayer(CanvasType.Start);
         const endLayer = this.stateService.getActivePathLayer(CanvasType.End);
         if (!startLayer || !endLayer) {
