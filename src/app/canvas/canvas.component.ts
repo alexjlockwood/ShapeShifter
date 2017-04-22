@@ -117,7 +117,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     this.subscribeTo(
       this.stateService.getActivePathIdObservable(this.canvasType),
       (activePathId) => {
-        if (activePathId) {
+        if (activePathId || this.canvasType === CanvasType.Preview) {
           this.canvasContainer.css({ cursor: '' });
         } else {
           // Use a pointer cursor over the canvas so the user knows
