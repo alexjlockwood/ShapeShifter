@@ -111,7 +111,6 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
           // TODO: show better user messaging when attempting to morph btw stroked and fill paths
           return '';
         }
-
         if (status === MorphStatus.Morphable) {
           const hasClosedPath =
             _.chain([CanvasType.Start, CanvasType.End])
