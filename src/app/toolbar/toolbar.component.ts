@@ -11,6 +11,7 @@ import {
   HoverType,
   AppModeService,
   AppMode,
+  MorphSubPathService,
 } from '../services';
 import {
   deleteSelectedSplitSubPath,
@@ -53,6 +54,7 @@ export class ToolbarComponent implements OnInit {
     private readonly stateService: StateService,
     private readonly appModeService: AppModeService,
     private readonly dialogService: DialogService,
+    private readonly morphSubPathService: MorphSubPathService,
   ) { }
 
   ngOnInit() {
@@ -62,12 +64,13 @@ export class ToolbarComponent implements OnInit {
     const combinedObservable =
       Observable.combineLatest(
         this.selectionService.asObservable(),
-        this.appModeService.asObservable());
+        this.appModeService.asObservable(),
+        this.morphSubPathService.asObservable());
     this.toolbarObservable = combinedObservable.map(() => {
       const selections = this.selectionService.getSelections();
       const appMode = this.appModeService.getAppMode();
       const selectionInfo =
-        new ToolbarData(this.stateService, appMode, selections);
+        new ToolbarData(this.stateService, this.morphSubPathService, appMode, selections);
       if (selectionInfo.getNumSelections() > 0) {
         this.hasActionModeBeenEnabled = true;
       }
@@ -184,7 +187,7 @@ export class ToolbarComponent implements OnInit {
   onReversePointsHover(isHovering: boolean) {
     const { source, subIdx } = this.selectionService.getSubPathSelections()[0];
     if (isHovering) {
-      this.hoverService.setHover({ source, subIdx, type: HoverType.Reverse });
+      this.hoverService.setHoverAndNotify({ source, subIdx, type: HoverType.Reverse });
     } else {
       this.hoverService.resetAndNotify();
     }
@@ -204,7 +207,7 @@ export class ToolbarComponent implements OnInit {
   onShiftBackPointsHover(isHovering: boolean) {
     const { source, subIdx } = this.selectionService.getSubPathSelections()[0];
     if (isHovering) {
-      this.hoverService.setHover({ source, subIdx, type: HoverType.ShiftBack });
+      this.hoverService.setHoverAndNotify({ source, subIdx, type: HoverType.ShiftBack });
     } else {
       this.hoverService.resetAndNotify();
     }
@@ -224,7 +227,7 @@ export class ToolbarComponent implements OnInit {
   onShiftForwardPointsHover(isHovering: boolean) {
     const { source, subIdx } = this.selectionService.getSubPathSelections()[0];
     if (isHovering) {
-      this.hoverService.setHover({ source, subIdx, type: HoverType.Reverse });
+      this.hoverService.setHoverAndNotify({ source, subIdx, type: HoverType.Reverse });
     } else {
       this.hoverService.resetAndNotify();
     }
@@ -252,7 +255,7 @@ export class ToolbarComponent implements OnInit {
   onSetFirstPositionHover(isHovering: boolean) {
     const { source, subIdx, cmdIdx } = this.selectionService.getPointSelections()[0];
     if (isHovering) {
-      this.hoverService.setHover({
+      this.hoverService.setHoverAndNotify({
         source, subIdx, cmdIdx, type: HoverType.SetFirstPosition,
       });
     } else {
@@ -267,6 +270,28 @@ export class ToolbarComponent implements OnInit {
       source,
       activePath.mutate()
         .shiftSubPathForward(subIdx, cmdIdx)
+        .build());
+    this.selectionService.resetAndNotify();
+  }
+
+  onSplitInHalfHoverEvent(isHovering: boolean) {
+    const { source, subIdx, cmdIdx } = this.selectionService.getPointSelections()[0];
+    if (isHovering) {
+      this.hoverService.setHoverAndNotify({
+        source, subIdx, cmdIdx, type: HoverType.Split,
+      });
+    } else {
+      this.hoverService.resetAndNotify();
+    }
+  }
+
+  onSplitInHalfClick() {
+    const { source, subIdx, cmdIdx } = this.selectionService.getPointSelections()[0];
+    const activePath = this.stateService.getActivePathLayer(source).pathData;
+    this.stateService.updateActivePath(
+      source,
+      activePath.mutate()
+        .splitCommandInHalf(subIdx, cmdIdx)
         .build());
     this.selectionService.resetAndNotify();
   }
@@ -286,9 +311,12 @@ class ToolbarData {
   private readonly showShiftSubPath: boolean;
   private readonly isFilled: boolean;
   private readonly isStroked: boolean;
+  private readonly showSplitInHalf: boolean;
+  private readonly unpairedSubPathSource: CanvasType;
 
   constructor(
     stateService: StateService,
+    morphSubPathService: MorphSubPathService,
     private readonly appMode: AppMode,
     selections: ReadonlyArray<Selection>,
   ) {
@@ -341,6 +369,13 @@ class ToolbarData {
       && activePath.getSubPath(this.points[0].subIdx).isClosed();
     this.showShiftSubPath = this.subPaths.length > 0
       && activePath.getSubPath(this.subPaths[0]).isClosed();
+    this.showSplitInHalf = this.points.length === 1 && !!this.points[0].cmdIdx;
+    if (this.appMode === AppMode.MorphSubPaths) {
+      const unpair = morphSubPathService.getUnpairedSubPath();
+      if (unpair) {
+        this.unpairedSubPathSource = unpair.source;
+      }
+    }
   }
 
   getNumSelections() {
@@ -367,7 +402,7 @@ class ToolbarData {
       return 'Split subpaths';
     }
     if (this.appMode === AppMode.MorphSubPaths) {
-      return 'Morph subpaths';
+      return 'Pair subpaths';
     }
     const numSubPaths = this.getNumSubPaths();
     const subStr = `${numSubPaths} subpath${numSubPaths === 1 ? '' : 's'}`;
@@ -389,15 +424,19 @@ class ToolbarData {
 
   getToolbarSubtitle() {
     if (this.appMode === AppMode.SplitCommands) {
-      return 'Click on the edge of a subpath to add a point';
+      return 'Click along the edge of a subpath to add a point';
     } else if (this.appMode === AppMode.SplitSubPaths) {
       if (this.isFilled) {
         return 'Draw a line across a subpath to split it into 2';
       } else if (this.isStroked) {
-        return 'Click on the edge of a subpath to split it into 2';
+        return 'Click along the edge of a subpath to split it into 2';
       }
     } else if (this.appMode === AppMode.MorphSubPaths) {
-      return '';
+      if (this.unpairedSubPathSource) {
+        const toSourceDir = this.unpairedSubPathSource === CanvasType.Start ? 'right' : 'left';
+        return `Pair the selected subpath with a corresponding subpath on the ${toSourceDir}`;
+      }
+      return 'Select a subpath';
     }
     return '';
   }
@@ -418,9 +457,12 @@ class ToolbarData {
     return this.showShiftSubPath || false;
   }
 
-
   shouldShowActionMode() {
     return this.getNumSelections() > 0 || !this.isSelectionMode();
+  }
+
+  shouldShowSplitInHalf() {
+    return this.showSplitInHalf || false;
   }
 
   isSelectionMode() {

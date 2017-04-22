@@ -211,7 +211,7 @@ export class SelectionHelper {
       this.hoverService.resetAndNotify();
     } else if (hitResult.isEndPointHit) {
       const { subIdx, cmdIdx } = this.findHitPoint(hitResult.endPointHits);
-      this.hoverService.setHover({
+      this.hoverService.setHoverAndNotify({
         type: HoverType.Point,
         source: this.canvasType,
         subIdx,
@@ -220,7 +220,7 @@ export class SelectionHelper {
     } else if (hitResult.isSegmentHit || hitResult.isShapeHit) {
       const hits = hitResult.isShapeHit ? hitResult.shapeHits : hitResult.segmentHits;
       const { subIdx } = this.findHitSubPath(hits);
-      this.hoverService.setHover({
+      this.hoverService.setHoverAndNotify({
         type: HoverType.SubPath,
         source: this.canvasType,
         subIdx,

@@ -71,10 +71,12 @@ const PLAY_PAUSE_SVGS = [`
 
 const DEBUG_SVGS = [`
 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-  <path d="M 4 4 h 8 v 8 h -8 v -8 M 12.25 4 h 8 v 8 h -8 v -8"/>
+  <path d="M 2 2 h 2 v 20 h -2 v -20 M 6 2 h 2 v 20 h -2 v -20
+  M 10 2 h 2 v 20 h -2 v -20 M 14 2 h 2 v 20 h -2 v -20 M 18 2 h 2 v 20 h -2 v -20"/>
 </svg>`, `
 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-  <path d="M 4 4 h 16 v 16 h -16 v -16"/>
+  <path d="M 2 2 h 2 v 20 h -2 v -20 M 6 2 h 2 v 20 h -2 v -20
+  M 16 2 h 2 v 20 h -2 v -20 M 20 2 h 2 v 20 h -2 v -20"/>
 </svg>`];
 
 // Note that the titles are currently used as Google Analytics tracking labels.

@@ -207,7 +207,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
             const selections = this.selectionService.getSubPathSelections();
             if (selections.length) {
               const { source, subIdx } = selections[0];
-              this.morphSubPathService.setCurrentUnpairedSubPath(source, subIdx);
+              this.morphSubPathService.setUnpairedSubPath({ source, subIdx });
             }
           } else {
             this.morphSubPathHelper = undefined;
@@ -237,18 +237,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
             case HoverType.Unsplit:
               previewPath = mutator.unsplitCommand(subIdx, cmdIdx).build();
               break;
-            // case HoverType.Reverse:
-            //   previewPath = mutator.reverseSubPath(subIdx).build();
-            //   break;
-            // case HoverType.ShiftForward:
-            //   previewPath = mutator.shiftSubPathForward(subIdx).build();
-            //   break;
-            // case HoverType.ShiftBack:
-            //   previewPath = mutator.shiftSubPathBack(subIdx).build();
-            //   break;
-            // case HoverType.SetFirstPosition:
-            // previewPath = mutator.shiftSubPathForward(subIdx, cmdIdx).build();
-            // break;
           }
         }
         this.currentHoverPreviewPath = previewPath;
@@ -682,7 +670,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     this.executeHighlights(ctx, SPLIT_POINT_COLOR, this.unselectedSegmentLineWidth);
 
     if (this.morphSubPathHelper) {
-      const currUnpair = this.morphSubPathService.getCurrentUnpairedSubPath();
+      const currUnpair = this.morphSubPathService.getUnpairedSubPath();
       if (currUnpair) {
         const { source, subIdx } = currUnpair;
         const subPath = this.activePath.getSubPath(subIdx);

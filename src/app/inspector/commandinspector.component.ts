@@ -184,14 +184,14 @@ export class CommandInspectorComponent implements OnInit {
     const subIdx = this.subIdx;
     const cmdIdx = this.cmdIdx;
     if (isHovering) {
-      this.hoverService.setHover({
+      this.hoverService.setHoverAndNotify({
         type,
         subIdx,
         cmdIdx,
         source: this.canvasType,
       });
     } else if (type !== HoverType.Point && this.isHoveringOverCommand) {
-      this.hoverService.setHover({
+      this.hoverService.setHoverAndNotify({
         type: HoverType.Point,
         subIdx,
         cmdIdx,

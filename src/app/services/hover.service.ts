@@ -8,35 +8,49 @@ import { CanvasType } from '../CanvasType';
 @Injectable()
 export class HoverService {
   private readonly source = new BehaviorSubject<Hover>(undefined);
+  private hover: Hover;
 
   asObservable() {
     return this.source.asObservable();
   }
 
   getHover() {
-    return this.source.getValue();
+    return this.hover;
   }
 
   setHover(hover: Hover) {
-    this.source.next(hover);
+    this.hover = hover;
+  }
+
+  setHoverAndNotify(hover: Hover) {
+    this.setHover(hover);
+    this.notify();
   }
 
   setPoint(source: CanvasType, subIdx: number, cmdIdx: number) {
-    this.setHover({ type: HoverType.Point, source, subIdx, cmdIdx });
+    this.setHoverAndNotify({ type: HoverType.Point, source, subIdx, cmdIdx });
   }
 
   setSegment(source: CanvasType, subIdx: number, cmdIdx: number) {
-    this.setHover({ type: HoverType.Segment, source, subIdx, cmdIdx });
+    this.setHoverAndNotify({ type: HoverType.Segment, source, subIdx, cmdIdx });
   }
 
   setSubPath(source: CanvasType, subIdx: number) {
-    this.setHover({ type: HoverType.SubPath, source, subIdx });
+    this.setHoverAndNotify({ type: HoverType.SubPath, source, subIdx });
+  }
+
+  reset() {
+    this.setHover(undefined);
   }
 
   resetAndNotify() {
-    if (this.source.getValue()) {
-      this.setHover(undefined);
+    if (this.hover) {
+      this.setHoverAndNotify(undefined);
     }
+  }
+
+  notify() {
+    this.source.next(this.hover);
   }
 }
 

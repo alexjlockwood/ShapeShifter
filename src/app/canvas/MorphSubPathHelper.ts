@@ -8,6 +8,7 @@ import {
   HoverType,
   AppMode,
   MorphSubPathService,
+  SelectionService,
 } from '../services';
 
 /**
@@ -16,12 +17,14 @@ import {
 export class MorphSubPathHelper {
   private readonly stateService: StateService;
   private readonly hoverService: HoverService;
+  private readonly selectionService: SelectionService;
   private readonly morphSubPathService: MorphSubPathService;
   private readonly canvasType: CanvasType;
 
   constructor(private readonly component: CanvasComponent) {
     this.stateService = component.stateService;
     this.hoverService = component.hoverService;
+    this.selectionService = component.selectionService;
     this.morphSubPathService = component.morphSubPathService;
     this.canvasType = component.canvasType;
   }
@@ -32,11 +35,8 @@ export class MorphSubPathHelper {
     if (hitResult.isSegmentHit || hitResult.isShapeHit) {
       const hits = hitResult.isShapeHit ? hitResult.shapeHits : hitResult.segmentHits;
       let { subIdx } = this.findHitSubPath(hits);
-      const currUnpair =
-        this.morphSubPathService.getCurrentUnpairedSubPath();
-      if (currUnpair
-        && subIdx !== currUnpair.subIdx
-        && this.canvasType !== currUnpair.source) {
+      const currUnpair = this.morphSubPathService.getUnpairedSubPath();
+      if (currUnpair && this.canvasType !== currUnpair.source) {
         let { source: fromSource, subIdx: fromSubIdx } = currUnpair;
         let toSource = this.canvasType;
         let toSubIdx = subIdx;
@@ -51,10 +51,28 @@ export class MorphSubPathHelper {
           fromSubIdx = toSubIdx;
           toSubIdx = tempFromSubIdx;
         }
-        // this.hoverService.resetAndNotify();
-        // this.selectionService.resetAndNotify();
-        this.morphSubPathService.reset();
-        this.morphSubPathService.setPairedSubPaths(new Set([toSubIdx]));
+        this.morphSubPathService.setUnpairedSubPath(undefined);
+        const pairedSubPaths = this.morphSubPathService.getPairedSubPaths();
+        let selections =
+          this.selectionService.getSelections().filter(s => s.source === fromSource);
+        if (selections.length) {
+          selections = selections.map(s => {
+            const { subIdx: sIdx, cmdIdx, source, type } = s;
+            return {
+              subIdx: sIdx === fromSubIdx ? toSubIdx : sIdx,
+              cmdIdx,
+              source,
+              type,
+            };
+          });
+          this.selectionService.setSelections(selections);
+        }
+        if (pairedSubPaths.has(fromSubIdx)) {
+          pairedSubPaths.delete(fromSubIdx);
+        }
+        pairedSubPaths.add(toSubIdx);
+        this.morphSubPathService.setPairedSubPaths(pairedSubPaths);
+        this.hoverService.reset();
         this.stateService.updateActivePath(
           fromSource,
           this.stateService.getActivePathLayer(fromSource).pathData.mutate()
@@ -62,8 +80,9 @@ export class MorphSubPathHelper {
             .build());
         subIdx = toSubIdx;
       } else {
-        this.morphSubPathService.setCurrentUnpairedSubPath(this.canvasType, subIdx).notify();
+        this.morphSubPathService.setUnpairedSubPath({ source: this.canvasType, subIdx });
       }
+      this.morphSubPathService.notify();
     } else if (!isShiftOrMetaPressed) {
       this.component.appModeService.setAppMode(AppMode.Selection);
     }
@@ -79,6 +98,7 @@ export class MorphSubPathHelper {
   }
 
   onMouseLeave(mouseLeave: Point) {
+    this.hoverService.reset();
     this.component.drawOverlays();
   }
 
@@ -93,7 +113,7 @@ export class MorphSubPathHelper {
     } else if (hitResult.isSegmentHit || hitResult.isShapeHit) {
       const hits = hitResult.isShapeHit ? hitResult.shapeHits : hitResult.segmentHits;
       const { subIdx } = this.findHitSubPath(hits);
-      this.hoverService.setHover({
+      this.hoverService.setHoverAndNotify({
         type: HoverType.SubPath,
         source: this.canvasType,
         subIdx,

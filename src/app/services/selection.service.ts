@@ -18,8 +18,13 @@ export class SelectionService {
     return this.source.asObservable();
   }
 
+  setSelections(selections: ReadonlyArray<Selection>) {
+    this.selections = selections.slice();
+    return this;
+  }
+
   getSelections() {
-    return this.selections;
+    return this.selections.slice();
   }
 
   getSubPathSelections() {

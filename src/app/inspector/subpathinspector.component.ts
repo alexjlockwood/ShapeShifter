@@ -99,13 +99,13 @@ export class SubpathInspectorComponent implements OnInit {
   private broadcastHoverEvent(isHovering: boolean, type: HoverType) {
     const subIdx = this.subIdx;
     if (isHovering) {
-      this.hoverService.setHover({
+      this.hoverService.setHoverAndNotify({
         type,
         subIdx,
         source: this.canvasType,
       });
     } else if (type !== HoverType.Point && this.isHoveringOverSubPath) {
-      this.hoverService.setHover({
+      this.hoverService.setHoverAndNotify({
         type: HoverType.Point,
         subIdx,
         source: this.canvasType,

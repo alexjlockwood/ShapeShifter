@@ -17,8 +17,8 @@ export class MorphSubPathService {
     return this;
   }
 
-  setCurrentUnpairedSubPath(source: CanvasType, subIdx: number) {
-    this.currentUnpairedSubPath = { source, subIdx };
+  setUnpairedSubPath(unpair: { source: CanvasType, subIdx: number } | undefined) {
+    this.currentUnpairedSubPath = unpair;
     return this;
   }
 
@@ -35,7 +35,7 @@ export class MorphSubPathService {
     return new Set(this.pairedSubPaths);
   }
 
-  getCurrentUnpairedSubPath() {
+  getUnpairedSubPath() {
     return this.currentUnpairedSubPath;
   }
 
