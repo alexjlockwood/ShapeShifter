@@ -8,7 +8,6 @@ import {
   SelectionService,
   HoverService,
   HoverType,
-  SelectionType,
   AppMode,
 } from '../services';
 import { LayerUtil } from '../scripts/layers';
