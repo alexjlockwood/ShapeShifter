@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
 import * as ModelUtil from './ModelUtil';
 import { VectorLayer, GroupLayer, PathLayer, ClipPathLayer } from '../layers';
-import { newPath, SubPath, Command } from '../paths';
+import { newPath, Command } from '../paths';
 import { ColorUtil, Matrix } from '../common';
 import { Svgo } from '../svgo';
 import { ROTATION_GROUP_LAYER_ID } from '.';
