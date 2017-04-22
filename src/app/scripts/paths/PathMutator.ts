@@ -475,7 +475,8 @@ export class PathMutator {
   }
 
   /**
-   * Deletes the subpath split segment with the specified index.
+   * Deletes the subpath split segment with the specified index. The two subpaths
+   * that share the split segment ID will be merged into a single subpath.
    */
   private deleteSubPathSplitSegmentInternal(subIdx: number, targetCs: CommandState) {
     const targetSpsId = this.findSubPathStateLeaf(subIdx).getId();
