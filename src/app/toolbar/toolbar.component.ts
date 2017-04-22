@@ -201,6 +201,46 @@ export class ToolbarComponent implements OnInit {
     this.hoverService.resetAndNotify();
   }
 
+  onShiftBackPointsHover(isHovering: boolean) {
+    const { source, subIdx } = this.selectionService.getSubPathSelections()[0];
+    if (isHovering) {
+      this.hoverService.setHover({ source, subIdx, type: HoverType.ShiftBack });
+    } else {
+      this.hoverService.resetAndNotify();
+    }
+  }
+
+  onShiftBackPointsClick() {
+    const selections = this.selectionService.getSubPathSelections();
+    const { source } = selections[0];
+    const pathMutator = this.stateService.getActivePathLayer(source).pathData.mutate();
+    for (const { subIdx } of this.selectionService.getSubPathSelections()) {
+      pathMutator.shiftSubPathBack(subIdx);
+    }
+    this.stateService.updateActivePath(source, pathMutator.build());
+    this.hoverService.resetAndNotify();
+  }
+
+  onShiftForwardPointsHover(isHovering: boolean) {
+    const { source, subIdx } = this.selectionService.getSubPathSelections()[0];
+    if (isHovering) {
+      this.hoverService.setHover({ source, subIdx, type: HoverType.Reverse });
+    } else {
+      this.hoverService.resetAndNotify();
+    }
+  }
+
+  onShiftForwardPointsClick() {
+    const selections = this.selectionService.getSubPathSelections();
+    const { source } = selections[0];
+    const pathMutator = this.stateService.getActivePathLayer(source).pathData.mutate();
+    for (const { subIdx } of this.selectionService.getSubPathSelections()) {
+      pathMutator.shiftSubPathBack(subIdx);
+    }
+    this.stateService.updateActivePath(source, pathMutator.build());
+    this.hoverService.resetAndNotify();
+  }
+
   onDeleteSubPathsClick() {
     deleteSelectedSplitSubPath(this.stateService, this.selectionService);
   }
@@ -243,6 +283,9 @@ class ToolbarData {
   private readonly numSplitSubPaths: number;
   private readonly numSplitPoints: number;
   private readonly showSetFirstPosition: boolean;
+  private readonly showShiftSubPath: boolean;
+  private readonly isFilled: boolean;
+  private readonly isStroked: boolean;
 
   constructor(
     stateService: StateService,
@@ -259,6 +302,8 @@ class ToolbarData {
       return;
     }
     const activePath = activePathLayer.pathData;
+    this.isFilled = activePathLayer.isFilled();
+    this.isStroked = activePathLayer.isStroked();
     this.subPaths =
       selections
         .filter(s => s.type === SelectionType.SubPath)
@@ -294,6 +339,8 @@ class ToolbarData {
     this.showSetFirstPosition = this.points.length === 1
       && this.points[0].cmdIdx
       && activePath.getSubPath(this.points[0].subIdx).isClosed();
+    this.showShiftSubPath = this.subPaths.length > 0
+      && activePath.getSubPath(this.subPaths[0]).isClosed();
   }
 
   getNumSelections() {
@@ -313,6 +360,15 @@ class ToolbarData {
   }
 
   getToolbarTitle() {
+    if (this.appMode === AppMode.SplitCommands) {
+      return 'Add points';
+    }
+    if (this.appMode === AppMode.SplitSubPaths) {
+      return 'Split subpaths';
+    }
+    if (this.appMode === AppMode.MorphSubPaths) {
+      return 'Morph subpaths';
+    }
     const numSubPaths = this.getNumSubPaths();
     const subStr = `${numSubPaths} subpath${numSubPaths === 1 ? '' : 's'}`;
     const numSegments = this.getNumSegments();
@@ -331,6 +387,21 @@ class ToolbarData {
     return 'Shape Shifter';
   }
 
+  getToolbarSubtitle() {
+    if (this.appMode === AppMode.SplitCommands) {
+      return 'Click on the edge of a subpath to add a point';
+    } else if (this.appMode === AppMode.SplitSubPaths) {
+      if (this.isFilled) {
+        return 'Draw a line across a subpath to split it into 2';
+      } else if (this.isStroked) {
+        return 'Click on the edge of a subpath to split it into 2';
+      }
+    } else if (this.appMode === AppMode.MorphSubPaths) {
+      return '';
+    }
+    return '';
+  }
+
   getNumSplitSubPaths() {
     return this.numSplitSubPaths || 0;
   }
@@ -342,6 +413,11 @@ class ToolbarData {
   shouldShowSetFirstPosition() {
     return this.showSetFirstPosition || false;
   }
+
+  shouldShowShiftSubPath() {
+    return this.showShiftSubPath || false;
+  }
+
 
   shouldShowActionMode() {
     return this.getNumSelections() > 0 || !this.isSelectionMode();

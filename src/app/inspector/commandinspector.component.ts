@@ -18,7 +18,7 @@ import { CanvasType } from '../CanvasType';
 @Component({
   selector: 'app-commandinspector',
   templateUrl: './commandinspector.component.html',
-  styleUrls: ['./commandinspector.component.scss'],
+  styleUrls: ['./inspectoritem.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CommandInspectorComponent implements OnInit {

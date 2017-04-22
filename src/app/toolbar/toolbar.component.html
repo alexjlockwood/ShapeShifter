@@ -9,13 +9,15 @@
       numSegments: toolbarData.getNumSegments(),
       numPoints: toolbarData.getNumPoints(),
       toolbarTitle: toolbarData.getToolbarTitle(),
+      toolbarSubtitle: toolbarData.getToolbarSubtitle(),
       showAddPoints: toolbarData.getNumSubPaths() > 0 || !toolbarData.isSelectionMode(),
       showSplitSubPaths: toolbarData.getNumSubPaths() > 0 || !toolbarData.isSelectionMode(),
       showMorphSubPaths: toolbarData.getNumSubPaths() === 1 || !toolbarData.isSelectionMode(),
       showReverseSubPaths: toolbarData.getNumSubPaths() === 1,
+      showShiftSubPath: toolbarData.shouldShowShiftSubPath(),
+      showSetFirstPosition: toolbarData.shouldShowSetFirstPosition(),
       showDeleteSubPaths: toolbarData.getNumSplitSubPaths() > 0,
       showDeleteSegments: toolbarData.getNumSegments() > 0,
-      showSetFirstPosition: toolbarData.shouldShowSetFirstPosition(),
       showDeletePoints: toolbarData.getNumSplitPoints() > 0
     } as data">
 
@@ -29,7 +31,10 @@
     </button>
 
     <!-- Toolbar text. -->
-    <span>{{data.toolbarTitle}}</span>
+    <div fxLayout="column" fx>
+      <span class="toolbar-title">{{data.toolbarTitle}}</span>
+      <span *ngIf="data.toolbarSubtitle" class="toolbar-subtitle">{{data.toolbarSubtitle}}</span>
+    </div>
 
     <span fxFlex="1 1 auto"></span>
 
@@ -75,9 +80,20 @@
       [disabled]="!toolbarData.isSelectionMode()">
       <md-icon svgIcon="reverse"></md-icon>
     </button>
-    <!-- TODO: determine how we want to support deleting subpaths here -->
+    <button md-icon-button class="toolbar-action-button" mdTooltip="Shift back points (B)"
+      mdTooltipPosition="below" *ngIf="data.showShiftSubPath" mdTooltipShowDelay="300"
+      (click)="onShiftBackPointsClick()" (mouseenter)="onShiftBackPointsHover(true)"
+      (mouseleave)="onShiftBackPointsHover(false)" [disabled]="!toolbarData.isSelectionMode()">
+      <md-icon>skip_previous</md-icon>
+    </button>
+    <button md-icon-button class="toolbar-action-button" mdTooltip="Shift forward points (F)"
+      mdTooltipPosition="below" *ngIf="data.showShiftSubPath" mdTooltipShowDelay="300"
+      (click)="onShiftForwardPointsClick()" (mouseenter)="onShiftForwardPointsHover(true)"
+      (mouseleave)="onShiftForwardPointsHover(false)" [disabled]="!toolbarData.isSelectionMode()">
+      <md-icon>skip_next</md-icon>
+    </button>
     <button md-icon-button class="toolbar-action-button" mdTooltipPosition="below"
-      mdTooltip="Delete subpath{{data.numSubPaths === 1 ? '' : 's'}} (D)"
+      mdTooltip="Delete subpath{{data.numSubPaths === 1 ? '' : 's'}} (Backspace)"
       mdTooltipShowDelay="300" *ngIf="data.showDeleteSubPaths"
       (click)="onDeleteSubPathsClick()">
       <md-icon>delete</md-icon>
@@ -85,7 +101,7 @@
 
     <!-- Segment mode. -->
     <button md-icon-button class="toolbar-action-button" mdTooltipPosition="below"
-      mdTooltip="Delete segment{{data.numSegments === 1 ? '' : 's'}} (D)"
+      mdTooltip="Delete segment{{data.numSegments === 1 ? '' : 's'}} (Backspace)"
       mdTooltipShowDelay="300" *ngIf="data.showDeleteSegments"
       (click)="onDeleteSegmentsClick()">
       <md-icon>delete</md-icon>
@@ -99,7 +115,7 @@
       <md-icon>looks_one</md-icon>
     </button>
     <button md-icon-button class="toolbar-action-button" mdTooltipPosition="below"
-      mdTooltip="Delete point{{data.numPoints === 1 ? '' : 's'}} (D)"
+      mdTooltip="Delete point{{data.numPoints === 1 ? '' : 's'}} (Backspace)"
       mdTooltipShowDelay="300" *ngIf="data.showDeletePoints" (click)="onDeletePointsClick()">
       <md-icon>delete</md-icon>
     </button>

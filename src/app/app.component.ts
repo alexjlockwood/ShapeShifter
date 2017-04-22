@@ -47,6 +47,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   readonly SELECTION_MODE = AppMode.Selection;
   readonly SPLIT_COMMANDS_MODE = AppMode.SplitCommands;
   readonly SPLIT_SUBPATHS_MODE = AppMode.SplitSubPaths;
+  readonly MORPH_SUBPATHS_MODE = AppMode.MorphSubPaths;
 
   readonly MORPH_NONE = MorphStatus.None;
   readonly MORPH_UNMORPHABLE = MorphStatus.Unmorphable;
@@ -91,16 +92,8 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
         const endLayer = this.stateService.getActivePathLayer(CanvasType.End);
         if (!startLayer || !endLayer) {
           // TODO: should we display a message here? does this ever even happen?
-          return '';
-        }
-
-        if (appMode === AppMode.SplitSubPaths) {
           // TODO: show better user messaging when attempting to morph btw stroked and fill paths
-          if (startLayer.isFilled() && endLayer.isFilled()) {
-            return 'Draw a line across a subpath to split it into 2';
-          } else if (startLayer.isStroked() && endLayer.isStroked()) {
-            return 'Choose a point along a subpath to split it into 2';
-          }
+          return '';
         }
 
         // if (appMode === AppMode.Selection) {

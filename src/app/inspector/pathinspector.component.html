@@ -8,26 +8,22 @@
         <app-subpathinspector [canvasType]="START_CANVAS" [subIdx]="subPathCmdItem.subIdx"
           [subPath]="subPathCmdItem.startSubPath">
         </app-subpathinspector>
-        <ng-container *ngIf="shouldShowDetailsObservable | async">
-          <app-commandinspector [canvasType]="START_CANVAS" [subIdx]="subPathCmdItem.subIdx"
-            [cmdIdx]="cmdIdx" [command]="command" *ngFor="let command of subPathCmdItem.startCmdItems;
+        <app-commandinspector [canvasType]="START_CANVAS" [subIdx]="subPathCmdItem.subIdx"
+          [cmdIdx]="cmdIdx" [command]="command" *ngFor="let command of subPathCmdItem.startCmdItems;
                     let cmdIdx = index;
                     trackBy: trackCommand">
-          </app-commandinspector>
-        </ng-container>
+        </app-commandinspector>
       </div>
       <div class="subpath-border" [class.is-selected]="subPathCmdItem.isEndSubPathSelected"
         fxLayout="column">
         <app-subpathinspector [canvasType]="END_CANVAS" [subIdx]="subPathCmdItem.subIdx"
           [subPath]="subPathCmdItem.endSubPath">
         </app-subpathinspector>
-        <ng-container *ngIf="shouldShowDetailsObservable | async">
-          <app-commandinspector [canvasType]="END_CANVAS" [subIdx]="subPathCmdItem.subIdx"
-            [cmdIdx]="cmdIdx" [command]="command" *ngFor="let command of subPathCmdItem.endCmdItems;
+        <app-commandinspector [canvasType]="END_CANVAS" [subIdx]="subPathCmdItem.subIdx"
+          [cmdIdx]="cmdIdx" [command]="command" *ngFor="let command of subPathCmdItem.endCmdItems;
                     let cmdIdx = index;
                     trackBy: trackCommand">
-          </app-commandinspector>
-        </ng-container>
+        </app-commandinspector>
       </div>
     </div>
   </div>

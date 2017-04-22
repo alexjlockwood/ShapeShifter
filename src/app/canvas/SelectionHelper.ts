@@ -42,11 +42,8 @@ export class SelectionHelper {
     this.initialMouseDown = mouseDown;
     this.lastKnownMouseLocation = mouseDown;
 
-    const isMorphSubPathsMode =
-      this.component.appModeService.getAppMode() === AppMode.MorphSubPaths;
-
     const hitResult = this.performHitTest(mouseDown);
-    if (!isMorphSubPathsMode && hitResult.isEndPointHit) {
+    if (hitResult.isEndPointHit) {
       const { subIdx, cmdIdx, cmd } = this.findHitPoint(hitResult.endPointHits);
       if (cmd.isSplitPoint()) {
         // Then a click has occurred on top of a split point.
@@ -61,8 +58,7 @@ export class SelectionHelper {
       return;
     }
 
-    if (!isMorphSubPathsMode
-      && this.component.activePathLayer.isFilled()
+    if (this.component.activePathLayer.isFilled()
       && hitResult.isSegmentHit) {
       const { subIdx, cmdIdx, cmd } = this.findHitSegment(hitResult.segmentHits);
       if (cmd.isSplitSegment()) {
@@ -78,40 +74,7 @@ export class SelectionHelper {
 
     if (hitResult.isSegmentHit || hitResult.isShapeHit) {
       const hits = hitResult.isShapeHit ? hitResult.shapeHits : hitResult.segmentHits;
-      let { subIdx } = this.findHitSubPath(hits);
-      if (isMorphSubPathsMode) {
-        const oppSubPathSelections =
-          this.selectionService.getSelections()
-            .filter(s => {
-              return s.source !== this.canvasType
-                && s.type === SelectionType.SubPath
-                && s.subIdx !== subIdx;
-            });
-        if (oppSubPathSelections.length) {
-          let { source: fromSource, subIdx: fromSubIdx } = oppSubPathSelections[0];
-          let toSource = this.canvasType;
-          let toSubIdx = subIdx;
-          const numFromSubPaths =
-            this.stateService.getActivePathLayer(fromSource).pathData.getSubPaths()
-              .filter(s => !s.isCollapsing()).length;
-          if (toSubIdx >= numFromSubPaths) {
-            const tempFromSource = fromSource;
-            fromSource = toSource;
-            toSource = tempFromSource;
-            const tempFromSubIdx = fromSubIdx;
-            fromSubIdx = toSubIdx;
-            toSubIdx = tempFromSubIdx;
-          }
-          this.hoverService.resetAndNotify();
-          this.selectionService.resetAndNotify();
-          this.stateService.updateActivePath(
-            fromSource,
-            this.stateService.getActivePathLayer(fromSource).pathData.mutate()
-              .moveSubPath(fromSubIdx, toSubIdx)
-              .build());
-          subIdx = toSubIdx;
-        }
-      }
+      const { subIdx } = this.findHitSubPath(hits);
       this.selectionService.toggleSubPath(this.canvasType, subIdx, isShiftOrMetaPressed).notify();
     } else if (!isShiftOrMetaPressed) {
       // If the mouse down event didn't result in a hit, then

@@ -34,7 +34,7 @@ export class SelectionService {
     return this.getSelections().filter(s => s.type === SelectionType.Point);
   }
 
-  isSubPathIndexSelected(subIdx: number, restrictToCanvasType?: CanvasType) {
+  isSubPathSelected(subIdx: number, restrictToCanvasType?: CanvasType) {
     return this.getSelections().some(selection => {
       const type = SelectionType.SubPath;
       if (restrictToCanvasType === undefined) {

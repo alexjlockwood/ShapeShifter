@@ -17,12 +17,14 @@ import {
   HoverService, HoverType, Hover,
   SettingsService,
   FilePickerService,
+  MorphSubPathService,
 } from '../services';
 import { CanvasRulerDirective } from './canvasruler.directive';
 import { Observable } from 'rxjs/Observable';
 import { Subscription } from 'rxjs/Subscription';
 import { SegmentSplitter } from './SegmentSplitter';
 import { SelectionHelper } from './SelectionHelper';
+import { MorphSubPathHelper } from './MorphSubPathHelper';
 import { ShapeSplitter } from './ShapeSplitter';
 // import { PathUtil } from '../scripts/paths';
 
@@ -84,6 +86,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   private vlSize = { width: DEFAULT_VIEWPORT_SIZE, height: DEFAULT_VIEWPORT_SIZE };
   private currentHoverPreviewPath: Path;
   private selectionHelper: SelectionHelper | undefined;
+  private morphSubPathHelper: MorphSubPathHelper | undefined;
   private segmentSplitter: SegmentSplitter | undefined;
   private shapeSplitter: ShapeSplitter | undefined;
   private readonly subscriptions: Subscription[] = [];
@@ -101,6 +104,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     readonly selectionService: SelectionService,
     private readonly settingsService: SettingsService,
     private readonly filePickerService: FilePickerService,
+    readonly morphSubPathService: MorphSubPathService,
   ) { }
 
   ngAfterViewInit() {
@@ -132,6 +136,11 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           this.draw();
         }
       });
+    this.subscribeTo(this.morphSubPathService.asObservable(), () => {
+      // const unpairedSubPath = this.morphSubPathService.getCurrentUnpairedSubPath();
+      // const pairedSubPaths = this.morphSubPathService.getPairedSubPaths();
+      this.drawOverlays();
+    });
     this.subscriptions.push(
       this.canvasResizeService.asObservable()
         .subscribe(size => {
@@ -187,10 +196,21 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           } else {
             this.segmentSplitter = undefined;
           }
-          if (this.appMode === AppMode.Selection || this.appMode === AppMode.MorphSubPaths) {
+          if (this.appMode === AppMode.Selection) {
             this.selectionHelper = new SelectionHelper(this);
           } else {
             this.selectionHelper = undefined;
+          }
+          if (this.appMode === AppMode.MorphSubPaths) {
+            this.morphSubPathHelper = new MorphSubPathHelper(this);
+            this.morphSubPathService.reset();
+            const selections = this.selectionService.getSubPathSelections();
+            if (selections.length) {
+              const { source, subIdx } = selections[0];
+              this.morphSubPathService.setCurrentUnpairedSubPath(source, subIdx);
+            }
+          } else {
+            this.morphSubPathHelper = undefined;
           }
           if (this.appMode === AppMode.SplitSubPaths
             && this.activePathLayer
@@ -713,7 +733,33 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     this.executeCommands(ctx, cmds);
     this.executeHighlights(ctx, SPLIT_POINT_COLOR, this.unselectedSegmentLineWidth);
 
-    if (this.shapeSplitter) {
+    if (this.morphSubPathHelper) {
+      const currUnpair = this.morphSubPathService.getCurrentUnpairedSubPath();
+      if (currUnpair) {
+        const { source, subIdx } = currUnpair;
+        const subPath = this.activePath.getSubPath(subIdx);
+        if (source === this.canvasType) {
+          this.executeCommands(ctx, subPath.getCommands());
+          this.executeHighlights(ctx, SPLIT_POINT_COLOR, this.selectedSegmentLineWidth);
+        }
+      }
+      const pairedSubPaths = this.morphSubPathService.getPairedSubPaths();
+      if (pairedSubPaths.size) {
+        const pairedCmds: Command[] = [];
+        pairedSubPaths.forEach(subIdx => {
+          pairedCmds.push(...this.activePath.getSubPath(subIdx).getCommands());
+        });
+        this.executeCommands(ctx, pairedCmds);
+        this.executeHighlights(ctx, NORMAL_POINT_COLOR, this.selectedSegmentLineWidth);
+      }
+      if (this.currentHover
+        && this.currentHover.source === this.canvasType
+        && this.currentHover.type === HoverType.SubPath) {
+        const hoverCmds = this.activePath.getSubPath(this.currentHover.subIdx).getCommands();
+        this.executeCommands(ctx, hoverCmds);
+        this.executeHighlights(ctx, SPLIT_POINT_COLOR, this.selectedSegmentLineWidth);
+      }
+    } else if (this.shapeSplitter) {
       // If we are splitting a filled subpath, draw the in progress drag segment.
       const proj1 = this.shapeSplitter.getInitialProjectionOntoPath();
       const proj2 = this.shapeSplitter.getFinalProjectionOntoPath();
@@ -925,8 +971,10 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       return;
     }
     const mouseDown = this.mouseEventToPoint(event);
-    if (this.appMode === AppMode.Selection || this.appMode === AppMode.MorphSubPaths) {
+    if (this.appMode === AppMode.Selection) {
       this.selectionHelper.onMouseDown(mouseDown, event.shiftKey || event.metaKey);
+    } else if (this.appMode === AppMode.MorphSubPaths) {
+      this.morphSubPathHelper.onMouseDown(mouseDown, event.shiftKey || event.metaKey);
     } else if (this.appMode === AppMode.SplitCommands) {
       this.segmentSplitter.onMouseDown(mouseDown);
     } else if (this.appMode === AppMode.SplitSubPaths) {
@@ -945,8 +993,10 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       return;
     }
     const mouseMove = this.mouseEventToPoint(event);
-    if (this.appMode === AppMode.Selection || this.appMode === AppMode.MorphSubPaths) {
+    if (this.appMode === AppMode.Selection) {
       this.selectionHelper.onMouseMove(mouseMove);
+    } else if (this.appMode === AppMode.MorphSubPaths) {
+      this.morphSubPathHelper.onMouseMove(mouseMove);
     } else if (this.appMode === AppMode.SplitCommands) {
       this.segmentSplitter.onMouseMove(mouseMove);
     } else if (this.appMode === AppMode.SplitSubPaths) {
@@ -965,8 +1015,10 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       return;
     }
     const mouseUp = this.mouseEventToPoint(event);
-    if (this.appMode === AppMode.Selection || this.appMode === AppMode.MorphSubPaths) {
+    if (this.appMode === AppMode.Selection) {
       this.selectionHelper.onMouseUp(mouseUp, event.shiftKey || event.metaKey);
+    } else if (this.appMode === AppMode.MorphSubPaths) {
+      this.morphSubPathHelper.onMouseUp(mouseUp);
     } else if (this.appMode === AppMode.SplitCommands) {
       this.segmentSplitter.onMouseUp(mouseUp);
     } else if (this.appMode === AppMode.SplitSubPaths) {
@@ -985,9 +1037,11 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       return;
     }
     const mouseLeave = this.mouseEventToPoint(event);
-    if (this.appMode === AppMode.Selection || this.appMode === AppMode.MorphSubPaths) {
+    if (this.appMode === AppMode.Selection) {
       // TODO: how to handle the case where the mouse leaves and re-enters mid-gesture?
       this.selectionHelper.onMouseLeave(mouseLeave);
+    } else if (this.appMode === AppMode.MorphSubPaths) {
+      this.morphSubPathHelper.onMouseLeave(mouseLeave);
     } else if (this.appMode === AppMode.SplitCommands) {
       this.segmentSplitter.onMouseLeave(mouseLeave);
     } else if (this.appMode === AppMode.SplitSubPaths) {

@@ -1,4 +1,4 @@
-<div class="command-container" fxLayout="row" fxLayoutAlign="start center"
+<div class="inspector-item" fxLayout="row" fxLayoutAlign="start center"
   [class.is-selected]="isSelectedObservable | async" [class.is-hovering]="isHovering"
   (click)="onCommandClick($event)" (mouseenter)="onCommandHoverEvent(true)"
   (mouseleave)="onCommandHoverEvent(false)">
@@ -6,17 +6,17 @@
   <span class="command-text">{{ this.command | toSvgText }}</span>
   <span fxFlex></span>
   <button md-icon-button mdTooltip="Shift back points" mdTooltipPosition="above"
-    mdTooltipShowDelay="300" *ngIf="isShiftable()" (mouseenter)="onShiftBackHoverEvent(true)"
+    mdTooltipShowDelay="300" *ngIf="isShiftable() && false" (mouseenter)="onShiftBackHoverEvent(true)"
     (mouseleave)="onShiftBackHoverEvent(false)" (click)="onShiftBackClick($event)">
     <md-icon>skip_previous</md-icon>
   </button>
   <button md-icon-button mdTooltip="Shift forward points" mdTooltipPosition="above"
-    mdTooltipShowDelay="300" *ngIf="isShiftable()" (mouseenter)="onShiftForwardHoverEvent(true)"
+    mdTooltipShowDelay="300" *ngIf="isShiftable() && false" (mouseenter)="onShiftForwardHoverEvent(true)"
     (mouseleave)="onShiftForwardHoverEvent(false)" (click)="onShiftForwardClick($event)">
     <md-icon>skip_next</md-icon>
   </button>
   <button md-icon-button mdTooltip="Reverse points" mdTooltipPosition="above"
-    mdTooltipShowDelay="300" *ngIf="isReversible()" (mouseenter)="onReverseHoverEvent(true)"
+    mdTooltipShowDelay="300" *ngIf="isReversible() && false" (mouseenter)="onReverseHoverEvent(true)"
     (mouseleave)="onReverseHoverEvent(false)" (click)="onReverseClick($event)">
     <md-icon svgIcon="reverse"></md-icon>
   </button>
@@ -26,7 +26,7 @@
     <md-icon>delete</md-icon>
   </button>
   <button md-icon-button mdTooltip="Add point" mdTooltipPosition="above"
-    mdTooltipShowDelay="300" *ngIf="isSplittable()" (mouseenter)="onSplitHoverEvent(true)"
+    mdTooltipShowDelay="300" *ngIf="isSplittable() && false" (mouseenter)="onSplitHoverEvent(true)"
     (mouseleave)="onSplitHoverEvent(false)" (click)="onSplitButtonClick($event)">
     <md-icon>add</md-icon>
   </button>

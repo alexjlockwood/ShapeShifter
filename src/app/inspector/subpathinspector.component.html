@@ -1,10 +1,10 @@
-<div class="subpathitem-container" (mouseenter)="onSubPathHoverEvent(true)"
+<div class="inspector-item" (mouseenter)="onSubPathHoverEvent(true)"
   (mouseleave)="onSubPathHoverEvent(false)" (click)="onSubPathClick($event)"
   [class.is-hovering]="isHovering" fxLayout="row" fxLayoutAlign="start center">
   <strong><span class="subpath-text">{{subPathText}}</span></strong>
   <span fxFlex></span>
   <button md-icon-button mdTooltip="Delete subpath" mdTooltipPosition="above"
-    mdTooltipShowDelay="500" (mouseenter)="onDeleteSubPathHoverEvent(true)"
+    mdTooltipShowDelay="300" (mouseenter)="onDeleteSubPathHoverEvent(true)"
     (mouseleave)="onDeleteSubPathHoverEvent(false)" *ngIf="isUnsplittable()"
     (click)="onUnsplitButtonClick($event)">
     <md-icon>delete</md-icon>

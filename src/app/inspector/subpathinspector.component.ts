@@ -11,7 +11,7 @@ import { CanvasType } from '../CanvasType';
 @Component({
   selector: 'app-subpathinspector',
   templateUrl: './subpathinspector.component.html',
-  styleUrls: ['./subpathinspector.component.scss'],
+  styleUrls: ['./inspectoritem.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SubpathInspectorComponent implements OnInit {

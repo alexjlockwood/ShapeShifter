@@ -5,9 +5,10 @@
   </div>
   <div class="display-container" fxLayout="column" fxFlex>
     <!-- Start/Preview/End canvases. -->
-    <div #canvasContainer class="canvas-container" fxLayout="row"
-      (click)="onCanvasContainerClick()" [class.show-pen-cursor]="(appModeObservable | async) !== SELECTION_MODE"
-      fxLayoutAlign="center center" fxFlex>
+    <div #canvasContainer class="canvas-container" fxFlex fxLayout="row"
+      (click)="onCanvasContainerClick()" fxLayoutAlign="center center"
+      [class.show-pen-cursor]="![SELECTION_MODE, MORPH_SUBPATHS_MODE].includes(appModeObservable | async)">
+
       <app-canvas [canvasType]="START_CANVAS"></app-canvas>
       <app-canvas *ngIf="wasMorphable" [canvasType]="PREVIEW_CANVAS"></app-canvas>
       <app-canvas [canvasType]="END_CANVAS"></app-canvas>
@@ -56,22 +57,6 @@
             [innerHTML]="statusTextObservable | async">
           </span>
         </span>
-        <!--<span fxFlex></span>-->
-        <!--<button md-icon-button [disabled]="morphStatus === MORPH_NONE"
-          mdTooltip="Select points (S)" mdTooltipPosition="above"
-          (click)="appModeService.setAppMode(SELECTION_MODE)">
-          <md-icon class="svg-button" [class.activated]="(appModeObservable | async) === SELECTION_MODE" svgIcon="selectioncursor"></md-icon>
-        </button>
-        <button md-icon-button [disabled]="morphStatus === MORPH_NONE"
-          mdTooltip="Add points (A)" mdTooltipPosition="above"
-          (click)="appModeService.setAppMode(SPLIT_COMMANDS_MODE)">
-          <md-icon [class.activated]="(appModeObservable | async) === SPLIT_COMMANDS_MODE">add_circle_outline</md-icon>
-        </button>
-        <button md-icon-button [disabled]="morphStatus === MORPH_NONE"
-          mdTooltip="Split subpaths (C)" mdTooltipPosition="above"
-          (click)="appModeService.setAppMode(SPLIT_SUBPATHS_MODE)">
-          <md-icon [class.activated]="(appModeObservable | async) === SPLIT_SUBPATHS_MODE">content_cut</md-icon>
-        </button>-->
       </div>
       <app-pathinspector fxFlexFill></app-pathinspector>
     </div>

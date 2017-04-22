@@ -6,3 +6,4 @@ export { StateService, MorphStatus } from './state.service';
 export { SelectionService, Selection, SelectionType } from './selection.service';
 export { SettingsService } from './settings.service';
 export { FilePickerService } from './filepicker.service';
+export { MorphSubPathService } from './morphsubpath.service';

@@ -2,13 +2,10 @@ import { Component, OnInit, PipeTransform, Pipe, ChangeDetectionStrategy } from 
 import { SubPath, Command } from '../scripts/paths';
 import { CanvasType } from '../CanvasType';
 import {
-  StateService, SelectionService, Selection, AppModeService, AppMode
+  StateService, SelectionService, Selection, AppModeService
 } from '../services';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/combineLatest';
-
-// TODO: determine if we should disable this in some cases...
-const SHOULD_SHOW_DETAILS = true;
 
 @Component({
   selector: 'app-pathinspector',
@@ -20,7 +17,6 @@ export class PathInspectorComponent implements OnInit {
   START_CANVAS = CanvasType.Start;
   END_CANVAS = CanvasType.End;
   subPathItemsObservable: Observable<[string, string, ReadonlyArray<Selection>]>;
-  shouldShowDetailsObservable: Observable<boolean>;
 
   constructor(
     private readonly stateService: StateService,
@@ -34,13 +30,6 @@ export class PathInspectorComponent implements OnInit {
         this.stateService.getActivePathIdObservable(CanvasType.Start),
         this.stateService.getActivePathIdObservable(CanvasType.End),
         this.selectionService.asObservable());
-    this.shouldShowDetailsObservable =
-      this.appModeService.asObservable().map(appMode => {
-        if (SHOULD_SHOW_DETAILS) {
-          return true;
-        }
-        return appMode === AppMode.Selection || appMode === AppMode.SplitCommands;
-      });
   }
 
   trackSubPath(index: number, item: SubPathItem) {
@@ -104,7 +93,7 @@ export class SubPathItemsPipe implements PipeTransform {
         id += endSubPaths[i].getId();
         endCmdItems.push(...endSubPaths[i].getCommands());
       }
-      const isSubPathSelected = this.selectionService.isSubPathIndexSelected(i);
+      const isSubPathSelected = this.selectionService.isSubPathSelected(i);
       subPathItems.push(
         new SubPathItem(
           i,
