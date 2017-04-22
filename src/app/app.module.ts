@@ -40,7 +40,7 @@ import {
 } from './dialogs';
 
 // Pipes.
-import { SubPathItemsPipe } from './inspector/pathinspector.component';
+import { SubPathPairsPipe } from './inspector/pathinspector.component';
 import { SvgCommandPipe } from './inspector/commandinspector.component';
 
 import 'hammerjs';
@@ -61,7 +61,7 @@ import 'hammerjs';
     ConfirmDialogComponent,
     DemoDialogComponent,
     SvgCommandPipe,
-    SubPathItemsPipe,
+    SubPathPairsPipe,
   ],
   imports: [
     BrowserModule,

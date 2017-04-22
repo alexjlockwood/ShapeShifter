@@ -2,7 +2,10 @@ import { Component, OnInit, PipeTransform, Pipe, ChangeDetectionStrategy } from 
 import { SubPath, Command } from '../scripts/paths';
 import { CanvasType } from '../CanvasType';
 import {
-  StateService, SelectionService, Selection, AppModeService
+  StateService,
+  SelectionService, Selection, SelectionType,
+  AppModeService,
+  HoverService, Hover,
 } from '../services';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/combineLatest';
@@ -14,26 +17,29 @@ import 'rxjs/add/observable/combineLatest';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PathInspectorComponent implements OnInit {
-  START_CANVAS = CanvasType.Start;
-  END_CANVAS = CanvasType.End;
-  subPathItemsObservable: Observable<[string, string, ReadonlyArray<Selection>]>;
+  readonly START_CANVAS = CanvasType.Start;
+  readonly END_CANVAS = CanvasType.End;
+
+  pathInspectorObservable: Observable<[string, string, ReadonlyArray<Selection>, Hover]>;
 
   constructor(
     private readonly stateService: StateService,
     private readonly selectionService: SelectionService,
     private readonly appModeService: AppModeService,
+    private readonly hoverService: HoverService,
   ) { }
 
   ngOnInit() {
-    this.subPathItemsObservable =
+    this.pathInspectorObservable =
       Observable.combineLatest(
         this.stateService.getActivePathIdObservable(CanvasType.Start),
         this.stateService.getActivePathIdObservable(CanvasType.End),
-        this.selectionService.asObservable());
+        this.selectionService.asObservable(),
+        this.hoverService.asObservable());
   }
 
-  trackSubPath(index: number, item: SubPathItem) {
-    return item.subPathItemId;
+  trackSubPathPair(index: number, item: SubPathPair) {
+    return item.subPathPairId;
   }
 
   trackCommand(index: number, item: Command) {
@@ -41,28 +47,24 @@ export class PathInspectorComponent implements OnInit {
   }
 }
 
-class SubPathItem {
+class SubPathPair {
   constructor(
-    public readonly subIdx: number,
+    public readonly subPathPairId: string,
     public readonly startSubPath: SubPath,
     public readonly endSubPath: SubPath,
-    public readonly subPathItemId: string,
-    public readonly startCmdItems: Command[] = [],
-    public readonly endCmdItems: Command[] = [],
+    public readonly startCmds: Command[] = [],
+    public readonly endCmds: Command[] = [],
     public readonly isStartSubPathSelected = false,
     public readonly isEndSubPathSelected = false,
   ) { }
 }
 
-@Pipe({ name: 'toSubPathItems' })
-export class SubPathItemsPipe implements PipeTransform {
-  constructor(
-    private readonly stateService: StateService,
-    private readonly selectionService: SelectionService,
-  ) { }
+@Pipe({ name: 'toSubPathPairs' })
+export class SubPathPairsPipe implements PipeTransform {
+  constructor(private readonly stateService: StateService) { }
 
-  transform(items: [string, string, ReadonlyArray<Selection>]): SubPathItem[] {
-    const subPathItems: SubPathItem[] = [];
+  transform(items: [string, string, ReadonlyArray<Selection>, Hover]): SubPathPair[] {
+    const subPathPairs: SubPathPair[] = [];
 
     const getPathFn = (canvasType: CanvasType) => {
       const pathLayer = this.stateService.getActivePathLayer(canvasType);
@@ -72,40 +74,54 @@ export class SubPathItemsPipe implements PipeTransform {
       return pathLayer.pathData;
     };
 
-    const startPathCmd = getPathFn(CanvasType.Start);
-    const endPathCmd = getPathFn(CanvasType.End);
+    const startPath = getPathFn(CanvasType.Start);
+    const endPath = getPathFn(CanvasType.End);
     const startSubPaths =
-      startPathCmd ? startPathCmd.getSubPaths().filter(s => !s.isCollapsing()) : [];
+      startPath ? startPath.getSubPaths().filter(s => !s.isCollapsing()) : [];
     const endSubPaths =
-      endPathCmd ? endPathCmd.getSubPaths().filter(s => !s.isCollapsing()) : [];
+      endPath ? endPath.getSubPaths().filter(s => !s.isCollapsing()) : [];
     const numStartSubPaths = startSubPaths.length;
     const numEndSubPaths = endSubPaths.length;
-    for (let i = 0; i < Math.max(numStartSubPaths, numEndSubPaths); i++) {
-      const startCmdItems: Command[] = [];
-      const endCmdItems: Command[] = [];
-      let id = '';
-      if (i < numStartSubPaths) {
-        id += startSubPaths[i].getId();
-        startCmdItems.push(...startSubPaths[i].getCommands());
+    for (let subIdx = 0; subIdx < Math.max(numStartSubPaths, numEndSubPaths); subIdx++) {
+      const startCmds: Command[] = [];
+      const endCmds: Command[] = [];
+      let pairId = '';
+      if (subIdx < numStartSubPaths) {
+        pairId += startSubPaths[subIdx].getId();
+        startCmds.push(...startSubPaths[subIdx].getCommands());
       }
-      id += ',';
-      if (i < numEndSubPaths) {
-        id += endSubPaths[i].getId();
-        endCmdItems.push(...endSubPaths[i].getCommands());
+      pairId += ',';
+      if (subIdx < numEndSubPaths) {
+        pairId += endSubPaths[subIdx].getId();
+        endCmds.push(...endSubPaths[subIdx].getCommands());
       }
-      const isSubPathSelected = this.selectionService.isSubPathSelected(i);
-      subPathItems.push(
-        new SubPathItem(
-          i,
-          startSubPaths[i],
-          endSubPaths[i],
-          id,
-          startCmdItems,
-          endCmdItems,
-          isSubPathSelected,
-          isSubPathSelected,
+      const selections = items[2].slice();
+      const hover = items[3];
+      if (hover) {
+        const { subIdx: hoverSubIdx, source: hoverSource } = hover;
+        selections.push({
+          subIdx: hoverSubIdx,
+          source: hoverSource,
+          type: SelectionType.SubPath,
+        });
+      }
+      const isStartSubPathSelected = selections.some(s => {
+        return s.source === CanvasType.Start && s.subIdx === subIdx;
+      });
+      const isEndSubPathSelected = selections.some(s => {
+        return s.source === CanvasType.End && s.subIdx === subIdx;
+      });
+      subPathPairs.push(
+        new SubPathPair(
+          pairId,
+          startSubPaths[subIdx],
+          endSubPaths[subIdx],
+          startCmds,
+          endCmds,
+          isStartSubPathSelected,
+          isEndSubPathSelected,
         ));
     }
-    return subPathItems;
+    return subPathPairs;
   }
 }

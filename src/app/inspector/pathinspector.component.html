@@ -1,31 +1,35 @@
 <div fxLayout="column" class="path-container">
   <div class="subpath-container" *ngFor="
-       let subPathCmdItem of (subPathItemsObservable | async | toSubPathItems);
-       trackBy: trackSubPath">
+       let subPathPair of (pathInspectorObservable | async | toSubPathPairs);
+       let subIdx = index;
+       trackBy: trackSubPathPair">
     <div fxLayout="row">
-      <div class="subpath-border" [class.is-selected]="subPathCmdItem.isStartSubPathSelected"
-        fxLayout="column">
-        <app-subpathinspector [canvasType]="START_CANVAS" [subIdx]="subPathCmdItem.subIdx"
-          [subPath]="subPathCmdItem.startSubPath">
-        </app-subpathinspector>
-        <app-commandinspector [canvasType]="START_CANVAS" [subIdx]="subPathCmdItem.subIdx"
-          [cmdIdx]="cmdIdx" [command]="command" *ngFor="let command of subPathCmdItem.startCmdItems;
+      <div fxFlex="50%" fxLayout="row">
+        <div class="subpath-border" [class.is-selected]="subPathPair.isStartSubPathSelected"
+          fxLayout="column">
+          <app-subpathinspector [canvasType]="START_CANVAS" [subIdx]="subIdx"
+            [subPath]="subPathPair.startSubPath">
+          </app-subpathinspector>
+          <app-commandinspector [canvasType]="START_CANVAS" [subIdx]="subIdx"
+            [cmdIdx]="cmdIdx" [command]="cmd" *ngFor="let cmd of subPathPair.startCmds;
                     let cmdIdx = index;
                     trackBy: trackCommand">
-        </app-commandinspector>
+          </app-commandinspector>
+        </div>
       </div>
-      <div class="subpath-border" [class.is-selected]="subPathCmdItem.isEndSubPathSelected"
-        fxLayout="column">
-        <app-subpathinspector [canvasType]="END_CANVAS" [subIdx]="subPathCmdItem.subIdx"
-          [subPath]="subPathCmdItem.endSubPath">
-        </app-subpathinspector>
-        <app-commandinspector [canvasType]="END_CANVAS" [subIdx]="subPathCmdItem.subIdx"
-          [cmdIdx]="cmdIdx" [command]="command" *ngFor="let command of subPathCmdItem.endCmdItems;
+      <div fxFlex="50%" fxLayout="row">
+        <div class="subpath-border" [class.is-selected]="subPathPair.isEndSubPathSelected"
+          fxLayout="column">
+          <app-subpathinspector [canvasType]="END_CANVAS" [subIdx]="subIdx"
+            [subPath]="subPathPair.endSubPath">
+          </app-subpathinspector>
+          <app-commandinspector [canvasType]="END_CANVAS" [subIdx]="subIdx"
+            [cmdIdx]="cmdIdx" [command]="cmd" *ngFor="let cmd of subPathPair.endCmds;
                     let cmdIdx = index;
                     trackBy: trackCommand">
-        </app-commandinspector>
+          </app-commandinspector>
+        </div>
       </div>
     </div>
   </div>
-  <span fxFlex></span>
 </div>
