@@ -98,7 +98,6 @@ export class MorphSubPathHelper {
         source: this.canvasType,
         subIdx,
       });
-      this.component.resetCursor();
     }
   }
 
@@ -111,3 +110,24 @@ export class MorphSubPathHelper {
     return infos[lastSplitIndex < 0 ? infos.length - 1 : lastSplitIndex];
   }
 }
+
+// if (appMode === AppMode.Selection) {
+//   const subPathSelections = selections.filter(s => s.type === SelectionType.SubPath);
+//   if (subPathSelections.length) {
+//     const { source, subIdx } = subPathSelections[0];
+//     const startPath = startLayer.pathData;
+//     const endPath = endLayer.pathData;
+//     const isSourceStart = source === CanvasType.Start;
+//     const oppSubPaths =
+//       (isSourceStart ? endPath : startPath).getSubPaths().filter(s => !s.isCollapsing());
+//     const numOppSubPaths = oppSubPaths.length;
+//     const numAvailableOppSubPaths = numOppSubPaths - (subIdx < numOppSubPaths ? 1 : 0);
+//     const sourceSubPathName = `<i>Subpath #${subIdx + 1}${isSourceStart ? 'a' : 'b'}</i>`;
+//     if (!numAvailableOppSubPaths) {
+//       return `${sourceSubPathName} selected`;
+//     }
+//     const direction = isSourceStart ? 'right' : 'left';
+//     return `${sourceSubPathName} selected. `
+//       + `Choose a corresponding subpath on the ${direction} to customize the animation.`;
+//   }
+// }

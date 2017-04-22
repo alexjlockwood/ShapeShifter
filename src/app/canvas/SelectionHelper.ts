@@ -183,7 +183,6 @@ export class SelectionHelper {
     this.currentDraggableSplitIndex = undefined;
     this.isDragTriggered_ = false;
     this.lastKnownMouseLocation = undefined;
-    this.component.resetCursor();
   }
 
   isDragTriggered() {
@@ -210,7 +209,6 @@ export class SelectionHelper {
     const hitResult = this.performHitTest(mousePoint);
     if (!hitResult.isHit) {
       this.hoverService.resetAndNotify();
-      this.component.resetCursor();
     } else if (hitResult.isEndPointHit) {
       const { subIdx, cmdIdx } = this.findHitPoint(hitResult.endPointHits);
       this.hoverService.setHover({
@@ -219,7 +217,6 @@ export class SelectionHelper {
         subIdx,
         cmdIdx,
       });
-      this.component.showPointerCursor();
     } else if (hitResult.isSegmentHit || hitResult.isShapeHit) {
       const hits = hitResult.isShapeHit ? hitResult.shapeHits : hitResult.segmentHits;
       const { subIdx } = this.findHitSubPath(hits);
@@ -228,7 +225,6 @@ export class SelectionHelper {
         source: this.canvasType,
         subIdx,
       });
-      this.component.resetCursor();
     }
   }
 

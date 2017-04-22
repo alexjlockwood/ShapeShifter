@@ -34,28 +34,6 @@ export class SelectionService {
     return this.getSelections().filter(s => s.type === SelectionType.Point);
   }
 
-  isSubPathSelected(subIdx: number, restrictToCanvasType?: CanvasType) {
-    return this.getSelections().some(selection => {
-      const type = SelectionType.SubPath;
-      if (restrictToCanvasType === undefined) {
-        return areSelectionsEqual(selection, { type, source: CanvasType.Start, subIdx })
-          || areSelectionsEqual(selection, { type, source: CanvasType.End, subIdx });
-      }
-      return areSelectionsEqual(selection, { type, source: restrictToCanvasType, subIdx });
-    });
-  }
-
-  isPointSelected(subIdx: number, cmdIdx: number, restrictToCanvasType?: CanvasType) {
-    return this.getSelections().some(selection => {
-      const type = SelectionType.Point;
-      if (restrictToCanvasType === undefined) {
-        return areSelectionsEqual(selection, { type, source: CanvasType.Start, subIdx, cmdIdx })
-          || areSelectionsEqual(selection, { type, source: CanvasType.End, subIdx, cmdIdx });
-      }
-      return areSelectionsEqual(selection, { type, source: restrictToCanvasType, subIdx, cmdIdx });
-    });
-  }
-
   toggleSubPath(source: CanvasType, subIdx: number, appendToList = false) {
     // TODO: support multi-selection for subpaths
     appendToList = false;

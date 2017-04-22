@@ -5,14 +5,19 @@
   </div>
   <div class="display-container" fxLayout="column" fxFlex>
     <!-- Start/Preview/End canvases. -->
-    <div #canvasContainer class="canvas-container" fxFlex fxLayout="row"
-      (click)="onCanvasContainerClick()" fxLayoutAlign="center center"
-      [class.show-pen-cursor]="![SELECTION_MODE, MORPH_SUBPATHS_MODE].includes(appModeObservable | async)">
-
-      <app-canvas [canvasType]="START_CANVAS"></app-canvas>
-      <app-canvas *ngIf="wasMorphable" [canvasType]="PREVIEW_CANVAS"></app-canvas>
-      <app-canvas [canvasType]="END_CANVAS"></app-canvas>
-    </div>
+    <ng-container *ngIf="{type: (cursorObservable | async) } as cursor">
+      <div #canvasContainer class="canvas-container" fxFlex fxLayout="row"
+        (click)="onCanvasContainerClick()" fxLayoutAlign="center center"
+        [ngClass]="{
+          'show-default-cursor': cursor.type === CURSOR_DEFAULT,
+          'show-pointer-cursor': cursor.type === CURSOR_POINTER,
+          'show-pen-cursor': cursor.type === CURSOR_PEN
+        }">
+        <app-canvas [canvasType]="START_CANVAS"></app-canvas>
+        <app-canvas *ngIf="wasMorphable" [canvasType]="PREVIEW_CANVAS"></app-canvas>
+        <app-canvas [canvasType]="END_CANVAS"></app-canvas>
+      </div>
+    </ng-container>
     <!-- Timeline controls. -->
     <app-timeline></app-timeline>
   </div>

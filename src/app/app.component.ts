@@ -44,6 +44,10 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   readonly PREVIEW_CANVAS = CanvasType.Preview;
   readonly END_CANVAS = CanvasType.End;
 
+  readonly CURSOR_DEFAULT = CursorType.Default;
+  readonly CURSOR_POINTER = CursorType.Pointer;
+  readonly CURSOR_PEN = CursorType.Pen;
+
   readonly SELECTION_MODE = AppMode.Selection;
   readonly SPLIT_COMMANDS_MODE = AppMode.SplitCommands;
   readonly SPLIT_SUBPATHS_MODE = AppMode.SplitSubPaths;
@@ -53,7 +57,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   readonly MORPH_UNMORPHABLE = MorphStatus.Unmorphable;
   readonly MORPH_MORPHABLE = MorphStatus.Morphable;
 
-  appModeObservable: Observable<AppMode>;
+  cursorObservable: Observable<CursorType>;
   statusTextObservable: Observable<string>;
   wasMorphable = false;
 
@@ -80,7 +84,19 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   ) { }
 
   ngOnInit() {
-    this.appModeObservable = this.appModeService.asObservable();
+    this.cursorObservable =
+      Observable.combineLatest(
+        this.appModeService.asObservable(),
+        this.hoverService.asObservable(),
+      ).map(obj => {
+        const [appMode, hover] = obj;
+        if (appMode === AppMode.SplitCommands || appMode === AppMode.SplitSubPaths) {
+          return CursorType.Pen;
+        } else if (hover) {
+          return CursorType.Pointer;
+        }
+        return CursorType.Default;
+      });
     this.statusTextObservable =
       Observable.combineLatest(
         this.stateService.getMorphStatusObservable(),
@@ -95,27 +111,6 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
           // TODO: show better user messaging when attempting to morph btw stroked and fill paths
           return '';
         }
-
-        // if (appMode === AppMode.Selection) {
-        //   const subPathSelections = selections.filter(s => s.type === SelectionType.SubPath);
-        //   if (subPathSelections.length) {
-        //     const { source, subIdx } = subPathSelections[0];
-        //     const startPath = startLayer.pathData;
-        //     const endPath = endLayer.pathData;
-        //     const isSourceStart = source === CanvasType.Start;
-        //     const oppSubPaths =
-        //       (isSourceStart ? endPath : startPath).getSubPaths().filter(s => !s.isCollapsing());
-        //     const numOppSubPaths = oppSubPaths.length;
-        //     const numAvailableOppSubPaths = numOppSubPaths - (subIdx < numOppSubPaths ? 1 : 0);
-        //     const sourceSubPathName = `<i>Subpath #${subIdx + 1}${isSourceStart ? 'a' : 'b'}</i>`;
-        //     if (!numAvailableOppSubPaths) {
-        //       return `${sourceSubPathName} selected`;
-        //     }
-        //     const direction = isSourceStart ? 'right' : 'left';
-        //     return `${sourceSubPathName} selected. `
-        //       + `Choose a corresponding subpath on the ${direction} to customize the animation.`;
-        //   }
-        // }
 
         if (status === MorphStatus.Morphable) {
           const hasClosedPath =
@@ -157,6 +152,12 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     this.initKeyCodeListeners();
     this.initBeforeOnLoadListener();
 
+    this.subscriptions.push(
+      this.filePickerService.asObservable()
+        .subscribe((canvasType: CanvasType) => this.addPathsFromSvg(canvasType)));
+  }
+
+  ngAfterViewInit() {
     this.canvasContainer = $(this.canvasContainerRef.nativeElement);
     const updateCanvasSizes = () => {
       const numCanvases = this.wasMorphable ? 3 : 2;
@@ -176,16 +177,10 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
         updateCanvasSizes();
       }));
 
-    this.subscriptions.push(
-      this.filePickerService.asObservable()
-        .subscribe((canvasType: CanvasType) => this.addPathsFromSvg(canvasType)));
-
     ELEMENT_RESIZE_DETECTOR.listenTo(this.canvasContainer.get(0), el => {
       updateCanvasSizes();
     });
-  }
 
-  ngAfterViewInit() {
     if ('serviceWorker' in navigator) {
       const isFirstTimeUser = window.localStorage.getItem(STORAGE_KEY_FIRST_TIME_USER);
       if (!isFirstTimeUser) {
@@ -498,3 +493,8 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 }
 
+enum CursorType {
+  Default = 1,
+  Pointer,
+  Pen,
+}

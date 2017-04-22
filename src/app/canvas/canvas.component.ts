@@ -4,7 +4,7 @@ import {
   Component, AfterViewInit, OnDestroy, ElementRef, ViewChild,
   Input, ViewChildren, QueryList, ChangeDetectionStrategy
 } from '@angular/core';
-import { Path, SubPath, Command } from '../scripts/paths';
+import { Path, Command } from '../scripts/paths';
 import { PathLayer, ClipPathLayer, LayerUtil } from '../scripts/layers';
 import { CanvasType } from '../CanvasType';
 import { Point, Matrix, MathUtil, ColorUtil } from '../scripts/common';
@@ -75,11 +75,9 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   private renderingCanvas: JQuery;
   private overlayCanvas: JQuery;
   private offscreenLayerCanvas: JQuery;
-  private offscreenSubPathCanvas: JQuery;
   private renderingCtx: Context;
   private overlayCtx: Context;
   private offscreenLayerCtx: Context;
-  private offscreenSubPathCtx: Context;
   private isViewInit: boolean;
   private cssContainerWidth = 1;
   private cssContainerHeight = 1;
@@ -90,9 +88,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   private segmentSplitter: SegmentSplitter | undefined;
   private shapeSplitter: ShapeSplitter | undefined;
   private readonly subscriptions: Subscription[] = [];
-
-  // TODO: use this somehow in the UI?
-  private disabledSubPathIndices: number[] = [];
 
   constructor(
     private readonly elementRef: ElementRef,
@@ -113,17 +108,22 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     this.renderingCanvas = $(this.renderingCanvasRef.nativeElement);
     this.overlayCanvas = $(this.overlayCanvasRef.nativeElement);
     this.offscreenLayerCanvas = $(document.createElement('canvas'));
-    this.offscreenSubPathCanvas = $(document.createElement('canvas'));
     const getCtxFn = (canvas: JQuery) => {
       return (canvas.get(0) as HTMLCanvasElement).getContext('2d');
     };
     this.renderingCtx = getCtxFn(this.renderingCanvas);
     this.overlayCtx = getCtxFn(this.overlayCanvas);
     this.offscreenLayerCtx = getCtxFn(this.offscreenLayerCanvas);
-    this.offscreenSubPathCtx = getCtxFn(this.offscreenSubPathCanvas);
     this.subscribeTo(
       this.stateService.getActivePathIdObservable(this.canvasType),
-      () => {
+      (activePathId) => {
+        if (activePathId) {
+          this.canvasContainer.css({ cursor: '' });
+        } else {
+          // Use a pointer cursor over the canvas so the user knows
+          // they can click to upload an SVG.
+          this.canvasContainer.css({ cursor: 'pointer' });
+        }
         const vl = this.stateService.getVectorLayer(this.canvasType);
         const newWidth = vl ? vl.width : DEFAULT_VIEWPORT_SIZE;
         const newHeight = vl ? vl.height : DEFAULT_VIEWPORT_SIZE;
@@ -219,12 +219,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           } else {
             this.shapeSplitter = undefined;
           }
-          if (!this.activePathId) {
-            // Use a pointer cursor over the canvas so the user knows
-            // they can click to upload an SVG.
-            this.showPointerCursor();
-          }
-          this.resetCursor();
           this.currentHoverPreviewPath = undefined;
           this.draw();
         });
@@ -243,18 +237,18 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
             case HoverType.Unsplit:
               previewPath = mutator.unsplitCommand(subIdx, cmdIdx).build();
               break;
-            case HoverType.Reverse:
-              previewPath = mutator.reverseSubPath(subIdx).build();
-              break;
-            case HoverType.ShiftForward:
-              previewPath = mutator.shiftSubPathForward(subIdx).build();
-              break;
-            case HoverType.ShiftBack:
-              previewPath = mutator.shiftSubPathBack(subIdx).build();
-              break;
-            case HoverType.SetFirstPosition:
-              previewPath = mutator.shiftSubPathForward(subIdx, cmdIdx).build();
-              break;
+            // case HoverType.Reverse:
+            //   previewPath = mutator.reverseSubPath(subIdx).build();
+            //   break;
+            // case HoverType.ShiftForward:
+            //   previewPath = mutator.shiftSubPathForward(subIdx).build();
+            //   break;
+            // case HoverType.ShiftBack:
+            //   previewPath = mutator.shiftSubPathBack(subIdx).build();
+            //   break;
+            // case HoverType.SetFirstPosition:
+            // previewPath = mutator.shiftSubPathForward(subIdx, cmdIdx).build();
+            // break;
           }
         }
         this.currentHoverPreviewPath = previewPath;
@@ -401,14 +395,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       Matrix.flatten(...this.transformsForActiveLayer.reverse()));
   }
 
-  showPointerCursor() {
-    this.canvasContainer.css({ cursor: 'pointer' });
-  }
-
-  resetCursor() {
-    this.canvasContainer.css({ cursor: '' });
-  }
-
   performHitTest(mousePoint: Point, opts: HitTestOpts = {}) {
     const transformMatrix =
       Matrix.flatten(...this.transformsForActiveLayer.reverse()).invert();
@@ -452,7 +438,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       this.renderingCanvas,
       this.overlayCanvas,
       this.offscreenLayerCanvas,
-      this.offscreenSubPathCanvas,
     ];
     const { width: vlWidth, height: vlHeight } = this.vlSize;
     canvases.forEach(canvas => {
@@ -493,39 +478,9 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     // the layer's appearance.
     const layerCtx = currentAlpha < 1 ? this.offscreenLayerCtx : this.renderingCtx;
     if (this.shouldDrawLayers) {
-      const hasDisabledSubPaths = !!this.disabledSubPathIndices.length;
-      const subPathCtx = hasDisabledSubPaths ? this.offscreenSubPathCtx : layerCtx;
-      if (hasDisabledSubPaths) {
-        subPathCtx.save();
-        this.setupCtxWithViewportCoords(subPathCtx);
-      }
-
-      // Draw any disabled subpaths.
-      this.drawPaths(subPathCtx, layer => {
-        if (layer.id !== this.activePathId) {
-          return [];
-        }
-        return _.flatMap(layer.pathData.getSubPaths() as SubPath[],
-          (subPath, subIdx) => {
-            return this.disabledSubPathIndices.includes(subIdx)
-              ? subPath.getCommands() as Command[] : [];
-          });
-      });
-      if (hasDisabledSubPaths) {
-        this.drawTranslucentOffscreenCtx(layerCtx, subPathCtx, DISABLED_ALPHA);
-        subPathCtx.restore();
-      }
-
-      // Draw any enabled subpaths.
+      // TODO: display non-active paths as well?
       this.drawPaths(layerCtx, layer => {
-        if (layer.id !== this.activePathId) {
-          return [];
-        }
-        return _.flatMap(layer.pathData.getSubPaths() as SubPath[],
-          (subPath, subIdx) => {
-            return this.disabledSubPathIndices.includes(subIdx)
-              ? [] : subPath.getCommands() as Command[];
-          });
+        return layer.id === this.activePathId ? layer.pathData.getCommands() : [];
       });
     }
 
@@ -567,7 +522,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   ) {
     this.vectorLayer.walk(layer => {
       if (layer instanceof ClipPathLayer) {
-        // TODO: our SVG importer doesn't import clip paths... so this will never happen (yet)
         const transforms = LayerUtil.getTransformsForLayer(this.vectorLayer, layer.id);
         this.executeCommands(ctx, layer.pathData.getCommands(), transforms);
         ctx.clip();
@@ -687,24 +641,18 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       return;
     }
     if (this.selectionHelper) {
-      // Draw any highlighted segments. A segment will be highlighted if
-      // there is a subpath/point selection/hover that shares the same subIdx.
-      const selectedSubIdxs: Set<number> =
-        new Set<number>(
-          this.selectionService.getSelections()
-            .filter(s => s.type !== SelectionType.Segment)
-            .map(s => s.subIdx));
-
-      if (this.currentHover && this.currentHover.type !== HoverType.Segment) {
-        selectedSubIdxs.add(this.currentHover.subIdx);
-      }
-
-      const subPaths =
-        Array.from(selectedSubIdxs)
+      // Draw any highlighted subpaths. We'll highlight a subpath if a subpath
+      // selection or a point selection exists, but not a segment selection.
+      const selectedSubPaths =
+        _.chain(this.selectionService.getSelections())
+          .filter(s => s.type !== SelectionType.Segment && s.source === this.canvasType)
+          .map(s => s.subIdx)
+          .uniq()
           .map(subIdx => this.activePath.getSubPath(subIdx))
-          .filter(subPath => !subPath.isCollapsing());
+          .filter(subPath => !subPath.isCollapsing())
+          .value();
 
-      for (const subPath of subPaths) {
+      for (const subPath of selectedSubPaths) {
         const cmds = subPath.getCommands();
         const isSplitSubPath = cmds.some(c => c.isSplitSegment());
         const highlightColor = isSplitSubPath ? SPLIT_POINT_COLOR : HIGHLIGHT_COLOR;
@@ -871,9 +819,14 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       const isSelected = isPointInfoSelectedFn({ cmd, subIdx, cmdIdx });
       if ((isSelected || isHovering) && this.appMode === AppMode.Selection) {
         radius = this.mediumPointRadius * SELECTED_POINT_RADIUS_FACTOR;
+        const isPointSelectedFn = (source: CanvasType, sIdx: number, cIdx: number) => {
+          return this.selectionService.getPointSelections().some(s => {
+            return s.subIdx === sIdx && s.cmdIdx === cIdx && s.source === source;
+          });
+        };
         if ((isHovering && cmdIdx === this.currentHover.cmdIdx)
-          || this.selectionService.isPointSelected(CanvasType.Start, subIdx, cmdIdx)
-          || this.selectionService.isPointSelected(CanvasType.End, subIdx, cmdIdx)) {
+          || isPointSelectedFn(CanvasType.Start, subIdx, cmdIdx)
+          || isPointSelectedFn(CanvasType.End, subIdx, cmdIdx)) {
           radius /= SPLIT_POINT_RADIUS_FACTOR;
         }
         text = (cmdIdx + 1).toString();
