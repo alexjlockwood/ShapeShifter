@@ -136,11 +136,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           this.draw();
         }
       });
-    this.subscribeTo(this.morphSubPathService.asObservable(), () => {
-      // const unpairedSubPath = this.morphSubPathService.getCurrentUnpairedSubPath();
-      // const pairedSubPaths = this.morphSubPathService.getPairedSubPaths();
-      this.drawOverlays();
-    });
+    this.subscribeTo(this.morphSubPathService.asObservable(), () => this.drawOverlays());
     this.subscriptions.push(
       this.canvasResizeService.asObservable()
         .subscribe(size => {
@@ -351,6 +347,10 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     return MEDIUM_POINT_RADIUS / this.cssScale;
   }
 
+  private get splitPointRadius() {
+    return this.mediumPointRadius * SPLIT_POINT_RADIUS_FACTOR;
+  }
+
   private get highlightLineWidth() {
     return HIGHLIGHT_LINE_WIDTH / this.cssScale;
   }
@@ -406,12 +406,13 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
     const findShapesInRange = this.activePathLayer.isFilled() && !opts.noShapes;
     const restrictToSubIdx = opts.restrictToSubIdx;
-    return this.activePath.hitTest(transformedMousePoint, {
-      isPointInRangeFn,
-      isSegmentInRangeFn,
-      findShapesInRange,
-      restrictToSubIdx,
-    });
+    return this.activePath.hitTest(
+      transformedMousePoint, {
+        isPointInRangeFn,
+        isSegmentInRangeFn,
+        findShapesInRange,
+        restrictToSubIdx,
+      });
   }
 
   /**
@@ -630,10 +631,14 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
     if (this.selectionHelper) {
       // Draw any highlighted subpaths. We'll highlight a subpath if a subpath
-      // selection or a point selection exists, but not a segment selection.
+      // selection or a point selection exists.
       const selectedSubPaths =
         _.chain(this.selectionService.getSelections())
-          .filter(s => s.type !== SelectionType.Segment && s.source === this.canvasType)
+          .filter(s => {
+            return s.source === this.canvasType
+              && (s.type === SelectionType.Point
+                || s.type === SelectionType.SubPath);
+          })
           .map(s => s.subIdx)
           .uniq()
           .map(subIdx => this.activePath.getSubPath(subIdx))
@@ -641,6 +646,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           .value();
 
       for (const subPath of selectedSubPaths) {
+        // If the subpath has a split segment, highlight it in orange. Otherwise,
+        // use the default blue highlight color.
         const cmds = subPath.getCommands();
         const isSplitSubPath = cmds.some(c => c.isSplitSegment());
         const highlightColor = isSplitSubPath ? SPLIT_POINT_COLOR : HIGHLIGHT_COLOR;
@@ -651,12 +658,10 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       // Highlight the segment as the user hovers over it.
       const { subIdx, cmdIdx, projection: { d } } =
         this.segmentSplitter.getProjectionOntoPath();
-      const commands =
-        d < this.minSnapThreshold
-          ? [this.activePath.getCommand(subIdx, cmdIdx)]
-          : this.activePath.getCommands();
-      this.executeCommands(ctx, commands);
-      this.executeHighlights(ctx, SPLIT_POINT_COLOR, this.selectedSegmentLineWidth);
+      if (d < this.minSnapThreshold) {
+        this.executeCommands(ctx, [this.activePath.getCommand(subIdx, cmdIdx)]);
+        this.executeHighlights(ctx, SPLIT_POINT_COLOR, this.selectedSegmentLineWidth);
+      }
     }
 
     // Draw any existing split shape segments to the canvas.
@@ -672,6 +677,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     if (this.morphSubPathHelper) {
       const currUnpair = this.morphSubPathService.getUnpairedSubPath();
       if (currUnpair) {
+        // Draw the current unpaired subpath in orange, if it exists.
         const { source, subIdx } = currUnpair;
         const subPath = this.activePath.getSubPath(subIdx);
         if (source === this.canvasType) {
@@ -680,17 +686,24 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         }
       }
       const pairedSubPaths = this.morphSubPathService.getPairedSubPaths();
+      const hasHover =
+        this.currentHover
+        && this.currentHover.source === this.canvasType
+        && this.currentHover.type === HoverType.SubPath;
+      if (hasHover) {
+        pairedSubPaths.delete(this.currentHover.subIdx);
+      }
       if (pairedSubPaths.size) {
-        const pairedCmds: Command[] = [];
-        pairedSubPaths.forEach(subIdx => {
-          pairedCmds.push(...this.activePath.getSubPath(subIdx).getCommands());
-        });
+        // Draw any already paired subpaths in blue.
+        const pairedCmds =
+          _.flatMap(
+            Array.from(pairedSubPaths),
+            subIdx => this.activePath.getSubPath(subIdx).getCommands() as Command[]);
         this.executeCommands(ctx, pairedCmds);
         this.executeHighlights(ctx, NORMAL_POINT_COLOR, this.selectedSegmentLineWidth);
       }
-      if (this.currentHover
-        && this.currentHover.source === this.canvasType
-        && this.currentHover.type === HoverType.SubPath) {
+      if (hasHover) {
+        // Highlight the hover in orange, if it exists.
         const hoverCmds = this.activePath.getSubPath(this.currentHover.subIdx).getCommands();
         this.executeCommands(ctx, hoverCmds);
         this.executeHighlights(ctx, SPLIT_POINT_COLOR, this.selectedSegmentLineWidth);
@@ -732,6 +745,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   // Draw any labeled points.
   private drawLabeledPoints(ctx: Context) {
     if (this.canvasType === CanvasType.Preview && !this.shouldLabelPoints) {
+      // Only draw points on the preview canvas if the user has enabled the setting.
       return;
     }
 
@@ -746,6 +760,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       cmdIdx: number;
     }
 
+    // Create a list of all path points in their normal order.
     const pointInfos =
       _.chain(path.getSubPaths())
         .filter(subPath => !subPath.isCollapsing())
@@ -759,20 +774,26 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         .reverse()
         .value();
 
-    const selectedPointInfos =
-      _.remove(pointInfos, ({ subIdx, cmdIdx }: PointInfo) => {
-        return this.selectionService.getSubPathSelections().some(s => s.subIdx === subIdx)
-          || _.find(this.selectionService.getSelections(), s => {
-            return s.subIdx === subIdx && s.cmdIdx === cmdIdx;
-          });
-      });
+    const subPathSelections = this.selectionService.getSubPathSelections();
+    const pointSelections = this.selectionService.getPointSelections();
+
+    // Remove all selected points from the list.
     const isPointInfoSelectedFn = ({ subIdx, cmdIdx }: PointInfo) => {
-      return this.selectionService.getSubPathSelections().some(s => s.subIdx === subIdx)
-        || _.find(this.selectionService.getSelections(), s => s.subIdx === subIdx);
+      return subPathSelections.some(s => s.subIdx === subIdx)
+        || pointSelections.some(s => s.subIdx === subIdx && s.cmdIdx === cmdIdx);
     };
-    pointInfos.push(..._.remove(pointInfos, pi => isPointInfoSelectedFn(pi)));
+    const selectedPointInfos = _.remove(pointInfos, pi => isPointInfoSelectedFn(pi));
+    // Remove any subpath points that share the same subIdx as an existing selection.
+    // We'll call these 'medium' points (i.e. labeled, but not selected), and we'll
+    // always draw selected points on top of medium points, and medium points
+    // on top of small points.
+    const isPointInfoAtLeastMediumFn = ({ subIdx }: PointInfo) => {
+      return this.selectionService.getSelections().some(s => s.subIdx === subIdx);
+    };
+    pointInfos.push(..._.remove(pointInfos, pi => isPointInfoAtLeastMediumFn(pi)));
     pointInfos.push(...selectedPointInfos);
 
+    // Remove a hovering point, if one exists.
     const hoveringPointInfos =
       _.remove(pointInfos, ({ subIdx, cmdIdx }: PointInfo) => {
         const hover = this.currentHover;
@@ -781,12 +802,14 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           && hover.subIdx === subIdx
           && hover.cmdIdx === cmdIdx;
       });
+    // Remove any subpath points that share the same subIdx as an existing hover.
     const isPointInfoHoveringFn = ({ subIdx }: PointInfo) => {
       const hover = this.currentHover;
       return hover
         && hover.type !== HoverType.Segment
         && hover.subIdx === subIdx;
     };
+    // Similar to above, always draw hover points on top of subpath hover points.
     pointInfos.push(..._.remove(pointInfos, pi => isPointInfoHoveringFn(pi)));
     pointInfos.push(...hoveringPointInfos);
 
@@ -804,17 +827,17 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       let radius = this.smallPointRadius;
       let text: string = undefined;
       const isHovering = isPointInfoHoveringFn({ cmd, subIdx, cmdIdx });
-      const isSelected = isPointInfoSelectedFn({ cmd, subIdx, cmdIdx });
-      if ((isSelected || isHovering) && this.appMode === AppMode.Selection) {
+      const isAtLeastMedium = isPointInfoAtLeastMediumFn({ cmd, subIdx, cmdIdx });
+      if ((isAtLeastMedium || isHovering) && this.appMode === AppMode.Selection) {
         radius = this.mediumPointRadius * SELECTED_POINT_RADIUS_FACTOR;
-        const isPointSelectedFn = (source: CanvasType, sIdx: number, cIdx: number) => {
-          return this.selectionService.getPointSelections().some(s => {
+        const isPointEnlargedFn = (source: CanvasType, sIdx: number, cIdx: number) => {
+          return pointSelections.some(s => {
             return s.subIdx === sIdx && s.cmdIdx === cIdx && s.source === source;
           });
         };
         if ((isHovering && cmdIdx === this.currentHover.cmdIdx)
-          || isPointSelectedFn(CanvasType.Start, subIdx, cmdIdx)
-          || isPointSelectedFn(CanvasType.End, subIdx, cmdIdx)) {
+          || isPointEnlargedFn(CanvasType.Start, subIdx, cmdIdx)
+          || isPointEnlargedFn(CanvasType.End, subIdx, cmdIdx)) {
           radius /= SPLIT_POINT_RADIUS_FACTOR;
         }
         text = (cmdIdx + 1).toString();
@@ -846,8 +869,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     this.executeLabeledPoint(
       ctx,
       point,
-      this.mediumPointRadius *
-      SPLIT_POINT_RADIUS_FACTOR, SPLIT_POINT_COLOR);
+      this.splitPointRadius,
+      SPLIT_POINT_COLOR);
   }
 
   // Draw a floating point preview over the canvas in split commands mode
@@ -865,7 +888,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       this.executeLabeledPoint(
         ctx,
         this.applyGroupTransforms(new Point(x, y)),
-        this.mediumPointRadius * SPLIT_POINT_RADIUS_FACTOR,
+        this.splitPointRadius,
         SPLIT_POINT_COLOR);
     }
   }
@@ -881,7 +904,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       this.executeLabeledPoint(
         ctx,
         this.applyGroupTransforms(new Point(proj1.projection.x, proj1.projection.y)),
-        this.mediumPointRadius * SPLIT_POINT_RADIUS_FACTOR,
+        this.splitPointRadius,
         SPLIT_POINT_COLOR);
       if (this.shapeSplitter.willFinalProjectionOntoPathCreateSplitPoint()) {
         const endPoint = proj2
@@ -890,7 +913,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         this.executeLabeledPoint(
           ctx,
           endPoint,
-          this.mediumPointRadius * SPLIT_POINT_RADIUS_FACTOR,
+          this.splitPointRadius,
           SPLIT_POINT_COLOR);
       }
     } else if (this.shapeSplitter.getCurrentProjectionOntoPath()) {
@@ -899,7 +922,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         this.executeLabeledPoint(
           ctx,
           this.applyGroupTransforms(new Point(x, y)),
-          this.mediumPointRadius * SPLIT_POINT_RADIUS_FACTOR,
+          this.splitPointRadius,
           SPLIT_POINT_COLOR);
       }
     }
