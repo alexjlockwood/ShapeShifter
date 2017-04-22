@@ -1,6 +1,7 @@
-<div class="inspector-item" (mouseenter)="onSubPathHoverEvent(true)"
-  (mouseleave)="onSubPathHoverEvent(false)" (click)="onSubPathClick($event)"
-  [class.is-hovering]="isHovering" fxLayout="row" fxLayoutAlign="start center">
+<div class="inspector-item" [class.cursor-pointer]="!!subPath"
+  (mouseenter)="onSubPathHoverEvent(true)" (mouseleave)="onSubPathHoverEvent(false)"
+  (click)="onSubPathClick($event)" [class.is-hovering]="isHovering && subPath"
+  fxLayout="row" fxLayoutAlign="start center">
   <strong><span class="subpath-text">{{subPathText}}</span></strong>
   <span fxFlex></span>
   <button md-icon-button mdTooltip="Delete subpath" mdTooltipPosition="above"

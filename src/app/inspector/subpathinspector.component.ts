@@ -7,7 +7,6 @@ import {
 } from '../services';
 import { CanvasType } from '../CanvasType';
 
-// TODO: these need to be canvas-mode-aware
 @Component({
   selector: 'app-subpathinspector',
   templateUrl: './subpathinspector.component.html',
@@ -15,12 +14,13 @@ import { CanvasType } from '../CanvasType';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SubpathInspectorComponent implements OnInit {
-  START_CANVAS = CanvasType.Start;
-  END_CANVAS = CanvasType.End;
+  readonly START_CANVAS = CanvasType.Start;
+  readonly END_CANVAS = CanvasType.End;
 
   @Input() canvasType: CanvasType;
   @Input() subIdx: number;
   @Input() subPath: SubPath;
+
   isHovering = false;
   private isHoveringOverDeleteSubPath = false;
   private isHoveringOverSubPath = false;
@@ -42,10 +42,16 @@ export class SubpathInspectorComponent implements OnInit {
   }
 
   onSubPathClick(event: MouseEvent) {
+    if (!this.subPath) {
+      return;
+    }
     this.selectionService.toggleSubPath(this.canvasType, this.subIdx).notify();
   }
 
   onUnsplitButtonClick(event: MouseEvent) {
+    if (!this.subPath) {
+      return;
+    }
     const fromPathLayer = this.stateService.getActivePathLayer(this.canvasType);
     this.clearSelectionsAndHovers();
     if (fromPathLayer.isFilled()) {
@@ -87,11 +93,17 @@ export class SubpathInspectorComponent implements OnInit {
   }
 
   onSubPathHoverEvent(isHoveringOverSubPath: boolean) {
+    if (!this.subPath) {
+      return;
+    }
     this.isHoveringOverSubPath = isHoveringOverSubPath;
     this.broadcastHoverEvent(isHoveringOverSubPath, HoverType.SubPath);
   }
 
   onDeleteSubPathHoverEvent(isHoveringOverDeleteSubPath: boolean) {
+    if (!this.subPath) {
+      return;
+    }
     this.isHoveringOverDeleteSubPath = isHoveringOverDeleteSubPath;
     this.broadcastHoverEvent(isHoveringOverDeleteSubPath, HoverType.SubPath);
   }

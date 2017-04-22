@@ -8,7 +8,6 @@
   padding-bottom: 2px;
   padding-left: 4px;
   padding-right: 2px;
-  cursor: pointer;
   font-size: 13px;
   outline: none;
   color: $colorBlackTextSecondary;
@@ -44,4 +43,8 @@
   span.subpath-text {
     margin-right: 32px;
   }
+}
+
+.cursor-pointer {
+  cursor: pointer;
 }
