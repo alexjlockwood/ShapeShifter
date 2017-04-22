@@ -309,7 +309,7 @@ class ToolbarData {
         .filter(s => s.type === SelectionType.SubPath)
         .map(s => s.subIdx);
     this.segments =
-      _.chain(selections as Selection[])
+      _.chain(selections)
         .filter(s => {
           const { subIdx, cmdIdx } = s;
           return s.type === SelectionType.Segment

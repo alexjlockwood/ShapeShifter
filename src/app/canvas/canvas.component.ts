@@ -725,7 +725,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
     // Draw any existing split shape segments to the canvas.
     const cmds =
-      _.chain(this.activePath.getSubPaths() as SubPath[])
+      _.chain(this.activePath.getSubPaths())
         .filter(s => !s.isCollapsing())
         .flatMap(s => s.getCommands() as Command[])
         .filter(c => c.isSplitSegment())
@@ -811,7 +811,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
 
     const pointInfos =
-      _.chain(path.getSubPaths() as SubPath[])
+      _.chain(path.getSubPaths())
         .filter(subPath => !subPath.isCollapsing())
         .map((subPath, subIdx) => {
           return subPath.getCommands()

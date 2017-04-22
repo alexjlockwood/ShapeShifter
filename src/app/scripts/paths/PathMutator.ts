@@ -416,13 +416,13 @@ export class PathMutator {
     const newStates: SubPathState[] = [];
     const parent = this.findSubPathStateParent(subIdx);
     const parentSplitSegIds =
-      _.chain((parent ? parent.getCommandStates() : []) as CommandState[])
+      _.chain((parent ? parent.getCommandStates() : []))
         .flatMap(css => css)
         .filter(cs => !!cs.getSplitSegmentId())
         .map(cs => cs.getBackingId())
         .value();
     const splitSegCssIds =
-      _.chain(targetSps.getCommandStates() as CommandState[])
+      _.chain(targetSps.getCommandStates())
         .filter(cs => !!cs.getSplitSegmentId() && !parentSplitSegIds.includes(cs.getBackingId()))
         .map(cs => cs.getBackingId())
         .value();
@@ -460,7 +460,7 @@ export class PathMutator {
   deleteFilledSubPath(subIdx: number) {
     LOG('deleteFilledSubPath', subIdx);
     const splitSegIds = new Set<string>(
-      _.chain(this.findSubPathStateLeaf(subIdx).getCommandStates() as CommandState[])
+      _.chain(this.findSubPathStateLeaf(subIdx).getCommandStates())
         .map(cs => cs.getSplitSegmentId())
         .filter(id => !!id)
         .value()
