@@ -25,7 +25,6 @@ import {
   HoverService,
   ActionModeService,
 } from './services';
-import { deleteSelectedSplitPoints } from './services/selection.service';
 import { DemoUtil, DEMO_MAP } from './scripts/demos';
 import 'rxjs/add/observable/combineLatest';
 
@@ -209,9 +208,9 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
   onCanvasContainerClick() {
     // TODO: is this hacky? should we be using onBlur() to reset the app mode?
-    this.hoverService.resetAndNotify();
-    this.selectionService.resetAndNotify();
-    this.appModeService.setAppMode(AppMode.Selection);
+    if (this.actionModeService.isShowingActionMode()) {
+      this.actionModeService.closeActionMode();
+    }
   }
 
   private initKeyCodeListeners() {

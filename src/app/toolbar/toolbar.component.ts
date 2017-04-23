@@ -8,17 +8,11 @@ import {
   Selection,
   SelectionType,
   HoverService,
-  HoverType,
   AppModeService,
   AppMode,
   MorphSubPathService,
   ActionModeService,
 } from '../services';
-import {
-  deleteSelectedSplitSubPath,
-  deleteSelectedSplitSegment,
-  deleteSelectedSplitPoints,
-} from '../services/selection.service';
 import { CanvasType } from '../CanvasType';
 import { ExportUtil } from '../scripts/export';
 import { DialogService } from '../dialogs';
