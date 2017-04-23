@@ -198,7 +198,6 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     ELEMENT_RESIZE_DETECTOR.removeAllListeners(this.canvasContainer.get(0));
     this.subscriptions.forEach(s => s.unsubscribe());
     $(window).unbind('keydown');
-    $(window).unbind('keyup');
     $(window).unbind('beforeunload');
   }
 
@@ -220,8 +219,8 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
         return true;
       }
 
-      // const isMorphStatusNone = this.stateService.getMorphStatus() === MorphStatus.None;
-      const isMorphable = this.stateService.getMorphStatus() === MorphStatus.Morphable;
+      // const isMorphStatusNone = this.morphStatus === MorphStatus.None;
+      const isMorphable = this.morphStatus === MorphStatus.Morphable;
       if (event.keyCode === 8 || event.keyCode === 46) {
         // In case there's a JS error, never navigate away.
         event.preventDefault();
