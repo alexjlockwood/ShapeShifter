@@ -507,6 +507,7 @@ export class PathMutator {
         cs = splitCss1[i];
         if ((i + 1 < splitCss1.length && splitCss1[i + 1].getSplitSegmentId() === targetSegId)
           || cs.getBackingId() === parentBackingCmd1.getBackingId()) {
+          // Iterate until we reach the location of the first split.
           break;
         }
         newCss.push(cs);
@@ -522,6 +523,7 @@ export class PathMutator {
         cs = splitCss2[i];
         if ((i + 1 < splitCss2.length && splitCss2[i + 1].getSplitSegmentId() === targetSegId)
           || cs.getBackingId() === parentBackingCmd2.getBackingId()) {
+          // Iterate until we reach the location of the second split.
           break;
         }
         newCss.push(cs);
@@ -529,8 +531,12 @@ export class PathMutator {
       i = _.findIndex(splitCss1, c => c.getBackingId() === parentBackingCmd2.getBackingId());
       if (i >= 0) {
         if (splitCss1[i].getBackingId() === cs.getBackingId()) {
+          // If the split created a new point, then merge the left/right commands
+          // together to reconstruct the previous state.
           newCss.push(splitCss1[i].merge(cs));
         } else {
+          // If the split was done at an existing point, then simply push the next
+          // command state onto the list.
           newCss.push(cs);
         }
       } else {
