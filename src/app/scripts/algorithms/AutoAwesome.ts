@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 import { Path, Command, PathUtil } from '../paths';
-import { MathUtil } from '../common';
+import { MathUtil, Point } from '../common';
 
 // Needleman-Wunsch scoring function constants.
 const MATCH = 1;
@@ -36,6 +36,12 @@ export function autoFix(
     return fromPaths;
   };
 
+  // Approximate the centers of the start and end subpaths. We'll use this information
+  // to achieve a more accurate alignment score.
+  const fromCenter = srcFromPath.getPoleOfInaccessibility(subIdx);
+  const toCenter = srcToPath.getPoleOfInaccessibility(subIdx);
+  const centerOffset = new Point(toCenter.x - fromCenter.x, toCenter.y - fromCenter.y);
+
   // The scoring function to use to calculate the alignment. Convert-able
   // commands are considered matches. However, the farther away the points
   // are from each other, the lower the score.
@@ -45,9 +51,10 @@ export function autoFix(
       && !cmdB.canConvertTo(cmdA.getSvgChar())) {
       return MISMATCH;
     }
-    // TODO: if we are going to use distance as part of the scoring function,
-    // the value should be dependent on the SVG's viewport width/height.
-    const distance = Math.max(MATCH, MathUtil.distance(cmdA.getEnd(), cmdB.getEnd()));
+    const { x, y } = cmdA.getEnd();
+    const start = new Point(x + centerOffset.x, y + centerOffset.y);
+    const end = cmdB.getEnd();
+    const distance = Math.max(MATCH, MathUtil.distance(start, end));
     return 1 / distance;
   };
 
