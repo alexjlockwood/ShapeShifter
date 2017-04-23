@@ -520,14 +520,19 @@ export class PathMutator {
       }
       for (i = 2; i < splitCss2.length; i++) {
         cs = splitCss2[i];
-        if (cs.getBackingId() === parentBackingCmd2.getBackingId()) {
+        if ((i + 1 < splitCss2.length && splitCss2[i + 1].getSplitSegmentId() === targetSegId)
+          || cs.getBackingId() === parentBackingCmd2.getBackingId()) {
           break;
         }
         newCss.push(cs);
       }
       i = _.findIndex(splitCss1, c => c.getBackingId() === parentBackingCmd2.getBackingId());
       if (i >= 0) {
-        newCss.push(splitCss1[i].merge(cs));
+        if (splitCss1[i].getBackingId() === cs.getBackingId()) {
+          newCss.push(splitCss1[i].merge(cs));
+        } else {
+          newCss.push(cs);
+        }
       } else {
         i = parentBackingCmdIdx1 + 1;
         newCss.push(cs);

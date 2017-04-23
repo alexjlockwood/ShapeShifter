@@ -117,6 +117,10 @@ export function fromPathOpString(pathString: string, pathOpsString: string) {
         mutator.splitFilledSubPath(+A[i + 1], +A[i + 2], +A[i + 3]);
         i += 3;
         break;
+      case 'DFSP': // Delete filled sub path.
+        mutator.deleteFilledSubPath(+A[i + 1]);
+        i += 1;
+        break;
       case 'DSPSS': // Delete sub path split segment.
         mutator.deleteSubPathSplitSegment(+A[i + 1], +A[i + 2]);
         i += 2;
