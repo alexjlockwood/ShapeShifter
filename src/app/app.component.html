@@ -32,19 +32,20 @@
             mdTooltipShowDelay="300" [mdMenuTriggerFor]="addPathsMenu">
             <md-icon class="svg-button" svgIcon="addpaths"></md-icon>
           </button>
+          <!-- TODO: allow multiple files to be imported at once -->
           <md-menu #addPathsMenu="mdMenu">
             <button md-menu-item (click)="addPathsFromSvg()">
               Add paths from SVG
               <div>
                 <input id="addPathsFromSvgButton" type="file" accept=".svg"
-                  (change)="onSvgFilesPicked(($event.target || $event.srcElement).files)" multiple>
+                  (change)="onSvgFilesPicked(($event.target || $event.srcElement).files)">
               </div>
             </button>
             <button md-menu-item (click)="addPathsFromXml()">
               Add paths from Vector Drawable
               <div>
                 <input id="addPathsFromXmlButton" type="file" accept=".xml"
-                  (change)="onXmlFilesPicked(($event.target || $event.srcElement).files)" multiple>
+                  (change)="onXmlFilesPicked(($event.target || $event.srcElement).files)">
               </div>
             </button>
           </md-menu>
