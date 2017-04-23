@@ -23,6 +23,7 @@ import {
   MorphStatus,
   FilePickerService,
   HoverService,
+  ActionModeService,
 } from './services';
 import { deleteSelectedSplitPoints } from './services/selection.service';
 import { DemoUtil, DEMO_MAP } from './scripts/demos';
@@ -81,6 +82,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     private readonly canvasResizeService: CanvasResizeService,
     // This is public so that it can be accessed by the template.
     public readonly appModeService: AppModeService,
+    private readonly actionModeService: ActionModeService,
   ) { }
 
   ngOnInit() {
@@ -219,16 +221,26 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
         return true;
       }
 
-      // const isMorphStatusNone = this.morphStatus === MorphStatus.None;
       const isMorphable = this.morphStatus === MorphStatus.Morphable;
       if (event.keyCode === 8 || event.keyCode === 46) {
         // In case there's a JS error, never navigate away.
         event.preventDefault();
-        if (this.appModeService.getAppMode() === AppMode.Selection) {
-          // Can only delete points in selection mode.
-          deleteSelectedSplitPoints(
-            this.stateService,
-            this.selectionService);
+        if (this.actionModeService.isShowingSubPathActionMode()) {
+          // TODO: don't do anything if there are no subpaths to delete
+          this.actionModeService.deleteSubPaths();
+        } else if (this.actionModeService.isShowingSegmentActionMode()) {
+          // TODO: don't do anything if there are no segments to delete
+          this.actionModeService.deleteSegments();
+        } else if (this.actionModeService.isShowingPointActionMode()) {
+          // TODO: don't do anything if there are no points to delete
+          this.actionModeService.deletePoints();
+        }
+        return false;
+      }
+      if (event.keyCode === 27) {
+        // Escape.
+        if (this.actionModeService.isShowingActionMode()) {
+          this.actionModeService.closeActionMode();
         }
         return false;
       }
@@ -267,27 +279,52 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
         }
         return false;
       }
-      // if (event.keyCode === 83) {
-      //   // S.
-      //   if (!isMorphStatusNone) {
-      //     this.appModeService.setAppMode(AppMode.Selection);
-      //   }
-      //   return false;
-      // }
-      // if (event.keyCode === 65) {
-      //   // A.
-      //   if (!isMorphStatusNone) {
-      //     this.appModeService.setAppMode(AppMode.SplitCommands);
-      //   }
-      //   return false;
-      // }
-      // if (event.keyCode === 67) {
-      //   // C.
-      //   if (!isMorphStatusNone) {
-      //     this.appModeService.setAppMode(AppMode.SplitSubPaths);
-      //   }
-      //   return false;
-      // }
+      if (event.keyCode === 83) {
+        // S.
+        if (this.actionModeService.isShowingSubPathActionMode()) {
+          this.actionModeService.toggleSplitSubPathsMode();
+        }
+        return false;
+      }
+      if (event.keyCode === 65) {
+        // A.
+        if (this.actionModeService.isShowingSubPathActionMode()) {
+          this.actionModeService.toggleSplitCommandsMode();
+        } else if (this.actionModeService.isShowingPointActionMode()) {
+          this.actionModeService.splitInHalfClick();
+        }
+        return false;
+      }
+      if (event.keyCode === 80) {
+        // P.
+        if (this.actionModeService.isShowingSubPathActionMode()) {
+          this.actionModeService.toggleMorphSubPathsMode();
+        }
+        return false;
+      }
+      if (event.keyCode === 82) {
+        // R.
+        if (this.actionModeService.isShowingSubPathActionMode()) {
+          this.actionModeService.reversePoints();
+        }
+        return false;
+      }
+      if (event.keyCode === 66) {
+        // B.
+        if (this.actionModeService.isShowingSubPathActionMode()) {
+          this.actionModeService.shiftBackPoints();
+        }
+        return false;
+      }
+      if (event.keyCode === 70) {
+        // F.
+        if (this.actionModeService.isShowingSubPathActionMode()) {
+          this.actionModeService.shiftForwardPoints();
+        } else if (this.actionModeService.isShowingPointActionMode()) {
+          this.actionModeService.setFirstPosition();
+        }
+        return false;
+      }
       return undefined;
     });
   }
@@ -486,7 +523,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private autoLoadDemo() {
     setTimeout(() => {
-      DemoUtil.loadDemo(this.stateService, DEMO_MAP.get('Debug demos'));
+      DemoUtil.loadDemo(this.stateService, DEMO_MAP.get('Play-to-pause icon'));
     });
   }
 }

@@ -12,6 +12,7 @@ import {
   AppModeService,
   AppMode,
   MorphSubPathService,
+  ActionModeService,
 } from '../services';
 import {
   deleteSelectedSplitSubPath,
@@ -55,6 +56,7 @@ export class ToolbarComponent implements OnInit {
     private readonly appModeService: AppModeService,
     private readonly dialogService: DialogService,
     private readonly morphSubPathService: MorphSubPathService,
+    private readonly actionModeService: ActionModeService,
   ) { }
 
   ngOnInit() {
@@ -79,8 +81,7 @@ export class ToolbarComponent implements OnInit {
   }
 
   shouldShowActionMode() {
-    return this.selectionService.getSelections().length
-      || this.appModeService.getAppMode() !== AppMode.Selection;
+    return this.actionModeService.isShowingActionMode();
   }
 
   onNewClick() {
@@ -151,153 +152,56 @@ export class ToolbarComponent implements OnInit {
     ga('send', 'event', 'Miscellaneous', 'About click');
   }
 
-  // TODO: need to also support keyboard deletions
-  // TODO: support multi select/multi delete
-  // TODO: implement pair subpaths mode
-  // TODO: shift ops in action mode?
-  // TODO: implement hover hints (similar to inspector)
-  // TODO: need to improve how points are selected/enlarged in the canvas...
-
   onCloseActionModeClick() {
-    this.hoverService.resetAndNotify();
-    this.selectionService.resetAndNotify();
-    this.appModeService.setAppMode(AppMode.Selection);
+    this.actionModeService.closeActionMode();
   }
 
   onAddPointsClick() {
-    // TODO: prefer already selected subpaths over others when creating new points?
-    const appMode = this.appModeService.getAppMode();
-    this.appModeService.setAppMode(
-      appMode === AppMode.SplitCommands ? AppMode.Selection : AppMode.SplitCommands);
+    this.actionModeService.toggleSplitCommandsMode();
   }
 
   onSplitSubPathsClick() {
-    // TODO: prefer already selected subpaths over others when splitting new subpaths?
-    const appMode = this.appModeService.getAppMode();
-    this.appModeService.setAppMode(
-      appMode === AppMode.SplitSubPaths ? AppMode.Selection : AppMode.SplitSubPaths);
+    this.actionModeService.toggleSplitSubPathsMode();
   }
 
   onMorphSubPathsClick() {
-    const appMode = this.appModeService.getAppMode();
-    this.appModeService.setAppMode(
-      appMode === AppMode.MorphSubPaths ? AppMode.Selection : AppMode.MorphSubPaths);
-  }
-
-  onReversePointsHover(isHovering: boolean) {
-    const { source, subIdx } = this.selectionService.getSubPathSelections()[0];
-    if (isHovering) {
-      this.hoverService.setHoverAndNotify({ source, subIdx, type: HoverType.Reverse });
-    } else {
-      this.hoverService.resetAndNotify();
-    }
+    this.actionModeService.toggleMorphSubPathsMode();
   }
 
   onReversePointsClick() {
-    const selections = this.selectionService.getSubPathSelections();
-    const { source } = selections[0];
-    const pathMutator = this.stateService.getActivePathLayer(source).pathData.mutate();
-    for (const { subIdx } of this.selectionService.getSubPathSelections()) {
-      pathMutator.reverseSubPath(subIdx);
-    }
-    this.stateService.updateActivePath(source, pathMutator.build());
-    this.hoverService.resetAndNotify();
-  }
-
-  onShiftBackPointsHover(isHovering: boolean) {
-    const { source, subIdx } = this.selectionService.getSubPathSelections()[0];
-    if (isHovering) {
-      this.hoverService.setHoverAndNotify({ source, subIdx, type: HoverType.ShiftBack });
-    } else {
-      this.hoverService.resetAndNotify();
-    }
+    this.actionModeService.reversePoints();
   }
 
   onShiftBackPointsClick() {
-    const selections = this.selectionService.getSubPathSelections();
-    const { source } = selections[0];
-    const pathMutator = this.stateService.getActivePathLayer(source).pathData.mutate();
-    for (const { subIdx } of this.selectionService.getSubPathSelections()) {
-      pathMutator.shiftSubPathBack(subIdx);
-    }
-    this.stateService.updateActivePath(source, pathMutator.build());
-    this.hoverService.resetAndNotify();
-  }
-
-  onShiftForwardPointsHover(isHovering: boolean) {
-    const { source, subIdx } = this.selectionService.getSubPathSelections()[0];
-    if (isHovering) {
-      this.hoverService.setHoverAndNotify({ source, subIdx, type: HoverType.Reverse });
-    } else {
-      this.hoverService.resetAndNotify();
-    }
+    this.actionModeService.shiftBackPoints();
   }
 
   onShiftForwardPointsClick() {
-    const selections = this.selectionService.getSubPathSelections();
-    const { source } = selections[0];
-    const pathMutator = this.stateService.getActivePathLayer(source).pathData.mutate();
-    for (const { subIdx } of this.selectionService.getSubPathSelections()) {
-      pathMutator.shiftSubPathBack(subIdx);
-    }
-    this.stateService.updateActivePath(source, pathMutator.build());
-    this.hoverService.resetAndNotify();
+    this.actionModeService.shiftForwardPoints();
   }
 
   onDeleteSubPathsClick() {
-    deleteSelectedSplitSubPath(this.stateService, this.selectionService);
+    this.actionModeService.deleteSubPaths();
   }
 
   onDeleteSegmentsClick() {
-    deleteSelectedSplitSegment(this.stateService, this.selectionService);
-  }
-
-  onSetFirstPositionHover(isHovering: boolean) {
-    const { source, subIdx, cmdIdx } = this.selectionService.getPointSelections()[0];
-    if (isHovering) {
-      this.hoverService.setHoverAndNotify({
-        source, subIdx, cmdIdx, type: HoverType.SetFirstPosition,
-      });
-    } else {
-      this.hoverService.resetAndNotify();
-    }
+    this.actionModeService.deleteSegments();
   }
 
   onSetFirstPositionClick() {
-    const { source, subIdx, cmdIdx } = this.selectionService.getPointSelections()[0];
-    const activePath = this.stateService.getActivePathLayer(source).pathData;
-    this.stateService.updateActivePath(
-      source,
-      activePath.mutate()
-        .shiftSubPathForward(subIdx, cmdIdx)
-        .build());
-    this.selectionService.resetAndNotify();
+    this.actionModeService.setFirstPosition();
   }
 
   onSplitInHalfHoverEvent(isHovering: boolean) {
-    const { source, subIdx, cmdIdx } = this.selectionService.getPointSelections()[0];
-    if (isHovering) {
-      this.hoverService.setHoverAndNotify({
-        source, subIdx, cmdIdx, type: HoverType.Split,
-      });
-    } else {
-      this.hoverService.resetAndNotify();
-    }
+    this.actionModeService.splitInHalfHover(isHovering);
   }
 
   onSplitInHalfClick() {
-    const { source, subIdx, cmdIdx } = this.selectionService.getPointSelections()[0];
-    const activePath = this.stateService.getActivePathLayer(source).pathData;
-    this.stateService.updateActivePath(
-      source,
-      activePath.mutate()
-        .splitCommandInHalf(subIdx, cmdIdx)
-        .build());
-    this.selectionService.resetAndNotify();
+    this.actionModeService.splitInHalfClick();
   }
 
   onDeletePointsClick() {
-    deleteSelectedSplitPoints(this.stateService, this.selectionService);
+    this.actionModeService.deletePoints();
   }
 }
 

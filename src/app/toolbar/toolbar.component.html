@@ -77,20 +77,17 @@
     <button md-icon-button class="toolbar-action-button" mdTooltip="Reverse points (R)"
       mdTooltipPosition="below" *ngIf="data.showReverseSubPaths"
       mdTooltipShowDelay="300" (click)="onReversePointsClick()"
-      (mouseenter)="onReversePointsHover(true)" (mouseleave)="onReversePointsHover(false)"
       [disabled]="!toolbarData.isSelectionMode()">
       <md-icon svgIcon="reverse"></md-icon>
     </button>
     <button md-icon-button class="toolbar-action-button" mdTooltip="Shift back points (B)"
       mdTooltipPosition="below" *ngIf="data.showShiftSubPath" mdTooltipShowDelay="300"
-      (click)="onShiftBackPointsClick()" (mouseenter)="onShiftBackPointsHover(true)"
-      (mouseleave)="onShiftBackPointsHover(false)" [disabled]="!toolbarData.isSelectionMode()">
+      (click)="onShiftBackPointsClick()" [disabled]="!toolbarData.isSelectionMode()">
       <md-icon>skip_previous</md-icon>
     </button>
     <button md-icon-button class="toolbar-action-button" mdTooltip="Shift forward points (F)"
       mdTooltipPosition="below" *ngIf="data.showShiftSubPath" mdTooltipShowDelay="300"
-      (click)="onShiftForwardPointsClick()" (mouseenter)="onShiftForwardPointsHover(true)"
-      (mouseleave)="onShiftForwardPointsHover(false)" [disabled]="!toolbarData.isSelectionMode()">
+      (click)="onShiftForwardPointsClick()" [disabled]="!toolbarData.isSelectionMode()">
       <md-icon>skip_next</md-icon>
     </button>
     <button md-icon-button class="toolbar-action-button" mdTooltipPosition="below"
@@ -116,8 +113,7 @@
     </button>
     <button md-icon-button class="toolbar-action-button" mdTooltip="Set first point (F)"
       mdTooltipPosition="below" mdTooltipShowDelay="300" *ngIf="data.showSetFirstPosition"
-      (click)="onSetFirstPositionClick()" (mouseenter)="onSetFirstPositionHover(true)"
-      (mouseleave)="onSetFirstPositionHover(false)">
+      (click)="onSetFirstPositionClick()">
       <md-icon>looks_one</md-icon>
     </button>
     <button md-icon-button class="toolbar-action-button" mdTooltipPosition="below"
