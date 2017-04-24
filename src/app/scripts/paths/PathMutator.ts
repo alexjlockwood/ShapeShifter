@@ -448,15 +448,26 @@ export class PathMutator {
   }
 
   /**
-   * Deletes the filled subpath at the specified index. All adjacent subpaths
+   * Deletes the filled subpath at the specified index. All adjacent sibling subpaths
    * will be deleted as well (i.e. subpaths that share the same split segment id).
    */
   deleteFilledSubPath(subIdx: number) {
     LOG('deleteFilledSubPath', subIdx);
     const targetCss = this.findSubPathStateLeaf(subIdx).getCommandStates();
-    const splitSegIds =
-      new Set(_.chain(targetCss).map(cs => cs.getSplitSegmentId()).compact().value());
-    splitSegIds.forEach(id => {
+    const parentSplitSegIds =
+      _.chain(this.findSubPathStateParent(subIdx).getCommandStates())
+        .map(cs => cs.getSplitSegmentId())
+        .compact()
+        .uniq()
+        .value();
+    const siblingSplitSegIds =
+      _.chain(targetCss)
+        .map(cs => cs.getSplitSegmentId())
+        .compact()
+        .uniq()
+        .difference(parentSplitSegIds)
+        .value();
+    siblingSplitSegIds.forEach(id => {
       const targetCs = _.find(targetCss, cs => cs.getSplitSegmentId() === id);
       const deletedSubIdxs = this.calculateDeletedSubIdxs(subIdx, targetCs);
       this.deleteSubPathSplitSegmentInternal(subIdx, targetCs);
@@ -572,16 +583,16 @@ export class PathMutator {
    */
   private calculateDeletedSubIdxs(subIdx: number, targetCs: CommandState) {
     const splitSegId = targetCs.getSplitSegmentId();
-    const parentSps = findSplitSegmentParentNode(this.subPathStateMap, splitSegId);
-    const parentSplitSubPaths = parentSps.getSplitSubPaths();
-    const splitSubPathIdx1 = _.findIndex(parentSplitSubPaths, sps => {
+    const psps = findSplitSegmentParentNode(this.subPathStateMap, splitSegId);
+    const pssps = psps.getSplitSubPaths();
+    const splitSubPathIdx1 = _.findIndex(pssps, sps => {
       return sps.getCommandStates().some(cs => cs.getSplitSegmentId() === splitSegId);
     });
-    const splitSubPathIdx2 = _.findLastIndex(parentSplitSubPaths, sps => {
+    const splitSubPathIdx2 = _.findLastIndex(pssps, sps => {
       return sps.getCommandStates().some(cs => cs.getSplitSegmentId() === splitSegId);
     });
-    const pssp1 = parentSplitSubPaths[splitSubPathIdx1];
-    const pssp2 = parentSplitSubPaths[splitSubPathIdx2];
+    const pssp1 = pssps[splitSubPathIdx1];
+    const pssp2 = pssps[splitSubPathIdx2];
     const deletedSps = flattenSubPathStates([pssp1]).concat(flattenSubPathStates([pssp2]));
     const spss = flattenSubPathStates(this.subPathStateMap);
     return deletedSps.slice(1)

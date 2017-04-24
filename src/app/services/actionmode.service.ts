@@ -111,6 +111,7 @@ export class ActionModeService {
     const { source, subIdx } = selections[0];
     const activePathLayer = this.stateService.getActivePathLayer(source);
     this.selectionService.resetAndNotify();
+    this.hoverService.resetAndNotify();
     const mutator = activePathLayer.pathData.mutate();
     if (activePathLayer.isStroked()) {
       mutator.deleteStrokedSubPath(subIdx);
@@ -130,6 +131,7 @@ export class ActionModeService {
     const { source, subIdx, cmdIdx } = selections[0];
     const activePathLayer = this.stateService.getActivePathLayer(source);
     this.selectionService.resetAndNotify();
+    this.hoverService.resetAndNotify();
     const mutator = activePathLayer.pathData.mutate();
     mutator.deleteSubPathSplitSegment(subIdx, cmdIdx);
     this.stateService.updateActivePath(source, mutator.build());
@@ -189,6 +191,7 @@ export class ActionModeService {
       unsplitOpsMap.set(subIdx, subIdxOps);
     }
     this.selectionService.resetAndNotify();
+    this.hoverService.resetAndNotify();
     const mutator = activePathLayer.pathData.mutate();
     unsplitOpsMap.forEach((ops, idx) => {
       PathUtil.sortPathOps(ops);

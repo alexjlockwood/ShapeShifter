@@ -757,6 +757,22 @@ describe('Path', () => {
         'SIH 0 3 SIH 0 1 SFSP 0 1 4 SIH 1 4 SIH 1 2 SFSP 1 2 5 DFSPS 2 3',
         'M 4 4 h 16 v 16 h -16 v -16',
       ),
+      makeTest(
+        'M8 5v14l11-7L8 5',
+        'SIH 0 3 SIH 0 1 SFSP 0 1 4 SIH 1 4 SIH 1 2 SFSP 1 2 5 DFSP 0',
+        'M8 5v14l11-7L8 5',
+      ),
+      makeTest(
+        'M8 5v14l11-7L8 5',
+        'SIH 0 3 SIH 0 1 SFSP 0 1 4 SIH 1 4 SIH 1 2 SFSP 1 2 5 DFSP 1',
+        'M 8 5 L 8 12 L 13.5 8.5 L 8 5 M 8 12 L 8 19 L 19 12 L 13.5 8.5 L 8 12',
+      ),
+      makeTest(
+        'M8 5v14l11-7L8 5',
+        'SIH 0 3 SIH 0 1 SFSP 0 1 4 SIH 1 4 SIH 1 2 SFSP 1 2 5 DFSP 2',
+        'M 8 5 L 8 12 L 13.5 8.5 L 8 5 M 8 12 L 8 19 L 19 12 L 13.5 8.5 L 8 12',
+      ),
+
       // TODO: determine if this is the right behavior
       // makeTest(
       //   'M 4 4 h 16 v 16 h -16 v -16',
