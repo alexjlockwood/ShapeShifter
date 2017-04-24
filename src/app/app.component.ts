@@ -12,7 +12,7 @@ import { Observable } from 'rxjs/Observable';
 import { CanvasType } from './CanvasType';
 import { VectorLayer, PathLayer, LayerUtil } from './scripts/layers';
 import { SvgLoader, VectorDrawableLoader } from './scripts/import';
-import { SubPath, Command } from './scripts/paths';
+import { SubPath } from './scripts/paths';
 import {
   AnimatorService,
   CanvasResizeService,
@@ -103,6 +103,8 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
         this.stateService.getMorphStatusObservable(),
         this.selectionService.asObservable(),
         this.appModeService.asObservable(),
+        this.stateService.getActivePathIdObservable(CanvasType.Start),
+        this.stateService.getActivePathIdObservable(CanvasType.End),
       ).map(obj => {
         const status = obj[0];
         const startLayer = this.stateService.getActivePathLayer(CanvasType.Start);
@@ -119,22 +121,15 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
               .flatMap(path => path.getSubPaths() as SubPath[])
               .some((subPath: SubPath) => subPath.isClosed() && !subPath.isCollapsing())
               .value();
-          const hasSplitCmd =
-            _.chain([CanvasType.Start, CanvasType.End])
-              .map(type => this.stateService.getActivePathLayer(type).pathData)
-              .flatMap(path => path.getCommands() as Command[])
-              .some((cmd: Command) => cmd.isSplitPoint())
-              .value();
-          return `Reverse${hasClosedPath ? ', shift' : ''} or drag `
-            + `the points below ${hasSplitCmd ? 'or drag the orange points above' : ''} `
-            + `to customize the animation`;
+          return `Reverse${hasClosedPath ? ', shift,' : ''} or create new `
+            + `points above to customize the animation`;
         }
         if (status === MorphStatus.Unmorphable) {
-          const startCommand = startLayer.pathData;
-          const endCommand = endLayer.pathData;
-          for (let i = 0; i < startCommand.getSubPaths().length; i++) {
-            const startCmds = startCommand.getSubPaths()[i].getCommands();
-            const endCmds = endCommand.getSubPaths()[i].getCommands();
+          const startPath = startLayer.pathData;
+          const endPath = endLayer.pathData;
+          for (let i = 0; i < startPath.getSubPaths().length; i++) {
+            const startCmds = startPath.getSubPath(i).getCommands();
+            const endCmds = endPath.getSubPath(i).getCommands();
             if (startCmds.length !== endCmds.length) {
               const pathLetter = startCmds.length < endCmds.length ? 'a' : 'b';
               const diff = Math.abs(startCmds.length - endCmds.length);

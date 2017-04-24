@@ -25,7 +25,6 @@ import { SegmentSplitter } from './SegmentSplitter';
 import { SelectionHelper } from './SelectionHelper';
 import { MorphSubPathHelper } from './MorphSubPathHelper';
 import { ShapeSplitter } from './ShapeSplitter';
-// import { PathUtil } from '../scripts/paths';
 
 const SPLIT_POINT_RADIUS_FACTOR = 0.8;
 const SELECTED_POINT_RADIUS_FACTOR = 1.25;
@@ -114,15 +113,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     this.offscreenLayerCtx = getCtxFn(this.offscreenLayerCanvas);
     this.subscribeTo(
       this.stateService.getActivePathIdObservable(this.canvasType),
-      (activePathId) => {
-        // TODO: reenable this stuff when fixed?
-        // if (activePathId || this.canvasType === CanvasType.Preview) {
-        // this.canvasContainer.css({ cursor: '' });
-        // } else {
-        // Use a pointer cursor over the canvas so the user knows
-        // they can click to upload an SVG.
-        // this.canvasContainer.css({ cursor: 'pointer' });
-        // }
+      () => {
         const vl = this.stateService.getVectorLayer(this.canvasType);
         const newWidth = vl ? vl.width : DEFAULT_VIEWPORT_SIZE;
         const newHeight = vl ? vl.height : DEFAULT_VIEWPORT_SIZE;
@@ -1037,29 +1028,15 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  // private isFirstClick = true;
   onClick(event: MouseEvent) {
     // TODO: is this hacky? should we be using onBlur() to reset the app mode?
     // This ensures that parents won't also receive the same click event.
     event.cancelBubble = true;
 
-    // if (this.isFirstClick) {
-    //   this.selectionService.reset();
-    //   this.hoverService.reset();
-    //   this.stateService.updateActivePath(
-    //     this.canvasType,
-    //     PathUtil.fromPathOpString(
-    //       'M 4 4 h 16 v 16 h -16 v -16',
-    //       'SIH 0 4 SIH 0 2 SFSP 0 2 5 SIH 0 3 SIH 0 1 SFSP 0 1 4 SIH 1 3 SIH 1 1 SFSP 1 1 4',
-    //     ));
-    //   this.isFirstClick = false;
-    // }
-
-    // if (this.activePathId) {
-    //   return;
-    // }
     // TODO: re-enable this when fixed
-    // this.filePickerService.showFilePicker(this.canvasType);
+    // if (!this.activePathId) {
+    //   this.filePickerService.showFilePicker(this.canvasType);
+    // }
   }
 
   /**

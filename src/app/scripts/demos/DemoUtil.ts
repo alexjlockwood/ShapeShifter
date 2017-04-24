@@ -14,6 +14,6 @@ export function loadDemo(lss: StateService, selectedSvgStrings: ReadonlyArray<st
   }
   lss.addVectorLayers(vls, false /* shouldNotify */);
   const shuffledAvailableIds = _.shuffle(LayerUtil.getAllIds(vls, l => l instanceof PathLayer));
-  lss.setActivePathId(CanvasType.Start, shuffledAvailableIds[0], true /* shouldNotify */);
-  lss.setActivePathId(CanvasType.End, shuffledAvailableIds[1], true /* shouldNotify */);
+  lss.setActivePathId(CanvasType.Start, shuffledAvailableIds[0]);
+  lss.setActivePathId(CanvasType.End, shuffledAvailableIds[1]);
 }
