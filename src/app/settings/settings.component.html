@@ -14,9 +14,8 @@
           step="10" name="duration" [(ngModel)]="duration" type="number">
       </md-input-container>
       <md-input-container fxFlex>
-        <input mdInput [disabled]="(shouldDisableSettingsObservable | async) ? '' : undefined"
-          placeholder="Rotation" value="0" min="0" max="720" step="10"
-          name="rotation" [(ngModel)]="rotation" type="number">
+        <input mdInput placeholder="Rotation" value="0" min="0" max="720"
+          step="10" name="rotation" [(ngModel)]="rotation" type="number">
       </md-input-container>
     </div>
     <div>
