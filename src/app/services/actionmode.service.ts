@@ -121,7 +121,6 @@ export class ActionModeService {
       activePath.mutate()
         .shiftSubPathForward(subIdx, cmdIdx)
         .build());
-    this.selectionService.resetAndNotify();
   }
 
   splitInHalfHover(isHovering: boolean) {
