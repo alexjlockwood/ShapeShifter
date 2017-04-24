@@ -41,7 +41,6 @@ export function newCalculator(cmd: Command): Calculator {
     return new BezierCalculator(
       cmd.getId(), cmd.getSvgChar(), pts[0], pts[1], pts[2], pts[3]);
   }
-  // TODO: create an elliptical arc path helper some day?
   throw new Error('Invalid command type: ' + cmd.getSvgChar());
 }
 

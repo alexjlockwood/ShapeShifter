@@ -118,7 +118,6 @@ export class LineCalculator implements Calculator {
     return { x, y } as BBox;
   }
 
-  // TODO: test this
   intersects(line: Line) {
     if (this.p1.equals(this.p2)) {
       // Points can't be intersected.

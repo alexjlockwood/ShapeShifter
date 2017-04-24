@@ -44,7 +44,7 @@ export function loadVectorLayerFromSvgString(
       .replace(/[^\w_]+/g, '');
   };
 
-  // TODO: how should we protect against duplicate ids in separate vector layers?
+  // TODO: need to confirm we protect against duplicate ids in separate vector layers
   const usedIds = new Set<string>(existingLayerIds);
   usedIds.add(ROTATION_GROUP_LAYER_ID);
 

@@ -19,7 +19,7 @@ import {
 // TODO: add css prefixes to keyframes generation to support all browsers
 // TODO: generate non-cubic-bezier interpolators correctly
 const SHOULD_EXPORT_CSS_KEYFRAMES = !environment.production && true;
-// TODO: round widths/heights to nearest pixel to avoid weird offses
+// TODO: round widths/heights to nearest pixel to avoid weird offsets
 const SHOULD_EXPORT_SVG_SPRITE = !environment.production && true;
 
 export function generateZip(
@@ -350,7 +350,6 @@ function createPathSvgTarget(
   return new SvgTarget(startLayer.id, svgAnimations);
 }
 
-// TODO: also export the original SVG files?
 function createExportReadme() {
   return `=== Assets exported by Shape Shifter (https://shapeshifter.design) ===
 

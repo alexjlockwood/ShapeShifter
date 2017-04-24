@@ -60,7 +60,6 @@ export class SelectionHelper {
     if (this.component.activePathLayer.isFilled() && hitResult.isSegmentHit) {
       const { subIdx, cmdIdx, cmd } = this.findHitSegment(hitResult.segmentHits);
       if (cmd.isSplitSegment()) {
-        // TODO: highlight connected split segments as well?
         this.selectionService.toggleSegments(
           this.canvasType, [{ subIdx, cmdIdx }], isShiftOrMetaPressed).notify();
         return;

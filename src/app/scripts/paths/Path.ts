@@ -65,11 +65,6 @@ export interface Path {
   getPoleOfInaccessibility(subIdx: number): Point;
 
   /**
-   * Returns a list of all descendant split segments.
-   */
-  getConnectedSplitSegments(subIdx: number, cmdIdx: number): ReadonlyArray<Index>;
-
-  /**
    * Creates a builder that can create a mutated Path object.
    */
   mutate(): PathMutator;

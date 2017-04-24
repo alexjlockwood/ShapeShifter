@@ -62,7 +62,6 @@ export class BezierCalculator implements Calculator {
       throw new Error('Attempt to convert an undefined svgChar');
     }
     if (this.svgChar === 'Q' && svgChar === 'C') {
-      // TODO: double check this math
       const qcp0 = this.points[0];
       const qcp1 = this.points[1];
       const qcp2 = this.points[2];

@@ -86,7 +86,6 @@ export class CanvasRulerDirective implements OnInit, OnDestroy {
     }
   }
 
-  // TODO: ruler doesn't align right for 800x600 viewport in a small window
   draw() {
     const isHorizontal = this.orientation === 'horizontal';
     const vectorAspectRatio = this.vlWidth / this.vlHeight;
