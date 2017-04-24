@@ -217,8 +217,8 @@ export class SelectionHelper {
       });
       return;
     }
-    if (hitResult.isSegmentHit || hitResult.isShapeHit) {
-      if (hitResult.isSegmentHit) {
+    if (hitResult.isSegmentHit) {
+      if (this.component.activePathLayer.isFilled()) {
         const { subIdx, cmdIdx } = this.findHitSegment(hitResult.segmentHits);
         if (this.component.activePath.getCommand(subIdx, cmdIdx).isSplitSegment()) {
           this.hoverService.setHoverAndNotify({
@@ -229,9 +229,8 @@ export class SelectionHelper {
           });
           return;
         }
-      }
-      if (hitResult.isShapeHit) {
-        const { subIdx } = this.findHitSubPath(hitResult.shapeHits);
+      } else if (this.component.activePathLayer.isStroked()) {
+        const { subIdx } = this.findHitSegment(hitResult.segmentHits);
         this.hoverService.setHoverAndNotify({
           type: HoverType.SubPath,
           source: this.canvasType,
@@ -239,6 +238,15 @@ export class SelectionHelper {
         });
         return;
       }
+    }
+    if (hitResult.isShapeHit && this.component.activePathLayer.isFilled()) {
+      const { subIdx } = this.findHitSubPath(hitResult.shapeHits);
+      this.hoverService.setHoverAndNotify({
+        type: HoverType.SubPath,
+        source: this.canvasType,
+        subIdx,
+      });
+      return;
     }
   }
 

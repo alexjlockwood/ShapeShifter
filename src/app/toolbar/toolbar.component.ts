@@ -63,8 +63,6 @@ export class ToolbarComponent implements OnInit {
         this.appModeService.asObservable(),
         this.morphSubPathService.asObservable());
     this.toolbarObservable = combinedObservable.map(() => {
-      const selections = this.selectionService.getSelections();
-      const appMode = this.appModeService.getAppMode();
       const selectionInfo = this.createToolbarData();
       if (selectionInfo.getNumSelections() > 0) {
         this.hasActionModeBeenEnabled = true;
@@ -82,6 +80,11 @@ export class ToolbarComponent implements OnInit {
   }
 
   shouldShowActionMode() {
+    const startLayer = this.stateService.getActivePathLayer(CanvasType.Start);
+    const endLayer = this.stateService.getActivePathLayer(CanvasType.End);
+    if (!startLayer || !endLayer) {
+      return false;
+    }
     return this.actionModeService.isShowingActionMode();
   }
 
@@ -220,7 +223,7 @@ class ToolbarData {
   private readonly unpairedSubPathSource: CanvasType;
 
   constructor(
-    stateService: StateService,
+    private readonly stateService: StateService,
     morphSubPathService: MorphSubPathService,
     private readonly appMode: AppMode,
     selections: ReadonlyArray<Selection>,
@@ -249,10 +252,9 @@ class ToolbarData {
             && activePathLayer.isFilled()
             && activePath.getCommand(subIdx, cmdIdx).isSplitSegment();
         })
-        .flatMap(s => {
-          // TODO: also include connected segments as well.
+        .map(s => {
           const { subIdx, cmdIdx } = s;
-          return [{ subIdx, cmdIdx }];
+          return { subIdx, cmdIdx };
         })
         .value();
     this.points =
@@ -297,6 +299,21 @@ class ToolbarData {
 
   getNumPoints() {
     return this.points.length;
+  }
+
+  shouldShowMorphSubPaths() {
+    const startLayer = this.stateService.getActivePathLayer(CanvasType.Start);
+    const endLayer = this.stateService.getActivePathLayer(CanvasType.End);
+    if (!startLayer || !endLayer) {
+      return false;
+    }
+    if (startLayer.pathData.getSubPaths().length === 1
+      && endLayer.pathData.getSubPaths().length === 1) {
+      return false;
+    }
+    return this.getNumSubPaths() === 1
+      || this.getNumSegments() > 0
+      || !this.isSelectionMode();
   }
 
   getToolbarTitle() {

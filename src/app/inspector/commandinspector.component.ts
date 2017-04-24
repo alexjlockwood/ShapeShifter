@@ -59,7 +59,9 @@ export class CommandInspectorComponent implements OnInit {
   }
 
   isHovering() {
-    return this.isHoveringOverCommand && !this.isHoveringOverUnsplit;
+    return this.appModeService.isSelectionMode()
+      && this.isHoveringOverCommand
+      && !this.isHoveringOverUnsplit;
   }
 
   shouldShowDeletePoint() {
@@ -101,14 +103,13 @@ export class CommandInspectorComponent implements OnInit {
   }
 
   onPointHover(isHovering: boolean) {
+    this.isHoveringOverCommand = isHovering;
     if (!this.appModeService.isSelectionMode()) {
       return;
     }
-    this.isHoveringOverCommand = isHovering;
-    if (isHovering || this.isHoveringOverUnsplit) {
-      const type = this.isHoveringOverUnsplit ? HoverType.Unsplit : HoverType.Point;
+    if (isHovering) {
       this.hoverService.setHoverAndNotify({
-        type,
+        type: HoverType.Point,
         subIdx: this.subIdx,
         cmdIdx: this.cmdIdx,
         source: this.canvasType,
@@ -119,21 +120,7 @@ export class CommandInspectorComponent implements OnInit {
   }
 
   onDeletePointHover(isHovering: boolean) {
-    if (!this.appModeService.isSelectionMode()) {
-      return;
-    }
     this.isHoveringOverUnsplit = isHovering;
-    if (isHovering || this.isHoveringOverCommand) {
-      const type = isHovering ? HoverType.Unsplit : HoverType.Point;
-      this.hoverService.setHoverAndNotify({
-        type,
-        subIdx: this.subIdx,
-        cmdIdx: this.cmdIdx,
-        source: this.canvasType,
-      });
-    } else {
-      this.hoverService.resetAndNotify();
-    }
   }
 
   private clearSelectionsAndHovers() {

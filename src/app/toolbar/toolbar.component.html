@@ -12,7 +12,7 @@
       toolbarSubtitle: toolbarData.getToolbarSubtitle(),
       showAddPoints: toolbarData.getNumSubPaths() > 0 || toolbarData.getNumSegments() > 0 || !toolbarData.isSelectionMode(),
       showSplitSubPaths: toolbarData.getNumSubPaths() > 0 || toolbarData.getNumSegments() > 0 || !toolbarData.isSelectionMode(),
-      showMorphSubPaths: toolbarData.getNumSubPaths() === 1 || toolbarData.getNumSegments() === 1 || !toolbarData.isSelectionMode(),
+      showMorphSubPaths: toolbarData.shouldShowMorphSubPaths(),
       showReverseSubPaths: toolbarData.getNumSubPaths() === 1,
       showShiftSubPath: toolbarData.shouldShowShiftSubPath(),
       showSetFirstPosition: toolbarData.shouldShowSetFirstPosition(),

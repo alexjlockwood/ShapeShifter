@@ -96,11 +96,11 @@ export class SubpathInspectorComponent implements OnInit {
   }
 
   onSubPathHover(isHovering: boolean) {
+    this.isHoveringOverSubPath = isHovering;
     if (!this.subPath || !this.appModeService.isSelectionMode()) {
       return;
     }
-    this.isHoveringOverSubPath = isHovering;
-    if (isHovering || this.isHoveringOverSubPath) {
+    if (isHovering) {
       this.hoverService.setHoverAndNotify({
         type: HoverType.SubPath,
         subIdx: this.subIdx,
@@ -112,19 +112,7 @@ export class SubpathInspectorComponent implements OnInit {
   }
 
   onDeleteSubPathHover(isHovering: boolean) {
-    if (!this.subPath || !this.appModeService.isSelectionMode()) {
-      return;
-    }
     this.isHoveringOverDeleteSubPath = isHovering;
-    if (isHovering || this.isHoveringOverSubPath) {
-      this.hoverService.setHoverAndNotify({
-        type: HoverType.SubPath,
-        subIdx: this.subIdx,
-        source: this.canvasType,
-      });
-    } else {
-      this.hoverService.resetAndNotify();
-    }
   }
 
   private clearSelectionsAndHovers() {
