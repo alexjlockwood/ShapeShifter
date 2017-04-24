@@ -18,11 +18,13 @@ export class MorphSubPathService {
   }
 
   setUnpairedSubPath(unpair: { source: CanvasType, subIdx: number } | undefined) {
+    console.info('setUnpairedSubPath', JSON.stringify(unpair));
     this.currentUnpairedSubPath = unpair;
     return this;
   }
 
   setPairedSubPaths(pairedSubPaths: Set<number>) {
+    console.info('setPairedSubPaths', Array.from(pairedSubPaths).toString());
     this.pairedSubPaths = new Set(pairedSubPaths);
     return this;
   }

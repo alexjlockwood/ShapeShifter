@@ -12,7 +12,7 @@ import {
 } from './SubPathState';
 import { environment } from '../../../environments/environment';
 
-const ENABLE_LOGS = !environment.production && false;
+const ENABLE_LOGS = !environment.production && true;
 
 /**
  * A builder class for creating mutated Path objects.
@@ -228,6 +228,7 @@ export class PathMutator {
    * Moves a subpath from one index to another. Returns a new path object.
    */
   moveSubPath(fromSubIdx: number, toSubIdx: number) {
+    LOG('moveSubPath', fromSubIdx, toSubIdx);
     this.subPathOrdering.splice(toSubIdx, 0, this.subPathOrdering.splice(fromSubIdx, 1)[0]);
     return this;
   }

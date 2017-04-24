@@ -34,51 +34,58 @@ export class MorphSubPathHelper {
 
     if (hitResult.isSegmentHit || hitResult.isShapeHit) {
       const hits = hitResult.isShapeHit ? hitResult.shapeHits : hitResult.segmentHits;
-      let { subIdx } = this.findHitSubPath(hits);
+      const { subIdx } = this.findHitSubPath(hits);
       const currUnpair = this.morphSubPathService.getUnpairedSubPath();
       if (currUnpair && this.canvasType !== currUnpair.source) {
-        let { source: fromSource, subIdx: fromSubIdx } = currUnpair;
-        let toSource = this.canvasType;
-        let toSubIdx = subIdx;
-        const numFromSubPaths =
-          this.stateService.getActivePathLayer(fromSource).pathData
-            .getSubPaths().filter(s => !s.isCollapsing()).length;
-        if (toSubIdx >= numFromSubPaths) {
-          const tempFromSource = fromSource;
-          fromSource = toSource;
-          toSource = tempFromSource;
-          const tempFromSubIdx = fromSubIdx;
-          fromSubIdx = toSubIdx;
-          toSubIdx = tempFromSubIdx;
-        }
+        const { source: fromSource, subIdx: fromSubIdx } = currUnpair;
+        const toSource = this.canvasType;
+        const toSubIdx = subIdx;
         this.morphSubPathService.setUnpairedSubPath(undefined);
-        const pairedSubPaths = this.morphSubPathService.getPairedSubPaths();
-        let selections =
+        const fromSelections =
           this.selectionService.getSelections().filter(s => s.source === fromSource);
-        if (selections.length) {
-          selections = selections.map(s => {
+        const toSelections =
+          this.selectionService.getSelections().filter(s => s.source === toSource);
+        if (fromSelections.length) {
+          this.selectionService.setSelections(fromSelections.map(s => {
             const { subIdx: sIdx, cmdIdx, source, type } = s;
             return {
-              subIdx: sIdx === fromSubIdx ? toSubIdx : sIdx,
+              subIdx: sIdx === fromSubIdx ? 0 : sIdx,
               cmdIdx,
               source,
               type,
             };
-          });
-          this.selectionService.setSelections(selections);
+          }));
+        } else if (toSelections.length) {
+          this.selectionService.setSelections(toSelections.map(s => {
+            const { subIdx: sIdx, cmdIdx, source, type } = s;
+            return {
+              subIdx: sIdx === toSubIdx ? 0 : sIdx,
+              cmdIdx,
+              source,
+              type,
+            };
+          }));
         }
+        const pairedSubPaths = this.morphSubPathService.getPairedSubPaths();
         if (pairedSubPaths.has(fromSubIdx)) {
           pairedSubPaths.delete(fromSubIdx);
         }
-        pairedSubPaths.add(toSubIdx);
+        if (pairedSubPaths.has(toSubIdx)) {
+          pairedSubPaths.delete(toSubIdx);
+        }
+        pairedSubPaths.add(pairedSubPaths.size);
         this.morphSubPathService.setPairedSubPaths(pairedSubPaths);
         this.hoverService.reset();
         this.stateService.updateActivePath(
           fromSource,
           this.stateService.getActivePathLayer(fromSource).pathData.mutate()
-            .moveSubPath(fromSubIdx, toSubIdx)
+            .moveSubPath(fromSubIdx, 0)
             .build());
-        subIdx = toSubIdx;
+        this.stateService.updateActivePath(
+          toSource,
+          this.stateService.getActivePathLayer(toSource).pathData.mutate()
+            .moveSubPath(toSubIdx, 0)
+            .build());
       } else {
         this.morphSubPathService.setUnpairedSubPath({ source: this.canvasType, subIdx });
       }
@@ -130,24 +137,3 @@ export class MorphSubPathHelper {
     return infos[lastSplitIndex < 0 ? infos.length - 1 : lastSplitIndex];
   }
 }
-
-// if (appMode === AppMode.Selection) {
-//   const subPathSelections = selections.filter(s => s.type === SelectionType.SubPath);
-//   if (subPathSelections.length) {
-//     const { source, subIdx } = subPathSelections[0];
-//     const startPath = startLayer.pathData;
-//     const endPath = endLayer.pathData;
-//     const isSourceStart = source === CanvasType.Start;
-//     const oppSubPaths =
-//       (isSourceStart ? endPath : startPath).getSubPaths().filter(s => !s.isCollapsing());
-//     const numOppSubPaths = oppSubPaths.length;
-//     const numAvailableOppSubPaths = numOppSubPaths - (subIdx < numOppSubPaths ? 1 : 0);
-//     const sourceSubPathName = `<i>Subpath #${subIdx + 1}${isSourceStart ? 'a' : 'b'}</i>`;
-//     if (!numAvailableOppSubPaths) {
-//       return `${sourceSubPathName} selected`;
-//     }
-//     const direction = isSourceStart ? 'right' : 'left';
-//     return `${sourceSubPathName} selected. `
-//       + `Choose a corresponding subpath on the ${direction} to customize the animation.`;
-//   }
-// }
