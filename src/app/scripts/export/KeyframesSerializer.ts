@@ -1,6 +1,5 @@
 import { SvgTarget } from '../animation';
 
-// TODO: add css prefixes to support all browsers
 export function createHtml(svgText: string, cssFileName: string) {
   return `<html>
 <head>

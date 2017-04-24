@@ -16,33 +16,22 @@ export function createHtml(svgFileName: string, cssFileName: string) {
 }
 
 export function createCss(width: number, height: number, duration: number, numSteps: number) {
-  const prefixes = ['-webkit-', '-moz-', '-o-', ''];
-  const animationDurations = prefixes.map(prefix => {
-    return `  ${prefix}animation-duration: ${duration}ms;`;
-  }).join('\n');
-  const animationTimings = prefixes.map(prefix => {
-    return `  ${prefix}animation-timing-function: steps(${numSteps});`;
-  }).join('\n');
-  const animationNames = prefixes.map(prefix => {
-    return `  ${prefix}animation-name: play${numSteps};`;
-  }).join('\n');
   return createKeyframes(width, numSteps) + `
 .shapeshifter {
-${animationDurations}
-${animationTimings}
+  animation-duration: ${duration}ms;
+  animation-timing-function: steps(${numSteps});
   width: ${width}px;
   height: ${height}px;
   background-repeat: no-repeat;
 }
 .shapeshifter.play {
-${animationNames}
+  animation-name: play${numSteps};
 }
 `;
 }
 
 function createKeyframes(width: number, numSteps: number) {
-  return ['@-webkit-', '@-moz-', '@-o-', '@'].map(prefix => {
-    return `${prefix}keyframes play${numSteps} {
+  return `@keyframes play${numSteps} {
   0% {
     background-position: 0px 0px;
   }
@@ -50,7 +39,6 @@ function createKeyframes(width: number, numSteps: number) {
     background-position: -${numSteps * width}px 0px;
   }
 }`;
-  }).join('\n');
 }
 
 export function createSvg(
