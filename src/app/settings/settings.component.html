@@ -11,8 +11,7 @@
     </div>
     <div fxLayout="row" fxLayoutGap="16px">
       <md-input-container fxFlex>
-        <input mdInput [disabled]="(shouldDisableSettingsObservable | async) ? '' : undefined"
-          placeholder="Duration" value="300" min="100" max="60000"
+        <input mdInput placeholder="Duration" value="300" min="0" max="60000"
           step="10" name="duration" [(ngModel)]="duration" type="number">
       </md-input-container>
       <md-input-container fxFlex>
@@ -22,8 +21,7 @@
       </md-input-container>
     </div>
     <div>
-      <md-checkbox [disabled]="(shouldDisableSettingsObservable | async) ? '' : undefined"
-        name="shouldLabelPoints" [(ngModel)]="shouldLabelPoints">
+      <md-checkbox name="shouldLabelPoints" [(ngModel)]="shouldLabelPoints">
         Show points
       </md-checkbox>
     </div>

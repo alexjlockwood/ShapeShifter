@@ -411,7 +411,7 @@ describe('Path', () => {
       ),
       makeTest(
         'M 0 0 L 1 1 L 2 2 L 3 3 L 4 4 L 5 5 M 0 0 L 10 10 L 20 20 L 30 30 L 40 40 L 50 50',
-        'SSSP 0 1 DSSSP 0',
+        'SSSP 0 1 DSSP 0',
         'M 0 0 L 1 1 L 2 2 L 3 3 L 4 4 L 5 5 M 0 0 L 10 10 L 20 20 L 30 30 L 40 40 L 50 50',
       ),
       makeTest(
@@ -421,12 +421,12 @@ describe('Path', () => {
       ),
       makeTest(
         'M 0 0 L 1 1 L 2 2 L 3 3 L 4 4 L 5 5 M 0 0 L 10 10 L 20 20 L 30 30 L 40 40 L 50 50',
-        'SSSP 0 1 M 0 1 DSSSP 1',
+        'SSSP 0 1 M 0 1 DSSP 1',
         'M 0 0 L 1 1 L 2 2 L 3 3 L 4 4 L 5 5 M 0 0 L 10 10 L 20 20 L 30 30 L 40 40 L 50 50',
       ),
       makeTest(
         'M 0 0 L 1 1 L 2 2 L 3 3 L 4 4 L 5 5 M 0 0 L 10 10 L 20 20 L 30 30 L 40 40 L 50 50',
-        'SSSP 0 1 DSSSP 1',
+        'SSSP 0 1 DSSP 1',
         'M 0 0 L 1 1 L 2 2 L 3 3 L 4 4 L 5 5 M 0 0 L 10 10 L 20 20 L 30 30 L 40 40 L 50 50',
       ),
       makeTest(
@@ -481,12 +481,12 @@ describe('Path', () => {
       ),
       makeTest(
         'M 0 0 L 10 10 L 20 20 L 30 30',
-        'RV 0 SSSP 0 2 DSSSP 0',
+        'RV 0 SSSP 0 2 DSSP 0',
         'M 30 30 L 20 20 L 10 10 L 0 0',
       ),
       makeTest(
         'M 0 0 L 10 10 L 20 20 L 30 30',
-        'RV 0 SSSP 0 2 DSSSP 1',
+        'RV 0 SSSP 0 2 DSSP 1',
         'M 30 30 L 20 20 L 10 10 L 0 0',
       ),
       makeTest(
@@ -583,17 +583,17 @@ describe('Path', () => {
       ),
       makeTest(
         'M0 0L0 0v10h10v-10h-10',
-        'SFSP 0 1 3 USFSP 0',
+        'SFSP 0 1 3 DSSP 0',
         'M0 0L0 0v10h10v-10h-10',
       ),
       makeTest(
         'M0 0L0 0v10h10v-10h-10',
-        'SFSP 0 1 3 SF 1 RV 1 USFSP 0',
+        'SFSP 0 1 3 SF 1 RV 1 DSSP 0',
         'M0 0L0 0v10h10v-10h-10',
       ),
       makeTest(
         'M0 0L0 0v10h10v-10h-10',
-        'SFSP 0 1 3 RV 0 SF 1 SF 1 USFSP 1',
+        'SFSP 0 1 3 RV 0 SF 1 SF 1 DSSP 1',
         'M0 0L0 0v10h10v-10h-10',
       ),
       makeTest(
@@ -609,22 +609,22 @@ describe('Path', () => {
       // Delete sub path split segment.
       makeTest(
         'M 0 0 L 0 10 L 10 10 L 10 0 L 0 0',
-        'SIH 0 3 SIH 0 1 SFSP 0 1 4 DSPSS 0 2',
+        'SIH 0 3 SIH 0 1 SFSP 0 1 4 DFSPS 0 2',
         'M 0 0 L 0 10 L 10 10 L 10 0 L 0 0'
       ),
       makeTest(
         'M 0 0 L 0 10 L 10 10 L 10 0 L 0 0',
-        'SIH 0 3 SIH 0 1 SFSP 0 1 4 DSPSS 1 4',
+        'SIH 0 3 SIH 0 1 SFSP 0 1 4 DFSPS 1 4',
         'M 0 0 L 0 10 L 10 10 L 10 0 L 0 0'
       ),
       makeTest(
         'M 0 0 L 0 10 L 10 10 L 10 0 L 0 0',
-        'SIH 0 3 SIH 0 1 SFSP 0 1 4 SIH 1 4 SIH 1 2 SFSP 1 2 5 DSPSS 1 3',
+        'SIH 0 3 SIH 0 1 SFSP 0 1 4 SIH 1 4 SIH 1 2 SFSP 1 2 5 DFSPS 1 3',
         'M 0 0 L 0 5 L 10 5 L 10 0 L 0 0 M 0 5 L 0 10 L 10 10 L 10 5 L 0 5'
       ),
       makeTest(
         'M 0 0 L 0 10 L 10 10 L 10 0 L 0 0',
-        'SIH 0 3 SIH 0 1 SFSP 0 1 4 SIH 1 4 SIH 1 2 SFSP 1 2 5 DSPSS 2 4',
+        'SIH 0 3 SIH 0 1 SFSP 0 1 4 SIH 1 4 SIH 1 2 SFSP 1 2 5 DFSPS 2 4',
         'M 0 0 L 0 5 L 10 5 L 10 0 L 0 0 M 0 5 L 0 10 L 10 10 L 10 5 L 0 5'
       ),
       makeTest(
@@ -639,12 +639,12 @@ describe('Path', () => {
       ),
       makeTest(
         'M 0 0 L 0 15 L 15 15 L 15 0 L 0 0',
-        `S 0 3 ${2 / 3} S 0 3 0.5 S 0 1 ${2 / 3} S 0 1 0.5 SFSP 0 1 6 SFSP 1 1 4 DSPSS 1 2`,
+        `S 0 3 ${2 / 3} S 0 3 0.5 S 0 1 ${2 / 3} S 0 1 0.5 SFSP 0 1 6 SFSP 1 1 4 DFSPS 1 2`,
         `M 0 0 L 0 5 L 15 5 L 15 0 L 0 0 M 0 5 L 0 15 L 15 15 L 15 5 L 0 5`
       ),
       makeTest(
         'M 0 0 L 0 15 L 15 15 L 15 0 L 0 0',
-        `S 0 3 ${2 / 3} S 0 3 0.5 S 0 1 ${2 / 3} S 0 1 0.5 SFSP 0 1 6 SFSP 1 1 4 DSPSS 2 4`,
+        `S 0 3 ${2 / 3} S 0 3 0.5 S 0 1 ${2 / 3} S 0 1 0.5 SFSP 0 1 6 SFSP 1 1 4 DFSPS 2 4`,
         `M 0 0 L 0 5 L 15 5 L 15 0 L 0 0 M 0 5 L 0 15 L 15 15 L 15 5 L 0 5`
       ),
       makeTest(
@@ -669,32 +669,32 @@ describe('Path', () => {
       ),
       makeTest(
         'M 0 0 h 20 v 20 h -20 v -20',
-        'S 0 3 0.75 S 0 1 0.25 SFSP 0 1 4 S 1 3 0.5 S 1 1 0.5 SFSP 1 1 4 DSPSS 1 2',
+        'S 0 3 0.75 S 0 1 0.25 SFSP 0 1 4 S 1 3 0.5 S 1 1 0.5 SFSP 1 1 4 DFSPS 1 2',
         'M 0 0 L 5 0 L 5 20 L 0 20 L 0 0 M 5 0 L 20 0 L 20 20 L 5 20 L 5 0',
       ),
       makeTest(
         'M 0 0 h 20 v 20 h -20 v -20',
-        'S 0 3 0.75 S 0 1 0.25 SFSP 0 1 4 S 1 3 0.5 S 1 1 0.5 SFSP 1 1 4 DSPSS 2 4',
+        'S 0 3 0.75 S 0 1 0.25 SFSP 0 1 4 S 1 3 0.5 S 1 1 0.5 SFSP 1 1 4 DFSPS 2 4',
         'M 0 0 L 5 0 L 5 20 L 0 20 L 0 0 M 5 0 L 20 0 L 20 20 L 5 20 L 5 0',
       ),
       makeTest(
         'M 4 4 h 16 v 16 h -16 v -16',
-        `SIH 0 3 SIH 0 1 SFSP 0 1 4 S 1 4 0.625 S 1 1 0.75 SFSP 1 1 5 SIH 1 3 SIH 1 2 SFSP 1 2 4 DSPSS 3 4`,
+        `SIH 0 3 SIH 0 1 SFSP 0 1 4 S 1 4 0.625 S 1 1 0.75 SFSP 1 1 5 SIH 1 3 SIH 1 2 SFSP 1 2 4 DFSPS 3 4`,
         'M 4 4 h 16 v 16 h -16 v -16',
       ),
       makeTest(
         'M 4 4 h 16 v 16 h -16 v -16',
-        'SIH 0 3 SIH 0 1 SFSP 0 1 4 S 1 4 0.625 S 1 1 0.75 SFSP 1 1 5 SIH 1 3 SIH 1 2 SFSP 1 2 4 DSPSS 0 1',
+        'SIH 0 3 SIH 0 1 SFSP 0 1 4 S 1 4 0.625 S 1 1 0.75 SFSP 1 1 5 SIH 1 3 SIH 1 2 SFSP 1 2 4 DFSPS 0 1',
         'M 4 4 h 16 v 16 h -16 v -16',
       ),
       makeTest(
         'M 4 4 h 16 v 16 h -16 v -16',
-        'SIH 0 3 SIH 0 1 SFSP 0 1 4 S 1 4 0.625 SFSP 1 1 4 SIH 1 3 SIH 1 2 SFSP 1 2 4 SFSP 3 1 3 DSPSS 3 2',
+        'SIH 0 3 SIH 0 1 SFSP 0 1 4 S 1 4 0.625 SFSP 1 1 4 SIH 1 3 SIH 1 2 SFSP 1 2 4 SFSP 3 1 3 DFSPS 3 2',
         'M4 4L12 4L12 20L4 20L4 4M12 4L20 4L16 7L12 7L12 4M16 7L12 10L12 7L16 7M20 4L20 20L12 20L12 10L20 4',
       ),
       makeTest(
         'M 4 4 h 16 v 16 h -16 v -16',
-        'SIH 0 3 SIH 0 1 SFSP 0 1 4 SIH 0 4 SIH 0 3 SFSP 0 3 5 DSPSS 0 2',
+        'SIH 0 3 SIH 0 1 SFSP 0 1 4 SIH 0 4 SIH 0 3 SFSP 0 3 5 DFSPS 0 2',
         'M 4 4 L 20 4 L 20 20 L 8 20 L 4 12 L 4 4 M 8 20 L 4 20 L 4 12 L 8 20',
       ),
       makeTest(
@@ -709,22 +709,22 @@ describe('Path', () => {
       ),
       makeTest(
         'M 4 4 h 16 v 16 h -16 v -16',
-        'SIH 0 4 SIH 0 1 SFSP 0 1 5 SIH 0 2 SFSP 0 2 4 SIH 0 1 SFSP 0 1 3 DSPSS 0 2',
+        'SIH 0 4 SIH 0 1 SFSP 0 1 5 SIH 0 2 SFSP 0 2 4 SIH 0 1 SFSP 0 1 3 DFSPS 0 2',
         'M 4 4 L 12 4 L 8 8 L 4 4 M 8 8 L 4 12 L 4 4 L 8 8 M 12 4 L 20 4 L 20 20 L 4 20 L 4 12 L 12 4',
       ),
       makeTest(
         'M 4 4 h 16 v 16 h -16 v -16',
-        'SIH 0 4 SIH 0 1 SFSP 0 1 5 SIH 0 2 SFSP 0 2 4 SIH 0 1 SFSP 0 1 3 DSPSS 1 3',
+        'SIH 0 4 SIH 0 1 SFSP 0 1 5 SIH 0 2 SFSP 0 2 4 SIH 0 1 SFSP 0 1 3 DFSPS 1 3',
         'M 4 4 L 12 4 L 8 8 L 4 4 M 8 8 L 4 12 L 4 4 L 8 8 M 12 4 L 20 4 L 20 20 L 4 20 L 4 12 L 12 4',
       ),
       makeTest(
         'M 4 4 h 16 v 16 h -16 v -16',
-        'SIH 0 4 SIH 0 1 SFSP 0 1 5 SIH 0 2 SFSP 0 2 4 SIH 0 1 SFSP 0 1 3 DSPSS 0 3',
+        'SIH 0 4 SIH 0 1 SFSP 0 1 5 SIH 0 2 SFSP 0 2 4 SIH 0 1 SFSP 0 1 3 DFSPS 0 3',
         'M 4 4 L 8 4 L 8 8 L 4 12 L 4 4 M 8 4 L 12 4 L 8 8 L 8 4 M 12 4 L 20 4 L 20 20 L 4 20 L 4 12 L 12 4',
       ),
       makeTest(
         'M 4 4 h 16 v 16 h -16 v -16',
-        'SIH 0 4 SIH 0 2 SFSP 0 2 5 SIH 0 3 SIH 0 1 SFSP 0 1 4 SIH 1 3 SIH 1 1 SFSP 1 1 4 DSPSS 0 2',
+        'SIH 0 4 SIH 0 2 SFSP 0 2 5 SIH 0 3 SIH 0 1 SFSP 0 1 4 SIH 1 3 SIH 1 1 SFSP 1 1 4 DFSPS 0 2',
         'M 4 4 L 16 4 L 16 12 L 4 12 L 4 4 M 16 4 L 20 4 L 20 12 L 16 12 L 16 4 M 20 12 L 20 20 L 4 20 L 4 12 L 20 12',
       ),
       makeTest(
@@ -742,10 +742,25 @@ describe('Path', () => {
         'SIH 0 4 SIH 0 1 SFSP 0 1 5 SIH 1 3 SFSP 1 3 5 DFSP 2 DFSP 0',
         'M 4 4 v 16 h 16 v -16 h -16',
       ),
+      makeTest(
+        'M 4 4 h 16 v 16 h -16 v -16',
+        'SIH 0 3 SIH 0 1 SFSP 0 1 4 SIH 1 4 SIH 1 2 SFSP 1 2 5',
+        'M 4 4 L 12 4 L 12 20 L 4 20 L 4 4 M 12 4 L 20 4 L 20 12 L 12 12 L 12 4 M 20 12 L 20 20 L 12 20 L 12 12 L 20 12',
+      ),
+      makeTest(
+        'M 4 4 h 16 v 16 h -16 v -16',
+        'SIH 0 3 SIH 0 1 SFSP 0 1 4 SIH 1 4 SIH 1 2 SFSP 1 2 5 DFSPS 2 4',
+        'M 4 4 L 12 4 L 12 20 L 4 20 L 4 4 M 12 4 L 20 4 L 20 20 L 12 20 L 12 4',
+      ),
+      makeTest(
+        'M 4 4 h 16 v 16 h -16 v -16',
+        'SIH 0 3 SIH 0 1 SFSP 0 1 4 SIH 1 4 SIH 1 2 SFSP 1 2 5 DFSPS 2 3',
+        'M 4 4 h 16 v 16 h -16 v -16',
+      ),
       // TODO: determine if this is the right behavior
       // makeTest(
       //   'M 4 4 h 16 v 16 h -16 v -16',
-      //   'SIH 0 3 SIH 0 1 SFSP 0 1 4 SIH 1 3 DSPSS 0 2',
+      //   'SIH 0 3 SIH 0 1 SFSP 0 1 4 SIH 1 3 DFSPS 0 2',
       //   'M 4 4 h 16 v 16 h -4 h -12 v -16',
       // ),
       // TODO: add tests for shift offsets w/ split sub paths

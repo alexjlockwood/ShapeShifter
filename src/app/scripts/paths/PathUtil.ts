@@ -48,7 +48,7 @@ export function sortPathOps(ops: Array<{ subIdx: number, cmdIdx: number }>) {
 }
 
 type PathOp = 'RV' | 'SB' | 'SF' | 'S' | 'SIH' | 'US' | 'CV' | 'UCV' | 'RT' | 'M'
-  | 'AC' | 'DC' | 'SSSP' | 'SFSP' | 'DFSP' | 'DSPSS' | 'DSSSP' | 'USFSP' | 'T';
+  | 'AC' | 'DC' | 'SSSP' | 'SFSP' | 'DFSP' | 'DFSPS' | 'DSSP' | 'T';
 
 export function fromPathOpString(pathString: string, pathOpsString: string) {
   const A = pathOpsString.split(' ');
@@ -121,15 +121,11 @@ export function fromPathOpString(pathString: string, pathOpsString: string) {
         mutator.deleteFilledSubPath(+A[i + 1]);
         i += 1;
         break;
-      case 'DSPSS': // Delete sub path split segment.
+      case 'DFSPS': // Delete filled subpath segment.
         mutator.deleteSubPathSplitSegment(+A[i + 1], +A[i + 2]);
         i += 2;
         break;
-      case 'DSSSP': // Unsplit stroked sub path.
-        mutator.deleteStrokedSubPath(+A[i + 1]);
-        i += 1;
-        break;
-      case 'USFSP': // Unsplit stroked sub path.
+      case 'DSSP': // Delete stroked sub path.
         mutator.deleteStrokedSubPath(+A[i + 1]);
         i += 1;
         break;

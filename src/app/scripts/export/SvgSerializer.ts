@@ -9,11 +9,11 @@ const SVG_NS = 'http://www.w3.org/2000/svg';
  * Serializes an VectorLayer to a vector drawable XML file.
  */
 export function vectorLayerToSvgString(
-  vectorLayer: VectorLayer, width?: number, height?: number, x?: number, y?: number) {
+  vectorLayer: VectorLayer, width?: number, height?: number, x?: number, y?: number, withIdsAndNS = true) {
 
   const xmlDoc = document.implementation.createDocument(null, 'svg', null);
   const rootNode = xmlDoc.documentElement;
-  vectorLayerToSvgNode(vectorLayer, rootNode, xmlDoc);
+  vectorLayerToSvgNode(vectorLayer, rootNode, xmlDoc, withIdsAndNS);
   if (width !== undefined) {
     rootNode.setAttributeNS(null, 'width', width.toString() + 'px');
   }
@@ -33,19 +33,25 @@ export function vectorLayerToSvgString(
  * Helper method that serializes a VectorLayer to a destinationNode in an xmlDoc.
  * The destinationNode should be a <vector> node.
  */
-function vectorLayerToSvgNode(vl: VectorLayer, destinationNode: HTMLElement, xmlDoc: Document) {
-  destinationNode.setAttributeNS(XMLNS_NS, 'xmlns', SVG_NS);
+function vectorLayerToSvgNode(vl: VectorLayer, destinationNode: HTMLElement, xmlDoc: Document, withIdsAndNS = true) {
+  if (withIdsAndNS) {
+    destinationNode.setAttributeNS(XMLNS_NS, 'xmlns', SVG_NS);
+  }
   destinationNode.setAttributeNS(null, 'viewBox', `0 0 ${vl.width} ${vl.height}`);
 
   walk(vl, (layer, parentNode) => {
     if (layer instanceof VectorLayer) {
-      conditionalAttr(destinationNode, 'id', vl.id, '');
+      if (withIdsAndNS) {
+        conditionalAttr(destinationNode, 'id', vl.id, '');
+      }
       conditionalAttr(destinationNode, 'opacity', vl.alpha, 1);
       return parentNode;
 
     } else if (layer instanceof PathLayer) {
       const node = xmlDoc.createElement('path');
-      conditionalAttr(node, 'id', layer.id);
+      if (withIdsAndNS) {
+        conditionalAttr(node, 'id', layer.id);
+      }
       conditionalAttr(node, 'd', layer.pathData.getPathString());
       if (layer.fillColor) {
         conditionalAttr(node, 'fill', ColorUtil.androidToCssColor(layer.fillColor), '');
@@ -73,7 +79,10 @@ function vectorLayerToSvgNode(vl: VectorLayer, destinationNode: HTMLElement, xml
 
     } else if (layer instanceof GroupLayer) {
       const node = xmlDoc.createElement('g');
-      conditionalAttr(node, 'id', layer.id);
+      if (withIdsAndNS) {
+
+        conditionalAttr(node, 'id', layer.id);
+      }
       const transformValues: string[] = [];
       if (layer.scaleX !== 1 || layer.scaleY !== 1) {
         transformValues.push(`scale(${layer.scaleX} ${layer.scaleY}`);

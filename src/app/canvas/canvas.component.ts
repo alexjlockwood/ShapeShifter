@@ -356,7 +356,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   }
 
   private get selectedSegmentLineWidth() {
-    return HIGHLIGHT_LINE_WIDTH / this.cssScale / 2;
+    return HIGHLIGHT_LINE_WIDTH / this.cssScale / 1.9;
   }
 
   private get unselectedSegmentLineWidth() {
@@ -654,6 +654,26 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         this.executeCommands(ctx, cmds);
         this.executeHighlights(ctx, highlightColor, this.selectedSegmentLineWidth);
       }
+
+      const segmentSelections =
+        this.selectionService.getSegmentSelections()
+          .filter(s => s.source === this.canvasType)
+          .map(s => { return { subIdx: s.subIdx, cmdIdx: s.cmdIdx }; });
+      const hover = this.currentHover;
+      if (hover
+        && hover.source === this.canvasType
+        && hover.type === HoverType.Segment) {
+        segmentSelections.push({
+          subIdx: hover.subIdx,
+          cmdIdx: hover.cmdIdx,
+        });
+      }
+      const segmentSelectionCmds =
+        segmentSelections
+          .map(s => this.activePath.getCommand(s.subIdx, s.cmdIdx))
+          .filter(cmd => cmd.isSplitSegment());
+      this.executeCommands(ctx, segmentSelectionCmds);
+      this.executeHighlights(ctx, SPLIT_POINT_COLOR, this.selectedSegmentLineWidth);
     } else if (this.segmentSplitter && this.segmentSplitter.getProjectionOntoPath()) {
       // Highlight the segment as the user hovers over it.
       const { subIdx, cmdIdx, projection: { d } } =
@@ -788,7 +808,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     // always draw selected points on top of medium points, and medium points
     // on top of small points.
     const isPointInfoAtLeastMediumFn = ({ subIdx }: PointInfo) => {
-      return this.selectionService.getSelections().some(s => s.subIdx === subIdx);
+      return subPathSelections.some(s => s.subIdx === subIdx)
+        || pointSelections.some(s => s.subIdx === subIdx);
     };
     pointInfos.push(..._.remove(pointInfos, pi => isPointInfoAtLeastMediumFn(pi)));
     pointInfos.push(...selectedPointInfos);

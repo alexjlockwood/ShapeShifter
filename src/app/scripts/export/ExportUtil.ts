@@ -13,6 +13,8 @@ import {
   SvgTarget, SvgAnimation, SvgPropertyName, Interpolator,
 } from '../animation';
 
+// TODO: finish writing the README
+// TODO: round SVG coordinates in exported sprite sheets?
 // TODO: also export the original SVG files?
 // TODO: add css prefixes to keyframes generation to support all browsers
 // TODO: generate non-cubic-bezier interpolators correctly

@@ -27,7 +27,7 @@ class PathImpl implements Path {
     }
     if (!environment.production) {
       const allIds = this.getCommands().map(c => c.getId());
-      const uniqueIds = new Set<string>(allIds);
+      const uniqueIds = new Set(allIds);
       const numCommands = allIds.length;
       if (uniqueIds.size !== numCommands) {
         const dumpInfo = this.getSubPaths().map((s, subIdx) => {

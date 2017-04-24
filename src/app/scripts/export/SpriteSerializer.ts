@@ -65,7 +65,7 @@ export function createSvg(
   for (let i = 0; i <= numSteps; i++) {
     const fraction = interpolator.interpolateFn(i / numSteps);
     LayerUtil.deepInterpolate(start, preview, end, fraction);
-    svgs.push(SvgSerializer.vectorLayerToSvgString(preview, width, height, width * i, 0));
+    svgs.push(SvgSerializer.vectorLayerToSvgString(preview, width, height, width * i, 0, false));
   }
   const totalWidth = width * numSteps;
   let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${totalWidth} ${height}" width="${totalWidth}px" height="${height}px">

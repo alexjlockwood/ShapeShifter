@@ -57,16 +57,12 @@ export class SelectionHelper {
       return;
     }
 
-    if (this.component.activePathLayer.isFilled()
-      && hitResult.isSegmentHit) {
+    if (this.component.activePathLayer.isFilled() && hitResult.isSegmentHit) {
       const { subIdx, cmdIdx, cmd } = this.findHitSegment(hitResult.segmentHits);
       if (cmd.isSplitSegment()) {
-        // The user has selected a split segment, so also select any connected
-        // segments associated with it.
-        const connectedSplitSegments =
-          this.component.activePath.getConnectedSplitSegments(subIdx, cmdIdx);
+        // TODO: highlight connected split segments as well?
         this.selectionService.toggleSegments(
-          this.canvasType, connectedSplitSegments, isShiftOrMetaPressed).notify();
+          this.canvasType, [{ subIdx, cmdIdx }], isShiftOrMetaPressed).notify();
         return;
       }
     }
@@ -210,7 +206,9 @@ export class SelectionHelper {
     const hitResult = this.performHitTest(mousePoint);
     if (!hitResult.isHit) {
       this.hoverService.resetAndNotify();
-    } else if (hitResult.isEndPointHit) {
+      return;
+    }
+    if (hitResult.isEndPointHit) {
       const { subIdx, cmdIdx } = this.findHitPoint(hitResult.endPointHits);
       this.hoverService.setHoverAndNotify({
         type: HoverType.Point,
@@ -218,14 +216,30 @@ export class SelectionHelper {
         subIdx,
         cmdIdx,
       });
-    } else if (hitResult.isSegmentHit || hitResult.isShapeHit) {
-      const hits = hitResult.isShapeHit ? hitResult.shapeHits : hitResult.segmentHits;
-      const { subIdx } = this.findHitSubPath(hits);
-      this.hoverService.setHoverAndNotify({
-        type: HoverType.SubPath,
-        source: this.canvasType,
-        subIdx,
-      });
+      return;
+    }
+    if (hitResult.isSegmentHit || hitResult.isShapeHit) {
+      if (hitResult.isSegmentHit) {
+        const { subIdx, cmdIdx } = this.findHitSegment(hitResult.segmentHits);
+        if (this.component.activePath.getCommand(subIdx, cmdIdx).isSplitSegment()) {
+          this.hoverService.setHoverAndNotify({
+            type: HoverType.Segment,
+            source: this.canvasType,
+            subIdx,
+            cmdIdx,
+          });
+          return;
+        }
+      }
+      if (hitResult.isShapeHit) {
+        const { subIdx } = this.findHitSubPath(hitResult.shapeHits);
+        this.hoverService.setHoverAndNotify({
+          type: HoverType.SubPath,
+          source: this.canvasType,
+          subIdx,
+        });
+        return;
+      }
     }
   }
 

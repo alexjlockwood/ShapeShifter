@@ -275,7 +275,8 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       }
       if (event.keyCode === 83) {
         // S.
-        if (this.actionModeService.isShowingSubPathActionMode()) {
+        if (this.actionModeService.isShowingSubPathActionMode()
+          || this.actionModeService.isShowingSegmentActionMode()) {
           this.actionModeService.toggleSplitSubPathsMode();
         } else if (isMorphable) {
           this.animatorService.setIsSlowMotion(!this.animatorService.isSlowMotion());
@@ -284,7 +285,8 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       }
       if (event.keyCode === 65) {
         // A.
-        if (this.actionModeService.isShowingSubPathActionMode()) {
+        if (this.actionModeService.isShowingSubPathActionMode()
+          || this.actionModeService.isShowingSegmentActionMode()) {
           this.actionModeService.toggleSplitCommandsMode();
         } else if (this.actionModeService.isShowingPointActionMode()) {
           this.actionModeService.splitInHalfClick();
@@ -293,7 +295,8 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       }
       if (event.keyCode === 80) {
         // P.
-        if (this.actionModeService.isShowingSubPathActionMode()) {
+        if (this.actionModeService.isShowingSubPathActionMode()
+          || this.actionModeService.isShowingSegmentActionMode()) {
           this.actionModeService.toggleMorphSubPathsMode();
         }
         return false;
@@ -512,7 +515,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private autoLoadDemo() {
     setTimeout(() => {
-      DemoUtil.loadDemo(this.stateService, DEMO_MAP.get('Play-to-pause icon'));
+      DemoUtil.loadDemo(this.stateService, DEMO_MAP.get('Debug demos'));
     });
   }
 }
