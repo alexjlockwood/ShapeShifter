@@ -1,11 +1,15 @@
 import {
   Component, OnInit, Input, ChangeDetectionStrategy
 } from '@angular/core';
-import { SubPath, Path } from '../scripts/paths';
+import { SubPath } from '../scripts/paths';
 import {
-  StateService, SelectionService, HoverService, HoverType
+  StateService,
+  SelectionService,
+  HoverService, HoverType,
+  AppModeService, AppMode
 } from '../services';
 import { CanvasType } from '../CanvasType';
+import { Observable } from 'rxjs/Observable';
 
 @Component({
   selector: 'app-subpathinspector',
@@ -21,110 +25,110 @@ export class SubpathInspectorComponent implements OnInit {
   @Input() subIdx: number;
   @Input() subPath: SubPath;
 
-  isHovering = false;
-  private isHoveringOverDeleteSubPath = false;
+  shouldShowPointerCursorObservable: Observable<boolean>;
   private isHoveringOverSubPath = false;
-  private subPathText_ = '';
+  private isHoveringOverDeleteSubPath = false;
 
   constructor(
     private readonly stateService: StateService,
     private readonly hoverService: HoverService,
     private readonly selectionService: SelectionService,
+    private readonly appModeService: AppModeService,
   ) { }
 
   ngOnInit() {
-    this.subPathText_ =
-      `Subpath #${this.subIdx + 1}${this.canvasType === CanvasType.Start ? 'a' : 'b'}`;
+    this.shouldShowPointerCursorObservable =
+      this.appModeService.asObservable()
+        .map(appMode => this.subPath && appMode === AppMode.Selection);
   }
 
-  get subPathText() {
-    return this.subPath ? this.subPathText_ : '';
+  getSubPathText() {
+    if (!this.subPath) {
+      return '';
+    }
+    return `Subpath #${this.subIdx + 1}${this.canvasType === CanvasType.Start ? 'a' : 'b'}`;
+  }
+
+  isHovering() {
+    return this.subPath
+      && this.appModeService.isSelectionMode()
+      && this.isHoveringOverSubPath
+      && !this.isHoveringOverDeleteSubPath;
+  }
+
+  shouldShowDeleteSubPath() {
+    return this.subPath && this.subPath.isUnsplittable();
+  }
+
+  shouldDisableDeleteSubPath() {
+    return !this.appModeService.isSelectionMode();
   }
 
   onSubPathClick(event: MouseEvent) {
-    if (!this.subPath) {
+    if (!this.subPath || !this.appModeService.isSelectionMode()) {
       return;
     }
     this.selectionService.toggleSubPath(this.canvasType, this.subIdx).notify();
   }
 
-  onUnsplitButtonClick(event: MouseEvent) {
-    if (!this.subPath) {
+  onDeleteSubPathClick(event: MouseEvent) {
+    if (!this.subPath || !this.appModeService.isSelectionMode()) {
       return;
     }
     const fromPathLayer = this.stateService.getActivePathLayer(this.canvasType);
     this.clearSelectionsAndHovers();
     if (fromPathLayer.isFilled()) {
-      this.replacePath(fromPathLayer.pathData.mutate()
-        .deleteFilledSubPath(this.subIdx)
-        .build(),
-        event);
+      this.stateService.updateActivePath(
+        this.canvasType,
+        fromPathLayer.pathData.mutate()
+          .deleteFilledSubPath(this.subIdx)
+          .build());
     } else if (fromPathLayer.isStroked()) {
-      this.replacePath(fromPathLayer.pathData.mutate()
-        .deleteStrokedSubPath(this.subIdx)
-        .build(),
-        event);
+      this.stateService.updateActivePath(
+        this.canvasType,
+        fromPathLayer.pathData.mutate()
+          .deleteStrokedSubPath(this.subIdx)
+          .build());
+    }
+
+    // This ensures that the parent div won't also receive the same click event.
+    event.cancelBubble = true;
+  }
+
+  onSubPathHover(isHovering: boolean) {
+    if (!this.subPath || !this.appModeService.isSelectionMode()) {
+      return;
+    }
+    this.isHoveringOverSubPath = isHovering;
+    if (isHovering || this.isHoveringOverSubPath) {
+      this.hoverService.setHoverAndNotify({
+        type: HoverType.SubPath,
+        subIdx: this.subIdx,
+        source: this.canvasType,
+      });
+    } else {
+      this.hoverService.resetAndNotify();
+    }
+  }
+
+  onDeleteSubPathHover(isHovering: boolean) {
+    if (!this.subPath || !this.appModeService.isSelectionMode()) {
+      return;
+    }
+    this.isHoveringOverDeleteSubPath = isHovering;
+    if (isHovering || this.isHoveringOverSubPath) {
+      this.hoverService.setHoverAndNotify({
+        type: HoverType.SubPath,
+        subIdx: this.subIdx,
+        source: this.canvasType,
+      });
+    } else {
+      this.hoverService.resetAndNotify();
     }
   }
 
   private clearSelectionsAndHovers() {
     this.hoverService.resetAndNotify();
     this.selectionService.resetAndNotify();
-  }
-
-  private replacePath(path: Path, event: MouseEvent) {
-    this.stateService.updateActivePath(this.canvasType, path);
-
-    // This ensures that the parent div won't also receive the same click event.
-    event.cancelBubble = true;
-  }
-
-  private getPath() {
-    const pathLayer = this.stateService.getActivePathLayer(this.canvasType);
-    if (!pathLayer) {
-      return undefined;
-    }
-    return pathLayer.pathData;
-  }
-
-  isUnsplittable() {
-    const path = this.getPath();
-    return path && this.subPath && this.subPath.isUnsplittable();
-  }
-
-  onSubPathHoverEvent(isHoveringOverSubPath: boolean) {
-    if (!this.subPath) {
-      return;
-    }
-    this.isHoveringOverSubPath = isHoveringOverSubPath;
-    this.broadcastHoverEvent(isHoveringOverSubPath, HoverType.SubPath);
-  }
-
-  onDeleteSubPathHoverEvent(isHoveringOverDeleteSubPath: boolean) {
-    if (!this.subPath) {
-      return;
-    }
-    this.isHoveringOverDeleteSubPath = isHoveringOverDeleteSubPath;
-    this.broadcastHoverEvent(isHoveringOverDeleteSubPath, HoverType.SubPath);
-  }
-
-  private broadcastHoverEvent(isHovering: boolean, type: HoverType) {
-    const subIdx = this.subIdx;
-    if (isHovering) {
-      this.hoverService.setHoverAndNotify({
-        type,
-        subIdx,
-        source: this.canvasType,
-      });
-    } else if (type !== HoverType.Point && this.isHoveringOverSubPath) {
-      this.hoverService.setHoverAndNotify({
-        type: HoverType.Point,
-        subIdx,
-        source: this.canvasType,
-      });
-    } else {
-      this.hoverService.resetAndNotify();
-    }
-    this.isHovering = this.isHoveringOverSubPath && !this.isHoveringOverDeleteSubPath;
   }
 }

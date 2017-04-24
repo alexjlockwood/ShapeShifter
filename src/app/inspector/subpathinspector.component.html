@@ -1,13 +1,13 @@
-<div class="inspector-item" [class.cursor-pointer]="!!subPath"
-  (mouseenter)="onSubPathHoverEvent(true)" (mouseleave)="onSubPathHoverEvent(false)"
-  (click)="onSubPathClick($event)" [class.is-hovering]="isHovering && subPath"
+<div class="inspector-item" [class.cursor-pointer]="shouldShowPointerCursorObservable | async"
+  (mouseenter)="onSubPathHover(true)" (mouseleave)="onSubPathHover(false)"
+  (click)="onSubPathClick($event)" [class.is-hovering]="isHovering()"
   fxLayout="row" fxLayoutAlign="start center">
-  <strong><span class="subpath-text">{{subPathText}}</span></strong>
+  <strong><span class="subpath-text">{{getSubPathText()}}</span></strong>
   <span fxFlex></span>
-  <button md-icon-button mdTooltip="Delete subpath" mdTooltipPosition="above"
-    mdTooltipShowDelay="300" (mouseenter)="onDeleteSubPathHoverEvent(true)"
-    (mouseleave)="onDeleteSubPathHoverEvent(false)" *ngIf="isUnsplittable()"
-    (click)="onUnsplitButtonClick($event)">
+  <button md-icon-button mdTooltip="Delete subpath" mdTooltipPosition="below"
+    mdTooltipShowDelay="300" (mouseenter)="onDeleteSubPathHover(true)"
+    (mouseleave)="onDeleteSubPathHover(false)" *ngIf="shouldShowDeleteSubPath()"
+    (click)="onDeleteSubPathClick($event)" [disabled]="shouldDisableDeleteSubPath()">
     <md-icon>delete</md-icon>
   </button>
 </div>

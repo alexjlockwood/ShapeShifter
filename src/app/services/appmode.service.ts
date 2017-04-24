@@ -25,6 +25,10 @@ export class AppModeService {
   reset() {
     this.setAppMode(AppMode.Selection);
   }
+
+  isSelectionMode() {
+    return this.getAppMode() === AppMode.Selection;
+  }
 }
 
 export enum AppMode {
