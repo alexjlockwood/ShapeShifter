@@ -266,15 +266,10 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       }
       if (event.keyCode === 82 && !event.ctrlKey && !event.metaKey) {
         // R.
-        if (isMorphable) {
+        if (this.actionModeService.isShowingSubPathActionMode()) {
+          this.actionModeService.reversePoints();
+        } else if (isMorphable) {
           this.animatorService.setIsRepeating(!this.animatorService.isRepeating());
-        }
-        return false;
-      }
-      if (event.keyCode === 84) {
-        // T.
-        if (isMorphable) {
-          this.animatorService.setIsSlowMotion(!this.animatorService.isSlowMotion());
         }
         return false;
       }
@@ -282,6 +277,8 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
         // S.
         if (this.actionModeService.isShowingSubPathActionMode()) {
           this.actionModeService.toggleSplitSubPathsMode();
+        } else if (isMorphable) {
+          this.animatorService.setIsSlowMotion(!this.animatorService.isSlowMotion());
         }
         return false;
       }
