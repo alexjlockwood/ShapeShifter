@@ -1,5 +1,5 @@
-<div *ngIf="(toolbarObservable | async) as toolbarData" fxLayout="row"
-  fxLayoutAlign="center center" class="toolbar action-mode-disabled"
+<div *ngIf="((toolbarObservable | async) || createToolbarData()) as toolbarData"
+  fxLayout="row" fxLayoutAlign="center center" class="toolbar action-mode-disabled"
   [class.action-mode-enabled]="hasActionModeBeenEnabled && shouldShowActionMode()"
   [class.action-mode-disabled]="hasActionModeBeenEnabled && !shouldShowActionMode()">
 

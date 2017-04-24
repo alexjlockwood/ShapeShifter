@@ -16,7 +16,6 @@ import {
   StateService, MorphStatus,
   HoverService, HoverType, Hover,
   SettingsService,
-  FilePickerService,
   MorphSubPathService,
 } from '../services';
 import { CanvasRulerDirective } from './canvasruler.directive';
@@ -98,7 +97,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     private readonly animatorService: AnimatorService,
     readonly selectionService: SelectionService,
     private readonly settingsService: SettingsService,
-    private readonly filePickerService: FilePickerService,
     readonly morphSubPathService: MorphSubPathService,
   ) { }
 
@@ -117,13 +115,14 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     this.subscribeTo(
       this.stateService.getActivePathIdObservable(this.canvasType),
       (activePathId) => {
-        if (activePathId || this.canvasType === CanvasType.Preview) {
-          this.canvasContainer.css({ cursor: '' });
-        } else {
-          // Use a pointer cursor over the canvas so the user knows
-          // they can click to upload an SVG.
-          this.canvasContainer.css({ cursor: 'pointer' });
-        }
+        // TODO: reenable this stuff when fixed?
+        // if (activePathId || this.canvasType === CanvasType.Preview) {
+        // this.canvasContainer.css({ cursor: '' });
+        // } else {
+        // Use a pointer cursor over the canvas so the user knows
+        // they can click to upload an SVG.
+        // this.canvasContainer.css({ cursor: 'pointer' });
+        // }
         const vl = this.stateService.getVectorLayer(this.canvasType);
         const newWidth = vl ? vl.width : DEFAULT_VIEWPORT_SIZE;
         const newHeight = vl ? vl.height : DEFAULT_VIEWPORT_SIZE;
@@ -1056,10 +1055,11 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     //   this.isFirstClick = false;
     // }
 
-    if (this.activePathId) {
-      return;
-    }
-    this.filePickerService.showFilePicker(this.canvasType);
+    // if (this.activePathId) {
+    //   return;
+    // }
+    // TODO: re-enable this when fixed
+    // this.filePickerService.showFilePicker(this.canvasType);
   }
 
   /**

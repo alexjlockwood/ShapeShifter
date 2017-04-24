@@ -65,13 +65,20 @@ export class ToolbarComponent implements OnInit {
     this.toolbarObservable = combinedObservable.map(() => {
       const selections = this.selectionService.getSelections();
       const appMode = this.appModeService.getAppMode();
-      const selectionInfo =
-        new ToolbarData(this.stateService, this.morphSubPathService, appMode, selections);
+      const selectionInfo = this.createToolbarData();
       if (selectionInfo.getNumSelections() > 0) {
         this.hasActionModeBeenEnabled = true;
       }
       return selectionInfo;
     });
+  }
+
+  createToolbarData() {
+    return new ToolbarData(
+      this.stateService,
+      this.morphSubPathService,
+      this.appModeService.getAppMode(),
+      this.selectionService.getSelections());
   }
 
   shouldShowActionMode() {

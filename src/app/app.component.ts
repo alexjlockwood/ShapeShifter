@@ -29,7 +29,7 @@ import { DemoUtil, DEMO_MAP } from './scripts/demos';
 import 'rxjs/add/observable/combineLatest';
 
 const IS_DEV_MODE = !environment.production;
-const AUTO_LOAD_DEMO = IS_DEV_MODE && true;
+const AUTO_LOAD_DEMO = IS_DEV_MODE && false;
 const ELEMENT_RESIZE_DETECTOR = erd();
 const STORAGE_KEY_FIRST_TIME_USER = 'storage_key_first_time_user';
 
@@ -125,7 +125,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
               .flatMap(path => path.getCommands() as Command[])
               .some((cmd: Command) => cmd.isSplitPoint())
               .value();
-          return `Reverse${hasClosedPath ? '/shift' : ''} `
+          return `Reverse${hasClosedPath ? ', shift' : ''} or drag `
             + `the points below ${hasSplitCmd ? 'or drag the orange points above' : ''} `
             + `to customize the animation`;
         }
@@ -336,6 +336,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // Proxies a button click to the <input> tag that opens the file picker.
   addPathsFromSvg(canvasType?: CanvasType) {
+    // TODO: this doesnt work right now because the inputs are lazily initialized
     this.pendingFilePickerCanvasType = canvasType;
     $('#addPathsFromSvgButton').click();
   }
@@ -432,6 +433,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // Proxies a button click to the <input> tag that opens the file picker.
   addPathsFromXml(canvasType?: CanvasType) {
+    // TODO: this doesnt work right now because the inputs are lazily initialized
     $('#addPathsFromXmlButton').click();
   }
 
