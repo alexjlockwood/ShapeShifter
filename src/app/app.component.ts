@@ -298,13 +298,6 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
         }
         return false;
       }
-      if (event.keyCode === 82) {
-        // R.
-        if (this.actionModeService.isShowingSubPathActionMode()) {
-          this.actionModeService.reversePoints();
-        }
-        return false;
-      }
       if (event.keyCode === 66) {
         // B.
         if (this.actionModeService.isShowingSubPathActionMode()) {
