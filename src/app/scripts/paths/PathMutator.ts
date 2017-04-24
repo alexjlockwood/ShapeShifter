@@ -12,7 +12,7 @@ import {
 } from './SubPathState';
 import { environment } from '../../../environments/environment';
 
-const ENABLE_LOGS = !environment.production && true;
+const ENABLE_LOGS = !environment.production && false;
 
 /**
  * A builder class for creating mutated Path objects.

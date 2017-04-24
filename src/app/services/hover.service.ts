@@ -44,9 +44,7 @@ export class HoverService {
   }
 
   resetAndNotify() {
-    if (this.hover) {
-      this.setHoverAndNotify(undefined);
-    }
+    this.setHoverAndNotify(undefined);
   }
 
   notify() {

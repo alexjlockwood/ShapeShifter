@@ -1026,6 +1026,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         this.shapeSplitter.onMouseLeave(mouseLeave);
       }
     }
+    this.hoverService.resetAndNotify();
   }
 
   onClick(event: MouseEvent) {
