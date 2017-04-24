@@ -2,7 +2,7 @@ import * as _ from 'lodash';
 import {
   Component, OnInit, Input, Pipe, PipeTransform, ChangeDetectionStrategy
 } from '@angular/core';
-import { Command } from '../scripts/paths';
+import { Path, Command } from '../scripts/paths';
 import {
   HoverService,
   HoverType,
@@ -10,12 +10,11 @@ import {
   SelectionService,
   SelectionType,
   Selection,
-  AppModeService,
-  AppMode,
 } from '../services';
 import { Observable } from 'rxjs/Observable';
 import { CanvasType } from '../CanvasType';
 
+// TODO: these need to be canvas-mode-aware
 @Component({
   selector: 'app-commandinspector',
   templateUrl: './commandinspector.component.html',
@@ -28,17 +27,23 @@ export class CommandInspectorComponent implements OnInit {
   @Input() cmdIdx: number;
   @Input() command: Command;
 
-  // TODO: hide pointer cursor when not in selection mode
-  // TODO: pointer cursor in canvas doesnt show up on top of stroked path
-  isSelectionModeObservable: Observable<boolean>;
   isSelectedObservable: Observable<boolean>;
   isHovering = false;
+  private isHoveringOverCommand = false;
+  private isHoveringOverSplit = false;
+  private isHoveringOverUnsplit = false;
+  private isHoveringOverReverse = false;
+  private isHoveringOverShiftBack = false;
+  private isHoveringOverShiftForward = false;
 
+  //TODO: remove unused code in here
+  //TODO: dont allow selection while not in selection mode
+  //TODO: dont allow pointer to show up when it isnt supposed to
+  //TODO: pointer doesnt show up in canvas with stroked path
   constructor(
     private readonly stateService: StateService,
     private readonly hoverService: HoverService,
     private readonly selectionService: SelectionService,
-    private readonly appModeService: AppModeService,
   ) { }
 
   ngOnInit() {
@@ -56,9 +61,6 @@ export class CommandInspectorComponent implements OnInit {
   }
 
   onCommandClick(event: MouseEvent) {
-    if (this.appModeService.getAppMode() !== AppMode.Selection) {
-      return;
-    }
     const selections =
       this.selectionService.getSelections().filter(s => s.type === SelectionType.Point);
     const appendToList = event.shiftKey || event.metaKey;
@@ -68,6 +70,62 @@ export class CommandInspectorComponent implements OnInit {
       return;
     }
     this.selectionService.togglePoint(this.canvasType, this.subIdx, this.cmdIdx, appendToList).notify();
+  }
+
+  onReverseClick(event: MouseEvent) {
+    const fromPathLayer = this.stateService.getActivePathLayer(this.canvasType);
+    this.replacePath(fromPathLayer.pathData.mutate().reverseSubPath(this.subIdx).build(), event);
+    this.broadcastHoverEvent(true, HoverType.Reverse);
+  }
+
+  onShiftBackClick(event: MouseEvent) {
+    const fromPathLayer = this.stateService.getActivePathLayer(this.canvasType);
+    this.replacePath(fromPathLayer.pathData.mutate()
+      .shiftSubPathBack(this.subIdx)
+      .build(),
+      event);
+    this.broadcastHoverEvent(true, HoverType.ShiftBack);
+  }
+
+  onShiftForwardClick(event: MouseEvent) {
+    const fromPathLayer = this.stateService.getActivePathLayer(this.canvasType);
+    this.replacePath(fromPathLayer.pathData.mutate()
+      .shiftSubPathForward(this.subIdx)
+      .build(),
+      event);
+    this.broadcastHoverEvent(true, HoverType.ShiftForward);
+
+  }
+
+  onSplitButtonClick(event: MouseEvent) {
+    const fromPathLayer = this.stateService.getActivePathLayer(this.canvasType);
+    this.clearSelectionsAndHovers();
+    this.replacePath(
+      fromPathLayer.pathData.mutate()
+        .splitCommandInHalf(this.subIdx, this.cmdIdx)
+        .build(),
+      event);
+  }
+
+  onUnsplitButtonClick(event: MouseEvent) {
+    const fromPathLayer = this.stateService.getActivePathLayer(this.canvasType);
+    this.clearSelectionsAndHovers();
+    this.replacePath(fromPathLayer.pathData.mutate()
+      .unsplitCommand(this.subIdx, this.cmdIdx)
+      .build(),
+      event);
+  }
+
+  private clearSelectionsAndHovers() {
+    this.hoverService.resetAndNotify();
+    this.selectionService.resetAndNotify();
+  }
+
+  private replacePath(path: Path, event: MouseEvent) {
+    this.stateService.updateActivePath(this.canvasType, path);
+
+    // This ensures that the parent div won't also receive the same click event.
+    event.cancelBubble = true;
   }
 
   private getPath() {
@@ -96,18 +154,63 @@ export class CommandInspectorComponent implements OnInit {
     return this.command.isSplitPoint();
   }
 
-  onCommandHoverEvent(isHovering: boolean) {
+  onCommandHoverEvent(isHoveringOverCommand: boolean) {
+    this.isHoveringOverCommand = isHoveringOverCommand;
+    this.broadcastHoverEvent(isHoveringOverCommand, HoverType.Point);
+  }
+
+  onSplitHoverEvent(isHoveringOverSplit: boolean) {
+    this.isHoveringOverSplit = isHoveringOverSplit;
+    this.broadcastHoverEvent(isHoveringOverSplit, HoverType.Split);
+  }
+
+  onUnsplitHoverEvent(isHoveringOverUnsplit: boolean) {
+    this.isHoveringOverUnsplit = isHoveringOverUnsplit;
+    this.broadcastHoverEvent(isHoveringOverUnsplit, HoverType.Unsplit);
+  }
+
+  onReverseHoverEvent(isHoveringOverReverse: boolean) {
+    this.isHoveringOverReverse = isHoveringOverReverse;
+    this.broadcastHoverEvent(isHoveringOverReverse, HoverType.Reverse);
+  }
+
+  onShiftBackHoverEvent(isHoveringOverShiftBack: boolean) {
+    this.isHoveringOverShiftBack = isHoveringOverShiftBack;
+    this.broadcastHoverEvent(isHoveringOverShiftBack, HoverType.ShiftBack);
+  }
+
+  onShiftForwardHoverEvent(isHoveringOverShiftForward: boolean) {
+    this.isHoveringOverShiftForward = isHoveringOverShiftForward;
+    this.broadcastHoverEvent(isHoveringOverShiftForward, HoverType.ShiftForward);
+  }
+
+  private broadcastHoverEvent(isHovering: boolean, type: HoverType) {
+    const subIdx = this.subIdx;
+    const cmdIdx = this.cmdIdx;
     if (isHovering) {
       this.hoverService.setHoverAndNotify({
+        type,
+        subIdx,
+        cmdIdx,
+        source: this.canvasType,
+      });
+    } else if (type !== HoverType.Point && this.isHoveringOverCommand) {
+      this.hoverService.setHoverAndNotify({
         type: HoverType.Point,
-        subIdx: this.subIdx,
-        cmdIdx: this.cmdIdx,
+        subIdx,
+        cmdIdx,
         source: this.canvasType,
       });
     } else {
       this.hoverService.resetAndNotify();
     }
-    this.isHovering = isHovering;
+    this.isHovering =
+      this.isHoveringOverCommand
+      && !this.isHoveringOverSplit
+      && !this.isHoveringOverUnsplit
+      && !this.isHoveringOverReverse
+      && !this.isHoveringOverShiftBack
+      && !this.isHoveringOverShiftForward;
   }
 }
 
