@@ -2,7 +2,6 @@
   <form fxLayout="column">
     <div>
       <md-select color="accent" placeholder="Interpolator" [(ngModel)]="selectedInterpolator"
-        [disabled]="(shouldDisableSettingsObservable | async) ? '' : undefined"
         name="interpolator">
         <md-option *ngFor="let interpolator of INTERPOLATORS" [value]="interpolator">
           {{interpolator.label}}

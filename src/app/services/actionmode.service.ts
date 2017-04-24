@@ -1,13 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HoverService, HoverType } from './hover.service';
 import { StateService, MorphStatus } from './state.service';
-import {
-  SelectionService,
-  deleteSelectedSplitSubPath,
-  deleteSelectedSplitSegment,
-  deleteSelectedSplitPoints,
-} from './selection.service';
+import { SelectionService } from './selection.service';
 import { AppModeService, AppMode } from './appmode.service';
+import { PathUtil } from '../scripts/paths';
 
 /**
  * A simple service that provides an interface for making action mode changes.
@@ -106,11 +102,37 @@ export class ActionModeService {
   }
 
   deleteSubPaths() {
-    deleteSelectedSplitSubPath(this.stateService, this.selectionService);
+    // TODO: support deleting multiple subpaths at a time?
+    const selections = this.selectionService.getSubPathSelections();
+    if (!selections.length) {
+      return;
+    }
+    // Preconditions: all selections exist in the same canvas.
+    const { source, subIdx } = selections[0];
+    const activePathLayer = this.stateService.getActivePathLayer(source);
+    this.selectionService.resetAndNotify();
+    const mutator = activePathLayer.pathData.mutate();
+    if (activePathLayer.isStroked()) {
+      mutator.deleteStrokedSubPath(subIdx);
+    } else if (activePathLayer.isFilled()) {
+      mutator.deleteFilledSubPath(subIdx);
+    }
+    this.stateService.updateActivePath(source, mutator.build());
   }
 
   deleteSegments() {
-    deleteSelectedSplitSegment(this.stateService, this.selectionService);
+    // TODO: support deleting multiple segments at a time?
+    const selections = this.selectionService.getSelections();
+    if (!selections.length) {
+      return;
+    }
+    // Preconditions: all selections exist in the same canvas.
+    const { source, subIdx, cmdIdx } = selections[0];
+    const activePathLayer = this.stateService.getActivePathLayer(source);
+    this.selectionService.resetAndNotify();
+    const mutator = activePathLayer.pathData.mutate();
+    mutator.deleteSubPathSplitSegment(subIdx, cmdIdx);
+    this.stateService.updateActivePath(source, mutator.build());
   }
 
   setFirstPosition() {
@@ -146,6 +168,34 @@ export class ActionModeService {
   }
 
   deletePoints() {
-    deleteSelectedSplitPoints(this.stateService, this.selectionService);
+    const selections = this.selectionService.getPointSelections();
+    if (!selections.length) {
+      return;
+    }
+    // Preconditions: all selections exist in the same canvas.
+    const canvasType = selections[0].source;
+    const activePathLayer = this.stateService.getActivePathLayer(canvasType);
+    const unsplitOpsMap: Map<number, Array<{ subIdx: number, cmdIdx: number }>> = new Map();
+    for (const selection of selections) {
+      const { subIdx, cmdIdx } = selection;
+      if (!activePathLayer.pathData.getCommand(subIdx, cmdIdx).isSplitPoint()) {
+        continue;
+      }
+      let subIdxOps = unsplitOpsMap.get(subIdx);
+      if (!subIdxOps) {
+        subIdxOps = [];
+      }
+      subIdxOps.push({ subIdx, cmdIdx });
+      unsplitOpsMap.set(subIdx, subIdxOps);
+    }
+    this.selectionService.resetAndNotify();
+    const mutator = activePathLayer.pathData.mutate();
+    unsplitOpsMap.forEach((ops, idx) => {
+      PathUtil.sortPathOps(ops);
+      for (const op of ops) {
+        mutator.unsplitCommand(op.subIdx, op.cmdIdx);
+      }
+    });
+    this.stateService.updateActivePath(canvasType, mutator.build());
   }
 }
