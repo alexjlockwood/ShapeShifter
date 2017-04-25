@@ -133,7 +133,7 @@ export class ActionModeService {
     this.selectionService.resetAndNotify();
     this.hoverService.resetAndNotify();
     const mutator = activePathLayer.pathData.mutate();
-    mutator.deleteSubPathSplitSegment(subIdx, cmdIdx);
+    mutator.deleteFilledSubPathSegment(subIdx, cmdIdx);
     this.stateService.updateActivePath(source, mutator.build());
   }
 

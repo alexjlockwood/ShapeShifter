@@ -15,8 +15,6 @@ import * as polylabel from 'polylabel';
 import {
   SubPathState,
   findSubPathState,
-  findSplitSegmentParentNode,
-  flattenSubPathStates,
 } from './SubPathState';
 
 /**

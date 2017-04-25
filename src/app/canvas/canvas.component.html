@@ -7,10 +7,11 @@
   </canvas>
   <div #canvasContainer class="canvas-container" (mousedown)="onMouseDown($event)"
     (mouseup)="onMouseUp($event)" (mousemove)="onMouseMove($event)"
-    (mouseleave)="onMouseLeave($event)" (click)="onClick($event)">
-    <canvas #renderingCanvas class="rendering-canvas">
+    (mouseleave)="onMouseLeave($event)" (click)="onClick($event)"
+    (dblclick)="onDoubleClick($event)">
+    <canvas #renderingCanvas class=" rendering-canvas ">
     </canvas>
-    <canvas #overlayCanvas class="overlay-canvas">
+    <canvas #overlayCanvas class="overlay-canvas ">
     </canvas>
   </div>
 </div>

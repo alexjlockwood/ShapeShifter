@@ -8,11 +8,10 @@ import {
   SubPathState,
   SubPathStateMutator,
   flattenSubPathStates,
-  findSplitSegmentParentNode,
 } from './SubPathState';
 import { environment } from '../../../environments/environment';
 
-const ENABLE_LOGS = !environment.production && false;
+const ENABLE_LOGS = !environment.production && true;
 
 /**
  * A builder class for creating mutated Path objects.
@@ -359,8 +358,8 @@ export class PathMutator {
     const endSplitCmd = secondLeft.getCommands()[endSplitIdx];
     const endSplitPoint = endSplitCmd.getEnd();
 
-    // Give both line segments a unique ID so that we can later identify which
-    // split segments were added together.
+    // Give both line segments the same unique ID so that we can later identify which
+    // split segments were added together during the deletion phase.
     const splitSegmentId = _.uniqueId();
     const endLine =
       new CommandState(newCommand('L', [endSplitPoint, startSplitPoint]))
@@ -410,26 +409,31 @@ export class PathMutator {
     ];
     const newStates: SubPathState[] = [];
     const parent = this.findSubPathStateParent(subIdx);
-    const parentSplitSegIds =
+
+    // Find the backing IDs for each parent command state that is a split segment.
+    const parentSplitBackingIds =
       _.chain((parent ? parent.getCommandStates() : []))
-        .flatMap(css => css)
         .filter(cs => !!cs.getSplitSegmentId())
         .map(cs => cs.getBackingId())
         .value();
-    const splitSegCssIds =
+
+    // Find the backing IDs for each sibling command state that is a split segment,
+    // not including split segments that were inherited from the parent.
+    const siblingSplitBackingIds =
       _.chain(targetSps.getCommandStates())
-        .filter(cs => !!cs.getSplitSegmentId() && !parentSplitSegIds.includes(cs.getBackingId()))
+        .filter(cs => !!cs.getSplitSegmentId() && !parentSplitBackingIds.includes(cs.getBackingId()))
         .map(cs => cs.getBackingId())
         .value();
+
     // Checking for the existence of 'firstRight' and 'secondRight' ensures that
     // paths connected to the end point of a deleted split segment will still be kept.
     if (this.subPathStateMap.includes(targetSps)
-      || (firstRight && splitSegCssIds.includes(firstLeft.getBackingId()))
-      || (secondRight && splitSegCssIds.includes(secondLeft.getBackingId()))) {
+      || (firstRight && siblingSplitBackingIds.includes(firstLeft.getBackingId()))
+      || (secondRight && siblingSplitBackingIds.includes(secondLeft.getBackingId()))) {
       // If we are at the first level of the tree or if one of the new
-      // split edges is a split segment, then add a new level of the tree
-      // (if the already existing split segment is deleted, we want to
-      // delete the split segment we are creating right now as well).
+      // split edges is a split segment, then add a new level to the tree.
+      // If the already existing split segment is deleted, we want to
+      // delete the split segment we are creating right now as well.
       newStates.push(
         targetSps.mutate()
           .setSplitSubPaths(splitSubPaths)
@@ -450,17 +454,20 @@ export class PathMutator {
 
   /**
    * Deletes the filled subpath at the specified index. All adjacent sibling subpaths
-   * will be deleted as well (i.e. subpaths that share the same split segment id).
+   * will be deleted as well (i.e. subpaths that share the same split segment ID).
    */
   deleteFilledSubPath(subIdx: number) {
     LOG('deleteFilledSubPath', subIdx);
     const targetCss = this.findSubPathStateLeaf(subIdx).getCommandStates();
+    // Get the list of parent split segment IDs.
     const parentSplitSegIds =
       _.chain(this.findSubPathStateParent(subIdx).getCommandStates())
         .map(cs => cs.getSplitSegmentId())
         .compact()
         .uniq()
         .value();
+    // Get the list of sibling split segment IDs, not including split segment
+    // IDs inherited from the parent.
     const siblingSplitSegIds =
       _.chain(targetCss)
         .map(cs => cs.getSplitSegmentId())
@@ -471,7 +478,7 @@ export class PathMutator {
     siblingSplitSegIds.forEach(id => {
       const targetCs = _.find(targetCss, cs => cs.getSplitSegmentId() === id);
       const deletedSubIdxs = this.calculateDeletedSubIdxs(subIdx, targetCs);
-      this.deleteSubPathSplitSegmentInternal(subIdx, targetCs);
+      this.deleteFilledSubPathSegmentInternal(subIdx, targetCs);
       subIdx -= _.sumBy(deletedSubIdxs, idx => idx <= subIdx ? 1 : 0);
     });
     return this;
@@ -480,36 +487,40 @@ export class PathMutator {
   /**
    * Deletes the subpath split segment with the specified indices.
    */
-  deleteSubPathSplitSegment(subIdx: number, cmdIdx: number) {
+  deleteFilledSubPathSegment(subIdx: number, cmdIdx: number) {
     LOG('deleteSubPathSplitSegment', subIdx, cmdIdx);
     const { targetCs } = this.findReversedAndShiftedInternalIndices(subIdx, cmdIdx);
-    this.deleteSubPathSplitSegmentInternal(subIdx, targetCs);
+    this.deleteFilledSubPathSegmentInternal(subIdx, targetCs);
   }
 
   /**
    * Deletes the subpath split segment with the specified index. The two subpaths
    * that share the split segment ID will be merged into a single subpath.
    */
-  private deleteSubPathSplitSegmentInternal(subIdx: number, targetCs: CommandState) {
+  private deleteFilledSubPathSegmentInternal(subIdx: number, targetCs: CommandState) {
+    // Get the SubPathState ID of the node representing the subpath with index 'subIdx'.
     const targetSpsId = this.findSubPathStateLeaf(subIdx).getId();
-    const targetSegId = targetCs.getSplitSegmentId();
-    const psps = findSplitSegmentParentNode(this.subPathStateMap, targetSegId);
+    // Get the split segment ID of the target command state object.
+    const targetSplitSegId = targetCs.getSplitSegmentId();
+    const psps = this.findSplitSegmentParentNode(targetSplitSegId);
     const pssps = psps.getSplitSubPaths();
     const pcss = psps.getCommandStates();
+    // Find the first index of the split sub path containing the target.
     const splitSubPathIdx1 = _.findIndex(pssps, sps => {
-      return sps.getCommandStates().some(cs => cs.getSplitSegmentId() === targetSegId);
+      return sps.getCommandStates().some(cs => cs.getSplitSegmentId() === targetSplitSegId);
     });
+    // Find the second index of the split sub path containing the target.
     const splitSubPathIdx2 = _.findLastIndex(pssps, sps => {
-      return sps.getCommandStates().some(cs => cs.getSplitSegmentId() === targetSegId);
+      return sps.getCommandStates().some(cs => cs.getSplitSegmentId() === targetSplitSegId);
     });
     const deletedSubIdxs = this.calculateDeletedSubIdxs(subIdx, targetCs);
-    let updatedSplitSubPaths: SubPathState[] = [];
     const splitCss1 = pssps[splitSubPathIdx1].getCommandStates();
     const splitCss2 = pssps[splitSubPathIdx2].getCommandStates();
+    let updatedSplitSubPaths: SubPathState[] = [];
     if (pssps.length > 2) {
-      const parentBackingId1 = splitCss2[0].getParentCommandState().getBackingId();
+      // In addition to deleting the split segment, we will also have to merge its
+      // two adjacent sub paths together into one.
       const parentBackingId2 = _.last(splitCss2).getParentCommandState().getBackingId();
-      const parentBackingCmd1 = _.find(pcss, cs => parentBackingId1 === cs.getBackingId());
       const parentBackingCmd2 = _.find(pcss, cs => parentBackingId2 === cs.getBackingId());
 
       const newCss: CommandState[] = [];
@@ -517,8 +528,7 @@ export class PathMutator {
       let i = 0;
       for (; i < splitCss1.length; i++) {
         cs = splitCss1[i];
-        if ((i + 1 < splitCss1.length && splitCss1[i + 1].getSplitSegmentId() === targetSegId)
-          || cs.getBackingId() === parentBackingCmd1.getBackingId()) {
+        if (splitCss1[i + 1].getSplitSegmentId() === targetSplitSegId) {
           // Iterate until we reach the location of the first split.
           break;
         }
@@ -531,10 +541,10 @@ export class PathMutator {
         newCss.push(cs);
         newCss.push(splitCss2[1]);
       }
-      for (i = 2; i < splitCss2.length; i++) {
+      cs = undefined;
+      for (i = 2; i < splitCss2.length - 1; i++) {
         cs = splitCss2[i];
-        if ((i + 1 < splitCss2.length && splitCss2[i + 1].getSplitSegmentId() === targetSegId)
-          || cs.getBackingId() === parentBackingCmd2.getBackingId()) {
+        if (splitCss2[i + 1].getSplitSegmentId() === targetSplitSegId) {
           // Iterate until we reach the location of the second split.
           break;
         }
@@ -542,18 +552,22 @@ export class PathMutator {
       }
       i = _.findIndex(splitCss1, c => c.getBackingId() === parentBackingCmd2.getBackingId());
       if (i >= 0) {
-        if (splitCss1[i].getBackingId() === cs.getBackingId()) {
-          // If the split created a new point, then merge the left/right commands
-          // together to reconstruct the previous state.
-          newCss.push(splitCss1[i].merge(cs));
-        } else {
-          // If the split was done at an existing point, then simply push the next
-          // command state onto the list.
-          newCss.push(cs);
+        if (cs) {
+          if (splitCss1[i].getBackingId() === cs.getBackingId()) {
+            // If the split created a new point, then merge the left/right commands
+            // together to reconstruct the previous state.
+            newCss.push(splitCss1[i].merge(cs));
+          } else if (cs) {
+            // If the split was done at an existing point, then simply push the next
+            // command state onto the list.
+            newCss.push(cs);
+          }
         }
       } else {
         i = parentBackingCmdIdx1 + 1;
-        newCss.push(cs);
+        if (cs) {
+          newCss.push(cs);
+        }
       }
       for (i = i + 1; i < splitCss1.length; i++) {
         newCss.push(splitCss1[i]);
@@ -584,7 +598,7 @@ export class PathMutator {
    */
   private calculateDeletedSubIdxs(subIdx: number, targetCs: CommandState) {
     const splitSegId = targetCs.getSplitSegmentId();
-    const psps = findSplitSegmentParentNode(this.subPathStateMap, splitSegId);
+    const psps = this.findSplitSegmentParentNode(splitSegId);
     const pssps = psps.getSplitSubPaths();
     const splitSubPathIdx1 = _.findIndex(pssps, sps => {
       return sps.getCommandStates().some(cs => cs.getSplitSegmentId() === splitSegId);
@@ -824,6 +838,26 @@ export class PathMutator {
       // Return undefined to signal that the parent was not found.
       return undefined;
     })(this.subPathStateMap.slice());
+  }
+
+  /**
+   * Finds the first node in the tree that contains the specified split segment ID.
+   */
+  private findSplitSegmentParentNode(splitSegId: string): SubPathState {
+    return (function recurseFn(...states: SubPathState[]) {
+      for (const state of states) {
+        for (const sps of state.getSplitSubPaths()) {
+          if (sps.getCommandStates().some(cs => cs.getSplitSegmentId() === splitSegId)) {
+            return state;
+          }
+          const parent = recurseFn(sps);
+          if (parent) {
+            return parent;
+          }
+        }
+      }
+      return undefined;
+    })(...this.subPathStateMap);
   }
 }
 

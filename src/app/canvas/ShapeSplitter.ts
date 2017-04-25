@@ -63,6 +63,7 @@ export class ShapeSplitter {
     this.finalProjInfos = [];
     this.lastKnownMouseLocation = mouseUp;
     if (!this.initProjInfos.length) {
+      this.reset();
       this.component.drawOverlays();
       return;
     }
@@ -168,6 +169,7 @@ export class ShapeSplitter {
           .splitFilledSubPath(initSubIdx, startingCmdIdx, endingCmdIdx)
           .build());
     }
+    this.reset();
     this.component.drawOverlays();
   }
 
