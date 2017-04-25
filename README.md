@@ -58,7 +58,8 @@ To address these problems, Shape Shifter provides the following features:
   paths and attempts to make them compatible in an optimal way.* Depending on the complexity
   of the paths, auto fix may or may not generate a satisfying final result, so further
   modification may be necessary in order to achieve the animation you're looking for.
-* *The ability to export the results to SVG and `AnimatedVectorDrawable` format for use on
+* *The ability to export the results to SVG spritesheets, CSS keyframes, and
+  `AnimatedVectorDrawable` format for use on
   the web and in Android applications.* I'm open to adding support for other export formats
   as well, so feel free to file a [feature request][report-feature-request]!
 
