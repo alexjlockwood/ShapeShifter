@@ -2,8 +2,6 @@ import * as _ from 'lodash';
 import { Injectable } from '@angular/core';
 import { Subject } from 'rxjs/Subject';
 import { CanvasType } from '../CanvasType';
-import { StateService } from './state.service';
-import { PathUtil } from '../scripts/paths';
 
 /**
  * A simple service that broadcasts selection events to all parts of the application.

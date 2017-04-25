@@ -1040,11 +1040,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     // }
   }
 
-  onDoubleClick(event: MouseEvent) {
-    console.info(this.activePath.getPathString());
-    console.info(this.activePath);
-  }
-
   /**
    * Converts a mouse point's CSS coordinates into vector layer viewport coordinates.
    */

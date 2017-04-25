@@ -29,7 +29,7 @@ import { DemoUtil, DEMO_MAP } from './scripts/demos';
 import 'rxjs/add/observable/combineLatest';
 
 const IS_DEV_MODE = !environment.production;
-const AUTO_LOAD_DEMO = IS_DEV_MODE && true;
+const AUTO_LOAD_DEMO = IS_DEV_MODE && false;
 const ELEMENT_RESIZE_DETECTOR = erd();
 const STORAGE_KEY_FIRST_TIME_USER = 'storage_key_first_time_user';
 
