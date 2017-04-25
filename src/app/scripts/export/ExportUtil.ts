@@ -13,7 +13,6 @@ import {
   SvgTarget, SvgAnimation, SvgPropertyName, Interpolator,
 } from '../animation';
 
-// TODO: finish writing the README
 // TODO: round SVG coordinates in exported sprite sheets?
 // TODO: also export the original SVG files?
 // TODO: generate non-cubic-bezier interpolators correctly
@@ -367,9 +366,11 @@ web/
     - Contains two standalone SVG files representing the start and end state of
       the generated animation.
   sprite/
-    - TODO: write this
+    - Contains an SVG spritesheet that plays the generated animation. Assets
+      are generated in both 30fps and 60fps.
   keyframes/
-    - TODO: write this
+    - Contains CSS keyframes files that play the generated animation
+      (only supported in Chrome as of April 2017).
 
 If you have an export format that you'd like to see added, please file
 a feature request using the link below!
