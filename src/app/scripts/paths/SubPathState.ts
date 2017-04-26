@@ -1,15 +1,10 @@
 import * as _ from 'lodash';
 import { CommandState } from './CommandState';
-import { environment } from '../../../environments/environment';
 
 /**
  * Container class that encapsulates a SubPath's underlying state.
  */
 export class SubPathState {
-  private readonly backingCommandIds: ReadonlyArray<string>;
-  private readonly splitCommandIds: ReadonlyArray<string>;
-  private readonly commandIds: ReadonlyArray<string>;
-  private readonly pathString: string;
 
   constructor(
     private readonly commandStates: ReadonlyArray<CommandState>,
@@ -19,17 +14,7 @@ export class SubPathState {
     // Either empty if this sub path is not split, or an array
     // containing this sub path's split children.
     private readonly splitSubPaths: ReadonlyArray<SubPathState> = [],
-  ) {
-    if (!environment.production) {
-      // TODO: remove this at some point
-      this.backingCommandIds = commandStates.map(cs => cs.getBackingId());
-      this.splitCommandIds = commandStates.map(cs => cs.getSplitSegmentId());
-      this.commandIds = commandStates.map(cs => cs.getCommands().map(c => c.getId()).join(' '));
-      this.pathString = commandStates.map(cs => {
-        return cs.getCommands().map(c => c.toString()).join(' ');
-      }).join(' ');
-    }
-  }
+  ) { }
 
   getId() {
     return this.id;

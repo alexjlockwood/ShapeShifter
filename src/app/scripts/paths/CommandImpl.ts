@@ -1,7 +1,6 @@
 import * as _ from 'lodash';
 import { Point, Matrix, MathUtil } from '../common';
 import { Command, SvgChar } from '.';
-import { environment } from '../../../environments/environment';
 
 export function newCommand(svgChar: SvgChar, points: ReadonlyArray<Point>) {
   return new CommandImpl(svgChar, points);
@@ -13,7 +12,6 @@ export function newCommand(svgChar: SvgChar, points: ReadonlyArray<Point>) {
  * or close path).
  */
 class CommandImpl implements Command {
-  private readonly debugString: string;
 
   constructor(
     private readonly svgChar: SvgChar,
@@ -25,7 +23,6 @@ class CommandImpl implements Command {
     if (svgChar === undefined) {
       throw new Error('Attempt to set an undefined svgChar');
     }
-    this.debugString = environment.production ? '' : this.toString();
   }
 
   // Implements the Command interface.

@@ -185,13 +185,16 @@ class Animator {
 
   private startAnimation(onUpdateFn: (fraction: number, value: number) => void) {
     let startTimestamp: number = undefined;
+    const duration = this.getDuration();
+    const playbackSpeed = this.playbackSpeed_;
+    const interpolator = this.getInterpolator();
     const onAnimationFrameFn = (timestamp: number) => {
       if (!startTimestamp) {
         startTimestamp = timestamp;
       }
       const progress = timestamp - startTimestamp;
       const shouldPlayInReverse = this.shouldPlayInReverse;
-      if (progress < (this.getDuration() * this.playbackSpeed_)) {
+      if (progress < (duration * playbackSpeed)) {
         this.animationFrameId = requestAnimationFrame(onAnimationFrameFn);
       } else {
         this.shouldPlayInReverse = !this.shouldPlayInReverse;
@@ -203,8 +206,8 @@ class Animator {
           this.pause();
         }
       }
-      const fraction = Math.min(1, progress / (this.getDuration() * this.playbackSpeed_));
-      const value = this.getInterpolator().interpolateFn(fraction);
+      const fraction = Math.min(1, progress / (duration * playbackSpeed));
+      const value = interpolator.interpolateFn(fraction);
       onUpdateFn(fraction, shouldPlayInReverse ? 1 - value : value);
     };
     this.ngZone.runOutsideAngular(() => {
