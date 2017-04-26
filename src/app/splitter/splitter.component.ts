@@ -25,17 +25,17 @@ export class SplitterComponent {
     return this.isHovering || !!this.downPoint;
   }
 
-  @HostListener('mouseenter')
+  @HostListener('mouseenter', ['$event'])
   onMouseEnter(event: MouseEvent) {
     this.isHovering = true;
   }
 
-  @HostListener('mouseleave')
+  @HostListener('mouseleave', ['$event'])
   onMouseLeave(event: MouseEvent) {
     this.isHovering = false;
   }
 
-  @HostListener('mousedown')
+  @HostListener('mousedown', ['$event'])
   onMouseDown(event: MouseEvent) {
     this.downHeight = this.parent.height();
     event = event || window.event as MouseEvent;
