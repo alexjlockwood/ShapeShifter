@@ -56,12 +56,9 @@
     <!-- Path inspector. -->
     <div class="inspector-panel" fxLayout="column" fxFlex>
       <div class="inspector-panel-header" fxLayout="row" fxLayoutAlign="start center">
-        <span *ngIf="morphStatus !== MORPH_NONE">
-          <span class="status-text" [ngClass]="{
+        <span class="status-text" [ngClass]="{
             'unmorphable': morphStatus === MORPH_UNMORPHABLE,
-            'morphable': morphStatus === MORPH_MORPHABLE}"
-            [innerHTML]="statusTextObservable | async">
-          </span>
+            'morphable': morphStatus === MORPH_MORPHABLE}" [innerHTML]="statusTextObservable | async">
         </span>
       </div>
       <app-pathinspector fxFlexFill></app-pathinspector>
