@@ -2,7 +2,6 @@ import * as JSZip from 'jszip';
 import * as $ from 'jquery';
 import * as KeyframesSerializer from './KeyframesSerializer';
 import * as SpriteSerializer from './SpriteSerializer';
-import { environment } from '../../../environments/environment';
 import { StateService } from '../../services';
 import { PathLayer, GroupLayer, VectorLayer } from '../layers';
 import { CanvasType } from '../../CanvasType';
@@ -16,9 +15,7 @@ import {
 // TODO: round SVG coordinates in exported sprite sheets?
 // TODO: also export the original SVG files?
 // TODO: generate non-cubic-bezier interpolators correctly
-const SHOULD_EXPORT_CSS_KEYFRAMES = !environment.production && true;
 // TODO: round widths/heights to nearest pixel to avoid weird offsets
-const SHOULD_EXPORT_SVG_SPRITE = !environment.production && true;
 
 export function generateZip(
   stateService: StateService,
@@ -139,29 +136,28 @@ export function generateZip(
   const svg = web.folder('svg');
   svg.file('start.svg', startSvg);
   svg.file('end.svg', endSvg);
-  if (SHOULD_EXPORT_CSS_KEYFRAMES) {
-    // Create a CSS keyframe animation.
-    const keyframes = web.folder('keyframes');
-    keyframes.file('keyframes.html', KeyframesSerializer.createHtml(startSvg, 'keyframes.css'));
-    keyframes.file('keyframes.css', KeyframesSerializer.createCss(svgTargets, duration, interpolator.webRef));
-  }
-  if (SHOULD_EXPORT_SVG_SPRITE) {
-    // Create an svg sprite animation.
-    const sprite = web.folder('sprite');
-    [30, 60].forEach(fps => {
-      const numSteps = Math.ceil(duration / 1000 * fps);
-      const svgSprite =
-        SpriteSerializer.createSvg(startVl, endVl, interpolator, numSteps);
-      const cssSprite =
-        SpriteSerializer.createCss(startVl.width, startVl.height, duration, numSteps);
-      const fileName = `sprite_${fps}fps`;
-      const htmlSprite = SpriteSerializer.createHtml(`${fileName}.svg`, `${fileName}.css`);
-      const spriteFolder = sprite.folder(`${fps}fps`);
-      spriteFolder.file(`${fileName}.html`, htmlSprite);
-      spriteFolder.file(`${fileName}.css`, cssSprite);
-      spriteFolder.file(`${fileName}.svg`, svgSprite);
-    });
-  }
+
+  // Create a CSS keyframe animation.
+  const keyframes = web.folder('keyframes');
+  keyframes.file('keyframes.html', KeyframesSerializer.createHtml(startSvg, 'keyframes.css'));
+  keyframes.file('keyframes.css', KeyframesSerializer.createCss(svgTargets, duration, interpolator.webRef));
+
+  // Create an svg sprite animation.
+  const sprite = web.folder('sprite');
+  [30, 60].forEach(fps => {
+    const numSteps = Math.ceil(duration / 1000 * fps);
+    const svgSprite =
+      SpriteSerializer.createSvg(startVl, endVl, interpolator, numSteps);
+    const cssSprite =
+      SpriteSerializer.createCss(startVl.width, startVl.height, duration, numSteps);
+    const fileName = `sprite_${fps}fps`;
+    const htmlSprite = SpriteSerializer.createHtml(`${fileName}.svg`, `${fileName}.css`);
+    const spriteFolder = sprite.folder(`${fps}fps`);
+    spriteFolder.file(`${fileName}.html`, htmlSprite);
+    spriteFolder.file(`${fileName}.css`, cssSprite);
+    spriteFolder.file(`${fileName}.svg`, svgSprite);
+  });
+
   zip.generateAsync({ type: 'blob' }).then(content => {
     downloadFile(content, 'ShapeShifter.zip');
   });
