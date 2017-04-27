@@ -108,7 +108,6 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
         const startLayer = this.stateService.getActivePathLayer(CanvasType.Start);
         const endLayer = this.stateService.getActivePathLayer(CanvasType.End);
         if (!startLayer || !endLayer) {
-          // TODO: should we display a message here? does this ever even happen?
           // TODO: show better user messaging when attempting to morph btw stroked and fill paths
           return '';
         }
