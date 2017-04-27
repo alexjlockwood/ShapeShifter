@@ -10,6 +10,7 @@ import { MaterialModule, MdIconRegistry } from '@angular/material';
 import { AppComponent } from './app.component';
 import { CanvasComponent } from './canvas/canvas.component';
 import { TimelineComponent } from './timeline/timeline.component';
+import { TimelineRulerComponent } from './timeline/timelineruler.component';
 import { CanvasRulerDirective } from './canvas/canvasruler.directive';
 import { PathInspectorComponent } from './inspector/pathinspector.component';
 import { CommandInspectorComponent } from './inspector/commandinspector.component';
@@ -61,6 +62,7 @@ import 'hammerjs';
     SettingsComponent,
     ToolbarComponent,
     TimelineComponent,
+    TimelineRulerComponent,
     VectorViewerComponent,
     ConfirmDialogComponent,
     DemoDialogComponent,

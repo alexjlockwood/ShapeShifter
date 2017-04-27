@@ -3,7 +3,7 @@ import { Component, OnInit, Input } from '@angular/core';
 import { Layer } from '../scripts/layers';
 
 // TODO: determine if we want to show group layers
-const SHOULD_HIDE_GROUP_LAYERS = true;
+const SHOULD_HIDE_GROUP_LAYERS = false;
 
 @Component({
   selector: 'app-layertree',

@@ -56,7 +56,8 @@
     <!-- Path inspector. -->
     <div class="inspector-panel" fxLayout="column" fxFlex>
       <div class="inspector-panel-header" fxLayout="row" fxLayoutAlign="start center">
-        <span class="status-text" [ngClass]="{
+        <app-timelineruler></app-timelineruler>
+        <span *ngIf="false" class="status-text" [ngClass]="{
             'unmorphable': morphStatus === MORPH_UNMORPHABLE,
             'morphable': morphStatus === MORPH_MORPHABLE}" [innerHTML]="statusTextObservable | async">
         </span>
