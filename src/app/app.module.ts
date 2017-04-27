@@ -45,6 +45,7 @@ import { SubPathPairsPipe } from './inspector/pathinspector.component';
 import { SvgCommandPipe } from './inspector/commandinspector.component';
 
 import 'hammerjs';
+import { TimelineComponent } from './timeline/timeline.component';
 
 @NgModule({
   declarations: [
@@ -63,6 +64,7 @@ import 'hammerjs';
     DemoDialogComponent,
     SvgCommandPipe,
     SubPathPairsPipe,
+    TimelineComponent,
   ],
   imports: [
     BrowserModule,
