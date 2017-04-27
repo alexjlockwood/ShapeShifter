@@ -1,8 +1,14 @@
+# [v0.3.0](https://github.com/alexjlockwood/ShapeShifter/compare/v0.2.0...v0.3.0) (2017-05-01)
+
+### Features
+
+* TODO: write this
+
 # [v0.2.0](https://github.com/alexjlockwood/ShapeShifter/compare/v0.1.3...v0.2.0) (2017-04-10)
 
 ### Features
 
-* Shape Shifter has a brand new landing page: https://shapeshifter.design
+* Shape Shifter has a new landing page: https://shapeshifter.design
 * It is now possible to morph paths with different numbers of subpaths! Here's
   a rundown of the new features that make it possible:
     * *Unmatched subpaths are automatically animated down to a point.* For example,
