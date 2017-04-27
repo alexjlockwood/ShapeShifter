@@ -80,11 +80,6 @@ export class ToolbarComponent implements OnInit {
   }
 
   shouldShowActionMode() {
-    const startLayer = this.stateService.getActivePathLayer(CanvasType.Start);
-    const endLayer = this.stateService.getActivePathLayer(CanvasType.End);
-    if (!startLayer || !endLayer) {
-      return false;
-    }
     return this.actionModeService.isShowingActionMode();
   }
 
@@ -301,21 +296,6 @@ class ToolbarData {
     return this.points.length;
   }
 
-  shouldShowMorphSubPaths() {
-    const startLayer = this.stateService.getActivePathLayer(CanvasType.Start);
-    const endLayer = this.stateService.getActivePathLayer(CanvasType.End);
-    if (!startLayer || !endLayer) {
-      return false;
-    }
-    if (startLayer.pathData.getSubPaths().length === 1
-      && endLayer.pathData.getSubPaths().length === 1) {
-      return false;
-    }
-    return this.getNumSubPaths() === 1
-      || this.getNumSegments() > 0
-      || !this.isSelectionMode();
-  }
-
   getToolbarTitle() {
     if (this.appMode === AppMode.SplitCommands) {
       return 'Add points';
@@ -363,6 +343,25 @@ class ToolbarData {
     return '';
   }
 
+  private shouldShowActionMode() {
+    return this.getNumSelections() > 0 || !this.isSelectionMode();
+  }
+
+  shouldShowMorphSubPaths() {
+    const startLayer = this.stateService.getActivePathLayer(CanvasType.Start);
+    const endLayer = this.stateService.getActivePathLayer(CanvasType.End);
+    if (!startLayer || !endLayer) {
+      return false;
+    }
+    if (startLayer.pathData.getSubPaths().length === 1
+      && endLayer.pathData.getSubPaths().length === 1) {
+      return false;
+    }
+    return this.getNumSubPaths() === 1
+      || this.getNumSegments() > 0
+      || !this.isSelectionMode();
+  }
+
   getNumSplitSubPaths() {
     return this.numSplitSubPaths || 0;
   }
@@ -377,10 +376,6 @@ class ToolbarData {
 
   shouldShowShiftSubPath() {
     return this.showShiftSubPath || false;
-  }
-
-  shouldShowActionMode() {
-    return this.getNumSelections() > 0 || !this.isSelectionMode();
   }
 
   shouldShowSplitInHalf() {

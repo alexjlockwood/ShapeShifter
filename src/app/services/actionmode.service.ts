@@ -19,27 +19,23 @@ export class ActionModeService {
   ) { }
 
   isShowingActionMode() {
-    return this.stateService.getMorphStatus() !== MorphStatus.None
-      && (this.selectionService.getSelections().length
-        || this.appModeService.getAppMode() !== AppMode.Selection);
+    return this.selectionService.getSelections().length
+      || this.appModeService.getAppMode() !== AppMode.Selection;
   }
 
   isShowingSubPathActionMode() {
-    return this.stateService.getMorphStatus() !== MorphStatus.None
-      && (this.selectionService.getSubPathSelections().length
-        || this.appModeService.getAppMode() !== AppMode.Selection);
+    return this.selectionService.getSubPathSelections().length
+      || this.appModeService.getAppMode() !== AppMode.Selection;
   }
 
   isShowingSegmentActionMode() {
-    return this.stateService.getMorphStatus() !== MorphStatus.None
-      && (this.selectionService.getSegmentSelections().length
-        || this.appModeService.getAppMode() !== AppMode.Selection);
+    return this.selectionService.getSegmentSelections().length
+      || this.appModeService.getAppMode() !== AppMode.Selection;
   }
 
   isShowingPointActionMode() {
-    return this.stateService.getMorphStatus() !== MorphStatus.None
-      && (this.selectionService.getPointSelections().length
-        || this.appModeService.getAppMode() !== AppMode.Selection);
+    return this.selectionService.getPointSelections().length
+      || this.appModeService.getAppMode() !== AppMode.Selection;
   }
 
   closeActionMode() {

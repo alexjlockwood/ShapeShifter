@@ -145,7 +145,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.subscriptions.push(
       this.filePickerService.asObservable()
-        .subscribe((canvasType: CanvasType) => this.addPathsFromSvg(canvasType)));
+        .subscribe(canvasType => this.addPathsFromSvg(canvasType)));
   }
 
   ngAfterViewInit() {

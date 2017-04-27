@@ -340,6 +340,17 @@ export class StateService {
           notifyTypes.push(type);
         }
       });
+    const shouldClearSelections = this.selectionService.getSelections().some(s => {
+      return notifyTypes.includes(s.source);
+    });
+    if (shouldClearSelections) {
+      this.selectionService.resetAndNotify();
+    }
+    const shouldClearHovers =
+      this.hoverService.getHover() && notifyTypes.includes(this.hoverService.getHover().source);
+    if (shouldClearHovers) {
+      this.hoverService.resetAndNotify();
+    }
     for (const type of notifyTypes) {
       this.notifyChange(type);
     }
