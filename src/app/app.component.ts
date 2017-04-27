@@ -79,8 +79,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     private readonly hoverService: HoverService,
     private readonly animatorService: AnimatorService,
     private readonly canvasResizeService: CanvasResizeService,
-    // This is public so that it can be accessed by the template.
-    public readonly appModeService: AppModeService,
+    private readonly appModeService: AppModeService,
     private readonly actionModeService: ActionModeService,
   ) { }
 
@@ -118,7 +117,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
               .flatMap(path => path.getSubPaths() as SubPath[])
               .some((subPath: SubPath) => subPath.isClosed() && !subPath.isCollapsing())
               .value();
-          return `Reverse${hasClosedPath ? ', shift,' : ''} or create new `
+          return `Reverse${hasClosedPath ? ', shift,' : ''} drag, or create `
             + `points above to customize the animation`;
         }
         if (status === MorphStatus.Unmorphable) {
