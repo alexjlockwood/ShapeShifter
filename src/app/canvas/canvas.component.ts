@@ -365,14 +365,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     return DRAG_TRIGGER_TOUCH_SLOP / this.cssScale;
   }
 
-  // Takes a path point and transforms it so that its coordinates are in terms
-  // of the VectorLayer's viewport coordinates.
-  private applyGroupTransforms(mousePoint: Point) {
-    return MathUtil.transformPoint(
-      mousePoint,
-      Matrix.flatten(...this.transformsForActiveLayer.reverse()));
-  }
-
   performHitTest(mousePoint: Point, opts: HitTestOpts = {}) {
     const transformMatrix =
       Matrix.flatten(...this.transformsForActiveLayer.reverse()).invert();
@@ -502,7 +494,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     this.vectorLayer.walk(layer => {
       if (layer instanceof ClipPathLayer) {
         const transforms = LayerUtil.getTransformsForLayer(this.vectorLayer, layer.id);
-        this.executeCommands(ctx, layer.pathData.getCommands(), transforms);
+        executeCommands(ctx, layer.pathData.getCommands(), transforms);
         ctx.clip();
         return;
       }
@@ -517,7 +509,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       ctx.save();
 
       const transforms = LayerUtil.getTransformsForLayer(this.vectorLayer, layer.id);
-      this.executeCommands(ctx, commands, transforms);
+      executeCommands(ctx, commands, transforms);
 
       // TODO: confirm this stroke multiplier thing works...
       const strokeWidthMultiplier = Matrix.flatten(...transforms).getScale();
@@ -619,6 +611,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     if (this.canvasType === CanvasType.Preview) {
       return;
     }
+    const transforms = this.transformsForActiveLayer;
     if (this.selectionHelper) {
       // Draw any highlighted subpaths. We'll highlight a subpath if a subpath
       // selection or a point selection exists.
@@ -641,7 +634,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         const cmds = subPath.getCommands();
         const isSplitSubPath = cmds.some(c => c.isSplitSegment());
         const highlightColor = isSplitSubPath ? SPLIT_POINT_COLOR : HIGHLIGHT_COLOR;
-        this.executeCommands(ctx, cmds);
+        executeCommands(ctx, cmds, transforms);
         this.executeHighlights(ctx, highlightColor, this.selectedSegmentLineWidth);
       }
 
@@ -662,14 +655,14 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         segmentSelections
           .map(s => this.activePath.getCommand(s.subIdx, s.cmdIdx))
           .filter(cmd => cmd.isSplitSegment());
-      this.executeCommands(ctx, segmentSelectionCmds);
+      executeCommands(ctx, segmentSelectionCmds, transforms);
       this.executeHighlights(ctx, SPLIT_POINT_COLOR, this.selectedSegmentLineWidth);
     } else if (this.segmentSplitter && this.segmentSplitter.getProjectionOntoPath()) {
       // Highlight the segment as the user hovers over it.
       const { subIdx, cmdIdx, projection: { d } } =
         this.segmentSplitter.getProjectionOntoPath();
       if (d < this.minSnapThreshold) {
-        this.executeCommands(ctx, [this.activePath.getCommand(subIdx, cmdIdx)]);
+        executeCommands(ctx, [this.activePath.getCommand(subIdx, cmdIdx)], transforms);
         this.executeHighlights(ctx, SPLIT_POINT_COLOR, this.selectedSegmentLineWidth);
       }
     }
@@ -681,7 +674,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         .flatMap(s => s.getCommands() as Command[])
         .filter(c => c.isSplitSegment())
         .value();
-    this.executeCommands(ctx, cmds);
+    executeCommands(ctx, cmds, transforms);
     this.executeHighlights(ctx, SPLIT_POINT_COLOR, this.unselectedSegmentLineWidth);
 
     if (this.morphSubPathHelper) {
@@ -691,7 +684,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         const { source, subIdx } = currUnpair;
         const subPath = this.activePath.getSubPath(subIdx);
         if (source === this.canvasType) {
-          this.executeCommands(ctx, subPath.getCommands());
+          executeCommands(ctx, subPath.getCommands(), transforms);
           this.executeHighlights(ctx, SPLIT_POINT_COLOR, this.selectedSegmentLineWidth);
         }
       }
@@ -709,13 +702,13 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           _.flatMap(
             Array.from(pairedSubPaths),
             subIdx => this.activePath.getSubPath(subIdx).getCommands() as Command[]);
-        this.executeCommands(ctx, pairedCmds);
+        executeCommands(ctx, pairedCmds, transforms);
         this.executeHighlights(ctx, NORMAL_POINT_COLOR, this.selectedSegmentLineWidth);
       }
       if (hasHover) {
         // Highlight the hover in orange, if it exists.
         const hoverCmds = this.activePath.getSubPath(this.currentHover.subIdx).getCommands();
-        this.executeCommands(ctx, hoverCmds);
+        executeCommands(ctx, hoverCmds, transforms);
         this.executeHighlights(ctx, SPLIT_POINT_COLOR, this.selectedSegmentLineWidth);
       }
     } else if (this.shapeSplitter) {
@@ -726,15 +719,13 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         // Draw a line from the starting projection to the final projection (or
         // to the last known mouse location, if one doesn't exist).
         const startPoint =
-          this.applyGroupTransforms(new Point(proj1.projection.x, proj1.projection.y));
+          applyGroupTransforms(new Point(proj1.projection.x, proj1.projection.y), transforms);
         const endPoint = proj2
-          ? this.applyGroupTransforms(new Point(proj2.projection.x, proj2.projection.y))
+          ? applyGroupTransforms(new Point(proj2.projection.x, proj2.projection.y), transforms)
           : this.shapeSplitter.getLastKnownMouseLocation();
-        ctx.save();
         ctx.beginPath();
         ctx.moveTo(startPoint.x, startPoint.y);
         ctx.lineTo(endPoint.x, endPoint.y);
-        ctx.restore();
         this.executeHighlights(ctx, SPLIT_POINT_COLOR, this.selectedSegmentLineWidth);
       }
       if (!proj1 || proj2) {
@@ -744,7 +735,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
           const projection = projectionOntoPath.projection;
           if (projection && projection.d < this.minSnapThreshold) {
             const { subIdx, cmdIdx } = projectionOntoPath;
-            this.executeCommands(ctx, [this.activePath.getCommand(subIdx, cmdIdx)]);
+            executeCommands(ctx, [this.activePath.getCommand(subIdx, cmdIdx)], transforms);
             this.executeHighlights(ctx, SPLIT_POINT_COLOR, this.selectedSegmentLineWidth);
           }
         }
@@ -828,6 +819,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       this.selectionHelper && this.selectionHelper.isDragTriggered()
         ? this.selectionHelper.getDraggableSplitIndex()
         : undefined;
+    const transforms = this.transformsForActiveLayer;
     for (const { cmd, subIdx, cmdIdx } of pointInfos) {
       if (draggingIndex
         && subIdx === draggingIndex.subIdx
@@ -861,7 +853,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         color = NORMAL_POINT_COLOR;
       }
       this.executeLabeledPoint(
-        ctx, this.applyGroupTransforms(_.last(cmd.getPoints())), radius, color, text);
+        ctx, applyGroupTransforms(_.last(cmd.getPoints()), transforms), radius, color, text);
     }
   }
 
@@ -875,7 +867,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     const { x, y, d } = this.selectionHelper.getProjectionOntoPath().projection;
     const point =
       d < this.minSnapThreshold
-        ? this.applyGroupTransforms(new Point(x, y))
+        ? applyGroupTransforms(new Point(x, y), this.transformsForActiveLayer)
         : this.selectionHelper.getLastKnownMouseLocation();
     this.executeLabeledPoint(
       ctx,
@@ -898,7 +890,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     if (d < this.minSnapThreshold) {
       this.executeLabeledPoint(
         ctx,
-        this.applyGroupTransforms(new Point(x, y)),
+        applyGroupTransforms(new Point(x, y), this.transformsForActiveLayer),
         this.splitPointRadius,
         SPLIT_POINT_COLOR);
     }
@@ -909,17 +901,18 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     if (this.appMode !== AppMode.SplitSubPaths || !this.shapeSplitter) {
       return;
     }
+    const transforms = this.transformsForActiveLayer;
     const proj1 = this.shapeSplitter.getInitialProjectionOntoPath();
     if (proj1) {
       const proj2 = this.shapeSplitter.getFinalProjectionOntoPath();
       this.executeLabeledPoint(
         ctx,
-        this.applyGroupTransforms(new Point(proj1.projection.x, proj1.projection.y)),
+        applyGroupTransforms(new Point(proj1.projection.x, proj1.projection.y), transforms),
         this.splitPointRadius,
         SPLIT_POINT_COLOR);
       if (this.shapeSplitter.willFinalProjectionOntoPathCreateSplitPoint()) {
         const endPoint = proj2
-          ? this.applyGroupTransforms(new Point(proj2.projection.x, proj2.projection.y))
+          ? applyGroupTransforms(new Point(proj2.projection.x, proj2.projection.y), transforms)
           : this.shapeSplitter.getLastKnownMouseLocation();
         this.executeLabeledPoint(
           ctx,
@@ -932,7 +925,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       if (d < this.minSnapThreshold) {
         this.executeLabeledPoint(
           ctx,
-          this.applyGroupTransforms(new Point(x, y)),
+          applyGroupTransforms(new Point(x, y), transforms),
           this.splitPointRadius,
           SPLIT_POINT_COLOR);
       }
@@ -1030,14 +1023,11 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   }
 
   onClick(event: MouseEvent) {
+    // TODO: re-enable click canvas to import file?
+
     // TODO: is this hacky? should we be using onBlur() to reset the app mode?
     // This ensures that parents won't also receive the same click event.
     event.cancelBubble = true;
-
-    // TODO: re-enable this when fixed
-    // if (!this.activePathId) {
-    //   this.filePickerService.showFilePicker(this.canvasType);
-    // }
   }
 
   /**
@@ -1048,57 +1038,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     const x = (event.pageX - canvasOffset.left) / this.cssScale;
     const y = (event.pageY - canvasOffset.top) / this.cssScale;
     return new Point(x, y);
-  }
-
-  private executeCommands(
-    ctx: Context,
-    commands: ReadonlyArray<Command>,
-    transforms = this.transformsForActiveLayer) {
-
-    ctx.save();
-    transforms.forEach(m => ctx.transform(m.a, m.b, m.c, m.d, m.e, m.f));
-    ctx.beginPath();
-
-    if (commands.length === 1 && commands[0].getSvgChar() !== 'M') {
-      ctx.moveTo(commands[0].getStart().x, commands[0].getStart().y);
-    }
-
-    let previousEndPoint: Point;
-    commands.forEach(cmd => {
-      const start = cmd.getStart();
-      const end = cmd.getEnd();
-
-      if (start && !start.equals(previousEndPoint)) {
-        // This is to support the case where the list of commands
-        // is size fragmented.
-        ctx.moveTo(start.x, start.y);
-      }
-
-      if (cmd.getSvgChar() === 'M') {
-        ctx.moveTo(end.x, end.y);
-      } else if (cmd.getSvgChar() === 'L') {
-        ctx.lineTo(end.x, end.y);
-      } else if (cmd.getSvgChar() === 'Q') {
-        ctx.quadraticCurveTo(
-          cmd.getPoints()[1].x, cmd.getPoints()[1].y,
-          cmd.getPoints()[2].x, cmd.getPoints()[2].y);
-      } else if (cmd.getSvgChar() === 'C') {
-        ctx.bezierCurveTo(
-          cmd.getPoints()[1].x, cmd.getPoints()[1].y,
-          cmd.getPoints()[2].x, cmd.getPoints()[2].y,
-          cmd.getPoints()[3].x, cmd.getPoints()[3].y);
-      } else if (cmd.getSvgChar() === 'Z') {
-        if (start.equals(previousEndPoint)) {
-          ctx.closePath();
-        } else {
-          // This is to support the case where the list of commands
-          // is size fragmented.
-          ctx.lineTo(end.x, end.y);
-        }
-      }
-      previousEndPoint = end;
-    });
-    ctx.restore();
   }
 
   private executeHighlights(ctx: Context, color: string, lineWidth: number) {
@@ -1158,6 +1097,65 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     const y = (event.pageY - canvasOffset.top) / Math.max(1, this.cssScale);
     this.canvasRulers.forEach(r => r.showMouse(new Point(_.round(x), _.round(y))));
   }
+}
+
+// Takes a path point and transforms it so that its coordinates are in terms
+// of the VectorLayer's viewport coordinates.
+function applyGroupTransforms(mousePoint: Point, transforms: Matrix[]) {
+  return MathUtil.transformPoint(
+    mousePoint,
+    Matrix.flatten(...transforms.slice().reverse()));
+}
+
+function executeCommands(
+  ctx: Context,
+  commands: ReadonlyArray<Command>,
+  transforms: Matrix[]) {
+
+  ctx.save();
+  transforms.forEach(m => ctx.transform(m.a, m.b, m.c, m.d, m.e, m.f));
+  ctx.beginPath();
+
+  if (commands.length === 1 && commands[0].getSvgChar() !== 'M') {
+    ctx.moveTo(commands[0].getStart().x, commands[0].getStart().y);
+  }
+
+  let previousEndPoint: Point;
+  commands.forEach(cmd => {
+    const start = cmd.getStart();
+    const end = cmd.getEnd();
+
+    if (start && !start.equals(previousEndPoint)) {
+      // This is to support the case where the list of commands
+      // is size fragmented.
+      ctx.moveTo(start.x, start.y);
+    }
+
+    if (cmd.getSvgChar() === 'M') {
+      ctx.moveTo(end.x, end.y);
+    } else if (cmd.getSvgChar() === 'L') {
+      ctx.lineTo(end.x, end.y);
+    } else if (cmd.getSvgChar() === 'Q') {
+      ctx.quadraticCurveTo(
+        cmd.getPoints()[1].x, cmd.getPoints()[1].y,
+        cmd.getPoints()[2].x, cmd.getPoints()[2].y);
+    } else if (cmd.getSvgChar() === 'C') {
+      ctx.bezierCurveTo(
+        cmd.getPoints()[1].x, cmd.getPoints()[1].y,
+        cmd.getPoints()[2].x, cmd.getPoints()[2].y,
+        cmd.getPoints()[3].x, cmd.getPoints()[3].y);
+    } else if (cmd.getSvgChar() === 'Z') {
+      if (start.equals(previousEndPoint)) {
+        ctx.closePath();
+      } else {
+        // This is to support the case where the list of commands
+        // is size fragmented.
+        ctx.lineTo(end.x, end.y);
+      }
+    }
+    previousEndPoint = end;
+  });
+  ctx.restore();
 }
 
 interface HitTestOpts {

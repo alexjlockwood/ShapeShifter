@@ -151,22 +151,20 @@ export function autoConvert(
 
   const fromCmds = srcFromPath.getSubPaths()[subIdx].getCommands();
   const toCmds = srcToPath.getSubPaths()[subIdx].getCommands();
-  let from = srcFromPath;
-  let to = srcToPath;
+  const fromMutator = srcFromPath.mutate();
+  const toMutator = srcToPath.mutate();
   fromCmds.forEach((fromCmd, cmdIdx) => {
     const toCmd = toCmds[cmdIdx];
     if (fromCmd.getSvgChar() === toCmd.getSvgChar()) {
       return;
     }
     if (fromCmd.canConvertTo(toCmd.getSvgChar())) {
-      // TODO: perform all of these as a single batch operation?
-      from = from.mutate().convertCommand(subIdx, cmdIdx, toCmd.getSvgChar()).build();
+      fromMutator.convertCommand(subIdx, cmdIdx, toCmd.getSvgChar());
     } else if (toCmd.canConvertTo(fromCmd.getSvgChar())) {
-      // TODO: perform all of these as a single batch operation?
-      to = to.mutate().convertCommand(subIdx, cmdIdx, fromCmd.getSvgChar()).build();
+      toMutator.convertCommand(subIdx, cmdIdx, fromCmd.getSvgChar());
     }
   });
-  return { from, to };
+  return { from: fromMutator.build(), to: toMutator.build() };
 }
 
 /** Represents either a valid object or an empty gap slot. */
