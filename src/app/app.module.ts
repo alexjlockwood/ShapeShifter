@@ -9,6 +9,7 @@ import { MaterialModule, MdIconRegistry } from '@angular/material';
 // Components & directives.
 import { AppComponent } from './app.component';
 import { CanvasComponent } from './canvas/canvas.component';
+import { TimelineComponent } from './timeline/timeline.component';
 import { CanvasRulerDirective } from './canvas/canvasruler.directive';
 import { PathInspectorComponent } from './inspector/pathinspector.component';
 import { CommandInspectorComponent } from './inspector/commandinspector.component';
@@ -45,7 +46,6 @@ import { SubPathPairsPipe } from './inspector/pathinspector.component';
 import { SvgCommandPipe } from './inspector/commandinspector.component';
 
 import 'hammerjs';
-import { TimelineComponent } from './timeline/timeline.component';
 
 @NgModule({
   declarations: [
@@ -59,12 +59,12 @@ import { TimelineComponent } from './timeline/timeline.component';
     CanvasRulerDirective,
     SettingsComponent,
     ToolbarComponent,
+    TimelineComponent,
     VectorViewerComponent,
     ConfirmDialogComponent,
     DemoDialogComponent,
     SvgCommandPipe,
     SubPathPairsPipe,
-    TimelineComponent,
   ],
   imports: [
     BrowserModule,
