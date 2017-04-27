@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HoverService, HoverType } from './hover.service';
-import { StateService, MorphStatus } from './state.service';
+import { StateService } from './state.service';
 import { SelectionService } from './selection.service';
 import { AppModeService, AppMode } from './appmode.service';
 import { PathUtil } from '../scripts/paths';
