@@ -105,7 +105,7 @@ export class AppModule {
       .addSvgIcon('autofix', sanitizer.bypassSecurityTrustResourceUrl('assets/autofix.svg'))
       .addSvgIcon('contribute', sanitizer.bypassSecurityTrustResourceUrl('assets/contribute.svg'))
       .addSvgIcon('shapeshifter', sanitizer.bypassSecurityTrustResourceUrl('assets/shapeshifter.svg'))
-      .addSvgIcon('importlayers', sanitizer.bypassSecurityTrustResourceUrl('assets/importlayers.svg'))
+      .addSvgIcon('addpaths', sanitizer.bypassSecurityTrustResourceUrl('assets/addpaths.svg'))
       .addSvgIcon('clippath', sanitizer.bypassSecurityTrustResourceUrl('assets/clippath.svg'))
       .addSvgIcon('group', sanitizer.bypassSecurityTrustResourceUrl('assets/group.svg'))
       .addSvgIcon('path', sanitizer.bypassSecurityTrustResourceUrl('assets/path.svg'))
