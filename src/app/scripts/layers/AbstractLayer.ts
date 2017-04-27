@@ -1,4 +1,4 @@
-import { Layer, GroupLayer, ClipPathLayer, PathLayer } from '.';
+import { Layer, GroupLayer, ClipPathLayer, PathLayer, VectorLayer } from '.';
 
 /**
  * Root class for all layer model classes.
@@ -52,5 +52,25 @@ export abstract class AbstractLayer implements Layer {
       }
     };
     visitFn(this);
+  }
+
+  // Implements the Layer interface.
+  isPathLayer() {
+    return this instanceof PathLayer;
+  }
+
+  // Implements the Layer interface.
+  isClipPathLayer() {
+    return this instanceof ClipPathLayer;
+  }
+
+  // Implements the Layer interface.
+  isGroupLayer() {
+    return this instanceof GroupLayer;
+  }
+
+  // Implements the Layer interface.
+  isVectorLayer() {
+    return this instanceof VectorLayer;
   }
 }

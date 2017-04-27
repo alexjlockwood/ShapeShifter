@@ -32,6 +32,8 @@ export class StateService {
   private readonly activePathIdSources = new Map<CanvasType, BehaviorSubject<string>>();
   // Observable that broadcast changes to the current morph status.
   private readonly statusSource = new BehaviorSubject<MorphStatus>(MorphStatus.None);
+  // Observable that broadcasts changes when the current list of vector layers changes.
+  private readonly importedVlsSource = new BehaviorSubject<ReadonlyArray<VectorLayer>>([]);
 
   constructor(
     private readonly selectionService: SelectionService,
@@ -77,6 +79,8 @@ export class StateService {
         }
       })(vl);
     }
+    const importedVls = this.importedVlsSource.getValue();
+    this.importedVlsSource.next(importedVls.concat(vectorLayers));
     this.existingPathIdsSource.next(Array.from(this.importedPathMap.keys()));
   }
 
@@ -397,6 +401,10 @@ export class StateService {
 
   getMorphStatusObservable() {
     return this.statusSource.asObservable();
+  }
+
+  getVectorLayersObservable() {
+    return this.importedVlsSource.asObservable();
   }
 }
 

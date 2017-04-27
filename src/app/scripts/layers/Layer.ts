@@ -39,4 +39,24 @@ export interface Layer {
    * preorder traversal.
    */
   walk(beforeFn: (layer: Layer) => void): void;
+
+  /**
+   * Returns true iff this layer is a PathLayer.
+   */
+  isPathLayer(): boolean;
+
+  /**
+   * Returns true iff this layer is a GroupLayer.
+   */
+  isGroupLayer(): boolean;
+
+  /**
+   * Returns true iff this layer is a ClipPathLayer.
+   */
+  isClipPathLayer(): boolean;
+
+  /**
+   * Returns true iff this layer is a VectorLayer.
+   */
+  isVectorLayer(): boolean;
 }
