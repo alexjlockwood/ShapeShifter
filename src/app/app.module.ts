@@ -16,7 +16,7 @@ import { SubpathInspectorComponent } from './inspector/subpathinspector.componen
 import { VectorViewerComponent } from './viewer/vectorviewer.component';
 import { SettingsComponent } from './settings/settings.component';
 import { SplitterComponent } from './splitter/splitter.component';
-import { TimelineComponent } from './timeline/timeline.component';
+import { PlaybackComponent } from './playback/playback.component';
 import { ToolbarComponent } from './toolbar/toolbar.component';
 
 // Services.
@@ -50,7 +50,7 @@ import 'hammerjs';
   declarations: [
     AppComponent,
     CanvasComponent,
-    TimelineComponent,
+    PlaybackComponent,
     SplitterComponent,
     PathInspectorComponent,
     CommandInspectorComponent,

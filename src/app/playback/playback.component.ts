@@ -8,12 +8,12 @@ import { Subscription } from 'rxjs/Subscription';
 import { Observable } from 'rxjs/Observable';
 
 @Component({
-  selector: 'app-timeline',
-  templateUrl: './timeline.component.html',
-  styleUrls: ['./timeline.component.scss'],
+  selector: 'app-playback',
+  templateUrl: './playback.component.html',
+  styleUrls: ['./playback.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class TimelineComponent implements OnInit, OnDestroy {
+export class PlaybackComponent implements OnInit, OnDestroy {
   readonly MORPH_NONE = MorphStatus.None;
   readonly MORPH_UNMORPHABLE = MorphStatus.Unmorphable;
   readonly MORPH_MORPHABLE = MorphStatus.Morphable;
