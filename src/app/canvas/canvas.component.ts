@@ -45,8 +45,6 @@ const MIN_SNAP_THRESHOLD = 12;
 const MEDIUM_POINT_RADIUS = 8;
 // The radius of a small point in css pixels.
 const SMALL_POINT_RADIUS = MEDIUM_POINT_RADIUS / 1.7;
-// The size of a dashed outline in css pixels.
-const DASH_SIZE = 20;
 
 const NORMAL_POINT_COLOR = '#2962FF'; // Blue A400
 const SPLIT_POINT_COLOR = '#E65100'; // Orange 900
@@ -351,10 +349,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
   private get unselectedSegmentLineWidth() {
     return HIGHLIGHT_LINE_WIDTH / this.cssScale / 3;
-  }
-
-  private get lineDashLength() {
-    return DASH_SIZE / this.cssScale;
   }
 
   private get minSnapThreshold() {
