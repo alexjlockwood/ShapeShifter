@@ -1,4 +1,3 @@
-import * as _ from 'lodash';
 import * as tinycolor from 'tinycolor2';
 
 export function parseAndroidColor(val: string): ColorFormats.RGBA | undefined {
