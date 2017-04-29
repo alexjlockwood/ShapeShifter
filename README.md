@@ -61,6 +61,15 @@ To address these problems, Shape Shifter provides the following features:
   the web and in Android applications.* I'm open to adding support for other export formats
   as well, so feel free to file a [feature request][report-feature-request]!
 
+## Examples
+
+Here are some example icon animations created by Shape Shifter.
+
+![Expand to collapse animation](art/expandcollapse.gif)
+![Overflow to back arrow animation](art/moreback.gif)
+![Four to nine animation](art/fournine.gif)
+![Elephant to buffalo animation](art/animals.gif)
+
 ## How does it work?
 
 Pretty much all of the graphics in this app are powered by bezier curve approximations under-the-hood.
