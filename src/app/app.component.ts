@@ -284,8 +284,8 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
         }
         return false;
       }
-      if (event.keyCode === 80) {
-        // P.
+      if (event.keyCode === 68) {
+        // D.
         if (this.actionModeService.isShowingSubPathActionMode()
           || this.actionModeService.isShowingSegmentActionMode()) {
           this.actionModeService.toggleMorphSubPathsMode();

@@ -1,3 +1,4 @@
+import * as _ from 'lodash';
 import * as JSZip from 'jszip';
 import * as $ from 'jquery';
 import * as KeyframesSerializer from './KeyframesSerializer';
@@ -16,6 +17,8 @@ import {
 // TODO: also export the original SVG files?
 // TODO: generate non-cubic-bezier interpolators correctly
 // TODO: round widths/heights to nearest pixel to avoid weird offsets
+
+const EXPORTED_FPS = [30, 60];
 
 export function generateZip(
   stateService: StateService,
@@ -119,35 +122,43 @@ export function generateZip(
       duration,
       interpolator.webRef));
 
-  // Create compatible SVGs (note that we intentionally don't run SVGO on these).
-  const startSvg = SvgSerializer.vectorLayerToSvgString(startOutVl, startOutVl.width, startOutVl.height);
-  const endSvg = SvgSerializer.vectorLayerToSvgString(endOutVl, endOutVl.width, endOutVl.height);
-
   const zip = new JSZip();
-  zip.file('README.txt', createExportReadme());
   const android = zip.folder('android');
+  const web = zip.folder('web');
+  zip.file('README.txt', createExportReadme());
+
   const avd = AvdSerializer.vectorLayerAnimationToAvdXmlString(startOutVl, avdTargets);
   android.file('animated_vector_drawable.xml', avd);
   const startVd = AvdSerializer.vectorLayerToVectorDrawableXmlString(startOutVl);
   android.file('start_vector_drawable.xml', startVd);
   const endVd = AvdSerializer.vectorLayerToVectorDrawableXmlString(endOutVl);
   android.file('end_vector_drawable.xml', endVd);
-  const web = zip.folder('web');
+
+  // Export standalone SVG frames.
   const svg = web.folder('svg');
-  svg.file('start.svg', startSvg);
-  svg.file('end.svg', endSvg);
+
+  EXPORTED_FPS.forEach(fps => {
+    const numSteps = Math.ceil(duration / 1000 * fps);
+    const svgs = SpriteSerializer.createSvgFrames(startVl, endVl, interpolator, numSteps);
+    const length = (numSteps - 1).toString().length;
+    const fpsFolder = svg.folder(`${fps}fps`);
+    svgs.forEach((s, i) => {
+      fpsFolder.file(`frame_${_.padStart(i.toString(), length, '0')}.svg`, s);
+    });
+  });
 
   // Create a CSS keyframe animation.
   const keyframes = web.folder('keyframes');
+  const startSvg = SvgSerializer.vectorLayerToSvgString(startOutVl, startOutVl.width, startOutVl.height);
   keyframes.file('keyframes.html', KeyframesSerializer.createHtml(startSvg, 'keyframes.css'));
   keyframes.file('keyframes.css', KeyframesSerializer.createCss(svgTargets, duration, interpolator.webRef));
 
   // Create an svg sprite animation.
   const sprite = web.folder('sprite');
-  [30, 60].forEach(fps => {
+  EXPORTED_FPS.forEach(fps => {
     const numSteps = Math.ceil(duration / 1000 * fps);
     const svgSprite =
-      SpriteSerializer.createSvg(startVl, endVl, interpolator, numSteps);
+      SpriteSerializer.createSvgSprite(startVl, endVl, interpolator, numSteps);
     const cssSprite =
       SpriteSerializer.createCss(startVl.width, startVl.height, duration, numSteps);
     const fileName = `sprite_${fps}fps`;
