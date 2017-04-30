@@ -24,7 +24,7 @@ file a [feature request][report-feature-request]!
 
 Here are some example icon animations created by Shape Shifter:
 
-<img src="art/expandcollapse.gif" alt="Expand to collapse animation" width="216px"/><img src="art/moreback.gif" alt="Overflow to back arrow animation" width="216px"/><img src="art/digits.gif" alt="Digits animation" width="216px"/><img src="art/animals.gif" alt="Animals animation" width="216px"/><img src="art/cast.gif" alt="Cast animation" width="216px"/>
+<img src="art/expandcollapse.gif" alt="Expand to collapse animation" width="216px"/><img src="art/moreback.gif" alt="Overflow to back arrow animation" width="216px"/><img src="art/digits.gif" alt="Digits animation" width="216px"/><img src="art/animals.gif" alt="Animals animation" width="216px" vspace="34px"/><img src="art/cast.gif" alt="Cast animation" width="216px"/>
 
 ## Problem
 
