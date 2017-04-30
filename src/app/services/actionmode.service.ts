@@ -91,7 +91,7 @@ export class ActionModeService {
     const { source } = selections[0];
     const pathMutator = this.stateService.getActivePathLayer(source).pathData.mutate();
     for (const { subIdx } of this.selectionService.getSubPathSelections()) {
-      pathMutator.shiftSubPathBack(subIdx);
+      pathMutator.shiftSubPathForward(subIdx);
     }
     this.stateService.updateActivePath(source, pathMutator.build());
     this.hoverService.resetAndNotify();
