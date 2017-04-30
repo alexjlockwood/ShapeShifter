@@ -143,7 +143,7 @@ export function generateZip(
     const length = (numSteps - 1).toString().length;
     const fpsFolder = svg.folder(`${fps}fps`);
     svgs.forEach((s, i) => {
-      fpsFolder.file(`frame_${_.padStart(i.toString(), length, '0')}.svg`, s);
+      fpsFolder.file(`frame${_.padStart(i.toString(), length, '0')}.svg`, s);
     });
   });
 
@@ -370,14 +370,18 @@ android/
 
 web/
   svg/
-    - Contains two standalone SVG files representing the start and end state of
-      the generated animation.
+    - Contains standalone SVG frames representing the in-between states of
+      the generated animation. Assets are generated in both 30fps and 60fps.
   sprite/
-    - Contains an SVG spritesheet that plays the generated animation. Assets
+    - Contains a SVG spritesheet that plays the generated animation. Assets
       are generated in both 30fps and 60fps.
   keyframes/
-    - Contains CSS keyframes files that play the generated animation
-      (only supported in Chrome as of April 2017).
+    - Contains CSS keyframes files that play the generated animation. Note
+      that as of April 2017, only Chrome has implemented support for this
+      feature, and that its syntax may change in the future
+      (see https://goo.gl/SMhF35). It goes without saying that these assets
+      should be treated as experimental and probably shouldn't be used
+      in production until more browsers begin to support it.
 
 If you have an export format that you'd like to see added, please file
 a feature request using the link below!
