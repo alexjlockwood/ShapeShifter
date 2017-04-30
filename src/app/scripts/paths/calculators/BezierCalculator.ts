@@ -114,9 +114,6 @@ export class BezierCalculator implements Calculator {
   }
 
   toCommand() {
-    if (this.svgChar !== 'Q' && this.svgChar !== 'C') {
-      throw new Error('Invalid command type: ' + this.svgChar);
-    }
     return new CommandBuilder(this.svgChar, this.points.slice()).setId(this.id).build();
   }
 
