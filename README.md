@@ -24,10 +24,7 @@ file a [feature request][report-feature-request]!
 
 Here are some example icon animations created by Shape Shifter:
 
-![Expand to collapse animation](art/expandcollapse.gif)
-![Overflow to back arrow animation](art/moreback.gif)
-![Four to nine animation](art/fournine.gif)
-![Elephant to buffalo animation](art/animals.gif)
+<img src="art/expandcollapse.gif" alt="Expand to collapse animation" width="216px"/><img src="art/moreback.gif" alt="Overflow to back arrow animation" width="216px"/><img src="art/animals.gif" alt="Animals animation" width="216px"/>
 
 ## Problem
 
