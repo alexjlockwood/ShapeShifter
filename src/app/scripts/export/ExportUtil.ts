@@ -377,11 +377,8 @@ web/
       are generated in both 30fps and 60fps.
   keyframes/
     - Contains CSS keyframes files that play the generated animation. Note
-      that as of April 2017, only Chrome has implemented support for this
-      feature, and that its syntax may change in the future
-      (see https://goo.gl/SMhF35). It goes without saying that these assets
-      should be treated as experimental and probably shouldn't be used
-      in production until more browsers begin to support it.
+      that as of April 2017, only Blink-based browsers have implemented
+      support for this feature.
 
 If you have an export format that you'd like to see added, please file
 a feature request using the link below!
