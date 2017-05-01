@@ -7,13 +7,13 @@
   user interface, which is activated whenever the user selects a subpath, segment, and/or point.
 * Added a new *pair subpaths* mode, which allows the user to specify how subpaths in the start
   canvas should morph into subpaths in the end canvas.
-* Added two new export formats for the web:
+* Added three new export formats for the web:
     * Export to *SVG spritesheet* (30fps and 60fps).
+    * Export to standalone *SVG frames* (30fps and 60fps).
     * Export to *CSS keyframes* (note that Chrome is the only browser that supports them
       as of April, 2017).
 * Added the ability to import `VectorDrawable` files into the workspace.
 * Added the ability to delete subpaths and split segments directly from the canvas.
-* Made improvements to the "auto fix" algorithm which now gives more accurate results.
 
 # [v0.2.0](https://github.com/alexjlockwood/ShapeShifter/compare/v0.1.3...v0.2.0) (2017-04-10)
 
@@ -138,7 +138,7 @@
 * Fixed scaling bug in Safari when importing the 'morphing animals' demo.
   ([5a7a5bd](https://github.com/alexjlockwood/ShapeShifter/commit/5a7a5bd))
 
-# [v0.1.1](https://github.com/alexjlockwood/ShapeShifter/compare/v0.1...v0.1.1) (2017-02-27)
+# [v0.1.1](https://github.com/alexjlockwood/ShapeShifter/compare/v0.1.0...v0.1.1) (2017-02-27)
 
 ### Features
 

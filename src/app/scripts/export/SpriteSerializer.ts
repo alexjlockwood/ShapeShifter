@@ -41,7 +41,7 @@ function createKeyframes(width: number, numSteps: number) {
 }`;
 }
 
-export function createSvg(
+export function createSvgSprite(
   start: VectorLayer,
   end: VectorLayer,
   interpolator: Interpolator,
@@ -56,7 +56,8 @@ export function createSvg(
     svgs.push(SvgSerializer.vectorLayerToSvgString(preview, width, height, width * i, 0, false));
   }
   const totalWidth = width * numSteps;
-  let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${totalWidth} ${height}" width="${totalWidth}px" height="${height}px">
+  let svg = `<svg xmlns="http://www.w3.org/2000/svg" `
+    + `viewBox="0 0 ${totalWidth} ${height}" width="${totalWidth}px" height="${height}px">
 ${svgs.join('\n')}
 </svg>
 `;
@@ -64,4 +65,21 @@ ${svgs.join('\n')}
     svg = optimizedSvgText;
   });
   return svg;
+}
+
+export function createSvgFrames(
+  start: VectorLayer,
+  end: VectorLayer,
+  interpolator: Interpolator,
+  numSteps: number) {
+
+  const preview = start.clone();
+  const svgs: string[] = [];
+  const { width, height } = preview;
+  for (let i = 0; i <= numSteps; i++) {
+    const fraction = interpolator.interpolateFn(i / numSteps);
+    LayerUtil.deepInterpolate(start, preview, end, fraction);
+    svgs.push(SvgSerializer.vectorLayerToSvgString(preview, width, height));
+  }
+  return svgs;
 }

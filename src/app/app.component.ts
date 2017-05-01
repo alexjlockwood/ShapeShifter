@@ -284,8 +284,8 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
         }
         return false;
       }
-      if (event.keyCode === 80) {
-        // P.
+      if (event.keyCode === 68) {
+        // D.
         if (this.actionModeService.isShowingSubPathActionMode()
           || this.actionModeService.isShowingSegmentActionMode()) {
           this.actionModeService.toggleMorphSubPathsMode();
@@ -329,7 +329,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   addPathsFromSvg(canvasType?: CanvasType) {
     // TODO: this doesnt work right now because the inputs are lazily initialized
     this.pendingFilePickerCanvasType = canvasType;
-    $('#addPathsFromSvgButton').click();
+    $('#addPathsFromSvgButton').val('').click();
   }
 
   // Called when the user picks a file from the file picker.
@@ -425,7 +425,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   // Proxies a button click to the <input> tag that opens the file picker.
   addPathsFromXml(canvasType?: CanvasType) {
     // TODO: this doesnt work right now because the inputs are lazily initialized
-    $('#addPathsFromXmlButton').click();
+    $('#addPathsFromXmlButton').val('').click();
   }
 
   // Called when the user picks a file from the file picker.

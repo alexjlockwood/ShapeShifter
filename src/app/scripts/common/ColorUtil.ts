@@ -1,4 +1,3 @@
-import * as _ from 'lodash';
 import * as tinycolor from 'tinycolor2';
 
 export function parseAndroidColor(val: string): ColorFormats.RGBA | undefined {
@@ -58,5 +57,12 @@ export function androidToCssColor(androidColor: string | undefined, multAlpha = 
     return 'transparent';
   }
   const d = parseAndroidColor(androidColor);
-  return `rgba(${d.r},${d.g},${d.b},${_.round(d.a * multAlpha / 255, 2)})`;
+  let str = '#';
+  str += ((d.r < 16) ? '0' : '') + d.r.toString(16)
+    + ((d.g < 16) ? '0' : '') + d.g.toString(16)
+    + ((d.b < 16) ? '0' : '') + d.b.toString(16);
+  if (d.a !== 255) {
+    str += ((d.a < 16) ? '0' : '') + d.a.toString(16);
+  }
+  return str;
 }
