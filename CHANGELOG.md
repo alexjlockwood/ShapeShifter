@@ -138,7 +138,7 @@
 * Fixed scaling bug in Safari when importing the 'morphing animals' demo.
   ([5a7a5bd](https://github.com/alexjlockwood/ShapeShifter/commit/5a7a5bd))
 
-# [v0.1.1](https://github.com/alexjlockwood/ShapeShifter/compare/v0.1...v0.1.1) (2017-02-27)
+# [v0.1.1](https://github.com/alexjlockwood/ShapeShifter/compare/v0.1.0...v0.1.1) (2017-02-27)
 
 ### Features
 
