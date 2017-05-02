@@ -1,5 +1,5 @@
 import { AbstractLayer } from './AbstractLayer';
-import { ClipPathLayer, PathLayer } from '.';
+import { Layer } from '.';
 import { MathUtil } from '../common';
 
 /**
@@ -7,7 +7,7 @@ import { MathUtil } from '../common';
  */
 export class GroupLayer extends AbstractLayer {
   constructor(
-    readonly children: Array<GroupLayer | ClipPathLayer | PathLayer>,
+    readonly children: Layer[],
     readonly id: string,
     public pivotX = 0,
     public pivotY = 0,

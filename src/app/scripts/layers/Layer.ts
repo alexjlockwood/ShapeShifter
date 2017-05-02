@@ -8,12 +8,18 @@ export interface Layer {
   /**
    * This layers children layers, or undefined if none exist.
    */
-  readonly children: (GroupLayer | ClipPathLayer | PathLayer)[] | undefined;
+  children: Layer[] | undefined;
 
   /**
    * A string uniquely identifying this layer in its tree.
    */
   readonly id: string;
+
+  parent: Layer | undefined;
+  previousSibling: Layer | undefined;
+  nextSibling: Layer | undefined;
+  getSibling(offset: number): Layer | undefined;
+  remove(): void;
 
   /**
    * Returns the first descendent layer with the specified ID.

@@ -1,5 +1,5 @@
 import { AbstractLayer } from './AbstractLayer';
-import { GroupLayer, ClipPathLayer, PathLayer } from '.';
+import { GroupLayer, ClipPathLayer, PathLayer, Layer } from '.';
 import { MathUtil } from '../common';
 
 /**
@@ -8,7 +8,7 @@ import { MathUtil } from '../common';
 export class VectorLayer extends AbstractLayer {
 
   constructor(
-    readonly children: Array<GroupLayer | ClipPathLayer | PathLayer>,
+    readonly children: Layer[],
     readonly id: string,
     public width = 24,
     public height = 24,
@@ -23,7 +23,7 @@ export class VectorLayer extends AbstractLayer {
 
   clone(): VectorLayer {
     const cloneFn =
-      (layer: GroupLayer | ClipPathLayer | PathLayer): GroupLayer | ClipPathLayer | PathLayer => {
+      (layer: Layer): Layer => {
         if (layer instanceof GroupLayer) {
           return new GroupLayer(
             layer.children.map(child => cloneFn(child)),

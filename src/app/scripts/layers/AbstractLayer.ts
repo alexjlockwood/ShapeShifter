@@ -1,13 +1,35 @@
+import * as _ from 'lodash';
 import { Layer, GroupLayer, ClipPathLayer, PathLayer, VectorLayer } from '.';
 
 /**
  * Root class for all layer model classes.
  */
 export abstract class AbstractLayer implements Layer {
+  private parent_: Layer;
+
   constructor(
-    public readonly children: Array<GroupLayer | ClipPathLayer | PathLayer> | undefined,
+    private children_: Layer[] | undefined,
     public readonly id: string,
   ) { }
+
+  get parent(): Layer | undefined {
+    return this.parent_;
+  }
+
+  set parent(parent: Layer | undefined) {
+    this.parent_ = parent;
+  }
+
+  get children() {
+    return this.children_;
+  }
+
+  set children(layers: Layer[] | undefined) {
+    this.children_ = layers;
+    if (this.children_) {
+      this.children_.forEach(layer => layer.parent = this);
+    }
+  }
 
   // Implements the Layer interface.
   findLayer(id: string): Layer | undefined {
@@ -42,6 +64,45 @@ export abstract class AbstractLayer implements Layer {
     return this.children.length === layer.children.length
       && this.children.every((c, i) => c.isMorphableWith(layer.children[i]));
   }
+
+  // Implements the Layer interface.
+  getSibling(offset: number) {
+    if (!this.parent || !this.parent.children) {
+      return undefined;
+    }
+    let index = _.findIndex(this.parent.children, c => c.id === this.id);
+    if (index < 0) {
+      return undefined;
+    }
+    index += offset;
+    if (index < 0 || this.parent.children.length <= index) {
+      return undefined;
+    }
+    return this.parent.children[index];
+  }
+
+  // Implements the Layer interface.
+  get previousSibling() {
+    return this.getSibling(-1);
+  }
+
+  // Implements the Layer interface.
+  get nextSibling() {
+    return this.getSibling(1);
+  }
+
+  // Implements the Layer interface.
+  remove() {
+    if (!this.parent || !this.parent.children) {
+      return;
+    }
+    const index = _.findIndex(this.parent.children, c => c.id === this.id);
+    if (index >= 0) {
+      this.parent.children.splice(index, 1);
+    }
+    this.parent = undefined;
+  }
+
 
   // Implements the Layer interface.
   walk(beforeFn: (layer: Layer) => void) {

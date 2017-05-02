@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 import * as ModelUtil from './ModelUtil';
-import { VectorLayer, GroupLayer, PathLayer, ClipPathLayer } from '../layers';
+import { VectorLayer, GroupLayer, PathLayer, Layer } from '../layers';
 import { newPath, Command } from '../paths';
 import { ColorUtil, Matrix } from '../common';
 import { Svgo } from '../svgo';
@@ -65,7 +65,7 @@ export function loadVectorLayerFromSvgString(
     return svgLength.valueInSpecifiedUnits;
   };
 
-  const nodeToLayerDataFn = (node, context): GroupLayer | ClipPathLayer | PathLayer => {
+  const nodeToLayerDataFn = (node, context): Layer => {
     if (!node) {
       return undefined;
     }

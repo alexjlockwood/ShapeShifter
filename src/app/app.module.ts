@@ -15,12 +15,12 @@ import { CanvasRulerDirective } from './canvas/canvasruler.directive';
 import { PathInspectorComponent } from './inspector/pathinspector.component';
 import { CommandInspectorComponent } from './inspector/commandinspector.component';
 import { SubpathInspectorComponent } from './inspector/subpathinspector.component';
-import { VectorViewerComponent } from './viewer/vectorviewer.component';
+import { VectorListComponent } from './vectorlist/vectorlist.component';
 import { SettingsComponent } from './settings/settings.component';
 import { SplitterComponent } from './splitter/splitter.component';
 import { PlaybackComponent } from './playback/playback.component';
 import { ToolbarComponent } from './toolbar/toolbar.component';
-import { LayerTreeComponent } from './viewer/layertree.component';
+import { LayerTreeComponent } from './vectorlist/layertree.component';
 
 // Services.
 import {
@@ -63,7 +63,7 @@ import 'hammerjs';
     ToolbarComponent,
     TimelineComponent,
     TimelineRulerComponent,
-    VectorViewerComponent,
+    VectorListComponent,
     ConfirmDialogComponent,
     DemoDialogComponent,
     SvgCommandPipe,

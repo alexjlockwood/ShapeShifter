@@ -2,6 +2,10 @@
 @import '../styles/material-shadows';
 @import '../styles/variables';
 @import '../styles/theme';
+:host {
+  user-select: none;
+}
+
 ul {
   margin: 0;
   padding: 0;
@@ -11,7 +15,7 @@ li {
   list-style: none;
 }
 
-.lt-layer {
+.slt-layer {
   box-sizing: border-box;
   height: 20px;
   padding-top: 2px;
@@ -28,7 +32,7 @@ li {
     box-shadow: none;
     color: #fff;
   }
-  span.lt-layer-id-text {
+  span.slt-layer-id-text {
     flex: 1 1 0;
     min-width: 0;
     overflow: hidden;
@@ -38,7 +42,7 @@ li {
   md-icon {
     width: 16px;
     height: 16px;
-    font-size: 16px; // margin-right: 4px;
+    font-size: 16px;
   }
   button {
     line-height: 16px;
@@ -54,12 +58,12 @@ li {
   }
 }
 
-.lt-layer-type-group,
-.lt-layer-type-vector {
+.slt-layer-type-group,
+.slt-layer-type-vector {
   font-weight: 500;
 }
 
-.lt-children {
+.slt-children {
   padding: 0;
   margin: 0 0 0 20px;
 }

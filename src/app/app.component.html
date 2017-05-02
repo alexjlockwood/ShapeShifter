@@ -50,13 +50,13 @@
           </md-menu>
         </div>
       </div>
-      <app-vectorviewer fxFlexFill></app-vectorviewer>
+      <!-- Vector list. -->
+      <app-vectorlist fxLayout="column" fxFlexFill></app-vectorlist>
     </div>
     <!-- Path inspector. -->
     <div class="inspector-panel" fxLayout="column" fxFlex>
       <div class="inspector-panel-header" fxLayout="row" fxLayoutAlign="start center">
-        <app-timelineruler></app-timelineruler>
-        <span *ngIf="false" class="status-text" [ngClass]="{
+        <span class="status-text" [ngClass]="{
             'unmorphable': morphStatus === MORPH_UNMORPHABLE,
             'morphable': morphStatus === MORPH_MORPHABLE}" [innerHTML]="statusTextObservable | async">
         </span>

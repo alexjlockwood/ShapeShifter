@@ -87,3 +87,45 @@ DEMO_MAP.set('Play-to-pause icon', PLAY_PAUSE_SVGS);
 if (!environment.production) {
   DEMO_MAP.set('Debug demos', DEBUG_SVGS);
 }
+
+export const DEBUG_VECTOR_DRAWABLE = `
+<vector
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  android:width="24dp"
+  android:height="24dp"
+  android:viewportHeight="24"
+  android:viewportWidth="24">
+  <group
+    android:name="hourglass_frame"
+    android:scaleX="0.7"
+    android:scaleY="0.7"
+    android:translateX="12"
+    android:translateY="12">
+    <group
+      android:name="hourglass_frame_pivot"
+      android:translateX="-12"
+      android:translateY="-12">
+      <group
+        android:name="hourglass_bottom"
+        android:translateX="12"
+        android:translateY="6.5">
+        <path
+          android:name="bottom_inner_path"
+          android:fillAlpha="1"
+          android:fillColor="#000"
+          android:pathData="M 6.52099609375,-3.89300537109 c 0,0 -6.52099609375,6.87901306152 -6.52099609375,6.87901306152 c 0,0 -6.52099609375,-6.87901306152 -6.52099609375,-6.87901306152 c 0,0 13.0419921875,0 13.0419921875,0 Z M 9.99800109863,-6.5 c 0,0 -19.9960021973,0 -19.9960021973,0 c -0.890991210938,0 -1.33700561523,1.07699584961 -0.707000732422,1.70700073242 c 0,0 10.7050018311,11.2929992676 10.7050018311,11.2929992676 c 0,0 10.7050018311,-11.2929992676 10.7050018311,-11.2929992676 c 0.630004882812,-0.630004882812 0.183990478516,-1.70700073242 -0.707000732422,-1.70700073242 Z"/>
+      </group>
+      <group
+        android:name="hourglass_top"
+        android:translateX="12"
+        android:translateY="17.5">
+        <path
+          android:name="top_inner_path"
+          android:fillAlpha="1"
+          android:fillColor="#000"
+          android:pathData="M 0,-2.98600769043 c 0,0 6.52099609375,6.87901306152 6.52099609375,6.87901306152 c 0,0 -13.0419921875,0 -13.0419921875,0 c 0,0 6.52099609375,-6.87901306152 6.52099609375,-6.87901306152 Z M 0,-6.5 c 0,0 -10.7050018311,11.2929992676 -10.7050018311,11.2929992676 c -0.630004882812,0.630004882812 -0.184005737305,1.70700073242 0.707000732422,1.70700073242 c 0,0 19.9960021973,0 19.9960021973,0 c 0.890991210938,0 1.33699035645,-1.07699584961 0.707000732422,-1.70700073242 c 0,0 -10.7050018311,-11.2929992676 -10.7050018311,-11.2929992676 Z"/>
+      </group>
+    </group>
+  </group>
+</vector>
+`;
