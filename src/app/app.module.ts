@@ -48,6 +48,7 @@ import { SubPathPairsPipe } from './inspector/pathinspector.component';
 import { SvgCommandPipe } from './inspector/commandinspector.component';
 
 import 'hammerjs';
+import { PropertyinputComponent } from './propertyinput/propertyinput.component';
 
 @NgModule({
   declarations: [
@@ -69,6 +70,7 @@ import 'hammerjs';
     SvgCommandPipe,
     SubPathPairsPipe,
     LayerTreeComponent,
+    PropertyinputComponent,
   ],
   imports: [
     BrowserModule,

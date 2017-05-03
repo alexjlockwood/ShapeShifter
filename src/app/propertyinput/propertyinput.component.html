@@ -1,0 +1,55 @@
+<!--<studio-splitter edge="left" min="200" persist-id="property-inspector"></studio-splitter>-->
+<div *ngIf="!this.selectionInfo" class="spi-empty" fxFlex>
+  Select something below to edit its properties
+</div>
+<div *ngIf="this.selectionInfo" fxFlex fxLayout="column">
+  <div class="spi-header" fxFlex="none">
+    <!--<md-icon class="spi-selection-icon" svgIcon="avdstudio:{{this.selectionInfo.icon}}"></md-icon>-->
+    <div class="spi-selection-description-container" fxLayout="column"
+      fxFlex>
+      <span class="spi-selection-description">{{this.selectionDescription}}</span>
+      <span class="spi-selection-sub-description">{{this.selectionInfo.subDescription}}</span>
+    </div>
+  </div>
+  <div class="spi-body" flex fxLayout="column">
+    <div class="spi-empty" flex *ngIf="!this.selectionInfo.inspectedProperties
+                 || !this.selectionInfo.inspectedProperties.length">
+      No shared properties to view or edit
+    </div>
+    <div class="spi-property" *ngFor="let ip of this.selectionInfo.inspectedProperties">
+      <div class="spi-property-name">{{ip.propertyName}}</div>
+      <div class="spi-property-value" fxLayout="row">
+        <div *ngIf="ip.typeName === 'ColorProperty'" class="spi-property-color-preview"
+          [style.background-color]="this.androidToCssColor(ip.value)">
+        </div>
+        <span *ngIf="!ip.editable" class="spi-property-value-static"
+          fxFlex>
+            {{ip.displayValue}}
+          </span>
+        <div *ngIf="ip.editable" class="spi-property-value-editor" fxLayout="column"
+          fxFlex>
+          <input *ngIf="ip.typeName == 'StringProperty' ||
+                       ip.typeName == 'IdProperty' ||
+                       ip.typeName == 'PathDataProperty' ||
+                       ip.typeName == 'ColorProperty' ||
+                       ip.typeName == 'NumberProperty' ||
+                       ip.typeName == 'FractionProperty'" [(ngModel)]="ip.editableValue"
+            (keydown)="this.onValueEditorKeyDown($event, ip)" (blur)="ip.resolveEnteredValue()">
+          <!--<md-menu class="spi-property-value-menu" *ngIf="ip.typeName == 'EnumProperty'"
+              fxLayout="column">
+              <button class="spi-property-value-menu-target" ng-click="$mdOpenMenu($event)">
+                <span class="spi-property-value-menu-current-value">{{ip.displayValue}}</span>
+              </button>
+              <md-menu-content>
+                <md-menu-item ng-repeat="option in ip.property.options">
+                  <md-button ng-click="ip.value = option;">
+                    {{option.label}}
+                  </md-button>
+                </md-menu-item>
+              </md-menu-content>
+            </md-menu>-->
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
