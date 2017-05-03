@@ -4,16 +4,15 @@
 </div>
 <div *ngIf="this.selectionInfo" fxFlex fxLayout="column">
   <div class="spi-header" fxFlex="none">
-    <!--<md-icon class="spi-selection-icon" svgIcon="avdstudio:{{this.selectionInfo.icon}}"></md-icon>-->
+    <md-icon class="spi-selection-icon" svgIcon="{{this.selectionInfo.icon}}"></md-icon>
     <div class="spi-selection-description-container" fxLayout="column"
       fxFlex>
-      <span class="spi-selection-description">{{this.selectionDescription}}</span>
+      <span class="spi-selection-description">{{this.selectionInfo.description}}</span>
       <span class="spi-selection-sub-description">{{this.selectionInfo.subDescription}}</span>
     </div>
   </div>
-  <div class="spi-body" flex fxLayout="column">
-    <div class="spi-empty" flex *ngIf="!this.selectionInfo.inspectedProperties
-                 || !this.selectionInfo.inspectedProperties.length">
+  <div class="spi-body" fxFlex fxLayout="column">
+    <div class="spi-empty" fxFlex *ngIf="!this.selectionInfo.inspectedProperties.length">
       No shared properties to view or edit
     </div>
     <div class="spi-property" *ngFor="let ip of this.selectionInfo.inspectedProperties">

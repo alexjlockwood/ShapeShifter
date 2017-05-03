@@ -107,7 +107,6 @@ export class AppModule {
     mdIconRegistry
       .addSvgIcon('reverse', sanitizer.bypassSecurityTrustResourceUrl('assets/reverse.svg'))
       .addSvgIcon('autofix', sanitizer.bypassSecurityTrustResourceUrl('assets/autofix.svg'))
-      .addSvgIcon('contribute', sanitizer.bypassSecurityTrustResourceUrl('assets/contribute.svg'))
       .addSvgIcon('shapeshifter', sanitizer.bypassSecurityTrustResourceUrl('assets/shapeshifter.svg'))
       .addSvgIcon('addpaths', sanitizer.bypassSecurityTrustResourceUrl('assets/addpaths.svg'))
       .addSvgIcon('clippath', sanitizer.bypassSecurityTrustResourceUrl('assets/clippath.svg'))

@@ -7,11 +7,46 @@ import { Component, OnInit } from '@angular/core';
 })
 export class PropertyinputComponent implements OnInit {
 
-  selectionInfo = undefined;
+  selectionInfo: SelectionInfo = {
+    icon: 'vector',
+    description: 'vector',
+    inspectedProperties: [{
+      editable: true,
+      typeName: 'ColorProperty',
+      displayValue: '',
+      editableValue: '',
+      propertyName: 'color',
+      resolveEnteredValue: () => { console.info('resolveEnteredValue()') },
+    } as InspectedProperty<string>],
+  };
 
   constructor() { }
 
   ngOnInit() {
   }
 
+  onValueEditorKeyDown(event: MouseEvent, ip: InspectedProperty<string | number>) {
+    console.info('onValueEditorKeyDown', ip);
+  }
+
+  androidToCssColor(color: string) {
+    console.info('androidToCssColor', color);
+  }
+}
+
+interface SelectionInfo {
+  icon: string;
+  description: string;
+  subDescription?: string;
+  inspectedProperties: InspectedProperty<string | number>[];
+}
+
+interface InspectedProperty<T> {
+  propertyName: string;
+  value: T;
+  displayValue: string;
+  editableValue: T;
+  typeName: string;
+  editable: boolean;
+  resolveEnteredValue();
 }
