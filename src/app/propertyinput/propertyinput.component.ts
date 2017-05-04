@@ -5,7 +5,7 @@ import { Component, OnInit } from '@angular/core';
   templateUrl: './propertyinput.component.html',
   styleUrls: ['./propertyinput.component.scss']
 })
-export class PropertyinputComponent implements OnInit {
+export class PropertyInputComponent implements OnInit {
 
   selectionInfo: SelectionInfo = {
     icon: 'vector',
@@ -16,7 +16,7 @@ export class PropertyinputComponent implements OnInit {
       displayValue: '',
       editableValue: '',
       propertyName: 'color',
-      resolveEnteredValue: () => { console.info('resolveEnteredValue()') },
+      resolveEnteredValue: () => { },
     } as InspectedProperty<string>],
   };
 

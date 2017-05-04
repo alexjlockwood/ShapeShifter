@@ -1,10 +1,29 @@
 import { Path, PathUtil } from '../paths';
 import { AbstractLayer } from './AbstractLayer';
 import { ColorUtil, MathUtil } from '../common';
+import {
+  Property, PathProperty, ColorProperty,
+  FractionProperty, NumberProperty,
+} from '../properties';
 
 /**
  * Model object that mirrors the VectorDrawable's '<path>' element.
  */
+@Property.register(
+  new PathProperty('pathData', { animatable: true }),
+  new ColorProperty('fillColor', { animatable: true }),
+  new FractionProperty('fillAlpha', { animatable: true }),
+  new ColorProperty('strokeColor', { animatable: true }),
+  new FractionProperty('strokeAlpha', { animatable: true }),
+  new NumberProperty('strokeWidth', { animatable: true }),
+  // new EnumProperty('strokeLinecap', ENUM_LINECAP_OPTIONS),
+  // new EnumProperty('strokeLinejoin', ENUM_LINEJOIN_OPTIONS),
+  new NumberProperty('strokeMiterLimit', { animatable: true, min: 1 }),
+  new FractionProperty('trimPathStart', { animatable: true }),
+  new FractionProperty('trimPathEnd', { animatable: true }),
+  new FractionProperty('trimPathOffset', { animatable: true }),
+  // TODO: create enum property for 'fill type'
+)
 export class PathLayer extends AbstractLayer {
   constructor(
     readonly id: string,

@@ -1,9 +1,13 @@
 import { Path, PathUtil } from '../paths';
 import { AbstractLayer } from './AbstractLayer';
+import { Property, PathProperty } from '../properties';
 
 /**
  * Model object that mirrors the VectorDrawable's '<clip-path>' element.
  */
+@Property.register(
+  new PathProperty('pathData', { animatable: true }),
+)
 export class ClipPathLayer extends AbstractLayer {
   constructor(
     readonly id: string,

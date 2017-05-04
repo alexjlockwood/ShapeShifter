@@ -517,9 +517,9 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private autoLoadVectorDrawable() {
     setTimeout(() => {
-      this.stateService.addVectorLayers([
-        VectorDrawableLoader.loadVectorLayerFromXmlString(DEBUG_VECTOR_DRAWABLE, []),
-      ]);
+      const vl = VectorDrawableLoader.loadVectorLayerFromXmlString(DEBUG_VECTOR_DRAWABLE, []);
+      this.stateService.addVectorLayers([vl]);
+      console.info(vl);
     });
   }
 }

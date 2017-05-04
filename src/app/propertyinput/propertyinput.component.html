@@ -27,13 +27,13 @@
           </span>
         <div *ngIf="ip.editable" class="spi-property-value-editor" fxLayout="column"
           fxFlex>
-          <input *ngIf="ip.typeName == 'StringProperty' ||
-                       ip.typeName == 'IdProperty' ||
-                       ip.typeName == 'PathDataProperty' ||
-                       ip.typeName == 'ColorProperty' ||
-                       ip.typeName == 'NumberProperty' ||
-                       ip.typeName == 'FractionProperty'" [(ngModel)]="ip.editableValue"
-            (keydown)="this.onValueEditorKeyDown($event, ip)" (blur)="ip.resolveEnteredValue()">
+          <input *ngIf="ip.typeName == 'IdProperty'
+                        || ip.typeName == 'PathDataProperty'
+                        || ip.typeName == 'ColorProperty'
+                        || ip.typeName == 'NumberProperty'
+                        || ip.typeName == 'FractionProperty'"
+            [(ngModel)]="ip.editableValue" (keydown)="this.onValueEditorKeyDown($event, ip)"
+            (blur)="ip.resolveEnteredValue()">
           <!--<md-menu class="spi-property-value-menu" *ngIf="ip.typeName == 'EnumProperty'"
               fxLayout="column">
               <button class="spi-property-value-menu-target" ng-click="$mdOpenMenu($event)">

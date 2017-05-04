@@ -1,10 +1,20 @@
 import { AbstractLayer } from './AbstractLayer';
 import { GroupLayer, ClipPathLayer, PathLayer, Layer } from '.';
 import { MathUtil } from '../common';
+import {
+  Property, IdProperty, NumberProperty, ColorProperty, FractionProperty,
+} from '../properties';
 
 /**
  * Model object that mirrors the VectorDrawable's '<vector>' element.
  */
+@Property.register(
+  new IdProperty('id'),
+  new ColorProperty('canvasColor'),
+  new NumberProperty('width', { animatable: false, min: 1, integer: true }),
+  new NumberProperty('height', { animatable: false, min: 1, integer: true }),
+  new FractionProperty('alpha', { animatable: true }),
+)
 export class VectorLayer extends AbstractLayer {
 
   constructor(

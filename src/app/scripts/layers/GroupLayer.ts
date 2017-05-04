@@ -1,10 +1,20 @@
 import { AbstractLayer } from './AbstractLayer';
 import { Layer } from '.';
 import { MathUtil } from '../common';
+import { Property, NumberProperty } from '../properties';
 
 /**
  * Model object that mirrors the VectorDrawable's '<group>' element.
  */
+@Property.register(
+  new NumberProperty('rotation', { animatable: true }),
+  new NumberProperty('scaleX', { animatable: true }),
+  new NumberProperty('scaleY', { animatable: true }),
+  new NumberProperty('pivotX', { animatable: true }),
+  new NumberProperty('pivotY', { animatable: true }),
+  new NumberProperty('translateX', { animatable: true }),
+  new NumberProperty('translateY', { animatable: true }),
+)
 export class GroupLayer extends AbstractLayer {
   constructor(
     readonly children: Layer[],
