@@ -1,6 +1,9 @@
 import * as _ from 'lodash';
 import * as ModelUtil from './ModelUtil';
-import { VectorLayer, GroupLayer, PathLayer, Layer } from '../layers';
+import {
+  VectorLayer, GroupLayer, PathLayer,
+  Layer, StrokeLineCap, StrokeLineJoin, FillType,
+} from '../layers';
 import { newPath, Command } from '../paths';
 import { ColorUtil, Matrix } from '../common';
 import { Svgo } from '../svgo';
@@ -124,35 +127,38 @@ export function loadVectorLayerFromSvgString(
       const fillAlpha = ('fillAlpha' in context) ? Number(context.fillAlpha) : 1;
       const strokeWidth = ('strokeWidth' in context) ? Number(context.strokeWidth) : 1;
       const strokeAlpha = ('strokeAlpha' in context) ? Number(context.strokeAlpha) : 1;
+      const strokeLinecap: StrokeLineCap = ('strokeLinecap' in context) ? context.strokeLinecap : 'butt';
+      const strokeLinejoin: StrokeLineJoin = ('strokeLinejoin' in context) ? context.strokeLinecap : 'miter';
       const strokeMiterLimit = ('strokeMiterLimit' in context) ? Number(context.strokeMiterLimit) : 4;
       const fillRuleToFillTypeFn = (fillRule: string) => {
         return fillRule === 'evenodd' ? 'evenOdd' : 'nonZero';
       };
-      const fillType = ('fillType' in context) ? fillRuleToFillTypeFn(context.fillType) : 'nonZero';
-      return new PathLayer(
-        makeFinalNodeIdFn(node, 'path'),
+      const fillType: FillType = ('fillType' in context) ? fillRuleToFillTypeFn(context.fillType) : 'nonZero';
+      return new PathLayer({
+        id: makeFinalNodeIdFn(node, 'path'),
+        children: [],
         pathData,
         fillColor,
         fillAlpha,
         strokeColor,
         strokeAlpha,
         strokeWidth,
-        context.strokeLinecap || 'butt',
-        context.strokeLinejoin || 'miter',
+        strokeLinecap,
+        strokeLinejoin,
         strokeMiterLimit,
         fillType,
-      );
+      });
     }
 
     if (node.childNodes.length) {
-      const layers = Array.from(node.childNodes)
+      const children = Array.from(node.childNodes)
         .map(child => nodeToLayerDataFn(child, Object.assign({}, context)))
-        .filter(layer => !!layer);
-      if (layers && layers.length) {
-        return new GroupLayer(
-          layers,
-          makeFinalNodeIdFn(node, 'group'),
-        );
+        .filter(child => !!child);
+      if (children && children.length) {
+        return new GroupLayer({
+          id: makeFinalNodeIdFn(node, 'group'),
+          children,
+        });
       }
     }
 
@@ -187,14 +193,14 @@ export function loadVectorLayerFromSvgString(
 
   const rootLayer = nodeToLayerDataFn(documentElement, docElContext);
   const id = makeFinalNodeIdFn(documentElement, 'vector');
-  const childrenLayers = rootLayer ? rootLayer.children : undefined;
+  const children = rootLayer ? rootLayer.children : undefined;
   const alpha = documentElement.getAttribute('opacity') || undefined;
 
-  return new VectorLayer(
-    childrenLayers,
+  return new VectorLayer({
     id,
-    width === undefined ? undefined : Number(width),
-    height === undefined ? undefined : Number(height),
-    alpha === undefined ? undefined : Number(alpha),
-  );
+    children,
+    width: width === undefined ? undefined : Number(width),
+    height: height === undefined ? undefined : Number(height),
+    alpha: alpha === undefined ? undefined : Number(alpha),
+  });
 }

@@ -1,30 +1,26 @@
-import { AbstractLayer } from './AbstractLayer';
+import { AbstractLayer, ConstructorArgs as AbstractConstructorArgs } from './AbstractLayer';
 import { GroupLayer, ClipPathLayer, PathLayer, Layer } from '.';
 import { MathUtil } from '../common';
 import {
-  Property, IdProperty, NumberProperty, ColorProperty, FractionProperty,
+  Property, NumberProperty, ColorProperty, FractionProperty,
 } from '../properties';
 
 /**
  * Model object that mirrors the VectorDrawable's '<vector>' element.
  */
 @Property.register(
-  new IdProperty('id'),
   new ColorProperty('canvasColor'),
-  new NumberProperty('width', { animatable: false, min: 1, integer: true }),
-  new NumberProperty('height', { animatable: false, min: 1, integer: true }),
-  new FractionProperty('alpha', { animatable: true }),
+  new NumberProperty('width', { isAnimatable: false, min: 1, isInteger: true }),
+  new NumberProperty('height', { isAnimatable: false, min: 1, isInteger: true }),
+  new FractionProperty('alpha', { isAnimatable: true }),
 )
 export class VectorLayer extends AbstractLayer {
 
-  constructor(
-    readonly children: Layer[],
-    readonly id: string,
-    public width = 24,
-    public height = 24,
-    public alpha = 1,
-  ) {
-    super(children || [], id);
+  constructor(obj: ConstructorArgs) {
+    super(obj);
+    this.width = obj.width || 1;
+    this.height = obj.height || 1;
+    this.alpha = obj.alpha || 1;
   }
 
   interpolate(start: VectorLayer, end: VectorLayer, fraction: number) {
@@ -36,43 +32,28 @@ export class VectorLayer extends AbstractLayer {
       (layer: Layer): Layer => {
         if (layer instanceof GroupLayer) {
           return new GroupLayer(
-            layer.children.map(child => cloneFn(child)),
-            layer.id,
-            layer.pivotX,
-            layer.pivotY,
-            layer.rotation,
-            layer.scaleX,
-            layer.scaleY,
-            layer.translateX,
-            layer.translateY);
+            Object.assign({}, layer, { children: layer.children.map(c => cloneFn(c)) }));
         }
         if (layer instanceof PathLayer) {
           return new PathLayer(
-            layer.id,
-            layer.pathData.clone(),
-            layer.fillColor,
-            layer.fillAlpha,
-            layer.strokeColor,
-            layer.strokeAlpha,
-            layer.strokeWidth,
-            layer.strokeLinecap,
-            layer.strokeLinejoin,
-            layer.strokeMiterLimit,
-            layer.fillType,
-            layer.trimPathStart,
-            layer.trimPathEnd,
-            layer.trimPathOffset);
+            Object.assign({}, layer, { pathData: layer.pathData.clone() }));
         }
         if (layer instanceof ClipPathLayer) {
-          return new ClipPathLayer(layer.id, layer.pathData.clone());
+          return new ClipPathLayer(
+            Object.assign({}, layer, { pathData: layer.pathData.clone() }));
         }
         throw new Error('Unknown layer type');
       };
     return new VectorLayer(
-      this.children.map(child => cloneFn(child)),
-      this.id,
-      this.width,
-      this.height,
-      this.alpha);
+      Object.assign({}, this, { children: this.children.map(c => cloneFn(c)) }));
   }
 }
+
+interface VectorLayerArgs {
+  width?: number;
+  height?: number;
+  alpha?: number;
+}
+
+export interface VectorLayer extends AbstractLayer, VectorLayerArgs { }
+export interface ConstructorArgs extends AbstractConstructorArgs, VectorLayerArgs { }

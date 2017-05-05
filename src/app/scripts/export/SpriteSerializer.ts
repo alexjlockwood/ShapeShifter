@@ -1,5 +1,5 @@
 import { SvgSerializer } from '.';
-import { Interpolator } from '../animation';
+import { Interpolator } from '../animations';
 import { VectorLayer, LayerUtil } from '../layers';
 import { Svgo } from '../svgo';
 

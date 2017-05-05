@@ -1,16 +1,21 @@
 import * as _ from 'lodash';
 import { Layer, GroupLayer, ClipPathLayer, PathLayer, VectorLayer } from '.';
+import { Property, IdProperty } from '../properties';
 
 /**
- * Root class for all layer model classes.
+ * Root class for all layer types.
  */
+@Property.register(
+  new IdProperty('id'),
+)
 export abstract class AbstractLayer implements Layer {
   private parent_: Layer;
+  private children_: Layer[];
 
-  constructor(
-    private children_: Layer[] | undefined,
-    public readonly id: string,
-  ) { }
+  constructor(obj: ConstructorArgs) {
+    this.id = obj.id || '';
+    this.children = obj.children || [];
+  }
 
   get parent(): Layer | undefined {
     return this.parent_;
@@ -20,15 +25,13 @@ export abstract class AbstractLayer implements Layer {
     this.parent_ = parent;
   }
 
-  get children() {
-    return this.children_;
+  get children(): Layer[] {
+    return this.children_ || [];
   }
 
   set children(layers: Layer[] | undefined) {
-    this.children_ = layers;
-    if (this.children_) {
-      this.children_.forEach(layer => layer.parent = this);
-    }
+    this.children_ = layers || [];
+    this.children_.forEach(layer => layer.parent = this);
   }
 
   // Implements the Layer interface.
@@ -48,7 +51,7 @@ export abstract class AbstractLayer implements Layer {
   }
 
   // Implements the Layer interface.
-  abstract interpolate<T extends Layer>(start: T, end: T, fraction: number): void;
+  abstract interpolate(start: AbstractLayer, end: AbstractLayer, fraction: number): void;
 
   // Implements the Layer interface.
   isMorphableWith(layer: Layer) {
@@ -56,7 +59,7 @@ export abstract class AbstractLayer implements Layer {
       return false;
     }
     if (this instanceof PathLayer || this instanceof ClipPathLayer) {
-      return this.pathData.isMorphableWith((layer as PathLayer).pathData);
+      return this.pathData.isMorphableWith((layer as any).pathData);
     }
     if (!this.children) {
       return true;
@@ -103,7 +106,6 @@ export abstract class AbstractLayer implements Layer {
     this.parent = undefined;
   }
 
-
   // Implements the Layer interface.
   walk(beforeFn: (layer: Layer) => void) {
     const visitFn = (layer: Layer) => {
@@ -135,3 +137,15 @@ export abstract class AbstractLayer implements Layer {
     return this instanceof VectorLayer;
   }
 }
+
+// TODO: share this interface with Layer?
+interface AbstractLayerArgs {
+  id: string;
+  children: Layer[];
+}
+
+// tslint:disable-next-line
+export interface AbstractLayer extends AbstractLayerArgs { }
+
+// tslint:disable-next-line
+export interface ConstructorArgs extends AbstractLayerArgs { }

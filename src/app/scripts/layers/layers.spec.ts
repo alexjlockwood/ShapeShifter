@@ -1,23 +1,10 @@
-import { VectorLayer, GroupLayer, PathLayer } from '.';
+import { VectorLayer, ClipPathLayer, GroupLayer, PathLayer } from '.';
+import { newPath } from '../paths';
 
-describe('AbstractLayer', () => {
-  const pl1 = new PathLayer('pl1', undefined);
-  const pl2 = new PathLayer('pl2', undefined);
-  const pl3 = new PathLayer('pl3', undefined);
-  const pl4 = new PathLayer('pl4', undefined);
-  const pl5 = new PathLayer('pl5', undefined);
-  const pl6 = new PathLayer('pl6', undefined);
-  const pl7 = new PathLayer('pl7', undefined);
-  const pl8 = new PathLayer('pl8', undefined);
-  const gl1 = new GroupLayer([pl1, pl2, pl3, pl4], 'gl1');
-  const gl2 = new GroupLayer([gl1, pl5], 'gl2');
-  const gl3 = new GroupLayer([pl6, gl2], 'gl3');
-  const gl4 = new GroupLayer([pl7, pl8], 'gl4');
-  const vl = new VectorLayer([gl3, gl4], 'vector');
-  it('findLayerById #1', () => {
-    expect(vl.findLayer('vector')).toEqual(vl);
-  });
-  it('findLayerById #2', () => {
-    expect(vl.findLayer('pl1').id).toEqual('pl1');
+describe('Layers', () => {
+  it('ClipPathLayer', () => {
+    // const layer = new ClipPathLayer('myId', newPath('M 0 0 1 1 2 2 3 3'));
+    // console.info(layer);
+    // expect(layer.hasOwnProperty('id')).toBe(true);
   });
 });

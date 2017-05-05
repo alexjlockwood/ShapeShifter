@@ -1,64 +1,54 @@
-import { Property } from './Property';
+import * as _ from 'lodash';
+import { Property, Config } from './Property';
 import { MathUtil } from '../common';
-import { Config } from './Property';
 
 export class NumberProperty extends Property<number> {
   private readonly min: number;
   private readonly max: number;
-  private readonly integer: boolean;
+  private readonly isInteger: boolean;
 
   constructor(
     readonly name: string,
     readonly config: NumberConfig = {},
   ) {
     super(name, config);
-    this.min = config.min;
-    this.max = config.max;
-    this.integer = !!config.integer;
+    this.min = config.min === undefined ? -Infinity : config.min;
+    this.max = config.max === undefined ? Infinity : config.max;
+    this.isInteger = !!config.isInteger;
   }
 
   // @Override
-  trySetEditedValue(obj: any, propertyName: string, value: number) {
-    if (!isNaN(value)) {
-      if (this.min !== undefined) {
-        value = Math.max(this.min, value);
-      }
-      if (this.max !== undefined) {
-        value = Math.min(this.max, value);
-      }
-      if (this.integer) {
-        value = Math.floor(value);
-      }
-      obj[propertyName] = value;
+  trySetEditedValue(model: any, propertyName: string, value: number) {
+    if (isNaN(value)) {
+      return;
     }
-  }
-
-  // @Override
-  displayValueForValue(value: number) {
-    return (Number.isInteger(value)
-      ? value.toString()
-      : Number(value.toFixed(3)).toString()).replace(/-/g, '\u2212');
-  }
-
-  // @Override
-  setter_(obj: any, propertyName: string, value: number) {
-    if (!isNaN(value)) {
-      if (this.min !== undefined) {
-        value = Math.max(this.min, value);
-      }
-      if (this.max !== undefined) {
-        value = Math.min(this.max, value);
-      }
-      if (this.integer) {
-        value = Math.floor(value);
-      }
+    value = _.clamp(value, this.min, this.max);
+    if (this.isInteger) {
+      value = Math.floor(value);
     }
-    obj[`${propertyName}_`] = value;
+    super.trySetEditedValue(model, propertyName, value);
+  }
+
+  // @Override
+  protected setter_(model: any, propertyName: string, value: number) {
+    if (isNaN(value)) {
+      return;
+    }
+    value = _.clamp(value, this.min, this.max);
+    if (this.isInteger) {
+      value = Math.floor(value);
+    }
+    super.setter_(model, propertyName, value);
   }
 
   // @Override
   interpolateValue(start: number, end: number, fraction: number) {
     return MathUtil.lerp(start, end, fraction);
+  }
+
+  // @Override
+  displayValueForValue(val: number) {
+    return _.round(val, 3).toString().replace(/-/g, '\u2212');
   }
 
   // @Override
@@ -70,5 +60,5 @@ export class NumberProperty extends Property<number> {
 export interface NumberConfig extends Config {
   readonly min?: number;
   readonly max?: number;
-  readonly integer?: boolean;
+  readonly isInteger?: boolean;
 }

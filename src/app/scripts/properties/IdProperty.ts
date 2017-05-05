@@ -12,6 +12,6 @@ export class IdProperty extends Property<string> {
 
   // @Override
   trySetEditedValue(obj: any, propertyName: string, value: string) {
-    obj[propertyName] = IdProperty.sanitize(value);
+    super.trySetEditedValue(obj, propertyName, IdProperty.sanitize(value));
   }
 }

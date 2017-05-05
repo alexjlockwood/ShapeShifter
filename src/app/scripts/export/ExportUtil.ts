@@ -11,7 +11,7 @@ import { ColorUtil } from '../common';
 import {
   AvdTarget, AvdAnimation, AvdPropertyName, AvdValueType,
   SvgTarget, SvgAnimation, SvgPropertyName, Interpolator,
-} from '../animation';
+} from '../animations';
 
 // TODO: round SVG coordinates in exported sprite sheets?
 // TODO: also export the original SVG files?
@@ -75,19 +75,21 @@ export function generateZip(
 
   // Create VectorLayers.
   const startOutVl =
-    new VectorLayer(
-      startVlChildren,
-      startVl.id,
-      startVl.width,
-      startVl.height,
-      startVl.alpha);
+    new VectorLayer({
+      children: startVlChildren,
+      id: startVl.id,
+      width: startVl.width,
+      height: startVl.height,
+      alpha: startVl.alpha,
+    });
   const endOutVl =
-    new VectorLayer(
-      endVlChildren,
-      endVl.id,
-      endVl.width,
-      endVl.height,
-      endVl.alpha);
+    new VectorLayer({
+      children: endVlChildren,
+      id: endVl.id,
+      width: endVl.width,
+      height: endVl.height,
+      alpha: endVl.alpha,
+    });
 
   // Create SvgTargets.
   const svgTargets: SvgTarget[] = [];

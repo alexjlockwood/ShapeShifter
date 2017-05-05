@@ -1,5 +1,4 @@
-import { AbstractLayer } from './AbstractLayer';
-import { Layer } from '.';
+import { AbstractLayer, ConstructorArgs as AbstractConstructorArgs } from './AbstractLayer';
 import { MathUtil } from '../common';
 import { Property, NumberProperty } from '../properties';
 
@@ -7,27 +6,24 @@ import { Property, NumberProperty } from '../properties';
  * Model object that mirrors the VectorDrawable's '<group>' element.
  */
 @Property.register(
-  new NumberProperty('rotation', { animatable: true }),
-  new NumberProperty('scaleX', { animatable: true }),
-  new NumberProperty('scaleY', { animatable: true }),
-  new NumberProperty('pivotX', { animatable: true }),
-  new NumberProperty('pivotY', { animatable: true }),
-  new NumberProperty('translateX', { animatable: true }),
-  new NumberProperty('translateY', { animatable: true }),
+  new NumberProperty('rotation', { isAnimatable: true }),
+  new NumberProperty('scaleX', { isAnimatable: true }),
+  new NumberProperty('scaleY', { isAnimatable: true }),
+  new NumberProperty('pivotX', { isAnimatable: true }),
+  new NumberProperty('pivotY', { isAnimatable: true }),
+  new NumberProperty('translateX', { isAnimatable: true }),
+  new NumberProperty('translateY', { isAnimatable: true }),
 )
 export class GroupLayer extends AbstractLayer {
-  constructor(
-    readonly children: Layer[],
-    readonly id: string,
-    public pivotX = 0,
-    public pivotY = 0,
-    public rotation = 0,
-    public scaleX = 1,
-    public scaleY = 1,
-    public translateX = 0,
-    public translateY = 0,
-  ) {
-    super(children || [], id);
+  constructor(obj: ConstructorArgs) {
+    super(obj);
+    this.pivotX = obj.pivotX || 0;
+    this.pivotY = obj.pivotY || 0;
+    this.rotation = obj.rotation || 0;
+    this.scaleX = obj.scaleX || 1;
+    this.scaleY = obj.scaleY || 1;
+    this.translateX = obj.translateX || 0;
+    this.translateY = obj.translateY || 0;
   }
 
   interpolate(start: GroupLayer, end: GroupLayer, fraction: number) {
@@ -40,3 +36,16 @@ export class GroupLayer extends AbstractLayer {
     this.translateY = MathUtil.lerp(start.translateY, end.translateY, fraction);
   }
 }
+
+interface GroupLayerArgs {
+  pivotX?: number;
+  pivotY?: number;
+  rotation?: number;
+  scaleX?: number;
+  scaleY?: number;
+  translateX?: number;
+  translateY?: number;
+}
+
+export interface GroupLayer extends AbstractLayer, GroupLayerArgs { }
+export interface ConstructorArgs extends AbstractConstructorArgs, GroupLayerArgs { }

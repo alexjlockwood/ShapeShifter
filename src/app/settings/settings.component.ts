@@ -1,5 +1,5 @@
 import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
-import { Interpolator, INTERPOLATORS } from '../scripts/animation';
+import { Interpolator, INTERPOLATORS } from '../scripts/animations';
 import {
   AnimatorService,
   StateService,

@@ -1,4 +1,4 @@
-import { SvgTarget } from '../animation';
+import { SvgTarget } from '../animations';
 
 export function createHtml(svgText: string, cssFileName: string) {
   return `<html>

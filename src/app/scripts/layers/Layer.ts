@@ -1,5 +1,3 @@
-import { GroupLayer, ClipPathLayer, PathLayer } from '.';
-
 /**
  * Interface that is shared by all vector drawable layer models below.
  */
@@ -8,12 +6,12 @@ export interface Layer {
   /**
    * This layers children layers, or undefined if none exist.
    */
-  children: Layer[] | undefined;
+  children: Layer[];
 
   /**
    * A string uniquely identifying this layer in its tree.
    */
-  readonly id: string;
+  id: string;
 
   parent: Layer | undefined;
   previousSibling: Layer | undefined;

@@ -196,7 +196,7 @@ export class StateService {
         for (let i = minIdx; i < maxIdx; i++) {
           const pole = oppPathToChange.getPoleOfInaccessibility(i);
           mutator.addCollapsingSubPath(
-            pole, oppPathToChange.getSubPaths()[i].getCommands().length);
+            pole, oppPathToChange.getSubPath(i).getCommands().length);
         }
         if (numSubPaths < numOppSubPaths) {
           path = mutator.build();
@@ -205,9 +205,9 @@ export class StateService {
         }
       }
       for (let subIdx = 0; subIdx < Math.max(numSubPaths, numOppSubPaths); subIdx++) {
-        const numCommands = path.getSubPaths()[subIdx].getCommands().length;
+        const numCommands = path.getSubPath(subIdx).getCommands().length;
         const numOppositeCommands =
-          oppActivePathLayer.pathData.getSubPaths()[subIdx].getCommands().length;
+          oppActivePathLayer.pathData.getSubPath(subIdx).getCommands().length;
         if (numCommands === numOppositeCommands) {
           // Only auto convert when the number of commands in both canvases
           // are equal. Otherwise we'll wait for the user to add more points.
@@ -306,7 +306,10 @@ export class StateService {
       }
       return undefined;
     };
-    const newRotationLayer = new GroupLayer([activePathLayer], ROTATION_GROUP_LAYER_ID);
+    const newRotationLayer = new GroupLayer({
+      children: [activePathLayer],
+      id: ROTATION_GROUP_LAYER_ID,
+    });
     const activePathLayerParent = findActivePathLayerParentFn(vectorLayer, undefined);
     const activePathLayerIndex = activePathLayerParent.children.indexOf(activePathLayer);
     activePathLayerParent.children[activePathLayerIndex] = newRotationLayer;

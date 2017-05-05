@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
-import { Interpolator, INTERPOLATORS } from '../scripts/animation';
+import { Interpolator, INTERPOLATORS } from '../scripts/animations';
 import { MathUtil } from '../scripts/common';
 
 const DEFAULT_SHOULD_LABEL_POINTS = false;
