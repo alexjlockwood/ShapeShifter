@@ -21,6 +21,8 @@ import { SplitterComponent } from './splitter/splitter.component';
 import { PlaybackComponent } from './playback/playback.component';
 import { ToolbarComponent } from './toolbar/toolbar.component';
 import { LayerTreeComponent } from './vectorlist/layertree.component';
+import { PropertyInputComponent } from './propertyinput/propertyinput.component';
+import { ScrollGroupDirective } from './scrollgroup/scrollgroup.directive';
 
 // Services.
 import {
@@ -48,7 +50,6 @@ import { SubPathPairsPipe } from './inspector/pathinspector.component';
 import { SvgCommandPipe } from './inspector/commandinspector.component';
 
 import 'hammerjs';
-import { PropertyInputComponent } from './propertyinput/propertyinput.component';
 
 @NgModule({
   declarations: [
@@ -71,6 +72,7 @@ import { PropertyInputComponent } from './propertyinput/propertyinput.component'
     SubPathPairsPipe,
     LayerTreeComponent,
     PropertyInputComponent,
+    ScrollGroupDirective,
   ],
   imports: [
     BrowserModule,
