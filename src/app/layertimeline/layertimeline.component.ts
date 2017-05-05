@@ -8,6 +8,7 @@ import { VectorLayer, Layer, GroupLayer } from '../scripts/layers';
 import { Dragger } from '../scripts/dragger';
 import * as $ from 'jquery';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+import { Animation } from '../scripts/animations';
 
 declare const ga: Function;
 
@@ -237,6 +238,18 @@ export class LayerTimelineComponent implements OnInit, OnDestroy {
 
   trackLayerFn(index: number, layer: Layer) {
     return layer.id; // TODO: will this be OK for renamed layers?
+  }
+
+  horizZoom = 2; // 1ms = 2px
+  activeAnimation: Animation = new Animation({ id: 'anim', duration: 300 });
+  animations: Animation[] = [this.activeAnimation];
+
+  onAnimationMouseDown(event: MouseEvent, animation: Animation) {
+    console.info(event, animation);
+  }
+
+  onAnimationHeaderClick(event: MouseEvent, animation: Animation) {
+    console.info(event, animation);
   }
 }
 
