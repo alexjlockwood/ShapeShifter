@@ -16,8 +16,8 @@ import { Interpolator, INTERPOLATORS } from '.';
 export abstract class AnimationBlock<T extends AnimationBlockType> {
 
   constructor(obj: ConstructorArgs<T>) {
-    this.layerId = obj.layerId || '';
-    this.propertyName = obj.propertyName || '';
+    this.layerId = obj.layerId;
+    this.propertyName = obj.propertyName;
     this.startTime = obj.startTime || 0;
     this.endTime = obj.endTime || 0;
     if (this.startTime > this.endTime) {
@@ -47,8 +47,8 @@ interface AnimationBlockArgs<T> {
   startTime?: number;
   endTime?: number;
   interpolator?: Interpolator;
-  fromValue: T;
-  toValue: T;
+  fromValue?: T;
+  toValue?: T;
 }
 
 type AnimationBlockType = string | number | Path;
