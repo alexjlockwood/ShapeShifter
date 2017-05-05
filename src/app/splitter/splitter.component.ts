@@ -1,87 +1,109 @@
-import { Component, ElementRef, HostListener, ChangeDetectionStrategy } from '@angular/core';
-import { Point } from '../scripts/common';
+import {
+  Component, ElementRef, HostListener, Input, OnInit, ViewEncapsulation,
+} from '@angular/core';
 import * as $ from 'jquery';
+import { Dragger } from '../scripts/dragger';
 
-// TODO: this constant should always be equal to the inspector toolbar size... enforce this!
-const MIN_PARENT_HEIGHT = 40;
-
+// TODO: remove the view encapsulation stuff here
 @Component({
   selector: 'app-splitter',
   templateUrl: './splitter.component.html',
   styleUrls: ['./splitter.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  encapsulation: ViewEncapsulation.None,
 })
-export class SplitterComponent {
-  private downPoint: Point;
-  private isHovering = false;
-  private downHeight: number;
-  private readonly parent: JQuery;
+export class SplitterComponent implements OnInit {
+  @Input() edge: string;
+  @Input() min: number;
+  @Input() persistId: string;
 
-  constructor(private element: ElementRef) {
-    this.parent = $(element.nativeElement).parent();
+  private element: JQuery;
+  private parent: JQuery;
+  private persistKey: string;
+  private orientation: string;
+  private sizeGetterFn: () => number;
+  private sizeSetterFn: (size: number) => void;
+  private clientXY: string;
+
+  constructor(private readonly elementRef: ElementRef) { }
+
+  ngOnInit() {
+    this.element = $(this.elementRef.nativeElement);
+    if (this.min === undefined || this.min <= 0) {
+      this.min = 100;
+    }
+    if (this.persistId) {
+      this.persistKey = `\$\$splitter::${this.persistId}`;
+    }
+    this.orientation =
+      this.edge === 'left' || this.edge === 'right' ? 'vertical' : 'horizontal';
+    this.parent = this.element.parent();
+
+    if (this.orientation === 'vertical') {
+      this.sizeGetterFn = () => this.parent.width();
+      this.sizeSetterFn = size => this.parent.width(size);
+      this.clientXY = 'clientX';
+
+    } else {
+      this.sizeGetterFn = () => this.parent.height();
+      this.sizeSetterFn = size => this.parent.height(size);
+      this.clientXY = 'clientY';
+    }
+
+    this.addClasses();
+    this.setupEventListeners();
+    this.deserializeState();
   }
 
-  isHighlighted() {
-    return this.isHovering || !!this.downPoint;
+  private deserializeState() {
+    if (this.persistKey in localStorage) {
+      this.setSize_(Number(localStorage[this.persistKey]));
+    }
+  }
+
+  private addClasses() {
+    this.element
+      .addClass(`splt-${this.orientation}`)
+      .addClass(`splt-edge-${this.edge}`);
+  }
+
+  private setupEventListeners() {
+    this.element.on('mousedown', event => {
+      const downSize = this.sizeGetterFn();
+      event.preventDefault();
+
+      new Dragger({
+        downX: event.clientX,
+        downY: event.clientY,
+        direction: (this.orientation === 'vertical') ? 'horizontal' : 'vertical',
+        draggingCursor: (this.orientation === 'vertical') ? 'col-resize' : 'row-resize',
+
+        onBeginDragFn: () => this.element.addClass('is-dragging'),
+        onDragFn: (_, p) => {
+          const sign = (this.edge === 'left' || this.edge === 'top') ? -1 : 1;
+          const d = this.orientation === 'vertical' ? p.x : p.y;
+          this.setSize_(Math.max(this.min, downSize + sign * d));
+        },
+        onDropFn: () => this.element.removeClass('is-dragging'),
+      });
+    });
+  }
+
+  setSize_(size) {
+    if (this.persistKey) {
+      localStorage[this.persistKey] = size;
+    }
+    this.sizeSetterFn(size);
   }
 
   @HostListener('mouseenter', ['$event'])
-  onMouseEnter(event: MouseEvent) {
-    this.isHovering = true;
+  onMouseEnter() {
+    this.elementRef.nativeElement.style.backgroundColor = 'rgba(0, 0, 0, 0.1)';
   }
 
   @HostListener('mouseleave', ['$event'])
-  onMouseLeave(event: MouseEvent) {
-    this.isHovering = false;
-  }
-
-  @HostListener('mousedown', ['$event'])
-  onMouseDown(event: MouseEvent) {
-    this.downHeight = this.parent.height();
-    event = event || window.event as MouseEvent;
-    event.stopPropagation();
-    event.preventDefault();
-    if (event.pageX) {
-      this.downPoint = new Point(event.pageX, event.pageY);
-    } else if (event.clientX) {
-      this.downPoint = new Point(event.clientX, event.clientY);
-    }
-    if (this.downPoint) {
-      document.body.onmousemove = (e: MouseEvent) => {
-        e = e || window.event as MouseEvent;
-        e.stopPropagation();
-        e.preventDefault();
-        let endX = 0;
-        let endY = 0;
-        if (e.pageX) {
-          endX = e.pageX;
-          endY = e.pageY;
-        } else if (e.clientX) {
-          endX = e.clientX;
-          endY = e.clientX;
-        }
-        this.parent.height(Math.max(MIN_PARENT_HEIGHT, this.downHeight - (endY - this.downPoint.y)));
-      };
-
-      document.body.onmouseup = (e: MouseEvent) => {
-        document.body.onmousemove = document.body.onmouseup = undefined;
-        e = e || window.event as MouseEvent;
-        e.stopPropagation();
-        e.preventDefault();
-        let endX = 0;
-        let endY = 0;
-        if (e.pageX) {
-          endX = e.pageX;
-          endY = e.pageY;
-        } else if (e.clientX) {
-          endX = e.clientX;
-          endY = e.clientX;
-        }
-        this.parent.height(Math.max(MIN_PARENT_HEIGHT, this.downHeight - (endY - this.downPoint.y)));
-        this.downPoint = undefined;
-      };
+  onMouseLeave() {
+    if (!this.element.hasClass('is-dragging')) {
+      this.elementRef.nativeElement.style.backgroundColor = undefined;
     }
   }
 }
-
-

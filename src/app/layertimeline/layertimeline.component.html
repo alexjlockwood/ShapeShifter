@@ -1,0 +1,281 @@
+<div class="studio-layer-timeline">
+  <app-splitter edge="top" min="200" persist-id="layer-timeline"></app-splitter>
+
+  <div class="slt-layers" layout="column">
+    <!--<studio-splitter edge="right" min="200" persist-id="layer-list"></studio-splitter>-->
+
+    <div class="slt-header" fxLayout="row" fxLayoutAlign="start center">
+      <!--<md-menu md-offset="0 40">
+        <button class="slt-layers-menu-group-button" ng-click="$mdOpenMenu()">
+          File
+        </button>
+        <md-menu-content>
+          <md-menu-item>
+            <md-button ng-click="ctrl.onNewFile($event)">
+              New
+            </md-button>
+          </md-menu-item>
+          <md-menu-item>
+            <md-button file-open-handler="ctrl.onNewFromSVG(fileInfo)">
+              New from SVG
+              <input type="file" accept=".svg">
+            </md-button>
+          </md-menu-item>
+          <md-menu-item>
+            <md-button file-open-handler="ctrl.onNewFromVD(fileInfo)">
+              New from vector drawable
+              <input type="file" accept=".xml">
+            </md-button>
+          </md-menu-item>
+          <md-menu-divider></md-menu-divider>
+          <md-menu-item>
+            <md-button file-open-handler="ctrl.onOpenFile(fileInfo)">
+              Open
+              <input type="file" accept=".iconanim">
+            </md-button>
+          </md-menu-item>
+          <md-menu-item>
+            <md-button ng-click="ctrl.onSaveFile($event)">
+              Save
+            </md-button>
+          </md-menu-item>
+        </md-menu-content>
+      </md-menu>
+      <md-menu md-offset="0 40">
+        <button class="slt-layers-menu-group-button" ng-click="$mdOpenMenu()">
+          Import
+        </button>
+        <md-menu-content>
+          <md-menu-item>
+            <md-button file-open-handler="ctrl.onAddLayersFromSVG(fileInfo)">
+              Add layers from SVG
+              <input type="file" accept=".svg">
+            </md-button>
+          </md-menu-item>
+        </md-menu-content>
+      </md-menu>
+
+      <md-menu md-offset="0 40">
+        <button class="slt-layers-menu-group-button" ng-click="$mdOpenMenu()">
+          Export
+        </button>
+        <md-menu-content>
+          <md-menu-item>
+            <md-button ng-click="ctrl.onExportVectorDrawable($event)">
+              Vector drawable
+            </md-button>
+          </md-menu-item>
+          <md-menu-item>
+            <md-button ng-click="ctrl.onExportAVDs($event)" ng-disabled="!ctrl.animations.length">
+              Animated vector drawable(s)
+            </md-button>
+          </md-menu-item>
+        </md-menu-content>
+      </md-menu>
+      <div flex></div>-->
+      <!--<md-menu class="slt-add-layer-menu">
+        <md-button class="md-icon-button" ng-click="$mdOpenMenu($event)"
+          aria-label="New layer or group">
+          <md-icon md-svg-icon="avdstudio:add_layer"></md-icon>
+          <md-tooltip>New layer or group</md-tooltip>
+        </md-button>
+        <md-menu-content>
+          <md-menu-item>
+            <md-button ng-click="ctrl.onAddLayer($event, 'layer')">
+              New path
+            </md-button>
+          </md-menu-item>
+          <md-menu-item>
+            <md-button ng-click="ctrl.onAddLayer($event, 'mask')">
+              New clip path
+            </md-button>
+          </md-menu-item>
+          <md-menu-item>
+            <md-button ng-click="ctrl.onAddLayer($event, 'group')">
+              New layer group
+            </md-button>
+          </md-menu-item>
+        </md-menu-content>
+      </md-menu>-->
+    </div>
+
+    <ng-container *ngIf="{ vectorLayers: (vectorLayersObservable | async) } as data">
+      <div class="slt-layers-list-scroller" fxFlex appScrollGroup="timeline">
+        <div class="slt-layers-list">
+          <!--<div ng-repeat="layer in [ctrl.artwork]" ng-include="'layerListItem'"
+          layout="column"></div>
+      </div>-->
+          <!-- Layer list tree. -->
+          <app-layertree fxLayout="column" class="slt-layer-container"
+            *ngFor="let vl of data.vectorLayers; trackBy: trackLayerFn;"
+            [layer]="vl" (onLayerClick)="layerClick($event.event, $event.layer)"
+            (onLayerDoubleClick)="layerDoubleClick($event.event, $event.layer)"
+            (onLayerMouseDown)="layerMouseDown($event.event, $event.layer)"></app-layertree>
+        </div>
+        <div *ngIf="(this.dragIndicatorSource.asObservable() | async) as data"
+          class="slt-layers-list-drag-indicator" [ngStyle]="{
+      'display': data.isVisible ? 'block' : 'none',
+      'left': data.left + 'px',
+      'top': data.top + 'px'
+    }"></div>
+        <!-- Empty view. -->
+        <div *ngIf="data.vectorLayers.length === 0" class="slt-layers-empty">
+          <span>Import 2 SVGs to get started<br>(or load a demo in the top right menu)</span>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- Empty view. -->
+    <!--<ng-container *ngIf="{ vectorLayers: (vectorLayersObservable | async) } as data">
+    <div *ngIf="data.vectorLayers.length === 0" class="empty-state"
+      fxLayout="column" fxLayoutAlign="center center" fxFlexFill>
+      <span>Import 2 SVGs to get started<br>(or load a demo in the top right menu)</span>
+    </div>-->
+    <!-- Layer list tree. -->
+    <!--<div *ngIf="data.vectorLayers.length > 0" class="slt-layers-list-scroller"
+    fxFlexFill>
+    <div class="slt-layers-list">
+      <app-layertree *ngFor="let vl of data.vectorLayers; trackBy: trackLayerFn;"
+        [layer]="vl" (onLayerClick)="layerClick($event.event, $event.layer)"
+        (onLayerDoubleClick)="layerDoubleClick($event.event, $event.layer)"
+        (onLayerMouseDown)="layerMouseDown($event.event, $event.layer)"></app-layertree>
+    </div>
+  </div>
+  <div *ngIf="(this.dragIndicatorSource.asObservable() | async) as data"
+    class="slt-layers-list-drag-indicator" [ngStyle]="{
+      'display': data.isVisible ? 'block' : 'none',
+      'left': data.left + 'px',
+      'top': data.top + 'px'
+    }"></div>
+  </ng-container>-->
+
+
+    <!--<script type="text/ng-template" id="layerListItem">
+      <div class="slt-layer slt-layer-type-{{ layer._slt.layerType }}"
+        ng-class="{'is-selected': layer.selected_}" ng-click="ctrl.onLayerClick($event, layer)"
+        ng-dblclick="ctrl.onLayerToggleExpanded($event, layer)"
+        ng-mousedown="ctrl.onLayerMouseDown($event, layer)" layout="row">
+        <md-button class="md-icon-button slt-layer-expanded-toggle" ng-class="{'is-visible':layer._slt.layerType == 'group'}"
+          ng-click="ctrl.onLayerToggleExpanded($event, layer)">
+          <md-icon class="material-icons">{{layer.expanded ? 'expand_more' : 'chevron_right'}}</md-icon>
+        </md-button>
+        <md-icon md-svg-icon="avdstudio:{{ layer.typeIcon }}"></md-icon>
+        <span class="slt-layer-id">{{ layer.id }}</span>
+        <md-menu ng-if="layer._slt.layerType == 'layer' || layer._slt.layerType == 'mask'">
+          <md-button class="md-icon-button slt-layer-action-button slt-layer-more-actions"
+            ng-click="$mdOpenMenu($event)">
+            <md-icon class="material-icons">more_vert</md-icon>
+          </md-button>
+          <md-menu-content>
+            <md-menu-item ng-if="layer._slt.layerType == 'layer'">
+              <md-button ng-click="ctrl.onConvertLayerToClipPath($event, layer)">Convert to clip path</md-button>
+            </md-menu-item>
+            <md-menu-item ng-if="layer._slt.layerType == 'mask'">
+              <md-button ng-click="ctrl.onConvertLayerToPath($event, layer)">Convert to path</md-button>
+            </md-menu-item>
+          </md-menu-content>
+        </md-menu>
+        <md-button class="md-icon-button slt-layer-action-button slt-layer-visibility-toggle"
+          ng-class="{'is-checked':layer.visible}" ng-click="ctrl.onLayerToggleVisibility($event, layer)"
+          aria-label="Show/hide layer">
+          <md-icon class="material-icons">{{layer.visible ? 'visibility' : 'visibility_off'}}</md-icon>
+          <md-tooltip>Show/hide layer</md-tooltip>
+        </md-button>
+        <md-menu class="slt-layer-add-property-menu" ng-if="ctrl.activeAnimation && layer._slt.hasAvailableProperties">
+          <md-button class="md-icon-button slt-layer-action-button" ng-click="$mdOpenMenu($event)"
+            aria-label="Animate this layer">
+            <md-icon md-svg-icon="avdstudio:animation_block"></md-icon>
+            <md-tooltip>Animate this layer</md-tooltip>
+          </md-button>
+          <md-menu-content>
+            <md-menu-item ng-repeat="(propertyName, __) in layer._slt.availableProperties">
+              <md-button ng-click="ctrl.onAddTimelineBlock($event, layer, propertyName)">
+                {{propertyName}}
+              </md-button>
+            </md-menu-item>
+          </md-menu-content>
+        </md-menu>
+      </div>
+      <div class="slt-properties" ng-show="layer.expanded">
+        <div class="slt-property" layout="row" ng-repeat="(propertyName, __) in layer._slt.blocksByProperty">
+          <span class="slt-property-name">{{propertyName}}</span>
+          <md-button class="md-icon-button" ng-click="ctrl.onAddTimelineBlock($event, layer, propertyName)"
+            aria-label="Add another animation">
+            <md-icon class="material-icons">add</md-icon>
+            <md-tooltip>Add another animation</md-tooltip>
+          </md-button>
+        </div>
+      </div>
+      <ul class="slt-children" ng-if="layer.layers" ng-show="layer.expanded">
+        <li class="slt-layer-container" ng-repeat="layer in layer.layers"
+          data-layer-id="{{layer.id}}" ng-include="'layerListItem'"
+          layout="column"></li>
+      </ul>
+    </script>-->
+
+  </div>
+
+  <div class="slt-timeline">
+    <!--<div class="slt-timeline-animation" ng-class="{'is-active': ctrl.activeAnimation == animation}"
+      ng-mousedown="ctrl.onAnimationMouseDown($event, animation)"
+      style="width: {{animation.duration * ctrl.horizZoom + 40}}px"
+      ng-repeat="animation in ctrl.animations" layout="column">
+
+      <div class="slt-header">
+        <div class="slt-timeline-animation-meta" ng-class="{'is-selected': animation.selected_}"
+          ng-click="ctrl.onAnimationHeaderClick($event, animation)">
+          <span class="slt-timeline-animation-name">{{animation.id}}</span>
+          <span class="slt-timeline-animation-duration">{{animation.duration}}ms</span>
+        </div>
+        <studio-timeline-grid class="slt-timeline-header-grid" is-header
+          is-active="ctrl.activeAnimation == animation" active-time="ctrl.activeTime"
+          animation="animation" on-scrub="ctrl.onTimelineHeaderScrub(animation, time, options)">
+        </studio-timeline-grid>
+      </div>
+
+      <studio-timeline-grid class="slt-timeline-grid" is-active="ctrl.activeAnimation == animation"
+        active-time="ctrl.activeTime">
+      </studio-timeline-grid>
+
+      <div class="slt-timeline-animation-scroller" scroll-group="timeline">
+        <div class="slt-timeline-animation-rows">
+          <div ng-repeat="layer in [ctrl.artwork]" ng-include="'timelineRow'"></div>
+        </div>
+      </div>-->
+
+    <!--<script type="text/ng-template" id="timelineRow">
+        <div class="slt-layer slt-layer-type-{{ layer._slt.layerType }}"></div>
+
+        <div class="slt-properties" ng-show="layer.expanded">
+          <div class="slt-property" ng-repeat="(property, blocks) in layer._slt.blocksByProperty">
+            <div class="slt-timeline-block" ng-class="{'is-selected': block.selected_}"
+              ng-click="ctrl.onTimelineBlockClick($event, block, animation, layer)"
+              ng-mousedown="ctrl.onTimelineBlockMouseDown($event, block, animation, layer)"
+              ng-repeat="block in blocks[animation.id]" tabindex="-1"
+              style="left: {{100 * block.startTime / animation.duration}}%;
+                     width: {{100 * (block.endTime - block.startTime) / animation.duration}}%">
+              <div class="slt-timeline-block-edge slt-timeline-block-edge-start"></div>
+              <div class="slt-timeline-block-edge slt-timeline-block-edge-end"></div>
+            </div>
+          </div>
+        </div>
+
+        <ul class="slt-children" ng-if="layer.layers" ng-show="layer.expanded">
+          <li ng-repeat="layer in layer.layers" ng-include="'timelineRow'"></li>
+        </ul>
+      </script>-->
+
+  </div>
+
+  <!--<div layout="row" layout-align="start stretch">
+    <div class="slt-timeline-animation-new-container" layout="column"
+      layout-align="center center">
+      <md-button ng-click="ctrl.onAddNewAnimation()" class="slt-timeline-animation-new"
+        layout="column" layout-align="center center">
+        <md-icon md-svg-icon="avdstudio:add_animation"></md-icon>
+        <span>New animation</span>
+      </md-button>
+    </div>
+  </div>
+</div>-->
+</div>

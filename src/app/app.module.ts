@@ -15,14 +15,15 @@ import { CanvasRulerDirective } from './canvas/canvasruler.directive';
 import { PathInspectorComponent } from './inspector/pathinspector.component';
 import { CommandInspectorComponent } from './inspector/commandinspector.component';
 import { SubpathInspectorComponent } from './inspector/subpathinspector.component';
-import { VectorListComponent } from './vectorlist/vectorlist.component';
+import { VectorListComponent } from './layertimeline/vectorlist.component';
 import { SettingsComponent } from './settings/settings.component';
 import { SplitterComponent } from './splitter/splitter.component';
 import { PlaybackComponent } from './playback/playback.component';
 import { ToolbarComponent } from './toolbar/toolbar.component';
-import { LayerTreeComponent } from './vectorlist/layertree.component';
+import { LayerTreeComponent } from './layertimeline/layertree.component';
 import { PropertyInputComponent } from './propertyinput/propertyinput.component';
 import { ScrollGroupDirective } from './scrollgroup/scrollgroup.directive';
+import { LayerTimelineComponent } from './layertimeline/layertimeline.component';
 
 // Services.
 import {
@@ -73,6 +74,7 @@ import 'hammerjs';
     LayerTreeComponent,
     PropertyInputComponent,
     ScrollGroupDirective,
+    LayerTimelineComponent,
   ],
   imports: [
     BrowserModule,

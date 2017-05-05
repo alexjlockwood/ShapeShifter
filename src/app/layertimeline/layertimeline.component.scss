@@ -1,0 +1,400 @@
+@import '../styles/material-colors';
+@import '../styles/material-shadows';
+@import '../styles/variables';
+@import '../styles/theme';
+.studio-layer-timeline {
+  background-color: #fff;
+  height: 300px;
+  display: flex;
+  flex-direction: row;
+  flex-shrink: 0;
+  overflow: hidden;
+  box-shadow: material-shadow(8);
+  z-index: 1;
+  position: relative;
+  $headerHeight: 40px;
+  $timelineAnimationPadding: 20px; // basic resets
+  ul {
+    margin: 0;
+    padding: 0;
+  }
+  li {
+    list-style: none;
+  } // general vertical metrics
+  .slt-layers-list,
+  .slt-timeline-animation-rows {
+    padding: 8px 0;
+  }
+  .slt-layer {
+    box-sizing: border-box;
+    line-height: 20px;
+    height: 20px;
+  }
+  .slt-property {
+    line-height: 24px;
+    height: 24px;
+  }
+  .slt-properties {
+    margin: 4px 0;
+    &:empty {
+      display: none;
+    }
+  } // layers list
+  .slt-layers {
+    width: 300px;
+    box-shadow: material-shadow(2);
+    position: relative;
+    z-index: 3;
+    user-select: none;
+    flex: 0 0 auto;
+    md-icon {
+      width: 16px;
+      height: 16px;
+      font-size: 16px;
+    }
+    @mixin layer-list-button {
+      margin: 0;
+      padding: 2px;
+      height: 20px;
+      width: 20px;
+      line-height: 16px;
+      min-height: 20px;
+      md-icon {
+        vertical-align: top;
+      }
+    }
+    .slt-layers-list-scroller {
+      position: relative;
+      overflow-x: hidden;
+      overflow-y: auto;
+      -ms-overflow-style: none;
+      &::-webkit-scrollbar {
+        display: none;
+      }
+    }
+    .slt-layers-list {
+      padding-left: 8px;
+    }
+    .slt-children {
+      padding: 0;
+      margin: 0 0 0 20px;
+    }
+    .slt-layer {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      padding: 2px;
+      font-size: 12px;
+      cursor: pointer;
+      color: $colorBlackTextSecondary;
+      outline: none;
+      border-radius: 2px 0 0 2px;
+      &:focus {
+        box-shadow: 0 0 0 1px $colorFocusBorder inset;
+      }
+      &.is-selected {
+        background-color: $colorSelection;
+        box-shadow: none;
+        &,
+        & md-icon {
+          color: #fff;
+        }
+      }
+      md-icon {
+        flex: 0 0 auto;
+        margin-right: 4px;
+      }
+    }
+    .slt-layer:hover,
+    .slt-layer.is-selected {
+      .slt-layer-action-button {
+        opacity: 1;
+      }
+    }
+    .slt-layer-expanded-toggle {
+      @include layer-list-button;
+      visibility: hidden;
+      &.is-visible {
+        visibility: visible;
+      }
+    }
+    .slt-layer-id {
+      flex: 1 1 0;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .slt-layer-add-property-menu {
+      padding: 0;
+      display: flex;
+    }
+    .slt-layer-action-button {
+      @include layer-list-button;
+      opacity: .2;
+    }
+    md-menu {
+      display: flex;
+    }
+    .slt-layer-more-actions {
+      opacity: 0;
+    }
+    .slt-layer-visibility-toggle {
+      &.is-checked {
+        opacity: 0;
+      }
+      &:not(.is-checked) {
+        opacity: .7;
+      }
+    }
+    .slt-layer-type-group {
+      font-weight: 500;
+    }
+    .slt-properties {
+      margin-left: 40px; // indent by both the icon (20px) and expand toggle (20px)
+      margin-right: -2px; // hide inset shadow
+      padding-right: 2px; // offset margin
+      box-shadow: 0 0 0 1px $thinBorderColor inset;
+      border-radius: 2px;
+    }
+    .slt-property {
+      color: $colorBlackTextSecondary;
+      padding-left: 8px;
+      font-size: 12px;
+      &:not(:last-child) {
+        box-shadow: 0 -1px 0 $thinBorderColor inset;
+      }
+      .slt-property-name {
+        flex: 1 1 0;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .md-button {
+        @include layer-list-button;
+        margin: 2px;
+      }
+      md-icon {
+        color: $colorBlackTextDisabled;
+      }
+    }
+    .slt-header {
+      padding: 0 0 0 4px;
+      overflow: hidden;
+      .slt-layers-menu-group-button {
+        position: relative;
+        border: 0;
+        height: $headerHeight;
+        font-size: 12px;
+        font-weight: 500;
+        color: $colorBlackTextSecondary;
+        line-height: $headerHeight;
+        padding: 0 8px 0 8px;
+        margin: 0;
+        outline: 0;
+        background-color: transparent;
+        &:focus {
+          background-color: rgba(#000, .08);
+        }
+      }
+      md-menu {
+        padding: 0;
+        .md-icon-button {
+          margin: 0;
+        }
+        md-icon {
+          vertical-align: top;
+        }
+      }
+    }
+    .slt-layers-list-drag-indicator {
+      position: absolute;
+      height: 2px;
+      left: 0;
+      right: 0;
+      margin-top: -1px;
+      background-color: $colorPrimary400;
+      pointer-events: none;
+      &::before {
+        position: absolute;
+        content: '';
+        left: -4px;
+        top: -3px;
+        height: 8px;
+        width: 8px;
+        background-color: $colorPrimary400;
+        border-radius: 50%;
+      }
+    }
+  } // empty/placeholder pattern
+  .slt-layers-empty {
+    padding: 32px;
+    text-align: center;
+    font-size: 14px;
+    line-height: 20px;
+    color: $colorBlackTextDisabled;
+  } // timeline
+  .slt-timeline {
+    background-color: material-color('grey', '300');
+    overflow-x: auto;
+    overflow-y: hidden;
+    flex: 1;
+    user-select: none;
+    cursor: default;
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    .slt-timeline-animation-scroller {
+      position: relative;
+      overflow-x: hidden;
+      overflow-y: auto;
+      -ms-overflow-style: none;
+      &::-webkit-scrollbar {
+        display: none;
+      }
+    }
+    .slt-timeline-animation {
+      position: relative;
+      background-color: material-color('grey', '100');
+      margin-left: 4px;
+      box-sizing: content-box;
+      width: 100px;
+      overflow: hidden;
+      flex: 0 0 auto;
+      box-shadow: 4px 0 0 material-color('grey', '500'), -4px 0 0 material-color('grey', '500');
+      opacity: .5;
+      &.is-active {
+        opacity: 1;
+      }
+    }
+    .slt-timeline-animation-rows {
+      padding-left: $timelineAnimationPadding;
+      padding-right: $timelineAnimationPadding;
+    }
+    .slt-timeline-animation-new-container {
+      flex: 0 0 auto;
+      width: 128px;
+      margin: 24px;
+    }
+    .slt-timeline-animation-new {
+      color: $colorBlackTextSecondary;
+      cursor: pointer;
+      padding: 8px 12px;
+      outline: 0;
+      md-icon {
+        width: 24px;
+        height: 24px;
+        box-sizing: content-box;
+        margin-bottom: 4px;
+      }
+      span {
+        font-size: 12px;
+        text-transform: none;
+        letter-spacing: 0;
+        line-height: 16px;
+        font-weight: 500;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+    }
+    .slt-properties {
+      background-color: #fff;
+      border-radius: 2px;
+      box-shadow: 0 0 0 1px $thinBorderColor inset;
+    }
+    .slt-property {
+      position: relative;
+      &:not(:last-child) {
+        box-shadow: 0 -1px 0 $thinBorderColor inset;
+      }
+    }
+    .slt-timeline-block {
+      position: absolute;
+      background-color: material-color('grey', '500');
+      height: 12px;
+      border-radius: 6px;
+      top: 50%;
+      transform: translate(0, -50%);
+      outline: 0;
+      cursor: pointer;
+      .slt-timeline-block-edge {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 6px;
+        cursor: ew-resize;
+      }
+      .slt-timeline-block-edge-start {
+        left: 0;
+      }
+      .slt-timeline-block-edge-end {
+        right: 0;
+      }
+    }
+    .slt-timeline-animation.is-active .slt-timeline-block {
+      background-color: material-color('green', '200');
+      &.is-selected {
+        background-color: $colorSelectedAnimationBlock;
+      }
+    }
+    .slt-timeline-grid {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+    .slt-header {
+      display: flex;
+      flex-direction: column;
+      margin: 0;
+      .slt-timeline-animation-meta {
+        height: $headerHeight / 2 - 4px;
+        line-height: $headerHeight / 2 - 4px;
+        margin: 2px -4px;
+        padding: 0 4px;
+        border-radius: 2px;
+        cursor: pointer;
+        outline: 0;
+        align-self: flex-start;
+        display: flex;
+        flex-direction: row;
+        &.is-selected,
+        &.is-selected .slt-timeline-animation-name {
+          background-color: $colorSelection;
+          color: $colorWhiteTextPrimary;
+        }
+      }
+      .slt-timeline-animation-name {
+        color: $colorBlackTextPrimary;
+        margin-right: 4px;
+        font-weight: 500;
+      }
+      .slt-timeline-header-grid {
+        position: absolute;
+        left: 0;
+        top: 50%;
+        width: 100%;
+        height: 50%;
+        z-index: 1;
+        cursor: pointer;
+      }
+    }
+  } // headers
+  .slt-header {
+    position: relative;
+    flex: 0 0 auto;
+    height: $headerHeight;
+    box-sizing: border-box;
+    width: 100%;
+    background-color: material-color('grey', '100');
+    font-size: 12px;
+    line-height: $headerHeight;
+    color: material-color('grey', '700');
+    padding: 0 16px;
+    box-shadow: material-shadow(2);
+    z-index: 2;
+  }
+}

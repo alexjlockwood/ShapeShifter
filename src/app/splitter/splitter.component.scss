@@ -1,16 +1,55 @@
+$splitterWidth: 4px;
 :host {
+  position: absolute;
+  z-index: 100;
+}
+
+.splt-hover {
+  background-color: rgba(#000, .1);
+}
+
+.is-dragging {
+  background-color: rgba(#000, .1);
+}
+
+.splt-vertical {
+  position: absolute;
+  z-index: 100;
+  top: 0;
+  bottom: 0;
+  width: $splitterWidth;
+  cursor: col-resize;
+}
+
+.splt-horizontal {
   position: absolute;
   z-index: 100;
   left: 0;
   right: 0;
-  height: 4px;
+  height: $splitterWidth;
   cursor: row-resize;
 }
 
-// TODO: the splitter cursor doesn't always show up as 'row-resize' when dragging
-.highlighted {
-  width: 100%;
-  height: 100%;
-  background-color: rgba(#000, .1);
-  cursor: row-resize;
+.splt-edge-left {
+  position: absolute;
+  z-index: 100;
+  left: 0;
+}
+
+.splt-edge-right {
+  position: absolute;
+  z-index: 100;
+  right: 0;
+}
+
+.splt-edge-top {
+  position: absolute;
+  z-index: 100;
+  top: 0;
+}
+
+.splt-edge-bottom {
+  position: absolute;
+  z-index: 100;
+  bottom: 0;
 }
