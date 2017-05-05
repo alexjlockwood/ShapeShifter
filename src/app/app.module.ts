@@ -105,17 +105,21 @@ export class AppModule {
     private mdIconRegistry: MdIconRegistry,
     private sanitizer: DomSanitizer) {
     mdIconRegistry
-      .addSvgIcon('reverse', sanitizer.bypassSecurityTrustResourceUrl('assets/reverse.svg'))
-      .addSvgIcon('autofix', sanitizer.bypassSecurityTrustResourceUrl('assets/autofix.svg'))
+      // Logo.
       .addSvgIcon('shapeshifter', sanitizer.bypassSecurityTrustResourceUrl('assets/shapeshifter.svg'))
-      .addSvgIcon('addpaths', sanitizer.bypassSecurityTrustResourceUrl('assets/addpaths.svg'))
-      .addSvgIcon('clippath', sanitizer.bypassSecurityTrustResourceUrl('assets/clippath.svg'))
-      .addSvgIcon('group', sanitizer.bypassSecurityTrustResourceUrl('assets/group.svg'))
-      .addSvgIcon('path', sanitizer.bypassSecurityTrustResourceUrl('assets/path.svg'))
-      .addSvgIcon('vector', sanitizer.bypassSecurityTrustResourceUrl('assets/vector.svg'))
-      .addSvgIcon('animation', sanitizer.bypassSecurityTrustResourceUrl('assets/animation.svg'))
-      .addSvgIcon('animation_block', sanitizer.bypassSecurityTrustResourceUrl('assets/animation_block.svg'))
-      .addSvgIcon('selectioncursor', sanitizer.bypassSecurityTrustResourceUrl('assets/selectioncursor.svg'))
-      .addSvgIcon('demoicon', sanitizer.bypassSecurityTrustResourceUrl('assets/demoicon.svg'));
+      // Icons.
+      .addSvgIcon('addpaths', sanitizer.bypassSecurityTrustResourceUrl('assets/icons/addpaths.svg'))
+      .addSvgIcon('autofix', sanitizer.bypassSecurityTrustResourceUrl('assets/icons/autofix.svg'))
+      .addSvgIcon('demos', sanitizer.bypassSecurityTrustResourceUrl('assets/icons/demos.svg'))
+      .addSvgIcon('reverse', sanitizer.bypassSecurityTrustResourceUrl('assets/icons/reverse.svg'))
+      // Models.
+      .addSvgIcon('animation', sanitizer.bypassSecurityTrustResourceUrl('assets/models/animation.svg'))
+      .addSvgIcon('animationblock', sanitizer.bypassSecurityTrustResourceUrl('assets/models/animationblock.svg'))
+      .addSvgIcon('clippathlayer', sanitizer.bypassSecurityTrustResourceUrl('assets/models/clippathlayer.svg'))
+      .addSvgIcon('grouplayer', sanitizer.bypassSecurityTrustResourceUrl('assets/models/grouplayer.svg'))
+      .addSvgIcon('pathlayer', sanitizer.bypassSecurityTrustResourceUrl('assets/models/pathlayer.svg'))
+      .addSvgIcon('vectorlayer', sanitizer.bypassSecurityTrustResourceUrl('assets/models/vectorlayer.svg'))
+      // Cursors.
+      .addSvgIcon('selectioncursor', sanitizer.bypassSecurityTrustResourceUrl('assets/cursorsselectioncursor.svg'));
   }
 }

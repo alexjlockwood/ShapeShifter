@@ -23,13 +23,13 @@ export class LayerTreeComponent implements OnInit {
 
   getLayerTypeName() {
     if (this.layer.isPathLayer()) {
-      return 'path';
+      return 'pathlayer';
     } else if (this.layer.isClipPathLayer()) {
-      return 'clippath';
+      return 'clippathlayer';
     } else if (this.layer.isGroupLayer()) {
-      return 'group';
+      return 'grouplayer';
     } else {
-      return 'vector';
+      return 'vectorlayer';
     }
   }
 

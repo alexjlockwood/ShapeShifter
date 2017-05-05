@@ -45,7 +45,7 @@ export class PropertyInputComponent implements OnInit {
       return;
     }
     this.selectionInfo = {
-      icon: 'vector',
+      icon: 'vectorlayer',
       inspectedProperties: [],
     };
     const layer = layers[0].findLayer('bottom_inner_path');
