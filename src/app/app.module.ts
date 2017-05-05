@@ -15,7 +15,6 @@ import { CanvasRulerDirective } from './canvas/canvasruler.directive';
 import { PathInspectorComponent } from './inspector/pathinspector.component';
 import { CommandInspectorComponent } from './inspector/commandinspector.component';
 import { SubpathInspectorComponent } from './inspector/subpathinspector.component';
-import { VectorListComponent } from './layertimeline/vectorlist.component';
 import { SettingsComponent } from './settings/settings.component';
 import { SplitterComponent } from './splitter/splitter.component';
 import { PlaybackComponent } from './playback/playback.component';
@@ -66,7 +65,6 @@ import 'hammerjs';
     ToolbarComponent,
     TimelineComponent,
     TimelineRulerComponent,
-    VectorListComponent,
     ConfirmDialogComponent,
     DemoDialogComponent,
     SvgCommandPipe,
