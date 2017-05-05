@@ -53,6 +53,8 @@ export abstract class AbstractLayer implements Layer {
   // Implements the Layer interface.
   abstract interpolate(start: AbstractLayer, end: AbstractLayer, fraction: number): void;
 
+  abstract clone<T extends Layer>(): T;
+
   // Implements the Layer interface.
   isMorphableWith(layer: Layer) {
     if (this.constructor !== layer.constructor) {

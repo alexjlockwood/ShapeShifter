@@ -14,6 +14,14 @@ export class ClipPathLayer extends AbstractLayer {
     this.pathData = obj.pathData;
   }
 
+  clone<ClipPathLayer>() {
+    return new ClipPathLayer({
+      id: this.id,
+      children: [],
+      pathData: this.pathData.clone(),
+    });
+  }
+
   interpolate(start: ClipPathLayer, end: ClipPathLayer, fraction: number) {
     this.pathData = PathUtil.interpolate(start.pathData, end.pathData, fraction);
   }

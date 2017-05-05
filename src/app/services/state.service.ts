@@ -70,8 +70,7 @@ export class StateService {
             console.warn('Ignoring attempt to add duplicate path ID', pathMap, vl, layer.id);
             return;
           }
-          // TODO: is it necessary to clone here? just to be safe?
-          pathMap.set(layer.id, vl.clone());
+          pathMap.set(layer.id, vl);
           return;
         }
         if (layer.children) {

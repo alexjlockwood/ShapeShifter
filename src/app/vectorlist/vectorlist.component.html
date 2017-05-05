@@ -8,8 +8,8 @@
   <div *ngIf="data.vectorLayers.length > 0" class="slt-layers-list-scroller"
     fxFlexFill>
     <div class="slt-layers-list">
-      <app-layertree *ngFor="let vl of data.vectorLayers" [layer]="vl"
-        (onLayerClick)="layerClick($event.event, $event.layer)"
+      <app-layertree *ngFor="let vl of data.vectorLayers; trackBy: trackLayerFn;"
+        [layer]="vl" (onLayerClick)="layerClick($event.event, $event.layer)"
         (onLayerDoubleClick)="layerDoubleClick($event.event, $event.layer)"
         (onLayerMouseDown)="layerMouseDown($event.event, $event.layer)"></app-layertree>
     </div>

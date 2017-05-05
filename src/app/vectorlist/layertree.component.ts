@@ -34,7 +34,7 @@ export class LayerTreeComponent implements OnInit {
   }
 
   trackLayerFn(index: number, layer: Layer) {
-    return layer.id;
+    return layer.id; // TODO: will this be OK for renamed layers?
   }
 
   layerClick(event: MouseEvent, layer: Layer) {

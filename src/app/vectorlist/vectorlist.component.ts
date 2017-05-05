@@ -1,8 +1,9 @@
+import * as _ from 'lodash';
 import { Component, OnInit, ChangeDetectionStrategy, OnDestroy } from '@angular/core';
-import { CanvasType } from '../CanvasType';
+// import { CanvasType } from '../CanvasType';
 import { StateService, } from '../services';
 import { Observable } from 'rxjs/Observable';
-import { Subscription } from 'rxjs/Subscription';
+// import { Subscription } from 'rxjs/Subscription';
 import { VectorLayer, Layer, GroupLayer } from '../scripts/layers';
 import { Dragger } from '../scripts/dragger';
 import * as $ from 'jquery';
@@ -21,14 +22,14 @@ const LAYER_INDENT_PIXELS = 20;
 export class VectorListComponent implements OnInit, OnDestroy {
 
   // These are public because they are accessed via the HTML template.
-  existingPathIdsObservable: Observable<ReadonlyArray<string>>;
-  startActivePathIdObservable: Observable<string>;
-  endActivePathIdObservable: Observable<string>;
+  // existingPathIdsObservable: Observable<ReadonlyArray<string>>;
+  // startActivePathIdObservable: Observable<string>;
+  // endActivePathIdObservable: Observable<string>;
   vectorLayersObservable: Observable<ReadonlyArray<VectorLayer>>;
 
-  private isHoveringOverListItem = new Map<string, boolean>();
-  private isHoveringOverOverflow = new Map<string, boolean>();
-  private readonly subscriptions: Subscription[] = [];
+  // private isHoveringOverListItem = new Map<string, boolean>();
+  // private isHoveringOverOverflow = new Map<string, boolean>();
+  // private readonly subscriptions: Subscription[] = [];
 
   private shouldSuppressClick = false;
 
@@ -37,18 +38,18 @@ export class VectorListComponent implements OnInit, OnDestroy {
   constructor(private readonly stateService: StateService) { }
 
   ngOnInit() {
-    this.startActivePathIdObservable = this.stateService.getActivePathIdObservable(CanvasType.Start);
-    this.endActivePathIdObservable = this.stateService.getActivePathIdObservable(CanvasType.End);
-    this.existingPathIdsObservable = this.stateService.getExistingPathIdsObservable();
-    this.existingPathIdsObservable.subscribe(() => {
-      this.isHoveringOverListItem.clear();
-      this.isHoveringOverOverflow.clear();
-    });
+    // this.startActivePathIdObservable = this.stateService.getActivePathIdObservable(CanvasType.Start);
+    // this.endActivePathIdObservable = this.stateService.getActivePathIdObservable(CanvasType.End);
+    // this.existingPathIdsObservable = this.stateService.getExistingPathIdsObservable();
+    // this.existingPathIdsObservable.subscribe(() => {
+    //   this.isHoveringOverListItem.clear();
+    //   this.isHoveringOverOverflow.clear();
+    // });
     this.vectorLayersObservable = this.stateService.getVectorLayersObservable();
   }
 
   ngOnDestroy() {
-    this.subscriptions.forEach(s => s.unsubscribe());
+    // this.subscriptions.forEach(s => s.unsubscribe());
   }
 
   layerClick(event: MouseEvent, layer: Layer) { }
@@ -70,7 +71,6 @@ export class VectorListComponent implements OnInit, OnDestroy {
     let targetLayerInfo: LayerInfo = undefined;
     let targetEdge: string;
 
-    // TODO: need to add the scroller.
     // tslint:disable-next-line
     new Dragger({
       direction: 'both',
@@ -186,20 +186,27 @@ export class VectorListComponent implements OnInit, OnDestroy {
             // moving into an empty layer group
             const newParent = targetLayerInfo.layer;
             dragLayer.remove();
+            dragLayer = dragLayer.clone();
             newParent.children.push(dragLayer);
             dragLayer.parent = newParent;
           } else {
             // moving next to another layer
+            console.info(this.stateService.getImportedVectorLayers()[0]);
             const newParent = targetLayerInfo.layer.parent;
             if (newParent) {
               dragLayer.remove();
-              let index = newParent.children ? newParent.children.indexOf(targetLayerInfo.layer) : -1;
+              let index =
+                newParent.children
+                  ? _.findIndex(newParent.children, child => child.id === targetLayerInfo.layer.id)
+                  : -1;
               if (index >= 0) {
                 index += (targetEdge === 'top') ? 0 : 1;
                 newParent.children.splice(index, 0, dragLayer);
                 dragLayer.parent = newParent;
               }
             }
+            this.stateService.addVectorLayers([]); // notify change
+            console.info(this.stateService.getImportedVectorLayers()[0]);
           }
 
           // this.studioState_.artworkChanged();
@@ -226,6 +233,10 @@ export class VectorListComponent implements OnInit, OnDestroy {
       }
     }
     return undefined;
+  }
+
+  trackLayerFn(index: number, layer: Layer) {
+    return layer.id; // TODO: will this be OK for renamed layers?
   }
 }
 

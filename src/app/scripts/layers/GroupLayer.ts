@@ -26,6 +26,20 @@ export class GroupLayer extends AbstractLayer {
     this.translateY = obj.translateY || 0;
   }
 
+  clone<GroupLayer>() {
+    return new GroupLayer({
+      id: this.id,
+      children: this.children.map(c => c.clone()),
+      pivotX: this.pivotX,
+      pivotY: this.pivotY,
+      rotation: this.rotation,
+      scaleX: this.scaleX,
+      scaleY: this.scaleY,
+      translateX: this.translateX,
+      translateY: this.translateY,
+    })
+  }
+
   interpolate(start: GroupLayer, end: GroupLayer, fraction: number) {
     this.pivotX = MathUtil.lerp(start.pivotX, end.pivotX, fraction);
     this.pivotY = MathUtil.lerp(start.pivotY, end.pivotY, fraction);

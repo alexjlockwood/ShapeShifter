@@ -62,6 +62,26 @@ export class PathLayer extends AbstractLayer {
     this.fillType = obj.fillType || 'nonZero';
   }
 
+  clone<PathLayer>() {
+    return new PathLayer({
+      id: this.id,
+      children: [],
+      pathData: this.pathData.clone(),
+      fillColor: this.fillColor,
+      fillAlpha: this.fillAlpha,
+      strokeColor: this.strokeColor,
+      strokeAlpha: this.strokeAlpha,
+      strokeWidth: this.strokeWidth,
+      strokeLinecap: this.strokeLinecap,
+      strokeLinejoin: this.strokeLinejoin,
+      strokeMiterLimit: this.strokeMiterLimit,
+      trimPathStart: this.trimPathStart,
+      trimPathEnd: this.trimPathEnd,
+      trimPathOffset: this.trimPathOffset,
+      fillType: this.fillType,
+    });
+  }
+
   isStroked() {
     return !!this.strokeColor;
   }

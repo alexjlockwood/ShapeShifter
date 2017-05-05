@@ -20,6 +20,7 @@ export interface Layer extends Inspectable, Animatable {
   nextSibling: Layer | undefined;
   getSibling(offset: number): Layer | undefined;
   remove(): void;
+  clone<T extends Layer>(): T;
 
   /**
    * Returns the first descendent layer with the specified ID.
