@@ -24,6 +24,9 @@ export class SplitterComponent implements OnInit {
   private sizeSetterFn: (size: number) => void;
   private clientXY: string;
 
+  private isHovering = false;
+  private isDragging = false;
+
   constructor(private readonly elementRef: ElementRef) { }
 
   ngOnInit() {
@@ -50,7 +53,6 @@ export class SplitterComponent implements OnInit {
     }
 
     this.addClasses();
-    this.setupEventListeners();
     this.deserializeState();
   }
 
@@ -66,28 +68,6 @@ export class SplitterComponent implements OnInit {
       .addClass(`splt-edge-${this.edge}`);
   }
 
-  private setupEventListeners() {
-    this.element.on('mousedown', event => {
-      const downSize = this.sizeGetterFn();
-      event.preventDefault();
-
-      new Dragger({
-        downX: event.clientX,
-        downY: event.clientY,
-        direction: (this.orientation === 'vertical') ? 'horizontal' : 'vertical',
-        draggingCursor: (this.orientation === 'vertical') ? 'col-resize' : 'row-resize',
-
-        onBeginDragFn: () => this.element.addClass('is-dragging'),
-        onDragFn: (_, p) => {
-          const sign = (this.edge === 'left' || this.edge === 'top') ? -1 : 1;
-          const d = this.orientation === 'vertical' ? p.x : p.y;
-          this.setSize_(Math.max(this.min, downSize + sign * d));
-        },
-        onDropFn: () => this.element.removeClass('is-dragging'),
-      });
-    });
-  }
-
   setSize_(size) {
     if (this.persistKey) {
       localStorage[this.persistKey] = size;
@@ -95,15 +75,56 @@ export class SplitterComponent implements OnInit {
     this.sizeSetterFn(size);
   }
 
-  @HostListener('mouseenter', ['$event'])
-  onMouseEnter() {
-    this.elementRef.nativeElement.style.backgroundColor = 'rgba(0, 0, 0, 0.1)';
+  @HostListener('mousedown', ['$event'])
+  onMouseDown(event: MouseEvent) {
+    const downSize = this.sizeGetterFn();
+    event.preventDefault();
+
+    this.isDragging = true;
+    this.showSplitter();
+
+    new Dragger({
+      downX: event.clientX,
+      downY: event.clientY,
+      direction: (this.orientation === 'vertical') ? 'horizontal' : 'vertical',
+      draggingCursor: (this.orientation === 'vertical') ? 'col-resize' : 'row-resize',
+      onBeginDragFn: () => {
+        this.isDragging = true;
+        this.showSplitter();
+      },
+      onDragFn: (_, p) => {
+        const sign = (this.edge === 'left' || this.edge === 'top') ? -1 : 1;
+        const d = this.orientation === 'vertical' ? p.x : p.y;
+        this.setSize_(Math.max(this.min, downSize + sign * d));
+      },
+      onDropFn: () => {
+        this.isDragging = false;
+        this.hideSplitter();
+      }
+    });
   }
 
-  @HostListener('mouseleave', ['$event'])
+  @HostListener('mouseenter')
+  onMouseEnter() {
+    this.isHovering = true;
+    this.showSplitter();
+  }
+
+  @HostListener('mouseleave')
   onMouseLeave() {
-    if (!this.element.hasClass('is-dragging')) {
-      this.elementRef.nativeElement.style.backgroundColor = undefined;
+    this.isHovering = false;
+    this.hideSplitter();
+  }
+
+  private showSplitter() {
+    if (this.isDragging || this.isHovering) {
+      this.elementRef.nativeElement.style.backgroundColor = 'rgba(0, 0, 0, 0.1)';
+    }
+  }
+
+  private hideSplitter() {
+    if (!this.isDragging && !this.isHovering) {
+      this.elementRef.nativeElement.style.backgroundColor = 'transparent';
     }
   }
 }
