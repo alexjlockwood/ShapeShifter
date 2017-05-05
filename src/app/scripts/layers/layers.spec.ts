@@ -1,5 +1,5 @@
-import { VectorLayer, ClipPathLayer, GroupLayer, PathLayer } from '.';
-import { newPath } from '../paths';
+// import { VectorLayer, ClipPathLayer, GroupLayer, PathLayer } from '.';
+// import { newPath } from '../paths';
 
 describe('Layers', () => {
   it('ClipPathLayer', () => {

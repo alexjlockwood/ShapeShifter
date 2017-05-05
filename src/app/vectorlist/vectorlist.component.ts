@@ -56,8 +56,6 @@ export class VectorListComponent implements OnInit, OnDestroy {
   layerDoubleClick(event: MouseEvent, layer: Layer) { }
 
   layerMouseDown(mouseDownEvent: MouseEvent, dragLayer: Layer) {
-    console.info('layerMouseDown', mouseDownEvent, dragLayer);
-
     const $layersList = $(mouseDownEvent.target).parents('.slt-layers-list');
     const $scroller = $(mouseDownEvent.target).parents('.slt-layers-list-scroller');
 
@@ -72,28 +70,23 @@ export class VectorListComponent implements OnInit, OnDestroy {
     let targetLayerInfo: LayerInfo = undefined;
     let targetEdge: string;
 
-    console.info($layersList, $scroller);
-
     // TODO: need to add the scroller.
+    // tslint:disable-next-line
     new Dragger({
       direction: 'both',
       downX: mouseDownEvent.clientX,
       downY: mouseDownEvent.clientY,
 
       onBeginDragFn: () => {
-        console.info('onBeginDrag');
         this.shouldSuppressClick = true;
 
         // build up a list of all layers ordered by Y position
         orderedLayerInfos = [];
         scrollerRect = $scroller.get(0).getBoundingClientRect();
         const scrollTop = $scroller.scrollTop();
-        console.info($layersList);
-        console.info($layersList.find('.slt-layer-container'));
         $layersList.find('.slt-layer-container').each((i, element) => {
           if (!$(element).data('layer-id')) {
             // the artwork root layer doesn't have an ID set
-            console.info('no id found', $(element).data('layer-id'));
             return;
           }
 
@@ -132,20 +125,15 @@ export class VectorListComponent implements OnInit, OnDestroy {
 
       onDragFn: event => {
         const localEventY = event.clientY - scrollerRect.top + $scroller.scrollTop();
-        console.info('onDrag');
-        console.info('localEventY', localEventY);
-
         // find the target layer and edge (top or bottom)
         targetLayerInfo = undefined;
         let minDistance = Infinity;
         let minDistanceIndent = Infinity; // tie break to most indented layer
-        console.info('orderedLayerInfos', orderedLayerInfos);
         for (let i = 0; i < orderedLayerInfos.length; i++) {
           const layerInfo = orderedLayerInfos[i];
 
           // skip if mouse to the left of this layer
           if (event.clientX < layerInfo.localRect.left) {
-            console.info('131');
             continue;
           }
 
@@ -166,7 +154,6 @@ export class VectorListComponent implements OnInit, OnDestroy {
 
         // disallow dragging a layer into itself or its children
         if (targetLayerInfo) {
-          console.info('151');
           let layer = targetLayerInfo.layer;
           while (layer) {
             if (layer === dragLayer) {
@@ -179,7 +166,6 @@ export class VectorListComponent implements OnInit, OnDestroy {
 
         if (targetLayerInfo && targetEdge === 'bottom'
           && targetLayerInfo.layer.nextSibling === dragLayer) {
-          console.info('163');
           targetLayerInfo = undefined;
         }
 
@@ -192,7 +178,6 @@ export class VectorListComponent implements OnInit, OnDestroy {
       },
 
       onDropFn: () => {
-        console.info('onDrop');
         this.updateDragIndicator({ isVisible: false });
 
         if (targetLayerInfo) {
@@ -228,9 +213,7 @@ export class VectorListComponent implements OnInit, OnDestroy {
 
   private updateDragIndicator(info: DragIndicatorInfo) {
     const curr = this.dragIndicatorSource.getValue();
-    console.info('updating...', curr);
     this.dragIndicatorSource.next(Object.assign({}, curr, info));
-    console.info('updated', this.dragIndicatorSource.getValue());
   }
 
   // TODO: figure out if this is right

@@ -36,8 +36,6 @@ export class Dragger {
         this.draggingScrim = this.buildDraggingScrim().appendTo(document.body);
         this.draggingCursor = this.draggingCursor_;
         this.onBeginDragFn(event);
-      } else {
-        console.info(this.isDragging, this.shouldBeginDragging(event));
       }
 
       if (this.isDragging) {
