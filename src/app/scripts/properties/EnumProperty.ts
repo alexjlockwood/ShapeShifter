@@ -1,21 +1,23 @@
+import * as _ from 'lodash';
 import { Property } from './Property';
 
-export class EnumProperty extends Property<Option> {
+export class EnumProperty extends Property<string> {
 
   constructor(name: string, public readonly options: ReadonlyArray<Option>) {
     super(name);
   }
 
   // @Override
-  displayValueForValue(value: Option) {
-    return value.label;
+  displayValueForValue(value: string) {
+    return _.find(this.options, o => o.value === value).label;
   }
 }
 
 /**
- * Stores a label to display in the UI and its corresponding key.
+ * The value is the unique string used as a key (and that is stored inside of
+ * the model object). The label is what we display in the UI.
  */
 interface Option {
-  readonly key: string;
+  readonly value: string;
   readonly label: string;
 }

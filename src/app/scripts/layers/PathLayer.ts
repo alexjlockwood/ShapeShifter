@@ -8,20 +8,20 @@ import {
 } from '../properties';
 
 const ENUM_LINECAP_OPTIONS = [
-  { key: 'butt', label: 'Butt' },
-  { key: 'square', label: 'Square' },
-  { key: 'round', label: 'Round' },
+  { value: 'butt', label: 'Butt' },
+  { value: 'square', label: 'Square' },
+  { value: 'round', label: 'Round' },
 ];
 
 const ENUM_LINEJOIN_OPTIONS = [
-  { key: 'miter', label: 'Miter' },
-  { key: 'round', label: 'Round' },
-  { key: 'bevel', label: 'Bevel' },
+  { value: 'miter', label: 'Miter' },
+  { value: 'round', label: 'Round' },
+  { value: 'bevel', label: 'Bevel' },
 ];
 
 const ENUM_FILLTYPE_OPTIONS = [
-  { key: 'nonzero', label: 'nonZero' },
-  { key: 'evenodd', label: 'evenOdd' },
+  { value: 'nonZero', label: 'nonZero' },
+  { value: 'evenOdd', label: 'evenOdd' },
 ];
 
 /**
@@ -42,6 +42,7 @@ const ENUM_FILLTYPE_OPTIONS = [
   new FractionProperty('trimPathOffset', { isAnimatable: true }),
   new EnumProperty('fillType', ENUM_FILLTYPE_OPTIONS),
 )
+// TODO: need to fix enum properties so they store/return strings instead of options?
 export class PathLayer extends AbstractLayer {
 
   constructor(obj: ConstructorArgs) {

@@ -34,19 +34,14 @@
                         || ip.typeName == 'FractionProperty'"
             [(ngModel)]="ip.editableValue" (keydown)="this.onValueEditorKeyDown($event, ip)"
             (blur)="ip.resolveEnteredValue()">
-          <!--<md-menu class="spi-property-value-menu" *ngIf="ip.typeName == 'EnumProperty'"
-              fxLayout="column">
-              <button class="spi-property-value-menu-target" ng-click="$mdOpenMenu($event)">
-                <span class="spi-property-value-menu-current-value">{{ip.displayValue}}</span>
-              </button>
-              <md-menu-content>
-                <md-menu-item ng-repeat="option in ip.property.options">
-                  <md-button ng-click="ip.value = option;">
-                    {{option.label}}
-                  </md-button>
-                </md-menu-item>
-              </md-menu-content>
-            </md-menu>-->
+          <md-menu #enumMenu="mdMenu">
+            <button *ngFor="let option of ip.property.options" (click)="ip.value = option.value;"
+              md-menu-item>{{option.label}}</button>
+          </md-menu>
+          <button *ngIf="ip.typeName == 'EnumProperty'" class="spi-property-value-menu-target"
+            [mdMenuTriggerFor]="enumMenu">
+            <span class="spi-property-value-menu-current-value">{{ip.displayValue}}</span>
+          </button>
         </div>
       </div>
     </div>

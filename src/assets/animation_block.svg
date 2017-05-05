@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="16px" height="16px" viewBox="0 0 16 16" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 3.8.3 (29802) - http://www.bohemiancoding.com/sketch -->
+    <title>animation_block</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="animation_block" fill="#000000">
+            <path d="M12.8907479,5.52346564 C13.589209,6.50428451 14,7.70416957 14,9 C14,12.3137085 11.3137085,15 8,15 C4.6862915,15 2,12.3137085 2,9 C2,5.6862915 4.6862915,3 8,3 C9.29583043,3 10.4957155,3.41079097 11.4765344,4.10925208 L12.8155737,2.77021271 L14.2297873,4.18442627 L12.8907479,5.52346564 L12.8907479,5.52346564 Z M8,13 C10.209139,13 12,11.209139 12,9 C12,6.790861 10.209139,5 8,5 C5.790861,5 4,6.790861 4,9 C4,11.209139 5.790861,13 8,13 Z M6,1 L10,1 L10,2 L6,2 L6,1 Z M7.5,6 L8.5,6 L8.5,9 L7.5,9 L7.5,6 Z" id="Combined-Shape"></path>
+        </g>
+    </g>
+</svg>

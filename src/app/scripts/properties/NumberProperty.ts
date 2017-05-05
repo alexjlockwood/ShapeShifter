@@ -18,7 +18,7 @@ export class NumberProperty extends Property<number> {
   }
 
   // @Override
-  trySetEditedValue(model: any, propertyName: string, value: number) {
+  setEditableValue(model: any, propertyName: string, value: number) {
     if (isNaN(value)) {
       return;
     }
@@ -26,20 +26,21 @@ export class NumberProperty extends Property<number> {
     if (this.isInteger) {
       value = Math.floor(value);
     }
-    super.trySetEditedValue(model, propertyName, value);
+    super.setEditableValue(model, propertyName, value);
   }
 
+  // TODO: is overriding this necessary? (already being done above?)
   // @Override
-  protected setter_(model: any, propertyName: string, value: number) {
-    if (isNaN(value)) {
-      return;
-    }
-    value = _.clamp(value, this.min, this.max);
-    if (this.isInteger) {
-      value = Math.floor(value);
-    }
-    super.setter_(model, propertyName, value);
-  }
+  // protected setter_(model: any, propertyName: string, value: number) {
+  //   if (isNaN(value)) {
+  //     return;
+  //   }
+  //   value = _.clamp(value, this.min, this.max);
+  //   if (this.isInteger) {
+  //     value = Math.floor(value);
+  //   }
+  //   super.setter_(model, propertyName, value);
+  // }
 
   // @Override
   interpolateValue(start: number, end: number, fraction: number) {

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="16px" height="16px" viewBox="0 0 16 16" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 3.8.3 (29802) - http://www.bohemiancoding.com/sketch -->
+    <title>animation</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="animation" fill="#000000">
+            <path d="M1,4 L15,4 L15,12.000385 C15,13.1047419 14.1029399,14 12.9941413,14 L3.00585866,14 C1.89805351,14 1,13.1125667 1,12.000385 L1,4 Z M6,6 L6,12 L10.7142857,9 L6,6 Z" id="Combined-Shape"></path>
+            <path d="M1,4.75213255 L1,4.5042651 L1,4.0085302 C1,3.21235954 1.46211606,2.5243853 2.13295859,2.19943789 L3.33333333,4 L1,4 L1,4.75213255 L1,4.75213255 Z" id="Combined-Shape" fill-opacity="0.300000012"></path>
+            <polygon id="Combined-Shape" fill-opacity="0.300000012" points="5.33333333 4 4 2 6 2 6 2 7.33333333 4 5.33333333 4"></polygon>
+            <path d="M15,4.25639765 L15,4.0085302 C15,2.90195036 14.1019465,2 12.9941413,2 L12.4970707,2 L12,2 L13.3333333,4 L15,4 L15,4.25639765 L15,4.25639765 Z" id="Combined-Shape" fill-opacity="0.300000012"></path>
+            <polygon id="Path" fill-opacity="0.300000012" points="9.33333333 4 8 2 10 2 10 2 11.3333333 4"></polygon>
+        </g>
+    </g>
+</svg>

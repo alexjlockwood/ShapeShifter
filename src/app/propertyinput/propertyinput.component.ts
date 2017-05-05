@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { Property, IdProperty } from '../scripts/properties';
+import { Property } from '../scripts/properties';
 import { StateService } from '../services';
 import { VectorLayer } from '../scripts/layers';
 import { Observable } from 'rxjs/Observable';
@@ -14,7 +14,7 @@ export class PropertyInputComponent implements OnInit {
 
   vlObservable: Observable<VectorLayer[]>;
 
-  selectionInfo;
+  selectionInfo: SelectionInfo;
 
   constructor(private readonly stateService: StateService) { }
 
@@ -25,7 +25,7 @@ export class PropertyInputComponent implements OnInit {
     });
   }
 
-  onValueEditorKeyDown(event: MouseEvent, ip: InspectedProperty) {
+  onValueEditorKeyDown(event: MouseEvent, ip: InspectedProperty<any>) {
     // console.info('onValueEditorKeyDown', ip);
   }
 
@@ -35,8 +35,6 @@ export class PropertyInputComponent implements OnInit {
 
   rebuildLayersSelection() {
     this.selectionInfo = {
-      type: 'layers',
-      description: '',
       inspectedProperties: [],
     };
 
@@ -45,84 +43,77 @@ export class PropertyInputComponent implements OnInit {
     if (!layers.length) {
       return;
     }
+    this.selectionInfo = {
+      icon: 'vector',
+      inspectedProperties: [],
+    };
     const layer = layers[0].findLayer('bottom_inner_path');
-    this.selectionInfo.icon = 'vector';
-    Object.defineProperty(this.selectionInfo, 'description', {
-      get: () => layer.id
+    layer.inspectableProperties.forEach((property, propertyName) => {
+      this.selectionInfo.inspectedProperties.push(
+        new InspectedProperty<any>(
+          layer,
+          propertyName,
+          property,
+        ));
     });
-    (layer.inspectableProperties).forEach((property, propertyName) => {
-      // const self = this;
-      this.selectionInfo.inspectedProperties.push(new InspectedProperty({
-        object: layer,
-        propertyName,
-        property,
-        get value() {
-          return layer[propertyName];
-          // if (!self.studioState_.animationRenderer || layer === self.studioState_.artwork) {
-          //   return layer[propertyName];
-          // }
+    // object: layer,
+    // propertyName,
+    // property,
+    // get value() {
+    // return layer[propertyName];
+    // if (!self.studioState_.animationRenderer || layer === self.studioState_.artwork) {
+    //   return layer[propertyName];
+    // }
 
-          // let renderedLayer = self.studioState_.animationRenderer
-          //   .renderedArtwork.findLayerById(layer.id);
-          // return renderedLayer ? renderedLayer[propertyName] : undefined;
-        },
-        set value(value) {
-          // if (property instanceof IdProperty) {
-          // self.studioState_.updateLayerId(layer, value);
-          // } else {
-          layer[propertyName] = value;
-          // self.studioState_.artworkChanged();
-          // }
-        },
-        transformEditedValue: (property instanceof IdProperty)
-          ? enteredValue => enteredValue // this.studioState_.getUniqueLayerId(IdProperty.sanitize(enteredValue), layer)
-          : undefined,
-        get editable() {
-          return true;
-          // return self.studioState_.animationRenderer
-          //   ? !self.studioState_.animationRenderer.getLayerPropertyState(layer.id, propertyName).activeBlock
-          //   : true;
-        }
-      }));
-    });
+    // let renderedLayer = self.studioState_.animationRenderer
+    //   .renderedArtwork.findLayerById(layer.id);
+    // return renderedLayer ? renderedLayer[propertyName] : undefined;
+    // },
+    // set value(value) {
+    // if (property instanceof IdProperty) {
+    // self.studioState_.updateLayerId(layer, value);
+    // } else {
+    // layer[propertyName] = value;
+    // self.studioState_.artworkChanged();
+    // }
+    // },
+    // }));
+    // });
   }
 }
 
 interface SelectionInfo {
-  type: string;
+  type?: string;
   icon?: string;
-  description: string;
+  description?: string;
   subDescription?: string;
-  inspectedProperties: InspectedProperty[];
+  inspectedProperties: InspectedProperty<any>[];
 }
 
-class InspectedProperty {
-  private delegate: any;
-  private object: any;
-  private propertyName: string;
-  private property: Property<any>;
-  private enteredValue: any;
+class InspectedProperty<T> {
+  private enteredValue: T;
 
-  constructor(delegate) {
-    this.delegate = delegate;
-    this.object = delegate.object;
-    this.propertyName = delegate.propertyName;
-    this.property = delegate.property;
+  constructor(
+    private readonly model: any,
+    public readonly propertyName: string,
+    private readonly property: Property<T>,
+  ) { }
+
+  get value(): T {
+    return this.model[this.propertyName];
+    // return ('value' in this.delegate)
+    //   ? this.delegate.value
+    //   : this.model[this.propertyName];
   }
 
-  get value() {
-    return ('value' in this.delegate)
-      ? this.delegate.value
-      : this.object[this.propertyName];
-  }
-
-  set value(value) {
-    ('value' in this.delegate)
-      ? (this.delegate.value = value)
-      : (this.object[this.propertyName] = value);
-    if (this.delegate.onChange) {
-      this.delegate.onChange();
-    }
+  set value(value: T) {
+    this.model[this.propertyName] = value;
+    // ('value' in this.delegate)
+    //   ? (this.delegate.value = value)
+    //   : (this.model[this.propertyName] = value);
+    // if (this.delegate.onChange) {
+    //   this.delegate.onChange();
+    // }
   }
 
   get typeName() {
@@ -130,7 +121,7 @@ class InspectedProperty {
   }
 
   get editable() {
-    return 'editable' in this.delegate ? this.delegate.editable : true;
+    return true;
   }
 
   get displayValue() {
@@ -138,17 +129,13 @@ class InspectedProperty {
   }
 
   get editableValue() {
-    return (this.enteredValue !== undefined)
-      ? this.enteredValue
-      : this.property.getEditableValue(this, 'value');
+    return this.enteredValue === undefined ? this.value : this.enteredValue;
   }
 
-  set editableValue(enteredValue) {
+  // TODO: if IdProperty, replace with sanitized unique ID
+  set editableValue(enteredValue: T) {
     this.enteredValue = enteredValue;
-    if (this.delegate.transformEditedValue) {
-      enteredValue = this.delegate.transformEditedValue(enteredValue);
-    }
-    this.property.trySetEditedValue(this, 'value', enteredValue);
+    this.value = enteredValue;
   }
 
   resolveEnteredValue() {

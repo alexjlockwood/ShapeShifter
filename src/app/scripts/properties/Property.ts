@@ -1,6 +1,6 @@
 /**
  * A property is used to decorate a model object so that it can be inspected
- * and/or animated. T is the value type being inspected and/or animated.
+ * and/or animated. T is the value type that is stored inside the model object.
  *
  * Model objects decorated with a property are given the following:
  *
@@ -22,10 +22,10 @@ export abstract class Property<T> {
         // Create's a property with the specified property name.
         Object.defineProperty(cls.prototype, prop.propertyName, {
           get() {
-            return prop.getter_(this, prop.propertyName);
+            return this[`${prop.propertyName}_`];
           },
           set(value: any) {
-            prop.setter_(this, prop.propertyName, value);
+            this[`${prop.propertyName}_`] = value;
           }
         });
       });
@@ -73,23 +73,8 @@ export abstract class Property<T> {
   /**
    * Sets the property's editable value (the value keyed with the property's name).
    */
-  trySetEditedValue(model: any, propertyName: string, value: T) {
+  setEditableValue(model: any, propertyName: string, value: T) {
     model[propertyName] = value;
-  }
-
-  /**
-   * Gets the property's source of truth value.
-   */
-  protected getter_(model: any, propertyName: string): T {
-    return model[`${propertyName}_`];
-  }
-
-  /**
-   * Gets the property's source of truth value. This value is only changed when the user
-   * finishes modifying an input in the UI.
-   */
-  protected setter_(model: any, propertyName: string, value: T) {
-    model[`${propertyName}_`] = value;
   }
 
   /**

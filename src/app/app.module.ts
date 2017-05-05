@@ -113,6 +113,8 @@ export class AppModule {
       .addSvgIcon('group', sanitizer.bypassSecurityTrustResourceUrl('assets/group.svg'))
       .addSvgIcon('path', sanitizer.bypassSecurityTrustResourceUrl('assets/path.svg'))
       .addSvgIcon('vector', sanitizer.bypassSecurityTrustResourceUrl('assets/vector.svg'))
+      .addSvgIcon('animation', sanitizer.bypassSecurityTrustResourceUrl('assets/animation.svg'))
+      .addSvgIcon('animation_block', sanitizer.bypassSecurityTrustResourceUrl('assets/animation_block.svg'))
       .addSvgIcon('selectioncursor', sanitizer.bypassSecurityTrustResourceUrl('assets/selectioncursor.svg'))
       .addSvgIcon('demoicon', sanitizer.bypassSecurityTrustResourceUrl('assets/demoicon.svg'));
   }
