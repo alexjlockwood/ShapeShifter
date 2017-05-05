@@ -26,11 +26,11 @@ export class PropertyInputComponent implements OnInit {
   }
 
   onValueEditorKeyDown(event: MouseEvent, ip: InspectedProperty) {
-    console.info('onValueEditorKeyDown', ip);
+    // console.info('onValueEditorKeyDown', ip);
   }
 
   androidToCssColor(color: string) {
-    console.info('androidToCssColor', color);
+    // console.info('androidToCssColor', color);
   }
 
   rebuildLayersSelection() {
