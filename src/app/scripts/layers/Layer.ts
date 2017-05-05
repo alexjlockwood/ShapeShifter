@@ -1,7 +1,9 @@
+import { Inspectable, Animatable } from '../properties';
+
 /**
  * Interface that is shared by all vector drawable layer models below.
  */
-export interface Layer {
+export interface Layer extends Inspectable, Animatable {
 
   /**
    * This layers children layers, or undefined if none exist.

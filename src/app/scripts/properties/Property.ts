@@ -1,5 +1,3 @@
-import { StubProperty } from '.';
-
 /**
  * A property is used to decorate a model object so that it can be inspected
  * and/or animated. T is the value type being inspected and/or animated.
@@ -21,9 +19,6 @@ export abstract class Property<T> {
   static register(...props: Property<any>[]) {
     return function (cls: any) {
       props.forEach(prop => {
-        if (prop instanceof StubProperty) {
-          return;
-        }
         // Create's a property with the specified property name.
         Object.defineProperty(cls.prototype, prop.propertyName, {
           get() {
@@ -35,15 +30,13 @@ export abstract class Property<T> {
         });
       });
 
-      const animatableProperties = new Map<string, any>();
-      const inspectableProperties = new Map<string, any>();
-      const currAnimatableProperties = cls.prototype.animatableProperties as Map<string, any>;
-      if (currAnimatableProperties) {
-        currAnimatableProperties.forEach((v, k) => animatableProperties.set(k, v));
+      let animatableProperties = new Map<string, Property<any>>();
+      if (cls.prototype.animatableProperties) {
+        animatableProperties = new Map<string, Property<any>>(cls.prototype.animatableProperties);
       }
-      const currInspectableProperties = cls.prototype.animatableProperties as Map<string, any>;
-      if (currInspectableProperties) {
-        currInspectableProperties.forEach((v, k) => inspectableProperties.set(k, v));
+      let inspectableProperties = new Map<string, Property<any>>();
+      if (cls.prototype.inspectableProperties) {
+        inspectableProperties = new Map<string, Property<any>>(cls.prototype.inspectableProperties);
       }
 
       props.forEach(prop => {
@@ -67,7 +60,6 @@ export abstract class Property<T> {
     private readonly propertyName: string,
     readonly config: Config = {},
   ) {
-    this.propertyName = name;
     this.isAnimatable = !!config.isAnimatable;
   }
 

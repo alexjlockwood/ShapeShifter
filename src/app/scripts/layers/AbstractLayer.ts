@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 import { Layer, GroupLayer, ClipPathLayer, PathLayer, VectorLayer } from '.';
-import { Property, IdProperty } from '../properties';
+import { Property, IdProperty, Inspectable, Animatable } from '../properties';
 
 /**
  * Root class for all layer types.
@@ -144,8 +144,7 @@ interface AbstractLayerArgs {
   children: Layer[];
 }
 
-// tslint:disable-next-line
-export interface AbstractLayer extends AbstractLayerArgs { }
+export interface AbstractLayer extends AbstractLayerArgs, Inspectable, Animatable { }
 
 // tslint:disable-next-line
 export interface ConstructorArgs extends AbstractLayerArgs { }

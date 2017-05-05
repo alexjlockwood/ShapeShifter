@@ -1,5 +1,8 @@
 import { Path } from '../paths';
-import { Property, PathProperty, ColorProperty, NumberProperty, EnumProperty } from '../properties';
+import {
+  Property, PathProperty, ColorProperty,
+  NumberProperty, EnumProperty, Inspectable,
+} from '../properties';
 import { Interpolator, INTERPOLATORS } from '.';
 
 /**
@@ -10,7 +13,7 @@ import { Interpolator, INTERPOLATORS } from '.';
   new NumberProperty('endTime', { min: 0, isInteger: true }),
   new EnumProperty('interpolator', INTERPOLATORS),
 )
-export abstract class AnimationBlock<T extends string | number | Path> {
+export abstract class AnimationBlock<T extends AnimationBlockType> {
 
   constructor(obj: ConstructorArgs<T>) {
     this.layerId = obj.layerId || '';
@@ -48,11 +51,12 @@ interface AnimationBlockArgs<T> {
   toValue: T;
 }
 
-// tslint:disable-next-line
-export interface AnimationBlock<T extends string | number | Path> extends AnimationBlockArgs<T> { }
+type AnimationBlockType = string | number | Path;
+
+export interface AnimationBlock<T extends AnimationBlockType> extends AnimationBlockArgs<T>, Inspectable { }
 
 // tslint:disable-next-line
-export interface ConstructorArgs<T extends string | number | Path> extends AnimationBlockArgs<T> { }
+export interface ConstructorArgs<T extends AnimationBlockType> extends AnimationBlockArgs<T> { }
 
 /**
  * An animation block that animates the 'pathData' property.

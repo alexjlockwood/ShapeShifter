@@ -1,7 +1,5 @@
-import { Property, IdProperty, NumberProperty } from '../properties';
-import {
-  AnimationBlock, PathAnimationBlock, ColorAnimationBlock, NumberAnimationBlock,
-} from './AnimationBlock';
+import { Property, IdProperty, NumberProperty, Inspectable } from '../properties';
+import { PathAnimationBlock, ColorAnimationBlock, NumberAnimationBlock } from '.';
 
 /**
  * An animation represents a collection of layer property tweens for a VectorLayer.
@@ -56,8 +54,7 @@ interface AnimationArgs {
   duration?: number;
 }
 
-// tslint:disable-next-line
-export interface Animation extends AnimationArgs { }
+export interface Animation extends AnimationArgs, Inspectable { }
 
 export interface ConstructorArgs extends AnimationArgs {
   blocks?: ConcreteAnimationBlock[];

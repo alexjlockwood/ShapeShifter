@@ -31,21 +31,53 @@ export class VectorLayer extends AbstractLayer {
     const cloneFn =
       (layer: Layer): Layer => {
         if (layer instanceof GroupLayer) {
-          return new GroupLayer(
-            Object.assign({}, layer, { children: layer.children.map(c => cloneFn(c)) }));
+          return new GroupLayer({
+            id: layer.id,
+            children: layer.children.map(c => cloneFn(c)),
+            pivotX: layer.pivotX,
+            pivotY: layer.pivotY,
+            rotation: layer.rotation,
+            scaleX: layer.scaleX,
+            scaleY: layer.scaleY,
+            translateX: layer.translateX,
+            translateY: layer.translateY,
+          });
         }
         if (layer instanceof PathLayer) {
-          return new PathLayer(
-            Object.assign({}, layer, { pathData: layer.pathData.clone() }));
+          return new PathLayer({
+            id: layer.id,
+            children: [],
+            pathData: layer.pathData.clone(),
+            fillColor: layer.fillColor,
+            fillAlpha: layer.fillAlpha,
+            strokeColor: layer.strokeColor,
+            strokeAlpha: layer.strokeAlpha,
+            strokeWidth: layer.strokeWidth,
+            strokeLinecap: layer.strokeLinecap,
+            strokeLinejoin: layer.strokeLinejoin,
+            strokeMiterLimit: layer.strokeMiterLimit,
+            trimPathStart: layer.trimPathStart,
+            trimPathEnd: layer.trimPathEnd,
+            trimPathOffset: layer.trimPathOffset,
+            fillType: layer.fillType,
+          });
         }
         if (layer instanceof ClipPathLayer) {
-          return new ClipPathLayer(
-            Object.assign({}, layer, { pathData: layer.pathData.clone() }));
+          return new ClipPathLayer({
+            id: layer.id,
+            children: [],
+            pathData: layer.pathData.clone(),
+          });
         }
         throw new Error('Unknown layer type');
       };
-    return new VectorLayer(
-      Object.assign({}, this, { children: this.children.map(c => cloneFn(c)) }));
+    return new VectorLayer({
+      id: this.id,
+      children: this.children.map(child => cloneFn(child)),
+      width: this.width,
+      height: this.height,
+      alpha: this.alpha,
+    });
   }
 }
 

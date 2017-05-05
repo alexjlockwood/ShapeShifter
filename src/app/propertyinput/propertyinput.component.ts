@@ -37,7 +37,7 @@ export class PropertyInputComponent implements OnInit {
     this.selectionInfo = {
       type: 'layers',
       description: '',
-      inspectedProperties: []
+      inspectedProperties: [],
     };
 
     // edit a single layer
@@ -50,7 +50,7 @@ export class PropertyInputComponent implements OnInit {
     Object.defineProperty(this.selectionInfo, 'description', {
       get: () => layer.id
     });
-    ((layer as any).inspectableProperties).forEach((property, propertyName) => {
+    (layer.inspectableProperties).forEach((property, propertyName) => {
       // const self = this;
       this.selectionInfo.inspectedProperties.push(new InspectedProperty({
         object: layer,
