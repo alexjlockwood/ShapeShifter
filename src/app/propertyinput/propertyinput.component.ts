@@ -1,8 +1,10 @@
 import { Component, OnInit } from '@angular/core';
-import { Property } from '../scripts/properties';
+import { Property, PathProperty } from '../scripts/properties';
 import { StateService } from '../services';
 import { VectorLayer } from '../scripts/layers';
 import { Observable } from 'rxjs/Observable';
+import { ColorUtil } from '../scripts/common';
+import { newPath } from '../scripts/paths';
 
 @Component({
   selector: 'app-propertyinput',
@@ -30,7 +32,7 @@ export class PropertyInputComponent implements OnInit {
   }
 
   androidToCssColor(color: string) {
-    // console.info('androidToCssColor', color);
+    return ColorUtil.androidToCssColor(color);
   }
 
   rebuildLayersSelection() {
@@ -91,7 +93,7 @@ interface SelectionInfo {
 }
 
 class InspectedProperty<T> {
-  private enteredValue: T;
+  private enteredValue: string;
 
   constructor(
     private readonly model: any,
@@ -129,13 +131,24 @@ class InspectedProperty<T> {
   }
 
   get editableValue() {
-    return this.enteredValue === undefined ? this.value : this.enteredValue;
+    return this.enteredValue === undefined ? this.displayValue : this.enteredValue;
   }
 
   // TODO: if IdProperty, replace with sanitized unique ID
-  set editableValue(enteredValue: T) {
+  // TODO: should call property.setEditableValue() here instead for ids/paths/strings/etc?
+  set editableValue(enteredValue: string) {
     this.enteredValue = enteredValue;
-    this.value = enteredValue;
+    if (this.property instanceof PathProperty) {
+      try {
+        // TODO: can this type assertion be avoided?
+        this.value = (newPath(enteredValue) as any) as T;
+      } catch (e) {
+        // The path string is invalid.
+      }
+    } else {
+      // TODO: can this type assertion be avoided?
+      this.value = (enteredValue as any) as T;
+    }
   }
 
   resolveEnteredValue() {

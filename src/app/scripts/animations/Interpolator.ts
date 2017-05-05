@@ -1,7 +1,7 @@
 import * as BezierEasing from './BezierEasing';
 
 export interface Interpolator {
-  readonly key: string;
+  readonly value: string;
   readonly label: string;
   readonly interpolateFn: (fraction: number) => number;
   readonly androidRef: string;
@@ -14,42 +14,42 @@ const LINEAR_OUT_SLOW_IN_EASING = BezierEasing.create(0, 0, .2, 1);
 
 export const INTERPOLATORS: ReadonlyArray<Interpolator> = [
   {
-    key: 'FAST_OUT_SLOW_IN',
+    value: 'FAST_OUT_SLOW_IN',
     label: 'Fast out, slow in',
     androidRef: '@android:interpolator/fast_out_slow_in',
     interpolateFn: f => FAST_OUT_SLOW_IN_EASING(f),
     webRef: 'cubic-bezier(0.4, 0, 0.2, 1)',
   },
   {
-    key: 'FAST_OUT_LINEAR_IN',
+    value: 'FAST_OUT_LINEAR_IN',
     label: 'Fast out, linear in',
     androidRef: '@android:interpolator/fast_out_linear_in',
     interpolateFn: f => FAST_OUT_LINEAR_IN_EASING(f),
     webRef: 'cubic-bezier(0.4, 0, 0.2, 1)',
   },
   {
-    key: 'LINEAR_OUT_SLOW_IN',
+    value: 'LINEAR_OUT_SLOW_IN',
     label: 'Linear out, slow in',
     androidRef: '@android:interpolator/linear_out_slow_in',
     interpolateFn: f => LINEAR_OUT_SLOW_IN_EASING(f),
     webRef: 'cubic-bezier(0, 0, 0.2, 1)',
   },
   {
-    key: 'ACCELERATE_DECELERATE',
+    value: 'ACCELERATE_DECELERATE',
     label: 'Accelerate/decelerate',
     androidRef: '@android:anim/accelerate_decelerate_interpolator',
     interpolateFn: f => Math.cos((f + 1) * Math.PI) / 2.0 + 0.5,
     webRef: 'cubic-bezier(0.455, 0.03, 0.515, 0.955)',
   },
   {
-    key: 'ACCELERATE',
+    value: 'ACCELERATE',
     label: 'Accelerate',
     androidRef: '@android:anim/accelerate_interpolator',
     interpolateFn: f => f * f,
     webRef: 'cubic-bezier(0.55, 0.085, 0.68, 0.53)'
   },
   {
-    key: 'DECELERATE',
+    value: 'DECELERATE',
     label: 'Decelerate',
     androidRef: '@android:anim/decelerate_interpolator',
     interpolateFn: f => (1 - (1 - f) * (1 - f)),
@@ -57,28 +57,28 @@ export const INTERPOLATORS: ReadonlyArray<Interpolator> = [
 
   },
   {
-    key: 'LINEAR',
+    value: 'LINEAR',
     label: 'Linear',
     androidRef: '@android:anim/linear_interpolator',
     interpolateFn: f => f,
     webRef: 'linear',
   },
   {
-    key: 'ANTICIPATE',
+    value: 'ANTICIPATE',
     label: 'Anticipate',
     androidRef: '@android:anim/anticipate_interpolator',
     interpolateFn: f => f * f * ((2 + 1) * f - 2),
     webRef: 'cubic-bezier(0.4, 0, 0.2, 1)', // TODO: support exporting this interpolator!
   },
   {
-    key: 'OVERSHOOT',
+    value: 'OVERSHOOT',
     label: 'Overshoot',
     androidRef: '@android:anim/overshoot_interpolator',
     interpolateFn: f => (f - 1) * (f - 1) * ((2 + 1) * (f - 1) + 2) + 1,
     webRef: 'cubic-bezier(0.4, 0, 0.2, 1)', // TODO: support exporting this interpolator!
   },
   {
-    key: 'BOUNCE',
+    value: 'BOUNCE',
     label: 'Bounce',
     androidRef: '@android:anim/bounce_interpolator',
     interpolateFn: f => {
@@ -97,7 +97,7 @@ export const INTERPOLATORS: ReadonlyArray<Interpolator> = [
     webRef: 'cubic-bezier(0.4, 0, 0.2, 1)', // TODO: support exporting this interpolator!
   },
   {
-    key: 'ANTICIPATE_OVERSHOOT',
+    value: 'ANTICIPATE_OVERSHOOT',
     label: 'Anticipate overshoot',
     androidRef: '@android:anim/anticipate_overshoot_interpolator',
     interpolateFn: f => {

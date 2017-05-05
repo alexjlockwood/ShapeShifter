@@ -17,16 +17,16 @@ export class ColorProperty extends Property<string> {
   }
 
   // @Override
-  setEditableValue(obj: any, propertyName: string, value: string) {
+  setEditableValue(model: any, propertyName: string, value: string) {
     if (!value) {
-      super.setEditableValue(obj, propertyName, undefined);
+      super.setEditableValue(model, propertyName, undefined);
       return;
     }
     let processedValue = ColorUtil.parseAndroidColor(value);
     if (!processedValue) {
       processedValue = ColorUtil.parseAndroidColor(ColorUtil.svgToAndroidColor(value));
     }
-    super.setEditableValue(obj, propertyName, ColorUtil.toAndroidString(processedValue));
+    super.setEditableValue(model, propertyName, ColorUtil.toAndroidString(processedValue));
   }
 
   // @Override
