@@ -15,7 +15,6 @@ import { newPath } from '../scripts/paths';
 export class PropertyInputComponent implements OnInit {
 
   vlObservable: Observable<VectorLayer[]>;
-
   selectionInfo: SelectionInfo;
 
   constructor(private readonly stateService: StateService) { }
@@ -66,7 +65,6 @@ export class PropertyInputComponent implements OnInit {
     // if (!self.studioState_.animationRenderer || layer === self.studioState_.artwork) {
     //   return layer[propertyName];
     // }
-
     // let renderedLayer = self.studioState_.animationRenderer
     //   .renderedArtwork.findLayerById(layer.id);
     // return renderedLayer ? renderedLayer[propertyName] : undefined;
