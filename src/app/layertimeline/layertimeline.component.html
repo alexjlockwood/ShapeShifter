@@ -116,7 +116,8 @@
           class="slt-layers-list-drag-indicator" [ngStyle]="{
                 'display': data.isVisible ? 'block' : 'none',
                 'left': data.left + 'px',
-                'top': data.top + 'px'}">
+                'top': data.top + 'px'
+                }">
         </div>
         <!-- Layer list empty view. -->
         <div *ngIf="data.vectorLayers.length === 0" class="slt-layers-empty">
