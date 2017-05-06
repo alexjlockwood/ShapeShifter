@@ -5,8 +5,8 @@
   <div class="slt-property" *ngFor="let blocksByAnimation of this.getBlocksByAnimationByPropertyValues()">
     <!-- TODO: highlight selected animation blocks HERE! -->
     <div class="slt-timeline-block" *ngFor="let block of blocksByAnimation[this.animation.id]"
-      (click)="this.onTimelineBlockClick($event, block, this.animation, this.layer)"
-      (mousedown)="this.onTimelineBlockMouseDown($event, block, this.animation, this.layer)"
+      (click)="this.timelineBlockClick($event, block, this.animation, this.layer)"
+      (mousedown)="this.timelineBlockMouseDown($event, block, this.animation, this.layer)"
       tabindex="-1" [ngStyle]="{
          'left': (100 * block.startTime / this.animation.duration) + '%',
          'width': (100 * (block.endTime - block.startTime) / this.animation.duration) + '%'
@@ -21,6 +21,7 @@
 <ul class="slt-children" *ngIf="layer.children.length > 0">
   <li *ngFor="let child of layer.children">
     <app-timelineanimationrow [layer]="child" [animation]="this.animation"
-      [animations]="this.animations"></app-timelineanimationrow>
+      [animations]="this.animations" (onTimelineBlockMouseDown)="this.timelineBlockMouseDown($event.event, $event.block, $event.animation, $event.layer)"
+      (onTimelineBlockClick)="this.timelineBlockClick($event.event, $event.block, $event.animation, $event.layer)"></app-timelineanimationrow>
   </li>
 </ul>

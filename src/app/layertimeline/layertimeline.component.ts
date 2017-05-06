@@ -13,8 +13,8 @@ import * as $ from 'jquery';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Animation, AnimationBlock, NumberAnimationBlock } from '../scripts/animations';
 import { ScrubEvent } from './layertimeline.directive';
-
-declare const ga: Function;
+import { Callbacks as TimelineAnimationRowCallbacks } from './timelineanimationrow.component';
+import { Callbacks as LayerListTreeCallbacks } from './layerlisttree.component';
 
 const LAYER_INDENT_PIXELS = 20;
 
@@ -23,8 +23,14 @@ const LAYER_INDENT_PIXELS = 20;
   templateUrl: './layertimeline.component.html',
   styleUrls: ['./layertimeline.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  // encapsulation: ViewEncapsulation.None,
+  // TODO: remove view encapsulation
 })
-export class LayerTimelineComponent implements OnInit, OnDestroy {
+export class LayerTimelineComponent implements
+  OnInit,
+  OnDestroy,
+  TimelineAnimationRowCallbacks,
+  LayerListTreeCallbacks {
 
   // Layer timeline variables.
   horizZoom = 2; // 1ms = 2px
@@ -42,21 +48,11 @@ export class LayerTimelineComponent implements OnInit, OnDestroy {
     })],
   });
   animations: Animation[] = [this.activeAnimation];
-
-
-  // These are public because they are accessed via the HTML template.
-  // existingPathIdsObservable: Observable<ReadonlyArray<string>>;
-  // startActivePathIdObservable: Observable<string>;
-  // endActivePathIdObservable: Observable<string>;
   vectorLayersObservable: Observable<ReadonlyArray<VectorLayer>>;
-
-  // private isHoveringOverListItem = new Map<string, boolean>();
-  // private isHoveringOverOverflow = new Map<string, boolean>();
-  // private readonly subscriptions: Subscription[] = [];
-
   private shouldSuppressClick = false;
-
-  dragIndicatorSource = new BehaviorSubject<DragIndicatorInfo>({ isVisible: false, left: 0, top: 0 });
+  dragIndicatorSource = new BehaviorSubject<DragIndicatorInfo>({
+    isVisible: false, left: 0, top: 0,
+  });
 
   constructor(private readonly stateService: StateService) { }
 
@@ -75,10 +71,13 @@ export class LayerTimelineComponent implements OnInit, OnDestroy {
     // this.subscriptions.forEach(s => s.unsubscribe());
   }
 
+  // Called by the LayerListTreeComponent.
   layerClick(event: MouseEvent, layer: Layer) { }
 
+  // Called by the LayerListTreeComponent.
   layerDoubleClick(event: MouseEvent, layer: Layer) { }
 
+  // Called by the LayerListTreeComponent.
   layerMouseDown(mouseDownEvent: MouseEvent, dragLayer: Layer) {
     const $layersList = $(mouseDownEvent.target).parents('.slt-layers-list');
     const $scroller = $(mouseDownEvent.target).parents('.slt-layers-list-scroller');
@@ -132,7 +131,9 @@ export class LayerTimelineComponent implements OnInit, OnDestroy {
 
           // add a fake target for empty groups
           if (layer instanceof GroupLayer && !layer.children.length) {
-            rect = Object.assign({}, rect, { left: rect.left + LAYER_INDENT_PIXELS, top: rect.bottom });
+            rect = Object.assign({}, rect, {
+              left: rect.left + LAYER_INDENT_PIXELS, top: rect.bottom,
+            });
             orderedLayerInfos.push({
               layer,
               element,
@@ -256,38 +257,65 @@ export class LayerTimelineComponent implements OnInit, OnDestroy {
     return undefined;
   }
 
+  /**
+   * Called by the LayerListTreeComponent when a new animation block is created.
+   */
+  addTimelineBlockClick(
+    event: MouseEvent,
+    layer: Layer,
+    propertyName: string,
+  ) {
+    console.info('addTimelineBlockClick');
+  }
+
+  /**
+   * Called when a mouse down event occurs anywhere in the animation timeline.
+   */
+  animationTimelineMouseDown(event: MouseEvent, animation: Animation) {
+    console.info('animationTimelineMouseDown');
+  }
+
+  /**
+   * Called when an animation's header text is clicked in the timeline header.
+   */
+  animationHeaderTextClick(event: MouseEvent, animation: Animation) {
+    console.info('animationHeaderTextClick');
+  }
+
+  /**
+   * Called by the LayerTimelineDirective when a timeline scrub event occurs.
+   */
+  timelineHeaderScrub(event: ScrubEvent) {
+    console.info('timelineHeaderScrub');
+  }
+
+  /**
+   * Called by the TimelineAnimationRowComponent when an animation block is clicked.
+   */
+  timelineBlockClick(
+    event: MouseEvent,
+    block: AnimationBlock<any>,
+    animation: Animation,
+    layer: Layer,
+  ) {
+    console.info('timelineBlockClick');
+  }
+
+  /**
+   * Called by the TimelineAnimationRowComponent when a mouse down event
+   * occurs on top of an animation block.
+   */
+  timelineBlockMouseDown(
+    event: MouseEvent,
+    block: AnimationBlock<any>,
+    animation: Animation,
+    layer: Layer,
+  ) {
+    console.info('timelineBlockMouseDown');
+  }
+
   trackLayerFn(index: number, layer: Layer) {
     return layer.id; // TODO: will this be OK for renamed layers?
-  }
-
-  onAnimationMouseDown(event: MouseEvent, animation: Animation) {
-    // console.info(event, animation);
-  }
-
-  onAnimationHeaderClick(event: MouseEvent, animation: Animation) {
-    // console.info(event, animation);
-  }
-
-  onTimelineHeaderScrub(event: ScrubEvent) {
-    // console.info(event);
-  }
-
-  onTimelineBlockClick(
-    event: MouseEvent,
-    block: AnimationBlock<any>,
-    animation: Animation,
-    layer: Layer,
-  ) {
-    console.info('onTimelineBlockClick');
-  }
-
-  onTimelineBlockMouseDown(
-    event: MouseEvent,
-    block: AnimationBlock<any>,
-    animation: Animation,
-    layer: Layer,
-  ) {
-    console.info('onTimelineBlockMouseDown');
   }
 }
 

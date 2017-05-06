@@ -1,5 +1,5 @@
 <!-- TODO: add ability to select layers  -->
-<div fxLayout="row" class="slt-layer slt-layer-type-{{this.getLayerTypeName()}}"
+<div class="slt-layer slt-layer-type-{{this.getLayerTypeName()}}"
   fxLayout="row" fxLayoutAlign="start center" [class.is-selected]="false"
   (click)="this.layerClick($event, this.layer)" (dblclick)="this.layerDoubleClick($event, this.layer)"
   (mousedown)="this.layerMouseDown($event, this.layer)">
@@ -14,14 +14,39 @@
   <button md-icon-button>
     <md-icon>visibility</md-icon>
   </button>
-  <button md-icon-button>
-    <md-icon>delete</md-icon>
+  <!-- TODO: ngIf activeAnimation and layer.hasAvailableProperties -->
+  <!--<md-menu class="slt-layer-add-property-menu" ng-if="ctrl.activeAnimation && layer._slt.hasAvailableProperties">-->
+  <button md-icon-button class="slt-layer-action-button">
+    <md-icon svgIcon="animationblock"></md-icon>
   </button>
+  <!--<md-menu-content>
+      <md-menu-item ng-repeat="(propertyName, __) in layer._slt.availableProperties">
+        <md-button ng-click="ctrl.onAddTimelineBlock($event, layer, propertyName)">
+          {{propertyName}}
+        </md-button>
+      </md-menu-item>
+    </md-menu-content>-->
+  <!--</md-menu>-->
 </div>
+
+<!-- TODO: hide if not expanded HERE! -->
+<div class="slt-properties">
+  <div class="slt-property" fxLayout="row" fxLayoutAlign="start center"
+    *ngFor="let propertyName of this.getBlocksByAnimationByPropertyKeys()">
+    <span class="slt-property-name">{{propertyName}}</span>
+    <button md-icon-button (click)="this.addTimelineBlockClick($event, layer, propertyName)"
+      aria-label="Add another animation">
+        <md-icon>add</md-icon>
+        <!--<md-tooltip>Add another animation</md-tooltip>-->
+    </button>
+  </div>
+</div>
+
 <ul *ngIf="this.children" class="slt-children">
   <li *ngFor="let child of this.children; trackBy: this.trackLayerFn"
     class="slt-layer-container" [attr.data-layer-id]="child.id">
-    <app-layerlisttree [layer]="child" (onLayerClick)="this.layerClick($event.event, $event.layer)"
+    <app-layerlisttree [layer]="child" [animations]="this.animations"
+      (onLayerClick)="this.layerClick($event.event, $event.layer)"
       (onLayerDoubleClick)="this.layerDoubleClick($event.event, $event.layer)"
       (onLayerMouseDown)="this.layerMouseDown($event.event, $event.layer)"></app-layerlisttree>
   </li>
