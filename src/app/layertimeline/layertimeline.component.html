@@ -133,24 +133,23 @@
         'width': (animation.duration * this.horizZoom + 40) + 'px'
         }" *ngFor="let animation of this.animations" fxLayout="column">
 
-      <!--<div class="slt-header">-->
-      <!-- TODO: add selected_ attribute to animation? -->
-      <!--<div class="slt-timeline-animation-meta" [ngClass]="{'is-selected': animation.selected_}"
+      <div class="slt-header">
+        <!-- TODO: add selected_ attribute to animation? -->
+        <div class="slt-timeline-animation-meta" [ngClass]="{'is-selected': animation.selected_}"
           (click)="this.onAnimationHeaderClick($event, animation)">
           <span class="slt-timeline-animation-name">{{animation.id}}</span>
           <span class="slt-timeline-animation-duration">{{animation.duration}}ms</span>
         </div>
-        <app-timelinegrid class="slt-timeline-header-grid" is-header
-          is-active="ctrl.activeAnimation == animation" active-time="ctrl.activeTime"
-          animation="animation" on-scrub="ctrl.onTimelineHeaderScrub(animation, time, options)">
-        </app-timelinegrid>
+        <canvas class="slt-timeline-header-grid" appTimelineRuler [isActive]="this.activeAnimation === animation"
+          [animation]="animation" [activeTime]="this.activeTime"
+          [horizZoom]="this.horizZoom" [isHeader]="true" (onScrub)="this.onTimelineHeaderScrub($event)"></canvas>
       </div>
 
-      <studio-timeline-grid class="slt-timeline-grid" is-active="ctrl.activeAnimation == animation"
-        active-time="ctrl.activeTime">
-      </studio-timeline-grid>
+      <canvas appTimelineRuler class="slt-timeline-grid" [animation]="animation"
+        [isActive]="this.activeAnimation === animation" [activeTime]="this.activeTime"
+        [horizZoom]="this.horizZoom"></canvas>
 
-      <div class="slt-timeline-animation-scroller" scroll-group="timeline">
+      <!--<div class="slt-timeline-animation-scroller" scroll-group="timeline">
         <div class="slt-timeline-animation-rows">
           <div ng-repeat="layer in [ctrl.artwork]" ng-include="'timelineRow'"></div>
         </div>

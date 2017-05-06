@@ -9,6 +9,7 @@ import { Dragger } from '../scripts/dragger';
 import * as $ from 'jquery';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Animation } from '../scripts/animations';
+import { ScrubEvent } from './timelineruler.directive';
 
 declare const ga: Function;
 
@@ -21,6 +22,13 @@ const LAYER_INDENT_PIXELS = 20;
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LayerTimelineComponent implements OnInit, OnDestroy {
+
+  // Layer timeline variables.
+  horizZoom = 2; // 1ms = 2px
+  activeTime = 10;
+  activeAnimation: Animation = new Animation({ id: 'anim', duration: 300 });
+  animations: Animation[] = [this.activeAnimation];
+
 
   // These are public because they are accessed via the HTML template.
   // existingPathIdsObservable: Observable<ReadonlyArray<string>>;
@@ -192,7 +200,6 @@ export class LayerTimelineComponent implements OnInit, OnDestroy {
             dragLayer.parent = newParent;
           } else {
             // moving next to another layer
-            console.info(this.stateService.getImportedVectorLayers()[0]);
             const newParent = targetLayerInfo.layer.parent;
             if (newParent) {
               dragLayer.remove();
@@ -207,7 +214,6 @@ export class LayerTimelineComponent implements OnInit, OnDestroy {
               }
             }
             this.stateService.addVectorLayers([]); // notify change
-            console.info(this.stateService.getImportedVectorLayers()[0]);
           }
 
           // this.studioState_.artworkChanged();
@@ -240,16 +246,16 @@ export class LayerTimelineComponent implements OnInit, OnDestroy {
     return layer.id; // TODO: will this be OK for renamed layers?
   }
 
-  horizZoom = 2; // 1ms = 2px
-  activeAnimation: Animation = new Animation({ id: 'anim', duration: 300 });
-  animations: Animation[] = [this.activeAnimation];
-
   onAnimationMouseDown(event: MouseEvent, animation: Animation) {
-    console.info(event, animation);
+    // console.info(event, animation);
   }
 
   onAnimationHeaderClick(event: MouseEvent, animation: Animation) {
-    console.info(event, animation);
+    // console.info(event, animation);
+  }
+
+  onTimelineHeaderScrub(event: ScrubEvent) {
+    // console.info(event);
   }
 }
 
