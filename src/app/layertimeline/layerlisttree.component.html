@@ -1,13 +1,18 @@
 <!-- TODO: add ability to select layers  -->
 <div class="slt-layer slt-layer-type-{{this.getLayerTypeName()}}"
-  fxLayout="row" fxLayoutAlign="start center" [class.is-selected]="false"
-  (click)="this.layerClick($event, this.layer)" (dblclick)="this.layerDoubleClick($event, this.layer)"
+  fxLayout="row"
+  fxLayoutAlign="start center"
+  [class.is-selected]="false"
+  (click)="this.layerClick($event, this.layer)"
+  (dblclick)="this.layerDoubleClick($event, this.layer)"
   (mousedown)="this.layerMouseDown($event, this.layer)">
-  <button md-icon-button *ngIf="this.layer.isVectorLayer()">
+  <button md-icon-button
+    *ngIf="this.layer.isVectorLayer() || this.layer.isGroupLayer()">
     <md-icon>chevron_right</md-icon>
   </button>
   <md-icon svgIcon="{{this.getLayerTypeName()}}"></md-icon>
-  <span class="slt-layer-id-text" fxFlex>{{this.layer.id}}</span>
+  <span class="slt-layer-id-text"
+    fxFlex>{{this.layer.id}}</span>
   <button md-icon-button>
     <md-icon>more_vert</md-icon>
   </button>
@@ -16,7 +21,8 @@
   </button>
   <!-- TODO: ngIf activeAnimation and layer.hasAvailableProperties -->
   <!--<md-menu class="slt-layer-add-property-menu" ng-if="ctrl.activeAnimation && layer._slt.hasAvailableProperties">-->
-  <button md-icon-button class="slt-layer-action-button">
+  <button md-icon-button
+    class="slt-layer-action-button">
     <md-icon svgIcon="animationblock"></md-icon>
   </button>
   <!--<md-menu-content>
@@ -30,24 +36,34 @@
 </div>
 
 <!-- TODO: hide if not expanded HERE! -->
-<div class="slt-properties">
-  <div class="slt-property" fxLayout="row" fxLayoutAlign="start center"
-    *ngFor="let propertyName of this.getBlocksByAnimationByPropertyKeys()">
-    <span class="slt-property-name">{{propertyName}}</span>
-    <button md-icon-button (click)="this.addTimelineBlockClick($event, layer, propertyName)"
-      aria-label="Add another animation">
+<ng-container *ngIf="{propertyNames: this.getBlocksByAnimationByPropertyKeys()} as data">
+  <div class="slt-properties"
+    *ngIf="data.propertyNames.length > 0">
+    <div class="slt-property"
+      fxLayout="row"
+      fxLayoutAlign="start center"
+      *ngFor="let propertyName of data.propertyNames">
+      <span class="slt-property-name">{{propertyName}}</span>
+      <button md-icon-button
+        (click)="this.addTimelineBlockClick($event, layer, propertyName)"
+        aria-label="Add another animation">
         <md-icon>add</md-icon>
         <!--<md-tooltip>Add another animation</md-tooltip>-->
     </button>
+    </div>
   </div>
-</div>
+</ng-container>
 
-<ul *ngIf="this.children" class="slt-children">
+<ul *ngIf="this.children.length > 0"
+  class="slt-children">
   <li *ngFor="let child of this.children; trackBy: this.trackLayerFn"
-    class="slt-layer-container" [attr.data-layer-id]="child.id">
-    <app-layerlisttree [layer]="child" [animations]="this.animations"
+    class="slt-layer-container"
+    [attr.data-layer-id]="child.id">
+    <app-layerlisttree [layer]="child"
+      [animations]="this.animations"
       (onLayerClick)="this.layerClick($event.event, $event.layer)"
       (onLayerDoubleClick)="this.layerDoubleClick($event.event, $event.layer)"
-      (onLayerMouseDown)="this.layerMouseDown($event.event, $event.layer)"></app-layerlisttree>
+      (onLayerMouseDown)="this.layerMouseDown($event.event, $event.layer)">
+    </app-layerlisttree>
   </li>
 </ul>

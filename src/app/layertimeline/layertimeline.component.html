@@ -1,10 +1,19 @@
 <div class="studio-layer-timeline">
-  <app-splitter edge="top" min="200" persist-id="layer-timeline"></app-splitter>
+  <app-splitter edge="top"
+    min="200"
+    persist-id="layer-timeline">
+  </app-splitter>
 
-  <div class="slt-layers" layout="column">
-    <app-splitter edge="right" min="200" persist-id="layer-list"></app-splitter>
+  <div class="slt-layers"
+    fxLayout="column">
+    <app-splitter edge="right"
+      min="200"
+      persist-id="layer-list">
+    </app-splitter>
 
-    <div class="slt-header" fxLayout="row" fxLayoutAlign="start center">
+    <div class="slt-header"
+      fxLayout="row"
+      fxLayoutAlign="start center">
       <!--<md-menu md-offset="0 40">
         <button class="slt-layers-menu-group-button" ng-click="$mdOpenMenu()">
           File
@@ -101,26 +110,34 @@
 
     <!-- TODO: display animation blocks in the layer list. -->
     <ng-container *ngIf="{ vectorLayers: (this.vectorLayersObservable | async) } as data">
-      <div class="slt-layers-list-scroller" fxFlex appScrollGroup="timeline">
+      <div appScrollGroup="timeline"
+        class="slt-layers-list-scroller"
+        fxFlex>
         <!-- Layer list. -->
         <div class="slt-layers-list">
           <!-- TODO: only display one vector layer? -->
-          <app-layerlisttree fxLayout="column" class="slt-layer-container"
+          <app-layerlisttree fxLayout="column"
+            class="slt-layer-container"
             *ngFor="let vl of data.vectorLayers; trackBy: this.trackLayerFn;"
-            [layer]="vl" [animations]="this.animations" (onLayerClick)="this.layerClick($event.event, $event.layer)"
+            [layer]="vl"
+            [animations]="this.animations"
+            (onLayerClick)="this.layerClick($event.event, $event.layer)"
             (onLayerDoubleClick)="this.layerDoubleClick($event.event, $event.layer)"
             (onLayerMouseDown)="this.layerMouseDown($event.event, $event.layer)"
-            (onAddTimelineBlockClick)="this.addTimelineBlockClick($event.event, $event.layer, $event.propertyName)"></app-layerlisttree>
+            (onAddTimelineBlockClick)="this.addTimelineBlockClick($event.event, $event.layer, $event.propertyName)">
+          </app-layerlisttree>
         </div>
         <div *ngIf="(this.dragIndicatorSource.asObservable() | async) as data"
-          class="slt-layers-list-drag-indicator" [ngStyle]="{
-                'display': data.isVisible ? 'block' : 'none',
-                'left': data.left + 'px',
-                'top': data.top + 'px'
-                }">
+          class="slt-layers-list-drag-indicator"
+          [ngStyle]="{
+            'display': data.isVisible ? 'block' : 'none',
+            'left': data.left + 'px',
+            'top': data.top + 'px'
+          }">
         </div>
         <!-- Layer list empty view. -->
-        <div *ngIf="data.vectorLayers.length === 0" class="slt-layers-empty">
+        <div *ngIf="data.vectorLayers.length === 0"
+          class="slt-layers-empty">
           <span>Import 2 SVGs to get started<br>(or load a demo in the top right menu)</span>
         </div>
       </div>
@@ -129,7 +146,8 @@
 
   <!-- Animation timeline. -->
   <div class="slt-timeline">
-    <div class="slt-timeline-animation" *ngFor="let animation of this.animations"
+    <div class="slt-timeline-animation"
+      *ngFor="let animation of this.animations"
       (mousedown)="this.animationTimelineMouseDown($event, animation)"
       [ngClass]="{'is-active': this.activeAnimation === animation}"
       [ngStyle]="{'width': (animation.duration * this.horizZoom + 40) + 'px'}"
@@ -137,34 +155,49 @@
 
       <div class="slt-header">
         <!-- TODO: add selected_ attribute to animation? -->
-        <div class="slt-timeline-animation-meta" [ngClass]="{'is-selected': animation.selected_}"
+        <div class="slt-timeline-animation-meta"
+          [ngClass]="{'is-selected': animation.selected_}"
           (click)="this.animationHeaderTextClick($event, animation)">
           <span class="slt-timeline-animation-name">{{animation.id}}</span>
           <span class="slt-timeline-animation-duration">{{animation.duration}}ms</span>
         </div>
-        <canvas class="slt-timeline-header-grid" appLayerTimeline [isActive]="this.activeAnimation === animation"
-          [animation]="animation" [activeTime]="this.activeTime"
-          [horizZoom]="this.horizZoom" [isHeader]="true" (onScrub)="this.timelineHeaderScrub($event)"></canvas>
+        <canvas appLayerTimeline
+          class="slt-timeline-header-grid"
+          [isActive]="this.activeAnimation === animation"
+          [animation]="animation"
+          [activeTime]="this.activeTime"
+          [horizZoom]="this.horizZoom"
+          [isHeader]="true"
+          (onScrub)="this.timelineHeaderScrub($event)"></canvas>
       </div>
 
-      <canvas appLayerTimeline class="slt-timeline-grid" [animation]="animation"
-        [isActive]="this.activeAnimation === animation" [activeTime]="this.activeTime"
+      <canvas appLayerTimeline
+        class="slt-timeline-grid"
+        [animation]="animation"
+        [isActive]="this.activeAnimation === animation"
+        [activeTime]="this.activeTime"
         [horizZoom]="this.horizZoom"></canvas>
 
-      <div class="slt-timeline-animation-scroller" appScrollGroup="timeline">
+      <div appScrollGroup="timeline"
+        class="slt-timeline-animation-scroller">
         <div class="slt-timeline-animation-rows">
           <ng-container *ngIf="{ vectorLayers: (vectorLayersObservable | async) } as data">
             <!-- TODO: only display one vector layer? -->
             <app-timelineanimationrow *ngFor="let layer of data.vectorLayers; trackBy: this.trackLayerFn;"
-              [layer]="layer" [animation]="animation" [animations]="this.animations"
+              [layer]="layer"
+              [animation]="animation"
+              [animations]="this.animations"
               (onTimelineBlockMouseDown)="this.timelineBlockMouseDown($event.event, $event.block, $event.animation, $event.layer)"
-              (onTimelineBlockClick)="this.timelineBlockClick($event.event, $event.block, $event.animation, $event.layer)"></app-timelineanimationrow>
+              (onTimelineBlockClick)="this.timelineBlockClick($event.event, $event.block, $event.animation, $event.layer)">
+            </app-timelineanimationrow>
           </ng-container>
         </div>
       </div>
     </div>
+  </div>
 
-    <!--<div layout="row" layout-align="start stretch">
+  <!-- TODO: do we want to show this? -->
+  <!--<div layout="row" layout-align="start stretch">
     <div class="slt-timeline-animation-new-container" layout="column"
       layout-align="center center">
       <md-button ng-click="ctrl.onAddNewAnimation()" class="slt-timeline-animation-new"
@@ -175,4 +208,3 @@
     </div>
   </div>
 </div>-->
-  </div>
