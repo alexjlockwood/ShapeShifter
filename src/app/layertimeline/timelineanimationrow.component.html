@@ -1,0 +1,26 @@
+<div class="slt-layer slt-layer-type-{{ this.getLayerTypeName() }}"></div>
+
+<!-- TODO: hide if layer is not expanded HERE! -->
+<div class="slt-properties">
+  <div class="slt-property" *ngFor="let blocksByAnimation of this.getBlocksByAnimationByPropertyValues()">
+    <!-- TODO: highlight selected animation blocks HERE! -->
+    <div class="slt-timeline-block" *ngFor="let block of blocksByAnimation[this.animation.id]"
+      (click)="this.onTimelineBlockClick($event, block, this.animation, this.layer)"
+      (mousedown)="this.onTimelineBlockMouseDown($event, block, this.animation, this.layer)"
+      tabindex="-1" [ngStyle]="{
+         'left': (100 * block.startTime / this.animation.duration) + '%',
+         'width': (100 * (block.endTime - block.startTime) / this.animation.duration) + '%'
+      }" [ngClass]="{'is-selected': block.selected_}">
+      <div class="slt-timeline-block-edge slt-timeline-block-edge-start"></div>
+      <div class="slt-timeline-block-edge slt-timeline-block-edge-end"></div>
+    </div>
+  </div>
+</div>
+
+<!-- TODO: hide if layer is not expanded HERE! -->
+<ul class="slt-children" *ngIf="layer.children.length > 0">
+  <li *ngFor="let child of layer.children">
+    <app-timelineanimationrow [layer]="child" [animation]="this.animation"
+      [animations]="this.animations"></app-timelineanimationrow>
+  </li>
+</ul>

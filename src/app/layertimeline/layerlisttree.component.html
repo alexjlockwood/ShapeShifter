@@ -1,3 +1,4 @@
+<!-- TODO: add ability to select layers  -->
 <div fxLayout="row" class="slt-layer slt-layer-type-{{this.getLayerTypeName()}}"
   fxLayout="row" fxLayoutAlign="start center" [class.is-selected]="false"
   (click)="this.layerClick($event, this.layer)" (dblclick)="this.layerDoubleClick($event, this.layer)"
@@ -25,31 +26,3 @@
       (onLayerMouseDown)="this.layerMouseDown($event.event, $event.layer)"></app-layerlisttree>
   </li>
 </ul>
-
-<!--<div *ngFor="let pathId of (existingPathIdsObservable | async);
-    let idx = index;">
-    <div class="path-selector-listitem" fxLayout="row" fxLayoutAlign="start center"
-      [class.is-selected]="((startActivePathIdObservable | async) === pathId) || ((endActivePathIdObservable | async) === pathId)"
-      (click)="onListItemClick($event, idx)" [class.is-hovering]="isHovering(pathId)"
-      (mouseenter)="onListItemHoverEvent(pathId, true)" (mouseleave)="onListItemHoverEvent(pathId, false)">
-      <span class="path-name-text">{{ pathId }}</span>
-      <span fxFlex></span>
-      <button md-icon-button (click)="onOverflowButtonClick($event)"
-        (mouseenter)="onOverflowHoverEvent(pathId, true)" (mouseleave)="onOverflowHoverEvent(pathId, false)"
-        [mdMenuTriggerFor]="pathSelectorOverflow">
-        <md-icon>more_vert</md-icon>
-      </button>
-      <md-menu #pathSelectorOverflow="mdMenu">
-        <button md-menu-item (click)="onSetStartPathIdClick(pathId)"
-          *ngIf="(startActivePathIdObservable | async) !== pathId">
-          <span>Set start path</span>
-        </button>
-        <button md-menu-item (click)="onSetEndPathIdClick(pathId)" *ngIf="(endActivePathIdObservable | async) !== pathId">
-          <span>Set end path</span>
-        </button>
-        <button md-menu-item (click)="onDeletePathClick(pathId)">
-          <span>Delete</span>
-        </button>
-      </md-menu>
-    </div>
-  </div>-->

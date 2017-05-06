@@ -1,0 +1,142 @@
+// TODO: copy only what we need?
+@import '../styles/material-colors';
+@import '../styles/material-shadows';
+@import '../styles/variables';
+@import '../styles/theme';
+$timelineAnimationPadding: 20px;
+ul {
+  margin: 0;
+  padding: 0;
+}
+
+li {
+  list-style: none;
+} // general vertical metrics
+.slt-timeline-animation-rows {
+  padding: 8px 0;
+}
+
+.slt-layer {
+  box-sizing: border-box;
+  line-height: 20px;
+  height: 20px;
+}
+
+.slt-property {
+  line-height: 24px;
+  height: 24px;
+}
+
+.slt-properties {
+  margin: 4px 0;
+  &:empty {
+    display: none;
+  }
+} // timeline
+.slt-timeline {
+  background-color: material-color('grey', '300');
+  overflow-x: auto;
+  overflow-y: hidden;
+  flex: 1;
+  user-select: none;
+  cursor: default;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  .slt-timeline-animation-scroller {
+    position: relative;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -ms-overflow-style: none;
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+  .slt-timeline-animation {
+    position: relative;
+    background-color: material-color('grey', '100');
+    margin-left: 4px;
+    box-sizing: content-box;
+    width: 100px;
+    overflow: hidden;
+    flex: 0 0 auto;
+    box-shadow: 4px 0 0 material-color('grey', '500'), -4px 0 0 material-color('grey', '500');
+    opacity: .5;
+    &.is-active {
+      opacity: 1;
+    }
+  }
+  .slt-timeline-animation-rows {
+    padding-left: $timelineAnimationPadding;
+    padding-right: $timelineAnimationPadding;
+  }
+  .slt-timeline-animation-new-container {
+    flex: 0 0 auto;
+    width: 128px;
+    margin: 24px;
+  }
+  .slt-timeline-animation-new {
+    color: $colorBlackTextSecondary;
+    cursor: pointer;
+    padding: 8px 12px;
+    outline: 0;
+    md-icon {
+      width: 24px;
+      height: 24px;
+      box-sizing: content-box;
+      margin-bottom: 4px;
+    }
+    span {
+      font-size: 12px;
+      text-transform: none;
+      letter-spacing: 0;
+      line-height: 16px;
+      font-weight: 500;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+  }
+  .slt-properties {
+    background-color: #fff;
+    border-radius: 2px;
+    box-shadow: 0 0 0 1px $thinBorderColor inset;
+  }
+  .slt-property {
+    position: relative;
+    &:not(:last-child) {
+      box-shadow: 0 -1px 0 $thinBorderColor inset;
+    }
+  }
+  .slt-timeline-block {
+    position: absolute;
+    background-color: material-color('grey', '500');
+    height: 12px;
+    border-radius: 6px;
+    top: 50%;
+    transform: translate(0, -50%);
+    outline: 0;
+    cursor: pointer;
+    .slt-timeline-block-edge {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 6px;
+      cursor: ew-resize;
+    }
+    .slt-timeline-block-edge-start {
+      left: 0;
+    }
+    .slt-timeline-block-edge-end {
+      right: 0;
+    }
+  }
+  .slt-timeline-animation.is-active .slt-timeline-block {
+    background-color: material-color('green', '200');
+    &.is-selected {
+      background-color: $colorSelectedAnimationBlock;
+    }
+  }
+}
+
+// }

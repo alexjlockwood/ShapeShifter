@@ -22,6 +22,7 @@ import { PropertyInputComponent } from './propertyinput/propertyinput.component'
 import { ScrollGroupDirective } from './scrollgroup/scrollgroup.directive';
 import { LayerTimelineComponent } from './layertimeline/layertimeline.component';
 import { LayerTimelineDirective } from './layertimeline/layertimeline.directive';
+import { TimelineAnimationRowComponent } from './layertimeline/timelineanimationrow.component';
 
 // Services.
 import {
@@ -71,6 +72,7 @@ import 'hammerjs';
     ScrollGroupDirective,
     LayerTimelineComponent,
     LayerTimelineDirective,
+    TimelineAnimationRowComponent,
   ],
   imports: [
     BrowserModule,

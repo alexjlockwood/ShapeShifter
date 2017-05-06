@@ -1,5 +1,8 @@
 import * as _ from 'lodash';
-import { Component, OnInit, ChangeDetectionStrategy, OnDestroy } from '@angular/core';
+import {
+  Component, OnInit, ChangeDetectionStrategy,
+  OnDestroy, ViewEncapsulation,
+} from '@angular/core';
 // import { CanvasType } from '../CanvasType';
 import { StateService, } from '../services';
 import { Observable } from 'rxjs/Observable';
@@ -8,8 +11,8 @@ import { VectorLayer, Layer, GroupLayer } from '../scripts/layers';
 import { Dragger } from '../scripts/dragger';
 import * as $ from 'jquery';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
-import { Animation } from '../scripts/animations';
-import { ScrubEvent } from './timelineruler.directive';
+import { Animation, AnimationBlock, NumberAnimationBlock } from '../scripts/animations';
+import { ScrubEvent } from './layertimeline.directive';
 
 declare const ga: Function;
 
@@ -26,7 +29,18 @@ export class LayerTimelineComponent implements OnInit, OnDestroy {
   // Layer timeline variables.
   horizZoom = 2; // 1ms = 2px
   activeTime = 10;
-  activeAnimation: Animation = new Animation({ id: 'anim', duration: 300 });
+  activeAnimation = new Animation({
+    id: 'anim',
+    duration: 300,
+    blocks: [new NumberAnimationBlock({
+      layerId: 'vector',
+      propertyName: 'alpha',
+      startTime: 0,
+      endTime: 100,
+      fromValue: 0,
+      toValue: 1,
+    })],
+  });
   animations: Animation[] = [this.activeAnimation];
 
 
@@ -256,6 +270,24 @@ export class LayerTimelineComponent implements OnInit, OnDestroy {
 
   onTimelineHeaderScrub(event: ScrubEvent) {
     // console.info(event);
+  }
+
+  onTimelineBlockClick(
+    event: MouseEvent,
+    block: AnimationBlock<any>,
+    animation: Animation,
+    layer: Layer,
+  ) {
+    console.info('onTimelineBlockClick');
+  }
+
+  onTimelineBlockMouseDown(
+    event: MouseEvent,
+    block: AnimationBlock<any>,
+    animation: Animation,
+    layer: Layer,
+  ) {
+    console.info('onTimelineBlockMouseDown');
   }
 }
 

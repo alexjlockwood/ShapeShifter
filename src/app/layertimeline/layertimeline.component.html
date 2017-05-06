@@ -104,6 +104,7 @@
       <div class="slt-layers-list-scroller" fxFlex appScrollGroup="timeline">
         <!-- Layer list. -->
         <div class="slt-layers-list">
+          <!-- TODO: only display one vector layer? -->
           <app-layerlisttree fxLayout="column" class="slt-layer-container"
             *ngFor="let vl of data.vectorLayers; trackBy: trackLayerFn;"
             [layer]="vl" (onLayerClick)="layerClick($event.event, $event.layer)"
@@ -148,34 +149,15 @@
         [isActive]="this.activeAnimation === animation" [activeTime]="this.activeTime"
         [horizZoom]="this.horizZoom"></canvas>
 
-      <!--<div class="slt-timeline-animation-scroller" scroll-group="timeline">
+      <div class="slt-timeline-animation-scroller" appScrollGroup="timeline">
         <div class="slt-timeline-animation-rows">
-          <div ng-repeat="layer in [ctrl.artwork]" ng-include="'timelineRow'"></div>
+          <ng-container *ngIf="{ vectorLayers: (vectorLayersObservable | async) } as data">
+            <!-- TODO: only display one vector layer? -->
+            <app-timelineanimationrow *ngFor="let layer of data.vectorLayers; trackBy: trackLayerFn;"
+              [layer]="layer" [animation]="animation" [animations]="this.animations"></app-timelineanimationrow>
+          </ng-container>
         </div>
-      </div>-->
-
-      <!--<script type="text/ng-template" id="timelineRow">
-        <div class="slt-layer slt-layer-type-{{ layer._slt.layerType }}"></div>
-
-        <div class="slt-properties" ng-show="layer.expanded">
-          <div class="slt-property" ng-repeat="(property, blocks) in layer._slt.blocksByProperty">
-            <div class="slt-timeline-block" ng-class="{'is-selected': block.selected_}"
-              ng-click="ctrl.onTimelineBlockClick($event, block, animation, layer)"
-              ng-mousedown="ctrl.onTimelineBlockMouseDown($event, block, animation, layer)"
-              ng-repeat="block in blocks[animation.id]" tabindex="-1"
-              style="left: {{100 * block.startTime / animation.duration}}%;
-                     width: {{100 * (block.endTime - block.startTime) / animation.duration}}%">
-              <div class="slt-timeline-block-edge slt-timeline-block-edge-start"></div>
-              <div class="slt-timeline-block-edge slt-timeline-block-edge-end"></div>
-            </div>
-          </div>
-        </div>
-
-        <ul class="slt-children" ng-if="layer.layers" ng-show="layer.expanded">
-          <li ng-repeat="layer in layer.layers" ng-include="'timelineRow'"></li>
-        </ul>
-      </script>-->
-
+      </div>
     </div>
 
     <!--<div layout="row" layout-align="start stretch">
