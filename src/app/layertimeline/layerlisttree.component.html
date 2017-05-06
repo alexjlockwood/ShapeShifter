@@ -20,9 +20,9 @@
 <ul *ngIf="this.children" class="slt-children">
   <li *ngFor="let child of this.children; trackBy: this.trackLayerFn"
     class="slt-layer-container" [attr.data-layer-id]="child.id">
-    <app-layertree [layer]="child" (onLayerClick)="this.layerClick($event.event, $event.layer)"
+    <app-layerlisttree [layer]="child" (onLayerClick)="this.layerClick($event.event, $event.layer)"
       (onLayerDoubleClick)="this.layerDoubleClick($event.event, $event.layer)"
-      (onLayerMouseDown)="this.layerMouseDown($event.event, $event.layer)"></app-layertree>
+      (onLayerMouseDown)="this.layerMouseDown($event.event, $event.layer)"></app-layerlisttree>
   </li>
 </ul>
 

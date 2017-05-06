@@ -99,26 +99,24 @@
       </md-menu>-->
     </div>
 
+    <!-- TODO: display animation blocks in the layer list. -->
     <ng-container *ngIf="{ vectorLayers: (vectorLayersObservable | async) } as data">
       <div class="slt-layers-list-scroller" fxFlex appScrollGroup="timeline">
+        <!-- Layer list. -->
         <div class="slt-layers-list">
-          <!--<div ng-repeat="layer in [ctrl.artwork]" ng-include="'layerListItem'"
-          layout="column"></div>
-      </div>-->
-          <!-- Layer list tree. -->
-          <app-layertree fxLayout="column" class="slt-layer-container"
+          <app-layerlisttree fxLayout="column" class="slt-layer-container"
             *ngFor="let vl of data.vectorLayers; trackBy: trackLayerFn;"
             [layer]="vl" (onLayerClick)="layerClick($event.event, $event.layer)"
             (onLayerDoubleClick)="layerDoubleClick($event.event, $event.layer)"
-            (onLayerMouseDown)="layerMouseDown($event.event, $event.layer)"></app-layertree>
+            (onLayerMouseDown)="layerMouseDown($event.event, $event.layer)"></app-layerlisttree>
         </div>
         <div *ngIf="(this.dragIndicatorSource.asObservable() | async) as data"
           class="slt-layers-list-drag-indicator" [ngStyle]="{
-      'display': data.isVisible ? 'block' : 'none',
-      'left': data.left + 'px',
-      'top': data.top + 'px'
-    }"></div>
-        <!-- Empty view. -->
+                'display': data.isVisible ? 'block' : 'none',
+                'left': data.left + 'px',
+                'top': data.top + 'px'}">
+        </div>
+        <!-- Layer list empty view. -->
         <div *ngIf="data.vectorLayers.length === 0" class="slt-layers-empty">
           <span>Import 2 SVGs to get started<br>(or load a demo in the top right menu)</span>
         </div>
@@ -126,12 +124,13 @@
     </ng-container>
   </div>
 
+  <!-- Animation timeline. -->
   <div class="slt-timeline">
-    <div class="slt-timeline-animation" (mousedown)="this.onAnimationMouseDown($event, animation)"
+    <div class="slt-timeline-animation" *ngFor="let animation of this.animations"
+      (mousedown)="this.onAnimationMouseDown($event, animation)"
       [ngClass]="{'is-active': this.activeAnimation === animation}"
-      [ngStyle]="{
-        'width': (animation.duration * this.horizZoom + 40) + 'px'
-        }" *ngFor="let animation of this.animations" fxLayout="column">
+      [ngStyle]="{'width': (animation.duration * this.horizZoom + 40) + 'px'}"
+      fxLayout="column">
 
       <div class="slt-header">
         <!-- TODO: add selected_ attribute to animation? -->
@@ -140,12 +139,12 @@
           <span class="slt-timeline-animation-name">{{animation.id}}</span>
           <span class="slt-timeline-animation-duration">{{animation.duration}}ms</span>
         </div>
-        <canvas class="slt-timeline-header-grid" appTimelineRuler [isActive]="this.activeAnimation === animation"
+        <canvas class="slt-timeline-header-grid" appLayerTimeline [isActive]="this.activeAnimation === animation"
           [animation]="animation" [activeTime]="this.activeTime"
           [horizZoom]="this.horizZoom" [isHeader]="true" (onScrub)="this.onTimelineHeaderScrub($event)"></canvas>
       </div>
 
-      <canvas appTimelineRuler class="slt-timeline-grid" [animation]="animation"
+      <canvas appLayerTimeline class="slt-timeline-grid" [animation]="animation"
         [isActive]="this.activeAnimation === animation" [activeTime]="this.activeTime"
         [horizZoom]="this.horizZoom"></canvas>
 

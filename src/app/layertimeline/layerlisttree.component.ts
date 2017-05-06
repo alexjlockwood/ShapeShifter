@@ -3,11 +3,11 @@ import { Layer } from '../scripts/layers';
 import { StateService } from '../services';
 
 @Component({
-  selector: 'app-layertree',
-  templateUrl: './layertree.component.html',
-  styleUrls: ['./layertree.component.scss']
+  selector: 'app-layerlisttree',
+  templateUrl: './layerlisttree.component.html',
+  styleUrls: ['./layerlisttree.component.scss']
 })
-export class LayerTreeComponent implements OnInit {
+export class LayerListTreeComponent implements OnInit {
   @Output() onLayerClick = new EventEmitter<{ event: MouseEvent, layer: Layer }>();
   @Output() onLayerDoubleClick = new EventEmitter<{ event: MouseEvent, layer: Layer }>();
   @Output() onLayerMouseDown = new EventEmitter<{ event: MouseEvent, layer: Layer }>();

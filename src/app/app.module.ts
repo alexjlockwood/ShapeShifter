@@ -9,8 +9,6 @@ import { MaterialModule, MdIconRegistry } from '@angular/material';
 // Components & directives.
 import { AppComponent } from './app.component';
 import { CanvasComponent } from './canvas/canvas.component';
-import { TimelineComponent } from './timeline/timeline.component';
-import { TimelineRulerComponent } from './timeline/timelineruler.component';
 import { CanvasRulerDirective } from './canvas/canvasruler.directive';
 import { PathInspectorComponent } from './inspector/pathinspector.component';
 import { CommandInspectorComponent } from './inspector/commandinspector.component';
@@ -19,11 +17,11 @@ import { SettingsComponent } from './settings/settings.component';
 import { SplitterComponent } from './splitter/splitter.component';
 import { PlaybackComponent } from './playback/playback.component';
 import { ToolbarComponent } from './toolbar/toolbar.component';
-import { LayerTreeComponent } from './layertimeline/layertree.component';
+import { LayerListTreeComponent } from './layertimeline/layerlisttree.component';
 import { PropertyInputComponent } from './propertyinput/propertyinput.component';
 import { ScrollGroupDirective } from './scrollgroup/scrollgroup.directive';
 import { LayerTimelineComponent } from './layertimeline/layertimeline.component';
-import { TimelineRulerDirective } from './layertimeline/timelineruler.directive';
+import { LayerTimelineDirective } from './layertimeline/layertimeline.directive';
 
 // Services.
 import {
@@ -64,17 +62,15 @@ import 'hammerjs';
     CanvasRulerDirective,
     SettingsComponent,
     ToolbarComponent,
-    TimelineComponent,
-    TimelineRulerComponent,
     ConfirmDialogComponent,
     DemoDialogComponent,
     SvgCommandPipe,
     SubPathPairsPipe,
-    LayerTreeComponent,
+    LayerListTreeComponent,
     PropertyInputComponent,
     ScrollGroupDirective,
     LayerTimelineComponent,
-    TimelineRulerDirective,
+    LayerTimelineDirective,
   ],
   imports: [
     BrowserModule,
