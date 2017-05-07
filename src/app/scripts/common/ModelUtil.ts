@@ -35,7 +35,10 @@ export function getOrderedBlocksByPropertyByLayer(animation: Animation) {
  * animation blocks. In other words, it allows us to find all animation blocks
  * associated with a particular layer ID, property name, and animation ID.
  */
-export function getBlocksByAnimationByProperty(layerId: string, animations: Animation[]) {
+export function getBlocksByAnimationByProperty(
+  layerId: string,
+  animations: ReadonlyArray<Animation>,
+) {
   const blocksByAnimationByProperty: PropertyMap<AnimationMap<AnimationBlock<any>[]>> = {};
   animations.forEach(animation => {
     const blocksByPropertyByLayer = getOrderedBlocksByPropertyByLayer(animation);
@@ -63,19 +66,6 @@ export function getAvailablePropertyNamesForLayer(layer: Layer, animations: Anim
     animatedPropertyNames.forEach(name => availablePropertyNames.delete(name));
   });
   return availablePropertyNames;
-}
-
-// TODO: move this somewhere else?
-export function getLayerTypeName(layer: Layer) {
-  if (layer.isPathLayer()) {
-    return 'pathlayer';
-  } else if (layer.isClipPathLayer()) {
-    return 'clippathlayer';
-  } else if (layer.isGroupLayer()) {
-    return 'grouplayer';
-  } else {
-    return 'vectorlayer';
-  }
 }
 
 interface BlocksByAnimationByProperty {

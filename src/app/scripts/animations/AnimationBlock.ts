@@ -27,18 +27,6 @@ export abstract class AnimationBlock<T extends AnimationBlockType> {
     }
     this.interpolator = obj.interpolator || INTERPOLATORS[0];
   }
-
-  get typeString() {
-    return 'block';
-  }
-
-  get typeIdPrefix() {
-    return 'block';
-  }
-
-  get typeIcon() {
-    return 'animation_block';
-  }
 }
 
 interface AnimationBlockArgs<T> {
@@ -53,10 +41,12 @@ interface AnimationBlockArgs<T> {
 
 type AnimationBlockType = string | number | Path;
 
-export interface AnimationBlock<T extends AnimationBlockType> extends AnimationBlockArgs<T>, Inspectable { }
+export interface AnimationBlock<T extends AnimationBlockType>
+  extends AnimationBlockArgs<T>, Inspectable { }
 
 // tslint:disable-next-line
-export interface ConstructorArgs<T extends AnimationBlockType> extends AnimationBlockArgs<T> { }
+export interface ConstructorArgs<T extends AnimationBlockType>
+  extends AnimationBlockArgs<T> { }
 
 /**
  * An animation block that animates the 'pathData' property.

@@ -1,5 +1,5 @@
 <!-- TODO: add ability to select layers  -->
-<div class="slt-layer slt-layer-type-{{this.getLayerTypeName()}}"
+<div class="slt-layer slt-layer-type-{{ this.layer.getType() }}"
   fxLayout="row"
   fxLayoutAlign="start center"
   [class.is-selected]="false"
@@ -10,7 +10,7 @@
     *ngIf="this.layer.isVectorLayer() || this.layer.isGroupLayer()">
     <md-icon>chevron_right</md-icon>
   </button>
-  <md-icon svgIcon="{{this.getLayerTypeName()}}"></md-icon>
+  <md-icon svgIcon="{{this.layer.getType()}}"></md-icon>
   <span class="slt-layer-id-text"
     fxFlex>{{this.layer.id}}</span>
   <button md-icon-button>
@@ -54,9 +54,9 @@
   </div>
 </ng-container>
 
-<ul *ngIf="this.children.length > 0"
+<ul *ngIf="this.layer.children.length > 0"
   class="slt-children">
-  <li *ngFor="let child of this.children; trackBy: this.trackLayerFn"
+  <li *ngFor="let child of this.layer.children; trackBy: this.trackLayerFn"
     class="slt-layer-container"
     [attr.data-layer-id]="child.id">
     <app-layerlisttree [layer]="child"

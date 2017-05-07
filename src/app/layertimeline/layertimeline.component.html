@@ -1,4 +1,5 @@
-<div class="studio-layer-timeline">
+<div class="studio-layer-timeline"
+  *ngIf="(this.animations | async) as animations">
   <app-splitter edge="top"
     min="200"
     persist-id="layer-timeline">
@@ -120,7 +121,7 @@
             class="slt-layer-container"
             *ngFor="let vl of data.vectorLayers; trackBy: this.trackLayerFn;"
             [layer]="vl"
-            [animations]="this.animations"
+            [animations]="animations"
             (onLayerClick)="this.layerClick($event.event, $event.layer)"
             (onLayerDoubleClick)="this.layerDoubleClick($event.event, $event.layer)"
             (onLayerMouseDown)="this.layerMouseDown($event.event, $event.layer)"
@@ -146,54 +147,56 @@
 
   <!-- Animation timeline. -->
   <div class="slt-timeline">
-    <div class="slt-timeline-animation"
-      *ngFor="let animation of this.animations"
-      (mousedown)="this.animationTimelineMouseDown($event, animation)"
-      [ngClass]="{'is-active': this.activeAnimation === animation}"
-      [ngStyle]="{'width': (animation.duration * this.horizZoom + 40) + 'px'}"
-      fxLayout="column">
+    <ng-container *ngFor="let animation of animations">
+      <div class="slt-timeline-animation"
+        *ngIf="{isActiveAnimation: (this.activeAnimation | async) === animation} as data"
+        (mousedown)="this.animationTimelineMouseDown($event, animation)"
+        [ngClass]="{'is-active': data.isActiveAnimation}"
+        [ngStyle]="{'width': (animation.duration * this.horizZoom + 40) + 'px'}"
+        fxLayout="column">
 
-      <div class="slt-header">
-        <!-- TODO: add selected_ attribute to animation? -->
-        <div class="slt-timeline-animation-meta"
-          [ngClass]="{'is-selected': animation.selected_}"
-          (click)="this.animationHeaderTextClick($event, animation)">
-          <span class="slt-timeline-animation-name">{{animation.id}}</span>
-          <span class="slt-timeline-animation-duration">{{animation.duration}}ms</span>
+        <div class="slt-header">
+          <!-- TODO: add selected_ attribute to animation? -->
+          <div class="slt-timeline-animation-meta"
+            [ngClass]="{'is-selected': animation.selected_}"
+            (click)="this.animationHeaderTextClick($event, animation)">
+            <span class="slt-timeline-animation-name">{{animation.id}}</span>
+            <span class="slt-timeline-animation-duration">{{animation.duration}}ms</span>
+          </div>
+          <canvas appLayerTimeline
+            class="slt-timeline-header-grid"
+            [isActive]="data.isActiveAnimation"
+            [animation]="animation"
+            [activeTime]="this.activeTime"
+            [horizZoom]="this.horizZoom"
+            [isHeader]="true"
+            (onScrub)="this.timelineHeaderScrub($event)"></canvas>
         </div>
+
         <canvas appLayerTimeline
-          class="slt-timeline-header-grid"
-          [isActive]="this.activeAnimation === animation"
+          class="slt-timeline-grid"
           [animation]="animation"
+          [isActive]="data.isActiveAnimation"
           [activeTime]="this.activeTime"
-          [horizZoom]="this.horizZoom"
-          [isHeader]="true"
-          (onScrub)="this.timelineHeaderScrub($event)"></canvas>
-      </div>
+          [horizZoom]="this.horizZoom"></canvas>
 
-      <canvas appLayerTimeline
-        class="slt-timeline-grid"
-        [animation]="animation"
-        [isActive]="this.activeAnimation === animation"
-        [activeTime]="this.activeTime"
-        [horizZoom]="this.horizZoom"></canvas>
-
-      <div appScrollGroup="timeline"
-        class="slt-timeline-animation-scroller">
-        <div class="slt-timeline-animation-rows">
-          <ng-container *ngIf="{ vectorLayers: (vectorLayersObservable | async) } as data">
-            <!-- TODO: only display one vector layer? -->
-            <app-timelineanimationrow *ngFor="let layer of data.vectorLayers; trackBy: this.trackLayerFn;"
-              [layer]="layer"
-              [animation]="animation"
-              [animations]="this.animations"
-              (onTimelineBlockMouseDown)="this.timelineBlockMouseDown($event.event, $event.block, $event.animation, $event.layer)"
-              (onTimelineBlockClick)="this.timelineBlockClick($event.event, $event.block, $event.animation, $event.layer)">
-            </app-timelineanimationrow>
-          </ng-container>
+        <div appScrollGroup="timeline"
+          class="slt-timeline-animation-scroller">
+          <div class="slt-timeline-animation-rows">
+            <ng-container *ngIf="{ vectorLayers: (vectorLayersObservable | async) } as data">
+              <!-- TODO: only display one vector layer? -->
+              <app-timelineanimationrow *ngFor="let layer of data.vectorLayers; trackBy: this.trackLayerFn;"
+                [layer]="layer"
+                [animation]="animation"
+                [animations]="animations"
+                (onTimelineBlockMouseDown)="this.timelineBlockMouseDown($event.event, $event.block, $event.animation, $event.layer)"
+                (onTimelineBlockClick)="this.timelineBlockClick($event.event, $event.block, $event.animation, $event.layer)">
+              </app-timelineanimationrow>
+            </ng-container>
+          </div>
         </div>
       </div>
-    </div>
+    </ng-container>
   </div>
 
   <!-- TODO: do we want to show this? -->

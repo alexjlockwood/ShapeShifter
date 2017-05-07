@@ -1,6 +1,7 @@
 import * as _ from 'lodash';
 import { Layer, GroupLayer, ClipPathLayer, PathLayer, VectorLayer } from '.';
 import { Property, IdProperty, Inspectable, Animatable } from '../properties';
+import { Type } from './Layer';
 
 /**
  * Root class for all layer types.
@@ -49,11 +50,6 @@ export abstract class AbstractLayer implements Layer {
     }
     return undefined;
   }
-
-  // Implements the Layer interface.
-  abstract interpolate(start: AbstractLayer, end: AbstractLayer, fraction: number): void;
-
-  abstract clone<T extends Layer>(): T;
 
   // Implements the Layer interface.
   isMorphableWith(layer: Layer) {
@@ -138,6 +134,10 @@ export abstract class AbstractLayer implements Layer {
   isVectorLayer() {
     return this instanceof VectorLayer;
   }
+
+  abstract interpolate(start: AbstractLayer, end: AbstractLayer, fraction: number): void;
+  abstract clone<T extends Layer>(): T;
+  abstract getType(): Type;
 }
 
 // TODO: share this interface with Layer?

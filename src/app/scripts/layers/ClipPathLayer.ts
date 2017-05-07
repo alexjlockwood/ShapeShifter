@@ -1,6 +1,7 @@
 import { Path, PathUtil } from '../paths';
 import { AbstractLayer, ConstructorArgs as AbstractConstructorArgs } from './AbstractLayer';
 import { Property, PathProperty } from '../properties';
+import { Type } from './Layer';
 
 /**
  * Model object that mirrors the VectorDrawable's '<clip-path>' element.
@@ -12,6 +13,10 @@ export class ClipPathLayer extends AbstractLayer {
   constructor(obj: ConstructorArgs) {
     super(obj);
     this.pathData = obj.pathData;
+  }
+
+  getType(): Type {
+    return 'clippathlayer';
   }
 
   clone<ClipPathLayer>() {

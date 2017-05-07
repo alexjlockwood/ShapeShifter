@@ -1,10 +1,9 @@
 import * as _ from 'lodash';
 import {
-  Component, OnInit, Input,
+  Component, OnInit, Input, ChangeDetectionStrategy,
   Output, EventEmitter, ViewEncapsulation
 } from '@angular/core';
 import { Layer } from '../scripts/layers';
-import { StateService } from '../services';
 import { ModelUtil } from '../scripts/common';
 import { Animation } from '../scripts/animations';
 
@@ -12,10 +11,14 @@ import { Animation } from '../scripts/animations';
   selector: 'app-layerlisttree',
   templateUrl: './layerlisttree.component.html',
   styleUrls: ['./layerlisttree.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  // TODO: remove view encapsulation.
   encapsulation: ViewEncapsulation.None,
-  // TODO: remove view encapsulation=
 })
-export class LayerListTreeComponent implements OnInit, Callbacks {
+export class LayerListTreeComponent implements Callbacks {
+
+  @Input() layer: Layer;
+  @Input() animations: ReadonlyArray<Animation>;
 
   // MouseEvents from this layer (or children layers further down the tree)
   // are recursively handled by parent components until they reach
@@ -25,42 +28,33 @@ export class LayerListTreeComponent implements OnInit, Callbacks {
   @Output() onLayerMouseDown = new EventEmitter<LayerEvent>();
   @Output() onAddTimelineBlockClick = new EventEmitter<TimelineBlockEvent>();
 
-  @Input() layer: Layer;
-  @Input() animations: Animation[];
-  children: ReadonlyArray<Layer>;
-
-  constructor(private readonly stateService: StateService) { }
-
-  ngOnInit() {
-    this.children = this.layer.children;
-  }
-
-  getLayerTypeName() {
-    return ModelUtil.getLayerTypeName(this.layer);
-  }
-
-  getBlocksByAnimationByPropertyKeys() {
-    return _.keys(ModelUtil.getBlocksByAnimationByProperty(this.layer.id, this.animations));
-  }
-
-  trackLayerFn(index: number, layer: Layer) {
-    return layer.id; // TODO: will this be OK for renamed layers?
-  }
-
+  // @Override Callbacks
   layerClick(event: MouseEvent, layer: Layer) {
     this.onLayerClick.emit({ event, layer });
   }
 
+  // @Override Callbacks
   layerDoubleClick(event: MouseEvent, layer: Layer) {
     this.onLayerDoubleClick.emit({ event, layer });
   }
 
+  // @Override Callbacks
   layerMouseDown(event: MouseEvent, layer: Layer) {
     this.onLayerMouseDown.emit({ event, layer });
   }
 
+  // @Override Callbacks
   addTimelineBlockClick(event: MouseEvent, layer: Layer, propertyName: string) {
     this.onAddTimelineBlockClick.emit({ event, layer, propertyName });
+  }
+
+  // Used by *ngFor loop.
+  trackLayerFn(index: number, layer: Layer) {
+    return layer.id; // TODO: will this be OK for renamed layers?
+  }
+
+  getBlocksByAnimationByPropertyKeys() {
+    return _.keys(ModelUtil.getBlocksByAnimationByProperty(this.layer.id, this.animations));
   }
 }
 

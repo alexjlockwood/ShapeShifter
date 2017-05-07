@@ -3,6 +3,7 @@ import { MathUtil } from '../common';
 import {
   Property, NumberProperty, ColorProperty, FractionProperty,
 } from '../properties';
+import { Type } from './Layer';
 
 /**
  * Model object that mirrors the VectorDrawable's '<vector>' element.
@@ -20,6 +21,10 @@ export class VectorLayer extends AbstractLayer {
     this.width = obj.width || 1;
     this.height = obj.height || 1;
     this.alpha = obj.alpha || 1;
+  }
+
+  getType(): Type {
+    return 'vectorlayer';
   }
 
   interpolate(start: VectorLayer, end: VectorLayer, fraction: number) {

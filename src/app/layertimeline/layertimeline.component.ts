@@ -15,6 +15,8 @@ import { Animation, AnimationBlock, NumberAnimationBlock } from '../scripts/anim
 import { ScrubEvent } from './layertimeline.directive';
 import { Callbacks as TimelineAnimationRowCallbacks } from './timelineanimationrow.component';
 import { Callbacks as LayerListTreeCallbacks } from './layerlisttree.component';
+import { Store } from '@ngrx/store';
+import { AppState, ActionCreator } from '../scripts/store';
 
 const LAYER_INDENT_PIXELS = 20;
 
@@ -23,61 +25,66 @@ const LAYER_INDENT_PIXELS = 20;
   templateUrl: './layertimeline.component.html',
   styleUrls: ['./layertimeline.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  // encapsulation: ViewEncapsulation.None,
-  // TODO: remove view encapsulation
 })
 export class LayerTimelineComponent implements
   OnInit,
-  OnDestroy,
   TimelineAnimationRowCallbacks,
   LayerListTreeCallbacks {
 
   // Layer timeline variables.
   horizZoom = 2; // 1ms = 2px
   activeTime = 10;
-  activeAnimation = new Animation({
-    id: 'anim',
-    duration: 300,
-    blocks: [new NumberAnimationBlock({
-      layerId: 'vector',
-      propertyName: 'alpha',
-      startTime: 0,
-      endTime: 100,
-      fromValue: 0,
-      toValue: 1,
-    })],
-  });
-  animations: Animation[] = [this.activeAnimation];
+  activeAnimation: Observable<Animation>;
+  animations: Observable<ReadonlyArray<Animation>>;
   vectorLayersObservable: Observable<ReadonlyArray<VectorLayer>>;
   private shouldSuppressClick = false;
   dragIndicatorSource = new BehaviorSubject<DragIndicatorInfo>({
     isVisible: false, left: 0, top: 0,
   });
 
-  constructor(private readonly stateService: StateService) { }
+  constructor(
+    private readonly stateService: StateService,
+    private readonly store: Store<AppState>,
+  ) { }
 
   ngOnInit() {
-    // this.startActivePathIdObservable = this.stateService.getActivePathIdObservable(CanvasType.Start);
-    // this.endActivePathIdObservable = this.stateService.getActivePathIdObservable(CanvasType.End);
-    // this.existingPathIdsObservable = this.stateService.getExistingPathIdsObservable();
-    // this.existingPathIdsObservable.subscribe(() => {
-    //   this.isHoveringOverListItem.clear();
-    //   this.isHoveringOverOverflow.clear();
-    // });
     this.vectorLayersObservable = this.stateService.getVectorLayersObservable();
+
+    // TODO: remove this demo code
+    const animation = new Animation({
+      id: 'anim',
+      duration: 300,
+      blocks: [new NumberAnimationBlock({
+        layerId: 'vector',
+        propertyName: 'alpha',
+        startTime: 0,
+        endTime: 100,
+        fromValue: 0,
+        toValue: 1,
+      })],
+    });
+    console.info(animation);
+    console.info(Object.assign({}, animation));
+    console.info({ ...animation });
+    console.info(Object.create(animation));
+    console.info(Object.assign(Object.create(animation), animation));
+    this.store.dispatch(ActionCreator.addAnimation(animation));
+    this.animations = this.store.select('animations');
+    this.activeAnimation = this.animations.map(animations => {
+      if (animations.length === 0) {
+        return undefined;
+      }
+      return animations[0];
+    });
   }
 
-  ngOnDestroy() {
-    // this.subscriptions.forEach(s => s.unsubscribe());
-  }
-
-  // Called by the LayerListTreeComponent.
+  // Called by the LayerListTreeComponent. Overrides LayerListTreeComponentCallbacks.
   layerClick(event: MouseEvent, layer: Layer) { }
 
-  // Called by the LayerListTreeComponent.
+  // Called by the LayerListTreeComponent. Overrides LayerListTreeComponentCallbacks.
   layerDoubleClick(event: MouseEvent, layer: Layer) { }
 
-  // Called by the LayerListTreeComponent.
+  // Called by the LayerListTreeComponent. Overrides LayerListTreeComponentCallbacks.
   layerMouseDown(mouseDownEvent: MouseEvent, dragLayer: Layer) {
     const $layersList = $(mouseDownEvent.target).parents('.slt-layers-list');
     const $scroller = $(mouseDownEvent.target).parents('.slt-layers-list-scroller');
@@ -270,6 +277,7 @@ export class LayerTimelineComponent implements
 
   /**
    * Called when a mouse down event occurs anywhere in the animation timeline.
+   * Overrides TimelineAnimationRowCallbacks.
    */
   animationTimelineMouseDown(event: MouseEvent, animation: Animation) {
     console.info('animationTimelineMouseDown');
@@ -277,6 +285,7 @@ export class LayerTimelineComponent implements
 
   /**
    * Called when an animation's header text is clicked in the timeline header.
+   * Overrides TimelineAnimationRowCallbacks.
    */
   animationHeaderTextClick(event: MouseEvent, animation: Animation) {
     console.info('animationHeaderTextClick');
@@ -284,6 +293,7 @@ export class LayerTimelineComponent implements
 
   /**
    * Called by the LayerTimelineDirective when a timeline scrub event occurs.
+   * Overrides TimelineAnimationRowCallbacks.
    */
   timelineHeaderScrub(event: ScrubEvent) {
     console.info('timelineHeaderScrub');
@@ -291,6 +301,7 @@ export class LayerTimelineComponent implements
 
   /**
    * Called by the TimelineAnimationRowComponent when an animation block is clicked.
+   * Overrides TimelineAnimationRowCallbacks.
    */
   timelineBlockClick(
     event: MouseEvent,

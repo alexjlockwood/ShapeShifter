@@ -35,18 +35,6 @@ export class Animation {
   set blocks(blocks: ConcreteAnimationBlock[] | undefined) {
     this.blocks_ = blocks || [];
   }
-
-  get typeString() {
-    return 'animation';
-  }
-
-  get typeIdPrefix() {
-    return 'anim';
-  }
-
-  get typeIcon() {
-    return 'animation';
-  }
 }
 
 interface AnimationArgs {

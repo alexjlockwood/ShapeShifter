@@ -21,6 +21,7 @@ export interface Layer extends Inspectable, Animatable {
   getSibling(offset: number): Layer | undefined;
   remove(): void;
   clone<T extends Layer>(): T;
+  getType(): Type;
 
   /**
    * Returns the first descendent layer with the specified ID.
@@ -67,3 +68,5 @@ export interface Layer extends Inspectable, Animatable {
    */
   isVectorLayer(): boolean;
 }
+
+export type Type = 'vectorlayer' | 'grouplayer' | 'clippathlayer' | 'pathlayer';

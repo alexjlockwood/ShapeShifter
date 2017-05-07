@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
 import {
   Component, OnInit, Input, ViewEncapsulation,
-  EventEmitter, Output,
+  EventEmitter, Output, ChangeDetectionStrategy,
 } from '@angular/core';
 import { Layer } from '../scripts/layers';
 import { Property } from '../scripts/properties';
@@ -12,24 +12,21 @@ import { ModelUtil } from '../scripts/common';
   selector: 'app-timelineanimationrow',
   templateUrl: './timelineanimationrow.component.html',
   styleUrls: ['./timelineanimationrow.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  // TODO: remove ViewEncapsulation.
   encapsulation: ViewEncapsulation.None,
-  // TODO: make OnPush and remove ViewEncapsulation
 })
 export class TimelineAnimationRowComponent implements Callbacks {
+
+  @Input() layer: Layer;
+  @Input() animation: Animation;
+  @Input() animations: Animation[];
 
   // MouseEvents from this layer (or children layers further down the tree)
   // are recursively handled by parent components until they reach
   // the LayerTimelineComponent.
   @Output() onTimelineBlockClick = new EventEmitter<Event>();
   @Output() onTimelineBlockMouseDown = new EventEmitter<Event>();
-
-  @Input() layer: Layer;
-  @Input() animation: Animation;
-  @Input() animations: Animation[];
-
-  getLayerTypeName() {
-    return ModelUtil.getLayerTypeName(this.layer);
-  }
 
   getBlocksByAnimationByPropertyValues() {
     return _.values(ModelUtil.getBlocksByAnimationByProperty(this.layer.id, this.animations));
@@ -39,6 +36,7 @@ export class TimelineAnimationRowComponent implements Callbacks {
     return layer.id; // TODO: will this be OK for renamed layers?
   }
 
+  // TODO: figure out why this isn't being called when clicked?
   timelineBlockClick(
     event: MouseEvent,
     block: AnimationBlock<any>,
