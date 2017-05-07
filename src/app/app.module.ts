@@ -5,6 +5,10 @@ import { FormsModule } from '@angular/forms';
 import { HttpModule } from '@angular/http';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { MaterialModule, MdIconRegistry } from '@angular/material';
+import { StoreModule } from '@ngrx/store';
+
+// Reducers.
+import { counterReducer } from './scripts/reducers';
 
 // Components & directives.
 import { AppComponent } from './app.component';
@@ -81,6 +85,7 @@ import 'hammerjs';
     FlexLayoutModule,
     MaterialModule,
     BrowserAnimationsModule,
+    StoreModule.provideStore({ counter: counterReducer })
   ],
   providers: [
     AnimatorService,

@@ -29,6 +29,8 @@
     "@angular/platform-server": "^4.0.0",
     "@angular/router": "^4.0.0",
     "@angular/service-worker": "^1.0.0-beta.6",
+    "@ngrx/core": "^1.2.0",
+    "@ngrx/store": "^2.2.2",
     "@types/polylabel": "^1.0.3",
     "bezier-js": "^2.2.2",
     "core-js": "^2.4.1",
