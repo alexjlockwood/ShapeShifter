@@ -1,5 +1,5 @@
 import { Property, IdProperty, NumberProperty, Inspectable } from '../properties';
-import { PathAnimationBlock, ColorAnimationBlock, NumberAnimationBlock } from '.';
+import { AnimationBlock } from '.';
 
 /**
  * An animation represents a collection of layer property tweens for a VectorLayer.
@@ -12,19 +12,11 @@ import { PathAnimationBlock, ColorAnimationBlock, NumberAnimationBlock } from '.
   new NumberProperty('duration', { min: 100, max: 60000 }),
 )
 export class Animation {
-  private blocks_: ConcreteAnimationBlock[] = [];
+  private blocks_: AnimationBlock<any>[] = [];
 
   constructor(readonly obj: ConstructorArgs) {
     this.id = obj.id || '';
-    this.blocks = (obj.blocks || []).map(o => {
-      if (o instanceof PathAnimationBlock) {
-        return new PathAnimationBlock(o);
-      } else if (o instanceof ColorAnimationBlock) {
-        return new ColorAnimationBlock(o);
-      } else {
-        return new NumberAnimationBlock(o);
-      }
-    });
+    this.blocks = (obj.blocks || []).map(b => b.clone());
     this.duration = obj.duration || 100;
   }
 
@@ -32,7 +24,7 @@ export class Animation {
     return this.blocks_ || [];
   }
 
-  set blocks(blocks: ConcreteAnimationBlock[] | undefined) {
+  set blocks(blocks: AnimationBlock<any>[] | undefined) {
     this.blocks_ = blocks || [];
   }
 }
@@ -45,7 +37,6 @@ interface AnimationArgs {
 export interface Animation extends AnimationArgs, Inspectable { }
 
 export interface ConstructorArgs extends AnimationArgs {
-  blocks?: ConcreteAnimationBlock[];
+  blocks?: AnimationBlock<any>[];
 }
 
-type ConcreteAnimationBlock = PathAnimationBlock | ColorAnimationBlock | NumberAnimationBlock;

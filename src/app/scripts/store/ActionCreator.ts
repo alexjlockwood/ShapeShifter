@@ -1,6 +1,11 @@
-import { ADD_ANIMATION } from './Reducers';
+import { ADD_ANIMATIONS, ADD_VECTOR_LAYERS } from './Reducers';
 import { Animation } from '../animations';
+import { VectorLayer } from '../layers';
 
-export function addAnimation(animation: Animation) {
-  return { type: ADD_ANIMATION, payload: { animation } };
+export function addAnimations(...animations: Animation[]) {
+  return { type: ADD_ANIMATIONS, payload: animations };
+}
+
+export function addVectorLayers(...vectorLayers: VectorLayer[]) {
+  return { type: ADD_VECTOR_LAYERS, payload: vectorLayers };
 }

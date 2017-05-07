@@ -25,8 +25,11 @@ import {
   HoverService,
   ActionModeService,
 } from './services';
+import { Animation, NumberAnimationBlock } from './scripts/animations';
 import { DemoUtil, DEMO_MAP, DEBUG_VECTOR_DRAWABLE } from './scripts/demos';
 import 'rxjs/add/observable/combineLatest';
+import { Store } from '@ngrx/store';
+import { AppState, ActionCreator } from './scripts/store';
 
 const IS_DEV_MODE = !environment.production;
 const AUTO_LOAD_DEMO = IS_DEV_MODE && false;
@@ -82,9 +85,33 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     private readonly canvasResizeService: CanvasResizeService,
     private readonly appModeService: AppModeService,
     private readonly actionModeService: ActionModeService,
+    private readonly store: Store<AppState>,
   ) { }
 
   ngOnInit() {
+    // TODO: remove any unnecessary demo code here...
+    if (AUTO_LOAD_DEMO) {
+      this.autoLoadDemo();
+    } else if (AUTO_LOAD_VECTOR_DRAWABLE) {
+      // TODO: remove this demo code
+      const vl = VectorDrawableLoader.loadVectorLayerFromXmlString(DEBUG_VECTOR_DRAWABLE, []);
+      // this.stateService.addVectorLayers([vl]);
+      this.store.dispatch(ActionCreator.addVectorLayers(vl));
+      const animation = new Animation({
+        id: 'anim',
+        duration: 300,
+        blocks: [new NumberAnimationBlock({
+          layerId: 'vector',
+          propertyName: 'alpha',
+          startTime: 0,
+          endTime: 100,
+          fromValue: 0,
+          toValue: 1,
+        })],
+      });
+      this.store.dispatch(ActionCreator.addAnimations(animation));
+    }
+
     this.cursorObservable =
       Observable.combineLatest(
         this.appModeService.asObservable(),
@@ -181,11 +208,6 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
           this.snackBar.open('Ready to work offline', 'Dismiss', { duration: 5000 });
         });
       }
-    }
-    if (AUTO_LOAD_DEMO) {
-      this.autoLoadDemo();
-    } else if (AUTO_LOAD_VECTOR_DRAWABLE) {
-      this.autoLoadVectorDrawable();
     }
   }
 
@@ -512,13 +534,6 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   private autoLoadDemo() {
     setTimeout(() => {
       DemoUtil.loadDemo(this.stateService, DEMO_MAP.get('Debug demos'));
-    });
-  }
-
-  private autoLoadVectorDrawable() {
-    setTimeout(() => {
-      const vl = VectorDrawableLoader.loadVectorLayerFromXmlString(DEBUG_VECTOR_DRAWABLE, []);
-      this.stateService.addVectorLayers([vl]);
     });
   }
 }

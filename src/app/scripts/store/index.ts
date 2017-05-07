@@ -1,4 +1,7 @@
-export { animationsReducer } from './Reducers';
+export { AppState } from './AppState';
 import * as ActionCreator from './ActionCreator';
 export { ActionCreator };
-export { AppState } from './AppState';
+export {
+  animationsReducer,
+  vectorLayersReducer,
+} from './Reducers';

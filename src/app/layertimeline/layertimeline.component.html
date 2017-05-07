@@ -1,5 +1,5 @@
 <div class="studio-layer-timeline"
-  *ngIf="(this.animations | async) as animations">
+  *ngIf="(this.layerTimelineModel | async) as model">
   <app-splitter edge="top"
     min="200"
     persist-id="layer-timeline">
@@ -15,143 +15,48 @@
     <div class="slt-header"
       fxLayout="row"
       fxLayoutAlign="start center">
-      <!--<md-menu md-offset="0 40">
-        <button class="slt-layers-menu-group-button" ng-click="$mdOpenMenu()">
-          File
-        </button>
-        <md-menu-content>
-          <md-menu-item>
-            <md-button ng-click="ctrl.onNewFile($event)">
-              New
-            </md-button>
-          </md-menu-item>
-          <md-menu-item>
-            <md-button file-open-handler="ctrl.onNewFromSVG(fileInfo)">
-              New from SVG
-              <input type="file" accept=".svg">
-            </md-button>
-          </md-menu-item>
-          <md-menu-item>
-            <md-button file-open-handler="ctrl.onNewFromVD(fileInfo)">
-              New from vector drawable
-              <input type="file" accept=".xml">
-            </md-button>
-          </md-menu-item>
-          <md-menu-divider></md-menu-divider>
-          <md-menu-item>
-            <md-button file-open-handler="ctrl.onOpenFile(fileInfo)">
-              Open
-              <input type="file" accept=".iconanim">
-            </md-button>
-          </md-menu-item>
-          <md-menu-item>
-            <md-button ng-click="ctrl.onSaveFile($event)">
-              Save
-            </md-button>
-          </md-menu-item>
-        </md-menu-content>
-      </md-menu>
-      <md-menu md-offset="0 40">
-        <button class="slt-layers-menu-group-button" ng-click="$mdOpenMenu()">
-          Import
-        </button>
-        <md-menu-content>
-          <md-menu-item>
-            <md-button file-open-handler="ctrl.onAddLayersFromSVG(fileInfo)">
-              Add layers from SVG
-              <input type="file" accept=".svg">
-            </md-button>
-          </md-menu-item>
-        </md-menu-content>
-      </md-menu>
-
-      <md-menu md-offset="0 40">
-        <button class="slt-layers-menu-group-button" ng-click="$mdOpenMenu()">
-          Export
-        </button>
-        <md-menu-content>
-          <md-menu-item>
-            <md-button ng-click="ctrl.onExportVectorDrawable($event)">
-              Vector drawable
-            </md-button>
-          </md-menu-item>
-          <md-menu-item>
-            <md-button ng-click="ctrl.onExportAVDs($event)" ng-disabled="!ctrl.animations.length">
-              Animated vector drawable(s)
-            </md-button>
-          </md-menu-item>
-        </md-menu-content>
-      </md-menu>
-      <div flex></div>-->
-      <!--<md-menu class="slt-add-layer-menu">
-        <md-button class="md-icon-button" ng-click="$mdOpenMenu($event)"
-          aria-label="New layer or group">
-          <md-icon md-svg-icon="avdstudio:add_layer"></md-icon>
-          <md-tooltip>New layer or group</md-tooltip>
-        </md-button>
-        <md-menu-content>
-          <md-menu-item>
-            <md-button ng-click="ctrl.onAddLayer($event, 'layer')">
-              New path
-            </md-button>
-          </md-menu-item>
-          <md-menu-item>
-            <md-button ng-click="ctrl.onAddLayer($event, 'mask')">
-              New clip path
-            </md-button>
-          </md-menu-item>
-          <md-menu-item>
-            <md-button ng-click="ctrl.onAddLayer($event, 'group')">
-              New layer group
-            </md-button>
-          </md-menu-item>
-        </md-menu-content>
-      </md-menu>-->
+      <!-- TODO: add file/import/export buttons -->
     </div>
 
-    <!-- TODO: display animation blocks in the layer list. -->
-    <ng-container *ngIf="{ vectorLayers: (this.vectorLayersObservable | async) } as data">
-      <div appScrollGroup="timeline"
-        class="slt-layers-list-scroller"
-        fxFlex>
-        <!-- Layer list. -->
-        <div class="slt-layers-list">
-          <!-- TODO: only display one vector layer? -->
-          <app-layerlisttree fxLayout="column"
-            class="slt-layer-container"
-            *ngFor="let vl of data.vectorLayers; trackBy: this.trackLayerFn;"
-            [layer]="vl"
-            [animations]="animations"
-            (onLayerClick)="this.layerClick($event.event, $event.layer)"
-            (onLayerDoubleClick)="this.layerDoubleClick($event.event, $event.layer)"
-            (onLayerMouseDown)="this.layerMouseDown($event.event, $event.layer)"
-            (onAddTimelineBlockClick)="this.addTimelineBlockClick($event.event, $event.layer, $event.propertyName)">
-          </app-layerlisttree>
-        </div>
-        <div *ngIf="(this.dragIndicatorSource.asObservable() | async) as data"
-          class="slt-layers-list-drag-indicator"
-          [ngStyle]="{
-            'display': data.isVisible ? 'block' : 'none',
-            'left': data.left + 'px',
-            'top': data.top + 'px'
-          }">
-        </div>
-        <!-- Layer list empty view. -->
-        <div *ngIf="data.vectorLayers.length === 0"
-          class="slt-layers-empty">
-          <span>Import 2 SVGs to get started<br>(or load a demo in the top right menu)</span>
-        </div>
+    <div appScrollGroup="timeline"
+      class="slt-layers-list-scroller"
+      fxFlex>
+      <!-- Layer list. -->
+      <div class="slt-layers-list">
+        <!-- TODO: only display one vector layer? -->
+        <app-layerlisttree fxLayout="column"
+          class="slt-layer-container"
+          *ngFor="let vl of model.vectorLayers; trackBy: this.trackLayerFn;"
+          [layer]="vl"
+          [animations]="model.animations"
+          (onLayerClick)="this.layerClick($event.event, $event.layer)"
+          (onLayerDoubleClick)="this.layerDoubleClick($event.event, $event.layer)"
+          (onLayerMouseDown)="this.layerMouseDown($event.event, $event.layer)"
+          (onAddTimelineBlockClick)="this.addTimelineBlockClick($event.event, $event.layer, $event.propertyName)">
+        </app-layerlisttree>
       </div>
-    </ng-container>
+      <div *ngIf="(this.dragIndicatorSource.asObservable() | async) as dragData"
+        class="slt-layers-list-drag-indicator"
+        [ngStyle]="{
+            'display': dragData.isVisible ? 'block' : 'none',
+            'left': dragData.left + 'px',
+            'top': dragData.top + 'px'
+          }">
+      </div>
+      <!-- Layer list empty view. -->
+      <div *ngIf="model.vectorLayers.length === 0"
+        class="slt-layers-empty">
+        <span>Import 2 SVGs to get started<br>(or load a demo in the top right menu)</span>
+      </div>
+    </div>
   </div>
 
   <!-- Animation timeline. -->
   <div class="slt-timeline">
-    <ng-container *ngFor="let animation of animations">
+    <ng-container *ngFor="let animation of model.animations; trackBy: trackAnimationFn;">
       <div class="slt-timeline-animation"
-        *ngIf="{isActiveAnimation: (this.activeAnimation | async) === animation} as data"
         (mousedown)="this.animationTimelineMouseDown($event, animation)"
-        [ngClass]="{'is-active': data.isActiveAnimation}"
+        [ngClass]="{'is-active': model.activeAnimation === animation}"
         [ngStyle]="{'width': (animation.duration * this.horizZoom + 40) + 'px'}"
         fxLayout="column">
 
@@ -165,7 +70,7 @@
           </div>
           <canvas appLayerTimeline
             class="slt-timeline-header-grid"
-            [isActive]="data.isActiveAnimation"
+            [isActive]="model.activeAnimation === animation"
             [animation]="animation"
             [activeTime]="this.activeTime"
             [horizZoom]="this.horizZoom"
@@ -176,23 +81,21 @@
         <canvas appLayerTimeline
           class="slt-timeline-grid"
           [animation]="animation"
-          [isActive]="data.isActiveAnimation"
+          [isActive]="model.activeAnimation === animation"
           [activeTime]="this.activeTime"
           [horizZoom]="this.horizZoom"></canvas>
 
         <div appScrollGroup="timeline"
           class="slt-timeline-animation-scroller">
           <div class="slt-timeline-animation-rows">
-            <ng-container *ngIf="{ vectorLayers: (vectorLayersObservable | async) } as data">
-              <!-- TODO: only display one vector layer? -->
-              <app-timelineanimationrow *ngFor="let layer of data.vectorLayers; trackBy: this.trackLayerFn;"
-                [layer]="layer"
-                [animation]="animation"
-                [animations]="animations"
-                (onTimelineBlockMouseDown)="this.timelineBlockMouseDown($event.event, $event.block, $event.animation, $event.layer)"
-                (onTimelineBlockClick)="this.timelineBlockClick($event.event, $event.block, $event.animation, $event.layer)">
-              </app-timelineanimationrow>
-            </ng-container>
+            <!-- TODO: only display one vector layer? -->
+            <app-timelineanimationrow *ngFor="let layer of model.vectorLayers; trackBy: this.trackLayerFn;"
+              [layer]="layer"
+              [animation]="animation"
+              [animations]="model.animations"
+              (onTimelineBlockMouseDown)="this.timelineBlockMouseDown($event.event, $event.block, $event.animation, $event.layer)"
+              (onTimelineBlockClick)="this.timelineBlockClick($event.event, $event.block, $event.animation, $event.layer)">
+            </app-timelineanimationrow>
           </div>
         </div>
       </div>

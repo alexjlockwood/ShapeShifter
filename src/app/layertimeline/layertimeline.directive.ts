@@ -4,7 +4,7 @@ import {
   Directive, ElementRef, Input, OnInit,
   HostListener, Output, EventEmitter,
 } from '@angular/core';
-import { TIMELINE_ANIMATION_PADDING } from './constants';
+import { TIMELINE_ANIMATION_PADDING } from './Constants';
 import { MathUtil } from '../scripts/common';
 import { Animation } from '../scripts/animations';
 import { Dragger } from '../scripts/dragger';
@@ -18,7 +18,7 @@ const GRID_INTERVALS_MS = [
   selector: '[appLayerTimeline]'
 })
 export class LayerTimelineDirective implements OnInit {
-  // TODO: listen to some sort of observable for redraw events?
+  // TODO: make these setters/getters and trigger redraw when necessary?
   @Input() isHeader: boolean | undefined;
   @Input() animation: Animation;
   @Input() isActive: boolean;

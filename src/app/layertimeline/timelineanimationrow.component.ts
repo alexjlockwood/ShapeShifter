@@ -28,15 +28,12 @@ export class TimelineAnimationRowComponent implements Callbacks {
   @Output() onTimelineBlockClick = new EventEmitter<Event>();
   @Output() onTimelineBlockMouseDown = new EventEmitter<Event>();
 
-  getBlocksByAnimationByPropertyValues() {
-    return _.values(ModelUtil.getBlocksByAnimationByProperty(this.layer.id, this.animations));
-  }
-
-  trackLayerFn(index: number, layer: Layer) {
-    return layer.id; // TODO: will this be OK for renamed layers?
-  }
-
-  // TODO: figure out why this isn't being called when clicked?
+  // TODO: this doesn't get called!!!!
+  // TODO: this doesn't get called!!!!
+  // TODO: this doesn't get called!!!!
+  // TODO: this doesn't get called!!!!
+  // TODO: this doesn't get called!!!!
+  // @Override Callbacks
   timelineBlockClick(
     event: MouseEvent,
     block: AnimationBlock<any>,
@@ -46,6 +43,7 @@ export class TimelineAnimationRowComponent implements Callbacks {
     this.onTimelineBlockClick.emit({ event, block, animation, layer });
   }
 
+  // @Override Callbacks
   timelineBlockMouseDown(
     event: MouseEvent,
     block: AnimationBlock<any>,
@@ -53,7 +51,18 @@ export class TimelineAnimationRowComponent implements Callbacks {
     layer: Layer,
   ) {
     this.onTimelineBlockMouseDown.emit({ event, block, animation, layer });
+    return false;
   }
+
+  // Used by *ngFor loop.
+  trackLayerFn(index: number, layer: Layer) {
+    return layer.id; // TODO: will this be OK for renamed layers?
+  }
+
+  getBlocksByAnimationByPropertyValues() {
+    return _.values(ModelUtil.getBlocksByAnimationByProperty(this.layer.id, this.animations));
+  }
+
 }
 
 export interface Callbacks {

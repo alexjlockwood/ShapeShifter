@@ -3,14 +3,13 @@ import {
   Component, OnInit, ChangeDetectionStrategy,
   OnDestroy, ViewEncapsulation,
 } from '@angular/core';
-// import { CanvasType } from '../CanvasType';
 import { StateService, } from '../services';
 import { Observable } from 'rxjs/Observable';
-// import { Subscription } from 'rxjs/Subscription';
 import { VectorLayer, Layer, GroupLayer } from '../scripts/layers';
 import { Dragger } from '../scripts/dragger';
 import * as $ from 'jquery';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+import 'rxjs/add/observable/combineLatest';
 import { Animation, AnimationBlock, NumberAnimationBlock } from '../scripts/animations';
 import { ScrubEvent } from './layertimeline.directive';
 import { Callbacks as TimelineAnimationRowCallbacks } from './timelineanimationrow.component';
@@ -34,58 +33,53 @@ export class LayerTimelineComponent implements
   // Layer timeline variables.
   horizZoom = 2; // 1ms = 2px
   activeTime = 10;
-  activeAnimation: Observable<Animation>;
-  animations: Observable<ReadonlyArray<Animation>>;
-  vectorLayersObservable: Observable<ReadonlyArray<VectorLayer>>;
   private shouldSuppressClick = false;
   dragIndicatorSource = new BehaviorSubject<DragIndicatorInfo>({
     isVisible: false, left: 0, top: 0,
   });
 
+  layerTimelineModel;
+
   constructor(
-    private readonly stateService: StateService,
     private readonly store: Store<AppState>,
   ) { }
 
   ngOnInit() {
-    this.vectorLayersObservable = this.stateService.getVectorLayersObservable();
-
-    // TODO: remove this demo code
-    const animation = new Animation({
-      id: 'anim',
-      duration: 300,
-      blocks: [new NumberAnimationBlock({
-        layerId: 'vector',
-        propertyName: 'alpha',
-        startTime: 0,
-        endTime: 100,
-        fromValue: 0,
-        toValue: 1,
-      })],
-    });
-    console.info(animation);
-    console.info(Object.assign({}, animation));
-    console.info({ ...animation });
-    console.info(Object.create(animation));
-    console.info(Object.assign(Object.create(animation), animation));
-    this.store.dispatch(ActionCreator.addAnimation(animation));
-    this.animations = this.store.select('animations');
-    this.activeAnimation = this.animations.map(animations => {
-      if (animations.length === 0) {
-        return undefined;
+    this.layerTimelineModel = Observable.combineLatest(
+      this.store.select('animations'),
+      this.store.select('vectorLayers'),
+    ).map(([animations, vectorLayers]: [Animation[], VectorLayer[]]) => {
+      return {
+        animations,
+        vectorLayers,
+        // TODO: keep track of the currently 'active' animation
+        activeAnimation: animations[0],
       }
-      return animations[0];
     });
   }
 
-  // Called by the LayerListTreeComponent. Overrides LayerListTreeComponentCallbacks.
-  layerClick(event: MouseEvent, layer: Layer) { }
+  // @Override LayerListTreeComponentCallbacks
+  addTimelineBlockClick(
+    event: MouseEvent,
+    layer: Layer,
+    propertyName: string,
+  ) {
+    console.info('addTimelineBlockClick');
+  }
 
-  // Called by the LayerListTreeComponent. Overrides LayerListTreeComponentCallbacks.
-  layerDoubleClick(event: MouseEvent, layer: Layer) { }
+  // @Override LayerListTreeComponentCallbacks
+  layerClick(event: MouseEvent, layer: Layer) {
+    console.info('layerClick');
+  }
 
-  // Called by the LayerListTreeComponent. Overrides LayerListTreeComponentCallbacks.
+  // @Override LayerListTreeComponentCallbacks
+  layerDoubleClick(event: MouseEvent, layer: Layer) {
+    console.info('layerDoubleClick');
+  }
+
+  // @Override LayerListTreeComponentCallbacks
   layerMouseDown(mouseDownEvent: MouseEvent, dragLayer: Layer) {
+    console.info('layerMouseDown');
     const $layersList = $(mouseDownEvent.target).parents('.slt-layers-list');
     const $scroller = $(mouseDownEvent.target).parents('.slt-layers-list-scroller');
 
@@ -100,6 +94,7 @@ export class LayerTimelineComponent implements
     let targetLayerInfo: LayerInfo = undefined;
     let targetEdge: string;
 
+    // TODO: need to rethink this... we can't mutate the layers directly anymore like this
     // tslint:disable-next-line
     new Dragger({
       direction: 'both',
@@ -235,7 +230,8 @@ export class LayerTimelineComponent implements
                 dragLayer.parent = newParent;
               }
             }
-            this.stateService.addVectorLayers([]); // notify change
+            // TODO: make the change in a reducer instead of mutating directly...
+            // this.stateService.addVectorLayers([]); // notify change
           }
 
           // this.studioState_.artworkChanged();
@@ -252,57 +248,29 @@ export class LayerTimelineComponent implements
     this.dragIndicatorSource.next(Object.assign({}, curr, info));
   }
 
-  // TODO: figure out if this is right
+  // TODO: see TODO above... this will no longer work.
   private findLayerById(id: string) {
-    const vls = this.stateService.getImportedVectorLayers();
-    for (const vl of vls) {
-      const layer = vl.findLayer(id);
-      if (layer) {
-        return layer;
-      }
-    }
+    // const vls = this.stateService.getImportedVectorLayers();
+    // for (const vl of vls) {
+    //   const layer = vl.findLayer(id);
+    //   if (layer) {
+    //     return layer;
+    //   }
+    // }
     return undefined;
   }
 
-  /**
-   * Called by the LayerListTreeComponent when a new animation block is created.
-   */
-  addTimelineBlockClick(
-    event: MouseEvent,
-    layer: Layer,
-    propertyName: string,
-  ) {
-    console.info('addTimelineBlockClick');
-  }
-
-  /**
-   * Called when a mouse down event occurs anywhere in the animation timeline.
-   * Overrides TimelineAnimationRowCallbacks.
-   */
-  animationTimelineMouseDown(event: MouseEvent, animation: Animation) {
-    console.info('animationTimelineMouseDown');
-  }
-
-  /**
-   * Called when an animation's header text is clicked in the timeline header.
-   * Overrides TimelineAnimationRowCallbacks.
-   */
+  // Called from the LayerTimelineComponent template.
   animationHeaderTextClick(event: MouseEvent, animation: Animation) {
     console.info('animationHeaderTextClick');
   }
 
-  /**
-   * Called by the LayerTimelineDirective when a timeline scrub event occurs.
-   * Overrides TimelineAnimationRowCallbacks.
-   */
+  // Called from the LayerTimelineComponent template.
   timelineHeaderScrub(event: ScrubEvent) {
     console.info('timelineHeaderScrub');
   }
 
-  /**
-   * Called by the TimelineAnimationRowComponent when an animation block is clicked.
-   * Overrides TimelineAnimationRowCallbacks.
-   */
+  // Called from the LayerTimelineComponent template.
   timelineBlockClick(
     event: MouseEvent,
     block: AnimationBlock<any>,
@@ -312,10 +280,12 @@ export class LayerTimelineComponent implements
     console.info('timelineBlockClick');
   }
 
-  /**
-   * Called by the TimelineAnimationRowComponent when a mouse down event
-   * occurs on top of an animation block.
-   */
+  // @Override TimelineAnimationRowCallbacks
+  animationTimelineMouseDown(event: MouseEvent, animation: Animation) {
+    console.info('animationTimelineMouseDown');
+  }
+
+  // @Override TimelineAnimationRowCallbacks
   timelineBlockMouseDown(
     event: MouseEvent,
     block: AnimationBlock<any>,
@@ -327,6 +297,10 @@ export class LayerTimelineComponent implements
 
   trackLayerFn(index: number, layer: Layer) {
     return layer.id; // TODO: will this be OK for renamed layers?
+  }
+
+  trackAnimationFn(index: number, animation: Animation) {
+    return animation.id; // TODO: will this be OK for renamed animations?
   }
 }
 

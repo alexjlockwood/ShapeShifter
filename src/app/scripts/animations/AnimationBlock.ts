@@ -27,6 +27,10 @@ export abstract class AnimationBlock<T extends AnimationBlockType> {
     }
     this.interpolator = obj.interpolator || INTERPOLATORS[0];
   }
+
+  clone(): AnimationBlock<T> {
+    return Object.assign(Object.create(this), this);
+  }
 }
 
 interface AnimationBlockArgs<T> {
