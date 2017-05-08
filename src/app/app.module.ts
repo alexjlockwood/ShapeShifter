@@ -6,12 +6,7 @@ import { HttpModule } from '@angular/http';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { MaterialModule, MdIconRegistry } from '@angular/material';
 import { StoreModule } from '@ngrx/store';
-
-// @ngrx/store.
-import {
-  animationsReducer,
-  vectorLayersReducer,
-} from './scripts/store';
+import { REDUCERS } from './scripts/store';
 
 // Components & directives.
 import { AppComponent } from './app.component';
@@ -88,10 +83,7 @@ import 'hammerjs';
     FlexLayoutModule,
     MaterialModule,
     BrowserAnimationsModule,
-    StoreModule.provideStore({
-      animations: animationsReducer,
-      vectorLayers: vectorLayersReducer,
-    })
+    StoreModule.provideStore(REDUCERS),
   ],
   providers: [
     AnimatorService,

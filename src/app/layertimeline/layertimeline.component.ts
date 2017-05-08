@@ -15,7 +15,7 @@ import { ScrubEvent } from './layertimeline.directive';
 import { Callbacks as TimelineAnimationRowCallbacks } from './timelineanimationrow.component';
 import { Callbacks as LayerListTreeCallbacks } from './layerlisttree.component';
 import { Store } from '@ngrx/store';
-import { AppState, ActionCreator } from '../scripts/store';
+import { AppState } from '../scripts/store';
 
 const LAYER_INDENT_PIXELS = 20;
 
@@ -38,14 +38,16 @@ export class LayerTimelineComponent implements
     isVisible: false, left: 0, top: 0,
   });
 
-  layerTimelineModel;
+  layerTimelineModel$: Observable<{
+    animations: ReadonlyArray<Animation>,
+    vectorLayers: ReadonlyArray<VectorLayer>,
+    activeAnimation: Animation
+  }>;
 
-  constructor(
-    private readonly store: Store<AppState>,
-  ) { }
+  constructor(private readonly store: Store<AppState>) { }
 
   ngOnInit() {
-    this.layerTimelineModel = Observable.combineLatest(
+    this.layerTimelineModel$ = Observable.combineLatest(
       this.store.select('animations'),
       this.store.select('vectorLayers'),
     ).map(([animations, vectorLayers]: [Animation[], VectorLayer[]]) => {
@@ -56,6 +58,41 @@ export class LayerTimelineComponent implements
         activeAnimation: animations[0],
       }
     });
+  }
+
+  // Called from the LayerTimelineComponent template.
+  animationHeaderTextClick(event: MouseEvent, animation: Animation) {
+    console.info('animationHeaderTextClick');
+  }
+
+  // Called from the LayerTimelineComponent template.
+  timelineHeaderScrub(event: ScrubEvent) {
+    console.info('timelineHeaderScrub');
+  }
+
+  // Called from the LayerTimelineComponent template.
+  timelineBlockClick(
+    event: MouseEvent,
+    block: AnimationBlock<any>,
+    animation: Animation,
+    layer: Layer,
+  ) {
+    console.info('timelineBlockClick');
+  }
+
+  // @Override TimelineAnimationRowCallbacks
+  animationTimelineMouseDown(event: MouseEvent, animation: Animation) {
+    console.info('animationTimelineMouseDown');
+  }
+
+  // @Override TimelineAnimationRowCallbacks
+  timelineBlockMouseDown(
+    event: MouseEvent,
+    block: AnimationBlock<any>,
+    animation: Animation,
+    layer: Layer,
+  ) {
+    console.info('timelineBlockMouseDown');
   }
 
   // @Override LayerListTreeComponentCallbacks
@@ -258,41 +295,6 @@ export class LayerTimelineComponent implements
     //   }
     // }
     return undefined;
-  }
-
-  // Called from the LayerTimelineComponent template.
-  animationHeaderTextClick(event: MouseEvent, animation: Animation) {
-    console.info('animationHeaderTextClick');
-  }
-
-  // Called from the LayerTimelineComponent template.
-  timelineHeaderScrub(event: ScrubEvent) {
-    console.info('timelineHeaderScrub');
-  }
-
-  // Called from the LayerTimelineComponent template.
-  timelineBlockClick(
-    event: MouseEvent,
-    block: AnimationBlock<any>,
-    animation: Animation,
-    layer: Layer,
-  ) {
-    console.info('timelineBlockClick');
-  }
-
-  // @Override TimelineAnimationRowCallbacks
-  animationTimelineMouseDown(event: MouseEvent, animation: Animation) {
-    console.info('animationTimelineMouseDown');
-  }
-
-  // @Override TimelineAnimationRowCallbacks
-  timelineBlockMouseDown(
-    event: MouseEvent,
-    block: AnimationBlock<any>,
-    animation: Animation,
-    layer: Layer,
-  ) {
-    console.info('timelineBlockMouseDown');
   }
 
   trackLayerFn(index: number, layer: Layer) {

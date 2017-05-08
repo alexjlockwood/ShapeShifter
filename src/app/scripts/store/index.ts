@@ -1,7 +1,6 @@
-export { AppState } from './AppState';
-import * as ActionCreator from './ActionCreator';
-export { ActionCreator };
+export { AppState, REDUCERS } from './Reducers';
 export {
-  animationsReducer,
-  vectorLayersReducer,
-} from './Reducers';
+  ADD_ANIMATIONS, AddAnimations,
+  ADD_VECTOR_LAYERS, AddVectorLayers,
+  TOGGLE_LAYER_ID_SELECTION, ToggleLayerIdSelection,
+} from './Actions';

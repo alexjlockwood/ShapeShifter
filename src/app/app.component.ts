@@ -29,7 +29,7 @@ import { Animation, NumberAnimationBlock } from './scripts/animations';
 import { DemoUtil, DEMO_MAP, DEBUG_VECTOR_DRAWABLE } from './scripts/demos';
 import 'rxjs/add/observable/combineLatest';
 import { Store } from '@ngrx/store';
-import { AppState, ActionCreator } from './scripts/store';
+import { AppState, AddAnimations, AddVectorLayers } from './scripts/store';
 
 const IS_DEV_MODE = !environment.production;
 const AUTO_LOAD_DEMO = IS_DEV_MODE && false;
@@ -96,7 +96,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       // TODO: remove this demo code
       const vl = VectorDrawableLoader.loadVectorLayerFromXmlString(DEBUG_VECTOR_DRAWABLE, []);
       // this.stateService.addVectorLayers([vl]);
-      this.store.dispatch(ActionCreator.addVectorLayers(vl));
+      this.store.dispatch(new AddVectorLayers([vl]));
       const animation = new Animation({
         id: 'anim',
         duration: 300,
@@ -109,7 +109,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
           toValue: 1,
         })],
       });
-      this.store.dispatch(ActionCreator.addAnimations(animation));
+      this.store.dispatch(new AddAnimations([animation]));
     }
 
     this.cursorObservable =

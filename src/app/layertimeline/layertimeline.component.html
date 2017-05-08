@@ -1,5 +1,5 @@
 <div class="studio-layer-timeline"
-  *ngIf="(this.layerTimelineModel | async) as model">
+  *ngIf="(this.layerTimelineModel$ | async) as model">
   <app-splitter edge="top"
     min="200"
     persist-id="layer-timeline">

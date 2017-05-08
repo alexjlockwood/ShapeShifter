@@ -1,62 +1,54 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { Property, PathProperty } from '../scripts/properties';
 import { StateService } from '../services';
 import { VectorLayer } from '../scripts/layers';
 import { Observable } from 'rxjs/Observable';
 import { ColorUtil } from '../scripts/common';
 import { newPath } from '../scripts/paths';
+import { Store } from '@ngrx/store'
+import { AppState } from '../scripts/store';
 
 @Component({
   selector: 'app-propertyinput',
   templateUrl: './propertyinput.component.html',
   styleUrls: ['./propertyinput.component.scss'],
-  // TODO: make this OnPush change detection
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PropertyInputComponent implements OnInit {
 
-  vlObservable: Observable<VectorLayer[]>;
-  selectionInfo: SelectionInfo;
+  propertyInputModel$: Observable<PropertyInputData>;
 
-  constructor(private readonly stateService: StateService) { }
+  constructor(private readonly store: Store<AppState>) { }
 
   ngOnInit() {
-    this.vlObservable = this.stateService.getVectorLayersObservable();
-    this.vlObservable.subscribe(() => {
-      this.rebuildLayersSelection();
-    });
+    this.propertyInputModel$ =
+      this.store.select<ReadonlyArray<VectorLayer>>('vectorLayers')
+        .map(vls => this.buildPropertyInputData(vls));
   }
 
-  onValueEditorKeyDown(event: MouseEvent, ip: InspectedProperty<any>) {
-    // console.info('onValueEditorKeyDown', ip);
-  }
-
-  androidToCssColor(color: string) {
-    return ColorUtil.androidToCssColor(color);
-  }
-
-  rebuildLayersSelection() {
-    this.selectionInfo = {
+  private buildPropertyInputData(vls: ReadonlyArray<VectorLayer>) {
+    let selectionInfo: PropertyInputData = {
       inspectedProperties: [],
     };
 
     // edit a single layer
-    const layers = this.stateService.getImportedVectorLayers();
-    if (!layers.length) {
-      return;
+    if (!vls.length) {
+      return selectionInfo;
     }
-    this.selectionInfo = {
+    selectionInfo = {
       icon: 'vectorlayer',
       inspectedProperties: [],
     };
-    const layer = layers[0].findLayer('bottom_inner_path');
+    const layer = vls[0].findLayer('bottom_inner_path');
     layer.inspectableProperties.forEach((property, propertyName) => {
-      this.selectionInfo.inspectedProperties.push(
+      selectionInfo.inspectedProperties.push(
         new InspectedProperty<any>(
           layer,
           propertyName,
           property,
         ));
     });
+    return selectionInfo
     // object: layer,
     // propertyName,
     // property,
@@ -80,9 +72,17 @@ export class PropertyInputComponent implements OnInit {
     // }));
     // });
   }
+
+  onValueEditorKeyDown(event: MouseEvent, ip: InspectedProperty<any>) {
+    // console.info('onValueEditorKeyDown', ip);
+  }
+
+  androidToCssColor(color: string) {
+    return ColorUtil.androidToCssColor(color);
+  }
 }
 
-interface SelectionInfo {
+interface PropertyInputData {
   type?: string;
   icon?: string;
   description?: string;

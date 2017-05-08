@@ -28,11 +28,11 @@ export class TimelineAnimationRowComponent implements Callbacks {
   @Output() onTimelineBlockClick = new EventEmitter<Event>();
   @Output() onTimelineBlockMouseDown = new EventEmitter<Event>();
 
-  // TODO: this doesn't get called!!!!
-  // TODO: this doesn't get called!!!!
-  // TODO: this doesn't get called!!!!
-  // TODO: this doesn't get called!!!!
-  // TODO: this doesn't get called!!!!
+  // TODO: this doesn't get called (unlike the click event in layer list tree)!!!!
+  // TODO: this doesn't get called (unlike the click event in layer list tree)!!!!
+  // TODO: this doesn't get called (unlike the click event in layer list tree)!!!!
+  // TODO: this doesn't get called (unlike the click event in layer list tree)!!!!
+  // TODO: this doesn't get called (unlike the click event in layer list tree)!!!!
   // @Override Callbacks
   timelineBlockClick(
     event: MouseEvent,
