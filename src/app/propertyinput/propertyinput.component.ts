@@ -58,11 +58,11 @@ export class PropertyInputComponent implements OnInit {
     //   return layer[propertyName];
     // }
     // let renderedLayer = self.studioState_.animationRenderer
-    //   .renderedArtwork.findLayerById(layer.id);
+    //   .renderedArtwork.findLayerById(layer.name);
     // return renderedLayer ? renderedLayer[propertyName] : undefined;
     // },
     // set value(value) {
-    // if (property instanceof IdProperty) {
+    // if (property instanceof NameProperty) {
     // self.studioState_.updateLayerId(layer, value);
     // } else {
     // layer[propertyName] = value;
@@ -132,7 +132,7 @@ class InspectedProperty<T> {
     return this.enteredValue === undefined ? this.displayValue : this.enteredValue;
   }
 
-  // TODO: if IdProperty, replace with sanitized unique ID
+  // TODO: if NameProperty, replace with sanitized unique ID
   // TODO: should call property.setEditableValue() here instead for ids/paths/strings/etc?
   set editableValue(enteredValue: string) {
     this.enteredValue = enteredValue;

@@ -42,7 +42,7 @@ function vectorLayerToSvgNode(vl: VectorLayer, destinationNode: HTMLElement, xml
   walk(vl, (layer, parentNode) => {
     if (layer instanceof VectorLayer) {
       if (withIdsAndNS) {
-        conditionalAttr(destinationNode, 'id', vl.id, '');
+        conditionalAttr(destinationNode, 'id', vl.name, '');
       }
       conditionalAttr(destinationNode, 'opacity', vl.alpha, 1);
       return parentNode;
@@ -50,7 +50,7 @@ function vectorLayerToSvgNode(vl: VectorLayer, destinationNode: HTMLElement, xml
     } else if (layer instanceof PathLayer) {
       const node = xmlDoc.createElement('path');
       if (withIdsAndNS) {
-        conditionalAttr(node, 'id', layer.id);
+        conditionalAttr(node, 'id', layer.name);
       }
       conditionalAttr(node, 'd', layer.pathData.getPathString());
       if (layer.fillColor) {
@@ -80,8 +80,7 @@ function vectorLayerToSvgNode(vl: VectorLayer, destinationNode: HTMLElement, xml
     } else if (layer instanceof GroupLayer) {
       const node = xmlDoc.createElement('g');
       if (withIdsAndNS) {
-
-        conditionalAttr(node, 'id', layer.id);
+        conditionalAttr(node, 'id', layer.name);
       }
       const transformValues: string[] = [];
       if (layer.scaleX !== 1 || layer.scaleY !== 1) {
@@ -102,7 +101,7 @@ function vectorLayerToSvgNode(vl: VectorLayer, destinationNode: HTMLElement, xml
     // TODO: support exporting clip paths to SVG
     /* else if (layer instanceof ClipPathLayer) {
     const node = xmlDoc.createElement('clip-path');
-    conditionalAttr(node, '', layer.id);
+    conditionalAttr(node, '', layer.name);
     conditionalAttr(node, 'android:pathData', layer.pathData.getPathString());
     parentNode.appendChild(node);
     return parentNode;

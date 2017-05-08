@@ -1,20 +1,21 @@
 import * as _ from 'lodash';
 import { Layer, GroupLayer, ClipPathLayer, PathLayer, VectorLayer } from '.';
-import { Property, IdProperty, Inspectable, Animatable } from '../properties';
+import { Property, NameProperty, Inspectable, Animatable } from '../properties';
 import { Type } from './Layer';
 
 /**
  * Root class for all layer types.
  */
 @Property.register(
-  new IdProperty('id'),
+  new NameProperty('name'),
 )
 export abstract class AbstractLayer implements Layer {
   private parent_: Layer;
   private children_: Layer[];
 
   constructor(obj: ConstructorArgs) {
-    this.id = obj.id || '';
+    this.id = obj.id || _.uniqueId();
+    this.name = obj.name || '';
     this.children = obj.children || [];
   }
 
@@ -36,13 +37,13 @@ export abstract class AbstractLayer implements Layer {
   }
 
   // Implements the Layer interface.
-  findLayer(id: string): Layer | undefined {
-    if (this.id === id) {
+  findLayer(name: string): Layer | undefined {
+    if (this.name === name) {
       return this;
     }
     if (this.children) {
       for (const child of this.children) {
-        const layer = child.findLayer(id);
+        const layer = child.findLayer(name);
         if (layer) {
           return layer;
         }
@@ -71,7 +72,7 @@ export abstract class AbstractLayer implements Layer {
     if (!this.parent || !this.parent.children) {
       return undefined;
     }
-    let index = _.findIndex(this.parent.children, c => c.id === this.id);
+    let index = _.findIndex(this.parent.children, c => c.name === this.name);
     if (index < 0) {
       return undefined;
     }
@@ -97,7 +98,7 @@ export abstract class AbstractLayer implements Layer {
     if (!this.parent || !this.parent.children) {
       return;
     }
-    const index = _.findIndex(this.parent.children, c => c.id === this.id);
+    const index = _.findIndex(this.parent.children, c => c.name === this.name);
     if (index >= 0) {
       this.parent.children.splice(index, 1);
     }
@@ -135,14 +136,16 @@ export abstract class AbstractLayer implements Layer {
     return this instanceof VectorLayer;
   }
 
-  abstract interpolate(start: AbstractLayer, end: AbstractLayer, fraction: number): void;
   abstract clone<T extends Layer>(): T;
+  abstract deepClone<T extends Layer>(): T;
+  abstract interpolate(start: AbstractLayer, end: AbstractLayer, fraction: number): void;
   abstract getType(): Type;
 }
 
 // TODO: share this interface with Layer?
 interface AbstractLayerArgs {
   id: string;
+  name: string;
   children: Layer[];
 }
 

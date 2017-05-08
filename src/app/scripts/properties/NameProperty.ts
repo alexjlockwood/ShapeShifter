@@ -1,6 +1,6 @@
 import { Property } from './Property';
 
-export class IdProperty extends Property<string> {
+export class NameProperty extends Property<string> {
 
   static sanitize(value = '') {
     return value
@@ -12,6 +12,6 @@ export class IdProperty extends Property<string> {
 
   // @Override
   setEditableValue(model: any, propertyName: string, value: string) {
-    super.setEditableValue(model, propertyName, IdProperty.sanitize(value));
+    super.setEditableValue(model, propertyName, NameProperty.sanitize(value));
   }
 }

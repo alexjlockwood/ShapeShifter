@@ -1,3 +1,4 @@
+import * as _ from 'lodash';
 import * as ModelUtil from './ModelUtil';
 import { VectorLayer, PathLayer, GroupLayer, ClipPathLayer } from '../layers';
 import { newPath } from '../paths';
@@ -42,7 +43,8 @@ export function loadVectorLayerFromXmlString(
 
     if (node.tagName === 'path') {
       return new PathLayer({
-        id: makeFinalNodeIdFn(node.getAttribute('android:name'), 'path'),
+        id: _.uniqueId(),
+        name: makeFinalNodeIdFn(node.getAttribute('android:name'), 'path'),
         children: [],
         // TODO: avoid crashing when pathData attribute isn't specified
         pathData: newPath(node.getAttribute('android:pathData') || ''),
@@ -63,7 +65,8 @@ export function loadVectorLayerFromXmlString(
 
     if (node.tagName === 'clip-path') {
       return new ClipPathLayer({
-        id: makeFinalNodeIdFn(node.getAttribute('android:name'), 'clip-path'),
+        id: _.uniqueId(),
+        name: makeFinalNodeIdFn(node.getAttribute('android:name'), 'clip-path'),
         children: [],
         // TODO: avoid crashing when pathData attribute isn't specified
         pathData: newPath(node.getAttribute('android:pathData') || ''),
@@ -76,7 +79,8 @@ export function loadVectorLayerFromXmlString(
         .filter(child => !!child);
       if (children && children.length) {
         return new GroupLayer({
-          id: makeFinalNodeIdFn(node.getAttribute('android:name'), 'group'),
+          id: _.uniqueId(),
+          name: makeFinalNodeIdFn(node.getAttribute('android:name'), 'group'),
           children,
           pivotX: Number(node.getAttribute('android:pivotX') || 0),
           pivotY: Number(node.getAttribute('android:pivotY') || 0),
@@ -93,14 +97,15 @@ export function loadVectorLayerFromXmlString(
   };
 
   const rootLayer = nodeToLayerDataFn(doc.documentElement);
-  const id =
+  const name =
     makeFinalNodeIdFn(doc.documentElement.getAttribute('android:name'), 'vector');
-  usedIds.add(id);
+  usedIds.add(name);
   const width = Number(doc.documentElement.getAttribute('android:viewportWidth'));
   const height = Number(doc.documentElement.getAttribute('android:viewportHeight'));
   const alpha = Number(doc.documentElement.getAttribute('android:alpha') || 1);
   return new VectorLayer({
-    id,
+    id: _.uniqueId(),
+    name,
     children: rootLayer.children,
     width: Number(width || 24),
     height: Number(height || 24),

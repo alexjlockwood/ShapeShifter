@@ -1,21 +1,22 @@
 import * as _ from 'lodash';
-import {
-  Component, OnInit, ChangeDetectionStrategy,
-  OnDestroy, ViewEncapsulation,
-} from '@angular/core';
-import { StateService, } from '../services';
-import { Observable } from 'rxjs/Observable';
-import { VectorLayer, Layer, GroupLayer } from '../scripts/layers';
-import { Dragger } from '../scripts/dragger';
 import * as $ from 'jquery';
-import { BehaviorSubject } from 'rxjs/BehaviorSubject';
-import 'rxjs/add/observable/combineLatest';
-import { Animation, AnimationBlock, NumberAnimationBlock } from '../scripts/animations';
-import { ScrubEvent } from './layertimeline.directive';
+import {
+  Component, OnInit, ChangeDetectionStrategy, OnDestroy,
+} from '@angular/core';
+
 import { Callbacks as TimelineAnimationRowCallbacks } from './timelineanimationrow.component';
 import { Callbacks as LayerListTreeCallbacks } from './layerlisttree.component';
+import { ScrubEvent } from './layertimeline.directive';
+
+import { VectorLayer, Layer, GroupLayer } from '../scripts/layers';
+import { Animation, AnimationBlock, NumberAnimationBlock } from '../scripts/animations';
+import { Dragger } from '../scripts/dragger';
+
 import { Store } from '@ngrx/store';
 import { AppState } from '../scripts/store';
+import { Observable } from 'rxjs/Observable';
+import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+import 'rxjs/add/observable/combineLatest';
 
 const LAYER_INDENT_PIXELS = 20;
 
@@ -62,12 +63,12 @@ export class LayerTimelineComponent implements
 
   // Called from the LayerTimelineComponent template.
   animationHeaderTextClick(event: MouseEvent, animation: Animation) {
-    console.info('animationHeaderTextClick');
+    // console.info('animationHeaderTextClick');
   }
 
   // Called from the LayerTimelineComponent template.
   timelineHeaderScrub(event: ScrubEvent) {
-    console.info('timelineHeaderScrub');
+    // console.info('timelineHeaderScrub');
   }
 
   // Called from the LayerTimelineComponent template.
@@ -77,12 +78,12 @@ export class LayerTimelineComponent implements
     animation: Animation,
     layer: Layer,
   ) {
-    console.info('timelineBlockClick');
+    // console.info('timelineBlockClick');
   }
 
   // @Override TimelineAnimationRowCallbacks
   animationTimelineMouseDown(event: MouseEvent, animation: Animation) {
-    console.info('animationTimelineMouseDown');
+    // console.info('animationTimelineMouseDown');
   }
 
   // @Override TimelineAnimationRowCallbacks
@@ -92,7 +93,7 @@ export class LayerTimelineComponent implements
     animation: Animation,
     layer: Layer,
   ) {
-    console.info('timelineBlockMouseDown');
+    // console.info('timelineBlockMouseDown');
   }
 
   // @Override LayerListTreeComponentCallbacks
@@ -101,22 +102,22 @@ export class LayerTimelineComponent implements
     layer: Layer,
     propertyName: string,
   ) {
-    console.info('addTimelineBlockClick');
+    // console.info('addTimelineBlockClick');
   }
 
   // @Override LayerListTreeComponentCallbacks
   layerClick(event: MouseEvent, layer: Layer) {
-    console.info('layerClick');
+    // console.info('layerClick');
   }
 
   // @Override LayerListTreeComponentCallbacks
   layerDoubleClick(event: MouseEvent, layer: Layer) {
-    console.info('layerDoubleClick');
+    // console.info('layerDoubleClick');
   }
 
   // @Override LayerListTreeComponentCallbacks
   layerMouseDown(mouseDownEvent: MouseEvent, dragLayer: Layer) {
-    console.info('layerMouseDown');
+    // console.info('layerMouseDown');
     const $layersList = $(mouseDownEvent.target).parents('.slt-layers-list');
     const $scroller = $(mouseDownEvent.target).parents('.slt-layers-list-scroller');
 
@@ -249,7 +250,7 @@ export class LayerTimelineComponent implements
             // moving into an empty layer group
             const newParent = targetLayerInfo.layer;
             dragLayer.remove();
-            dragLayer = dragLayer.clone();
+            dragLayer = dragLayer.deepClone();
             newParent.children.push(dragLayer);
             dragLayer.parent = newParent;
           } else {
@@ -259,7 +260,7 @@ export class LayerTimelineComponent implements
               dragLayer.remove();
               let index =
                 newParent.children
-                  ? _.findIndex(newParent.children, child => child.id === targetLayerInfo.layer.id)
+                  ? _.findIndex(newParent.children, child => child.name === targetLayerInfo.layer.name)
                   : -1;
               if (index >= 0) {
                 index += (targetEdge === 'top') ? 0 : 1;
@@ -298,11 +299,11 @@ export class LayerTimelineComponent implements
   }
 
   trackLayerFn(index: number, layer: Layer) {
-    return layer.id; // TODO: will this be OK for renamed layers?
+    return layer.id;
   }
 
   trackAnimationFn(index: number, animation: Animation) {
-    return animation.id; // TODO: will this be OK for renamed animations?
+    return animation.id;
   }
 }
 

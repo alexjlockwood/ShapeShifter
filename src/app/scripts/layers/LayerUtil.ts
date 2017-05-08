@@ -13,7 +13,7 @@ const PRECISION = 8;
  */
 export function getTransformsForLayer(vectorLayer: VectorLayer, layerId: string) {
   const getTransformsFn = (parents: Layer[], current: Layer): Matrix[] => {
-    if (current.id === layerId) {
+    if (current.name === layerId) {
       return _.flatMap(parents, layer => {
         if (!(layer instanceof GroupLayer)) {
           return [];
@@ -48,8 +48,8 @@ export function adjustVectorLayerDimensions(vl1: VectorLayer, vl2: VectorLayer) 
     return { vl1, vl2 };
   }
 
-  vl1 = vl1.clone();
-  vl2 = vl2.clone();
+  vl1 = vl1.deepClone();
+  vl2 = vl2.deepClone();
 
   let { width: w1, height: h1 } = vl1;
   let { width: w2, height: h2 } = vl2;
@@ -139,7 +139,7 @@ export function getAllIds(
   vls.forEach(vl => {
     (function recurseFn(layer: Layer) {
       if (predicateFn(layer)) {
-        ids.push(layer.id);
+        ids.push(layer.name);
       }
       if (layer.children) {
         layer.children.forEach(l => recurseFn(l));

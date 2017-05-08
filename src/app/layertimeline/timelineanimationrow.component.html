@@ -7,7 +7,7 @@
     *ngFor="let blocksByAnimation of this.getBlocksByAnimationByPropertyValues()">
     <!-- TODO: highlight selected animation blocks HERE! -->
     <div class="slt-timeline-block"
-      *ngFor="let block of blocksByAnimation[this.animation.id]"
+      *ngFor="let block of blocksByAnimation[this.animation.name]"
       (click)="this.timelineBlockClick($event, block, this.animation, this.layer)"
       (mousedown)="this.timelineBlockMouseDown($event, block, this.animation, this.layer)"
       tabindex="-1"

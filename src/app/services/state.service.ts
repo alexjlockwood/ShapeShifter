@@ -1,3 +1,4 @@
+import * as _ from 'lodash';
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Layer, VectorLayer, PathLayer, GroupLayer, LayerUtil } from '../scripts/layers';
@@ -66,11 +67,11 @@ export class StateService {
       const pathMap = this.importedPathMap;
       (function recurseFn(layer: Layer) {
         if (layer instanceof PathLayer) {
-          if (pathMap.has(layer.id)) {
-            console.warn('Ignoring attempt to add duplicate path ID', pathMap, vl, layer.id);
+          if (pathMap.has(layer.name)) {
+            console.warn('Ignoring attempt to add duplicate path ID', pathMap, vl, layer.name);
             return;
           }
-          pathMap.set(layer.id, vl);
+          pathMap.set(layer.name, vl);
           return;
         }
         if (layer.children) {
@@ -118,13 +119,13 @@ export class StateService {
       }
       this.activePathIdMap.set(type, pathId);
       const vl = this.importedPathMap.get(pathId);
-      this.activeLayerMap.set(type, vl ? vl.clone() : vl);
+      this.activeLayerMap.set(type, vl ? vl.deepClone() : vl);
       const { vl1: startVl, vl2: endVl } =
         LayerUtil.adjustVectorLayerDimensions(
           this.importedPathMap.get(this.getActivePathId(CanvasType.Start)),
           this.importedPathMap.get(this.getActivePathId(CanvasType.End)));
       this.activeLayerMap.set(CanvasType.Start, startVl);
-      this.activeLayerMap.set(CanvasType.Preview, startVl ? startVl.clone() : startVl);
+      this.activeLayerMap.set(CanvasType.Preview, startVl ? startVl.deepClone() : startVl);
       this.activeLayerMap.set(CanvasType.End, endVl);
       // Attempt to make the start and end subpaths compatible with each other.
       this.updateActivePath(
@@ -306,8 +307,9 @@ export class StateService {
       return undefined;
     };
     const newRotationLayer = new GroupLayer({
+      id: _.uniqueId(),
       children: [activePathLayer],
-      id: ROTATION_GROUP_LAYER_ID,
+      name: ROTATION_GROUP_LAYER_ID,
     });
     const activePathLayerParent = findActivePathLayerParentFn(vectorLayer, undefined);
     const activePathLayerIndex = activePathLayerParent.children.indexOf(activePathLayer);

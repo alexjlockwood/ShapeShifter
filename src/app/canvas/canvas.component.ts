@@ -445,7 +445,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     if (this.shouldDrawLayers) {
       // TODO: display non-active paths as well?
       this.drawPaths(layerCtx, layer => {
-        return layer.id === this.activePathId ? layer.pathData.getCommands() : [];
+        return layer.name === this.activePathId ? layer.pathData.getCommands() : [];
       });
     }
 
@@ -487,7 +487,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   ) {
     this.vectorLayer.walk(layer => {
       if (layer instanceof ClipPathLayer) {
-        const transforms = LayerUtil.getTransformsForLayer(this.vectorLayer, layer.id);
+        const transforms = LayerUtil.getTransformsForLayer(this.vectorLayer, layer.name);
         executeCommands(ctx, layer.pathData.getCommands(), transforms);
         ctx.clip();
         return;
@@ -502,7 +502,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
       ctx.save();
 
-      const transforms = LayerUtil.getTransformsForLayer(this.vectorLayer, layer.id);
+      const transforms = LayerUtil.getTransformsForLayer(this.vectorLayer, layer.name);
       executeCommands(ctx, commands, transforms);
 
       // TODO: confirm this stroke multiplier thing works...

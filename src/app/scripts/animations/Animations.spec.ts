@@ -2,8 +2,8 @@
 
 describe('Animations', () => {
   // it('Construct Animation object', () => {
-  //   const anim = new Animation({ id: 'myId', duration: 300, blocks: [] });
-  //   expect(anim.id).toEqual('myId');
+  //   const anim = new Animation({ name: 'myId', duration: 300, blocks: [] });
+  //   expect(anim.name).toEqual('myId');
   //   expect(anim.duration).toEqual(300);
   //   expect(anim.blocks).toEqual([]);
   // });

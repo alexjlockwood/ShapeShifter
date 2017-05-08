@@ -48,7 +48,7 @@ export function getBlocksByAnimationByProperty(
         blocksByAnimation = {};
         blocksByAnimationByProperty[propertyName] = blocksByAnimation;
       }
-      blocksByAnimation[animation.id] = blocksByPropertyByLayer[layerId][propertyName];
+      blocksByAnimation[animation.name] = blocksByPropertyByLayer[layerId][propertyName];
     });
   });
   return blocksByAnimationByProperty;
@@ -61,7 +61,7 @@ export function getAvailablePropertyNamesForLayer(layer: Layer, animations: Anim
   const availablePropertyNames = new Set(layer.animatableProperties.keys());
   animations.forEach(animation => {
     const blocksByPropertyByLayer = getOrderedBlocksByPropertyByLayer(animation);
-    const blocksByProperty = blocksByPropertyByLayer[layer.id];
+    const blocksByProperty = blocksByPropertyByLayer[layer.name];
     const animatedPropertyNames = new Set(Object.keys(blocksByProperty));
     animatedPropertyNames.forEach(name => availablePropertyNames.delete(name));
   });

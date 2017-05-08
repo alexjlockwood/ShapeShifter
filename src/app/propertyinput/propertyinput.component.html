@@ -1,36 +1,38 @@
-<app-splitter edge="left"
-  min="200"
-  persist-id="property-inspector"></app-splitter>
-<ng-container *ngIf="(propertyInputModel$ | async) as selectionInfo">
-  <div *ngIf="!selectionInfo"
+<app-splitter persist-id="property-inspector"
+  edge="left"
+  min="200">
+</app-splitter>
+<ng-container *ngIf="(propertyInputModel$ | async) as data">
+  <div *ngIf="!data"
     class="spi-empty"
     fxFlex>
     Select something to edit its properties
   </div>
-  <div *ngIf="selectionInfo"
-    fxFlex
-    fxLayout="column">
+  <div *ngIf="data"
+    fxLayout="column"
+    fxFlex>
     <div class="spi-header"
       fxFlex="none">
       <md-icon class="spi-selection-icon"
-        svgIcon="{{selectionInfo.icon}}"></md-icon>
+        svgIcon="{{data.icon}}">
+      </md-icon>
       <div class="spi-selection-description-container"
         fxLayout="column"
         fxFlex>
-        <span class="spi-selection-description">{{selectionInfo.description}}</span>
-        <span class="spi-selection-sub-description">{{selectionInfo.subDescription}}</span>
+        <span class="spi-selection-description">{{data.description}}</span>
+        <span class="spi-selection-sub-description">{{data.subDescription}}</span>
       </div>
     </div>
     <div class="spi-body"
       fxLayout="column"
       fxFlex>
       <div class="spi-empty"
-        *ngIf="!selectionInfo.inspectedProperties.length"
+        *ngIf="!data.inspectedProperties.length"
         fxFlex>
         No shared properties to view or edit
       </div>
       <div class="spi-property"
-        *ngFor="let ip of selectionInfo.inspectedProperties">
+        *ngFor="let ip of data.inspectedProperties">
         <div class="spi-property-name">{{ip.propertyName}}</div>
         <div class="spi-property-value"
           fxLayout="row">
@@ -47,24 +49,26 @@
             class="spi-property-value-editor"
             fxLayout="column"
             fxFlex>
-            <input *ngIf="ip.typeName == 'IdProperty'
-                        || ip.typeName == 'PathProperty'
-                        || ip.typeName == 'ColorProperty'
-                        || ip.typeName == 'NumberProperty'
-                        || ip.typeName == 'FractionProperty'"
-              [(ngModel)]="ip.editableValue"
+            <input [(ngModel)]="ip.editableValue"
               (keydown)="this.onValueEditorKeyDown($event, ip)"
-              (blur)="ip.resolveEnteredValue()">
+              (blur)="ip.resolveEnteredValue()"
+              *ngIf="ip.typeName == 'NameProperty'
+                  || ip.typeName == 'PathProperty'
+                  || ip.typeName == 'ColorProperty'
+                  || ip.typeName == 'NumberProperty'
+                  || ip.typeName == 'FractionProperty'">
             <md-menu #enumMenu="mdMenu">
               <button *ngFor="let option of ip.property.options"
                 (click)="ip.value = option.value;"
-                md-menu-item>{{option.label}}</button>
+                md-menu-item>
+                {{option.label}}
+              </button>
             </md-menu>
             <button *ngIf="ip.typeName == 'EnumProperty'"
               class="spi-property-value-menu-target"
               [mdMenuTriggerFor]="enumMenu">
-            <span class="spi-property-value-menu-current-value">{{ip.displayValue}}</span>
-          </button>
+              <span class="spi-property-value-menu-current-value">{{ip.displayValue}}</span>
+            </button>
           </div>
         </div>
       </div>

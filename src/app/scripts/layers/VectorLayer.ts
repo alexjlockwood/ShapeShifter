@@ -31,14 +31,16 @@ export class VectorLayer extends AbstractLayer {
     this.alpha = MathUtil.lerp(start.alpha, end.alpha, fraction);
   }
 
-  clone<VectorLayer>() {
-    return new VectorLayer({
-      id: this.id,
-      children: this.children.map(child => child.clone()),
-      width: this.width,
-      height: this.height,
-      alpha: this.alpha,
-    });
+  clone() {
+    const clone = Object.assign(Object.create(this), this) as VectorLayer;
+    clone.children = this.children.slice();
+    return clone;
+  }
+
+  deepClone() {
+    const clone = this.clone();
+    clone.children = this.children.map(c => c.deepClone());
+    return clone;
   }
 }
 

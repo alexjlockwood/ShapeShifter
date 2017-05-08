@@ -83,6 +83,7 @@ export class SplitterComponent implements OnInit {
     this.isDragging = true;
     this.showSplitter();
 
+    // tslint:disable-next-line
     new Dragger({
       downX: event.clientX,
       downY: event.clientY,

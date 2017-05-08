@@ -6,14 +6,21 @@ import { Inspectable, Animatable } from '../properties';
 export interface Layer extends Inspectable, Animatable {
 
   /**
-   * This layers children layers, or undefined if none exist.
+   * A non-user-visible string that uniquely identifies this layer in the tree.
    */
-  children: Layer[];
+  readonly id: string;
 
   /**
-   * A string uniquely identifying this layer in its tree.
+   * A user-visible string uniquely identifying this layer in the tree. This value
+   * can be renamed, as long as it doesn't conflict with other layers in the tree.
    */
-  id: string;
+  name: string;
+
+  /**
+   * This layers children layers, or undefined if none exist.
+   */
+  // TODO: make this a readonly array?
+  children: Layer[];
 
   parent: Layer | undefined;
   previousSibling: Layer | undefined;
@@ -21,12 +28,13 @@ export interface Layer extends Inspectable, Animatable {
   getSibling(offset: number): Layer | undefined;
   remove(): void;
   clone<T extends Layer>(): T;
+  deepClone<T extends Layer>(): T;
   getType(): Type;
 
   /**
-   * Returns the first descendent layer with the specified ID.
+   * Returns the first descendent layer with the specified name.
    */
-  findLayer(id: string): Layer | undefined;
+  findLayer(name: string): Layer | undefined;
 
   /**
    * Returns true iff this layer is morphable with the specified layer. Two

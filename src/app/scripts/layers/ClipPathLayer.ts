@@ -19,12 +19,16 @@ export class ClipPathLayer extends AbstractLayer {
     return 'clippathlayer';
   }
 
-  clone<ClipPathLayer>() {
-    return new ClipPathLayer({
-      id: this.id,
-      children: [],
-      pathData: this.pathData.clone(),
-    });
+  clone() {
+    const clone = Object.assign(Object.create(this), this) as ClipPathLayer;
+    // TODO: paths are immutable, so can we avoid the extra clone?
+    clone.pathData = this.pathData.clone();
+    clone.children = [];
+    return clone;
+  }
+
+  deepClone() {
+    return this.clone();
   }
 
   interpolate(start: ClipPathLayer, end: ClipPathLayer, fraction: number) {
@@ -36,6 +40,7 @@ interface ClipPathLayerArgs {
   pathData: Path;
 }
 
-export interface ClipPathLayer extends AbstractLayer, ClipPathLayerArgs { }
-
+export interface ClipPathLayer extends AbstractLayer, ClipPathLayerArgs {
+  clone(): ClipPathLayer;
+}
 export interface ConstructorArgs extends AbstractConstructorArgs, ClipPathLayerArgs { }

@@ -50,11 +50,11 @@ export class LayerListTreeComponent implements Callbacks {
 
   // Used by *ngFor loop.
   trackLayerFn(index: number, layer: Layer) {
-    return layer.id; // TODO: will this be OK for renamed layers?
+    return layer.id;
   }
 
   getBlocksByAnimationByPropertyKeys() {
-    return _.keys(ModelUtil.getBlocksByAnimationByProperty(this.layer.id, this.animations));
+    return _.keys(ModelUtil.getBlocksByAnimationByProperty(this.layer.name, this.animations));
   }
 }
 

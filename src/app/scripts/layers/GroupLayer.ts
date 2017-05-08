@@ -31,18 +31,16 @@ export class GroupLayer extends AbstractLayer {
     return 'grouplayer';
   }
 
-  clone<GroupLayer>() {
-    return new GroupLayer({
-      id: this.id,
-      children: this.children.map(c => c.clone()),
-      pivotX: this.pivotX,
-      pivotY: this.pivotY,
-      rotation: this.rotation,
-      scaleX: this.scaleX,
-      scaleY: this.scaleY,
-      translateX: this.translateX,
-      translateY: this.translateY,
-    });
+  clone() {
+    const clone = Object.assign(Object.create(this), this) as GroupLayer;
+    clone.children = this.children.slice();
+    return clone;
+  }
+
+  deepClone() {
+    const clone = this.clone();
+    clone.children = this.children.map(c => c.deepClone());
+    return clone;
   }
 
   // TODO: remove this and use properties to interpolate values

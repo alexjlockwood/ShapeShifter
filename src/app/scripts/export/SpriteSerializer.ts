@@ -47,7 +47,7 @@ export function createSvgSprite(
   interpolator: Interpolator,
   numSteps: number) {
 
-  const preview = start.clone();
+  const preview = start.deepClone();
   const svgs: string[] = [];
   const { width, height } = preview;
   for (let i = 0; i <= numSteps; i++) {
@@ -73,7 +73,7 @@ export function createSvgFrames(
   interpolator: Interpolator,
   numSteps: number) {
 
-  const preview = start.clone();
+  const preview = start.deepClone();
   const svgs: string[] = [];
   const { width, height } = preview;
   for (let i = 0; i <= numSteps; i++) {

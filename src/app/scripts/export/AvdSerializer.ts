@@ -93,7 +93,7 @@ function vectorLayerToXmlNode(vl: VectorLayer, destinationNode: HTMLElement, xml
 
     } else if (layer instanceof PathLayer) {
       const node = xmlDoc.createElement('path');
-      conditionalAttr(node, 'android:name', layer.id);
+      conditionalAttr(node, 'android:name', layer.name);
       conditionalAttr(node, 'android:pathData', layer.pathData.getPathString());
       conditionalAttr(node, 'android:fillColor', layer.fillColor, '');
       conditionalAttr(node, 'android:fillAlpha', layer.fillAlpha, 1);
@@ -112,14 +112,14 @@ function vectorLayerToXmlNode(vl: VectorLayer, destinationNode: HTMLElement, xml
 
     } else if (layer instanceof ClipPathLayer) {
       const node = xmlDoc.createElement('clip-path');
-      conditionalAttr(node, 'android:name', layer.id);
+      conditionalAttr(node, 'android:name', layer.name);
       conditionalAttr(node, 'android:pathData', layer.pathData.getPathString());
       parentNode.appendChild(node);
       return parentNode;
 
     } else if (layer instanceof GroupLayer) {
       const node = xmlDoc.createElement('group');
-      conditionalAttr(node, 'android:name', layer.id);
+      conditionalAttr(node, 'android:name', layer.name);
       conditionalAttr(node, 'android:pivotX', layer.pivotX, 0);
       conditionalAttr(node, 'android:pivotY', layer.pivotY, 0);
       conditionalAttr(node, 'android:translateX', layer.translateX, 0);

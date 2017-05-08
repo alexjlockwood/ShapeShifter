@@ -65,7 +65,7 @@
           <div class="slt-timeline-animation-meta"
             [ngClass]="{'is-selected': animation.selected_}"
             (click)="this.animationHeaderTextClick($event, animation)">
-            <span class="slt-timeline-animation-name">{{animation.id}}</span>
+            <span class="slt-timeline-animation-name">{{animation.name}}</span>
             <span class="slt-timeline-animation-duration">{{animation.duration}}ms</span>
           </div>
           <canvas appLayerTimeline

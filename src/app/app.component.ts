@@ -98,7 +98,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       // this.stateService.addVectorLayers([vl]);
       this.store.dispatch(new AddVectorLayers([vl]));
       const animation = new Animation({
-        id: 'anim',
+        name: 'anim',
         duration: 300,
         blocks: [new NumberAnimationBlock({
           layerId: 'vector',

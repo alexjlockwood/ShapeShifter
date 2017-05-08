@@ -1,4 +1,5 @@
-import { Property, IdProperty, NumberProperty, Inspectable } from '../properties';
+import * as _ from 'lodash';
+import { Property, NameProperty, NumberProperty, Inspectable } from '../properties';
 import { AnimationBlock } from '.';
 
 /**
@@ -8,14 +9,15 @@ import { AnimationBlock } from '.';
  * AnimatedVectorDrawable, with the targets being AnimationBlocks.
  */
 @Property.register(
-  new IdProperty('id'),
+  new NameProperty('name'),
   new NumberProperty('duration', { min: 100, max: 60000 }),
 )
 export class Animation {
   private blocks_: AnimationBlock<any>[] = [];
 
   constructor(readonly obj: ConstructorArgs) {
-    this.id = obj.id || '';
+    this.id = obj.id || _.uniqueId();
+    this.name = obj.name || '';
     this.blocks = (obj.blocks || []).map(b => b.clone());
     this.duration = obj.duration || 100;
   }
@@ -31,6 +33,7 @@ export class Animation {
 
 interface AnimationArgs {
   id?: string;
+  name?: string;
   duration?: number;
 }
 

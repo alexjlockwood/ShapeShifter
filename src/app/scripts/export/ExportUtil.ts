@@ -76,16 +76,18 @@ export function generateZip(
   // Create VectorLayers.
   const startOutVl =
     new VectorLayer({
-      children: startVlChildren,
       id: startVl.id,
+      children: startVlChildren,
+      name: startVl.name,
       width: startVl.width,
       height: startVl.height,
       alpha: startVl.alpha,
     });
   const endOutVl =
     new VectorLayer({
-      children: endVlChildren,
       id: endVl.id,
+      children: endVlChildren,
+      name: endVl.name,
       width: endVl.width,
       height: endVl.height,
       alpha: endVl.alpha,
@@ -187,7 +189,7 @@ function createAlphaAvdTarget(
   }
   const fromValue = startLayer.alpha;
   const toValue = endLayer.alpha;
-  return new AvdTarget(startLayer.id,
+  return new AvdTarget(startLayer.name,
     [new AvdAnimation(
       fromValue.toString(),
       toValue.toString(),
@@ -208,7 +210,7 @@ function createRotationAvdTarget(
   }
   const fromValue = startLayer.rotation;
   const toValue = endLayer.rotation;
-  return new AvdTarget(startLayer.id,
+  return new AvdTarget(startLayer.name,
     [new AvdAnimation(
       fromValue.toString(),
       toValue.toString(),
@@ -257,7 +259,7 @@ function createPathAvdTarget(
       createAvdAnimation(
         startLayer.strokeWidth.toString(), endLayer.strokeWidth.toString(), 'strokeWidth', 'floatType'));
   }
-  return new AvdTarget(startLayer.id, avdAnimations);
+  return new AvdTarget(startLayer.name, avdAnimations);
 }
 
 function createOpacitySvgTarget(
@@ -271,7 +273,7 @@ function createOpacitySvgTarget(
   }
   const fromValue = startLayer.alpha;
   const toValue = endLayer.alpha;
-  return new SvgTarget(startLayer.id,
+  return new SvgTarget(startLayer.name,
     [new SvgAnimation(
       fromValue.toString(),
       toValue.toString(),
@@ -307,7 +309,7 @@ function createRotationSvgTarget(
       duration,
       interpolator,
       'transform-origin'));
-  return new SvgTarget(startLayer.id, svgAnimations);
+  return new SvgTarget(startLayer.name, svgAnimations);
 }
 
 function createPathSvgTarget(
@@ -354,7 +356,7 @@ function createPathSvgTarget(
       createSvgAnimation(
         startLayer.strokeWidth.toString(), endLayer.strokeWidth.toString(), 'stroke-width'));
   }
-  return new SvgTarget(startLayer.id, svgAnimations);
+  return new SvgTarget(startLayer.name, svgAnimations);
 }
 
 function createExportReadme() {

@@ -56,11 +56,11 @@ export class TimelineAnimationRowComponent implements Callbacks {
 
   // Used by *ngFor loop.
   trackLayerFn(index: number, layer: Layer) {
-    return layer.id; // TODO: will this be OK for renamed layers?
+    return layer.name; // TODO: will this be OK for renamed layers?
   }
 
   getBlocksByAnimationByPropertyValues() {
-    return _.values(ModelUtil.getBlocksByAnimationByProperty(this.layer.id, this.animations));
+    return _.values(ModelUtil.getBlocksByAnimationByProperty(this.layer.name, this.animations));
   }
 
 }

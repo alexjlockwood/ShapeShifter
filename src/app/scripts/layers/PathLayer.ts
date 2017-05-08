@@ -67,24 +67,16 @@ export class PathLayer extends AbstractLayer {
     return 'pathlayer';
   }
 
-  clone<PathLayer>() {
-    return new PathLayer({
-      id: this.id,
-      children: [],
-      pathData: this.pathData.clone(),
-      fillColor: this.fillColor,
-      fillAlpha: this.fillAlpha,
-      strokeColor: this.strokeColor,
-      strokeAlpha: this.strokeAlpha,
-      strokeWidth: this.strokeWidth,
-      strokeLinecap: this.strokeLinecap,
-      strokeLinejoin: this.strokeLinejoin,
-      strokeMiterLimit: this.strokeMiterLimit,
-      trimPathStart: this.trimPathStart,
-      trimPathEnd: this.trimPathEnd,
-      trimPathOffset: this.trimPathOffset,
-      fillType: this.fillType,
-    });
+  clone() {
+    const clone = Object.assign(Object.create(this), this) as PathLayer;
+    // TODO: paths are immutable, so can we avoid the extra clone?
+    clone.pathData = this.pathData.clone();
+    clone.children = [];
+    return clone;
+  }
+
+  deepClone() {
+    return this.clone();
   }
 
   isStroked() {

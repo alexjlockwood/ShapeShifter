@@ -135,7 +135,8 @@ export function loadVectorLayerFromSvgString(
       };
       const fillType: FillType = ('fillType' in context) ? fillRuleToFillTypeFn(context.fillType) : 'nonZero';
       return new PathLayer({
-        id: makeFinalNodeIdFn(node, 'path'),
+        id: _.uniqueId(),
+        name: makeFinalNodeIdFn(node, 'path'),
         children: [],
         pathData,
         fillColor,
@@ -156,7 +157,8 @@ export function loadVectorLayerFromSvgString(
         .filter(child => !!child);
       if (children && children.length) {
         return new GroupLayer({
-          id: makeFinalNodeIdFn(node, 'group'),
+          id: _.uniqueId(),
+          name: makeFinalNodeIdFn(node, 'group'),
           children,
         });
       }
@@ -192,12 +194,12 @@ export function loadVectorLayerFromSvgString(
   }
 
   const rootLayer = nodeToLayerDataFn(documentElement, docElContext);
-  const id = makeFinalNodeIdFn(documentElement, 'vector');
+  const name = makeFinalNodeIdFn(documentElement, 'vector');
   const children = rootLayer ? rootLayer.children : undefined;
   const alpha = documentElement.getAttribute('opacity') || undefined;
-
   return new VectorLayer({
-    id,
+    id: _.uniqueId(),
+    name,
     children,
     width: width === undefined ? undefined : Number(width),
     height: height === undefined ? undefined : Number(height),

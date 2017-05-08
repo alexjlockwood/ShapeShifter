@@ -12,7 +12,7 @@
   </button>
   <md-icon svgIcon="{{this.layer.getType()}}"></md-icon>
   <span class="slt-layer-id-text"
-    fxFlex>{{this.layer.id}}</span>
+    fxFlex>{{this.layer.name}}</span>
   <button md-icon-button>
     <md-icon>more_vert</md-icon>
   </button>
@@ -58,7 +58,7 @@
   class="slt-children">
   <li *ngFor="let child of this.layer.children; trackBy: this.trackLayerFn"
     class="slt-layer-container"
-    [attr.data-layer-id]="child.id">
+    [attr.data-layer-id]="child.name">
     <app-layerlisttree [layer]="child"
       [animations]="this.animations"
       (onLayerClick)="this.layerClick($event.event, $event.layer)"

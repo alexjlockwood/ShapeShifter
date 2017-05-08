@@ -1,6 +1,6 @@
 export { ColorProperty } from './ColorProperty';
 export { FractionProperty } from './FractionProperty';
-export { IdProperty } from './IdProperty';
+export { NameProperty } from './NameProperty';
 export { NumberProperty } from './NumberProperty';
 export { PathProperty } from './PathProperty';
 export { Property } from './Property';
