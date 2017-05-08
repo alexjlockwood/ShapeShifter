@@ -29,7 +29,15 @@ import { Animation, NumberAnimationBlock } from './scripts/animations';
 import { DemoUtil, DEMO_MAP, DEBUG_VECTOR_DRAWABLE } from './scripts/demos';
 import 'rxjs/add/observable/combineLatest';
 import { Store } from '@ngrx/store';
-import { AppState, AddAnimations, AddVectorLayers } from './scripts/store';
+import {
+  State,
+} from './scripts/store/reducers';
+import {
+  AddAnimations,
+} from './scripts/store/actions/Animation';
+import {
+  AddVectorLayers,
+} from './scripts/store/actions/VectorLayer';
 
 const IS_DEV_MODE = !environment.production;
 const AUTO_LOAD_DEMO = IS_DEV_MODE && false;
@@ -85,7 +93,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     private readonly canvasResizeService: CanvasResizeService,
     private readonly appModeService: AppModeService,
     private readonly actionModeService: ActionModeService,
-    private readonly store: Store<AppState>,
+    private readonly store: Store<State>,
   ) { }
 
   ngOnInit() {

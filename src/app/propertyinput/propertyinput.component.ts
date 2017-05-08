@@ -6,7 +6,7 @@ import { Observable } from 'rxjs/Observable';
 import { ColorUtil } from '../scripts/common';
 import { newPath } from '../scripts/paths';
 import { Store } from '@ngrx/store'
-import { AppState } from '../scripts/store';
+import { State, getVectorLayerState } from '../scripts/store/reducers';
 
 @Component({
   selector: 'app-propertyinput',
@@ -18,12 +18,12 @@ export class PropertyInputComponent implements OnInit {
 
   propertyInputModel$: Observable<PropertyInputData>;
 
-  constructor(private readonly store: Store<AppState>) { }
+  constructor(private readonly store: Store<State>) { }
 
   ngOnInit() {
     this.propertyInputModel$ =
-      this.store.select<ReadonlyArray<VectorLayer>>('vectorLayers')
-        .map(vls => this.buildPropertyInputData(vls));
+      this.store.select(getVectorLayerState)
+        .map(state => this.buildPropertyInputData(state.vectorLayers));
   }
 
   private buildPropertyInputData(vls: ReadonlyArray<VectorLayer>) {

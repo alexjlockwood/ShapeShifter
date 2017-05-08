@@ -13,7 +13,15 @@ import { Animation, AnimationBlock, NumberAnimationBlock } from '../scripts/anim
 import { Dragger } from '../scripts/dragger';
 
 import { Store } from '@ngrx/store';
-import { AppState } from '../scripts/store';
+import {
+  State,
+  getAnimationState,
+  getVectorLayerState,
+} from '../scripts/store/reducers';
+import { State as AnimationState } from '../scripts/store/reducers/animation';
+import { State as VectorLayerState } from '../scripts/store/reducers/vectorlayer';
+import { AddAnimations } from '../scripts/store/actions/animation';
+import { AddVectorLayers } from '../scripts/store/actions/vectorlayer';
 import { Observable } from 'rxjs/Observable';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import 'rxjs/add/observable/combineLatest';
@@ -39,24 +47,21 @@ export class LayerTimelineComponent implements
     isVisible: false, left: 0, top: 0,
   });
 
-  layerTimelineModel$: Observable<{
-    animations: ReadonlyArray<Animation>,
-    vectorLayers: ReadonlyArray<VectorLayer>,
-    activeAnimation: Animation
-  }>;
+  layerTimelineModel$: Observable<LayerTimelineModel>;
 
-  constructor(private readonly store: Store<AppState>) { }
+  constructor(private readonly store: Store<State>) { }
 
   ngOnInit() {
     this.layerTimelineModel$ = Observable.combineLatest(
-      this.store.select('animations'),
-      this.store.select('vectorLayers'),
-    ).map(([animations, vectorLayers]: [Animation[], VectorLayer[]]) => {
+      this.store.select(getAnimationState),
+      this.store.select(getVectorLayerState),
+      // this.store.select<Set<string>>('selectedLayerIds'),
+    ).map(([animations, vectorLayers]) => {
       return {
-        animations,
-        vectorLayers,
+        animations: animations.animations,
+        vectorLayers: vectorLayers.vectorLayers,
         // TODO: keep track of the currently 'active' animation
-        activeAnimation: animations[0],
+        activeAnimation: animations.animations[0],
       }
     });
   }
@@ -305,6 +310,12 @@ export class LayerTimelineComponent implements
   trackAnimationFn(index: number, animation: Animation) {
     return animation.id;
   }
+}
+
+interface LayerTimelineModel {
+  animations: ReadonlyArray<Animation>;
+  vectorLayers: ReadonlyArray<VectorLayer>;
+  activeAnimation: Animation;
 }
 
 interface DragIndicatorInfo {
