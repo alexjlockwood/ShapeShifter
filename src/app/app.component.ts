@@ -109,7 +109,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
         name: 'anim',
         duration: 300,
         blocks: [new NumberAnimationBlock({
-          layerId: 'vector',
+          layerId: vl.id,
           propertyName: 'alpha',
           startTime: 0,
           endTime: 100,

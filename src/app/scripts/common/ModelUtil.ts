@@ -6,7 +6,7 @@ import { Layer, VectorLayer } from '../layers';
  * Builds a map where the keys are layer IDs and the values are
  * maps of property names to their corresponding animation blocks.
  */
-export function getOrderedBlocksByPropertyByLayer(animation: Animation) {
+function getOrderedBlocksByPropertyByLayer(animation: Animation) {
   const blocksByPropertyByLayer: LayerMap<PropertyMap<AnimationBlock<any>[]>> = {};
 
   animation.blocks.forEach(block => {
@@ -48,7 +48,7 @@ export function getBlocksByAnimationByProperty(
         blocksByAnimation = {};
         blocksByAnimationByProperty[propertyName] = blocksByAnimation;
       }
-      blocksByAnimation[animation.name] = blocksByPropertyByLayer[layerId][propertyName];
+      blocksByAnimation[animation.id] = blocksByPropertyByLayer[layerId][propertyName];
     });
   });
   return blocksByAnimationByProperty;
@@ -57,11 +57,20 @@ export function getBlocksByAnimationByProperty(
 /**
  * Returns a set of property names that have not yet been animated.
  */
-export function getAvailablePropertyNamesForLayer(layer: Layer, animations: Animation[]) {
+export function getAvailablePropertyNamesForLayer(
+  layer: Layer,
+  animations: ReadonlyArray<Animation>,
+) {
+  if (!animations) {
+    throw new Error('animations');
+  }
   const availablePropertyNames = new Set(layer.animatableProperties.keys());
   animations.forEach(animation => {
     const blocksByPropertyByLayer = getOrderedBlocksByPropertyByLayer(animation);
-    const blocksByProperty = blocksByPropertyByLayer[layer.name];
+    const blocksByProperty = blocksByPropertyByLayer[layer.id];
+    if (!blocksByProperty) {
+      return;
+    }
     const animatedPropertyNames = new Set(Object.keys(blocksByProperty));
     animatedPropertyNames.forEach(name => availablePropertyNames.delete(name));
   });

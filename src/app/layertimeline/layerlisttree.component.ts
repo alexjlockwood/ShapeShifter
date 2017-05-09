@@ -50,11 +50,18 @@ export class LayerListTreeComponent implements OnInit, Callbacks {
       this.store.select(getHiddenLayerIds),
     ).map(([selectedLayerIds, collapsedLayerIds, hiddenLayerIds]) => {
       const isExpandable = this.layer.isVectorLayer() || this.layer.isGroupLayer();
+      const availablePropertyNames =
+        Array.from(ModelUtil.getAvailablePropertyNamesForLayer(this.layer, this.animations));
+      const existingPropertyNames =
+        Array.from(
+          _.keys(ModelUtil.getBlocksByAnimationByProperty(this.layer.id, this.animations)));
       return {
         isSelected: selectedLayerIds.has(this.layer.id),
         isExpandable,
         isExpanded: isExpandable && !collapsedLayerIds.has(this.layer.id),
         isVisible: !hiddenLayerIds.has(this.layer.id),
+        availablePropertyNames,
+        existingPropertyNames,
       }
     });
   }
@@ -88,10 +95,6 @@ export class LayerListTreeComponent implements OnInit, Callbacks {
   trackLayerFn(index: number, layer: Layer) {
     return layer.id;
   }
-
-  getBlocksByAnimationByPropertyKeys() {
-    return _.keys(ModelUtil.getBlocksByAnimationByProperty(this.layer.name, this.animations));
-  }
 }
 
 export interface Callbacks {
@@ -115,6 +118,9 @@ interface TimelineBlockEvent {
 
 interface LayerModel {
   readonly isSelected: boolean;
+  readonly isExpandable: boolean;
   readonly isExpanded: boolean;
   readonly isVisible: boolean;
+  readonly availablePropertyNames: ReadonlyArray<string>;
+  readonly existingPropertyNames: ReadonlyArray<string>;
 }

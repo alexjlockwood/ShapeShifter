@@ -32,49 +32,52 @@
       [ngClass]="{'is-checked': model.isVisible}">
       <md-icon>{{model.isVisible ? 'visibility' : 'visibility_off'}}</md-icon>
     </button>
-    <!-- TODO: ngIf activeAnimation and layer.hasAvailableProperties -->
-    <!--<md-menu class="slt-layer-add-property-menu" ng-if="ctrl.activeAnimation && layer._slt.hasAvailableProperties">-->
+    <md-menu *ngIf="model.availablePropertyNames.length > 0"
+      #addTimelineBlockMenu="mdMenu">
+      <button *ngFor="let propertyName of model.availablePropertyNames"
+        (click)="this.addTimelineBlockClick($event, layer, propertyName)"
+        md-menu-item>
+        {{propertyName}}
+      </button>
+    </md-menu>
     <button md-icon-button
+      *ngIf="model.availablePropertyNames.length > 0"
       class="slt-layer-action-button"
+      (click)="$event.stopPropagation()"
       mdTooltip="Animate this layer"
       mdTooltipPosition="below"
-      mdTooltipShowDelay="300">
+      mdTooltipShowDelay="300"
+      [mdMenuTriggerFor]="addTimelineBlockMenu">
       <md-icon svgIcon="animationblock"></md-icon>
     </button>
-    <!--<md-menu-content>
-      <md-menu-item ng-repeat="(propertyName, __) in layer._slt.availableProperties">
-        <md-button ng-click="ctrl.onAddTimelineBlock($event, layer, propertyName)">
-          {{propertyName}}
-        </md-button>
-      </md-menu-item>
-    </md-menu-content>-->
-    <!--</md-menu>-->
+
   </div>
 
-  <ng-container *ngIf="{propertyNames: this.getBlocksByAnimationByPropertyKeys()} as data">
-    <div class="slt-properties"
-      *ngIf="model.isExpanded && data.propertyNames.length > 0">
-      <div class="slt-property"
-        fxLayout="row"
-        fxLayoutAlign="start center"
-        *ngFor="let propertyName of data.propertyNames">
-        <span class="slt-property-name">{{propertyName}}</span>
-        <button md-icon-button
-          (click)="this.addTimelineBlockClick($event, layer, propertyName)"
-          mdTooltip="Add another animation"
-          mdTooltipPosition="below"
-          mdTooltipShowDelay="300">
-          <md-icon>add</md-icon>
-        </button>
-      </div>
+  <!-- List the property names that have been animated. -->
+  <div class="slt-properties"
+    *ngIf="model.isExpanded && model.existingPropertyNames.length > 0">
+    <div class="slt-property"
+      fxLayout="row"
+      fxLayoutAlign="start center"
+      *ngFor="let propertyName of model.existingPropertyNames">
+      <span class="slt-property-name">{{propertyName}}</span>
+      <button md-icon-button
+        (click)="this.addTimelineBlockClick($event, layer, propertyName)"
+        mdTooltip="Add another animation"
+        mdTooltipPosition="below"
+        mdTooltipShowDelay="300">
+        <md-icon>add</md-icon>
+      </button>
     </div>
-  </ng-container>
+  </div>
 
+  <!-- List the layer's children if it is expanded. -->
+  <!-- TODO: will have to remove this attr.data-layer-id stuff -->
   <ul *ngIf="model.isExpanded && this.layer.children.length > 0"
     class="slt-children">
     <li *ngFor="let child of this.layer.children; trackBy: this.trackLayerFn"
       class="slt-layer-container"
-      [attr.data-layer-id]="child.name">
+      [attr.data-layer-id]="child.id">
       <app-layerlisttree [layer]="child"
         [animations]="this.animations"
         (onLayerClick)="this.layerClick($event.event, $event.layer)"

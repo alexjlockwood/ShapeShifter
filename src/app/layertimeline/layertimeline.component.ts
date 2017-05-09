@@ -9,7 +9,7 @@ import { Callbacks as LayerListTreeCallbacks } from './layerlisttree.component';
 import { ScrubEvent } from './layertimeline.directive';
 
 import { VectorLayer, Layer, GroupLayer } from '../scripts/layers';
-import { Animation, AnimationBlock, NumberAnimationBlock } from '../scripts/animations';
+import { Animation, AnimationBlock } from '../scripts/animations';
 import { Dragger } from '../scripts/dragger';
 
 import { Store } from '@ngrx/store';
@@ -281,7 +281,7 @@ export class LayerTimelineComponent implements
               dragLayer.remove();
               let index =
                 newParent.children
-                  ? _.findIndex(newParent.children, child => child.name === targetLayerInfo.layer.name)
+                  ? _.findIndex(newParent.children, child => child.id === targetLayerInfo.layer.id)
                   : -1;
               if (index >= 0) {
                 index += (targetEdge === 'top') ? 0 : 1;

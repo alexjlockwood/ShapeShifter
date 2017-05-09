@@ -5,7 +5,7 @@ import {
 } from '@angular/core';
 import { Layer } from '../scripts/layers';
 import { Property } from '../scripts/properties';
-import { Animation, AnimationBlock, NumberAnimationBlock } from '../scripts/animations';
+import { Animation, AnimationBlock } from '../scripts/animations';
 import { ModelUtil } from '../scripts/common';
 
 @Component({
@@ -56,11 +56,11 @@ export class TimelineAnimationRowComponent implements Callbacks {
 
   // Used by *ngFor loop.
   trackLayerFn(index: number, layer: Layer) {
-    return layer.name; // TODO: will this be OK for renamed layers?
+    return layer.id; // TODO: will this be OK for renamed layers?
   }
 
   getBlocksByAnimationByPropertyValues() {
-    return _.values(ModelUtil.getBlocksByAnimationByProperty(this.layer.name, this.animations));
+    return _.values(ModelUtil.getBlocksByAnimationByProperty(this.layer.id, this.animations));
   }
 
 }
