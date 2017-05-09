@@ -180,7 +180,6 @@ export class LayerTimelineComponent implements
           const layerId: string = ($(element).data('layer-id') || '').toString();
           if (!layerId) {
             // The root layer doesn't have an ID set.
-            // console.info('ignoring element:', element);
             return;
           }
 
@@ -217,14 +216,11 @@ export class LayerTimelineComponent implements
 
         orderedLayerInfos.sort((a, b) => a.localRect.top - b.localRect.top);
         this.updateDragIndicator({ isVisible: true, left: 0, top: 0 });
-        // console.info('onBeginDragEnd');
       },
 
       onDragFn: event => {
-        // console.info('onDragStart');
         const localEventY = event.clientY - scrollerRect.top + $scroller.scrollTop();
         // Find the target layer and edge (top or bottom).
-        // console.info('targetLayerInfo=', undefined);
         targetLayerInfo = undefined;
         let minDistance = Infinity;
         let minDistanceIndent = Infinity; // Tie break to most indented layer.
@@ -244,7 +240,6 @@ export class LayerTimelineComponent implements
               if (distance !== minDistance || indent > minDistanceIndent) {
                 minDistance = distance;
                 minDistanceIndent = indent;
-                // console.info('targetLayerInfo=', layerInfo);
                 targetLayerInfo = layerInfo;
                 targetEdge = edge;
               }
@@ -267,7 +262,6 @@ export class LayerTimelineComponent implements
 
         if (targetLayerInfo && targetEdge === 'bottom'
           && LayerUtil.findNextSibling(this.vectorLayers, targetLayerInfo.layer.id) === dragLayer) {
-          // console.info('targetLayerInfo=', undefined);
           targetLayerInfo = undefined;
         }
 
@@ -276,65 +270,40 @@ export class LayerTimelineComponent implements
           dragIndicatorInfo.left = targetLayerInfo.localRect.left;
           dragIndicatorInfo.top = targetLayerInfo.localRect[targetEdge];
         }
-        // console.info('updateDragIndicator', dragIndicatorInfo);
         this.updateDragIndicator(dragIndicatorInfo);
-        // console.info('onDragEnd');
       },
 
       onDropFn: () => {
-        // console.info('onDropStart');
         this.updateDragIndicator({ isVisible: false });
-        // console.info('updateDragIndicator finished');
 
         if (targetLayerInfo) {
           const root = LayerUtil.findVectorLayer(this.vectorLayers, dragLayer.id);
           let replacementVl: VectorLayer;
           if (targetLayerInfo.moveIntoEmptyLayerGroup) {
             // Moving into an empty layer group.
-            console.log('remove start');
             replacementVl = LayerUtil.removeLayerFromTree(this.vectorLayers, dragLayer.id);
-            console.log('remove end');
-            // dragLayer = dragLayer.clone();
             const newParent = targetLayerInfo.layer;
-            console.log('add start');
             replacementVl =
               LayerUtil.addLayerToTree(
                 replacementVl, newParent.id, dragLayer.clone(), newParent.children.length);
-            console.log('add end');
-            // newParent.children.push(dragLayer);
-            // dragLayer.parent = newParent;
           } else {
             // Moving next to another layer.
             let newParent = LayerUtil.findParent(this.vectorLayers, targetLayerInfo.layer.id);
             if (newParent) {
-              console.log('remove start', this.vectorLayers, dragLayer, newParent);
               replacementVl = LayerUtil.removeLayerFromTree(this.vectorLayers, dragLayer.id);
               newParent = LayerUtil.findParent([replacementVl], targetLayerInfo.layer.id);
-              console.log('remove end', replacementVl);
               let index =
                 newParent.children
                   ? _.findIndex(newParent.children, child => child.id === targetLayerInfo.layer.id)
                   : -1;
               if (index >= 0) {
                 index += (targetEdge === 'top') ? 0 : 1;
-                console.log('add start', replacementVl, index);
                 replacementVl =
                   LayerUtil.addLayerToTree(replacementVl, newParent.id, dragLayer.clone(), index);
-                console.log('add end', replacementVl);
-                // newParent.children.splice(index, 0, dragLayer);
-                // dragLayer.parent = newParent;
               }
             }
           }
           if (replacementVl) {
-            replacementVl.walk(l => {
-              if (l instanceof PathLayer || l instanceof ClipPathLayer) {
-                if (l.children.length) {
-                  console.error(replacementVl);
-                  throw new Error('group layer at invalid position');
-                }
-              }
-            });
             setTimeout(() => {
               this.store.dispatch(new ReplaceVectorLayer(replacementVl));
             });
@@ -342,7 +311,6 @@ export class LayerTimelineComponent implements
         }
 
         setTimeout(() => this.shouldSuppressClick = false, 0);
-        // console.info('onDropEnd');
       }
     });
   }
