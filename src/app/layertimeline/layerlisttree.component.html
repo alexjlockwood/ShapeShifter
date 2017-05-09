@@ -51,7 +51,6 @@
     <!--</md-menu>-->
   </div>
 
-  <!-- TODO: hide if not expanded HERE! -->
   <ng-container *ngIf="{propertyNames: this.getBlocksByAnimationByPropertyKeys()} as data">
     <div class="slt-properties"
       *ngIf="model.isExpanded && data.propertyNames.length > 0">

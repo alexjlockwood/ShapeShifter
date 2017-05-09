@@ -223,10 +223,6 @@ $headerHeight: 40px;
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    .md-button {
-      @include layer-list-button;
-      margin: 2px;
-    }
     md-icon {
       color: $colorBlackTextDisabled;
     }
@@ -236,6 +232,8 @@ $headerHeight: 40px;
       font-size: 16px;
     }
     button {
+      margin: 2px;
+      padding: 2px;
       line-height: 16px;
       height: 20px;
       width: 20px;
