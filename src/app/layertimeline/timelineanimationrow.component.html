@@ -1,13 +1,14 @@
 <div class="slt-layer slt-layer-type-{{ this.layer.getType() }}"></div>
 
 <!-- TODO: hide if layer is not expanded HERE! -->
-<!-- We shouldn't create these elements if there are no properties to display -->
-<div class="slt-properties">
+<!-- TODO: we shouldn't create these elements if there are no properties to display -->
+<div class="slt-properties"
+  *ngIf="(this.animationRowModel$ | async) as model">
   <div class="slt-property"
-    *ngFor="let blocksByAnimation of this.getBlocksByAnimationByPropertyValues()">
+    *ngFor="let blocksByAnimation of model.blocksByAnimationByPropertyValues">
     <!-- TODO: highlight selected animation blocks HERE! -->
     <div class="slt-timeline-block"
-      *ngFor="let block of blocksByAnimation[this.animation.name]"
+      *ngFor="let block of blocksByAnimation[this.animation.id]"
       (click)="this.timelineBlockClick($event, block, this.animation, this.layer)"
       (mousedown)="this.timelineBlockMouseDown($event, block, this.animation, this.layer)"
       tabindex="-1"
@@ -28,7 +29,6 @@
   <li *ngFor="let child of layer.children">
     <app-timelineanimationrow [layer]="child"
       [animation]="this.animation"
-      [animations]="this.animations"
       (onTimelineBlockMouseDown)="this.timelineBlockMouseDown($event.event, $event.block, $event.animation, $event.layer)"
       (onTimelineBlockClick)="this.timelineBlockClick($event.event, $event.block, $event.animation, $event.layer)">
     </app-timelineanimationrow>

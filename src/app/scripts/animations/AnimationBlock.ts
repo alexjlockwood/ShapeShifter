@@ -28,8 +28,21 @@ export abstract class AnimationBlock<T extends AnimationBlockType> {
     this.interpolator = obj.interpolator || INTERPOLATORS[0];
   }
 
-  clone(): AnimationBlock<T> {
-    return Object.assign(Object.create(this), this);
+  clone(): PathAnimationBlock | ColorAnimationBlock | NumberAnimationBlock {
+    const blockArgs = {
+      layerId: this.layerId,
+      propertyName: this.propertyName,
+      startTime: this.startTime,
+      endTime: this.endTime,
+      interpolator: this.interpolator,
+    };
+    if (this instanceof PathAnimationBlock) {
+      return new PathAnimationBlock(blockArgs);
+    } else if (this instanceof ColorAnimationBlock) {
+      return new ColorAnimationBlock(blockArgs);
+    } else {
+      return new NumberAnimationBlock(blockArgs);
+    }
   }
 }
 

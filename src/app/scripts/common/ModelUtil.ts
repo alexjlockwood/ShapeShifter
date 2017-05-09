@@ -89,14 +89,14 @@ interface BlocksByAnimation {
   [animationId: string]: AnimationBlock<any>[];
 }
 
-interface LayerMap<T> {
+export interface LayerMap<T> {
   [layerId: string]: T;
 }
 
-interface AnimationMap<T> {
+export interface AnimationMap<T> {
   [animationId: string]: T;
 }
 
-interface PropertyMap<T> {
+export interface PropertyMap<T> {
   [propertyName: string]: T;
 }

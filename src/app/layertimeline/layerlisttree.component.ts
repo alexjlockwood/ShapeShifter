@@ -9,6 +9,7 @@ import { Animation } from '../scripts/animations';
 import { Store } from '@ngrx/store';
 import {
   State,
+  getAnimations,
   getSelectedLayerIds,
   getCollapsedLayerIds,
   getHiddenLayerIds,
@@ -29,7 +30,6 @@ export class LayerListTreeComponent implements OnInit, Callbacks {
   layerModel$: Observable<LayerModel>;
 
   @Input() layer: Layer;
-  @Input() animations: ReadonlyArray<Animation>;
 
   // MouseEvents from this layer (or children layers further down the tree)
   // are recursively handled by parent components until they reach
@@ -45,17 +45,19 @@ export class LayerListTreeComponent implements OnInit, Callbacks {
 
   ngOnInit() {
     this.layerModel$ = Observable.combineLatest(
+      this.store.select(getAnimations),
       this.store.select(getSelectedLayerIds),
       this.store.select(getCollapsedLayerIds),
       this.store.select(getHiddenLayerIds),
-    ).map(([selectedLayerIds, collapsedLayerIds, hiddenLayerIds]) => {
+    ).map(([animations, selectedLayerIds, collapsedLayerIds, hiddenLayerIds]) => {
       const isExpandable = this.layer.isVectorLayer() || this.layer.isGroupLayer();
       const availablePropertyNames =
-        Array.from(ModelUtil.getAvailablePropertyNamesForLayer(this.layer, this.animations));
+        Array.from(ModelUtil.getAvailablePropertyNamesForLayer(this.layer, animations));
       const existingPropertyNames =
         Array.from(
-          _.keys(ModelUtil.getBlocksByAnimationByProperty(this.layer.id, this.animations)));
+          _.keys(ModelUtil.getBlocksByAnimationByProperty(this.layer.id, animations)));
       return {
+        animations,
         isSelected: selectedLayerIds.has(this.layer.id),
         isExpandable,
         isExpanded: isExpandable && !collapsedLayerIds.has(this.layer.id),
@@ -117,6 +119,7 @@ interface TimelineBlockEvent {
 }
 
 interface LayerModel {
+  readonly animations: ReadonlyArray<Animation>;
   readonly isSelected: boolean;
   readonly isExpandable: boolean;
   readonly isExpanded: boolean;

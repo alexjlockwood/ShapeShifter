@@ -18,6 +18,7 @@
       <!-- TODO: add file/import/export buttons -->
     </div>
 
+    <!-- TODO: scrolling causes crashes -->
     <div appScrollGroup="timeline"
       class="slt-layers-list-scroller"
       fxFlex>
@@ -28,7 +29,6 @@
           class="slt-layer-container"
           *ngFor="let vl of model.vectorLayers; trackBy: this.trackLayerFn;"
           [layer]="vl"
-          [animations]="model.animations"
           (onLayerClick)="this.layerClick($event.event, $event.layer)"
           (onLayerToggleExpanded)="this.layerToggleExpanded($event.event, $event.layer)"
           (onLayerToggleVisibility)="this.layerToggleVisibility($event.event, $event.layer)"
@@ -92,7 +92,6 @@
             <app-timelineanimationrow *ngFor="let layer of model.vectorLayers; trackBy: this.trackLayerFn;"
               [layer]="layer"
               [animation]="animation"
-              [animations]="model.animations"
               (onTimelineBlockMouseDown)="this.timelineBlockMouseDown($event.event, $event.block, $event.animation, $event.layer)"
               (onTimelineBlockClick)="this.timelineBlockClick($event.event, $event.block, $event.animation, $event.layer)">
             </app-timelineanimationrow>

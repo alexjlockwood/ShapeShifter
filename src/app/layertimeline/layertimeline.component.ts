@@ -151,7 +151,7 @@ export class LayerTimelineComponent implements
     }
     let orderedLayerInfos: LayerInfo[] = [];
     let scrollerRect: ClientRect;
-    let targetLayerInfo: LayerInfo = undefined;
+    let targetLayerInfo: LayerInfo;
     let targetEdge: string;
 
     // TODO: need to rethink this... we can't mutate the layers directly anymore like this

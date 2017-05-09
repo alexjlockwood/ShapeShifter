@@ -6,8 +6,15 @@ import {
 import { Layer } from '../scripts/layers';
 import { Property } from '../scripts/properties';
 import { Animation, AnimationBlock } from '../scripts/animations';
-import { ModelUtil } from '../scripts/common';
+import { ModelUtil, AnimationMap } from '../scripts/common';
+import { Store } from '@ngrx/store';
+import {
+  State,
+  getAnimations,
+} from '../scripts/store/reducers';
 
+import { Observable } from 'rxjs/Observable';
+import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 @Component({
   selector: 'app-timelineanimationrow',
   templateUrl: './timelineanimationrow.component.html',
@@ -16,17 +23,32 @@ import { ModelUtil } from '../scripts/common';
   // TODO: remove ViewEncapsulation.
   encapsulation: ViewEncapsulation.None,
 })
-export class TimelineAnimationRowComponent implements Callbacks {
+export class TimelineAnimationRowComponent implements OnInit, Callbacks {
+
+  animationRowModel$: Observable<AnimationRowModel>;
 
   @Input() layer: Layer;
-  @Input() animation: Animation;
-  @Input() animations: Animation[];
+  @Input() animation: Layer;
 
   // MouseEvents from this layer (or children layers further down the tree)
   // are recursively handled by parent components until they reach
   // the LayerTimelineComponent.
   @Output() onTimelineBlockClick = new EventEmitter<Event>();
   @Output() onTimelineBlockMouseDown = new EventEmitter<Event>();
+
+  constructor(private readonly store: Store<State>) { }
+
+  ngOnInit() {
+    this.animationRowModel$ =
+      this.store.select(getAnimations)
+        .map(animations => {
+          const blocksByAnimationByPropertyValues =
+            _.values(ModelUtil.getBlocksByAnimationByProperty(this.layer.id, animations));
+          return {
+            blocksByAnimationByPropertyValues,
+          }
+        })
+  }
 
   // TODO: this doesn't get called (unlike the click event in layer list tree)!!!!
   // TODO: this doesn't get called (unlike the click event in layer list tree)!!!!
@@ -58,11 +80,6 @@ export class TimelineAnimationRowComponent implements Callbacks {
   trackLayerFn(index: number, layer: Layer) {
     return layer.id; // TODO: will this be OK for renamed layers?
   }
-
-  getBlocksByAnimationByPropertyValues() {
-    return _.values(ModelUtil.getBlocksByAnimationByProperty(this.layer.id, this.animations));
-  }
-
 }
 
 export interface Callbacks {
@@ -78,6 +95,10 @@ export interface Callbacks {
     animation: Animation,
     layer: Layer,
   );
+}
+
+interface AnimationRowModel {
+  readonly blocksByAnimationByPropertyValues: AnimationMap<AnimationBlock<any>[]>[];
 }
 
 interface Event {

@@ -78,7 +78,6 @@
       class="slt-layer-container"
       [attr.data-layer-id]="child.id">
       <app-layerlisttree [layer]="child"
-        [animations]="this.animations"
         (onLayerClick)="this.layerClick($event.event, $event.layer)"
         (onLayerToggleExpanded)="this.layerToggleExpanded($event.event, $event.layer)"
         (onLayerToggleVisibility)="this.layerToggleVisibility($event.event, $event.layer)"

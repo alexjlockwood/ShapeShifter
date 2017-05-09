@@ -24,6 +24,7 @@ export const initialState: State = {
 };
 
 export function reducer(state = initialState, action: animation.Actions): State {
+  console.info(state);
   switch (action.type) {
     case animation.ADD_ANIMATIONS: {
       const animations = state.animations.concat(...action.payload);
