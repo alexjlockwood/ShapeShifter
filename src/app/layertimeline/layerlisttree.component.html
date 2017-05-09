@@ -32,8 +32,7 @@
       [ngClass]="{'is-checked': model.isVisible}">
       <md-icon>{{model.isVisible ? 'visibility' : 'visibility_off'}}</md-icon>
     </button>
-    <md-menu *ngIf="model.availablePropertyNames.length > 0"
-      #addTimelineBlockMenu="mdMenu">
+    <md-menu #addTimelineBlockMenu="mdMenu">
       <button *ngFor="let propertyName of model.availablePropertyNames"
         (click)="this.addTimelineBlockClick($event, layer, propertyName)"
         md-menu-item>
@@ -83,6 +82,7 @@
         (onLayerClick)="this.layerClick($event.event, $event.layer)"
         (onLayerToggleExpanded)="this.layerToggleExpanded($event.event, $event.layer)"
         (onLayerToggleVisibility)="this.layerToggleVisibility($event.event, $event.layer)"
+        (onAddTimelineBlockClick)="this.addTimelineBlockClick($event.event, $event.layer, $event.propertyName)"
         (onLayerMouseDown)="this.layerMouseDown($event.event, $event.layer)">
       </app-layerlisttree>
     </li>

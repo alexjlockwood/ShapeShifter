@@ -6,7 +6,7 @@ import { Layer, VectorLayer } from '../layers';
  * Builds a map where the keys are layer IDs and the values are
  * maps of property names to their corresponding animation blocks.
  */
-function getOrderedBlocksByPropertyByLayer(animation: Animation) {
+export function getOrderedBlocksByPropertyByLayer(animation: Animation) {
   const blocksByPropertyByLayer: LayerMap<PropertyMap<AnimationBlock<any>[]>> = {};
 
   animation.blocks.forEach(block => {

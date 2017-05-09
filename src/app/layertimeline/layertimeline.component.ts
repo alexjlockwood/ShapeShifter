@@ -24,6 +24,7 @@ import {
   AddAnimations,
   SelectAnimationId,
   ActivateAnimationId,
+  AddAnimationBlock,
   AddVectorLayers,
   SelectLayerId,
   ToggleLayerIdExpansion,
@@ -115,7 +116,7 @@ export class LayerTimelineComponent implements
     layer: Layer,
     propertyName: string,
   ) {
-    // TODO: implement this
+    this.store.dispatch(new AddAnimationBlock(layer, propertyName));
   }
 
   // @Override LayerListTreeComponentCallbacks

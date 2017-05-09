@@ -101,21 +101,11 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     if (AUTO_LOAD_DEMO) {
       this.autoLoadDemo();
     } else if (AUTO_LOAD_VECTOR_DRAWABLE) {
-      // TODO: remove this demo code
       const vl = VectorDrawableLoader.loadVectorLayerFromXmlString(DEBUG_VECTOR_DRAWABLE, []);
-      // this.stateService.addVectorLayers([vl]);
       this.store.dispatch(new AddVectorLayers([vl]));
       const animation = new Animation({
         name: 'anim',
         duration: 300,
-        blocks: [new NumberAnimationBlock({
-          layerId: vl.id,
-          propertyName: 'alpha',
-          startTime: 0,
-          endTime: 100,
-          fromValue: 0,
-          toValue: 1,
-        })],
       });
       this.store.dispatch(new AddAnimations([animation]));
     }

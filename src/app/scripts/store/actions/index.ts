@@ -2,6 +2,7 @@ export {
   AddAnimations,
   SelectAnimationId,
   ActivateAnimationId,
+  AddAnimationBlock,
 } from './Animation';
 export {
   AddVectorLayers,

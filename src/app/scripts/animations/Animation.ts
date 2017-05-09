@@ -29,6 +29,15 @@ export class Animation {
   set blocks(blocks: AnimationBlock<any>[] | undefined) {
     this.blocks_ = blocks || [];
   }
+
+  clone() {
+    return new Animation({
+      id: this.id,
+      name: this.name,
+      blocks: this.blocks.slice(),
+      duration: this.duration,
+    });
+  }
 }
 
 interface AnimationArgs {
