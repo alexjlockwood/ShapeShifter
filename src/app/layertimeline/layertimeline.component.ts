@@ -8,7 +8,7 @@ import { Callbacks as TimelineAnimationRowCallbacks } from './timelineanimationr
 import { Callbacks as LayerListTreeCallbacks } from './layerlisttree.component';
 import { ScrubEvent } from './layertimeline.directive';
 
-import { VectorLayer, Layer, GroupLayer } from '../scripts/layers';
+import { VectorLayer, Layer, GroupLayer, LayerUtil, PathLayer, ClipPathLayer } from '../scripts/layers';
 import { Animation, AnimationBlock } from '../scripts/animations';
 import { Dragger } from '../scripts/dragger';
 
@@ -26,6 +26,7 @@ import {
   ActivateAnimationId,
   AddAnimationBlock,
   AddVectorLayers,
+  ReplaceVectorLayer,
   SelectLayerId,
   ToggleLayerIdExpansion,
   ToggleLayerIdVisibility,
@@ -54,6 +55,7 @@ export class LayerTimelineComponent implements
   dragIndicatorSource = new BehaviorSubject<DragIndicatorInfo>({
     isVisible: false, left: 0, top: 0,
   });
+  private vectorLayers: ReadonlyArray<VectorLayer>;
 
   layerTimelineModel$: Observable<LayerTimelineModel>;
 
@@ -66,6 +68,7 @@ export class LayerTimelineComponent implements
       this.store.select(getSelectedAnimationId),
       this.store.select(getActiveAnimationId),
     ).map(([animations, vectorLayers, selectedAnimationId, activeAnimationId]) => {
+      this.vectorLayers = vectorLayers;
       return {
         animations,
         vectorLayers,
@@ -149,12 +152,15 @@ export class LayerTimelineComponent implements
       localRect: ClientRect;
       moveIntoEmptyLayerGroup?: boolean;
     }
+
     let orderedLayerInfos: LayerInfo[] = [];
     let scrollerRect: ClientRect;
     let targetLayerInfo: LayerInfo;
     let targetEdge: string;
 
-    // TODO: need to rethink this... we can't mutate the layers directly anymore like this
+    // TODO: make sure it is impossible to drag layers across different vector layers?
+    const vectorLayers = this.vectorLayers;
+
     // tslint:disable-next-line
     new Dragger({
       direction: 'both',
@@ -162,15 +168,19 @@ export class LayerTimelineComponent implements
       downY: mouseDownEvent.clientY,
 
       onBeginDragFn: () => {
+        // console.info('onBeginDragStart');
         this.shouldSuppressClick = true;
 
         // build up a list of all layers ordered by Y position
         orderedLayerInfos = [];
         scrollerRect = $scroller.get(0).getBoundingClientRect();
         const scrollTop = $scroller.scrollTop();
-        $layersList.find('.slt-layer-container').each((i, element) => {
-          if (!$(element).data('layer-id')) {
-            // the artwork root layer doesn't have an ID set
+        $layersList.find('.slt-layer-container').each((_, element) => {
+          // toString() is necessary because JQuery converts the ID into a number.
+          const layerId: string = ($(element).data('layer-id') || '').toString();
+          if (!layerId) {
+            // The root layer doesn't have an ID set.
+            // console.info('ignoring element:', element);
             return;
           }
 
@@ -184,14 +194,14 @@ export class LayerTimelineComponent implements
             width: rect.width,
           };
 
-          const layer = this.findLayerById($(element).data('layer-id'));
+          const layer = this.findLayerById(layerId);
           orderedLayerInfos.push({
             layer,
             element,
             localRect: rect,
           });
 
-          // add a fake target for empty groups
+          // Add a fake target for empty groups.
           if (layer instanceof GroupLayer && !layer.children.length) {
             rect = Object.assign({}, rect, {
               left: rect.left + LAYER_INDENT_PIXELS, top: rect.bottom,
@@ -207,30 +217,34 @@ export class LayerTimelineComponent implements
 
         orderedLayerInfos.sort((a, b) => a.localRect.top - b.localRect.top);
         this.updateDragIndicator({ isVisible: true, left: 0, top: 0 });
+        // console.info('onBeginDragEnd');
       },
 
       onDragFn: event => {
+        // console.info('onDragStart');
         const localEventY = event.clientY - scrollerRect.top + $scroller.scrollTop();
-        // find the target layer and edge (top or bottom)
+        // Find the target layer and edge (top or bottom).
+        // console.info('targetLayerInfo=', undefined);
         targetLayerInfo = undefined;
         let minDistance = Infinity;
-        let minDistanceIndent = Infinity; // tie break to most indented layer
+        let minDistanceIndent = Infinity; // Tie break to most indented layer.
         for (let i = 0; i < orderedLayerInfos.length; i++) {
           const layerInfo = orderedLayerInfos[i];
 
-          // skip if mouse to the left of this layer
+          // Skip if mouse to the left of this layer.
           if (event.clientX < layerInfo.localRect.left) {
             continue;
           }
 
           for (const edge of ['top', 'bottom']) {
-            // test distance to top edge
+            // Test distance to top edge.
             const distance = Math.abs(localEventY - layerInfo.localRect[edge]);
             const indent = layerInfo.localRect.left;
             if (distance <= minDistance) {
               if (distance !== minDistance || indent > minDistanceIndent) {
                 minDistance = distance;
                 minDistanceIndent = indent;
+                // console.info('targetLayerInfo=', layerInfo);
                 targetLayerInfo = layerInfo;
                 targetEdge = edge;
               }
@@ -238,20 +252,22 @@ export class LayerTimelineComponent implements
           }
         }
 
-        // disallow dragging a layer into itself or its children
+        // Disallow dragging a layer into itself or its children.
         if (targetLayerInfo) {
           let layer = targetLayerInfo.layer;
           while (layer) {
             if (layer === dragLayer) {
+              // console.info('targetLayerInfo=', undefined);
               targetLayerInfo = undefined;
               break;
             }
-            layer = layer.parent;
+            layer = LayerUtil.findParent(this.vectorLayers, layer.id);
           }
         }
 
         if (targetLayerInfo && targetEdge === 'bottom'
-          && targetLayerInfo.layer.nextSibling === dragLayer) {
+          && LayerUtil.findNextSibling(this.vectorLayers, targetLayerInfo.layer.id) === dragLayer) {
+          // console.info('targetLayerInfo=', undefined);
           targetLayerInfo = undefined;
         }
 
@@ -260,64 +276,90 @@ export class LayerTimelineComponent implements
           dragIndicatorInfo.left = targetLayerInfo.localRect.left;
           dragIndicatorInfo.top = targetLayerInfo.localRect[targetEdge];
         }
+        // console.info('updateDragIndicator', dragIndicatorInfo);
         this.updateDragIndicator(dragIndicatorInfo);
+        // console.info('onDragEnd');
       },
 
       onDropFn: () => {
+        // console.info('onDropStart');
         this.updateDragIndicator({ isVisible: false });
+        // console.info('updateDragIndicator finished');
 
         if (targetLayerInfo) {
-          // this.scope_.$apply(() => {
+          const root = LayerUtil.findVectorLayer(this.vectorLayers, dragLayer.id);
+          let replacementVl: VectorLayer;
           if (targetLayerInfo.moveIntoEmptyLayerGroup) {
-            // moving into an empty layer group
+            // Moving into an empty layer group.
+            console.log('remove start');
+            replacementVl = LayerUtil.removeLayerFromTree(this.vectorLayers, dragLayer.id);
+            console.log('remove end');
+            // dragLayer = dragLayer.clone();
             const newParent = targetLayerInfo.layer;
-            dragLayer.remove();
-            dragLayer = dragLayer.deepClone();
-            newParent.children.push(dragLayer);
-            dragLayer.parent = newParent;
+            console.log('add start');
+            replacementVl =
+              LayerUtil.addLayerToTree(
+                replacementVl, newParent.id, dragLayer.clone(), newParent.children.length);
+            console.log('add end');
+            // newParent.children.push(dragLayer);
+            // dragLayer.parent = newParent;
           } else {
-            // moving next to another layer
-            const newParent = targetLayerInfo.layer.parent;
+            // Moving next to another layer.
+            let newParent = LayerUtil.findParent(this.vectorLayers, targetLayerInfo.layer.id);
             if (newParent) {
-              dragLayer.remove();
+              console.log('remove start', this.vectorLayers, dragLayer, newParent);
+              replacementVl = LayerUtil.removeLayerFromTree(this.vectorLayers, dragLayer.id);
+              newParent = LayerUtil.findParent([replacementVl], targetLayerInfo.layer.id);
+              console.log('remove end', replacementVl);
               let index =
                 newParent.children
                   ? _.findIndex(newParent.children, child => child.id === targetLayerInfo.layer.id)
                   : -1;
               if (index >= 0) {
                 index += (targetEdge === 'top') ? 0 : 1;
-                newParent.children.splice(index, 0, dragLayer);
-                dragLayer.parent = newParent;
+                console.log('add start', replacementVl, index);
+                replacementVl =
+                  LayerUtil.addLayerToTree(replacementVl, newParent.id, dragLayer.clone(), index);
+                console.log('add end', replacementVl);
+                // newParent.children.splice(index, 0, dragLayer);
+                // dragLayer.parent = newParent;
               }
             }
-            // TODO: make the change in a reducer instead of mutating directly...
-            // this.stateService.addVectorLayers([]); // notify change
           }
-
-          // this.studioState_.artworkChanged();
-          // });
+          if (replacementVl) {
+            replacementVl.walk(l => {
+              if (l instanceof PathLayer || l instanceof ClipPathLayer) {
+                if (l.children.length) {
+                  console.error(replacementVl);
+                  throw new Error('group layer at invalid position');
+                }
+              }
+            });
+            setTimeout(() => {
+              this.store.dispatch(new ReplaceVectorLayer(replacementVl));
+            });
+          }
         }
 
-        // this.timeout_(() => this.shouldSuppressClick = false, 0);
+        setTimeout(() => this.shouldSuppressClick = false, 0);
+        // console.info('onDropEnd');
       }
     });
+  }
+
+  private findLayerById(id: string) {
+    for (const vl of this.vectorLayers) {
+      const layer = vl.findLayerById(id);
+      if (layer) {
+        return layer;
+      }
+    }
+    return undefined;
   }
 
   private updateDragIndicator(info: DragIndicatorInfo) {
     const curr = this.dragIndicatorSource.getValue();
     this.dragIndicatorSource.next(Object.assign({}, curr, info));
-  }
-
-  // TODO: see TODO above... this will no longer work.
-  private findLayerById(id: string) {
-    // const vls = this.stateService.getImportedVectorLayers();
-    // for (const vl of vls) {
-    //   const layer = vl.findLayer(id);
-    //   if (layer) {
-    //     return layer;
-    //   }
-    // }
-    return undefined;
   }
 
   trackLayerFn(index: number, layer: Layer) {
@@ -330,9 +372,9 @@ export class LayerTimelineComponent implements
 }
 
 interface LayerTimelineModel {
-  animations: ReadonlyArray<Animation>;
-  vectorLayers: ReadonlyArray<VectorLayer>;
-  selectedAnimationId: string;
+  readonly animations: ReadonlyArray<Animation>;
+  readonly vectorLayers: ReadonlyArray<VectorLayer>;
+  readonly selectedAnimationId: string;
 }
 
 interface DragIndicatorInfo {

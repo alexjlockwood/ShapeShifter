@@ -20,11 +20,13 @@ export class ClipPathLayer extends AbstractLayer {
   }
 
   clone() {
-    const clone = Object.assign(Object.create(this), this) as ClipPathLayer;
-    // TODO: paths are immutable, so can we avoid the extra clone?
-    clone.pathData = this.pathData.clone();
-    clone.children = [];
-    return clone;
+    return new ClipPathLayer({
+      id: this.id,
+      name: this.name,
+      children: [],
+      // TODO: paths are immutable, so can we avoid the extra clone?
+      pathData: this.pathData.clone(),
+    });
   }
 
   deepClone() {

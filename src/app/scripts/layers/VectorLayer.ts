@@ -9,7 +9,6 @@ import { Type } from './Layer';
  * Model object that mirrors the VectorDrawable's '<vector>' element.
  */
 @Property.register(
-  new ColorProperty('canvasColor'),
   new NumberProperty('width', { isAnimatable: false, min: 1, isInteger: true }),
   new NumberProperty('height', { isAnimatable: false, min: 1, isInteger: true }),
   new FractionProperty('alpha', { isAnimatable: true }),
@@ -32,9 +31,15 @@ export class VectorLayer extends AbstractLayer {
   }
 
   clone() {
-    const clone = Object.assign(Object.create(this), this) as VectorLayer;
-    clone.children = this.children.slice();
-    return clone;
+    return new VectorLayer({
+      id: this.id,
+      name: this.name,
+      children: this.children.slice(),
+      // TODO: paths are immutable, so can we avoid the extra clone?
+      width: this.width,
+      height: this.height,
+      alpha: this.alpha,
+    });
   }
 
   deepClone() {

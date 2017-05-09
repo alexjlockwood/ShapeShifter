@@ -171,3 +171,111 @@ export function deepInterpolate<T extends Layer>(start: T, preview: T, end: T, f
     });
   }
 }
+
+export function addLayerToTree(
+  root: VectorLayer,
+  addedLayerParentId: string,
+  addedLayer: Layer,
+  childIndex: number,
+) {
+  return (function recurseFn(curr: Layer) {
+    if (curr.id === addedLayerParentId) {
+      // If we have reached the added layer's parent, then
+      // clone the parent, insert the new layer into its list
+      // of children, and return the new parent node.
+      const children = curr.children.slice();
+      children.splice(childIndex, 0, addedLayer);
+      curr = curr.clone();
+      curr.children = children;
+      return curr;
+    }
+    for (let i = 0; i < curr.children.length; i++) {
+      const clonedChild = recurseFn(curr.children[i]);
+      if (clonedChild) {
+        // Then clone the current layer, insert the cloned child
+        // into its list of children, and return the cloned current layer.
+        const children = curr.children.slice();
+        children[i] = clonedChild;
+        curr = curr.clone();
+        curr.children = children;
+        return curr;
+      }
+    }
+    return undefined;
+  })(root) as VectorLayer;
+}
+
+export function removeLayerFromTree(
+  vls: ReadonlyArray<VectorLayer>,
+  removedLayerId: string,
+) {
+  const root = findVectorLayer(vls, removedLayerId);
+  return (function recurseFn(curr: Layer) {
+    if (curr.id === removedLayerId) {
+      return undefined;
+    }
+    const children = _.flatMap(curr.children, child => {
+      const clonedChild = recurseFn(child);
+      return clonedChild ? [clonedChild] : [];
+    });
+    curr = curr.clone();
+    curr.children = children;
+    return curr;
+  })(root) as VectorLayer;
+}
+
+export function findParent(vls: ReadonlyArray<VectorLayer>, layerId: string) {
+  for (const vl of vls) {
+    const result =
+      (function recurseFn(curr: Layer, parent?: Layer): Layer {
+        if (curr.id === layerId) {
+          return parent;
+        }
+        for (const child of curr.children) {
+          const p = recurseFn(child, curr);
+          if (p) {
+            return p;
+          }
+        }
+        return undefined;
+      })(vl);
+    if (result) {
+      return result;
+    }
+  }
+  return undefined;
+}
+
+export function findVectorLayer(vls: ReadonlyArray<VectorLayer>, layerId: string) {
+  for (const vl of vls) {
+    if (vl.findLayerById(layerId)) {
+      return vl;
+    }
+  }
+  return undefined;
+}
+
+export function findNextSibling(vls: ReadonlyArray<VectorLayer>, layerId: string) {
+  const parent = findParent(vls, layerId);
+  return findSibling(layerId, parent, 1);
+}
+
+export function findPreviousSibling(vls: ReadonlyArray<VectorLayer>, layerId: string) {
+  const parent = findParent(vls, layerId);
+  return findSibling(layerId, parent, -1);
+}
+
+function findSibling(layerId: string, parent: Layer, offset: number) {
+  if (!parent || !parent.children) {
+    return undefined;
+  }
+  let index = _.findIndex(parent.children, c => c.id === layerId);
+  if (index < 0) {
+    return undefined;
+  }
+  index += offset;
+  if (index < 0 || parent.children.length <= index) {
+    return undefined;
+  }
+  return parent.children[index];
+}

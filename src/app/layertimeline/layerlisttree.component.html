@@ -14,7 +14,10 @@
       mdTooltipShowDelay="300">
       <md-icon>{{model.isExpanded ? 'expand_more' : 'chevron_right'}}</md-icon>
     </button>
-    <md-icon svgIcon="{{this.layer.getType()}}"></md-icon>
+    <!-- Add extra 20px margin if the expand/collapse icon isn't being displayed -->
+    <md-icon svgIcon="{{this.layer.getType()}}"
+      [style.margin-left]="model.isExpandable ? '0px' : '20px'">
+    </md-icon>
     <span class="slt-layer-id-text"
       fxFlex>
       {{this.layer.name}}

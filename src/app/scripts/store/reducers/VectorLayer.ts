@@ -23,6 +23,13 @@ export function reducer(state = initialState, action: vectorLayer.Actions): Stat
       const vectorLayers = state.vectorLayers.concat(...action.payload.vectorLayers);
       return { ...state, vectorLayers };
     }
+    case vectorLayer.REPLACE_VECTOR_LAYER: {
+      const replacement = action.payload.vectorLayer;
+      const replacementId = replacement.id;
+      const vectorLayers =
+        state.vectorLayers.map(vl => vl.id === replacementId ? replacement : vl);
+      return { ...state, vectorLayers };
+    }
     case vectorLayer.SELECT_LAYER_ID: {
       const { layerId, clearExisting } = action.payload;
       const selectedLayerIds = clearExisting ? new Set() : new Set(state.selectedLayerIds);

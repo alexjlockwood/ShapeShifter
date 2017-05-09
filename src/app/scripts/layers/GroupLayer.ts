@@ -32,9 +32,18 @@ export class GroupLayer extends AbstractLayer {
   }
 
   clone() {
-    const clone = Object.assign(Object.create(this), this) as GroupLayer;
-    clone.children = this.children.slice();
-    return clone;
+    return new GroupLayer({
+      id: this.id,
+      name: this.name,
+      children: this.children.slice(),
+      pivotX: this.pivotX,
+      pivotY: this.pivotY,
+      rotation: this.rotation,
+      scaleX: this.scaleX,
+      scaleY: this.scaleY,
+      translateX: this.translateX,
+      translateY: this.translateY,
+    });
   }
 
   deepClone() {

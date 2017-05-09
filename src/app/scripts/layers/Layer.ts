@@ -1,4 +1,5 @@
 import { Inspectable, Animatable } from '../properties';
+import { VectorLayer } from '.';
 
 /**
  * Interface that is shared by all vector drawable layer models below.
@@ -20,13 +21,8 @@ export interface Layer extends Inspectable, Animatable {
    * This layers children layers, or undefined if none exist.
    */
   // TODO: make this a readonly array?
-  children: Layer[];
+  children: ReadonlyArray<Layer>;
 
-  parent: Layer | undefined;
-  previousSibling: Layer | undefined;
-  nextSibling: Layer | undefined;
-  getSibling(offset: number): Layer | undefined;
-  remove(): void;
   clone<T extends Layer>(): T;
   deepClone<T extends Layer>(): T;
   getType(): Type;

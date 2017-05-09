@@ -6,6 +6,7 @@ export {
 } from './Animation';
 export {
   AddVectorLayers,
+  ReplaceVectorLayer,
   SelectLayerId,
   ToggleLayerIdExpansion,
   ToggleLayerIdVisibility,
