@@ -153,7 +153,7 @@ export class StateService {
     if (!vectorLayer || !activePathId) {
       return undefined;
     }
-    return vectorLayer.findLayer(activePathId) as PathLayer;
+    return vectorLayer.findLayerByName(activePathId) as PathLayer;
   }
 
   /**
@@ -257,7 +257,7 @@ export class StateService {
     if (!vectorLayer) {
       return undefined;
     }
-    return vectorLayer.findLayer(ROTATION_GROUP_LAYER_ID) as GroupLayer;
+    return vectorLayer.findLayerByName(ROTATION_GROUP_LAYER_ID) as GroupLayer;
   }
 
   /**

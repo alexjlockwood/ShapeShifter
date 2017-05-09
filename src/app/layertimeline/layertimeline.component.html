@@ -30,7 +30,8 @@
           [layer]="vl"
           [animations]="model.animations"
           (onLayerClick)="this.layerClick($event.event, $event.layer)"
-          (onLayerDoubleClick)="this.layerDoubleClick($event.event, $event.layer)"
+          (onLayerToggleExpanded)="this.layerToggleExpanded($event.event, $event.layer)"
+          (onLayerToggleVisibility)="this.layerToggleVisibility($event.event, $event.layer)"
           (onLayerMouseDown)="this.layerMouseDown($event.event, $event.layer)"
           (onAddTimelineBlockClick)="this.addTimelineBlockClick($event.event, $event.layer, $event.propertyName)">
         </app-layerlisttree>
@@ -56,21 +57,20 @@
     <ng-container *ngFor="let animation of model.animations; trackBy: trackAnimationFn;">
       <div class="slt-timeline-animation"
         (mousedown)="this.animationTimelineMouseDown($event, animation)"
-        [ngClass]="{'is-active': model.activeAnimation === animation}"
+        [ngClass]="{'is-active': model.activeAnimationId === animation.id}"
         [ngStyle]="{'width': (animation.duration * this.horizZoom + 40) + 'px'}"
         fxLayout="column">
 
         <div class="slt-header">
-          <!-- TODO: add selected_ attribute to animation? -->
           <div class="slt-timeline-animation-meta"
-            [ngClass]="{'is-selected': animation.selected_}"
+            [ngClass]="{'is-selected': model.selectedAnimationId === animation.id}"
             (click)="this.animationHeaderTextClick($event, animation)">
             <span class="slt-timeline-animation-name">{{animation.name}}</span>
             <span class="slt-timeline-animation-duration">{{animation.duration}}ms</span>
           </div>
           <canvas appLayerTimeline
             class="slt-timeline-header-grid"
-            [isActive]="model.activeAnimation === animation"
+            [isActive]="model.activeAnimationId === animation.id"
             [animation]="animation"
             [activeTime]="this.activeTime"
             [horizZoom]="this.horizZoom"
@@ -81,7 +81,7 @@
         <canvas appLayerTimeline
           class="slt-timeline-grid"
           [animation]="animation"
-          [isActive]="model.activeAnimation === animation"
+          [isActive]="model.activeAnimationId === animation.id"
           [activeTime]="this.activeTime"
           [horizZoom]="this.horizZoom"></canvas>
 

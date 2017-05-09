@@ -32,9 +32,14 @@ export interface Layer extends Inspectable, Animatable {
   getType(): Type;
 
   /**
+   * Returns the first descendent layer with the specified id.
+   */
+  findLayerById(id: string): Layer | undefined;
+
+  /**
    * Returns the first descendent layer with the specified name.
    */
-  findLayer(name: string): Layer | undefined;
+  findLayerByName(name: string): Layer | undefined;
 
   /**
    * Returns true iff this layer is morphable with the specified layer. Two

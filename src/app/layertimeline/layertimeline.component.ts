@@ -15,13 +15,20 @@ import { Dragger } from '../scripts/dragger';
 import { Store } from '@ngrx/store';
 import {
   State,
-  getAnimationState,
-  getVectorLayerState,
+  getAnimations,
+  getVectorLayers,
+  getSelectedAnimationId,
+  getActiveAnimationId,
 } from '../scripts/store/reducers';
-import { State as AnimationState } from '../scripts/store/reducers/animation';
-import { State as VectorLayerState } from '../scripts/store/reducers/vectorlayer';
-import { AddAnimations } from '../scripts/store/actions/animation';
-import { AddVectorLayers } from '../scripts/store/actions/vectorlayer';
+import {
+  AddAnimations,
+  SelectAnimationId,
+  ActivateAnimationId,
+  AddVectorLayers,
+  SelectLayerId,
+  ToggleLayerIdExpansion,
+  ToggleLayerIdVisibility,
+} from '../scripts/store/actions';
 import { Observable } from 'rxjs/Observable';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import 'rxjs/add/observable/combineLatest';
@@ -53,27 +60,28 @@ export class LayerTimelineComponent implements
 
   ngOnInit() {
     this.layerTimelineModel$ = Observable.combineLatest(
-      this.store.select(getAnimationState),
-      this.store.select(getVectorLayerState),
-      // this.store.select<Set<string>>('selectedLayerIds'),
-    ).map(([animations, vectorLayers]) => {
+      this.store.select(getAnimations),
+      this.store.select(getVectorLayers),
+      this.store.select(getSelectedAnimationId),
+      this.store.select(getActiveAnimationId),
+    ).map(([animations, vectorLayers, selectedAnimationId, activeAnimationId]) => {
       return {
-        animations: animations.animations,
-        vectorLayers: vectorLayers.vectorLayers,
-        // TODO: keep track of the currently 'active' animation
-        activeAnimation: animations.animations[0],
+        animations,
+        vectorLayers,
+        selectedAnimationId,
+        activeAnimationId,
       }
     });
   }
 
   // Called from the LayerTimelineComponent template.
   animationHeaderTextClick(event: MouseEvent, animation: Animation) {
-    // console.info('animationHeaderTextClick');
+    this.store.dispatch(new SelectAnimationId(animation.id));
   }
 
   // Called from the LayerTimelineComponent template.
   timelineHeaderScrub(event: ScrubEvent) {
-    // console.info('timelineHeaderScrub');
+    // TODO: implement this
   }
 
   // Called from the LayerTimelineComponent template.
@@ -83,12 +91,12 @@ export class LayerTimelineComponent implements
     animation: Animation,
     layer: Layer,
   ) {
-    // console.info('timelineBlockClick');
+    // TODO: implement this
   }
 
   // @Override TimelineAnimationRowCallbacks
   animationTimelineMouseDown(event: MouseEvent, animation: Animation) {
-    // console.info('animationTimelineMouseDown');
+    this.store.dispatch(new ActivateAnimationId(animation.id));
   }
 
   // @Override TimelineAnimationRowCallbacks
@@ -98,7 +106,7 @@ export class LayerTimelineComponent implements
     animation: Animation,
     layer: Layer,
   ) {
-    // console.info('timelineBlockMouseDown');
+    // TODO: implement this
   }
 
   // @Override LayerListTreeComponentCallbacks
@@ -107,22 +115,30 @@ export class LayerTimelineComponent implements
     layer: Layer,
     propertyName: string,
   ) {
-    // console.info('addTimelineBlockClick');
+    // TODO: implement this
   }
 
   // @Override LayerListTreeComponentCallbacks
   layerClick(event: MouseEvent, layer: Layer) {
-    // console.info('layerClick');
+    const clearExisting = !event.metaKey && !event.shiftKey;
+    this.store.dispatch(new SelectLayerId(layer.id, clearExisting));
   }
 
   // @Override LayerListTreeComponentCallbacks
-  layerDoubleClick(event: MouseEvent, layer: Layer) {
-    // console.info('layerDoubleClick');
+  layerToggleExpanded(event: MouseEvent, layer: Layer) {
+    const recursive = event.metaKey || event.shiftKey
+    this.store.dispatch(new ToggleLayerIdExpansion(layer.id, recursive));
+    event.stopPropagation();
+  }
+
+  // @Override LayerListTreeComponentCallbacks
+  layerToggleVisibility(event: MouseEvent, layer: Layer) {
+    this.store.dispatch(new ToggleLayerIdVisibility(layer.id));
+    event.stopPropagation();
   }
 
   // @Override LayerListTreeComponentCallbacks
   layerMouseDown(mouseDownEvent: MouseEvent, dragLayer: Layer) {
-    // console.info('layerMouseDown');
     const $layersList = $(mouseDownEvent.target).parents('.slt-layers-list');
     const $scroller = $(mouseDownEvent.target).parents('.slt-layers-list-scroller');
 
@@ -315,7 +331,7 @@ export class LayerTimelineComponent implements
 interface LayerTimelineModel {
   animations: ReadonlyArray<Animation>;
   vectorLayers: ReadonlyArray<VectorLayer>;
-  activeAnimation: Animation;
+  selectedAnimationId: string;
 }
 
 interface DragIndicatorInfo {

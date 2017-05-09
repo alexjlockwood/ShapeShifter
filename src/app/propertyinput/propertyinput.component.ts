@@ -6,7 +6,10 @@ import { Observable } from 'rxjs/Observable';
 import { ColorUtil } from '../scripts/common';
 import { newPath } from '../scripts/paths';
 import { Store } from '@ngrx/store'
-import { State, getVectorLayerState } from '../scripts/store/reducers';
+import {
+  State,
+  getVectorLayers
+} from '../scripts/store/reducers';
 
 @Component({
   selector: 'app-propertyinput',
@@ -22,8 +25,8 @@ export class PropertyInputComponent implements OnInit {
 
   ngOnInit() {
     this.propertyInputModel$ =
-      this.store.select(getVectorLayerState)
-        .map(state => this.buildPropertyInputData(state.vectorLayers));
+      this.store.select(getVectorLayers)
+        .map(vls => this.buildPropertyInputData(vls));
   }
 
   private buildPropertyInputData(vls: ReadonlyArray<VectorLayer>) {
@@ -39,7 +42,7 @@ export class PropertyInputComponent implements OnInit {
       icon: 'vectorlayer',
       inspectedProperties: [],
     };
-    const layer = vls[0].findLayer('bottom_inner_path');
+    const layer = vls[0].findLayerByName('bottom_inner_path');
     layer.inspectableProperties.forEach((property, propertyName) => {
       selectionInfo.inspectedProperties.push(
         new InspectedProperty<any>(

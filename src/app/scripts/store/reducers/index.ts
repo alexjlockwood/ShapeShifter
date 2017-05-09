@@ -24,5 +24,11 @@ export function reducer(state: any, action: any) {
   }
 }
 
-export const getAnimationState = (state: State) => state.root.animations;
-export const getVectorLayerState = (state: State) => state.root.vectorLayers;
+export const getAnimations = (state: State) => state.root.animations.animations;
+export const getSelectedAnimationId = (state: State) => state.root.animations.selectedAnimationId;
+export const getActiveAnimationId = (state: State) => state.root.animations.activeAnimationId;
+
+export const getVectorLayers = (state: State) => state.root.vectorLayers.vectorLayers;
+export const getSelectedLayerIds = (state: State) => state.root.vectorLayers.selectedLayerIds;
+export const getCollapsedLayerIds = (state: State) => state.root.vectorLayers.collapsedLayerIds;
+export const getHiddenLayerIds = (state: State) => state.root.vectorLayers.hiddenLayerIds;

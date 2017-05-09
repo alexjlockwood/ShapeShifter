@@ -37,13 +37,29 @@ export abstract class AbstractLayer implements Layer {
   }
 
   // Implements the Layer interface.
-  findLayer(name: string): Layer | undefined {
+  findLayerById(id: string): Layer | undefined {
+    if (this.id === id) {
+      return this;
+    }
+    if (this.children) {
+      for (const child of this.children) {
+        const layer = child.findLayerById(id);
+        if (layer) {
+          return layer;
+        }
+      }
+    }
+    return undefined;
+  }
+
+  // Implements the Layer interface.
+  findLayerByName(name: string): Layer | undefined {
     if (this.name === name) {
       return this;
     }
     if (this.children) {
       for (const child of this.children) {
-        const layer = child.findLayer(name);
+        const layer = child.findLayerByName(name);
         if (layer) {
           return layer;
         }
