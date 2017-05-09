@@ -16,7 +16,9 @@
     </button>
     <md-icon svgIcon="{{this.layer.getType()}}"></md-icon>
     <span class="slt-layer-id-text"
-      fxFlex>{{this.layer.name}}</span>
+      fxFlex>
+      {{this.layer.name}}
+    </span>
     <button md-icon-button
       class="slt-layer-action-button slt-layer-more-actions">
       <md-icon>more_vert</md-icon>
@@ -28,8 +30,8 @@
       mdTooltipPosition="below"
       mdTooltipShowDelay="300"
       [ngClass]="{'is-checked': model.isVisible}">
-    <md-icon>{{model.isVisible ? 'visibility' : 'visibility_off'}}</md-icon>
-  </button>
+      <md-icon>{{model.isVisible ? 'visibility' : 'visibility_off'}}</md-icon>
+    </button>
     <!-- TODO: ngIf activeAnimation and layer.hasAvailableProperties -->
     <!--<md-menu class="slt-layer-add-property-menu" ng-if="ctrl.activeAnimation && layer._slt.hasAvailableProperties">-->
     <button md-icon-button
@@ -37,8 +39,8 @@
       mdTooltip="Animate this layer"
       mdTooltipPosition="below"
       mdTooltipShowDelay="300">
-    <md-icon svgIcon="animationblock"></md-icon>
-  </button>
+      <md-icon svgIcon="animationblock"></md-icon>
+    </button>
     <!--<md-menu-content>
       <md-menu-item ng-repeat="(propertyName, __) in layer._slt.availableProperties">
         <md-button ng-click="ctrl.onAddTimelineBlock($event, layer, propertyName)">
@@ -63,8 +65,8 @@
           mdTooltip="Add another animation"
           mdTooltipPosition="below"
           mdTooltipShowDelay="300">
-        <md-icon>add</md-icon>
-    </button>
+          <md-icon>add</md-icon>
+        </button>
       </div>
     </div>
   </ng-container>
