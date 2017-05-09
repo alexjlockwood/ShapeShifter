@@ -11,10 +11,11 @@ import { Store } from '@ngrx/store';
 import {
   State,
   getAnimations,
+  getCollapsedLayerIds,
 } from '../scripts/store/reducers';
-
 import { Observable } from 'rxjs/Observable';
-import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+import 'rxjs/add/observable/combineLatest';
+
 @Component({
   selector: 'app-timelineanimationrow',
   templateUrl: './timelineanimationrow.component.html',
@@ -40,14 +41,17 @@ export class TimelineAnimationRowComponent implements OnInit, Callbacks {
 
   ngOnInit() {
     this.animationRowModel$ =
-      this.store.select(getAnimations)
-        .map(animations => {
-          const blocksByAnimationByPropertyValues =
-            _.values(ModelUtil.getBlocksByAnimationByProperty(this.layer.id, animations));
-          return {
-            blocksByAnimationByPropertyValues,
-          }
-        })
+      Observable.combineLatest(
+        this.store.select(getAnimations),
+        this.store.select(getCollapsedLayerIds),
+      ).map(([animations, collapsedLayerIds]) => {
+        const blocksByAnimationByPropertyValues =
+          _.values(ModelUtil.getBlocksByAnimationByProperty(this.layer.id, animations));
+        return {
+          blocksByAnimationByPropertyValues,
+          isExpanded: !collapsedLayerIds.has(this.layer.id),
+        }
+      })
   }
 
   // TODO: this doesn't get called (unlike the click event in layer list tree)!!!!
@@ -99,6 +103,7 @@ export interface Callbacks {
 
 interface AnimationRowModel {
   readonly blocksByAnimationByPropertyValues: AnimationMap<AnimationBlock<any>[]>[];
+  readonly isExpanded: boolean;
 }
 
 interface Event {

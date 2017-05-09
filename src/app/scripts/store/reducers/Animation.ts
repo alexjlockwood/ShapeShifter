@@ -24,7 +24,6 @@ export const initialState: State = {
 };
 
 export function reducer(state = initialState, action: animation.Actions): State {
-  console.info(state);
   switch (action.type) {
     case animation.ADD_ANIMATIONS: {
       const animations = state.animations.concat(...action.payload);
@@ -82,6 +81,7 @@ export function reducer(state = initialState, action: animation.Actions): State 
       if (!gaps.length) {
         // No available gaps, cancel.
         // TODO: show a disabled button to prevent this case?
+        console.warn('Ignoring failed attempt to add animation block');
         return state;
       }
 
@@ -135,7 +135,6 @@ export function reducer(state = initialState, action: animation.Actions): State 
       // TODO: auto-select the new animation block
       // TODO: auto-select the new animation block
       // TODO: auto-select the new animation block
-
       return { ...state, animations };
     }
     default: {

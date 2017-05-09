@@ -12,13 +12,14 @@ export class ScrollGroupDirective implements OnDestroy {
   private readonly element: JQuery;
 
   constructor(private readonly elementRef: ElementRef) {
-    const element = $(elementRef.nativeElement);
+    this.element = $(elementRef.nativeElement);
     GROUPS.set(this.scrollGroup, GROUPS.get(this.scrollGroup) || []);
-    GROUPS.get(this.scrollGroup).push(element);
+    GROUPS.get(this.scrollGroup).push(this.element);
   }
 
   ngOnDestroy() {
-    GROUPS.get(this.scrollGroup).splice(GROUPS.get(this.scrollGroup).indexOf(this.element), 1);
+    GROUPS.get(this.scrollGroup)
+      .splice(GROUPS.get(this.scrollGroup).indexOf(this.element), 1);
   }
 
   @HostListener('scroll', ['$event'])

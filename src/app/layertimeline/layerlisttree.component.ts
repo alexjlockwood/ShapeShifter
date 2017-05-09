@@ -60,7 +60,7 @@ export class LayerListTreeComponent implements OnInit, Callbacks {
         animations,
         isSelected: selectedLayerIds.has(this.layer.id),
         isExpandable,
-        isExpanded: isExpandable && !collapsedLayerIds.has(this.layer.id),
+        isExpanded: !collapsedLayerIds.has(this.layer.id),
         isVisible: !hiddenLayerIds.has(this.layer.id),
         availablePropertyNames,
         existingPropertyNames,

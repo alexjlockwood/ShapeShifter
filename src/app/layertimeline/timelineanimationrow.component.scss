@@ -11,7 +11,7 @@ ul {
 
 li {
   list-style: none;
-} // general vertical metrics
+}
 .slt-timeline-animation-rows {
   padding: 8px 0;
 }
@@ -29,10 +29,10 @@ li {
 
 .slt-properties {
   margin: 4px 0;
-  &:empty {
-    display: none;
-  }
-} // timeline
+}
+.slt-properties-empty {
+  display: none;
+}
 .slt-timeline {
   background-color: material-color('grey', '300');
   overflow-x: auto;
@@ -138,5 +138,3 @@ li {
     }
   }
 }
-
-// }
