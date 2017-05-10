@@ -15,16 +15,17 @@ export function getTransformsForLayer(vectorLayer: VectorLayer, layerId: string)
   const getTransformsFn = (parents: Layer[], current: Layer): Matrix[] => {
     if (current.name === layerId) {
       return _.flatMap(parents, layer => {
-        if (!(layer instanceof GroupLayer)) {
-          return [];
+        if (layer instanceof GroupLayer) {
+          const l = layer as GroupLayer;
+          return [
+            Matrix.fromTranslation(l.pivotX, l.pivotY),
+            Matrix.fromTranslation(l.translateX, l.translateY),
+            Matrix.fromRotation(l.rotation),
+            Matrix.fromScaling(l.scaleX, l.scaleY),
+            Matrix.fromTranslation(-l.pivotX, -l.pivotY),
+          ];
         }
-        return [
-          Matrix.fromTranslation(layer.pivotX, layer.pivotY),
-          Matrix.fromTranslation(layer.translateX, layer.translateY),
-          Matrix.fromRotation(layer.rotation),
-          Matrix.fromScaling(layer.scaleX, layer.scaleY),
-          Matrix.fromTranslation(-layer.pivotX, -layer.pivotY),
-        ];
+        return [];
       });
     }
     if (current.children) {
@@ -222,6 +223,30 @@ export function removeLayerFromTree(
     curr.children = children;
     return curr;
   })(root) as VectorLayer;
+}
+
+export function replaceLayerInTree(
+  root: VectorLayer,
+  replacement: Layer,
+) {
+  return (function recurseFn(curr: Layer) {
+    if (curr.id === replacement.id) {
+      return replacement;
+    }
+    curr = curr.clone();
+    curr.children = curr.children.map(child => recurseFn(child));
+    return curr;
+  })(root) as VectorLayer;
+}
+
+export function findLayer(vls: ReadonlyArray<VectorLayer>, layerId: string) {
+  for (const vl of vls) {
+    const layer = vl.findLayerById(layerId);
+    if (layer) {
+      return layer;
+    }
+  }
+  return undefined;
 }
 
 export function findParent(vls: ReadonlyArray<VectorLayer>, layerId: string) {

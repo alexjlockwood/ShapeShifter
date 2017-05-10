@@ -2,37 +2,39 @@
   edge="left"
   min="200">
 </app-splitter>
-<ng-container *ngIf="(propertyInputModel$ | async) as data">
-  <div *ngIf="!data"
+<ng-container *ngIf="(propertyInputModel$ | async) as model">
+  <!-- No shared properties selected. -->
+  <div *ngIf="model.numSelections === 0"
     class="spi-empty"
     fxFlex>
     Select something to edit its properties
   </div>
-  <div *ngIf="data"
+  <!-- At least one shared property selected. -->
+  <div *ngIf="model.numSelections > 0"
     fxLayout="column"
     fxFlex>
     <div class="spi-header"
       fxFlex="none">
       <md-icon class="spi-selection-icon"
-        svgIcon="{{data.icon}}">
+        svgIcon="{{model.icon}}">
       </md-icon>
       <div class="spi-selection-description-container"
         fxLayout="column"
         fxFlex>
-        <span class="spi-selection-description">{{data.description}}</span>
-        <span class="spi-selection-sub-description">{{data.subDescription}}</span>
+        <span class="spi-selection-description">{{model.description}}</span>
+        <span class="spi-selection-sub-description">{{model.subDescription}}</span>
       </div>
     </div>
     <div class="spi-body"
       fxLayout="column"
       fxFlex>
       <div class="spi-empty"
-        *ngIf="!data.inspectedProperties.length"
+        *ngIf="!model.inspectedProperties.length"
         fxFlex>
         No shared properties to view or edit
       </div>
       <div class="spi-property"
-        *ngFor="let ip of data.inspectedProperties">
+        *ngFor="let ip of model.inspectedProperties">
         <div class="spi-property-name">{{ip.propertyName}}</div>
         <div class="spi-property-value"
           fxLayout="row">
@@ -43,6 +45,7 @@
           <span *ngIf="!ip.editable"
             class="spi-property-value-static"
             fxFlex>
+            <!-- Don't show an input element if the property isn't inspectable. -->
             {{ip.displayValue}}
           </span>
           <div *ngIf="ip.editable"
@@ -53,6 +56,7 @@
             <!-- [(ngModel)]="ip.editableValue" -->
             <input (keydown)="this.onValueEditorKeyDown($event, ip)"
               (blur)="ip.resolveEnteredValue()"
+              [(ngModel)]="ip.editableValue"
               *ngIf="ip.typeName == 'NameProperty'
                   || ip.typeName == 'PathProperty'
                   || ip.typeName == 'ColorProperty'
