@@ -20,7 +20,7 @@
   }
   li {
     list-style: none;
-  } // general vertical metrics
+  }
   .slt-layers-list,
   .slt-timeline-animation-rows {
     padding: 8px 0;
@@ -39,7 +39,7 @@
     &:empty {
       display: none;
     }
-  } // layers list
+  }
   .slt-layers {
     width: 300px;
     box-shadow: material-shadow(2);
@@ -196,13 +196,11 @@
           background-color: rgba(#000, .08);
         }
       }
-      md-menu {
-        padding: 0;
-        .md-icon-button {
-          margin: 0;
-        }
-        md-icon {
-          vertical-align: top;
+      button {
+        &[md-icon-button] {
+          md-icon {
+            color: $colorBlackTextSecondary;
+          }
         }
       }
     }
@@ -225,14 +223,14 @@
         border-radius: 50%;
       }
     }
-  } // empty/placeholder pattern
+  }
   .slt-layers-empty {
     padding: 32px;
     text-align: center;
     font-size: 14px;
     line-height: 20px;
     color: $colorBlackTextDisabled;
-  } // timeline
+  }
   .slt-timeline {
     background-color: material-color('grey', '300');
     overflow-x: auto;
@@ -382,7 +380,7 @@
         cursor: pointer;
       }
     }
-  } // headers
+  }
   .slt-header {
     position: relative;
     flex: 0 0 auto;

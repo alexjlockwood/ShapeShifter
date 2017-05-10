@@ -15,7 +15,42 @@
     <div class="slt-header"
       fxLayout="row"
       fxLayoutAlign="start center">
-      <!-- TODO: add file/import/export buttons -->
+
+      <md-menu #fileMenu="mdMenu">
+        <button md-menu-item>New</button>
+      </md-menu>
+      <button class="slt-layers-menu-group-button"
+        [mdMenuTriggerFor]="fileMenu">
+        File
+      </button>
+      <md-menu #importMenu="mdMenu">
+        <button md-menu-item>Add layers from SVG</button>
+      </md-menu>
+      <button class="slt-layers-menu-group-button"
+        [mdMenuTriggerFor]="importMenu">
+        Import
+      </button>
+      <md-menu #exportMenu="mdMenu">
+        <button md-menu-item>Vector Drawable</button>
+        <button md-menu-item>Animated Vector Drawable</button>
+      </md-menu>
+      <button class="slt-layers-menu-group-button"
+        [mdMenuTriggerFor]="exportMenu">
+        Export
+      </button>
+      <div fxFlex></div>
+      <md-menu #addLayerMenu="mdMenu">
+        <button md-menu-item>New path</button>
+        <button md-menu-item>New clip path</button>
+        <button md-menu-item>New layer group</button>
+      </md-menu>
+      <button md-icon-button
+        mdTooltip="Add layer"
+        mdTooltipPosition="below"
+        mdTooltipShowDelay="300"
+        [mdMenuTriggerFor]="addLayerMenu">
+        <md-icon svgIcon="addlayer"></md-icon>
+      </button>
     </div>
 
     <div appScrollGroup="timeline"
