@@ -1,3 +1,4 @@
+import * as _ from 'lodash';
 import { Path } from '../paths';
 import {
   Property, PathProperty, ColorProperty,
@@ -16,10 +17,11 @@ import { Interpolator, INTERPOLATORS } from '.';
 export abstract class AnimationBlock<T extends AnimationBlockType> {
 
   constructor(obj: ConstructorArgs<T>) {
+    this.id = obj.id || _.uniqueId();
     this.layerId = obj.layerId;
     this.propertyName = obj.propertyName;
     this.startTime = obj.startTime || 0;
-    this.endTime = obj.endTime || 0;
+    this.endTime = obj.endTime || 100;
     if (this.startTime > this.endTime) {
       const tmp = this.endTime;
       this.endTime = this.startTime;
@@ -29,24 +31,20 @@ export abstract class AnimationBlock<T extends AnimationBlockType> {
   }
 
   clone(): PathAnimationBlock | ColorAnimationBlock | NumberAnimationBlock {
-    const blockArgs = {
-      layerId: this.layerId,
-      propertyName: this.propertyName,
-      startTime: this.startTime,
-      endTime: this.endTime,
-      interpolator: this.interpolator,
-    };
     if (this instanceof PathAnimationBlock) {
-      return new PathAnimationBlock(blockArgs);
+      return new PathAnimationBlock(this);
     } else if (this instanceof ColorAnimationBlock) {
-      return new ColorAnimationBlock(blockArgs);
+      return new ColorAnimationBlock(this);
+    } else if (this instanceof NumberAnimationBlock) {
+      return new NumberAnimationBlock(this);
     } else {
-      return new NumberAnimationBlock(blockArgs);
+      throw new Error('Invalid class type');
     }
   }
 }
 
 interface AnimationBlockArgs<T> {
+  id?: string;
   layerId: string;
   propertyName: string;
   startTime?: number;

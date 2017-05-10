@@ -15,12 +15,14 @@ export interface State {
   animations: ReadonlyArray<Animation>;
   selectedAnimationId: string;
   activeAnimationId: string;
+  selectedAnimationBlockIds: Set<string>;
 }
 
 export const initialState: State = {
   animations: [],
   selectedAnimationId: '',
   activeAnimationId: '',
+  selectedAnimationBlockIds: new Set<string>(),
 };
 
 export function reducer(state = initialState, action: animation.Actions): State {
@@ -126,7 +128,7 @@ export function reducer(state = initialState, action: animation.Actions): State 
           return anim;
         }
         anim = anim.clone();
-        anim.blocks.push(newBlock);
+        anim.blocks = anim.blocks.concat(newBlock);
         return anim;
       });
 

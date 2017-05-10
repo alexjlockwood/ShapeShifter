@@ -31,15 +31,7 @@ export class VectorLayer extends AbstractLayer {
   }
 
   clone() {
-    return new VectorLayer({
-      id: this.id,
-      name: this.name,
-      children: this.children.slice(),
-      // TODO: paths are immutable, so can we avoid the extra clone?
-      width: this.width,
-      height: this.height,
-      alpha: this.alpha,
-    });
+    return new VectorLayer(this);
   }
 
   deepClone() {

@@ -13,30 +13,16 @@ import { AnimationBlock } from '.';
   new NumberProperty('duration', { min: 100, max: 60000 }),
 )
 export class Animation {
-  private blocks_: AnimationBlock<any>[] = [];
 
   constructor(readonly obj: ConstructorArgs) {
     this.id = obj.id || _.uniqueId();
     this.name = obj.name || '';
-    this.blocks = (obj.blocks || []).map(b => b.clone());
+    this.blocks = obj.blocks || [];
     this.duration = obj.duration || 100;
   }
 
-  get blocks() {
-    return this.blocks_ || [];
-  }
-
-  set blocks(blocks: AnimationBlock<any>[] | undefined) {
-    this.blocks_ = blocks || [];
-  }
-
   clone() {
-    return new Animation({
-      id: this.id,
-      name: this.name,
-      blocks: this.blocks.slice(),
-      duration: this.duration,
-    });
+    return new Animation(this);
   }
 }
 
@@ -44,11 +30,11 @@ interface AnimationArgs {
   id?: string;
   name?: string;
   duration?: number;
+  blocks?: ReadonlyArray<AnimationBlock<any>>;
 }
 
 export interface Animation extends AnimationArgs, Inspectable { }
 
-export interface ConstructorArgs extends AnimationArgs {
-  blocks?: AnimationBlock<any>[];
-}
+// tslint:disable-next-line
+export interface ConstructorArgs extends AnimationArgs { }
 

@@ -20,13 +20,7 @@ export class ClipPathLayer extends AbstractLayer {
   }
 
   clone() {
-    return new ClipPathLayer({
-      id: this.id,
-      name: this.name,
-      children: [],
-      // TODO: paths are immutable, so can we avoid the extra clone?
-      pathData: this.pathData.clone(),
-    });
+    return new ClipPathLayer(this);
   }
 
   deepClone() {
@@ -42,7 +36,5 @@ interface ClipPathLayerArgs {
   pathData: Path;
 }
 
-export interface ClipPathLayer extends AbstractLayer, ClipPathLayerArgs {
-  clone(): ClipPathLayer;
-}
+export interface ClipPathLayer extends AbstractLayer, ClipPathLayerArgs { }
 export interface ConstructorArgs extends AbstractConstructorArgs, ClipPathLayerArgs { }

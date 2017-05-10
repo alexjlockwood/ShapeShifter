@@ -68,25 +68,7 @@ export class PathLayer extends AbstractLayer {
   }
 
   clone() {
-    return new PathLayer({
-      id: this.id,
-      name: this.name,
-      children: [],
-      // TODO: paths are immutable, so can we avoid the extra clone?
-      pathData: this.pathData.clone(),
-      fillColor: this.fillColor,
-      fillAlpha: this.fillAlpha,
-      strokeColor: this.strokeColor,
-      strokeAlpha: this.strokeAlpha,
-      strokeWidth: this.strokeWidth,
-      strokeLinecap: this.strokeLinecap,
-      strokeLinejoin: this.strokeLinejoin,
-      strokeMiterLimit: this.strokeMiterLimit,
-      trimPathStart: this.trimPathStart,
-      trimPathEnd: this.trimPathEnd,
-      trimPathOffset: this.trimPathOffset,
-      fillType: this.fillType,
-    });
+    return new PathLayer(this);
   }
 
   deepClone() {
