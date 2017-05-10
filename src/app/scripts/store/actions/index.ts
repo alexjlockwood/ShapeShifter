@@ -3,6 +3,8 @@ export {
   SelectAnimationId,
   ActivateAnimationId,
   AddAnimationBlock,
+  SelectAnimationBlockId,
+  ReplaceAnimationBlocks,
 } from './Animation';
 export {
   AddVectorLayers,

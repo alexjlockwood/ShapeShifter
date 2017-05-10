@@ -12,6 +12,7 @@ import {
   State,
   getAnimations,
   getCollapsedLayerIds,
+  getSelectedBlockIds,
 } from '../scripts/store/reducers';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/combineLatest';
@@ -44,21 +45,18 @@ export class TimelineAnimationRowComponent implements OnInit, Callbacks {
       Observable.combineLatest(
         this.store.select(getAnimations),
         this.store.select(getCollapsedLayerIds),
-      ).map(([animations, collapsedLayerIds]) => {
+        this.store.select(getSelectedBlockIds),
+      ).map(([animations, collapsedLayerIds, selectedBlockIds]) => {
         const blocksByAnimationByPropertyValues =
           _.values(ModelUtil.getBlocksByAnimationByProperty(this.layer.id, animations));
         return {
           blocksByAnimationByPropertyValues,
           isExpanded: !collapsedLayerIds.has(this.layer.id),
+          selectedBlockIds,
         }
       })
   }
 
-  // TODO: this doesn't get called (unlike the click event in layer list tree)!!!!
-  // TODO: this doesn't get called (unlike the click event in layer list tree)!!!!
-  // TODO: this doesn't get called (unlike the click event in layer list tree)!!!!
-  // TODO: this doesn't get called (unlike the click event in layer list tree)!!!!
-  // TODO: this doesn't get called (unlike the click event in layer list tree)!!!!
   // @Override Callbacks
   timelineBlockClick(
     event: MouseEvent,
@@ -77,23 +75,22 @@ export class TimelineAnimationRowComponent implements OnInit, Callbacks {
     layer: Layer,
   ) {
     this.onTimelineBlockMouseDown.emit({ event, block, animation, layer });
-    return false;
   }
 
   // Used by *ngFor loop.
   trackLayerFn(index: number, layer: Layer) {
-    return layer.id; // TODO: will this be OK for renamed layers?
+    return layer.id;
   }
 }
 
 export interface Callbacks {
-  timelineBlockClick(
+  timelineBlockMouseDown(
     event: MouseEvent,
     block: AnimationBlock<any>,
     animation: Animation,
     layer: Layer,
   );
-  timelineBlockMouseDown(
+  timelineBlockClick(
     event: MouseEvent,
     block: AnimationBlock<any>,
     animation: Animation,
@@ -104,6 +101,7 @@ export interface Callbacks {
 interface AnimationRowModel {
   readonly blocksByAnimationByPropertyValues: AnimationMap<AnimationBlock<any>[]>[];
   readonly isExpanded: boolean;
+  readonly selectedBlockIds: Set<string>;
 }
 
 interface Event {

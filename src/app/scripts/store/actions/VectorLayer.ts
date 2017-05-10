@@ -10,7 +10,7 @@ export const TOGGLE_LAYER_ID_VISIBILITY = 'TOGGLE_LAYER_ID_VISIBILITY';
 export class AddVectorLayers implements Action {
   readonly type = ADD_VECTOR_LAYERS;
   readonly payload: { vectorLayers: ReadonlyArray<VectorLayer> };
-  constructor(vectorLayers: ReadonlyArray<VectorLayer>) {
+  constructor(readonly vectorLayers: ReadonlyArray<VectorLayer>) {
     this.payload = { vectorLayers };
   }
 }
@@ -18,7 +18,7 @@ export class AddVectorLayers implements Action {
 export class ReplaceVectorLayer implements Action {
   readonly type = REPLACE_VECTOR_LAYER;
   readonly payload: { vectorLayer: VectorLayer };
-  constructor(vectorLayer: VectorLayer) {
+  constructor(readonly vectorLayer: VectorLayer) {
     this.payload = { vectorLayer };
   }
 }
@@ -26,7 +26,7 @@ export class ReplaceVectorLayer implements Action {
 export class SelectLayerId implements Action {
   readonly type = SELECT_LAYER_ID;
   readonly payload: { layerId: string, clearExisting: boolean };
-  constructor(layerId: string, clearExisting = true) {
+  constructor(readonly layerId: string, readonly clearExisting = true) {
     this.payload = { layerId, clearExisting };
   }
 }
@@ -34,7 +34,7 @@ export class SelectLayerId implements Action {
 export class ToggleLayerIdExpansion implements Action {
   readonly type = TOGGLE_LAYER_ID_EXPANSION;
   readonly payload: { layerId: string, recursive: boolean };
-  constructor(layerId: string, recursive = false) {
+  constructor(readonly layerId: string, readonly recursive = false) {
     this.payload = { layerId, recursive };
   }
 }
@@ -42,7 +42,7 @@ export class ToggleLayerIdExpansion implements Action {
 export class ToggleLayerIdVisibility implements Action {
   readonly type = TOGGLE_LAYER_ID_VISIBILITY;
   readonly payload: { layerId: string };
-  constructor(layerId: string) {
+  constructor(readonly layerId: string) {
     this.payload = { layerId };
   }
 }

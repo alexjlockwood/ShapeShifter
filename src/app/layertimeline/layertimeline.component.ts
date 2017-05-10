@@ -11,6 +11,7 @@ import { ScrubEvent } from './layertimeline.directive';
 import { VectorLayer, Layer, GroupLayer, LayerUtil, PathLayer, ClipPathLayer } from '../scripts/layers';
 import { Animation, AnimationBlock } from '../scripts/animations';
 import { Dragger } from '../scripts/dragger';
+import { ModelUtil } from '../scripts/common';
 
 import { Store } from '@ngrx/store';
 import {
@@ -19,12 +20,15 @@ import {
   getVectorLayers,
   getSelectedAnimationId,
   getActiveAnimationId,
+  getSelectedBlockIds,
 } from '../scripts/store/reducers';
 import {
   AddAnimations,
   SelectAnimationId,
   ActivateAnimationId,
   AddAnimationBlock,
+  SelectAnimationBlockId,
+  ReplaceAnimationBlocks,
   AddVectorLayers,
   ReplaceVectorLayer,
   SelectLayerId,
@@ -35,7 +39,20 @@ import { Observable } from 'rxjs/Observable';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import 'rxjs/add/observable/combineLatest';
 
+// Distance in pixels from a snap point before snapping to the point.
+const SNAP_PIXELS = 10;
 const LAYER_INDENT_PIXELS = 20;
+const MIN_BLOCK_DURATION = 10;
+const MAX_ZOOM = 10;
+const MIN_ZOOM = 0.01;
+
+enum MouseActions {
+  Moving = 1,
+  ScalingUniformStart,
+  ScalingUniformEnd,
+  ScalingTogetherStart,
+  ScalingTogetherEnd,
+}
 
 @Component({
   selector: 'app-layertimeline',
@@ -51,11 +68,17 @@ export class LayerTimelineComponent implements
   // Layer timeline variables.
   horizZoom = 2; // 1ms = 2px
   activeTime = 10;
-  private shouldSuppressClick = false;
   dragIndicatorSource = new BehaviorSubject<DragIndicatorInfo>({
     isVisible: false, left: 0, top: 0,
   });
+
+  private shouldSuppressClick = false;
+  private shouldSuppressRebuildSnapTimes = false;
+  private snapTimes: Map<string, number[]>;
+
+  private animations: ReadonlyArray<Animation>;
   private vectorLayers: ReadonlyArray<VectorLayer>;
+  private selectedBlockIds: Set<string>;
 
   layerTimelineModel$: Observable<LayerTimelineModel>;
 
@@ -67,8 +90,14 @@ export class LayerTimelineComponent implements
       this.store.select(getVectorLayers),
       this.store.select(getSelectedAnimationId),
       this.store.select(getActiveAnimationId),
-    ).map(([animations, vectorLayers, selectedAnimationId, activeAnimationId]) => {
+      this.store.select(getSelectedBlockIds),
+    ).map(([
+      animations, vectorLayers, selectedAnimationId, activeAnimationId, selectedBlockIds,
+    ]) => {
+      this.animations = animations;
+      this.rebuildSnapTimes();
       this.vectorLayers = vectorLayers;
+      this.selectedBlockIds = selectedBlockIds;
       return {
         animations,
         vectorLayers,
@@ -89,28 +118,312 @@ export class LayerTimelineComponent implements
   }
 
   // Called from the LayerTimelineComponent template.
-  timelineBlockClick(
-    event: MouseEvent,
-    block: AnimationBlock<any>,
-    animation: Animation,
-    layer: Layer,
-  ) {
-    // TODO: implement this
-  }
-
-  // @Override TimelineAnimationRowCallbacks
   animationTimelineMouseDown(event: MouseEvent, animation: Animation) {
     this.store.dispatch(new ActivateAnimationId(animation.id));
   }
 
   // @Override TimelineAnimationRowCallbacks
   timelineBlockMouseDown(
+    mouseDownEvent: MouseEvent,
+    dragBlock: AnimationBlock<any>,
+    animation: Animation,
+    layer: Layer,
+  ) {
+    // TODO: not sure if this JQuery 'class' stuff will work with view encapsulation?
+    const $target = $(mouseDownEvent.target);
+
+    // Some geometry and hit-testing basics.
+    const animRect = $(mouseDownEvent.target).parents('.slt-property').get(0).getBoundingClientRect();
+    const xToTimeFn = x => (x - animRect.left) / animRect.width * animation.duration;
+    const downTime = xToTimeFn(mouseDownEvent.clientX);
+
+    // Determine the action based on where the user clicked and the modifier keys.
+    let action = MouseActions.Moving;
+    if ($target.hasClass('slt-timeline-block-edge-end')) {
+      action = mouseDownEvent.shiftKey || mouseDownEvent.metaKey
+        ? MouseActions.ScalingTogetherEnd
+        : MouseActions.ScalingUniformEnd;
+    } else if ($target.hasClass('slt-timeline-block-edge-start')) {
+      action = mouseDownEvent.shiftKey || mouseDownEvent.metaKey
+        ? MouseActions.ScalingTogetherStart
+        : MouseActions.ScalingUniformStart;
+    }
+
+    // Start up a cache of info for each selected block, calculating the left and right
+    // bounds for each selected block, based on adjacent non-dragging blocks.
+    const blocksByPropertyByLayer = ModelUtil.getOrderedBlocksByPropertyByLayer(animation);
+
+    // Either drag all selected blocks or just the mousedown block.
+    const selectedBlocks = animation.blocks.filter(block => this.selectedBlockIds.has(block.id));
+    const draggingBlocks = this.selectedBlockIds.has(dragBlock.id) ? selectedBlocks : [dragBlock];
+
+    interface BlockInfo {
+      block: AnimationBlock<any>;
+      startBound: number;
+      endBound: number;
+      downStartTime: number;
+      downEndTime: number;
+      newStartTime?: number;
+      newEndTime?: number;
+    }
+
+    const blockInfos: BlockInfo[] = draggingBlocks
+      .map(block => {
+        // By default the block is only bound by the animation duration.
+        let startBound = 0;
+        let endBound = animation.duration;
+
+        const blockNeighbors = blocksByPropertyByLayer[block.layerId][block.propertyName];
+        const indexIntoNeighbors = _.findIndex(blockNeighbors, b => block.id === b.id);
+
+        // Find start time bound.
+        if (indexIntoNeighbors > 0) {
+          for (let i = indexIntoNeighbors - 1; i >= 0; i--) {
+            const neighbor = blockNeighbors[i];
+            if (!draggingBlocks.includes(neighbor)
+              || action === MouseActions.ScalingUniformStart) {
+              // Only be bound by neighbors not being dragged
+              // except when uniformly changing just start time.
+              startBound = neighbor.endTime;
+              break;
+            }
+          }
+        }
+
+        // Find end time bound.
+        if (indexIntoNeighbors < blockNeighbors.length - 1) {
+          for (let i = indexIntoNeighbors + 1; i < blockNeighbors.length; i++) {
+            const neighbor = blockNeighbors[i];
+            if (!draggingBlocks.includes(neighbor)
+              || action === MouseActions.ScalingUniformEnd) {
+              // Only be bound by neighbors not being dragged
+              // except when uniformly changing just end time.
+              endBound = neighbor.startTime;
+              break;
+            }
+          }
+        }
+
+        return {
+          block,
+          startBound,
+          endBound,
+          downStartTime: block.startTime,
+          downEndTime: block.endTime,
+        };
+      });
+
+    const dragBlockDownStartTime = dragBlock.startTime;
+    const dragBlockDownEndTime = dragBlock.endTime;
+
+    let minStartTime, maxEndTime;
+    if (action === MouseActions.ScalingTogetherStart
+      || action === MouseActions.ScalingTogetherEnd) {
+      minStartTime = blockInfos.reduce(
+        (t, info) => Math.min(t, info.block.startTime), Infinity);
+      maxEndTime = blockInfos.reduce(
+        (t, info) => Math.max(t, info.block.endTime), 0);
+      // Avoid divide by zero.
+      maxEndTime = Math.max(maxEndTime, minStartTime + MIN_BLOCK_DURATION);
+    }
+
+    // tslint:disable-next-line
+    new Dragger({
+      direction: 'horizontal',
+      downX: mouseDownEvent.clientX,
+      downY: mouseDownEvent.clientY,
+      draggingCursor: (action === MouseActions.Moving) ? 'grabbing' : 'ew-resize',
+      onBeginDragFn: () => {
+        this.shouldSuppressClick = true;
+        this.shouldSuppressRebuildSnapTimes = true;
+      },
+      onDropFn: () => setTimeout(() => {
+        this.shouldSuppressClick = false;
+        this.shouldSuppressRebuildSnapTimes = false;
+        this.rebuildSnapTimes();
+      }, 0),
+      onDragFn: event => {
+        let timeDelta = Math.round(xToTimeFn(event.clientX) - downTime);
+        const allowSnap = !event.shiftKey && !event.metaKey;
+        const replacementBlocks: AnimationBlock<any>[] = [];
+        switch (action) {
+          case MouseActions.Moving: {
+            blockInfos.forEach(info => {
+              // Snap time delta.
+              if (allowSnap && info.block.id === dragBlock.id) {
+                const newStartTime = info.downStartTime + timeDelta;
+                const newStartTimeSnapDelta = this.snapTime(animation, newStartTime) - newStartTime;
+                const newEndTime = info.downEndTime + timeDelta;
+                const newEndTimeSnapDelta = this.snapTime(animation, newEndTime) - newEndTime;
+                if (newStartTimeSnapDelta) {
+                  if (newEndTimeSnapDelta) {
+                    timeDelta += Math.min(newStartTimeSnapDelta, newEndTimeSnapDelta);
+                  } else {
+                    timeDelta += newStartTimeSnapDelta;
+                  }
+                } else if (newEndTimeSnapDelta) {
+                  timeDelta += newEndTimeSnapDelta;
+                }
+              }
+              // Constrain time delta.
+              timeDelta = Math.min(timeDelta, info.endBound - info.downEndTime);
+              timeDelta = Math.max(timeDelta, info.startBound - info.downStartTime);
+            });
+            blockInfos.forEach(info => {
+              const blockDuration = (info.block.endTime - info.block.startTime);
+              const block = info.block.clone();
+              block.startTime = info.downStartTime + timeDelta;
+              block.endTime = block.startTime + blockDuration;
+              replacementBlocks.push(block);
+            });
+            break;
+          }
+          case MouseActions.ScalingUniformStart: {
+            blockInfos.forEach(info => {
+              // Snap time delta.
+              if (allowSnap && info.block.id === dragBlock.id) {
+                const newStartTime = info.downStartTime + timeDelta;
+                const newStartTimeSnapDelta = this.snapTime(animation, newStartTime) - newStartTime;
+                if (newStartTimeSnapDelta) {
+                  timeDelta += newStartTimeSnapDelta;
+                }
+              }
+              // Constrain time delta.
+              timeDelta = Math.min(timeDelta, (info.block.endTime - MIN_BLOCK_DURATION) - info.downStartTime);
+              timeDelta = Math.max(timeDelta, info.startBound - info.downStartTime);
+            });
+            blockInfos.forEach(info => {
+              const block = info.block.clone();
+              block.startTime = info.downStartTime + timeDelta;
+              replacementBlocks.push(block);
+            });
+            break;
+          }
+          case MouseActions.ScalingUniformEnd: {
+            blockInfos.forEach(info => {
+              // Snap time delta.
+              if (allowSnap && info.block === dragBlock) {
+                const newEndTime = info.downEndTime + timeDelta;
+                const newEndTimeSnapDelta = this.snapTime(animation, newEndTime) - newEndTime;
+                if (newEndTimeSnapDelta) {
+                  timeDelta += newEndTimeSnapDelta;
+                }
+              }
+              // Constrain time delta.
+              timeDelta = Math.min(timeDelta, info.endBound - info.downEndTime);
+              timeDelta = Math.max(timeDelta, (info.block.startTime + MIN_BLOCK_DURATION) - info.downEndTime);
+            });
+            blockInfos.forEach(info => {
+              const block = info.block.clone();
+              block.endTime = info.downEndTime + timeDelta;
+              replacementBlocks.push(block);
+            });
+            break;
+          }
+          case MouseActions.ScalingTogetherStart: {
+            let scale = (dragBlockDownStartTime + timeDelta - maxEndTime)
+              / (dragBlockDownStartTime - maxEndTime);
+            scale = Math.min(scale, maxEndTime / (maxEndTime - minStartTime));
+            let cancel = false;
+            blockInfos.forEach(info => {
+              info.newStartTime = maxEndTime - (maxEndTime - info.downStartTime) * scale;
+              info.newEndTime = Math.max(
+                maxEndTime - (maxEndTime - info.downEndTime) * scale,
+                info.newStartTime + MIN_BLOCK_DURATION);
+              if (info.newStartTime < info.startBound || info.newEndTime > info.endBound) {
+                cancel = true;
+              }
+            });
+            if (!cancel) {
+              blockInfos.forEach(info => {
+                const block = info.block.clone();
+                block.startTime = info.newStartTime;
+                block.endTime = info.newEndTime;
+                replacementBlocks.push(block);
+              });
+            }
+            break;
+          }
+          case MouseActions.ScalingTogetherEnd: {
+            let scale = (dragBlockDownEndTime + timeDelta - minStartTime)
+              / (dragBlockDownEndTime - minStartTime);
+            scale = Math.min(scale, (animation.duration - minStartTime) / (maxEndTime - minStartTime));
+            let cancel = false;
+            blockInfos.forEach(info => {
+              info.newStartTime = minStartTime + (info.downStartTime - minStartTime) * scale;
+              info.newEndTime = Math.max(
+                minStartTime + (info.downEndTime - minStartTime) * scale,
+                info.newStartTime + MIN_BLOCK_DURATION);
+              if (info.newStartTime < info.startBound || info.newEndTime > info.endBound) {
+                cancel = true;
+              }
+            });
+            if (!cancel) {
+              blockInfos.forEach(info => {
+                const block = info.block.clone();
+                block.startTime = info.newStartTime;
+                block.endTime = info.newEndTime;
+                replacementBlocks.push(block);
+              });
+            }
+            break;
+          }
+        }
+        this.store.dispatch(new ReplaceAnimationBlocks(replacementBlocks));
+      },
+    });
+  }
+
+  /**
+   * Builds a cache of snap times for all available animations.
+   */
+  private rebuildSnapTimes() {
+    if (this.shouldSuppressRebuildSnapTimes) {
+      return;
+    }
+    this.snapTimes = new Map();
+    if (this.animations) {
+      this.animations.forEach(animation => {
+        const snapTimesSet = new Set<number>();
+        snapTimesSet.add(0);
+        snapTimesSet.add(animation.duration);
+        animation.blocks.forEach(block => {
+          snapTimesSet.add(block.startTime);
+          snapTimesSet.add(block.endTime);
+        });
+        this.snapTimes.set(animation.id, Array.from(snapTimesSet));
+      });
+    }
+  }
+
+  /**
+   * Returns a new time, possibly snapped to animation boundaries
+   */
+  snapTime(animation: Animation, time: number, includeActiveTime = true) {
+    const snapTimes = this.snapTimes.get(animation.id);
+    const snapDelta = SNAP_PIXELS / this.horizZoom;
+    const reducerFn = (bestSnapTime, snapTime) => {
+      const dist = Math.abs(time - snapTime);
+      return (dist < snapDelta && dist < Math.abs(time - bestSnapTime))
+        ? snapTime
+        : bestSnapTime;
+    };
+    let bestSnapTime = snapTimes.reduce(reducerFn, Infinity);
+    if (includeActiveTime) {
+      bestSnapTime = reducerFn(bestSnapTime, this.activeTime);
+    }
+    return isFinite(bestSnapTime) ? bestSnapTime : time;
+  }
+
+  // @Override TimelineAnimationRowCallbacks
+  timelineBlockClick(
     event: MouseEvent,
     block: AnimationBlock<any>,
     animation: Animation,
     layer: Layer,
   ) {
-    // TODO: implement this
+    const clearExisting = !event.metaKey && !event.shiftKey;
+    this.store.dispatch(new SelectAnimationBlockId(block.id, clearExisting));
   }
 
   // @Override LayerListTreeComponentCallbacks
@@ -132,13 +445,11 @@ export class LayerTimelineComponent implements
   layerToggleExpanded(event: MouseEvent, layer: Layer) {
     const recursive = event.metaKey || event.shiftKey
     this.store.dispatch(new ToggleLayerIdExpansion(layer.id, recursive));
-    event.stopPropagation();
   }
 
   // @Override LayerListTreeComponentCallbacks
   layerToggleVisibility(event: MouseEvent, layer: Layer) {
     this.store.dispatch(new ToggleLayerIdVisibility(layer.id));
-    event.stopPropagation();
   }
 
   // @Override LayerListTreeComponentCallbacks

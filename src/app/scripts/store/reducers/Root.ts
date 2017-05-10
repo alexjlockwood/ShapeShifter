@@ -18,6 +18,13 @@ export const initialState: State = {
 
 type RootActions = animation.Actions | vectorLayer.Actions;
 
+export function reducer(state = initialState, action: RootActions) {
+  state = prereduce(state, action);
+  state = reduce(state, action);
+  state = postreduce(state, action);
+  return state;
+}
+
 function prereduce(state: State, action: RootActions) {
   // TODO: preprocess state here if necessary
   return state;
@@ -30,12 +37,5 @@ const reduce: ActionReducer<State> = combineReducers({
 
 function postreduce(state: State, action: RootActions) {
   // TODO: postprocess state here if necessary
-  return state;
-}
-
-export function reducer(state = initialState, action: RootActions) {
-  state = prereduce(state, action);
-  state = reduce(state, action);
-  state = postreduce(state, action);
   return state;
 }

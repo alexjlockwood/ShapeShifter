@@ -18,6 +18,7 @@ export abstract class AnimationBlock<T extends AnimationBlockType> {
 
   constructor(obj: ConstructorArgs<T>) {
     this.id = obj.id || _.uniqueId();
+    this.animationId = obj.animationId;
     this.layerId = obj.layerId;
     this.propertyName = obj.propertyName;
     this.startTime = obj.startTime || 0;
@@ -45,6 +46,7 @@ export abstract class AnimationBlock<T extends AnimationBlockType> {
 
 interface AnimationBlockArgs<T> {
   id?: string;
+  animationId: string;
   layerId: string;
   propertyName: string;
   startTime?: number;

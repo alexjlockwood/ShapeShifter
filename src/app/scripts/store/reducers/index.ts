@@ -1,7 +1,6 @@
 import { createSelector } from 'reselect';
 import { ActionReducer } from '@ngrx/store';
 import { storeFreeze } from 'ngrx-store-freeze';
-import { storeLogger } from 'ngrx-store-logger';
 import { combineReducers } from '@ngrx/store';
 import { environment } from '../../../../environments/environment';
 import { compose } from '@ngrx/core/compose';
@@ -27,6 +26,7 @@ export function reducer(state: any, action: any) {
 export const getAnimations = (state: State) => state.root.animations.animations;
 export const getSelectedAnimationId = (state: State) => state.root.animations.selectedAnimationId;
 export const getActiveAnimationId = (state: State) => state.root.animations.activeAnimationId;
+export const getSelectedBlockIds = (state: State) => state.root.animations.selectedBlockIds;
 
 export const getVectorLayers = (state: State) => state.root.vectorLayers.vectorLayers;
 export const getSelectedLayerIds = (state: State) => state.root.vectorLayers.selectedLayerIds;

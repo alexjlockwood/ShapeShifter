@@ -7,7 +7,6 @@
     [ngClass]="{'slt-properties-empty': !model.blocksByAnimationByPropertyValues.length}">
     <div class="slt-property"
       *ngFor="let blocksByAnimation of model.blocksByAnimationByPropertyValues">
-      <!-- TODO: highlight selected animation blocks HERE! -->
       <div class="slt-timeline-block"
         *ngFor="let block of blocksByAnimation[this.animation.id]"
         (click)="this.timelineBlockClick($event, block, this.animation, this.layer)"
@@ -17,7 +16,7 @@
           'left': (100 * block.startTime / this.animation.duration) + '%',
           'width': (100 * (block.endTime - block.startTime) / this.animation.duration) + '%'
         }"
-        [ngClass]="{'is-selected': false}">
+        [ngClass]="{'is-selected': model.selectedBlockIds.has(block.id)}">
         <div class="slt-timeline-block-edge slt-timeline-block-edge-start"></div>
         <div class="slt-timeline-block-edge slt-timeline-block-edge-end"></div>
       </div>
