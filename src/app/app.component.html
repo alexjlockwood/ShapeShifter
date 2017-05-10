@@ -1,21 +1,33 @@
-<div class="app-container" fxLayout="column">
+<!-- Disable HTML5 drag/drop for the entire document. -->
+<div class="app-container"
+  fxLayout="column"
+  ondragstart="return false;"
+  ondrop="return false;">
   <!-- Toolbar. -->
   <div class="toolbar-container">
     <app-toolbar></app-toolbar>
   </div>
-  <div fxLayout="row" fxFlex>
-    <div class="display-container" fxLayout="column" fxFlex>
+  <div fxLayout="row"
+    fxFlex>
+    <div class="display-container"
+      fxLayout="column"
+      fxFlex>
       <!-- Start/Preview/End canvases. -->
       <ng-container *ngIf="{type: (cursorObservable | async) } as cursor">
-        <div #canvasContainer class="canvas-container" fxFlex fxLayout="row"
-          (click)="onCanvasContainerClick()" fxLayoutAlign="center center"
+        <div #canvasContainer
+          class="canvas-container"
+          fxFlex
+          fxLayout="row"
+          (click)="onCanvasContainerClick()"
+          fxLayoutAlign="center center"
           [ngClass]="{
           'show-default-cursor': cursor.type === CURSOR_DEFAULT,
           'show-pointer-cursor': cursor.type === CURSOR_POINTER,
           'show-pen-cursor': cursor.type === CURSOR_PEN
         }">
           <app-canvas [canvasType]="START_CANVAS"></app-canvas>
-          <app-canvas *ngIf="wasMorphable" [canvasType]="PREVIEW_CANVAS"></app-canvas>
+          <app-canvas *ngIf="wasMorphable"
+            [canvasType]="PREVIEW_CANVAS"></app-canvas>
           <app-canvas [canvasType]="END_CANVAS"></app-canvas>
         </div>
       </ng-container>

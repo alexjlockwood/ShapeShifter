@@ -4,16 +4,16 @@ import { Point } from '../common';
 const DRAG_SLOP_PIXELS = 4;
 
 export class Dragger {
-  private direction: Direction;
-  private downX: number;
-  private downY: number;
-  private shouldSkipSlopCheck: boolean;
+  private readonly direction: Direction;
+  private readonly downX: number;
+  private readonly downY: number;
+  private readonly shouldSkipSlopCheck: boolean;
+  private readonly onBeginDragFn: (event: JQueryMouseEventObject) => void;
+  private readonly onDragFn: (event: JQueryMouseEventObject, point: Point) => void;
+  private readonly onDropFn: () => void;
   private draggingCursor_: string;
   private isDragging: boolean;
   private draggingScrim: JQuery;
-  private onBeginDragFn: (event: JQueryMouseEventObject) => void;
-  private onDragFn: (event: JQueryMouseEventObject, point: Point) => void;
-  private onDropFn: () => void;
 
   constructor(opts: ConstructorArgs = {}) {
     this.direction = opts.direction || 'both';
