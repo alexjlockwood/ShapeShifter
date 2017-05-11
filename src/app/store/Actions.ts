@@ -1,6 +1,6 @@
 import { Action } from '@ngrx/store';
-import { Animation, AnimationBlock } from '../animations';
-import { VectorLayer, Layer } from '../layers';
+import { Animation, AnimationBlock } from '../scripts/animations';
+import { VectorLayer, Layer } from '../scripts/layers';
 
 export const ADD_ANIMATIONS = 'ADD_ANIMATIONS';
 export const SELECT_ANIMATION_ID = 'SELECT_ANIMATION_ID';

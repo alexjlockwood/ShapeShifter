@@ -18,7 +18,7 @@ import {
   ReplaceVectorLayer,
   ReplaceBlocks,
   ReplaceAnimations,
-} from '../scripts/store';
+} from '../store';
 import 'rxjs/add/observable/combineLatest';
 
 @Component({

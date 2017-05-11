@@ -13,7 +13,7 @@ import {
   getAnimations,
   getCollapsedLayerIds,
   getSelectedBlockIds,
-} from '../scripts/store';
+} from '../store';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/combineLatest';
 

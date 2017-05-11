@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 import { createSelector } from 'reselect';
-import { VectorLayer } from '../layers';
+import { VectorLayer } from '../scripts/layers';
 import * as actions from './Actions';
 import {
   Animation,
@@ -8,9 +8,9 @@ import {
   PathAnimationBlock,
   ColorAnimationBlock,
   NumberAnimationBlock,
-} from '../animations';
-import { ModelUtil } from '../common';
-import { PathProperty, ColorProperty } from '../properties';
+} from '../scripts/animations';
+import { ModelUtil } from '../scripts/common';
+import { PathProperty, ColorProperty } from '../scripts/properties';
 
 export interface State {
   // TODO: not sure it makes sense to have a list of vectors anymore

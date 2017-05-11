@@ -33,7 +33,7 @@ import {
   State,
   AddAnimations,
   AddVectorLayers,
-} from './scripts/store';
+} from './store';
 
 const IS_DEV_MODE = !environment.production;
 const AUTO_LOAD_DEMO = IS_DEV_MODE && false;
