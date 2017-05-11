@@ -150,11 +150,6 @@ export class LayerTimelineComponent implements
       // TODO: need to set a unique name on the animation!
       // TODO: need to set a unique name on the animation!
       // TODO: need to set a unique name on the animation!
-      // TODO: scrubber doesn't work right when there are multiple animations
-      // TODO: scrubber doesn't work right when there are multiple animations
-      // TODO: scrubber doesn't work right when there are multiple animations
-      // TODO: scrubber doesn't work right when there are multiple animations
-      // TODO: scrubber doesn't work right when there are multiple animations
       name: 'TODO: fix this!',
     })]));
   }

@@ -97,8 +97,7 @@
 
   <!-- Animation timeline. -->
   <div class="slt-timeline"
-    #timeline
-    fxLayout="row">
+    #timeline>
     <ng-container *ngFor="let animation of model.animations; trackBy: trackAnimationFn;">
       <div #timelineAnimation
         *ngIf="{
@@ -109,9 +108,7 @@
         (mousedown)="this.animationTimelineMouseDown($event, animation)"
         [ngClass]="{'is-active': model.activeAnimationId === animation.id}"
         [ngStyle]="{'width': (animation.duration * animationData.horizZoom + 40) + 'px'}"
-        fxLayout="column"
-        fxFlex>
-
+        fxLayout="column">
         <div class="slt-header">
           <div class="slt-timeline-animation-meta"
             [ngClass]="{'is-selected': model.selectedAnimationIds.has(animation.id)}"
