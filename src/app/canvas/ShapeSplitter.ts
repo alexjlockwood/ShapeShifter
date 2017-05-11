@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import { CanvasComponent } from './canvas.component';
+import { OldCanvasComponent } from './oldcanvas.component';
 import { ProjectionOntoPath, HitResult } from '../scripts/paths';
 import { Point } from '../scripts/common';
 import {
@@ -21,7 +21,7 @@ export class ShapeSplitter {
   private hitResult: HitResult;
   private lastKnownMouseLocation: Point;
 
-  constructor(private readonly component: CanvasComponent) {
+  constructor(private readonly component: OldCanvasComponent) {
     this.appModeService = component.appModeService;
     this.selectionService = component.selectionService;
     this.hoverService = component.hoverService;

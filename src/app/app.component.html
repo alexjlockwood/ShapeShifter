@@ -25,10 +25,10 @@
           'show-pointer-cursor': cursor.type === CURSOR_POINTER,
           'show-pen-cursor': cursor.type === CURSOR_PEN
         }">
-          <app-canvas [canvasType]="START_CANVAS"></app-canvas>
-          <app-canvas *ngIf="wasMorphable"
-            [canvasType]="PREVIEW_CANVAS"></app-canvas>
-          <app-canvas [canvasType]="END_CANVAS"></app-canvas>
+          <app-oldcanvas [canvasType]="START_CANVAS"></app-oldcanvas>
+          <app-oldcanvas *ngIf="wasMorphable"
+            [canvasType]="PREVIEW_CANVAS"></app-oldcanvas>
+          <app-oldcanvas [canvasType]="END_CANVAS"></app-oldcanvas>
         </div>
       </ng-container>
       <!-- Playback controls. -->

@@ -1,4 +1,4 @@
-import { CanvasComponent } from './canvas.component';
+import { OldCanvasComponent } from './oldcanvas.component';
 import { ProjectionOntoPath } from '../scripts/paths';
 import { Point } from '../scripts/common';
 import { CanvasType } from '../CanvasType';
@@ -21,7 +21,7 @@ export class SegmentSplitter {
   private lastKnownMouseLocation: Point;
 
   constructor(
-    private readonly component: CanvasComponent,
+    private readonly component: OldCanvasComponent,
     private readonly restrictToSubIdx?: number,
   ) {
     this.stateService = component.stateService;

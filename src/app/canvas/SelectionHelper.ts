@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import { CanvasComponent } from './canvas.component';
+import { OldCanvasComponent } from './oldcanvas.component';
 import { ProjectionOntoPath } from '../scripts/paths';
 import { Point, MathUtil, Matrix } from '../scripts/common';
 import { CanvasType } from '../CanvasType';
@@ -30,7 +30,7 @@ export class SelectionHelper {
   private lastKnownMouseLocation: Point;
   private initialMouseDown: Point;
 
-  constructor(private readonly component: CanvasComponent) {
+  constructor(private readonly component: OldCanvasComponent) {
     this.stateService = component.stateService;
     this.selectionService = component.selectionService;
     this.hoverService = component.hoverService;

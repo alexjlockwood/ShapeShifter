@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import { CanvasComponent } from './canvas.component';
+import { OldCanvasComponent } from './oldcanvas.component';
 import { Point } from '../scripts/common';
 import { CanvasType } from '../CanvasType';
 import {
@@ -21,7 +21,7 @@ export class MorphSubPathHelper {
   private readonly morphSubPathService: MorphSubPathService;
   private readonly canvasType: CanvasType;
 
-  constructor(private readonly component: CanvasComponent) {
+  constructor(private readonly component: OldCanvasComponent) {
     this.stateService = component.stateService;
     this.hoverService = component.hoverService;
     this.selectionService = component.selectionService;
