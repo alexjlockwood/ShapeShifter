@@ -20,7 +20,7 @@ export interface State {
   readonly collapsedLayerIds: Set<string>;
   readonly hiddenLayerIds: Set<string>;
   readonly animations: ReadonlyArray<Animation>;
-  readonly selectedAnimationId: string;
+  readonly selectedAnimationIds: Set<string>;
   readonly activeAnimationId: string;
   readonly selectedBlockIds: Set<string>;
 }
@@ -31,7 +31,7 @@ export const initialState: State = {
   collapsedLayerIds: new Set<string>(),
   hiddenLayerIds: new Set<string>(),
   animations: [],
-  selectedAnimationId: '',
+  selectedAnimationIds: new Set<string>(),
   activeAnimationId: '',
   selectedBlockIds: new Set<string>(),
 };
@@ -174,7 +174,8 @@ export function reducer(state = initialState, action: actions.Actions): State {
 
     // Select an animation.
     case actions.SELECT_ANIMATION_ID: {
-      return selectAnimationId(state, action.payload.animationId);
+      const { animationId, clearExisting } = action.payload;
+      return selectAnimationId(state, animationId, clearExisting);
     }
 
     // Activate an animation.
@@ -185,6 +186,20 @@ export function reducer(state = initialState, action: actions.Actions): State {
         return state;
       }
       return { ...state, activeAnimationId: animationId };
+    }
+
+    // Replace a list of animations.
+    case actions.REPLACE_ANIMATIONS: {
+      const { animations: replacementAnimations } = action.payload;
+      if (!replacementAnimations.length) {
+        // Do nothing if the list of animations is empty.
+        return state;
+      }
+      const animations = state.animations.map(animation => {
+        const replacementAnimation = _.find(replacementAnimations, r => r.id === animation.id);
+        return replacementAnimation ? replacementAnimation : animation;
+      });
+      return { ...state, animations };
     }
 
     // Add an animation block to the currently active animation.
@@ -326,26 +341,27 @@ export function reducer(state = initialState, action: actions.Actions): State {
   }
 }
 
-function selectAnimationId(state: State, selectedAnimationId: string) {
-  if (selectedAnimationId === state.selectedAnimationId) {
-    // Do nothing if the selected animation ID hasn't changed.
+function selectAnimationId(state: State, animationId: string, clearExisting: boolean) {
+  const oldSelectedAnimationIds = state.selectedBlockIds;
+  const newSelectedAnimationIds = clearExisting ? new Set() : new Set(oldSelectedAnimationIds);
+  newSelectedAnimationIds.add(animationId);
+  if (_.isEqual(oldSelectedAnimationIds, newSelectedAnimationIds)) {
+    // Do nothing if the selections haven't changed.
     return state;
   }
-  // Clear any existing layer/block selections.
-  let { selectedLayerIds, selectedBlockIds } = state;
-  if (selectedLayerIds.size) {
-    selectedLayerIds = new Set<string>();
-  }
+  // Clear any existing animation/layer selections.
+  let { selectedBlockIds, selectedLayerIds } = state;
   if (selectedBlockIds.size) {
     selectedBlockIds = new Set<string>();
   }
+  if (selectedLayerIds.size) {
+    selectedLayerIds = new Set<string>();
+  }
   return {
     ...state,
-    selectedAnimationId,
-    // Selecting a new animation ID also makes it active.
-    activeAnimationId: selectedAnimationId,
-    selectedLayerIds,
     selectedBlockIds,
+    selectedAnimationIds: newSelectedAnimationIds,
+    selectedLayerIds,
   };
 }
 
@@ -358,9 +374,9 @@ function selectBlockId(state: State, blockId: string, clearExisting: boolean) {
     return state;
   }
   // Clear any existing animation/layer selections.
-  let { selectedAnimationId, selectedLayerIds } = state;
-  if (selectedAnimationId) {
-    selectedAnimationId = '';
+  let { selectedAnimationIds, selectedLayerIds } = state;
+  if (selectedAnimationIds.size) {
+    selectedAnimationIds = new Set<string>();
   }
   if (selectedLayerIds.size) {
     selectedLayerIds = new Set<string>();
@@ -368,7 +384,7 @@ function selectBlockId(state: State, blockId: string, clearExisting: boolean) {
   return {
     ...state,
     selectedBlockIds: newSelectedBlockIds,
-    selectedAnimationId,
+    selectedAnimationIds,
     selectedLayerIds,
   };
 }
@@ -382,9 +398,9 @@ function selectLayerId(state: State, layerId: string, clearExisting: boolean) {
     return state;
   }
   // Clear any existing animation/block selections.
-  let { selectedAnimationId, selectedBlockIds } = state;
-  if (selectedAnimationId) {
-    selectedAnimationId = '';
+  let { selectedAnimationIds, selectedBlockIds } = state;
+  if (selectedAnimationIds.size) {
+    selectedAnimationIds = new Set<string>();
   }
   if (selectedBlockIds.size) {
     selectedBlockIds = new Set<string>();
@@ -392,7 +408,7 @@ function selectLayerId(state: State, layerId: string, clearExisting: boolean) {
   return {
     ...state,
     selectedLayerIds: newSelectedLayerIds,
-    selectedAnimationId,
+    selectedAnimationIds,
     selectedBlockIds,
   };
 }

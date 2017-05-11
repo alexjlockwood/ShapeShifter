@@ -24,7 +24,7 @@ export function reducer(state: any, action: any) {
 }
 
 export const getAnimations = (state: State) => state.root.state.animations;
-export const getSelectedAnimationId = (state: State) => state.root.state.selectedAnimationId;
+export const getSelectedAnimationIds = (state: State) => state.root.state.selectedAnimationIds;
 export const getActiveAnimationId = (state: State) => state.root.state.activeAnimationId;
 export const getSelectedBlockIds = (state: State) => state.root.state.selectedBlockIds;
 

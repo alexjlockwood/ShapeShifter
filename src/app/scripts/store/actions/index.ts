@@ -2,6 +2,7 @@ export {
   AddAnimations,
   SelectAnimationId,
   ActivateAnimationId,
+  ReplaceAnimations,
   AddBlock,
   SelectBlockId,
   ReplaceBlocks,

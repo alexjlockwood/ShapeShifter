@@ -119,6 +119,7 @@ export class AppModule {
       .addSvgIcon('reverse', sanitizer.bypassSecurityTrustResourceUrl('assets/icons/reverse.svg'))
       // Models.
       .addSvgIcon('animation', sanitizer.bypassSecurityTrustResourceUrl('assets/models/animation.svg'))
+      .addSvgIcon('collection', sanitizer.bypassSecurityTrustResourceUrl('assets/models/collection.svg'))
       .addSvgIcon('animationblock', sanitizer.bypassSecurityTrustResourceUrl('assets/models/animationblock.svg'))
       .addSvgIcon('clippathlayer', sanitizer.bypassSecurityTrustResourceUrl('assets/models/clippathlayer.svg'))
       .addSvgIcon('grouplayer', sanitizer.bypassSecurityTrustResourceUrl('assets/models/grouplayer.svg'))

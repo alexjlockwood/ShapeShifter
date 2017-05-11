@@ -106,7 +106,7 @@
 
         <div class="slt-header">
           <div class="slt-timeline-animation-meta"
-            [ngClass]="{'is-selected': model.selectedAnimationId === animation.id}"
+            [ngClass]="{'is-selected': model.selectedAnimationIds.has(animation.id)}"
             (click)="this.animationHeaderTextClick($event, animation)">
             <span class="slt-timeline-animation-name">{{animation.name}}</span>
             <span class="slt-timeline-animation-duration">{{animation.duration}}ms</span>

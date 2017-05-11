@@ -28,7 +28,7 @@ export abstract class AnimationBlock<T extends AnimationBlockType> {
       this.endTime = this.startTime;
       this.startTime = tmp;
     }
-    this.interpolator = obj.interpolator || INTERPOLATORS[0];
+    this.interpolator = obj.interpolator || INTERPOLATORS[0].value;
   }
 
   clone(): PathAnimationBlock | ColorAnimationBlock | NumberAnimationBlock {
@@ -51,7 +51,8 @@ interface AnimationBlockArgs<T> {
   propertyName: string;
   startTime?: number;
   endTime?: number;
-  interpolator?: Interpolator;
+  // Stores the 'value' key of the Interpolator object.
+  interpolator?: string;
   fromValue?: T;
   toValue?: T;
 }

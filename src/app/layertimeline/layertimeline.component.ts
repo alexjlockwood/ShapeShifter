@@ -18,7 +18,7 @@ import {
   State,
   getAnimations,
   getVectorLayers,
-  getSelectedAnimationId,
+  getSelectedAnimationIds,
   getActiveAnimationId,
   getSelectedBlockIds,
 } from '../scripts/store/reducers';
@@ -89,11 +89,11 @@ export class LayerTimelineComponent implements
     this.layerTimelineModel$ = Observable.combineLatest(
       this.store.select(getAnimations),
       this.store.select(getVectorLayers),
-      this.store.select(getSelectedAnimationId),
+      this.store.select(getSelectedAnimationIds),
       this.store.select(getActiveAnimationId),
       this.store.select(getSelectedBlockIds),
     ).map(([
-      animations, vectorLayers, selectedAnimationId, activeAnimationId, selectedBlockIds,
+      animations, vectorLayers, selectedAnimationIds, activeAnimationId, selectedBlockIds,
     ]) => {
       this.animations = animations;
       this.rebuildSnapTimes();
@@ -102,7 +102,7 @@ export class LayerTimelineComponent implements
       return {
         animations,
         vectorLayers,
-        selectedAnimationId,
+        selectedAnimationIds,
         activeAnimationId,
       }
     });
@@ -110,7 +110,8 @@ export class LayerTimelineComponent implements
 
   // Called from the LayerTimelineComponent template.
   animationHeaderTextClick(event: MouseEvent, animation: Animation) {
-    this.store.dispatch(new SelectAnimationId(animation.id));
+    const clearExisting = !event.metaKey && !event.shiftKey;
+    this.store.dispatch(new SelectAnimationId(animation.id, clearExisting));
   }
 
   // Called from the LayerTimelineComponent template.
@@ -668,7 +669,8 @@ export class LayerTimelineComponent implements
 interface LayerTimelineModel {
   readonly animations: ReadonlyArray<Animation>;
   readonly vectorLayers: ReadonlyArray<VectorLayer>;
-  readonly selectedAnimationId: string;
+  readonly selectedAnimationIds: Set<string>;
+  readonly activeAnimationId: string;
 }
 
 interface DragIndicatorInfo {

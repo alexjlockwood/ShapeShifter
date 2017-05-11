@@ -5,6 +5,7 @@ import { VectorLayer, Layer } from '../../layers';
 export const ADD_ANIMATIONS = 'ADD_ANIMATIONS';
 export const SELECT_ANIMATION_ID = 'SELECT_ANIMATION_ID';
 export const ACTIVATE_ANIMATION_ID = 'ACTIVATE_ANIMATION_ID';
+export const REPLACE_ANIMATIONS = 'REPLACE_ANIMATIONS';
 export const ADD_BLOCK = 'ADD_BLOCK';
 export const SELECT_BLOCK_ID = 'SELECT_BLOCK_ID';
 export const REPLACE_BLOCKS = 'REPLACE_BLOCKS';
@@ -25,9 +26,9 @@ export class AddAnimations implements Action {
 
 export class SelectAnimationId implements Action {
   readonly type = SELECT_ANIMATION_ID;
-  readonly payload: { animationId: string };
-  constructor(readonly animationId: string) {
-    this.payload = { animationId };
+  readonly payload: { animationId: string, clearExisting: boolean };
+  constructor(readonly animationId: string, readonly clearExisting = false) {
+    this.payload = { animationId, clearExisting };
   }
 }
 
@@ -36,6 +37,14 @@ export class ActivateAnimationId implements Action {
   readonly payload: { animationId: string };
   constructor(readonly animationId: string) {
     this.payload = { animationId };
+  }
+}
+
+export class ReplaceAnimations implements Action {
+  readonly type = REPLACE_ANIMATIONS;
+  readonly payload: { animations: ReadonlyArray<Animation> };
+  constructor(readonly animations: ReadonlyArray<Animation>) {
+    this.payload = { animations };
   }
 }
 
@@ -115,6 +124,7 @@ export type Actions =
   AddAnimations
   | SelectAnimationId
   | ActivateAnimationId
+  | ReplaceAnimations
   | AddBlock
   | SelectBlockId
   | ReplaceBlocks
