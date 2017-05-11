@@ -79,7 +79,7 @@
           (onAddTimelineBlockClick)="this.addTimelineBlockClick($event.event, $event.layer, $event.propertyName)">
         </app-layerlisttree>
       </div>
-      <div *ngIf="(this.dragIndicatorSource.asObservable() | async) as dragData"
+      <div *ngIf="(this.dragIndicatorObservable | async) as dragData"
         class="slt-layers-list-drag-indicator"
         [ngStyle]="{
             'display': dragData.isVisible ? 'block' : 'none',
@@ -96,12 +96,18 @@
   </div>
 
   <!-- Animation timeline. -->
-  <div class="slt-timeline">
+  <div class="slt-timeline"
+    #timeline>
     <ng-container *ngFor="let animation of model.animations; trackBy: trackAnimationFn;">
-      <div class="slt-timeline-animation"
+      <div #timelineAnimation
+        *ngIf="{
+          horizZoom: (this.horizZoomObservable | async),
+          activeTime: (this.activeTimeObservable | async)
+        } as animationData"
+        class="slt-timeline-animation"
         (mousedown)="this.animationTimelineMouseDown($event, animation)"
         [ngClass]="{'is-active': model.activeAnimationId === animation.id}"
-        [ngStyle]="{'width': (animation.duration * this.horizZoom + 40) + 'px'}"
+        [ngStyle]="{'width': (animation.duration * animationData.horizZoom + 40) + 'px'}"
         fxLayout="column">
 
         <div class="slt-header">
@@ -115,18 +121,20 @@
             class="slt-timeline-header-grid"
             [isActive]="model.activeAnimationId === animation.id"
             [animation]="animation"
-            [activeTime]="this.activeTime"
-            [horizZoom]="this.horizZoom"
+            [activeTime]="animationData.activeTime"
+            [horizZoom]="animationData.horizZoom"
             [isHeader]="true"
-            (onScrub)="this.timelineHeaderScrub($event)"></canvas>
+            (onScrub)="this.timelineHeaderScrub($event)">
+          </canvas>
         </div>
 
         <canvas appLayerTimeline
           class="slt-timeline-grid"
           [animation]="animation"
           [isActive]="model.activeAnimationId === animation.id"
-          [activeTime]="this.activeTime"
-          [horizZoom]="this.horizZoom"></canvas>
+          [activeTime]="animationData.activeTime"
+          [horizZoom]="animationData.horizZoom">
+        </canvas>
 
         <div appScrollGroup="timeline"
           class="slt-timeline-animation-scroller">

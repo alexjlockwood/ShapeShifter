@@ -1,7 +1,8 @@
 import * as _ from 'lodash';
 import * as $ from 'jquery';
 import {
-  Component, OnInit, ChangeDetectionStrategy, OnDestroy,
+  Component, OnInit, ChangeDetectionStrategy, QueryList,
+  OnDestroy, ViewChild, ViewChildren, ElementRef, AfterViewInit,
 } from '@angular/core';
 
 import { Callbacks as TimelineAnimationRowCallbacks } from './timelineanimationrow.component';
@@ -11,7 +12,8 @@ import { ScrubEvent } from './layertimeline.directive';
 import { VectorLayer, Layer, GroupLayer, LayerUtil, PathLayer, ClipPathLayer } from '../scripts/layers';
 import { Animation, AnimationBlock } from '../scripts/animations';
 import { Dragger } from '../scripts/dragger';
-import { ModelUtil } from '../scripts/common';
+import { ModelUtil, UiUtil } from '../scripts/common';
+import * as TimelineConsts from './constants';
 
 import { Store } from '@ngrx/store';
 import {
@@ -63,21 +65,28 @@ enum MouseActions {
 })
 export class LayerTimelineComponent implements
   OnInit,
+  AfterViewInit,
   TimelineAnimationRowCallbacks,
   LayerListTreeCallbacks {
 
-  // Layer timeline variables.
-  horizZoom = 2; // 1ms = 2px
-  activeTime = 10;
-  dragIndicatorSource = new BehaviorSubject<DragIndicatorInfo>({
+  @ViewChild('timeline') private timelineRef: ElementRef;
+  @ViewChildren('timelineAnimation') private timelineAnimationRefs: QueryList<ElementRef>;
+
+  private readonly dragIndicatorSubject = new BehaviorSubject<DragIndicatorInfo>({
     isVisible: false, left: 0, top: 0,
   });
+  dragIndicatorObservable = this.dragIndicatorSubject.asObservable();
+  private readonly horizZoomSubject = new BehaviorSubject<number>(2); // 1ms = 2px.
+  horizZoomObservable = this.horizZoomSubject.asObservable();
+  private readonly activeTimeSubject = new BehaviorSubject<number>(0);
+  activeTimeObservable = this.activeTimeSubject.asObservable();
 
   private shouldSuppressClick = false;
   private shouldSuppressRebuildSnapTimes = false;
   private snapTimes: Map<string, number[]>;
 
   private animations: ReadonlyArray<Animation>;
+  private activeAnimationId: string;
   private vectorLayers: ReadonlyArray<VectorLayer>;
   private selectedBlockIds: Set<string>;
 
@@ -96,9 +105,15 @@ export class LayerTimelineComponent implements
       animations, vectorLayers, selectedAnimationIds, activeAnimationId, selectedBlockIds,
     ]) => {
       this.animations = animations;
+      this.activeAnimationId = activeAnimationId;
       this.rebuildSnapTimes();
       this.vectorLayers = vectorLayers;
       this.selectedBlockIds = selectedBlockIds;
+      // TODO: auto zoom back to initial state after full reset?
+      // TODO: auto zoom back to initial state after full reset?
+      // TODO: auto zoom back to initial state after full reset?
+      // TODO: auto zoom back to initial state after full reset?
+      // TODO: auto zoom back to initial state after full reset?
       return {
         animations,
         vectorLayers,
@@ -106,6 +121,27 @@ export class LayerTimelineComponent implements
         activeAnimationId,
       }
     });
+  }
+
+  ngAfterViewInit() {
+    this.setupMouseWheelZoom();
+    this.autoZoomToAnimation();
+  }
+
+  private get horizZoom() {
+    return this.horizZoomSubject.getValue();
+  }
+
+  private set horizZoom(horizZoom: number) {
+    this.horizZoomSubject.next(horizZoom);
+  }
+
+  private get activeTime() {
+    return this.activeTimeSubject.getValue();
+  }
+
+  private set activeTime(activeTime: number) {
+    this.activeTimeSubject.next(activeTime);
   }
 
   // Called from the LayerTimelineComponent template.
@@ -116,7 +152,17 @@ export class LayerTimelineComponent implements
 
   // Called from the LayerTimelineComponent template.
   timelineHeaderScrub(event: ScrubEvent) {
-    // TODO: implement this
+    let time = event.time;
+    const animation = event.animation;
+    if (!event.disableSnap) {
+      time = this.snapTime(animation, time, false);
+    }
+    // TODO: store active time and active animation in database here!!
+    // TODO: store active time and active animation in database here!!
+    // TODO: store active time and active animation in database here!!
+    // TODO: store active time and active animation in database here!!
+    // TODO: store active time and active animation in database here!!
+    this.activeTime = time;
   }
 
   addPathLayerClick() {
@@ -653,8 +699,8 @@ export class LayerTimelineComponent implements
   }
 
   private updateDragIndicator(info: DragIndicatorInfo) {
-    const curr = this.dragIndicatorSource.getValue();
-    this.dragIndicatorSource.next(Object.assign({}, curr, info));
+    const curr = this.dragIndicatorSubject.getValue();
+    this.dragIndicatorSubject.next(Object.assign({}, curr, info));
   }
 
   trackLayerFn(index: number, layer: Layer) {
@@ -663,6 +709,97 @@ export class LayerTimelineComponent implements
 
   trackAnimationFn(index: number, animation: Animation) {
     return animation.id;
+  }
+
+  /**
+   * Handles ctrl+mousewheel for zooming into and out of the timeline.
+   */
+  private setupMouseWheelZoom() {
+    // TODO: don't directly modify DOM like this... do things the Angular 2 way
+    const $timeline = $(this.timelineRef.nativeElement);
+    let $zoomStartActiveAnimation;
+    let targetHorizZoom;
+    let performZoomRAF = undefined;
+    let endZoomTimeout = undefined;
+    let zoomStartTimeCursorPos;
+
+    $timeline.on('wheel', event => {
+      // TODO: should this be OS-dependent (i.e. use alt for windows?)
+      // TODO: should this be OS-dependent (i.e. use alt for windows?)
+      // TODO: should this be OS-dependent (i.e. use alt for windows?)
+      // TODO: should this be OS-dependent (i.e. use alt for windows?)
+      // TODO: should this be OS-dependent (i.e. use alt for windows?)
+      if (event.ctrlKey) { // chrome+mac trackpad pinch-zoom = ctrlKey
+        if (!targetHorizZoom) {
+          // Multiple changes can happen to targetHorizZoom before the
+          // actual zoom level is updated (see performZoom_).
+          targetHorizZoom = this.horizZoom;
+        }
+
+        event.preventDefault();
+        // TODO: is using 'deltaY' here safe?
+        targetHorizZoom *= Math.pow(1.01, -(event.originalEvent as any).deltaY);
+        targetHorizZoom = _.clamp(targetHorizZoom, MIN_ZOOM, MAX_ZOOM);
+        if (targetHorizZoom !== this.horizZoom) {
+          // zoom has changed
+          if (performZoomRAF) {
+            window.cancelAnimationFrame(performZoomRAF);
+          }
+          performZoomRAF = window.requestAnimationFrame(() => performZoom_());
+          if (endZoomTimeout) {
+            window.clearTimeout(endZoomTimeout);
+          } else {
+            startZoom_();
+          }
+          endZoomTimeout = window.setTimeout(() => endZoom_(), 100);
+        }
+        return false;
+      }
+      return undefined;
+    });
+
+    const startZoom_ = () => {
+      const animationIndex = _.findIndex(this.animations, a => a.id === this.activeAnimationId);
+      $zoomStartActiveAnimation = $(this.timelineAnimationRefs.toArray()[animationIndex].nativeElement);
+      zoomStartTimeCursorPos = $zoomStartActiveAnimation.position().left
+        + this.activeTime * this.horizZoom + TimelineConsts.TIMELINE_ANIMATION_PADDING;
+    };
+
+    const performZoom_ = () => {
+      this.horizZoom = targetHorizZoom;
+
+      // Set the scroll offset such that the time cursor remains at zoomStartTimeCursorPos
+      if ($zoomStartActiveAnimation) {
+        const newScrollLeft = $zoomStartActiveAnimation.position().left
+          + $timeline.scrollLeft()
+          + this.activeTime * this.horizZoom + TimelineConsts.TIMELINE_ANIMATION_PADDING
+          - zoomStartTimeCursorPos;
+        $timeline.scrollLeft(newScrollLeft);
+      }
+    };
+
+    const endZoom_ = () => {
+      zoomStartTimeCursorPos = 0;
+      $zoomStartActiveAnimation = undefined;
+      endZoomTimeout = undefined;
+      targetHorizZoom = 0;
+    };
+  }
+
+  /**
+   * Zooms the timeline to fit the first animation.
+   */
+  private autoZoomToAnimation() {
+    if (this.animations.length) {
+      const $timeline = $(this.timelineRef.nativeElement);
+      UiUtil.waitForElementWidth($timeline)
+        .then(width => {
+          // Shave off a hundred pixels for safety.
+          width -= 100;
+          const zoom = width / this.animations[0].duration;
+          this.horizZoom = zoom;
+        });
+    }
   }
 }
 

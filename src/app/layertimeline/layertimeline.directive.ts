@@ -4,7 +4,7 @@ import {
   Directive, ElementRef, Input, OnInit,
   HostListener, Output, EventEmitter,
 } from '@angular/core';
-import { TIMELINE_ANIMATION_PADDING } from './Constants';
+import { TIMELINE_ANIMATION_PADDING } from './constants';
 import { MathUtil } from '../scripts/common';
 import { Animation } from '../scripts/animations';
 import { Dragger } from '../scripts/dragger';
@@ -17,13 +17,13 @@ const GRID_INTERVALS_MS = [
 @Directive({
   selector: '[appLayerTimeline]'
 })
-export class LayerTimelineDirective implements OnInit {
+export class LayerTimelineDirective {
   // TODO: make these setters/getters and trigger redraw when necessary?
   @Input() isHeader: boolean | undefined;
   @Input() animation: Animation;
   @Input() isActive: boolean;
-  @Input() horizZoom: number;
-  @Input() activeTime: number;
+  private activeTime_: number;
+  private horizZoom_: number;
   @Output() onScrub = new EventEmitter<ScrubEvent>();
 
   private readonly canvas: HTMLCanvasElement;
@@ -34,9 +34,28 @@ export class LayerTimelineDirective implements OnInit {
     this.$canvas = $(this.canvas);
   }
 
-  ngOnInit() {
-    // TODO: trigger redraw
-    this.redraw();
+  get horizZoom() {
+    return this.horizZoom_;
+  }
+
+  @Input()
+  set horizZoom(horizZoom: number) {
+    if (this.horizZoom_ !== horizZoom) {
+      this.horizZoom_ = horizZoom;
+      this.redraw();
+    }
+  }
+
+  get activeTime() {
+    return this.activeTime_;
+  }
+
+  @Input()
+  set activeTime(activeTime: number) {
+    if (this.activeTime_ !== activeTime) {
+      this.activeTime_ = activeTime;
+      this.redraw();
+    }
   }
 
   @HostListener('mousedown', ['$event'])
@@ -64,7 +83,8 @@ export class LayerTimelineDirective implements OnInit {
     this.onScrub.emit({
       animation: this.animation,
       time,
-      options: { disableSnap: !!event.altKey }
+      // TODO: make the use of alt/ctrl/meta key consistent across entire app
+      disableSnap: !!event.altKey,
     });
   }
 
@@ -128,5 +148,5 @@ export class LayerTimelineDirective implements OnInit {
 export interface ScrubEvent {
   animation: Animation;
   time: number;
-  options: { disableSnap: boolean };
+  disableSnap: boolean;
 }
