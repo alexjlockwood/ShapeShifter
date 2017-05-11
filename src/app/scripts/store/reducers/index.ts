@@ -23,12 +23,12 @@ export function reducer(state: any, action: any) {
   }
 }
 
-export const getAnimations = (state: State) => state.root.animations.animations;
-export const getSelectedAnimationId = (state: State) => state.root.animations.selectedAnimationId;
-export const getActiveAnimationId = (state: State) => state.root.animations.activeAnimationId;
-export const getSelectedBlockIds = (state: State) => state.root.animations.selectedBlockIds;
+export const getAnimations = (state: State) => state.root.state.animations;
+export const getSelectedAnimationId = (state: State) => state.root.state.selectedAnimationId;
+export const getActiveAnimationId = (state: State) => state.root.state.activeAnimationId;
+export const getSelectedBlockIds = (state: State) => state.root.state.selectedBlockIds;
 
-export const getVectorLayers = (state: State) => state.root.vectorLayers.vectorLayers;
-export const getSelectedLayerIds = (state: State) => state.root.vectorLayers.selectedLayerIds;
-export const getCollapsedLayerIds = (state: State) => state.root.vectorLayers.collapsedLayerIds;
-export const getHiddenLayerIds = (state: State) => state.root.vectorLayers.hiddenLayerIds;
+export const getVectorLayers = (state: State) => state.root.state.vectorLayers;
+export const getSelectedLayerIds = (state: State) => state.root.state.selectedLayerIds;
+export const getCollapsedLayerIds = (state: State) => state.root.state.collapsedLayerIds;
+export const getHiddenLayerIds = (state: State) => state.root.state.hiddenLayerIds;

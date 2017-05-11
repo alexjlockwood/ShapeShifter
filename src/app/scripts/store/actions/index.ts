@@ -2,15 +2,13 @@ export {
   AddAnimations,
   SelectAnimationId,
   ActivateAnimationId,
-  AddAnimationBlock,
-  SelectAnimationBlockId,
-  ReplaceAnimationBlocks,
-} from './Animation';
-export {
+  AddBlock,
+  SelectBlockId,
+  ReplaceBlocks,
   AddVectorLayers,
   ReplaceVectorLayer,
   SelectLayerId,
   ToggleLayerIdExpansion,
   ToggleLayerIdVisibility,
   AddLayer,
-} from './VectorLayer';
+} from './Actions';

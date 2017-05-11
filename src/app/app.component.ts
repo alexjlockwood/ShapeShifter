@@ -34,10 +34,8 @@ import {
 } from './scripts/store/reducers';
 import {
   AddAnimations,
-} from './scripts/store/actions/Animation';
-import {
   AddVectorLayers,
-} from './scripts/store/actions/VectorLayer';
+} from './scripts/store/actions';
 
 const IS_DEV_MODE = !environment.production;
 const AUTO_LOAD_DEMO = IS_DEV_MODE && false;

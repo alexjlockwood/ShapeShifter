@@ -1,41 +1,23 @@
 import { createSelector } from 'reselect';
 import { ActionReducer } from '@ngrx/store';
 import { combineReducers } from '@ngrx/store';
-import * as animation from '../actions/Animation';
-import * as vectorLayer from '../actions/VectorLayer';
-import * as fromAnimations from './Animation';
-import * as fromVectorLayers from './VectorLayer';
+import * as state from '../actions/Actions';
+import * as fromState from './State';
 
 export interface State {
-  animations: fromAnimations.State;
-  vectorLayers: fromVectorLayers.State;
+  state: fromState.State;
 }
 
 export const initialState: State = {
-  animations: fromAnimations.initialState,
-  vectorLayers: fromVectorLayers.initialState,
+  state: fromState.initialState,
 };
 
-type RootActions = animation.Actions | vectorLayer.Actions;
+type RootActions = state.Actions;
 
 export function reducer(state = initialState, action: RootActions) {
-  state = prereduce(state, action);
-  state = reduce(state, action);
-  state = postreduce(state, action);
-  return state;
-}
-
-function prereduce(state: State, action: RootActions) {
-  // TODO: preprocess state here if necessary
-  return state;
+  return reduce(state, action);
 }
 
 const reduce: ActionReducer<State> = combineReducers({
-  animations: fromAnimations.reducer,
-  vectorLayers: fromVectorLayers.reducer,
+  state: fromState.reducer,
 });
-
-function postreduce(state: State, action: RootActions) {
-  // TODO: postprocess state here if necessary
-  return state;
-}

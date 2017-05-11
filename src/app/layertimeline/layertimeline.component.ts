@@ -26,9 +26,9 @@ import {
   AddAnimations,
   SelectAnimationId,
   ActivateAnimationId,
-  AddAnimationBlock,
-  SelectAnimationBlockId,
-  ReplaceAnimationBlocks,
+  AddBlock,
+  SelectBlockId,
+  ReplaceBlocks,
   AddVectorLayers,
   ReplaceVectorLayer,
   SelectLayerId,
@@ -383,7 +383,7 @@ export class LayerTimelineComponent implements
             break;
           }
         }
-        this.store.dispatch(new ReplaceAnimationBlocks(replacementBlocks));
+        this.store.dispatch(new ReplaceBlocks(replacementBlocks));
       },
     });
   }
@@ -437,7 +437,7 @@ export class LayerTimelineComponent implements
     layer: Layer,
   ) {
     const clearExisting = !event.metaKey && !event.shiftKey;
-    this.store.dispatch(new SelectAnimationBlockId(block.id, clearExisting));
+    this.store.dispatch(new SelectBlockId(block.id, clearExisting));
   }
 
   // @Override LayerListTreeComponentCallbacks
@@ -446,7 +446,7 @@ export class LayerTimelineComponent implements
     layer: Layer,
     propertyName: string,
   ) {
-    this.store.dispatch(new AddAnimationBlock(layer, propertyName));
+    this.store.dispatch(new AddBlock(layer, propertyName));
   }
 
   // @Override LayerListTreeComponentCallbacks
@@ -463,7 +463,8 @@ export class LayerTimelineComponent implements
 
   // @Override LayerListTreeComponentCallbacks
   layerToggleVisibility(event: MouseEvent, layer: Layer) {
-    this.store.dispatch(new ToggleLayerIdVisibility(layer.id));
+    const recursive = event.metaKey || event.shiftKey
+    this.store.dispatch(new ToggleLayerIdVisibility(layer.id, recursive));
   }
 
   // @Override LayerListTreeComponentCallbacks
