@@ -15,12 +15,10 @@ import {
   getSelectedLayerIds,
   getSelectedAnimationIds,
   getSelectedBlockIds,
-} from '../scripts/store/reducers';
-import {
   ReplaceVectorLayer,
   ReplaceBlocks,
   ReplaceAnimations,
-} from '../scripts/store/actions';
+} from '../scripts/store';
 import 'rxjs/add/observable/combineLatest';
 
 @Component({

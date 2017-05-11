@@ -6,7 +6,7 @@ import { HttpModule } from '@angular/http';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { MaterialModule, MdIconRegistry } from '@angular/material';
 import { StoreModule } from '@ngrx/store';
-import { reducer } from './scripts/store/reducers';
+import { reducer } from './scripts/store';
 
 // Components & directives.
 import { AppComponent } from './app.component';

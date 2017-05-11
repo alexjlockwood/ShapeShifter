@@ -1,7 +1,7 @@
 import { createSelector } from 'reselect';
 import { ActionReducer } from '@ngrx/store';
 import { combineReducers } from '@ngrx/store';
-import * as state from '../actions/Actions';
+import * as state from './Actions';
 import * as fromState from './State';
 
 export interface State {

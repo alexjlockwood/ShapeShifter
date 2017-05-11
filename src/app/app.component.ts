@@ -31,11 +31,9 @@ import 'rxjs/add/observable/combineLatest';
 import { Store } from '@ngrx/store';
 import {
   State,
-} from './scripts/store/reducers';
-import {
   AddAnimations,
   AddVectorLayers,
-} from './scripts/store/actions';
+} from './scripts/store';
 
 const IS_DEV_MODE = !environment.production;
 const AUTO_LOAD_DEMO = IS_DEV_MODE && false;

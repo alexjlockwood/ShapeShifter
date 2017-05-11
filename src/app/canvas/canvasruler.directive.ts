@@ -36,7 +36,8 @@ export class CanvasRulerDirective implements OnInit, OnDestroy {
   constructor(
     private readonly elementRef: ElementRef,
     private readonly canvasResizeService: CanvasResizeService,
-    private readonly stateService: StateService) { }
+    private readonly stateService: StateService,
+  ) { }
 
   ngOnInit() {
     this.canvas = $(this.elementRef.nativeElement);

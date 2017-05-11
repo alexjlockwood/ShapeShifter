@@ -23,8 +23,6 @@ import {
   getSelectedAnimationIds,
   getActiveAnimationId,
   getSelectedBlockIds,
-} from '../scripts/store/reducers';
-import {
   AddAnimations,
   SelectAnimationId,
   ActivateAnimationId,
@@ -37,7 +35,7 @@ import {
   ToggleLayerIdExpansion,
   ToggleLayerIdVisibility,
   AddLayer,
-} from '../scripts/store/actions';
+} from '../scripts/store';
 import { Observable } from 'rxjs/Observable';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import 'rxjs/add/observable/combineLatest';
