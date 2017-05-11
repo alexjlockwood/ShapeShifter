@@ -97,7 +97,8 @@
 
   <!-- Animation timeline. -->
   <div class="slt-timeline"
-    #timeline>
+    #timeline
+    fxLayout="row">
     <ng-container *ngFor="let animation of model.animations; trackBy: trackAnimationFn;">
       <div #timelineAnimation
         *ngIf="{
@@ -108,7 +109,8 @@
         (mousedown)="this.animationTimelineMouseDown($event, animation)"
         [ngClass]="{'is-active': model.activeAnimationId === animation.id}"
         [ngStyle]="{'width': (animation.duration * animationData.horizZoom + 40) + 'px'}"
-        fxLayout="column">
+        fxLayout="column"
+        fxFlex>
 
         <div class="slt-header">
           <div class="slt-timeline-animation-meta"
@@ -150,17 +152,20 @@
         </div>
       </div>
     </ng-container>
-  </div>
-
-  <!-- TODO: do we want to show this? -->
-  <!--<div layout="row" layout-align="start stretch">
-    <div class="slt-timeline-animation-new-container" layout="column"
-      layout-align="center center">
-      <md-button ng-click="ctrl.onAddNewAnimation()" class="slt-timeline-animation-new"
-        layout="column" layout-align="center center">
-        <md-icon md-svg-icon="avdstudio:add_animation"></md-icon>
-        <span>New animation</span>
-      </md-button>
+    <div fxLayout="row"
+      fxLayoutAlign="start stretch">
+      <div class="slt-timeline-animation-new-container"
+        fxLayout="column"
+        fxLayoutAlign="center center">
+        <button md-button
+          (click)="this.addNewAnimationClick()"
+          class="slt-timeline-animation-new"
+          fxLayout="column"
+          fxLayoutAlign="center center">
+          <md-icon svgIcon="addanimation"></md-icon>
+          <span>New animation</span>
+        </button>
+      </div>
     </div>
   </div>
-</div>-->
+</div>

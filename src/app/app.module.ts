@@ -114,17 +114,17 @@ export class AppModule {
       .addSvgIcon('shapeshifter', sanitizer.bypassSecurityTrustResourceUrl('assets/shapeshifter.svg'))
       // Icons.
       .addSvgIcon('addlayer', sanitizer.bypassSecurityTrustResourceUrl('assets/icons/addlayer.svg'))
+      .addSvgIcon('addanimation', sanitizer.bypassSecurityTrustResourceUrl('assets/icons/addanimation.svg'))
       .addSvgIcon('autofix', sanitizer.bypassSecurityTrustResourceUrl('assets/icons/autofix.svg'))
       .addSvgIcon('demos', sanitizer.bypassSecurityTrustResourceUrl('assets/icons/demos.svg'))
       .addSvgIcon('reverse', sanitizer.bypassSecurityTrustResourceUrl('assets/icons/reverse.svg'))
-      // Models.
-      .addSvgIcon('animation', sanitizer.bypassSecurityTrustResourceUrl('assets/models/animation.svg'))
-      .addSvgIcon('collection', sanitizer.bypassSecurityTrustResourceUrl('assets/models/collection.svg'))
-      .addSvgIcon('animationblock', sanitizer.bypassSecurityTrustResourceUrl('assets/models/animationblock.svg'))
-      .addSvgIcon('clippathlayer', sanitizer.bypassSecurityTrustResourceUrl('assets/models/clippathlayer.svg'))
-      .addSvgIcon('grouplayer', sanitizer.bypassSecurityTrustResourceUrl('assets/models/grouplayer.svg'))
-      .addSvgIcon('pathlayer', sanitizer.bypassSecurityTrustResourceUrl('assets/models/pathlayer.svg'))
-      .addSvgIcon('vectorlayer', sanitizer.bypassSecurityTrustResourceUrl('assets/models/vectorlayer.svg'))
+      .addSvgIcon('animation', sanitizer.bypassSecurityTrustResourceUrl('assets/icons/animation.svg'))
+      .addSvgIcon('collection', sanitizer.bypassSecurityTrustResourceUrl('assets/icons/collection.svg'))
+      .addSvgIcon('animationblock', sanitizer.bypassSecurityTrustResourceUrl('assets/icons/animationblock.svg'))
+      .addSvgIcon('clippathlayer', sanitizer.bypassSecurityTrustResourceUrl('assets/icons/clippathlayer.svg'))
+      .addSvgIcon('grouplayer', sanitizer.bypassSecurityTrustResourceUrl('assets/icons/grouplayer.svg'))
+      .addSvgIcon('pathlayer', sanitizer.bypassSecurityTrustResourceUrl('assets/icons/pathlayer.svg'))
+      .addSvgIcon('vectorlayer', sanitizer.bypassSecurityTrustResourceUrl('assets/icons/vectorlayer.svg'))
       // Cursors.
       .addSvgIcon('selectioncursor', sanitizer.bypassSecurityTrustResourceUrl('assets/cursorsselectioncursor.svg'));
   }

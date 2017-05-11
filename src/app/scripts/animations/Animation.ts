@@ -18,7 +18,7 @@ export class Animation {
     this.id = obj.id || _.uniqueId();
     this.name = obj.name || '';
     this.blocks = obj.blocks || [];
-    this.duration = obj.duration || 100;
+    this.duration = obj.duration || 300;
   }
 
   clone() {

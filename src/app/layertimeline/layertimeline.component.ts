@@ -143,6 +143,23 @@ export class LayerTimelineComponent implements
   }
 
   // Called from the LayerTimelineComponent template.
+  addNewAnimationClick() {
+    this.store.dispatch(new AddAnimations([new Animation({
+      // TODO: need to set a unique name on the animation!
+      // TODO: need to set a unique name on the animation!
+      // TODO: need to set a unique name on the animation!
+      // TODO: need to set a unique name on the animation!
+      // TODO: need to set a unique name on the animation!
+      // TODO: scrubber doesn't work right when there are multiple animations
+      // TODO: scrubber doesn't work right when there are multiple animations
+      // TODO: scrubber doesn't work right when there are multiple animations
+      // TODO: scrubber doesn't work right when there are multiple animations
+      // TODO: scrubber doesn't work right when there are multiple animations
+      name: 'TODO: fix this!',
+    })]));
+  }
+
+  // Called from the LayerTimelineComponent template.
   animationHeaderTextClick(event: MouseEvent, animation: Animation) {
     const clearExisting = !event.metaKey && !event.shiftKey;
     this.store.dispatch(new SelectAnimationId(animation.id, clearExisting));
