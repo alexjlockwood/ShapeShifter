@@ -28,7 +28,6 @@ export class LayerTimelineDirective {
   // TODO: make sure these update correctly when multiple animations are supported
   // TODO: make sure these update correctly when multiple animations are supported
   // TODO: make sure these update correctly when multiple animations are supported
-
   @Input() isHeader: boolean | undefined;
   @Input() animation: Animation;
   @Input() isActive: boolean;
