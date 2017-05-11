@@ -19,6 +19,16 @@ const GRID_INTERVALS_MS = [
 })
 export class LayerTimelineDirective {
   // TODO: make these setters/getters and trigger redraw when necessary?
+  // TODO: make these setters/getters and trigger redraw when necessary?
+  // TODO: make these setters/getters and trigger redraw when necessary?
+  // TODO: make these setters/getters and trigger redraw when necessary?
+  // TODO: make these setters/getters and trigger redraw when necessary?
+  // TODO: make sure these update correctly when multiple animations are supported
+  // TODO: make sure these update correctly when multiple animations are supported
+  // TODO: make sure these update correctly when multiple animations are supported
+  // TODO: make sure these update correctly when multiple animations are supported
+  // TODO: make sure these update correctly when multiple animations are supported
+
   @Input() isHeader: boolean | undefined;
   @Input() animation: Animation;
   @Input() isActive: boolean;
