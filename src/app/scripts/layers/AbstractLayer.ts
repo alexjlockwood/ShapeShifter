@@ -97,7 +97,7 @@ export abstract class AbstractLayer implements Layer {
 
 // TODO: share this interface with Layer?
 interface AbstractLayerArgs {
-  id: string;
+  id?: string;
   name: string;
   children: ReadonlyArray<Layer>;
 }

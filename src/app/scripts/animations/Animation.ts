@@ -22,7 +22,9 @@ export class Animation {
   }
 
   clone() {
-    return new Animation(this);
+    const clone = new Animation(this);
+    clone.blocks = clone.blocks.slice();
+    return clone;
   }
 }
 

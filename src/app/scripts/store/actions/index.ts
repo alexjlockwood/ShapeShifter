@@ -12,4 +12,5 @@ export {
   SelectLayerId,
   ToggleLayerIdExpansion,
   ToggleLayerIdVisibility,
+  AddLayer,
 } from './VectorLayer';

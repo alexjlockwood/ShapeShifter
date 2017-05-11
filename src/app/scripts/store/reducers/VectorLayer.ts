@@ -4,6 +4,8 @@ import { VectorLayer } from '../../layers';
 import * as vectorLayer from '../actions/VectorLayer';
 
 export interface State {
+  // TODO: not sure it makes sense to have a list of vectors anymore
+  // (i.e. how should add layer work?)
   readonly vectorLayers: ReadonlyArray<VectorLayer>;
   readonly selectedLayerIds: Set<string>;
   readonly collapsedLayerIds: Set<string>;
@@ -67,6 +69,21 @@ export function reducer(state = initialState, action: vectorLayer.Actions): Stat
         hiddenLayerIds.add(layerId);
       }
       return { ...state, hiddenLayerIds };
+    }
+    case vectorLayer.ADD_LAYER: {
+      if (!state.vectorLayers.length) {
+        // TODO: don't allow the user to add a layer if no vector layers exist?
+        return state;
+      }
+      // TODO: add the layer below the currently selected layer, if one exists
+      const { layer } = action.payload;
+      // TODO: assign the layer a unique name that doesn't clash with any others
+      // layer.name = 'TODO: fix this';
+      const vl = state.vectorLayers[0].clone();
+      vl.children = vl.children.concat(layer);
+      const vectorLayers = state.vectorLayers.slice();
+      vectorLayers[0] = vl;
+      return { ...state, vectorLayers };
     }
     default: {
       return state;

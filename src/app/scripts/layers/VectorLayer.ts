@@ -31,7 +31,9 @@ export class VectorLayer extends AbstractLayer {
   }
 
   clone() {
-    return new VectorLayer(this);
+    const clone = new VectorLayer(this);
+    clone.children = this.children.slice();
+    return clone;
   }
 
   deepClone() {

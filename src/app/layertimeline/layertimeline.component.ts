@@ -34,6 +34,7 @@ import {
   SelectLayerId,
   ToggleLayerIdExpansion,
   ToggleLayerIdVisibility,
+  AddLayer,
 } from '../scripts/store/actions';
 import { Observable } from 'rxjs/Observable';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
@@ -115,6 +116,19 @@ export class LayerTimelineComponent implements
   // Called from the LayerTimelineComponent template.
   timelineHeaderScrub(event: ScrubEvent) {
     // TODO: implement this
+  }
+
+  addPathLayerClick() {
+    // TODO: implement this (most of the codebase assumes pathData will be non-null)
+  }
+
+  addClipPathLayerClick() {
+    // TODO: implement this (most of the codebase assumes pathData will be non-null)
+  }
+
+  addGroupLayerClick() {
+    const layer = new GroupLayer({ id: undefined, name: 'TODO: fix this', children: [] });
+    this.store.dispatch(new AddLayer(layer));
   }
 
   // Called from the LayerTimelineComponent template.
@@ -399,7 +413,7 @@ export class LayerTimelineComponent implements
   /**
    * Returns a new time, possibly snapped to animation boundaries
    */
-  snapTime(animation: Animation, time: number, includeActiveTime = true) {
+  private snapTime(animation: Animation, time: number, includeActiveTime = true) {
     const snapTimes = this.snapTimes.get(animation.id);
     const snapDelta = SNAP_PIXELS / this.horizZoom;
     const reducerFn = (bestSnapTime, snapTime) => {

@@ -40,9 +40,18 @@
       </button>
       <div fxFlex></div>
       <md-menu #addLayerMenu="mdMenu">
-        <button md-menu-item>New path</button>
-        <button md-menu-item>New clip path</button>
-        <button md-menu-item>New layer group</button>
+        <button md-menu-item
+          (click)="addPathLayerClick()">
+          New path
+        </button>
+        <button md-menu-item
+          (click)="addClipPathLayerClick()">
+          New clip path
+        </button>
+        <button md-menu-item
+          (click)="addGroupLayerClick()">
+          New layer group
+        </button>
       </md-menu>
       <button md-icon-button
         mdTooltip="Add layer"

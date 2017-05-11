@@ -1,11 +1,12 @@
 import { Action } from '@ngrx/store';
-import { VectorLayer } from '../../layers';
+import { VectorLayer, Layer } from '../../layers';
 
 export const ADD_VECTOR_LAYERS = 'ADD_VECTOR_LAYERS';
 export const REPLACE_VECTOR_LAYER = 'REPLACE_VECTOR_LAYER';
 export const SELECT_LAYER_ID = 'SELECT_LAYER_ID';
 export const TOGGLE_LAYER_ID_EXPANSION = 'TOGGLE_LAYER_ID_EXPANSION';
 export const TOGGLE_LAYER_ID_VISIBILITY = 'TOGGLE_LAYER_ID_VISIBILITY';
+export const ADD_LAYER = 'ADD_LAYER';
 
 export class AddVectorLayers implements Action {
   readonly type = ADD_VECTOR_LAYERS;
@@ -47,9 +48,18 @@ export class ToggleLayerIdVisibility implements Action {
   }
 }
 
+export class AddLayer implements Action {
+  readonly type = ADD_LAYER;
+  readonly payload: { layer: Layer };
+  constructor(readonly layer: Layer) {
+    this.payload = { layer };
+  }
+}
+
 export type Actions =
   AddVectorLayers
   | ReplaceVectorLayer
   | SelectLayerId
   | ToggleLayerIdExpansion
-  | ToggleLayerIdVisibility;
+  | ToggleLayerIdVisibility
+  | AddLayer;
