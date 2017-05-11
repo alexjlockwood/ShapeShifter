@@ -18,7 +18,7 @@ import {
   SettingsService,
   MorphSubPathService,
 } from '../services';
-import { CanvasRulerDirective } from './canvasruler.directive';
+import { OldCanvasRulerDirective } from './oldcanvasruler.directive';
 import { Observable } from 'rxjs/Observable';
 import { Subscription } from 'rxjs/Subscription';
 import { SegmentSplitter } from './SegmentSplitter';
@@ -55,17 +55,17 @@ const POINT_TEXT_COLOR = '#fff';
 type Context = CanvasRenderingContext2D;
 
 @Component({
-  selector: 'app-canvas',
-  templateUrl: './canvas.component.html',
-  styleUrls: ['./canvas.component.scss'],
+  selector: 'app-oldcanvas',
+  templateUrl: './oldcanvas.component.html',
+  styleUrls: ['./oldcanvas.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class CanvasComponent implements AfterViewInit, OnDestroy {
+export class OldCanvasComponent implements AfterViewInit, OnDestroy {
   @Input() canvasType: CanvasType;
   @ViewChild('canvasContainer') private canvasContainerRef: ElementRef;
   @ViewChild('renderingCanvas') private renderingCanvasRef: ElementRef;
   @ViewChild('overlayCanvas') private overlayCanvasRef: ElementRef;
-  @ViewChildren(CanvasRulerDirective) canvasRulers: QueryList<CanvasRulerDirective>;
+  @ViewChildren(OldCanvasRulerDirective) canvasRulers: QueryList<OldCanvasRulerDirective>;
 
   private canvasContainer: JQuery;
   private renderingCanvas: JQuery;

@@ -8,7 +8,7 @@ import {
 } from '../services';
 import { Point } from '../scripts/common';
 import { Subscription } from 'rxjs/Subscription';
-import { CANVAS_MARGIN, DEFAULT_VIEWPORT_SIZE } from './canvas.component';
+import { CANVAS_MARGIN, DEFAULT_VIEWPORT_SIZE } from './oldcanvas.component';
 
 // Ruler size in css pixels.
 const RULER_SIZE = 32;
@@ -19,9 +19,9 @@ const LABEL_OFFSET = 12;
 const TICK_SIZE = 6;
 
 @Directive({
-  selector: '[appCanvasRuler]',
+  selector: '[appOldCanvasRuler]',
 })
-export class CanvasRulerDirective implements OnInit, OnDestroy {
+export class OldCanvasRulerDirective implements OnInit, OnDestroy {
   @Input() canvasType: CanvasType;
   @Input() orientation: Orientation;
   private canvas: JQuery;
