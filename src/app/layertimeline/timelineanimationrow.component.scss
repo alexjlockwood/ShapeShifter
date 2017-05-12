@@ -16,7 +16,7 @@ li {
   padding: 8px 0;
 }
 
-.slt-layer {
+.slt-layer-row {
   box-sizing: border-box;
   line-height: 20px;
   height: 20px;
@@ -32,6 +32,10 @@ li {
 }
 .slt-properties-empty {
   display: none;
+}
+.slt-children-row {
+  padding: 0;
+  margin: 0 0 0 0px;
 }
 .slt-timeline {
   background-color: material-color('grey', '300');

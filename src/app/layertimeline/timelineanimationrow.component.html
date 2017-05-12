@@ -1,5 +1,4 @@
-<!-- TODO: conflicts with other scss files causes pointer to be displayed for empty rows -->
-<div class="slt-layer slt-layer-type-{{ this.layer.getType() }}"></div>
+<div class="slt-layer-row"></div>
 
 <ng-container *ngIf="(this.animationRowModel$ | async) as model">
   <div class="slt-properties"
@@ -23,7 +22,7 @@
     </div>
   </div>
 
-  <ul class="slt-children"
+  <ul class="slt-children-row"
     *ngIf="layer.children.length > 0 && model.isExpanded">
     <li *ngFor="let child of layer.children">
       <app-timelineanimationrow [layer]="child"
