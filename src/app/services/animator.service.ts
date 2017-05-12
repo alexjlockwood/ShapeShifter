@@ -41,6 +41,7 @@ export class AnimatorService {
   private animationRenderer: AnimationRenderer;
   private activeAnimation: Animation;
 
+  // TODO: the 'should reverse' flag below doesn't work anymore... fix or remove?
   constructor(
     private readonly ngZone: NgZone,
     private readonly store: Store<State>,
