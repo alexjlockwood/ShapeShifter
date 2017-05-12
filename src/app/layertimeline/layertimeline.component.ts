@@ -69,6 +69,8 @@ export class LayerTimelineComponent implements
   LayerListTreeCallbacks {
 
   @ViewChild('timeline') private timelineRef: ElementRef;
+  private $timeline: JQuery;
+
   @ViewChildren('timelineAnimation') private timelineAnimationRefs: QueryList<ElementRef>;
   @ViewChildren(LayerTimelineDirective) timelineDirectives: QueryList<LayerTimelineDirective>;
 
@@ -91,6 +93,13 @@ export class LayerTimelineComponent implements
 
   layerTimelineModel$: Observable<LayerTimelineModel>;
   private readonly subscriptions: Subscription[] = [];
+
+  // Mouse wheel zoom variables.
+  private $zoomStartActiveAnimation: JQuery;
+  private targetHorizZoom: number;
+  private performZoomRAF: number = undefined;
+  private endZoomTimeout: number = undefined;
+  private zoomStartTimeCursorPos: number;
 
   constructor(
     private readonly animatorService: AnimatorService,
@@ -127,7 +136,7 @@ export class LayerTimelineComponent implements
   }
 
   ngAfterViewInit() {
-    this.setupMouseWheelZoom();
+    this.$timeline = $(this.timelineRef.nativeElement);
     this.autoZoomToAnimation();
     this.subscriptions.push(
       this.animatorService.asObservable().subscribe(event => {
@@ -739,78 +748,67 @@ export class LayerTimelineComponent implements
   }
 
   /**
-   * Handles ctrl+mousewheel for zooming into and out of the timeline.
+   * Handles ctrl + mouse wheel event for zooming into and out of the timeline.
    */
-  private setupMouseWheelZoom() {
-    // TODO: don't directly modify DOM like this... do things the Angular 2 way
-    const $timeline = $(this.timelineRef.nativeElement);
-    let $zoomStartActiveAnimation;
-    let targetHorizZoom;
-    let performZoomRAF = undefined;
-    let endZoomTimeout = undefined;
-    let zoomStartTimeCursorPos;
-
-    $timeline.on('wheel', event => {
-      // TODO: should this be OS-dependent (i.e. use alt for windows?)
-      // TODO: should this be OS-dependent (i.e. use alt for windows?)
-      // TODO: should this be OS-dependent (i.e. use alt for windows?)
-      // TODO: should this be OS-dependent (i.e. use alt for windows?)
-      // TODO: should this be OS-dependent (i.e. use alt for windows?)
-      if (event.ctrlKey) { // chrome+mac trackpad pinch-zoom = ctrlKey
-        if (!targetHorizZoom) {
-          // Multiple changes can happen to targetHorizZoom before the
-          // actual zoom level is updated (see performZoom_).
-          targetHorizZoom = this.horizZoom;
-        }
-
-        event.preventDefault();
-        // TODO: is using 'deltaY' here safe?
-        targetHorizZoom *= Math.pow(1.01, -(event.originalEvent as any).deltaY);
-        targetHorizZoom = _.clamp(targetHorizZoom, MIN_ZOOM, MAX_ZOOM);
-        if (targetHorizZoom !== this.horizZoom) {
-          // zoom has changed
-          if (performZoomRAF) {
-            window.cancelAnimationFrame(performZoomRAF);
-          }
-          performZoomRAF = window.requestAnimationFrame(() => performZoom_());
-          if (endZoomTimeout) {
-            window.clearTimeout(endZoomTimeout);
-          } else {
-            startZoom_();
-          }
-          endZoomTimeout = window.setTimeout(() => endZoom_(), 100);
-        }
-        return false;
-      }
-      return undefined;
-    });
-
-    const startZoom_ = () => {
+  onWheelEvent(event: WheelEvent) {
+    const startZoomFn = () => {
       const animationIndex = _.findIndex(this.animations, a => a.id === this.activeAnimationId);
-      $zoomStartActiveAnimation = $(this.timelineAnimationRefs.toArray()[animationIndex].nativeElement);
-      zoomStartTimeCursorPos = $zoomStartActiveAnimation.position().left
+      this.$zoomStartActiveAnimation = $(this.timelineAnimationRefs.toArray()[animationIndex].nativeElement);
+      this.zoomStartTimeCursorPos = this.$zoomStartActiveAnimation.position().left
         + this.activeTime * this.horizZoom + TimelineConsts.TIMELINE_ANIMATION_PADDING;
     };
 
-    const performZoom_ = () => {
-      this.horizZoom = targetHorizZoom;
+    const performZoomFn = () => {
+      this.horizZoom = this.targetHorizZoom;
 
       // Set the scroll offset such that the time cursor remains at zoomStartTimeCursorPos
-      if ($zoomStartActiveAnimation) {
-        const newScrollLeft = $zoomStartActiveAnimation.position().left
-          + $timeline.scrollLeft()
+      if (this.$zoomStartActiveAnimation) {
+        const newScrollLeft = this.$zoomStartActiveAnimation.position().left
+          + this.$timeline.scrollLeft()
           + this.activeTime * this.horizZoom + TimelineConsts.TIMELINE_ANIMATION_PADDING
-          - zoomStartTimeCursorPos;
-        $timeline.scrollLeft(newScrollLeft);
+          - this.zoomStartTimeCursorPos;
+        this.$timeline.scrollLeft(newScrollLeft);
       }
     };
 
-    const endZoom_ = () => {
-      zoomStartTimeCursorPos = 0;
-      $zoomStartActiveAnimation = undefined;
-      endZoomTimeout = undefined;
-      targetHorizZoom = 0;
+    const endZoomFn = () => {
+      this.zoomStartTimeCursorPos = 0;
+      this.$zoomStartActiveAnimation = undefined;
+      this.endZoomTimeout = undefined;
+      this.targetHorizZoom = 0;
     };
+
+    // TODO: should this be OS-dependent (i.e. use alt for windows?)
+    // TODO: should this be OS-dependent (i.e. use alt for windows?)
+    // TODO: should this be OS-dependent (i.e. use alt for windows?)
+    // TODO: should this be OS-dependent (i.e. use alt for windows?)
+    // TODO: should this be OS-dependent (i.e. use alt for windows?)
+    if (event.ctrlKey) { // chrome+mac trackpad pinch-zoom = ctrlKey
+      if (!this.targetHorizZoom) {
+        // Multiple changes can happen to targetHorizZoom before the
+        // actual zoom level is updated (see performZoom_).
+        this.targetHorizZoom = this.horizZoom;
+      }
+
+      event.preventDefault();
+      this.targetHorizZoom *= Math.pow(1.01, -event.deltaY);
+      this.targetHorizZoom = _.clamp(this.targetHorizZoom, MIN_ZOOM, MAX_ZOOM);
+      if (this.targetHorizZoom !== this.horizZoom) {
+        // Zoom has changed.
+        if (this.performZoomRAF) {
+          window.cancelAnimationFrame(this.performZoomRAF);
+        }
+        this.performZoomRAF = window.requestAnimationFrame(() => performZoomFn());
+        if (this.endZoomTimeout) {
+          window.clearTimeout(this.endZoomTimeout);
+        } else {
+          startZoomFn();
+        }
+        this.endZoomTimeout = window.setTimeout(() => endZoomFn(), 100);
+      }
+      return false;
+    }
+    return undefined;
   }
 
   /**
@@ -818,8 +816,7 @@ export class LayerTimelineComponent implements
    */
   private autoZoomToAnimation() {
     if (this.animations.length) {
-      const $timeline = $(this.timelineRef.nativeElement);
-      UiUtil.waitForElementWidth($timeline)
+      UiUtil.waitForElementWidth(this.$timeline)
         .then(width => {
           // Shave off a hundred pixels for safety.
           width -= 100;
