@@ -2,14 +2,14 @@
   *ngIf="(this.layerTimelineModel$ | async) as model">
   <app-splitter edge="top"
     min="200"
-    persist-id="layer-timeline">
+    [persistId]="layer-timeline">
   </app-splitter>
 
   <div class="slt-layers"
     fxLayout="column">
     <app-splitter edge="right"
       min="200"
-      persist-id="layer-list">
+      [persistId]="layer-list">
     </app-splitter>
 
     <div class="slt-header"
