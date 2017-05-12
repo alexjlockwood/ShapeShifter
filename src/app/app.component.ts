@@ -173,7 +173,9 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   ngAfterViewInit() {
     this.canvasContainer = $(this.canvasContainerRef.nativeElement);
     const updateCanvasSizes = () => {
-      const numCanvases = this.wasMorphable ? 3 : 2;
+      // TODO: re-update this at some point...
+      const numCanvases = 1;
+      // const numCanvases = this.wasMorphable ? 3 : 2;
       const width = this.canvasContainer.width() / numCanvases;
       const height = this.canvasContainer.height();
       if (this.currentPaneWidth !== width || this.currentPaneHeight !== height) {

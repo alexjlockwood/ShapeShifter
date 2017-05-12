@@ -242,7 +242,7 @@ class AnimationRenderer {
         const blocks = animData.orderedBlocks[propertyName];
         const _ar = Object.assign({}, DEFAULT_LAYER_PROPERTY_STATE);
 
-        // cCmpute rendered value at given time.
+        // Compute the rendered value at the given time.
         const property = animData.originalLayer.animatableProperties.get(propertyName);
         let value = animData.originalLayer[propertyName];
         for (const block of blocks) {

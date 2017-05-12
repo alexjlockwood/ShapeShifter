@@ -15,12 +15,11 @@
       <!-- Canvas -->
       <div #canvasContainer
         *ngIf="{ type: (cursorObservable | async) } as cursor"
-        class="canvas-container"
         [ngClass]="{
-            'show-default-cursor': cursor.type === CURSOR_DEFAULT,
-            'show-pointer-cursor': cursor.type === CURSOR_POINTER,
-            'show-pen-cursor': cursor.type === CURSOR_PEN
-          }"
+          'show-default-cursor': cursor.type === CURSOR_DEFAULT,
+          'show-pointer-cursor': cursor.type === CURSOR_POINTER,
+          'show-pen-cursor': cursor.type === CURSOR_PEN
+        }"
         fxFlex
         fxLayout="row"
         fxLayoutAlign="center center"

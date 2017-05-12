@@ -1,6 +1,9 @@
 import * as tinycolor from 'tinycolor2';
 
 export function parseAndroidColor(val: string): ColorFormats.RGBA | undefined {
+  if (typeof val !== 'string') {
+    throw new TypeError(`Argument has incorrect type (${typeof val}): ` + val);
+  }
   val = (val || '').replace(/^\s*#?|\s*$/g, '');
   const dict: ColorFormats.RGBA = { a: 0, r: 0, g: 0, b: 0 };
 

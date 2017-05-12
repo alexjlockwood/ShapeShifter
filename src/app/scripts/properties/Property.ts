@@ -25,6 +25,9 @@ export abstract class Property<T> {
             return this[`${prop.propertyName}_`];
           },
           set(value: any) {
+            if (prop.propertyName === 'fillColor' && typeof value !== 'string') {
+              throw new TypeError('invalid type!');
+            }
             this[`${prop.propertyName}_`] = value;
           }
         });
