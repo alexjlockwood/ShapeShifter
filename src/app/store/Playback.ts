@@ -58,7 +58,7 @@ function setIsPlaying(state: State, isPlaying: boolean) {
 }
 
 function setIsRepeating(state: State, isRepeating: boolean) {
-  if (state.isSlowMotion === isRepeating) {
+  if (state.isRepeating === isRepeating) {
     return state;
   }
   return { ...state, isRepeating };

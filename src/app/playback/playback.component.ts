@@ -51,7 +51,7 @@ export class PlaybackComponent implements OnInit {
     this.animatorService.fastForward();
   }
 
-  isRepeatingClick(isRepeating: boolean) {
+  isRepeatingClick() {
     this.animatorService.toggleIsRepeating();
   }
 }
