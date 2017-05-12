@@ -203,7 +203,7 @@ export function reducer(state = initialState, action: actions.Actions): State {
 
     // Add an animation block to the currently active animation.
     case actions.ADD_BLOCK: {
-      const { layer, propertyName } = action.payload;
+      const { layer, propertyName, fromValue, toValue } = action.payload;
       const animation = _.find(state.animations, anim => anim.id === state.activeAnimationId);
       const newBlockDuration = 100;
 
@@ -270,10 +270,8 @@ export function reducer(state = initialState, action: actions.Actions): State {
         propertyName,
         startTime,
         endTime,
-        fromValue: undefined, // TODO: fix me!
-        toValue: undefined, // TODO: fix me!
-        // fromValue: property.cloneValue(valueAtCurrentTime),
-        // toValue: property.cloneValue(valueAtCurrentTime),
+        fromValue,
+        toValue,
       };
 
       let newBlock: AnimationBlock<any>;

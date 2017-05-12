@@ -183,14 +183,12 @@ export class PropertyInputComponent implements OnInit {
         },
         set value(value: any) {
           const clonedBlock = block.clone();
-          console.info('cloned block before', clonedBlock);
           // TODO: confirm this the right way to set a new value on the cloned block?
           // TODO: confirm this the right way to set a new value on the cloned block?
           // TODO: confirm this the right way to set a new value on the cloned block?
           // TODO: confirm this the right way to set a new value on the cloned block?
           clonedBlock.inspectableProperties.get(propertyName)
             .setEditableValue(clonedBlock, propertyName, value);
-          console.info('cloned block after', clonedBlock);
           store.dispatch(new ReplaceBlocks([clonedBlock]));
         },
         get editable() {
@@ -339,9 +337,7 @@ class InspectedProperty<M extends Inspectable, V> {
   }
 
   get displayValue() {
-    const dv = this.property.displayValueForValue(this.value);
-    console.info(this.propertyName, `displayValue(${dv})`);
-    return dv;
+    return this.property.displayValueForValue(this.value);
   }
 
   get editableValue() {

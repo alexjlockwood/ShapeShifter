@@ -518,7 +518,9 @@ export class LayerTimelineComponent implements
     layer: Layer,
     propertyName: string,
   ) {
-    this.store.dispatch(new AddBlock(layer, propertyName));
+    const fromValue = layer.inspectableProperties.get(propertyName).cloneValue(this.activeTime);
+    const toValue = layer.inspectableProperties.get(propertyName).cloneValue(this.activeTime);
+    this.store.dispatch(new AddBlock(layer, propertyName, fromValue, toValue));
   }
 
   // @Override LayerListTreeComponentCallbacks

@@ -45,9 +45,14 @@ export class ReplaceAnimations implements Action {
 
 export class AddBlock implements Action {
   readonly type = ADD_BLOCK;
-  readonly payload: { layer: Layer, propertyName: string };
-  constructor(readonly layer: Layer, readonly propertyName: string) {
-    this.payload = { layer, propertyName };
+  readonly payload: { layer: Layer, propertyName: string, fromValue: any, toValue: any };
+  constructor(
+    readonly layer: Layer,
+    readonly propertyName: string,
+    readonly fromValue: any,
+    readonly toValue: any,
+  ) {
+    this.payload = { layer, propertyName, fromValue, toValue };
   }
 }
 
