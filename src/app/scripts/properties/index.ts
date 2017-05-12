@@ -5,4 +5,4 @@ export { NumberProperty } from './NumberProperty';
 export { PathProperty } from './PathProperty';
 export { Property } from './Property';
 export { Animatable, Inspectable } from './PropertyMaps';
-export { EnumProperty } from './EnumProperty';
+export { EnumProperty, Option } from './EnumProperty';

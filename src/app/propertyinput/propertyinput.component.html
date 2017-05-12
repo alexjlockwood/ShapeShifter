@@ -2,7 +2,7 @@
   edge="left"
   min="200">
 </app-splitter>
-<ng-container *ngIf="(propertyInputModel$ | async) as model">
+<ng-container *ngIf="(this.propertyInputModel$ | async) as model">
   <!-- No shared properties selected. -->
   <div *ngIf="model.numSelections === 0"
     class="spi-empty"
@@ -34,7 +34,7 @@
         No shared properties to view or edit
       </div>
       <div class="spi-property"
-        *ngFor="let ip of model.inspectedProperties">
+        *ngFor="let ip of model.inspectedProperties; trackBy: trackInspectedPropertyFn">
         <div class="spi-property-name">{{ip.propertyName}}</div>
         <div class="spi-property-value"
           fxLayout="row">
@@ -55,23 +55,24 @@
             <input (keydown)="this.onValueEditorKeyDown($event, ip)"
               (blur)="ip.resolveEnteredValue()"
               [(ngModel)]="ip.editableValue"
-              *ngIf="ip.typeName == 'NameProperty'
-                  || ip.typeName == 'PathProperty'
-                  || ip.typeName == 'ColorProperty'
-                  || ip.typeName == 'NumberProperty'
-                  || ip.typeName == 'FractionProperty'">
-            <md-menu #enumMenu="mdMenu">
-              <button *ngFor="let option of ip.property.options"
-                (click)="ip.value = option.value;"
-                md-menu-item>
-                {{option.label}}
+              *ngIf="ip.typeName === 'NameProperty'
+                  || ip.typeName === 'PathProperty'
+                  || ip.typeName === 'ColorProperty'
+                  || ip.typeName === 'NumberProperty'
+                  || ip.typeName === 'FractionProperty'">
+            <ng-container *ngIf="ip.typeName === 'EnumProperty'">
+              <md-menu #enumMenu="mdMenu">
+                <button *ngFor="let option of ip.property.options; trackBy: trackEnumOptionFn"
+                  (click)="ip.value = option.value;"
+                  md-menu-item>
+                  {{option.label}}
+                </button>
+              </md-menu>
+              <button class="spi-property-value-menu-target"
+                [mdMenuTriggerFor]="enumMenu">
+                <span class="spi-property-value-menu-current-value">{{ip.displayValue}}</span>
               </button>
-            </md-menu>
-            <button *ngIf="ip.typeName == 'EnumProperty'"
-              class="spi-property-value-menu-target"
-              [mdMenuTriggerFor]="enumMenu">
-              <span class="spi-property-value-menu-current-value">{{ip.displayValue}}</span>
-            </button>
+            </ng-container>
           </div>
         </div>
       </div>

@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
-import { Property, PathProperty, NameProperty, Inspectable } from '../scripts/properties';
+import { Property, PathProperty, NameProperty, Inspectable, Option } from '../scripts/properties';
 import { StateService } from '../services';
 import { VectorLayer, LayerUtil, Layer } from '../scripts/layers';
 import { Animation, AnimationBlock } from '../scripts/animations';
@@ -177,16 +177,20 @@ export class PropertyInputComponent implements OnInit {
         property,
         propertyName,
         get value() {
-          return property.getEditableValue(block, propertyName);
+          const val = property.getEditableValue(block, propertyName);
+          // console.info(propertyName, `value(${val})`);
+          return val;
         },
-        set value(value) {
+        set value(value: any) {
           const clonedBlock = block.clone();
+          console.info('cloned block before', clonedBlock);
           // TODO: confirm this the right way to set a new value on the cloned block?
           // TODO: confirm this the right way to set a new value on the cloned block?
           // TODO: confirm this the right way to set a new value on the cloned block?
           // TODO: confirm this the right way to set a new value on the cloned block?
           clonedBlock.inspectableProperties.get(propertyName)
             .setEditableValue(clonedBlock, propertyName, value);
+          console.info('cloned block after', clonedBlock);
           store.dispatch(new ReplaceBlocks([clonedBlock]));
         },
         get editable() {
@@ -274,6 +278,14 @@ export class PropertyInputComponent implements OnInit {
       description,
     } as PropertyInputModel;
   }
+
+  trackInspectedPropertyFn(index: number, ip: InspectedProperty<Inspectable, any>) {
+    return ip.propertyName;
+  }
+
+  trackEnumOptionFn(index: number, option: Option) {
+    return option.value;
+  }
 }
 
 // TODO: use this for batch editing
@@ -327,7 +339,9 @@ class InspectedProperty<M extends Inspectable, V> {
   }
 
   get displayValue() {
-    return this.property.displayValueForValue(this.value);
+    const dv = this.property.displayValueForValue(this.value);
+    console.info(this.propertyName, `displayValue(${dv})`);
+    return dv;
   }
 
   get editableValue() {

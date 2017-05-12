@@ -45,7 +45,6 @@ export class ToggleIsRepeating implements Action {
   readonly type = TOGGLE_IS_REPEATING;
 }
 
-
 export class ResetPlaybackSettings implements Action {
   readonly type = RESET_PLAYBACK_SETTINGS;
 }

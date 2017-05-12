@@ -270,6 +270,8 @@ export function reducer(state = initialState, action: actions.Actions): State {
         propertyName,
         startTime,
         endTime,
+        fromValue: undefined, // TODO: fix me!
+        toValue: undefined, // TODO: fix me!
         // fromValue: property.cloneValue(valueAtCurrentTime),
         // toValue: property.cloneValue(valueAtCurrentTime),
       };
