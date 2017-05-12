@@ -1,6 +1,6 @@
-<app-splitter [persistId]="property-inspector"
-  edge="left"
-  min="200">
+<app-splitter [persistId]="'property-inspector'"
+  [edge]="'left'"
+  [min]="200">
 </app-splitter>
 <ng-container *ngIf="(this.propertyInputModel$ | async) as model">
   <!-- No shared properties selected. -->
