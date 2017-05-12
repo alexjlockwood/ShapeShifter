@@ -21,10 +21,10 @@
           (click)="onCanvasContainerClick()"
           fxLayoutAlign="center center"
           [ngClass]="{
-          'show-default-cursor': cursor.type === CURSOR_DEFAULT,
-          'show-pointer-cursor': cursor.type === CURSOR_POINTER,
-          'show-pen-cursor': cursor.type === CURSOR_PEN
-        }">
+            'show-default-cursor': cursor.type === CURSOR_DEFAULT,
+            'show-pointer-cursor': cursor.type === CURSOR_POINTER,
+            'show-pen-cursor': cursor.type === CURSOR_PEN
+          }">
           <app-oldcanvas [canvasType]="START_CANVAS"></app-oldcanvas>
           <app-oldcanvas *ngIf="wasMorphable"
             [canvasType]="PREVIEW_CANVAS"></app-oldcanvas>
