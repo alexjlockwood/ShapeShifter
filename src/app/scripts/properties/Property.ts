@@ -82,18 +82,17 @@ export abstract class Property<T> {
 
   /**
    * Returns an interpolated value between start and end using the specified fraction.
-   * This method does not modify the property's internal state.
+   * This method does not modify the property's internal state, but rather
+   * returns a newly created object.
    */
-  interpolateValue(start: T, end: T, fraction: number) {
+  interpolateValue(start: T, end: T, fraction: number): T {
     return undefined;
   }
 
   /**
    * Returns a string representation of the value for display in the UI.
    */
-  displayValueForValue(value: T) {
-    return '';
-  }
+  abstract displayValueForValue(value: T): string;
 
   /**
    * Returns a cloned instance of the value.

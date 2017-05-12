@@ -85,7 +85,6 @@ export class PropertyInputComponent implements OnInit {
     const inspectedProperties: InspectedProperty<Layer, any>[] = [];
     layer.inspectableProperties.forEach((property, propertyName) => {
       inspectedProperties.push(new InspectedProperty<Layer, any>({
-        model: layer,
         property,
         propertyName,
         get value() {
@@ -173,13 +172,10 @@ export class PropertyInputComponent implements OnInit {
     const inspectedProperties: InspectedProperty<AnimationBlock<any>, any>[] = [];
     block.inspectableProperties.forEach((property, propertyName) => {
       inspectedProperties.push(new InspectedProperty<AnimationBlock<any>, any>({
-        model: block,
         property,
         propertyName,
         get value() {
-          const val = property.getEditableValue(block, propertyName);
-          // console.info(propertyName, `value(${val})`);
-          return val;
+          return property.getEditableValue(block, propertyName);
         },
         set value(value: any) {
           const clonedBlock = block.clone();
@@ -227,7 +223,6 @@ export class PropertyInputComponent implements OnInit {
     const inspectedProperties: InspectedProperty<Animation, any>[] = [];
     animation.inspectableProperties.forEach((property, propertyName) => {
       inspectedProperties.push(new InspectedProperty<Animation, any>({
-        model: animation,
         property,
         propertyName,
         get value() {
@@ -309,13 +304,11 @@ function getSharedPropertyNames(items: ReadonlyArray<Inspectable>) {
  * V is the property value type (number, string, path).
  */
 class InspectedProperty<M extends Inspectable, V> {
-  public readonly model: M;
   public readonly property: Property<V>;
   public readonly propertyName: string;
   private enteredValue: V;
 
   constructor(public readonly delegate: Delegate<M, V>) {
-    this.model = delegate.model;
     this.property = delegate.property;
     this.propertyName = delegate.propertyName;
   }
@@ -358,7 +351,6 @@ class InspectedProperty<M extends Inspectable, V> {
 }
 
 interface Delegate<M extends Inspectable, V> {
-  model: M;
   property: Property<V>;
   propertyName: string;
   value: V;
