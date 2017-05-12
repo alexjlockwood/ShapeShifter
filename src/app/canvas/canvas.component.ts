@@ -236,8 +236,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     this.renderingCtx.save();
     this.setupCtxWithViewportCoords(this.renderingCtx);
 
-    const layerAlpha = this.vectorLayer ? this.vectorLayer.alpha : 1;
-    const currentAlpha = 1;
+    const currentAlpha = this.vectorLayer ? this.vectorLayer.alpha : 1;
     if (currentAlpha < 1) {
       this.offscreenLayerCtx.save();
       this.setupCtxWithViewportCoords(this.offscreenLayerCtx);
@@ -315,6 +314,10 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
       ctx.lineJoin = layer.strokeLinejoin;
       ctx.miterLimit = layer.strokeMiterLimit;
 
+      // TODO: update layer.pathData.length so that it reflects scale transforms
+      // TODO: update layer.pathData.length so that it reflects scale transforms
+      // TODO: update layer.pathData.length so that it reflects scale transforms
+      // TODO: update layer.pathData.length so that it reflects scale transforms
       // TODO: update layer.pathData.length so that it reflects scale transforms
       if (layer.trimPathStart !== 0
         || layer.trimPathEnd !== 1

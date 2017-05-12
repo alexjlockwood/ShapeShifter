@@ -98,7 +98,7 @@
   <!-- Animation timeline. -->
   <div class="slt-timeline"
     #timeline
-    (mousewheel)="onWheelEvent($event)">
+    (mousewheel)="this.onWheelEvent($event)">
     <ng-container *ngFor="let animation of model.animations; trackBy: trackAnimationFn;">
       <div #timelineAnimation
         *ngIf="{
