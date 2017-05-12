@@ -101,8 +101,7 @@
     <ng-container *ngFor="let animation of model.animations; trackBy: trackAnimationFn;">
       <div #timelineAnimation
         *ngIf="{
-          horizZoom: (this.horizZoomObservable | async),
-          activeTime: (this.activeTimeObservable | async)
+          horizZoom: (this.horizZoomObservable | async)
         } as animationData"
         class="slt-timeline-animation"
         (mousedown)="this.animationTimelineMouseDown($event, animation)"
@@ -120,7 +119,6 @@
             class="slt-timeline-header-grid"
             [isActive]="model.activeAnimationId === animation.id"
             [animation]="animation"
-            [activeTime]="animationData.activeTime"
             [horizZoom]="animationData.horizZoom"
             [isHeader]="true"
             (onScrub)="this.timelineHeaderScrub($event)">
@@ -131,7 +129,6 @@
           class="slt-timeline-grid"
           [animation]="animation"
           [isActive]="model.activeAnimationId === animation.id"
-          [activeTime]="animationData.activeTime"
           [horizZoom]="animationData.horizZoom">
         </canvas>
 

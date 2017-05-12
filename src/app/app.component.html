@@ -12,80 +12,27 @@
     <div class="display-container"
       fxLayout="column"
       fxFlex>
-      <!-- Start/Preview/End canvases. -->
-      <ng-container *ngIf="{type: (cursorObservable | async) } as cursor">
-        <div #canvasContainer
-          class="canvas-container"
-          fxFlex
-          fxLayout="row"
-          (click)="onCanvasContainerClick()"
-          fxLayoutAlign="center center"
-          [ngClass]="{
+      <!-- Canvas -->
+      <div #canvasContainer
+        *ngIf="{ type: (cursorObservable | async) } as cursor"
+        class="canvas-container"
+        [ngClass]="{
             'show-default-cursor': cursor.type === CURSOR_DEFAULT,
             'show-pointer-cursor': cursor.type === CURSOR_POINTER,
             'show-pen-cursor': cursor.type === CURSOR_PEN
-          }">
-          <app-oldcanvas [canvasType]="START_CANVAS"></app-oldcanvas>
-          <app-oldcanvas *ngIf="wasMorphable"
-            [canvasType]="PREVIEW_CANVAS"></app-oldcanvas>
-          <app-oldcanvas [canvasType]="END_CANVAS"></app-oldcanvas>
-        </div>
-      </ng-container>
+          }"
+        fxFlex
+        fxLayout="row"
+        fxLayoutAlign="center center"
+        (click)="onCanvasContainerClick()">
+        <app-canvas></app-canvas>
+      </div>
       <!-- Playback controls. -->
       <app-playback></app-playback>
     </div>
+    <!-- Property input panel. -->
     <app-propertyinput fxLayout="column"></app-propertyinput>
   </div>
+  <!-- Layer list & animation timeline. -->
   <app-layertimeline></app-layertimeline>
-  <!--<div class="inspector-container" fxLayout="row">
-    <app-splitter></app-splitter>
-  </div>-->
-  <!-- SVG importer and/or path selector. -->
-  <!--<div fxLayout="column" class="inspector-panel">
-      <div class="inspector-panel-header" fxLayout="row" fxLayoutAlign="start center">
-        <div fxFlex fxLayoutAlign="end center">
-          <span fxFlex>Paths</span>
-          <button md-icon-button mdTooltip="Add paths" mdTooltipPosition="above"
-            mdTooltipShowDelay="300" [mdMenuTriggerFor]="addPathsMenu">
-            <md-icon class="svg-button" svgIcon="addpaths"></md-icon>
-          </button>
-          <md-menu #addPathsMenu="mdMenu">
-            <button md-menu-item (click)="addPathsFromSvg()">
-              Add paths from SVG
-              <div>
-                <input multiple id="addPathsFromSvgButton" type="file" accept=".svg"
-                  (change)="onSvgFilesPicked(($event.target || $event.srcElement).files)">
-              </div>
-            </button>
-            <button md-menu-item (click)="addPathsFromXml()">
-              Add paths from Vector Drawable
-              <div>
-                <input multiple id="addPathsFromXmlButton" type="file" accept=".xml"
-                  (change)="onXmlFilesPicked(($event.target || $event.srcElement).files)">
-              </div>
-            </button>
-          </md-menu>
-        </div>
-      </div>-->
-  <!-- Vector list. -->
-  <!--<app-vectorlist fxLayout="column" fxFlexFill></app-vectorlist>
-  </div>-->
-  <!-- Path inspector. -->
-  <!--<div class="inspector-panel" fxLayout="column" fxFlex>
-      <div class="inspector-panel-header" fxLayout="row" fxLayoutAlign="start center">
-        <span class="status-text" [ngClass]="{
-            'unmorphable': morphStatus === MORPH_UNMORPHABLE,
-            'morphable': morphStatus === MORPH_MORPHABLE}" [innerHTML]="statusTextObservable | async">
-        </span>
-      </div>
-      <app-pathinspector fxFlexFill></app-pathinspector>
-    </div>-->
-  <!-- Preview panel. -->
-  <!--<div class="inspector-panel" fxLayout="column">
-      <div class="inspector-panel-header" fxLayoutAlign="start center">
-        <span>Preview</span>
-      </div>
-      <app-settings fxFlexFill></app-settings>
-    </div>-->
-  <!--</div>-->
 </div>

@@ -2,6 +2,7 @@ import { Action } from '@ngrx/store';
 import { Animation, AnimationBlock } from '../scripts/animations';
 import { VectorLayer, Layer } from '../scripts/layers';
 
+// Animation actions.
 export const ADD_ANIMATIONS = 'ADD_ANIMATIONS';
 export const SELECT_ANIMATION_ID = 'SELECT_ANIMATION_ID';
 export const ACTIVATE_ANIMATION_ID = 'ACTIVATE_ANIMATION_ID';
@@ -9,12 +10,6 @@ export const REPLACE_ANIMATIONS = 'REPLACE_ANIMATIONS';
 export const ADD_BLOCK = 'ADD_BLOCK';
 export const SELECT_BLOCK_ID = 'SELECT_BLOCK_ID';
 export const REPLACE_BLOCKS = 'REPLACE_BLOCKS';
-export const ADD_VECTOR_LAYERS = 'ADD_VECTOR_LAYERS';
-export const REPLACE_VECTOR_LAYER = 'REPLACE_VECTOR_LAYER';
-export const SELECT_LAYER_ID = 'SELECT_LAYER_ID';
-export const TOGGLE_LAYER_ID_EXPANSION = 'TOGGLE_LAYER_ID_EXPANSION';
-export const TOGGLE_LAYER_ID_VISIBILITY = 'TOGGLE_LAYER_ID_VISIBILITY';
-export const ADD_LAYER = 'ADD_LAYER';
 
 export class AddAnimations implements Action {
   readonly type = ADD_ANIMATIONS;
@@ -71,6 +66,14 @@ export class ReplaceBlocks implements Action {
     this.payload = { blocks };
   }
 }
+
+// VectorLayer constants.
+export const ADD_VECTOR_LAYERS = 'ADD_VECTOR_LAYERS';
+export const REPLACE_VECTOR_LAYER = 'REPLACE_VECTOR_LAYER';
+export const SELECT_LAYER_ID = 'SELECT_LAYER_ID';
+export const TOGGLE_LAYER_ID_EXPANSION = 'TOGGLE_LAYER_ID_EXPANSION';
+export const TOGGLE_LAYER_ID_VISIBILITY = 'TOGGLE_LAYER_ID_VISIBILITY';
+export const ADD_LAYER = 'ADD_LAYER';
 
 export class AddVectorLayers implements Action {
   readonly type = ADD_VECTOR_LAYERS;

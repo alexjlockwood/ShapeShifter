@@ -10,8 +10,8 @@ import { reducer } from './store';
 
 // Components & directives.
 import { AppComponent } from './app.component';
-import { OldCanvasComponent } from './canvas/oldcanvas.component';
-import { OldCanvasRulerDirective } from './canvas/oldcanvasruler.directive';
+import { CanvasComponent } from './canvas/canvas.component';
+import { CanvasRulerDirective } from './canvas/canvasruler.directive';
 import { PathInspectorComponent } from './inspector/pathinspector.component';
 import { CommandInspectorComponent } from './inspector/commandinspector.component';
 import { SubpathInspectorComponent } from './inspector/subpathinspector.component';
@@ -56,13 +56,13 @@ import 'hammerjs';
 @NgModule({
   declarations: [
     AppComponent,
-    OldCanvasComponent,
+    CanvasComponent,
     PlaybackComponent,
     SplitterComponent,
     PathInspectorComponent,
     CommandInspectorComponent,
     SubpathInspectorComponent,
-    OldCanvasRulerDirective,
+    CanvasRulerDirective,
     SettingsComponent,
     ToolbarComponent,
     ConfirmDialogComponent,

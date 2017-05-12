@@ -1,0 +1,176 @@
+import * as _ from 'lodash';
+import * as $ from 'jquery';
+import { Directive, OnInit, Input, ElementRef, OnDestroy } from '@angular/core';
+import { CanvasType } from '../CanvasType';
+import {
+  CanvasResizeService,
+} from '../services';
+import { Store } from '@ngrx/store';
+import {
+  State,
+  getVectorLayers,
+} from '../store';
+import { Point } from '../scripts/common';
+import { Subscription } from 'rxjs/Subscription';
+import { CANVAS_MARGIN, DEFAULT_VIEWPORT_SIZE } from './oldcanvas.component';
+
+// Ruler size in css pixels.
+const RULER_SIZE = 32;
+// Extra ruler padding in css pixels.
+const EXTRA_PADDING = 12;
+const GRID_INTERVALS_PX = [1, 2, 4, 8, 16, 24, 48, 100, 100, 250];
+const LABEL_OFFSET = 12;
+const TICK_SIZE = 6;
+
+@Directive({
+  selector: '[appCanvasRuler]',
+})
+export class CanvasRulerDirective implements OnInit, OnDestroy {
+  @Input() orientation: Orientation;
+  private canvas: JQuery;
+  private mousePoint: Point;
+  private readonly subscriptions: Subscription[] = [];
+  private vlWidth = DEFAULT_VIEWPORT_SIZE;
+  private vlHeight = DEFAULT_VIEWPORT_SIZE;
+  private cssContainerWidth = 1;
+  private cssContainerHeight = 1;
+  private cssScale: number;
+
+  constructor(
+    private readonly elementRef: ElementRef,
+    private readonly canvasResizeService: CanvasResizeService,
+    private readonly store: Store<State>,
+  ) { }
+
+  ngOnInit() {
+    this.canvas = $(this.elementRef.nativeElement);
+    this.subscriptions.push(
+      this.store.select(getVectorLayers).subscribe(vls => {
+        if (!vls.length) {
+          // TODO: how to handle 0 vector layers? should this ever be possible?
+          return;
+        }
+        // TODO: how to handle multiple vector layers?
+        const vl = vls[0];
+        const newWidth = vl ? vl.width : DEFAULT_VIEWPORT_SIZE;
+        const newHeight = vl ? vl.height : DEFAULT_VIEWPORT_SIZE;
+        const didSizeChange = this.vlWidth !== newWidth || this.vlHeight !== newHeight;
+        if (didSizeChange) {
+          this.vlWidth = newWidth;
+          this.vlHeight = newHeight;
+          this.draw();
+        }
+      }));
+    this.subscriptions.push(
+      this.canvasResizeService.asObservable().subscribe(size => {
+        const oldWidth = this.cssContainerWidth;
+        const oldHeight = this.cssContainerHeight;
+        this.cssContainerWidth = Math.max(1, size.width - CANVAS_MARGIN * 2);
+        this.cssContainerHeight = Math.max(1, size.height - CANVAS_MARGIN * 2);
+        if (this.cssContainerWidth !== oldWidth || this.cssContainerHeight !== oldHeight) {
+          this.draw();
+        }
+      }));
+  }
+
+  ngOnDestroy() {
+    this.subscriptions.forEach(s => s.unsubscribe());
+  }
+
+  hideMouse() {
+    if (this.mousePoint) {
+      this.mousePoint = undefined;
+      this.draw();
+    }
+  }
+
+  /**
+   * Show the current mouse point, passed as an argument in viewport coordinates.
+   */
+  showMouse(mousePoint: Point) {
+    if (!this.mousePoint || !this.mousePoint.equals(mousePoint)) {
+      this.mousePoint = mousePoint;
+      this.draw();
+    }
+  }
+
+  draw() {
+    const isHorizontal = this.orientation === 'horizontal';
+    const vectorAspectRatio = this.vlWidth / this.vlHeight;
+    const containerAspectRatio = this.cssContainerWidth / this.cssContainerHeight;
+
+    // The 'cssScale' represents the number of CSS pixels per SVG viewport pixel.
+    if (vectorAspectRatio > containerAspectRatio) {
+      this.cssScale = this.cssContainerWidth / this.vlWidth;
+    } else {
+      this.cssScale = this.cssContainerHeight / this.vlHeight;
+    }
+
+    const cssWidth = this.vlWidth * this.cssScale;
+    const cssHeight = this.vlHeight * this.cssScale;
+    const width = isHorizontal ? cssWidth + EXTRA_PADDING * 2 : RULER_SIZE;
+    const height = isHorizontal ? RULER_SIZE : cssHeight + EXTRA_PADDING * 2;
+    this.canvas.css('width', width);
+    this.canvas.css('height', height);
+    this.canvas.attr('width', width * window.devicePixelRatio);
+    this.canvas.attr('height', height * window.devicePixelRatio);
+
+    const ctx = (this.canvas.get(0) as HTMLCanvasElement).getContext('2d');
+    ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+    ctx.translate(
+      isHorizontal ? EXTRA_PADDING : 0,
+      isHorizontal ? 0 : EXTRA_PADDING);
+
+    const zoom = Math.max(1, isHorizontal
+      ? (width - EXTRA_PADDING * 2) / this.vlWidth
+      : (height - EXTRA_PADDING * 2) / this.vlHeight);
+
+    // Compute grid spacing (40 = minimum grid spacing in pixels).
+    let interval = 0;
+    let spacingArtPx = GRID_INTERVALS_PX[interval];
+    while ((spacingArtPx * zoom) < 40 || interval >= GRID_INTERVALS_PX.length) {
+      interval++;
+      spacingArtPx = GRID_INTERVALS_PX[interval];
+    }
+
+    const spacingRulerPx = spacingArtPx * zoom;
+
+    // Text labels.
+    ctx.fillStyle = 'rgba(0,0,0,.3)';
+    ctx.font = '10px Roboto, Helvetica Neue, sans-serif';
+    if (isHorizontal) {
+      ctx.textBaseline = 'alphabetic';
+      ctx.textAlign = 'center';
+      for (let x = 0, t = 0;
+        round(x) <= round(width - EXTRA_PADDING * 2);
+        x += spacingRulerPx, t += spacingArtPx) {
+        ctx.fillText(t.toString(), x, height - LABEL_OFFSET);
+        ctx.fillRect(x - 0.5, height - TICK_SIZE, 1, TICK_SIZE);
+      }
+    } else {
+      ctx.textBaseline = 'middle';
+      ctx.textAlign = 'right';
+      for (let y = 0, t = 0;
+        round(y) <= round(height - EXTRA_PADDING * 2);
+        y += spacingRulerPx, t += spacingArtPx) {
+        ctx.fillText(t.toString(), width - LABEL_OFFSET, y);
+        ctx.fillRect(width - TICK_SIZE, y - 0.5, TICK_SIZE, 1);
+      }
+    }
+
+    ctx.fillStyle = 'rgba(0,0,0,.7)';
+    const mouseX = this.mousePoint ? this.mousePoint.x : -1;
+    const mouseY = this.mousePoint ? this.mousePoint.y : -1;
+    if (isHorizontal && mouseX >= 0) {
+      ctx.fillText(mouseX.toString(), mouseX * zoom, height - LABEL_OFFSET);
+    } else if (!isHorizontal && mouseY >= 0) {
+      ctx.fillText(mouseY.toString(), width - LABEL_OFFSET, mouseY * zoom);
+    }
+  }
+}
+
+function round(n: number) {
+  return _.round(n, 8);
+}
+
+export type Orientation = 'horizontal' | 'vertical';

@@ -1,18 +1,22 @@
 import { createSelector } from 'reselect';
 import { ActionReducer } from '@ngrx/store';
 import { combineReducers } from '@ngrx/store';
-import * as state from './Actions';
+import * as state from './StateActions';
+import * as playback from './PlaybackActions';
 import * as fromState from './State';
+import * as fromPlayback from './Playback';
 
 export interface State {
   state: fromState.State;
+  playback: fromPlayback.State;
 }
 
 export const initialState: State = {
   state: fromState.initialState,
+  playback: fromPlayback.initialState,
 };
 
-type RootActions = state.Actions;
+type RootActions = state.Actions | playback.Actions;
 
 export function reducer(state = initialState, action: RootActions) {
   return reduce(state, action);
@@ -20,4 +24,5 @@ export function reducer(state = initialState, action: RootActions) {
 
 const reduce: ActionReducer<State> = combineReducers({
   state: fromState.reducer,
+  playback: fromPlayback.reducer,
 });

@@ -1,7 +1,6 @@
 import * as _ from 'lodash';
-import { createSelector } from 'reselect';
 import { VectorLayer } from '../scripts/layers';
-import * as actions from './Actions';
+import * as actions from './StateActions';
 import {
   Animation,
   AnimationBlock,

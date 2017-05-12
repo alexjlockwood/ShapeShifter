@@ -1,36 +1,48 @@
-<div fxLayout="row" fxLayoutAlight="center center">
-  <span fxFlex="1 1 auto"></span>
-  <button md-icon-button [disabled]="(morphStatusObservable | async) !== MORPH_MORPHABLE"
-    mdTooltip="Slow motion (T)" mdTooltipPosition="below" mdTooltipShowDelay="300"
-    (click)="setIsSlowMotion(!isSlowMotion())" md-theme="light">
-    <md-icon [class.activated]="isAnimationSlowMotionObservable | async">slow_motion_video</md-icon>
+<div *ngIf="(playbackModel$ | async) as model"
+  fxLayout="row"
+  fxLayoutAlight="center center">
+  <span fxFlex></span>
+  <button md-icon-button
+    mdTooltip="Slow motion (T)"
+    mdTooltipPosition="below"
+    mdTooltipShowDelay="300"
+    (click)="this.isSlowMotionClick()">
+    <md-icon [class.activated]="model.isSlowMotion">slow_motion_video</md-icon>
   </button>
-  <button md-icon-button [disabled]="(morphStatusObservable | async) !== MORPH_MORPHABLE"
-    mdTooltip="Rewind (Left)" mdTooltipPosition="below" mdTooltipShowDelay="300"
-    (click)="onRewindClick()" md-theme="light">
+  <button md-icon-button
+    mdTooltip="Rewind (Left)"
+    mdTooltipPosition="below"
+    mdTooltipShowDelay="300"
+    (click)="this.rewindClick()">
     <md-icon>skip_previous</md-icon>
   </button>
-  <button md-mini-fab [disabled]="(morphStatusObservable | async) !== MORPH_MORPHABLE"
-    mdTooltip="{{ (isAnimationPlayingObservable | async) ? 'Pause' : 'Play' }} (Spacebar)"
-    mdTooltipPosition="below" mdTooltipShowDelay="300" (click)="onPlayPauseButtonClick()"
-    md-theme="dark">
-    <div *ngIf="(morphStatusObservable | async) === MORPH_MORPHABLE"
+  <button md-mini-fab
+    mdTooltip="{{ (model.isPlaying) ? 'Pause' : 'Play' }} (Spacebar)"
+    mdTooltipPosition="below"
+    mdTooltipShowDelay="300"
+    (click)="this.playPauseButtonClick()">
+    <div
       class="play-pause-icon"
       [ngClass]="{
         'can-animate': true,
-        'is-playing': (isAnimationPlayingObservable | async)}">
+        'is-playing': model.isPlaying
+      }">
     </div>
-    <md-icon *ngIf="(morphStatusObservable | async) !== MORPH_MORPHABLE">play_arrow</md-icon>
+    <!--<md-icon *ngIf="(morphStatusObservable | async) !== MORPH_MORPHABLE">play_arrow</md-icon>-->
   </button>
-  <button md-icon-button [disabled]="(morphStatusObservable | async) !== MORPH_MORPHABLE"
-    mdTooltip="Fast forward (Right)" mdTooltipPosition="below"
-    mdTooltipShowDelay="300" (click)="onFastForwardClick()" md-theme="light">
+  <button md-icon-button
+    mdTooltip="Fast forward (Right)"
+    mdTooltipPosition="below"
+    mdTooltipShowDelay="300"
+    (click)="this.fastForwardClick()">
     <md-icon>skip_next</md-icon>
   </button>
-  <button md-icon-button [disabled]="(morphStatusObservable | async) !== MORPH_MORPHABLE"
-    mdTooltip="Repeat (R)" mdTooltipPosition="below" mdTooltipShowDelay="300"
-    (click)="setIsRepeating(!isRepeating())" md-theme="light">
-    <md-icon [class.activated]="(isAnimationRepeatingObservable | async)">repeat</md-icon>
+  <button md-icon-button
+    mdTooltip="Repeat (R)"
+    mdTooltipPosition="below"
+    mdTooltipShowDelay="300"
+    (click)="this.isRepeatingClick(!model.isRepeating)">
+    <md-icon [class.activated]="model.isRepeating">repeat</md-icon>
   </button>
   <span fxFlex></span>
 </div>

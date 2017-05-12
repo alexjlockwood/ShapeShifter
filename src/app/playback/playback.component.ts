@@ -6,6 +6,15 @@ import {
 } from '../services';
 import { Subscription } from 'rxjs/Subscription';
 import { Observable } from 'rxjs/Observable';
+import { Store } from '@ngrx/store';
+import {
+  State,
+  SetIsSlowMotion,
+  SetIsPlaying,
+  SetIsRepeating,
+  getPlaybackSettings,
+} from '../store';
+import 'rxjs/add/observable/combineLatest';
 
 @Component({
   selector: 'app-playback',
@@ -13,76 +22,42 @@ import { Observable } from 'rxjs/Observable';
   styleUrls: ['./playback.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PlaybackComponent implements OnInit, OnDestroy {
-  readonly MORPH_NONE = MorphStatus.None;
-  readonly MORPH_UNMORPHABLE = MorphStatus.Unmorphable;
-  readonly MORPH_MORPHABLE = MorphStatus.Morphable;
+export class PlaybackComponent implements OnInit {
 
-  morphStatusObservable: Observable<MorphStatus>;
-  isAnimationSlowMotionObservable: Observable<boolean>;
-  isAnimationPlayingObservable: Observable<boolean>;
-  isAnimationRepeatingObservable: Observable<boolean>;
-  private readonly subscriptions: Subscription[] = [];
+  playbackModel$: Observable<PlaybackModel>;
 
   constructor(
-    private readonly stateService: StateService,
+    private readonly store: Store<State>,
     private readonly animatorService: AnimatorService,
   ) { }
 
   ngOnInit() {
-    this.isAnimationSlowMotionObservable =
-      this.animatorService.getAnimatorSettingsObservable()
-        .map((value: { isSlowMotion: boolean }) => value.isSlowMotion);
-    this.isAnimationPlayingObservable =
-      this.animatorService.getAnimatorSettingsObservable()
-        .map((value: { isPlaying: boolean }) => value.isPlaying);
-    this.isAnimationRepeatingObservable =
-      this.animatorService.getAnimatorSettingsObservable()
-        .map((value: { isRepeating: boolean }) => value.isRepeating);
-    this.morphStatusObservable =
-      this.stateService.getMorphStatusObservable();
-    this.subscriptions.push(
-      this.stateService.getMorphStatusObservable()
-        .subscribe(status => {
-          if (status !== MorphStatus.Morphable) {
-            this.animatorService.rewind();
-          }
-        }));
-    // TODO: pause animations when window becomes inactive?
-    // document.addEventListener('visibilitychange', function() {
-    //   console.log(document.hidden);
-    // });
+    this.playbackModel$ = this.store.select(getPlaybackSettings);
   }
 
-  ngOnDestroy() {
-    this.subscriptions.forEach(s => s.unsubscribe());
+  isSlowMotionClick() {
+    this.animatorService.toggleIsSlowMotion();
   }
 
-  setIsSlowMotion(isSlowMotion: boolean) {
-    this.animatorService.setIsSlowMotion(isSlowMotion);
-  }
-
-  onPlayPauseButtonClick() {
+  playPauseButtonClick() {
     this.animatorService.toggle();
   }
 
-  onRewindClick() {
+  rewindClick() {
     this.animatorService.rewind();
   }
 
-  onFastForwardClick() {
+  fastForwardClick() {
     this.animatorService.fastForward();
   }
 
-  setIsRepeating(isRepeating: boolean) {
-    this.animatorService.setIsRepeating(isRepeating);
+  isRepeatingClick(isRepeating: boolean) {
+    this.animatorService.toggleIsRepeating();
   }
+}
 
-  isSlowMotion() {
-    return this.animatorService.isSlowMotion();
-  }
-
-  isRepeating() {
-    return this.animatorService.isRepeating();
-  }
+interface PlaybackModel {
+  readonly isSlowMotion: boolean;
+  readonly isPlaying: boolean;
+  readonly isRepeating: boolean;
 }

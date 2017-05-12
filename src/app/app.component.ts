@@ -279,7 +279,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
         if (this.actionModeService.isShowingSubPathActionMode()) {
           this.actionModeService.reversePoints();
         } else if (isMorphable) {
-          this.animatorService.setIsRepeating(!this.animatorService.isRepeating());
+          this.animatorService.toggleIsRepeating();
         }
         return false;
       }
@@ -289,7 +289,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
           || this.actionModeService.isShowingSegmentActionMode()) {
           this.actionModeService.toggleSplitSubPathsMode();
         } else if (isMorphable) {
-          this.animatorService.setIsSlowMotion(!this.animatorService.isSlowMotion());
+          this.animatorService.toggleIsSlowMotion();
         }
         return false;
       }

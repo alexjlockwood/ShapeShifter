@@ -139,24 +139,24 @@ export class OldCanvasComponent implements AfterViewInit, OnDestroy {
         }));
     if (this.canvasType === CanvasType.Preview) {
       // Preview canvas specific setup.
-      const interpolatePreviewFn = () => {
-        const fraction = this.animatorService.getAnimatedValue();
-        const startVl = this.stateService.getVectorLayer(CanvasType.Start);
-        const previewVl = this.stateService.getVectorLayer(CanvasType.Preview);
-        const endVl = this.stateService.getVectorLayer(CanvasType.End);
-        if (startVl && previewVl && endVl
-          && startVl.isMorphableWith(previewVl)
-          && previewVl.isMorphableWith(endVl)) {
-          LayerUtil.deepInterpolate(startVl, previewVl, endVl, fraction);
-        }
-        this.draw();
-      };
-      this.subscribeTo(
-        this.stateService.getActivePathIdObservable(this.canvasType),
-        () => interpolatePreviewFn());
-      this.subscribeTo(
-        this.animatorService.getAnimatedValueObservable(),
-        () => interpolatePreviewFn());
+      // const interpolatePreviewFn = () => {
+      //   const fraction = this.animatorService.getAnimatedValue();
+      //   const startVl = this.stateService.getVectorLayer(CanvasType.Start);
+      //   const previewVl = this.stateService.getVectorLayer(CanvasType.Preview);
+      //   const endVl = this.stateService.getVectorLayer(CanvasType.End);
+      //   if (startVl && previewVl && endVl
+      //     && startVl.isMorphableWith(previewVl)
+      //     && previewVl.isMorphableWith(endVl)) {
+      //     LayerUtil.deepInterpolate(startVl, previewVl, endVl, fraction);
+      //   }
+      //   this.draw();
+      // };
+      // this.subscribeTo(
+      //   this.stateService.getActivePathIdObservable(this.canvasType),
+      //   () => interpolatePreviewFn());
+      // this.subscribeTo(
+      //   this.animatorService.getAnimatedValueObservable(),
+      //   () => interpolatePreviewFn());
       this.subscribeTo(this.settingsService.getCanvasSettingsObservable());
       this.subscribeTo(this.stateService.getMorphStatusObservable());
     } else {

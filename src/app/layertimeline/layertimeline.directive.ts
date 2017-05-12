@@ -59,7 +59,6 @@ export class LayerTimelineDirective {
     return this.activeTime_;
   }
 
-  @Input()
   set activeTime(activeTime: number) {
     if (this.activeTime_ !== activeTime) {
       this.activeTime_ = activeTime;

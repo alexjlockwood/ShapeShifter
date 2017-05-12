@@ -1,3 +1,4 @@
+import * as _ from 'lodash';
 import { createSelector } from 'reselect';
 import { ActionReducer } from '@ngrx/store';
 import { storeFreeze } from 'ngrx-store-freeze';
@@ -23,16 +24,28 @@ export function reducer(state: any, action: any) {
   }
 }
 
+// State selectors.
 export const getAnimations = (state: State) => state.root.state.animations;
 export const getSelectedAnimationIds = (state: State) => state.root.state.selectedAnimationIds;
 export const getActiveAnimationId = (state: State) => state.root.state.activeAnimationId;
+export const getActiveAnimation = (state: State) => {
+  const animations = state.root.state.animations;
+  const activeAnimationId = state.root.state.activeAnimationId;
+  return _.find(animations, a => a.id === activeAnimationId);
+}
 export const getSelectedBlockIds = (state: State) => state.root.state.selectedBlockIds;
-
 export const getVectorLayers = (state: State) => state.root.state.vectorLayers;
 export const getSelectedLayerIds = (state: State) => state.root.state.selectedLayerIds;
 export const getCollapsedLayerIds = (state: State) => state.root.state.collapsedLayerIds;
 export const getHiddenLayerIds = (state: State) => state.root.state.hiddenLayerIds;
 
+// Playback selectors.
+export const getPlaybackSettings = (state: State) => state.root.playback;
+export const getIsSlowMotion = (state: State) => state.root.playback.isSlowMotion;
+export const getIsPlaying = (state: State) => state.root.playback.isPlaying;
+export const getIsRepeating = (state: State) => state.root.playback.isRepeating;
+
+// State actions.
 export {
   AddAnimations,
   SelectAnimationId,
@@ -47,4 +60,15 @@ export {
   ToggleLayerIdExpansion,
   ToggleLayerIdVisibility,
   AddLayer,
-} from './Actions';
+} from './StateActions';
+
+// Playback actions.
+export {
+  SetIsSlowMotion,
+  SetIsPlaying,
+  SetIsRepeating,
+  ToggleIsSlowMotion,
+  ToggleIsPlaying,
+  ToggleIsRepeating,
+  ResetPlaybackSettings,
+} from './PlaybackActions';

@@ -4,17 +4,16 @@ import {
   Component, OnInit, ChangeDetectionStrategy, QueryList,
   OnDestroy, ViewChild, ViewChildren, ElementRef, AfterViewInit,
 } from '@angular/core';
-
 import { Callbacks as TimelineAnimationRowCallbacks } from './timelineanimationrow.component';
 import { Callbacks as LayerListTreeCallbacks } from './layerlisttree.component';
 import { ScrubEvent } from './layertimeline.directive';
-
 import { VectorLayer, Layer, GroupLayer, LayerUtil, PathLayer, ClipPathLayer } from '../scripts/layers';
 import { Animation, AnimationBlock } from '../scripts/animations';
 import { Dragger } from '../scripts/dragger';
 import { ModelUtil, UiUtil } from '../scripts/common';
 import * as TimelineConsts from './constants';
-
+import { AnimatorService } from '../services';
+import { LayerTimelineDirective } from './layertimeline.directive';
 import { Store } from '@ngrx/store';
 import {
   State,
@@ -38,6 +37,7 @@ import {
 } from '../store';
 import { Observable } from 'rxjs/Observable';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+import { Subscription } from 'rxjs/Subscription';
 import 'rxjs/add/observable/combineLatest';
 
 // Distance in pixels from a snap point before snapping to the point.
@@ -63,12 +63,14 @@ enum MouseActions {
 })
 export class LayerTimelineComponent implements
   OnInit,
+  OnDestroy,
   AfterViewInit,
   TimelineAnimationRowCallbacks,
   LayerListTreeCallbacks {
 
   @ViewChild('timeline') private timelineRef: ElementRef;
   @ViewChildren('timelineAnimation') private timelineAnimationRefs: QueryList<ElementRef>;
+  @ViewChildren(LayerTimelineDirective) timelineDirectives: QueryList<LayerTimelineDirective>;
 
   private readonly dragIndicatorSubject = new BehaviorSubject<DragIndicatorInfo>({
     isVisible: false, left: 0, top: 0,
@@ -76,8 +78,7 @@ export class LayerTimelineComponent implements
   dragIndicatorObservable = this.dragIndicatorSubject.asObservable();
   private readonly horizZoomSubject = new BehaviorSubject<number>(2); // 1ms = 2px.
   horizZoomObservable = this.horizZoomSubject.asObservable();
-  private readonly activeTimeSubject = new BehaviorSubject<number>(0);
-  activeTimeObservable = this.activeTimeSubject.asObservable();
+  private activeTime_ = 0;
 
   private shouldSuppressClick = false;
   private shouldSuppressRebuildSnapTimes = false;
@@ -89,8 +90,12 @@ export class LayerTimelineComponent implements
   private selectedBlockIds: Set<string>;
 
   layerTimelineModel$: Observable<LayerTimelineModel>;
+  private readonly subscriptions: Subscription[] = [];
 
-  constructor(private readonly store: Store<State>) { }
+  constructor(
+    private readonly animatorService: AnimatorService,
+    private readonly store: Store<State>,
+  ) { }
 
   ngOnInit() {
     this.layerTimelineModel$ = Observable.combineLatest(
@@ -124,6 +129,14 @@ export class LayerTimelineComponent implements
   ngAfterViewInit() {
     this.setupMouseWheelZoom();
     this.autoZoomToAnimation();
+    this.subscriptions.push(
+      this.animatorService.asObservable().subscribe(event => {
+        this.activeTime = event.currentTime;
+      }));
+  }
+
+  ngOnDestroy() {
+    this.subscriptions.forEach(s => s.unsubscribe());
   }
 
   private get horizZoom() {
@@ -135,11 +148,12 @@ export class LayerTimelineComponent implements
   }
 
   private get activeTime() {
-    return this.activeTimeSubject.getValue();
+    return this.activeTime_;
   }
 
   private set activeTime(activeTime: number) {
-    this.activeTimeSubject.next(activeTime);
+    this.activeTime_ = activeTime;
+    this.timelineDirectives.forEach(dir => dir.activeTime = activeTime);
   }
 
   // Called from the LayerTimelineComponent template.
@@ -184,7 +198,8 @@ export class LayerTimelineComponent implements
   }
 
   addGroupLayerClick() {
-    const layer = new GroupLayer({ id: undefined, name: 'TODO: fix this', children: [] });
+    const name = 'TODO: fix this';
+    const layer = new GroupLayer({ id: undefined, name, children: [] });
     this.store.dispatch(new AddLayer(layer));
   }
 

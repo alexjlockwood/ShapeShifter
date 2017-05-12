@@ -26,16 +26,16 @@ export class SettingsComponent implements OnInit {
   ) { }
 
   ngOnInit() {
-    this.shouldDisableSettingsObservable = Observable.combineLatest(
-      this.animatorService.getAnimatorSettingsObservable(),
-      this.stateService.getMorphStatusObservable())
-      .map((value: [{ isPlaying: boolean }, MorphStatus]) => {
-        return value[0].isPlaying || value[1] !== MorphStatus.Morphable;
-      });
-    // We subscribe here to ensure that Angular 2 change detection works properly.
-    this.settingsService.getCanvasSettingsObservable().subscribe(() => { });
-    this.settingsService.getAnimationSettingsObservable().subscribe(() => { });
-    this.settingsService.getRotationObservable().subscribe(() => { });
+    // this.shouldDisableSettingsObservable = Observable.combineLatest(
+    //   this.animatorService.getAnimatorSettingsObservable(),
+    //   this.stateService.getMorphStatusObservable())
+    //   .map((value: [{ isPlaying: boolean }, MorphStatus]) => {
+    //     return value[0].isPlaying || value[1] !== MorphStatus.Morphable;
+    //   });
+    // // We subscribe here to ensure that Angular 2 change detection works properly.
+    // this.settingsService.getCanvasSettingsObservable().subscribe(() => { });
+    // this.settingsService.getAnimationSettingsObservable().subscribe(() => { });
+    // this.settingsService.getRotationObservable().subscribe(() => { });
   }
 
   get selectedInterpolator() {
