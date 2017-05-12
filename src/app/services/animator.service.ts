@@ -51,7 +51,7 @@ export class AnimatorService {
     this.store.select(getIsPlaying)
       .subscribe(isPlaying => isPlaying ? this.play() : this.pause());
     this.store.select(getIsRepeating)
-      .subscribe(isRepeating => this.animator.setIsSlowMotion(isRepeating));
+      .subscribe(isRepeating => this.animator.setIsRepeating(isRepeating));
     Observable.combineLatest(
       this.store.select(getVectorLayers),
       this.store.select(getActiveAnimation),
