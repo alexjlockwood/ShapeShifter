@@ -57,10 +57,10 @@ type Context = CanvasRenderingContext2D;
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CanvasComponent implements AfterViewInit, OnDestroy {
-  @Input() canvasType: CanvasType;
-  @ViewChild('canvasContainer') private canvasContainerRef: ElementRef;
-  @ViewChild('renderingCanvas') private renderingCanvasRef: ElementRef;
-  @ViewChild('overlayCanvas') private overlayCanvasRef: ElementRef;
+
+  @ViewChild('canvasContainer') canvasContainerRef: ElementRef;
+  @ViewChild('renderingCanvas') renderingCanvasRef: ElementRef;
+  @ViewChild('overlayCanvas') overlayCanvasRef: ElementRef;
   @ViewChildren(CanvasRulerDirective) canvasRulers: QueryList<CanvasRulerDirective>;
 
   private canvasContainer: JQuery;
@@ -70,11 +70,9 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   private renderingCtx: Context;
   private overlayCtx: Context;
   private offscreenLayerCtx: Context;
-  private isViewInit: boolean;
   private cssContainerWidth = 1;
   private cssContainerHeight = 1;
   private vlSize = { width: DEFAULT_VIEWPORT_SIZE, height: DEFAULT_VIEWPORT_SIZE };
-  private currentHoverPreviewPath: Path;
   private readonly subscriptions: Subscription[] = [];
   private vectorLayer_: VectorLayer;
 
@@ -86,7 +84,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   ) { }
 
   ngAfterViewInit() {
-    this.isViewInit = true;
     this.canvasContainer = $(this.canvasContainerRef.nativeElement);
     this.renderingCanvas = $(this.renderingCanvasRef.nativeElement);
     this.overlayCanvas = $(this.overlayCanvasRef.nativeElement);
@@ -210,9 +207,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
    * Resizes the canvas and redraws all content.
    */
   private resizeAndDraw() {
-    if (!this.isViewInit) {
-      return;
-    }
     const canvases = [
       this.canvasContainer,
       this.renderingCanvas,
@@ -239,10 +233,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
    * Redraws all content.
    */
   draw() {
-    if (!this.isViewInit) {
-      return;
-    }
-
     this.renderingCtx.save();
     this.setupCtxWithViewportCoords(this.renderingCtx);
 
@@ -371,10 +361,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
   // Draw labeled points, highlights, selections, the pixel grid, etc.
   drawOverlays() {
-    if (!this.isViewInit) {
-      return;
-    }
-
     this.overlayCtx.save();
     this.setupCtxWithViewportCoords(this.overlayCtx);
     this.overlayCtx.restore();
