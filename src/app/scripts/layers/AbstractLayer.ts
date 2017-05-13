@@ -7,7 +7,7 @@ import { LayerUtil } from '.';
 /**
  * Root class for all layer types.
  */
-@Property.register<string>(
+@Property.register(
   new NameProperty('name'),
 )
 export abstract class AbstractLayer implements Layer {

@@ -16,7 +16,7 @@ export abstract class Property<T> {
   /**
    * Builds a decorator factory for the specified properties.
    */
-  static register<T>(...props: Property<T>[]) {
+  static register(...props: Property<any>[]) {
     return function (cls: any) {
       props.forEach(prop => {
         // Create's a property with the specified property name.

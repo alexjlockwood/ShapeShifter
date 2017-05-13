@@ -28,7 +28,7 @@ const ENUM_FILLTYPE_OPTIONS = [
 /**
  * Model object that mirrors the VectorDrawable's '<path>' element.
  */
-@Property.register<any>(
+@Property.register(
   new PathProperty('pathData', { isAnimatable: true }),
   new ColorProperty('fillColor', { isAnimatable: true }),
   new FractionProperty('fillAlpha', { isAnimatable: true }),

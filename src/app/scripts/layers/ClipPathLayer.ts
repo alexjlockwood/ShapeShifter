@@ -6,7 +6,7 @@ import { Type } from './Layer';
 /**
  * Model object that mirrors the VectorDrawable's '<clip-path>' element.
  */
-@Property.register<any>(
+@Property.register(
   new PathProperty('pathData', { isAnimatable: true }),
 )
 export class ClipPathLayer extends AbstractLayer {

@@ -17,7 +17,7 @@ import {
   ToggleIsRepeating,
   ResetPlaybackSettings,
 } from '../store';
-import { Animation, AnimationBlock, INTERPOLATORS } from '../scripts/animations';
+import { Animation, AnimationBlock, INTERPOLATORS, AnimationRenderer } from '../scripts/animations';
 import { VectorLayer, Layer } from '../scripts/layers';
 import { ModelUtil, LayerMap, PropertyMap } from '../scripts/common';
 import { Observable } from 'rxjs/Observable';
@@ -207,99 +207,7 @@ class Animator {
   }
 }
 
-const DEFAULT_LAYER_PROPERTY_STATE: PropertyState = {
-  activeBlock: undefined,
-  interpolatedValue: false
-};
-
-// TODO: should we 'link selected state' here similar to AIA?
-class AnimationRenderer {
-  private readonly renderedVectorLayer: VectorLayer;
-  private readonly animDataByLayer: LayerMap<RendererData> = {};
-
-  constructor(
-    readonly originalVectorLayer: VectorLayer,
-    readonly activeAnimation: Animation,
-  ) {
-    this.renderedVectorLayer = originalVectorLayer.deepClone();
-    const animDataByLayer = ModelUtil.getOrderedBlocksByPropertyByLayer(activeAnimation);
-    Object.keys(animDataByLayer).forEach(layerId => {
-      this.animDataByLayer[layerId] = {
-        originalLayer: originalVectorLayer.findLayerById(layerId),
-        renderedLayer: this.renderedVectorLayer.findLayerById(layerId),
-        orderedBlocks: animDataByLayer[layerId],
-      };
-    });
-    this.setAnimationTime(0);
-  }
-
-  setAnimationTime(time: number) {
-    Object.keys(this.animDataByLayer).forEach(layerId => {
-      const animData = this.animDataByLayer[layerId];
-      animData.cachedState = animData.cachedState || {} as PropertyState;
-
-      Object.keys(animData.orderedBlocks).forEach(propertyName => {
-        const blocks = animData.orderedBlocks[propertyName];
-        const _ar = Object.assign({}, DEFAULT_LAYER_PROPERTY_STATE);
-
-        // Compute the rendered value at the given time.
-        const property = animData.originalLayer.animatableProperties.get(propertyName);
-        let value = animData.originalLayer[propertyName];
-        for (const block of blocks) {
-          if (time < block.startTime) {
-            break;
-          }
-          if (time < block.endTime) {
-            const fromValue = ('fromValue' in block) ? block.fromValue : value;
-            let f = (time - block.startTime) / (block.endTime - block.startTime);
-            // TODO: this is a bit hacky... no need to perform a search every time.
-            const interpolatorFn =
-              _.find(INTERPOLATORS, i => i.value === block.interpolator).interpolateFn;
-            f = interpolatorFn(f);
-            value = property.interpolateValue(fromValue, block.toValue, f);
-            _ar.activeBlock = block;
-            _ar.interpolatedValue = true;
-            break;
-          }
-          value = block.toValue;
-          _ar.activeBlock = block;
-        }
-
-        animData.renderedLayer[propertyName] = value;
-
-        // Cached data.
-        animData.cachedState[propertyName] = animData.cachedState[propertyName] || {};
-        animData.cachedState[propertyName] = _ar;
-      });
-    });
-    return this.renderedVectorLayer;
-  }
-
-  private getLayerPropertyValue(layerId: string, propertyName: string) {
-    return this.renderedVectorLayer.findLayerById(layerId)[propertyName];
-  }
-
-  private getLayerPropertyState(layerId: string, propertyName: string) {
-    const layerAnimData = this.animDataByLayer[layerId];
-    return layerAnimData
-      ? (layerAnimData.cachedState[propertyName] || {}) as PropertyState
-      : Object.assign({}, DEFAULT_LAYER_PROPERTY_STATE);
-  }
-}
-
 interface AnimatorEvent {
   readonly vl: VectorLayer;
   readonly currentTime: number;
-}
-
-interface RendererData {
-  readonly originalLayer: Layer;
-  readonly renderedLayer: Layer;
-  readonly orderedBlocks: PropertyMap<AnimationBlock<any>[]>;
-  cachedState?: PropertyState;
-}
-
-interface PropertyState {
-  activeBlock: AnimationBlock<any>;
-  interpolatedValue: boolean;
 }

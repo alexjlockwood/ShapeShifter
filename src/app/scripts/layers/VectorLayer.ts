@@ -8,7 +8,7 @@ import { Type } from './Layer';
 /**
  * Model object that mirrors the VectorDrawable's '<vector>' element.
  */
-@Property.register<any>(
+@Property.register(
   new NumberProperty('width', { isAnimatable: false, min: 1, isInteger: true }),
   new NumberProperty('height', { isAnimatable: false, min: 1, isInteger: true }),
   new FractionProperty('alpha', { isAnimatable: true }),

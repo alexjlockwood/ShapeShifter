@@ -131,18 +131,8 @@ export class PropertyInputComponent implements OnInit {
           // TODO: need to somehow save the 'entered value' after data store updates?
           // TODO: need to somehow save the 'entered value' after data store updates?
           // TODO: need to somehow save the 'entered value' after data store updates?
-          // TODO: should avoid recreating the layer too when possible
-          // TODO: should avoid recreating the layer too when possible
-          // TODO: should avoid recreating the layer too when possible
-          // TODO: should avoid recreating the layer too when possible
           const vl = LayerUtil.findVectorLayer(vls, layer.id);
           const clonedLayer = layer.clone();
-          // TODO: confirm this the right way to set a new value on the cloned Layer?
-          // TODO: confirm this the right way to set a new value on the cloned Layer?
-          // TODO: confirm this the right way to set a new value on the cloned Layer?
-          // TODO: confirm this the right way to set a new value on the cloned Layer?
-          // clonedLayer.inspectableProperties.get(propertyName)
-          //   .setEditableValue(clonedLayer, propertyName, value);
           clonedLayer[propertyName] = value;
           const clonedVl = LayerUtil.replaceLayerInTree(vl, clonedLayer);
           store.dispatch(new ReplaceVectorLayer(clonedVl));
@@ -160,6 +150,11 @@ export class PropertyInputComponent implements OnInit {
         }
       }));
     });
+    // TODO: clean this up... it is a bit hacky
+    // TODO: clean this up... it is a bit hacky
+    // TODO: clean this up... it is a bit hacky
+    // TODO: clean this up... it is a bit hacky
+    // TODO: clean this up... it is a bit hacky
     if (this.propertyInputModel && this.propertyInputModel.model.id === layer.id) {
       for (let i = 0; i < inspectedProperties.length; i++) {
         inspectedProperties[i].enteredValue =
@@ -213,12 +208,6 @@ export class PropertyInputComponent implements OnInit {
         },
         set value(value: any) {
           const clonedBlock = block.clone();
-          // TODO: confirm this the right way to set a new value on the cloned block?
-          // TODO: confirm this the right way to set a new value on the cloned block?
-          // TODO: confirm this the right way to set a new value on the cloned block?
-          // TODO: confirm this the right way to set a new value on the cloned block?
-          // clonedBlock.inspectableProperties.get(propertyName)
-          //   .setEditableValue(clonedBlock, propertyName, value);
           clonedBlock[propertyName] = value;
           store.dispatch(new ReplaceBlocks([clonedBlock]));
         },
@@ -270,21 +259,7 @@ export class PropertyInputComponent implements OnInit {
           //   layer[propertyName] = value;
           //   self.studioState_.artworkChanged();
           // }
-          // TODO: need to make sure name updates don't conflict with other animations
-          // TODO: need to make sure name updates don't conflict with other animations
-          // TODO: need to make sure name updates don't conflict with other animations
-          // TODO: need to make sure name updates don't conflict with other animations
-          // TODO: should avoid recreating the Animation too when possible
-          // TODO: should avoid recreating the Animation too when possible
-          // TODO: should avoid recreating the Animation too when possible
-          // TODO: should avoid recreating the Animation too when possible
           const clonedAnimation = animation.clone();
-          // TODO: confirm this the right way to set a new value on the cloned Animation?
-          // TODO: confirm this the right way to set a new value on the cloned Animation?
-          // TODO: confirm this the right way to set a new value on the cloned Animation?
-          // TODO: confirm this the right way to set a new value on the cloned Animation?
-          // clonedAnimation.inspectableProperties.get(propertyName)
-          //  .setEditableValue(clonedAnimation, propertyName, value);
           clonedAnimation[propertyName] = value;
           store.dispatch(new ReplaceAnimations([clonedAnimation]));
         },
@@ -371,34 +346,23 @@ class InspectedProperty<M extends Inspectable, V> {
   }
 
   get displayValue() {
-    const displayValue = this.property.displayValueForValue(this.value);
-    console.info('displayValue', displayValue);
-    return displayValue;
+    return this.property.displayValueForValue(this.value);
   }
 
   get editableValue() {
-    const editableValue = (this.enteredValue !== undefined)
-      ? this.enteredValue
-      : this.property.getEditableValue(this, 'value');
-    console.info('editableValue', editableValue, this.enteredValue);
-    return editableValue;
+    return this.enteredValue === undefined
+      ? this.property.getEditableValue(this, 'value')
+      : this.enteredValue
   }
 
   set editableValue(enteredValue: V) {
-    console.info('editableValue', enteredValue);
     this.enteredValue = enteredValue;
     if (this.delegate.transformEditedValueFn) {
       enteredValue = this.delegate.transformEditedValueFn(enteredValue);
     }
     this.property.setEditableValue(this, 'value', enteredValue);
-
   }
 
-  // TODO: need to trigger change detection somehow here or else value won't get reset!!
-  // TODO: need to trigger change detection somehow here or else value won't get reset!!
-  // TODO: need to trigger change detection somehow here or else value won't get reset!!
-  // TODO: need to trigger change detection somehow here or else value won't get reset!!
-  // TODO: need to trigger change detection somehow here or else value won't get reset!!
   resolveEnteredValue() {
     this.enteredValue = undefined;
   }
@@ -407,9 +371,9 @@ class InspectedProperty<M extends Inspectable, V> {
 interface Delegate<M extends Inspectable, V> {
   readonly property: Property<V>;
   readonly propertyName: string;
-  value: V;
   readonly transformEditedValueFn?: (editedValue: V) => V;
   readonly editable: boolean;
+  value: V;
 }
 
 interface PropertyInputModel {

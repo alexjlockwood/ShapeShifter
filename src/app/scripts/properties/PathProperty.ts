@@ -3,15 +3,13 @@ import { Property } from './Property';
 
 export class PathProperty extends Property<Path> {
 
+  // @Override
   setEditableValue(model: any, propertyName: string, value: string) {
-    if (typeof value !== 'string') {
-      throw new TypeError(`value (${value}, ${typeof value}) must have type string`);
-    }
     model[propertyName] = newPath(value);
   }
 
   // @Override
-  getEditableValue(model: any, propertyName: string) {
+  getEditableValue(model: any, propertyName: string): string {
     // TODO: avoid cloning this thing every time... or clone it somewhere else...
     // TODO: avoid cloning this thing every time... or clone it somewhere else...
     // TODO: avoid cloning this thing every time... or clone it somewhere else...
@@ -20,14 +18,18 @@ export class PathProperty extends Property<Path> {
   }
 
   // @Override
-  protected getter_(model: any, propertyName: string) {
+  protected getter_(model: any, propertyName: string): Path {
     return model[`${propertyName}_`];
   }
 
   // @Override
-  protected setter_(model: any, propertyName: string, value) {
+  protected setter_(model: any, propertyName: string, value: Path | string) {
+    if (!value) {
+      model[`${propertyName}_`] = undefined;
+      return;
+    }
     let pathData: Path;
-    if (value && typeof value === 'string') {
+    if (typeof value === 'string') {
       pathData = newPath(value);
     } else {
       pathData = value;
@@ -36,7 +38,7 @@ export class PathProperty extends Property<Path> {
   }
 
   // @Override
-  displayValueForValue(value: Path) {
+  displayValueForValue(value: Path): string {
     // TODO: avoid cloning this thing every time... or clone it somewhere else...
     // TODO: avoid cloning this thing every time... or clone it somewhere else...
     // TODO: avoid cloning this thing every time... or clone it somewhere else...
