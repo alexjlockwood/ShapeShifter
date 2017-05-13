@@ -18,15 +18,16 @@ export class ColorProperty extends Property<string> {
 
   // @Override
   setEditableValue(model: any, propertyName: string, value: string) {
+    console.info('setEditableValue', model, propertyName, value);
     if (!value) {
-      super.setEditableValue(model, propertyName, undefined);
+      model[propertyName] = undefined;
       return;
     }
     let processedValue = ColorUtil.parseAndroidColor(value);
     if (!processedValue) {
       processedValue = ColorUtil.parseAndroidColor(ColorUtil.svgToAndroidColor(value));
     }
-    super.setEditableValue(model, propertyName, ColorUtil.toAndroidString(processedValue));
+    model[propertyName] = ColorUtil.toAndroidString(processedValue);
   }
 
   // @Override
@@ -34,20 +35,3 @@ export class ColorProperty extends Property<string> {
     return 'colorType';
   }
 }
-
-// export class ColorProperty extends Property {
-
-//   trySetEditedValue(obj, propertyName, value) {
-//     if (!value) {
-//       obj[propertyName] = null;
-//       return;
-//     }
-
-//     let processedValue = ColorUtil.parseAndroidColor(value);
-//     if (!processedValue) {
-//       processedValue = ColorUtil.parseAndroidColor(ColorUtil.svgToAndroidColor(value));
-//     }
-
-//     obj[propertyName] = ColorUtil.toAndroidString(processedValue);
-//   }
-// }

@@ -330,15 +330,15 @@ function createPathSvgTarget(
   if (startLayer.fillColor && endLayer.fillColor && startLayer.fillColor !== endLayer.fillColor) {
     svgAnimations.push(
       createSvgAnimation(
-        ColorUtil.androidToCssColor(startLayer.fillColor),
-        ColorUtil.androidToCssColor(endLayer.fillColor),
+        ColorUtil.androidToCssHexColor(startLayer.fillColor),
+        ColorUtil.androidToCssHexColor(endLayer.fillColor),
         'fill'));
   }
   if (startLayer.strokeColor && endLayer.strokeColor && startLayer.strokeColor !== endLayer.strokeColor) {
     svgAnimations.push(
       createSvgAnimation(
-        ColorUtil.androidToCssColor(startLayer.strokeColor),
-        ColorUtil.androidToCssColor(endLayer.strokeColor),
+        ColorUtil.androidToCssHexColor(startLayer.strokeColor),
+        ColorUtil.androidToCssHexColor(endLayer.strokeColor),
         'stroke'));
   }
   if (startLayer.fillAlpha !== endLayer.fillAlpha) {

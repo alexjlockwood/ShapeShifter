@@ -55,7 +55,7 @@ export function svgToAndroidColor(color: string): string | undefined {
   return '#' + (alphaHex !== 'ff' ? alphaHex : '') + colorHex;
 }
 
-export function androidToCssColor(androidColor: string | undefined, multAlpha = 1): string {
+export function androidToCssHexColor(androidColor: string | undefined, multAlpha = 1): string {
   if (!androidColor) {
     return 'transparent';
   }
@@ -68,4 +68,12 @@ export function androidToCssColor(androidColor: string | undefined, multAlpha = 
     str += ((d.a < 16) ? '0' : '') + d.a.toString(16);
   }
   return str;
+}
+
+export function androidToCssRgbaColor(androidColor: string | undefined, multAlpha = 1): string {
+  if (!androidColor) {
+    return 'transparent';
+  }
+  const d = parseAndroidColor(androidColor);
+  return `rgba(${d.r},${d.g},${d.b},${(d.a * multAlpha / 255).toFixed(2)})`;
 }

@@ -54,13 +54,13 @@ function vectorLayerToSvgNode(vl: VectorLayer, destinationNode: HTMLElement, xml
       }
       conditionalAttr(node, 'd', layer.pathData.getPathString());
       if (layer.fillColor) {
-        conditionalAttr(node, 'fill', ColorUtil.androidToCssColor(layer.fillColor), '');
+        conditionalAttr(node, 'fill', ColorUtil.androidToCssHexColor(layer.fillColor), '');
       } else {
         conditionalAttr(node, 'fill', 'none');
       }
       conditionalAttr(node, 'fill-opacity', layer.fillAlpha, 1);
       if (layer.strokeColor) {
-        conditionalAttr(node, 'stroke', ColorUtil.androidToCssColor(layer.strokeColor), '');
+        conditionalAttr(node, 'stroke', ColorUtil.androidToCssHexColor(layer.strokeColor), '');
       }
       conditionalAttr(node, 'stroke-opacity', layer.strokeAlpha, 1);
       conditionalAttr(node, 'stroke-width', layer.strokeWidth, 0);

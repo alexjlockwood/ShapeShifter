@@ -31,6 +31,7 @@ import 'rxjs/add/observable/combineLatest';
 export class PropertyInputComponent implements OnInit {
 
   propertyInputModel$: Observable<PropertyInputModel>;
+  private propertyInputModel: PropertyInputModel;
 
   constructor(private readonly store: Store<State>) { }
 
@@ -44,7 +45,8 @@ export class PropertyInputComponent implements OnInit {
         this.store.select(getSelectedBlockIds),
       ).map(([animations, vls, selectedLayerIds, selectedAnimationIds, selectedBlockIds]) => {
         if (selectedLayerIds.size) {
-          return this.buildInspectedLayerProperties(vls, selectedLayerIds);
+          this.propertyInputModel = this.buildInspectedLayerProperties(vls, selectedLayerIds);
+          return this.propertyInputModel;
         } else if (selectedBlockIds.size) {
           return this.buildInspectedBlockProperties(vls, animations, selectedBlockIds);
         } else if (selectedAnimationIds.size) {
@@ -158,7 +160,14 @@ export class PropertyInputComponent implements OnInit {
         }
       }));
     });
+    if (this.propertyInputModel && this.propertyInputModel.model.id === layer.id) {
+      for (let i = 0; i < inspectedProperties.length; i++) {
+        inspectedProperties[i].enteredValue =
+          this.propertyInputModel.inspectedProperties[i].enteredValue;
+      }
+    }
     return {
+      model: layer,
       numSelections,
       inspectedProperties,
       icon,
@@ -301,7 +310,7 @@ export class PropertyInputComponent implements OnInit {
 
   // Called from the HTML template.
   androidToCssColor(color: string) {
-    return ColorUtil.androidToCssColor(color);
+    return ColorUtil.androidToCssHexColor(color);
   }
 
   trackInspectedPropertyFn(index: number, ip: InspectedProperty<Inspectable, any>) {
@@ -338,7 +347,7 @@ function getSharedPropertyNames(items: ReadonlyArray<Inspectable>) {
 class InspectedProperty<M extends Inspectable, V> {
   public readonly property: Property<V>;
   public readonly propertyName: string;
-  private enteredValue: V;
+  enteredValue: V;
 
   constructor(public readonly delegate: Delegate<M, V>) {
     this.property = delegate.property;
@@ -362,16 +371,21 @@ class InspectedProperty<M extends Inspectable, V> {
   }
 
   get displayValue() {
-    return this.property.displayValueForValue(this.value);
+    const displayValue = this.property.displayValueForValue(this.value);
+    console.info('displayValue', displayValue);
+    return displayValue;
   }
 
   get editableValue() {
-    return (this.enteredValue !== undefined)
+    const editableValue = (this.enteredValue !== undefined)
       ? this.enteredValue
       : this.property.getEditableValue(this, 'value');
+    console.info('editableValue', editableValue, this.enteredValue);
+    return editableValue;
   }
 
   set editableValue(enteredValue: V) {
+    console.info('editableValue', enteredValue);
     this.enteredValue = enteredValue;
     if (this.delegate.transformEditedValueFn) {
       enteredValue = this.delegate.transformEditedValueFn(enteredValue);
@@ -399,6 +413,7 @@ interface Delegate<M extends Inspectable, V> {
 }
 
 interface PropertyInputModel {
+  readonly model?: any;
   readonly numSelections: number;
   readonly inspectedProperties: ReadonlyArray<InspectedProperty<Inspectable, any>>;
   // TODO: use a union type here for better type safety?

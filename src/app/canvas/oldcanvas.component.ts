@@ -507,9 +507,9 @@ export class OldCanvasComponent implements AfterViewInit, OnDestroy {
 
       // TODO: confirm this stroke multiplier thing works...
       const strokeWidthMultiplier = Matrix.flatten(...transforms).getScale();
-      ctx.strokeStyle = ColorUtil.androidToCssColor(layer.strokeColor, layer.strokeAlpha);
+      ctx.strokeStyle = ColorUtil.androidToCssRgbaColor(layer.strokeColor, layer.strokeAlpha);
       ctx.lineWidth = layer.strokeWidth * strokeWidthMultiplier;
-      ctx.fillStyle = ColorUtil.androidToCssColor(layer.fillColor, layer.fillAlpha);
+      ctx.fillStyle = ColorUtil.androidToCssRgbaColor(layer.fillColor, layer.fillAlpha);
       ctx.lineCap = layer.strokeLinecap;
       ctx.lineJoin = layer.strokeLinejoin;
       ctx.miterLimit = layer.strokeMiterLimit;

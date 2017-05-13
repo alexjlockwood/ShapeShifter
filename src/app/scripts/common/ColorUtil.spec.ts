@@ -36,7 +36,7 @@ describe('ColorUtil', () => {
   describe('#androidToCssColor', () => {
     TESTS_ANDROID_CSS.forEach(a => {
       it(`converting '${a[0]}' to CSS color yields '${a[1]}'`, () => {
-        expect(ColorUtil.androidToCssColor(a[0])).toEqual(a[1]);
+        expect(ColorUtil.androidToCssHexColor(a[0])).toEqual(a[1]);
       });
     });
   });
