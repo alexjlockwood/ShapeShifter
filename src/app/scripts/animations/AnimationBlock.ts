@@ -9,7 +9,7 @@ import { Interpolator, INTERPOLATORS } from '.';
 /**
  * An animation block is an individual layer property tween (property animation).
  */
-@Property.register(
+@Property.register<any>(
   new NumberProperty('startTime', { min: 0, isInteger: true }),
   new NumberProperty('endTime', { min: 0, isInteger: true }),
   new EnumProperty('interpolator', INTERPOLATORS),
@@ -61,7 +61,7 @@ export interface ConstructorArgs<T extends AnimationBlockType>
 /**
  * An animation block that animates the 'pathData' property.
  */
-@Property.register(
+@Property.register<any>(
   new PathProperty('fromValue'),
   new PathProperty('toValue'),
 )
@@ -75,7 +75,7 @@ export class PathAnimationBlock extends AnimationBlock<Path> {
 /**
  * An animation block that animates a color property.
  */
-@Property.register(
+@Property.register<any>(
   new ColorProperty('fromValue'),
   new ColorProperty('toValue'),
 )
@@ -89,7 +89,7 @@ export class ColorAnimationBlock extends AnimationBlock<string> {
 /**
  * An animation block that animates a number property.
  */
-@Property.register(
+@Property.register<any>(
   new NumberProperty('fromValue'),
   new NumberProperty('toValue'),
 )

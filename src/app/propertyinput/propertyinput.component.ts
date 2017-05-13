@@ -1,6 +1,7 @@
 import * as _ from 'lodash';
+import * as $ from 'jquery';
 import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
-import { Property, PathProperty, NameProperty, Inspectable, Option } from '../scripts/properties';
+import { Property, PathProperty, NameProperty, FractionProperty, Inspectable, Option } from '../scripts/properties';
 import { StateService } from '../services';
 import { VectorLayer, LayerUtil, Layer } from '../scripts/layers';
 import { Animation, AnimationBlock } from '../scripts/animations';
@@ -54,13 +55,35 @@ export class PropertyInputComponent implements OnInit {
       });
   }
 
-  onValueEditorKeyDown(event: MouseEvent, ip: InspectedProperty<Inspectable, any>) {
-    // TODO: copy AIA and detect up/down arrow key presses and react appropriately
-  }
+  valueEditorKeyDown(event: KeyboardEvent, ip: InspectedProperty<Inspectable, any>) {
+    switch (event.keyCode) {
+      // Up/down arrow buttons.
+      case 38:
+      case 40:
+        ip.resolveEnteredValue();
+        const $target = $(event.target);
+        let numberValue = Number($target.val());
+        if (!isNaN(numberValue)) {
+          let delta = (event.keyCode === 38) ? 1 : -1;
 
-  // Called from the HTML template.
-  androidToCssColor(color: string) {
-    return ColorUtil.androidToCssColor(color);
+          if (ip.property instanceof FractionProperty) {
+            delta *= .1;
+          }
+
+          if (event.shiftKey) {
+            delta *= 10;
+          } else if (event.altKey) {
+            delta /= 10;
+          }
+
+          numberValue += delta;
+          ip.property.setEditableValue(ip, 'value', Number(numberValue.toFixed(6)));
+          setTimeout(() => ($target.get(0) as HTMLInputElement).select(), 0);
+          return false;
+        }
+        break;
+    }
+    return undefined;
   }
 
   private buildInspectedLayerProperties(
@@ -92,7 +115,8 @@ export class PropertyInputComponent implements OnInit {
           // TODO: return the 'rendered' value if an animation is ongoing? (see AIA)
           // TODO: return the 'rendered' value if an animation is ongoing? (see AIA)
           // TODO: return the 'rendered' value if an animation is ongoing? (see AIA)
-          return property.getEditableValue(layer, propertyName);
+          // return property.getEditableValue(layer, propertyName);
+          return layer[propertyName];
         },
         set value(value) {
           // if (property instanceof NameProperty) {
@@ -115,8 +139,9 @@ export class PropertyInputComponent implements OnInit {
           // TODO: confirm this the right way to set a new value on the cloned Layer?
           // TODO: confirm this the right way to set a new value on the cloned Layer?
           // TODO: confirm this the right way to set a new value on the cloned Layer?
-          clonedLayer.inspectableProperties.get(propertyName)
-            .setEditableValue(clonedLayer, propertyName, value);
+          // clonedLayer.inspectableProperties.get(propertyName)
+          //   .setEditableValue(clonedLayer, propertyName, value);
+          clonedLayer[propertyName] = value;
           const clonedVl = LayerUtil.replaceLayerInTree(vl, clonedLayer);
           store.dispatch(new ReplaceVectorLayer(clonedVl));
         },
@@ -175,7 +200,7 @@ export class PropertyInputComponent implements OnInit {
         property,
         propertyName,
         get value() {
-          return property.getEditableValue(block, propertyName);
+          return block[propertyName];
         },
         set value(value: any) {
           const clonedBlock = block.clone();
@@ -183,8 +208,9 @@ export class PropertyInputComponent implements OnInit {
           // TODO: confirm this the right way to set a new value on the cloned block?
           // TODO: confirm this the right way to set a new value on the cloned block?
           // TODO: confirm this the right way to set a new value on the cloned block?
-          clonedBlock.inspectableProperties.get(propertyName)
-            .setEditableValue(clonedBlock, propertyName, value);
+          // clonedBlock.inspectableProperties.get(propertyName)
+          //   .setEditableValue(clonedBlock, propertyName, value);
+          clonedBlock[propertyName] = value;
           store.dispatch(new ReplaceBlocks([clonedBlock]));
         },
         get editable() {
@@ -226,7 +252,7 @@ export class PropertyInputComponent implements OnInit {
         property,
         propertyName,
         get value() {
-          return property.getEditableValue(animation, propertyName);
+          return animation[propertyName];
         },
         set value(value) {
           // if (property instanceof NameProperty) {
@@ -248,8 +274,9 @@ export class PropertyInputComponent implements OnInit {
           // TODO: confirm this the right way to set a new value on the cloned Animation?
           // TODO: confirm this the right way to set a new value on the cloned Animation?
           // TODO: confirm this the right way to set a new value on the cloned Animation?
-          clonedAnimation.inspectableProperties.get(propertyName)
-            .setEditableValue(clonedAnimation, propertyName, value);
+          // clonedAnimation.inspectableProperties.get(propertyName)
+          //  .setEditableValue(clonedAnimation, propertyName, value);
+          clonedAnimation[propertyName] = value;
           store.dispatch(new ReplaceAnimations([clonedAnimation]));
         },
         transformEditedValueFn: (property instanceof NameProperty)
@@ -270,6 +297,11 @@ export class PropertyInputComponent implements OnInit {
       icon,
       description,
     } as PropertyInputModel;
+  }
+
+  // Called from the HTML template.
+  androidToCssColor(color: string) {
+    return ColorUtil.androidToCssColor(color);
   }
 
   trackInspectedPropertyFn(index: number, ip: InspectedProperty<Inspectable, any>) {
@@ -334,7 +366,9 @@ class InspectedProperty<M extends Inspectable, V> {
   }
 
   get editableValue() {
-    return (this.enteredValue === undefined) ? this.value : this.enteredValue;
+    return (this.enteredValue !== undefined)
+      ? this.enteredValue
+      : this.property.getEditableValue(this, 'value');
   }
 
   set editableValue(enteredValue: V) {
@@ -342,20 +376,26 @@ class InspectedProperty<M extends Inspectable, V> {
     if (this.delegate.transformEditedValueFn) {
       enteredValue = this.delegate.transformEditedValueFn(enteredValue);
     }
-    this.value = enteredValue;
+    this.property.setEditableValue(this, 'value', enteredValue);
+
   }
 
+  // TODO: need to trigger change detection somehow here or else value won't get reset!!
+  // TODO: need to trigger change detection somehow here or else value won't get reset!!
+  // TODO: need to trigger change detection somehow here or else value won't get reset!!
+  // TODO: need to trigger change detection somehow here or else value won't get reset!!
+  // TODO: need to trigger change detection somehow here or else value won't get reset!!
   resolveEnteredValue() {
     this.enteredValue = undefined;
   }
 }
 
 interface Delegate<M extends Inspectable, V> {
-  property: Property<V>;
-  propertyName: string;
+  readonly property: Property<V>;
+  readonly propertyName: string;
   value: V;
-  transformEditedValueFn?: (editedValue: V) => V;
-  editable: boolean;
+  readonly transformEditedValueFn?: (editedValue: V) => V;
+  readonly editable: boolean;
 }
 
 interface PropertyInputModel {

@@ -8,7 +8,7 @@ import { AnimationBlock } from '.';
  * each target a single layer in the vector. An animation is structured as an
  * AnimatedVectorDrawable, with the targets being AnimationBlocks.
  */
-@Property.register(
+@Property.register<any>(
   new NameProperty('name'),
   new NumberProperty('duration', { min: 100, max: 60000 }),
 )

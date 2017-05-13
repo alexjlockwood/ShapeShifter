@@ -16,30 +16,29 @@ export abstract class Property<T> {
   /**
    * Builds a decorator factory for the specified properties.
    */
-  static register(...props: Property<any>[]) {
+  static register<T>(...props: Property<T>[]) {
     return function (cls: any) {
       props.forEach(prop => {
         // Create's a property with the specified property name.
         Object.defineProperty(cls.prototype, prop.propertyName, {
           get() {
-            return this[`${prop.propertyName}_`];
+            return prop.getter_(this, prop.propertyName);
           },
           set(value: any) {
-            if (prop.propertyName === 'fillColor' && typeof value !== 'string') {
-              throw new TypeError('invalid type!');
-            }
-            this[`${prop.propertyName}_`] = value;
+            prop.setter_(this, prop.propertyName, value);
           }
         });
       });
 
       let animatableProperties = new Map<string, Property<any>>();
       if (cls.prototype.animatableProperties) {
-        animatableProperties = new Map<string, Property<any>>(cls.prototype.animatableProperties);
+        animatableProperties =
+          new Map<string, Property<any>>(cls.prototype.animatableProperties);
       }
       let inspectableProperties = new Map<string, Property<any>>();
       if (cls.prototype.inspectableProperties) {
-        inspectableProperties = new Map<string, Property<any>>(cls.prototype.inspectableProperties);
+        inspectableProperties =
+          new Map<string, Property<any>>(cls.prototype.inspectableProperties);
       }
 
       props.forEach(prop => {
@@ -66,18 +65,24 @@ export abstract class Property<T> {
     this.isAnimatable = !!config.isAnimatable;
   }
 
-  /**
-   * Returns the property's editable value (the value keyed with the property's name).
-   */
-  getEditableValue(model: any, propertyName: string): T {
+  getEditableValue(model: any, propertyName: string) {
     return model[propertyName];
   }
 
-  /**
-   * Sets the property's editable value (the value keyed with the property's name).
-   */
-  setEditableValue(model: any, propertyName: string, value: T) {
+  setEditableValue(model: any, propertyName: string, value) {
     model[propertyName] = value;
+  }
+
+  protected getter_(model: any, propertyName: string) {
+    return model[`${propertyName}_`];
+  }
+
+  protected setter_(model: any, propertyName: string, value) {
+    model[`${propertyName}_`] = value;
+  }
+
+  displayValueForValue(value) {
+    return value;
   }
 
   /**
@@ -85,15 +90,8 @@ export abstract class Property<T> {
    * This method does not modify the property's internal state, but rather
    * returns a newly created object.
    */
-  interpolateValue(start: T, end: T, fraction: number): T {
-    return undefined;
-  }
-
-  /**
-   * Returns a string representation of the value for display in the UI.
-   */
-  displayValueForValue(value: T) {
-    return '';
+  interpolateValue(start: T, end: T, fraction: number) {
+    return start;
   }
 
   /**
@@ -114,3 +112,55 @@ export abstract class Property<T> {
 export interface Config {
   readonly isAnimatable?: boolean;
 }
+
+// export class Property {
+//   constructor(name, config = {}) {
+//     this.name = name;
+//     this.config = config;
+//     this.animatable = config.animatable;
+//     this.inspectable = config.inspectable;
+//   }
+
+//   static register(props, {reset = false} = {}) {
+//     return function(cls) {
+//       props.forEach(prop => {
+//         if (!(prop instanceof StubProperty)) {
+//           Object.defineProperty(cls.prototype, prop.name, {
+//             get() {
+//               return prop.getter_(this, prop.name);
+//             },
+//             set(value) {
+//               prop.setter_(this, prop.name, value);
+//             }
+//           });
+//         }
+//       });
+
+//       let animatableProperties = {};
+//       let inspectableProperties = {};
+
+//       if (!reset) {
+//         Object.assign(animatableProperties, cls.prototype.animatableProperties);
+//         Object.assign(inspectableProperties, cls.prototype.inspectableProperties);
+//       }
+
+//       props.forEach(prop => {
+//         if (prop.animatable) {
+//           animatableProperties[prop.name] = prop;
+//         }
+
+//         if (!prop.inspectable) {
+//           inspectableProperties[prop.name] = prop;
+//         }
+//       });
+
+//       Object.defineProperty(cls.prototype, 'animatableProperties', {
+//         get: () => Object.assign({}, animatableProperties)
+//       });
+
+//       Object.defineProperty(cls.prototype, 'inspectableProperties', {
+//         get: () => Object.assign({}, inspectableProperties)
+//       });
+//     };
+//   }
+// }

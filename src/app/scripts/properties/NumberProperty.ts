@@ -18,7 +18,8 @@ export class NumberProperty extends Property<number> {
   }
 
   // @Override
-  setEditableValue(model: any, propertyName: string, value: number) {
+  setEditableValue(model: any, propertyName: string, value) {
+    value = parseFloat(value);
     if (isNaN(value)) {
       return;
     }
@@ -26,21 +27,24 @@ export class NumberProperty extends Property<number> {
     if (this.isInteger) {
       value = Math.floor(value);
     }
-    super.setEditableValue(model, propertyName, value);
+    model[propertyName] = value;
   }
 
-  // TODO: is overriding this necessary? (already being done above?)
   // @Override
-  // protected setter_(model: any, propertyName: string, value: number) {
-  //   if (isNaN(value)) {
-  //     return;
-  //   }
-  //   value = _.clamp(value, this.min, this.max);
-  //   if (this.isInteger) {
-  //     value = Math.floor(value);
-  //   }
-  //   super.setter_(model, propertyName, value);
-  // }
+  protected setter_(model: any, propertyName: string, value) {
+    if (typeof value === 'string') {
+      value = Number(value);
+    }
+    if (typeof value === 'number') {
+      if (!isNaN(value)) {
+        value = _.clamp(value, this.min, this.max);
+        if (this.isInteger) {
+          value = Math.floor(value);
+        }
+      }
+    }
+    model[`${propertyName}_`] = value;
+  }
 
   // @Override
   interpolateValue(start: number, end: number, fraction: number) {
@@ -48,8 +52,13 @@ export class NumberProperty extends Property<number> {
   }
 
   // @Override
-  displayValueForValue(val: number) {
-    return _.round(val, 3).toString().replace(/-/g, '\u2212');
+  displayValueForValue(value) {
+    if (typeof value === 'number') {
+      return (Number.isInteger(value)
+        ? value.toString()
+        : Number(value.toFixed(3)).toString()).replace(/-/g, '\u2212');
+    }
+    return value;
   }
 
   // @Override
@@ -59,7 +68,7 @@ export class NumberProperty extends Property<number> {
 }
 
 export interface NumberConfig extends Config {
-  readonly min?: number;
-  readonly max?: number;
-  readonly isInteger?: boolean;
+  isInteger?: boolean;
+  min?: number;
+  max?: number;
 }

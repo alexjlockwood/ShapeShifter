@@ -52,7 +52,8 @@
             class="spi-property-value-editor"
             fxLayout="column"
             fxFlex>
-            <input (keydown)="this.onValueEditorKeyDown($event, ip)"
+            <!-- TODO: set input type here? -->
+            <input (keydown)="this.valueEditorKeyDown($event, ip)"
               (blur)="ip.resolveEnteredValue()"
               [(ngModel)]="ip.editableValue"
               *ngIf="ip.typeName === 'NameProperty'

@@ -12,6 +12,6 @@ export class NameProperty extends Property<string> {
 
   // @Override
   setEditableValue(model: any, propertyName: string, value: string) {
-    super.setEditableValue(model, propertyName, NameProperty.sanitize(value));
+    model[propertyName] = NameProperty.sanitize(value);
   }
 }

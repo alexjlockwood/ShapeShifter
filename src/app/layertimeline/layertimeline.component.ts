@@ -224,7 +224,11 @@ export class LayerTimelineComponent implements
     animation: Animation,
     layer: Layer,
   ) {
-    // TODO: not sure if this JQuery 'class' stuff will work with view encapsulation?
+    // TODO: this JQuery 'class' stuff won't work with view encapsulation
+    // TODO: this JQuery 'class' stuff won't work with view encapsulation
+    // TODO: this JQuery 'class' stuff won't work with view encapsulation
+    // TODO: this JQuery 'class' stuff won't work with view encapsulation
+    // TODO: this JQuery 'class' stuff won't work with view encapsulation
     const $target = $(mouseDownEvent.target);
 
     // Some geometry and hit-testing basics.
@@ -527,6 +531,16 @@ export class LayerTimelineComponent implements
     layer: Layer,
     propertyName: string,
   ) {
+    // TODO: handle case where property name is undefined!! we need to avoid crashes!!
+    // TODO: handle case where property name is undefined!! we need to avoid crashes!!
+    // TODO: handle case where property name is undefined!! we need to avoid crashes!!
+    // TODO: handle case where property name is undefined!! we need to avoid crashes!!
+    // TODO: handle case where property name is undefined!! we need to avoid crashes!!
+    // TODO: handle case where property name is undefined!! we need to avoid crashes!!
+    // TODO: handle case where property name is undefined!! we need to avoid crashes!!
+    // TODO: handle case where property name is undefined!! we need to avoid crashes!!
+    // TODO: handle case where property name is undefined!! we need to avoid crashes!!
+    // TODO: handle case where property name is undefined!! we need to avoid crashes!!
     const clonedValue = layer.inspectableProperties.get(propertyName).cloneValue(layer[propertyName]);
     this.store.dispatch(new AddBlock(layer, propertyName, clonedValue, clonedValue));
   }
@@ -601,7 +615,7 @@ export class LayerTimelineComponent implements
             width: rect.width,
           };
 
-          const layer = this.findLayerById(layerId);
+          const layer = LayerUtil.findLayer(this.vectorLayers, layerId);
           orderedLayerInfos.push({
             layer,
             element,
@@ -721,16 +735,6 @@ export class LayerTimelineComponent implements
         setTimeout(() => this.shouldSuppressClick = false, 0);
       }
     });
-  }
-
-  private findLayerById(id: string) {
-    for (const vl of this.vectorLayers) {
-      const layer = vl.findLayerById(id);
-      if (layer) {
-        return layer;
-      }
-    }
-    return undefined;
   }
 
   private updateDragIndicator(info: DragIndicatorInfo) {

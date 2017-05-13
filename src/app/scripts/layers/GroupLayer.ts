@@ -6,7 +6,7 @@ import { Type } from './Layer';
 /**
  * Model object that mirrors the VectorDrawable's '<group>' element.
  */
-@Property.register(
+@Property.register<any>(
   new NumberProperty('rotation', { isAnimatable: true }),
   new NumberProperty('scaleX', { isAnimatable: true }),
   new NumberProperty('scaleY', { isAnimatable: true }),

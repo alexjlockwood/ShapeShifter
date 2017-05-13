@@ -112,6 +112,11 @@ export class ToggleLayerIdExpansion implements Action {
   }
 }
 
+// TODO: toggling layer visibility should *always* be recursive?
+// TODO: toggling layer visibility should *always* be recursive?
+// TODO: toggling layer visibility should *always* be recursive?
+// TODO: toggling layer visibility should *always* be recursive?
+// TODO: toggling layer visibility should *always* be recursive?
 export class ToggleLayerIdVisibility implements Action {
   readonly type = TOGGLE_LAYER_ID_VISIBILITY;
   readonly payload: { layerId: string, recursive: boolean };
