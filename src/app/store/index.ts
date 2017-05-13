@@ -1,3 +1,4 @@
+export { Store } from '@ngrx/store';
 import * as _ from 'lodash';
 import { createSelector } from 'reselect';
 import { ActionReducer } from '@ngrx/store';

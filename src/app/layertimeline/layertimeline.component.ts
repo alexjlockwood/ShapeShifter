@@ -1,39 +1,29 @@
 import * as _ from 'lodash';
 import * as $ from 'jquery';
 import {
-  Component, OnInit, ChangeDetectionStrategy, QueryList,
-  OnDestroy, ViewChild, ViewChildren, ElementRef, AfterViewInit,
+  Component, OnInit, ChangeDetectionStrategy,
+  QueryList, OnDestroy, ViewChild, ViewChildren,
+  ElementRef, AfterViewInit,
 } from '@angular/core';
 import { Callbacks as TimelineAnimationRowCallbacks } from './timelineanimationrow.component';
 import { Callbacks as LayerListTreeCallbacks } from './layerlisttree.component';
 import { ScrubEvent } from './layertimeline.directive';
-import { VectorLayer, Layer, GroupLayer, LayerUtil, PathLayer, ClipPathLayer } from '../scripts/layers';
+import {
+  VectorLayer, Layer, GroupLayer,
+  LayerUtil, PathLayer, ClipPathLayer,
+} from '../scripts/layers';
 import { Animation, AnimationBlock } from '../scripts/animations';
 import { Dragger } from '../scripts/dragger';
 import { ModelUtil, UiUtil } from '../scripts/common';
 import * as TimelineConsts from './constants';
 import { AnimatorService } from '../services';
 import { LayerTimelineDirective } from './layertimeline.directive';
-import { Store } from '@ngrx/store';
 import {
-  State,
-  getAnimations,
-  getVectorLayers,
-  getSelectedAnimationIds,
-  getActiveAnimationId,
-  getSelectedBlockIds,
-  AddAnimations,
-  SelectAnimationId,
-  ActivateAnimationId,
-  AddBlock,
-  SelectBlockId,
-  ReplaceBlocks,
-  AddVectorLayers,
-  ReplaceVectorLayer,
-  SelectLayerId,
-  ToggleLayerIdExpansion,
-  ToggleLayerIdVisibility,
-  AddLayer,
+  Store, State, getAnimations, getVectorLayers, getSelectedAnimationIds,
+  getActiveAnimationId, getSelectedBlockIds, AddAnimations,
+  SelectAnimationId, ActivateAnimationId, AddBlock, SelectBlockId,
+  ReplaceBlocks, AddVectorLayers, ReplaceVectorLayer, SelectLayerId,
+  ToggleLayerIdExpansion, ToggleLayerIdVisibility, AddLayer,
 } from '../store';
 import { Observable } from 'rxjs/Observable';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
@@ -196,6 +186,7 @@ export class LayerTimelineComponent implements
     // TODO: store active time and active animation in database here!!
     // TODO: store active time and active animation in database here!!
     this.activeTime = time;
+    this.animatorService.setAnimationTime(time);
   }
 
   addPathLayerClick() {

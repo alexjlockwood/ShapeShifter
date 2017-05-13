@@ -8,8 +8,8 @@ import { Animation, AnimationBlock } from '../scripts/animations';
 import { Observable } from 'rxjs/Observable';
 import { ColorUtil } from '../scripts/common';
 import { newPath } from '../scripts/paths';
-import { Store } from '@ngrx/store'
 import {
+  Store,
   State,
   getAnimations,
   getVectorLayers,
@@ -45,14 +45,22 @@ export class PropertyInputComponent implements OnInit {
         this.store.select(getSelectedBlockIds),
       ).map(([animations, vls, selectedLayerIds, selectedAnimationIds, selectedBlockIds]) => {
         if (selectedLayerIds.size) {
+          // TODO: clean this and below up
+          // TODO: clean this and below up
+          // TODO: clean this and below up
+          // TODO: clean this and below up
+          // TODO: clean this and below up
           this.propertyInputModel = this.buildInspectedLayerProperties(vls, selectedLayerIds);
           return this.propertyInputModel;
         } else if (selectedBlockIds.size) {
-          return this.buildInspectedBlockProperties(vls, animations, selectedBlockIds);
+          this.propertyInputModel = this.buildInspectedBlockProperties(vls, animations, selectedBlockIds);
+          return this.propertyInputModel;
         } else if (selectedAnimationIds.size) {
-          return this.buildInspectedAnimationProperties(animations, selectedAnimationIds);
+          this.propertyInputModel = this.buildInspectedAnimationProperties(animations, selectedAnimationIds);
+          return this.propertyInputModel;
         } else {
-          return { numSelections: 0, inspectedProperties: [] };
+          this.propertyInputModel = { numSelections: 0, inspectedProperties: [] };
+          return this.propertyInputModel;
         }
       });
   }
@@ -155,12 +163,12 @@ export class PropertyInputComponent implements OnInit {
     // TODO: clean this up... it is a bit hacky
     // TODO: clean this up... it is a bit hacky
     // TODO: clean this up... it is a bit hacky
-    if (this.propertyInputModel && this.propertyInputModel.model.id === layer.id) {
-      for (let i = 0; i < inspectedProperties.length; i++) {
-        inspectedProperties[i].enteredValue =
-          this.propertyInputModel.inspectedProperties[i].enteredValue;
-      }
-    }
+    // if (this.propertyInputModel && this.propertyInputModel.model.id === layer.id) {
+    //   for (let i = 0; i < inspectedProperties.length; i++) {
+    //     inspectedProperties[i].enteredValue =
+    //       this.propertyInputModel.inspectedProperties[i].enteredValue;
+    //   }
+    // }
     return {
       model: layer,
       numSelections,

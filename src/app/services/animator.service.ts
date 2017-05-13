@@ -1,8 +1,8 @@
 import * as _ from 'lodash';
 import { Injectable, NgZone } from '@angular/core';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
-import { Store } from '@ngrx/store';
 import {
+  Store,
   State,
   getAnimations,
   getActiveAnimation,
@@ -116,6 +116,11 @@ export class AnimatorService {
   fastForward() {
     this.animator.fastForward();
     const currentTime = this.activeAnimation.duration;
+    const vl = this.animationRenderer.setAnimationTime(currentTime);
+    this.animatorSubject.next({ vl, currentTime });
+  }
+
+  setAnimationTime(currentTime: number) {
     const vl = this.animationRenderer.setAnimationTime(currentTime);
     this.animatorSubject.next({ vl, currentTime });
   }
