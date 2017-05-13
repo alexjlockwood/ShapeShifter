@@ -4,9 +4,21 @@ import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpModule } from '@angular/http';
 import { FlexLayoutModule } from '@angular/flex-layout';
-import { MaterialModule, MdIconRegistry } from '@angular/material';
 import { StoreModule } from '@ngrx/store';
 import { reducer } from './store';
+import {
+  MdButtonModule,
+  MdDialogModule,
+  MdIconModule,
+  MdInputModule,
+  MdMenuModule,
+  MdOptionModule,
+  MdRadioModule,
+  MdSnackBarModule,
+  MdToolbarModule,
+  MdTooltipModule,
+  MdIconRegistry,
+} from '@angular/material';
 
 // Components & directives.
 import { AppComponent } from './app.component';
@@ -81,9 +93,19 @@ import 'hammerjs';
     FormsModule,
     HttpModule,
     FlexLayoutModule,
-    MaterialModule,
     BrowserAnimationsModule,
     StoreModule.provideStore(reducer),
+    // Angular material components.
+    MdButtonModule,
+    MdDialogModule,
+    MdIconModule,
+    MdInputModule,
+    MdMenuModule,
+    MdOptionModule,
+    MdRadioModule,
+    MdSnackBarModule,
+    MdToolbarModule,
+    MdTooltipModule,
   ],
   providers: [
     AnimatorService,
@@ -107,8 +129,8 @@ import 'hammerjs';
 export class AppModule {
 
   constructor(
-    private mdIconRegistry: MdIconRegistry,
-    private sanitizer: DomSanitizer) {
+    private readonly mdIconRegistry: MdIconRegistry,
+    private readonly sanitizer: DomSanitizer) {
     mdIconRegistry
       // Logo.
       .addSvgIcon('shapeshifter', sanitizer.bypassSecurityTrustResourceUrl('assets/shapeshifter.svg'))
