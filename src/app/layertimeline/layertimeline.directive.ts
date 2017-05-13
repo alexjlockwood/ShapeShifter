@@ -18,18 +18,9 @@ const GRID_INTERVALS_MS = [
   selector: '[appLayerTimeline]'
 })
 export class LayerTimelineDirective {
-  // TODO: make these setters/getters and trigger redraw when necessary?
-  // TODO: make these setters/getters and trigger redraw when necessary?
-  // TODO: make these setters/getters and trigger redraw when necessary?
-  // TODO: make these setters/getters and trigger redraw when necessary?
-  // TODO: make these setters/getters and trigger redraw when necessary?
-  // TODO: make sure these update correctly when multiple animations are supported
-  // TODO: make sure these update correctly when multiple animations are supported
-  // TODO: make sure these update correctly when multiple animations are supported
-  // TODO: make sure these update correctly when multiple animations are supported
-  // TODO: make sure these update correctly when multiple animations are supported
+
   @Input() isHeader: boolean | undefined;
-  @Input() animation: Animation;
+  private animation_: Animation;
   @Input() isActive: boolean;
   private activeTime_: number;
   private horizZoom_: number;
@@ -64,6 +55,16 @@ export class LayerTimelineDirective {
       this.activeTime_ = activeTime;
       this.redraw();
     }
+  }
+
+  get animation() {
+    return this.animation_;
+  }
+
+  @Input()
+  set animation(animation: Animation) {
+    this.animation_ = animation;
+    this.redraw();
   }
 
   @HostListener('mousedown', ['$event'])
