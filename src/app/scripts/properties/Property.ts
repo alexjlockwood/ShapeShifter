@@ -92,7 +92,9 @@ export abstract class Property<T> {
   /**
    * Returns a string representation of the value for display in the UI.
    */
-  abstract displayValueForValue(value: T): string;
+  displayValueForValue(value: T) {
+    return '';
+  }
 
   /**
    * Returns a cloned instance of the value.
