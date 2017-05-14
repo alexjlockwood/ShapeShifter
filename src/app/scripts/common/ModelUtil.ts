@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 import { Animation, AnimationBlock } from '../animations';
-import { Layer, VectorLayer } from '../layers';
+import { Layer } from '../layers';
 
 /**
  * Builds a map where the keys are layer IDs and the values are
@@ -75,18 +75,6 @@ export function getAvailablePropertyNamesForLayer(
     animatedPropertyNames.forEach(name => availablePropertyNames.delete(name));
   });
   return availablePropertyNames;
-}
-
-interface BlocksByAnimationByProperty {
-  [propertyName: string]: BlocksByAnimation;
-}
-
-interface BlocksByProperty {
-  [propertyName: string]: AnimationBlock<any>[];
-}
-
-interface BlocksByAnimation {
-  [animationId: string]: AnimationBlock<any>[];
 }
 
 export interface LayerMap<T> {

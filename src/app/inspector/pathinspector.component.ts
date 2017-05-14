@@ -2,10 +2,7 @@ import { Component, OnInit, PipeTransform, Pipe, ChangeDetectionStrategy } from 
 import { SubPath, Command } from '../scripts/paths';
 import { CanvasType } from '../CanvasType';
 import {
-  StateService,
-  SelectionService, Selection, SelectionType,
-  AppModeService,
-  HoverService, Hover,
+  StateService, SelectionService, Selection, SelectionType, HoverService, Hover,
 } from '../services';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/combineLatest';
@@ -25,7 +22,6 @@ export class PathInspectorComponent implements OnInit {
   constructor(
     private readonly stateService: StateService,
     private readonly selectionService: SelectionService,
-    private readonly appModeService: AppModeService,
     private readonly hoverService: HoverService,
   ) { }
 

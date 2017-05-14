@@ -1,8 +1,6 @@
 import { AbstractLayer, ConstructorArgs as AbstractConstructorArgs } from './AbstractLayer';
 import { MathUtil } from '../common';
-import {
-  Property, NumberProperty, ColorProperty, FractionProperty,
-} from '../properties';
+import { Property, NumberProperty, FractionProperty } from '../properties';
 import { Type } from './Layer';
 
 /**

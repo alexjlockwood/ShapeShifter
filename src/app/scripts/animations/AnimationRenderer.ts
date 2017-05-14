@@ -71,17 +71,6 @@ export class AnimationRenderer {
     });
     return this.renderedVectorLayer;
   }
-
-  private getLayerPropertyValue(layerId: string, propertyName: string) {
-    return this.renderedVectorLayer.findLayerById(layerId)[propertyName];
-  }
-
-  private getLayerPropertyState(layerId: string, propertyName: string) {
-    const layerAnimData = this.animDataByLayer[layerId];
-    return layerAnimData
-      ? (layerAnimData.cachedState[propertyName] || {}) as PropertyState
-      : Object.assign({}, DEFAULT_LAYER_PROPERTY_STATE);
-  }
 }
 
 interface RendererData {

@@ -25,7 +25,7 @@ import {
   HoverService,
   ActionModeService,
 } from './services';
-import { Animation, NumberAnimationBlock } from './scripts/animations';
+import { Animation } from './scripts/animations';
 import { DemoUtil, DEMO_MAP, DEBUG_VECTOR_DRAWABLE } from './scripts/demos';
 import 'rxjs/add/observable/combineLatest';
 import { Store } from '@ngrx/store';
@@ -363,6 +363,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     const files: File[] = [];
+    // tslint:disable-next-line
     for (let i = 0; i < fileList.length; i++) {
       files.push(fileList[i]);
     }
@@ -457,6 +458,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     const files: File[] = [];
+    // tslint:disable-next-line
     for (let i = 0; i < fileList.length; i++) {
       files.push(fileList[i]);
     }

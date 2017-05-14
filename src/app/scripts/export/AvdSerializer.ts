@@ -1,3 +1,4 @@
+import * as _ from 'lodash';
 import * as XmlSerializer from './XmlSerializer';
 import { Layer, VectorLayer, PathLayer, GroupLayer, ClipPathLayer } from '../layers';
 import { AvdTarget } from '../animations';
@@ -10,7 +11,7 @@ const AAPT_NS = 'http://schemas.android.com/aapt';
  * Serializes an VectorLayer to a vector drawable XML file.
  */
 export function vectorLayerToVectorDrawableXmlString(vectorLayer: VectorLayer) {
-  const xmlDoc = document.implementation.createDocument(null, 'vector', null);
+  const xmlDoc = document.implementation.createDocument(undefined, 'vector', undefined);
   const rootNode = xmlDoc.documentElement;
   vectorLayerToXmlNode(vectorLayer, rootNode, xmlDoc);
   return serializeXmlNode(rootNode);
@@ -23,7 +24,7 @@ export function vectorLayerAnimationToAvdXmlString(
   vectorLayer: VectorLayer,
   avdTargets: ReadonlyArray<AvdTarget>) {
 
-  const xmlDoc = document.implementation.createDocument(null, 'animated-vector', null);
+  const xmlDoc = document.implementation.createDocument(undefined, 'animated-vector', undefined);
   const rootNode = xmlDoc.documentElement;
   rootNode.setAttributeNS(XMLNS_NS, 'xmlns:android', ANDROID_NS);
   rootNode.setAttributeNS(XMLNS_NS, 'xmlns:aapt', AAPT_NS);
@@ -134,8 +135,7 @@ function vectorLayerToXmlNode(vl: VectorLayer, destinationNode: HTMLElement, xml
 }
 
 function conditionalAttr(node, attr, value, skipValue?) {
-  if (value !== undefined
-    && value !== null
+  if (!_.isNil(value)
     && (skipValue === undefined || value !== skipValue)) {
     node.setAttributeNS(ANDROID_NS, attr, value);
   }

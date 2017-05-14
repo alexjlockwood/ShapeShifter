@@ -2,7 +2,6 @@ import * as _ from 'lodash';
 import { Layer, GroupLayer, ClipPathLayer, PathLayer, VectorLayer } from '.';
 import { Property, NameProperty, Inspectable, Animatable } from '../properties';
 import { Type } from './Layer';
-import { LayerUtil } from '.';
 
 /**
  * Root class for all layer types.

@@ -638,6 +638,7 @@ export class PathMutator {
   private updateOrderingAfterUnsplitSubPath(subIdx: number) {
     const spsIdx = this.subPathOrdering[subIdx];
     this.subPathOrdering.splice(subIdx, 1);
+    // tslint:disable-next-line
     for (let i = 0; i < this.subPathOrdering.length; i++) {
       if (spsIdx < this.subPathOrdering[i]) {
         this.subPathOrdering[i]--;

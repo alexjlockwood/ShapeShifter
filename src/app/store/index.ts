@@ -29,11 +29,13 @@ export function reducer(state: any, action: any) {
 export const getAnimations = (state: State) => state.root.state.animations;
 export const getSelectedAnimationIds = (state: State) => state.root.state.selectedAnimationIds;
 export const getActiveAnimationId = (state: State) => state.root.state.activeAnimationId;
-export const getActiveAnimation = (state: State) => {
-  const animations = state.root.state.animations;
-  const activeAnimationId = state.root.state.activeAnimationId;
-  return _.find(animations, a => a.id === activeAnimationId);
-}
+export const getActiveAnimation = createSelector(
+  getActiveAnimationId,
+  getAnimations,
+  (activeAnimationId, animations) => {
+    return _.find(animations, a => a.id === activeAnimationId);
+  },
+);
 export const getSelectedBlockIds = (state: State) => state.root.state.selectedBlockIds;
 export const getVectorLayers = (state: State) => state.root.state.vectorLayers;
 export const getSelectedLayerIds = (state: State) => state.root.state.selectedLayerIds;

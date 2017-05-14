@@ -1,4 +1,3 @@
-import { createSelector } from 'reselect';
 import { ActionReducer } from '@ngrx/store';
 import { combineReducers } from '@ngrx/store';
 import * as state from './StateActions';

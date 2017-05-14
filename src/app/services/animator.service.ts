@@ -1,13 +1,10 @@
-import * as _ from 'lodash';
 import { Injectable, NgZone } from '@angular/core';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import {
   Store,
   State,
-  getAnimations,
   getActiveAnimation,
   getVectorLayers,
-  getPlaybackSettings,
   getIsSlowMotion,
   getIsPlaying,
   getIsRepeating,
@@ -17,9 +14,8 @@ import {
   ToggleIsRepeating,
   ResetPlaybackSettings,
 } from '../store';
-import { Animation, AnimationBlock, INTERPOLATORS, AnimationRenderer } from '../scripts/animations';
-import { VectorLayer, Layer } from '../scripts/layers';
-import { ModelUtil, LayerMap, PropertyMap } from '../scripts/common';
+import { Animation, AnimationRenderer } from '../scripts/animations';
+import { VectorLayer } from '../scripts/layers';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/combineLatest';
 
@@ -27,8 +23,6 @@ const REPEAT_DELAY = 750;
 const DEFAULT_IS_SLOW_MOTION = false;
 const DEFAULT_PLAYBACK_SPEED = 1;
 const SLOW_MOTION_PLAYBACK_SPEED = 5;
-const DEFAULT_IS_REPEATING = false;
-const DEFAULT_IS_PLAYING = false;
 const DEFAULT_ANIMATOR_EVENT = { vl: undefined, currentTime: 0 };
 
 /**
@@ -190,7 +184,6 @@ class Animator {
         startTimestamp = timestamp;
       }
       const progress = timestamp - startTimestamp;
-      const shouldPlayInReverse = this.shouldPlayInReverse;
       if (progress < (duration * playbackSpeed)) {
         this.animationFrameId = requestAnimationFrame(onAnimationFrameFn);
       } else {

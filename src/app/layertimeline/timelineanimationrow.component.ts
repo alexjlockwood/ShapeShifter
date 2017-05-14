@@ -4,7 +4,6 @@ import {
   EventEmitter, Output, ChangeDetectionStrategy,
 } from '@angular/core';
 import { Layer } from '../scripts/layers';
-import { Property } from '../scripts/properties';
 import { Animation, AnimationBlock } from '../scripts/animations';
 import { ModelUtil, AnimationMap } from '../scripts/common';
 import { Store } from '@ngrx/store';

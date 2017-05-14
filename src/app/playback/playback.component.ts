@@ -1,17 +1,9 @@
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
-import {
-  AnimatorService,
-  StateService,
-  MorphStatus,
-} from '../services';
-import { Subscription } from 'rxjs/Subscription';
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { AnimatorService } from '../services';
 import { Observable } from 'rxjs/Observable';
 import { Store } from '@ngrx/store';
 import {
   State,
-  SetIsSlowMotion,
-  SetIsPlaying,
-  SetIsRepeating,
   getPlaybackSettings,
 } from '../store';
 import 'rxjs/add/observable/combineLatest';

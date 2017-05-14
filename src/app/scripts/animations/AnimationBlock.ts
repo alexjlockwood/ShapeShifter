@@ -2,9 +2,9 @@ import * as _ from 'lodash';
 import { Path } from '../paths';
 import {
   Property, PathProperty, ColorProperty,
-  NumberProperty, EnumProperty, Inspectable, Option,
+  NumberProperty, EnumProperty, Inspectable,
 } from '../properties';
-import { Interpolator, INTERPOLATORS } from '.';
+import { INTERPOLATORS } from '.';
 
 /**
  * An animation block is an individual layer property tween (property animation).

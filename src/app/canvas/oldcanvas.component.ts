@@ -86,12 +86,12 @@ export class OldCanvasComponent implements AfterViewInit, OnDestroy {
   private readonly subscriptions: Subscription[] = [];
 
   constructor(
-    private readonly elementRef: ElementRef,
+    readonly elementRef: ElementRef,
     readonly appModeService: AppModeService,
     private readonly canvasResizeService: CanvasResizeService,
     readonly hoverService: HoverService,
     readonly stateService: StateService,
-    private readonly animatorService: AnimatorService,
+    readonly animatorService: AnimatorService,
     readonly selectionService: SelectionService,
     private readonly settingsService: SettingsService,
     readonly morphSubPathService: MorphSubPathService,
@@ -174,9 +174,7 @@ export class OldCanvasComponent implements AfterViewInit, OnDestroy {
             for (const s of this.selectionService.getSelections()) {
               subIdxs.add(s.subIdx);
             }
-            const toArray = Array.from(subIdxs);
-            const restrictToSubIdx = toArray.length ? toArray[0] : undefined;
-            this.segmentSplitter = new SegmentSplitter(this, restrictToSubIdx);
+            this.segmentSplitter = new SegmentSplitter(this);
           } else {
             this.segmentSplitter = undefined;
           }

@@ -1,5 +1,4 @@
 import * as _ from 'lodash';
-import { createSelector } from 'reselect';
 import * as actions from './PlaybackActions';
 
 export interface State {

@@ -11,7 +11,7 @@ export class ScrollGroupDirective implements OnDestroy {
 
   private readonly element: JQuery;
 
-  constructor(private readonly elementRef: ElementRef) {
+  constructor(readonly elementRef: ElementRef) {
     this.element = $(elementRef.nativeElement);
     GROUPS.set(this.scrollGroup, GROUPS.get(this.scrollGroup) || []);
     GROUPS.get(this.scrollGroup).push(this.element);

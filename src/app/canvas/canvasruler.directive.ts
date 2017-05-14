@@ -1,7 +1,6 @@
 import * as _ from 'lodash';
 import * as $ from 'jquery';
 import { Directive, OnInit, Input, ElementRef, OnDestroy } from '@angular/core';
-import { CanvasType } from '../CanvasType';
 import {
   CanvasResizeService,
 } from '../services';

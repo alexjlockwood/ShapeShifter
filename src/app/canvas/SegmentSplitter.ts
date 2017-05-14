@@ -20,10 +20,7 @@ export class SegmentSplitter {
   private currProjInfo: ProjInfo;
   private lastKnownMouseLocation: Point;
 
-  constructor(
-    private readonly component: OldCanvasComponent,
-    private readonly restrictToSubIdx?: number,
-  ) {
+  constructor(private readonly component: OldCanvasComponent) {
     this.stateService = component.stateService;
     this.hoverService = component.hoverService;
     this.selectionService = component.selectionService;

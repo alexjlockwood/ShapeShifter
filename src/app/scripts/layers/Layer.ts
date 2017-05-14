@@ -1,5 +1,4 @@
 import { Inspectable, Animatable } from '../properties';
-import { VectorLayer } from '.';
 
 /**
  * Interface that is shared by all vector drawable layer models below.

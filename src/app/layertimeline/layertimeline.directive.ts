@@ -1,11 +1,10 @@
 import * as $ from 'jquery';
 import * as _ from 'lodash';
 import {
-  Directive, ElementRef, Input, OnInit,
+  Directive, ElementRef, Input,
   HostListener, Output, EventEmitter,
 } from '@angular/core';
 import { TIMELINE_ANIMATION_PADDING } from './constants';
-import { MathUtil } from '../scripts/common';
 import { Animation } from '../scripts/animations';
 import { Dragger } from '../scripts/dragger';
 
@@ -29,7 +28,7 @@ export class LayerTimelineDirective {
   private readonly canvas: HTMLCanvasElement;
   private readonly $canvas: JQuery;
 
-  constructor(private readonly elementRef: ElementRef) {
+  constructor(readonly elementRef: ElementRef) {
     this.canvas = elementRef.nativeElement;
     this.$canvas = $(this.canvas);
   }

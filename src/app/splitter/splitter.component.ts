@@ -1,6 +1,6 @@
 import {
   Component, ElementRef, HostListener, Input,
-  OnInit, HostBinding, ViewEncapsulation, AfterViewInit
+  OnInit, HostBinding, ViewEncapsulation,
 } from '@angular/core';
 import * as $ from 'jquery';
 import { Dragger } from '../scripts/dragger';

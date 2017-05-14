@@ -1,13 +1,11 @@
 import * as _ from 'lodash';
 import * as $ from 'jquery';
 import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
-import { Property, PathProperty, NameProperty, FractionProperty, Inspectable, Option } from '../scripts/properties';
-import { StateService } from '../services';
-import { VectorLayer, LayerUtil, Layer } from '../scripts/layers';
-import { Animation, AnimationBlock } from '../scripts/animations';
+import { Property, NameProperty, FractionProperty, Option } from '../scripts/properties';
+import { VectorLayer, LayerUtil } from '../scripts/layers';
+import { Animation } from '../scripts/animations';
 import { Observable } from 'rxjs/Observable';
 import { ColorUtil } from '../scripts/common';
-import { newPath } from '../scripts/paths';
 import {
   Store,
   State,
@@ -65,7 +63,7 @@ export class PropertyInputComponent implements OnInit {
       });
   }
 
-  valueEditorKeyDown(event: KeyboardEvent, ip: InspectedProperty<Inspectable, any>) {
+  valueEditorKeyDown(event: KeyboardEvent, ip: InspectedProperty<any>) {
     switch (event.keyCode) {
       // Up/down arrow buttons.
       case 38:
@@ -115,9 +113,9 @@ export class PropertyInputComponent implements OnInit {
     const layer = selectedLayers[0];
     const icon = layer.getType();
     const description = layer.name;
-    const inspectedProperties: InspectedProperty<Layer, any>[] = [];
+    const inspectedProperties: InspectedProperty<any>[] = [];
     layer.inspectableProperties.forEach((property, propertyName) => {
-      inspectedProperties.push(new InspectedProperty<Layer, any>({
+      inspectedProperties.push(new InspectedProperty<any>({
         property,
         propertyName,
         get value() {
@@ -206,9 +204,9 @@ export class PropertyInputComponent implements OnInit {
     const description = block.propertyName;
     const blockLayer = LayerUtil.findLayer(vectorLayers, block.layerId);
     const subDescription = `for '${blockLayer.name}'`;
-    const inspectedProperties: InspectedProperty<AnimationBlock<any>, any>[] = [];
+    const inspectedProperties: InspectedProperty<any>[] = [];
     block.inspectableProperties.forEach((property, propertyName) => {
-      inspectedProperties.push(new InspectedProperty<AnimationBlock<any>, any>({
+      inspectedProperties.push(new InspectedProperty<any>({
         property,
         propertyName,
         get value() {
@@ -252,9 +250,9 @@ export class PropertyInputComponent implements OnInit {
     const animation = selectedAnimations[0];
     const icon = 'animation';
     const description = animation.name;
-    const inspectedProperties: InspectedProperty<Animation, any>[] = [];
+    const inspectedProperties: InspectedProperty<any>[] = [];
     animation.inspectableProperties.forEach((property, propertyName) => {
-      inspectedProperties.push(new InspectedProperty<Animation, any>({
+      inspectedProperties.push(new InspectedProperty<any>({
         property,
         propertyName,
         get value() {
@@ -296,7 +294,7 @@ export class PropertyInputComponent implements OnInit {
     return ColorUtil.androidToCssHexColor(color);
   }
 
-  trackInspectedPropertyFn(index: number, ip: InspectedProperty<Inspectable, any>) {
+  trackInspectedPropertyFn(index: number, ip: InspectedProperty<any>) {
     return ip.propertyName;
   }
 
@@ -306,33 +304,33 @@ export class PropertyInputComponent implements OnInit {
 }
 
 // TODO: use this for batch editing
-function getSharedPropertyNames(items: ReadonlyArray<Inspectable>) {
-  if (!items || !items.length) {
-    return [];
-  }
-  let shared: ReadonlyArray<string>;
-  items.forEach(item => {
-    const names = Array.from(item.inspectableProperties.keys());
-    if (!shared) {
-      shared = names;
-    } else {
-      shared = shared.filter(n => names.includes(n));
-    }
-  });
-  return shared;
-}
+// function getSharedPropertyNames(items: ReadonlyArray<Inspectable>) {
+//   if (!items || !items.length) {
+//     return [];
+//   }
+//   let shared: ReadonlyArray<string>;
+//   items.forEach(item => {
+//     const names = Array.from(item.inspectableProperties.keys());
+//     if (!shared) {
+//       shared = names;
+//     } else {
+//       shared = shared.filter(n => names.includes(n));
+//     }
+//   });
+//   return shared;
+// }
 
 /**
  * Stores information about an inspected property. M is the type of model
  * object being inspected (i.e. layer, animation, animation block), and
  * V is the property value type (number, string, path).
  */
-class InspectedProperty<M extends Inspectable, V> {
+class InspectedProperty<V> {
   public readonly property: Property<V>;
   public readonly propertyName: string;
   enteredValue: V;
 
-  constructor(public readonly delegate: Delegate<M, V>) {
+  constructor(public readonly delegate: Delegate<V>) {
     this.property = delegate.property;
     this.propertyName = delegate.propertyName;
   }
@@ -376,7 +374,7 @@ class InspectedProperty<M extends Inspectable, V> {
   }
 }
 
-interface Delegate<M extends Inspectable, V> {
+interface Delegate<V> {
   readonly property: Property<V>;
   readonly propertyName: string;
   readonly transformEditedValueFn?: (editedValue: V) => V;
@@ -387,7 +385,7 @@ interface Delegate<M extends Inspectable, V> {
 interface PropertyInputModel {
   readonly model?: any;
   readonly numSelections: number;
-  readonly inspectedProperties: ReadonlyArray<InspectedProperty<Inspectable, any>>;
+  readonly inspectedProperties: ReadonlyArray<InspectedProperty<any>>;
   // TODO: use a union type here for better type safety?
   readonly icon?: string;
   readonly description?: string;
