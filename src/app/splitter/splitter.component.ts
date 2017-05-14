@@ -9,6 +9,7 @@ import { Dragger } from '../scripts/dragger';
   selector: 'app-splitter',
   templateUrl: './splitter.component.html',
   styleUrls: ['./splitter.component.scss'],
+  // TODO: remove view encapsulation here
   encapsulation: ViewEncapsulation.None,
 })
 export class SplitterComponent implements AfterViewInit {
