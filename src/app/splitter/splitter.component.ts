@@ -91,7 +91,7 @@ export class SplitterComponent implements OnInit {
       onDropFn: () => {
         this.isDragging = false;
         this.hideSplitter();
-      }
+      },
     });
   }
 

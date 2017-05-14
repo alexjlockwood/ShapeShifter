@@ -155,7 +155,7 @@ export class PropertyInputComponent implements OnInit {
         get editable() {
           // TODO: copy AIA conditions to determine whether this should be editable
           return true;
-        }
+        },
       }));
     });
     // TODO: clean this up... it is a bit hacky
@@ -221,7 +221,7 @@ export class PropertyInputComponent implements OnInit {
         },
         get editable() {
           return true;
-        }
+        },
       }));
     });
     return {
@@ -280,7 +280,7 @@ export class PropertyInputComponent implements OnInit {
           : undefined,
         get editable() {
           return true;
-        }
+        },
       }));
     });
     return {

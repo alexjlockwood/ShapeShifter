@@ -274,7 +274,6 @@ export class PathMutator {
     return this;
   }
 
-
   /**
    * Deletes the stroked subpath at the specified index. The subpath's sibling
    * will be deleted as well.
@@ -342,7 +341,7 @@ export class PathMutator {
         startCsIdx: s.csIdx,
         startSplitIdx: s.splitIdx,
         endCsIdx: e.csIdx,
-        endSplitIdx: e.splitIdx
+        endSplitIdx: e.splitIdx,
       };
     };
 

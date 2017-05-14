@@ -151,7 +151,7 @@ export class PathState {
             const { subIdx, cmdIdx, projection } = pointInfo;
             return { subIdx, cmdIdx, projection };
           })
-          .value()
+          .value(),
       );
     }
 
@@ -188,7 +188,7 @@ export class PathState {
             const cmd = this.subPaths[obj.subIdx].getCommands()[obj.cmdIdx];
             return opts.isSegmentInRangeFn(obj.projection.d, cmd);
           })
-          .value()
+          .value(),
       );
     }
 
@@ -224,7 +224,7 @@ export class PathState {
             }
             return [{ subIdx }];
           })
-          .value()
+          .value(),
       );
     }
     const isEndPointHit = !!endPointHits.length;

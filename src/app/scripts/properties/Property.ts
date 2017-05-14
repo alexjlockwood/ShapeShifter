@@ -26,7 +26,7 @@ export abstract class Property<T> {
           },
           set(value: any) {
             prop.setter_(this, prop.propertyName, value);
-          }
+          },
         });
       });
 

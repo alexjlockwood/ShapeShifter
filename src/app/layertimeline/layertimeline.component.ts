@@ -9,8 +9,7 @@ import { Callbacks as TimelineAnimationRowCallbacks } from './timelineanimationr
 import { Callbacks as LayerListTreeCallbacks } from './layerlisttree.component';
 import { ScrubEvent } from './layertimeline.directive';
 import {
-  VectorLayer, Layer, GroupLayer,
-  LayerUtil, PathLayer, ClipPathLayer,
+  VectorLayer, Layer, GroupLayer, LayerUtil
 } from '../scripts/layers';
 import { Animation, AnimationBlock } from '../scripts/animations';
 import { Dragger } from '../scripts/dragger';
@@ -22,7 +21,7 @@ import {
   Store, State, getAnimations, getVectorLayers, getSelectedAnimationIds,
   getActiveAnimationId, getSelectedBlockIds, AddAnimations,
   SelectAnimationId, ActivateAnimationId, AddBlock, SelectBlockId,
-  ReplaceBlocks, AddVectorLayers, ReplaceVectorLayer, SelectLayerId,
+  ReplaceBlocks, ReplaceVectorLayer, SelectLayerId,
   ToggleLayerIdExpansion, ToggleLayerIdVisibility, AddLayer,
 } from '../store';
 import { Observable } from 'rxjs/Observable';
@@ -570,8 +569,7 @@ export class LayerTimelineComponent implements
     let targetLayerInfo: LayerInfo;
     let targetEdge: string;
 
-    // TODO: make sure it is impossible to drag layers across different vector layers?
-    const vectorLayers = this.vectorLayers;
+    // TODO: make it is impossible to drag layers across different vector layers?
 
     // tslint:disable-next-line
     new Dragger({
@@ -687,7 +685,6 @@ export class LayerTimelineComponent implements
         this.updateDragIndicator({ isVisible: false });
 
         if (targetLayerInfo) {
-          const root = LayerUtil.findVectorLayer(this.vectorLayers, dragLayer.id);
           let replacementVl: VectorLayer;
           if (targetLayerInfo.moveIntoEmptyLayerGroup) {
             // Moving into an empty layer group.

@@ -15,7 +15,7 @@ const GRID_INTERVALS_MS = [
 ];
 
 @Directive({
-  selector: '[appLayerTimeline]'
+  selector: '[appLayerTimeline]',
 })
 export class LayerTimelineDirective {
 

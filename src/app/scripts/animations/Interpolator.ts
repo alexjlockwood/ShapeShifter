@@ -46,7 +46,7 @@ export const INTERPOLATORS: ReadonlyArray<Interpolator> = [
     label: 'Accelerate',
     androidRef: '@android:anim/accelerate_interpolator',
     interpolateFn: f => f * f,
-    webRef: 'cubic-bezier(0.55, 0.085, 0.68, 0.53)'
+    webRef: 'cubic-bezier(0.55, 0.085, 0.68, 0.53)',
   },
   {
     value: 'DECELERATE',

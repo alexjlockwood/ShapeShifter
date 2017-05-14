@@ -5,7 +5,7 @@ import { ModelUtil, LayerMap, PropertyMap } from '../common';
 
 const DEFAULT_LAYER_PROPERTY_STATE: PropertyState = {
   activeBlock: undefined,
-  interpolatedValue: false
+  interpolatedValue: false,
 };
 
 // TODO: use this to export svg sprite animations

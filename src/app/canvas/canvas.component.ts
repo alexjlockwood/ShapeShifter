@@ -2,12 +2,11 @@ import * as _ from 'lodash';
 import * as $ from 'jquery';
 import {
   Component, AfterViewInit, OnDestroy, ElementRef, ViewChild,
-  Input, ViewChildren, QueryList, ChangeDetectionStrategy
+  ViewChildren, QueryList, ChangeDetectionStrategy
 } from '@angular/core';
-import { Path, Command } from '../scripts/paths';
+import { Command } from '../scripts/paths';
 import { PathLayer, ClipPathLayer, LayerUtil, VectorLayer } from '../scripts/layers';
-import { CanvasType } from '../CanvasType';
-import { Point, Matrix, MathUtil, ColorUtil } from '../scripts/common';
+import { Point, Matrix, ColorUtil } from '../scripts/common';
 import {
   AnimatorService,
   CanvasResizeService,
@@ -16,17 +15,15 @@ import {
   Store,
   State,
   getVectorLayers,
-  getHiddenLayerIds,
 } from '../store';
 import { CanvasRulerDirective } from './canvasruler.directive';
-import { Observable } from 'rxjs/Observable';
 import { Subscription } from 'rxjs/Subscription';
 import 'rxjs/add/observable/combineLatest';
 
 const SPLIT_POINT_RADIUS_FACTOR = 0.8;
-const SELECTED_POINT_RADIUS_FACTOR = 1.25;
-const POINT_BORDER_FACTOR = 1.075;
-const DISABLED_ALPHA = 0.38;
+// const SELECTED_POINT_RADIUS_FACTOR = 1.25;
+// const POINT_BORDER_FACTOR = 1.075;
+// const DISABLED_ALPHA = 0.38;
 
 // Canvas margin in css pixels.
 export const CANVAS_MARGIN = 36;
@@ -43,11 +40,11 @@ const MEDIUM_POINT_RADIUS = 8;
 // The radius of a small point in css pixels.
 const SMALL_POINT_RADIUS = MEDIUM_POINT_RADIUS / 1.7;
 
-const NORMAL_POINT_COLOR = '#2962FF'; // Blue A400
-const SPLIT_POINT_COLOR = '#E65100'; // Orange 900
-const HIGHLIGHT_COLOR = '#448AFF';
-const POINT_BORDER_COLOR = '#000';
-const POINT_TEXT_COLOR = '#fff';
+// const NORMAL_POINT_COLOR = '#2962FF'; // Blue A400
+// const SPLIT_POINT_COLOR = '#E65100'; // Orange 900
+// const HIGHLIGHT_COLOR = '#448AFF';
+// const POINT_BORDER_COLOR = '#000';
+// const POINT_TEXT_COLOR = '#fff';
 
 type Context = CanvasRenderingContext2D;
 
@@ -78,7 +75,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   private vectorLayer_: VectorLayer;
 
   constructor(
-    private readonly elementRef: ElementRef,
     private readonly animatorService: AnimatorService,
     private readonly canvasResizeService: CanvasResizeService,
     private readonly store: Store<State>,
@@ -408,7 +404,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   }
 
   // MOUSE LEAVE
-  onMouseLeave(event: MouseEvent) {
+  onMouseLeave() {
     this.canvasRulers.forEach(r => r.hideMouse());
   }
 
@@ -423,60 +419,60 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   /**
    * Converts a mouse point's CSS coordinates into vector layer viewport coordinates.
    */
-  private mouseEventToPoint(event: MouseEvent) {
-    const canvasOffset = this.canvasContainer.offset();
-    const x = (event.pageX - canvasOffset.left) / this.cssScale;
-    const y = (event.pageY - canvasOffset.top) / this.cssScale;
-    return new Point(x, y);
-  }
+  // private mouseEventToPoint(event: MouseEvent) {
+  //   const canvasOffset = this.canvasContainer.offset();
+  //   const x = (event.pageX - canvasOffset.left) / this.cssScale;
+  //   const y = (event.pageY - canvasOffset.top) / this.cssScale;
+  //   return new Point(x, y);
+  // }
 
-  private executeHighlights(ctx: Context, color: string, lineWidth: number) {
-    ctx.save();
-    ctx.lineCap = 'round';
-    ctx.strokeStyle = color;
-    ctx.lineWidth = lineWidth;
-    ctx.stroke();
-    ctx.restore();
-  }
+  // private executeHighlights(ctx: Context, color: string, lineWidth: number) {
+  //   ctx.save();
+  //   ctx.lineCap = 'round';
+  //   ctx.strokeStyle = color;
+  //   ctx.lineWidth = lineWidth;
+  //   ctx.stroke();
+  //   ctx.restore();
+  // }
 
   // Draws a labeled point with optional text.
-  private executeLabeledPoint(
-    ctx: Context,
-    point: Point,
-    radius: number,
-    color: string,
-    text?: string) {
+  // private executeLabeledPoint(
+  //   ctx: Context,
+  //   point: Point,
+  //   radius: number,
+  //   color: string,
+  //   text?: string) {
 
-    // Convert the point and the radius to physical pixel coordinates.
-    // We do this to avoid fractional font sizes less than 1px, which
-    // show up OK on Chrome but not on Firefox or Safari.
-    point = MathUtil.transformPoint(
-      point, Matrix.fromScaling(this.attrScale, this.attrScale));
-    radius *= this.attrScale;
+  //   // Convert the point and the radius to physical pixel coordinates.
+  //   // We do this to avoid fractional font sizes less than 1px, which
+  //   // show up OK on Chrome but not on Firefox or Safari.
+  //   point = MathUtil.transformPoint(
+  //     point, Matrix.fromScaling(this.attrScale, this.attrScale));
+  //   radius *= this.attrScale;
 
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(point.x, point.y, radius * POINT_BORDER_FACTOR, 0, 2 * Math.PI, false);
-    ctx.fillStyle = POINT_BORDER_COLOR;
-    ctx.fill();
+  //   ctx.save();
+  //   ctx.beginPath();
+  //   ctx.arc(point.x, point.y, radius * POINT_BORDER_FACTOR, 0, 2 * Math.PI, false);
+  //   ctx.fillStyle = POINT_BORDER_COLOR;
+  //   ctx.fill();
 
-    ctx.beginPath();
-    ctx.arc(point.x, point.y, radius, 0, 2 * Math.PI, false);
-    ctx.fillStyle = color;
-    ctx.fill();
+  //   ctx.beginPath();
+  //   ctx.arc(point.x, point.y, radius, 0, 2 * Math.PI, false);
+  //   ctx.fillStyle = color;
+  //   ctx.fill();
 
-    if (text) {
-      ctx.beginPath();
-      ctx.fillStyle = POINT_TEXT_COLOR;
-      ctx.font = radius + 'px Roboto, Helvetica Neue, sans-serif';
-      const width = ctx.measureText(text).width;
-      // TODO: is there a better way to get the height?
-      const height = ctx.measureText('o').width;
-      ctx.fillText(text, point.x - width / 2, point.y + height / 2);
-      ctx.fill();
-    }
-    ctx.restore();
-  }
+  //   if (text) {
+  //     ctx.beginPath();
+  //     ctx.fillStyle = POINT_TEXT_COLOR;
+  //     ctx.font = radius + 'px Roboto, Helvetica Neue, sans-serif';
+  //     const width = ctx.measureText(text).width;
+  //     // TODO: is there a better way to get the height?
+  //     const height = ctx.measureText('o').width;
+  //     ctx.fillText(text, point.x - width / 2, point.y + height / 2);
+  //     ctx.fill();
+  //   }
+  //   ctx.restore();
+  // }
 
   /**
    * Sends a signal that the canvas rulers should be redrawn.
@@ -491,11 +487,11 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
 // Takes a path point and transforms it so that its coordinates are in terms
 // of the VectorLayer's viewport coordinates.
-function applyGroupTransforms(mousePoint: Point, transforms: Matrix[]) {
-  return MathUtil.transformPoint(
-    mousePoint,
-    Matrix.flatten(...transforms.slice().reverse()));
-}
+// function applyGroupTransforms(mousePoint: Point, transforms: Matrix[]) {
+//   return MathUtil.transformPoint(
+//     mousePoint,
+//     Matrix.flatten(...transforms.slice().reverse()));
+// }
 
 function executeCommands(
   ctx: Context,
@@ -546,11 +542,4 @@ function executeCommands(
     previousEndPoint = end;
   });
   ctx.restore();
-}
-
-interface HitTestOpts {
-  noPoints?: boolean;
-  noSegments?: boolean;
-  noShapes?: boolean;
-  restrictToSubIdx?: number[];
 }

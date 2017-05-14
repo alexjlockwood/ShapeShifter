@@ -187,9 +187,9 @@ export function loadVectorLayerFromSvgString(
           c: 0,
           d: 1,
           e: -documentElement.viewBox.baseVal.x,
-          f: -documentElement.viewBox.baseVal.y
-        }
-      }
+          f: -documentElement.viewBox.baseVal.y,
+        },
+      },
     ];
   }
 

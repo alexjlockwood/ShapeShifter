@@ -531,7 +531,7 @@ export class OldCanvasComponent implements AfterViewInit, OnDestroy {
         // trimmed path length.
         ctx.setLineDash([
           shownFraction * layer.pathData.getPathLength(),
-          (1 - shownFraction + 0.001) * layer.pathData.getPathLength()
+          (1 - shownFraction + 0.001) * layer.pathData.getPathLength(),
         ]);
         // The amount to offset the path is equal to the trimPathStart plus
         // trimPathOffset. We mod the result because the trimmed path

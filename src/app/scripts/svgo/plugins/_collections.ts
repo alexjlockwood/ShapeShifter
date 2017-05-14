@@ -13,7 +13,7 @@ export const elemsGroups = {
   filterPrimitive: [
     'feBlend', 'feColorMatrix', 'feComponentTransfer', 'feComposite', 'feConvolveMatrix', 'feDiffuseLighting',
     'feDisplacementMap', 'feFlood', 'feGaussianBlur', 'feImage', 'feMerge', 'feMorphology', 'feOffset',
-    'feSpecularLighting', 'feTile', 'feTurbulence'
+    'feSpecularLighting', 'feTile', 'feTurbulence',
   ],
 };
 
@@ -29,7 +29,7 @@ export const attrsGroups = {
   conditionalProcessing: ['requiredFeatures', 'requiredExtensions', 'systemLanguage'],
   core: ['id', 'tabindex', 'xml:base', 'xml:lang', 'xml:space'],
   graphicalEvent: [
-    'onfocusin', 'onfocusout', 'onactivate', 'onclick', 'onmousedown', 'onmouseup', 'onmouseover', 'onmousemove', 'onmouseout', 'onload'
+    'onfocusin', 'onfocusout', 'onactivate', 'onclick', 'onmousedown', 'onmouseup', 'onmouseover', 'onmousemove', 'onmouseout', 'onload',
   ],
   presentation: [
     'alignment-baseline',
@@ -100,12 +100,12 @@ export const attrsGroups = {
     'visibility',
     'white-space',
     'word-spacing',
-    'writing-mode'
+    'writing-mode',
   ],
   xlink: ['xlink:href', 'xlink:show', 'xlink:actuate', 'xlink:type', 'xlink:role', 'xlink:arcrole', 'xlink:title'],
   documentEvent: ['onunload', 'onabort', 'onerror', 'onresize', 'onscroll', 'onzoom'],
   filterPrimitive: ['x', 'y', 'width', 'height', 'result'],
-  transferFunction: ['type', 'tableValues', 'slope', 'intercept', 'amplitude', 'exponent', 'offset']
+  transferFunction: ['type', 'tableValues', 'slope', 'intercept', 'amplitude', 'exponent', 'offset'],
 };
 
 export const attrsGroupsDefaults = {
@@ -167,9 +167,9 @@ export const attrsGroupsDefaults = {
     'unicode-bidi': 'normal',
     'dominant-baseline': 'auto',
     'alignment-baseline': 'baseline',
-    'baseline-shift': 'baseline'
+    'baseline-shift': 'baseline',
   },
-  transferFunction: { slope: '1', intercept: '0', amplitude: '1', exponent: '1', offset: '0' }
+  transferFunction: { slope: '1', intercept: '0', amplitude: '1', exponent: '1', offset: '0' },
 };
 
 // http://www.w3.org/TR/SVG/eltindex.html
@@ -180,24 +180,24 @@ export const elems = {
       'core',
       'graphicalEvent',
       'presentation',
-      'xlink'
+      'xlink',
     ],
     attrs: [
       'class',
       'style',
       'externalResourcesRequired',
       'transform',
-      'target'
+      'target',
     ],
     defaults: {
-      target: '_self'
+      target: '_self',
     },
     contentGroups: [
       'animation',
       'descriptive',
       'shape',
       'structural',
-      'paintServer'
+      'paintServer',
     ],
     content: [
       'a',
@@ -217,8 +217,8 @@ export const elems = {
       'style',
       'switch',
       'text',
-      'view'
-    ]
+      'view',
+    ],
   },
   altGlyph: {
     attrsGroups: [
@@ -226,7 +226,7 @@ export const elems = {
       'core',
       'graphicalEvent',
       'presentation',
-      'xlink'
+      'xlink',
     ],
     attrs: [
       'class',
@@ -238,25 +238,25 @@ export const elems = {
       'dy',
       'glyphRef',
       'format',
-      'rotate'
-    ]
+      'rotate',
+    ],
   },
   altGlyphDef: {
     attrsGroups: [
-      'core'
-    ],
-    content: [
-      'glyphRef'
-    ]
-  },
-  altGlyphItem: {
-    attrsGroups: [
-      'core'
+      'core',
     ],
     content: [
       'glyphRef',
-      'altGlyphItem'
-    ]
+    ],
+  },
+  altGlyphItem: {
+    attrsGroups: [
+      'core',
+    ],
+    content: [
+      'glyphRef',
+      'altGlyphItem',
+    ],
   },
   animate: {
     attrsGroups: [
@@ -268,14 +268,14 @@ export const elems = {
       'animationTiming',
       'animationValue',
       'presentation',
-      'xlink'
+      'xlink',
     ],
     attrs: [
-      'externalResourcesRequired'
+      'externalResourcesRequired',
     ],
     contentGroups: [
-      'descriptive'
-    ]
+      'descriptive',
+    ],
   },
   animateColor: {
     attrsGroups: [
@@ -287,14 +287,14 @@ export const elems = {
       'animationTiming',
       'animationValue',
       'animationAddition',
-      'presentation'
+      'presentation',
     ],
     attrs: [
-      'externalResourcesRequired'
+      'externalResourcesRequired',
     ],
     contentGroups: [
-      'descriptive'
-    ]
+      'descriptive',
+    ],
   },
   animateMotion: {
     attrsGroups: [
@@ -304,24 +304,24 @@ export const elems = {
       'xlink',
       'animationTiming',
       'animationValue',
-      'animationAddition'
+      'animationAddition',
     ],
     attrs: [
       'externalResourcesRequired',
       'path',
       'keyPoints',
       'rotate',
-      'origin'
+      'origin',
     ],
     defaults: {
-      'rotate': '0'
+      'rotate': '0',
     },
     contentGroups: [
-      'descriptive'
+      'descriptive',
     ],
     content: [
-      'mpath'
-    ]
+      'mpath',
+    ],
   },
   animateTransform: {
     attrsGroups: [
@@ -332,22 +332,22 @@ export const elems = {
       'animationAttributeTarget',
       'animationTiming',
       'animationValue',
-      'animationAddition'
+      'animationAddition',
     ],
     attrs: [
       'externalResourcesRequired',
-      'type'
+      'type',
     ],
     contentGroups: [
-      'descriptive'
-    ]
+      'descriptive',
+    ],
   },
   circle: {
     attrsGroups: [
       'conditionalProcessing',
       'core',
       'graphicalEvent',
-      'presentation'
+      'presentation',
     ],
     attrs: [
       'class',
@@ -356,99 +356,99 @@ export const elems = {
       'transform',
       'cx',
       'cy',
-      'r'
+      'r',
     ],
     defaults: {
       cx: '0',
-      cy: '0'
+      cy: '0',
     },
     contentGroups: [
       'animation',
-      'descriptive'
-    ]
+      'descriptive',
+    ],
   },
   clipPath: {
     attrsGroups: [
       'conditionalProcessing',
       'core',
-      'presentation'
+      'presentation',
     ],
     attrs: [
       'class',
       'style',
       'externalResourcesRequired',
       'transform',
-      'clipPathUnits'
+      'clipPathUnits',
     ],
     defaults: {
-      clipPathUnits: 'userSpaceOnUse'
+      clipPathUnits: 'userSpaceOnUse',
     },
     contentGroups: [
       'animation',
       'descriptive',
-      'shape'
+      'shape',
     ],
     content: [
       'text',
-      'use'
-    ]
+      'use',
+    ],
   },
   'color-profile': {
     attrsGroups: [
       'core',
-      'xlink'
+      'xlink',
     ],
     attrs: [
       'local',
       'name',
-      'rendering-intent'
+      'rendering-intent',
     ],
     defaults: {
       name: 'sRGB',
-      'rendering-intent': 'auto'
+      'rendering-intent': 'auto',
     },
     contentGroups: [
-      'descriptive'
-    ]
+      'descriptive',
+    ],
   },
   cursor: {
     attrsGroups: [
       'core',
       'conditionalProcessing',
-      'xlink'
+      'xlink',
     ],
     attrs: [
       'externalResourcesRequired',
       'x',
-      'y'
+      'y',
     ],
     defaults: {
       x: '0',
-      y: '0'
+      y: '0',
     },
     contentGroups: [
-      'descriptive'
-    ]
+      'descriptive',
+    ],
   },
   defs: {
     attrsGroups: [
       'conditionalProcessing',
       'core',
       'graphicalEvent',
-      'presentation'
+      'presentation',
     ],
     attrs: [
       'class',
       'style',
       'externalResourcesRequired',
-      'transform'
+      'transform',
     ],
     contentGroups: [
       'animation',
       'descriptive',
       'shape',
       'structural',
-      'paintServer'
+      'paintServer',
     ],
     content: [
       'a',
@@ -468,24 +468,24 @@ export const elems = {
       'style',
       'switch',
       'text',
-      'view'
-    ]
+      'view',
+    ],
   },
   desc: {
     attrsGroups: [
-      'core'
+      'core',
     ],
     attrs: [
       'class',
-      'style'
-    ]
+      'style',
+    ],
   },
   ellipse: {
     attrsGroups: [
       'conditionalProcessing',
       'core',
       'graphicalEvent',
-      'presentation'
+      'presentation',
     ],
     attrs: [
       'class',
@@ -495,22 +495,22 @@ export const elems = {
       'cx',
       'cy',
       'rx',
-      'ry'
+      'ry',
     ],
     defaults: {
       cx: '0',
-      cy: '0'
+      cy: '0',
     },
     contentGroups: [
       'animation',
-      'descriptive'
-    ]
+      'descriptive',
+    ],
   },
   feBlend: {
     attrsGroups: [
       'core',
       'presentation',
-      'filterPrimitive'
+      'filterPrimitive',
     ],
     attrs: [
       'class',
@@ -519,60 +519,60 @@ export const elems = {
       // then this filter primitive will use SourceGraphic as its input'
       'in',
       'in2',
-      'mode'
+      'mode',
     ],
     defaults: {
-      mode: 'normal'
+      mode: 'normal',
     },
     content: [
       'animate',
-      'set'
-    ]
+      'set',
+    ],
   },
   feColorMatrix: {
     attrsGroups: [
       'core',
       'presentation',
-      'filterPrimitive'
+      'filterPrimitive',
     ],
     attrs: [
       'class',
       'style',
       'in',
       'type',
-      'values'
+      'values',
     ],
     defaults: {
-      type: 'matrix'
+      type: 'matrix',
     },
     content: [
       'animate',
-      'set'
-    ]
+      'set',
+    ],
   },
   feComponentTransfer: {
     attrsGroups: [
       'core',
       'presentation',
-      'filterPrimitive'
+      'filterPrimitive',
     ],
     attrs: [
       'class',
       'style',
-      'in'
+      'in',
     ],
     content: [
       'feFuncA',
       'feFuncB',
       'feFuncG',
-      'feFuncR'
-    ]
+      'feFuncR',
+    ],
   },
   feComposite: {
     attrsGroups: [
       'core',
       'presentation',
-      'filterPrimitive'
+      'filterPrimitive',
     ],
     attrs: [
       'class',
@@ -583,25 +583,25 @@ export const elems = {
       'k1',
       'k2',
       'k3',
-      'k4'
+      'k4',
     ],
     defaults: {
       operator: 'over',
       k1: '0',
       k2: '0',
       k3: '0',
-      k4: '0'
+      k4: '0',
     },
     content: [
       'animate',
-      'set'
-    ]
+      'set',
+    ],
   },
   feConvolveMatrix: {
     attrsGroups: [
       'core',
       'presentation',
-      'filterPrimitive'
+      'filterPrimitive',
     ],
     attrs: [
       'class',
@@ -621,24 +621,24 @@ export const elems = {
       // TODO: kernelUnitLength - 'The first number is the <dx> value. The second number
       // is the <dy> value. If the <dy> value is not specified, it defaults to the same value as <dx>'
       'kernelUnitLength',
-      'preserveAlpha'
+      'preserveAlpha',
     ],
     defaults: {
       order: '3',
       bias: '0',
       edgeMode: 'duplicate',
-      preserveAlpha: 'false'
+      preserveAlpha: 'false',
     },
     content: [
       'animate',
-      'set'
-    ]
+      'set',
+    ],
   },
   feDiffuseLighting: {
     attrsGroups: [
       'core',
       'presentation',
-      'filterPrimitive'
+      'filterPrimitive',
     ],
     attrs: [
       'class',
@@ -646,27 +646,27 @@ export const elems = {
       'in',
       'surfaceScale',
       'diffuseConstant',
-      'kernelUnitLength'
+      'kernelUnitLength',
     ],
     defaults: {
       surfaceScale: '1',
-      diffuseConstant: '1'
+      diffuseConstant: '1',
     },
     contentGroups: [
-      'descriptive'
+      'descriptive',
     ],
     content: [
       // TODO: 'exactly one light source element, in any order'
       'feDistantLight',
       'fePointLight',
-      'feSpotLight'
-    ]
+      'feSpotLight',
+    ],
   },
   feDisplacementMap: {
     attrsGroups: [
       'core',
       'presentation',
-      'filterPrimitive'
+      'filterPrimitive',
     ],
     attrs: [
       'class',
@@ -675,228 +675,228 @@ export const elems = {
       'in2',
       'scale',
       'xChannelSelector',
-      'yChannelSelector'
+      'yChannelSelector',
     ],
     defaults: {
       scale: '0',
       xChannelSelector: 'A',
-      yChannelSelector: 'A'
+      yChannelSelector: 'A',
     },
     content: [
       'animate',
-      'set'
-    ]
+      'set',
+    ],
   },
   feDistantLight: {
     attrsGroups: [
-      'core'
+      'core',
     ],
     attrs: [
       'azimuth',
-      'elevation'
+      'elevation',
     ],
     defaults: {
       azimuth: '0',
-      elevation: '0'
+      elevation: '0',
     },
     content: [
       'animate',
-      'set'
-    ]
+      'set',
+    ],
   },
   feFlood: {
     attrsGroups: [
       'core',
       'presentation',
-      'filterPrimitive'
+      'filterPrimitive',
     ],
     attrs: [
       'class',
-      'style'
+      'style',
     ],
     content: [
       'animate',
       'animateColor',
-      'set'
-    ]
+      'set',
+    ],
   },
   feFuncA: {
     attrsGroups: [
       'core',
-      'transferFunction'
+      'transferFunction',
     ],
     content: [
       'set',
-      'animate'
-    ]
+      'animate',
+    ],
   },
   feFuncB: {
     attrsGroups: [
       'core',
-      'transferFunction'
+      'transferFunction',
     ],
     content: [
       'set',
-      'animate'
-    ]
+      'animate',
+    ],
   },
   feFuncG: {
     attrsGroups: [
       'core',
-      'transferFunction'
+      'transferFunction',
     ],
     content: [
       'set',
-      'animate'
-    ]
+      'animate',
+    ],
   },
   feFuncR: {
     attrsGroups: [
       'core',
-      'transferFunction'
+      'transferFunction',
     ],
     content: [
       'set',
-      'animate'
-    ]
+      'animate',
+    ],
   },
   feGaussianBlur: {
     attrsGroups: [
       'core',
       'presentation',
-      'filterPrimitive'
+      'filterPrimitive',
     ],
     attrs: [
       'class',
       'style',
       'in',
-      'stdDeviation'
+      'stdDeviation',
     ],
     defaults: {
-      stdDeviation: '0'
+      stdDeviation: '0',
     },
     content: [
       'set',
-      'animate'
-    ]
+      'animate',
+    ],
   },
   feImage: {
     attrsGroups: [
       'core',
       'presentation',
       'filterPrimitive',
-      'xlink'
+      'xlink',
     ],
     attrs: [
       'class',
       'style',
       'externalResourcesRequired',
       'preserveAspectRatio',
-      'xlink:href'
+      'xlink:href',
     ],
     defaults: {
-      preserveAspectRatio: 'xMidYMid meet'
+      preserveAspectRatio: 'xMidYMid meet',
     },
     content: [
       'animate',
       'animateTransform',
-      'set'
-    ]
+      'set',
+    ],
   },
   feMerge: {
     attrsGroups: [
       'core',
       'presentation',
-      'filterPrimitive'
+      'filterPrimitive',
     ],
     attrs: [
       'class',
-      'style'
+      'style',
     ],
     content: [
-      'feMergeNode'
-    ]
+      'feMergeNode',
+    ],
   },
   feMergeNode: {
     attrsGroups: [
-      'core'
+      'core',
     ],
     attrs: [
-      'in'
+      'in',
     ],
     content: [
       'animate',
-      'set'
-    ]
+      'set',
+    ],
   },
   feMorphology: {
     attrsGroups: [
       'core',
       'presentation',
-      'filterPrimitive'
+      'filterPrimitive',
     ],
     attrs: [
       'class',
       'style',
       'in',
       'operator',
-      'radius'
+      'radius',
     ],
     defaults: {
       operator: 'erode',
-      radius: '0'
+      radius: '0',
     },
     content: [
       'animate',
-      'set'
-    ]
+      'set',
+    ],
   },
   feOffset: {
     attrsGroups: [
       'core',
       'presentation',
-      'filterPrimitive'
+      'filterPrimitive',
     ],
     attrs: [
       'class',
       'style',
       'in',
       'dx',
-      'dy'
+      'dy',
     ],
     defaults: {
       dx: '0',
-      dy: '0'
+      dy: '0',
     },
     content: [
       'animate',
-      'set'
-    ]
+      'set',
+    ],
   },
   fePointLight: {
     attrsGroups: [
-      'core'
+      'core',
     ],
     attrs: [
       'x',
       'y',
-      'z'
+      'z',
     ],
     defaults: {
       x: '0',
       y: '0',
-      z: '0'
+      z: '0',
     },
     content: [
       'animate',
-      'set'
-    ]
+      'set',
+    ],
   },
   feSpecularLighting: {
     attrsGroups: [
       'core',
       'presentation',
-      'filterPrimitive'
+      'filterPrimitive',
     ],
     attrs: [
       'class',
@@ -905,22 +905,22 @@ export const elems = {
       'surfaceScale',
       'specularConstant',
       'specularExponent',
-      'kernelUnitLength'
+      'kernelUnitLength',
     ],
     defaults: {
       surfaceScale: '1',
       specularConstant: '1',
-      specularExponent: '1'
+      specularExponent: '1',
     },
     contentGroups: [
       'descriptive',
       // TODO: exactly one 'light source element'
-      'lightSource'
-    ]
+      'lightSource',
+    ],
   },
   feSpotLight: {
     attrsGroups: [
-      'core'
+      'core',
     ],
     attrs: [
       'x',
@@ -930,7 +930,7 @@ export const elems = {
       'pointsAtY',
       'pointsAtZ',
       'specularExponent',
-      'limitingConeAngle'
+      'limitingConeAngle',
     ],
     defaults: {
       x: '0',
@@ -939,34 +939,34 @@ export const elems = {
       pointsAtX: '0',
       pointsAtY: '0',
       pointsAtZ: '0',
-      specularExponent: '1'
+      specularExponent: '1',
     },
     content: [
       'animate',
-      'set'
-    ]
+      'set',
+    ],
   },
   feTile: {
     attrsGroups: [
       'core',
       'presentation',
-      'filterPrimitive'
+      'filterPrimitive',
     ],
     attrs: [
       'class',
       'style',
-      'in'
+      'in',
     ],
     content: [
       'animate',
-      'set'
-    ]
+      'set',
+    ],
   },
   feTurbulence: {
     attrsGroups: [
       'core',
       'presentation',
-      'filterPrimitive'
+      'filterPrimitive',
     ],
     attrs: [
       'class',
@@ -975,25 +975,25 @@ export const elems = {
       'numOctaves',
       'seed',
       'stitchTiles',
-      'type'
+      'type',
     ],
     defaults: {
       baseFrequency: '0',
       numOctaves: '1',
       seed: '0',
       stitchTiles: 'noStitch',
-      type: 'turbulence'
+      type: 'turbulence',
     },
     content: [
       'animate',
-      'set'
-    ]
+      'set',
+    ],
   },
   filter: {
     attrsGroups: [
       'core',
       'presentation',
-      'xlink'
+      'xlink',
     ],
     attrs: [
       'class',
@@ -1006,28 +1006,28 @@ export const elems = {
       'filterRes',
       'filterUnits',
       'primitiveUnits',
-      'xlink:href'
+      'xlink:href',
     ],
     defaults: {
       primitiveUnits: 'userSpaceOnUse',
       x: '-10%',
       y: '-10%',
       width: '120%',
-      height: '120%'
+      height: '120%',
     },
     contentGroups: [
       'descriptive',
-      'filterPrimitive'
+      'filterPrimitive',
     ],
     content: [
       'animate',
-      'set'
-    ]
+      'set',
+    ],
   },
   font: {
     attrsGroups: [
       'core',
-      'presentation'
+      'presentation',
     ],
     attrs: [
       'class',
@@ -1038,26 +1038,26 @@ export const elems = {
       'horiz-adv-x',
       'vert-origin-x',
       'vert-origin-y',
-      'vert-adv-y'
+      'vert-adv-y',
     ],
     defaults: {
       'horiz-origin-x': '0',
-      'horiz-origin-y': '0'
+      'horiz-origin-y': '0',
     },
     contentGroups: [
-      'descriptive'
+      'descriptive',
     ],
     content: [
       'font-face',
       'glyph',
       'hkern',
       'missing-glyph',
-      'vkern'
-    ]
+      'vkern',
+    ],
   },
   'font-face': {
     attrsGroups: [
-      'core'
+      'core',
     ],
     attrs: [
       'font-family',
@@ -1092,7 +1092,7 @@ export const elems = {
       'strikethrough-position',
       'strikethrough-thickness',
       'overline-position',
-      'overline-thickness'
+      'overline-thickness',
     ],
     defaults: {
       'font-style': 'all',
@@ -1102,60 +1102,60 @@ export const elems = {
       'unicode-range': 'U+0-10FFFF',
       'units-per-em': '1000',
       'panose-1': '0 0 0 0 0 0 0 0 0 0',
-      'slope': '0'
+      'slope': '0',
     },
     contentGroups: [
-      'descriptive'
+      'descriptive',
     ],
     content: [
       // TODO: "at most one 'font-face-src' element"
-      'font-face-src'
-    ]
+      'font-face-src',
+    ],
   },
   // TODO: empty content
   'font-face-format': {
     attrsGroups: [
-      'core'
+      'core',
     ],
     attrs: [
-      'string'
-    ]
+      'string',
+    ],
   },
   'font-face-name': {
     attrsGroups: [
-      'core'
+      'core',
     ],
     attrs: [
-      'name'
-    ]
+      'name',
+    ],
   },
   'font-face-src': {
     attrsGroups: [
-      'core'
+      'core',
     ],
     content: [
       'font-face-name',
-      'font-face-uri'
-    ]
+      'font-face-uri',
+    ],
   },
   'font-face-uri': {
     attrsGroups: [
       'core',
-      'xlink'
+      'xlink',
     ],
     attrs: [
-      'xlink:href'
+      'xlink:href',
     ],
     content: [
-      'font-face-format'
-    ]
+      'font-face-format',
+    ],
   },
   foreignObject: {
     attrsGroups: [
       'core',
       'conditionalProcessing',
       'graphicalEvent',
-      'presentation'
+      'presentation',
     ],
     attrs: [
       'class',
@@ -1165,32 +1165,32 @@ export const elems = {
       'x',
       'y',
       'width',
-      'height'
+      'height',
     ],
     defaults: {
       x: 0,
-      y: 0
-    }
+      y: 0,
+    },
   },
   g: {
     attrsGroups: [
       'conditionalProcessing',
       'core',
       'graphicalEvent',
-      'presentation'
+      'presentation',
     ],
     attrs: [
       'class',
       'style',
       'externalResourcesRequired',
-      'transform'
+      'transform',
     ],
     contentGroups: [
       'animation',
       'descriptive',
       'shape',
       'structural',
-      'paintServer'
+      'paintServer',
     ],
     content: [
       'a',
@@ -1210,13 +1210,13 @@ export const elems = {
       'style',
       'switch',
       'text',
-      'view'
-    ]
+      'view',
+    ],
   },
   glyph: {
     attrsGroups: [
       'core',
-      'presentation'
+      'presentation',
     ],
     attrs: [
       'class',
@@ -1230,17 +1230,17 @@ export const elems = {
       'glyph-name',
       'orientation',
       'arabic-form',
-      'lang'
+      'lang',
     ],
     defaults: {
-      'arabic-form': 'initial'
+      'arabic-form': 'initial',
     },
     contentGroups: [
       'animation',
       'descriptive',
       'shape',
       'structural',
-      'paintServer'
+      'paintServer',
     ],
     content: [
       'a',
@@ -1260,13 +1260,13 @@ export const elems = {
       'style',
       'switch',
       'text',
-      'view'
+      'view',
     ],
   },
   glyphRef: {
     attrsGroups: [
       'core',
-      'presentation'
+      'presentation',
     ],
     attrs: [
       'class',
@@ -1275,14 +1275,14 @@ export const elems = {
       'horiz-adv-x',
       'vert-origin-x',
       'vert-origin-y',
-      'vert-adv-y'
+      'vert-adv-y',
     ],
     contentGroups: [
       'animation',
       'descriptive',
       'shape',
       'structural',
-      'paintServer'
+      'paintServer',
     ],
     content: [
       'a',
@@ -1302,14 +1302,14 @@ export const elems = {
       'style',
       'switch',
       'text',
-      'view'
-    ]
+      'view',
+    ],
   },
   hatch: {
     attrsGroups: [
       'core',
       'presentation',
-      'xlink'
+      'xlink',
     ],
     attrs: [
       'class',
@@ -1320,7 +1320,7 @@ export const elems = {
       'rotate',
       'hatchUnits',
       'hatchContentUnits',
-      'transform'
+      'transform',
     ],
     defaults: {
       hatchUnits: 'objectBoundingBox',
@@ -1328,47 +1328,47 @@ export const elems = {
       x: '0',
       y: '0',
       pitch: '0',
-      rotate: '0'
+      rotate: '0',
     },
     contentGroups: [
       'animation',
-      'descriptive'
+      'descriptive',
     ],
     content: [
-      'hatchPath'
-    ]
+      'hatchPath',
+    ],
   },
   hatchPath: {
     attrsGroups: [
       'core',
       'presentation',
-      'xlink'
+      'xlink',
     ],
     attrs: [
       'class',
       'style',
       'd',
-      'offset'
+      'offset',
     ],
     defaults: {
-      offset: '0'
+      offset: '0',
     },
     contentGroups: [
       'animation',
-      'descriptive'
-    ]
+      'descriptive',
+    ],
   },
   hkern: {
     attrsGroups: [
-      'core'
+      'core',
     ],
     attrs: [
       'u1',
       'g1',
       'u2',
       'g2',
-      'k'
-    ]
+      'k',
+    ],
   },
   image: {
     attrsGroups: [
@@ -1376,7 +1376,7 @@ export const elems = {
       'conditionalProcessing',
       'graphicalEvent',
       'xlink',
-      'presentation'
+      'presentation',
     ],
     attrs: [
       'class',
@@ -1388,24 +1388,24 @@ export const elems = {
       'y',
       'width',
       'height',
-      'xlink:href'
+      'xlink:href',
     ],
     defaults: {
       x: '0',
       y: '0',
-      preserveAspectRatio: 'xMidYMid meet'
+      preserveAspectRatio: 'xMidYMid meet',
     },
     contentGroups: [
       'animation',
-      'descriptive'
-    ]
+      'descriptive',
+    ],
   },
   line: {
     attrsGroups: [
       'conditionalProcessing',
       'core',
       'graphicalEvent',
-      'presentation'
+      'presentation',
     ],
     attrs: [
       'class',
@@ -1415,24 +1415,24 @@ export const elems = {
       'x1',
       'y1',
       'x2',
-      'y2'
+      'y2',
     ],
     defaults: {
       x1: '0',
       y1: '0',
       x2: '0',
-      y2: '0'
+      y2: '0',
     },
     contentGroups: [
       'animation',
-      'descriptive'
-    ]
+      'descriptive',
+    ],
   },
   linearGradient: {
     attrsGroups: [
       'core',
       'presentation',
-      'xlink'
+      'xlink',
     ],
     attrs: [
       'class',
@@ -1445,29 +1445,29 @@ export const elems = {
       'gradientUnits',
       'gradientTransform',
       'spreadMethod',
-      'xlink:href'
+      'xlink:href',
     ],
     defaults: {
       x1: '0',
       y1: '0',
       x2: '100%',
       y2: '0',
-      spreadMethod: 'pad'
+      spreadMethod: 'pad',
     },
     contentGroups: [
-      'descriptive'
+      'descriptive',
     ],
     content: [
       'animate',
       'animateTransform',
       'set',
-      'stop'
-    ]
+      'stop',
+    ],
   },
   marker: {
     attrsGroups: [
       'core',
-      'presentation'
+      'presentation',
     ],
     attrs: [
       'class',
@@ -1480,21 +1480,21 @@ export const elems = {
       'markerUnits',
       'markerWidth',
       'markerHeight',
-      'orient'
+      'orient',
     ],
     defaults: {
       markerUnits: 'strokeWidth',
       refX: '0',
       refY: '0',
       markerWidth: '3',
-      markerHeight: '3'
+      markerHeight: '3',
     },
     contentGroups: [
       'animation',
       'descriptive',
       'shape',
       'structural',
-      'paintServer'
+      'paintServer',
     ],
     content: [
       'a',
@@ -1514,14 +1514,14 @@ export const elems = {
       'style',
       'switch',
       'text',
-      'view'
-    ]
+      'view',
+    ],
   },
   mask: {
     attrsGroups: [
       'conditionalProcessing',
       'core',
-      'presentation'
+      'presentation',
     ],
     attrs: [
       'class',
@@ -1532,7 +1532,7 @@ export const elems = {
       'width',
       'height',
       'maskUnits',
-      'maskContentUnits'
+      'maskContentUnits',
     ],
     defaults: {
       maskUnits: 'objectBoundingBox',
@@ -1540,14 +1540,14 @@ export const elems = {
       x: '-10%',
       y: '-10%',
       width: '120%',
-      height: '120%'
+      height: '120%',
     },
     contentGroups: [
       'animation',
       'descriptive',
       'shape',
       'structural',
-      'paintServer'
+      'paintServer',
     ],
     content: [
       'a',
@@ -1567,18 +1567,18 @@ export const elems = {
       'style',
       'switch',
       'text',
-      'view'
-    ]
+      'view',
+    ],
   },
   metadata: {
     attrsGroups: [
-      'core'
-    ]
+      'core',
+    ],
   },
   'missing-glyph': {
     attrsGroups: [
       'core',
-      'presentation'
+      'presentation',
     ],
     attrs: [
       'class',
@@ -1587,14 +1587,14 @@ export const elems = {
       'horiz-adv-x',
       'vert-origin-x',
       'vert-origin-y',
-      'vert-adv-y'
+      'vert-adv-y',
     ],
     contentGroups: [
       'animation',
       'descriptive',
       'shape',
       'structural',
-      'paintServer'
+      'paintServer',
     ],
     content: [
       'a',
@@ -1614,28 +1614,28 @@ export const elems = {
       'style',
       'switch',
       'text',
-      'view'
-    ]
+      'view',
+    ],
   },
   mpath: {
     attrsGroups: [
       'core',
-      'xlink'
+      'xlink',
     ],
     attrs: [
       'externalResourcesRequired',
-      'xlink:href'
+      'xlink:href',
     ],
     contentGroups: [
-      'descriptive'
-    ]
+      'descriptive',
+    ],
   },
   path: {
     attrsGroups: [
       'conditionalProcessing',
       'core',
       'graphicalEvent',
-      'presentation'
+      'presentation',
     ],
     attrs: [
       'class',
@@ -1643,19 +1643,19 @@ export const elems = {
       'externalResourcesRequired',
       'transform',
       'd',
-      'pathLength'
+      'pathLength',
     ],
     contentGroups: [
       'animation',
-      'descriptive'
-    ]
+      'descriptive',
+    ],
   },
   pattern: {
     attrsGroups: [
       'conditionalProcessing',
       'core',
       'presentation',
-      'xlink'
+      'xlink',
     ],
     attrs: [
       'class',
@@ -1670,7 +1670,7 @@ export const elems = {
       'patternUnits',
       'patternContentUnits',
       'patternTransform',
-      'xlink:href'
+      'xlink:href',
     ],
     defaults: {
       patternUnits: 'objectBoundingBox',
@@ -1679,14 +1679,14 @@ export const elems = {
       y: '0',
       width: '0',
       height: '0',
-      preserveAspectRatio: 'xMidYMid meet'
+      preserveAspectRatio: 'xMidYMid meet',
     },
     contentGroups: [
       'animation',
       'descriptive',
       'paintServer',
       'shape',
-      'structural'
+      'structural',
     ],
     content: [
       'a',
@@ -1706,52 +1706,52 @@ export const elems = {
       'style',
       'switch',
       'text',
-      'view'
-    ]
+      'view',
+    ],
   },
   polygon: {
     attrsGroups: [
       'conditionalProcessing',
       'core',
       'graphicalEvent',
-      'presentation'
+      'presentation',
     ],
     attrs: [
       'class',
       'style',
       'externalResourcesRequired',
       'transform',
-      'points'
+      'points',
     ],
     contentGroups: [
       'animation',
-      'descriptive'
-    ]
+      'descriptive',
+    ],
   },
   polyline: {
     attrsGroups: [
       'conditionalProcessing',
       'core',
       'graphicalEvent',
-      'presentation'
+      'presentation',
     ],
     attrs: [
       'class',
       'style',
       'externalResourcesRequired',
       'transform',
-      'points'
+      'points',
     ],
     contentGroups: [
       'animation',
-      'descriptive'
-    ]
+      'descriptive',
+    ],
   },
   radialGradient: {
     attrsGroups: [
       'core',
       'presentation',
-      'xlink'
+      'xlink',
     ],
     attrs: [
       'class',
@@ -1766,29 +1766,29 @@ export const elems = {
       'gradientUnits',
       'gradientTransform',
       'spreadMethod',
-      'xlink:href'
+      'xlink:href',
     ],
     defaults: {
       gradientUnits: 'objectBoundingBox',
       cx: '50%',
       cy: '50%',
-      r: '50%'
+      r: '50%',
     },
     contentGroups: [
-      'descriptive'
+      'descriptive',
     ],
     content: [
       'animate',
       'animateTransform',
       'set',
-      'stop'
-    ]
+      'stop',
+    ],
   },
   meshGradient: {
     attrsGroups: [
       'core',
       'presentation',
-      'xlink'
+      'xlink',
     ],
     attrs: [
       'class',
@@ -1796,7 +1796,7 @@ export const elems = {
       'x',
       'y',
       'gradientUnits',
-      'transform'
+      'transform',
     ],
     contentGroups: [
       'descriptive',
@@ -1804,47 +1804,47 @@ export const elems = {
       'animation',
     ],
     content: [
-      'meshRow'
-    ]
+      'meshRow',
+    ],
   },
   meshRow: {
     attrsGroups: [
       'core',
-      'presentation'
+      'presentation',
     ],
     attrs: [
       'class',
-      'style'
+      'style',
     ],
     contentGroups: [
-      'descriptive'
+      'descriptive',
     ],
     content: [
-      'meshPatch'
-    ]
+      'meshPatch',
+    ],
   },
   meshPatch: {
     attrsGroups: [
       'core',
-      'presentation'
+      'presentation',
     ],
     attrs: [
       'class',
-      'style'
+      'style',
     ],
     contentGroups: [
-      'descriptive'
+      'descriptive',
     ],
     content: [
-      'stop'
-    ]
+      'stop',
+    ],
   },
   rect: {
     attrsGroups: [
       'conditionalProcessing',
       'core',
       'graphicalEvent',
-      'presentation'
+      'presentation',
     ],
     attrs: [
       'class',
@@ -1856,27 +1856,27 @@ export const elems = {
       'width',
       'height',
       'rx',
-      'ry'
+      'ry',
     ],
     defaults: {
       x: '0',
-      y: '0'
+      y: '0',
     },
     contentGroups: [
       'animation',
-      'descriptive'
-    ]
+      'descriptive',
+    ],
   },
   script: {
     attrsGroups: [
       'core',
-      'xlink'
+      'xlink',
     ],
     attrs: [
       'externalResourcesRequired',
       'type',
-      'xlink:href'
-    ]
+      'xlink:href',
+    ],
   },
   set: {
     attrsGroups: [
@@ -1889,54 +1889,54 @@ export const elems = {
     ],
     attrs: [
       'externalResourcesRequired',
-      'to'
+      'to',
     ],
     contentGroups: [
-      'descriptive'
-    ]
+      'descriptive',
+    ],
   },
   solidColor: {
     attrsGroups: [
       'core',
-      'presentation'
+      'presentation',
     ],
     attrs: [
       'class',
-      'style'
+      'style',
     ],
     contentGroups: [
-      'paintServer'
-    ]
+      'paintServer',
+    ],
   },
   stop: {
     attrsGroups: [
       'core',
-      'presentation'
+      'presentation',
     ],
     attrs: [
       'class',
       'style',
       'offset',
-      'path'
+      'path',
     ],
     content: [
       'animate',
       'animateColor',
-      'set'
-    ]
+      'set',
+    ],
   },
   style: {
     attrsGroups: [
-      'core'
+      'core',
     ],
     attrs: [
       'type',
       'media',
-      'title'
+      'title',
     ],
     defaults: {
-      type: 'text/css'
-    }
+      type: 'text/css',
+    },
   },
   svg: {
     attrsGroups: [
@@ -1944,7 +1944,7 @@ export const elems = {
       'core',
       'documentEvent',
       'graphicalEvent',
-      'presentation'
+      'presentation',
     ],
     attrs: [
       'class',
@@ -1959,7 +1959,7 @@ export const elems = {
       'version',
       'baseProfile',
       'contentScriptType',
-      'contentStyleType'
+      'contentStyleType',
     ],
     defaults: {
       x: '0',
@@ -1971,14 +1971,14 @@ export const elems = {
       version: '1.1',
       baseProfile: 'none',
       contentScriptType: 'application/ecmascript',
-      contentStyleType: 'text/css'
+      contentStyleType: 'text/css',
     },
     contentGroups: [
       'animation',
       'descriptive',
       'shape',
       'structural',
-      'paintServer'
+      'paintServer',
     ],
     content: [
       'a',
@@ -1998,26 +1998,26 @@ export const elems = {
       'style',
       'switch',
       'text',
-      'view'
-    ]
+      'view',
+    ],
   },
   switch: {
     attrsGroups: [
       'conditionalProcessing',
       'core',
       'graphicalEvent',
-      'presentation'
+      'presentation',
     ],
     attrs: [
       'class',
       'style',
       'externalResourcesRequired',
-      'transform'
+      'transform',
     ],
     contentGroups: [
       'animation',
       'descriptive',
-      'shape'
+      'shape',
     ],
     content: [
       'a',
@@ -2027,14 +2027,14 @@ export const elems = {
       'svg',
       'switch',
       'text',
-      'use'
-    ]
+      'use',
+    ],
   },
   symbol: {
     attrsGroups: [
       'core',
       'graphicalEvent',
-      'presentation'
+      'presentation',
     ],
     attrs: [
       'class',
@@ -2043,18 +2043,18 @@ export const elems = {
       'preserveAspectRatio',
       'viewBox',
       'refX',
-      'refY'
+      'refY',
     ],
     defaults: {
       refX: 0,
-      refY: 0
+      refY: 0,
     },
     contentGroups: [
       'animation',
       'descriptive',
       'shape',
       'structural',
-      'paintServer'
+      'paintServer',
     ],
     content: [
       'a',
@@ -2074,15 +2074,15 @@ export const elems = {
       'style',
       'switch',
       'text',
-      'view'
-    ]
+      'view',
+    ],
   },
   text: {
     attrsGroups: [
       'conditionalProcessing',
       'core',
       'graphicalEvent',
-      'presentation'
+      'presentation',
     ],
     attrs: [
       'class',
@@ -2095,21 +2095,21 @@ export const elems = {
       'dx',
       'dy',
       'rotate',
-      'textLength'
+      'textLength',
     ],
     defaults: {
       x: '0',
       y: '0',
-      lengthAdjust: 'spacing'
+      lengthAdjust: 'spacing',
     },
     contentGroups: [
       'animation',
       'descriptive',
-      'textContentChild'
+      'textContentChild',
     ],
     content: [
-      'a'
-    ]
+      'a',
+    ],
   },
   textPath: {
     attrsGroups: [
@@ -2117,7 +2117,7 @@ export const elems = {
       'core',
       'graphicalEvent',
       'presentation',
-      'xlink'
+      'xlink',
     ],
     attrs: [
       'class',
@@ -2127,15 +2127,15 @@ export const elems = {
       'startOffset',
       'method',
       'spacing',
-      'd'
+      'd',
     ],
     defaults: {
       startOffset: '0',
       method: 'align',
-      spacing: 'exact'
+      spacing: 'exact',
     },
     contentGroups: [
-      'descriptive'
+      'descriptive',
     ],
     content: [
       'a',
@@ -2144,17 +2144,17 @@ export const elems = {
       'animateColor',
       'set',
       'tref',
-      'tspan'
-    ]
+      'tspan',
+    ],
   },
   title: {
     attrsGroups: [
-      'core'
+      'core',
     ],
     attrs: [
       'class',
-      'style'
-    ]
+      'style',
+    ],
   },
   tref: {
     attrsGroups: [
@@ -2162,29 +2162,29 @@ export const elems = {
       'core',
       'graphicalEvent',
       'presentation',
-      'xlink'
+      'xlink',
     ],
     attrs: [
       'class',
       'style',
       'externalResourcesRequired',
-      'xlink:href'
+      'xlink:href',
     ],
     contentGroups: [
-      'descriptive'
+      'descriptive',
     ],
     content: [
       'animate',
       'animateColor',
-      'set'
-    ]
+      'set',
+    ],
   },
   tspan: {
     attrsGroups: [
       'conditionalProcessing',
       'core',
       'graphicalEvent',
-      'presentation'
+      'presentation',
     ],
     attrs: [
       'class',
@@ -2196,10 +2196,10 @@ export const elems = {
       'dy',
       'rotate',
       'textLength',
-      'lengthAdjust'
+      'lengthAdjust',
     ],
     contentGroups: [
-      'descriptive'
+      'descriptive',
     ],
     content: [
       'a',
@@ -2208,8 +2208,8 @@ export const elems = {
       'animateColor',
       'set',
       'tref',
-      'tspan'
-    ]
+      'tspan',
+    ],
   },
   use: {
     attrsGroups: [
@@ -2217,7 +2217,7 @@ export const elems = {
       'conditionalProcessing',
       'graphicalEvent',
       'presentation',
-      'xlink'
+      'xlink',
     ],
     attrs: [
       'class',
@@ -2228,44 +2228,44 @@ export const elems = {
       'y',
       'width',
       'height',
-      'xlink:href'
+      'xlink:href',
     ],
     defaults: {
       x: '0',
-      y: '0'
+      y: '0',
     },
     contentGroups: [
       'animation',
-      'descriptive'
-    ]
+      'descriptive',
+    ],
   },
   view: {
     attrsGroups: [
-      'core'
+      'core',
     ],
     attrs: [
       'externalResourcesRequired',
       'viewBox',
       'preserveAspectRatio',
       'zoomAndPan',
-      'viewTarget'
+      'viewTarget',
     ],
     contentGroups: [
-      'descriptive'
-    ]
+      'descriptive',
+    ],
   },
   vkern: {
     attrsGroups: [
-      'core'
+      'core',
     ],
     attrs: [
       'u1',
       'g1',
       'u2',
       'g2',
-      'k'
-    ]
-  }
+      'k',
+    ],
+  },
 };
 
 // http://wiki.inkscape.org/wiki/index.php/Inkscape-specific_XML_attributes
@@ -2283,7 +2283,7 @@ export const editorNamespaces = [
   'http://ns.adobe.com/Flows/1.0/',
   'http://ns.adobe.com/ImageReplacement/1.0/',
   'http://ns.adobe.com/GenericCustomNamespace/1.0/',
-  'http://ns.adobe.com/XPath/1.0/'
+  'http://ns.adobe.com/XPath/1.0/',
 ];
 
 // http://www.w3.org/TR/SVG/linking.html#processingIRI
@@ -2297,7 +2297,7 @@ export const referencesProps = [
   'marker-end',
   'mask',
   'stroke',
-  'style'
+  'style',
 ];
 
 // http://www.w3.org/TR/SVG/propidx.html
@@ -2346,7 +2346,7 @@ export const inheritableAttrs = [
   'visibility',
   'white-space',
   'word-spacing',
-  'writing-mode'
+  'writing-mode',
 ];
 
 // http://www.w3.org/TR/SVG/single-page.html#types-ColorKeywords
@@ -2490,7 +2490,7 @@ export const colorsNames = {
   'white': '#fff',
   'whitesmoke': '#f5f5f5',
   'yellow': '#ff0',
-  'yellowgreen': '#9acd32'
+  'yellowgreen': '#9acd32',
 };
 
 export const colorsShortNames = {
@@ -2524,10 +2524,10 @@ export const colorsShortNames = {
   '#008080': 'teal',
   '#ff6347': 'tomato',
   '#ee82ee': 'violet',
-  '#f5deb3': 'wheat'
+  '#f5deb3': 'wheat',
 };
 
 // http://www.w3.org/TR/SVG/single-page.html#types-DataTypeColor
 export const colorsProps = [
-  'color', 'fill', 'stroke', 'stop-color', 'flood-color', 'lighting-color'
+  'color', 'fill', 'stroke', 'stop-color', 'flood-color', 'lighting-color',
 ];

@@ -616,53 +616,53 @@ describe('Path', () => {
       makeTest(
         'M 0 0 L 0 10 L 10 10 L 10 0 L 0 0',
         'SIH 0 3 SIH 0 1 SFSP 0 1 4',
-        'M 0 0 L 0 5 L 10 5 L 10 0 L 0 0 M 0 5 L 0 10 L 10 10 L 10 5 L 0 5'
+        'M 0 0 L 0 5 L 10 5 L 10 0 L 0 0 M 0 5 L 0 10 L 10 10 L 10 5 L 0 5',
       ),
       makeTest(
         'M 0 0 L 0 10 L 10 10 L 10 0 L 0 0',
         'SIH 0 3 SIH 0 1 SFSP 0 1 4 SIH 1 4 SIH 1 2 SFSP 1 2 5',
-        'M 0 0 L 0 5 L 10 5 L 10 0 L 0 0 M 0 5 L 0 10 L 5 10 L 5 5 L 0 5 M 5 10 L 10 10 L 10 5 L 5 5 L 5 10'
+        'M 0 0 L 0 5 L 10 5 L 10 0 L 0 0 M 0 5 L 0 10 L 5 10 L 5 5 L 0 5 M 5 10 L 10 10 L 10 5 L 5 5 L 5 10',
       ),
       // Delete sub path split segment.
       makeTest(
         'M 0 0 L 0 10 L 10 10 L 10 0 L 0 0',
         'SIH 0 3 SIH 0 1 SFSP 0 1 4 DFSPS 0 2',
-        'M 0 0 L 0 10 L 10 10 L 10 0 L 0 0'
+        'M 0 0 L 0 10 L 10 10 L 10 0 L 0 0',
       ),
       makeTest(
         'M 0 0 L 0 10 L 10 10 L 10 0 L 0 0',
         'SIH 0 3 SIH 0 1 SFSP 0 1 4 DFSPS 1 4',
-        'M 0 0 L 0 10 L 10 10 L 10 0 L 0 0'
+        'M 0 0 L 0 10 L 10 10 L 10 0 L 0 0',
       ),
       makeTest(
         'M 0 0 L 0 10 L 10 10 L 10 0 L 0 0',
         'SIH 0 3 SIH 0 1 SFSP 0 1 4 SIH 1 4 SIH 1 2 SFSP 1 2 5 DFSPS 1 3',
-        'M 0 0 L 0 5 L 10 5 L 10 0 L 0 0 M 0 5 L 0 10 L 10 10 L 10 5 L 0 5'
+        'M 0 0 L 0 5 L 10 5 L 10 0 L 0 0 M 0 5 L 0 10 L 10 10 L 10 5 L 0 5',
       ),
       makeTest(
         'M 0 0 L 0 10 L 10 10 L 10 0 L 0 0',
         'SIH 0 3 SIH 0 1 SFSP 0 1 4 SIH 1 4 SIH 1 2 SFSP 1 2 5 DFSPS 2 4',
-        'M 0 0 L 0 5 L 10 5 L 10 0 L 0 0 M 0 5 L 0 10 L 10 10 L 10 5 L 0 5'
+        'M 0 0 L 0 5 L 10 5 L 10 0 L 0 0 M 0 5 L 0 10 L 10 10 L 10 5 L 0 5',
       ),
       makeTest(
         'M 0 0 L 0 15 L 15 15 L 15 0 L 0 0',
         `S 0 3 ${2 / 3} S 0 3 0.5 S 0 1 ${2 / 3} S 0 1 0.5 SFSP 0 1 6`,
-        `M 0 0 L 0 5 L 15 5 L 15 0 L 0 0 M 0 5 L 0 10 L 0 15 L 15 15 L 15 10 L 15 5 L 0 5`
+        `M 0 0 L 0 5 L 15 5 L 15 0 L 0 0 M 0 5 L 0 10 L 0 15 L 15 15 L 15 10 L 15 5 L 0 5`,
       ),
       makeTest(
         'M 0 0 L 0 15 L 15 15 L 15 0 L 0 0',
         `S 0 3 ${2 / 3} S 0 3 0.5 S 0 1 ${2 / 3} S 0 1 0.5 SFSP 0 1 6 SFSP 1 1 4`,
-        `M 0 0 L 0 5 L 15 5 L 15 0 L 0 0 M 0 5 L 0 10 L 15 10 L 15 5 L 0 5 M 0 10 L 0 15 L 15 15 L 15 10 L 0 10`
+        `M 0 0 L 0 5 L 15 5 L 15 0 L 0 0 M 0 5 L 0 10 L 15 10 L 15 5 L 0 5 M 0 10 L 0 15 L 15 15 L 15 10 L 0 10`,
       ),
       makeTest(
         'M 0 0 L 0 15 L 15 15 L 15 0 L 0 0',
         `S 0 3 ${2 / 3} S 0 3 0.5 S 0 1 ${2 / 3} S 0 1 0.5 SFSP 0 1 6 SFSP 1 1 4 DFSPS 1 2`,
-        `M 0 0 L 0 5 L 15 5 L 15 0 L 0 0 M 0 5 L 0 15 L 15 15 L 15 5 L 0 5`
+        `M 0 0 L 0 5 L 15 5 L 15 0 L 0 0 M 0 5 L 0 15 L 15 15 L 15 5 L 0 5`,
       ),
       makeTest(
         'M 0 0 L 0 15 L 15 15 L 15 0 L 0 0',
         `S 0 3 ${2 / 3} S 0 3 0.5 S 0 1 ${2 / 3} S 0 1 0.5 SFSP 0 1 6 SFSP 1 1 4 DFSPS 2 4`,
-        `M 0 0 L 0 5 L 15 5 L 15 0 L 0 0 M 0 5 L 0 15 L 15 15 L 15 5 L 0 5`
+        `M 0 0 L 0 5 L 15 5 L 15 0 L 0 0 M 0 5 L 0 15 L 15 15 L 15 5 L 0 5`,
       ),
       makeTest(
         'M 18 19 L 18 5 L 14 5 L 14 19 L 18 19',
@@ -923,7 +923,7 @@ describe('Path', () => {
         point: new Point(4, 12),
         path: 'M 20 22 L 4 22 L 4 2 L 6 2 L 6 14 L 8 14 L 8 2 L 10 2 L 10 14 Z',
         proj: { subIdx: 0, cmdIdx: 2, projection: { x: 4, y: 12, d: 0, t: 0.5 } },
-      }
+      },
     ];
 
     TESTS_PROJECT.forEach(a => {
@@ -978,7 +978,7 @@ describe('Path', () => {
         const hitResult = path.hitTest(point, {
           isSegmentInRangeFn: dist => {
             return dist < a[2];
-          }
+          },
         });
         expect(hitResult.isSegmentHit).toEqual(a[3] as boolean);
       });
@@ -1011,4 +1011,3 @@ function checkCommandsEqual(actual: ReadonlyArray<Command>, expected: ReadonlyAr
     }
   }
 }
-

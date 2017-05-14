@@ -39,4 +39,3 @@ export interface Animation extends AnimationArgs, Inspectable { }
 
 // tslint:disable-next-line
 export interface ConstructorArgs extends AnimationArgs { }
-

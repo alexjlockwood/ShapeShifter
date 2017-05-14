@@ -106,7 +106,7 @@ export class PathLayer extends AbstractLayer {
       r: _.clamp(Math.round(MathUtil.lerp(startColor.r, endColor.r, fraction)), 0, 255),
       g: _.clamp(Math.round(MathUtil.lerp(startColor.g, endColor.g, fraction)), 0, 255),
       b: _.clamp(Math.round(MathUtil.lerp(startColor.b, endColor.b, fraction)), 0, 255),
-      a: _.clamp(Math.round(MathUtil.lerp(startColor.a, endColor.a, fraction)), 0, 255)
+      a: _.clamp(Math.round(MathUtil.lerp(startColor.a, endColor.a, fraction)), 0, 255),
     });
   }
 }
@@ -133,4 +133,3 @@ export interface ConstructorArgs extends AbstractConstructorArgs, PathLayerArgs 
 export type StrokeLineCap = 'butt' | 'square' | 'round';
 export type StrokeLineJoin = 'miter' | 'round' | 'bevel';
 export type FillType = 'nonZero' | 'evenOdd';
-

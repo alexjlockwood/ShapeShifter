@@ -124,13 +124,13 @@ import 'hammerjs';
     ConfirmDialogComponent,
     DemoDialogComponent,
   ],
-  bootstrap: [AppComponent]
+  bootstrap: [AppComponent],
 })
 export class AppModule {
 
   constructor(
-    private readonly mdIconRegistry: MdIconRegistry,
-    private readonly sanitizer: DomSanitizer) {
+    readonly mdIconRegistry: MdIconRegistry,
+    readonly sanitizer: DomSanitizer) {
     mdIconRegistry
       // Logo.
       .addSvgIcon('shapeshifter', sanitizer.bypassSecurityTrustResourceUrl('assets/shapeshifter.svg'))

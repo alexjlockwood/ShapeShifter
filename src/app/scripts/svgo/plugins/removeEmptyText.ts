@@ -5,7 +5,7 @@ export const removeEmptyText = {
   params: {
     text: true,
     tspan: true,
-    tref: true
+    tref: true,
   },
 };
 

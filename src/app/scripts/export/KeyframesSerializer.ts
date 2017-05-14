@@ -50,4 +50,3 @@ function svgTargetToCssKeyframes(layerId: string, svgTarget: SvgTarget) {
   }
 }`;
 }
-

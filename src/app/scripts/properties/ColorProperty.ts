@@ -25,7 +25,7 @@ export class ColorProperty extends Property<string> {
       r: _.clamp(Math.round(MathUtil.lerp(s.r, e.r, f)), 0, 0xff),
       g: _.clamp(Math.round(MathUtil.lerp(s.g, e.g, f)), 0, 0xff),
       b: _.clamp(Math.round(MathUtil.lerp(s.b, e.b, f)), 0, 0xff),
-      a: _.clamp(Math.round(MathUtil.lerp(s.a, e.a, f)), 0, 0xff)
+      a: _.clamp(Math.round(MathUtil.lerp(s.a, e.a, f)), 0, 0xff),
     });
   }
 
