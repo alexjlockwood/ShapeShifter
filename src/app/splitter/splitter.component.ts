@@ -5,6 +5,9 @@ import {
 import * as $ from 'jquery';
 import { Dragger } from '../scripts/dragger';
 
+type Orientation = 'vertical' | 'horizontal';
+type Edge = 'left' | 'right' | 'top';
+
 @Component({
   selector: 'app-splitter',
   templateUrl: './splitter.component.html',
@@ -12,15 +15,15 @@ import { Dragger } from '../scripts/dragger';
   // TODO: remove view encapsulation here
   encapsulation: ViewEncapsulation.None,
 })
-export class SplitterComponent implements AfterViewInit {
-  @Input() edge: string;
+export class SplitterComponent implements OnInit {
+  @Input() edge: Edge;
   @Input() min: number;
   @Input() persistId: string;
   @HostBinding('class') classNames = '';
   @HostBinding('style.backgroundColor') backgroundColor = '';
 
   private persistKey: string;
-  private orientation: string;
+  private orientation: Orientation;
   private sizeGetterFn: () => number;
   private sizeSetterFn: (size: number) => void;
   private clientXY: string;
@@ -30,7 +33,7 @@ export class SplitterComponent implements AfterViewInit {
 
   constructor(private readonly elementRef: ElementRef) { }
 
-  ngAfterViewInit() {
+  ngOnInit() {
     if (this.min === undefined || this.min <= 0) {
       this.min = 100;
     }
@@ -39,19 +42,17 @@ export class SplitterComponent implements AfterViewInit {
     }
     this.orientation =
       this.edge === 'left' || this.edge === 'right' ? 'vertical' : 'horizontal';
-
-    const parent: JQuery = $(this.elementRef.nativeElement).parent();
+    this.classNames = `splt-${this.orientation} splt-edge-${this.edge}`;
+    const getParentFn = () => $(this.elementRef.nativeElement).parent();
     if (this.orientation === 'vertical') {
-      this.sizeGetterFn = () => parent.width();
-      this.sizeSetterFn = size => parent.width(size);
+      this.sizeGetterFn = () => getParentFn().width();
+      this.sizeSetterFn = size => getParentFn().width(size);
       this.clientXY = 'clientX';
     } else {
-      this.sizeGetterFn = () => parent.height();
-      this.sizeSetterFn = size => parent.height(size);
+      this.sizeGetterFn = () => getParentFn().height();
+      this.sizeSetterFn = size => getParentFn().height(size);
       this.clientXY = 'clientY';
     }
-
-    this.classNames = `splt-${this.orientation} splt-edge-${this.edge}`
     if (this.persistKey in localStorage) {
       this.setSize(Number(localStorage[this.persistKey]));
     }
