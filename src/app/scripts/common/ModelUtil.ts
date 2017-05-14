@@ -8,7 +8,7 @@ export function getUniqueAnimationName(
 ) {
   return getUniqueName(
     prefix || 'anim',
-    name => _.includes(this.animations, a => a.name === name),
+    name => _.find(animations, a => a.name === name),
   );
 }
 
