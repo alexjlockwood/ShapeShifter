@@ -100,7 +100,7 @@ export class PropertyInputComponent implements OnInit {
   ) {
     const numSelections = selectedLayerIds.size;
     const selectedLayers =
-      Array.from(selectedLayerIds).map(id => LayerUtil.findLayer(vls, id));
+      Array.from(selectedLayerIds).map(id => LayerUtil.findLayerById(vls, id));
     if (numSelections > 1) {
       // TODO: implement batch editting
       return {
@@ -202,7 +202,7 @@ export class PropertyInputComponent implements OnInit {
     const block = selectedBlocks[0];
     const icon = 'animationblock';
     const description = block.propertyName;
-    const blockLayer = LayerUtil.findLayer(vectorLayers, block.layerId);
+    const blockLayer = LayerUtil.findLayerById(vectorLayers, block.layerId);
     const subDescription = `for '${blockLayer.name}'`;
     const inspectedProperties: InspectedProperty<any>[] = [];
     block.inspectableProperties.forEach((property, propertyName) => {

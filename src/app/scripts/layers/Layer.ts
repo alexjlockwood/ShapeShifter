@@ -24,6 +24,7 @@ export interface Layer extends Inspectable, Animatable {
   clone<T extends Layer>(): T;
   deepClone<T extends Layer>(): T;
   getIconName(): string;
+  getPrefix(): string;
 
   /**
    * Returns the first descendent layer with the specified id.

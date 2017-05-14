@@ -18,6 +18,10 @@ export class ClipPathLayer extends AbstractLayer {
     return 'clippathlayer';
   }
 
+  getPrefix() {
+    return 'mask';
+  }
+
   clone() {
     return new ClipPathLayer(this);
   }

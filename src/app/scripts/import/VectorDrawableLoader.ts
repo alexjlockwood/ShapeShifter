@@ -16,9 +16,9 @@ export function loadVectorLayerFromXmlString(
   const usedIds = new Set<string>(existingLayerIds);
   usedIds.add(ROTATION_GROUP_LAYER_ID);
 
-  const makeFinalNodeIdFn = (value: string, typeIdPrefix: string) => {
+  const makeFinalNodeIdFn = (value: string, prefix: string) => {
     const finalId = ModelUtil.getUniqueName(
-      NameProperty.sanitize(value || typeIdPrefix),
+      NameProperty.sanitize(value || prefix),
       id => usedIds.has(id),
     );
     usedIds.add(finalId);

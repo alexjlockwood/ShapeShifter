@@ -23,6 +23,10 @@ export class VectorLayer extends AbstractLayer {
     return 'vectorlayer';
   }
 
+  getPrefix() {
+    return 'vector';
+  }
+
   interpolate(start: VectorLayer, end: VectorLayer, fraction: number) {
     this.alpha = MathUtil.lerp(start.alpha, end.alpha, fraction);
   }

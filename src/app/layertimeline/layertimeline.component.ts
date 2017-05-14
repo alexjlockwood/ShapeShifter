@@ -9,7 +9,7 @@ import { Callbacks as TimelineAnimationRowCallbacks } from './timelineanimationr
 import { Callbacks as LayerListTreeCallbacks } from './layerlisttree.component';
 import { ScrubEvent } from './layertimeline.directive';
 import {
-  VectorLayer, Layer, GroupLayer, LayerUtil
+  VectorLayer, Layer, GroupLayer, LayerUtil, PathLayer, ClipPathLayer,
 } from '../scripts/layers';
 import { Animation, AnimationBlock } from '../scripts/animations';
 import { Dragger } from '../scripts/dragger';
@@ -157,12 +157,7 @@ export class LayerTimelineComponent implements
   // Called from the LayerTimelineComponent template.
   addNewAnimationClick() {
     this.store.dispatch(new AddAnimations([new Animation({
-      // TODO: need to set a unique name on the animation!
-      // TODO: need to set a unique name on the animation!
-      // TODO: need to set a unique name on the animation!
-      // TODO: need to set a unique name on the animation!
-      // TODO: need to set a unique name on the animation!
-      name: 'TODO: fix this!',
+      name: ModelUtil.getUniqueAnimationName(this.animations, 'anim'),
     })]));
   }
 
@@ -189,15 +184,29 @@ export class LayerTimelineComponent implements
   }
 
   addPathLayerClick() {
-    // TODO: implement this (most of the codebase assumes pathData will be non-null)
+    const name = ModelUtil.getUniqueLayerName(this.vectorLayers, 'path');
+    const layer = new PathLayer({
+      id: undefined,
+      name,
+      children: [],
+      pathData: undefined,
+    });
+    this.store.dispatch(new AddLayer(layer));
   }
 
   addClipPathLayerClick() {
-    // TODO: implement this (most of the codebase assumes pathData will be non-null)
+    const name = ModelUtil.getUniqueLayerName(this.vectorLayers, 'mask');
+    const layer = new ClipPathLayer({
+      id: undefined,
+      name,
+      children: [],
+      pathData: undefined,
+    });
+    this.store.dispatch(new AddLayer(layer));
   }
 
   addGroupLayerClick() {
-    const name = 'TODO: fix this';
+    const name = ModelUtil.getUniqueLayerName(this.vectorLayers, 'group');
     const layer = new GroupLayer({ id: undefined, name, children: [] });
     this.store.dispatch(new AddLayer(layer));
   }
@@ -603,7 +612,7 @@ export class LayerTimelineComponent implements
             width: rect.width,
           };
 
-          const layer = LayerUtil.findLayer(this.vectorLayers, layerId);
+          const layer = LayerUtil.findLayerById(this.vectorLayers, layerId);
           orderedLayerInfos.push({
             layer,
             element,

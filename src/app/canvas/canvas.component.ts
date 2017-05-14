@@ -284,12 +284,15 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   ) {
     this.vectorLayer.walk(layer => {
       if (layer instanceof ClipPathLayer) {
+        if (!layer.pathData) {
+          return;
+        }
         const transforms = LayerUtil.getTransformsForLayer(this.vectorLayer, layer.name);
         executeCommands(ctx, layer.pathData.getCommands(), transforms);
         ctx.clip();
         return;
       }
-      if (!(layer instanceof PathLayer)) {
+      if (!(layer instanceof PathLayer) || !layer.pathData) {
         return;
       }
       const commands = extractDrawingCommandsFn(layer);

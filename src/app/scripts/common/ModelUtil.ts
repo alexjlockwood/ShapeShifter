@@ -2,16 +2,45 @@ import * as _ from 'lodash';
 import { Animation, AnimationBlock } from '../animations';
 import { Layer } from '../layers';
 
+export function getUniqueAnimationName(
+  animations: ReadonlyArray<Animation>,
+  prefix: string,
+) {
+  return getUniqueName(
+    prefix || 'anim',
+    name => _.includes(this.animations, a => a.name === name),
+  );
+}
+
+export function getUniqueLayerName(
+  layers: ReadonlyArray<Layer>,
+  prefix: string,
+) {
+  return getUniqueName(
+    prefix,
+    name => findLayerByName(layers, name),
+  );
+}
+
+function findLayerByName(vls: ReadonlyArray<Layer>, layerName: string) {
+  for (const vl of vls) {
+    const layer = vl.findLayerByName(layerName);
+    if (layer) {
+      return layer;
+    }
+  }
+  return undefined;
+}
+
 export function getUniqueName(
   prefix = '',
   objectByNameFn = (s: string) => undefined,
-  targetObject?: any,
 ) {
   let n = 0;
   const nameFn = () => prefix + (n ? `_${n}` : '');
   while (true) {
     const o = objectByNameFn(nameFn());
-    if (!o || o === targetObject) {
+    if (!o) {
       break;
     }
     n++;

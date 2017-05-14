@@ -239,7 +239,7 @@ export function replaceLayerInTree(
   })(root) as VectorLayer;
 }
 
-export function findLayer(vls: ReadonlyArray<VectorLayer>, layerId: string) {
+export function findLayerById(vls: ReadonlyArray<VectorLayer>, layerId: string) {
   for (const vl of vls) {
     const layer = vl.findLayerById(layerId);
     if (layer) {

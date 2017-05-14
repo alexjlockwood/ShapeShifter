@@ -66,6 +66,10 @@ export class PathLayer extends AbstractLayer {
     return 'pathlayer';
   }
 
+  getPrefix() {
+    return 'path';
+  }
+
   clone() {
     return new PathLayer(this);
   }

@@ -43,9 +43,9 @@ export function loadVectorLayerFromSvgString(
   const usedIds = new Set<string>(existingLayerIds);
   usedIds.add(ROTATION_GROUP_LAYER_ID);
 
-  const makeFinalNodeIdFn = (node, typeIdPrefix: string) => {
+  const makeFinalNodeIdFn = (node, prefix: string) => {
     const finalId = ModelUtil.getUniqueName(
-      NameProperty.sanitize(node.id || typeIdPrefix),
+      NameProperty.sanitize(node.id || prefix),
       id => usedIds.has(id),
     );
     usedIds.add(finalId);

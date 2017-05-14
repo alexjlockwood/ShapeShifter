@@ -30,6 +30,10 @@ export class GroupLayer extends AbstractLayer {
     return 'grouplayer';
   }
 
+  getPrefix() {
+    return 'group';
+  }
+
   clone() {
     const clone = new GroupLayer(this);
     clone.children = this.children.slice();

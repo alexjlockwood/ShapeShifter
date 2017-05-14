@@ -71,6 +71,7 @@ export abstract class AbstractLayer implements Layer {
   abstract deepClone<T extends Layer>(): T;
   abstract interpolate(start: AbstractLayer, end: AbstractLayer, fraction: number): void;
   abstract getIconName(): string;
+  abstract getPrefix(): string;
 }
 
 // TODO: share this interface with Layer?
