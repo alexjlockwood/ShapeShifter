@@ -1,6 +1,7 @@
 import * as _ from 'lodash';
-import * as ModelUtil from './ModelUtil';
 import { VectorLayer, PathLayer, GroupLayer, ClipPathLayer } from '../layers';
+import { NameProperty } from '../properties';
+import { ModelUtil } from '../common';
 import { newPath } from '../paths';
 import { ROTATION_GROUP_LAYER_ID } from '.';
 
@@ -11,21 +12,13 @@ export function loadVectorLayerFromXmlString(
   const parser = new DOMParser();
   const doc = parser.parseFromString(xmlString, 'application/xml');
 
-  const sanitizeIdFn = (value: string) => {
-    return (value || '')
-      .toLowerCase()
-      .replace(/^\s+|\s+$/g, '')
-      .replace(/[\s-]+/g, '_')
-      .replace(/[^\w_]+/g, '');
-  };
-
   // TODO: need to confirm we protect against duplicate ids in separate vector layers
   const usedIds = new Set<string>(existingLayerIds);
   usedIds.add(ROTATION_GROUP_LAYER_ID);
 
   const makeFinalNodeIdFn = (value: string, typeIdPrefix: string) => {
-    const finalId = ModelUtil.getUniqueId(
-      sanitizeIdFn(value || typeIdPrefix),
+    const finalId = ModelUtil.getUniqueName(
+      NameProperty.sanitize(value || typeIdPrefix),
       id => usedIds.has(id),
     );
     usedIds.add(finalId);

@@ -1,7 +1,6 @@
 import { AbstractLayer, ConstructorArgs as AbstractConstructorArgs } from './AbstractLayer';
 import { MathUtil } from '../common';
 import { Property, NumberProperty } from '../properties';
-import { Type } from './Layer';
 
 /**
  * Model object that mirrors the VectorDrawable's '<group>' element.
@@ -27,7 +26,7 @@ export class GroupLayer extends AbstractLayer {
     this.translateY = obj.translateY || 0;
   }
 
-  getType(): Type {
+  getIconName() {
     return 'grouplayer';
   }
 

@@ -19,12 +19,11 @@ export interface Layer extends Inspectable, Animatable {
   /**
    * This layers children layers, or undefined if none exist.
    */
-  // TODO: make this a readonly array?
   children: ReadonlyArray<Layer>;
 
   clone<T extends Layer>(): T;
   deepClone<T extends Layer>(): T;
-  getType(): Type;
+  getIconName(): string;
 
   /**
    * Returns the first descendent layer with the specified id.
@@ -55,26 +54,4 @@ export interface Layer extends Inspectable, Animatable {
    * preorder traversal.
    */
   walk(beforeFn: (layer: Layer) => void): void;
-
-  /**
-   * Returns true iff this layer is a PathLayer.
-   */
-  isPathLayer(): boolean;
-
-  /**
-   * Returns true iff this layer is a GroupLayer.
-   */
-  isGroupLayer(): boolean;
-
-  /**
-   * Returns true iff this layer is a ClipPathLayer.
-   */
-  isClipPathLayer(): boolean;
-
-  /**
-   * Returns true iff this layer is a VectorLayer.
-   */
-  isVectorLayer(): boolean;
 }
-
-export type Type = 'vectorlayer' | 'grouplayer' | 'clippathlayer' | 'pathlayer';

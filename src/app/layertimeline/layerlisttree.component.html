@@ -1,5 +1,5 @@
 <ng-container *ngIf="(this.layerModel$ | async) as model">
-  <div class="slt-layer slt-layer-type-{{ this.layer.getType() }}"
+  <div class="slt-layer slt-layer-type-{{ this.layer.getIconName() }}"
     fxLayout="row"
     fxLayoutAlign="start center"
     [class.is-selected]="model.isSelected"
@@ -15,7 +15,7 @@
       <md-icon>{{model.isExpanded ? 'expand_more' : 'chevron_right'}}</md-icon>
     </button>
     <!-- Add extra 20px margin if the expand/collapse icon isn't being displayed -->
-    <md-icon svgIcon="{{this.layer.getType()}}"
+    <md-icon svgIcon="{{this.layer.getIconName()}}"
       [style.margin-left]="model.isExpandable ? '0px' : '20px'">
     </md-icon>
     <span class="slt-layer-id-text"

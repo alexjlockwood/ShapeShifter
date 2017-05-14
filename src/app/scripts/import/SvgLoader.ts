@@ -1,11 +1,11 @@
 import * as _ from 'lodash';
-import * as ModelUtil from './ModelUtil';
 import {
   VectorLayer, GroupLayer, PathLayer,
   Layer, StrokeLineCap, StrokeLineJoin, FillType,
 } from '../layers';
+import { NameProperty } from '../properties';
 import { newPath, Command } from '../paths';
-import { ColorUtil, Matrix } from '../common';
+import { ColorUtil, Matrix, ModelUtil } from '../common';
 import { Svgo } from '../svgo';
 import { ROTATION_GROUP_LAYER_ID } from '.';
 
@@ -39,21 +39,13 @@ export function loadVectorLayerFromSvgString(
   const parser = new DOMParser();
   const doc = parser.parseFromString(svgString, 'image/svg+xml');
 
-  const sanitizeIdFn = (value: string) => {
-    return (value || '')
-      .toLowerCase()
-      .replace(/^\s+|\s+$/g, '')
-      .replace(/[\s-]+/g, '_')
-      .replace(/[^\w_]+/g, '');
-  };
-
   // TODO: need to confirm we protect against duplicate ids in separate vector layers
   const usedIds = new Set<string>(existingLayerIds);
   usedIds.add(ROTATION_GROUP_LAYER_ID);
 
   const makeFinalNodeIdFn = (node, typeIdPrefix: string) => {
-    const finalId = ModelUtil.getUniqueId(
-      sanitizeIdFn(node.id || typeIdPrefix),
+    const finalId = ModelUtil.getUniqueName(
+      NameProperty.sanitize(node.id || typeIdPrefix),
       id => usedIds.has(id),
     );
     usedIds.add(finalId);

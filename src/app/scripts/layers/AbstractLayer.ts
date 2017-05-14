@@ -1,7 +1,6 @@
 import * as _ from 'lodash';
-import { Layer, GroupLayer, ClipPathLayer, PathLayer, VectorLayer } from '.';
+import { Layer, ClipPathLayer, PathLayer } from '.';
 import { Property, NameProperty, Inspectable, Animatable } from '../properties';
-import { Type } from './Layer';
 
 /**
  * Root class for all layer types.
@@ -68,30 +67,10 @@ export abstract class AbstractLayer implements Layer {
     visitFn(this);
   }
 
-  // Implements the Layer interface.
-  isPathLayer() {
-    return this instanceof PathLayer;
-  }
-
-  // Implements the Layer interface.
-  isClipPathLayer() {
-    return this instanceof ClipPathLayer;
-  }
-
-  // Implements the Layer interface.
-  isGroupLayer() {
-    return this instanceof GroupLayer;
-  }
-
-  // Implements the Layer interface.
-  isVectorLayer() {
-    return this instanceof VectorLayer;
-  }
-
   abstract clone<T extends Layer>(): T;
   abstract deepClone<T extends Layer>(): T;
   abstract interpolate(start: AbstractLayer, end: AbstractLayer, fraction: number): void;
-  abstract getType(): Type;
+  abstract getIconName(): string;
 }
 
 // TODO: share this interface with Layer?

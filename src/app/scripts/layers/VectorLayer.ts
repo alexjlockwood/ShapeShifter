@@ -1,7 +1,6 @@
 import { AbstractLayer, ConstructorArgs as AbstractConstructorArgs } from './AbstractLayer';
 import { MathUtil } from '../common';
 import { Property, NumberProperty, FractionProperty } from '../properties';
-import { Type } from './Layer';
 
 /**
  * Model object that mirrors the VectorDrawable's '<vector>' element.
@@ -20,7 +19,7 @@ export class VectorLayer extends AbstractLayer {
     this.alpha = obj.alpha || 1;
   }
 
-  getType(): Type {
+  getIconName() {
     return 'vectorlayer';
   }
 

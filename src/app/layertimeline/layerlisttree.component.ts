@@ -3,11 +3,11 @@ import {
   Component, OnInit, Input, ChangeDetectionStrategy,
   Output, EventEmitter, ViewEncapsulation
 } from '@angular/core';
-import { Layer } from '../scripts/layers';
+import { Layer, VectorLayer, GroupLayer } from '../scripts/layers';
 import { ModelUtil } from '../scripts/common';
 import { Animation } from '../scripts/animations';
-import { Store } from '@ngrx/store';
 import {
+  Store,
   State,
   getAnimations,
   getSelectedLayerIds,
@@ -50,7 +50,7 @@ export class LayerListTreeComponent implements OnInit, Callbacks {
       this.store.select(getCollapsedLayerIds),
       this.store.select(getHiddenLayerIds),
     ).map(([animations, selectedLayerIds, collapsedLayerIds, hiddenLayerIds]) => {
-      const isExpandable = this.layer.isVectorLayer() || this.layer.isGroupLayer();
+      const isExpandable = this.layer instanceof VectorLayer || this.layer instanceof GroupLayer;
       const availablePropertyNames =
         Array.from(ModelUtil.getAvailablePropertyNamesForLayer(this.layer, animations));
       const existingPropertyNames =

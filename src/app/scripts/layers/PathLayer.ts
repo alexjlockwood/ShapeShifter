@@ -6,7 +6,6 @@ import {
   Property, PathProperty, ColorProperty,
   FractionProperty, NumberProperty, EnumProperty,
 } from '../properties';
-import { Type } from './Layer';
 
 const ENUM_LINECAP_OPTIONS = [
   { value: 'butt', label: 'Butt' },
@@ -63,7 +62,7 @@ export class PathLayer extends AbstractLayer {
     this.fillType = obj.fillType || 'nonZero';
   }
 
-  getType(): Type {
+  getIconName() {
     return 'pathlayer';
   }
 

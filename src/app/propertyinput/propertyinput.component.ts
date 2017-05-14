@@ -111,7 +111,7 @@ export class PropertyInputComponent implements OnInit {
     // Edit a single layer.
     const store = this.store;
     const layer = selectedLayers[0];
-    const icon = layer.getType();
+    const icon = layer.getIconName();
     const description = layer.name;
     const inspectedProperties: InspectedProperty<any>[] = [];
     layer.inspectableProperties.forEach((property, propertyName) => {

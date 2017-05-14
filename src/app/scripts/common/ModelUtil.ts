@@ -2,6 +2,23 @@ import * as _ from 'lodash';
 import { Animation, AnimationBlock } from '../animations';
 import { Layer } from '../layers';
 
+export function getUniqueName(
+  prefix = '',
+  objectByNameFn = (s: string) => undefined,
+  targetObject?: any,
+) {
+  let n = 0;
+  const nameFn = () => prefix + (n ? `_${n}` : '');
+  while (true) {
+    const o = objectByNameFn(nameFn());
+    if (!o || o === targetObject) {
+      break;
+    }
+    n++;
+  }
+  return nameFn();
+}
+
 /**
  * Builds a map where the keys are layer IDs and the values are
  * maps of property names to their corresponding animation blocks.
