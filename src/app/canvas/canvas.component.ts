@@ -12,10 +12,11 @@ import {
   AnimatorService,
   CanvasResizeService,
 } from '../services';
-import { Store } from '@ngrx/store';
 import {
+  Store,
   State,
   getVectorLayers,
+  getHiddenLayerIds,
 } from '../store';
 import { CanvasRulerDirective } from './canvasruler.directive';
 import { Observable } from 'rxjs/Observable';
@@ -335,7 +336,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         // trimmed path length.
         ctx.setLineDash([
           shownFraction * layer.pathData.getPathLength(),
-          (1 - shownFraction + 0.001) * layer.pathData.getPathLength()
+          (1 - shownFraction + 0.001) * layer.pathData.getPathLength(),
         ]);
         // The amount to offset the path is equal to the trimPathStart plus
         // trimPathOffset. We mod the result because the trimmed path

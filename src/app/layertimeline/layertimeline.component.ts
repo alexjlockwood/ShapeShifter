@@ -550,8 +550,7 @@ export class LayerTimelineComponent implements
 
   // @Override LayerListTreeComponentCallbacks
   layerToggleVisibility(event: MouseEvent, layer: Layer) {
-    const recursive = event.metaKey || event.shiftKey
-    this.store.dispatch(new ToggleLayerIdVisibility(layer.id, recursive));
+    this.store.dispatch(new ToggleLayerIdVisibility(layer.id));
   }
 
   // @Override LayerListTreeComponentCallbacks
@@ -637,9 +636,7 @@ export class LayerTimelineComponent implements
         targetLayerInfo = undefined;
         let minDistance = Infinity;
         let minDistanceIndent = Infinity; // Tie break to most indented layer.
-        for (let i = 0; i < orderedLayerInfos.length; i++) {
-          const layerInfo = orderedLayerInfos[i];
-
+        for (const layerInfo of orderedLayerInfos) {
           // Skip if mouse to the left of this layer.
           if (event.clientX < layerInfo.localRect.left) {
             continue;
@@ -724,7 +721,7 @@ export class LayerTimelineComponent implements
         }
 
         setTimeout(() => this.shouldSuppressClick = false, 0);
-      }
+      },
     });
   }
 

@@ -95,24 +95,12 @@ export function reducer(state = initialState, action: actions.Actions): State {
 
     // Show/hide a layer.
     case actions.TOGGLE_LAYER_ID_VISIBILITY: {
-      const { layerId, recursive } = action.payload;
-      const layerIds = new Set([layerId]);
-      if (recursive) {
-        _.forEach(state.vectorLayers, vl => {
-          // Recursively show/hide the layer's children.
-          const layer = vl.findLayerById(layerId);
-          if (!layer) {
-            return true;
-          }
-          layer.walk(l => layerIds.add(l.id));
-          return false;
-        });
-      }
+      const { layerId } = action.payload;
       const hiddenLayerIds = new Set(state.hiddenLayerIds);
       if (hiddenLayerIds.has(layerId)) {
-        layerIds.forEach(id => hiddenLayerIds.delete(id));
+        hiddenLayerIds.delete(layerId);
       } else {
-        layerIds.forEach(id => hiddenLayerIds.add(id));
+        hiddenLayerIds.add(layerId);
       }
       return { ...state, hiddenLayerIds };
     }
