@@ -1,3 +1,4 @@
+import * as _ from 'lodash';
 import * as XmlSerializer from './XmlSerializer';
 import { Layer, VectorLayer, PathLayer, GroupLayer } from '../layers';
 import { ColorUtil } from '../common';
@@ -11,20 +12,20 @@ const SVG_NS = 'http://www.w3.org/2000/svg';
 export function vectorLayerToSvgString(
   vectorLayer: VectorLayer, width?: number, height?: number, x?: number, y?: number, withIdsAndNS = true) {
 
-  const xmlDoc = document.implementation.createDocument(null, 'svg', null);
+  const xmlDoc = document.implementation.createDocument(undefined, 'svg', undefined);
   const rootNode = xmlDoc.documentElement;
   vectorLayerToSvgNode(vectorLayer, rootNode, xmlDoc, withIdsAndNS);
   if (width !== undefined) {
-    rootNode.setAttributeNS(null, 'width', width.toString() + 'px');
+    rootNode.setAttributeNS(undefined, 'width', width.toString() + 'px');
   }
   if (height !== undefined) {
-    rootNode.setAttributeNS(null, 'height', height.toString() + 'px');
+    rootNode.setAttributeNS(undefined, 'height', height.toString() + 'px');
   }
   if (x !== undefined) {
-    rootNode.setAttributeNS(null, 'x', x.toString() + 'px');
+    rootNode.setAttributeNS(undefined, 'x', x.toString() + 'px');
   }
   if (y !== undefined) {
-    rootNode.setAttributeNS(null, 'y', y.toString() + 'px');
+    rootNode.setAttributeNS(undefined, 'y', y.toString() + 'px');
   }
   return serializeXmlNode(rootNode);
 }
@@ -37,7 +38,7 @@ function vectorLayerToSvgNode(vl: VectorLayer, destinationNode: HTMLElement, xml
   if (withIdsAndNS) {
     destinationNode.setAttributeNS(XMLNS_NS, 'xmlns', SVG_NS);
   }
-  destinationNode.setAttributeNS(null, 'viewBox', `0 0 ${vl.width} ${vl.height}`);
+  destinationNode.setAttributeNS(undefined, 'viewBox', `0 0 ${vl.width} ${vl.height}`);
 
   walk(vl, (layer, parentNode) => {
     if (layer instanceof VectorLayer) {
@@ -93,7 +94,7 @@ function vectorLayerToSvgNode(vl: VectorLayer, destinationNode: HTMLElement, xml
         transformValues.push(`translate(${layer.translateX} ${layer.translateY})`);
       }
       if (transformValues.length) {
-        node.setAttributeNS(null, 'transform', transformValues.join(' '));
+        node.setAttributeNS(undefined, 'transform', transformValues.join(' '));
       }
       parentNode.appendChild(node);
       return node;
@@ -110,10 +111,9 @@ function vectorLayerToSvgNode(vl: VectorLayer, destinationNode: HTMLElement, xml
 }
 
 function conditionalAttr(node: HTMLElement, attr, value, skipValue?) {
-  if (value !== undefined
-    && value !== null
+  if (!_.isNil(value)
     && (skipValue === undefined || value !== skipValue)) {
-    node.setAttributeNS(null, attr, value);
+    node.setAttributeNS(undefined, attr, value);
   }
 }
 
