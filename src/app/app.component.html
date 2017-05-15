@@ -1,8 +1,9 @@
-<!-- Disable HTML5 drag/drop for the entire document. -->
-<div class="app-container"
+<!-- Disable drag start events by default. -->
+<div appDropTarget
+  (onDropFiles)="onDropFiles($event)"
+  class="app-container"
   fxLayout="column"
-  ondragstart="return false;"
-  ondrop="return false;">
+  ondragstart="return false;">
   <!-- Toolbar. -->
   <div class="toolbar-container">
     <app-toolbar></app-toolbar>

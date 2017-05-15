@@ -53,18 +53,17 @@ export const getIsRepeating = (state: State) => state.root.playback.isRepeating;
 // State actions.
 export {
   AddAnimations,
-  SelectAnimationId,
-  ActivateAnimationId,
+  SelectAnimation,
+  ActivateAnimation,
   ReplaceAnimations,
   AddBlock,
-  SelectBlockId,
+  SelectBlock,
   ReplaceBlocks,
-  AddVectorLayers,
-  ReplaceVectorLayer,
-  SelectLayerId,
-  ToggleLayerIdExpansion,
-  ToggleLayerIdVisibility,
-  AddLayer,
+  ReplaceLayer,
+  SelectLayer,
+  ToggleLayerExpansion,
+  ToggleLayerVisibility,
+  AddLayers,
   DeleteSelectedModels,
 } from './StateActions';
 

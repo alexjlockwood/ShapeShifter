@@ -69,13 +69,13 @@ export function reducer(state = initialState, action: actions.Actions): State {
     }
 
     // Select an animation.
-    case actions.SELECT_ANIMATION_ID: {
+    case actions.SELECT_ANIMATION: {
       const { animationId, clearExisting } = action.payload;
       return selectAnimationId(state, animationId, clearExisting);
     }
 
     // Activate an animation.
-    case actions.ACTIVATE_ANIMATION_ID: {
+    case actions.ACTIVATE_ANIMATION: {
       const { animationId } = action.payload;
       const timeline = state.timeline;
       if (animationId === timeline.activeAnimationId) {
@@ -209,7 +209,7 @@ export function reducer(state = initialState, action: actions.Actions): State {
     }
 
     // Select an animation block.
-    case actions.SELECT_BLOCK_ID: {
+    case actions.SELECT_BLOCK: {
       const { blockId, clearExisting } = action.payload;
       return selectBlockId(state, blockId, clearExisting);
     }
@@ -249,31 +249,19 @@ export function reducer(state = initialState, action: actions.Actions): State {
       };
     }
 
-    // Add a list of vector layers to the application state.
-    case actions.ADD_VECTOR_LAYERS: {
-      const addedVectorLayers = action.payload.vectorLayers;
-      if (!addedVectorLayers.length) {
-        // Do nothing if the list of added vector layers is empty.
-        return state;
+    // Replace a layer.
+    case actions.REPLACE_LAYER: {
+      const replacementLayer = action.payload.layer;
+      const layers = state.layers;
+      let replacementVl: VectorLayer;
+      if (replacementLayer instanceof VectorLayer) {
+        replacementVl = replacementLayer;
+      } else {
+        const vl =
+          LayerUtil.findParentVectorLayer(layers.vectorLayers, replacementLayer.id);
+        replacementVl = LayerUtil.replaceLayerInTree(vl, replacementLayer);
       }
-      const layers = state.layers;
-      const vectorLayers = layers.vectorLayers.concat(...addedVectorLayers);
-      return {
-        ...state,
-        layers: { ...layers, vectorLayers },
-      };
-    }
-
-    // TODO: make this more general? i.e. replace a 'layer' instead?
-    // TODO: make this more general? i.e. replace a 'layer' instead?
-    // TODO: make this more general? i.e. replace a 'layer' instead?
-    // TODO: make this more general? i.e. replace a 'layer' instead?
-    // TODO: make this more general? i.e. replace a 'layer' instead?
-    // Replace a vector layer.
-    case actions.REPLACE_VECTOR_LAYER: {
-      const replacementVl = action.payload.vectorLayer;
       const replacementId = replacementVl.id;
-      const layers = state.layers;
       const vectorLayers =
         layers.vectorLayers.map(vl => vl.id === replacementId ? replacementVl : vl);
       return {
@@ -283,13 +271,13 @@ export function reducer(state = initialState, action: actions.Actions): State {
     }
 
     // Select a layer.
-    case actions.SELECT_LAYER_ID: {
+    case actions.SELECT_LAYER: {
       const { layerId, clearExisting } = action.payload;
       return selectLayerId(state, layerId, clearExisting);
     }
 
     // Expand/collapse a layer.
-    case actions.TOGGLE_LAYER_ID_EXPANSION: {
+    case actions.TOGGLE_LAYER_EXPANSION: {
       const { layerId, recursive } = action.payload;
       const layerIds = new Set([layerId]);
       const layers = state.layers;
@@ -317,7 +305,7 @@ export function reducer(state = initialState, action: actions.Actions): State {
     }
 
     // Show/hide a layer.
-    case actions.TOGGLE_LAYER_ID_VISIBILITY: {
+    case actions.TOGGLE_LAYER_VISIBILITY: {
       const { layerId } = action.payload;
       const layers = state.layers;
       const hiddenLayerIds = new Set(layers.hiddenLayerIds);
@@ -332,29 +320,20 @@ export function reducer(state = initialState, action: actions.Actions): State {
       };
     }
 
-    // TODO: not sure it makes sense to have a list of vectors here?
-    // TODO: not sure it makes sense to have a list of vectors here?
-    // TODO: not sure it makes sense to have a list of vectors here?
-    // TODO: not sure it makes sense to have a list of vectors here?
-    // TODO: not sure it makes sense to have a list of vectors here?
-    // Add a layer to the tree.
-    case actions.ADD_LAYER: {
+    // Add layers to the tree.
+    case actions.ADD_LAYERS: {
       // TODO: add the layer below the currently selected layer, if one exists
-      // TODO: add the layer below the currently selected layer, if one exists
-      // TODO: add the layer below the currently selected layer, if one exists
-      // TODO: add the layer below the currently selected layer, if one exists
-      // TODO: add the layer below the currently selected layer, if one exists
-      const { layer } = action.payload;
+      // TODO: add new layers to the currently selected vector, if one exists
+      const { layers: addedLayers } = action.payload;
+      if (!addedLayers.length) {
+        // Do nothing if there are no layers to add.
+        return state;
+      }
       const layers = state.layers;
       const vl = layers.vectorLayers[0].clone();
-      vl.children = vl.children.concat(layer);
+      vl.children = vl.children.concat(addedLayers);
       const vectorLayers = layers.vectorLayers.slice();
       vectorLayers[0] = vl;
-      // TODO: auto-select the new layer?
-      // TODO: auto-select the new layer?
-      // TODO: auto-select the new layer?
-      // TODO: auto-select the new layer?
-      // TODO: auto-select the new layer?
       return {
         ...state,
         layers: { ...layers, vectorLayers },
@@ -461,11 +440,21 @@ function deleteSelectedAnimations(state: State) {
   const animations = timeline.animations.filter(animation => {
     return !selectedAnimationIds.has(animation.id);
   });
+  if (!animations.length) {
+    // Create an empty animation if the last one was deleted.
+    animations.push(new Animation());
+  }
+  let activeAnimationId = timeline.activeAnimationId;
+  if (selectedAnimationIds.has(activeAnimationId)) {
+    // If the active animation was deleted, activate the first animation.
+    activeAnimationId = timeline.animations[0].id;
+  }
   return {
     ...state,
     timeline: {
       ...timeline,
       animations,
+      activeAnimationId,
       selectedAnimationIds: new Set<string>(),
     },
   };
@@ -498,13 +487,6 @@ function deleteSelectedBlocks(state: State) {
   };
 }
 
-// TODO: consider possibility of vector layers being deleted
-// TODO: consider possibility of the last animation being deleted
-// TODO: need to make sure toggled/visible layer ids are deleted as well!
-// TODO: need to make sure toggled/visible layer ids are deleted as well!
-// TODO: need to make sure toggled/visible layer ids are deleted as well!
-// TODO: need to make sure toggled/visible layer ids are deleted as well!
-// TODO: need to make sure toggled/visible layer ids are deleted as well!
 function deleteSelectedLayers(state: State) {
   const layers = state.layers;
   const { selectedLayerIds } = layers;
@@ -513,19 +495,41 @@ function deleteSelectedLayers(state: State) {
     return state;
   }
   const vectorLayers = layers.vectorLayers.slice();
+  let collapsedLayerIds = new Set(layers.collapsedLayerIds);
+  let hiddenLayerIds = new Set(layers.hiddenLayerIds);
   selectedLayerIds.forEach(layerId => {
-    const vl = LayerUtil.findParentVectorLayer(vectorLayers, layerId);
-    if (vl) {
-      const vlIndex = _.findIndex(vectorLayers, l => l.id === vl.id);
-      vectorLayers[vlIndex] = LayerUtil.removeLayerFromTree(vl, layerId);
+    const parentVl = LayerUtil.findParentVectorLayer(vectorLayers, layerId);
+    if (parentVl) {
+      const vlIndex = _.findIndex(vectorLayers, vl => vl.id === parentVl.id);
+      if (parentVl.id === layerId) {
+        // Remove the selected vector from the list of vectors.
+        vectorLayers.splice(vlIndex, 1);
+      } else {
+        // Remove the layer node from the parent vector.
+        vectorLayers[vlIndex] = LayerUtil.removeLayerFromTree(parentVl, layerId);
+      }
+      collapsedLayerIds.delete(layerId);
+      hiddenLayerIds.delete(layerId);
     }
   });
+  if (collapsedLayerIds.size === layers.collapsedLayerIds.size) {
+    collapsedLayerIds = layers.collapsedLayerIds;
+  }
+  if (hiddenLayerIds.size === layers.hiddenLayerIds.size) {
+    hiddenLayerIds = layers.hiddenLayerIds;
+  }
+  if (!vectorLayers.length) {
+    // Create an empty vector layer if the last one was deleted.
+    vectorLayers.push(new VectorLayer());
+  }
   return {
     ...state,
     layers: {
       ...layers,
       vectorLayers,
       selectedLayerIds: new Set<string>(),
+      collapsedLayerIds,
+      hiddenLayerIds,
     },
   };
 }

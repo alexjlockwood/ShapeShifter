@@ -1,14 +1,14 @@
 import { Action } from '@ngrx/store';
 import { Animation, AnimationBlock } from '../scripts/animations';
-import { VectorLayer, Layer } from '../scripts/layers';
+import { Layer } from '../scripts/layers';
 
 // Animation actions.
 export const ADD_ANIMATIONS = 'ADD_ANIMATIONS';
-export const SELECT_ANIMATION_ID = 'SELECT_ANIMATION_ID';
-export const ACTIVATE_ANIMATION_ID = 'ACTIVATE_ANIMATION_ID';
+export const SELECT_ANIMATION = 'SELECT_ANIMATION';
+export const ACTIVATE_ANIMATION = 'ACTIVATE_ANIMATION_ID';
 export const REPLACE_ANIMATIONS = 'REPLACE_ANIMATIONS';
 export const ADD_BLOCK = 'ADD_BLOCK';
-export const SELECT_BLOCK_ID = 'SELECT_BLOCK_ID';
+export const SELECT_BLOCK = 'SELECT_BLOCK_ID';
 export const REPLACE_BLOCKS = 'REPLACE_BLOCKS';
 
 export class AddAnimations implements Action {
@@ -19,16 +19,16 @@ export class AddAnimations implements Action {
   }
 }
 
-export class SelectAnimationId implements Action {
-  readonly type = SELECT_ANIMATION_ID;
+export class SelectAnimation implements Action {
+  readonly type = SELECT_ANIMATION;
   readonly payload: { animationId: string, clearExisting: boolean };
   constructor(readonly animationId: string, readonly clearExisting = false) {
     this.payload = { animationId, clearExisting };
   }
 }
 
-export class ActivateAnimationId implements Action {
-  readonly type = ACTIVATE_ANIMATION_ID;
+export class ActivateAnimation implements Action {
+  readonly type = ACTIVATE_ANIMATION;
   readonly payload: { animationId: string };
   constructor(readonly animationId: string) {
     this.payload = { animationId };
@@ -56,8 +56,8 @@ export class AddBlock implements Action {
   }
 }
 
-export class SelectBlockId implements Action {
-  readonly type = SELECT_BLOCK_ID;
+export class SelectBlock implements Action {
+  readonly type = SELECT_BLOCK;
   readonly payload: { blockId: string, clearExisting: boolean };
   constructor(readonly blockId: string, readonly clearExisting = true) {
     this.payload = { blockId, clearExisting };
@@ -72,60 +72,51 @@ export class ReplaceBlocks implements Action {
   }
 }
 
-// VectorLayer constants.
-export const ADD_VECTOR_LAYERS = 'ADD_VECTOR_LAYERS';
-export const REPLACE_VECTOR_LAYER = 'REPLACE_VECTOR_LAYER';
-export const SELECT_LAYER_ID = 'SELECT_LAYER_ID';
-export const TOGGLE_LAYER_ID_EXPANSION = 'TOGGLE_LAYER_ID_EXPANSION';
-export const TOGGLE_LAYER_ID_VISIBILITY = 'TOGGLE_LAYER_ID_VISIBILITY';
-export const ADD_LAYER = 'ADD_LAYER';
+// Layer constants.
+export const REPLACE_LAYER = 'REPLACE_LAYER';
+export const SELECT_LAYER = 'SELECT_LAYER';
+export const TOGGLE_LAYER_EXPANSION = 'TOGGLE_LAYER_EXPANSION';
+export const TOGGLE_LAYER_VISIBILITY = 'TOGGLE_LAYER_VISIBILITY';
+export const ADD_LAYERS = 'ADD_LAYERS';
 export const DELETE_SELECTED_LAYERS = 'DELETE_SELECTED_LAYERS';
 
-export class AddVectorLayers implements Action {
-  readonly type = ADD_VECTOR_LAYERS;
-  readonly payload: { vectorLayers: ReadonlyArray<VectorLayer> };
-  constructor(readonly vectorLayers: ReadonlyArray<VectorLayer>) {
-    this.payload = { vectorLayers };
+export class ReplaceLayer implements Action {
+  readonly type = REPLACE_LAYER;
+  readonly payload: { layer: Layer };
+  constructor(readonly layer: Layer) {
+    this.payload = { layer };
   }
 }
 
-export class ReplaceVectorLayer implements Action {
-  readonly type = REPLACE_VECTOR_LAYER;
-  readonly payload: { vectorLayer: VectorLayer };
-  constructor(readonly vectorLayer: VectorLayer) {
-    this.payload = { vectorLayer };
-  }
-}
-
-export class SelectLayerId implements Action {
-  readonly type = SELECT_LAYER_ID;
+export class SelectLayer implements Action {
+  readonly type = SELECT_LAYER;
   readonly payload: { layerId: string, clearExisting: boolean };
   constructor(readonly layerId: string, readonly clearExisting = true) {
     this.payload = { layerId, clearExisting };
   }
 }
 
-export class ToggleLayerIdExpansion implements Action {
-  readonly type = TOGGLE_LAYER_ID_EXPANSION;
+export class ToggleLayerExpansion implements Action {
+  readonly type = TOGGLE_LAYER_EXPANSION;
   readonly payload: { layerId: string, recursive: boolean };
   constructor(readonly layerId: string, readonly recursive = false) {
     this.payload = { layerId, recursive };
   }
 }
 
-export class ToggleLayerIdVisibility implements Action {
-  readonly type = TOGGLE_LAYER_ID_VISIBILITY;
+export class ToggleLayerVisibility implements Action {
+  readonly type = TOGGLE_LAYER_VISIBILITY;
   readonly payload: { layerId: string };
   constructor(readonly layerId: string) {
     this.payload = { layerId };
   }
 }
 
-export class AddLayer implements Action {
-  readonly type = ADD_LAYER;
-  readonly payload: { layer: Layer };
-  constructor(readonly layer: Layer) {
-    this.payload = { layer };
+export class AddLayers implements Action {
+  readonly type = ADD_LAYERS;
+  readonly payload: { layers: ReadonlyArray<Layer> };
+  constructor(...layers: Layer[]) {
+    this.payload = { layers };
   }
 }
 
@@ -139,16 +130,15 @@ export class DeleteSelectedModels implements Action {
 
 export type Actions =
   AddAnimations
-  | SelectAnimationId
-  | ActivateAnimationId
+  | SelectAnimation
+  | ActivateAnimation
   | ReplaceAnimations
   | AddBlock
-  | SelectBlockId
+  | SelectBlock
   | ReplaceBlocks
-  | AddVectorLayers
-  | ReplaceVectorLayer
-  | SelectLayerId
-  | ToggleLayerIdExpansion
-  | ToggleLayerIdVisibility
-  | AddLayer
+  | ReplaceLayer
+  | SelectLayer
+  | ToggleLayerExpansion
+  | ToggleLayerVisibility
+  | AddLayers
   | DeleteSelectedModels;

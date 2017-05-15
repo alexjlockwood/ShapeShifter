@@ -20,9 +20,9 @@ import { LayerTimelineDirective } from './layertimeline.directive';
 import {
   Store, State, getAnimations, getVectorLayers, getSelectedAnimationIds,
   getActiveAnimationId, getSelectedBlockIds, AddAnimations,
-  SelectAnimationId, ActivateAnimationId, AddBlock, SelectBlockId,
-  ReplaceBlocks, ReplaceVectorLayer, SelectLayerId,
-  ToggleLayerIdExpansion, ToggleLayerIdVisibility, AddLayer,
+  SelectAnimation, ActivateAnimation, AddBlock, SelectBlock,
+  ReplaceBlocks, ReplaceLayer, SelectLayer,
+  ToggleLayerExpansion, ToggleLayerVisibility, AddLayers,
 } from '../store';
 import { Observable } from 'rxjs/Observable';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
@@ -164,7 +164,7 @@ export class LayerTimelineComponent implements
   // Called from the LayerTimelineComponent template.
   animationHeaderTextClick(event: MouseEvent, animation: Animation) {
     const clearExisting = !event.metaKey && !event.shiftKey;
-    this.store.dispatch(new SelectAnimationId(animation.id, clearExisting));
+    this.store.dispatch(new SelectAnimation(animation.id, clearExisting));
   }
 
   // Called from the LayerTimelineComponent template.
@@ -191,7 +191,7 @@ export class LayerTimelineComponent implements
       children: [],
       pathData: undefined,
     });
-    this.store.dispatch(new AddLayer(layer));
+    this.store.dispatch(new AddLayers(layer));
   }
 
   addClipPathLayerClick() {
@@ -202,18 +202,18 @@ export class LayerTimelineComponent implements
       children: [],
       pathData: undefined,
     });
-    this.store.dispatch(new AddLayer(layer));
+    this.store.dispatch(new AddLayers(layer));
   }
 
   addGroupLayerClick() {
     const name = ModelUtil.getUniqueLayerName(this.vectorLayers, 'group');
     const layer = new GroupLayer({ id: undefined, name, children: [] });
-    this.store.dispatch(new AddLayer(layer));
+    this.store.dispatch(new AddLayers(layer));
   }
 
   // Called from the LayerTimelineComponent template.
   animationTimelineMouseDown(event: MouseEvent, animation: Animation) {
-    this.store.dispatch(new ActivateAnimationId(animation.id));
+    this.store.dispatch(new ActivateAnimation(animation.id));
   }
 
   // @Override TimelineAnimationRowCallbacks
@@ -521,7 +521,7 @@ export class LayerTimelineComponent implements
     layer: Layer,
   ) {
     const clearExisting = !event.metaKey && !event.shiftKey;
-    this.store.dispatch(new SelectBlockId(block.id, clearExisting));
+    this.store.dispatch(new SelectBlock(block.id, clearExisting));
   }
 
   // @Override LayerListTreeComponentCallbacks
@@ -547,18 +547,18 @@ export class LayerTimelineComponent implements
   // @Override LayerListTreeComponentCallbacks
   layerClick(event: MouseEvent, layer: Layer) {
     const clearExisting = !event.metaKey && !event.shiftKey;
-    this.store.dispatch(new SelectLayerId(layer.id, clearExisting));
+    this.store.dispatch(new SelectLayer(layer.id, clearExisting));
   }
 
   // @Override LayerListTreeComponentCallbacks
   layerToggleExpanded(event: MouseEvent, layer: Layer) {
     const recursive = event.metaKey || event.shiftKey
-    this.store.dispatch(new ToggleLayerIdExpansion(layer.id, recursive));
+    this.store.dispatch(new ToggleLayerExpansion(layer.id, recursive));
   }
 
   // @Override LayerListTreeComponentCallbacks
   layerToggleVisibility(event: MouseEvent, layer: Layer) {
-    this.store.dispatch(new ToggleLayerIdVisibility(layer.id));
+    this.store.dispatch(new ToggleLayerVisibility(layer.id));
   }
 
   // @Override LayerListTreeComponentCallbacks
@@ -723,7 +723,7 @@ export class LayerTimelineComponent implements
           }
           if (replacementVl) {
             setTimeout(() => {
-              this.store.dispatch(new ReplaceVectorLayer(replacementVl));
+              this.store.dispatch(new ReplaceLayer(replacementVl));
             });
           }
         }

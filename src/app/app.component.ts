@@ -25,14 +25,12 @@ import {
   ActionModeService,
   ShortcutService,
 } from './services';
-import { Animation } from './scripts/animations';
 import { DemoUtil, DEMO_MAP, DEBUG_VECTOR_DRAWABLE } from './scripts/demos';
 import 'rxjs/add/observable/combineLatest';
 import {
   Store,
   State,
-  AddAnimations,
-  AddVectorLayers,
+  AddLayers,
 } from './store';
 
 const IS_DEV_MODE = !environment.production;
@@ -98,12 +96,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       this.autoLoadDemo();
     } else if (AUTO_LOAD_VECTOR_DRAWABLE) {
       const vl = VectorDrawableLoader.loadVectorLayerFromXmlString(DEBUG_VECTOR_DRAWABLE, []);
-      this.store.dispatch(new AddVectorLayers([vl]));
-      const animation = new Animation({
-        name: 'anim',
-        duration: 300,
-      });
-      this.store.dispatch(new AddAnimations([animation]));
+      this.store.dispatch(new AddLayers(vl));
     }
 
     this.cursorObservable =
@@ -236,6 +229,11 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       }
       return undefined;
     });
+  }
+
+  // Called by the DropTargetDirective.
+  onDropFiles(fileList: FileList) {
+    // TODO: hook this up to svg/xml import...
   }
 
   // Proxies a button click to the <input> tag that opens the file picker.

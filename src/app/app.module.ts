@@ -36,6 +36,7 @@ import { ScrollGroupDirective } from './scrollgroup/scrollgroup.directive';
 import { LayerTimelineComponent } from './layertimeline/layertimeline.component';
 import { LayerTimelineDirective } from './layertimeline/layertimeline.directive';
 import { TimelineAnimationRowComponent } from './layertimeline/timelineanimationrow.component';
+import { DropTargetDirective } from './droptarget.directive';
 
 // Services.
 import {
@@ -86,6 +87,7 @@ import 'hammerjs';
     LayerTimelineComponent,
     LayerTimelineDirective,
     TimelineAnimationRowComponent,
+    DropTargetDirective,
   ],
   imports: [
     BrowserModule,

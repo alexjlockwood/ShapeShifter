@@ -118,3 +118,26 @@ div.inspector-container {
 .show-pen-cursor {
   cursor: url(/assets/cursors/penaddcursorsmall.png) 5 0, auto;
 }
+
+.file-drop-target {
+  &.is-dragging-over::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 9999;
+    animation: pulsate-color .66s ease 0s infinite;
+    background-color: rgba($colorPrimary600, .5);
+    box-shadow: 0 0 0 8px $colorPrimary600 inset;
+    pointer-events: none;
+    transform: translateZ(0);
+  }
+
+  @keyframes pulsate-color {
+    0% { opacity: .5; }
+    50% { opacity: 1; }
+    100% { opacity: .5; }
+  }
+}

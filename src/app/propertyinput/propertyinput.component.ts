@@ -11,7 +11,7 @@ import {
   State,
   getTimelineState,
   getLayerState,
-  ReplaceVectorLayer,
+  ReplaceLayer,
   ReplaceBlocks,
   ReplaceAnimations,
 } from '../store';
@@ -140,11 +140,11 @@ export class PropertyInputComponent implements OnInit {
           // TODO: need to somehow save the 'entered value' after data store updates?
           // TODO: need to somehow save the 'entered value' after data store updates?
           // TODO: need to somehow save the 'entered value' after data store updates?
-          const vl = LayerUtil.findParentVectorLayer(vls, layer.id);
+          // const vl = LayerUtil.findParentVectorLayer(vls, layer.id);
           const clonedLayer = layer.clone();
           clonedLayer[propertyName] = value;
-          const clonedVl = LayerUtil.replaceLayerInTree(vl, clonedLayer);
-          store.dispatch(new ReplaceVectorLayer(clonedVl));
+          // const clonedVl = LayerUtil.replaceLayerInTree(vl, clonedLayer);
+          store.dispatch(new ReplaceLayer(clonedLayer));
         },
         transformEditedValueFn: (property instanceof NameProperty)
           // TODO: replace entered value with a unique value if the name already exists
