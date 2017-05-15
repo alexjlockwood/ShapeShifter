@@ -14,7 +14,6 @@ import { VectorLayer, PathLayer, LayerUtil } from './scripts/layers';
 import { SvgLoader, VectorDrawableLoader } from './scripts/import';
 import { SubPath } from './scripts/paths';
 import {
-  AnimatorService,
   CanvasResizeService,
   SelectionService,
   AppModeService,
@@ -24,6 +23,7 @@ import {
   FilePickerService,
   HoverService,
   ActionModeService,
+  ShortcutService,
 } from './services';
 import { Animation } from './scripts/animations';
 import { DemoUtil, DEMO_MAP, DEBUG_VECTOR_DRAWABLE } from './scripts/demos';
@@ -33,7 +33,6 @@ import {
   State,
   AddAnimations,
   AddVectorLayers,
-  DeleteSelectedModels,
 } from './store';
 
 const IS_DEV_MODE = !environment.production;
@@ -86,11 +85,11 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     private readonly stateService: StateService,
     private readonly selectionService: SelectionService,
     private readonly hoverService: HoverService,
-    private readonly animatorService: AnimatorService,
     private readonly canvasResizeService: CanvasResizeService,
     private readonly appModeService: AppModeService,
     private readonly actionModeService: ActionModeService,
     private readonly store: Store<State>,
+    private readonly shortcutService: ShortcutService,
   ) { }
 
   ngOnInit() {
@@ -163,7 +162,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
         }
         return '';
       });
-    this.initKeyCodeListeners();
+    this.shortcutService.init();
     this.initBeforeOnLoadListener();
 
     this.subscriptions.push(
@@ -211,7 +210,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   ngOnDestroy() {
     ELEMENT_RESIZE_DETECTOR.removeAllListeners(this.canvasContainer.get(0));
     this.subscriptions.forEach(s => s.unsubscribe());
-    $(window).unbind('keydown');
+    this.shortcutService.destroy();
     $(window).unbind('beforeunload');
   }
 
@@ -224,119 +223,6 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.actionModeService.isShowingActionMode()) {
       this.actionModeService.closeActionMode();
     }
-  }
-
-  private initKeyCodeListeners() {
-    $(window).on('keydown', event => {
-      if (document.activeElement.matches('input')) {
-        // Ignore shortcuts when an input element has focus.
-        return true;
-      }
-
-      const isMorphable = this.morphStatus === MorphStatus.Morphable;
-      if (event.keyCode === 8 || event.keyCode === 46) {
-        // In case there's a JS error, never navigate away.
-        event.preventDefault();
-
-        // TODO: combine into a single action?
-        this.store.dispatch(new DeleteSelectedModels());
-
-        // TODO: re-enable this stuff
-        // if (this.actionModeService.isShowingSubPathActionMode()) {
-        //   // TODO: don't do anything if there are no subpaths to delete
-        //   this.actionModeService.deleteSubPaths();
-        // } else if (this.actionModeService.isShowingSegmentActionMode()) {
-        //   // TODO: don't do anything if there are no segments to delete
-        //   this.actionModeService.deleteSegments();
-        // } else if (this.actionModeService.isShowingPointActionMode()) {
-        //   // TODO: don't do anything if there are no points to delete
-        //   this.actionModeService.deletePoints();
-        // }
-        return false;
-      }
-      if (event.keyCode === 27) {
-        // Escape.
-        if (this.actionModeService.isShowingActionMode()) {
-          this.actionModeService.closeActionMode();
-        }
-        return false;
-      }
-      if (event.keyCode === 32) {
-        // Spacebar.
-        if (isMorphable) {
-          this.animatorService.toggle();
-        }
-        return false;
-      }
-      if (event.keyCode === 37) {
-        // Left arrow.
-        if (isMorphable) {
-          this.animatorService.rewind();
-        }
-        return false;
-      }
-      if (event.keyCode === 39) {
-        // Right arrow.
-        if (isMorphable) {
-          this.animatorService.fastForward();
-        }
-        return false;
-      }
-      if (event.keyCode === 82 && !event.ctrlKey && !event.metaKey) {
-        // R.
-        if (this.actionModeService.isShowingSubPathActionMode()) {
-          this.actionModeService.reversePoints();
-        } else if (isMorphable) {
-          this.animatorService.toggleIsRepeating();
-        }
-        return false;
-      }
-      if (event.keyCode === 83) {
-        // S.
-        if (this.actionModeService.isShowingSubPathActionMode()
-          || this.actionModeService.isShowingSegmentActionMode()) {
-          this.actionModeService.toggleSplitSubPathsMode();
-        } else if (isMorphable) {
-          this.animatorService.toggleIsSlowMotion();
-        }
-        return false;
-      }
-      if (event.keyCode === 65) {
-        // A.
-        if (this.actionModeService.isShowingSubPathActionMode()
-          || this.actionModeService.isShowingSegmentActionMode()) {
-          this.actionModeService.toggleSplitCommandsMode();
-        } else if (this.actionModeService.isShowingPointActionMode()) {
-          this.actionModeService.splitInHalfClick();
-        }
-        return false;
-      }
-      if (event.keyCode === 68) {
-        // D.
-        if (this.actionModeService.isShowingSubPathActionMode()
-          || this.actionModeService.isShowingSegmentActionMode()) {
-          this.actionModeService.toggleMorphSubPathsMode();
-        }
-        return false;
-      }
-      if (event.keyCode === 66) {
-        // B.
-        if (this.actionModeService.isShowingSubPathActionMode()) {
-          this.actionModeService.shiftBackPoints();
-        }
-        return false;
-      }
-      if (event.keyCode === 70) {
-        // F.
-        if (this.actionModeService.isShowingSubPathActionMode()) {
-          this.actionModeService.shiftForwardPoints();
-        } else if (this.actionModeService.isShowingPointActionMode()) {
-          this.actionModeService.setFirstPosition();
-        }
-        return false;
-      }
-      return undefined;
-    });
   }
 
   private initBeforeOnLoadListener() {

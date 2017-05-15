@@ -8,3 +8,4 @@ export { SettingsService } from './settings.service';
 export { FilePickerService } from './filepicker.service';
 export { MorphSubPathService } from './morphsubpath.service';
 export { ActionModeService } from './actionmode.service';
+export { ShortcutService } from './shortcut.service';

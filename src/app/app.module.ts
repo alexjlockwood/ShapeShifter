@@ -49,6 +49,7 @@ import {
   FilePickerService,
   MorphSubPathService,
   ActionModeService,
+  ShortcutService,
 } from './services';
 
 // Dialogs.
@@ -117,6 +118,7 @@ import 'hammerjs';
     FilePickerService,
     MorphSubPathService,
     ActionModeService,
+    ShortcutService,
   ],
   entryComponents: [
     ConfirmDialogComponent,
