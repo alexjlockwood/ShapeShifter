@@ -14,9 +14,9 @@ import { AnimationBlock } from '.';
 )
 export class Animation {
 
-  constructor(readonly obj: ConstructorArgs) {
+  constructor(readonly obj = {} as ConstructorArgs) {
     this.id = obj.id || _.uniqueId();
-    this.name = obj.name || '';
+    this.name = obj.name || 'anim';
     this.blocks = obj.blocks || [];
     this.duration = obj.duration || 300;
   }

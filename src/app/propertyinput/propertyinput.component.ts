@@ -9,11 +9,8 @@ import { ColorUtil } from '../scripts/common';
 import {
   Store,
   State,
-  getAnimations,
-  getVectorLayers,
-  getSelectedLayerIds,
-  getSelectedAnimationIds,
-  getSelectedBlockIds,
+  getTimelineState,
+  getLayerState,
   ReplaceVectorLayer,
   ReplaceBlocks,
   ReplaceAnimations,
@@ -36,12 +33,12 @@ export class PropertyInputComponent implements OnInit {
   ngOnInit() {
     this.propertyInputModel$ =
       Observable.combineLatest(
-        this.store.select(getAnimations),
-        this.store.select(getVectorLayers),
-        this.store.select(getSelectedLayerIds),
-        this.store.select(getSelectedAnimationIds),
-        this.store.select(getSelectedBlockIds),
-      ).map(([animations, vls, selectedLayerIds, selectedAnimationIds, selectedBlockIds]) => {
+        this.store.select(getTimelineState),
+        this.store.select(getLayerState),
+      ).map(([
+        { animations, selectedAnimationIds, selectedBlockIds },
+        { vectorLayers: vls, selectedLayerIds },
+      ]) => {
         if (selectedLayerIds.size) {
           // TODO: clean this and below up
           // TODO: clean this and below up
@@ -111,6 +108,12 @@ export class PropertyInputComponent implements OnInit {
     // Edit a single layer.
     const store = this.store;
     const layer = selectedLayers[0];
+    if (!layer) {
+      return {
+        numSelections: 0,
+        inspectedProperties: [],
+      } as PropertyInputModel;
+    }
     const icon = layer.getIconName();
     const description = layer.name;
     const inspectedProperties: InspectedProperty<any>[] = [];
@@ -137,7 +140,7 @@ export class PropertyInputComponent implements OnInit {
           // TODO: need to somehow save the 'entered value' after data store updates?
           // TODO: need to somehow save the 'entered value' after data store updates?
           // TODO: need to somehow save the 'entered value' after data store updates?
-          const vl = LayerUtil.findVectorLayer(vls, layer.id);
+          const vl = LayerUtil.findParentVectorLayer(vls, layer.id);
           const clonedLayer = layer.clone();
           clonedLayer[propertyName] = value;
           const clonedVl = LayerUtil.replaceLayerInTree(vl, clonedLayer);

@@ -79,6 +79,7 @@ export const SELECT_LAYER_ID = 'SELECT_LAYER_ID';
 export const TOGGLE_LAYER_ID_EXPANSION = 'TOGGLE_LAYER_ID_EXPANSION';
 export const TOGGLE_LAYER_ID_VISIBILITY = 'TOGGLE_LAYER_ID_VISIBILITY';
 export const ADD_LAYER = 'ADD_LAYER';
+export const DELETE_SELECTED_LAYERS = 'DELETE_SELECTED_LAYERS';
 
 export class AddVectorLayers implements Action {
   readonly type = ADD_VECTOR_LAYERS;
@@ -128,6 +129,14 @@ export class AddLayer implements Action {
   }
 }
 
+// General actions.
+
+export const DELETE_SELECTED_MODELS = 'DELETE_SELECTED_MODELS';
+
+export class DeleteSelectedModels implements Action {
+  readonly type = DELETE_SELECTED_MODELS;
+}
+
 export type Actions =
   AddAnimations
   | SelectAnimationId
@@ -141,4 +150,5 @@ export type Actions =
   | SelectLayerId
   | ToggleLayerIdExpansion
   | ToggleLayerIdVisibility
-  | AddLayer;
+  | AddLayer
+  | DeleteSelectedModels;

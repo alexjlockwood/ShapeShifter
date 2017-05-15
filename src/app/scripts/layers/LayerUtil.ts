@@ -206,11 +206,7 @@ export function addLayerToTree(
   })(root) as VectorLayer;
 }
 
-export function removeLayerFromTree(
-  vls: ReadonlyArray<VectorLayer>,
-  removedLayerId: string,
-) {
-  const root = findVectorLayer(vls, removedLayerId);
+export function removeLayerFromTree(vl: VectorLayer, removedLayerId: string) {
   return (function recurseFn(curr: Layer) {
     if (curr.id === removedLayerId) {
       return undefined;
@@ -222,7 +218,7 @@ export function removeLayerFromTree(
     curr = curr.clone();
     curr.children = children;
     return curr;
-  })(root) as VectorLayer;
+  })(vl) as VectorLayer;
 }
 
 export function replaceLayerInTree(
@@ -271,7 +267,7 @@ export function findParent(vls: ReadonlyArray<VectorLayer>, layerId: string) {
   return undefined;
 }
 
-export function findVectorLayer(vls: ReadonlyArray<VectorLayer>, layerId: string) {
+export function findParentVectorLayer(vls: ReadonlyArray<VectorLayer>, layerId: string) {
   for (const vl of vls) {
     if (vl.findLayerById(layerId)) {
       return vl;

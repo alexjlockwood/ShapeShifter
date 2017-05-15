@@ -26,9 +26,10 @@ export function reducer(state: any, action: any) {
 }
 
 // State selectors.
-export const getAnimations = (state: State) => state.root.state.animations;
-export const getSelectedAnimationIds = (state: State) => state.root.state.selectedAnimationIds;
-export const getActiveAnimationId = (state: State) => state.root.state.activeAnimationId;
+export const getTimelineState = (state: State) => state.root.state.timeline;
+export const getAnimations = (state: State) => state.root.state.timeline.animations;
+export const getSelectedAnimationIds = (state: State) => state.root.state.timeline.selectedAnimationIds;
+export const getActiveAnimationId = (state: State) => state.root.state.timeline.activeAnimationId;
 export const getActiveAnimation = createSelector(
   getActiveAnimationId,
   getAnimations,
@@ -36,11 +37,12 @@ export const getActiveAnimation = createSelector(
     return _.find(animations, a => a.id === activeAnimationId);
   },
 );
-export const getSelectedBlockIds = (state: State) => state.root.state.selectedBlockIds;
-export const getVectorLayers = (state: State) => state.root.state.vectorLayers;
-export const getSelectedLayerIds = (state: State) => state.root.state.selectedLayerIds;
-export const getCollapsedLayerIds = (state: State) => state.root.state.collapsedLayerIds;
-export const getHiddenLayerIds = (state: State) => state.root.state.hiddenLayerIds;
+export const getSelectedBlockIds = (state: State) => state.root.state.timeline.selectedBlockIds;
+export const getLayerState = (state: State) => state.root.state.layers;
+export const getVectorLayers = (state: State) => state.root.state.layers.vectorLayers;
+export const getSelectedLayerIds = (state: State) => state.root.state.layers.selectedLayerIds;
+export const getCollapsedLayerIds = (state: State) => state.root.state.layers.collapsedLayerIds;
+export const getHiddenLayerIds = (state: State) => state.root.state.layers.hiddenLayerIds;
 
 // Playback selectors.
 export const getPlaybackSettings = (state: State) => state.root.playback;
@@ -63,6 +65,7 @@ export {
   ToggleLayerIdExpansion,
   ToggleLayerIdVisibility,
   AddLayer,
+  DeleteSelectedModels,
 } from './StateActions';
 
 // Playback actions.

@@ -12,10 +12,10 @@ import { Property, NumberProperty, FractionProperty } from '../properties';
 )
 export class VectorLayer extends AbstractLayer {
 
-  constructor(obj: ConstructorArgs) {
+  constructor(obj = { children: [], name: 'vector' } as ConstructorArgs) {
     super(obj);
-    this.width = obj.width || 1;
-    this.height = obj.height || 1;
+    this.width = obj.width || 24;
+    this.height = obj.height || 24;
     this.alpha = obj.alpha || 1;
   }
 

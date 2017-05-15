@@ -28,16 +28,17 @@ import {
 import { Animation } from './scripts/animations';
 import { DemoUtil, DEMO_MAP, DEBUG_VECTOR_DRAWABLE } from './scripts/demos';
 import 'rxjs/add/observable/combineLatest';
-import { Store } from '@ngrx/store';
 import {
+  Store,
   State,
   AddAnimations,
   AddVectorLayers,
+  DeleteSelectedModels,
 } from './store';
 
 const IS_DEV_MODE = !environment.production;
 const AUTO_LOAD_DEMO = IS_DEV_MODE && false;
-const AUTO_LOAD_VECTOR_DRAWABLE = IS_DEV_MODE && true;
+const AUTO_LOAD_VECTOR_DRAWABLE = IS_DEV_MODE && false;
 const ELEMENT_RESIZE_DETECTOR = erd();
 const STORAGE_KEY_FIRST_TIME_USER = 'storage_key_first_time_user';
 
@@ -236,16 +237,21 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       if (event.keyCode === 8 || event.keyCode === 46) {
         // In case there's a JS error, never navigate away.
         event.preventDefault();
-        if (this.actionModeService.isShowingSubPathActionMode()) {
-          // TODO: don't do anything if there are no subpaths to delete
-          this.actionModeService.deleteSubPaths();
-        } else if (this.actionModeService.isShowingSegmentActionMode()) {
-          // TODO: don't do anything if there are no segments to delete
-          this.actionModeService.deleteSegments();
-        } else if (this.actionModeService.isShowingPointActionMode()) {
-          // TODO: don't do anything if there are no points to delete
-          this.actionModeService.deletePoints();
-        }
+
+        // TODO: combine into a single action?
+        this.store.dispatch(new DeleteSelectedModels());
+
+        // TODO: re-enable this stuff
+        // if (this.actionModeService.isShowingSubPathActionMode()) {
+        //   // TODO: don't do anything if there are no subpaths to delete
+        //   this.actionModeService.deleteSubPaths();
+        // } else if (this.actionModeService.isShowingSegmentActionMode()) {
+        //   // TODO: don't do anything if there are no segments to delete
+        //   this.actionModeService.deleteSegments();
+        // } else if (this.actionModeService.isShowingPointActionMode()) {
+        //   // TODO: don't do anything if there are no points to delete
+        //   this.actionModeService.deletePoints();
+        // }
         return false;
       }
       if (event.keyCode === 27) {

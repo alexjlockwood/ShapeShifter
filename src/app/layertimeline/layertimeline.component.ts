@@ -697,7 +697,8 @@ export class LayerTimelineComponent implements
           let replacementVl: VectorLayer;
           if (targetLayerInfo.moveIntoEmptyLayerGroup) {
             // Moving into an empty layer group.
-            replacementVl = LayerUtil.removeLayerFromTree(this.vectorLayers, dragLayer.id);
+            const sourceVl = LayerUtil.findParentVectorLayer(this.vectorLayers, dragLayer.id);
+            replacementVl = LayerUtil.removeLayerFromTree(sourceVl, dragLayer.id);
             const newParent = targetLayerInfo.layer;
             replacementVl =
               LayerUtil.addLayerToTree(
@@ -706,7 +707,8 @@ export class LayerTimelineComponent implements
             // Moving next to another layer.
             let newParent = LayerUtil.findParent(this.vectorLayers, targetLayerInfo.layer.id);
             if (newParent) {
-              replacementVl = LayerUtil.removeLayerFromTree(this.vectorLayers, dragLayer.id);
+              const sourceVl = LayerUtil.findParentVectorLayer(this.vectorLayers, dragLayer.id);
+              replacementVl = LayerUtil.removeLayerFromTree(sourceVl, dragLayer.id);
               newParent = LayerUtil.findParent([replacementVl], targetLayerInfo.layer.id);
               let index =
                 newParent.children
