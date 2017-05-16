@@ -156,9 +156,9 @@ export class LayerTimelineComponent implements
 
   // Called from the LayerTimelineComponent template.
   addNewAnimationClick() {
-    this.store.dispatch(new AddAnimations([new Animation({
+    this.store.dispatch(new AddAnimations(new Animation({
       name: ModelUtil.getUniqueAnimationName(this.animations, 'anim'),
-    })]));
+    })));
   }
 
   // Called from the LayerTimelineComponent template.
@@ -184,10 +184,8 @@ export class LayerTimelineComponent implements
   }
 
   addPathLayerClick() {
-    const name = ModelUtil.getUniqueLayerName(this.vectorLayers, 'path');
     const layer = new PathLayer({
-      id: undefined,
-      name,
+      name: ModelUtil.getUniqueLayerName(this.vectorLayers, 'path'),
       children: [],
       pathData: undefined,
     });
@@ -195,10 +193,8 @@ export class LayerTimelineComponent implements
   }
 
   addClipPathLayerClick() {
-    const name = ModelUtil.getUniqueLayerName(this.vectorLayers, 'mask');
     const layer = new ClipPathLayer({
-      id: undefined,
-      name,
+      name: ModelUtil.getUniqueLayerName(this.vectorLayers, 'mask'),
       children: [],
       pathData: undefined,
     });
@@ -207,7 +203,13 @@ export class LayerTimelineComponent implements
 
   addGroupLayerClick() {
     const name = ModelUtil.getUniqueLayerName(this.vectorLayers, 'group');
-    const layer = new GroupLayer({ id: undefined, name, children: [] });
+    const layer = new GroupLayer({ name, children: [] });
+    this.store.dispatch(new AddLayers(layer));
+  }
+
+  addVectorLayerClick() {
+    const name = ModelUtil.getUniqueLayerName(this.vectorLayers, 'vector');
+    const layer = new VectorLayer({ name, children: [] });
     this.store.dispatch(new AddLayers(layer));
   }
 
@@ -223,10 +225,6 @@ export class LayerTimelineComponent implements
     animation: Animation,
     layer: Layer,
   ) {
-    // TODO: this JQuery 'class' stuff won't work with view encapsulation
-    // TODO: this JQuery 'class' stuff won't work with view encapsulation
-    // TODO: this JQuery 'class' stuff won't work with view encapsulation
-    // TODO: this JQuery 'class' stuff won't work with view encapsulation
     // TODO: this JQuery 'class' stuff won't work with view encapsulation
     const $target = $(mouseDownEvent.target);
 

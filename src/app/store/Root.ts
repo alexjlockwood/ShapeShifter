@@ -2,8 +2,8 @@ import { ActionReducer } from '@ngrx/store';
 import { combineReducers } from '@ngrx/store';
 import * as state from './StateActions';
 import * as playback from './PlaybackActions';
-import * as fromState from './State';
-import * as fromPlayback from './Playback';
+import * as fromState from './StateReducer';
+import * as fromPlayback from './PlaybackReducer';
 
 export interface State {
   state: fromState.State;

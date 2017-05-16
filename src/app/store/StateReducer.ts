@@ -17,13 +17,21 @@ export interface State {
     readonly selectedLayerIds: Set<string>;
     readonly collapsedLayerIds: Set<string>;
     readonly hiddenLayerIds: Set<string>;
+    readonly propertyInput?: PropertyInput,
   },
   readonly timeline: {
     readonly animations: ReadonlyArray<Animation>;
     readonly selectedAnimationIds: Set<string>;
     readonly activeAnimationId: string;
     readonly selectedBlockIds: Set<string>;
+    readonly propertyInput?: PropertyInput,
   },
+}
+
+export interface PropertyInput {
+  readonly modelIds: ReadonlyArray<string>;
+  readonly propertyName: string;
+  readonly enteredValue: string;
 }
 
 export const initialState = buildInitialState();
@@ -59,8 +67,8 @@ export function reducer(state = initialState, action: actions.Actions): State {
       const animations = timeline.animations.concat(...newAnimations);
       let { activeAnimationId } = timeline;
       if (!activeAnimationId) {
-        // Auto-activate the first animation.
-        activeAnimationId = animations[0].id;
+        // Auto-activate the first new animation.
+        activeAnimationId = newAnimations[0].id;
       }
       return {
         ...state,
@@ -249,21 +257,22 @@ export function reducer(state = initialState, action: actions.Actions): State {
       };
     }
 
-    // Replace a layer.
-    case actions.REPLACE_LAYER: {
-      const replacementLayer = action.payload.layer;
-      const layers = state.layers;
-      let replacementVl: VectorLayer;
-      if (replacementLayer instanceof VectorLayer) {
-        replacementVl = replacementLayer;
-      } else {
-        const vl =
-          LayerUtil.findParentVectorLayer(layers.vectorLayers, replacementLayer.id);
-        replacementVl = LayerUtil.replaceLayerInTree(vl, replacementLayer);
+    // Add layers to the tree.
+    case actions.ADD_LAYERS: {
+      // TODO: add the layer below the currently selected layer, if one exists
+      // TODO: add new layers to the currently selected vector, if one exists
+      const { layers: addedLayers } = action.payload;
+      if (!addedLayers.length) {
+        // Do nothing if there are no layers to add.
+        return state;
       }
-      const replacementId = replacementVl.id;
-      const vectorLayers =
-        layers.vectorLayers.map(vl => vl.id === replacementId ? replacementVl : vl);
+      const addedVectorLayers = addedLayers.filter(l => l instanceof VectorLayer);
+      const layers = state.layers;
+      const vectorLayers = layers.vectorLayers.concat(addedVectorLayers);
+      const addedNonVectorLayers = addedLayers.filter(l => !(l instanceof VectorLayer));
+      const vl = vectorLayers[0].clone();
+      vl.children = vl.children.concat(addedNonVectorLayers);
+      vectorLayers[0] = vl;
       return {
         ...state,
         layers: { ...layers, vectorLayers },
@@ -320,20 +329,21 @@ export function reducer(state = initialState, action: actions.Actions): State {
       };
     }
 
-    // Add layers to the tree.
-    case actions.ADD_LAYERS: {
-      // TODO: add the layer below the currently selected layer, if one exists
-      // TODO: add new layers to the currently selected vector, if one exists
-      const { layers: addedLayers } = action.payload;
-      if (!addedLayers.length) {
-        // Do nothing if there are no layers to add.
-        return state;
-      }
+    // Replace a layer.
+    case actions.REPLACE_LAYER: {
+      const replacementLayer = action.payload.layer;
       const layers = state.layers;
-      const vl = layers.vectorLayers[0].clone();
-      vl.children = vl.children.concat(addedLayers);
-      const vectorLayers = layers.vectorLayers.slice();
-      vectorLayers[0] = vl;
+      let replacementVl: VectorLayer;
+      if (replacementLayer instanceof VectorLayer) {
+        replacementVl = replacementLayer;
+      } else {
+        const vl =
+          LayerUtil.findParentVectorLayer(layers.vectorLayers, replacementLayer.id);
+        replacementVl = LayerUtil.replaceLayerInTree(vl, replacementLayer);
+      }
+      const replacementId = replacementVl.id;
+      const vectorLayers =
+        layers.vectorLayers.map(vl => vl.id === replacementId ? replacementVl : vl);
       return {
         ...state,
         layers: { ...layers, vectorLayers },
@@ -425,8 +435,8 @@ function selectLayerId(state: State, layerId: string, clearExisting: boolean) {
   }
   return {
     ...state,
-    layers: { ...layers, selectedLayerIds: newSelectedLayerIds, },
-    timeline: { ...timeline, selectedAnimationIds, selectedBlockIds, },
+    layers: { ...layers, selectedLayerIds: newSelectedLayerIds },
+    timeline: { ...timeline, selectedAnimationIds, selectedBlockIds },
   };
 }
 
@@ -447,7 +457,7 @@ function deleteSelectedAnimations(state: State) {
   let activeAnimationId = timeline.activeAnimationId;
   if (selectedAnimationIds.has(activeAnimationId)) {
     // If the active animation was deleted, activate the first animation.
-    activeAnimationId = timeline.animations[0].id;
+    activeAnimationId = animations[0].id;
   }
   return {
     ...state,

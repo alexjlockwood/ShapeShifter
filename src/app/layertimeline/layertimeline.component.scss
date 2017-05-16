@@ -13,7 +13,7 @@
   z-index: 1;
   position: relative;
   $headerHeight: 40px;
-  $timelineAnimationPadding: 20px; // basic resets
+  $timelineAnimationPadding: 20px;
   ul {
     margin: 0;
     padding: 0;
@@ -199,6 +199,7 @@
       button {
         &[md-icon-button] {
           md-icon {
+            line-height: 0px;
             color: $colorBlackTextSecondary;
           }
         }

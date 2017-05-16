@@ -57,9 +57,11 @@ export abstract class AbstractLayer implements Layer {
   }
 
   // Implements the Layer interface.
-  walk(beforeFn: (layer: Layer) => void) {
+  walk(beforeFn: (layer: Layer) => (any | void)) {
     const visitFn = (layer: Layer) => {
-      beforeFn(layer);
+      if (beforeFn(layer) === false) {
+        return;
+      }
       if (layer.children) {
         layer.children.forEach(l => visitFn(l));
       }

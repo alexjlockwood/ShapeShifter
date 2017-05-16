@@ -1,20 +1,18 @@
 import { Action } from '@ngrx/store';
 import { Animation, AnimationBlock } from '../scripts/animations';
 import { Layer } from '../scripts/layers';
+import { PropertyInput } from './StateReducer';
 
 // Animation actions.
 export const ADD_ANIMATIONS = 'ADD_ANIMATIONS';
 export const SELECT_ANIMATION = 'SELECT_ANIMATION';
 export const ACTIVATE_ANIMATION = 'ACTIVATE_ANIMATION_ID';
 export const REPLACE_ANIMATIONS = 'REPLACE_ANIMATIONS';
-export const ADD_BLOCK = 'ADD_BLOCK';
-export const SELECT_BLOCK = 'SELECT_BLOCK_ID';
-export const REPLACE_BLOCKS = 'REPLACE_BLOCKS';
 
 export class AddAnimations implements Action {
   readonly type = ADD_ANIMATIONS;
   readonly payload: { animations: ReadonlyArray<Animation> };
-  constructor(readonly animations: ReadonlyArray<Animation>) {
+  constructor(...animations: Animation[]) {
     this.payload = { animations };
   }
 }
@@ -37,11 +35,22 @@ export class ActivateAnimation implements Action {
 
 export class ReplaceAnimations implements Action {
   readonly type = REPLACE_ANIMATIONS;
-  readonly payload: { animations: ReadonlyArray<Animation> };
-  constructor(readonly animations: ReadonlyArray<Animation>) {
-    this.payload = { animations };
+  readonly payload: {
+    animations: ReadonlyArray<Animation>,
+    propertyInput?: PropertyInput,
+  };
+  constructor(
+    readonly animations: ReadonlyArray<Animation>,
+    readonly propertyInput?: PropertyInput,
+  ) {
+    this.payload = { animations, propertyInput };
   }
 }
+
+// Block actions.
+export const ADD_BLOCK = 'ADD_BLOCK';
+export const SELECT_BLOCK = 'SELECT_BLOCK';
+export const REPLACE_BLOCKS = 'REPLACE_BLOCKS';
 
 export class AddBlock implements Action {
   readonly type = ADD_BLOCK;
@@ -66,25 +75,30 @@ export class SelectBlock implements Action {
 
 export class ReplaceBlocks implements Action {
   readonly type = REPLACE_BLOCKS;
-  readonly payload: { blocks: ReadonlyArray<AnimationBlock<any>> };
-  constructor(readonly blocks: ReadonlyArray<AnimationBlock<any>>) {
-    this.payload = { blocks };
+  readonly payload: {
+    blocks: ReadonlyArray<AnimationBlock<any>>,
+    propertyInput?: PropertyInput,
+  };
+  constructor(
+    readonly blocks: ReadonlyArray<AnimationBlock<any>>,
+    readonly propertyInput?: PropertyInput,
+  ) {
+    this.payload = { blocks, propertyInput };
   }
 }
 
-// Layer constants.
-export const REPLACE_LAYER = 'REPLACE_LAYER';
+// Layer actions.
+export const ADD_LAYERS = 'ADD_LAYERS';
 export const SELECT_LAYER = 'SELECT_LAYER';
 export const TOGGLE_LAYER_EXPANSION = 'TOGGLE_LAYER_EXPANSION';
 export const TOGGLE_LAYER_VISIBILITY = 'TOGGLE_LAYER_VISIBILITY';
-export const ADD_LAYERS = 'ADD_LAYERS';
-export const DELETE_SELECTED_LAYERS = 'DELETE_SELECTED_LAYERS';
+export const REPLACE_LAYER = 'REPLACE_LAYER';
 
-export class ReplaceLayer implements Action {
-  readonly type = REPLACE_LAYER;
-  readonly payload: { layer: Layer };
-  constructor(readonly layer: Layer) {
-    this.payload = { layer };
+export class AddLayers implements Action {
+  readonly type = ADD_LAYERS;
+  readonly payload: { layers: ReadonlyArray<Layer> };
+  constructor(...layers: Layer[]) {
+    this.payload = { layers };
   }
 }
 
@@ -112,16 +126,19 @@ export class ToggleLayerVisibility implements Action {
   }
 }
 
-export class AddLayers implements Action {
-  readonly type = ADD_LAYERS;
-  readonly payload: { layers: ReadonlyArray<Layer> };
-  constructor(...layers: Layer[]) {
-    this.payload = { layers };
+// TODO: change this to 'replace layers' (plural)
+export class ReplaceLayer implements Action {
+  readonly type = REPLACE_LAYER;
+  readonly payload: { layer: Layer, propertyInput?: PropertyInput };
+  constructor(
+    readonly layer: Layer,
+    readonly propertyInput?: PropertyInput,
+  ) {
+    this.payload = { layer, propertyInput };
   }
 }
 
-// General actions.
-
+// Other actions.
 export const DELETE_SELECTED_MODELS = 'DELETE_SELECTED_MODELS';
 
 export class DeleteSelectedModels implements Action {
@@ -136,9 +153,9 @@ export type Actions =
   | AddBlock
   | SelectBlock
   | ReplaceBlocks
-  | ReplaceLayer
+  | AddLayers
   | SelectLayer
   | ToggleLayerExpansion
   | ToggleLayerVisibility
-  | AddLayers
+  | ReplaceLayer
   | DeleteSelectedModels;

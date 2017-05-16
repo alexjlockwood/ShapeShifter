@@ -24,7 +24,8 @@
         File
       </button>
       <md-menu #importMenu="mdMenu">
-        <button md-menu-item>Add layers from SVG</button>
+        <button md-menu-item>SVG</button>
+        <button md-menu-item>Vector Drawable</button>
       </md-menu>
       <button class="slt-layers-menu-group-button"
         [mdMenuTriggerFor]="importMenu">
@@ -51,6 +52,10 @@
         <button md-menu-item
           (click)="addGroupLayerClick()">
           New layer group
+        </button>
+        <button md-menu-item
+          (click)="addVectorLayerClick()">
+          New root layer
         </button>
       </md-menu>
       <button md-icon-button

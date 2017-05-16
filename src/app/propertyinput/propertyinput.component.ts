@@ -26,36 +26,31 @@ import 'rxjs/add/observable/combineLatest';
 export class PropertyInputComponent implements OnInit {
 
   propertyInputModel$: Observable<PropertyInputModel>;
-  private propertyInputModel: PropertyInputModel;
 
   constructor(private readonly store: Store<State>) { }
 
   ngOnInit() {
+    // TODO: need to save 'entered values'
+    // TODO: need to save 'entered values'
+    // TODO: need to save 'entered values'
+    // TODO: need to save 'entered values'
+    // TODO: need to save 'entered values'
     this.propertyInputModel$ =
       Observable.combineLatest(
         this.store.select(getTimelineState),
         this.store.select(getLayerState),
       ).map(([
         { animations, selectedAnimationIds, selectedBlockIds },
-        { vectorLayers: vls, selectedLayerIds },
+        { vectorLayers, selectedLayerIds },
       ]) => {
         if (selectedLayerIds.size) {
-          // TODO: clean this and below up
-          // TODO: clean this and below up
-          // TODO: clean this and below up
-          // TODO: clean this and below up
-          // TODO: clean this and below up
-          this.propertyInputModel = this.buildInspectedLayerProperties(vls, selectedLayerIds);
-          return this.propertyInputModel;
+          return this.buildInspectedLayerProperties(vectorLayers, selectedLayerIds);
         } else if (selectedBlockIds.size) {
-          this.propertyInputModel = this.buildInspectedBlockProperties(vls, animations, selectedBlockIds);
-          return this.propertyInputModel;
+          return this.buildInspectedBlockProperties(vectorLayers, animations, selectedBlockIds);
         } else if (selectedAnimationIds.size) {
-          this.propertyInputModel = this.buildInspectedAnimationProperties(animations, selectedAnimationIds);
-          return this.propertyInputModel;
+          return this.buildInspectedAnimationProperties(animations, selectedAnimationIds);
         } else {
-          this.propertyInputModel = { numSelections: 0, inspectedProperties: [] };
-          return this.propertyInputModel;
+          return { numSelections: 0, inspectedProperties: [] };
         }
       });
   }
@@ -108,12 +103,6 @@ export class PropertyInputComponent implements OnInit {
     // Edit a single layer.
     const store = this.store;
     const layer = selectedLayers[0];
-    if (!layer) {
-      return {
-        numSelections: 0,
-        inspectedProperties: [],
-      } as PropertyInputModel;
-    }
     const icon = layer.getIconName();
     const description = layer.name;
     const inspectedProperties: InspectedProperty<any>[] = [];
@@ -123,10 +112,6 @@ export class PropertyInputComponent implements OnInit {
         propertyName,
         get value() {
           // TODO: return the 'rendered' value if an animation is ongoing? (see AIA)
-          // TODO: return the 'rendered' value if an animation is ongoing? (see AIA)
-          // TODO: return the 'rendered' value if an animation is ongoing? (see AIA)
-          // TODO: return the 'rendered' value if an animation is ongoing? (see AIA)
-          // return property.getEditableValue(layer, propertyName);
           return layer[propertyName];
         },
         set value(value) {

@@ -52,7 +52,7 @@ export interface Layer extends Inspectable, Animatable {
 
   /**
    * Walks the layer tree, executing beforeFunc on each node using a
-   * preorder traversal.
+   * preorder traversal. Returning false from beforeFn will stop traversal.
    */
-  walk(beforeFn: (layer: Layer) => void): void;
+  walk(beforeFn: (layer: Layer) => (any | void)): void;
 }

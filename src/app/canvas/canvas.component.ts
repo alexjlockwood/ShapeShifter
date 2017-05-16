@@ -14,7 +14,7 @@ import {
 import {
   Store,
   State,
-  getVectorLayers,
+  getLayerState,
 } from '../store';
 import { CanvasRulerDirective } from './canvasruler.directive';
 import { Subscription } from 'rxjs/Subscription';
@@ -73,6 +73,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
   private vlSize = { width: DEFAULT_VIEWPORT_SIZE, height: DEFAULT_VIEWPORT_SIZE };
   private readonly subscriptions: Subscription[] = [];
   private vectorLayer_: VectorLayer;
+  private hiddenLayerIds: Set<string>;
 
   constructor(
     private readonly animatorService: AnimatorService,
@@ -92,25 +93,23 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     this.overlayCtx = getCtxFn(this.overlayCanvas);
     this.offscreenLayerCtx = getCtxFn(this.offscreenLayerCanvas);
     this.subscriptions.push(
-      this.store.select(getVectorLayers).subscribe(vls => {
-        if (!vls.length) {
-          // TODO: how to handle 0 vector layers? should this ever be possible?
-          return;
-        }
-        // TODO: how to handle multiple vector layers?
-        const vl = vls[0];
-        this.vectorLayer = vl;
-        const newWidth = vl ? vl.width : DEFAULT_VIEWPORT_SIZE;
-        const newHeight = vl ? vl.height : DEFAULT_VIEWPORT_SIZE;
-        const didSizeChange =
-          this.vlSize.width !== newWidth || this.vlSize.height !== newHeight;
-        this.vlSize = { width: newWidth, height: newHeight };
-        if (didSizeChange) {
-          this.resizeAndDraw();
-        } else {
-          this.draw();
-        }
-      }));
+      this.store.select(getLayerState)
+        .subscribe(({ vectorLayers: vls, hiddenLayerIds }) => {
+          // TODO: how to handle multiple vector layers?
+          const vl = vls[0];
+          this.vectorLayer = vl;
+          this.hiddenLayerIds = hiddenLayerIds;
+          const newWidth = vl ? vl.width : DEFAULT_VIEWPORT_SIZE;
+          const newHeight = vl ? vl.height : DEFAULT_VIEWPORT_SIZE;
+          const didSizeChange =
+            this.vlSize.width !== newWidth || this.vlSize.height !== newHeight;
+          this.vlSize = { width: newWidth, height: newHeight };
+          if (didSizeChange) {
+            this.resizeAndDraw();
+          } else {
+            this.draw();
+          }
+        }));
     this.subscriptions.push(
       this.canvasResizeService.asObservable()
         .subscribe(size => {
@@ -283,21 +282,24 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     extractDrawingCommandsFn: (layer: PathLayer) => ReadonlyArray<Command>,
   ) {
     this.vectorLayer.walk(layer => {
+      if (this.hiddenLayerIds.has(layer.id)) {
+        return false;
+      }
       if (layer instanceof ClipPathLayer) {
         if (!layer.pathData) {
-          return;
+          return true;
         }
         const transforms = LayerUtil.getTransformsForLayer(this.vectorLayer, layer.name);
         executeCommands(ctx, layer.pathData.getCommands(), transforms);
         ctx.clip();
-        return;
+        return true;
       }
       if (!(layer instanceof PathLayer) || !layer.pathData) {
-        return;
+        return true;
       }
       const commands = extractDrawingCommandsFn(layer);
       if (!commands.length) {
-        return;
+        return true;
       }
 
       ctx.save();
@@ -359,6 +361,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         }
       }
       ctx.restore();
+
+      return true;
     });
   }
 
