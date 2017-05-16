@@ -3,13 +3,13 @@
   [min]="200">
 </app-splitter>
 <ng-container *ngIf="(this.propertyInputModel$ | async) as model">
-  <!-- No shared properties selected. -->
+  <!-- No models selected. -->
   <div *ngIf="model.numSelections === 0"
     class="spi-empty"
     fxFlex>
     Select something to edit its properties
   </div>
-  <!-- At least one shared property selected. -->
+  <!-- At least one model selected. -->
   <div *ngIf="model.numSelections > 0"
     fxLayout="column"
     fxFlex>
@@ -33,7 +33,7 @@
         fxFlex>
         No shared properties to view or edit
       </div>
-      <form novalidate>
+      <form>
         <div class="spi-property"
           *ngFor="let ip of model.inspectedProperties; trackBy: trackInspectedPropertyFn">
           <div class="spi-property-name">{{ip.propertyName}}</div>
@@ -58,7 +58,7 @@
                 (blur)="ip.resolveEnteredValue()"
                 name="{{ip.propertyName}}"
                 [(ngModel)]="ip.editableValue"
-                required="ip.typeName === 'NameProperty' ? '' : undefined"
+                required="ip.propertyName === 'NameProperty' ? '' : undefined"
                 *ngIf="ip.typeName === 'NameProperty'
                   || ip.typeName === 'PathProperty'
                   || ip.typeName === 'ColorProperty'

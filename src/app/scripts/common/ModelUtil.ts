@@ -22,9 +22,9 @@ export function getUniqueLayerName(
   );
 }
 
-function findLayerByName(vls: ReadonlyArray<Layer>, layerName: string) {
-  for (const vl of vls) {
-    const layer = vl.findLayerByName(layerName);
+function findLayerByName(layers: ReadonlyArray<Layer>, layerName: string) {
+  for (const l of layers) {
+    const layer = l.findLayerByName(layerName);
     if (layer) {
       return layer;
     }

@@ -1,7 +1,6 @@
 import { Action } from '@ngrx/store';
 import { Animation, AnimationBlock } from '../scripts/animations';
 import { Layer } from '../scripts/layers';
-import { PropertyInput } from './StateReducer';
 
 // Animation actions.
 export const ADD_ANIMATIONS = 'ADD_ANIMATIONS';
@@ -35,15 +34,9 @@ export class ActivateAnimation implements Action {
 
 export class ReplaceAnimations implements Action {
   readonly type = REPLACE_ANIMATIONS;
-  readonly payload: {
-    animations: ReadonlyArray<Animation>,
-    propertyInput?: PropertyInput,
-  };
-  constructor(
-    readonly animations: ReadonlyArray<Animation>,
-    readonly propertyInput?: PropertyInput,
-  ) {
-    this.payload = { animations, propertyInput };
+  readonly payload: { animations: ReadonlyArray<Animation> };
+  constructor(readonly animations: ReadonlyArray<Animation>) {
+    this.payload = { animations };
   }
 }
 
@@ -75,15 +68,9 @@ export class SelectBlock implements Action {
 
 export class ReplaceBlocks implements Action {
   readonly type = REPLACE_BLOCKS;
-  readonly payload: {
-    blocks: ReadonlyArray<AnimationBlock<any>>,
-    propertyInput?: PropertyInput,
-  };
-  constructor(
-    readonly blocks: ReadonlyArray<AnimationBlock<any>>,
-    readonly propertyInput?: PropertyInput,
-  ) {
-    this.payload = { blocks, propertyInput };
+  readonly payload: { blocks: ReadonlyArray<AnimationBlock<any>> };
+  constructor(readonly blocks: ReadonlyArray<AnimationBlock<any>>) {
+    this.payload = { blocks };
   }
 }
 
@@ -129,12 +116,9 @@ export class ToggleLayerVisibility implements Action {
 // TODO: change this to 'replace layers' (plural)
 export class ReplaceLayer implements Action {
   readonly type = REPLACE_LAYER;
-  readonly payload: { layer: Layer, propertyInput?: PropertyInput };
-  constructor(
-    readonly layer: Layer,
-    readonly propertyInput?: PropertyInput,
-  ) {
-    this.payload = { layer, propertyInput };
+  readonly payload: { layer: Layer };
+  constructor(readonly layer: Layer) {
+    this.payload = { layer, };
   }
 }
 

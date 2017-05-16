@@ -17,21 +17,13 @@ export interface State {
     readonly selectedLayerIds: Set<string>;
     readonly collapsedLayerIds: Set<string>;
     readonly hiddenLayerIds: Set<string>;
-    readonly propertyInput?: PropertyInput,
   },
   readonly timeline: {
     readonly animations: ReadonlyArray<Animation>;
     readonly selectedAnimationIds: Set<string>;
     readonly activeAnimationId: string;
     readonly selectedBlockIds: Set<string>;
-    readonly propertyInput?: PropertyInput,
   },
-}
-
-export interface PropertyInput {
-  readonly modelIds: ReadonlyArray<string>;
-  readonly propertyName: string;
-  readonly enteredValue: string;
 }
 
 export const initialState = buildInitialState();
@@ -479,7 +471,7 @@ function deleteSelectedBlocks(state: State) {
   }
   const animations = timeline.animations.map(animation => {
     const existingBlocks = animation.blocks;
-    const newBlocks = existingBlocks.filter(b => selectedBlockIds.has(b.id));
+    const newBlocks = existingBlocks.filter(b => !selectedBlockIds.has(b.id));
     if (existingBlocks.length === newBlocks.length) {
       return animation;
     }

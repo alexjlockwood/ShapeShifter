@@ -5,7 +5,7 @@ import { Property, NameProperty, FractionProperty, Option } from '../scripts/pro
 import { VectorLayer, LayerUtil } from '../scripts/layers';
 import { Animation } from '../scripts/animations';
 import { Observable } from 'rxjs/Observable';
-import { ColorUtil } from '../scripts/common';
+import { ColorUtil, ModelUtil } from '../scripts/common';
 import {
   Store,
   State,
@@ -26,15 +26,11 @@ import 'rxjs/add/observable/combineLatest';
 export class PropertyInputComponent implements OnInit {
 
   propertyInputModel$: Observable<PropertyInputModel>;
+  private readonly enteredValueMap = new Map<string, any>();
 
   constructor(private readonly store: Store<State>) { }
 
   ngOnInit() {
-    // TODO: need to save 'entered values'
-    // TODO: need to save 'entered values'
-    // TODO: need to save 'entered values'
-    // TODO: need to save 'entered values'
-    // TODO: need to save 'entered values'
     this.propertyInputModel$ =
       Observable.combineLatest(
         this.store.select(getTimelineState),
@@ -94,14 +90,17 @@ export class PropertyInputComponent implements OnInit {
     const selectedLayers =
       Array.from(selectedLayerIds).map(id => LayerUtil.findLayerById(vls, id));
     if (numSelections > 1) {
-      // TODO: implement batch editting
       return {
-        numSelections: 0,
+        numSelections,
+        icon: 'collection',
+        description: `${numSelections} layers`,
+        // TODO: implement batch editting
         inspectedProperties: [],
       } as PropertyInputModel;
     }
     // Edit a single layer.
     const store = this.store;
+    const enteredValueMap = this.enteredValueMap;
     const layer = selectedLayers[0];
     const icon = layer.getIconName();
     const description = layer.name;
@@ -110,33 +109,19 @@ export class PropertyInputComponent implements OnInit {
       inspectedProperties.push(new InspectedProperty<any>({
         property,
         propertyName,
+        enteredValueMap,
         get value() {
           // TODO: return the 'rendered' value if an animation is ongoing? (see AIA)
           return layer[propertyName];
         },
         set value(value) {
-          // if (property instanceof NameProperty) {
-          //   self.studioState_.updateLayerId(layer, value);
-          // } else {
-          //   layer[propertyName] = value;
-          //   self.studioState_.artworkChanged();
-          // }
-          // TODO: need to somehow save the 'entered value' after data store updates?
-          // TODO: need to somehow save the 'entered value' after data store updates?
-          // TODO: need to somehow save the 'entered value' after data store updates?
-          // TODO: need to somehow save the 'entered value' after data store updates?
-          // const vl = LayerUtil.findParentVectorLayer(vls, layer.id);
           const clonedLayer = layer.clone();
           clonedLayer[propertyName] = value;
-          // const clonedVl = LayerUtil.replaceLayerInTree(vl, clonedLayer);
           store.dispatch(new ReplaceLayer(clonedLayer));
         },
         transformEditedValueFn: (property instanceof NameProperty)
-          // TODO: replace entered value with a unique value if the name already exists
-          // TODO: replace entered value with a unique value if the name already exists
-          // TODO: replace entered value with a unique value if the name already exists
-          // TODO: replace entered value with a unique value if the name already exists
-          ? (enteredValue: string) => NameProperty.sanitize(enteredValue)
+          ? (enteredValue: string) =>
+            ModelUtil.getUniqueLayerName(vls, NameProperty.sanitize(enteredValue))
           : undefined,
         get editable() {
           // TODO: copy AIA conditions to determine whether this should be editable
@@ -144,17 +129,6 @@ export class PropertyInputComponent implements OnInit {
         },
       }));
     });
-    // TODO: clean this up... it is a bit hacky
-    // TODO: clean this up... it is a bit hacky
-    // TODO: clean this up... it is a bit hacky
-    // TODO: clean this up... it is a bit hacky
-    // TODO: clean this up... it is a bit hacky
-    // if (this.propertyInputModel && this.propertyInputModel.model.id === layer.id) {
-    //   for (let i = 0; i < inspectedProperties.length; i++) {
-    //     inspectedProperties[i].enteredValue =
-    //       this.propertyInputModel.inspectedProperties[i].enteredValue;
-    //   }
-    // }
     return {
       model: layer,
       numSelections,
@@ -180,13 +154,16 @@ export class PropertyInputComponent implements OnInit {
       throw new Error('Could not find selected block ID');
     });
     if (numSelections > 1) {
-      // TODO: implement batch editting
       return {
-        numSelections: 0,
+        numSelections,
+        icon: 'collection',
+        // TODO: implement batch editting
+        description: `${numSelections} property animations`,
         inspectedProperties: [],
       } as PropertyInputModel;
     }
     const store = this.store;
+    const enteredValueMap = this.enteredValueMap;
     const block = selectedBlocks[0];
     const icon = 'animationblock';
     const description = block.propertyName;
@@ -197,6 +174,7 @@ export class PropertyInputComponent implements OnInit {
       inspectedProperties.push(new InspectedProperty<any>({
         property,
         propertyName,
+        enteredValueMap,
         get value() {
           return block[propertyName];
         },
@@ -228,13 +206,15 @@ export class PropertyInputComponent implements OnInit {
       return _.find(animations, animation => animation.id === id);
     });
     if (numSelections > 1) {
-      // TODO: implement batch editting
       return {
-        numSelections: 0,
+        numSelections,
+        description: `${numSelections} animations`,
+        // TODO: implement batch editting
         inspectedProperties: [],
       } as PropertyInputModel;
     }
     const store = this.store;
+    const enteredValueMap = this.enteredValueMap;
     const animation = selectedAnimations[0];
     const icon = 'animation';
     const description = animation.name;
@@ -243,26 +223,18 @@ export class PropertyInputComponent implements OnInit {
       inspectedProperties.push(new InspectedProperty<any>({
         property,
         propertyName,
+        enteredValueMap,
         get value() {
           return animation[propertyName];
         },
         set value(value) {
-          // if (property instanceof NameProperty) {
-          //   self.studioState_.updateLayerId(layer, value);
-          // } else {
-          //   layer[propertyName] = value;
-          //   self.studioState_.artworkChanged();
-          // }
           const clonedAnimation = animation.clone();
           clonedAnimation[propertyName] = value;
           store.dispatch(new ReplaceAnimations([clonedAnimation]));
         },
         transformEditedValueFn: (property instanceof NameProperty)
-          // TODO: replace entered value with a unique value if the name already exists
-          // TODO: replace entered value with a unique value if the name already exists
-          // TODO: replace entered value with a unique value if the name already exists
-          // TODO: replace entered value with a unique value if the name already exists
-          ? (enteredValue: string) => NameProperty.sanitize(enteredValue)
+          ? (enteredValue: string) =>
+            ModelUtil.getUniqueAnimationName(animations, NameProperty.sanitize(enteredValue))
           : undefined,
         get editable() {
           return true;
@@ -316,11 +288,12 @@ export class PropertyInputComponent implements OnInit {
 class InspectedProperty<V> {
   public readonly property: Property<V>;
   public readonly propertyName: string;
-  enteredValue: V;
+  private readonly enteredValueMap: Map<string, any>;
 
   constructor(public readonly delegate: Delegate<V>) {
     this.property = delegate.property;
     this.propertyName = delegate.propertyName;
+    this.enteredValueMap = delegate.enteredValueMap;
   }
 
   get value() {
@@ -360,11 +333,27 @@ class InspectedProperty<V> {
   resolveEnteredValue() {
     this.enteredValue = undefined;
   }
+
+  private get enteredValue() {
+    if (this.enteredValueMap.has(this.propertyName)) {
+      return this.enteredValueMap.get(this.propertyName);
+    }
+    return undefined;
+  }
+
+  private set enteredValue(value) {
+    if (value === undefined) {
+      this.enteredValueMap.delete(this.propertyName);
+    } else {
+      this.enteredValueMap.set(this.propertyName, value);
+    }
+  }
 }
 
 interface Delegate<V> {
   readonly property: Property<V>;
   readonly propertyName: string;
+  readonly enteredValueMap: Map<string, any>;
   readonly transformEditedValueFn?: (editedValue: V) => V;
   readonly editable: boolean;
   value: V;
