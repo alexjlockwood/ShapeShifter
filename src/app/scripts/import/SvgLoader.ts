@@ -25,7 +25,7 @@ export function loadVectorLayerFromSvgStringWithCallback(
     try {
       callbackFn(loadVectorLayerFromSvgString(optimizedSvgString, doesNameExistFn));
     } catch (e) {
-      console.error('Shape Shifter failed to parse the optimized SVG string', optimizedSvgString, e);
+      console.error('Failed to parse the optimized SVG file', e);
       callbackFn(undefined);
     }
   });
@@ -42,7 +42,7 @@ export function loadVectorLayerFromSvgString(
   const makeFinalNodeIdFn = (node, prefix: string) => {
     const finalName = ModelUtil.getUniqueName(
       NameProperty.sanitize(node.id || prefix),
-      name => doesNameExistFn(name) && usedIds.has(name),
+      name => doesNameExistFn(name) || usedIds.has(name),
     );
     usedIds.add(finalName);
     return finalName;

@@ -253,21 +253,29 @@ export function reducer(state = initialState, action: actions.Actions): State {
     case actions.ADD_LAYERS: {
       // TODO: add the layer below the currently selected layer, if one exists
       // TODO: add new layers to the currently selected vector, if one exists
-      const { layers: addedLayers } = action.payload;
+      const { layers: addedLayers, deleteSoleEmptyVector } = action.payload;
       if (!addedLayers.length) {
         // Do nothing if there are no layers to add.
         return state;
       }
       const addedVectorLayers = addedLayers.filter(l => l instanceof VectorLayer);
       const layers = state.layers;
-      const vectorLayers = layers.vectorLayers.concat(addedVectorLayers);
+      let existingVectorLayers = layers.vectorLayers.slice();
+      if (deleteSoleEmptyVector
+        && addedVectorLayers.length
+        && existingVectorLayers.length === 1
+        && !existingVectorLayers[0].children.length) {
+        // Delete the single empty vector layer during initial import.
+        existingVectorLayers = [];
+      }
+      existingVectorLayers.push(...addedVectorLayers);
       const addedNonVectorLayers = addedLayers.filter(l => !(l instanceof VectorLayer));
-      const vl = vectorLayers[0].clone();
+      const vl = existingVectorLayers[0].clone();
       vl.children = vl.children.concat(addedNonVectorLayers);
-      vectorLayers[0] = vl;
+      existingVectorLayers[0] = vl;
       return {
         ...state,
-        layers: { ...layers, vectorLayers },
+        layers: { ...layers, vectorLayers: existingVectorLayers },
       };
     }
 

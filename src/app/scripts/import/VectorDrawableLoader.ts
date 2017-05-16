@@ -15,7 +15,7 @@ export function loadVectorLayerFromXmlString(
   const makeFinalNodeIdFn = (value: string, prefix: string) => {
     const finalName = ModelUtil.getUniqueName(
       NameProperty.sanitize(value || prefix),
-      name => doesNameExistFn(name) && usedNames.has(name),
+      name => doesNameExistFn(name) || usedNames.has(name),
     );
     usedNames.add(finalName);
     return finalName;

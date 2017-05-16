@@ -192,7 +192,7 @@ export class LayerTimelineComponent implements
       children: [],
       pathData: undefined,
     });
-    this.store.dispatch(new AddLayers(layer));
+    this.store.dispatch(new AddLayers([layer]));
   }
 
   addClipPathLayerClick() {
@@ -201,19 +201,19 @@ export class LayerTimelineComponent implements
       children: [],
       pathData: undefined,
     });
-    this.store.dispatch(new AddLayers(layer));
+    this.store.dispatch(new AddLayers([layer]));
   }
 
   addGroupLayerClick() {
     const name = ModelUtil.getUniqueLayerName(this.vectorLayers, 'group');
     const layer = new GroupLayer({ name, children: [] });
-    this.store.dispatch(new AddLayers(layer));
+    this.store.dispatch(new AddLayers([layer]));
   }
 
   addVectorLayerClick() {
     const name = ModelUtil.getUniqueLayerName(this.vectorLayers, 'vector');
     const layer = new VectorLayer({ name, children: [] });
-    this.store.dispatch(new AddLayers(layer));
+    this.store.dispatch(new AddLayers([layer]));
   }
 
   // Called from the LayerTimelineComponent template.
@@ -836,7 +836,7 @@ export class LayerTimelineComponent implements
     this.fileImporterService.import(
       fileList,
       vls => {
-        this.store.dispatch(new AddLayers(...vls));
+        this.store.dispatch(new AddLayers(vls, true /* delete empty vector layer */));
         this.snackBar.open(
           `Imported ${vls.length} path${vls.length === 1 ? '' : 's'}`,
           'Dismiss',

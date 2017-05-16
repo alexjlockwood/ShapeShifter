@@ -96,7 +96,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     this.fileImporterService.import(
       fileList,
       vls => {
-        this.store.dispatch(new AddLayers(...vls));
+        this.store.dispatch(new AddLayers(vls, true /* delete empty vector layer */));
         this.snackBar.open(
           `Imported ${vls.length} path${vls.length === 1 ? '' : 's'}`,
           'Dismiss',

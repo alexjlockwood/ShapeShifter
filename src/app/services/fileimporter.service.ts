@@ -69,6 +69,7 @@ export class FileImporterService {
             const vl = VectorDrawableLoader.loadVectorLayerFromXmlString(text, doesNameExistFn);
             callbackFn(vl);
           } catch (e) {
+            console.error('Failed to parse the XML file', e);
             callbackFn(undefined);
           }
         }
