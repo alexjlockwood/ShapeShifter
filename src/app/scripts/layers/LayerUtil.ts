@@ -245,6 +245,16 @@ export function findLayerById(vls: ReadonlyArray<VectorLayer>, layerId: string) 
   return undefined;
 }
 
+export function findLayerByName(vls: ReadonlyArray<VectorLayer>, layerName: string) {
+  for (const vl of vls) {
+    const layer = vl.findLayerByName(layerName);
+    if (layer) {
+      return layer;
+    }
+  }
+  return undefined;
+}
+
 export function findParent(vls: ReadonlyArray<VectorLayer>, layerId: string) {
   for (const vl of vls) {
     const result =

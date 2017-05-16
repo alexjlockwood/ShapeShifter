@@ -53,6 +53,10 @@ export class PathProperty extends Property<Path> {
 
   // @Override
   cloneValue(value: Path) {
+    // TODO: avoid crashes here (maybe make sure value will always be non-null?)
+    // TODO: avoid crashes here (maybe make sure value will always be non-null?)
+    // TODO: avoid crashes here (maybe make sure value will always be non-null?)
+    // TODO: avoid crashes here (maybe make sure value will always be non-null?)
     return value.clone();
   }
 

@@ -5,6 +5,7 @@ import {
   QueryList, OnDestroy, ViewChild, ViewChildren,
   ElementRef, AfterViewInit,
 } from '@angular/core';
+import { MdSnackBar } from '@angular/material';
 import { Callbacks as TimelineAnimationRowCallbacks } from './timelineanimationrow.component';
 import { Callbacks as LayerListTreeCallbacks } from './layerlisttree.component';
 import { ScrubEvent } from './layertimeline.directive';
@@ -15,7 +16,7 @@ import { Animation, AnimationBlock } from '../scripts/animations';
 import { Dragger } from '../scripts/dragger';
 import { ModelUtil, UiUtil } from '../scripts/common';
 import * as TimelineConsts from './constants';
-import { AnimatorService } from '../services';
+import { AnimatorService, FileImporterService } from '../services';
 import { LayerTimelineDirective } from './layertimeline.directive';
 import {
   Store, State, getAnimations, getVectorLayers, getSelectedAnimationIds,
@@ -91,6 +92,8 @@ export class LayerTimelineComponent implements
   private zoomStartTimeCursorPos: number;
 
   constructor(
+    private readonly fileImporterService: FileImporterService,
+    private readonly snackBar: MdSnackBar,
     private readonly animatorService: AnimatorService,
     private readonly store: Store<State>,
   ) { }
@@ -821,6 +824,30 @@ export class LayerTimelineComponent implements
           this.horizZoom = zoom;
         });
     }
+  }
+
+  // Proxies a button click to the <input> tag that opens the file picker.
+  launchFilePicker(sourceElementId: string) {
+    $(`#${sourceElementId}`).val('').click();
+  }
+
+  // Called by the HTML template when SVGs/VDs are imported.
+  onImportedFilesPicked(fileList: FileList) {
+    this.fileImporterService.import(
+      fileList,
+      vls => {
+        this.store.dispatch(new AddLayers(...vls));
+        this.snackBar.open(
+          `Imported ${vls.length} path${vls.length === 1 ? '' : 's'}`,
+          'Dismiss',
+          { duration: 2750 });
+      },
+      () => {
+        this.snackBar.open(
+          `Couldn't import paths from SVG.`,
+          'Dismiss',
+          { duration: 5000 });
+      });
   }
 }
 

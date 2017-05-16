@@ -7,7 +7,6 @@ import { NameProperty } from '../properties';
 import { newPath, Command } from '../paths';
 import { ColorUtil, Matrix, ModelUtil } from '../common';
 import { Svgo } from '../svgo';
-import { ROTATION_GROUP_LAYER_ID } from '.';
 
 /**
  * Utility function that takes an SVG string as input and
@@ -15,41 +14,38 @@ import { ROTATION_GROUP_LAYER_ID } from '.';
  */
 export function loadVectorLayerFromSvgStringWithCallback(
   svgString: string,
-  callback: (vl: VectorLayer) => void,
-  existingLayerIds: ReadonlyArray<string>) {
+  callbackFn: (vl: VectorLayer) => void,
+  doesNameExistFn: (name: string) => boolean) {
 
   Svgo.optimize(svgString, (optimizedSvgString: string) => {
     if (!optimizedSvgString) {
-      callback(undefined);
+      callbackFn(undefined);
       return;
     }
     try {
-      callback(loadVectorLayerFromSvgString(optimizedSvgString, existingLayerIds));
+      callbackFn(loadVectorLayerFromSvgString(optimizedSvgString, doesNameExistFn));
     } catch (e) {
       console.error('Shape Shifter failed to parse the optimized SVG string', optimizedSvgString, e);
-      callback(undefined);
+      callbackFn(undefined);
     }
   });
 }
 
 export function loadVectorLayerFromSvgString(
   svgString: string,
-  existingLayerIds: ReadonlyArray<string>): VectorLayer {
+  doesNameExistFn: (name: string) => boolean): VectorLayer {
 
   const parser = new DOMParser();
   const doc = parser.parseFromString(svgString, 'image/svg+xml');
 
-  // TODO: need to confirm we protect against duplicate ids in separate vector layers
-  const usedIds = new Set<string>(existingLayerIds);
-  usedIds.add(ROTATION_GROUP_LAYER_ID);
-
+  const usedIds = new Set<string>();
   const makeFinalNodeIdFn = (node, prefix: string) => {
-    const finalId = ModelUtil.getUniqueName(
+    const finalName = ModelUtil.getUniqueName(
       NameProperty.sanitize(node.id || prefix),
-      id => usedIds.has(id),
+      name => doesNameExistFn(name) && usedIds.has(name),
     );
-    usedIds.add(finalId);
-    return finalId;
+    usedIds.add(finalName);
+    return finalName;
   };
 
   const lengthPxFn = svgLength => {

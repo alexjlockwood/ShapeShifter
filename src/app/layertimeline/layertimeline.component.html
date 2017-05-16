@@ -24,8 +24,26 @@
         File
       </button>
       <md-menu #importMenu="mdMenu">
-        <button md-menu-item>SVG</button>
-        <button md-menu-item>Vector Drawable</button>
+        <button md-menu-item
+          (click)="this.launchFilePicker('addPathsFromSvgButton')">
+          SVG
+          <input
+            multiple
+            id="addPathsFromSvgButton"
+            type="file"
+            accept=".svg"
+            (change)="onImportedFilesPicked(($event.target || $event.srcElement).files)">
+        </button>
+        <button md-menu-item
+          (click)="this.launchFilePicker('addPathsFromXmlButton')">
+          Vector Drawable
+          <input
+            multiple
+            id="addPathsFromXmlButton"
+            type="file"
+            accept=".xml"
+            (change)="onImportedFilesPicked(($event.target || $event.srcElement).files)">
+        </button>
       </md-menu>
       <button class="slt-layers-menu-group-button"
         [mdMenuTriggerFor]="importMenu">

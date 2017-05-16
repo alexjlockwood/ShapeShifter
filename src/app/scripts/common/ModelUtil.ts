@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 import { Animation, AnimationBlock } from '../animations';
-import { Layer } from '../layers';
+import { Layer, LayerUtil } from '../layers';
 
 export function getUniqueAnimationName(
   animations: ReadonlyArray<Animation>,
@@ -18,18 +18,8 @@ export function getUniqueLayerName(
 ) {
   return getUniqueName(
     prefix,
-    name => findLayerByName(layers, name),
+    name => LayerUtil.findLayerByName(layers, name),
   );
-}
-
-function findLayerByName(layers: ReadonlyArray<Layer>, layerName: string) {
-  for (const l of layers) {
-    const layer = l.findLayerByName(layerName);
-    if (layer) {
-      return layer;
-    }
-  }
-  return undefined;
 }
 
 export function getUniqueName(

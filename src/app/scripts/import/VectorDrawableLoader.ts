@@ -3,26 +3,22 @@ import { VectorLayer, PathLayer, GroupLayer, ClipPathLayer } from '../layers';
 import { NameProperty } from '../properties';
 import { ModelUtil } from '../common';
 import { newPath } from '../paths';
-import { ROTATION_GROUP_LAYER_ID } from '.';
 
 export function loadVectorLayerFromXmlString(
   xmlString: string,
-  existingLayerIds: ReadonlyArray<string>): VectorLayer {
+  doesNameExistFn: (name: string) => boolean) {
 
   const parser = new DOMParser();
   const doc = parser.parseFromString(xmlString, 'application/xml');
 
-  // TODO: need to confirm we protect against duplicate ids in separate vector layers
-  const usedIds = new Set<string>(existingLayerIds);
-  usedIds.add(ROTATION_GROUP_LAYER_ID);
-
+  const usedNames = new Set<string>();
   const makeFinalNodeIdFn = (value: string, prefix: string) => {
-    const finalId = ModelUtil.getUniqueName(
+    const finalName = ModelUtil.getUniqueName(
       NameProperty.sanitize(value || prefix),
-      id => usedIds.has(id),
+      name => doesNameExistFn(name) && usedNames.has(name),
     );
-    usedIds.add(finalId);
-    return finalId;
+    usedNames.add(finalName);
+    return finalName;
   };
 
   const nodeToLayerDataFn = (node): GroupLayer | ClipPathLayer | PathLayer => {
@@ -92,7 +88,7 @@ export function loadVectorLayerFromXmlString(
   const rootLayer = nodeToLayerDataFn(doc.documentElement);
   const name =
     makeFinalNodeIdFn(doc.documentElement.getAttribute('android:name'), 'vector');
-  usedIds.add(name);
+  usedNames.add(name);
   const width = Number(doc.documentElement.getAttribute('android:viewportWidth'));
   const height = Number(doc.documentElement.getAttribute('android:viewportHeight'));
   const alpha = Number(doc.documentElement.getAttribute('android:alpha') || 1);

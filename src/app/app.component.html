@@ -15,16 +15,9 @@
       fxFlex>
       <!-- Canvas -->
       <div #canvasContainer
-        *ngIf="{ type: (cursorObservable | async) } as cursor"
-        [ngClass]="{
-          'show-default-cursor': cursor.type === CURSOR_DEFAULT,
-          'show-pointer-cursor': cursor.type === CURSOR_POINTER,
-          'show-pen-cursor': cursor.type === CURSOR_PEN
-        }"
-        fxFlex
         fxLayout="row"
         fxLayoutAlign="center center"
-        (click)="onCanvasContainerClick()">
+        fxFlex>
         <app-canvas></app-canvas>
       </div>
       <!-- Playback controls. -->
