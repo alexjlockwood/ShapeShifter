@@ -30,7 +30,6 @@ type RootActions =
 
 export function reducer(state = initialState, action: RootActions) {
   switch (action.type) {
-    // Add a list of animations to the application state.
     case actions.NEW_WORKSPACE: {
       return buildInitialState();
     }
