@@ -4,6 +4,7 @@ import * as state from './StateActions';
 import * as playback from './PlaybackActions';
 import * as fromState from './StateReducer';
 import * as fromPlayback from './PlaybackReducer';
+import * as actions from './RootActions';
 
 export interface State {
   state: fromState.State;
@@ -15,9 +16,25 @@ export const initialState: State = {
   playback: fromPlayback.initialState,
 };
 
-type RootActions = state.Actions | playback.Actions;
+function buildInitialState(): State {
+  return {
+    state: fromState.buildInitialState(),
+    playback: fromPlayback.buildInitialState(),
+  };
+}
+
+type RootActions =
+  actions.NewWorkspace
+  | state.Actions
+  | playback.Actions;
 
 export function reducer(state = initialState, action: RootActions) {
+  switch (action.type) {
+    // Add a list of animations to the application state.
+    case actions.NEW_WORKSPACE: {
+      return buildInitialState();
+    }
+  }
   return reduce(state, action);
 }
 

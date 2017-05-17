@@ -23,7 +23,7 @@ import {
   getActiveAnimationId, getSelectedBlockIds, AddAnimations,
   SelectAnimation, ActivateAnimation, AddBlock, SelectBlock,
   ReplaceBlocks, ReplaceLayer, SelectLayer,
-  ToggleLayerExpansion, ToggleLayerVisibility, AddLayers,
+  ToggleLayerExpansion, ToggleLayerVisibility, AddLayers, NewWorkspace,
 } from '../store';
 import { Observable } from 'rxjs/Observable';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
@@ -36,6 +36,7 @@ const LAYER_INDENT_PIXELS = 20;
 const MIN_BLOCK_DURATION = 10;
 const MAX_ZOOM = 10;
 const MIN_ZOOM = 0.01;
+const DEFAULT_HORIZ_ZOOM = 2; // 1ms = 2px.
 
 enum MouseActions {
   Moving = 1,
@@ -68,7 +69,7 @@ export class LayerTimelineComponent implements
     isVisible: false, left: 0, top: 0,
   });
   dragIndicatorObservable = this.dragIndicatorSubject.asObservable();
-  private readonly horizZoomSubject = new BehaviorSubject<number>(2); // 1ms = 2px.
+  private readonly horizZoomSubject = new BehaviorSubject<number>(DEFAULT_HORIZ_ZOOM);
   horizZoomObservable = this.horizZoomSubject.asObservable();
   private activeTime_ = 0;
 
@@ -158,10 +159,22 @@ export class LayerTimelineComponent implements
   }
 
   // Called from the LayerTimelineComponent template.
+  newWorkspaceClick() {
+    // TODO: show some sort of dialog here to confirm (but only when the workspace is dirty)
+    // TODO: show some sort of dialog here to confirm (but only when the workspace is dirty)
+    // TODO: show some sort of dialog here to confirm (but only when the workspace is dirty)
+    // TODO: show some sort of dialog here to confirm (but only when the workspace is dirty)
+    // TODO: show some sort of dialog here to confirm (but only when the workspace is dirty)
+    this.store.dispatch(new NewWorkspace());
+  }
+
+  // Called from the LayerTimelineComponent template.
   addNewAnimationClick() {
-    this.store.dispatch(new AddAnimations(new Animation({
-      name: ModelUtil.getUniqueAnimationName(this.animations, 'anim'),
-    })));
+    this.store.dispatch(
+      new AddAnimations(
+        new Animation({
+          name: ModelUtil.getUniqueAnimationName(this.animations, 'anim'),
+        })));
   }
 
   // Called from the LayerTimelineComponent template.
@@ -177,15 +190,11 @@ export class LayerTimelineComponent implements
     if (!event.disableSnap) {
       time = this.snapTime(animation, time, false);
     }
-    // TODO: store active time and active animation in database here!!
-    // TODO: store active time and active animation in database here!!
-    // TODO: store active time and active animation in database here!!
-    // TODO: store active time and active animation in database here!!
-    // TODO: store active time and active animation in database here!!
     this.activeTime = time;
     this.animatorService.setAnimationTime(time);
   }
 
+  // Called from the LayerTimelineComponent template.
   addPathLayerClick() {
     const layer = new PathLayer({
       name: ModelUtil.getUniqueLayerName(this.vectorLayers, 'path'),
@@ -195,6 +204,7 @@ export class LayerTimelineComponent implements
     this.store.dispatch(new AddLayers([layer]));
   }
 
+  // Called from the LayerTimelineComponent template.
   addClipPathLayerClick() {
     const layer = new ClipPathLayer({
       name: ModelUtil.getUniqueLayerName(this.vectorLayers, 'mask'),
@@ -204,12 +214,14 @@ export class LayerTimelineComponent implements
     this.store.dispatch(new AddLayers([layer]));
   }
 
+  // Called from the LayerTimelineComponent template.
   addGroupLayerClick() {
     const name = ModelUtil.getUniqueLayerName(this.vectorLayers, 'group');
     const layer = new GroupLayer({ name, children: [] });
     this.store.dispatch(new AddLayers([layer]));
   }
 
+  // Called from the LayerTimelineComponent template.
   addVectorLayerClick() {
     const name = ModelUtil.getUniqueLayerName(this.vectorLayers, 'vector');
     const layer = new VectorLayer({ name, children: [] });
@@ -623,7 +635,8 @@ export class LayerTimelineComponent implements
           // Add a fake target for empty groups.
           if (layer instanceof GroupLayer && !layer.children.length) {
             rect = Object.assign({}, rect, {
-              left: rect.left + LAYER_INDENT_PIXELS, top: rect.bottom,
+              left: rect.left + LAYER_INDENT_PIXELS,
+              top: rect.bottom,
             });
             orderedLayerInfos.push({
               layer,
@@ -752,8 +765,10 @@ export class LayerTimelineComponent implements
    */
   onWheelEvent(event: WheelEvent) {
     const startZoomFn = () => {
-      const animationIndex = _.findIndex(this.animations, a => a.id === this.activeAnimationId);
-      this.$zoomStartActiveAnimation = $(this.timelineAnimationRefs.toArray()[animationIndex].nativeElement);
+      const animationIndex =
+        _.findIndex(this.animations, a => a.id === this.activeAnimationId);
+      this.$zoomStartActiveAnimation =
+        $(this.timelineAnimationRefs.toArray()[animationIndex].nativeElement);
       this.zoomStartTimeCursorPos = this.$zoomStartActiveAnimation.position().left
         + this.activeTime * this.horizZoom + TimelineConsts.TIMELINE_ANIMATION_PADDING;
     };
@@ -818,8 +833,8 @@ export class LayerTimelineComponent implements
     if (this.animations.length) {
       UiUtil.waitForElementWidth(this.$timeline)
         .then(width => {
-          // Shave off a hundred pixels for safety.
-          width -= 100;
+          // Shave off two hundred pixels for safety.
+          width -= 200;
           const zoom = width / this.animations[0].duration;
           this.horizZoom = zoom;
         });
@@ -827,6 +842,8 @@ export class LayerTimelineComponent implements
   }
 
   // Proxies a button click to the <input> tag that opens the file picker.
+  // We clear the element's value to make it possible to import the same file
+  // more than once.
   launchFilePicker(sourceElementId: string) {
     $(`#${sourceElementId}`).val('').click();
   }

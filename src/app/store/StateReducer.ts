@@ -28,7 +28,7 @@ export interface State {
 
 export const initialState = buildInitialState();
 
-function buildInitialState(): State {
+export function buildInitialState(): State {
   const initialAnimation = new Animation();
   return {
     layers: {
@@ -266,6 +266,8 @@ export function reducer(state = initialState, action: actions.Actions): State {
         && existingVectorLayers.length === 1
         && !existingVectorLayers[0].children.length) {
         // Delete the single empty vector layer during initial import.
+        addedVectorLayers[0] = addedVectorLayers[0].clone();
+        addedVectorLayers[0].name = existingVectorLayers[0].name;
         existingVectorLayers = [];
       }
       existingVectorLayers.push(...addedVectorLayers);

@@ -6,7 +6,7 @@ import { storeFreeze } from 'ngrx-store-freeze';
 import { combineReducers } from '@ngrx/store';
 import { environment } from '../../environments/environment';
 import { compose } from '@ngrx/core/compose';
-import * as fromRoot from './Root';
+import * as fromRoot from './RootReducer';
 
 export interface State {
   root: fromRoot.State,
@@ -49,6 +49,11 @@ export const getPlaybackSettings = (state: State) => state.root.playback;
 export const getIsSlowMotion = (state: State) => state.root.playback.isSlowMotion;
 export const getIsPlaying = (state: State) => state.root.playback.isPlaying;
 export const getIsRepeating = (state: State) => state.root.playback.isRepeating;
+
+// Root actions.
+export {
+  NewWorkspace,
+} from './RootActions';
 
 // State actions.
 export {

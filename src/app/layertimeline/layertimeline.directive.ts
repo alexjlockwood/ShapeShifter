@@ -114,7 +114,7 @@ export class LayerTimelineDirective {
     let interval = 0;
     let spacingMs = GRID_INTERVALS_MS[interval];
     while ((spacingMs * this.horizZoom) < 40 || interval >= GRID_INTERVALS_MS.length) {
-      ++interval;
+      interval++;
       spacingMs = GRID_INTERVALS_MS[interval];
     }
 

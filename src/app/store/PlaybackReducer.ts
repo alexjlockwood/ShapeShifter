@@ -7,11 +7,15 @@ export interface State {
   readonly isRepeating: boolean;
 }
 
-export const initialState: State = {
-  isSlowMotion: false,
-  isPlaying: false,
-  isRepeating: false,
-};
+export const initialState = buildInitialState();
+
+export function buildInitialState(): State {
+  return {
+    isSlowMotion: false,
+    isPlaying: false,
+    isRepeating: false,
+  };
+}
 
 export function reducer(state = initialState, action: actions.Actions): State {
   switch (action.type) {

@@ -17,7 +17,10 @@
       fxLayoutAlign="start center">
 
       <md-menu #fileMenu="mdMenu">
-        <button md-menu-item>New</button>
+        <button md-menu-item
+          (click)="this.newWorkspaceClick()">
+          New
+        </button>
       </md-menu>
       <button class="slt-layers-menu-group-button"
         [mdMenuTriggerFor]="fileMenu">
@@ -90,7 +93,6 @@
       fxFlex>
       <!-- Layer list. -->
       <div class="slt-layers-list">
-        <!-- TODO: only display one vector layer? -->
         <app-layerlisttree fxLayout="column"
           class="slt-layer-container"
           *ngFor="let vl of model.vectorLayers; trackBy: this.trackLayerFn;"
@@ -105,15 +107,10 @@
       <div *ngIf="(this.dragIndicatorObservable | async) as dragData"
         class="slt-layers-list-drag-indicator"
         [ngStyle]="{
-            'display': dragData.isVisible ? 'block' : 'none',
-            'left': dragData.left + 'px',
-            'top': dragData.top + 'px'
-          }">
-      </div>
-      <!-- Layer list empty view. -->
-      <div *ngIf="model.vectorLayers.length === 0"
-        class="slt-layers-empty">
-        <span>Import 2 SVGs to get started<br>(or load a demo in the top right menu)</span>
+          'display': dragData.isVisible ? 'block' : 'none',
+          'left': dragData.left + 'px',
+          'top': dragData.top + 'px'
+        }">
       </div>
     </div>
   </div>
@@ -159,7 +156,6 @@
         <div appScrollGroup="timeline"
           class="slt-timeline-animation-scroller">
           <div class="slt-timeline-animation-rows">
-            <!-- TODO: only display one vector layer? -->
             <app-timelineanimationrow *ngFor="let layer of model.vectorLayers; trackBy: this.trackLayerFn;"
               [layer]="layer"
               [animation]="animation"
