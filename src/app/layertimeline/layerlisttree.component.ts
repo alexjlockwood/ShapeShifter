@@ -23,7 +23,7 @@ import 'rxjs/add/observable/combineLatest';
   styleUrls: ['./layerlisttree.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   // TODO: remove view encapsulation.
-  encapsulation: ViewEncapsulation.None,
+  // encapsulation: ViewEncapsulation.None,
 })
 export class LayerListTreeComponent implements OnInit, Callbacks {
 
