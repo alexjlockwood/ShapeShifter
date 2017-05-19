@@ -10,7 +10,7 @@ import { CanvasType } from '../CanvasType';
 import { Point, Matrix, MathUtil, ColorUtil } from '../scripts/common';
 import {
   AnimatorService,
-  // CanvasResizeService,
+  CanvasResizeService,
   AppModeService, AppMode,
   SelectionService, SelectionType,
   StateService, MorphStatus,
@@ -88,7 +88,7 @@ export class OldCanvasComponent implements AfterViewInit, OnDestroy {
   constructor(
     readonly elementRef: ElementRef,
     readonly appModeService: AppModeService,
-    // private readonly canvasResizeService: CanvasResizeService,
+    private readonly canvasResizeService: CanvasResizeService,
     readonly hoverService: HoverService,
     readonly stateService: StateService,
     readonly animatorService: AnimatorService,
@@ -125,18 +125,18 @@ export class OldCanvasComponent implements AfterViewInit, OnDestroy {
         }
       });
     this.subscribeTo(this.morphSubPathService.asObservable(), () => this.drawOverlays());
-    // this.subscriptions.push(
-    //   this.canvasResizeService.asObservable()
-    //     .subscribe(size => {
-    //       const oldWidth = this.cssContainerWidth;
-    //       const oldHeight = this.cssContainerHeight;
-    //       this.cssContainerWidth = Math.max(1, size.width - CANVAS_MARGIN * 2);
-    //       this.cssContainerHeight = Math.max(1, size.height - CANVAS_MARGIN * 2);
-    //       if (this.cssContainerWidth !== oldWidth
-    //         || this.cssContainerHeight !== oldHeight) {
-    //         this.resizeAndDraw();
-    //       }
-    //     }));
+    this.subscriptions.push(
+      this.canvasResizeService.asObservable()
+        .subscribe(size => {
+          const oldWidth = this.cssContainerWidth;
+          const oldHeight = this.cssContainerHeight;
+          this.cssContainerWidth = Math.max(1, size.width - CANVAS_MARGIN * 2);
+          this.cssContainerHeight = Math.max(1, size.height - CANVAS_MARGIN * 2);
+          if (this.cssContainerWidth !== oldWidth
+            || this.cssContainerHeight !== oldHeight) {
+            this.resizeAndDraw();
+          }
+        }));
     if (this.canvasType === CanvasType.Preview) {
       // Preview canvas specific setup.
       // const interpolatePreviewFn = () => {
