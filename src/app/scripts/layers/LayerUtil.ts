@@ -8,12 +8,11 @@ const PRECISION = 8;
 /**
  * Returns a list of parent transforms for the specified layer ID. The transforms
  * are returned in top-down order (i.e. the transform for the layer's
- * immediate parent will be the very last matrix in the returned list). This
- * function returns undefined if the layer is not found in the vector layer.
+ * immediate parent will be the very last matrix in the returned list).
  */
 export function getTransformsForLayer(vectorLayer: VectorLayer, layerId: string) {
   const getTransformsFn = (parents: Layer[], current: Layer): Matrix[] => {
-    if (current.name === layerId) {
+    if (current.id === layerId) {
       return _.flatMap(parents, layer => {
         if (layer instanceof GroupLayer) {
           const l = layer as GroupLayer;
@@ -28,15 +27,13 @@ export function getTransformsForLayer(vectorLayer: VectorLayer, layerId: string)
         return [];
       });
     }
-    if (current.children) {
-      for (const child of current.children) {
-        const transforms = getTransformsFn(parents.concat([current]), child);
-        if (transforms) {
-          return transforms;
-        }
+    for (const child of current.children) {
+      const transforms = getTransformsFn([...parents, current], child);
+      if (transforms) {
+        return transforms;
       }
     }
-    return undefined;
+    return [];
   };
   return getTransformsFn([], vectorLayer);
 }
@@ -108,11 +105,9 @@ export function adjustVectorLayerDimensions(vl1: VectorLayer, vl2: VectorLayer) 
           }));
           return;
         }
-        if (layer.children) {
-          layer.children.forEach(l => {
-            recurseFn(l);
-          });
-        }
+        layer.children.forEach(l => {
+          recurseFn(l);
+        });
       })(vl);
     };
 
@@ -127,28 +122,6 @@ export function adjustVectorLayerDimensions(vl1: VectorLayer, vl2: VectorLayer) 
   vl2.height = newHeight;
   return { vl1, vl2 };
 }
-
-/**
- * Returns a list of all path IDs in this VectorLayer.
- * TODO: make this ignore deleted path IDs that are still in the vector layer
- */
-export function getAllIds(
-  vls: VectorLayer[],
-  predicateFn = (layer: Layer) => { return true; }) {
-
-  const ids: string[] = [];
-  vls.forEach(vl => {
-    (function recurseFn(layer: Layer) {
-      if (predicateFn(layer)) {
-        ids.push(layer.name);
-      }
-      if (layer.children) {
-        layer.children.forEach(l => recurseFn(l));
-      }
-    })(vl);
-  });
-  return ids;
-};
 
 /**
  * Interpolates the properties of the specified layer and all of its children.
