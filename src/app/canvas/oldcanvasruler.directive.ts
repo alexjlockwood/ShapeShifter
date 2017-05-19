@@ -4,7 +4,7 @@ import { Directive, OnInit, Input, ElementRef, OnDestroy } from '@angular/core';
 import { CanvasType } from '../CanvasType';
 import {
   StateService,
-  // CanvasResizeService,
+  CanvasResizeService,
 } from '../services';
 import { Point } from '../scripts/common';
 import { Subscription } from 'rxjs/Subscription';
@@ -35,7 +35,7 @@ export class OldCanvasRulerDirective implements OnInit, OnDestroy {
 
   constructor(
     private readonly elementRef: ElementRef,
-    // private readonly canvasResizeService: CanvasResizeService,
+    private readonly canvasResizeService: CanvasResizeService,
     private readonly stateService: StateService,
   ) { }
 
@@ -54,16 +54,16 @@ export class OldCanvasRulerDirective implements OnInit, OnDestroy {
             this.draw();
           }
         }));
-    // this.subscriptions.push(
-    //   this.canvasResizeService.asObservable().subscribe(size => {
-    //     const oldWidth = this.cssContainerWidth;
-    //     const oldHeight = this.cssContainerHeight;
-    //     this.cssContainerWidth = Math.max(1, size.width - CANVAS_MARGIN * 2);
-    //     this.cssContainerHeight = Math.max(1, size.height - CANVAS_MARGIN * 2);
-    //     if (this.cssContainerWidth !== oldWidth || this.cssContainerHeight !== oldHeight) {
-    //       this.draw();
-    //     }
-    //   }));
+    this.subscriptions.push(
+      this.canvasResizeService.asObservable().subscribe(size => {
+        const oldWidth = this.cssContainerWidth;
+        const oldHeight = this.cssContainerHeight;
+        this.cssContainerWidth = Math.max(1, size.width - CANVAS_MARGIN * 2);
+        this.cssContainerHeight = Math.max(1, size.height - CANVAS_MARGIN * 2);
+        if (this.cssContainerWidth !== oldWidth || this.cssContainerHeight !== oldHeight) {
+          this.draw();
+        }
+      }));
   }
 
   ngOnDestroy() {

@@ -41,6 +41,7 @@ import { DropTargetDirective } from './droptarget.directive';
 // Services.
 import {
   AnimatorService,
+  CanvasResizeService,
   HoverService,
   StateService,
   SelectionService,
@@ -64,7 +65,6 @@ import { SubPathPairsPipe } from './inspector/pathinspector.component';
 import { SvgCommandPipe } from './inspector/commandinspector.component';
 
 import 'hammerjs';
-import { CanvasOverlayDirective } from './canvas/canvasoverlay.directive';
 
 @NgModule({
   declarations: [
@@ -88,7 +88,6 @@ import { CanvasOverlayDirective } from './canvas/canvasoverlay.directive';
     LayerTimelineDirective,
     TimelineAnimationRowComponent,
     DropTargetDirective,
-    CanvasOverlayDirective,
   ],
   imports: [
     BrowserModule,
@@ -114,6 +113,7 @@ import { CanvasOverlayDirective } from './canvas/canvasoverlay.directive';
     StateService,
     SelectionService,
     HoverService,
+    CanvasResizeService,
     DialogService,
     SettingsService,
     AppModeService,

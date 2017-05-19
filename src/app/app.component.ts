@@ -6,12 +6,17 @@ import {
 } from '@angular/core';
 import { MdSnackBar } from '@angular/material';
 import { environment } from '../environments/environment';
-import { FileImporterService, ShortcutService } from './services';
+import {
+  CanvasResizeService,
+  FileImporterService,
+  ShortcutService,
+} from './services';
 import 'rxjs/add/observable/combineLatest';
-import { Store, State, AddLayers } from './store';
-import { BehaviorSubject } from 'rxjs/BehaviorSubject';
-import { Observable } from 'rxjs/Observable';
-import 'rxjs/add/operator/distinctUntilChanged';
+import {
+  Store,
+  State,
+  AddLayers,
+} from './store';
 
 const IS_DEV_MODE = !environment.production;
 const ELEMENT_RESIZE_DETECTOR = erd();
@@ -25,18 +30,16 @@ const STORAGE_KEY_FIRST_TIME_USER = 'storage_key_first_time_user';
 })
 export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
-  private readonly sizeSubject = new BehaviorSubject<Size>({ w: 1, h: 1 });
-  readonly sizeObservable = this.sizeSubject.asObservable()
-    .distinctUntilChanged(({ w: w1, h: h1 }, { w: w2, h: h2 }) => {
-      return w1 === w2 && h1 === h2;
-    });
+  private canvasContainer: JQuery;
+  private currentPaneWidth = 0;
+  private currentPaneHeight = 0;
 
-  @ViewChild('canvasContainer') canvasContainerRef: ElementRef;
-  private $canvasContainer: JQuery;
+  @ViewChild('canvasContainer') private canvasContainerRef: ElementRef;
 
   constructor(
     private readonly snackBar: MdSnackBar,
     private readonly fileImporterService: FileImporterService,
+    private readonly canvasResizeService: CanvasResizeService,
     private readonly store: Store<State>,
     private readonly shortcutService: ShortcutService,
   ) { }
@@ -55,11 +58,20 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngAfterViewInit() {
-    this.$canvasContainer = $(this.canvasContainerRef.nativeElement);
-    ELEMENT_RESIZE_DETECTOR.listenTo(this.$canvasContainer.get(0), el => {
-      const w = this.$canvasContainer.width();
-      const h = this.$canvasContainer.height();
-      this.sizeSubject.next({ w, h });
+    this.canvasContainer = $(this.canvasContainerRef.nativeElement);
+    const updateCanvasSizes = () => {
+      const width = this.canvasContainer.width();
+      const height = this.canvasContainer.height();
+      if (this.currentPaneWidth !== width
+        || this.currentPaneHeight !== height) {
+        this.currentPaneWidth = width;
+        this.currentPaneHeight = height;
+        this.canvasResizeService.setSize(width, height);
+      }
+    };
+
+    ELEMENT_RESIZE_DETECTOR.listenTo(this.canvasContainer.get(0), el => {
+      updateCanvasSizes();
     });
 
     if ('serviceWorker' in navigator) {
@@ -74,7 +86,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    ELEMENT_RESIZE_DETECTOR.removeAllListeners(this.$canvasContainer.get(0));
+    ELEMENT_RESIZE_DETECTOR.removeAllListeners(this.canvasContainer.get(0));
     this.shortcutService.destroy();
     $(window).unbind('beforeunload');
   }
@@ -97,9 +109,4 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
           { duration: 5000 });
       });
   }
-}
-
-interface Size {
-  readonly w: number;
-  readonly h: number;
 }
