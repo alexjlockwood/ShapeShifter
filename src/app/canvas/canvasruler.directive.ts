@@ -1,17 +1,10 @@
 import * as _ from 'lodash';
 import * as $ from 'jquery';
 import { Directive, OnInit, Input, ElementRef, OnDestroy } from '@angular/core';
-import {
-  CanvasResizeService,
-} from '../services';
-import { Store } from '@ngrx/store';
-import {
-  State,
-  getVectorLayers,
-} from '../store';
 import { Point } from '../scripts/common';
-import { Subscription } from 'rxjs/Subscription';
-import { CANVAS_MARGIN, DEFAULT_VIEWPORT_SIZE } from './oldcanvas.component';
+import * as CanvasConstants from './constants';
+import { CanvasMixin } from './CanvasMixin';
+import { VectorLayer } from '../scripts/layers';
 
 // Ruler size in css pixels.
 const RULER_SIZE = 32;
@@ -24,56 +17,14 @@ const TICK_SIZE = 6;
 @Directive({
   selector: '[appCanvasRuler]',
 })
-export class CanvasRulerDirective implements OnInit, OnDestroy {
+export class CanvasRulerDirective extends CanvasMixin(class { }) {
   @Input() orientation: Orientation;
-  private canvas: JQuery;
+  private readonly $canvas: JQuery;
   private mousePoint: Point;
-  private readonly subscriptions: Subscription[] = [];
-  private vlWidth = DEFAULT_VIEWPORT_SIZE;
-  private vlHeight = DEFAULT_VIEWPORT_SIZE;
-  private cssContainerWidth = 1;
-  private cssContainerHeight = 1;
-  private cssScale: number;
 
-  constructor(
-    private readonly elementRef: ElementRef,
-    private readonly canvasResizeService: CanvasResizeService,
-    private readonly store: Store<State>,
-  ) { }
-
-  ngOnInit() {
-    this.canvas = $(this.elementRef.nativeElement);
-    this.subscriptions.push(
-      this.store.select(getVectorLayers).subscribe(vls => {
-        if (!vls.length) {
-          // TODO: how to handle 0 vector layers? should this ever be possible?
-          return;
-        }
-        // TODO: how to handle multiple vector layers?
-        const vl = vls[0];
-        const newWidth = vl ? vl.width : DEFAULT_VIEWPORT_SIZE;
-        const newHeight = vl ? vl.height : DEFAULT_VIEWPORT_SIZE;
-        const didSizeChange = this.vlWidth !== newWidth || this.vlHeight !== newHeight;
-        if (didSizeChange) {
-          this.vlWidth = newWidth;
-          this.vlHeight = newHeight;
-          this.draw();
-        }
-      }));
-    this.subscriptions.push(
-      this.canvasResizeService.asObservable().subscribe(size => {
-        const oldWidth = this.cssContainerWidth;
-        const oldHeight = this.cssContainerHeight;
-        this.cssContainerWidth = Math.max(1, size.width - CANVAS_MARGIN * 2);
-        this.cssContainerHeight = Math.max(1, size.height - CANVAS_MARGIN * 2);
-        if (this.cssContainerWidth !== oldWidth || this.cssContainerHeight !== oldHeight) {
-          this.draw();
-        }
-      }));
-  }
-
-  ngOnDestroy() {
-    this.subscriptions.forEach(s => s.unsubscribe());
+  constructor(readonly elementRef: ElementRef) {
+    super();
+    this.$canvas = $(this.elementRef.nativeElement);
   }
 
   hideMouse() {
@@ -83,9 +34,6 @@ export class CanvasRulerDirective implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * Show the current mouse point, passed as an argument in viewport coordinates.
-   */
   showMouse(mousePoint: Point) {
     if (!this.mousePoint || !this.mousePoint.equals(mousePoint)) {
       this.mousePoint = mousePoint;
@@ -94,35 +42,25 @@ export class CanvasRulerDirective implements OnInit, OnDestroy {
   }
 
   draw() {
+    const { w: vlWidth, h: vlHeight } = this.getViewport();
     const isHorizontal = this.orientation === 'horizontal';
-    const vectorAspectRatio = this.vlWidth / this.vlHeight;
-    const containerAspectRatio = this.cssContainerWidth / this.cssContainerHeight;
+    const width = isHorizontal ? vlWidth * this.cssScale + EXTRA_PADDING * 2 : RULER_SIZE;
+    const height = isHorizontal ? RULER_SIZE : vlHeight * this.cssScale + EXTRA_PADDING * 2;
 
-    // The 'cssScale' represents the number of CSS pixels per SVG viewport pixel.
-    if (vectorAspectRatio > containerAspectRatio) {
-      this.cssScale = this.cssContainerWidth / this.vlWidth;
-    } else {
-      this.cssScale = this.cssContainerHeight / this.vlHeight;
-    }
+    this.$canvas.css('width', width);
+    this.$canvas.css('height', height);
+    this.$canvas.attr('width', width * window.devicePixelRatio);
+    this.$canvas.attr('height', height * window.devicePixelRatio);
 
-    const cssWidth = this.vlWidth * this.cssScale;
-    const cssHeight = this.vlHeight * this.cssScale;
-    const width = isHorizontal ? cssWidth + EXTRA_PADDING * 2 : RULER_SIZE;
-    const height = isHorizontal ? RULER_SIZE : cssHeight + EXTRA_PADDING * 2;
-    this.canvas.css('width', width);
-    this.canvas.css('height', height);
-    this.canvas.attr('width', width * window.devicePixelRatio);
-    this.canvas.attr('height', height * window.devicePixelRatio);
-
-    const ctx = (this.canvas.get(0) as HTMLCanvasElement).getContext('2d');
+    const ctx = (this.$canvas.get(0) as HTMLCanvasElement).getContext('2d');
     ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
     ctx.translate(
       isHorizontal ? EXTRA_PADDING : 0,
       isHorizontal ? 0 : EXTRA_PADDING);
 
     const zoom = Math.max(1, isHorizontal
-      ? (width - EXTRA_PADDING * 2) / this.vlWidth
-      : (height - EXTRA_PADDING * 2) / this.vlHeight);
+      ? (width - EXTRA_PADDING * 2) / vlWidth
+      : (height - EXTRA_PADDING * 2) / vlHeight);
 
     // Compute grid spacing (40 = minimum grid spacing in pixels).
     let interval = 0;
