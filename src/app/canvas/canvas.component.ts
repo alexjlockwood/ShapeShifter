@@ -19,6 +19,7 @@ import { CanvasSizeMixin, Size } from './CanvasSizeMixin';
 import { DestroyableMixin } from '../scripts/mixins';
 import 'rxjs/add/observable/combineLatest';
 
+// Canvas margin in css pixels.
 const CANVAS_MARGIN = 36;
 
 type Context = CanvasRenderingContext2D;
