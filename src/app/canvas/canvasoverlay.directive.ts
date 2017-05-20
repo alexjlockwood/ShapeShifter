@@ -1,7 +1,8 @@
 import * as $ from 'jquery';
-import { Directive, ElementRef, AfterViewInit } from '@angular/core';
-import { CanvasMixin } from './CanvasMixin';
-import { CanvasDirective } from './canvas.component';
+import { Directive, ElementRef, AfterViewInit, Input } from '@angular/core';
+import { CanvasSizeMixin, Size } from './CanvasSizeMixin';
+import { DestroyableMixin } from '../scripts/mixins';
+import { Observable } from 'rxjs/Observable';
 
 const SPLIT_POINT_RADIUS_FACTOR = 0.8;
 // const SELECTED_POINT_RADIUS_FACTOR = 1.25;
@@ -31,14 +32,13 @@ type Context = CanvasRenderingContext2D;
   selector: '[appCanvasOverlay]',
 })
 export class CanvasOverlayDirective
-  extends CanvasMixin()
-  implements CanvasDirective {
+  extends CanvasSizeMixin(DestroyableMixin(class { })) {
 
-  private readonly $overlayCanvas: JQuery;
+  private readonly $canvas: JQuery;
 
   constructor(readonly elementRef: ElementRef) {
     super();
-    this.$overlayCanvas = $(this.elementRef.nativeElement);
+    this.$canvas = $(elementRef.nativeElement);
   }
 
   private get smallPointRadius() {
@@ -73,11 +73,23 @@ export class CanvasOverlayDirective
     return DRAG_TRIGGER_TOUCH_SLOP / this.cssScale;
   }
 
-  draw() {
-    this.resizeCanvases(this.$overlayCanvas);
+  onDimensionsChanged() {
+    const { w: vlWidth, h: vlHeight } = this.getViewport();
+    this.$canvas
+      .attr({
+        width: vlWidth * this.attrScale,
+        height: vlHeight * this.attrScale,
+      })
+      .css({
+        width: vlWidth * this.cssScale,
+        height: vlHeight * this.cssScale,
+      });
+    this.draw();
+  }
 
+  draw() {
     // Draw labeled points, highlights, selections, the pixel grid, etc.
-    const overlayCtx = (this.$overlayCanvas.get(0) as HTMLCanvasElement).getContext('2d');
+    const overlayCtx = (this.$canvas.get(0) as HTMLCanvasElement).getContext('2d');
     overlayCtx.save();
     this.setupCtxWithViewportCoords(overlayCtx);
 
@@ -107,6 +119,14 @@ export class CanvasOverlayDirective
       }
       overlayCtx.restore();
     }
+  }
+
+  // Scale the canvas so that everything from this point forward is drawn
+  // in terms of the SVG's viewport coordinates.
+  private setupCtxWithViewportCoords = (ctx: Context) => {
+    ctx.scale(this.attrScale, this.attrScale);
+    const { w, h } = this.getViewport();
+    ctx.clearRect(0, 0, w, h);
   }
 
   // private executeHighlights(ctx: Context, color: string, lineWidth: number) {

@@ -39,6 +39,7 @@ import { TimelineAnimationRowComponent } from './layertimeline/timelineanimation
 import { DropTargetDirective } from './droptarget.directive';
 import { CanvasOverlayDirective } from './canvas/canvasoverlay.directive';
 import { CanvasLayersDirective } from './canvas/canvaslayers.directive';
+import { CanvasContainerDirective } from './canvas/canvascontainer.directive';
 
 // Services.
 import {
@@ -91,6 +92,7 @@ import 'hammerjs';
     DropTargetDirective,
     CanvasOverlayDirective,
     CanvasLayersDirective,
+    CanvasContainerDirective,
   ],
   imports: [
     BrowserModule,

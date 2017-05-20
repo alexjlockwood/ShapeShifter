@@ -14,11 +14,11 @@
       fxLayout="column"
       fxFlex>
       <!-- Canvas -->
-      <div #canvasContainer
+      <div #rootCanvasContainer
         fxLayout="row"
         fxLayoutAlign="center center"
         fxFlex>
-        <app-canvas [sizeObservable]="this.sizeObservable"></app-canvas>
+        <app-canvas [boundsObservable]="this.boundsObservable"></app-canvas>
       </div>
       <!-- Playback controls. -->
       <app-playback></app-playback>

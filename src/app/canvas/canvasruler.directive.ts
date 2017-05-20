@@ -1,11 +1,12 @@
 import * as _ from 'lodash';
 import * as $ from 'jquery';
-import { Directive, OnInit, Input, ElementRef, OnDestroy } from '@angular/core';
+import { Directive, AfterViewInit, Input, ElementRef, OnDestroy } from '@angular/core';
 import { Point } from '../scripts/common';
-import * as CanvasConstants from './constants';
-import { CanvasMixin } from './CanvasMixin';
+import { CanvasSizeMixin, Size } from './CanvasSizeMixin';
 import { VectorLayer } from '../scripts/layers';
-import { CanvasDirective } from './canvas.component';
+// import { CanvasDirective } from './canvas.component';
+import { Observable } from 'rxjs/Observable';
+import { DestroyableMixin } from '../scripts/mixins';
 
 // Ruler size in css pixels.
 const RULER_SIZE = 32;
@@ -18,9 +19,7 @@ const TICK_SIZE = 6;
 @Directive({
   selector: '[appCanvasRuler]',
 })
-export class CanvasRulerDirective
-  extends CanvasMixin()
-  implements CanvasDirective {
+export class CanvasRulerDirective extends CanvasSizeMixin(class { }) {
 
   @Input() orientation: Orientation;
   private readonly $canvas: JQuery;
@@ -28,7 +27,11 @@ export class CanvasRulerDirective
 
   constructor(readonly elementRef: ElementRef) {
     super();
-    this.$canvas = $(this.elementRef.nativeElement);
+    this.$canvas = $(elementRef.nativeElement);
+  }
+
+  onDimensionsChanged() {
+    this.draw();
   }
 
   hideMouse() {

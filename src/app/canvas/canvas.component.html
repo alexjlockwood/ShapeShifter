@@ -1,26 +1,22 @@
 <div class="app-canvas-container">
   <canvas appCanvasRuler
-    #horizontalRuler
     class="canvas-ruler orientation-horizontal"
     [orientation]="'horizontal'">
   </canvas>
   <canvas appCanvasRuler
-    #verticalRuler
     class="canvas-ruler orientation-vertical"
     [orientation]="'vertical'">
   </canvas>
-  <div #canvasContainer
+  <div appCanvasContainer
     class="canvas-container"
     (mousedown)="onMouseDown($event)"
     (mouseup)="onMouseUp($event)"
     (mousemove)="onMouseMove($event)"
     (mouseleave)="onMouseLeave()">
-    <canvas #renderingCanvas
-      appCanvasLayers
+    <canvas appCanvasLayers
       class="rendering-canvas">
     </canvas>
-    <canvas #overlayCanvas
-      appCanvasOverlay
+    <canvas appCanvasOverlay
       class="overlay-canvas">
     </canvas>
   </div>

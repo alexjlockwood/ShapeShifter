@@ -25,13 +25,13 @@ const STORAGE_KEY_FIRST_TIME_USER = 'storage_key_first_time_user';
 })
 export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
-  private readonly sizeSubject = new BehaviorSubject<Size>({ w: 1, h: 1 });
-  readonly sizeObservable = this.sizeSubject.asObservable()
+  private readonly boundsSubject = new BehaviorSubject<Size>({ w: 1, h: 1 });
+  readonly boundsObservable = this.boundsSubject.asObservable()
     .distinctUntilChanged(({ w: w1, h: h1 }, { w: w2, h: h2 }) => {
-      return w1 === w2 && h1 === h2;
+      return false;//w1 === w2 && h1 === h2;
     });
 
-  @ViewChild('canvasContainer') canvasContainerRef: ElementRef;
+  @ViewChild('rootCanvasContainer') canvasContainerRef: ElementRef;
   private $canvasContainer: JQuery;
 
   constructor(
@@ -59,7 +59,8 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     ELEMENT_RESIZE_DETECTOR.listenTo(this.$canvasContainer.get(0), el => {
       const w = this.$canvasContainer.width();
       const h = this.$canvasContainer.height();
-      this.sizeSubject.next({ w, h });
+      console.info(w, h);
+      this.boundsSubject.next({ w, h });
     });
 
     if ('serviceWorker' in navigator) {
