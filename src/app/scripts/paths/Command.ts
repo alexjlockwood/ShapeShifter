@@ -6,61 +6,6 @@ import { SvgChar } from '.';
  * Represents an individual SVG command. These are the essential building blocks
  * of all Paths and SubPath objects.
  */
-export interface Command {
-
-  /**
-   * Returns the unique ID for this command.
-   */
-  getId(): string;
-
-  /**
-   * Returns true iff the command was created as a result of being split.
-   * Only split commands are able to be editted and deleted via the inspector/canvas.
-   */
-  isSplitPoint(): boolean;
-
-  /**
-   * Returns true iff the command was created as a result of a subpath split.
-   */
-  isSplitSegment(): boolean;
-
-  /**
-   * Returns the SVG character for this command.
-   */
-  getSvgChar(): SvgChar;
-
-  /**
-   * Returns the points for this command.
-   */
-  getPoints(): ReadonlyArray<Point>;
-
-  /**
-   * Returns the command's starting point.
-   */
-  getStart(): Point;
-
-  /**
-   * Returns the command's ending point.
-   */
-  getEnd(): Point;
-
-  /**
-   * Returns true iff this command can be converted into a new command
-   * that is morphable with the specified SVG command type.
-   */
-  canConvertTo(ch: SvgChar): boolean;
-
-  /**
-   * Returns a builder to construct a mutated Command.
-   */
-  mutate(): CommandBuilder;
-}
-
-/**
- * Implementation of the Command interface. Each draw command represents
- * a single SVG drawing command (move, line, quadratic curve, bezier curve,
- * or close path).
- */
 export class Command {
 
   constructor(
@@ -75,41 +20,60 @@ export class Command {
     }
   }
 
-  // Implements the Command interface.
+  /**
+   * Returns the unique ID for this command.
+   */
   getId() {
     return this.id;
   }
 
-  // Implements the Command interface.
+  /**
+   * Returns the SVG character for this command.
+   */
   getSvgChar() {
     return this.svgChar;
   }
 
-  // Implements the Command interface.
+  /**
+   * Returns the points for this command.
+   */
   getPoints() {
     return this.points;
   }
 
+  /**
+   * Returns true iff the command was created as a result of being split.
+   * Only split commands are able to be editted and deleted via the inspector/canvas.
+   */
   isSplitPoint() {
     return this.isSplitPoint_;
   }
 
-  // Implements the Command interface.
+  /**
+   * Returns true iff the command was created as a result of a subpath split.
+   */
   isSplitSegment() {
     return this.isSplitSegment_;
   }
 
-  // Implements the Command interface.
+  /**
+   * Returns the command's starting point.
+   */
   getStart() {
     return _.first(this.points);
   }
 
-  // Implements the Command interface.
+  /**
+   * Returns the command's ending point.
+   */
   getEnd() {
     return _.last(this.points);
   }
 
-  // Implements the Command interface.
+  /**
+   * Returns true iff this command can be converted into a new command
+   * that is morphable with the specified SVG command type.
+   */
   canConvertTo(targetChar: SvgChar) {
     const ch = targetChar;
     if (this.svgChar === 'M' || ch === 'M' || this.svgChar === ch) {
@@ -134,7 +98,9 @@ export class Command {
     return false;
   }
 
-  // Implements the Command interface.
+  /**
+   * Returns a builder to construct a mutated Command.
+   */
   mutate() {
     return new CommandBuilder(
       this.svgChar,

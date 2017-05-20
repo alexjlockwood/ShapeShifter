@@ -5,58 +5,6 @@ import { Command } from '.';
  * Represents a string of Commands, beginning with a 'moveTo' command and ending
  * with either a 'closepath' command or the next 'moveTo' command.
  */
-export interface SubPath {
-
-  /**
-   * Returns a unique ID for this subpath.
-   */
-  getId(): string;
-
-  /**
-   * The list of commands in this subpath.
-   */
-  getCommands(): ReadonlyArray<Command>;
-
-  /**
-   * Returns true iff the sub path's start point is equal to its end point.
-   */
-  isClosed(): boolean;
-
-  /**
-   * Returns true iff this sub path was created to collapse to a single point.
-   */
-  isCollapsing(): boolean;
-
-  /**
-   * Returns true iff this sub path was created as a result of a split.
-   */
-  isSplit(): boolean;
-
-  /**
-   * Returns true iff this sub path can be unsplit.
-   */
-  isUnsplittable(): boolean;
-
-  /**
-   * Returns true iff this sub path has been reversed.
-   */
-  isReversed(): boolean;
-
-  /**
-   * Returns the shift offset of this sub path.
-   */
-  getShiftOffset(): number;
-
-  /**
-   * Returns a builder to construct a mutated SubPath.
-   */
-  mutate(): SubPathBuilder;
-}
-
-/**
- * Implementation of the SubPath interface.
- * Precondition: must have exactly 1 move command and at most 1 closepath command.
- */
 export class SubPath {
 
   constructor(
@@ -69,49 +17,67 @@ export class SubPath {
     private readonly isUnsplittable_ = false,
   ) { }
 
-  // Implements the SubPath interface.
+  /**
+   * Returns a unique ID for this subpath.
+   */
   getId() {
     return this.id;
   }
 
-  // Implements the SubPath interface.
+  /**
+   * The list of commands in this subpath.
+   */
   getCommands() {
     return this.commands;
   }
 
-  // Implements the SubPath interface.
+  /**
+   * Returns true iff this sub path was created to collapse to a single point.
+   */
   isCollapsing() {
     return this.isCollapsing_;
   }
 
-  // Implements the SubPath interface.
+  /**
+   * Returns true iff this sub path has been reversed.
+   */
   isReversed() {
     return this.isReversed_;
   }
 
-  // Implements the SubPath interface.
+  /**
+   * Returns the shift offset of this sub path.
+   */
   getShiftOffset() {
     return this.shiftOffset;
   }
 
-  // Implements the SubPath interface.
+  /**
+   * Returns true iff this sub path was created as a result of a split.
+   */
   isSplit() {
     return this.isSplit_;
   }
 
-  // Implements the SubPath interface.
+  /**
+   * Returns true iff this sub path can be unsplit.
+   */
   isUnsplittable() {
     return this.isUnsplittable_;
   }
 
-  // Implements the SubPath interface.
+  /**
+   * Returns true iff the sub path's start point is equal to its end point.
+   */
   isClosed() {
     const start = _.first(this.getCommands()).getEnd();
     const end = _.last(this.getCommands()).getEnd();
     return start.equals(end);
   }
 
-  // Implements the SubPath interface.
+  /**
+   * Returns a builder to construct a mutated SubPath.
+   */
   mutate() {
     return new SubPathBuilder(
       this.commands,
