@@ -9,7 +9,7 @@ import { Command } from '../scripts/paths';
 import { PathLayer, ClipPathLayer, LayerUtil, VectorLayer } from '../scripts/layers';
 import { Point, Matrix, ColorUtil } from '../scripts/common';
 import { AnimatorService } from '../services';
-import { Store, State, getViewport } from '../store';
+import { Store, State, getViewport, getLayerState } from '../store';
 import { CanvasContainerDirective } from './canvascontainer.directive';
 import { CanvasRulerDirective } from './canvasruler.directive';
 import { CanvasLayersDirective } from './canvaslayers.directive';
@@ -58,24 +58,29 @@ export class CanvasComponent
         const h = Math.max(1, bounds.h - CANVAS_MARGIN * 2);
         this.setDimensions({ w, h }, viewport);
       }));
-    // this.registerSubscription(
-    //   this.store.select(getLayerState)
-    //     .subscribe(({ vectorLayers, hiddenLayerIds }) => {
-    //       this.setVectorLayer(vectorLayers[0]);
-    //       this.canvasLayers.setHiddenLayerIds(hiddenLayerIds);
-    //       this.resizeCanvases(this.$canvasContainer);
-    //       this.draw();
-    //     }));
-    // this.registerSubscription(
-    //   this.animatorService.asObservable().subscribe(event => {
-    //     if (!event.vl) {
-    //       // TODO: don't let this case happen
-    //       return;
-    //     }
-    //     // TODO: how to deal with multiple vector layers?
-    //     this.setVectorLayer(event.vl);
-    //     this.draw();
-    //   }));
+    this.registerSubscription(
+      this.store.select(getLayerState)
+        .subscribe(({ vectorLayers, hiddenLayerIds }) => {
+          // TODO: how to deal with multiple vector layers?
+          // TODO: how to deal with multiple vector layers?
+          // TODO: how to deal with multiple vector layers?
+          // TODO: how to deal with multiple vector layers?
+          // TODO: how to deal with multiple vector layers?
+          this.canvasLayers.setLayerState([vectorLayers[0]], hiddenLayerIds);
+        }));
+    this.registerSubscription(
+      this.animatorService.asObservable().subscribe(event => {
+        if (!event.vl) {
+          // TODO: don't let this case happen
+          return;
+        }
+        // TODO: how to deal with multiple vector layers?
+        // TODO: how to deal with multiple vector layers?
+        // TODO: how to deal with multiple vector layers?
+        // TODO: how to deal with multiple vector layers?
+        // TODO: how to deal with multiple vector layers?
+        this.canvasLayers.setVectorLayers([event.vl]);
+      }));
   }
 
   // @Override

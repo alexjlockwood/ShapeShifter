@@ -26,6 +26,10 @@ class PathImpl implements Path {
       this.ps = obj;
     }
     if (!environment.production) {
+      // Don't initialize variables lazily for dev builds (to avoid
+      // ngrx-store-freeze crashes).
+      this.getPathString();
+
       const allIds = this.getCommands().map(c => c.getId());
       const uniqueIds = new Set(allIds);
       const numCommands = allIds.length;

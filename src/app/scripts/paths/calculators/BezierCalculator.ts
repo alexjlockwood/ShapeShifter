@@ -6,6 +6,7 @@ import { CommandBuilder } from '../CommandImpl';
 import { Calculator, BBox, Line } from '.';
 import { PointCalculator } from './PointCalculator';
 import { LineCalculator } from './LineCalculator';
+import { environment } from '../../../../environments/environment';
 
 /**
  * A simple typed wrapper class around the amazing bezier-js library.
@@ -22,6 +23,14 @@ export class BezierCalculator implements Calculator {
     ...points: Point[],
   ) {
     this.points = points;
+
+    // Don't initialize variables lazily for dev builds (to avoid
+    // ngrx-store-freeze crashes).
+    if (!environment.production) {
+      (() => this.bezierJs)();
+      this.getPathLength();
+      this.getBoundingBox();
+    }
   }
 
   get bezierJs() {

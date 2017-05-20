@@ -9,12 +9,8 @@ export class PathProperty extends Property<Path> {
   }
 
   // @Override
-  getEditableValue(model: any, propertyName: string): string {
-    // TODO: avoid cloning this thing every time... or clone it somewhere else...
-    // TODO: avoid cloning this thing every time... or clone it somewhere else...
-    // TODO: avoid cloning this thing every time... or clone it somewhere else...
-    // TODO: avoid cloning this thing every time... or clone it somewhere else...
-    return model[propertyName] ? model[propertyName].clone().getPathString() : '';
+  getEditableValue(model: any, propertyName: string) {
+    return model[propertyName] ? model[propertyName].getPathString() : '';
   }
 
   // @Override
@@ -38,12 +34,8 @@ export class PathProperty extends Property<Path> {
   }
 
   // @Override
-  displayValueForValue(value: Path): string {
-    // TODO: avoid cloning this thing every time... or clone it somewhere else...
-    // TODO: avoid cloning this thing every time... or clone it somewhere else...
-    // TODO: avoid cloning this thing every time... or clone it somewhere else...
-    // TODO: avoid cloning this thing every time... or clone it somewhere else...
-    return value.clone().getPathString();
+  displayValueForValue(value: Path) {
+    return value.getPathString();
   }
 
   // @Override

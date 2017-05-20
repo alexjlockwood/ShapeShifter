@@ -28,11 +28,11 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   private readonly boundsSubject = new BehaviorSubject<Size>({ w: 1, h: 1 });
   readonly boundsObservable = this.boundsSubject.asObservable()
     .distinctUntilChanged(({ w: w1, h: h1 }, { w: w2, h: h2 }) => {
-      return false;//w1 === w2 && h1 === h2;
+      return w1 === w2 && h1 === h2;
     });
 
-  @ViewChild('rootCanvasContainer') canvasContainerRef: ElementRef;
-  private $canvasContainer: JQuery;
+  @ViewChild('displayContainer') displayContainerRef: ElementRef;
+  private $displayContainer: JQuery;
 
   constructor(
     private readonly snackBar: MdSnackBar,
@@ -55,11 +55,10 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngAfterViewInit() {
-    this.$canvasContainer = $(this.canvasContainerRef.nativeElement);
-    ELEMENT_RESIZE_DETECTOR.listenTo(this.$canvasContainer.get(0), el => {
-      const w = this.$canvasContainer.width();
-      const h = this.$canvasContainer.height();
-      console.info(w, h);
+    this.$displayContainer = $(this.displayContainerRef.nativeElement);
+    ELEMENT_RESIZE_DETECTOR.listenTo(this.$displayContainer.get(0), el => {
+      const w = this.$displayContainer.width();
+      const h = this.$displayContainer.height();
       this.boundsSubject.next({ w, h });
     });
 
@@ -75,7 +74,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    ELEMENT_RESIZE_DETECTOR.removeAllListeners(this.$canvasContainer.get(0));
+    ELEMENT_RESIZE_DETECTOR.removeAllListeners(this.$displayContainer.get(0));
     this.shortcutService.destroy();
     $(window).unbind('beforeunload');
   }
