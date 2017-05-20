@@ -1,6 +1,7 @@
 import * as $ from 'jquery';
 import { Directive, ElementRef, AfterViewInit } from '@angular/core';
 import { CanvasMixin } from './CanvasMixin';
+import { CanvasDirective } from './canvas.component';
 
 const SPLIT_POINT_RADIUS_FACTOR = 0.8;
 // const SELECTED_POINT_RADIUS_FACTOR = 1.25;
@@ -29,17 +30,15 @@ type Context = CanvasRenderingContext2D;
 @Directive({
   selector: '[appCanvasOverlay]',
 })
-export class CanvasOverlayDirective extends CanvasMixin(class { }) implements AfterViewInit {
-  private $overlayCanvas: JQuery;
-  private overlayCtx: Context;
+export class CanvasOverlayDirective
+  extends CanvasMixin(class { })
+  implements CanvasDirective {
 
-  constructor(private readonly elementRef: ElementRef) {
+  private readonly $overlayCanvas: JQuery;
+
+  constructor(readonly elementRef: ElementRef) {
     super();
     this.$overlayCanvas = $(this.elementRef.nativeElement);
-  }
-
-  ngAfterViewInit() {
-    this.overlayCtx = (this.$overlayCanvas.get(0) as HTMLCanvasElement).getContext('2d');
   }
 
   private get smallPointRadius() {
@@ -78,34 +77,35 @@ export class CanvasOverlayDirective extends CanvasMixin(class { }) implements Af
     this.resizeCanvases(this.$overlayCanvas);
 
     // Draw labeled points, highlights, selections, the pixel grid, etc.
-    this.overlayCtx.save();
-    this.setupCtxWithViewportCoords(this.overlayCtx);
+    const overlayCtx = (this.$overlayCanvas.get(0) as HTMLCanvasElement).getContext('2d');
+    overlayCtx.save();
+    this.setupCtxWithViewportCoords(overlayCtx);
 
     // TODO: implement this
 
-    this.overlayCtx.restore();
+    overlayCtx.restore();
 
     // Draw the pixel grid in terms of physical pixels, not viewport pixels.
     if (this.cssScale > 4) {
-      this.overlayCtx.save();
-      this.overlayCtx.fillStyle = 'rgba(128, 128, 128, .25)';
+      overlayCtx.save();
+      overlayCtx.fillStyle = 'rgba(128, 128, 128, .25)';
       const devicePixelRatio = window.devicePixelRatio || 1;
       const { w: vlWidth, h: vlHeight } = this.getViewport();
       for (let x = 1; x < vlWidth; x++) {
-        this.overlayCtx.fillRect(
+        overlayCtx.fillRect(
           x * this.attrScale - devicePixelRatio / 2,
           0,
           devicePixelRatio,
           vlHeight * this.attrScale);
       }
       for (let y = 1; y < vlHeight; y++) {
-        this.overlayCtx.fillRect(
+        overlayCtx.fillRect(
           0,
           y * this.attrScale - devicePixelRatio / 2,
           vlWidth * this.attrScale,
           devicePixelRatio);
       }
-      this.overlayCtx.restore();
+      overlayCtx.restore();
     }
   }
 }

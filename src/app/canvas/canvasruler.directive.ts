@@ -5,6 +5,7 @@ import { Point } from '../scripts/common';
 import * as CanvasConstants from './constants';
 import { CanvasMixin } from './CanvasMixin';
 import { VectorLayer } from '../scripts/layers';
+import { CanvasDirective } from './canvas.component';
 
 // Ruler size in css pixels.
 const RULER_SIZE = 32;
@@ -17,7 +18,10 @@ const TICK_SIZE = 6;
 @Directive({
   selector: '[appCanvasRuler]',
 })
-export class CanvasRulerDirective extends CanvasMixin(class { }) {
+export class CanvasRulerDirective
+  extends CanvasMixin(class { })
+  implements CanvasDirective {
+
   @Input() orientation: Orientation;
   private readonly $canvas: JQuery;
   private mousePoint: Point;

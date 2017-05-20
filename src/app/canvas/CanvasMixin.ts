@@ -2,6 +2,7 @@ import * as _ from 'lodash';
 import { VectorLayer } from '../scripts/layers';
 import * as CanvasConstants from './constants';
 import { Constructor } from '../scripts/mixins';
+import { CanvasDirective } from './canvas.component';
 
 type Context = CanvasRenderingContext2D;
 
@@ -10,6 +11,12 @@ export function CanvasMixin<T extends Constructor<{}>>(Base: T) {
     private width = 1;
     private height = 1;
     private vectorLayer: VectorLayer;
+    private hiddenLayerIds: Set<string>;
+    private readonly canvasDirectives: CanvasDirective[] = [];
+
+    protected registerDirectives(directives: CanvasDirective[]) {
+      this.canvasDirectives.push(...directives);
+    }
 
     // TODO: make sure imported vector layers always have same width/height
     // TODO: make sure changing the width/height of one vector changes all other vectors?
@@ -19,6 +26,7 @@ export function CanvasMixin<T extends Constructor<{}>>(Base: T) {
 
     setVectorLayer(vl: VectorLayer) {
       this.vectorLayer = vl;
+      this.canvasDirectives.forEach(d => d.setVectorLayer(vl));
     }
 
     getViewport() {
@@ -31,10 +39,20 @@ export function CanvasMixin<T extends Constructor<{}>>(Base: T) {
     setDimensions(w: number, h: number) {
       this.width = Math.max(1, w - CanvasConstants.CANVAS_MARGIN * 2);
       this.height = Math.max(1, h - CanvasConstants.CANVAS_MARGIN * 2);
+      this.canvasDirectives.forEach(d => d.setDimensions(w, h));
     }
 
     getDimensions() {
       return { w: this.width, h: this.height };
+    }
+
+    setHiddenLayerIds(layerIds: Set<string>) {
+      this.hiddenLayerIds = layerIds;
+      this.canvasDirectives.forEach(d => d.setHiddenLayerIds(layerIds));
+    }
+
+    getHiddenLayerIds() {
+      return this.hiddenLayerIds;
     }
 
     /**
@@ -80,6 +98,10 @@ export function CanvasMixin<T extends Constructor<{}>>(Base: T) {
             height: vlHeight * this.cssScale,
           });
       });
+    }
+
+    draw() {
+      this.canvasDirectives.forEach(d => d.draw());
     }
   };
 }

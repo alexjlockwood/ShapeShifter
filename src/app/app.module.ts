@@ -37,6 +37,8 @@ import { LayerTimelineComponent } from './layertimeline/layertimeline.component'
 import { LayerTimelineDirective } from './layertimeline/layertimeline.directive';
 import { TimelineAnimationRowComponent } from './layertimeline/timelineanimationrow.component';
 import { DropTargetDirective } from './droptarget.directive';
+import { CanvasOverlayDirective } from './canvas/canvasoverlay.directive';
+import { CanvasLayersDirective } from './canvas/canvaslayers.directive';
 
 // Services.
 import {
@@ -64,7 +66,6 @@ import { SubPathPairsPipe } from './inspector/pathinspector.component';
 import { SvgCommandPipe } from './inspector/commandinspector.component';
 
 import 'hammerjs';
-import { CanvasOverlayDirective } from './canvas/canvasoverlay.directive';
 
 @NgModule({
   declarations: [
@@ -89,6 +90,7 @@ import { CanvasOverlayDirective } from './canvas/canvasoverlay.directive';
     TimelineAnimationRowComponent,
     DropTargetDirective,
     CanvasOverlayDirective,
+    CanvasLayersDirective,
   ],
   imports: [
     BrowserModule,
