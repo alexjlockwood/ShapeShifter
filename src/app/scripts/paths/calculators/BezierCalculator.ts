@@ -27,7 +27,8 @@ export class BezierCalculator implements Calculator {
     // Don't initialize variables lazily for dev builds (to avoid
     // ngrx-store-freeze crashes).
     if (!environment.production) {
-      (() => this.bezierJs)();
+      // tslint:disable-next-line
+      this.bezierJs;
       this.getPathLength();
       this.getBoundingBox();
     }
