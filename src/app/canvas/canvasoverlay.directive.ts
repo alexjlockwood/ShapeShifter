@@ -73,6 +73,7 @@ export class CanvasOverlayDirective
     return DRAG_TRIGGER_TOUCH_SLOP / this.cssScale;
   }
 
+  // @Override
   onDimensionsChanged() {
     const { w: vlWidth, h: vlHeight } = this.getViewport();
     this.$canvas

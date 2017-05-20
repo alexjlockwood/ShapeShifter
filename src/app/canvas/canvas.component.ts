@@ -78,6 +78,7 @@ export class CanvasComponent
     //   }));
   }
 
+  // @Override
   onDimensionsChanged(bounds: Size, viewport: Size) {
     const directives = [
       this.canvasContainer,

@@ -42,6 +42,7 @@ export class CanvasLayersDirective
     //     }));
   }
 
+  // @Override
   onDimensionsChanged(bounds: Size, viewport: Size) {
     const { w: vlWidth, h: vlHeight } = this.getViewport();
     [this.$renderingCanvas, this.$offscreenLayerCanvas]

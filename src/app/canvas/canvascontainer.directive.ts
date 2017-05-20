@@ -16,6 +16,7 @@ export class CanvasContainerDirective extends CanvasSizeMixin() {
     this.container = $(elementRef.nativeElement);
   }
 
+  // @Override
   onDimensionsChanged(bounds: Size, viewport: Size) {
     const { w: vlWidth, h: vlHeight } = viewport;
     this.container
