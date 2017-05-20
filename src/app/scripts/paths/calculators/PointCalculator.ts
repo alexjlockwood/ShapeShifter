@@ -1,6 +1,6 @@
 import { Calculator, BBox, Line } from '.';
 import { SvgChar, Projection } from '..';
-import { CommandBuilder } from '../CommandImpl';
+import { CommandBuilder } from '../Command';
 import { MathUtil, Point } from '../../common';
 
 export class PointCalculator implements Calculator {

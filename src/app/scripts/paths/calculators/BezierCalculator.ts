@@ -2,7 +2,7 @@ import * as _ from 'lodash';
 import * as BezierJs from 'bezier-js';
 import { Point } from '../../common';
 import { SvgChar, Projection } from '..';
-import { CommandBuilder } from '../CommandImpl';
+import { CommandBuilder } from '../Command';
 import { Calculator, BBox, Line } from '.';
 import { PointCalculator } from './PointCalculator';
 import { LineCalculator } from './LineCalculator';

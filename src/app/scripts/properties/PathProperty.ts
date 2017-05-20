@@ -1,11 +1,11 @@
-import { Path, PathUtil, newPath } from '../paths';
+import { Path, PathUtil } from '../paths';
 import { Property } from './Property';
 
 export class PathProperty extends Property<Path> {
 
   // @Override
   setEditableValue(model: any, propertyName: string, value: string) {
-    model[propertyName] = newPath(value);
+    model[propertyName] = new Path(value);
   }
 
   // @Override
@@ -26,7 +26,7 @@ export class PathProperty extends Property<Path> {
     }
     let pathData: Path;
     if (typeof value === 'string') {
-      pathData = newPath(value);
+      pathData = new Path(value);
     } else {
       pathData = value;
     }

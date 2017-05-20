@@ -1,6 +1,5 @@
 import { Point, Matrix, SvgUtil } from '../common';
 import { Command, SvgChar } from '.';
-import { newCommand } from './CommandImpl';
 
 /**
  * Takes an SVG path string (i.e. the text specified in the path's 'd' attribute) and returns
@@ -337,22 +336,22 @@ const enum Token {
 }
 
 function newMove(start: Point, end: Point) {
-  return newCommand('M', [start, end]);
+  return new Command('M', [start, end]);
 }
 
 function newLine(start: Point, end: Point) {
-  return newCommand('L', [start, end]);
+  return new Command('L', [start, end]);
 }
 
 function newQuadraticCurve(start: Point, cp: Point, end: Point) {
-  return newCommand('Q', [start, cp, end]);
+  return new Command('Q', [start, cp, end]);
 }
 
 function newBezierCurve(
   start: Point, cp1: Point, cp2: Point, end: Point) {
-  return newCommand('C', [start, cp1, cp2, end]);
+  return new Command('C', [start, cp1, cp2, end]);
 }
 
 function newClosePath(start: Point, end: Point) {
-  return newCommand('Z', [start, end]);
+  return new Command('Z', [start, end]);
 }

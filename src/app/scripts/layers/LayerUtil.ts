@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 import { Layer, VectorLayer, GroupLayer, PathLayer, ClipPathLayer } from '.';
-import { newPath } from '../paths';
+import { Path } from '../paths';
 import { Matrix } from '../common';
 
 const PRECISION = 8;
@@ -100,7 +100,7 @@ export function adjustVectorLayerDimensions(vl1: VectorLayer, vl2: VectorLayer) 
           if (layer instanceof PathLayer && layer.isStroked()) {
             layer.strokeWidth *= scale;
           }
-          layer.pathData = newPath(layer.pathData.getCommands().map(cmd => {
+          layer.pathData = new Path(layer.pathData.getCommands().map(cmd => {
             return cmd.mutate().transform(transforms).build();
           }));
           return;

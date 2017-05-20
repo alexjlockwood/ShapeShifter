@@ -1,4 +1,4 @@
-import { SvgChar, newPath, Path, Command, ProjectionOntoPath, PathUtil } from '.';
+import { SvgChar, Path, Command, ProjectionOntoPath, PathUtil } from '.';
 import { Point, MathUtil } from '../common';
 import * as _ from 'lodash';
 
@@ -22,7 +22,7 @@ describe('Path', () => {
             return 0;
         }
       };
-      return newPath(svgChars.split('').map((svgChar: SvgChar) => {
+      return new Path(svgChars.split('').map((svgChar: SvgChar) => {
         const args = '5'.repeat(numSvgCharArgsFn(svgChar)).split('').join(' ');
         return svgChar === 'Z' ? 'Z' : `${svgChar} ${args}`;
       }).join(' '));
@@ -80,7 +80,7 @@ describe('Path', () => {
 
     for (const test of TESTS) {
       it(`subpath #${test[1]} in '${test[0]}' is ${test[2] ? 'closed' : 'open'}`, () => {
-        const path = newPath(test[0] as string);
+        const path = new Path(test[0] as string);
         expect(path.getSubPaths()[test[1] as number].isClosed()).toEqual(test[2] as boolean);
       });
     }
@@ -98,7 +98,7 @@ describe('Path', () => {
         };
 
       // Creating a new path generates 4 new ids.
-      let path = newPath('M 0 0 L 0 0 L 0 0 L 0 0');
+      let path = new Path('M 0 0 L 0 0 L 0 0 L 0 0');
       extractPathIdsFn(path, 4, 4);
 
       // Reversing/shifting an existing path generates no new ids.
@@ -114,10 +114,10 @@ describe('Path', () => {
       extractPathIdsFn(path, 7, 7);
 
       // Creating new paths generate new IDs.
-      path = newPath('M 0 0 L 0 0 L 0 0 L 0 0').mutate().shiftSubPathBack(0).build();
+      path = new Path('M 0 0 L 0 0 L 0 0 L 0 0').mutate().shiftSubPathBack(0).build();
       extractPathIdsFn(path, 4, 11);
 
-      path = newPath('M 0 0 L 0 0 L 0 0 L 0 0').mutate().reverseSubPath(0).build();
+      path = new Path('M 0 0 L 0 0 L 0 0 L 0 0').mutate().reverseSubPath(0).build();
       extractPathIdsFn(path, 4, 15);
     });
 
@@ -850,7 +850,7 @@ describe('Path', () => {
 
     for (const test of MUTATION_TESTS) {
       it(`[${test.ops}] '${test.actual}' → '${test.expected}'`, () => {
-        checkPathsEqual(fromPathOpString(test.actual, test.ops), newPath(test.expected));
+        checkPathsEqual(fromPathOpString(test.actual, test.ops), new Path(test.expected));
       });
     }
   });
@@ -863,7 +863,7 @@ describe('Path', () => {
     ];
 
     const countUniqueSubPathIdsFn = (pathString: string) => {
-      return new Set(newPath(pathString).getSubPaths().map(s => s.getId())).size;
+      return new Set(new Path(pathString).getSubPaths().map(s => s.getId())).size;
     };
 
     for (const test of SUBPATH_ID_TESTS) {
@@ -873,7 +873,7 @@ describe('Path', () => {
     }
 
     it('subpath IDs persist correctly after mutations', () => {
-      const path = newPath('M 0 0 L 0 0 M 0 0 L 0 0 M 0 0 L 0 0');
+      const path = new Path('M 0 0 L 0 0 M 0 0 L 0 0 M 0 0 L 0 0');
       const subPathIds = path.getSubPaths().map(s => s.getId());
       const updatedPath = path.mutate().moveSubPath(0, 1).build();
       const updatedSubPathIds = updatedPath.getSubPaths().map(s => s.getId());
@@ -928,7 +928,7 @@ describe('Path', () => {
 
     TESTS_PROJECT.forEach(a => {
       const point = a.point as Point;
-      const path = (typeof a.path === 'string') ? newPath(a.path) : a.path;
+      const path = (typeof a.path === 'string') ? new Path(a.path) : a.path;
       it(`projecting '(${point.x},${point.y})' onto '${path.getPathString()}' yields ${JSON.stringify(a.proj)}`, () => {
         const result = path.project(point, a.subIdx);
         result.projection.t = _.round(result.projection.t, 10);
@@ -965,7 +965,7 @@ describe('Path', () => {
 
     TESTS_HIT_TEST_FILL.forEach(a => {
       const point = a[0] as Point;
-      const path = (typeof a[1] === 'string') ? newPath(a[1] as string) : a[1] as Path;
+      const path = (typeof a[1] === 'string') ? new Path(a[1] as string) : a[1] as Path;
       it(`hit test for '(${point.x},${point.y})' on fill path '${a[1]}' yields '${a[2]}'`, () => {
         expect(path.hitTest(point, { findShapesInRange: true }).isShapeHit).toEqual(a[2] as boolean);
       });
@@ -973,7 +973,7 @@ describe('Path', () => {
 
     TESTS_HIT_TEST_STROKE.forEach(a => {
       const point = a[0] as Point;
-      const path = newPath(a[1] as string);
+      const path = new Path(a[1] as string);
       it(`hit test for '(${point.x},${point.y})' on stroke path '${a[1]}' yields '${a[3]}'`, () => {
         const hitResult = path.hitTest(point, {
           isSegmentInRangeFn: dist => {

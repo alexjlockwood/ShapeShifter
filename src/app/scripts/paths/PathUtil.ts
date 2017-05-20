@@ -1,5 +1,3 @@
-import { newCommand } from './CommandImpl';
-import { newPath } from './PathImpl';
 import { Command, Path, SvgChar } from '.';
 import { MathUtil, Point, Matrix } from '../common';
 
@@ -30,9 +28,9 @@ export function interpolate(start: Path, end: Path, fraction: number) {
       }
     }
     // TODO: avoid re-generating unique ids on each animation frame.
-    newCommands.push(newCommand(startCmd.getSvgChar(), points));
+    newCommands.push(new Command(startCmd.getSvgChar(), points));
   });
-  return newPath(newCommands);
+  return new Path(newCommands);
 }
 
 /**
@@ -52,7 +50,7 @@ type PathOp = 'RV' | 'SB' | 'SF' | 'S' | 'SIH' | 'US' | 'CV' | 'UCV' | 'RT' | 'M
 
 export function fromPathOpString(pathString: string, pathOpsString: string) {
   const A = pathOpsString.split(' ');
-  const mutator = newPath(pathString).mutate();
+  const mutator = new Path(pathString).mutate();
   for (let i = 0; i < A.length; i++) {
     const op = A[i] as PathOp;
     switch (op) {

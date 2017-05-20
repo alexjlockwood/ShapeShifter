@@ -7,7 +7,7 @@ import {
   HitResult,
   Line,
 } from '.';
-import { createSubPaths } from './SubPathImpl';
+import { createSubPaths } from './SubPath';
 import { CommandState } from './CommandState';
 import { MathUtil, Point, Rect } from '../common';
 import * as PathParser from './PathParser';

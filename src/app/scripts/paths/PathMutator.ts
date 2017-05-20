@@ -1,6 +1,5 @@
 import * as _ from 'lodash';
-import { SvgChar, Command, newPath } from '.';
-import { newCommand } from './CommandImpl';
+import { SvgChar, Command, Path } from '.';
 import { CommandState } from './CommandState';
 import { MathUtil, Matrix, Point } from '../common';
 import { PathState } from './PathState';
@@ -254,7 +253,7 @@ export class PathMutator {
         const splitPoint = css[i].getCommands()[splitIdx].getEnd();
         const { left, right } = css[i].slice(splitIdx);
         startCommandStates.push(left);
-        let endMoveCs = new CommandState(newCommand('M', [splitPoint, splitPoint]));
+        let endMoveCs = new CommandState(new Command('M', [splitPoint, splitPoint]));
         if (sps.isReversed()) {
           endMoveCs = endMoveCs.mutate().reverse().build();
         }
@@ -361,10 +360,10 @@ export class PathMutator {
     // split segments were added together during the deletion phase.
     const splitSegmentId = _.uniqueId();
     const endLine =
-      new CommandState(newCommand('L', [endSplitPoint, startSplitPoint]))
+      new CommandState(new Command('L', [endSplitPoint, startSplitPoint]))
         .mutate().setSplitSegmentInfo(secondLeft, splitSegmentId).build();
     const startLine =
-      new CommandState(newCommand('L', [startSplitPoint, endSplitPoint]))
+      new CommandState(new Command('L', [startSplitPoint, endSplitPoint]))
         .mutate().setSplitSegmentInfo(firstLeft, splitSegmentId).build();
 
     const startCommandStates: CommandState[] = [];
@@ -383,7 +382,7 @@ export class PathMutator {
     for (let i = 0; i < targetCss.length; i++) {
       if (i === startCsIdx) {
         endCommandStates.push(
-          new CommandState(newCommand('M', [startSplitPoint, startSplitPoint]))
+          new CommandState(new Command('M', [startSplitPoint, startSplitPoint]))
             .mutate()
             // The move command identifies the beginning of a new split segment,
             // so we'll mark it with the parent state as well (we'll need this
@@ -651,9 +650,9 @@ export class PathMutator {
    */
   addCollapsingSubPath(point: Point, numCommands: number) {
     const prevCmd = _.last(this.buildOrderedCommands());
-    const css = [new CommandState(newCommand('M', [prevCmd.getEnd(), point]))];
+    const css = [new CommandState(new Command('M', [prevCmd.getEnd(), point]))];
     for (let i = 1; i < numCommands; i++) {
-      css.push(new CommandState(newCommand('L', [point, point])));
+      css.push(new CommandState(new Command('L', [point, point])));
     }
     this.subPathStateMap.push(new SubPathState(css));
     this.subPathOrdering.push(this.subPathOrdering.length);
@@ -707,7 +706,7 @@ export class PathMutator {
    * Builds a new mutated path.
    */
   build() {
-    return newPath(
+    return new Path(
       new PathState(
         this.buildOrderedCommands(),
         this.subPathStateMap,
@@ -884,7 +883,7 @@ function reverseCommandStates(css: CommandState[], isReversed: boolean) {
   if (isReversed) {
     const revCss = [
       new CommandState(
-        newCommand('M', [
+        new Command('M', [
           css[0].getCommands()[0].getStart(),
           _.last(_.last(css).getCommands()).getEnd(),
         ])),
@@ -931,7 +930,7 @@ function shiftCommandStates(css: CommandState[], isReversed: boolean, shiftOffse
 
   newCss.push(
     new CommandState(
-      newCommand('M', [
+      new Command('M', [
         css[0].getCommands()[0].getStart(),
         targetCs.getCommands()[targetSplitIdx].getEnd(),
       ])));

@@ -2,7 +2,7 @@ import * as _ from 'lodash';
 import { VectorLayer, PathLayer, GroupLayer, ClipPathLayer } from '../layers';
 import { NameProperty } from '../properties';
 import { ModelUtil } from '../common';
-import { newPath } from '../paths';
+import { Path } from '../paths';
 
 export function loadVectorLayerFromXmlString(
   xmlString: string,
@@ -36,7 +36,7 @@ export function loadVectorLayerFromXmlString(
         name: makeFinalNodeIdFn(node.getAttribute('android:name'), 'path'),
         children: [],
         // TODO: avoid crashing when pathData attribute isn't specified
-        pathData: newPath(node.getAttribute('android:pathData') || ''),
+        pathData: new Path(node.getAttribute('android:pathData') || ''),
         fillColor: node.getAttribute('android:fillColor') || undefined,
         fillAlpha: Number(node.getAttribute('android:fillAlpha') || 1),
         strokeColor: node.getAttribute('android:strokeColor') || undefined,
@@ -58,7 +58,7 @@ export function loadVectorLayerFromXmlString(
         name: makeFinalNodeIdFn(node.getAttribute('android:name'), 'clip-path'),
         children: [],
         // TODO: avoid crashing when pathData attribute isn't specified
-        pathData: newPath(node.getAttribute('android:pathData') || ''),
+        pathData: new Path(node.getAttribute('android:pathData') || ''),
       });
     }
 

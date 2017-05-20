@@ -4,7 +4,7 @@ import {
   Layer, StrokeLineCap, StrokeLineJoin, FillType,
 } from '../layers';
 import { NameProperty } from '../properties';
-import { newPath, Command } from '../paths';
+import { Path, Command } from '../paths';
 import { ColorUtil, Matrix, ModelUtil } from '../common';
 import { Svgo } from '../svgo';
 
@@ -96,10 +96,10 @@ export function loadVectorLayerFromSvgString(
     }
 
     if (path) {
-      let pathData = newPath(path);
+      let pathData = new Path(path);
       if (context.transforms && context.transforms.length) {
         const transforms = context.transforms.map(t => t.matrix as Matrix);
-        pathData = newPath(
+        pathData = new Path(
           _.chain(pathData.getSubPaths())
             .flatMap(subPath => subPath.getCommands() as Command[])
             .map(command => command.mutate().transform(transforms).build())
