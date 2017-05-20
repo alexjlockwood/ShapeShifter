@@ -1,12 +1,14 @@
 import * as _ from 'lodash';
+import { OnDestroy } from '@angular/core';
 import { VectorLayer } from '../scripts/layers';
 import * as CanvasConstants from './constants';
 import { Constructor } from '../scripts/mixins';
 import { CanvasDirective } from './canvas.component';
+import { Subscription } from 'rxjs/Subscription';
 
 type Context = CanvasRenderingContext2D;
 
-export function CanvasMixin<T extends Constructor<{}>>(Base: T) {
+export function CanvasMixin<T extends Constructor<{}>>(Base = class { } as T) {
   return class extends Base {
     private width = 1;
     private height = 1;

@@ -28,16 +28,17 @@ type Context = CanvasRenderingContext2D;
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CanvasComponent
-  extends CanvasMixin(DestroyableMixin(class { }))
+  extends CanvasMixin(DestroyableMixin())
   implements AfterViewInit {
 
   @ViewChild('canvasContainer') canvasContainerRef: ElementRef;
+  private $canvasContainer: JQuery;
+
   @ViewChild(CanvasLayersDirective) canvasLayers: CanvasLayersDirective;
   @ViewChild(CanvasOverlayDirective) canvasOverlay: CanvasOverlayDirective;
   @ViewChildren(CanvasRulerDirective) canvasRulers: QueryList<CanvasRulerDirective>;
-  @Input() sizeObservable: Observable<{ w: number, h: number }>;
 
-  private $canvasContainer: JQuery;
+  @Input() sizeObservable: Observable<{ w: number, h: number }>;
 
   constructor(
     private readonly animatorService: AnimatorService,
@@ -55,12 +56,14 @@ export class CanvasComponent
         .subscribe(({ vectorLayers, hiddenLayerIds }) => {
           this.setVectorLayer(vectorLayers[0]);
           this.canvasLayers.setHiddenLayerIds(hiddenLayerIds);
+          this.resizeCanvases(this.$canvasContainer);
           this.draw();
         }));
     this.registerSubscription(
       this.sizeObservable
         .subscribe(({ w, h }) => {
           this.setDimensions(w, h);
+          this.resizeCanvases(this.$canvasContainer);
           this.draw();
         }));
     this.registerSubscription(
@@ -73,14 +76,6 @@ export class CanvasComponent
         this.setVectorLayer(event.vl);
         this.draw();
       }));
-  }
-
-  /**
-   * Redraws all content.
-   */
-  draw() {
-    this.resizeCanvases(this.$canvasContainer);
-    super.draw();
   }
 
   // MOUSE DOWN
@@ -110,64 +105,6 @@ export class CanvasComponent
     // This ensures that parents won't also receive the same click event.
     event.cancelBubble = true;
   }
-
-  /**
-   * Converts a mouse point's CSS coordinates into vector layer viewport coordinates.
-   */
-  // private mouseEventToPoint(event: MouseEvent) {
-  //   const canvasOffset = this.canvasContainer.offset();
-  //   const x = (event.pageX - canvasOffset.left) / this.cssScale;
-  //   const y = (event.pageY - canvasOffset.top) / this.cssScale;
-  //   return new Point(x, y);
-  // }
-
-  // private executeHighlights(ctx: Context, color: string, lineWidth: number) {
-  //   ctx.save();
-  //   ctx.lineCap = 'round';
-  //   ctx.strokeStyle = color;
-  //   ctx.lineWidth = lineWidth;
-  //   ctx.stroke();
-  //   ctx.restore();
-  // }
-
-  // Draws a labeled point with optional text.
-  // private executeLabeledPoint(
-  //   ctx: Context,
-  //   point: Point,
-  //   radius: number,
-  //   color: string,
-  //   text?: string) {
-
-  //   // Convert the point and the radius to physical pixel coordinates.
-  //   // We do this to avoid fractional font sizes less than 1px, which
-  //   // show up OK on Chrome but not on Firefox or Safari.
-  //   point = MathUtil.transformPoint(
-  //     point, Matrix.fromScaling(this.attrScale, this.attrScale));
-  //   radius *= this.attrScale;
-
-  //   ctx.save();
-  //   ctx.beginPath();
-  //   ctx.arc(point.x, point.y, radius * POINT_BORDER_FACTOR, 0, 2 * Math.PI, false);
-  //   ctx.fillStyle = POINT_BORDER_COLOR;
-  //   ctx.fill();
-
-  //   ctx.beginPath();
-  //   ctx.arc(point.x, point.y, radius, 0, 2 * Math.PI, false);
-  //   ctx.fillStyle = color;
-  //   ctx.fill();
-
-  //   if (text) {
-  //     ctx.beginPath();
-  //     ctx.fillStyle = POINT_TEXT_COLOR;
-  //     ctx.font = radius + 'px Roboto, Helvetica Neue, sans-serif';
-  //     const width = ctx.measureText(text).width;
-  //     // TODO: is there a better way to get the height?
-  //     const height = ctx.measureText('o').width;
-  //     ctx.fillText(text, point.x - width / 2, point.y + height / 2);
-  //     ctx.fill();
-  //   }
-  //   ctx.restore();
-  // }
 
   /**
    * Sends a signal that the canvas rulers should be redrawn.

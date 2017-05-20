@@ -27,8 +27,8 @@ import {
 } from '../store';
 import { Observable } from 'rxjs/Observable';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
-import { Subscription } from 'rxjs/Subscription';
 import 'rxjs/add/observable/combineLatest';
+import { DestroyableMixin } from '../scripts/mixins';
 
 // Distance in pixels from a snap point before snapping to the point.
 const SNAP_PIXELS = 10;
@@ -52,12 +52,10 @@ enum MouseActions {
   styleUrls: ['./layertimeline.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class LayerTimelineComponent implements
-  OnInit,
-  OnDestroy,
-  AfterViewInit,
-  TimelineAnimationRowCallbacks,
-  LayerListTreeCallbacks {
+export class LayerTimelineComponent
+  extends DestroyableMixin()
+  implements OnInit, AfterViewInit,
+  TimelineAnimationRowCallbacks, LayerListTreeCallbacks {
 
   @ViewChild('timeline') private timelineRef: ElementRef;
   private $timeline: JQuery;
@@ -83,7 +81,6 @@ export class LayerTimelineComponent implements
   private selectedBlockIds: Set<string>;
 
   layerTimelineModel$: Observable<LayerTimelineModel>;
-  private readonly subscriptions: Subscription[] = [];
 
   // Mouse wheel zoom variables.
   private $zoomStartActiveAnimation: JQuery;
@@ -97,7 +94,7 @@ export class LayerTimelineComponent implements
     private readonly snackBar: MdSnackBar,
     private readonly animatorService: AnimatorService,
     private readonly store: Store<State>,
-  ) { }
+  ) { super() }
 
   ngOnInit() {
     this.layerTimelineModel$ = Observable.combineLatest(
@@ -131,14 +128,10 @@ export class LayerTimelineComponent implements
   ngAfterViewInit() {
     this.$timeline = $(this.timelineRef.nativeElement);
     this.autoZoomToAnimation();
-    this.subscriptions.push(
+    this.registerSubscription(
       this.animatorService.asObservable().subscribe(event => {
         this.activeTime = event.currentTime;
       }));
-  }
-
-  ngOnDestroy() {
-    this.subscriptions.forEach(s => s.unsubscribe());
   }
 
   private get horizZoom() {

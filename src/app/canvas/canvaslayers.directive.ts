@@ -14,13 +14,13 @@ type Context = CanvasRenderingContext2D;
   selector: '[appCanvasLayers]',
 })
 export class CanvasLayersDirective
-  extends CanvasMixin(DestroyableMixin(class { }))
+  extends CanvasMixin(DestroyableMixin())
   implements CanvasDirective {
 
   private readonly $renderingCanvas: JQuery;
-  private $offscreenLayerCanvas: JQuery;
-  private renderingCtx: Context;
-  private offscreenLayerCtx: Context;
+  private readonly $offscreenLayerCanvas: JQuery;
+  private readonly renderingCtx: Context;
+  private readonly offscreenLayerCtx: Context;
 
   constructor(
     readonly elementRef: ElementRef,

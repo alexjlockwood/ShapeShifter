@@ -31,7 +31,7 @@ type Context = CanvasRenderingContext2D;
   selector: '[appCanvasOverlay]',
 })
 export class CanvasOverlayDirective
-  extends CanvasMixin(class { })
+  extends CanvasMixin()
   implements CanvasDirective {
 
   private readonly $overlayCanvas: JQuery;
@@ -108,4 +108,52 @@ export class CanvasOverlayDirective
       overlayCtx.restore();
     }
   }
+
+  // private executeHighlights(ctx: Context, color: string, lineWidth: number) {
+  //   ctx.save();
+  //   ctx.lineCap = 'round';
+  //   ctx.strokeStyle = color;
+  //   ctx.lineWidth = lineWidth;
+  //   ctx.stroke();
+  //   ctx.restore();
+  // }
+
+  // Draws a labeled point with optional text.
+  // private executeLabeledPoint(
+  //   ctx: Context,
+  //   point: Point,
+  //   radius: number,
+  //   color: string,
+  //   text?: string) {
+
+  //   // Convert the point and the radius to physical pixel coordinates.
+  //   // We do this to avoid fractional font sizes less than 1px, which
+  //   // show up OK on Chrome but not on Firefox or Safari.
+  //   point = MathUtil.transformPoint(
+  //     point, Matrix.fromScaling(this.attrScale, this.attrScale));
+  //   radius *= this.attrScale;
+
+  //   ctx.save();
+  //   ctx.beginPath();
+  //   ctx.arc(point.x, point.y, radius * POINT_BORDER_FACTOR, 0, 2 * Math.PI, false);
+  //   ctx.fillStyle = POINT_BORDER_COLOR;
+  //   ctx.fill();
+
+  //   ctx.beginPath();
+  //   ctx.arc(point.x, point.y, radius, 0, 2 * Math.PI, false);
+  //   ctx.fillStyle = color;
+  //   ctx.fill();
+
+  //   if (text) {
+  //     ctx.beginPath();
+  //     ctx.fillStyle = POINT_TEXT_COLOR;
+  //     ctx.font = radius + 'px Roboto, Helvetica Neue, sans-serif';
+  //     const width = ctx.measureText(text).width;
+  //     // TODO: is there a better way to get the height?
+  //     const height = ctx.measureText('o').width;
+  //     ctx.fillText(text, point.x - width / 2, point.y + height / 2);
+  //     ctx.fill();
+  //   }
+  //   ctx.restore();
+  // }
 }

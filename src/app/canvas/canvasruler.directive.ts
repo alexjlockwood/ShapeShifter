@@ -19,7 +19,7 @@ const TICK_SIZE = 6;
   selector: '[appCanvasRuler]',
 })
 export class CanvasRulerDirective
-  extends CanvasMixin(class { })
+  extends CanvasMixin()
   implements CanvasDirective {
 
   @Input() orientation: Orientation;
