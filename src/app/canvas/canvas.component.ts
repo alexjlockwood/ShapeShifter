@@ -98,14 +98,6 @@ export class CanvasComponent
     this.canvasRulers.forEach(r => r.hideMouse());
   }
 
-  onClick(event: MouseEvent) {
-    // TODO: re-enable click canvas to import file?
-
-    // TODO: is this hacky? should we be using onBlur() to reset the app mode?
-    // This ensures that parents won't also receive the same click event.
-    event.cancelBubble = true;
-  }
-
   /**
    * Sends a signal that the canvas rulers should be redrawn.
    */
