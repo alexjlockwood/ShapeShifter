@@ -19,7 +19,7 @@ const TICK_SIZE = 6;
 @Directive({
   selector: '[appCanvasRuler]',
 })
-export class CanvasRulerDirective extends CanvasSizeMixin(class { }) {
+export class CanvasRulerDirective extends CanvasSizeMixin() {
 
   @Input() orientation: Orientation;
   private readonly $canvas: JQuery;
@@ -30,6 +30,7 @@ export class CanvasRulerDirective extends CanvasSizeMixin(class { }) {
     this.$canvas = $(elementRef.nativeElement);
   }
 
+  // @Override
   onDimensionsChanged() {
     this.draw();
   }

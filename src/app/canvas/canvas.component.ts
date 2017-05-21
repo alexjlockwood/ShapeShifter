@@ -60,13 +60,15 @@ export class CanvasComponent
       }));
     this.registerSubscription(
       this.store.select(getLayerState)
-        .subscribe(({ vectorLayers, hiddenLayerIds }) => {
+        .subscribe(({ vectorLayers, hiddenLayerIds, selectedLayerIds }) => {
           // TODO: how to deal with multiple vector layers?
           // TODO: how to deal with multiple vector layers?
           // TODO: how to deal with multiple vector layers?
           // TODO: how to deal with multiple vector layers?
           // TODO: how to deal with multiple vector layers?
-          this.canvasLayers.setLayerState([vectorLayers[0]], hiddenLayerIds);
+          const vls = [vectorLayers[0]];
+          this.canvasLayers.setLayerState(vls, hiddenLayerIds);
+          this.canvasOverlay.setLayerState(vls, hiddenLayerIds, selectedLayerIds);
         }));
     this.registerSubscription(
       this.animatorService.asObservable().subscribe(event => {
@@ -79,7 +81,8 @@ export class CanvasComponent
         // TODO: how to deal with multiple vector layers?
         // TODO: how to deal with multiple vector layers?
         // TODO: how to deal with multiple vector layers?
-        this.canvasLayers.setVectorLayers([event.vl]);
+        const vls = [event.vl];
+        this.canvasLayers.setVectorLayers(vls);
       }));
   }
 

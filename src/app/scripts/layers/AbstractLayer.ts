@@ -86,6 +86,4 @@ interface AbstractLayerArgs {
 }
 
 export interface AbstractLayer extends AbstractLayerArgs, Inspectable, Animatable { }
-
-// tslint:disable-next-line
 export interface ConstructorArgs extends AbstractLayerArgs { }
