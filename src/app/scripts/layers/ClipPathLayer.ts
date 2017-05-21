@@ -1,6 +1,7 @@
 import { Path, PathUtil } from '../paths';
 import { AbstractLayer, ConstructorArgs as AbstractConstructorArgs } from './AbstractLayer';
 import { Property, PathProperty } from '../properties';
+import { Rect } from '../common';
 
 /**
  * Model object that mirrors the VectorDrawable's '<clip-path>' element.
@@ -32,6 +33,10 @@ export class ClipPathLayer extends AbstractLayer {
 
   interpolate(start: ClipPathLayer, end: ClipPathLayer, fraction: number) {
     this.pathData = PathUtil.interpolate(start.pathData, end.pathData, fraction);
+  }
+
+  getBoundingBox() {
+    return this.pathData ? this.pathData.getBoundingBox() : undefined;
   }
 }
 

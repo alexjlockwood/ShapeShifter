@@ -1,21 +1,11 @@
 import * as _ from 'lodash';
-import {
-  SubPath,
-  Command,
-  ProjectionOntoPath,
-  HitOptions,
-  HitResult,
-  Line,
-} from '.';
+import { SubPath, Command, ProjectionOntoPath, HitOptions, HitResult, Line } from '.';
 import { createSubPaths } from './SubPath';
 import { CommandState } from './CommandState';
 import { MathUtil, Point, Rect } from '../common';
 import * as PathParser from './PathParser';
 import * as polylabel from 'polylabel';
-import {
-  SubPathState,
-  findSubPathState,
-} from './SubPathState';
+import { SubPathState, findSubPathState } from './SubPathState';
 
 /**
  * Container class that encapsulates a Path's underlying state.
@@ -204,7 +194,7 @@ export class PathState {
           .flatMap(obj => {
             const { subIdx } = obj;
             const css = this.findSubPathState(subIdx).getCommandStates();
-            const bounds = createBoundingBox(...css);
+            const bounds = createBoundingBox(css);
             if (!bounds.contains(point)) {
               // Nothing to see here. Check the next subpath.
               return [] as Array<{ subIdx: number }>;
@@ -269,6 +259,12 @@ export class PathState {
     return new Point(pole[0], pole[1]);
   }
 
+  // TODO: cache this?
+  getBoundingBox() {
+    const css = _.flatMap(this.subPathStateMap, sps => sps.getCommandStates() as CommandState[]);
+    return createBoundingBox(css);
+  }
+
   private findSubPathState(subIdx: number) {
     return findSubPathState(this.subPathStateMap, this.subPathOrdering[subIdx]);
   }
@@ -319,7 +315,7 @@ export class PathState {
 }
 
 // TODO: cache this?
-function createBoundingBox(...css: CommandState[]) {
+function createBoundingBox(css: ReadonlyArray<CommandState>) {
   const bounds = new Rect(Infinity, Infinity, -Infinity, -Infinity);
 
   const expandBoundsFn = (x: number, y: number) => {

@@ -1,5 +1,5 @@
 import { AbstractLayer, ConstructorArgs as AbstractConstructorArgs } from './AbstractLayer';
-import { MathUtil } from '../common';
+import { MathUtil, Rect } from '../common';
 import { Property, NumberProperty } from '../properties';
 
 /**
@@ -55,6 +55,25 @@ export class GroupLayer extends AbstractLayer {
     this.scaleY = MathUtil.lerp(start.scaleY, end.scaleY, fraction);
     this.translateX = MathUtil.lerp(start.translateX, end.translateX, fraction);
     this.translateY = MathUtil.lerp(start.translateY, end.translateY, fraction);
+  }
+
+  getBoundingBox() {
+    let bounds: Rect = undefined;
+    this.children.forEach(child => {
+      const childBounds = child.getBoundingBox();
+      if (!childBounds) {
+        return;
+      }
+      if (bounds) {
+        bounds.l = Math.min(childBounds.l, bounds.l);
+        bounds.t = Math.min(childBounds.t, bounds.t);
+        bounds.r = Math.max(childBounds.r, bounds.r);
+        bounds.b = Math.max(childBounds.b, bounds.b);
+      } else {
+        bounds = childBounds.clone();
+      }
+    });
+    return bounds;
   }
 }
 

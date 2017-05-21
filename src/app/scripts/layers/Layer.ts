@@ -1,4 +1,5 @@
 import { Inspectable, Animatable } from '../properties';
+import { Rect } from '../common';
 
 /**
  * Interface that is shared by all vector drawable layer models below.
@@ -25,6 +26,7 @@ export interface Layer extends Inspectable, Animatable {
   deepClone<T extends Layer>(): T;
   getIconName(): string;
   getPrefix(): string;
+  getBoundingBox(): Rect | undefined;
 
   /**
    * Returns the first descendent layer with the specified id.

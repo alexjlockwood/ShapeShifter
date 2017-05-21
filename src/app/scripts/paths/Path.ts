@@ -145,6 +145,13 @@ export class Path {
   }
 
   /**
+   * Returns the bounding box for this path.
+   */
+  getBoundingBox() {
+    return this.ps.getBoundingBox();
+  }
+
+  /**
    * Creates a builder that can create a mutated Path object.
    */
   mutate() {

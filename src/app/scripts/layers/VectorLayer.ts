@@ -1,11 +1,12 @@
 import { AbstractLayer, ConstructorArgs as AbstractConstructorArgs } from './AbstractLayer';
-import { MathUtil } from '../common';
+import { MathUtil, Rect } from '../common';
 import { Property, NumberProperty, FractionProperty } from '../properties';
 
 /**
  * Model object that mirrors the VectorDrawable's '<vector>' element.
  */
 @Property.register(
+  // TODO: add 'canvas color' property?
   new NumberProperty('width', { isAnimatable: false, min: 1, isInteger: true }),
   new NumberProperty('height', { isAnimatable: false, min: 1, isInteger: true }),
   new FractionProperty('alpha', { isAnimatable: true }),
@@ -41,6 +42,10 @@ export class VectorLayer extends AbstractLayer {
     const clone = this.clone();
     clone.children = this.children.map(c => c.deepClone());
     return clone;
+  }
+
+  getBoundingBox() {
+    return new Rect(0, 0, this.width, this.height);
   }
 }
 

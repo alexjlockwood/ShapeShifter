@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
 import { Path, PathUtil } from '../paths';
 import { AbstractLayer, ConstructorArgs as AbstractConstructorArgs } from './AbstractLayer';
-import { ColorUtil, MathUtil } from '../common';
+import { ColorUtil, MathUtil, Rect } from '../common';
 import {
   Property, PathProperty, ColorProperty,
   FractionProperty, NumberProperty, EnumProperty,
@@ -111,6 +111,10 @@ export class PathLayer extends AbstractLayer {
       b: _.clamp(Math.round(MathUtil.lerp(startColor.b, endColor.b, fraction)), 0, 255),
       a: _.clamp(Math.round(MathUtil.lerp(startColor.a, endColor.a, fraction)), 0, 255),
     });
+  }
+
+  getBoundingBox() {
+    return this.pathData ? this.pathData.getBoundingBox() : undefined;
   }
 }
 

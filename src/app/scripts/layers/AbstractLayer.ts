@@ -1,6 +1,7 @@
 import * as _ from 'lodash';
 import { Layer, ClipPathLayer, PathLayer } from '.';
 import { Property, NameProperty, Inspectable, Animatable } from '../properties';
+import { Rect } from '../common';
 
 /**
  * Root class for all layer types.
@@ -74,6 +75,7 @@ export abstract class AbstractLayer implements Layer {
   abstract interpolate(start: AbstractLayer, end: AbstractLayer, fraction: number): void;
   abstract getIconName(): string;
   abstract getPrefix(): string;
+  abstract getBoundingBox(): Rect | undefined;
 }
 
 // TODO: share this interface with Layer?
