@@ -97,6 +97,31 @@ export const DEBUG_VECTOR_DRAWABLE = `
   android:viewportWidth="24">
   <group
     android:name="hourglass_frame"
+    android:scaleX="0.25"
+    android:scaleY="0.25"
+    android:pivotX="12"
+    android:pivotY="12">
+    <path
+      android:name="bottom_inner_path"
+      android:strokeColor="#000"
+      android:strokeWidth="2"
+      android:trimPathStart="0.2"
+      android:trimPathEnd="0.8"
+      android:pathData="M 4 4 h 16 v 16 h -16 v -16"/>
+  </group>
+</vector>
+`;
+
+
+export const DEBUG_VECTOR_DRAWABLE_2 = `
+<vector
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  android:width="24dp"
+  android:height="24dp"
+  android:viewportHeight="24"
+  android:viewportWidth="24">
+  <group
+    android:name="hourglass_frame"
     android:scaleX="0.7"
     android:scaleY="0.7"
     android:translateX="12"

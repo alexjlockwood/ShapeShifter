@@ -57,7 +57,6 @@ export function loadVectorLayerFromXmlString(
         id: _.uniqueId(),
         name: makeFinalNodeIdFn(node.getAttribute('android:name'), 'clip-path'),
         children: [],
-        // TODO: avoid crashing when pathData attribute isn't specified
         pathData: new Path(node.getAttribute('android:pathData') || ''),
       });
     }

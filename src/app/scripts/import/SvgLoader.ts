@@ -99,6 +99,7 @@ export function loadVectorLayerFromSvgString(
       let pathData = new Path(path);
       if (context.transforms && context.transforms.length) {
         const transforms = context.transforms.map(t => t.matrix as Matrix);
+        console.info(transforms);
         pathData = new Path(
           _.chain(pathData.getSubPaths())
             .flatMap(subPath => subPath.getCommands() as Command[])

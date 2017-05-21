@@ -28,12 +28,12 @@ export function getTransformsForLayer(vectorLayer: VectorLayer, layerId: string)
       });
     }
     for (const child of current.children) {
-      const transforms = getTransformsFn([...parents, current], child);
+      const transforms = getTransformsFn(parents.concat([current]), child);
       if (transforms) {
         return transforms;
       }
     }
-    return [];
+    return undefined;
   };
   return getTransformsFn([], vectorLayer);
 }

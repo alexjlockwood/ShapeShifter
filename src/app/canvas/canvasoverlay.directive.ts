@@ -15,6 +15,8 @@ const SPLIT_POINT_RADIUS_FACTOR = 0.8;
 
 // The line width of a highlight in css pixels.
 const HIGHLIGHT_LINE_WIDTH = 6;
+// The line dash of a highlight in css pixels.
+const HIGHLIGHT_LINE_DASH = 5;
 // The distance of a mouse gesture that triggers a drag, in css pixels.
 const DRAG_TRIGGER_TOUCH_SLOP = 6;
 // The minimum distance between a point and a path that causes a snap.
@@ -49,6 +51,17 @@ export class CanvasOverlayDirective extends CanvasSizeMixin() {
     this.overlayCtx = (this.$canvas.get(0) as HTMLCanvasElement).getContext('2d');
   }
 
+  private get highlightLineWidth() {
+    return HIGHLIGHT_LINE_WIDTH / this.cssScale;
+  }
+
+  private get highlightLineDash() {
+    return [
+      HIGHLIGHT_LINE_DASH / this.cssScale,
+      HIGHLIGHT_LINE_DASH / this.cssScale,
+    ];
+  }
+
   // @Override
   onDimensionsChanged() {
     const { w, h } = this.getViewport();
@@ -66,10 +79,6 @@ export class CanvasOverlayDirective extends CanvasSizeMixin() {
     this.hiddenLayerIds = hiddenLayerIds;
     this.selectedLayerIds = selectedLayerIds;
     this.draw();
-  }
-
-  private get highlightLineWidth() {
-    return HIGHLIGHT_LINE_WIDTH / this.cssScale;
   }
 
   draw() {
@@ -123,7 +132,7 @@ export class CanvasOverlayDirective extends CanvasSizeMixin() {
     }
     const transforms = LayerUtil.getTransformsForLayer(vl, layer.id);
     CanvasUtil.executeCommands(ctx, layer.pathData.getCommands(), transforms);
-    executeHighlights(ctx, HIGHLIGHT_COLOR, this.highlightLineWidth);
+    executeHighlights(ctx, HIGHLIGHT_COLOR, this.highlightLineWidth, this.highlightLineDash);
     ctx.clip();
   }
 
@@ -163,49 +172,16 @@ export class CanvasOverlayDirective extends CanvasSizeMixin() {
       this.overlayCtx.restore();
     }
   }
-
-  // Draws a labeled point with optional text.
-  // private executeLabeledPoint(
-  //   ctx: Context,
-  //   point: Point,
-  //   radius: number,
-  //   color: string,
-  //   text?: string) {
-
-  //   // Convert the point and the radius to physical pixel coordinates.
-  //   // We do this to avoid fractional font sizes less than 1px, which
-  //   // show up OK on Chrome but not on Firefox or Safari.
-  //   point = MathUtil.transformPoint(
-  //     point, Matrix.fromScaling(this.attrScale, this.attrScale));
-  //   radius *= this.attrScale;
-
-  //   ctx.save();
-  //   ctx.beginPath();
-  //   ctx.arc(point.x, point.y, radius * POINT_BORDER_FACTOR, 0, 2 * Math.PI, false);
-  //   ctx.fillStyle = POINT_BORDER_COLOR;
-  //   ctx.fill();
-
-  //   ctx.beginPath();
-  //   ctx.arc(point.x, point.y, radius, 0, 2 * Math.PI, false);
-  //   ctx.fillStyle = color;
-  //   ctx.fill();
-
-  //   if (text) {
-  //     ctx.beginPath();
-  //     ctx.fillStyle = POINT_TEXT_COLOR;
-  //     ctx.font = radius + 'px Roboto, Helvetica Neue, sans-serif';
-  //     const width = ctx.measureText(text).width;
-  //     // TODO: is there a better way to get the height?
-  //     const height = ctx.measureText('o').width;
-  //     ctx.fillText(text, point.x - width / 2, point.y + height / 2);
-  //     ctx.fill();
-  //   }
-  //   ctx.restore();
-  // }
 }
 
-function executeHighlights(ctx: Context, color: string, lineWidth: number) {
+function executeHighlights(
+  ctx: Context,
+  color: string,
+  lineWidth: number,
+  lineDash: number[] = [],
+) {
   ctx.save();
+  ctx.setLineDash(lineDash);
   ctx.lineCap = 'round';
   ctx.strokeStyle = color;
   ctx.lineWidth = lineWidth;

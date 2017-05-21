@@ -7,11 +7,12 @@ import {
 import { MdSnackBar } from '@angular/material';
 import { environment } from '../environments/environment';
 import { FileImporterService, ShortcutService } from './services';
-import 'rxjs/add/observable/combineLatest';
 import { Store, State, AddLayers } from './store';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/operator/distinctUntilChanged';
+import { VectorDrawableLoader } from './scripts/import';
+import { DEBUG_VECTOR_DRAWABLE } from './scripts/demos';
 
 const IS_DEV_MODE = !environment.production;
 const ELEMENT_RESIZE_DETECTOR = erd();
@@ -70,6 +71,15 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
           this.snackBar.open('Ready to work offline', 'Dismiss', { duration: 5000 });
         });
       }
+    }
+
+    if (IS_DEV_MODE) {
+      const vl =
+        VectorDrawableLoader.loadVectorLayerFromXmlString(
+          DEBUG_VECTOR_DRAWABLE,
+          name => false,
+        );
+      this.store.dispatch(new AddLayers([vl], true /* delete empty vector layer */));
     }
   }
 

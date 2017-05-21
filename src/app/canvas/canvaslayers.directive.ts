@@ -84,7 +84,7 @@ export class CanvasLayersDirective extends CanvasSizeMixin() {
       // so that we can draw it translucently w/ o affecting the rest of
       // the layer's appearance.
       const layerCtx = currentAlpha < 1 ? this.offscreenLayerCtx : this.renderingCtx;
-      this.drawLayer(vl, vl, layerCtx);
+      this.drawVectorLayer(vl, layerCtx);
 
       if (currentAlpha < 1) {
         this.renderingCtx.save();
@@ -100,16 +100,18 @@ export class CanvasLayersDirective extends CanvasSizeMixin() {
     });
   }
 
-  private drawLayer(vl: VectorLayer, curr: Layer, ctx: Context) {
-    if (this.hiddenLayerIds.has(curr.id)) {
-      return;
-    }
-    if (curr instanceof ClipPathLayer) {
-      this.drawClipPathLayer(vl, curr, ctx);
-    } else if (curr instanceof PathLayer) {
-      this.drawPathLayer(vl, curr, ctx);
-    }
-    curr.children.forEach(child => this.drawLayer(vl, child, ctx));
+  private drawVectorLayer(vl: VectorLayer, ctx: Context) {
+    vl.walk(curr => {
+      if (this.hiddenLayerIds.has(curr.id)) {
+        return false;
+      }
+      if (curr instanceof ClipPathLayer) {
+        this.drawClipPathLayer(vl, curr, ctx);
+      } else if (curr instanceof PathLayer) {
+        this.drawPathLayer(vl, curr, ctx);
+      }
+      return true;
+    });
   }
 
   private drawClipPathLayer(vl: VectorLayer, layer: ClipPathLayer, ctx: Context) {
@@ -128,10 +130,10 @@ export class CanvasLayersDirective extends CanvasSizeMixin() {
     ctx.save();
 
     const transforms = LayerUtil.getTransformsForLayer(vl, layer.id);
-    CanvasUtil.executeCommands(ctx, layer.pathData.getCommands(), transforms);
+    const flattenedTransform = Matrix.flatten(...transforms.slice().reverse());
+    CanvasUtil.executeCommands(ctx, layer.pathData.getCommands(), [flattenedTransform]);
 
-    // TODO: confirm this stroke multiplier thing works...
-    const strokeWidthMultiplier = Matrix.flatten(...transforms).getScale();
+    const strokeWidthMultiplier = flattenedTransform.getScale();
     ctx.strokeStyle = ColorUtil.androidToCssRgbaColor(layer.strokeColor, layer.strokeAlpha);
     ctx.lineWidth = layer.strokeWidth * strokeWidthMultiplier;
     ctx.fillStyle = ColorUtil.androidToCssRgbaColor(layer.fillColor, layer.fillAlpha);
@@ -139,14 +141,21 @@ export class CanvasLayersDirective extends CanvasSizeMixin() {
     ctx.lineJoin = layer.strokeLinejoin;
     ctx.miterLimit = layer.strokeMiterLimit;
 
-    // TODO: update layer.pathData.length so that it reflects scale transforms
-    // TODO: update layer.pathData.length so that it reflects scale transforms
-    // TODO: update layer.pathData.length so that it reflects scale transforms
-    // TODO: update layer.pathData.length so that it reflects scale transforms
-    // TODO: update layer.pathData.length so that it reflects scale transforms
     if (layer.trimPathStart !== 0
       || layer.trimPathEnd !== 1
       || layer.trimPathOffset !== 0) {
+      const { a, d } = flattenedTransform;
+      let pathLength: number;
+      if (a !== 1 || d !== 1) {
+        // Then recompute the scaled path length.
+        pathLength = layer.pathData.mutate()
+          .addTransforms(transforms.slice().reverse())
+          .build()
+          .getPathLength();
+      } else {
+        pathLength = layer.pathData.getPathLength();
+      }
+
       // Calculate the visible fraction of the trimmed path. If trimPathStart
       // is greater than trimPathEnd, then the result should be the combined
       // length of the two line segments: [trimPathStart,1] and [0,trimPathEnd].
@@ -159,13 +168,13 @@ export class CanvasLayersDirective extends CanvasSizeMixin() {
       // difference in length between the total path length and the visible
       // trimmed path length.
       ctx.setLineDash([
-        shownFraction * layer.pathData.getPathLength(),
-        (1 - shownFraction + 0.001) * layer.pathData.getPathLength(),
+        shownFraction * pathLength,
+        (1 - shownFraction + 0.001) * pathLength,
       ]);
       // The amount to offset the path is equal to the trimPathStart plus
       // trimPathOffset. We mod the result because the trimmed path
       // should wrap around once it reaches 1.
-      ctx.lineDashOffset = layer.pathData.getPathLength()
+      ctx.lineDashOffset = pathLength
         * (1 - ((layer.trimPathStart + layer.trimPathOffset) % 1));
     } else {
       ctx.setLineDash([]);
