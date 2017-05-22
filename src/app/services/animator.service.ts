@@ -3,8 +3,7 @@ import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import {
   Store,
   State,
-  getActiveAnimation,
-  getVectorLayers,
+  getAnimatorState,
   getIsSlowMotion,
   getIsPlaying,
   getIsRepeating,
@@ -47,20 +46,13 @@ export class AnimatorService {
       .subscribe(isPlaying => isPlaying ? this.play() : this.pause());
     this.store.select(getIsRepeating)
       .subscribe(isRepeating => this.animator.setIsRepeating(isRepeating));
-    Observable.combineLatest(
-      this.store.select(getVectorLayers),
-      this.store.select(getActiveAnimation),
-    ).subscribe(([vls, activeAnimation]) => {
-      if (!vls.length || !activeAnimation) {
-        // TODO: make it so these cases are never possible
-        return;
-      }
-      this.activeAnimation = activeAnimation;
-      const vl = vls[0];
-      this.animationRenderer = new AnimationRenderer(vl, activeAnimation);
-      // TODO: can we make it possible to modify this data w/o pausing the animation?
-      this.animator.pause();
-    });
+    this.store.select(getAnimatorState)
+      .subscribe(({ activeVectorLayer, activeAnimation }) => {
+        this.activeAnimation = activeAnimation;
+        this.animationRenderer = new AnimationRenderer(activeVectorLayer, activeAnimation);
+        // TODO: can we make it possible to modify this data w/o pausing the animation?
+        this.animator.pause();
+      });
   }
 
   asObservable() {

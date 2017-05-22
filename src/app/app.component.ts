@@ -73,14 +73,14 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     }
 
-    if (IS_DEV_MODE) {
-      const vl =
-        VectorDrawableLoader.loadVectorLayerFromXmlString(
-          DEBUG_VECTOR_DRAWABLE,
-          name => false,
-        );
-      this.store.dispatch(new AddLayers([vl], true /* delete empty vector layer */));
-    }
+    // if (IS_DEV_MODE) {
+    //   const vl =
+    //     VectorDrawableLoader.loadVectorLayerFromXmlString(
+    //       DEBUG_VECTOR_DRAWABLE,
+    //       name => false,
+    //     );
+    //   this.store.dispatch(new AddLayers([vl], true /* delete empty vector layer */));
+    // }
   }
 
   ngOnDestroy() {
@@ -94,7 +94,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     this.fileImporterService.import(
       fileList,
       vls => {
-        this.store.dispatch(new AddLayers(vls, true /* delete empty vector layer */));
+        this.store.dispatch(new AddLayers(vls));
         this.snackBar.open(
           `Imported ${vls.length} path${vls.length === 1 ? '' : 's'}`,
           'Dismiss',

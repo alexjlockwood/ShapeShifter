@@ -2,7 +2,6 @@ import * as $ from 'jquery';
 import { Directive, ElementRef, Input, AfterViewInit } from '@angular/core';
 import { CanvasSizeMixin, Size } from './CanvasSizeMixin';
 import { DestroyableMixin } from '../scripts/mixins';
-import { Store, State, getLayerState } from '../store';
 import {
   Layer, PathLayer, GroupLayer, ClipPathLayer, LayerUtil, VectorLayer,
 } from '../scripts/layers';
@@ -22,13 +21,10 @@ export class CanvasLayersDirective extends CanvasSizeMixin() {
   private readonly $offscreenLayerCanvas: JQuery;
   private readonly renderingCtx: Context;
   private readonly offscreenLayerCtx: Context;
-  private vectorLayers: ReadonlyArray<VectorLayer> = [];
+  private vectorLayer: VectorLayer;
   private hiddenLayerIds = new Set<string>();
 
-  constructor(
-    readonly elementRef: ElementRef,
-    readonly store: Store<State>,
-  ) {
+  constructor(readonly elementRef: ElementRef) {
     super();
     this.$renderingCanvas = $(elementRef.nativeElement);
     this.$offscreenLayerCanvas = $(document.createElement('canvas'));
@@ -50,54 +46,56 @@ export class CanvasLayersDirective extends CanvasSizeMixin() {
     this.draw();
   }
 
-  setVectorLayers(vls: ReadonlyArray<VectorLayer>) {
-    this.vectorLayers = vls;
+  setVectorLayer(vl: VectorLayer) {
+    this.vectorLayer = vl;
     this.draw();
   }
 
-  setLayerState(vls: ReadonlyArray<VectorLayer>, hiddenLayerIds: Set<string>) {
-    this.vectorLayers = vls;
+  setLayerState(vl: VectorLayer, hiddenLayerIds: Set<string>) {
+    this.vectorLayer = vl;
     this.hiddenLayerIds = hiddenLayerIds;
     this.draw();
   }
 
   draw() {
-    this.vectorLayers.forEach(vl => {
-      // Scale the canvas so that everything from this point forward is drawn
-      // in terms of the SVG's viewport coordinates.
-      const setupCtxWithViewportCoordsFn = (ctx: Context) => {
-        ctx.scale(this.attrScale, this.attrScale);
-        const { w, h } = this.getViewport();
-        ctx.clearRect(0, 0, w, h);
-      }
+    if (!this.vectorLayer) {
+      return;
+    }
 
+    // Scale the canvas so that everything from this point forward is drawn
+    // in terms of the SVG's viewport coordinates.
+    const setupCtxWithViewportCoordsFn = (ctx: Context) => {
+      ctx.scale(this.attrScale, this.attrScale);
+      const { w, h } = this.getViewport();
+      ctx.clearRect(0, 0, w, h);
+    }
+
+    this.renderingCtx.save();
+    setupCtxWithViewportCoordsFn(this.renderingCtx);
+
+    const currentAlpha = this.vectorLayer ? this.vectorLayer.alpha : 1;
+    if (currentAlpha < 1) {
+      this.offscreenLayerCtx.save();
+      setupCtxWithViewportCoordsFn(this.offscreenLayerCtx);
+    }
+
+    // If the canvas is disabled, draw the layer to an offscreen canvas
+    // so that we can draw it translucently w/ o affecting the rest of
+    // the layer's appearance.
+    const layerCtx = currentAlpha < 1 ? this.offscreenLayerCtx : this.renderingCtx;
+    this.drawVectorLayer(this.vectorLayer, layerCtx);
+
+    if (currentAlpha < 1) {
       this.renderingCtx.save();
-      setupCtxWithViewportCoordsFn(this.renderingCtx);
-
-      const currentAlpha = vl ? vl.alpha : 1;
-      if (currentAlpha < 1) {
-        this.offscreenLayerCtx.save();
-        setupCtxWithViewportCoordsFn(this.offscreenLayerCtx);
-      }
-
-      // If the canvas is disabled, draw the layer to an offscreen canvas
-      // so that we can draw it translucently w/ o affecting the rest of
-      // the layer's appearance.
-      const layerCtx = currentAlpha < 1 ? this.offscreenLayerCtx : this.renderingCtx;
-      this.drawVectorLayer(vl, layerCtx);
-
-      if (currentAlpha < 1) {
-        this.renderingCtx.save();
-        this.renderingCtx.globalAlpha = currentAlpha;
-        // Bring the canvas back to its original coordinates before
-        // drawing the offscreen canvas contents.
-        this.renderingCtx.scale(1 / this.attrScale, 1 / this.attrScale);
-        this.renderingCtx.drawImage(this.offscreenLayerCtx.canvas, 0, 0);
-        this.renderingCtx.restore();
-        this.offscreenLayerCtx.restore();
-      }
+      this.renderingCtx.globalAlpha = currentAlpha;
+      // Bring the canvas back to its original coordinates before
+      // drawing the offscreen canvas contents.
+      this.renderingCtx.scale(1 / this.attrScale, 1 / this.attrScale);
+      this.renderingCtx.drawImage(this.offscreenLayerCtx.canvas, 0, 0);
       this.renderingCtx.restore();
-    });
+      this.offscreenLayerCtx.restore();
+    }
+    this.renderingCtx.restore();
   }
 
   private drawVectorLayer(vl: VectorLayer, ctx: Context) {

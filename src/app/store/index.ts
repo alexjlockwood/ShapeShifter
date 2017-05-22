@@ -68,30 +68,88 @@ export {
 const createDeepEqualSelector = createSelectorCreator(defaultMemoize, _.isEqual);
 
 // State selectors.
-export const getTimelineState = (state: State) => state.root.state.timeline;
-export const getAnimations = (state: State) => state.root.state.timeline.animations;
-export const getSelectedAnimationIds = (state: State) => state.root.state.timeline.selectedAnimationIds;
-export const getActiveAnimationId = (state: State) => state.root.state.timeline.activeAnimationId;
-export const getActiveAnimation = createSelector(
-  getActiveAnimationId,
+const getState = (state: State) => state.root.state;
+
+// Timeline state selectors.
+const getTimelineState = createSelector(getState, s => s.timeline)
+const getAnimations = createSelector(getTimelineState, t => t.animations);
+const getSelectedAnimationIds = createDeepEqualSelector(getTimelineState, t => t.selectedAnimationIds);
+const getActiveAnimationId = createDeepEqualSelector(getTimelineState, t => t.activeAnimationId);
+const getActiveAnimation = createSelector(
   getAnimations,
-  (activeAnimationId, animations) => {
-    return _.find(animations, a => a.id === activeAnimationId);
-  },
+  getActiveAnimationId,
+  (anims, id) => _.find(anims, anim => anim.id === id),
 );
-export const getSelectedBlockIds = (state: State) => state.root.state.timeline.selectedBlockIds;
-export const getLayerState = (state: State) => state.root.state.layers;
-export const getVectorLayers = (state: State) => state.root.state.layers.vectorLayers;
-export const getSelectedLayerIds = (state: State) => state.root.state.layers.selectedLayerIds;
-export const getCollapsedLayerIds = (state: State) => state.root.state.layers.collapsedLayerIds;
-export const getHiddenLayerIds = (state: State) => state.root.state.layers.hiddenLayerIds;
-export const getViewport = createDeepEqualSelector(
-  (state: State) => state.root.state.layers.vectorLayers[0],
-  (vl: VectorLayer) => { return { w: vl.width, h: vl.height } },
+const getSelectedBlockIds = createDeepEqualSelector(getTimelineState, t => t.selectedBlockIds);
+
+// Layer state selectors.
+const getLayerState = createSelector(getState, s => s.layers);
+const getVectorLayers = createSelector(getLayerState, l => l.vectorLayers);
+const getActiveVectorLayerId = createDeepEqualSelector(getLayerState, l => l.activeVectorLayerId);
+const getActiveVectorLayer = createSelector(
+  getVectorLayers,
+  getActiveVectorLayerId,
+  (vls, id) => _.find(vls, vl => vl.id === id),
 );
+const getSelectedLayerIds = createDeepEqualSelector(getLayerState, l => l.selectedLayerIds);
+const getCollapsedLayerIds = createDeepEqualSelector(getLayerState, l => l.collapsedLayerIds);
+const getHiddenLayerIds = createDeepEqualSelector(getLayerState, l => l.hiddenLayerIds);
 
 // Playback selectors.
 export const getPlaybackSettings = (state: State) => state.root.playback;
-export const getIsSlowMotion = (state: State) => state.root.playback.isSlowMotion;
-export const getIsPlaying = (state: State) => state.root.playback.isPlaying;
-export const getIsRepeating = (state: State) => state.root.playback.isRepeating;
+export const getIsSlowMotion = createDeepEqualSelector(getPlaybackSettings, p => p.isSlowMotion);
+export const getIsPlaying = createDeepEqualSelector(getPlaybackSettings, p => p.isPlaying);
+export const getIsRepeating = createDeepEqualSelector(getPlaybackSettings, p => p.isRepeating);
+
+// Exported property input selector.
+export const getPropertyInputState = createStructuredSelector({
+  animations: getAnimations,
+  selectedAnimationIds: getSelectedAnimationIds,
+  selectedBlockIds: getSelectedBlockIds,
+  vectorLayers: getVectorLayers,
+  selectedLayerIds: getSelectedLayerIds,
+});
+
+// Exported canvas selectors.
+export const getActiveViewport = createDeepEqualSelector(
+  getActiveVectorLayer,
+  vl => { return { w: vl.width, h: vl.height } },
+);
+export const getCanvasState = createStructuredSelector({
+  activeVectorLayer: getActiveVectorLayer,
+  selectedLayerIds: getSelectedLayerIds,
+  hiddenLayerIds: getHiddenLayerIds,
+});
+
+// Exported layer list tree selectors.
+export const getLayerListTreeState = createStructuredSelector({
+  animations: getAnimations,
+  selectedLayerIds: getSelectedLayerIds,
+  collapsedLayerIds: getCollapsedLayerIds,
+  hiddenLayerIds: getHiddenLayerIds,
+});
+
+// Exported timeline animation row selectors.
+export const getTimelineAnimationRowState = createStructuredSelector({
+  animations: getAnimations,
+  collapsedLayerIds: getCollapsedLayerIds,
+  selectedBlockIds: getSelectedBlockIds,
+});
+
+// Exported layer timeline selectors.
+export const getLayerTimelineState = createStructuredSelector({
+  animations: getAnimations,
+  vectorLayers: getVectorLayers,
+  selectedAnimationIds: getSelectedAnimationIds,
+  activeAnimationId: getActiveAnimationId,
+  selectedBlockIds: getSelectedBlockIds,
+});
+
+// Exported animator selectors.
+export const getAnimatorState = createStructuredSelector({
+  activeAnimation: getActiveAnimation,
+  activeVectorLayer: getActiveVectorLayer,
+});
+
+// File importer selectors.
+export const getImportedVectorLayers = getVectorLayers;

@@ -14,6 +14,7 @@ import { PathProperty, ColorProperty } from '../scripts/properties';
 export interface State {
   readonly layers: {
     readonly vectorLayers: ReadonlyArray<VectorLayer>;
+    readonly activeVectorLayerId: string;
     readonly selectedLayerIds: Set<string>;
     readonly collapsedLayerIds: Set<string>;
     readonly hiddenLayerIds: Set<string>;
@@ -29,11 +30,13 @@ export interface State {
 export const initialState = buildInitialState();
 
 export function buildInitialState(): State {
+  const initialVectorLayer = new VectorLayer();
   const initialAnimation = new Animation();
   return {
     layers: {
-      vectorLayers: [new VectorLayer()],
+      vectorLayers: [initialVectorLayer],
       selectedLayerIds: new Set<string>(),
+      activeVectorLayerId: initialVectorLayer.id,
       collapsedLayerIds: new Set<string>(),
       hiddenLayerIds: new Set<string>(),
     },
@@ -253,23 +256,14 @@ export function reducer(state = initialState, action: actions.Actions): State {
     case actions.ADD_LAYERS: {
       // TODO: add the layer below the currently selected layer, if one exists
       // TODO: add new layers to the currently selected vector, if one exists
-      const { layers: addedLayers, deleteSoleEmptyVector } = action.payload;
+      const { layers: addedLayers } = action.payload;
       if (!addedLayers.length) {
         // Do nothing if there are no layers to add.
         return state;
       }
       const addedVectorLayers = addedLayers.filter(l => l instanceof VectorLayer);
       const layers = state.layers;
-      let existingVectorLayers = layers.vectorLayers.slice();
-      if (deleteSoleEmptyVector
-        && addedVectorLayers.length
-        && existingVectorLayers.length === 1
-        && !existingVectorLayers[0].children.length) {
-        // Delete the single empty vector layer during initial import.
-        addedVectorLayers[0] = addedVectorLayers[0].clone();
-        addedVectorLayers[0].name = existingVectorLayers[0].name;
-        existingVectorLayers = [];
-      }
+      const existingVectorLayers = layers.vectorLayers.slice();
       existingVectorLayers.push(...addedVectorLayers);
       const addedNonVectorLayers = addedLayers.filter(l => !(l instanceof VectorLayer));
       const vl = existingVectorLayers[0].clone();
@@ -534,6 +528,12 @@ function deleteSelectedLayers(state: State) {
     // Create an empty vector layer if the last one was deleted.
     vectorLayers.push(new VectorLayer());
   }
+  let { activeVectorLayerId } = layers;
+  if (!_.find(vectorLayers, vl => vl.id === activeVectorLayerId)) {
+    // If the active vector layer ID has been deleted, make
+    // the first vector layer active instead.
+    activeVectorLayerId = vectorLayers[0].id;
+  }
   return {
     ...state,
     layers: {
@@ -542,6 +542,7 @@ function deleteSelectedLayers(state: State) {
       selectedLayerIds: new Set<string>(),
       collapsedLayerIds,
       hiddenLayerIds,
+      activeVectorLayerId,
     },
   };
 }

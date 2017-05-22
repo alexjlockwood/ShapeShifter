@@ -11,7 +11,7 @@
       (click)="this.layerToggleExpanded($event, this.layer)"
       mdTooltip="{{model.isExpanded ? 'Collapse layer' : 'Expand layer'}}"
       mdTooltipPosition="below"
-      mdTooltipShowDelay="300">
+      mdTooltipShowDelay="500">
       <md-icon>{{model.isExpanded ? 'expand_more' : 'chevron_right'}}</md-icon>
     </button>
     <!-- Add extra 20px margin if the expand/collapse icon isn't being displayed -->
@@ -22,16 +22,19 @@
       fxFlex>
       {{this.layer.name}}
     </span>
+    <!-- TODO: re-enable this if necessary? -->
+    <!--
     <button md-icon-button
       class="slt-layer-action-button slt-layer-more-actions">
       <md-icon>more_vert</md-icon>
     </button>
+    -->
     <button md-icon-button
       class="slt-layer-action-button slt-layer-visibility-toggle"
       (click)="this.layerToggleVisibility($event, this.layer)"
       mdTooltip="{{model.isVisible ? 'Hide layer' : 'Show layer'}}"
       mdTooltipPosition="below"
-      mdTooltipShowDelay="300"
+      mdTooltipShowDelay="500"
       [ngClass]="{'is-checked': model.isVisible}">
       <md-icon>{{model.isVisible ? 'visibility' : 'visibility_off'}}</md-icon>
     </button>
@@ -48,7 +51,7 @@
       (click)="$event.stopPropagation()"
       mdTooltip="Animate this layer"
       mdTooltipPosition="below"
-      mdTooltipShowDelay="300"
+      mdTooltipShowDelay="500"
       [mdMenuTriggerFor]="addTimelineBlockMenu">
       <md-icon svgIcon="animationblock"></md-icon>
     </button>
@@ -67,7 +70,7 @@
         (click)="this.addTimelineBlockClick($event, layer, propertyName)"
         mdTooltip="Add another animation"
         mdTooltipPosition="below"
-        mdTooltipShowDelay="300">
+        mdTooltipShowDelay="500">
         <md-icon>add</md-icon>
       </button>
     </div>

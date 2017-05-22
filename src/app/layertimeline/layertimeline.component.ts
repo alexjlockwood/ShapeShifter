@@ -19,8 +19,7 @@ import * as TimelineConsts from './constants';
 import { AnimatorService, FileImporterService } from '../services';
 import { LayerTimelineDirective } from './layertimeline.directive';
 import {
-  Store, State, getAnimations, getVectorLayers, getSelectedAnimationIds,
-  getActiveAnimationId, getSelectedBlockIds, AddAnimations,
+  Store, State, getLayerTimelineState, AddAnimations,
   SelectAnimation, ActivateAnimation, AddBlock, SelectBlock,
   ReplaceBlocks, ReplaceLayer, SelectLayer,
   ToggleLayerExpansion, ToggleLayerVisibility, AddLayers, NewWorkspace,
@@ -97,32 +96,26 @@ export class LayerTimelineComponent
   ) { super() }
 
   ngOnInit() {
-    this.layerTimelineModel$ = Observable.combineLatest(
-      this.store.select(getAnimations),
-      this.store.select(getVectorLayers),
-      this.store.select(getSelectedAnimationIds),
-      this.store.select(getActiveAnimationId),
-      this.store.select(getSelectedBlockIds),
-    ).map(([
-      animations, vectorLayers, selectedAnimationIds, activeAnimationId, selectedBlockIds,
-    ]) => {
-      this.animations = animations;
-      this.activeAnimationId = activeAnimationId;
-      this.rebuildSnapTimes();
-      this.vectorLayers = vectorLayers;
-      this.selectedBlockIds = selectedBlockIds;
-      // TODO: auto zoom back to initial state after full reset?
-      // TODO: auto zoom back to initial state after full reset?
-      // TODO: auto zoom back to initial state after full reset?
-      // TODO: auto zoom back to initial state after full reset?
-      // TODO: auto zoom back to initial state after full reset?
-      return {
-        animations,
-        vectorLayers,
-        selectedAnimationIds,
-        activeAnimationId,
-      }
-    });
+    this.layerTimelineModel$ =
+      this.store.select(getLayerTimelineState)
+        .map(({ animations, vectorLayers, selectedAnimationIds, activeAnimationId, selectedBlockIds }) => {
+          this.animations = animations;
+          this.activeAnimationId = activeAnimationId;
+          this.rebuildSnapTimes();
+          this.vectorLayers = vectorLayers;
+          this.selectedBlockIds = selectedBlockIds;
+          // TODO: auto zoom back to initial state after full reset?
+          // TODO: auto zoom back to initial state after full reset?
+          // TODO: auto zoom back to initial state after full reset?
+          // TODO: auto zoom back to initial state after full reset?
+          // TODO: auto zoom back to initial state after full reset?
+          return {
+            animations,
+            vectorLayers,
+            selectedAnimationIds,
+            activeAnimationId,
+          }
+        });
   }
 
   ngAfterViewInit() {
@@ -846,7 +839,7 @@ export class LayerTimelineComponent
     this.fileImporterService.import(
       fileList,
       vls => {
-        this.store.dispatch(new AddLayers(vls, true /* delete empty vector layer */));
+        this.store.dispatch(new AddLayers(vls));
         this.snackBar.open(
           `Imported ${vls.length} path${vls.length === 1 ? '' : 's'}`,
           'Dismiss',

@@ -83,9 +83,9 @@ export const REPLACE_LAYER = 'REPLACE_LAYER';
 
 export class AddLayers implements Action {
   readonly type = ADD_LAYERS;
-  readonly payload: { layers: ReadonlyArray<Layer>, deleteSoleEmptyVector: boolean };
-  constructor(layers: ReadonlyArray<Layer>, deleteSoleEmptyVector = false) {
-    this.payload = { layers, deleteSoleEmptyVector };
+  readonly payload: { layers: ReadonlyArray<Layer> };
+  constructor(layers: ReadonlyArray<Layer>) {
+    this.payload = { layers };
   }
 }
 

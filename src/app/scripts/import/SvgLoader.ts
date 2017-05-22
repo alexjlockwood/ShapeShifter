@@ -27,6 +27,7 @@ export function loadVectorLayerFromSvgStringWithCallback(
     } catch (e) {
       console.error('Failed to parse the optimized SVG file', e);
       callbackFn(undefined);
+      throw e;
     }
   });
 }

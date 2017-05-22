@@ -1,12 +1,7 @@
 import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { AnimatorService } from '../services';
 import { Observable } from 'rxjs/Observable';
-import { Store } from '@ngrx/store';
-import {
-  State,
-  getPlaybackSettings,
-} from '../store';
-import 'rxjs/add/observable/combineLatest';
+import { Store, State, getPlaybackSettings } from '../store';
 
 @Component({
   selector: 'app-playback',

@@ -41,7 +41,7 @@ export class CanvasOverlayDirective extends CanvasSizeMixin() {
 
   private readonly $canvas: JQuery;
   private readonly overlayCtx: Context;
-  private vectorLayers: ReadonlyArray<VectorLayer> = [];
+  private vectorLayer: VectorLayer;
   private hiddenLayerIds = new Set<string>();
   private selectedLayerIds = new Set<string>();
 
@@ -70,26 +70,22 @@ export class CanvasOverlayDirective extends CanvasSizeMixin() {
     this.draw();
   }
 
-  setLayerState(
-    vls: ReadonlyArray<VectorLayer>,
-    hiddenLayerIds: Set<string>,
-    selectedLayerIds: Set<string>,
-  ) {
-    this.vectorLayers = vls;
+  setLayerState(vl: VectorLayer, hiddenLayerIds: Set<string>, selectedLayerIds: Set<string>) {
+    this.vectorLayer = vl;
     this.hiddenLayerIds = hiddenLayerIds;
     this.selectedLayerIds = selectedLayerIds;
     this.draw();
   }
 
   draw() {
-    this.vectorLayers.forEach(vl => {
+    if (this.vectorLayer) {
       const { w, h } = this.getViewport();
       this.overlayCtx.save();
       this.overlayCtx.scale(this.attrScale, this.attrScale);
       this.overlayCtx.clearRect(0, 0, w, h);
-      this.drawLayer(vl, vl, this.overlayCtx);
+      this.drawLayer(this.vectorLayer, this.vectorLayer, this.overlayCtx);
       this.overlayCtx.restore();
-    });
+    }
     this.drawPixelGrid();
   }
 

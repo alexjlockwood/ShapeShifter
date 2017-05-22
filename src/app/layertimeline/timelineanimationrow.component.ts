@@ -6,15 +6,8 @@ import {
 import { Layer } from '../scripts/layers';
 import { Animation, AnimationBlock } from '../scripts/animations';
 import { ModelUtil, AnimationMap } from '../scripts/common';
-import { Store } from '@ngrx/store';
-import {
-  State,
-  getAnimations,
-  getCollapsedLayerIds,
-  getSelectedBlockIds,
-} from '../store';
+import { Store, State, getTimelineAnimationRowState } from '../store';
 import { Observable } from 'rxjs/Observable';
-import 'rxjs/add/observable/combineLatest';
 
 @Component({
   selector: 'app-timelineanimationrow',
@@ -41,19 +34,16 @@ export class TimelineAnimationRowComponent implements OnInit, Callbacks {
 
   ngOnInit() {
     this.animationRowModel$ =
-      Observable.combineLatest(
-        this.store.select(getAnimations),
-        this.store.select(getCollapsedLayerIds),
-        this.store.select(getSelectedBlockIds),
-      ).map(([animations, collapsedLayerIds, selectedBlockIds]) => {
-        const blocksByAnimationByPropertyValues =
-          _.values(ModelUtil.getBlocksByAnimationByProperty(this.layer.id, animations));
-        return {
-          blocksByAnimationByPropertyValues,
-          isExpanded: !collapsedLayerIds.has(this.layer.id),
-          selectedBlockIds,
-        }
-      })
+      this.store.select(getTimelineAnimationRowState)
+        .map(({ animations, collapsedLayerIds, selectedBlockIds }) => {
+          const blocksByAnimationByPropertyValues =
+            _.values(ModelUtil.getBlocksByAnimationByProperty(this.layer.id, animations));
+          return {
+            blocksByAnimationByPropertyValues,
+            isExpanded: !collapsedLayerIds.has(this.layer.id),
+            selectedBlockIds,
+          }
+        })
   }
 
   // @Override Callbacks

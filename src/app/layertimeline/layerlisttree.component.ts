@@ -6,16 +6,8 @@ import {
 import { Layer, VectorLayer, GroupLayer } from '../scripts/layers';
 import { ModelUtil } from '../scripts/common';
 import { Animation } from '../scripts/animations';
-import {
-  Store,
-  State,
-  getAnimations,
-  getSelectedLayerIds,
-  getCollapsedLayerIds,
-  getHiddenLayerIds,
-} from '../store';
+import { Store, State, getLayerListTreeState } from '../store';
 import { Observable } from 'rxjs/Observable';
-import 'rxjs/add/observable/combineLatest';
 
 @Component({
   selector: 'app-layerlisttree',
@@ -44,28 +36,25 @@ export class LayerListTreeComponent implements OnInit, Callbacks {
   constructor(private readonly store: Store<State>) { }
 
   ngOnInit() {
-    this.layerModel$ = Observable.combineLatest(
-      this.store.select(getAnimations),
-      this.store.select(getSelectedLayerIds),
-      this.store.select(getCollapsedLayerIds),
-      this.store.select(getHiddenLayerIds),
-    ).map(([animations, selectedLayerIds, collapsedLayerIds, hiddenLayerIds]) => {
-      const isExpandable = this.layer instanceof VectorLayer || this.layer instanceof GroupLayer;
-      const availablePropertyNames =
-        Array.from(ModelUtil.getAvailablePropertyNamesForLayer(this.layer, animations));
-      const existingPropertyNames =
-        Array.from(
-          _.keys(ModelUtil.getBlocksByAnimationByProperty(this.layer.id, animations)));
-      return {
-        animations,
-        isSelected: selectedLayerIds.has(this.layer.id),
-        isExpandable,
-        isExpanded: !collapsedLayerIds.has(this.layer.id),
-        isVisible: !hiddenLayerIds.has(this.layer.id),
-        availablePropertyNames,
-        existingPropertyNames,
-      }
-    });
+    this.layerModel$ =
+      this.store.select(getLayerListTreeState)
+        .map(({ animations, selectedLayerIds, collapsedLayerIds, hiddenLayerIds }) => {
+          const isExpandable = this.layer instanceof VectorLayer || this.layer instanceof GroupLayer;
+          const availablePropertyNames =
+            Array.from(ModelUtil.getAvailablePropertyNamesForLayer(this.layer, animations));
+          const existingPropertyNames =
+            Array.from(
+              _.keys(ModelUtil.getBlocksByAnimationByProperty(this.layer.id, animations)));
+          return {
+            animations,
+            isSelected: selectedLayerIds.has(this.layer.id),
+            isExpandable,
+            isExpanded: !collapsedLayerIds.has(this.layer.id),
+            isVisible: !hiddenLayerIds.has(this.layer.id),
+            availablePropertyNames,
+            existingPropertyNames,
+          }
+        });
   }
 
   // @Override Callbacks
