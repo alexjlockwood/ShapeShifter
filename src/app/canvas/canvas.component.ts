@@ -48,16 +48,13 @@ export class CanvasComponent
 
   ngAfterViewInit() {
     this.registerSubscription(
-      Observable.combineLatest(
-        this.boundsObservable,
-        this.store.select(getActiveViewport),
-      ).map(([bounds, viewport]) => {
-        return { bounds, viewport };
-      }).subscribe(({ bounds, viewport }) => {
-        const w = Math.max(1, bounds.w - CANVAS_MARGIN * 2);
-        const h = Math.max(1, bounds.h - CANVAS_MARGIN * 2);
-        this.setDimensions({ w, h }, viewport);
-      }));
+      Observable.combineLatest(this.boundsObservable, this.store.select(getActiveViewport))
+        .map(([bounds, viewport]) => { return { bounds, viewport } })
+        .subscribe(({ bounds, viewport }) => {
+          const w = Math.max(1, bounds.w - CANVAS_MARGIN * 2);
+          const h = Math.max(1, bounds.h - CANVAS_MARGIN * 2);
+          this.setDimensions({ w, h }, viewport);
+        }));
     this.registerSubscription(
       this.store.select(getCanvasState)
         .subscribe(({ activeVectorLayer, hiddenLayerIds, selectedLayerIds }) => {
@@ -67,8 +64,9 @@ export class CanvasComponent
     this.registerSubscription(
       this.animatorService.asObservable()
         .filter(event => !!event.vl)
-        .subscribe(event => {
-          this.canvasLayers.setVectorLayer(event.vl);
+        .map(event => event.vl)
+        .subscribe(vl => {
+          this.canvasLayers.setVectorLayer(vl);
         }));
   }
 

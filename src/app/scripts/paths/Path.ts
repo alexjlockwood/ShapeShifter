@@ -111,8 +111,9 @@ export class Path {
   isMorphableWith(path: Path) {
     const cmds1 = this.getCommands();
     const cmds2 = path.getCommands();
-    return cmds1.length === cmds2.length && cmds1.every((cmd1, i) =>
-      cmd1.getSvgChar() === cmds2[i].getSvgChar());
+    return cmds1.length === cmds2.length
+      && cmds1.every((cmd1, i) =>
+        cmd1.getSvgChar() === cmds2[i].getSvgChar());
   }
 
   /**

@@ -6,10 +6,11 @@ type Context = CanvasRenderingContext2D;
 export function executeCommands(
   ctx: Context,
   commands: ReadonlyArray<Command>,
-  transforms: Matrix[],
+  transform: Matrix,
 ) {
   ctx.save();
-  transforms.forEach(m => ctx.transform(m.a, m.b, m.c, m.d, m.e, m.f));
+  const { a, b, c, d, e, f } = transform;
+  ctx.transform(a, b, c, d, e, f);
   ctx.beginPath();
 
   if (commands.length === 1 && commands[0].getSvgChar() !== 'M') {

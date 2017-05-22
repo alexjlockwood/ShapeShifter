@@ -113,8 +113,9 @@ export class CanvasOverlayDirective extends CanvasSizeMixin() {
     const bounds = layer.getBoundingBox();
     if (bounds) {
       ctx.save();
-      const transforms = LayerUtil.getTransformsForLayer(vl, layer.id);
-      transforms.forEach(m => ctx.transform(m.a, m.b, m.c, m.d, m.e, m.f));
+      const flattenedTransform = LayerUtil.getFlattenedTransformForLayer(vl, layer.id);
+      const { a, b, c, d, e, f } = flattenedTransform;
+      ctx.transform(a, b, c, d, e, f);
       ctx.beginPath();
       ctx.rect(bounds.l, bounds.t, bounds.r - bounds.l, bounds.b - bounds.t);
       ctx.restore();
@@ -126,8 +127,8 @@ export class CanvasOverlayDirective extends CanvasSizeMixin() {
     if (!layer.pathData || !layer.pathData.getCommands().length) {
       return;
     }
-    const transforms = LayerUtil.getTransformsForLayer(vl, layer.id);
-    CanvasUtil.executeCommands(ctx, layer.pathData.getCommands(), transforms);
+    const flattenedTransform = LayerUtil.getFlattenedTransformForLayer(vl, layer.id);
+    CanvasUtil.executeCommands(ctx, layer.pathData.getCommands(), flattenedTransform);
     executeHighlights(ctx, HIGHLIGHT_COLOR, this.highlightLineWidth, this.highlightLineDash);
     ctx.clip();
   }
@@ -137,8 +138,8 @@ export class CanvasOverlayDirective extends CanvasSizeMixin() {
       return;
     }
     ctx.save();
-    const transforms = LayerUtil.getTransformsForLayer(vl, layer.id);
-    CanvasUtil.executeCommands(ctx, layer.pathData.getCommands(), transforms);
+    const flattenedTransform = LayerUtil.getFlattenedTransformForLayer(vl, layer.id);
+    CanvasUtil.executeCommands(ctx, layer.pathData.getCommands(), flattenedTransform);
     executeHighlights(ctx, HIGHLIGHT_COLOR, this.highlightLineWidth);
     ctx.restore();
   }

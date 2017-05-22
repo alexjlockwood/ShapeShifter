@@ -10,7 +10,7 @@ const PRECISION = 8;
  * are returned in top-down order (i.e. the transform for the layer's
  * immediate parent will be the very last matrix in the returned list).
  */
-export function getTransformsForLayer(vectorLayer: VectorLayer, layerId: string) {
+function getTransformsForLayer(vl: VectorLayer, layerId: string) {
   const getTransformsFn = (parents: Layer[], current: Layer): Matrix[] => {
     if (current.id === layerId) {
       return _.flatMap(parents, layer => {
@@ -35,7 +35,15 @@ export function getTransformsForLayer(vectorLayer: VectorLayer, layerId: string)
     }
     return undefined;
   };
-  return getTransformsFn([], vectorLayer);
+  return getTransformsFn([], vl);
+}
+
+/**
+ * Returns a single flattened transform matrix that can be used to perform canvas
+ * transform operations.
+ */
+export function getFlattenedTransformForLayer(vl: VectorLayer, layerId: string) {
+  return Matrix.flatten(...getTransformsForLayer(vl, layerId).reverse());
 }
 
 /**
@@ -132,18 +140,19 @@ export function deepInterpolate<T extends Layer>(start: T, preview: T, end: T, f
     console.warn('Attempt to interpolate incompatible layers', start, preview, end);
     return;
   }
-  const layers = [start, preview, end];
-  if (layers.every(l => l instanceof PathLayer)
-    || layers.every(l => l instanceof ClipPathLayer)
-    || layers.every(l => l instanceof GroupLayer)
-    || layers.every(l => l instanceof VectorLayer)) {
-    preview.interpolate(start, end, fraction);
-  }
-  if (layers.every(l => !!l.children)) {
-    preview.children.forEach((p, i) => {
-      return deepInterpolate(start.children[i], p, end.children[i], fraction);
-    });
-  }
+  throw new Error('This method is not yet implemented. Fix me!');
+  // const layers = [start, preview, end];
+  // if (layers.every(l => l instanceof PathLayer)
+  //   || layers.every(l => l instanceof ClipPathLayer)
+  //   || layers.every(l => l instanceof GroupLayer)
+  //   || layers.every(l => l instanceof VectorLayer)) {
+  //   preview.interpolate(start, end, fraction);
+  // }
+  // if (layers.every(l => !!l.children)) {
+  //   preview.children.forEach((p, i) => {
+  //     return deepInterpolate(start.children[i], p, end.children[i], fraction);
+  //   });
+  // }
 }
 
 export function addLayerToTree(

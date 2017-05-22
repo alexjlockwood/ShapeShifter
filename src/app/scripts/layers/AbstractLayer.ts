@@ -58,23 +58,27 @@ export abstract class AbstractLayer implements Layer {
   }
 
   // Implements the Layer interface.
-  walk(beforeFn: (layer: Layer) => (any | void)) {
+  walk(beforeFn: (layer: Layer) => void) {
     const visitFn = (layer: Layer) => {
-      if (beforeFn(layer) === false) {
-        return;
-      }
-      if (layer.children) {
-        layer.children.forEach(l => visitFn(l));
-      }
+      beforeFn(layer);
+      layer.children.forEach(l => visitFn(l));
     };
     visitFn(this);
   }
 
+  // Implements the Layer interface.
   abstract clone<T extends Layer>(): T;
+
+  // Implements the Layer interface.
   abstract deepClone<T extends Layer>(): T;
-  abstract interpolate(start: AbstractLayer, end: AbstractLayer, fraction: number): void;
+
+  // Implements the Layer interface.
   abstract getIconName(): string;
+
+  // Implements the Layer interface.
   abstract getPrefix(): string;
+
+  // Implements the Layer interface.
   abstract getBoundingBox(): Rect | undefined;
 }
 

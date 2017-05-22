@@ -79,38 +79,11 @@ export class PathLayer extends AbstractLayer {
   }
 
   isStroked() {
-    return !!this.strokeColor;
+    return !this.isFilled();
   }
 
   isFilled() {
     return !!this.fillColor;
-  }
-
-  interpolate(start: PathLayer, end: PathLayer, fraction: number) {
-    this.pathData = PathUtil.interpolate(start.pathData, end.pathData, fraction);
-    if (start.fillColor && end.fillColor) {
-      this.fillColor = this.lerpColor(start.fillColor, end.fillColor, fraction);
-    }
-    this.fillAlpha = MathUtil.lerp(start.fillAlpha, end.fillAlpha, fraction);
-    if (start.strokeColor && end.strokeColor) {
-      this.strokeColor = this.lerpColor(start.strokeColor, end.strokeColor, fraction);
-    }
-    this.strokeAlpha = MathUtil.lerp(start.strokeAlpha, end.strokeAlpha, fraction);
-    this.strokeWidth = MathUtil.lerp(start.strokeWidth, end.strokeWidth, fraction);
-    this.trimPathStart = MathUtil.lerp(start.trimPathStart, end.trimPathStart, fraction);
-    this.trimPathEnd = MathUtil.lerp(start.trimPathEnd, end.trimPathEnd, fraction);
-    this.trimPathOffset = MathUtil.lerp(start.trimPathOffset, end.trimPathOffset, fraction);
-  }
-
-  private lerpColor(start: string, end: string, fraction: number) {
-    const startColor = ColorUtil.parseAndroidColor(start);
-    const endColor = ColorUtil.parseAndroidColor(end);
-    return ColorUtil.toAndroidString({
-      r: _.clamp(Math.round(MathUtil.lerp(startColor.r, endColor.r, fraction)), 0, 255),
-      g: _.clamp(Math.round(MathUtil.lerp(startColor.g, endColor.g, fraction)), 0, 255),
-      b: _.clamp(Math.round(MathUtil.lerp(startColor.b, endColor.b, fraction)), 0, 255),
-      a: _.clamp(Math.round(MathUtil.lerp(startColor.a, endColor.a, fraction)), 0, 255),
-    });
   }
 
   getBoundingBox() {

@@ -31,10 +31,6 @@ export class ClipPathLayer extends AbstractLayer {
     return this.clone();
   }
 
-  interpolate(start: ClipPathLayer, end: ClipPathLayer, fraction: number) {
-    this.pathData = PathUtil.interpolate(start.pathData, end.pathData, fraction);
-  }
-
   getBoundingBox() {
     return this.pathData ? this.pathData.getBoundingBox() : undefined;
   }

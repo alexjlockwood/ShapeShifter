@@ -79,7 +79,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     //       DEBUG_VECTOR_DRAWABLE,
     //       name => false,
     //     );
-    //   this.store.dispatch(new AddLayers([vl], true /* delete empty vector layer */));
+    //   this.store.dispatch(new AddLayers([vl]));
     // }
   }
 

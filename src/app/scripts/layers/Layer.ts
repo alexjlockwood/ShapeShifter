@@ -22,10 +22,29 @@ export interface Layer extends Inspectable, Animatable {
    */
   children: ReadonlyArray<Layer>;
 
+  /**
+   * Returns a shallow clone of this Layer.
+   */
   clone<T extends Layer>(): T;
+
+  /**
+   * Returns a deep clone of this Layer.
+   */
   deepClone<T extends Layer>(): T;
+
+  /**g
+   * Returns the name of the icon that represents this Layer type.
+   */
   getIconName(): string;
+
+  /**
+   * Returns the prefix that represents this Layer type.
+   */
   getPrefix(): string;
+
+  /**
+   * Returns the bounding box for this Layer (or undefined if none exists).
+   */
   getBoundingBox(): Rect | undefined;
 
   /**
@@ -48,13 +67,8 @@ export interface Layer extends Inspectable, Animatable {
   isMorphableWith(layer: Layer): boolean;
 
   /**
-   * Interpolate this layer between a start and end layer of the same type.
-   */
-  interpolate<T extends Layer>(start: T, end: T, fraction: number): void;
-
-  /**
    * Walks the layer tree, executing beforeFunc on each node using a
-   * preorder traversal. Returning false from beforeFn will stop traversal.
+   * preorder traversal.
    */
-  walk(beforeFn: (layer: Layer) => (any | void)): void;
+  walk(beforeFn: (layer: Layer) => void): void;
 }

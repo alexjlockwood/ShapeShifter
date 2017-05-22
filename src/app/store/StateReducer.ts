@@ -35,8 +35,8 @@ export function buildInitialState(): State {
   return {
     layers: {
       vectorLayers: [initialVectorLayer],
-      selectedLayerIds: new Set<string>(),
       activeVectorLayerId: initialVectorLayer.id,
+      selectedLayerIds: new Set<string>(),
       collapsedLayerIds: new Set<string>(),
       hiddenLayerIds: new Set<string>(),
     },
@@ -255,7 +255,6 @@ export function reducer(state = initialState, action: actions.Actions): State {
     // Add layers to the tree.
     case actions.ADD_LAYERS: {
       // TODO: add the layer below the currently selected layer, if one exists
-      // TODO: add new layers to the currently selected vector, if one exists
       const { layers: addedLayers } = action.payload;
       if (!addedLayers.length) {
         // Do nothing if there are no layers to add.
@@ -266,9 +265,11 @@ export function reducer(state = initialState, action: actions.Actions): State {
       const existingVectorLayers = layers.vectorLayers.slice();
       existingVectorLayers.push(...addedVectorLayers);
       const addedNonVectorLayers = addedLayers.filter(l => !(l instanceof VectorLayer));
-      const vl = existingVectorLayers[0].clone();
+      const activeVectorLayerId = layers.activeVectorLayerId;
+      const activeVlIndex = _.findIndex(existingVectorLayers, vl => vl.id === activeVectorLayerId);
+      const vl = existingVectorLayers[activeVlIndex].clone();
       vl.children = vl.children.concat(addedNonVectorLayers);
-      existingVectorLayers[0] = vl;
+      existingVectorLayers[activeVlIndex] = vl;
       return {
         ...state,
         layers: { ...layers, vectorLayers: existingVectorLayers },
@@ -415,11 +416,14 @@ function selectLayerId(state: State, layerId: string, clearExisting: boolean) {
   const layers = state.layers;
   const timeline = state.timeline;
   const oldSelectedLayerIds = layers.selectedLayerIds;
+  let activeVectorLayerId = layers.activeVectorLayerId;
   const newSelectedLayerIds = clearExisting ? new Set() : new Set(oldSelectedLayerIds);
-  newSelectedLayerIds.add(layerId);
-  if (_.isEqual(oldSelectedLayerIds, newSelectedLayerIds)) {
-    // Do nothing if the selections haven't changed.
-    return state;
+  const parentVl = LayerUtil.findParentVectorLayer(layers.vectorLayers, layerId);
+  if (clearExisting) {
+    activeVectorLayerId = parentVl.id;
+    newSelectedLayerIds.add(layerId);
+  } else if (activeVectorLayerId === parentVl.id) {
+    newSelectedLayerIds.add(layerId);
   }
   // Clear any existing animation/block selections.
   let { selectedAnimationIds, selectedBlockIds } = timeline;
@@ -429,9 +433,10 @@ function selectLayerId(state: State, layerId: string, clearExisting: boolean) {
   if (selectedBlockIds.size) {
     selectedBlockIds = new Set<string>();
   }
+
   return {
     ...state,
-    layers: { ...layers, selectedLayerIds: newSelectedLayerIds },
+    layers: { ...layers, selectedLayerIds: newSelectedLayerIds, activeVectorLayerId },
     timeline: { ...timeline, selectedAnimationIds, selectedBlockIds },
   };
 }

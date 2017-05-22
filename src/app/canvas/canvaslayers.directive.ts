@@ -83,7 +83,7 @@ export class CanvasLayersDirective extends CanvasSizeMixin() {
     // so that we can draw it translucently w/ o affecting the rest of
     // the layer's appearance.
     const layerCtx = currentAlpha < 1 ? this.offscreenLayerCtx : this.renderingCtx;
-    this.drawVectorLayer(this.vectorLayer, layerCtx);
+    this.drawLayer(this.vectorLayer, this.vectorLayer, layerCtx);
 
     if (currentAlpha < 1) {
       this.renderingCtx.save();
@@ -98,26 +98,25 @@ export class CanvasLayersDirective extends CanvasSizeMixin() {
     this.renderingCtx.restore();
   }
 
-  private drawVectorLayer(vl: VectorLayer, ctx: Context) {
-    vl.walk(curr => {
-      if (this.hiddenLayerIds.has(curr.id)) {
-        return false;
-      }
-      if (curr instanceof ClipPathLayer) {
-        this.drawClipPathLayer(vl, curr, ctx);
-      } else if (curr instanceof PathLayer) {
-        this.drawPathLayer(vl, curr, ctx);
-      }
-      return true;
-    });
+  private drawLayer(vl: VectorLayer, layer: Layer, ctx: Context) {
+    if (this.hiddenLayerIds.has(layer.id)) {
+      return;
+    }
+    if (layer instanceof ClipPathLayer) {
+      this.drawClipPathLayer(vl, layer, ctx);
+    } else if (layer instanceof PathLayer) {
+      this.drawPathLayer(vl, layer, ctx);
+    } else {
+      layer.children.forEach(child => this.drawLayer(vl, child, ctx));
+    }
   }
 
   private drawClipPathLayer(vl: VectorLayer, layer: ClipPathLayer, ctx: Context) {
     if (!layer.pathData || !layer.pathData.getCommands().length) {
       return;
     }
-    const transforms = LayerUtil.getTransformsForLayer(vl, layer.id);
-    CanvasUtil.executeCommands(ctx, layer.pathData.getCommands(), transforms);
+    const flattenedTransform = LayerUtil.getFlattenedTransformForLayer(vl, layer.id);
+    CanvasUtil.executeCommands(ctx, layer.pathData.getCommands(), flattenedTransform);
     ctx.clip();
   }
 
@@ -127,9 +126,8 @@ export class CanvasLayersDirective extends CanvasSizeMixin() {
     }
     ctx.save();
 
-    const transforms = LayerUtil.getTransformsForLayer(vl, layer.id);
-    const flattenedTransform = Matrix.flatten(...transforms.slice().reverse());
-    CanvasUtil.executeCommands(ctx, layer.pathData.getCommands(), [flattenedTransform]);
+    const flattenedTransform = LayerUtil.getFlattenedTransformForLayer(vl, layer.id);
+    CanvasUtil.executeCommands(ctx, layer.pathData.getCommands(), flattenedTransform);
 
     const strokeWidthMultiplier = flattenedTransform.getScale();
     ctx.strokeStyle = ColorUtil.androidToCssRgbaColor(layer.strokeColor, layer.strokeAlpha);
@@ -147,7 +145,7 @@ export class CanvasLayersDirective extends CanvasSizeMixin() {
       if (a !== 1 || d !== 1) {
         // Then recompute the scaled path length.
         pathLength = layer.pathData.mutate()
-          .addTransforms(transforms.slice().reverse())
+          .addTransforms([flattenedTransform])
           .build()
           .getPathLength();
       } else {

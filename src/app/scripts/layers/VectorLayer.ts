@@ -28,10 +28,6 @@ export class VectorLayer extends AbstractLayer {
     return 'vector';
   }
 
-  interpolate(start: VectorLayer, end: VectorLayer, fraction: number) {
-    this.alpha = MathUtil.lerp(start.alpha, end.alpha, fraction);
-  }
-
   clone() {
     const clone = new VectorLayer(this);
     clone.children = this.children.slice();
