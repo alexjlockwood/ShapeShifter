@@ -47,10 +47,10 @@
     "stable": "^0.1.5",
     "tinycolor2": "^1.4.1",
     "whet.extend": "~0.9.9",
-    "zone.js": "0.8.10"
+    "zone.js": "^0.8.10"
   },
   "devDependencies": {
-    "@angular/cli": "1.0.3",
+    "@angular/cli": "^1.0.4",
     "@angular/compiler-cli": "^4.0.0",
     "@types/es6-promise": "0.0.32",
     "@types/hammerjs": "^2.0.34",
