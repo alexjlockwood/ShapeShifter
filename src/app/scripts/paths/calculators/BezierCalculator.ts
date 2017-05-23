@@ -27,8 +27,6 @@ export class BezierCalculator implements Calculator {
     // Don't initialize variables lazily for dev builds (to avoid
     // ngrx-store-freeze crashes).
     if (!environment.production) {
-      // tslint:disable-next-line
-      this.bezierJs;
       this.getPathLength();
       this.getBoundingBox();
     }
@@ -49,7 +47,9 @@ export class BezierCalculator implements Calculator {
   }
 
   project(point: Point): Projection {
-    const { x, y, t, d } = this.bezierJs.project(point);
+    // Create a new bezier curve for dev builds to avoid ngrx-store-freeze crashes.
+    const bezierJs = !environment.production ? new BezierJs(this.points) : this.bezierJs;
+    const { x, y, t, d } = bezierJs.project(point);
     return { x, y, t, d };
   }
 
