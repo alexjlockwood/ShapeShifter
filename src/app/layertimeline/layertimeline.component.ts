@@ -546,7 +546,7 @@ export class LayerTimelineComponent
   // @Override LayerListTreeComponentCallbacks
   layerClick(event: MouseEvent, layer: Layer) {
     const clearExisting = !event.metaKey && !event.shiftKey;
-    this.store.dispatch(new SelectLayer(layer.id, clearExisting));
+    this.store.dispatch(new SelectLayer(layer.id, false /* shouldToggle */, clearExisting));
   }
 
   // @Override LayerListTreeComponentCallbacks

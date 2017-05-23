@@ -278,8 +278,18 @@ export function reducer(state = initialState, action: actions.Actions): State {
 
     // Select a layer.
     case actions.SELECT_LAYER: {
-      const { layerId, clearExisting } = action.payload;
-      return selectLayerId(state, layerId, clearExisting);
+      const { layerId, shouldToggle, clearExisting } = action.payload;
+      return selectLayerId(state, layerId, shouldToggle, clearExisting);
+    }
+
+    // Clear all layer selections.
+    case actions.CLEAR_LAYER_SELECTIONS: {
+      const layers = state.layers;
+      const selectedLayerIds = new Set<string>();
+      return {
+        ...state,
+        layers: { ...layers, selectedLayerIds },
+      };
     }
 
     // Expand/collapse a layer.
@@ -412,19 +422,34 @@ function selectBlockId(state: State, blockId: string, clearExisting: boolean) {
   };
 }
 
-function selectLayerId(state: State, layerId: string, clearExisting: boolean) {
+function selectLayerId(
+  state: State,
+  layerId: string,
+  shouldToggle: boolean,
+  clearExisting: boolean,
+) {
   const layers = state.layers;
   const timeline = state.timeline;
-  const oldSelectedLayerIds = layers.selectedLayerIds;
-  let activeVectorLayerId = layers.activeVectorLayerId;
-  const newSelectedLayerIds = clearExisting ? new Set() : new Set(oldSelectedLayerIds);
-  const parentVl = LayerUtil.findParentVectorLayer(layers.vectorLayers, layerId);
+  const selectedLayerIds = new Set(layers.selectedLayerIds);
   if (clearExisting) {
-    activeVectorLayerId = parentVl.id;
-    newSelectedLayerIds.add(layerId);
-  } else if (activeVectorLayerId === parentVl.id) {
-    newSelectedLayerIds.add(layerId);
+    selectedLayerIds.forEach(id => {
+      if (id !== layerId) {
+        selectedLayerIds.delete(id);
+      }
+    });
   }
+  let activeVectorLayerId = layers.activeVectorLayerId;
+  const parentVl = LayerUtil.findParentVectorLayer(layers.vectorLayers, layerId);
+  if (clearExisting || activeVectorLayerId === parentVl.id) {
+    // Only allow multi-selecting layers from the same parent vector layer.
+    activeVectorLayerId = parentVl.id;
+    if (shouldToggle && selectedLayerIds.has(layerId)) {
+      selectedLayerIds.delete(layerId);
+    } else {
+      selectedLayerIds.add(layerId);
+    }
+  }
+
   // Clear any existing animation/block selections.
   let { selectedAnimationIds, selectedBlockIds } = timeline;
   if (selectedAnimationIds.size) {
@@ -436,7 +461,7 @@ function selectLayerId(state: State, layerId: string, clearExisting: boolean) {
 
   return {
     ...state,
-    layers: { ...layers, selectedLayerIds: newSelectedLayerIds, activeVectorLayerId },
+    layers: { ...layers, selectedLayerIds, activeVectorLayerId },
     timeline: { ...timeline, selectedAnimationIds, selectedBlockIds },
   };
 }

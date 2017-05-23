@@ -77,6 +77,7 @@ export class ReplaceBlocks implements Action {
 // Layer actions.
 export const ADD_LAYERS = 'ADD_LAYERS';
 export const SELECT_LAYER = 'SELECT_LAYER';
+export const CLEAR_LAYER_SELECTIONS = 'CLEAR_LAYER_SELECTIONS';
 export const TOGGLE_LAYER_EXPANSION = 'TOGGLE_LAYER_EXPANSION';
 export const TOGGLE_LAYER_VISIBILITY = 'TOGGLE_LAYER_VISIBILITY';
 export const REPLACE_LAYER = 'REPLACE_LAYER';
@@ -91,10 +92,18 @@ export class AddLayers implements Action {
 
 export class SelectLayer implements Action {
   readonly type = SELECT_LAYER;
-  readonly payload: { layerId: string, clearExisting: boolean };
-  constructor(readonly layerId: string, readonly clearExisting = true) {
-    this.payload = { layerId, clearExisting };
+  readonly payload: { layerId: string, shouldToggle: boolean, clearExisting: boolean };
+  constructor(
+    readonly layerId: string,
+    readonly shouldToggle: boolean,
+    readonly clearExisting: boolean,
+  ) {
+    this.payload = { layerId, shouldToggle, clearExisting };
   }
+}
+
+export class ClearLayerSelections implements Action {
+  readonly type = CLEAR_LAYER_SELECTIONS;
 }
 
 export class ToggleLayerExpansion implements Action {
@@ -139,6 +148,7 @@ export type Actions =
   | ReplaceBlocks
   | AddLayers
   | SelectLayer
+  | ClearLayerSelections
   | ToggleLayerExpansion
   | ToggleLayerVisibility
   | ReplaceLayer

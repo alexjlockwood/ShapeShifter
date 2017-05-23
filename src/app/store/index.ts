@@ -47,6 +47,7 @@ export {
   ReplaceBlocks,
   ReplaceLayer,
   SelectLayer,
+  ClearLayerSelections,
   ToggleLayerExpansion,
   ToggleLayerVisibility,
   AddLayers,

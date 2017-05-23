@@ -6,10 +6,15 @@ import {
 } from '@angular/core';
 import { CanvasOverlayDirective } from './canvasoverlay.directive';
 import { Command } from '../scripts/paths';
-import { PathLayer, ClipPathLayer, LayerUtil, VectorLayer } from '../scripts/layers';
-import { Point, Matrix, ColorUtil } from '../scripts/common';
+import {
+  PathLayer, ClipPathLayer, LayerUtil, Layer, VectorLayer,
+} from '../scripts/layers';
+import { Point, Matrix, ColorUtil, MathUtil } from '../scripts/common';
 import { AnimatorService } from '../services';
-import { Store, State, getCanvasState, getActiveViewport } from '../store';
+import {
+  Store, State, getCanvasState,
+  getActiveViewport, SelectLayer, ClearLayerSelections
+} from '../store';
 import { CanvasContainerDirective } from './canvascontainer.directive';
 import { CanvasRulerDirective } from './canvasruler.directive';
 import { CanvasLayersDirective } from './canvaslayers.directive';
@@ -21,6 +26,8 @@ import 'rxjs/add/observable/combineLatest';
 
 // Canvas margin in css pixels.
 const CANVAS_MARGIN = 36;
+// The minimum distance between a point and a path that causes a snap.
+const MIN_SNAP_THRESHOLD = 12;
 
 type Context = CanvasRenderingContext2D;
 
@@ -42,6 +49,7 @@ export class CanvasComponent
   @Input() boundsObservable: Observable<Size>;
 
   private readonly $element: JQuery;
+  private vectorLayer: VectorLayer;
 
   constructor(
     readonly elementRef: ElementRef,
@@ -50,6 +58,10 @@ export class CanvasComponent
   ) {
     super();
     this.$element = $(elementRef.nativeElement);
+  }
+
+  private get minSnapThreshold() {
+    return MIN_SNAP_THRESHOLD / this.cssScale;
   }
 
   ngAfterViewInit() {
@@ -64,13 +76,17 @@ export class CanvasComponent
     this.registerSubscription(
       this.store.select(getCanvasState)
         .subscribe(({ activeVectorLayer, hiddenLayerIds, selectedLayerIds }) => {
+          this.vectorLayer = activeVectorLayer;
           this.canvasLayers.setLayerState(activeVectorLayer, hiddenLayerIds);
           this.canvasOverlay.setLayerState(activeVectorLayer, hiddenLayerIds, selectedLayerIds);
         }));
     this.registerSubscription(
       this.animatorService.asObservable()
         .filter(event => !!event.vl)
-        .subscribe(event => this.canvasLayers.setVectorLayer(event.vl)));
+        .subscribe(event => {
+          this.vectorLayer = event.vl;
+          this.canvasLayers.setVectorLayer(event.vl);
+        }));
   }
 
   // @Override
@@ -87,6 +103,16 @@ export class CanvasComponent
   @HostListener('mousedown', ['$event'])
   onMouseDown(event: MouseEvent) {
     this.showRuler(event);
+
+    const hitPathLayer = this.hitTestForLayer(this.mouseEventToViewportCoords(event));
+    const isMetaOrShiftPressed = event.metaKey || event.shiftKey;
+    if (hitPathLayer) {
+      const shouldToggle = true;
+      this.store.dispatch(
+        new SelectLayer(hitPathLayer.id, shouldToggle, !isMetaOrShiftPressed));
+    } else if (!isMetaOrShiftPressed) {
+      this.store.dispatch(new ClearLayerSelections());
+    }
   }
 
   @HostListener('mousemove', ['$event'])
@@ -116,5 +142,34 @@ export class CanvasComponent
     const x = (event.pageX - canvasOffset.left) / this.cssScale;
     const y = (event.pageY - canvasOffset.top) / this.cssScale;
     return new Point(x, y);
+  }
+
+  private hitTestForLayer(point: Point) {
+    const root = this.vectorLayer;
+    const recurseFn = (layer: Layer): Layer => {
+      if (layer instanceof PathLayer && layer.pathData) {
+        const transformedPoint =
+          MathUtil.transformPoint(
+            point, LayerUtil.getFlattenedTransformForLayer(root, layer.id).invert());
+        let isSegmentInRangeFn: (distance: number, cmd: Command) => boolean;
+        isSegmentInRangeFn = distance => {
+          let maxDistance = this.minSnapThreshold;
+          if (layer.isStroked()) {
+            maxDistance = Math.max(maxDistance, layer.strokeWidth / 2);
+          }
+          return distance <= maxDistance;
+        };
+        const findShapesInRange = layer.isFilled();
+        const hitResult = layer.pathData.hitTest(
+          transformedPoint, {
+            isSegmentInRangeFn,
+            findShapesInRange,
+          });
+        return hitResult.isHit ? layer : undefined;
+      }
+      // Use 'hitTestLayer || h' and not the other way around because of reverse z-order.
+      return layer.children.reduce((h, l) => recurseFn(l) || h, undefined);
+    };
+    return recurseFn(root) as PathLayer;
   }
 }

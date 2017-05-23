@@ -3,6 +3,9 @@ import { Matrix, Point } from '../scripts/common';
 
 type Context = CanvasRenderingContext2D;
 
+/**
+ * Executes a series of canvas commands for a given path.
+ */
 export function executeCommands(
   ctx: Context,
   commands: ReadonlyArray<Command>,

@@ -10,7 +10,7 @@ const PRECISION = 8;
  * are returned in top-down order (i.e. the transform for the layer's
  * immediate parent will be the very last matrix in the returned list).
  */
-function getTransformsForLayer(vl: VectorLayer, layerId: string) {
+function getTransformsForLayer(root: Layer, layerId: string) {
   const getTransformsFn = (parents: Layer[], current: Layer): Matrix[] => {
     if (current.id === layerId) {
       return _.flatMap(parents, layer => {
@@ -35,15 +35,15 @@ function getTransformsForLayer(vl: VectorLayer, layerId: string) {
     }
     return undefined;
   };
-  return getTransformsFn([], vl);
+  return getTransformsFn([], root);
 }
 
 /**
  * Returns a single flattened transform matrix that can be used to perform canvas
  * transform operations.
  */
-export function getFlattenedTransformForLayer(vl: VectorLayer, layerId: string) {
-  return Matrix.flatten(...getTransformsForLayer(vl, layerId).reverse());
+export function getFlattenedTransformForLayer(root: Layer, layerId: string) {
+  return Matrix.flatten(...getTransformsForLayer(root, layerId).reverse());
 }
 
 /**
