@@ -1,6 +1,6 @@
 import * as $ from 'jquery';
 import { Directive, ElementRef, Input, AfterViewInit } from '@angular/core';
-import { CanvasSizeMixin, Size } from './CanvasSizeMixin';
+import { CanvasLayoutMixin, Size } from './CanvasLayoutMixin';
 import { DestroyableMixin } from '../scripts/mixins';
 import {
   Layer, PathLayer, GroupLayer, ClipPathLayer, LayerUtil, VectorLayer,
@@ -15,7 +15,7 @@ type Context = CanvasRenderingContext2D;
 @Directive({
   selector: '[appCanvasLayers]',
 })
-export class CanvasLayersDirective extends CanvasSizeMixin() {
+export class CanvasLayersDirective extends CanvasLayoutMixin() {
 
   private readonly $renderingCanvas: JQuery;
   private readonly $offscreenLayerCanvas: JQuery;

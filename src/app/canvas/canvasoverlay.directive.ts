@@ -1,6 +1,6 @@
 import * as $ from 'jquery';
 import { Directive, ElementRef, AfterViewInit, Input } from '@angular/core';
-import { CanvasSizeMixin, Size } from './CanvasSizeMixin';
+import { CanvasLayoutMixin, Size } from './CanvasLayoutMixin';
 import { DestroyableMixin } from '../scripts/mixins';
 import { Observable } from 'rxjs/Observable';
 import {
@@ -37,7 +37,7 @@ type Context = CanvasRenderingContext2D;
 @Directive({
   selector: '[appCanvasOverlay]',
 })
-export class CanvasOverlayDirective extends CanvasSizeMixin() {
+export class CanvasOverlayDirective extends CanvasLayoutMixin() {
 
   private readonly $canvas: JQuery;
   private readonly overlayCtx: Context;

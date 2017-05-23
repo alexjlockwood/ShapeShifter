@@ -2,9 +2,8 @@ import * as _ from 'lodash';
 import * as $ from 'jquery';
 import { Directive, AfterViewInit, Input, ElementRef, OnDestroy } from '@angular/core';
 import { Point } from '../scripts/common';
-import { CanvasSizeMixin, Size } from './CanvasSizeMixin';
+import { CanvasLayoutMixin, Size } from './CanvasLayoutMixin';
 import { VectorLayer } from '../scripts/layers';
-// import { CanvasDirective } from './canvas.component';
 import { Observable } from 'rxjs/Observable';
 import { DestroyableMixin } from '../scripts/mixins';
 
@@ -19,7 +18,7 @@ const TICK_SIZE = 6;
 @Directive({
   selector: '[appCanvasRuler]',
 })
-export class CanvasRulerDirective extends CanvasSizeMixin() {
+export class CanvasRulerDirective extends CanvasLayoutMixin() {
 
   @Input() orientation: Orientation;
   private readonly $canvas: JQuery;
@@ -54,11 +53,11 @@ export class CanvasRulerDirective extends CanvasSizeMixin() {
     const isHorizontal = this.orientation === 'horizontal';
     const width = isHorizontal ? vlWidth * this.cssScale + EXTRA_PADDING * 2 : RULER_SIZE;
     const height = isHorizontal ? RULER_SIZE : vlHeight * this.cssScale + EXTRA_PADDING * 2;
-
-    this.$canvas.css('width', width);
-    this.$canvas.css('height', height);
-    this.$canvas.attr('width', width * window.devicePixelRatio);
-    this.$canvas.attr('height', height * window.devicePixelRatio);
+    this.$canvas.css({ width, height });
+    this.$canvas.attr({
+      width: width * window.devicePixelRatio,
+      height: height * window.devicePixelRatio,
+    });
 
     const ctx = (this.$canvas.get(0) as HTMLCanvasElement).getContext('2d');
     ctx.scale(window.devicePixelRatio, window.devicePixelRatio);

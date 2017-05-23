@@ -3,7 +3,7 @@ import { Constructor } from '../scripts/mixins';
 import { Observable } from 'rxjs/Observable';
 import { Subscription } from 'rxjs/Subscription';
 
-export function CanvasSizeMixin<T extends Constructor<{}>>(Base = class { } as T) {
+export function CanvasLayoutMixin<T extends Constructor<{}>>(Base = class { } as T) {
   return class extends Base {
     private bounds = { w: 1, h: 1 };
     private viewport = { w: 1, h: 1 };
@@ -55,7 +55,7 @@ export interface Size {
   readonly h: number;
 }
 
-export interface CanvasSizeMixin {
+export interface CanvasDimensionsMixin {
   readonly cssScale: number;
   readonly attrScale: number;
   getViewport(): Size;

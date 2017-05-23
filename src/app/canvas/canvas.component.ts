@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
 import * as $ from 'jquery';
 import {
-  Component, AfterViewInit, ViewChild,
+  Component, AfterViewInit, ViewChild, ElementRef, HostListener,
   ViewChildren, QueryList, ChangeDetectionStrategy, Input,
 } from '@angular/core';
 import { CanvasOverlayDirective } from './canvasoverlay.directive';
@@ -15,7 +15,7 @@ import { CanvasRulerDirective } from './canvasruler.directive';
 import { CanvasLayersDirective } from './canvaslayers.directive';
 import { Observable } from 'rxjs/Observable';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
-import { CanvasSizeMixin, Size } from './CanvasSizeMixin';
+import { CanvasLayoutMixin, Size } from './CanvasLayoutMixin';
 import { DestroyableMixin } from '../scripts/mixins';
 import 'rxjs/add/observable/combineLatest';
 
@@ -31,7 +31,7 @@ type Context = CanvasRenderingContext2D;
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CanvasComponent
-  extends CanvasSizeMixin(DestroyableMixin())
+  extends CanvasLayoutMixin(DestroyableMixin())
   implements AfterViewInit {
 
   @ViewChild(CanvasContainerDirective) canvasContainer: CanvasContainerDirective;
@@ -41,10 +41,16 @@ export class CanvasComponent
 
   @Input() boundsObservable: Observable<Size>;
 
+  private readonly $element: JQuery;
+
   constructor(
+    readonly elementRef: ElementRef,
     private readonly animatorService: AnimatorService,
     private readonly store: Store<State>,
-  ) { super() }
+  ) {
+    super();
+    this.$element = $(elementRef.nativeElement);
+  }
 
   ngAfterViewInit() {
     this.registerSubscription(
@@ -64,10 +70,7 @@ export class CanvasComponent
     this.registerSubscription(
       this.animatorService.asObservable()
         .filter(event => !!event.vl)
-        .map(event => event.vl)
-        .subscribe(vl => {
-          this.canvasLayers.setVectorLayer(vl);
-        }));
+        .subscribe(event => this.canvasLayers.setVectorLayer(event.vl)));
   }
 
   // @Override
@@ -81,30 +84,37 @@ export class CanvasComponent
     directives.forEach(d => d.setDimensions(bounds, viewport));
   }
 
-  // MOUSE DOWN
+  @HostListener('mousedown', ['$event'])
   onMouseDown(event: MouseEvent) {
     this.showRuler(event);
   }
 
-  // MOUSE MOVE
+  @HostListener('mousemove', ['$event'])
   onMouseMove(event: MouseEvent) {
     this.showRuler(event);
   }
 
-  // MOUSE UP
+  @HostListener('mouseup', ['$event'])
   onMouseUp(event: MouseEvent) {
     this.showRuler(event);
   }
 
-  // MOUSE LEAVE
-  onMouseLeave() {
+  @HostListener('mouseleave', ['$event'])
+  onMouseLeave(event: MouseEvent) {
     this.canvasRulers.forEach(r => r.hideMouse());
   }
 
   private showRuler(event: MouseEvent) {
-    const canvasOffset = this.canvasContainer.container.offset();
+    const canvasOffset = this.$element.offset();
     const x = (event.pageX - canvasOffset.left) / Math.max(1, this.cssScale);
     const y = (event.pageY - canvasOffset.top) / Math.max(1, this.cssScale);
     this.canvasRulers.forEach(r => r.showMouse(new Point(_.round(x), _.round(y))));
+  }
+
+  private mouseEventToViewportCoords(event: MouseEvent) {
+    const canvasOffset = this.$element.offset();
+    const x = (event.pageX - canvasOffset.left) / this.cssScale;
+    const y = (event.pageY - canvasOffset.top) / this.cssScale;
+    return new Point(x, y);
   }
 }

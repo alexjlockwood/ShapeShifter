@@ -8,11 +8,7 @@
     [orientation]="'vertical'">
   </canvas>
   <div appCanvasContainer
-    class="canvas-container"
-    (mousedown)="onMouseDown($event)"
-    (mouseup)="onMouseUp($event)"
-    (mousemove)="onMouseMove($event)"
-    (mouseleave)="onMouseLeave()">
+    class="canvas-container">
     <canvas appCanvasLayers
       class="rendering-canvas">
     </canvas>
