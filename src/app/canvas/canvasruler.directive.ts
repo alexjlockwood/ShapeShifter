@@ -1,11 +1,8 @@
 import * as _ from 'lodash';
 import * as $ from 'jquery';
-import { Directive, AfterViewInit, Input, ElementRef, OnDestroy } from '@angular/core';
+import { Directive, Input, ElementRef } from '@angular/core';
 import { Point } from '../scripts/common';
-import { CanvasLayoutMixin, Size } from './CanvasLayoutMixin';
-import { VectorLayer } from '../scripts/layers';
-import { Observable } from 'rxjs/Observable';
-import { DestroyableMixin } from '../scripts/mixins';
+import { CanvasLayoutMixin } from './CanvasLayoutMixin';
 
 // Ruler size in css pixels.
 const RULER_SIZE = 32;
@@ -30,7 +27,7 @@ export class CanvasRulerDirective extends CanvasLayoutMixin() {
   }
 
   // @Override
-  onDimensionsChanged() {
+  protected onDimensionsChanged() {
     this.draw();
   }
 

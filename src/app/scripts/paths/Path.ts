@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 import {
-  SubPath, Command, Line, Projection,
+  Command, Line, Projection,
   ProjectionOntoPath, HitOptions, HitResult,
 } from '.';
 import { PathMutator } from './PathMutator';

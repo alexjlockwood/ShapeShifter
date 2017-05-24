@@ -19,6 +19,7 @@ export class AnimationRenderer {
     readonly activeAnimation: Animation,
   ) {
     this.renderedVectorLayer = originalVectorLayer.deepClone();
+    // TODO: need to filter out the blocks attached to the 'non active' vector layer
     const animDataByLayer = ModelUtil.getOrderedBlocksByPropertyByLayer(activeAnimation);
     Object.keys(animDataByLayer).forEach(layerId => {
       this.animDataByLayer[layerId] = {

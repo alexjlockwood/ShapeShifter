@@ -12,7 +12,6 @@ import { combineReducers } from '@ngrx/store';
 import { environment } from '../../environments/environment';
 import { compose } from '@ngrx/core/compose';
 import * as fromRoot from './RootReducer';
-import { VectorLayer } from '../scripts/layers';
 
 export interface State {
   root: fromRoot.State,
@@ -66,7 +65,8 @@ export {
 } from './PlaybackActions';
 
 // Selectors.
-const createDeepEqualSelector = createSelectorCreator(defaultMemoize, _.isEqual);
+const createDeepEqualSelector =
+  createSelectorCreator(defaultMemoize, _.isEqual);
 
 // State selectors.
 const getState = (state: State) => state.root.state;
@@ -74,7 +74,8 @@ const getState = (state: State) => state.root.state;
 // Timeline state selectors.
 const getTimelineState = createSelector(getState, s => s.timeline)
 const getAnimations = createSelector(getTimelineState, t => t.animations);
-const getSelectedAnimationIds = createDeepEqualSelector(getTimelineState, t => t.selectedAnimationIds);
+const getSelectedAnimationIds =
+  createDeepEqualSelector(getTimelineState, t => t.selectedAnimationIds);
 const getActiveAnimationId = createDeepEqualSelector(getTimelineState, t => t.activeAnimationId);
 const getActiveAnimation = createSelector(
   getAnimations,
@@ -96,7 +97,7 @@ const getSelectedLayerIds = createDeepEqualSelector(getLayerState, l => l.select
 const getCollapsedLayerIds = createDeepEqualSelector(getLayerState, l => l.collapsedLayerIds);
 const getHiddenLayerIds = createDeepEqualSelector(getLayerState, l => l.hiddenLayerIds);
 
-// Playback selectors.
+// Exported playback settings selectors.
 export const getPlaybackSettings = (state: State) => state.root.playback;
 export const getIsSlowMotion = createDeepEqualSelector(getPlaybackSettings, p => p.isSlowMotion);
 export const getIsPlaying = createDeepEqualSelector(getPlaybackSettings, p => p.isPlaying);

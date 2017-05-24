@@ -1,7 +1,5 @@
 import * as _ from 'lodash';
 import { Constructor } from '../scripts/mixins';
-import { Observable } from 'rxjs/Observable';
-import { Subscription } from 'rxjs/Subscription';
 
 export function CanvasLayoutMixin<T extends Constructor<{}>>(Base = class { } as T) {
   return class extends Base {
@@ -30,11 +28,11 @@ export function CanvasLayoutMixin<T extends Constructor<{}>>(Base = class { } as
       return this.cssScale * devicePixelRatio;
     }
 
-    getBounds() {
+    protected getBounds() {
       return this.bounds;
     }
 
-    getViewport() {
+    protected getViewport() {
       return this.viewport;
     }
 
@@ -46,7 +44,7 @@ export function CanvasLayoutMixin<T extends Constructor<{}>>(Base = class { } as
       }
     }
 
-    onDimensionsChanged(bounds: Size, viewport: Size) { }
+    protected onDimensionsChanged(bounds: Size, viewport: Size) { }
   };
 }
 
@@ -55,7 +53,7 @@ export interface Size {
   readonly h: number;
 }
 
-export interface CanvasDimensionsMixin {
+export interface CanvasLayoutMixin {
   readonly cssScale: number;
   readonly attrScale: number;
   getViewport(): Size;

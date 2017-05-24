@@ -1,7 +1,6 @@
-import { Path, PathUtil } from '../paths';
+import { Path } from '../paths';
 import { AbstractLayer, ConstructorArgs as AbstractConstructorArgs } from './AbstractLayer';
 import { Property, PathProperty } from '../properties';
-import { Rect } from '../common';
 
 /**
  * Model object that mirrors the VectorDrawable's '<clip-path>' element.

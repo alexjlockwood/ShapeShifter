@@ -1,14 +1,12 @@
 import * as $ from 'jquery';
-import { Directive, ElementRef, AfterViewInit, Input } from '@angular/core';
-import { CanvasLayoutMixin, Size } from './CanvasLayoutMixin';
-import { DestroyableMixin } from '../scripts/mixins';
-import { Observable } from 'rxjs/Observable';
+import { Directive, ElementRef } from '@angular/core';
+import { CanvasLayoutMixin } from './CanvasLayoutMixin';
 import {
   Layer, VectorLayer, LayerUtil, PathLayer, ClipPathLayer, GroupLayer,
 } from '../scripts/layers';
 import * as CanvasUtil from './CanvasUtil';
 
-const SPLIT_POINT_RADIUS_FACTOR = 0.8;
+// const SPLIT_POINT_RADIUS_FACTOR = 0.8;
 // const SELECTED_POINT_RADIUS_FACTOR = 1.25;
 // const POINT_BORDER_FACTOR = 1.075;
 // const DISABLED_ALPHA = 0.38;
@@ -18,13 +16,13 @@ const HIGHLIGHT_LINE_WIDTH = 6;
 // The line dash of a highlight in css pixels.
 const HIGHLIGHT_LINE_DASH = 5;
 // The distance of a mouse gesture that triggers a drag, in css pixels.
-const DRAG_TRIGGER_TOUCH_SLOP = 6;
+// const DRAG_TRIGGER_TOUCH_SLOP = 6;
 // The minimum distance between a point and a path that causes a snap.
-const MIN_SNAP_THRESHOLD = 12;
+// const MIN_SNAP_THRESHOLD = 12;
 // The radius of a medium point in css pixels.
-const MEDIUM_POINT_RADIUS = 8;
+// const MEDIUM_POINT_RADIUS = 8;
 // The radius of a small point in css pixels.
-const SMALL_POINT_RADIUS = MEDIUM_POINT_RADIUS / 1.7;
+// const SMALL_POINT_RADIUS = MEDIUM_POINT_RADIUS / 1.7;
 
 // const NORMAL_POINT_COLOR = '#2962FF'; // Blue A400
 // const SPLIT_POINT_COLOR = '#E65100'; // Orange 900
@@ -63,7 +61,7 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin() {
   }
 
   // @Override
-  onDimensionsChanged() {
+  protected onDimensionsChanged() {
     const { w, h } = this.getViewport();
     this.$canvas.attr({ width: w * this.attrScale, height: h * this.attrScale });
     this.$canvas.css({ width: w * this.cssScale, height: h * this.cssScale });

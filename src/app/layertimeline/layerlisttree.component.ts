@@ -1,7 +1,6 @@
 import * as _ from 'lodash';
 import {
-  Component, OnInit, Input, ChangeDetectionStrategy,
-  Output, EventEmitter, ViewEncapsulation
+  Component, OnInit, Input, ChangeDetectionStrategy, Output, EventEmitter,
 } from '@angular/core';
 import { Layer, VectorLayer, GroupLayer } from '../scripts/layers';
 import { ModelUtil } from '../scripts/common';

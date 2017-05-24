@@ -2,7 +2,7 @@ import * as _ from 'lodash';
 import * as $ from 'jquery';
 import {
   Component, OnInit, ChangeDetectionStrategy,
-  QueryList, OnDestroy, ViewChild, ViewChildren,
+  QueryList, ViewChild, ViewChildren,
   ElementRef, AfterViewInit,
 } from '@angular/core';
 import { MdSnackBar } from '@angular/material';

@@ -12,6 +12,14 @@
   user-select: none;
 }
 
+app-canvas.start {
+  margin-right: 48px;
+}
+
+app-canvas.end {
+  margin-left: 48px;
+}
+
 div.toolbar-container {
   position: relative;
   z-index: 1;

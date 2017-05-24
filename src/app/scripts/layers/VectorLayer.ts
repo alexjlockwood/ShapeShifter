@@ -1,7 +1,6 @@
 import { AbstractLayer, ConstructorArgs as AbstractConstructorArgs } from './AbstractLayer';
-import { MathUtil, Rect, Point } from '../common';
+import { Rect } from '../common';
 import { Property, NumberProperty, FractionProperty } from '../properties';
-import { GroupLayer, PathLayer, LayerUtil } from '.';
 
 /**
  * Model object that mirrors the VectorDrawable's '<vector>' element.

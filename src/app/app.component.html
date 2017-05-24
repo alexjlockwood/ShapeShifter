@@ -18,7 +18,19 @@
         fxLayout="row"
         fxLayoutAlign="center center"
         fxFlex>
-        <app-canvas [boundsObservable]="this.boundsObservable"></app-canvas>
+        <app-canvas class="start"
+          *ngIf="this.isMultiCanvasDisplayMode$ | async"
+          [canvasId]="'start'"
+          [canvasBounds$]="this.canvasBounds$">
+        </app-canvas>
+        <app-canvas [canvasBounds$]="this.canvasBounds$"
+          [canvasId]="'middle'">
+        </app-canvas>
+        <app-canvas class="end"
+          *ngIf="this.isMultiCanvasDisplayMode$ | async"
+          [canvasId]="'end'"
+          [canvasBounds$]="this.canvasBounds$">
+        </app-canvas>
       </div>
       <!-- Playback controls. -->
       <app-playback></app-playback>

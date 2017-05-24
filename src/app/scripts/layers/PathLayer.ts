@@ -1,7 +1,5 @@
-import * as _ from 'lodash';
-import { Path, PathUtil } from '../paths';
+import { Path, } from '../paths';
 import { AbstractLayer, ConstructorArgs as AbstractConstructorArgs } from './AbstractLayer';
-import { ColorUtil, MathUtil, Rect } from '../common';
 import {
   Property, PathProperty, ColorProperty,
   FractionProperty, NumberProperty, EnumProperty,

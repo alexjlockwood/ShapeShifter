@@ -1,5 +1,5 @@
 import { AbstractLayer, ConstructorArgs as AbstractConstructorArgs } from './AbstractLayer';
-import { MathUtil, Rect } from '../common';
+import { Rect } from '../common';
 import { Property, NumberProperty } from '../properties';
 
 /**

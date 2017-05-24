@@ -15,8 +15,6 @@ import {
 } from '../store';
 import { Animation, AnimationRenderer } from '../scripts/animations';
 import { VectorLayer } from '../scripts/layers';
-import { Observable } from 'rxjs/Observable';
-import 'rxjs/add/observable/combineLatest';
 
 const REPEAT_DELAY = 750;
 const DEFAULT_IS_SLOW_MOTION = false;

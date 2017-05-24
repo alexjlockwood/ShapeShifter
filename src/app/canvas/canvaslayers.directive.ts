@@ -1,13 +1,10 @@
 import * as $ from 'jquery';
-import { Directive, ElementRef, Input, AfterViewInit } from '@angular/core';
+import { Directive, ElementRef } from '@angular/core';
 import { CanvasLayoutMixin, Size } from './CanvasLayoutMixin';
-import { DestroyableMixin } from '../scripts/mixins';
 import {
-  Layer, PathLayer, GroupLayer, ClipPathLayer, LayerUtil, VectorLayer,
+  Layer, PathLayer, ClipPathLayer, LayerUtil, VectorLayer,
 } from '../scripts/layers';
-import { Matrix, ColorUtil, Point } from '../scripts/common';
-import { Command } from '../scripts/paths';
-import { Observable } from 'rxjs/Observable';
+import { ColorUtil } from '../scripts/common';
 import * as CanvasUtil from './CanvasUtil';
 
 type Context = CanvasRenderingContext2D;
@@ -36,7 +33,7 @@ export class CanvasLayersDirective extends CanvasLayoutMixin() {
   }
 
   // @Override
-  onDimensionsChanged(bounds: Size, viewport: Size) {
+  protected onDimensionsChanged(bounds: Size, viewport: Size) {
     const { w, h } = this.getViewport();
     [this.$renderingCanvas, this.$offscreenLayerCanvas]
       .forEach(canvas => {

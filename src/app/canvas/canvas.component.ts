@@ -7,9 +7,9 @@ import {
 import { CanvasOverlayDirective } from './canvasoverlay.directive';
 import { Command } from '../scripts/paths';
 import {
-  PathLayer, ClipPathLayer, LayerUtil, Layer, VectorLayer,
+  PathLayer, LayerUtil, Layer, VectorLayer,
 } from '../scripts/layers';
-import { Point, Matrix, ColorUtil, MathUtil } from '../scripts/common';
+import { Point, MathUtil } from '../scripts/common';
 import { AnimatorService } from '../services';
 import {
   Store, State, getCanvasState,
@@ -19,7 +19,6 @@ import { CanvasContainerDirective } from './canvascontainer.directive';
 import { CanvasRulerDirective } from './canvasruler.directive';
 import { CanvasLayersDirective } from './canvaslayers.directive';
 import { Observable } from 'rxjs/Observable';
-import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { CanvasLayoutMixin, Size } from './CanvasLayoutMixin';
 import { DestroyableMixin } from '../scripts/mixins';
 import 'rxjs/add/observable/combineLatest';
@@ -28,8 +27,6 @@ import 'rxjs/add/observable/combineLatest';
 const CANVAS_MARGIN = 36;
 // The minimum distance between a point and a path that causes a snap.
 const MIN_SNAP_THRESHOLD = 12;
-
-type Context = CanvasRenderingContext2D;
 
 @Component({
   selector: 'app-canvas',
@@ -46,7 +43,8 @@ export class CanvasComponent
   @ViewChild(CanvasOverlayDirective) canvasOverlay: CanvasOverlayDirective;
   @ViewChildren(CanvasRulerDirective) canvasRulers: QueryList<CanvasRulerDirective>;
 
-  @Input() boundsObservable: Observable<Size>;
+  @Input() canvasId: CanvasId;
+  @Input() canvasBounds$: Observable<Size>;
 
   private readonly $element: JQuery;
   private vectorLayer: VectorLayer;
@@ -66,31 +64,31 @@ export class CanvasComponent
 
   ngAfterViewInit() {
     this.registerSubscription(
-      Observable.combineLatest(this.boundsObservable, this.store.select(getActiveViewport))
+      Observable.combineLatest(this.canvasBounds$, this.store.select(getActiveViewport))
         .map(([bounds, viewport]) => { return { bounds, viewport } })
         .subscribe(({ bounds, viewport }) => {
           const w = Math.max(1, bounds.w - CANVAS_MARGIN * 2);
           const h = Math.max(1, bounds.h - CANVAS_MARGIN * 2);
           this.setDimensions({ w, h }, viewport);
         }));
+    const canvasState$ = this.store.select(getCanvasState);
+    const animatorState$ =
+      this.animatorService.asObservable().map(event => event.vl).filter(vl => !!vl);
     this.registerSubscription(
-      this.store.select(getCanvasState)
-        .subscribe(({ activeVectorLayer, hiddenLayerIds, selectedLayerIds }) => {
-          this.vectorLayer = activeVectorLayer;
-          this.canvasLayers.setLayerState(activeVectorLayer, hiddenLayerIds);
-          this.canvasOverlay.setLayerState(activeVectorLayer, hiddenLayerIds, selectedLayerIds);
-        }));
+      canvasState$.subscribe(({ activeVectorLayer, hiddenLayerIds, selectedLayerIds }) => {
+        this.vectorLayer = activeVectorLayer;
+        this.canvasLayers.setLayerState(activeVectorLayer, hiddenLayerIds);
+        this.canvasOverlay.setLayerState(activeVectorLayer, hiddenLayerIds, selectedLayerIds);
+      }));
     this.registerSubscription(
-      this.animatorService.asObservable()
-        .filter(event => !!event.vl)
-        .subscribe(event => {
-          this.vectorLayer = event.vl;
-          this.canvasLayers.setVectorLayer(event.vl);
-        }));
+      animatorState$.subscribe(vl => {
+        this.vectorLayer = vl;
+        this.canvasLayers.setVectorLayer(vl);
+      }));
   }
 
   // @Override
-  onDimensionsChanged(bounds: Size, viewport: Size) {
+  protected onDimensionsChanged(bounds: Size, viewport: Size) {
     const directives = [
       this.canvasContainer,
       this.canvasLayers,
@@ -173,3 +171,5 @@ export class CanvasComponent
     return recurseFn(root) as PathLayer;
   }
 }
+
+export type CanvasId = 'start' | 'middle' | 'end';

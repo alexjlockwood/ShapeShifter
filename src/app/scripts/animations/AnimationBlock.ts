@@ -53,8 +53,6 @@ type AnimationBlockType = string | number | Path;
 
 export interface AnimationBlock<T extends AnimationBlockType>
   extends AnimationBlockArgs<T>, Inspectable { }
-
-// tslint:disable-next-line
 export interface ConstructorArgs<T extends AnimationBlockType>
   extends AnimationBlockArgs<T> { }
 

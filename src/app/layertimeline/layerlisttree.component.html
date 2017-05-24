@@ -10,8 +10,8 @@
       *ngIf="model.isExpandable"
       (click)="this.layerToggleExpanded($event, this.layer)"
       mdTooltip="{{model.isExpanded ? 'Collapse layer' : 'Expand layer'}}"
-      mdTooltipPosition="below"
-      mdTooltipShowDelay="500">
+      mdTooltipPosition="right"
+      mdTooltipShowDelay="1000">
       <md-icon>{{model.isExpanded ? 'expand_more' : 'chevron_right'}}</md-icon>
     </button>
     <!-- Add extra 20px margin if the expand/collapse icon isn't being displayed -->
@@ -34,7 +34,7 @@
       (click)="this.layerToggleVisibility($event, this.layer)"
       mdTooltip="{{model.isVisible ? 'Hide layer' : 'Show layer'}}"
       mdTooltipPosition="below"
-      mdTooltipShowDelay="500"
+      mdTooltipShowDelay="1000"
       [ngClass]="{'is-checked': model.isVisible}">
       <md-icon>{{model.isVisible ? 'visibility' : 'visibility_off'}}</md-icon>
     </button>
@@ -51,7 +51,7 @@
       (click)="$event.stopPropagation()"
       mdTooltip="Animate this layer"
       mdTooltipPosition="below"
-      mdTooltipShowDelay="500"
+      mdTooltipShowDelay="1000"
       [mdMenuTriggerFor]="addTimelineBlockMenu">
       <md-icon svgIcon="animationblock"></md-icon>
     </button>
@@ -70,7 +70,7 @@
         (click)="this.addTimelineBlockClick($event, layer, propertyName)"
         mdTooltip="Add another animation"
         mdTooltipPosition="below"
-        mdTooltipShowDelay="500">
+        mdTooltipShowDelay="1000">
         <md-icon>add</md-icon>
       </button>
     </div>

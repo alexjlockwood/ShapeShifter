@@ -22,8 +22,13 @@ import {
 
 // Components & directives.
 import { AppComponent } from './app.component';
-import { CanvasComponent } from './canvas/canvas.component';
-import { CanvasRulerDirective } from './canvas/canvasruler.directive';
+import {
+  CanvasComponent,
+  CanvasContainerDirective,
+  CanvasLayersDirective,
+  CanvasRulerDirective,
+  CanvasOverlayDirective,
+} from './canvas';
 import { PathInspectorComponent } from './inspector/pathinspector.component';
 import { CommandInspectorComponent } from './inspector/commandinspector.component';
 import { SubpathInspectorComponent } from './inspector/subpathinspector.component';
@@ -37,9 +42,6 @@ import { LayerTimelineComponent } from './layertimeline/layertimeline.component'
 import { LayerTimelineDirective } from './layertimeline/layertimeline.directive';
 import { TimelineAnimationRowComponent } from './layertimeline/timelineanimationrow.component';
 import { DropTargetDirective } from './droptarget.directive';
-import { CanvasOverlayDirective } from './canvas/canvasoverlay.directive';
-import { CanvasLayersDirective } from './canvas/canvaslayers.directive';
-import { CanvasContainerDirective } from './canvas/canvascontainer.directive';
 
 // Services.
 import {
