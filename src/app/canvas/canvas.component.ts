@@ -83,7 +83,7 @@ export class CanvasComponent
     this.registerSubscription(
       animatorState$.subscribe(vl => {
         this.vectorLayer = vl;
-        this.canvasLayers.setVectorLayer(vl);
+        this.canvasLayers.setLayerState(vl);
       }));
   }
 

@@ -92,54 +92,34 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin() {
       return;
     }
     if (this.selectedLayerIds.has(curr.id)) {
+      const flattenedTransform = LayerUtil.getFlattenedTransformForLayer(vl, curr.id);
       if (curr instanceof ClipPathLayer) {
-        this.drawClipPathHighlights(vl, curr, ctx);
+        if (curr.pathData && curr.pathData.getCommands().length) {
+          CanvasUtil.executeCommands(ctx, curr.pathData.getCommands(), flattenedTransform);
+          executeHighlights(ctx, HIGHLIGHT_COLOR, this.highlightLineWidth, this.highlightLineDash);
+          ctx.clip();
+        }
       } else if (curr instanceof PathLayer) {
-        this.drawPathHighlights(vl, curr, ctx);
+        if (curr.pathData && curr.pathData.getCommands().length) {
+          ctx.save();
+          CanvasUtil.executeCommands(ctx, curr.pathData.getCommands(), flattenedTransform);
+          executeHighlights(ctx, HIGHLIGHT_COLOR, this.highlightLineWidth);
+          ctx.restore();
+        }
       } else if (curr instanceof VectorLayer || curr instanceof GroupLayer) {
-        this.drawGroupHighlights(vl, curr, ctx);
+        const bounds = curr.getBoundingBox();
+        if (bounds) {
+          ctx.save();
+          const { a, b, c, d, e, f } = flattenedTransform;
+          ctx.transform(a, b, c, d, e, f);
+          ctx.beginPath();
+          ctx.rect(bounds.l, bounds.t, bounds.r - bounds.l, bounds.b - bounds.t);
+          executeHighlights(ctx, HIGHLIGHT_COLOR, this.highlightLineWidth);
+          ctx.restore();
+        }
       }
     }
     curr.children.forEach(child => this.drawLayer(vl, child, ctx));
-  }
-
-  private drawGroupHighlights(
-    vl: VectorLayer,
-    layer: VectorLayer | GroupLayer,
-    ctx: Context,
-  ) {
-    const bounds = layer.getBoundingBox();
-    if (bounds) {
-      ctx.save();
-      const flattenedTransform = LayerUtil.getFlattenedTransformForLayer(vl, layer.id);
-      const { a, b, c, d, e, f } = flattenedTransform;
-      ctx.transform(a, b, c, d, e, f);
-      ctx.beginPath();
-      ctx.rect(bounds.l, bounds.t, bounds.r - bounds.l, bounds.b - bounds.t);
-      ctx.restore();
-      executeHighlights(ctx, HIGHLIGHT_COLOR, this.highlightLineWidth);
-    }
-  }
-
-  private drawClipPathHighlights(vl: VectorLayer, layer: ClipPathLayer, ctx: Context) {
-    if (!layer.pathData || !layer.pathData.getCommands().length) {
-      return;
-    }
-    const flattenedTransform = LayerUtil.getFlattenedTransformForLayer(vl, layer.id);
-    CanvasUtil.executeCommands(ctx, layer.pathData.getCommands(), flattenedTransform);
-    executeHighlights(ctx, HIGHLIGHT_COLOR, this.highlightLineWidth, this.highlightLineDash);
-    ctx.clip();
-  }
-
-  private drawPathHighlights(vl: VectorLayer, layer: PathLayer, ctx: Context) {
-    if (!layer.pathData || !layer.pathData.getCommands().length) {
-      return;
-    }
-    ctx.save();
-    const flattenedTransform = LayerUtil.getFlattenedTransformForLayer(vl, layer.id);
-    CanvasUtil.executeCommands(ctx, layer.pathData.getCommands(), flattenedTransform);
-    executeHighlights(ctx, HIGHLIGHT_COLOR, this.highlightLineWidth);
-    ctx.restore();
   }
 
   private drawPixelGrid() {

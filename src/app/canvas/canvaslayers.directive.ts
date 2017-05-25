@@ -43,14 +43,11 @@ export class CanvasLayersDirective extends CanvasLayoutMixin() {
     this.draw();
   }
 
-  setVectorLayer(vl: VectorLayer) {
+  setLayerState(vl: VectorLayer, hiddenLayerIds?: Set<string>) {
     this.vectorLayer = vl;
-    this.draw();
-  }
-
-  setLayerState(vl: VectorLayer, hiddenLayerIds: Set<string>) {
-    this.vectorLayer = vl;
-    this.hiddenLayerIds = hiddenLayerIds;
+    if (hiddenLayerIds !== undefined) {
+      this.hiddenLayerIds = hiddenLayerIds;
+    }
     this.draw();
   }
 
