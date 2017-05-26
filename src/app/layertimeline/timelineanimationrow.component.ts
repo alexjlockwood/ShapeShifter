@@ -49,7 +49,7 @@ export class TimelineAnimationRowComponent implements OnInit, Callbacks {
   // @Override Callbacks
   timelineBlockClick(
     event: MouseEvent,
-    block: AnimationBlock<any>,
+    block: AnimationBlock,
     animation: Animation,
     layer: Layer,
   ) {
@@ -59,7 +59,7 @@ export class TimelineAnimationRowComponent implements OnInit, Callbacks {
   // @Override Callbacks
   timelineBlockMouseDown(
     event: MouseEvent,
-    block: AnimationBlock<any>,
+    block: AnimationBlock,
     animation: Animation,
     layer: Layer,
   ) {
@@ -75,27 +75,27 @@ export class TimelineAnimationRowComponent implements OnInit, Callbacks {
 export interface Callbacks {
   timelineBlockMouseDown(
     event: MouseEvent,
-    block: AnimationBlock<any>,
+    block: AnimationBlock,
     animation: Animation,
     layer: Layer,
   );
   timelineBlockClick(
     event: MouseEvent,
-    block: AnimationBlock<any>,
+    block: AnimationBlock,
     animation: Animation,
     layer: Layer,
   );
 }
 
 interface AnimationRowModel {
-  readonly blocksByAnimationByPropertyValues: AnimationMap<AnimationBlock<any>[]>[];
+  readonly blocksByAnimationByPropertyValues: AnimationMap<AnimationBlock[]>[];
   readonly isExpanded: boolean;
   readonly selectedBlockIds: Set<string>;
 }
 
 interface Event {
   readonly event: MouseEvent;
-  readonly block: AnimationBlock<any>;
+  readonly block: AnimationBlock;
   readonly animation: Animation;
   readonly layer: Layer;
 }

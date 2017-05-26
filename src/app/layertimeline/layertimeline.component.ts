@@ -529,16 +529,6 @@ export class LayerTimelineComponent
     layer: Layer,
     propertyName: string,
   ) {
-    // TODO: handle case where property name is undefined!! we need to avoid crashes!!
-    // TODO: handle case where property name is undefined!! we need to avoid crashes!!
-    // TODO: handle case where property name is undefined!! we need to avoid crashes!!
-    // TODO: handle case where property name is undefined!! we need to avoid crashes!!
-    // TODO: handle case where property name is undefined!! we need to avoid crashes!!
-    // TODO: handle case where property name is undefined!! we need to avoid crashes!!
-    // TODO: handle case where property name is undefined!! we need to avoid crashes!!
-    // TODO: handle case where property name is undefined!! we need to avoid crashes!!
-    // TODO: handle case where property name is undefined!! we need to avoid crashes!!
-    // TODO: handle case where property name is undefined!! we need to avoid crashes!!
     const clonedValue = layer.inspectableProperties.get(propertyName).cloneValue(layer[propertyName]);
     this.store.dispatch(new AddBlock(layer, propertyName, clonedValue, clonedValue));
   }

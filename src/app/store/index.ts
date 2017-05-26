@@ -12,6 +12,8 @@ import { combineReducers } from '@ngrx/store';
 import { environment } from '../../environments/environment';
 import { compose } from '@ngrx/core/compose';
 import * as fromRoot from './RootReducer';
+import { Animation, AnimationBlock, PathAnimationBlock } from '../scripts/animations';
+import { VectorLayer } from '../scripts/layers';
 
 export interface State {
   root: fromRoot.State,
@@ -83,6 +85,15 @@ const getActiveAnimation = createSelector(
   (anims, id) => _.find(anims, anim => anim.id === id),
 );
 const getSelectedBlockIds = createDeepEqualSelector(getTimelineState, t => t.selectedBlockIds);
+const getSelectedBlocks = createSelector(
+  getActiveAnimation,
+  getSelectedBlockIds,
+  (animation, blockIds) => {
+    return Array.from(blockIds).map(blockId => {
+      return _.find(animation.blocks, b => b.id === blockId);
+    });
+  },
+);
 
 // Layer state selectors.
 const getLayerState = createSelector(getState, s => s.layers);
@@ -155,3 +166,16 @@ export const getAnimatorState = createStructuredSelector({
 
 // File importer selectors.
 export const getImportedVectorLayers = getVectorLayers;
+
+// Exported shape shifter mode selectors.
+export const isShapeShifterMode = createSelector(
+  getActiveVectorLayer,
+  getSelectedBlocks,
+  // TODO: the 'active vector layer' here may cause some problems in the timeline
+  (vl: VectorLayer, blocks: AnimationBlock[]) => {
+    return blocks.length === 1 && blocks[0] instanceof PathAnimationBlock;
+  },
+);
+export const getShapeShifterModeState = createStructuredSelector({
+
+});

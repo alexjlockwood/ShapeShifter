@@ -14,9 +14,9 @@ import { INTERPOLATORS } from '.';
   new NumberProperty('endTime', { min: 0, isInteger: true }),
   new EnumProperty('interpolator', INTERPOLATORS),
 )
-export abstract class AnimationBlock<T extends AnimationBlockType> {
+export abstract class AnimationBlock {
 
-  constructor(obj: ConstructorArgs<T>) {
+  constructor(obj: ConstructorArgs) {
     this.id = obj.id || _.uniqueId();
     this.animationId = obj.animationId;
     this.layerId = obj.layerId;
@@ -33,10 +33,10 @@ export abstract class AnimationBlock<T extends AnimationBlockType> {
     this.toValue = obj.toValue;
   }
 
-  abstract clone(): AnimationBlock<T>;
+  abstract clone(): AnimationBlock;
 }
 
-interface AnimationBlockArgs<T> {
+interface AnimationBlockArgs {
   id?: string;
   animationId: string;
   layerId: string;
@@ -45,16 +45,12 @@ interface AnimationBlockArgs<T> {
   endTime?: number;
   // Stores the 'value' key of the Interpolator object.
   interpolator?: string;
-  fromValue: T;
-  toValue: T;
+  fromValue: any;
+  toValue: any;
 }
 
-type AnimationBlockType = string | number | Path;
-
-export interface AnimationBlock<T extends AnimationBlockType>
-  extends AnimationBlockArgs<T>, Inspectable { }
-export interface ConstructorArgs<T extends AnimationBlockType>
-  extends AnimationBlockArgs<T> { }
+export interface AnimationBlock extends AnimationBlockArgs, Inspectable { }
+export interface ConstructorArgs extends AnimationBlockArgs { }
 
 /**
  * An animation block that animates the 'pathData' property.
@@ -63,7 +59,7 @@ export interface ConstructorArgs<T extends AnimationBlockType>
   new PathProperty('fromValue'),
   new PathProperty('toValue'),
 )
-export class PathAnimationBlock extends AnimationBlock<Path> {
+export class PathAnimationBlock extends AnimationBlock {
 
   clone() {
     return new PathAnimationBlock(this);
@@ -77,7 +73,7 @@ export class PathAnimationBlock extends AnimationBlock<Path> {
   new ColorProperty('fromValue'),
   new ColorProperty('toValue'),
 )
-export class ColorAnimationBlock extends AnimationBlock<string> {
+export class ColorAnimationBlock extends AnimationBlock {
 
   clone() {
     return new ColorAnimationBlock(this);
@@ -91,7 +87,7 @@ export class ColorAnimationBlock extends AnimationBlock<string> {
   new NumberProperty('fromValue'),
   new NumberProperty('toValue'),
 )
-export class NumberAnimationBlock extends AnimationBlock<number> {
+export class NumberAnimationBlock extends AnimationBlock {
 
   clone() {
     return new NumberAnimationBlock(this);

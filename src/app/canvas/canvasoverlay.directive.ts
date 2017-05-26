@@ -32,13 +32,14 @@ const HIGHLIGHT_COLOR = '#448AFF';
 
 type Context = CanvasRenderingContext2D;
 
-@Directive({
-  selector: '[appCanvasOverlay]',
-})
+/**
+ * A directive that draws overlay selections and other content on top
+ * of the currently active vector layer.
+ */
+@Directive({ selector: '[appCanvasOverlay]' })
 export class CanvasOverlayDirective extends CanvasLayoutMixin() {
 
   private readonly $canvas: JQuery;
-  private readonly overlayCtx: Context;
   private vectorLayer: VectorLayer;
   private hiddenLayerIds = new Set<string>();
   private selectedLayerIds = new Set<string>();
@@ -46,7 +47,6 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin() {
   constructor(readonly elementRef: ElementRef) {
     super();
     this.$canvas = $(elementRef.nativeElement);
-    this.overlayCtx = (this.$canvas.get(0) as HTMLCanvasElement).getContext('2d');
   }
 
   private get highlightLineWidth() {
@@ -68,26 +68,26 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin() {
     this.draw();
   }
 
-  setLayerState(vl: VectorLayer, hiddenLayerIds: Set<string>, selectedLayerIds: Set<string>) {
+  setState(vl: VectorLayer, hiddenLayerIds: Set<string>, selectedLayerIds: Set<string>) {
     this.vectorLayer = vl;
     this.hiddenLayerIds = hiddenLayerIds;
     this.selectedLayerIds = selectedLayerIds;
-    this.draw();
   }
 
   draw() {
+    const overlayCtx = (this.$canvas.get(0) as HTMLCanvasElement).getContext('2d');
     if (this.vectorLayer) {
       const { w, h } = this.getViewport();
-      this.overlayCtx.save();
-      this.overlayCtx.scale(this.attrScale, this.attrScale);
-      this.overlayCtx.clearRect(0, 0, w, h);
-      this.drawLayer(this.vectorLayer, this.vectorLayer, this.overlayCtx);
-      this.overlayCtx.restore();
+      overlayCtx.save();
+      overlayCtx.scale(this.attrScale, this.attrScale);
+      overlayCtx.clearRect(0, 0, w, h);
+      this.drawLayerSelections(this.vectorLayer, this.vectorLayer, overlayCtx);
+      overlayCtx.restore();
     }
-    this.drawPixelGrid();
+    this.drawPixelGrid(overlayCtx);
   }
 
-  private drawLayer(vl: VectorLayer, curr: Layer, ctx: Context) {
+  private drawLayerSelections(vl: VectorLayer, curr: Layer, ctx: Context) {
     if (this.hiddenLayerIds.has(curr.id)) {
       return;
     }
@@ -119,32 +119,32 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin() {
         }
       }
     }
-    curr.children.forEach(child => this.drawLayer(vl, child, ctx));
+    curr.children.forEach(child => this.drawLayerSelections(vl, child, ctx));
   }
 
-  private drawPixelGrid() {
+  private drawPixelGrid(ctx: Context) {
     // Note that we draw the pixel grid in terms of physical pixels,
     // not viewport pixels.
     if (this.cssScale > 4) {
-      this.overlayCtx.save();
-      this.overlayCtx.fillStyle = 'rgba(128, 128, 128, .25)';
+      ctx.save();
+      ctx.fillStyle = 'rgba(128, 128, 128, .25)';
       const devicePixelRatio = window.devicePixelRatio || 1;
       const viewport = this.getViewport();
       for (let x = 1; x < viewport.w; x++) {
-        this.overlayCtx.fillRect(
+        ctx.fillRect(
           x * this.attrScale - devicePixelRatio / 2,
           0,
           devicePixelRatio,
           viewport.h * this.attrScale);
       }
       for (let y = 1; y < viewport.h; y++) {
-        this.overlayCtx.fillRect(
+        ctx.fillRect(
           0,
           y * this.attrScale - devicePixelRatio / 2,
           viewport.w * this.attrScale,
           devicePixelRatio);
       }
-      this.overlayCtx.restore();
+      ctx.restore();
     }
   }
 }

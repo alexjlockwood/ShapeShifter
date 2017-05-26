@@ -7,11 +7,12 @@ import {
 import { MdSnackBar } from '@angular/material';
 import { environment } from '../environments/environment';
 import { FileImporterService, ShortcutService } from './services';
-import { Store, State, AddLayers } from './store';
+import { Store, State, AddLayers, isShapeShifterMode } from './store';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/operator/distinctUntilChanged';
 import 'rxjs/add/operator/combineLatest';
+import { CanvasType } from './CanvasType';
 
 const IS_DEV_MODE = !environment.production;
 const ELEMENT_RESIZE_DETECTOR = erd();
@@ -24,14 +25,16 @@ const STORAGE_KEY_FIRST_TIME_USER = 'storage_key_first_time_user';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
+  readonly CANVAS_TYPE_START = CanvasType.Start;
+  readonly CANVAS_TYPE_PREVIEW = CanvasType.Preview;
+  readonly CANVAS_TYPE_END = CanvasType.End;
 
   @ViewChild('displayContainer') displayContainerRef: ElementRef;
   private $displayContainer: JQuery;
+
   private readonly displayBoundsSubject = new BehaviorSubject<Size>({ w: 1, h: 1 });
-  private readonly displayModeSubject = new BehaviorSubject<DisplayMode>(DisplayMode.MultiCanvas);
-  private readonly displayMode$ = this.displayModeSubject.asObservable().distinctUntilChanged();
-  readonly isMultiCanvasDisplayMode$ = this.displayMode$.map(m => m === DisplayMode.MultiCanvas);
   canvasBounds$: Observable<Size>;
+  isShapeShifterMode$: Observable<boolean>;
 
   constructor(
     private readonly snackBar: MdSnackBar,
@@ -56,9 +59,10 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       .distinctUntilChanged(({ w: w1, h: h1 }, { w: w2, h: h2 }) => {
         return w1 === w2 && h1 === h2;
       });
-    this.canvasBounds$ = Observable.combineLatest(displaySize$, this.displayMode$)
-      .map(([{ w, h }, displayMode]) => {
-        return { w: w / (displayMode === DisplayMode.MultiCanvas ? 3 : 1), h };
+    this.isShapeShifterMode$ = this.store.select(isShapeShifterMode);
+    this.canvasBounds$ = Observable.combineLatest(displaySize$, this.isShapeShifterMode$)
+      .map(([{ w, h }, shouldShowThreeCanvases]) => {
+        return { w: w / (shouldShowThreeCanvases ? 3 : 1), h };
       });
   }
 
@@ -119,9 +123,4 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 interface Size {
   readonly w: number;
   readonly h: number;
-}
-
-enum DisplayMode {
-  Default = 1,
-  MultiCanvas,
 }

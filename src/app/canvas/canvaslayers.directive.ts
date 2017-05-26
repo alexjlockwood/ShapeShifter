@@ -9,33 +9,35 @@ import * as CanvasUtil from './CanvasUtil';
 
 type Context = CanvasRenderingContext2D;
 
-@Directive({
-  selector: '[appCanvasLayers]',
-})
+/**
+ * Directive that draws the currently active vector layer to the canvas.
+ */
+@Directive({ selector: '[appCanvasLayers]' })
 export class CanvasLayersDirective extends CanvasLayoutMixin() {
 
   private readonly $renderingCanvas: JQuery;
-  private readonly $offscreenLayerCanvas: JQuery;
-  private readonly renderingCtx: Context;
-  private readonly offscreenLayerCtx: Context;
+  private readonly $offscreenCanvas: JQuery;
   private vectorLayer: VectorLayer;
   private hiddenLayerIds = new Set<string>();
 
   constructor(readonly elementRef: ElementRef) {
     super();
     this.$renderingCanvas = $(elementRef.nativeElement);
-    this.$offscreenLayerCanvas = $(document.createElement('canvas'));
-    const getCtxFn = (canvas: JQuery) => {
-      return (canvas.get(0) as HTMLCanvasElement).getContext('2d');
-    };
-    this.renderingCtx = getCtxFn(this.$renderingCanvas);
-    this.offscreenLayerCtx = getCtxFn(this.$offscreenLayerCanvas);
+    this.$offscreenCanvas = $(document.createElement('canvas'));
+  }
+
+  private get renderingCtx() {
+    return (this.$renderingCanvas.get(0) as HTMLCanvasElement).getContext('2d');
+  }
+
+  private get offscreenCtx() {
+    return (this.$offscreenCanvas.get(0) as HTMLCanvasElement).getContext('2d');
   }
 
   // @Override
   protected onDimensionsChanged(bounds: Size, viewport: Size) {
     const { w, h } = this.getViewport();
-    [this.$renderingCanvas, this.$offscreenLayerCanvas]
+    [this.$renderingCanvas, this.$offscreenCanvas]
       .forEach(canvas => {
         canvas.attr({ width: w * this.attrScale, height: h * this.attrScale });
         canvas.css({ width: w * this.cssScale, height: h * this.cssScale });
@@ -43,12 +45,11 @@ export class CanvasLayersDirective extends CanvasLayoutMixin() {
     this.draw();
   }
 
-  setLayerState(vl: VectorLayer, hiddenLayerIds?: Set<string>) {
+  setState(vl: VectorLayer, hiddenLayerIds?: Set<string>) {
     this.vectorLayer = vl;
     if (hiddenLayerIds !== undefined) {
       this.hiddenLayerIds = hiddenLayerIds;
     }
-    this.draw();
   }
 
   draw() {
@@ -69,14 +70,14 @@ export class CanvasLayersDirective extends CanvasLayoutMixin() {
 
     const currentAlpha = this.vectorLayer ? this.vectorLayer.alpha : 1;
     if (currentAlpha < 1) {
-      this.offscreenLayerCtx.save();
-      setupCtxWithViewportCoordsFn(this.offscreenLayerCtx);
+      this.offscreenCtx.save();
+      setupCtxWithViewportCoordsFn(this.offscreenCtx);
     }
 
     // If the canvas is disabled, draw the layer to an offscreen canvas
     // so that we can draw it translucently w/ o affecting the rest of
     // the layer's appearance.
-    const layerCtx = currentAlpha < 1 ? this.offscreenLayerCtx : this.renderingCtx;
+    const layerCtx = currentAlpha < 1 ? this.offscreenCtx : this.renderingCtx;
     this.drawLayer(this.vectorLayer, this.vectorLayer, layerCtx);
 
     if (currentAlpha < 1) {
@@ -85,9 +86,9 @@ export class CanvasLayersDirective extends CanvasLayoutMixin() {
       // Bring the canvas back to its original coordinates before
       // drawing the offscreen canvas contents.
       this.renderingCtx.scale(1 / this.attrScale, 1 / this.attrScale);
-      this.renderingCtx.drawImage(this.offscreenLayerCtx.canvas, 0, 0);
+      this.renderingCtx.drawImage(this.offscreenCtx.canvas, 0, 0);
       this.renderingCtx.restore();
-      this.offscreenLayerCtx.restore();
+      this.offscreenCtx.restore();
     }
     this.renderingCtx.restore();
   }

@@ -185,7 +185,7 @@ export function reducer(state = initialState, action: actions.Actions): State {
         toValue,
       };
 
-      let newBlock: AnimationBlock<any>;
+      let newBlock: AnimationBlock;
       if (property instanceof PathProperty) {
         newBlock = new PathAnimationBlock(newBlockArgs);
       } else if (property instanceof ColorProperty) {
@@ -224,7 +224,7 @@ export function reducer(state = initialState, action: actions.Actions): State {
         // Do nothing if the list of blocks is empty.
         return state;
       }
-      const blockMap = new Map<string, AnimationBlock<any>[]>();
+      const blockMap = new Map<string, AnimationBlock[]>();
       for (const block of blocks) {
         if (blockMap.has(block.animationId)) {
           const blockList = blockMap.get(block.animationId);
@@ -429,7 +429,6 @@ function selectLayerId(
   clearExisting: boolean,
 ) {
   const layers = state.layers;
-  const timeline = state.timeline;
   const selectedLayerIds = new Set(layers.selectedLayerIds);
   if (clearExisting) {
     selectedLayerIds.forEach(id => {
@@ -438,6 +437,7 @@ function selectLayerId(
       }
     });
   }
+
   let activeVectorLayerId = layers.activeVectorLayerId;
   const parentVl = LayerUtil.findParentVectorLayer(layers.vectorLayers, layerId);
   if (clearExisting || activeVectorLayerId === parentVl.id) {
@@ -451,6 +451,7 @@ function selectLayerId(
   }
 
   // Clear any existing animation/block selections.
+  const timeline = state.timeline;
   let { selectedAnimationIds, selectedBlockIds } = timeline;
   if (selectedAnimationIds.size) {
     selectedAnimationIds = new Set<string>();

@@ -13,8 +13,6 @@ import { Observable } from 'rxjs/Observable';
   templateUrl: './layerlisttree.component.html',
   styleUrls: ['./layerlisttree.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  // TODO: remove view encapsulation.
-  // encapsulation: ViewEncapsulation.None,
 })
 export class LayerListTreeComponent implements OnInit, Callbacks {
 
@@ -38,7 +36,7 @@ export class LayerListTreeComponent implements OnInit, Callbacks {
     this.layerModel$ =
       this.store.select(getLayerListTreeState)
         .map(({ animations, selectedLayerIds, collapsedLayerIds, hiddenLayerIds }) => {
-          const isExpandable = this.layer instanceof VectorLayer || this.layer instanceof GroupLayer;
+          const isExpandable = this.isLayerExpandable();
           const availablePropertyNames =
             Array.from(ModelUtil.getAvailablePropertyNamesForLayer(this.layer, animations));
           const existingPropertyNames =
@@ -68,7 +66,9 @@ export class LayerListTreeComponent implements OnInit, Callbacks {
 
   // @Override Callbacks
   layerToggleExpanded(event: MouseEvent, layer: Layer) {
-    this.onLayerToggleExpanded.emit({ event, layer });
+    if (this.isLayerExpandable()) {
+      this.onLayerToggleExpanded.emit({ event, layer });
+    }
     event.stopPropagation();
   }
 
@@ -86,6 +86,10 @@ export class LayerListTreeComponent implements OnInit, Callbacks {
   // Used by *ngFor loop.
   trackLayerFn(index: number, layer: Layer) {
     return layer.id;
+  }
+
+  private isLayerExpandable() {
+    return this.layer instanceof VectorLayer || this.layer instanceof GroupLayer;
   }
 }
 

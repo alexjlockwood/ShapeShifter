@@ -33,7 +33,7 @@ export class NumberProperty extends Property<number> {
   }
 
   // @Override
-  protected setter_(model: any, propertyName: string, value: string | number | undefined) {
+  protected setter(model: any, propertyName: string, value: string | number | undefined) {
     if (typeof value === 'string') {
       value = Number(value);
     }

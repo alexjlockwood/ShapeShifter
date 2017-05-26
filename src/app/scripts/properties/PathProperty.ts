@@ -14,12 +14,12 @@ export class PathProperty extends Property<Path> {
   }
 
   // @Override
-  protected getter_(model: any, propertyName: string): Path {
+  protected getter(model: any, propertyName: string): Path {
     return model[`${propertyName}_`];
   }
 
   // @Override
-  protected setter_(model: any, propertyName: string, value: Path | string) {
+  protected setter(model: any, propertyName: string, value: Path | string) {
     if (!value) {
       model[`${propertyName}_`] = undefined;
       return;
@@ -40,16 +40,15 @@ export class PathProperty extends Property<Path> {
 
   // @Override
   interpolateValue(start: Path, end: Path, fraction: number) {
+    if (!start || !end) {
+      return undefined;
+    }
     return PathUtil.interpolate(start, end, fraction);
   }
 
   // @Override
   cloneValue(value: Path) {
-    // TODO: avoid crashes here (maybe make sure value will always be non-null?)
-    // TODO: avoid crashes here (maybe make sure value will always be non-null?)
-    // TODO: avoid crashes here (maybe make sure value will always be non-null?)
-    // TODO: avoid crashes here (maybe make sure value will always be non-null?)
-    return value.clone();
+    return value ? value.clone() : undefined;
   }
 
   // @Override

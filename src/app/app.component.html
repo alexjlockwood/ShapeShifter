@@ -19,16 +19,16 @@
         fxLayoutAlign="center center"
         fxFlex>
         <app-canvas class="start"
-          *ngIf="this.isMultiCanvasDisplayMode$ | async"
-          [canvasId]="'start'"
+          *ngIf="this.isShapeShifterMode$ | async"
+          [canvasType]="CANVAS_TYPE_START"
           [canvasBounds$]="this.canvasBounds$">
         </app-canvas>
         <app-canvas [canvasBounds$]="this.canvasBounds$"
-          [canvasId]="'middle'">
+          [canvasType]="CANVAS_TYPE_PREVIEW">
         </app-canvas>
         <app-canvas class="end"
-          *ngIf="this.isMultiCanvasDisplayMode$ | async"
-          [canvasId]="'end'"
+          *ngIf="this.isShapeShifterMode$ | async"
+          [canvasType]="CANVAS_TYPE_END"
           [canvasBounds$]="this.canvasBounds$">
         </app-canvas>
       </div>

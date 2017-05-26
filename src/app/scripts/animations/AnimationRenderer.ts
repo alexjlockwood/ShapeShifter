@@ -77,11 +77,11 @@ export class AnimationRenderer {
 interface RendererData {
   readonly originalLayer: Layer;
   readonly renderedLayer: Layer;
-  readonly orderedBlocks: PropertyMap<AnimationBlock<any>[]>;
+  readonly orderedBlocks: PropertyMap<AnimationBlock[]>;
   cachedState?: PropertyState;
 }
 
 interface PropertyState {
-  activeBlock: AnimationBlock<any>;
+  activeBlock: AnimationBlock;
   interpolatedValue: boolean;
 }
