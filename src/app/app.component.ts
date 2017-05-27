@@ -13,6 +13,8 @@ import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/operator/distinctUntilChanged';
 import 'rxjs/add/operator/combineLatest';
 import { CanvasType } from './CanvasType';
+import { VectorDrawableLoader } from './scripts/import';
+import { DEBUG_VECTOR_DRAWABLE } from './scripts/demos';
 
 const IS_DEV_MODE = !environment.production;
 const ELEMENT_RESIZE_DETECTOR = erd();
@@ -84,14 +86,14 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     }
 
-    // if (IS_DEV_MODE) {
-    //   const vl =
-    //     VectorDrawableLoader.loadVectorLayerFromXmlString(
-    //       DEBUG_VECTOR_DRAWABLE,
-    //       name => false,
-    //     );
-    //   this.store.dispatch(new AddLayers([vl]));
-    // }
+    if (IS_DEV_MODE) {
+      const vl =
+        VectorDrawableLoader.loadVectorLayerFromXmlString(
+          DEBUG_VECTOR_DRAWABLE,
+          name => false,
+        );
+      this.store.dispatch(new AddLayers(vl.children));
+    }
   }
 
   ngOnDestroy() {

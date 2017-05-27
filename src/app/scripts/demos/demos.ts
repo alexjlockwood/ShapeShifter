@@ -97,31 +97,6 @@ export const DEBUG_VECTOR_DRAWABLE = `
   android:viewportWidth="24">
   <group
     android:name="hourglass_frame"
-    android:scaleX="0.25"
-    android:scaleY="0.25"
-    android:pivotX="12"
-    android:pivotY="12">
-    <path
-      android:name="bottom_inner_path"
-      android:strokeColor="#000"
-      android:strokeWidth="2"
-      android:trimPathStart="0.2"
-      android:trimPathEnd="0.8"
-      android:pathData="M 4 4 h 16 v 16 h -16 v -16"/>
-  </group>
-</vector>
-`;
-
-
-export const DEBUG_VECTOR_DRAWABLE_2 = `
-<vector
-  xmlns:android="http://schemas.android.com/apk/res/android"
-  android:width="24dp"
-  android:height="24dp"
-  android:viewportHeight="24"
-  android:viewportWidth="24">
-  <group
-    android:name="hourglass_frame"
     android:scaleX="0.7"
     android:scaleY="0.7"
     android:translateX="12"
@@ -168,6 +143,30 @@ export const DEBUG_VECTOR_DRAWABLE_2 = `
         android:fillColor="#000"
         android:pathData="M 22.7100067139,22.2900085449 c 0.629989624023,0.629989624023 0.179992675781,1.70999145508 -0.710006713867,1.70999145508 c 0,0 -20,0 -20,0 c -0.889999389648,0 -1.33999633789,-1.08000183105 -0.710006713867,-1.70999145508 c 0,0 9.76000976562,-10.2900085449 9.76000976562,-10.2900085449 c 0,0 -9.76000976562,-10.2899932861 -9.76000976562,-10.2899932861 c -0.629989624023,-0.630004882812 -0.179992675781,-1.71000671387 0.710006713867,-1.71000671387 c 0,0 20,0 20,0 c 0.889999389648,0 1.33999633789,1.08000183105 0.710006713867,1.71000671387 c 0,0 -9.76000976562,10.2899932861 -9.76000976563,10.2899932861 c 0,0 9.76000976563,10.2900085449 9.76000976563,10.2900085449 Z"/>
     </group>
+  </group>
+</vector>
+`;
+
+export const DEBUG_VECTOR_DRAWABLE_2 = `
+<vector
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  android:width="24dp"
+  android:height="24dp"
+  android:viewportHeight="24"
+  android:viewportWidth="24">
+  <group
+    android:name="hourglass_frame"
+    android:scaleX="0.25"
+    android:scaleY="0.25"
+    android:pivotX="12"
+    android:pivotY="12">
+    <path
+      android:name="bottom_inner_path"
+      android:strokeColor="#000"
+      android:strokeWidth="2"
+      android:trimPathStart="0.2"
+      android:trimPathEnd="0.8"
+      android:pathData="M 4 4 h 16 v 16 h -16 v -16"/>
   </group>
 </vector>
 `;
