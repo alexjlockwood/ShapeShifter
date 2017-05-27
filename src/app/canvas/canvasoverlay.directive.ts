@@ -3,7 +3,6 @@ import * as _ from 'lodash';
 import * as CanvasUtil from './CanvasUtil';
 import { Directive, ElementRef, HostListener, Input, AfterViewInit } from '@angular/core';
 import { CanvasLayoutMixin } from './CanvasLayoutMixin';
-import { CanvasOverlayMixin } from './CanvasOverlayMixin';
 import { Command } from '../scripts/paths';
 import { CanvasType } from '..';
 import { DestroyableMixin } from '../scripts/mixins';
@@ -68,7 +67,7 @@ type Context = CanvasRenderingContext2D;
  */
 @Directive({ selector: '[appCanvasOverlay]' })
 export class CanvasOverlayDirective
-  extends CanvasOverlayMixin(CanvasLayoutMixin(DestroyableMixin()))
+  extends CanvasLayoutMixin(DestroyableMixin())
   implements AfterViewInit {
 
   @Input() canvasType: CanvasType;
@@ -132,7 +131,7 @@ export class CanvasOverlayDirective
           this.vectorLayer = animatedVl || activeVl;
           this.hiddenLayerIds = hiddenLayerIds;
           this.selectedLayerIds = selectedLayerIds;
-          this.draw(this.overlayCtx);
+          this.draw();
         }));
     } else {
       // Start & end canvas specific setup.
@@ -147,7 +146,7 @@ export class CanvasOverlayDirective
             this.shapeShifterPathLayerId = pathLayerId;
             this.shapeShifterHover = hover;
             this.shapeShifterSelections = selections;
-            this.draw(this.overlayCtx);
+            this.draw();
           }),
       );
     }
@@ -158,21 +157,48 @@ export class CanvasOverlayDirective
     const { w, h } = this.getViewport();
     this.$canvas.attr({ width: w * this.attrScale, height: h * this.attrScale });
     this.$canvas.css({ width: w * this.cssScale, height: h * this.cssScale });
-    this.draw(this.overlayCtx);
+    this.draw();
   }
 
-  // @Override
-  onDraw(ctx: Context) {
-    if (!this.vectorLayer) {
-      return;
+  draw() {
+    const ctx = this.overlayCtx;
+    if (this.vectorLayer) {
+      const { w, h } = this.getViewport();
+      ctx.save();
+      ctx.scale(this.attrScale, this.attrScale);
+      ctx.clearRect(0, 0, w, h);
+      this.drawLayerSelections(ctx, this.vectorLayer);
+      ctx.restore();
+      this.drawLabeledPoints(ctx);
     }
-    const { w, h } = this.getViewport();
-    ctx.save();
-    ctx.scale(this.attrScale, this.attrScale);
-    ctx.clearRect(0, 0, w, h);
-    this.drawLayerSelections(ctx, this.vectorLayer);
-    ctx.restore();
-    this.drawLabeledPoints(ctx);
+    this.drawPixelGrid(ctx);
+  }
+
+  // Draws the pixel grid on top of the canvas content.
+  private drawPixelGrid(ctx: Context) {
+    // Note that we draw the pixel grid in terms of physical pixels,
+    // not viewport pixels.
+    if (this.cssScale > 4) {
+      ctx.save();
+      ctx.fillStyle = 'rgba(128, 128, 128, .25)';
+      const devicePixelRatio = window.devicePixelRatio || 1;
+      const viewport = this.getViewport();
+      for (let x = 1; x < viewport.w; x++) {
+        ctx.fillRect(
+          x * this.attrScale - devicePixelRatio / 2,
+          0,
+          devicePixelRatio,
+          viewport.h * this.attrScale);
+      }
+      for (let y = 1; y < viewport.h; y++) {
+        ctx.fillRect(
+          0,
+          y * this.attrScale - devicePixelRatio / 2,
+          viewport.w * this.attrScale,
+          devicePixelRatio);
+      }
+      ctx.restore();
+    }
   }
 
   // Recursively draws all layer selections to the canvas.
