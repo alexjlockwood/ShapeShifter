@@ -49,6 +49,10 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin() {
     this.$canvas = $(elementRef.nativeElement);
   }
 
+  private get overlayCtx() {
+    return (this.$canvas.get(0) as HTMLCanvasElement).getContext('2d');
+  }
+
   private get highlightLineWidth() {
     return HIGHLIGHT_LINE_WIDTH / this.cssScale;
   }
@@ -75,24 +79,27 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin() {
   }
 
   draw() {
-    const overlayCtx = (this.$canvas.get(0) as HTMLCanvasElement).getContext('2d');
+    const ctx = this.overlayCtx;
     if (this.vectorLayer) {
       const { w, h } = this.getViewport();
-      overlayCtx.save();
-      overlayCtx.scale(this.attrScale, this.attrScale);
-      overlayCtx.clearRect(0, 0, w, h);
-      this.drawLayerSelections(this.vectorLayer, this.vectorLayer, overlayCtx);
-      overlayCtx.restore();
+      ctx.save();
+      ctx.scale(this.attrScale, this.attrScale);
+      ctx.clearRect(0, 0, w, h);
+      this.drawLayerSelections(this.vectorLayer);
+      ctx.restore();
     }
-    this.drawPixelGrid(overlayCtx);
+    this.drawPixelGrid();
   }
 
-  private drawLayerSelections(vl: VectorLayer, curr: Layer, ctx: Context) {
+  private drawLayerSelections(curr: Layer) {
     if (this.hiddenLayerIds.has(curr.id)) {
+      // Don't draw selections for hidden layers.
       return;
     }
     if (this.selectedLayerIds.has(curr.id)) {
-      const flattenedTransform = LayerUtil.getFlattenedTransformForLayer(vl, curr.id);
+      const root = this.vectorLayer;
+      const ctx = this.overlayCtx;
+      const flattenedTransform = LayerUtil.getFlattenedTransformForLayer(root, curr.id);
       if (curr instanceof ClipPathLayer) {
         if (curr.pathData && curr.pathData.getCommands().length) {
           CanvasUtil.executeCommands(ctx, curr.pathData.getCommands(), flattenedTransform);
@@ -119,13 +126,14 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin() {
         }
       }
     }
-    curr.children.forEach(child => this.drawLayerSelections(vl, child, ctx));
+    curr.children.forEach(child => this.drawLayerSelections(child));
   }
 
-  private drawPixelGrid(ctx: Context) {
+  private drawPixelGrid() {
     // Note that we draw the pixel grid in terms of physical pixels,
     // not viewport pixels.
     if (this.cssScale > 4) {
+      const ctx = this.overlayCtx;
       ctx.save();
       ctx.fillStyle = 'rgba(128, 128, 128, .25)';
       const devicePixelRatio = window.devicePixelRatio || 1;

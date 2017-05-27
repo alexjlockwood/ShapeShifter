@@ -49,12 +49,11 @@ export class AnimationRenderer {
           }
           if (time < block.endTime) {
             const fromValue = ('fromValue' in block) ? block.fromValue : value;
-            let f = (time - block.startTime) / (block.endTime - block.startTime);
+            const f = (time - block.startTime) / (block.endTime - block.startTime);
             // TODO: this is a bit hacky... no need to perform a search every time.
             const interpolatorFn =
               _.find(INTERPOLATORS, i => i.value === block.interpolator).interpolateFn;
-            f = interpolatorFn(f);
-            value = property.interpolateValue(fromValue, block.toValue, f);
+            value = property.interpolateValue(fromValue, block.toValue, interpolatorFn(f));
             _ar.activeBlock = block;
             _ar.interpolatedValue = true;
             break;
