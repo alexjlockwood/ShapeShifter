@@ -12,7 +12,7 @@ import { combineReducers } from '@ngrx/store';
 import { environment } from '../../environments/environment';
 import { compose } from '@ngrx/core/compose';
 import * as fromRoot from './RootReducer';
-import { Animation, AnimationBlock, PathAnimationBlock } from '../scripts/animations';
+import { PathAnimationBlock } from '../scripts/animations';
 import { VectorLayer, PathLayer, LayerUtil } from '../scripts/layers';
 import { Path } from '../scripts/paths';
 
@@ -91,10 +91,7 @@ const getSelectedBlocks = createSelector(
   getSelectedBlockIds,
   (animation, blockIds) => {
     return Array.from(blockIds)
-      .map(blockId => {
-        const block = _.find(animation.blocks, b => b.id === blockId);
-        return _.find(animation.blocks, b => b.id === blockId);
-      });
+      .map(blockId => _.find(animation.blocks, b => b.id === blockId));
   },
 );
 
