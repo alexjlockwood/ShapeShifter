@@ -1,6 +1,8 @@
 import { Action } from '@ngrx/store';
 import { Animation, AnimationBlock } from '../scripts/animations';
 import { Layer } from '../scripts/layers';
+import { Hover, Selection } from './StateReducer';
+import { CanvasType } from '../CanvasType';
 
 // Animation actions.
 export const ADD_ANIMATIONS = 'ADD_ANIMATIONS';
@@ -131,11 +133,59 @@ export class ReplaceLayer implements Action {
   }
 }
 
-// Other actions.
+// Miscellaneous actions.
 export const DELETE_SELECTED_MODELS = 'DELETE_SELECTED_MODELS';
 
 export class DeleteSelectedModels implements Action {
   readonly type = DELETE_SELECTED_MODELS;
+}
+
+// Shape Shifter actions.
+export const SET_HOVER = 'SET_HOVER';
+export const TOGGLE_SUBPATH_SELECTION = 'TOGGLE_SUBPATH_SELECTION';
+export const TOGGLE_SEGMENT_SELECTION = 'TOGGLE_SEGMENT_SELECTION';
+export const TOGGLE_POINT_SELECTION = 'TOGGLE_POINT_SELECTION';
+
+export class SetHover implements Action {
+  readonly type = SET_HOVER;
+  readonly payload: { hover: Hover };
+  constructor(readonly hover: Hover) {
+    this.payload = { hover };
+  }
+}
+
+export class ToggleSubPathSelection implements Action {
+  readonly type = TOGGLE_SUBPATH_SELECTION;
+  readonly payload: { source: CanvasType, subIdx: number };
+  // TODO: support multi-selection for subpaths
+  constructor(source: CanvasType, subIdx: number) {
+    this.payload = { source, subIdx };
+  }
+}
+
+export class ToggleSegmentSelection implements Action {
+  readonly type = TOGGLE_SEGMENT_SELECTION;
+  readonly payload: {
+    source: CanvasType,
+    segments: ReadonlyArray<{ subIdx: number, cmdIdx: number }>,
+  };
+  // TODO: support multi-selection for segments
+  constructor(source: CanvasType, segments: ReadonlyArray<{ subIdx: number, cmdIdx: number }>) {
+    this.payload = { source, segments };
+  }
+}
+
+export class TogglePointSelection implements Action {
+  readonly type = TOGGLE_POINT_SELECTION;
+  readonly payload: {
+    source: CanvasType,
+    subIdx: number,
+    cmdIdx: number,
+    appendToList: boolean,
+  };
+  constructor(source: CanvasType, subIdx: number, cmdIdx: number, appendToList = false) {
+    this.payload = { source, subIdx, cmdIdx, appendToList };
+  }
 }
 
 export type Actions =
@@ -152,4 +202,8 @@ export type Actions =
   | ToggleLayerExpansion
   | ToggleLayerVisibility
   | ReplaceLayer
+  | SetHover
+  | ToggleSubPathSelection
+  | ToggleSegmentSelection
+  | TogglePointSelection
   | DeleteSelectedModels;

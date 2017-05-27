@@ -10,10 +10,12 @@
   <div appCanvasContainer
     class="canvas-container">
     <canvas appCanvasLayers
-      class="rendering-canvas">
+      class="rendering-canvas"
+      [canvasType]="this.canvasType">
     </canvas>
     <canvas appCanvasOverlay
-      class="overlay-canvas">
+      class="overlay-canvas"
+      [canvasType]="this.canvasType">
     </canvas>
   </div>
 </div>

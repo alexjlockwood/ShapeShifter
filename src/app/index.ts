@@ -1,0 +1,1 @@
+export { CanvasType } from './CanvasType';

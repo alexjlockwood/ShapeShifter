@@ -1,11 +1,28 @@
 import * as $ from 'jquery';
-import { Directive, ElementRef } from '@angular/core';
+import { Directive, ElementRef, AfterViewInit, Input } from '@angular/core';
 import { CanvasLayoutMixin, Size } from './CanvasLayoutMixin';
 import {
-  Layer, PathLayer, ClipPathLayer, LayerUtil, VectorLayer,
+  Layer,
+  PathLayer,
+  ClipPathLayer,
+  LayerUtil,
+  VectorLayer,
 } from '../scripts/layers';
 import { ColorUtil } from '../scripts/common';
 import * as CanvasUtil from './CanvasUtil';
+import { DestroyableMixin } from '../scripts/mixins';
+import { CanvasType } from '..';
+import { AnimatorService } from '../services';
+import { Observable } from 'rxjs/Observable';
+import {
+  Store,
+  State,
+  getActiveVectorLayer,
+  getHiddenLayerIds,
+  getShapeShifterStartState,
+  getShapeShifterEndState,
+} from '../store';
+import 'rxjs/add/observable/combineLatest';
 
 type Context = CanvasRenderingContext2D;
 
@@ -13,14 +30,22 @@ type Context = CanvasRenderingContext2D;
  * Directive that draws the currently active vector layer to the canvas.
  */
 @Directive({ selector: '[appCanvasLayers]' })
-export class CanvasLayersDirective extends CanvasLayoutMixin() {
+export class CanvasLayersDirective
+  extends CanvasLayoutMixin(DestroyableMixin())
+  implements AfterViewInit {
+
+  @Input() canvasType: CanvasType;
 
   private readonly $renderingCanvas: JQuery;
   private readonly $offscreenCanvas: JQuery;
   private vectorLayer: VectorLayer;
   private hiddenLayerIds = new Set<string>();
 
-  constructor(readonly elementRef: ElementRef) {
+  constructor(
+    readonly elementRef: ElementRef,
+    private readonly animatorService: AnimatorService,
+    private readonly store: Store<State>,
+  ) {
     super();
     this.$renderingCanvas = $(elementRef.nativeElement);
     this.$offscreenCanvas = $(document.createElement('canvas'));
@@ -34,8 +59,36 @@ export class CanvasLayersDirective extends CanvasLayoutMixin() {
     return (this.$offscreenCanvas.get(0) as HTMLCanvasElement).getContext('2d');
   }
 
+  ngAfterViewInit() {
+    if (this.canvasType === CanvasType.Preview) {
+      // Preview canvas specific setup.
+      this.registerSubscription(
+        Observable.combineLatest(
+          this.animatorService.asObservable().map(event => event.vl),
+          this.store.select(getActiveVectorLayer),
+          this.store.select(getHiddenLayerIds),
+        ).subscribe(([animatedVl, activeVl, hiddenLayerIds]) => {
+          this.vectorLayer = animatedVl || activeVl;
+          this.hiddenLayerIds = hiddenLayerIds;
+          this.draw();
+        }));
+    } else {
+      // Start & end canvas specific setup.
+      const shapeShifterSelector =
+        this.canvasType === CanvasType.Start
+          ? getShapeShifterStartState
+          : getShapeShifterEndState;
+      this.registerSubscription(
+        this.store.select(shapeShifterSelector).subscribe(({ vectorLayer }) => {
+          this.vectorLayer = vectorLayer;
+          this.draw();
+        }),
+      );
+    }
+  }
+
   // @Override
-  protected onDimensionsChanged(bounds: Size, viewport: Size) {
+  onDimensionsChanged(bounds: Size, viewport: Size) {
     const { w, h } = this.getViewport();
     [this.$renderingCanvas, this.$offscreenCanvas]
       .forEach(canvas => {
@@ -45,14 +98,7 @@ export class CanvasLayersDirective extends CanvasLayoutMixin() {
     this.draw();
   }
 
-  setState(vl: VectorLayer, hiddenLayerIds?: Set<string>) {
-    this.vectorLayer = vl;
-    if (hiddenLayerIds !== undefined) {
-      this.hiddenLayerIds = hiddenLayerIds;
-    }
-  }
-
-  draw() {
+  private draw() {
     if (!this.vectorLayer) {
       return;
     }

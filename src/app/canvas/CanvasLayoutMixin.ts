@@ -28,11 +28,11 @@ export function CanvasLayoutMixin<T extends Constructor<{}>>(Base = class { } as
       return this.cssScale * devicePixelRatio;
     }
 
-    protected getBounds() {
+    getBounds() {
       return this.bounds;
     }
 
-    protected getViewport() {
+    getViewport() {
       return this.viewport;
     }
 
@@ -44,7 +44,7 @@ export function CanvasLayoutMixin<T extends Constructor<{}>>(Base = class { } as
       }
     }
 
-    protected onDimensionsChanged(bounds: Size, viewport: Size) { }
+    onDimensionsChanged(bounds: Size, viewport: Size) { }
   };
 }
 

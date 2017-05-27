@@ -1,4 +1,5 @@
 export { Store } from '@ngrx/store';
+export { Hover, HoverType, Selection, SelectionType } from './StateReducer';
 import * as _ from 'lodash';
 import {
   createSelector,
@@ -99,14 +100,14 @@ const getSelectedBlocks = createSelector(
 const getLayerState = createSelector(getState, s => s.layers);
 const getVectorLayers = createSelector(getLayerState, l => l.vectorLayers);
 const getActiveVectorLayerId = createDeepEqualSelector(getLayerState, l => l.activeVectorLayerId);
-const getActiveVectorLayer = createSelector(
+export const getActiveVectorLayer = createSelector(
   getVectorLayers,
   getActiveVectorLayerId,
   (vls, id) => _.find(vls, vl => vl.id === id),
 );
-const getSelectedLayerIds = createDeepEqualSelector(getLayerState, l => l.selectedLayerIds);
-const getCollapsedLayerIds = createDeepEqualSelector(getLayerState, l => l.collapsedLayerIds);
-const getHiddenLayerIds = createDeepEqualSelector(getLayerState, l => l.hiddenLayerIds);
+export const getSelectedLayerIds = createDeepEqualSelector(getLayerState, l => l.selectedLayerIds);
+export const getCollapsedLayerIds = createDeepEqualSelector(getLayerState, l => l.collapsedLayerIds);
+export const getHiddenLayerIds = createDeepEqualSelector(getLayerState, l => l.hiddenLayerIds);
 
 // Exported playback settings selectors.
 export const getPlaybackSettings = (state: State) => state.root.playback;
@@ -121,17 +122,6 @@ export const getPropertyInputState = createStructuredSelector({
   selectedBlockIds: getSelectedBlockIds,
   vectorLayers: getVectorLayers,
   selectedLayerIds: getSelectedLayerIds,
-});
-
-// Exported canvas selectors.
-export const getActiveViewport = createDeepEqualSelector(
-  getActiveVectorLayer,
-  vl => { return { w: vl.width, h: vl.height } },
-);
-export const getCanvasState = createStructuredSelector({
-  activeVectorLayer: getActiveVectorLayer,
-  selectedLayerIds: getSelectedLayerIds,
-  hiddenLayerIds: getHiddenLayerIds,
 });
 
 // Exported layer list tree selectors.
@@ -176,14 +166,24 @@ const getSingleSelectedPathAnimationBlock = createSelector(
       : undefined;
   });
 
+const getShapeShifterPathLayerId = createSelector(
+  getSingleSelectedPathAnimationBlock,
+  block => block ? block.layerId : undefined,
+);
+
 export const isShapeShifterMode = createSelector(
   getSingleSelectedPathAnimationBlock,
   block => !!block,
 );
 
+const getShapeShifterState = createSelector(getState, s => s.shapeshifter);
+const getShapeShifterHover = createDeepEqualSelector(getShapeShifterState, s => s.hover);
+const getShapeShifterSelections = createSelector(getShapeShifterState, s => s.selections);
+
 function createShapeShifterStateSelector(
-  getBlockValueFn: (block: PathAnimationBlock) => Path) {
-  return createSelector(
+  getBlockValueFn: (block: PathAnimationBlock) => Path,
+) {
+  const getShapeShifterVectorLayer = createSelector(
     getActiveVectorLayer,
     getSingleSelectedPathAnimationBlock,
     (vl, block) => {
@@ -194,6 +194,12 @@ function createShapeShifterStateSelector(
       pathLayer.pathData = getBlockValueFn(block);
       return LayerUtil.replaceLayerInTree(vl, pathLayer);
     });
+  return createStructuredSelector({
+    vectorLayer: getShapeShifterVectorLayer,
+    pathLayerId: getShapeShifterPathLayerId,
+    hover: getShapeShifterHover,
+    selections: getShapeShifterSelections,
+  });
 }
 
 export const getShapeShifterStartState =

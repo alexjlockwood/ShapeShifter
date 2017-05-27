@@ -8,6 +8,7 @@ import {
   ColorAnimationBlock,
   NumberAnimationBlock,
 } from '../scripts/animations';
+import { CanvasType } from '../CanvasType';
 import { ModelUtil } from '../scripts/common';
 import { PathProperty, ColorProperty } from '../scripts/properties';
 
@@ -25,6 +26,10 @@ export interface State {
     readonly activeAnimationId: string;
     readonly selectedBlockIds: Set<string>;
   },
+  readonly shapeshifter: {
+    readonly hover: Hover;
+    readonly selections: ReadonlyArray<Selection>;
+  }
 }
 
 export const initialState = buildInitialState();
@@ -45,6 +50,10 @@ export function buildInitialState(): State {
       selectedAnimationIds: new Set<string>(),
       activeAnimationId: initialAnimation.id,
       selectedBlockIds: new Set<string>(),
+    },
+    shapeshifter: {
+      hover: undefined,
+      selections: [],
     },
   };
 }
@@ -357,6 +366,69 @@ export function reducer(state = initialState, action: actions.Actions): State {
       };
     }
 
+    // Set the hover mode during shape shifter mode.
+    case actions.SET_HOVER: {
+      const { hover } = action.payload;
+      const { shapeshifter } = state;
+      return {
+        ...state,
+        shapeshifter: { ...shapeshifter, hover },
+      };
+    }
+
+    // Toggle a subpath selection.
+    case actions.TOGGLE_SUBPATH_SELECTION: {
+      const { source, subIdx } = action.payload;
+      const { shapeshifter } = state;
+      let selections = shapeshifter.selections.slice();
+      _.remove(selections, sel => sel.type !== SelectionType.SubPath && sel.source !== source);
+      selections = toggleShapeShifterSelections(
+        selections,
+        [{ type: SelectionType.SubPath, source, subIdx }],
+        false);
+      return {
+        ...state,
+        shapeshifter: { ...shapeshifter, selections },
+      };
+    }
+
+    // Toggle a segment selection.
+    case actions.TOGGLE_SEGMENT_SELECTION: {
+      const { source, segments } = action.payload;
+      const { shapeshifter } = state;
+      let selections = shapeshifter.selections.slice();
+      _.remove(selections, sel => sel.type !== SelectionType.Segment);
+      selections = toggleShapeShifterSelections(
+        selections,
+        segments.map(seg => {
+          const { subIdx, cmdIdx } = seg;
+          return { type: SelectionType.Segment, source, subIdx, cmdIdx };
+        }),
+        false);
+      return {
+        ...state,
+        shapeshifter: { ...shapeshifter, selections },
+      };
+    }
+
+    // Toggle a point selection.
+    case actions.TOGGLE_POINT_SELECTION: {
+      const { source, subIdx, cmdIdx, appendToList } = action.payload;
+      const { shapeshifter } = state;
+      let selections = shapeshifter.selections.slice();
+      _.remove(selections, sel => sel.type !== SelectionType.Point && sel.source !== source);
+      selections = toggleShapeShifterSelections(
+        selections,
+        [{ type: SelectionType.Point, source, subIdx, cmdIdx }],
+        appendToList,
+      );
+      return {
+        ...state,
+        shapeshifter: { ...shapeshifter, selections },
+      };
+    }
+
+    // Delete all selected animations, blocks, and layers.
     case actions.DELETE_SELECTED_MODELS: {
       state = deleteSelectedAnimations(state);
       state = deleteSelectedBlocks(state);
@@ -576,4 +648,79 @@ function deleteSelectedLayers(state: State) {
       activeVectorLayerId,
     },
   };
+}
+
+/**
+  * Toggles the specified shape shifter selections. If a selection exists, all selections
+  * will be removed from the list. Otherwise, they will be added to the list of selections.
+  * By default, all other selections from the list will be cleared.
+  */
+function toggleShapeShifterSelections(
+  currentSelections: Selection[],
+  newSelections: Selection[],
+  appendToList = false,
+) {
+  const matchingSelections = _.remove(currentSelections, currSel => {
+    // Remove any selections that are equal to a new selection.
+    return newSelections.some(newSel => _.isEqual(newSel, currSel));
+  });
+  if (!matchingSelections.length) {
+    // If no selections were removed, then add all of the selections to the list.
+    currentSelections.push(...newSelections);
+  }
+  if (!appendToList) {
+    // If we aren't appending multiple selections at a time, then clear
+    // any previous selections from the list.
+    _.remove(currentSelections, currSel => {
+      return newSelections.every(newSel => !_.isEqual(currSel, newSel));
+    });
+  }
+  return currentSelections;
+}
+
+/**
+ * A selection represents an action that is the result of a mouse click.
+ */
+export interface Selection {
+  readonly type: SelectionType;
+  readonly source: CanvasType;
+  readonly subIdx: number;
+  readonly cmdIdx?: number;
+}
+
+/**
+ * Describes the different types of selection events.
+ */
+export enum SelectionType {
+  // The user selected an entire subpath.
+  SubPath = 1,
+  // The user selected an individual segment in a subpath.
+  Segment,
+  // The user selected an individual point in a subpath.
+  Point,
+}
+
+/**
+ * A hover represents a transient action that results from a mouse movement.
+ */
+export interface Hover {
+  readonly type: HoverType;
+  readonly source: CanvasType;
+  readonly subIdx: number;
+  readonly cmdIdx?: number;
+}
+
+/**
+ * Describes the different types of hover events.
+ */
+export enum HoverType {
+  SubPath = 1,
+  Segment,
+  Point,
+  Split,
+  Unsplit,
+  Reverse,
+  ShiftBack,
+  ShiftForward,
+  SetFirstPosition,
 }
