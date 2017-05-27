@@ -36,7 +36,7 @@ export function artworkAnimationToAvdXmlString(artwork: VectorLayer, animation: 
   artworkContainerNode.appendChild(artworkNode);
 
   // create animation nodes (one per layer)
-  const animBlocksByLayer = new Map<string, AnimationBlock<any>[]>();
+  const animBlocksByLayer = new Map<string, AnimationBlock[]>();
   animation.blocks.forEach(block => {
     const blocks = animBlocksByLayer.get(block.layerId) || [];
     blocks.push(block);

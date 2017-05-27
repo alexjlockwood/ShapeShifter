@@ -68,8 +68,8 @@ export class SelectBlock implements Action {
 
 export class ReplaceBlocks implements Action {
   readonly type = REPLACE_BLOCKS;
-  readonly payload: { blocks: ReadonlyArray<AnimationBlock<any>> };
-  constructor(readonly blocks: ReadonlyArray<AnimationBlock<any>>) {
+  readonly payload: { blocks: ReadonlyArray<AnimationBlock> };
+  constructor(readonly blocks: ReadonlyArray<AnimationBlock>) {
     this.payload = { blocks };
   }
 }

@@ -43,7 +43,7 @@ export function getUniqueName(
  * maps of property names to their corresponding animation blocks.
  */
 export function getOrderedBlocksByPropertyByLayer(animation: Animation) {
-  const blocksByPropertyByLayer: LayerMap<PropertyMap<AnimationBlock<any>[]>> = {};
+  const blocksByPropertyByLayer: LayerMap<PropertyMap<AnimationBlock[]>> = {};
 
   animation.blocks.forEach(block => {
     let blocksByProperty = blocksByPropertyByLayer[block.layerId];
@@ -75,7 +75,7 @@ export function getBlocksByAnimationByProperty(
   layerId: string,
   animations: ReadonlyArray<Animation>,
 ) {
-  const blocksByAnimationByProperty: PropertyMap<AnimationMap<AnimationBlock<any>[]>> = {};
+  const blocksByAnimationByProperty: PropertyMap<AnimationMap<AnimationBlock[]>> = {};
   animations.forEach(animation => {
     const blocksByPropertyByLayer = getOrderedBlocksByPropertyByLayer(animation);
     _.forEach(blocksByPropertyByLayer[layerId], (blocksByProperty, propertyName) => {

@@ -222,7 +222,7 @@ export class LayerTimelineComponent
   // @Override TimelineAnimationRowCallbacks
   timelineBlockMouseDown(
     mouseDownEvent: MouseEvent,
-    dragBlock: AnimationBlock<any>,
+    dragBlock: AnimationBlock,
     animation: Animation,
     layer: Layer,
   ) {
@@ -255,7 +255,7 @@ export class LayerTimelineComponent
     const draggingBlocks = this.selectedBlockIds.has(dragBlock.id) ? selectedBlocks : [dragBlock];
 
     interface BlockInfo {
-      block: AnimationBlock<any>;
+      block: AnimationBlock;
       startBound: number;
       endBound: number;
       downStartTime: number;
@@ -342,7 +342,7 @@ export class LayerTimelineComponent
       onDragFn: event => {
         let timeDelta = Math.round(xToTimeFn(event.clientX) - downTime);
         const allowSnap = !event.shiftKey && !event.metaKey;
-        const replacementBlocks: AnimationBlock<any>[] = [];
+        const replacementBlocks: AnimationBlock[] = [];
         switch (action) {
           case MouseActions.Moving: {
             blockInfos.forEach(info => {
@@ -515,7 +515,7 @@ export class LayerTimelineComponent
   // @Override TimelineAnimationRowCallbacks
   timelineBlockClick(
     event: MouseEvent,
-    block: AnimationBlock<any>,
+    block: AnimationBlock,
     animation: Animation,
     layer: Layer,
   ) {

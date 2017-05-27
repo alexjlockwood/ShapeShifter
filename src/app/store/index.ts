@@ -13,7 +13,8 @@ import { environment } from '../../environments/environment';
 import { compose } from '@ngrx/core/compose';
 import * as fromRoot from './RootReducer';
 import { Animation, AnimationBlock, PathAnimationBlock } from '../scripts/animations';
-import { VectorLayer } from '../scripts/layers';
+import { VectorLayer, PathLayer, LayerUtil } from '../scripts/layers';
+import { Path } from '../scripts/paths';
 
 export interface State {
   root: fromRoot.State,
@@ -89,9 +90,11 @@ const getSelectedBlocks = createSelector(
   getActiveAnimation,
   getSelectedBlockIds,
   (animation, blockIds) => {
-    return Array.from(blockIds).map(blockId => {
-      return _.find(animation.blocks, b => b.id === blockId);
-    });
+    return Array.from(blockIds)
+      .map(blockId => {
+        const block = _.find(animation.blocks, b => b.id === blockId);
+        return _.find(animation.blocks, b => b.id === blockId);
+      });
   },
 );
 
@@ -168,14 +171,35 @@ export const getAnimatorState = createStructuredSelector({
 export const getImportedVectorLayers = getVectorLayers;
 
 // Exported shape shifter mode selectors.
-export const isShapeShifterMode = createSelector(
-  getActiveVectorLayer,
+const getSingleSelectedPathAnimationBlock = createSelector(
   getSelectedBlocks,
-  // TODO: the 'active vector layer' here may cause some problems in the timeline
-  (vl: VectorLayer, blocks: AnimationBlock[]) => {
-    return blocks.length === 1 && blocks[0] instanceof PathAnimationBlock;
-  },
-);
-export const getShapeShifterModeState = createStructuredSelector({
+  (blocks): PathAnimationBlock => {
+    return blocks.length === 1 && blocks[0] instanceof PathAnimationBlock
+      ? blocks[0]
+      : undefined;
+  });
 
-});
+export const isShapeShifterMode = createSelector(
+  getSingleSelectedPathAnimationBlock,
+  block => !!block,
+);
+
+function createShapeShifterStateSelector(
+  getBlockValueFn: (block: PathAnimationBlock) => Path) {
+  return createSelector(
+    getActiveVectorLayer,
+    getSingleSelectedPathAnimationBlock,
+    (vl, block) => {
+      if (!vl || !block) {
+        return undefined;
+      }
+      const pathLayer = (vl.findLayerById(block.layerId) as PathLayer).clone();
+      pathLayer.pathData = getBlockValueFn(block);
+      return LayerUtil.replaceLayerInTree(vl, pathLayer);
+    });
+}
+
+export const getShapeShifterStartState =
+  createShapeShifterStateSelector(block => block.fromValue);
+export const getShapeShifterEndState =
+  createShapeShifterStateSelector(block => block.toValue);

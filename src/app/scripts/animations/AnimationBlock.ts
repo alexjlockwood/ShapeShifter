@@ -60,6 +60,8 @@ export interface ConstructorArgs extends AnimationBlockArgs { }
   new PathProperty('toValue'),
 )
 export class PathAnimationBlock extends AnimationBlock {
+  fromValue: Path;
+  toValue: Path;
 
   clone() {
     return new PathAnimationBlock(this);
@@ -74,6 +76,8 @@ export class PathAnimationBlock extends AnimationBlock {
   new ColorProperty('toValue'),
 )
 export class ColorAnimationBlock extends AnimationBlock {
+  fromValue: string;
+  toValue: string;
 
   clone() {
     return new ColorAnimationBlock(this);
@@ -88,6 +92,8 @@ export class ColorAnimationBlock extends AnimationBlock {
   new NumberProperty('toValue'),
 )
 export class NumberAnimationBlock extends AnimationBlock {
+  fromValue: number;
+  toValue: number;
 
   clone() {
     return new NumberAnimationBlock(this);

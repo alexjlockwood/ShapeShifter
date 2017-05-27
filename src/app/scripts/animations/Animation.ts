@@ -32,7 +32,7 @@ interface AnimationArgs {
   id?: string;
   name?: string;
   duration?: number;
-  blocks?: ReadonlyArray<AnimationBlock<any>>;
+  blocks?: ReadonlyArray<AnimationBlock>;
 }
 
 export interface Animation extends AnimationArgs, Inspectable { }

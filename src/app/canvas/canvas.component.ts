@@ -14,6 +14,8 @@ import { AnimatorService } from '../services';
 import {
   Store, State, getCanvasState,
   getActiveViewport, SelectLayer, ClearLayerSelections,
+  getShapeShifterStartState,
+  getShapeShifterEndState,
 } from '../store';
 import { CanvasContainerDirective } from './canvascontainer.directive';
 import { CanvasRulerDirective } from './canvasruler.directive';
@@ -78,8 +80,8 @@ export class CanvasComponent
           .subscribe(({ activeVectorLayer, hiddenLayerIds, selectedLayerIds }) => {
             this.vectorLayer = activeVectorLayer;
             this.canvasLayers.setState(activeVectorLayer, hiddenLayerIds);
-            this.canvasOverlay.setState(activeVectorLayer, hiddenLayerIds, selectedLayerIds);
             this.canvasLayers.draw();
+            this.canvasOverlay.setState(activeVectorLayer, hiddenLayerIds, selectedLayerIds);
             this.canvasOverlay.draw();
           }));
       this.registerSubscription(
@@ -92,7 +94,18 @@ export class CanvasComponent
             this.canvasLayers.draw();
           }));
     } else {
-      // this.registerSubscription();
+      const shapeShifterSelector =
+        this.canvasType === CanvasType.Start
+          ? getShapeShifterStartState
+          : getShapeShifterEndState;
+      this.registerSubscription(
+        this.store.select(shapeShifterSelector)
+          .subscribe(vl => {
+            this.vectorLayer = vl;
+            this.canvasLayers.setState(vl);
+            this.canvasLayers.draw();
+          }),
+      );
     }
   }
 
