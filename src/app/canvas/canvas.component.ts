@@ -75,6 +75,7 @@ export class CanvasComponent
           this.setDimensions({ w, h }, viewport);
         }));
     if (this.canvasType === CanvasType.Preview) {
+      // Preview canvas specific setup.
       this.registerSubscription(
         this.store.select(getCanvasState)
           .subscribe(({ activeVectorLayer, hiddenLayerIds, selectedLayerIds }) => {
@@ -94,6 +95,7 @@ export class CanvasComponent
             this.canvasLayers.draw();
           }));
     } else {
+      // Start & end canvas specific setup.
       const shapeShifterSelector =
         this.canvasType === CanvasType.Start
           ? getShapeShifterStartState
