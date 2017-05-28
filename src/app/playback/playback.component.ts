@@ -1,5 +1,5 @@
 import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
-import { AnimatorService } from '../services';
+import { AnimatorService } from '../animator';
 import { Observable } from 'rxjs/Observable';
 import { Store, State, getPlaybackSettings } from '../store';
 

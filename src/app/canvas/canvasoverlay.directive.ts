@@ -7,10 +7,8 @@ import { Command } from '../scripts/paths';
 import { CanvasType } from '..';
 import { DestroyableMixin } from '../scripts/mixins';
 import { MathUtil, Point, Matrix } from '../scripts/common';
-import {
-  AnimatorService,
-  MorphSubPathService,
-} from '../services';
+import { MorphSubPathService } from '../services';
+import { AnimatorService } from '../animator';
 import { Observable } from 'rxjs/Observable';
 import { Path } from '../scripts/paths';
 import {
@@ -60,7 +58,8 @@ const SMALL_POINT_RADIUS = MEDIUM_POINT_RADIUS / 1.7;
 const SPLIT_POINT_RADIUS_FACTOR = 0.8;
 const SELECTED_POINT_RADIUS_FACTOR = 1.25;
 const POINT_BORDER_FACTOR = 1.075;
-const DISABLED_ALPHA = 0.38;
+// TODO: disable the canvas if the paths aren't morphable
+// const DISABLED_ALPHA = 0.38;
 
 const NORMAL_POINT_COLOR = '#2962FF'; // Blue A400
 const SPLIT_POINT_COLOR = '#E65100'; // Orange 900

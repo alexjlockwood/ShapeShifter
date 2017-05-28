@@ -12,7 +12,7 @@ import { ColorUtil } from '../scripts/common';
 import * as CanvasUtil from './CanvasUtil';
 import { DestroyableMixin } from '../scripts/mixins';
 import { CanvasType } from '..';
-import { AnimatorService } from '../services';
+import { AnimatorService } from '../animator';
 import { Observable } from 'rxjs/Observable';
 import {
   Store,

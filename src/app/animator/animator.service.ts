@@ -13,21 +13,22 @@ import {
   ToggleIsRepeating,
   ResetPlaybackSettings,
 } from '../store';
-import { Animation, AnimationRenderer } from '../scripts/animations';
+import { Animation } from '../scripts/animations';
+import { AnimationRenderer } from './AnimationRenderer';
+import { Animator } from './Animator';
 import { VectorLayer } from '../scripts/layers';
 
-const REPEAT_DELAY = 750;
-const DEFAULT_IS_SLOW_MOTION = false;
-const DEFAULT_PLAYBACK_SPEED = 1;
-const SLOW_MOTION_PLAYBACK_SPEED = 5;
-const DEFAULT_ANIMATOR_EVENT = { vl: undefined, currentTime: 0 };
+const DEFAULT_ANIMATOR_EVENT = {
+  vl: undefined as VectorLayer,
+  currentTime: 0,
+};
 
 /**
  * Coordinates and stores information about the currently active animation.
  */
 @Injectable()
 export class AnimatorService {
-  private readonly animatorSubject = new BehaviorSubject<AnimatorEvent>(DEFAULT_ANIMATOR_EVENT);
+  private readonly animatorSubject = new BehaviorSubject(DEFAULT_ANIMATOR_EVENT);
   private animator: Animator;
   private animationRenderer: AnimationRenderer;
   private activeAnimation: Animation;
@@ -114,88 +115,4 @@ export class AnimatorService {
     this.store.dispatch(new ResetPlaybackSettings());
     this.animator = new Animator(this.ngZone, this.store);
   }
-}
-
-class Animator {
-  private timeoutId: number;
-  private animationFrameId: number;
-  private playbackSpeed = DEFAULT_IS_SLOW_MOTION ? SLOW_MOTION_PLAYBACK_SPEED : DEFAULT_PLAYBACK_SPEED;
-  private isRepeating = false;
-  private currentAnimatedFraction = 0;
-  private shouldPlayInReverse = false;
-
-  constructor(
-    private readonly ngZone: NgZone,
-    private readonly store: Store<State>,
-  ) { }
-
-  setIsRepeating(isRepeating: boolean) {
-    this.isRepeating = isRepeating;
-  }
-
-  setIsSlowMotion(isSlowMotion: boolean) {
-    this.playbackSpeed = isSlowMotion ? SLOW_MOTION_PLAYBACK_SPEED : DEFAULT_PLAYBACK_SPEED;
-  }
-
-  play(duration: number, onUpdateFn: (fraction: number) => void) {
-    this.startAnimation(duration, onUpdateFn);
-    this.store.dispatch(new SetIsPlaying(true));
-  }
-
-  pause() {
-    if (this.timeoutId) {
-      clearTimeout(this.timeoutId);
-      this.timeoutId = undefined;
-    }
-    if (this.animationFrameId) {
-      cancelAnimationFrame(this.animationFrameId);
-      this.animationFrameId = undefined;
-    }
-    this.store.dispatch(new SetIsPlaying(false));
-  }
-
-  rewind() {
-    this.pause();
-    this.shouldPlayInReverse = false;
-    this.currentAnimatedFraction = 0;
-  }
-
-  fastForward() {
-    this.pause();
-    this.shouldPlayInReverse = true;
-    this.currentAnimatedFraction = 1;
-  }
-
-  private startAnimation(duration: number, onUpdateFn: (fraction: number) => void) {
-    let startTimestamp: number = undefined;
-    const playbackSpeed = this.playbackSpeed;
-    const onAnimationFrameFn = (timestamp: number) => {
-      if (!startTimestamp) {
-        startTimestamp = timestamp;
-      }
-      const progress = timestamp - startTimestamp;
-      if (progress < (duration * playbackSpeed)) {
-        this.animationFrameId = requestAnimationFrame(onAnimationFrameFn);
-      } else {
-        this.shouldPlayInReverse = !this.shouldPlayInReverse;
-        if (this.isRepeating) {
-          this.timeoutId = window.setTimeout(() => {
-            this.startAnimation(duration, onUpdateFn);
-          }, REPEAT_DELAY);
-        } else {
-          this.pause();
-        }
-      }
-      const fraction = Math.min(1, progress / (duration * playbackSpeed));
-      onUpdateFn(fraction);
-    };
-    this.ngZone.runOutsideAngular(() => {
-      this.animationFrameId = requestAnimationFrame(onAnimationFrameFn);
-    });
-  }
-}
-
-interface AnimatorEvent {
-  readonly vl: VectorLayer;
-  readonly currentTime: number;
 }

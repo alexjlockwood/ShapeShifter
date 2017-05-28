@@ -1,7 +1,7 @@
 import * as $ from 'jquery';
 import { Injectable } from '@angular/core';
 import { Store, State, DeleteSelectedModels } from '../store';
-import { AnimatorService } from './animator.service';
+import { AnimatorService } from '../animator';
 
 @Injectable()
 export class ShortcutService {

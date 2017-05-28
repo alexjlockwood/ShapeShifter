@@ -45,7 +45,6 @@ import { DropTargetDirective } from './droptarget.directive';
 
 // Services.
 import {
-  AnimatorService,
   HoverService,
   StateService,
   SelectionService,
@@ -56,6 +55,7 @@ import {
   ActionModeService,
   ShortcutService,
 } from './services';
+import { AnimatorService } from './animator';
 
 // Dialogs.
 import {

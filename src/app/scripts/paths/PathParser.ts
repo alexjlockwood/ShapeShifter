@@ -1,6 +1,13 @@
 import { Point, Matrix, SvgUtil } from '../common';
 import { Command, SvgChar } from '.';
 
+const enum Token {
+  AbsoluteCommand = 1,
+  RelativeCommand,
+  Value,
+  EOF,
+}
+
 /**
  * Takes an SVG path string (i.e. the text specified in the path's 'd' attribute) and returns
  * list of DrawCommands that represent the SVG path's individual sequence of instructions.
@@ -326,13 +333,6 @@ export function commandsToString(commands: ReadonlyArray<Command>) {
     tokens.splice(tokens.length, 0, ...args.map(n => Number(n.toFixed(3)).toString() as SvgChar));
   });
   return tokens.join(' ');
-}
-
-const enum Token {
-  AbsoluteCommand = 1,
-  RelativeCommand,
-  Value,
-  EOF,
 }
 
 function newMove(start: Point, end: Point) {

@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
-import { Animation, AnimationBlock, INTERPOLATORS } from '.';
-import { VectorLayer, Layer } from '../layers';
-import { ModelUtil, LayerMap, PropertyMap } from '../common';
+import { Animation, AnimationBlock, INTERPOLATORS } from '../scripts/animations';
+import { VectorLayer, Layer } from '../scripts/layers';
+import { ModelUtil, LayerMap, PropertyMap } from '../scripts/common';
 
 const DEFAULT_LAYER_PROPERTY_STATE: PropertyState = {
   activeBlock: undefined,

@@ -1,4 +1,3 @@
-export { AnimatorService } from './animator.service';
 export { AppModeService, AppMode } from './appmode.service';
 export { HoverService, Hover, HoverType } from './hover.service';
 export { StateService, MorphStatus } from './state.service';

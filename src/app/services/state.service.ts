@@ -10,7 +10,7 @@ import { Matrix } from '../scripts/common';
 
 // Note that importing these from '.' causes runtime errors.
 import { AppModeService } from './appmode.service';
-import { AnimatorService } from './animator.service';
+import { AnimatorService } from '../animator';
 import { HoverService } from './hover.service';
 import { SelectionService } from './selection.service';
 import { SettingsService } from './settings.service';

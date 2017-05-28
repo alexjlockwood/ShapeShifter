@@ -16,7 +16,8 @@ import { Animation, AnimationBlock } from '../scripts/animations';
 import { Dragger } from '../scripts/dragger';
 import { ModelUtil, UiUtil } from '../scripts/common';
 import * as TimelineConsts from './constants';
-import { AnimatorService, FileImporterService } from '../services';
+import { FileImporterService } from '../services';
+import { AnimatorService } from '../animator';
 import { LayerTimelineDirective } from './layertimeline.directive';
 import {
   Store, State, getLayerTimelineState, AddAnimations,
