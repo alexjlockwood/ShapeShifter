@@ -12,6 +12,63 @@ import { CanvasType } from '../CanvasType';
 import { ModelUtil } from '../scripts/common';
 import { PathProperty, ColorProperty } from '../scripts/properties';
 
+/**
+ * Different shape shifter app modes.
+ */
+export enum AppMode {
+  Selection = 1,
+  SplitCommands,
+  SplitSubPaths,
+  MorphSubPaths,
+}
+
+/**
+ * A selection represents an action that is the result of a mouse click.
+ */
+export interface Selection {
+  readonly type: SelectionType;
+  readonly source: CanvasType;
+  readonly subIdx: number;
+  readonly cmdIdx?: number;
+}
+
+/**
+ * Describes the different types of selection events.
+ */
+export enum SelectionType {
+  // The user selected an entire subpath.
+  SubPath = 1,
+  // The user selected an individual segment in a subpath.
+  Segment,
+  // The user selected an individual point in a subpath.
+  Point,
+}
+
+/**
+ * A hover represents a transient action that results from a mouse movement.
+ */
+export interface Hover {
+  readonly type: HoverType;
+  readonly source: CanvasType;
+  readonly subIdx: number;
+  readonly cmdIdx?: number;
+}
+
+/**
+ * Describes the different types of hover events.
+ */
+export enum HoverType {
+  SubPath = 1,
+  Segment,
+  Point,
+  Split,
+  Unsplit,
+  Reverse,
+  ShiftBack,
+  ShiftForward,
+  SetFirstPosition,
+}
+
 export interface State {
   readonly layers: {
     readonly vectorLayers: ReadonlyArray<VectorLayer>;
@@ -27,6 +84,7 @@ export interface State {
     readonly selectedBlockIds: Set<string>;
   },
   readonly shapeshifter: {
+    readonly appMode: AppMode;
     readonly hover: Hover;
     readonly selections: ReadonlyArray<Selection>;
   }
@@ -52,6 +110,7 @@ export function buildInitialState(): State {
       selectedBlockIds: new Set<string>(),
     },
     shapeshifter: {
+      appMode: AppMode.Selection,
       hover: undefined,
       selections: [],
     },
@@ -366,6 +425,16 @@ export function reducer(state = initialState, action: actions.Actions): State {
       };
     }
 
+    // Set the app mode during shape shifter mode.
+    case actions.SET_APP_MODE: {
+      const { appMode } = action.payload;
+      const { shapeshifter } = state;
+      return {
+        ...state,
+        shapeshifter: { ...shapeshifter, appMode },
+      };
+    }
+
     // Set the hover mode during shape shifter mode.
     case actions.SET_HOVER: {
       const { hover } = action.payload;
@@ -373,6 +442,16 @@ export function reducer(state = initialState, action: actions.Actions): State {
       return {
         ...state,
         shapeshifter: { ...shapeshifter, hover },
+      };
+    }
+
+    // Set the path selections during shape shifter mode.
+    case actions.SET_SELECTIONS: {
+      const { selections } = action.payload;
+      const { shapeshifter } = state;
+      return {
+        ...state,
+        shapeshifter: { ...shapeshifter, selections },
       };
     }
 
@@ -393,7 +472,7 @@ export function reducer(state = initialState, action: actions.Actions): State {
     }
 
     // Toggle a segment selection.
-    case actions.TOGGLE_SEGMENT_SELECTION: {
+    case actions.TOGGLE_SEGMENT_SELECTIONS: {
       const { source, segments } = action.payload;
       const { shapeshifter } = state;
       let selections = shapeshifter.selections.slice();
@@ -676,51 +755,4 @@ function toggleShapeShifterSelections(
     });
   }
   return currentSelections;
-}
-
-/**
- * A selection represents an action that is the result of a mouse click.
- */
-export interface Selection {
-  readonly type: SelectionType;
-  readonly source: CanvasType;
-  readonly subIdx: number;
-  readonly cmdIdx?: number;
-}
-
-/**
- * Describes the different types of selection events.
- */
-export enum SelectionType {
-  // The user selected an entire subpath.
-  SubPath = 1,
-  // The user selected an individual segment in a subpath.
-  Segment,
-  // The user selected an individual point in a subpath.
-  Point,
-}
-
-/**
- * A hover represents a transient action that results from a mouse movement.
- */
-export interface Hover {
-  readonly type: HoverType;
-  readonly source: CanvasType;
-  readonly subIdx: number;
-  readonly cmdIdx?: number;
-}
-
-/**
- * Describes the different types of hover events.
- */
-export enum HoverType {
-  SubPath = 1,
-  Segment,
-  Point,
-  Split,
-  Unsplit,
-  Reverse,
-  ShiftBack,
-  ShiftForward,
-  SetFirstPosition,
 }

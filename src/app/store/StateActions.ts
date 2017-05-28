@@ -1,7 +1,7 @@
 import { Action } from '@ngrx/store';
 import { Animation, AnimationBlock } from '../scripts/animations';
 import { Layer } from '../scripts/layers';
-import { Hover, Selection } from './StateReducer';
+import { Hover, Selection, AppMode } from './StateReducer';
 import { CanvasType } from '../CanvasType';
 
 // Animation actions.
@@ -141,16 +141,34 @@ export class DeleteSelectedModels implements Action {
 }
 
 // Shape Shifter actions.
+export const SET_APP_MODE = 'SET_APP_MODE';
 export const SET_HOVER = 'SET_HOVER';
+export const SET_SELECTIONS = 'SET_SELECTIONS';
 export const TOGGLE_SUBPATH_SELECTION = 'TOGGLE_SUBPATH_SELECTION';
-export const TOGGLE_SEGMENT_SELECTION = 'TOGGLE_SEGMENT_SELECTION';
+export const TOGGLE_SEGMENT_SELECTIONS = 'TOGGLE_SEGMENT_SELECTION';
 export const TOGGLE_POINT_SELECTION = 'TOGGLE_POINT_SELECTION';
+
+export class SetAppMode implements Action {
+  readonly type = SET_APP_MODE;
+  readonly payload: { appMode: AppMode };
+  constructor(readonly appMode: AppMode) {
+    this.payload = { appMode };
+  }
+}
 
 export class SetHover implements Action {
   readonly type = SET_HOVER;
   readonly payload: { hover: Hover };
   constructor(readonly hover: Hover) {
     this.payload = { hover };
+  }
+}
+
+export class SetSelections implements Action {
+  readonly type = SET_SELECTIONS;
+  readonly payload: { selections: ReadonlyArray<Selection> };
+  constructor(readonly selections: ReadonlyArray<Selection>) {
+    this.payload = { selections };
   }
 }
 
@@ -163,8 +181,8 @@ export class ToggleSubPathSelection implements Action {
   }
 }
 
-export class ToggleSegmentSelection implements Action {
-  readonly type = TOGGLE_SEGMENT_SELECTION;
+export class ToggleSegmentSelections implements Action {
+  readonly type = TOGGLE_SEGMENT_SELECTIONS;
   readonly payload: {
     source: CanvasType,
     segments: ReadonlyArray<{ subIdx: number, cmdIdx: number }>,
@@ -202,8 +220,10 @@ export type Actions =
   | ToggleLayerExpansion
   | ToggleLayerVisibility
   | ReplaceLayer
+  | SetAppMode
   | SetHover
+  | SetSelections
   | ToggleSubPathSelection
-  | ToggleSegmentSelection
+  | ToggleSegmentSelections
   | TogglePointSelection
   | DeleteSelectedModels;

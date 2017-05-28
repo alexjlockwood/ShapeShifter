@@ -7,7 +7,10 @@ import { Command } from '../scripts/paths';
 import { CanvasType } from '..';
 import { DestroyableMixin } from '../scripts/mixins';
 import { MathUtil, Point, Matrix } from '../scripts/common';
-import { AnimatorService } from '../services';
+import {
+  AnimatorService,
+  MorphSubPathService,
+} from '../services';
 import { Observable } from 'rxjs/Observable';
 import { Path } from '../scripts/paths';
 import {
@@ -28,11 +31,17 @@ import {
   getHiddenLayerIds,
   getShapeShifterStartState,
   getShapeShifterEndState,
+  getShapeShifterAppMode,
   Hover,
   HoverType,
   Selection,
   SelectionType,
+  AppMode,
 } from '../store';
+import { SegmentSplitter } from './SegmentSplitter';
+import { MorphSubPathHelper } from './MorphSubPathHelper';
+import { SelectionHelper } from './SelectionHelper';
+import { ShapeSplitter } from './ShapeSplitter';
 import 'rxjs/add/observable/combineLatest';
 
 // The line width of a highlight in css pixels.
@@ -73,22 +82,38 @@ export class CanvasOverlayDirective
   @Input() canvasType: CanvasType;
 
   private readonly $canvas: JQuery;
-  private vectorLayer: VectorLayer;
+  vectorLayer: VectorLayer;
   // Normal mode variables.
   private hiddenLayerIds = new Set<string>();
   private selectedLayerIds = new Set<string>();
   // Shape Shifter mode variables.
   private shapeShifterPathLayerId: string;
+  shapeShifterAppMode: AppMode;
   private shapeShifterHover: Hover;
-  private shapeShifterSelections: ReadonlyArray<Selection>;
+  shapeShifterSelections: ReadonlyArray<Selection>;
+
+  private selectionHelper: SelectionHelper | undefined;
+  private morphSubPathHelper: MorphSubPathHelper | undefined;
+  private segmentSplitter: SegmentSplitter | undefined;
+  private shapeSplitter: ShapeSplitter | undefined;
 
   constructor(
     readonly elementRef: ElementRef,
-    private readonly store: Store<State>,
+    public readonly store: Store<State>,
     private readonly animatorService: AnimatorService,
+    // TODO: move this into ngrx store
+    // TODO: move this into ngrx store
+    // TODO: move this into ngrx store
+    // TODO: move this into ngrx store
+    // TODO: move this into ngrx store
+    readonly morphSubPathService: MorphSubPathService,
   ) {
     super();
     this.$canvas = $(elementRef.nativeElement);
+  }
+
+  get isShapeShifterMode() {
+    return !!this.shapeShifterPathLayerId;
   }
 
   private get overlayCtx() {
@@ -116,6 +141,40 @@ export class CanvasOverlayDirective
 
   private get mediumPointRadius() {
     return MEDIUM_POINT_RADIUS / this.cssScale;
+  }
+
+  private get splitPointRadius() {
+    return this.mediumPointRadius * SPLIT_POINT_RADIUS_FACTOR;
+  }
+
+  private get selectedSegmentLineWidth() {
+    return HIGHLIGHT_LINE_WIDTH / this.cssScale / 1.9;
+  }
+
+  private get unselectedSegmentLineWidth() {
+    return HIGHLIGHT_LINE_WIDTH / this.cssScale / 3;
+  }
+
+  get dragTriggerTouchSlop() {
+    return DRAG_TRIGGER_TOUCH_SLOP / this.cssScale;
+  }
+
+  // TODO: only use this for shape shifter mode
+  // TODO: only use this for shape shifter mode
+  // TODO: only use this for shape shifter mode
+  // TODO: only use this for shape shifter mode
+  // TODO: only use this for shape shifter mode
+  get activePathLayer() {
+    return this.vectorLayer.findLayerById(this.shapeShifterPathLayerId) as PathLayer;
+  }
+
+  // TODO: only use this for shape shifter mode
+  // TODO: only use this for shape shifter mode
+  // TODO: only use this for shape shifter mode
+  // TODO: only use this for shape shifter mode
+  // TODO: only use this for shape shifter mode
+  get activePath() {
+    return this.activePathLayer.pathData;
   }
 
   ngAfterViewInit() {
@@ -149,6 +208,97 @@ export class CanvasOverlayDirective
             this.draw();
           }),
       );
+      this.registerSubscription(
+        this.store.select(getShapeShifterAppMode).subscribe(appMode => {
+          this.shapeShifterAppMode = appMode;
+          const pathLayer =
+            this.vectorLayer.findLayerById(this.shapeShifterPathLayerId) as PathLayer;
+          if (this.shapeShifterAppMode === AppMode.SplitCommands
+            || (this.shapeShifterAppMode === AppMode.SplitSubPaths
+              && pathLayer
+              && pathLayer.isStroked())) {
+            const subIdxs = new Set<number>();
+            for (const s of this.shapeShifterSelections) {
+              subIdxs.add(s.subIdx);
+            }
+            const toArray = Array.from(subIdxs);
+            const restrictToSubIdx = toArray.length ? toArray[0] : undefined;
+            this.segmentSplitter = new SegmentSplitter(this, restrictToSubIdx);
+          } else {
+            this.segmentSplitter = undefined;
+          }
+          if (this.shapeShifterAppMode === AppMode.Selection) {
+            this.selectionHelper = new SelectionHelper(this);
+          } else {
+            this.selectionHelper = undefined;
+          }
+          if (this.shapeShifterAppMode === AppMode.MorphSubPaths) {
+            this.morphSubPathHelper = new MorphSubPathHelper(this);
+            this.morphSubPathService.reset();
+            const selections =
+              this.shapeShifterSelections.filter(s => s.type === SelectionType.SubPath);
+            if (selections.length) {
+              const { source, subIdx } = selections[0];
+              this.morphSubPathService.setUnpairedSubPath({ source, subIdx });
+            }
+          } else {
+            this.morphSubPathHelper = undefined;
+          }
+          if (this.shapeShifterAppMode === AppMode.SplitSubPaths
+            && pathLayer
+            && pathLayer.isFilled()) {
+            this.shapeSplitter = new ShapeSplitter(this);
+          } else {
+            this.shapeSplitter = undefined;
+          }
+          // TODO: uncomment this
+          // TODO: uncomment this
+          // TODO: uncomment this
+          // TODO: uncomment this
+          // TODO: uncomment this
+          // this.currentHoverPreviewPath = undefined;
+          this.draw();
+        }));
+      // TODO: uncomment this
+      // TODO: uncomment this
+      // TODO: uncomment this
+      // TODO: uncomment this
+      // TODO: uncomment this
+      // const updateCurrentHoverFn = (hover: Hover | undefined) => {
+      //   let previewPath: Path = undefined;
+      //   if (this.shouldDrawLayers && hover) {
+      //     // If the user is hovering over the inspector split button, then build
+      //     // a snapshot of what the path would look like after the action
+      //     // and display the result.
+      //     const mutator = this.activePath.mutate();
+      //     const { type, subIdx, cmdIdx } = hover;
+      //     switch (type) {
+      //       case HoverType.Split:
+      //         previewPath = mutator.splitCommandInHalf(subIdx, cmdIdx).build();
+      //         break;
+      //       case HoverType.Unsplit:
+      //         previewPath = mutator.unsplitCommand(subIdx, cmdIdx).build();
+      //         break;
+      //     }
+      //   }
+      //   this.currentHoverPreviewPath = previewPath;
+      //   this.drawOverlays();
+      // };
+      // this.subscribeTo(
+      //   this.hoverService.asObservable(),
+      //   hover => {
+      //     if (!hover) {
+      //       // Clear the current hover.
+      //       updateCurrentHoverFn(undefined);
+      //       return;
+      //     }
+      //     if (hover.source !== this.canvasType
+      //       && hover.type !== HoverType.Point) {
+      //       updateCurrentHoverFn(undefined);
+      //       return;
+      //     }
+      //     updateCurrentHoverFn(hover);
+      //   });
     }
   }
 
@@ -168,37 +318,15 @@ export class CanvasOverlayDirective
       ctx.scale(this.attrScale, this.attrScale);
       ctx.clearRect(0, 0, w, h);
       this.drawLayerSelections(ctx, this.vectorLayer);
+      this.drawHighlights(ctx);
       ctx.restore();
+      // Draw points in terms of physical pixels, not viewport pixels.
       this.drawLabeledPoints(ctx);
+      this.drawDraggingPoints(ctx);
+      this.drawFloatingPreviewPoint(ctx);
+      this.drawFloatingSplitFilledPathPreviewPoints(ctx);
     }
     this.drawPixelGrid(ctx);
-  }
-
-  // Draws the pixel grid on top of the canvas content.
-  private drawPixelGrid(ctx: Context) {
-    // Note that we draw the pixel grid in terms of physical pixels,
-    // not viewport pixels.
-    if (this.cssScale > 4) {
-      ctx.save();
-      ctx.fillStyle = 'rgba(128, 128, 128, .25)';
-      const devicePixelRatio = window.devicePixelRatio || 1;
-      const viewport = this.getViewport();
-      for (let x = 1; x < viewport.w; x++) {
-        ctx.fillRect(
-          x * this.attrScale - devicePixelRatio / 2,
-          0,
-          devicePixelRatio,
-          viewport.h * this.attrScale);
-      }
-      for (let y = 1; y < viewport.h; y++) {
-        ctx.fillRect(
-          0,
-          y * this.attrScale - devicePixelRatio / 2,
-          viewport.w * this.attrScale,
-          devicePixelRatio);
-      }
-      ctx.restore();
-    }
   }
 
   // Recursively draws all layer selections to the canvas.
@@ -239,15 +367,170 @@ export class CanvasOverlayDirective
     curr.children.forEach(child => this.drawLayerSelections(ctx, child));
   }
 
+  // Draw any highlighted segments.
+  private drawHighlights(ctx: Context) {
+    if (!this.isShapeShifterMode) {
+      return;
+    }
+    if (this.canvasType === CanvasType.Preview) {
+      return;
+    }
+
+    const flattenedTransform =
+      LayerUtil.getFlattenedTransformForLayer(this.vectorLayer, this.shapeShifterPathLayerId);
+    const pathLayer = this.vectorLayer.findLayerById(this.shapeShifterPathLayerId) as PathLayer;
+    const activePath = pathLayer.pathData;
+    const currentHover = this.shapeShifterHover;
+
+    if (this.selectionHelper) {
+      // Draw any highlighted subpaths. We'll highlight a subpath if a subpath
+      // selection or a point selection exists.
+      const selectedSubPaths =
+        _.chain(this.shapeShifterSelections)
+          .filter(s => {
+            return s.source === this.canvasType
+              && (s.type === SelectionType.Point
+                || s.type === SelectionType.SubPath);
+          })
+          .map(s => s.subIdx)
+          .uniq()
+          .map(subIdx => activePath.getSubPath(subIdx))
+          .filter(subPath => !subPath.isCollapsing())
+          .value();
+
+      for (const subPath of selectedSubPaths) {
+        // If the subpath has a split segment, highlight it in orange. Otherwise,
+        // use the default blue highlight color.
+        const cmds = subPath.getCommands();
+        const isSplitSubPath = cmds.some(c => c.isSplitSegment());
+        const highlightColor = isSplitSubPath ? SPLIT_POINT_COLOR : HIGHLIGHT_COLOR;
+        CanvasUtil.executeCommands(ctx, cmds, flattenedTransform);
+        executeHighlights(ctx, highlightColor, this.selectedSegmentLineWidth);
+      }
+
+      const segmentSelections =
+        this.shapeShifterSelections.filter(s => s.type === SelectionType.Segment)
+          .filter(s => s.source === this.canvasType)
+          .map(s => { return { subIdx: s.subIdx, cmdIdx: s.cmdIdx }; });
+      const hover = currentHover;
+      if (hover
+        && hover.source === this.canvasType
+        && hover.type === HoverType.Segment) {
+        segmentSelections.push({
+          subIdx: hover.subIdx,
+          cmdIdx: hover.cmdIdx,
+        });
+      }
+      const segmentSelectionCmds =
+        segmentSelections
+          .map(s => activePath.getCommand(s.subIdx, s.cmdIdx))
+          .filter(cmd => cmd.isSplitSegment());
+      CanvasUtil.executeCommands(ctx, segmentSelectionCmds, flattenedTransform);
+      executeHighlights(ctx, SPLIT_POINT_COLOR, this.selectedSegmentLineWidth);
+    } else if (this.segmentSplitter && this.segmentSplitter.getProjectionOntoPath()) {
+      // Highlight the segment as the user hovers over it.
+      const { subIdx, cmdIdx, projection: { d } } =
+        this.segmentSplitter.getProjectionOntoPath();
+      if (d < this.minSnapThreshold) {
+        CanvasUtil.executeCommands(ctx, [activePath.getCommand(subIdx, cmdIdx)], flattenedTransform);
+        executeHighlights(ctx, SPLIT_POINT_COLOR, this.selectedSegmentLineWidth);
+      }
+    }
+
+    // Draw any existing split shape segments to the canvas.
+    const cmds =
+      _.chain(activePath.getSubPaths())
+        .filter(s => !s.isCollapsing())
+        .flatMap(s => s.getCommands() as Command[])
+        .filter(c => c.isSplitSegment())
+        .value();
+    CanvasUtil.executeCommands(ctx, cmds, flattenedTransform);
+    executeHighlights(ctx, SPLIT_POINT_COLOR, this.unselectedSegmentLineWidth);
+
+    if (this.morphSubPathHelper) {
+      const currUnpair = this.morphSubPathService.getUnpairedSubPath();
+      if (currUnpair) {
+        // Draw the current unpaired subpath in orange, if it exists.
+        const { source, subIdx } = currUnpair;
+        const subPath = activePath.getSubPath(subIdx);
+        if (source === this.canvasType) {
+          CanvasUtil.executeCommands(ctx, subPath.getCommands(), flattenedTransform);
+          executeHighlights(ctx, SPLIT_POINT_COLOR, this.selectedSegmentLineWidth);
+        }
+      }
+      const pairedSubPaths = this.morphSubPathService.getPairedSubPaths();
+      const hasHover =
+        currentHover
+        && currentHover.source === this.canvasType
+        && currentHover.type === HoverType.SubPath;
+      if (hasHover) {
+        pairedSubPaths.delete(currentHover.subIdx);
+      }
+      if (pairedSubPaths.size) {
+        // Draw any already paired subpaths in blue.
+        const pairedCmds =
+          _.flatMap(
+            Array.from(pairedSubPaths),
+            subIdx => activePath.getSubPath(subIdx).getCommands() as Command[]);
+        CanvasUtil.executeCommands(ctx, pairedCmds, flattenedTransform);
+        executeHighlights(ctx, NORMAL_POINT_COLOR, this.selectedSegmentLineWidth);
+      }
+      if (hasHover) {
+        // Highlight the hover in orange, if it exists.
+        const hoverCmds = activePath.getSubPath(currentHover.subIdx).getCommands();
+        CanvasUtil.executeCommands(ctx, hoverCmds, flattenedTransform);
+        executeHighlights(ctx, SPLIT_POINT_COLOR, this.selectedSegmentLineWidth);
+      }
+    } else if (this.shapeSplitter) {
+      // If we are splitting a filled subpath, draw the in progress drag segment.
+      const proj1 = this.shapeSplitter.getInitialProjectionOntoPath();
+      const proj2 = this.shapeSplitter.getFinalProjectionOntoPath();
+      if (proj1) {
+        // Draw a line from the starting projection to the final projection (or
+        // to the last known mouse location, if one doesn't exist).
+        const startPoint =
+          applyGroupTransform(new Point(proj1.projection.x, proj1.projection.y), flattenedTransform);
+        const endPoint = proj2
+          ? applyGroupTransform(new Point(proj2.projection.x, proj2.projection.y), flattenedTransform)
+          : this.shapeSplitter.getLastKnownMouseLocation();
+        ctx.beginPath();
+        ctx.moveTo(startPoint.x, startPoint.y);
+        ctx.lineTo(endPoint.x, endPoint.y);
+        executeHighlights(ctx, SPLIT_POINT_COLOR, this.selectedSegmentLineWidth);
+      }
+      if (!proj1 || proj2) {
+        // Highlight the segment as the user hovers over it.
+        const projectionOntoPath = this.shapeSplitter.getCurrentProjectionOntoPath();
+        if (projectionOntoPath) {
+          const projection = projectionOntoPath.projection;
+          if (projection && projection.d < this.minSnapThreshold) {
+            const { subIdx, cmdIdx } = projectionOntoPath;
+            CanvasUtil.executeCommands(ctx, [activePath.getCommand(subIdx, cmdIdx)], flattenedTransform);
+            executeHighlights(ctx, SPLIT_POINT_COLOR, this.selectedSegmentLineWidth);
+          }
+        }
+      }
+    }
+  }
+
   // Draw any labeled points.
   private drawLabeledPoints(ctx: Context) {
+    if (!this.isShapeShifterMode) {
+      return;
+    }
     if (this.canvasType === CanvasType.Preview) {
       // Don't draw labeled points in the preview canvas.
       return;
     }
 
-    const pathLayer = this.vectorLayer.findLayerById(this.shapeShifterPathLayerId) as PathLayer;
+    const pathLayer =
+      this.vectorLayer.findLayerById(this.shapeShifterPathLayerId) as PathLayer;
     const path = pathLayer.pathData;
+    // TODO: uncomment this
+    // TODO: uncomment this
+    // TODO: uncomment this
+    // TODO: uncomment this
+    // TODO: uncomment this
     // if (this.currentHoverPreviewPath) {
     //   path = this.currentHoverPreviewPath;
     // }
@@ -317,9 +600,9 @@ export class CanvasOverlayDirective
     pointInfos.push(...hoveringPointInfos);
 
     const draggingIndex =
-      /*this.selectionHelper && this.selectionHelper.isDragTriggered()
+      this.selectionHelper && this.selectionHelper.isDragTriggered()
         ? this.selectionHelper.getDraggableSplitIndex()
-        :*/ undefined;
+        : undefined;
 
     for (const { cmd, subIdx, cmdIdx } of pointInfos) {
       if (draggingIndex
@@ -332,7 +615,7 @@ export class CanvasOverlayDirective
       let text: string = undefined;
       const isHovering = isPointInfoHoveringFn({ cmd, subIdx, cmdIdx });
       const isAtLeastMedium = isPointInfoAtLeastMediumFn({ cmd, subIdx, cmdIdx });
-      if ((isAtLeastMedium || isHovering) && true /*this.appMode === AppMode.Selection*/) {
+      if ((isAtLeastMedium || isHovering) && this.shapeShifterAppMode === AppMode.Selection) {
         radius = this.mediumPointRadius * SELECTED_POINT_RADIUS_FACTOR;
         const isPointEnlargedFn = (source: CanvasType, sIdx: number, cIdx: number) => {
           return pointSelections.some(s => {
@@ -366,30 +649,240 @@ export class CanvasOverlayDirective
     }
   }
 
+  // Draw any actively dragged points along the path in selection mode.
+  private drawDraggingPoints(ctx: Context) {
+    if (!this.isShapeShifterMode) {
+      return;
+    }
+    if (this.shapeShifterAppMode !== AppMode.Selection
+      || !this.selectionHelper
+      || !this.selectionHelper.isDragTriggered()) {
+      return;
+    }
+    const flattenedTransform =
+      LayerUtil.getFlattenedTransformForLayer(this.vectorLayer, this.shapeShifterPathLayerId);
+    const { x, y, d } = this.selectionHelper.getProjectionOntoPath().projection;
+    const point =
+      d < this.minSnapThreshold
+        ? applyGroupTransform(new Point(x, y), flattenedTransform)
+        : this.selectionHelper.getLastKnownMouseLocation();
+    executeLabeledPoint(
+      ctx,
+      this.attrScale,
+      point,
+      this.splitPointRadius,
+      SPLIT_POINT_COLOR);
+  }
+
+  // Draw a floating point preview over the canvas in split commands mode
+  // and split subpaths mode for stroked paths.
+  private drawFloatingPreviewPoint(ctx: Context) {
+    if (!this.isShapeShifterMode) {
+      return;
+    }
+    const pathLayer =
+      this.vectorLayer.findLayerById(this.shapeShifterPathLayerId) as PathLayer;
+    if (this.shapeShifterAppMode !== AppMode.SplitCommands
+      && this.shapeShifterAppMode !== AppMode.SplitSubPaths
+      && !pathLayer.isStroked()
+      || !this.segmentSplitter
+      || !this.segmentSplitter.getProjectionOntoPath()) {
+      return;
+    }
+    const { x, y, d } = this.segmentSplitter.getProjectionOntoPath().projection;
+    if (d < this.minSnapThreshold) {
+      const flattenedTransform =
+        LayerUtil.getFlattenedTransformForLayer(
+          this.vectorLayer, this.shapeShifterPathLayerId);
+      executeLabeledPoint(
+        ctx,
+        this.attrScale,
+        applyGroupTransform(new Point(x, y), flattenedTransform),
+        this.splitPointRadius,
+        SPLIT_POINT_COLOR);
+    }
+  }
+
+  // Draw the floating points on top of the drag line in split filled subpath mode.
+  private drawFloatingSplitFilledPathPreviewPoints(ctx: Context) {
+    if (!this.isShapeShifterMode) {
+      return;
+    }
+    if (this.shapeShifterAppMode !== AppMode.SplitSubPaths || !this.shapeSplitter) {
+      return;
+    }
+    const flattenedTransform =
+      LayerUtil.getFlattenedTransformForLayer(
+        this.vectorLayer, this.shapeShifterPathLayerId);
+    const proj1 = this.shapeSplitter.getInitialProjectionOntoPath();
+    if (proj1) {
+      const proj2 = this.shapeSplitter.getFinalProjectionOntoPath();
+      executeLabeledPoint(
+        ctx,
+        this.attrScale,
+        applyGroupTransform(new Point(proj1.projection.x, proj1.projection.y), flattenedTransform),
+        this.splitPointRadius,
+        SPLIT_POINT_COLOR);
+      if (this.shapeSplitter.willFinalProjectionOntoPathCreateSplitPoint()) {
+        const endPoint = proj2
+          ? applyGroupTransform(new Point(proj2.projection.x, proj2.projection.y), flattenedTransform)
+          : this.shapeSplitter.getLastKnownMouseLocation();
+        executeLabeledPoint(
+          ctx,
+          this.attrScale,
+          endPoint,
+          this.splitPointRadius,
+          SPLIT_POINT_COLOR);
+      }
+    } else if (this.shapeSplitter.getCurrentProjectionOntoPath()) {
+      const { x, y, d } = this.shapeSplitter.getCurrentProjectionOntoPath().projection;
+      if (d < this.minSnapThreshold) {
+        executeLabeledPoint(
+          ctx,
+          this.attrScale,
+          applyGroupTransform(new Point(x, y), flattenedTransform),
+          this.splitPointRadius,
+          SPLIT_POINT_COLOR);
+      }
+    }
+  }
+
+  // Draws the pixel grid on top of the canvas content.
+  private drawPixelGrid(ctx: Context) {
+    // Note that we draw the pixel grid in terms of physical pixels,
+    // not viewport pixels.
+    if (this.cssScale > 4) {
+      ctx.save();
+      ctx.fillStyle = 'rgba(128, 128, 128, .25)';
+      const devicePixelRatio = window.devicePixelRatio || 1;
+      const viewport = this.getViewport();
+      for (let x = 1; x < viewport.w; x++) {
+        ctx.fillRect(
+          x * this.attrScale - devicePixelRatio / 2,
+          0,
+          devicePixelRatio,
+          viewport.h * this.attrScale);
+      }
+      for (let y = 1; y < viewport.h; y++) {
+        ctx.fillRect(
+          0,
+          y * this.attrScale - devicePixelRatio / 2,
+          viewport.w * this.attrScale,
+          devicePixelRatio);
+      }
+      ctx.restore();
+    }
+  }
+
   @HostListener('mousedown', ['$event'])
   onMouseDown(event: MouseEvent) {
-    const hitLayer = this.hitTestForLayer(this.mouseEventToViewportCoords(event));
-    const isMetaOrShiftPressed = event.metaKey || event.shiftKey;
-    if (hitLayer) {
-      const shouldToggle = true;
-      this.store.dispatch(
-        new SelectLayer(hitLayer.id, shouldToggle, !isMetaOrShiftPressed));
-    } else if (!isMetaOrShiftPressed) {
-      this.store.dispatch(new ClearLayerSelections());
+    const mouseDown = this.mouseEventToViewportCoords(event);
+    if (this.isShapeShifterMode) {
+      if (this.shapeShifterAppMode === AppMode.Selection) {
+        this.selectionHelper.onMouseDown(mouseDown, event.shiftKey || event.metaKey);
+      } else if (this.shapeShifterAppMode === AppMode.MorphSubPaths) {
+        this.morphSubPathHelper.onMouseDown(mouseDown, event.shiftKey || event.metaKey);
+      } else if (this.shapeShifterAppMode === AppMode.SplitCommands) {
+        this.segmentSplitter.onMouseDown(mouseDown);
+      } else if (this.shapeShifterAppMode === AppMode.SplitSubPaths) {
+        const pathLayer = this.vectorLayer.findLayerById(this.shapeShifterPathLayerId) as PathLayer;
+        if (pathLayer.isStroked()) {
+          this.segmentSplitter.onMouseDown(mouseDown);
+        } else {
+          this.shapeSplitter.onMouseDown(mouseDown);
+        }
+      }
+    } else {
+      const hitLayer = this.hitTestForLayer(mouseDown);
+      const isMetaOrShiftPressed = event.metaKey || event.shiftKey;
+      if (hitLayer) {
+        const shouldToggle = true;
+        this.store.dispatch(
+          new SelectLayer(hitLayer.id, shouldToggle, !isMetaOrShiftPressed));
+      } else if (!isMetaOrShiftPressed) {
+        this.store.dispatch(new ClearLayerSelections());
+      }
     }
   }
 
   @HostListener('mousemove', ['$event'])
   onMouseMove(event: MouseEvent) {
+    if (!this.isShapeShifterMode) {
+      return;
+    }
+    const mouseMove = this.mouseEventToViewportCoords(event);
+    if (this.shapeShifterAppMode === AppMode.Selection) {
+      this.selectionHelper.onMouseMove(mouseMove);
+    } else if (this.shapeShifterAppMode === AppMode.MorphSubPaths) {
+      this.morphSubPathHelper.onMouseMove(mouseMove);
+    } else if (this.shapeShifterAppMode === AppMode.SplitCommands) {
+      this.segmentSplitter.onMouseMove(mouseMove);
+    } else if (this.shapeShifterAppMode === AppMode.SplitSubPaths) {
+      const pathLayer = this.vectorLayer.findLayerById(this.shapeShifterPathLayerId) as PathLayer;
+      if (pathLayer.isStroked()) {
+        this.segmentSplitter.onMouseMove(mouseMove);
+      } else {
+        this.shapeSplitter.onMouseMove(mouseMove);
+      }
+    }
   }
 
   @HostListener('mouseup', ['$event'])
   onMouseUp(event: MouseEvent) {
+    if (!this.isShapeShifterMode) {
+      return;
+    }
+    const mouseUp = this.mouseEventToViewportCoords(event);
+    if (this.shapeShifterAppMode === AppMode.Selection) {
+      this.selectionHelper.onMouseUp(mouseUp, event.shiftKey || event.metaKey);
+    } else if (this.shapeShifterAppMode === AppMode.MorphSubPaths) {
+      this.morphSubPathHelper.onMouseUp(mouseUp);
+    } else if (this.shapeShifterAppMode === AppMode.SplitCommands) {
+      this.segmentSplitter.onMouseUp(mouseUp);
+    } else if (this.shapeShifterAppMode === AppMode.SplitSubPaths) {
+      const pathLayer = this.vectorLayer.findLayerById(this.shapeShifterPathLayerId) as PathLayer;
+      if (pathLayer.isStroked()) {
+        this.segmentSplitter.onMouseUp(mouseUp);
+      } else {
+        this.shapeSplitter.onMouseUp(mouseUp);
+      }
+    }
   }
 
   @HostListener('mouseleave', ['$event'])
   onMouseLeave(event: MouseEvent) {
+    if (!this.isShapeShifterMode) {
+      return;
+    }
+    const mouseLeave = this.mouseEventToViewportCoords(event);
+    if (this.shapeShifterAppMode === AppMode.Selection) {
+      // TODO: how to handle the case where the mouse leaves and re-enters mid-gesture?
+      this.selectionHelper.onMouseLeave(mouseLeave);
+    } else if (this.shapeShifterAppMode === AppMode.MorphSubPaths) {
+      this.morphSubPathHelper.onMouseLeave(mouseLeave);
+    } else if (this.shapeShifterAppMode === AppMode.SplitCommands) {
+      this.segmentSplitter.onMouseLeave(mouseLeave);
+    } else if (this.shapeShifterAppMode === AppMode.SplitSubPaths) {
+      const pathLayer = this.vectorLayer.findLayerById(this.shapeShifterPathLayerId) as PathLayer;
+      if (pathLayer.isStroked()) {
+        this.segmentSplitter.onMouseLeave(mouseLeave);
+      } else {
+        this.shapeSplitter.onMouseLeave(mouseLeave);
+      }
+    }
+    // TODO: uncomment this
+    // TODO: uncomment this
+    // TODO: uncomment this
+    // TODO: uncomment this
+    // TODO: uncomment this
+    // this.hoverService.resetAndNotify();
   }
+
+  // TODO: override onClick()?
+  // TODO: override onClick()?
+  // TODO: override onClick()?
+  // TODO: override onClick()?
+  // TODO: override onClick()?
 
   private mouseEventToViewportCoords(event: MouseEvent) {
     const canvasOffset = this.$canvas.offset();
@@ -428,6 +921,43 @@ export class CanvasOverlayDirective
       return layer.children.reduce((h, l) => recurseFn(l) || h, undefined);
     };
     return recurseFn(root) as PathLayer;
+  }
+
+  // TODO: make it clear this is only meant to be called in shape shifter mode
+  performHitTest(mousePoint: Point, opts: HitTestOpts = {}) {
+    const flattenedTransform =
+      LayerUtil.getFlattenedTransformForLayer(
+        this.vectorLayer, this.shapeShifterPathLayerId);
+    const transformedMousePoint =
+      MathUtil.transformPoint(mousePoint, flattenedTransform.invert());
+    let isPointInRangeFn: (distance: number, cmd: Command) => boolean;
+    if (!opts.noPoints) {
+      isPointInRangeFn = (distance, cmd) => {
+        const multiplyFactor = cmd.isSplitPoint() ? SPLIT_POINT_RADIUS_FACTOR : 1;
+        return distance <= this.mediumPointRadius * multiplyFactor;
+      };
+    }
+    const pathLayer =
+      this.vectorLayer.findLayerById(this.shapeShifterPathLayerId) as PathLayer;
+    let isSegmentInRangeFn: (distance: number, cmd: Command) => boolean;
+    if (!opts.noSegments) {
+      isSegmentInRangeFn = distance => {
+        let maxDistance = this.minSnapThreshold;
+        if (pathLayer.isStroked()) {
+          maxDistance = Math.max(maxDistance, pathLayer.strokeWidth / 2);
+        }
+        return distance <= maxDistance;
+      };
+    }
+    const findShapesInRange = pathLayer.isFilled() && !opts.noShapes;
+    const restrictToSubIdx = opts.restrictToSubIdx;
+    return pathLayer.pathData.hitTest(
+      transformedMousePoint, {
+        isPointInRangeFn,
+        isSegmentInRangeFn,
+        findShapesInRange,
+        restrictToSubIdx,
+      });
   }
 }
 
@@ -490,4 +1020,11 @@ function executeLabeledPoint(
 // of the VectorLayer's viewport coordinates.
 function applyGroupTransform(mousePoint: Point, transform: Matrix) {
   return MathUtil.transformPoint(mousePoint, transform);
+}
+
+interface HitTestOpts {
+  noPoints?: boolean;
+  noSegments?: boolean;
+  noShapes?: boolean;
+  restrictToSubIdx?: number[];
 }

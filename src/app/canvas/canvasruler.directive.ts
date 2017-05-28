@@ -18,6 +18,7 @@ const TICK_SIZE = 6;
 export class CanvasRulerDirective extends CanvasLayoutMixin() {
 
   @Input() orientation: Orientation;
+
   private readonly $canvas: JQuery;
   private mousePoint: Point;
 
@@ -27,7 +28,7 @@ export class CanvasRulerDirective extends CanvasLayoutMixin() {
   }
 
   // @Override
-  protected onDimensionsChanged() {
+  onDimensionsChanged() {
     this.draw();
   }
 

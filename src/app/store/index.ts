@@ -1,5 +1,5 @@
 export { Store } from '@ngrx/store';
-export { Hover, HoverType, Selection, SelectionType } from './StateReducer';
+export { Hover, HoverType, Selection, SelectionType, AppMode } from './StateReducer';
 import * as _ from 'lodash';
 import {
   createSelector,
@@ -54,6 +54,12 @@ export {
   ToggleLayerExpansion,
   ToggleLayerVisibility,
   AddLayers,
+  SetAppMode,
+  SetHover,
+  SetSelections,
+  ToggleSubPathSelection,
+  ToggleSegmentSelections,
+  TogglePointSelection,
   DeleteSelectedModels,
 } from './StateActions';
 
@@ -177,6 +183,7 @@ export const isShapeShifterMode = createSelector(
 );
 
 const getShapeShifterState = createSelector(getState, s => s.shapeshifter);
+export const getShapeShifterAppMode = createSelector(getState, s => s.shapeshifter.appMode);
 const getShapeShifterHover = createDeepEqualSelector(getShapeShifterState, s => s.hover);
 const getShapeShifterSelections = createSelector(getShapeShifterState, s => s.selections);
 
