@@ -1,12 +1,17 @@
-import * as _ from 'lodash';
-import {
-  Component, OnInit, Input, ViewEncapsulation,
-  EventEmitter, Output, ChangeDetectionStrategy,
-} from '@angular/core';
-import { Layer } from '../scripts/layers';
 import { Animation, AnimationBlock } from '../scripts/animations';
-import { ModelUtil, AnimationMap } from '../scripts/common';
-import { Store, State, getTimelineAnimationRowState } from '../store';
+import { AnimationMap, ModelUtil } from '../scripts/common';
+import { Layer } from '../scripts/layers';
+import { State, Store, getTimelineAnimationRowState } from '../store';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  EventEmitter,
+  Input,
+  OnInit,
+  Output,
+  ViewEncapsulation,
+} from '@angular/core';
+import * as _ from 'lodash';
 import { Observable } from 'rxjs/Observable';
 
 @Component({

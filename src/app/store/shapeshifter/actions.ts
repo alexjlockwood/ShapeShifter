@@ -1,6 +1,6 @@
-import { Action } from '@ngrx/store';
-import { Hover, Selection, AppMode } from './reducer';
 import { CanvasType } from '../../CanvasType';
+import { AppMode, Hover, Selection } from './reducer';
+import { Action } from '@ngrx/store';
 
 // Shape Shifter actions.
 export const SET_APP_MODE = 'SET_APP_MODE';

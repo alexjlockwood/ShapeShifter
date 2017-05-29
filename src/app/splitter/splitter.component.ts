@@ -1,9 +1,14 @@
+import { Dragger } from '../scripts/dragger';
 import {
-  Component, ElementRef, HostListener, Input,
-  OnInit, HostBinding, ViewEncapsulation,
+  Component,
+  ElementRef,
+  HostBinding,
+  HostListener,
+  Input,
+  OnInit,
+  ViewEncapsulation,
 } from '@angular/core';
 import * as $ from 'jquery';
-import { Dragger } from '../scripts/dragger';
 
 type Orientation = 'vertical' | 'horizontal';
 type Edge = 'left' | 'right' | 'top';

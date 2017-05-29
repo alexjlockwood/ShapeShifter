@@ -1,19 +1,19 @@
-import * as _ from 'lodash';
-import * as $ from 'jquery';
-import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
-import { Property, NameProperty, FractionProperty, Option } from '../scripts/properties';
-import { VectorLayer, LayerUtil } from '../scripts/layers';
 import { Animation } from '../scripts/animations';
-import { Observable } from 'rxjs/Observable';
 import { ColorUtil, ModelUtil } from '../scripts/common';
+import { LayerUtil, VectorLayer } from '../scripts/layers';
+import { FractionProperty, NameProperty, Option, Property } from '../scripts/properties';
 import {
-  Store,
-  State,
-  getPropertyInputState,
-  ReplaceLayer,
-  ReplaceBlocks,
   ReplaceAnimations,
+  ReplaceBlocks,
+  ReplaceLayer,
+  State,
+  Store,
+  getPropertyInputState,
 } from '../store';
+import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import * as $ from 'jquery';
+import * as _ from 'lodash';
+import { Observable } from 'rxjs/Observable';
 
 @Component({
   selector: 'app-propertyinput',

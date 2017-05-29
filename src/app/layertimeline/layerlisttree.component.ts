@@ -1,11 +1,16 @@
-import * as _ from 'lodash';
-import {
-  Component, OnInit, Input, ChangeDetectionStrategy, Output, EventEmitter,
-} from '@angular/core';
-import { Layer, VectorLayer, GroupLayer } from '../scripts/layers';
-import { ModelUtil } from '../scripts/common';
 import { Animation } from '../scripts/animations';
-import { Store, State, getLayerListTreeState } from '../store';
+import { ModelUtil } from '../scripts/common';
+import { GroupLayer, Layer, VectorLayer } from '../scripts/layers';
+import { State, Store, getLayerListTreeState } from '../store';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  EventEmitter,
+  Input,
+  OnInit,
+  Output,
+} from '@angular/core';
+import * as _ from 'lodash';
 import { Observable } from 'rxjs/Observable';
 
 @Component({

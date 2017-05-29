@@ -1,12 +1,16 @@
-import * as $ from 'jquery';
-import * as _ from 'lodash';
-import {
-  Directive, ElementRef, Input,
-  HostListener, Output, EventEmitter,
-} from '@angular/core';
-import { TIMELINE_ANIMATION_PADDING } from './constants';
 import { Animation } from '../scripts/animations';
 import { Dragger } from '../scripts/dragger';
+import { TIMELINE_ANIMATION_PADDING } from './constants';
+import {
+  Directive,
+  ElementRef,
+  EventEmitter,
+  HostListener,
+  Input,
+  Output,
+} from '@angular/core';
+import * as $ from 'jquery';
+import * as _ from 'lodash';
 
 const GRID_INTERVALS_MS = [
   10, 25, 50, 100, 250, 500,

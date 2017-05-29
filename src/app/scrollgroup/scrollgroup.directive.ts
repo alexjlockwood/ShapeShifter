@@ -1,4 +1,10 @@
-import { Directive, OnDestroy, ElementRef, Input, HostListener } from '@angular/core';
+import {
+   Directive,
+   ElementRef,
+   HostListener,
+   Input,
+   OnDestroy,
+} from '@angular/core';
 import * as $ from 'jquery';
 
 const GROUPS = new Map<string, JQuery[]>();
