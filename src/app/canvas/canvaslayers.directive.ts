@@ -14,11 +14,15 @@ import { DestroyableMixin } from '../scripts/mixins';
 import {
   State,
   Store,
+} from '../store';
+import {
   getActiveVectorLayer,
   getHiddenLayerIds,
+} from '../store/aia/selectors';
+import {
   getShapeShifterEndState,
   getShapeShifterStartState,
-} from '../store';
+} from '../store/shapeshifter/selectors';
 import { CanvasLayoutMixin, Size } from './CanvasLayoutMixin';
 import * as CanvasUtil from './CanvasUtil';
 import { AfterViewInit, Directive, ElementRef, Input } from '@angular/core';

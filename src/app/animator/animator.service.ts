@@ -1,22 +1,24 @@
-import { Injectable, NgZone } from '@angular/core';
-import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+import { Animation } from '../scripts/animations';
+import { VectorLayer } from '../scripts/layers';
 import {
-  Store,
-  State,
-  getAnimatorState,
-  getIsSlowMotion,
-  getIsPlaying,
-  getIsRepeating,
+  ResetPlaybackSettings,
   SetIsPlaying,
-  ToggleIsSlowMotion,
+  State,
+  Store,
   ToggleIsPlaying,
   ToggleIsRepeating,
-  ResetPlaybackSettings,
+  ToggleIsSlowMotion,
 } from '../store';
-import { Animation } from '../scripts/animations';
+import { getAnimatorState } from '../store/aia/selectors';
+import {
+  getIsPlaying,
+  getIsRepeating,
+  getIsSlowMotion,
+} from '../store/playback/selectors';
 import { AnimationRenderer } from './AnimationRenderer';
 import { Animator } from './Animator';
-import { VectorLayer } from '../scripts/layers';
+import { Injectable, NgZone } from '@angular/core';
+import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 
 const DEFAULT_ANIMATOR_EVENT = {
   vl: undefined as VectorLayer,

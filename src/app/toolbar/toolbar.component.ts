@@ -5,6 +5,7 @@ import { DialogService } from '../dialogs';
 import { AutoAwesome } from '../scripts/algorithms';
 import { DEMO_MAP, DemoUtil } from '../scripts/demos';
 import { ExportUtil } from '../scripts/export';
+import { PathLayer } from '../scripts/layers';
 import {
   ActionModeService,
   AppMode,
@@ -18,8 +19,10 @@ import {
 import {
   State,
   Store,
-  isShapeShifterMode,
 } from '../store';
+import {
+  getToolbarState,
+} from '../store/shapeshifter/selectors';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -47,45 +50,43 @@ export class ToolbarComponent implements OnInit {
   // This boolean is used to ensure the toolbar transition doesn't run on page load.
   hasActionModeBeenEnabled = false;
 
-  toolbarObservable: Observable<ToolbarData>;
+  toolbarData$: Observable<ToolbarData>;
+  shouldShowActionMode$: Observable<boolean>;
 
   constructor(
     private readonly viewContainerRef: ViewContainerRef,
-    private readonly selectionService: SelectionService,
-    private readonly stateService: StateService,
-    private readonly appModeService: AppModeService,
+    // private readonly selectionService: SelectionService,
+    // private readonly stateService: StateService,
+    // private readonly appModeService: AppModeService,
     private readonly dialogService: DialogService,
-    private readonly morphSubPathService: MorphSubPathService,
+    // TODO: uncomment this
+    // TODO: uncomment this
+    // TODO: uncomment this
+    // TODO: uncomment this
+    // TODO: uncomment this
+    // private readonly morphSubPathService: MorphSubPathService,
     private readonly actionModeService: ActionModeService,
     private readonly store: Store<State>,
   ) { }
 
   ngOnInit() {
-    const combinedObservable =
-      Observable.combineLatest(
-        this.selectionService.asObservable(),
-        this.appModeService.asObservable(),
-        this.morphSubPathService.asObservable());
-    this.toolbarObservable = combinedObservable.map(() => {
-      const selectionInfo = this.createToolbarData();
-      if (selectionInfo.getNumSelections() > 0) {
-        this.hasActionModeBeenEnabled = true;
-      }
-      return selectionInfo;
-    });
-  }
-
-  createToolbarData() {
-    return new ToolbarData(
-      this.stateService,
-      this.morphSubPathService,
-      this.appModeService.getAppMode(),
-      this.selectionService.getSelections(),
-    );
-  }
-
-  shouldShowActionMode() {
-    return this.actionModeService.isShowingActionMode();
+    this.toolbarData$ = this.store.select(getToolbarState)
+      .map(({ fromPl, toPl, appMode, selections }) => {
+        console.info(fromPl, toPl, appMode, selections);
+        const selectionInfo = new ToolbarData(
+          fromPl,
+          toPl,
+          // this.morphSubPathService,
+          appMode,
+          selections,
+        );
+        if (selectionInfo.getNumSelections() > 0) {
+          this.hasActionModeBeenEnabled = true;
+        }
+        return selectionInfo;
+      });
+    this.shouldShowActionMode$ =
+      this.toolbarData$.map(toolbarData => toolbarData.shouldShowActionMode());
   }
 
   // onNewClick() {
@@ -223,17 +224,19 @@ class ToolbarData {
   private readonly unpairedSubPathSource: CanvasType;
 
   constructor(
-    private readonly stateService: StateService,
-    morphSubPathService: MorphSubPathService,
-    private readonly appMode: AppMode,
-    selections: ReadonlyArray<Selection>,
+    activeStartPathLayer: PathLayer,
+    activeEndPathLayer: PathLayer,
+    // morphSubPathService: MorphSubPathService,
+    public readonly appMode: AppMode,
+    public readonly selections: ReadonlyArray<Selection>,
   ) {
     // Precondition: assume all selections are for the same canvas type
     if (!selections.length) {
       return;
     }
     const canvasType = selections[0].source;
-    const activePathLayer = stateService.getActivePathLayer(canvasType);
+    const activePathLayer =
+      canvasType === CanvasType.Start ? activeStartPathLayer : activeEndPathLayer;
     if (!activePathLayer) {
       return;
     }
@@ -277,12 +280,17 @@ class ToolbarData {
     this.showShiftSubPath = this.subPaths.length > 0
       && activePath.getSubPath(this.subPaths[0]).isClosed();
     this.showSplitInHalf = this.points.length === 1 && !!this.points[0].cmdIdx;
-    if (this.appMode === AppMode.MorphSubPaths) {
-      const unpair = morphSubPathService.getUnpairedSubPath();
-      if (unpair) {
-        this.unpairedSubPathSource = unpair.source;
-      }
-    }
+    // TODO: uncomment this
+    // TODO: uncomment this
+    // TODO: uncomment this
+    // TODO: uncomment this
+    // TODO: uncomment this
+    // if (this.appMode === AppMode.MorphSubPaths) {
+    //   const unpair = morphSubPathService.getUnpairedSubPath();
+    //   if (unpair) {
+    //     this.unpairedSubPathSource = unpair.source;
+    //   }
+    // }
   }
 
   getNumSelections() {
@@ -348,23 +356,29 @@ class ToolbarData {
     return '';
   }
 
-  private shouldShowActionMode() {
+  shouldShowActionMode() {
     return this.getNumSelections() > 0 || !this.isSelectionMode();
   }
 
   shouldShowMorphSubPaths() {
-    const startLayer = this.stateService.getActivePathLayer(CanvasType.Start);
-    const endLayer = this.stateService.getActivePathLayer(CanvasType.End);
-    if (!startLayer || !endLayer) {
-      return false;
-    }
-    if (startLayer.pathData.getSubPaths().length === 1
-      && endLayer.pathData.getSubPaths().length === 1) {
-      return false;
-    }
-    return this.getNumSubPaths() === 1
-      || this.getNumSegments() > 0
-      || !this.isSelectionMode();
+    // TODO: uncomment this
+    // TODO: uncomment this
+    // TODO: uncomment this
+    // TODO: uncomment this
+    // TODO: uncomment this
+    // const startLayer = this.stateService.getActivePathLayer(CanvasType.Start);
+    // const endLayer = this.stateService.getActivePathLayer(CanvasType.End);
+    // if (!startLayer || !endLayer) {
+    //   return false;
+    // }
+    // if (startLayer.pathData.getSubPaths().length === 1
+    //   && endLayer.pathData.getSubPaths().length === 1) {
+    //   return false;
+    // }
+    // return this.getNumSubPaths() === 1
+    //   || this.getNumSegments() > 0
+    //   || !this.isSelectionMode();
+    return false;
   }
 
   getNumSplitSubPaths() {

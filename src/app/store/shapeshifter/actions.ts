@@ -3,12 +3,26 @@ import { AppMode, Hover, Selection } from './reducer';
 import { Action } from '@ngrx/store';
 
 // Shape Shifter actions.
+export const ENTER_SHAPE_SHIFTER_MODE = 'ENTER_SHAPE_SHIFTER_MODE';
+export const EXIT_SHAPE_SHIFTER_MODE = 'EXIT_SHAPE_SHIFTER_MODE';
 export const SET_APP_MODE = 'SET_APP_MODE';
 export const SET_HOVER = 'SET_HOVER';
 export const SET_SELECTIONS = 'SET_SELECTIONS';
 export const TOGGLE_SUBPATH_SELECTION = 'TOGGLE_SUBPATH_SELECTION';
 export const TOGGLE_SEGMENT_SELECTIONS = 'TOGGLE_SEGMENT_SELECTION';
 export const TOGGLE_POINT_SELECTION = 'TOGGLE_POINT_SELECTION';
+
+export class EnterShapeShifterMode implements Action {
+  readonly type = ENTER_SHAPE_SHIFTER_MODE;
+  readonly payload: { blockId: string };
+  constructor(readonly blockId: string) {
+    this.payload = { blockId };
+  }
+}
+
+export class ExitShapeShifterMode implements Action {
+  readonly type = EXIT_SHAPE_SHIFTER_MODE;
+}
 
 export class SetAppMode implements Action {
   readonly type = SET_APP_MODE;
@@ -69,7 +83,9 @@ export class TogglePointSelection implements Action {
 }
 
 export type Actions =
-  SetAppMode
+  EnterShapeShifterMode
+  | ExitShapeShifterMode
+  | SetAppMode
   | SetHover
   | SetSelections
   | ToggleSubPathSelection

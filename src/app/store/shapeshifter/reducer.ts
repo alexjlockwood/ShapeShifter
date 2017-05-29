@@ -1,6 +1,7 @@
-import * as _ from 'lodash';
-import * as actions from './actions';
 import { CanvasType } from '../../CanvasType';
+import { NEW_WORKSPACE, NewWorkspace } from '../actions';
+import * as actions from './actions';
+import * as _ from 'lodash';
 
 /**
  * Different shape shifter app modes.
@@ -60,6 +61,7 @@ export enum HoverType {
 }
 
 export interface State {
+  readonly blockId: string;
   readonly appMode: AppMode;
   readonly hover: Hover;
   readonly selections: ReadonlyArray<Selection>;
@@ -67,16 +69,36 @@ export interface State {
 
 export const initialState = buildInitialState();
 
-export function buildInitialState(): State {
+export function buildInitialState() {
   return {
+    blockId: undefined,
     appMode: AppMode.Selection,
     hover: undefined,
     selections: [],
-  };
+  } as State;
 }
 
-export function reducer(state = initialState, action: actions.Actions): State {
+export function reducer(
+  state = initialState,
+  action: NewWorkspace | actions.Actions,
+) {
   switch (action.type) {
+
+    // Shared action to create a new workspace.
+    case NEW_WORKSPACE: {
+      return buildInitialState();
+    }
+
+    // Enter shape shifter mode.
+    case actions.ENTER_SHAPE_SHIFTER_MODE: {
+      const { blockId } = action.payload;
+      return { ...state, blockId };
+    }
+
+    // Exit shape shifter mode.
+    case actions.EXIT_SHAPE_SHIFTER_MODE: {
+      return buildInitialState();
+    }
 
     // Set the app mode during shape shifter mode.
     case actions.SET_APP_MODE: {

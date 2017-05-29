@@ -1,7 +1,8 @@
-import { Injectable } from '@angular/core';
-import { Store, State, getImportedVectorLayers } from '../store';
-import { VectorLayer, LayerUtil } from '../scripts/layers';
 import { SvgLoader, VectorDrawableLoader } from '../scripts/import';
+import { LayerUtil, VectorLayer } from '../scripts/layers';
+import { State, Store } from '../store';
+import { getImportedVectorLayers } from '../store/aia/selectors';
+import { Injectable } from '@angular/core';
 
 /**
  * A simple service that imports vector layers from files.

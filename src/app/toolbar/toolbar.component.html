@@ -1,12 +1,12 @@
-<div *ngIf="((toolbarObservable | async) || createToolbarData()) as toolbarData"
+<div *ngIf="(this.toolbarData$ | async) as toolbarData"
   fxLayout="row"
   fxLayoutAlign="center center"
   class="toolbar action-mode-disabled"
-  [class.action-mode-enabled]="hasActionModeBeenEnabled && shouldShowActionMode()"
-  [class.action-mode-disabled]="hasActionModeBeenEnabled && !shouldShowActionMode()">
+  [class.action-mode-enabled]="this.hasActionModeBeenEnabled && (this.shouldShowActionMode$ | async)"
+  [class.action-mode-disabled]="this.hasActionModeBeenEnabled && !(this.shouldShowActionMode$ | async)">
 
   <ng-container *ngIf="{
-    showActionMode: shouldShowActionMode(),
+    showActionMode: toolbarData.shouldShowActionMode(),
     numSubPaths: toolbarData.getNumSubPaths(),
     numSegments: toolbarData.getNumSegments(),
     numPoints: toolbarData.getNumPoints(),

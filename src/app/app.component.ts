@@ -1,20 +1,27 @@
-import * as $ from 'jquery';
-import * as erd from 'element-resize-detector';
-import {
-  Component, OnInit, ViewChild, AfterViewInit,
-  OnDestroy, ElementRef, ChangeDetectionStrategy
-} from '@angular/core';
-import { MdSnackBar } from '@angular/material';
-import { environment } from '../environments/environment';
-import { FileImporterService, ShortcutService } from './services';
-import { Store, State, AddLayers, isShapeShifterMode } from './store';
-import { BehaviorSubject } from 'rxjs/BehaviorSubject';
-import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/operator/distinctUntilChanged';
 import 'rxjs/add/operator/combineLatest';
+
+import { environment } from '../environments/environment';
 import { CanvasType } from './CanvasType';
-import { VectorDrawableLoader } from './scripts/import';
 import { DEBUG_VECTOR_DRAWABLE } from './scripts/demos';
+import { VectorDrawableLoader } from './scripts/import';
+import { FileImporterService, ShortcutService } from './services';
+import { AddLayers, State, Store } from './store';
+import { isShapeShifterMode } from './store/shapeshifter/selectors';
+import {
+  AfterViewInit,
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  OnDestroy,
+  OnInit,
+  ViewChild,
+} from '@angular/core';
+import { MdSnackBar } from '@angular/material';
+import * as erd from 'element-resize-detector';
+import * as $ from 'jquery';
+import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+import { Observable } from 'rxjs/Observable';
 
 const IS_DEV_MODE = !environment.production;
 const ELEMENT_RESIZE_DETECTOR = erd();

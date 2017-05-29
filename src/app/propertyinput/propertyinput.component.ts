@@ -1,15 +1,16 @@
-import { Animation } from '../scripts/animations';
+import { Animation, PathAnimationBlock } from '../scripts/animations';
 import { ColorUtil, ModelUtil } from '../scripts/common';
 import { LayerUtil, VectorLayer } from '../scripts/layers';
 import { FractionProperty, NameProperty, Option, Property } from '../scripts/properties';
 import {
+  EnterShapeShifterMode,
   ReplaceAnimations,
   ReplaceBlocks,
   ReplaceLayer,
   State,
   Store,
-  getPropertyInputState,
 } from '../store';
+import { getPropertyInputState } from '../store/aia/selectors';
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import * as $ from 'jquery';
 import * as _ from 'lodash';
@@ -48,6 +49,14 @@ export class PropertyInputComponent implements OnInit {
             return { numSelections: 0, inspectedProperties: [] };
           }
         });
+  }
+
+  shouldShowShapeShifterButton(model: PropertyInputModel) {
+    return model.numSelections === 1 && model.model instanceof PathAnimationBlock;
+  }
+
+  onShapeShifterModeClick(blockId: string) {
+    this.store.dispatch(new EnterShapeShifterMode(blockId));
   }
 
   valueEditorKeyDown(event: KeyboardEvent, ip: InspectedProperty<any>) {
@@ -188,6 +197,7 @@ export class PropertyInputComponent implements OnInit {
       }));
     });
     return {
+      model: block,
       numSelections,
       inspectedProperties,
       icon,
@@ -241,6 +251,7 @@ export class PropertyInputComponent implements OnInit {
       }));
     });
     return {
+      model: animation,
       numSelections,
       inspectedProperties,
       icon,

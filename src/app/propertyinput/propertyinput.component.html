@@ -82,5 +82,11 @@
         </div>
       </form>
     </div>
+    <!-- TODO: change this text to something else? -->
+    <button md-button
+      *ngIf="this.shouldShowShapeShifterButton(model)"
+      (click)="this.onShapeShifterModeClick(model.model.id)">
+      Shape Shifter mode
+    </button>
   </div>
 </ng-container>

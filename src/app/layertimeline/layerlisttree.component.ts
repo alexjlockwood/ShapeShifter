@@ -1,7 +1,8 @@
 import { Animation } from '../scripts/animations';
 import { ModelUtil } from '../scripts/common';
 import { GroupLayer, Layer, VectorLayer } from '../scripts/layers';
-import { State, Store, getLayerListTreeState } from '../store';
+import { State, Store } from '../store';
+import { getLayerListTreeState } from '../store/aia/selectors';
 import {
   ChangeDetectionStrategy,
   Component,

@@ -1,5 +1,6 @@
-import * as _ from 'lodash';
+import { NEW_WORKSPACE, NewWorkspace } from '../actions';
 import * as actions from './actions';
+import * as _ from 'lodash';
 
 export interface State {
   readonly isSlowMotion: boolean;
@@ -17,8 +18,14 @@ export function buildInitialState(): State {
   };
 }
 
-export function reducer(state = initialState, action: actions.Actions): State {
+export function reducer(
+  state = initialState,
+  action: NewWorkspace | actions.Actions,
+) {
   switch (action.type) {
+    case NEW_WORKSPACE: {
+      return buildInitialState();
+    }
     case actions.SET_IS_SLOW_MOTION: {
       return setIsSlowMotion(state, action.payload.isSlowMotion);
     }

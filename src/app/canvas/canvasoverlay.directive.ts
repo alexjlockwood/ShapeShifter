@@ -27,14 +27,18 @@ import {
   SetHover,
   State,
   Store,
+} from '../store';
+import {
   getActiveVectorLayer,
   getHiddenLayerIds,
   getSelectedLayerIds,
-  getShapeShifterAppMode,
+} from '../store/aia/selectors';
+import {
+  getAppMode,
+  getHover,
   getShapeShifterEndState,
-  getShapeShifterHover,
   getShapeShifterStartState,
-} from '../store';
+} from '../store/shapeshifter/selectors';
 import { CanvasLayoutMixin } from './CanvasLayoutMixin';
 import * as CanvasUtil from './CanvasUtil';
 import { MorphSubPathHelper } from './MorphSubPathHelper';
@@ -205,9 +209,9 @@ export class CanvasOverlayDirective
           : getShapeShifterEndState;
       this.registerSubscription(
         this.store.select(shapeShifterSelector)
-          .subscribe(({ vectorLayer, pathLayerId, block, hover, selections }) => {
+          .subscribe(({ vectorLayer, block, hover, selections }) => {
             this.vectorLayer = vectorLayer;
-            this.shapeShifterPathLayerId = pathLayerId;
+            this.shapeShifterPathLayerId = block ? block.layerId : undefined;
             this.shapeShifterBlock = block;
             this.shapeShifterHover = hover;
             this.shapeShifterSelections = selections;
@@ -215,7 +219,7 @@ export class CanvasOverlayDirective
           }),
       );
       this.registerSubscription(
-        this.store.select(getShapeShifterAppMode).subscribe(appMode => {
+        this.store.select(getAppMode).subscribe(appMode => {
           this.shapeShifterAppMode = appMode;
           const pathLayer =
             this.vectorLayer.findLayerById(this.shapeShifterPathLayerId) as PathLayer;
@@ -286,7 +290,7 @@ export class CanvasOverlayDirective
       // TODO: avoid re-executing the draw by combining with the above subscriptions
       // TODO: avoid re-executing the draw by combining with the above subscriptions
       this.registerSubscription(
-        this.store.select(getShapeShifterHover).subscribe(
+        this.store.select(getHover).subscribe(
           hover => {
             if (!hover) {
               // Clear the current hover.

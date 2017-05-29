@@ -1,24 +1,25 @@
-import * as _ from 'lodash';
-import * as actions from './actions';
-import {
-  VectorLayer,
-  LayerUtil,
-} from '../../scripts/layers';
+import { CanvasType } from '../../CanvasType';
+import { AutoAwesome } from '../../scripts/algorithms';
 import {
   Animation,
   AnimationBlock,
-  PathAnimationBlock,
   ColorAnimationBlock,
   NumberAnimationBlock,
+  PathAnimationBlock,
 } from '../../scripts/animations';
-import {
-  PathProperty,
-  ColorProperty,
-} from '../../scripts/properties';
-import { Path } from '../../scripts/paths';
-import { CanvasType } from '../../CanvasType';
 import { ModelUtil } from '../../scripts/common';
-import { AutoAwesome } from '../../scripts/algorithms';
+import {
+  LayerUtil,
+  VectorLayer,
+} from '../../scripts/layers';
+import { Path } from '../../scripts/paths';
+import {
+  ColorProperty,
+  PathProperty,
+} from '../../scripts/properties';
+import { NEW_WORKSPACE, NewWorkspace } from '../actions';
+import * as actions from './actions';
+import * as _ from 'lodash';
 
 /**
  * Different shape shifter app modes.
@@ -115,8 +116,17 @@ export function buildInitialState(): State {
   };
 }
 
-export function reducer(state = initialState, action: actions.Actions): State {
+export function reducer(
+  state = initialState,
+  action: NewWorkspace | actions.Actions,
+) {
   switch (action.type) {
+
+    // Shared action to create a new workspace.
+    case NEW_WORKSPACE: {
+      return buildInitialState();
+    }
+
     // Add a list of animations to the application state.
     case actions.ADD_ANIMATIONS: {
       const newAnimations = action.payload.animations;

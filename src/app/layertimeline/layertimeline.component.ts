@@ -19,6 +19,7 @@ import {
   AddAnimations,
   AddBlock,
   AddLayers,
+  NewWorkspace,
   ReplaceBlocks,
   ReplaceLayer,
   SelectAnimation,
@@ -28,8 +29,8 @@ import {
   Store,
   ToggleLayerExpansion,
   ToggleLayerVisibility,
-  getLayerTimelineState,
 } from '../store';
+import { getLayerTimelineState } from '../store/aia/selectors';
 import * as TimelineConsts from './constants';
 import { Callbacks as LayerListTreeCallbacks } from './layerlisttree.component';
 import { ScrubEvent } from './layertimeline.directive';
@@ -180,7 +181,7 @@ export class LayerTimelineComponent
     // TODO: show some sort of dialog here to confirm (but only when the workspace is dirty)
     // TODO: show some sort of dialog here to confirm (but only when the workspace is dirty)
     // TODO: show some sort of dialog here to confirm (but only when the workspace is dirty)
-    // this.store.dispatch(new NewWorkspace());
+    this.store.dispatch(new NewWorkspace());
   }
 
   // Called from the LayerTimelineComponent template.
