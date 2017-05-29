@@ -1,7 +1,12 @@
-import * as $ from 'jquery';
 import {
-  Directive, ElementRef, EventEmitter, Output, HostListener, OnInit,
+  Directive,
+  ElementRef,
+  EventEmitter,
+  HostListener,
+  OnInit,
+  Output,
 } from '@angular/core';
+import * as $ from 'jquery';
 
 enum DragState {
   None = 0,
