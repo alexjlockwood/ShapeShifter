@@ -1,25 +1,39 @@
-import * as _ from 'lodash';
-import { Component, OnInit, ViewContainerRef, ChangeDetectionStrategy } from '@angular/core';
-import {
-  StateService,
-  MorphStatus,
-  SettingsService,
-  SelectionService,
-  Selection,
-  SelectionType,
-  AppModeService,
-  AppMode,
-  MorphSubPathService,
-  ActionModeService,
-} from '../services';
-import { CanvasType } from '../CanvasType';
-import { ExportUtil } from '../scripts/export';
-import { DialogService } from '../dialogs';
-import { AutoAwesome } from '../scripts/algorithms';
-import { DemoUtil, DEMO_MAP } from '../scripts/demos';
-import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/combineLatest';
 
+import { CanvasType } from '../CanvasType';
+import { DialogService } from '../dialogs';
+import { AutoAwesome } from '../scripts/algorithms';
+import { DEMO_MAP, DemoUtil } from '../scripts/demos';
+import { ExportUtil } from '../scripts/export';
+import {
+  ActionModeService,
+  AppMode,
+  AppModeService,
+  MorphSubPathService,
+  Selection,
+  SelectionService,
+  SelectionType,
+  StateService,
+} from '../services';
+import {
+  State,
+  Store,
+  isShapeShifterMode,
+} from '../store';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  OnInit,
+  ViewContainerRef,
+} from '@angular/core';
+import * as _ from 'lodash';
+import { Observable } from 'rxjs/Observable';
+
+// TODO: add back google analytics stuff!
+// TODO: add back google analytics stuff!
+// TODO: add back google analytics stuff!
+// TODO: add back google analytics stuff!
+// TODO: add back google analytics stuff!
 declare const ga: Function;
 
 @Component({
@@ -29,32 +43,24 @@ declare const ga: Function;
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ToolbarComponent implements OnInit {
-  readonly MORPH_NONE = MorphStatus.None;
-  readonly MORPH_UNMORPHABLE = MorphStatus.Unmorphable;
-  readonly MORPH_MORPHABLE = MorphStatus.Morphable;
 
   // This boolean is used to ensure the toolbar transition doesn't run on page load.
   hasActionModeBeenEnabled = false;
 
-  morphStatusObservable: Observable<MorphStatus>;
-  isDirtyObservable: Observable<boolean>;
   toolbarObservable: Observable<ToolbarData>;
 
   constructor(
     private readonly viewContainerRef: ViewContainerRef,
-    private readonly settingsService: SettingsService,
     private readonly selectionService: SelectionService,
     private readonly stateService: StateService,
     private readonly appModeService: AppModeService,
     private readonly dialogService: DialogService,
     private readonly morphSubPathService: MorphSubPathService,
     private readonly actionModeService: ActionModeService,
+    private readonly store: Store<State>,
   ) { }
 
   ngOnInit() {
-    this.morphStatusObservable = this.stateService.getMorphStatusObservable();
-    this.isDirtyObservable =
-      this.stateService.getExistingPathIdsObservable().map(ids => !!ids.length);
     const combinedObservable =
       Observable.combineLatest(
         this.selectionService.asObservable(),
@@ -74,72 +80,73 @@ export class ToolbarComponent implements OnInit {
       this.stateService,
       this.morphSubPathService,
       this.appModeService.getAppMode(),
-      this.selectionService.getSelections());
+      this.selectionService.getSelections(),
+    );
   }
 
   shouldShowActionMode() {
     return this.actionModeService.isShowingActionMode();
   }
 
-  onNewClick() {
-    ga('send', 'event', 'General', 'New click');
+  // onNewClick() {
+  //   ga('send', 'event', 'General', 'New click');
 
-    this.dialogService
-      .confirm(this.viewContainerRef, 'Start over?', 'You\'ll lose any unsaved changes.')
-      .subscribe(result => {
-        if (!result) {
-          return;
-        }
-        this.stateService.reset();
-      });
-  }
+  //   this.dialogService
+  //     .confirm(this.viewContainerRef, 'Start over?', 'You\'ll lose any unsaved changes.')
+  //     .subscribe(result => {
+  //       if (!result) {
+  //         return;
+  //       }
+  //       this.stateService.reset();
+  //     });
+  // }
 
-  onAutoFixClick() {
-    ga('send', 'event', 'General', 'Auto fix click');
+  // onAutoFixClick() {
+  //   ga('send', 'event', 'General', 'Auto fix click');
 
-    let resultStartCmd = this.stateService.getActivePathLayer(CanvasType.Start).pathData;
-    let resultEndCmd = this.stateService.getActivePathLayer(CanvasType.End).pathData;
-    const numSubPaths =
-      Math.min(resultStartCmd.getSubPaths().length, resultEndCmd.getSubPaths().length);
-    for (let subIdx = 0; subIdx < numSubPaths; subIdx++) {
-      // Pass the command with the larger subpath as the 'from' command.
-      const numStartCmds = resultStartCmd.getSubPath(subIdx).getCommands().length;
-      const numEndCmds = resultEndCmd.getSubPath(subIdx).getCommands().length;
-      const fromCmd = numStartCmds >= numEndCmds ? resultStartCmd : resultEndCmd;
-      const toCmd = numStartCmds >= numEndCmds ? resultEndCmd : resultStartCmd;
-      const { from, to } = AutoAwesome.autoFix(subIdx, fromCmd, toCmd);
-      resultStartCmd = numStartCmds >= numEndCmds ? from : to;
-      resultEndCmd = numStartCmds >= numEndCmds ? to : from;
-    }
-    this.stateService.updateActivePath(CanvasType.Start, resultStartCmd, false);
-    this.stateService.updateActivePath(CanvasType.End, resultEndCmd, false);
-    this.stateService.notifyChange(CanvasType.Preview);
-    this.stateService.notifyChange(CanvasType.Start);
-    this.stateService.notifyChange(CanvasType.End);
-  }
+  //   let resultStartCmd = this.stateService.getActivePathLayer(CanvasType.Start).pathData;
+  //   let resultEndCmd = this.stateService.getActivePathLayer(CanvasType.End).pathData;
+  //   const numSubPaths =
+  //     Math.min(resultStartCmd.getSubPaths().length, resultEndCmd.getSubPaths().length);
+  //   for (let subIdx = 0; subIdx < numSubPaths; subIdx++) {
+  //     // Pass the command with the larger subpath as the 'from' command.
+  //     const numStartCmds = resultStartCmd.getSubPath(subIdx).getCommands().length;
+  //     const numEndCmds = resultEndCmd.getSubPath(subIdx).getCommands().length;
+  //     const fromCmd = numStartCmds >= numEndCmds ? resultStartCmd : resultEndCmd;
+  //     const toCmd = numStartCmds >= numEndCmds ? resultEndCmd : resultStartCmd;
+  //     const { from, to } = AutoAwesome.autoFix(subIdx, fromCmd, toCmd);
+  //     resultStartCmd = numStartCmds >= numEndCmds ? from : to;
+  //     resultEndCmd = numStartCmds >= numEndCmds ? to : from;
+  //   }
+  //   this.stateService.updateActivePath(CanvasType.Start, resultStartCmd, false);
+  //   this.stateService.updateActivePath(CanvasType.End, resultEndCmd, false);
+  //   this.stateService.notifyChange(CanvasType.Preview);
+  //   this.stateService.notifyChange(CanvasType.Start);
+  //   this.stateService.notifyChange(CanvasType.End);
+  // }
 
-  onExportClick() {
-    ga('send', 'event', 'Export', 'Export click');
-    const duration = this.settingsService.getDuration();
-    const interpolator = this.settingsService.getInterpolator();
-    ExportUtil.generateZip(this.stateService, duration, interpolator);
-  }
+  // onExportClick() {
+  //   ga('send', 'event', 'Export', 'Export click');
+  //   const duration = this.settingsService.getDuration();
+  //   const interpolator = this.settingsService.getInterpolator();
+  //   ExportUtil.generateZip(this.stateService, duration, interpolator);
+  // }
 
-  onDemoClick() {
-    ga('send', 'event', 'Demos', 'Demos dialog shown');
-    const demoTitles = Array.from(DEMO_MAP.keys());
-    this.dialogService
-      .demo(this.viewContainerRef, demoTitles)
-      .subscribe(selectedDemoTitle => {
-        const selectedSvgStrings = DEMO_MAP.get(selectedDemoTitle);
-        if (!selectedSvgStrings) {
-          return;
-        }
-        ga('send', 'event', 'Demos', 'Demo selected', selectedDemoTitle);
-        this.stateService.reset();
-        DemoUtil.loadDemo(this.stateService, selectedSvgStrings);
-      });
-  }
+  // onDemoClick() {
+  //   ga('send', 'event', 'Demos', 'Demos dialog shown');
+  //   const demoTitles = Array.from(DEMO_MAP.keys());
+  //   this.dialogService
+  //     .demo(this.viewContainerRef, demoTitles)
+  //     .subscribe(selectedDemoTitle => {
+  //       const selectedSvgStrings = DEMO_MAP.get(selectedDemoTitle);
+  //       if (!selectedSvgStrings) {
+  //         return;
+  //       }
+  //       ga('send', 'event', 'Demos', 'Demo selected', selectedDemoTitle);
+  //       this.stateService.reset();
+  //       DemoUtil.loadDemo(this.stateService, selectedSvgStrings);
+  //     });
+  // }
 
   onSendFeedbackClick() {
     ga('send', 'event', 'Miscellaneous', 'Send feedback click');

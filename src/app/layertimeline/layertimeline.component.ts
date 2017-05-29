@@ -1,34 +1,56 @@
-import * as _ from 'lodash';
-import * as $ from 'jquery';
+import 'rxjs/add/observable/combineLatest';
+
+import { AnimatorService } from '../animator';
+import { Animation, AnimationBlock } from '../scripts/animations';
+import { ModelUtil, UiUtil } from '../scripts/common';
+import { Dragger } from '../scripts/dragger';
 import {
-  Component, OnInit, ChangeDetectionStrategy,
-  QueryList, ViewChild, ViewChildren,
-  ElementRef, AfterViewInit,
-} from '@angular/core';
-import { MdSnackBar } from '@angular/material';
-import { Callbacks as TimelineAnimationRowCallbacks } from './timelineanimationrow.component';
+  ClipPathLayer,
+  GroupLayer,
+  Layer,
+  LayerUtil,
+  PathLayer,
+  VectorLayer,
+} from '../scripts/layers';
+import { DestroyableMixin } from '../scripts/mixins';
+import { FileImporterService } from '../services';
+import {
+  ActivateAnimation,
+  AddAnimations,
+  AddBlock,
+  AddLayers,
+  NewWorkspace,
+  ReplaceBlocks,
+  ReplaceLayer,
+  SelectAnimation,
+  SelectBlock,
+  SelectLayer,
+  State,
+  Store,
+  ToggleLayerExpansion,
+  ToggleLayerVisibility,
+  getLayerTimelineState,
+} from '../store';
+import * as TimelineConsts from './constants';
 import { Callbacks as LayerListTreeCallbacks } from './layerlisttree.component';
 import { ScrubEvent } from './layertimeline.directive';
-import {
-  VectorLayer, Layer, GroupLayer, LayerUtil, PathLayer, ClipPathLayer,
-} from '../scripts/layers';
-import { Animation, AnimationBlock } from '../scripts/animations';
-import { Dragger } from '../scripts/dragger';
-import { ModelUtil, UiUtil } from '../scripts/common';
-import * as TimelineConsts from './constants';
-import { FileImporterService } from '../services';
-import { AnimatorService } from '../animator';
 import { LayerTimelineDirective } from './layertimeline.directive';
+import { Callbacks as TimelineAnimationRowCallbacks } from './timelineanimationrow.component';
 import {
-  Store, State, getLayerTimelineState, AddAnimations,
-  SelectAnimation, ActivateAnimation, AddBlock, SelectBlock,
-  ReplaceBlocks, ReplaceLayer, SelectLayer,
-  ToggleLayerExpansion, ToggleLayerVisibility, AddLayers, NewWorkspace,
-} from '../store';
-import { Observable } from 'rxjs/Observable';
+  AfterViewInit,
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  OnInit,
+  QueryList,
+  ViewChild,
+  ViewChildren,
+} from '@angular/core';
+import { MdSnackBar } from '@angular/material';
+import * as $ from 'jquery';
+import * as _ from 'lodash';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
-import 'rxjs/add/observable/combineLatest';
-import { DestroyableMixin } from '../scripts/mixins';
+import { Observable } from 'rxjs/Observable';
 
 // Distance in pixels from a snap point before snapping to the point.
 const SNAP_PIXELS = 10;
@@ -45,6 +67,13 @@ enum MouseActions {
   ScalingTogetherStart,
   ScalingTogetherEnd,
 }
+
+// TODO: add back google analytics stuff!
+// TODO: add back google analytics stuff!
+// TODO: add back google analytics stuff!
+// TODO: add back google analytics stuff!
+// TODO: add back google analytics stuff!
+declare const ga: Function;
 
 @Component({
   selector: 'app-layertimeline',

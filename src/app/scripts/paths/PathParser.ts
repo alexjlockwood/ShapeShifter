@@ -1,7 +1,7 @@
-import { Point, Matrix, SvgUtil } from '../common';
+import { Matrix, Point, SvgUtil } from '../common';
 import { Command, SvgChar } from '.';
 
-const enum Token {
+enum Token {
   AbsoluteCommand = 1,
   RelativeCommand,
   Value,
