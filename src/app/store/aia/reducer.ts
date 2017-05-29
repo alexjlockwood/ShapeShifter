@@ -17,66 +17,8 @@ import {
   ColorProperty,
   PathProperty,
 } from '../../scripts/properties';
-import { NEW_WORKSPACE, NewWorkspace } from '../actions';
 import * as actions from './actions';
 import * as _ from 'lodash';
-
-/**
- * Different shape shifter app modes.
- */
-export enum AppMode {
-  Selection = 1,
-  SplitCommands,
-  SplitSubPaths,
-  MorphSubPaths,
-}
-
-/**
- * A selection represents an action that is the result of a mouse click.
- */
-export interface Selection {
-  readonly type: SelectionType;
-  readonly source: CanvasType;
-  readonly subIdx: number;
-  readonly cmdIdx?: number;
-}
-
-/**
- * Describes the different types of selection events.
- */
-export enum SelectionType {
-  // The user selected an entire subpath.
-  SubPath = 1,
-  // The user selected an individual segment in a subpath.
-  Segment,
-  // The user selected an individual point in a subpath.
-  Point,
-}
-
-/**
- * A hover represents a transient action that results from a mouse movement.
- */
-export interface Hover {
-  readonly type: HoverType;
-  readonly source: CanvasType;
-  readonly subIdx: number;
-  readonly cmdIdx?: number;
-}
-
-/**
- * Describes the different types of hover events.
- */
-export enum HoverType {
-  SubPath = 1,
-  Segment,
-  Point,
-  Split,
-  Unsplit,
-  Reverse,
-  ShiftBack,
-  ShiftForward,
-  SetFirstPosition,
-}
 
 export interface State {
   readonly layers: {
@@ -94,9 +36,7 @@ export interface State {
   },
 }
 
-export const initialState = buildInitialState();
-
-export function buildInitialState(): State {
+export function buildInitialState() {
   const initialVectorLayer = new VectorLayer();
   const initialAnimation = new Animation();
   return {
@@ -113,19 +53,13 @@ export function buildInitialState(): State {
       activeAnimationId: initialAnimation.id,
       selectedBlockIds: new Set<string>(),
     },
-  };
+  } as State;
 }
 
-export function reducer(
-  state = initialState,
-  action: NewWorkspace | actions.Actions,
-) {
-  switch (action.type) {
+const initialState = buildInitialState();
 
-    // Shared action to create a new workspace.
-    case NEW_WORKSPACE: {
-      return buildInitialState();
-    }
+export function reducer(state = initialState, action: actions.Actions) {
+  switch (action.type) {
 
     // Add a list of animations to the application state.
     case actions.ADD_ANIMATIONS: {

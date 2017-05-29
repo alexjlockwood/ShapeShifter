@@ -22,7 +22,7 @@ const getBlockId = createSelector(getState, s => s.blockId);
 const getPathAnimationBlock = createSelector(
   getAnimations,
   getBlockId,
-  (animations, blockId): PathAnimationBlock => {
+  (animations, blockId) => {
     if (!blockId) {
       return undefined;
     }

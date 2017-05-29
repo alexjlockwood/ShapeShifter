@@ -72,7 +72,6 @@ export class ToolbarComponent implements OnInit {
   ngOnInit() {
     this.toolbarData$ = this.store.select(getToolbarState)
       .map(({ fromPl, toPl, appMode, selections }) => {
-        console.info(fromPl, toPl, appMode, selections);
         const selectionInfo = new ToolbarData(
           fromPl,
           toPl,

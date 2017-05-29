@@ -1,64 +1,7 @@
 import { CanvasType } from '../../CanvasType';
-import { NEW_WORKSPACE, NewWorkspace } from '../actions';
+import { AppMode, Hover, HoverType, Selection, SelectionType } from '.';
 import * as actions from './actions';
 import * as _ from 'lodash';
-
-/**
- * Different shape shifter app modes.
- */
-export enum AppMode {
-  Selection = 1,
-  SplitCommands,
-  SplitSubPaths,
-  MorphSubPaths,
-}
-
-/**
- * A selection represents an action that is the result of a mouse click.
- */
-export interface Selection {
-  readonly type: SelectionType;
-  readonly source: CanvasType;
-  readonly subIdx: number;
-  readonly cmdIdx?: number;
-}
-
-/**
- * Describes the different types of selection events.
- */
-export enum SelectionType {
-  // The user selected an entire subpath.
-  SubPath = 1,
-  // The user selected an individual segment in a subpath.
-  Segment,
-  // The user selected an individual point in a subpath.
-  Point,
-}
-
-/**
- * A hover represents a transient action that results from a mouse movement.
- */
-export interface Hover {
-  readonly type: HoverType;
-  readonly source: CanvasType;
-  readonly subIdx: number;
-  readonly cmdIdx?: number;
-}
-
-/**
- * Describes the different types of hover events.
- */
-export enum HoverType {
-  SubPath = 1,
-  Segment,
-  Point,
-  Split,
-  Unsplit,
-  Reverse,
-  ShiftBack,
-  ShiftForward,
-  SetFirstPosition,
-}
 
 export interface State {
   readonly blockId: string;
@@ -66,8 +9,6 @@ export interface State {
   readonly hover: Hover;
   readonly selections: ReadonlyArray<Selection>;
 }
-
-export const initialState = buildInitialState();
 
 export function buildInitialState() {
   return {
@@ -78,20 +19,15 @@ export function buildInitialState() {
   } as State;
 }
 
-export function reducer(
-  state = initialState,
-  action: NewWorkspace | actions.Actions,
-) {
-  switch (action.type) {
+const initialState = buildInitialState();
 
-    // Shared action to create a new workspace.
-    case NEW_WORKSPACE: {
-      return buildInitialState();
-    }
+export function reducer(state = initialState, action: actions.Actions) {
+  switch (action.type) {
 
     // Enter shape shifter mode.
     case actions.ENTER_SHAPE_SHIFTER_MODE: {
       const { blockId } = action.payload;
+      state = buildInitialState();
       return { ...state, blockId };
     }
 
@@ -156,6 +92,17 @@ export function reducer(
         appendToList,
       );
       return { ...state, selections };
+    }
+
+    case actions.REVERSE_POINTS: {
+      // const selections = this.selectionService.getSubPathSelections();
+      // const { source } = selections[0];
+      // const pathMutator = this.stateService.getActivePathLayer(source).pathData.mutate();
+      // for (const { subIdx } of this.selectionService.getSubPathSelections()) {
+      //   pathMutator.reverseSubPath(subIdx);
+      // }
+      // this.stateService.updateActivePath(source, pathMutator.build());
+      // this.hoverService.resetAndNotify();
     }
 
     default: {

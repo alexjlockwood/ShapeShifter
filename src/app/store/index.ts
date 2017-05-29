@@ -1,49 +1,12 @@
 export { Store } from '@ngrx/store';
+export { State, reducer } from './reducer';
 export {
   AppMode,
   Hover,
   HoverType,
   Selection,
   SelectionType,
-} from './aia/reducer';
-
-import { environment } from '../../environments/environment';
-import * as fromAia from './aia/reducer';
-import * as fromPlayback from './playback/reducer';
-import * as fromShapeShifter from './shapeshifter/reducer';
-import { compose } from '@ngrx/core/compose';
-import {
-  Action,
-  ActionReducer,
-  combineReducers,
-} from '@ngrx/store';
-import { storeFreeze } from 'ngrx-store-freeze';
-
-export interface State {
-  aia: fromAia.State,
-  playback: fromPlayback.State,
-  shapeshifter: fromShapeShifter.State,
-}
-
-const reducers = {
-  aia: fromAia.reducer,
-  playback: fromPlayback.reducer,
-  shapeshifter: fromShapeShifter.reducer,
-};
-const developmentReducer: ActionReducer<State> =
-  compose(storeFreeze, combineReducers)(reducers);
-const productionReducer: ActionReducer<State> = combineReducers(reducers);
-
-export function reducer(state: State, action: Action) {
-  if (environment.production) {
-    return productionReducer(state, action);
-  } else {
-    return developmentReducer(state, action);
-  }
-}
-
-// Shared actions.
-export { NewWorkspace } from './actions';
+} from './shapeshifter';
 
 // Android Icon Animator actions.
 export {
@@ -85,4 +48,16 @@ export {
   ToggleSubPathSelection,
   ToggleSegmentSelections,
   TogglePointSelection,
+  ReversePoints,
+  ShiftBackPoints,
+  ShiftForwardPoints,
+  DeleteSubPaths,
+  DeleteSegments,
+  DeletePoints,
+  SetFirstPosition,
+  SplitInHalfHover,
+  SplitInHalfClick,
 } from './shapeshifter/actions';
+
+// Resetable actions.
+export { ResetWorkspace } from './resetable/actions';
