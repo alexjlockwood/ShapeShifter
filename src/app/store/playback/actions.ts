@@ -1,13 +1,11 @@
 import { Action } from '@ngrx/store';
 
-// Playback actions.
-export const SET_IS_SLOW_MOTION = 'SET_IS_SLOW_MOTION';
-export const SET_IS_PLAYING = 'SET_IS_PLAYING';
-export const SET_IS_REPEATING = 'SET_IS_REPEATING';
-export const TOGGLE_IS_SLOW_MOTION = 'TOGGLE_IS_SLOW_MOTION';
-export const TOGGLE_IS_PLAYING = 'TOGGLE_IS_PLAYING';
-export const TOGGLE_IS_REPEATING = 'TOGGLE_IS_REPEATING';
-export const RESET_PLAYBACK_SETTINGS = 'RESET_PLAYBACK_SETTINGS';
+export const SET_IS_SLOW_MOTION = '__playback__SET_IS_SLOW_MOTION';
+export const SET_IS_PLAYING = '__playback__SET_IS_PLAYING';
+export const SET_IS_REPEATING = '__playback__SET_IS_REPEATING';
+export const TOGGLE_IS_SLOW_MOTION = '__playback__TOGGLE_IS_SLOW_MOTION';
+export const TOGGLE_IS_PLAYING = '__playback__TOGGLE_IS_PLAYING';
+export const TOGGLE_IS_REPEATING = '__playback__TOGGLE_IS_REPEATING';
 
 export class SetIsSlowMotion implements Action {
   readonly type = SET_IS_SLOW_MOTION;
@@ -45,15 +43,10 @@ export class ToggleIsRepeating implements Action {
   readonly type = TOGGLE_IS_REPEATING;
 }
 
-export class ResetPlaybackSettings implements Action {
-  readonly type = RESET_PLAYBACK_SETTINGS;
-}
-
 export type Actions =
   SetIsSlowMotion
   | SetIsPlaying
   | SetIsRepeating
   | ToggleIsSlowMotion
   | ToggleIsPlaying
-  | ToggleIsRepeating
-  | ResetPlaybackSettings;
+  | ToggleIsRepeating;

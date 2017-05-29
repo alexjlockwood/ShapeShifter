@@ -10,32 +10,31 @@ export {
 
 // Android Icon Animator actions.
 export {
-  AddAnimations,
-  SelectAnimation,
   ActivateAnimation,
-  ReplaceAnimations,
+  AddAnimations,
   AddBlock,
-  SelectBlock,
-  ReplaceBlocks,
-  UpdatePathBlock,
-  ReplaceLayer,
-  SelectLayer,
+  AddLayers,
   ClearLayerSelections,
+  DeleteSelectedModels,
+  ReplaceAnimations,
+  ReplaceBlocks,
+  ReplaceLayer,
+  SelectAnimation,
+  SelectBlock,
+  SelectLayer,
   ToggleLayerExpansion,
   ToggleLayerVisibility,
-  AddLayers,
-  DeleteSelectedModels,
+  UpdatePathBlock,
 } from './aia/actions';
 
 // Playback actions.
 export {
-  SetIsSlowMotion,
   SetIsPlaying,
   SetIsRepeating,
-  ToggleIsSlowMotion,
+  SetIsSlowMotion,
   ToggleIsPlaying,
   ToggleIsRepeating,
-  ResetPlaybackSettings,
+  ToggleIsSlowMotion,
 } from './playback/actions';
 
 // Shape Shifter actions.
@@ -45,19 +44,23 @@ export {
   SetAppMode,
   SetHover,
   SetSelections,
-  ToggleSubPathSelection,
-  ToggleSegmentSelections,
   TogglePointSelection,
-  ReversePoints,
-  ShiftBackPoints,
-  ShiftForwardPoints,
-  DeleteSubPaths,
-  DeleteSegments,
-  DeletePoints,
-  SetFirstPosition,
-  SplitInHalfHover,
-  SplitInHalfClick,
+  ToggleSegmentSelections,
+  ToggleSubPathSelection,
 } from './shapeshifter/actions';
 
 // Resetable actions.
 export { ResetWorkspace } from './resetable/actions';
+
+// Action mode actions.
+export {
+  DeleteSelectedPoints,
+  DeleteSelectedSegments,
+  DeleteSelectedSubPaths,
+  ReverseSelectedSubPaths,
+  ShiftBackSelectedSubPaths,
+  ShiftForwardSelectedSubPaths,
+  ShiftPointToFront,
+  SplitCommandInHalfClick,
+  SplitCommandInHalfHover,
+} from './actionmode/actions';

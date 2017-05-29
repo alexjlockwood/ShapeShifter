@@ -19,9 +19,7 @@ export function buildInitialState() {
   } as State;
 }
 
-const initialState = buildInitialState();
-
-export function reducer(state = initialState, action: actions.Actions) {
+export function reducer(state = buildInitialState(), action: actions.Actions) {
   switch (action.type) {
 
     // Enter shape shifter mode.
@@ -92,17 +90,6 @@ export function reducer(state = initialState, action: actions.Actions) {
         appendToList,
       );
       return { ...state, selections };
-    }
-
-    case actions.REVERSE_POINTS: {
-      // const selections = this.selectionService.getSubPathSelections();
-      // const { source } = selections[0];
-      // const pathMutator = this.stateService.getActivePathLayer(source).pathData.mutate();
-      // for (const { subIdx } of this.selectionService.getSubPathSelections()) {
-      //   pathMutator.reverseSubPath(subIdx);
-      // }
-      // this.stateService.updateActivePath(source, pathMutator.build());
-      // this.hoverService.resetAndNotify();
     }
 
     default: {

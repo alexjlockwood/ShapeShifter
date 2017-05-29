@@ -1,19 +1,18 @@
-import * as _ from 'lodash';
-import { Injectable } from '@angular/core';
-import { BehaviorSubject } from 'rxjs/BehaviorSubject';
-import { Layer, VectorLayer, PathLayer, GroupLayer, LayerUtil } from '../scripts/layers';
+import { AnimatorService } from '../animator';
 import { CanvasType } from '../CanvasType';
-import { Path } from '../scripts/paths';
 import { AutoAwesome } from '../scripts/algorithms';
-import { ROTATION_GROUP_LAYER_ID } from '../scripts/import';
 import { Matrix } from '../scripts/common';
-
+import { ROTATION_GROUP_LAYER_ID } from '../scripts/import';
+import { GroupLayer, Layer, LayerUtil, PathLayer, VectorLayer } from '../scripts/layers';
+import { Path } from '../scripts/paths';
 // Note that importing these from '.' causes runtime errors.
 import { AppModeService } from './appmode.service';
-import { AnimatorService } from '../animator';
 import { HoverService } from './hover.service';
 import { SelectionService } from './selection.service';
 import { SettingsService } from './settings.service';
+import { Injectable } from '@angular/core';
+import * as _ from 'lodash';
+import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 
 /**
  * The global state service that is in charge of keeping track of the loaded
@@ -111,7 +110,7 @@ export class StateService {
     this.appModeService.reset();
     this.selectionService.resetAndNotify();
     this.hoverService.resetAndNotify();
-    this.animatorService.reset();
+    // this.animatorService.reset();
 
     const setActivePathIdFn = (type: CanvasType) => {
       if (type === CanvasType.Start) {

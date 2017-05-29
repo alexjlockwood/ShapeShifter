@@ -1,6 +1,7 @@
 import { Action } from '@ngrx/store';
 
-// Resetable actions.
+const PREFIX = '__resetable__';
+
 export const RESET_WORKSPACE = '__resetable__RESET_WORKSPACE';
 
 export class ResetWorkspace implements Action {

@@ -7,7 +7,6 @@ export interface State {
   readonly isRepeating: boolean;
 }
 
-
 export function buildInitialState() {
   return {
     isSlowMotion: false,
@@ -16,9 +15,7 @@ export function buildInitialState() {
   } as State;
 }
 
-const initialState = buildInitialState();
-
-export function reducer(state = initialState, action: actions.Actions) {
+export function reducer(state = buildInitialState(), action: actions.Actions) {
   switch (action.type) {
     case actions.SET_IS_SLOW_MOTION: {
       return setIsSlowMotion(state, action.payload.isSlowMotion);
@@ -37,9 +34,6 @@ export function reducer(state = initialState, action: actions.Actions) {
     }
     case actions.TOGGLE_IS_REPEATING: {
       return setIsRepeating(state, !state.isRepeating);
-    }
-    case actions.RESET_PLAYBACK_SETTINGS: {
-      return _.isEqual(state, initialState) ? state : initialState;
     }
     default: {
       return state;

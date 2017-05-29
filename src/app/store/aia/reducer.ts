@@ -56,9 +56,7 @@ export function buildInitialState() {
   } as State;
 }
 
-const initialState = buildInitialState();
-
-export function reducer(state = initialState, action: actions.Actions) {
+export function reducer(state = buildInitialState(), action: actions.Actions) {
   switch (action.type) {
 
     // Add a list of animations to the application state.

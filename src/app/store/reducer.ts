@@ -1,4 +1,5 @@
 import { environment } from '../../environments/environment';
+import * as fromActionMode from './actionmode/reducer';
 import * as fromAia from './aia/reducer';
 import * as fromPlayback from './playback/reducer';
 import * as fromResetable from './resetable/reducer';
@@ -23,8 +24,13 @@ const stateReducers = {
   shapeshifter: fromShapeShifter.reducer,
 };
 
-const productionReducer: ActionReducer<State> =
-  compose(fromResetable.makeResetable, combineReducers)(stateReducers);
+const metaReducers = [
+  fromResetable.wrapResetable,
+  fromActionMode.wrapActionMode,
+  combineReducers,
+];
+
+const productionReducer: ActionReducer<State> = compose(...metaReducers)(stateReducers);
 const developmentReducer: ActionReducer<State> = storeFreeze(productionReducer);
 
 // Returns the final reducer that is used to initialize the store.

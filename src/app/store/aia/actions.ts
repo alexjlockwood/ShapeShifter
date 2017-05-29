@@ -1,14 +1,14 @@
-import { Action } from '@ngrx/store';
+import { CanvasType } from '../../CanvasType';
 import { Animation, AnimationBlock } from '../../scripts/animations';
 import { Layer } from '../../scripts/layers';
 import { Path } from '../../scripts/paths';
-import { CanvasType } from '../../CanvasType';
+import { Action } from '@ngrx/store';
 
 // Animation actions.
-export const ADD_ANIMATIONS = 'ADD_ANIMATIONS';
-export const SELECT_ANIMATION = 'SELECT_ANIMATION';
-export const ACTIVATE_ANIMATION = 'ACTIVATE_ANIMATION_ID';
-export const REPLACE_ANIMATIONS = 'REPLACE_ANIMATIONS';
+export const ADD_ANIMATIONS = '__aia__ADD_ANIMATIONS';
+export const SELECT_ANIMATION = '__aia__SELECT_ANIMATION';
+export const ACTIVATE_ANIMATION = '__aia__ACTIVATE_ANIMATION_ID';
+export const REPLACE_ANIMATIONS = '__aia__REPLACE_ANIMATIONS';
 
 export class AddAnimations implements Action {
   readonly type = ADD_ANIMATIONS;
@@ -43,10 +43,10 @@ export class ReplaceAnimations implements Action {
 }
 
 // Block actions.
-export const ADD_BLOCK = 'ADD_BLOCK';
-export const SELECT_BLOCK = 'SELECT_BLOCK';
-export const REPLACE_BLOCKS = 'REPLACE_BLOCKS';
-export const UPDATE_PATH_BLOCK = 'UPDATE_PATH_BLOCK';
+export const ADD_BLOCK = '__aia__ADD_BLOCK';
+export const SELECT_BLOCK = '__aia__SELECT_BLOCK';
+export const REPLACE_BLOCKS = '__aia__REPLACE_BLOCKS';
+export const UPDATE_PATH_BLOCK = '__aia__UPDATE_PATH_BLOCK';
 
 export class AddBlock implements Action {
   readonly type = ADD_BLOCK;
@@ -94,12 +94,12 @@ export class UpdatePathBlock implements Action {
 }
 
 // Layer actions.
-export const ADD_LAYERS = 'ADD_LAYERS';
-export const SELECT_LAYER = 'SELECT_LAYER';
-export const CLEAR_LAYER_SELECTIONS = 'CLEAR_LAYER_SELECTIONS';
-export const TOGGLE_LAYER_EXPANSION = 'TOGGLE_LAYER_EXPANSION';
-export const TOGGLE_LAYER_VISIBILITY = 'TOGGLE_LAYER_VISIBILITY';
-export const REPLACE_LAYER = 'REPLACE_LAYER';
+export const ADD_LAYERS = '__aia__ADD_LAYERS';
+export const SELECT_LAYER = '__aia__SELECT_LAYER';
+export const CLEAR_LAYER_SELECTIONS = '__aia__CLEAR_LAYER_SELECTIONS';
+export const TOGGLE_LAYER_EXPANSION = '__aia__TOGGLE_LAYER_EXPANSION';
+export const TOGGLE_LAYER_VISIBILITY = '__aia__TOGGLE_LAYER_VISIBILITY';
+export const REPLACE_LAYER = '__aia__REPLACE_LAYER';
 
 export class AddLayers implements Action {
   readonly type = ADD_LAYERS;
@@ -151,7 +151,7 @@ export class ReplaceLayer implements Action {
 }
 
 // Miscellaneous actions.
-export const DELETE_SELECTED_MODELS = 'DELETE_SELECTED_MODELS';
+export const DELETE_SELECTED_MODELS = '__aia__DELETE_SELECTED_MODELS';
 
 export class DeleteSelectedModels implements Action {
   readonly type = DELETE_SELECTED_MODELS;

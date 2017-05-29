@@ -181,6 +181,7 @@ export class LayerTimelineComponent
     // TODO: show some sort of dialog here to confirm (but only when the workspace is dirty)
     // TODO: show some sort of dialog here to confirm (but only when the workspace is dirty)
     // TODO: show some sort of dialog here to confirm (but only when the workspace is dirty)
+    this.animatorService.reset();
     this.store.dispatch(new ResetWorkspace());
   }
 

@@ -1,7 +1,6 @@
 import { Animation } from '../scripts/animations';
 import { VectorLayer } from '../scripts/layers';
 import {
-  ResetPlaybackSettings,
   SetIsPlaying,
   State,
   Store,
@@ -114,7 +113,6 @@ export class AnimatorService {
 
   reset() {
     this.rewind();
-    this.store.dispatch(new ResetPlaybackSettings());
     this.animator = new Animator(this.ngZone, this.store);
   }
 }
