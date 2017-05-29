@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import * as actions from './PlaybackActions';
+import * as actions from './actions';
 
 export interface State {
   readonly isSlowMotion: boolean;

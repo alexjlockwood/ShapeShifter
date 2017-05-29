@@ -12,6 +12,7 @@ import {
   SetHover,
   SetSelections,
   AppMode,
+  UpdatePathBlock,
 } from '../store';
 
 /**
@@ -52,13 +53,12 @@ export class SegmentSplitter {
       this.store.dispatch(new SetHover(undefined));
       this.store.dispatch(new SetSelections([]));
       this.currProjInfo = undefined;
-
-      // TODO: uncomment this
-      // TODO: uncomment this
-      // TODO: uncomment this
-      // TODO: uncomment this
-      // TODO: uncomment this
-      // this.component.stateService.updateActivePath(this.canvasType, pathMutator.build());
+      this.store.dispatch(
+        new UpdatePathBlock(
+          this.component.shapeShifterBlock.id,
+          this.canvasType,
+          pathMutator.build(),
+        ));
       this.component.draw();
       return;
     }

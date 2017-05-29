@@ -1,7 +1,7 @@
 import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { AnimatorService } from '../animator';
 import { Observable } from 'rxjs/Observable';
-import { Store, State, getPlaybackSettings } from '../store';
+import { Store, State, getPlaybackState } from '../store';
 
 @Component({
   selector: 'app-playback',
@@ -19,7 +19,7 @@ export class PlaybackComponent implements OnInit {
   ) { }
 
   ngOnInit() {
-    this.playbackModel$ = this.store.select(getPlaybackSettings);
+    this.playbackModel$ = this.store.select(getPlaybackState);
   }
 
   isSlowMotionClick() {

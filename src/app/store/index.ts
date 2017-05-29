@@ -1,5 +1,5 @@
 export { Store } from '@ngrx/store';
-export { Hover, HoverType, Selection, SelectionType, AppMode } from './StateReducer';
+export { Hover, HoverType, Selection, SelectionType, AppMode } from './aia/reducer';
 import * as _ from 'lodash';
 import {
   createSelector,
@@ -12,7 +12,7 @@ import { storeFreeze } from 'ngrx-store-freeze';
 import { combineReducers } from '@ngrx/store';
 import { environment } from '../../environments/environment';
 import { compose } from '@ngrx/core/compose';
-import * as fromRoot from './RootReducer';
+import * as fromRoot from './reducer';
 import { PathAnimationBlock } from '../scripts/animations';
 import { VectorLayer, PathLayer, LayerUtil } from '../scripts/layers';
 import { Path } from '../scripts/paths';
@@ -37,9 +37,9 @@ export function reducer(state: any, action: any) {
 // Root actions.
 export {
   NewWorkspace,
-} from './RootActions';
+} from './actions';
 
-// State actions.
+// Android Icon Animator actions.
 export {
   AddAnimations,
   SelectAnimation,
@@ -48,20 +48,15 @@ export {
   AddBlock,
   SelectBlock,
   ReplaceBlocks,
+  UpdatePathBlock,
   ReplaceLayer,
   SelectLayer,
   ClearLayerSelections,
   ToggleLayerExpansion,
   ToggleLayerVisibility,
   AddLayers,
-  SetAppMode,
-  SetHover,
-  SetSelections,
-  ToggleSubPathSelection,
-  ToggleSegmentSelections,
-  TogglePointSelection,
   DeleteSelectedModels,
-} from './StateActions';
+} from './aia/actions';
 
 // Playback actions.
 export {
@@ -72,17 +67,28 @@ export {
   ToggleIsPlaying,
   ToggleIsRepeating,
   ResetPlaybackSettings,
-} from './PlaybackActions';
+} from './playback/actions';
+
+// Shape Shifter actions.
+export {
+  SetAppMode,
+  SetHover,
+  SetSelections,
+  ToggleSubPathSelection,
+  ToggleSegmentSelections,
+  TogglePointSelection,
+} from './shapeshifter/actions';
 
 // Selectors.
 const createDeepEqualSelector =
   createSelectorCreator(defaultMemoize, _.isEqual);
 
-// State selectors.
-const getState = (state: State) => state.root.state;
+const getRoot = (state: State) => state.root;
+
+const getAiaState = createSelector(getRoot, root => root.aia);
 
 // Timeline state selectors.
-const getTimelineState = createSelector(getState, s => s.timeline)
+const getTimelineState = createSelector(getAiaState, s => s.timeline)
 const getAnimations = createSelector(getTimelineState, t => t.animations);
 const getSelectedAnimationIds =
   createDeepEqualSelector(getTimelineState, t => t.selectedAnimationIds);
@@ -103,9 +109,9 @@ const getSelectedBlocks = createSelector(
 );
 
 // Layer state selectors.
-const getLayerState = createSelector(getState, s => s.layers);
+const getLayerState = createSelector(getAiaState, s => s.layers);
 const getVectorLayers = createSelector(getLayerState, l => l.vectorLayers);
-const getActiveVectorLayerId = createDeepEqualSelector(getLayerState, l => l.activeVectorLayerId);
+const getActiveVectorLayerId = createSelector(getLayerState, l => l.activeVectorLayerId);
 export const getActiveVectorLayer = createSelector(
   getVectorLayers,
   getActiveVectorLayerId,
@@ -116,10 +122,10 @@ export const getCollapsedLayerIds = createDeepEqualSelector(getLayerState, l => 
 export const getHiddenLayerIds = createDeepEqualSelector(getLayerState, l => l.hiddenLayerIds);
 
 // Exported playback settings selectors.
-export const getPlaybackSettings = (state: State) => state.root.playback;
-export const getIsSlowMotion = createDeepEqualSelector(getPlaybackSettings, p => p.isSlowMotion);
-export const getIsPlaying = createDeepEqualSelector(getPlaybackSettings, p => p.isPlaying);
-export const getIsRepeating = createDeepEqualSelector(getPlaybackSettings, p => p.isRepeating);
+export const getPlaybackState = (state: State) => state.root.playback;
+export const getIsSlowMotion = createSelector(getPlaybackState, p => p.isSlowMotion);
+export const getIsPlaying = createSelector(getPlaybackState, p => p.isPlaying);
+export const getIsRepeating = createSelector(getPlaybackState, p => p.isRepeating);
 
 // Exported property input selector.
 export const getPropertyInputState = createStructuredSelector({
@@ -182,14 +188,12 @@ export const isShapeShifterMode = createSelector(
   block => !!block,
 );
 
-const getShapeShifterState = createSelector(getState, s => s.shapeshifter);
-export const getShapeShifterAppMode = createSelector(getState, s => s.shapeshifter.appMode);
-const getShapeShifterHover = createDeepEqualSelector(getShapeShifterState, s => s.hover);
+const getShapeShifterState = createSelector(getRoot, s => s.shapeshifter);
+export const getShapeShifterAppMode = createSelector(getShapeShifterState, s => s.appMode);
+export const getShapeShifterHover = createDeepEqualSelector(getShapeShifterState, s => s.hover);
 const getShapeShifterSelections = createSelector(getShapeShifterState, s => s.selections);
 
-function createShapeShifterStateSelector(
-  getBlockValueFn: (block: PathAnimationBlock) => Path,
-) {
+function createShapeShifterStateSelector(getBlockValueFn: (block: PathAnimationBlock) => Path) {
   const getShapeShifterVectorLayer = createSelector(
     getActiveVectorLayer,
     getSingleSelectedPathAnimationBlock,
@@ -204,6 +208,7 @@ function createShapeShifterStateSelector(
   return createStructuredSelector({
     vectorLayer: getShapeShifterVectorLayer,
     pathLayerId: getShapeShifterPathLayerId,
+    block: getSingleSelectedPathAnimationBlock,
     hover: getShapeShifterHover,
     selections: getShapeShifterSelections,
   });

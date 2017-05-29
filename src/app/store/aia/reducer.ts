@@ -1,16 +1,24 @@
 import * as _ from 'lodash';
-import { VectorLayer, LayerUtil } from '../scripts/layers';
-import * as actions from './StateActions';
+import * as actions from './actions';
+import {
+  VectorLayer,
+  LayerUtil,
+} from '../../scripts/layers';
 import {
   Animation,
   AnimationBlock,
   PathAnimationBlock,
   ColorAnimationBlock,
   NumberAnimationBlock,
-} from '../scripts/animations';
-import { CanvasType } from '../CanvasType';
-import { ModelUtil } from '../scripts/common';
-import { PathProperty, ColorProperty } from '../scripts/properties';
+} from '../../scripts/animations';
+import {
+  PathProperty,
+  ColorProperty,
+} from '../../scripts/properties';
+import { Path } from '../../scripts/paths';
+import { CanvasType } from '../../CanvasType';
+import { ModelUtil } from '../../scripts/common';
+import { AutoAwesome } from '../../scripts/algorithms';
 
 /**
  * Different shape shifter app modes.
@@ -83,11 +91,6 @@ export interface State {
     readonly activeAnimationId: string;
     readonly selectedBlockIds: Set<string>;
   },
-  readonly shapeshifter: {
-    readonly appMode: AppMode;
-    readonly hover: Hover;
-    readonly selections: ReadonlyArray<Selection>;
-  }
 }
 
 export const initialState = buildInitialState();
@@ -108,11 +111,6 @@ export function buildInitialState(): State {
       selectedAnimationIds: new Set<string>(),
       activeAnimationId: initialAnimation.id,
       selectedBlockIds: new Set<string>(),
-    },
-    shapeshifter: {
-      appMode: AppMode.Selection,
-      hover: undefined,
-      selections: [],
     },
   };
 }
@@ -320,6 +318,12 @@ export function reducer(state = initialState, action: actions.Actions): State {
       };
     }
 
+    // Update a path animation block in shape shifter mode.
+    case actions.UPDATE_PATH_BLOCK: {
+      const { blockId, source, path } = action.payload;
+      return updatePathAnimationBlock(state, blockId, source, path);
+    }
+
     // Add layers to the tree.
     case actions.ADD_LAYERS: {
       // TODO: add the layer below the currently selected layer, if one exists
@@ -422,88 +426,6 @@ export function reducer(state = initialState, action: actions.Actions): State {
       return {
         ...state,
         layers: { ...layers, vectorLayers },
-      };
-    }
-
-    // Set the app mode during shape shifter mode.
-    case actions.SET_APP_MODE: {
-      const { appMode } = action.payload;
-      const { shapeshifter } = state;
-      return {
-        ...state,
-        shapeshifter: { ...shapeshifter, appMode },
-      };
-    }
-
-    // Set the hover mode during shape shifter mode.
-    case actions.SET_HOVER: {
-      const { hover } = action.payload;
-      const { shapeshifter } = state;
-      return {
-        ...state,
-        shapeshifter: { ...shapeshifter, hover },
-      };
-    }
-
-    // Set the path selections during shape shifter mode.
-    case actions.SET_SELECTIONS: {
-      const { selections } = action.payload;
-      const { shapeshifter } = state;
-      return {
-        ...state,
-        shapeshifter: { ...shapeshifter, selections },
-      };
-    }
-
-    // Toggle a subpath selection.
-    case actions.TOGGLE_SUBPATH_SELECTION: {
-      const { source, subIdx } = action.payload;
-      const { shapeshifter } = state;
-      let selections = shapeshifter.selections.slice();
-      _.remove(selections, sel => sel.type !== SelectionType.SubPath && sel.source !== source);
-      selections = toggleShapeShifterSelections(
-        selections,
-        [{ type: SelectionType.SubPath, source, subIdx }],
-        false);
-      return {
-        ...state,
-        shapeshifter: { ...shapeshifter, selections },
-      };
-    }
-
-    // Toggle a segment selection.
-    case actions.TOGGLE_SEGMENT_SELECTIONS: {
-      const { source, segments } = action.payload;
-      const { shapeshifter } = state;
-      let selections = shapeshifter.selections.slice();
-      _.remove(selections, sel => sel.type !== SelectionType.Segment);
-      selections = toggleShapeShifterSelections(
-        selections,
-        segments.map(seg => {
-          const { subIdx, cmdIdx } = seg;
-          return { type: SelectionType.Segment, source, subIdx, cmdIdx };
-        }),
-        false);
-      return {
-        ...state,
-        shapeshifter: { ...shapeshifter, selections },
-      };
-    }
-
-    // Toggle a point selection.
-    case actions.TOGGLE_POINT_SELECTION: {
-      const { source, subIdx, cmdIdx, appendToList } = action.payload;
-      const { shapeshifter } = state;
-      let selections = shapeshifter.selections.slice();
-      _.remove(selections, sel => sel.type !== SelectionType.Point && sel.source !== source);
-      selections = toggleShapeShifterSelections(
-        selections,
-        [{ type: SelectionType.Point, source, subIdx, cmdIdx }],
-        appendToList,
-      );
-      return {
-        ...state,
-        shapeshifter: { ...shapeshifter, selections },
       };
     }
 
@@ -755,4 +677,95 @@ function toggleShapeShifterSelections(
     });
   }
   return currentSelections;
+}
+
+/**
+ * Updates the path command at the specified sub path index. The path's previous
+ * conversions will be removed and an attempt to make the path compatible with
+ * its opposite path layer will be made.
+ */
+function updatePathAnimationBlock(
+  state: State,
+  blockId: string,
+  source: CanvasType,
+  path: Path,
+) {
+  const { timeline } = state;
+  const animations = timeline.animations.slice();
+  const { activeAnimationId } = timeline;
+  const activeAnimationIndex = _.findIndex(animations, a => a.id === activeAnimationId);
+  const activeAnimation = animations[activeAnimationIndex];
+  const activeAnimationBlocks = activeAnimation.blocks.slice();
+  const blockIndex = _.findIndex(activeAnimationBlocks, b => b.id === blockId);
+  const block = activeAnimationBlocks[blockIndex];
+
+  // Remove any existing conversions and collapsing sub paths from the path.
+  const pathMutator = path.mutate();
+  path.getSubPaths().forEach((_, subIdx) => {
+    pathMutator.unconvertSubPath(subIdx);
+  });
+  path = pathMutator.deleteCollapsingSubPaths().build();
+
+  const getBlockPathFn = (t: CanvasType) => {
+    return t === CanvasType.Start ? block.fromValue : block.toValue;
+  };
+  const setBlockPathFn = (t: CanvasType, p: Path) => {
+    if (t === CanvasType.Start) {
+      block.fromValue = p;
+    } else {
+      block.toValue = p;
+    }
+  };
+
+  const oppSource = source === CanvasType.Start ? CanvasType.End : CanvasType.Start;
+  let oppPath = getBlockPathFn(oppSource);
+  if (oppPath) {
+    oppPath = oppPath.mutate().deleteCollapsingSubPaths().build();
+    const numSubPaths = path.getSubPaths().length;
+    const numOppSubPaths = oppPath.getSubPaths().length;
+    if (numSubPaths !== numOppSubPaths) {
+      const pathToChange = numSubPaths < numOppSubPaths ? path : oppPath;
+      const oppPathToChange = numSubPaths < numOppSubPaths ? oppPath : path;
+      const minIdx = Math.min(numSubPaths, numOppSubPaths);
+      const maxIdx = Math.max(numSubPaths, numOppSubPaths);
+      const mutator = pathToChange.mutate();
+      for (let i = minIdx; i < maxIdx; i++) {
+        // TODO: allow the user to specify the location of collapsing paths?
+        const pole = oppPathToChange.getPoleOfInaccessibility(i);
+        mutator.addCollapsingSubPath(
+          pole, oppPathToChange.getSubPaths()[i].getCommands().length);
+      }
+      if (numSubPaths < numOppSubPaths) {
+        path = mutator.build();
+      } else {
+        oppPath = mutator.build();
+      }
+    }
+    for (let subIdx = 0; subIdx < Math.max(numSubPaths, numOppSubPaths); subIdx++) {
+      const numCmds = path.getSubPaths()[subIdx].getCommands().length;
+      const numOppCommands = oppPath.getSubPaths()[subIdx].getCommands().length;
+      if (numCmds === numOppCommands) {
+        // Only auto convert when the number of commands in both canvases
+        // are equal. Otherwise we'll wait for the user to add more points.
+        const autoConvertResults = AutoAwesome.autoConvert(
+          subIdx,
+          path,
+          oppPath.mutate().unconvertSubPath(subIdx).build(),
+        );
+        path = autoConvertResults.from;
+
+        // This is the one case where a change in one canvas type's vector layer
+        // will cause corresponding changes to be made in the opposite canvas type's
+        // vector layer.
+        oppPath = autoConvertResults.to;
+      }
+    }
+  }
+  setBlockPathFn(source, path);
+  setBlockPathFn(oppSource, oppPath);
+
+  activeAnimationBlocks[blockIndex] = block;
+  activeAnimation.blocks = activeAnimationBlocks;
+  animations[activeAnimationIndex] = activeAnimation;
+  return { ...state, animations };
 }

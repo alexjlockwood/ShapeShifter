@@ -14,6 +14,7 @@ import {
   SetSelections,
   AppMode,
   HoverType,
+  UpdatePathBlock,
 } from '../store';
 import { LayerUtil } from '../scripts/layers';
 
@@ -139,12 +140,8 @@ export class SelectionHelper {
         this.store.dispatch(new SetSelections([]));
         this.reset();
 
-        // TODO: uncomment this
-        // TODO: uncomment this
-        // TODO: uncomment this
-        // TODO: uncomment this
-        // TODO: uncomment this
-        // this.stateService.updateActivePath(this.canvasType, pathMutator.build());
+        this.store.dispatch(
+          new UpdatePathBlock(this.component.shapeShifterBlock.id, this.canvasType, pathMutator.build()));
       }
     } else if (this.currentDraggableSplitIndex) {
       const hitResult = this.performHitTest(mouseUp);

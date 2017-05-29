@@ -30,16 +30,19 @@ import {
   getShapeShifterStartState,
   getShapeShifterEndState,
   getShapeShifterAppMode,
+  getShapeShifterHover,
   Hover,
   HoverType,
   Selection,
   SelectionType,
   AppMode,
+  SetHover,
 } from '../store';
 import { SegmentSplitter } from './SegmentSplitter';
 import { MorphSubPathHelper } from './MorphSubPathHelper';
 import { SelectionHelper } from './SelectionHelper';
 import { ShapeSplitter } from './ShapeSplitter';
+import { PathAnimationBlock } from '../scripts/animations';
 import 'rxjs/add/observable/combineLatest';
 
 // The line width of a highlight in css pixels.
@@ -88,8 +91,10 @@ export class CanvasOverlayDirective
   // Shape Shifter mode variables.
   private shapeShifterPathLayerId: string;
   shapeShifterAppMode: AppMode;
+  shapeShifterBlock: PathAnimationBlock;
   private shapeShifterHover: Hover;
   shapeShifterSelections: ReadonlyArray<Selection>;
+  private currentHoverPreviewPath: Path | undefined;
 
   private selectionHelper: SelectionHelper | undefined;
   private morphSubPathHelper: MorphSubPathHelper | undefined;
@@ -199,9 +204,10 @@ export class CanvasOverlayDirective
           : getShapeShifterEndState;
       this.registerSubscription(
         this.store.select(shapeShifterSelector)
-          .subscribe(({ vectorLayer, pathLayerId, hover, selections }) => {
+          .subscribe(({ vectorLayer, pathLayerId, block, hover, selections }) => {
             this.vectorLayer = vectorLayer;
             this.shapeShifterPathLayerId = pathLayerId;
+            this.shapeShifterBlock = block;
             this.shapeShifterHover = hover;
             this.shapeShifterSelections = selections;
             this.draw();
@@ -250,54 +256,49 @@ export class CanvasOverlayDirective
           } else {
             this.shapeSplitter = undefined;
           }
-          // TODO: uncomment this
-          // TODO: uncomment this
-          // TODO: uncomment this
-          // TODO: uncomment this
-          // TODO: uncomment this
-          // this.currentHoverPreviewPath = undefined;
+          this.currentHoverPreviewPath = undefined;
           this.draw();
         }));
-      // TODO: uncomment this
-      // TODO: uncomment this
-      // TODO: uncomment this
-      // TODO: uncomment this
-      // TODO: uncomment this
-      // const updateCurrentHoverFn = (hover: Hover | undefined) => {
-      //   let previewPath: Path = undefined;
-      //   if (this.shouldDrawLayers && hover) {
-      //     // If the user is hovering over the inspector split button, then build
-      //     // a snapshot of what the path would look like after the action
-      //     // and display the result.
-      //     const mutator = this.activePath.mutate();
-      //     const { type, subIdx, cmdIdx } = hover;
-      //     switch (type) {
-      //       case HoverType.Split:
-      //         previewPath = mutator.splitCommandInHalf(subIdx, cmdIdx).build();
-      //         break;
-      //       case HoverType.Unsplit:
-      //         previewPath = mutator.unsplitCommand(subIdx, cmdIdx).build();
-      //         break;
-      //     }
-      //   }
-      //   this.currentHoverPreviewPath = previewPath;
-      //   this.drawOverlays();
-      // };
-      // this.subscribeTo(
-      //   this.hoverService.asObservable(),
-      //   hover => {
-      //     if (!hover) {
-      //       // Clear the current hover.
-      //       updateCurrentHoverFn(undefined);
-      //       return;
-      //     }
-      //     if (hover.source !== this.canvasType
-      //       && hover.type !== HoverType.Point) {
-      //       updateCurrentHoverFn(undefined);
-      //       return;
-      //     }
-      //     updateCurrentHoverFn(hover);
-      //   });
+      const updateCurrentHoverFn = (hover: Hover | undefined) => {
+        let previewPath: Path = undefined;
+        if (this.vectorLayer && this.activePath && hover) {
+          // If the user is hovering over the inspector split button, then build
+          // a snapshot of what the path would look like after the action
+          // and display the result.
+          const mutator = this.activePath.mutate();
+          const { type, subIdx, cmdIdx } = hover;
+          switch (type) {
+            case HoverType.Split:
+              previewPath = mutator.splitCommandInHalf(subIdx, cmdIdx).build();
+              break;
+            case HoverType.Unsplit:
+              previewPath = mutator.unsplitCommand(subIdx, cmdIdx).build();
+              break;
+          }
+        }
+        this.currentHoverPreviewPath = previewPath;
+        this.draw();
+      };
+      // TODO: avoid re-executing the draw by combining with the above subscriptions
+      // TODO: avoid re-executing the draw by combining with the above subscriptions
+      // TODO: avoid re-executing the draw by combining with the above subscriptions
+      // TODO: avoid re-executing the draw by combining with the above subscriptions
+      // TODO: avoid re-executing the draw by combining with the above subscriptions
+      this.registerSubscription(
+        this.store.select(getShapeShifterHover).subscribe(
+          hover => {
+            if (!hover) {
+              // Clear the current hover.
+              updateCurrentHoverFn(undefined);
+              return;
+            }
+            if (hover.source !== this.canvasType
+              && hover.type !== HoverType.Point) {
+              updateCurrentHoverFn(undefined);
+              return;
+            }
+            updateCurrentHoverFn(hover);
+          }));
     }
   }
 
@@ -524,15 +525,10 @@ export class CanvasOverlayDirective
 
     const pathLayer =
       this.vectorLayer.findLayerById(this.shapeShifterPathLayerId) as PathLayer;
-    const path = pathLayer.pathData;
-    // TODO: uncomment this
-    // TODO: uncomment this
-    // TODO: uncomment this
-    // TODO: uncomment this
-    // TODO: uncomment this
-    // if (this.currentHoverPreviewPath) {
-    //   path = this.currentHoverPreviewPath;
-    // }
+    let path = pathLayer.pathData;
+    if (this.currentHoverPreviewPath) {
+      path = this.currentHoverPreviewPath;
+    }
 
     interface PointInfo {
       cmd: Command;
@@ -869,12 +865,7 @@ export class CanvasOverlayDirective
         this.shapeSplitter.onMouseLeave(mouseLeave);
       }
     }
-    // TODO: uncomment this
-    // TODO: uncomment this
-    // TODO: uncomment this
-    // TODO: uncomment this
-    // TODO: uncomment this
-    // this.hoverService.resetAndNotify();
+    this.store.dispatch(new SetHover(undefined));
   }
 
   // TODO: override onClick()?

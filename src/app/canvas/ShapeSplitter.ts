@@ -12,6 +12,7 @@ import {
   SetHover,
   SetSelections,
   AppMode,
+  UpdatePathBlock,
 } from '../store';
 
 /**
@@ -165,16 +166,12 @@ export class ShapeSplitter {
       const startingCmdIdx = initCmdIdx > finalCmdIdx ? finalCmdIdx : initCmdIdx;
       const endingCmdIdx =
         initCmdIdx > finalCmdIdx ? initCmdIdx + lastCmdOffset : finalCmdIdx + lastCmdOffset;
-      // TODO: uncomment this
-      // TODO: uncomment this
-      // TODO: uncomment this
-      // TODO: uncomment this
-      // TODO: uncomment this
-      // this.component.stateService.updateActivePath(
-      //   this.component.canvasType,
-      //   pathMutator
-      //     .splitFilledSubPath(initSubIdx, startingCmdIdx, endingCmdIdx)
-      //     .build());
+      this.store.dispatch(new UpdatePathBlock(
+        this.component.shapeShifterBlock.id,
+        this.component.canvasType,
+        pathMutator
+          .splitFilledSubPath(initSubIdx, startingCmdIdx, endingCmdIdx)
+          .build()));
     }
     this.reset();
     this.component.draw();

@@ -1,6 +1,6 @@
 import { Action } from '@ngrx/store';
 
-// Playback actions.
+// Root actions.
 export const NEW_WORKSPACE = 'NEW_WORKSPACE';
 
 export class NewWorkspace implements Action {
