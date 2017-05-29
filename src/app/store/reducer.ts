@@ -1,12 +1,12 @@
-import { ActionReducer } from '@ngrx/store';
-import { combineReducers } from '@ngrx/store';
 import * as actions from './actions';
 import * as aia from './aia/actions';
-import * as playback from './playback/actions';
-import * as shapeshifter from './shapeshifter/actions';
 import * as fromAia from './aia/reducer';
+import * as playback from './playback/actions';
 import * as fromPlayback from './playback/reducer';
+import * as shapeshifter from './shapeshifter/actions';
 import * as fromShapeShifter from './shapeshifter/reducer';
+import { ActionReducer } from '@ngrx/store';
+import { combineReducers } from '@ngrx/store';
 
 export interface State {
   aia: fromAia.State;

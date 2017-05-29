@@ -1,21 +1,22 @@
 export { Store } from '@ngrx/store';
-export { Hover, HoverType, Selection, SelectionType, AppMode } from './aia/reducer';
+export { AppMode, Hover, HoverType, Selection, SelectionType } from './aia/reducer';
+
+import { environment } from '../../environments/environment';
+import { PathAnimationBlock } from '../scripts/animations';
+import { LayerUtil, PathLayer, VectorLayer } from '../scripts/layers';
+import { Path } from '../scripts/paths';
+import * as fromRoot from './reducer';
+import { compose } from '@ngrx/core/compose';
+import { combineReducers } from '@ngrx/store';
+import { ActionReducer } from '@ngrx/store';
 import * as _ from 'lodash';
+import { storeFreeze } from 'ngrx-store-freeze';
 import {
   createSelector,
   createSelectorCreator,
   createStructuredSelector,
   defaultMemoize,
 } from 'reselect';
-import { ActionReducer } from '@ngrx/store';
-import { storeFreeze } from 'ngrx-store-freeze';
-import { combineReducers } from '@ngrx/store';
-import { environment } from '../../environments/environment';
-import { compose } from '@ngrx/core/compose';
-import * as fromRoot from './reducer';
-import { PathAnimationBlock } from '../scripts/animations';
-import { VectorLayer, PathLayer, LayerUtil } from '../scripts/layers';
-import { Path } from '../scripts/paths';
 
 export interface State {
   root: fromRoot.State,

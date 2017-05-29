@@ -1,7 +1,7 @@
-import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { AnimatorService } from '../animator';
+import { State, Store, getPlaybackState } from '../store';
+import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { Observable } from 'rxjs/Observable';
-import { Store, State, getPlaybackState } from '../store';
 
 @Component({
   selector: 'app-playback',
