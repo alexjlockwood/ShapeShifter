@@ -5,7 +5,12 @@ import { environment } from '../../environments/environment';
 import { PathAnimationBlock } from '../scripts/animations';
 import { LayerUtil, PathLayer, VectorLayer } from '../scripts/layers';
 import { Path } from '../scripts/paths';
-import * as fromRoot from './reducer';
+import * as aia from './aia/actions';
+import * as fromAia from './aia/reducer';
+import * as playback from './playback/actions';
+import * as fromPlayback from './playback/reducer';
+import * as shapeshifter from './shapeshifter/actions';
+import * as fromShapeShifter from './shapeshifter/reducer';
 import { compose } from '@ngrx/core/compose';
 import { combineReducers } from '@ngrx/store';
 import { ActionReducer } from '@ngrx/store';
@@ -19,10 +24,24 @@ import {
 } from 'reselect';
 
 export interface State {
-  root: fromRoot.State,
+  aia: fromAia.State,
+  playback: fromPlayback.State,
+  shapeshifter: fromShapeShifter.State,
 }
 
-const reducers = { root: fromRoot.reducer };
+function buildInitialState(): State {
+  return {
+    aia: fromAia.buildInitialState(),
+    playback: fromPlayback.buildInitialState(),
+    shapeshifter: fromShapeShifter.buildInitialState(),
+  };
+}
+
+const reducers = {
+  aia: fromAia.reducer,
+  playback: fromPlayback.reducer,
+  shapeshifter: fromShapeShifter.reducer,
+};
 const developmentReducer: ActionReducer<State> =
   compose(storeFreeze, combineReducers)(reducers);
 const productionReducer: ActionReducer<State> = combineReducers(reducers);
@@ -35,10 +54,10 @@ export function reducer(state: any, action: any) {
   }
 }
 
-// Root actions.
-export {
-  NewWorkspace,
-} from './actions';
+type RootActions =
+  | aia.Actions
+  | playback.Actions
+  | shapeshifter.Actions;
 
 // Android Icon Animator actions.
 export {
@@ -84,9 +103,7 @@ export {
 const createDeepEqualSelector =
   createSelectorCreator(defaultMemoize, _.isEqual);
 
-const getRoot = (state: State) => state.root;
-
-const getAiaState = createSelector(getRoot, root => root.aia);
+const getAiaState = (state: State) => state.aia;
 
 // Timeline state selectors.
 const getTimelineState = createSelector(getAiaState, s => s.timeline)
@@ -123,7 +140,7 @@ export const getCollapsedLayerIds = createDeepEqualSelector(getLayerState, l => 
 export const getHiddenLayerIds = createDeepEqualSelector(getLayerState, l => l.hiddenLayerIds);
 
 // Exported playback settings selectors.
-export const getPlaybackState = (state: State) => state.root.playback;
+export const getPlaybackState = (state: State) => state.playback;
 export const getIsSlowMotion = createSelector(getPlaybackState, p => p.isSlowMotion);
 export const getIsPlaying = createSelector(getPlaybackState, p => p.isPlaying);
 export const getIsRepeating = createSelector(getPlaybackState, p => p.isRepeating);
@@ -189,7 +206,7 @@ export const isShapeShifterMode = createSelector(
   block => !!block,
 );
 
-const getShapeShifterState = createSelector(getRoot, s => s.shapeshifter);
+const getShapeShifterState = (state: State) => state.shapeshifter;
 export const getShapeShifterAppMode = createSelector(getShapeShifterState, s => s.appMode);
 export const getShapeShifterHover = createDeepEqualSelector(getShapeShifterState, s => s.hover);
 const getShapeShifterSelections = createSelector(getShapeShifterState, s => s.selections);
