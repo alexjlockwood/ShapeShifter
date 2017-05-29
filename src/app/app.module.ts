@@ -1,15 +1,55 @@
-import { BrowserModule, DomSanitizer } from '@angular/platform-browser';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import 'hammerjs';
+
+import { AnimatorService } from './animator';
+import { AppComponent } from './app.component';
+import {
+  CanvasComponent,
+  CanvasContainerDirective,
+  CanvasLayersDirective,
+  CanvasOverlayDirective,
+  CanvasRulerDirective,
+} from './canvas';
+import {
+  ConfirmDialogComponent,
+  DemoDialogComponent,
+  DialogService,
+} from './dialogs';
+import { DropTargetDirective } from './droptarget.directive';
+import { SvgCommandPipe } from './inspector/commandinspector.component';
+import { CommandInspectorComponent } from './inspector/commandinspector.component';
+import { SubPathPairsPipe } from './inspector/pathinspector.component';
+import { PathInspectorComponent } from './inspector/pathinspector.component';
+import { SubpathInspectorComponent } from './inspector/subpathinspector.component';
+import { LayerListTreeComponent } from './layertimeline/layerlisttree.component';
+import { LayerTimelineComponent } from './layertimeline/layertimeline.component';
+import { LayerTimelineDirective } from './layertimeline/layertimeline.directive';
+import { TimelineAnimationRowComponent } from './layertimeline/timelineanimationrow.component';
+import { PlaybackComponent } from './playback/playback.component';
+import { PropertyInputComponent } from './propertyinput/propertyinput.component';
+import { ScrollGroupDirective } from './scrollgroup/scrollgroup.directive';
+import {
+  ActionModeService,
+  AppModeService,
+  FileImporterService,
+  HoverService,
+  MorphSubPathService,
+  SelectionService,
+  SettingsService,
+  ShortcutService,
+  StateService,
+} from './services';
+import { SplitterComponent } from './splitter/splitter.component';
+import { reducer } from './store';
+import { ToolbarComponent } from './toolbar/toolbar.component';
 import { NgModule } from '@angular/core';
+import { FlexLayoutModule } from '@angular/flex-layout';
 import { FormsModule } from '@angular/forms';
 import { HttpModule } from '@angular/http';
-import { FlexLayoutModule } from '@angular/flex-layout';
-import { StoreModule } from '@ngrx/store';
-import { reducer } from './store';
 import {
   MdButtonModule,
   MdDialogModule,
   MdIconModule,
+  MdIconRegistry,
   MdInputModule,
   MdMenuModule,
   MdOptionModule,
@@ -17,58 +57,10 @@ import {
   MdSnackBarModule,
   MdToolbarModule,
   MdTooltipModule,
-  MdIconRegistry,
 } from '@angular/material';
-
-// Components & directives.
-import { AppComponent } from './app.component';
-import {
-  CanvasComponent,
-  CanvasContainerDirective,
-  CanvasLayersDirective,
-  CanvasRulerDirective,
-  CanvasOverlayDirective,
-} from './canvas';
-import { PathInspectorComponent } from './inspector/pathinspector.component';
-import { CommandInspectorComponent } from './inspector/commandinspector.component';
-import { SubpathInspectorComponent } from './inspector/subpathinspector.component';
-import { SplitterComponent } from './splitter/splitter.component';
-import { PlaybackComponent } from './playback/playback.component';
-import { ToolbarComponent } from './toolbar/toolbar.component';
-import { LayerListTreeComponent } from './layertimeline/layerlisttree.component';
-import { PropertyInputComponent } from './propertyinput/propertyinput.component';
-import { ScrollGroupDirective } from './scrollgroup/scrollgroup.directive';
-import { LayerTimelineComponent } from './layertimeline/layertimeline.component';
-import { LayerTimelineDirective } from './layertimeline/layertimeline.directive';
-import { TimelineAnimationRowComponent } from './layertimeline/timelineanimationrow.component';
-import { DropTargetDirective } from './droptarget.directive';
-
-// Services.
-import {
-  HoverService,
-  StateService,
-  SelectionService,
-  SettingsService,
-  AppModeService,
-  FileImporterService,
-  MorphSubPathService,
-  ActionModeService,
-  ShortcutService,
-} from './services';
-import { AnimatorService } from './animator';
-
-// Dialogs.
-import {
-  ConfirmDialogComponent,
-  DemoDialogComponent,
-  DialogService,
-} from './dialogs';
-
-// Pipes.
-import { SubPathPairsPipe } from './inspector/pathinspector.component';
-import { SvgCommandPipe } from './inspector/commandinspector.component';
-
-import 'hammerjs';
+import { BrowserModule, DomSanitizer } from '@angular/platform-browser';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { StoreModule } from '@ngrx/store';
 
 @NgModule({
   declarations: [
