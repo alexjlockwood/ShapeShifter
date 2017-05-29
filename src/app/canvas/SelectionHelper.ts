@@ -1,22 +1,22 @@
-import * as _ from 'lodash';
-import { CanvasOverlayDirective } from './canvasoverlay.directive';
-import { ProjectionOntoPath } from '../scripts/paths';
-import { Point, MathUtil, Matrix } from '../scripts/common';
 import { CanvasType } from '../CanvasType';
+import { MathUtil, Matrix, Point } from '../scripts/common';
+import { LayerUtil } from '../scripts/layers';
+import { ProjectionOntoPath } from '../scripts/paths';
 import {
+  AppMode,
+  HoverType,
+  SetAppMode,
+  SetHover,
+  SetSelections,
   State,
   Store,
   TogglePointSelection,
   ToggleSegmentSelections,
   ToggleSubPathSelection,
-  SetAppMode,
-  SetHover,
-  SetSelections,
-  AppMode,
-  HoverType,
   UpdatePathBlock,
 } from '../store';
-import { LayerUtil } from '../scripts/layers';
+import { CanvasOverlayDirective } from './canvasoverlay.directive';
+import * as _ from 'lodash';
 
 /**
  * Helper class that tracks information about a user's mouse gesture, allowing

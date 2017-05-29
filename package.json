@@ -80,5 +80,15 @@
     "tslint": "^5.3.2",
     "typescript": "~2.3.1",
     "webdriver-manager": "12.0.6"
+  },
+  "importSort": {
+    ".js, .jsx, .es6, .es": {
+      "parser": "babylon",
+      "style": "module"
+    },
+    ".ts, .tsx": {
+      "parser": "typescript",
+      "style": "module"
+    }
   }
 }

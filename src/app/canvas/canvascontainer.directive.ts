@@ -1,6 +1,6 @@
-import * as $ from 'jquery';
-import { Directive, ElementRef } from '@angular/core';
 import { CanvasLayoutMixin, Size } from './CanvasLayoutMixin';
+import { Directive, ElementRef } from '@angular/core';
+import * as $ from 'jquery';
 
 /**
  * Directive that resizes the canvas container when necessary.

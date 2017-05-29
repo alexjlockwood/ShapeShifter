@@ -1,19 +1,19 @@
-import * as _ from 'lodash';
-import { CanvasOverlayDirective } from './canvasoverlay.directive';
-import { ProjectionOntoPath, HitResult } from '../scripts/paths';
 import { Point } from '../scripts/common';
+import { HitResult, ProjectionOntoPath } from '../scripts/paths';
 import {
+  AppMode,
+  SetAppMode,
+  SetHover,
+  SetSelections,
   State,
   Store,
   TogglePointSelection,
   ToggleSegmentSelections,
   ToggleSubPathSelection,
-  SetAppMode,
-  SetHover,
-  SetSelections,
-  AppMode,
   UpdatePathBlock,
 } from '../store';
+import { CanvasOverlayDirective } from './canvasoverlay.directive';
+import * as _ from 'lodash';
 
 /**
  * Helper class that can be used to split a filled subpath.

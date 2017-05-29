@@ -1,20 +1,20 @@
-import * as _ from 'lodash';
-import { CanvasOverlayDirective } from './canvasoverlay.directive';
-import { Point } from '../scripts/common';
 import { CanvasType } from '../CanvasType';
+import { Point } from '../scripts/common';
 import { MorphSubPathService } from '../services';
 import {
+  AppMode,
+  HoverType,
+  SetAppMode,
+  SetHover,
+  SetSelections,
   State,
   Store,
   TogglePointSelection,
   ToggleSegmentSelections,
   ToggleSubPathSelection,
-  SetAppMode,
-  SetHover,
-  SetSelections,
-  HoverType,
-  AppMode,
 } from '../store';
+import { CanvasOverlayDirective } from './canvasoverlay.directive';
+import * as _ from 'lodash';
 
 /**
  * Helper class that tracks information during morph subpath mode.

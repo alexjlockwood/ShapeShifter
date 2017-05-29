@@ -1,19 +1,19 @@
-import { CanvasOverlayDirective } from './canvasoverlay.directive';
-import { ProjectionOntoPath } from '../scripts/paths';
-import { Point } from '../scripts/common';
 import { CanvasType } from '../CanvasType';
+import { Point } from '../scripts/common';
+import { ProjectionOntoPath } from '../scripts/paths';
 import {
+  AppMode,
+  SetAppMode,
+  SetHover,
+  SetSelections,
   State,
   Store,
   TogglePointSelection,
   ToggleSegmentSelections,
   ToggleSubPathSelection,
-  SetAppMode,
-  SetHover,
-  SetSelections,
-  AppMode,
   UpdatePathBlock,
 } from '../store';
+import { CanvasOverlayDirective } from './canvasoverlay.directive';
 
 /**
  * Helper class that can be used to split a segment.

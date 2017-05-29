@@ -1,8 +1,8 @@
-import * as _ from 'lodash';
-import * as $ from 'jquery';
-import { Directive, Input, ElementRef } from '@angular/core';
 import { Point } from '../scripts/common';
 import { CanvasLayoutMixin } from './CanvasLayoutMixin';
+import { Directive, ElementRef, Input } from '@angular/core';
+import * as $ from 'jquery';
+import * as _ from 'lodash';
 
 // Ruler size in css pixels.
 const RULER_SIZE = 32;

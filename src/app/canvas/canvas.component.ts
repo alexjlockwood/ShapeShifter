@@ -1,27 +1,28 @@
-import * as _ from 'lodash';
-import * as $ from 'jquery';
+import 'rxjs/add/observable/combineLatest';
+
+import { CanvasType } from '../CanvasType';
+import { Point } from '../scripts/common';
+import { DestroyableMixin } from '../scripts/mixins';
+import { State, Store, getActiveVectorLayer } from '../store';
+import { CanvasContainerDirective } from './canvascontainer.directive';
+import { CanvasLayersDirective } from './canvaslayers.directive';
+import { CanvasLayoutMixin, Size } from './CanvasLayoutMixin';
+import { CanvasOverlayDirective } from './canvasoverlay.directive';
+import { CanvasRulerDirective } from './canvasruler.directive';
 import {
-  Component,
   AfterViewInit,
-  ViewChild,
+  ChangeDetectionStrategy,
+  Component,
   ElementRef,
   HostListener,
-  ViewChildren,
-  QueryList,
-  ChangeDetectionStrategy,
   Input,
+  QueryList,
+  ViewChild,
+  ViewChildren,
 } from '@angular/core';
-import { CanvasOverlayDirective } from './canvasoverlay.directive';
-import { Point } from '../scripts/common';
-import { Store, State, getActiveVectorLayer } from '../store';
-import { CanvasContainerDirective } from './canvascontainer.directive';
-import { CanvasRulerDirective } from './canvasruler.directive';
-import { CanvasLayersDirective } from './canvaslayers.directive';
+import * as $ from 'jquery';
+import * as _ from 'lodash';
 import { Observable } from 'rxjs/Observable';
-import { CanvasLayoutMixin, Size } from './CanvasLayoutMixin';
-import { DestroyableMixin } from '../scripts/mixins';
-import { CanvasType } from '../CanvasType';
-import 'rxjs/add/observable/combineLatest';
 
 // Canvas margin in css pixels.
 const CANVAS_MARGIN = 36;

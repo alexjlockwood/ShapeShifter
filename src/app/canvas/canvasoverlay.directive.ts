@@ -1,49 +1,50 @@
-import * as $ from 'jquery';
-import * as _ from 'lodash';
-import * as CanvasUtil from './CanvasUtil';
-import { Directive, ElementRef, HostListener, Input, AfterViewInit } from '@angular/core';
-import { CanvasLayoutMixin } from './CanvasLayoutMixin';
-import { Command } from '../scripts/paths';
+import 'rxjs/add/observable/combineLatest';
+
 import { CanvasType } from '..';
-import { DestroyableMixin } from '../scripts/mixins';
-import { MathUtil, Point, Matrix } from '../scripts/common';
-import { MorphSubPathService } from '../services';
 import { AnimatorService } from '../animator';
-import { Observable } from 'rxjs/Observable';
-import { Path } from '../scripts/paths';
+import { PathAnimationBlock } from '../scripts/animations';
+import { MathUtil, Matrix, Point } from '../scripts/common';
 import {
-  Layer,
-  VectorLayer,
-  LayerUtil,
-  PathLayer,
   ClipPathLayer,
   GroupLayer,
+  Layer,
+  LayerUtil,
+  PathLayer,
+  VectorLayer,
 } from '../scripts/layers';
+import { DestroyableMixin } from '../scripts/mixins';
+import { Command } from '../scripts/paths';
+import { Path } from '../scripts/paths';
+import { MorphSubPathService } from '../services';
 import {
-  Store,
-  State,
-  SelectLayer,
+  AppMode,
   ClearLayerSelections,
-  getActiveVectorLayer,
-  getSelectedLayerIds,
-  getHiddenLayerIds,
-  getShapeShifterStartState,
-  getShapeShifterEndState,
-  getShapeShifterAppMode,
-  getShapeShifterHover,
   Hover,
   HoverType,
+  SelectLayer,
   Selection,
   SelectionType,
-  AppMode,
   SetHover,
+  State,
+  Store,
+  getActiveVectorLayer,
+  getHiddenLayerIds,
+  getSelectedLayerIds,
+  getShapeShifterAppMode,
+  getShapeShifterEndState,
+  getShapeShifterHover,
+  getShapeShifterStartState,
 } from '../store';
-import { SegmentSplitter } from './SegmentSplitter';
+import { CanvasLayoutMixin } from './CanvasLayoutMixin';
+import * as CanvasUtil from './CanvasUtil';
 import { MorphSubPathHelper } from './MorphSubPathHelper';
+import { SegmentSplitter } from './SegmentSplitter';
 import { SelectionHelper } from './SelectionHelper';
 import { ShapeSplitter } from './ShapeSplitter';
-import { PathAnimationBlock } from '../scripts/animations';
-import 'rxjs/add/observable/combineLatest';
+import { AfterViewInit, Directive, ElementRef, HostListener, Input } from '@angular/core';
+import * as $ from 'jquery';
+import * as _ from 'lodash';
+import { Observable } from 'rxjs/Observable';
 
 // The line width of a highlight in css pixels.
 const HIGHLIGHT_LINE_WIDTH = 6;

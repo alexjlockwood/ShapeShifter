@@ -1,5 +1,5 @@
-import { Command } from '../scripts/paths'
 import { Matrix, Point } from '../scripts/common';
+import { Command } from '../scripts/paths'
 
 type Context = CanvasRenderingContext2D;
 

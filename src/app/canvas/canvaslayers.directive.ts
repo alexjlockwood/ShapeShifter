@@ -1,28 +1,29 @@
-import * as $ from 'jquery';
-import { Directive, ElementRef, AfterViewInit, Input } from '@angular/core';
-import { CanvasLayoutMixin, Size } from './CanvasLayoutMixin';
-import {
-  Layer,
-  PathLayer,
-  ClipPathLayer,
-  LayerUtil,
-  VectorLayer,
-} from '../scripts/layers';
-import { ColorUtil } from '../scripts/common';
-import * as CanvasUtil from './CanvasUtil';
-import { DestroyableMixin } from '../scripts/mixins';
+import 'rxjs/add/observable/combineLatest';
+
 import { CanvasType } from '..';
 import { AnimatorService } from '../animator';
-import { Observable } from 'rxjs/Observable';
+import { ColorUtil } from '../scripts/common';
 import {
-  Store,
+  ClipPathLayer,
+  Layer,
+  LayerUtil,
+  PathLayer,
+  VectorLayer,
+} from '../scripts/layers';
+import { DestroyableMixin } from '../scripts/mixins';
+import {
   State,
+  Store,
   getActiveVectorLayer,
   getHiddenLayerIds,
-  getShapeShifterStartState,
   getShapeShifterEndState,
+  getShapeShifterStartState,
 } from '../store';
-import 'rxjs/add/observable/combineLatest';
+import { CanvasLayoutMixin, Size } from './CanvasLayoutMixin';
+import * as CanvasUtil from './CanvasUtil';
+import { AfterViewInit, Directive, ElementRef, Input } from '@angular/core';
+import * as $ from 'jquery';
+import { Observable } from 'rxjs/Observable';
 
 type Context = CanvasRenderingContext2D;
 
