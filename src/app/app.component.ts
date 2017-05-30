@@ -3,7 +3,7 @@ import 'rxjs/add/operator/combineLatest';
 
 import { environment } from '../environments/environment';
 import { CanvasType } from './CanvasType';
-import { DEBUG_VECTOR_DRAWABLE } from './scripts/demos';
+import { DEBUG_VECTOR_DRAWABLE_2 } from './scripts/demos';
 import { VectorDrawableLoader } from './scripts/import';
 import { FileImporterService, ShortcutService } from './services';
 import { AddLayers, State, Store } from './store';
@@ -96,7 +96,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     if (IS_DEV_MODE) {
       const vl =
         VectorDrawableLoader.loadVectorLayerFromXmlString(
-          DEBUG_VECTOR_DRAWABLE,
+          DEBUG_VECTOR_DRAWABLE_2,
           name => false,
         );
       this.store.dispatch(new AddLayers(vl.children));

@@ -2,11 +2,11 @@ import { CanvasType } from '../CanvasType';
 import { Point } from '../scripts/common';
 import { MorphSubPathService } from '../services';
 import {
-  AppMode,
   HoverType,
-  SetAppMode,
-  SetHover,
-  SetSelections,
+  SetPathHover,
+  SetPathSelections,
+  SetShapeShifterMode,
+  ShapeShifterMode,
   State,
   Store,
   TogglePointSelection,
@@ -47,7 +47,7 @@ export class MorphSubPathHelper {
         const toSelections =
           this.component.shapeShifterSelections.filter(s => s.source === toSource);
         if (fromSelections.length) {
-          this.store.dispatch(new SetSelections(fromSelections.map(s => {
+          this.store.dispatch(new SetPathSelections(fromSelections.map(s => {
             const { subIdx: sIdx, cmdIdx, source, type } = s;
             return {
               subIdx: sIdx === fromSubIdx ? 0 : sIdx,
@@ -57,7 +57,7 @@ export class MorphSubPathHelper {
             };
           })));
         } else if (toSelections.length) {
-          this.store.dispatch(new SetSelections(toSelections.map(s => {
+          this.store.dispatch(new SetPathSelections(toSelections.map(s => {
             const { subIdx: sIdx, cmdIdx, source, type } = s;
             return {
               subIdx: sIdx === toSubIdx ? 0 : sIdx,
@@ -76,7 +76,7 @@ export class MorphSubPathHelper {
         }
         pairedSubPaths.add(pairedSubPaths.size);
         this.morphSubPathService.setPairedSubPaths(pairedSubPaths);
-        this.store.dispatch(new SetHover(undefined));
+        this.store.dispatch(new SetPathHover(undefined));
         // TODO: uncomment this
         // TODO: uncomment this
         // TODO: uncomment this
@@ -97,7 +97,7 @@ export class MorphSubPathHelper {
       }
       this.morphSubPathService.notify();
     } else if (!isShiftOrMetaPressed) {
-      this.store.dispatch(new SetAppMode(AppMode.Selection));
+      this.store.dispatch(new SetShapeShifterMode(ShapeShifterMode.Selection));
     }
   }
 
@@ -111,7 +111,7 @@ export class MorphSubPathHelper {
   }
 
   onMouseLeave(mouseLeave: Point) {
-    this.store.dispatch(new SetHover(undefined));
+    this.store.dispatch(new SetPathHover(undefined));
     this.component.draw();
   }
 
@@ -122,11 +122,11 @@ export class MorphSubPathHelper {
   private checkForHovers(mousePoint: Point) {
     const hitResult = this.performHitTest(mousePoint);
     if (!hitResult.isHit) {
-      this.store.dispatch(new SetHover(undefined));
+      this.store.dispatch(new SetPathHover(undefined));
     } else if (hitResult.isSegmentHit || hitResult.isShapeHit) {
       const hits = hitResult.isShapeHit ? hitResult.shapeHits : hitResult.segmentHits;
       const { subIdx } = this.findHitSubPath(hits);
-      this.store.dispatch(new SetHover({
+      this.store.dispatch(new SetPathHover({
         type: HoverType.SubPath,
         source: this.canvasType,
         subIdx,

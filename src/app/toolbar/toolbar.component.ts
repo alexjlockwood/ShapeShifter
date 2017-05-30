@@ -8,21 +8,16 @@ import { ExportUtil } from '../scripts/export';
 import { PathLayer } from '../scripts/layers';
 import {
   ActionModeService,
-  AppMode,
-  AppModeService,
   MorphSubPathService,
-  Selection,
-  SelectionService,
-  SelectionType,
-  StateService,
 } from '../services';
 import {
+  Selection,
+  SelectionType,
+  ShapeShifterMode,
   State,
   Store,
 } from '../store';
-import {
-  getToolbarState,
-} from '../store/shapeshifter/selectors';
+import { getToolbarState } from '../store/shapeshifter/selectors';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -55,9 +50,6 @@ export class ToolbarComponent implements OnInit {
 
   constructor(
     private readonly viewContainerRef: ViewContainerRef,
-    // private readonly selectionService: SelectionService,
-    // private readonly stateService: StateService,
-    // private readonly appModeService: AppModeService,
     private readonly dialogService: DialogService,
     // TODO: uncomment this
     // TODO: uncomment this
@@ -71,12 +63,12 @@ export class ToolbarComponent implements OnInit {
 
   ngOnInit() {
     this.toolbarData$ = this.store.select(getToolbarState)
-      .map(({ fromPl, toPl, appMode, selections }) => {
+      .map(({ fromPl, toPl, mode, selections }) => {
         const selectionInfo = new ToolbarData(
           fromPl,
           toPl,
           // this.morphSubPathService,
-          appMode,
+          mode,
           selections,
         );
         if (selectionInfo.getNumSelections() > 0) {
@@ -226,7 +218,7 @@ class ToolbarData {
     activeStartPathLayer: PathLayer,
     activeEndPathLayer: PathLayer,
     // morphSubPathService: MorphSubPathService,
-    public readonly appMode: AppMode,
+    public readonly mode: ShapeShifterMode,
     public readonly selections: ReadonlyArray<Selection>,
   ) {
     // Precondition: assume all selections are for the same canvas type
@@ -309,13 +301,13 @@ class ToolbarData {
   }
 
   getToolbarTitle() {
-    if (this.appMode === AppMode.SplitCommands) {
+    if (this.mode === ShapeShifterMode.SplitCommands) {
       return 'Add points';
     }
-    if (this.appMode === AppMode.SplitSubPaths) {
+    if (this.mode === ShapeShifterMode.SplitSubPaths) {
       return 'Split subpaths';
     }
-    if (this.appMode === AppMode.MorphSubPaths) {
+    if (this.mode === ShapeShifterMode.MorphSubPaths) {
       return 'Pair subpaths';
     }
     const numSubPaths = this.getNumSubPaths();
@@ -337,15 +329,15 @@ class ToolbarData {
   }
 
   getToolbarSubtitle() {
-    if (this.appMode === AppMode.SplitCommands) {
+    if (this.mode === ShapeShifterMode.SplitCommands) {
       return 'Click along the edge of a subpath to add a point';
-    } else if (this.appMode === AppMode.SplitSubPaths) {
+    } else if (this.mode === ShapeShifterMode.SplitSubPaths) {
       if (this.isFilled) {
         return 'Draw a line across a subpath to split it into 2';
       } else if (this.isStroked) {
         return 'Click along the edge of a subpath to split it into 2';
       }
-    } else if (this.appMode === AppMode.MorphSubPaths) {
+    } else if (this.mode === ShapeShifterMode.MorphSubPaths) {
       if (this.unpairedSubPathSource) {
         const toSourceDir = this.unpairedSubPathSource === CanvasType.Start ? 'right' : 'left';
         return `Pair the selected subpath with a corresponding subpath on the ${toSourceDir}`;
@@ -401,18 +393,18 @@ class ToolbarData {
   }
 
   isSelectionMode() {
-    return this.appMode === AppMode.Selection;
+    return this.mode === ShapeShifterMode.Selection;
   }
 
   isAddPointsMode() {
-    return this.appMode === AppMode.SplitCommands;
+    return this.mode === ShapeShifterMode.SplitCommands;
   }
 
   isSplitSubPathsMode() {
-    return this.appMode === AppMode.SplitSubPaths;
+    return this.mode === ShapeShifterMode.SplitSubPaths;
   }
 
   isMorphSubPathsMode() {
-    return this.appMode === AppMode.MorphSubPaths;
+    return this.mode === ShapeShifterMode.MorphSubPaths;
   }
 }

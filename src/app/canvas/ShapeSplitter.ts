@@ -1,16 +1,16 @@
 import { Point } from '../scripts/common';
 import { HitResult, ProjectionOntoPath } from '../scripts/paths';
 import {
-  AppMode,
-  SetAppMode,
-  SetHover,
-  SetSelections,
+  SetPathHover,
+  SetPathSelections,
+  SetShapeShifterMode,
+  ShapeShifterMode,
   State,
   Store,
   TogglePointSelection,
   ToggleSegmentSelections,
   ToggleSubPathSelection,
-  UpdatePathBlock,
+  UpdateActivePathBlock,
 } from '../store';
 import { CanvasOverlayDirective } from './canvasoverlay.directive';
 import * as _ from 'lodash';
@@ -46,7 +46,7 @@ export class ShapeSplitter {
       this.component.draw();
       return;
     }
-    this.store.dispatch(new SetAppMode(AppMode.Selection));
+    this.store.dispatch(new SetShapeShifterMode(ShapeShifterMode.Selection));
     this.component.draw();
   }
 
@@ -156,8 +156,8 @@ export class ShapeSplitter {
       }
 
       // TODO: make sure the inspector doesn't set hovers/selections while a split is in process...
-      this.store.dispatch(new SetHover(undefined));
-      this.store.dispatch(new SetSelections([]));
+      this.store.dispatch(new SetPathHover(undefined));
+      this.store.dispatch(new SetPathSelections([]));
       this.reset();
 
       // TODO: some bugs with this path: M 0 20 v -16 h 20 v 2 h -12 v 2 h 12 v 2 h -12 Z
@@ -166,8 +166,7 @@ export class ShapeSplitter {
       const startingCmdIdx = initCmdIdx > finalCmdIdx ? finalCmdIdx : initCmdIdx;
       const endingCmdIdx =
         initCmdIdx > finalCmdIdx ? initCmdIdx + lastCmdOffset : finalCmdIdx + lastCmdOffset;
-      this.store.dispatch(new UpdatePathBlock(
-        this.component.shapeShifterBlock.id,
+      this.store.dispatch(new UpdateActivePathBlock(
         this.component.canvasType,
         pathMutator
           .splitFilledSubPath(initSubIdx, startingCmdIdx, endingCmdIdx)

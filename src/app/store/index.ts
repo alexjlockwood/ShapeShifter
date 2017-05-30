@@ -1,7 +1,7 @@
 export { Store } from '@ngrx/store';
 export { State, reducer } from './reducer';
 export {
-  AppMode,
+  ShapeShifterMode,
   Hover,
   HoverType,
   Selection,
@@ -24,7 +24,6 @@ export {
   SelectLayer,
   ToggleLayerExpansion,
   ToggleLayerVisibility,
-  UpdatePathBlock,
 } from './aia/actions';
 
 // Playback actions.
@@ -39,11 +38,11 @@ export {
 
 // Shape Shifter actions.
 export {
-  EnterShapeShifterMode,
-  ExitShapeShifterMode,
-  SetAppMode,
-  SetHover,
-  SetSelections,
+  SetActivePathBlockId,
+  ClearActivePathBlockId,
+  SetShapeShifterMode,
+  SetPathHover,
+  SetPathSelections,
   TogglePointSelection,
   ToggleSegmentSelections,
   ToggleSubPathSelection,
@@ -63,4 +62,5 @@ export {
   ShiftPointToFront,
   SplitCommandInHalfClick,
   SplitCommandInHalfHover,
+  UpdateActivePathBlock,
 } from './actionmode/actions';

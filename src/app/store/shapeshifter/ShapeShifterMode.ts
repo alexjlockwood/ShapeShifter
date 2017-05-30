@@ -1,7 +1,7 @@
 /**
- * Different shape shifter app modes.
+ * Different shape shifter modes.
  */
-export enum AppMode {
+export enum ShapeShifterMode {
   Selection = 1,
   SplitCommands,
   SplitSubPaths,

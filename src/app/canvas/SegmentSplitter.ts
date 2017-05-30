@@ -2,16 +2,16 @@ import { CanvasType } from '../CanvasType';
 import { Point } from '../scripts/common';
 import { ProjectionOntoPath } from '../scripts/paths';
 import {
-  AppMode,
-  SetAppMode,
-  SetHover,
-  SetSelections,
+  SetPathHover,
+  SetPathSelections,
+  SetShapeShifterMode,
+  ShapeShifterMode,
   State,
   Store,
   TogglePointSelection,
   ToggleSegmentSelections,
   ToggleSubPathSelection,
-  UpdatePathBlock,
+  UpdateActivePathBlock,
 } from '../store';
 import { CanvasOverlayDirective } from './canvasoverlay.directive';
 
@@ -38,11 +38,11 @@ export class SegmentSplitter {
     const activePathLayer = this.component.activePathLayer;
     if (this.currProjInfo) {
       const { proj: { subIdx, cmdIdx, projection }, isEndPt } = this.currProjInfo;
-      const appMode = this.component.shapeShifterAppMode;
+      const mode = this.component.shapeShifterMode;
       const pathMutator = activePathLayer.pathData.mutate();
-      if (appMode === AppMode.SplitCommands) {
+      if (mode === ShapeShifterMode.SplitCommands) {
         pathMutator.splitCommand(subIdx, cmdIdx, projection.t);
-      } else if (appMode === AppMode.SplitSubPaths) {
+      } else if (mode === ShapeShifterMode.SplitSubPaths) {
         if (!isEndPt) {
           pathMutator.splitCommand(subIdx, cmdIdx, projection.t);
         }
@@ -50,12 +50,11 @@ export class SegmentSplitter {
       }
 
       // TODO: make sure the inspector doesn't set hovers/selections while a split is in process...
-      this.store.dispatch(new SetHover(undefined));
-      this.store.dispatch(new SetSelections([]));
+      this.store.dispatch(new SetPathHover(undefined));
+      this.store.dispatch(new SetPathSelections([]));
       this.currProjInfo = undefined;
       this.store.dispatch(
-        new UpdatePathBlock(
-          this.component.shapeShifterBlock.id,
+        new UpdateActivePathBlock(
           this.canvasType,
           pathMutator.build(),
         ));
@@ -63,7 +62,7 @@ export class SegmentSplitter {
       return;
     }
 
-    this.store.dispatch(new SetAppMode(AppMode.Selection));
+    this.store.dispatch(new SetShapeShifterMode(ShapeShifterMode.Selection));
     this.component.draw();
   }
 

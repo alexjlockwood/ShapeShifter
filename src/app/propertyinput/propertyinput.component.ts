@@ -3,10 +3,10 @@ import { ColorUtil, ModelUtil } from '../scripts/common';
 import { LayerUtil, VectorLayer } from '../scripts/layers';
 import { FractionProperty, NameProperty, Option, Property } from '../scripts/properties';
 import {
-  EnterShapeShifterMode,
   ReplaceAnimations,
   ReplaceBlocks,
   ReplaceLayer,
+  SetActivePathBlockId,
   State,
   Store,
 } from '../store';
@@ -56,7 +56,7 @@ export class PropertyInputComponent implements OnInit {
   }
 
   onShapeShifterModeClick(blockId: string) {
-    this.store.dispatch(new EnterShapeShifterMode(blockId));
+    this.store.dispatch(new SetActivePathBlockId(blockId));
   }
 
   valueEditorKeyDown(event: KeyboardEvent, ip: InspectedProperty<any>) {

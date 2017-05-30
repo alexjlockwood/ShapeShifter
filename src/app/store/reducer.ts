@@ -11,6 +11,7 @@ import {
   combineReducers,
 } from '@ngrx/store';
 import { storeFreeze } from 'ngrx-store-freeze';
+import { storeLogger } from 'ngrx-store-logger';
 
 export interface State {
   aia: fromAia.State,
@@ -24,14 +25,19 @@ const stateReducers = {
   shapeshifter: fromShapeShifter.reducer,
 };
 
-const metaReducers = [
+const prodMetaReducers = [
   fromResetable.wrapResetable,
   fromActionMode.wrapActionMode,
   combineReducers,
 ];
 
-const productionReducer: ActionReducer<State> = compose(...metaReducers)(stateReducers);
-const developmentReducer: ActionReducer<State> = storeFreeze(productionReducer);
+const devMetaReducers = [
+  storeLogger(),
+  storeFreeze,
+];
+
+const productionReducer: ActionReducer<State> = compose(...prodMetaReducers)(stateReducers);
+const developmentReducer: ActionReducer<State> = compose(...devMetaReducers)(productionReducer);
 
 // Returns the final reducer that is used to initialize the store.
 export function reducer(state: State, action: Action) {

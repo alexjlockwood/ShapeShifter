@@ -13,18 +13,18 @@ import {
   VectorLayer,
 } from '../scripts/layers';
 import { DestroyableMixin } from '../scripts/mixins';
-import { Command } from '../scripts/paths';
 import { Path } from '../scripts/paths';
+import { Command } from '../scripts/paths';
 import { MorphSubPathService } from '../services';
 import {
-  AppMode,
   ClearLayerSelections,
   Hover,
   HoverType,
   SelectLayer,
   Selection,
   SelectionType,
-  SetHover,
+  SetPathHover,
+  ShapeShifterMode,
   State,
   Store,
 } from '../store';
@@ -34,9 +34,9 @@ import {
   getSelectedLayerIds,
 } from '../store/aia/selectors';
 import {
-  getAppMode,
-  getHover,
+  getPathHover,
   getShapeShifterEndState,
+  getShapeShifterMode,
   getShapeShifterStartState,
 } from '../store/shapeshifter/selectors';
 import { CanvasLayoutMixin } from './CanvasLayoutMixin';
@@ -75,6 +75,11 @@ const HIGHLIGHT_COLOR = '#448AFF';
 const POINT_BORDER_COLOR = '#000';
 const POINT_TEXT_COLOR = '#fff';
 
+// TODO: make shape shifter mode work with clip paths
+// TODO: make shape shifter mode work with clip paths
+// TODO: make shape shifter mode work with clip paths
+// TODO: make shape shifter mode work with clip paths
+// TODO: make shape shifter mode work with clip paths
 type Context = CanvasRenderingContext2D;
 
 /**
@@ -95,8 +100,7 @@ export class CanvasOverlayDirective
   private selectedLayerIds = new Set<string>();
   // Shape Shifter mode variables.
   private shapeShifterPathLayerId: string;
-  shapeShifterAppMode: AppMode;
-  shapeShifterBlock: PathAnimationBlock;
+  shapeShifterMode: ShapeShifterMode;
   private shapeShifterHover: Hover;
   shapeShifterSelections: ReadonlyArray<Selection>;
   private currentHoverPreviewPath: Path | undefined;
@@ -210,21 +214,21 @@ export class CanvasOverlayDirective
       this.registerSubscription(
         this.store.select(shapeShifterSelector)
           .subscribe(({ vectorLayer, block, hover, selections }) => {
+            console.info('canvas overlay', this.canvasType, vectorLayer, hover, selections);
             this.vectorLayer = vectorLayer;
-            this.shapeShifterPathLayerId = block ? block.layerId : undefined;
-            this.shapeShifterBlock = block;
+            this.shapeShifterPathLayerId = block.layerId;
             this.shapeShifterHover = hover;
             this.shapeShifterSelections = selections;
             this.draw();
           }),
       );
       this.registerSubscription(
-        this.store.select(getAppMode).subscribe(appMode => {
-          this.shapeShifterAppMode = appMode;
+        this.store.select(getShapeShifterMode).subscribe(mode => {
+          this.shapeShifterMode = mode;
           const pathLayer =
             this.vectorLayer.findLayerById(this.shapeShifterPathLayerId) as PathLayer;
-          if (this.shapeShifterAppMode === AppMode.SplitCommands
-            || (this.shapeShifterAppMode === AppMode.SplitSubPaths
+          if (this.shapeShifterMode === ShapeShifterMode.SplitCommands
+            || (this.shapeShifterMode === ShapeShifterMode.SplitSubPaths
               && pathLayer
               && pathLayer.isStroked())) {
             const subIdxs = new Set<number>();
@@ -237,12 +241,12 @@ export class CanvasOverlayDirective
           } else {
             this.segmentSplitter = undefined;
           }
-          if (this.shapeShifterAppMode === AppMode.Selection) {
+          if (this.shapeShifterMode === ShapeShifterMode.Selection) {
             this.selectionHelper = new SelectionHelper(this);
           } else {
             this.selectionHelper = undefined;
           }
-          if (this.shapeShifterAppMode === AppMode.MorphSubPaths) {
+          if (this.shapeShifterMode === ShapeShifterMode.MorphSubPaths) {
             this.morphSubPathHelper = new MorphSubPathHelper(this);
             this.morphSubPathService.reset();
             const selections =
@@ -254,7 +258,7 @@ export class CanvasOverlayDirective
           } else {
             this.morphSubPathHelper = undefined;
           }
-          if (this.shapeShifterAppMode === AppMode.SplitSubPaths
+          if (this.shapeShifterMode === ShapeShifterMode.SplitSubPaths
             && pathLayer
             && pathLayer.isFilled()) {
             this.shapeSplitter = new ShapeSplitter(this);
@@ -290,7 +294,7 @@ export class CanvasOverlayDirective
       // TODO: avoid re-executing the draw by combining with the above subscriptions
       // TODO: avoid re-executing the draw by combining with the above subscriptions
       this.registerSubscription(
-        this.store.select(getHover).subscribe(
+        this.store.select(getPathHover).subscribe(
           hover => {
             if (!hover) {
               // Clear the current hover.
@@ -615,7 +619,7 @@ export class CanvasOverlayDirective
       let text: string = undefined;
       const isHovering = isPointInfoHoveringFn({ cmd, subIdx, cmdIdx });
       const isAtLeastMedium = isPointInfoAtLeastMediumFn({ cmd, subIdx, cmdIdx });
-      if ((isAtLeastMedium || isHovering) && this.shapeShifterAppMode === AppMode.Selection) {
+      if ((isAtLeastMedium || isHovering) && this.shapeShifterMode === ShapeShifterMode.Selection) {
         radius = this.mediumPointRadius * SELECTED_POINT_RADIUS_FACTOR;
         const isPointEnlargedFn = (source: CanvasType, sIdx: number, cIdx: number) => {
           return pointSelections.some(s => {
@@ -654,7 +658,7 @@ export class CanvasOverlayDirective
     if (!this.isShapeShifterMode) {
       return;
     }
-    if (this.shapeShifterAppMode !== AppMode.Selection
+    if (this.shapeShifterMode !== ShapeShifterMode.Selection
       || !this.selectionHelper
       || !this.selectionHelper.isDragTriggered()) {
       return;
@@ -682,8 +686,8 @@ export class CanvasOverlayDirective
     }
     const pathLayer =
       this.vectorLayer.findLayerById(this.shapeShifterPathLayerId) as PathLayer;
-    if (this.shapeShifterAppMode !== AppMode.SplitCommands
-      && this.shapeShifterAppMode !== AppMode.SplitSubPaths
+    if (this.shapeShifterMode !== ShapeShifterMode.SplitCommands
+      && this.shapeShifterMode !== ShapeShifterMode.SplitSubPaths
       && !pathLayer.isStroked()
       || !this.segmentSplitter
       || !this.segmentSplitter.getProjectionOntoPath()) {
@@ -708,7 +712,7 @@ export class CanvasOverlayDirective
     if (!this.isShapeShifterMode) {
       return;
     }
-    if (this.shapeShifterAppMode !== AppMode.SplitSubPaths || !this.shapeSplitter) {
+    if (this.shapeShifterMode !== ShapeShifterMode.SplitSubPaths || !this.shapeSplitter) {
       return;
     }
     const flattenedTransform =
@@ -778,13 +782,13 @@ export class CanvasOverlayDirective
   onMouseDown(event: MouseEvent) {
     const mouseDown = this.mouseEventToViewportCoords(event);
     if (this.isShapeShifterMode) {
-      if (this.shapeShifterAppMode === AppMode.Selection) {
+      if (this.shapeShifterMode === ShapeShifterMode.Selection) {
         this.selectionHelper.onMouseDown(mouseDown, event.shiftKey || event.metaKey);
-      } else if (this.shapeShifterAppMode === AppMode.MorphSubPaths) {
+      } else if (this.shapeShifterMode === ShapeShifterMode.MorphSubPaths) {
         this.morphSubPathHelper.onMouseDown(mouseDown, event.shiftKey || event.metaKey);
-      } else if (this.shapeShifterAppMode === AppMode.SplitCommands) {
+      } else if (this.shapeShifterMode === ShapeShifterMode.SplitCommands) {
         this.segmentSplitter.onMouseDown(mouseDown);
-      } else if (this.shapeShifterAppMode === AppMode.SplitSubPaths) {
+      } else if (this.shapeShifterMode === ShapeShifterMode.SplitSubPaths) {
         const pathLayer = this.vectorLayer.findLayerById(this.shapeShifterPathLayerId) as PathLayer;
         if (pathLayer.isStroked()) {
           this.segmentSplitter.onMouseDown(mouseDown);
@@ -811,13 +815,13 @@ export class CanvasOverlayDirective
       return;
     }
     const mouseMove = this.mouseEventToViewportCoords(event);
-    if (this.shapeShifterAppMode === AppMode.Selection) {
+    if (this.shapeShifterMode === ShapeShifterMode.Selection) {
       this.selectionHelper.onMouseMove(mouseMove);
-    } else if (this.shapeShifterAppMode === AppMode.MorphSubPaths) {
+    } else if (this.shapeShifterMode === ShapeShifterMode.MorphSubPaths) {
       this.morphSubPathHelper.onMouseMove(mouseMove);
-    } else if (this.shapeShifterAppMode === AppMode.SplitCommands) {
+    } else if (this.shapeShifterMode === ShapeShifterMode.SplitCommands) {
       this.segmentSplitter.onMouseMove(mouseMove);
-    } else if (this.shapeShifterAppMode === AppMode.SplitSubPaths) {
+    } else if (this.shapeShifterMode === ShapeShifterMode.SplitSubPaths) {
       const pathLayer = this.vectorLayer.findLayerById(this.shapeShifterPathLayerId) as PathLayer;
       if (pathLayer.isStroked()) {
         this.segmentSplitter.onMouseMove(mouseMove);
@@ -833,13 +837,13 @@ export class CanvasOverlayDirective
       return;
     }
     const mouseUp = this.mouseEventToViewportCoords(event);
-    if (this.shapeShifterAppMode === AppMode.Selection) {
+    if (this.shapeShifterMode === ShapeShifterMode.Selection) {
       this.selectionHelper.onMouseUp(mouseUp, event.shiftKey || event.metaKey);
-    } else if (this.shapeShifterAppMode === AppMode.MorphSubPaths) {
+    } else if (this.shapeShifterMode === ShapeShifterMode.MorphSubPaths) {
       this.morphSubPathHelper.onMouseUp(mouseUp);
-    } else if (this.shapeShifterAppMode === AppMode.SplitCommands) {
+    } else if (this.shapeShifterMode === ShapeShifterMode.SplitCommands) {
       this.segmentSplitter.onMouseUp(mouseUp);
-    } else if (this.shapeShifterAppMode === AppMode.SplitSubPaths) {
+    } else if (this.shapeShifterMode === ShapeShifterMode.SplitSubPaths) {
       const pathLayer = this.vectorLayer.findLayerById(this.shapeShifterPathLayerId) as PathLayer;
       if (pathLayer.isStroked()) {
         this.segmentSplitter.onMouseUp(mouseUp);
@@ -855,14 +859,14 @@ export class CanvasOverlayDirective
       return;
     }
     const mouseLeave = this.mouseEventToViewportCoords(event);
-    if (this.shapeShifterAppMode === AppMode.Selection) {
+    if (this.shapeShifterMode === ShapeShifterMode.Selection) {
       // TODO: how to handle the case where the mouse leaves and re-enters mid-gesture?
       this.selectionHelper.onMouseLeave(mouseLeave);
-    } else if (this.shapeShifterAppMode === AppMode.MorphSubPaths) {
+    } else if (this.shapeShifterMode === ShapeShifterMode.MorphSubPaths) {
       this.morphSubPathHelper.onMouseLeave(mouseLeave);
-    } else if (this.shapeShifterAppMode === AppMode.SplitCommands) {
+    } else if (this.shapeShifterMode === ShapeShifterMode.SplitCommands) {
       this.segmentSplitter.onMouseLeave(mouseLeave);
-    } else if (this.shapeShifterAppMode === AppMode.SplitSubPaths) {
+    } else if (this.shapeShifterMode === ShapeShifterMode.SplitSubPaths) {
       const pathLayer = this.vectorLayer.findLayerById(this.shapeShifterPathLayerId) as PathLayer;
       if (pathLayer.isStroked()) {
         this.segmentSplitter.onMouseLeave(mouseLeave);
@@ -870,7 +874,7 @@ export class CanvasOverlayDirective
         this.shapeSplitter.onMouseLeave(mouseLeave);
       }
     }
-    this.store.dispatch(new SetHover(undefined));
+    this.store.dispatch(new SetPathHover(undefined));
   }
 
   // TODO: override onClick()?

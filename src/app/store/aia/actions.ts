@@ -46,7 +46,6 @@ export class ReplaceAnimations implements Action {
 export const ADD_BLOCK = '__aia__ADD_BLOCK';
 export const SELECT_BLOCK = '__aia__SELECT_BLOCK';
 export const REPLACE_BLOCKS = '__aia__REPLACE_BLOCKS';
-export const UPDATE_PATH_BLOCK = '__aia__UPDATE_PATH_BLOCK';
 
 export class AddBlock implements Action {
   readonly type = ADD_BLOCK;
@@ -74,22 +73,6 @@ export class ReplaceBlocks implements Action {
   readonly payload: { blocks: ReadonlyArray<AnimationBlock> };
   constructor(readonly blocks: ReadonlyArray<AnimationBlock>) {
     this.payload = { blocks };
-  }
-}
-
-export class UpdatePathBlock implements Action {
-  readonly type = UPDATE_PATH_BLOCK;
-  readonly payload: {
-    blockId: string,
-    source: CanvasType,
-    path: Path,
-  };
-  constructor(
-    readonly blockId: string,
-    readonly source: CanvasType,
-    readonly path: Path,
-  ) {
-    this.payload = { blockId, source, path };
   }
 }
 
@@ -165,7 +148,6 @@ export type Actions =
   | AddBlock
   | SelectBlock
   | ReplaceBlocks
-  | UpdatePathBlock
   | AddLayers
   | SelectLayer
   | ClearLayerSelections

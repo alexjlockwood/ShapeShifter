@@ -260,12 +260,6 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
       };
     }
 
-    // Update a path animation block in shape shifter mode.
-    case actions.UPDATE_PATH_BLOCK: {
-      const { blockId, source, path } = action.payload;
-      return updatePathAnimationBlock(state, blockId, source, path);
-    }
-
     // Add layers to the tree.
     case actions.ADD_LAYERS: {
       // TODO: add the layer below the currently selected layer, if one exists
@@ -619,95 +613,4 @@ function toggleShapeShifterSelections(
     });
   }
   return currentSelections;
-}
-
-/**
- * Updates the path command at the specified sub path index. The path's previous
- * conversions will be removed and an attempt to make the path compatible with
- * its opposite path layer will be made.
- */
-function updatePathAnimationBlock(
-  state: State,
-  blockId: string,
-  source: CanvasType,
-  path: Path,
-) {
-  const { timeline } = state;
-  const animations = timeline.animations.slice();
-  const { activeAnimationId } = timeline;
-  const activeAnimationIndex = _.findIndex(animations, a => a.id === activeAnimationId);
-  const activeAnimation = animations[activeAnimationIndex];
-  const activeAnimationBlocks = activeAnimation.blocks.slice();
-  const blockIndex = _.findIndex(activeAnimationBlocks, b => b.id === blockId);
-  const block = activeAnimationBlocks[blockIndex];
-
-  // Remove any existing conversions and collapsing sub paths from the path.
-  const pathMutator = path.mutate();
-  path.getSubPaths().forEach((_, subIdx) => {
-    pathMutator.unconvertSubPath(subIdx);
-  });
-  path = pathMutator.deleteCollapsingSubPaths().build();
-
-  const getBlockPathFn = (t: CanvasType) => {
-    return t === CanvasType.Start ? block.fromValue : block.toValue;
-  };
-  const setBlockPathFn = (t: CanvasType, p: Path) => {
-    if (t === CanvasType.Start) {
-      block.fromValue = p;
-    } else {
-      block.toValue = p;
-    }
-  };
-
-  const oppSource = source === CanvasType.Start ? CanvasType.End : CanvasType.Start;
-  let oppPath = getBlockPathFn(oppSource);
-  if (oppPath) {
-    oppPath = oppPath.mutate().deleteCollapsingSubPaths().build();
-    const numSubPaths = path.getSubPaths().length;
-    const numOppSubPaths = oppPath.getSubPaths().length;
-    if (numSubPaths !== numOppSubPaths) {
-      const pathToChange = numSubPaths < numOppSubPaths ? path : oppPath;
-      const oppPathToChange = numSubPaths < numOppSubPaths ? oppPath : path;
-      const minIdx = Math.min(numSubPaths, numOppSubPaths);
-      const maxIdx = Math.max(numSubPaths, numOppSubPaths);
-      const mutator = pathToChange.mutate();
-      for (let i = minIdx; i < maxIdx; i++) {
-        // TODO: allow the user to specify the location of collapsing paths?
-        const pole = oppPathToChange.getPoleOfInaccessibility(i);
-        mutator.addCollapsingSubPath(
-          pole, oppPathToChange.getSubPaths()[i].getCommands().length);
-      }
-      if (numSubPaths < numOppSubPaths) {
-        path = mutator.build();
-      } else {
-        oppPath = mutator.build();
-      }
-    }
-    for (let subIdx = 0; subIdx < Math.max(numSubPaths, numOppSubPaths); subIdx++) {
-      const numCmds = path.getSubPaths()[subIdx].getCommands().length;
-      const numOppCommands = oppPath.getSubPaths()[subIdx].getCommands().length;
-      if (numCmds === numOppCommands) {
-        // Only auto convert when the number of commands in both canvases
-        // are equal. Otherwise we'll wait for the user to add more points.
-        const autoConvertResults = AutoAwesome.autoConvert(
-          subIdx,
-          path,
-          oppPath.mutate().unconvertSubPath(subIdx).build(),
-        );
-        path = autoConvertResults.from;
-
-        // This is the one case where a change in one canvas type's vector layer
-        // will cause corresponding changes to be made in the opposite canvas type's
-        // vector layer.
-        oppPath = autoConvertResults.to;
-      }
-    }
-  }
-  setBlockPathFn(source, path);
-  setBlockPathFn(oppSource, oppPath);
-
-  activeAnimationBlocks[blockIndex] = block;
-  activeAnimation.blocks = activeAnimationBlocks;
-  animations[activeAnimationIndex] = activeAnimation;
-  return { ...state, animations };
 }

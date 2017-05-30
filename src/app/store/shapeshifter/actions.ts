@@ -1,46 +1,46 @@
 import { CanvasType } from '../../CanvasType';
-import { AppMode, Hover, Selection } from '.';
+import { Hover, Selection, ShapeShifterMode } from '.';
 import { Action } from '@ngrx/store';
 
-export const ENTER_SHAPE_SHIFTER_MODE = '__shapeshifter__ENTER_SHAPE_SHIFTER_MODE';
-export const EXIT_SHAPE_SHIFTER_MODE = '__shapeshifter__EXIT_SHAPE_SHIFTER_MODE';
-export const SET_APP_MODE = '__shapeshifter__SET_APP_MODE';
-export const SET_HOVER = '__shapeshifter__SET_HOVER';
-export const SET_SELECTIONS = '__shapeshifter__SET_SELECTIONS';
+export const SET_ACTIVE_PATH_BLOCK_ID = '__shapeshifter__SET_ACTIVE_PATH_BLOCK_ID';
+export const CLEAR_ACTIVE_PATH_BLOCK_ID = '__shapeshifter__CLEAR_ACTIVE_PATH_BLOCK_ID';
+export const SET_SHAPE_SHIFTER_MODE = '__shapeshifter__SET_SHAPE_SHIFTER_MODE';
+export const SET_PATH_HOVER = '__shapeshifter__SET_HOVER';
+export const SET_PATH_SELECTIONS = '__shapeshifter__SET_SELECTIONS';
 export const TOGGLE_SUBPATH_SELECTION = '__shapeshifter__TOGGLE_SUBPATH_SELECTION';
 export const TOGGLE_SEGMENT_SELECTIONS = '__shapeshifter__TOGGLE_SEGMENT_SELECTION';
 export const TOGGLE_POINT_SELECTION = '__shapeshifter__TOGGLE_POINT_SELECTION';
 
-export class EnterShapeShifterMode implements Action {
-  readonly type = ENTER_SHAPE_SHIFTER_MODE;
+export class SetActivePathBlockId implements Action {
+  readonly type = SET_ACTIVE_PATH_BLOCK_ID;
   readonly payload: { blockId: string };
   constructor(readonly blockId: string) {
     this.payload = { blockId };
   }
 }
 
-export class ExitShapeShifterMode implements Action {
-  readonly type = EXIT_SHAPE_SHIFTER_MODE;
+export class ClearActivePathBlockId implements Action {
+  readonly type = CLEAR_ACTIVE_PATH_BLOCK_ID;
 }
 
-export class SetAppMode implements Action {
-  readonly type = SET_APP_MODE;
-  readonly payload: { appMode: AppMode };
-  constructor(readonly appMode: AppMode) {
-    this.payload = { appMode };
+export class SetShapeShifterMode implements Action {
+  readonly type = SET_SHAPE_SHIFTER_MODE;
+  readonly payload: { mode: ShapeShifterMode };
+  constructor(readonly mode: ShapeShifterMode) {
+    this.payload = { mode };
   }
 }
 
-export class SetHover implements Action {
-  readonly type = SET_HOVER;
+export class SetPathHover implements Action {
+  readonly type = SET_PATH_HOVER;
   readonly payload: { hover: Hover };
   constructor(readonly hover: Hover) {
     this.payload = { hover };
   }
 }
 
-export class SetSelections implements Action {
-  readonly type = SET_SELECTIONS;
+export class SetPathSelections implements Action {
+  readonly type = SET_PATH_SELECTIONS;
   readonly payload: { selections: ReadonlyArray<Selection> };
   constructor(readonly selections: ReadonlyArray<Selection>) {
     this.payload = { selections };
@@ -82,11 +82,11 @@ export class TogglePointSelection implements Action {
 }
 
 export type Actions =
-  EnterShapeShifterMode
-  | ExitShapeShifterMode
-  | SetAppMode
-  | SetHover
-  | SetSelections
+  SetActivePathBlockId
+  | ClearActivePathBlockId
+  | SetShapeShifterMode
+  | SetPathHover
+  | SetPathSelections
   | ToggleSubPathSelection
   | ToggleSegmentSelections
   | TogglePointSelection;

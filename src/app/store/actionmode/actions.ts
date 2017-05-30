@@ -1,3 +1,5 @@
+import { CanvasType } from '../..';
+import { Path } from '../../scripts/paths';
 import { Action } from '@ngrx/store';
 
 export const REVERSE_SELECTED_SUBPATHS = '__actionmode__REVERSE_SELECTED_SUBPATHS';
@@ -9,6 +11,7 @@ export const DELETE_SELECTED_POINTS = '__actionmode__DELETE_SELECTED_POINTS';
 export const SHIFT_POINT_TO_FRONT = '__actionmode__SHIFT_POINT_TO_FRONT';
 export const SPLIT_COMMAND_IN_HALF_HOVER = '__actionmode__SPLIT_COMMAND_IN_HALF_HOVER';
 export const SPLIT_COMMAND_IN_HALF_CLICK = '__actionmode__SPLIT_COMMAND_IN_HALF_CLICK';
+export const UPDATE_ACTIVE_PATH_BLOCK = '__actionmode__UPDATE_ACTIVE_PATH_BLOCK';
 
 export class ReverseSelectedSubPaths implements Action {
   readonly type = REVERSE_SELECTED_SUBPATHS;
@@ -46,6 +49,17 @@ export class SplitCommandInHalfClick implements Action {
   readonly type = SPLIT_COMMAND_IN_HALF_CLICK;
 }
 
+export class UpdateActivePathBlock implements Action {
+  readonly type = UPDATE_ACTIVE_PATH_BLOCK;
+  readonly payload: {
+    source: CanvasType,
+    path: Path,
+  };
+  constructor(source: CanvasType, path: Path) {
+    this.payload = { source, path };
+  }
+}
+
 export type Actions =
   ReverseSelectedSubPaths
   | ShiftBackSelectedSubPaths
@@ -55,4 +69,5 @@ export type Actions =
   | DeleteSelectedPoints
   | ShiftPointToFront
   | SplitCommandInHalfHover
-  | SplitCommandInHalfClick;
+  | SplitCommandInHalfClick
+  | UpdateActivePathBlock;

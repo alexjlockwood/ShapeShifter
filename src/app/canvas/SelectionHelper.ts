@@ -3,17 +3,17 @@ import { MathUtil, Matrix, Point } from '../scripts/common';
 import { LayerUtil } from '../scripts/layers';
 import { ProjectionOntoPath } from '../scripts/paths';
 import {
-  AppMode,
   HoverType,
-  SetAppMode,
-  SetHover,
-  SetSelections,
+  SetPathHover,
+  SetPathSelections,
+  SetShapeShifterMode,
+  ShapeShifterMode,
   State,
   Store,
   TogglePointSelection,
   ToggleSegmentSelections,
   ToggleSubPathSelection,
-  UpdatePathBlock,
+  UpdateActivePathBlock,
 } from '../store';
 import { CanvasOverlayDirective } from './canvasoverlay.directive';
 import * as _ from 'lodash';
@@ -75,7 +75,7 @@ export class SelectionHelper {
       // If the mouse down event didn't result in a hit, then
       // clear any existing selections, but only if the user isn't in
       // the middle of selecting multiple points at once.
-      this.store.dispatch(new SetAppMode(AppMode.Selection));
+      this.store.dispatch(new SetShapeShifterMode(ShapeShifterMode.Selection));
     }
   }
 
@@ -136,17 +136,18 @@ export class SelectionHelper {
 
         // Notify the global layer state service about the change and draw.
         // Clear any existing selections and/or hovers as well.
-        this.store.dispatch(new SetHover(undefined));
-        this.store.dispatch(new SetSelections([]));
+        this.store.dispatch(new SetPathHover(undefined));
+        this.store.dispatch(new SetPathSelections([]));
         this.reset();
 
         this.store.dispatch(
-          new UpdatePathBlock(this.component.shapeShifterBlock.id, this.canvasType, pathMutator.build()));
+          new UpdateActivePathBlock(
+            this.canvasType, pathMutator.build()));
       }
     } else if (this.currentDraggableSplitIndex) {
       const hitResult = this.performHitTest(mouseUp);
       if (!hitResult.isHit) {
-        this.store.dispatch(new SetSelections([]));
+        this.store.dispatch(new SetPathSelections([]));
       } else if (hitResult.isEndPointHit) {
         const { subIdx, cmdIdx } = this.findHitPoint(hitResult.endPointHits);
         this.store.dispatch(
@@ -166,7 +167,7 @@ export class SelectionHelper {
   onMouseLeave(mouseLeave: Point) {
     this.lastKnownMouseLocation = mouseLeave;
     this.reset();
-    this.store.dispatch(new SetHover(undefined));
+    this.store.dispatch(new SetPathHover(undefined));
     this.component.draw();
   }
 
@@ -205,12 +206,12 @@ export class SelectionHelper {
     }
     const hitResult = this.performHitTest(mousePoint);
     if (!hitResult.isHit) {
-      this.store.dispatch(new SetHover(undefined));
+      this.store.dispatch(new SetPathHover(undefined));
       return;
     }
     if (hitResult.isEndPointHit) {
       const { subIdx, cmdIdx } = this.findHitPoint(hitResult.endPointHits);
-      this.store.dispatch(new SetHover({
+      this.store.dispatch(new SetPathHover({
         type: HoverType.Point,
         source: this.canvasType,
         subIdx,
@@ -222,7 +223,7 @@ export class SelectionHelper {
       if (this.component.activePathLayer.isFilled()) {
         const { subIdx, cmdIdx } = this.findHitSegment(hitResult.segmentHits);
         if (this.component.activePath.getCommand(subIdx, cmdIdx).isSplitSegment()) {
-          this.store.dispatch(new SetHover({
+          this.store.dispatch(new SetPathHover({
             type: HoverType.Segment,
             source: this.canvasType,
             subIdx,
@@ -232,7 +233,7 @@ export class SelectionHelper {
         }
       } else if (this.component.activePathLayer.isStroked()) {
         const { subIdx } = this.findHitSegment(hitResult.segmentHits);
-        this.store.dispatch(new SetHover({
+        this.store.dispatch(new SetPathHover({
           type: HoverType.SubPath,
           source: this.canvasType,
           subIdx,
@@ -242,7 +243,7 @@ export class SelectionHelper {
     }
     if (hitResult.isShapeHit && this.component.activePathLayer.isFilled()) {
       const { subIdx } = this.findHitSubPath(hitResult.shapeHits);
-      this.store.dispatch(new SetHover({
+      this.store.dispatch(new SetPathHover({
         type: HoverType.SubPath,
         source: this.canvasType,
         subIdx,

@@ -1,11 +1,17 @@
 import { CanvasType } from '../../CanvasType';
-import { AppMode, Hover, HoverType, Selection, SelectionType } from '.';
+import {
+  Hover,
+  HoverType,
+  Selection,
+  SelectionType,
+  ShapeShifterMode,
+} from '.';
 import * as actions from './actions';
 import * as _ from 'lodash';
 
 export interface State {
   readonly blockId: string;
-  readonly appMode: AppMode;
+  readonly mode: ShapeShifterMode;
   readonly hover: Hover;
   readonly selections: ReadonlyArray<Selection>;
 }
@@ -13,7 +19,7 @@ export interface State {
 export function buildInitialState() {
   return {
     blockId: undefined,
-    appMode: AppMode.Selection,
+    mode: ShapeShifterMode.Selection,
     hover: undefined,
     selections: [],
   } as State;
@@ -22,32 +28,31 @@ export function buildInitialState() {
 export function reducer(state = buildInitialState(), action: actions.Actions) {
   switch (action.type) {
 
-    // Enter shape shifter mode.
-    case actions.ENTER_SHAPE_SHIFTER_MODE: {
+    // Set the currently active block ID, enabling shape shifter mode.
+    case actions.SET_ACTIVE_PATH_BLOCK_ID: {
       const { blockId } = action.payload;
-      state = buildInitialState();
-      return { ...state, blockId };
+      return { ...buildInitialState(), blockId };
     }
 
-    // Exit shape shifter mode.
-    case actions.EXIT_SHAPE_SHIFTER_MODE: {
+    // Clear the currently active block ID, ending shape shifter mode.
+    case actions.CLEAR_ACTIVE_PATH_BLOCK_ID: {
       return buildInitialState();
     }
 
     // Set the app mode during shape shifter mode.
-    case actions.SET_APP_MODE: {
-      const { appMode } = action.payload;
-      return { ...state, appMode };
+    case actions.SET_SHAPE_SHIFTER_MODE: {
+      const { mode } = action.payload;
+      return { ...state, mode };
     }
 
     // Set the hover mode during shape shifter mode.
-    case actions.SET_HOVER: {
+    case actions.SET_PATH_HOVER: {
       const { hover } = action.payload;
       return { ...state, hover };
     }
 
     // Set the path selections during shape shifter mode.
-    case actions.SET_SELECTIONS: {
+    case actions.SET_PATH_SELECTIONS: {
       const { selections } = action.payload;
       return { ...state, selections };
     }
@@ -57,7 +62,7 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
       const { source, subIdx } = action.payload;
       let selections = state.selections.slice();
       _.remove(selections, s => s.type !== SelectionType.SubPath && s.source !== source);
-      selections = toggleShapeShifterSelections(
+      selections = toggleSelections(
         selections,
         [{ type: SelectionType.SubPath, source, subIdx }],
         false);
@@ -69,7 +74,7 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
       const { source, segments } = action.payload;
       let selections = state.selections.slice();
       _.remove(selections, s => s.type !== SelectionType.Segment);
-      selections = toggleShapeShifterSelections(
+      selections = toggleSelections(
         selections,
         segments.map(segment => {
           const { subIdx, cmdIdx } = segment;
@@ -84,7 +89,7 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
       const { source, subIdx, cmdIdx, appendToList } = action.payload;
       let selections = state.selections.slice();
       _.remove(selections, s => s.type !== SelectionType.Point && s.source !== source);
-      selections = toggleShapeShifterSelections(
+      selections = toggleSelections(
         selections,
         [{ type: SelectionType.Point, source, subIdx, cmdIdx }],
         appendToList,
@@ -99,11 +104,11 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
 }
 
 /**
-  * Toggles the specified shape shifter selections. If a selection exists, all selections
-  * will be removed from the list. Otherwise, they will be added to the list of selections.
-  * By default, all other selections from the list will be cleared.
-  */
-function toggleShapeShifterSelections(
+ * Toggles the specified shape shifter selections. If a selection exists, all selections
+ * will be removed from the list. Otherwise, they will be added to the list of selections.
+ * By default, all other selections from the list will be cleared.
+ */
+function toggleSelections(
   currentSelections: Selection[],
   newSelections: Selection[],
   appendToList = false,
