@@ -31,6 +31,10 @@ export const isShapeShifterMode = createSelector(getBlockId, id => !!id);
 export const getShapeShifterMode = createSelector(getShapeShifterState, s => s.mode);
 export const getPathHover = createDeepEqualSelector(getShapeShifterState, s => s.hover);
 const getPathSelections = createSelector(getShapeShifterState, s => s.selections);
+const getPairedSubPaths =
+  createDeepEqualSelector(getShapeShifterState, state => state.pairedSubPaths);
+const getUnpairedSubPath =
+  createDeepEqualSelector(getShapeShifterState, state => state.unpairedSubPath);
 
 const getVectorLayerFromValue =
   createSelector(
@@ -86,6 +90,8 @@ export const getShapeShifterStartState =
     blockLayerId: getBlockLayerId,
     hover: getPathHover,
     selections: getPathSelections,
+    pairedSubPaths: getPairedSubPaths,
+    unpairedSubPath: getUnpairedSubPath,
   });
 
 export const getShapeShifterEndState =
@@ -94,6 +100,8 @@ export const getShapeShifterEndState =
     blockLayerId: getBlockLayerId,
     hover: getPathHover,
     selections: getPathSelections,
+    pairedSubPaths: getPairedSubPaths,
+    unpairedSubPath: getUnpairedSubPath,
   });
 
 export const getToolbarState =
@@ -102,4 +110,5 @@ export const getToolbarState =
     toPl: getPathLayerToValue,
     mode: getShapeShifterMode,
     selections: getPathSelections,
+    unpairedSubPath: getUnpairedSubPath,
   });

@@ -1,11 +1,12 @@
 import { CanvasType } from '../CanvasType';
 import { Point } from '../scripts/common';
-import { MorphSubPathService } from '../services';
 import {
   HoverType,
+  SetPairedSubPaths,
   SetPathHover,
   SetPathSelections,
   SetShapeShifterMode,
+  SetUnpairedSubPath,
   ShapeShifterMode,
   State,
   Store,
@@ -17,12 +18,10 @@ import * as _ from 'lodash';
  * Helper class that tracks information during morph subpath mode.
  */
 export class MorphSubPathHelper {
-  private readonly morphSubPathService: MorphSubPathService;
   private readonly canvasType: CanvasType;
   private readonly store: Store<State>;
 
   constructor(private readonly component: CanvasOverlayDirective) {
-    this.morphSubPathService = component.morphSubPathService;
     this.canvasType = component.canvasType;
     this.store = component.store;
   }
@@ -33,12 +32,12 @@ export class MorphSubPathHelper {
     if (hitResult.isSegmentHit || hitResult.isShapeHit) {
       const hits = hitResult.isShapeHit ? hitResult.shapeHits : hitResult.segmentHits;
       const { subIdx } = this.findHitSubPath(hits);
-      const currUnpair = this.morphSubPathService.getUnpairedSubPath();
+      const currUnpair = this.component.unpairedSubPath;
       if (currUnpair && this.canvasType !== currUnpair.source) {
         const { source: fromSource, subIdx: fromSubIdx } = currUnpair;
         const toSource = this.canvasType;
         const toSubIdx = subIdx;
-        this.morphSubPathService.setUnpairedSubPath(undefined);
+        this.store.dispatch(new SetUnpairedSubPath(undefined));
         const fromSelections =
           this.component.shapeShifterSelections.filter(s => s.source === fromSource);
         const toSelections =
@@ -64,7 +63,7 @@ export class MorphSubPathHelper {
             };
           })));
         }
-        const pairedSubPaths = this.morphSubPathService.getPairedSubPaths();
+        const pairedSubPaths = this.component.pairedSubPaths;
         if (pairedSubPaths.has(fromSubIdx)) {
           pairedSubPaths.delete(fromSubIdx);
         }
@@ -72,7 +71,7 @@ export class MorphSubPathHelper {
           pairedSubPaths.delete(toSubIdx);
         }
         pairedSubPaths.add(pairedSubPaths.size);
-        this.morphSubPathService.setPairedSubPaths(pairedSubPaths);
+        this.store.dispatch(new SetPairedSubPaths(pairedSubPaths));
         this.store.dispatch(new SetPathHover(undefined));
         // TODO: uncomment this
         // TODO: uncomment this
@@ -90,9 +89,8 @@ export class MorphSubPathHelper {
         //     .moveSubPath(toSubIdx, 0)
         //     .build());
       } else {
-        this.morphSubPathService.setUnpairedSubPath({ source: this.canvasType, subIdx });
+        this.store.dispatch(new SetUnpairedSubPath({ source: this.canvasType, subIdx }));
       }
-      this.morphSubPathService.notify();
     } else if (!isShiftOrMetaPressed) {
       this.store.dispatch(new SetShapeShifterMode(ShapeShifterMode.Selection));
     }

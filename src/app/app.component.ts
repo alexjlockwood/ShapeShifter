@@ -3,8 +3,6 @@ import 'rxjs/add/operator/combineLatest';
 
 import { environment } from '../environments/environment';
 import { CanvasType } from './CanvasType';
-import { DEBUG_VECTOR_DRAWABLE_2 } from './scripts/demos';
-import { VectorDrawableLoader } from './scripts/import';
 import { FileImporterService, ShortcutService } from './services';
 import { AddLayers, State, Store } from './store';
 import { isShapeShifterMode } from './store/shapeshifter/selectors';
@@ -23,7 +21,7 @@ import * as $ from 'jquery';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Observable } from 'rxjs/Observable';
 
-const IS_DEV_MODE = !environment.production;
+const IS_DEV_BUILD = !environment.production;
 const ELEMENT_RESIZE_DETECTOR = erd();
 const STORAGE_KEY_FIRST_TIME_USER = 'storage_key_first_time_user';
 
@@ -57,7 +55,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // TODO: we should check to see if there are any dirty changes first
     $(window).on('beforeunload', event => {
-      if (!IS_DEV_MODE) {
+      if (!IS_DEV_BUILD) {
         return 'You\'ve made changes but haven\'t saved. ' +
           'Are you sure you want to navigate away?';
       }
@@ -91,15 +89,6 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
           this.snackBar.open('Ready to work offline', 'Dismiss', { duration: 5000 });
         });
       }
-    }
-
-    if (IS_DEV_MODE) {
-      const vl =
-        VectorDrawableLoader.loadVectorLayerFromXmlString(
-          DEBUG_VECTOR_DRAWABLE_2,
-          name => false,
-        );
-      this.store.dispatch(new AddLayers(vl.children));
     }
   }
 

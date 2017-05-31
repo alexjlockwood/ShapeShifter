@@ -51,8 +51,9 @@ export class ToolbarComponent implements OnInit {
 
   ngOnInit() {
     this.toolbarData$ = this.store.select(getToolbarState)
-      .map(({ fromPl, toPl, mode, selections }) => {
-        const selectionInfo = new ToolbarData(fromPl, toPl, mode, selections);
+      .map(({ fromPl, toPl, mode, selections, unpairedSubPath }) => {
+        const selectionInfo =
+          new ToolbarData(fromPl, toPl, mode, selections, unpairedSubPath);
         if (selectionInfo.getNumSelections() > 0) {
           this.hasActionModeBeenEnabled = true;
         }
@@ -201,6 +202,7 @@ class ToolbarData {
     activeEndPathLayer: PathLayer,
     public readonly mode: ShapeShifterMode,
     public readonly selections: ReadonlyArray<Selection>,
+    readonly unpair: { source: CanvasType; subIdx: number; },
   ) {
     // Precondition: assume all selections are for the same canvas type
     if (!selections.length) {
@@ -252,30 +254,20 @@ class ToolbarData {
     this.showShiftSubPath = this.subPaths.length > 0
       && activePath.getSubPath(this.subPaths[0]).isClosed();
     this.showSplitInHalf = this.points.length === 1 && !!this.points[0].cmdIdx;
-    // TODO: uncomment this
-    // TODO: uncomment this
-    // TODO: uncomment this
-    // TODO: uncomment this
-    // TODO: uncomment this
-    // if (this.appMode === AppMode.MorphSubPaths) {
-    //   const unpair = morphSubPathService.getUnpairedSubPath();
-    //   if (unpair) {
-    //     this.unpairedSubPathSource = unpair.source;
-    //   }
-    // }
-
-    // const startLayer = this.stateService.getActivePathLayer(CanvasType.Start);
-    // const endLayer = this.stateService.getActivePathLayer(CanvasType.End);
-    // if (!startLayer || !endLayer) {
-    //   return false;
-    // }
-    // if (startLayer.pathData.getSubPaths().length === 1
-    //   && endLayer.pathData.getSubPaths().length === 1) {
-    //   return false;
-    // }
-    // return this.getNumSubPaths() === 1
-    //   || this.getNumSegments() > 0
-    //   || !this.isSelectionMode();
+    if (this.mode === ShapeShifterMode.MorphSubPaths) {
+      if (unpair) {
+        this.unpairedSubPathSource = unpair.source;
+      }
+    }
+    if (activeStartPathLayer.pathData.getSubPaths().length === 1
+      && activeEndPathLayer.pathData.getSubPaths().length === 1) {
+      this.showMorphSubPaths = false;
+    } else {
+      this.showMorphSubPaths =
+        this.getNumSubPaths() === 1
+        || this.getNumSegments() > 0
+        || !this.isSelectionMode();
+    }
   }
 
   getNumSelections() {
@@ -346,24 +338,7 @@ class ToolbarData {
   }
 
   shouldShowMorphSubPaths() {
-    // TODO: uncomment this
-    // TODO: uncomment this
-    // TODO: uncomment this
-    // TODO: uncomment this
-    // TODO: uncomment this
-    // const startLayer = this.stateService.getActivePathLayer(CanvasType.Start);
-    // const endLayer = this.stateService.getActivePathLayer(CanvasType.End);
-    // if (!startLayer || !endLayer) {
-    //   return false;
-    // }
-    // if (startLayer.pathData.getSubPaths().length === 1
-    //   && endLayer.pathData.getSubPaths().length === 1) {
-    //   return false;
-    // }
-    // return this.getNumSubPaths() === 1
-    //   || this.getNumSegments() > 0
-    //   || !this.isSelectionMode();
-    return false;
+    return this.showMorphSubPaths;
   }
 
   getNumSplitSubPaths() {

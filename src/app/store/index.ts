@@ -66,6 +66,8 @@ export {
   DeleteSelectedSegments,
   DeleteSelectedSubPaths,
   ReverseSelectedSubPaths,
+  SetPairedSubPaths,
+  SetUnpairedSubPath,
   ShiftBackSelectedSubPaths,
   ShiftForwardSelectedSubPaths,
   ShiftPointToFront,

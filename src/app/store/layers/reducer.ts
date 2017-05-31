@@ -1,6 +1,11 @@
+import { environment } from '../../../environments/environment';
+import { DEBUG_VECTOR_DRAWABLE_3 } from '../../scripts/demos';
+import { VectorDrawableLoader } from '../../scripts/import';
 import { LayerUtil, VectorLayer } from '../../scripts/layers';
 import * as actions from './actions';
 import * as _ from 'lodash';
+
+const IS_DEV_BUILD = !environment.production;
 
 export interface State {
   readonly vectorLayers: ReadonlyArray<VectorLayer>;
@@ -11,7 +16,17 @@ export interface State {
 }
 
 export function buildInitialState() {
-  const initialVectorLayer = new VectorLayer();
+  let initialVectorLayer: VectorLayer;
+  if (IS_DEV_BUILD) {
+    // TODO: remove this demo code
+    initialVectorLayer =
+      VectorDrawableLoader.loadVectorLayerFromXmlString(
+        DEBUG_VECTOR_DRAWABLE_3,
+        name => false,
+      );
+  } else {
+    initialVectorLayer = new VectorLayer();
+  }
   return {
     vectorLayers: [initialVectorLayer],
     activeVectorLayerId: initialVectorLayer.id,

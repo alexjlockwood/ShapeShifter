@@ -1,3 +1,4 @@
+import { CanvasType } from '../..';
 import {
   Hover,
   Selection,
@@ -12,6 +13,8 @@ export interface State {
   readonly mode: ShapeShifterMode;
   readonly hover: Hover;
   readonly selections: ReadonlyArray<Selection>;
+  readonly pairedSubPaths: Set<number>;
+  readonly unpairedSubPath: { source: CanvasType; subIdx: number; };
 }
 
 export function buildInitialState() {
@@ -20,6 +23,9 @@ export function buildInitialState() {
     mode: ShapeShifterMode.Selection,
     hover: undefined,
     selections: [],
+    // TODO: reset this stuff after mode switches
+    pairedSubPaths: new Set<number>(),
+    unpairedSubPath: undefined,
   } as State;
 }
 

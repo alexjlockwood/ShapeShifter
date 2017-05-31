@@ -147,7 +147,6 @@ export const DEBUG_VECTOR_DRAWABLE = `
 </vector>
 `;
 
-// TODO: this vector should not be allowed to be shifted
 export const DEBUG_VECTOR_DRAWABLE_2 = `
 <vector
   xmlns:android="http://schemas.android.com/apk/res/android"
@@ -168,6 +167,29 @@ export const DEBUG_VECTOR_DRAWABLE_2 = `
       android:trimPathStart="0.2"
       android:trimPathEnd="0.8"
       android:pathData="M 4 4 h 16 v 16 h -16 v -16"/>
+  </group>
+</vector>
+`;
+
+export const DEBUG_VECTOR_DRAWABLE_3 = `
+<vector
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  android:width="18dp"
+  android:height="18dp"
+  android:viewportHeight="18"
+  android:viewportWidth="18">
+
+  <group
+    android:name="iconGroup"
+    android:pivotX="9"
+    android:pivotY="9"
+    android:rotation="90"
+    android:translateX="0.75">
+
+    <path
+      android:name="iconPath"
+      android:fillColor="#000"
+      android:pathData="M9,5 L9,5 L9,13 L4,13 L9,5 M9,5 L9,5 L14,13 L9,13 L9,5"/>
   </group>
 </vector>
 `;

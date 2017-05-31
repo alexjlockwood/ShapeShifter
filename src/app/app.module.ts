@@ -15,11 +15,6 @@ import {
   DialogService,
 } from './dialogs';
 import { DropTargetDirective } from './droptarget.directive';
-import { SvgCommandPipe } from './inspector/commandinspector.component';
-import { CommandInspectorComponent } from './inspector/commandinspector.component';
-import { SubPathPairsPipe } from './inspector/pathinspector.component';
-import { PathInspectorComponent } from './inspector/pathinspector.component';
-import { SubpathInspectorComponent } from './inspector/subpathinspector.component';
 import { LayerListTreeComponent } from './layertimeline/layerlisttree.component';
 import { LayerTimelineComponent } from './layertimeline/layertimeline.component';
 import { LayerTimelineDirective } from './layertimeline/layertimeline.directive';
@@ -32,7 +27,6 @@ import {
   AppModeService,
   FileImporterService,
   HoverService,
-  MorphSubPathService,
   SelectionService,
   SettingsService,
   ShortcutService,
@@ -68,15 +62,10 @@ import { StoreModule } from '@ngrx/store';
     CanvasComponent,
     PlaybackComponent,
     SplitterComponent,
-    PathInspectorComponent,
-    CommandInspectorComponent,
-    SubpathInspectorComponent,
     CanvasRulerDirective,
     ToolbarComponent,
     ConfirmDialogComponent,
     DemoDialogComponent,
-    SvgCommandPipe,
-    SubPathPairsPipe,
     LayerListTreeComponent,
     PropertyInputComponent,
     ScrollGroupDirective,
@@ -116,7 +105,6 @@ import { StoreModule } from '@ngrx/store';
     SettingsService,
     AppModeService,
     FileImporterService,
-    MorphSubPathService,
     ActionModeService,
     ShortcutService,
   ],

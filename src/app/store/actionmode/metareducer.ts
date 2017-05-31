@@ -168,6 +168,20 @@ export function metaReducer(reducer: ActionReducer<State>): ActionReducer<State>
         state = updateActivePathBlock(state, source, path);
         break;
       }
+
+      // Set the currently paired subpaths in pair subpaths mode.
+      case actions.SET_PAIRED_SUBPATHS: {
+        const { pairedSubPaths } = action.payload;
+        state = setPairedSubPaths(state, pairedSubPaths);
+        break;
+      }
+
+      // Set the currently unpaired subpath in pair subpaths mode.
+      case actions.SET_UNPAIRED_SUBPATH: {
+        const { unpairedSubPath } = action.payload;
+        state = setUnpairedSubPath(state, unpairedSubPath);
+        break;
+      }
     }
     return reducer(state, action);
   };
@@ -301,4 +315,17 @@ function setHover(state: State, source: CanvasType, subIdx: number, cmdIdx: numb
 function clearHover(state: State) {
   const { shapeshifter } = state;
   return { ...state, shapeshifter: { ...shapeshifter, hover: undefined } };
+}
+
+function setPairedSubPaths(state: State, pairedSubPaths: Set<number>) {
+  const { shapeshifter } = state;
+  return { ...state, shapeshifter: { ...shapeshifter, pairedSubPaths } };
+}
+
+function setUnpairedSubPath(
+  state: State,
+  unpairedSubPath: { source: CanvasType, subIdx: number },
+) {
+  const { shapeshifter } = state;
+  return { ...state, shapeshifter: { ...shapeshifter, unpairedSubPath } };
 }

@@ -14,7 +14,6 @@ import {
 import { DestroyableMixin } from '../scripts/mixins';
 import { Path } from '../scripts/paths';
 import { Command } from '../scripts/paths';
-import { MorphSubPathService } from '../services';
 import {
   ClearLayerSelections,
   Hover,
@@ -23,6 +22,7 @@ import {
   Selection,
   SelectionType,
   SetPathHover,
+  SetUnpairedSubPath,
   ShapeShifterMode,
   State,
   Store,
@@ -101,6 +101,8 @@ export class CanvasOverlayDirective
   private shapeShifterHover: Hover;
   shapeShifterSelections: ReadonlyArray<Selection>;
   private currentHoverPreviewPath: Path | undefined;
+  pairedSubPaths: Set<number>;
+  unpairedSubPath: { source: CanvasType, subIdx: number };
 
   private selectionHelper: SelectionHelper | undefined;
   private morphSubPathHelper: MorphSubPathHelper | undefined;
@@ -111,12 +113,6 @@ export class CanvasOverlayDirective
     readonly elementRef: ElementRef,
     public readonly store: Store<State>,
     private readonly animatorService: AnimatorService,
-    // TODO: move this into ngrx store
-    // TODO: move this into ngrx store
-    // TODO: move this into ngrx store
-    // TODO: move this into ngrx store
-    // TODO: move this into ngrx store
-    readonly morphSubPathService: MorphSubPathService,
   ) {
     super();
     this.$canvas = $(elementRef.nativeElement);
@@ -210,11 +206,20 @@ export class CanvasOverlayDirective
           : getShapeShifterEndState;
       this.registerSubscription(
         this.store.select(shapeShifterSelector)
-          .subscribe(({ vectorLayer, blockLayerId, hover, selections }) => {
+          .subscribe(({
+            vectorLayer,
+            blockLayerId,
+            hover,
+            selections,
+            pairedSubPaths,
+            unpairedSubPath,
+           }) => {
             this.vectorLayer = vectorLayer;
             this.shapeShifterPathLayerId = blockLayerId;
             this.shapeShifterHover = hover;
             this.shapeShifterSelections = selections;
+            this.pairedSubPaths = pairedSubPaths;
+            this.unpairedSubPath = unpairedSubPath;
             this.draw();
           }),
       );
@@ -244,12 +249,16 @@ export class CanvasOverlayDirective
           }
           if (this.shapeShifterMode === ShapeShifterMode.MorphSubPaths) {
             this.morphSubPathHelper = new MorphSubPathHelper(this);
-            this.morphSubPathService.reset();
             const selections =
               this.shapeShifterSelections.filter(s => s.type === SelectionType.SubPath);
             if (selections.length) {
               const { source, subIdx } = selections[0];
-              this.morphSubPathService.setUnpairedSubPath({ source, subIdx });
+              // TODO: avoid calling this in a subscription (should automatically do this)
+              // TODO: avoid calling this in a subscription (should automatically do this)
+              // TODO: avoid calling this in a subscription (should automatically do this)
+              // TODO: avoid calling this in a subscription (should automatically do this)
+              // TODO: avoid calling this in a subscription (should automatically do this)
+              this.store.dispatch(new SetUnpairedSubPath({ source, subIdx }));
             }
           } else {
             this.morphSubPathHelper = undefined;
@@ -453,7 +462,7 @@ export class CanvasOverlayDirective
     executeHighlights(ctx, SPLIT_POINT_COLOR, this.unselectedSegmentLineWidth);
 
     if (this.morphSubPathHelper) {
-      const currUnpair = this.morphSubPathService.getUnpairedSubPath();
+      const currUnpair = this.unpairedSubPath;
       if (currUnpair) {
         // Draw the current unpaired subpath in orange, if it exists.
         const { source, subIdx } = currUnpair;
@@ -463,7 +472,7 @@ export class CanvasOverlayDirective
           executeHighlights(ctx, SPLIT_POINT_COLOR, this.selectedSegmentLineWidth);
         }
       }
-      const pairedSubPaths = this.morphSubPathService.getPairedSubPaths();
+      const pairedSubPaths = this.pairedSubPaths;
       const hasHover =
         currentHover
         && currentHover.source === this.canvasType
