@@ -213,10 +213,9 @@ export class CanvasOverlayDirective
           : getShapeShifterEndState;
       this.registerSubscription(
         this.store.select(shapeShifterSelector)
-          .subscribe(({ vectorLayer, block, hover, selections }) => {
-            console.info('canvas overlay', this.canvasType, vectorLayer, hover, selections);
+          .subscribe(({ vectorLayer, blockLayerId, hover, selections }) => {
             this.vectorLayer = vectorLayer;
-            this.shapeShifterPathLayerId = block.layerId;
+            this.shapeShifterPathLayerId = blockLayerId;
             this.shapeShifterHover = hover;
             this.shapeShifterSelections = selections;
             this.draw();

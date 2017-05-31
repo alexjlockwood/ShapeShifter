@@ -1,3 +1,5 @@
+import 'rxjs/add/observable/combineLatest';
+
 import { Animation, PathAnimationBlock } from '../scripts/animations';
 import { ColorUtil, ModelUtil } from '../scripts/common';
 import { LayerUtil, VectorLayer } from '../scripts/layers';
@@ -31,24 +33,23 @@ export class PropertyInputComponent implements OnInit {
 
   ngOnInit() {
     this.propertyInputModel$ =
-      this.store.select(getPropertyInputState)
-        .map(({
-          animations,
-          selectedAnimationIds,
-          selectedBlockIds,
-          vectorLayers,
-          selectedLayerIds,
-         }) => {
-          if (selectedLayerIds.size) {
-            return this.buildInspectedLayerProperties(vectorLayers, selectedLayerIds);
-          } else if (selectedBlockIds.size) {
-            return this.buildInspectedBlockProperties(vectorLayers, animations, selectedBlockIds);
-          } else if (selectedAnimationIds.size) {
-            return this.buildInspectedAnimationProperties(animations, selectedAnimationIds);
-          } else {
-            return { numSelections: 0, inspectedProperties: [] };
-          }
-        });
+      this.store.select(getPropertyInputState).map(({
+        animations,
+        selectedAnimationIds,
+        selectedBlockIds,
+        vectorLayers,
+        selectedLayerIds,
+      }) => {
+        if (selectedLayerIds.size) {
+          return this.buildInspectedLayerProperties(vectorLayers, selectedLayerIds);
+        } else if (selectedBlockIds.size) {
+          return this.buildInspectedBlockProperties(vectorLayers, animations, selectedBlockIds);
+        } else if (selectedAnimationIds.size) {
+          return this.buildInspectedAnimationProperties(animations, selectedAnimationIds);
+        } else {
+          return { numSelections: 0, inspectedProperties: [] };
+        }
+      });
   }
 
   shouldShowShapeShifterButton(model: PropertyInputModel) {

@@ -147,6 +147,7 @@ export const DEBUG_VECTOR_DRAWABLE = `
 </vector>
 `;
 
+// TODO: this vector should not be allowed to be shifted
 export const DEBUG_VECTOR_DRAWABLE_2 = `
 <vector
   xmlns:android="http://schemas.android.com/apk/res/android"

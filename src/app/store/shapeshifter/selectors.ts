@@ -1,4 +1,3 @@
-import { State } from '..';
 import { PathAnimationBlock } from '../../scripts/animations';
 import {
   LayerUtil,
@@ -10,15 +9,14 @@ import {
   getActiveVectorLayer,
   getAnimations,
 } from '../aia/selectors';
+import { State } from '../reducer';
+import { getState } from '../selectors';
 import { createDeepEqualSelector } from '../selectors';
 import * as _ from 'lodash';
-import {
-  createSelector,
-  createStructuredSelector,
-} from 'reselect';
+import { createSelector, createStructuredSelector } from 'reselect';
 
-const getState = (state: State) => state.shapeshifter;
-const getBlockId = createSelector(getState, s => s.blockId);
+const getShapeShifterState = createSelector(getState, s => s.shapeshifter);
+const getBlockId = createSelector(getShapeShifterState, s => s.blockId);
 const getBlock = createSelector(
   getAnimations,
   getBlockId,
@@ -35,26 +33,15 @@ const getBlock = createSelector(
     return undefined;
   },
 );
-const getBlockLayerId =
-  createSelector(
-    getBlock,
-    block => block ? block.layerId : undefined,
-  );
 
-const getPathBlockFromValue = createSelector(
-  getBlock,
-  block => block.fromValue,
-);
+const getBlockLayerId = createSelector(getBlock, b => b ? b.layerId : undefined);
+const getPathBlockFromValue = createSelector(getBlock, b => b ? b.fromValue : undefined);
+const getPathBlockToValue = createSelector(getBlock, b => b ? b.toValue : undefined);
 
-const getPathBlockToValue = createSelector(
-  getBlock,
-  block => block.toValue,
-);
-
-export const isShapeShifterMode = createSelector(getBlockId, blockId => !!blockId);
-export const getShapeShifterMode = createSelector(getState, s => s.mode);
-export const getPathHover = createDeepEqualSelector(getState, s => s.hover);
-const getPathSelections = createSelector(getState, s => s.selections);
+export const isShapeShifterMode = createSelector(getBlockId, id => !!id);
+export const getShapeShifterMode = createSelector(getShapeShifterState, s => s.mode);
+export const getPathHover = createDeepEqualSelector(getShapeShifterState, s => s.hover);
+const getPathSelections = createSelector(getShapeShifterState, s => s.selections);
 
 const getVectorLayerFromValue = createSelector(
   getActiveVectorLayer,
@@ -76,7 +63,7 @@ const getVectorLayerToValue = createSelector(
       return undefined;
     }
     const pathLayer = (vl.findLayerById(block.layerId) as PathLayer).clone();
-    pathLayer.pathData = block.fromValue;
+    pathLayer.pathData = block.toValue;
     return LayerUtil.replaceLayerInTree(vl, pathLayer);
   });
 
@@ -105,15 +92,15 @@ const getPathLayerToValue =
 export const getShapeShifterStartState =
   createStructuredSelector({
     vectorLayer: getVectorLayerFromValue,
-    block: getBlock,
+    blockLayerId: getBlockLayerId,
     hover: getPathHover,
     selections: getPathSelections,
   });
 
 export const getShapeShifterEndState =
   createStructuredSelector({
-    vectorLayer: getVectorLayerFromValue,
-    block: getBlock,
+    vectorLayer: getVectorLayerToValue,
+    blockLayerId: getBlockLayerId,
     hover: getPathHover,
     selections: getPathSelections,
   });

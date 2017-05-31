@@ -1,37 +1,26 @@
 import { State } from '..';
 import { PathAnimationBlock } from '../../scripts/animations';
-import { createDeepEqualSelector } from '../selectors';
+import { createDeepEqualSelector, getState } from '../selectors';
 import * as _ from 'lodash';
-import {
-  createSelector,
-  createStructuredSelector,
-} from 'reselect';
+import { createSelector, createStructuredSelector } from 'reselect';
 
-const getState = (state: State) => state.aia;
+const getAiaState = createSelector(getState, s => s.aia);
 
 // Timeline state selectors.
-const getTimelineState = createSelector(getState, s => s.timeline)
+const getTimelineState = createSelector(getAiaState, s => s.timeline)
 export const getAnimations = createSelector(getTimelineState, t => t.animations);
 const getSelectedAnimationIds =
   createDeepEqualSelector(getTimelineState, t => t.selectedAnimationIds);
-const getActiveAnimationId = createDeepEqualSelector(getTimelineState, t => t.activeAnimationId);
+const getActiveAnimationId = createSelector(getTimelineState, t => t.activeAnimationId);
 const getActiveAnimation = createSelector(
   getAnimations,
   getActiveAnimationId,
-  (anims, id) => _.find(anims, anim => anim.id === id),
+  (animations, id) => _.find(animations, a => a.id === id),
 );
-const getSelectedBlockIds = createDeepEqualSelector(getTimelineState, t => t.selectedBlockIds);
-const getSelectedBlocks = createSelector(
-  getActiveAnimation,
-  getSelectedBlockIds,
-  (animation, blockIds) => {
-    return Array.from(blockIds)
-      .map(blockId => _.find(animation.blocks, b => b.id === blockId));
-  },
-);
+export const getSelectedBlockIds = createDeepEqualSelector(getTimelineState, t => t.selectedBlockIds);
 
 // Layer state selectors.
-const getLayerState = createSelector(getState, s => s.layers);
+const getLayerState = createSelector(getAiaState, s => s.layers);
 const getVectorLayers = createSelector(getLayerState, l => l.vectorLayers);
 const getActiveVectorLayerId = createSelector(getLayerState, l => l.activeVectorLayerId);
 export const getActiveVectorLayer = createSelector(
