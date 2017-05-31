@@ -11,10 +11,7 @@ import {
   VectorLayer,
 } from '../scripts/layers';
 import { DestroyableMixin } from '../scripts/mixins';
-import {
-  State,
-  Store,
-} from '../store';
+import { State, Store } from '../store';
 import {
   getActiveVectorLayer,
   getHiddenLayerIds,

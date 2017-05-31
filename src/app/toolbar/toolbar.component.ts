@@ -3,9 +3,7 @@ import 'rxjs/add/observable/combineLatest';
 import { CanvasType } from '../CanvasType';
 import { DialogService } from '../dialogs';
 import { PathLayer } from '../scripts/layers';
-import {
-  ActionModeService,
-} from '../services';
+import { ActionModeService } from '../services';
 import {
   Selection,
   SelectionType,
@@ -47,12 +45,6 @@ export class ToolbarComponent implements OnInit {
   constructor(
     readonly viewContainerRef: ViewContainerRef,
     readonly dialogService: DialogService,
-    // TODO: uncomment this
-    // TODO: uncomment this
-    // TODO: uncomment this
-    // TODO: uncomment this
-    // TODO: uncomment this
-    // private readonly morphSubPathService: MorphSubPathService,
     private readonly actionModeService: ActionModeService,
     private readonly store: Store<State>,
   ) { }
@@ -60,20 +52,13 @@ export class ToolbarComponent implements OnInit {
   ngOnInit() {
     this.toolbarData$ = this.store.select(getToolbarState)
       .map(({ fromPl, toPl, mode, selections }) => {
-        const selectionInfo = new ToolbarData(
-          fromPl,
-          toPl,
-          // this.morphSubPathService,
-          mode,
-          selections,
-        );
+        const selectionInfo = new ToolbarData(fromPl, toPl, mode, selections);
         if (selectionInfo.getNumSelections() > 0) {
           this.hasActionModeBeenEnabled = true;
         }
         return selectionInfo;
       });
-    this.shouldShowActionMode$ =
-      this.toolbarData$.map(toolbarData => toolbarData.shouldShowActionMode());
+    this.shouldShowActionMode$ = this.toolbarData$.map(data => data.shouldShowActionMode());
   }
 
   // onNewClick() {
@@ -209,11 +194,11 @@ class ToolbarData {
   private readonly isStroked: boolean;
   private readonly showSplitInHalf: boolean;
   private readonly unpairedSubPathSource: CanvasType;
+  private readonly showMorphSubPaths: boolean;
 
   constructor(
     activeStartPathLayer: PathLayer,
     activeEndPathLayer: PathLayer,
-    // morphSubPathService: MorphSubPathService,
     public readonly mode: ShapeShifterMode,
     public readonly selections: ReadonlyArray<Selection>,
   ) {
@@ -278,6 +263,19 @@ class ToolbarData {
     //     this.unpairedSubPathSource = unpair.source;
     //   }
     // }
+
+    // const startLayer = this.stateService.getActivePathLayer(CanvasType.Start);
+    // const endLayer = this.stateService.getActivePathLayer(CanvasType.End);
+    // if (!startLayer || !endLayer) {
+    //   return false;
+    // }
+    // if (startLayer.pathData.getSubPaths().length === 1
+    //   && endLayer.pathData.getSubPaths().length === 1) {
+    //   return false;
+    // }
+    // return this.getNumSubPaths() === 1
+    //   || this.getNumSegments() > 0
+    //   || !this.isSelectionMode();
   }
 
   getNumSelections() {

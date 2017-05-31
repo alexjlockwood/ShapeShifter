@@ -75,10 +75,8 @@ const POINT_BORDER_COLOR = '#000';
 const POINT_TEXT_COLOR = '#fff';
 
 // TODO: make shape shifter mode work with clip paths
-// TODO: make shape shifter mode work with clip paths
-// TODO: make shape shifter mode work with clip paths
-// TODO: make shape shifter mode work with clip paths
-// TODO: make shape shifter mode work with clip paths
+// TODO: make segment splitter work with trim paths
+// TODO: make trim paths work with shifts/reversals
 type Context = CanvasRenderingContext2D;
 
 /**

@@ -7,11 +7,7 @@ import * as fromResetable from './resetable/metareducer';
 import * as fromShapeShifter from './shapeshifter/reducer';
 import * as fromTimeline from './timeline/reducer';
 import { compose } from '@ngrx/core/compose'
-import {
-  Action,
-  ActionReducer,
-  combineReducers,
-} from '@ngrx/store';
+import { Action, ActionReducer, combineReducers } from '@ngrx/store';
 import { storeFreeze } from 'ngrx-store-freeze';
 import { storeLogger } from 'ngrx-store-logger';
 

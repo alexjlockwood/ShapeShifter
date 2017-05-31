@@ -8,58 +8,52 @@ import * as actions from './actions';
 import { ActionReducer } from '@ngrx/store';
 import * as _ from 'lodash';
 
-// Meta-reducer that intercepts action mode actions and modifies any corresponding state.
 export function metaReducer(reducer: ActionReducer<State>): ActionReducer<State> {
   return (state: State, action: actions.Actions): State => {
     switch (action.type) {
+
+      // Reverse all currently selected subpaths.
       case actions.REVERSE_SELECTED_SUBPATHS: {
         const selections = getSubPathSelections(state);
         const { source } = selections[0];
-        const activePathBlock = getActivePathBlock(state);
-        const activePath =
-          source === CanvasType.Start
-            ? activePathBlock.fromValue : activePathBlock.toValue;
-        const pathMutator = activePath.mutate();
+        const pathMutator = getActivePath(state, source).mutate();
         for (const { subIdx } of selections) {
           pathMutator.reverseSubPath(subIdx);
         }
-        const newActivePath = pathMutator.build();
-        state = updateActivePathBlock(state, source, newActivePath);
+        state = updateActivePathBlock(state, source, pathMutator.build());
         state = clearHover(state);
         break;
       }
+
+      // Shift back all currently selected subpaths.
       case actions.SHIFT_BACK_SELECTED_SUBPATHS: {
         const selections = getSubPathSelections(state);
         const { source } = selections[0];
-        const activePathBlock = getActivePathBlock(state);
-        const activePath =
-          source === CanvasType.Start
-            ? activePathBlock.fromValue : activePathBlock.toValue;
-        const pathMutator = activePath.mutate();
+        const pathMutator = getActivePath(state, source).mutate();
         for (const { subIdx } of selections) {
           pathMutator.shiftSubPathBack(subIdx);
         }
         const newActivePath = pathMutator.build();
-        state = updateActivePathBlock(state, source, newActivePath);
+        state = updateActivePathBlock(state, source, pathMutator.build());
         state = clearHover(state);
         break;
       }
+
+      // Shift forward all currently selected subpaths.
       case actions.SHIFT_FORWARD_SELECTED_SUBPATHS: {
         const selections = getSubPathSelections(state);
         const { source } = selections[0];
-        const activePathBlock = getActivePathBlock(state);
-        const activePath =
-          source === CanvasType.Start
-            ? activePathBlock.fromValue : activePathBlock.toValue;
-        const pathMutator = activePath.mutate();
+        const pathMutator = getActivePath(state, source).mutate();
         for (const { subIdx } of selections) {
           pathMutator.shiftSubPathForward(subIdx);
         }
         const newActivePath = pathMutator.build();
-        state = updateActivePathBlock(state, source, newActivePath);
+        state = updateActivePathBlock(state, source, pathMutator.build());
         state = clearHover(state);
         break;
       }
+
+      // Delete all currently selected subpaths.
       case actions.DELETE_SELECTED_SUBPATHS: {
         // TODO: implement this
         // TODO: implement this
@@ -85,6 +79,8 @@ export function metaReducer(reducer: ActionReducer<State>): ActionReducer<State>
         // this.stateService.updateActivePath(source, mutator.build());
         throw new Error('TODO: implement this');
       }
+
+      // Delete all currently selected segments.
       case actions.DELETE_SELECTED_SEGMENTS: {
         // // TODO: support deleting multiple segments at a time?
         const selections = getSegmentSelections(state);
@@ -93,17 +89,15 @@ export function metaReducer(reducer: ActionReducer<State>): ActionReducer<State>
         }
         // Preconditions: all selections exist in the same canvas.
         const { source, subIdx, cmdIdx } = selections[0];
-        const activePathBlock = getActivePathBlock(state);
-        const activePath =
-          source === CanvasType.Start
-            ? activePathBlock.fromValue : activePathBlock.toValue;
-        state = clearSelections(state);
-        state = clearHover(state);
-        const mutator = activePath.mutate();
+        const mutator = getActivePath(state, source).mutate();
         mutator.deleteFilledSubPathSegment(subIdx, cmdIdx);
         state = updateActivePathBlock(state, source, mutator.build());
+        state = clearSelections(state);
+        state = clearHover(state);
         break;
       }
+
+      // Delete all currently selected points.
       case actions.DELETE_SELECTED_POINTS: {
         const selections = getPointSelections(state);
         if (!selections.length) {
@@ -111,10 +105,7 @@ export function metaReducer(reducer: ActionReducer<State>): ActionReducer<State>
         }
         // Preconditions: all selections exist in the same canvas.
         const source = selections[0].source;
-        const activePathBlock = getActivePathBlock(state);
-        const activePath =
-          source === CanvasType.Start
-            ? activePathBlock.fromValue : activePathBlock.toValue;
+        const activePath = getActivePath(state, source);
         const unsplitOpsMap: Map<number, Array<{ subIdx: number, cmdIdx: number }>> = new Map();
         for (const selection of selections) {
           const { subIdx, cmdIdx } = selection;
@@ -128,8 +119,6 @@ export function metaReducer(reducer: ActionReducer<State>): ActionReducer<State>
           subIdxOps.push({ subIdx, cmdIdx });
           unsplitOpsMap.set(subIdx, subIdxOps);
         }
-        state = clearSelections(state);
-        state = clearHover(state);
         const mutator = activePath.mutate();
         unsplitOpsMap.forEach((ops, idx) => {
           PathUtil.sortPathOps(ops);
@@ -138,40 +127,41 @@ export function metaReducer(reducer: ActionReducer<State>): ActionReducer<State>
           }
         });
         state = updateActivePathBlock(state, source, mutator.build());
+        state = clearSelections(state);
+        state = clearHover(state);
         break;
       }
+
+      // Shift point to the front of its subpath.
       case actions.SHIFT_POINT_TO_FRONT: {
         const { source, subIdx, cmdIdx } = getPointSelections(state)[0];
-        const activePathBlock = getActivePathBlock(state);
-        const activePath =
-          source === CanvasType.Start
-            ? activePathBlock.fromValue : activePathBlock.toValue;
+        const activePath = getActivePath(state, source);
         const pathMutator = activePath.mutate();
         pathMutator.shiftSubPathForward(subIdx, cmdIdx);
-        const newActivePath = pathMutator.build();
-        state = updateActivePathBlock(state, source, newActivePath);
+        state = updateActivePathBlock(state, source, pathMutator.build());
         // state = clearHover(state);
         break;
       }
+
+      // Show a split command hover for the currently selected point.
       case actions.SPLIT_COMMAND_IN_HALF_HOVER: {
         const { source, subIdx, cmdIdx } = getPointSelections(state)[0];
         state = setHover(state, source, subIdx, cmdIdx);
         break;
       }
+
+      // Split the currently selected point.
       case actions.SPLIT_COMMAND_IN_HALF_CLICK: {
         const { source, subIdx, cmdIdx } = getPointSelections(state)[0];
-        const activePathBlock = getActivePathBlock(state);
-        const activePath =
-          source === CanvasType.Start
-            ? activePathBlock.fromValue : activePathBlock.toValue;
+        const activePath = getActivePath(state, source);
         const pathMutator = activePath.mutate();
         pathMutator.splitCommandInHalf(subIdx, cmdIdx);
-        const newActivePath = pathMutator.build();
-        state = updateActivePathBlock(state, source, newActivePath);
+        state = updateActivePathBlock(state, source, pathMutator.build());
         state = clearSelections(state);
         state = clearHover(state);
         break;
       }
+
       // Update a path animation block in shape shifter mode.
       case actions.UPDATE_ACTIVE_PATH_BLOCK: {
         const { source, path } = action.payload;
@@ -195,6 +185,11 @@ function getActivePathBlock(state: State) {
   return activeAnimationBlocks[blockIndex] as PathAnimationBlock;
 }
 
+function getActivePath(state: State, source: CanvasType) {
+  const block = getActivePathBlock(state);
+  return source === CanvasType.Start ? block.fromValue : block.toValue;
+}
+
 function getSubPathSelections(state: State) {
   return state.shapeshifter.selections.filter(s => s.type === SelectionType.SubPath);
 }
@@ -207,11 +202,7 @@ function getPointSelections(state: State) {
   return state.shapeshifter.selections.filter(s => s.type === SelectionType.Point);
 }
 
-function updateActivePathBlock(
-  state: State,
-  source: CanvasType,
-  path: Path,
-) {
+function updateActivePathBlock(state: State, source: CanvasType, path: Path) {
   const { blockId } = state.shapeshifter;
   const { timeline } = state;
   const animations = timeline.animations.slice();
