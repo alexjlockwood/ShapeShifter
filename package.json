@@ -1,6 +1,6 @@
 {
   "name": "shapeshifter",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "license": "Apache-2.0",
   "scripts": {
     "ng": "ng",
@@ -91,5 +91,8 @@
       "parser": "typescript",
       "style": "module"
     }
-  }
+  },
+  "main": "index.js",
+  "repository": "https://github.com/alexjlockwood/ShapeShifter",
+  "author": "Alex Lockwood <alexjlockwood@gmail.com>"
 }
