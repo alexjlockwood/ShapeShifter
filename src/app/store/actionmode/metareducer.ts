@@ -3,15 +3,14 @@ import { AutoAwesome } from '../../scripts/algorithms';
 import { PathAnimationBlock } from '../../scripts/animations';
 import { Path, PathUtil } from '../../scripts/paths';
 import { State } from '../reducer';
-import { SelectionType } from '../shapeshifter';
+import { HoverType, SelectionType } from '../shapeshifter';
 import * as actions from './actions';
 import { Action, ActionReducer } from '@ngrx/store';
 import * as _ from 'lodash';
 
 // Meta-reducer that intercepts action mode actions and modifies any corresponding state.
-export function wrapActionMode(reducer: ActionReducer<State>): ActionReducer<State> {
+export function metaReducer(reducer: ActionReducer<State>): ActionReducer<State> {
   return (state: State, action: actions.Actions): State => {
-    const oldState1 = state;
     switch (action.type) {
       case actions.REVERSE_SELECTED_SUBPATHS: {
         const selections = getSubPathSelections(state);
@@ -155,7 +154,8 @@ export function wrapActionMode(reducer: ActionReducer<State>): ActionReducer<Sta
         break;
       }
       case actions.SPLIT_COMMAND_IN_HALF_HOVER: {
-        // TODO: remove this
+        const { source, subIdx, cmdIdx } = getPointSelections(state)[0];
+        state = setHover(state, source, subIdx, cmdIdx);
         break;
       }
       case actions.SPLIT_COMMAND_IN_HALF_CLICK: {
@@ -172,7 +172,6 @@ export function wrapActionMode(reducer: ActionReducer<State>): ActionReducer<Sta
         state = clearHover(state);
         break;
       }
-
       // Update a path animation block in shape shifter mode.
       case actions.UPDATE_ACTIVE_PATH_BLOCK: {
         const { source, path } = action.payload;
@@ -186,7 +185,7 @@ export function wrapActionMode(reducer: ActionReducer<State>): ActionReducer<Sta
 
 function getActivePathBlock(state: State) {
   const { blockId } = state.shapeshifter;
-  const { timeline } = state.aia;
+  const { timeline } = state;
   const animations = timeline.animations.slice();
   const { activeAnimationId } = timeline;
   const activeAnimationIndex = _.findIndex(animations, a => a.id === activeAnimationId);
@@ -214,7 +213,7 @@ function updateActivePathBlock(
   path: Path,
 ) {
   const { blockId } = state.shapeshifter;
-  const { timeline } = state.aia;
+  const { timeline } = state;
   const animations = timeline.animations.slice();
   const { activeAnimationId } = timeline;
   const activeAnimationIndex = _.findIndex(animations, a => a.id === activeAnimationId);
@@ -293,13 +292,19 @@ function updateActivePathBlock(
   activeAnimation = activeAnimation.clone();
   activeAnimation.blocks = activeAnimationBlocks;
   animations[activeAnimationIndex] = activeAnimation;
-  const { aia } = state;
-  return { ...state, aia: { ...aia, timeline: { ...timeline, animations } } };
+  return { ...state, timeline: { ...timeline, animations } };
 }
 
 function clearSelections(state: State) {
   const { shapeshifter } = state;
   return { ...state, shapeshifter: { ...shapeshifter, selections: [] } };
+}
+
+function setHover(state: State, source: CanvasType, subIdx: number, cmdIdx: number) {
+  const { shapeshifter } = state;
+  const type = HoverType.Split;
+  const hover = { source, subIdx, cmdIdx, type };
+  return { ...state, shapeshifter: { ...shapeshifter, hover } };
 }
 
 function clearHover(state: State) {

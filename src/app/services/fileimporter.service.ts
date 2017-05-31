@@ -1,7 +1,7 @@
 import { SvgLoader, VectorDrawableLoader } from '../scripts/import';
 import { LayerUtil, VectorLayer } from '../scripts/layers';
 import { State, Store } from '../store';
-import { getImportedVectorLayers } from '../store/aia/selectors';
+import { getVectorLayers } from '../store/aia/selectors';
 import { Injectable } from '@angular/core';
 
 /**
@@ -11,8 +11,8 @@ import { Injectable } from '@angular/core';
 export class FileImporterService {
   private vectorLayers: ReadonlyArray<VectorLayer>;
 
-  constructor(private readonly store: Store<State>) {
-    this.store.select(getImportedVectorLayers).subscribe(vls => this.vectorLayers = vls);
+  constructor(readonly store: Store<State>) {
+    this.store.select(getVectorLayers).subscribe(vls => this.vectorLayers = vls);
   }
 
   import(

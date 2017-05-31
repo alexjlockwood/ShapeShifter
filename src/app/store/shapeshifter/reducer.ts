@@ -45,6 +45,14 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
       return { ...state, mode };
     }
 
+    // Toggle the app mode during shape shifter mode.
+    case actions.TOGGLE_SHAPE_SHIFTER_MODE: {
+      const { modeToToggle } = action.payload;
+      const { mode: currentMode } = state;
+      const mode = currentMode === modeToToggle ? ShapeShifterMode.Selection : modeToToggle;
+      return { ...state, mode };
+    }
+
     // Set the hover mode during shape shifter mode.
     case actions.SET_PATH_HOVER: {
       const { hover } = action.payload;

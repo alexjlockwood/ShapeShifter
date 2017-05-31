@@ -4,10 +4,8 @@ import { createDeepEqualSelector, getState } from '../selectors';
 import * as _ from 'lodash';
 import { createSelector, createStructuredSelector } from 'reselect';
 
-const getAiaState = createSelector(getState, s => s.aia);
-
 // Timeline state selectors.
-const getTimelineState = createSelector(getAiaState, s => s.timeline)
+const getTimelineState = createSelector(getState, s => s.timeline)
 export const getAnimations = createSelector(getTimelineState, t => t.animations);
 const getSelectedAnimationIds =
   createDeepEqualSelector(getTimelineState, t => t.selectedAnimationIds);
@@ -20,8 +18,8 @@ const getActiveAnimation = createSelector(
 export const getSelectedBlockIds = createDeepEqualSelector(getTimelineState, t => t.selectedBlockIds);
 
 // Layer state selectors.
-const getLayerState = createSelector(getAiaState, s => s.layers);
-const getVectorLayers = createSelector(getLayerState, l => l.vectorLayers);
+const getLayerState = createSelector(getState, s => s.layers);
+export const getVectorLayers = createSelector(getLayerState, l => l.vectorLayers);
 const getActiveVectorLayerId = createSelector(getLayerState, l => l.activeVectorLayerId);
 export const getActiveVectorLayer = createSelector(
   getVectorLayers,
@@ -73,6 +71,3 @@ export const getAnimatorState = createStructuredSelector({
   activeAnimation: getActiveAnimation,
   activeVectorLayer: getActiveVectorLayer,
 });
-
-// File importer selectors.
-export const getImportedVectorLayers = getVectorLayers;

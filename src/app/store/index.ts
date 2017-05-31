@@ -10,21 +10,29 @@ export {
 
 // Android Icon Animator actions.
 export {
-  ActivateAnimation,
-  AddAnimations,
-  AddBlock,
-  AddLayers,
-  ClearLayerSelections,
   DeleteSelectedModels,
-  ReplaceAnimations,
-  ReplaceBlocks,
-  ReplaceLayer,
   SelectAnimation,
   SelectBlock,
   SelectLayer,
+} from './aia/actions';
+
+// Timeline actions.
+export {
+  ActivateAnimation,
+  AddAnimations,
+  AddBlock,
+  ReplaceAnimations,
+  ReplaceBlocks,
+} from './timeline/actions';
+
+// Layer actions.
+export {
+  AddLayers,
+  ClearLayerSelections,
+  ReplaceLayer,
   ToggleLayerExpansion,
   ToggleLayerVisibility,
-} from './aia/actions';
+} from './layers/actions';
 
 // Playback actions.
 export {
@@ -41,6 +49,7 @@ export {
   SetActivePathBlockId,
   ClearActivePathBlockId,
   SetShapeShifterMode,
+  ToggleShapeShifterMode,
   SetPathHover,
   SetPathSelections,
   TogglePointSelection,

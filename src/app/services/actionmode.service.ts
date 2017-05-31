@@ -16,6 +16,7 @@ import {
   SplitCommandInHalfHover,
   State,
   Store,
+  ToggleShapeShifterMode,
 } from '../store';
 import { getShapeShifterMode } from '../store/shapeshifter/selectors';
 import { Injectable } from '@angular/core';
@@ -28,7 +29,7 @@ export class ActionModeService {
   private mode: ShapeShifterMode;
 
   constructor(private readonly store: Store<State>) {
-    this.store.select(getShapeShifterMode).subscribe(mode => this.mode = mode);
+    this.store.select(getShapeShifterMode).subscribe(m => this.mode = m);
   }
 
   closeActionMode() {
@@ -37,28 +38,16 @@ export class ActionModeService {
 
   toggleSplitCommandsMode() {
     // TODO: prefer already selected subpaths over others when creating new points?
-    this.store.dispatch(
-      new SetShapeShifterMode(
-        this.mode === ShapeShifterMode.SplitCommands
-          ? ShapeShifterMode.Selection
-          : ShapeShifterMode.SplitCommands));
+    this.store.dispatch(new ToggleShapeShifterMode(ShapeShifterMode.SplitCommands));
   }
 
   toggleSplitSubPathsMode() {
     // TODO: prefer already selected subpaths over others when splitting new subpaths?
-    this.store.dispatch(
-      new SetShapeShifterMode(
-        this.mode === ShapeShifterMode.SplitSubPaths
-          ? ShapeShifterMode.Selection
-          : ShapeShifterMode.SplitSubPaths));
+    this.store.dispatch(new ToggleShapeShifterMode(ShapeShifterMode.SplitSubPaths));
   }
 
   toggleMorphSubPathsMode() {
-    this.store.dispatch(
-      new SetShapeShifterMode(
-        this.mode === ShapeShifterMode.MorphSubPaths
-          ? ShapeShifterMode.Selection
-          : ShapeShifterMode.MorphSubPaths));
+    this.store.dispatch(new ToggleShapeShifterMode(ShapeShifterMode.MorphSubPaths));
   }
 
   reversePoints() {
@@ -90,7 +79,7 @@ export class ActionModeService {
   }
 
   splitInHalfHover(isHovering: boolean) {
-    this.store.dispatch(new SplitCommandInHalfHover())
+    this.store.dispatch(new SplitCommandInHalfHover(isHovering))
   }
 
   splitInHalfClick() {

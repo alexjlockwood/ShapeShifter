@@ -5,6 +5,7 @@ import { Action } from '@ngrx/store';
 export const SET_ACTIVE_PATH_BLOCK_ID = '__shapeshifter__SET_ACTIVE_PATH_BLOCK_ID';
 export const CLEAR_ACTIVE_PATH_BLOCK_ID = '__shapeshifter__CLEAR_ACTIVE_PATH_BLOCK_ID';
 export const SET_SHAPE_SHIFTER_MODE = '__shapeshifter__SET_SHAPE_SHIFTER_MODE';
+export const TOGGLE_SHAPE_SHIFTER_MODE = '__shapeshifter__TOGGLE_SHAPE_SHIFTER_MODE';
 export const SET_PATH_HOVER = '__shapeshifter__SET_HOVER';
 export const SET_PATH_SELECTIONS = '__shapeshifter__SET_SELECTIONS';
 export const TOGGLE_SUBPATH_SELECTION = '__shapeshifter__TOGGLE_SUBPATH_SELECTION';
@@ -26,15 +27,23 @@ export class ClearActivePathBlockId implements Action {
 export class SetShapeShifterMode implements Action {
   readonly type = SET_SHAPE_SHIFTER_MODE;
   readonly payload: { mode: ShapeShifterMode };
-  constructor(readonly mode: ShapeShifterMode) {
+  constructor(mode: ShapeShifterMode) {
     this.payload = { mode };
+  }
+}
+
+export class ToggleShapeShifterMode implements Action {
+  readonly type = TOGGLE_SHAPE_SHIFTER_MODE;
+  readonly payload: { modeToToggle: ShapeShifterMode };
+  constructor(modeToToggle: ShapeShifterMode) {
+    this.payload = { modeToToggle };
   }
 }
 
 export class SetPathHover implements Action {
   readonly type = SET_PATH_HOVER;
   readonly payload: { hover: Hover };
-  constructor(readonly hover: Hover) {
+  constructor(hover: Hover) {
     this.payload = { hover };
   }
 }
@@ -42,7 +51,7 @@ export class SetPathHover implements Action {
 export class SetPathSelections implements Action {
   readonly type = SET_PATH_SELECTIONS;
   readonly payload: { selections: ReadonlyArray<Selection> };
-  constructor(readonly selections: ReadonlyArray<Selection>) {
+  constructor(selections: ReadonlyArray<Selection>) {
     this.payload = { selections };
   }
 }
@@ -85,6 +94,7 @@ export type Actions =
   SetActivePathBlockId
   | ClearActivePathBlockId
   | SetShapeShifterMode
+  | ToggleShapeShifterMode
   | SetPathHover
   | SetPathSelections
   | ToggleSubPathSelection
