@@ -54,7 +54,6 @@ const devMetaReducers = [
 const productionReducer: ActionReducer<State> = compose(...prodMetaReducers)(stateReducers);
 const developmentReducer: ActionReducer<State> = compose(...devMetaReducers)(productionReducer);
 
-// Returns the final reducer that is used to initialize the store.
 export function reducer(state: State, action: Action) {
   if (environment.production) {
     return productionReducer(state, action);
