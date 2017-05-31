@@ -4,7 +4,7 @@ import { CanvasType } from '../CanvasType';
 import { Point } from '../scripts/common';
 import { DestroyableMixin } from '../scripts/mixins';
 import { State, Store } from '../store';
-import { getActiveVectorLayer } from '../store/aia/selectors';
+import { getActiveVectorLayer } from '../store/layers/selectors';
 import { CanvasContainerDirective } from './canvascontainer.directive';
 import { CanvasLayersDirective } from './canvaslayers.directive';
 import { CanvasLayoutMixin, Size } from './CanvasLayoutMixin';

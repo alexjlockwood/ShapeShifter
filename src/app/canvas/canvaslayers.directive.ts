@@ -18,7 +18,7 @@ import {
 import {
   getActiveVectorLayer,
   getHiddenLayerIds,
-} from '../store/aia/selectors';
+} from '../store/layers/selectors';
 import {
   getShapeShifterEndState,
   getShapeShifterStartState,

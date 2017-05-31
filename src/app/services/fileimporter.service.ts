@@ -1,7 +1,7 @@
 import { SvgLoader, VectorDrawableLoader } from '../scripts/import';
 import { LayerUtil, VectorLayer } from '../scripts/layers';
 import { State, Store } from '../store';
-import { getVectorLayers } from '../store/aia/selectors';
+import { getVectorLayers } from '../store/layers/selectors';
 import { Injectable } from '@angular/core';
 
 /**
