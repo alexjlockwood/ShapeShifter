@@ -1,7 +1,5 @@
-import { CanvasType } from '../../CanvasType';
 import {
   Hover,
-  HoverType,
   Selection,
   SelectionType,
   ShapeShifterMode,

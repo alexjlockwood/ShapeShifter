@@ -1,9 +1,4 @@
-import { AutoAwesome } from '../../scripts/algorithms';
-import {
-  LayerUtil,
-  VectorLayer,
-} from '../../scripts/layers';
-import { Path } from '../../scripts/paths';
+import { LayerUtil, VectorLayer } from '../../scripts/layers';
 import * as actions from './actions';
 import * as _ from 'lodash';
 
@@ -112,54 +107,4 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
       return state;
     }
   }
-}
-
-function deleteSelectedLayers(state: State) {
-  const { selectedLayerIds } = state;
-  if (!selectedLayerIds.size) {
-    // Do nothing if there are no layers selected.
-    return state;
-  }
-  const vectorLayers = state.vectorLayers.slice();
-  let collapsedLayerIds = new Set(state.collapsedLayerIds);
-  let hiddenLayerIds = new Set(state.hiddenLayerIds);
-  selectedLayerIds.forEach(layerId => {
-    const parentVl = LayerUtil.findParentVectorLayer(vectorLayers, layerId);
-    if (parentVl) {
-      const vlIndex = _.findIndex(vectorLayers, vl => vl.id === parentVl.id);
-      if (parentVl.id === layerId) {
-        // Remove the selected vector from the list of vectors.
-        vectorLayers.splice(vlIndex, 1);
-      } else {
-        // Remove the layer node from the parent vector.
-        vectorLayers[vlIndex] = LayerUtil.removeLayerFromTree(parentVl, layerId);
-      }
-      collapsedLayerIds.delete(layerId);
-      hiddenLayerIds.delete(layerId);
-    }
-  });
-  if (collapsedLayerIds.size === state.collapsedLayerIds.size) {
-    collapsedLayerIds = state.collapsedLayerIds;
-  }
-  if (hiddenLayerIds.size === state.hiddenLayerIds.size) {
-    hiddenLayerIds = state.hiddenLayerIds;
-  }
-  if (!vectorLayers.length) {
-    // Create an empty vector layer if the last one was deleted.
-    vectorLayers.push(new VectorLayer());
-  }
-  let { activeVectorLayerId } = state;
-  if (!_.find(vectorLayers, vl => vl.id === activeVectorLayerId)) {
-    // If the active vector layer ID has been deleted, make
-    // the first vector layer active instead.
-    activeVectorLayerId = vectorLayers[0].id;
-  }
-  return {
-    ...state,
-    vectorLayers,
-    selectedLayerIds: new Set<string>(),
-    collapsedLayerIds,
-    hiddenLayerIds,
-    activeVectorLayerId,
-  };
 }

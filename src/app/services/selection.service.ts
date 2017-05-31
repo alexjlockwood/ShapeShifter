@@ -1,7 +1,29 @@
-import * as _ from 'lodash';
-import { Injectable } from '@angular/core';
-import { Subject } from 'rxjs/Subject';
 import { CanvasType } from '../CanvasType';
+import { Injectable } from '@angular/core';
+import * as _ from 'lodash';
+import { Subject } from 'rxjs/Subject';
+
+/**
+ * A selection represents an action that is the result of a mouse click.
+ */
+export interface Selection {
+  readonly type: SelectionType;
+  readonly source: CanvasType;
+  readonly subIdx: number;
+  readonly cmdIdx?: number;
+}
+
+/**
+ * Describes the different types of selection events.
+ */
+export enum SelectionType {
+  // The user selected an entire subpath.
+  SubPath = 1,
+  // The user selected an individual segment in a subpath.
+  Segment,
+  // The user selected an individual point in a subpath.
+  Point,
+}
 
 /**
  * A simple service that broadcasts selection events to all parts of the application.
@@ -92,7 +114,7 @@ export class SelectionService {
 
     const matchingSelections = _.remove(currentSelections, currSel => {
       // Remove any selections that are equal to a new selection.
-      return newSelections.some(newSel => areSelectionsEqual(newSel, currSel));
+      return newSelections.some(newSel => _.isEqual(newSel, currSel));
     });
     if (!matchingSelections.length) {
       // If no selections were removed, then add all of the selections to the list.
@@ -102,7 +124,7 @@ export class SelectionService {
       // If we aren't appending multiple selections at a time, then clear
       // any previous selections from the list.
       _.remove(currentSelections, currSel => {
-        return newSelections.every(newSel => !areSelectionsEqual(currSel, newSel));
+        return newSelections.every(newSel => !_.isEqual(currSel, newSel));
       });
     }
     this.selections = currentSelections;
@@ -126,33 +148,4 @@ export class SelectionService {
   notify() {
     this.source.next(this.selections);
   }
-}
-
-/**
- * A selection represents an action that is the result of a mouse click.
- */
-export interface Selection {
-  readonly type: SelectionType;
-  readonly source: CanvasType;
-  readonly subIdx: number;
-  readonly cmdIdx?: number;
-}
-
-/**
- * Describes the different types of selection events.
- */
-export enum SelectionType {
-  // The user selected an entire subpath.
-  SubPath = 1,
-  // The user selected an individual segment in a subpath.
-  Segment,
-  // The user selected an individual point in a subpath.
-  Point,
-}
-
-function areSelectionsEqual(sel1: Selection, sel2: Selection) {
-  return sel1.source === sel2.source
-    && sel1.type === sel2.type
-    && sel1.subIdx === sel2.subIdx
-    && sel1.cmdIdx === sel2.cmdIdx;
 }

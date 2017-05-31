@@ -14,6 +14,12 @@ import { Injectable } from '@angular/core';
 import * as _ from 'lodash';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 
+export enum MorphStatus {
+  None = 1,
+  Unmorphable,
+  Morphable,
+}
+
 /**
  * The global state service that is in charge of keeping track of the loaded
  * SVGs, active path layers, and the current morph status.
@@ -415,10 +421,4 @@ export class StateService {
   getVectorLayersObservable() {
     return this.importedVlsSource.asObservable();
   }
-}
-
-export enum MorphStatus {
-  None = 1,
-  Unmorphable,
-  Morphable,
 }

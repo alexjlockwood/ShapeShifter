@@ -9,9 +9,6 @@ import {
   ShapeShifterMode,
   State,
   Store,
-  TogglePointSelection,
-  ToggleSegmentSelections,
-  ToggleSubPathSelection,
 } from '../store';
 import { CanvasOverlayDirective } from './canvasoverlay.directive';
 import * as _ from 'lodash';

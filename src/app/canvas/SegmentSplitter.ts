@@ -8,12 +8,14 @@ import {
   ShapeShifterMode,
   State,
   Store,
-  TogglePointSelection,
-  ToggleSegmentSelections,
-  ToggleSubPathSelection,
   UpdateActivePathBlock,
 } from '../store';
 import { CanvasOverlayDirective } from './canvasoverlay.directive';
+
+interface ProjInfo {
+  readonly proj: ProjectionOntoPath;
+  readonly isEndPt: boolean;
+}
 
 /**
  * Helper class that can be used to split a segment.
@@ -26,7 +28,7 @@ export class SegmentSplitter {
 
   constructor(
     private readonly component: CanvasOverlayDirective,
-    private readonly restrictToSubIdx?: number,
+    readonly restrictToSubIdx?: number,
   ) {
     this.canvasType = component.canvasType;
     this.store = component.store;
@@ -130,9 +132,4 @@ export class SegmentSplitter {
     });
     return projInfos[0];
   };
-}
-
-interface ProjInfo {
-  readonly proj: ProjectionOntoPath;
-  readonly isEndPt: boolean;
 }

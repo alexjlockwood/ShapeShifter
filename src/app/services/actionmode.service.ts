@@ -1,13 +1,9 @@
-import { PathUtil } from '../scripts/paths';
 import {
   ClearActivePathBlockId,
   DeleteSelectedPoints,
   DeleteSelectedSegments,
   DeleteSelectedSubPaths,
-  HoverType,
   ReverseSelectedSubPaths,
-  SetPathHover,
-  SetShapeShifterMode,
   ShapeShifterMode,
   ShiftBackSelectedSubPaths,
   ShiftForwardSelectedSubPaths,

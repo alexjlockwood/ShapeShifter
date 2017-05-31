@@ -1,5 +1,5 @@
 import * as actions from './actions';
-import { Action, ActionReducer } from '@ngrx/store';
+import { ActionReducer } from '@ngrx/store';
 
 // Meta-reducer that intercepts reset workspace actions to reset the current state.
 export function metaReducer<T>(reducer: ActionReducer<T>): ActionReducer<T> {

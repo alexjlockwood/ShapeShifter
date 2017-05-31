@@ -2,7 +2,6 @@ import 'rxjs/add/observable/combineLatest';
 
 import { CanvasType } from '..';
 import { AnimatorService } from '../animator';
-import { PathAnimationBlock } from '../scripts/animations';
 import { MathUtil, Matrix, Point } from '../scripts/common';
 import {
   ClipPathLayer,

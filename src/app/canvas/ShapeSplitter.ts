@@ -7,13 +7,15 @@ import {
   ShapeShifterMode,
   State,
   Store,
-  TogglePointSelection,
-  ToggleSegmentSelections,
-  ToggleSubPathSelection,
   UpdateActivePathBlock,
 } from '../store';
 import { CanvasOverlayDirective } from './canvasoverlay.directive';
 import * as _ from 'lodash';
+
+interface ProjInfo {
+  readonly proj: ProjectionOntoPath;
+  readonly isEndPt: boolean;
+}
 
 /**
  * Helper class that can be used to split a filled subpath.
@@ -248,9 +250,4 @@ export class ShapeSplitter {
   getLastKnownMouseLocation() {
     return this.lastKnownMouseLocation;
   }
-}
-
-interface ProjInfo {
-  readonly proj: ProjectionOntoPath;
-  readonly isEndPt: boolean;
 }

@@ -1,6 +1,13 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 
+export enum AppMode {
+  Selection = 1,
+  SplitCommands,
+  SplitSubPaths,
+  MorphSubPaths,
+}
+
 /**
  * A simple service that broadcasts changes to the current app mode.
  */
@@ -29,11 +36,4 @@ export class AppModeService {
   isSelectionMode() {
     return this.getAppMode() === AppMode.Selection;
   }
-}
-
-export enum AppMode {
-  Selection = 1,
-  SplitCommands,
-  SplitSubPaths,
-  MorphSubPaths,
 }

@@ -73,7 +73,7 @@ enum MouseActions {
 // TODO: add back google analytics stuff!
 // TODO: add back google analytics stuff!
 // TODO: add back google analytics stuff!
-declare const ga: Function;
+// declare const ga: Function;
 
 @Component({
   selector: 'app-layertimeline',

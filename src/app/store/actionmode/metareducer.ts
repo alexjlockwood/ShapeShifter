@@ -5,7 +5,7 @@ import { Path, PathUtil } from '../../scripts/paths';
 import { State } from '../reducer';
 import { HoverType, SelectionType } from '../shapeshifter';
 import * as actions from './actions';
-import { Action, ActionReducer } from '@ngrx/store';
+import { ActionReducer } from '@ngrx/store';
 import * as _ from 'lodash';
 
 // Meta-reducer that intercepts action mode actions and modifies any corresponding state.

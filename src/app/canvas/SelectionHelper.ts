@@ -1,5 +1,5 @@
 import { CanvasType } from '../CanvasType';
-import { MathUtil, Matrix, Point } from '../scripts/common';
+import { MathUtil, Point } from '../scripts/common';
 import { LayerUtil } from '../scripts/layers';
 import { ProjectionOntoPath } from '../scripts/paths';
 import {

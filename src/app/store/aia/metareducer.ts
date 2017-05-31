@@ -1,30 +1,8 @@
-import { CanvasType } from '../../CanvasType';
-import { AutoAwesome } from '../../scripts/algorithms';
-import {
-  Animation,
-  AnimationBlock,
-  ColorAnimationBlock,
-  NumberAnimationBlock,
-  PathAnimationBlock,
-} from '../../scripts/animations';
-import { ModelUtil } from '../../scripts/common';
-import {
-  LayerUtil,
-  VectorLayer,
-} from '../../scripts/layers';
-import { Path } from '../../scripts/paths';
-import {
-  ColorProperty,
-  PathProperty,
-} from '../../scripts/properties';
+import { Animation } from '../../scripts/animations';
+import { LayerUtil, VectorLayer } from '../../scripts/layers';
 import { State } from '../reducer';
 import * as actions from './actions';
-import { compose } from '@ngrx/core/compose'
-import {
-  Action,
-  ActionReducer,
-  combineReducers,
-} from '@ngrx/store';
+import { ActionReducer } from '@ngrx/store';
 import * as _ from 'lodash';
 
 // Meta-reducer that intercepts layer and timeline actions and modifies any corresponding state.

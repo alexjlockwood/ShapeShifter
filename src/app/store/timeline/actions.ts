@@ -1,4 +1,3 @@
-import { CanvasType } from '../../CanvasType';
 import { Animation, AnimationBlock } from '../../scripts/animations';
 import { Layer } from '../../scripts/layers';
 import { Action } from '@ngrx/store';

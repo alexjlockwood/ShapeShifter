@@ -1,4 +1,3 @@
-import { State } from '../reducer';
 import { getState } from '../selectors';
 import { createSelector } from 'reselect';
 

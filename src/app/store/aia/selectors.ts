@@ -1,5 +1,3 @@
-import { State } from '..';
-import { PathAnimationBlock } from '../../scripts/animations';
 import { createDeepEqualSelector, getState } from '../selectors';
 import * as _ from 'lodash';
 import { createSelector, createStructuredSelector } from 'reselect';

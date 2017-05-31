@@ -1,5 +1,4 @@
 import * as actions from './actions';
-import * as _ from 'lodash';
 
 export interface State {
   readonly isSlowMotion: boolean;

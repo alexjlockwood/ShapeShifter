@@ -1,7 +1,6 @@
 import { Animation } from '../scripts/animations';
 import { VectorLayer } from '../scripts/layers';
 import {
-  SetIsPlaying,
   State,
   Store,
   ToggleIsPlaying,

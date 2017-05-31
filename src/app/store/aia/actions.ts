@@ -1,7 +1,3 @@
-import { CanvasType } from '../../CanvasType';
-import { Animation, AnimationBlock } from '../../scripts/animations';
-import { Layer } from '../../scripts/layers';
-import { Path } from '../../scripts/paths';
 import { Action } from '@ngrx/store';
 
 export const SELECT_ANIMATION = '__aia__SELECT_ANIMATION';

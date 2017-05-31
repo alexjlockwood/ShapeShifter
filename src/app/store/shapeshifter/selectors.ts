@@ -2,14 +2,11 @@ import { PathAnimationBlock } from '../../scripts/animations';
 import {
   LayerUtil,
   PathLayer,
-  VectorLayer,
 } from '../../scripts/layers';
-import { Path } from '../../scripts/paths';
 import {
   getActiveVectorLayer,
   getAnimations,
 } from '../aia/selectors';
-import { State } from '../reducer';
 import { getState } from '../selectors';
 import { createDeepEqualSelector } from '../selectors';
 import * as _ from 'lodash';
@@ -33,10 +30,7 @@ const getBlock = createSelector(
     return undefined;
   },
 );
-
 const getBlockLayerId = createSelector(getBlock, b => b ? b.layerId : undefined);
-const getPathBlockFromValue = createSelector(getBlock, b => b ? b.fromValue : undefined);
-const getPathBlockToValue = createSelector(getBlock, b => b ? b.toValue : undefined);
 
 export const isShapeShifterMode = createSelector(getBlockId, id => !!id);
 export const getShapeShifterMode = createSelector(getShapeShifterState, s => s.mode);

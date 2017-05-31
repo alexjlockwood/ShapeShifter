@@ -2,13 +2,9 @@ import 'rxjs/add/observable/combineLatest';
 
 import { CanvasType } from '../CanvasType';
 import { DialogService } from '../dialogs';
-import { AutoAwesome } from '../scripts/algorithms';
-import { DEMO_MAP, DemoUtil } from '../scripts/demos';
-import { ExportUtil } from '../scripts/export';
 import { PathLayer } from '../scripts/layers';
 import {
   ActionModeService,
-  MorphSubPathService,
 } from '../services';
 import {
   Selection,
@@ -49,8 +45,8 @@ export class ToolbarComponent implements OnInit {
   shouldShowActionMode$: Observable<boolean>;
 
   constructor(
-    private readonly viewContainerRef: ViewContainerRef,
-    private readonly dialogService: DialogService,
+    readonly viewContainerRef: ViewContainerRef,
+    readonly dialogService: DialogService,
     // TODO: uncomment this
     // TODO: uncomment this
     // TODO: uncomment this
