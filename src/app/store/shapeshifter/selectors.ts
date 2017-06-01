@@ -32,7 +32,7 @@ export const getShapeShifterMode = createSelector(getShapeShifterState, s => s.m
 export const getShapeShifterHover = createDeepEqualSelector(getShapeShifterState, s => s.hover);
 const getShapeShifterSelections = createSelector(getShapeShifterState, s => s.selections);
 const getPairedSubPaths =
-  createDeepEqualSelector(getShapeShifterState, state => state.pairedSubPaths);
+  createDeepEqualSelector(getShapeShifterState, state => new Set(state.pairedSubPaths));
 const getUnpairedSubPath =
   createDeepEqualSelector(getShapeShifterState, state => state.unpairedSubPath);
 

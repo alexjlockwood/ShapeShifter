@@ -32,7 +32,6 @@ export class MorphSubPathHelper {
     if (hitResult.isSegmentHit || hitResult.isShapeHit) {
       const hits = hitResult.isShapeHit ? hitResult.shapeHits : hitResult.segmentHits;
       const { subIdx } = this.findHitSubPath(hits);
-      console.info('DISPATCHING', new SelectPairedSubPath(subIdx, this.canvasType));
       this.store.dispatch(new SelectPairedSubPath(subIdx, this.canvasType));
     } else if (!isShiftOrMetaPressed) {
       this.store.dispatch(new SetShapeShifterMode(ShapeShifterMode.Selection));

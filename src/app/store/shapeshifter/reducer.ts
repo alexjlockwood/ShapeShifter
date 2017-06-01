@@ -108,11 +108,8 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
       );
       return { ...state, selections };
     }
-
-    default: {
-      return state;
-    }
   }
+  return state;
 }
 
 /**

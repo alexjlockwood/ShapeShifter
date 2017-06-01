@@ -227,6 +227,8 @@ export function reducer(state: State, action: actions.Actions): State {
       } else {
         state = setUnpairedSubPath(state, { source: canvasType, subIdx });
       }
+      const shapeshifter = state.shapeshifter;
+      state = { ...state, shapeshifter: { ...shapeshifter, random: _.uniqueId() } };
       break;
     }
 
@@ -376,7 +378,6 @@ function clearHover(state: State) {
 function setPairedSubPaths(state: State, pairedSubPaths: Set<number>) {
   const { shapeshifter } = state;
   const newState = { ...state, shapeshifter: { ...shapeshifter, pairedSubPaths } };
-  console.info('setting paired subpaths: ', state, newState, 'subIdxs', Array.from(pairedSubPaths).toString());
   return newState;
 }
 

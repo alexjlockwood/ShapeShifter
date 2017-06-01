@@ -11,23 +11,6 @@ import { Action, ActionReducer, combineReducers } from '@ngrx/store';
 import { storeFreeze } from 'ngrx-store-freeze';
 import { storeLogger } from 'ngrx-store-logger';
 
-export function logger(reducer) {
-  return function newReducer(state, action) {
-    const shouldLog = action.type === '__actionmode__SELECT_PAIRED_SUBPATH' || action.type === '__shapeshifter__SET_SHAPE_SHIFTER_HOVER';
-    if (shouldLog) {
-      console.group(action.type);
-    }
-    const nextState = reducer(state, action);
-    if (shouldLog) {
-      console.log(`%c prev state`, `color: #9E9E9E; font-weight: bold`, state);
-      console.log(`%c action`, `color: #03A9F4; font-weight: bold`, action);
-      console.log(`%c next state`, `color: #4CAF50; font-weight: bold`, nextState);
-      console.groupEnd();
-    }
-    return nextState;
-  }
-}
-
 export interface State {
   readonly layers: fromLayers.State;
   readonly timeline: fromTimeline.State;
