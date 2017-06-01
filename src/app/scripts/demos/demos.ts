@@ -179,7 +179,7 @@ export const DEBUG_VECTOR_DRAWABLE_3 = `
   android:viewportHeight="18"
   android:viewportWidth="18">
 
-  <!--<group
+  <group
     android:name="playGroup"
     android:pivotX="9"
     android:pivotY="9"
@@ -201,17 +201,6 @@ export const DEBUG_VECTOR_DRAWABLE_3 = `
       android:name="pausePath"
       android:fillColor="#000"
       android:pathData="M6,5 L8,5 L8,13 L6,13 L6,5 M10,5 L12,5 L12,13 L10,13 L10,5"/>
-  </group>-->
-  <group
-    android:name="sample"
-    android:scaleX="1"
-    android:scaleY="1"
-    android:pivotX="9"
-    android:pivotY="9">
-    <path
-      android:name="samplePath"
-      android:fillColor="#000"
-      android:pathData="M 8 8 h 2 v 2 h -2 v -2"/>
   </group>
 </vector>
 `;
