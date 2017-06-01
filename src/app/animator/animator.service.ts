@@ -39,12 +39,9 @@ export class AnimatorService {
     private readonly store: Store<State>,
   ) {
     this.animator = new Animator(ngZone, this.store);
-    this.store.select(getIsSlowMotion)
-      .subscribe(isSlowMotion => this.animator.setIsSlowMotion(isSlowMotion));
-    this.store.select(getIsPlaying)
-      .subscribe(isPlaying => isPlaying ? this.play() : this.pause());
-    this.store.select(getIsRepeating)
-      .subscribe(isRepeating => this.animator.setIsRepeating(isRepeating));
+    this.store.select(getIsSlowMotion).subscribe(s => this.animator.setIsSlowMotion(s));
+    this.store.select(getIsPlaying).subscribe(p => p ? this.play() : this.pause());
+    this.store.select(getIsRepeating).subscribe(r => this.animator.setIsRepeating(r));
     this.store.select(getAnimatorState)
       .subscribe(({ activeVectorLayer, activeAnimation }) => {
         this.activeAnimation = activeAnimation;
