@@ -21,16 +21,13 @@ export function buildInitialState() {
   const initialAnimation = new Animation();
   return {
     animations: [initialAnimation],
-    selectedAnimationIds: new Set<string>(),
+    selectedAnimationIds: new Set(),
     activeAnimationId: initialAnimation.id,
-    selectedBlockIds: new Set<string>(),
+    selectedBlockIds: new Set(),
   } as State;
 }
 
-export function reducer(
-  state = buildInitialState(),
-  action: actions.Actions,
-) {
+export function reducer(state = buildInitialState(), action: actions.Actions) {
   switch (action.type) {
 
     // Add a list of animations to the application state.

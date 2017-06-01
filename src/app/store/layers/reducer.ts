@@ -30,9 +30,9 @@ export function buildInitialState() {
   return {
     vectorLayers: [initialVectorLayer],
     activeVectorLayerId: initialVectorLayer.id,
-    selectedLayerIds: new Set<string>(),
-    collapsedLayerIds: new Set<string>(),
-    hiddenLayerIds: new Set<string>(),
+    selectedLayerIds: new Set(),
+    collapsedLayerIds: new Set(),
+    hiddenLayerIds: new Set(),
   } as State;
 }
 
@@ -61,8 +61,7 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
 
     // Clear all layer selections.
     case actions.CLEAR_LAYER_SELECTIONS: {
-      const selectedLayerIds = new Set<string>();
-      return { ...state, selectedLayerIds };
+      return { ...state, selectedLayerIds: new Set() };
     }
 
     // Expand/collapse a layer.

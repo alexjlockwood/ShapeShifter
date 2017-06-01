@@ -1,12 +1,17 @@
-import * as _ from 'lodash';
-import {
-  VectorLayer, GroupLayer, PathLayer,
-  Layer, StrokeLineCap, StrokeLineJoin, FillType,
-} from '../layers';
-import { NameProperty } from '../properties';
-import { Path, Command } from '../paths';
 import { ColorUtil, Matrix, ModelUtil } from '../common';
+import {
+  FillType,
+  GroupLayer,
+  Layer,
+  PathLayer,
+  StrokeLineCap,
+  StrokeLineJoin,
+  VectorLayer,
+} from '../layers';
+import { Command, Path } from '../paths';
+import { NameProperty } from '../properties';
 import { Svgo } from '../svgo';
+import * as _ from 'lodash';
 
 /**
  * Utility function that takes an SVG string as input and
@@ -142,7 +147,7 @@ export function loadVectorLayerFromSvgString(
 
     if (node.childNodes.length) {
       const children = Array.from(node.childNodes)
-        .map(child => nodeToLayerDataFn(child, Object.assign({}, context)))
+        .map(child => nodeToLayerDataFn(child, { ...context }))
         .filter(child => !!child);
       if (children && children.length) {
         return new GroupLayer({

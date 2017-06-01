@@ -1,6 +1,7 @@
-import { AbstractLayer, ConstructorArgs as AbstractConstructorArgs } from './AbstractLayer';
-import { Rect } from '../common';
-import { Property, NumberProperty } from '../properties';
+import { MathUtil, Matrix, Point, Rect } from '../common';
+import { NumberProperty, Property } from '../properties';
+import { LayerUtil } from '.';
+import { ConstructorArgs as AbstractConstructorArgs, AbstractLayer } from './AbstractLayer';
 
 /**
  * Model object that mirrors the VectorDrawable's '<group>' element.
@@ -62,7 +63,23 @@ export class GroupLayer extends AbstractLayer {
         bounds = childBounds.clone();
       }
     });
-    return bounds;
+    bounds.l -= this.pivotX;
+    bounds.t -= this.pivotY;
+    bounds.r -= this.pivotX;
+    bounds.b -= this.pivotY;
+    const transforms = [
+      Matrix.fromScaling(this.scaleX, this.scaleY),
+      Matrix.fromRotation(this.rotation),
+      Matrix.fromTranslation(this.translateX, this.translateY),
+    ];
+    const topLeft = MathUtil.transformPoint(new Point(bounds.l, bounds.t), ...transforms);
+    const bottomRight = MathUtil.transformPoint(new Point(bounds.r, bounds.b), ...transforms);
+    return new Rect(
+      topLeft.x + this.pivotX,
+      topLeft.y + this.pivotY,
+      bottomRight.x + this.pivotX,
+      bottomRight.y + this.pivotY,
+    );
   }
 }
 
