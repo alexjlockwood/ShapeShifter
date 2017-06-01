@@ -20,15 +20,15 @@
         fxFlex>
         <app-canvas class="start"
           *ngIf="this.isShapeShifterMode$ | async"
-          [actionSource]="ACTION_SOURCE_START"
+          [actionSource]="ACTION_SOURCE_FROM"
           [canvasBounds$]="this.canvasBounds$">
         </app-canvas>
         <app-canvas [canvasBounds$]="this.canvasBounds$"
-          [actionSource]="ACTION_SOURCE_PREVIEW">
+          [actionSource]="ACTION_SOURCE_ANIMATED">
         </app-canvas>
         <app-canvas class="end"
           *ngIf="this.isShapeShifterMode$ | async"
-          [actionSource]="ACTION_SOURCE_END"
+          [actionSource]="ACTION_SOURCE_TO"
           [canvasBounds$]="this.canvasBounds$">
         </app-canvas>
       </div>

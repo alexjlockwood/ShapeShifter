@@ -36,8 +36,8 @@ export function generateZip(
 
   // Create AvdTargets.
   const avdTargets: AvdTarget[] = [];
-  const startVl = stateService.getVectorLayer(ActionSource.Start);
-  const endVl = stateService.getVectorLayer(ActionSource.End);
+  const startVl = stateService.getVectorLayer(ActionSource.From);
+  const endVl = stateService.getVectorLayer(ActionSource.To);
 
   // Create vector layer target.
   const alphaTarget =
@@ -50,8 +50,8 @@ export function generateZip(
     avdTargets.push(alphaTarget);
   }
 
-  const startGl = stateService.getActiveRotationLayer(ActionSource.Start);
-  const endGl = stateService.getActiveRotationLayer(ActionSource.End);
+  const startGl = stateService.getActiveRotationLayer(ActionSource.From);
+  const endGl = stateService.getActiveRotationLayer(ActionSource.To);
 
   // Create rotation layer target.
   const rotationTarget =
@@ -60,8 +60,8 @@ export function generateZip(
       endGl,
       duration,
       interpolator.androidRef);
-  const startPl = stateService.getActivePathLayer(ActionSource.Start);
-  const endPl = stateService.getActivePathLayer(ActionSource.End);
+  const startPl = stateService.getActivePathLayer(ActionSource.From);
+  const endPl = stateService.getActivePathLayer(ActionSource.To);
   if (rotationTarget) {
     avdTargets.push(rotationTarget);
     startVlChildren.push(startGl);

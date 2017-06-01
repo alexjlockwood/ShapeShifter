@@ -23,7 +23,7 @@ import * as _ from 'lodash';
  * for the selection of path points, segments, and shapes.
  */
 export class SelectionHelper {
-  private readonly canvasType: ActionSource;
+  private readonly actionSource: ActionSource;
   private readonly store: Store<State>;
 
   // Holds a reference to the currently selected split point, which
@@ -35,7 +35,7 @@ export class SelectionHelper {
   private initialMouseDown: Point;
 
   constructor(private readonly component: CanvasOverlayDirective) {
-    this.canvasType = component.actionSource;
+    this.actionSource = component.actionSource;
     this.store = component.store;
   }
 
@@ -54,7 +54,7 @@ export class SelectionHelper {
       } else {
         // Then a click has occurred on top of a non-split point.
         this.store.dispatch(
-          new TogglePointSelection(this.canvasType, subIdx, cmdIdx, isShiftOrMetaPressed));
+          new TogglePointSelection(this.actionSource, subIdx, cmdIdx, isShiftOrMetaPressed));
       }
       return;
     }
@@ -62,7 +62,7 @@ export class SelectionHelper {
     if (this.component.activePathLayer.isFilled() && hitResult.isSegmentHit) {
       const { subIdx, cmdIdx, cmd } = this.findHitSegment(hitResult.segmentHits);
       if (cmd.isSplitSegment()) {
-        this.store.dispatch(new ToggleSegmentSelections(this.canvasType, [{ subIdx, cmdIdx }]));
+        this.store.dispatch(new ToggleSegmentSelections(this.actionSource, [{ subIdx, cmdIdx }]));
         return;
       }
     }
@@ -70,7 +70,7 @@ export class SelectionHelper {
     if (hitResult.isSegmentHit || hitResult.isShapeHit) {
       const hits = hitResult.isShapeHit ? hitResult.shapeHits : hitResult.segmentHits;
       const { subIdx } = this.findHitSubPath(hits);
-      this.store.dispatch(new ToggleSubPathSelection(this.canvasType, subIdx));
+      this.store.dispatch(new ToggleSubPathSelection(this.actionSource, subIdx));
     } else if (!isShiftOrMetaPressed) {
       // If the mouse down event didn't result in a hit, then
       // clear any existing selections, but only if the user isn't in
@@ -142,7 +142,7 @@ export class SelectionHelper {
 
         this.store.dispatch(
           new UpdateActivePathBlock(
-            this.canvasType, pathMutator.build()));
+            this.actionSource, pathMutator.build()));
       }
     } else if (this.currentDraggableSplitIndex) {
       const hitResult = this.performHitTest(mouseUp);
@@ -151,11 +151,11 @@ export class SelectionHelper {
       } else if (hitResult.isEndPointHit) {
         const { subIdx, cmdIdx } = this.findHitPoint(hitResult.endPointHits);
         this.store.dispatch(
-          new TogglePointSelection(this.canvasType, subIdx, cmdIdx, isShiftOrMetaPressed));
+          new TogglePointSelection(this.actionSource, subIdx, cmdIdx, isShiftOrMetaPressed));
       } else if (hitResult.isSegmentHit || hitResult.isShapeHit) {
         const hits = hitResult.isShapeHit ? hitResult.shapeHits : hitResult.segmentHits;
         const { subIdx } = this.findHitSubPath(hits);
-        this.store.dispatch(new ToggleSubPathSelection(this.canvasType, subIdx));
+        this.store.dispatch(new ToggleSubPathSelection(this.actionSource, subIdx));
       }
     }
 
@@ -213,7 +213,7 @@ export class SelectionHelper {
       const { subIdx, cmdIdx } = this.findHitPoint(hitResult.endPointHits);
       this.component.hoverService.setHover({
         type: HoverType.Point,
-        source: this.canvasType,
+        source: this.actionSource,
         subIdx,
         cmdIdx,
       });
@@ -225,7 +225,7 @@ export class SelectionHelper {
         if (this.component.activePath.getCommand(subIdx, cmdIdx).isSplitSegment()) {
           this.component.hoverService.setHover({
             type: HoverType.Segment,
-            source: this.canvasType,
+            source: this.actionSource,
             subIdx,
             cmdIdx,
           });
@@ -235,7 +235,7 @@ export class SelectionHelper {
         const { subIdx } = this.findHitSegment(hitResult.segmentHits);
         this.component.hoverService.setHover({
           type: HoverType.SubPath,
-          source: this.canvasType,
+          source: this.actionSource,
           subIdx,
         });
         return;
@@ -245,7 +245,7 @@ export class SelectionHelper {
       const { subIdx } = this.findHitSubPath(hitResult.shapeHits);
       this.component.hoverService.setHover({
         type: HoverType.SubPath,
-        source: this.canvasType,
+        source: this.actionSource,
         subIdx,
       });
       return;

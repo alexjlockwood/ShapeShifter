@@ -166,11 +166,11 @@ export function metaReducer(reducer: ActionReducer<State>): ActionReducer<State>
 
       // Select a subpath in paired subpath shapeshifter mode.
       case actions.PAIR_SUBPATH: {
-        const { subIdx, source: canvasType } = action.payload;
+        const { subIdx, source: actionSource } = action.payload;
         const { unpairedSubPath: currUnpair } = state.actionmode;
-        if (currUnpair && canvasType !== currUnpair.source) {
+        if (currUnpair && actionSource !== currUnpair.source) {
           const { source: fromSource, subIdx: fromSubIdx } = currUnpair;
-          const toSource = canvasType;
+          const toSource = actionSource;
           const toSubIdx = subIdx;
           state = setUnpairedSubPath(state, undefined);
           const selections = state.actionmode.selections;
@@ -221,7 +221,7 @@ export function metaReducer(reducer: ActionReducer<State>): ActionReducer<State>
               .moveSubPath(toSubIdx, 0)
               .build());
         } else {
-          state = setUnpairedSubPath(state, { source: canvasType, subIdx });
+          state = setUnpairedSubPath(state, { source: actionSource, subIdx });
         }
         const actionmode = state.actionmode;
         state = { ...state, actionmode: { ...actionmode, random: _.uniqueId() } };
@@ -258,7 +258,7 @@ function getActivePathBlockLayer(state: State) {
 
 function getActivePath(state: State, source: ActionSource) {
   const block = getActivePathBlock(state);
-  return source === ActionSource.Start ? block.fromValue : block.toValue;
+  return source === ActionSource.From ? block.fromValue : block.toValue;
 }
 
 function getSubPathSelections(state: State) {
@@ -292,18 +292,18 @@ function updateActivePathBlock(state: State, source: ActionSource, path: Path) {
   path = pathMutator.deleteCollapsingSubPaths().build();
 
   const getBlockPathFn = (t: ActionSource) => {
-    return t === ActionSource.Start ? block.fromValue : block.toValue;
+    return t === ActionSource.From ? block.fromValue : block.toValue;
   };
   const setBlockPathFn = (t: ActionSource, p: Path) => {
     block = block.clone();
-    if (t === ActionSource.Start) {
+    if (t === ActionSource.From) {
       block.fromValue = p;
     } else {
       block.toValue = p;
     }
   };
 
-  const oppSource = source === ActionSource.Start ? ActionSource.End : ActionSource.Start;
+  const oppSource = source === ActionSource.From ? ActionSource.To : ActionSource.From;
   let oppPath = getBlockPathFn(oppSource);
   if (oppPath) {
     oppPath = oppPath.mutate().deleteCollapsingSubPaths().build();

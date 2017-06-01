@@ -18,11 +18,11 @@ import * as _ from 'lodash';
  * Helper class that tracks information during morph subpath mode.
  */
 export class MorphSubPathHelper {
-  private readonly canvasType: ActionSource;
+  private readonly actionSource: ActionSource;
   private readonly store: Store<State>;
 
   constructor(private readonly component: CanvasOverlayDirective) {
-    this.canvasType = component.actionSource;
+    this.actionSource = component.actionSource;
     this.store = component.store;
   }
 
@@ -32,7 +32,7 @@ export class MorphSubPathHelper {
     if (hitResult.isSegmentHit || hitResult.isShapeHit) {
       const hits = hitResult.isShapeHit ? hitResult.shapeHits : hitResult.segmentHits;
       const { subIdx } = this.findHitSubPath(hits);
-      this.store.dispatch(new PairSubPath(subIdx, this.canvasType));
+      this.store.dispatch(new PairSubPath(subIdx, this.actionSource));
     } else if (!isShiftOrMetaPressed) {
       this.store.dispatch(new SetShapeShifterMode(ActionMode.Selection));
     }
@@ -65,7 +65,7 @@ export class MorphSubPathHelper {
       const { subIdx } = this.findHitSubPath(hits);
       this.component.hoverService.setHover({
         type: HoverType.SubPath,
-        source: this.canvasType,
+        source: this.actionSource,
         subIdx,
       });
     }

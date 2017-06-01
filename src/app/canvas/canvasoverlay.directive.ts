@@ -185,7 +185,7 @@ export class CanvasOverlayDirective
   }
 
   ngAfterViewInit() {
-    if (this.actionSource === ActionSource.Preview) {
+    if (this.actionSource === ActionSource.Animated) {
       // Preview canvas specific setup.
       this.registerSubscription(
         Observable.combineLatest(
@@ -202,7 +202,7 @@ export class CanvasOverlayDirective
     } else {
       // Start & end canvas specific setup.
       const shapeShifterSelector =
-        this.actionSource === ActionSource.Start
+        this.actionSource === ActionSource.From
           ? getActionModeStartState
           : getActionModeEndState;
       this.registerSubscription(
@@ -387,7 +387,7 @@ export class CanvasOverlayDirective
     if (!this.isShapeShifterMode) {
       return;
     }
-    if (this.actionSource === ActionSource.Preview) {
+    if (this.actionSource === ActionSource.Animated) {
       return;
     }
 
@@ -533,7 +533,7 @@ export class CanvasOverlayDirective
     if (!this.isShapeShifterMode) {
       return;
     }
-    if (this.actionSource === ActionSource.Preview) {
+    if (this.actionSource === ActionSource.Animated) {
       // Don't draw labeled points in the preview canvas.
       return;
     }
@@ -633,8 +633,8 @@ export class CanvasOverlayDirective
           });
         };
         if ((isHovering && cmdIdx === currentHover.cmdIdx)
-          || isPointEnlargedFn(ActionSource.Start, subIdx, cmdIdx)
-          || isPointEnlargedFn(ActionSource.End, subIdx, cmdIdx)) {
+          || isPointEnlargedFn(ActionSource.From, subIdx, cmdIdx)
+          || isPointEnlargedFn(ActionSource.To, subIdx, cmdIdx)) {
           radius /= SPLIT_POINT_RADIUS_FACTOR;
         }
         text = (cmdIdx + 1).toString();

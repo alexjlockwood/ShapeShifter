@@ -2,18 +2,18 @@ import { Path } from '../../scripts/paths';
 import { ActionSource } from './types';
 import { Action } from '@ngrx/store';
 
-export const REVERSE_SELECTED_SUBPATHS = '__actionmode__REVERSE_SELECTED_SUBPATHS';
-export const SHIFT_BACK_SELECTED_SUBPATHS = '__actionmode__SHIFT_BACK_SELECTED_SUBPATHS';
-export const SHIFT_FORWARD_SELECTED_SUBPATHS = '__actionmode__SHIFT_FORWARD_SELECTED_SUBPATHS';
-export const DELETE_SELECTED_SUBPATHS = '__actionmode__DELETE_SELECTED_SUBPATHS';
-export const DELETE_SELECTED_SEGMENTS = '__actionmode__DELETE_SELECTED_SEGMENTS';
-export const DELETE_SELECTED_POINTS = '__actionmode__DELETE_SELECTED_POINTS';
-export const SHIFT_POINT_TO_FRONT = '__actionmode__SHIFT_POINT_TO_FRONT';
-export const SPLIT_COMMAND_IN_HALF_HOVER = '__actionmode__SPLIT_COMMAND_IN_HALF_HOVER';
-export const SPLIT_COMMAND_IN_HALF_CLICK = '__actionmode__SPLIT_COMMAND_IN_HALF_CLICK';
-export const UPDATE_ACTIVE_PATH_BLOCK = '__actionmode__UPDATE_ACTIVE_PATH_BLOCK';
-export const PAIR_SUBPATH = '__actionmode__PAIR_SUBPATH';
-export const SET_UNPAIRED_SUBPATH = '__actionmode__SET_UNPAIRED_SUBPATH';
+export const REVERSE_SELECTED_SUBPATHS = '__metaactionmode__REVERSE_SELECTED_SUBPATHS';
+export const SHIFT_BACK_SELECTED_SUBPATHS = '__metaactionmode__SHIFT_BACK_SELECTED_SUBPATHS';
+export const SHIFT_FORWARD_SELECTED_SUBPATHS = '__metaactionmode__SHIFT_FORWARD_SELECTED_SUBPATHS';
+export const DELETE_SELECTED_SUBPATHS = '__metaactionmode__DELETE_SELECTED_SUBPATHS';
+export const DELETE_SELECTED_SEGMENTS = '__metaactionmode__DELETE_SELECTED_SEGMENTS';
+export const DELETE_SELECTED_POINTS = '__metaactionmode__DELETE_SELECTED_POINTS';
+export const SHIFT_POINT_TO_FRONT = '__metaactionmode__SHIFT_POINT_TO_FRONT';
+export const SPLIT_COMMAND_IN_HALF_HOVER = '__metaactionmode__SPLIT_COMMAND_IN_HALF_HOVER';
+export const SPLIT_COMMAND_IN_HALF_CLICK = '__metaactionmode__SPLIT_COMMAND_IN_HALF_CLICK';
+export const UPDATE_ACTIVE_PATH_BLOCK = '__metaactionmode__UPDATE_ACTIVE_PATH_BLOCK';
+export const PAIR_SUBPATH = '__metaactionmode__PAIR_SUBPATH';
+export const SET_UNPAIRED_SUBPATH = '__metaactionmode__SET_UNPAIRED_SUBPATH';
 
 export class ReverseSelectedSubPaths implements Action {
   readonly type = REVERSE_SELECTED_SUBPATHS;

@@ -50,16 +50,16 @@ export class StateService {
     private readonly appModeService: AppModeService,
     private readonly settingsService: SettingsService,
   ) {
-    [ActionSource.Start, ActionSource.Preview, ActionSource.End].forEach(type => {
+    [ActionSource.From, ActionSource.Animated, ActionSource.To].forEach(type => {
       this.activePathIdSources.set(type, new BehaviorSubject<string>(undefined));
     });
     settingsService.getRotationObservable().subscribe(rotation => {
-      this.updateActiveRotationLayer(ActionSource.Start, 0, false /* shouldNotify */);
-      this.updateActiveRotationLayer(ActionSource.Preview, 0, false /* shouldNotify */);
-      this.updateActiveRotationLayer(ActionSource.End, rotation, false /* shouldNotify */);
-      this.notifyChange(ActionSource.Start);
-      this.notifyChange(ActionSource.Preview);
-      this.notifyChange(ActionSource.End);
+      this.updateActiveRotationLayer(ActionSource.From, 0, false /* shouldNotify */);
+      this.updateActiveRotationLayer(ActionSource.Animated, 0, false /* shouldNotify */);
+      this.updateActiveRotationLayer(ActionSource.To, rotation, false /* shouldNotify */);
+      this.notifyChange(ActionSource.From);
+      this.notifyChange(ActionSource.Animated);
+      this.notifyChange(ActionSource.To);
     });
   }
 
@@ -121,32 +121,32 @@ export class StateService {
     // this.animatorService.reset();
 
     const setActivePathIdFn = (type: ActionSource) => {
-      if (type === ActionSource.Start) {
-        this.activePathIdMap.set(ActionSource.Preview, pathId);
+      if (type === ActionSource.From) {
+        this.activePathIdMap.set(ActionSource.Animated, pathId);
       }
       this.activePathIdMap.set(type, pathId);
       const vl = this.importedPathMap.get(pathId);
       this.activeLayerMap.set(type, vl ? vl.deepClone() : vl);
       const { vl1: startVl, vl2: endVl } =
         LayerUtil.adjustVectorLayerDimensions(
-          this.importedPathMap.get(this.getActivePathId(ActionSource.Start)),
-          this.importedPathMap.get(this.getActivePathId(ActionSource.End)));
-      this.activeLayerMap.set(ActionSource.Start, startVl);
-      this.activeLayerMap.set(ActionSource.Preview, startVl ? startVl.deepClone() : startVl);
-      this.activeLayerMap.set(ActionSource.End, endVl);
+          this.importedPathMap.get(this.getActivePathId(ActionSource.From)),
+          this.importedPathMap.get(this.getActivePathId(ActionSource.To)));
+      this.activeLayerMap.set(ActionSource.From, startVl);
+      this.activeLayerMap.set(ActionSource.Animated, startVl ? startVl.deepClone() : startVl);
+      this.activeLayerMap.set(ActionSource.To, endVl);
       // Attempt to make the start and end subpaths compatible with each other.
       this.updateActivePath(
         type, this.getActivePathLayer(type).pathData, false /* shouldNotify */);
-      this.updateActiveRotationLayer(ActionSource.Start, 0, false /* shouldNotify */);
-      this.updateActiveRotationLayer(ActionSource.Preview, 0, false /* shouldNotify */);
+      this.updateActiveRotationLayer(ActionSource.From, 0, false /* shouldNotify */);
+      this.updateActiveRotationLayer(ActionSource.Animated, 0, false /* shouldNotify */);
       this.updateActiveRotationLayer(
-        ActionSource.End, this.settingsService.getRotation(), false /* shouldNotify */);
+        ActionSource.To, this.settingsService.getRotation(), false /* shouldNotify */);
     };
 
     setActivePathIdFn(canvasType);
 
     if (shouldNotify) {
-      [ActionSource.Preview, ActionSource.Start, ActionSource.End].forEach(type => this.notifyChange(type));
+      [ActionSource.Animated, ActionSource.From, ActionSource.To].forEach(type => this.notifyChange(type));
     }
   }
 
@@ -181,13 +181,13 @@ export class StateService {
     path = pathMutator.deleteCollapsingSubPaths().build();
 
     const oppositeCanvasType =
-      type === ActionSource.Start
-        ? ActionSource.End
-        : ActionSource.Start;
+      type === ActionSource.From
+        ? ActionSource.To
+        : ActionSource.From;
     let hasOppositeCanvasTypeChanged = false;
 
     const oppActivePathLayer =
-      type === ActionSource.Preview ? undefined : this.getActivePathLayer(oppositeCanvasType);
+      type === ActionSource.Animated ? undefined : this.getActivePathLayer(oppositeCanvasType);
     if (oppActivePathLayer) {
       oppActivePathLayer.pathData =
         oppActivePathLayer.pathData.mutate().deleteCollapsingSubPaths().build();
@@ -236,10 +236,10 @@ export class StateService {
 
     this.getActivePathLayer(type).pathData = path;
 
-    if (type === ActionSource.Start || hasOppositeCanvasTypeChanged) {
+    if (type === ActionSource.From || hasOppositeCanvasTypeChanged) {
       // A canvas layer has changed, so update the preview layer as well.
-      const activeStartLayer = this.getActivePathLayer(ActionSource.Start);
-      const activePreviewLayer = this.getActivePathLayer(ActionSource.Preview);
+      const activeStartLayer = this.getActivePathLayer(ActionSource.From);
+      const activePreviewLayer = this.getActivePathLayer(ActionSource.Animated);
       if (activeStartLayer && activePreviewLayer) {
         activePreviewLayer.pathData = activeStartLayer.pathData.clone();
       }
@@ -251,7 +251,7 @@ export class StateService {
         this.notifyChange(oppositeCanvasType);
       }
       // TODO: notifying the preview layer every time could be avoided...
-      this.notifyChange(ActionSource.Preview);
+      this.notifyChange(ActionSource.Animated);
     }
   }
 
@@ -352,7 +352,7 @@ export class StateService {
   deletePathId(pathId: string) {
     this.importedPathMap.delete(pathId);
     const notifyTypes: ActionSource[] = [];
-    [ActionSource.Start, ActionSource.Preview, ActionSource.End]
+    [ActionSource.From, ActionSource.Animated, ActionSource.To]
       .forEach(type => {
         const activeStartPathId = this.activePathIdMap.get(type);
         if (activeStartPathId === pathId) {
@@ -379,8 +379,8 @@ export class StateService {
   }
 
   getMorphStatus() {
-    const startPathLayer = this.getActivePathLayer(ActionSource.Start);
-    const endPathLayer = this.getActivePathLayer(ActionSource.End);
+    const startPathLayer = this.getActivePathLayer(ActionSource.From);
+    const endPathLayer = this.getActivePathLayer(ActionSource.To);
     if (!startPathLayer || !endPathLayer) {
       return MorphStatus.None;
     }
@@ -405,7 +405,7 @@ export class StateService {
     this.activePathIdSources.forEach(source => source.next(undefined));
     this.statusSource.next(MorphStatus.None);
     this.existingPathIdsSource.next([]);
-    [ActionSource.Preview, ActionSource.Start, ActionSource.End].forEach(type => this.notifyChange(type));
+    [ActionSource.Animated, ActionSource.From, ActionSource.To].forEach(type => this.notifyChange(type));
   }
 
   getExistingPathIdsObservable() {

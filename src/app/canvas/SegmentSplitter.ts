@@ -21,13 +21,13 @@ interface ProjInfo {
  * Helper class that can be used to split a segment.
  */
 export class SegmentSplitter {
-  private readonly canvasType: ActionSource;
+  private readonly actionSource: ActionSource;
   private readonly store: Store<State>;
   private currProjInfo: ProjInfo;
   private lastKnownMouseLocation: Point;
 
   constructor(private readonly component: CanvasOverlayDirective) {
-    this.canvasType = component.actionSource;
+    this.actionSource = component.actionSource;
     this.store = component.store;
   }
 
@@ -54,7 +54,7 @@ export class SegmentSplitter {
       this.currProjInfo = undefined;
       this.store.dispatch(
         new UpdateActivePathBlock(
-          this.canvasType,
+          this.actionSource,
           pathMutator.build(),
         ));
       this.component.draw();

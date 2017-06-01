@@ -34,9 +34,9 @@ export enum ActionMode {
  * Different action sources.
  */
 export enum ActionSource {
-  Start = 1,
-  Preview,
-  End,
+  From = 1,
+  Animated,
+  To,
 }
 
 /**

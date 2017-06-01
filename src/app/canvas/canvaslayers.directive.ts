@@ -61,7 +61,7 @@ export class CanvasLayersDirective
   }
 
   ngAfterViewInit() {
-    if (this.actionSource === ActionSource.Preview) {
+    if (this.actionSource === ActionSource.Animated) {
       // Preview canvas specific setup.
       this.registerSubscription(
         Observable.combineLatest(
@@ -76,7 +76,7 @@ export class CanvasLayersDirective
     } else {
       // Start & end canvas specific setup.
       const actionModeSelector =
-        this.actionSource === ActionSource.Start
+        this.actionSource === ActionSource.From
           ? getActionModeStartState
           : getActionModeEndState;
       this.registerSubscription(

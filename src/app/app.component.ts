@@ -36,9 +36,9 @@ const STORAGE_KEY_FIRST_TIME_USER = 'storage_key_first_time_user';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
-  readonly ACTION_SOURCE_START = ActionSource.Start;
-  readonly ACTION_SOURCE_PREVIEW = ActionSource.Preview;
-  readonly ACTION_SOURCE_END = ActionSource.End;
+  readonly ACTION_SOURCE_FROM = ActionSource.From;
+  readonly ACTION_SOURCE_ANIMATED = ActionSource.Animated;
+  readonly ACTION_SOURCE_TO = ActionSource.To;
 
   @ViewChild('displayContainer') displayContainerRef: ElementRef;
   private $displayContainer: JQuery;

@@ -210,7 +210,7 @@ class ToolbarData {
     }
     const canvasType = selections[0].source;
     const activePathLayer =
-      canvasType === ActionSource.Start ? activeStartPathLayer : activeEndPathLayer;
+      canvasType === ActionSource.From ? activeStartPathLayer : activeEndPathLayer;
     if (!activePathLayer) {
       return;
     }
@@ -325,7 +325,7 @@ class ToolbarData {
       }
     } else if (this.mode === ActionMode.MorphSubPaths) {
       if (this.unpairedSubPathSource) {
-        const toSourceDir = this.unpairedSubPathSource === ActionSource.Start ? 'right' : 'left';
+        const toSourceDir = this.unpairedSubPathSource === ActionSource.From ? 'right' : 'left';
         return `Pair the selected subpath with a corresponding subpath on the ${toSourceDir}`;
       }
       return 'Select a subpath';
