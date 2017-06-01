@@ -12,7 +12,7 @@ export const SHIFT_POINT_TO_FRONT = '__actionmode__SHIFT_POINT_TO_FRONT';
 export const SPLIT_COMMAND_IN_HALF_HOVER = '__actionmode__SPLIT_COMMAND_IN_HALF_HOVER';
 export const SPLIT_COMMAND_IN_HALF_CLICK = '__actionmode__SPLIT_COMMAND_IN_HALF_CLICK';
 export const UPDATE_ACTIVE_PATH_BLOCK = '__actionmode__UPDATE_ACTIVE_PATH_BLOCK';
-export const SELECT_PAIRED_SUBPATH = '__actionmode__SELECT_PAIRED_SUBPATH';
+export const PAIR_SUBPATH = '__actionmode__PAIR_SUBPATH';
 export const SET_UNPAIRED_SUBPATH = '__actionmode__SET_UNPAIRED_SUBPATH';
 
 export class ReverseSelectedSubPaths implements Action {
@@ -66,8 +66,8 @@ export class UpdateActivePathBlock implements Action {
   }
 }
 
-export class SelectPairedSubPath implements Action {
-  readonly type = SELECT_PAIRED_SUBPATH;
+export class PairSubPath implements Action {
+  readonly type = PAIR_SUBPATH;
   readonly payload: { subIdx: number, source: CanvasType; };
   constructor(subIdx: number, source: CanvasType) {
     this.payload = { subIdx, source };
@@ -93,5 +93,5 @@ export type Actions =
   | SplitCommandInHalfHover
   | SplitCommandInHalfClick
   | UpdateActivePathBlock
-  | SelectPairedSubPath
+  | PairSubPath
   | SetUnpairedSubPath;

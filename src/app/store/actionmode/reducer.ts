@@ -169,7 +169,7 @@ export function reducer(state: State, action: actions.Actions): State {
     }
 
     // Select a subpath in paired subpath shapeshifter mode.
-    case actions.SELECT_PAIRED_SUBPATH: {
+    case actions.PAIR_SUBPATH: {
       const { subIdx, source: canvasType } = action.payload;
       const { unpairedSubPath: currUnpair } = state.shapeshifter;
       if (currUnpair && canvasType !== currUnpair.source) {

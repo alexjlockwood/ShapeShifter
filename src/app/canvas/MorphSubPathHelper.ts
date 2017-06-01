@@ -3,7 +3,7 @@ import { Point } from '../scripts/common';
 import { HoverService } from '../services';
 import {
   HoverType,
-  SelectPairedSubPath,
+  PairSubPath,
   SetShapeShifterMode,
   SetShapeShifterSelections,
   SetUnpairedSubPath,
@@ -32,7 +32,7 @@ export class MorphSubPathHelper {
     if (hitResult.isSegmentHit || hitResult.isShapeHit) {
       const hits = hitResult.isShapeHit ? hitResult.shapeHits : hitResult.segmentHits;
       const { subIdx } = this.findHitSubPath(hits);
-      this.store.dispatch(new SelectPairedSubPath(subIdx, this.canvasType));
+      this.store.dispatch(new PairSubPath(subIdx, this.canvasType));
     } else if (!isShiftOrMetaPressed) {
       this.store.dispatch(new SetShapeShifterMode(ShapeShifterMode.Selection));
     }

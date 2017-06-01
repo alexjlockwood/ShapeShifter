@@ -25,10 +25,6 @@ const sliceReducers = {
   shapeshifter: fromShapeShifter.reducer,
 };
 
-function reduceReducers(reducers: ReadonlyArray<ActionReducer<State>>) {
-  return (state: State, action: Action) => reducers.reduce((s, r) => r(s, action), state);
-}
-
 const stateReducers = [
   // Reducer that adds the ability to reset the entire state tree.
   fromResetable.reducer,
@@ -38,7 +34,7 @@ const stateReducers = [
   // Reducer that adds the ability to modify the layer list and
   // timeline simultaneously.
   fromAia.reducer,
-  // Reducer that maps our state reducers to the keys in our state tree.
+  // Reducer that maps our slice reducers to the keys in our state tree.
   combineReducers(sliceReducers),
 ];
 
@@ -50,6 +46,11 @@ const devMetaReducers = [
   // accidental mutations fail fast in dev builds.
   storeFreeze,
 ];
+
+// Chains together multiple reducers by executing them sequentially.
+function reduceReducers(reducers: ReadonlyArray<ActionReducer<State>>) {
+  return (state: State, action: Action) => reducers.reduce((s, r) => r(s, action), state);
+}
 
 const productionReducer: ActionReducer<State> = reduceReducers(stateReducers);
 const developmentReducer: ActionReducer<State> = compose(...devMetaReducers)(productionReducer);
