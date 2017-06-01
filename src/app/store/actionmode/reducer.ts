@@ -8,7 +8,7 @@ import * as actions from './actions';
 import { ActionReducer } from '@ngrx/store';
 import * as _ from 'lodash';
 
-export function reducer(state: State, action: actions.Actions): State {
+export function reducer(state: State, action: actions.Actions) {
   switch (action.type) {
 
     // Reverse all currently selected subpaths.
@@ -81,7 +81,7 @@ export function reducer(state: State, action: actions.Actions): State {
 
     // Delete all currently selected segments.
     case actions.DELETE_SELECTED_SEGMENTS: {
-      // // TODO: support deleting multiple segments at a time?
+      // TODO: support deleting multiple segments at a time?
       const selections = getSegmentSelections(state);
       if (!selections.length) {
         break;
@@ -355,7 +355,7 @@ function updateActivePathBlock(state: State, source: CanvasType, path: Path) {
   return { ...state, timeline: { ...timeline, animations } };
 }
 
-function setSelections(state: State, selections: ReadonlyArray<Selection>): State {
+function setSelections(state: State, selections: ReadonlyArray<Selection>) {
   const { shapeshifter } = state;
   return { ...state, shapeshifter: { ...shapeshifter, selections } };
 }
