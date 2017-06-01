@@ -1,9 +1,8 @@
 import 'rxjs/add/observable/combineLatest';
 
-import { CanvasType } from '../CanvasType';
 import { Point } from '../scripts/common';
 import { DestroyableMixin } from '../scripts/mixins';
-import { State, Store } from '../store';
+import { ActionSource, State, Store } from '../store';
 import { getActiveVectorLayer } from '../store/layers/selectors';
 import { CanvasContainerDirective } from './canvascontainer.directive';
 import { CanvasLayersDirective } from './canvaslayers.directive';
@@ -38,16 +37,12 @@ export class CanvasComponent
   extends CanvasLayoutMixin(DestroyableMixin())
   implements AfterViewInit {
 
-  readonly CANVAS_TYPE_START = CanvasType.Start;
-  readonly CANVAS_TYPE_PREVIEW = CanvasType.Preview;
-  readonly CANVAS_TYPE_END = CanvasType.End;
-
   @ViewChild(CanvasContainerDirective) canvasContainer: CanvasContainerDirective;
   @ViewChild(CanvasLayersDirective) canvasLayers: CanvasLayersDirective;
   @ViewChild(CanvasOverlayDirective) canvasOverlay: CanvasOverlayDirective;
   @ViewChildren(CanvasRulerDirective) canvasRulers: QueryList<CanvasRulerDirective>;
 
-  @Input() canvasType: CanvasType;
+  @Input() actionSource: ActionSource;
   @Input() canvasBounds$: Observable<Size>;
 
   private readonly $element: JQuery;

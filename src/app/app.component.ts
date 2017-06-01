@@ -2,10 +2,14 @@ import 'rxjs/add/operator/distinctUntilChanged';
 import 'rxjs/add/operator/combineLatest';
 
 import { environment } from '../environments/environment';
-import { CanvasType } from './CanvasType';
 import { FileImporterService, ShortcutService } from './services';
-import { AddLayers, State, Store } from './store';
-import { isShapeShifterMode } from './store/shapeshifter/selectors';
+import {
+  ActionSource,
+  AddLayers,
+  State,
+  Store,
+} from './store';
+import { isActionMode } from './store/actionmode/selectors';
 import {
   AfterViewInit,
   ChangeDetectionStrategy,
@@ -32,9 +36,9 @@ const STORAGE_KEY_FIRST_TIME_USER = 'storage_key_first_time_user';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
-  readonly CANVAS_TYPE_START = CanvasType.Start;
-  readonly CANVAS_TYPE_PREVIEW = CanvasType.Preview;
-  readonly CANVAS_TYPE_END = CanvasType.End;
+  readonly ACTION_SOURCE_START = ActionSource.Start;
+  readonly ACTION_SOURCE_PREVIEW = ActionSource.Preview;
+  readonly ACTION_SOURCE_END = ActionSource.End;
 
   @ViewChild('displayContainer') displayContainerRef: ElementRef;
   private $displayContainer: JQuery;
@@ -66,7 +70,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       .distinctUntilChanged(({ w: w1, h: h1 }, { w: w2, h: h2 }) => {
         return w1 === w2 && h1 === h2;
       });
-    this.isShapeShifterMode$ = this.store.select(isShapeShifterMode);
+    this.isShapeShifterMode$ = this.store.select(isActionMode);
     this.canvasBounds$ = Observable.combineLatest(displaySize$, this.isShapeShifterMode$)
       .map(([{ w, h }, shouldShowThreeCanvases]) => {
         return { w: w / (shouldShowThreeCanvases ? 3 : 1), h };

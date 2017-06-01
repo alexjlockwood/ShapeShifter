@@ -1,17 +1,23 @@
-import * as _ from 'lodash';
-import * as JSZip from 'jszip';
-import * as $ from 'jquery';
+import { StateService } from '../../services';
+import { ActionSource } from '../../store';
+import {
+  AvdAnimation,
+  AvdPropertyName,
+  AvdTarget,
+  AvdValueType,
+  Interpolator,
+  SvgAnimation,
+  SvgPropertyName,
+  SvgTarget,
+} from '../animations';
+import { ColorUtil } from '../common';
+import { GroupLayer, PathLayer, VectorLayer } from '../layers';
+import { AvdSerializer, SvgSerializer } from '.';
 import * as KeyframesSerializer from './KeyframesSerializer';
 import * as SpriteSerializer from './SpriteSerializer';
-import { StateService } from '../../services';
-import { PathLayer, GroupLayer, VectorLayer } from '../layers';
-import { CanvasType } from '../../CanvasType';
-import { AvdSerializer, SvgSerializer } from '.';
-import { ColorUtil } from '../common';
-import {
-  AvdTarget, AvdAnimation, AvdPropertyName, AvdValueType,
-  SvgTarget, SvgAnimation, SvgPropertyName, Interpolator,
-} from '../animations';
+import * as $ from 'jquery';
+import * as JSZip from 'jszip';
+import * as _ from 'lodash';
 
 // TODO: round SVG coordinates in exported sprite sheets?
 // TODO: also export the original SVG files?
@@ -30,8 +36,8 @@ export function generateZip(
 
   // Create AvdTargets.
   const avdTargets: AvdTarget[] = [];
-  const startVl = stateService.getVectorLayer(CanvasType.Start);
-  const endVl = stateService.getVectorLayer(CanvasType.End);
+  const startVl = stateService.getVectorLayer(ActionSource.Start);
+  const endVl = stateService.getVectorLayer(ActionSource.End);
 
   // Create vector layer target.
   const alphaTarget =
@@ -44,8 +50,8 @@ export function generateZip(
     avdTargets.push(alphaTarget);
   }
 
-  const startGl = stateService.getActiveRotationLayer(CanvasType.Start);
-  const endGl = stateService.getActiveRotationLayer(CanvasType.End);
+  const startGl = stateService.getActiveRotationLayer(ActionSource.Start);
+  const endGl = stateService.getActiveRotationLayer(ActionSource.End);
 
   // Create rotation layer target.
   const rotationTarget =
@@ -54,8 +60,8 @@ export function generateZip(
       endGl,
       duration,
       interpolator.androidRef);
-  const startPl = stateService.getActivePathLayer(CanvasType.Start);
-  const endPl = stateService.getActivePathLayer(CanvasType.End);
+  const startPl = stateService.getActivePathLayer(ActionSource.Start);
+  const endPl = stateService.getActivePathLayer(ActionSource.End);
   if (rotationTarget) {
     avdTargets.push(rotationTarget);
     startVlChildren.push(startGl);

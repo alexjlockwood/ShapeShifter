@@ -1,12 +1,13 @@
 export { Store } from '@ngrx/store';
 export { State, reducer } from './reducer';
 export {
-  ShapeShifterMode,
+  ActionMode,
+  ActionSource,
   Hover,
   HoverType,
   Selection,
   SelectionType,
-} from './shapeshifter';
+} from './actionmode';
 
 // Android Icon Animator actions.
 export { DeleteSelectedModels } from './aia/actions';
@@ -40,23 +41,7 @@ export {
   ToggleIsSlowMotion,
 } from './playback/actions';
 
-// Shape Shifter actions.
-export {
-  SetActivePathBlockId,
-  ClearActivePathBlockId,
-  SetShapeShifterMode,
-  ToggleShapeShifterMode,
-  SetShapeShifterHover,
-  SetShapeShifterSelections,
-  TogglePointSelection,
-  ToggleSegmentSelections,
-  ToggleSubPathSelection,
-} from './shapeshifter/actions';
-
-// Resetable actions.
-export { ResetWorkspace } from './reset/actions';
-
-// Action mode actions.
+// Action mode meta actions.
 export {
   DeleteSelectedPoints,
   DeleteSelectedSegments,
@@ -70,4 +55,20 @@ export {
   SplitCommandInHalfClick,
   SplitCommandInHalfHover,
   UpdateActivePathBlock,
+} from './actionmode/metaactions';
+
+// Action mode actions.
+export {
+  SetActivePathBlockId,
+  ClearActivePathBlockId,
+  SetShapeShifterMode,
+  ToggleShapeShifterMode,
+  SetShapeShifterHover,
+  SetShapeShifterSelections,
+  TogglePointSelection,
+  ToggleSegmentSelections,
+  ToggleSubPathSelection,
 } from './actionmode/actions';
+
+// Resetable meta actions.
+export { ResetWorkspace } from './reset/metaactions';

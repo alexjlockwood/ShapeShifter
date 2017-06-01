@@ -1,4 +1,4 @@
-import { CanvasType } from '../CanvasType';
+import { ActionSource } from '../store';
 import { Injectable } from '@angular/core';
 import * as _ from 'lodash';
 import { Subject } from 'rxjs/Subject';
@@ -9,7 +9,7 @@ import { Subject } from 'rxjs/Subject';
  */
 export interface Selection {
   readonly type: SelectionType;
-  readonly source: CanvasType;
+  readonly source: ActionSource;
   readonly subIdx: number;
   readonly cmdIdx?: number;
 }
@@ -61,7 +61,7 @@ export class SelectionService {
     return this.getSelections().filter(s => s.type === SelectionType.Point);
   }
 
-  toggleSubPath(source: CanvasType, subIdx: number, appendToList = false) {
+  toggleSubPath(source: ActionSource, subIdx: number, appendToList = false) {
     // TODO: support multi-selection for subpaths
     appendToList = false;
 
@@ -75,7 +75,7 @@ export class SelectionService {
   }
 
   toggleSegments(
-    source: CanvasType,
+    source: ActionSource,
     segments: ReadonlyArray<{ subIdx: number, cmdIdx: number }>,
     appendToList = false) {
 
@@ -94,7 +94,7 @@ export class SelectionService {
     return this;
   }
 
-  togglePoint(source: CanvasType, subIdx: number, cmdIdx: number, appendToList = false) {
+  togglePoint(source: ActionSource, subIdx: number, cmdIdx: number, appendToList = false) {
     const selections = this.getSelections().slice();
     _.remove(selections, sel => sel.type !== SelectionType.Point && sel.source !== source);
     this.toggleSelections(

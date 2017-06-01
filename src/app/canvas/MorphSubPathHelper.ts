@@ -1,13 +1,13 @@
-import { CanvasType } from '../CanvasType';
 import { Point } from '../scripts/common';
 import { HoverService } from '../services';
 import {
+  ActionMode,
+  ActionSource,
   HoverType,
   PairSubPath,
   SetShapeShifterMode,
   SetShapeShifterSelections,
   SetUnpairedSubPath,
-  ShapeShifterMode,
   State,
   Store,
 } from '../store';
@@ -18,11 +18,11 @@ import * as _ from 'lodash';
  * Helper class that tracks information during morph subpath mode.
  */
 export class MorphSubPathHelper {
-  private readonly canvasType: CanvasType;
+  private readonly canvasType: ActionSource;
   private readonly store: Store<State>;
 
   constructor(private readonly component: CanvasOverlayDirective) {
-    this.canvasType = component.canvasType;
+    this.canvasType = component.actionSource;
     this.store = component.store;
   }
 
@@ -34,7 +34,7 @@ export class MorphSubPathHelper {
       const { subIdx } = this.findHitSubPath(hits);
       this.store.dispatch(new PairSubPath(subIdx, this.canvasType));
     } else if (!isShiftOrMetaPressed) {
-      this.store.dispatch(new SetShapeShifterMode(ShapeShifterMode.Selection));
+      this.store.dispatch(new SetShapeShifterMode(ActionMode.Selection));
     }
   }
 

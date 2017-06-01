@@ -1,17 +1,17 @@
 import 'rxjs/add/observable/combineLatest';
 
-import { CanvasType } from '../CanvasType';
 import { DialogService } from '../dialogs';
 import { PathLayer } from '../scripts/layers';
 import { ActionModeService } from '../services';
 import {
+  ActionMode,
+  ActionSource,
   Selection,
   SelectionType,
-  ShapeShifterMode,
   State,
   Store,
 } from '../store';
-import { getToolbarState } from '../store/shapeshifter/selectors';
+import { getToolbarState } from '../store/actionmode/selectors';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -194,15 +194,15 @@ class ToolbarData {
   private readonly isFilled: boolean;
   private readonly isStroked: boolean;
   private readonly showSplitInHalf: boolean;
-  private readonly unpairedSubPathSource: CanvasType;
+  private readonly unpairedSubPathSource: ActionSource;
   private readonly showMorphSubPaths: boolean;
 
   constructor(
     activeStartPathLayer: PathLayer,
     activeEndPathLayer: PathLayer,
-    public readonly mode: ShapeShifterMode,
+    public readonly mode: ActionMode,
     public readonly selections: ReadonlyArray<Selection>,
-    readonly unpair: { source: CanvasType; subIdx: number; },
+    readonly unpair: { source: ActionSource; subIdx: number; },
   ) {
     // Precondition: assume all selections are for the same canvas type
     if (!selections.length) {
@@ -210,7 +210,7 @@ class ToolbarData {
     }
     const canvasType = selections[0].source;
     const activePathLayer =
-      canvasType === CanvasType.Start ? activeStartPathLayer : activeEndPathLayer;
+      canvasType === ActionSource.Start ? activeStartPathLayer : activeEndPathLayer;
     if (!activePathLayer) {
       return;
     }
@@ -254,7 +254,7 @@ class ToolbarData {
     this.showShiftSubPath = this.subPaths.length > 0
       && activePath.getSubPath(this.subPaths[0]).isClosed();
     this.showSplitInHalf = this.points.length === 1 && !!this.points[0].cmdIdx;
-    if (this.mode === ShapeShifterMode.MorphSubPaths) {
+    if (this.mode === ActionMode.MorphSubPaths) {
       if (unpair) {
         this.unpairedSubPathSource = unpair.source;
       }
@@ -287,13 +287,13 @@ class ToolbarData {
   }
 
   getToolbarTitle() {
-    if (this.mode === ShapeShifterMode.SplitCommands) {
+    if (this.mode === ActionMode.SplitCommands) {
       return 'Add points';
     }
-    if (this.mode === ShapeShifterMode.SplitSubPaths) {
+    if (this.mode === ActionMode.SplitSubPaths) {
       return 'Split subpaths';
     }
-    if (this.mode === ShapeShifterMode.MorphSubPaths) {
+    if (this.mode === ActionMode.MorphSubPaths) {
       return 'Pair subpaths';
     }
     const numSubPaths = this.getNumSubPaths();
@@ -315,17 +315,17 @@ class ToolbarData {
   }
 
   getToolbarSubtitle() {
-    if (this.mode === ShapeShifterMode.SplitCommands) {
+    if (this.mode === ActionMode.SplitCommands) {
       return 'Click along the edge of a subpath to add a point';
-    } else if (this.mode === ShapeShifterMode.SplitSubPaths) {
+    } else if (this.mode === ActionMode.SplitSubPaths) {
       if (this.isFilled) {
         return 'Draw a line across a subpath to split it into 2';
       } else if (this.isStroked) {
         return 'Click along the edge of a subpath to split it into 2';
       }
-    } else if (this.mode === ShapeShifterMode.MorphSubPaths) {
+    } else if (this.mode === ActionMode.MorphSubPaths) {
       if (this.unpairedSubPathSource) {
-        const toSourceDir = this.unpairedSubPathSource === CanvasType.Start ? 'right' : 'left';
+        const toSourceDir = this.unpairedSubPathSource === ActionSource.Start ? 'right' : 'left';
         return `Pair the selected subpath with a corresponding subpath on the ${toSourceDir}`;
       }
       return 'Select a subpath';
@@ -362,18 +362,18 @@ class ToolbarData {
   }
 
   isSelectionMode() {
-    return this.mode === ShapeShifterMode.Selection;
+    return this.mode === ActionMode.Selection;
   }
 
   isAddPointsMode() {
-    return this.mode === ShapeShifterMode.SplitCommands;
+    return this.mode === ActionMode.SplitCommands;
   }
 
   isSplitSubPathsMode() {
-    return this.mode === ShapeShifterMode.SplitSubPaths;
+    return this.mode === ActionMode.SplitSubPaths;
   }
 
   isMorphSubPathsMode() {
-    return this.mode === ShapeShifterMode.MorphSubPaths;
+    return this.mode === ActionMode.MorphSubPaths;
   }
 }

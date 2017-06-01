@@ -1,6 +1,5 @@
 import 'rxjs/add/observable/combineLatest';
 
-import { CanvasType } from '..';
 import { AnimatorService } from '../animator';
 import { ColorUtil } from '../scripts/common';
 import {
@@ -11,15 +10,15 @@ import {
   VectorLayer,
 } from '../scripts/layers';
 import { DestroyableMixin } from '../scripts/mixins';
-import { State, Store } from '../store';
+import { ActionSource, State, Store } from '../store';
+import {
+  getActionModeEndState,
+  getActionModeStartState,
+} from '../store/actionmode/selectors';
 import {
   getActiveVectorLayer,
   getHiddenLayerIds,
 } from '../store/layers/selectors';
-import {
-  getShapeShifterEndState,
-  getShapeShifterStartState,
-} from '../store/shapeshifter/selectors';
 import { CanvasLayoutMixin, Size } from './CanvasLayoutMixin';
 import * as CanvasUtil from './CanvasUtil';
 import { AfterViewInit, Directive, ElementRef, Input } from '@angular/core';
@@ -36,7 +35,7 @@ export class CanvasLayersDirective
   extends CanvasLayoutMixin(DestroyableMixin())
   implements AfterViewInit {
 
-  @Input() canvasType: CanvasType;
+  @Input() actionSource: ActionSource;
 
   private readonly $renderingCanvas: JQuery;
   private readonly $offscreenCanvas: JQuery;
@@ -62,7 +61,7 @@ export class CanvasLayersDirective
   }
 
   ngAfterViewInit() {
-    if (this.canvasType === CanvasType.Preview) {
+    if (this.actionSource === ActionSource.Preview) {
       // Preview canvas specific setup.
       this.registerSubscription(
         Observable.combineLatest(
@@ -76,12 +75,12 @@ export class CanvasLayersDirective
         }));
     } else {
       // Start & end canvas specific setup.
-      const shapeShifterSelector =
-        this.canvasType === CanvasType.Start
-          ? getShapeShifterStartState
-          : getShapeShifterEndState;
+      const actionModeSelector =
+        this.actionSource === ActionSource.Start
+          ? getActionModeStartState
+          : getActionModeEndState;
       this.registerSubscription(
-        this.store.select(shapeShifterSelector)
+        this.store.select(actionModeSelector)
           .subscribe(({ vectorLayer }) => {
             this.vectorLayer = vectorLayer;
             this.draw();

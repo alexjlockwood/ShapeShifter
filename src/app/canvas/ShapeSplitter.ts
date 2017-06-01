@@ -2,9 +2,9 @@ import { Point } from '../scripts/common';
 import { HitResult, ProjectionOntoPath } from '../scripts/paths';
 import { HoverService } from '../services';
 import {
+  ActionMode,
   SetShapeShifterMode,
   SetShapeShifterSelections,
-  ShapeShifterMode,
   State,
   Store,
   UpdateActivePathBlock,
@@ -48,7 +48,7 @@ export class ShapeSplitter {
       this.component.draw();
       return;
     }
-    this.store.dispatch(new SetShapeShifterMode(ShapeShifterMode.Selection));
+    this.store.dispatch(new SetShapeShifterMode(ActionMode.Selection));
   }
 
   onMouseMove(mouseMove: Point) {
@@ -168,7 +168,7 @@ export class ShapeSplitter {
       const endingCmdIdx =
         initCmdIdx > finalCmdIdx ? initCmdIdx + lastCmdOffset : finalCmdIdx + lastCmdOffset;
       this.store.dispatch(new UpdateActivePathBlock(
-        this.component.canvasType,
+        this.component.actionSource,
         pathMutator
           .splitFilledSubPath(initSubIdx, startingCmdIdx, endingCmdIdx)
           .build()));

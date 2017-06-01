@@ -1,11 +1,11 @@
-import { CanvasType } from '../CanvasType';
 import { Point } from '../scripts/common';
 import { ProjectionOntoPath } from '../scripts/paths';
 import { HoverService } from '../services';
 import {
+  ActionMode,
+  ActionSource,
   SetShapeShifterMode,
   SetShapeShifterSelections,
-  ShapeShifterMode,
   State,
   Store,
   UpdateActivePathBlock,
@@ -21,13 +21,13 @@ interface ProjInfo {
  * Helper class that can be used to split a segment.
  */
 export class SegmentSplitter {
-  private readonly canvasType: CanvasType;
+  private readonly canvasType: ActionSource;
   private readonly store: Store<State>;
   private currProjInfo: ProjInfo;
   private lastKnownMouseLocation: Point;
 
   constructor(private readonly component: CanvasOverlayDirective) {
-    this.canvasType = component.canvasType;
+    this.canvasType = component.actionSource;
     this.store = component.store;
   }
 
@@ -39,9 +39,9 @@ export class SegmentSplitter {
       const { proj: { subIdx, cmdIdx, projection }, isEndPt } = this.currProjInfo;
       const mode = this.component.shapeShifterMode;
       const pathMutator = activePathLayer.pathData.mutate();
-      if (mode === ShapeShifterMode.SplitCommands) {
+      if (mode === ActionMode.SplitCommands) {
         pathMutator.splitCommand(subIdx, cmdIdx, projection.t);
-      } else if (mode === ShapeShifterMode.SplitSubPaths) {
+      } else if (mode === ActionMode.SplitSubPaths) {
         if (!isEndPt) {
           pathMutator.splitCommand(subIdx, cmdIdx, projection.t);
         }
@@ -61,7 +61,7 @@ export class SegmentSplitter {
       return;
     }
 
-    this.store.dispatch(new SetShapeShifterMode(ShapeShifterMode.Selection));
+    this.store.dispatch(new SetShapeShifterMode(ActionMode.Selection));
   }
 
   onMouseMove(mouseMove: Point) {

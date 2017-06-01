@@ -1,13 +1,13 @@
-import { CanvasType } from '../CanvasType';
 import { MathUtil, Point } from '../scripts/common';
 import { LayerUtil } from '../scripts/layers';
 import { ProjectionOntoPath } from '../scripts/paths';
 import { HoverService } from '../services';
 import {
+  ActionMode,
+  ActionSource,
   HoverType,
   SetShapeShifterMode,
   SetShapeShifterSelections,
-  ShapeShifterMode,
   State,
   Store,
   TogglePointSelection,
@@ -23,7 +23,7 @@ import * as _ from 'lodash';
  * for the selection of path points, segments, and shapes.
  */
 export class SelectionHelper {
-  private readonly canvasType: CanvasType;
+  private readonly canvasType: ActionSource;
   private readonly store: Store<State>;
 
   // Holds a reference to the currently selected split point, which
@@ -35,7 +35,7 @@ export class SelectionHelper {
   private initialMouseDown: Point;
 
   constructor(private readonly component: CanvasOverlayDirective) {
-    this.canvasType = component.canvasType;
+    this.canvasType = component.actionSource;
     this.store = component.store;
   }
 
@@ -75,7 +75,7 @@ export class SelectionHelper {
       // If the mouse down event didn't result in a hit, then
       // clear any existing selections, but only if the user isn't in
       // the middle of selecting multiple points at once.
-      this.store.dispatch(new SetShapeShifterMode(ShapeShifterMode.Selection));
+      this.store.dispatch(new SetShapeShifterMode(ActionMode.Selection));
     }
   }
 

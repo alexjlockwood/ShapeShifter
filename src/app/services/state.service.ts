@@ -1,10 +1,10 @@
 import { AnimatorService } from '../animator';
-import { CanvasType } from '../CanvasType';
 import { AutoAwesome } from '../scripts/algorithms';
 import { Matrix } from '../scripts/common';
 import { ROTATION_GROUP_LAYER_ID } from '../scripts/import';
 import { GroupLayer, Layer, LayerUtil, PathLayer, VectorLayer } from '../scripts/layers';
 import { Path } from '../scripts/paths';
+import { ActionSource } from '../store';
 // Note that importing these from '.' causes runtime errors.
 import { AppModeService } from './appmode.service';
 import { HoverService } from './hover.service';
@@ -33,11 +33,11 @@ export class StateService {
   // Observable that broadcasts changes to the current list of imported path IDs.
   private readonly existingPathIdsSource = new BehaviorSubject<ReadonlyArray<string>>([]);
   // Maps CanvasTypes to the currently active path ID.
-  private readonly activePathIdMap = new Map<CanvasType, string>();
+  private readonly activePathIdMap = new Map<ActionSource, string>();
   // Maps CanvasTypes to a copy of the active path ID's parent VectorLayer.
-  private readonly activeLayerMap = new Map<CanvasType, VectorLayer>();
+  private readonly activeLayerMap = new Map<ActionSource, VectorLayer>();
   // Observable that broadcasts changes to the currently active path ID for each CanvasType.
-  private readonly activePathIdSources = new Map<CanvasType, BehaviorSubject<string>>();
+  private readonly activePathIdSources = new Map<ActionSource, BehaviorSubject<string>>();
   // Observable that broadcast changes to the current morph status.
   private readonly statusSource = new BehaviorSubject<MorphStatus>(MorphStatus.None);
   // Observable that broadcasts changes when the current list of vector layers changes.
@@ -50,16 +50,16 @@ export class StateService {
     private readonly appModeService: AppModeService,
     private readonly settingsService: SettingsService,
   ) {
-    [CanvasType.Start, CanvasType.Preview, CanvasType.End].forEach(type => {
+    [ActionSource.Start, ActionSource.Preview, ActionSource.End].forEach(type => {
       this.activePathIdSources.set(type, new BehaviorSubject<string>(undefined));
     });
     settingsService.getRotationObservable().subscribe(rotation => {
-      this.updateActiveRotationLayer(CanvasType.Start, 0, false /* shouldNotify */);
-      this.updateActiveRotationLayer(CanvasType.Preview, 0, false /* shouldNotify */);
-      this.updateActiveRotationLayer(CanvasType.End, rotation, false /* shouldNotify */);
-      this.notifyChange(CanvasType.Start);
-      this.notifyChange(CanvasType.Preview);
-      this.notifyChange(CanvasType.End);
+      this.updateActiveRotationLayer(ActionSource.Start, 0, false /* shouldNotify */);
+      this.updateActiveRotationLayer(ActionSource.Preview, 0, false /* shouldNotify */);
+      this.updateActiveRotationLayer(ActionSource.End, rotation, false /* shouldNotify */);
+      this.notifyChange(ActionSource.Start);
+      this.notifyChange(ActionSource.Preview);
+      this.notifyChange(ActionSource.End);
     });
   }
 
@@ -94,21 +94,21 @@ export class StateService {
   /**
    * Returns the currently set vector layer for the specified canvas type.
    */
-  getVectorLayer(canvasType: CanvasType) {
+  getVectorLayer(canvasType: ActionSource) {
     return this.activeLayerMap.get(canvasType);
   }
 
   /**
    * Returns the currently set active path ID for the specified canvas type.
    */
-  getActivePathId(type: CanvasType): string | undefined {
+  getActivePathId(type: ActionSource): string | undefined {
     return this.activePathIdMap.get(type);
   }
 
   /**
    * Called by the PathSelectorComponent when a new vector layer path is selected.
    */
-  setActivePathId(canvasType: CanvasType, pathId: string, shouldNotify = true) {
+  setActivePathId(canvasType: ActionSource, pathId: string, shouldNotify = true) {
     if (this.getActivePathId(canvasType) === pathId) {
       if (shouldNotify) {
         this.notifyChange(canvasType);
@@ -120,33 +120,33 @@ export class StateService {
     this.hoverService.resetAndNotify();
     // this.animatorService.reset();
 
-    const setActivePathIdFn = (type: CanvasType) => {
-      if (type === CanvasType.Start) {
-        this.activePathIdMap.set(CanvasType.Preview, pathId);
+    const setActivePathIdFn = (type: ActionSource) => {
+      if (type === ActionSource.Start) {
+        this.activePathIdMap.set(ActionSource.Preview, pathId);
       }
       this.activePathIdMap.set(type, pathId);
       const vl = this.importedPathMap.get(pathId);
       this.activeLayerMap.set(type, vl ? vl.deepClone() : vl);
       const { vl1: startVl, vl2: endVl } =
         LayerUtil.adjustVectorLayerDimensions(
-          this.importedPathMap.get(this.getActivePathId(CanvasType.Start)),
-          this.importedPathMap.get(this.getActivePathId(CanvasType.End)));
-      this.activeLayerMap.set(CanvasType.Start, startVl);
-      this.activeLayerMap.set(CanvasType.Preview, startVl ? startVl.deepClone() : startVl);
-      this.activeLayerMap.set(CanvasType.End, endVl);
+          this.importedPathMap.get(this.getActivePathId(ActionSource.Start)),
+          this.importedPathMap.get(this.getActivePathId(ActionSource.End)));
+      this.activeLayerMap.set(ActionSource.Start, startVl);
+      this.activeLayerMap.set(ActionSource.Preview, startVl ? startVl.deepClone() : startVl);
+      this.activeLayerMap.set(ActionSource.End, endVl);
       // Attempt to make the start and end subpaths compatible with each other.
       this.updateActivePath(
         type, this.getActivePathLayer(type).pathData, false /* shouldNotify */);
-      this.updateActiveRotationLayer(CanvasType.Start, 0, false /* shouldNotify */);
-      this.updateActiveRotationLayer(CanvasType.Preview, 0, false /* shouldNotify */);
+      this.updateActiveRotationLayer(ActionSource.Start, 0, false /* shouldNotify */);
+      this.updateActiveRotationLayer(ActionSource.Preview, 0, false /* shouldNotify */);
       this.updateActiveRotationLayer(
-        CanvasType.End, this.settingsService.getRotation(), false /* shouldNotify */);
+        ActionSource.End, this.settingsService.getRotation(), false /* shouldNotify */);
     };
 
     setActivePathIdFn(canvasType);
 
     if (shouldNotify) {
-      [CanvasType.Preview, CanvasType.Start, CanvasType.End].forEach(type => this.notifyChange(type));
+      [ActionSource.Preview, ActionSource.Start, ActionSource.End].forEach(type => this.notifyChange(type));
     }
   }
 
@@ -154,7 +154,7 @@ export class StateService {
    * Returns the path layer associated with the currently set
    * active path ID, for the specified canvas type.
    */
-  getActivePathLayer(type: CanvasType): PathLayer | undefined {
+  getActivePathLayer(type: ActionSource): PathLayer | undefined {
     const vectorLayer = this.getVectorLayer(type);
     const activePathId = this.getActivePathId(type);
     if (!vectorLayer || !activePathId) {
@@ -169,7 +169,7 @@ export class StateService {
    * its opposite path layer will be made.
    */
   updateActivePath(
-    type: CanvasType,
+    type: ActionSource,
     path: Path,
     shouldNotify = true) {
 
@@ -181,13 +181,13 @@ export class StateService {
     path = pathMutator.deleteCollapsingSubPaths().build();
 
     const oppositeCanvasType =
-      type === CanvasType.Start
-        ? CanvasType.End
-        : CanvasType.Start;
+      type === ActionSource.Start
+        ? ActionSource.End
+        : ActionSource.Start;
     let hasOppositeCanvasTypeChanged = false;
 
     const oppActivePathLayer =
-      type === CanvasType.Preview ? undefined : this.getActivePathLayer(oppositeCanvasType);
+      type === ActionSource.Preview ? undefined : this.getActivePathLayer(oppositeCanvasType);
     if (oppActivePathLayer) {
       oppActivePathLayer.pathData =
         oppActivePathLayer.pathData.mutate().deleteCollapsingSubPaths().build();
@@ -236,10 +236,10 @@ export class StateService {
 
     this.getActivePathLayer(type).pathData = path;
 
-    if (type === CanvasType.Start || hasOppositeCanvasTypeChanged) {
+    if (type === ActionSource.Start || hasOppositeCanvasTypeChanged) {
       // A canvas layer has changed, so update the preview layer as well.
-      const activeStartLayer = this.getActivePathLayer(CanvasType.Start);
-      const activePreviewLayer = this.getActivePathLayer(CanvasType.Preview);
+      const activeStartLayer = this.getActivePathLayer(ActionSource.Start);
+      const activePreviewLayer = this.getActivePathLayer(ActionSource.Preview);
       if (activeStartLayer && activePreviewLayer) {
         activePreviewLayer.pathData = activeStartLayer.pathData.clone();
       }
@@ -251,7 +251,7 @@ export class StateService {
         this.notifyChange(oppositeCanvasType);
       }
       // TODO: notifying the preview layer every time could be avoided...
-      this.notifyChange(CanvasType.Preview);
+      this.notifyChange(ActionSource.Preview);
     }
   }
 
@@ -259,7 +259,7 @@ export class StateService {
    * Returns the active rotation layer, which will always be the immediate parent
    * of the active path layer.
    */
-  getActiveRotationLayer(type: CanvasType) {
+  getActiveRotationLayer(type: ActionSource) {
     const vectorLayer = this.getVectorLayer(type);
     if (!vectorLayer) {
       return undefined;
@@ -270,7 +270,7 @@ export class StateService {
   /**
    * Updates the active rotation layer with the new rotation value.
    */
-  private updateActiveRotationLayer(type: CanvasType, rotation: number, shouldNotify = true) {
+  private updateActiveRotationLayer(type: ActionSource, rotation: number, shouldNotify = true) {
     const vectorLayer = this.getVectorLayer(type);
     const activePathLayer = this.getActivePathLayer(type);
     if (!activePathLayer) {
@@ -334,7 +334,7 @@ export class StateService {
    * Notify listeners that the layer state associated with the specified
    * canvas type has changed and that they should update their content.
    */
-  notifyChange(type: CanvasType) {
+  notifyChange(type: ActionSource) {
     this.activePathIdSources.get(type).next(this.activePathIdMap.get(type));
     this.statusSource.next(this.getMorphStatus());
   }
@@ -351,8 +351,8 @@ export class StateService {
    */
   deletePathId(pathId: string) {
     this.importedPathMap.delete(pathId);
-    const notifyTypes: CanvasType[] = [];
-    [CanvasType.Start, CanvasType.Preview, CanvasType.End]
+    const notifyTypes: ActionSource[] = [];
+    [ActionSource.Start, ActionSource.Preview, ActionSource.End]
       .forEach(type => {
         const activeStartPathId = this.activePathIdMap.get(type);
         if (activeStartPathId === pathId) {
@@ -379,8 +379,8 @@ export class StateService {
   }
 
   getMorphStatus() {
-    const startPathLayer = this.getActivePathLayer(CanvasType.Start);
-    const endPathLayer = this.getActivePathLayer(CanvasType.End);
+    const startPathLayer = this.getActivePathLayer(ActionSource.Start);
+    const endPathLayer = this.getActivePathLayer(ActionSource.End);
     if (!startPathLayer || !endPathLayer) {
       return MorphStatus.None;
     }
@@ -405,14 +405,14 @@ export class StateService {
     this.activePathIdSources.forEach(source => source.next(undefined));
     this.statusSource.next(MorphStatus.None);
     this.existingPathIdsSource.next([]);
-    [CanvasType.Preview, CanvasType.Start, CanvasType.End].forEach(type => this.notifyChange(type));
+    [ActionSource.Preview, ActionSource.Start, ActionSource.End].forEach(type => this.notifyChange(type));
   }
 
   getExistingPathIdsObservable() {
     return this.existingPathIdsSource.asObservable();
   }
 
-  getActivePathIdObservable(type: CanvasType) {
+  getActivePathIdObservable(type: ActionSource) {
     return this.activePathIdSources.get(type);
   }
 

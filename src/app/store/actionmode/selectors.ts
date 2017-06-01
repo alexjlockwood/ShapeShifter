@@ -6,8 +6,8 @@ import { getAnimations } from '../timeline/selectors';
 import * as _ from 'lodash';
 import { createSelector, createStructuredSelector } from 'reselect';
 
-const getShapeShifterState = createSelector(getState, s => s.shapeshifter);
-const getBlockId = createSelector(getShapeShifterState, s => s.blockId);
+const getActionModeState = createSelector(getState, s => s.actionmode);
+const getBlockId = createSelector(getActionModeState, s => s.blockId);
 const getBlock =
   createSelector(
     getAnimations,
@@ -27,14 +27,14 @@ const getBlock =
   );
 const getBlockLayerId = createSelector(getBlock, b => b ? b.layerId : undefined);
 
-export const isShapeShifterMode = createSelector(getBlockId, id => !!id);
-export const getShapeShifterMode = createSelector(getShapeShifterState, s => s.mode);
-export const getShapeShifterHover = createDeepEqualSelector(getShapeShifterState, s => s.hover);
-const getShapeShifterSelections = createSelector(getShapeShifterState, s => s.selections);
+export const isActionMode = createSelector(getBlockId, id => !!id);
+export const getActionMode = createSelector(getActionModeState, s => s.mode);
+export const getActionHover = createDeepEqualSelector(getActionModeState, s => s.hover);
+const getActionSelections = createSelector(getActionModeState, s => s.selections);
 const getPairedSubPaths =
-  createDeepEqualSelector(getShapeShifterState, state => new Set(state.pairedSubPaths));
+  createDeepEqualSelector(getActionModeState, state => new Set(state.pairedSubPaths));
 const getUnpairedSubPath =
-  createDeepEqualSelector(getShapeShifterState, state => state.unpairedSubPath);
+  createDeepEqualSelector(getActionModeState, state => state.unpairedSubPath);
 
 const getVectorLayerFromValue =
   createSelector(
@@ -84,22 +84,22 @@ const getPathLayerToValue =
       return vl.findLayerById(block.layerId) as PathLayer;
     });
 
-export const getShapeShifterStartState =
+export const getActionModeStartState =
   createStructuredSelector({
     vectorLayer: getVectorLayerFromValue,
     blockLayerId: getBlockLayerId,
-    hover: getShapeShifterHover,
-    selections: getShapeShifterSelections,
+    hover: getActionHover,
+    selections: getActionSelections,
     pairedSubPaths: getPairedSubPaths,
     unpairedSubPath: getUnpairedSubPath,
   });
 
-export const getShapeShifterEndState =
+export const getActionModeEndState =
   createStructuredSelector({
     vectorLayer: getVectorLayerToValue,
     blockLayerId: getBlockLayerId,
-    hover: getShapeShifterHover,
-    selections: getShapeShifterSelections,
+    hover: getActionHover,
+    selections: getActionSelections,
     pairedSubPaths: getPairedSubPaths,
     unpairedSubPath: getUnpairedSubPath,
   });
@@ -108,7 +108,7 @@ export const getToolbarState =
   createStructuredSelector({
     fromPl: getPathLayerFromValue,
     toPl: getPathLayerToValue,
-    mode: getShapeShifterMode,
-    selections: getShapeShifterSelections,
+    mode: getActionMode,
+    selections: getActionSelections,
     unpairedSubPath: getUnpairedSubPath,
   });

@@ -1,10 +1,10 @@
 import {
+  ActionMode,
   ClearActivePathBlockId,
   DeleteSelectedPoints,
   DeleteSelectedSegments,
   DeleteSelectedSubPaths,
   ReverseSelectedSubPaths,
-  ShapeShifterMode,
   ShiftBackSelectedSubPaths,
   ShiftForwardSelectedSubPaths,
   ShiftPointToFront,
@@ -14,7 +14,7 @@ import {
   Store,
   ToggleShapeShifterMode,
 } from '../store';
-import { getShapeShifterMode } from '../store/shapeshifter/selectors';
+import { getActionMode } from '../store/actionmode/selectors';
 import { Injectable } from '@angular/core';
 
 /**
@@ -31,16 +31,16 @@ export class ActionModeService {
 
   toggleSplitCommandsMode() {
     // TODO: prefer already selected subpaths over others when creating new points?
-    this.store.dispatch(new ToggleShapeShifterMode(ShapeShifterMode.SplitCommands));
+    this.store.dispatch(new ToggleShapeShifterMode(ActionMode.SplitCommands));
   }
 
   toggleSplitSubPathsMode() {
     // TODO: prefer already selected subpaths over others when splitting new subpaths?
-    this.store.dispatch(new ToggleShapeShifterMode(ShapeShifterMode.SplitSubPaths));
+    this.store.dispatch(new ToggleShapeShifterMode(ActionMode.SplitSubPaths));
   }
 
   toggleMorphSubPathsMode() {
-    this.store.dispatch(new ToggleShapeShifterMode(ShapeShifterMode.MorphSubPaths));
+    this.store.dispatch(new ToggleShapeShifterMode(ActionMode.MorphSubPaths));
   }
 
   reversePoints() {

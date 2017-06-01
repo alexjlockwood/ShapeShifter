@@ -1,9 +1,9 @@
 import { environment } from '../../environments/environment';
+import * as metaActionMode from './actionmode/metareducer';
 import * as fromActionMode from './actionmode/reducer';
 import * as fromLayers from './layers/reducer';
 import * as fromPlayback from './playback/reducer';
-import * as fromReset from './reset/reducer';
-import * as fromShapeShifter from './shapeshifter/reducer';
+import * as metaReset from './reset/metareducer';
 import * as fromTimeline from './timeline/reducer';
 import { compose } from '@ngrx/core/compose'
 import { Action, ActionReducer, combineReducers } from '@ngrx/store';
@@ -14,24 +14,24 @@ export interface State {
   readonly layers: fromLayers.State;
   readonly timeline: fromTimeline.State;
   readonly playback: fromPlayback.State;
-  readonly shapeshifter: fromShapeShifter.State;
+  readonly actionmode: fromActionMode.State;
 }
 
 const sliceReducers = {
   layers: fromLayers.reducer,
   timeline: fromTimeline.reducer,
   playback: fromPlayback.reducer,
-  shapeshifter: fromShapeShifter.reducer,
+  actionmode: fromActionMode.reducer,
 };
 
-const stateReducers = [
-  // Reducer that adds the ability to reset the entire state tree.
-  fromReset.reducer,
-  // Reducer that allows us to perform actions that modify different
+const prodMetaReducers = [
+  // Meta-reducer that adds the ability to reset the entire state tree.
+  metaReset.metaReducer,
+  // Meta-reducer that allows us to perform actions that modify different
   // aspects of the state tree while in action mode.
-  fromActionMode.reducer,
-  // Reducer that maps our slice reducers to the keys in our state tree.
-  combineReducers(sliceReducers),
+  metaActionMode.metaReducer,
+  // Meta-reducer that maps our slice reducers to the keys in our state tree.
+  combineReducers,
 ];
 
 const devMetaReducers = [
@@ -43,12 +43,7 @@ const devMetaReducers = [
   storeFreeze,
 ];
 
-// Chains together multiple reducers by executing them sequentially.
-function reduceReducers(reducers: ReadonlyArray<ActionReducer<State>>) {
-  return (state: State, action: Action) => reducers.reduce((s, r) => r(s, action), state);
-}
-
-const productionReducer: ActionReducer<State> = reduceReducers(stateReducers);
+const productionReducer: ActionReducer<State> = compose(...prodMetaReducers)(sliceReducers);
 const developmentReducer: ActionReducer<State> = compose(...devMetaReducers)(productionReducer);
 
 export function reducer(state: State, action: Action) {

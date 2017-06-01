@@ -1,7 +1,6 @@
-import { CanvasType } from '../CanvasType';
 import { SetShapeShifterHover, State, Store } from '../store';
-import { Hover, HoverType } from '../store/shapeshifter';
-import { getShapeShifterHover } from '../store/shapeshifter/selectors';
+import { ActionSource, Hover, HoverType } from '../store/actionmode';
+import { getActionHover } from '../store/actionmode/selectors';
 import { Injectable } from '@angular/core';
 import * as _ from 'lodash';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
@@ -14,7 +13,7 @@ export class HoverService {
   private hover: Hover;
 
   constructor(private readonly store: Store<State>) {
-    this.store.select(getShapeShifterHover).subscribe(h => this.hover = h);
+    this.store.select(getActionHover).subscribe(h => this.hover = h);
   }
 
   /** @deprecated */
@@ -28,15 +27,15 @@ export class HoverService {
     }
   }
 
-  setPoint(source: CanvasType, subIdx: number, cmdIdx: number) {
+  setPoint(source: ActionSource, subIdx: number, cmdIdx: number) {
     this.setHover({ type: HoverType.Point, source, subIdx, cmdIdx });
   }
 
-  setSegment(source: CanvasType, subIdx: number, cmdIdx: number) {
+  setSegment(source: ActionSource, subIdx: number, cmdIdx: number) {
     this.setHover({ type: HoverType.Segment, source, subIdx, cmdIdx });
   }
 
-  setSubPath(source: CanvasType, subIdx: number) {
+  setSubPath(source: ActionSource, subIdx: number) {
     this.setHover({ type: HoverType.SubPath, source, subIdx });
   }
 
