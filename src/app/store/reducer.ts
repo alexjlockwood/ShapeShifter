@@ -1,9 +1,9 @@
 import { environment } from '../../environments/environment';
-import * as fromActionMode from './actionmode/metareducer';
-import * as fromAia from './aia/metareducer';
+import * as fromActionMode from './actionmode/reducer';
+import * as fromAia from './aia/reducer';
 import * as fromLayers from './layers/reducer';
 import * as fromPlayback from './playback/reducer';
-import * as fromResetable from './resetable/metareducer';
+import * as fromReset from './reset/reducer';
 import * as fromShapeShifter from './shapeshifter/reducer';
 import * as fromTimeline from './timeline/reducer';
 import { compose } from '@ngrx/core/compose'
@@ -27,7 +27,7 @@ const sliceReducers = {
 
 const stateReducers = [
   // Reducer that adds the ability to reset the entire state tree.
-  fromResetable.reducer,
+  fromReset.reducer,
   // Reducer that allows us to perform actions that modify different
   // aspects of the state tree while in action mode.
   fromActionMode.reducer,

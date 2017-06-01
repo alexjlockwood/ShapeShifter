@@ -58,7 +58,7 @@ export {
 } from './shapeshifter/actions';
 
 // Resetable actions.
-export { ResetWorkspace } from './resetable/actions';
+export { ResetWorkspace } from './reset/actions';
 
 // Action mode actions.
 export {
