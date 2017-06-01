@@ -7,27 +7,11 @@ export const TOGGLE_IS_SLOW_MOTION = '__playback__TOGGLE_IS_SLOW_MOTION';
 export const TOGGLE_IS_PLAYING = '__playback__TOGGLE_IS_PLAYING';
 export const TOGGLE_IS_REPEATING = '__playback__TOGGLE_IS_REPEATING';
 
-export class SetIsSlowMotion implements Action {
-  readonly type = SET_IS_SLOW_MOTION;
-  readonly payload: { isSlowMotion: boolean };
-  constructor(readonly isSlowMotion: boolean) {
-    this.payload = { isSlowMotion };
-  }
-}
-
 export class SetIsPlaying implements Action {
   readonly type = SET_IS_PLAYING;
   readonly payload: { isPlaying: boolean };
   constructor(readonly isPlaying: boolean) {
     this.payload = { isPlaying };
-  }
-}
-
-export class SetIsRepeating implements Action {
-  readonly type = SET_IS_REPEATING;
-  readonly payload: { isRepeating: boolean };
-  constructor(readonly isRepeating: boolean) {
-    this.payload = { isRepeating };
   }
 }
 
@@ -44,9 +28,7 @@ export class ToggleIsRepeating implements Action {
 }
 
 export type Actions =
-  SetIsSlowMotion
-  | SetIsPlaying
-  | SetIsRepeating
+  SetIsPlaying
   | ToggleIsSlowMotion
   | ToggleIsPlaying
   | ToggleIsRepeating;

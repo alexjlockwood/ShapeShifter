@@ -1,6 +1,9 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 
+/**
+ * @deprecated
+ */
 export enum AppMode {
   Selection = 1,
   SplitCommands,
@@ -10,6 +13,7 @@ export enum AppMode {
 
 /**
  * A simple service that broadcasts changes to the current app mode.
+ * @deprecated
  */
 @Injectable()
 export class AppModeService {

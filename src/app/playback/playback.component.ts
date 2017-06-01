@@ -28,7 +28,7 @@ export class PlaybackComponent implements OnInit {
   }
 
   playPauseButtonClick() {
-    this.animatorService.toggle();
+    this.animatorService.toggleIsPlaying();
   }
 
   rewindClick() {

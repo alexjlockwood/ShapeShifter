@@ -1,5 +1,4 @@
-import { NgZone } from '@angular/core';
-import { Store, State, SetIsPlaying } from '../store';
+import { SetIsPlaying, State, Store } from '../store';
 
 const REPEAT_DELAY = 750;
 const DEFAULT_IS_SLOW_MOTION = false;
@@ -14,10 +13,7 @@ export class Animator {
   private currentAnimatedFraction = 0;
   private shouldPlayInReverse = false;
 
-  constructor(
-    private readonly ngZone: NgZone,
-    private readonly store: Store<State>,
-  ) { }
+  constructor(private readonly callback: Callback) { }
 
   setIsRepeating(isRepeating: boolean) {
     this.isRepeating = isRepeating;
@@ -29,7 +25,7 @@ export class Animator {
 
   play(duration: number, onUpdateFn: (fraction: number) => void) {
     this.startAnimation(duration, onUpdateFn);
-    this.store.dispatch(new SetIsPlaying(true));
+    this.callback.setIsPlaying(true);
   }
 
   pause() {
@@ -41,7 +37,7 @@ export class Animator {
       cancelAnimationFrame(this.animationFrameId);
       this.animationFrameId = undefined;
     }
-    this.store.dispatch(new SetIsPlaying(false));
+    this.callback.setIsPlaying(false);
   }
 
   rewind() {
@@ -79,8 +75,13 @@ export class Animator {
       const fraction = Math.min(1, progress / (duration * playbackSpeed));
       onUpdateFn(fraction);
     };
-    this.ngZone.runOutsideAngular(() => {
+    this.callback.runOutsideAngular(() => {
       this.animationFrameId = requestAnimationFrame(onAnimationFrameFn);
     });
   }
+}
+
+export interface Callback {
+  readonly setIsPlaying: (isPlaying: boolean) => void;
+  readonly runOutsideAngular: (fn: () => void) => void;
 }

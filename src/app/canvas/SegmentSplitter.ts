@@ -26,10 +26,7 @@ export class SegmentSplitter {
   private currProjInfo: ProjInfo;
   private lastKnownMouseLocation: Point;
 
-  constructor(
-    private readonly component: CanvasOverlayDirective,
-    readonly restrictToSubIdx?: number,
-  ) {
+  constructor(private readonly component: CanvasOverlayDirective) {
     this.canvasType = component.canvasType;
     this.store = component.store;
   }
@@ -65,7 +62,6 @@ export class SegmentSplitter {
     }
 
     this.store.dispatch(new SetShapeShifterMode(ShapeShifterMode.Selection));
-    this.component.draw();
   }
 
   onMouseMove(mouseMove: Point) {

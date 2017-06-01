@@ -35,8 +35,6 @@ export {
 // Playback actions.
 export {
   SetIsPlaying,
-  SetIsRepeating,
-  SetIsSlowMotion,
   ToggleIsPlaying,
   ToggleIsRepeating,
   ToggleIsSlowMotion,

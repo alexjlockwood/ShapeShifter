@@ -1,7 +1,7 @@
-import * as $ from 'jquery';
-import { Injectable } from '@angular/core';
-import { Store, State, DeleteSelectedModels } from '../store';
 import { AnimatorService } from '../animator';
+import { DeleteSelectedModels, State, Store } from '../store';
+import { Injectable } from '@angular/core';
+import * as $ from 'jquery';
 
 @Injectable()
 export class ShortcutService {
@@ -29,7 +29,7 @@ export class ShortcutService {
       }
       if (event.keyCode === 32) {
         // Spacebar.
-        this.animatorService.toggle();
+        this.animatorService.toggleIsPlaying();
         return false;
       }
       if (event.keyCode === 37) {

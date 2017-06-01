@@ -1,7 +1,7 @@
+import { INTERPOLATORS, Interpolator } from '../scripts/animations';
+import { MathUtil } from '../scripts/common';
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
-import { Interpolator, INTERPOLATORS } from '../scripts/animations';
-import { MathUtil } from '../scripts/common';
 
 const DEFAULT_SHOULD_LABEL_POINTS = false;
 const DEFAULT_ROTATION = 0;
@@ -14,6 +14,8 @@ const DEFAULT_INTERPOLATOR = INTERPOLATORS[0];
 
 /**
  * A simple service that broadcasts changes to the application's settings.
+ *
+ * @deprecated
  */
 @Injectable()
 export class SettingsService {

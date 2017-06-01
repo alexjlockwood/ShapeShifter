@@ -246,7 +246,7 @@ export class CanvasOverlayDirective
             }
             const toArray = Array.from(subIdxs);
             const restrictToSubIdx = toArray.length ? toArray[0] : undefined;
-            this.segmentSplitter = new SegmentSplitter(this, restrictToSubIdx);
+            this.segmentSplitter = new SegmentSplitter(this);
           } else {
             this.segmentSplitter = undefined;
           }

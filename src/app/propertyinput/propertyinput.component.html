@@ -85,9 +85,10 @@
     </div>
     <!-- TODO: change this text to something else? -->
     <button md-button
+      class="launch-shape-shifter-button"
       *ngIf="this.shouldShowShapeShifterButton(model)"
       (click)="this.onShapeShifterModeClick(model.model.id)">
-      Shape Shifter mode
+      Edit paths
     </button>
   </div>
 </ng-container>

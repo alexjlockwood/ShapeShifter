@@ -23,6 +23,8 @@ export enum MorphStatus {
 /**
  * The global state service that is in charge of keeping track of the loaded
  * SVGs, active path layers, and the current morph status.
+ *
+ * @deprecated
  */
 @Injectable()
 export class StateService {

@@ -81,10 +81,11 @@ export class CanvasLayersDirective
           ? getShapeShifterStartState
           : getShapeShifterEndState;
       this.registerSubscription(
-        this.store.select(shapeShifterSelector).subscribe(({ vectorLayer }) => {
-          this.vectorLayer = vectorLayer;
-          this.draw();
-        }),
+        this.store.select(shapeShifterSelector)
+          .subscribe(({ vectorLayer }) => {
+            this.vectorLayer = vectorLayer;
+            this.draw();
+          }),
       );
     }
   }

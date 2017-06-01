@@ -24,14 +24,14 @@ import { PropertyInputComponent } from './propertyinput/propertyinput.component'
 import { ScrollGroupDirective } from './scrollgroup/scrollgroup.directive';
 import {
   ActionModeService,
-  AppModeService,
   FileImporterService,
   HoverService,
-  SelectionService,
-  SettingsService,
   ShortcutService,
   StateService,
 } from './services';
+import { AppModeService } from './services/appmode.service';
+import { SelectionService } from './services/selection.service';
+import { SettingsService } from './services/settings.service';
 import { SplitterComponent } from './splitter/splitter.component';
 import { reducer } from './store';
 import { ToolbarComponent } from './toolbar/toolbar.component';

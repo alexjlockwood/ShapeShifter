@@ -49,7 +49,6 @@ export class ShapeSplitter {
       return;
     }
     this.store.dispatch(new SetShapeShifterMode(ShapeShifterMode.Selection));
-    this.component.draw();
   }
 
   onMouseMove(mouseMove: Point) {

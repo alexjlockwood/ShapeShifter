@@ -1,6 +1,7 @@
 import { Animation } from '../scripts/animations';
 import { VectorLayer } from '../scripts/layers';
 import {
+  SetIsPlaying,
   State,
   Store,
   ToggleIsPlaying,
@@ -14,7 +15,7 @@ import {
   getIsSlowMotion,
 } from '../store/playback/selectors';
 import { AnimationRenderer } from './AnimationRenderer';
-import { Animator } from './Animator';
+import { Animator, Callback } from './Animator';
 import { Injectable, NgZone } from '@angular/core';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 
@@ -32,13 +33,27 @@ export class AnimatorService {
   private animator: Animator;
   private animationRenderer: AnimationRenderer;
   private activeAnimation: Animation;
+  private isPlaying: boolean;
+  private readonly animatorCallback: Callback;
 
   // TODO: the 'should reverse' flag below doesn't work anymore... fix or remove?
   constructor(
     private readonly ngZone: NgZone,
     private readonly store: Store<State>,
   ) {
-    this.animator = new Animator(ngZone, this.store);
+    this.animatorCallback = {
+      setIsPlaying: (isPlaying: boolean) => {
+        if (this.isPlaying === isPlaying) {
+          return;
+        }
+        this.isPlaying = isPlaying;
+        this.store.dispatch(new SetIsPlaying(isPlaying));
+      },
+      runOutsideAngular: (fn: () => void) => {
+        this.ngZone.runOutsideAngular(fn);
+      },
+    };
+    this.animator = new Animator(this.animatorCallback);
     this.store.select(getIsSlowMotion).subscribe(s => this.animator.setIsSlowMotion(s));
     this.store.select(getIsPlaying).subscribe(p => p ? this.play() : this.pause());
     this.store.select(getIsRepeating).subscribe(r => this.animator.setIsRepeating(r));
@@ -63,7 +78,7 @@ export class AnimatorService {
     this.store.dispatch(new ToggleIsRepeating());
   }
 
-  toggle() {
+  toggleIsPlaying() {
     this.store.dispatch(new ToggleIsPlaying());
   }
 
@@ -109,6 +124,6 @@ export class AnimatorService {
 
   reset() {
     this.rewind();
-    this.animator = new Animator(this.ngZone, this.store);
+    this.animator = new Animator(this.animatorCallback);
   }
 }

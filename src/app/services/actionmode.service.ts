@@ -22,11 +22,8 @@ import { Injectable } from '@angular/core';
  */
 @Injectable()
 export class ActionModeService {
-  private mode: ShapeShifterMode;
 
-  constructor(private readonly store: Store<State>) {
-    this.store.select(getShapeShifterMode).subscribe(m => this.mode = m);
-  }
+  constructor(private readonly store: Store<State>) { }
 
   closeActionMode() {
     this.store.dispatch(new ClearActivePathBlockId());

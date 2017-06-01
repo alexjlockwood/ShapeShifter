@@ -5,6 +5,7 @@ import { Subject } from 'rxjs/Subject';
 
 /**
  * A selection represents an action that is the result of a mouse click.
+ * @deprecated
  */
 export interface Selection {
   readonly type: SelectionType;
@@ -15,6 +16,7 @@ export interface Selection {
 
 /**
  * Describes the different types of selection events.
+ * @deprecated
  */
 export enum SelectionType {
   // The user selected an entire subpath.
@@ -27,7 +29,7 @@ export enum SelectionType {
 
 /**
  * A simple service that broadcasts selection events to all parts of the application.
- * TODO: clear selections in an onBlur callback somehow
+ * @deprecated
  */
 @Injectable()
 export class SelectionService {
