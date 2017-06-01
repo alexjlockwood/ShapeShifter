@@ -9,20 +9,17 @@ export {
 } from './shapeshifter';
 
 // Android Icon Animator actions.
-export {
-  DeleteSelectedModels,
-  SelectAnimation,
-  SelectBlock,
-  SelectLayer,
-} from './aia/actions';
+export { DeleteSelectedModels } from './aia/actions';
 
 // Timeline actions.
 export {
   ActivateAnimation,
   AddAnimations,
-  AddBlock,
   ReplaceAnimations,
+  SelectAnimation,
+  AddBlock,
   ReplaceBlocks,
+  SelectBlock,
 } from './timeline/actions';
 
 // Layer actions.
@@ -32,6 +29,7 @@ export {
   ReplaceLayer,
   ToggleLayerExpansion,
   ToggleLayerVisibility,
+  SelectLayer,
 } from './layers/actions';
 
 // Playback actions.

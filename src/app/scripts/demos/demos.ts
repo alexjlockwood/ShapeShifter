@@ -180,16 +180,27 @@ export const DEBUG_VECTOR_DRAWABLE_3 = `
   android:viewportWidth="18">
 
   <group
-    android:name="iconGroup"
+    android:name="playGroup"
     android:pivotX="9"
     android:pivotY="9"
     android:rotation="90"
     android:translateX="0.75">
 
     <path
-      android:name="iconPath"
+      android:name="playPath"
       android:fillColor="#000"
-      android:pathData="M9,5 L9,5 L9,13 L4,13 L9,5 M9,5 L9,5 L14,13 L9,13 L9,5 M 2 2 h 2 v 2 h -2 v -2"/>
+      android:pathData="M9,5 L9,5 L9,13 L4,13 L9,5 M9,5 L9,5 L14,13 L9,13 L9,5"/>
+  </group>
+
+  <group
+    android:name="pauseGroup"
+    android:pivotX="9"
+    android:pivotY="9">
+
+    <path
+      android:name="pausePath"
+      android:fillColor="#000"
+      android:pathData="M6,5 L8,5 L8,13 L6,13 L6,5 M10,5 L12,5 L12,13 L10,13 L10,5"/>
   </group>
 </vector>
 `;

@@ -1,11 +1,18 @@
 import { Animation, AnimationBlock } from '../../scripts/animations';
 import { Layer } from '../../scripts/layers';
+import { DeleteSelectedModels } from '../aia/actions';
+import { SelectLayer } from '../layers/actions';
 import { Action } from '@ngrx/store';
 
-// Animation actions.
 export const ADD_ANIMATIONS = '__timeline__ADD_ANIMATIONS';
 export const ACTIVATE_ANIMATION = '__timeline__ACTIVATE_ANIMATION_ID';
 export const REPLACE_ANIMATIONS = '__timeline__REPLACE_ANIMATIONS';
+export const SELECT_ANIMATION = '__timeline__SELECT_ANIMATION';
+export const ADD_BLOCK = '__timeline__ADD_BLOCK';
+export const REPLACE_BLOCKS = '__timeline__REPLACE_BLOCKS';
+export const SELECT_BLOCK = '__timeline__SELECT_BLOCK';
+export { SELECT_LAYER } from '../layers/actions';
+export { DELETE_SELECTED_MODELS } from '../aia/actions';
 
 export class AddAnimations implements Action {
   readonly type = ADD_ANIMATIONS;
@@ -31,9 +38,13 @@ export class ReplaceAnimations implements Action {
   }
 }
 
-// Block actions.
-export const ADD_BLOCK = '__timeline__ADD_BLOCK';
-export const REPLACE_BLOCKS = '__timeline__REPLACE_BLOCKS';
+export class SelectAnimation implements Action {
+  readonly type = SELECT_ANIMATION;
+  readonly payload: { animationId: string, clearExisting: boolean };
+  constructor(animationId: string, clearExisting = false) {
+    this.payload = { animationId, clearExisting };
+  }
+}
 
 export class AddBlock implements Action {
   readonly type = ADD_BLOCK;
@@ -51,9 +62,21 @@ export class ReplaceBlocks implements Action {
   }
 }
 
+export class SelectBlock implements Action {
+  readonly type = SELECT_BLOCK;
+  readonly payload: { blockId: string, clearExisting: boolean };
+  constructor(blockId: string, clearExisting = true) {
+    this.payload = { blockId, clearExisting };
+  }
+}
+
 export type Actions =
   AddAnimations
   | ActivateAnimation
   | ReplaceAnimations
+  | SelectAnimation
   | AddBlock
-  | ReplaceBlocks;
+  | ReplaceBlocks
+  | SelectBlock
+  | SelectLayer
+  | DeleteSelectedModels;

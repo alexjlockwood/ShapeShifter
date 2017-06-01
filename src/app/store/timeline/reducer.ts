@@ -6,10 +6,7 @@ import {
   PathAnimationBlock,
 } from '../../scripts/animations';
 import { ModelUtil } from '../../scripts/common';
-import {
-  ColorProperty,
-  PathProperty,
-} from '../../scripts/properties';
+import { ColorProperty, PathProperty } from '../../scripts/properties';
 import * as actions from './actions';
 import * as _ from 'lodash';
 
@@ -30,7 +27,10 @@ export function buildInitialState() {
   } as State;
 }
 
-export function reducer(state = buildInitialState(), action: actions.Actions) {
+export function reducer(
+  state = buildInitialState(),
+  action: actions.Actions,
+) {
   switch (action.type) {
 
     // Add a list of animations to the application state.
@@ -52,10 +52,6 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
     // Activate an animation.
     case actions.ACTIVATE_ANIMATION: {
       const { animationId } = action.payload;
-      if (animationId === state.activeAnimationId) {
-        // Do nothing if the active animation ID hasn't changed.
-        return state;
-      }
       return { ...state, activeAnimationId: animationId };
     }
 
@@ -72,6 +68,12 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
         return replacementAnimation ? replacementAnimation : animation;
       });
       return { ...state, animations };
+    }
+
+    // Select an animation.
+    case actions.SELECT_ANIMATION: {
+      const { animationId, clearExisting } = action.payload;
+      return selectAnimationId(state, animationId, clearExisting);
     }
 
     // Add an animation block to the currently active animation.
@@ -201,8 +203,86 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
       return { ...state, animations };
     }
 
-    default: {
+    // Select an animation block.
+    case actions.SELECT_BLOCK: {
+      const { blockId, clearExisting } = action.payload;
+      return selectBlockId(state, blockId, clearExisting);
+    }
+
+    // Select a layer.
+    case actions.SELECT_LAYER: {
+      return { ...state, selectedAnimationIds: new Set(), selectedBlockIds: new Set() }
+    }
+
+    // Delete all selected animations, blocks, and layers.
+    case actions.DELETE_SELECTED_MODELS: {
+      state = deleteSelectedAnimations(state);
+      state = deleteSelectedBlocks(state);
       return state;
     }
   }
+
+  return state;
+}
+
+function selectAnimationId(state: State, animationId: string, clearExisting: boolean) {
+  const oldSelectedAnimationIds = state.selectedBlockIds;
+  const newSelectedAnimationIds = clearExisting ? new Set() : new Set(oldSelectedAnimationIds);
+  newSelectedAnimationIds.add(animationId);
+  let { selectedBlockIds } = state;
+  if (selectedBlockIds.size) {
+    selectedBlockIds = new Set<string>();
+  }
+  return { ...state, selectedAnimationIds: newSelectedAnimationIds, selectedBlockIds };
+}
+
+function selectBlockId(state: State, blockId: string, clearExisting: boolean) {
+  const oldSelectedBlockIds = state.selectedBlockIds;
+  const newSelectedBlockIds = clearExisting ? new Set() : new Set(oldSelectedBlockIds);
+  newSelectedBlockIds.add(blockId);
+  let { selectedAnimationIds } = state;
+  if (selectedAnimationIds.size) {
+    selectedAnimationIds = new Set();
+  }
+  return { ...state, selectedAnimationIds, selectedBlockIds: newSelectedBlockIds };
+}
+
+function deleteSelectedAnimations(state: State) {
+  const { selectedAnimationIds } = state;
+  if (!selectedAnimationIds.size) {
+    // Do nothing if there are no selected animations;
+    return state;
+  }
+  const animations = state.animations.filter(animation => {
+    return !selectedAnimationIds.has(animation.id);
+  });
+  if (!animations.length) {
+    // Create an empty animation if the last one was deleted.
+    animations.push(new Animation());
+  }
+  let activeAnimationId = state.activeAnimationId;
+  if (selectedAnimationIds.has(activeAnimationId)) {
+    // If the active animation was deleted, activate the first animation.
+    activeAnimationId = animations[0].id;
+  }
+  return { ...state, animations, activeAnimationId, selectedAnimationIds: new Set() };
+}
+
+function deleteSelectedBlocks(state: State) {
+  const { selectedBlockIds } = state;
+  if (!selectedBlockIds.size) {
+    // Do nothing if there are no selected blocks;
+    return state;
+  }
+  const animations = state.animations.map(animation => {
+    const existingBlocks = animation.blocks;
+    const newBlocks = existingBlocks.filter(b => !selectedBlockIds.has(b.id));
+    if (existingBlocks.length === newBlocks.length) {
+      return animation;
+    }
+    const clonedAnimation = animation.clone();
+    clonedAnimation.blocks = newBlocks;
+    return clonedAnimation;
+  });
+  return { ...state, animations, selectedBlockIds: new Set() };
 }

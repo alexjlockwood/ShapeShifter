@@ -1,6 +1,5 @@
 import { environment } from '../../environments/environment';
 import * as fromActionMode from './actionmode/reducer';
-import * as fromAia from './aia/reducer';
 import * as fromLayers from './layers/reducer';
 import * as fromPlayback from './playback/reducer';
 import * as fromReset from './reset/reducer';
@@ -31,9 +30,6 @@ const stateReducers = [
   // Reducer that allows us to perform actions that modify different
   // aspects of the state tree while in action mode.
   fromActionMode.reducer,
-  // Reducer that adds the ability to modify the layer list and
-  // timeline simultaneously.
-  fromAia.reducer,
   // Reducer that maps our slice reducers to the keys in our state tree.
   combineReducers(sliceReducers),
 ];

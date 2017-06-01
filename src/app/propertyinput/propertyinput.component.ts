@@ -27,6 +27,9 @@ import { Observable } from 'rxjs/Observable';
 export class PropertyInputComponent implements OnInit {
 
   propertyInputModel$: Observable<PropertyInputModel>;
+
+  // Map used to track user state that has been entered into textfields
+  // but may not have been saved in the store.
   private readonly enteredValueMap = new Map<string, any>();
 
   constructor(private readonly store: Store<State>) { }
