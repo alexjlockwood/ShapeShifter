@@ -1,6 +1,6 @@
 import { Layer } from '../../scripts/layers';
 import { DeleteSelectedModels } from '../aia/actions';
-import { SelectAnimation, SelectBlock } from '../timeline/actions';
+import { AddBlock, SelectAnimation, SelectBlock } from '../timeline/actions';
 import { Action } from '@ngrx/store';
 
 export const ADD_LAYERS = '__layers__ADD_LAYERS';
@@ -9,7 +9,7 @@ export const TOGGLE_LAYER_EXPANSION = '__layers__TOGGLE_LAYER_EXPANSION';
 export const TOGGLE_LAYER_VISIBILITY = '__layers__TOGGLE_LAYER_VISIBILITY';
 export const REPLACE_LAYER = '__layers__REPLACE_LAYER';
 export const SELECT_LAYER = '__layers__SELECT_LAYER';
-export { SELECT_ANIMATION, SELECT_BLOCK } from '../timeline/actions';
+export { SELECT_ANIMATION, ADD_BLOCK, SELECT_BLOCK } from '../timeline/actions';
 export { DELETE_SELECTED_MODELS } from '../aia/actions';
 
 export class AddLayers implements Action {
@@ -66,4 +66,5 @@ export type Actions =
   | SelectLayer
   | SelectAnimation
   | SelectBlock
+  | AddBlock
   | DeleteSelectedModels;

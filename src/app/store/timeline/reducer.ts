@@ -164,8 +164,8 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
         return anim;
       });
 
-      // TODO: auto-select the new animation block.
-      // state = selectBlockId(state, newBlock.id, true /* clearExisting */);
+      // Auto-select the new animation block.
+      state = selectBlockId(state, newBlock.id, true /* clearExisting */);
       return { ...state, animations };
     }
 
@@ -226,22 +226,14 @@ function selectAnimationId(state: State, animationId: string, clearExisting: boo
   const oldSelectedAnimationIds = state.selectedBlockIds;
   const newSelectedAnimationIds = clearExisting ? new Set() : new Set(oldSelectedAnimationIds);
   newSelectedAnimationIds.add(animationId);
-  let { selectedBlockIds } = state;
-  if (selectedBlockIds.size) {
-    selectedBlockIds = new Set<string>();
-  }
-  return { ...state, selectedAnimationIds: newSelectedAnimationIds, selectedBlockIds };
+  return { ...state, selectedAnimationIds: newSelectedAnimationIds, selectedBlockIds: new Set() };
 }
 
 function selectBlockId(state: State, blockId: string, clearExisting: boolean) {
   const oldSelectedBlockIds = state.selectedBlockIds;
   const newSelectedBlockIds = clearExisting ? new Set() : new Set(oldSelectedBlockIds);
   newSelectedBlockIds.add(blockId);
-  let { selectedAnimationIds } = state;
-  if (selectedAnimationIds.size) {
-    selectedAnimationIds = new Set();
-  }
-  return { ...state, selectedAnimationIds, selectedBlockIds: newSelectedBlockIds };
+  return { ...state, selectedAnimationIds: new Set(), selectedBlockIds: newSelectedBlockIds };
 }
 
 function deleteSelectedAnimations(state: State) {

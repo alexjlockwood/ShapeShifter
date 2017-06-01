@@ -70,26 +70,27 @@ export class PropertyInputComponent implements OnInit {
       case 40:
         ip.resolveEnteredValue();
         const $target = $(event.target);
-        let numberValue = Number($target.val());
-        if (!isNaN(numberValue)) {
-          let delta = (event.keyCode === 38) ? 1 : -1;
-
-          if (ip.property instanceof FractionProperty) {
-            delta *= .1;
-          }
-
-          if (event.shiftKey) {
-            delta *= 10;
-          } else if (event.altKey) {
-            delta /= 10;
-          }
-
-          numberValue += delta;
-          ip.property.setEditableValue(ip, 'value', Number(numberValue.toFixed(6)));
-          setTimeout(() => ($target.get(0) as HTMLInputElement).select(), 0);
-          return false;
+        const numberValue = Number($target.val());
+        if (isNaN(numberValue)) {
+          break;
         }
-        break;
+        let delta = (event.keyCode === 38) ? 1 : -1;
+
+        if (ip.property instanceof FractionProperty) {
+          delta *= .1;
+        }
+
+        if (event.shiftKey) {
+          // TODO: make this more obvious somehow
+          delta *= 10;
+        } else if (event.altKey) {
+          // TODO: make this more obvious somehow
+          delta /= 10;
+        }
+
+        ip.property.setEditableValue(ip, 'value', Number((numberValue + delta).toFixed(6)));
+        setTimeout(() => ($target.get(0) as HTMLInputElement).select(), 0);
+        return false;
     }
     return undefined;
   }

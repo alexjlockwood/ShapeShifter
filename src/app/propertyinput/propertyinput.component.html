@@ -46,14 +46,13 @@
             <span *ngIf="!ip.editable"
               class="spi-property-value-static"
               fxFlex>
-            <!-- Don't show an input element if the property isn't inspectable. -->
+            <!-- Only show text if the property isn't inspectable. -->
             {{ip.displayValue}}
           </span>
             <div *ngIf="ip.editable"
               class="spi-property-value-editor"
               fxLayout="column"
               fxFlex>
-              <!-- TODO: set input type here? -->
               <input (keydown)="this.valueEditorKeyDown($event, ip)"
                 (blur)="ip.resolveEnteredValue()"
                 name="{{ip.propertyName}}"
@@ -66,16 +65,18 @@
                   || ip.typeName === 'FractionProperty'">
               <ng-container *ngIf="ip.typeName === 'EnumProperty'">
                 <md-menu #enumMenu="mdMenu">
-                  <button *ngFor="let option of ip.property.options; trackBy: trackEnumOptionFn"
-                    (click)="ip.value = option.value;"
-                    md-menu-item>
-                  {{option.label}}
-                </button>
+                  <button md-menu-item
+                    *ngFor="let option of ip.property.options; trackBy: trackEnumOptionFn"
+                    (click)="ip.value = option.value;">
+                    {{option.label}}
+                  </button>
                 </md-menu>
                 <button class="spi-property-value-menu-target"
                   [mdMenuTriggerFor]="enumMenu">
-                <span class="spi-property-value-menu-current-value">{{ip.displayValue}}</span>
-              </button>
+                  <span class="spi-property-value-menu-current-value">
+                    {{ip.displayValue}}
+                  </span>
+                </button>
               </ng-container>
             </div>
           </div>
