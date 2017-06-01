@@ -223,8 +223,6 @@ export function metaReducer(reducer: ActionReducer<State>): ActionReducer<State>
         } else {
           state = setUnpairedSubPath(state, { source: actionSource, subIdx });
         }
-        const actionmode = state.actionmode;
-        state = { ...state, actionmode: { ...actionmode, random: _.uniqueId() } };
         break;
       }
 
