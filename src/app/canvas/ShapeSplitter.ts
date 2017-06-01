@@ -1,9 +1,9 @@
 import { Point } from '../scripts/common';
 import { HitResult, ProjectionOntoPath } from '../scripts/paths';
+import { HoverService } from '../services';
 import {
-  SetPathHover,
-  SetPathSelections,
   SetShapeShifterMode,
+  SetShapeShifterSelections,
   ShapeShifterMode,
   State,
   Store,
@@ -158,8 +158,8 @@ export class ShapeSplitter {
       }
 
       // TODO: make sure the inspector doesn't set hovers/selections while a split is in process...
-      this.store.dispatch(new SetPathHover(undefined));
-      this.store.dispatch(new SetPathSelections([]));
+      this.component.hoverService.setHover(undefined);
+      this.store.dispatch(new SetShapeShifterSelections([]));
       this.reset();
 
       // TODO: some bugs with this path: M 0 20 v -16 h 20 v 2 h -12 v 2 h 12 v 2 h -12 Z

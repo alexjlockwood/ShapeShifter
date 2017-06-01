@@ -12,8 +12,8 @@ export const SHIFT_POINT_TO_FRONT = '__actionmode__SHIFT_POINT_TO_FRONT';
 export const SPLIT_COMMAND_IN_HALF_HOVER = '__actionmode__SPLIT_COMMAND_IN_HALF_HOVER';
 export const SPLIT_COMMAND_IN_HALF_CLICK = '__actionmode__SPLIT_COMMAND_IN_HALF_CLICK';
 export const UPDATE_ACTIVE_PATH_BLOCK = '__actionmode__UPDATE_ACTIVE_PATH_BLOCK';
-export const SET_PAIRED_SUBPATHS = '__actionmode__SET_PAIRED_SUBPATHS'
-export const SET_UNPAIRED_SUBPATH = '__actionmode__SET_UNPAIRED_SUBPATH'
+export const SELECT_PAIRED_SUBPATH = '__actionmode__SELECT_PAIRED_SUBPATH';
+export const SET_UNPAIRED_SUBPATH = '__actionmode__SET_UNPAIRED_SUBPATH';
 
 export class ReverseSelectedSubPaths implements Action {
   readonly type = REVERSE_SELECTED_SUBPATHS;
@@ -66,11 +66,11 @@ export class UpdateActivePathBlock implements Action {
   }
 }
 
-export class SetPairedSubPaths implements Action {
-  readonly type = SET_PAIRED_SUBPATHS;
-  readonly payload: { pairedSubPaths: Set<number> };
-  constructor(pairedSubPaths: Set<number>) {
-    this.payload = { pairedSubPaths: new Set(pairedSubPaths) };
+export class SelectPairedSubPath implements Action {
+  readonly type = SELECT_PAIRED_SUBPATH;
+  readonly payload: { subIdx: number, source: CanvasType; };
+  constructor(subIdx: number, source: CanvasType) {
+    this.payload = { subIdx, source };
   }
 }
 
@@ -93,5 +93,5 @@ export type Actions =
   | SplitCommandInHalfHover
   | SplitCommandInHalfClick
   | UpdateActivePathBlock
-  | SetPairedSubPaths
+  | SelectPairedSubPath
   | SetUnpairedSubPath;

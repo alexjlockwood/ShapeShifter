@@ -1,10 +1,10 @@
 import { CanvasType } from '../CanvasType';
 import { Point } from '../scripts/common';
 import { ProjectionOntoPath } from '../scripts/paths';
+import { HoverService } from '../services';
 import {
-  SetPathHover,
-  SetPathSelections,
   SetShapeShifterMode,
+  SetShapeShifterSelections,
   ShapeShifterMode,
   State,
   Store,
@@ -52,8 +52,8 @@ export class SegmentSplitter {
       }
 
       // TODO: make sure the inspector doesn't set hovers/selections while a split is in process...
-      this.store.dispatch(new SetPathHover(undefined));
-      this.store.dispatch(new SetPathSelections([]));
+      this.component.hoverService.setHover(undefined);
+      this.store.dispatch(new SetShapeShifterSelections([]));
       this.currProjInfo = undefined;
       this.store.dispatch(
         new UpdateActivePathBlock(

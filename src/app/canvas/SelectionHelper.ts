@@ -2,11 +2,11 @@ import { CanvasType } from '../CanvasType';
 import { MathUtil, Point } from '../scripts/common';
 import { LayerUtil } from '../scripts/layers';
 import { ProjectionOntoPath } from '../scripts/paths';
+import { HoverService } from '../services';
 import {
   HoverType,
-  SetPathHover,
-  SetPathSelections,
   SetShapeShifterMode,
+  SetShapeShifterSelections,
   ShapeShifterMode,
   State,
   Store,
@@ -136,8 +136,8 @@ export class SelectionHelper {
 
         // Notify the global layer state service about the change and draw.
         // Clear any existing selections and/or hovers as well.
-        this.store.dispatch(new SetPathHover(undefined));
-        this.store.dispatch(new SetPathSelections([]));
+        this.component.hoverService.setHover(undefined);
+        this.store.dispatch(new SetShapeShifterSelections([]));
         this.reset();
 
         this.store.dispatch(
@@ -147,7 +147,7 @@ export class SelectionHelper {
     } else if (this.currentDraggableSplitIndex) {
       const hitResult = this.performHitTest(mouseUp);
       if (!hitResult.isHit) {
-        this.store.dispatch(new SetPathSelections([]));
+        this.store.dispatch(new SetShapeShifterSelections([]));
       } else if (hitResult.isEndPointHit) {
         const { subIdx, cmdIdx } = this.findHitPoint(hitResult.endPointHits);
         this.store.dispatch(
@@ -167,7 +167,7 @@ export class SelectionHelper {
   onMouseLeave(mouseLeave: Point) {
     this.lastKnownMouseLocation = mouseLeave;
     this.reset();
-    this.store.dispatch(new SetPathHover(undefined));
+    this.component.hoverService.setHover(undefined);
     this.component.draw();
   }
 
@@ -206,48 +206,48 @@ export class SelectionHelper {
     }
     const hitResult = this.performHitTest(mousePoint);
     if (!hitResult.isHit) {
-      this.store.dispatch(new SetPathHover(undefined));
+      this.component.hoverService.setHover(undefined);
       return;
     }
     if (hitResult.isEndPointHit) {
       const { subIdx, cmdIdx } = this.findHitPoint(hitResult.endPointHits);
-      this.store.dispatch(new SetPathHover({
+      this.component.hoverService.setHover({
         type: HoverType.Point,
         source: this.canvasType,
         subIdx,
         cmdIdx,
-      }));
+      });
       return;
     }
     if (hitResult.isSegmentHit) {
       if (this.component.activePathLayer.isFilled()) {
         const { subIdx, cmdIdx } = this.findHitSegment(hitResult.segmentHits);
         if (this.component.activePath.getCommand(subIdx, cmdIdx).isSplitSegment()) {
-          this.store.dispatch(new SetPathHover({
+          this.component.hoverService.setHover({
             type: HoverType.Segment,
             source: this.canvasType,
             subIdx,
             cmdIdx,
-          }));
+          });
           return;
         }
       } else if (this.component.activePathLayer.isStroked()) {
         const { subIdx } = this.findHitSegment(hitResult.segmentHits);
-        this.store.dispatch(new SetPathHover({
+        this.component.hoverService.setHover({
           type: HoverType.SubPath,
           source: this.canvasType,
           subIdx,
-        }));
+        });
         return;
       }
     }
     if (hitResult.isShapeHit && this.component.activePathLayer.isFilled()) {
       const { subIdx } = this.findHitSubPath(hitResult.shapeHits);
-      this.store.dispatch(new SetPathHover({
+      this.component.hoverService.setHover({
         type: HoverType.SubPath,
         source: this.canvasType,
         subIdx,
-      }));
+      });
       return;
     }
   }

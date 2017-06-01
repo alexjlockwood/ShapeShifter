@@ -5,42 +5,39 @@ import * as actions from './actions';
 import { ActionReducer } from '@ngrx/store';
 import * as _ from 'lodash';
 
-// Meta-reducer that intercepts layer and timeline actions and modifies any corresponding state.
-export function metaReducer(reducer: ActionReducer<State>): ActionReducer<State> {
-  return (state: State, action: actions.Actions): State => {
-    switch (action.type) {
+export function reducer(state: State, action: actions.Actions): State {
+  switch (action.type) {
 
-      // Select an animation.
-      case actions.SELECT_ANIMATION: {
-        const { animationId, clearExisting } = action.payload;
-        state = selectAnimationId(state, animationId, clearExisting);
-        break;
-      }
-
-      // Select an animation block.
-      case actions.SELECT_BLOCK: {
-        const { blockId, clearExisting } = action.payload;
-        state = selectBlockId(state, blockId, clearExisting);
-        break;
-      }
-
-      // Select a layer.
-      case actions.SELECT_LAYER: {
-        const { layerId, shouldToggle, clearExisting } = action.payload;
-        state = selectLayerId(state, layerId, shouldToggle, clearExisting);
-        break;
-      }
-
-      // Delete all selected animations, blocks, and layers.
-      case actions.DELETE_SELECTED_MODELS: {
-        state = deleteSelectedAnimations(state);
-        state = deleteSelectedBlocks(state);
-        state = deleteSelectedLayers(state);
-        break;
-      }
+    // Select an animation.
+    case actions.SELECT_ANIMATION: {
+      const { animationId, clearExisting } = action.payload;
+      state = selectAnimationId(state, animationId, clearExisting);
+      break;
     }
-    return reducer(state, action);
+
+    // Select an animation block.
+    case actions.SELECT_BLOCK: {
+      const { blockId, clearExisting } = action.payload;
+      state = selectBlockId(state, blockId, clearExisting);
+      break;
+    }
+
+    // Select a layer.
+    case actions.SELECT_LAYER: {
+      const { layerId, shouldToggle, clearExisting } = action.payload;
+      state = selectLayerId(state, layerId, shouldToggle, clearExisting);
+      break;
+    }
+
+    // Delete all selected animations, blocks, and layers.
+    case actions.DELETE_SELECTED_MODELS: {
+      state = deleteSelectedAnimations(state);
+      state = deleteSelectedBlocks(state);
+      state = deleteSelectedLayers(state);
+      break;
+    }
   }
+  return state;
 }
 
 function selectAnimationId(state: State, animationId: string, clearExisting: boolean) {

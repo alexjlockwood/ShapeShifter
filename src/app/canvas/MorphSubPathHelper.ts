@@ -1,11 +1,11 @@
 import { CanvasType } from '../CanvasType';
 import { Point } from '../scripts/common';
+import { HoverService } from '../services';
 import {
   HoverType,
-  SetPairedSubPaths,
-  SetPathHover,
-  SetPathSelections,
+  SelectPairedSubPath,
   SetShapeShifterMode,
+  SetShapeShifterSelections,
   SetUnpairedSubPath,
   ShapeShifterMode,
   State,
@@ -32,65 +32,8 @@ export class MorphSubPathHelper {
     if (hitResult.isSegmentHit || hitResult.isShapeHit) {
       const hits = hitResult.isShapeHit ? hitResult.shapeHits : hitResult.segmentHits;
       const { subIdx } = this.findHitSubPath(hits);
-      const currUnpair = this.component.unpairedSubPath;
-      if (currUnpair && this.canvasType !== currUnpair.source) {
-        const { source: fromSource, subIdx: fromSubIdx } = currUnpair;
-        const toSource = this.canvasType;
-        const toSubIdx = subIdx;
-        this.store.dispatch(new SetUnpairedSubPath(undefined));
-        const fromSelections =
-          this.component.shapeShifterSelections.filter(s => s.source === fromSource);
-        const toSelections =
-          this.component.shapeShifterSelections.filter(s => s.source === toSource);
-        if (fromSelections.length) {
-          this.store.dispatch(new SetPathSelections(fromSelections.map(s => {
-            const { subIdx: sIdx, cmdIdx, source, type } = s;
-            return {
-              subIdx: sIdx === fromSubIdx ? 0 : sIdx,
-              cmdIdx,
-              source,
-              type,
-            };
-          })));
-        } else if (toSelections.length) {
-          this.store.dispatch(new SetPathSelections(toSelections.map(s => {
-            const { subIdx: sIdx, cmdIdx, source, type } = s;
-            return {
-              subIdx: sIdx === toSubIdx ? 0 : sIdx,
-              cmdIdx,
-              source,
-              type,
-            };
-          })));
-        }
-        const pairedSubPaths = this.component.pairedSubPaths;
-        if (pairedSubPaths.has(fromSubIdx)) {
-          pairedSubPaths.delete(fromSubIdx);
-        }
-        if (pairedSubPaths.has(toSubIdx)) {
-          pairedSubPaths.delete(toSubIdx);
-        }
-        pairedSubPaths.add(pairedSubPaths.size);
-        this.store.dispatch(new SetPairedSubPaths(pairedSubPaths));
-        this.store.dispatch(new SetPathHover(undefined));
-        // TODO: uncomment this
-        // TODO: uncomment this
-        // TODO: uncomment this
-        // TODO: uncomment this
-        // TODO: uncomment this
-        // this.stateService.updateActivePath(
-        //   fromSource,
-        //   this.stateService.getActivePathLayer(fromSource).pathData.mutate()
-        //     .moveSubPath(fromSubIdx, 0)
-        //     .build());
-        // this.stateService.updateActivePath(
-        //   toSource,
-        //   this.stateService.getActivePathLayer(toSource).pathData.mutate()
-        //     .moveSubPath(toSubIdx, 0)
-        //     .build());
-      } else {
-        this.store.dispatch(new SetUnpairedSubPath({ source: this.canvasType, subIdx }));
-      }
+      console.info('DISPATCHING', new SelectPairedSubPath(subIdx, this.canvasType));
+      this.store.dispatch(new SelectPairedSubPath(subIdx, this.canvasType));
     } else if (!isShiftOrMetaPressed) {
       this.store.dispatch(new SetShapeShifterMode(ShapeShifterMode.Selection));
     }
@@ -106,7 +49,7 @@ export class MorphSubPathHelper {
   }
 
   onMouseLeave(mouseLeave: Point) {
-    this.store.dispatch(new SetPathHover(undefined));
+    this.component.hoverService.setHover(undefined);
     this.component.draw();
   }
 
@@ -117,15 +60,15 @@ export class MorphSubPathHelper {
   private checkForHovers(mousePoint: Point) {
     const hitResult = this.performHitTest(mousePoint);
     if (!hitResult.isHit) {
-      this.store.dispatch(new SetPathHover(undefined));
+      this.component.hoverService.setHover(undefined);
     } else if (hitResult.isSegmentHit || hitResult.isShapeHit) {
       const hits = hitResult.isShapeHit ? hitResult.shapeHits : hitResult.segmentHits;
       const { subIdx } = this.findHitSubPath(hits);
-      this.store.dispatch(new SetPathHover({
+      this.component.hoverService.setHover({
         type: HoverType.SubPath,
         source: this.canvasType,
         subIdx,
-      }));
+      });
     }
   }
 

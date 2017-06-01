@@ -119,7 +119,7 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
     }
 
     default: {
-      return state;
+      return { ...state };
     }
   }
 }

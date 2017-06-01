@@ -189,7 +189,7 @@ export const DEBUG_VECTOR_DRAWABLE_3 = `
     <path
       android:name="iconPath"
       android:fillColor="#000"
-      android:pathData="M9,5 L9,5 L9,13 L4,13 L9,5 M9,5 L9,5 L14,13 L9,13 L9,5"/>
+      android:pathData="M9,5 L9,5 L9,13 L4,13 L9,5 M9,5 L9,5 L14,13 L9,13 L9,5 M 2 2 h 2 v 2 h -2 v -2"/>
   </group>
 </vector>
 `;

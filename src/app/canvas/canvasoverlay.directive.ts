@@ -14,6 +14,7 @@ import {
 import { DestroyableMixin } from '../scripts/mixins';
 import { Path } from '../scripts/paths';
 import { Command } from '../scripts/paths';
+import { HoverService } from '../services';
 import {
   ClearLayerSelections,
   Hover,
@@ -21,7 +22,6 @@ import {
   SelectLayer,
   Selection,
   SelectionType,
-  SetPathHover,
   SetUnpairedSubPath,
   ShapeShifterMode,
   State,
@@ -33,8 +33,8 @@ import {
   getSelectedLayerIds,
 } from '../store/layers/selectors';
 import {
-  getPathHover,
   getShapeShifterEndState,
+  getShapeShifterHover,
   getShapeShifterMode,
   getShapeShifterStartState,
 } from '../store/shapeshifter/selectors';
@@ -112,6 +112,7 @@ export class CanvasOverlayDirective
   constructor(
     readonly elementRef: ElementRef,
     public readonly store: Store<State>,
+    public readonly hoverService: HoverService,
     private readonly animatorService: AnimatorService,
   ) {
     super();
@@ -220,6 +221,13 @@ export class CanvasOverlayDirective
             this.shapeShifterSelections = selections;
             this.pairedSubPaths = pairedSubPaths;
             this.unpairedSubPath = unpairedSubPath;
+            // console.info(
+            //   'shape shifter state',
+            //   this.canvasType,
+            //   this.pairedSubPaths,
+            //   this.unpairedSubPath,
+            //   this.shapeShifterHover,
+            // );
             this.draw();
           }),
       );
@@ -299,7 +307,7 @@ export class CanvasOverlayDirective
       // TODO: avoid re-executing the draw by combining with the above subscriptions
       // TODO: avoid re-executing the draw by combining with the above subscriptions
       this.registerSubscription(
-        this.store.select(getPathHover).subscribe(
+        this.store.select(getShapeShifterHover).subscribe(
           hover => {
             if (!hover) {
               // Clear the current hover.
@@ -879,7 +887,8 @@ export class CanvasOverlayDirective
         this.shapeSplitter.onMouseLeave(mouseLeave);
       }
     }
-    this.store.dispatch(new SetPathHover(undefined));
+    // TODO: remove this somehow? or make it part of the helper class methods?
+    this.hoverService.setHover(undefined);
   }
 
   // TODO: override onClick()?

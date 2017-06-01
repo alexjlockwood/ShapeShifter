@@ -6,8 +6,8 @@ export const SET_ACTIVE_PATH_BLOCK_ID = '__shapeshifter__SET_ACTIVE_PATH_BLOCK_I
 export const CLEAR_ACTIVE_PATH_BLOCK_ID = '__shapeshifter__CLEAR_ACTIVE_PATH_BLOCK_ID';
 export const SET_SHAPE_SHIFTER_MODE = '__shapeshifter__SET_SHAPE_SHIFTER_MODE';
 export const TOGGLE_SHAPE_SHIFTER_MODE = '__shapeshifter__TOGGLE_SHAPE_SHIFTER_MODE';
-export const SET_PATH_HOVER = '__shapeshifter__SET_HOVER';
-export const SET_PATH_SELECTIONS = '__shapeshifter__SET_SELECTIONS';
+export const SET_SHAPE_SHIFTER_HOVER = '__shapeshifter__SET_SHAPE_SHIFTER_HOVER';
+export const SET_SHAPE_SHIFTER_SELECTIONS = '__shapeshifter__SET_SHAPE_SHIFTER_SELECTIONS';
 export const TOGGLE_SUBPATH_SELECTION = '__shapeshifter__TOGGLE_SUBPATH_SELECTION';
 export const TOGGLE_SEGMENT_SELECTIONS = '__shapeshifter__TOGGLE_SEGMENT_SELECTION';
 export const TOGGLE_POINT_SELECTION = '__shapeshifter__TOGGLE_POINT_SELECTION';
@@ -40,16 +40,16 @@ export class ToggleShapeShifterMode implements Action {
   }
 }
 
-export class SetPathHover implements Action {
-  readonly type = SET_PATH_HOVER;
+export class SetShapeShifterHover implements Action {
+  readonly type = SET_SHAPE_SHIFTER_HOVER;
   readonly payload: { hover: Hover };
   constructor(hover: Hover) {
     this.payload = { hover };
   }
 }
 
-export class SetPathSelections implements Action {
-  readonly type = SET_PATH_SELECTIONS;
+export class SetShapeShifterSelections implements Action {
+  readonly type = SET_SHAPE_SHIFTER_SELECTIONS;
   readonly payload: { selections: ReadonlyArray<Selection> };
   constructor(selections: ReadonlyArray<Selection>) {
     this.payload = { selections };
@@ -95,8 +95,8 @@ export type Actions =
   | ClearActivePathBlockId
   | SetShapeShifterMode
   | ToggleShapeShifterMode
-  | SetPathHover
-  | SetPathSelections
+  | SetShapeShifterHover
+  | SetShapeShifterSelections
   | ToggleSubPathSelection
   | ToggleSegmentSelections
   | TogglePointSelection;
