@@ -658,11 +658,9 @@ export class LayerTimelineComponent
 
           // Add a fake target for empty groups.
           if (layer instanceof GroupLayer && !layer.children.length) {
-            rect = {
-              ...rect,
-              left: rect.left + LAYER_INDENT_PIXELS,
-              top: rect.bottom,
-            };
+            const left = rect.left + LAYER_INDENT_PIXELS;
+            const top = rect.bottom;
+            rect = { ...rect, ...{ left, top } };
             orderedLayerInfos.push({
               layer,
               element,
@@ -774,7 +772,7 @@ export class LayerTimelineComponent
 
   private updateDragIndicator(info: DragIndicatorInfo) {
     const curr = this.dragIndicatorSubject.getValue();
-    this.dragIndicatorSubject.next({ ...curr, info });
+    this.dragIndicatorSubject.next({ ...curr, ...info });
   }
 
   trackLayerFn(index: number, layer: Layer) {
