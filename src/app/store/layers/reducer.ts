@@ -5,9 +5,10 @@ import { LayerUtil, VectorLayer } from '../../scripts/layers';
 import * as actions from './actions';
 import * as _ from 'lodash';
 
-const IS_DEV_BUILD = !environment.production;
+const IS_DEV_BUILD = !environment.production && false;
 
 export interface State {
+  // TODO: get rid of the active vector layer id and make this a single VectorLayer variable?
   readonly vectorLayers: ReadonlyArray<VectorLayer>;
   readonly activeVectorLayerId: string;
   readonly selectedLayerIds: Set<string>;
@@ -39,24 +40,27 @@ export function buildInitialState() {
 export function reducer(state = buildInitialState(), action: actions.Actions) {
   switch (action.type) {
 
-    // Add layers to the tree.
-    case actions.ADD_LAYERS: {
-      // TODO: add the layer below the currently selected layer, if one exists
-      const { layers: addedLayers } = action.payload;
-      if (!addedLayers.length) {
-        // Do nothing if there are no layers to add.
-        return state;
-      }
-      const addedVectorLayers = addedLayers.filter(l => l instanceof VectorLayer);
-      const existingVectorLayers = state.vectorLayers.slice();
-      existingVectorLayers.push(...addedVectorLayers);
-      const addedNonVectorLayers = addedLayers.filter(l => !(l instanceof VectorLayer));
-      const activeVectorLayerId = state.activeVectorLayerId;
-      const activeVlIndex = _.findIndex(existingVectorLayers, vl => vl.id === activeVectorLayerId);
-      const vl = existingVectorLayers[activeVlIndex].clone();
-      vl.children = vl.children.concat(addedNonVectorLayers);
-      existingVectorLayers[activeVlIndex] = vl;
-      return { ...state, vectorLayers: existingVectorLayers };
+    // Import vector layers into the tree.
+    case actions.IMPORT_VECTOR_LAYERS: {
+      const { vectorLayers: importedVls } = action.payload;
+      const { vectorLayers } = state;
+      const newVectorLayers = vectorLayers.concat(importedVls);
+      const mergedVl = newVectorLayers.reduce(LayerUtil.mergeVectorLayers);
+      return { ...state, vectorLayers: [mergedVl] };
+    }
+
+    // Add a layer to the tree.
+    case actions.ADD_LAYER: {
+      const { layer } = action.payload;
+      const vectorLayers = state.vectorLayers.map(vl => {
+        if (vl.id === state.activeVectorLayerId) {
+          // TODO: add the layer below the currently selected layer, if one exists
+          vl = vl.clone();
+          vl.children = vl.children.concat([layer]);
+        }
+        return vl;
+      });
+      return { ...state, vectorLayers };
     }
 
     // Clear all layer selections.

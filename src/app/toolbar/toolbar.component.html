@@ -21,7 +21,8 @@
     showDeleteSubPaths: toolbarData.getNumSplitSubPaths() > 0,
     showDeleteSegments: toolbarData.getNumSegments() > 0,
     showDeletePoints: toolbarData.getNumSplitPoints() > 0,
-    showSplitInHalf: toolbarData.shouldShowSplitInHalf()
+    showSplitInHalf: toolbarData.shouldShowSplitInHalf(),
+    showAutoFix: toolbarData.shouldShowAutoFix()
   } as data">
 
     <!-- Shape Shifter logo. -->
@@ -59,16 +60,15 @@
       (click)="onNewClick()">
       <md-icon>create</md-icon>
     </button>-->
-    <!--<button md-icon-button
+    <button md-icon-button
       class="toolbar-action-button"
-      [disabled]="(morphStatusObservable | async) === MORPH_NONE"
       (click)="onAutoFixClick()"
       mdTooltip="Auto fix"
       mdTooltipShowDelay="300"
-      *ngIf="!data.showActionMode"
+      *ngIf="data.showAutoFix"
       mdTooltipPosition="below">
       <md-icon svgIcon="autofix"></md-icon>
-    </button>-->
+    </button>
     <!--<button md-icon-button
       class="toolbar-action-button"
       [disabled]="(morphStatusObservable | async) !== MORPH_MORPHABLE"

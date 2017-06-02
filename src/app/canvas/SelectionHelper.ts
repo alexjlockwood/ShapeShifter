@@ -5,7 +5,6 @@ import {
   ActionMode,
   ActionSource,
   HoverType,
-  SetActionMode,
   SetSelections,
   State,
   Store,
@@ -74,7 +73,7 @@ export class SelectionHelper {
       // If the mouse down event didn't result in a hit, then
       // clear any existing selections, but only if the user isn't in
       // the middle of selecting multiple points at once.
-      this.store.dispatch(new SetActionMode(ActionMode.Selection));
+      this.store.dispatch(new SetSelections([]));
     }
   }
 

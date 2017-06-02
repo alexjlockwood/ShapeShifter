@@ -1,6 +1,6 @@
-import * as _ from 'lodash';
 import { ColorUtil, MathUtil } from '../common';
 import { Property } from './Property';
+import * as _ from 'lodash';
 
 export class ColorProperty extends Property<string> {
 
@@ -19,6 +19,9 @@ export class ColorProperty extends Property<string> {
 
   // @Override
   interpolateValue(start: string, end: string, f: number) {
+    if (!start || !end) {
+      return undefined;
+    }
     const s = ColorUtil.parseAndroidColor(start);
     const e = ColorUtil.parseAndroidColor(end);
     return ColorUtil.toAndroidString({

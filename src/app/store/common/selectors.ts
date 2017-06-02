@@ -17,6 +17,19 @@ import * as _ from 'lodash';
 import { createSelectorCreator, defaultMemoize } from 'reselect';
 import { createStructuredSelector } from 'reselect';
 
+export const getCanvasLayersState =
+  createStructuredSelector({
+    activeVectorLayer: getActiveVectorLayer,
+    hiddenLayerIds: getHiddenLayerIds,
+  });
+
+export const getCanvasOverlayState =
+  createStructuredSelector({
+    activeVectorLayer: getActiveVectorLayer,
+    hiddenLayerIds: getHiddenLayerIds,
+    selectedLayerIds: getSelectedLayerIds,
+  });
+
 export const getPropertyInputState =
   createStructuredSelector({
     animations: getAnimations,

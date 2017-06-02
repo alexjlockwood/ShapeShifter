@@ -8,18 +8,14 @@ import { Injectable } from '@angular/core';
  * A simple service that imports vector layers from files.
  */
 @Injectable()
-export class FileImporterService {
+export class FileImportService {
   private vectorLayers: ReadonlyArray<VectorLayer>;
 
   constructor(readonly store: Store<State>) {
     this.store.select(getVectorLayers).subscribe(vls => this.vectorLayers = vls);
   }
 
-  import(
-    fileList: FileList,
-    successCallbackFn: (vls: VectorLayer[]) => void,
-    failureCallbackFn: () => void,
-  ) {
+  import(fileList: FileList, successFn: (vls: VectorLayer[]) => void, failureFn: () => void) {
     if (!fileList || !fileList.length) {
       return;
     }
@@ -37,9 +33,9 @@ export class FileImporterService {
     const maybeAddVectorLayersFn = () => {
       numCallbacks++;
       if (numErrors === files.length) {
-        failureCallbackFn();
+        failureFn();
       } else if (numCallbacks === files.length) {
-        successCallbackFn(addedVls)
+        successFn(addedVls)
       }
     };
 

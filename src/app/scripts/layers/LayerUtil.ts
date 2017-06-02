@@ -1,7 +1,7 @@
-import * as _ from 'lodash';
-import { Layer, VectorLayer, GroupLayer, PathLayer, ClipPathLayer } from '.';
-import { Path } from '../paths';
 import { Matrix } from '../common';
+import { Path } from '../paths';
+import { ClipPathLayer, GroupLayer, Layer, PathLayer, VectorLayer } from '.';
+import * as _ from 'lodash';
 
 const PRECISION = 8;
 
@@ -49,7 +49,7 @@ export function getFlattenedTransformForLayer(root: Layer, layerId: string) {
 /**
  * Makes two vector layers with possibly different viewports compatible with each other.
  */
-export function adjustVectorLayerDimensions(vl1: VectorLayer, vl2: VectorLayer) {
+export function adjustViewports(vl1: VectorLayer, vl2: VectorLayer) {
   if (!vl1 || !vl2) {
     return { vl1, vl2 };
   }
@@ -129,6 +129,14 @@ export function adjustVectorLayerDimensions(vl1: VectorLayer, vl2: VectorLayer) 
   vl1.height = newHeight;
   vl2.height = newHeight;
   return { vl1, vl2 };
+}
+
+// TODO: note that we lose information about vl2's alpha value here... can this be fixed?
+export function mergeVectorLayers(vl1: VectorLayer, vl2: VectorLayer) {
+  const { vl1: newVl1, vl2: newVl2 } = adjustViewports(vl1, vl2);
+  const resultVl = newVl1.clone();
+  resultVl.children = resultVl.children.concat(newVl2.children);
+  return resultVl;
 }
 
 /**

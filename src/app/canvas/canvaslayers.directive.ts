@@ -15,10 +15,7 @@ import {
   getActionModeEndState,
   getActionModeStartState,
 } from '../store/actionmode/selectors';
-import {
-  getActiveVectorLayer,
-  getHiddenLayerIds,
-} from '../store/layers/selectors';
+import { getCanvasLayersState } from '../store/common/selectors';
 import { CanvasLayoutMixin, Size } from './CanvasLayoutMixin';
 import * as CanvasUtil from './CanvasUtil';
 import { AfterViewInit, Directive, ElementRef, Input } from '@angular/core';
@@ -66,10 +63,9 @@ export class CanvasLayersDirective
       this.registerSubscription(
         Observable.combineLatest(
           this.animatorService.asObservable().map(event => event.vl),
-          this.store.select(getActiveVectorLayer),
-          this.store.select(getHiddenLayerIds),
-        ).subscribe(([animatedVl, activeVl, hiddenLayerIds]) => {
-          this.vectorLayer = animatedVl || activeVl;
+          this.store.select(getCanvasLayersState),
+        ).subscribe(([animatedVl, { activeVectorLayer, hiddenLayerIds }]) => {
+          this.vectorLayer = animatedVl || activeVectorLayer;
           this.hiddenLayerIds = hiddenLayerIds;
           this.draw();
         }));

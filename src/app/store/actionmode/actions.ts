@@ -1,8 +1,8 @@
 import { ActionMode, ActionSource, Hover, Selection } from './types';
 import { Action } from '@ngrx/store';
 
-export const SET_ACTIVE_PATH_BLOCK_ID = '__actionmode__SET_ACTIVE_PATH_BLOCK_ID';
-export const CLEAR_ACTIVE_PATH_BLOCK_ID = '__actionmode__CLEAR_ACTIVE_PATH_BLOCK_ID';
+export const START_ACTION_MODE = '__actionmode__START_ACTION_MODE';
+export const END_ACTION_MODE = '__actionmode__END_ACTION_MODE';
 export const SET_ACTION_MODE = '__actionmode__SET_ACTION_MODE';
 export const TOGGLE_ACTION_MODE = '__actionmode__TOGGLE_ACTION_MODE';
 export const SET_HOVER = '__actionmode__SET_HOVER';
@@ -11,16 +11,16 @@ export const TOGGLE_SUBPATH_SELECTION = '__actionmode__TOGGLE_SUBPATH_SELECTION'
 export const TOGGLE_SEGMENT_SELECTIONS = '__actionmode__TOGGLE_SEGMENT_SELECTION';
 export const TOGGLE_POINT_SELECTION = '__actionmode__TOGGLE_POINT_SELECTION';
 
-export class SetActivePathBlockId implements Action {
-  readonly type = SET_ACTIVE_PATH_BLOCK_ID;
+export class StartActionMode implements Action {
+  readonly type = START_ACTION_MODE;
   readonly payload: { blockId: string };
   constructor(readonly blockId: string) {
     this.payload = { blockId };
   }
 }
 
-export class ClearActivePathBlockId implements Action {
-  readonly type = CLEAR_ACTIVE_PATH_BLOCK_ID;
+export class EndActionMode implements Action {
+  readonly type = END_ACTION_MODE;
 }
 
 export class SetActionMode implements Action {
@@ -95,8 +95,8 @@ export class TogglePointSelection implements Action {
 }
 
 export type Actions =
-  SetActivePathBlockId
-  | ClearActivePathBlockId
+  StartActionMode
+  | EndActionMode
   | SetActionMode
   | ToggleActionMode
   | SetHover

@@ -33,19 +33,23 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
   switch (action.type) {
 
     // Set the currently active block ID, enabling shape shifter mode.
-    case actions.SET_ACTIVE_PATH_BLOCK_ID: {
+    case actions.START_ACTION_MODE: {
       const { blockId } = action.payload;
       return { ...buildInitialState(), blockId };
     }
 
     // Clear the currently active block ID, ending shape shifter mode.
-    case actions.CLEAR_ACTIVE_PATH_BLOCK_ID: {
+    case actions.END_ACTION_MODE: {
       return buildInitialState();
     }
 
     // Set the app mode during shape shifter mode.
     case actions.SET_ACTION_MODE: {
       const { mode } = action.payload;
+      if (mode === ActionMode.Selection && mode !== state.mode) {
+        // Clear selections when switching back to selection mode.
+        state = { ...state, selections: [] };
+      }
       return { ...state, mode };
     }
 
@@ -54,6 +58,10 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
       const { modeToToggle } = action.payload;
       const { mode: currentMode } = state;
       const mode = currentMode === modeToToggle ? ActionMode.Selection : modeToToggle;
+      if (mode === ActionMode.Selection) {
+        // Clear selections when switching back to selection mode.
+        state = { ...state, selections: [] };
+      }
       return { ...state, mode };
     }
 

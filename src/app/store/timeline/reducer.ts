@@ -75,16 +75,9 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
 
     // Add an animation block to the currently active animation.
     case actions.ADD_BLOCK: {
-      const { layer, propertyName, fromValue, toValue } = action.payload;
+      const { layer, propertyName, fromValue, toValue, activeTime } = action.payload;
       const animation = _.find(state.animations, a => a.id === state.activeAnimationId);
       const newBlockDuration = 100;
-
-      // TODO: pass the active time in as an argument
-      // TODO: pass the active time in as an argument
-      // TODO: pass the active time in as an argument
-      // TODO: pass the active time in as an argument
-      // TODO: pass the active time in as an argument
-      const activeTime = 0;
 
       // Find the right start time for the block, which should be a gap between
       // neighboring blocks closest to the active time cursor, of a minimum size.

@@ -25,7 +25,8 @@ export {
 
 // Layer actions.
 export {
-  AddLayers,
+  ImportVectorLayers,
+  AddLayer,
   ClearLayerSelections,
   ReplaceLayer,
   ToggleLayerExpansion,
@@ -54,13 +55,14 @@ export {
   ShiftPointToFront,
   SplitCommandInHalfClick,
   SplitCommandInHalfHover,
+  AutoFixClick,
   UpdateActivePathBlock,
 } from './actionmode/metaactions';
 
 // Action mode actions.
 export {
-  SetActivePathBlockId,
-  ClearActivePathBlockId,
+  StartActionMode,
+  EndActionMode,
   SetActionMode,
   ToggleActionMode,
   SetHover,

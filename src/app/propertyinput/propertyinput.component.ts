@@ -1,5 +1,3 @@
-import 'rxjs/add/observable/combineLatest';
-
 import { ColorUtil, ModelUtil } from '../scripts/common';
 import { LayerUtil, VectorLayer } from '../scripts/layers';
 import { FractionProperty, NameProperty, Option, Property } from '../scripts/properties';
@@ -8,7 +6,7 @@ import {
   ReplaceAnimations,
   ReplaceBlocks,
   ReplaceLayer,
-  SetActivePathBlockId,
+  StartActionMode,
   State,
   Store,
 } from '../store';
@@ -60,7 +58,7 @@ export class PropertyInputComponent implements OnInit {
   }
 
   onShapeShifterModeClick(blockId: string) {
-    this.store.dispatch(new SetActivePathBlockId(blockId));
+    this.store.dispatch(new StartActionMode(blockId));
   }
 
   valueEditorKeyDown(event: KeyboardEvent, ip: InspectedProperty<any>) {

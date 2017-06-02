@@ -106,6 +106,7 @@ export const getActionModeEndState =
 
 export const getToolbarState =
   createStructuredSelector({
+    isActionMode,
     fromPl: getPathLayerFromValue,
     toPl: getPathLayerToValue,
     mode: getActionMode,

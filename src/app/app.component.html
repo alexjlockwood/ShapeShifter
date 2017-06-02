@@ -19,7 +19,7 @@
         fxLayoutAlign="center center"
         fxFlex>
         <app-canvas class="start"
-          *ngIf="this.isShapeShifterMode$ | async"
+          *ngIf="this.isActionMode$ | async"
           [actionSource]="ACTION_SOURCE_FROM"
           [canvasBounds$]="this.canvasBounds$">
         </app-canvas>
@@ -27,7 +27,7 @@
           [actionSource]="ACTION_SOURCE_ANIMATED">
         </app-canvas>
         <app-canvas class="end"
-          *ngIf="this.isShapeShifterMode$ | async"
+          *ngIf="this.isActionMode$ | async"
           [actionSource]="ACTION_SOURCE_TO"
           [canvasBounds$]="this.canvasBounds$">
         </app-canvas>
@@ -36,7 +36,9 @@
       <app-playback></app-playback>
     </div>
     <!-- Property input panel. -->
-    <app-propertyinput fxLayout="column"></app-propertyinput>
+    <app-propertyinput *ngIf="!(this.isActionMode$ | async)"
+      fxLayout="column">
+    </app-propertyinput>
   </div>
   <!-- Layer list & animation timeline. -->
   <app-layertimeline></app-layertimeline>

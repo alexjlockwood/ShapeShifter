@@ -2,10 +2,10 @@ import 'rxjs/add/operator/distinctUntilChanged';
 import 'rxjs/add/operator/combineLatest';
 
 import { environment } from '../environments/environment';
-import { FileImporterService, ShortcutService } from './services';
+import { FileImportService, ShortcutService } from './services';
 import {
   ActionSource,
-  AddLayers,
+  ImportVectorLayers,
   State,
   Store,
 } from './store';
@@ -45,11 +45,11 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private readonly displayBoundsSubject = new BehaviorSubject<Size>({ w: 1, h: 1 });
   canvasBounds$: Observable<Size>;
-  isShapeShifterMode$: Observable<boolean>;
+  isActionMode$: Observable<boolean>;
 
   constructor(
     private readonly snackBar: MdSnackBar,
-    private readonly fileImporterService: FileImporterService,
+    private readonly fileImporterService: FileImportService,
     private readonly store: Store<State>,
     private readonly shortcutService: ShortcutService,
   ) { }
@@ -70,8 +70,8 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       .distinctUntilChanged(({ w: w1, h: h1 }, { w: w2, h: h2 }) => {
         return w1 === w2 && h1 === h2;
       });
-    this.isShapeShifterMode$ = this.store.select(isActionMode);
-    this.canvasBounds$ = Observable.combineLatest(displaySize$, this.isShapeShifterMode$)
+    this.isActionMode$ = this.store.select(isActionMode);
+    this.canvasBounds$ = Observable.combineLatest(displaySize$, this.isActionMode$)
       .map(([{ w, h }, shouldShowThreeCanvases]) => {
         return { w: w / (shouldShowThreeCanvases ? 3 : 1), h };
       });
@@ -107,7 +107,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     this.fileImporterService.import(
       fileList,
       vls => {
-        this.store.dispatch(new AddLayers(vls));
+        this.store.dispatch(new ImportVectorLayers(vls));
         this.snackBar.open(
           `Imported ${vls.length} path${vls.length === 1 ? '' : 's'}`,
           'Dismiss',

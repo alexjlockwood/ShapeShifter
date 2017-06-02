@@ -1,5 +1,3 @@
-import 'rxjs/add/observable/combineLatest';
-
 import { DialogService } from '../dialogs';
 import { PathLayer } from '../scripts/layers';
 import { ActionModeService } from '../services';
@@ -51,10 +49,10 @@ export class ToolbarComponent implements OnInit {
 
   ngOnInit() {
     this.toolbarData$ = this.store.select(getToolbarState)
-      .map(({ fromPl, toPl, mode, selections, unpairedSubPath }) => {
+      .map(({ isActionMode, fromPl, toPl, mode, selections, unpairedSubPath }) => {
         const selectionInfo =
-          new ToolbarData(fromPl, toPl, mode, selections, unpairedSubPath);
-        if (selectionInfo.getNumSelections() > 0) {
+          new ToolbarData(isActionMode, fromPl, toPl, mode, selections, unpairedSubPath);
+        if (isActionMode) {
           this.hasActionModeBeenEnabled = true;
         }
         return selectionInfo;
@@ -75,29 +73,11 @@ export class ToolbarComponent implements OnInit {
   //     });
   // }
 
-  // onAutoFixClick() {
-  //   ga('send', 'event', 'General', 'Auto fix click');
+  onAutoFixClick() {
+    ga('send', 'event', 'General', 'Auto fix click');
 
-  //   let resultStartCmd = this.stateService.getActivePathLayer(CanvasType.Start).pathData;
-  //   let resultEndCmd = this.stateService.getActivePathLayer(CanvasType.End).pathData;
-  //   const numSubPaths =
-  //     Math.min(resultStartCmd.getSubPaths().length, resultEndCmd.getSubPaths().length);
-  //   for (let subIdx = 0; subIdx < numSubPaths; subIdx++) {
-  //     // Pass the command with the larger subpath as the 'from' command.
-  //     const numStartCmds = resultStartCmd.getSubPath(subIdx).getCommands().length;
-  //     const numEndCmds = resultEndCmd.getSubPath(subIdx).getCommands().length;
-  //     const fromCmd = numStartCmds >= numEndCmds ? resultStartCmd : resultEndCmd;
-  //     const toCmd = numStartCmds >= numEndCmds ? resultEndCmd : resultStartCmd;
-  //     const { from, to } = AutoAwesome.autoFix(subIdx, fromCmd, toCmd);
-  //     resultStartCmd = numStartCmds >= numEndCmds ? from : to;
-  //     resultEndCmd = numStartCmds >= numEndCmds ? to : from;
-  //   }
-  //   this.stateService.updateActivePath(CanvasType.Start, resultStartCmd, false);
-  //   this.stateService.updateActivePath(CanvasType.End, resultEndCmd, false);
-  //   this.stateService.notifyChange(CanvasType.Preview);
-  //   this.stateService.notifyChange(CanvasType.Start);
-  //   this.stateService.notifyChange(CanvasType.End);
-  // }
+    this.actionModeService.autoFixClick();
+  }
 
   // onExportClick() {
   //   ga('send', 'event', 'Export', 'Export click');
@@ -198,6 +178,7 @@ class ToolbarData {
   private readonly showMorphSubPaths: boolean;
 
   constructor(
+    private readonly showActionMode: boolean,
     activeStartPathLayer: PathLayer,
     activeEndPathLayer: PathLayer,
     public readonly mode: ActionMode,
@@ -334,7 +315,7 @@ class ToolbarData {
   }
 
   shouldShowActionMode() {
-    return this.getNumSelections() > 0 || !this.isSelectionMode();
+    return this.showActionMode;
   }
 
   shouldShowMorphSubPaths() {
@@ -375,5 +356,9 @@ class ToolbarData {
 
   isMorphSubPathsMode() {
     return this.mode === ActionMode.MorphSubPaths;
+  }
+
+  shouldShowAutoFix() {
+    return this.shouldShowActionMode() && !this.getNumSelections();
   }
 }

@@ -1,9 +1,10 @@
 import {
   ActionMode,
-  ClearActivePathBlockId,
+  AutoFixClick,
   DeleteSelectedPoints,
   DeleteSelectedSegments,
   DeleteSelectedSubPaths,
+  EndActionMode,
   ReverseSelectedSubPaths,
   ShiftBackSelectedSubPaths,
   ShiftForwardSelectedSubPaths,
@@ -25,7 +26,7 @@ export class ActionModeService {
   constructor(private readonly store: Store<State>) { }
 
   closeActionMode() {
-    this.store.dispatch(new ClearActivePathBlockId());
+    this.store.dispatch(new EndActionMode());
   }
 
   toggleSplitCommandsMode() {
@@ -76,5 +77,9 @@ export class ActionModeService {
 
   splitInHalfClick() {
     this.store.dispatch(new SplitCommandInHalfClick())
+  }
+
+  autoFixClick() {
+    this.store.dispatch(new AutoFixClick());
   }
 }

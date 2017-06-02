@@ -155,6 +155,27 @@ export function metaReducer(reducer: ActionReducer<State>): ActionReducer<State>
         break;
       }
 
+      // Auto fix the currently active paths.
+      case actions.AUTO_FIX_CLICK: {
+        let resultStartPath = getActivePath(state, ActionSource.From);
+        let resultEndPath = getActivePath(state, ActionSource.To);
+        const numSubPaths =
+          Math.min(resultStartPath.getSubPaths().length, resultEndPath.getSubPaths().length);
+        for (let subIdx = 0; subIdx < numSubPaths; subIdx++) {
+          // Pass the command with the larger subpath as the 'from' command.
+          const numStartCmds = resultStartPath.getSubPath(subIdx).getCommands().length;
+          const numEndCmds = resultEndPath.getSubPath(subIdx).getCommands().length;
+          const fromCmd = numStartCmds >= numEndCmds ? resultStartPath : resultEndPath;
+          const toCmd = numStartCmds >= numEndCmds ? resultEndPath : resultStartPath;
+          const { from, to } = AutoAwesome.autoFix(subIdx, fromCmd, toCmd);
+          resultStartPath = numStartCmds >= numEndCmds ? from : to;
+          resultEndPath = numStartCmds >= numEndCmds ? to : from;
+        }
+        state = updateActivePathBlock(state, ActionSource.From, resultStartPath);
+        state = updateActivePathBlock(state, ActionSource.To, resultEndPath);
+        break;
+      }
+
       // Update a path animation block in shape shifter mode.
       case actions.UPDATE_ACTIVE_PATH_BLOCK: {
         const { source, path } = action.payload;

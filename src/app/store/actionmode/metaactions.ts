@@ -11,6 +11,7 @@ export const DELETE_SELECTED_POINTS = '__metaactionmode__DELETE_SELECTED_POINTS'
 export const SHIFT_POINT_TO_FRONT = '__metaactionmode__SHIFT_POINT_TO_FRONT';
 export const SPLIT_COMMAND_IN_HALF_HOVER = '__metaactionmode__SPLIT_COMMAND_IN_HALF_HOVER';
 export const SPLIT_COMMAND_IN_HALF_CLICK = '__metaactionmode__SPLIT_COMMAND_IN_HALF_CLICK';
+export const AUTO_FIX_CLICK = '__metaactionmode__AUTO_FIX_CLICK';
 export const UPDATE_ACTIVE_PATH_BLOCK = '__metaactionmode__UPDATE_ACTIVE_PATH_BLOCK';
 export const PAIR_SUBPATH = '__metaactionmode__PAIR_SUBPATH';
 export const SET_UNPAIRED_SUBPATH = '__metaactionmode__SET_UNPAIRED_SUBPATH';
@@ -55,6 +56,10 @@ export class SplitCommandInHalfClick implements Action {
   readonly type = SPLIT_COMMAND_IN_HALF_CLICK;
 }
 
+export class AutoFixClick implements Action {
+  readonly type = AUTO_FIX_CLICK;
+}
+
 export class UpdateActivePathBlock implements Action {
   readonly type = UPDATE_ACTIVE_PATH_BLOCK;
   readonly payload: {
@@ -92,6 +97,7 @@ export type Actions =
   | ShiftPointToFront
   | SplitCommandInHalfHover
   | SplitCommandInHalfClick
+  | AutoFixClick
   | UpdateActivePathBlock
   | PairSubPath
   | SetUnpairedSubPath;

@@ -1,9 +1,10 @@
-import { Layer } from '../../scripts/layers';
+import { Layer, VectorLayer } from '../../scripts/layers';
 import { DeleteSelectedModels } from '../common/actions';
 import { AddBlock, SelectAnimation, SelectBlock } from '../timeline/actions';
 import { Action } from '@ngrx/store';
 
-export const ADD_LAYERS = '__layers__ADD_LAYERS';
+export const IMPORT_VECTOR_LAYERS = '__layers__IMPORT_VECTOR_LAYERS';
+export const ADD_LAYER = '__layers__ADD_LAYER';
 export const CLEAR_LAYER_SELECTIONS = '__layers__CLEAR_LAYER_SELECTIONS';
 export const TOGGLE_LAYER_EXPANSION = '__layers__TOGGLE_LAYER_EXPANSION';
 export const TOGGLE_LAYER_VISIBILITY = '__layers__TOGGLE_LAYER_VISIBILITY';
@@ -12,11 +13,19 @@ export const SELECT_LAYER = '__layers__SELECT_LAYER';
 export { SELECT_ANIMATION, ADD_BLOCK, SELECT_BLOCK } from '../timeline/actions';
 export { DELETE_SELECTED_MODELS } from '../common/actions';
 
-export class AddLayers implements Action {
-  readonly type = ADD_LAYERS;
-  readonly payload: { layers: ReadonlyArray<Layer> };
-  constructor(layers: ReadonlyArray<Layer>) {
-    this.payload = { layers };
+export class ImportVectorLayers implements Action {
+  readonly type = IMPORT_VECTOR_LAYERS;
+  readonly payload: { vectorLayers: ReadonlyArray<VectorLayer> };
+  constructor(vectorLayers: ReadonlyArray<VectorLayer>) {
+    this.payload = { vectorLayers };
+  }
+}
+
+export class AddLayer implements Action {
+  readonly type = ADD_LAYER;
+  readonly payload: { layer: Layer };
+  constructor(layer: Layer) {
+    this.payload = { layer };
   }
 }
 
@@ -58,7 +67,8 @@ export class SelectLayer implements Action {
 }
 
 export type Actions =
-  AddLayers
+  ImportVectorLayers
+  | AddLayer
   | ClearLayerSelections
   | ToggleLayerExpansion
   | ToggleLayerVisibility

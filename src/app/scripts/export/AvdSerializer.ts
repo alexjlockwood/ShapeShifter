@@ -1,5 +1,15 @@
-import { ClipPathLayer, GroupLayer, Layer, PathLayer, VectorLayer } from '../layers';
-import { AvdTarget } from './AvdTarget';
+import { INTERPOLATORS } from '../interpolators';
+import {
+  ClipPathLayer,
+  GroupLayer,
+  Layer,
+  PathLayer,
+  VectorLayer,
+} from '../layers';
+import {
+  Animation,
+  AnimationBlock,
+} from '../timeline';
 import * as XmlSerializer from './XmlSerializer';
 import * as _ from 'lodash';
 
@@ -8,22 +18,19 @@ const ANDROID_NS = 'http://schemas.android.com/apk/res/android';
 const AAPT_NS = 'http://schemas.android.com/aapt';
 
 /**
- * Serializes an VectorLayer to a vector drawable XML file.
+ * Serializes a VectorLayer to a vector drawable XML string.
  */
-export function vectorLayerToVectorDrawableXmlString(vectorLayer: VectorLayer) {
+export function toVectorDrawableXmlString(vl: VectorLayer) {
   const xmlDoc = document.implementation.createDocument(undefined, 'vector', undefined);
   const rootNode = xmlDoc.documentElement;
-  vectorLayerToXmlNode(vectorLayer, rootNode, xmlDoc);
+  vectorLayerToXmlNode(vl, rootNode, xmlDoc);
   return serializeXmlNode(rootNode);
 }
 
 /**
- * Serializes a given VectorLayer and Animation to an animated vector drawable XML file.
+ * Serializes a given VectorLayer and Animation to an animatedvector drawable XML file.
  */
-export function vectorLayerAnimationToAvdXmlString(
-  vectorLayer: VectorLayer,
-  avdTargets: ReadonlyArray<AvdTarget>) {
-
+export function toAnimatedVectorDrawableXmlString(vl: VectorLayer, animation: Animation) {
   const xmlDoc = document.implementation.createDocument(undefined, 'animated-vector', undefined);
   const rootNode = xmlDoc.documentElement;
   rootNode.setAttributeNS(XMLNS_NS, 'xmlns:android', ANDROID_NS);
@@ -35,11 +42,18 @@ export function vectorLayerAnimationToAvdXmlString(
   rootNode.appendChild(vectorLayerContainerNode);
 
   const vectorLayerNode = xmlDoc.createElement('vector');
-  vectorLayerToXmlNode(vectorLayer, vectorLayerNode, xmlDoc);
+  vectorLayerToXmlNode(vl, vectorLayerNode, xmlDoc);
   vectorLayerContainerNode.appendChild(vectorLayerNode);
 
-  for (const target of avdTargets) {
-    const layerId = target.layerId;
+  // create animation nodes (one per layer)
+  const animBlocksByLayer = new Map<string, AnimationBlock[]>();
+  animation.blocks.forEach(block => {
+    const blocks = animBlocksByLayer.get(block.layerId) || [];
+    blocks.push(block);
+    animBlocksByLayer.set(block.layerId, blocks);
+  });
+
+  animBlocksByLayer.forEach((blocksForLayer, layerId) => {
     const targetNode = xmlDoc.createElement('target');
     targetNode.setAttributeNS(ANDROID_NS, 'android:name', layerId);
     rootNode.appendChild(targetNode);
@@ -48,95 +62,99 @@ export function vectorLayerAnimationToAvdXmlString(
     animationNode.setAttribute('name', 'android:animation');
     targetNode.appendChild(animationNode);
 
-    const animations = target.animations;
-    let animationContainerNode = animationNode;
-    if (animations.length > 1) {
-      // <set> for multiple property animations on a single layer
-      animationContainerNode = xmlDoc.createElement('set');
-      animationContainerNode.setAttributeNS(XMLNS_NS, 'xmlns:android', ANDROID_NS);
-      animationNode.appendChild(animationContainerNode);
+    let blockContainerNode = animationNode;
+    let multiBlock = false;
+    if (blocksForLayer.length > 1) {
+      multiBlock = true;
+
+      // <set> for multiple property animations on a single layer.
+      blockContainerNode = xmlDoc.createElement('set');
+      blockContainerNode.setAttributeNS(XMLNS_NS, 'xmlns:android', ANDROID_NS);
+      animationNode.appendChild(blockContainerNode);
     }
 
-    for (const animation of animations) {
-      const animatorNode = xmlDoc.createElement('objectAnimator');
-      if (animations.length === 1) {
-        animatorNode.setAttributeNS(XMLNS_NS, 'xmlns:android', ANDROID_NS);
+    const layer = vl.findLayerById(layerId);
+    const animatableProperties = layer.animatableProperties;
+
+    blocksForLayer.forEach(block => {
+      const blockNode = xmlDoc.createElement('objectAnimator');
+      if (!multiBlock) {
+        blockNode.setAttributeNS(XMLNS_NS, 'xmlns:android', ANDROID_NS);
       }
-      animatorNode.setAttributeNS(XMLNS_NS, 'xmlns:android', ANDROID_NS);
-      animatorNode.setAttributeNS(ANDROID_NS, 'android:propertyName', animation.propertyName);
-      conditionalAttr(animatorNode, 'android:duration', animation.duration);
-      conditionalAttr(animatorNode, 'android:valueFrom', animation.valueFrom);
-      conditionalAttr(animatorNode, 'android:valueTo', animation.valueTo);
-      conditionalAttr(animatorNode, 'android:valueType', animation.valueType);
-      conditionalAttr(animatorNode, 'android:interpolator', animation.interpolator);
-      animationContainerNode.appendChild(animatorNode);
-    }
-  }
-
+      blockNode.setAttributeNS(ANDROID_NS, 'android:propertyName', block.propertyName);
+      conditionalAttr_(blockNode, 'android:startOffset', block.startTime, 0);
+      conditionalAttr_(blockNode, 'android:duration', block.endTime - block.startTime);
+      conditionalAttr_(blockNode, 'android:valueFrom', block.fromValue);
+      conditionalAttr_(blockNode, 'android:valueTo', block.toValue);
+      conditionalAttr_(
+        blockNode,
+        'android:valueType',
+        animatableProperties.get(block.propertyName).getAnimatorValueType(),
+      );
+      const interpolator = _.find(INTERPOLATORS, i => i.value === block.interpolator);
+      conditionalAttr_(blockNode, 'android:interpolator', interpolator.androidRef);
+      blockContainerNode.appendChild(blockNode);
+    });
+  });
   return serializeXmlNode(rootNode);
 }
 
 /**
- * Helper method that serializes a VectorLayer to a destinationNode in an xmlDoc.
+ * Helper method that serializes an VectorLayer to a destinationNode in an xmlDoc.
  * The destinationNode should be a <vector> node.
  */
-function vectorLayerToXmlNode(vl: VectorLayer, destinationNode: HTMLElement, xmlDoc: Document) {
+function vectorLayerToXmlNode(vl: VectorLayer, destinationNode, xmlDoc) {
   destinationNode.setAttributeNS(XMLNS_NS, 'xmlns:android', ANDROID_NS);
   destinationNode.setAttributeNS(ANDROID_NS, 'android:width', `${vl.width}dp`);
   destinationNode.setAttributeNS(ANDROID_NS, 'android:height', `${vl.height}dp`);
   destinationNode.setAttributeNS(ANDROID_NS, 'android:viewportWidth', `${vl.width}`);
   destinationNode.setAttributeNS(ANDROID_NS, 'android:viewportHeight', `${vl.height}`);
-  conditionalAttr(destinationNode, 'android:alpha', vl.alpha, 1);
+  conditionalAttr_(destinationNode, 'android:alpha', vl.alpha, 1);
 
   walk(vl, (layer, parentNode) => {
     if (layer instanceof VectorLayer) {
       return parentNode;
-
     } else if (layer instanceof PathLayer) {
       const node = xmlDoc.createElement('path');
-      conditionalAttr(node, 'android:name', layer.name);
-      conditionalAttr(node, 'android:pathData', layer.pathData.getPathString());
-      conditionalAttr(node, 'android:fillColor', layer.fillColor, '');
-      conditionalAttr(node, 'android:fillAlpha', layer.fillAlpha, 1);
-      conditionalAttr(node, 'android:strokeColor', layer.strokeColor, '');
-      conditionalAttr(node, 'android:strokeAlpha', layer.strokeAlpha, 1);
-      conditionalAttr(node, 'android:strokeWidth', layer.strokeWidth, 0);
-      conditionalAttr(node, 'android:trimPathStart', layer.trimPathStart, 0);
-      conditionalAttr(node, 'android:trimPathEnd', layer.trimPathEnd, 1);
-      conditionalAttr(node, 'android:trimPathOffset', layer.trimPathOffset, 0);
-      conditionalAttr(node, 'android:strokeLineCap', layer.strokeLinecap, 'butt');
-      conditionalAttr(node, 'android:strokeLineJoin', layer.strokeLinejoin, 'miter');
-      conditionalAttr(node, 'android:strokeMiterLimit', layer.strokeMiterLimit, 4);
-      conditionalAttr(node, 'android:fillType', layer.fillType, 'nonZero');
+      conditionalAttr_(node, 'android:name', layer.name);
+      conditionalAttr_(node, 'android:pathData', layer.pathData.getPathString());
+      conditionalAttr_(node, 'android:fillColor', layer.fillColor, '');
+      conditionalAttr_(node, 'android:fillAlpha', layer.fillAlpha, 1);
+      conditionalAttr_(node, 'android:strokeColor', layer.strokeColor, '');
+      conditionalAttr_(node, 'android:strokeAlpha', layer.strokeAlpha, 1);
+      conditionalAttr_(node, 'android:strokeWidth', layer.strokeWidth, 0);
+      conditionalAttr_(node, 'android:trimPathStart', layer.trimPathStart, 0);
+      conditionalAttr_(node, 'android:trimPathEnd', layer.trimPathEnd, 1);
+      conditionalAttr_(node, 'android:trimPathOffset', layer.trimPathOffset, 0);
+      conditionalAttr_(node, 'android:strokeLineCap', layer.strokeLinecap, 'butt');
+      conditionalAttr_(node, 'android:strokeLineJoin', layer.strokeLinejoin, 'miter');
+      conditionalAttr_(node, 'android:strokeMiterLimit', layer.strokeMiterLimit, 4);
       parentNode.appendChild(node);
       return parentNode;
-
     } else if (layer instanceof ClipPathLayer) {
       const node = xmlDoc.createElement('clip-path');
-      conditionalAttr(node, 'android:name', layer.name);
-      conditionalAttr(node, 'android:pathData', layer.pathData.getPathString());
+      conditionalAttr_(node, 'android:name', layer.name);
+      conditionalAttr_(node, 'android:pathData', layer.pathData.getPathString());
       parentNode.appendChild(node);
       return parentNode;
-
     } else if (layer instanceof GroupLayer) {
       const node = xmlDoc.createElement('group');
-      conditionalAttr(node, 'android:name', layer.name);
-      conditionalAttr(node, 'android:pivotX', layer.pivotX, 0);
-      conditionalAttr(node, 'android:pivotY', layer.pivotY, 0);
-      conditionalAttr(node, 'android:translateX', layer.translateX, 0);
-      conditionalAttr(node, 'android:translateY', layer.translateY, 0);
-      conditionalAttr(node, 'android:scaleX', layer.scaleX, 1);
-      conditionalAttr(node, 'android:scaleY', layer.scaleY, 1);
-      conditionalAttr(node, 'android:rotation', layer.rotation, 0);
+      conditionalAttr_(node, 'android:name', layer.name);
+      conditionalAttr_(node, 'android:pivotX', layer.pivotX, 0);
+      conditionalAttr_(node, 'android:pivotY', layer.pivotY, 0);
+      conditionalAttr_(node, 'android:translateX', layer.translateX, 0);
+      conditionalAttr_(node, 'android:translateY', layer.translateY, 0);
+      conditionalAttr_(node, 'android:scaleX', layer.scaleX, 1);
+      conditionalAttr_(node, 'android:scaleY', layer.scaleY, 1);
+      conditionalAttr_(node, 'android:rotation', layer.rotation, 0);
       parentNode.appendChild(node);
       return node;
     }
   }, destinationNode);
 }
 
-function conditionalAttr(node, attr, value, skipValue?) {
-  if (!_.isNil(value)
-    && (skipValue === undefined || value !== skipValue)) {
+function conditionalAttr_(node, attr, value, skipValue?) {
+  if (!_.isNil(value) && (skipValue === undefined || value !== skipValue)) {
     node.setAttributeNS(ANDROID_NS, attr, value);
   }
 }

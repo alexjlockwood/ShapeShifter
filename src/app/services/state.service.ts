@@ -128,7 +128,7 @@ export class StateService {
       const vl = this.importedPathMap.get(pathId);
       this.activeLayerMap.set(type, vl ? vl.deepClone() : vl);
       const { vl1: startVl, vl2: endVl } =
-        LayerUtil.adjustVectorLayerDimensions(
+        LayerUtil.adjustViewports(
           this.importedPathMap.get(this.getActivePathId(ActionSource.From)),
           this.importedPathMap.get(this.getActivePathId(ActionSource.To)));
       this.activeLayerMap.set(ActionSource.From, startVl);

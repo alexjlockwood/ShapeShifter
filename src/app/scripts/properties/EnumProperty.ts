@@ -1,5 +1,5 @@
-import * as _ from 'lodash';
 import { Property } from './Property';
+import * as _ from 'lodash';
 
 export class EnumProperty extends Property<string> {
 

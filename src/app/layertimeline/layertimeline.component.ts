@@ -1,5 +1,3 @@
-import 'rxjs/add/observable/combineLatest';
-
 import { AnimatorService } from '../animator';
 import { ModelUtil, UiUtil } from '../scripts/common';
 import { Dragger } from '../scripts/dragger';
@@ -13,12 +11,13 @@ import {
 } from '../scripts/layers';
 import { DestroyableMixin } from '../scripts/mixins';
 import { Animation, AnimationBlock } from '../scripts/timeline';
-import { FileImporterService } from '../services';
+import { FileExportService, FileImportService } from '../services';
 import {
   ActivateAnimation,
   AddAnimations,
   AddBlock,
-  AddLayers,
+  AddLayer,
+  ImportVectorLayers,
   ReplaceBlocks,
   ReplaceLayer,
   ResetWorkspace,
@@ -119,7 +118,8 @@ export class LayerTimelineComponent
   private zoomStartTimeCursorPos: number;
 
   constructor(
-    private readonly fileImporterService: FileImporterService,
+    private readonly fileImportService: FileImportService,
+    private readonly fileExportService: FileExportService,
     private readonly snackBar: MdSnackBar,
     private readonly animatorService: AnimatorService,
     private readonly store: Store<State>,
@@ -195,6 +195,16 @@ export class LayerTimelineComponent
   }
 
   // Called from the LayerTimelineComponent template.
+  exportVectorDrawableClick() {
+    this.fileExportService.exportVectorDrawable();
+  }
+
+  // Called from the LayerTimelineComponent template.
+  exportAnimatedVectorDrawableClick() {
+    this.fileExportService.exportAnimatedVectorDrawable();
+  }
+
+  // Called from the LayerTimelineComponent template.
   animationHeaderTextClick(event: MouseEvent, animation: Animation) {
     const clearExisting = !event.metaKey && !event.shiftKey;
     this.store.dispatch(new SelectAnimation(animation.id, clearExisting));
@@ -218,7 +228,7 @@ export class LayerTimelineComponent
       children: [],
       pathData: undefined,
     });
-    this.store.dispatch(new AddLayers([layer]));
+    this.store.dispatch(new AddLayer(layer));
   }
 
   // Called from the LayerTimelineComponent template.
@@ -228,22 +238,22 @@ export class LayerTimelineComponent
       children: [],
       pathData: undefined,
     });
-    this.store.dispatch(new AddLayers([layer]));
+    this.store.dispatch(new AddLayer(layer));
   }
 
   // Called from the LayerTimelineComponent template.
   addGroupLayerClick() {
     const name = ModelUtil.getUniqueLayerName(this.vectorLayers, 'group');
     const layer = new GroupLayer({ name, children: [] });
-    this.store.dispatch(new AddLayers([layer]));
+    this.store.dispatch(new AddLayer(layer));
   }
 
   // Called from the LayerTimelineComponent template.
-  addVectorLayerClick() {
-    const name = ModelUtil.getUniqueLayerName(this.vectorLayers, 'vector');
-    const layer = new VectorLayer({ name, children: [] });
-    this.store.dispatch(new AddLayers([layer]));
-  }
+  // addVectorLayerClick() {
+  //   const name = ModelUtil.getUniqueLayerName(this.vectorLayers, 'vector');
+  //   const layer = new VectorLayer({ name, children: [] });
+  //   this.store.dispatch(new AddLayer(layer));
+  // }
 
   // Called from the LayerTimelineComponent template.
   animationTimelineMouseDown(event: MouseEvent, animation: Animation) {
@@ -560,8 +570,10 @@ export class LayerTimelineComponent
     layer: Layer,
     propertyName: string,
   ) {
-    const clonedValue = layer.inspectableProperties.get(propertyName).cloneValue(layer[propertyName]);
-    this.store.dispatch(new AddBlock(layer, propertyName, clonedValue, clonedValue));
+    const clonedValue =
+      layer.inspectableProperties.get(propertyName).cloneValue(layer[propertyName]);
+    this.store.dispatch(
+      new AddBlock(layer, propertyName, clonedValue, clonedValue, this.activeTime));
   }
 
   // @Override LayerListTreeComponentCallbacks
@@ -856,10 +868,10 @@ export class LayerTimelineComponent
 
   // Called by the HTML template when SVGs/VDs are imported.
   onImportedFilesPicked(fileList: FileList) {
-    this.fileImporterService.import(
+    this.fileImportService.import(
       fileList,
       vls => {
-        this.store.dispatch(new AddLayers(vls));
+        this.store.dispatch(new ImportVectorLayers(vls));
         this.snackBar.open(
           `Imported ${vls.length} path${vls.length === 1 ? '' : 's'}`,
           'Dismiss',

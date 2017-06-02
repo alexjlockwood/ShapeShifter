@@ -5,7 +5,7 @@ import { SelectLayer } from '../layers/actions';
 import { Action } from '@ngrx/store';
 
 export const ADD_ANIMATIONS = '__timeline__ADD_ANIMATIONS';
-export const ACTIVATE_ANIMATION = '__timeline__ACTIVATE_ANIMATION_ID';
+export const ACTIVATE_ANIMATION = '__timeline__ACTIVATE_ANIMATION';
 export const REPLACE_ANIMATIONS = '__timeline__REPLACE_ANIMATIONS';
 export const SELECT_ANIMATION = '__timeline__SELECT_ANIMATION';
 export const ADD_BLOCK = '__timeline__ADD_BLOCK';
@@ -48,9 +48,21 @@ export class SelectAnimation implements Action {
 
 export class AddBlock implements Action {
   readonly type = ADD_BLOCK;
-  readonly payload: { layer: Layer, propertyName: string, fromValue: any, toValue: any };
-  constructor(layer: Layer, propertyName: string, fromValue: any, toValue: any) {
-    this.payload = { layer, propertyName, fromValue, toValue };
+  readonly payload: {
+    layer: Layer,
+    propertyName: string,
+    fromValue: any,
+    toValue: any,
+    activeTime: number,
+  };
+  constructor(
+    layer: Layer,
+    propertyName: string,
+    fromValue: any,
+    toValue: any,
+    activeTime: number,
+  ) {
+    this.payload = { layer, propertyName, fromValue, toValue, activeTime };
   }
 }
 

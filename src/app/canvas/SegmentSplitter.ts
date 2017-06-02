@@ -36,7 +36,7 @@ export class SegmentSplitter {
     const activePathLayer = this.component.activePathLayer;
     if (this.currProjInfo) {
       const { proj: { subIdx, cmdIdx, projection }, isEndPt } = this.currProjInfo;
-      const mode = this.component.shapeShifterMode;
+      const mode = this.component.actionMode;
       const pathMutator = activePathLayer.pathData.mutate();
       if (mode === ActionMode.SplitCommands) {
         pathMutator.splitCommand(subIdx, cmdIdx, projection.t);

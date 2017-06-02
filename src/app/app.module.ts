@@ -24,7 +24,8 @@ import { PropertyInputComponent } from './propertyinput/propertyinput.component'
 import { ScrollGroupDirective } from './scrollgroup/scrollgroup.directive';
 import {
   ActionModeService,
-  FileImporterService,
+  FileExportService,
+  FileImportService,
   HoverService,
   ShortcutService,
   StateService,
@@ -104,7 +105,8 @@ import { StoreModule } from '@ngrx/store';
     DialogService,
     SettingsService,
     AppModeService,
-    FileImporterService,
+    FileImportService,
+    FileExportService,
     ActionModeService,
     ShortcutService,
   ],
