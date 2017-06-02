@@ -1,6 +1,12 @@
 import { Matrix } from '../common';
 import { Path } from '../paths';
-import { ClipPathLayer, GroupLayer, Layer, PathLayer, VectorLayer } from '.';
+import {
+  ClipPathLayer,
+  GroupLayer,
+  Layer,
+  PathLayer,
+  VectorLayer,
+} from '.';
 import * as _ from 'lodash';
 
 const PRECISION = 8;
@@ -113,9 +119,14 @@ export function adjustViewports(vl1: VectorLayer, vl2: VectorLayer) {
           }));
           return;
         }
-        layer.children.forEach(l => {
-          recurseFn(l);
-        });
+        if (layer instanceof GroupLayer) {
+          const l = layer as GroupLayer;
+          l.translateX *= scale;
+          l.translateY *= scale;
+          l.pivotX *= scale;
+          l.pivotY *= scale;
+        }
+        layer.children.forEach(l => recurseFn(l));
       })(vl);
     };
 
@@ -137,30 +148,6 @@ export function mergeVectorLayers(vl1: VectorLayer, vl2: VectorLayer) {
   const resultVl = newVl1.clone();
   resultVl.children = resultVl.children.concat(newVl2.children);
   return resultVl;
-}
-
-/**
- * Interpolates the properties of the specified layer and all of its children.
- * The specified layers are assumed to be structurally compatible with each other.
- */
-export function deepInterpolate<T extends Layer>(start: T, preview: T, end: T, fraction: number) {
-  if (!start.isMorphableWith(preview) || !preview.isMorphableWith(end)) {
-    console.warn('Attempt to interpolate incompatible layers', start, preview, end);
-    return;
-  }
-  throw new Error('This method is not yet implemented. Fix me!');
-  // const layers = [start, preview, end];
-  // if (layers.every(l => l instanceof PathLayer)
-  //   || layers.every(l => l instanceof ClipPathLayer)
-  //   || layers.every(l => l instanceof GroupLayer)
-  //   || layers.every(l => l instanceof VectorLayer)) {
-  //   preview.interpolate(start, end, fraction);
-  // }
-  // if (layers.every(l => !!l.children)) {
-  //   preview.children.forEach((p, i) => {
-  //     return deepInterpolate(start.children[i], p, end.children[i], fraction);
-  //   });
-  // }
 }
 
 export function addLayerToTree(
