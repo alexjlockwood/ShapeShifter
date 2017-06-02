@@ -12,7 +12,15 @@ import {
   State,
   Store,
 } from '../store';
-import { getPropertyInputState } from '../store/selectors';
+import {
+  getSelectedLayerIds,
+  getVectorLayers,
+} from '../store/layers/selectors';
+import {
+  getAnimations,
+  getSelectedAnimationIds,
+  getSelectedBlockIds,
+} from '../store/timeline/selectors';
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import * as $ from 'jquery';
 import * as _ from 'lodash';
@@ -36,13 +44,19 @@ export class PropertyInputComponent implements OnInit {
 
   ngOnInit() {
     this.propertyInputModel$ =
-      this.store.select(getPropertyInputState).map(({
+      Observable.combineLatest(
+        this.store.select(getAnimations),
+        this.store.select(getSelectedAnimationIds),
+        this.store.select(getSelectedBlockIds),
+        this.store.select(getVectorLayers),
+        this.store.select(getSelectedLayerIds),
+      ).map(([
         animations,
         selectedAnimationIds,
         selectedBlockIds,
         vectorLayers,
         selectedLayerIds,
-      }) => {
+      ]) => {
         if (selectedLayerIds.size) {
           return this.buildInspectedLayerProperties(vectorLayers, selectedLayerIds);
         } else if (selectedBlockIds.size) {

@@ -97,9 +97,6 @@ export function getAvailablePropertyNamesForLayer(
   layer: Layer,
   animations: ReadonlyArray<Animation>,
 ) {
-  if (!animations) {
-    throw new Error('animations');
-  }
   const availablePropertyNames = new Set(layer.animatableProperties.keys());
   animations.forEach(animation => {
     const blocksByPropertyByLayer = getOrderedBlocksByPropertyByLayer(animation);

@@ -30,7 +30,13 @@ import {
   ToggleLayerExpansion,
   ToggleLayerVisibility,
 } from '../store';
-import { getLayerTimelineState } from '../store/selectors';
+import { getVectorLayers } from '../store/layers/selectors';
+import {
+  getActiveAnimationId,
+  getAnimations,
+  getSelectedAnimationIds,
+  getSelectedBlockIds,
+} from '../store/timeline/selectors';
 import * as TimelineConsts from './constants';
 import { Callbacks as LayerListTreeCallbacks } from './layerlisttree.component';
 import { ScrubEvent } from './layertimeline.directive';
@@ -127,25 +133,36 @@ export class LayerTimelineComponent
 
   ngOnInit() {
     this.layerTimelineModel$ =
-      this.store.select(getLayerTimelineState)
-        .map(({ animations, vectorLayers, selectedAnimationIds, activeAnimationId, selectedBlockIds }) => {
-          this.animations = animations;
-          this.activeAnimationId = activeAnimationId;
-          this.rebuildSnapTimes();
-          this.vectorLayers = vectorLayers;
-          this.selectedBlockIds = selectedBlockIds;
-          // TODO: auto zoom back to initial state after full reset?
-          // TODO: auto zoom back to initial state after full reset?
-          // TODO: auto zoom back to initial state after full reset?
-          // TODO: auto zoom back to initial state after full reset?
-          // TODO: auto zoom back to initial state after full reset?
-          return {
-            animations,
-            vectorLayers,
-            selectedAnimationIds,
-            activeAnimationId,
-          }
-        });
+      Observable.combineLatest(
+        this.store.select(getAnimations),
+        this.store.select(getVectorLayers),
+        this.store.select(getSelectedAnimationIds),
+        this.store.select(getActiveAnimationId),
+        this.store.select(getSelectedBlockIds),
+      ).map(([
+        animations,
+        vectorLayers,
+        selectedAnimationIds,
+        activeAnimationId,
+        selectedBlockIds,
+      ]) => {
+        this.animations = animations;
+        this.activeAnimationId = activeAnimationId;
+        this.rebuildSnapTimes();
+        this.vectorLayers = vectorLayers;
+        this.selectedBlockIds = selectedBlockIds;
+        // TODO: auto zoom back to initial state after full reset?
+        // TODO: auto zoom back to initial state after full reset?
+        // TODO: auto zoom back to initial state after full reset?
+        // TODO: auto zoom back to initial state after full reset?
+        // TODO: auto zoom back to initial state after full reset?
+        return {
+          animations,
+          vectorLayers,
+          selectedAnimationIds,
+          activeAnimationId,
+        }
+      });
   }
 
   ngAfterViewInit() {
