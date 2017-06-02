@@ -8,12 +8,12 @@ import {
   ToggleIsRepeating,
   ToggleIsSlowMotion,
 } from '../store';
-import { getAnimatorState } from '../store/aia/selectors';
 import {
   getIsPlaying,
   getIsRepeating,
   getIsSlowMotion,
 } from '../store/playback/selectors';
+import { getAnimatorState } from '../store/selectors';
 import { AnimationRenderer } from './AnimationRenderer';
 import { Animator, Callback } from './Animator';
 import { Injectable, NgZone } from '@angular/core';

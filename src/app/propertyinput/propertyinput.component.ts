@@ -12,7 +12,7 @@ import {
   State,
   Store,
 } from '../store';
-import { getPropertyInputState } from '../store/aia/selectors';
+import { getPropertyInputState } from '../store/selectors';
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import * as $ from 'jquery';
 import * as _ from 'lodash';

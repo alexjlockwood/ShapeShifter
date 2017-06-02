@@ -2,7 +2,7 @@ import { ModelUtil } from '../scripts/common';
 import { GroupLayer, Layer, VectorLayer } from '../scripts/layers';
 import { Animation } from '../scripts/timeline';
 import { State, Store } from '../store';
-import { getLayerListTreeState } from '../store/aia/selectors';
+import { getLayerListTreeState } from '../store/selectors';
 import {
   ChangeDetectionStrategy,
   Component,
