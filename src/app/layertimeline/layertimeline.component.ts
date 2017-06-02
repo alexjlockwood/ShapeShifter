@@ -1,7 +1,6 @@
 import 'rxjs/add/observable/combineLatest';
 
 import { AnimatorService } from '../animator';
-import { Animation, AnimationBlock } from '../scripts/animations';
 import { ModelUtil, UiUtil } from '../scripts/common';
 import { Dragger } from '../scripts/dragger';
 import {
@@ -13,6 +12,7 @@ import {
   VectorLayer,
 } from '../scripts/layers';
 import { DestroyableMixin } from '../scripts/mixins';
+import { Animation, AnimationBlock } from '../scripts/timeline';
 import { FileImporterService } from '../services';
 import {
   ActivateAnimation,
@@ -641,10 +641,11 @@ export class LayerTimelineComponent
 
           // Add a fake target for empty groups.
           if (layer instanceof GroupLayer && !layer.children.length) {
-            rect = Object.assign({}, rect, {
+            rect = {
+              ...rect,
               left: rect.left + LAYER_INDENT_PIXELS,
               top: rect.bottom,
-            });
+            };
             orderedLayerInfos.push({
               layer,
               element,
@@ -756,7 +757,7 @@ export class LayerTimelineComponent
 
   private updateDragIndicator(info: DragIndicatorInfo) {
     const curr = this.dragIndicatorSubject.getValue();
-    this.dragIndicatorSubject.next(Object.assign({}, curr, info));
+    this.dragIndicatorSubject.next({ ...curr, info });
   }
 
   trackLayerFn(index: number, layer: Layer) {

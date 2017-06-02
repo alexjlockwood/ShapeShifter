@@ -1,7 +1,17 @@
-import * as _ from 'lodash';
+import { INTERPOLATORS } from '../interpolators';
+import {
+  ClipPathLayer,
+  GroupLayer,
+  Layer,
+  PathLayer,
+  VectorLayer,
+} from '../layers';
+import {
+  Animation,
+  AnimationBlock,
+} from '../timeline';
 import * as XmlSerializer from './XmlSerializer';
-import { Layer, VectorLayer, PathLayer, GroupLayer, ClipPathLayer } from '../layers';
-import { Animation, AnimationBlock, INTERPOLATORS } from '../animations';
+import * as _ from 'lodash';
 
 const XMLNS_NS = 'http://www.w3.org/2000/xmlns/';
 const ANDROID_NS = 'http://schemas.android.com/apk/res/android';

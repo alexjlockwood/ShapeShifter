@@ -1,5 +1,5 @@
-import { Animation, AnimationBlock } from '../../scripts/animations';
 import { Layer } from '../../scripts/layers';
+import { Animation, AnimationBlock } from '../../scripts/timeline';
 import { DeleteSelectedModels } from '../aia/actions';
 import { SelectLayer } from '../layers/actions';
 import { Action } from '@ngrx/store';

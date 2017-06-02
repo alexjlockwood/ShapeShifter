@@ -1,7 +1,10 @@
-import { SvgSerializer } from '.';
-import { Interpolator } from '../animations';
-import { VectorLayer, LayerUtil } from '../layers';
+import { Interpolator } from '../interpolators';
+import {
+  LayerUtil,
+  VectorLayer,
+} from '../layers';
 import { Svgo } from '../svgo';
+import { SvgSerializer } from '.';
 
 export function createHtml(svgFileName: string, cssFileName: string) {
   return `<html>

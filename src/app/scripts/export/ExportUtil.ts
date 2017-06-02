@@ -1,20 +1,22 @@
 import { StateService } from '../../services';
 import { ActionSource } from '../../store';
+import { ColorUtil } from '../common';
+import { Interpolator } from '../interpolators';
+import { GroupLayer, PathLayer, VectorLayer } from '../layers';
+import { AvdSerializer, SvgSerializer } from '.';
 import {
   AvdAnimation,
   AvdPropertyName,
   AvdTarget,
   AvdValueType,
-  Interpolator,
+} from './AvdTarget';
+import * as KeyframesSerializer from './KeyframesSerializer';
+import * as SpriteSerializer from './SpriteSerializer';
+import {
   SvgAnimation,
   SvgPropertyName,
   SvgTarget,
-} from '../animations';
-import { ColorUtil } from '../common';
-import { GroupLayer, PathLayer, VectorLayer } from '../layers';
-import { AvdSerializer, SvgSerializer } from '.';
-import * as KeyframesSerializer from './KeyframesSerializer';
-import * as SpriteSerializer from './SpriteSerializer';
+} from './SvgTarget';
 import * as $ from 'jquery';
 import * as JSZip from 'jszip';
 import * as _ from 'lodash';

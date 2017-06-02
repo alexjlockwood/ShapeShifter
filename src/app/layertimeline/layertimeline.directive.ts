@@ -1,5 +1,5 @@
-import { Animation } from '../scripts/animations';
 import { Dragger } from '../scripts/dragger';
+import { Animation } from '../scripts/timeline';
 import { TIMELINE_ANIMATION_PADDING } from './constants';
 import {
   Directive,

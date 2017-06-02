@@ -1,12 +1,12 @@
+import { ModelUtil } from '../../scripts/common';
+import { ColorProperty, PathProperty } from '../../scripts/properties';
 import {
   Animation,
   AnimationBlock,
   ColorAnimationBlock,
   NumberAnimationBlock,
   PathAnimationBlock,
-} from '../../scripts/animations';
-import { ModelUtil } from '../../scripts/common';
-import { ColorProperty, PathProperty } from '../../scripts/properties';
+} from '../../scripts/timeline';
 import * as actions from './actions';
 import * as _ from 'lodash';
 

@@ -1,7 +1,7 @@
-import * as _ from 'lodash';
+import { ClipPathLayer, GroupLayer, Layer, PathLayer, VectorLayer } from '../layers';
+import { AvdTarget } from './AvdTarget';
 import * as XmlSerializer from './XmlSerializer';
-import { Layer, VectorLayer, PathLayer, GroupLayer, ClipPathLayer } from '../layers';
-import { AvdTarget } from '../animations';
+import * as _ from 'lodash';
 
 const XMLNS_NS = 'http://www.w3.org/2000/xmlns/';
 const ANDROID_NS = 'http://schemas.android.com/apk/res/android';

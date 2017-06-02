@@ -1,6 +1,6 @@
-import { Animation, AnimationBlock } from '../scripts/animations';
 import { AnimationMap, ModelUtil } from '../scripts/common';
 import { Layer } from '../scripts/layers';
+import { Animation, AnimationBlock } from '../scripts/timeline';
 import { State, Store } from '../store';
 import { getTimelineAnimationRowState } from '../store/aia/selectors';
 import {

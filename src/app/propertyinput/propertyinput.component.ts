@@ -1,9 +1,9 @@
 import 'rxjs/add/observable/combineLatest';
 
-import { Animation, PathAnimationBlock } from '../scripts/animations';
 import { ColorUtil, ModelUtil } from '../scripts/common';
 import { LayerUtil, VectorLayer } from '../scripts/layers';
 import { FractionProperty, NameProperty, Option, Property } from '../scripts/properties';
+import { Animation, PathAnimationBlock } from '../scripts/timeline';
 import {
   ReplaceAnimations,
   ReplaceBlocks,

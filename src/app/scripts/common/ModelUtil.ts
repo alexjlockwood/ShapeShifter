@@ -1,6 +1,6 @@
-import * as _ from 'lodash';
-import { Animation, AnimationBlock } from '../animations';
 import { Layer, LayerUtil } from '../layers';
+import { Animation, AnimationBlock } from '../timeline';
+import * as _ from 'lodash';
 
 export function getUniqueAnimationName(
   animations: ReadonlyArray<Animation>,

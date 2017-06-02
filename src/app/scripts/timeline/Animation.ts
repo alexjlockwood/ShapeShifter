@@ -1,6 +1,11 @@
-import * as _ from 'lodash';
-import { Property, NameProperty, NumberProperty, Inspectable } from '../properties';
+import {
+  Inspectable,
+  NameProperty,
+  NumberProperty,
+  Property,
+} from '../properties';
 import { AnimationBlock } from '.';
+import * as _ from 'lodash';
 
 /**
  * An animation represents a collection of layer property tweens for a VectorLayer.

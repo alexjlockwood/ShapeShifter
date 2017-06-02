@@ -1,7 +1,7 @@
 import { AutoAwesome } from '../../scripts/algorithms';
-import { PathAnimationBlock } from '../../scripts/animations';
 import { LayerUtil, PathLayer } from '../../scripts/layers';
 import { Path, PathUtil } from '../../scripts/paths';
+import { PathAnimationBlock } from '../../scripts/timeline';
 import { State } from '../reducer';
 import * as actions from './metaactions';
 import { ActionSource, HoverType, Selection, SelectionType } from './types';

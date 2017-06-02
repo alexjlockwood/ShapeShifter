@@ -1,5 +1,5 @@
-import { PathAnimationBlock } from '../../scripts/animations';
 import { LayerUtil, PathLayer } from '../../scripts/layers';
+import { PathAnimationBlock } from '../../scripts/timeline';
 import { getActiveVectorLayer } from '../layers/selectors';
 import { createDeepEqualSelector, getState } from '../selectors';
 import { getAnimations } from '../timeline/selectors';

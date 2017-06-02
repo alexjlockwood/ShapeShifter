@@ -1,7 +1,8 @@
+import { LayerMap, ModelUtil, PropertyMap } from '../scripts/common';
+import { INTERPOLATORS } from '../scripts/interpolators';
+import { Layer, VectorLayer } from '../scripts/layers';
+import { Animation, AnimationBlock } from '../scripts/timeline';
 import * as _ from 'lodash';
-import { Animation, AnimationBlock, INTERPOLATORS } from '../scripts/animations';
-import { VectorLayer, Layer } from '../scripts/layers';
-import { ModelUtil, LayerMap, PropertyMap } from '../scripts/common';
 
 const DEFAULT_LAYER_PROPERTY_STATE: PropertyState = {
   activeBlock: undefined,
@@ -38,7 +39,7 @@ export class AnimationRenderer {
 
       Object.keys(animData.orderedBlocks).forEach(propertyName => {
         const blocks = animData.orderedBlocks[propertyName];
-        const _ar = Object.assign({}, DEFAULT_LAYER_PROPERTY_STATE);
+        const _ar = { ...DEFAULT_LAYER_PROPERTY_STATE };
 
         // Compute the rendered value at the given time.
         const property = animData.originalLayer.animatableProperties.get(propertyName);

@@ -1,5 +1,5 @@
-import { Animation } from '../scripts/animations';
 import { VectorLayer } from '../scripts/layers';
+import { Animation } from '../scripts/timeline';
 import {
   SetIsPlaying,
   State,

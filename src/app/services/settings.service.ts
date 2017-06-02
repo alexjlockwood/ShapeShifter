@@ -1,5 +1,5 @@
-import { INTERPOLATORS, Interpolator } from '../scripts/animations';
 import { MathUtil } from '../scripts/common';
+import { INTERPOLATORS, Interpolator } from '../scripts/interpolators';
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 
