@@ -5,7 +5,7 @@ import { LayerUtil, VectorLayer } from '../../scripts/layers';
 import * as actions from './actions';
 import * as _ from 'lodash';
 
-const IS_DEV_BUILD = !environment.production && false;
+const IS_DEV_BUILD = !environment.production;
 
 export interface State {
   // TODO: get rid of the active vector layer id and make this a single VectorLayer variable?
@@ -42,6 +42,7 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
 
     // Import vector layers into the tree.
     case actions.IMPORT_VECTOR_LAYERS: {
+      // TODO: support displaying multiple vector layers at some point?
       const { vectorLayers: importedVls } = action.payload;
       const { vectorLayers } = state;
       const newVectorLayers = vectorLayers.concat(importedVls);
