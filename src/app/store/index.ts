@@ -9,8 +9,8 @@ export {
   SelectionType,
 } from './actionmode';
 
-// Shared actions.
-export { DeleteSelectedModels } from './actions';
+// Common actions.
+export { DeleteSelectedModels } from './common/actions';
 
 // Timeline actions.
 export {

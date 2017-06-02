@@ -30,7 +30,7 @@ import {
   ToggleLayerExpansion,
   ToggleLayerVisibility,
 } from '../store';
-import { getLayerTimelineState } from '../store/selectors';
+import { getLayerTimelineState } from '../store/common/selectors';
 import * as TimelineConsts from './constants';
 import { Callbacks as LayerListTreeCallbacks } from './layerlisttree.component';
 import { ScrubEvent } from './layertimeline.directive';

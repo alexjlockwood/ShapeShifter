@@ -1,5 +1,5 @@
 import { Layer } from '../../scripts/layers';
-import { DeleteSelectedModels } from '../actions';
+import { DeleteSelectedModels } from '../common/actions';
 import { AddBlock, SelectAnimation, SelectBlock } from '../timeline/actions';
 import { Action } from '@ngrx/store';
 
@@ -10,7 +10,7 @@ export const TOGGLE_LAYER_VISIBILITY = '__layers__TOGGLE_LAYER_VISIBILITY';
 export const REPLACE_LAYER = '__layers__REPLACE_LAYER';
 export const SELECT_LAYER = '__layers__SELECT_LAYER';
 export { SELECT_ANIMATION, ADD_BLOCK, SELECT_BLOCK } from '../timeline/actions';
-export { DELETE_SELECTED_MODELS } from '../actions';
+export { DELETE_SELECTED_MODELS } from '../common/actions';
 
 export class AddLayers implements Action {
   readonly type = ADD_LAYERS;

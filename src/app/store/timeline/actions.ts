@@ -12,7 +12,7 @@ export const ADD_BLOCK = '__timeline__ADD_BLOCK';
 export const REPLACE_BLOCKS = '__timeline__REPLACE_BLOCKS';
 export const SELECT_BLOCK = '__timeline__SELECT_BLOCK';
 export { SELECT_LAYER } from '../layers/actions';
-export { DELETE_SELECTED_MODELS } from '../actions';
+export { DELETE_SELECTED_MODELS } from '../common/actions';
 
 export class AddAnimations implements Action {
   readonly type = ADD_ANIMATIONS;
