@@ -9,8 +9,8 @@ export {
   SelectionType,
 } from './actionmode';
 
-// Android Icon Animator actions.
-export { DeleteSelectedModels } from './aia/actions';
+// Shared actions.
+export { DeleteSelectedModels } from './actions';
 
 // Timeline actions.
 export {
