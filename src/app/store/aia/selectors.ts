@@ -5,7 +5,6 @@ import {
   getSelectedLayerIds,
   getVectorLayers,
 } from '../layers/selectors';
-import { createDeepEqualSelector, getState } from '../selectors';
 import {
   getActiveAnimation,
   getActiveAnimationId,
@@ -13,8 +12,7 @@ import {
   getSelectedAnimationIds,
   getSelectedBlockIds,
 } from '../timeline/selectors';
-import * as _ from 'lodash';
-import { createSelector, createStructuredSelector } from 'reselect';
+import { createStructuredSelector } from 'reselect';
 
 export const getPropertyInputState =
   createStructuredSelector({

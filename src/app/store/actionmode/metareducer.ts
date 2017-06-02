@@ -33,7 +33,6 @@ export function metaReducer(reducer: ActionReducer<State>): ActionReducer<State>
         for (const { subIdx } of selections) {
           pathMutator.shiftSubPathBack(subIdx);
         }
-        const newActivePath = pathMutator.build();
         state = updateActivePathBlock(state, source, pathMutator.build());
         state = clearHover(state);
         break;
@@ -47,7 +46,6 @@ export function metaReducer(reducer: ActionReducer<State>): ActionReducer<State>
         for (const { subIdx } of selections) {
           pathMutator.shiftSubPathForward(subIdx);
         }
-        const newActivePath = pathMutator.build();
         state = updateActivePathBlock(state, source, pathMutator.build());
         state = clearHover(state);
         break;

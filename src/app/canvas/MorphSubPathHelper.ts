@@ -1,13 +1,10 @@
 import { Point } from '../scripts/common';
-import { HoverService } from '../services';
 import {
   ActionMode,
   ActionSource,
   HoverType,
   PairSubPath,
-  SetShapeShifterMode,
-  SetShapeShifterSelections,
-  SetUnpairedSubPath,
+  SetActionMode,
   State,
   Store,
 } from '../store';
@@ -34,7 +31,7 @@ export class MorphSubPathHelper {
       const { subIdx } = this.findHitSubPath(hits);
       this.store.dispatch(new PairSubPath(subIdx, this.actionSource));
     } else if (!isShiftOrMetaPressed) {
-      this.store.dispatch(new SetShapeShifterMode(ActionMode.Selection));
+      this.store.dispatch(new SetActionMode(ActionMode.Selection));
     }
   }
 

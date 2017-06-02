@@ -1,5 +1,3 @@
-import { SetIsPlaying, State, Store } from '../store';
-
 const REPEAT_DELAY = 750;
 const DEFAULT_IS_SLOW_MOTION = false;
 const DEFAULT_PLAYBACK_SPEED = 1;

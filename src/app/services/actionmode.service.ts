@@ -12,9 +12,8 @@ import {
   SplitCommandInHalfHover,
   State,
   Store,
-  ToggleShapeShifterMode,
+  ToggleActionMode,
 } from '../store';
-import { getActionMode } from '../store/actionmode/selectors';
 import { Injectable } from '@angular/core';
 
 /**
@@ -31,16 +30,16 @@ export class ActionModeService {
 
   toggleSplitCommandsMode() {
     // TODO: prefer already selected subpaths over others when creating new points?
-    this.store.dispatch(new ToggleShapeShifterMode(ActionMode.SplitCommands));
+    this.store.dispatch(new ToggleActionMode(ActionMode.SplitCommands));
   }
 
   toggleSplitSubPathsMode() {
     // TODO: prefer already selected subpaths over others when splitting new subpaths?
-    this.store.dispatch(new ToggleShapeShifterMode(ActionMode.SplitSubPaths));
+    this.store.dispatch(new ToggleActionMode(ActionMode.SplitSubPaths));
   }
 
   toggleMorphSubPathsMode() {
-    this.store.dispatch(new ToggleShapeShifterMode(ActionMode.MorphSubPaths));
+    this.store.dispatch(new ToggleActionMode(ActionMode.MorphSubPaths));
   }
 
   reversePoints() {

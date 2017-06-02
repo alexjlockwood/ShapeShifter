@@ -44,13 +44,13 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
     }
 
     // Set the app mode during shape shifter mode.
-    case actions.SET_SHAPE_SHIFTER_MODE: {
+    case actions.SET_ACTION_MODE: {
       const { mode } = action.payload;
       return { ...state, mode };
     }
 
     // Toggle the app mode during shape shifter mode.
-    case actions.TOGGLE_SHAPE_SHIFTER_MODE: {
+    case actions.TOGGLE_ACTION_MODE: {
       const { modeToToggle } = action.payload;
       const { mode: currentMode } = state;
       const mode = currentMode === modeToToggle ? ActionMode.Selection : modeToToggle;
@@ -58,13 +58,13 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
     }
 
     // Set the hover mode during shape shifter mode.
-    case actions.SET_SHAPE_SHIFTER_HOVER: {
+    case actions.SET_HOVER: {
       const { hover } = action.payload;
       return { ...state, hover };
     }
 
     // Set the path selections during shape shifter mode.
-    case actions.SET_SHAPE_SHIFTER_SELECTIONS: {
+    case actions.SET_SELECTIONS: {
       const { selections } = action.payload;
       return { ...state, selections };
     }

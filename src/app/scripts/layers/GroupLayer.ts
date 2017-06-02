@@ -1,6 +1,5 @@
 import { MathUtil, Matrix, Point, Rect } from '../common';
 import { NumberProperty, Property } from '../properties';
-import { LayerUtil } from '.';
 import { ConstructorArgs as AbstractConstructorArgs, AbstractLayer } from './AbstractLayer';
 
 /**

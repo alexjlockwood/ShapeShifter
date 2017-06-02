@@ -1,9 +1,8 @@
-import { SetShapeShifterHover, State, Store } from '../store';
+import { SetHover, State, Store } from '../store';
 import { ActionSource, Hover, HoverType } from '../store/actionmode';
 import { getActionHover } from '../store/actionmode/selectors';
 import { Injectable } from '@angular/core';
 import * as _ from 'lodash';
-import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 
 /**
  * A simple service that broadcasts hover events to all parts of the application.
@@ -23,7 +22,7 @@ export class HoverService {
 
   setHover(hover: Hover) {
     if (!_.isEqual(this.hover, hover)) {
-      this.store.dispatch(new SetShapeShifterHover(hover));
+      this.store.dispatch(new SetHover(hover));
     }
   }
 

@@ -1,13 +1,12 @@
 import { MathUtil, Point } from '../scripts/common';
 import { LayerUtil } from '../scripts/layers';
 import { ProjectionOntoPath } from '../scripts/paths';
-import { HoverService } from '../services';
 import {
   ActionMode,
   ActionSource,
   HoverType,
-  SetShapeShifterMode,
-  SetShapeShifterSelections,
+  SetActionMode,
+  SetSelections,
   State,
   Store,
   TogglePointSelection,
@@ -75,7 +74,7 @@ export class SelectionHelper {
       // If the mouse down event didn't result in a hit, then
       // clear any existing selections, but only if the user isn't in
       // the middle of selecting multiple points at once.
-      this.store.dispatch(new SetShapeShifterMode(ActionMode.Selection));
+      this.store.dispatch(new SetActionMode(ActionMode.Selection));
     }
   }
 
@@ -137,7 +136,7 @@ export class SelectionHelper {
         // Notify the global layer state service about the change and draw.
         // Clear any existing selections and/or hovers as well.
         this.component.hoverService.setHover(undefined);
-        this.store.dispatch(new SetShapeShifterSelections([]));
+        this.store.dispatch(new SetSelections([]));
         this.reset();
 
         this.store.dispatch(
@@ -147,7 +146,7 @@ export class SelectionHelper {
     } else if (this.currentDraggableSplitIndex) {
       const hitResult = this.performHitTest(mouseUp);
       if (!hitResult.isHit) {
-        this.store.dispatch(new SetShapeShifterSelections([]));
+        this.store.dispatch(new SetSelections([]));
       } else if (hitResult.isEndPointHit) {
         const { subIdx, cmdIdx } = this.findHitPoint(hitResult.endPointHits);
         this.store.dispatch(

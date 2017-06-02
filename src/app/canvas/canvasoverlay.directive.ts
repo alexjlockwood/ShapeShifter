@@ -237,8 +237,6 @@ export class CanvasOverlayDirective
             for (const s of this.shapeShifterSelections) {
               subIdxs.add(s.subIdx);
             }
-            const toArray = Array.from(subIdxs);
-            const restrictToSubIdx = toArray.length ? toArray[0] : undefined;
             this.segmentSplitter = new SegmentSplitter(this);
           } else {
             this.segmentSplitter = undefined;
