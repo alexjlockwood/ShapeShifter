@@ -1,15 +1,8 @@
-import 'rxjs/add/observable/combineLatest';
-
 import { ModelUtil } from '../scripts/common';
 import { GroupLayer, Layer, VectorLayer } from '../scripts/layers';
 import { Animation } from '../scripts/timeline';
 import { State, Store } from '../store';
-import {
-  getCollapsedLayerIds,
-  getHiddenLayerIds,
-  getSelectedLayerIds,
-} from '../store/layers/selectors';
-import { getAnimations } from '../store/timeline/selectors';
+import { getLayerListTreeState } from '../store/selectors';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -47,33 +40,24 @@ export class LayerListTreeComponent implements OnInit, Callbacks {
 
   ngOnInit() {
     this.layerModel$ =
-      Observable.combineLatest(
-        this.store.select(getAnimations),
-        this.store.select(getSelectedLayerIds),
-        this.store.select(getCollapsedLayerIds),
-        this.store.select(getHiddenLayerIds),
-      ).map(([
-        animations,
-        selectedLayerIds,
-        collapsedLayerIds,
-        hiddenLayerIds,
-      ]) => {
-        const isExpandable = this.isLayerExpandable();
-        const availablePropertyNames =
-          Array.from(ModelUtil.getAvailablePropertyNamesForLayer(this.layer, animations));
-        const existingPropertyNames =
-          Array.from(
-            _.keys(ModelUtil.getBlocksByAnimationByProperty(this.layer.id, animations)));
-        return {
-          animations,
-          isSelected: selectedLayerIds.has(this.layer.id),
-          isExpandable,
-          isExpanded: !collapsedLayerIds.has(this.layer.id),
-          isVisible: !hiddenLayerIds.has(this.layer.id),
-          availablePropertyNames,
-          existingPropertyNames,
-        }
-      });
+      this.store.select(getLayerListTreeState)
+        .map(({ animations, selectedLayerIds, collapsedLayerIds, hiddenLayerIds }) => {
+          const isExpandable = this.isLayerExpandable();
+          const availablePropertyNames =
+            Array.from(ModelUtil.getAvailablePropertyNamesForLayer(this.layer, animations));
+          const existingPropertyNames =
+            Array.from(
+              _.keys(ModelUtil.getBlocksByAnimationByProperty(this.layer.id, animations)));
+          return {
+            animations,
+            isSelected: selectedLayerIds.has(this.layer.id),
+            isExpandable,
+            isExpanded: !collapsedLayerIds.has(this.layer.id),
+            isVisible: !hiddenLayerIds.has(this.layer.id),
+            availablePropertyNames,
+            existingPropertyNames,
+          }
+        });
   }
 
   // @Override Callbacks

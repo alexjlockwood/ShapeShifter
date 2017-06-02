@@ -1,5 +1,3 @@
-import 'rxjs/add/observable/combineLatest';
-
 import { VectorLayer } from '../scripts/layers';
 import { Animation } from '../scripts/timeline';
 import {
@@ -10,18 +8,16 @@ import {
   ToggleIsRepeating,
   ToggleIsSlowMotion,
 } from '../store';
-import { getActiveVectorLayer } from '../store/layers/selectors';
 import {
   getIsPlaying,
   getIsRepeating,
   getIsSlowMotion,
 } from '../store/playback/selectors';
-import { getActiveAnimation } from '../store/timeline/selectors';
+import { getAnimatorState } from '../store/selectors';
 import { AnimationRenderer } from './AnimationRenderer';
 import { Animator, Callback } from './Animator';
 import { Injectable, NgZone } from '@angular/core';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
-import { Observable } from 'rxjs/Observable';
 
 const DEFAULT_ANIMATOR_EVENT = {
   vl: undefined as VectorLayer,
@@ -61,16 +57,13 @@ export class AnimatorService {
     this.store.select(getIsSlowMotion).subscribe(s => this.animator.setIsSlowMotion(s));
     this.store.select(getIsPlaying).subscribe(p => p ? this.play() : this.pause());
     this.store.select(getIsRepeating).subscribe(r => this.animator.setIsRepeating(r));
-
-    Observable.combineLatest(
-      this.store.select(getActiveVectorLayer),
-      this.store.select(getActiveAnimation),
-    ).subscribe(([activeVectorLayer, activeAnimation]) => {
-      this.activeAnimation = activeAnimation;
-      this.animationRenderer = new AnimationRenderer(activeVectorLayer, activeAnimation);
-      // TODO: can we make it possible to modify this data w/o pausing the animation?
-      this.animator.pause();
-    });
+    this.store.select(getAnimatorState)
+      .subscribe(({ activeVectorLayer, activeAnimation }) => {
+        this.activeAnimation = activeAnimation;
+        this.animationRenderer = new AnimationRenderer(activeVectorLayer, activeAnimation);
+        // TODO: can we make it possible to modify this data w/o pausing the animation?
+        this.animator.pause();
+      });
   }
 
   asObservable() {
