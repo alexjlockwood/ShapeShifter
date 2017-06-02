@@ -1,3 +1,4 @@
+import { isActionMode } from '../actionmode/selectors';
 import {
   getActiveVectorLayer,
   getCollapsedLayerIds,
@@ -28,6 +29,7 @@ export const getCanvasOverlayState =
     activeVectorLayer: getActiveVectorLayer,
     hiddenLayerIds: getHiddenLayerIds,
     selectedLayerIds: getSelectedLayerIds,
+    isActionMode,
   });
 
 export const getPropertyInputState =

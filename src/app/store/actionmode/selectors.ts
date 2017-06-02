@@ -88,6 +88,7 @@ export const getActionModeStartState =
   createStructuredSelector({
     vectorLayer: getVectorLayerFromValue,
     blockLayerId: getBlockLayerId,
+    isActionMode,
     hover: getActionHover,
     selections: getActionSelections,
     pairedSubPaths: getPairedSubPaths,
@@ -98,6 +99,7 @@ export const getActionModeEndState =
   createStructuredSelector({
     vectorLayer: getVectorLayerToValue,
     blockLayerId: getBlockLayerId,
+    isActionMode,
     hover: getActionHover,
     selections: getActionSelections,
     pairedSubPaths: getPairedSubPaths,

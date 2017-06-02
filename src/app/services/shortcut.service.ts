@@ -1,15 +1,19 @@
 import { AnimatorService } from '../animator';
 import { DeleteSelectedModels, State, Store } from '../store';
+import { isActionMode } from '../store/actionmode/selectors';
 import { Injectable } from '@angular/core';
 import * as $ from 'jquery';
 
 @Injectable()
 export class ShortcutService {
+  private isActionMode: boolean;
 
   constructor(
     private readonly store: Store<State>,
     private readonly animatorService: AnimatorService,
-  ) { }
+  ) {
+    this.store.select(isActionMode).subscribe(isActive => this.isActionMode = isActive);
+  }
 
   init() {
     $(window).on('keydown', event => {
@@ -24,7 +28,10 @@ export class ShortcutService {
       if (event.keyCode === 8 || event.keyCode === 46) {
         // In case there's a JS error, never navigate away.
         event.preventDefault();
-        this.store.dispatch(new DeleteSelectedModels());
+        if (!this.isActionMode) {
+          // TODO: handle case where user is in action mode as well
+          this.store.dispatch(new DeleteSelectedModels());
+        }
         return false;
       }
       if (event.keyCode === 32) {
