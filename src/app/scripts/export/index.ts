@@ -1,2 +1,3 @@
 import * as AvdSerializer from './AvdSerializer';
-export { AvdSerializer };
+import * as SvgSerializer from './SvgSerializer';
+export { AvdSerializer, SvgSerializer };

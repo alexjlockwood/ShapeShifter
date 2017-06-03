@@ -195,6 +195,11 @@ export class LayerTimelineComponent
   }
 
   // Called from the LayerTimelineComponent template.
+  exportSvgClick() {
+    this.fileExportService.exportSvg();
+  }
+
+  // Called from the LayerTimelineComponent template.
   exportVectorDrawableClick() {
     this.fileExportService.exportVectorDrawable();
   }
@@ -202,6 +207,16 @@ export class LayerTimelineComponent
   // Called from the LayerTimelineComponent template.
   exportAnimatedVectorDrawableClick() {
     this.fileExportService.exportAnimatedVectorDrawable();
+  }
+
+  // Called from the LayerTimelineComponent template.
+  exportSvgSpritesheetClick() {
+    this.fileExportService.exportSvgSpritesheet();
+  }
+
+  // Called from the LayerTimelineComponent template.
+  exportCssKeyframesClick() {
+    this.fileExportService.exportCssKeyframes();
   }
 
   // Called from the LayerTimelineComponent template.

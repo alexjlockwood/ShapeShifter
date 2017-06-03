@@ -1,4 +1,4 @@
-import { AvdSerializer } from '../scripts/export';
+import { AvdSerializer, SvgSerializer } from '../scripts/export';
 import { SvgLoader, VectorDrawableLoader } from '../scripts/import';
 import { LayerUtil, VectorLayer } from '../scripts/layers';
 import { Animation } from '../scripts/timeline';
@@ -21,7 +21,15 @@ export class FileExportService {
     this.store.select(getActiveAnimation).subscribe(anim => this.animation = anim);
   }
 
-  // TODO: should we or should we not export currently hidden layers?
+  // TODO: should we or should we not export hidden layers?
+  exportSvg() {
+    const vl = this.vectorLayer;
+    const svg = SvgSerializer.toSvgString(vl);
+    const fileName = `${vl.name}.svg`;
+    downloadFile(svg, fileName);
+  }
+
+  // TODO: should we or should we not export hidden layers?
   exportVectorDrawable() {
     const vl = this.vectorLayer;
     const vd = AvdSerializer.toVectorDrawableXmlString(vl);
@@ -35,6 +43,14 @@ export class FileExportService {
     const avd = AvdSerializer.toAnimatedVectorDrawableXmlString(vl, anim);
     const fileName = `avd_${anim.name}.xml`;
     downloadFile(avd, fileName);
+  }
+
+  exportSvgSpritesheet() {
+    // TODO: implement this
+  }
+
+  exportCssKeyframes() {
+    // TODO: implement this
   }
 }
 

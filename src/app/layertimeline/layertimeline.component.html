@@ -53,7 +53,10 @@
         Import
       </button>
       <md-menu #exportMenu="mdMenu">
-        <button md-menu-item>SVG</button>
+        <button md-menu-item
+          (click)="exportSvgClick()">
+          SVG
+        </button>
         <button md-menu-item
           (click)="exportVectorDrawableClick()">
           Vector Drawable
@@ -62,8 +65,14 @@
           (click)="exportAnimatedVectorDrawableClick()">
           Animated Vector Drawable
         </button>
-        <button md-menu-item>SVG spritesheet</button>
-        <button md-menu-item>CSS keyframes</button>
+        <button md-menu-item
+          (click)="exportSvgSpritesheetClick()">
+          SVG spritesheet
+        </button>
+        <button md-menu-item
+          (click)="exportCssKeyframesClick()">
+          CSS keyframes
+        </button>
       </md-menu>
       <button class="slt-layers-menu-group-button"
         [mdMenuTriggerFor]="exportMenu">
