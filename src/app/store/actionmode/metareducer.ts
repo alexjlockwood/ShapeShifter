@@ -58,7 +58,7 @@ export function metaReducer(reducer: ActionReducer<State>): ActionReducer<State>
         if (!selections.length) {
           break;
         }
-        // Preconditions: all selections exist in the same canvas.
+        // Precondition: all selections exist in the same canvas.
         const { source, subIdx } = selections[0];
         const pathMutator = getActivePath(state, source).mutate();
         const activePathLayer = getActivePathBlockLayer(state);
@@ -80,7 +80,7 @@ export function metaReducer(reducer: ActionReducer<State>): ActionReducer<State>
         if (!selections.length) {
           break;
         }
-        // Preconditions: all selections exist in the same canvas.
+        // Precondition: all selections exist in the same canvas.
         const { source, subIdx, cmdIdx } = selections[0];
         const mutator = getActivePath(state, source).mutate();
         mutator.deleteFilledSubPathSegment(subIdx, cmdIdx);
@@ -96,7 +96,7 @@ export function metaReducer(reducer: ActionReducer<State>): ActionReducer<State>
         if (!selections.length) {
           break;
         }
-        // Preconditions: all selections exist in the same canvas.
+        // Precondition: all selections exist in the same canvas.
         const source = selections[0].source;
         const activePath = getActivePath(state, source);
         const unsplitOpsMap: Map<number, Array<{ subIdx: number, cmdIdx: number }>> = new Map();

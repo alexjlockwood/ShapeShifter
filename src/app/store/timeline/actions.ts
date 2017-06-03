@@ -1,7 +1,7 @@
 import { Layer } from '../../scripts/layers';
 import { Animation, AnimationBlock } from '../../scripts/timeline';
 import { DeleteSelectedModels } from '../common/actions';
-import { SelectLayer } from '../layers/actions';
+import { ClearLayerSelections, SelectLayer } from '../layers/actions';
 import { Action } from '@ngrx/store';
 
 export const ADD_ANIMATIONS = '__timeline__ADD_ANIMATIONS';
@@ -11,7 +11,7 @@ export const SELECT_ANIMATION = '__timeline__SELECT_ANIMATION';
 export const ADD_BLOCK = '__timeline__ADD_BLOCK';
 export const REPLACE_BLOCKS = '__timeline__REPLACE_BLOCKS';
 export const SELECT_BLOCK = '__timeline__SELECT_BLOCK';
-export { SELECT_LAYER } from '../layers/actions';
+export { CLEAR_LAYER_SELECTIONS, SELECT_LAYER } from '../layers/actions';
 export { DELETE_SELECTED_MODELS } from '../common/actions';
 
 export class AddAnimations implements Action {
@@ -90,5 +90,6 @@ export type Actions =
   | AddBlock
   | ReplaceBlocks
   | SelectBlock
+  | ClearLayerSelections
   | SelectLayer
   | DeleteSelectedModels;

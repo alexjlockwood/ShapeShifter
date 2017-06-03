@@ -64,11 +64,6 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
       return { ...state, vectorLayers };
     }
 
-    // Clear all layer selections.
-    case actions.CLEAR_LAYER_SELECTIONS: {
-      return { ...state, selectedLayerIds: new Set() };
-    }
-
     // Expand/collapse a layer.
     case actions.TOGGLE_LAYER_EXPANSION: {
       const { layerId, recursive } = action.payload;
@@ -120,6 +115,11 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
       const vectorLayers =
         state.vectorLayers.map(vl => vl.id === replacementId ? replacementVl : vl);
       return { ...state, vectorLayers };
+    }
+
+    // Clear all layer selections.
+    case actions.CLEAR_LAYER_SELECTIONS: {
+      return { ...state, selectedLayerIds: new Set() };
     }
 
     // Select a layer.
