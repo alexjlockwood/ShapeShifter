@@ -43,13 +43,13 @@
               class="spi-property-color-preview"
               [style.background-color]="this.androidToCssColor(ip.value)">
             </div>
-            <span *ngIf="!ip.editable"
+            <span *ngIf="!ip.isEditable()"
               class="spi-property-value-static"
               fxFlex>
             <!-- Only show text if the property isn't inspectable. -->
-            {{ip.displayValue}}
+            {{ip.getDisplayValue()}}
           </span>
-            <div *ngIf="ip.editable"
+            <div *ngIf="ip.isEditable()"
               class="spi-property-value-editor"
               fxLayout="column"
               fxFlex>
@@ -74,7 +74,7 @@
                 <button class="spi-property-value-menu-target"
                   [mdMenuTriggerFor]="enumMenu">
                   <span class="spi-property-value-menu-current-value">
-                    {{ip.displayValue}}
+                    {{ip.getDisplayValue()}}
                   </span>
                 </button>
               </ng-container>

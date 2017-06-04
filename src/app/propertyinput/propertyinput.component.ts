@@ -118,28 +118,27 @@ export class PropertyInputComponent implements OnInit {
     const inspectedProperties: InspectedProperty<any>[] = [];
     layer.inspectableProperties.forEach((property, propertyName) => {
       inspectedProperties.push(new InspectedProperty<any>(
+        layer,
         property,
         propertyName,
         enteredValueMap,
-        {
-          get value() {
-            // TODO: return the 'rendered' value if an animation is ongoing? (see AIA)
-            return layer[propertyName];
-          },
-          set value(value) {
-            const clonedLayer = layer.clone();
-            clonedLayer[propertyName] = value;
-            store.dispatch(new ReplaceLayer(clonedLayer));
-          },
-          transformEditedValueFn: (property instanceof NameProperty)
-            ? (enteredValue: string) =>
-              ModelUtil.getUniqueLayerName(vls, NameProperty.sanitize(enteredValue))
-            : undefined,
-          get editable() {
-            // TODO: copy AIA conditions to determine whether this should be editable
-            return true;
-          },
-        }));
+        (value) => {
+          const clonedLayer = layer.clone();
+          clonedLayer[propertyName] = value;
+          store.dispatch(new ReplaceLayer(clonedLayer));
+        },
+        // TODO: return the 'rendered' value if an animation is ongoing? (see AIA)
+        undefined,
+        (enteredValue) => {
+          if (property instanceof NameProperty) {
+            return ModelUtil.getUniqueLayerName(
+              vls, NameProperty.sanitize(enteredValue));
+          }
+          return enteredValue;
+        },
+        // TODO: copy AIA conditions to determine whether this should be editable
+        undefined,
+      ));
     });
     return {
       model: layer,
@@ -184,19 +183,16 @@ export class PropertyInputComponent implements OnInit {
     const inspectedProperties: InspectedProperty<any>[] = [];
     block.inspectableProperties.forEach((property, propertyName) => {
       inspectedProperties.push(new InspectedProperty<any>(
+        block,
         property,
         propertyName,
         enteredValueMap,
-        {
-          get value() {
-            return block[propertyName];
-          },
-          set value(value: any) {
-            const clonedBlock = block.clone();
-            clonedBlock[propertyName] = value;
-            store.dispatch(new ReplaceBlocks([clonedBlock]));
-          },
-        }));
+        (value) => {
+          const clonedBlock = block.clone();
+          clonedBlock[propertyName] = value;
+          store.dispatch(new ReplaceBlocks([clonedBlock]));
+        },
+      ));
     });
     return {
       model: block,
@@ -232,23 +228,25 @@ export class PropertyInputComponent implements OnInit {
     const inspectedProperties: InspectedProperty<any>[] = [];
     animation.inspectableProperties.forEach((property, propertyName) => {
       inspectedProperties.push(new InspectedProperty<any>(
+        animation,
         property,
         propertyName,
         enteredValueMap,
-        {
-          get value() {
-            return animation[propertyName];
-          },
-          set value(value) {
-            const clonedAnimation = animation.clone();
-            clonedAnimation[propertyName] = value;
-            store.dispatch(new ReplaceAnimations([clonedAnimation]));
-          },
-          transformEditedValueFn: (property instanceof NameProperty)
-            ? (enteredValue: string) =>
-              ModelUtil.getUniqueAnimationName(animations, NameProperty.sanitize(enteredValue))
-            : undefined,
-        }));
+        (value) => {
+          const clonedAnimation = animation.clone();
+          clonedAnimation[propertyName] = value;
+          store.dispatch(new ReplaceAnimations([clonedAnimation]));
+        },
+        undefined,
+        (enteredValue) => {
+          if (property instanceof NameProperty) {
+            return ModelUtil.getUniqueAnimationName(
+              animations, NameProperty.sanitize(enteredValue));
+          }
+          return enteredValue;
+        },
+        undefined,
+      ));
     });
     return {
       model: animation,
@@ -292,75 +290,75 @@ export class PropertyInputComponent implements OnInit {
 
 /**
  * Stores information about an inspected property.
- * V is the property value type (number, string, path).
+ * V is the property value type (number, string, or path).
  */
 class InspectedProperty<V> {
+  public readonly typeName: string;
 
   constructor(
+    // The model object being inspected (a layer, animation, or animation block).
+    private readonly model: any,
+    // The model object's inspected property.
     public readonly property: Property<V>,
+    // The model object's inspected property name.
     public readonly propertyName: string,
+    // The in-memory entered value map.
     private readonly enteredValueMap: Map<string, any>,
-    private readonly delegate: Delegate<V>,
-  ) { }
+    // Stores the model's entered value for the given property name in the application store.
+    private readonly setValueFn: (value: V) => void,
+    // Returns the value associated with this model's property name.
+    private readonly getValueFn = () => model[propertyName],
+    // Provides an opportunity to edit the value before it is set.
+    private readonly transformEditedValueFn = (enteredValue: V) => enteredValue,
+    // Returns whether or not this property name is editable.
+    public readonly isEditable = () => true,
+  ) {
+    this.typeName = this.property.constructor.name;
+  }
 
   get value() {
-    return this.delegate.value;
+    return this.getValueFn();
   }
 
   set value(value: V) {
-    this.delegate.value = value;
+    this.setValueFn(value);
   }
 
-  get typeName() {
-    return this.property.constructor.name;
-  }
-
-  get editable() {
-    return 'editable' in this.delegate ? this.delegate.editable : true;
-  }
-
-  get displayValue() {
+  getDisplayValue() {
     return this.property.displayValueForValue(this.value);
   }
 
   get editableValue() {
-    return this.enteredValue === undefined
+    const enteredValue = this.getEnteredValue();
+    return enteredValue === undefined
       ? this.property.getEditableValue(this, 'value')
-      : this.enteredValue
+      : enteredValue;
   }
 
   set editableValue(enteredValue: V) {
-    this.enteredValue = enteredValue;
-    if (this.delegate.transformEditedValueFn) {
-      enteredValue = this.delegate.transformEditedValueFn(enteredValue);
-    }
+    this.setEnteredValue(enteredValue);
+    enteredValue = this.transformEditedValueFn(enteredValue);
     this.property.setEditableValue(this, 'value', enteredValue);
   }
 
   resolveEnteredValue() {
-    this.enteredValue = undefined;
+    this.setEnteredValue(undefined);
   }
 
-  private get enteredValue() {
+  private getEnteredValue() {
     if (this.enteredValueMap.has(this.propertyName)) {
       return this.enteredValueMap.get(this.propertyName);
     }
     return undefined;
   }
 
-  private set enteredValue(value) {
+  private setEnteredValue(value) {
     if (value === undefined) {
       this.enteredValueMap.delete(this.propertyName);
     } else {
       this.enteredValueMap.set(this.propertyName, value);
     }
   }
-}
-
-interface Delegate<V> {
-  value: V;
-  readonly editable?: boolean;
-  readonly transformEditedValueFn?: (editedValue: V) => V;
 }
 
 interface PropertyInputModel {
