@@ -1,4 +1,5 @@
-export function waitForElementWidth($el: JQuery, timeout = 1000) {
+// TODO: figure out why travis fails when JQuery is uncommented
+export function waitForElementWidth($el/*: JQuery*/, timeout = 1000) {
   const start = Number(new Date());
   return new Promise<number>((resolve, reject) => {
     const tryResolve_ = () => {
