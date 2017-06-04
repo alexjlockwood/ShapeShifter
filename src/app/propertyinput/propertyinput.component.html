@@ -46,9 +46,9 @@
             <span *ngIf="!ip.isEditable()"
               class="spi-property-value-static"
               fxFlex>
-            <!-- Only show text if the property isn't inspectable. -->
-            {{ip.getDisplayValue()}}
-          </span>
+              <!-- Only show text if the property isn't inspectable. -->
+              {{ip.getDisplayValue()}}
+            </span>
             <div *ngIf="ip.isEditable()"
               class="spi-property-value-editor"
               fxLayout="column"
