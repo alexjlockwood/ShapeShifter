@@ -1,8 +1,17 @@
+import { AnimatorService } from '../animator';
 import { ColorUtil, ModelUtil } from '../scripts/common';
-import { LayerUtil, VectorLayer } from '../scripts/layers';
-import { FractionProperty, NameProperty, Option, Property } from '../scripts/properties';
-import { Animation, PathAnimationBlock } from '../scripts/timeline';
 import {
+  ClipPathLayer,
+  GroupLayer,
+  Layer,
+  LayerUtil,
+  PathLayer,
+  VectorLayer,
+} from '../scripts/layers';
+import { FractionProperty, NameProperty, Option, Property } from '../scripts/properties';
+import { Animation, AnimationBlock, PathAnimationBlock } from '../scripts/timeline';
+import {
+  AddBlock,
   ReplaceAnimations,
   ReplaceBlocks,
   ReplaceLayer,
@@ -30,7 +39,10 @@ export class PropertyInputComponent implements OnInit {
   // but may not have been saved in the store.
   private readonly enteredValueMap = new Map<string, any>();
 
-  constructor(private readonly store: Store<State>) { }
+  constructor(
+    private readonly store: Store<State>,
+    private readonly animatorService: AnimatorService,
+  ) { }
 
   ngOnInit() {
     this.propertyInputModel$ =
@@ -42,7 +54,7 @@ export class PropertyInputComponent implements OnInit {
         selectedLayerIds,
       }) => {
         if (selectedLayerIds.size) {
-          return this.buildInspectedLayerProperties(vectorLayers, selectedLayerIds);
+          return this.buildInspectedLayerProperties(vectorLayers, selectedLayerIds, animations);
         } else if (selectedBlockIds.size) {
           return this.buildInspectedBlockProperties(vectorLayers, animations, selectedBlockIds);
         } else if (selectedAnimationIds.size) {
@@ -53,12 +65,29 @@ export class PropertyInputComponent implements OnInit {
       });
   }
 
-  shouldShowShapeShifterButton(model: PropertyInputModel) {
+  shouldShowEditPathMorphButton(model: PropertyInputModel) {
     return model.numSelections === 1 && model.model instanceof PathAnimationBlock;
   }
 
-  onShapeShifterModeClick(blockId: string) {
+  onEditPathMorphClick(blockId: string) {
     this.store.dispatch(new StartActionMode(blockId));
+  }
+
+  shouldShowAnimateLayerButton(model: PropertyInputModel) {
+    return model.availablePropertyNames.length > 0
+      && model.numSelections === 1
+      && (model.model instanceof VectorLayer
+        || model.model instanceof GroupLayer
+        || model.model instanceof ClipPathLayer
+        || model.model instanceof PathLayer);
+  }
+
+  onAnimateLayerClick(layer: Layer, propertyName: string) {
+    const clonedValue =
+      layer.inspectableProperties.get(propertyName).cloneValue(layer[propertyName]);
+    const currentTime = this.animatorService.getCurrentTime();
+    this.store.dispatch(
+      new AddBlock(layer, propertyName, clonedValue, clonedValue, currentTime));
   }
 
   valueEditorKeyDown(event: KeyboardEvent, ip: InspectedProperty<any>) {
@@ -96,6 +125,7 @@ export class PropertyInputComponent implements OnInit {
   private buildInspectedLayerProperties(
     vls: ReadonlyArray<VectorLayer>,
     selectedLayerIds: Set<string>,
+    animations: ReadonlyArray<Animation>,
   ) {
     const numSelections = selectedLayerIds.size;
     const selectedLayers =
@@ -107,6 +137,7 @@ export class PropertyInputComponent implements OnInit {
         description: `${numSelections} layers`,
         // TODO: implement batch editting
         inspectedProperties: [],
+        availablePropertyNames: [],
       } as PropertyInputModel;
     }
     // Edit a single layer.
@@ -140,12 +171,15 @@ export class PropertyInputComponent implements OnInit {
         undefined,
       ));
     });
+    const availablePropertyNames =
+      Array.from(ModelUtil.getAvailablePropertyNamesForLayer(layer, animations));
     return {
       model: layer,
       numSelections,
       inspectedProperties,
       icon,
       description,
+      availablePropertyNames,
     } as PropertyInputModel;
   }
 
@@ -171,6 +205,7 @@ export class PropertyInputComponent implements OnInit {
         // TODO: implement batch editting
         description: `${numSelections} property animations`,
         inspectedProperties: [],
+        availablePropertyNames: [],
       } as PropertyInputModel;
     }
     const store = this.store;
@@ -201,6 +236,7 @@ export class PropertyInputComponent implements OnInit {
       icon,
       description,
       subDescription,
+      availablePropertyNames: [],
     } as PropertyInputModel;
   }
 
@@ -218,6 +254,7 @@ export class PropertyInputComponent implements OnInit {
         description: `${numSelections} animations`,
         // TODO: implement batch editting
         inspectedProperties: [],
+        availablePropertyNames: [],
       } as PropertyInputModel;
     }
     const store = this.store;
@@ -254,6 +291,7 @@ export class PropertyInputComponent implements OnInit {
       inspectedProperties,
       icon,
       description,
+      availablePropertyNames: [],
     } as PropertyInputModel;
   }
 
@@ -369,4 +407,5 @@ interface PropertyInputModel {
   readonly icon?: string;
   readonly description?: string;
   readonly subDescription?: string;
+  readonly availablePropertyNames: ReadonlyArray<string>;
 }

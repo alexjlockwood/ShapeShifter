@@ -66,6 +66,10 @@ export class AnimatorService {
       });
   }
 
+  getCurrentTime() {
+    return this.animatorSubject.getValue().currentTime;
+  }
+
   asObservable() {
     return this.animatorSubject.asObservable();
   }

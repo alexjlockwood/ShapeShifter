@@ -83,12 +83,28 @@
         </div>
       </form>
     </div>
-    <!-- TODO: change this text to something else? -->
-    <button md-button
-      class="launch-shape-shifter-button"
-      *ngIf="this.shouldShowShapeShifterButton(model)"
-      (click)="this.onShapeShifterModeClick(model.model.id)">
-      Edit paths
+    <button md-icon-button
+      *ngIf="this.shouldShowEditPathMorphButton(model)"
+      (click)="this.onEditPathMorphClick(model.model.id)"
+      mdTooltip="Customize path morphing animation"
+      mdTooltipPosition="below"
+      mdTooltipShowDelay="500">
+      <md-icon>edit</md-icon>
+    </button>
+    <md-menu #addTimelineBlockMenu="mdMenu">
+      <button md-menu-item
+        *ngFor="let propertyName of model.availablePropertyNames"
+        (click)="this.onAnimateLayerClick(model.model, propertyName)">
+        {{propertyName}}
+      </button>
+    </md-menu>
+    <button md-icon-button
+      *ngIf="this.shouldShowAnimateLayerButton(model)"
+      mdTooltip="Animate this layer"
+      mdTooltipPosition="below"
+      mdTooltipShowDelay="500"
+      [mdMenuTriggerFor]="addTimelineBlockMenu">
+      <md-icon svgIcon="animationblock"></md-icon>
     </button>
   </div>
 </ng-container>

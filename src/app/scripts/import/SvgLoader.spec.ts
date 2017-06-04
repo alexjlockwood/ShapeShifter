@@ -1,4 +1,5 @@
 import 'jasmine';
+
 import { SvgLoader } from '.';
 
 describe('SvgLoader', () => {
@@ -13,7 +14,7 @@ describe('SvgLoader', () => {
     L 11,19 L 11,13 L 5,13 L 5,11">
   </path>
 </svg>`;
-    SvgLoader.loadVectorLayerFromSvgStringWithCallback(svg, () => { }, []);
+    SvgLoader.loadVectorLayerFromSvgStringWithCallback(svg, () => { }, () => true);
     expect(true).toEqual(true);
   });
 });
