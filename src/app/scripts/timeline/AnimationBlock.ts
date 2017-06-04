@@ -37,6 +37,10 @@ export abstract class AnimationBlock {
     this.toValue = obj.toValue;
   }
 
+  isAnimatable() {
+    return this.fromValue && this.toValue;
+  }
+
   abstract clone(): AnimationBlock;
 }
 
@@ -66,6 +70,10 @@ export interface ConstructorArgs extends AnimationBlockArgs { }
 export class PathAnimationBlock extends AnimationBlock {
   fromValue: Path;
   toValue: Path;
+
+  isAnimatable() {
+    return super.isAnimatable() && this.fromValue.isMorphableWith(this.toValue);
+  }
 
   clone() {
     return new PathAnimationBlock(this);

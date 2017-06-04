@@ -90,6 +90,13 @@ export class PropertyInputComponent implements OnInit {
       new AddBlock(layer, propertyName, clonedValue, clonedValue, currentTime));
   }
 
+  shouldShowInvalidPathAnimationBlockMsg(model: PropertyInputModel) {
+    // TODO: also show message for invalid color animation block?
+    return model.numSelections === 1
+      && model.model instanceof PathAnimationBlock
+      && !model.model.isAnimatable();
+  }
+
   valueEditorKeyDown(event: KeyboardEvent, ip: InspectedProperty<any>) {
     switch (event.keyCode) {
       // Up/down arrow buttons.

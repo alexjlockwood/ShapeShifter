@@ -83,6 +83,9 @@
         </div>
       </form>
     </div>
+    <span *ngIf="this.shouldShowInvalidPathAnimationBlockMsg(model)">
+      Customize the animation below to make the paths are compatible.
+    </span>
     <button md-icon-button
       *ngIf="this.shouldShowEditPathMorphButton(model)"
       (click)="this.onEditPathMorphClick(model.model.id)"
