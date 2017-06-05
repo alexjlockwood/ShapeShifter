@@ -1,4 +1,3 @@
-@import '../styles/material-colors';
 @import '../styles/variables';
 @import '../styles/theme';
 button {
@@ -11,7 +10,7 @@ button {
       color: $colorBlackTextSecondary;
     }
     md-icon.activated {
-      color: material-color('orange', '900');
+      color: mat-color(mat-palette($mat-orange, 900));
     }
   }
   &[md-icon-button][disabled] {

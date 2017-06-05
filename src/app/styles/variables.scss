@@ -1,3 +1,5 @@
+@import './theme';
+
 // Dimensions.
 $mobileChromeBreakpoint: 600px;
 
@@ -16,17 +18,17 @@ $colorWhiteTextPrimary: rgba(#fff, 1.0);
 $colorWhiteTextSecondary: rgba(#fff, .70);
 $colorWhiteTextDisabled: rgba(#fff, .5);
 
-$colorPrimary400: material-color('blue', '400');
-$colorPrimary500: material-color('blue', '500');
-$colorPrimary600: material-color('blue', '600');
-$colorPrimary700: material-color('blue', '700');
+$colorPrimary400: mat-color(mat-palette($mat-blue, 400));
+$colorPrimary500: mat-color(mat-palette($mat-blue, 500));
+$colorPrimary600: mat-color(mat-palette($mat-blue, 600));
+$colorPrimary700: mat-color(mat-palette($mat-blue, 700));
 
-$colorFocusBorder: material-color('blue', '400');
-$colorSelection: material-color('blue', '700');
-$colorSelectedAnimationBlock: material-color('blue', '500');
+$colorFocusBorder: mat-color(mat-palette($mat-blue, 400));
+$colorSelection: mat-color(mat-palette($mat-blue, 700));
+$colorSelectedAnimationBlock: mat-color(mat-palette($mat-blue, 500));
 
-$colorError: material-color('red', 'a200');
-$colorSuccess: material-color('teal', 'a700');
+$colorError: mat-color(mat-palette($mat-red, A200));
+$colorSuccess: mat-color(mat-palette($mat-teal, A700));
 
 // Animation timings.
 $animTimeMedium: .3s;

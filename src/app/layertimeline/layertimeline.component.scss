@@ -1,4 +1,3 @@
-@import '../styles/material-colors';
 @import '../styles/material-shadows';
 @import '../styles/variables';
 @import '../styles/theme';
@@ -226,7 +225,7 @@
     }
   }
   .slt-timeline {
-    background-color: material-color('grey', '300');
+    background-color: mat-color(mat-palette($mat-grey, 300));
     overflow-x: auto;
     overflow-y: hidden;
     flex: 1;
@@ -246,13 +245,13 @@
     }
     .slt-timeline-animation {
       position: relative;
-      background-color: material-color('grey', '100');
+      background-color: mat-color(mat-palette($mat-grey, 100));
       margin-left: 4px;
       box-sizing: content-box;
       width: 100px;
       overflow: hidden;
       flex: 0 0 auto;
-      box-shadow: 4px 0 0 material-color('grey', '500'), -4px 0 0 material-color('grey', '500');
+      box-shadow: 4px 0 0 mat-color(mat-palette($mat-grey, 500)), -4px 0 0 mat-color(mat-palette($mat-grey, 500));
       opacity: .5;
       &.is-active {
         opacity: 1;
@@ -302,7 +301,7 @@
     }
     .slt-timeline-block {
       position: absolute;
-      background-color: material-color('grey', '500');
+      background-color: mat-color(mat-palette($mat-grey, 500));
       height: 12px;
       border-radius: 6px;
       top: 50%;
@@ -324,7 +323,7 @@
       }
     }
     .slt-timeline-animation.is-active .slt-timeline-block {
-      background-color: material-color('green', '200');
+      background-color: mat-color(mat-palette($mat-green, 200));
       &.is-selected {
         background-color: $colorSelectedAnimationBlock;
       }
@@ -381,10 +380,10 @@
     height: $headerHeight;
     box-sizing: border-box;
     width: 100%;
-    background-color: material-color('grey', '100');
+    background-color: mat-color(mat-palette($mat-grey, 100));
     font-size: 12px;
     line-height: $headerHeight;
-    color: material-color('grey', '700');
+    color: mat-color(mat-palette($mat-grey, 700));
     padding: 0 16px;
     box-shadow: material-shadow(2);
     z-index: 2;

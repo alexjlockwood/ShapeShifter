@@ -1,5 +1,4 @@
 // TODO: copy only what we need?
-@import '../styles/material-colors';
 @import '../styles/material-shadows';
 @import '../styles/variables';
 @import '../styles/theme';
@@ -38,7 +37,7 @@ li {
   margin: 0 0 0 0px;
 }
 .slt-timeline {
-  background-color: material-color('grey', '300');
+  background-color: mat-color(mat-palette($mat-grey, 300));
   overflow-x: auto;
   overflow-y: hidden;
   flex: 1;
@@ -58,13 +57,13 @@ li {
   }
   .slt-timeline-animation {
     position: relative;
-    background-color: material-color('grey', '100');
+    background-color: mat-color(mat-palette($mat-grey, 100));
     margin-left: 4px;
     box-sizing: content-box;
     width: 100px;
     overflow: hidden;
     flex: 0 0 auto;
-    box-shadow: 4px 0 0 material-color('grey', '500'), -4px 0 0 material-color('grey', '500');
+    box-shadow: 4px 0 0 mat-color(mat-palette($mat-grey, 500)), -4px 0 0 mat-color(mat-palette($mat-grey, 500));
     opacity: .5;
     &.is-active {
       opacity: 1;
@@ -114,7 +113,7 @@ li {
   }
   .slt-timeline-block {
     position: absolute;
-    background-color: material-color('grey', '500');
+    background-color: mat-color(mat-palette($mat-grey, 500));
     height: 12px;
     border-radius: 6px;
     top: 50%;
@@ -136,15 +135,15 @@ li {
     }
   }
   .slt-timeline-animation.is-active .slt-timeline-block {
-    background-color: material-color('green', '200');
+    background-color: mat-color(mat-palette($mat-green, 200));
     &.is-selected {
       background-color: $colorSelectedAnimationBlock;
     }
     &.has-error {
-      background-color: material-color('red', '400');
+      background-color: mat-color(mat-palette($mat-red, A200));
     }
     &.is-selected-with-error {
-      background-color: #c63937;
+      background-color: mat-color(mat-palette($mat-red, A700));
     }
   }
 }

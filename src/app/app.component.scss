@@ -1,4 +1,3 @@
-@import './styles/material-colors';
 @import './styles/material-shadows';
 @import './styles/variables';
 @import './styles/theme';
@@ -28,7 +27,7 @@ div.toolbar-container {
 div.display-container {
   box-sizing: border-box;
   padding: 16px;
-  background-color: material-color('grey', '300');
+  background-color: mat-color(mat-palette($mat-grey, 300));
   user-select: none;
 }
 

@@ -1,10 +1,9 @@
 @import '../styles/variables';
 @import '../styles/theme';
-@import '../styles/material-colors';
 @import '../styles/material-icons';
 @import '../styles/material-shadows';
 :host {
-  background-color: material-color('grey', '200');
+  background-color: mat-color(mat-palette($mat-grey, 200));
   width: 320px;
   box-shadow: material-shadow(4);
   user-select: none;
