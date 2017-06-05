@@ -1,5 +1,6 @@
 import {
   AvdSerializer,
+  SpriteSerializer,
   SvgSerializer,
 } from '../scripts/export';
 import {
@@ -22,6 +23,10 @@ import {
 } from '../store/timeline/selectors';
 import { Injectable } from '@angular/core';
 import * as $ from 'jquery';
+import * as JSZip from 'jszip';
+import * as _ from 'lodash';
+
+const EXPORTED_FPS = [30, 60];
 
 /**
  * A simple service that exports vectors and animations.
@@ -71,7 +76,40 @@ export class FileExportService {
   }
 
   exportSvgSpritesheet() {
-    // TODO: implement this
+    // Export standalone SVG frames.
+    const zip = new JSZip();
+    const svg = zip.folder('svg');
+
+    EXPORTED_FPS.forEach(fps => {
+      const numSteps = Math.ceil(this.activeAnimation.duration / 1000 * fps);
+      const svgs = SpriteSerializer.createSvgFrames(this.vectorLayer, this.activeAnimation, numSteps);
+      const length = (numSteps - 1).toString().length;
+      const fpsFolder = svg.folder(`${fps}fps`);
+      svgs.forEach((s, i) => {
+        fpsFolder.file(`frame${_.padStart(i.toString(), length, '0')}.svg`, s);
+      });
+    });
+
+    // Create an svg sprite animation.
+    const sprite = zip.folder('sprite');
+    EXPORTED_FPS.forEach(fps => {
+      const numSteps = Math.ceil(this.activeAnimation.duration / 1000 * fps);
+      const svgSprite =
+        SpriteSerializer.createSvgSprite(this.vectorLayer, this.activeAnimation, numSteps);
+      const { width, height } = this.vectorLayer;
+      const cssSprite =
+        SpriteSerializer.createCss(width, height, this.activeAnimation.duration, numSteps);
+      const fileName = `sprite_${fps}fps`;
+      const htmlSprite = SpriteSerializer.createHtml(`${fileName}.svg`, `${fileName}.css`);
+      const spriteFolder = sprite.folder(`${fps}fps`);
+      spriteFolder.file(`${fileName}.html`, htmlSprite);
+      spriteFolder.file(`${fileName}.css`, cssSprite);
+      spriteFolder.file(`${fileName}.svg`, svgSprite);
+    });
+
+    zip.generateAsync({ type: 'blob' }).then(content => {
+      downloadFile(content, `spritesheet_${this.vectorLayer.name}.zip`);
+    });
   }
 
   exportCssKeyframes() {
