@@ -1,10 +1,25 @@
-import { AvdSerializer, SvgSerializer } from '../scripts/export';
-import { SvgLoader, VectorDrawableLoader } from '../scripts/import';
-import { LayerUtil, VectorLayer } from '../scripts/layers';
+import {
+  AvdSerializer,
+  SvgSerializer,
+} from '../scripts/export';
+import {
+  SvgLoader,
+  VectorDrawableLoader,
+} from '../scripts/import';
+import {
+  LayerUtil,
+  VectorLayer,
+} from '../scripts/layers';
 import { Animation } from '../scripts/timeline';
-import { State, Store } from '../store';
+import {
+  State,
+  Store,
+} from '../store';
 import { getActiveVectorLayer } from '../store/layers/selectors';
-import { getActiveAnimation } from '../store/timeline/selectors';
+import {
+  getActiveAnimation,
+  getAnimations,
+} from '../store/timeline/selectors';
 import { Injectable } from '@angular/core';
 import * as $ from 'jquery';
 
@@ -14,11 +29,21 @@ import * as $ from 'jquery';
 @Injectable()
 export class FileExportService {
   private vectorLayer: VectorLayer;
-  private animation: Animation;
+  private animations: ReadonlyArray<Animation>;
+  private activeAnimation: Animation;
 
   constructor(readonly store: Store<State>) {
     this.store.select(getActiveVectorLayer).subscribe(vl => this.vectorLayer = vl);
-    this.store.select(getActiveAnimation).subscribe(anim => this.animation = anim);
+    this.store.select(getAnimations).subscribe(anims => this.animations = anims);
+    this.store.select(getActiveAnimation).subscribe(anim => this.activeAnimation = anim);
+  }
+
+  exportJSON() {
+    const jsonStr = JSON.stringify({
+      artwork: this.vectorLayer.toJSON(),
+      animations: this.animations.map(anim => anim.toJSON()),
+    }, undefined, 2);
+    downloadFile(jsonStr, `${this.vectorLayer.name}.iconanim`);
   }
 
   // TODO: should we or should we not export hidden layers?
@@ -39,7 +64,7 @@ export class FileExportService {
 
   exportAnimatedVectorDrawable() {
     const vl = this.vectorLayer;
-    const anim = this.animation;
+    const anim = this.activeAnimation;
     const avd = AvdSerializer.toAnimatedVectorDrawableXmlString(vl, anim);
     const fileName = `avd_${anim.name}.xml`;
     downloadFile(avd, fileName);

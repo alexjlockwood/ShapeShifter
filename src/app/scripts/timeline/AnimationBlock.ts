@@ -41,6 +41,18 @@ export abstract class AnimationBlock {
     return this.fromValue && this.toValue;
   }
 
+  toJSON() {
+    return {
+      id: this.id,
+      animationId: this.animationId,
+      layerId: this.layerId,
+      propertyName: this.propertyName,
+      startTime: this.startTime,
+      endTime: this.endTime,
+      interpolator: this.interpolator,
+    };
+  }
+
   abstract clone(): AnimationBlock;
 }
 
@@ -75,6 +87,13 @@ export class PathAnimationBlock extends AnimationBlock {
     return super.isAnimatable() && this.fromValue.isMorphableWith(this.toValue);
   }
 
+  toJSON() {
+    return Object.assign(super.toJSON(), {
+      fromValue: this.fromValue.getPathString(),
+      toValue: this.toValue.getPathString(),
+    });
+  }
+
   clone() {
     return new PathAnimationBlock(this);
   }
@@ -91,6 +110,13 @@ export class ColorAnimationBlock extends AnimationBlock {
   fromValue: string;
   toValue: string;
 
+  toJSON() {
+    return Object.assign(super.toJSON(), {
+      fromValue: this.fromValue,
+      toValue: this.toValue,
+    });
+  }
+
   clone() {
     return new ColorAnimationBlock(this);
   }
@@ -106,6 +132,13 @@ export class ColorAnimationBlock extends AnimationBlock {
 export class NumberAnimationBlock extends AnimationBlock {
   fromValue: number;
   toValue: number;
+
+  toJSON() {
+    return Object.assign(super.toJSON(), {
+      fromValue: this.fromValue,
+      toValue: this.toValue,
+    });
+  }
 
   clone() {
     return new NumberAnimationBlock(this);

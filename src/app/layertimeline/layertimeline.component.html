@@ -16,16 +16,23 @@
       fxLayout="row"
       fxLayoutAlign="start center">
 
+      <!-- File menu. -->
       <md-menu #fileMenu="mdMenu">
         <button md-menu-item
           (click)="this.newWorkspaceClick()">
           New
+        </button>
+        <button md-menu-item
+          (click)="this.saveToFileClick()">
+          Save
         </button>
       </md-menu>
       <button class="slt-layers-menu-group-button"
         [mdMenuTriggerFor]="fileMenu">
         File
       </button>
+
+      <!-- Import menu. -->
       <md-menu #importMenu="mdMenu">
         <button md-menu-item
           (click)="this.launchFilePicker('addPathsFromSvgButton')">
@@ -52,6 +59,8 @@
         [mdMenuTriggerFor]="importMenu">
         Import
       </button>
+
+      <!-- Export menu. -->
       <md-menu #exportMenu="mdMenu">
         <button md-menu-item
           (click)="exportSvgClick()">
@@ -78,7 +87,10 @@
         [mdMenuTriggerFor]="exportMenu">
         Export
       </button>
+
       <div fxFlex></div>
+
+      <!-- Add layer menu. -->
       <md-menu #addLayerMenu="mdMenu">
         <button md-menu-item
           (click)="addPathLayerClick()">
@@ -92,11 +104,6 @@
           (click)="addGroupLayerClick()">
           New group layer
         </button>
-        <!-- TODO: reenable this at some point? -->
-        <!--<button md-menu-item
-          (click)="addVectorLayerClick()">
-          New vector layer
-        </button>-->
       </md-menu>
       <button md-icon-button
         mdTooltip="Add layer"

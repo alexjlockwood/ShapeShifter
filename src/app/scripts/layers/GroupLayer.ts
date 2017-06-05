@@ -80,6 +80,19 @@ export class GroupLayer extends AbstractLayer {
       bottomRight.y + this.pivotY,
     );
   }
+
+  toJSON() {
+    return Object.assign(super.toJSON(), {
+      rotation: this.rotation,
+      scaleX: this.scaleX,
+      scaleY: this.scaleY,
+      pivotX: this.pivotX,
+      pivotY: this.pivotY,
+      translateX: this.translateX,
+      translateY: this.translateY,
+      children: this.children.map(child => child.toJSON()),
+    });
+  }
 }
 
 interface GroupLayerArgs {

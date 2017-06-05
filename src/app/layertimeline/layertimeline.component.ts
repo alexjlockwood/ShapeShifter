@@ -205,6 +205,11 @@ export class LayerTimelineComponent
   }
 
   // Called from the LayerTimelineComponent template.
+  saveToFileClick() {
+    this.fileExportService.exportJSON();
+  }
+
+  // Called from the LayerTimelineComponent template.
   addNewAnimationClick() {
     this.store.dispatch(
       new AddAnimations(
@@ -283,13 +288,6 @@ export class LayerTimelineComponent
   }
 
   // Called from the LayerTimelineComponent template.
-  // addVectorLayerClick() {
-  //   const name = ModelUtil.getUniqueLayerName(this.vectorLayers, 'vector');
-  //   const layer = new VectorLayer({ name, children: [] });
-  //   this.store.dispatch(new AddLayer(layer));
-  // }
-
-  // Called from the LayerTimelineComponent template.
   animationTimelineMouseDown(event: MouseEvent, animation: Animation) {
     this.store.dispatch(new ActivateAnimation(animation.id));
   }
@@ -301,7 +299,7 @@ export class LayerTimelineComponent
     animation: Animation,
     layer: Layer,
   ) {
-    // TODO: this JQuery 'class' stuff won't work with view encapsulation
+    // TODO: this JQuery 'class' stuff may not work with view encapsulation enabled
     const $target = $(mouseDownEvent.target);
 
     // Some geometry and hit-testing basics.
@@ -345,51 +343,50 @@ export class LayerTimelineComponent
       newEndTime?: number;
     }
 
-    const blockInfos: BlockInfo[] = draggingBlocks
-      .map(block => {
-        // By default the block is only bound by the animation duration.
-        let startBound = 0;
-        let endBound = animation.duration;
+    const blockInfos: BlockInfo[] = draggingBlocks.map(block => {
+      // By default the block is only bound by the animation duration.
+      let startBound = 0;
+      let endBound = animation.duration;
 
-        const blockNeighbors = blocksByPropertyByLayer[block.layerId][block.propertyName];
-        const indexIntoNeighbors = _.findIndex(blockNeighbors, b => block.id === b.id);
+      const blockNeighbors = blocksByPropertyByLayer[block.layerId][block.propertyName];
+      const indexIntoNeighbors = _.findIndex(blockNeighbors, b => block.id === b.id);
 
-        // Find start time bound.
-        if (indexIntoNeighbors > 0) {
-          for (let i = indexIntoNeighbors - 1; i >= 0; i--) {
-            const neighbor = blockNeighbors[i];
-            if (!draggingBlocks.includes(neighbor)
-              || action === MouseActions.ScalingUniformStart) {
-              // Only be bound by neighbors not being dragged
-              // except when uniformly changing just start time.
-              startBound = neighbor.endTime;
-              break;
-            }
+      // Find start time bound.
+      if (indexIntoNeighbors > 0) {
+        for (let i = indexIntoNeighbors - 1; i >= 0; i--) {
+          const neighbor = blockNeighbors[i];
+          if (!draggingBlocks.includes(neighbor)
+            || action === MouseActions.ScalingUniformStart) {
+            // Only be bound by neighbors not being dragged
+            // except when uniformly changing just start time.
+            startBound = neighbor.endTime;
+            break;
           }
         }
+      }
 
-        // Find end time bound.
-        if (indexIntoNeighbors < blockNeighbors.length - 1) {
-          for (let i = indexIntoNeighbors + 1; i < blockNeighbors.length; i++) {
-            const neighbor = blockNeighbors[i];
-            if (!draggingBlocks.includes(neighbor)
-              || action === MouseActions.ScalingUniformEnd) {
-              // Only be bound by neighbors not being dragged
-              // except when uniformly changing just end time.
-              endBound = neighbor.startTime;
-              break;
-            }
+      // Find end time bound.
+      if (indexIntoNeighbors < blockNeighbors.length - 1) {
+        for (let i = indexIntoNeighbors + 1; i < blockNeighbors.length; i++) {
+          const neighbor = blockNeighbors[i];
+          if (!draggingBlocks.includes(neighbor)
+            || action === MouseActions.ScalingUniformEnd) {
+            // Only be bound by neighbors not being dragged
+            // except when uniformly changing just end time.
+            endBound = neighbor.startTime;
+            break;
           }
         }
+      }
 
-        return {
-          block,
-          startBound,
-          endBound,
-          downStartTime: block.startTime,
-          downEndTime: block.endTime,
-        };
-      });
+      return {
+        block,
+        startBound,
+        endBound,
+        downStartTime: block.startTime,
+        downEndTime: block.endTime,
+      };
+    });
 
     const dragBlockDownStartTime = dragBlock.startTime;
     const dragBlockDownEndTime = dragBlock.endTime;
@@ -430,7 +427,8 @@ export class LayerTimelineComponent
               // Snap time delta.
               if (allowSnap && info.block.id === dragBlock.id) {
                 const newStartTime = info.downStartTime + timeDelta;
-                const newStartTimeSnapDelta = this.snapTime(animation, newStartTime) - newStartTime;
+                const newStartTimeSnapDelta =
+                  this.snapTime(animation, newStartTime) - newStartTime;
                 const newEndTime = info.downEndTime + timeDelta;
                 const newEndTimeSnapDelta = this.snapTime(animation, newEndTime) - newEndTime;
                 if (newStartTimeSnapDelta) {
@@ -461,13 +459,15 @@ export class LayerTimelineComponent
               // Snap time delta.
               if (allowSnap && info.block.id === dragBlock.id) {
                 const newStartTime = info.downStartTime + timeDelta;
-                const newStartTimeSnapDelta = this.snapTime(animation, newStartTime) - newStartTime;
+                const newStartTimeSnapDelta =
+                  this.snapTime(animation, newStartTime) - newStartTime;
                 if (newStartTimeSnapDelta) {
                   timeDelta += newStartTimeSnapDelta;
                 }
               }
               // Constrain time delta.
-              timeDelta = Math.min(timeDelta, (info.block.endTime - MIN_BLOCK_DURATION) - info.downStartTime);
+              timeDelta =
+                Math.min(timeDelta, (info.block.endTime - MIN_BLOCK_DURATION) - info.downStartTime);
               timeDelta = Math.max(timeDelta, info.startBound - info.downStartTime);
             });
             blockInfos.forEach(info => {
@@ -489,7 +489,8 @@ export class LayerTimelineComponent
               }
               // Constrain time delta.
               timeDelta = Math.min(timeDelta, info.endBound - info.downEndTime);
-              timeDelta = Math.max(timeDelta, (info.block.startTime + MIN_BLOCK_DURATION) - info.downEndTime);
+              timeDelta =
+                Math.max(timeDelta, (info.block.startTime + MIN_BLOCK_DURATION) - info.downEndTime);
             });
             blockInfos.forEach(info => {
               const block = info.block.clone();
@@ -525,7 +526,8 @@ export class LayerTimelineComponent
           case MouseActions.ScalingTogetherEnd: {
             let scale = (dragBlockDownEndTime + timeDelta - minStartTime)
               / (dragBlockDownEndTime - minStartTime);
-            scale = Math.min(scale, (animation.duration - minStartTime) / (maxEndTime - minStartTime));
+            scale =
+              Math.min(scale, (animation.duration - minStartTime) / (maxEndTime - minStartTime));
             let cancel = false;
             blockInfos.forEach(info => {
               info.newStartTime = minStartTime + (info.downStartTime - minStartTime) * scale;
@@ -749,8 +751,10 @@ export class LayerTimelineComponent
           }
         }
 
-        if (targetLayerInfo && targetEdge === 'bottom'
-          && LayerUtil.findNextSibling(this.vectorLayers, targetLayerInfo.layer.id) === dragLayer) {
+        if (targetLayerInfo
+          && targetEdge === 'bottom'
+          && LayerUtil.findNextSibling(
+            this.vectorLayers, targetLayerInfo.layer.id) === dragLayer) {
           targetLayerInfo = undefined;
         }
 

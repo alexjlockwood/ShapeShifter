@@ -31,6 +31,14 @@ export class Animation {
     clone.blocks = clone.blocks.slice();
     return clone;
   }
+
+  toJSON() {
+    return {
+      id: this.id,
+      duration: this.duration,
+      blocks: this.blocks.map(block => block.toJSON()),
+    };
+  }
 }
 
 interface AnimationArgs {

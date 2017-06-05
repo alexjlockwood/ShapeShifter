@@ -1,6 +1,6 @@
 import { Path } from '../paths';
-import { AbstractLayer, ConstructorArgs as AbstractConstructorArgs } from './AbstractLayer';
-import { Property, PathProperty } from '../properties';
+import { PathProperty, Property } from '../properties';
+import { ConstructorArgs as AbstractConstructorArgs, AbstractLayer } from './AbstractLayer';
 
 /**
  * Model object that mirrors the VectorDrawable's '<clip-path>' element.
@@ -32,6 +32,12 @@ export class ClipPathLayer extends AbstractLayer {
 
   getBoundingBox() {
     return this.pathData ? this.pathData.getBoundingBox() : undefined;
+  }
+
+  toJSON() {
+    return Object.assign(super.toJSON(), {
+      pathData: this.pathData.getPathString(),
+    });
   }
 }
 

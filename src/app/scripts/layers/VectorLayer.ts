@@ -1,6 +1,6 @@
-import { AbstractLayer, ConstructorArgs as AbstractConstructorArgs } from './AbstractLayer';
 import { Rect } from '../common';
-import { Property, NumberProperty, FractionProperty } from '../properties';
+import { FractionProperty, NumberProperty, Property } from '../properties';
+import { ConstructorArgs as AbstractConstructorArgs, AbstractLayer } from './AbstractLayer';
 
 /**
  * Model object that mirrors the VectorDrawable's '<vector>' element.
@@ -42,6 +42,15 @@ export class VectorLayer extends AbstractLayer {
 
   getBoundingBox() {
     return new Rect(0, 0, this.width, this.height);
+  }
+
+  toJSON() {
+    return Object.assign(super.toJSON(), {
+      width: this.width,
+      height: this.height,
+      alpha: this.alpha,
+      children: this.children.map(child => child.toJSON()),
+    });
   }
 }
 

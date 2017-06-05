@@ -1,9 +1,13 @@
-import { Path, } from '../paths';
-import { AbstractLayer, ConstructorArgs as AbstractConstructorArgs } from './AbstractLayer';
+import { Path } from '../paths';
 import {
-  Property, PathProperty, ColorProperty,
-  FractionProperty, NumberProperty, EnumProperty,
+  ColorProperty,
+  EnumProperty,
+  FractionProperty,
+  NumberProperty,
+  PathProperty,
+  Property,
 } from '../properties';
+import { ConstructorArgs as AbstractConstructorArgs, AbstractLayer } from './AbstractLayer';
 
 const ENUM_LINECAP_OPTIONS = [
   { value: 'butt', label: 'Butt' },
@@ -86,6 +90,24 @@ export class PathLayer extends AbstractLayer {
 
   getBoundingBox() {
     return this.pathData ? this.pathData.getBoundingBox() : undefined;
+  }
+
+  toJSON() {
+    return Object.assign(super.toJSON(), {
+      pathData: this.pathData.getPathString(),
+      fillColor: this.fillColor,
+      fillAlpha: this.fillAlpha,
+      strokeColor: this.strokeColor,
+      strokeAlpha: this.strokeAlpha,
+      strokeWidth: this.strokeWidth,
+      strokeLinecap: this.strokeLinecap,
+      strokeLinejoin: this.strokeLinejoin,
+      strokeMiterLimit: this.strokeMiterLimit,
+      trimPathStart: this.trimPathStart,
+      trimPathEnd: this.trimPathEnd,
+      trimPathOffset: this.trimPathOffset,
+      fillType: this.fillType,
+    });
   }
 }
 

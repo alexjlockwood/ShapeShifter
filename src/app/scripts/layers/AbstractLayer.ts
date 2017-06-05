@@ -1,7 +1,7 @@
-import * as _ from 'lodash';
-import { Layer, ClipPathLayer, PathLayer } from '.';
-import { Property, NameProperty, Inspectable, Animatable } from '../properties';
 import { Rect } from '../common';
+import { Animatable, Inspectable, NameProperty, Property } from '../properties';
+import { ClipPathLayer, Layer, PathLayer } from '.';
+import * as _ from 'lodash';
 
 /**
  * Root class for all layer types.
@@ -64,6 +64,14 @@ export abstract class AbstractLayer implements Layer {
       layer.children.forEach(l => visitFn(l));
     };
     visitFn(this);
+  }
+
+  toJSON() {
+    return {
+      id: this.id,
+      name: this.name,
+      type: this.getPrefix(),
+    };
   }
 
   // Implements the Layer interface.

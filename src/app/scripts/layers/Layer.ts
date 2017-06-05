@@ -1,5 +1,5 @@
-import { Inspectable, Animatable } from '../properties';
 import { Rect } from '../common';
+import { Animatable, Inspectable } from '../properties';
 
 /**
  * Interface that is shared by all vector drawable layer models below.
@@ -71,4 +71,9 @@ export interface Layer extends Inspectable, Animatable {
    * preorder traversal.
    */
   walk(beforeFn: (layer: Layer) => void): void;
+
+  /**
+   * Returns the JSON representation of this layer.
+   */
+  toJSON();
 }
