@@ -94,7 +94,7 @@ export class PathLayer extends AbstractLayer {
 
   toJSON() {
     return Object.assign(super.toJSON(), {
-      pathData: this.pathData.getPathString(),
+      pathData: this.pathData ? this.pathData.getPathString() : '',
       fillColor: this.fillColor,
       fillAlpha: this.fillAlpha,
       strokeColor: this.strokeColor,

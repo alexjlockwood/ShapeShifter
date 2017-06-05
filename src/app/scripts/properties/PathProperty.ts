@@ -35,7 +35,7 @@ export class PathProperty extends Property<Path> {
 
   // @Override
   displayValueForValue(value: Path) {
-    return value.getPathString();
+    return value ? value.getPathString() : '';
   }
 
   // @Override

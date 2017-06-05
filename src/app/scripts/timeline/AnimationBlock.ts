@@ -90,8 +90,8 @@ export class PathAnimationBlock extends AnimationBlock {
   toJSON() {
     return Object.assign(super.toJSON(), {
       type: 'path',
-      fromValue: this.fromValue.getPathString(),
-      toValue: this.toValue.getPathString(),
+      fromValue: this.fromValue ? this.fromValue.getPathString() : '',
+      toValue: this.toValue ? this.toValue.getPathString() : '',
     });
   }
 

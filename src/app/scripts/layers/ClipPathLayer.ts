@@ -36,7 +36,7 @@ export class ClipPathLayer extends AbstractLayer {
 
   toJSON() {
     return Object.assign(super.toJSON(), {
-      pathData: this.pathData.getPathString(),
+      pathData: this.pathData ? this.pathData.getPathString() : '',
     });
   }
 }

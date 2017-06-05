@@ -63,7 +63,8 @@ function vectorLayerToSvgNode(
       if (withIdsAndNS) {
         conditionalAttr(node, 'id', layer.name);
       }
-      conditionalAttr(node, 'd', layer.pathData.getPathString());
+      const path = layer.pathData;
+      conditionalAttr(node, 'd', path ? path.getPathString() : '');
       if (layer.fillColor) {
         conditionalAttr(node, 'fill', ColorUtil.androidToCssHexColor(layer.fillColor), '');
       } else {

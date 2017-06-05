@@ -116,8 +116,9 @@ function vectorLayerToXmlNode(vl: VectorLayer, destinationNode, xmlDoc) {
       return parentNode;
     } else if (layer instanceof PathLayer) {
       const node = xmlDoc.createElement('path');
+      const path = layer.pathData;
       conditionalAttr_(node, 'android:name', layer.name);
-      conditionalAttr_(node, 'android:pathData', layer.pathData.getPathString());
+      conditionalAttr_(node, 'android:pathData', path ? path.getPathString() : '');
       conditionalAttr_(node, 'android:fillColor', layer.fillColor, '');
       conditionalAttr_(node, 'android:fillAlpha', layer.fillAlpha, 1);
       conditionalAttr_(node, 'android:strokeColor', layer.strokeColor, '');
@@ -133,8 +134,9 @@ function vectorLayerToXmlNode(vl: VectorLayer, destinationNode, xmlDoc) {
       return parentNode;
     } else if (layer instanceof ClipPathLayer) {
       const node = xmlDoc.createElement('clip-path');
+      const path = layer.pathData;
       conditionalAttr_(node, 'android:name', layer.name);
-      conditionalAttr_(node, 'android:pathData', layer.pathData.getPathString());
+      conditionalAttr_(node, 'android:pathData', path ? path.getPathString() : '');
       parentNode.appendChild(node);
       return parentNode;
     } else if (layer instanceof GroupLayer) {
