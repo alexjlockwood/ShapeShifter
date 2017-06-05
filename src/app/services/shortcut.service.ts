@@ -1,5 +1,9 @@
 import { AnimatorService } from '../animator';
-import { DeleteSelectedModels, State, Store } from '../store';
+import {
+  DeleteSelectedModels,
+  State,
+  Store,
+} from '../store';
 import { isActionMode } from '../store/actionmode/selectors';
 import { Injectable } from '@angular/core';
 import * as $ from 'jquery';

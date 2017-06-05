@@ -1,5 +1,8 @@
 import { Rect } from '../common';
-import { Animatable, Inspectable } from '../properties';
+import {
+  Animatable,
+  Inspectable,
+} from '../properties';
 
 /**
  * Interface that is shared by all vector drawable layer models below.

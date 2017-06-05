@@ -1,7 +1,11 @@
 import 'rxjs/add/observable/combineLatest';
 
 import { AnimatorService } from '../animator';
-import { MathUtil, Matrix, Point } from '../scripts/common';
+import {
+  MathUtil,
+  Matrix,
+  Point,
+} from '../scripts/common';
 import {
   ClipPathLayer,
   GroupLayer,
@@ -45,7 +49,13 @@ import { MorphSubPathHelper } from './MorphSubPathHelper';
 import { SegmentSplitter } from './SegmentSplitter';
 import { SelectionHelper } from './SelectionHelper';
 import { ShapeSplitter } from './ShapeSplitter';
-import { AfterViewInit, Directive, ElementRef, HostListener, Input } from '@angular/core';
+import {
+  AfterViewInit,
+  Directive,
+  ElementRef,
+  HostListener,
+  Input,
+} from '@angular/core';
 import * as $ from 'jquery';
 import * as _ from 'lodash';
 import { Observable } from 'rxjs/Observable';
@@ -78,6 +88,7 @@ const POINT_TEXT_COLOR = '#fff';
 // TODO: make shape shifter mode work with clip paths
 // TODO: make segment splitter work with trim paths
 // TODO: make trim paths work with shifts/reversals
+// TODO: make cursor 'drag' in selection mode when dragging points
 type Context = CanvasRenderingContext2D;
 
 /**
@@ -120,67 +131,6 @@ export class CanvasOverlayDirective
   ) {
     super();
     this.$canvas = $(elementRef.nativeElement);
-  }
-
-  private get overlayCtx() {
-    return (this.$canvas.get(0) as HTMLCanvasElement).getContext('2d');
-  }
-
-  private get highlightLineWidth() {
-    return HIGHLIGHT_LINE_WIDTH / this.cssScale;
-  }
-
-  private get minSnapThreshold() {
-    return MIN_SNAP_THRESHOLD / this.cssScale;
-  }
-
-  private get highlightLineDash() {
-    return [
-      HIGHLIGHT_LINE_DASH / this.cssScale,
-      HIGHLIGHT_LINE_DASH / this.cssScale,
-    ];
-  }
-
-  private get smallPointRadius() {
-    return SMALL_POINT_RADIUS / this.cssScale;
-  }
-
-  private get mediumPointRadius() {
-    return MEDIUM_POINT_RADIUS / this.cssScale;
-  }
-
-  private get splitPointRadius() {
-    return this.mediumPointRadius * SPLIT_POINT_RADIUS_FACTOR;
-  }
-
-  private get selectedSegmentLineWidth() {
-    return HIGHLIGHT_LINE_WIDTH / this.cssScale / 1.9;
-  }
-
-  private get unselectedSegmentLineWidth() {
-    return HIGHLIGHT_LINE_WIDTH / this.cssScale / 3;
-  }
-
-  get dragTriggerTouchSlop() {
-    return DRAG_TRIGGER_TOUCH_SLOP / this.cssScale;
-  }
-
-  // TODO: only use this for shape shifter mode
-  // TODO: only use this for shape shifter mode
-  // TODO: only use this for shape shifter mode
-  // TODO: only use this for shape shifter mode
-  // TODO: only use this for shape shifter mode
-  get activePathLayer() {
-    return this.vectorLayer.findLayerById(this.blockLayerId) as PathLayer;
-  }
-
-  // TODO: only use this for shape shifter mode
-  // TODO: only use this for shape shifter mode
-  // TODO: only use this for shape shifter mode
-  // TODO: only use this for shape shifter mode
-  // TODO: only use this for shape shifter mode
-  get activePath() {
-    return this.activePathLayer.pathData;
   }
 
   ngAfterViewInit() {
@@ -237,12 +187,9 @@ export class CanvasOverlayDirective
       this.registerSubscription(
         this.store.select(getActionMode).subscribe(mode => {
           this.actionMode = mode;
-          const pathLayer =
-            this.vectorLayer.findLayerById(this.blockLayerId) as PathLayer;
+          const layer = this.activePathLayer;
           if (this.actionMode === ActionMode.SplitCommands
-            || (this.actionMode === ActionMode.SplitSubPaths
-              && pathLayer
-              && pathLayer.isStroked())) {
+            || (this.actionMode === ActionMode.SplitSubPaths && layer && layer.isStroked())) {
             const subIdxs = new Set<number>();
             for (const s of this.actionSelections) {
               subIdxs.add(s.subIdx);
@@ -272,9 +219,7 @@ export class CanvasOverlayDirective
           } else {
             this.morphSubPathHelper = undefined;
           }
-          if (this.actionMode === ActionMode.SplitSubPaths
-            && pathLayer
-            && pathLayer.isFilled()) {
+          if (this.actionMode === ActionMode.SplitSubPaths && layer && layer.isFilled()) {
             this.shapeSplitter = new ShapeSplitter(this);
           } else {
             this.shapeSplitter = undefined;
@@ -323,6 +268,66 @@ export class CanvasOverlayDirective
             updateCurrentHoverFn(hover);
           }));
     }
+  }
+
+  private get overlayCtx() {
+    return (this.$canvas.get(0) as HTMLCanvasElement).getContext('2d');
+  }
+
+  private get highlightLineWidth() {
+    return HIGHLIGHT_LINE_WIDTH / this.cssScale;
+  }
+
+  private get minSnapThreshold() {
+    return MIN_SNAP_THRESHOLD / this.cssScale;
+  }
+
+  private get highlightLineDash() {
+    return [
+      HIGHLIGHT_LINE_DASH / this.cssScale,
+      HIGHLIGHT_LINE_DASH / this.cssScale,
+    ];
+  }
+
+  private get smallPointRadius() {
+    return SMALL_POINT_RADIUS / this.cssScale;
+  }
+
+  private get mediumPointRadius() {
+    return MEDIUM_POINT_RADIUS / this.cssScale;
+  }
+
+  private get splitPointRadius() {
+    return this.mediumPointRadius * SPLIT_POINT_RADIUS_FACTOR;
+  }
+
+  private get selectedSegmentLineWidth() {
+    return HIGHLIGHT_LINE_WIDTH / this.cssScale / 1.9;
+  }
+
+  private get unselectedSegmentLineWidth() {
+    return HIGHLIGHT_LINE_WIDTH / this.cssScale / 3;
+  }
+
+  get dragTriggerTouchSlop() {
+    return DRAG_TRIGGER_TOUCH_SLOP / this.cssScale;
+  }
+
+  // TODO: only use this for action mode
+  get activePathLayer() {
+    if (!this.vectorLayer) {
+      return undefined;
+    }
+    return this.vectorLayer.findLayerById(this.blockLayerId) as MorphableLayer;
+  }
+
+  // TODO: only use this for action mode
+  get activePath() {
+    const layer = this.activePathLayer;
+    if (!layer) {
+      return undefined;
+    }
+    return layer.pathData;
   }
 
   // @Override
@@ -398,7 +403,7 @@ export class CanvasOverlayDirective
 
     const flattenedTransform =
       LayerUtil.getFlattenedTransformForLayer(this.vectorLayer, this.blockLayerId);
-    const pathLayer = this.vectorLayer.findLayerById(this.blockLayerId) as PathLayer;
+    const pathLayer = this.activePathLayer;
     const activePath = pathLayer.pathData;
     const currentHover = this.actionHover;
 
@@ -539,8 +544,7 @@ export class CanvasOverlayDirective
       return;
     }
 
-    const pathLayer =
-      this.vectorLayer.findLayerById(this.blockLayerId) as PathLayer;
+    const pathLayer = this.activePathLayer;
     let path = pathLayer.pathData;
     if (this.currentHoverPreviewPath) {
       path = this.currentHoverPreviewPath;
@@ -691,8 +695,7 @@ export class CanvasOverlayDirective
     if (!this.isActionMode || this.actionSource === ActionSource.Animated) {
       return;
     }
-    const pathLayer =
-      this.vectorLayer.findLayerById(this.blockLayerId) as PathLayer;
+    const pathLayer = this.activePathLayer;
     if (this.actionMode !== ActionMode.SplitCommands
       && this.actionMode !== ActionMode.SplitSubPaths
       && !pathLayer.isStroked()
@@ -812,8 +815,7 @@ export class CanvasOverlayDirective
     } else if (this.actionMode === ActionMode.SplitCommands) {
       this.segmentSplitter.onMouseDown(mouseDown);
     } else if (this.actionMode === ActionMode.SplitSubPaths) {
-      const pathLayer =
-        this.vectorLayer.findLayerById(this.blockLayerId) as PathLayer;
+      const pathLayer = this.activePathLayer;
       if (pathLayer.isStroked()) {
         this.segmentSplitter.onMouseDown(mouseDown);
       } else {
@@ -835,7 +837,7 @@ export class CanvasOverlayDirective
     } else if (this.actionMode === ActionMode.SplitCommands) {
       this.segmentSplitter.onMouseMove(mouseMove);
     } else if (this.actionMode === ActionMode.SplitSubPaths) {
-      const pathLayer = this.vectorLayer.findLayerById(this.blockLayerId) as PathLayer;
+      const pathLayer = this.activePathLayer;
       if (pathLayer.isStroked()) {
         this.segmentSplitter.onMouseMove(mouseMove);
       } else {
@@ -857,7 +859,7 @@ export class CanvasOverlayDirective
     } else if (this.actionMode === ActionMode.SplitCommands) {
       this.segmentSplitter.onMouseUp(mouseUp);
     } else if (this.actionMode === ActionMode.SplitSubPaths) {
-      const pathLayer = this.vectorLayer.findLayerById(this.blockLayerId) as PathLayer;
+      const pathLayer = this.activePathLayer;
       if (pathLayer.isStroked()) {
         this.segmentSplitter.onMouseUp(mouseUp);
       } else {
@@ -880,7 +882,7 @@ export class CanvasOverlayDirective
     } else if (this.actionMode === ActionMode.SplitCommands) {
       this.segmentSplitter.onMouseLeave(mouseLeave);
     } else if (this.actionMode === ActionMode.SplitSubPaths) {
-      const pathLayer = this.vectorLayer.findLayerById(this.blockLayerId) as PathLayer;
+      const pathLayer = this.activePathLayer;
       if (pathLayer.isStroked()) {
         this.segmentSplitter.onMouseLeave(mouseLeave);
       } else {
@@ -1040,4 +1042,10 @@ interface HitTestOpts {
   noSegments?: boolean;
   noShapes?: boolean;
   restrictToSubIdx?: number[];
+}
+
+interface MorphableLayer extends Layer {
+  pathData: Path;
+  isFilled(): boolean;
+  isStroked(): boolean;
 }

@@ -1,6 +1,12 @@
 import { Path } from '../paths';
-import { PathProperty, Property } from '../properties';
-import { ConstructorArgs as AbstractConstructorArgs, AbstractLayer } from './AbstractLayer';
+import {
+  PathProperty,
+  Property,
+} from '../properties';
+import {
+  ConstructorArgs as AbstractConstructorArgs,
+  AbstractLayer,
+} from './AbstractLayer';
 
 /**
  * Model object that mirrors the VectorDrawable's '<clip-path>' element.
@@ -9,6 +15,7 @@ import { ConstructorArgs as AbstractConstructorArgs, AbstractLayer } from './Abs
   new PathProperty('pathData', { isAnimatable: true }),
 )
 export class ClipPathLayer extends AbstractLayer {
+
   constructor(obj: ConstructorArgs) {
     super(obj);
     this.pathData = obj.pathData;
@@ -32,6 +39,15 @@ export class ClipPathLayer extends AbstractLayer {
 
   getBoundingBox() {
     return this.pathData ? this.pathData.getBoundingBox() : undefined;
+  }
+
+  isStroked() {
+    // TODO: this may be the case for Android... but does this limit what web/iOS devs can do?
+    return false;
+  }
+
+  isFilled() {
+    return true;
   }
 
   toJSON() {

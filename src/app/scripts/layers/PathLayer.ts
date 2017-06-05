@@ -7,7 +7,10 @@ import {
   PathProperty,
   Property,
 } from '../properties';
-import { ConstructorArgs as AbstractConstructorArgs, AbstractLayer } from './AbstractLayer';
+import {
+  ConstructorArgs as AbstractConstructorArgs,
+  AbstractLayer,
+} from './AbstractLayer';
 
 const ENUM_LINECAP_OPTIONS = [
   { value: 'butt', label: 'Butt' },

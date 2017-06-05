@@ -1,6 +1,13 @@
 import { Rect } from '../common';
-import { FractionProperty, NumberProperty, Property } from '../properties';
-import { ConstructorArgs as AbstractConstructorArgs, AbstractLayer } from './AbstractLayer';
+import {
+  FractionProperty,
+  NumberProperty,
+  Property,
+} from '../properties';
+import {
+  ConstructorArgs as AbstractConstructorArgs,
+  AbstractLayer,
+} from './AbstractLayer';
 
 /**
  * Model object that mirrors the VectorDrawable's '<vector>' element.

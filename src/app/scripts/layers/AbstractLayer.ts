@@ -1,6 +1,17 @@
 import { Rect } from '../common';
-import { Animatable, Inspectable, NameProperty, Property } from '../properties';
-import { ClipPathLayer, GroupLayer, Layer, PathLayer, VectorLayer } from '.';
+import {
+  Animatable,
+  Inspectable,
+  NameProperty,
+  Property,
+} from '../properties';
+import {
+  ClipPathLayer,
+  GroupLayer,
+  Layer,
+  PathLayer,
+  VectorLayer,
+} from '.';
 import * as _ from 'lodash';
 
 /**
@@ -18,7 +29,7 @@ export abstract class AbstractLayer implements Layer {
   }
 
   // Implements the Layer interface.
-  findLayerById(id: string): Layer | undefined {
+  findLayerById<T extends Layer>(id: string): Layer | undefined {
     if (this.id === id) {
       return this;
     }
