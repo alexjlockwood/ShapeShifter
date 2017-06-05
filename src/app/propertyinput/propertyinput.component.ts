@@ -41,6 +41,7 @@ import * as $ from 'jquery';
 import * as _ from 'lodash';
 import { Observable } from 'rxjs/Observable';
 
+// TODO: POSSIBLE CRASH! don't let user enter action mode when 'M 0' is entered
 @Component({
   selector: 'app-propertyinput',
   templateUrl: './propertyinput.component.html',

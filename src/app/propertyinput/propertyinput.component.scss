@@ -24,8 +24,13 @@
     width: 32px;
     height: 32px;
   }
-  .spi-secondary-icon {
+  button.spi-secondary-icon {
     color: $colorBlackTextSecondary;
+    &[md-icon-button][disabled] {
+      md-icon {
+        color: $colorBlackTextDisabled;
+      }
+    }
   }
   .spi-selection-description-container {
     padding: (32px - 24px) / 2 0;
