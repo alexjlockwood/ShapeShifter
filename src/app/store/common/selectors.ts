@@ -13,6 +13,7 @@ import {
   getAnimations,
   getSelectedAnimationIds,
   getSelectedBlockIds,
+  getSelectedBlockLayerIds,
 } from '../timeline/selectors';
 import * as _ from 'lodash';
 import { createSelectorCreator, defaultMemoize } from 'reselect';
@@ -30,6 +31,7 @@ export const getCanvasOverlayState =
     hiddenLayerIds: getHiddenLayerIds,
     selectedLayerIds: getSelectedLayerIds,
     isActionMode,
+    selectedBlockLayerIds: getSelectedBlockLayerIds,
   });
 
 export const getPropertyInputState =

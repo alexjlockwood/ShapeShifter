@@ -105,6 +105,7 @@ export class CanvasOverlayDirective
   pairedSubPaths: Set<number>;
   unpairedSubPath: { source: ActionSource, subIdx: number };
   private isActionMode: boolean;
+  private selectedBlockLayerIds: Set<string>;
 
   private selectionHelper: SelectionHelper | undefined;
   private morphSubPathHelper: MorphSubPathHelper | undefined;
@@ -191,12 +192,19 @@ export class CanvasOverlayDirective
           this.store.select(getCanvasOverlayState),
         ).subscribe(([
           animatedVl,
-          { activeVectorLayer, hiddenLayerIds, selectedLayerIds, isActionMode },
+          {
+            activeVectorLayer,
+            hiddenLayerIds,
+            selectedLayerIds,
+            isActionMode,
+            selectedBlockLayerIds,
+          },
         ]) => {
           this.vectorLayer = animatedVl || activeVectorLayer;
           this.hiddenLayerIds = hiddenLayerIds;
           this.selectedLayerIds = selectedLayerIds;
-          this.isActionMode = isActionMode
+          this.isActionMode = isActionMode;
+          this.selectedBlockLayerIds = selectedBlockLayerIds;
           this.draw();
         }));
     } else {
@@ -346,11 +354,11 @@ export class CanvasOverlayDirective
 
   // Recursively draws all layer selections to the canvas.
   private drawLayerSelections(ctx: Context, curr: Layer) {
-    if (this.hiddenLayerIds.has(curr.id)) {
-      // Don't draw selections for hidden layers.
+    if (this.hiddenLayerIds.has(curr.id) || this.isActionMode) {
+      // Don't draw selections for hidden layers or while in action mode.
       return;
     }
-    if (this.selectedLayerIds.has(curr.id)) {
+    if (this.selectedLayerIds.has(curr.id) || this.selectedBlockLayerIds.has(curr.id)) {
       const root = this.vectorLayer;
       const flattenedTransform = LayerUtil.getFlattenedTransformForLayer(root, curr.id);
       if (curr instanceof ClipPathLayer) {

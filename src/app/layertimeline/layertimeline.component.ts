@@ -142,16 +142,18 @@ export class LayerTimelineComponent
   ngOnInit() {
     this.layerTimelineModel$ =
       this.store.select(getLayerTimelineState)
-        .map(({ animations, vectorLayers, selectedAnimationIds, activeAnimationId, selectedBlockIds }) => {
+        .map(({
+          animations,
+          vectorLayers,
+          selectedAnimationIds,
+          activeAnimationId,
+          selectedBlockIds,
+        }) => {
           this.animations = animations;
           this.activeAnimationId = activeAnimationId;
           this.rebuildSnapTimes();
           this.vectorLayers = vectorLayers;
           this.selectedBlockIds = selectedBlockIds;
-          // TODO: auto zoom back to initial state after full reset?
-          // TODO: auto zoom back to initial state after full reset?
-          // TODO: auto zoom back to initial state after full reset?
-          // TODO: auto zoom back to initial state after full reset?
           // TODO: auto zoom back to initial state after full reset?
           return {
             animations,
@@ -303,7 +305,11 @@ export class LayerTimelineComponent
     const $target = $(mouseDownEvent.target);
 
     // Some geometry and hit-testing basics.
-    const animRect = $(mouseDownEvent.target).parents('.slt-property').get(0).getBoundingClientRect();
+    const animRect =
+      $(mouseDownEvent.target)
+        .parents('.slt-property')
+        .get(0)
+        .getBoundingClientRect();
     const xToTimeFn = x => (x - animRect.left) / animRect.width * animation.duration;
     const downTime = xToTimeFn(mouseDownEvent.clientX);
 
@@ -324,8 +330,10 @@ export class LayerTimelineComponent
     const blocksByPropertyByLayer = ModelUtil.getOrderedBlocksByPropertyByLayer(animation);
 
     // Either drag all selected blocks or just the mousedown block.
-    const selectedBlocks = animation.blocks.filter(block => this.selectedBlockIds.has(block.id));
-    const draggingBlocks = this.selectedBlockIds.has(dragBlock.id) ? selectedBlocks : [dragBlock];
+    const selectedBlocks =
+      animation.blocks.filter(block => this.selectedBlockIds.has(block.id));
+    const draggingBlocks =
+      this.selectedBlockIds.has(dragBlock.id) ? selectedBlocks : [dragBlock];
 
     interface BlockInfo {
       block: AnimationBlock;
@@ -843,10 +851,6 @@ export class LayerTimelineComponent
       this.targetHorizZoom = 0;
     };
 
-    // TODO: should this be OS-dependent (i.e. use alt for windows?)
-    // TODO: should this be OS-dependent (i.e. use alt for windows?)
-    // TODO: should this be OS-dependent (i.e. use alt for windows?)
-    // TODO: should this be OS-dependent (i.e. use alt for windows?)
     // TODO: should this be OS-dependent (i.e. use alt for windows?)
     if (event.ctrlKey) { // chrome+mac trackpad pinch-zoom = ctrlKey
       if (!this.targetHorizZoom) {
