@@ -268,9 +268,10 @@ function getActivePathBlock(state: State) {
   return activeAnimationBlocks[blockIndex] as PathAnimationBlock;
 }
 
+// TODO: should cast this to PathLayer OR ClipPathLayer?
 function getActivePathBlockLayer(state: State) {
   const pathLayerId = getActivePathBlock(state).layerId;
-  return LayerUtil.findLayerById(state.layers.vectorLayers, pathLayerId) as PathLayer;
+  return state.layers.vectorLayer.findLayerById(pathLayerId) as PathLayer;
 }
 
 function getActivePath(state: State, source: ActionSource) {

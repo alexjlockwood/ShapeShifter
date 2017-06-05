@@ -3,7 +3,7 @@ import 'rxjs/add/observable/combineLatest';
 import { Point } from '../scripts/common';
 import { DestroyableMixin } from '../scripts/mixins';
 import { ActionSource, State, Store } from '../store';
-import { getActiveVectorLayer } from '../store/layers/selectors';
+import { getVectorLayer } from '../store/layers/selectors';
 import { CanvasContainerDirective } from './canvascontainer.directive';
 import { CanvasLayersDirective } from './canvaslayers.directive';
 import { CanvasLayoutMixin, Size } from './CanvasLayoutMixin';
@@ -57,7 +57,7 @@ export class CanvasComponent
 
   ngAfterViewInit() {
     const activeViewport$ =
-      this.store.select(getActiveVectorLayer)
+      this.store.select(getVectorLayer)
         .map(vl => { return { w: vl.width, h: vl.height } })
         .distinctUntilChanged((x, y) => _.isEqual(x, y));
     this.registerSubscription(

@@ -7,18 +7,15 @@ import * as _ from 'lodash';
 
 export interface State {
   // TODO: get rid of the active vector layer id and make this a single VectorLayer variable?
-  readonly vectorLayers: ReadonlyArray<VectorLayer>;
-  readonly activeVectorLayerId: string;
+  readonly vectorLayer: VectorLayer;
   readonly selectedLayerIds: Set<string>;
   readonly collapsedLayerIds: Set<string>;
   readonly hiddenLayerIds: Set<string>;
 }
 
 export function buildInitialState() {
-  const initialVectorLayer = new VectorLayer();
   return {
-    vectorLayers: [initialVectorLayer],
-    activeVectorLayerId: initialVectorLayer.id,
+    vectorLayer: new VectorLayer(),
     selectedLayerIds: new Set(),
     collapsedLayerIds: new Set(),
     hiddenLayerIds: new Set(),
@@ -30,39 +27,32 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
 
     // Import vector layers into the tree.
     case actions.IMPORT_VECTOR_LAYERS: {
-      // TODO: support displaying multiple vector layers at some point?
       const { vectorLayers: importedVls } = action.payload;
       if (!importedVls.length) {
         return state;
       }
-      let { vectorLayers } = state;
-      if (vectorLayers.length === 1 && !vectorLayers[0].children.length) {
+      const { vectorLayer } = state;
+      let vectorLayers = [vectorLayer];
+      if (!vectorLayer.children.length) {
         // Simply replace the empty vector layer rather than merging with it.
-        // TODO: should we still use the initial vector's name though? (or use vector_1?)
+        importedVls[0].name = vectorLayer.name;
         vectorLayers = [];
       }
-      const newVectorLayers = vectorLayers.concat(importedVls);
-      let mergedVl: VectorLayer;
+      const newVectorLayers = [...vectorLayers, ...importedVls];
       if (newVectorLayers.length === 1) {
-        mergedVl = newVectorLayers[0];
+        return { ...state, vectorLayer: newVectorLayers[0] };
       } else {
-        mergedVl = newVectorLayers.reduce(LayerUtil.mergeVectorLayers);
+        return { ...state, vectorLayer: newVectorLayers.reduce(LayerUtil.mergeVectorLayers) };
       }
-      return { ...state, vectorLayers: [mergedVl], activeVectorLayerId: mergedVl.id };
     }
 
     // Add a layer to the tree.
     case actions.ADD_LAYER: {
+      // TODO: add the layer below the currently selected layer, if one exists
       const { layer } = action.payload;
-      const vectorLayers = state.vectorLayers.map(vl => {
-        if (vl.id === state.activeVectorLayerId) {
-          // TODO: add the layer below the currently selected layer, if one exists
-          vl = vl.clone();
-          vl.children = vl.children.concat([layer]);
-        }
-        return vl;
-      });
-      return { ...state, vectorLayers };
+      const vectorLayer = state.vectorLayer.clone();
+      vectorLayer.children = vectorLayer.children.concat([layer]);
+      return { ...state, vectorLayer };
     }
 
     // Expand/collapse a layer.
@@ -70,15 +60,10 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
       const { layerId, recursive } = action.payload;
       const layerIds = new Set([layerId]);
       if (recursive) {
-        _.forEach(state.vectorLayers, vl => {
-          // Recursively expand/collapse the layer's children.
-          const layer = vl.findLayerById(layerId);
-          if (!layer) {
-            return true;
-          }
+        const layer = state.vectorLayer.findLayerById(layerId);
+        if (layer) {
           layer.walk(l => layerIds.add(l.id));
-          return false;
-        });
+        }
       }
       const collapsedLayerIds = new Set(state.collapsedLayerIds);
       if (collapsedLayerIds.has(layerId)) {
@@ -104,18 +89,13 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
     // Replace a layer.
     case actions.REPLACE_LAYER: {
       const replacementLayer = action.payload.layer;
-      let replacementVl: VectorLayer;
+      let vectorLayer: VectorLayer;
       if (replacementLayer instanceof VectorLayer) {
-        replacementVl = replacementLayer;
+        vectorLayer = replacementLayer;
       } else {
-        const vl =
-          LayerUtil.findParentVectorLayer(state.vectorLayers, replacementLayer.id);
-        replacementVl = LayerUtil.replaceLayerInTree(vl, replacementLayer);
+        vectorLayer = LayerUtil.replaceLayerInTree(state.vectorLayer, replacementLayer);
       }
-      const replacementId = replacementVl.id;
-      const vectorLayers =
-        state.vectorLayers.map(vl => vl.id === replacementId ? replacementVl : vl);
-      return { ...state, vectorLayers };
+      return { ...state, vectorLayer };
     }
 
     // Clear all layer selections.
@@ -165,20 +145,13 @@ function selectLayerId(
       }
     });
   }
-
-  let activeVectorLayerId = state.activeVectorLayerId;
-  const parentVl = LayerUtil.findParentVectorLayer(state.vectorLayers, layerId);
-  if (clearExisting || activeVectorLayerId === parentVl.id) {
-    // Only allow multi-selecting layers from the same parent vector layer.
-    activeVectorLayerId = parentVl.id;
-    if (shouldToggle && selectedLayerIds.has(layerId)) {
-      selectedLayerIds.delete(layerId);
-    } else {
-      selectedLayerIds.add(layerId);
-    }
+  if (shouldToggle && selectedLayerIds.has(layerId)) {
+    selectedLayerIds.delete(layerId);
+  } else {
+    selectedLayerIds.add(layerId);
   }
 
-  return { ...state, selectedLayerIds, activeVectorLayerId };
+  return { ...state, selectedLayerIds };
 }
 
 function deleteSelectedLayers(state: State) {
@@ -187,46 +160,30 @@ function deleteSelectedLayers(state: State) {
     // Do nothing if there are no layers selected.
     return state;
   }
-  const vectorLayers = state.vectorLayers.slice();
-  let collapsedLayerIds = new Set(state.collapsedLayerIds);
-  let hiddenLayerIds = new Set(state.hiddenLayerIds);
-  selectedLayerIds.forEach(layerId => {
-    const parentVl = LayerUtil.findParentVectorLayer(vectorLayers, layerId);
-    if (parentVl) {
-      const vlIndex = _.findIndex(vectorLayers, vl => vl.id === parentVl.id);
-      if (parentVl.id === layerId) {
-        // Remove the selected vector from the list of vectors.
-        vectorLayers.splice(vlIndex, 1);
-      } else {
-        // Remove the layer node from the parent vector.
-        vectorLayers[vlIndex] = LayerUtil.removeLayerFromTree(parentVl, layerId);
-      }
-      collapsedLayerIds.delete(layerId);
-      hiddenLayerIds.delete(layerId);
+  let { vectorLayer } = state;
+  const collapsedLayerIds = new Set(state.collapsedLayerIds);
+  const hiddenLayerIds = new Set(state.hiddenLayerIds);
+  _.forEach(selectedLayerIds, layerId => {
+    if (vectorLayer.id === layerId) {
+      vectorLayer = undefined;
+      collapsedLayerIds.clear();
+      hiddenLayerIds.clear();
+      return false;
     }
+    vectorLayer = LayerUtil.removeLayerFromTree(vectorLayer, layerId);
+    collapsedLayerIds.delete(layerId);
+    hiddenLayerIds.delete(layerId);
+    return true;
   });
-  if (collapsedLayerIds.size === state.collapsedLayerIds.size) {
-    collapsedLayerIds = state.collapsedLayerIds;
-  }
-  if (hiddenLayerIds.size === state.hiddenLayerIds.size) {
-    hiddenLayerIds = state.hiddenLayerIds;
-  }
-  if (!vectorLayers.length) {
+  if (!vectorLayer) {
     // Create an empty vector layer if the last one was deleted.
-    vectorLayers.push(new VectorLayer());
-  }
-  let { activeVectorLayerId } = state;
-  if (!_.find(vectorLayers, vl => vl.id === activeVectorLayerId)) {
-    // If the active vector layer ID has been deleted, make
-    // the first vector layer active instead.
-    activeVectorLayerId = vectorLayers[0].id;
+    vectorLayer = new VectorLayer();
   }
   return {
     ...state,
-    vectorLayers,
+    vectorLayer,
     selectedLayerIds: new Set(),
     collapsedLayerIds,
     hiddenLayerIds,
-    activeVectorLayerId,
   };
 }

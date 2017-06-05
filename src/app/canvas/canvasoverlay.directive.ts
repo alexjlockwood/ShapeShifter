@@ -39,9 +39,9 @@ import {
 } from '../store/actionmode/selectors';
 import { getCanvasOverlayState } from '../store/common/selectors';
 import {
-  getActiveVectorLayer,
   getHiddenLayerIds,
   getSelectedLayerIds,
+  getVectorLayer,
 } from '../store/layers/selectors';
 import { CanvasLayoutMixin } from './CanvasLayoutMixin';
 import * as CanvasUtil from './CanvasUtil';
@@ -143,14 +143,14 @@ export class CanvasOverlayDirective
         ).subscribe(([
           animatedVl,
           {
-            activeVectorLayer,
+            vectorLayer,
             hiddenLayerIds,
             selectedLayerIds,
             isActionMode,
             selectedBlockLayerIds,
           },
         ]) => {
-          this.vectorLayer = animatedVl || activeVectorLayer;
+          this.vectorLayer = animatedVl || vectorLayer;
           this.hiddenLayerIds = hiddenLayerIds;
           this.selectedLayerIds = selectedLayerIds;
           this.isActionMode = isActionMode;

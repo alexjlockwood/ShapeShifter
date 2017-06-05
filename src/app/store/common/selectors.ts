@@ -1,10 +1,9 @@
 import { isActionMode } from '../actionmode/selectors';
 import {
-  getActiveVectorLayer,
   getCollapsedLayerIds,
   getHiddenLayerIds,
   getSelectedLayerIds,
-  getVectorLayers,
+  getVectorLayer,
 } from '../layers/selectors';
 import { State } from '../reducer';
 import {
@@ -21,13 +20,13 @@ import { createStructuredSelector } from 'reselect';
 
 export const getCanvasLayersState =
   createStructuredSelector({
-    activeVectorLayer: getActiveVectorLayer,
+    vectorLayer: getVectorLayer,
     hiddenLayerIds: getHiddenLayerIds,
   });
 
 export const getCanvasOverlayState =
   createStructuredSelector({
-    activeVectorLayer: getActiveVectorLayer,
+    vectorLayer: getVectorLayer,
     hiddenLayerIds: getHiddenLayerIds,
     selectedLayerIds: getSelectedLayerIds,
     isActionMode,
@@ -39,7 +38,7 @@ export const getPropertyInputState =
     animations: getAnimations,
     selectedAnimationIds: getSelectedAnimationIds,
     selectedBlockIds: getSelectedBlockIds,
-    vectorLayers: getVectorLayers,
+    vectorLayer: getVectorLayer,
     selectedLayerIds: getSelectedLayerIds,
   });
 
@@ -61,7 +60,7 @@ export const getTimelineAnimationRowState =
 export const getLayerTimelineState =
   createStructuredSelector({
     animations: getAnimations,
-    vectorLayers: getVectorLayers,
+    vectorLayer: getVectorLayer,
     selectedAnimationIds: getSelectedAnimationIds,
     activeAnimationId: getActiveAnimationId,
     selectedBlockIds: getSelectedBlockIds,
@@ -70,5 +69,5 @@ export const getLayerTimelineState =
 export const getAnimatorState =
   createStructuredSelector({
     activeAnimation: getActiveAnimation,
-    activeVectorLayer: getActiveVectorLayer,
+    vectorLayer: getVectorLayer,
   });

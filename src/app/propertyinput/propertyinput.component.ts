@@ -66,13 +66,13 @@ export class PropertyInputComponent implements OnInit {
         animations,
         selectedAnimationIds,
         selectedBlockIds,
-        vectorLayers,
+        vectorLayer,
         selectedLayerIds,
       }) => {
         if (selectedLayerIds.size) {
-          return this.buildInspectedLayerProperties(vectorLayers, selectedLayerIds, animations);
+          return this.buildInspectedLayerProperties(vectorLayer, selectedLayerIds, animations);
         } else if (selectedBlockIds.size) {
-          return this.buildInspectedBlockProperties(vectorLayers, animations, selectedBlockIds);
+          return this.buildInspectedBlockProperties(vectorLayer, animations, selectedBlockIds);
         } else if (selectedAnimationIds.size) {
           return this.buildInspectedAnimationProperties(animations, selectedAnimationIds);
         } else {
@@ -146,13 +146,12 @@ export class PropertyInputComponent implements OnInit {
   }
 
   private buildInspectedLayerProperties(
-    vls: ReadonlyArray<VectorLayer>,
+    vl: VectorLayer,
     selectedLayerIds: Set<string>,
     animations: ReadonlyArray<Animation>,
   ) {
     const numSelections = selectedLayerIds.size;
-    const selectedLayers =
-      Array.from(selectedLayerIds).map(id => LayerUtil.findLayerById(vls, id));
+    const selectedLayers = Array.from(selectedLayerIds).map(id => vl.findLayerById(id));
     if (numSelections > 1) {
       return {
         numSelections,
@@ -185,8 +184,7 @@ export class PropertyInputComponent implements OnInit {
         undefined,
         (enteredValue) => {
           if (property instanceof NameProperty) {
-            return ModelUtil.getUniqueLayerName(
-              vls, NameProperty.sanitize(enteredValue));
+            return ModelUtil.getUniqueLayerName([vl], NameProperty.sanitize(enteredValue));
           }
           return enteredValue;
         },
@@ -207,7 +205,7 @@ export class PropertyInputComponent implements OnInit {
   }
 
   private buildInspectedBlockProperties(
-    vectorLayers: ReadonlyArray<VectorLayer>,
+    vl: VectorLayer,
     animations: ReadonlyArray<Animation>,
     selectedBlockIds: Set<string>,
   ) {
@@ -236,7 +234,7 @@ export class PropertyInputComponent implements OnInit {
     const block = selectedBlocks[0];
     const icon = 'animationblock';
     const description = block.propertyName;
-    const blockLayer = LayerUtil.findLayerById(vectorLayers, block.layerId);
+    const blockLayer = vl.findLayerById(block.layerId);
     const subDescription = `for '${blockLayer.name}'`;
     const inspectedProperties: InspectedProperty<any>[] = [];
     block.inspectableProperties.forEach((property, propertyName) => {

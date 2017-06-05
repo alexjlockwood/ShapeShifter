@@ -131,8 +131,7 @@
       <div class="slt-layers-list">
         <app-layerlisttree fxLayout="column"
           class="slt-layer-container"
-          *ngFor="let vl of model.vectorLayers; trackBy: this.trackLayerFn;"
-          [layer]="vl"
+          [layer]="model.vectorLayer"
           (onLayerClick)="this.layerClick($event.event, $event.layer)"
           (onLayerToggleExpanded)="this.layerToggleExpanded($event.event, $event.layer)"
           (onLayerToggleVisibility)="this.layerToggleVisibility($event.event, $event.layer)"
@@ -192,8 +191,7 @@
         <div appScrollGroup="timeline"
           class="slt-timeline-animation-scroller">
           <div class="slt-timeline-animation-rows">
-            <app-timelineanimationrow *ngFor="let layer of model.vectorLayers; trackBy: this.trackLayerFn;"
-              [layer]="layer"
+            <app-timelineanimationrow [layer]="model.vectorLayer"
               [animation]="animation"
               (onTimelineBlockMouseDown)="this.timelineBlockMouseDown($event.event, $event.block, $event.animation, $event.layer)"
               (onTimelineBlockClick)="this.timelineBlockClick($event.event, $event.block, $event.animation, $event.layer)">

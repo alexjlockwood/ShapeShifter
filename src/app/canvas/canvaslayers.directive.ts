@@ -25,7 +25,7 @@ import { Observable } from 'rxjs/Observable';
 type Context = CanvasRenderingContext2D;
 
 /**
- * Directive that draws the currently active vector layer to the canvas.
+ * Directive that draws the current vector layer to the canvas.
  */
 @Directive({ selector: '[appCanvasLayers]' })
 export class CanvasLayersDirective
@@ -64,8 +64,8 @@ export class CanvasLayersDirective
         Observable.combineLatest(
           this.animatorService.asObservable().map(event => event.vl),
           this.store.select(getCanvasLayersState),
-        ).subscribe(([animatedVl, { activeVectorLayer, hiddenLayerIds }]) => {
-          this.vectorLayer = animatedVl || activeVectorLayer;
+        ).subscribe(([animatedVl, { vectorLayer, hiddenLayerIds }]) => {
+          this.vectorLayer = animatedVl || vectorLayer;
           this.hiddenLayerIds = hiddenLayerIds;
           this.draw();
         }));

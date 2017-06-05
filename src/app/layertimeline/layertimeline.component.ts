@@ -117,7 +117,7 @@ export class LayerTimelineComponent
 
   private animations: ReadonlyArray<Animation>;
   private activeAnimationId: string;
-  private vectorLayers: ReadonlyArray<VectorLayer>;
+  private vectorLayer: VectorLayer;
   private selectedBlockIds: Set<string>;
 
   layerTimelineModel$: Observable<LayerTimelineModel>;
@@ -144,7 +144,7 @@ export class LayerTimelineComponent
       this.store.select(getLayerTimelineState)
         .map(({
           animations,
-          vectorLayers,
+          vectorLayer,
           selectedAnimationIds,
           activeAnimationId,
           selectedBlockIds,
@@ -152,12 +152,12 @@ export class LayerTimelineComponent
           this.animations = animations;
           this.activeAnimationId = activeAnimationId;
           this.rebuildSnapTimes();
-          this.vectorLayers = vectorLayers;
+          this.vectorLayer = vectorLayer;
           this.selectedBlockIds = selectedBlockIds;
           // TODO: auto zoom back to initial state after full reset?
           return {
             animations,
-            vectorLayers,
+            vectorLayer,
             selectedAnimationIds,
             activeAnimationId,
           }
@@ -264,7 +264,7 @@ export class LayerTimelineComponent
   // Called from the LayerTimelineComponent template.
   addPathLayerClick() {
     const layer = new PathLayer({
-      name: ModelUtil.getUniqueLayerName(this.vectorLayers, 'path'),
+      name: ModelUtil.getUniqueLayerName([this.vectorLayer], 'path'),
       children: [],
       pathData: undefined,
     });
@@ -274,7 +274,7 @@ export class LayerTimelineComponent
   // Called from the LayerTimelineComponent template.
   addClipPathLayerClick() {
     const layer = new ClipPathLayer({
-      name: ModelUtil.getUniqueLayerName(this.vectorLayers, 'mask'),
+      name: ModelUtil.getUniqueLayerName([this.vectorLayer], 'mask'),
       children: [],
       pathData: undefined,
     });
@@ -283,7 +283,7 @@ export class LayerTimelineComponent
 
   // Called from the LayerTimelineComponent template.
   addGroupLayerClick() {
-    const name = ModelUtil.getUniqueLayerName(this.vectorLayers, 'group');
+    const name = ModelUtil.getUniqueLayerName([this.vectorLayer], 'group');
     const layer = new GroupLayer({ name, children: [] });
     this.store.dispatch(new AddLayer(layer));
   }
@@ -687,7 +687,7 @@ export class LayerTimelineComponent
             width: rect.width,
           };
 
-          const layer = LayerUtil.findLayerById(this.vectorLayers, layerId);
+          const layer = this.vectorLayer.findLayerById(layerId);
           orderedLayerInfos.push({
             layer,
             element,
@@ -748,14 +748,14 @@ export class LayerTimelineComponent
               targetLayerInfo = undefined;
               break;
             }
-            layer = LayerUtil.findParent(this.vectorLayers, layer.id);
+            layer = LayerUtil.findParent([this.vectorLayer], layer.id);
           }
         }
 
         if (targetLayerInfo
           && targetEdge === 'bottom'
           && LayerUtil.findNextSibling(
-            this.vectorLayers, targetLayerInfo.layer.id) === dragLayer) {
+            [this.vectorLayer], targetLayerInfo.layer.id) === dragLayer) {
           targetLayerInfo = undefined;
         }
 
@@ -774,7 +774,7 @@ export class LayerTimelineComponent
           let replacementVl: VectorLayer;
           if (targetLayerInfo.moveIntoEmptyLayerGroup) {
             // Moving into an empty layer group.
-            const sourceVl = LayerUtil.findParentVectorLayer(this.vectorLayers, dragLayer.id);
+            const sourceVl = this.vectorLayer;
             replacementVl = LayerUtil.removeLayerFromTree(sourceVl, dragLayer.id);
             const newParent = targetLayerInfo.layer;
             replacementVl =
@@ -782,9 +782,9 @@ export class LayerTimelineComponent
                 replacementVl, newParent.id, dragLayer.clone(), newParent.children.length);
           } else {
             // Moving next to another layer.
-            let newParent = LayerUtil.findParent(this.vectorLayers, targetLayerInfo.layer.id);
+            let newParent = LayerUtil.findParent([this.vectorLayer], targetLayerInfo.layer.id);
             if (newParent) {
-              const sourceVl = LayerUtil.findParentVectorLayer(this.vectorLayers, dragLayer.id);
+              const sourceVl = this.vectorLayer;
               replacementVl = LayerUtil.removeLayerFromTree(sourceVl, dragLayer.id);
               newParent = LayerUtil.findParent([replacementVl], targetLayerInfo.layer.id);
               let index =
@@ -813,10 +813,6 @@ export class LayerTimelineComponent
   private updateDragIndicator(info: DragIndicatorInfo) {
     const curr = this.dragIndicatorSubject.getValue();
     this.dragIndicatorSubject.next({ ...curr, ...info });
-  }
-
-  trackLayerFn(index: number, layer: Layer) {
-    return layer.id;
   }
 
   trackAnimationFn(index: number, animation: Animation) {
@@ -933,7 +929,7 @@ export class LayerTimelineComponent
 
 interface LayerTimelineModel {
   readonly animations: ReadonlyArray<Animation>;
-  readonly vectorLayers: ReadonlyArray<VectorLayer>;
+  readonly vectorLayer: VectorLayer;
   readonly selectedAnimationIds: Set<string>;
   readonly activeAnimationId: string;
 }

@@ -11,7 +11,7 @@ import {
   State,
   Store,
 } from '../store';
-import { getVectorLayers } from '../store/layers/selectors';
+import { getVectorLayer } from '../store/layers/selectors';
 import { Injectable } from '@angular/core';
 
 /**
@@ -19,10 +19,10 @@ import { Injectable } from '@angular/core';
  */
 @Injectable()
 export class FileImportService {
-  private vectorLayers: ReadonlyArray<VectorLayer>;
+  private vectorLayer: VectorLayer;
 
   constructor(readonly store: Store<State>) {
-    this.store.select(getVectorLayers).subscribe(vls => this.vectorLayers = vls);
+    this.store.select(getVectorLayer).subscribe(vl => this.vectorLayer = vl);
   }
 
   import(
@@ -53,7 +53,7 @@ export class FileImportService {
       }
     };
 
-    const existingVls = this.vectorLayers.slice();
+    const existingVl = this.vectorLayer;
     for (const file of files) {
       const fileReader = new FileReader();
 
@@ -71,7 +71,7 @@ export class FileImportService {
           };
         const doesNameExistFn =
           (name: string) => {
-            return !!LayerUtil.findLayerByName(existingVls.concat(addedVls), name);
+            return !!LayerUtil.findLayerByName([existingVl, ...addedVls], name);
           };
         if (file.type.includes('svg')) {
           SvgLoader.loadVectorLayerFromSvgStringWithCallback(text, callbackFn, doesNameExistFn);

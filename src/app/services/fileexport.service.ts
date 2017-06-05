@@ -16,7 +16,7 @@ import {
   State,
   Store,
 } from '../store';
-import { getActiveVectorLayer } from '../store/layers/selectors';
+import { getVectorLayer } from '../store/layers/selectors';
 import {
   getActiveAnimation,
   getAnimations,
@@ -38,7 +38,7 @@ export class FileExportService {
   private activeAnimation: Animation;
 
   constructor(readonly store: Store<State>) {
-    this.store.select(getActiveVectorLayer).subscribe(vl => this.vectorLayer = vl);
+    this.store.select(getVectorLayer).subscribe(vl => this.vectorLayer = vl);
     this.store.select(getAnimations).subscribe(anims => this.animations = anims);
     this.store.select(getActiveAnimation).subscribe(anim => this.activeAnimation = anim);
   }

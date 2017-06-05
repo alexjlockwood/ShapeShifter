@@ -1,6 +1,6 @@
 import { LayerUtil, PathLayer } from '../../scripts/layers';
 import { PathAnimationBlock } from '../../scripts/timeline';
-import { getActiveVectorLayer } from '../layers/selectors';
+import { getVectorLayer } from '../layers/selectors';
 import { createDeepEqualSelector, getState } from '../selectors';
 import { getAnimations } from '../timeline/selectors';
 import * as _ from 'lodash';
@@ -38,7 +38,7 @@ const getUnpairedSubPath =
 
 const getVectorLayerFromValue =
   createSelector(
-    getActiveVectorLayer,
+    getVectorLayer,
     getBlock,
     (vl, block) => {
       if (!vl || !block) {
@@ -51,7 +51,7 @@ const getVectorLayerFromValue =
 
 const getVectorLayerToValue =
   createSelector(
-    getActiveVectorLayer,
+    getVectorLayer,
     getBlock,
     (vl, block) => {
       if (!vl || !block) {
