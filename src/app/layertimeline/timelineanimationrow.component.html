@@ -15,7 +15,11 @@
           'left': (100 * block.startTime / this.animation.duration) + '%',
           'width': (100 * (block.endTime - block.startTime) / this.animation.duration) + '%'
         }"
-        [ngClass]="{'is-selected': model.selectedBlockIds.has(block.id)}">
+        [ngClass]="{
+          'is-selected': block.isAnimatable() && model.selectedBlockIds.has(block.id),
+          'has-error': !block.isAnimatable() && !model.selectedBlockIds.has(block.id),
+          'is-selected-with-error': !block.isAnimatable() && model.selectedBlockIds.has(block.id)
+        }">
         <div class="slt-timeline-block-edge slt-timeline-block-edge-start"></div>
         <div class="slt-timeline-block-edge slt-timeline-block-edge-end"></div>
       </div>

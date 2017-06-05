@@ -44,6 +44,7 @@ export class TimelineAnimationRowComponent implements OnInit, Callbacks {
         .map(({ animations, collapsedLayerIds, selectedBlockIds }) => {
           const blocksByAnimationByPropertyValues =
             _.values(ModelUtil.getBlocksByAnimationByProperty(this.layer.id, animations));
+          console.info(blocksByAnimationByPropertyValues);
           return {
             blocksByAnimationByPropertyValues,
             isExpanded: !collapsedLayerIds.has(this.layer.id),
@@ -59,6 +60,7 @@ export class TimelineAnimationRowComponent implements OnInit, Callbacks {
     animation: Animation,
     layer: Layer,
   ) {
+    console.info(block, block.isAnimatable());
     this.onTimelineBlockClick.emit({ event, block, animation, layer });
   }
 
