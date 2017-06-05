@@ -81,21 +81,27 @@ export class PropertyInputComponent implements OnInit {
       });
   }
 
-  shouldShowEditPathMorphButton(model: PropertyInputModel) {
-    return model.numSelections === 1 && model.model instanceof PathAnimationBlock;
+  shouldDisableEditPathMorphButton(pim: PropertyInputModel) {
+    return pim.numSelections === 1
+      && pim.model instanceof PathAnimationBlock
+      && (!pim.model.fromValue || !pim.model.toValue)
+  }
+
+  shouldShowEditPathMorphButton(pim: PropertyInputModel) {
+    return pim.numSelections === 1 && pim.model instanceof PathAnimationBlock;
   }
 
   onEditPathMorphClick(blockId: string) {
     this.store.dispatch(new StartActionMode(blockId));
   }
 
-  shouldShowAnimateLayerButton(model: PropertyInputModel) {
-    return model.availablePropertyNames.length > 0
-      && model.numSelections === 1
-      && (model.model instanceof VectorLayer
-        || model.model instanceof GroupLayer
-        || model.model instanceof ClipPathLayer
-        || model.model instanceof PathLayer);
+  shouldShowAnimateLayerButton(pim: PropertyInputModel) {
+    return pim.availablePropertyNames.length > 0
+      && pim.numSelections === 1
+      && (pim.model instanceof VectorLayer
+        || pim.model instanceof GroupLayer
+        || pim.model instanceof ClipPathLayer
+        || pim.model instanceof PathLayer);
   }
 
   onAnimateLayerClick(layer: Layer, propertyName: string) {
@@ -106,11 +112,10 @@ export class PropertyInputComponent implements OnInit {
       new AddBlock(layer, propertyName, clonedValue, clonedValue, currentTime));
   }
 
-  shouldShowInvalidPathAnimationBlockMsg(model: PropertyInputModel) {
-    // TODO: also show message for invalid color animation block?
-    return model.numSelections === 1
-      && model.model instanceof PathAnimationBlock
-      && !model.model.isAnimatable();
+  shouldShowInvalidPathAnimationBlockMsg(pim: PropertyInputModel) {
+    return pim.numSelections === 1
+      && pim.model instanceof PathAnimationBlock
+      && !pim.model.isAnimatable();
   }
 
   valueEditorKeyDown(event: KeyboardEvent, ip: InspectedProperty<any>) {
