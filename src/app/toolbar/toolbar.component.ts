@@ -11,6 +11,13 @@ import {
 } from '../store';
 import { getToolbarState } from '../store/actionmode/selectors';
 import {
+  animate,
+  state,
+  style,
+  transition,
+  trigger,
+} from '@angular/animations';
+import {
   ChangeDetectionStrategy,
   Component,
   OnInit,
@@ -24,67 +31,61 @@ import { Observable } from 'rxjs/Observable';
 // TODO: add back google analytics stuff!
 // TODO: add back google analytics stuff!
 // TODO: add back google analytics stuff!
+//   ga('send', 'event', 'Export', 'Export click');
 declare const ga: Function;
+
+type ActionModeState = 'inactive' | 'active' | 'active_with_error';
 
 @Component({
   selector: 'app-toolbar',
   templateUrl: './toolbar.component.html',
   styleUrls: ['./toolbar.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  animations: [
+    trigger('actionModeState', [
+      // Blue grey 500.
+      state('inactive', style({ backgroundColor: '#607D8B' })),
+      // Blue A400.
+      state('active', style({ backgroundColor: '#2979FF' })),
+      // Red 500.
+      state('active_with_error', style({ backgroundColor: '#F44336' })),
+      transition('* => *', animate('200ms ease-out')),
+    ]),
+  ],
 })
 export class ToolbarComponent implements OnInit {
 
-  // This boolean is used to ensure the toolbar transition doesn't run on page load.
-  hasActionModeBeenEnabled = false;
-
   toolbarData$: Observable<ToolbarData>;
-  shouldShowActionMode$: Observable<boolean>;
+  actionModeState$: Observable<ActionModeState>;
 
   constructor(
-    readonly viewContainerRef: ViewContainerRef,
-    readonly dialogService: DialogService,
     private readonly actionModeService: ActionModeService,
     private readonly store: Store<State>,
   ) { }
 
   ngOnInit() {
-    this.toolbarData$ = this.store.select(getToolbarState)
+    const toolbarState = this.store.select(getToolbarState);
+    this.toolbarData$ = toolbarState
       .map(({ isActionMode, fromPl, toPl, mode, selections, unpairedSubPath }) => {
-        const selectionInfo =
-          new ToolbarData(isActionMode, fromPl, toPl, mode, selections, unpairedSubPath);
-        if (isActionMode) {
-          this.hasActionModeBeenEnabled = true;
-        }
-        return selectionInfo;
+        return new ToolbarData(isActionMode, fromPl, toPl, mode, selections, unpairedSubPath);
       });
-    this.shouldShowActionMode$ = this.toolbarData$.map(data => data.shouldShowActionMode());
+    this.actionModeState$ =
+      toolbarState.map(({ isActionMode, block }) => {
+        if (!isActionMode) {
+          return 'inactive';
+        }
+        if (block.isAnimatable()) {
+          return 'active';
+        }
+        return 'active_with_error';
+      });
   }
-
-  // onNewClick() {
-  //   ga('send', 'event', 'General', 'New click');
-
-  //   this.dialogService
-  //     .confirm(this.viewContainerRef, 'Start over?', 'You\'ll lose any unsaved changes.')
-  //     .subscribe(result => {
-  //       if (!result) {
-  //         return;
-  //       }
-  //       this.stateService.reset();
-  //     });
-  // }
 
   onAutoFixClick() {
     ga('send', 'event', 'General', 'Auto fix click');
 
     this.actionModeService.autoFixClick();
   }
-
-  // onExportClick() {
-  //   ga('send', 'event', 'Export', 'Export click');
-  //   const duration = this.settingsService.getDuration();
-  //   const interpolator = this.settingsService.getInterpolator();
-  //   ExportUtil.generateZip(this.stateService, duration, interpolator);
-  // }
 
   // onDemoClick() {
   //   ga('send', 'event', 'Demos', 'Demos dialog shown');

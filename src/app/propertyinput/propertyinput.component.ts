@@ -1,5 +1,8 @@
 import { AnimatorService } from '../animator';
-import { ColorUtil, ModelUtil } from '../scripts/common';
+import {
+  ColorUtil,
+  ModelUtil,
+} from '../scripts/common';
 import {
   ClipPathLayer,
   GroupLayer,
@@ -8,8 +11,17 @@ import {
   PathLayer,
   VectorLayer,
 } from '../scripts/layers';
-import { FractionProperty, NameProperty, Option, Property } from '../scripts/properties';
-import { Animation, AnimationBlock, PathAnimationBlock } from '../scripts/timeline';
+import {
+  FractionProperty,
+  NameProperty,
+  Option,
+  Property,
+} from '../scripts/properties';
+import {
+  Animation,
+  AnimationBlock,
+  PathAnimationBlock,
+} from '../scripts/timeline';
 import {
   AddBlock,
   ReplaceAnimations,
@@ -20,7 +32,11 @@ import {
   Store,
 } from '../store';
 import { getPropertyInputState } from '../store/common/selectors';
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  OnInit,
+} from '@angular/core';
 import * as $ from 'jquery';
 import * as _ from 'lodash';
 import { Observable } from 'rxjs/Observable';

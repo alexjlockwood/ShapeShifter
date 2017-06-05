@@ -1,5 +1,9 @@
 import { AnimatorService } from '../animator';
-import { ModelUtil, UiUtil } from '../scripts/common';
+import { DialogService } from '../dialogs';
+import {
+  ModelUtil,
+  UiUtil,
+} from '../scripts/common';
 import { Dragger } from '../scripts/dragger';
 import {
   ClipPathLayer,
@@ -10,8 +14,14 @@ import {
   VectorLayer,
 } from '../scripts/layers';
 import { DestroyableMixin } from '../scripts/mixins';
-import { Animation, AnimationBlock } from '../scripts/timeline';
-import { FileExportService, FileImportService } from '../services';
+import {
+  Animation,
+  AnimationBlock,
+} from '../scripts/timeline';
+import {
+  FileExportService,
+  FileImportService,
+} from '../services';
 import {
   ActivateAnimation,
   AddAnimations,
@@ -44,6 +54,7 @@ import {
   QueryList,
   ViewChild,
   ViewChildren,
+  ViewContainerRef,
 } from '@angular/core';
 import { MdSnackBar } from '@angular/material';
 import * as $ from 'jquery';
@@ -72,6 +83,7 @@ enum MouseActions {
 // TODO: add back google analytics stuff!
 // TODO: add back google analytics stuff!
 // TODO: add back google analytics stuff!
+// ga('send', 'event', 'General', 'New click');
 // declare const ga: Function;
 
 @Component({
@@ -123,6 +135,8 @@ export class LayerTimelineComponent
     private readonly snackBar: MdSnackBar,
     private readonly animatorService: AnimatorService,
     private readonly store: Store<State>,
+    private readonly dialogService: DialogService,
+    private readonly viewContainerRef: ViewContainerRef,
   ) { super() }
 
   ngOnInit() {
@@ -176,13 +190,16 @@ export class LayerTimelineComponent
 
   // Called from the LayerTimelineComponent template.
   newWorkspaceClick() {
-    // TODO: show some sort of dialog here to confirm (but only when the workspace is dirty)
-    // TODO: show some sort of dialog here to confirm (but only when the workspace is dirty)
-    // TODO: show some sort of dialog here to confirm (but only when the workspace is dirty)
-    // TODO: show some sort of dialog here to confirm (but only when the workspace is dirty)
-    // TODO: show some sort of dialog here to confirm (but only when the workspace is dirty)
-    this.animatorService.reset();
-    this.store.dispatch(new ResetWorkspace());
+    // TODO: only show when workspace is dirty
+    this.dialogService
+      .confirm(this.viewContainerRef, 'Start over?', 'You\'ll lose any unsaved changes.')
+      .subscribe(result => {
+        if (!result) {
+          return;
+        }
+        this.animatorService.reset();
+        this.store.dispatch(new ResetWorkspace());
+      });
   }
 
   // Called from the LayerTimelineComponent template.

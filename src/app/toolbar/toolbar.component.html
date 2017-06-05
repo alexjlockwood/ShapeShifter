@@ -1,9 +1,8 @@
 <div *ngIf="(this.toolbarData$ | async) as toolbarData"
   fxLayout="row"
   fxLayoutAlign="center center"
-  class="toolbar action-mode-disabled"
-  [class.action-mode-enabled]="this.hasActionModeBeenEnabled && (this.shouldShowActionMode$ | async)"
-  [class.action-mode-disabled]="this.hasActionModeBeenEnabled && !(this.shouldShowActionMode$ | async)">
+  class="toolbar"
+  [@actionModeState]="this.actionModeState$ | async">
 
   <ng-container *ngIf="{
     showActionMode: toolbarData.shouldShowActionMode(),
@@ -49,17 +48,6 @@
 
     <span fxFlex="1 1 auto"></span>
 
-    <!-- Default mode buttons. -->
-    <!--<button md-icon-button
-      class="toolbar-action-button"
-      [disabled]="!(isDirtyObservable | async)"
-      *ngIf="!data.showActionMode"
-      mdTooltip="New"
-      mdTooltipPosition="below"
-      mdTooltipShowDelay="300"
-      (click)="onNewClick()">
-      <md-icon>create</md-icon>
-    </button>-->
     <button md-icon-button
       class="toolbar-action-button"
       (click)="onAutoFixClick()"
@@ -69,48 +57,43 @@
       mdTooltipPosition="below">
       <md-icon svgIcon="autofix"></md-icon>
     </button>
-    <!--<button md-icon-button
-      class="toolbar-action-button"
-      [disabled]="(morphStatusObservable | async) !== MORPH_MORPHABLE"
-      mdTooltip="Export"
-      mdTooltipPosition="below"
-      mdTooltipShowDelay="300"
-      *ngIf="!data.showActionMode"
-      (click)="onExportClick()">
-      <md-icon>file_download</md-icon>
-    </button>-->
 
     <!-- SubPath mode. -->
-    <button md-icon-button
-      class="toolbar-action-button"
-      mdTooltip="Add points (A)"
-      mdTooltipPosition="below"
-      *ngIf="data.showAddPoints"
-      mdTooltipShowDelay="300"
-      (click)="onAddPointsClick()"
-      [class.activated]="toolbarData.isAddPointsMode()">
+    <ng-container *ngIf="{state: (this.actionModeState$ | async)} as actionMode">
+      <button md-icon-button
+        class="toolbar-action-button"
+        mdTooltip="Add points (A)"
+        mdTooltipPosition="below"
+        *ngIf="data.showAddPoints"
+        mdTooltipShowDelay="300"
+        (click)="onAddPointsClick()"
+        [class.activated-with-error]="toolbarData.isAddPointsMode() && actionMode.state === 'active_with_error'"
+        [class.activated]="toolbarData.isAddPointsMode() && actionMode.state === 'active'">
       <md-icon>add_circle_outline</md-icon>
     </button>
-    <button md-icon-button
-      class="toolbar-action-button"
-      mdTooltip="Split subpaths (S)"
-      mdTooltipPosition="below"
-      *ngIf="data.showSplitSubPaths"
-      mdTooltipShowDelay="300"
-      (click)="onSplitSubPathsClick()"
-      [class.activated]="toolbarData.isSplitSubPathsMode()">
+      <button md-icon-button
+        class="toolbar-action-button"
+        mdTooltip="Split subpaths (S)"
+        mdTooltipPosition="below"
+        *ngIf="data.showSplitSubPaths"
+        mdTooltipShowDelay="300"
+        (click)="onSplitSubPathsClick()"
+        [class.activated-with-error]="toolbarData.isSplitSubPathsMode() && actionMode.state === 'active_with_error'"
+        [class.activated]="toolbarData.isSplitSubPathsMode() && actionMode.state === 'active'">
       <md-icon>content_cut</md-icon>
     </button>
-    <button md-icon-button
-      class="toolbar-action-button"
-      mdTooltip="Pair subpaths (D)"
-      mdTooltipPosition="below"
-      *ngIf="data.showMorphSubPaths"
-      mdTooltipShowDelay="300"
-      (click)="onMorphSubPathsClick()"
-      [class.activated]="toolbarData.isMorphSubPathsMode()">
-      <md-icon>compare_arrows</md-icon>
+      <button md-icon-button
+        class="toolbar-action-button"
+        mdTooltip="Pair subpaths (D)"
+        mdTooltipPosition="below"
+        *ngIf="data.showMorphSubPaths"
+        mdTooltipShowDelay="300"
+        (click)="onMorphSubPathsClick()"
+        [class.activated-with-error]="toolbarData.isMorphSubPathsMode() && actionMode.state === 'active_with_error'"
+        [class.activated]="toolbarData.isMorphSubPathsMode() && actionMode.state === 'active'">
+       <md-icon>compare_arrows</md-icon>
     </button>
+    </ng-container>
     <button md-icon-button
       class="toolbar-action-button"
       mdTooltip="Reverse points (R)"

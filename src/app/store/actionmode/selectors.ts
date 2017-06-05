@@ -114,4 +114,5 @@ export const getToolbarState =
     mode: getActionMode,
     selections: getActionSelections,
     unpairedSubPath: getUnpairedSubPath,
+    block: getBlock,
   });

@@ -47,42 +47,12 @@ button.activated {
   }
 }
 
+button.activated-with-error {
+  md-icon {
+    color: mat-color(mat-palette($mat-grey, 800));
+  }
+}
+
 .toolbar-action-button {
   margin-left: 16px;
-}
-
-.action-mode-disabled {
-  animation-name: actionModeDisabled;
-  animation-duration: 200ms;
-  animation-timing-function: ease-out;
-  animation-fill-mode: forwards;
-}
-
-.action-mode-enabled {
-  animation-name: actionModeEnabled;
-  animation-duration: 200ms;
-  animation-timing-function: ease-out;
-  animation-fill-mode: forwards;
-}
-
-@keyframes actionModeEnabled {
-  0% {
-    background-color: mat-color($app-primary);
-    color: mat-color($app-primary, default-contrast);
-  }
-  100% {
-    background-color: mat-color($app-accent);
-    color: mat-color($app-accent, default-contrast);
-  }
-}
-
-@keyframes actionModeDisabled {
-  0% {
-    background-color: mat-color($app-accent);
-    color: mat-color($app-accent, default-contrast);
-  }
-  100% {
-    background-color: mat-color($app-primary);
-    color: mat-color($app-primary, default-contrast);
-  }
 }

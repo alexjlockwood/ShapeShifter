@@ -780,7 +780,7 @@ export class CanvasOverlayDirective
   @HostListener('mousedown', ['$event'])
   onMouseDown(event: MouseEvent) {
     const mouseDown = this.mouseEventToViewportCoords(event);
-    if (this.actionSource !== ActionSource.Animated || !this.isActionMode) {
+    if (this.actionSource === ActionSource.Animated && !this.isActionMode) {
       // Detect layer selections.
       const hitLayer = this.hitTestForLayer(mouseDown);
       const isMetaOrShiftPressed = event.metaKey || event.shiftKey;
