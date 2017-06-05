@@ -2,7 +2,7 @@ dist: trusty
 sudo: required
 language: node_js
 node_js:
-  - "7.7.1"
+  - "7.10.0"
 os:
   - linux
 env:
