@@ -193,6 +193,7 @@ export class LayerTimelineComponent
   // Called from the LayerTimelineComponent template.
   newWorkspaceClick() {
     // TODO: only show when workspace is dirty
+    // TODO: also show similar dialog when dropping a file into an existing workspace
     this.dialogService
       .confirm(this.viewContainerRef, 'Start over?', 'You\'ll lose any unsaved changes.')
       .subscribe(result => {
@@ -906,20 +907,24 @@ export class LayerTimelineComponent
     $(`#${sourceElementId}`).val('').click();
   }
 
-  // Called by the HTML template when SVGs/VDs are imported.
+  // Called from the LayerTimelineComponent template.
   onImportedFilesPicked(fileList: FileList) {
     this.fileImportService.import(
       fileList,
-      vls => {
-        this.store.dispatch(new ImportVectorLayers(vls));
-        this.snackBar.open(
-          `Imported ${vls.length} path${vls.length === 1 ? '' : 's'}`,
-          'Dismiss',
-          { duration: 2750 });
+      (vls, animations) => {
+        if (animations) {
+          this.store.dispatch(new ResetWorkspace(vls, animations));
+        } else {
+          this.store.dispatch(new ImportVectorLayers(vls));
+          this.snackBar.open(
+            `Imported ${vls.length} path${vls.length === 1 ? '' : 's'}`,
+            'Dismiss',
+            { duration: 2750 });
+        }
       },
       () => {
         this.snackBar.open(
-          `Couldn't import paths from SVG.`,
+          `Couldn't import paths from file.`,
           'Dismiss',
           { duration: 5000 });
       });

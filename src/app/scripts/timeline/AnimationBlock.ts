@@ -89,6 +89,7 @@ export class PathAnimationBlock extends AnimationBlock {
 
   toJSON() {
     return Object.assign(super.toJSON(), {
+      type: 'path',
       fromValue: this.fromValue.getPathString(),
       toValue: this.toValue.getPathString(),
     });
@@ -112,6 +113,7 @@ export class ColorAnimationBlock extends AnimationBlock {
 
   toJSON() {
     return Object.assign(super.toJSON(), {
+      type: 'color',
       fromValue: this.fromValue,
       toValue: this.toValue,
     });
@@ -135,6 +137,7 @@ export class NumberAnimationBlock extends AnimationBlock {
 
   toJSON() {
     return Object.assign(super.toJSON(), {
+      type: 'number',
       fromValue: this.fromValue,
       toValue: this.toValue,
     });

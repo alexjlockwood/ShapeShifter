@@ -1,6 +1,6 @@
 import { Rect } from '../common';
 import { Animatable, Inspectable, NameProperty, Property } from '../properties';
-import { ClipPathLayer, Layer, PathLayer } from '.';
+import { ClipPathLayer, GroupLayer, Layer, PathLayer, VectorLayer } from '.';
 import * as _ from 'lodash';
 
 /**
@@ -14,7 +14,7 @@ export abstract class AbstractLayer implements Layer {
   constructor(obj: ConstructorArgs) {
     this.id = obj.id || _.uniqueId();
     this.name = obj.name || '';
-    this.children = obj.children || [];
+    this.children = (obj.children || []).map(child => load(child));
   }
 
   // Implements the Layer interface.
@@ -99,3 +99,23 @@ interface AbstractLayerArgs {
 
 export interface AbstractLayer extends AbstractLayerArgs, Inspectable, Animatable { }
 export interface ConstructorArgs extends AbstractLayerArgs { }
+
+function load(obj: AbstractLayer | any): Layer {
+  if (obj instanceof AbstractLayer) {
+    return obj;
+  }
+  if (obj.type === 'vector') {
+    return new VectorLayer(obj);
+  }
+  if (obj.type === 'group') {
+    return new GroupLayer(obj);
+  }
+  if (obj.type === 'path') {
+    return new PathLayer(obj);
+  }
+  if (obj.type === 'mask') {
+    return new ClipPathLayer(obj);
+  }
+  console.error('Attempt to load layer with invalid object: ', obj)
+  throw new Error('Attempt to load layer with invalid object');
+}

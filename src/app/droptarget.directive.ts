@@ -69,8 +69,8 @@ export class DropTargetDirective implements OnInit {
   // of each child triggers these events on the element.
   private setDragging(isDragging: boolean) {
     if (isDragging) {
-      // when moving from child to child, dragenter is sent before dragleave
-      // on previous child
+      // When moving from child to child, dragenter is sent before dragleave
+      // on previous child.
       window.setTimeout(() => {
         if (this.notDraggingTimeoutId) {
           window.clearTimeout(this.notDraggingTimeoutId);

@@ -5,7 +5,9 @@ import { environment } from '../environments/environment';
 import { FileImportService, ShortcutService } from './services';
 import {
   ActionSource,
+  AddAnimations,
   ImportVectorLayers,
+  ResetWorkspace,
   State,
   Store,
 } from './store';
@@ -106,16 +108,20 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   onDropFiles(fileList: FileList) {
     this.fileImporterService.import(
       fileList,
-      vls => {
-        this.store.dispatch(new ImportVectorLayers(vls));
-        this.snackBar.open(
-          `Imported ${vls.length} path${vls.length === 1 ? '' : 's'}`,
-          'Dismiss',
-          { duration: 2750 });
+      (vls, animations) => {
+        if (animations) {
+          this.store.dispatch(new ResetWorkspace(vls, animations));
+        } else {
+          this.store.dispatch(new ImportVectorLayers(vls));
+          this.snackBar.open(
+            `Imported ${vls.length} path${vls.length === 1 ? '' : 's'}`,
+            'Dismiss',
+            { duration: 2750 });
+        }
       },
       () => {
         this.snackBar.open(
-          `Couldn't import paths from SVG.`,
+          `Couldn't import the file.`,
           'Dismiss',
           { duration: 5000 });
       });

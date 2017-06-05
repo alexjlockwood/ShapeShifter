@@ -23,6 +23,15 @@
           New
         </button>
         <button md-menu-item
+          (click)="this.launchFilePicker('openFileButton')">
+          Open
+          <input
+            id="openFileButton"
+            type="file"
+            accept=".shapeshifter"
+            (change)="onImportedFilesPicked(($event.target || $event.srcElement).files)">
+        </button>
+        <button md-menu-item
           (click)="this.saveToFileClick()">
           Save
         </button>

@@ -40,7 +40,7 @@ const devMetaReducers = [
   storeLogger(),
   // Meta reducer that freezes the state tree to ensure that
   // accidental mutations fail fast in dev builds.
-  storeFreeze,
+  //storeFreeze,
 ];
 
 const productionReducer: ActionReducer<State> = compose(...prodMetaReducers)(sliceReducers);

@@ -40,10 +40,10 @@ export class FileExportService {
 
   exportJSON() {
     const jsonStr = JSON.stringify({
-      artwork: this.vectorLayer.toJSON(),
+      vectorLayer: this.vectorLayer.toJSON(),
       animations: this.animations.map(anim => anim.toJSON()),
     }, undefined, 2);
-    downloadFile(jsonStr, `${this.vectorLayer.name}.iconanim`);
+    downloadFile(jsonStr, `${this.vectorLayer.name}.shapeshifter`);
   }
 
   // TODO: should we or should we not export hidden layers?

@@ -59,6 +59,7 @@ export class AnimatorService {
     this.store.select(getIsRepeating).subscribe(r => this.animator.setIsRepeating(r));
     this.store.select(getAnimatorState)
       .subscribe(({ activeVectorLayer, activeAnimation }) => {
+        console.info(activeVectorLayer, activeAnimation);
         this.activeAnimation = activeAnimation;
         this.animationRenderer = new AnimationRenderer(activeVectorLayer, activeAnimation);
         // TODO: can we make it possible to modify this data w/o pausing the animation?

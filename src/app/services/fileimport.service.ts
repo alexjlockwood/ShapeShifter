@@ -1,6 +1,16 @@
-import { SvgLoader, VectorDrawableLoader } from '../scripts/import';
-import { LayerUtil, VectorLayer } from '../scripts/layers';
-import { State, Store } from '../store';
+import {
+  SvgLoader,
+  VectorDrawableLoader,
+} from '../scripts/import';
+import {
+  LayerUtil,
+  VectorLayer,
+} from '../scripts/layers';
+import { Animation } from '../scripts/timeline';
+import {
+  State,
+  Store,
+} from '../store';
 import { getVectorLayers } from '../store/layers/selectors';
 import { Injectable } from '@angular/core';
 
@@ -15,7 +25,11 @@ export class FileImportService {
     this.store.select(getVectorLayers).subscribe(vls => this.vectorLayers = vls);
   }
 
-  import(fileList: FileList, successFn: (vls: VectorLayer[]) => void, failureFn: () => void) {
+  import(
+    fileList: FileList,
+    successFn: (vls: VectorLayer[], animations?: Animation[]) => void,
+    failureFn: () => void,
+  ) {
     if (!fileList || !fileList.length) {
       return;
     }
@@ -62,13 +76,26 @@ export class FileImportService {
         if (file.type.includes('svg')) {
           SvgLoader.loadVectorLayerFromSvgStringWithCallback(text, callbackFn, doesNameExistFn);
         } else if (file.type.includes('xml')) {
+          let vl: VectorLayer;
           try {
-            const vl = VectorDrawableLoader.loadVectorLayerFromXmlString(text, doesNameExistFn);
-            callbackFn(vl);
+            vl = VectorDrawableLoader.loadVectorLayerFromXmlString(text, doesNameExistFn);
           } catch (e) {
-            console.error('Failed to parse the XML file', e);
+            console.error('Failed to parse the file', e);
             callbackFn(undefined);
           }
+          callbackFn(vl);
+        } else if (file.type === 'application/json' || file.name.match(/\.shapeshifter$/)) {
+          let vl: VectorLayer;
+          let animations: Animation[];
+          try {
+            const jsonObj = JSON.parse(text);
+            vl = new VectorLayer(jsonObj.vectorLayer);
+            animations = jsonObj.animations.map(anim => new Animation(anim));
+          } catch (e) {
+            console.error('Failed to parse the file', e);
+            failureFn();
+          }
+          successFn([vl], animations);
         }
       };
 
