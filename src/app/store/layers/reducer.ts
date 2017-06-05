@@ -38,6 +38,7 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
       let { vectorLayers } = state;
       if (vectorLayers.length === 1 && !vectorLayers[0].children.length) {
         // Simply replace the empty vector layer rather than merging with it.
+        // TODO: should we still use the initial vector's name though? (or use vector_1?)
         vectorLayers = [];
       }
       const newVectorLayers = vectorLayers.concat(importedVls);
