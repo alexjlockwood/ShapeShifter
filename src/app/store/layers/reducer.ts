@@ -5,8 +5,6 @@ import { LayerUtil, VectorLayer } from '../../scripts/layers';
 import * as actions from './actions';
 import * as _ from 'lodash';
 
-const IS_DEV_BUILD = !environment.production;
-
 export interface State {
   // TODO: get rid of the active vector layer id and make this a single VectorLayer variable?
   readonly vectorLayers: ReadonlyArray<VectorLayer>;
@@ -17,17 +15,7 @@ export interface State {
 }
 
 export function buildInitialState() {
-  let initialVectorLayer: VectorLayer;
-  if (IS_DEV_BUILD) {
-    // TODO: remove this demo code
-    initialVectorLayer =
-      VectorDrawableLoader.loadVectorLayerFromXmlString(
-        DEBUG_VECTOR_DRAWABLE_3,
-        name => false,
-      );
-  } else {
-    initialVectorLayer = new VectorLayer();
-  }
+  const initialVectorLayer = new VectorLayer();
   return {
     vectorLayers: [initialVectorLayer],
     activeVectorLayerId: initialVectorLayer.id,
@@ -44,10 +32,22 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
     case actions.IMPORT_VECTOR_LAYERS: {
       // TODO: support displaying multiple vector layers at some point?
       const { vectorLayers: importedVls } = action.payload;
-      const { vectorLayers } = state;
+      if (!importedVls.length) {
+        return state;
+      }
+      let { vectorLayers } = state;
+      if (vectorLayers.length === 1 && !vectorLayers[0].children.length) {
+        // Simply replace the empty vector layer rather than merging with it.
+        vectorLayers = [];
+      }
       const newVectorLayers = vectorLayers.concat(importedVls);
-      const mergedVl = newVectorLayers.reduce(LayerUtil.mergeVectorLayers);
-      return { ...state, vectorLayers: [mergedVl] };
+      let mergedVl: VectorLayer;
+      if (newVectorLayers.length === 1) {
+        mergedVl = newVectorLayers[0];
+      } else {
+        mergedVl = newVectorLayers.reduce(LayerUtil.mergeVectorLayers);
+      }
+      return { ...state, vectorLayers: [mergedVl], activeVectorLayerId: mergedVl.id };
     }
 
     // Add a layer to the tree.
