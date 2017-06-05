@@ -1,9 +1,11 @@
 import { DialogService } from '../dialogs';
-import { PathLayer } from '../scripts/layers';
+import { PathLayer, VectorLayer } from '../scripts/layers';
+import { Animation } from '../scripts/timeline';
 import { ActionModeService } from '../services';
 import {
   ActionMode,
   ActionSource,
+  ResetWorkspace,
   Selection,
   SelectionType,
   State,
@@ -23,6 +25,7 @@ import {
   OnInit,
   ViewContainerRef,
 } from '@angular/core';
+import { Http, Response } from '@angular/http';
 import * as _ from 'lodash';
 import { Observable } from 'rxjs/Observable';
 
@@ -61,6 +64,9 @@ export class ToolbarComponent implements OnInit {
   constructor(
     private readonly actionModeService: ActionModeService,
     private readonly store: Store<State>,
+    private readonly dialogService: DialogService,
+    private readonly viewContainerRef: ViewContainerRef,
+    private readonly http: Http,
   ) { }
 
   ngOnInit() {
@@ -87,21 +93,31 @@ export class ToolbarComponent implements OnInit {
     this.actionModeService.autoFixClick();
   }
 
-  // onDemoClick() {
-  //   ga('send', 'event', 'Demos', 'Demos dialog shown');
-  //   const demoTitles = Array.from(DEMO_MAP.keys());
-  //   this.dialogService
-  //     .demo(this.viewContainerRef, demoTitles)
-  //     .subscribe(selectedDemoTitle => {
-  //       const selectedSvgStrings = DEMO_MAP.get(selectedDemoTitle);
-  //       if (!selectedSvgStrings) {
-  //         return;
-  //       }
-  //       ga('send', 'event', 'Demos', 'Demo selected', selectedDemoTitle);
-  //       this.stateService.reset();
-  //       DemoUtil.loadDemo(this.stateService, selectedSvgStrings);
-  //     });
-  // }
+  onDemoClick() {
+    ga('send', 'event', 'Demos', 'Demos dialog shown');
+
+    // TODO: add demos here
+    const demoTitles = ['TODO: add demos'];
+    this.dialogService
+      .demo(this.viewContainerRef, demoTitles)
+      .subscribe(selectedDemoTitle => {
+        if (selectedDemoTitle !== 'TODO: add demos') {
+          return;
+        }
+        ga('send', 'event', 'Demos', 'Demo selected', selectedDemoTitle);
+        this.http.get('demos/vector.shapeshifter')
+          .map((res: Response) => res.json())
+          .catch((error: any) => Observable.throw(error.json().error || 'Server error'))
+          .subscribe(jsonObj => {
+            // TODO: display snackbar if an error occurs?
+            // TODO: display snackbar when in offline mode
+            // TODO: show some sort of loader indicator to avoid blocking the UI thread?
+            const vl = new VectorLayer(jsonObj.vectorLayer);
+            const animations = jsonObj.animations.map(anim => new Animation(anim));
+            this.store.dispatch(new ResetWorkspace([vl], animations));
+          });
+      });
+  }
 
   onSendFeedbackClick() {
     ga('send', 'event', 'Miscellaneous', 'Send feedback click');
