@@ -79,7 +79,9 @@
             fxLayout="column"
             fxFlex>
             <input (keydown)="this.valueEditorKeyDown($event, ip)"
-              [ngClass]="{'has-input-error': ip.typeName === 'PathProperty' && this.shouldShowInvalidPathAnimationBlockMsg(model)}"
+              [ngClass]="{
+                'has-input-error': ip.typeName === 'PathProperty' && this.shouldShowInvalidPathAnimationBlockMsg(model)
+              }"
               (blur)="ip.resolveEnteredValue()"
               name="{{ip.propertyName}}"
               [(ngModel)]="ip.editableValue"
