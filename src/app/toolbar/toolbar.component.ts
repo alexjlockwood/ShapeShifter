@@ -1,7 +1,7 @@
 import { ActionModeService } from '../actionmode/actionmode.service';
 import { DialogService } from '../dialogs';
 import {
-  PathLayer,
+  MorphableLayer,
   VectorLayer,
 } from '../scripts/layers';
 import { Animation } from '../scripts/timeline';
@@ -79,8 +79,8 @@ export class ToolbarComponent implements OnInit {
   ngOnInit() {
     const toolbarState = this.store.select(getToolbarState);
     this.toolbarData$ = toolbarState
-      .map(({ isActionMode, fromPl, toPl, mode, selections, unpairedSubPath }) => {
-        return new ToolbarData(isActionMode, fromPl, toPl, mode, selections, unpairedSubPath);
+      .map(({ isActionMode, fromMl, toMl, mode, selections, unpairedSubPath }) => {
+        return new ToolbarData(isActionMode, fromMl, toMl, mode, selections, unpairedSubPath);
       });
     this.actionModeState$ =
       toolbarState.map(({ isActionMode, block }) => {
@@ -204,8 +204,8 @@ class ToolbarData {
 
   constructor(
     private readonly showActionMode: boolean,
-    activeStartPathLayer: PathLayer,
-    activeEndPathLayer: PathLayer,
+    readonly startMorphableLayer: MorphableLayer,
+    readonly endMorphableLayer: MorphableLayer,
     public readonly mode: ActionMode,
     public readonly selections: ReadonlyArray<Selection>,
     readonly unpair: { source: ActionSource; subIdx: number; },
@@ -215,14 +215,14 @@ class ToolbarData {
       return;
     }
     const canvasType = selections[0].source;
-    const activePathLayer =
-      canvasType === ActionSource.From ? activeStartPathLayer : activeEndPathLayer;
-    if (!activePathLayer) {
+    const morphableLayer =
+      canvasType === ActionSource.From ? startMorphableLayer : endMorphableLayer;
+    if (!morphableLayer) {
       return;
     }
-    const activePath = activePathLayer.pathData;
-    this.isFilled = activePathLayer.isFilled();
-    this.isStroked = activePathLayer.isStroked();
+    const activePath = morphableLayer.pathData;
+    this.isFilled = morphableLayer.isFilled();
+    this.isStroked = morphableLayer.isStroked();
     this.subPaths =
       selections
         .filter(s => s.type === SelectionType.SubPath)
@@ -232,7 +232,7 @@ class ToolbarData {
         .filter(s => {
           const { subIdx, cmdIdx } = s;
           return s.type === SelectionType.Segment
-            && activePathLayer.isFilled()
+            && morphableLayer.isFilled()
             && activePath.getCommand(subIdx, cmdIdx).isSplitSegment();
         })
         .map(s => {
@@ -265,8 +265,8 @@ class ToolbarData {
         this.unpairedSubPathSource = unpair.source;
       }
     }
-    if (activeStartPathLayer.pathData.getSubPaths().length === 1
-      && activeEndPathLayer.pathData.getSubPaths().length === 1) {
+    if (startMorphableLayer.pathData.getSubPaths().length === 1
+      && endMorphableLayer.pathData.getSubPaths().length === 1) {
       this.showMorphSubPaths = false;
     } else {
       this.showMorphSubPaths =

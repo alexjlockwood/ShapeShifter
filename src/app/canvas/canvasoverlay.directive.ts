@@ -101,8 +101,8 @@ export class CanvasOverlayDirective
   private readonly $canvas: JQuery;
   vectorLayer: VectorLayer;
   // Normal mode variables.
-  private hiddenLayerIds = new Set<string>();
-  private selectedLayerIds = new Set<string>();
+  private hiddenLayerIds: Set<string>;
+  private selectedLayerIds: Set<string>;
   // Shape Shifter mode variables.
   private blockLayerId: string;
   actionMode: ActionMode;
@@ -169,6 +169,8 @@ export class CanvasOverlayDirective
             selections,
             pairedSubPaths,
             unpairedSubPath,
+            hiddenLayerIds,
+            selectedLayerIds,
           }) => {
             this.vectorLayer = vectorLayer;
             this.blockLayerId = blockLayerId;
@@ -177,6 +179,8 @@ export class CanvasOverlayDirective
             this.actionSelections = selections;
             this.pairedSubPaths = pairedSubPaths;
             this.unpairedSubPath = unpairedSubPath;
+            this.hiddenLayerIds = hiddenLayerIds;
+            this.selectedLayerIds = selectedLayerIds;
             this.draw();
           }),
       );
@@ -908,6 +912,9 @@ export class CanvasOverlayDirective
       return undefined;
     }
     const recurseFn = (layer: Layer): Layer => {
+      if (this.hiddenLayerIds.has(layer.id)) {
+        return undefined;
+      }
       // TODO: use a user-defined type check to confirm this layer is an instance of MorphableLayer
       if ((layer instanceof PathLayer || layer instanceof ClipPathLayer) && layer.pathData) {
         const transformedPoint =
