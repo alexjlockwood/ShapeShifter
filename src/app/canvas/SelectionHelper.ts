@@ -15,6 +15,9 @@ import {
 import { CanvasOverlayDirective } from './canvasoverlay.directive';
 import * as _ from 'lodash';
 
+// TODO: use the 'Dragger' to drag points to different locations
+// TODO: clean up this class' messy communication w/ the overlay directive
+
 /**
  * Helper class that tracks information about a user's mouse gesture, allowing
  * for the selection of path points, segments, and shapes.

@@ -11,6 +11,8 @@ import {
 import { CanvasOverlayDirective } from './canvasoverlay.directive';
 import * as _ from 'lodash';
 
+// TODO: clean up this class' messy communication w/ the overlay directive
+
 /**
  * Helper class that tracks information during morph subpath mode.
  */

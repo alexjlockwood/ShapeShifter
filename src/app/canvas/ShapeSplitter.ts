@@ -17,6 +17,7 @@ interface ProjInfo {
 }
 
 // TODO: prefer previous selections over others when performing splits?
+// TODO: clean up this class' messy communication w/ the overlay directive
 
 /**
  * Helper class that can be used to split a filled subpath.
