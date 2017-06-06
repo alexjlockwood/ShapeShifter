@@ -17,20 +17,18 @@ const GRID_INTERVALS_MS = [
   1000, 2500, 5000, 10000, 30000, 60000,
 ];
 
-@Directive({
-  selector: '[appLayerTimeline]',
-})
+@Directive({ selector: '[appLayerTimeline]' })
 export class LayerTimelineDirective {
 
   @Input() isHeader: boolean | undefined;
-  private animation_: Animation;
   @Input() isActive: boolean;
-  private activeTime_: number;
-  private horizZoom_: number;
   @Output() onScrub = new EventEmitter<ScrubEvent>();
 
   private readonly canvas: HTMLCanvasElement;
   private readonly $canvas: JQuery;
+  private animation_: Animation;
+  private activeTime_: number;
+  private horizZoom_: number;
 
   constructor(readonly elementRef: ElementRef) {
     this.canvas = elementRef.nativeElement;
@@ -130,7 +128,9 @@ export class LayerTimelineDirective {
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.font = '10px Roboto';
-      for (let x = 0, t = 0; x <= width; x += spacingPx, t += spacingMs) {
+      for (let x = 0, t = 0;
+        round(x) <= round(width);
+        x += spacingPx, t += spacingMs) {
         ctx.fillText(`${t / 1000}s`, x, height / 2);
       }
       if (this.isActive) {
@@ -145,7 +145,7 @@ export class LayerTimelineDirective {
       // Grid lines.
       ctx.fillStyle = 'rgba(0,0,0,0.1)';
       for (let x = spacingPx;
-        x < width - TIMELINE_ANIMATION_PADDING * 2;
+        round(x) < round(width - TIMELINE_ANIMATION_PADDING * 2);
         x += spacingPx) {
         ctx.fillRect(x - 0.5, 0, 1, 1);
       }
@@ -155,6 +155,10 @@ export class LayerTimelineDirective {
       }
     }
   }
+}
+
+function round(n: number) {
+  return _.round(n, 8);
 }
 
 export interface ScrubEvent {
