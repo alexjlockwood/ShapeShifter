@@ -1,9 +1,5 @@
 import { AnimationRenderer } from '../../animator';
-import { Interpolator } from '../interpolators';
-import {
-  LayerUtil,
-  VectorLayer,
-} from '../layers';
+import { VectorLayer } from '../layers';
 import { Svgo } from '../svgo';
 import { Animation } from '../timeline';
 import { SvgSerializer } from '.';

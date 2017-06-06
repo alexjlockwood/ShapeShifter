@@ -1,5 +1,3 @@
-import { environment } from '../../../environments/environment';
-import { VectorDrawableLoader } from '../../scripts/import';
 import { LayerUtil, VectorLayer } from '../../scripts/layers';
 import * as actions from './actions';
 import * as _ from 'lodash';

@@ -29,7 +29,7 @@ export abstract class AbstractLayer implements Layer {
   }
 
   // Implements the Layer interface.
-  findLayerById<T extends Layer>(id: string): Layer | undefined {
+  findLayerById(id: string): Layer | undefined {
     if (this.id === id) {
       return this;
     }

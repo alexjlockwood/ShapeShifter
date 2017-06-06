@@ -1,5 +1,4 @@
 import { createDeepEqualSelector, getState } from '../selectors';
-import * as _ from 'lodash';
 import { createSelector } from 'reselect';
 
 const getLayerState = createSelector(getState, s => s.layers);

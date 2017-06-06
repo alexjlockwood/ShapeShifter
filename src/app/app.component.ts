@@ -5,7 +5,6 @@ import { environment } from '../environments/environment';
 import { FileImportService, ShortcutService } from './services';
 import {
   ActionSource,
-  AddAnimations,
   ImportVectorLayers,
   ResetWorkspace,
   State,

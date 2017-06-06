@@ -2,7 +2,6 @@ import { MathUtil, Point } from '../scripts/common';
 import { LayerUtil } from '../scripts/layers';
 import { ProjectionOntoPath } from '../scripts/paths';
 import {
-  ActionMode,
   ActionSource,
   HoverType,
   SetSelections,

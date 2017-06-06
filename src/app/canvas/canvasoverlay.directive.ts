@@ -38,11 +38,6 @@ import {
   getActionModeStartState,
 } from '../store/actionmode/selectors';
 import { getCanvasOverlayState } from '../store/common/selectors';
-import {
-  getHiddenLayerIds,
-  getSelectedLayerIds,
-  getVectorLayer,
-} from '../store/layers/selectors';
 import { CanvasLayoutMixin } from './CanvasLayoutMixin';
 import * as CanvasUtil from './CanvasUtil';
 import { MorphSubPathHelper } from './MorphSubPathHelper';

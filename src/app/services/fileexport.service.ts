@@ -3,14 +3,7 @@ import {
   SpriteSerializer,
   SvgSerializer,
 } from '../scripts/export';
-import {
-  SvgLoader,
-  VectorDrawableLoader,
-} from '../scripts/import';
-import {
-  LayerUtil,
-  VectorLayer,
-} from '../scripts/layers';
+import { VectorLayer } from '../scripts/layers';
 import { Animation } from '../scripts/timeline';
 import {
   State,

@@ -5,7 +5,6 @@ import {
   getSelectedLayerIds,
   getVectorLayer,
 } from '../layers/selectors';
-import { State } from '../reducer';
 import {
   getActiveAnimation,
   getActiveAnimationId,
@@ -14,8 +13,6 @@ import {
   getSelectedBlockIds,
   getSelectedBlockLayerIds,
 } from '../timeline/selectors';
-import * as _ from 'lodash';
-import { createSelectorCreator, defaultMemoize } from 'reselect';
 import { createStructuredSelector } from 'reselect';
 
 export const getCanvasLayersState =
