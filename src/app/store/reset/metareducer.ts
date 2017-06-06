@@ -2,7 +2,7 @@ import { State } from '../reducer';
 import * as actions from './metaactions';
 import { ActionReducer } from '@ngrx/store';
 
-// TODO: should we replace all of the IDs stored in JSON just to be safe?
+// TODO: replace all of the IDs stored in JSON!!! otherwise selectors might not update properly
 export function metaReducer(reducer: ActionReducer<State>): ActionReducer<State> {
   return (state: State, action: actions.Actions): State => {
     if (action.type === actions.RESET_WORKSPACE) {
@@ -10,17 +10,10 @@ export function metaReducer(reducer: ActionReducer<State>): ActionReducer<State>
     }
     state = reducer(state, action);
     if (action.type === actions.RESET_WORKSPACE) {
-      const { vectorLayers, animations } = action.payload;
-      if (vectorLayers) {
+      const { vectorLayer, animations } = action.payload;
+      if (vectorLayer) {
         const { layers } = state;
-        state = {
-          ...state,
-          layers: {
-            ...layers,
-            vectorLayers,
-            activeVectorLayerId: vectorLayers[0].id,
-          },
-        };
+        state = { ...state, layers: { ...layers, vectorLayer } };
       }
       if (animations) {
         const { timeline } = state;
