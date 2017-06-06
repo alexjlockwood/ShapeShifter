@@ -10,10 +10,10 @@ export function metaReducer(reducer: ActionReducer<State>): ActionReducer<State>
     }
     state = reducer(state, action);
     if (action.type === actions.RESET_WORKSPACE) {
-      const { vectorLayer, animations } = action.payload;
+      const { vectorLayer, animations, hiddenLayerIds } = action.payload;
       if (vectorLayer) {
         const { layers } = state;
-        state = { ...state, layers: { ...layers, vectorLayer } };
+        state = { ...state, layers: { ...layers, vectorLayer, hiddenLayerIds } };
       }
       if (animations) {
         const { timeline } = state;

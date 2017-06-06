@@ -1,4 +1,5 @@
 {
+  "version": 1,
   "vectorLayer": {
     "id": "36",
     "name": "vector",
@@ -80,5 +81,6 @@
         }
       ]
     }
-  ]
+  ],
+  "hiddenLayerIds": []
 }

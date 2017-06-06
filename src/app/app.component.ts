@@ -2,7 +2,7 @@ import 'rxjs/add/operator/distinctUntilChanged';
 import 'rxjs/add/operator/combineLatest';
 
 import { environment } from '../environments/environment';
-import { FileImportService } from './import/fileimport.service';
+import { FileImportService, regenerateModelIds } from './import/fileimport.service';
 import { VectorLayer } from './scripts/layers';
 import { Animation } from './scripts/timeline';
 import { ShortcutService } from './shortcut/shortcut.service';
@@ -110,9 +110,14 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
           // TODO: display snackbar if an error occurs?
           // TODO: display snackbar when in offline mode
           // TODO: show some sort of loader indicator to avoid blocking the UI thread?
-          const vl = new VectorLayer(jsonObj.vectorLayer);
-          const animations = jsonObj.animations.map(anim => new Animation(anim));
-          this.store.dispatch(new ResetWorkspace(vl, animations));
+          let vl = new VectorLayer(jsonObj.vectorLayer);
+          let animations = jsonObj.animations.map(anim => new Animation(anim));
+          let hiddenLayerIds = new Set<string>(jsonObj.hiddenLayerIds);
+          const regeneratedModels = regenerateModelIds(vl, animations, hiddenLayerIds);
+          vl = regeneratedModels.vl;
+          animations = regeneratedModels.animations;
+          hiddenLayerIds = regeneratedModels.hiddenLayerIds;
+          this.store.dispatch(new ResetWorkspace(vl, animations, hiddenLayerIds));
         });
     }
   }
@@ -127,9 +132,9 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   onDropFiles(fileList: FileList) {
     this.fileImporterService.import(
       fileList,
-      (vls, animations) => {
+      (vls, animations, hiddenLayerIds) => {
         if (animations) {
-          this.store.dispatch(new ResetWorkspace(vls[0], animations));
+          this.store.dispatch(new ResetWorkspace(vls[0], animations, hiddenLayerIds));
         } else {
           this.store.dispatch(new ImportVectorLayers(vls));
           this.snackBar.open(

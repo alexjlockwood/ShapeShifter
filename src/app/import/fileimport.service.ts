@@ -1,8 +1,12 @@
 import {
+  Layer,
   LayerUtil,
   VectorLayer,
 } from '../scripts/layers';
-import { Animation } from '../scripts/timeline';
+import {
+  Animation,
+  AnimationBlock,
+} from '../scripts/timeline';
 import {
   State,
   Store,
@@ -11,6 +15,7 @@ import { getVectorLayer } from '../store/layers/selectors';
 import * as  SvgLoader from './SvgLoader';
 import * as VectorDrawableLoader from './VectorDrawableLoader';
 import { Injectable } from '@angular/core';
+import * as _ from 'lodash';
 
 /**
  * A simple service that imports vector layers from files.
@@ -25,7 +30,7 @@ export class FileImportService {
 
   import(
     fileList: FileList,
-    successFn: (vls: VectorLayer[], animations?: Animation[]) => void,
+    successFn: (vls: VectorLayer[], animations?: ReadonlyArray<Animation>, hiddenLayerIds?: Set<string>) => void,
     failureFn: () => void,
   ) {
     if (!fileList || !fileList.length) {
@@ -84,16 +89,22 @@ export class FileImportService {
           callbackFn(vl);
         } else if (file.type === 'application/json' || file.name.match(/\.shapeshifter$/)) {
           let vl: VectorLayer;
-          let animations: Animation[];
+          let animations: ReadonlyArray<Animation>;
+          let hiddenLayerIds: Set<string>;
           try {
             const jsonObj = JSON.parse(text);
             vl = new VectorLayer(jsonObj.vectorLayer);
             animations = jsonObj.animations.map(anim => new Animation(anim));
+            hiddenLayerIds = new Set<string>(jsonObj.hiddenLayerIds);
+            const regeneratedModels = regenerateModelIds(vl, animations, hiddenLayerIds);
+            vl = regeneratedModels.vl;
+            animations = regeneratedModels.animations;
+            hiddenLayerIds = regeneratedModels.hiddenLayerIds;
           } catch (e) {
             console.error('Failed to parse the file', e);
             failureFn();
           }
-          successFn([vl], animations);
+          successFn([vl], animations, hiddenLayerIds);
         }
       };
 
@@ -122,4 +133,38 @@ export class FileImportService {
       fileReader.readAsText(file);
     }
   }
+}
+
+// TODO: make this private
+export function regenerateModelIds(
+  vl: VectorLayer,
+  animations: ReadonlyArray<Animation>,
+  hiddenLayerIds: Set<string>,
+) {
+  // Create a map of old IDs to new IDs.
+  const layerIdMap = new Map<string, string>();
+  vl.walk(layer => layerIdMap.set(layer.id, _.uniqueId()));
+
+  vl = (function recurseFn(layer: Layer) {
+    const clone = layer.clone();
+    clone.id = layerIdMap.get(clone.id);
+    clone.children = clone.children.map(l => recurseFn(l));
+    return clone;
+  })(vl);
+
+  animations = animations.map(anim => {
+    const clonedAnim = anim.clone();
+    clonedAnim.id = _.uniqueId();
+    clonedAnim.blocks = clonedAnim.blocks.map(block => {
+      const clonedBlock = block.clone();
+      clonedBlock.id = _.uniqueId();
+      clonedBlock.layerId = layerIdMap.get(clonedBlock.layerId);
+      return clonedBlock;
+    });
+    return clonedAnim;
+  });
+
+  hiddenLayerIds = new Set(Array.from(hiddenLayerIds).map(id => layerIdMap.get(id)));
+
+  return { vl, animations, hiddenLayerIds };
 }

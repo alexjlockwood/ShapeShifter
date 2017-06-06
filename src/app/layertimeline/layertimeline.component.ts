@@ -902,9 +902,9 @@ export class LayerTimelineComponent
   onImportedFilesPicked(fileList: FileList) {
     this.fileImportService.import(
       fileList,
-      (vls, animations) => {
+      (vls, animations, hiddenLayerIds) => {
         if (animations) {
-          this.store.dispatch(new ResetWorkspace(vls[0], animations));
+          this.store.dispatch(new ResetWorkspace(vls[0], animations, hiddenLayerIds));
         } else {
           this.store.dispatch(new ImportVectorLayers(vls));
           this.snackBar.open(

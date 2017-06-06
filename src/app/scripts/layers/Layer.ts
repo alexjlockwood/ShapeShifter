@@ -12,7 +12,7 @@ export interface Layer extends Inspectable, Animatable {
   /**
    * A non-user-visible string that uniquely identifies this layer in the tree.
    */
-  readonly id?: string;
+  id?: string;
 
   /**
    * A user-visible string uniquely identifying this layer in the tree. This value

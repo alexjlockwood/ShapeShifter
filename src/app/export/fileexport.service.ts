@@ -4,7 +4,10 @@ import {
   State,
   Store,
 } from '../store';
-import { getVectorLayer } from '../store/layers/selectors';
+import {
+  getHiddenLayerIds,
+  getVectorLayer,
+} from '../store/layers/selectors';
 import {
   getActiveAnimation,
   getAnimations,
@@ -17,6 +20,9 @@ import * as $ from 'jquery';
 import * as JSZip from 'jszip';
 import * as _ from 'lodash';
 
+// Store a version number just in case we ever change the export format....
+const IMPORT_EXPORT_VERSION = 1;
+
 const EXPORTED_FPS = [30, 60];
 
 /**
@@ -27,17 +33,21 @@ export class FileExportService {
   private vectorLayer: VectorLayer;
   private animations: ReadonlyArray<Animation>;
   private activeAnimation: Animation;
+  private hiddenLayerIds: Set<string>;
 
   constructor(readonly store: Store<State>) {
     this.store.select(getVectorLayer).subscribe(vl => this.vectorLayer = vl);
     this.store.select(getAnimations).subscribe(anims => this.animations = anims);
     this.store.select(getActiveAnimation).subscribe(anim => this.activeAnimation = anim);
+    this.store.select(getHiddenLayerIds).subscribe(ids => this.hiddenLayerIds = ids);
   }
 
   exportJSON() {
     const jsonStr = JSON.stringify({
+      version: IMPORT_EXPORT_VERSION,
       vectorLayer: this.vectorLayer.toJSON(),
       animations: this.animations.map(anim => anim.toJSON()),
+      hiddenLayerIds: Array.from(this.hiddenLayerIds),
     }, undefined, 2);
     downloadFile(jsonStr, `${this.vectorLayer.name}.shapeshifter`);
   }
