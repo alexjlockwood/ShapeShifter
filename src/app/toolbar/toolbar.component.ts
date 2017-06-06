@@ -5,6 +5,7 @@ import {
   VectorLayer,
 } from '../scripts/layers';
 import { Animation } from '../scripts/timeline';
+import { PathAnimationBlock } from '../scripts/timeline';
 import {
   ActionMode,
   ActionSource,
@@ -34,7 +35,6 @@ import {
 } from '@angular/http';
 import * as _ from 'lodash';
 import { Observable } from 'rxjs/Observable';
-;
 
 // TODO: add back google analytics stuff!
 // TODO: add back google analytics stuff!
@@ -45,6 +45,9 @@ import { Observable } from 'rxjs/Observable';
 declare const ga: Function;
 
 type ActionModeState = 'inactive' | 'active' | 'active_with_error';
+const INACTIVE = 'inactive';
+const ACTIVE = 'active';
+const ACTIVE_WITH_ERROR = 'active_with_error';
 
 @Component({
   selector: 'app-toolbar',
@@ -54,11 +57,11 @@ type ActionModeState = 'inactive' | 'active' | 'active_with_error';
   animations: [
     trigger('actionModeState', [
       // Blue grey 500.
-      state('inactive', style({ backgroundColor: '#607D8B' })),
+      state(INACTIVE, style({ backgroundColor: '#607D8B' })),
       // Blue A400.
-      state('active', style({ backgroundColor: '#2979FF' })),
+      state(ACTIVE, style({ backgroundColor: '#2979FF' })),
       // Red 500.
-      state('active_with_error', style({ backgroundColor: '#F44336' })),
+      state(ACTIVE_WITH_ERROR, style({ backgroundColor: '#F44336' })),
       transition('* => *', animate('200ms ease-out')),
     ]),
   ],
@@ -79,18 +82,19 @@ export class ToolbarComponent implements OnInit {
   ngOnInit() {
     const toolbarState = this.store.select(getToolbarState);
     this.toolbarData$ = toolbarState
-      .map(({ isActionMode, fromMl, toMl, mode, selections, unpairedSubPath }) => {
-        return new ToolbarData(isActionMode, fromMl, toMl, mode, selections, unpairedSubPath);
+      .map(({ isActionMode, fromMl, toMl, mode, selections, unpairedSubPath, block }) => {
+        return new ToolbarData(
+          isActionMode, fromMl, toMl, mode, selections, unpairedSubPath, block);
       });
     this.actionModeState$ =
       toolbarState.map(({ isActionMode, block }) => {
         if (!isActionMode) {
-          return 'inactive';
+          return INACTIVE;
         }
         if (block.isAnimatable()) {
-          return 'active';
+          return ACTIVE;
         }
-        return 'active_with_error';
+        return ACTIVE_WITH_ERROR;
       });
   }
 
@@ -101,30 +105,30 @@ export class ToolbarComponent implements OnInit {
   }
 
   onDemoClick() {
-    ga('send', 'event', 'Demos', 'Demos dialog shown');
+    // ga('send', 'event', 'Demos', 'Demos dialog shown');
 
     // TODO: add demos here
     // TODO: move this HTTP logic into a global service?
-    const demoTitles = ['TODO: add demos'];
-    this.dialogService
-      .demo(this.viewContainerRef, demoTitles)
-      .subscribe(selectedDemoTitle => {
-        if (selectedDemoTitle !== 'TODO: add demos') {
-          return;
-        }
-        ga('send', 'event', 'Demos', 'Demo selected', selectedDemoTitle);
-        this.http.get('demos/vector.shapeshifter')
-          .map((res: Response) => res.json())
-          .catch((error: any) => Observable.throw(error.json().error || 'Server error'))
-          .subscribe(jsonObj => {
-            // TODO: display snackbar if an error occurs?
-            // TODO: display snackbar when in offline mode
-            // TODO: show some sort of loader indicator to avoid blocking the UI thread?
-            const vl = new VectorLayer(jsonObj.vectorLayer);
-            const animations = jsonObj.animations.map(anim => new Animation(anim));
-            this.store.dispatch(new ResetWorkspace(vl, animations));
-          });
-      });
+    // const demoTitles = ['TODO: add demos'];
+    // this.dialogService
+    //   .demo(this.viewContainerRef, demoTitles)
+    //   .subscribe(selectedDemoTitle => {
+    //     if (selectedDemoTitle !== 'TODO: add demos') {
+    //       return;
+    //     }
+    //     ga('send', 'event', 'Demos', 'Demo selected', selectedDemoTitle);
+    //     this.http.get('demos/vector.shapeshifter')
+    //       .map((res: Response) => res.json())
+    //       .catch((error: any) => Observable.throw(error.json().error || 'Server error'))
+    //       .subscribe(jsonObj => {
+    //         // TODO: display snackbar if an error occurs?
+    //         // TODO: display snackbar when in offline mode
+    //         // TODO: show some sort of loader indicator to avoid blocking the UI thread?
+    //         const vl = new VectorLayer(jsonObj.vectorLayer);
+    //         const animations = jsonObj.animations.map(anim => new Animation(anim));
+    //         this.store.dispatch(new ResetWorkspace(vl, animations));
+    //       });
+    //   });
   }
 
   onSendFeedbackClick() {
@@ -201,6 +205,7 @@ class ToolbarData {
   private readonly showSplitInHalf: boolean;
   private readonly unpairedSubPathSource: ActionSource;
   private readonly showMorphSubPaths: boolean;
+  private readonly morphableLayerName: string;
 
   constructor(
     private readonly showActionMode: boolean,
@@ -209,6 +214,7 @@ class ToolbarData {
     public readonly mode: ActionMode,
     public readonly selections: ReadonlyArray<Selection>,
     readonly unpair: { source: ActionSource; subIdx: number; },
+    private readonly block: PathAnimationBlock | undefined,
   ) {
     // Precondition: assume all selections are for the same canvas type
     if (!selections.length) {
@@ -220,6 +226,7 @@ class ToolbarData {
     if (!morphableLayer) {
       return;
     }
+    this.morphableLayerName = morphableLayer.name;
     const activePath = morphableLayer.pathData;
     this.isFilled = morphableLayer.isFilled();
     this.isStroked = morphableLayer.isStroked();
@@ -315,7 +322,7 @@ class ToolbarData {
     } else if (numPoints > 0) {
       return `${ptStr} selected`;
     } else if (this.shouldShowActionMode()) {
-      return '';
+      return `Customize path morphing animation`;
     }
     return 'Shape Shifter';
   }
@@ -335,6 +342,32 @@ class ToolbarData {
         return `Pair the selected subpath with a corresponding subpath on the ${toSourceDir}`;
       }
       return 'Select a subpath';
+    } else if (this.shouldShowActionMode() && !this.getNumSelections()) {
+      if (!this.block || this.block.isAnimatable()) {
+        return 'Select something below to edit its properties'
+      }
+      const { fromValue, toValue } = this.block;
+      const numFromSubPaths = fromValue.getSubPaths().length;
+      const numToSubPaths = toValue.getSubPaths().length;
+
+      // The number of subpaths should be equal, but just to be safe...
+      for (let i = 0; i < Math.min(numFromSubPaths, numToSubPaths); i++) {
+        const fromCmds = fromValue.getSubPath(i).getCommands();
+        const toCmds = toValue.getSubPath(i).getCommands();
+        if (fromCmds.length === toCmds.length) {
+          continue;
+        }
+        const pathDirection = fromCmds.length < toCmds.length ? 'left' : 'right';
+        const diff = Math.abs(fromCmds.length - toCmds.length);
+        // TODO: should we explicitly call out subpath numbers here?
+        // TODO: maybe explicitly highlight the subpath in question as well?
+        if (diff === 1) {
+          return `Add 1 point to the subpath on the ${pathDirection}`;
+        } else {
+          return `Add ${diff} points to the subpath on the ${pathDirection}`;
+        }
+      }
+      // We should never reach this point, but fall through just to be safe.
     }
     return '';
   }

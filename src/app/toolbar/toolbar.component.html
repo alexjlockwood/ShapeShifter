@@ -183,9 +183,10 @@
     </button>
     <md-menu #overflowMenu="mdMenu">
       <button md-menu-item
+        [disabled]="true"
         (click)="onDemoClick()">
         <md-icon class="material-icons" svgIcon="demos"></md-icon>
-        <span>Demos</span>
+        <span>Demos (coming soon)</span>
       </button>
       <a href="https://github.com/alexjlockwood/ShapeShifter/issues"
         target="_blank"
