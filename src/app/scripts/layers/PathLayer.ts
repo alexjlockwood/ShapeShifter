@@ -50,7 +50,7 @@ const ENUM_FILLTYPE_OPTIONS = [
 // TODO: need to fix enum properties so they store/return strings instead of options?
 export class PathLayer extends AbstractLayer {
 
-  constructor(obj: ConstructorArgs) {
+  constructor(obj = { pathData: undefined, children: [], name: 'path' } as ConstructorArgs) {
     super(obj);
     this.pathData = obj.pathData;
     this.fillColor = obj.fillColor || '';

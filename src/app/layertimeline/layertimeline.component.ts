@@ -109,7 +109,7 @@ export class LayerTimelineComponent
   dragIndicatorObservable = this.dragIndicatorSubject.asObservable();
   private readonly horizZoomSubject = new BehaviorSubject<number>(DEFAULT_HORIZ_ZOOM);
   horizZoomObservable = this.horizZoomSubject.asObservable();
-  private activeTime_ = 0;
+  private currentTime_ = 0;
 
   private shouldSuppressClick = false;
   private shouldSuppressRebuildSnapTimes = false;
@@ -169,7 +169,7 @@ export class LayerTimelineComponent
     this.autoZoomToAnimation();
     this.registerSubscription(
       this.animatorService.asObservable().subscribe(event => {
-        this.activeTime = event.currentTime;
+        this.currentTime = event.currentTime;
       }));
   }
 
@@ -181,13 +181,13 @@ export class LayerTimelineComponent
     this.horizZoomSubject.next(horizZoom);
   }
 
-  private get activeTime() {
-    return this.activeTime_;
+  private get currentTime() {
+    return this.currentTime_;
   }
 
-  private set activeTime(activeTime: number) {
-    this.activeTime_ = activeTime;
-    this.timelineDirectives.forEach(dir => dir.activeTime = activeTime);
+  private set currentTime(currentTime: number) {
+    this.currentTime_ = currentTime;
+    this.timelineDirectives.forEach(dir => dir.currentTime = currentTime);
   }
 
   // Called from the LayerTimelineComponent template.
@@ -212,11 +212,8 @@ export class LayerTimelineComponent
 
   // Called from the LayerTimelineComponent template.
   addNewAnimationClick() {
-    this.store.dispatch(
-      new AddAnimations(
-        new Animation({
-          name: ModelUtil.getUniqueAnimationName(this.animations, 'anim'),
-        })));
+    const name = ModelUtil.getUniqueAnimationName(this.animations, 'anim');
+    this.store.dispatch(new AddAnimations(new Animation({ name })));
   }
 
   // Called from the LayerTimelineComponent template.
@@ -257,7 +254,7 @@ export class LayerTimelineComponent
     if (!event.disableSnap) {
       time = this.snapTime(animation, time, false);
     }
-    this.activeTime = time;
+    this.currentTime = time;
     this.animatorService.setAnimationTime(time);
   }
 
@@ -591,7 +588,7 @@ export class LayerTimelineComponent
     };
     let bestSnapTime = snapTimes.reduce(reducerFn, Infinity);
     if (includeActiveTime) {
-      bestSnapTime = reducerFn(bestSnapTime, this.activeTime);
+      bestSnapTime = reducerFn(bestSnapTime, this.currentTime);
     }
     return isFinite(bestSnapTime) ? bestSnapTime : time;
   }
@@ -616,7 +613,7 @@ export class LayerTimelineComponent
     const clonedValue =
       layer.inspectableProperties.get(propertyName).cloneValue(layer[propertyName]);
     this.store.dispatch(
-      new AddBlock(layer, propertyName, clonedValue, clonedValue, this.activeTime));
+      new AddBlock(layer, propertyName, clonedValue, clonedValue, this.currentTime));
   }
 
   // @Override LayerListTreeComponentCallbacks
@@ -829,7 +826,7 @@ export class LayerTimelineComponent
       this.$zoomStartActiveAnimation =
         $(this.timelineAnimationRefs.toArray()[animationIndex].nativeElement);
       this.zoomStartTimeCursorPos = this.$zoomStartActiveAnimation.position().left
-        + this.activeTime * this.horizZoom + TimelineConsts.TIMELINE_ANIMATION_PADDING;
+        + this.currentTime * this.horizZoom + TimelineConsts.TIMELINE_ANIMATION_PADDING;
     };
 
     const performZoomFn = () => {
@@ -839,7 +836,7 @@ export class LayerTimelineComponent
       if (this.$zoomStartActiveAnimation) {
         const newScrollLeft = this.$zoomStartActiveAnimation.position().left
           + this.$timeline.scrollLeft()
-          + this.activeTime * this.horizZoom + TimelineConsts.TIMELINE_ANIMATION_PADDING
+          + this.currentTime * this.horizZoom + TimelineConsts.TIMELINE_ANIMATION_PADDING
           - this.zoomStartTimeCursorPos;
         this.$timeline.scrollLeft(newScrollLeft);
       }

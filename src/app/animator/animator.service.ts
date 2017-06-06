@@ -36,7 +36,6 @@ export class AnimatorService {
   private isPlaying: boolean;
   private readonly animatorCallback: Callback;
 
-  // TODO: the 'should reverse' flag below doesn't work anymore... fix or remove?
   constructor(
     private readonly ngZone: NgZone,
     private readonly store: Store<State>,
@@ -49,9 +48,7 @@ export class AnimatorService {
         this.isPlaying = isPlaying;
         this.store.dispatch(new SetIsPlaying(isPlaying));
       },
-      runOutsideAngular: (fn: () => void) => {
-        this.ngZone.runOutsideAngular(fn);
-      },
+      runOutsideAngular: (fn: () => void) => this.ngZone.runOutsideAngular(fn),
     };
     this.animator = new Animator(this.animatorCallback);
     this.store.select(getIsSlowMotion).subscribe(s => this.animator.setIsSlowMotion(s));

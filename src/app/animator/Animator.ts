@@ -3,13 +3,15 @@ const DEFAULT_IS_SLOW_MOTION = false;
 const DEFAULT_PLAYBACK_SPEED = 1;
 const SLOW_MOTION_PLAYBACK_SPEED = 5;
 
+/**
+ * A simple class that simulates an animation loop.
+ */
 export class Animator {
   private timeoutId: number;
   private animationFrameId: number;
-  private playbackSpeed = DEFAULT_IS_SLOW_MOTION ? SLOW_MOTION_PLAYBACK_SPEED : DEFAULT_PLAYBACK_SPEED;
+  private playbackSpeed = DEFAULT_PLAYBACK_SPEED;
   private isRepeating = false;
   private currentAnimatedFraction = 0;
-  private shouldPlayInReverse = false;
 
   constructor(private readonly callback: Callback) { }
 
@@ -40,13 +42,11 @@ export class Animator {
 
   rewind() {
     this.pause();
-    this.shouldPlayInReverse = false;
     this.currentAnimatedFraction = 0;
   }
 
   fastForward() {
     this.pause();
-    this.shouldPlayInReverse = true;
     this.currentAnimatedFraction = 1;
   }
 
@@ -60,15 +60,11 @@ export class Animator {
       const progress = timestamp - startTimestamp;
       if (progress < (duration * playbackSpeed)) {
         this.animationFrameId = requestAnimationFrame(onAnimationFrameFn);
+      } else if (this.isRepeating) {
+        this.timeoutId =
+          window.setTimeout(() => this.startAnimation(duration, onUpdateFn), REPEAT_DELAY);
       } else {
-        this.shouldPlayInReverse = !this.shouldPlayInReverse;
-        if (this.isRepeating) {
-          this.timeoutId = window.setTimeout(() => {
-            this.startAnimation(duration, onUpdateFn);
-          }, REPEAT_DELAY);
-        } else {
-          this.pause();
-        }
+        this.pause();
       }
       const fraction = Math.min(1, progress / (duration * playbackSpeed));
       onUpdateFn(fraction);

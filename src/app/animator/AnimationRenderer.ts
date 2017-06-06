@@ -9,10 +9,14 @@ const DEFAULT_LAYER_PROPERTY_STATE: PropertyState = {
   interpolatedValue: false,
 };
 
-// TODO: use this to export svg sprite animations
-// TODO: should we 'link selected state' here similar to AIA?
+/**
+ * A simple class that takes a VectorLayer and an animation and outputs a new
+ * rendered VectorLayer given a specific time.
+ */
 export class AnimationRenderer {
   private readonly renderedVectorLayer: VectorLayer;
+
+  // Keys are layerIds and values are RenderedData objects.
   private readonly animDataByLayer: LayerMap<RendererData> = {};
 
   constructor(
@@ -20,7 +24,6 @@ export class AnimationRenderer {
     readonly activeAnimation: Animation,
   ) {
     this.renderedVectorLayer = originalVectorLayer.deepClone();
-    // TODO: need to filter out the blocks attached to the 'non active' vector layer
     const animDataByLayer = ModelUtil.getOrderedBlocksByPropertyByLayer(activeAnimation);
     Object.keys(animDataByLayer).forEach(layerId => {
       this.animDataByLayer[layerId] = {
@@ -32,6 +35,12 @@ export class AnimationRenderer {
     this.setAnimationTime(0);
   }
 
+  /**
+   * Returns a rendered vector layer given a specific time. The time must be
+   * non-negative and must be less than the animation's duration. The returned
+   * vector layer should not be mutated externally, as it will be cached and
+   * returned on subsequent time frames.
+   */
   setAnimationTime(time: number) {
     Object.keys(this.animDataByLayer).forEach(layerId => {
       const animData = this.animDataByLayer[layerId];

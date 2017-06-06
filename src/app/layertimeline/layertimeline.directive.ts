@@ -27,7 +27,7 @@ export class LayerTimelineDirective {
   private readonly canvas: HTMLCanvasElement;
   private readonly $canvas: JQuery;
   private animation_: Animation;
-  private activeTime_: number;
+  private currentTime_: number;
   private horizZoom_: number;
 
   constructor(readonly elementRef: ElementRef) {
@@ -47,13 +47,13 @@ export class LayerTimelineDirective {
     }
   }
 
-  get activeTime() {
-    return this.activeTime_;
+  get currentTime() {
+    return this.currentTime_;
   }
 
-  set activeTime(activeTime: number) {
-    if (this.activeTime_ !== activeTime) {
-      this.activeTime_ = activeTime;
+  set currentTime(currentTime: number) {
+    if (this.currentTime_ !== currentTime) {
+      this.currentTime_ = currentTime;
       this.redraw();
     }
   }
@@ -84,8 +84,7 @@ export class LayerTimelineDirective {
   }
 
   private handleScrubEvent(event: { clientX: number, altKey: boolean }) {
-    let x = event.clientX;
-    x -= this.$canvas.offset().left;
+    const x = event.clientX - this.$canvas.offset().left;
     let time = (x - TIMELINE_ANIMATION_PADDING)
       / (this.$canvas.width() - TIMELINE_ANIMATION_PADDING * 2)
       * this.animation.duration;
@@ -136,10 +135,10 @@ export class LayerTimelineDirective {
       if (this.isActive) {
         ctx.fillStyle = 'rgba(244, 67, 54, .7)';
         ctx.beginPath();
-        ctx.arc(this.activeTime * this.horizZoom, height / 2, 4, 0, 2 * Math.PI, false);
+        ctx.arc(this.currentTime * this.horizZoom, height / 2, 4, 0, 2 * Math.PI, false);
         ctx.fill();
         ctx.closePath();
-        ctx.fillRect(this.activeTime * this.horizZoom - 1, height / 2 + 4, 2, height);
+        ctx.fillRect(this.currentTime * this.horizZoom - 1, height / 2 + 4, 2, height);
       }
     } else {
       // Grid lines.
@@ -151,7 +150,7 @@ export class LayerTimelineDirective {
       }
       if (this.isActive) {
         ctx.fillStyle = 'rgba(244, 67, 54, .7)';
-        ctx.fillRect(this.activeTime * this.horizZoom - 1, 0, 2, 1);
+        ctx.fillRect(this.currentTime * this.horizZoom - 1, 0, 2, 1);
       }
     }
   }
