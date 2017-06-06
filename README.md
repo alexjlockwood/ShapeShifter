@@ -109,6 +109,8 @@ If you want to contribute, you can build and serve the web app locally as follow
      ```
      npm start
      ```
+     
+If you're having issues with the build, make sure your `Node.js` version is up-to-date before reporting issues.
 
 If you're having issues with the build, make sure your `Node.js` version is up-to-date before reporting issues.
 
