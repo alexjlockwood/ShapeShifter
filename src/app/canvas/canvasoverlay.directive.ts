@@ -80,6 +80,7 @@ const SPLIT_POINT_COLOR = '#E65100'; // Orange 900
 const HIGHLIGHT_COLOR = '#448AFF';
 const POINT_BORDER_COLOR = '#000';
 const POINT_TEXT_COLOR = '#fff';
+const ERROR_COLOR = '#F44336';
 
 // TODO: make shape shifter mode work with clip paths
 // TODO: make segment splitter work with trim paths
@@ -113,6 +114,7 @@ export class CanvasOverlayDirective
   unpairedSubPath: { source: ActionSource, subIdx: number };
   private isActionMode: boolean;
   private selectedBlockLayerIds: Set<string>;
+  private subIdxWithError: number;
 
   private selectionHelper: SelectionHelper | undefined;
   private morphSubPathHelper: MorphSubPathHelper | undefined;
@@ -171,16 +173,18 @@ export class CanvasOverlayDirective
             unpairedSubPath,
             hiddenLayerIds,
             selectedLayerIds,
+            subIdxWithError,
           }) => {
             this.vectorLayer = vectorLayer;
             this.blockLayerId = blockLayerId;
-            this.isActionMode = isActionMode
+            this.isActionMode = isActionMode;
             this.actionHover = hover;
             this.actionSelections = selections;
             this.pairedSubPaths = pairedSubPaths;
             this.unpairedSubPath = unpairedSubPath;
             this.hiddenLayerIds = hiddenLayerIds;
             this.selectedLayerIds = selectedLayerIds;
+            this.subIdxWithError = subIdxWithError;
             this.draw();
           }),
       );
@@ -452,6 +456,13 @@ export class CanvasOverlayDirective
           .filter(cmd => cmd.isSplitSegment());
       CanvasUtil.executeCommands(ctx, segmentSelectionCmds, flattenedTransform);
       executeHighlights(ctx, SPLIT_POINT_COLOR, this.selectedSegmentLineWidth);
+
+      // Highlight any subpaths with errors.
+      if (this.subIdxWithError !== undefined) {
+        const cmds = activePath.getSubPath(this.subIdxWithError).getCommands();
+        CanvasUtil.executeCommands(ctx, cmds, flattenedTransform);
+        executeHighlights(ctx, ERROR_COLOR, this.highlightLineWidth, this.highlightLineDash);
+      }
     } else if (this.segmentSplitter && this.segmentSplitter.getProjectionOntoPath()) {
       // Highlight the segment as the user hovers over it.
       const { subIdx, cmdIdx, projection: { d } } =

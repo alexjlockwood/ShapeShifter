@@ -1,3 +1,4 @@
+import { ActionModeUtil } from '../actionmode';
 import { ActionModeService } from '../actionmode/actionmode.service';
 import { DialogService } from '../dialogs';
 import {
@@ -322,7 +323,26 @@ class ToolbarData {
     } else if (numPoints > 0) {
       return `${ptStr} selected`;
     } else if (this.shouldShowActionMode()) {
-      return `Customize path morphing animation`;
+      const { areCompatible, errorPath, numPointsMissing } =
+        ActionModeUtil.checkPathsCompatible(this.block);
+      if (areCompatible) {
+        return 'Select something below to edit its properties';
+      } else {
+        const createSubtitleFn = (direction: string) => {
+          if (numPointsMissing === 1) {
+            return `Add 1 point to the subpath on the ${direction}`;
+          } else {
+            return `Add ${numPointsMissing} points to the subpath on the ${direction}`;
+          }
+        };
+        if (errorPath === ActionSource.From) {
+          return createSubtitleFn('left');
+        } else if (errorPath === ActionSource.To) {
+          return createSubtitleFn('right');
+        }
+        // This should never happen, but return empty string just to be safe.
+        return '';
+      }
     }
     return 'Shape Shifter';
   }
@@ -342,32 +362,6 @@ class ToolbarData {
         return `Pair the selected subpath with a corresponding subpath on the ${toSourceDir}`;
       }
       return 'Select a subpath';
-    } else if (this.shouldShowActionMode() && !this.getNumSelections()) {
-      if (!this.block || this.block.isAnimatable()) {
-        return 'Select something below to edit its properties'
-      }
-      const { fromValue, toValue } = this.block;
-      const numFromSubPaths = fromValue.getSubPaths().length;
-      const numToSubPaths = toValue.getSubPaths().length;
-
-      // The number of subpaths should be equal, but just to be safe...
-      for (let i = 0; i < Math.min(numFromSubPaths, numToSubPaths); i++) {
-        const fromCmds = fromValue.getSubPath(i).getCommands();
-        const toCmds = toValue.getSubPath(i).getCommands();
-        if (fromCmds.length === toCmds.length) {
-          continue;
-        }
-        const pathDirection = fromCmds.length < toCmds.length ? 'left' : 'right';
-        const diff = Math.abs(fromCmds.length - toCmds.length);
-        // TODO: should we explicitly call out subpath numbers here?
-        // TODO: maybe explicitly highlight the subpath in question as well?
-        if (diff === 1) {
-          return `Add 1 point to the subpath on the ${pathDirection}`;
-        } else {
-          return `Add ${diff} points to the subpath on the ${pathDirection}`;
-        }
-      }
-      // We should never reach this point, but fall through just to be safe.
     }
     return '';
   }

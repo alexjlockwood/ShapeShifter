@@ -1,3 +1,4 @@
+import { ActionModeUtil } from '../../actionmode';
 import {
   LayerUtil,
   MorphableLayer,
@@ -16,6 +17,10 @@ import {
   getState,
 } from '../selectors';
 import { getAnimations } from '../timeline/selectors';
+import {
+  ActionMode,
+  ActionSource,
+} from './types';
 import * as _ from 'lodash';
 import {
   createSelector,
@@ -73,7 +78,7 @@ type CombinerFunc = (vl: VectorLayer, block: PathAnimationBlock) => VectorLayer;
 
 function getMorphableLayerValue(selector: Reselect.OutputSelector<State, VectorLayer, CombinerFunc>) {
   return createSelector(
-    getVectorLayerFromValue,
+    selector,
     getBlockLayerId,
     (vl, blockLayerId) => {
       if (!vl || !blockLayerId) {
@@ -85,6 +90,36 @@ function getMorphableLayerValue(selector: Reselect.OutputSelector<State, VectorL
 
 const getMorphableLayerFromValue = getMorphableLayerValue(getVectorLayerFromValue);
 const getMorphableLayerToValue = getMorphableLayerValue(getVectorLayerToValue);
+
+const getPathsCompatibleResult =
+  createSelector(
+    getBlock,
+    block => block ? ActionModeUtil.checkPathsCompatible(block) : undefined,
+  );
+
+function getHighlightedSubIdxWithError(actionSource: ActionSource) {
+  return createSelector(
+    getActionMode,
+    getActionSelections,
+    getPathsCompatibleResult,
+    (mode, selections, result) => {
+      if (!result) {
+        // Then there is no path animation block currently selected.
+        return undefined;
+      }
+      const { areCompatible, errorPath, errorSubIdx } = result;
+      if (mode !== ActionMode.Selection || selections.length) {
+        // Don't show any highlights if we're not in selection mode, or
+        // if there are any existing selections.
+        return undefined;
+      }
+      if (areCompatible || errorPath !== actionSource || errorSubIdx === undefined) {
+        return undefined;
+      }
+      return errorSubIdx;
+    },
+  );
+}
 
 const actionModeBaseSelectors = {
   blockLayerId: getBlockLayerId,
@@ -101,12 +136,14 @@ export const getActionModeStartState =
   createStructuredSelector({
     ...actionModeBaseSelectors,
     vectorLayer: getVectorLayerFromValue,
+    subIdxWithError: getHighlightedSubIdxWithError(ActionSource.From),
   });
 
 export const getActionModeEndState =
   createStructuredSelector({
     ...actionModeBaseSelectors,
     vectorLayer: getVectorLayerToValue,
+    subIdxWithError: getHighlightedSubIdxWithError(ActionSource.To),
   });
 
 export const getToolbarState =
