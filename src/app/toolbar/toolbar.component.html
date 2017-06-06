@@ -182,11 +182,12 @@
       <md-icon>more_vert</md-icon>
     </button>
     <md-menu #overflowMenu="mdMenu">
+      <!-- TODO: enable for prod builds -->
       <button md-menu-item
-        [disabled]="true"
+        *ngIf="this.IS_DEV_BUILD"
         (click)="onDemoClick()">
         <md-icon class="material-icons" svgIcon="demos"></md-icon>
-        <span>Demos (coming soon)</span>
+        <span>Demos</span>
       </button>
       <a href="https://github.com/alexjlockwood/ShapeShifter/issues"
         target="_blank"

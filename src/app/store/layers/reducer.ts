@@ -154,29 +154,19 @@ function selectLayerId(
 }
 
 function deleteSelectedLayers(state: State) {
-  const { selectedLayerIds } = state;
-  if (!selectedLayerIds.size) {
-    // Do nothing if there are no layers selected.
-    return state;
-  }
   let { vectorLayer } = state;
   const collapsedLayerIds = new Set(state.collapsedLayerIds);
   const hiddenLayerIds = new Set(state.hiddenLayerIds);
-  _.forEach(selectedLayerIds, layerId => {
-    if (vectorLayer.id === layerId) {
-      vectorLayer = undefined;
-      collapsedLayerIds.clear();
-      hiddenLayerIds.clear();
-      return false;
-    }
-    vectorLayer = LayerUtil.removeLayerFromTree(vectorLayer, layerId);
-    collapsedLayerIds.delete(layerId);
-    hiddenLayerIds.delete(layerId);
-    return true;
-  });
-  if (!vectorLayer) {
-    // Create an empty vector layer if the last one was deleted.
+  if (state.selectedLayerIds.has(vectorLayer.id)) {
     vectorLayer = new VectorLayer();
+    collapsedLayerIds.clear();
+    hiddenLayerIds.clear();
+  } else {
+    state.selectedLayerIds.forEach(layerId => {
+      vectorLayer = LayerUtil.removeLayerFromTree(vectorLayer, layerId);
+      collapsedLayerIds.delete(layerId);
+      hiddenLayerIds.delete(layerId);
+    });
   }
   return {
     ...state,

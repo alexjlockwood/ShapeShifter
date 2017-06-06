@@ -1,3 +1,4 @@
+import { environment } from '../../environments/environment';
 import { ActionModeUtil } from '../actionmode';
 import { ActionModeService } from '../actionmode/actionmode.service';
 import { DialogService } from '../dialogs';
@@ -68,6 +69,7 @@ const ACTIVE_WITH_ERROR = 'active_with_error';
   ],
 })
 export class ToolbarComponent implements OnInit {
+  readonly IS_DEV_BUILD = !environment.production;
 
   toolbarData$: Observable<ToolbarData>;
   actionModeState$: Observable<ActionModeState>;
@@ -106,30 +108,30 @@ export class ToolbarComponent implements OnInit {
   }
 
   onDemoClick() {
-    // ga('send', 'event', 'Demos', 'Demos dialog shown');
+    ga('send', 'event', 'Demos', 'Demos dialog shown');
 
     // TODO: add demos here
     // TODO: move this HTTP logic into a global service?
-    // const demoTitles = ['TODO: add demos'];
-    // this.dialogService
-    //   .demo(this.viewContainerRef, demoTitles)
-    //   .subscribe(selectedDemoTitle => {
-    //     if (selectedDemoTitle !== 'TODO: add demos') {
-    //       return;
-    //     }
-    //     ga('send', 'event', 'Demos', 'Demo selected', selectedDemoTitle);
-    //     this.http.get('demos/vector.shapeshifter')
-    //       .map((res: Response) => res.json())
-    //       .catch((error: any) => Observable.throw(error.json().error || 'Server error'))
-    //       .subscribe(jsonObj => {
-    //         // TODO: display snackbar if an error occurs?
-    //         // TODO: display snackbar when in offline mode
-    //         // TODO: show some sort of loader indicator to avoid blocking the UI thread?
-    //         const vl = new VectorLayer(jsonObj.vectorLayer);
-    //         const animations = jsonObj.animations.map(anim => new Animation(anim));
-    //         this.store.dispatch(new ResetWorkspace(vl, animations));
-    //       });
-    //   });
+    const demoTitles = ['TODO: add demos'];
+    this.dialogService
+      .demo(this.viewContainerRef, demoTitles)
+      .subscribe(selectedDemoTitle => {
+        if (selectedDemoTitle !== 'TODO: add demos') {
+          return;
+        }
+        ga('send', 'event', 'Demos', 'Demo selected', selectedDemoTitle);
+        this.http.get('demos/vector.shapeshifter')
+          .map((res: Response) => res.json())
+          .catch((error: any) => Observable.throw(error.json().error || 'Server error'))
+          .subscribe(jsonObj => {
+            // TODO: display snackbar if an error occurs?
+            // TODO: display snackbar when in offline mode
+            // TODO: show some sort of loader indicator to avoid blocking the UI thread?
+            const vl = new VectorLayer(jsonObj.vectorLayer);
+            const animations = jsonObj.animations.map(anim => new Animation(anim));
+            this.store.dispatch(new ResetWorkspace(vl, animations));
+          });
+      });
   }
 
   onSendFeedbackClick() {

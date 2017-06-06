@@ -188,12 +188,8 @@ export function removeLayerFromTree(vl: VectorLayer, removedLayerId: string) {
     if (curr.id === removedLayerId) {
       return undefined;
     }
-    const children = _.flatMap(curr.children, child => {
-      const clonedChild = recurseFn(child);
-      return clonedChild ? [clonedChild] : [];
-    });
     curr = curr.clone();
-    curr.children = children;
+    curr.children = curr.children.map(l => recurseFn(l)).filter(l => !!l);
     return curr;
   })(vl) as VectorLayer;
 }

@@ -235,20 +235,15 @@ function selectBlockId(state: State, blockId: string, clearExisting: boolean) {
 }
 
 function deleteSelectedAnimations(state: State) {
-  const { selectedAnimationIds } = state;
-  if (!selectedAnimationIds.size) {
-    // Do nothing if there are no selected animations;
-    return state;
-  }
   const animations = state.animations.filter(animation => {
-    return !selectedAnimationIds.has(animation.id);
+    return !state.selectedAnimationIds.has(animation.id);
   });
   if (!animations.length) {
     // Create an empty animation if the last one was deleted.
     animations.push(new Animation());
   }
   let activeAnimationId = state.activeAnimationId;
-  if (selectedAnimationIds.has(activeAnimationId)) {
+  if (state.selectedAnimationIds.has(activeAnimationId)) {
     // If the active animation was deleted, activate the first animation.
     activeAnimationId = animations[0].id;
   }
@@ -256,14 +251,9 @@ function deleteSelectedAnimations(state: State) {
 }
 
 function deleteSelectedBlocks(state: State) {
-  const { selectedBlockIds } = state;
-  if (!selectedBlockIds.size) {
-    // Do nothing if there are no selected blocks;
-    return state;
-  }
   const animations = state.animations.map(animation => {
     const existingBlocks = animation.blocks;
-    const newBlocks = existingBlocks.filter(b => !selectedBlockIds.has(b.id));
+    const newBlocks = existingBlocks.filter(b => !state.selectedBlockIds.has(b.id));
     if (existingBlocks.length === newBlocks.length) {
       return animation;
     }
