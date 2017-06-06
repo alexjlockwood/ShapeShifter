@@ -115,7 +115,7 @@ export class ToolbarComponent implements OnInit {
             // TODO: show some sort of loader indicator to avoid blocking the UI thread?
             const vl = new VectorLayer(jsonObj.vectorLayer);
             const animations = jsonObj.animations.map(anim => new Animation(anim));
-            this.store.dispatch(new ResetWorkspace([vl], animations));
+            this.store.dispatch(new ResetWorkspace(vl, animations));
           });
       });
   }

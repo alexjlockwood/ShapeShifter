@@ -1,5 +1,4 @@
 import { environment } from '../../../environments/environment';
-import { DEBUG_VECTOR_DRAWABLE_3 } from '../../scripts/demos';
 import { VectorDrawableLoader } from '../../scripts/import';
 import { LayerUtil, VectorLayer } from '../../scripts/layers';
 import * as actions from './actions';
