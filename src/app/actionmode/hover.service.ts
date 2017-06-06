@@ -15,11 +15,6 @@ export class HoverService {
     this.store.select(getActionHover).subscribe(h => this.hover = h);
   }
 
-  /** @deprecated */
-  getHover() {
-    return this.hover;
-  }
-
   setHover(hover: Hover) {
     if (!_.isEqual(this.hover, hover)) {
       this.store.dispatch(new SetHover(hover));
@@ -36,10 +31,5 @@ export class HoverService {
 
   setSubPath(source: ActionSource, subIdx: number) {
     this.setHover({ type: HoverType.SubPath, source, subIdx });
-  }
-
-  /** @deprecated */
-  resetAndNotify() {
-    this.setHover(undefined);
   }
 }

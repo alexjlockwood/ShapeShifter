@@ -60,76 +60,10 @@ export function metaReducer(reducer: ActionReducer<State>): ActionReducer<State>
       }
 
       // Delete all currently selected subpaths.
-      case actions.DELETE_SELECTED_SUBPATHS: {
-        // TODO: support deleting multiple segments at a time?
-        const selections = getSubPathSelections(state);
-        if (!selections.length) {
-          break;
-        }
-        // Precondition: all selections exist in the same canvas.
-        const { source, subIdx } = selections[0];
-        const pathMutator = getActivePath(state, source).mutate();
-        const activePathLayer = getActivePathBlockLayer(state);
-        if (activePathLayer.isStroked()) {
-          pathMutator.deleteStrokedSubPath(subIdx);
-        } else if (activePathLayer.isFilled()) {
-          pathMutator.deleteFilledSubPath(subIdx);
-        }
-        state = updateActivePathBlock(state, source, pathMutator.build());
-        state = clearSelections(state);
-        state = clearHover(state);
-        break;
-      }
-
-      // Delete all currently selected segments.
-      case actions.DELETE_SELECTED_SEGMENTS: {
-        // TODO: support deleting multiple segments at a time?
-        const selections = getSegmentSelections(state);
-        if (!selections.length) {
-          break;
-        }
-        // Precondition: all selections exist in the same canvas.
-        const { source, subIdx, cmdIdx } = selections[0];
-        const mutator = getActivePath(state, source).mutate();
-        mutator.deleteFilledSubPathSegment(subIdx, cmdIdx);
-        state = updateActivePathBlock(state, source, mutator.build());
-        state = clearSelections(state);
-        state = clearHover(state);
-        break;
-      }
-
-      // Delete all currently selected points.
-      case actions.DELETE_SELECTED_POINTS: {
-        const selections = getPointSelections(state);
-        if (!selections.length) {
-          break;
-        }
-        // Precondition: all selections exist in the same canvas.
-        const source = selections[0].source;
-        const activePath = getActivePath(state, source);
-        const unsplitOpsMap: Map<number, Array<{ subIdx: number, cmdIdx: number }>> = new Map();
-        for (const selection of selections) {
-          const { subIdx, cmdIdx } = selection;
-          if (!activePath.getCommand(subIdx, cmdIdx).isSplitPoint()) {
-            continue;
-          }
-          let subIdxOps = unsplitOpsMap.get(subIdx);
-          if (!subIdxOps) {
-            subIdxOps = [];
-          }
-          subIdxOps.push({ subIdx, cmdIdx });
-          unsplitOpsMap.set(subIdx, subIdxOps);
-        }
-        const mutator = activePath.mutate();
-        unsplitOpsMap.forEach((ops, idx) => {
-          PathUtil.sortPathOps(ops);
-          for (const op of ops) {
-            mutator.unsplitCommand(op.subIdx, op.cmdIdx);
-          }
-        });
-        state = updateActivePathBlock(state, source, mutator.build());
-        state = clearSelections(state);
-        state = clearHover(state);
+      case actions.DELETE_SELECTED_PATH_DETAILS: {
+        state = deleteSelectedSubPaths(state);
+        state = deleteSelectedSegments(state);
+        state = deleteSelectedPoints(state);
         break;
       }
 
@@ -415,4 +349,75 @@ function setUnpairedSubPath(
 ) {
   const { actionmode } = state;
   return { ...state, actionmode: { ...actionmode, unpairedSubPath } };
+}
+
+function deleteSelectedSubPaths(state: State) {
+  // TODO: support deleting multiple segments at a time?
+  const selections = getSubPathSelections(state);
+  if (!selections.length) {
+    return state;
+  }
+  // Precondition: all selections exist in the same canvas.
+  const { source, subIdx } = selections[0];
+  const pathMutator = getActivePath(state, source).mutate();
+  const activePathLayer = getActivePathBlockLayer(state);
+  if (activePathLayer.isStroked()) {
+    pathMutator.deleteStrokedSubPath(subIdx);
+  } else if (activePathLayer.isFilled()) {
+    pathMutator.deleteFilledSubPath(subIdx);
+  }
+  state = updateActivePathBlock(state, source, pathMutator.build());
+  state = clearSelections(state);
+  state = clearHover(state);
+  return state;
+}
+
+function deleteSelectedSegments(state: State) {
+  // TODO: support deleting multiple segments at a time?
+  const selections = getSegmentSelections(state);
+  if (!selections.length) {
+    return state;
+  }
+  // Precondition: all selections exist in the same canvas.
+  const { source, subIdx, cmdIdx } = selections[0];
+  const mutator = getActivePath(state, source).mutate();
+  mutator.deleteFilledSubPathSegment(subIdx, cmdIdx);
+  state = updateActivePathBlock(state, source, mutator.build());
+  state = clearSelections(state);
+  state = clearHover(state);
+  return state;
+}
+
+function deleteSelectedPoints(state: State) {
+  const selections = getPointSelections(state);
+  if (!selections.length) {
+    return state;
+  }
+  // Precondition: all selections exist in the same canvas.
+  const source = selections[0].source;
+  const activePath = getActivePath(state, source);
+  const unsplitOpsMap: Map<number, Array<{ subIdx: number, cmdIdx: number }>> = new Map();
+  for (const selection of selections) {
+    const { subIdx, cmdIdx } = selection;
+    if (!activePath.getCommand(subIdx, cmdIdx).isSplitPoint()) {
+      continue;
+    }
+    let subIdxOps = unsplitOpsMap.get(subIdx);
+    if (!subIdxOps) {
+      subIdxOps = [];
+    }
+    subIdxOps.push({ subIdx, cmdIdx });
+    unsplitOpsMap.set(subIdx, subIdxOps);
+  }
+  const mutator = activePath.mutate();
+  unsplitOpsMap.forEach((ops, idx) => {
+    PathUtil.sortPathOps(ops);
+    for (const op of ops) {
+      mutator.unsplitCommand(op.subIdx, op.cmdIdx);
+    }
+  });
+  state = updateActivePathBlock(state, source, mutator.build());
+  state = clearSelections(state);
+  state = clearHover(state);
+  return state;
 }

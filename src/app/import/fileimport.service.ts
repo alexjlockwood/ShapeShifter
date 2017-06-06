@@ -1,8 +1,4 @@
 import {
-  SvgLoader,
-  VectorDrawableLoader,
-} from '../scripts/import';
-import {
   LayerUtil,
   VectorLayer,
 } from '../scripts/layers';
@@ -12,6 +8,8 @@ import {
   Store,
 } from '../store';
 import { getVectorLayer } from '../store/layers/selectors';
+import * as  SvgLoader from './SvgLoader';
+import * as VectorDrawableLoader from './VectorDrawableLoader';
 import { Injectable } from '@angular/core';
 
 /**

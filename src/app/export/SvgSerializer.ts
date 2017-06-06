@@ -1,5 +1,10 @@
-import { ColorUtil } from '../common';
-import { GroupLayer, Layer, PathLayer, VectorLayer } from '../layers';
+import { ColorUtil } from '../scripts/common';
+import {
+  GroupLayer,
+  Layer,
+  PathLayer,
+  VectorLayer,
+} from '../scripts/layers';
 import * as XmlSerializer from './XmlSerializer';
 import * as _ from 'lodash';
 

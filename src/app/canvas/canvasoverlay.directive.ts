@@ -1,5 +1,6 @@
 import 'rxjs/add/observable/combineLatest';
 
+import { HoverService } from '../actionmode/hover.service';
 import { AnimatorService } from '../animator';
 import {
   MathUtil,
@@ -17,7 +18,6 @@ import {
 import { DestroyableMixin } from '../scripts/mixins';
 import { Path } from '../scripts/paths';
 import { Command } from '../scripts/paths';
-import { HoverService } from '../services';
 import {
   ActionMode,
   ActionSource,

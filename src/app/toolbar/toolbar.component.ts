@@ -1,7 +1,10 @@
+import { ActionModeService } from '../actionmode/actionmode.service';
 import { DialogService } from '../dialogs';
-import { PathLayer, VectorLayer } from '../scripts/layers';
+import {
+  PathLayer,
+  VectorLayer,
+} from '../scripts/layers';
 import { Animation } from '../scripts/timeline';
-import { ActionModeService } from '../services';
 import {
   ActionMode,
   ActionSource,
@@ -25,9 +28,13 @@ import {
   OnInit,
   ViewContainerRef,
 } from '@angular/core';
-import { Http, Response } from '@angular/http';
+import {
+  Http,
+  Response,
+} from '@angular/http';
 import * as _ from 'lodash';
 import { Observable } from 'rxjs/Observable';
+;
 
 // TODO: add back google analytics stuff!
 // TODO: add back google analytics stuff!
@@ -145,27 +152,27 @@ export class ToolbarComponent implements OnInit {
   }
 
   onReversePointsClick() {
-    this.actionModeService.reversePoints();
+    this.actionModeService.reverseSelectedSubPaths();
   }
 
   onShiftBackPointsClick() {
-    this.actionModeService.shiftBackPoints();
+    this.actionModeService.shiftBackSelectedSubPaths();
   }
 
   onShiftForwardPointsClick() {
-    this.actionModeService.shiftForwardPoints();
+    this.actionModeService.shiftForwardSelectedSubPaths();
   }
 
   onDeleteSubPathsClick() {
-    this.actionModeService.deleteSubPaths();
+    this.actionModeService.deleteSelections();
   }
 
   onDeleteSegmentsClick() {
-    this.actionModeService.deleteSegments();
+    this.actionModeService.deleteSelections();
   }
 
   onSetFirstPositionClick() {
-    this.actionModeService.setFirstPosition();
+    this.actionModeService.shiftPointToFront();
   }
 
   onSplitInHalfHoverEvent(isHovering: boolean) {
@@ -177,7 +184,7 @@ export class ToolbarComponent implements OnInit {
   }
 
   onDeletePointsClick() {
-    this.actionModeService.deletePoints();
+    this.actionModeService.deleteSelections();
   }
 }
 

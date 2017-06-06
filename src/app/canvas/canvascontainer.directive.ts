@@ -1,5 +1,11 @@
-import { CanvasLayoutMixin, Size } from './CanvasLayoutMixin';
-import { Directive, ElementRef } from '@angular/core';
+import {
+  CanvasLayoutMixin,
+  Size,
+} from './CanvasLayoutMixin';
+import {
+  Directive,
+  ElementRef,
+} from '@angular/core';
 import * as $ from 'jquery';
 
 /**

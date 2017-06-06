@@ -24,7 +24,7 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
 
     // Import vector layers into the tree.
     case actions.IMPORT_VECTOR_LAYERS: {
-      const { vectorLayers: importedVls } = action.payload;
+      const importedVls = action.payload.vectorLayers.slice();
       if (!importedVls.length) {
         return state;
       }
@@ -32,7 +32,9 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
       let vectorLayers = [vectorLayer];
       if (!vectorLayer.children.length) {
         // Simply replace the empty vector layer rather than merging with it.
-        importedVls[0].name = vectorLayer.name;
+        const vl = importedVls[0].clone();
+        vl.name = vectorLayer.name;
+        importedVls[0] = vl;
         vectorLayers = [];
       }
       const newVectorLayers = [...vectorLayers, ...importedVls];

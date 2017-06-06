@@ -1,9 +1,7 @@
 import {
   ActionMode,
   AutoFixClick,
-  DeleteSelectedPoints,
-  DeleteSelectedSegments,
-  DeleteSelectedSubPaths,
+  DeleteSelectedPathDetails,
   EndActionMode,
   ReverseSelectedSubPaths,
   SetActionMode,
@@ -27,16 +25,20 @@ import { Injectable } from '@angular/core';
  */
 @Injectable()
 export class ActionModeService {
-  private isActionMode: boolean;
+  private isActionMode_: boolean;
   private actionMode: ActionMode;
 
   constructor(private readonly store: Store<State>) {
-    this.store.select(isActionMode).subscribe(isActive => this.isActionMode = isActive);
+    this.store.select(isActionMode).subscribe(isActive => this.isActionMode_ = isActive);
     this.store.select(getActionMode).subscribe(mode => this.actionMode = mode);
   }
 
+  isActionMode() {
+    return this.isActionMode_;
+  }
+
   closeActionMode() {
-    if (!this.isActionMode) {
+    if (!this.isActionMode_) {
       return;
     }
     if (this.actionMode === ActionMode.Selection) {
@@ -46,13 +48,19 @@ export class ActionModeService {
     }
   }
 
+  deleteSelections() {
+    if (this.actionMode !== ActionMode.Selection) {
+      // TODO: determine if it makes sense to perform an action in this case
+      return;
+    }
+    this.store.dispatch(new DeleteSelectedPathDetails());
+  }
+
   toggleSplitCommandsMode() {
-    // TODO: prefer already selected subpaths over others when creating new points?
     this.store.dispatch(new ToggleActionMode(ActionMode.SplitCommands));
   }
 
   toggleSplitSubPathsMode() {
-    // TODO: prefer already selected subpaths over others when splitting new subpaths?
     this.store.dispatch(new ToggleActionMode(ActionMode.SplitSubPaths));
   }
 
@@ -60,31 +68,19 @@ export class ActionModeService {
     this.store.dispatch(new ToggleActionMode(ActionMode.MorphSubPaths));
   }
 
-  reversePoints() {
+  reverseSelectedSubPaths() {
     this.store.dispatch(new ReverseSelectedSubPaths());
   }
 
-  shiftBackPoints() {
+  shiftBackSelectedSubPaths() {
     this.store.dispatch(new ShiftBackSelectedSubPaths());
   }
 
-  shiftForwardPoints() {
+  shiftForwardSelectedSubPaths() {
     this.store.dispatch(new ShiftForwardSelectedSubPaths());
   }
 
-  deleteSubPaths() {
-    this.store.dispatch(new DeleteSelectedSubPaths())
-  }
-
-  deleteSegments() {
-    this.store.dispatch(new DeleteSelectedSegments())
-  }
-
-  deletePoints() {
-    this.store.dispatch(new DeleteSelectedPoints())
-  }
-
-  setFirstPosition() {
+  shiftPointToFront() {
     this.store.dispatch(new ShiftPointToFront());
   }
 

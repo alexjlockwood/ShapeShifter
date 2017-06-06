@@ -1,6 +1,6 @@
 import 'jasmine';
 
-import { SvgLoader } from '.';
+import * as SvgLoader from './SvgLoader';
 
 describe('SvgLoader', () => {
   it(`SvgLoader sanity test`, () => {

@@ -2,7 +2,8 @@ import 'rxjs/add/operator/distinctUntilChanged';
 import 'rxjs/add/operator/combineLatest';
 
 import { environment } from '../environments/environment';
-import { FileImportService, ShortcutService } from './services';
+import { FileImportService } from './import/fileimport.service';
+import { ShortcutService } from './shortcut/shortcut.service';
 import {
   ActionSource,
   ImportVectorLayers,

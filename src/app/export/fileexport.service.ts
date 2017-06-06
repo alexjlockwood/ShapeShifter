@@ -1,8 +1,3 @@
-import {
-  AvdSerializer,
-  SpriteSerializer,
-  SvgSerializer,
-} from '../scripts/export';
 import { VectorLayer } from '../scripts/layers';
 import { Animation } from '../scripts/timeline';
 import {
@@ -14,6 +9,9 @@ import {
   getActiveAnimation,
   getAnimations,
 } from '../store/timeline/selectors';
+import * as AvdSerializer from './AvdSerializer';
+import * as SpriteSerializer from './SpriteSerializer';
+import * as SvgSerializer from './SvgSerializer';
 import { Injectable } from '@angular/core';
 import * as $ from 'jquery';
 import * as JSZip from 'jszip';

@@ -44,9 +44,8 @@ export {
 
 // Action mode meta actions.
 export {
-  DeleteSelectedPoints,
-  DeleteSelectedSegments,
-  DeleteSelectedSubPaths,
+  AutoFixClick,
+  DeleteSelectedPathDetails,
   ReverseSelectedSubPaths,
   PairSubPath,
   SetUnpairedSubPath,
@@ -55,7 +54,6 @@ export {
   ShiftPointToFront,
   SplitCommandInHalfClick,
   SplitCommandInHalfHover,
-  AutoFixClick,
   UpdateActivePathBlock,
 } from './actionmode/metaactions';
 

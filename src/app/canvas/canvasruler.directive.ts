@@ -1,6 +1,10 @@
 import { Point } from '../scripts/common';
 import { CanvasLayoutMixin } from './CanvasLayoutMixin';
-import { Directive, ElementRef, Input } from '@angular/core';
+import {
+  Directive,
+  ElementRef,
+  Input,
+} from '@angular/core';
 import * as $ from 'jquery';
 import * as _ from 'lodash';
 

@@ -1,4 +1,4 @@
-import { Dragger } from '../scripts/dragger';
+import { Dragger } from '../dragger';
 import { Animation } from '../scripts/timeline';
 import { TIMELINE_ANIMATION_PADDING } from './constants';
 import {

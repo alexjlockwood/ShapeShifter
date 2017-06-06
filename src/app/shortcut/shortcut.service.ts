@@ -1,27 +1,29 @@
+import { ActionModeService } from '../actionmode/actionmode.service';
 import { AnimatorService } from '../animator';
-import { ActionModeService } from '../services';
 import {
   DeleteSelectedModels,
   State,
   Store,
 } from '../store';
-import { isActionMode } from '../store/actionmode/selectors';
 import { Injectable } from '@angular/core';
 import * as $ from 'jquery';
 
 @Injectable()
 export class ShortcutService {
-  private isActionMode: boolean;
+  private isInit = false;
 
   constructor(
     private readonly store: Store<State>,
     private readonly animatorService: AnimatorService,
     private readonly actionModeService: ActionModeService,
-  ) {
-    this.store.select(isActionMode).subscribe(isActive => this.isActionMode = isActive);
-  }
+  ) { }
 
   init() {
+    if (this.isInit) {
+      return;
+    }
+    this.isInit = true;
+
     $(window).on('keydown', event => {
       if (event.ctrlKey || event.metaKey) {
         // Do nothing if the ctrl or meta keys are pressed.
@@ -34,8 +36,9 @@ export class ShortcutService {
       if (event.keyCode === 8 || event.keyCode === 46) {
         // In case there's a JS error, never navigate away.
         event.preventDefault();
-        if (!this.isActionMode) {
-          // TODO: handle case where user is in action mode as well
+        if (this.actionModeService.isActionMode()) {
+          this.actionModeService.deleteSelections();
+        } else {
           this.store.dispatch(new DeleteSelectedModels());
         }
         return false;
@@ -75,6 +78,10 @@ export class ShortcutService {
   }
 
   destroy() {
+    if (!this.isInit) {
+      return;
+    }
+    this.isInit = false;
     $(window).unbind('keydown');
   }
 }

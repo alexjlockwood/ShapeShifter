@@ -1,10 +1,12 @@
 import { AnimatorService } from '../animator';
 import { DialogService } from '../dialogs';
+import { Dragger } from '../dragger';
+import { FileExportService } from '../export/fileexport.service';
+import { FileImportService } from '../import/fileimport.service';
 import {
   ModelUtil,
   UiUtil,
 } from '../scripts/common';
-import { Dragger } from '../scripts/dragger';
 import {
   ClipPathLayer,
   GroupLayer,
@@ -18,10 +20,6 @@ import {
   Animation,
   AnimationBlock,
 } from '../scripts/timeline';
-import {
-  FileExportService,
-  FileImportService,
-} from '../services';
 import {
   ActivateAnimation,
   AddAnimations,

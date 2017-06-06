@@ -1,5 +1,5 @@
+import { Point } from '../scripts/common';
 import * as $ from 'jquery';
-import { Point } from '../common';
 
 const DRAG_SLOP_PIXELS = 4;
 

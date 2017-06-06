@@ -16,6 +16,8 @@ interface ProjInfo {
   readonly isEndPt: boolean;
 }
 
+// TODO: prefer previous selections over others when performing splits?
+
 /**
  * Helper class that can be used to split a segment.
  */

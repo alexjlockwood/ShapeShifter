@@ -10,15 +10,27 @@ import {
   VectorLayer,
 } from '../scripts/layers';
 import { DestroyableMixin } from '../scripts/mixins';
-import { ActionSource, State, Store } from '../store';
+import {
+  ActionSource,
+  State,
+  Store,
+} from '../store';
 import {
   getActionModeEndState,
   getActionModeStartState,
 } from '../store/actionmode/selectors';
 import { getCanvasLayersState } from '../store/common/selectors';
-import { CanvasLayoutMixin, Size } from './CanvasLayoutMixin';
+import {
+  CanvasLayoutMixin,
+  Size,
+} from './CanvasLayoutMixin';
 import * as CanvasUtil from './CanvasUtil';
-import { AfterViewInit, Directive, ElementRef, Input } from '@angular/core';
+import {
+  AfterViewInit,
+  Directive,
+  ElementRef,
+  Input,
+} from '@angular/core';
 import * as $ from 'jquery';
 import { Observable } from 'rxjs/Observable';
 

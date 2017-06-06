@@ -1,15 +1,15 @@
-import { INTERPOLATORS } from '../interpolators';
+import { INTERPOLATORS } from '../scripts/interpolators';
 import {
   ClipPathLayer,
   GroupLayer,
   Layer,
   PathLayer,
   VectorLayer,
-} from '../layers';
+} from '../scripts/layers';
 import {
   Animation,
   AnimationBlock,
-} from '../timeline';
+} from '../scripts/timeline';
 import * as XmlSerializer from './XmlSerializer';
 import * as _ from 'lodash';
 

@@ -1,4 +1,4 @@
-import { ColorUtil, Matrix, ModelUtil } from '../common';
+import { ColorUtil, Matrix, ModelUtil } from '../scripts/common';
 import {
   FillType,
   GroupLayer,
@@ -7,10 +7,10 @@ import {
   StrokeLineCap,
   StrokeLineJoin,
   VectorLayer,
-} from '../layers';
-import { Command, Path } from '../paths';
-import { NameProperty } from '../properties';
-import { Svgo } from '../svgo';
+} from '../scripts/layers';
+import { Command, Path } from '../scripts/paths';
+import { NameProperty } from '../scripts/properties';
+import { Svgo } from '../scripts/svgo';
 import * as _ from 'lodash';
 
 /**

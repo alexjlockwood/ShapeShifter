@@ -1,8 +1,8 @@
-import { AnimationRenderer } from '../../animator';
-import { VectorLayer } from '../layers';
-import { Svgo } from '../svgo';
-import { Animation } from '../timeline';
-import { SvgSerializer } from '.';
+import { AnimationRenderer } from '../animator';
+import { VectorLayer } from '../scripts/layers';
+import { Svgo } from '../scripts/svgo';
+import { Animation } from '../scripts/timeline';
+import * as SvgSerializer from './SvgSerializer';
 
 export function createHtml(svgFileName: string, cssFileName: string) {
   return `<html>

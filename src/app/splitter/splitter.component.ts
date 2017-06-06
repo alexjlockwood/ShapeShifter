@@ -1,4 +1,4 @@
-import { Dragger } from '../scripts/dragger';
+import { Dragger } from '../dragger';
 import {
   Component,
   ElementRef,

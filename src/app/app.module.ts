@@ -1,5 +1,7 @@
 import 'hammerjs';
 
+import { ActionModeService } from './actionmode/actionmode.service';
+import { HoverService } from './actionmode/hover.service';
 import { AnimatorService } from './animator';
 import { AppComponent } from './app.component';
 import {
@@ -15,6 +17,8 @@ import {
   DialogService,
 } from './dialogs';
 import { DropTargetDirective } from './droptarget.directive';
+import { FileExportService } from './export/fileexport.service';
+import { FileImportService } from './import/fileimport.service';
 import { LayerListTreeComponent } from './layertimeline/layerlisttree.component';
 import { LayerTimelineComponent } from './layertimeline/layertimeline.component';
 import { LayerTimelineDirective } from './layertimeline/layertimeline.directive';
@@ -22,13 +26,7 @@ import { TimelineAnimationRowComponent } from './layertimeline/timelineanimation
 import { PlaybackComponent } from './playback/playback.component';
 import { PropertyInputComponent } from './propertyinput/propertyinput.component';
 import { ScrollGroupDirective } from './scrollgroup/scrollgroup.directive';
-import {
-  ActionModeService,
-  FileExportService,
-  FileImportService,
-  HoverService,
-  ShortcutService,
-} from './services';
+import { ShortcutService } from './shortcut/shortcut.service';
 import { SplitterComponent } from './splitter/splitter.component';
 import { reducer } from './store';
 import { ToolbarComponent } from './toolbar/toolbar.component';
