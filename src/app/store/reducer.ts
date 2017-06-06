@@ -5,7 +5,7 @@ import * as fromLayers from './layers/reducer';
 import * as fromPlayback from './playback/reducer';
 import * as metaReset from './reset/metareducer';
 import * as fromTimeline from './timeline/reducer';
-import { compose } from '@ngrx/core/compose'
+import { compose } from '@ngrx/core/compose';
 import { Action, ActionReducer, combineReducers } from '@ngrx/store';
 import { storeFreeze } from 'ngrx-store-freeze';
 import { storeLogger } from 'ngrx-store-logger';

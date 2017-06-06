@@ -206,7 +206,7 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
 
     // Select a layer.
     case actions.SELECT_LAYER: {
-      return { ...state, selectedAnimationIds: new Set(), selectedBlockIds: new Set() }
+      return { ...state, selectedAnimationIds: new Set(), selectedBlockIds: new Set() };
     }
 
     // Delete all selected animations, blocks, and layers.

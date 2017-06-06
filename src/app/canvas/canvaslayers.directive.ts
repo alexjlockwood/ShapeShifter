@@ -119,7 +119,7 @@ export class CanvasLayersDirective
       ctx.scale(this.attrScale, this.attrScale);
       const { w, h } = this.getViewport();
       ctx.clearRect(0, 0, w, h);
-    }
+    };
 
     this.renderingCtx.save();
     setupCtxWithViewportCoordsFn(this.renderingCtx);

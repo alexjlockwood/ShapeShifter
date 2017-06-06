@@ -85,11 +85,11 @@ export class ActionModeService {
   }
 
   splitInHalfHover(isHovering: boolean) {
-    this.store.dispatch(new SplitCommandInHalfHover(isHovering))
+    this.store.dispatch(new SplitCommandInHalfHover(isHovering));
   }
 
   splitInHalfClick() {
-    this.store.dispatch(new SplitCommandInHalfClick())
+    this.store.dispatch(new SplitCommandInHalfClick());
   }
 
   autoFixClick() {

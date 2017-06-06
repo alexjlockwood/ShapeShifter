@@ -56,7 +56,7 @@ export class LayerListTreeComponent implements OnInit, Callbacks {
             isVisible: !hiddenLayerIds.has(this.layer.id),
             availablePropertyNames,
             existingPropertyNames,
-          }
+          };
         });
   }
 

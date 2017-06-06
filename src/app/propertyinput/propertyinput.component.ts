@@ -83,7 +83,7 @@ export class PropertyInputComponent implements OnInit {
   shouldDisableEditPathMorphButton(pim: PropertyInputModel) {
     return pim.numSelections === 1
       && pim.model instanceof PathAnimationBlock
-      && (!pim.model.fromValue || !pim.model.toValue)
+      && (!pim.model.fromValue || !pim.model.toValue);
   }
 
   shouldShowEditPathMorphButton(pim: PropertyInputModel) {

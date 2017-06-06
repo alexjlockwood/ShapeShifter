@@ -71,6 +71,6 @@ function load(obj: AnimationBlock | any) {
   if (obj.type === 'path') {
     return new PathAnimationBlock(obj);
   }
-  console.error('Attempt to load animation block with invalid object: ', obj)
+  console.error('Attempt to load animation block with invalid object: ', obj);
   throw new Error('Attempt to load animation block with invalid object');
 }

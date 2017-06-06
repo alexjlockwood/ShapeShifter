@@ -167,7 +167,7 @@ export function metaReducer(reducer: ActionReducer<State>): ActionReducer<State>
             pairedSubPaths.delete(toSubIdx);
           }
           pairedSubPaths.add(pairedSubPaths.size);
-          state = setPairedSubPaths(state, pairedSubPaths)
+          state = setPairedSubPaths(state, pairedSubPaths);
           state = clearHover(state);
           state = updateActivePathBlock(
             state,
