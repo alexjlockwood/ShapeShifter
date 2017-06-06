@@ -909,7 +909,7 @@ export class LayerTimelineComponent
       fileList,
       (vls, animations) => {
         if (animations) {
-          this.store.dispatch(new ResetWorkspace(vls, animations));
+          this.store.dispatch(new ResetWorkspace(vls[0], animations));
         } else {
           this.store.dispatch(new ImportVectorLayers(vls));
           this.snackBar.open(
