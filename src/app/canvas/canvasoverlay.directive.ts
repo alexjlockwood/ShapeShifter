@@ -12,6 +12,7 @@ import {
   GroupLayer,
   Layer,
   LayerUtil,
+  MorphableLayer,
   PathLayer,
   VectorLayer,
 } from '../scripts/layers';
@@ -907,14 +908,15 @@ export class CanvasOverlayDirective
       return undefined;
     }
     const recurseFn = (layer: Layer): Layer => {
-      if (layer instanceof PathLayer && layer.pathData) {
+      // TODO: use a user-defined type check to confirm this layer is an instance of MorphableLayer
+      if ((layer instanceof PathLayer || layer instanceof ClipPathLayer) && layer.pathData) {
         const transformedPoint =
           MathUtil.transformPoint(
             point, LayerUtil.getFlattenedTransformForLayer(root, layer.id).invert());
         let isSegmentInRangeFn: (distance: number, cmd: Command) => boolean;
         isSegmentInRangeFn = distance => {
           let maxDistance = this.minSnapThreshold;
-          if (layer.isStroked()) {
+          if (layer instanceof PathLayer && layer.isStroked()) {
             maxDistance = Math.max(maxDistance, layer.strokeWidth / 2);
           }
           return distance <= maxDistance;
@@ -930,7 +932,7 @@ export class CanvasOverlayDirective
       // Use 'hitTestLayer || h' and not the other way around because of reverse z-order.
       return layer.children.reduce((h, l) => recurseFn(l) || h, undefined);
     };
-    return recurseFn(root) as PathLayer;
+    return recurseFn(root) as MorphableLayer;
   }
 
   // TODO: make it clear this is only meant to be called in shape shifter mode
@@ -947,14 +949,13 @@ export class CanvasOverlayDirective
         return distance <= this.mediumPointRadius * multiplyFactor;
       };
     }
-    const pathLayer =
-      this.vectorLayer.findLayerById(this.blockLayerId) as PathLayer;
+    const pathLayer = this.vectorLayer.findLayerById(this.blockLayerId) as MorphableLayer;
     let isSegmentInRangeFn: (distance: number, cmd: Command) => boolean;
     if (!opts.noSegments) {
       isSegmentInRangeFn = distance => {
         let maxDistance = this.minSnapThreshold;
         if (pathLayer.isStroked()) {
-          maxDistance = Math.max(maxDistance, pathLayer.strokeWidth / 2);
+          maxDistance = Math.max(maxDistance, (pathLayer as PathLayer).strokeWidth / 2);
         }
         return distance <= maxDistance;
       };
@@ -1037,10 +1038,4 @@ interface HitTestOpts {
   noSegments?: boolean;
   noShapes?: boolean;
   restrictToSubIdx?: number[];
-}
-
-interface MorphableLayer extends Layer {
-  pathData: Path;
-  isFilled(): boolean;
-  isStroked(): boolean;
 }

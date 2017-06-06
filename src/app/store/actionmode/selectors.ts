@@ -1,4 +1,4 @@
-import { LayerUtil, PathLayer } from '../../scripts/layers';
+import { LayerUtil, MorphableLayer } from '../../scripts/layers';
 import { PathAnimationBlock } from '../../scripts/timeline';
 import { getVectorLayer } from '../layers/selectors';
 import { createDeepEqualSelector, getState } from '../selectors';
@@ -44,7 +44,7 @@ const getVectorLayerFromValue =
       if (!vl || !block) {
         return undefined;
       }
-      const pathLayer = (vl.findLayerById(block.layerId) as PathLayer).clone();
+      const pathLayer = vl.findLayerById(block.layerId).clone() as MorphableLayer;
       pathLayer.pathData = block.fromValue;
       return LayerUtil.replaceLayerInTree(vl, pathLayer);
     });
@@ -57,7 +57,7 @@ const getVectorLayerToValue =
       if (!vl || !block) {
         return undefined;
       }
-      const pathLayer = (vl.findLayerById(block.layerId) as PathLayer).clone();
+      const pathLayer = vl.findLayerById(block.layerId).clone() as MorphableLayer;
       pathLayer.pathData = block.toValue;
       return LayerUtil.replaceLayerInTree(vl, pathLayer);
     });
@@ -70,7 +70,7 @@ const getPathLayerFromValue =
       if (!vl || !block) {
         return undefined;
       }
-      return vl.findLayerById(block.layerId) as PathLayer;
+      return vl.findLayerById(block.layerId) as MorphableLayer;
     });
 
 const getPathLayerToValue =
@@ -81,7 +81,7 @@ const getPathLayerToValue =
       if (!vl || !block) {
         return undefined;
       }
-      return vl.findLayerById(block.layerId) as PathLayer;
+      return vl.findLayerById(block.layerId) as MorphableLayer;
     });
 
 export const getActionModeStartState =

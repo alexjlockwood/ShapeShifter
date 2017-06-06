@@ -10,3 +10,4 @@ export {
   StrokeLineJoin,
   FillType,
 } from './PathLayer';
+export { MorphableLayer } from './MorphableLayer';

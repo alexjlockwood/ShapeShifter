@@ -1,5 +1,5 @@
 import { AutoAwesome } from '../../scripts/algorithms';
-import { PathLayer } from '../../scripts/layers';
+import { MorphableLayer } from '../../scripts/layers';
 import {
   Path,
   PathUtil,
@@ -210,10 +210,9 @@ function getActivePathBlock(state: State) {
   return activeAnimationBlocks[blockIndex] as PathAnimationBlock;
 }
 
-// TODO: should cast this to PathLayer OR ClipPathLayer?
 function getActivePathBlockLayer(state: State) {
   const pathLayerId = getActivePathBlock(state).layerId;
-  return state.layers.vectorLayer.findLayerById(pathLayerId) as PathLayer;
+  return state.layers.vectorLayer.findLayerById(pathLayerId) as MorphableLayer;
 }
 
 function getActivePath(state: State, source: ActionSource) {

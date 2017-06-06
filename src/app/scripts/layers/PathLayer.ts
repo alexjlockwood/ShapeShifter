@@ -7,6 +7,7 @@ import {
   PathProperty,
   Property,
 } from '../properties';
+import { MorphableLayer } from '.';
 import {
   ConstructorArgs as AbstractConstructorArgs,
   AbstractLayer,
@@ -48,7 +49,7 @@ const ENUM_FILLTYPE_OPTIONS = [
   new EnumProperty('fillType', ENUM_FILLTYPE_OPTIONS),
 )
 // TODO: need to fix enum properties so they store/return strings instead of options?
-export class PathLayer extends AbstractLayer {
+export class PathLayer extends AbstractLayer implements MorphableLayer {
 
   constructor(obj: ConstructorArgs) {
     super(obj);

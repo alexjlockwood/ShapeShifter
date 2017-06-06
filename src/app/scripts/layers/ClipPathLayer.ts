@@ -3,6 +3,7 @@ import {
   PathProperty,
   Property,
 } from '../properties';
+import { MorphableLayer } from '.';
 import {
   ConstructorArgs as AbstractConstructorArgs,
   AbstractLayer,
@@ -14,7 +15,7 @@ import {
 @Property.register(
   new PathProperty('pathData', { isAnimatable: true }),
 )
-export class ClipPathLayer extends AbstractLayer {
+export class ClipPathLayer extends AbstractLayer implements MorphableLayer {
 
   constructor(obj: ConstructorArgs) {
     super(obj);
