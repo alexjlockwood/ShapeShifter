@@ -127,6 +127,6 @@ function load(obj: AbstractLayer | any): Layer {
   if (obj.type === 'mask') {
     return new ClipPathLayer(obj);
   }
-  console.error('Attempt to load layer with invalid object: ', obj)
+  console.error('Attempt to load layer with invalid object: ', obj);
   throw new Error('Attempt to load layer with invalid object');
 }

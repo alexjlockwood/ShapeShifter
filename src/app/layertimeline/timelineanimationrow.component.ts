@@ -48,8 +48,8 @@ export class TimelineAnimationRowComponent implements OnInit, Callbacks {
             blocksByAnimationByPropertyValues,
             isExpanded: !collapsedLayerIds.has(this.layer.id),
             selectedBlockIds,
-          }
-        })
+          };
+        });
   }
 
   // @Override Callbacks

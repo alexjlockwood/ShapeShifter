@@ -7,7 +7,7 @@ export function serializeToString(node, options): string {
 function removeInvalidCharacters(content: string) {
   // See http://www.w3.org/TR/xml/#NT-Char for valid XML 1.0 characters.
   return content.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, '');
-};
+}
 
 function serializeAttributeValue(value: string) {
   return value

@@ -58,11 +58,11 @@ export class CanvasComponent
   ngAfterViewInit() {
     const activeViewport$ =
       this.store.select(getVectorLayer)
-        .map(vl => { return { w: vl.width, h: vl.height } })
+        .map(vl => { return { w: vl.width, h: vl.height }; })
         .distinctUntilChanged((x, y) => _.isEqual(x, y));
     this.registerSubscription(
       Observable.combineLatest(this.canvasBounds$, activeViewport$)
-        .map(([bounds, viewport]) => { return { bounds, viewport } })
+        .map(([bounds, viewport]) => { return { bounds, viewport }; })
         .subscribe(({ bounds, viewport }) => {
           const w = Math.max(1, bounds.w - CANVAS_MARGIN * 2);
           const h = Math.max(1, bounds.h - CANVAS_MARGIN * 2);

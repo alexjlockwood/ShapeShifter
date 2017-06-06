@@ -135,7 +135,7 @@ export class LayerTimelineComponent
     private readonly store: Store<State>,
     private readonly dialogService: DialogService,
     private readonly viewContainerRef: ViewContainerRef,
-  ) { super() }
+  ) { super(); }
 
   ngOnInit() {
     this.layerTimelineModel$ =
@@ -158,7 +158,7 @@ export class LayerTimelineComponent
             vectorLayer,
             selectedAnimationIds,
             activeAnimationId,
-          }
+          };
         });
   }
 
@@ -622,7 +622,7 @@ export class LayerTimelineComponent
 
   // @Override LayerListTreeComponentCallbacks
   layerToggleExpanded(event: MouseEvent, layer: Layer) {
-    const recursive = event.metaKey || event.shiftKey
+    const recursive = event.metaKey || event.shiftKey;
     this.store.dispatch(new ToggleLayerExpansion(layer.id, recursive));
   }
 

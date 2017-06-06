@@ -129,5 +129,5 @@ export class SegmentSplitter {
       return 0;
     });
     return projInfos[0];
-  };
+  }
 }

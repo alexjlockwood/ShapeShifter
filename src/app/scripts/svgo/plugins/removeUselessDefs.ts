@@ -27,7 +27,7 @@ function removeUselessDefsFn(item) {
     return false;
   }
   return undefined;
-};
+}
 
 function getUsefulItems(usefulItems, item) {
   if (item.hasAttr('id') || item.isElem('style')) {

@@ -47,7 +47,7 @@ export class FileImportService {
       if (numErrors === files.length) {
         failureFn();
       } else if (numCallbacks === files.length) {
-        successFn(addedVls)
+        successFn(addedVls);
       }
     };
 
