@@ -97,6 +97,7 @@ export class ToolbarComponent implements OnInit {
     ga('send', 'event', 'Demos', 'Demos dialog shown');
 
     // TODO: add demos here
+    // TODO: move this HTTP logic into a global service?
     const demoTitles = ['TODO: add demos'];
     this.dialogService
       .demo(this.viewContainerRef, demoTitles)

@@ -6,6 +6,7 @@ import {
   DeleteSelectedSubPaths,
   EndActionMode,
   ReverseSelectedSubPaths,
+  SetActionMode,
   ShiftBackSelectedSubPaths,
   ShiftForwardSelectedSubPaths,
   ShiftPointToFront,
@@ -15,6 +16,10 @@ import {
   Store,
   ToggleActionMode,
 } from '../store';
+import {
+  getActionMode,
+  isActionMode,
+} from '../store/actionmode/selectors';
 import { Injectable } from '@angular/core';
 
 /**
@@ -22,11 +27,23 @@ import { Injectable } from '@angular/core';
  */
 @Injectable()
 export class ActionModeService {
+  private isActionMode: boolean;
+  private actionMode: ActionMode;
 
-  constructor(private readonly store: Store<State>) { }
+  constructor(private readonly store: Store<State>) {
+    this.store.select(isActionMode).subscribe(isActive => this.isActionMode = isActive);
+    this.store.select(getActionMode).subscribe(mode => this.actionMode = mode);
+  }
 
   closeActionMode() {
-    this.store.dispatch(new EndActionMode());
+    if (!this.isActionMode) {
+      return;
+    }
+    if (this.actionMode === ActionMode.Selection) {
+      this.store.dispatch(new EndActionMode());
+    } else {
+      this.store.dispatch(new SetActionMode(ActionMode.Selection));
+    }
   }
 
   toggleSplitCommandsMode() {

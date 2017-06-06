@@ -35,7 +35,7 @@
       *ngIf="data.showActionMode"
       class="action-mode-close-icon"
       (click)="onCloseActionModeClick()">
-      <md-icon>close</md-icon>
+      <md-icon>{{toolbarData.isSelectionMode() ? 'arrow_back' : 'close'}}</md-icon>
     </button>
 
     <!-- Toolbar text. -->

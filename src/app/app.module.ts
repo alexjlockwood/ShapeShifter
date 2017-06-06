@@ -28,11 +28,7 @@ import {
   FileImportService,
   HoverService,
   ShortcutService,
-  StateService,
 } from './services';
-import { AppModeService } from './services/appmode.service';
-import { SelectionService } from './services/selection.service';
-import { SettingsService } from './services/settings.service';
 import { SplitterComponent } from './splitter/splitter.component';
 import { reducer } from './store';
 import { ToolbarComponent } from './toolbar/toolbar.component';
@@ -61,29 +57,29 @@ import { StoreModule } from '@ngrx/store';
   declarations: [
     AppComponent,
     CanvasComponent,
-    PlaybackComponent,
-    SplitterComponent,
+    CanvasContainerDirective,
+    CanvasLayersDirective,
+    CanvasOverlayDirective,
     CanvasRulerDirective,
-    ToolbarComponent,
     ConfirmDialogComponent,
     DemoDialogComponent,
+    DropTargetDirective,
     LayerListTreeComponent,
-    PropertyInputComponent,
-    ScrollGroupDirective,
     LayerTimelineComponent,
     LayerTimelineDirective,
+    PlaybackComponent,
+    PropertyInputComponent,
+    ScrollGroupDirective,
+    SplitterComponent,
     TimelineAnimationRowComponent,
-    DropTargetDirective,
-    CanvasOverlayDirective,
-    CanvasLayersDirective,
-    CanvasContainerDirective,
+    ToolbarComponent,
   ],
   imports: [
     BrowserModule,
+    BrowserAnimationsModule,
+    FlexLayoutModule,
     FormsModule,
     HttpModule,
-    FlexLayoutModule,
-    BrowserAnimationsModule,
     StoreModule.provideStore(reducer),
     // Angular material components.
     MdButtonModule,
@@ -98,16 +94,12 @@ import { StoreModule } from '@ngrx/store';
     MdTooltipModule,
   ],
   providers: [
-    AnimatorService,
-    StateService,
-    SelectionService,
-    HoverService,
-    DialogService,
-    SettingsService,
-    AppModeService,
-    FileImportService,
-    FileExportService,
     ActionModeService,
+    AnimatorService,
+    DialogService,
+    FileExportService,
+    FileImportService,
+    HoverService,
     ShortcutService,
   ],
   entryComponents: [

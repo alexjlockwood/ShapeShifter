@@ -1,4 +1,5 @@
 import { AnimatorService } from '../animator';
+import { ActionModeService } from '../services';
 import {
   DeleteSelectedModels,
   State,
@@ -15,6 +16,7 @@ export class ShortcutService {
   constructor(
     private readonly store: Store<State>,
     private readonly animatorService: AnimatorService,
+    private readonly actionModeService: ActionModeService,
   ) {
     this.store.select(isActionMode).subscribe(isActive => this.isActionMode = isActive);
   }
@@ -36,6 +38,11 @@ export class ShortcutService {
           // TODO: handle case where user is in action mode as well
           this.store.dispatch(new DeleteSelectedModels());
         }
+        return false;
+      }
+      if (event.keyCode === 27) {
+        // Escape.
+        this.actionModeService.closeActionMode();
         return false;
       }
       if (event.keyCode === 32) {
