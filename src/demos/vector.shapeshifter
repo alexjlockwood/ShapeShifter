@@ -52,42 +52,12 @@
         "translateY": 0,
         "children": [
           {
-            "id": "18",
-            "name": "pausepath",
-            "type": "path",
-            "pathData": "M 6 5 L 8 5 L 8 13 L 6 13 L 6 5 M 10 5 L 12 5 L 12 13 L 10 13 L 10 5",
-            "fillColor": "#000",
-            "fillAlpha": 1,
-            "strokeColor": "",
-            "strokeAlpha": 1,
-            "strokeWidth": 0,
-            "strokeLinecap": "butt",
-            "strokeLinejoin": "miter",
-            "strokeMiterLimit": 4,
-            "trimPathStart": 0,
-            "trimPathEnd": 1,
-            "trimPathOffset": 0,
-            "fillType": "nonZero"
+            "id": "110",
+            "name": "mask",
+            "type": "mask",
+            "pathData": "M 6 5 L 8 5 L 8 13 L 6 13 L 6 5 M 10 5 L 12 5 L 12 13 L 10 13 L 10 5"
           }
         ]
-      },
-      {
-        "id": "38",
-        "name": "path",
-        "type": "path",
-        "pathData": "",
-        "fillColor": "",
-        "fillAlpha": 1,
-        "strokeColor": "",
-        "strokeAlpha": 1,
-        "strokeWidth": 0,
-        "strokeLinecap": "butt",
-        "strokeLinejoin": "miter",
-        "strokeMiterLimit": 4,
-        "trimPathStart": 0,
-        "trimPathEnd": 1,
-        "trimPathOffset": 0,
-        "fillType": "nonZero"
       }
     ]
   },

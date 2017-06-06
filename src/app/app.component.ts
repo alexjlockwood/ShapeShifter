@@ -3,6 +3,8 @@ import 'rxjs/add/operator/combineLatest';
 
 import { environment } from '../environments/environment';
 import { FileImportService } from './import/fileimport.service';
+import { VectorLayer } from './scripts/layers';
+import { Animation } from './scripts/timeline';
 import { ShortcutService } from './shortcut/shortcut.service';
 import {
   ActionSource,
@@ -21,12 +23,14 @@ import {
   OnInit,
   ViewChild,
 } from '@angular/core';
+import { Http, Response } from '@angular/http';
 import { MdSnackBar } from '@angular/material';
 import * as erd from 'element-resize-detector';
 import * as $ from 'jquery';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Observable } from 'rxjs/Observable';
 
+const SHOULD_AUTO_LOAD_DEMO = true;
 const IS_DEV_BUILD = !environment.production;
 const ELEMENT_RESIZE_DETECTOR = erd();
 const STORAGE_KEY_FIRST_TIME_USER = 'storage_key_first_time_user';
@@ -54,6 +58,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     private readonly fileImporterService: FileImportService,
     private readonly store: Store<State>,
     private readonly shortcutService: ShortcutService,
+    private readonly http: Http,
   ) { }
 
   ngOnInit() {
@@ -95,6 +100,20 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
           this.snackBar.open('Ready to work offline', 'Dismiss', { duration: 5000 });
         });
       }
+    }
+
+    if (IS_DEV_BUILD && SHOULD_AUTO_LOAD_DEMO) {
+      this.http.get('demos/vector.shapeshifter')
+        .map((res: Response) => res.json())
+        .catch((error: any) => Observable.throw(error.json().error || 'Server error'))
+        .subscribe(jsonObj => {
+          // TODO: display snackbar if an error occurs?
+          // TODO: display snackbar when in offline mode
+          // TODO: show some sort of loader indicator to avoid blocking the UI thread?
+          const vl = new VectorLayer(jsonObj.vectorLayer);
+          const animations = jsonObj.animations.map(anim => new Animation(anim));
+          this.store.dispatch(new ResetWorkspace(vl, animations));
+        });
     }
   }
 

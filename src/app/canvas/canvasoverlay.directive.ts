@@ -59,7 +59,7 @@ import { Observable } from 'rxjs/Observable';
 // The line width of a highlight in css pixels.
 const HIGHLIGHT_LINE_WIDTH = 6;
 // The line dash of a highlight in css pixels.
-const HIGHLIGHT_LINE_DASH = 5;
+const HIGHLIGHT_LINE_DASH = 12;
 // The minimum distance between a point and a path that causes a snap.
 const MIN_SNAP_THRESHOLD = 12;
 // The distance of a mouse gesture that triggers a drag, in css pixels.
