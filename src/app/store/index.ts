@@ -45,7 +45,7 @@ export {
 // Action mode meta actions.
 export {
   AutoFixClick,
-  DeleteSelectedPathDetails,
+  DeleteActionSelections,
   ReverseSelectedSubPaths,
   PairSubPath,
   SetUnpairedSubPath,

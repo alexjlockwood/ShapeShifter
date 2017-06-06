@@ -1,7 +1,7 @@
 import {
   ActionMode,
   AutoFixClick,
-  DeleteSelectedPathDetails,
+  DeleteActionSelections,
   EndActionMode,
   ReverseSelectedSubPaths,
   SetActionMode,
@@ -53,7 +53,7 @@ export class ActionModeService {
       // TODO: determine if it makes sense to perform an action in this case
       return;
     }
-    this.store.dispatch(new DeleteSelectedPathDetails());
+    this.store.dispatch(new DeleteActionSelections());
   }
 
   toggleSplitCommandsMode() {

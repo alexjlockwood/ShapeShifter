@@ -59,8 +59,8 @@ export function metaReducer(reducer: ActionReducer<State>): ActionReducer<State>
         break;
       }
 
-      // Delete all currently selected subpaths.
-      case actions.DELETE_SELECTED_PATH_DETAILS: {
+      // Delete all currently selected subpaths/segments/points.
+      case actions.DELETE_ACTION_SELECTIONS: {
         state = deleteSelectedSubPaths(state);
         state = deleteSelectedSegments(state);
         state = deleteSelectedPoints(state);
