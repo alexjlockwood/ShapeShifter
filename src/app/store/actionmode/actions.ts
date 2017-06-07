@@ -39,7 +39,7 @@ export class ToggleActionMode implements Action {
   }
 }
 
-export class SetHover implements Action {
+export class SetActionModeHover implements Action {
   readonly type = SET_HOVER;
   readonly payload: { hover: Hover };
   constructor(hover: Hover) {
@@ -99,7 +99,7 @@ export type Actions =
   | EndActionMode
   | SetActionMode
   | ToggleActionMode
-  | SetHover
+  | SetActionModeHover
   | SetSelections
   | ToggleSubPathSelection
   | ToggleSegmentSelections

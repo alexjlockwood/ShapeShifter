@@ -33,9 +33,9 @@ import {
   Store,
 } from '../store';
 import {
-  getActionHover,
   getActionMode,
   getActionModeEndState,
+  getActionModeHover,
   getActionModeStartState,
 } from '../store/actionmode/selectors';
 import { getCanvasOverlayState } from '../store/common/selectors';
@@ -257,7 +257,7 @@ export class CanvasOverlayDirective
       // TODO: avoid re-executing the draw by combining with the above subscriptions
       // TODO: avoid re-executing the draw by combining with the above subscriptions
       this.registerSubscription(
-        this.store.select(getActionHover).subscribe(
+        this.store.select(getActionModeHover).subscribe(
           hover => {
             if (!hover) {
               // Clear the current hover.

@@ -50,7 +50,7 @@ const getBlockLayerId = createSelector(getBlock, b => b ? b.layerId : undefined)
 
 export const isActionMode = createSelector(getBlockId, id => !!id);
 export const getActionMode = createSelector(getActionModeState, s => s.mode);
-export const getActionHover = createDeepEqualSelector(getActionModeState, s => s.hover);
+export const getActionModeHover = createDeepEqualSelector(getActionModeState, s => s.hover);
 const getActionSelections = createSelector(getActionModeState, s => s.selections);
 const getPairedSubPaths =
   createDeepEqualSelector(getActionModeState, state => new Set(state.pairedSubPaths));
@@ -124,7 +124,7 @@ function getHighlightedSubIdxWithError(actionSource: ActionSource) {
 const actionModeBaseSelectors = {
   blockLayerId: getBlockLayerId,
   isActionMode,
-  hover: getActionHover,
+  hover: getActionModeHover,
   selections: getActionSelections,
   pairedSubPaths: getPairedSubPaths,
   unpairedSubPath: getUnpairedSubPath,

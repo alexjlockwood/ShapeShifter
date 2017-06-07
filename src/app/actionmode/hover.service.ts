@@ -1,6 +1,14 @@
-import { SetHover, State, Store } from '../store';
-import { ActionSource, Hover, HoverType } from '../store/actionmode';
-import { getActionHover } from '../store/actionmode/selectors';
+import {
+  SetActionModeHover,
+  State,
+  Store,
+} from '../store';
+import {
+  ActionSource,
+  Hover,
+  HoverType,
+} from '../store/actionmode';
+import { getActionModeHover } from '../store/actionmode/selectors';
 import { Injectable } from '@angular/core';
 import * as _ from 'lodash';
 
@@ -9,17 +17,8 @@ import * as _ from 'lodash';
  */
 @Injectable()
 export class HoverService {
-  private hover: Hover;
 
-  constructor(private readonly store: Store<State>) {
-    this.store.select(getActionHover).subscribe(h => this.hover = h);
-  }
-
-  setHover(hover: Hover) {
-    if (!_.isEqual(this.hover, hover)) {
-      this.store.dispatch(new SetHover(hover));
-    }
-  }
+  constructor(private readonly store: Store<State>) { }
 
   setPoint(source: ActionSource, subIdx: number, cmdIdx: number) {
     this.setHover({ type: HoverType.Point, source, subIdx, cmdIdx });
@@ -31,5 +30,13 @@ export class HoverService {
 
   setSubPath(source: ActionSource, subIdx: number) {
     this.setHover({ type: HoverType.SubPath, source, subIdx });
+  }
+
+  setHover(newHover: Hover) {
+    this.store.select(getActionModeHover).first().subscribe(currHover => {
+      if (!_.isEqual(newHover, currHover)) {
+        this.store.dispatch(new SetActionModeHover(newHover));
+      }
+    });
   }
 }

@@ -63,7 +63,7 @@ export {
   EndActionMode,
   SetActionMode,
   ToggleActionMode,
-  SetHover,
+  SetActionModeHover,
   SetSelections,
   TogglePointSelection,
   ToggleSegmentSelections,
