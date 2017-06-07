@@ -1,7 +1,9 @@
+import 'rxjs/add/operator/combineLatest';
+
 import {
   ActionMode,
   AutoFixClick,
-  DeleteActionSelections,
+  DeleteActionModeSelections,
   EndActionMode,
   ReverseSelectedSubPaths,
   SetActionMode,
@@ -12,60 +14,69 @@ import {
   SplitCommandInHalfHover,
   State,
   Store,
-  ToggleActionMode,
 } from '../store';
 import {
   getActionMode,
   isActionMode,
 } from '../store/actionmode/selectors';
 import { Injectable } from '@angular/core';
+import { Observable } from 'rxjs/Observable';
 
 /**
  * A simple service that provides an interface for making action mode changes.
  */
 @Injectable()
 export class ActionModeService {
-  private isActionMode_: boolean;
-  private actionMode: ActionMode;
 
-  constructor(private readonly store: Store<State>) {
-    this.store.select(isActionMode).subscribe(isActive => this.isActionMode_ = isActive);
-    this.store.select(getActionMode).subscribe(mode => this.actionMode = mode);
-  }
+  constructor(private readonly store: Store<State>) { }
 
   isActionMode() {
-    return this.isActionMode_;
+    let result: boolean;
+    this.store.select(isActionMode).first().subscribe(isActive => result = isActive);
+    return result;
   }
 
   closeActionMode() {
-    if (!this.isActionMode_) {
-      return;
-    }
-    if (this.actionMode === ActionMode.Selection) {
-      this.store.dispatch(new EndActionMode());
-    } else {
-      this.store.dispatch(new SetActionMode(ActionMode.Selection));
-    }
+    Observable.combineLatest(
+      this.store.select(isActionMode),
+      this.store.select(getActionMode),
+    ).first().subscribe(([isActive, actionMode]) => {
+      if (!isActive) {
+        return;
+      }
+      if (actionMode === ActionMode.Selection) {
+        this.store.dispatch(new EndActionMode());
+      } else {
+        this.store.dispatch(new SetActionMode(ActionMode.Selection));
+      }
+    });
   }
 
   deleteSelections() {
-    if (this.actionMode !== ActionMode.Selection) {
-      // TODO: determine if it makes sense to perform an action in this case
-      return;
-    }
-    this.store.dispatch(new DeleteActionSelections());
+    this.store.select(getActionMode).first().subscribe(currentMode => {
+      if (currentMode === ActionMode.Selection) {
+        this.store.dispatch(new DeleteActionModeSelections());
+      }
+    });
   }
 
   toggleSplitCommandsMode() {
-    this.store.dispatch(new ToggleActionMode(ActionMode.SplitCommands));
+    this.toggleActionMode(ActionMode.SplitCommands);
   }
 
   toggleSplitSubPathsMode() {
-    this.store.dispatch(new ToggleActionMode(ActionMode.SplitSubPaths));
+    this.toggleActionMode(ActionMode.SplitSubPaths);
   }
 
   toggleMorphSubPathsMode() {
-    this.store.dispatch(new ToggleActionMode(ActionMode.MorphSubPaths));
+    this.toggleActionMode(ActionMode.MorphSubPaths);
+  }
+
+  private toggleActionMode(modeToToggle: ActionMode) {
+    this.store.select(getActionMode).first().subscribe(currentMode => {
+      const newMode = currentMode === modeToToggle ? ActionMode.Selection : modeToToggle;
+      this.store.dispatch(new SetActionMode(newMode));
+    });
   }
 
   reverseSelectedSubPaths() {

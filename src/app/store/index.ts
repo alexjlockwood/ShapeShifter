@@ -45,7 +45,7 @@ export {
 // Action mode meta actions.
 export {
   AutoFixClick,
-  DeleteActionSelections,
+  DeleteActionModeSelections,
   ReverseSelectedSubPaths,
   PairSubPath,
   SetUnpairedSubPath,
@@ -62,9 +62,8 @@ export {
   StartActionMode,
   EndActionMode,
   SetActionMode,
-  ToggleActionMode,
   SetActionModeHover,
-  SetSelections,
+  SetActionModeSelections,
   TogglePointSelection,
   ToggleSegmentSelections,
   ToggleSubPathSelection,

@@ -4,9 +4,8 @@ import { Action } from '@ngrx/store';
 export const START_ACTION_MODE = '__actionmode__START_ACTION_MODE';
 export const END_ACTION_MODE = '__actionmode__END_ACTION_MODE';
 export const SET_ACTION_MODE = '__actionmode__SET_ACTION_MODE';
-export const TOGGLE_ACTION_MODE = '__actionmode__TOGGLE_ACTION_MODE';
-export const SET_HOVER = '__actionmode__SET_HOVER';
-export const SET_SELECTIONS = '__actionmode__SET_SELECTIONS';
+export const SET_ACTION_MODE_HOVER = '__actionmode__SET_ACTION_MODE_HOVER';
+export const SET_ACTION_MODE_SELECTIONS = '__actionmode__SET_ACTION_MODE_SELECTIONS';
 export const TOGGLE_SUBPATH_SELECTION = '__actionmode__TOGGLE_SUBPATH_SELECTION';
 export const TOGGLE_SEGMENT_SELECTIONS = '__actionmode__TOGGLE_SEGMENT_SELECTION';
 export const TOGGLE_POINT_SELECTION = '__actionmode__TOGGLE_POINT_SELECTION';
@@ -31,24 +30,16 @@ export class SetActionMode implements Action {
   }
 }
 
-export class ToggleActionMode implements Action {
-  readonly type = TOGGLE_ACTION_MODE;
-  readonly payload: { modeToToggle: ActionMode };
-  constructor(modeToToggle: ActionMode) {
-    this.payload = { modeToToggle };
-  }
-}
-
 export class SetActionModeHover implements Action {
-  readonly type = SET_HOVER;
+  readonly type = SET_ACTION_MODE_HOVER;
   readonly payload: { hover: Hover };
   constructor(hover: Hover) {
     this.payload = { hover };
   }
 }
 
-export class SetSelections implements Action {
-  readonly type = SET_SELECTIONS;
+export class SetActionModeSelections implements Action {
+  readonly type = SET_ACTION_MODE_SELECTIONS;
   readonly payload: { selections: ReadonlyArray<Selection> };
   constructor(selections: ReadonlyArray<Selection>) {
     this.payload = { selections };
@@ -98,9 +89,8 @@ export type Actions =
   StartActionMode
   | EndActionMode
   | SetActionMode
-  | ToggleActionMode
   | SetActionModeHover
-  | SetSelections
+  | SetActionModeSelections
   | ToggleSubPathSelection
   | ToggleSegmentSelections
   | TogglePointSelection;

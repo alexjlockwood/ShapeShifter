@@ -4,7 +4,7 @@ import {
   ActionMode,
   ActionSource,
   SetActionMode,
-  SetSelections,
+  SetActionModeSelections,
   State,
   Store,
   UpdateActivePathBlock,
@@ -52,7 +52,7 @@ export class SegmentSplitter {
 
       // TODO: make sure the inspector doesn't set hovers/selections while a split is in process...
       this.component.hoverService.setHover(undefined);
-      this.store.dispatch(new SetSelections([]));
+      this.store.dispatch(new SetActionModeSelections([]));
       this.currProjInfo = undefined;
       this.store.dispatch(
         new UpdateActivePathBlock(
