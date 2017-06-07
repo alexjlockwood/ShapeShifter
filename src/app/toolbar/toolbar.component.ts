@@ -2,6 +2,7 @@ import { environment } from '../../environments/environment';
 import { ActionModeUtil } from '../actionmode';
 import { ActionModeService } from '../actionmode/actionmode.service';
 import { DialogService } from '../dialogs';
+import { regenerateModelIds } from '../import/fileimport.service';
 import {
   MorphableLayer,
   VectorLayer,
@@ -112,24 +113,29 @@ export class ToolbarComponent implements OnInit {
 
     // TODO: add demos here
     // TODO: move this HTTP logic into a global service?
-    const demoTitles = ['TODO: add demos'];
+    const demoTitles = ['Morphing animals'];
     this.dialogService
       .demo(this.viewContainerRef, demoTitles)
       .subscribe(selectedDemoTitle => {
-        if (selectedDemoTitle !== 'TODO: add demos') {
+        if (selectedDemoTitle !== 'Morphing animals') {
           return;
         }
         ga('send', 'event', 'Demos', 'Demo selected', selectedDemoTitle);
-        this.http.get('demos/vector.shapeshifter')
+        this.http.get('demos/hippobuffalo.shapeshifter')
           .map((res: Response) => res.json())
           .catch((error: any) => Observable.throw(error.json().error || 'Server error'))
           .subscribe(jsonObj => {
             // TODO: display snackbar if an error occurs?
             // TODO: display snackbar when in offline mode
             // TODO: show some sort of loader indicator to avoid blocking the UI thread?
-            const vl = new VectorLayer(jsonObj.vectorLayer);
-            const animations = jsonObj.animations.map(anim => new Animation(anim));
-            this.store.dispatch(new ResetWorkspace(vl, animations));
+            let vl = new VectorLayer(jsonObj.vectorLayer);
+            let animations = jsonObj.animations.map(anim => new Animation(anim));
+            let hiddenLayerIds = new Set<string>(jsonObj.hiddenLayerIds);
+            const regeneratedModels = regenerateModelIds(vl, animations, hiddenLayerIds);
+            vl = regeneratedModels.vl;
+            animations = regeneratedModels.animations;
+            hiddenLayerIds = regeneratedModels.hiddenLayerIds;
+            this.store.dispatch(new ResetWorkspace(vl, animations, hiddenLayerIds));
           });
       });
   }

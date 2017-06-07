@@ -31,7 +31,7 @@ import * as $ from 'jquery';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Observable } from 'rxjs/Observable';
 
-const SHOULD_AUTO_LOAD_DEMO = true;
+const SHOULD_AUTO_LOAD_DEMO = false;
 const IS_DEV_BUILD = !environment.production;
 const ELEMENT_RESIZE_DETECTOR = erd();
 const STORAGE_KEY_FIRST_TIME_USER = 'storage_key_first_time_user';
@@ -104,7 +104,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     if (IS_DEV_BUILD && SHOULD_AUTO_LOAD_DEMO) {
-      this.http.get('demos/vector.shapeshifter')
+      this.http.get('demos/hippobuffalo.shapeshifter')
         .map((res: Response) => res.json())
         .catch((error: any) => Observable.throw(error.json().error || 'Server error'))
         .subscribe(jsonObj => {
