@@ -112,7 +112,7 @@ export class ActionModeService {
   }
 
   splitInHalfHover() {
-    this.store.select(getActionModePointSelections).take(1).subscribe(selections => {
+    this.store.select(getActionModePointSelections).first().subscribe(selections => {
       if (selections.length) {
         const { source, subIdx, cmdIdx } = selections[0];
         this.setHover({ type: HoverType.Split, source, subIdx, cmdIdx });

@@ -3,7 +3,6 @@ import * as actions from './actions';
 import * as _ from 'lodash';
 
 export interface State {
-  // TODO: get rid of the active vector layer id and make this a single VectorLayer variable?
   readonly vectorLayer: VectorLayer;
   readonly selectedLayerIds: Set<string>;
   readonly collapsedLayerIds: Set<string>;
@@ -88,18 +87,8 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
     // Replace a layer.
     case actions.REPLACE_LAYER: {
       const replacementLayer = action.payload.layer;
-      let vectorLayer: VectorLayer;
-      if (replacementLayer instanceof VectorLayer) {
-        vectorLayer = replacementLayer;
-      } else {
-        vectorLayer = LayerUtil.replaceLayerInTree(state.vectorLayer, replacementLayer);
-      }
+      const vectorLayer = LayerUtil.replaceLayerInTree(state.vectorLayer, replacementLayer);
       return { ...state, vectorLayer };
-    }
-
-    // Clear all layer selections.
-    case actions.CLEAR_LAYER_SELECTIONS: {
-      return { ...state, selectedLayerIds: new Set() };
     }
 
     // Select a layer.
@@ -108,23 +97,16 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
       return selectLayerId(state, layerId, shouldToggle, clearExisting);
     }
 
-    // Select an animation.
-    case actions.SELECT_ANIMATION: {
-      return { ...state, selectedLayerIds: new Set() };
-    }
-
-    // Select an animation block.
-    case actions.SELECT_BLOCK: {
-      return { ...state, selectedLayerIds: new Set() };
-    }
-
-    case actions.ADD_BLOCK: {
-      return { ...state, selectedLayerIds: new Set() };
-    }
-
     // Delete all selected layers.
     case actions.DELETE_SELECTED_MODELS: {
       return deleteSelectedLayers(state);
+    }
+
+    case actions.CLEAR_LAYER_SELECTIONS:
+    case actions.SELECT_ANIMATION:
+    case actions.SELECT_BLOCK:
+    case actions.ADD_BLOCK: {
+      return { ...state, selectedLayerIds: new Set() };
     }
   }
   return state;
@@ -149,7 +131,6 @@ function selectLayerId(
   } else {
     selectedLayerIds.add(layerId);
   }
-
   return { ...state, selectedLayerIds };
 }
 
