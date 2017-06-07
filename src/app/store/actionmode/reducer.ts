@@ -20,7 +20,7 @@ export interface State {
 export function buildInitialState() {
   return {
     blockId: undefined,
-    mode: ActionMode.Selection,
+    mode: ActionMode.None,
     hover: undefined,
     selections: [],
     // TODO: reset this stuff after mode switches
@@ -32,34 +32,35 @@ export function buildInitialState() {
 export function reducer(state = buildInitialState(), action: actions.Actions) {
   switch (action.type) {
 
-    // Set the currently active block ID, enabling shape shifter mode.
+    // Set the currently active block ID, enabling action mode.
     case actions.START_ACTION_MODE: {
       const { blockId } = action.payload;
-      return { ...buildInitialState(), blockId };
+      return { ...buildInitialState(), blockId, mode: ActionMode.Selection };
     }
 
-    // Clear the currently active block ID, ending shape shifter mode.
+    // Clear the currently active block ID, ending action mode.
     case actions.END_ACTION_MODE: {
       return buildInitialState();
     }
 
-    // Set the app mode during shape shifter mode.
+    // Set the app mode during action mode.
     case actions.SET_ACTION_MODE: {
       const { mode } = action.payload;
+      let { selections } = state;
       if (mode === ActionMode.Selection && mode !== state.mode) {
         // Clear selections when switching back to selection mode.
-        state = { ...state, selections: [] };
+        selections = [];
       }
-      return { ...state, mode };
+      return { ...state, mode, selections };
     }
 
-    // Set the hover mode during shape shifter mode.
+    // Set the hover mode during action mode.
     case actions.SET_ACTION_MODE_HOVER: {
       const { hover } = action.payload;
       return { ...state, hover };
     }
 
-    // Set the path selections during shape shifter mode.
+    // Set the path selections during action mode.
     case actions.SET_ACTION_MODE_SELECTIONS: {
       const { selections } = action.payload;
       return { ...state, selections };

@@ -1,5 +1,3 @@
-import 'rxjs/add/operator/combineLatest';
-
 import {
   ActionMode,
   ActionSource,
@@ -23,7 +21,6 @@ import {
   getActionMode,
   getActionModeHover,
   getActionModePointSelections,
-  isActionMode,
 } from '../store/actionmode/selectors';
 import { Injectable } from '@angular/core';
 import * as _ from 'lodash';
@@ -39,20 +36,18 @@ export class ActionModeService {
 
   isActionMode() {
     let result: boolean;
-    this.store.select(isActionMode).first().subscribe(isActive => result = isActive);
+    this.store.select(getActionMode)
+      .first()
+      .subscribe(mode => result = (mode !== ActionMode.None));
     return result;
   }
 
   closeActionMode() {
-    // TODO: create a default ActionMode.None constant or something to avoid this
-    Observable.combineLatest(
-      this.store.select(isActionMode),
-      this.store.select(getActionMode),
-    ).first().subscribe(([isActive, actionMode]) => {
-      if (!isActive) {
+    this.store.select(getActionMode).first().subscribe(mode => {
+      if (mode === ActionMode.None) {
         return;
       }
-      if (actionMode === ActionMode.Selection) {
+      if (mode === ActionMode.Selection) {
         this.store.dispatch(new EndActionMode());
       } else {
         this.store.dispatch(new SetActionMode(ActionMode.Selection));
@@ -82,6 +77,9 @@ export class ActionModeService {
 
   private toggleActionMode(modeToToggle: ActionMode) {
     this.store.select(getActionMode).first().subscribe(currentMode => {
+      if (currentMode === ActionMode.None) {
+        return;
+      }
       const newMode = currentMode === modeToToggle ? ActionMode.Selection : modeToToggle;
       this.store.dispatch(new SetActionMode(newMode));
     });

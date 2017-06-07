@@ -7,13 +7,14 @@ import { VectorLayer } from './scripts/layers';
 import { Animation } from './scripts/timeline';
 import { ShortcutService } from './shortcut/shortcut.service';
 import {
+  ActionMode,
   ActionSource,
   ImportVectorLayers,
   ResetWorkspace,
   State,
   Store,
 } from './store';
-import { isActionMode } from './store/actionmode/selectors';
+import { getActionMode } from './store/actionmode/selectors';
 import {
   AfterViewInit,
   ChangeDetectionStrategy,
@@ -77,7 +78,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       .distinctUntilChanged(({ w: w1, h: h1 }, { w: w2, h: h2 }) => {
         return w1 === w2 && h1 === h2;
       });
-    this.isActionMode$ = this.store.select(isActionMode);
+    this.isActionMode$ = this.store.select(getActionMode).map(mode => mode !== ActionMode.None);
     this.canvasBounds$ = Observable.combineLatest(displaySize$, this.isActionMode$)
       .map(([{ w, h }, shouldShowThreeCanvases]) => {
         return { w: w / (shouldShowThreeCanvases ? 3 : 1), h };

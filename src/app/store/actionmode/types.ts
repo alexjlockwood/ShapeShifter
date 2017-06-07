@@ -24,10 +24,11 @@ export enum SelectionType {
  * Different shape shifter modes.
  */
 export enum ActionMode {
-  Selection = 1,
+  None = 1,
+  Selection,
   SplitCommands,
-  SplitSubPaths,
   MorphSubPaths,
+  SplitSubPaths,
 }
 
 /**

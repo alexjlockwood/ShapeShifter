@@ -118,14 +118,14 @@ export function metaReducer(reducer: ActionReducer<State>): ActionReducer<State>
         break;
       }
 
-      // Update a path animation block in shape shifter mode.
+      // Update a path animation block in action mode.
       case actions.UPDATE_ACTIVE_PATH_BLOCK: {
         const { source, path } = action.payload;
         state = updateActivePathBlock(state, source, path);
         break;
       }
 
-      // Select a subpath in paired subpath shapeshifter mode.
+      // Select a subpath in paired subpath action mode.
       case actions.PAIR_SUBPATH: {
         const { subIdx, source: actionSource } = action.payload;
         const { unpairedSubPath: currUnpair } = state.actionmode;

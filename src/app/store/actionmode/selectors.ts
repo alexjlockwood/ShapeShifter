@@ -49,8 +49,8 @@ const getBlock =
   );
 const getBlockLayerId = createSelector(getBlock, b => b ? b.layerId : undefined);
 
-export const isActionMode = createSelector(getBlockId, id => !!id);
 export const getActionMode = createSelector(getActionModeState, s => s.mode);
+export const isActionMode = createSelector(getActionMode, mode => mode !== ActionMode.None);
 export const getActionModeHover = createDeepEqualSelector(getActionModeState, s => s.hover);
 
 const getActionModeSelections =
