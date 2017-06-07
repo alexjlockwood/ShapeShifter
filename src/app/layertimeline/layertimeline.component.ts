@@ -1,3 +1,4 @@
+import { environment } from '../../environments/environment';
 import { AnimatorService } from '../animator';
 import { DialogService } from '../dialogs';
 import { Dragger } from '../dragger';
@@ -94,6 +95,8 @@ export class LayerTimelineComponent
   extends DestroyableMixin()
   implements OnInit, AfterViewInit,
   TimelineAnimationRowCallbacks, LayerListTreeCallbacks {
+
+  readonly ENABLE_SAVE_AND_RESTORE_JSON = !environment.production;
 
   @ViewChild('timeline') private timelineRef: ElementRef;
   private $timeline: JQuery;

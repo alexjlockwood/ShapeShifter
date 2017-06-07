@@ -54,10 +54,20 @@ export class FileExportService {
 
   // TODO: should we or should we not export hidden layers?
   exportSvg() {
-    const vl = this.vectorLayer;
-    const svg = SvgSerializer.toSvgString(vl);
-    const fileName = `${vl.name}.svg`;
-    downloadFile(svg, fileName);
+    // Export standalone SVG frames.
+    const zip = new JSZip();
+    EXPORTED_FPS.forEach(fps => {
+      const numSteps = Math.ceil(this.activeAnimation.duration / 1000 * fps);
+      const svgs = SpriteSerializer.createSvgFrames(this.vectorLayer, this.activeAnimation, numSteps);
+      const length = (numSteps - 1).toString().length;
+      const fpsFolder = zip.folder(`${fps}fps`);
+      svgs.forEach((s, i) => {
+        fpsFolder.file(`frame${_.padStart(i.toString(), length, '0')}.svg`, s);
+      });
+    });
+    zip.generateAsync({ type: 'blob' }).then(content => {
+      downloadFile(content, `frames_${this.vectorLayer.name}.zip`);
+    });
   }
 
   // TODO: should we or should we not export hidden layers?
@@ -77,22 +87,8 @@ export class FileExportService {
   }
 
   exportSvgSpritesheet() {
-    // Export standalone SVG frames.
-    const zip = new JSZip();
-    const svg = zip.folder('svg');
-
-    EXPORTED_FPS.forEach(fps => {
-      const numSteps = Math.ceil(this.activeAnimation.duration / 1000 * fps);
-      const svgs = SpriteSerializer.createSvgFrames(this.vectorLayer, this.activeAnimation, numSteps);
-      const length = (numSteps - 1).toString().length;
-      const fpsFolder = svg.folder(`${fps}fps`);
-      svgs.forEach((s, i) => {
-        fpsFolder.file(`frame${_.padStart(i.toString(), length, '0')}.svg`, s);
-      });
-    });
-
     // Create an svg sprite animation.
-    const sprite = zip.folder('sprite');
+    const zip = new JSZip();
     EXPORTED_FPS.forEach(fps => {
       const numSteps = Math.ceil(this.activeAnimation.duration / 1000 * fps);
       const svgSprite =
@@ -102,12 +98,11 @@ export class FileExportService {
         SpriteSerializer.createCss(width, height, this.activeAnimation.duration, numSteps);
       const fileName = `sprite_${fps}fps`;
       const htmlSprite = SpriteSerializer.createHtml(`${fileName}.svg`, `${fileName}.css`);
-      const spriteFolder = sprite.folder(`${fps}fps`);
+      const spriteFolder = zip.folder(`${fps}fps`);
       spriteFolder.file(`${fileName}.html`, htmlSprite);
       spriteFolder.file(`${fileName}.css`, cssSprite);
       spriteFolder.file(`${fileName}.svg`, svgSprite);
     });
-
     zip.generateAsync({ type: 'blob' }).then(content => {
       downloadFile(content, `spritesheet_${this.vectorLayer.name}.zip`);
     });

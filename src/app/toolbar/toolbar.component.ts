@@ -286,7 +286,7 @@ class ToolbarData {
       this.showMorphSubPaths =
         this.getNumSubPaths() === 1
         || this.getNumSegments() > 0
-        || !this.isSelectionMode();
+        || (!this.isSelectionMode());
     }
   }
 
@@ -401,7 +401,7 @@ class ToolbarData {
   }
 
   isSelectionMode() {
-    return this.mode === ActionMode.Selection;
+    return this.mode === ActionMode.None || this.mode === ActionMode.Selection;
   }
 
   isAddPointsMode() {

@@ -23,6 +23,7 @@
           New
         </button>
         <button md-menu-item
+          *ngIf="this.ENABLE_SAVE_AND_RESTORE_JSON"
           (click)="this.launchFilePicker('openFileButton')">
           Open
           <input
@@ -32,6 +33,7 @@
             (change)="onImportedFilesPicked(($event.target || $event.srcElement).files)">
         </button>
         <button md-menu-item
+          *ngIf="this.ENABLE_SAVE_AND_RESTORE_JSON"
           (click)="this.saveToFileClick()">
           Save
         </button>

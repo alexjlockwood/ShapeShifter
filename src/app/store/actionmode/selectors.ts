@@ -32,8 +32,7 @@ const getActionModeState = createSelector(getState, s => s.actionmode);
 const getBlockId = createSelector(getActionModeState, s => s.blockId);
 const getBlock =
   createSelector(
-    getAnimations,
-    getBlockId,
+    [getAnimations, getBlockId],
     (animations, blockId) => {
       if (!blockId) {
         return undefined;
@@ -79,8 +78,7 @@ const getUnpairedSubPath =
 
 function getVectorLayerValue(getValueFn: (block: PathAnimationBlock) => Path) {
   return createSelector(
-    getVectorLayer,
-    getBlock,
+    [getVectorLayer, getBlock],
     (vl, block) => {
       if (!vl || !block) {
         return undefined;
@@ -98,8 +96,7 @@ type CombinerFunc = (vl: VectorLayer, block: PathAnimationBlock) => VectorLayer;
 
 function getMorphableLayerValue(selector: Reselect.OutputSelector<State, VectorLayer, CombinerFunc>) {
   return createSelector(
-    selector,
-    getBlockLayerId,
+    [selector, getBlockLayerId],
     (vl, blockLayerId) => {
       if (!vl || !blockLayerId) {
         return undefined;
@@ -119,9 +116,7 @@ const getPathsCompatibleResult =
 
 function getHighlightedSubIdxWithError(actionSource: ActionSource) {
   return createSelector(
-    getActionMode,
-    getActionModeSelections,
-    getPathsCompatibleResult,
+    [getActionMode, getActionModeSelections, getPathsCompatibleResult],
     (mode, selections, result) => {
       if (!result) {
         // Then there is no path animation block currently selected.
