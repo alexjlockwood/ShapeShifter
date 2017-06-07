@@ -47,7 +47,7 @@ export class MorphSubPathHelper {
   }
 
   onMouseLeave(mouseLeave: Point) {
-    this.component.hoverService.setHover(undefined);
+    this.component.actionModeService.clearHover();
     this.component.draw();
   }
 
@@ -58,11 +58,11 @@ export class MorphSubPathHelper {
   private checkForHovers(mousePoint: Point) {
     const hitResult = this.performHitTest(mousePoint);
     if (!hitResult.isHit) {
-      this.component.hoverService.setHover(undefined);
+      this.component.actionModeService.clearHover();
     } else if (hitResult.isSegmentHit || hitResult.isShapeHit) {
       const hits = hitResult.isShapeHit ? hitResult.shapeHits : hitResult.segmentHits;
       const { subIdx } = this.findHitSubPath(hits);
-      this.component.hoverService.setHover({
+      this.component.actionModeService.setHover({
         type: HoverType.SubPath,
         source: this.actionSource,
         subIdx,

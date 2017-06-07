@@ -136,7 +136,7 @@ export class SelectionHelper {
 
         // Notify the global layer state service about the change and draw.
         // Clear any existing selections and/or hovers as well.
-        this.component.hoverService.setHover(undefined);
+        this.component.actionModeService.clearHover();
         this.store.dispatch(new SetActionModeSelections([]));
         this.reset();
 
@@ -167,7 +167,7 @@ export class SelectionHelper {
   onMouseLeave(mouseLeave: Point) {
     this.lastKnownMouseLocation = mouseLeave;
     this.reset();
-    this.component.hoverService.setHover(undefined);
+    this.component.actionModeService.clearHover();
     this.component.draw();
   }
 
@@ -206,12 +206,12 @@ export class SelectionHelper {
     }
     const hitResult = this.performHitTest(mousePoint);
     if (!hitResult.isHit) {
-      this.component.hoverService.setHover(undefined);
+      this.component.actionModeService.clearHover();
       return;
     }
     if (hitResult.isEndPointHit) {
       const { subIdx, cmdIdx } = this.findHitPoint(hitResult.endPointHits);
-      this.component.hoverService.setHover({
+      this.component.actionModeService.setHover({
         type: HoverType.Point,
         source: this.actionSource,
         subIdx,
@@ -223,7 +223,7 @@ export class SelectionHelper {
       if (this.component.activePathLayer.isFilled()) {
         const { subIdx, cmdIdx } = this.findHitSegment(hitResult.segmentHits);
         if (this.component.activePath.getCommand(subIdx, cmdIdx).isSplitSegment()) {
-          this.component.hoverService.setHover({
+          this.component.actionModeService.setHover({
             type: HoverType.Segment,
             source: this.actionSource,
             subIdx,
@@ -233,7 +233,7 @@ export class SelectionHelper {
         }
       } else if (this.component.activePathLayer.isStroked()) {
         const { subIdx } = this.findHitSegment(hitResult.segmentHits);
-        this.component.hoverService.setHover({
+        this.component.actionModeService.setHover({
           type: HoverType.SubPath,
           source: this.actionSource,
           subIdx,
@@ -243,7 +243,7 @@ export class SelectionHelper {
     }
     if (hitResult.isShapeHit && this.component.activePathLayer.isFilled()) {
       const { subIdx } = this.findHitSubPath(hitResult.shapeHits);
-      this.component.hoverService.setHover({
+      this.component.actionModeService.setHover({
         type: HoverType.SubPath,
         source: this.actionSource,
         subIdx,

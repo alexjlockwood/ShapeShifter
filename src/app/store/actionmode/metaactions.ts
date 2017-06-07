@@ -36,10 +36,6 @@ export class ShiftPointToFront implements Action {
 
 export class SplitCommandInHalfHover implements Action {
   readonly type = SPLIT_COMMAND_IN_HALF_HOVER;
-  readonly payload: { readonly isHovering: boolean };
-  constructor(readonly isHovering: boolean) {
-    this.payload = { isHovering };
-  }
 }
 
 export class SplitCommandInHalfClick implements Action {

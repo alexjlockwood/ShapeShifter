@@ -1,6 +1,6 @@
 import 'rxjs/add/observable/combineLatest';
 
-import { HoverService } from '../actionmode/hover.service';
+import { ActionModeService } from '../actionmode/actionmode.service';
 import { AnimatorService } from '../animator';
 import {
   MathUtil,
@@ -124,7 +124,7 @@ export class CanvasOverlayDirective
   constructor(
     readonly elementRef: ElementRef,
     public readonly store: Store<State>,
-    public readonly hoverService: HoverService,
+    public readonly actionModeService: ActionModeService,
     private readonly animatorService: AnimatorService,
   ) {
     super();
@@ -901,7 +901,7 @@ export class CanvasOverlayDirective
       }
     }
     // TODO: remove this somehow? or make it part of the helper class methods?
-    this.hoverService.setHover(undefined);
+    this.actionModeService.clearHover();
   }
 
   // TODO: override onClick()?

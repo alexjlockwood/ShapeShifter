@@ -2,11 +2,15 @@ import 'rxjs/add/operator/combineLatest';
 
 import {
   ActionMode,
+  ActionSource,
   AutoFixClick,
   DeleteActionModeSelections,
   EndActionMode,
+  Hover,
+  HoverType,
   ReverseSelectedSubPaths,
   SetActionMode,
+  SetActionModeHover,
   ShiftBackSelectedSubPaths,
   ShiftForwardSelectedSubPaths,
   ShiftPointToFront,
@@ -17,9 +21,12 @@ import {
 } from '../store';
 import {
   getActionMode,
+  getActionModeHover,
+  getActionModePointSelections,
   isActionMode,
 } from '../store/actionmode/selectors';
 import { Injectable } from '@angular/core';
+import * as _ from 'lodash';
 import { Observable } from 'rxjs/Observable';
 
 /**
@@ -37,6 +44,7 @@ export class ActionModeService {
   }
 
   closeActionMode() {
+    // TODO: create a default ActionMode.None constant or something to avoid this
     Observable.combineLatest(
       this.store.select(isActionMode),
       this.store.select(getActionMode),
@@ -95,15 +103,32 @@ export class ActionModeService {
     this.store.dispatch(new ShiftPointToFront());
   }
 
-  splitInHalfHover(isHovering: boolean) {
-    this.store.dispatch(new SplitCommandInHalfHover(isHovering));
+  autoFixClick() {
+    this.store.dispatch(new AutoFixClick());
   }
 
   splitInHalfClick() {
     this.store.dispatch(new SplitCommandInHalfClick());
   }
 
-  autoFixClick() {
-    this.store.dispatch(new AutoFixClick());
+  splitInHalfHover() {
+    this.store.select(getActionModePointSelections).take(1).subscribe(selections => {
+      if (selections.length) {
+        const { source, subIdx, cmdIdx } = selections[0];
+        this.setHover({ type: HoverType.Split, source, subIdx, cmdIdx });
+      }
+    });
+  }
+
+  setHover(newHover: Hover) {
+    this.store.select(getActionModeHover).first().subscribe(currHover => {
+      if (!_.isEqual(newHover, currHover)) {
+        this.store.dispatch(new SetActionModeHover(newHover));
+      }
+    });
+  }
+
+  clearHover() {
+    this.setHover(undefined);
   }
 }

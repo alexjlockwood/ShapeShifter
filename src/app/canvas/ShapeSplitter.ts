@@ -159,7 +159,7 @@ export class ShapeSplitter {
       }
 
       // TODO: make sure the inspector doesn't set hovers/selections while a split is in process...
-      this.component.hoverService.setHover(undefined);
+      this.component.actionModeService.clearHover();
       this.store.dispatch(new SetActionModeSelections([]));
       this.reset();
 

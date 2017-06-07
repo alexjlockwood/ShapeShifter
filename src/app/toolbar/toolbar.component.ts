@@ -183,7 +183,11 @@ export class ToolbarComponent implements OnInit {
   }
 
   onSplitInHalfHoverEvent(isHovering: boolean) {
-    this.actionModeService.splitInHalfHover(isHovering);
+    if (isHovering) {
+      this.actionModeService.splitInHalfHover();
+    } else {
+      this.actionModeService.clearHover();
+    }
   }
 
   onSplitInHalfClick() {

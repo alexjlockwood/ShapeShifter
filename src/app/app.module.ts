@@ -1,7 +1,6 @@
 import 'hammerjs';
 
 import { ActionModeService } from './actionmode/actionmode.service';
-import { HoverService } from './actionmode/hover.service';
 import { AnimatorService } from './animator';
 import { AppComponent } from './app.component';
 import {
@@ -97,7 +96,6 @@ import { StoreModule } from '@ngrx/store';
     DialogService,
     FileExportService,
     FileImportService,
-    HoverService,
     ShortcutService,
   ],
   entryComponents: [

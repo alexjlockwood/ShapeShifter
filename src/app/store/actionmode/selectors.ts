@@ -17,6 +17,7 @@ import {
   getState,
 } from '../selectors';
 import { getAnimations } from '../timeline/selectors';
+import { SelectionType } from './types';
 import {
   ActionMode,
   ActionSource,
@@ -51,7 +52,26 @@ const getBlockLayerId = createSelector(getBlock, b => b ? b.layerId : undefined)
 export const isActionMode = createSelector(getBlockId, id => !!id);
 export const getActionMode = createSelector(getActionModeState, s => s.mode);
 export const getActionModeHover = createDeepEqualSelector(getActionModeState, s => s.hover);
-const getActionSelections = createSelector(getActionModeState, s => s.selections);
+
+const getActionModeSelections =
+  createDeepEqualSelector(getActionModeState, s => s.selections);
+
+export const getActionModeSubPathSelections =
+  createDeepEqualSelector(
+    getActionModeSelections,
+    selections => selections.filter(s => s.type === SelectionType.SubPath),
+  );
+export const getActionModeSegmentSelections =
+  createDeepEqualSelector(
+    getActionModeSelections,
+    selections => selections.filter(s => s.type === SelectionType.Segment),
+  );
+export const getActionModePointSelections =
+  createDeepEqualSelector(
+    getActionModeSelections,
+    selections => selections.filter(s => s.type === SelectionType.Point),
+  );
+
 const getPairedSubPaths =
   createDeepEqualSelector(getActionModeState, state => new Set(state.pairedSubPaths));
 const getUnpairedSubPath =
@@ -100,7 +120,7 @@ const getPathsCompatibleResult =
 function getHighlightedSubIdxWithError(actionSource: ActionSource) {
   return createSelector(
     getActionMode,
-    getActionSelections,
+    getActionModeSelections,
     getPathsCompatibleResult,
     (mode, selections, result) => {
       if (!result) {
@@ -125,7 +145,7 @@ const actionModeBaseSelectors = {
   blockLayerId: getBlockLayerId,
   isActionMode,
   hover: getActionModeHover,
-  selections: getActionSelections,
+  selections: getActionModeSelections,
   pairedSubPaths: getPairedSubPaths,
   unpairedSubPath: getUnpairedSubPath,
   hiddenLayerIds: getHiddenLayerIds,
@@ -152,7 +172,7 @@ export const getToolbarState =
     fromMl: getMorphableLayerFromValue,
     toMl: getMorphableLayerToValue,
     mode: getActionMode,
-    selections: getActionSelections,
+    selections: getActionModeSelections,
     unpairedSubPath: getUnpairedSubPath,
     block: getBlock,
   });
