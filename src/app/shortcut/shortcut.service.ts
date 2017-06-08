@@ -7,6 +7,7 @@ import {
 } from '../store';
 import { Injectable } from '@angular/core';
 import * as $ from 'jquery';
+import { ActionCreators } from 'redux-undo';
 
 @Injectable()
 export class ShortcutService {
@@ -25,6 +26,13 @@ export class ShortcutService {
     this.isInit = true;
 
     $(window).on('keydown', event => {
+      if (event.metaKey && event.keyCode === 'Z'.charCodeAt(0)) {
+        // undo/redo (Z key)
+        event.shiftKey
+          ? this.store.dispatch(ActionCreators.redo())
+          : this.store.dispatch(ActionCreators.undo());
+        return false;
+      }
       if (event.ctrlKey || event.metaKey) {
         // Do nothing if the ctrl or meta keys are pressed.
         return undefined;

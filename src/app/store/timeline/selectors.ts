@@ -3,7 +3,7 @@ import { createDeepEqualSelector, getState } from '../selectors';
 import * as _ from 'lodash';
 import { createSelector } from 'reselect';
 
-const getTimelineState = createSelector(getState, s => s.timeline);
+const getTimelineState = createSelector(getState, s => s.present.timeline);
 
 export const getAnimations =
   createSelector(getTimelineState, t => t.animations);

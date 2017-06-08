@@ -1,7 +1,7 @@
 import { createDeepEqualSelector, getState } from '../selectors';
 import { createSelector } from 'reselect';
 
-const getLayerState = createSelector(getState, s => s.layers);
+const getLayerState = createSelector(getState, s => s.present.layers);
 export const getVectorLayer = createSelector(getLayerState, l => l.vectorLayer);
 export const getSelectedLayerIds =
   createDeepEqualSelector(getLayerState, l => l.selectedLayerIds);

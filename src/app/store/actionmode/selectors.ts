@@ -28,7 +28,7 @@ import {
   createStructuredSelector,
 } from 'reselect';
 
-const getActionModeState = createSelector(getState, s => s.actionmode);
+const getActionModeState = createSelector(getState, s => s.present.actionmode);
 const getBlockId = createSelector(getActionModeState, s => s.blockId);
 const getBlock =
   createSelector(
@@ -94,7 +94,7 @@ const getVectorLayerToValue = getVectorLayerValue(block => block.toValue);
 
 type CombinerFunc = (vl: VectorLayer, block: PathAnimationBlock) => VectorLayer;
 
-function getMorphableLayerValue(selector: Reselect.OutputSelector<State, VectorLayer, CombinerFunc>) {
+function getMorphableLayerValue<T>(selector: Reselect.OutputSelector<State, VectorLayer, CombinerFunc>) {
   return createSelector(
     [selector, getBlockLayerId],
     (vl, blockLayerId) => {
