@@ -34,10 +34,6 @@ export class ShiftPointToFront implements Action {
   readonly type = SHIFT_POINT_TO_FRONT;
 }
 
-export class SplitCommandInHalfHover implements Action {
-  readonly type = SPLIT_COMMAND_IN_HALF_HOVER;
-}
-
 export class SplitCommandInHalfClick implements Action {
   readonly type = SPLIT_COMMAND_IN_HALF_CLICK;
 }
@@ -79,7 +75,6 @@ export type Actions =
   | ShiftForwardSelectedSubPaths
   | DeleteActionModeSelections
   | ShiftPointToFront
-  | SplitCommandInHalfHover
   | SplitCommandInHalfClick
   | AutoFixClick
   | UpdateActivePathBlock

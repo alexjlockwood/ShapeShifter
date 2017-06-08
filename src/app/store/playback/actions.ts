@@ -1,9 +1,16 @@
 import { Action } from '@ngrx/store';
 
+export const SET_IS_SLOW_MOTION = '__playback__SET_IS_SLOW_MOTION';
 export const SET_IS_PLAYING = '__playback__SET_IS_PLAYING';
-export const TOGGLE_IS_SLOW_MOTION = '__playback__TOGGLE_IS_SLOW_MOTION';
-export const TOGGLE_IS_PLAYING = '__playback__TOGGLE_IS_PLAYING';
-export const TOGGLE_IS_REPEATING = '__playback__TOGGLE_IS_REPEATING';
+export const SET_IS_REPEATING = '__playback__SET_IS_REPEATING';
+
+export class SetIsSlowMotion implements Action {
+  readonly type = SET_IS_SLOW_MOTION;
+  readonly payload: { isSlowMotion: boolean };
+  constructor(readonly isSlowMotion: boolean) {
+    this.payload = { isSlowMotion };
+  }
+}
 
 export class SetIsPlaying implements Action {
   readonly type = SET_IS_PLAYING;
@@ -13,20 +20,15 @@ export class SetIsPlaying implements Action {
   }
 }
 
-export class ToggleIsSlowMotion implements Action {
-  readonly type = TOGGLE_IS_SLOW_MOTION;
-}
-
-export class ToggleIsPlaying implements Action {
-  readonly type = TOGGLE_IS_PLAYING;
-}
-
-export class ToggleIsRepeating implements Action {
-  readonly type = TOGGLE_IS_REPEATING;
+export class SetIsRepeating implements Action {
+  readonly type = SET_IS_REPEATING;
+  readonly payload: { isRepeating: boolean };
+  constructor(readonly isRepeating: boolean) {
+    this.payload = { isRepeating };
+  }
 }
 
 export type Actions =
-  SetIsPlaying
-  | ToggleIsSlowMotion
-  | ToggleIsPlaying
-  | ToggleIsRepeating;
+  SetIsSlowMotion
+  | SetIsPlaying
+  | SetIsRepeating;

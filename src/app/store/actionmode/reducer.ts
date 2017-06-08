@@ -38,14 +38,12 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
       return { ...buildInitialState(), blockId, mode: ActionMode.Selection };
     }
 
-    // Clear the currently active block ID, ending action mode.
-    case actions.END_ACTION_MODE: {
-      return buildInitialState();
-    }
-
     // Set the app mode during action mode.
     case actions.SET_ACTION_MODE: {
       const { mode } = action.payload;
+      if (mode === ActionMode.None) {
+        return buildInitialState();
+      }
       let { selections } = state;
       if (mode === ActionMode.Selection && mode !== state.mode) {
         // Clear selections when switching back to selection mode.

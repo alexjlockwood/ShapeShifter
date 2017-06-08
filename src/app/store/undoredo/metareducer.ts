@@ -7,12 +7,10 @@ import undoable, { StateWithHistory, excludeAction } from 'redux-undo';
 const UNDO_HISTORY_SIZE = 30;
 const UNDO_DEBOUNCE_MILLIS = 1000;
 const UNDO_EXCLUDED_ACTIONS = [
+  playbackActions.SET_IS_SLOW_MOTION,
   playbackActions.SET_IS_PLAYING,
-  playbackActions.TOGGLE_IS_SLOW_MOTION,
-  playbackActions.TOGGLE_IS_PLAYING,
-  playbackActions.TOGGLE_IS_REPEATING,
+  playbackActions.SET_IS_REPEATING,
   actionModeActions.START_ACTION_MODE,
-  actionModeActions.END_ACTION_MODE,
   actionModeActions.SET_ACTION_MODE,
   actionModeActions.SET_ACTION_MODE_HOVER,
 ];

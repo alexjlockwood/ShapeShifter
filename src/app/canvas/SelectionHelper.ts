@@ -1,17 +1,15 @@
+import { ActionModeService } from '../actionmode/actionmode.service';
 import { MathUtil, Point } from '../scripts/common';
 import { LayerUtil } from '../scripts/layers';
 import { ProjectionOntoPath } from '../scripts/paths';
 import {
-  ActionSource,
-  HoverType,
-  SetActionModeSelections,
   State,
   Store,
-  TogglePointSelection,
-  ToggleSegmentSelections,
-  ToggleSubPathSelection,
-  UpdateActivePathBlock,
 } from '../store';
+import {
+  ActionSource,
+  HoverType,
+} from '../store/actionmode';
 import { CanvasOverlayDirective } from './canvasoverlay.directive';
 import * as _ from 'lodash';
 
@@ -25,6 +23,7 @@ import * as _ from 'lodash';
 export class SelectionHelper {
   private readonly actionSource: ActionSource;
   private readonly store: Store<State>;
+  private readonly actionModeService: ActionModeService;
 
   // Holds a reference to the currently selected split point, which
   // may or may not begin to drag.
@@ -53,8 +52,7 @@ export class SelectionHelper {
         this.currentDraggableSplitIndex = { subIdx, cmdIdx };
       } else {
         // Then a click has occurred on top of a non-split point.
-        this.store.dispatch(
-          new TogglePointSelection(this.actionSource, subIdx, cmdIdx, isShiftOrMetaPressed));
+
       }
       return;
     }
@@ -62,7 +60,7 @@ export class SelectionHelper {
     if (this.component.activePathLayer.isFilled() && hitResult.isSegmentHit) {
       const { subIdx, cmdIdx, cmd } = this.findHitSegment(hitResult.segmentHits);
       if (cmd.isSplitSegment()) {
-        this.store.dispatch(new ToggleSegmentSelections(this.actionSource, [{ subIdx, cmdIdx }]));
+        this.actionModeService.toggleSegmentSelections(this.actionSource, [{ subIdx, cmdIdx }]);
         return;
       }
     }
@@ -70,12 +68,12 @@ export class SelectionHelper {
     if (hitResult.isSegmentHit || hitResult.isShapeHit) {
       const hits = hitResult.isShapeHit ? hitResult.shapeHits : hitResult.segmentHits;
       const { subIdx } = this.findHitSubPath(hits);
-      this.store.dispatch(new ToggleSubPathSelection(this.actionSource, subIdx));
+      this.actionModeService.toggleSubPathSelection(this.actionSource, subIdx);
     } else if (!isShiftOrMetaPressed) {
       // If the mouse down event didn't result in a hit, then
       // clear any existing selections, but only if the user isn't in
       // the middle of selecting multiple points at once.
-      this.store.dispatch(new SetActionModeSelections([]));
+      this.actionModeService.setSelections([]);
     }
   }
 
@@ -136,26 +134,24 @@ export class SelectionHelper {
 
         // Notify the global layer state service about the change and draw.
         // Clear any existing selections and/or hovers as well.
-        this.component.actionModeService.clearHover();
-        this.store.dispatch(new SetActionModeSelections([]));
+        this.actionModeService.clearHover();
+        this.actionModeService.setSelections([]);
         this.reset();
 
-        this.store.dispatch(
-          new UpdateActivePathBlock(
-            this.actionSource, pathMutator.build()));
+        this.actionModeService.updateActivePathBlock(            this.actionSource, pathMutator.build());
       }
     } else if (this.currentDraggableSplitIndex) {
       const hitResult = this.performHitTest(mouseUp);
       if (!hitResult.isHit) {
-        this.store.dispatch(new SetActionModeSelections([]));
+        this.actionModeService.setSelections([]);
       } else if (hitResult.isEndPointHit) {
         const { subIdx, cmdIdx } = this.findHitPoint(hitResult.endPointHits);
-        this.store.dispatch(
-          new TogglePointSelection(this.actionSource, subIdx, cmdIdx, isShiftOrMetaPressed));
+        this.actionModeService.togglePointSelection(
+          this.actionSource, subIdx, cmdIdx, isShiftOrMetaPressed);
       } else if (hitResult.isSegmentHit || hitResult.isShapeHit) {
         const hits = hitResult.isShapeHit ? hitResult.shapeHits : hitResult.segmentHits;
         const { subIdx } = this.findHitSubPath(hits);
-        this.store.dispatch(new ToggleSubPathSelection(this.actionSource, subIdx));
+        this.actionModeService.toggleSubPathSelection(this.actionSource, subIdx);
       }
     }
 

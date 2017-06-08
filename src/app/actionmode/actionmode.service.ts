@@ -1,22 +1,36 @@
+import { Path } from '../scripts/paths';
+import {
+  State,
+  Store,
+} from '../store';
 import {
   ActionMode,
   ActionSource,
-  AutoFixClick,
-  DeleteActionModeSelections,
-  EndActionMode,
   Hover,
   HoverType,
-  ReverseSelectedSubPaths,
+  Selection,
+} from '../store/actionmode';
+import {
   SetActionMode,
   SetActionModeHover,
+  SetActionModeSelections,
+  StartActionMode,
+  TogglePointSelection,
+  ToggleSegmentSelections,
+  ToggleSubPathSelection,
+} from '../store/actionmode/actions';
+import {
+  AutoFixClick,
+  DeleteActionModeSelections,
+  PairSubPath,
+  ReverseSelectedSubPaths,
+  SetUnpairedSubPath,
   ShiftBackSelectedSubPaths,
   ShiftForwardSelectedSubPaths,
   ShiftPointToFront,
   SplitCommandInHalfClick,
-  SplitCommandInHalfHover,
-  State,
-  Store,
-} from '../store';
+  UpdateActivePathBlock,
+} from '../store/actionmode/metaactions';
 import {
   getActionMode,
   getActionModeHover,
@@ -42,17 +56,29 @@ export class ActionModeService {
     return result;
   }
 
+  startActionMode(blockId: string) {
+    this.store.dispatch(new StartActionMode(blockId));
+  }
+
+  setActionMode(mode: ActionMode) {
+    this.store.dispatch(new SetActionMode(mode));
+  }
+
   closeActionMode() {
     this.store.select(getActionMode).first().subscribe(mode => {
       if (mode === ActionMode.None) {
         return;
       }
       if (mode === ActionMode.Selection) {
-        this.store.dispatch(new EndActionMode());
+        this.store.dispatch(new SetActionMode(ActionMode.None));
       } else {
         this.store.dispatch(new SetActionMode(ActionMode.Selection));
       }
     });
+  }
+
+  setSelections(selections: ReadonlyArray<Selection>) {
+    this.store.dispatch(new SetActionModeSelections(selections));
   }
 
   deleteSelections() {
@@ -128,5 +154,41 @@ export class ActionModeService {
 
   clearHover() {
     this.setHover(undefined);
+  }
+
+  pairSubPath(subIdx: number, source: ActionSource) {
+    this.store.dispatch(new PairSubPath(subIdx, source));
+  }
+
+  setUnpairedSubPath(unpair: { subIdx: number, source: ActionSource }) {
+    this.store.dispatch(new SetUnpairedSubPath(unpair));
+  }
+
+  updateActivePathBlock(source: ActionSource, path: Path) {
+    this.store.dispatch(new UpdateActivePathBlock(source, path));
+  }
+
+  togglePointSelection(
+    source: ActionSource,
+    subIdx: number,
+    cmdIdx: number,
+    isShiftOrMetaPressed: boolean,
+  ) {
+    this.store.dispatch(
+      new TogglePointSelection(source, subIdx, cmdIdx, isShiftOrMetaPressed));
+  }
+
+  toggleSegmentSelections(
+    source: ActionSource,
+    segments: ReadonlyArray<{ subIdx: number, cmdIdx: number }>,
+  ) {
+    this.store.dispatch(new ToggleSegmentSelections(source, segments));
+  }
+
+  toggleSubPathSelection(
+    source: ActionSource,
+    subIdx: number,
+  ) {
+    this.store.dispatch(new ToggleSubPathSelection(source, subIdx));
   }
 }

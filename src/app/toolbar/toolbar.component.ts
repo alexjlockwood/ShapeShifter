@@ -10,14 +10,16 @@ import {
 import { Animation } from '../scripts/timeline';
 import { PathAnimationBlock } from '../scripts/timeline';
 import {
-  ActionMode,
-  ActionSource,
   ResetWorkspace,
-  Selection,
-  SelectionType,
   State,
   Store,
 } from '../store';
+import {
+  ActionMode,
+  ActionSource,
+  Selection,
+  SelectionType,
+} from '../store/actionmode';
 import { getToolbarState } from '../store/actionmode/selectors';
 import {
   animate,

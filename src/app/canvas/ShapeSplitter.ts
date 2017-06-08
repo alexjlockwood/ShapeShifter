@@ -1,13 +1,11 @@
+import { ActionModeService } from '../actionmode/actionmode.service';
 import { Point } from '../scripts/common';
 import { HitResult, ProjectionOntoPath } from '../scripts/paths';
 import {
-  ActionMode,
-  SetActionMode,
-  SetActionModeSelections,
   State,
   Store,
-  UpdateActivePathBlock,
 } from '../store';
+import { ActionMode } from '../store/actionmode';
 import { CanvasOverlayDirective } from './canvasoverlay.directive';
 import * as _ from 'lodash';
 
@@ -24,6 +22,7 @@ interface ProjInfo {
  */
 export class ShapeSplitter {
   private readonly store: Store<State>;
+  private readonly actionModeService: ActionModeService;
   private initProjInfos: ProjInfo[] = [];
   private currProjInfos: ProjInfo[] = [];
   private finalProjInfos: ProjInfo[] = [];
@@ -32,6 +31,7 @@ export class ShapeSplitter {
 
   constructor(private readonly component: CanvasOverlayDirective) {
     this.store = component.store;
+    this.actionModeService = component.actionModeService;
   }
 
   onMouseDown(mouseDown: Point) {
@@ -50,7 +50,7 @@ export class ShapeSplitter {
       this.component.draw();
       return;
     }
-    this.store.dispatch(new SetActionMode(ActionMode.Selection));
+    this.actionModeService.setActionMode(ActionMode.Selection);
   }
 
   onMouseMove(mouseMove: Point) {
@@ -160,7 +160,7 @@ export class ShapeSplitter {
 
       // TODO: make sure the inspector doesn't set hovers/selections while a split is in process...
       this.component.actionModeService.clearHover();
-      this.store.dispatch(new SetActionModeSelections([]));
+      this.actionModeService.setSelections([]);
       this.reset();
 
       // TODO: some bugs with this path: M 0 20 v -16 h 20 v 2 h -12 v 2 h 12 v 2 h -12 Z
@@ -169,11 +169,12 @@ export class ShapeSplitter {
       const startingCmdIdx = initCmdIdx > finalCmdIdx ? finalCmdIdx : initCmdIdx;
       const endingCmdIdx =
         initCmdIdx > finalCmdIdx ? initCmdIdx + lastCmdOffset : finalCmdIdx + lastCmdOffset;
-      this.store.dispatch(new UpdateActivePathBlock(
+      this.actionModeService.updateActivePathBlock(
         this.component.actionSource,
         pathMutator
           .splitFilledSubPath(initSubIdx, startingCmdIdx, endingCmdIdx)
-          .build()));
+          .build(),
+      );
     }
     this.reset();
     this.component.draw();

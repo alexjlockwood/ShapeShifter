@@ -1,13 +1,14 @@
+import { ActionModeService } from '../actionmode/actionmode.service';
 import { Point } from '../scripts/common';
+import {
+  State,
+  Store,
+} from '../store';
 import {
   ActionMode,
   ActionSource,
   HoverType,
-  PairSubPath,
-  SetActionMode,
-  State,
-  Store,
-} from '../store';
+} from '../store/actionmode';
 import { CanvasOverlayDirective } from './canvasoverlay.directive';
 import * as _ from 'lodash';
 
@@ -19,10 +20,12 @@ import * as _ from 'lodash';
 export class MorphSubPathHelper {
   private readonly actionSource: ActionSource;
   private readonly store: Store<State>;
+  private readonly actionModeService: ActionModeService;
 
   constructor(private readonly component: CanvasOverlayDirective) {
     this.actionSource = component.actionSource;
     this.store = component.store;
+    this.actionModeService = component.actionModeService;
   }
 
   onMouseDown(mouseDown: Point, isShiftOrMetaPressed: boolean) {
@@ -31,9 +34,9 @@ export class MorphSubPathHelper {
     if (hitResult.isSegmentHit || hitResult.isShapeHit) {
       const hits = hitResult.isShapeHit ? hitResult.shapeHits : hitResult.segmentHits;
       const { subIdx } = this.findHitSubPath(hits);
-      this.store.dispatch(new PairSubPath(subIdx, this.actionSource));
+      this.actionModeService.pairSubPath(subIdx, this.actionSource);
     } else if (!isShiftOrMetaPressed) {
-      this.store.dispatch(new SetActionMode(ActionMode.Selection));
+      this.actionModeService.setActionMode(ActionMode.Selection);
     }
   }
 

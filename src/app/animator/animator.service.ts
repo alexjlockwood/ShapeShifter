@@ -1,12 +1,9 @@
+import { PlaybackService } from '../playback/playback.service';
 import { VectorLayer } from '../scripts/layers';
 import { Animation } from '../scripts/timeline';
 import {
-  SetIsPlaying,
   State,
   Store,
-  ToggleIsPlaying,
-  ToggleIsRepeating,
-  ToggleIsSlowMotion,
 } from '../store';
 import { getAnimatorState } from '../store/common/selectors';
 import {
@@ -33,20 +30,16 @@ export class AnimatorService {
   private animator: Animator;
   private animationRenderer: AnimationRenderer;
   private activeAnimation: Animation;
-  private isPlaying: boolean;
   private readonly animatorCallback: Callback;
 
   constructor(
     private readonly ngZone: NgZone,
     private readonly store: Store<State>,
+    private readonly playbackService: PlaybackService,
   ) {
     this.animatorCallback = {
       setIsPlaying: (isPlaying: boolean) => {
-        if (this.isPlaying === isPlaying) {
-          return;
-        }
-        this.isPlaying = isPlaying;
-        this.store.dispatch(new SetIsPlaying(isPlaying));
+        this.playbackService.setIsPlaying(isPlaying);
       },
       runOutsideAngular: (fn: () => void) => this.ngZone.runOutsideAngular(fn),
     };
@@ -72,15 +65,15 @@ export class AnimatorService {
   }
 
   toggleIsSlowMotion() {
-    this.store.dispatch(new ToggleIsSlowMotion());
-  }
-
-  toggleIsRepeating() {
-    this.store.dispatch(new ToggleIsRepeating());
+    this.playbackService.toggleIsSlowMotion();
   }
 
   toggleIsPlaying() {
-    this.store.dispatch(new ToggleIsPlaying());
+    this.playbackService.toggleIsPlaying();
+  }
+
+  toggleIsRepeating() {
+    this.playbackService.toggleIsRepeating();
   }
 
   private play() {

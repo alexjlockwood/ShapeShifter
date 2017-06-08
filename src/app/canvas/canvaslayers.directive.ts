@@ -11,10 +11,10 @@ import {
 } from '../scripts/layers';
 import { DestroyableMixin } from '../scripts/mixins';
 import {
-  ActionSource,
   State,
   Store,
 } from '../store';
+import { ActionSource } from '../store/actionmode';
 import {
   getActionModeEndState,
   getActionModeStartState,

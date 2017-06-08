@@ -16,20 +16,16 @@ export function buildInitialState() {
 
 export function reducer(state = buildInitialState(), action: actions.Actions) {
   switch (action.type) {
+    case actions.SET_IS_SLOW_MOTION: {
+      const { isSlowMotion } = action.payload;
+      return { ...state, isSlowMotion };
+    }
     case actions.SET_IS_PLAYING: {
       const { isPlaying } = action.payload;
       return { ...state, isPlaying };
     }
-    case actions.TOGGLE_IS_SLOW_MOTION: {
-      const isSlowMotion = !state.isSlowMotion;
-      return { ...state, isSlowMotion };
-    }
-    case actions.TOGGLE_IS_PLAYING: {
-      const isPlaying = !state.isPlaying;
-      return { ...state, isPlaying };
-    }
-    case actions.TOGGLE_IS_REPEATING: {
-      const isRepeating = !state.isRepeating;
+    case actions.SET_IS_REPEATING: {
+      const { isRepeating } = action.payload;
       return { ...state, isRepeating };
     }
   }

@@ -1,14 +1,14 @@
+import { ActionModeService } from '../actionmode/actionmode.service';
 import { Point } from '../scripts/common';
 import { ProjectionOntoPath } from '../scripts/paths';
 import {
-  ActionMode,
-  ActionSource,
-  SetActionMode,
-  SetActionModeSelections,
   State,
   Store,
-  UpdateActivePathBlock,
 } from '../store';
+import {
+  ActionMode,
+  ActionSource,
+} from '../store/actionmode';
 import { CanvasOverlayDirective } from './canvasoverlay.directive';
 
 interface ProjInfo {
@@ -25,12 +25,14 @@ interface ProjInfo {
 export class SegmentSplitter {
   private readonly actionSource: ActionSource;
   private readonly store: Store<State>;
+  private readonly actionModeService: ActionModeService;
   private currProjInfo: ProjInfo;
   private lastKnownMouseLocation: Point;
 
   constructor(private readonly component: CanvasOverlayDirective) {
     this.actionSource = component.actionSource;
     this.store = component.store;
+    this.actionModeService = component.actionModeService;
   }
 
   onMouseDown(mouseDown: Point) {
@@ -52,18 +54,17 @@ export class SegmentSplitter {
 
       // TODO: make sure the inspector doesn't set hovers/selections while a split is in process...
       this.component.actionModeService.clearHover();
-      this.store.dispatch(new SetActionModeSelections([]));
+      this.actionModeService.setSelections([]);
       this.currProjInfo = undefined;
-      this.store.dispatch(
-        new UpdateActivePathBlock(
-          this.actionSource,
-          pathMutator.build(),
-        ));
+      this.actionModeService.updateActivePathBlock(
+        this.actionSource,
+        pathMutator.build(),
+      );
       this.component.draw();
       return;
     }
 
-    this.store.dispatch(new SetActionMode(ActionMode.Selection));
+    this.actionModeService.setActionMode(ActionMode.Selection);
   }
 
   onMouseMove(mouseMove: Point) {

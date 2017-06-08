@@ -20,18 +20,17 @@ import { DestroyableMixin } from '../scripts/mixins';
 import { Path } from '../scripts/paths';
 import { Command } from '../scripts/paths';
 import {
-  ActionMode,
-  ActionSource,
-  ClearLayerSelections,
-  Hover,
-  HoverType,
-  SelectLayer,
-  Selection,
-  SelectionType,
-  SetUnpairedSubPath,
   State,
   Store,
 } from '../store';
+import {
+  ActionMode,
+  ActionSource,
+  Hover,
+  HoverType,
+  Selection,
+  SelectionType,
+} from '../store/actionmode';
 import {
   getActionMode,
   getActionModeEndState,
@@ -39,6 +38,10 @@ import {
   getActionModeStartState,
 } from '../store/actionmode/selectors';
 import { getCanvasOverlayState } from '../store/common/selectors';
+import {
+  ClearLayerSelections,
+  SelectLayer,
+} from '../store/layers/actions';
 import { CanvasLayoutMixin } from './CanvasLayoutMixin';
 import * as CanvasUtil from './CanvasUtil';
 import { MorphSubPathHelper } from './MorphSubPathHelper';
@@ -218,7 +221,7 @@ export class CanvasOverlayDirective
               // TODO: avoid calling this in a subscription (should automatically do this)
               // TODO: avoid calling this in a subscription (should automatically do this)
               // TODO: avoid calling this in a subscription (should automatically do this)
-              this.store.dispatch(new SetUnpairedSubPath({ source, subIdx }));
+              this.actionModeService.setUnpairedSubPath({ source, subIdx });
             }
           } else {
             this.morphSubPathHelper = undefined;

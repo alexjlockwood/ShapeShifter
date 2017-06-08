@@ -7,13 +7,15 @@ import { VectorLayer } from './scripts/layers';
 import { Animation } from './scripts/timeline';
 import { ShortcutService } from './shortcut/shortcut.service';
 import {
-  ActionMode,
-  ActionSource,
   ImportVectorLayers,
   ResetWorkspace,
   State,
   Store,
 } from './store';
+import {
+   ActionMode,
+   ActionSource,
+} from './store/actionmode';
 import { getActionMode } from './store/actionmode/selectors';
 import {
   AfterViewInit,

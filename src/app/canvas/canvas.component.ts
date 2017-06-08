@@ -2,7 +2,8 @@ import 'rxjs/add/observable/combineLatest';
 
 import { Point } from '../scripts/common';
 import { DestroyableMixin } from '../scripts/mixins';
-import { ActionSource, State, Store } from '../store';
+import { State, Store } from '../store';
+import { ActionSource } from '../store/actionmode';
 import { getVectorLayer } from '../store/layers/selectors';
 import { CanvasContainerDirective } from './canvascontainer.directive';
 import { CanvasLayersDirective } from './canvaslayers.directive';

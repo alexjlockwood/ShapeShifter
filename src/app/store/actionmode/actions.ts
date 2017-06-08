@@ -1,8 +1,12 @@
-import { ActionMode, ActionSource, Hover, Selection } from './types';
+import {
+  ActionMode,
+  ActionSource,
+  Hover,
+  Selection,
+} from './types';
 import { Action } from '@ngrx/store';
 
 export const START_ACTION_MODE = '__actionmode__START_ACTION_MODE';
-export const END_ACTION_MODE = '__actionmode__END_ACTION_MODE';
 export const SET_ACTION_MODE = '__actionmode__SET_ACTION_MODE';
 export const SET_ACTION_MODE_HOVER = '__actionmode__SET_ACTION_MODE_HOVER';
 export const SET_ACTION_MODE_SELECTIONS = '__actionmode__SET_ACTION_MODE_SELECTIONS';
@@ -16,10 +20,6 @@ export class StartActionMode implements Action {
   constructor(readonly blockId: string) {
     this.payload = { blockId };
   }
-}
-
-export class EndActionMode implements Action {
-  readonly type = END_ACTION_MODE;
 }
 
 export class SetActionMode implements Action {
@@ -87,7 +87,6 @@ export class TogglePointSelection implements Action {
 
 export type Actions =
   StartActionMode
-  | EndActionMode
   | SetActionMode
   | SetActionModeHover
   | SetActionModeSelections

@@ -1,13 +1,5 @@
 export { Store } from '@ngrx/store';
 export { State, reducer } from './reducer';
-export {
-  ActionMode,
-  ActionSource,
-  Hover,
-  HoverType,
-  Selection,
-  SelectionType,
-} from './actionmode';
 
 // Common actions.
 export { DeleteSelectedModels } from './common/actions';
@@ -36,38 +28,10 @@ export {
 
 // Playback actions.
 export {
+  SetIsSlowMotion,
   SetIsPlaying,
-  ToggleIsPlaying,
-  ToggleIsRepeating,
-  ToggleIsSlowMotion,
+  SetIsRepeating,
 } from './playback/actions';
-
-// Action mode meta actions.
-export {
-  AutoFixClick,
-  DeleteActionModeSelections,
-  ReverseSelectedSubPaths,
-  PairSubPath,
-  SetUnpairedSubPath,
-  ShiftBackSelectedSubPaths,
-  ShiftForwardSelectedSubPaths,
-  ShiftPointToFront,
-  SplitCommandInHalfClick,
-  SplitCommandInHalfHover,
-  UpdateActivePathBlock,
-} from './actionmode/metaactions';
-
-// Action mode actions.
-export {
-  StartActionMode,
-  EndActionMode,
-  SetActionMode,
-  SetActionModeHover,
-  SetActionModeSelections,
-  TogglePointSelection,
-  ToggleSegmentSelections,
-  ToggleSubPathSelection,
-} from './actionmode/actions';
 
 // Resetable meta actions.
 export { ResetWorkspace } from './reset/metaactions';

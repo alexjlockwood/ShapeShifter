@@ -23,6 +23,7 @@ import { LayerTimelineComponent } from './layertimeline/layertimeline.component'
 import { LayerTimelineDirective } from './layertimeline/layertimeline.directive';
 import { TimelineAnimationRowComponent } from './layertimeline/timelineanimationrow.component';
 import { PlaybackComponent } from './playback/playback.component';
+import { PlaybackService } from './playback/playback.service';
 import { PropertyInputComponent } from './propertyinput/propertyinput.component';
 import { ScrollGroupDirective } from './scrollgroup/scrollgroup.directive';
 import { ShortcutService } from './shortcut/shortcut.service';
@@ -96,6 +97,7 @@ import { StoreModule } from '@ngrx/store';
     DialogService,
     FileExportService,
     FileImportService,
+    PlaybackService,
     ShortcutService,
   ],
   entryComponents: [

@@ -1,3 +1,4 @@
+import { ActionModeService } from '../actionmode/actionmode.service';
 import { AnimatorService } from '../animator';
 import {
   ColorUtil,
@@ -25,7 +26,6 @@ import {
   ReplaceAnimations,
   ReplaceBlocks,
   ReplaceLayer,
-  StartActionMode,
   State,
   Store,
 } from '../store';
@@ -56,6 +56,7 @@ export class PropertyInputComponent implements OnInit {
 
   constructor(
     private readonly store: Store<State>,
+    private readonly actionModeService: ActionModeService,
     private readonly animatorService: AnimatorService,
   ) { }
 
@@ -91,7 +92,7 @@ export class PropertyInputComponent implements OnInit {
   }
 
   onEditPathMorphClick(blockId: string) {
-    this.store.dispatch(new StartActionMode(blockId));
+    this.actionModeService.startActionMode(blockId);
   }
 
   shouldShowAnimateLayerButton(pim: PropertyInputModel) {
