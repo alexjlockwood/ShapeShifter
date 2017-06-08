@@ -1,4 +1,3 @@
-import { State } from '..';
 import { AutoAwesome } from '../../scripts/algorithms';
 import { MorphableLayer } from '../../scripts/layers';
 import {
@@ -6,6 +5,7 @@ import {
   PathUtil,
 } from '../../scripts/paths';
 import { PathAnimationBlock } from '../../scripts/timeline';
+import { AppState } from '../reducer';
 import * as actions from './metaactions';
 import {
   ActionSource,
@@ -16,8 +16,8 @@ import {
 import { ActionReducer } from '@ngrx/store';
 import * as _ from 'lodash';
 
-export function metaReducer(reducer: ActionReducer<State>): ActionReducer<State> {
-  return (state: State, action: actions.Actions) => {
+export function metaReducer(reducer: ActionReducer<AppState>): ActionReducer<AppState> {
+  return (state: AppState, action: actions.Actions) => {
     switch (action.type) {
 
       // Reverse all currently selected subpaths.
@@ -128,13 +128,13 @@ export function metaReducer(reducer: ActionReducer<State>): ActionReducer<State>
       // Select a subpath in paired subpath action mode.
       case actions.PAIR_SUBPATH: {
         const { subIdx, source: actionSource } = action.payload;
-        const { unpairedSubPath: currUnpair } = state.present.actionmode;
+        const { unpairedSubPath: currUnpair } = state.actionmode;
         if (currUnpair && actionSource !== currUnpair.source) {
           const { source: fromSource, subIdx: fromSubIdx } = currUnpair;
           const toSource = actionSource;
           const toSubIdx = subIdx;
           state = setUnpairedSubPath(state, undefined);
-          const selections = state.present.actionmode.selections;
+          const selections = state.actionmode.selections;
           const fromSelections = selections.filter(s => s.source === fromSource);
           const toSelections = selections.filter(s => s.source === toSource);
           if (fromSelections.length) {
@@ -159,7 +159,7 @@ export function metaReducer(reducer: ActionReducer<State>): ActionReducer<State>
             }));
           }
           const pairedSubPaths = new Set();
-          state.present.actionmode.pairedSubPaths.forEach(p => pairedSubPaths.add(p));
+          state.actionmode.pairedSubPaths.forEach(p => pairedSubPaths.add(p));
           if (pairedSubPaths.has(fromSubIdx)) {
             pairedSubPaths.delete(fromSubIdx);
           }
@@ -198,10 +198,9 @@ export function metaReducer(reducer: ActionReducer<State>): ActionReducer<State>
   };
 }
 
-function getActivePathBlock(state: State) {
-  const { present } = state;
-  const { blockId } = present.actionmode;
-  const { timeline } = present;
+function getActivePathBlock(state: AppState) {
+  const { blockId } = state.actionmode;
+  const { timeline } = state;
   const animations = timeline.animations.slice();
   const { activeAnimationId } = timeline;
   const activeAnimationIndex = _.findIndex(animations, a => a.id === activeAnimationId);
@@ -211,32 +210,31 @@ function getActivePathBlock(state: State) {
   return activeAnimationBlocks[blockIndex] as PathAnimationBlock;
 }
 
-function getActivePathBlockLayer(state: State) {
+function getActivePathBlockLayer(state: AppState) {
   const pathLayerId = getActivePathBlock(state).layerId;
-  return state.present.layers.vectorLayer.findLayerById(pathLayerId) as MorphableLayer;
+  return state.layers.vectorLayer.findLayerById(pathLayerId) as MorphableLayer;
 }
 
-function getActivePath(state: State, source: ActionSource) {
+function getActivePath(state: AppState, source: ActionSource) {
   const block = getActivePathBlock(state);
   return source === ActionSource.From ? block.fromValue : block.toValue;
 }
 
-function getSubPathSelections(state: State) {
-  return state.present.actionmode.selections.filter(s => s.type === SelectionType.SubPath);
+function getSubPathSelections(state: AppState) {
+  return state.actionmode.selections.filter(s => s.type === SelectionType.SubPath);
 }
 
-function getSegmentSelections(state: State) {
-  return state.present.actionmode.selections.filter(s => s.type === SelectionType.Segment);
+function getSegmentSelections(state: AppState) {
+  return state.actionmode.selections.filter(s => s.type === SelectionType.Segment);
 }
 
-function getPointSelections(state: State) {
-  return state.present.actionmode.selections.filter(s => s.type === SelectionType.Point);
+function getPointSelections(state: AppState) {
+  return state.actionmode.selections.filter(s => s.type === SelectionType.Point);
 }
 
-function updateActivePathBlock(state: State, source: ActionSource, path: Path) {
-  const { present } = state;
-  const { blockId } = present.actionmode;
-  const { timeline } = present;
+function updateActivePathBlock(state: AppState, source: ActionSource, path: Path) {
+  const { blockId } = state.actionmode;
+  const { timeline } = state;
   const animations = timeline.animations.slice();
   const { activeAnimationId } = timeline;
   const activeAnimationIndex = _.findIndex(animations, a => a.id === activeAnimationId);
@@ -317,55 +315,47 @@ function updateActivePathBlock(state: State, source: ActionSource, path: Path) {
   animations[activeAnimationIndex] = activeAnimation;
   return {
     ...state,
-    present: {
-      ...present,
-      timeline: {
-        ...timeline,
-        animations,
-      },
+    timeline: {
+      ...timeline,
+      animations,
     },
   };
 }
 
-function setSelections(state: State, selections: ReadonlyArray<Selection>) {
-  const { present } = state;
-  const { actionmode } = present;
-  return { ...state, present: { ...present, actionmode: { ...actionmode, selections } } };
+function setSelections(state: AppState, selections: ReadonlyArray<Selection>) {
+  const { actionmode } = state;
+  return { ...state, actionmode: { ...actionmode, selections } };
 }
 
-function clearSelections(state: State) {
+function clearSelections(state: AppState) {
   return setSelections(state, []);
 }
 
-function setHover(state: State, type: HoverType, source: ActionSource, subIdx: number, cmdIdx: number) {
-  const { present } = state;
-  const { actionmode } = present;
+function setHover(state: AppState, type: HoverType, source: ActionSource, subIdx: number, cmdIdx: number) {
+  const { actionmode } = state;
   const hover = { source, subIdx, cmdIdx, type };
-  return { ...state, present: { ...present, actionmode: { ...actionmode, hover } } };
+  return { ...state, actionmode: { ...actionmode, hover } };
 }
 
-function clearHover(state: State) {
-  const { present } = state;
-  const { actionmode } = present;
-  return { ...state, present: { ...present, actionmode: { ...actionmode, hover: undefined } } };
+function clearHover(state: AppState) {
+  const { actionmode } = state;
+  return { ...state, actionmode: { ...actionmode, hover: undefined } };
 }
 
-function setPairedSubPaths(state: State, pairedSubPaths: Set<number>) {
-  const { present } = state;
-  const { actionmode } = present;
-  return { ...state, present: { ...present, actionmode: { ...actionmode, pairedSubPaths } } };
+function setPairedSubPaths(state: AppState, pairedSubPaths: Set<number>) {
+  const { actionmode } = state;
+  return { ...state, actionmode: { ...actionmode, pairedSubPaths } };
 }
 
 function setUnpairedSubPath(
-  state: State,
+  state: AppState,
   unpairedSubPath: { source: ActionSource, subIdx: number },
 ) {
-  const { present } = state;
-  const { actionmode } = present;
-  return { ...state, present: { ...present, actionmode: { ...actionmode, unpairedSubPath } } };
+  const { actionmode } = state;
+  return { ...state, actionmode: { ...actionmode, unpairedSubPath } };
 }
 
-function deleteSelectedSubPaths(state: State) {
+function deleteSelectedSubPaths(state: AppState) {
   // TODO: support deleting multiple segments at a time?
   const selections = getSubPathSelections(state);
   if (!selections.length) {
@@ -386,7 +376,7 @@ function deleteSelectedSubPaths(state: State) {
   return state;
 }
 
-function deleteSelectedSegments(state: State) {
+function deleteSelectedSegments(state: AppState) {
   // TODO: support deleting multiple segments at a time?
   const selections = getSegmentSelections(state);
   if (!selections.length) {
@@ -402,7 +392,7 @@ function deleteSelectedSegments(state: State) {
   return state;
 }
 
-function deleteSelectedPoints(state: State) {
+function deleteSelectedPoints(state: AppState) {
   const selections = getPointSelections(state);
   if (!selections.length) {
     return state;

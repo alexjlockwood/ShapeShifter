@@ -1,9 +1,9 @@
-import { State } from '..';
+import { AppState } from '../reducer';
 import * as actions from './metaactions';
 import { ActionReducer } from '@ngrx/store';
 
-export function metaReducer(reducer: ActionReducer<State>): ActionReducer<State> {
-  return (state: State, action: actions.Actions) => {
+export function metaReducer(reducer: ActionReducer<AppState>): ActionReducer<AppState> {
+  return (state: AppState, action: actions.Actions) => {
     if (action.type === actions.RESET_WORKSPACE) {
       state = undefined;
     }
@@ -11,32 +11,24 @@ export function metaReducer(reducer: ActionReducer<State>): ActionReducer<State>
     if (action.type === actions.RESET_WORKSPACE) {
       const { vectorLayer, animations, hiddenLayerIds } = action.payload;
       if (vectorLayer) {
-        const { present } = state;
-        const { layers } = present;
+        const { layers } = state;
         state = {
           ...state,
-          present: {
-            ...present,
-            layers: {
-              ...layers,
-              vectorLayer,
-              hiddenLayerIds,
-            },
+          layers: {
+            ...layers,
+            vectorLayer,
+            hiddenLayerIds,
           },
         };
       }
       if (animations) {
-        const { present } = state;
-        const { timeline } = present;
+        const { timeline } = state;
         state = {
           ...state,
-          present: {
-            ...present,
-            timeline: {
-              ...timeline,
-              animations,
-              activeAnimationId: animations[0].id,
-            },
+          timeline: {
+            ...timeline,
+            animations,
+            activeAnimationId: animations[0].id,
           },
         };
       }

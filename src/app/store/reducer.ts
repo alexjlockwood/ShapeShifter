@@ -7,7 +7,11 @@ import * as metaReset from './reset/metareducer';
 import * as metaStoreFreeze from './storefreeze/metareducer';
 import * as fromTimeline from './timeline/reducer';
 import { compose } from '@ngrx/core/compose';
-import { Action, ActionReducer, combineReducers } from '@ngrx/store';
+import {
+  Action,
+  ActionReducer,
+  combineReducers,
+} from '@ngrx/store';
 import { storeLogger } from 'ngrx-store-logger';
 import undoable from 'redux-undo';
 import { StateWithHistory } from 'redux-undo';
@@ -28,7 +32,7 @@ const sliceReducers = {
   actionmode: fromActionMode.reducer,
 };
 
-function undoableMetaReducer(reducer: ActionReducer<State>) {
+function undoableMetaReducer(reducer: ActionReducer<AppState>): ActionReducer<State> {
   return undoable(reducer, {
     limit: 100,
   });
