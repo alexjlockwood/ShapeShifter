@@ -6,6 +6,7 @@ import * as fromPlayback from './playback/reducer';
 import * as metaReset from './reset/metareducer';
 import * as metaStoreFreeze from './storefreeze/metareducer';
 import * as fromTimeline from './timeline/reducer';
+import * as metaUndoRedo from './undoredo/metareducer';
 import { compose } from '@ngrx/core/compose';
 import {
   Action,
@@ -13,8 +14,9 @@ import {
   combineReducers,
 } from '@ngrx/store';
 import { storeLogger } from 'ngrx-store-logger';
-import undoable from 'redux-undo';
 import { StateWithHistory } from 'redux-undo';
+
+export type State = metaUndoRedo.StateWithHistoryAndTimestamp;
 
 export interface AppState {
   readonly layers: fromLayers.State;
@@ -23,8 +25,6 @@ export interface AppState {
   readonly actionmode: fromActionMode.State;
 }
 
-export type State = StateWithHistory<AppState>;
-
 const sliceReducers = {
   layers: fromLayers.reducer,
   timeline: fromTimeline.reducer,
@@ -32,15 +32,9 @@ const sliceReducers = {
   actionmode: fromActionMode.reducer,
 };
 
-function undoableMetaReducer(reducer: ActionReducer<AppState>): ActionReducer<State> {
-  return undoable(reducer, {
-    limit: 100,
-  });
-}
-
 const prodMetaReducers = [
   // Meta-reducer that records past/present/future state.
-  undoableMetaReducer,
+  metaUndoRedo.metaReducer,
   // Meta-reducer that adds the ability to reset the entire state tree.
   metaReset.metaReducer,
   // Meta-reducer that allows us to perform actions that modify different
