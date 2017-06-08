@@ -1,8 +1,6 @@
 import { Action } from '@ngrx/store';
 
-export const SET_IS_SLOW_MOTION = '__playback__SET_IS_SLOW_MOTION';
 export const SET_IS_PLAYING = '__playback__SET_IS_PLAYING';
-export const SET_IS_REPEATING = '__playback__SET_IS_REPEATING';
 export const TOGGLE_IS_SLOW_MOTION = '__playback__TOGGLE_IS_SLOW_MOTION';
 export const TOGGLE_IS_PLAYING = '__playback__TOGGLE_IS_PLAYING';
 export const TOGGLE_IS_REPEATING = '__playback__TOGGLE_IS_REPEATING';

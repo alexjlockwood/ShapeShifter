@@ -1,12 +1,21 @@
-import { SELECT_LAYER } from '../layers/actions';
+import * as actionModeActions from '../actionmode/actions';
+import * as playbackActions from '../playback/actions';
 import { AppState } from '../reducer';
 import { Action, ActionReducer } from '@ngrx/store';
-import undoable from 'redux-undo';
-import { StateWithHistory, excludeAction } from 'redux-undo';
+import undoable, { StateWithHistory, excludeAction } from 'redux-undo';
 
 const UNDO_HISTORY_SIZE = 30;
 const UNDO_DEBOUNCE_MILLIS = 1000;
-const UNDO_EXCLUDED_ACTIONS = []; // TODO: fill these in
+const UNDO_EXCLUDED_ACTIONS = [
+  playbackActions.SET_IS_PLAYING,
+  playbackActions.TOGGLE_IS_SLOW_MOTION,
+  playbackActions.TOGGLE_IS_PLAYING,
+  playbackActions.TOGGLE_IS_REPEATING,
+  actionModeActions.START_ACTION_MODE,
+  actionModeActions.END_ACTION_MODE,
+  actionModeActions.SET_ACTION_MODE,
+  actionModeActions.SET_ACTION_MODE_HOVER,
+];
 
 let groupCounter = 1;
 
