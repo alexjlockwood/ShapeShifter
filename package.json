@@ -47,10 +47,10 @@
     "stable": "^0.1.6",
     "tinycolor2": "^1.4.1",
     "whet.extend": "~0.9.9",
-    "zone.js": "^0.8.11"
+    "zone.js": "^0.8.12"
   },
   "devDependencies": {
-    "@angular/cli": "^1.1.0",
+    "@angular/cli": "^1.1.1",
     "@angular/compiler-cli": "^4.1.3",
     "@types/es6-promise": "0.0.32",
     "@types/hammerjs": "^2.0.34",
@@ -58,13 +58,13 @@
     "@types/jquery": "^2.0.46",
     "@types/jszip": "0.0.33",
     "@types/lodash": "^4.14.65",
-    "@types/node": "^7.0.28",
+    "@types/node": "^7.0.29",
     "@types/tinycolor2": "^1.1.1",
     "angular-cli-ghpages": "^0.5.1",
     "codelyzer": "3.0.1",
     "concurrently": "^3.4.0",
     "coveralls": "^2.13.1",
-    "jasmine-core": "~2.6.2",
+    "jasmine-core": "^2.6.3",
     "jasmine-spec-reporter": "~4.1.0",
     "karma": "~1.7.0",
     "karma-chrome-launcher": "~2.1.1",
