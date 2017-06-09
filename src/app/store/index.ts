@@ -26,12 +26,5 @@ export {
   SelectLayer,
 } from './layers/actions';
 
-// Playback actions.
-export {
-  SetIsSlowMotion,
-  SetIsPlaying,
-  SetIsRepeating,
-} from './playback/actions';
-
 // Resetable meta actions.
 export { ResetWorkspace } from './reset/metaactions';
