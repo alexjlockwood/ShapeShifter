@@ -7,7 +7,6 @@ export const SHIFT_BACK_SELECTED_SUBPATHS = '__metaactionmode__SHIFT_BACK_SELECT
 export const SHIFT_FORWARD_SELECTED_SUBPATHS = '__metaactionmode__SHIFT_FORWARD_SELECTED_SUBPATHS';
 export const DELETE_ACTION_MODE_SELECTIONS = '__metaactionmode__DELETE_ACTION_MODE_SELECTIONS';
 export const SHIFT_POINT_TO_FRONT = '__metaactionmode__SHIFT_POINT_TO_FRONT';
-export const SPLIT_COMMAND_IN_HALF_HOVER = '__metaactionmode__SPLIT_COMMAND_IN_HALF_HOVER';
 export const SPLIT_COMMAND_IN_HALF_CLICK = '__metaactionmode__SPLIT_COMMAND_IN_HALF_CLICK';
 export const AUTO_FIX_CLICK = '__metaactionmode__AUTO_FIX_CLICK';
 export const UPDATE_ACTIVE_PATH_BLOCK = '__metaactionmode__UPDATE_ACTIVE_PATH_BLOCK';

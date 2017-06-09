@@ -78,13 +78,6 @@ export function metaReducer(reducer: ActionReducer<AppState>): ActionReducer<App
         break;
       }
 
-      // Show a split command hover for the currently selected point.
-      case actions.SPLIT_COMMAND_IN_HALF_HOVER: {
-        const { source, subIdx, cmdIdx } = getPointSelections(state)[0];
-        state = setHover(state, HoverType.Split, source, subIdx, cmdIdx);
-        break;
-      }
-
       // Split the currently selected point.
       case actions.SPLIT_COMMAND_IN_HALF_CLICK: {
         const { source, subIdx, cmdIdx } = getPointSelections(state)[0];
