@@ -5,12 +5,12 @@
   "scripts": {
     "ng": "ng",
     "start": "node --max-old-space-size=8192 ./node_modules/.bin/ng serve",
-    "build": "ng build -prod",
-    "test": "ng test",
-    "lint": "ng lint",
-    "e2e": "ng e2e",
-    "test-once": "./node_modules/@angular/cli/bin/ng test --single-run --code-coverage",
-    "deploy": "ng build -prod && cp ./CNAME ./dist/CNAME && ngh",
+    "build": "node --max-old-space-size=8192 ./node_modules/.bin/ng build -prod",
+    "test": "node --max-old-space-size=8192 ./node_modules/.bin/ng test",
+    "lint": "node --max-old-space-size=8192 ./node_modules/.bin/ng lint",
+    "e2e": "node --max-old-space-size=8192 ./node_modules/.bin/ng e2e",
+    "test-once": "node --max-old-space-size=8192 ./node_modules/.bin/ng test --single-run --code-coverage",
+    "deploy": "node --max-old-space-size=8192 ./node_modules/.bin/ng build -prod && cp ./CNAME ./dist/CNAME && ngh",
     "coveralls": "cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js"
   },
   "private": true,
