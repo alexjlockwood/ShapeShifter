@@ -22,23 +22,27 @@ import {
   AnimationBlock,
 } from '../scripts/timeline';
 import {
+  State,
+  Store,
+} from '../store';
+import { getLayerTimelineState } from '../store/common/selectors';
+import {
+  AddLayer,
+  ImportVectorLayers,
+  ReplaceLayer,
+  SelectLayer,
+  ToggleLayerExpansion,
+  ToggleLayerVisibility,
+} from '../store/layers/actions';
+import { ResetWorkspace } from '../store/reset/metaactions';
+import {
   ActivateAnimation,
   AddAnimation,
   AddBlock,
-  AddLayer,
-  ImportVectorLayers,
   ReplaceBlocks,
-  ReplaceLayer,
-  ResetWorkspace,
   SelectAnimation,
   SelectBlock,
-  SelectLayer,
-  State,
-  Store,
-  ToggleLayerExpansion,
-  ToggleLayerVisibility,
-} from '../store';
-import { getLayerTimelineState } from '../store/common/selectors';
+} from '../store/timeline/actions';
 import * as TimelineConsts from './constants';
 import { Callbacks as LayerListTreeCallbacks } from './layerlisttree.component';
 import { ScrubEvent } from './layertimeline.directive';

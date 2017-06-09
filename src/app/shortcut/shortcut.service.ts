@@ -1,10 +1,10 @@
 import { ActionModeService } from '../actionmode/actionmode.service';
 import { AnimatorService } from '../animator';
 import {
-  DeleteSelectedModels,
   State,
   Store,
 } from '../store';
+import { DeleteSelectedModels } from '../store/common/actions';
 import { Injectable } from '@angular/core';
 import * as $ from 'jquery';
 import { ActionCreators } from 'redux-undo';

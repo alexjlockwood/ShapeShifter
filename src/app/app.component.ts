@@ -7,16 +7,16 @@ import { VectorLayer } from './scripts/layers';
 import { Animation } from './scripts/timeline';
 import { ShortcutService } from './shortcut/shortcut.service';
 import {
-  ImportVectorLayers,
-  ResetWorkspace,
   State,
   Store,
 } from './store';
 import {
-   ActionMode,
-   ActionSource,
+  ActionMode,
+  ActionSource,
 } from './store/actionmode';
 import { getActionMode } from './store/actionmode/selectors';
+import { ImportVectorLayers } from './store/layers/actions';
+import { ResetWorkspace } from './store/reset/metaactions';
 import {
   AfterViewInit,
   ChangeDetectionStrategy,

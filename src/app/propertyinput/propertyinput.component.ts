@@ -22,14 +22,16 @@ import {
   PathAnimationBlock,
 } from '../scripts/timeline';
 import {
-  AddBlock,
-  ReplaceAnimations,
-  ReplaceBlocks,
-  ReplaceLayer,
   State,
   Store,
 } from '../store';
 import { getPropertyInputState } from '../store/common/selectors';
+import { ReplaceLayer } from '../store/layers/actions';
+import {
+  AddBlock,
+  ReplaceAnimations,
+  ReplaceBlocks,
+} from '../store/timeline/actions';
 import {
   ChangeDetectionStrategy,
   Component,

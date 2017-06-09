@@ -10,7 +10,6 @@ import {
 import { Animation } from '../scripts/timeline';
 import { PathAnimationBlock } from '../scripts/timeline';
 import {
-  ResetWorkspace,
   State,
   Store,
 } from '../store';
@@ -21,6 +20,7 @@ import {
   SelectionType,
 } from '../store/actionmode';
 import { getToolbarState } from '../store/actionmode/selectors';
+import { ResetWorkspace } from '../store/reset/metaactions';
 import {
   animate,
   state,
