@@ -110,20 +110,24 @@ export class ToolbarComponent implements OnInit {
     this.actionModeService.autoFixClick();
   }
 
+  // TODO: demo dialog doesn't initially set radio buttons correctly (try clicking second item)
   onDemoClick() {
     ga('send', 'event', 'Demos', 'Demos dialog shown');
 
     // TODO: add demos here
     // TODO: move this HTTP logic into a global service?
-    const demoTitles = ['Morphing animals'];
+    const demoMap = new Map<string, string>();
+    demoMap.set('Morphing animals', 'demos/hippobuffalo.shapeshifter');
+    demoMap.set('Visibility strike', 'demos/visibilitystrike.shapeshifter');
+    const demoTitles = Array.from(demoMap.keys());
     this.dialogService
       .demo(this.viewContainerRef, demoTitles)
       .subscribe(selectedDemoTitle => {
-        if (selectedDemoTitle !== 'Morphing animals') {
+        if (!demoTitles.includes(selectedDemoTitle)) {
           return;
         }
         ga('send', 'event', 'Demos', 'Demo selected', selectedDemoTitle);
-        this.http.get('demos/hippobuffalo.shapeshifter')
+        this.http.get(demoMap.get(selectedDemoTitle))
           .map((res: Response) => res.json())
           .catch((error: any) => Observable.throw(error.json().error || 'Server error'))
           .subscribe(jsonObj => {
