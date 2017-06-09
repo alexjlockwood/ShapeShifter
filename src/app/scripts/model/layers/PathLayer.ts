@@ -12,6 +12,7 @@ import {
   ConstructorArgs as AbstractConstructorArgs,
   AbstractLayer,
 } from './AbstractLayer';
+import * as _ from 'lodash';
 
 const ENUM_LINECAP_OPTIONS = [
   { value: 'butt', label: 'Butt' },
@@ -53,18 +54,19 @@ export class PathLayer extends AbstractLayer implements MorphableLayer {
 
   constructor(obj: ConstructorArgs) {
     super(obj);
+    const setterFn = (num: number, def: number) => _.isNil(num) ? def : num;
     this.pathData = obj.pathData;
     this.fillColor = obj.fillColor || '';
-    this.fillAlpha = obj.fillAlpha || 1;
+    this.fillAlpha = setterFn(obj.fillAlpha, 1);
     this.strokeColor = obj.strokeColor || '';
-    this.strokeAlpha = obj.strokeAlpha || 1;
-    this.strokeWidth = obj.strokeWidth || 0;
+    this.strokeAlpha = setterFn(obj.strokeAlpha, 1);
+    this.strokeWidth = setterFn(obj.strokeWidth, 0);
     this.strokeLinecap = obj.strokeLinecap || 'butt';
     this.strokeLinejoin = obj.strokeLinejoin || 'miter';
-    this.strokeMiterLimit = obj.strokeMiterLimit || 4;
-    this.trimPathStart = obj.trimPathStart || 0;
-    this.trimPathEnd = obj.trimPathEnd || 1;
-    this.trimPathOffset = obj.trimPathOffset || 0;
+    this.strokeMiterLimit = setterFn(obj.strokeMiterLimit, 4);
+    this.trimPathStart = setterFn(obj.trimPathStart, 0);
+    this.trimPathEnd = setterFn(obj.trimPathEnd, 1);
+    this.trimPathOffset = setterFn(obj.trimPathOffset, 0);
     this.fillType = obj.fillType || 'nonZero';
   }
 

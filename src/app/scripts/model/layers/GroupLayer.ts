@@ -12,6 +12,7 @@ import {
   Point,
   Rect,
 } from 'app/scripts/common';
+import * as _ from 'lodash';
 
 /**
  * Model object that mirrors the VectorDrawable's '<group>' element.
@@ -28,13 +29,14 @@ import {
 export class GroupLayer extends AbstractLayer {
   constructor(obj: ConstructorArgs) {
     super(obj);
-    this.pivotX = obj.pivotX || 0;
-    this.pivotY = obj.pivotY || 0;
-    this.rotation = obj.rotation || 0;
-    this.scaleX = obj.scaleX || 1;
-    this.scaleY = obj.scaleY || 1;
-    this.translateX = obj.translateX || 0;
-    this.translateY = obj.translateY || 0;
+    const setterFn = (num: number, def: number) => _.isNil(num) ? def : num;
+    this.pivotX = setterFn(obj.pivotX, 0);
+    this.pivotY = setterFn(obj.pivotY, 0);
+    this.rotation = setterFn(obj.rotation, 0);
+    this.scaleX = setterFn(obj.scaleX, 1);
+    this.scaleY = setterFn(obj.scaleY, 1);
+    this.translateX = setterFn(obj.translateX, 0);
+    this.translateY = setterFn(obj.translateY, 0);
   }
 
   getIconName() {

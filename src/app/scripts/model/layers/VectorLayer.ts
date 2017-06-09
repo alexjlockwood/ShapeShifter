@@ -8,6 +8,7 @@ import {
   AbstractLayer,
 } from './AbstractLayer';
 import { Rect } from 'app/scripts/common';
+import * as _ from 'lodash';
 
 /**
  * Model object that mirrors the VectorDrawable's '<vector>' element.
@@ -22,9 +23,10 @@ export class VectorLayer extends AbstractLayer {
 
   constructor(obj = { children: [], name: 'vector' } as ConstructorArgs) {
     super(obj);
-    this.width = obj.width || 24;
-    this.height = obj.height || 24;
-    this.alpha = obj.alpha || 1;
+    const setterFn = (num: number, def: number) => _.isNil(num) ? def : num;
+    this.width = setterFn(obj.width, 24);
+    this.height = setterFn(obj.height, 24);
+    this.alpha = setterFn(obj.alpha, 1);
   }
 
   getIconName() {

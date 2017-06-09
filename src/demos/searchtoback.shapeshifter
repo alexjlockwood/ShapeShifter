@@ -62,7 +62,7 @@
       "duration": 2500,
       "blocks": [
         {
-          "id": 1000,
+          "id": "1000",
           "type": "number",
           "animationId": "search_to_back",
           "layerId": "circle",
@@ -73,7 +73,7 @@
           "endTime": 1000
         },
         {
-          "id": 1001,
+          "id": "1001",
           "type": "number",
           "animationId": "search_to_back",
           "layerId": "stem",
@@ -84,7 +84,7 @@
           "endTime": 1500
         },
         {
-          "id": 1002,
+          "id": "1002",
           "type": "number",
           "animationId": "search_to_back",
           "layerId": "stem",
@@ -95,7 +95,7 @@
           "endTime": 1700
         },
         {
-          "id": 1003,
+          "id": "1003",
           "type": "number",
           "animationId": "search_to_back",
           "layerId": "top_arrowhead",
@@ -106,7 +106,7 @@
           "endTime": 1900
         },
         {
-          "id": 1004,
+          "id": "1004",
           "type": "number",
           "animationId": "search_to_back",
           "layerId": "bottom_arrowhead",
