@@ -1,35 +1,38 @@
 import 'hammerjs';
 
 import { ActionModeService } from './actionmode/actionmode.service';
-import { AnimatorService } from './animator';
-import { AppComponent } from './app.component';
+import { AnimatorService } from './animator/animator.service';
+import { ClipboardService } from './clipboard/clipboard.service';
 import {
   CanvasComponent,
   CanvasContainerDirective,
   CanvasLayersDirective,
   CanvasOverlayDirective,
   CanvasRulerDirective,
-} from './canvas';
+} from './components/canvas';
 import {
   ConfirmDialogComponent,
   DemoDialogComponent,
   DialogService,
-} from './dialogs';
-import { DropTargetDirective } from './droptarget.directive';
+} from './components/dialogs';
+import {
+  LayerListTreeComponent,
+  LayerTimelineComponent,
+  LayerTimelineDirective,
+  TimelineAnimationRowComponent,
+} from './components/layertimeline';
+import { PlaybackComponent } from './components/playback/playback.component';
+import { PropertyInputComponent } from './components/propertyinput/propertyinput.component';
+import { DropTargetDirective } from './components/root/droptarget.directive';
+import { RootComponent } from './components/root/root.component';
+import { ScrollGroupDirective } from './components/scrollgroup/scrollgroup.directive';
+import { SplitterComponent } from './components/splitter/splitter.component';
+import { ToolbarComponent } from './components/toolbar/toolbar.component';
 import { FileExportService } from './export/fileexport.service';
 import { FileImportService } from './import/fileimport.service';
-import { LayerListTreeComponent } from './layertimeline/layerlisttree.component';
-import { LayerTimelineComponent } from './layertimeline/layertimeline.component';
-import { LayerTimelineDirective } from './layertimeline/layertimeline.directive';
-import { TimelineAnimationRowComponent } from './layertimeline/timelineanimationrow.component';
-import { PlaybackComponent } from './playback/playback.component';
 import { PlaybackService } from './playback/playback.service';
-import { PropertyInputComponent } from './propertyinput/propertyinput.component';
-import { ScrollGroupDirective } from './scrollgroup/scrollgroup.directive';
 import { ShortcutService } from './shortcut/shortcut.service';
-import { SplitterComponent } from './splitter/splitter.component';
 import { reducer } from './store';
-import { ToolbarComponent } from './toolbar/toolbar.component';
 import { NgModule } from '@angular/core';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { FormsModule } from '@angular/forms';
@@ -53,7 +56,7 @@ import { StoreModule } from '@ngrx/store';
 
 @NgModule({
   declarations: [
-    AppComponent,
+    RootComponent,
     CanvasComponent,
     CanvasContainerDirective,
     CanvasLayersDirective,
@@ -94,6 +97,7 @@ import { StoreModule } from '@ngrx/store';
   providers: [
     ActionModeService,
     AnimatorService,
+    ClipboardService,
     DialogService,
     FileExportService,
     FileImportService,
@@ -104,7 +108,7 @@ import { StoreModule } from '@ngrx/store';
     ConfirmDialogComponent,
     DemoDialogComponent,
   ],
-  bootstrap: [AppComponent],
+  bootstrap: [RootComponent],
 })
 export class AppModule {
 

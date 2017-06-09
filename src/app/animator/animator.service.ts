@@ -1,19 +1,19 @@
-import { PlaybackService } from '../playback/playback.service';
-import { VectorLayer } from '../scripts/layers';
-import { Animation } from '../scripts/timeline';
+import { AnimationRenderer } from './AnimationRenderer';
+import { Animator, Callback } from './Animator';
+import { Injectable, NgZone } from '@angular/core';
+import { PlaybackService } from 'app/playback/playback.service';
+import { VectorLayer } from 'app/scripts/layers';
+import { Animation } from 'app/scripts/timeline';
 import {
   State,
   Store,
-} from '../store';
-import { getAnimatorState } from '../store/common/selectors';
+} from 'app/store';
+import { getAnimatorState } from 'app/store/common/selectors';
 import {
   getIsPlaying,
   getIsRepeating,
   getIsSlowMotion,
-} from '../store/playback/selectors';
-import { AnimationRenderer } from './AnimationRenderer';
-import { Animator, Callback } from './Animator';
-import { Injectable, NgZone } from '@angular/core';
+} from 'app/store/playback/selectors';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 
 const DEFAULT_ANIMATOR_EVENT = {

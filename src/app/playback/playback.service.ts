@@ -1,18 +1,18 @@
+import { Injectable } from '@angular/core';
 import {
   State,
   Store,
-} from '../store';
+} from 'app/store';
 import {
   SetIsPlaying,
   SetIsRepeating,
   SetIsSlowMotion,
-} from '../store/playback/actions';
+} from 'app/store/playback/actions';
 import {
   getIsPlaying,
   getIsRepeating,
   getIsSlowMotion,
-} from '../store/playback/selectors';
-import { Injectable } from '@angular/core';
+} from 'app/store/playback/selectors';
 
 /**
  * A simple service that provides an interface for making playback changes.
