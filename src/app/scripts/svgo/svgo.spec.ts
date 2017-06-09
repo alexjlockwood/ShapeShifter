@@ -1,31 +1,32 @@
 /* tslint:disable */
 
 import 'jasmine';
-import { svgToJs } from './lib/svg2js';
+
 import { jsToSvg } from './lib/js2svg';
 import { executePlugins } from './lib/plugins';
-import { inlineStyles } from './plugins/inlineStyles';
-import { convertStyleToAttrs } from './plugins/convertStyleToAttrs';
-import { moveGroupAttrsToElems } from './plugins/moveGroupAttrsToElems';
-import { convertPathData } from './plugins/convertPathData';
-import { mergePaths } from './plugins/mergePaths';
-import { removeDoctype } from './plugins/removeDoctype';
-import { collapseGroups } from './plugins/collapseGroups';
-import { convertShapeToPath } from './plugins/convertShapeToPath';
-import { removeEmptyContainers } from './plugins/removeEmptyContainers';
-import { removeHiddenElems } from './plugins/removeHiddenElems';
-import { removeUselessDefs } from './plugins/removeUselessDefs';
-import { removeEditorsNSData } from './plugins/removeEditorsNSData';
+import { svgToJs } from './lib/svg2js';
 import { cleanupNumericValues } from './plugins/cleanupNumericValues';
+import { collapseGroups } from './plugins/collapseGroups';
+import { convertPathData } from './plugins/convertPathData';
+import { convertShapeToPath } from './plugins/convertShapeToPath';
+import { convertStyleToAttrs } from './plugins/convertStyleToAttrs';
 import { convertTransforms } from './plugins/convertTransforms';
+import { inlineStyles } from './plugins/inlineStyles';
+import { mergePaths } from './plugins/mergePaths';
+import { moveGroupAttrsToElems } from './plugins/moveGroupAttrsToElems';
 import { removeComments } from './plugins/removeComments';
-import { removeMetadata } from './plugins/removeMetadata';
-import { removeUnknownsAndDefaults } from './plugins/removeUnknownsAndDefaults';
-import { removeEmptyText } from './plugins/removeEmptyText';
+import { removeDoctype } from './plugins/removeDoctype';
+import { removeEditorsNSData } from './plugins/removeEditorsNSData';
 import { removeEmptyAttrs } from './plugins/removeEmptyAttrs';
+import { removeEmptyContainers } from './plugins/removeEmptyContainers';
+import { removeEmptyText } from './plugins/removeEmptyText';
+import { removeHiddenElems } from './plugins/removeHiddenElems';
+import { removeMetadata } from './plugins/removeMetadata';
 import { removeNonInheritableGroupAttrs } from './plugins/removeNonInheritableGroupAttrs';
-import { replaceUseElems } from './plugins/replaceUseElems';
+import { removeUnknownsAndDefaults } from './plugins/removeUnknownsAndDefaults';
+import { removeUselessDefs } from './plugins/removeUselessDefs';
 import { removeUselessStrokeAndFill } from './plugins/removeUselessStrokeAndFill';
+import { replaceUseElems } from './plugins/replaceUseElems';
 
 describe('SVGO plugins', () => {
 
@@ -1012,11 +1013,6 @@ describe('SVGO plugins', () => {
     });
   });
 });
-
-
-// { "removeNone": true }
-
-
 
 function runTest(plugin, svgText: string, expectedSvgText: string) {
   optimize(svgText, plugin, optimized => {
