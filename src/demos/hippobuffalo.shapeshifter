@@ -49,6 +49,7 @@
   "animations": [
     {
       "id": "2",
+      "name": "anim",
       "duration": 300,
       "blocks": [
         {
