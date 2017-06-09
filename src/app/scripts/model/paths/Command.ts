@@ -1,6 +1,10 @@
-import * as _ from 'lodash';
-import { Point, Matrix, MathUtil } from '../common';
 import { SvgChar } from '.';
+import {
+  MathUtil,
+  Matrix,
+  Point,
+} from 'app/scripts/common';
+import * as _ from 'lodash';
 
 /**
  * Represents an individual SVG command. These are the essential building blocks

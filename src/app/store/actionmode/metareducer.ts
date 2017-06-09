@@ -1,10 +1,3 @@
-import { AutoAwesome } from '../../scripts/algorithms';
-import { MorphableLayer } from '../../scripts/layers';
-import {
-  Path,
-  PathUtil,
-} from '../../scripts/paths';
-import { PathAnimationBlock } from '../../scripts/timeline';
 import { AppState } from '../reducer';
 import * as actions from './metaactions';
 import {
@@ -14,6 +7,13 @@ import {
   SelectionType,
 } from './types';
 import { ActionReducer } from '@ngrx/store';
+import { AutoAwesome } from 'app/scripts/algorithms';
+import { MorphableLayer } from 'app/scripts/model/layers';
+import {
+  Path,
+  PathUtil,
+} from 'app/scripts/model/paths';
+import { PathAnimationBlock } from 'app/scripts/model/timeline';
 import * as _ from 'lodash';
 
 export function metaReducer(reducer: ActionReducer<AppState>): ActionReducer<AppState> {

@@ -1,16 +1,16 @@
-import { INTERPOLATORS } from '../scripts/interpolators';
+import * as XmlSerializer from './XmlSerializer';
+import { INTERPOLATORS } from 'app/scripts/model/interpolators';
 import {
   ClipPathLayer,
   GroupLayer,
   Layer,
   PathLayer,
   VectorLayer,
-} from '../scripts/layers';
+} from 'app/scripts/model/layers';
 import {
   Animation,
   AnimationBlock,
-} from '../scripts/timeline';
-import * as XmlSerializer from './XmlSerializer';
+} from 'app/scripts/model/timeline';
 import * as _ from 'lodash';
 
 const XMLNS_NS = 'http://www.w3.org/2000/xmlns/';

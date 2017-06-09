@@ -1,4 +1,3 @@
-import { Rect } from '../common';
 import {
   FractionProperty,
   NumberProperty,
@@ -8,6 +7,7 @@ import {
   ConstructorArgs as AbstractConstructorArgs,
   AbstractLayer,
 } from './AbstractLayer';
+import { Rect } from 'app/scripts/common';
 
 /**
  * Model object that mirrors the VectorDrawable's '<vector>' element.

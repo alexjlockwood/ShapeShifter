@@ -1,5 +1,8 @@
-import { LayerUtil, VectorLayer } from '../../scripts/layers';
 import * as actions from './actions';
+import {
+  LayerUtil,
+  VectorLayer,
+} from 'app/scripts/model/layers';
 import * as _ from 'lodash';
 
 export interface State {

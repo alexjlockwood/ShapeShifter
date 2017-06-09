@@ -8,7 +8,7 @@ import {
   Output,
 } from '@angular/core';
 import { Dragger } from 'app/scripts/dragger';
-import { Animation } from 'app/scripts/timeline';
+import { Animation } from 'app/scripts/model/timeline';
 import * as $ from 'jquery';
 import * as _ from 'lodash';
 

@@ -1,5 +1,8 @@
-import { MathUtil } from '../common';
-import { Config, Property } from './Property';
+import {
+  Config,
+  Property,
+} from './Property';
+import { MathUtil } from 'app/scripts/common';
 import * as _ from 'lodash';
 
 export class NumberProperty extends Property<number> {

@@ -1,4 +1,3 @@
-import { Rect } from '../common';
 import {
   Animatable,
   Inspectable,
@@ -12,6 +11,7 @@ import {
   PathLayer,
   VectorLayer,
 } from '.';
+import { Rect } from 'app/scripts/common';
 import * as _ from 'lodash';
 
 /**

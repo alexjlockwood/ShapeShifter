@@ -1,4 +1,3 @@
-import { environment } from '../../environments/environment';
 import * as metaActionMode from './actionmode/metareducer';
 import * as fromActionMode from './actionmode/reducer';
 import * as fromLayers from './layers/reducer';
@@ -13,6 +12,7 @@ import {
   ActionReducer,
   combineReducers,
 } from '@ngrx/store';
+import { environment } from 'environments/environment';
 import { storeLogger } from 'ngrx-store-logger';
 import { StateWithHistory } from 'redux-undo';
 

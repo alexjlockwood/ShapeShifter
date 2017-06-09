@@ -1,5 +1,8 @@
-import { ColorUtil, MathUtil } from '../common';
 import { Property } from './Property';
+import {
+   ColorUtil,
+   MathUtil,
+} from 'app/scripts/common';
 import * as _ from 'lodash';
 
 export class ColorProperty extends Property<string> {

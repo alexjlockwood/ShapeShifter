@@ -1,9 +1,19 @@
-import * as _ from 'lodash';
-import { Calculator, BBox, Line } from '.';
-import { SvgChar, Projection } from '..';
+import {
+   Projection,
+   SvgChar,
+} from '..';
 import { CommandBuilder } from '../Command';
-import { MathUtil, Point } from '../../common';
+import {
+   BBox,
+   Calculator,
+   Line,
+} from '.';
 import { PointCalculator } from './PointCalculator';
+import {
+  MathUtil,
+  Point,
+} from 'app/scripts/common';
+import * as _ from 'lodash';
 
 const ROUNDING_PRECISION = 10;
 

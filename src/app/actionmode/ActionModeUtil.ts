@@ -1,4 +1,4 @@
-import { PathAnimationBlock } from '../scripts/timeline';
+import { PathAnimationBlock } from '../scripts/model/timeline';
 import { ActionSource } from '../store/actionmode';
 
 interface Result {

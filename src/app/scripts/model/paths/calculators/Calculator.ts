@@ -1,10 +1,13 @@
-import * as _ from 'lodash';
-import { Point } from '../../common';
-import { SvgChar, Command } from '..';
-import { PointCalculator } from './PointCalculator';
-import { LineCalculator } from './LineCalculator';
+import {
+  Command,
+  SvgChar,
+} from '..';
 import { BezierCalculator } from './BezierCalculator';
+import { LineCalculator } from './LineCalculator';
 import { MoveCalculator } from './MoveCalculator';
+import { PointCalculator } from './PointCalculator';
+import { Point } from 'app/scripts/common';
+import * as _ from 'lodash';
 
 /**
  * A wrapper around a backing SVG command that abstracts a lot of the math-y

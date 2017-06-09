@@ -7,9 +7,12 @@ import {
   StrokeLineCap,
   StrokeLineJoin,
   VectorLayer,
-} from '../scripts/layers';
-import { Command, Path } from '../scripts/paths';
-import { NameProperty } from '../scripts/properties';
+} from '../scripts/model/layers';
+import {
+   Command,
+   Path,
+} from '../scripts/model/paths';
+import { NameProperty } from '../scripts/model/properties';
 import { Svgo } from '../scripts/svgo';
 import * as _ from 'lodash';
 

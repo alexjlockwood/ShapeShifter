@@ -1,14 +1,22 @@
-import * as _ from 'lodash';
-import { SvgChar, Command, Path } from '.';
+import {
+  Command,
+  Path,
+  SvgChar,
+} from '.';
 import { CommandState } from './CommandState';
-import { MathUtil, Matrix, Point } from '../common';
 import { PathState } from './PathState';
 import {
   SubPathState,
   SubPathStateMutator,
   flattenSubPathStates,
 } from './SubPathState';
-import { environment } from '../../../environments/environment';
+import {
+  MathUtil,
+  Matrix,
+  Point,
+} from 'app/scripts/common';
+import { environment } from 'environments/environment';
+import * as _ from 'lodash';
 
 const ENABLE_LOGS = !environment.production && false;
 

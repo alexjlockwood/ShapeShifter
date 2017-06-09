@@ -2,11 +2,11 @@ import {
   Layer,
   LayerUtil,
   VectorLayer,
-} from '../scripts/layers';
+} from '../scripts/model/layers';
 import {
   Animation,
   AnimationBlock,
-} from '../scripts/timeline';
+} from '../scripts/model/timeline';
 import {
   State,
   Store,

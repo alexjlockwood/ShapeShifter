@@ -1,5 +1,14 @@
-import { SvgChar, Path, Command, ProjectionOntoPath, PathUtil } from '.';
-import { Point, MathUtil } from '../common';
+import {
+  Command,
+  Path,
+  PathUtil,
+  ProjectionOntoPath,
+  SvgChar,
+} from '.';
+import {
+   MathUtil,
+   Point,
+} from 'app/scripts/common';
 import * as _ from 'lodash';
 
 const lerp = MathUtil.lerp;

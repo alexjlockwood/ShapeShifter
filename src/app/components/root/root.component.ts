@@ -13,8 +13,8 @@ import {
 import { Http, Response } from '@angular/http';
 import { MdSnackBar } from '@angular/material';
 import { FileImportService, regenerateModelIds } from 'app/import/fileimport.service';
-import { VectorLayer } from 'app/scripts/layers';
-import { Animation } from 'app/scripts/timeline';
+import { VectorLayer } from 'app/scripts/model/layers';
+import { Animation } from 'app/scripts/model/timeline';
 import { ShortcutService } from 'app/shortcut/shortcut.service';
 import {
   State,

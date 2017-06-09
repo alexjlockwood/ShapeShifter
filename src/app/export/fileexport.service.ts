@@ -1,21 +1,21 @@
-import { VectorLayer } from '../scripts/layers';
-import { Animation } from '../scripts/timeline';
-import {
-  State,
-  Store,
-} from '../store';
-import {
-  getHiddenLayerIds,
-  getVectorLayer,
-} from '../store/layers/selectors';
-import {
-  getActiveAnimation,
-  getAnimations,
-} from '../store/timeline/selectors';
 import * as AvdSerializer from './AvdSerializer';
 import * as SpriteSerializer from './SpriteSerializer';
 import * as SvgSerializer from './SvgSerializer';
 import { Injectable } from '@angular/core';
+import { VectorLayer } from 'app/scripts/model/layers';
+import { Animation } from 'app/scripts/model/timeline';
+import {
+  State,
+  Store,
+} from 'app/store';
+import {
+  getHiddenLayerIds,
+  getVectorLayer,
+} from 'app/store/layers/selectors';
+import {
+  getActiveAnimation,
+  getAnimations,
+} from 'app/store/timeline/selectors';
 import * as $ from 'jquery';
 import * as JSZip from 'jszip';
 import * as _ from 'lodash';

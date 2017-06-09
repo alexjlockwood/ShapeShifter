@@ -20,6 +20,7 @@ import {
   Matrix,
   Point,
 } from 'app/scripts/common';
+import { DestroyableMixin } from 'app/scripts/mixins';
 import {
   ClipPathLayer,
   GroupLayer,
@@ -28,10 +29,9 @@ import {
   MorphableLayer,
   PathLayer,
   VectorLayer,
-} from 'app/scripts/layers';
-import { DestroyableMixin } from 'app/scripts/mixins';
-import { Command } from 'app/scripts/paths';
-import { Path } from 'app/scripts/paths';
+} from 'app/scripts/model/layers';
+import { Path } from 'app/scripts/model/paths';
+import { Command } from 'app/scripts/model/paths';
 import {
   State,
   Store,

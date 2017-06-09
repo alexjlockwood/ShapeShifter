@@ -1,7 +1,17 @@
-import { LayerMap, ModelUtil, PropertyMap } from '../scripts/common';
-import { INTERPOLATORS } from '../scripts/interpolators';
-import { Layer, VectorLayer } from '../scripts/layers';
-import { Animation, AnimationBlock } from '../scripts/timeline';
+import {
+  LayerMap,
+  ModelUtil,
+  PropertyMap,
+} from 'app/scripts/common';
+import { INTERPOLATORS } from 'app/scripts/model/interpolators';
+import {
+  Layer,
+  VectorLayer,
+} from 'app/scripts/model/layers';
+import {
+  Animation,
+  AnimationBlock,
+} from 'app/scripts/model/timeline';
 import * as _ from 'lodash';
 
 const DEFAULT_LAYER_PROPERTY_STATE: PropertyState = {

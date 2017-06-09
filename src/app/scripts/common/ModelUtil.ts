@@ -1,5 +1,5 @@
-import { Layer, LayerUtil } from '../layers';
-import { Animation, AnimationBlock } from '../timeline';
+import { Layer, LayerUtil } from '../model/layers';
+import { Animation, AnimationBlock } from '../model/timeline';
 import * as _ from 'lodash';
 
 export function getUniqueAnimationName(

@@ -1,5 +1,8 @@
-import { Path, PathUtil } from '../paths';
 import { Property } from './Property';
+import {
+  Path,
+  PathUtil,
+} from 'app/scripts/model/paths';
 
 export class PathProperty extends Property<Path> {
 

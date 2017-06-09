@@ -13,14 +13,14 @@ import {
 } from '@angular/core';
 import { AnimatorService } from 'app/animator';
 import { ColorUtil } from 'app/scripts/common';
+import { DestroyableMixin } from 'app/scripts/mixins';
 import {
   ClipPathLayer,
   Layer,
   LayerUtil,
   PathLayer,
   VectorLayer,
-} from 'app/scripts/layers';
-import { DestroyableMixin } from 'app/scripts/mixins';
+} from 'app/scripts/model/layers';
 import {
   State,
   Store,

@@ -1,5 +1,3 @@
-import { Matrix } from '../common';
-import { Path } from '../paths';
 import {
   ClipPathLayer,
   GroupLayer,
@@ -7,6 +5,8 @@ import {
   PathLayer,
   VectorLayer,
 } from '.';
+import { Matrix } from 'app/scripts/common';
+import { Path } from 'app/scripts/model/paths';
 import * as _ from 'lodash';
 
 const PRECISION = 8;

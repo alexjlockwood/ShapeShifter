@@ -1,11 +1,4 @@
-import { ActionModeUtil } from '../../actionmode';
-import {
-  LayerUtil,
-  MorphableLayer,
-  VectorLayer,
-} from '../../scripts/layers';
-import { Path } from '../../scripts/paths';
-import { PathAnimationBlock } from '../../scripts/timeline';
+import { PathAnimationBlock } from '../../scripts/model/timeline';
 import {
   getHiddenLayerIds,
   getSelectedLayerIds,
@@ -22,6 +15,13 @@ import {
   ActionMode,
   ActionSource,
 } from './types';
+import { ActionModeUtil } from 'app/actionmode';
+import {
+  LayerUtil,
+  MorphableLayer,
+  VectorLayer,
+} from 'app/scripts/model/layers';
+import { Path } from 'app/scripts/model/paths';
 import * as _ from 'lodash';
 import {
   createSelector,

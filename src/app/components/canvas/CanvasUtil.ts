@@ -2,7 +2,7 @@ import {
   Matrix,
   Point,
 } from 'app/scripts/common';
-import { Command } from 'app/scripts/paths';
+import { Command } from 'app/scripts/model/paths';
 
 type Context = CanvasRenderingContext2D;
 

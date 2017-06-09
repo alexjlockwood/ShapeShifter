@@ -15,17 +15,17 @@ import {
   Layer,
   PathLayer,
   VectorLayer,
-} from 'app/scripts/layers';
+} from 'app/scripts/model/layers';
 import {
   FractionProperty,
   NameProperty,
   Option,
   Property,
-} from 'app/scripts/properties';
+} from 'app/scripts/model/properties';
 import {
   Animation,
   PathAnimationBlock,
-} from 'app/scripts/timeline';
+} from 'app/scripts/model/timeline';
 import {
   State,
   Store,

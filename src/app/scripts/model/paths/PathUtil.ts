@@ -1,5 +1,13 @@
-import { Command, Path, SvgChar } from '.';
-import { MathUtil, Point, Matrix } from '../common';
+import {
+  Command,
+  Path,
+  SvgChar,
+} from '.';
+import {
+  MathUtil,
+  Matrix,
+  Point,
+} from 'app/scripts/common';
 
 /**
  * Interpolates between a start and end path using the specified fraction.

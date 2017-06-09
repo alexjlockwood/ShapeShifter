@@ -1,7 +1,17 @@
-import { Calculator, BBox, Line } from '.';
-import { SvgChar, Projection } from '..';
+import {
+  Projection,
+  SvgChar,
+} from '..';
 import { CommandBuilder } from '../Command';
-import { MathUtil, Point } from '../../common';
+import {
+   BBox,
+   Calculator,
+   Line,
+} from '.';
+import {
+  MathUtil,
+  Point,
+} from 'app/scripts/common';
 
 export class PointCalculator implements Calculator {
   private readonly svgChar: SvgChar;

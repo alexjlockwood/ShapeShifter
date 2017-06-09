@@ -1,5 +1,8 @@
-import { AnimationBlock } from '../../scripts/timeline';
-import { createDeepEqualSelector, getAppState } from '../selectors';
+import { AnimationBlock } from '../../scripts/model/timeline';
+import {
+  createDeepEqualSelector,
+  getAppState,
+} from '../selectors';
 import * as _ from 'lodash';
 import { createSelector } from 'reselect';
 

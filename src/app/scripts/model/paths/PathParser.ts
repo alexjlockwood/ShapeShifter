@@ -1,5 +1,12 @@
-import { Matrix, Point, SvgUtil } from '../common';
-import { Command, SvgChar } from '.';
+import {
+   Command,
+   SvgChar,
+} from '.';
+import {
+   Matrix,
+   Point,
+   SvgUtil,
+} from 'app/scripts/common';
 
 enum Token {
   AbsoluteCommand = 1,

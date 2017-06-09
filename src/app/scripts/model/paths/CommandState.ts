@@ -1,7 +1,19 @@
+import {
+   Command,
+   Projection,
+   SvgChar,
+} from '.';
+import {
+  Calculator,
+  Line,
+  newCalculator,
+} from './calculators';
+import {
+   MathUtil,
+   Matrix,
+   Point,
+} from 'app/scripts/common';
 import * as _ from 'lodash';
-import { MathUtil, Point, Matrix } from '../common';
-import { Calculator, newCalculator, Line } from './calculators';
-import { SvgChar, Command, Projection } from '.';
 
 /**
  * Container class that encapsulates a Command's underlying state.

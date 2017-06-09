@@ -73,7 +73,7 @@ Pretty much all of the graphics in this app are powered by bezier curve approxim
 I learned most of what I needed to know from this excellent [primer on bezier curves][primer-on-bezier-curves]
 (especially sections 9 and 33, which explain how to split and project points onto bezier
 curves without altering their original appearance). Most of the interesting SVG-related code
-is located under [`src/app/scripts/paths`](https://github.com/alexjlockwood/ShapeShifter/tree/master/src/app/scripts/paths).
+is located under [`src/app/scripts/model/paths`](https://github.com/alexjlockwood/ShapeShifter/tree/master/src/app/scripts/model/paths).
 
 Auto fix is powered by an adaptation of the [Needleman-Wunsch algorithm][Needleman-Wunsch],
 which is used in bioinformatics to align protein or nucleotide sequences. Instead of

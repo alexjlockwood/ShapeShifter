@@ -1,7 +1,7 @@
 import * as TimelineConsts from './constants';
 import { Callbacks as LayerListTreeCallbacks } from './layerlisttree.component';
-import { LayerTimelineDirective } from './layertimeline.directive';
 import { ScrubEvent } from './layertimeline.directive';
+import { LayerTimelineDirective } from './layertimeline.directive';
 import { Callbacks as TimelineAnimationRowCallbacks } from './timelineanimationrow.component';
 import {
   AfterViewInit,
@@ -24,6 +24,7 @@ import {
   UiUtil,
 } from 'app/scripts/common';
 import { Dragger } from 'app/scripts/dragger';
+import { DestroyableMixin } from 'app/scripts/mixins';
 import {
   ClipPathLayer,
   GroupLayer,
@@ -31,12 +32,11 @@ import {
   LayerUtil,
   PathLayer,
   VectorLayer,
-} from 'app/scripts/layers';
-import { DestroyableMixin } from 'app/scripts/mixins';
+} from 'app/scripts/model/layers';
 import {
   Animation,
   AnimationBlock,
-} from 'app/scripts/timeline';
+} from 'app/scripts/model/timeline';
 import {
   State,
   Store,

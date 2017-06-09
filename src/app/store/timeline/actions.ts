@@ -1,8 +1,11 @@
-import { Layer } from '../../scripts/layers';
-import { Animation, AnimationBlock } from '../../scripts/timeline';
 import { DeleteSelectedModels } from '../common/actions';
-import { ClearLayerSelections, SelectLayer } from '../layers/actions';
+import {
+  ClearLayerSelections,
+  SelectLayer,
+} from '../layers/actions';
 import { Action } from '@ngrx/store';
+import { Layer } from 'app/scripts/model/layers';
+import { Animation, AnimationBlock } from 'app/scripts/model/timeline';
 
 export const ADD_ANIMATION = '__timeline__ADD_ANIMATION';
 export const ACTIVATE_ANIMATION = '__timeline__ACTIVATE_ANIMATION';

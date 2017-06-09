@@ -4,7 +4,7 @@ import {
   Layer,
   PathLayer,
   VectorLayer,
-} from '../scripts/layers';
+} from '../scripts/model/layers';
 import * as XmlSerializer from './XmlSerializer';
 import * as _ from 'lodash';
 

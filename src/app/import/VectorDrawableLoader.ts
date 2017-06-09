@@ -1,7 +1,12 @@
 import { ModelUtil } from '../scripts/common';
-import { ClipPathLayer, GroupLayer, PathLayer, VectorLayer } from '../scripts/layers';
-import { Path } from '../scripts/paths';
-import { NameProperty } from '../scripts/properties';
+import {
+  ClipPathLayer,
+  GroupLayer,
+  PathLayer,
+  VectorLayer,
+} from '../scripts/model/layers';
+import { Path } from '../scripts/model/paths';
+import { NameProperty } from '../scripts/model/properties';
 import * as _ from 'lodash';
 
 export function loadVectorLayerFromXmlString(

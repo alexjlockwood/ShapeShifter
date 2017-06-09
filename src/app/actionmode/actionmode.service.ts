@@ -1,15 +1,16 @@
-import { Path } from '../scripts/paths';
+import { Injectable } from '@angular/core';
+import { Path } from 'app/scripts/model/paths';
 import {
   State,
   Store,
-} from '../store';
+} from 'app/store';
 import {
   ActionMode,
   ActionSource,
   Hover,
   HoverType,
   Selection,
-} from '../store/actionmode';
+} from 'app/store/actionmode';
 import {
   SetActionMode,
   SetActionModeHover,
@@ -18,7 +19,7 @@ import {
   TogglePointSelection,
   ToggleSegmentSelections,
   ToggleSubPathSelection,
-} from '../store/actionmode/actions';
+} from 'app/store/actionmode/actions';
 import {
   AutoFixClick,
   DeleteActionModeSelections,
@@ -30,13 +31,12 @@ import {
   ShiftPointToFront,
   SplitCommandInHalfClick,
   UpdateActivePathBlock,
-} from '../store/actionmode/metaactions';
+} from 'app/store/actionmode/metaactions';
 import {
   getActionMode,
   getActionModeHover,
   getActionModePointSelections,
-} from '../store/actionmode/selectors';
-import { Injectable } from '@angular/core';
+} from 'app/store/actionmode/selectors';
 import * as _ from 'lodash';
 import { Observable } from 'rxjs/Observable';
 

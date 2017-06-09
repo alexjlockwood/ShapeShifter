@@ -7,8 +7,8 @@ import {
   Output,
 } from '@angular/core';
 import { ModelUtil } from 'app/scripts/common';
-import { GroupLayer, Layer, VectorLayer } from 'app/scripts/layers';
-import { Animation } from 'app/scripts/timeline';
+import { GroupLayer, Layer, VectorLayer } from 'app/scripts/model/layers';
+import { Animation } from 'app/scripts/model/timeline';
 import { State, Store } from 'app/store';
 import { getLayerListTreeState } from 'app/store/common/selectors';
 import * as _ from 'lodash';

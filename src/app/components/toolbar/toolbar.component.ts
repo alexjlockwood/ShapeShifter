@@ -22,9 +22,9 @@ import { regenerateModelIds } from 'app/import/fileimport.service';
 import {
   MorphableLayer,
   VectorLayer,
-} from 'app/scripts/layers';
-import { Animation } from 'app/scripts/timeline';
-import { PathAnimationBlock } from 'app/scripts/timeline';
+} from 'app/scripts/model/layers';
+import { Animation } from 'app/scripts/model/timeline';
+import { PathAnimationBlock } from 'app/scripts/model/timeline';
 import {
   State,
   Store,

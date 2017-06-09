@@ -1,12 +1,19 @@
-import * as _ from 'lodash';
-import * as BezierJs from 'bezier-js';
-import { Point } from '../../common';
-import { SvgChar, Projection } from '..';
+import {
+  Projection,
+  SvgChar,
+} from '..';
 import { CommandBuilder } from '../Command';
-import { Calculator, BBox, Line } from '.';
-import { PointCalculator } from './PointCalculator';
+import {
+  BBox,
+  Calculator,
+  Line,
+} from '.';
 import { LineCalculator } from './LineCalculator';
-import { environment } from '../../../../environments/environment';
+import { PointCalculator } from './PointCalculator';
+import { Point } from 'app/scripts/common';
+import * as BezierJs from 'bezier-js';
+import { environment } from 'environments/environment';
+import * as _ from 'lodash';
 
 /**
  * A simple typed wrapper class around the amazing bezier-js library.

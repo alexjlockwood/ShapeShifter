@@ -1,10 +1,4 @@
 import {
-  MathUtil,
-  Matrix,
-  Point,
-  Rect,
-} from '../common';
-import {
   NumberProperty,
   Property,
 } from '../properties';
@@ -12,6 +6,12 @@ import {
   ConstructorArgs as AbstractConstructorArgs,
   AbstractLayer,
 } from './AbstractLayer';
+import {
+  MathUtil,
+  Matrix,
+  Point,
+  Rect,
+} from 'app/scripts/common';
 
 /**
  * Model object that mirrors the VectorDrawable's '<group>' element.

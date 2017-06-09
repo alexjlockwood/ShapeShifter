@@ -1,13 +1,16 @@
-import { ModelUtil } from '../../scripts/common';
-import { ColorProperty, PathProperty } from '../../scripts/properties';
+import * as actions from './actions';
+import { ModelUtil } from 'app/scripts/common';
+import {
+   ColorProperty,
+   PathProperty,
+} from 'app/scripts/model/properties';
 import {
   Animation,
   AnimationBlock,
   ColorAnimationBlock,
   NumberAnimationBlock,
   PathAnimationBlock,
-} from '../../scripts/timeline';
-import * as actions from './actions';
+} from 'app/scripts/model/timeline';
 import * as _ from 'lodash';
 
 export interface State {

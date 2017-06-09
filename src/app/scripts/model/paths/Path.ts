@@ -1,13 +1,17 @@
-import * as _ from 'lodash';
 import {
-  Command, Line, Projection,
-  ProjectionOntoPath, HitOptions, HitResult,
+  Command,
+  HitOptions,
+  HitResult,
+  Line,
+  Projection,
+  ProjectionOntoPath,
 } from '.';
 import { PathMutator } from './PathMutator';
-import { Point } from '../common';
-import { PathState } from './PathState';
 import * as PathParser from './PathParser';
-import { environment } from '../../../environments/environment';
+import { PathState } from './PathState';
+import { Point } from 'app/scripts/common';
+import { environment } from 'environments/environment';
+import * as _ from 'lodash';
 
 /**
  * A compound path that contains all of the information associated with a

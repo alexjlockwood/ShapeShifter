@@ -1,7 +1,7 @@
 import {
   Layer,
   VectorLayer,
-} from '../../scripts/layers';
+} from '../../scripts/model/layers';
 import { DeleteSelectedModels } from '../common/actions';
 import {
   AddBlock,

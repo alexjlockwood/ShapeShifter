@@ -8,8 +8,8 @@ import {
   ViewEncapsulation,
 } from '@angular/core';
 import { AnimationMap, ModelUtil } from 'app/scripts/common';
-import { Layer } from 'app/scripts/layers';
-import { Animation, AnimationBlock } from 'app/scripts/timeline';
+import { Layer } from 'app/scripts/model/layers';
+import { Animation, AnimationBlock } from 'app/scripts/model/timeline';
 import { State, Store } from 'app/store';
 import { getTimelineAnimationRowState } from 'app/store/common/selectors';
 import * as _ from 'lodash';

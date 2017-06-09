@@ -1,11 +1,21 @@
-import * as _ from 'lodash';
-import { SubPath, Command, ProjectionOntoPath, HitOptions, HitResult, Line } from '.';
-import { createSubPaths } from './SubPath';
+import {
+   Command,
+   HitOptions,
+   HitResult,
+   Line,
+   ProjectionOntoPath,
+   SubPath,
+} from '.';
 import { CommandState } from './CommandState';
-import { MathUtil, Point, Rect } from '../common';
 import * as PathParser from './PathParser';
+import { createSubPaths } from './SubPath';
+import {
+  SubPathState,
+  findSubPathState,
+} from './SubPathState';
+import { MathUtil, Point, Rect } from 'app/scripts/common';
+import * as _ from 'lodash';
 import * as polylabel from 'polylabel';
-import { SubPathState, findSubPathState } from './SubPathState';
 
 /**
  * Container class that encapsulates a Path's underlying state.
