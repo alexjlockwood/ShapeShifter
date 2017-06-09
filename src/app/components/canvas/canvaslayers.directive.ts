@@ -11,7 +11,6 @@ import {
   ElementRef,
   Input,
 } from '@angular/core';
-import { AnimatorService } from 'app/animator';
 import { ColorUtil } from 'app/scripts/common';
 import { DestroyableMixin } from 'app/scripts/mixins';
 import { ActionSource } from 'app/scripts/model/actionmode';
@@ -22,6 +21,7 @@ import {
   PathLayer,
   VectorLayer,
 } from 'app/scripts/model/layers';
+import { AnimatorService } from 'app/services/animator/animator.service';
 import {
   State,
   Store,

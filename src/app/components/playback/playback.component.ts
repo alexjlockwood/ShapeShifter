@@ -3,7 +3,7 @@ import {
   Component,
   OnInit,
 } from '@angular/core';
-import { AnimatorService } from 'app/animator';
+import { AnimatorService } from 'app/services/animator/animator.service';
 import {
   State,
   Store,
