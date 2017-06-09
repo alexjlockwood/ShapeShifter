@@ -1,12 +1,11 @@
 import { AnimationBlock } from '../../scripts/timeline';
-import { createDeepEqualSelector, getState } from '../selectors';
+import { createDeepEqualSelector, getAppState } from '../selectors';
 import * as _ from 'lodash';
 import { createSelector } from 'reselect';
 
-const getTimelineState = createSelector(getState, s => s.present.timeline);
+const getTimelineState = createSelector(getAppState, s => s.timeline);
 
-export const getAnimations =
-  createSelector(getTimelineState, t => t.animations);
+export const getAnimations = createSelector(getTimelineState, t => t.animations);
 export const getSelectedAnimationIds =
   createDeepEqualSelector(getTimelineState, t => t.selectedAnimationIds);
 export const getActiveAnimationId =

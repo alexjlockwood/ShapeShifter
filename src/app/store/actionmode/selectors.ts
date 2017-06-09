@@ -14,7 +14,7 @@ import {
 import { State } from '../reducer';
 import {
   createDeepEqualSelector,
-  getState,
+  getAppState,
 } from '../selectors';
 import { getAnimations } from '../timeline/selectors';
 import { SelectionType } from './types';
@@ -28,7 +28,7 @@ import {
   createStructuredSelector,
 } from 'reselect';
 
-const getActionModeState = createSelector(getState, s => s.present.actionmode);
+const getActionModeState = createSelector(getAppState, s => s.actionmode);
 const getBlockId = createSelector(getActionModeState, s => s.blockId);
 const getBlock =
   createSelector(
