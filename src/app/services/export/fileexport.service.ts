@@ -20,7 +20,7 @@ import * as $ from 'jquery';
 import * as JSZip from 'jszip';
 import * as _ from 'lodash';
 
-// Store a version number just in case we ever change the export format....
+// Store a version number just in case we ever change the export format...
 const IMPORT_EXPORT_VERSION = 1;
 
 const EXPORTED_FPS = [30, 60];

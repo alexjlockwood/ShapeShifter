@@ -1,20 +1,20 @@
+import * as  SvgLoader from './SvgLoader';
+import * as VectorDrawableLoader from './VectorDrawableLoader';
+import { Injectable } from '@angular/core';
 import {
   Layer,
   LayerUtil,
   VectorLayer,
-} from '../scripts/model/layers';
+} from 'app/scripts/model/layers';
 import {
   Animation,
   AnimationBlock,
-} from '../scripts/model/timeline';
+} from 'app/scripts/model/timeline';
 import {
   State,
   Store,
-} from '../store';
-import { getVectorLayer } from '../store/layers/selectors';
-import * as  SvgLoader from './SvgLoader';
-import * as VectorDrawableLoader from './VectorDrawableLoader';
-import { Injectable } from '@angular/core';
+} from 'app/store';
+import { getVectorLayer } from 'app/store/layers/selectors';
 import * as _ from 'lodash';
 
 /**

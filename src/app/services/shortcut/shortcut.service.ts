@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { ActionModeService } from 'app/actionmode/actionmode.service';
-import { AnimatorService } from 'app/animator';
+import { ActionModeService } from 'app/services/actionmode/actionmode.service';
+import { AnimatorService } from 'app/services/animator/animator.service';
 import {
   State,
   Store,

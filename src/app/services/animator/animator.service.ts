@@ -7,9 +7,9 @@ import {
    Injectable,
    NgZone,
 } from '@angular/core';
-import { PlaybackService } from 'app/playback/playback.service';
 import { VectorLayer } from 'app/scripts/model/layers';
 import { Animation } from 'app/scripts/model/timeline';
+import { PlaybackService } from 'app/services/playback/playback.service';
 import {
   State,
   Store,

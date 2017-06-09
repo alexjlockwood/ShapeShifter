@@ -1,7 +1,3 @@
-import {
-  Layer,
-  VectorLayer,
-} from '../../scripts/model/layers';
 import { DeleteSelectedModels } from '../common/actions';
 import {
   AddBlock,
@@ -9,6 +5,10 @@ import {
   SelectBlock,
 } from '../timeline/actions';
 import { Action } from '@ngrx/store';
+import {
+  Layer,
+  VectorLayer,
+} from 'app/scripts/model/layers';
 
 export const IMPORT_VECTOR_LAYERS = '__layers__IMPORT_VECTOR_LAYERS';
 export const ADD_LAYER = '__layers__ADD_LAYER';

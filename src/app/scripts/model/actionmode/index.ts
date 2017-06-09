@@ -1,3 +1,5 @@
+import * as ActionModeUtil from './ActionModeUtil';
+export { ActionModeUtil };
 export {
   ActionMode,
   ActionSource,

@@ -15,10 +15,7 @@ import {
   ViewContainerRef,
 } from '@angular/core';
 import { MdSnackBar } from '@angular/material';
-import { AnimatorService } from 'app/animator';
 import { DialogService } from 'app/components/dialogs';
-import { FileExportService } from 'app/export/fileexport.service';
-import { FileImportService } from 'app/import/fileimport.service';
 import {
   ModelUtil,
   UiUtil,
@@ -37,6 +34,9 @@ import {
   Animation,
   AnimationBlock,
 } from 'app/scripts/model/timeline';
+import { AnimatorService } from 'app/services/animator/animator.service';
+import { FileExportService } from 'app/services/export/fileexport.service';
+import { FileImportService } from 'app/services/import/fileimport.service';
 import {
   State,
   Store,

@@ -1,11 +1,11 @@
-import { ColorUtil } from '../scripts/common';
+import * as XmlSerializer from './XmlSerializer';
+import { ColorUtil } from 'app/scripts/common';
 import {
   GroupLayer,
   Layer,
   PathLayer,
   VectorLayer,
-} from '../scripts/model/layers';
-import * as XmlSerializer from './XmlSerializer';
+} from 'app/scripts/model/layers';
 import * as _ from 'lodash';
 
 const XMLNS_NS = 'http://www.w3.org/2000/xmlns/';

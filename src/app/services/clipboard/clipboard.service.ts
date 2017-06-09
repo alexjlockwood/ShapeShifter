@@ -1,16 +1,16 @@
-import {
-  State,
-  Store,
-} from '../store';
-import { DeleteSelectedModels } from '../store/common/actions';
 import { Injectable } from '@angular/core';
-import { ActionModeService } from 'app/actionmode/actionmode.service';
 import { ModelUtil } from 'app/scripts/common';
 import {
   GroupLayer,
   Layer,
   VectorLayer,
 } from 'app/scripts/model/layers';
+import { ActionModeService } from 'app/services/actionmode/actionmode.service';
+import {
+  State,
+  Store,
+} from 'app/store';
+import { DeleteSelectedModels } from 'app/store/common/actions';
 import * as $ from 'jquery';
 import { ActionCreators } from 'redux-undo';
 

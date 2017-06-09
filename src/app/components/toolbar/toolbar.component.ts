@@ -15,12 +15,10 @@ import {
   Http,
   Response,
 } from '@angular/http';
-import { ActionModeUtil } from 'app/actionmode';
-import { ActionModeService } from 'app/actionmode/actionmode.service';
 import { DialogService } from 'app/components/dialogs';
-import { regenerateModelIds } from 'app/import/fileimport.service';
 import {
   ActionMode,
+  ActionModeUtil,
   ActionSource,
   Selection,
   SelectionType,
@@ -29,8 +27,10 @@ import {
   MorphableLayer,
   VectorLayer,
 } from 'app/scripts/model/layers';
-import { PathAnimationBlock } from 'app/scripts/model/timeline';
 import { Animation } from 'app/scripts/model/timeline';
+import { PathAnimationBlock } from 'app/scripts/model/timeline';
+import { ActionModeService } from 'app/services/actionmode/actionmode.service';
+import { regenerateModelIds } from 'app/services/import/fileimport.service';
 import {
   State,
   Store,

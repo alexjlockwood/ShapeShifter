@@ -12,14 +12,14 @@ import {
 } from '@angular/core';
 import { Http, Response } from '@angular/http';
 import { MdSnackBar } from '@angular/material';
-import { FileImportService, regenerateModelIds } from 'app/import/fileimport.service';
 import {
   ActionMode,
   ActionSource,
 } from 'app/scripts/model/actionmode';
 import { VectorLayer } from 'app/scripts/model/layers';
 import { Animation } from 'app/scripts/model/timeline';
-import { ShortcutService } from 'app/shortcut/shortcut.service';
+import { FileImportService, regenerateModelIds } from 'app/services/import/fileimport.service';
+import { ShortcutService } from 'app/services/shortcut/shortcut.service';
 import {
   State,
   Store,

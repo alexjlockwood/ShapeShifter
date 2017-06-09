@@ -9,9 +9,9 @@ import {
   getAppState,
 } from '../selectors';
 import { getAnimations } from '../timeline/selectors';
-import { ActionModeUtil } from 'app/actionmode';
 import {
   ActionMode,
+  ActionModeUtil,
   ActionSource,
   SelectionType,
 } from 'app/scripts/model/actionmode';

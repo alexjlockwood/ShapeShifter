@@ -1,8 +1,5 @@
 import 'hammerjs';
 
-import { ActionModeService } from './actionmode/actionmode.service';
-import { AnimatorService } from './animator/animator.service';
-import { ClipboardService } from './clipboard/clipboard.service';
 import {
   CanvasComponent,
   CanvasContainerDirective,
@@ -28,10 +25,13 @@ import { RootComponent } from './components/root/root.component';
 import { ScrollGroupDirective } from './components/scrollgroup/scrollgroup.directive';
 import { SplitterComponent } from './components/splitter/splitter.component';
 import { ToolbarComponent } from './components/toolbar/toolbar.component';
-import { FileExportService } from './export/fileexport.service';
-import { FileImportService } from './import/fileimport.service';
-import { PlaybackService } from './playback/playback.service';
-import { ShortcutService } from './shortcut/shortcut.service';
+import { ActionModeService } from './services/actionmode/actionmode.service';
+import { AnimatorService } from './services/animator/animator.service';
+import { ClipboardService } from './services/clipboard/clipboard.service';
+import { FileExportService } from './services/export/fileexport.service';
+import { FileImportService } from './services/import/fileimport.service';
+import { PlaybackService } from './services/playback/playback.service';
+import { ShortcutService } from './services/shortcut/shortcut.service';
 import { reducer } from './store';
 import { NgModule } from '@angular/core';
 import { FlexLayoutModule } from '@angular/flex-layout';

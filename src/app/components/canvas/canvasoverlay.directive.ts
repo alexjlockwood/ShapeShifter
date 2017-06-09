@@ -13,8 +13,6 @@ import {
   HostListener,
   Input,
 } from '@angular/core';
-import { ActionModeService } from 'app/actionmode/actionmode.service';
-import { AnimatorService } from 'app/animator';
 import {
   MathUtil,
   Matrix,
@@ -40,6 +38,8 @@ import {
 } from 'app/scripts/model/layers';
 import { Command } from 'app/scripts/model/paths';
 import { Path } from 'app/scripts/model/paths';
+import { ActionModeService } from 'app/services/actionmode/actionmode.service';
+import { AnimatorService } from 'app/services/animator/animator.service';
 import {
   State,
   Store,

@@ -3,8 +3,6 @@ import {
   Component,
   OnInit,
 } from '@angular/core';
-import { ActionModeService } from 'app/actionmode/actionmode.service';
-import { AnimatorService } from 'app/animator';
 import {
   ColorUtil,
   ModelUtil,
@@ -26,6 +24,8 @@ import {
   Animation,
   PathAnimationBlock,
 } from 'app/scripts/model/timeline';
+import { ActionModeService } from 'app/services/actionmode/actionmode.service';
+import { AnimatorService } from 'app/services/animator/animator.service';
 import {
   State,
   Store,
