@@ -38,7 +38,6 @@ export function metaReducer(reducer: AppStateReducer): StateReducer {
     },
   });
   return (state: StateWithHistoryAndTimestamp, action: Action) => {
-    const result = undoableReducer(state, action);
-    return { ...result, timestamp: Date.now() };
+    return { ...undoableReducer(state, action), timestamp: Date.now() };
   };
 }

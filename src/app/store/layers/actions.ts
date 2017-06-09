@@ -1,6 +1,13 @@
-import { Layer, VectorLayer } from '../../scripts/layers';
+import {
+  Layer,
+  VectorLayer,
+} from '../../scripts/layers';
 import { DeleteSelectedModels } from '../common/actions';
-import { AddBlock, SelectAnimation, SelectBlock } from '../timeline/actions';
+import {
+  AddBlock,
+  SelectAnimation,
+  SelectBlock,
+} from '../timeline/actions';
 import { Action } from '@ngrx/store';
 
 export const IMPORT_VECTOR_LAYERS = '__layers__IMPORT_VECTOR_LAYERS';
@@ -54,7 +61,7 @@ export class ReplaceLayer implements Action {
   readonly type = REPLACE_LAYER;
   readonly payload: { layer: Layer };
   constructor(layer: Layer) {
-    this.payload = { layer, };
+    this.payload = { layer };
   }
 }
 

@@ -4,7 +4,7 @@ import { DeleteSelectedModels } from '../common/actions';
 import { ClearLayerSelections, SelectLayer } from '../layers/actions';
 import { Action } from '@ngrx/store';
 
-export const ADD_ANIMATIONS = '__timeline__ADD_ANIMATIONS';
+export const ADD_ANIMATION = '__timeline__ADD_ANIMATION';
 export const ACTIVATE_ANIMATION = '__timeline__ACTIVATE_ANIMATION';
 export const REPLACE_ANIMATIONS = '__timeline__REPLACE_ANIMATIONS';
 export const SELECT_ANIMATION = '__timeline__SELECT_ANIMATION';
@@ -14,11 +14,11 @@ export const SELECT_BLOCK = '__timeline__SELECT_BLOCK';
 export { CLEAR_LAYER_SELECTIONS, SELECT_LAYER } from '../layers/actions';
 export { DELETE_SELECTED_MODELS } from '../common/actions';
 
-export class AddAnimations implements Action {
-  readonly type = ADD_ANIMATIONS;
-  readonly payload: { animations: ReadonlyArray<Animation> };
-  constructor(...animations: Animation[]) {
-    this.payload = { animations };
+export class AddAnimation implements Action {
+  readonly type = ADD_ANIMATION;
+  readonly payload: { animation: Animation };
+  constructor(animation: Animation) {
+    this.payload = { animation };
   }
 }
 
@@ -83,7 +83,7 @@ export class SelectBlock implements Action {
 }
 
 export type Actions =
-  AddAnimations
+  AddAnimation
   | ActivateAnimation
   | ReplaceAnimations
   | SelectAnimation

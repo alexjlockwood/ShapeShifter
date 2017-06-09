@@ -30,39 +30,22 @@ export function buildInitialState() {
 export function reducer(state = buildInitialState(), action: actions.Actions) {
   switch (action.type) {
 
-    // Add a list of animations to the application state.
-    case actions.ADD_ANIMATIONS: {
-      const newAnimations = action.payload.animations;
-      if (!newAnimations.length) {
-        // Do nothing if the list of added animations is empty.
-        return state;
-      }
-      const animations = state.animations.concat(...newAnimations);
-      let { activeAnimationId } = state;
-      if (!activeAnimationId) {
-        // Auto-activate the first new animation.
-        activeAnimationId = newAnimations[0].id;
-      }
-      return { ...state, animations, activeAnimationId };
+    // Add an animation to the application state.
+    case actions.ADD_ANIMATION: {
+      const animations = state.animations.concat([action.payload.animation]);
+      return { ...state, animations };
     }
 
     // Activate an animation.
     case actions.ACTIVATE_ANIMATION: {
-      const { animationId } = action.payload;
-      return { ...state, activeAnimationId: animationId };
+      return { ...state, activeAnimationId: action.payload.animationId };
     }
 
     // Replace a list of animations.
     case actions.REPLACE_ANIMATIONS: {
-      const { animations: replacementAnimations } = action.payload;
-      if (!replacementAnimations.length) {
-        // Do nothing if the list of animations is empty.
-        return state;
-      }
-      const animations = state.animations.map(animation => {
-        const replacementAnimation =
-          _.find(replacementAnimations, r => r.id === animation.id);
-        return replacementAnimation ? replacementAnimation : animation;
+      const animations = state.animations.map(anim => {
+        const replacement = _.find(action.payload.animations, a => a.id === anim.id);
+        return replacement ? replacement : anim;
       });
       return { ...state, animations };
     }
