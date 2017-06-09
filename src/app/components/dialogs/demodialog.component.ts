@@ -21,7 +21,8 @@ import { MdDialogRef } from '@angular/material';
     <button fxFlexOrder="1" md-button md-dialog-close>Cancel</button>
   </md-dialog-actions>`,
   styleUrls: ['./demodialog.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  // TODO: make this OnPush
+  // changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DemoDialogComponent {
   private demoTitles_: string[] = [];

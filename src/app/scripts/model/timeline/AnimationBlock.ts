@@ -37,10 +37,6 @@ export abstract class AnimationBlock {
     this.toValue = obj.toValue;
   }
 
-  isAnimatable() {
-    return this.fromValue && this.toValue;
-  }
-
   toJSON() {
     return {
       id: this.id,
@@ -52,6 +48,8 @@ export abstract class AnimationBlock {
       interpolator: this.interpolator,
     };
   }
+
+  abstract isAnimatable(): boolean;
 
   abstract clone(): AnimationBlock;
 }
@@ -83,10 +81,7 @@ export class PathAnimationBlock extends AnimationBlock {
   fromValue: Path;
   toValue: Path;
 
-  isAnimatable() {
-    return super.isAnimatable() && this.fromValue.isMorphableWith(this.toValue);
-  }
-
+  // @Override
   toJSON() {
     return Object.assign(super.toJSON(), {
       type: 'path',
@@ -95,6 +90,12 @@ export class PathAnimationBlock extends AnimationBlock {
     });
   }
 
+  // @Override
+  isAnimatable() {
+    return this.fromValue && this.toValue && this.fromValue.isMorphableWith(this.toValue);
+  }
+
+  // @Override
   clone() {
     return new PathAnimationBlock(this);
   }
@@ -111,6 +112,7 @@ export class ColorAnimationBlock extends AnimationBlock {
   fromValue: string;
   toValue: string;
 
+  // @Override
   toJSON() {
     return Object.assign(super.toJSON(), {
       type: 'color',
@@ -119,6 +121,13 @@ export class ColorAnimationBlock extends AnimationBlock {
     });
   }
 
+  // @Override
+  isAnimatable() {
+    // TODO should this be more specific (i.e. check if valid color values?)
+    return !!this.fromValue && !!this.toValue;
+  }
+
+  // @Override
   clone() {
     return new ColorAnimationBlock(this);
   }
@@ -135,6 +144,7 @@ export class NumberAnimationBlock extends AnimationBlock {
   fromValue: number;
   toValue: number;
 
+  // @Override
   toJSON() {
     return Object.assign(super.toJSON(), {
       type: 'number',
@@ -143,6 +153,12 @@ export class NumberAnimationBlock extends AnimationBlock {
     });
   }
 
+  // @Override
+  isAnimatable() {
+    return _.isFinite(this.fromValue) && _.isFinite(this.toValue);
+  }
+
+  // @Override
   clone() {
     return new NumberAnimationBlock(this);
   }
