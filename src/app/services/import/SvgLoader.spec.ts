@@ -1,6 +1,7 @@
-import 'jasmine';
+// TODO: figure out why this test times out
 
-import * as SvgLoader from './SvgLoader';
+// import 'jasmine';
+// import * as SvgLoader from './SvgLoader';
 
 // describe('SvgLoader', () => {
 //   it(`SvgLoader sanity test`, () => {
@@ -14,7 +15,8 @@ import * as SvgLoader from './SvgLoader';
 //     L 11,19 L 11,13 L 5,13 L 5,11">
 //   </path>
 // </svg>`;
-//     SvgLoader.loadVectorLayerFromSvgStringWithCallback(svg, () => { }, () => true);
-//     expect(true).toEqual(true);
+//     SvgLoader.loadVectorLayerFromSvgStringWithCallback(svg, () => {
+//       expect(true).toEqual(true);
+//     }, () => true);
 //   });
 // });
