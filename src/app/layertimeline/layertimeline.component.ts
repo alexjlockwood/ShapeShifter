@@ -23,7 +23,7 @@ import {
 } from '../scripts/timeline';
 import {
   ActivateAnimation,
-  AddAnimations,
+  AddAnimation,
   AddBlock,
   AddLayer,
   ImportVectorLayers,
@@ -214,7 +214,7 @@ export class LayerTimelineComponent
   // Called from the LayerTimelineComponent template.
   addNewAnimationClick() {
     const name = ModelUtil.getUniqueAnimationName(this.animations, 'anim');
-    this.store.dispatch(new AddAnimations(new Animation({ name })));
+    this.store.dispatch(new AddAnimation(new Animation({ name })));
   }
 
   // Called from the LayerTimelineComponent template.

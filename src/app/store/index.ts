@@ -7,7 +7,7 @@ export { DeleteSelectedModels } from './common/actions';
 // Timeline actions.
 export {
   ActivateAnimation,
-  AddAnimations,
+  AddAnimation,
   ReplaceAnimations,
   SelectAnimation,
   AddBlock,
