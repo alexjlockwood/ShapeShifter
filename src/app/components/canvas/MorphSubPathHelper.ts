@@ -2,14 +2,14 @@ import { CanvasOverlayDirective } from './canvasoverlay.directive';
 import { ActionModeService } from 'app/actionmode/actionmode.service';
 import { Point } from 'app/scripts/common';
 import {
-  State,
-  Store,
-} from 'app/store';
-import {
   ActionMode,
   ActionSource,
   HoverType,
-} from 'app/store/actionmode';
+} from 'app/scripts/model/actionmode';
+import {
+  State,
+  Store,
+} from 'app/store';
 import * as _ from 'lodash';
 
 // TODO: clean up this class' messy communication w/ the overlay directive

@@ -1,16 +1,16 @@
 import { CanvasOverlayDirective } from './canvasoverlay.directive';
 import { ActionModeService } from 'app/actionmode/actionmode.service';
 import { MathUtil, Point } from 'app/scripts/common';
+import {
+  ActionSource,
+  HoverType,
+} from 'app/scripts/model/actionmode';
 import { LayerUtil } from 'app/scripts/model/layers';
 import { ProjectionOntoPath } from 'app/scripts/model/paths';
 import {
   State,
   Store,
 } from 'app/store';
-import {
-  ActionSource,
-  HoverType,
-} from 'app/store/actionmode';
 import * as _ from 'lodash';
 
 // TODO: use the 'Dragger' to drag points to different locations

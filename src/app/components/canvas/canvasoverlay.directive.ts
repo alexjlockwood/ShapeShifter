@@ -22,6 +22,14 @@ import {
 } from 'app/scripts/common';
 import { DestroyableMixin } from 'app/scripts/mixins';
 import {
+  ActionMode,
+  ActionSource,
+  Hover,
+  HoverType,
+  Selection,
+  SelectionType,
+} from 'app/scripts/model/actionmode';
+import {
   ClipPathLayer,
   GroupLayer,
   Layer,
@@ -30,20 +38,12 @@ import {
   PathLayer,
   VectorLayer,
 } from 'app/scripts/model/layers';
-import { Path } from 'app/scripts/model/paths';
 import { Command } from 'app/scripts/model/paths';
+import { Path } from 'app/scripts/model/paths';
 import {
   State,
   Store,
 } from 'app/store';
-import {
-  ActionMode,
-  ActionSource,
-  Hover,
-  HoverType,
-  Selection,
-  SelectionType,
-} from 'app/store/actionmode';
 import {
   getActionMode,
   getActionModeEndState,

@@ -1,12 +1,12 @@
 import { CanvasOverlayDirective } from './canvasoverlay.directive';
 import { ActionModeService } from 'app/actionmode/actionmode.service';
 import { Point } from 'app/scripts/common';
+import { ActionMode } from 'app/scripts/model/actionmode';
 import { HitResult, ProjectionOntoPath } from 'app/scripts/model/paths';
 import {
   State,
   Store,
 } from 'app/store';
-import { ActionMode } from 'app/store/actionmode';
 import * as _ from 'lodash';
 
 interface ProjInfo {

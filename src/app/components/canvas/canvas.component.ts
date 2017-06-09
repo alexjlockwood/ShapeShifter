@@ -18,8 +18,8 @@ import {
 } from '@angular/core';
 import { Point } from 'app/scripts/common';
 import { DestroyableMixin } from 'app/scripts/mixins';
+import { ActionSource } from 'app/scripts/model/actionmode';
 import { State, Store } from 'app/store';
-import { ActionSource } from 'app/store/actionmode';
 import { getVectorLayer } from 'app/store/layers/selectors';
 import * as $ from 'jquery';
 import * as _ from 'lodash';

@@ -14,6 +14,7 @@ import {
 import { AnimatorService } from 'app/animator';
 import { ColorUtil } from 'app/scripts/common';
 import { DestroyableMixin } from 'app/scripts/mixins';
+import { ActionSource } from 'app/scripts/model/actionmode';
 import {
   ClipPathLayer,
   Layer,
@@ -25,7 +26,6 @@ import {
   State,
   Store,
 } from 'app/store';
-import { ActionSource } from 'app/store/actionmode';
 import {
   getActionModeEndState,
   getActionModeStartState,

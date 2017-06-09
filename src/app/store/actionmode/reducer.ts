@@ -5,7 +5,7 @@ import {
   Hover,
   Selection,
   SelectionType,
-} from './types';
+} from 'app/scripts/model/actionmode';
 import * as _ from 'lodash';
 
 export interface State {

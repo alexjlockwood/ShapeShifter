@@ -1,5 +1,5 @@
-import { ActionSource } from './types';
 import { Action } from '@ngrx/store';
+import { ActionSource } from 'app/scripts/model/actionmode';
 import { Path } from 'app/scripts/model/paths';
 
 export const REVERSE_SELECTED_SUBPATHS = '__metaactionmode__REVERSE_SELECTED_SUBPATHS';

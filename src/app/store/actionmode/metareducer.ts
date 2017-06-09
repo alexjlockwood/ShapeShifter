@@ -1,13 +1,13 @@
 import { AppState } from '../reducer';
 import * as actions from './metaactions';
+import { ActionReducer } from '@ngrx/store';
+import { AutoAwesome } from 'app/scripts/algorithms';
 import {
   ActionSource,
   HoverType,
   Selection,
   SelectionType,
-} from './types';
-import { ActionReducer } from '@ngrx/store';
-import { AutoAwesome } from 'app/scripts/algorithms';
+} from 'app/scripts/model/actionmode';
 import { MorphableLayer } from 'app/scripts/model/layers';
 import {
   Path,

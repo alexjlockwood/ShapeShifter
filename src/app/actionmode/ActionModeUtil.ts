@@ -1,5 +1,5 @@
-import { PathAnimationBlock } from '../scripts/model/timeline';
-import { ActionSource } from '../store/actionmode';
+import { ActionSource } from 'app/scripts/model/actionmode';
+import { PathAnimationBlock } from 'app/scripts/model/timeline';
 
 interface Result {
   // True iff the paths are compatible.

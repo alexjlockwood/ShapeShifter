@@ -1,15 +1,15 @@
 import { CanvasOverlayDirective } from './canvasoverlay.directive';
 import { ActionModeService } from 'app/actionmode/actionmode.service';
 import { Point } from 'app/scripts/common';
+import {
+  ActionMode,
+  ActionSource,
+} from 'app/scripts/model/actionmode';
 import { ProjectionOntoPath } from 'app/scripts/model/paths';
 import {
   State,
   Store,
 } from 'app/store';
-import {
-  ActionMode,
-  ActionSource,
-} from 'app/store/actionmode';
 
 interface ProjInfo {
   readonly proj: ProjectionOntoPath;

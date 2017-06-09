@@ -20,21 +20,21 @@ import { ActionModeService } from 'app/actionmode/actionmode.service';
 import { DialogService } from 'app/components/dialogs';
 import { regenerateModelIds } from 'app/import/fileimport.service';
 import {
-  MorphableLayer,
-  VectorLayer,
-} from 'app/scripts/model/layers';
-import { Animation } from 'app/scripts/model/timeline';
-import { PathAnimationBlock } from 'app/scripts/model/timeline';
-import {
-  State,
-  Store,
-} from 'app/store';
-import {
   ActionMode,
   ActionSource,
   Selection,
   SelectionType,
-} from 'app/store/actionmode';
+} from 'app/scripts/model/actionmode';
+import {
+  MorphableLayer,
+  VectorLayer,
+} from 'app/scripts/model/layers';
+import { PathAnimationBlock } from 'app/scripts/model/timeline';
+import { Animation } from 'app/scripts/model/timeline';
+import {
+  State,
+  Store,
+} from 'app/store';
 import { getToolbarState } from 'app/store/actionmode/selectors';
 import { ResetWorkspace } from 'app/store/reset/metaactions';
 import { environment } from 'environments/environment';

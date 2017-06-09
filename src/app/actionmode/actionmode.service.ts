@@ -1,16 +1,16 @@
 import { Injectable } from '@angular/core';
-import { Path } from 'app/scripts/model/paths';
-import {
-  State,
-  Store,
-} from 'app/store';
 import {
   ActionMode,
   ActionSource,
   Hover,
   HoverType,
   Selection,
-} from 'app/store/actionmode';
+} from 'app/scripts/model/actionmode';
+import { Path } from 'app/scripts/model/paths';
+import {
+  State,
+  Store,
+} from 'app/store';
 import {
   SetActionMode,
   SetActionModeHover,
