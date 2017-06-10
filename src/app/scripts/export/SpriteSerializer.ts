@@ -1,8 +1,8 @@
 import * as SvgSerializer from './SvgSerializer';
+import { AnimationRenderer } from 'app/scripts/animator';
 import { VectorLayer } from 'app/scripts/model/layers';
 import { Animation } from 'app/scripts/model/timeline';
 import { Svgo } from 'app/scripts/svgo';
-import { AnimationRenderer } from 'app/services/animator';
 
 export function createHtml(svgFileName: string, cssFileName: string) {
   return `<html>

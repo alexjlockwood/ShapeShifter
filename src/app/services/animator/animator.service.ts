@@ -1,12 +1,12 @@
-import { AnimationRenderer } from './AnimationRenderer';
 import {
   Animator,
   Callback,
 } from './Animator';
 import {
-   Injectable,
-   NgZone,
+  Injectable,
+  NgZone,
 } from '@angular/core';
+import { AnimationRenderer } from 'app/scripts/animator';
 import { VectorLayer } from 'app/scripts/model/layers';
 import { Animation } from 'app/scripts/model/timeline';
 import { PlaybackService } from 'app/services/playback/playback.service';
