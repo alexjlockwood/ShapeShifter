@@ -1,8 +1,12 @@
 import { ModelUtil } from 'app/scripts/common';
 import {
   ClipPathLayer,
+  FillType,
   GroupLayer,
+  Layer,
   PathLayer,
+  StrokeLineCap,
+  StrokeLineJoin,
   VectorLayer,
 } from 'app/scripts/model/layers';
 import { Path } from 'app/scripts/model/paths';
@@ -11,27 +15,32 @@ import * as _ from 'lodash';
 
 export function loadVectorLayerFromXmlString(
   xmlString: string,
-  doesNameExistFn: (name: string) => boolean) {
-
+  doesLayerNameExistFn: (name: string) => boolean,
+) {
   const parser = new DOMParser();
   const doc = parser.parseFromString(xmlString, 'application/xml');
+  return loadVectorLayerFromElement(doc.documentElement, doesLayerNameExistFn);
+}
 
+function loadVectorLayerFromElement(
+  docEl: HTMLElement,
+  doesLayerNameExistFn: (name: string) => boolean,
+) {
+  if (!docEl) {
+    return undefined;
+  }
   const usedNames = new Set<string>();
   const makeFinalNodeIdFn = (value: string, prefix: string) => {
     const finalName = ModelUtil.getUniqueName(
       NameProperty.sanitize(value || prefix),
-      name => doesNameExistFn(name) || usedNames.has(name),
+      name => doesLayerNameExistFn(name) || usedNames.has(name),
     );
     usedNames.add(finalName);
     return finalName;
   };
 
-  const nodeToLayerDataFn = (node): GroupLayer | ClipPathLayer | PathLayer => {
-    if (!node) {
-      return undefined;
-    }
-    if (node.nodeType === Node.TEXT_NODE
-      || node.nodeType === Node.COMMENT_NODE) {
+  const nodeToLayerDataFn = (node: Node): Layer => {
+    if (!isElement(node)) {
       return undefined;
     }
 
@@ -40,29 +49,28 @@ export function loadVectorLayerFromXmlString(
         id: _.uniqueId(),
         name: makeFinalNodeIdFn(node.getAttribute('android:name'), 'path'),
         children: [],
-        // TODO: avoid crashing when pathData attribute isn't specified
-        pathData: new Path(node.getAttribute('android:pathData') || ''),
-        fillColor: node.getAttribute('android:fillColor') || undefined,
-        fillAlpha: Number(node.getAttribute('android:fillAlpha') || 1),
-        strokeColor: node.getAttribute('android:strokeColor') || undefined,
-        strokeAlpha: Number(node.getAttribute('android:strokeAlpha') || 1),
-        strokeWidth: Number(node.getAttribute('android:strokeWidth') || 0),
-        strokeLinecap: node.getAttribute('android:strokeLineCap') || 'butt',
-        strokeLinejoin: node.getAttribute('android:strokeLineJoin') || 'miter',
-        strokeMiterLimit: Number(node.getAttribute('android:strokeMiterLimit') || 4),
-        trimPathStart: Number(node.getAttribute('android:trimPathStart') || 0),
-        trimPathEnd: Number(node.getAttribute('android:trimPathEnd') || 1),
-        trimPathOffset: Number(node.getAttribute('android:trimPathOffset') || 0),
-        fillType: node.getAttribute('android:fillType') || undefined,
+        pathData: new Path(get(node, 'pathData', '')),
+        fillColor: get(node, 'fillColor', ''),
+        fillAlpha: Number(get(node, 'fillAlpha', '1')),
+        strokeColor: get(node, 'strokeColor', ''),
+        strokeAlpha: Number(get(node, 'strokeAlpha', '1')),
+        strokeWidth: Number(get(node, 'strokeWidth', '0')),
+        strokeLinecap: get(node, 'strokeLineCap', 'butt') as StrokeLineCap,
+        strokeLinejoin: get(node, 'strokeLineJoin', 'miter') as StrokeLineJoin,
+        strokeMiterLimit: Number(get(node, 'strokeMiterLimit', '4')),
+        trimPathStart: Number(get(node, 'trimPathStart', '0')),
+        trimPathEnd: Number(get(node, 'trimPathEnd', '1')),
+        trimPathOffset: Number(get(node, 'trimPathOffset', '0')),
+        fillType: get(node, 'fillType', 'evenOdd') as FillType,
       });
     }
 
     if (node.tagName === 'clip-path') {
       return new ClipPathLayer({
         id: _.uniqueId(),
-        name: makeFinalNodeIdFn(node.getAttribute('android:name'), 'clip-path'),
+        name: makeFinalNodeIdFn(get(node, 'name', ''), 'clip-path'),
         children: [],
-        pathData: new Path(node.getAttribute('android:pathData') || ''),
+        pathData: new Path(get(node, 'pathData', '')),
       });
     }
 
@@ -73,15 +81,15 @@ export function loadVectorLayerFromXmlString(
       if (children && children.length) {
         return new GroupLayer({
           id: _.uniqueId(),
-          name: makeFinalNodeIdFn(node.getAttribute('android:name'), 'group'),
+          name: makeFinalNodeIdFn(get(node, 'name', ''), 'group'),
           children,
-          pivotX: Number(node.getAttribute('android:pivotX') || 0),
-          pivotY: Number(node.getAttribute('android:pivotY') || 0),
-          rotation: Number(node.getAttribute('android:rotation') || 0),
-          scaleX: Number(node.getAttribute('android:scaleX') || 1),
-          scaleY: Number(node.getAttribute('android:scaleY') || 1),
-          translateX: Number(node.getAttribute('android:translateX') || 0),
-          translateY: Number(node.getAttribute('android:translateY') || 0),
+          pivotX: Number(get(node, 'pivotX', '0')),
+          pivotY: Number(get(node, 'pivotY', '0')),
+          rotation: Number(get(node, 'rotation', '0')),
+          scaleX: Number(get(node, 'scaleX', '1')),
+          scaleY: Number(get(node, 'scaleY', '1')),
+          translateX: Number(get(node, 'translateX', '0')),
+          translateY: Number(get(node, 'translateY', '0')),
         });
       }
     }
@@ -89,19 +97,90 @@ export function loadVectorLayerFromXmlString(
     return undefined;
   };
 
-  const rootLayer = nodeToLayerDataFn(doc.documentElement);
-  const name =
-    makeFinalNodeIdFn(doc.documentElement.getAttribute('android:name'), 'vector');
+  const rootLayer = nodeToLayerDataFn(docEl);
+  const children = rootLayer ? rootLayer.children : [];
+  const name = makeFinalNodeIdFn(get(docEl, 'name', ''), 'vector');
   usedNames.add(name);
-  const width = Number(doc.documentElement.getAttribute('android:viewportWidth'));
-  const height = Number(doc.documentElement.getAttribute('android:viewportHeight'));
-  const alpha = Number(doc.documentElement.getAttribute('android:alpha') || 1);
-  return new VectorLayer({
-    id: _.uniqueId(),
-    name,
-    children: rootLayer.children,
-    width: Number(width || 24),
-    height: Number(height || 24),
-    alpha: Number(alpha || 1),
-  });
+  const width = Number(get(docEl, 'viewportWidth', '24'));
+  const height = Number(get(docEl, 'viewportHeight', '24'));
+  const alpha = Number(get(docEl, 'alpha', '1'));
+  return new VectorLayer({ id: _.uniqueId(), name, children, width, height, alpha });
+}
+
+export function loadAnimationFromXmlString(
+  xmlString: string,
+  animationName: string,
+  doesLayerNameExistFn: (name: string) => boolean) {
+
+  const parser = new DOMParser();
+  const avdNode = parser.parseFromString(xmlString, 'application/xml').documentElement;
+  const vl =
+    _(Array.from(avdNode.childNodes))
+      .filter(elem => {
+        return isElement(elem)
+          && elem.tagName === 'aapt:attr'
+          && elem.hasAttribute('name')
+          && elem.getAttribute('name') === 'android:drawable';
+      })
+      .map((elem: HTMLElement) => {
+        return _(Array.from(elem.childNodes))
+          .filter(e => isElement(e) && e.tagName === 'vector')
+          .map((e: HTMLElement) => loadVectorLayerFromElement(e, doesLayerNameExistFn))
+          .first();
+      })
+      .first();
+  if (!vl) {
+    return undefined;
+  }
+  const blocks =
+    _(Array.from(avdNode.childNodes))
+      .filter(e => {
+        return isElement(e)
+          && e.tagName === 'target'
+          && !!e.getAttribute('android:name');
+      })
+      .flatMap((targetElem: HTMLElement) => {
+        const targetName = targetElem.getAttribute('android:name');
+        const animElem =
+          _(Array.from(targetElem.childNodes))
+            .filter(elem => {
+              return isElement(elem)
+                && elem.tagName === 'aapt:attr'
+                && elem.hasAttribute('name')
+                && elem.getAttribute('name') === 'android:animation'
+                && elem.childNodes.length;
+            })
+            .flatMap((elem: HTMLElement) => Array.from(elem.childNodes))
+            .filter(e => isElement(e) && (e.tagName === 'set' || e.tagName === 'objectAnimator'))
+            .map((e: HTMLElement) => {
+              if (e.tagName === 'set') {
+                // TODO: handle animator set case
+                return undefined;
+              }
+              // Otherwise it is an object animator.
+              return undefined;
+            })
+            .first() as HTMLElement;
+
+        // TODO: return a list of animation blocks here
+        return [animElem];
+      })
+      .value();
+  console.info(blocks);
+  // const avdTargetElements = avdChildElements.filter(e => e.tagName === 'target');
+  // avdTargetElements.forEach(e => getTargetFn(e));
+  // console.info(vl, avdTargetElements);
+  return undefined;
+}
+
+function isElement(node: Node): node is HTMLElement {
+  return node
+    && node.nodeType !== Node.TEXT_NODE
+    && node.nodeType !== Node.COMMENT_NODE
+    && _.isElement(node);
+}
+
+function get(obj: HTMLElement, attr: string, def = '') {
+  const androidAttr = `android:${attr}`;
+  return obj.hasAttribute(androidAttr) ? obj.getAttribute(androidAttr) : def;
 }

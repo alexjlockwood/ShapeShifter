@@ -96,7 +96,7 @@
           "type": "path",
           "startTime": 268,
           "endTime": 1539,
-          "interpolator": "ACCELERATE_DECELERATE"
+          "interpolator": "FAST_OUT_SLOW_IN"
         },
         {
           "id": "303",
@@ -108,7 +108,7 @@
           "type": "path",
           "startTime": 268,
           "endTime": 1539,
-          "interpolator": "ACCELERATE_DECELERATE"
+          "interpolator": "FAST_OUT_SLOW_IN"
         },
         {
           "id": "304",
@@ -120,7 +120,7 @@
           "type": "number",
           "startTime": 268,
           "endTime": 1539,
-          "interpolator": "ACCELERATE_DECELERATE"
+          "interpolator": "FAST_OUT_SLOW_IN"
         }
       ]
     }

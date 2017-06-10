@@ -3,6 +3,7 @@
   "vectorLayer": {
     "id": "search_back",
     "name": "search_back",
+    "type": "vector",
     "width": 48,
     "height": 24,
     "children": [

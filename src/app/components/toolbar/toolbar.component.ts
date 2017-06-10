@@ -119,6 +119,8 @@ export class ToolbarComponent implements OnInit {
     demoMap.set('Morphing animals', 'hippobuffalo');
     demoMap.set('Visibility strike', 'visibilitystrike');
     demoMap.set('Search-to-back', 'searchtoback');
+    demoMap.set('Bar chart', 'barchart');
+    demoMap.set('Search-to-close', 'searchtoclose');
     const demoTitles = Array.from(demoMap.keys());
     this.dialogService
       .demo(this.viewContainerRef, demoTitles)
