@@ -199,17 +199,37 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
 }
 
 function selectAnimationId(state: State, animationId: string, clearExisting: boolean) {
-  const oldSelectedAnimationIds = state.selectedBlockIds;
-  const newSelectedAnimationIds = clearExisting ? new Set() : new Set(oldSelectedAnimationIds);
-  newSelectedAnimationIds.add(animationId);
-  return { ...state, selectedAnimationIds: newSelectedAnimationIds, selectedBlockIds: new Set() };
+  const selectedAnimationIds = new Set(state.selectedAnimationIds);
+  if (clearExisting) {
+    selectedAnimationIds.forEach(id => {
+      if (id !== animationId) {
+        selectedAnimationIds.delete(id);
+      }
+    });
+  }
+  if (!clearExisting && selectedAnimationIds.has(animationId)) {
+    selectedAnimationIds.delete(animationId);
+  } else {
+    selectedAnimationIds.add(animationId);
+  }
+  return { ...state, selectedAnimationIds, selectedBlockIds: new Set() };
 }
 
 function selectBlockId(state: State, blockId: string, clearExisting: boolean) {
-  const oldSelectedBlockIds = state.selectedBlockIds;
-  const newSelectedBlockIds = clearExisting ? new Set() : new Set(oldSelectedBlockIds);
-  newSelectedBlockIds.add(blockId);
-  return { ...state, selectedAnimationIds: new Set(), selectedBlockIds: newSelectedBlockIds };
+  const selectedBlockIds = new Set(state.selectedBlockIds);
+  if (clearExisting) {
+    selectedBlockIds.forEach(id => {
+      if (id !== blockId) {
+        selectedBlockIds.delete(id);
+      }
+    });
+  }
+  if (!clearExisting && selectedBlockIds.has(blockId)) {
+    selectedBlockIds.delete(blockId);
+  } else {
+    selectedBlockIds.add(blockId);
+  }
+  return { ...state, selectedAnimationIds: new Set(), selectedBlockIds };
 }
 
 function deleteSelectedAnimations(state: State) {

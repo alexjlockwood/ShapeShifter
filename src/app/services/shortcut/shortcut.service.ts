@@ -6,6 +6,7 @@ import {
   Store,
 } from 'app/store';
 import { DeleteSelectedModels } from 'app/store/common/actions';
+import { GroupOrUngroupSelectedLayers } from 'app/store/layers/actions';
 import * as $ from 'jquery';
 import { ActionCreators } from 'redux-undo';
 
@@ -27,10 +28,15 @@ export class ShortcutService {
 
     $(window).on('keydown', event => {
       if (event.metaKey && event.keyCode === 'Z'.charCodeAt(0)) {
-        // undo/redo (Z key)
+        // Z.
         event.shiftKey
           ? this.store.dispatch(ActionCreators.redo())
           : this.store.dispatch(ActionCreators.undo());
+        return false;
+      }
+      if (event.metaKey && event.keyCode === 'G'.charCodeAt(0)) {
+        // G.
+        this.store.dispatch(new GroupOrUngroupSelectedLayers(!event.shiftKey));
         return false;
       }
       if (event.ctrlKey || event.metaKey) {
@@ -71,12 +77,12 @@ export class ShortcutService {
         this.animatorService.fastForward();
         return false;
       }
-      if (event.keyCode === 82 && !event.ctrlKey && !event.metaKey) {
+      if (event.keyCode === 'R'.charCodeAt(0)) {
         // R.
         this.animatorService.toggleIsRepeating();
         return false;
       }
-      if (event.keyCode === 83) {
+      if (event.keyCode === 'S'.charCodeAt(0)) {
         // S.
         this.animatorService.toggleIsSlowMotion();
         return false;

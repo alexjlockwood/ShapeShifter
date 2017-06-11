@@ -800,9 +800,7 @@ export class CanvasOverlayDirective
       const hitLayer = this.hitTestForLayer(mouseDown);
       const isMetaOrShiftPressed = event.metaKey || event.shiftKey;
       if (hitLayer) {
-        const shouldToggle = true;
-        this.store.dispatch(
-          new SelectLayer(hitLayer.id, shouldToggle, !isMetaOrShiftPressed));
+        this.store.dispatch(new SelectLayer(hitLayer.id, !isMetaOrShiftPressed));
       } else if (!isMetaOrShiftPressed) {
         this.store.dispatch(new ClearLayerSelections());
       }

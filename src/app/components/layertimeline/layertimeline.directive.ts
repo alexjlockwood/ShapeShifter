@@ -92,7 +92,6 @@ export class LayerTimelineDirective {
     this.onScrub.emit({
       animation: this.animation,
       time,
-      // TODO: make the use of alt/ctrl/meta key consistent across entire app
       disableSnap: !!event.altKey,
     });
   }

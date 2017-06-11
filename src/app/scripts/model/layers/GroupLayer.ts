@@ -75,6 +75,9 @@ export class GroupLayer extends AbstractLayer {
         bounds = childBounds.clone();
       }
     });
+    if (!bounds) {
+      return undefined;
+    }
     bounds.l -= this.pivotX;
     bounds.t -= this.pivotY;
     bounds.r -= this.pivotX;

@@ -17,6 +17,7 @@ export const TOGGLE_LAYER_EXPANSION = '__layers__TOGGLE_LAYER_EXPANSION';
 export const TOGGLE_LAYER_VISIBILITY = '__layers__TOGGLE_LAYER_VISIBILITY';
 export const REPLACE_LAYER = '__layers__REPLACE_LAYER';
 export const SELECT_LAYER = '__layers__SELECT_LAYER';
+export const GROUP_OR_UNGROUP_SELECTED_LAYERS = '__layers__GROUP_OR_UNGROUP_SELECTED_LAYERS';
 export { SELECT_ANIMATION, ADD_BLOCK, SELECT_BLOCK } from '../timeline/actions';
 export { DELETE_SELECTED_MODELS } from '../common/actions';
 
@@ -67,9 +68,17 @@ export class ReplaceLayer implements Action {
 
 export class SelectLayer implements Action {
   readonly type = SELECT_LAYER;
-  readonly payload: { layerId: string, shouldToggle: boolean, clearExisting: boolean };
-  constructor(layerId: string, shouldToggle: boolean, clearExisting: boolean) {
-    this.payload = { layerId, shouldToggle, clearExisting };
+  readonly payload: { layerId: string, clearExisting: boolean };
+  constructor(layerId: string, clearExisting: boolean) {
+    this.payload = { layerId, clearExisting };
+  }
+}
+
+export class GroupOrUngroupSelectedLayers implements Action {
+  readonly type = GROUP_OR_UNGROUP_SELECTED_LAYERS;
+  readonly payload: { shouldGroup: boolean };
+  constructor(shouldGroup: boolean) {
+    this.payload = { shouldGroup };
   }
 }
 
@@ -81,6 +90,7 @@ export type Actions =
   | ToggleLayerVisibility
   | ReplaceLayer
   | SelectLayer
+  | GroupOrUngroupSelectedLayers
   | SelectAnimation
   | SelectBlock
   | AddBlock

@@ -667,7 +667,7 @@ export class LayerTimelineComponent
   // @Override LayerListTreeComponentCallbacks
   layerClick(event: MouseEvent, layer: Layer) {
     const clearExisting = !event.metaKey && !event.shiftKey;
-    this.store.dispatch(new SelectLayer(layer.id, false /* shouldToggle */, clearExisting));
+    this.store.dispatch(new SelectLayer(layer.id, clearExisting));
   }
 
   // @Override LayerListTreeComponentCallbacks
@@ -898,7 +898,7 @@ export class LayerTimelineComponent
     };
 
     // TODO: should this be OS-dependent (i.e. use alt for windows?)
-    if (event.ctrlKey) { // chrome+mac trackpad pinch-zoom = ctrlKey
+    if (event.altKey || event.ctrlKey) { // chrome+mac trackpad pinch-zoom = ctrlKey
       if (!this.targetHorizZoom) {
         // Multiple changes can happen to targetHorizZoom before the
         // actual zoom level is updated (see performZoom_).
