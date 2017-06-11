@@ -40,6 +40,7 @@ const IS_DEV_BUILD = !environment.production;
 const ELEMENT_RESIZE_DETECTOR = erd();
 const STORAGE_KEY_FIRST_TIME_USER = 'storage_key_first_time_user';
 
+// TODO: show confirmation dialog when dropping a file into a dirty workspace
 @Component({
   selector: 'app-root',
   templateUrl: './root.component.html',

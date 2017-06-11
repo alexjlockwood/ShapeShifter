@@ -1,8 +1,5 @@
 import { Inject } from '@angular/core';
-import {
-  ChangeDetectionStrategy,
-  Component,
-} from '@angular/core';
+import { Component } from '@angular/core';
 import {
   MD_DIALOG_DATA,
   MdDialogRef,
@@ -22,7 +19,6 @@ import {
     <button fxFlexOrder="1" md-button md-dialog-close>Cancel</button>
   </md-dialog-actions>`,
   styleUrls: ['./confirmdialog.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ConfirmDialogComponent {
   constructor(

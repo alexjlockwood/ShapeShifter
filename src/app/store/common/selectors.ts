@@ -13,7 +13,10 @@ import {
   getSelectedBlockIds,
   getSelectedBlockLayerIds,
 } from '../timeline/selectors';
-import { createStructuredSelector } from 'reselect';
+import {
+  createSelector,
+  createStructuredSelector,
+} from 'reselect';
 
 export const getCanvasLayersState =
   createStructuredSelector({
@@ -68,3 +71,13 @@ export const getAnimatorState =
     activeAnimation: getActiveAnimation,
     vectorLayer: getVectorLayer,
   });
+
+export const isWorkspaceDirty =
+  createSelector(
+    [getVectorLayer, getAnimations],
+    (vectorLayer, animations) => {
+      return vectorLayer.children.length > 0
+        || animations.length > 1
+        || animations[0].blocks.length > 0;
+    },
+  );

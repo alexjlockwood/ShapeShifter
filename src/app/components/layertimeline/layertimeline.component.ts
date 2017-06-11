@@ -1,7 +1,7 @@
 import * as TimelineConsts from './constants';
 import { Callbacks as LayerListTreeCallbacks } from './layerlisttree.component';
-import { LayerTimelineDirective } from './layertimeline.directive';
 import { ScrubEvent } from './layertimeline.directive';
+import { LayerTimelineDirective } from './layertimeline.directive';
 import { Callbacks as TimelineAnimationRowCallbacks } from './timelineanimationrow.component';
 import {
   AfterViewInit,
@@ -42,7 +42,10 @@ import {
   State,
   Store,
 } from 'app/store';
-import { getLayerTimelineState } from 'app/store/common/selectors';
+import {
+  getLayerTimelineState,
+  isWorkspaceDirty,
+} from 'app/store/common/selectors';
 import {
   AddLayer,
   ImportVectorLayers,
@@ -65,6 +68,9 @@ import * as $ from 'jquery';
 import * as _ from 'lodash';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Observable } from 'rxjs/Observable';
+
+const IS_DEV_BUILD = !environment.production;
+const ENABLE_SAVE_AND_RESTORE_JSON = IS_DEV_BUILD;
 
 // Distance in pixels from a snap point before snapping to the point.
 const SNAP_PIXELS = 10;
@@ -97,7 +103,7 @@ export class LayerTimelineComponent
   implements OnInit, AfterViewInit,
   TimelineAnimationRowCallbacks, LayerListTreeCallbacks {
 
-  readonly ENABLE_SAVE_AND_RESTORE_JSON = !environment.production;
+  readonly ENABLE_SAVE_AND_RESTORE_JSON = ENABLE_SAVE_AND_RESTORE_JSON;
 
   @ViewChild('timeline') private timelineRef: ElementRef;
   private $timeline: JQuery;
@@ -195,15 +201,20 @@ export class LayerTimelineComponent
 
   // Called from the LayerTimelineComponent template.
   newWorkspaceClick() {
-    // TODO: only show when workspace is dirty
-    // TODO: also show similar dialog when dropping a file into an existing workspace
-    this.dialogService
-      .confirm('Start over?', 'You\'ll lose any unsaved changes.')
-      .filter(result => result)
-      .subscribe(() => {
-        this.animatorService.reset();
-        this.store.dispatch(new ResetWorkspace());
-      });
+    const resetWorkspaceFn = () => {
+      this.animatorService.reset();
+      this.store.dispatch(new ResetWorkspace());
+    };
+    this.store.select(isWorkspaceDirty).first().subscribe(isDirty => {
+      if (isDirty) {
+        this.dialogService
+          .confirm('Start over?', 'You\'ll lose any unsaved changes.')
+          .filter(result => result)
+          .subscribe(resetWorkspaceFn);
+      } else {
+        resetWorkspaceFn();
+      }
+    });
   }
 
   // Called from the LayerTimelineComponent template.
