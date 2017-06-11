@@ -1,4 +1,5 @@
 import { ModelUtil } from 'app/scripts/common';
+import { INTERPOLATORS } from 'app/scripts/model/interpolators';
 import {
   ClipPathLayer,
   FillType,
@@ -11,6 +12,10 @@ import {
 } from 'app/scripts/model/layers';
 import { Path } from 'app/scripts/model/paths';
 import { NameProperty } from 'app/scripts/model/properties';
+import {
+  AnimationBlock,
+  PathAnimationBlock,
+} from 'app/scripts/model/timeline';
 import * as _ from 'lodash';
 
 export function loadVectorLayerFromXmlString(
@@ -112,6 +117,8 @@ export function loadAnimationFromXmlString(
   animationName: string,
   doesLayerNameExistFn: (name: string) => boolean) {
 
+  const animationId = _.uniqueId();
+
   const parser = new DOMParser();
   const avdNode = parser.parseFromString(xmlString, 'application/xml').documentElement;
   const vl =
@@ -141,6 +148,7 @@ export function loadAnimationFromXmlString(
       })
       .flatMap((targetElem: HTMLElement) => {
         const targetName = targetElem.getAttribute('android:name');
+        const layerId = vl.findLayerByName(targetName).id;
         const animElem =
           _(Array.from(targetElem.childNodes))
             .filter(elem => {
@@ -158,12 +166,33 @@ export function loadAnimationFromXmlString(
                 return undefined;
               }
               // Otherwise it is an object animator.
-              return undefined;
+              return e;
             })
             .first() as HTMLElement;
-
+        console.info(targetElem);
+        const animationBlocks: AnimationBlock[] = [];
+        const propertyName = get(animElem, 'propertyName');
+        const fromValue = get(animElem, 'valueFrom');
+        const toValue = get(animElem, 'valueTo');
+        const interpolatorRef =
+          get(animElem, 'interpolator', '@android:anim/accelerate_decelerate_interpolator');
+        const interpolator = _.find(INTERPOLATORS, i => i.androidRef === interpolatorRef).value;
+        const startTime = Number(get(animElem, 'startOffset'));
+        const endTime = startTime + Number(get(animElem, 'duration'));
+        if (get(animElem, 'valueType') === 'pathType' && propertyName === 'pathData') {
+          animationBlocks.push(new PathAnimationBlock({
+            animationId,
+            layerId,
+            propertyName,
+            fromValue,
+            toValue,
+            startTime,
+            endTime,
+            interpolator,
+          }));
+        }
         // TODO: return a list of animation blocks here
-        return [animElem];
+        return animationBlocks;
       })
       .value();
   console.info(blocks);
