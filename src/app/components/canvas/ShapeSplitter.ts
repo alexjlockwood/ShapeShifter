@@ -163,7 +163,6 @@ export class ShapeSplitter {
       this.reset();
 
       // TODO: some bugs with this path: M 0 20 v -16 h 20 v 2 h -12 v 2 h 12 v 2 h -12 Z
-      // TODO: is it possible for there to be 1 or 2 intersections and be invalid?
       // TODO: how should we deal with collinear intersections? (i.e. drawing a line across the same line)
       const startingCmdIdx = initCmdIdx > finalCmdIdx ? finalCmdIdx : initCmdIdx;
       const endingCmdIdx =
