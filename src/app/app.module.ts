@@ -10,7 +10,6 @@ import {
 import {
   ConfirmDialogComponent,
   DemoDialogComponent,
-  DialogService,
 } from './components/dialogs';
 import {
   LayerListTreeComponent,
@@ -28,10 +27,13 @@ import { ToolbarComponent } from './components/toolbar/toolbar.component';
 import { ActionModeService } from './services/actionmode/actionmode.service';
 import { AnimatorService } from './services/animator/animator.service';
 import { ClipboardService } from './services/clipboard/clipboard.service';
+import { DemoService } from './services/demos/demo.service';
+import { DialogService } from './services/dialogs/dialog.service';
 import { FileExportService } from './services/export/fileexport.service';
 import { FileImportService } from './services/import/fileimport.service';
 import { PlaybackService } from './services/playback/playback.service';
 import { ShortcutService } from './services/shortcut/shortcut.service';
+import { SnackBarService } from './services/snackbar/snackbar.service';
 import { reducer } from './store';
 import { NgModule } from '@angular/core';
 import { FlexLayoutModule } from '@angular/flex-layout';
@@ -98,11 +100,13 @@ import { StoreModule } from '@ngrx/store';
     ActionModeService,
     AnimatorService,
     ClipboardService,
+    DemoService,
     DialogService,
     FileExportService,
     FileImportService,
     PlaybackService,
     ShortcutService,
+    SnackBarService,
   ],
   entryComponents: [
     ConfirmDialogComponent,
@@ -122,7 +126,7 @@ export class AppModule {
       .addSvgIcon('addlayer', sanitizer.bypassSecurityTrustResourceUrl('assets/icons/addlayer.svg'))
       .addSvgIcon('addanimation', sanitizer.bypassSecurityTrustResourceUrl('assets/icons/addanimation.svg'))
       .addSvgIcon('autofix', sanitizer.bypassSecurityTrustResourceUrl('assets/icons/autofix.svg'))
-      .addSvgIcon('demos', sanitizer.bypassSecurityTrustResourceUrl('assets/icons/demos.svg'))
+      .addSvgIcon('contribute', sanitizer.bypassSecurityTrustResourceUrl('assets/icons/contribute.svg'))
       .addSvgIcon('reverse', sanitizer.bypassSecurityTrustResourceUrl('assets/icons/reverse.svg'))
       .addSvgIcon('animation', sanitizer.bypassSecurityTrustResourceUrl('assets/icons/animation.svg'))
       .addSvgIcon('collection', sanitizer.bypassSecurityTrustResourceUrl('assets/icons/collection.svg'))

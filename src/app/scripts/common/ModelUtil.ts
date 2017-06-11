@@ -1,4 +1,4 @@
-import { Layer, LayerUtil } from '../model/layers';
+import { Layer, LayerUtil, VectorLayer } from '../model/layers';
 import { Animation, AnimationBlock } from '../model/timeline';
 import * as _ from 'lodash';
 
@@ -123,4 +123,37 @@ export interface AnimationMap<T> {
 
 export interface PropertyMap<T> {
   [propertyName: string]: T;
+}
+
+export function regenerateModelIds(
+  vectorLayer: VectorLayer,
+  animations: ReadonlyArray<Animation>,
+  hiddenLayerIds: Set<string>,
+) {
+  // Create a map of old IDs to new IDs.
+  const layerIdMap = new Map<string, string>();
+  vectorLayer.walk(layer => layerIdMap.set(layer.id, _.uniqueId()));
+
+  vectorLayer = (function recurseFn(layer: Layer) {
+    const clone = layer.clone();
+    clone.id = layerIdMap.get(clone.id);
+    clone.children = clone.children.map(l => recurseFn(l));
+    return clone;
+  })(vectorLayer);
+
+  animations = animations.map(anim => {
+    const clonedAnim = anim.clone();
+    clonedAnim.id = _.uniqueId();
+    clonedAnim.blocks = clonedAnim.blocks.map(block => {
+      const clonedBlock = block.clone();
+      clonedBlock.id = _.uniqueId();
+      clonedBlock.layerId = layerIdMap.get(clonedBlock.layerId);
+      return clonedBlock;
+    });
+    return clonedAnim;
+  });
+
+  hiddenLayerIds = new Set(Array.from(hiddenLayerIds).map(id => layerIdMap.get(id)));
+
+  return { vectorLayer, animations, hiddenLayerIds };
 }

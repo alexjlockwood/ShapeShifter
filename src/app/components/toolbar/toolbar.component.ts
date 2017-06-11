@@ -15,7 +15,6 @@ import {
   Http,
   Response,
 } from '@angular/http';
-import { DialogService } from 'app/components/dialogs';
 import {
   ActionMode,
   ActionModeUtil,
@@ -30,7 +29,7 @@ import {
 import { Animation } from 'app/scripts/model/timeline';
 import { PathAnimationBlock } from 'app/scripts/model/timeline';
 import { ActionModeService } from 'app/services/actionmode/actionmode.service';
-import { regenerateModelIds } from 'app/services/import/fileimport.service';
+import { DialogService } from 'app/services/dialogs/dialog.service';
 import {
   State,
   Store,
@@ -78,7 +77,6 @@ export class ToolbarComponent implements OnInit {
     private readonly store: Store<State>,
     private readonly dialogService: DialogService,
     private readonly viewContainerRef: ViewContainerRef,
-    private readonly http: Http,
   ) { }
 
   ngOnInit() {
@@ -104,44 +102,6 @@ export class ToolbarComponent implements OnInit {
     ga('send', 'event', 'General', 'Auto fix click');
 
     this.actionModeService.autoFixClick();
-  }
-
-  onDemoClick() {
-    ga('send', 'event', 'Demos', 'Demos dialog shown');
-
-    // TODO: add demos here
-    // TODO: move this HTTP logic into a global service?
-    const demoMap = new Map<string, string>();
-    demoMap.set('Morphing animals', 'hippobuffalo');
-    demoMap.set('Visibility strike', 'visibilitystrike');
-    demoMap.set('Search-to-back', 'searchtoback');
-    demoMap.set('Bar chart', 'barchart');
-    demoMap.set('Search-to-close', 'searchtoclose');
-    const demoTitles = Array.from(demoMap.keys());
-    this.dialogService
-      .demo(this.viewContainerRef, demoTitles)
-      .subscribe(selectedDemoTitle => {
-        if (!demoTitles.includes(selectedDemoTitle)) {
-          return;
-        }
-        ga('send', 'event', 'Demos', 'Demo selected', selectedDemoTitle);
-        this.http.get(`demos/${demoMap.get(selectedDemoTitle)}.shapeshifter`)
-          .map((res: Response) => res.json())
-          .catch((error: any) => Observable.throw(error.json().error || 'Server error'))
-          .subscribe(jsonObj => {
-            // TODO: display snackbar if an error occurs?
-            // TODO: display snackbar when in offline mode
-            // TODO: show some sort of loader indicator to avoid blocking the UI thread?
-            let vl = new VectorLayer(jsonObj.vectorLayer);
-            let animations = jsonObj.animations.map(anim => new Animation(anim));
-            let hiddenLayerIds = new Set<string>(jsonObj.hiddenLayerIds);
-            const regeneratedModels = regenerateModelIds(vl, animations, hiddenLayerIds);
-            vl = regeneratedModels.vl;
-            animations = regeneratedModels.animations;
-            hiddenLayerIds = regeneratedModels.hiddenLayerIds;
-            this.store.dispatch(new ResetWorkspace(vl, animations, hiddenLayerIds));
-          });
-      });
   }
 
   onSendFeedbackClick() {

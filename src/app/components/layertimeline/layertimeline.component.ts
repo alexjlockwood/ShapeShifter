@@ -1,7 +1,7 @@
 import * as TimelineConsts from './constants';
 import { Callbacks as LayerListTreeCallbacks } from './layerlisttree.component';
-import { ScrubEvent } from './layertimeline.directive';
 import { LayerTimelineDirective } from './layertimeline.directive';
+import { ScrubEvent } from './layertimeline.directive';
 import { Callbacks as TimelineAnimationRowCallbacks } from './timelineanimationrow.component';
 import {
   AfterViewInit,
@@ -14,8 +14,6 @@ import {
   ViewChildren,
   ViewContainerRef,
 } from '@angular/core';
-import { MdSnackBar } from '@angular/material';
-import { DialogService } from 'app/components/dialogs';
 import {
   ModelUtil,
   UiUtil,
@@ -35,8 +33,11 @@ import {
   AnimationBlock,
 } from 'app/scripts/model/timeline';
 import { AnimatorService } from 'app/services/animator/animator.service';
+import { DemoService } from 'app/services/demos/demo.service';
+import { DialogService } from 'app/services/dialogs/dialog.service';
 import { FileExportService } from 'app/services/export/fileexport.service';
 import { FileImportService } from 'app/services/import/fileimport.service';
+import { Duration, SnackBarService } from 'app/services/snackbar/snackbar.service';
 import {
   State,
   Store,
@@ -82,12 +83,8 @@ enum MouseActions {
 }
 
 // TODO: add back google analytics stuff!
-// TODO: add back google analytics stuff!
-// TODO: add back google analytics stuff!
-// TODO: add back google analytics stuff!
-// TODO: add back google analytics stuff!
 // ga('send', 'event', 'General', 'New click');
-// declare const ga: Function;
+declare const ga: Function;
 
 @Component({
   selector: 'app-layertimeline',
@@ -137,11 +134,12 @@ export class LayerTimelineComponent
   constructor(
     private readonly fileImportService: FileImportService,
     private readonly fileExportService: FileExportService,
-    private readonly snackBar: MdSnackBar,
+    private readonly snackBarService: SnackBarService,
     private readonly animatorService: AnimatorService,
     private readonly store: Store<State>,
     private readonly dialogService: DialogService,
     private readonly viewContainerRef: ViewContainerRef,
+    private readonly demoService: DemoService,
   ) { super(); }
 
   ngOnInit() {
@@ -200,11 +198,9 @@ export class LayerTimelineComponent
     // TODO: only show when workspace is dirty
     // TODO: also show similar dialog when dropping a file into an existing workspace
     this.dialogService
-      .confirm(this.viewContainerRef, 'Start over?', 'You\'ll lose any unsaved changes.')
-      .subscribe(result => {
-        if (!result) {
-          return;
-        }
+      .confirm('Start over?', 'You\'ll lose any unsaved changes.')
+      .filter(result => result)
+      .subscribe(() => {
         this.animatorService.reset();
         this.store.dispatch(new ResetWorkspace());
       });
@@ -213,6 +209,27 @@ export class LayerTimelineComponent
   // Called from the LayerTimelineComponent template.
   saveToFileClick() {
     this.fileExportService.exportJSON();
+  }
+
+  // Called from the LayerTimelineComponent template.
+  loadDemoClick() {
+    ga('send', 'event', 'Demos', 'Demos dialog shown');
+
+    this.dialogService
+      .pickDemo()
+      .filter(demoInfo => !!demoInfo)
+      .subscribe(selectedDemoInfo => {
+        ga('send', 'event', 'Demos', 'Demo selected', selectedDemoInfo.title);
+
+        this.demoService.getDemo(selectedDemoInfo.id)
+          .then(({ vectorLayer, animations, hiddenLayerIds }) => {
+            this.store.dispatch(new ResetWorkspace(vectorLayer, animations, hiddenLayerIds));
+          }).catch(error => {
+            // TODO: show a snackbar indicating the error occurred
+            // TODO: show a snackbar when in offline mode (telling the user they need to be online)
+            return Promise.reject(error.message || error);
+          });
+      });
   }
 
   // Called from the LayerTimelineComponent template.
@@ -914,17 +931,17 @@ export class LayerTimelineComponent
           this.store.dispatch(new ResetWorkspace(vls[0], animations, hiddenLayerIds));
         } else {
           this.store.dispatch(new ImportVectorLayers(vls));
-          this.snackBar.open(
+          this.snackBarService.show(
             `Imported ${vls.length} path${vls.length === 1 ? '' : 's'}`,
             'Dismiss',
-            { duration: 2750 });
+            Duration.Short);
         }
       },
       () => {
-        this.snackBar.open(
+        this.snackBarService.show(
           `Couldn't import paths from file.`,
           'Dismiss',
-          { duration: 5000 });
+          Duration.Long);
       });
   }
 }

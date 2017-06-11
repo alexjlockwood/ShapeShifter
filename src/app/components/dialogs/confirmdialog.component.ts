@@ -1,15 +1,19 @@
+import { Inject } from '@angular/core';
 import {
   ChangeDetectionStrategy,
   Component,
 } from '@angular/core';
-import { MdDialogRef } from '@angular/material';
+import {
+  MD_DIALOG_DATA,
+  MdDialogRef,
+} from '@angular/material';
 
 @Component({
   selector: 'app-confirmdialog',
   template: `
-  <span md-dialog-title>{{ title }}</span>
+  <span md-dialog-title>{{ this.data.title }}</span>
   <md-dialog-content>
-    <p>{{ message }}</p>
+    <p>{{ this.data.message }}</p>
   </md-dialog-content>
   <md-dialog-actions fxLayout="row">
     <!-- The ordering here matters (it ensures that 'OK' gets focus first). -->
@@ -21,8 +25,8 @@ import { MdDialogRef } from '@angular/material';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ConfirmDialogComponent {
-  title = '';
-  message = '';
-
-  constructor(public readonly dialogRef: MdDialogRef<ConfirmDialogComponent>) { }
+  constructor(
+    public readonly dialogRef: MdDialogRef<ConfirmDialogComponent>,
+    @Inject(MD_DIALOG_DATA) public readonly data: { title: string, message: string },
+  ) { }
 }

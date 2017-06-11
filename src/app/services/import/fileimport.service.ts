@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { ModelUtil } from 'app/scripts/common';
 import {
   SvgLoader,
   VectorDrawableLoader,
@@ -98,8 +99,8 @@ export class FileImportService {
             vl = new VectorLayer(jsonObj.vectorLayer);
             animations = jsonObj.animations.map(anim => new Animation(anim));
             hiddenLayerIds = new Set<string>(jsonObj.hiddenLayerIds);
-            const regeneratedModels = regenerateModelIds(vl, animations, hiddenLayerIds);
-            vl = regeneratedModels.vl;
+            const regeneratedModels = ModelUtil.regenerateModelIds(vl, animations, hiddenLayerIds);
+            vl = regeneratedModels.vectorLayer;
             animations = regeneratedModels.animations;
             hiddenLayerIds = regeneratedModels.hiddenLayerIds;
           } catch (e) {
@@ -135,38 +136,4 @@ export class FileImportService {
       fileReader.readAsText(file);
     }
   }
-}
-
-// TODO: make this private
-export function regenerateModelIds(
-  vl: VectorLayer,
-  animations: ReadonlyArray<Animation>,
-  hiddenLayerIds: Set<string>,
-) {
-  // Create a map of old IDs to new IDs.
-  const layerIdMap = new Map<string, string>();
-  vl.walk(layer => layerIdMap.set(layer.id, _.uniqueId()));
-
-  vl = (function recurseFn(layer: Layer) {
-    const clone = layer.clone();
-    clone.id = layerIdMap.get(clone.id);
-    clone.children = clone.children.map(l => recurseFn(l));
-    return clone;
-  })(vl);
-
-  animations = animations.map(anim => {
-    const clonedAnim = anim.clone();
-    clonedAnim.id = _.uniqueId();
-    clonedAnim.blocks = clonedAnim.blocks.map(block => {
-      const clonedBlock = block.clone();
-      clonedBlock.id = _.uniqueId();
-      clonedBlock.layerId = layerIdMap.get(clonedBlock.layerId);
-      return clonedBlock;
-    });
-    return clonedAnim;
-  });
-
-  hiddenLayerIds = new Set(Array.from(hiddenLayerIds).map(id => layerIdMap.get(id)));
-
-  return { vl, animations, hiddenLayerIds };
 }

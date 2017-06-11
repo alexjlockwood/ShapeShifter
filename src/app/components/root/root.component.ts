@@ -12,13 +12,15 @@ import {
 } from '@angular/core';
 import { Http, Response } from '@angular/http';
 import { MdSnackBar } from '@angular/material';
+import { ModelUtil } from 'app/scripts/common';
 import {
   ActionMode,
   ActionSource,
 } from 'app/scripts/model/actionmode';
 import { VectorLayer } from 'app/scripts/model/layers';
 import { Animation } from 'app/scripts/model/timeline';
-import { FileImportService, regenerateModelIds } from 'app/services/import/fileimport.service';
+import { DemoService } from 'app/services/demos/demo.service';
+import { FileImportService } from 'app/services/import/fileimport.service';
 import { ShortcutService } from 'app/services/shortcut/shortcut.service';
 import {
   State,
@@ -61,7 +63,7 @@ export class RootComponent implements OnInit, AfterViewInit, OnDestroy {
     private readonly fileImporterService: FileImportService,
     private readonly store: Store<State>,
     private readonly shortcutService: ShortcutService,
-    private readonly http: Http,
+    private readonly demoService: DemoService,
   ) { }
 
   ngOnInit() {
@@ -106,21 +108,9 @@ export class RootComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     if (IS_DEV_BUILD && SHOULD_AUTO_LOAD_DEMO) {
-      this.http.get('demos/hippobuffalo.shapeshifter')
-        .map((res: Response) => res.json())
-        .catch((error: any) => Observable.throw(error.json().error || 'Server error'))
-        .subscribe(jsonObj => {
-          // TODO: display snackbar if an error occurs?
-          // TODO: display snackbar when in offline mode
-          // TODO: show some sort of loader indicator to avoid blocking the UI thread?
-          let vl = new VectorLayer(jsonObj.vectorLayer);
-          let animations = jsonObj.animations.map(anim => new Animation(anim));
-          let hiddenLayerIds = new Set<string>(jsonObj.hiddenLayerIds);
-          const regeneratedModels = regenerateModelIds(vl, animations, hiddenLayerIds);
-          vl = regeneratedModels.vl;
-          animations = regeneratedModels.animations;
-          hiddenLayerIds = regeneratedModels.hiddenLayerIds;
-          this.store.dispatch(new ResetWorkspace(vl, animations, hiddenLayerIds));
+      this.demoService.getDemo('demos/hippobuffalo.shapeshifter')
+        .then(({ vectorLayer, animations, hiddenLayerIds }) => {
+          this.store.dispatch(new ResetWorkspace(vectorLayer, animations, hiddenLayerIds));
         });
     }
   }
