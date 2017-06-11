@@ -12,11 +12,7 @@ import {
 } from 'app/scripts/model/layers';
 import { Path } from 'app/scripts/model/paths';
 import { NameProperty } from 'app/scripts/model/properties';
-import {
-  AnimationBlock,
-  NumberAnimationBlock,
-  PathAnimationBlock,
-} from 'app/scripts/model/timeline';
+import { AnimationBlock } from 'app/scripts/model/timeline';
 import * as _ from 'lodash';
 
 export function loadVectorLayerFromXmlString(
@@ -182,7 +178,7 @@ export function loadAnimationFromXmlString(
         const startTime = Number(get(animElem, 'startOffset'));
         const endTime = startTime + Number(get(animElem, 'duration'));
         if (get(animElem, 'valueType') === 'pathType' && propertyName === 'pathData') {
-          animationBlocks.push(new PathAnimationBlock({
+          animationBlocks.push(AnimationBlock.from({
             animationId,
             layerId,
             propertyName,
@@ -191,9 +187,10 @@ export function loadAnimationFromXmlString(
             startTime,
             endTime,
             interpolator,
+            type: 'path',
           }));
         } else if (propertyName === 'fillAlpha' || propertyName === 'translateX') {
-          animationBlocks.push(new NumberAnimationBlock({
+          animationBlocks.push(AnimationBlock.from({
             animationId,
             layerId,
             propertyName,
@@ -202,6 +199,7 @@ export function loadAnimationFromXmlString(
             startTime,
             endTime,
             interpolator,
+            type: 'number',
           }));
         }
         // TODO: return a list of animation blocks here

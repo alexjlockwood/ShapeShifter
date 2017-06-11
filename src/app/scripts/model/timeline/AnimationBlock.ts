@@ -10,6 +10,8 @@ import {
 } from '../properties';
 import * as _ from 'lodash';
 
+type AnimationBlockType = 'path' | 'color' | 'number';
+
 /**
  * An animation block is an individual layer property tween (property animation).
  */
@@ -20,7 +22,20 @@ import * as _ from 'lodash';
 )
 export abstract class AnimationBlock {
 
-  constructor(obj: ConstructorArgs) {
+  static from(obj: ConstructorArgs) {
+    switch (obj.type) {
+      case 'path':
+        return new PathAnimationBlock(obj);
+      case 'color':
+        return new ColorAnimationBlock(obj);
+      case 'number':
+        return new NumberAnimationBlock(obj);
+      default:
+        throw new Error('invalid block type: ' + obj.type);
+    }
+  }
+
+  protected constructor(obj: ConstructorArgs) {
     this.id = obj.id || _.uniqueId();
     this.animationId = obj.animationId;
     this.layerId = obj.layerId;
@@ -32,9 +47,11 @@ export abstract class AnimationBlock {
       this.endTime = this.startTime;
       this.startTime = tmp;
     }
+    // TODO: use the correct default interpolator for import svg/avd/property input
     this.interpolator = obj.interpolator || INTERPOLATORS[0].value;
     this.fromValue = obj.fromValue;
     this.toValue = obj.toValue;
+    this.type = obj.type;
   }
 
   toJSON() {
@@ -46,29 +63,18 @@ export abstract class AnimationBlock {
       startTime: this.startTime,
       endTime: this.endTime,
       interpolator: this.interpolator,
+      type: this.type,
+      fromValue: this.fromValue,
+      toValue: this.toValue,
     };
   }
 
+  clone() {
+    return AnimationBlock.from(this);
+  }
+
   abstract isAnimatable(): boolean;
-
-  abstract clone(): AnimationBlock;
 }
-
-interface AnimationBlockArgs {
-  id?: string;
-  animationId: string;
-  layerId: string;
-  propertyName: string;
-  startTime?: number;
-  endTime?: number;
-  // Stores the 'value' key of the Interpolator object.
-  interpolator?: string;
-  fromValue: any;
-  toValue: any;
-}
-
-export interface AnimationBlock extends AnimationBlockArgs, Inspectable { }
-export interface ConstructorArgs extends AnimationBlockArgs { }
 
 /**
  * An animation block that animates the 'pathData' property.
@@ -78,13 +84,10 @@ export interface ConstructorArgs extends AnimationBlockArgs { }
   new PathProperty('toValue'),
 )
 export class PathAnimationBlock extends AnimationBlock {
-  fromValue: Path;
-  toValue: Path;
 
   // @Override
   toJSON() {
     return Object.assign(super.toJSON(), {
-      type: 'path',
       fromValue: this.fromValue ? this.fromValue.getPathString() : '',
       toValue: this.toValue ? this.toValue.getPathString() : '',
     });
@@ -92,12 +95,7 @@ export class PathAnimationBlock extends AnimationBlock {
 
   // @Override
   isAnimatable() {
-    return this.fromValue && this.toValue && this.fromValue.isMorphableWith(this.toValue);
-  }
-
-  // @Override
-  clone() {
-    return new PathAnimationBlock(this);
+    return !!this.fromValue && !!this.toValue && this.fromValue.isMorphableWith(this.toValue);
   }
 }
 
@@ -109,27 +107,11 @@ export class PathAnimationBlock extends AnimationBlock {
   new ColorProperty('toValue'),
 )
 export class ColorAnimationBlock extends AnimationBlock {
-  fromValue: string;
-  toValue: string;
-
-  // @Override
-  toJSON() {
-    return Object.assign(super.toJSON(), {
-      type: 'color',
-      fromValue: this.fromValue,
-      toValue: this.toValue,
-    });
-  }
 
   // @Override
   isAnimatable() {
     // TODO should this be more specific (i.e. check if valid color values?)
     return !!this.fromValue && !!this.toValue;
-  }
-
-  // @Override
-  clone() {
-    return new ColorAnimationBlock(this);
   }
 }
 
@@ -141,25 +123,43 @@ export class ColorAnimationBlock extends AnimationBlock {
   new NumberProperty('toValue'),
 )
 export class NumberAnimationBlock extends AnimationBlock {
-  fromValue: number;
-  toValue: number;
-
-  // @Override
-  toJSON() {
-    return Object.assign(super.toJSON(), {
-      type: 'number',
-      fromValue: this.fromValue,
-      toValue: this.toValue,
-    });
-  }
 
   // @Override
   isAnimatable() {
     return _.isFinite(this.fromValue) && _.isFinite(this.toValue);
   }
+}
 
-  // @Override
-  clone() {
-    return new NumberAnimationBlock(this);
-  }
+interface AnimationBlockArgs {
+  id?: string;
+  animationId: string;
+  layerId: string;
+  propertyName: string;
+  startTime?: number;
+  endTime?: number;
+  interpolator?: string; // Stores the 'value' key of the Interpolator object.
+  fromValue: any;
+  toValue: any;
+  type: AnimationBlockType;
+}
+
+export interface AnimationBlock extends AnimationBlockArgs, Inspectable { }
+export interface ConstructorArgs extends AnimationBlockArgs { }
+
+export interface PathAnimationBlock {
+  fromValue: Path;
+  toValue: Path;
+  clone(): PathAnimationBlock;
+}
+
+export interface ColorAnimationBlock {
+  fromValue: string;
+  toValue: string;
+  clone(): ColorAnimationBlock;
+}
+
+export interface NumberAnimationBlock {
+  fromValue: number;
+  toValue: number;
+  clone(): NumberAnimationBlock;
 }

@@ -4,12 +4,7 @@ import {
   NumberProperty,
   Property,
 } from '../properties';
-import {
-  AnimationBlock,
-  ColorAnimationBlock,
-  NumberAnimationBlock,
-  PathAnimationBlock,
-} from '.';
+import { AnimationBlock } from '.';
 import * as _ from 'lodash';
 
 /**
@@ -27,7 +22,7 @@ export class Animation {
   constructor(readonly obj = {} as ConstructorArgs) {
     this.id = obj.id || _.uniqueId();
     this.name = obj.name || 'anim';
-    this.blocks = (obj.blocks || []).map(block => load(block));
+    this.blocks = (obj.blocks || []).map(block => AnimationBlock.from(block));
     this.duration = obj.duration || 300;
   }
 
@@ -57,20 +52,3 @@ export interface Animation extends AnimationArgs, Inspectable { }
 
 // tslint:disable-next-line
 export interface ConstructorArgs extends AnimationArgs { }
-
-function load(obj: AnimationBlock | any) {
-  if (obj instanceof AnimationBlock) {
-    return obj;
-  }
-  if (obj.type === 'number') {
-    return new NumberAnimationBlock(obj);
-  }
-  if (obj.type === 'color') {
-    return new ColorAnimationBlock(obj);
-  }
-  if (obj.type === 'path') {
-    return new PathAnimationBlock(obj);
-  }
-  console.error('Attempt to load animation block with invalid object: ', obj);
-  throw new Error('Attempt to load animation block with invalid object');
-}

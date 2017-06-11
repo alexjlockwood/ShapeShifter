@@ -1,15 +1,12 @@
 import * as actions from './actions';
 import { ModelUtil } from 'app/scripts/common';
 import {
-   ColorProperty,
-   PathProperty,
+  ColorProperty,
+  PathProperty,
 } from 'app/scripts/model/properties';
 import {
   Animation,
   AnimationBlock,
-  ColorAnimationBlock,
-  NumberAnimationBlock,
-  PathAnimationBlock,
 } from 'app/scripts/model/timeline';
 import * as _ from 'lodash';
 
@@ -105,6 +102,14 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
 
       // Generate the new block.
       const property = layer.animatableProperties.get(propertyName);
+      let type: 'path' | 'color' | 'number';
+      if (property instanceof PathProperty) {
+        type = 'path';
+      } else if (property instanceof ColorProperty) {
+        type = 'color';
+      } else {
+        type = 'number';
+      }
 
       // TODO: clone the current rendered property value and set the from/to values appropriately
       // TODO: clone the current rendered property value and set the from/to values appropriately
@@ -115,7 +120,7 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
       //   this.studioState_.animationRenderer
       //     .getLayerPropertyValue(layer.id, propertyName);
 
-      const newBlockArgs = {
+      const newBlock = AnimationBlock.from({
         layerId: layer.id,
         animationId: state.activeAnimationId,
         propertyName,
@@ -123,17 +128,8 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
         endTime,
         fromValue,
         toValue,
-      };
-
-      let newBlock: AnimationBlock;
-      if (property instanceof PathProperty) {
-        newBlock = new PathAnimationBlock(newBlockArgs);
-      } else if (property instanceof ColorProperty) {
-        newBlock = new ColorAnimationBlock(newBlockArgs);
-      } else {
-        newBlock = new NumberAnimationBlock(newBlockArgs);
-      }
-
+        type,
+      });
       const animations = state.animations.map(anim => {
         if (anim.id !== animation.id) {
           return anim;
