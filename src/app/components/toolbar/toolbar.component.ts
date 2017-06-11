@@ -35,7 +35,6 @@ import {
   Store,
 } from 'app/store';
 import { getToolbarState } from 'app/store/actionmode/selectors';
-import { ResetWorkspace } from 'app/store/reset/metaactions';
 import { environment } from 'environments/environment';
 import * as _ from 'lodash';
 import { Observable } from 'rxjs/Observable';

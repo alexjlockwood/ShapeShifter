@@ -54,6 +54,7 @@
     "@angular/cli": "^1.1.1",
     "@angular/compiler-cli": "^4.2.0",
     "@angular/language-service": "^4.2.0",
+    "@ngrx/store-devtools": "^3.2.4",
     "@types/es6-promise": "0.0.32",
     "@types/hammerjs": "^2.0.34",
     "@types/jasmine": "^2.5.51",

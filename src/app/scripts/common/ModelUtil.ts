@@ -153,7 +153,9 @@ export function regenerateModelIds(
     return clonedAnim;
   });
 
+  console.info('before', hiddenLayerIds);
   hiddenLayerIds = new Set(Array.from(hiddenLayerIds).map(id => layerIdMap.get(id)));
+  console.info('after', hiddenLayerIds);
 
   return { vectorLayer, animations, hiddenLayerIds };
 }

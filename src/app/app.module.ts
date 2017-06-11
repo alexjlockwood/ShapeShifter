@@ -1,5 +1,6 @@
 import 'hammerjs';
 
+import { environment } from '../environments/environment';
 import {
   CanvasComponent,
   CanvasContainerDirective,
@@ -54,7 +55,10 @@ import {
 } from '@angular/material';
 import { BrowserModule, DomSanitizer } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { StoreDevtoolsModule } from '@ngrx/store-devtools';
 import { StoreModule } from '@ngrx/store';
+
+const IS_DEV_BUILD = !environment.production;
 
 @NgModule({
   declarations: [
@@ -95,7 +99,7 @@ import { StoreModule } from '@ngrx/store';
     MdSnackBarModule,
     MdToolbarModule,
     MdTooltipModule,
-  ],
+  ].concat(IS_DEV_BUILD ? [StoreDevtoolsModule.instrumentOnlyWithExtension({ maxAge: 5 })] : []),
   providers: [
     ActionModeService,
     AnimatorService,

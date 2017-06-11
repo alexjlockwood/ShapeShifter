@@ -1,7 +1,7 @@
 import * as TimelineConsts from './constants';
 import { Callbacks as LayerListTreeCallbacks } from './layerlisttree.component';
-import { ScrubEvent } from './layertimeline.directive';
 import { LayerTimelineDirective } from './layertimeline.directive';
+import { ScrubEvent } from './layertimeline.directive';
 import { Callbacks as TimelineAnimationRowCallbacks } from './timelineanimationrow.component';
 import {
   AfterViewInit,
@@ -54,6 +54,7 @@ import {
   ToggleLayerExpansion,
   ToggleLayerVisibility,
 } from 'app/store/layers/actions';
+import { getVectorLayer } from 'app/store/layers/selectors';
 import { ResetWorkspace } from 'app/store/reset/metaactions';
 import {
   ActivateAnimation,
@@ -63,6 +64,7 @@ import {
   SelectAnimation,
   SelectBlock,
 } from 'app/store/timeline/actions';
+import { getAnimations } from 'app/store/timeline/selectors';
 import { environment } from 'environments/environment';
 import * as $ from 'jquery';
 import * as _ from 'lodash';
@@ -202,8 +204,10 @@ export class LayerTimelineComponent
   // Called from the LayerTimelineComponent template.
   newWorkspaceClick() {
     const resetWorkspaceFn = () => {
+      // TODO: figure out if this hack is necessary and/or can be avoided?
       this.animatorService.reset();
       this.store.dispatch(new ResetWorkspace());
+      this.animatorService.reset();
     };
     this.store.select(isWorkspaceDirty).first().subscribe(isDirty => {
       if (isDirty && !IS_DEV_BUILD) {
@@ -234,7 +238,10 @@ export class LayerTimelineComponent
 
         this.demoService.getDemo(selectedDemoInfo.id)
           .then(({ vectorLayer, animations, hiddenLayerIds }) => {
+            // TODO: figure out if this hack is necessary and/or can be avoided?
+            this.animatorService.reset();
             this.store.dispatch(new ResetWorkspace(vectorLayer, animations, hiddenLayerIds));
+            this.animatorService.reset();
           }).catch(error => {
             // TODO: show a snackbar indicating the error occurred
             // TODO: show a snackbar when in offline mode (telling the user they need to be online)
@@ -245,8 +252,10 @@ export class LayerTimelineComponent
 
   // Called from the LayerTimelineComponent template.
   addNewAnimationClick() {
-    const name = ModelUtil.getUniqueAnimationName(this.animations, 'anim');
-    this.store.dispatch(new AddAnimation(new Animation({ name })));
+    this.store.select(getAnimations).first().subscribe(animations => {
+      const name = ModelUtil.getUniqueAnimationName(animations, 'anim');
+      this.store.dispatch(new AddAnimation(new Animation({ name })));
+    });
   }
 
   // Called from the LayerTimelineComponent template.
@@ -293,29 +302,35 @@ export class LayerTimelineComponent
 
   // Called from the LayerTimelineComponent template.
   addPathLayerClick() {
-    const layer = new PathLayer({
-      name: ModelUtil.getUniqueLayerName([this.vectorLayer], 'path'),
-      children: [],
-      pathData: undefined,
+    this.store.select(getVectorLayer).first().subscribe(vl => {
+      const layer = new PathLayer({
+        name: ModelUtil.getUniqueLayerName([vl], 'path'),
+        children: [],
+        pathData: undefined,
+      });
+      this.store.dispatch(new AddLayer(layer));
     });
-    this.store.dispatch(new AddLayer(layer));
   }
 
   // Called from the LayerTimelineComponent template.
   addClipPathLayerClick() {
-    const layer = new ClipPathLayer({
-      name: ModelUtil.getUniqueLayerName([this.vectorLayer], 'mask'),
-      children: [],
-      pathData: undefined,
+    this.store.select(getVectorLayer).first().subscribe(vl => {
+      const layer = new ClipPathLayer({
+        name: ModelUtil.getUniqueLayerName([vl], 'mask'),
+        children: [],
+        pathData: undefined,
+      });
+      this.store.dispatch(new AddLayer(layer));
     });
-    this.store.dispatch(new AddLayer(layer));
   }
 
   // Called from the LayerTimelineComponent template.
   addGroupLayerClick() {
-    const name = ModelUtil.getUniqueLayerName([this.vectorLayer], 'group');
-    const layer = new GroupLayer({ name, children: [] });
-    this.store.dispatch(new AddLayer(layer));
+    this.store.select(getVectorLayer).first().subscribe(vl => {
+      const name = ModelUtil.getUniqueLayerName([vl], 'group');
+      const layer = new GroupLayer({ name, children: [] });
+      this.store.dispatch(new AddLayer(layer));
+    });
   }
 
   // Called from the LayerTimelineComponent template.
