@@ -14,6 +14,7 @@ import { Path } from 'app/scripts/model/paths';
 import { NameProperty } from 'app/scripts/model/properties';
 import {
   AnimationBlock,
+  NumberAnimationBlock,
   PathAnimationBlock,
 } from 'app/scripts/model/timeline';
 import * as _ from 'lodash';
@@ -169,11 +170,12 @@ export function loadAnimationFromXmlString(
               return e;
             })
             .first() as HTMLElement;
-        console.info(targetElem);
         const animationBlocks: AnimationBlock[] = [];
         const propertyName = get(animElem, 'propertyName');
         const fromValue = get(animElem, 'valueFrom');
         const toValue = get(animElem, 'valueTo');
+        // TODO: confirm difference between @android:anim and @android:interpolator
+        // TODO: @android:interpolator/linear doesn't work
         const interpolatorRef =
           get(animElem, 'interpolator', '@android:anim/accelerate_decelerate_interpolator');
         const interpolator = _.find(INTERPOLATORS, i => i.androidRef === interpolatorRef).value;
@@ -184,8 +186,19 @@ export function loadAnimationFromXmlString(
             animationId,
             layerId,
             propertyName,
-            fromValue,
-            toValue,
+            fromValue: new Path(fromValue),
+            toValue: new Path(toValue),
+            startTime,
+            endTime,
+            interpolator,
+          }));
+        } else if (propertyName === 'fillAlpha' || propertyName === 'translateX') {
+          animationBlocks.push(new NumberAnimationBlock({
+            animationId,
+            layerId,
+            propertyName,
+            fromValue: Number(fromValue),
+            toValue: Number(toValue),
             startTime,
             endTime,
             interpolator,
@@ -195,7 +208,6 @@ export function loadAnimationFromXmlString(
         return animationBlocks;
       })
       .value();
-  console.info(blocks);
   // const avdTargetElements = avdChildElements.filter(e => e.tagName === 'target');
   // avdTargetElements.forEach(e => getTargetFn(e));
   // console.info(vl, avdTargetElements);
