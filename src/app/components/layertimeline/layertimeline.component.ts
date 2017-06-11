@@ -206,7 +206,7 @@ export class LayerTimelineComponent
       this.store.dispatch(new ResetWorkspace());
     };
     this.store.select(isWorkspaceDirty).first().subscribe(isDirty => {
-      if (isDirty) {
+      if (isDirty && !IS_DEV_BUILD) {
         this.dialogService
           .confirm('Start over?', 'You\'ll lose any unsaved changes.')
           .filter(result => result)
