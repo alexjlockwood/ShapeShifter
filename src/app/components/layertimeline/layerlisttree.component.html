@@ -22,13 +22,6 @@
       fxFlex>
       {{this.layer.name}}
     </span>
-    <!-- TODO: re-enable this if necessary? -->
-    <!--
-    <button md-icon-button
-      class="slt-layer-action-button slt-layer-more-actions">
-      <md-icon>more_vert</md-icon>
-    </button>
-    -->
     <button md-icon-button
       class="slt-layer-action-button slt-layer-visibility-toggle"
       (click)="this.layerToggleVisibility($event, this.layer)"
@@ -76,7 +69,6 @@
   </div>
 
   <!-- List the layer's children if it is expanded. -->
-  <!-- TODO: will have to remove this attr.data-layer-id stuff -->
   <ul *ngIf="model.isExpanded && this.layer.children.length > 0"
     class="slt-children">
     <li *ngFor="let child of this.layer.children; trackBy: this.trackLayerFn"

@@ -42,10 +42,6 @@ import * as _ from 'lodash';
 import { Observable } from 'rxjs/Observable';
 
 // TODO: add back google analytics stuff!
-// TODO: add back google analytics stuff!
-// TODO: add back google analytics stuff!
-// TODO: add back google analytics stuff!
-// TODO: add back google analytics stuff!
 //   ga('send', 'event', 'Export', 'Export click');
 declare const ga: Function;
 

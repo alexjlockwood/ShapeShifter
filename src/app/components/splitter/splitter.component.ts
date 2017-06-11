@@ -19,6 +19,7 @@ type Edge = 'left' | 'right' | 'top';
   styleUrls: ['./splitter.component.scss'],
   // TODO: remove view encapsulation here
   encapsulation: ViewEncapsulation.None,
+  // TODO: use 'OnPush' change detection
 })
 export class SplitterComponent implements OnInit {
   @Input() edge: Edge;

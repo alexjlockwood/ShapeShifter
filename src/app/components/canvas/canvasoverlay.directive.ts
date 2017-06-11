@@ -75,8 +75,6 @@ const SMALL_POINT_RADIUS = MEDIUM_POINT_RADIUS / 1.7;
 const SPLIT_POINT_RADIUS_FACTOR = 0.8;
 const SELECTED_POINT_RADIUS_FACTOR = 1.25;
 const POINT_BORDER_FACTOR = 1.075;
-// TODO: disable the canvas if the paths aren't morphable
-// const DISABLED_ALPHA = 0.38;
 
 const NORMAL_POINT_COLOR = '#2962FF'; // Blue A400
 const SPLIT_POINT_COLOR = '#E65100'; // Orange 900
@@ -217,10 +215,6 @@ export class CanvasOverlayDirective
             if (selections.length) {
               const { source, subIdx } = selections[0];
               // TODO: avoid calling this in a subscription (should automatically do this)
-              // TODO: avoid calling this in a subscription (should automatically do this)
-              // TODO: avoid calling this in a subscription (should automatically do this)
-              // TODO: avoid calling this in a subscription (should automatically do this)
-              // TODO: avoid calling this in a subscription (should automatically do this)
               this.actionModeService.setUnpairedSubPath({ source, subIdx });
             }
           } else {
@@ -254,10 +248,6 @@ export class CanvasOverlayDirective
         this.currentHoverPreviewPath = previewPath;
         this.draw();
       };
-      // TODO: avoid re-executing the draw by combining with the above subscriptions
-      // TODO: avoid re-executing the draw by combining with the above subscriptions
-      // TODO: avoid re-executing the draw by combining with the above subscriptions
-      // TODO: avoid re-executing the draw by combining with the above subscriptions
       // TODO: avoid re-executing the draw by combining with the above subscriptions
       this.registerSubscription(
         this.store.select(getActionModeHover).subscribe(
@@ -320,7 +310,7 @@ export class CanvasOverlayDirective
     return DRAG_TRIGGER_TOUCH_SLOP / this.cssScale;
   }
 
-  // TODO: only use this for action mode
+  // NOTE: only use this for action mode
   get activePathLayer() {
     if (!this.vectorLayer) {
       return undefined;
@@ -328,7 +318,7 @@ export class CanvasOverlayDirective
     return this.vectorLayer.findLayerById(this.blockLayerId) as MorphableLayer;
   }
 
-  // TODO: only use this for action mode
+  // NOTE: only use this for action mode
   get activePath() {
     const layer = this.activePathLayer;
     if (!layer) {
@@ -903,15 +893,8 @@ export class CanvasOverlayDirective
         this.shapeSplitter.onMouseLeave(mouseLeave);
       }
     }
-    // TODO: remove this somehow? or make it part of the helper class methods?
     this.actionModeService.clearHover();
   }
-
-  // TODO: override onClick()?
-  // TODO: override onClick()?
-  // TODO: override onClick()?
-  // TODO: override onClick()?
-  // TODO: override onClick()?
 
   private mouseEventToViewportCoords(event: MouseEvent) {
     const canvasOffset = this.$canvas.offset();
@@ -956,7 +939,7 @@ export class CanvasOverlayDirective
     return recurseFn(root) as MorphableLayer;
   }
 
-  // TODO: make it clear this is only meant to be called in shape shifter mode
+  // NOTE: this should only be used in action mode
   performHitTest(mousePoint: Point, opts: HitTestOpts = {}) {
     const flattenedTransform =
       LayerUtil.getFlattenedTransformForLayer(

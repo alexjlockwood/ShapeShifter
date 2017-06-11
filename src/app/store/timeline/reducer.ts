@@ -112,10 +112,6 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
       }
 
       // TODO: clone the current rendered property value and set the from/to values appropriately
-      // TODO: clone the current rendered property value and set the from/to values appropriately
-      // TODO: clone the current rendered property value and set the from/to values appropriately
-      // TODO: clone the current rendered property value and set the from/to values appropriately
-      // TODO: clone the current rendered property value and set the from/to values appropriately
       // const valueAtCurrentTime =
       //   this.studioState_.animationRenderer
       //     .getLayerPropertyValue(layer.id, propertyName);

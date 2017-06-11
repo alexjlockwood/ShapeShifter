@@ -52,7 +52,6 @@ export class SegmentSplitter {
         pathMutator.splitStrokedSubPath(subIdx, cmdIdx);
       }
 
-      // TODO: make sure the inspector doesn't set hovers/selections while a split is in process...
       this.component.actionModeService.clearHover();
       this.actionModeService.setSelections([]);
       this.currProjInfo = undefined;
