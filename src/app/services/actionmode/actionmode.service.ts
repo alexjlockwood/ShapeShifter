@@ -36,6 +36,8 @@ import {
   getActionMode,
   getActionModeHover,
   getActionModePointSelections,
+  getActionModeSegmentSelections,
+  getActionModeSubPathSelections,
 } from 'app/store/actionmode/selectors';
 import * as _ from 'lodash';
 import { Observable } from 'rxjs/Observable';
@@ -49,11 +51,13 @@ export class ActionModeService {
   constructor(private readonly store: Store<State>) { }
 
   isActionMode() {
-    let result: boolean;
-    this.store.select(getActionMode)
-      .first()
-      .subscribe(mode => result = (mode !== ActionMode.None));
-    return result;
+    return this.getActionMode() !== ActionMode.None;
+  }
+
+  getActionMode() {
+    let mode: ActionMode;
+    this.store.select(getActionMode).first().subscribe(m => mode = m);
+    return mode;
   }
 
   startActionMode(blockId: string) {
@@ -65,16 +69,15 @@ export class ActionModeService {
   }
 
   closeActionMode() {
-    this.store.select(getActionMode).first().subscribe(mode => {
-      if (mode === ActionMode.None) {
-        return;
-      }
-      if (mode === ActionMode.Selection) {
-        this.store.dispatch(new SetActionMode(ActionMode.None));
-      } else {
-        this.store.dispatch(new SetActionMode(ActionMode.Selection));
-      }
-    });
+    const mode = this.getActionMode();
+    if (mode === ActionMode.None) {
+      return;
+    }
+    if (mode === ActionMode.Selection) {
+      this.store.dispatch(new SetActionMode(ActionMode.None));
+    } else {
+      this.store.dispatch(new SetActionMode(ActionMode.Selection));
+    }
   }
 
   setSelections(selections: ReadonlyArray<Selection>) {
@@ -82,11 +85,10 @@ export class ActionModeService {
   }
 
   deleteSelections() {
-    this.store.select(getActionMode).first().subscribe(currentMode => {
-      if (currentMode === ActionMode.Selection) {
-        this.store.dispatch(new DeleteActionModeSelections());
-      }
-    });
+    const mode = this.getActionMode();
+    if (mode === ActionMode.Selection) {
+      this.store.dispatch(new DeleteActionModeSelections());
+    }
   }
 
   toggleSplitCommandsMode() {
@@ -102,13 +104,12 @@ export class ActionModeService {
   }
 
   private toggleActionMode(modeToToggle: ActionMode) {
-    this.store.select(getActionMode).first().subscribe(currentMode => {
-      if (currentMode === ActionMode.None) {
-        return;
-      }
-      const newMode = currentMode === modeToToggle ? ActionMode.Selection : modeToToggle;
-      this.store.dispatch(new SetActionMode(newMode));
-    });
+    const currentMode = this.getActionMode();
+    if (currentMode === ActionMode.None) {
+      return;
+    }
+    const newMode = currentMode === modeToToggle ? ActionMode.Selection : modeToToggle;
+    this.store.dispatch(new SetActionMode(newMode));
   }
 
   reverseSelectedSubPaths() {
@@ -190,5 +191,41 @@ export class ActionModeService {
     subIdx: number,
   ) {
     this.store.dispatch(new ToggleSubPathSelection(source, subIdx));
+  }
+
+  isShowingSubPathActionMode() {
+    const currentMode = this.getActionMode();
+    if (currentMode === ActionMode.None) {
+      return false;
+    }
+    let hasSubPathSelections = false;
+    this.store.select(getActionModeSubPathSelections).first().subscribe(selections => {
+      hasSubPathSelections = !!selections.length;
+    });
+    return hasSubPathSelections || currentMode !== ActionMode.Selection;
+  }
+
+  isShowingSegmentActionMode() {
+    const currentMode = this.getActionMode();
+    if (currentMode === ActionMode.None) {
+      return false;
+    }
+    let hasSegmentSelections = false;
+    this.store.select(getActionModeSegmentSelections).first().subscribe(selections => {
+      hasSegmentSelections = !!selections.length;
+    });
+    return hasSegmentSelections || currentMode !== ActionMode.Selection;
+  }
+
+  isShowingPointActionMode() {
+    const currentMode = this.getActionMode();
+    if (currentMode === ActionMode.None) {
+      return false;
+    }
+    let hasPointSelections = false;
+    this.store.select(getActionModePointSelections).first().subscribe(selections => {
+      hasPointSelections = !!selections.length;
+    });
+    return hasPointSelections || currentMode !== ActionMode.Selection;
   }
 }

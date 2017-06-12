@@ -28,14 +28,12 @@ export class ShortcutService {
 
     $(window).on('keydown', event => {
       if (event.metaKey && event.keyCode === 'Z'.charCodeAt(0)) {
-        // Z.
         event.shiftKey
           ? this.store.dispatch(ActionCreators.redo())
           : this.store.dispatch(ActionCreators.undo());
         return false;
       }
       if (event.metaKey && event.keyCode === 'G'.charCodeAt(0)) {
-        // G.
         this.store.dispatch(new GroupOrUngroupSelectedLayers(!event.shiftKey));
         return false;
       }
@@ -78,13 +76,50 @@ export class ShortcutService {
         return false;
       }
       if (event.keyCode === 'R'.charCodeAt(0)) {
-        // R.
-        this.animatorService.toggleIsRepeating();
+        if (this.actionModeService.isShowingSubPathActionMode()) {
+          this.actionModeService.reverseSelectedSubPaths();
+        } else {
+          this.animatorService.toggleIsRepeating();
+        }
         return false;
       }
       if (event.keyCode === 'S'.charCodeAt(0)) {
-        // S.
-        this.animatorService.toggleIsSlowMotion();
+        if (this.actionModeService.isShowingSubPathActionMode()
+          || this.actionModeService.isShowingSegmentActionMode()) {
+          this.actionModeService.toggleSplitSubPathsMode();
+        } else {
+          this.animatorService.toggleIsSlowMotion();
+        }
+        return false;
+      }
+      if (event.keyCode === 'A'.charCodeAt(0)) {
+        if (this.actionModeService.isShowingSubPathActionMode()
+          || this.actionModeService.isShowingSegmentActionMode()) {
+          this.actionModeService.toggleSplitCommandsMode();
+        } else if (this.actionModeService.isShowingPointActionMode()) {
+          this.actionModeService.splitInHalfClick();
+        }
+        return false;
+      }
+      if (event.keyCode === 'D'.charCodeAt(0)) {
+        if (this.actionModeService.isShowingSubPathActionMode()
+          || this.actionModeService.isShowingSegmentActionMode()) {
+          this.actionModeService.toggleMorphSubPathsMode();
+        }
+        return false;
+      }
+      if (event.keyCode === 'B'.charCodeAt(0)) {
+        if (this.actionModeService.isShowingSubPathActionMode()) {
+          this.actionModeService.shiftBackSelectedSubPaths();
+        }
+        return false;
+      }
+      if (event.keyCode === 'F'.charCodeAt(0)) {
+        if (this.actionModeService.isShowingSubPathActionMode()) {
+          this.actionModeService.shiftForwardSelectedSubPaths();
+        } else if (this.actionModeService.isShowingPointActionMode()) {
+          this.actionModeService.shiftPointToFront();
+        }
         return false;
       }
       return undefined;
