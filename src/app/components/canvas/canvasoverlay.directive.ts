@@ -2,7 +2,7 @@ import 'rxjs/add/observable/combineLatest';
 
 import { CanvasLayoutMixin } from './CanvasLayoutMixin';
 import * as CanvasUtil from './CanvasUtil';
-import { MorphSubPathHelper } from './MorphSubPathHelper';
+import { PairSubPathHelper } from './PairSubPathHelper';
 import { SegmentSplitter } from './SegmentSplitter';
 import { SelectionHelper } from './SelectionHelper';
 import { ShapeSplitter } from './ShapeSplitter';
@@ -118,7 +118,7 @@ export class CanvasOverlayDirective
   private subIdxWithError: number;
 
   private selectionHelper: SelectionHelper | undefined;
-  private morphSubPathHelper: MorphSubPathHelper | undefined;
+  private pairSubPathHelper: PairSubPathHelper | undefined;
   private segmentSplitter: SegmentSplitter | undefined;
   private shapeSplitter: ShapeSplitter | undefined;
 
@@ -208,8 +208,8 @@ export class CanvasOverlayDirective
           } else {
             this.selectionHelper = undefined;
           }
-          if (this.actionMode === ActionMode.MorphSubPaths) {
-            this.morphSubPathHelper = new MorphSubPathHelper(this);
+          if (this.actionMode === ActionMode.PairSubPaths) {
+            this.pairSubPathHelper = new PairSubPathHelper(this);
             const selections =
               this.actionSelections.filter(s => s.type === SelectionType.SubPath);
             if (selections.length) {
@@ -218,7 +218,7 @@ export class CanvasOverlayDirective
               this.actionModeService.setUnpairedSubPath({ source, subIdx });
             }
           } else {
-            this.morphSubPathHelper = undefined;
+            this.pairSubPathHelper = undefined;
           }
           if (this.actionMode === ActionMode.SplitSubPaths && layer && layer.isFilled()) {
             this.shapeSplitter = new ShapeSplitter(this);
@@ -476,7 +476,7 @@ export class CanvasOverlayDirective
     CanvasUtil.executeCommands(ctx, cmds, flattenedTransform);
     executeHighlights(ctx, SPLIT_POINT_COLOR, this.unselectedSegmentLineWidth);
 
-    if (this.morphSubPathHelper) {
+    if (this.pairSubPathHelper) {
       const currUnpair = this.unpairedSubPath;
       if (currUnpair) {
         // Draw the current unpaired subpath in orange, if it exists.
@@ -812,8 +812,8 @@ export class CanvasOverlayDirective
     }
     if (this.actionMode === ActionMode.Selection) {
       this.selectionHelper.onMouseDown(mouseDown, event.shiftKey || event.metaKey);
-    } else if (this.actionMode === ActionMode.MorphSubPaths) {
-      this.morphSubPathHelper.onMouseDown(mouseDown, event.shiftKey || event.metaKey);
+    } else if (this.actionMode === ActionMode.PairSubPaths) {
+      this.pairSubPathHelper.onMouseDown(mouseDown, event.shiftKey || event.metaKey);
     } else if (this.actionMode === ActionMode.SplitCommands) {
       this.segmentSplitter.onMouseDown(mouseDown);
     } else if (this.actionMode === ActionMode.SplitSubPaths) {
@@ -834,8 +834,8 @@ export class CanvasOverlayDirective
     const mouseMove = this.mouseEventToViewportCoords(event);
     if (this.actionMode === ActionMode.Selection) {
       this.selectionHelper.onMouseMove(mouseMove);
-    } else if (this.actionMode === ActionMode.MorphSubPaths) {
-      this.morphSubPathHelper.onMouseMove(mouseMove);
+    } else if (this.actionMode === ActionMode.PairSubPaths) {
+      this.pairSubPathHelper.onMouseMove(mouseMove);
     } else if (this.actionMode === ActionMode.SplitCommands) {
       this.segmentSplitter.onMouseMove(mouseMove);
     } else if (this.actionMode === ActionMode.SplitSubPaths) {
@@ -856,8 +856,8 @@ export class CanvasOverlayDirective
     const mouseUp = this.mouseEventToViewportCoords(event);
     if (this.actionMode === ActionMode.Selection) {
       this.selectionHelper.onMouseUp(mouseUp, event.shiftKey || event.metaKey);
-    } else if (this.actionMode === ActionMode.MorphSubPaths) {
-      this.morphSubPathHelper.onMouseUp(mouseUp);
+    } else if (this.actionMode === ActionMode.PairSubPaths) {
+      this.pairSubPathHelper.onMouseUp(mouseUp);
     } else if (this.actionMode === ActionMode.SplitCommands) {
       this.segmentSplitter.onMouseUp(mouseUp);
     } else if (this.actionMode === ActionMode.SplitSubPaths) {
@@ -879,8 +879,8 @@ export class CanvasOverlayDirective
     if (this.actionMode === ActionMode.Selection) {
       // TODO: how to handle the case where the mouse leaves and re-enters mid-gesture?
       this.selectionHelper.onMouseLeave(mouseLeave);
-    } else if (this.actionMode === ActionMode.MorphSubPaths) {
-      this.morphSubPathHelper.onMouseLeave(mouseLeave);
+    } else if (this.actionMode === ActionMode.PairSubPaths) {
+      this.pairSubPathHelper.onMouseLeave(mouseLeave);
     } else if (this.actionMode === ActionMode.SplitCommands) {
       this.segmentSplitter.onMouseLeave(mouseLeave);
     } else if (this.actionMode === ActionMode.SplitSubPaths) {

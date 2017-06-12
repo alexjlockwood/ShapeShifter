@@ -13,7 +13,7 @@
     toolbarSubtitle: toolbarData.getToolbarSubtitle(),
     showAddPoints: toolbarData.getNumSubPaths() > 0 || toolbarData.getNumSegments() > 0 || !toolbarData.isSelectionMode(),
     showSplitSubPaths: toolbarData.getNumSubPaths() > 0 || toolbarData.getNumSegments() > 0 || !toolbarData.isSelectionMode(),
-    showMorphSubPaths: toolbarData.shouldShowMorphSubPaths(),
+    showPairSubPaths: toolbarData.shouldShowPairSubPaths(),
     showReverseSubPaths: toolbarData.getNumSubPaths() === 1,
     showShiftSubPath: toolbarData.shouldShowShiftSubPath(),
     showSetFirstPosition: toolbarData.shouldShowSetFirstPosition(),
@@ -86,11 +86,11 @@
         class="toolbar-action-button"
         mdTooltip="Pair subpaths (D)"
         mdTooltipPosition="below"
-        *ngIf="data.showMorphSubPaths"
+        *ngIf="data.showPairSubPaths"
         mdTooltipShowDelay="300"
-        (click)="onMorphSubPathsClick()"
-        [class.activated-with-error]="toolbarData.isMorphSubPathsMode() && actionMode.state === 'active_with_error'"
-        [class.activated]="toolbarData.isMorphSubPathsMode() && actionMode.state === 'active'">
+        (click)="onPairSubPathsClick()"
+        [class.activated-with-error]="toolbarData.isPairSubPathsMode() && actionMode.state === 'active_with_error'"
+        [class.activated]="toolbarData.isPairSubPathsMode() && actionMode.state === 'active'">
        <md-icon>compare_arrows</md-icon>
     </button>
     </ng-container>

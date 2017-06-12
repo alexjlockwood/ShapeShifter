@@ -123,8 +123,8 @@ export class ToolbarComponent implements OnInit {
     this.actionModeService.toggleSplitSubPathsMode();
   }
 
-  onMorphSubPathsClick() {
-    this.actionModeService.toggleMorphSubPathsMode();
+  onPairSubPathsClick() {
+    this.actionModeService.togglePairSubPathsMode();
   }
 
   onReversePointsClick() {
@@ -180,7 +180,7 @@ class ToolbarData {
   private readonly isStroked: boolean;
   private readonly showSplitInHalf: boolean;
   private readonly unpairedSubPathSource: ActionSource;
-  private readonly showMorphSubPaths: boolean;
+  private readonly showPairSubPaths: boolean;
   private readonly morphableLayerName: string;
 
   constructor(
@@ -243,16 +243,16 @@ class ToolbarData {
     this.showShiftSubPath = this.subPaths.length > 0
       && activePath.getSubPath(this.subPaths[0]).isClosed();
     this.showSplitInHalf = this.points.length === 1 && !!this.points[0].cmdIdx;
-    if (this.mode === ActionMode.MorphSubPaths) {
+    if (this.mode === ActionMode.PairSubPaths) {
       if (unpair) {
         this.unpairedSubPathSource = unpair.source;
       }
     }
     if (startMorphableLayer.pathData.getSubPaths().length === 1
       && endMorphableLayer.pathData.getSubPaths().length === 1) {
-      this.showMorphSubPaths = false;
+      this.showPairSubPaths = false;
     } else {
-      this.showMorphSubPaths =
+      this.showPairSubPaths =
         this.getNumSubPaths() === 1
         || this.getNumSegments() > 0
         || (!this.isSelectionMode());
@@ -282,7 +282,7 @@ class ToolbarData {
     if (this.mode === ActionMode.SplitSubPaths) {
       return 'Split subpaths';
     }
-    if (this.mode === ActionMode.MorphSubPaths) {
+    if (this.mode === ActionMode.PairSubPaths) {
       return 'Pair subpaths';
     }
     const numSubPaths = this.getNumSubPaths();
@@ -331,7 +331,7 @@ class ToolbarData {
       } else if (this.isStroked) {
         return 'Click along the edge of a subpath to split it into 2';
       }
-    } else if (this.mode === ActionMode.MorphSubPaths) {
+    } else if (this.mode === ActionMode.PairSubPaths) {
       if (this.unpairedSubPathSource) {
         const toSourceDir = this.unpairedSubPathSource === ActionSource.From ? 'right' : 'left';
         return `Pair the selected subpath with a corresponding subpath on the ${toSourceDir}`;
@@ -345,8 +345,8 @@ class ToolbarData {
     return this.showActionMode;
   }
 
-  shouldShowMorphSubPaths() {
-    return this.showMorphSubPaths;
+  shouldShowPairSubPaths() {
+    return this.showPairSubPaths;
   }
 
   getNumSplitSubPaths() {
@@ -381,8 +381,8 @@ class ToolbarData {
     return this.mode === ActionMode.SplitSubPaths;
   }
 
-  isMorphSubPathsMode() {
-    return this.mode === ActionMode.MorphSubPaths;
+  isPairSubPathsMode() {
+    return this.mode === ActionMode.PairSubPaths;
   }
 
   shouldShowAutoFix() {

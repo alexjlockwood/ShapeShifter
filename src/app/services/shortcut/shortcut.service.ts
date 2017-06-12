@@ -104,7 +104,7 @@ export class ShortcutService {
       if (event.keyCode === 'D'.charCodeAt(0)) {
         if (this.actionModeService.isShowingSubPathActionMode()
           || this.actionModeService.isShowingSegmentActionMode()) {
-          this.actionModeService.toggleMorphSubPathsMode();
+          this.actionModeService.togglePairSubPathsMode();
         }
         return false;
       }

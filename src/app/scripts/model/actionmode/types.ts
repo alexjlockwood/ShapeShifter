@@ -27,7 +27,7 @@ export enum ActionMode {
   None = 1,
   Selection,
   SplitCommands,
-  MorphSubPaths,
+  PairSubPaths,
   SplitSubPaths,
 }
 

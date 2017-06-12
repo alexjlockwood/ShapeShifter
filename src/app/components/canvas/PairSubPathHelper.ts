@@ -17,7 +17,7 @@ import * as _ from 'lodash';
 /**
  * Helper class that tracks information during morph subpath mode.
  */
-export class MorphSubPathHelper {
+export class PairSubPathHelper {
   private readonly actionSource: ActionSource;
   private readonly store: Store<State>;
   private readonly actionModeService: ActionModeService;

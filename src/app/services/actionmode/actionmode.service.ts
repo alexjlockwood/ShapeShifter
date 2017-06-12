@@ -99,8 +99,8 @@ export class ActionModeService {
     this.toggleActionMode(ActionMode.SplitSubPaths);
   }
 
-  toggleMorphSubPathsMode() {
-    this.toggleActionMode(ActionMode.MorphSubPaths);
+  togglePairSubPathsMode() {
+    this.toggleActionMode(ActionMode.PairSubPaths);
   }
 
   private toggleActionMode(modeToToggle: ActionMode) {
