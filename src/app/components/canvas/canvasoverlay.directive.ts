@@ -181,7 +181,7 @@ export class CanvasOverlayDirective
             this.isActionMode = isActionMode;
             this.actionHover = hover;
             this.actionSelections = selections;
-            this.pairedSubPaths = pairedSubPaths;
+            this.pairedSubPaths = new Set(pairedSubPaths);
             this.unpairedSubPath = unpairedSubPath;
             this.hiddenLayerIds = hiddenLayerIds;
             this.selectedLayerIds = selectedLayerIds;

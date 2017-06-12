@@ -33,10 +33,9 @@ import { Observable } from 'rxjs/Observable';
 //   ga('send', 'event', 'Export', 'Export click');
 declare const ga: Function;
 
-type ActionModeState = 'inactive' | 'active' | 'active_with_error';
+type ActionModeState = 'inactive' | 'active';
 const INACTIVE = 'inactive';
 const ACTIVE = 'active';
-const ACTIVE_WITH_ERROR = 'active_with_error';
 
 @Component({
   selector: 'app-toolbar',
@@ -49,8 +48,6 @@ const ACTIVE_WITH_ERROR = 'active_with_error';
       state(INACTIVE, style({ backgroundColor: '#607D8B' })),
       // Blue A400.
       state(ACTIVE, style({ backgroundColor: '#2979FF' })),
-      // Red 500.
-      state(ACTIVE_WITH_ERROR, style({ backgroundColor: '#F44336' })),
       transition('* => *', animate('200ms ease-out')),
     ]),
   ],
@@ -69,19 +66,13 @@ export class ToolbarComponent implements OnInit {
   ngOnInit() {
     const toolbarState = this.store.select(getToolbarState);
     this.toolbarData$ = toolbarState
-      .map(({ isActionMode, fromMl, toMl, mode, selections, unpairedSubPath, block }) => {
+      .map(({ actionMode, fromMl, toMl, mode, selections, unpairedSubPath, block }) => {
         return new ToolbarData(
-          isActionMode, fromMl, toMl, mode, selections, unpairedSubPath, block);
+          actionMode, fromMl, toMl, mode, selections, unpairedSubPath, block);
       });
     this.actionModeState$ =
-      toolbarState.map(({ isActionMode, block }) => {
-        if (!isActionMode) {
-          return INACTIVE;
-        }
-        if (block.isAnimatable()) {
-          return ACTIVE;
-        }
-        return ACTIVE_WITH_ERROR;
+      toolbarState.map(({ actionMode, block }) => {
+        return actionMode === ActionMode.None ? INACTIVE : ACTIVE;
       });
   }
 
@@ -172,7 +163,7 @@ class ToolbarData {
   private readonly morphableLayerName: string;
 
   constructor(
-    private readonly showActionMode: boolean,
+    private readonly actionMode: ActionMode,
     readonly startMorphableLayer: MorphableLayer,
     readonly endMorphableLayer: MorphableLayer,
     public readonly mode: ActionMode,
@@ -330,7 +321,7 @@ class ToolbarData {
   }
 
   shouldShowActionMode() {
-    return this.showActionMode;
+    return this.actionMode !== ActionMode.None;
   }
 
   shouldShowPairSubPaths() {
@@ -374,6 +365,6 @@ class ToolbarData {
   }
 
   shouldShowAutoFix() {
-    return this.shouldShowActionMode() && !this.getNumSelections();
+    return this.actionMode === ActionMode.Selection && !this.getNumSelections();
   }
 }

@@ -8,7 +8,11 @@ import {
   createDeepEqualSelector,
   getAppState,
 } from '../selectors';
-import { getAnimations } from '../timeline/selectors';
+import {
+  getActiveAnimation,
+  getAnimations,
+} from '../timeline/selectors';
+import { AnimationRenderer } from 'app/scripts/animator';
 import {
   ActionMode,
   ActionModeUtil,
@@ -21,7 +25,10 @@ import {
   VectorLayer,
 } from 'app/scripts/model/layers';
 import { Path } from 'app/scripts/model/paths';
-import { PathAnimationBlock } from 'app/scripts/model/timeline';
+import {
+  Animation,
+  PathAnimationBlock,
+} from 'app/scripts/model/timeline';
 import * as _ from 'lodash';
 import {
   createSelector,
@@ -72,27 +79,26 @@ export const getActionModePointSelections =
   );
 
 const getPairedSubPaths =
-  createDeepEqualSelector(getActionModeState, state => new Set(state.pairedSubPaths));
+  createDeepEqualSelector(getActionModeState, state => state.pairedSubPaths);
 const getUnpairedSubPath =
   createDeepEqualSelector(getActionModeState, state => state.unpairedSubPath);
 
-function getVectorLayerValue(getValueFn: (block: PathAnimationBlock) => Path) {
+function getVectorLayerValue(getTimeFn: (block: PathAnimationBlock) => number) {
   return createSelector(
-    [getVectorLayer, getBlock],
-    (vl, block) => {
+    [getVectorLayer, getActiveAnimation, getBlock],
+    (vl, anim, block) => {
       if (!vl || !block) {
         return undefined;
       }
-      const layer = vl.findLayerById(block.layerId).clone() as MorphableLayer;
-      layer.pathData = getValueFn(block);
-      return LayerUtil.replaceLayerInTree(vl, layer);
+      const renderer = new AnimationRenderer(vl, anim);
+      return renderer.setAnimationTime(getTimeFn(block));
     });
 }
 
-const getVectorLayerFromValue = getVectorLayerValue(block => block.fromValue);
-const getVectorLayerToValue = getVectorLayerValue(block => block.toValue);
+const getVectorLayerFromValue = getVectorLayerValue(block => block.startTime);
+const getVectorLayerToValue = getVectorLayerValue(block => block.endTime);
 
-type CombinerFunc = (vl: VectorLayer, block: PathAnimationBlock) => VectorLayer;
+type CombinerFunc = (vl: VectorLayer, anim: Animation, block: PathAnimationBlock) => VectorLayer;
 
 function getMorphableLayerValue(selector: Reselect.OutputSelector<State, VectorLayer, CombinerFunc>) {
   return createSelector(
@@ -163,7 +169,7 @@ export const getActionModeEndState =
 
 export const getToolbarState =
   createStructuredSelector({
-    isActionMode,
+    actionMode: getActionMode,
     fromMl: getMorphableLayerFromValue,
     toMl: getMorphableLayerToValue,
     mode: getActionMode,

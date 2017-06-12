@@ -59,41 +59,36 @@
     </button>
 
     <!-- SubPath mode. -->
-    <ng-container *ngIf="{state: (this.actionModeState$ | async)} as actionMode">
-      <button md-icon-button
-        class="toolbar-action-button"
-        mdTooltip="Add points (A)"
-        mdTooltipPosition="below"
-        *ngIf="data.showAddPoints"
-        mdTooltipShowDelay="300"
-        (click)="onAddPointsClick()"
-        [class.activated-with-error]="toolbarData.isAddPointsMode() && actionMode.state === 'active_with_error'"
-        [class.activated]="toolbarData.isAddPointsMode() && actionMode.state === 'active'">
+    <button md-icon-button
+      class="toolbar-action-button"
+      mdTooltip="Add points (A)"
+      mdTooltipPosition="below"
+      *ngIf="data.showAddPoints"
+      mdTooltipShowDelay="300"
+      (click)="onAddPointsClick()"
+      [class.activated]="toolbarData.isAddPointsMode()">
       <md-icon>add_circle_outline</md-icon>
     </button>
-      <button md-icon-button
-        class="toolbar-action-button"
-        mdTooltip="Split subpaths (S)"
-        mdTooltipPosition="below"
-        *ngIf="data.showSplitSubPaths"
-        mdTooltipShowDelay="300"
-        (click)="onSplitSubPathsClick()"
-        [class.activated-with-error]="toolbarData.isSplitSubPathsMode() && actionMode.state === 'active_with_error'"
-        [class.activated]="toolbarData.isSplitSubPathsMode() && actionMode.state === 'active'">
+    <button md-icon-button
+      class="toolbar-action-button"
+      mdTooltip="Split subpaths (S)"
+      mdTooltipPosition="below"
+      *ngIf="data.showSplitSubPaths"
+      mdTooltipShowDelay="300"
+      (click)="onSplitSubPathsClick()"
+      [class.activated]="toolbarData.isSplitSubPathsMode()">
       <md-icon>content_cut</md-icon>
     </button>
-      <button md-icon-button
-        class="toolbar-action-button"
-        mdTooltip="Pair subpaths (D)"
-        mdTooltipPosition="below"
-        *ngIf="data.showPairSubPaths"
-        mdTooltipShowDelay="300"
-        (click)="onPairSubPathsClick()"
-        [class.activated-with-error]="toolbarData.isPairSubPathsMode() && actionMode.state === 'active_with_error'"
-        [class.activated]="toolbarData.isPairSubPathsMode() && actionMode.state === 'active'">
-       <md-icon>compare_arrows</md-icon>
+    <button md-icon-button
+      class="toolbar-action-button"
+      mdTooltip="Pair subpaths (D)"
+      mdTooltipPosition="below"
+      *ngIf="data.showPairSubPaths"
+      mdTooltipShowDelay="300"
+      (click)="onPairSubPathsClick()"
+      [class.activated]="toolbarData.isPairSubPathsMode()">
+      <md-icon>compare_arrows</md-icon>
     </button>
-    </ng-container>
     <button md-icon-button
       class="toolbar-action-button"
       mdTooltip="Reverse points (R)"

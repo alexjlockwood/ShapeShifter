@@ -33,6 +33,7 @@ export class AnimationRenderer {
     readonly originalVectorLayer: VectorLayer,
     readonly activeAnimation: Animation,
   ) {
+    // TODO: technically this could be more performant if we only cloned the affected layers
     this.renderedVectorLayer = originalVectorLayer.deepClone();
     const animDataByLayer = ModelUtil.getOrderedBlocksByPropertyByLayer(activeAnimation);
     Object.keys(animDataByLayer).forEach(layerId => {

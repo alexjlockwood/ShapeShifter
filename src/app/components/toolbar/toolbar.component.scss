@@ -46,12 +46,6 @@ button.activated {
   }
 }
 
-button.activated-with-error {
-  md-icon {
-    color: mat-color(mat-palette($mat-grey, 900));
-  }
-}
-
 .toolbar-action-button {
   margin-left: 16px;
 }
