@@ -19,12 +19,6 @@ import {
   createStructuredSelector,
 } from 'reselect';
 
-export const getCanvasLayersState =
-  createStructuredSelector({
-    vectorLayer: getVectorLayer,
-    hiddenLayerIds: getHiddenLayerIds,
-  });
-
 export const getCanvasOverlayState =
   createStructuredSelector({
     vectorLayer: getVectorLayer,

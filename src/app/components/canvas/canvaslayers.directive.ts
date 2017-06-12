@@ -30,7 +30,10 @@ import {
   getActionModeEndState,
   getActionModeStartState,
 } from 'app/store/actionmode/selectors';
-import { getCanvasLayersState } from 'app/store/common/selectors';
+import {
+  getHiddenLayerIds,
+  getVectorLayer,
+} from 'app/store/layers/selectors';
 import * as $ from 'jquery';
 import { Observable } from 'rxjs/Observable';
 
@@ -49,7 +52,6 @@ export class CanvasLayersDirective
   private readonly $renderingCanvas: JQuery;
   private readonly $offscreenCanvas: JQuery;
   private vectorLayer: VectorLayer;
-  private hiddenLayerIds = new Set<string>();
 
   constructor(
     readonly elementRef: ElementRef,
@@ -61,24 +63,15 @@ export class CanvasLayersDirective
     this.$offscreenCanvas = $(document.createElement('canvas'));
   }
 
-  private get renderingCtx() {
-    return (this.$renderingCanvas.get(0) as HTMLCanvasElement).getContext('2d');
-  }
-
-  private get offscreenCtx() {
-    return (this.$offscreenCanvas.get(0) as HTMLCanvasElement).getContext('2d');
-  }
-
   ngAfterViewInit() {
     if (this.actionSource === ActionSource.Animated) {
       // Preview canvas specific setup.
       this.registerSubscription(
         Observable.combineLatest(
           this.animatorService.asObservable().map(event => event.vl),
-          this.store.select(getCanvasLayersState),
-        ).subscribe(([animatedVl, { vectorLayer, hiddenLayerIds }]) => {
+          this.store.select(getVectorLayer),
+        ).subscribe(([animatedVl, vectorLayer]) => {
           this.vectorLayer = animatedVl || vectorLayer;
-          this.hiddenLayerIds = hiddenLayerIds;
           this.draw();
         }));
     } else {
@@ -95,6 +88,20 @@ export class CanvasLayersDirective
           }),
       );
     }
+  }
+
+  private get renderingCtx() {
+    return (this.$renderingCanvas.get(0) as HTMLCanvasElement).getContext('2d');
+  }
+
+  private get offscreenCtx() {
+    return (this.$offscreenCanvas.get(0) as HTMLCanvasElement).getContext('2d');
+  }
+
+  private get hiddenLayerIds() {
+    let result: Set<string>;
+    this.store.select(getHiddenLayerIds).first().subscribe(ids => result = ids);
+    return result;
   }
 
   // @Override

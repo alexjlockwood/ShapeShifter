@@ -35,6 +35,7 @@ export class SelectionHelper {
 
   constructor(private readonly component: CanvasOverlayDirective) {
     this.actionSource = component.actionSource;
+    this.actionModeService = component.actionModeService;
     this.store = component.store;
   }
 
