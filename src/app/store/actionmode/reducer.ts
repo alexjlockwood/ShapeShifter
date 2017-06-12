@@ -44,12 +44,17 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
       if (mode === ActionMode.None) {
         return buildInitialState();
       }
-      let { selections } = state;
+      let { selections, pairedSubPaths, unpairedSubPath } = state;
+      if (state.mode === ActionMode.PairSubPaths && mode !== state.mode) {
+        // Reset the paired subpath state when leaving pair subpath mode.
+        pairedSubPaths = new Set();
+        unpairedSubPath = undefined;
+      }
       if (mode === ActionMode.Selection && mode !== state.mode) {
         // Clear selections when switching back to selection mode.
         selections = [];
       }
-      return { ...state, mode, selections };
+      return { ...state, mode, selections, pairedSubPaths, unpairedSubPath };
     }
 
     // Set the hover mode during action mode.
