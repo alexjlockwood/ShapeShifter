@@ -7,6 +7,6 @@ export const DEMO_INFOS: ReadonlyArray<DemoInfo> = [
   { id: 'hippobuffalo', title: 'Morphing animals' },
   { id: 'visibilitystrike', title: 'Visibility strike' },
   { id: 'searchtoback', title: 'Search-to-back' },
-  { id: 'barchart', title: 'Bar chart' },
+  { id: 'heartbreak', title: 'Heart break' },
   { id: 'searchtoclose', title: 'Search-to-close' },
 ];
