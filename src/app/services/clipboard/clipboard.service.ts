@@ -1,27 +1,21 @@
 import { Injectable } from '@angular/core';
-import { ModelUtil } from 'app/scripts/common';
 import {
   GroupLayer,
   Layer,
   VectorLayer,
 } from 'app/scripts/model/layers';
-import { ActionModeService } from 'app/services/actionmode/actionmode.service';
 import {
   State,
   Store,
 } from 'app/store';
 import { DeleteSelectedModels } from 'app/store/common/actions';
 import * as $ from 'jquery';
-import { ActionCreators } from 'redux-undo';
 
 @Injectable()
 export class ClipboardService {
   private isInit = false;
 
-  constructor(
-    private readonly store: Store<State>,
-    private readonly actionModeService: ActionModeService,
-  ) { }
+  constructor(private readonly store: Store<State>) { }
 
   init() {
     if (this.isInit) {

@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { AvdSerializer, SpriteSerializer, SvgSerializer } from 'app/scripts/export';
+import { AvdSerializer, SpriteSerializer } from 'app/scripts/export';
 import { VectorLayer } from 'app/scripts/model/layers';
 import { Animation } from 'app/scripts/model/timeline';
 import {

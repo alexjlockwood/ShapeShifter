@@ -10,13 +10,10 @@ import {
   OnInit,
   ViewChild,
 } from '@angular/core';
-import { ModelUtil } from 'app/scripts/common';
 import {
   ActionMode,
   ActionSource,
 } from 'app/scripts/model/actionmode';
-import { VectorLayer } from 'app/scripts/model/layers';
-import { Animation } from 'app/scripts/model/timeline';
 import { DemoService } from 'app/services/demos/demo.service';
 import { FileImportService } from 'app/services/import/fileimport.service';
 import { ShortcutService } from 'app/services/shortcut/shortcut.service';

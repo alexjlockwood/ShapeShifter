@@ -5,7 +5,6 @@ import { Http } from '@angular/http';
 import { ModelUtil } from 'app/scripts/common';
 import { VectorLayer } from 'app/scripts/model/layers';
 import { Animation } from 'app/scripts/model/timeline';
-import { Observable } from 'rxjs/Observable';
 
 // TODO: store hidden layer IDs and vector layer inside the animations?
 interface Demo {

@@ -1,7 +1,4 @@
-import {
-  AppState,
-  State,
-} from './reducer';
+import { State } from './reducer';
 import * as _ from 'lodash';
 import {
   createSelector,

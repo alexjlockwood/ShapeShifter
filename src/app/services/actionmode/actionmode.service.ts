@@ -40,7 +40,6 @@ import {
   getActionModeSubPathSelections,
 } from 'app/store/actionmode/selectors';
 import * as _ from 'lodash';
-import { Observable } from 'rxjs/Observable';
 
 /**
  * A simple service that provides an interface for making action mode changes.

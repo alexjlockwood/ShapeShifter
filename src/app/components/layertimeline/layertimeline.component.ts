@@ -12,7 +12,6 @@ import {
   QueryList,
   ViewChild,
   ViewChildren,
-  ViewContainerRef,
 } from '@angular/core';
 import {
   ModelUtil,
@@ -149,7 +148,6 @@ export class LayerTimelineComponent
     private readonly animatorService: AnimatorService,
     private readonly store: Store<State>,
     private readonly dialogService: DialogService,
-    private readonly viewContainerRef: ViewContainerRef,
     private readonly demoService: DemoService,
   ) { super(); }
 

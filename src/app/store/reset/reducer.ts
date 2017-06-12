@@ -1,6 +1,4 @@
-import { AppState } from '../reducer';
 import * as actions from './actions';
-import { ActionReducer } from '@ngrx/store';
 
 export interface State {
   readonly isBeingReset: boolean;

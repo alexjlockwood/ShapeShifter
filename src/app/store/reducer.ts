@@ -15,7 +15,6 @@ import {
 } from '@ngrx/store';
 import { environment } from 'environments/environment';
 import { storeLogger } from 'ngrx-store-logger';
-import { StateWithHistory } from 'redux-undo';
 
 export type State = metaUndoRedo.StateWithHistoryAndTimestamp;
 

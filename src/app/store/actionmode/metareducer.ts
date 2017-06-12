@@ -4,7 +4,6 @@ import { ActionReducer } from '@ngrx/store';
 import { AutoAwesome } from 'app/scripts/algorithms';
 import {
   ActionSource,
-  HoverType,
   Selection,
   SelectionType,
 } from 'app/scripts/model/actionmode';
@@ -322,12 +321,6 @@ function setSelections(state: AppState, selections: ReadonlyArray<Selection>) {
 
 function clearSelections(state: AppState) {
   return setSelections(state, []);
-}
-
-function setHover(state: AppState, type: HoverType, source: ActionSource, subIdx: number, cmdIdx: number) {
-  const { actionmode } = state;
-  const hover = { source, subIdx, cmdIdx, type };
-  return { ...state, actionmode: { ...actionmode, hover } };
 }
 
 function clearHover(state: AppState) {

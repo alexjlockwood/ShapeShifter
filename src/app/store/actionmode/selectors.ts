@@ -94,7 +94,7 @@ const getVectorLayerToValue = getVectorLayerValue(block => block.toValue);
 
 type CombinerFunc = (vl: VectorLayer, block: PathAnimationBlock) => VectorLayer;
 
-function getMorphableLayerValue<T>(selector: Reselect.OutputSelector<State, VectorLayer, CombinerFunc>) {
+function getMorphableLayerValue(selector: Reselect.OutputSelector<State, VectorLayer, CombinerFunc>) {
   return createSelector(
     [selector, getBlockLayerId],
     (vl, blockLayerId) => {

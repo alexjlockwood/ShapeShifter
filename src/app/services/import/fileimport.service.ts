@@ -5,20 +5,15 @@ import {
   VectorDrawableLoader,
 } from 'app/scripts/import';
 import {
-  Layer,
   LayerUtil,
   VectorLayer,
 } from 'app/scripts/model/layers';
-import {
-  Animation,
-  AnimationBlock,
-} from 'app/scripts/model/timeline';
+import { Animation } from 'app/scripts/model/timeline';
 import {
   State,
   Store,
 } from 'app/store';
 import { getVectorLayer } from 'app/store/layers/selectors';
-import * as _ from 'lodash';
 
 /**
  * A simple service that imports vector layers from files.

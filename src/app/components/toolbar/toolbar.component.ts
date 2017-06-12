@@ -9,12 +9,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   OnInit,
-  ViewContainerRef,
 } from '@angular/core';
-import {
-  Http,
-  Response,
-} from '@angular/http';
 import {
   ActionMode,
   ActionModeUtil,
@@ -22,14 +17,9 @@ import {
   Selection,
   SelectionType,
 } from 'app/scripts/model/actionmode';
-import {
-  MorphableLayer,
-  VectorLayer,
-} from 'app/scripts/model/layers';
-import { Animation } from 'app/scripts/model/timeline';
+import { MorphableLayer } from 'app/scripts/model/layers';
 import { PathAnimationBlock } from 'app/scripts/model/timeline';
 import { ActionModeService } from 'app/services/actionmode/actionmode.service';
-import { DialogService } from 'app/services/dialogs/dialog.service';
 import {
   State,
   Store,
@@ -74,8 +64,6 @@ export class ToolbarComponent implements OnInit {
   constructor(
     private readonly actionModeService: ActionModeService,
     private readonly store: Store<State>,
-    private readonly dialogService: DialogService,
-    private readonly viewContainerRef: ViewContainerRef,
   ) { }
 
   ngOnInit() {

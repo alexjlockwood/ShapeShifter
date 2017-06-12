@@ -1,9 +1,5 @@
-import { Inject } from '@angular/core';
 import { Component } from '@angular/core';
-import {
-  MD_DIALOG_DATA,
-  MdDialogRef,
-} from '@angular/material';
+import { MdDialogRef } from '@angular/material';
 import { DEMO_INFOS } from 'app/scripts/demos';
 
 @Component({
