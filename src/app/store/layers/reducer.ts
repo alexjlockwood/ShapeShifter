@@ -193,12 +193,12 @@ function groupOrUngroupSelectedLayers(state: State, shouldGroup: boolean) {
       if (layer instanceof VectorLayer) {
         return false;
       }
-      let p = LayerUtil.findParent([vectorLayer], layer.id);
+      let p = LayerUtil.findParent(vectorLayer, layer.id);
       while (p) {
         if (_.find(tempSelLayers, l => l.id === p.id)) {
           return false;
         }
-        p = LayerUtil.findParent([vectorLayer], p.id);
+        p = LayerUtil.findParent(vectorLayer, p.id);
       }
       return true;
     });
@@ -208,7 +208,7 @@ function groupOrUngroupSelectedLayers(state: State, shouldGroup: boolean) {
     }
 
     // Find destination parent and insertion point.
-    const firstSelectedLayerParent = LayerUtil.findParent([vectorLayer], tempSelLayers[0].id).clone();
+    const firstSelectedLayerParent = LayerUtil.findParent(vectorLayer, tempSelLayers[0].id).clone();
     const firstSelectedLayerIndexInParent =
       _.findIndex(firstSelectedLayerParent.children, l => l.id === tempSelLayers[0].id);
 
@@ -230,7 +230,7 @@ function groupOrUngroupSelectedLayers(state: State, shouldGroup: boolean) {
       .filter(layer => layer instanceof GroupLayer)
       .forEach(groupLayer => {
         // Move children into parent.
-        const parent = LayerUtil.findParent([vectorLayer], groupLayer.id).clone();
+        const parent = LayerUtil.findParent(vectorLayer, groupLayer.id).clone();
         const indexInParent = Math.max(0, _.findIndex(parent.children, l => l.id === groupLayer.id));
         const newChildren = parent.children.slice();
         newChildren.splice(indexInParent, 0, ...groupLayer.children);

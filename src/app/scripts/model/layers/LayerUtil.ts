@@ -208,16 +208,6 @@ export function replaceLayerInTree(
   })(root) as VectorLayer;
 }
 
-export function findLayerById(vls: ReadonlyArray<VectorLayer>, layerId: string) {
-  for (const vl of vls) {
-    const layer = vl.findLayerById(layerId);
-    if (layer) {
-      return layer;
-    }
-  }
-  return undefined;
-}
-
 export function findLayerByName(vls: ReadonlyArray<VectorLayer>, layerName: string) {
   for (const vl of vls) {
     const layer = vl.findLayerByName(layerName);
@@ -228,45 +218,27 @@ export function findLayerByName(vls: ReadonlyArray<VectorLayer>, layerName: stri
   return undefined;
 }
 
-export function findParent(vls: ReadonlyArray<VectorLayer>, layerId: string) {
-  for (const vl of vls) {
-    const result =
-      (function recurseFn(curr: Layer, parent?: Layer): Layer {
-        if (curr.id === layerId) {
-          return parent;
-        }
-        for (const child of curr.children) {
-          const p = recurseFn(child, curr);
-          if (p) {
-            return p;
-          }
-        }
-        return undefined;
-      })(vl);
-    if (result) {
-      return result;
+export function findParent(vl: VectorLayer, layerId: string) {
+  return (function recurseFn(curr: Layer, parent?: Layer): Layer {
+    if (curr.id === layerId) {
+      return parent;
     }
-  }
-  return undefined;
-}
-
-export function findParentVectorLayer(vls: ReadonlyArray<VectorLayer>, layerId: string) {
-  for (const vl of vls) {
-    if (vl.findLayerById(layerId)) {
-      return vl;
+    for (const child of curr.children) {
+      const p = recurseFn(child, curr);
+      if (p) {
+        return p;
+      }
     }
-  }
-  return undefined;
+    return undefined;
+  })(vl);
 }
 
-export function findNextSibling(vls: ReadonlyArray<VectorLayer>, layerId: string) {
-  const parent = findParent(vls, layerId);
-  return findSibling(layerId, parent, 1);
+export function findNextSibling(vl: VectorLayer, layerId: string) {
+  return findSibling(layerId, findParent(vl, layerId), 1);
 }
 
-export function findPreviousSibling(vls: ReadonlyArray<VectorLayer>, layerId: string) {
-  const parent = findParent(vls, layerId);
-  return findSibling(layerId, parent, -1);
+export function findPreviousSibling(vl: VectorLayer, layerId: string) {
+  return findSibling(layerId, findParent(vl, layerId), -1);
 }
 
 function findSibling(layerId: string, parent: Layer, offset: number) {

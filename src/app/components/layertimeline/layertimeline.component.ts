@@ -1,7 +1,7 @@
 import * as TimelineConsts from './constants';
 import { Callbacks as LayerListTreeCallbacks } from './layerlisttree.component';
-import { LayerTimelineDirective } from './layertimeline.directive';
 import { ScrubEvent } from './layertimeline.directive';
+import { LayerTimelineDirective } from './layertimeline.directive';
 import { Callbacks as TimelineAnimationRowCallbacks } from './timelineanimationrow.component';
 import {
   AfterViewInit,
@@ -797,14 +797,14 @@ export class LayerTimelineComponent
               targetLayerInfo = undefined;
               break;
             }
-            layer = LayerUtil.findParent([this.vectorLayer], layer.id);
+            layer = LayerUtil.findParent(this.vectorLayer, layer.id);
           }
         }
 
         if (targetLayerInfo
           && targetEdge === 'bottom'
           && LayerUtil.findNextSibling(
-            [this.vectorLayer], targetLayerInfo.layer.id) === dragLayer) {
+            this.vectorLayer, targetLayerInfo.layer.id) === dragLayer) {
           targetLayerInfo = undefined;
         }
 
@@ -831,11 +831,11 @@ export class LayerTimelineComponent
                 replacementVl, newParent.id, dragLayer.clone(), newParent.children.length);
           } else {
             // Moving next to another layer.
-            let newParent = LayerUtil.findParent([this.vectorLayer], targetLayerInfo.layer.id);
+            let newParent = LayerUtil.findParent(this.vectorLayer, targetLayerInfo.layer.id);
             if (newParent) {
               const sourceVl = this.vectorLayer;
               replacementVl = LayerUtil.removeLayerFromTree(sourceVl, dragLayer.id);
-              newParent = LayerUtil.findParent([replacementVl], targetLayerInfo.layer.id);
+              newParent = LayerUtil.findParent(replacementVl, targetLayerInfo.layer.id);
               let index =
                 newParent.children
                   ? _.findIndex(newParent.children, child => child.id === targetLayerInfo.layer.id)

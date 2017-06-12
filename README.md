@@ -8,8 +8,8 @@
 
 -----
 
-[Shape Shifter](https://alexjlockwood.github.io/ShapeShifter/) is a web-app that simplifies the process of
-creating SVG-based [path morphing animations][adp-path-morphing].
+[Shape Shifter](https://alexjlockwood.github.io/ShapeShifter/) is a web-app that simplifies
+the creation of [icon animations][adp-icon-animations] for Android, iOS, and the web.
 
 This tool currently exports to standalone SVGs, SVG spritesheets,
 and CSS keyframe animations for the web, as well as to
@@ -118,7 +118,7 @@ Huge thanks to [Nick Butcher][nick-butcher-twitter], [Roman Nurik][roman-nurik-t
 and [Steph Yim][steph-yim-website] for all of their help during the early stages of this project!
 
   [report-feature-request]: https://github.com/alexjlockwood/ShapeShifter/issues/new
-  [adp-path-morphing]: http://www.androiddesignpatterns.com/2016/11/introduction-to-icon-animation-techniques.html#morphing-paths
+  [adp-icon-animations]: http://www.androiddesignpatterns.com/2016/11/introduction-to-icon-animation-techniques.html
   [sketch]: https://www.sketchapp.com/
   [illustrator]: http://www.adobe.com/products/illustrator.html
   [Needleman-Wunsch]: https://en.wikipedia.org/wiki/Needleman%E2%80%93Wunsch_algorithm
