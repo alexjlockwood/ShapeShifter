@@ -114,9 +114,11 @@ export function adjustViewports(vl1: VectorLayer, vl2: VectorLayer) {
           if (layer instanceof PathLayer && layer.isStroked()) {
             layer.strokeWidth *= scale;
           }
-          layer.pathData = new Path(layer.pathData.getCommands().map(cmd => {
-            return cmd.mutate().transform(transforms).build();
-          }));
+          if (layer.pathData) {
+            layer.pathData = new Path(layer.pathData.getCommands().map(cmd => {
+              return cmd.mutate().transform(transforms).build();
+            }));
+          }
           return;
         }
         if (layer instanceof GroupLayer) {

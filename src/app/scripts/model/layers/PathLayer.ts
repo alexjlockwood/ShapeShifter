@@ -87,7 +87,7 @@ export class PathLayer extends AbstractLayer implements MorphableLayer {
   }
 
   isStroked() {
-    return !this.isFilled();
+    return !!this.strokeColor;
   }
 
   isFilled() {
