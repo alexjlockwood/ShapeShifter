@@ -63,7 +63,7 @@ function loadVectorLayerFromElement(
         trimPathStart: Number(get(node, 'trimPathStart', '0')),
         trimPathEnd: Number(get(node, 'trimPathEnd', '1')),
         trimPathOffset: Number(get(node, 'trimPathOffset', '0')),
-        fillType: get(node, 'fillType', 'evenOdd') as FillType,
+        fillType: get(node, 'fillType', 'nonZero') as FillType,
       });
     }
 
