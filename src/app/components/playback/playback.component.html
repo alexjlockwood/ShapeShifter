@@ -3,23 +3,23 @@
   fxLayoutAlight="center center">
   <span fxFlex></span>
   <button md-icon-button
-    mdTooltip="Slow motion (T)"
+    mdTooltip="Slow motion (S)"
     mdTooltipPosition="below"
-    mdTooltipShowDelay="300"
+    mdTooltipShowDelay="500"
     (click)="this.isSlowMotionClick()">
     <md-icon [class.activated]="model.isSlowMotion">slow_motion_video</md-icon>
   </button>
   <button md-icon-button
     mdTooltip="Rewind (Left)"
     mdTooltipPosition="below"
-    mdTooltipShowDelay="300"
+    mdTooltipShowDelay="500"
     (click)="this.rewindClick()">
     <md-icon>skip_previous</md-icon>
   </button>
   <button md-mini-fab
     mdTooltip="{{ (model.isPlaying) ? 'Pause' : 'Play' }} (Spacebar)"
     mdTooltipPosition="below"
-    mdTooltipShowDelay="300"
+    mdTooltipShowDelay="500"
     (click)="this.playPauseButtonClick()">
     <div
       class="play-pause-icon"
@@ -32,14 +32,14 @@
   <button md-icon-button
     mdTooltip="Fast forward (Right)"
     mdTooltipPosition="below"
-    mdTooltipShowDelay="300"
+    mdTooltipShowDelay="500"
     (click)="this.fastForwardClick()">
     <md-icon>skip_next</md-icon>
   </button>
   <button md-icon-button
     mdTooltip="Repeat (R)"
     mdTooltipPosition="below"
-    mdTooltipShowDelay="300"
+    mdTooltipShowDelay="500"
     (click)="this.isRepeatingClick()">
     <md-icon [class.activated]="model.isRepeating">repeat</md-icon>
   </button>
