@@ -37,7 +37,10 @@ import { DemoService } from 'app/services/demos/demo.service';
 import { DialogService } from 'app/services/dialogs/dialog.service';
 import { FileExportService } from 'app/services/export/fileexport.service';
 import { FileImportService } from 'app/services/import/fileimport.service';
-import { Duration, SnackBarService } from 'app/services/snackbar/snackbar.service';
+import {
+  Duration,
+  SnackBarService,
+} from 'app/services/snackbar/snackbar.service';
 import {
   State,
   Store,
@@ -55,7 +58,7 @@ import {
   ToggleLayerVisibility,
 } from 'app/store/layers/actions';
 import { getVectorLayer } from 'app/store/layers/selectors';
-import { ResetWorkspace } from 'app/store/reset/metaactions';
+import { ResetWorkspace } from 'app/store/reset/actions';
 import {
   ActivateAnimation,
   AddAnimation,
@@ -159,13 +162,16 @@ export class LayerTimelineComponent
           selectedAnimationIds,
           activeAnimationId,
           selectedBlockIds,
+          isBeingReset,
         }) => {
           this.animations = animations;
           this.activeAnimationId = activeAnimationId;
           this.rebuildSnapTimes();
           this.vectorLayer = vectorLayer;
           this.selectedBlockIds = selectedBlockIds;
-          // TODO: auto zoom back to initial state after full reset?
+          if (isBeingReset) {
+            this.autoZoomToAnimation();
+          }
           return {
             animations,
             vectorLayer,

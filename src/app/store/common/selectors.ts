@@ -5,6 +5,7 @@ import {
   getSelectedLayerIds,
   getVectorLayer,
 } from '../layers/selectors';
+import { isBeingReset } from '../reset/selectors';
 import {
   getActiveAnimation,
   getActiveAnimationId,
@@ -64,6 +65,7 @@ export const getLayerTimelineState =
     selectedAnimationIds: getSelectedAnimationIds,
     activeAnimationId: getActiveAnimationId,
     selectedBlockIds: getSelectedBlockIds,
+    isBeingReset,
   });
 
 export const getAnimatorState =

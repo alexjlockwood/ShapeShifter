@@ -28,7 +28,7 @@ import {
 } from 'app/store';
 import { getActionMode } from 'app/store/actionmode/selectors';
 import { ImportVectorLayers } from 'app/store/layers/actions';
-import { ResetWorkspace } from 'app/store/reset/metaactions';
+import { ResetWorkspace } from 'app/store/reset/actions';
 import * as erd from 'element-resize-detector';
 import { environment } from 'environments/environment';
 import * as $ from 'jquery';
