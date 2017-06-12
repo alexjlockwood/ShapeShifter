@@ -23,7 +23,6 @@ export function buildInitialState() {
     mode: ActionMode.None,
     hover: undefined,
     selections: [],
-    // TODO: reset this stuff after mode switches
     pairedSubPaths: new Set<number>(),
     unpairedSubPath: undefined,
   } as State;
