@@ -10,8 +10,6 @@ import {
   OnInit,
   ViewChild,
 } from '@angular/core';
-import { Http, Response } from '@angular/http';
-import { MdSnackBar } from '@angular/material';
 import { ModelUtil } from 'app/scripts/common';
 import {
   ActionMode,
@@ -22,6 +20,10 @@ import { Animation } from 'app/scripts/model/timeline';
 import { DemoService } from 'app/services/demos/demo.service';
 import { FileImportService } from 'app/services/import/fileimport.service';
 import { ShortcutService } from 'app/services/shortcut/shortcut.service';
+import {
+  Duration,
+  SnackBarService,
+} from 'app/services/snackbar/snackbar.service';
 import {
   State,
   Store,
@@ -60,7 +62,7 @@ export class RootComponent implements OnInit, AfterViewInit, OnDestroy {
   isActionMode$: Observable<boolean>;
 
   constructor(
-    private readonly snackBar: MdSnackBar,
+    private readonly snackBarService: SnackBarService,
     private readonly fileImporterService: FileImportService,
     private readonly store: Store<State>,
     private readonly shortcutService: ShortcutService,
@@ -103,7 +105,7 @@ export class RootComponent implements OnInit, AfterViewInit, OnDestroy {
       if (!isFirstTimeUser) {
         window.localStorage.setItem(STORAGE_KEY_FIRST_TIME_USER, 'true');
         setTimeout(() => {
-          this.snackBar.open('Ready to work offline', 'Dismiss', { duration: 5000 });
+          this.snackBarService.show('Ready to work offline', 'Dismiss', Duration.Long);
         });
       }
     }
@@ -131,17 +133,14 @@ export class RootComponent implements OnInit, AfterViewInit, OnDestroy {
           this.store.dispatch(new ResetWorkspace(vls[0], animations, hiddenLayerIds));
         } else {
           this.store.dispatch(new ImportVectorLayers(vls));
-          this.snackBar.open(
+          this.snackBarService.show(
             `Imported ${vls.length} path${vls.length === 1 ? '' : 's'}`,
             'Dismiss',
-            { duration: 2750 });
+            Duration.Short);
         }
       },
       () => {
-        this.snackBar.open(
-          `Couldn't import the file.`,
-          'Dismiss',
-          { duration: 5000 });
+        this.snackBarService.show(`Couldn't import the file`, 'Dismiss', Duration.Long);
       });
   }
 }
