@@ -147,6 +147,7 @@ export function regenerateModelIds(
     clonedAnim.blocks = clonedAnim.blocks.map(block => {
       const clonedBlock = block.clone();
       clonedBlock.id = _.uniqueId();
+      clonedBlock.animationId = clonedAnim.id;
       clonedBlock.layerId = layerIdMap.get(clonedBlock.layerId);
       return clonedBlock;
     });
