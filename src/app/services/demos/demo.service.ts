@@ -9,7 +9,7 @@ import { Animation } from 'app/scripts/model/timeline';
 // TODO: store hidden layer IDs and vector layer inside the animations?
 interface Demo {
   readonly vectorLayer: VectorLayer;
-  readonly animations: ReadonlyArray<Animation>;
+  readonly animation: Animation;
   readonly hiddenLayerIds: Set<string>;
 }
 
@@ -28,11 +28,15 @@ export class DemoService {
       .then(response => {
         const jsonObj = response.json();
         const vectorLayer = new VectorLayer(jsonObj.vectorLayer);
-        const animations = jsonObj.animations.map(anim => new Animation(anim));
+        const animation = new Animation(jsonObj.animation);
         const hiddenLayerIds = new Set<string>(jsonObj.hiddenLayerIds);
         const regeneratedModels =
-          ModelUtil.regenerateModelIds(vectorLayer, animations, hiddenLayerIds);
-        return regeneratedModels as Demo;
+          ModelUtil.regenerateModelIds(vectorLayer, [animation], hiddenLayerIds);
+        return {
+          vectorLayer: regeneratedModels.vectorLayer,
+          animation: regeneratedModels.animations[0],
+          hiddenLayerIds: regeneratedModels.hiddenLayerIds,
+        } as Demo;
       });
   }
 }

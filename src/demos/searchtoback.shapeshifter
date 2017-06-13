@@ -56,68 +56,66 @@
       }
     ]
   },
-  "animations": [
-    {
-      "id": "search_to_back",
-      "name": "search_to_back",
-      "duration": 2500,
-      "blocks": [
-        {
-          "id": "1000",
-          "type": "number",
-          "animationId": "search_to_back",
-          "layerId": "circle",
-          "propertyName": "trimPathEnd",
-          "fromValue": 1,
-          "toValue": 0,
-          "startTime": 0,
-          "endTime": 1000
-        },
-        {
-          "id": "1001",
-          "type": "number",
-          "animationId": "search_to_back",
-          "layerId": "stem",
-          "propertyName": "trimPathEnd",
-          "fromValue": 0.185,
-          "toValue": 1,
-          "startTime": 0,
-          "endTime": 1500
-        },
-        {
-          "id": "1002",
-          "type": "number",
-          "animationId": "search_to_back",
-          "layerId": "stem",
-          "propertyName": "trimPathStart",
-          "fromValue": 0,
-          "toValue": 0.75,
-          "startTime": 1000,
-          "endTime": 1700
-        },
-        {
-          "id": "1003",
-          "type": "number",
-          "animationId": "search_to_back",
-          "layerId": "top_arrowhead",
-          "propertyName": "trimPathEnd",
-          "fromValue": 0.2,
-          "toValue": 1,
-          "startTime": 1400,
-          "endTime": 1900
-        },
-        {
-          "id": "1004",
-          "type": "number",
-          "animationId": "search_to_back",
-          "layerId": "bottom_arrowhead",
-          "propertyName": "trimPathEnd",
-          "fromValue": 0.2,
-          "toValue": 1,
-          "startTime": 1400,
-          "endTime": 1900
-        }
-      ]
-    }
-  ]
+  "animation": {
+    "id": "search_to_back",
+    "name": "search_to_back",
+    "duration": 2500,
+    "blocks": [
+      {
+        "id": "1000",
+        "type": "number",
+        "animationId": "search_to_back",
+        "layerId": "circle",
+        "propertyName": "trimPathEnd",
+        "fromValue": 1,
+        "toValue": 0,
+        "startTime": 0,
+        "endTime": 1000
+      },
+      {
+        "id": "1001",
+        "type": "number",
+        "animationId": "search_to_back",
+        "layerId": "stem",
+        "propertyName": "trimPathEnd",
+        "fromValue": 0.185,
+        "toValue": 1,
+        "startTime": 0,
+        "endTime": 1500
+      },
+      {
+        "id": "1002",
+        "type": "number",
+        "animationId": "search_to_back",
+        "layerId": "stem",
+        "propertyName": "trimPathStart",
+        "fromValue": 0,
+        "toValue": 0.75,
+        "startTime": 1000,
+        "endTime": 1700
+      },
+      {
+        "id": "1003",
+        "type": "number",
+        "animationId": "search_to_back",
+        "layerId": "top_arrowhead",
+        "propertyName": "trimPathEnd",
+        "fromValue": 0.2,
+        "toValue": 1,
+        "startTime": 1400,
+        "endTime": 1900
+      },
+      {
+        "id": "1004",
+        "type": "number",
+        "animationId": "search_to_back",
+        "layerId": "bottom_arrowhead",
+        "propertyName": "trimPathEnd",
+        "fromValue": 0.2,
+        "toValue": 1,
+        "startTime": 1400,
+        "endTime": 1900
+      }
+    ]
+  }
 }

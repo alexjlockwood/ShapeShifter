@@ -41,15 +41,15 @@ export class LayerListTreeComponent implements OnInit, Callbacks {
   ngOnInit() {
     this.layerModel$ =
       this.store.select(getLayerListTreeState)
-        .map(({ animations, selectedLayerIds, collapsedLayerIds, hiddenLayerIds }) => {
+        .map(({ animation, selectedLayerIds, collapsedLayerIds, hiddenLayerIds }) => {
           const isExpandable = this.isLayerExpandable();
           const availablePropertyNames =
-            Array.from(ModelUtil.getAvailablePropertyNamesForLayer(this.layer, animations));
+            Array.from(ModelUtil.getAvailablePropertyNamesForLayer(this.layer, [animation]));
           const existingPropertyNames =
             Array.from(
-              _.keys(ModelUtil.getBlocksByAnimationByProperty(this.layer.id, animations)));
+              _.keys(ModelUtil.getBlocksByAnimationByProperty(this.layer.id, [animation])));
           return {
-            animations,
+            animation,
             isSelected: selectedLayerIds.has(this.layer.id),
             isExpandable,
             isExpanded: !collapsedLayerIds.has(this.layer.id),
@@ -119,7 +119,7 @@ interface TimelineBlockEvent {
 }
 
 interface LayerModel {
-  readonly animations: ReadonlyArray<Animation>;
+  readonly animation: Animation;
   readonly isSelected: boolean;
   readonly isExpandable: boolean;
   readonly isExpanded: boolean;

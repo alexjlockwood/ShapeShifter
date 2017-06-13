@@ -80,49 +80,47 @@
       }
     ]
   },
-  "animations": [
-    {
-      "id": "anim",
-      "name": "anim",
-      "duration": 2000,
-      "blocks": [
-        {
-          "id": "206",
-          "animationId": "anim",
-          "layerId": "strike",
-          "propertyName": "pathData",
-          "fromValue": "M 2,4.27 3.27,3 3.27,3 2,4.27 Z",
-          "toValue": "M 19.73,22 21,20.73 3.27,3 2,4.27 Z",
-          "type": "path",
-          "startTime": 268,
-          "endTime": 1539,
-          "interpolator": "FAST_OUT_SLOW_IN"
-        },
-        {
-          "id": "303",
-          "animationId": "anim",
-          "layerId": "strike_negative",
-          "propertyName": "pathData",
-          "fromValue": "M0 0 L24,0 L24,24 L0,24 L0,0 Z M4.54,1.73 L3.27,3 L3.27,3 L4.54,1.73 Z",
-          "toValue": "M0 0 L24,0 L24,24 L0,24 L0,0 Z M4.54,1.73 L3.27,3 L21,20.73 L22.27,19.46 Z",
-          "type": "path",
-          "startTime": 268,
-          "endTime": 1539,
-          "interpolator": "FAST_OUT_SLOW_IN"
-        },
-        {
-          "id": "304",
-          "animationId": "anim",
-          "layerId": "vector",
-          "propertyName": "alpha",
-          "fromValue": 1,
-          "toValue": 0.333,
-          "type": "number",
-          "startTime": 268,
-          "endTime": 1539,
-          "interpolator": "FAST_OUT_SLOW_IN"
-        }
-      ]
-    }
-  ]
+  "animation": {
+    "id": "anim",
+    "name": "anim",
+    "duration": 2000,
+    "blocks": [
+      {
+        "id": "206",
+        "animationId": "anim",
+        "layerId": "strike",
+        "propertyName": "pathData",
+        "fromValue": "M 2,4.27 3.27,3 3.27,3 2,4.27 Z",
+        "toValue": "M 19.73,22 21,20.73 3.27,3 2,4.27 Z",
+        "type": "path",
+        "startTime": 268,
+        "endTime": 1539,
+        "interpolator": "FAST_OUT_SLOW_IN"
+      },
+      {
+        "id": "303",
+        "animationId": "anim",
+        "layerId": "strike_negative",
+        "propertyName": "pathData",
+        "fromValue": "M0 0 L24,0 L24,24 L0,24 L0,0 Z M4.54,1.73 L3.27,3 L3.27,3 L4.54,1.73 Z",
+        "toValue": "M0 0 L24,0 L24,24 L0,24 L0,0 Z M4.54,1.73 L3.27,3 L21,20.73 L22.27,19.46 Z",
+        "type": "path",
+        "startTime": 268,
+        "endTime": 1539,
+        "interpolator": "FAST_OUT_SLOW_IN"
+      },
+      {
+        "id": "304",
+        "animationId": "anim",
+        "layerId": "vector",
+        "propertyName": "alpha",
+        "fromValue": 1,
+        "toValue": 0.333,
+        "type": "number",
+        "startTime": 268,
+        "endTime": 1539,
+        "interpolator": "FAST_OUT_SLOW_IN"
+      }
+    ]
+  }
 }

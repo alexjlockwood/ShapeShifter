@@ -1,7 +1,7 @@
 import * as TimelineConsts from './constants';
 import { Callbacks as LayerListTreeCallbacks } from './layerlisttree.component';
-import { ScrubEvent } from './layertimeline.directive';
 import { LayerTimelineDirective } from './layertimeline.directive';
+import { ScrubEvent } from './layertimeline.directive';
 import { Callbacks as TimelineAnimationRowCallbacks } from './timelineanimationrow.component';
 import {
   AfterViewInit,
@@ -67,7 +67,6 @@ import {
   SelectAnimation,
   SelectBlock,
 } from 'app/store/timeline/actions';
-import { getAnimations } from 'app/store/timeline/selectors';
 import { environment } from 'environments/environment';
 import * as $ from 'jquery';
 import * as _ from 'lodash';
@@ -126,8 +125,7 @@ export class LayerTimelineComponent
   private shouldSuppressRebuildSnapTimes = false;
   private snapTimes: Map<string, number[]>;
 
-  private animations: ReadonlyArray<Animation>;
-  private activeAnimationId: string;
+  private animation: Animation;
   private vectorLayer: VectorLayer;
   private selectedBlockIds: Set<string>;
 
@@ -154,15 +152,13 @@ export class LayerTimelineComponent
     this.layerTimelineModel$ =
       this.store.select(getLayerTimelineState)
         .map(({
-          animations,
+          animation,
           vectorLayer,
-          selectedAnimationIds,
-          activeAnimationId,
+          isAnimationSelected,
           selectedBlockIds,
           isBeingReset,
         }) => {
-          this.animations = animations;
-          this.activeAnimationId = activeAnimationId;
+          this.animation = animation;
           this.rebuildSnapTimes();
           this.vectorLayer = vectorLayer;
           this.selectedBlockIds = selectedBlockIds;
@@ -170,10 +166,9 @@ export class LayerTimelineComponent
             this.autoZoomToAnimation();
           }
           return {
-            animations,
+            animation,
             vectorLayer,
-            selectedAnimationIds,
-            activeAnimationId,
+            isAnimationSelected,
           };
         });
   }
@@ -241,10 +236,10 @@ export class LayerTimelineComponent
         ga('send', 'event', 'Demos', 'Demo selected', selectedDemoInfo.title);
 
         this.demoService.getDemo(selectedDemoInfo.id)
-          .then(({ vectorLayer, animations, hiddenLayerIds }) => {
+          .then(({ vectorLayer, animation, hiddenLayerIds }) => {
             // TODO: figure out if this hack is necessary and/or can be avoided?
             this.animatorService.reset();
-            this.store.dispatch(new ResetWorkspace(vectorLayer, animations, hiddenLayerIds));
+            this.store.dispatch(new ResetWorkspace(vectorLayer, animation, hiddenLayerIds));
             this.animatorService.reset();
           }).catch(error => {
             // TODO: show a snackbar indicating the error occurred
@@ -287,8 +282,8 @@ export class LayerTimelineComponent
 
   // Called from the LayerTimelineComponent template.
   animationHeaderTextClick(event: MouseEvent, animation: Animation) {
-    const clearExisting = !event.metaKey && !event.shiftKey;
-    this.store.dispatch(new SelectAnimation(animation.id, clearExisting));
+    const isSelected = !event.metaKey && !event.shiftKey;
+    this.store.dispatch(new SelectAnimation(isSelected));
   }
 
   // Called from the LayerTimelineComponent template.
@@ -610,18 +605,14 @@ export class LayerTimelineComponent
       return;
     }
     this.snapTimes = new Map();
-    if (this.animations) {
-      this.animations.forEach(animation => {
-        const snapTimesSet = new Set<number>();
-        snapTimesSet.add(0);
-        snapTimesSet.add(animation.duration);
-        animation.blocks.forEach(block => {
-          snapTimesSet.add(block.startTime);
-          snapTimesSet.add(block.endTime);
-        });
-        this.snapTimes.set(animation.id, Array.from(snapTimesSet));
-      });
-    }
+    const snapTimesSet = new Set<number>();
+    snapTimesSet.add(0);
+    snapTimesSet.add(this.animation.duration);
+    this.animation.blocks.forEach(block => {
+      snapTimesSet.add(block.startTime);
+      snapTimesSet.add(block.endTime);
+    });
+    this.snapTimes.set(this.animation.id, Array.from(snapTimesSet));
   }
 
   /**
@@ -870,10 +861,9 @@ export class LayerTimelineComponent
    */
   onWheelEvent(event: WheelEvent) {
     const startZoomFn = () => {
-      const animationIndex =
-        _.findIndex(this.animations, a => a.id === this.activeAnimationId);
+      // TODO: remove the array here
       this.$zoomStartActiveAnimation =
-        $(this.timelineAnimationRefs.toArray()[animationIndex].nativeElement);
+        $(this.timelineAnimationRefs.toArray()[0].nativeElement);
       this.zoomStartTimeCursorPos = this.$zoomStartActiveAnimation.position().left
         + this.currentTime * this.horizZoom + TimelineConsts.TIMELINE_ANIMATION_PADDING;
     };
@@ -931,15 +921,13 @@ export class LayerTimelineComponent
    * Zooms the timeline to fit the first animation.
    */
   private autoZoomToAnimation() {
-    if (this.animations.length) {
-      UiUtil.waitForElementWidth(this.$timeline)
-        .then(width => {
-          // Shave off one hundred pixels for safety.
-          width -= 100;
-          const zoom = width / this.animations[0].duration;
-          this.horizZoom = zoom;
-        });
-    }
+    UiUtil.waitForElementWidth(this.$timeline)
+      .then(width => {
+        // Shave off one hundred pixels for safety.
+        width -= 100;
+        const zoom = width / this.animation.duration;
+        this.horizZoom = zoom;
+      });
   }
 
   // Proxies a button click to the <input> tag that opens the file picker.
@@ -980,10 +968,9 @@ export class LayerTimelineComponent
 }
 
 interface LayerTimelineModel {
-  readonly animations: ReadonlyArray<Animation>;
+  readonly animation: Animation;
   readonly vectorLayer: VectorLayer;
-  readonly selectedAnimationIds: Set<string>;
-  readonly activeAnimationId: string;
+  readonly isAnimationSelected: boolean;
 }
 
 interface DragIndicatorInfo {

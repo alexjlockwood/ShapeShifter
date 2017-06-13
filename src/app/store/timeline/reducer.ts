@@ -11,18 +11,15 @@ import {
 import * as _ from 'lodash';
 
 export interface State {
-  readonly animations: ReadonlyArray<Animation>;
-  readonly selectedAnimationIds: Set<string>;
-  readonly activeAnimationId: string;
+  readonly animation: Animation;
+  readonly isAnimationSelected: boolean;
   readonly selectedBlockIds: Set<string>;
 }
 
 export function buildInitialState() {
-  const initialAnimation = new Animation();
   return {
-    animations: [initialAnimation],
-    selectedAnimationIds: new Set(),
-    activeAnimationId: initialAnimation.id,
+    animation: new Animation(),
+    isAnimationSelected: false,
     selectedBlockIds: new Set(),
   } as State;
 }
@@ -30,25 +27,22 @@ export function buildInitialState() {
 export function reducer(state = buildInitialState(), action: actions.Actions) {
   switch (action.type) {
 
-    // Replace a list of animations.
-    case actions.REPLACE_ANIMATIONS: {
-      const animations = state.animations.map(anim => {
-        const replacement = _.find(action.payload.animations, a => a.id === anim.id);
-        return replacement ? replacement : anim;
-      });
-      return { ...state, animations };
+    // Replace the animation.
+    case actions.REPLACE_ANIMATION: {
+      const { animation } = action.payload;
+      return { ...state, animation };
     }
 
     // Select an animation.
     case actions.SELECT_ANIMATION: {
-      const { animationId, clearExisting } = action.payload;
-      return selectAnimationId(state, animationId, clearExisting);
+      const { isAnimationSelected } = action.payload;
+      return { ...state, isAnimationSelected };
     }
 
     // Add an animation block to the currently active animation.
     case actions.ADD_BLOCK: {
       const { layer, propertyName, fromValue, toValue, activeTime } = action.payload;
-      const animation = _.find(state.animations, a => a.id === state.activeAnimationId);
+      let { animation } = state;
       const newBlockDuration = 100;
 
       // Find the right start time for the block, which should be a gap between
@@ -107,7 +101,7 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
 
       const newBlock = AnimationBlock.from({
         layerId: layer.id,
-        animationId: state.activeAnimationId,
+        animationId: state.animation.id,
         propertyName,
         startTime,
         endTime,
@@ -115,18 +109,12 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
         toValue,
         type,
       });
-      const animations = state.animations.map(anim => {
-        if (anim.id !== animation.id) {
-          return anim;
-        }
-        anim = anim.clone();
-        anim.blocks = anim.blocks.concat(newBlock);
-        return anim;
-      });
+      animation = animation.clone();
+      animation.blocks = animation.blocks.concat(newBlock);
 
       // Auto-select the new animation block.
       state = selectBlockId(state, newBlock.id, true /* clearExisting */);
-      return { ...state, animations };
+      return { ...state, animation };
     }
 
     // Replace a list of animation blocks.
@@ -136,28 +124,14 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
         // Do nothing if the list of blocks is empty.
         return state;
       }
-      const blockMap = new Map<string, AnimationBlock[]>();
-      for (const block of blocks) {
-        if (blockMap.has(block.animationId)) {
-          const blockList = blockMap.get(block.animationId);
-          blockList.push(block);
-          blockMap.set(block.animationId, blockList);
-        } else {
-          blockMap.set(block.animationId, [block]);
-        }
-      }
-      const animations = state.animations.map(animation => {
-        return blockMap.has(animation.id) ? animation.clone() : animation;
+      let { animation } = state;
+      const newBlocks = animation.blocks.map(block => {
+        const newBlock = _.find(blocks, b => block.id === b.id);
+        return newBlock ? newBlock : block;
       });
-      blockMap.forEach((replacementBlocks, animId) => {
-        const animation = _.find(animations, a => a.id === animId);
-        const newBlocks = animation.blocks.slice();
-        for (const block of replacementBlocks) {
-          newBlocks[_.findIndex(newBlocks, b => b.id === block.id)] = block;
-        }
-        animation.blocks = newBlocks;
-      });
-      return { ...state, animations };
+      animation = animation.clone();
+      animation.blocks = newBlocks;
+      return { ...state, animation };
     }
 
     // Select an animation block.
@@ -178,30 +152,13 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
 
     // Delete all selected animations, blocks, and layers.
     case actions.DELETE_SELECTED_MODELS: {
-      state = deleteSelectedAnimations(state);
+      state = deleteSelectedAnimation(state);
       state = deleteSelectedBlocks(state);
       return state;
     }
   }
 
   return state;
-}
-
-function selectAnimationId(state: State, animationId: string, clearExisting: boolean) {
-  const selectedAnimationIds = new Set(state.selectedAnimationIds);
-  if (clearExisting) {
-    selectedAnimationIds.forEach(id => {
-      if (id !== animationId) {
-        selectedAnimationIds.delete(id);
-      }
-    });
-  }
-  if (!clearExisting && selectedAnimationIds.has(animationId)) {
-    selectedAnimationIds.delete(animationId);
-  } else {
-    selectedAnimationIds.add(animationId);
-  }
-  return { ...state, selectedAnimationIds, selectedBlockIds: new Set() };
 }
 
 function selectBlockId(state: State, blockId: string, clearExisting: boolean) {
@@ -221,32 +178,16 @@ function selectBlockId(state: State, blockId: string, clearExisting: boolean) {
   return { ...state, selectedAnimationIds: new Set(), selectedBlockIds };
 }
 
-function deleteSelectedAnimations(state: State) {
-  const animations = state.animations.filter(animation => {
-    return !state.selectedAnimationIds.has(animation.id);
-  });
-  if (!animations.length) {
-    // Create an empty animation if the last one was deleted.
-    animations.push(new Animation());
+function deleteSelectedAnimation(state: State) {
+  let { animation } = state;
+  if (state.isAnimationSelected) {
+    animation = new Animation();
   }
-  let activeAnimationId = state.activeAnimationId;
-  if (state.selectedAnimationIds.has(activeAnimationId)) {
-    // If the active animation was deleted, activate the first animation.
-    activeAnimationId = animations[0].id;
-  }
-  return { ...state, animations, activeAnimationId, selectedAnimationIds: new Set() };
+  return { ...state, animation, isAnimationSelected: false };
 }
 
 function deleteSelectedBlocks(state: State) {
-  const animations = state.animations.map(animation => {
-    const existingBlocks = animation.blocks;
-    const newBlocks = existingBlocks.filter(b => !state.selectedBlockIds.has(b.id));
-    if (existingBlocks.length === newBlocks.length) {
-      return animation;
-    }
-    const clonedAnimation = animation.clone();
-    clonedAnimation.blocks = newBlocks;
-    return clonedAnimation;
-  });
-  return { ...state, animations, selectedBlockIds: new Set() };
+  const animation = state.animation.clone();
+  animation.blocks = animation.blocks.filter(b => !state.selectedBlockIds.has(b.id));
+  return { ...state, animation, selectedBlockIds: new Set() };
 }

@@ -75,85 +75,83 @@
       }
     ]
   },
-  "animations": [
-    {
-      "id": "anim",
-      "name": "anim",
-      "duration": 1000,
-      "blocks": [
-        {
-          "id": "1000",
-          "animationId": "anim",
-          "type": "number",
-          "layerId": "nw_stem",
-          "propertyName": "trimPathStart",
-          "fromValue": 0.48,
-          "toValue": 0,
-          "startTime": 300,
-          "endTime": 800,
-          "interpolator": "FAST_OUT_SLOW_IN"
-        },
-        {
-          "id": "1001",
-          "animationId": "anim",
-          "type": "number",
-          "layerId": "nw_stem",
-          "propertyName": "trimPathEnd",
-          "fromValue": 1,
-          "toValue": 0.86,
-          "startTime": 300,
-          "endTime": 800,
-          "interpolator": "FAST_OUT_SLOW_IN"
-        },
-        {
-          "id": "1002",
-          "animationId": "anim",
-          "type": "number",
-          "layerId": "ne_stem",
-          "propertyName": "trimPathStart",
-          "fromValue": 1,
-          "toValue": 0,
-          "startTime": 522,
-          "endTime": 836,
-          "interpolator": "FAST_OUT_SLOW_IN"
-        },
-        {
-          "id": "1003",
-          "animationId": "anim",
-          "type": "number",
-          "layerId": "oval",
-          "propertyName": "trimPathStart",
-          "fromValue": 0,
-          "toValue": 1,
-          "startTime": 134,
-          "endTime": 550,
-          "interpolator": "ACCELERATE_DECELERATE"
-        },
-        {
-          "id": "1004",
-          "animationId": "anim",
-          "type": "number",
-          "layerId": "oval_container",
-          "propertyName": "translateX",
-          "fromValue": 0,
-          "toValue": -6.7,
-          "startTime": 300,
-          "endTime": 800,
-          "interpolator": "FAST_OUT_SLOW_IN"
-        },
-        {
-          "id": "1005",
-          "animationId": "anim",
-          "type": "number",
-          "layerId": "oval_container",
-          "propertyName": "translateY",
-          "fromValue": 0,
-          "toValue": -6.7,
-          "startTime": 300,
-          "endTime": 800,
-          "interpolator": "FAST_OUT_SLOW_IN"
-        }
-      ]
-    }
-  ]
+  "animation": {
+    "id": "anim",
+    "name": "anim",
+    "duration": 1000,
+    "blocks": [
+      {
+        "id": "1000",
+        "animationId": "anim",
+        "type": "number",
+        "layerId": "nw_stem",
+        "propertyName": "trimPathStart",
+        "fromValue": 0.48,
+        "toValue": 0,
+        "startTime": 300,
+        "endTime": 800,
+        "interpolator": "FAST_OUT_SLOW_IN"
+      },
+      {
+        "id": "1001",
+        "animationId": "anim",
+        "type": "number",
+        "layerId": "nw_stem",
+        "propertyName": "trimPathEnd",
+        "fromValue": 1,
+        "toValue": 0.86,
+        "startTime": 300,
+        "endTime": 800,
+        "interpolator": "FAST_OUT_SLOW_IN"
+      },
+      {
+        "id": "1002",
+        "animationId": "anim",
+        "type": "number",
+        "layerId": "ne_stem",
+        "propertyName": "trimPathStart",
+        "fromValue": 1,
+        "toValue": 0,
+        "startTime": 522,
+        "endTime": 836,
+        "interpolator": "FAST_OUT_SLOW_IN"
+      },
+      {
+        "id": "1003",
+        "animationId": "anim",
+        "type": "number",
+        "layerId": "oval",
+        "propertyName": "trimPathStart",
+        "fromValue": 0,
+        "toValue": 1,
+        "startTime": 134,
+        "endTime": 550,
+        "interpolator": "ACCELERATE_DECELERATE"
+      },
+      {
+        "id": "1004",
+        "animationId": "anim",
+        "type": "number",
+        "layerId": "oval_container",
+        "propertyName": "translateX",
+        "fromValue": 0,
+        "toValue": -6.7,
+        "startTime": 300,
+        "endTime": 800,
+        "interpolator": "FAST_OUT_SLOW_IN"
+      },
+      {
+        "id": "1005",
+        "animationId": "anim",
+        "type": "number",
+        "layerId": "oval_container",
+        "propertyName": "translateY",
+        "fromValue": 0,
+        "toValue": -6.7,
+        "startTime": 300,
+        "endTime": 800,
+        "interpolator": "FAST_OUT_SLOW_IN"
+      }
+    ]
+  }
 }

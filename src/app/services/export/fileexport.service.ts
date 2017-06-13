@@ -10,10 +10,7 @@ import {
   getHiddenLayerIds,
   getVectorLayer,
 } from 'app/store/layers/selectors';
-import {
-  getActiveAnimation,
-  getAnimations,
-} from 'app/store/timeline/selectors';
+import { getAnimation } from 'app/store/timeline/selectors';
 import * as $ from 'jquery';
 import * as JSZip from 'jszip';
 import * as _ from 'lodash';
@@ -29,14 +26,13 @@ const EXPORTED_FPS = [30, 60];
 @Injectable()
 export class FileExportService {
   private vectorLayer: VectorLayer;
-  private animations: ReadonlyArray<Animation>;
+  private animation: Animation;
   private activeAnimation: Animation;
   private hiddenLayerIds: Set<string>;
 
   constructor(readonly store: Store<State>) {
     this.store.select(getVectorLayer).subscribe(vl => this.vectorLayer = vl);
-    this.store.select(getAnimations).subscribe(anims => this.animations = anims);
-    this.store.select(getActiveAnimation).subscribe(anim => this.activeAnimation = anim);
+    this.store.select(getAnimation).subscribe(anim => this.animation = anim);
     this.store.select(getHiddenLayerIds).subscribe(ids => this.hiddenLayerIds = ids);
   }
 
@@ -44,7 +40,8 @@ export class FileExportService {
     const jsonStr = JSON.stringify({
       version: IMPORT_EXPORT_VERSION,
       vectorLayer: this.vectorLayer.toJSON(),
-      animations: this.animations.map(anim => anim.toJSON()),
+      // TODO: remove the array here
+      animations: [this.animation.toJSON()],
       hiddenLayerIds: Array.from(this.hiddenLayerIds),
     }, undefined, 2);
     downloadFile(jsonStr, `${this.vectorLayer.name}.shapeshifter`);

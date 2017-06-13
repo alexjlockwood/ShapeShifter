@@ -34,7 +34,7 @@ import { getPropertyInputState } from 'app/store/common/selectors';
 import { ReplaceLayer } from 'app/store/layers/actions';
 import {
   AddBlock,
-  ReplaceAnimations,
+  ReplaceAnimation,
   ReplaceBlocks,
 } from 'app/store/timeline/actions';
 import * as $ from 'jquery';
@@ -68,18 +68,18 @@ export class PropertyInputComponent implements OnInit {
   ngOnInit() {
     this.propertyInputModel$ =
       this.store.select(getPropertyInputState).map(({
-        animations,
-        selectedAnimationIds,
+        animation,
+        isAnimationSelected,
         selectedBlockIds,
         vectorLayer,
         selectedLayerIds,
       }) => {
         if (selectedLayerIds.size) {
-          return this.buildInspectedLayerProperties(vectorLayer, selectedLayerIds, animations);
+          return this.buildInspectedLayerProperties(vectorLayer, selectedLayerIds, animation);
         } else if (selectedBlockIds.size) {
-          return this.buildInspectedBlockProperties(vectorLayer, animations, selectedBlockIds);
-        } else if (selectedAnimationIds.size) {
-          return this.buildInspectedAnimationProperties(animations, selectedAnimationIds);
+          return this.buildInspectedBlockProperties(vectorLayer, animation, selectedBlockIds);
+        } else if (isAnimationSelected) {
+          return this.buildInspectedAnimationProperties(animation);
         } else {
           return { numSelections: 0, inspectedProperties: [] };
         }
@@ -159,7 +159,7 @@ export class PropertyInputComponent implements OnInit {
   private buildInspectedLayerProperties(
     vl: VectorLayer,
     selectedLayerIds: Set<string>,
-    animations: ReadonlyArray<Animation>,
+    animation: Animation,
   ) {
     const numSelections = selectedLayerIds.size;
     const selectedLayers = Array.from(selectedLayerIds).map(id => vl.findLayerById(id));
@@ -203,8 +203,9 @@ export class PropertyInputComponent implements OnInit {
         undefined,
       ));
     });
+    // TODO: remove the animation array here
     const availablePropertyNames =
-      Array.from(ModelUtil.getAvailablePropertyNamesForLayer(layer, animations));
+      Array.from(ModelUtil.getAvailablePropertyNamesForLayer(layer, [animation]));
     return {
       model: layer,
       numSelections,
@@ -217,18 +218,12 @@ export class PropertyInputComponent implements OnInit {
 
   private buildInspectedBlockProperties(
     vl: VectorLayer,
-    animations: ReadonlyArray<Animation>,
+    animation: Animation,
     selectedBlockIds: Set<string>,
   ) {
     const numSelections = selectedBlockIds.size;
     const selectedBlocks = Array.from(selectedBlockIds).map(id => {
-      for (const anim of animations) {
-        const block = _.find(anim.blocks, b => b.id === id);
-        if (block) {
-          return block;
-        }
-      }
-      throw new Error('Could not find selected block ID');
+      return _.find(animation.blocks, b => b.id === id);
     });
     if (numSelections > 1) {
       return {
@@ -272,26 +267,9 @@ export class PropertyInputComponent implements OnInit {
     } as PropertyInputModel;
   }
 
-  private buildInspectedAnimationProperties(
-    animations: ReadonlyArray<Animation>,
-    selectedAnimationIds: Set<string>,
-  ) {
-    const numSelections = selectedAnimationIds.size;
-    const selectedAnimations = Array.from(selectedAnimationIds).map(id => {
-      return _.find(animations, animation => animation.id === id);
-    });
-    if (numSelections > 1) {
-      return {
-        numSelections,
-        description: `${numSelections} animations`,
-        // TODO: implement batch editting
-        inspectedProperties: [],
-        availablePropertyNames: [],
-      } as PropertyInputModel;
-    }
+  private buildInspectedAnimationProperties(animation: Animation) {
     const store = this.store;
     const enteredValueMap = this.enteredValueMap;
-    const animation = selectedAnimations[0];
     const icon = 'animation';
     const description = animation.name;
     const inspectedProperties: InspectedProperty<any>[] = [];
@@ -304,13 +282,14 @@ export class PropertyInputComponent implements OnInit {
         (value) => {
           const clonedAnimation = animation.clone();
           clonedAnimation[propertyName] = value;
-          store.dispatch(new ReplaceAnimations([clonedAnimation]));
+          store.dispatch(new ReplaceAnimation(clonedAnimation));
         },
         undefined,
         (enteredValue) => {
+          // TODO: remove this code now that only one animation is possible?
           if (property instanceof NameProperty) {
             return ModelUtil.getUniqueAnimationName(
-              animations, NameProperty.sanitize(enteredValue));
+              [animation], NameProperty.sanitize(enteredValue));
           }
           return enteredValue;
         },
@@ -319,7 +298,7 @@ export class PropertyInputComponent implements OnInit {
     });
     return {
       model: animation,
-      numSelections,
+      numSelections: 1,
       inspectedProperties,
       icon,
       description,

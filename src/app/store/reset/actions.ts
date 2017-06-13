@@ -8,15 +8,15 @@ export class ResetWorkspace implements Action {
   readonly type = RESET_WORKSPACE;
   readonly payload: {
     vectorLayer?: VectorLayer,
-    animations?: ReadonlyArray<Animation>,
+    animation?: Animation,
     hiddenLayerIds?: Set<string>,
   };
   constructor(
     vectorLayer?: VectorLayer,
-    animations?: ReadonlyArray<Animation>,
+    animation?: Animation,
     hiddenLayerIds?: Set<string>,
   ) {
-    this.payload = { vectorLayer, animations, hiddenLayerIds };
+    this.payload = { vectorLayer, animation, hiddenLayerIds };
   }
 }
 

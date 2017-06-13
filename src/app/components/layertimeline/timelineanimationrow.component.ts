@@ -41,9 +41,9 @@ export class TimelineAnimationRowComponent implements OnInit, Callbacks {
   ngOnInit() {
     this.animationRowModel$ =
       this.store.select(getTimelineAnimationRowState)
-        .map(({ animations, collapsedLayerIds, selectedBlockIds }) => {
+        .map(({ animation, collapsedLayerIds, selectedBlockIds }) => {
           const blocksByAnimationByPropertyValues =
-            _.values(ModelUtil.getBlocksByAnimationByProperty(this.layer.id, animations));
+            _.values(ModelUtil.getBlocksByAnimationByProperty(this.layer.id, [animation]));
           return {
             blocksByAnimationByPropertyValues,
             isExpanded: !collapsedLayerIds.has(this.layer.id),

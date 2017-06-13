@@ -43,7 +43,7 @@
       </button>
       <button md-icon-button
         class="spi-secondary-icon"
-        [disabled]="this.shouldShowStartActionModeButton(model)"
+        [disabled]="this.shouldDisableStartActionModeButton(model)"
         *ngIf="this.shouldShowStartActionModeButton(model)"
         (click)="this.onStartActionModeClick(model.model.id)"
         mdTooltip="Customize animation"

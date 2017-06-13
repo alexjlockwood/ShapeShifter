@@ -7,12 +7,10 @@ import {
 } from '../layers/selectors';
 import { isBeingReset } from '../reset/selectors';
 import {
-  getActiveAnimation,
-  getActiveAnimationId,
-  getAnimations,
-  getSelectedAnimationIds,
+  getAnimation,
   getSelectedBlockIds,
   getSelectedBlockLayerIds,
+  isAnimationSelected,
 } from '../timeline/selectors';
 import {
   createSelector,
@@ -30,8 +28,8 @@ export const getCanvasOverlayState =
 
 export const getPropertyInputState =
   createStructuredSelector({
-    animations: getAnimations,
-    selectedAnimationIds: getSelectedAnimationIds,
+    animation: getAnimation,
+    isAnimationSelected,
     selectedBlockIds: getSelectedBlockIds,
     vectorLayer: getVectorLayer,
     selectedLayerIds: getSelectedLayerIds,
@@ -39,7 +37,7 @@ export const getPropertyInputState =
 
 export const getLayerListTreeState =
   createStructuredSelector({
-    animations: getAnimations,
+    animation: getAnimation,
     selectedLayerIds: getSelectedLayerIds,
     collapsedLayerIds: getCollapsedLayerIds,
     hiddenLayerIds: getHiddenLayerIds,
@@ -47,33 +45,30 @@ export const getLayerListTreeState =
 
 export const getTimelineAnimationRowState =
   createStructuredSelector({
-    animations: getAnimations,
+    animation: getAnimation,
     collapsedLayerIds: getCollapsedLayerIds,
     selectedBlockIds: getSelectedBlockIds,
   });
 
 export const getLayerTimelineState =
   createStructuredSelector({
-    animations: getAnimations,
+    animation: getAnimation,
     vectorLayer: getVectorLayer,
-    selectedAnimationIds: getSelectedAnimationIds,
-    activeAnimationId: getActiveAnimationId,
+    isAnimationSelected,
     selectedBlockIds: getSelectedBlockIds,
     isBeingReset,
   });
 
 export const getAnimatorState =
   createStructuredSelector({
-    activeAnimation: getActiveAnimation,
+    animation: getAnimation,
     vectorLayer: getVectorLayer,
   });
 
 export const isWorkspaceDirty =
   createSelector(
-    [getVectorLayer, getAnimations],
-    (vectorLayer, animations) => {
-      return vectorLayer.children.length > 0
-        || animations.length > 1
-        || animations[0].blocks.length > 0;
+    [getVectorLayer, getAnimation],
+    (vectorLayer, animation) => {
+      return vectorLayer.children.length > 0 || animation.blocks.length > 0;
     },
   );

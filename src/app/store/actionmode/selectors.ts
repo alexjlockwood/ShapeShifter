@@ -8,10 +8,7 @@ import {
   createDeepEqualSelector,
   getAppState,
 } from '../selectors';
-import {
-  getActiveAnimation,
-  getAnimations,
-} from '../timeline/selectors';
+import { getAnimation } from '../timeline/selectors';
 import { AnimationRenderer } from 'app/scripts/animator';
 import {
   ActionMode,
@@ -39,18 +36,13 @@ const getActionModeState = createSelector(getAppState, s => s.actionmode);
 const getBlockId = createSelector(getActionModeState, s => s.blockId);
 const getBlock =
   createSelector(
-    [getAnimations, getBlockId],
-    (animations, blockId) => {
+    [getAnimation, getBlockId],
+    (anim, blockId) => {
       if (!blockId) {
         return undefined;
       }
-      for (const anim of animations) {
-        const block = _.find(anim.blocks, b => b.id === blockId);
-        if (block instanceof PathAnimationBlock) {
-          return block;
-        }
-      }
-      return undefined;
+      const block = _.find(anim.blocks, b => b.id === blockId);
+      return block instanceof PathAnimationBlock ? block : undefined;
     },
   );
 const getBlockLayerId = createSelector(getBlock, b => b ? b.layerId : undefined);
@@ -85,7 +77,7 @@ const getUnpairedSubPath =
 
 function getVectorLayerValue(getTimeFn: (block: PathAnimationBlock) => number) {
   return createSelector(
-    [getVectorLayer, getActiveAnimation, getBlock],
+    [getVectorLayer, getAnimation, getBlock],
     (vl, anim, block) => {
       if (!vl || !block) {
         return undefined;

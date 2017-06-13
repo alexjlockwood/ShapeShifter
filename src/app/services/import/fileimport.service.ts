@@ -34,7 +34,7 @@ export class FileImportService {
 
   import(
     fileList: FileList,
-    successFn: (type: ImportType, vls: VectorLayer[], animations?: ReadonlyArray<Animation>, hiddenLayerIds?: Set<string>) => void,
+    successFn: (type: ImportType, vls: VectorLayer[], animation?: Animation, hiddenLayerIds?: Set<string>) => void,
     failureFn: () => void,
   ) {
     if (!fileList || !fileList.length) {
@@ -97,22 +97,22 @@ export class FileImportService {
         } else if (file.type === 'application/json' || file.name.match(/\.shapeshifter$/)) {
           importType = ImportType.Json;
           let vl: VectorLayer;
-          let animations: ReadonlyArray<Animation>;
+          let animation: Animation;
           let hiddenLayerIds: Set<string>;
           try {
             const jsonObj = JSON.parse(text);
             vl = new VectorLayer(jsonObj.vectorLayer);
-            animations = jsonObj.animations.map(anim => new Animation(anim));
+            animation = new Animation(jsonObj.animation);
             hiddenLayerIds = new Set<string>(jsonObj.hiddenLayerIds);
-            const regeneratedModels = ModelUtil.regenerateModelIds(vl, animations, hiddenLayerIds);
+            const regeneratedModels = ModelUtil.regenerateModelIds(vl, [animation], hiddenLayerIds);
             vl = regeneratedModels.vectorLayer;
-            animations = regeneratedModels.animations;
+            animation = regeneratedModels.animations[0];
             hiddenLayerIds = regeneratedModels.hiddenLayerIds;
           } catch (e) {
             console.error('Failed to parse the file', e);
             failureFn();
           }
-          successFn(importType, [vl], animations, hiddenLayerIds);
+          successFn(importType, [vl], animation, hiddenLayerIds);
         }
       };
 
