@@ -29,8 +29,6 @@ import { environment } from 'environments/environment';
 import * as _ from 'lodash';
 import { Observable } from 'rxjs/Observable';
 
-// TODO: add back google analytics stuff!
-//   ga('send', 'event', 'Export', 'Export click');
 declare const ga: Function;
 
 type ActionModeState = 'inactive' | 'active';
@@ -77,8 +75,7 @@ export class ToolbarComponent implements OnInit {
   }
 
   onAutoFixClick() {
-    ga('send', 'event', 'General', 'Auto fix click');
-
+    ga('send', 'event', 'Action mode', 'Auto fix click');
     this.actionModeService.autoFixClick();
   }
 
