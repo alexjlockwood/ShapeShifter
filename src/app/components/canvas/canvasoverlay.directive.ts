@@ -397,6 +397,9 @@ export class CanvasOverlayDirective
     if (!this.isActionMode || this.actionSource === ActionSource.Animated) {
       return;
     }
+    if (!this.activePath) {
+      return;
+    }
 
     const flattenedTransform =
       LayerUtil.getFlattenedTransformForLayer(this.vectorLayer, this.blockLayerId);
@@ -547,6 +550,9 @@ export class CanvasOverlayDirective
     if (!this.isActionMode || this.actionSource === ActionSource.Animated) {
       return;
     }
+    if (!this.activePath) {
+      return;
+    }
 
     const pathLayer = this.activePathLayer;
     let path = pathLayer.pathData;
@@ -673,6 +679,9 @@ export class CanvasOverlayDirective
     if (!this.isActionMode || this.actionSource === ActionSource.Animated) {
       return;
     }
+    if (!this.activePath) {
+      return;
+    }
     if (this.actionMode !== ActionMode.Selection
       || !this.selectionHelper
       || !this.selectionHelper.isDragTriggered()) {
@@ -697,6 +706,9 @@ export class CanvasOverlayDirective
   // and split subpaths mode for stroked paths.
   private drawFloatingPreviewPoint(ctx: Context) {
     if (!this.isActionMode || this.actionSource === ActionSource.Animated) {
+      return;
+    }
+    if (!this.activePath) {
       return;
     }
     const pathLayer = this.activePathLayer;
@@ -724,6 +736,9 @@ export class CanvasOverlayDirective
   // Draw the floating points on top of the drag line in split filled subpath mode.
   private drawFloatingSplitFilledPathPreviewPoints(ctx: Context) {
     if (!this.isActionMode || this.actionSource === ActionSource.Animated) {
+      return;
+    }
+    if (!this.activePath) {
       return;
     }
     if (this.actionMode !== ActionMode.SplitSubPaths || !this.shapeSplitter) {
