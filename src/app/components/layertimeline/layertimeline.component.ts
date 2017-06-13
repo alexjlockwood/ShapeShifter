@@ -1,7 +1,7 @@
 import * as TimelineConsts from './constants';
 import { Callbacks as LayerListTreeCallbacks } from './layerlisttree.component';
-import { LayerTimelineDirective } from './layertimeline.directive';
 import { ScrubEvent } from './layertimeline.directive';
+import { LayerTimelineDirective } from './layertimeline.directive';
 import { Callbacks as TimelineAnimationRowCallbacks } from './timelineanimationrow.component';
 import {
   AfterViewInit,
@@ -934,8 +934,8 @@ export class LayerTimelineComponent
     if (this.animations.length) {
       UiUtil.waitForElementWidth(this.$timeline)
         .then(width => {
-          // Shave off two hundred pixels for safety.
-          width -= 200;
+          // Shave off one hundred pixels for safety.
+          width -= 100;
           const zoom = width / this.animations[0].duration;
           this.horizZoom = zoom;
         });
