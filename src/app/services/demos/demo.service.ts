@@ -30,13 +30,7 @@ export class DemoService {
         const vectorLayer = new VectorLayer(jsonObj.vectorLayer);
         const animation = new Animation(jsonObj.animation);
         const hiddenLayerIds = new Set<string>(jsonObj.hiddenLayerIds);
-        const regeneratedModels =
-          ModelUtil.regenerateModelIds(vectorLayer, [animation], hiddenLayerIds);
-        return {
-          vectorLayer: regeneratedModels.vectorLayer,
-          animation: regeneratedModels.animations[0],
-          hiddenLayerIds: regeneratedModels.hiddenLayerIds,
-        } as Demo;
+        return ModelUtil.regenerateModelIds(vectorLayer, animation, hiddenLayerIds) as Demo;
       });
   }
 }

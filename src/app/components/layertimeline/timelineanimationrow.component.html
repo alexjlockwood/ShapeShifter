@@ -3,11 +3,11 @@
 <ng-container *ngIf="(this.animationRowModel$ | async) as model">
   <div class="slt-properties"
     *ngIf="model.isExpanded"
-    [ngClass]="{'slt-properties-empty': !model.blocksByAnimationByPropertyValues.length}">
+    [ngClass]="{'slt-properties-empty': !model.blocksByPropertyNameValues.length}">
     <div class="slt-property"
-      *ngFor="let blocksByAnimation of model.blocksByAnimationByPropertyValues">
+      *ngFor="let blocks of model.blocksByPropertyNameValues">
       <div class="slt-timeline-block"
-        *ngFor="let block of blocksByAnimation[this.animation.id]"
+        *ngFor="let block of blocks"
         (click)="this.timelineBlockClick($event, block, this.animation, this.layer)"
         (mousedown)="this.timelineBlockMouseDown($event, block, this.animation, this.layer)"
         tabindex="-1"

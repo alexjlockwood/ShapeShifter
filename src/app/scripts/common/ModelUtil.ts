@@ -66,31 +66,6 @@ export function getOrderedBlocksByPropertyByLayer(animation: Animation) {
 }
 
 /**
- * Builds a map for a given layer ID, where the keys are property names
- * and the values are maps of animation IDs to its corresponding list of
- * animation blocks. In other words, it allows us to find all animation blocks
- * associated with a particular layer ID, property name, and animation ID.
- */
-export function getBlocksByAnimationByProperty(
-  layerId: string,
-  animations: ReadonlyArray<Animation>,
-) {
-  const blocksByAnimationByProperty: PropertyMap<AnimationMap<AnimationBlock[]>> = {};
-  animations.forEach(animation => {
-    const blocksByPropertyByLayer = getOrderedBlocksByPropertyByLayer(animation);
-    _.forEach(blocksByPropertyByLayer[layerId], (blocksByProperty, propertyName) => {
-      let blocksByAnimation = blocksByAnimationByProperty[propertyName];
-      if (!blocksByAnimation) {
-        blocksByAnimation = {};
-        blocksByAnimationByProperty[propertyName] = blocksByAnimation;
-      }
-      blocksByAnimation[animation.id] = blocksByPropertyByLayer[layerId][propertyName];
-    });
-  });
-  return blocksByAnimationByProperty;
-}
-
-/**
  * Returns a set of property names that have not yet been animated.
  */
 export function getAvailablePropertyNamesForLayer(layer: Layer, animation: Animation) {
@@ -133,14 +108,15 @@ export function regenerateModelIds(
     return clone;
   })(vectorLayer);
 
-  animation = animation.clone();
-  animation.id = _.uniqueId();
-  animation.blocks = animation.blocks.map(block => {
+  const clonedAnim = animation.clone();
+  clonedAnim.id = _.uniqueId();
+  clonedAnim.blocks = clonedAnim.blocks.map(block => {
     const clonedBlock = block.clone();
     clonedBlock.id = _.uniqueId();
     clonedBlock.layerId = layerIdMap.get(clonedBlock.layerId);
     return clonedBlock;
   });
+  animation = clonedAnim;
 
   hiddenLayerIds = new Set(Array.from(hiddenLayerIds).map(id => layerIdMap.get(id)));
 

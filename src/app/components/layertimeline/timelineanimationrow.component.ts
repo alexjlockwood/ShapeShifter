@@ -42,10 +42,12 @@ export class TimelineAnimationRowComponent implements OnInit, Callbacks {
     this.animationRowModel$ =
       this.store.select(getTimelineAnimationRowState)
         .map(({ animation, collapsedLayerIds, selectedBlockIds }) => {
-          const blocksByAnimationByPropertyValues =
-            _.values(ModelUtil.getBlocksByAnimationByProperty(this.layer.id, [animation]));
+          // Returns a list of animation block lists. Each animation block list corresponds to
+          // a property name displayed in the layer list tree.
+          const blocksByPropertyNameValues =
+            _.values(ModelUtil.getOrderedBlocksByPropertyByLayer(animation)[this.layer.id]);
           return {
-            blocksByAnimationByPropertyValues,
+            blocksByPropertyNameValues,
             isExpanded: !collapsedLayerIds.has(this.layer.id),
             selectedBlockIds,
           };
@@ -94,7 +96,7 @@ export interface Callbacks {
 }
 
 interface AnimationRowModel {
-  readonly blocksByAnimationByPropertyValues: AnimationMap<AnimationBlock[]>[];
+  readonly blocksByPropertyNameValues: ReadonlyArray<ReadonlyArray<AnimationBlock>>;
   readonly isExpanded: boolean;
   readonly selectedBlockIds: Set<string>;
 }

@@ -46,8 +46,7 @@ export class LayerListTreeComponent implements OnInit, Callbacks {
           const availablePropertyNames =
             Array.from(ModelUtil.getAvailablePropertyNamesForLayer(this.layer, animation));
           const existingPropertyNames =
-            Array.from(
-              _.keys(ModelUtil.getBlocksByAnimationByProperty(this.layer.id, [animation])));
+            Array.from(_.keys(ModelUtil.getOrderedBlocksByPropertyByLayer(animation)[this.layer.id]));
           return {
             animation,
             isSelected: selectedLayerIds.has(this.layer.id),
