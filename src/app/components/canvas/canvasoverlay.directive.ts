@@ -87,6 +87,9 @@ const ERROR_COLOR = '#F44336';
 // TODO: make segment splitter work with trim paths
 // TODO: make trim paths work with shifts/reversals
 // TODO: make cursor 'drag' in selection mode when dragging points
+// TODO: need to avoid cases where the pathData could be undefined
+// (i.e. this could happen if the user enters action mode w/o setting a path string on the layer)
+
 type Context = CanvasRenderingContext2D;
 
 /**
@@ -967,6 +970,9 @@ export class CanvasOverlayDirective
       };
     }
     const pathLayer = this.vectorLayer.findLayerById(this.blockLayerId) as MorphableLayer;
+    if (!pathLayer.pathData) {
+      return { isHit: false };
+    }
     let isSegmentInRangeFn: (distance: number, cmd: Command) => boolean;
     if (!opts.noSegments) {
       isSegmentInRangeFn = distance => {

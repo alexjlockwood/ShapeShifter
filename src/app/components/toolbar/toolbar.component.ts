@@ -273,27 +273,8 @@ class ToolbarData {
       return `${segStr} selected`;
     } else if (numPoints > 0) {
       return `${ptStr} selected`;
-    } else if (this.shouldShowActionMode()) {
-      const { areCompatible, errorPath, numPointsMissing } =
-        ActionModeUtil.checkPathsCompatible(this.block);
-      if (areCompatible) {
-        return 'Select something below to edit its properties';
-      } else {
-        const createSubtitleFn = (direction: string) => {
-          if (numPointsMissing === 1) {
-            return `Add 1 point to the subpath on the ${direction}`;
-          } else {
-            return `Add ${numPointsMissing} points to the subpath on the ${direction}`;
-          }
-        };
-        if (errorPath === ActionSource.From) {
-          return createSubtitleFn('left');
-        } else if (errorPath === ActionSource.To) {
-          return createSubtitleFn('right');
-        }
-        // This should never happen, but return empty string just to be safe.
-        return '';
-      }
+    } else if (this.mode === ActionMode.Selection) {
+      return 'Select something below to edit its properties';
     }
     return 'Shape Shifter';
   }
@@ -313,6 +294,25 @@ class ToolbarData {
         return `Pair the selected subpath with a corresponding subpath on the ${toSourceDir}`;
       }
       return 'Select a subpath';
+    } else if (this.mode === ActionMode.Selection) {
+      const { areCompatible, errorPath, numPointsMissing } =
+        ActionModeUtil.checkPathsCompatible(this.block);
+      if (!areCompatible) {
+        const createSubtitleFn = (direction: string) => {
+          if (numPointsMissing === 1) {
+            return `Add 1 point to the subpath on the ${direction}`;
+          } else {
+            return `Add ${numPointsMissing} points to the subpath on the ${direction}`;
+          }
+        };
+        if (errorPath === ActionSource.From) {
+          return createSubtitleFn('left');
+        } else if (errorPath === ActionSource.To) {
+          return createSubtitleFn('right');
+        }
+        // This should never happen, but return empty string just to be safe.
+        return '';
+      }
     }
     return '';
   }
