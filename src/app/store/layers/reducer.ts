@@ -214,7 +214,7 @@ function groupOrUngroupSelectedLayers(state: State, shouldGroup: boolean) {
 
     // Remove all selected items from their parents and move them into a new parent.
     const newGroup = new GroupLayer({
-      name: ModelUtil.getUniqueLayerName([vectorLayer], 'group'),
+      name: LayerUtil.getUniqueLayerName([vectorLayer], 'group'),
       children: tempSelLayers,
     });
     const parentChildren = firstSelectedLayerParent.children.slice();
