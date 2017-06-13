@@ -154,7 +154,6 @@
     "blocks": [
       {
         "id": "104",
-        "animationId": "103",
         "layerId": "94",
         "propertyName": "rotation",
         "startTime": 0,
@@ -166,7 +165,6 @@
       },
       {
         "id": "105",
-        "animationId": "103",
         "layerId": "96",
         "propertyName": "rotation",
         "startTime": 0,
@@ -178,7 +176,6 @@
       },
       {
         "id": "106",
-        "animationId": "103",
         "layerId": "95",
         "propertyName": "fillAlpha",
         "startTime": 100,
@@ -190,7 +187,6 @@
       },
       {
         "id": "107",
-        "animationId": "103",
         "layerId": "97",
         "propertyName": "fillAlpha",
         "startTime": 100,
@@ -202,7 +198,6 @@
       },
       {
         "id": "108",
-        "animationId": "103",
         "layerId": "98",
         "propertyName": "trimPathEnd",
         "startTime": 500,
@@ -214,7 +209,6 @@
       },
       {
         "id": "109",
-        "animationId": "103",
         "layerId": "99",
         "propertyName": "trimPathEnd",
         "startTime": 500,
@@ -226,7 +220,6 @@
       },
       {
         "id": "110",
-        "animationId": "103",
         "layerId": "101",
         "propertyName": "pathData",
         "startTime": 1160,
@@ -238,7 +231,6 @@
       },
       {
         "id": "111",
-        "animationId": "103",
         "layerId": "93",
         "propertyName": "alpha",
         "startTime": 500,
@@ -250,7 +242,6 @@
       },
       {
         "id": "145",
-        "animationId": "103",
         "layerId": "101",
         "propertyName": "pathData",
         "startTime": 1000,

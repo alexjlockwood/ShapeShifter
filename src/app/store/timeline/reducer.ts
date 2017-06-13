@@ -101,7 +101,6 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
 
       const newBlock = AnimationBlock.from({
         layerId: layer.id,
-        animationId: state.animation.id,
         propertyName,
         startTime,
         endTime,
@@ -142,12 +141,12 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
 
     // Clear all layer selections.
     case actions.CLEAR_LAYER_SELECTIONS: {
-      return { ...state, selectedAnimationIds: new Set(), selectedBlockIds: new Set() };
+      return { ...state, isAnimationSelected: false, selectedBlockIds: new Set() };
     }
 
     // Select a layer.
     case actions.SELECT_LAYER: {
-      return { ...state, selectedAnimationIds: new Set(), selectedBlockIds: new Set() };
+      return { ...state, isAnimationSelected: false, selectedBlockIds: new Set() };
     }
 
     // Delete all selected animations, blocks, and layers.
@@ -175,7 +174,7 @@ function selectBlockId(state: State, blockId: string, clearExisting: boolean) {
   } else {
     selectedBlockIds.add(blockId);
   }
-  return { ...state, selectedAnimationIds: new Set(), selectedBlockIds };
+  return { ...state, isAnimationSelected: false, selectedBlockIds };
 }
 
 function deleteSelectedAnimation(state: State) {

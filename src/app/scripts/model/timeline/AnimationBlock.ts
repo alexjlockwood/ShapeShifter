@@ -37,7 +37,6 @@ export abstract class AnimationBlock {
 
   protected constructor(obj: ConstructorArgs) {
     this.id = obj.id || _.uniqueId();
-    this.animationId = obj.animationId;
     this.layerId = obj.layerId;
     this.propertyName = obj.propertyName;
     this.startTime = obj.startTime || 0;
@@ -57,7 +56,6 @@ export abstract class AnimationBlock {
   toJSON() {
     return {
       id: this.id,
-      animationId: this.animationId,
       layerId: this.layerId,
       propertyName: this.propertyName,
       startTime: this.startTime,
@@ -132,7 +130,6 @@ export class NumberAnimationBlock extends AnimationBlock {
 
 interface AnimationBlockArgs {
   id?: string;
-  animationId: string;
   layerId: string;
   propertyName: string;
   startTime?: number;

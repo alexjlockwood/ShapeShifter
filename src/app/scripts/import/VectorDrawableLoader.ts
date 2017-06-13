@@ -114,8 +114,6 @@ export function loadAnimationFromXmlString(
   animationName: string,
   doesLayerNameExistFn: (name: string) => boolean) {
 
-  const animationId = _.uniqueId();
-
   const parser = new DOMParser();
   const avdNode = parser.parseFromString(xmlString, 'application/xml').documentElement;
   const vl =
@@ -179,7 +177,6 @@ export function loadAnimationFromXmlString(
         const endTime = startTime + Number(get(animElem, 'duration'));
         if (get(animElem, 'valueType') === 'pathType' && propertyName === 'pathData') {
           animationBlocks.push(AnimationBlock.from({
-            animationId,
             layerId,
             propertyName,
             fromValue: new Path(fromValue),
@@ -191,7 +188,6 @@ export function loadAnimationFromXmlString(
           }));
         } else if (propertyName === 'fillAlpha' || propertyName === 'translateX') {
           animationBlocks.push(AnimationBlock.from({
-            animationId,
             layerId,
             propertyName,
             fromValue: Number(fromValue),

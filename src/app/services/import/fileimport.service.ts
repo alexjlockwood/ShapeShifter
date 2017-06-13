@@ -104,9 +104,9 @@ export class FileImportService {
             vl = new VectorLayer(jsonObj.vectorLayer);
             animation = new Animation(jsonObj.animation);
             hiddenLayerIds = new Set<string>(jsonObj.hiddenLayerIds);
-            const regeneratedModels = ModelUtil.regenerateModelIds(vl, [animation], hiddenLayerIds);
+            const regeneratedModels = ModelUtil.regenerateModelIds(vl, animation, hiddenLayerIds);
             vl = regeneratedModels.vectorLayer;
-            animation = regeneratedModels.animations[0];
+            animation = regeneratedModels.animation;
             hiddenLayerIds = regeneratedModels.hiddenLayerIds;
           } catch (e) {
             console.error('Failed to parse the file', e);

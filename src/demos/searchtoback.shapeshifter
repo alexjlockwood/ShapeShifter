@@ -64,7 +64,6 @@
       {
         "id": "1000",
         "type": "number",
-        "animationId": "search_to_back",
         "layerId": "circle",
         "propertyName": "trimPathEnd",
         "fromValue": 1,
@@ -75,7 +74,6 @@
       {
         "id": "1001",
         "type": "number",
-        "animationId": "search_to_back",
         "layerId": "stem",
         "propertyName": "trimPathEnd",
         "fromValue": 0.185,
@@ -86,7 +84,6 @@
       {
         "id": "1002",
         "type": "number",
-        "animationId": "search_to_back",
         "layerId": "stem",
         "propertyName": "trimPathStart",
         "fromValue": 0,
@@ -97,7 +94,6 @@
       {
         "id": "1003",
         "type": "number",
-        "animationId": "search_to_back",
         "layerId": "top_arrowhead",
         "propertyName": "trimPathEnd",
         "fromValue": 0.2,
@@ -108,7 +104,6 @@
       {
         "id": "1004",
         "type": "number",
-        "animationId": "search_to_back",
         "layerId": "bottom_arrowhead",
         "propertyName": "trimPathEnd",
         "fromValue": 0.2,

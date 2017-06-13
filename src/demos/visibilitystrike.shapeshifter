@@ -87,7 +87,6 @@
     "blocks": [
       {
         "id": "206",
-        "animationId": "anim",
         "layerId": "strike",
         "propertyName": "pathData",
         "fromValue": "M 2,4.27 3.27,3 3.27,3 2,4.27 Z",
@@ -99,7 +98,6 @@
       },
       {
         "id": "303",
-        "animationId": "anim",
         "layerId": "strike_negative",
         "propertyName": "pathData",
         "fromValue": "M0 0 L24,0 L24,24 L0,24 L0,0 Z M4.54,1.73 L3.27,3 L3.27,3 L4.54,1.73 Z",
@@ -111,7 +109,6 @@
       },
       {
         "id": "304",
-        "animationId": "anim",
         "layerId": "vector",
         "propertyName": "alpha",
         "fromValue": 1,

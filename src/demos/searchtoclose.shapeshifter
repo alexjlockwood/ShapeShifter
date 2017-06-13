@@ -82,7 +82,6 @@
     "blocks": [
       {
         "id": "1000",
-        "animationId": "anim",
         "type": "number",
         "layerId": "nw_stem",
         "propertyName": "trimPathStart",
@@ -94,7 +93,6 @@
       },
       {
         "id": "1001",
-        "animationId": "anim",
         "type": "number",
         "layerId": "nw_stem",
         "propertyName": "trimPathEnd",
@@ -106,7 +104,6 @@
       },
       {
         "id": "1002",
-        "animationId": "anim",
         "type": "number",
         "layerId": "ne_stem",
         "propertyName": "trimPathStart",
@@ -118,7 +115,6 @@
       },
       {
         "id": "1003",
-        "animationId": "anim",
         "type": "number",
         "layerId": "oval",
         "propertyName": "trimPathStart",
@@ -130,7 +126,6 @@
       },
       {
         "id": "1004",
-        "animationId": "anim",
         "type": "number",
         "layerId": "oval_container",
         "propertyName": "translateX",
@@ -142,7 +137,6 @@
       },
       {
         "id": "1005",
-        "animationId": "anim",
         "type": "number",
         "layerId": "oval_container",
         "propertyName": "translateY",

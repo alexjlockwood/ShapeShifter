@@ -119,7 +119,7 @@ export interface PropertyMap<T> {
 
 export function regenerateModelIds(
   vectorLayer: VectorLayer,
-  animations: ReadonlyArray<Animation>,
+  animation: Animation,
   hiddenLayerIds: Set<string>,
 ) {
   // Create a map of old IDs to new IDs.
@@ -133,20 +133,16 @@ export function regenerateModelIds(
     return clone;
   })(vectorLayer);
 
-  animations = animations.map(anim => {
-    const clonedAnim = anim.clone();
-    clonedAnim.id = _.uniqueId();
-    clonedAnim.blocks = clonedAnim.blocks.map(block => {
-      const clonedBlock = block.clone();
-      clonedBlock.id = _.uniqueId();
-      clonedBlock.animationId = clonedAnim.id;
-      clonedBlock.layerId = layerIdMap.get(clonedBlock.layerId);
-      return clonedBlock;
-    });
-    return clonedAnim;
+  animation = animation.clone();
+  animation.id = _.uniqueId();
+  animation.blocks = animation.blocks.map(block => {
+    const clonedBlock = block.clone();
+    clonedBlock.id = _.uniqueId();
+    clonedBlock.layerId = layerIdMap.get(clonedBlock.layerId);
+    return clonedBlock;
   });
 
   hiddenLayerIds = new Set(Array.from(hiddenLayerIds).map(id => layerIdMap.get(id)));
 
-  return { vectorLayer, animations, hiddenLayerIds };
+  return { vectorLayer, animation, hiddenLayerIds };
 }
