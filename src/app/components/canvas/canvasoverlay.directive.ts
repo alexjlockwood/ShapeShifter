@@ -37,7 +37,10 @@ import {
   VectorLayer,
 } from 'app/scripts/model/layers';
 import { Command } from 'app/scripts/model/paths';
-import { Path } from 'app/scripts/model/paths';
+import {
+  HitResult,
+  Path,
+} from 'app/scripts/model/paths';
 import { ActionModeService } from 'app/services/actionmode/actionmode.service';
 import { AnimatorService } from 'app/services/animator/animator.service';
 import {
@@ -971,7 +974,7 @@ export class CanvasOverlayDirective
     }
     const pathLayer = this.vectorLayer.findLayerById(this.blockLayerId) as MorphableLayer;
     if (!pathLayer.pathData) {
-      return { isHit: false };
+      return { isHit: false } as HitResult;
     }
     let isSegmentInRangeFn: (distance: number, cmd: Command) => boolean;
     if (!opts.noSegments) {
