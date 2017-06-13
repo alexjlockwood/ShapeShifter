@@ -1,7 +1,7 @@
 import * as TimelineConsts from './constants';
 import { Callbacks as LayerListTreeCallbacks } from './layerlisttree.component';
-import { ScrubEvent } from './layertimeline.directive';
 import { LayerTimelineDirective } from './layertimeline.directive';
+import { ScrubEvent } from './layertimeline.directive';
 import { Callbacks as TimelineAnimationRowCallbacks } from './timelineanimationrow.component';
 import {
   AfterViewInit,
@@ -62,8 +62,6 @@ import {
 import { getVectorLayer } from 'app/store/layers/selectors';
 import { ResetWorkspace } from 'app/store/reset/actions';
 import {
-  ActivateAnimation,
-  AddAnimation,
   AddBlock,
   ReplaceBlocks,
   SelectAnimation,
@@ -257,14 +255,6 @@ export class LayerTimelineComponent
   }
 
   // Called from the LayerTimelineComponent template.
-  addNewAnimationClick() {
-    this.store.select(getAnimations).first().subscribe(animations => {
-      const name = ModelUtil.getUniqueAnimationName(animations, 'anim');
-      this.store.dispatch(new AddAnimation(new Animation({ name })));
-    });
-  }
-
-  // Called from the LayerTimelineComponent template.
   exportSvgClick() {
     ga('send', 'event', 'Export', 'SVG');
     this.fileExportService.exportSvg();
@@ -347,7 +337,7 @@ export class LayerTimelineComponent
 
   // Called from the LayerTimelineComponent template.
   animationTimelineMouseDown(event: MouseEvent, animation: Animation) {
-    this.store.dispatch(new ActivateAnimation(animation.id));
+    // TODO: should we clear any selections here?
   }
 
   // @Override TimelineAnimationRowCallbacks

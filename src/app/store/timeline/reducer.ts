@@ -30,17 +30,6 @@ export function buildInitialState() {
 export function reducer(state = buildInitialState(), action: actions.Actions) {
   switch (action.type) {
 
-    // Add an animation to the application state.
-    case actions.ADD_ANIMATION: {
-      const animations = state.animations.concat([action.payload.animation]);
-      return { ...state, animations };
-    }
-
-    // Activate an animation.
-    case actions.ACTIVATE_ANIMATION: {
-      return { ...state, activeAnimationId: action.payload.animationId };
-    }
-
     // Replace a list of animations.
     case actions.REPLACE_ANIMATIONS: {
       const animations = state.animations.map(anim => {

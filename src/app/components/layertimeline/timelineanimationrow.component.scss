@@ -73,33 +73,6 @@ li {
     padding-left: $timelineAnimationPadding;
     padding-right: $timelineAnimationPadding;
   }
-  .slt-timeline-animation-new-container {
-    flex: 0 0 auto;
-    width: 128px;
-    margin: 24px;
-  }
-  .slt-timeline-animation-new {
-    color: $colorBlackTextSecondary;
-    cursor: pointer;
-    padding: 8px 12px;
-    outline: 0;
-    md-icon {
-      width: 24px;
-      height: 24px;
-      box-sizing: content-box;
-      margin-bottom: 4px;
-    }
-    span {
-      font-size: 12px;
-      text-transform: none;
-      letter-spacing: 0;
-      line-height: 16px;
-      font-weight: 500;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-  }
   .slt-properties {
     background-color: #fff;
     border-radius: 2px;
