@@ -41,6 +41,3 @@ Thumbs.db
 
 *~
 *.sublime-workspace
-
-# TODO: remove this once this bug is fixed: https://github.com/mapbox/node-pre-gyp/issues/298
-package-lock.json
