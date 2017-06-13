@@ -90,7 +90,6 @@ export class LayerTimelineDirective {
       * this.animation.duration;
     time = _.clamp(time, 0, this.animation.duration);
     this.onScrub.emit({
-      animation: this.animation,
       time,
       disableSnap: !!event.altKey,
     });
@@ -160,7 +159,6 @@ function round(n: number) {
 }
 
 export interface ScrubEvent {
-  animation: Animation;
   time: number;
   disableSnap: boolean;
 }

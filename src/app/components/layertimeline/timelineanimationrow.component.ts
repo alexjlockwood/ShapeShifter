@@ -28,7 +28,6 @@ export class TimelineAnimationRowComponent implements OnInit, Callbacks {
   animationRowModel$: Observable<AnimationRowModel>;
 
   @Input() layer: Layer;
-  @Input() animation: Layer;
 
   // MouseEvents from this layer (or children layers further down the tree)
   // are recursively handled by parent components until they reach
@@ -47,6 +46,7 @@ export class TimelineAnimationRowComponent implements OnInit, Callbacks {
           const blocksByPropertyNameValues =
             _.values(ModelUtil.getOrderedBlocksByPropertyByLayer(animation)[this.layer.id]);
           return {
+            animation,
             blocksByPropertyNameValues,
             isExpanded: !collapsedLayerIds.has(this.layer.id),
             selectedBlockIds,
@@ -58,20 +58,18 @@ export class TimelineAnimationRowComponent implements OnInit, Callbacks {
   timelineBlockClick(
     event: MouseEvent,
     block: AnimationBlock,
-    animation: Animation,
     layer: Layer,
   ) {
-    this.onTimelineBlockClick.emit({ event, block, animation, layer });
+    this.onTimelineBlockClick.emit({ event, block, layer });
   }
 
   // @Override Callbacks
   timelineBlockMouseDown(
     event: MouseEvent,
     block: AnimationBlock,
-    animation: Animation,
     layer: Layer,
   ) {
-    this.onTimelineBlockMouseDown.emit({ event, block, animation, layer });
+    this.onTimelineBlockMouseDown.emit({ event, block, layer });
   }
 
   // Used by *ngFor loop.
@@ -84,18 +82,17 @@ export interface Callbacks {
   timelineBlockMouseDown(
     event: MouseEvent,
     block: AnimationBlock,
-    animation: Animation,
     layer: Layer,
   );
   timelineBlockClick(
     event: MouseEvent,
     block: AnimationBlock,
-    animation: Animation,
     layer: Layer,
   );
 }
 
 interface AnimationRowModel {
+  readonly animation: Animation;
   readonly blocksByPropertyNameValues: ReadonlyArray<ReadonlyArray<AnimationBlock>>;
   readonly isExpanded: boolean;
   readonly selectedBlockIds: Set<string>;
@@ -104,6 +101,5 @@ interface AnimationRowModel {
 interface Event {
   readonly event: MouseEvent;
   readonly block: AnimationBlock;
-  readonly animation: Animation;
   readonly layer: Layer;
 }

@@ -165,21 +165,21 @@
           horizZoom: (this.horizZoomObservable | async)
         } as animationData"
       class="slt-timeline-animation"
-      (mousedown)="this.animationTimelineMouseDown($event, animation)"
+      (mousedown)="this.animationTimelineMouseDown($event)"
       [ngClass]="{'is-active': true}"
-      [ngStyle]="{'width': (animation.duration * animationData.horizZoom + 40) + 'px'}"
+      [ngStyle]="{'width': (model.animation.duration * animationData.horizZoom + 40) + 'px'}"
       fxLayout="column">
       <div class="slt-header">
         <div class="slt-timeline-animation-meta"
           [ngClass]="{'is-selected': model.isAnimationSelected}"
-          (click)="this.animationHeaderTextClick($event, animation)">
-          <span class="slt-timeline-animation-name">{{animation.name}}</span>
-          <span class="slt-timeline-animation-duration">{{animation.duration}}ms</span>
+          (click)="this.animationHeaderTextClick($event)">
+          <span class="slt-timeline-animation-name">{{model.animation.name}}</span>
+          <span class="slt-timeline-animation-duration">{{model.animation.duration}}ms</span>
         </div>
         <canvas appLayerTimeline
           class="slt-timeline-header-grid"
           [isActive]="true"
-          [animation]="animation"
+          [animation]="model.animation"
           [horizZoom]="animationData.horizZoom"
           [isHeader]="true"
           (onScrub)="this.timelineHeaderScrub($event)">
@@ -188,7 +188,7 @@
 
       <canvas appLayerTimeline
         class="slt-timeline-grid"
-        [animation]="animation"
+        [animation]="model.animation"
         [isActive]="true"
         [horizZoom]="animationData.horizZoom">
       </canvas>
@@ -197,9 +197,8 @@
         class="slt-timeline-animation-scroller">
         <div class="slt-timeline-animation-rows">
           <app-timelineanimationrow [layer]="model.vectorLayer"
-            [animation]="animation"
-            (onTimelineBlockMouseDown)="this.timelineBlockMouseDown($event.event, $event.block, $event.animation, $event.layer)"
-            (onTimelineBlockClick)="this.timelineBlockClick($event.event, $event.block, $event.animation, $event.layer)">
+            (onTimelineBlockMouseDown)="this.timelineBlockMouseDown($event.event, $event.block)"
+            (onTimelineBlockClick)="this.timelineBlockClick($event.event, $event.block)">
           </app-timelineanimationrow>
         </div>
       </div>

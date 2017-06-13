@@ -281,7 +281,7 @@ export class LayerTimelineComponent
   }
 
   // Called from the LayerTimelineComponent template.
-  animationHeaderTextClick(event: MouseEvent, animation: Animation) {
+  animationHeaderTextClick(event: MouseEvent) {
     const isSelected = !event.metaKey && !event.shiftKey;
     this.store.dispatch(new SelectAnimation(isSelected));
   }
@@ -289,9 +289,8 @@ export class LayerTimelineComponent
   // Called from the LayerTimelineComponent template.
   timelineHeaderScrub(event: ScrubEvent) {
     let time = event.time;
-    const animation = event.animation;
     if (!event.disableSnap) {
-      time = this.snapTime(animation, time, false);
+      time = this.snapTime(time, false);
     }
     this.currentTime = time;
     this.animatorService.setAnimationTime(time);
@@ -301,7 +300,7 @@ export class LayerTimelineComponent
   addPathLayerClick() {
     this.store.select(getVectorLayer).first().subscribe(vl => {
       const layer = new PathLayer({
-        name: ModelUtil.getUniqueLayerName([vl], 'path'),
+        name: LayerUtil.getUniqueLayerName([vl], 'path'),
         children: [],
         pathData: undefined,
       });
@@ -313,7 +312,7 @@ export class LayerTimelineComponent
   addClipPathLayerClick() {
     this.store.select(getVectorLayer).first().subscribe(vl => {
       const layer = new ClipPathLayer({
-        name: ModelUtil.getUniqueLayerName([vl], 'mask'),
+        name: LayerUtil.getUniqueLayerName([vl], 'mask'),
         children: [],
         pathData: undefined,
       });
@@ -324,14 +323,14 @@ export class LayerTimelineComponent
   // Called from the LayerTimelineComponent template.
   addGroupLayerClick() {
     this.store.select(getVectorLayer).first().subscribe(vl => {
-      const name = ModelUtil.getUniqueLayerName([vl], 'group');
+      const name = LayerUtil.getUniqueLayerName([vl], 'group');
       const layer = new GroupLayer({ name, children: [] });
       this.store.dispatch(new AddLayer(layer));
     });
   }
 
   // Called from the LayerTimelineComponent template.
-  animationTimelineMouseDown(event: MouseEvent, animation: Animation) {
+  animationTimelineMouseDown(event: MouseEvent) {
     // TODO: should we clear any selections here?
   }
 
@@ -339,9 +338,8 @@ export class LayerTimelineComponent
   timelineBlockMouseDown(
     mouseDownEvent: MouseEvent,
     dragBlock: AnimationBlock,
-    animation: Animation,
-    layer: Layer,
   ) {
+    const animation = this.animation;
     // TODO: this JQuery 'class' stuff may not work with view encapsulation enabled
     const $target = $(mouseDownEvent.target);
 
@@ -471,9 +469,9 @@ export class LayerTimelineComponent
               if (allowSnap && info.block.id === dragBlock.id) {
                 const newStartTime = info.downStartTime + timeDelta;
                 const newStartTimeSnapDelta =
-                  this.snapTime(animation, newStartTime) - newStartTime;
+                  this.snapTime(newStartTime) - newStartTime;
                 const newEndTime = info.downEndTime + timeDelta;
-                const newEndTimeSnapDelta = this.snapTime(animation, newEndTime) - newEndTime;
+                const newEndTimeSnapDelta = this.snapTime(newEndTime) - newEndTime;
                 if (newStartTimeSnapDelta) {
                   if (newEndTimeSnapDelta) {
                     timeDelta += Math.min(newStartTimeSnapDelta, newEndTimeSnapDelta);
@@ -503,7 +501,7 @@ export class LayerTimelineComponent
               if (allowSnap && info.block.id === dragBlock.id) {
                 const newStartTime = info.downStartTime + timeDelta;
                 const newStartTimeSnapDelta =
-                  this.snapTime(animation, newStartTime) - newStartTime;
+                  this.snapTime(newStartTime) - newStartTime;
                 if (newStartTimeSnapDelta) {
                   timeDelta += newStartTimeSnapDelta;
                 }
@@ -525,7 +523,7 @@ export class LayerTimelineComponent
               // Snap time delta.
               if (allowSnap && info.block === dragBlock) {
                 const newEndTime = info.downEndTime + timeDelta;
-                const newEndTimeSnapDelta = this.snapTime(animation, newEndTime) - newEndTime;
+                const newEndTimeSnapDelta = this.snapTime(newEndTime) - newEndTime;
                 if (newEndTimeSnapDelta) {
                   timeDelta += newEndTimeSnapDelta;
                 }
@@ -618,7 +616,8 @@ export class LayerTimelineComponent
   /**
    * Returns a new time, possibly snapped to animation boundaries
    */
-  private snapTime(animation: Animation, time: number, includeActiveTime = true) {
+  private snapTime(time: number, includeActiveTime = true) {
+    const animation = this.animation;
     const snapTimes = this.snapTimes.get(animation.id);
     const snapDelta = SNAP_PIXELS / this.horizZoom;
     const reducerFn = (bestSnapTime, snapTime) => {
@@ -638,8 +637,6 @@ export class LayerTimelineComponent
   timelineBlockClick(
     event: MouseEvent,
     block: AnimationBlock,
-    animation: Animation,
-    layer: Layer,
   ) {
     const clearExisting = !event.metaKey && !event.shiftKey;
     this.store.dispatch(new SelectBlock(block.id, clearExisting));
@@ -850,10 +847,6 @@ export class LayerTimelineComponent
   private updateDragIndicator(info: DragIndicatorInfo) {
     const curr = this.dragIndicatorSubject.getValue();
     this.dragIndicatorSubject.next({ ...curr, ...info });
-  }
-
-  trackAnimationFn(index: number, animation: Animation) {
-    return animation.id;
   }
 
   /**
