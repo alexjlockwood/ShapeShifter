@@ -192,14 +192,8 @@ export function metaReducer(reducer: ActionReducer<AppState>): ActionReducer<App
 
 function getActivePathBlock(state: AppState) {
   const { blockId } = state.actionmode;
-  const { timeline } = state;
-  const animations = timeline.animations.slice();
-  const { activeAnimationId } = timeline;
-  const activeAnimationIndex = _.findIndex(animations, a => a.id === activeAnimationId);
-  const activeAnimation = animations[activeAnimationIndex];
-  const activeAnimationBlocks = activeAnimation.blocks.slice();
-  const blockIndex = _.findIndex(activeAnimationBlocks, b => b.id === blockId);
-  return activeAnimationBlocks[blockIndex] as PathAnimationBlock;
+  const { blocks } = state.timeline.animation;
+  return _.find(blocks, b => b.id === blockId) as PathAnimationBlock;
 }
 
 function getActivePathBlockLayer(state: AppState) {
@@ -227,13 +221,10 @@ function getPointSelections(state: AppState) {
 function updateActivePathBlock(state: AppState, source: ActionSource, path: Path) {
   const { blockId } = state.actionmode;
   const { timeline } = state;
-  const animations = timeline.animations.slice();
-  const { activeAnimationId } = timeline;
-  const activeAnimationIndex = _.findIndex(animations, a => a.id === activeAnimationId);
-  let activeAnimation = animations[activeAnimationIndex];
-  const activeAnimationBlocks = activeAnimation.blocks.slice();
-  const blockIndex = _.findIndex(activeAnimationBlocks, b => b.id === blockId);
-  let block = activeAnimationBlocks[blockIndex];
+  let { animation } = timeline;
+  const blocks = animation.blocks.slice();
+  const blockIndex = _.findIndex(blocks, b => b.id === blockId);
+  let block = blocks[blockIndex];
 
   // Remove any existing conversions and collapsing sub paths from the path.
   const pathMutator = path.mutate();
@@ -301,17 +292,10 @@ function updateActivePathBlock(state: AppState, source: ActionSource, path: Path
   setBlockPathFn(source, path);
   setBlockPathFn(oppSource, oppPath);
 
-  activeAnimationBlocks[blockIndex] = block;
-  activeAnimation = activeAnimation.clone();
-  activeAnimation.blocks = activeAnimationBlocks;
-  animations[activeAnimationIndex] = activeAnimation;
-  return {
-    ...state,
-    timeline: {
-      ...timeline,
-      animations,
-    },
-  };
+  blocks[blockIndex] = block;
+  animation = animation.clone();
+  animation.blocks = blocks;
+  return { ...state, timeline: { ...timeline, animation } };
 }
 
 function setSelections(state: AppState, selections: ReadonlyArray<Selection>) {

@@ -44,7 +44,7 @@ export class LayerListTreeComponent implements OnInit, Callbacks {
         .map(({ animation, selectedLayerIds, collapsedLayerIds, hiddenLayerIds }) => {
           const isExpandable = this.isLayerExpandable();
           const availablePropertyNames =
-            Array.from(ModelUtil.getAvailablePropertyNamesForLayer(this.layer, [animation]));
+            Array.from(ModelUtil.getAvailablePropertyNamesForLayer(this.layer, animation));
           const existingPropertyNames =
             Array.from(
               _.keys(ModelUtil.getBlocksByAnimationByProperty(this.layer.id, [animation])));

@@ -93,23 +93,15 @@ export function getBlocksByAnimationByProperty(
 /**
  * Returns a set of property names that have not yet been animated.
  */
-export function getAvailablePropertyNamesForLayer(
-  layer: Layer,
-  animations: ReadonlyArray<Animation>,
-) {
-  if (!animations) {
-    throw new Error('animations');
-  }
+export function getAvailablePropertyNamesForLayer(layer: Layer, animation: Animation) {
   const availablePropertyNames = new Set(layer.animatableProperties.keys());
-  animations.forEach(animation => {
-    const blocksByPropertyByLayer = getOrderedBlocksByPropertyByLayer(animation);
-    const blocksByProperty = blocksByPropertyByLayer[layer.id];
-    if (!blocksByProperty) {
-      return;
+  const blocksByPropertyByLayer = getOrderedBlocksByPropertyByLayer(animation);
+  const blocksByProperty = blocksByPropertyByLayer[layer.id];
+  if (blocksByProperty) {
+    for (const name of Object.keys(blocksByProperty)) {
+      availablePropertyNames.delete(name);
     }
-    const animatedPropertyNames = new Set(Object.keys(blocksByProperty));
-    animatedPropertyNames.forEach(name => availablePropertyNames.delete(name));
-  });
+  }
   return availablePropertyNames;
 }
 
