@@ -19,7 +19,7 @@ import * as _ from 'lodash';
 )
 export class Animation {
 
-  constructor(readonly obj = {} as ConstructorArgs) {
+  constructor(obj = {} as ConstructorArgs) {
     this.id = obj.id || _.uniqueId();
     this.name = obj.name || 'anim';
     this.blocks = (obj.blocks || []).map(block => AnimationBlock.from(block));
