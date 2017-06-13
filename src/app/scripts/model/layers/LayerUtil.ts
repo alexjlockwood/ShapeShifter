@@ -257,3 +257,29 @@ function findSibling(layerId: string, parent: Layer, offset: number) {
   }
   return parent.children[index];
 }
+
+export function getUniqueLayerName(
+  layers: ReadonlyArray<Layer>,
+  prefix: string,
+) {
+  return getUniqueName(
+    prefix,
+    name => findLayerByName(layers, name),
+  );
+}
+
+export function getUniqueName(
+  prefix = '',
+  objectByNameFn = (s: string) => undefined,
+) {
+  let n = 0;
+  const nameFn = () => prefix + (n ? `_${n}` : '');
+  while (true) {
+    const o = objectByNameFn(nameFn());
+    if (!o) {
+      break;
+    }
+    n++;
+  }
+  return nameFn();
+}

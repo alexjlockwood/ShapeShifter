@@ -11,6 +11,7 @@ import {
   ClipPathLayer,
   GroupLayer,
   Layer,
+  LayerUtil,
   PathLayer,
   VectorLayer,
 } from 'app/scripts/model/layers';
@@ -195,7 +196,7 @@ export class PropertyInputComponent implements OnInit {
         undefined,
         (enteredValue) => {
           if (property instanceof NameProperty) {
-            return ModelUtil.getUniqueLayerName([vl], NameProperty.sanitize(enteredValue));
+            return LayerUtil.getUniqueLayerName([vl], NameProperty.sanitize(enteredValue));
           }
           return enteredValue;
         },
@@ -285,14 +286,7 @@ export class PropertyInputComponent implements OnInit {
           store.dispatch(new ReplaceAnimation(clonedAnimation));
         },
         undefined,
-        (enteredValue) => {
-          // TODO: remove this code now that only one animation is possible?
-          if (property instanceof NameProperty) {
-            return ModelUtil.getUniqueAnimationName(
-              [animation], NameProperty.sanitize(enteredValue));
-          }
-          return enteredValue;
-        },
+        undefined,
         undefined,
       ));
     });

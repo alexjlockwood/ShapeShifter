@@ -1,20 +1,20 @@
 import {
-   ColorUtil,
-   Matrix,
-   ModelUtil,
+  ColorUtil,
+  Matrix,
 } from 'app/scripts/common';
 import {
   FillType,
   GroupLayer,
   Layer,
+  LayerUtil,
   PathLayer,
   StrokeLineCap,
   StrokeLineJoin,
   VectorLayer,
 } from 'app/scripts/model/layers';
 import {
-   Command,
-   Path,
+  Command,
+  Path,
 } from 'app/scripts/model/paths';
 import { NameProperty } from 'app/scripts/model/properties';
 import { Svgo } from 'app/scripts/svgo';
@@ -53,7 +53,7 @@ export function loadVectorLayerFromSvgString(
 
   const usedIds = new Set<string>();
   const makeFinalNodeIdFn = (node, prefix: string) => {
-    const finalName = ModelUtil.getUniqueName(
+    const finalName = LayerUtil.getUniqueName(
       NameProperty.sanitize(node.id || prefix),
       name => doesNameExistFn(name) || usedIds.has(name),
     );

@@ -2,42 +2,6 @@ import { Layer, LayerUtil, VectorLayer } from '../model/layers';
 import { Animation, AnimationBlock } from '../model/timeline';
 import * as _ from 'lodash';
 
-export function getUniqueAnimationName(
-  animations: ReadonlyArray<Animation>,
-  prefix: string,
-) {
-  return getUniqueName(
-    prefix || 'anim',
-    name => _.find(animations, a => a.name === name),
-  );
-}
-
-export function getUniqueLayerName(
-  layers: ReadonlyArray<Layer>,
-  prefix: string,
-) {
-  return getUniqueName(
-    prefix,
-    name => LayerUtil.findLayerByName(layers, name),
-  );
-}
-
-export function getUniqueName(
-  prefix = '',
-  objectByNameFn = (s: string) => undefined,
-) {
-  let n = 0;
-  const nameFn = () => prefix + (n ? `_${n}` : '');
-  while (true) {
-    const o = objectByNameFn(nameFn());
-    if (!o) {
-      break;
-    }
-    n++;
-  }
-  return nameFn();
-}
-
 /**
  * Builds a map where the keys are layer IDs and the values are
  * maps of property names to their corresponding animation blocks.

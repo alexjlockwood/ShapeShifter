@@ -1,10 +1,10 @@
-import { ModelUtil } from 'app/scripts/common';
 import { INTERPOLATORS } from 'app/scripts/model/interpolators';
 import {
   ClipPathLayer,
   FillType,
   GroupLayer,
   Layer,
+  LayerUtil,
   PathLayer,
   StrokeLineCap,
   StrokeLineJoin,
@@ -33,7 +33,7 @@ function loadVectorLayerFromElement(
   }
   const usedNames = new Set<string>();
   const makeFinalNodeIdFn = (value: string, prefix: string) => {
-    const finalName = ModelUtil.getUniqueName(
+    const finalName = LayerUtil.getUniqueName(
       NameProperty.sanitize(value || prefix),
       name => doesLayerNameExistFn(name) || usedNames.has(name),
     );
