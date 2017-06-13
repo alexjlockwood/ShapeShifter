@@ -41,6 +41,8 @@ import * as $ from 'jquery';
 import * as _ from 'lodash';
 import { Observable } from 'rxjs/Observable';
 
+declare const ga: Function;
+
 // TODO: when you enter a 'start time' larger than 'end time', transform 'end time' correctly
 // TODO: POSSIBLE CRASH! don't let user enter action mode when 'M 0' is entered
 @Component({
@@ -84,17 +86,18 @@ export class PropertyInputComponent implements OnInit {
       });
   }
 
-  shouldDisableEditPathMorphButton(pim: PropertyInputModel) {
+  shouldDisableStartActionModeButton(pim: PropertyInputModel) {
     return pim.numSelections === 1
       && pim.model instanceof PathAnimationBlock
       && (!pim.model.fromValue || !pim.model.toValue);
   }
 
-  shouldShowEditPathMorphButton(pim: PropertyInputModel) {
+  shouldShowStartActionModeButton(pim: PropertyInputModel) {
     return pim.numSelections === 1 && pim.model instanceof PathAnimationBlock;
   }
 
-  onEditPathMorphClick(blockId: string) {
+  onStartActionModeClick(blockId: string) {
+    ga('send', 'event', 'Action mode', 'Started');
     this.actionModeService.startActionMode(blockId);
   }
 

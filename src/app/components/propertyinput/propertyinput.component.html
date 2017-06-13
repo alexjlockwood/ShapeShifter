@@ -43,9 +43,9 @@
       </button>
       <button md-icon-button
         class="spi-secondary-icon"
-        [disabled]="this.shouldDisableEditPathMorphButton(model)"
-        *ngIf="this.shouldShowEditPathMorphButton(model)"
-        (click)="this.onEditPathMorphClick(model.model.id)"
+        [disabled]="this.shouldShowStartActionModeButton(model)"
+        *ngIf="this.shouldShowStartActionModeButton(model)"
+        (click)="this.onStartActionModeClick(model.model.id)"
         mdTooltip="Customize animation"
         mdTooltipPosition="left"
         mdTooltipShowDelay="500">

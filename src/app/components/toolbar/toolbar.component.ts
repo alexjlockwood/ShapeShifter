@@ -92,14 +92,17 @@ export class ToolbarComponent implements OnInit {
   }
 
   onAddPointsClick() {
+    ga('send', 'event', 'Action mode', 'Add points');
     this.actionModeService.toggleSplitCommandsMode();
   }
 
   onSplitSubPathsClick() {
+    ga('send', 'event', 'Action mode', 'Split sub paths');
     this.actionModeService.toggleSplitSubPathsMode();
   }
 
   onPairSubPathsClick() {
+    ga('send', 'event', 'Action mode', 'Pair sub paths');
     this.actionModeService.togglePairSubPathsMode();
   }
 
