@@ -15,6 +15,12 @@ import {
 } from 'app/store';
 import { getVectorLayer } from 'app/store/layers/selectors';
 
+export enum ImportType {
+  Svg = 1,
+  VectorDrawable,
+  Json,
+}
+
 /**
  * A simple service that imports vector layers from files.
  */
@@ -28,7 +34,7 @@ export class FileImportService {
 
   import(
     fileList: FileList,
-    successFn: (vls: VectorLayer[], animations?: ReadonlyArray<Animation>, hiddenLayerIds?: Set<string>) => void,
+    successFn: (type: ImportType, vls: VectorLayer[], animations?: ReadonlyArray<Animation>, hiddenLayerIds?: Set<string>) => void,
     failureFn: () => void,
   ) {
     if (!fileList || !fileList.length) {
@@ -45,12 +51,13 @@ export class FileImportService {
     let numErrors = 0;
     const addedVls: VectorLayer[] = [];
 
+    let importType: ImportType;
     const maybeAddVectorLayersFn = () => {
       numCallbacks++;
       if (numErrors === files.length) {
         failureFn();
       } else if (numCallbacks === files.length) {
-        successFn(addedVls);
+        successFn(importType, addedVls);
       }
     };
 
@@ -75,8 +82,10 @@ export class FileImportService {
             return !!LayerUtil.findLayerByName([existingVl, ...addedVls], name);
           };
         if (file.type.includes('svg')) {
+          importType = ImportType.Svg;
           SvgLoader.loadVectorLayerFromSvgStringWithCallback(text, callbackFn, doesNameExistFn);
         } else if (file.type.includes('xml')) {
+          importType = ImportType.VectorDrawable;
           let vl: VectorLayer;
           try {
             vl = VectorDrawableLoader.loadVectorLayerFromXmlString(text, doesNameExistFn);
@@ -86,6 +95,7 @@ export class FileImportService {
           }
           callbackFn(vl);
         } else if (file.type === 'application/json' || file.name.match(/\.shapeshifter$/)) {
+          importType = ImportType.Json;
           let vl: VectorLayer;
           let animations: ReadonlyArray<Animation>;
           let hiddenLayerIds: Set<string>;
@@ -102,7 +112,7 @@ export class FileImportService {
             console.error('Failed to parse the file', e);
             failureFn();
           }
-          successFn([vl], animations, hiddenLayerIds);
+          successFn(importType, [vl], animations, hiddenLayerIds);
         }
       };
 

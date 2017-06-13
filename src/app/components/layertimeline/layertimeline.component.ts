@@ -35,7 +35,10 @@ import { AnimatorService } from 'app/services/animator/animator.service';
 import { DemoService } from 'app/services/demos/demo.service';
 import { DialogService } from 'app/services/dialogs/dialog.service';
 import { FileExportService } from 'app/services/export/fileexport.service';
-import { FileImportService } from 'app/services/import/fileimport.service';
+import {
+  FileImportService,
+  ImportType,
+} from 'app/services/import/fileimport.service';
 import {
   Duration,
   SnackBarService,
@@ -92,8 +95,6 @@ enum MouseActions {
   ScalingTogetherEnd,
 }
 
-// TODO: add back google analytics stuff!
-// ga('send', 'event', 'General', 'New click');
 declare const ga: Function;
 
 @Component({
@@ -208,6 +209,7 @@ export class LayerTimelineComponent
   // Called from the LayerTimelineComponent template.
   newWorkspaceClick() {
     const resetWorkspaceFn = () => {
+      ga('send', 'event', 'File', 'New');
       // TODO: figure out if this hack is necessary and/or can be avoided?
       this.animatorService.reset();
       this.store.dispatch(new ResetWorkspace());
@@ -227,13 +229,13 @@ export class LayerTimelineComponent
 
   // Called from the LayerTimelineComponent template.
   saveToFileClick() {
+    ga('send', 'event', 'File', 'Save');
     this.fileExportService.exportJSON();
   }
 
   // Called from the LayerTimelineComponent template.
   loadDemoClick() {
-    ga('send', 'event', 'Demos', 'Demos dialog shown');
-
+    ga('send', 'event', 'File', 'Demo');
     this.dialogService
       .pickDemo()
       .filter(demoInfo => !!demoInfo)
@@ -264,26 +266,32 @@ export class LayerTimelineComponent
 
   // Called from the LayerTimelineComponent template.
   exportSvgClick() {
+    ga('send', 'event', 'Export', 'SVG');
     this.fileExportService.exportSvg();
   }
 
   // Called from the LayerTimelineComponent template.
   exportVectorDrawableClick() {
+    ga('send', 'event', 'Export', 'Vector Drawable');
     this.fileExportService.exportVectorDrawable();
   }
 
   // Called from the LayerTimelineComponent template.
   exportAnimatedVectorDrawableClick() {
+    ga('send', 'event', 'Export', 'Animated Vector Drawable');
     this.fileExportService.exportAnimatedVectorDrawable();
   }
 
   // Called from the LayerTimelineComponent template.
   exportSvgSpritesheetClick() {
+    ga('send', 'event', 'Export', 'SVG Spritesheet');
     this.fileExportService.exportSvgSpritesheet();
   }
 
   // Called from the LayerTimelineComponent template.
   exportCssKeyframesClick() {
+    ga('send', 'event', 'Export', 'CSS Keyframes');
+    // TODO: uncomment this stuff out in the HTML template once implemented
     this.fileExportService.exportCssKeyframes();
   }
 
@@ -711,7 +719,6 @@ export class LayerTimelineComponent
       downY: mouseDownEvent.clientY,
 
       onBeginDragFn: () => {
-        // console.info('onBeginDragStart');
         this.shouldSuppressClick = true;
 
         // build up a list of all layers ordered by Y position
@@ -956,10 +963,16 @@ export class LayerTimelineComponent
   onImportedFilesPicked(fileList: FileList) {
     this.fileImportService.import(
       fileList,
-      (vls, animations, hiddenLayerIds) => {
-        if (animations) {
+      (importType, vls, animations, hiddenLayerIds) => {
+        if (importType === ImportType.Json) {
+          ga('send', 'event', 'Import', 'JSON');
           this.store.dispatch(new ResetWorkspace(vls[0], animations, hiddenLayerIds));
         } else {
+          if (importType === ImportType.Svg) {
+            ga('send', 'event', 'Import', 'SVG');
+          } else if (importType === ImportType.VectorDrawable) {
+            ga('send', 'event', 'Import', 'Vector Drawable');
+          }
           this.store.dispatch(new ImportVectorLayers(vls));
           this.snackBarService.show(
             `Imported ${vls.length} path${vls.length === 1 ? '' : 's'}`,

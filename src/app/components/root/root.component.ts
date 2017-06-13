@@ -15,7 +15,10 @@ import {
   ActionSource,
 } from 'app/scripts/model/actionmode';
 import { DemoService } from 'app/services/demos/demo.service';
-import { FileImportService } from 'app/services/import/fileimport.service';
+import {
+  FileImportService,
+  ImportType,
+} from 'app/services/import/fileimport.service';
 import { ShortcutService } from 'app/services/shortcut/shortcut.service';
 import {
   Duration,
@@ -38,6 +41,8 @@ const SHOULD_AUTO_LOAD_DEMO = false;
 const IS_DEV_BUILD = !environment.production;
 const ELEMENT_RESIZE_DETECTOR = erd();
 const STORAGE_KEY_FIRST_TIME_USER = 'storage_key_first_time_user';
+
+declare const ga: Function;
 
 // TODO: show confirmation dialog when dropping a file into a dirty workspace
 @Component({
@@ -125,10 +130,16 @@ export class RootComponent implements OnInit, AfterViewInit, OnDestroy {
   onDropFiles(fileList: FileList) {
     this.fileImporterService.import(
       fileList,
-      (vls, animations, hiddenLayerIds) => {
-        if (animations) {
+      (importType, vls, animations, hiddenLayerIds) => {
+        if (importType === ImportType.Json) {
+          ga('send', 'event', 'Import', 'JSON', 'Drag/drop');
           this.store.dispatch(new ResetWorkspace(vls[0], animations, hiddenLayerIds));
         } else {
+          if (importType === ImportType.Svg) {
+            ga('send', 'event', 'Import', 'SVG', 'Drag/drop');
+          } else if (importType === ImportType.VectorDrawable) {
+            ga('send', 'event', 'Import', 'Vector Drawable', 'Drag/drop');
+          }
           this.store.dispatch(new ImportVectorLayers(vls));
           this.snackBarService.show(
             `Imported ${vls.length} path${vls.length === 1 ? '' : 's'}`,
