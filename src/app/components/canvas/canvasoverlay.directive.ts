@@ -40,6 +40,7 @@ import { Command } from 'app/scripts/model/paths';
 import {
   HitResult,
   Path,
+  SubPath,
 } from 'app/scripts/model/paths';
 import { ActionModeService } from 'app/services/actionmode/actionmode.service';
 import { AnimatorService } from 'app/services/animator/animator.service';
@@ -400,10 +401,7 @@ export class CanvasOverlayDirective
 
   // Draw any highlighted segments.
   private drawHighlights(ctx: Context) {
-    if (!this.isActionMode || this.actionSource === ActionSource.Animated) {
-      return;
-    }
-    if (!this.activePath) {
+    if (!this.isActionMode || this.actionSource === ActionSource.Animated || !this.activePath) {
       return;
     }
 
@@ -417,7 +415,7 @@ export class CanvasOverlayDirective
       // Draw any highlighted subpaths. We'll highlight a subpath if a subpath
       // selection or a point selection exists.
       const selectedSubPaths =
-        _.chain(this.actionSelections)
+        _(this.actionSelections as Selection[])
           .filter(s => {
             return s.source === this.actionSource
               && (s.type === SelectionType.Point
@@ -477,7 +475,7 @@ export class CanvasOverlayDirective
 
     // Draw any existing split shape segments to the canvas.
     const cmds =
-      _.chain(activePath.getSubPaths())
+      _(activePath.getSubPaths() as SubPath[])
         .filter(s => !s.isCollapsing())
         .flatMap(s => s.getCommands() as Command[])
         .filter(c => c.isSplitSegment())
@@ -553,10 +551,7 @@ export class CanvasOverlayDirective
 
   // Draw any labeled points.
   private drawLabeledPoints(ctx: Context) {
-    if (!this.isActionMode || this.actionSource === ActionSource.Animated) {
-      return;
-    }
-    if (!this.activePath) {
+    if (!this.isActionMode || this.actionSource === ActionSource.Animated || !this.activePath) {
       return;
     }
 
@@ -574,13 +569,12 @@ export class CanvasOverlayDirective
 
     // Create a list of all path points in their normal order.
     const pointInfos =
-      _.chain(path.getSubPaths())
-        .filter(subPath => !subPath.isCollapsing())
-        .map((subPath, subIdx) => {
-          return subPath.getCommands()
-            .map((cmd, cmdIdx) => {
-              return { cmd, subIdx, cmdIdx } as PointInfo;
-            });
+      _(path.getSubPaths() as SubPath[])
+        .filter(s => !s.isCollapsing())
+        .map((s, subIdx) => {
+          return s.getCommands().map((cmd, cmdIdx) => {
+            return { cmd, subIdx, cmdIdx } as PointInfo;
+          });
         })
         .flatMap(pis => pis)
         .reverse()
@@ -682,12 +676,10 @@ export class CanvasOverlayDirective
 
   // Draw any actively dragged points along the path in selection mode.
   private drawDraggingPoints(ctx: Context) {
-    if (!this.isActionMode || this.actionSource === ActionSource.Animated) {
+    if (!this.isActionMode || this.actionSource === ActionSource.Animated || !this.activePath) {
       return;
     }
-    if (!this.activePath) {
-      return;
-    }
+
     if (this.actionMode !== ActionMode.Selection
       || !this.selectionHelper
       || !this.selectionHelper.isDragTriggered()) {
@@ -711,12 +703,10 @@ export class CanvasOverlayDirective
   // Draw a floating point preview over the canvas in split commands mode
   // and split subpaths mode for stroked paths.
   private drawFloatingPreviewPoint(ctx: Context) {
-    if (!this.isActionMode || this.actionSource === ActionSource.Animated) {
+    if (!this.isActionMode || this.actionSource === ActionSource.Animated || !this.activePath) {
       return;
     }
-    if (!this.activePath) {
-      return;
-    }
+
     const pathLayer = this.activePathLayer;
     if (this.actionMode !== ActionMode.SplitCommands
       && this.actionMode !== ActionMode.SplitSubPaths
@@ -741,10 +731,7 @@ export class CanvasOverlayDirective
 
   // Draw the floating points on top of the drag line in split filled subpath mode.
   private drawFloatingSplitFilledPathPreviewPoints(ctx: Context) {
-    if (!this.isActionMode || this.actionSource === ActionSource.Animated) {
-      return;
-    }
-    if (!this.activePath) {
+    if (!this.isActionMode || this.actionSource === ActionSource.Animated || !this.activePath) {
       return;
     }
     if (this.actionMode !== ActionMode.SplitSubPaths || !this.shapeSplitter) {

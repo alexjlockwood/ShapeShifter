@@ -79,9 +79,13 @@ function getVectorLayerValue(getTimeFn: (block: PathAnimationBlock) => number) {
   return createSelector(
     [getVectorLayer, getAnimation, getBlock],
     (vl, anim, block) => {
-      if (!vl || !block) {
+      if (!block) {
         return undefined;
       }
+      // Note this is a bit dangerous because the renderer interpolates paths
+      // and that causes all mutated path state to be lost if we aren't careful.
+      // There are currently checks in PathProperty.ts to avoid this by returning
+      // the start and end path when the interpolated fraction is 0 and 1 respectively.
       const renderer = new AnimationRenderer(vl, anim);
       return renderer.setAnimationTime(getTimeFn(block));
     });

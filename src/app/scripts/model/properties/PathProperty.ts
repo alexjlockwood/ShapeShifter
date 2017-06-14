@@ -43,8 +43,11 @@ export class PathProperty extends Property<Path> {
 
   // @Override
   interpolateValue(start: Path, end: Path, fraction: number) {
-    if (!start || !end || !start.isMorphableWith(end)) {
+    if (!start || !end || !start.isMorphableWith(end) || !fraction) {
       return start;
+    }
+    if (fraction === 1) {
+      return end;
     }
     return PathUtil.interpolate(start, end, fraction);
   }
