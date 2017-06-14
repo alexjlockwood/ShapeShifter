@@ -1,7 +1,7 @@
 import * as TimelineConsts from './constants';
 import { Callbacks as LayerListTreeCallbacks } from './layerlisttree.component';
-import { LayerTimelineDirective } from './layertimeline.directive';
 import { ScrubEvent } from './layertimeline.directive';
+import { LayerTimelineDirective } from './layertimeline.directive';
 import { Callbacks as TimelineAnimationRowCallbacks } from './timelineanimationrow.component';
 import {
   AfterViewInit,
@@ -110,7 +110,7 @@ export class LayerTimelineComponent
   @ViewChild('timeline') private timelineRef: ElementRef;
   private $timeline: JQuery;
 
-  @ViewChildren('timelineAnimation') private timelineAnimationRefs: QueryList<ElementRef>;
+  @ViewChild('timelineAnimation') private timelineAnimationRef: ElementRef;
   @ViewChildren(LayerTimelineDirective) timelineDirectives: QueryList<LayerTimelineDirective>;
 
   private readonly dragIndicatorSubject = new BehaviorSubject<DragIndicatorInfo>({
@@ -854,11 +854,11 @@ export class LayerTimelineComponent
    */
   onWheelEvent(event: WheelEvent) {
     const startZoomFn = () => {
-      // TODO: remove the array here
-      this.$zoomStartActiveAnimation =
-        $(this.timelineAnimationRefs.toArray()[0].nativeElement);
-      this.zoomStartTimeCursorPos = this.$zoomStartActiveAnimation.position().left
-        + this.currentTime * this.horizZoom + TimelineConsts.TIMELINE_ANIMATION_PADDING;
+      this.$zoomStartActiveAnimation = $(this.timelineAnimationRef.nativeElement);
+      this.zoomStartTimeCursorPos =
+        this.$zoomStartActiveAnimation.position().left
+        + (this.currentTime * this.horizZoom)
+        + TimelineConsts.TIMELINE_ANIMATION_PADDING;
     };
 
     const performZoomFn = () => {
@@ -866,9 +866,11 @@ export class LayerTimelineComponent
 
       // Set the scroll offset such that the time cursor remains at zoomStartTimeCursorPos
       if (this.$zoomStartActiveAnimation) {
-        const newScrollLeft = this.$zoomStartActiveAnimation.position().left
+        const newScrollLeft =
+          this.$zoomStartActiveAnimation.position().left
           + this.$timeline.scrollLeft()
-          + this.currentTime * this.horizZoom + TimelineConsts.TIMELINE_ANIMATION_PADDING
+          + (this.currentTime * this.horizZoom)
+          + TimelineConsts.TIMELINE_ANIMATION_PADDING
           - this.zoomStartTimeCursorPos;
         this.$timeline.scrollLeft(newScrollLeft);
       }
@@ -914,13 +916,12 @@ export class LayerTimelineComponent
    * Zooms the timeline to fit the first animation.
    */
   private autoZoomToAnimation() {
-    UiUtil.waitForElementWidth(this.$timeline)
-      .then(width => {
-        // Shave off one hundred pixels for safety.
-        width -= 100;
-        const zoom = width / this.animation.duration;
-        this.horizZoom = zoom;
-      });
+    UiUtil.waitForElementWidth(this.$timeline).then(width => {
+      // Shave off one hundred pixels for safety.
+      width -= 100;
+      const zoom = width / this.animation.duration;
+      this.horizZoom = zoom;
+    });
   }
 
   // Proxies a button click to the <input> tag that opens the file picker.
