@@ -29,10 +29,7 @@ export class AnimationRenderer {
   // Keys are layerIds and values are RenderedData objects.
   private readonly animDataByLayer: LayerMap<RendererData> = {};
 
-  constructor(
-    readonly originalVectorLayer: VectorLayer,
-    readonly activeAnimation: Animation,
-  ) {
+  constructor(originalVectorLayer: VectorLayer, activeAnimation: Animation) {
     // TODO: technically this could be more performant if we only cloned the affected layers
     this.renderedVectorLayer = originalVectorLayer.deepClone();
     const animDataByLayer = ModelUtil.getOrderedBlocksByPropertyByLayer(activeAnimation);

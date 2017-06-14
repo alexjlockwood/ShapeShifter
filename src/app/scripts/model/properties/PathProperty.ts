@@ -44,7 +44,7 @@ export class PathProperty extends Property<Path> {
   // @Override
   interpolateValue(start: Path, end: Path, fraction: number) {
     if (!start || !end || !start.isMorphableWith(end)) {
-      return undefined;
+      return start;
     }
     return PathUtil.interpolate(start, end, fraction);
   }
