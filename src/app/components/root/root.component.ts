@@ -113,7 +113,7 @@ export class RootComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     if (IS_DEV_BUILD && SHOULD_AUTO_LOAD_DEMO) {
-      this.demoService.getDemo('playpause')
+      this.demoService.getDemo('morphinganimals')
         .then(({ vectorLayer, animation, hiddenLayerIds }) => {
           this.store.dispatch(new ResetWorkspace(vectorLayer, animation, hiddenLayerIds));
         });

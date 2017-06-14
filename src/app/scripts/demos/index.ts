@@ -4,9 +4,9 @@ export interface DemoInfo {
 }
 
 export const DEMO_INFOS: ReadonlyArray<DemoInfo> = [
-  { id: 'hippobuffalo', title: 'Morphing animals' },
-  { id: 'visibilitystrike', title: 'Visibility strike' },
-  { id: 'searchtoback', title: 'Search-to-back' },
-  { id: 'heartbreak', title: 'Heart break' },
+  { id: 'playtopause', title: 'Play-to-pause' },
   { id: 'searchtoclose', title: 'Search-to-close' },
+  { id: 'morphinganimals', title: 'Morphing animals' },
+  { id: 'visibilitystrike', title: 'Visibility strike' },
+  { id: 'heartbreak', title: 'Heart break' },
 ];
