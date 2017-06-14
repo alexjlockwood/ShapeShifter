@@ -3,7 +3,8 @@
   (onDropFiles)="onDropFiles($event)"
   class="app-container"
   fxLayout="column"
-  ondragstart="return false;">
+  ondragstart="return false;"
+  (click)="this.onClick($event)">
   <!-- Toolbar. -->
   <div class="toolbar-container">
     <app-toolbar></app-toolbar>
@@ -37,7 +38,8 @@
     </div>
     <!-- Property input panel. -->
     <app-propertyinput *ngIf="!(this.isActionMode$ | async)"
-      fxLayout="column">
+      fxLayout="column"
+      (click)="$event.stopPropagation()">
     </app-propertyinput>
   </div>
   <!-- Layer list & animation timeline. -->

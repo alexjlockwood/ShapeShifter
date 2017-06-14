@@ -29,6 +29,7 @@ import {
   Store,
 } from 'app/store';
 import { getActionMode } from 'app/store/actionmode/selectors';
+import { ClearSelections } from 'app/store/common/actions';
 import { ImportVectorLayers } from 'app/store/layers/actions';
 import { ResetWorkspace } from 'app/store/reset/actions';
 import * as erd from 'element-resize-detector';
@@ -150,6 +151,10 @@ export class RootComponent implements OnInit, AfterViewInit, OnDestroy {
       () => {
         this.snackBarService.show(`Couldn't import the file`, 'Dismiss', Duration.Long);
       });
+  }
+
+  onClick(event: MouseEvent) {
+    this.store.dispatch(new ClearSelections());
   }
 }
 

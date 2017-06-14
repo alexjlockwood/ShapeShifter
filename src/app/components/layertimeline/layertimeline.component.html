@@ -163,7 +163,6 @@
     <div #timelineAnimation
       *ngIf="{ horizZoom: (this.horizZoomObservable | async) } as animationData"
       class="slt-timeline-animation"
-      (mousedown)="this.animationTimelineMouseDown($event)"
       [ngClass]="{'is-active': true}"
       [ngStyle]="{'width': (model.animation.duration * animationData.horizZoom + 40) + 'px'}"
       fxLayout="column">

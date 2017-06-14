@@ -61,6 +61,7 @@ export class LayerListTreeComponent implements OnInit, Callbacks {
 
   // @Override Callbacks
   layerClick(event: MouseEvent, layer: Layer) {
+    event.stopPropagation();
     this.onLayerClick.emit({ event, layer });
   }
 
@@ -71,20 +72,21 @@ export class LayerListTreeComponent implements OnInit, Callbacks {
 
   // @Override Callbacks
   layerToggleExpanded(event: MouseEvent, layer: Layer) {
+    event.stopPropagation();
     if (this.isLayerExpandable()) {
       this.onLayerToggleExpanded.emit({ event, layer });
     }
-    event.stopPropagation();
   }
 
   // @Override Callbacks
   layerToggleVisibility(event: MouseEvent, layer: Layer) {
-    this.onLayerToggleVisibility.emit({ event, layer });
     event.stopPropagation();
+    this.onLayerToggleVisibility.emit({ event, layer });
   }
 
   // @Override Callbacks
   addTimelineBlockClick(event: MouseEvent, layer: Layer, propertyName: string) {
+    event.stopPropagation();
     this.onAddTimelineBlockClick.emit({ event, layer, propertyName });
   }
 

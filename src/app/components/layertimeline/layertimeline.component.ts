@@ -293,6 +293,8 @@ export class LayerTimelineComponent
 
   // Called from the LayerTimelineComponent template.
   animationHeaderTextClick(event: MouseEvent) {
+    // Stop propagation to ensure that animationTimelineClick() isn't called.
+    event.stopPropagation();
     const isSelected = !event.metaKey && !event.shiftKey;
     this.store.dispatch(new SelectAnimation(isSelected));
   }
@@ -338,11 +340,6 @@ export class LayerTimelineComponent
       const layer = new GroupLayer({ name, children: [] });
       this.store.dispatch(new AddLayer(layer));
     });
-  }
-
-  // Called from the LayerTimelineComponent template.
-  animationTimelineMouseDown(event: MouseEvent) {
-    // TODO: should we clear any selections here?
   }
 
   // @Override TimelineAnimationRowCallbacks

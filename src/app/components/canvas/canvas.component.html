@@ -1,4 +1,5 @@
-<div class="app-canvas-container">
+<div class="app-canvas-container"
+  (click)="$event.stopPropagation()">
   <canvas appCanvasRuler
     class="canvas-ruler orientation-horizontal"
     [orientation]="'horizontal'">

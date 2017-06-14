@@ -6,21 +6,21 @@
     mdTooltip="Slow motion (S)"
     mdTooltipPosition="below"
     mdTooltipShowDelay="500"
-    (click)="this.isSlowMotionClick()">
+    (click)="this.isSlowMotionClick($event)">
     <md-icon [class.activated]="model.isSlowMotion">slow_motion_video</md-icon>
   </button>
   <button md-icon-button
     mdTooltip="Rewind (Left)"
     mdTooltipPosition="below"
     mdTooltipShowDelay="500"
-    (click)="this.rewindClick()">
+    (click)="this.rewindClick($event)">
     <md-icon>skip_previous</md-icon>
   </button>
   <button md-mini-fab
     mdTooltip="{{ (model.isPlaying) ? 'Pause' : 'Play' }} (Spacebar)"
     mdTooltipPosition="below"
     mdTooltipShowDelay="500"
-    (click)="this.playPauseButtonClick()">
+    (click)="this.playPauseButtonClick($event)">
     <div
       class="play-pause-icon"
       [ngClass]="{
@@ -33,14 +33,14 @@
     mdTooltip="Fast forward (Right)"
     mdTooltipPosition="below"
     mdTooltipShowDelay="500"
-    (click)="this.fastForwardClick()">
+    (click)="this.fastForwardClick($event)">
     <md-icon>skip_next</md-icon>
   </button>
   <button md-icon-button
     mdTooltip="Repeat (R)"
     mdTooltipPosition="below"
     mdTooltipShowDelay="500"
-    (click)="this.isRepeatingClick()">
+    (click)="this.isRepeatingClick($event)">
     <md-icon [class.activated]="model.isRepeating">repeat</md-icon>
   </button>
   <span fxFlex></span>

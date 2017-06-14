@@ -55,11 +55,9 @@ import {
   getActionModeHover,
   getActionModeStartState,
 } from 'app/store/actionmode/selectors';
+import { ClearSelections } from 'app/store/common/actions';
 import { getCanvasOverlayState } from 'app/store/common/selectors';
-import {
-  ClearLayerSelections,
-  SelectLayer,
-} from 'app/store/layers/actions';
+import { SelectLayer } from 'app/store/layers/actions';
 import { getVectorLayer } from 'app/store/layers/selectors';
 import * as $ from 'jquery';
 import * as _ from 'lodash';
@@ -814,7 +812,7 @@ export class CanvasOverlayDirective
       if (hitLayer) {
         this.store.dispatch(new SelectLayer(hitLayer.id, !isMetaOrShiftPressed));
       } else if (!isMetaOrShiftPressed) {
-        this.store.dispatch(new ClearLayerSelections());
+        this.store.dispatch(new ClearSelections());
       }
       return;
     }

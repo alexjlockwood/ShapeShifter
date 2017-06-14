@@ -152,6 +152,12 @@ export class LayerTimelineDirective {
       }
     }
   }
+
+  @HostListener('click', ['$event'])
+  onClick(event: MouseEvent) {
+    // This ensures that click events aren't triggered in the component.
+    event.stopPropagation();
+  }
 }
 
 function round(n: number) {

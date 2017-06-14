@@ -1,4 +1,7 @@
-import { DeleteSelectedModels } from '../common/actions';
+import {
+  ClearSelections,
+  DeleteSelectedModels,
+} from '../common/actions';
 import {
   AddBlock,
   SelectAnimation,
@@ -12,14 +15,13 @@ import {
 
 export const IMPORT_VECTOR_LAYERS = '__layers__IMPORT_VECTOR_LAYERS';
 export const ADD_LAYER = '__layers__ADD_LAYER';
-export const CLEAR_LAYER_SELECTIONS = '__layers__CLEAR_LAYER_SELECTIONS';
 export const TOGGLE_LAYER_EXPANSION = '__layers__TOGGLE_LAYER_EXPANSION';
 export const TOGGLE_LAYER_VISIBILITY = '__layers__TOGGLE_LAYER_VISIBILITY';
 export const REPLACE_LAYER = '__layers__REPLACE_LAYER';
 export const SELECT_LAYER = '__layers__SELECT_LAYER';
 export const GROUP_OR_UNGROUP_SELECTED_LAYERS = '__layers__GROUP_OR_UNGROUP_SELECTED_LAYERS';
 export { SELECT_ANIMATION, ADD_BLOCK, SELECT_BLOCK } from '../timeline/actions';
-export { DELETE_SELECTED_MODELS } from '../common/actions';
+export { CLEAR_SELECTIONS, DELETE_SELECTED_MODELS } from '../common/actions';
 
 export class ImportVectorLayers implements Action {
   readonly type = IMPORT_VECTOR_LAYERS;
@@ -35,10 +37,6 @@ export class AddLayer implements Action {
   constructor(layer: Layer) {
     this.payload = { layer };
   }
-}
-
-export class ClearLayerSelections implements Action {
-  readonly type = CLEAR_LAYER_SELECTIONS;
 }
 
 export class ToggleLayerExpansion implements Action {
@@ -85,7 +83,6 @@ export class GroupOrUngroupSelectedLayers implements Action {
 export type Actions =
   ImportVectorLayers
   | AddLayer
-  | ClearLayerSelections
   | ToggleLayerExpansion
   | ToggleLayerVisibility
   | ReplaceLayer
@@ -94,4 +91,5 @@ export type Actions =
   | SelectAnimation
   | SelectBlock
   | AddBlock
+  | ClearSelections
   | DeleteSelectedModels;

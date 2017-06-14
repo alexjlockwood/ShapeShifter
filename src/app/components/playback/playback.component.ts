@@ -30,23 +30,28 @@ export class PlaybackComponent implements OnInit {
     this.playbackModel$ = this.store.select(getPlaybackState);
   }
 
-  isSlowMotionClick() {
+  isSlowMotionClick(event: MouseEvent) {
+    event.stopPropagation();
     this.animatorService.toggleIsSlowMotion();
   }
 
-  playPauseButtonClick() {
+  playPauseButtonClick(event: MouseEvent) {
+    event.stopPropagation();
     this.animatorService.toggleIsPlaying();
   }
 
-  rewindClick() {
+  rewindClick(event: MouseEvent) {
+    event.stopPropagation();
     this.animatorService.rewind();
   }
 
-  fastForwardClick() {
+  fastForwardClick(event: MouseEvent) {
+    event.stopPropagation();
     this.animatorService.fastForward();
   }
 
-  isRepeatingClick() {
+  isRepeatingClick(event: MouseEvent) {
+    event.stopPropagation();
     this.animatorService.toggleIsRepeating();
   }
 }

@@ -60,6 +60,7 @@ export class TimelineAnimationRowComponent implements OnInit, Callbacks {
     block: AnimationBlock,
     layer: Layer,
   ) {
+    event.stopPropagation();
     this.onTimelineBlockClick.emit({ event, block, layer });
   }
 

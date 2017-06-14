@@ -139,12 +139,7 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
       return selectBlockId(state, blockId, clearExisting);
     }
 
-    // Clear all layer selections.
-    case actions.CLEAR_LAYER_SELECTIONS: {
-      return { ...state, isAnimationSelected: false, selectedBlockIds: new Set<string>() };
-    }
-
-    // Select a layer.
+    case actions.CLEAR_SELECTIONS:
     case actions.SELECT_LAYER: {
       return { ...state, isAnimationSelected: false, selectedBlockIds: new Set<string>() };
     }

@@ -114,7 +114,7 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
       return deleteSelectedLayers(state);
     }
 
-    case actions.CLEAR_LAYER_SELECTIONS:
+    case actions.CLEAR_SELECTIONS:
     case actions.SELECT_ANIMATION:
     case actions.SELECT_BLOCK:
     case actions.ADD_BLOCK: {
