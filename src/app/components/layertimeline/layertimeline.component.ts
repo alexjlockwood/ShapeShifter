@@ -13,10 +13,7 @@ import {
   ViewChild,
   ViewChildren,
 } from '@angular/core';
-import {
-  ModelUtil,
-  UiUtil,
-} from 'app/scripts/common';
+import { ModelUtil } from 'app/scripts/common';
 import { Dragger } from 'app/scripts/dragger';
 import { DestroyableMixin } from 'app/scripts/mixins';
 import {
@@ -931,14 +928,8 @@ export class LayerTimelineComponent
    * Zooms the timeline to fit the first animation.
    */
   private autoZoomToAnimation() {
-    console.info(this.$timeline.width());
-    UiUtil.waitForElementWidth(this.$timeline).then(width => {
-      console.info(this.$timeline.width());
-      // Shave off some pixels for safety.
-      width -= 48;
-      const zoom = width / this.animation.duration;
-      this.horizZoom = zoom;
-    });
+    // Shave off 48 pixels for safety.
+    this.horizZoom = (this.$timeline.width() - 48) / this.animation.duration;
   }
 
   // Proxies a button click to the <input> tag that opens the file picker.
