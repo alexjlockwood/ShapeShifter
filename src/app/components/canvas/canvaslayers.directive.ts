@@ -1,4 +1,4 @@
-import 'rxjs/add/observable/combineLatest';
+import 'rxjs/add/observable/merge';
 
 import {
   CanvasLayoutMixin,
@@ -67,11 +67,11 @@ export class CanvasLayersDirective
     if (this.actionSource === ActionSource.Animated) {
       // Preview canvas specific setup.
       this.registerSubscription(
-        Observable.combineLatest(
+        Observable.merge(
           this.animatorService.asObservable().map(event => event.vl),
           this.store.select(getVectorLayer),
-        ).subscribe(([animatedVl, vectorLayer]) => {
-          this.vectorLayer = animatedVl || vectorLayer;
+        ).subscribe(vectorLayer => {
+          this.vectorLayer = vectorLayer;
           this.draw();
         }));
     } else {

@@ -19,7 +19,6 @@ import {
 
 export const getCanvasOverlayState =
   createStructuredSelector({
-    vectorLayer: getVectorLayer,
     hiddenLayerIds: getHiddenLayerIds,
     selectedLayerIds: getSelectedLayerIds,
     isActionMode,

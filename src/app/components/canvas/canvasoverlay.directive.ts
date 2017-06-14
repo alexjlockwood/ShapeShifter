@@ -1,4 +1,5 @@
 import 'rxjs/add/observable/combineLatest';
+import 'rxjs/add/observable/merge';
 
 import { CanvasLayoutMixin } from './CanvasLayoutMixin';
 import * as CanvasUtil from './CanvasUtil';
@@ -59,6 +60,7 @@ import {
   ClearLayerSelections,
   SelectLayer,
 } from 'app/store/layers/actions';
+import { getVectorLayer } from 'app/store/layers/selectors';
 import * as $ from 'jquery';
 import * as _ from 'lodash';
 import { Observable } from 'rxjs/Observable';
@@ -144,19 +146,21 @@ export class CanvasOverlayDirective
       // Animated canvas specific setup.
       this.registerSubscription(
         Observable.combineLatest(
-          this.animatorService.asObservable().map(event => event.vl),
+          Observable.merge(
+            this.animatorService.asObservable().map(event => event.vl),
+            this.store.select(getVectorLayer),
+          ),
           this.store.select(getCanvasOverlayState),
         ).subscribe(([
-          animatedVl,
+          vectorLayer,
           {
-            vectorLayer,
             hiddenLayerIds,
             selectedLayerIds,
             isActionMode,
             selectedBlockLayerIds,
           },
         ]) => {
-          this.vectorLayer = animatedVl || vectorLayer;
+          this.vectorLayer = vectorLayer;
           this.hiddenLayerIds = hiddenLayerIds;
           this.selectedLayerIds = selectedLayerIds;
           this.isActionMode = isActionMode;
