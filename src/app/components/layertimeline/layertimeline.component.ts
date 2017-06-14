@@ -1,7 +1,7 @@
 import * as TimelineConsts from './constants';
 import { Callbacks as LayerListTreeCallbacks } from './layerlisttree.component';
-import { ScrubEvent } from './layertimeline.directive';
 import { LayerTimelineDirective } from './layertimeline.directive';
+import { ScrubEvent } from './layertimeline.directive';
 import { Callbacks as TimelineAnimationRowCallbacks } from './timelineanimationrow.component';
 import {
   AfterViewInit,
@@ -86,9 +86,12 @@ const MIN_ZOOM = 0.01;
 const DEFAULT_HORIZ_ZOOM = 2; // 1ms = 2px.
 
 enum MouseActions {
+  // We are dragging a block to a different location on the timeline.
   Moving = 1,
+  // Scales all selected blocks w/o altering their initial positions.
   ScalingUniformStart,
   ScalingUniformEnd,
+  // Scales all blocks and also translates their initial positions.
   ScalingTogetherStart,
   ScalingTogetherEnd,
 }
@@ -383,29 +386,31 @@ export class LayerTimelineComponent
       this.selectedBlockIds.has(dragBlock.id) ? selectedBlocks : [dragBlock];
 
     interface BlockInfo {
-      block: AnimationBlock;
-      startBound: number;
-      endBound: number;
-      downStartTime: number;
-      downEndTime: number;
+      readonly block: AnimationBlock;
+      readonly startBound: number;
+      readonly endBound: number;
+      readonly downStartTime: number;
+      readonly downEndTime: number;
       newStartTime?: number;
       newEndTime?: number;
     }
 
+    // TODO: allow blocks to be dragged horizontally over other blocks
     const blockInfos: BlockInfo[] = draggingBlocks.map(block => {
-      // By default the block is only bound by the animation duration.
-      let startBound = 0;
-      let endBound = animation.duration;
 
       const blockNeighbors = blocksByPropertyByLayer[block.layerId][block.propertyName];
       const indexIntoNeighbors = _.findIndex(blockNeighbors, b => block.id === b.id);
 
-      // Find start time bound.
+      // By default the block is only bound by the animation duration.
+      let startBound = 0;
+      let endBound = animation.duration;
+
+      // For each block find the left-most non-selected block and use that as
+      // the start bound.
       if (indexIntoNeighbors > 0) {
         for (let i = indexIntoNeighbors - 1; i >= 0; i--) {
           const neighbor = blockNeighbors[i];
-          if (!draggingBlocks.includes(neighbor)
-            || action === MouseActions.ScalingUniformStart) {
+          if (!draggingBlocks.includes(neighbor) || action === MouseActions.ScalingUniformStart) {
             // Only be bound by neighbors not being dragged
             // except when uniformly changing just start time.
             startBound = neighbor.endTime;
@@ -414,12 +419,12 @@ export class LayerTimelineComponent
         }
       }
 
-      // Find end time bound.
+      // For each block find the right-most non-selected block and use that as
+      // the end bound.
       if (indexIntoNeighbors < blockNeighbors.length - 1) {
         for (let i = indexIntoNeighbors + 1; i < blockNeighbors.length; i++) {
           const neighbor = blockNeighbors[i];
-          if (!draggingBlocks.includes(neighbor)
-            || action === MouseActions.ScalingUniformEnd) {
+          if (!draggingBlocks.includes(neighbor) || action === MouseActions.ScalingUniformEnd) {
             // Only be bound by neighbors not being dragged
             // except when uniformly changing just end time.
             endBound = neighbor.startTime;
@@ -443,10 +448,8 @@ export class LayerTimelineComponent
     let minStartTime, maxEndTime;
     if (action === MouseActions.ScalingTogetherStart
       || action === MouseActions.ScalingTogetherEnd) {
-      minStartTime = blockInfos.reduce(
-        (t, info) => Math.min(t, info.block.startTime), Infinity);
-      maxEndTime = blockInfos.reduce(
-        (t, info) => Math.max(t, info.block.endTime), 0);
+      minStartTime = _.minBy(blockInfos, info => info.block.startTime);
+      maxEndTime = _.maxBy(blockInfos, info => info.block.endTime);
       // Avoid divide by zero.
       maxEndTime = Math.max(maxEndTime, minStartTime + MIN_BLOCK_DURATION);
     }
@@ -467,6 +470,7 @@ export class LayerTimelineComponent
         this.rebuildSnapTimes();
       }, 0),
       onDragFn: event => {
+        // Calculate the 'time delta', i.e. the amount of time the block wants to move.
         let timeDelta = Math.round(xToTimeFn(event.clientX) - downTime);
         const allowSnap = !event.shiftKey && !event.metaKey;
         const replacementBlocks: AnimationBlock[] = [];
@@ -476,8 +480,7 @@ export class LayerTimelineComponent
               // Snap time delta.
               if (allowSnap && info.block.id === dragBlock.id) {
                 const newStartTime = info.downStartTime + timeDelta;
-                const newStartTimeSnapDelta =
-                  this.snapTime(newStartTime) - newStartTime;
+                const newStartTimeSnapDelta = this.snapTime(newStartTime) - newStartTime;
                 const newEndTime = info.downEndTime + timeDelta;
                 const newEndTimeSnapDelta = this.snapTime(newEndTime) - newEndTime;
                 if (newStartTimeSnapDelta) {
@@ -490,9 +493,11 @@ export class LayerTimelineComponent
                   timeDelta += newEndTimeSnapDelta;
                 }
               }
-              // Constrain time delta.
-              timeDelta = Math.min(timeDelta, info.endBound - info.downEndTime);
-              timeDelta = Math.max(timeDelta, info.startBound - info.downStartTime);
+              // Clamp time delta.
+              const { startBound, endBound, downStartTime, downEndTime } = info;
+              const min = info.startBound - info.downStartTime;
+              const max = info.endBound - info.downEndTime;
+              timeDelta = _.clamp(timeDelta, min, max);
             });
             blockInfos.forEach(info => {
               const blockDuration = (info.block.endTime - info.block.startTime);
@@ -514,10 +519,10 @@ export class LayerTimelineComponent
                   timeDelta += newStartTimeSnapDelta;
                 }
               }
-              // Constrain time delta.
-              timeDelta =
-                Math.min(timeDelta, (info.block.endTime - MIN_BLOCK_DURATION) - info.downStartTime);
-              timeDelta = Math.max(timeDelta, info.startBound - info.downStartTime);
+              // Clamp time delta.
+              const min = info.startBound - info.downStartTime;
+              const max = (info.block.endTime - MIN_BLOCK_DURATION) - info.downStartTime;
+              timeDelta = _.clamp(timeDelta, min, max);
             });
             blockInfos.forEach(info => {
               const block = info.block.clone();
@@ -536,10 +541,10 @@ export class LayerTimelineComponent
                   timeDelta += newEndTimeSnapDelta;
                 }
               }
-              // Constrain time delta.
-              timeDelta = Math.min(timeDelta, info.endBound - info.downEndTime);
-              timeDelta =
-                Math.max(timeDelta, (info.block.startTime + MIN_BLOCK_DURATION) - info.downEndTime);
+              // Clamp time delta.
+              const min = (info.block.startTime + MIN_BLOCK_DURATION) - info.downEndTime;
+              const max = info.endBound - info.downEndTime;
+              timeDelta = _.clamp(timeDelta, min, max);
             });
             blockInfos.forEach(info => {
               const block = info.block.clone();
