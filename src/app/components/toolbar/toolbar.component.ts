@@ -74,59 +74,70 @@ export class ToolbarComponent implements OnInit {
       });
   }
 
-  onAutoFixClick() {
-    ga('send', 'event', 'Action mode', 'Auto fix click');
-    this.actionModeService.autoFixClick();
-  }
-
-  onSendFeedbackClick() {
+  onSendFeedbackClick(event: MouseEvent) {
     ga('send', 'event', 'Miscellaneous', 'Send feedback click');
   }
 
-  onAboutClick() {
+  onAboutClick(event: MouseEvent) {
     ga('send', 'event', 'Miscellaneous', 'About click');
   }
 
-  onCloseActionModeClick() {
+  onAutoFixClick(event: MouseEvent) {
+    ga('send', 'event', 'Action mode', 'Auto fix click');
+    event.stopPropagation();
+    this.actionModeService.autoFixClick();
+  }
+
+  onCloseActionModeClick(event: MouseEvent) {
+    event.stopPropagation();
     this.actionModeService.closeActionMode();
   }
 
-  onAddPointsClick() {
+  onAddPointsClick(event: MouseEvent) {
     ga('send', 'event', 'Action mode', 'Add points');
+    event.stopPropagation();
     this.actionModeService.toggleSplitCommandsMode();
   }
 
-  onSplitSubPathsClick() {
+  onSplitSubPathsClick(event: MouseEvent) {
     ga('send', 'event', 'Action mode', 'Split sub paths');
+    event.stopPropagation();
     this.actionModeService.toggleSplitSubPathsMode();
   }
 
-  onPairSubPathsClick() {
+  onPairSubPathsClick(event: MouseEvent) {
     ga('send', 'event', 'Action mode', 'Pair sub paths');
+    event.stopPropagation();
     this.actionModeService.togglePairSubPathsMode();
   }
 
-  onReversePointsClick() {
+  onReversePointsClick(event: MouseEvent) {
+    event.stopPropagation();
     this.actionModeService.reverseSelectedSubPaths();
   }
 
-  onShiftBackPointsClick() {
+  onShiftBackPointsClick(event: MouseEvent) {
+    event.stopPropagation();
     this.actionModeService.shiftBackSelectedSubPaths();
   }
 
-  onShiftForwardPointsClick() {
+  onShiftForwardPointsClick(event: MouseEvent) {
+    event.stopPropagation();
     this.actionModeService.shiftForwardSelectedSubPaths();
   }
 
-  onDeleteSubPathsClick() {
+  onDeleteSubPathsClick(event: MouseEvent) {
+    event.stopPropagation();
     this.actionModeService.deleteSelections();
   }
 
-  onDeleteSegmentsClick() {
+  onDeleteSegmentsClick(event: MouseEvent) {
+    event.stopPropagation();
     this.actionModeService.deleteSelections();
   }
 
-  onSetFirstPositionClick() {
+  onSetFirstPositionClick(event: MouseEvent) {
+    event.stopPropagation();
     this.actionModeService.shiftPointToFront();
   }
 
@@ -138,11 +149,13 @@ export class ToolbarComponent implements OnInit {
     }
   }
 
-  onSplitInHalfClick() {
+  onSplitInHalfClick(event: MouseEvent) {
+    event.stopPropagation();
     this.actionModeService.splitInHalfClick();
   }
 
-  onDeletePointsClick() {
+  onDeletePointsClick(event: MouseEvent) {
+    event.stopPropagation();
     this.actionModeService.deleteSelections();
   }
 }

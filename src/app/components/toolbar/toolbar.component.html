@@ -34,7 +34,7 @@
     <button md-icon-button
       *ngIf="data.showActionMode"
       class="action-mode-close-icon"
-      (click)="onCloseActionModeClick()">
+      (click)="onCloseActionModeClick($event)">
       <md-icon>{{toolbarData.isSelectionMode() ? 'arrow_back' : 'close'}}</md-icon>
     </button>
 
@@ -50,9 +50,9 @@
 
     <button md-icon-button
       class="toolbar-action-button"
-      (click)="onAutoFixClick()"
+      (click)="onAutoFixClick($event)"
       mdTooltip="Auto fix"
-      mdTooltipShowDelay="300"
+      mdTooltipShowDelay="500"
       *ngIf="data.showAutoFix"
       mdTooltipPosition="below">
       <md-icon svgIcon="autofix"></md-icon>
@@ -64,8 +64,8 @@
       mdTooltip="Add points (A)"
       mdTooltipPosition="below"
       *ngIf="data.showAddPoints"
-      mdTooltipShowDelay="300"
-      (click)="onAddPointsClick()"
+      mdTooltipShowDelay="500"
+      (click)="onAddPointsClick($event)"
       [class.activated]="toolbarData.isAddPointsMode()">
       <md-icon>add_circle_outline</md-icon>
     </button>
@@ -74,8 +74,8 @@
       mdTooltip="Split subpaths (S)"
       mdTooltipPosition="below"
       *ngIf="data.showSplitSubPaths"
-      mdTooltipShowDelay="300"
-      (click)="onSplitSubPathsClick()"
+      mdTooltipShowDelay="500"
+      (click)="onSplitSubPathsClick($event)"
       [class.activated]="toolbarData.isSplitSubPathsMode()">
       <md-icon>content_cut</md-icon>
     </button>
@@ -84,8 +84,8 @@
       mdTooltip="Pair subpaths (D)"
       mdTooltipPosition="below"
       *ngIf="data.showPairSubPaths"
-      mdTooltipShowDelay="300"
-      (click)="onPairSubPathsClick()"
+      mdTooltipShowDelay="500"
+      (click)="onPairSubPathsClick($event)"
       [class.activated]="toolbarData.isPairSubPathsMode()">
       <md-icon>compare_arrows</md-icon>
     </button>
@@ -94,8 +94,8 @@
       mdTooltip="Reverse points (R)"
       mdTooltipPosition="below"
       *ngIf="data.showReverseSubPaths"
-      mdTooltipShowDelay="300"
-      (click)="onReversePointsClick()"
+      mdTooltipShowDelay="500"
+      (click)="onReversePointsClick($event)"
       [disabled]="!toolbarData.isSelectionMode()">
       <md-icon svgIcon="reverse"></md-icon>
     </button>
@@ -104,8 +104,8 @@
       mdTooltip="Shift back points (B)"
       mdTooltipPosition="below"
       *ngIf="data.showShiftSubPath"
-      mdTooltipShowDelay="300"
-      (click)="onShiftBackPointsClick()"
+      mdTooltipShowDelay="500"
+      (click)="onShiftBackPointsClick($event)"
       [disabled]="!toolbarData.isSelectionMode()">
       <md-icon>skip_previous</md-icon>
     </button>
@@ -114,8 +114,8 @@
       mdTooltip="Shift forward points (F)"
       mdTooltipPosition="below"
       *ngIf="data.showShiftSubPath"
-      mdTooltipShowDelay="300"
-      (click)="onShiftForwardPointsClick()"
+      mdTooltipShowDelay="500"
+      (click)="onShiftForwardPointsClick($event)"
       [disabled]="!toolbarData.isSelectionMode()">
       <md-icon>skip_next</md-icon>
     </button>
@@ -123,9 +123,9 @@
       class="toolbar-action-button"
       mdTooltipPosition="below"
       mdTooltip="Delete subpath{{data.numSubPaths === 1 ? '' : 's'}}"
-      mdTooltipShowDelay="300"
+      mdTooltipShowDelay="500"
       *ngIf="data.showDeleteSubPaths"
-      (click)="onDeleteSubPathsClick()">
+      (click)="onDeleteSubPathsClick($event)">
       <md-icon>delete</md-icon>
     </button>
 
@@ -134,9 +134,9 @@
       class="toolbar-action-button"
       mdTooltipPosition="below"
       mdTooltip="Delete segment{{data.numSegments === 1 ? '' : 's'}}"
-      mdTooltipShowDelay="300"
+      mdTooltipShowDelay="500"
       *ngIf="data.showDeleteSegments"
-      (click)="onDeleteSegmentsClick()">
+      (click)="onDeleteSegmentsClick($event)">
       <md-icon>delete</md-icon>
     </button>
 
@@ -144,7 +144,7 @@
     <button md-icon-button
       mdTooltip="Add point (A)"
       mdTooltipPosition="below"
-      mdTooltipShowDelay="300"
+      mdTooltipShowDelay="500"
       *ngIf="data.showSplitInHalf"
       (mouseenter)="onSplitInHalfHoverEvent(true)"
       (mouseleave)="onSplitInHalfHoverEvent(false)"
@@ -155,24 +155,25 @@
       class="toolbar-action-button"
       mdTooltip="Set first point (F)"
       mdTooltipPosition="below"
-      mdTooltipShowDelay="300"
+      mdTooltipShowDelay="500"
       *ngIf="data.showSetFirstPosition"
-      (click)="onSetFirstPositionClick()">
+      (click)="onSetFirstPositionClick($event)">
       <md-icon>looks_one</md-icon>
     </button>
     <button md-icon-button
       class="toolbar-action-button"
       mdTooltipPosition="below"
       mdTooltip="Delete point{{data.numPoints === 1 ? '' : 's'}}"
-      mdTooltipShowDelay="300"
+      mdTooltipShowDelay="500"
       *ngIf="data.showDeletePoints"
-      (click)="onDeletePointsClick()">
+      (click)="onDeletePointsClick($event)">
       <md-icon>delete</md-icon>
     </button>
 
     <!-- Overflow menu buttons. -->
     <button class="toolbar-action-button"
       md-icon-button
+      (click)="$event.stopPropagation()"
       [mdMenuTriggerFor]="overflowMenu">
       <md-icon>more_vert</md-icon>
     </button>
