@@ -2,7 +2,7 @@
 export function waitForElementWidth($el/*: JQuery*/, timeout = 1000) {
   const start = Number(new Date());
   return new Promise<number>((resolve, reject) => {
-    const tryResolve_ = () => {
+    const tryResolveFn = () => {
       if (Number(new Date()) - start > timeout) {
         reject();
         return;
@@ -11,9 +11,9 @@ export function waitForElementWidth($el/*: JQuery*/, timeout = 1000) {
       if (width) {
         resolve(width);
       } else {
-        setTimeout(() => tryResolve_(), 0);
+        setTimeout(() => tryResolveFn(), 0);
       }
     };
-    tryResolve_();
+    tryResolveFn();
   });
 }

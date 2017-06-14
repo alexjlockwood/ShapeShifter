@@ -40,6 +40,10 @@ import {
   ImportType,
 } from 'app/services/import/fileimport.service';
 import {
+  Shortcut,
+  ShortcutService,
+} from 'app/services/shortcut/shortcut.service';
+import {
   Duration,
   SnackBarService,
 } from 'app/services/snackbar/snackbar.service';
@@ -146,6 +150,7 @@ export class LayerTimelineComponent
     private readonly store: Store<State>,
     private readonly dialogService: DialogService,
     private readonly demoService: DemoService,
+    readonly shortcutService: ShortcutService,
   ) { super(); }
 
   ngOnInit() {
@@ -171,6 +176,12 @@ export class LayerTimelineComponent
             isAnimationSelected,
           };
         });
+    this.registerSubscription(
+      this.shortcutService.asObservable().subscribe(shortcut => {
+        if (shortcut === Shortcut.ZoomToFit) {
+          this.autoZoomToAnimation();
+        }
+      }));
   }
 
   ngAfterViewInit() {
@@ -912,13 +923,19 @@ export class LayerTimelineComponent
     return undefined;
   }
 
+  zoomToFitClick() {
+    this.autoZoomToAnimation();
+  }
+
   /**
    * Zooms the timeline to fit the first animation.
    */
   private autoZoomToAnimation() {
+    console.info(this.$timeline.width());
     UiUtil.waitForElementWidth(this.$timeline).then(width => {
-      // Shave off one hundred pixels for safety.
-      width -= 100;
+      console.info(this.$timeline.width());
+      // Shave off some pixels for safety.
+      width -= 48;
       const zoom = width / this.animation.duration;
       this.horizZoom = zoom;
     });

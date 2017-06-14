@@ -161,20 +161,28 @@
     #timeline
     (mousewheel)="this.onWheelEvent($event)">
     <div #timelineAnimation
-      *ngIf="{
-          horizZoom: (this.horizZoomObservable | async)
-        } as animationData"
+      *ngIf="{ horizZoom: (this.horizZoomObservable | async) } as animationData"
       class="slt-timeline-animation"
       (mousedown)="this.animationTimelineMouseDown($event)"
       [ngClass]="{'is-active': true}"
       [ngStyle]="{'width': (model.animation.duration * animationData.horizZoom + 40) + 'px'}"
       fxLayout="column">
       <div class="slt-header">
-        <div class="slt-timeline-animation-meta"
-          [ngClass]="{'is-selected': model.isAnimationSelected}"
-          (click)="this.animationHeaderTextClick($event)">
-          <span class="slt-timeline-animation-name">{{model.animation.name}}</span>
-          <span class="slt-timeline-animation-duration">{{model.animation.duration}}ms</span>
+        <div fxLayout="row"
+          fxLayoutAlign="start center">
+          <div class="slt-timeline-animation-meta"
+            [ngClass]="{'is-selected': model.isAnimationSelected}"
+            (click)="this.animationHeaderTextClick($event)">
+            <span class="slt-timeline-animation-name">{{model.animation.name}}</span>
+            <span class="slt-timeline-animation-duration">{{model.animation.duration}}ms</span>
+          </div>
+          <button md-icon-button
+            (click)="this.zoomToFitClick()"
+            mdTooltip="Zoom to fit ({{this.shortcutService.getZoomToFitText()}})"
+            mdTooltipPosition="below"
+            mdTooltipShowDelay="500">
+            <md-icon>zoom_out_map</md-icon>
+          </button>
         </div>
         <canvas appLayerTimeline
           class="slt-timeline-header-grid"

@@ -9,16 +9,27 @@ import { DeleteSelectedModels } from 'app/store/common/actions';
 import { GroupOrUngroupSelectedLayers } from 'app/store/layers/actions';
 import * as $ from 'jquery';
 import { ActionCreators } from 'redux-undo';
+import { Observable } from 'rxjs/Observable';
+import { Subject } from 'rxjs/Subject';
+
+export enum Shortcut {
+  ZoomToFit = 1,
+}
 
 @Injectable()
 export class ShortcutService {
   private isInit = false;
+  private readonly shortcutSubject = new Subject<Shortcut>();
 
   constructor(
     private readonly store: Store<State>,
     private readonly animatorService: AnimatorService,
     private readonly actionModeService: ActionModeService,
   ) { }
+
+  asObservable() {
+    return this.shortcutSubject.asObservable();
+  }
 
   init() {
     if (this.isInit) {
@@ -27,15 +38,21 @@ export class ShortcutService {
     this.isInit = true;
 
     $(window).on('keydown', event => {
-      if (event.metaKey && event.keyCode === 'Z'.charCodeAt(0)) {
-        event.shiftKey
-          ? this.store.dispatch(ActionCreators.redo())
-          : this.store.dispatch(ActionCreators.undo());
-        return false;
-      }
-      if (event.metaKey && event.keyCode === 'G'.charCodeAt(0)) {
-        this.store.dispatch(new GroupOrUngroupSelectedLayers(!event.shiftKey));
-        return false;
+      if (this.isCmdOrCtrlKeyPressed(event)) {
+        if (event.keyCode === 'Z'.charCodeAt(0)) {
+          event.shiftKey
+            ? this.store.dispatch(ActionCreators.redo())
+            : this.store.dispatch(ActionCreators.undo());
+          return false;
+        }
+        if (event.keyCode === 'G'.charCodeAt(0)) {
+          this.store.dispatch(new GroupOrUngroupSelectedLayers(!event.shiftKey));
+          return false;
+        }
+        if (event.keyCode === 'O'.charCodeAt(0)) {
+          this.shortcutSubject.next(Shortcut.ZoomToFit);
+          return false;
+        }
       }
       if (event.ctrlKey || event.metaKey) {
         // Do nothing if the ctrl or meta keys are pressed.
@@ -132,5 +149,21 @@ export class ShortcutService {
     }
     this.isInit = false;
     $(window).unbind('keydown');
+  }
+
+  getZoomToFitText() {
+    return `${this.getCmdOrCtrlText()} + O`;
+  }
+
+  private isMac() {
+    return navigator.appVersion.includes('Mac');
+  }
+
+  private isCmdOrCtrlKeyPressed(event: JQueryEventObject) {
+    return this.isMac() ? event.metaKey : event.ctrlKey;
+  }
+
+  private getCmdOrCtrlText() {
+    return this.isMac() ? 'Cmd' : 'Ctrl';
   }
 }

@@ -345,6 +345,28 @@
         z-index: 1;
         cursor: pointer;
       }
+      md-icon {
+        width: 13px;
+        height: 13px;
+        font-size: 13px;
+      }
+      button {
+        line-height: 16px;
+        height: 16px;
+        width: 16px;
+        min-height: 16px;
+        padding-left: 1.5px;
+        padding-right: 1.5px;
+        padding-top: 1px;
+        padding-bottom: 1px;
+        margin-left: 4px;
+        &[md-icon-button] {
+          md-icon {
+            line-height: normal;
+            vertical-align: top;
+          }
+        }
+      }
     }
   }
   .slt-header {
