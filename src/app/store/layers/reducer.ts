@@ -18,9 +18,9 @@ export interface State {
 export function buildInitialState() {
   return {
     vectorLayer: new VectorLayer(),
-    selectedLayerIds: new Set(),
-    collapsedLayerIds: new Set(),
-    hiddenLayerIds: new Set(),
+    selectedLayerIds: new Set<string>(),
+    collapsedLayerIds: new Set<string>(),
+    hiddenLayerIds: new Set<string>(),
   } as State;
 }
 
@@ -118,7 +118,7 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
     case actions.SELECT_ANIMATION:
     case actions.SELECT_BLOCK:
     case actions.ADD_BLOCK: {
-      return { ...state, selectedLayerIds: new Set() };
+      return { ...state, selectedLayerIds: new Set<string>() };
     }
   }
   return state;
@@ -163,7 +163,7 @@ function deleteSelectedLayers(state: State) {
   return {
     ...state,
     vectorLayer,
-    selectedLayerIds: new Set(),
+    selectedLayerIds: new Set<string>(),
     collapsedLayerIds,
     hiddenLayerIds,
   };

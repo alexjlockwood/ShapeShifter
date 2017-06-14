@@ -20,7 +20,7 @@ export function buildInitialState() {
   return {
     animation: new Animation(),
     isAnimationSelected: false,
-    selectedBlockIds: new Set(),
+    selectedBlockIds: new Set<string>(),
   } as State;
 }
 
@@ -36,7 +36,7 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
     // Select an animation.
     case actions.SELECT_ANIMATION: {
       const { isAnimationSelected } = action.payload;
-      return { ...state, isAnimationSelected };
+      return { ...state, isAnimationSelected, selectedBlockIds: new Set<string>() };
     }
 
     // Add an animation block to the currently active animation.
@@ -141,12 +141,12 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
 
     // Clear all layer selections.
     case actions.CLEAR_LAYER_SELECTIONS: {
-      return { ...state, isAnimationSelected: false, selectedBlockIds: new Set() };
+      return { ...state, isAnimationSelected: false, selectedBlockIds: new Set<string>() };
     }
 
     // Select a layer.
     case actions.SELECT_LAYER: {
-      return { ...state, isAnimationSelected: false, selectedBlockIds: new Set() };
+      return { ...state, isAnimationSelected: false, selectedBlockIds: new Set<string>() };
     }
 
     // Delete all selected animations, blocks, and layers.
@@ -188,5 +188,5 @@ function deleteSelectedAnimation(state: State) {
 function deleteSelectedBlocks(state: State) {
   const animation = state.animation.clone();
   animation.blocks = animation.blocks.filter(b => !state.selectedBlockIds.has(b.id));
-  return { ...state, animation, selectedBlockIds: new Set() };
+  return { ...state, animation, selectedBlockIds: new Set<string>() };
 }
