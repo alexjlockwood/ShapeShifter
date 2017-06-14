@@ -35,6 +35,7 @@ export class Animation {
   toJSON() {
     return {
       id: this.id,
+      name: this.name,
       duration: this.duration,
       blocks: this.blocks.map(block => block.toJSON()),
     };

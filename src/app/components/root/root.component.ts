@@ -37,7 +37,7 @@ import * as $ from 'jquery';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Observable } from 'rxjs/Observable';
 
-const SHOULD_AUTO_LOAD_DEMO = false;
+const SHOULD_AUTO_LOAD_DEMO = true;
 const IS_DEV_BUILD = !environment.production;
 const ELEMENT_RESIZE_DETECTOR = erd();
 const STORAGE_KEY_FIRST_TIME_USER = 'storage_key_first_time_user';
@@ -113,7 +113,7 @@ export class RootComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     if (IS_DEV_BUILD && SHOULD_AUTO_LOAD_DEMO) {
-      this.demoService.getDemo('demos/hippobuffalo.shapeshifter')
+      this.demoService.getDemo('playpause')
         .then(({ vectorLayer, animation, hiddenLayerIds }) => {
           this.store.dispatch(new ResetWorkspace(vectorLayer, animation, hiddenLayerIds));
         });

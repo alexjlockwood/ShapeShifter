@@ -40,8 +40,7 @@ export class FileExportService {
     const jsonStr = JSON.stringify({
       version: IMPORT_EXPORT_VERSION,
       vectorLayer: this.vectorLayer.toJSON(),
-      // TODO: remove the array here
-      animations: [this.animation.toJSON()],
+      animation: this.animation.toJSON(),
       hiddenLayerIds: Array.from(this.hiddenLayerIds),
     }, undefined, 2);
     downloadFile(jsonStr, `${this.vectorLayer.name}.shapeshifter`);

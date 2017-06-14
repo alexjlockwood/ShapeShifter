@@ -164,11 +164,11 @@ class ToolbarData {
 
   constructor(
     private readonly actionMode: ActionMode,
-    readonly startMorphableLayer: MorphableLayer,
-    readonly endMorphableLayer: MorphableLayer,
+    startMorphableLayer: MorphableLayer,
+    endMorphableLayer: MorphableLayer,
     public readonly mode: ActionMode,
     public readonly selections: ReadonlyArray<Selection>,
-    readonly unpair: { source: ActionSource; subIdx: number; },
+    unpair: { source: ActionSource; subIdx: number; },
     private readonly block: PathAnimationBlock | undefined,
   ) {
     // Precondition: assume all selections are for the same canvas type
@@ -190,7 +190,7 @@ class ToolbarData {
         .filter(s => s.type === SelectionType.SubPath)
         .map(s => s.subIdx);
     this.segments =
-      _.chain(selections)
+      selections
         .filter(s => {
           const { subIdx, cmdIdx } = s;
           return s.type === SelectionType.Segment
@@ -200,10 +200,10 @@ class ToolbarData {
         .map(s => {
           const { subIdx, cmdIdx } = s;
           return { subIdx, cmdIdx };
-        })
-        .value();
+        });
     this.points =
-      selections.filter(s => s.type === SelectionType.Point)
+      selections
+        .filter(s => s.type === SelectionType.Point)
         .map(s => {
           const { subIdx, cmdIdx } = s;
           return { subIdx, cmdIdx };
