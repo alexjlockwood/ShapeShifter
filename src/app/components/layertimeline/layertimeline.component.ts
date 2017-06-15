@@ -255,8 +255,11 @@ export class LayerTimelineComponent
             this.store.dispatch(new ResetWorkspace(vectorLayer, animation, hiddenLayerIds));
             this.animatorService.reset();
           }).catch(error => {
-            // TODO: show a snackbar indicating the error occurred
-            // TODO: show a snackbar when in offline mode (telling the user they need to be online)
+            const msg =
+              'serviceWorker' in navigator && navigator.serviceWorker.controller
+                ? 'Demo not available offline'
+                : `Couldn't fetch demo`;
+            this.snackBarService.show(msg, 'Dismiss', Duration.Long);
             return Promise.reject(error.message || error);
           });
       });
