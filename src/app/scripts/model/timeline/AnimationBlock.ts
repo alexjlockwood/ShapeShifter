@@ -42,6 +42,7 @@ export abstract class AnimationBlock {
     this.startTime = obj.startTime || 0;
     this.endTime = obj.endTime || 100;
     if (this.startTime > this.endTime) {
+      // TODO: don't let this happen (usually results in behavior that seems weird to users)
       const tmp = this.endTime;
       this.endTime = this.startTime;
       this.startTime = tmp;

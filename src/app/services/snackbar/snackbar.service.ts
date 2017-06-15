@@ -11,7 +11,7 @@ export class SnackBarService {
 
   constructor(private readonly snackBar: MdSnackBar) { }
 
-  show(message: string, action: string, duration: Duration) {
-    this.snackBar.open(message, action, { duration });
+  show(message: string, action = '', duration = Duration.Short) {
+    this.snackBar.open(message, action.toUpperCase(), { duration });
   }
 }
