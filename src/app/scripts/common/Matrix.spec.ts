@@ -1,4 +1,3 @@
-import 'jasmine';
 import { Matrix } from '.';
 
 describe('Matrix', () => {

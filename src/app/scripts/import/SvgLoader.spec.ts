@@ -1,6 +1,5 @@
 // TODO: figure out why this test times out
 
-// import 'jasmine';
 // import * as SvgLoader from './SvgLoader';
 
 // describe('SvgLoader', () => {

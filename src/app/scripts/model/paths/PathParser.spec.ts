@@ -1,6 +1,5 @@
-import 'jasmine';
-import * as PathParser from './PathParser';
 import { Command } from '.';
+import * as PathParser from './PathParser';
 
 describe('PathParser', () => {
 

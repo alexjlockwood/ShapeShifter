@@ -1,4 +1,3 @@
-import 'jasmine';
 import { Point } from '.';
 
 describe('Point', () => {

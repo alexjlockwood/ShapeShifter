@@ -1,4 +1,3 @@
-import 'jasmine';
 import { Rect } from '.';
 
 describe('Rect', () => {

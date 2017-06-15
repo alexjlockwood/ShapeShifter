@@ -1,5 +1,8 @@
-import 'jasmine';
-import { Point, Matrix, MathUtil } from '.';
+import {
+  MathUtil,
+  Matrix,
+  Point,
+} from '.';
 
 describe('MathUtil', () => {
   it('#transformPoint', () => {

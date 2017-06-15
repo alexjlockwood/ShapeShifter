@@ -1,7 +1,5 @@
 /* tslint:disable */
 
-import 'jasmine';
-
 import { jsToSvg } from './lib/js2svg';
 import { executePlugins } from './lib/plugins';
 import { svgToJs } from './lib/svg2js';
