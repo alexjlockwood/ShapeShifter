@@ -4,9 +4,9 @@ import {
 } from '..';
 import { CommandBuilder } from '../Command';
 import {
-   BBox,
-   Calculator,
-   Line,
+  BBox,
+  Calculator,
+  Line,
 } from '.';
 import { Point } from 'app/scripts/common';
 

@@ -6,7 +6,8 @@ const EPSILON = 1e-8;
 export class Point {
   constructor(
     public readonly x = 0,
-    public readonly y = 0) { }
+    public readonly y = 0,
+  ) { }
 
   /**
    * Returns true if the point is approximately equal to this point.

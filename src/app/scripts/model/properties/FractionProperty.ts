@@ -1,13 +1,10 @@
 import {
-   NumberConfig,
-   NumberProperty,
+  NumberConfig,
+  NumberProperty,
 } from './NumberProperty';
 
 export class FractionProperty extends NumberProperty {
-  constructor(
-    readonly name: string,
-    readonly config: NumberConfig = {},
-  ) {
+  constructor(name: string, config: NumberConfig = {}) {
     super(name, {
       isAnimatable: config.isAnimatable,
       min: 0,

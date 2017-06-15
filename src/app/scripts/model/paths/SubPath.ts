@@ -1,5 +1,5 @@
-import * as _ from 'lodash';
 import { Command } from '.';
+import * as _ from 'lodash';
 
 /**
  * Represents a string of Commands, beginning with a 'moveTo' command and ending

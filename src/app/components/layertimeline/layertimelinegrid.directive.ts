@@ -30,7 +30,7 @@ export class LayerTimelineGridDirective {
   private currentTime_: number;
   private horizZoom_: number;
 
-  constructor(readonly elementRef: ElementRef) {
+  constructor(elementRef: ElementRef) {
     this.canvas = elementRef.nativeElement;
     this.$canvas = $(this.canvas);
   }

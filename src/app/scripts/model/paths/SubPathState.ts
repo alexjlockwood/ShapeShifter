@@ -1,5 +1,5 @@
-import * as _ from 'lodash';
 import { CommandState } from './CommandState';
+import * as _ from 'lodash';
 
 /**
  * Container class that encapsulates a SubPath's underlying state.

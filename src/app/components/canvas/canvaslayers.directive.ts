@@ -54,7 +54,7 @@ export class CanvasLayersDirective
   private vectorLayer: VectorLayer;
 
   constructor(
-    readonly elementRef: ElementRef,
+    elementRef: ElementRef,
     private readonly animatorService: AnimatorService,
     private readonly store: Store<State>,
   ) {

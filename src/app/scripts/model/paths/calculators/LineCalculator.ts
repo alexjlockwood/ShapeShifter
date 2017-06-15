@@ -1,12 +1,12 @@
 import {
-   Projection,
-   SvgChar,
+  Projection,
+  SvgChar,
 } from '..';
 import { CommandBuilder } from '../Command';
 import {
-   BBox,
-   Calculator,
-   Line,
+  BBox,
+  Calculator,
+  Line,
 } from '.';
 import { PointCalculator } from './PointCalculator';
 import {

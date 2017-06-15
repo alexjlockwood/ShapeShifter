@@ -1,9 +1,9 @@
 import {
-   Directive,
-   ElementRef,
-   HostListener,
-   Input,
-   OnDestroy,
+  Directive,
+  ElementRef,
+  HostListener,
+  Input,
+  OnDestroy,
 } from '@angular/core';
 import * as $ from 'jquery';
 
@@ -17,7 +17,7 @@ export class ScrollGroupDirective implements OnDestroy {
 
   private readonly element: JQuery;
 
-  constructor(readonly elementRef: ElementRef) {
+  constructor(elementRef: ElementRef) {
     this.element = $(elementRef.nativeElement);
     GROUPS.set(this.scrollGroup, GROUPS.get(this.scrollGroup) || []);
     GROUPS.get(this.scrollGroup).push(this.element);

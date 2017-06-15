@@ -152,7 +152,7 @@ export class LayerTimelineComponent
     private readonly store: Store<State>,
     private readonly dialogService: DialogService,
     private readonly demoService: DemoService,
-    readonly shortcutService: ShortcutService,
+    public readonly shortcutService: ShortcutService,
   ) { super(); }
 
   ngOnInit() {

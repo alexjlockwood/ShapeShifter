@@ -26,7 +26,7 @@ export class CanvasRulerDirective extends CanvasLayoutMixin() {
   private readonly $canvas: JQuery;
   private mousePoint: Point;
 
-  constructor(readonly elementRef: ElementRef) {
+  constructor(elementRef: ElementRef) {
     super();
     this.$canvas = $(elementRef.nativeElement);
   }

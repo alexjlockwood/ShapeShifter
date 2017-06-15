@@ -130,7 +130,7 @@ export class CanvasOverlayDirective
   private shapeSplitter: ShapeSplitter | undefined;
 
   constructor(
-    readonly elementRef: ElementRef,
+    elementRef: ElementRef,
     public readonly store: Store<State>,
     public readonly actionModeService: ActionModeService,
     private readonly animatorService: AnimatorService,

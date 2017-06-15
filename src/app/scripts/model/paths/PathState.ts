@@ -1,10 +1,10 @@
 import {
-   Command,
-   HitOptions,
-   HitResult,
-   Line,
-   ProjectionOntoPath,
-   SubPath,
+  Command,
+  HitOptions,
+  HitResult,
+  Line,
+  ProjectionOntoPath,
+  SubPath,
 } from '.';
 import { CommandState } from './CommandState';
 import * as PathParser from './PathParser';
@@ -25,7 +25,7 @@ export class PathState {
   readonly commands: ReadonlyArray<Command>;
 
   constructor(
-    readonly obj: string | Command[],
+    obj: string | Command[],
     // Maps internal spsIdx indices to SubPathState objects. The last 'numCollapsingSubPaths'
     // indices hold references to the collapsing sub paths.
     public readonly subPathStateMap?: ReadonlyArray<SubPathState>,

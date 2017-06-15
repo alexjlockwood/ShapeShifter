@@ -10,10 +10,7 @@ export class NumberProperty extends Property<number> {
   private readonly max: number;
   private readonly isInteger: boolean;
 
-  constructor(
-    readonly name: string,
-    readonly config: NumberConfig = {},
-  ) {
+  constructor(name: string, config: NumberConfig = {}) {
     super(name, config);
     this.min = config.min === undefined ? -Infinity : config.min;
     this.max = config.max === undefined ? Infinity : config.max;

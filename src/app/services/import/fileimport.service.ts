@@ -29,8 +29,8 @@ export enum ImportType {
 export class FileImportService {
   private vectorLayer: VectorLayer;
 
-  constructor(readonly store: Store<State>) {
-    this.store.select(getVectorLayer).subscribe(vl => this.vectorLayer = vl);
+  constructor(store: Store<State>) {
+    store.select(getVectorLayer).subscribe(vl => this.vectorLayer = vl);
   }
 
   import(

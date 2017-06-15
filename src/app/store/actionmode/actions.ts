@@ -17,7 +17,7 @@ export const TOGGLE_POINT_SELECTION = '__actionmode__TOGGLE_POINT_SELECTION';
 export class StartActionMode implements Action {
   readonly type = START_ACTION_MODE;
   readonly payload: { blockId: string };
-  constructor(readonly blockId: string) {
+  constructor(blockId: string) {
     this.payload = { blockId };
   }
 }

@@ -340,7 +340,7 @@ class InspectedProperty<V> {
 
   constructor(
     // The model object being inspected (a layer, animation, or animation block).
-    readonly model: any,
+    model: any,
     // The model object's inspected property.
     public readonly property: Property<V>,
     // The model object's inspected property name.

@@ -1,7 +1,7 @@
 import {
-   Command,
-   Projection,
-   SvgChar,
+  Command,
+  Projection,
+  SvgChar,
 } from '.';
 import {
   Calculator,
@@ -9,9 +9,9 @@ import {
   newCalculator,
 } from './calculators';
 import {
-   MathUtil,
-   Matrix,
-   Point,
+  MathUtil,
+  Matrix,
+  Point,
 } from 'app/scripts/common';
 import * as _ from 'lodash';
 
