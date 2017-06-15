@@ -1,75 +1,79 @@
 {
   "version": 1,
-  "vectorLayer": {
-    "id": "31",
-    "name": "playtopause",
-    "type": "vector",
-    "width": 24,
-    "height": 24,
-    "alpha": 1,
-    "children": [
-      {
-        "id": "9439",
-        "name": "group",
-        "type": "group",
-        "rotation": 0,
-        "scaleX": 1,
-        "scaleY": 1,
-        "pivotX": 12,
-        "pivotY": 12,
-        "translateX": 0,
-        "translateY": 0,
-        "children": [
-          {
-            "id": "32",
-            "name": "path",
-            "type": "path",
-            "pathData": "M 8 5 L 8 19 L 19 12 Z",
-            "fillColor": "#000000",
-            "fillAlpha": 1,
-            "strokeColor": "",
-            "strokeAlpha": 1,
-            "strokeWidth": 1,
-            "strokeLinecap": "butt",
-            "strokeLinejoin": "miter",
-            "strokeMiterLimit": 4,
-            "trimPathStart": 0,
-            "trimPathEnd": 1,
-            "trimPathOffset": 0,
-            "fillType": "nonZero"
-          }
-        ]
-      }
-    ]
+  "layers": {
+    "vectorLayer": {
+      "id": "31",
+      "name": "playtopause",
+      "type": "vector",
+      "width": 24,
+      "height": 24,
+      "alpha": 1,
+      "children": [
+        {
+          "id": "9439",
+          "name": "group",
+          "type": "group",
+          "rotation": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "pivotX": 12,
+          "pivotY": 12,
+          "translateX": 0,
+          "translateY": 0,
+          "children": [
+            {
+              "id": "32",
+              "name": "path",
+              "type": "path",
+              "pathData": "M 8 5 L 8 19 L 19 12 Z",
+              "fillColor": "#000000",
+              "fillAlpha": 1,
+              "strokeColor": "",
+              "strokeAlpha": 1,
+              "strokeWidth": 1,
+              "strokeLinecap": "butt",
+              "strokeLinejoin": "miter",
+              "strokeMiterLimit": 4,
+              "trimPathStart": 0,
+              "trimPathEnd": 1,
+              "trimPathOffset": 0,
+              "fillType": "nonZero"
+            }
+          ]
+        }
+      ]
+    },
+    "hiddenLayerIds": []
   },
-  "animation": {
-    "id": "33",
-    "name": "anim",
-    "duration": 300,
-    "blocks": [
-      {
-        "id": "34",
-        "layerId": "32",
-        "propertyName": "pathData",
-        "startTime": 0,
-        "endTime": 300,
-        "interpolator": "FAST_OUT_SLOW_IN",
-        "type": "path",
-        "fromValue": "M 8 5 L 8 5 L 8 12.022 L 19 12 L 19 12 L 8 5 M 8 12.022 L 8 19 L 19 12 L 19 12 L 19 12 L 8 12.022",
-        "toValue": "M 5 6 L 5 6 L 5 10 L 19 10 L 19 6 L 5 6 M 5 14 L 5 18 L 19 18 L 19 14 L 19 14 L 5 14"
-      },
-      {
-        "id": "9440",
-        "layerId": "9439",
-        "propertyName": "rotation",
-        "startTime": 0,
-        "endTime": 300,
-        "interpolator": "FAST_OUT_SLOW_IN",
-        "type": "number",
-        "fromValue": 0,
-        "toValue": 90
-      }
-    ]
-  },
-  "hiddenLayerIds": []
+  "timeline": {
+    "animation": {
+      "id": "33",
+      "name": "anim",
+      "duration": 300,
+      "blocks": [
+        {
+          "id": "34",
+          "layerId": "32",
+          "propertyName": "pathData",
+          "startTime": 0,
+          "endTime": 300,
+          "interpolator": "FAST_OUT_SLOW_IN",
+          "type": "path",
+          "fromValue": "M 8 5 L 8 5 L 8 12.022 L 19 12 L 19 12 L 8 5 M 8 12.022 L 8 19 L 19 12 L 19 12 L 19 12 L 8 12.022",
+          "toValue": "M 5 6 L 5 6 L 5 10 L 19 10 L 19 6 L 5 6 M 5 14 L 5 18 L 19 18 L 19 14 L 19 14 L 5 14"
+        },
+        {
+          "id": "9440",
+          "layerId": "9439",
+          "propertyName": "rotation",
+          "startTime": 0,
+          "endTime": 300,
+          "interpolator": "FAST_OUT_SLOW_IN",
+          "type": "number",
+          "fromValue": 0,
+          "toValue": 90
+        }
+      ]
+    }
+  }
 }

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { AvdSerializer, SpriteSerializer } from 'app/scripts/export';
-import { VectorLayer } from 'app/scripts/model/layers';
+import { LayerUtil, VectorLayer } from 'app/scripts/model/layers';
 import { Animation } from 'app/scripts/model/timeline';
 import {
   State,
@@ -25,34 +25,41 @@ const EXPORTED_FPS = [30, 60];
  */
 @Injectable()
 export class FileExportService {
-  private vectorLayer: VectorLayer;
-  private animation: Animation;
-  private activeAnimation: Animation;
-  private hiddenLayerIds: Set<string>;
 
-  constructor(readonly store: Store<State>) {
-    this.store.select(getVectorLayer).subscribe(vl => this.vectorLayer = vl);
-    this.store.select(getAnimation).subscribe(anim => this.animation = anim);
-    this.store.select(getHiddenLayerIds).subscribe(ids => this.hiddenLayerIds = ids);
+  static fromJSON(jsonObj: any) {
+    const { layers, timeline } = jsonObj;
+    const vectorLayer = new VectorLayer(layers.vectorLayer);
+    const hiddenLayerIds = new Set<string>(layers.hiddenLayerIds);
+    const animation = new Animation(timeline.animation);
+    return { vectorLayer, hiddenLayerIds, animation };
   }
+
+  constructor(private readonly store: Store<State>) { }
 
   exportJSON() {
+    const vl = this.getVectorLayer();
+    const anim = this.getAnimation();
     const jsonStr = JSON.stringify({
       version: IMPORT_EXPORT_VERSION,
-      vectorLayer: this.vectorLayer.toJSON(),
-      animation: this.animation.toJSON(),
-      hiddenLayerIds: Array.from(this.hiddenLayerIds),
+      layers: {
+        vectorLayer: vl.toJSON(),
+        hiddenLayerIds: Array.from(this.getHiddenLayerIds()),
+      },
+      timeline: {
+        animation: anim.toJSON(),
+      },
     }, undefined, 2);
-    downloadFile(jsonStr, `${this.vectorLayer.name}.shapeshifter`);
+    downloadFile(jsonStr, `${vl.name}.shapeshifter`);
   }
 
-  // TODO: should we or should we not export hidden layers?
   exportSvg() {
     // Export standalone SVG frames.
+    const vl = this.getVectorLayerWithoutHiddenLayers();
+    const anim = this.getAnimationWithoutHiddenBlocks();
     const zip = new JSZip();
     EXPORTED_FPS.forEach(fps => {
-      const numSteps = Math.ceil(this.activeAnimation.duration / 1000 * fps);
-      const svgs = SpriteSerializer.createSvgFrames(this.vectorLayer, this.activeAnimation, numSteps);
+      const numSteps = Math.ceil(anim.duration / 1000 * fps);
+      const svgs = SpriteSerializer.createSvgFrames(vl, anim, numSteps);
       const length = (numSteps - 1).toString().length;
       const fpsFolder = zip.folder(`${fps}fps`);
       svgs.forEach((s, i) => {
@@ -60,21 +67,21 @@ export class FileExportService {
       });
     });
     zip.generateAsync({ type: 'blob' }).then(content => {
-      downloadFile(content, `frames_${this.vectorLayer.name}.zip`);
+      downloadFile(content, `frames_${vl.name}.zip`);
     });
   }
 
   // TODO: should we or should we not export hidden layers?
   exportVectorDrawable() {
-    const vl = this.vectorLayer;
+    const vl = this.getVectorLayerWithoutHiddenLayers();
     const vd = AvdSerializer.toVectorDrawableXmlString(vl);
     const fileName = `vd_${vl.name}.xml`;
     downloadFile(vd, fileName);
   }
 
   exportAnimatedVectorDrawable() {
-    const vl = this.vectorLayer;
-    const anim = this.activeAnimation;
+    const vl = this.getVectorLayerWithoutHiddenLayers();
+    const anim = this.getAnimationWithoutHiddenBlocks();
     const avd = AvdSerializer.toAnimatedVectorDrawableXmlString(vl, anim);
     const fileName = `avd_${anim.name}.xml`;
     downloadFile(avd, fileName);
@@ -82,14 +89,14 @@ export class FileExportService {
 
   exportSvgSpritesheet() {
     // Create an svg sprite animation.
+    const vl = this.getVectorLayerWithoutHiddenLayers();
+    const anim = this.getAnimationWithoutHiddenBlocks();
     const zip = new JSZip();
     EXPORTED_FPS.forEach(fps => {
-      const numSteps = Math.ceil(this.activeAnimation.duration / 1000 * fps);
-      const svgSprite =
-        SpriteSerializer.createSvgSprite(this.vectorLayer, this.activeAnimation, numSteps);
-      const { width, height } = this.vectorLayer;
+      const numSteps = Math.ceil(anim.duration / 1000 * fps);
+      const svgSprite = SpriteSerializer.createSvgSprite(vl, anim, numSteps);
       const cssSprite =
-        SpriteSerializer.createCss(width, height, this.activeAnimation.duration, numSteps);
+        SpriteSerializer.createCss(vl.width, vl.height, anim.duration, numSteps);
       const fileName = `sprite_${fps}fps`;
       const htmlSprite = SpriteSerializer.createHtml(`${fileName}.svg`, `${fileName}.css`);
       const spriteFolder = zip.folder(`${fps}fps`);
@@ -98,13 +105,46 @@ export class FileExportService {
       spriteFolder.file(`${fileName}.svg`, svgSprite);
     });
     zip.generateAsync({ type: 'blob' }).then(content => {
-      downloadFile(content, `spritesheet_${this.vectorLayer.name}.zip`);
+      downloadFile(content, `spritesheet_${vl.name}.zip`);
     });
   }
 
   exportCssKeyframes() {
     // TODO: implement this
   }
+
+  private getVectorLayer() {
+    let vectorLayer: VectorLayer;
+    this.store.select(getVectorLayer).first().subscribe(vl => vectorLayer = vl);
+    return vectorLayer;
+  }
+
+  private getAnimation() {
+    let animation: Animation;
+    this.store.select(getAnimation).first().subscribe(anim => animation = anim);
+    return animation;
+  }
+
+  private getHiddenLayerIds() {
+    let hiddenLayerIds: Set<string>;
+    this.store.select(getHiddenLayerIds).first().subscribe(ids => hiddenLayerIds = ids);
+    return hiddenLayerIds;
+  }
+
+  private getVectorLayerWithoutHiddenLayers() {
+    return LayerUtil.removeLayersFromTree(
+      this.getVectorLayer(),
+      ...Array.from(this.getHiddenLayerIds()),
+    );
+  }
+
+  private getAnimationWithoutHiddenBlocks() {
+    const anim = this.getAnimation().clone();
+    const hiddenLayerIds = this.getHiddenLayerIds();
+    anim.blocks = anim.blocks.filter(b => !hiddenLayerIds.has(b.layerId));
+    return anim;
+  }
+
 }
 
 function downloadFile(content: string | Blob, fileName: string) {

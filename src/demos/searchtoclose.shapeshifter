@@ -1,151 +1,156 @@
 {
   "version": 1,
-  "vectorLayer": {
-    "id": "vector",
-    "name": "searchtoclose",
-    "type": "vector",
-    "width": 24,
-    "height": 24,
-    "alpha": 1,
-    "children": [
-      {
-        "id": "oval_container",
-        "name": "oval_container",
-        "type": "group",
-        "rotation": 0,
-        "scaleX": 1,
-        "scaleY": 1,
-        "pivotX": 0,
-        "pivotY": 0,
-        "translateX": 0,
-        "translateY": 0,
-        "children": [
-          {
-            "id": "oval",
-            "name": "oval",
-            "type": "path",
-            "pathData": "M 13.389 13.389 C 15.537 11.241 15.537 7.759 13.389 5.611 C 11.241 3.463 7.759 3.463 5.611 5.611 C 3.463 7.759 3.463 11.241 5.611 13.389 C 7.759 15.537 11.241 15.537 13.389 13.389 Z",
-            "fillColor": "",
-            "fillAlpha": 1,
-            "strokeColor": "#000000",
-            "strokeAlpha": 1,
-            "strokeWidth": 1.8,
-            "strokeLinecap": "butt",
-            "strokeLinejoin": "miter",
-            "strokeMiterLimit": 4,
-            "trimPathStart": 0,
-            "trimPathEnd": 1,
-            "trimPathOffset": 0
-          }
-        ]
-      },
-      {
-        "id": "ne_stem",
-        "name": "ne_stem",
-        "type": "path",
-        "pathData": "M 18 6 L 6 18",
-        "fillColor": "",
-        "fillAlpha": 1,
-        "strokeColor": "#000000",
-        "strokeAlpha": 1,
-        "strokeWidth": 1.8,
-        "strokeLinecap": "butt",
-        "strokeLinejoin": "miter",
-        "strokeMiterLimit": 4,
-        "trimPathStart": 1,
-        "trimPathEnd": 1,
-        "trimPathOffset": 0
-      },
-      {
-        "id": "nw_stem",
-        "name": "nw_stem",
-        "type": "path",
-        "pathData": "M 6 6 L 20 20",
-        "fillColor": "",
-        "fillAlpha": 1,
-        "strokeColor": "#000000",
-        "strokeAlpha": 1,
-        "strokeWidth": 1.8,
-        "strokeLinecap": "butt",
-        "strokeLinejoin": "miter",
-        "strokeMiterLimit": 4,
-        "trimPathStart": 0.48,
-        "trimPathEnd": 1,
-        "trimPathOffset": 0
-      }
-    ]
+  "layers": {
+    "vectorLayer": {
+      "id": "vector",
+      "name": "searchtoclose",
+      "type": "vector",
+      "width": 24,
+      "height": 24,
+      "alpha": 1,
+      "children": [
+        {
+          "id": "oval_container",
+          "name": "oval_container",
+          "type": "group",
+          "rotation": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "pivotX": 0,
+          "pivotY": 0,
+          "translateX": 0,
+          "translateY": 0,
+          "children": [
+            {
+              "id": "oval",
+              "name": "oval",
+              "type": "path",
+              "pathData": "M 13.389 13.389 C 15.537 11.241 15.537 7.759 13.389 5.611 C 11.241 3.463 7.759 3.463 5.611 5.611 C 3.463 7.759 3.463 11.241 5.611 13.389 C 7.759 15.537 11.241 15.537 13.389 13.389 Z",
+              "fillColor": "",
+              "fillAlpha": 1,
+              "strokeColor": "#000000",
+              "strokeAlpha": 1,
+              "strokeWidth": 1.8,
+              "strokeLinecap": "butt",
+              "strokeLinejoin": "miter",
+              "strokeMiterLimit": 4,
+              "trimPathStart": 0,
+              "trimPathEnd": 1,
+              "trimPathOffset": 0
+            }
+          ]
+        },
+        {
+          "id": "ne_stem",
+          "name": "ne_stem",
+          "type": "path",
+          "pathData": "M 18 6 L 6 18",
+          "fillColor": "",
+          "fillAlpha": 1,
+          "strokeColor": "#000000",
+          "strokeAlpha": 1,
+          "strokeWidth": 1.8,
+          "strokeLinecap": "butt",
+          "strokeLinejoin": "miter",
+          "strokeMiterLimit": 4,
+          "trimPathStart": 1,
+          "trimPathEnd": 1,
+          "trimPathOffset": 0
+        },
+        {
+          "id": "nw_stem",
+          "name": "nw_stem",
+          "type": "path",
+          "pathData": "M 6 6 L 20 20",
+          "fillColor": "",
+          "fillAlpha": 1,
+          "strokeColor": "#000000",
+          "strokeAlpha": 1,
+          "strokeWidth": 1.8,
+          "strokeLinecap": "butt",
+          "strokeLinejoin": "miter",
+          "strokeMiterLimit": 4,
+          "trimPathStart": 0.48,
+          "trimPathEnd": 1,
+          "trimPathOffset": 0
+        }
+      ]
+    },
+    "hiddenLayerIds": []
   },
-  "animation": {
-    "id": "anim",
-    "name": "anim",
-    "duration": 1000,
-    "blocks": [
-      {
-        "id": "1000",
-        "type": "number",
-        "layerId": "nw_stem",
-        "propertyName": "trimPathStart",
-        "fromValue": 0.48,
-        "toValue": 0,
-        "startTime": 300,
-        "endTime": 800,
-        "interpolator": "FAST_OUT_SLOW_IN"
-      },
-      {
-        "id": "1001",
-        "type": "number",
-        "layerId": "nw_stem",
-        "propertyName": "trimPathEnd",
-        "fromValue": 1,
-        "toValue": 0.86,
-        "startTime": 300,
-        "endTime": 800,
-        "interpolator": "FAST_OUT_SLOW_IN"
-      },
-      {
-        "id": "1002",
-        "type": "number",
-        "layerId": "ne_stem",
-        "propertyName": "trimPathStart",
-        "fromValue": 1,
-        "toValue": 0,
-        "startTime": 522,
-        "endTime": 836,
-        "interpolator": "FAST_OUT_SLOW_IN"
-      },
-      {
-        "id": "1003",
-        "type": "number",
-        "layerId": "oval",
-        "propertyName": "trimPathStart",
-        "fromValue": 0,
-        "toValue": 1,
-        "startTime": 134,
-        "endTime": 550,
-        "interpolator": "ACCELERATE_DECELERATE"
-      },
-      {
-        "id": "1004",
-        "type": "number",
-        "layerId": "oval_container",
-        "propertyName": "translateX",
-        "fromValue": 0,
-        "toValue": -6.7,
-        "startTime": 300,
-        "endTime": 800,
-        "interpolator": "FAST_OUT_SLOW_IN"
-      },
-      {
-        "id": "1005",
-        "type": "number",
-        "layerId": "oval_container",
-        "propertyName": "translateY",
-        "fromValue": 0,
-        "toValue": -6.7,
-        "startTime": 300,
-        "endTime": 800,
-        "interpolator": "FAST_OUT_SLOW_IN"
-      }
-    ]
+  "timeline": {
+    "animation": {
+      "id": "anim",
+      "name": "anim",
+      "duration": 1000,
+      "blocks": [
+        {
+          "id": "1000",
+          "type": "number",
+          "layerId": "nw_stem",
+          "propertyName": "trimPathStart",
+          "fromValue": 0.48,
+          "toValue": 0,
+          "startTime": 300,
+          "endTime": 800,
+          "interpolator": "FAST_OUT_SLOW_IN"
+        },
+        {
+          "id": "1001",
+          "type": "number",
+          "layerId": "nw_stem",
+          "propertyName": "trimPathEnd",
+          "fromValue": 1,
+          "toValue": 0.86,
+          "startTime": 300,
+          "endTime": 800,
+          "interpolator": "FAST_OUT_SLOW_IN"
+        },
+        {
+          "id": "1002",
+          "type": "number",
+          "layerId": "ne_stem",
+          "propertyName": "trimPathStart",
+          "fromValue": 1,
+          "toValue": 0,
+          "startTime": 522,
+          "endTime": 836,
+          "interpolator": "FAST_OUT_SLOW_IN"
+        },
+        {
+          "id": "1003",
+          "type": "number",
+          "layerId": "oval",
+          "propertyName": "trimPathStart",
+          "fromValue": 0,
+          "toValue": 1,
+          "startTime": 134,
+          "endTime": 550,
+          "interpolator": "ACCELERATE_DECELERATE"
+        },
+        {
+          "id": "1004",
+          "type": "number",
+          "layerId": "oval_container",
+          "propertyName": "translateX",
+          "fromValue": 0,
+          "toValue": -6.7,
+          "startTime": 300,
+          "endTime": 800,
+          "interpolator": "FAST_OUT_SLOW_IN"
+        },
+        {
+          "id": "1005",
+          "type": "number",
+          "layerId": "oval_container",
+          "propertyName": "translateY",
+          "fromValue": 0,
+          "toValue": -6.7,
+          "startTime": 300,
+          "endTime": 800,
+          "interpolator": "FAST_OUT_SLOW_IN"
+        }
+      ]
+    }
   }
 }

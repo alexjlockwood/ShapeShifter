@@ -15,7 +15,7 @@ import {
 import {
   LayerListTreeComponent,
   LayerTimelineComponent,
-  LayerTimelineDirective,
+  LayerTimelineGridDirective,
   TimelineAnimationRowComponent,
 } from './components/layertimeline';
 import { PlaybackComponent } from './components/playback/playback.component';
@@ -74,7 +74,7 @@ const SHOULD_PROFILE_STORE = IS_DEV_BUILD && false;
     DropTargetDirective,
     LayerListTreeComponent,
     LayerTimelineComponent,
-    LayerTimelineDirective,
+    LayerTimelineGridDirective,
     PlaybackComponent,
     PropertyInputComponent,
     ScrollGroupDirective,

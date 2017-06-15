@@ -9,6 +9,7 @@ import {
   VectorLayer,
 } from 'app/scripts/model/layers';
 import { Animation } from 'app/scripts/model/timeline';
+import { FileExportService } from 'app/services/export/fileexport.service';
 import {
   State,
   Store,
@@ -101,9 +102,10 @@ export class FileImportService {
           let hiddenLayerIds: Set<string>;
           try {
             const jsonObj = JSON.parse(text);
-            vl = new VectorLayer(jsonObj.vectorLayer);
-            animation = new Animation(jsonObj.animation);
-            hiddenLayerIds = new Set<string>(jsonObj.hiddenLayerIds);
+            const parsedObj = FileExportService.fromJSON(jsonObj);
+            vl = parsedObj.vectorLayer;
+            animation = parsedObj.animation;
+            hiddenLayerIds = parsedObj.hiddenLayerIds;
             const regeneratedModels = ModelUtil.regenerateModelIds(vl, animation, hiddenLayerIds);
             vl = regeneratedModels.vectorLayer;
             animation = regeneratedModels.animation;

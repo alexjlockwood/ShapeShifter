@@ -1,7 +1,9 @@
 import * as TimelineConsts from './constants';
 import { Callbacks as LayerListTreeCallbacks } from './layerlisttree.component';
-import { LayerTimelineDirective } from './layertimeline.directive';
-import { ScrubEvent } from './layertimeline.directive';
+import {
+  LayerTimelineGridDirective,
+  ScrubEvent,
+} from './layertimelinegrid.directive';
 import { Callbacks as TimelineAnimationRowCallbacks } from './timelineanimationrow.component';
 import {
   AfterViewInit,
@@ -115,7 +117,7 @@ export class LayerTimelineComponent
   private $timeline: JQuery;
 
   @ViewChild('timelineAnimation') private timelineAnimationRef: ElementRef;
-  @ViewChildren(LayerTimelineDirective) timelineDirectives: QueryList<LayerTimelineDirective>;
+  @ViewChildren(LayerTimelineGridDirective) timelineDirectives: QueryList<LayerTimelineGridDirective>;
 
   private readonly dragIndicatorSubject = new BehaviorSubject<DragIndicatorInfo>({
     isVisible: false, left: 0, top: 0,
@@ -819,7 +821,7 @@ export class LayerTimelineComponent
           if (targetLayerInfo.moveIntoEmptyLayerGroup) {
             // Moving into an empty layer group.
             const sourceVl = this.vectorLayer;
-            replacementVl = LayerUtil.removeLayerFromTree(sourceVl, dragLayer.id);
+            replacementVl = LayerUtil.removeLayersFromTree(sourceVl, dragLayer.id);
             const newParent = targetLayerInfo.layer;
             replacementVl =
               LayerUtil.addLayerToTree(
@@ -829,7 +831,7 @@ export class LayerTimelineComponent
             let newParent = LayerUtil.findParent(this.vectorLayer, targetLayerInfo.layer.id);
             if (newParent) {
               const sourceVl = this.vectorLayer;
-              replacementVl = LayerUtil.removeLayerFromTree(sourceVl, dragLayer.id);
+              replacementVl = LayerUtil.removeLayersFromTree(sourceVl, dragLayer.id);
               newParent = LayerUtil.findParent(replacementVl, targetLayerInfo.layer.id);
               let index =
                 newParent.children

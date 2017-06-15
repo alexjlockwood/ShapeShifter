@@ -147,9 +147,7 @@ export function adjustViewports(vl1: VectorLayer, vl2: VectorLayer) {
 // TODO: note that we lose information about vl2's alpha value here... can this be fixed?
 export function mergeVectorLayers(vl1: VectorLayer, vl2: VectorLayer) {
   const { vl1: newVl1, vl2: newVl2 } = adjustViewports(vl1, vl2);
-  const resultVl = newVl1.clone();
-  resultVl.children = resultVl.children.concat(newVl2.children);
-  return resultVl;
+  return setLayerChildren(newVl1, newVl1.children.concat(newVl2.children));
 }
 
 export function addLayerToTree(
@@ -165,9 +163,7 @@ export function addLayerToTree(
       // of children, and return the new parent node.
       const children = curr.children.slice();
       children.splice(childIndex, 0, addedLayer);
-      curr = curr.clone();
-      curr.children = children;
-      return curr;
+      return setLayerChildren(curr, children);
     }
     for (let i = 0; i < curr.children.length; i++) {
       const clonedChild = recurseFn(curr.children[i]);
@@ -176,23 +172,21 @@ export function addLayerToTree(
         // into its list of children, and return the cloned current layer.
         const children = curr.children.slice();
         children[i] = clonedChild;
-        curr = curr.clone();
-        curr.children = children;
-        return curr;
+        return setLayerChildren(curr, children);
       }
     }
     return undefined;
   })(root) as VectorLayer;
 }
 
-export function removeLayerFromTree(vl: VectorLayer, removedLayerId: string) {
+export function removeLayersFromTree(vl: VectorLayer, ...removedLayerIds: string[]) {
+  const layerIds = new Set(removedLayerIds);
   return (function recurseFn(curr: Layer) {
-    if (curr.id === removedLayerId) {
+    if (layerIds.has(curr.id)) {
       return undefined;
     }
-    curr = curr.clone();
-    curr.children = curr.children.map(l => recurseFn(l)).filter(l => !!l);
-    return curr;
+    const children = curr.children.map(l => recurseFn(l)).filter(l => !!l);
+    return setLayerChildren(curr, children);
   })(vl) as VectorLayer;
 }
 
@@ -204,9 +198,7 @@ export function replaceLayerInTree(
     if (curr.id === replacement.id) {
       return replacement;
     }
-    curr = curr.clone();
-    curr.children = curr.children.map(child => recurseFn(child));
-    return curr;
+    return setLayerChildren(curr, curr.children.map(child => recurseFn(child)));
   })(root) as VectorLayer;
 }
 
@@ -282,4 +274,10 @@ export function getUniqueName(
     n++;
   }
   return nameFn();
+}
+
+function setLayerChildren(layer: Layer, children: ReadonlyArray<Layer>) {
+  const clone = layer.clone();
+  clone.children = children;
+  return clone;
 }

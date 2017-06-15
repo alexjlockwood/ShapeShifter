@@ -11,6 +11,7 @@ export class Animator {
   private playbackSpeed = DEFAULT_PLAYBACK_SPEED;
   private isRepeating = false;
 
+  // TODO: add the ability to pause/resume animations
   constructor(private readonly callback: Callback) { }
 
   setIsRepeating(isRepeating: boolean) {

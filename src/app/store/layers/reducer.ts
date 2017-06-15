@@ -155,7 +155,7 @@ function deleteSelectedLayers(state: State) {
     hiddenLayerIds.clear();
   } else {
     state.selectedLayerIds.forEach(layerId => {
-      vectorLayer = LayerUtil.removeLayerFromTree(vectorLayer, layerId);
+      vectorLayer = LayerUtil.removeLayersFromTree(vectorLayer, layerId);
       collapsedLayerIds.delete(layerId);
       hiddenLayerIds.delete(layerId);
     });
@@ -238,7 +238,7 @@ function groupOrUngroupSelectedLayers(state: State, shouldGroup: boolean) {
         vectorLayer = LayerUtil.replaceLayerInTree(vectorLayer, parent);
         newSelectedLayers.splice(0, 0, ...groupLayer.children);
         // Delete the parent.
-        vectorLayer = LayerUtil.removeLayerFromTree(vectorLayer, groupLayer.id);
+        vectorLayer = LayerUtil.removeLayersFromTree(vectorLayer, groupLayer.id);
       });
     selectedLayerIds = new Set(newSelectedLayers.map(l => l.id));
   }

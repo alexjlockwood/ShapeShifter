@@ -17,8 +17,8 @@ const GRID_INTERVALS_MS = [
   1000, 2500, 5000, 10000, 30000, 60000,
 ];
 
-@Directive({ selector: '[appLayerTimeline]' })
-export class LayerTimelineDirective {
+@Directive({ selector: '[appLayerTimelineGrid]' })
+export class LayerTimelineGridDirective {
 
   @Input() isHeader: boolean | undefined;
   @Input() isActive: boolean;
