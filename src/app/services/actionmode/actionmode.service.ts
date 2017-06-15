@@ -1,3 +1,5 @@
+import 'rxjs/add/operator/first';
+
 import { Injectable } from '@angular/core';
 import {
   ActionMode,

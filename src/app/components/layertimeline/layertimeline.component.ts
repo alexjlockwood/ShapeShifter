@@ -1,3 +1,5 @@
+import 'rxjs/add/operator/first';
+
 import * as TimelineConsts from './constants';
 import { Callbacks as LayerListTreeCallbacks } from './layerlisttree.component';
 import {

@@ -1,3 +1,5 @@
+import 'rxjs/add/operator/first';
+
 import { Injectable } from '@angular/core';
 import { AvdSerializer, SpriteSerializer } from 'app/scripts/export';
 import { LayerUtil, VectorLayer } from 'app/scripts/model/layers';

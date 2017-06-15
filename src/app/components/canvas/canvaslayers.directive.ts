@@ -1,4 +1,5 @@
 import 'rxjs/add/observable/merge';
+import 'rxjs/add/operator/first';
 
 import {
   CanvasLayoutMixin,

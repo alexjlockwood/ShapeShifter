@@ -1,3 +1,5 @@
+import 'rxjs/add/operator/first';
+
 import { INTERPOLATORS } from 'app/scripts/model/interpolators';
 import {
   ClipPathLayer,
