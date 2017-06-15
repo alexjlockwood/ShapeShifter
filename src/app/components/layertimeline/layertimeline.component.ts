@@ -447,8 +447,10 @@ export class LayerTimelineComponent
     let minStartTime, maxEndTime;
     if (action === MouseActions.ScalingTogetherStart
       || action === MouseActions.ScalingTogetherEnd) {
-      minStartTime = _.minBy(blockInfos, info => info.block.startTime);
-      maxEndTime = _.maxBy(blockInfos, info => info.block.endTime);
+      minStartTime =
+        blockInfos.reduce((t, info) => Math.min(t, info.block.startTime), Infinity);
+      maxEndTime =
+        blockInfos.reduce((t, info) => Math.max(t, info.block.endTime), 0);
       // Avoid divide by zero.
       maxEndTime = Math.max(maxEndTime, minStartTime + MIN_BLOCK_DURATION);
     }
@@ -493,7 +495,6 @@ export class LayerTimelineComponent
                 }
               }
               // Clamp time delta.
-              const { startBound, endBound, downStartTime, downEndTime } = info;
               const min = info.startBound - info.downStartTime;
               const max = info.endBound - info.downEndTime;
               timeDelta = _.clamp(timeDelta, min, max);
