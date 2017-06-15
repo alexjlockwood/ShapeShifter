@@ -513,8 +513,7 @@ export class LayerTimelineComponent
               // Snap time delta.
               if (allowSnap && info.block.id === dragBlock.id) {
                 const newStartTime = info.downStartTime + timeDelta;
-                const newStartTimeSnapDelta =
-                  this.snapTime(newStartTime) - newStartTime;
+                const newStartTimeSnapDelta = this.snapTime(newStartTime) - newStartTime;
                 if (newStartTimeSnapDelta) {
                   timeDelta += newStartTimeSnapDelta;
                 }
