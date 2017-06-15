@@ -53,3 +53,15 @@ div.display-container {
     100% { opacity: .5; }
   }
 }
+
+.show-default-cursor {
+  cursor: '';
+}
+
+.show-pointer-cursor {
+  cursor: pointer;
+}
+
+.show-pen-cursor {
+  cursor: url(/assets/penaddcursorsmall.png) 5 0, auto;
+}

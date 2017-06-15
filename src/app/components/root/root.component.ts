@@ -29,7 +29,10 @@ import {
   State,
   Store,
 } from 'app/store';
-import { getActionMode } from 'app/store/actionmode/selectors';
+import {
+  getActionMode,
+  getActionModeHover,
+} from 'app/store/actionmode/selectors';
 import { ClearSelections } from 'app/store/common/actions';
 import { ImportVectorLayers } from 'app/store/layers/actions';
 import { ResetWorkspace } from 'app/store/reset/actions';
@@ -46,6 +49,12 @@ const STORAGE_KEY_FIRST_TIME_USER = 'storage_key_first_time_user';
 
 declare const ga: Function;
 
+enum CursorType {
+  Default = 1,
+  Pointer,
+  Pen,
+}
+
 // TODO: show confirmation dialog when dropping a file into a dirty workspace
 @Component({
   selector: 'app-root',
@@ -58,12 +67,17 @@ export class RootComponent implements OnInit, AfterViewInit, OnDestroy {
   readonly ACTION_SOURCE_ANIMATED = ActionSource.Animated;
   readonly ACTION_SOURCE_TO = ActionSource.To;
 
+  readonly CURSOR_DEFAULT = CursorType.Default;
+  readonly CURSOR_POINTER = CursorType.Pointer;
+  readonly CURSOR_PEN = CursorType.Pen;
+
   @ViewChild('displayContainer') displayContainerRef: ElementRef;
   private $displayContainer: JQuery;
 
   private readonly displayBoundsSubject = new BehaviorSubject<Size>({ w: 1, h: 1 });
   canvasBounds$: Observable<Size>;
   isActionMode$: Observable<boolean>;
+  cursorType$: Observable<CursorType>;
 
   constructor(
     private readonly snackBarService: SnackBarService,
@@ -94,6 +108,19 @@ export class RootComponent implements OnInit, AfterViewInit, OnDestroy {
     this.canvasBounds$ = Observable.combineLatest(displaySize$, this.isActionMode$)
       .map(([{ w, h }, shouldShowThreeCanvases]) => {
         return { w: w / (shouldShowThreeCanvases ? 3 : 1), h };
+      });
+
+    this.cursorType$ =
+      Observable.combineLatest(
+        this.store.select(getActionMode),
+        this.store.select(getActionModeHover),
+      ).map(([mode, hover]) => {
+        if (mode === ActionMode.SplitCommands || mode === ActionMode.SplitSubPaths) {
+          return CursorType.Pen;
+        } else if (hover) {
+          return CursorType.Pointer;
+        }
+        return CursorType.Default;
       });
   }
 

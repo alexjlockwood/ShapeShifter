@@ -49,7 +49,7 @@ export class CanvasComponent
   private readonly $element: JQuery;
 
   constructor(
-    readonly elementRef: ElementRef,
+    elementRef: ElementRef,
     private readonly store: Store<State>,
   ) {
     super();

@@ -121,9 +121,7 @@ const SHOULD_PROFILE_STORE = IS_DEV_BUILD && false;
 })
 export class AppModule {
 
-  constructor(
-    readonly mdIconRegistry: MdIconRegistry,
-    readonly sanitizer: DomSanitizer) {
+  constructor(mdIconRegistry: MdIconRegistry, sanitizer: DomSanitizer) {
     mdIconRegistry
       // Logo.
       .addSvgIcon('shapeshifter', sanitizer.bypassSecurityTrustResourceUrl('assets/shapeshifter.svg'))

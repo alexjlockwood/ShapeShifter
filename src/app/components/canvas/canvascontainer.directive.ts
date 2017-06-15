@@ -16,7 +16,7 @@ export class CanvasContainerDirective extends CanvasLayoutMixin() {
 
   private readonly element: JQuery;
 
-  constructor(readonly elementRef: ElementRef) {
+  constructor(elementRef: ElementRef) {
     super();
     this.element = $(elementRef.nativeElement);
   }
