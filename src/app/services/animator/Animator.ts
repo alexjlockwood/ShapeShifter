@@ -10,7 +10,6 @@ export class Animator {
   private animationFrameId: number;
   private playbackSpeed = DEFAULT_PLAYBACK_SPEED;
   private isRepeating = false;
-  private currentAnimatedFraction = 0;
 
   constructor(private readonly callback: Callback) { }
 
@@ -41,16 +40,14 @@ export class Animator {
 
   rewind() {
     this.pause();
-    this.currentAnimatedFraction = 0;
   }
 
   fastForward() {
     this.pause();
-    this.currentAnimatedFraction = 1;
   }
 
   private startAnimation(duration: number, onUpdateFn: (fraction: number) => void) {
-    let startTimestamp: number = undefined;
+    let startTimestamp: number;
     const playbackSpeed = this.playbackSpeed;
     const onAnimationFrameFn = (timestamp: number) => {
       if (!startTimestamp) {

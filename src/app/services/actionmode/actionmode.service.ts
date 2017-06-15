@@ -37,6 +37,7 @@ import {
   getActionModeHover,
   getActionModePointSelections,
   getActionModeSegmentSelections,
+  getActionModeSelections,
   getActionModeSubPathSelections,
 } from 'app/store/actionmode/selectors';
 import * as _ from 'lodash';
@@ -73,10 +74,22 @@ export class ActionModeService {
       return;
     }
     if (mode === ActionMode.Selection) {
-      this.store.dispatch(new SetActionMode(ActionMode.None));
+      if (this.hasSelections()) {
+        this.store.dispatch(new SetActionModeSelections([]));
+      } else {
+        this.store.dispatch(new SetActionMode(ActionMode.None));
+      }
     } else {
       this.store.dispatch(new SetActionMode(ActionMode.Selection));
     }
+  }
+
+  private hasSelections() {
+    let result: boolean;
+    this.store.select(getActionModeSelections).first().subscribe(selections => {
+      result = !!selections.length;
+    });
+    return result;
   }
 
   setSelections(selections: ReadonlyArray<Selection>) {

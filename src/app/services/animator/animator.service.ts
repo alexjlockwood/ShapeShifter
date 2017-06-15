@@ -57,8 +57,7 @@ export class AnimatorService {
       .subscribe(({ vectorLayer, animation }) => {
         this.activeAnimation = animation;
         this.animationRenderer = new AnimationRenderer(vectorLayer, animation);
-        // TODO: can we make it possible to modify this data w/o pausing the animation?
-        this.animator.pause();
+        this.animator.rewind();
       });
   }
 
@@ -82,6 +81,7 @@ export class AnimatorService {
     this.playbackService.toggleIsRepeating();
   }
 
+  // TODO: make it possible to pause/resume animations (right now playing resets the time back to 0)
   private play() {
     this.animator.play(this.activeAnimation.duration, fraction => {
       const currentTime = this.activeAnimation.duration * fraction;

@@ -14,6 +14,7 @@ import {
   ActionMode,
   ActionSource,
 } from 'app/scripts/model/actionmode';
+import { ActionModeService } from 'app/services/actionmode/actionmode.service';
 import { DemoService } from 'app/services/demos/demo.service';
 import {
   FileImportService,
@@ -68,6 +69,7 @@ export class RootComponent implements OnInit, AfterViewInit, OnDestroy {
     private readonly snackBarService: SnackBarService,
     private readonly fileImporterService: FileImportService,
     private readonly store: Store<State>,
+    private readonly actionModeService: ActionModeService,
     private readonly shortcutService: ShortcutService,
     private readonly demoService: DemoService,
   ) { }
@@ -154,7 +156,9 @@ export class RootComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   onClick(event: MouseEvent) {
-    this.store.dispatch(new ClearSelections());
+    if (!this.actionModeService.isActionMode()) {
+      this.store.dispatch(new ClearSelections());
+    }
   }
 }
 

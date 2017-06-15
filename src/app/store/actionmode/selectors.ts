@@ -51,7 +51,7 @@ export const getActionMode = createSelector(getActionModeState, s => s.mode);
 export const isActionMode = createSelector(getActionMode, mode => mode !== ActionMode.None);
 export const getActionModeHover = createDeepEqualSelector(getActionModeState, s => s.hover);
 
-const getActionModeSelections =
+export const getActionModeSelections =
   createDeepEqualSelector(getActionModeState, s => s.selections);
 
 export const getActionModeSubPathSelections =
