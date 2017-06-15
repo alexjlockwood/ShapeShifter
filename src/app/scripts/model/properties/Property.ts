@@ -60,7 +60,7 @@ export abstract class Property<T> {
 
   constructor(
     private readonly propertyName: string,
-    readonly config: Config = {},
+    config: Config = {},
   ) {
     this.isAnimatable = !!config.isAnimatable;
   }
