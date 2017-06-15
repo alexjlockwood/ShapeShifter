@@ -49,7 +49,7 @@ const prodMetaReducers = [
 const devMetaReducers = [
   // Meta reducer that logs the before/after state of the store
   // as actions are performed in dev builds.
-  storeLogger(),
+  storeLogger({ collapsed: true }),
   // Meta reducer that freezes the state tree to ensure that
   // accidental mutations fail fast in dev builds.
   metaStoreFreeze.metaReducer,

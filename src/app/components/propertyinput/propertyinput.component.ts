@@ -204,7 +204,6 @@ export class PropertyInputComponent implements OnInit {
         undefined,
       ));
     });
-    // TODO: remove the animation array here
     const availablePropertyNames =
       Array.from(ModelUtil.getAvailablePropertyNamesForLayer(layer, animation));
     return {
