@@ -20,8 +20,7 @@ const GRID_INTERVALS_MS = [
 @Directive({ selector: '[appLayerTimelineGrid]' })
 export class LayerTimelineGridDirective {
 
-  @Input() isHeader: boolean | undefined;
-  @Input() isActive: boolean;
+  @Input() isHeader: boolean;
   @Output() onScrub = new EventEmitter<ScrubEvent>();
 
   private readonly canvas: HTMLCanvasElement;
@@ -130,14 +129,12 @@ export class LayerTimelineGridDirective {
         x += spacingPx, t += spacingMs) {
         ctx.fillText(`${t / 1000}s`, x, height / 2);
       }
-      if (this.isActive) {
-        ctx.fillStyle = 'rgba(244, 67, 54, .7)';
-        ctx.beginPath();
-        ctx.arc(this.currentTime * this.horizZoom, height / 2, 4, 0, 2 * Math.PI, false);
-        ctx.fill();
-        ctx.closePath();
-        ctx.fillRect(this.currentTime * this.horizZoom - 1, height / 2 + 4, 2, height);
-      }
+      ctx.fillStyle = 'rgba(244, 67, 54, .7)';
+      ctx.beginPath();
+      ctx.arc(this.currentTime * this.horizZoom, height / 2, 4, 0, 2 * Math.PI, false);
+      ctx.fill();
+      ctx.closePath();
+      ctx.fillRect(this.currentTime * this.horizZoom - 1, height / 2 + 4, 2, height);
     } else {
       // Grid lines.
       ctx.fillStyle = 'rgba(0,0,0,0.1)';
@@ -146,16 +143,15 @@ export class LayerTimelineGridDirective {
         x += spacingPx) {
         ctx.fillRect(x - 0.5, 0, 1, 1);
       }
-      if (this.isActive) {
-        ctx.fillStyle = 'rgba(244, 67, 54, .7)';
-        ctx.fillRect(this.currentTime * this.horizZoom - 1, 0, 2, 1);
-      }
+      ctx.fillStyle = 'rgba(244, 67, 54, .7)';
+      ctx.fillRect(this.currentTime * this.horizZoom - 1, 0, 2, 1);
     }
   }
 
   @HostListener('click', ['$event'])
   onClick(event: MouseEvent) {
-    // This ensures that click events aren't triggered in the component.
+    // This ensures that click events originating on top of the
+    // host element aren't triggered in the component.
     event.stopPropagation();
   }
 }

@@ -7,10 +7,16 @@ import {
   Output,
   ViewEncapsulation,
 } from '@angular/core';
-import { AnimationMap, ModelUtil } from 'app/scripts/common';
+import {
+  AnimationMap,
+  ModelUtil,
+} from 'app/scripts/common';
 import { Layer } from 'app/scripts/model/layers';
 import { Animation, AnimationBlock } from 'app/scripts/model/timeline';
-import { State, Store } from 'app/store';
+import {
+  State,
+  Store,
+} from 'app/store';
 import { getTimelineAnimationRowState } from 'app/store/common/selectors';
 import * as _ from 'lodash';
 import { Observable } from 'rxjs/Observable';
@@ -34,6 +40,7 @@ export class TimelineAnimationRowComponent implements OnInit, Callbacks {
   // the LayerTimelineComponent.
   @Output() onTimelineBlockClick = new EventEmitter<Event>();
   @Output() onTimelineBlockMouseDown = new EventEmitter<Event>();
+  @Output() onTimelineBlockDoubleClick = new EventEmitter<Event>();
 
   constructor(private readonly store: Store<State>) { }
 
@@ -55,22 +62,19 @@ export class TimelineAnimationRowComponent implements OnInit, Callbacks {
   }
 
   // @Override Callbacks
-  timelineBlockClick(
-    event: MouseEvent,
-    block: AnimationBlock,
-    layer: Layer,
-  ) {
+  timelineBlockClick(event: MouseEvent, block: AnimationBlock) {
     event.stopPropagation();
-    this.onTimelineBlockClick.emit({ event, block, layer });
+    this.onTimelineBlockClick.emit({ event, block });
+  }
+
+  timelineBlockDoubleClick(event: MouseEvent, block: AnimationBlock) {
+    event.stopPropagation();
+    this.onTimelineBlockDoubleClick.emit({ event, block });
   }
 
   // @Override Callbacks
-  timelineBlockMouseDown(
-    event: MouseEvent,
-    block: AnimationBlock,
-    layer: Layer,
-  ) {
-    this.onTimelineBlockMouseDown.emit({ event, block, layer });
+  timelineBlockMouseDown(event: MouseEvent, block: AnimationBlock) {
+    this.onTimelineBlockMouseDown.emit({ event, block });
   }
 
   // Used by *ngFor loop.
@@ -80,16 +84,9 @@ export class TimelineAnimationRowComponent implements OnInit, Callbacks {
 }
 
 export interface Callbacks {
-  timelineBlockMouseDown(
-    event: MouseEvent,
-    block: AnimationBlock,
-    layer: Layer,
-  );
-  timelineBlockClick(
-    event: MouseEvent,
-    block: AnimationBlock,
-    layer: Layer,
-  );
+  timelineBlockMouseDown(event: MouseEvent, block: AnimationBlock);
+  timelineBlockClick(event: MouseEvent, block: AnimationBlock);
+  timelineBlockDoubleClick(event: MouseEvent, block: AnimationBlock);
 }
 
 interface AnimationRowModel {
@@ -102,5 +99,4 @@ interface AnimationRowModel {
 interface Event {
   readonly event: MouseEvent;
   readonly block: AnimationBlock;
-  readonly layer: Layer;
 }

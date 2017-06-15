@@ -350,10 +350,7 @@ export class LayerTimelineComponent
   }
 
   // @Override TimelineAnimationRowCallbacks
-  timelineBlockMouseDown(
-    mouseDownEvent: MouseEvent,
-    dragBlock: AnimationBlock,
-  ) {
+  timelineBlockMouseDown(mouseDownEvent: MouseEvent, dragBlock: AnimationBlock) {
     const animation = this.animation;
     // TODO: this JQuery 'class' stuff may not work with view encapsulation enabled
     const $target = $(mouseDownEvent.target);
@@ -651,12 +648,14 @@ export class LayerTimelineComponent
   }
 
   // @Override TimelineAnimationRowCallbacks
-  timelineBlockClick(
-    event: MouseEvent,
-    block: AnimationBlock,
-  ) {
+  timelineBlockClick(event: MouseEvent, block: AnimationBlock) {
     const clearExisting = !event.metaKey && !event.shiftKey;
     this.store.dispatch(new SelectBlock(block.id, clearExisting));
+  }
+
+  // @Override TimelineAnimationRowCallbacks
+  timelineBlockDoubleClick(event: MouseEvent, block: AnimationBlock) {
+    this.animatorService.setAnimationTime(block.startTime);
   }
 
   // @Override LayerListTreeComponentCallbacks

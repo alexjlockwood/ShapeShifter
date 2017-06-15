@@ -166,8 +166,7 @@
     (mousewheel)="this.onWheelEvent($event)">
     <div #timelineAnimation
       *ngIf="{ horizZoom: (this.horizZoomObservable | async) } as animationData"
-      class="slt-timeline-animation"
-      [ngClass]="{'is-active': true}"
+      class="slt-timeline-animation is-active"
       [ngStyle]="{'width': (model.animation.duration * animationData.horizZoom + 40) + 'px'}"
       fxLayout="column">
       <div class="slt-header">
@@ -189,7 +188,6 @@
         </div>
         <canvas appLayerTimelineGrid
           class="slt-timeline-header-grid"
-          [isActive]="true"
           [animation]="model.animation"
           [horizZoom]="animationData.horizZoom"
           [isHeader]="true"
@@ -199,8 +197,8 @@
 
       <canvas appLayerTimelineGrid
         class="slt-timeline-grid"
+        [isHeader]="false"
         [animation]="model.animation"
-        [isActive]="true"
         [horizZoom]="animationData.horizZoom">
       </canvas>
 
@@ -209,7 +207,8 @@
         <div class="slt-timeline-animation-rows">
           <app-timelineanimationrow [layer]="model.vectorLayer"
             (onTimelineBlockMouseDown)="this.timelineBlockMouseDown($event.event, $event.block)"
-            (onTimelineBlockClick)="this.timelineBlockClick($event.event, $event.block)">
+            (onTimelineBlockClick)="this.timelineBlockClick($event.event, $event.block)"
+            (onTimelineBlockDoubleClick)="this.timelineBlockDoubleClick($event.event, $event.block)">
           </app-timelineanimationrow>
         </div>
       </div>
