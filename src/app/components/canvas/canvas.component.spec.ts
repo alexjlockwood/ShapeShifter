@@ -15,8 +15,10 @@ import { FlexLayoutModule } from '@angular/flex-layout';
 import {
   MdButtonModule,
   MdIconModule,
+  MdIconRegistry,
   MdTooltipModule,
 } from '@angular/material';
+import { DomSanitizer } from '@angular/platform-browser';
 import { ActionSource } from 'app/scripts/model/actionmode';
 import { ActionModeService } from 'app/services/actionmode/actionmode.service';
 import { AnimatorService } from 'app/services/animator/animator.service';
