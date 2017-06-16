@@ -11,6 +11,7 @@ import {
   async,
   inject,
 } from '@angular/core/testing';
+import { FlexLayoutModule } from '@angular/flex-layout';
 import {
   MdButtonModule,
   MdIconModule,
@@ -39,6 +40,7 @@ describe('CanvasComponent', () => {
           CanvasOverlayDirective,
           CanvasRulerDirective,
         ],
+        imports: [FlexLayoutModule],
         providers: [
           { provide: Store, useValue: new MockStore() },
           ActionModeService,

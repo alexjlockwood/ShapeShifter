@@ -5,6 +5,7 @@ import {
   async,
   inject,
 } from '@angular/core/testing';
+import { FlexLayoutModule } from '@angular/flex-layout';
 import {
   MdButtonModule,
   MdIconModule,
@@ -24,6 +25,7 @@ describe('PlaybackComponent', () => {
       .configureTestingModule({
         declarations: [PlaybackComponent],
         imports: [
+          FlexLayoutModule,
           MdButtonModule,
           MdIconModule,
           MdTooltipModule,
