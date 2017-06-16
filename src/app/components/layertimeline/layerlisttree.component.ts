@@ -13,6 +13,7 @@ import {
   VectorLayer,
 } from 'app/scripts/model/layers';
 import { Animation } from 'app/scripts/model/timeline';
+import { ActionModeService } from 'app/services/actionmode/actionmode.service';
 import {
   State,
   Store,
@@ -43,12 +44,15 @@ export class LayerListTreeComponent implements OnInit, Callbacks {
   @Output() onLayerToggleVisibility = new EventEmitter<LayerEvent>();
   @Output() onAddTimelineBlockClick = new EventEmitter<TimelineBlockEvent>();
 
-  constructor(private readonly store: Store<State>) { }
+  constructor(
+    private readonly store: Store<State>,
+    private readonly actionModeService: ActionModeService,
+  ) { }
 
   ngOnInit() {
     this.layerModel$ =
       this.store.select(getLayerListTreeState)
-        .map(({ animation, selectedLayerIds, collapsedLayerIds, hiddenLayerIds }) => {
+        .map(({ animation, selectedLayerIds, collapsedLayerIds, hiddenLayerIds, isActionMode }) => {
           const isExpandable = this.isLayerExpandable();
           const availablePropertyNames =
             Array.from(ModelUtil.getAvailablePropertyNamesForLayer(this.layer, animation));
@@ -62,6 +66,7 @@ export class LayerListTreeComponent implements OnInit, Callbacks {
             isVisible: !hiddenLayerIds.has(this.layer.id),
             availablePropertyNames,
             existingPropertyNames,
+            isActionMode,
           };
         });
   }
@@ -69,18 +74,22 @@ export class LayerListTreeComponent implements OnInit, Callbacks {
   // @Override Callbacks
   layerClick(event: MouseEvent, layer: Layer) {
     event.stopPropagation();
-    this.onLayerClick.emit({ event, layer });
+    if (!this.actionModeService.isActionMode()) {
+      this.onLayerClick.emit({ event, layer });
+    }
   }
 
   // @Override Callbacks
   layerMouseDown(event: MouseEvent, layer: Layer) {
-    this.onLayerMouseDown.emit({ event, layer });
+    if (!this.actionModeService.isActionMode()) {
+      this.onLayerMouseDown.emit({ event, layer });
+    }
   }
 
   // @Override Callbacks
   layerToggleExpanded(event: MouseEvent, layer: Layer) {
     event.stopPropagation();
-    if (this.isLayerExpandable()) {
+    if (this.isLayerExpandable() && !this.actionModeService.isActionMode()) {
       this.onLayerToggleExpanded.emit({ event, layer });
     }
   }
@@ -88,13 +97,17 @@ export class LayerListTreeComponent implements OnInit, Callbacks {
   // @Override Callbacks
   layerToggleVisibility(event: MouseEvent, layer: Layer) {
     event.stopPropagation();
-    this.onLayerToggleVisibility.emit({ event, layer });
+    if (!this.actionModeService.isActionMode()) {
+      this.onLayerToggleVisibility.emit({ event, layer });
+    }
   }
 
   // @Override Callbacks
   addTimelineBlockClick(event: MouseEvent, layer: Layer, propertyName: string) {
     event.stopPropagation();
-    this.onAddTimelineBlockClick.emit({ event, layer, propertyName });
+    if (!this.actionModeService.isActionMode()) {
+      this.onAddTimelineBlockClick.emit({ event, layer, propertyName });
+    }
   }
 
   // Used by *ngFor loop.
@@ -134,4 +147,5 @@ interface LayerModel {
   readonly isVisible: boolean;
   readonly availablePropertyNames: ReadonlyArray<string>;
   readonly existingPropertyNames: ReadonlyArray<string>;
+  readonly isActionMode: boolean;
 }

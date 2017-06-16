@@ -12,7 +12,11 @@ import {
   ModelUtil,
 } from 'app/scripts/common';
 import { Layer } from 'app/scripts/model/layers';
-import { Animation, AnimationBlock } from 'app/scripts/model/timeline';
+import {
+  Animation,
+  AnimationBlock,
+} from 'app/scripts/model/timeline';
+import { ActionModeService } from 'app/services/actionmode/actionmode.service';
 import {
   State,
   Store,
@@ -42,12 +46,15 @@ export class TimelineAnimationRowComponent implements OnInit, Callbacks {
   @Output() onTimelineBlockMouseDown = new EventEmitter<Event>();
   @Output() onTimelineBlockDoubleClick = new EventEmitter<Event>();
 
-  constructor(private readonly store: Store<State>) { }
+  constructor(
+    private readonly store: Store<State>,
+    private readonly actionModeService: ActionModeService,
+  ) { }
 
   ngOnInit() {
     this.animationRowModel$ =
       this.store.select(getTimelineAnimationRowState)
-        .map(({ animation, collapsedLayerIds, selectedBlockIds }) => {
+        .map(({ animation, collapsedLayerIds, selectedBlockIds, isActionMode }) => {
           // Returns a list of animation block lists. Each animation block list corresponds to
           // a property name displayed in the layer list tree.
           const blocksByPropertyNameValues =
@@ -57,6 +64,7 @@ export class TimelineAnimationRowComponent implements OnInit, Callbacks {
             blocksByPropertyNameValues,
             isExpanded: !collapsedLayerIds.has(this.layer.id),
             selectedBlockIds,
+            isActionMode,
           };
         });
   }
@@ -64,17 +72,23 @@ export class TimelineAnimationRowComponent implements OnInit, Callbacks {
   // @Override Callbacks
   timelineBlockClick(event: MouseEvent, block: AnimationBlock) {
     event.stopPropagation();
-    this.onTimelineBlockClick.emit({ event, block });
+    if (!this.actionModeService.isActionMode()) {
+      this.onTimelineBlockClick.emit({ event, block });
+    }
   }
 
   timelineBlockDoubleClick(event: MouseEvent, block: AnimationBlock) {
     event.stopPropagation();
-    this.onTimelineBlockDoubleClick.emit({ event, block });
+    if (!this.actionModeService.isActionMode()) {
+      this.onTimelineBlockDoubleClick.emit({ event, block });
+    }
   }
 
   // @Override Callbacks
   timelineBlockMouseDown(event: MouseEvent, block: AnimationBlock) {
-    this.onTimelineBlockMouseDown.emit({ event, block });
+    if (!this.actionModeService.isActionMode()) {
+      this.onTimelineBlockMouseDown.emit({ event, block });
+    }
   }
 
   // Used by *ngFor loop.

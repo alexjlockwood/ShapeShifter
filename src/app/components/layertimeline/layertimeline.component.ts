@@ -33,6 +33,7 @@ import {
   Animation,
   AnimationBlock,
 } from 'app/scripts/model/timeline';
+import { ActionModeService } from 'app/services/actionmode/actionmode.service';
 import { AnimatorService } from 'app/services/animator/animator.service';
 import { DemoService } from 'app/services/demos/demo.service';
 import { DialogService } from 'app/services/dialogs/dialog.service';
@@ -150,6 +151,7 @@ export class LayerTimelineComponent
     private readonly store: Store<State>,
     private readonly dialogService: DialogService,
     private readonly demoService: DemoService,
+    private readonly actionModeService: ActionModeService,
     public readonly shortcutService: ShortcutService,
   ) { super(); }
 
@@ -162,6 +164,7 @@ export class LayerTimelineComponent
           isAnimationSelected,
           selectedBlockIds,
           isBeingReset,
+          isActionMode,
         }) => {
           this.animation = animation;
           this.rebuildSnapTimes();
@@ -174,6 +177,7 @@ export class LayerTimelineComponent
             animation,
             vectorLayer,
             isAnimationSelected,
+            isActionMode,
           };
         });
     this.registerSubscription(
@@ -298,8 +302,10 @@ export class LayerTimelineComponent
   animationHeaderTextClick(event: MouseEvent) {
     // Stop propagation to ensure that animationTimelineClick() isn't called.
     event.stopPropagation();
-    const isSelected = !ShortcutService.getOsDependentModifierKey(event) && !event.shiftKey;
-    this.store.dispatch(new SelectAnimation(isSelected));
+    if (!this.actionModeService.isActionMode()) {
+      const isSelected = !ShortcutService.getOsDependentModifierKey(event) && !event.shiftKey;
+      this.store.dispatch(new SelectAnimation(isSelected));
+    }
   }
 
   // Called from the LayerTimelineComponent template.
@@ -1032,6 +1038,7 @@ interface LayerTimelineModel {
   readonly animation: Animation;
   readonly vectorLayer: VectorLayer;
   readonly isAnimationSelected: boolean;
+  readonly isActionMode: boolean;
 }
 
 interface DragIndicatorInfo {

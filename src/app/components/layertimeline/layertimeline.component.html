@@ -71,6 +71,7 @@
       </md-menu>
       <button class="slt-layers-menu-group-button"
         (click)="$event.stopPropagation()"
+        [disabled]="model.isActionMode"
         [mdMenuTriggerFor]="importMenu">
         Import
       </button>
@@ -101,6 +102,7 @@
       </md-menu>
       <button class="slt-layers-menu-group-button"
         (click)="$event.stopPropagation()"
+        [disabled]="model.isActionMode"
         [mdMenuTriggerFor]="exportMenu">
         Export
       </button>
@@ -127,6 +129,7 @@
         mdTooltip="Add layer"
         mdTooltipPosition="below"
         mdTooltipShowDelay="500"
+        [disabled]="model.isActionMode"
         [mdMenuTriggerFor]="addLayerMenu">
         <md-icon svgIcon="addlayer"></md-icon>
       </button>
@@ -178,6 +181,7 @@
           </div>
           <button md-icon-button
             (click)="this.zoomToFitClick($event)"
+            [disabled]="model.isActionMode"
             mdTooltip="Zoom to fit ({{this.shortcutService.getZoomToFitText()}})"
             mdTooltipPosition="below"
             mdTooltipShowDelay="500">

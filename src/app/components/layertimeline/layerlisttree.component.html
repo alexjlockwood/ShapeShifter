@@ -9,6 +9,7 @@
     <button md-icon-button
       *ngIf="model.isExpandable"
       (click)="this.layerToggleExpanded($event, this.layer)"
+      [disabled]="model.isActionMode"
       mdTooltip="{{model.isExpanded ? 'Collapse layer' : 'Expand layer'}}"
       mdTooltipPosition="right"
       mdTooltipShowDelay="1000">
@@ -25,6 +26,7 @@
     <button md-icon-button
       class="slt-layer-action-button slt-layer-visibility-toggle"
       (click)="this.layerToggleVisibility($event, this.layer)"
+      [disabled]="model.isActionMode"
       mdTooltip="{{model.isVisible ? 'Hide layer' : 'Show layer'}}"
       mdTooltipPosition="below"
       mdTooltipShowDelay="1000"
@@ -42,6 +44,7 @@
       *ngIf="model.availablePropertyNames.length > 0"
       class="slt-layer-action-button"
       (click)="$event.stopPropagation()"
+      [disabled]="model.isActionMode"
       mdTooltip="Animate this layer"
       mdTooltipPosition="below"
       mdTooltipShowDelay="1000"
@@ -60,6 +63,7 @@
       <span class="slt-property-name">{{propertyName}}</span>
       <button md-icon-button
         (click)="this.addTimelineBlockClick($event, layer, propertyName)"
+        [disabled]="model.isActionMode"
         mdTooltip="Add another animation"
         mdTooltipPosition="below"
         mdTooltipShowDelay="1000">

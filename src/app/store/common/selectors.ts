@@ -21,8 +21,8 @@ export const getCanvasOverlayState =
   createStructuredSelector({
     hiddenLayerIds: getHiddenLayerIds,
     selectedLayerIds: getSelectedLayerIds,
-    isActionMode,
     selectedBlockLayerIds: getSelectedBlockLayerIds,
+    isActionMode,
   });
 
 export const getPropertyInputState =
@@ -40,6 +40,7 @@ export const getLayerListTreeState =
     selectedLayerIds: getSelectedLayerIds,
     collapsedLayerIds: getCollapsedLayerIds,
     hiddenLayerIds: getHiddenLayerIds,
+    isActionMode,
   });
 
 export const getTimelineAnimationRowState =
@@ -47,6 +48,7 @@ export const getTimelineAnimationRowState =
     animation: getAnimation,
     collapsedLayerIds: getCollapsedLayerIds,
     selectedBlockIds: getSelectedBlockIds,
+    isActionMode,
   });
 
 export const getLayerTimelineState =
@@ -56,6 +58,7 @@ export const getLayerTimelineState =
     isAnimationSelected,
     selectedBlockIds: getSelectedBlockIds,
     isBeingReset,
+    isActionMode,
   });
 
 export const getAnimatorState =
