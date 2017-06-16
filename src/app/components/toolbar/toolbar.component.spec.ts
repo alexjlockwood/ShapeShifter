@@ -55,7 +55,7 @@ describe('ToolbarComponent', () => {
     loadSvgIcons([
       { name: 'autofix', path: 'assets/icons/autofix.svg' },
       { name: 'contribute', path: 'assets/icons/contribute.svg' },
-      { name: 'shapeshifter', path: 'assets/icons/shapeshifter.svg' },
+      { name: 'shapeshifter', path: 'assets/shapeshifter.svg' },
       { name: 'reverse', path: 'assets/icons/reverse.svg' },
     ]);
   }));
