@@ -19,6 +19,7 @@ import {
 } from '@angular/core';
 import { ModelUtil } from 'app/scripts/common';
 import { Dragger } from 'app/scripts/dragger';
+import { IntervalTree } from 'app/scripts/intervals';
 import { DestroyableMixin } from 'app/scripts/mixins';
 import {
   ClipPathLayer,
@@ -72,6 +73,7 @@ import {
   SelectAnimation,
   SelectBlock,
 } from 'app/store/timeline/actions';
+import { getAnimation } from 'app/store/timeline/selectors';
 import { environment } from 'environments/environment';
 import * as $ from 'jquery';
 import * as _ from 'lodash';
@@ -379,24 +381,47 @@ export class LayerTimelineComponent
     const blocksByPropertyByLayer = ModelUtil.getOrderedBlocksByPropertyByLayer(animation);
 
     // Either drag all selected blocks or just the mousedown block.
-    const selectedBlocks =
-      animation.blocks.filter(block => this.selectedBlockIds.has(block.id));
     const draggingBlocks =
-      this.selectedBlockIds.has(dragBlock.id) ? selectedBlocks : [dragBlock];
+      this.selectedBlockIds.has(dragBlock.id)
+        ? animation.blocks.filter(b => this.selectedBlockIds.has(b.id))
+        : [dragBlock];
+    const stagnantBlocks =
+      animation.blocks.filter(block => {
+        return draggingBlocks.every(b => block.id !== b.id)
+          && draggingBlocks.some(({ layerId, propertyName }) => {
+            return block.layerId === layerId && block.propertyName === propertyName;
+          });
+      });
+
+    interface IntervalInfo {
+      readonly blockId: string;
+      readonly layerId: string;
+      readonly propertyName: string;
+      readonly startTime: number;
+      readonly endTime: number;
+    }
+
+    const intervalTree = new IntervalTree<IntervalInfo>();
+    stagnantBlocks.forEach(b => {
+      const { id, layerId, propertyName, startTime, endTime } = b;
+      intervalTree.insert(
+        Math.min(startTime, animation.duration),
+        Math.max(0, endTime),
+        { blockId: id, layerId, propertyName, startTime, endTime },
+      );
+    });
 
     interface BlockInfo {
       readonly block: AnimationBlock;
-      readonly startBound: number;
-      readonly endBound: number;
       readonly downStartTime: number;
       readonly downEndTime: number;
+      readonly startBound?: number;
+      readonly endBound?: number;
       newStartTime?: number;
       newEndTime?: number;
     }
 
-    // TODO: allow blocks to be dragged horizontally over other blocks
     const blockInfos: BlockInfo[] = draggingBlocks.map(block => {
-
       const blockNeighbors = blocksByPropertyByLayer[block.layerId][block.propertyName];
       const indexIntoNeighbors = _.findIndex(blockNeighbors, b => block.id === b.id);
 
@@ -455,6 +480,12 @@ export class LayerTimelineComponent
       maxEndTime = Math.max(maxEndTime, minStartTime + MIN_BLOCK_DURATION);
     }
 
+    const isOverlappingBlockFn = (info: BlockInfo, low: number, high: number) => {
+      const { id, layerId, propertyName } = info.block;
+      return intervalTree.intersectsWith(
+        low, high, d => d.layerId === layerId && d.propertyName === propertyName);
+    };
+
     // tslint:disable-next-line
     new Dragger({
       direction: 'horizontal',
@@ -471,7 +502,8 @@ export class LayerTimelineComponent
         this.rebuildSnapTimes();
       }, 0),
       onDragFn: event => {
-        // Calculate the 'time delta', i.e. the amount of time the block wants to move.
+        // Calculate the 'time delta' (the number of milliseconds the user has moved
+        // since the gesture began).
         let timeDelta = Math.round(xToTimeFn(event.clientX) - downTime);
         const allowSnap = !event.shiftKey && !ShortcutService.getOsDependentModifierKey(event);
         const replacementBlocks: AnimationBlock[] = [];
@@ -494,11 +526,47 @@ export class LayerTimelineComponent
                   timeDelta += newEndTimeSnapDelta;
                 }
               }
-              // Clamp time delta.
-              const min = info.startBound - info.downStartTime;
-              const max = info.endBound - info.downEndTime;
+              // Clamp time delta to ensure it remains within the duration's bounds.
+              const min = -info.downStartTime;
+              const max = animation.duration - info.downEndTime;
               timeDelta = _.clamp(timeDelta, min, max);
             });
+
+            const deltas =
+              _(blockInfos)
+                .filter(info => {
+                  // For each block, check if it overlaps with any of the stagnant blocks.
+                  const low = info.downStartTime + timeDelta;
+                  const end = info.downEndTime + timeDelta;
+                  return isOverlappingBlockFn(info, low, end);
+                })
+                .flatMap(info => {
+                  const { block: { id, layerId, propertyName } } = info;
+                  const neighbors =
+                    blocksByPropertyByLayer[layerId][propertyName]
+                      .filter(ngh => id !== ngh.id);
+                  return _.flatMap(neighbors, ngh => {
+                    return [ngh.startTime - info.downEndTime, ngh.endTime - info.downStartTime];
+                  });
+                })
+                .sort((a, b) => Math.abs(a - timeDelta) - Math.abs(b - timeDelta))
+                .value();
+
+            const deltaIndex =
+              _.findIndex(deltas, delta => {
+                return blockInfos.every(info => {
+                  const low = info.downStartTime + delta;
+                  const high = info.downEndTime + delta;
+                  if (low < 0 || high > animation.duration) {
+                    return false;
+                  }
+                  return !isOverlappingBlockFn(info, low, high);
+                });
+              });
+            if (deltaIndex >= 0) {
+              timeDelta = deltas[deltaIndex];
+            }
+
             blockInfos.forEach(info => {
               const blockDuration = (info.block.endTime - info.block.startTime);
               const block = info.block.clone();
@@ -602,7 +670,16 @@ export class LayerTimelineComponent
             break;
           }
         }
-        this.store.dispatch(new ReplaceBlocks(replacementBlocks));
+        this.store.select(getAnimation).first().subscribe(anim => {
+          const blocks = replacementBlocks.filter(replacementBlock => {
+            const existingBlock = _.find(anim.blocks, b => replacementBlock.id === b.id);
+            return replacementBlock.startTime !== existingBlock.startTime
+              || replacementBlock.endTime !== existingBlock.endTime;
+          });
+          if (blocks.length) {
+            this.store.dispatch(new ReplaceBlocks(blocks));
+          }
+        });
       },
     });
   }
@@ -795,7 +872,6 @@ export class LayerTimelineComponent
           let layer = targetLayerInfo.layer;
           while (layer) {
             if (layer === dragLayer) {
-              // console.info('targetLayerInfo=', undefined);
               targetLayerInfo = undefined;
               break;
             }
