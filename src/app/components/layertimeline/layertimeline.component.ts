@@ -302,7 +302,7 @@ export class LayerTimelineComponent
   animationHeaderTextClick(event: MouseEvent) {
     // Stop propagation to ensure that animationTimelineClick() isn't called.
     event.stopPropagation();
-    const isSelected = !event.metaKey && !event.shiftKey;
+    const isSelected = !ShortcutService.getOsDependentModifierKey(event) && !event.shiftKey;
     this.store.dispatch(new SelectAnimation(isSelected));
   }
 
@@ -365,13 +365,14 @@ export class LayerTimelineComponent
     const downTime = xToTimeFn(mouseDownEvent.clientX);
 
     // Determine the action based on where the user clicked and the modifier keys.
+    const metaKey = ShortcutService.getOsDependentModifierKey(mouseDownEvent);
     let action = MouseActions.Moving;
     if ($target.hasClass('slt-timeline-block-edge-end')) {
-      action = mouseDownEvent.shiftKey || mouseDownEvent.metaKey
+      action = mouseDownEvent.shiftKey || metaKey
         ? MouseActions.ScalingTogetherEnd
         : MouseActions.ScalingUniformEnd;
     } else if ($target.hasClass('slt-timeline-block-edge-start')) {
-      action = mouseDownEvent.shiftKey || mouseDownEvent.metaKey
+      action = mouseDownEvent.shiftKey || metaKey
         ? MouseActions.ScalingTogetherStart
         : MouseActions.ScalingUniformStart;
     }
@@ -475,7 +476,7 @@ export class LayerTimelineComponent
       onDragFn: event => {
         // Calculate the 'time delta', i.e. the amount of time the block wants to move.
         let timeDelta = Math.round(xToTimeFn(event.clientX) - downTime);
-        const allowSnap = !event.shiftKey && !event.metaKey;
+        const allowSnap = !event.shiftKey && !ShortcutService.getOsDependentModifierKey(event);
         const replacementBlocks: AnimationBlock[] = [];
         switch (action) {
           case MouseActions.Moving: {
@@ -649,7 +650,8 @@ export class LayerTimelineComponent
 
   // @Override TimelineAnimationRowCallbacks
   timelineBlockClick(event: MouseEvent, block: AnimationBlock) {
-    const clearExisting = !event.metaKey && !event.shiftKey;
+    const clearExisting =
+      !ShortcutService.getOsDependentModifierKey(event) && !event.shiftKey;
     this.store.dispatch(new SelectBlock(block.id, clearExisting));
   }
 
@@ -672,13 +674,15 @@ export class LayerTimelineComponent
 
   // @Override LayerListTreeComponentCallbacks
   layerClick(event: MouseEvent, layer: Layer) {
-    const clearExisting = !event.metaKey && !event.shiftKey;
+    const clearExisting =
+      !ShortcutService.getOsDependentModifierKey(event) && !event.shiftKey;
     this.store.dispatch(new SelectLayer(layer.id, clearExisting));
   }
 
   // @Override LayerListTreeComponentCallbacks
   layerToggleExpanded(event: MouseEvent, layer: Layer) {
-    const recursive = event.metaKey || event.shiftKey;
+    const recursive =
+      ShortcutService.getOsDependentModifierKey(event) || event.shiftKey;
     this.store.dispatch(new ToggleLayerExpansion(layer.id, recursive));
   }
 
@@ -899,8 +903,8 @@ export class LayerTimelineComponent
       this.targetHorizZoom = 0;
     };
 
-    // TODO: should this be OS-dependent (i.e. use alt for windows?)
-    if (event.altKey || event.ctrlKey) { // chrome+mac trackpad pinch-zoom = ctrlKey
+    // chrome+mac trackpad pinch-zoom = ctrlKey
+    if (ShortcutService.getOsDependentModifierKey(event) || event.ctrlKey) {
       if (!this.targetHorizZoom) {
         // Multiple changes can happen to targetHorizZoom before the
         // actual zoom level is updated (see performZoom_).

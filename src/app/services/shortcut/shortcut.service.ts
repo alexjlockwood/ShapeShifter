@@ -16,10 +16,23 @@ export enum Shortcut {
   ZoomToFit = 1,
 }
 
+interface ModifierKeyEvent {
+  readonly metaKey: boolean;
+  readonly ctrlKey: boolean;
+}
+
 @Injectable()
 export class ShortcutService {
   private isInit = false;
   private readonly shortcutSubject = new Subject<Shortcut>();
+
+  static isMac() {
+    return navigator.appVersion.includes('Mac');
+  }
+
+  static getOsDependentModifierKey(event: ModifierKeyEvent) {
+    return !!(ShortcutService.isMac() ? event.metaKey : event.ctrlKey);
+  }
 
   constructor(
     private readonly store: Store<State>,
@@ -38,7 +51,7 @@ export class ShortcutService {
     this.isInit = true;
 
     $(window).on('keydown', event => {
-      if (this.isCmdOrCtrlKeyPressed(event)) {
+      if (ShortcutService.getOsDependentModifierKey(event)) {
         if (event.keyCode === 'Z'.charCodeAt(0)) {
           event.shiftKey
             ? this.store.dispatch(ActionCreators.redo())
@@ -155,15 +168,7 @@ export class ShortcutService {
     return `${this.getCmdOrCtrlText()} + O`;
   }
 
-  private isMac() {
-    return navigator.appVersion.includes('Mac');
-  }
-
-  private isCmdOrCtrlKeyPressed(event: JQueryEventObject) {
-    return this.isMac() ? event.metaKey : event.ctrlKey;
-  }
-
   private getCmdOrCtrlText() {
-    return this.isMac() ? 'Cmd' : 'Ctrl';
+    return ShortcutService.isMac() ? 'Cmd' : 'Ctrl';
   }
 }

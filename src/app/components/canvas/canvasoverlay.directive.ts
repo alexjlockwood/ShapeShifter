@@ -45,6 +45,7 @@ import {
 } from 'app/scripts/model/paths';
 import { ActionModeService } from 'app/services/actionmode/actionmode.service';
 import { AnimatorService } from 'app/services/animator/animator.service';
+import { ShortcutService } from 'app/services/shortcut/shortcut.service';
 import {
   State,
   Store,
@@ -808,7 +809,8 @@ export class CanvasOverlayDirective
     if (this.actionSource === ActionSource.Animated && !this.isActionMode) {
       // Detect layer selections.
       const hitLayer = this.hitTestForLayer(mouseDown);
-      const isMetaOrShiftPressed = event.metaKey || event.shiftKey;
+      const isMetaOrShiftPressed =
+        ShortcutService.getOsDependentModifierKey(event) || event.shiftKey;
       if (hitLayer) {
         this.store.dispatch(new SelectLayer(hitLayer.id, !isMetaOrShiftPressed));
       } else if (!isMetaOrShiftPressed) {
@@ -821,9 +823,11 @@ export class CanvasOverlayDirective
       return;
     }
     if (this.actionMode === ActionMode.Selection) {
-      this.selectionHelper.onMouseDown(mouseDown, event.shiftKey || event.metaKey);
+      this.selectionHelper.onMouseDown(
+        mouseDown, event.shiftKey || ShortcutService.getOsDependentModifierKey(event));
     } else if (this.actionMode === ActionMode.PairSubPaths) {
-      this.pairSubPathHelper.onMouseDown(mouseDown, event.shiftKey || event.metaKey);
+      this.pairSubPathHelper.onMouseDown(
+        mouseDown, event.shiftKey || ShortcutService.getOsDependentModifierKey(event));
     } else if (this.actionMode === ActionMode.SplitCommands) {
       this.segmentSplitter.onMouseDown(mouseDown);
     } else if (this.actionMode === ActionMode.SplitSubPaths) {
@@ -865,7 +869,8 @@ export class CanvasOverlayDirective
     }
     const mouseUp = this.mouseEventToViewportCoords(event);
     if (this.actionMode === ActionMode.Selection) {
-      this.selectionHelper.onMouseUp(mouseUp, event.shiftKey || event.metaKey);
+      this.selectionHelper.onMouseUp(
+        mouseUp, event.shiftKey || ShortcutService.getOsDependentModifierKey(event));
     } else if (this.actionMode === ActionMode.PairSubPaths) {
       this.pairSubPathHelper.onMouseUp(mouseUp);
     } else if (this.actionMode === ActionMode.SplitCommands) {
@@ -950,8 +955,7 @@ export class CanvasOverlayDirective
   // NOTE: this should only be used in action mode
   performHitTest(mousePoint: Point, opts: HitTestOpts = {}) {
     const flattenedTransform =
-      LayerUtil.getFlattenedTransformForLayer(
-        this.vectorLayer, this.blockLayerId);
+      LayerUtil.getFlattenedTransformForLayer(this.vectorLayer, this.blockLayerId);
     const transformedMousePoint =
       MathUtil.transformPoint(mousePoint, flattenedTransform.invert());
     let isPointInRangeFn: (distance: number, cmd: Command) => boolean;

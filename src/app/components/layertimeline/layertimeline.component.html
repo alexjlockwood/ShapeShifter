@@ -161,8 +161,8 @@
   </div>
 
   <!-- Animation timeline. -->
-  <div class="slt-timeline"
-    #timeline
+  <div #timeline
+    class="slt-timeline"
     (mousewheel)="this.onWheelEvent($event)">
     <div #timelineAnimation
       *ngIf="{ horizZoom: (this.horizZoomObservable | async) } as animationData"

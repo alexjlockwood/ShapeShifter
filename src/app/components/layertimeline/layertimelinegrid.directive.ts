@@ -9,6 +9,7 @@ import {
 } from '@angular/core';
 import { Dragger } from 'app/scripts/dragger';
 import { Animation } from 'app/scripts/model/timeline';
+import { ShortcutService } from 'app/services/shortcut/shortcut.service';
 import * as $ from 'jquery';
 import * as _ from 'lodash';
 
@@ -69,29 +70,27 @@ export class LayerTimelineGridDirective {
 
   @HostListener('mousedown', ['$event'])
   onMouseDown(event: MouseEvent) {
-    this.handleScrubEvent(event);
+    this.handleScrubEvent(
+      event.clientX, ShortcutService.getOsDependentModifierKey(event));
     // tslint:disable-next-line
     new Dragger({
       direction: 'horizontal',
       downX: event.clientX,
       downY: event.clientY,
       shouldSkipSlopCheck: true,
-      onDragFn: evt => this.handleScrubEvent(evt),
+      onDragFn: e => this.handleScrubEvent(e.clientX, ShortcutService.getOsDependentModifierKey(e)),
     });
     event.preventDefault();
     return false;
   }
 
-  private handleScrubEvent(event: { clientX: number, altKey: boolean }) {
-    const x = event.clientX - this.$canvas.offset().left;
+  private handleScrubEvent(clientX: number, disableSnap: boolean) {
+    const x = clientX - this.$canvas.offset().left;
     let time = (x - TIMELINE_ANIMATION_PADDING)
       / (this.$canvas.width() - TIMELINE_ANIMATION_PADDING * 2)
       * this.animation.duration;
     time = _.clamp(time, 0, this.animation.duration);
-    this.onScrub.emit({
-      time,
-      disableSnap: !!event.altKey,
-    });
+    this.onScrub.emit({ time, disableSnap });
   }
 
   private redraw() {

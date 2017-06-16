@@ -27,6 +27,7 @@ import {
 } from 'app/scripts/model/timeline';
 import { ActionModeService } from 'app/services/actionmode/actionmode.service';
 import { AnimatorService } from 'app/services/animator/animator.service';
+import { ShortcutService } from 'app/services/shortcut/shortcut.service';
 import {
   State,
   Store,
@@ -145,7 +146,7 @@ export class PropertyInputComponent implements OnInit {
         if (event.shiftKey) {
           // TODO: make this more obvious somehow
           delta *= 10;
-        } else if (event.altKey) {
+        } else if (ShortcutService.getOsDependentModifierKey(event)) {
           // TODO: make this more obvious somehow
           delta /= 10;
         }
