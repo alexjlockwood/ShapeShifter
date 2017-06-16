@@ -1,3 +1,5 @@
+import 'rxjs/add/operator/first';
+
 import { Injectable } from '@angular/core';
 import { ModelUtil } from 'app/scripts/common';
 import {
@@ -10,13 +12,18 @@ import {
 } from 'app/scripts/model/layers';
 import { Animation } from 'app/scripts/model/timeline';
 import { FileExportService } from 'app/services/export/fileexport.service';
+import { Duration, SnackBarService } from 'app/services/snackbar/snackbar.service';
 import {
   State,
   Store,
 } from 'app/store';
+import { ImportVectorLayers } from 'app/store/layers/actions';
 import { getVectorLayer } from 'app/store/layers/selectors';
+import { ResetWorkspace } from 'app/store/reset/actions';
 
-export enum ImportType {
+declare const ga: Function;
+
+enum ImportType {
   Svg = 1,
   VectorDrawable,
   Json,
@@ -27,17 +34,19 @@ export enum ImportType {
  */
 @Injectable()
 export class FileImportService {
-  private vectorLayer: VectorLayer;
 
-  constructor(store: Store<State>) {
-    store.select(getVectorLayer).subscribe(vl => this.vectorLayer = vl);
+  constructor(
+    private readonly store: Store<State>,
+    private readonly snackBarService: SnackBarService,
+  ) { }
+
+  private get vectorLayer() {
+    let vectorLayer: VectorLayer;
+    this.store.select(getVectorLayer).first().subscribe(vl => vectorLayer = vl);
+    return vectorLayer;
   }
 
-  import(
-    fileList: FileList,
-    successFn: (type: ImportType, vls: VectorLayer[], animation?: Animation, hiddenLayerIds?: Set<string>) => void,
-    failureFn: () => void,
-  ) {
+  import(fileList: FileList) {
     if (!fileList || !fileList.length) {
       return;
     }
@@ -56,9 +65,9 @@ export class FileImportService {
     const maybeAddVectorLayersFn = () => {
       numCallbacks++;
       if (numErrors === files.length) {
-        failureFn();
+        this.onFailure();
       } else if (numCallbacks === files.length) {
-        successFn(importType, addedVls);
+        this.onSuccess(importType, addedVls);
       }
     };
 
@@ -112,9 +121,9 @@ export class FileImportService {
             hiddenLayerIds = regeneratedModels.hiddenLayerIds;
           } catch (e) {
             console.error('Failed to parse the file', e);
-            failureFn();
+            this.onFailure();
           }
-          successFn(importType, [vl], animation, hiddenLayerIds);
+          this.onSuccess(importType, [vl], animation, hiddenLayerIds);
         }
       };
 
@@ -142,5 +151,32 @@ export class FileImportService {
 
       fileReader.readAsText(file);
     }
+  }
+
+  private onSuccess(
+    importType: ImportType,
+    vls: ReadonlyArray<VectorLayer>,
+    animation?: Animation,
+    hiddenLayerIds?: Set<string>,
+  ) {
+    if (importType === ImportType.Json) {
+      ga('send', 'event', 'Import', 'JSON');
+      this.store.dispatch(new ResetWorkspace(vls[0], animation, hiddenLayerIds));
+    } else {
+      if (importType === ImportType.Svg) {
+        ga('send', 'event', 'Import', 'SVG');
+      } else if (importType === ImportType.VectorDrawable) {
+        ga('send', 'event', 'Import', 'Vector Drawable');
+      }
+      this.store.dispatch(new ImportVectorLayers(vls));
+      this.snackBarService.show(
+        `Imported ${vls.length} path${vls.length === 1 ? '' : 's'}`,
+        'Dismiss',
+        Duration.Short);
+    }
+  }
+
+  private onFailure() {
+    this.snackBarService.show(`Couldn't import paths from file.`, 'Dismiss', Duration.Long);
   }
 }

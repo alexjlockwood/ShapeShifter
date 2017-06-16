@@ -10,16 +10,15 @@ import {
   OnInit,
   ViewChild,
 } from '@angular/core';
+import { DropFilesAction } from 'app/components/dialogs';
 import {
   ActionMode,
   ActionSource,
 } from 'app/scripts/model/actionmode';
 import { ActionModeService } from 'app/services/actionmode/actionmode.service';
 import { DemoService } from 'app/services/demos/demo.service';
-import {
-  FileImportService,
-  ImportType,
-} from 'app/services/import/fileimport.service';
+import { DialogService } from 'app/services/dialogs/dialog.service';
+import { FileImportService } from 'app/services/import/fileimport.service';
 import { ShortcutService } from 'app/services/shortcut/shortcut.service';
 import {
   Duration,
@@ -34,6 +33,7 @@ import {
   getActionModeHover,
 } from 'app/store/actionmode/selectors';
 import { ClearSelections } from 'app/store/common/actions';
+import { isWorkspaceDirty } from 'app/store/common/selectors';
 import { ImportVectorLayers } from 'app/store/layers/actions';
 import { ResetWorkspace } from 'app/store/reset/actions';
 import * as erd from 'element-resize-detector';
@@ -81,11 +81,12 @@ export class RootComponent implements OnInit, AfterViewInit, OnDestroy {
 
   constructor(
     private readonly snackBarService: SnackBarService,
-    private readonly fileImporterService: FileImportService,
+    private readonly fileImportService: FileImportService,
     private readonly store: Store<State>,
     private readonly actionModeService: ActionModeService,
     private readonly shortcutService: ShortcutService,
     private readonly demoService: DemoService,
+    private readonly dialogService: DialogService,
   ) { }
 
   ngOnInit() {
@@ -158,27 +159,17 @@ export class RootComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // Called by the DropTargetDirective.
   onDropFiles(fileList: FileList) {
-    this.fileImporterService.import(
-      fileList,
-      (importType, vls, animations, hiddenLayerIds) => {
-        if (importType === ImportType.Json) {
-          ga('send', 'event', 'Import', 'JSON', 'Drag/drop');
-          this.store.dispatch(new ResetWorkspace(vls[0], animations, hiddenLayerIds));
-        } else {
-          if (importType === ImportType.Svg) {
-            ga('send', 'event', 'Import', 'SVG', 'Drag/drop');
-          } else if (importType === ImportType.VectorDrawable) {
-            ga('send', 'event', 'Import', 'Vector Drawable', 'Drag/drop');
-          }
-          this.store.dispatch(new ImportVectorLayers(vls));
-          this.snackBarService.show(
-            `Imported ${vls.length} path${vls.length === 1 ? '' : 's'}`,
-            'Dismiss',
-            Duration.Short);
+    // TODO: if dropping a JSON file, then prompt the user
+    // the same way as the new workspace dialog
+    this.dialogService
+      .dropFiles()
+      .subscribe(action => {
+        if (action === DropFilesAction.AddToWorkspace) {
+          // TODO: add as layers
+          this.fileImportService.import(fileList);
+        } else if (action === DropFilesAction.ResetWorkspace) {
+          this.fileImportService.import(fileList);
         }
-      },
-      () => {
-        this.snackBarService.show(`Couldn't import the file`, 'Dismiss', Duration.Long);
       });
   }
 

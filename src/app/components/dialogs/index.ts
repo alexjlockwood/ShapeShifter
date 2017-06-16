@@ -1,3 +1,3 @@
-import { ConfirmDialogComponent } from './confirmdialog.component';
-import { DemoDialogComponent } from './demodialog.component';
-export { ConfirmDialogComponent, DemoDialogComponent };
+export { ConfirmDialogComponent } from './confirmdialog.component';
+export { DemoDialogComponent } from './demodialog.component';
+export { DropFilesDialogComponent, DropFilesAction } from './dropfilesdialog.component';

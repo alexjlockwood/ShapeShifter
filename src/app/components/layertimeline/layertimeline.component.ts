@@ -37,10 +37,7 @@ import { AnimatorService } from 'app/services/animator/animator.service';
 import { DemoService } from 'app/services/demos/demo.service';
 import { DialogService } from 'app/services/dialogs/dialog.service';
 import { FileExportService } from 'app/services/export/fileexport.service';
-import {
-  FileImportService,
-  ImportType,
-} from 'app/services/import/fileimport.service';
+import { FileImportService } from 'app/services/import/fileimport.service';
 import {
   Shortcut,
   ShortcutService,
@@ -1027,31 +1024,7 @@ export class LayerTimelineComponent
 
   // Called from the LayerTimelineComponent template.
   onImportedFilesPicked(fileList: FileList) {
-    this.fileImportService.import(
-      fileList,
-      (importType, vls, animations, hiddenLayerIds) => {
-        if (importType === ImportType.Json) {
-          ga('send', 'event', 'Import', 'JSON');
-          this.store.dispatch(new ResetWorkspace(vls[0], animations, hiddenLayerIds));
-        } else {
-          if (importType === ImportType.Svg) {
-            ga('send', 'event', 'Import', 'SVG');
-          } else if (importType === ImportType.VectorDrawable) {
-            ga('send', 'event', 'Import', 'Vector Drawable');
-          }
-          this.store.dispatch(new ImportVectorLayers(vls));
-          this.snackBarService.show(
-            `Imported ${vls.length} path${vls.length === 1 ? '' : 's'}`,
-            'Dismiss',
-            Duration.Short);
-        }
-      },
-      () => {
-        this.snackBarService.show(
-          `Couldn't import paths from file.`,
-          'Dismiss',
-          Duration.Long);
-      });
+    this.fileImportService.import(fileList);
   }
 }
 

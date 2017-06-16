@@ -11,6 +11,7 @@ import {
 import {
   ConfirmDialogComponent,
   DemoDialogComponent,
+  DropFilesDialogComponent,
 } from './components/dialogs';
 import {
   LayerListTreeComponent,
@@ -70,6 +71,7 @@ const SHOULD_PROFILE_STORE = IS_DEV_BUILD && false;
     CanvasRulerDirective,
     ConfirmDialogComponent,
     DemoDialogComponent,
+    DropFilesDialogComponent,
     DropTargetDirective,
     LayerListTreeComponent,
     LayerTimelineComponent,
@@ -114,6 +116,7 @@ const SHOULD_PROFILE_STORE = IS_DEV_BUILD && false;
   entryComponents: [
     ConfirmDialogComponent,
     DemoDialogComponent,
+    DropFilesDialogComponent,
   ],
   bootstrap: [RootComponent],
 })

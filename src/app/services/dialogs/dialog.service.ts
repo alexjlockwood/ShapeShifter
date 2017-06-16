@@ -6,6 +6,8 @@ import {
 import {
   ConfirmDialogComponent,
   DemoDialogComponent,
+  DropFilesAction,
+  DropFilesDialogComponent,
 } from 'app/components/dialogs';
 import { DemoInfo } from 'app/scripts/demos';
 import { Observable } from 'rxjs/Observable';
@@ -23,5 +25,9 @@ export class DialogService {
 
   pickDemo(): Observable<DemoInfo> {
     return this.dialog.open(DemoDialogComponent, new MdDialogConfig()).afterClosed();
+  }
+
+  dropFiles(): Observable<DropFilesAction> {
+    return this.dialog.open(DropFilesDialogComponent, new MdDialogConfig()).afterClosed();
   }
 }
