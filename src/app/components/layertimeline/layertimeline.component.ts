@@ -79,7 +79,6 @@ import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Observable } from 'rxjs/Observable';
 
 const IS_DEV_BUILD = !environment.production;
-const ENABLE_SAVE_AND_RESTORE_JSON = IS_DEV_BUILD;
 
 // Distance in pixels from a snap point before snapping to the point.
 const SNAP_PIXELS = 10;
@@ -112,8 +111,6 @@ export class LayerTimelineComponent
   extends DestroyableMixin()
   implements OnInit, AfterViewInit,
   TimelineAnimationRowCallbacks, LayerListTreeCallbacks {
-
-  readonly ENABLE_SAVE_AND_RESTORE_JSON = ENABLE_SAVE_AND_RESTORE_JSON;
 
   @ViewChild('timeline') private timelineRef: ElementRef;
   private $timeline: JQuery;
@@ -932,7 +929,8 @@ export class LayerTimelineComponent
     return undefined;
   }
 
-  zoomToFitClick() {
+  zoomToFitClick(event: MouseEvent) {
+    event.stopPropagation();
     this.autoZoomToAnimation();
   }
 

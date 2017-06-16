@@ -23,7 +23,6 @@
           New
         </button>
         <button md-menu-item
-          *ngIf="this.ENABLE_SAVE_AND_RESTORE_JSON"
           (click)="this.launchFilePicker('openFileButton')">
           Open
           <input
@@ -33,7 +32,6 @@
             (change)="onImportedFilesPicked(($event.target || $event.srcElement).files)">
         </button>
         <button md-menu-item
-          *ngIf="this.ENABLE_SAVE_AND_RESTORE_JSON"
           (click)="this.saveToFileClick()">
           Save
         </button>
@@ -179,7 +177,7 @@
             <span class="slt-timeline-animation-duration">{{model.animation.duration}}ms</span>
           </div>
           <button md-icon-button
-            (click)="this.zoomToFitClick()"
+            (click)="this.zoomToFitClick($event)"
             mdTooltip="Zoom to fit ({{this.shortcutService.getZoomToFitText()}})"
             mdTooltipPosition="below"
             mdTooltipShowDelay="500">
