@@ -51,7 +51,6 @@ const ACTIVE = 'active';
   ],
 })
 export class ToolbarComponent implements OnInit {
-  readonly IS_DEV_BUILD = !environment.production;
 
   toolbarData$: Observable<ToolbarData>;
   actionModeState$: Observable<ActionModeState>;
