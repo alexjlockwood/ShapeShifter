@@ -27,7 +27,6 @@ import { SplitterComponent } from './components/splitter/splitter.component';
 import { ToolbarComponent } from './components/toolbar/toolbar.component';
 import { ActionModeService } from './services/actionmode/actionmode.service';
 import { AnimatorService } from './services/animator/animator.service';
-import { ClipboardService } from './services/clipboard/clipboard.service';
 import { DemoService } from './services/demos/demo.service';
 import { DialogService } from './services/dialogs/dialog.service';
 import { FileExportService } from './services/export/fileexport.service';
@@ -104,14 +103,12 @@ const SHOULD_PROFILE_STORE = IS_DEV_BUILD && false;
   providers: [
     ActionModeService,
     AnimatorService,
-    ClipboardService,
     DemoService,
     DialogService,
     FileExportService,
     FileImportService,
     PlaybackService,
-    // TODO: implement this
-    // ShortcutService,
+    ShortcutService,
     SnackBarService,
   ],
   entryComponents: [
