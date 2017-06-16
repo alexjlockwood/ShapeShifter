@@ -159,16 +159,32 @@ export class RootComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // Called by the DropTargetDirective.
   onDropFiles(fileList: FileList) {
-    // TODO: if dropping a JSON file, then prompt the user
-    // the same way as the new workspace dialog
+    if (!fileList || !fileList.length) {
+      return;
+    }
+    const files: File[] = [];
+    // tslint:disable-next-line
+    for (let i = 0; i < fileList.length; i++) {
+      files.push(fileList[i]);
+    }
+    const type = files[0].type;
+    if (!files.every(file => file.type === type)) {
+      // TODO: handle attempts to import different types of files better
+      return;
+    }
+    if (type === 'application/json' || files[0].name.match(/\.shapeshifter$/)) {
+      // TODO: Show a dialog here as well?
+      this.fileImportService.import(fileList, true /* resetWorkspace */);
+      return;
+    }
+
     this.dialogService
       .dropFiles()
       .subscribe(action => {
         if (action === DropFilesAction.AddToWorkspace) {
-          // TODO: add as layers
           this.fileImportService.import(fileList);
         } else if (action === DropFilesAction.ResetWorkspace) {
-          this.fileImportService.import(fileList);
+          this.fileImportService.import(fileList, true /* resetWorkspace */);
         }
       });
   }

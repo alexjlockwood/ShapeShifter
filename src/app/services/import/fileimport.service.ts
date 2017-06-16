@@ -11,6 +11,7 @@ import {
   VectorLayer,
 } from 'app/scripts/model/layers';
 import { Animation } from 'app/scripts/model/timeline';
+import { AnimatorService } from 'app/services/animator/animator.service';
 import { FileExportService } from 'app/services/export/fileexport.service';
 import { Duration, SnackBarService } from 'app/services/snackbar/snackbar.service';
 import {
@@ -38,6 +39,7 @@ export class FileImportService {
   constructor(
     private readonly store: Store<State>,
     private readonly snackBarService: SnackBarService,
+    private readonly animatorService: AnimatorService,
   ) { }
 
   private get vectorLayer() {
@@ -46,7 +48,7 @@ export class FileImportService {
     return vectorLayer;
   }
 
-  import(fileList: FileList) {
+  import(fileList: FileList, resetWorkspace = false) {
     if (!fileList || !fileList.length) {
       return;
     }
@@ -67,7 +69,7 @@ export class FileImportService {
       if (numErrors === files.length) {
         this.onFailure();
       } else if (numCallbacks === files.length) {
-        this.onSuccess(importType, addedVls);
+        this.onSuccess(importType, resetWorkspace, addedVls);
       }
     };
 
@@ -123,7 +125,7 @@ export class FileImportService {
             console.error('Failed to parse the file', e);
             this.onFailure();
           }
-          this.onSuccess(importType, [vl], animation, hiddenLayerIds);
+          this.onSuccess(importType, resetWorkspace, [vl], animation, hiddenLayerIds);
         }
       };
 
@@ -155,28 +157,40 @@ export class FileImportService {
 
   private onSuccess(
     importType: ImportType,
+    resetWorkspace: boolean,
     vls: ReadonlyArray<VectorLayer>,
     animation?: Animation,
     hiddenLayerIds?: Set<string>,
   ) {
     if (importType === ImportType.Json) {
       ga('send', 'event', 'Import', 'JSON');
+      // TODO: avoid these hacks
+      this.animatorService.reset();
       this.store.dispatch(new ResetWorkspace(vls[0], animation, hiddenLayerIds));
+      this.animatorService.reset();
     } else {
       if (importType === ImportType.Svg) {
         ga('send', 'event', 'Import', 'SVG');
       } else if (importType === ImportType.VectorDrawable) {
         ga('send', 'event', 'Import', 'Vector Drawable');
       }
+      if (resetWorkspace) {
+        // TODO: avoid these hacks
+        this.animatorService.reset();
+        this.store.dispatch(new ResetWorkspace());
+        this.animatorService.reset();
+      }
       this.store.dispatch(new ImportVectorLayers(vls));
+      // TODO: count number of individual layers?
       this.snackBarService.show(
-        `Imported ${vls.length} path${vls.length === 1 ? '' : 's'}`,
+        `Imported ${vls.length} layers${vls.length === 1 ? '' : 's'}`,
         'Dismiss',
-        Duration.Short);
+        Duration.Short,
+      );
     }
   }
 
   private onFailure() {
-    this.snackBarService.show(`Couldn't import paths from file.`, 'Dismiss', Duration.Long);
+    this.snackBarService.show(`Couldn't import layers from file.`, 'Dismiss', Duration.Long);
   }
 }
