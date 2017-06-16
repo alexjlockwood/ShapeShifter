@@ -110,7 +110,8 @@ const SHOULD_PROFILE_STORE = IS_DEV_BUILD && false;
     FileExportService,
     FileImportService,
     PlaybackService,
-    ShortcutService,
+    // TODO: implement this
+    // ShortcutService,
     SnackBarService,
   ],
   entryComponents: [
