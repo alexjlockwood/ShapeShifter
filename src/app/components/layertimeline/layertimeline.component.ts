@@ -190,11 +190,11 @@ export class LayerTimelineComponent
 
   ngAfterViewInit() {
     this.$timeline = $(this.timelineRef.nativeElement);
-    this.autoZoomToAnimation();
     this.registerSubscription(
       this.animatorService.asObservable().subscribe(event => {
         this.currentTime = event.currentTime;
       }));
+    setTimeout(() => this.autoZoomToAnimation());
   }
 
   private get horizZoom() {

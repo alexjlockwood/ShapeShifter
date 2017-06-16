@@ -10,7 +10,7 @@ import { Layer } from 'app/scripts/model/layers';
 import { Store } from 'app/store';
 import { MockStore } from 'test/store/MockStore.spec';
 
-describe('TimelineAnbimationRowComponent', () => {
+describe('TimelineAnimationRowComponent', () => {
   let component: TimelineAnimationRowComponent;
   let fixture: ComponentFixture<TimelineAnimationRowComponent>;
 

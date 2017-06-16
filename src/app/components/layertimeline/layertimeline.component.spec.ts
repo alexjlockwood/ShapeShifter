@@ -1,0 +1,100 @@
+import { LayerListTreeComponent } from './layerlisttree.component';
+import { LayerTimelineComponent } from './layertimeline.component';
+import { LayerTimelineGridDirective } from './layertimelinegrid.directive';
+import { TimelineAnimationRowComponent } from './timelineanimationrow.component';
+import {
+  ComponentFixture,
+  TestBed,
+  async,
+  inject,
+} from '@angular/core/testing';
+import { FlexLayoutModule } from '@angular/flex-layout';
+import { HttpModule } from '@angular/http';
+import {
+  MdButtonModule,
+  MdDialogModule,
+  MdIconModule,
+  MdIconRegistry,
+  MdMenuModule,
+  MdSnackBarModule,
+  MdTooltipModule,
+} from '@angular/material';
+import { DomSanitizer } from '@angular/platform-browser';
+import { ScrollGroupDirective } from 'app/components/scrollgroup/scrollgroup.directive';
+import { SplitterComponent } from 'app/components/splitter/splitter.component';
+import { ActionModeService } from 'app/services/actionmode/actionmode.service';
+import { AnimatorService } from 'app/services/animator/animator.service';
+import { DemoService } from 'app/services/demos/demo.service';
+import { DialogService } from 'app/services/dialogs/dialog.service';
+import { FileExportService } from 'app/services/export/fileexport.service';
+import { FileImportService } from 'app/services/import/fileimport.service';
+import { PlaybackService } from 'app/services/playback/playback.service';
+import { ShortcutService } from 'app/services/shortcut/shortcut.service';
+import { SnackBarService } from 'app/services/snackbar/snackbar.service';
+import { Store } from 'app/store';
+import { MockStore } from 'test/store/MockStore.spec';
+
+describe('LayerTimelineComponent', () => {
+  let component: LayerTimelineComponent;
+  let fixture: ComponentFixture<LayerTimelineComponent>;
+
+  beforeEach(async(() => {
+    TestBed
+      .configureTestingModule({
+        declarations: [
+          LayerListTreeComponent,
+          LayerTimelineComponent,
+          LayerTimelineGridDirective,
+          ScrollGroupDirective,
+          SplitterComponent,
+          TimelineAnimationRowComponent,
+        ],
+        imports: [
+          HttpModule,
+          FlexLayoutModule,
+          MdButtonModule,
+          MdIconModule,
+          MdMenuModule,
+          MdTooltipModule,
+          MdSnackBarModule,
+          MdDialogModule,
+        ],
+        providers: [
+          { provide: Store, useValue: new MockStore() },
+          ActionModeService,
+          AnimatorService,
+          DemoService,
+          DialogService,
+          FileExportService,
+          FileImportService,
+          PlaybackService,
+          ShortcutService,
+          SnackBarService,
+        ],
+      })
+      .compileComponents();
+    loadSvgIcons([
+      { name: 'addlayer', path: 'assets/icons/addlayer.svg' },
+      { name: 'animationblock', path: 'assets/icons/animationblock.svg' },
+      { name: 'vectorlayer', path: 'assets/icons/vectorlayer.svg' },
+    ]);
+  }));
+
+  beforeEach(inject([Store], (store: MockStore) => {
+    fixture = TestBed.createComponent(LayerTimelineComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  }));
+
+  it('should be created', () => {
+    expect(component).toBeTruthy();
+  });
+});
+
+function loadSvgIcons(svgIcons: Array<{ name: string, path: string }>) {
+  const mdIconRegistry = TestBed.get(MdIconRegistry);
+  const sanitizer = TestBed.get(DomSanitizer);
+  for (const { name, path } of svgIcons) {
+    mdIconRegistry.addSvgIcon(name, sanitizer.bypassSecurityTrustResourceUrl(path));
+  }
+}
