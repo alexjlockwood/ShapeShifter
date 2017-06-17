@@ -24,6 +24,7 @@ import { PropertyInputComponent } from './components/propertyinput/propertyinput
 import { DropTargetDirective } from './components/root/droptarget.directive';
 import { RootComponent } from './components/root/root.component';
 import { ScrollGroupDirective } from './components/scrollgroup/scrollgroup.directive';
+import { SplashScreenComponent } from './components/splashscreen/splashscreen.component';
 import { SplitterComponent } from './components/splitter/splitter.component';
 import { ToolbarComponent } from './components/toolbar/toolbar.component';
 import { ActionModeService } from './services/actionmode/actionmode.service';
@@ -79,6 +80,7 @@ const IS_DEV_BUILD = !environment.production;
     PlaybackComponent,
     PropertyInputComponent,
     ScrollGroupDirective,
+    SplashScreenComponent,
     SplitterComponent,
     TimelineAnimationRowComponent,
     ToolbarComponent,

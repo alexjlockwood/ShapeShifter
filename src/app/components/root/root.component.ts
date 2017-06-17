@@ -193,6 +193,10 @@ export class RootComponent implements OnInit, AfterViewInit, OnDestroy {
       this.store.dispatch(new ClearSelections());
     }
   }
+
+  isMobile() {
+    return window.navigator.userAgent.includes('Mobile');
+  }
 }
 
 interface Size {
