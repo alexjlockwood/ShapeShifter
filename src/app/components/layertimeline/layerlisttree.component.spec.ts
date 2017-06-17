@@ -15,6 +15,7 @@ import {
   MdTooltipModule,
 } from '@angular/material';
 import { DomSanitizer } from '@angular/platform-browser';
+import { ActionModeService } from 'app/services/actionmode/actionmode.service';
 import { Store } from 'app/store';
 import { MockStore } from 'test/store/MockStore.spec';
 
@@ -34,7 +35,10 @@ describe('LayerListTreeComponent', () => {
           MdMenuModule,
           MdTooltipModule,
         ],
-        providers: [{ provide: Store, useValue: new MockStore() }],
+        providers: [
+          { provide: Store, useValue: new MockStore() },
+          ActionModeService,
+        ],
       })
       .compileComponents();
     loadSvgIcons([
