@@ -356,7 +356,7 @@ class InspectedProperty<V> {
     // Returns whether or not this property name is editable.
     public readonly isEditable = () => true,
   ) {
-    this.typeName = this.property.constructor.name;
+    this.typeName = this.property.getTypeName();
   }
 
   get value() {

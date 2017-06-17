@@ -61,4 +61,9 @@ export class PathProperty extends Property<Path> {
   getAnimatorValueType() {
     return 'pathType';
   }
+
+  // @Override
+  getTypeName() {
+    return 'PathProperty';
+  }
 }

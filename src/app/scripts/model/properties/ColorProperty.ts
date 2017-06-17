@@ -1,7 +1,7 @@
 import { Property } from './Property';
 import {
-   ColorUtil,
-   MathUtil,
+  ColorUtil,
+  MathUtil,
 } from 'app/scripts/common';
 import * as _ from 'lodash';
 
@@ -38,5 +38,10 @@ export class ColorProperty extends Property<string> {
   // @Override
   getAnimatorValueType() {
     return 'colorType';
+  }
+
+  // @Override
+  getTypeName() {
+    return 'ColorProperty';
   }
 }

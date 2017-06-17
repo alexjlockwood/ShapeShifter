@@ -17,4 +17,9 @@ export class FractionProperty extends NumberProperty {
   getAnimatorValueType() {
     return 'floatType';
   }
+
+  // @Override
+  getTypeName() {
+    return 'FractionProperty';
+  }
 }

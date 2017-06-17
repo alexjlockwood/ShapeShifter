@@ -11,6 +11,11 @@ export class EnumProperty extends Property<string> {
   displayValueForValue(value: string) {
     return _.find(this.options, o => o.value === value).label;
   }
+
+  // @Override
+  getTypeName() {
+    return 'EnumProperty';
+  }
 }
 
 /**

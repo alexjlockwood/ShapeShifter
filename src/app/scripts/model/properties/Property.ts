@@ -107,6 +107,8 @@ export abstract class Property<T> {
   getAnimatorValueType() {
     return '';
   }
+
+  abstract getTypeName(): string;
 }
 
 export interface Config {

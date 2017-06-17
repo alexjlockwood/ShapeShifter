@@ -67,6 +67,11 @@ export class NumberProperty extends Property<number> {
   getAnimatorValueType() {
     return 'floatType';
   }
+
+  // @Override
+  getTypeName() {
+    return 'NumberProperty';
+  }
 }
 
 export interface NumberConfig extends Config {
