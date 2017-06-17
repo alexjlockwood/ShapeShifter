@@ -190,8 +190,13 @@ export function metaReducer(reducer: ActionReducer<AppState>): ActionReducer<App
   };
 }
 
+function getActivePathBlockId(state: AppState) {
+  const { selectedBlockIds } = state.timeline;
+  return selectedBlockIds.values().next().value;
+}
+
 function getActivePathBlock(state: AppState) {
-  const { blockId } = state.actionmode;
+  const blockId = getActivePathBlockId(state);
   const { blocks } = state.timeline.animation;
   return _.find(blocks, b => b.id === blockId) as PathAnimationBlock;
 }
@@ -219,7 +224,7 @@ function getPointSelections(state: AppState) {
 }
 
 function updateActivePathBlock(state: AppState, source: ActionSource, path: Path) {
-  const { blockId } = state.actionmode;
+  const blockId = state.timeline.selectedBlockIds.values().next().value;
   const { timeline } = state;
   let { animation } = timeline;
   const blocks = animation.blocks.slice();

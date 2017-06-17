@@ -111,8 +111,8 @@ export class CanvasOverlayDirective
   private readonly $canvas: JQuery;
   vectorLayer: VectorLayer;
   // Normal mode variables.
-  private hiddenLayerIds: Set<string>;
-  private selectedLayerIds: Set<string>;
+  private hiddenLayerIds = new Set<string>();
+  private selectedLayerIds = new Set<string>();
   // Shape Shifter mode variables.
   private blockLayerId: string;
   actionMode: ActionMode;
@@ -122,7 +122,7 @@ export class CanvasOverlayDirective
   pairedSubPaths: Set<number>;
   unpairedSubPath: { source: ActionSource, subIdx: number };
   private isActionMode: boolean;
-  private selectedBlockLayerIds: Set<string>;
+  private selectedBlockLayerIds = new Set<string>();
   private subIdxWithError: number;
 
   private selectionHelper: SelectionHelper | undefined;

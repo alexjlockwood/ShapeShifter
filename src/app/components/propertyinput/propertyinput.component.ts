@@ -3,10 +3,12 @@ import {
   Component,
   OnInit,
 } from '@angular/core';
+import { AutoAwesome } from 'app/scripts/algorithms';
 import {
   ColorUtil,
   ModelUtil,
 } from 'app/scripts/common';
+import { ActionMode } from 'app/scripts/model/actionmode';
 import {
   ClipPathLayer,
   GroupLayer,
@@ -90,19 +92,23 @@ export class PropertyInputComponent implements OnInit {
       });
   }
 
-  shouldDisableStartActionModeButton(pim: PropertyInputModel) {
-    return pim.numSelections === 1
-      && pim.model instanceof PathAnimationBlock
-      && (!pim.model.fromValue || !pim.model.toValue);
-  }
-
   shouldShowStartActionModeButton(pim: PropertyInputModel) {
     return pim.numSelections === 1 && pim.model instanceof PathAnimationBlock;
   }
 
-  onStartActionModeClick(blockId: string) {
+  shouldDisableStartActionModeButton(pim: PropertyInputModel) {
+    return this.shouldShowStartActionModeButton(pim)
+      && (!pim.model.fromValue || !pim.model.toValue);
+  }
+
+  onAutoFixPathsClick(pim: PropertyInputModel) {
+    const block = pim.model as PathAnimationBlock;
+    this.actionModeService.autoFixClick();
+  }
+
+  onStartActionModeClick() {
     ga('send', 'event', 'Action mode', 'Started');
-    this.actionModeService.startActionMode(blockId);
+    this.actionModeService.setActionMode(ActionMode.Selection);
   }
 
   shouldShowAnimateLayerButton(pim: PropertyInputModel) {

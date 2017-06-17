@@ -14,14 +14,6 @@ export const TOGGLE_SUBPATH_SELECTION = '__actionmode__TOGGLE_SUBPATH_SELECTION'
 export const TOGGLE_SEGMENT_SELECTIONS = '__actionmode__TOGGLE_SEGMENT_SELECTION';
 export const TOGGLE_POINT_SELECTION = '__actionmode__TOGGLE_POINT_SELECTION';
 
-export class StartActionMode implements Action {
-  readonly type = START_ACTION_MODE;
-  readonly payload: { blockId: string };
-  constructor(blockId: string) {
-    this.payload = { blockId };
-  }
-}
-
 export class SetActionMode implements Action {
   readonly type = SET_ACTION_MODE;
   readonly payload: { mode: ActionMode };
@@ -86,8 +78,7 @@ export class TogglePointSelection implements Action {
 }
 
 export type Actions =
-  StartActionMode
-  | SetActionMode
+  SetActionMode
   | SetActionModeHover
   | SetActionModeSelections
   | ToggleSubPathSelection

@@ -17,7 +17,6 @@ import {
   SetActionMode,
   SetActionModeHover,
   SetActionModeSelections,
-  StartActionMode,
   TogglePointSelection,
   ToggleSegmentSelections,
   ToggleSubPathSelection,
@@ -60,10 +59,6 @@ export class ActionModeService {
     let mode: ActionMode;
     this.store.select(getActionMode).first().subscribe(m => mode = m);
     return mode;
-  }
-
-  startActionMode(blockId: string) {
-    this.store.dispatch(new StartActionMode(blockId));
   }
 
   setActionMode(mode: ActionMode) {

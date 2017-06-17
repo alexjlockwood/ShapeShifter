@@ -53,7 +53,7 @@ export class CanvasLayersDirective
   private readonly $renderingCanvas: JQuery;
   private readonly $offscreenCanvas: JQuery;
   private vectorLayer: VectorLayer;
-  private hiddenLayerIds: Set<string>;
+  private hiddenLayerIds = new Set<string>()
 
   constructor(
     elementRef: ElementRef,

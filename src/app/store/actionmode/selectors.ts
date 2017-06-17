@@ -8,7 +8,12 @@ import {
   createDeepEqualSelector,
   getAppState,
 } from '../selectors';
-import { getAnimation } from '../timeline/selectors';
+import {
+  getAnimation,
+  getSingleSelectedBlockId,
+  getSingleSelectedBlockLayerId,
+  getSingleSelectedPathBlock,
+} from '../timeline/selectors';
 import { AnimationRenderer } from 'app/scripts/animator';
 import {
   ActionMode,
@@ -33,20 +38,6 @@ import {
 } from 'reselect';
 
 const getActionModeState = createSelector(getAppState, s => s.actionmode);
-const getBlockId = createSelector(getActionModeState, s => s.blockId);
-const getBlock =
-  createSelector(
-    [getAnimation, getBlockId],
-    (anim, blockId) => {
-      if (!blockId) {
-        return undefined;
-      }
-      const block = _.find(anim.blocks, b => b.id === blockId);
-      return block instanceof PathAnimationBlock ? block : undefined;
-    },
-  );
-const getBlockLayerId = createSelector(getBlock, b => b ? b.layerId : undefined);
-
 export const getActionMode = createSelector(getActionModeState, s => s.mode);
 export const isActionMode = createSelector(getActionMode, mode => mode !== ActionMode.None);
 export const getActionModeHover = createDeepEqualSelector(getActionModeState, s => s.hover);
@@ -77,7 +68,7 @@ const getUnpairedSubPath =
 
 function getVectorLayerValue(getTimeFn: (block: PathAnimationBlock) => number) {
   return createSelector(
-    [getVectorLayer, getAnimation, getBlock],
+    [getVectorLayer, getAnimation, getSingleSelectedPathBlock],
     (vl, anim, block) => {
       if (!block) {
         return undefined;
@@ -98,7 +89,7 @@ type CombinerFunc = (vl: VectorLayer, anim: Animation, block: PathAnimationBlock
 
 function getMorphableLayerValue(selector: Reselect.OutputSelector<State, VectorLayer, CombinerFunc>) {
   return createSelector(
-    [selector, getBlockLayerId],
+    [selector, getSingleSelectedBlockLayerId],
     (vl, blockLayerId) => {
       if (!vl || !blockLayerId) {
         return undefined;
@@ -112,7 +103,7 @@ const getMorphableLayerToValue = getMorphableLayerValue(getVectorLayerToValue);
 
 const getPathsCompatibleResult =
   createSelector(
-    getBlock,
+    getSingleSelectedPathBlock,
     block => block ? ActionModeUtil.checkPathsCompatible(block) : undefined,
   );
 
@@ -139,7 +130,7 @@ function getHighlightedSubIdxWithError(actionSource: ActionSource) {
 }
 
 const actionModeBaseSelectors = {
-  blockLayerId: getBlockLayerId,
+  blockLayerId: getSingleSelectedBlockLayerId,
   isActionMode,
   hover: getActionModeHover,
   selections: getActionModeSelections,
@@ -165,11 +156,10 @@ export const getActionModeEndState =
 
 export const getToolbarState =
   createStructuredSelector({
-    actionMode: getActionMode,
+    mode: getActionMode,
     fromMl: getMorphableLayerFromValue,
     toMl: getMorphableLayerToValue,
-    mode: getActionMode,
     selections: getActionModeSelections,
     unpairedSubPath: getUnpairedSubPath,
-    block: getBlock,
+    block: getSingleSelectedPathBlock,
   });

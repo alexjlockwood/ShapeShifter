@@ -63,13 +63,12 @@ export class ToolbarComponent implements OnInit {
   ngOnInit() {
     const toolbarState = this.store.select(getToolbarState);
     this.toolbarData$ = toolbarState
-      .map(({ actionMode, fromMl, toMl, mode, selections, unpairedSubPath, block }) => {
-        return new ToolbarData(
-          actionMode, fromMl, toMl, mode, selections, unpairedSubPath, block);
+      .map(({ mode, fromMl, toMl, selections, unpairedSubPath, block }) => {
+        return new ToolbarData(mode, fromMl, toMl, selections, unpairedSubPath, block);
       });
     this.actionModeState$ =
-      toolbarState.map(({ actionMode, block }) => {
-        return actionMode === ActionMode.None ? INACTIVE : ACTIVE;
+      toolbarState.map(({ mode }) => {
+        return mode === ActionMode.None ? INACTIVE : ACTIVE;
       });
   }
 
@@ -175,10 +174,9 @@ class ToolbarData {
   private readonly morphableLayerName: string;
 
   constructor(
-    private readonly actionMode: ActionMode,
+    public readonly mode: ActionMode,
     startMorphableLayer: MorphableLayer,
     endMorphableLayer: MorphableLayer,
-    public readonly mode: ActionMode,
     public readonly selections: ReadonlyArray<Selection>,
     unpair: { source: ActionSource; subIdx: number; },
     private readonly block: PathAnimationBlock | undefined,
@@ -333,7 +331,7 @@ class ToolbarData {
   }
 
   shouldShowActionMode() {
-    return this.actionMode !== ActionMode.None;
+    return this.mode !== ActionMode.None;
   }
 
   shouldShowPairSubPaths() {
@@ -377,6 +375,6 @@ class ToolbarData {
   }
 
   shouldShowAutoFix() {
-    return this.actionMode === ActionMode.Selection && !this.getNumSelections();
+    return this.mode === ActionMode.Selection && !this.getNumSelections();
   }
 }

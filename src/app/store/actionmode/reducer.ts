@@ -9,7 +9,6 @@ import {
 import * as _ from 'lodash';
 
 export interface State {
-  readonly blockId: string;
   readonly mode: ActionMode;
   readonly hover: Hover;
   readonly selections: ReadonlyArray<Selection>;
@@ -19,7 +18,6 @@ export interface State {
 
 export function buildInitialState() {
   return {
-    blockId: undefined,
     mode: ActionMode.None,
     hover: undefined,
     selections: [],
@@ -30,12 +28,6 @@ export function buildInitialState() {
 
 export function reducer(state = buildInitialState(), action: actions.Actions) {
   switch (action.type) {
-
-    // Set the currently active block ID, enabling action mode.
-    case actions.START_ACTION_MODE: {
-      const { blockId } = action.payload;
-      return { ...buildInitialState(), blockId, mode: ActionMode.Selection };
-    }
 
     // Set the app mode during action mode.
     case actions.SET_ACTION_MODE: {

@@ -45,7 +45,7 @@
         class="spi-secondary-icon"
         [disabled]="this.shouldDisableStartActionModeButton(model)"
         *ngIf="this.shouldShowStartActionModeButton(model)"
-        (click)="this.onStartActionModeClick(model.model.id)"
+        (click)="this.onStartActionModeClick()"
         mdTooltip="Customize animation"
         mdTooltipPosition="left"
         mdTooltipShowDelay="500">
@@ -110,8 +110,18 @@
         </div>
       </div>
       <div *ngIf="this.shouldShowInvalidPathAnimationBlockMsg(model)"
-        class="alert alert-danger">
-        Paths are incompatible. Customize the animation above.
+        class="alert alert-danger"
+        fxLayout="row">
+        <span class="paths-incompatible-text">Paths are incompatible. Auto fix or customize the paths above.</span>
+        <button md-icon-button
+          class="auto-fix-button"
+          *ngIf="this.shouldShowStartActionModeButton(model)"
+          (click)="this.onAutoFixPathsClick(model)"
+          mdTooltip="Auto fix"
+          mdTooltipPosition="below"
+          mdTooltipShowDelay="500">
+          <md-icon svgIcon="autofix"></md-icon>
+        </button>
       </div>
     </div>
   </div>
