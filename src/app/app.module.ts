@@ -59,7 +59,7 @@ import { StoreDevtoolsModule } from '@ngrx/store-devtools';
 import { StoreModule } from '@ngrx/store';
 
 const IS_DEV_BUILD = !environment.production;
-const SHOULD_PROFILE_STORE = IS_DEV_BUILD && false;
+// const SHOULD_PROFILE_STORE = IS_DEV_BUILD && false;
 
 @NgModule({
   declarations: [
@@ -101,7 +101,8 @@ const SHOULD_PROFILE_STORE = IS_DEV_BUILD && false;
     MdSnackBarModule,
     MdToolbarModule,
     MdTooltipModule,
-  ].concat(SHOULD_PROFILE_STORE ? [StoreDevtoolsModule.instrumentOnlyWithExtension({ maxAge: 5 })] : []),
+    // StoreDevtoolsModule.instrumentOnlyWithExtension({ maxAge: 5 }),
+  ],
   providers: [
     ActionModeService,
     AnimatorService,
