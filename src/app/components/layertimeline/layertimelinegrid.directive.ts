@@ -9,7 +9,7 @@ import {
 } from '@angular/core';
 import { Dragger } from 'app/scripts/dragger';
 import { Animation } from 'app/scripts/model/timeline';
-import { ShortcutService } from 'app/services/shortcut/shortcut.service';
+import { ShortcutService } from 'app/services';
 import * as $ from 'jquery';
 import * as _ from 'lodash';
 

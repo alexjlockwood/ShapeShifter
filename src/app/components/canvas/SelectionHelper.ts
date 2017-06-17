@@ -6,7 +6,7 @@ import {
 } from 'app/scripts/model/actionmode';
 import { LayerUtil } from 'app/scripts/model/layers';
 import { ProjectionOntoPath } from 'app/scripts/model/paths';
-import { ActionModeService } from 'app/services/actionmode/actionmode.service';
+import { ActionModeService } from 'app/services';
 import {
   State,
   Store,

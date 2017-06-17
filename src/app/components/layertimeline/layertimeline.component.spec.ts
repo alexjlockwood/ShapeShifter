@@ -22,15 +22,17 @@ import {
 import { DomSanitizer } from '@angular/platform-browser';
 import { ScrollGroupDirective } from 'app/components/scrollgroup/scrollgroup.directive';
 import { SplitterComponent } from 'app/components/splitter/splitter.component';
-import { ActionModeService } from 'app/services/actionmode/actionmode.service';
-import { AnimatorService } from 'app/services/animator/animator.service';
-import { DemoService } from 'app/services/demos/demo.service';
-import { DialogService } from 'app/services/dialogs/dialog.service';
-import { FileExportService } from 'app/services/export/fileexport.service';
-import { FileImportService } from 'app/services/import/fileimport.service';
-import { PlaybackService } from 'app/services/playback/playback.service';
-import { ShortcutService } from 'app/services/shortcut/shortcut.service';
-import { SnackBarService } from 'app/services/snackbar/snackbar.service';
+import {
+  ActionModeService,
+  AnimatorService,
+  DemoService,
+  DialogService,
+  FileExportService,
+  FileImportService,
+  PlaybackService,
+  ShortcutService,
+  SnackBarService,
+} from 'app/services';
 import { Store } from 'app/store';
 import { MockStore } from 'test/store/MockStore.spec';
 

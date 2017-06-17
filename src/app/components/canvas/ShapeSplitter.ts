@@ -2,7 +2,7 @@ import { CanvasOverlayDirective } from './canvasoverlay.directive';
 import { Point } from 'app/scripts/common';
 import { ActionMode } from 'app/scripts/model/actionmode';
 import { HitResult, ProjectionOntoPath } from 'app/scripts/model/paths';
-import { ActionModeService } from 'app/services/actionmode/actionmode.service';
+import { ActionModeService } from 'app/services';
 import {
   State,
   Store,

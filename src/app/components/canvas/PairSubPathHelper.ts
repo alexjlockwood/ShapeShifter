@@ -5,7 +5,7 @@ import {
   ActionSource,
   HoverType,
 } from 'app/scripts/model/actionmode';
-import { ActionModeService } from 'app/services/actionmode/actionmode.service';
+import { ActionModeService } from 'app/services';
 import {
   State,
   Store,

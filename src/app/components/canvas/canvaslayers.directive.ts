@@ -22,7 +22,7 @@ import {
   PathLayer,
   VectorLayer,
 } from 'app/scripts/model/layers';
-import { AnimatorService } from 'app/services/animator/animator.service';
+import { AnimatorService } from 'app/services';
 import {
   State,
   Store,
@@ -53,6 +53,7 @@ export class CanvasLayersDirective
   private readonly $renderingCanvas: JQuery;
   private readonly $offscreenCanvas: JQuery;
   private vectorLayer: VectorLayer;
+  private hiddenLayerIds: Set<string>;
 
   constructor(
     elementRef: ElementRef,
@@ -68,11 +69,15 @@ export class CanvasLayersDirective
     if (this.actionSource === ActionSource.Animated) {
       // Preview canvas specific setup.
       this.registerSubscription(
-        Observable.merge(
-          this.animatorService.asObservable().map(event => event.vl),
-          this.store.select(getVectorLayer),
-        ).subscribe(vectorLayer => {
+        Observable.combineLatest(
+          Observable.merge(
+            this.animatorService.asObservable().map(event => event.vl),
+            this.store.select(getVectorLayer),
+          ),
+          this.store.select(getHiddenLayerIds),
+        ).subscribe(([vectorLayer, hiddenLayerIds]) => {
           this.vectorLayer = vectorLayer;
+          this.hiddenLayerIds = hiddenLayerIds;
           this.draw();
         }));
     } else {
@@ -97,12 +102,6 @@ export class CanvasLayersDirective
 
   private get offscreenCtx() {
     return (this.$offscreenCanvas.get(0) as HTMLCanvasElement).getContext('2d');
-  }
-
-  private get hiddenLayerIds() {
-    let result: Set<string>;
-    this.store.select(getHiddenLayerIds).first().subscribe(ids => result = ids);
-    return result;
   }
 
   // @Override

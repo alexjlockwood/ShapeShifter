@@ -20,10 +20,12 @@ import {
 } from '@angular/material';
 import { DomSanitizer } from '@angular/platform-browser';
 import { ActionSource } from 'app/scripts/model/actionmode';
-import { ActionModeService } from 'app/services/actionmode/actionmode.service';
-import { AnimatorService } from 'app/services/animator/animator.service';
-import { PlaybackService } from 'app/services/playback/playback.service';
-import { ShortcutService } from 'app/services/shortcut/shortcut.service';
+import {
+  ActionModeService,
+  AnimatorService,
+  PlaybackService,
+  ShortcutService,
+} from 'app/services';
 import { Store } from 'app/store';
 import { Observable } from 'rxjs/Observable';
 import { MockStore } from 'test/store/MockStore.spec';

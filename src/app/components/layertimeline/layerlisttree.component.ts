@@ -13,7 +13,7 @@ import {
   VectorLayer,
 } from 'app/scripts/model/layers';
 import { Animation } from 'app/scripts/model/timeline';
-import { ActionModeService } from 'app/services/actionmode/actionmode.service';
+import { ActionModeService } from 'app/services';
 import {
   State,
   Store,

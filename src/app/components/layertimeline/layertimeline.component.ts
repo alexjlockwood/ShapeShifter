@@ -33,12 +33,14 @@ import {
   Animation,
   AnimationBlock,
 } from 'app/scripts/model/timeline';
-import { ActionModeService } from 'app/services/actionmode/actionmode.service';
-import { AnimatorService } from 'app/services/animator/animator.service';
-import { DemoService } from 'app/services/demos/demo.service';
-import { DialogService } from 'app/services/dialogs/dialog.service';
-import { FileExportService } from 'app/services/export/fileexport.service';
-import { FileImportService } from 'app/services/import/fileimport.service';
+import {
+  ActionModeService,
+  AnimatorService,
+  DemoService,
+  DialogService,
+  FileExportService,
+  FileImportService,
+} from 'app/services';
 import {
   Shortcut,
   ShortcutService,

@@ -25,9 +25,11 @@ import {
   Animation,
   PathAnimationBlock,
 } from 'app/scripts/model/timeline';
-import { ActionModeService } from 'app/services/actionmode/actionmode.service';
-import { AnimatorService } from 'app/services/animator/animator.service';
-import { ShortcutService } from 'app/services/shortcut/shortcut.service';
+import {
+  ActionModeService,
+  AnimatorService,
+  ShortcutService,
+} from 'app/services';
 import {
   State,
   Store,

@@ -11,8 +11,10 @@ import {
   VectorLayer,
 } from 'app/scripts/model/layers';
 import { Animation } from 'app/scripts/model/timeline';
-import { AnimatorService } from 'app/services/animator/animator.service';
-import { FileExportService } from 'app/services/export/fileexport.service';
+import {
+  AnimatorService,
+  FileExportService,
+} from 'app/services';
 import { Duration, SnackBarService } from 'app/services/snackbar/snackbar.service';
 import {
   State,

@@ -5,7 +5,7 @@ import {
   ActionSource,
 } from 'app/scripts/model/actionmode';
 import { ProjectionOntoPath } from 'app/scripts/model/paths';
-import { ActionModeService } from 'app/services/actionmode/actionmode.service';
+import { ActionModeService } from 'app/services';
 import {
   State,
   Store,
