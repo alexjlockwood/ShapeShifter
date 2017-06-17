@@ -88,8 +88,9 @@ export class CanvasLayersDirective
           : getActionModeEndState;
       this.registerSubscription(
         this.store.select(actionModeSelector)
-          .subscribe(({ vectorLayer }) => {
+          .subscribe(({ vectorLayer, hiddenLayerIds }) => {
             this.vectorLayer = vectorLayer;
+            this.hiddenLayerIds = hiddenLayerIds;
             this.draw();
           }),
       );
