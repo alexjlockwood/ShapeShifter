@@ -1032,6 +1032,11 @@ export class LayerTimelineComponent
   onImportedFilesPicked(fileList: FileList) {
     this.fileImportService.import(fileList);
   }
+
+  // Used by *ngFor loop.
+  trackLayerFn(index: number, layer: Layer) {
+    return layer.id;
+  }
 }
 
 interface LayerTimelineModel {

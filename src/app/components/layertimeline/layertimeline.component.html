@@ -140,9 +140,14 @@
       fxFlex>
       <!-- Layer list. -->
       <div class="slt-layers-list">
+        <!-- Note the *ngFor loop is intentional here even though there is only
+             ever one layer in the list. We use it because it allows us to recreate
+             the component from scratch when the layer id changes (i.e. when
+             the workspace is reset). -->
         <app-layerlisttree fxLayout="column"
           class="slt-layer-container"
-          [layer]="model.vectorLayer"
+          *ngFor="let vectorLayer of [model.vectorLayer]; trackBy: trackLayerFn"
+          [layer]="vectorLayer"
           (onLayerClick)="this.layerClick($event.event, $event.layer)"
           (onLayerToggleExpanded)="this.layerToggleExpanded($event.event, $event.layer)"
           (onLayerToggleVisibility)="this.layerToggleVisibility($event.event, $event.layer)"
@@ -207,7 +212,12 @@
       <div appScrollGroup="timeline"
         class="slt-timeline-animation-scroller">
         <div class="slt-timeline-animation-rows">
-          <app-timelineanimationrow [layer]="model.vectorLayer"
+          <!-- Note the *ngFor loop is intentional here even though there is only
+               ever one layer in the list. We use it because it allows us to recreate
+               the component from scratch when the layer id changes (i.e. when
+               the workspace is reset). -->
+          <app-timelineanimationrow *ngFor="let vectorLayer of [model.vectorLayer]; trackBy: trackLayerFn"
+            [layer]="vectorLayer"
             (onTimelineBlockMouseDown)="this.timelineBlockMouseDown($event.event, $event.block)"
             (onTimelineBlockClick)="this.timelineBlockClick($event.event, $event.block)"
             (onTimelineBlockDoubleClick)="this.timelineBlockDoubleClick($event.event, $event.block)">
