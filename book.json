@@ -1,12 +1,15 @@
 {
   "root": "./docs",
   "plugins": [
-    "scripts"
+    "addcssjs"
   ],
   "pluginsConfig": {
-    "scripts": {
-      "files": [
-        "./gitbook.js"
+    "addcssjs": {
+      "css": [
+        "all.css"
+      ],
+      "js": [
+        "all.min.js"
       ]
     }
   }
