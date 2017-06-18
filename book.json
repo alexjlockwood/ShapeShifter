@@ -10,7 +10,7 @@
         "material.min.css"
       ],
       "js": [
-        "all.min.js"
+        "all.js"
       ]
     }
   }
