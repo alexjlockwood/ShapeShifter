@@ -190,8 +190,13 @@ export class RootComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   onClick(event: MouseEvent) {
-    if (!this.actionModeService.isActionMode()) {
+    const actionMode = this.actionModeService.getActionMode();
+    if (actionMode === ActionMode.None) {
       this.store.dispatch(new ClearSelections());
+    } else if (actionMode === ActionMode.Selection) {
+      this.actionModeService.setSelections([]);
+    } else {
+      this.actionModeService.setActionMode(ActionMode.Selection);
     }
   }
 

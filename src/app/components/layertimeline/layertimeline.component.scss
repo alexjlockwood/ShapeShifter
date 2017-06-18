@@ -253,9 +253,12 @@
       overflow: hidden;
       flex: 0 0 auto;
       box-shadow: 4px 0 0 mat-color(mat-palette($mat-grey, 500)), -4px 0 0 mat-color(mat-palette($mat-grey, 500));
-      opacity: .5;
-      &.is-active {
-        opacity: 1;
+      opacity: 1;
+      &.is-disabled {
+        opacity: 0.5;
+      }
+      &.is-selected {
+        background-color: $colorSelectedAnimationBlock;
       }
     }
     .slt-timeline-animation-rows {
@@ -275,7 +278,7 @@
     }
     .slt-timeline-block {
       position: absolute;
-      background-color: mat-color(mat-palette($mat-grey, 500));
+      background-color: mat-color(mat-palette($mat-green, 200));
       height: 12px;
       border-radius: 6px;
       top: 50%;
@@ -295,9 +298,6 @@
       .slt-timeline-block-edge-end {
         right: 0;
       }
-    }
-    .slt-timeline-animation.is-active .slt-timeline-block {
-      background-color: mat-color(mat-palette($mat-green, 200));
       &.is-selected {
         background-color: $colorSelectedAnimationBlock;
       }
