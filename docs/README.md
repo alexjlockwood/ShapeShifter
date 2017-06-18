@@ -1,7 +1,6 @@
 # Introduction
 
-[Shape Shifter](https://alexjlockwood.github.io/ShapeShifter/) is a web-app that simplifies
-the creation of [icon animations][adp-icon-animations] for Android, iOS, and the web.
+[Shape Shifter](https://alexjlockwood.github.io/ShapeShifter/) is a web-app that simplifies the creation of icon animations for Android, iOS, and the web.
 
 This tool currently exports to standalone SVGs, SVG spritesheets,
 and CSS keyframe animations for the web, as well as to
@@ -10,7 +9,7 @@ format for Android. I am totally open to adding support for other export formats
 if you have a format that you'd like to see added in the future,
 file a [feature request][report-feature-request]!
 
-![Screen capture of tool](art/screencap.gif)
+![Screen capture of tool](/art/screencap.gif)
 
 ## Examples
 
