@@ -276,32 +276,6 @@
         box-shadow: 0 -1px 0 $thinBorderColor inset;
       }
     }
-    .slt-timeline-block {
-      position: absolute;
-      background-color: mat-color(mat-palette($mat-green, 200));
-      height: 12px;
-      border-radius: 6px;
-      top: 50%;
-      transform: translate(0, -50%);
-      outline: 0;
-      cursor: pointer;
-      .slt-timeline-block-edge {
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        width: 6px;
-        cursor: ew-resize;
-      }
-      .slt-timeline-block-edge-start {
-        left: 0;
-      }
-      .slt-timeline-block-edge-end {
-        right: 0;
-      }
-      &.is-selected {
-        background-color: $colorSelectedAnimationBlock;
-      }
-    }
     .slt-timeline-grid {
       position: absolute;
       left: 0;

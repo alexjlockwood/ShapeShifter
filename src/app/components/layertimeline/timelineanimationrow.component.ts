@@ -108,6 +108,7 @@ interface AnimationRowModel {
   readonly blocksByPropertyNameValues: ReadonlyArray<ReadonlyArray<AnimationBlock>>;
   readonly isExpanded: boolean;
   readonly selectedBlockIds: Set<string>;
+  readonly isActionMode: boolean;
 }
 
 interface Event {

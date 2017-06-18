@@ -17,6 +17,7 @@
           'width': (100 * (block.endTime - block.startTime) / model.animation.duration) + '%'
         }"
         [ngClass]="{
+          'is-disabled': model.isActionMode,
           'is-selected': block.isAnimatable() && model.selectedBlockIds.has(block.id),
           'has-error': !block.isAnimatable() && !model.selectedBlockIds.has(block.id),
           'is-selected-with-error': !block.isAnimatable() && model.selectedBlockIds.has(block.id)
