@@ -31,7 +31,7 @@ import { Observable } from 'rxjs/Observable';
   styleUrls: ['./timelineanimationrow.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   // TODO: remove ViewEncapsulation.
-  encapsulation: ViewEncapsulation.None,
+  // encapsulation: ViewEncapsulation.None,
 })
 export class TimelineAnimationRowComponent implements OnInit, Callbacks {
 

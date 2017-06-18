@@ -4,119 +4,75 @@
 @import '../../styles/theme';
 $timelineAnimationPadding: 20px;
 ul {
-  margin: 0;
-  padding: 0;
+    margin: 0;
+    padding: 0;
 }
 
 li {
-  list-style: none;
-}
-.slt-timeline-animation-rows {
-  padding: 8px 0;
+    list-style: none;
 }
 
 .slt-layer-row {
-  box-sizing: border-box;
-  line-height: 20px;
-  height: 20px;
+    box-sizing: border-box;
+    line-height: 20px;
+    height: 20px;
 }
 
-.slt-property {
-  line-height: 24px;
-  height: 24px;
+.slt-children-row {
+    padding: 0;
+    margin: 0 0 0 0px;
 }
 
 .slt-properties {
-  margin: 4px 0;
-}
-.slt-properties-empty {
-  display: none;
-}
-.slt-children-row {
-  padding: 0;
-  margin: 0 0 0 0px;
-}
-.slt-timeline {
-  background-color: mat-color(mat-palette($mat-grey, 300));
-  overflow-x: auto;
-  overflow-y: hidden;
-  flex: 1;
-  user-select: none;
-  cursor: default;
-  display: flex;
-  flex-direction: row;
-  align-items: stretch;
-  .slt-timeline-animation-scroller {
-    position: relative;
-    overflow-x: hidden;
-    overflow-y: auto;
-    -ms-overflow-style: none;
-    &::-webkit-scrollbar {
-      display: none;
-    }
-  }
-  .slt-timeline-animation {
-    position: relative;
-    background-color: mat-color(mat-palette($mat-grey, 100));
-    margin-left: 4px;
-    box-sizing: content-box;
-    width: 100px;
-    overflow: hidden;
-    flex: 0 0 auto;
-    box-shadow: 4px 0 0 mat-color(mat-palette($mat-grey, 500)), -4px 0 0 mat-color(mat-palette($mat-grey, 500));
-    opacity: .5;
-    &.is-active {
-      opacity: 1;
-    }
-  }
-  .slt-timeline-animation-rows {
-    padding-left: $timelineAnimationPadding;
-    padding-right: $timelineAnimationPadding;
-  }
-  .slt-properties {
+    margin: 4px 0;
     background-color: #fff;
     border-radius: 2px;
     box-shadow: 0 0 0 1px $thinBorderColor inset;
-  }
-  .slt-property {
-    position: relative;
-    &:not(:last-child) {
-      box-shadow: 0 -1px 0 $thinBorderColor inset;
+    .slt-property {
+        position: relative;
+        line-height: 24px;
+        height: 24px;
+        &:not(:last-child) {
+            box-shadow: 0 -1px 0 $thinBorderColor inset;
+        }
+        .slt-timeline-block {
+            position: absolute;
+            background-color: mat-color(mat-palette($mat-green, 200));
+            height: 12px;
+            border-radius: 6px;
+            top: 50%;
+            transform: translate(0, -50%);
+            outline: 0;
+            cursor: pointer;
+            .slt-timeline-block-edge {
+                position: absolute;
+                top: 0;
+                bottom: 0;
+                width: 6px;
+                cursor: ew-resize;
+            }
+            .slt-timeline-block-edge-start {
+                left: 0;
+            }
+            .slt-timeline-block-edge-end {
+                right: 0;
+            }
+            &.is-disabled {
+                cursor: default;
+            }
+            &.is-selected {
+                background-color: $colorSelectedAnimationBlock;
+            }
+            &.has-error {
+                background-color: mat-color(mat-palette($mat-red, A200));
+            }
+            &.is-selected-with-error {
+                background-color: mat-color(mat-palette($mat-red, A700));
+            }
+        }
     }
-  }
-  .slt-timeline-block {
-    position: absolute;
-    background-color: mat-color(mat-palette($mat-green, 200));
-    height: 12px;
-    border-radius: 6px;
-    top: 50%;
-    transform: translate(0, -50%);
-    outline: 0;
-    cursor: pointer;
-    .slt-timeline-block-edge {
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      width: 6px;
-      cursor: ew-resize;
-    }
-    .slt-timeline-block-edge-start {
-      left: 0;
-    }
-    .slt-timeline-block-edge-end {
-      right: 0;
-    }
-    &.is-disabled {
-      cursor: default;
-    }
-    &.is-selected {
-      background-color: $colorSelectedAnimationBlock;
-    }
-    &.has-error {
-      background-color: mat-color(mat-palette($mat-red, A200));
-    }
-    &.is-selected-with-error {
-      background-color: mat-color(mat-palette($mat-red, A700));
-    }
-  }
+}
+
+.slt-properties-empty {
+    display: none;
 }
