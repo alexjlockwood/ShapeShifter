@@ -1,4 +1,7 @@
-import { isActionMode } from '../actionmode/selectors';
+import {
+  getActionMode,
+  isActionMode,
+} from '../actionmode/selectors';
 import {
   getCollapsedLayerIds,
   getHiddenLayerIds,
@@ -10,6 +13,7 @@ import {
   getAnimation,
   getSelectedBlockIds,
   getSelectedBlockLayerIds,
+  getSingleSelectedPathBlock,
   isAnimationSelected,
 } from '../timeline/selectors';
 import {
@@ -59,6 +63,8 @@ export const getLayerTimelineState =
     selectedBlockIds: getSelectedBlockIds,
     isBeingReset,
     isActionMode,
+    actionMode: getActionMode,
+    singleSelectedPathBlock: getSingleSelectedPathBlock,
   });
 
 export const getAnimatorState =

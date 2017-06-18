@@ -21,6 +21,7 @@ import { ModelUtil } from 'app/scripts/common';
 import { Dragger } from 'app/scripts/dragger';
 import { IntervalTree } from 'app/scripts/intervals';
 import { DestroyableMixin } from 'app/scripts/mixins';
+import { ActionMode } from 'app/scripts/model/actionmode';
 import {
   ClipPathLayer,
   GroupLayer,
@@ -158,6 +159,7 @@ export class LayerTimelineComponent
   ) { super(); }
 
   ngOnInit() {
+    let currActionMode: ActionMode;
     this.layerTimelineModel$ =
       this.store.select(getLayerTimelineState)
         .map(({
@@ -167,6 +169,8 @@ export class LayerTimelineComponent
           selectedBlockIds,
           isBeingReset,
           isActionMode,
+          actionMode,
+          singleSelectedPathBlock,
         }) => {
           this.animation = animation;
           this.rebuildSnapTimes();
@@ -175,6 +179,12 @@ export class LayerTimelineComponent
           if (isBeingReset) {
             this.autoZoomToAnimation();
           }
+          if (currActionMode === ActionMode.None && actionMode === ActionMode.Selection) {
+            // Move the current time to the beginning of the selected block when
+            // entering action mode.
+            this.animatorService.setAnimationTime(singleSelectedPathBlock.startTime);
+          }
+          currActionMode = actionMode;
           return {
             animation,
             vectorLayer,
