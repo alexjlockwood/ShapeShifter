@@ -76,8 +76,12 @@ export class ToolbarComponent implements OnInit {
     ga('send', 'event', 'Miscellaneous', 'Send feedback click');
   }
 
-  onAboutClick(event: MouseEvent) {
-    ga('send', 'event', 'Miscellaneous', 'About click');
+  onContributeClick(event: MouseEvent) {
+    ga('send', 'event', 'Miscellaneous', 'Contribute click');
+  }
+
+  onGettingStartedClick(event: MouseEvent) {
+    ga('send', 'event', 'Miscellaneous', 'Getting started click');
   }
 
   onAutoFixClick(event: MouseEvent) {

@@ -178,20 +178,28 @@
       <md-icon>more_vert</md-icon>
     </button>
     <md-menu #overflowMenu="mdMenu">
+      <a href="https://alexjlockwood.gitbooks.io/shapeshifter"
+        target="_blank"
+        class="toolbar-overflow-link-item">
+        <button md-menu-item (click)="onGettingStartedClick()">
+          <md-icon>info</md-icon>
+          <span>Getting started</span>
+        </button>
+      </a>
+      <a href="https://github.com/alexjlockwood/ShapeShifter"
+        target="_blank"
+        class="toolbar-overflow-link-item">
+        <button md-menu-item (click)="onContributeClick()">
+          <md-icon class="material-icons" svgIcon="contribute"></md-icon>
+          <span>Contribute</span>
+        </button>
+      </a>
       <a href="https://github.com/alexjlockwood/ShapeShifter/issues"
         target="_blank"
         class="toolbar-overflow-link-item">
         <button md-menu-item (click)="onSendFeedbackClick()">
-          <md-icon class="material-icons" svgIcon="contribute"></md-icon>
+          <md-icon>bug_report</md-icon>
           <span>Send feedback</span>
-        </button>
-      </a>
-      <a href="https://github.com/alexjlockwood/ShapeShifter/blob/master/README.md"
-        target="_blank"
-        class="toolbar-overflow-link-item">
-        <button md-menu-item (click)="onAboutClick()">
-          <md-icon>info</md-icon>
-          <span>About</span>
         </button>
       </a>
     </md-menu>
