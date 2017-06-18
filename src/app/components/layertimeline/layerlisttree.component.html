@@ -2,6 +2,10 @@
   <div class="slt-layer slt-layer-type-{{ this.layer.getIconName() }}"
     fxLayout="row"
     fxLayoutAlign="start center"
+    [ngClass]="{
+      'is-selected': model.isSelected,
+      'is-disabled': model.isActionMode
+    }"
     [class.is-selected]="model.isSelected"
     (click)="this.layerClick($event, this.layer)"
     (dblclick)="this.layerToggleExpanded($event, this.layer)"

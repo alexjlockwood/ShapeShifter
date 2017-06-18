@@ -1,4 +1,3 @@
-// TODO: clean up the css in here
 @import '../../styles/material-shadows';
 @import '../../styles/variables';
 @import '../../styles/theme';
@@ -18,19 +17,29 @@ li {
 .slt-layer {
     box-sizing: border-box;
     height: 20px;
-    padding-top: 2px;
-    padding-bottom: 2px;
-    padding-left: 4px;
-    padding-right: 2px;
-    cursor: pointer;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 2px;
     font-size: 12px;
-    outline: none;
+    cursor: pointer;
     color: $colorBlackTextSecondary;
-    border-radius: 2px;
+    outline: none;
+    border-radius: 2px 0 0 2px;
+    &:focus {
+        box-shadow: 0 0 0 1px $colorFocusBorder inset;
+    }
     &.is-selected {
         background-color: mat-color($app-accent);
         box-shadow: none;
         color: #fff;
+        &,
+        & md-icon {
+            color: #fff;
+        }
+    }
+    &.is-disabled {
+        cursor: default;
     }
     span.slt-layer-id-text {
         flex: 1 1 0;
@@ -77,29 +86,6 @@ li {
     min-height: 20px;
     md-icon {
         vertical-align: top;
-    }
-}
-
-.slt-layer {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    padding: 2px;
-    font-size: 12px;
-    cursor: pointer;
-    color: $colorBlackTextSecondary;
-    outline: none;
-    border-radius: 2px 0 0 2px;
-    &:focus {
-        box-shadow: 0 0 0 1px $colorFocusBorder inset;
-    }
-    &.is-selected {
-        background-color: $colorSelection;
-        box-shadow: none;
-        &,
-        & md-icon {
-            color: #fff;
-        }
     }
 }
 
