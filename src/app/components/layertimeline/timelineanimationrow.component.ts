@@ -5,7 +5,6 @@ import {
   Input,
   OnInit,
   Output,
-  ViewEncapsulation,
 } from '@angular/core';
 import {
   AnimationMap,
@@ -30,8 +29,6 @@ import { Observable } from 'rxjs/Observable';
   templateUrl: './timelineanimationrow.component.html',
   styleUrls: ['./timelineanimationrow.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  // TODO: remove ViewEncapsulation.
-  // encapsulation: ViewEncapsulation.None,
 })
 export class TimelineAnimationRowComponent implements OnInit, Callbacks {
 
