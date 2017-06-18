@@ -91,9 +91,10 @@ export class RootComponent implements OnInit, AfterViewInit, OnDestroy {
   ngOnInit() {
     this.shortcutService.init();
 
-    // TODO: we should check to see if there are any dirty changes first
     $(window).on('beforeunload', event => {
-      if (!IS_DEV_BUILD) {
+      let isDirty: boolean;
+      this.store.select(isWorkspaceDirty).first().subscribe(dirty => isDirty = dirty);
+      if (isDirty && !IS_DEV_BUILD) {
         return 'You\'ve made changes but haven\'t saved. ' +
           'Are you sure you want to navigate away?';
       }
