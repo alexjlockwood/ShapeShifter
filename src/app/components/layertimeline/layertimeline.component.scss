@@ -75,12 +75,22 @@
                 &:focus {
                     background-color: rgba(#000, .08);
                 }
+                &.is-disabled {
+                    cursor: default;
+                    color: $colorBlackTextDisabled;
+                }
             }
             button {
                 &[md-icon-button] {
                     md-icon {
                         line-height: 0px;
                         color: $colorBlackTextSecondary;
+                    }
+                }
+                &[md-icon-button][disabled] {
+                    md-icon {
+                        line-height: 0px;
+                        color: $colorBlackTextDisabled;
                     }
                 }
             }
@@ -173,6 +183,9 @@
                 &.is-selected .slt-timeline-animation-name {
                     background-color: $colorSelection;
                     color: $colorWhiteTextPrimary;
+                }
+                &.is-disabled {
+                    cursor: default;
                 }
             }
             .slt-timeline-animation-name {

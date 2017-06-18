@@ -89,7 +89,7 @@ export class LayerListTreeComponent implements OnInit, Callbacks {
   // @Override Callbacks
   layerToggleExpanded(event: MouseEvent, layer: Layer) {
     event.stopPropagation();
-    if (this.isLayerExpandable() && !this.actionModeService.isActionMode()) {
+    if (this.isLayerExpandable()) {
       this.onLayerToggleExpanded.emit({ event, layer });
     }
   }

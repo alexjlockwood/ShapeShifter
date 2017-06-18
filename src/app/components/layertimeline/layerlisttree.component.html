@@ -6,7 +6,6 @@
       'is-selected': model.isSelected,
       'is-disabled': model.isActionMode
     }"
-    [class.is-selected]="model.isSelected"
     (click)="this.layerClick($event, this.layer)"
     (dblclick)="this.layerToggleExpanded($event, this.layer)"
     (mousedown)="this.layerMouseDown($event, this.layer)">
@@ -66,6 +65,7 @@
       *ngFor="let propertyName of model.existingPropertyNames">
       <span class="slt-property-name">{{propertyName}}</span>
       <button md-icon-button
+        class="slt-property-add-timeline-block-button"
         (click)="this.addTimelineBlockClick($event, layer, propertyName)"
         [disabled]="model.isActionMode"
         mdTooltip="Add another animation"

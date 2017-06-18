@@ -71,6 +71,7 @@
       </md-menu>
       <button class="slt-layers-menu-group-button"
         (click)="$event.stopPropagation()"
+        [ngClass]="{'is-disabled': model.isActionMode}"
         [disabled]="model.isActionMode"
         [mdMenuTriggerFor]="importMenu">
         Import
@@ -102,6 +103,7 @@
       </md-menu>
       <button class="slt-layers-menu-group-button"
         (click)="$event.stopPropagation()"
+        [ngClass]="{'is-disabled': model.isActionMode}"
         [disabled]="model.isActionMode"
         [mdMenuTriggerFor]="exportMenu">
         Export
@@ -179,10 +181,17 @@
         <div fxLayout="row"
           fxLayoutAlign="start center">
           <div class="slt-timeline-animation-meta"
-            [ngClass]="{'is-selected': model.isAnimationSelected}"
+            [class.is-disabled]="model.isActionMode"
+            [class.is-selected]="model.isAnimationSelected"
             (click)="this.animationHeaderTextClick($event)">
-            <span class="slt-timeline-animation-name">{{model.animation.name}}</span>
-            <span class="slt-timeline-animation-duration">{{model.animation.duration}}ms</span>
+            <span class="slt-timeline-animation-name"
+              [class.is-disabled]="model.isActionMode">
+              {{model.animation.name}}
+            </span>
+            <span class="slt-timeline-animation-duration"
+              [class.is-disabled]="model.isActionMode">
+              {{model.animation.duration}}ms
+            </span>
           </div>
           <button md-icon-button
             (click)="this.zoomToFitClick($event)"
