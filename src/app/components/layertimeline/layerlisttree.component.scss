@@ -111,11 +111,6 @@ li {
     text-overflow: ellipsis;
 }
 
-.slt-layer-add-property-menu {
-    padding: 0;
-    display: flex;
-}
-
 .slt-layer-action-button {
     @include layer-list-button;
     opacity: .2;
@@ -123,10 +118,6 @@ li {
 
 md-menu {
     display: flex;
-}
-
-.slt-layer-more-actions {
-    opacity: 0;
 }
 
 .slt-layer-visibility-toggle {
