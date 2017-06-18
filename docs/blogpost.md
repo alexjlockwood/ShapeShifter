@@ -306,11 +306,9 @@ The ability to chain together `group` transformations makes it possible to achie
 
     Pay particular attention to the first third of the animation, when the outer ring's stroke width and scale are simultaneously increased and decreased respectively to make it look as if the outer ring is collapsing inwards towards the center---a pretty awesome effect!
 
-<!--{% include posts/2016/11/29/includes3_transforming_paths_animated_svgs.html %}-->
 
 One last animation that makes use of group transformations is the _horizontal indeterminate progress bar_. A horizontal indeterminate progress bar consists of three paths: a translucent background and two inner rectangular paths. During the animation the two inner rectangles are horizontally translated and scaled at varying degrees. Toggle the checkboxes in **Figure 4** below to see how each transformation individually contributes to the animation!
 
-<!--{% include posts/2016/11/29/includes4_transforming_paths_indeterminate_progress.html %}-->
 
 ### Trimming stroked `path`s
 
@@ -324,7 +322,6 @@ A lesser known property of stroked paths is that they can be _trimmed_. That is,
 
 `trimPathStart` determines where the visible portion of the path will begin, while `trimPathEnd` determines where the visible portion of the path will end. An additional `trimPathOffset` may also be appended to the start and end values if desired. **Figure 5** demonstrates how this all works---update the sliders to see how different values affect what is drawn to the display! Note that it is perfectly fine for `trimPathStart` to be greater than `trimPathEnd`; if this occurs, the visible portion of the path simply wraps around the end of the segment back to the beginning.
 
-<!--{% include posts/2016/11/29/includes5_trimming_stroked_paths_demo.html %}-->
 
 The ability to animate these three properties opens up a world of possibilities. **Figure 6** shows four such examples:
 
@@ -334,7 +331,6 @@ The ability to animate these three properties opens up a world of possibilities.
 
 * Each animating digit in the _Google IO 2016 icon_ consists of 4 paths, each with a different stroke color and each with trim path start and end values covering a quarter of the digit's total length. Each path's `trimPathOffset` is then animated from `0` to `1` in order to create the effect.
 
-<!--{% include posts/2016/11/29/includes6_trimming_stroked_paths_animated_svgs.html %}-->
 
 Lastly, **Figure 7** shows how a stroked trim path is used to animate the familiar _circular indeterminate progress bar_. The icon consists of a single, circular stroked path that is animated as follows:
 
@@ -352,7 +348,6 @@ Lastly, **Figure 7** shows how a stroked trim path is used to animate the famili
 
     At time `t = 0.0`, the progress bar is at its smallest size (only 3% is visible). At `t = 0.5`, the progress bar has stretched to its maximum size (75% is visible). And at time `t = 1.0`, the progress bar has shrunk back to its smallest size, just as the animation is about to restart.
 
-<!--{% include posts/2016/11/29/includes7_trimming_stroked_paths_indeterminate_progress.html %}-->
 
 ### Morphing `path`s
 
@@ -370,7 +365,6 @@ The first thing to consider when implementing a path morphing animation is wheth
 
 If any of these conditions aren't met (i.e. attempting to morph an `L` command into a `C` command, or an `l` command with 2 coordinates into an `l` command with 4 coordinates, etc.), the application will crash with an exception. The reason these rules must be enforced is due to the way path morphing animations are implemented under-the-hood. Before the animation begins, the framework extracts the command types and their coordinates from each path's `android:pathData` attribute. If the conditions above are met, then the framework can assume that the only difference between the two paths are the values of the coordinates embedded in their drawing command strings. Under this assumption, the framework can execute the same sequence of drawing commands on each new display frame, re-calculating the values of the coordinates to use based on the current progress of the animation. **Figure 8** illustrates this concept nicely. First disable 'animate rotation', then enable the 'show path coordinates' and 'slow animation' checkboxes below. Notice how each path's red coordinates change during the course of the animation: they travel a straight line from their starting positions in path `A` to their ending positions in path `B`. Path morphing animations are really that simple!
 
-<!--{% include posts/2016/11/29/includes8_morphing_paths_animated_svgs.html %}-->
 
 Although conceptually simple, path morphing animations are known at times for being tedious and time-consuming to implement. For example, you'll often need to tweak the start and end paths by hand in order to make the two paths compatible to be morphed, which, depending on the complexity of the paths, is where most of the work will probably be spent. Listed below are several tips and tricks that I've found useful in getting started:
 
@@ -392,7 +386,6 @@ The last technique we'll cover involves animating the bounds of a `<clip-path>`.
 
 A `<clip-path>`'s bounds can be animated via path morphing by animating the differences in its path commands, as specified by its `android:pathData` attribute. Take a look at the examples in **Figure 9** to get a better idea of how these animations work. Enabling the 'show clip paths' checkbox will show a red overlay mask representing the bounds of the currently active `<clip-path>`, which in turn dictates the portions of its sibling `<path>`s that will be drawn. Clip path are especially useful for animating 'fill' effects, as demonstrated in the hourglass and heart fill/break examples below.
 
-<!--{% include posts/2016/11/29/includes9_clipping_paths_animated_svgs.html %}-->
 
 ### Conclusion: putting it all together
 
@@ -405,7 +398,6 @@ If you've made it this far in the blog post, that means you now have all of the 
 5. Path morphing (at the beginning to create the 'bouncing line' effect, and at the end while transitioning the check mark back into an arrow).
 6. Clip path (vertically filling the contents of the downloading arrow to indicate indeterminate progress).
 
-<!--{% include posts/2016/11/29/includes10_downloading_animated_svgs.html %}-->
 
 That's all I've got for now... thanks for reading! Remember to +1 this blog or leave a comment below if you have any questions. And remember that all of the icon animations in this blog post (and more) are available in `AnimatedVectorDrawable` format on [GitHub][adp-delightful-details]. Feel free to steal them for your own application if you want!
 
