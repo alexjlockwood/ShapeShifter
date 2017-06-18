@@ -287,7 +287,6 @@ It's important to understand the order in which nested `group` transformations a
 
 The transformed icons are shown in **Figure 2** below. Toggle the checkboxes to see how the different combinations of transformations affect the results!
 
-<!--{% include posts/2016/11/29/includes2_transforming_paths_demo.html %}-->
 
 The ability to chain together `group` transformations makes it possible to achieve a variety of cool effects. **Figure 3** shows three such examples:
 
