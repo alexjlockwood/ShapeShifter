@@ -1,3 +1,17 @@
 {
-  "root": "./docs"
+  "root": "./docs",
+  "plugins": [
+    "addcssjs"
+  ],
+  "pluginsConfig": {
+    "addcssjs": {
+      "css": [
+        "all.css",
+        "material.min.css"
+      ],
+      "js": [
+        "all.min.js"
+      ]
+    }
+  }
 }
