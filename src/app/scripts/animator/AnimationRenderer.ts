@@ -49,7 +49,7 @@ export class AnimationRenderer {
    * vector layer should not be mutated externally, as it will be cached and
    * returned on subsequent time frames.
    */
-  setAnimationTime(time: number) {
+  setAnimationTime(timeMillis: number) {
     Object.keys(this.animDataByLayer).forEach(layerId => {
       const animData = this.animDataByLayer[layerId];
       animData.cachedState = animData.cachedState || {} as PropertyState;
@@ -62,16 +62,15 @@ export class AnimationRenderer {
         const property = animData.originalLayer.animatableProperties.get(propertyName);
         let value = animData.originalLayer[propertyName];
         for (const block of blocks) {
-          if (time < block.startTime) {
+          if (timeMillis < block.startTime) {
             break;
           }
-          if (time < block.endTime) {
-            const fromValue = ('fromValue' in block) ? block.fromValue : value;
-            const f = (time - block.startTime) / (block.endTime - block.startTime);
+          if (timeMillis < block.endTime) {
+            const f = (timeMillis - block.startTime) / (block.endTime - block.startTime);
             // TODO: this is a bit hacky... no need to perform a search every time.
             const interpolatorFn =
               _.find(INTERPOLATORS, i => i.value === block.interpolator).interpolateFn;
-            value = property.interpolateValue(fromValue, block.toValue, interpolatorFn(f));
+            value = property.interpolateValue(block.fromValue, block.toValue, interpolatorFn(f));
             _ar.activeBlock = block;
             _ar.interpolatedValue = true;
             break;

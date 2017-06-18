@@ -78,7 +78,14 @@ function getVectorLayerValue(getTimeFn: (block: PathAnimationBlock) => number) {
       // There are currently checks in PathProperty.ts to avoid this by returning
       // the start and end path when the interpolated fraction is 0 and 1 respectively.
       const renderer = new AnimationRenderer(vl, anim);
-      return renderer.setAnimationTime(getTimeFn(block));
+      const timeMillis = getTimeFn(block);
+      // First interpolate the entire vector layer.
+      const renderedVl = renderer.setAnimationTime(timeMillis);
+      // TODO: this is hacky! the real solution is to not clear path state after interpolations
+      // Replace the interpolated value with the block's to/from value.
+      const layer = vl.findLayerById(block.layerId).clone() as MorphableLayer;
+      layer.pathData = timeMillis === block.startTime ? block.fromValue : block.toValue;
+      return LayerUtil.replaceLayerInTree(renderedVl, layer);
     });
 }
 
