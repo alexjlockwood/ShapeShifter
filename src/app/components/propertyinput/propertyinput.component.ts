@@ -134,6 +134,14 @@ export class PropertyInputComponent implements OnInit {
       && !pim.model.isAnimatable();
   }
 
+  isPathBlockFromValueEmpty(block: PathAnimationBlock) {
+    return !block.fromValue || !block.fromValue.getPathString();
+  }
+
+  isPathBlockToValueEmpty(block: PathAnimationBlock) {
+    return !block.toValue || !block.toValue.getPathString();
+  }
+
   valueEditorKeyDown(event: KeyboardEvent, ip: InspectedProperty<any>) {
     switch (event.keyCode) {
       // Up/down arrow buttons.
@@ -197,6 +205,7 @@ export class PropertyInputComponent implements OnInit {
         propertyName,
         enteredValueMap,
         (value) => {
+          // TODO: avoid dispatching the action if the properties are equal
           const clonedLayer = layer.clone();
           clonedLayer[propertyName] = value;
           store.dispatch(new ReplaceLayer(clonedLayer));
@@ -259,6 +268,7 @@ export class PropertyInputComponent implements OnInit {
         propertyName,
         enteredValueMap,
         (value) => {
+          // TODO: avoid dispatching the action if the properties are equal
           const clonedBlock = block.clone();
           clonedBlock[propertyName] = value;
           store.dispatch(new ReplaceBlocks([clonedBlock]));
@@ -289,6 +299,7 @@ export class PropertyInputComponent implements OnInit {
         propertyName,
         enteredValueMap,
         (value) => {
+          // TODO: avoid dispatching the action if the properties are equal
           const clonedAnimation = animation.clone();
           clonedAnimation[propertyName] = value;
           store.dispatch(new ReplaceAnimation(clonedAnimation));

@@ -3,12 +3,23 @@ import {
   Path,
   PathUtil,
 } from 'app/scripts/model/paths';
+import { environment } from 'environments/environment';
+
+const IS_DEV_BUILD = !environment.production;
 
 export class PathProperty extends Property<Path> {
 
   // @Override
   setEditableValue(model: any, propertyName: string, value: string) {
-    model[propertyName] = new Path(value);
+    let path: Path;
+    try {
+      path = new Path(value);
+    } catch (e) {
+      // An error will be thrown if the user attempts to enter an invalid path,
+      // which will occur frequently if they type the path out by hand.
+      return;
+    }
+    model[propertyName] = path;
   }
 
   // @Override

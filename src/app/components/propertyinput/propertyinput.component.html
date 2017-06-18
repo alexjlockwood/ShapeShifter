@@ -112,10 +112,19 @@
       <div *ngIf="this.shouldShowInvalidPathAnimationBlockMsg(model)"
         class="alert alert-danger"
         fxLayout="row">
-        <span class="paths-incompatible-text">Paths are incompatible. Auto fix or customize the paths above.</span>
+        <span class="paths-incompatible-text"
+          [innerHTML]="
+            (this.isPathBlockFromValueEmpty(model.model) && !this.isPathBlockToValueEmpty(model.model))
+              ? '<i>fromValue</i> must not be empty'
+              : (!this.isPathBlockFromValueEmpty(model.model) && this.isPathBlockToValueEmpty(model.model))
+                ? '<i>toValue</i> must not be empty'
+                : (this.isPathBlockFromValueEmpty(model.model) && this.isPathBlockToValueEmpty(model.model))
+                  ? '<i>fromValue</i> and <i>toValue</i> must not be empty'
+                  : 'Paths are incompatible. Auto fix or customize the paths above.'">
+        </span>
         <button md-icon-button
           class="auto-fix-button"
-          *ngIf="this.shouldShowStartActionModeButton(model)"
+          *ngIf="!this.isPathBlockFromValueEmpty(model.model) && !this.isPathBlockToValueEmpty(model.model)"
           (click)="this.onAutoFixPathsClick(model)"
           mdTooltip="Auto fix"
           mdTooltipPosition="below"
