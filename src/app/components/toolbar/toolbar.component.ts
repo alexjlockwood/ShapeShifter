@@ -51,6 +51,7 @@ const ACTIVE = 'active';
   ],
 })
 export class ToolbarComponent implements OnInit {
+  readonly SHOULD_SHOW_GITBOOK_MENU_ITEM = false;
 
   toolbarData$: Observable<ToolbarData>;
   actionModeState$: Observable<ActionModeState>;

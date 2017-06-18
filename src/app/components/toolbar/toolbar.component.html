@@ -180,7 +180,8 @@
     <md-menu #overflowMenu="mdMenu">
       <a href="https://alexjlockwood.gitbooks.io/shapeshifter/content"
         target="_blank"
-        class="toolbar-overflow-link-item">
+        class="toolbar-overflow-link-item"
+        *ngIf="this.SHOULD_SHOW_GITBOOK_MENU_ITEM">
         <button md-menu-item (click)="onGettingStartedClick()">
           <md-icon>info</md-icon>
           <span>Getting started</span>
