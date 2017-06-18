@@ -6,8 +6,7 @@
   "pluginsConfig": {
     "addcssjs": {
       "css": [
-        "all.css",
-        "material.min.css"
+        "all.css"
       ],
       "js": [
         "all.js"
