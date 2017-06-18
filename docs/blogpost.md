@@ -69,7 +69,7 @@ Let's see how this all works with an example. Say we wanted to create a play, pa
 
 The triangular play and circular record icons are both filled `path`s with orange and red fill colors respectively. The pause icon, on the other hand, is a stroked `path` with a green stroke color and a stroke width of 2. **Figure 1** illustrates each `path`'s drawing commands executed inside a `12x12` grid:
 
-<!--<div id="drawing_path_commands_root">
+<div id="drawing_path_commands_root">
   <div class="svgDemoContainer">
     <ul class="flex-container">
       <li class="flex-item">
@@ -225,7 +225,7 @@ The triangular play and circular record icons are both filled `path`s with orang
     </ul>
   </div>
   <p class="mdl-typography--caption mdl-typography--text-center"><strong>Figure 2.</strong> The effects of different combinations of <code>&lt;group&gt;</code> transformations on a play, pause, and record icon. The order of the checkboxes matches the order in which the transformations are applied in the sample code above. Android source code for each icon is available on <a href="https://gist.github.com/alexjlockwood/2d163aa6138a7f8894d76991456a9f68">GitHub</a>.</p>
-</div>-->
+</div>
 
 As we previously mentioned, one of the benefits of `VectorDrawable`s is that they provide density independence, meaning that they can be scaled arbitrarily on any device without loss of quality. This ends up being both convenient and efficient: developers no longer need to go through the tedious process of exporting different sized PNGs for each screen density, which in turn also leads to a smaller APK size. In our case, however, **the reason we want to use `VectorDrawable`s is so we can animate their individual `path`s using the [`AnimatedVectorDrawable`][AnimatedVectorDrawable] class.** `AnimatedVectorDrawable`s are the glue that connect `VectorDrawable`s with `ObjectAnimator`s: the `VectorDrawable` assigns each animated `path` (or `group` of `path`s) a unique name, and the `AnimatedVectorDrawable` maps each of these names to their corresponding `ObjectAnimator`s. As we'll see below, the ability to animate the individual elements within a `VectorDrawable` can be quite powerful.
 
