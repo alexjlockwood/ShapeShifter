@@ -6,11 +6,11 @@
   "pluginsConfig": {
     "addcssjs": {
       "css": [
-        "all.css",
-        "material.min.css"
+        "docs/all.css",
+        "docs/material.min.css"
       ],
       "js": [
-        "all.min.js"
+        "docs/all.min.js"
       ]
     }
   }
