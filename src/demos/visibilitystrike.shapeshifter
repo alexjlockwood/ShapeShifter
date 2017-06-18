@@ -2,7 +2,7 @@
   "version": 1,
   "layers": {
     "vectorLayer": {
-      "id": "vector",
+      "id": "visibilitystrike",
       "name": "visibilitystrike",
       "type": "vector",
       "width": 24,
@@ -10,74 +10,46 @@
       "alpha": 1,
       "children": [
         {
-          "id": "page_1",
-          "name": "page_1",
-          "type": "group",
-          "rotation": 0,
-          "scaleX": 1,
-          "scaleY": 1,
-          "pivotX": 0,
-          "pivotY": 0,
-          "translateX": 0,
-          "translateY": 0,
-          "children": [
-            {
-              "id": "artboard",
-              "name": "artboard",
-              "type": "group",
-              "rotation": 0,
-              "scaleX": 1,
-              "scaleY": 1,
-              "pivotX": 0,
-              "pivotY": 0,
-              "translateX": 0,
-              "translateY": 0,
-              "children": [
-                {
-                  "id": "strike",
-                  "name": "strike",
-                  "type": "path",
-                  "pathData": "M 2,4.27 3.27,3 3.27,3 2,4.27 Z",
-                  "fillColor": "#ff000000",
-                  "fillAlpha": 1,
-                  "strokeColor": "",
-                  "strokeAlpha": 1,
-                  "strokeWidth": 1,
-                  "strokeLinecap": "butt",
-                  "strokeLinejoin": "miter",
-                  "strokeMiterLimit": 4,
-                  "trimPathStart": 0,
-                  "trimPathEnd": 1,
-                  "trimPathOffset": 0,
-                  "fillType": "nonZero"
-                },
-                {
-                  "id": "strike_negative",
-                  "name": "strike_negative",
-                  "type": "mask",
-                  "pathData": "M0 0 L24,0 L24,24 L0,24 L0,0 Z M4.54,1.73 L3.27,3 L3.27,3 L4.54,1.73 Z"
-                },
-                {
-                  "id": "shape",
-                  "name": "shape",
-                  "type": "path",
-                  "pathData": "M12,4.5 C7,4.5 2.73,7.61 1,12 C2.73,16.39 7,19.5 12,19.5 C17,19.5 21.27,16.39 23,12 C21.27,7.61 17,4.5 12,4.5 L12,4.5 Z M12,17 C9.24,17 7,14.76 7,12 C7,9.24 9.24,7 12,7 C14.76,7 17,9.24 17,12 C17,14.76 14.76,17 12,17 L12,17 Z M12,9 C10.34,9 9,10.34 9,12 C9,13.66 10.34,15 12,15 C13.66,15 15,13.66 15,12 C15,10.34 13.66,9 12,9 L12,9 Z",
-                  "fillColor": "#ff000000",
-                  "fillAlpha": 1,
-                  "strokeColor": "",
-                  "strokeAlpha": 1,
-                  "strokeWidth": 1,
-                  "strokeLinecap": "butt",
-                  "strokeLinejoin": "miter",
-                  "strokeMiterLimit": 4,
-                  "trimPathStart": 0,
-                  "trimPathEnd": 1,
-                  "trimPathOffset": 0,
-                  "fillType": "nonZero"
-                }
-              ]
-            }
-          ]
+          "id": "strike_thru_path",
+          "name": "strike_thru_path",
+          "type": "path",
+          "pathData": "M 2,4.27 3.27,3 3.27,3 2,4.27 Z",
+          "fillColor": "#ff000000",
+          "fillAlpha": 1,
+          "strokeColor": "",
+          "strokeAlpha": 1,
+          "strokeWidth": 1,
+          "strokeLinecap": "butt",
+          "strokeLinejoin": "miter",
+          "strokeMiterLimit": 4,
+          "trimPathStart": 0,
+          "trimPathEnd": 1,
+          "trimPathOffset": 0,
+          "fillType": "nonZero"
+        },
+        {
+          "id": "strike_thru_mask",
+          "name": "strike_thru_mask",
+          "type": "mask",
+          "pathData": "M0 0 L24,0 L24,24 L0,24 L0,0 Z M4.54,1.73 L3.27,3 L3.27,3 L4.54,1.73 Z"
+        },
+        {
+          "id": "eye_path",
+          "name": "eye_path",
+          "type": "path",
+          "pathData": "M12,4.5 C7,4.5 2.73,7.61 1,12 C2.73,16.39 7,19.5 12,19.5 C17,19.5 21.27,16.39 23,12 C21.27,7.61 17,4.5 12,4.5 L12,4.5 Z M12,17 C9.24,17 7,14.76 7,12 C7,9.24 9.24,7 12,7 C14.76,7 17,9.24 17,12 C17,14.76 14.76,17 12,17 L12,17 Z M12,9 C10.34,9 9,10.34 9,12 C9,13.66 10.34,15 12,15 C13.66,15 15,13.66 15,12 C15,10.34 13.66,9 12,9 L12,9 Z",
+          "fillColor": "#ff000000",
+          "fillAlpha": 1,
+          "strokeColor": "",
+          "strokeAlpha": 1,
+          "strokeWidth": 1,
+          "strokeLinecap": "butt",
+          "strokeLinejoin": "miter",
+          "strokeMiterLimit": 4,
+          "trimPathStart": 0,
+          "trimPathEnd": 1,
+          "trimPathOffset": 0,
+          "fillType": "nonZero"
         }
       ]
     },
@@ -91,7 +63,7 @@
       "blocks": [
         {
           "id": "206",
-          "layerId": "strike",
+          "layerId": "strike_thru_path",
           "propertyName": "pathData",
           "fromValue": "M 2,4.27 3.27,3 3.27,3 2,4.27 Z",
           "toValue": "M 19.73,22 21,20.73 3.27,3 2,4.27 Z",
@@ -102,7 +74,7 @@
         },
         {
           "id": "303",
-          "layerId": "strike_negative",
+          "layerId": "strike_thru_mask",
           "propertyName": "pathData",
           "fromValue": "M0 0 L24,0 L24,24 L0,24 L0,0 Z M4.54,1.73 L3.27,3 L3.27,3 L4.54,1.73 Z",
           "toValue": "M0 0 L24,0 L24,24 L0,24 L0,0 Z M4.54,1.73 L3.27,3 L21,20.73 L22.27,19.46 Z",
@@ -113,7 +85,7 @@
         },
         {
           "id": "304",
-          "layerId": "vector",
+          "layerId": "visibilitystrike",
           "propertyName": "alpha",
           "fromValue": 1,
           "toValue": 0.333,
