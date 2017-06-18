@@ -2,20 +2,15 @@
 
 [Shape Shifter](https://alexjlockwood.github.io/ShapeShifter/) is a web-app that simplifies the creation of icon animations for Android, iOS, and the web.
 
-This tool currently exports to standalone SVGs, SVG spritesheets,
-and CSS keyframe animations for the web, as well as to
-[`AnimatedVectorDrawable`](https://developer.android.com/reference/android/graphics/drawable/AnimatedVectorDrawable.html)
-format for Android. I am totally open to adding support for other export formats as well, so
-if you have a format that you'd like to see added in the future,
-file a [feature request][report-feature-request]!
+![Screen capture of the Shape Shifter tool](/art/screencap.gif)
 
-![Screen capture of tool](/art/screencap.gif)
+## Goals
 
-## Examples
+asdf
 
-Here are some example icon animations created by Shape Shifter:
+## Non-goals
 
-<img src="art/expandcollapse.gif" alt="Expand to collapse animation" width="216px"/><img src="art/moreback.gif" alt="Overflow to back arrow animation" width="216px"/><img src="art/playpausestop.gif" alt="Play-pause-stop animation" width="216px"/><img src="art/animals.gif" alt="Animals animation" width="216px" vspace="34px"/><img src="art/plusminus.gif" alt="Plus-to-minus animation" width="216px"/><img src="art/cast.gif" alt="Cast animation" width="216px"/><img src="art/drawerarrow.gif" alt="Drawer-to-arrow animation" width="216px"/><img src="art/digits.gif" alt="Digits animation" width="216px"/>
+asdf
 
 ## Problem
 
