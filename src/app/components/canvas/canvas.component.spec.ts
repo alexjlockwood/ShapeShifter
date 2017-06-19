@@ -28,7 +28,7 @@ import {
 } from 'app/services';
 import { Store } from 'app/store';
 import { Observable } from 'rxjs/Observable';
-import { MockStore } from 'test/store/MockStore.spec';
+import { MockStore } from 'test/MockStore';
 
 describe('CanvasComponent', () => {
   let component: CanvasComponent;

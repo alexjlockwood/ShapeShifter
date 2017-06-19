@@ -55,7 +55,7 @@ const devMetaReducers = [
   metaStoreFreeze.metaReducer,
 ];
 
-const productionReducer: ActionReducer<State> = compose(...prodMetaReducers)(sliceReducers);
+export const productionReducer: ActionReducer<State> = compose(...prodMetaReducers)(sliceReducers);
 const developmentReducer: ActionReducer<State> = compose(...devMetaReducers)(productionReducer);
 
 export function reducer(state: State, action: Action) {

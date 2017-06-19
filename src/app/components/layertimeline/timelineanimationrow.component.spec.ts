@@ -9,7 +9,7 @@ import { FlexLayoutModule } from '@angular/flex-layout';
 import { Layer } from 'app/scripts/model/layers';
 import { ActionModeService } from 'app/services';
 import { Store } from 'app/store';
-import { MockStore } from 'test/store/MockStore.spec';
+import { MockStore } from 'test/MockStore';
 
 describe('TimelineAnimationRowComponent', () => {
   let component: TimelineAnimationRowComponent;

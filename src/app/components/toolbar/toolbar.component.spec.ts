@@ -27,7 +27,7 @@ import { PlaybackService } from 'app/services/playback/playback.service';
 import { ShortcutService } from 'app/services/shortcut/shortcut.service';
 import { SnackBarService } from 'app/services/snackbar/snackbar.service';
 import { Store } from 'app/store';
-import { MockStore } from 'test/store/MockStore.spec';
+import { MockStore } from 'test/MockStore';
 
 describe('ToolbarComponent', () => {
   let component: ToolbarComponent;

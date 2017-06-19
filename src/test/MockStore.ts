@@ -3,7 +3,7 @@ import {
   ActionReducer,
   Store,
 } from '@ngrx/store';
-import { State } from 'app/store';
+import { State, productionReducer } from 'app/store';
 import { buildInitialState as buildInitialActionModeState } from 'app/store/actionmode/reducer';
 import { buildInitialState as buildInitialLayerState } from 'app/store/layers/reducer';
 import { buildInitialState as buildInitialPlaybackState } from 'app/store/playback/reducer';
@@ -14,28 +14,11 @@ import { Observable } from 'rxjs/Observable';
 import { Observer } from 'rxjs/Observer';
 import { map } from 'rxjs/operator/map';
 
+const INIT_ACTION: Action = { type: '__test123__' };
+
 export class MockStore extends Store<State> {
 
-  // TODO: figure out the correct way to initialize this...
-  private fakeState: State = {
-    timestamp: undefined,
-    past: undefined,
-    present: {
-      actionmode: buildInitialActionModeState(),
-      playback: buildInitialPlaybackState(),
-      layers: buildInitialLayerState(),
-      timeline: buildInitialTimelineState(),
-      reset: buildInitialResetState(),
-    },
-    future: undefined,
-    _latestUnfiltered: undefined,
-    group: undefined,
-  };
-  private readonly fakeStateSubject: BehaviorSubject<State> = new BehaviorSubject(this.fakeState);
-
-  readonly select = <T, R>(mapFn: any, ...paths: string[]): Observable<R> => {
-    return map.call(this.fakeStateSubject, mapFn);
-  };
+  private readonly subject: BehaviorSubject<State>;
 
   constructor() {
     super(
@@ -43,13 +26,20 @@ export class MockStore extends Store<State> {
       undefined as Observer<ActionReducer<any>>,
       undefined as Observable<any>,
     );
+    this.subject = new BehaviorSubject(productionReducer(undefined, INIT_ACTION));
   }
 
+  readonly select = <T, R>(mapFn: any, ...paths: string[]): Observable<R> => {
+    return map.call(this.subject, mapFn);
+  }
+
+  dispatch(action: Action) { }
+
   setState(state: State) {
-    this.fakeStateSubject.next(state);
+    this.subject.next(state);
   }
 
   getState() {
-    return this.fakeStateSubject.getValue();
+    return this.subject.getValue();
   }
 }

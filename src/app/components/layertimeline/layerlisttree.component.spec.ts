@@ -17,7 +17,7 @@ import {
 import { DomSanitizer } from '@angular/platform-browser';
 import { ActionModeService } from 'app/services/actionmode/actionmode.service';
 import { Store } from 'app/store';
-import { MockStore } from 'test/store/MockStore.spec';
+import { MockStore } from 'test/MockStore';
 
 describe('LayerListTreeComponent', () => {
   let component: LayerListTreeComponent;

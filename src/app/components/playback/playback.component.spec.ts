@@ -14,7 +14,7 @@ import {
 import { AnimatorService } from 'app/services/animator/animator.service';
 import { PlaybackService } from 'app/services/playback/playback.service';
 import { Store } from 'app/store';
-import { MockStore } from 'test/store/MockStore.spec';
+import { MockStore } from 'test/MockStore';
 
 describe('PlaybackComponent', () => {
   let component: PlaybackComponent;
