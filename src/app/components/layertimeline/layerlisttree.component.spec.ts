@@ -3,6 +3,7 @@ import {
   ComponentFixture,
   TestBed,
   async,
+  fakeAsync,
   inject,
 } from '@angular/core/testing';
 import { FlexLayoutModule } from '@angular/flex-layout';
@@ -15,13 +16,17 @@ import {
   MdTooltipModule,
 } from '@angular/material';
 import { DomSanitizer } from '@angular/platform-browser';
+import { By } from '@angular/platform-browser';
 import { ActionModeService } from 'app/services/actionmode/actionmode.service';
 import { Store } from 'app/store';
+import { State as LayerState } from 'app/store/layers/reducer';
+import * as $ from 'jquery';
 import { MockStore } from 'test/MockStore';
 
 describe('LayerListTreeComponent', () => {
   let component: LayerListTreeComponent;
   let fixture: ComponentFixture<LayerListTreeComponent>;
+  let store: MockStore;
 
   beforeEach(async(() => {
     TestBed
@@ -47,15 +52,26 @@ describe('LayerListTreeComponent', () => {
     ]);
   }));
 
-  beforeEach(inject([Store], (store: MockStore) => {
+  beforeEach(inject([Store], (s: MockStore) => {
     fixture = TestBed.createComponent(LayerListTreeComponent);
     component = fixture.componentInstance;
-    component.layer = store.getState().present.layers.vectorLayer;
-    fixture.detectChanges();
+    store = s;
   }));
 
-  it('should be created', () => {
-    expect(component).toBeTruthy();
+  function callNgOnInit(layers?: LayerState) {
+    if (layers) {
+      store.setLayerState(layers);
+    }
+    component.layer = store.getState().present.layers.vectorLayer;
+    component.ngOnInit();
+    fixture.detectChanges();
+  }
+
+  it('Initialize w/ default state', () => {
+    callNgOnInit();
+    const vectorLayerElem =
+      fixture.debugElement.query(By.css('.slt-layer-id-text')).nativeElement;
+    expect($(vectorLayerElem).text().trim()).toBe('vector');
   });
 });
 

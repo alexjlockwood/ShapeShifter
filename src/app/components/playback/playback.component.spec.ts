@@ -17,6 +17,7 @@ import { Action } from '@ngrx/store';
 import { AnimatorService } from 'app/services/animator/animator.service';
 import { PlaybackService } from 'app/services/playback/playback.service';
 import { Store } from 'app/store';
+import { State as PlaybackState } from 'app/store/playback/reducer';
 import { MockStore } from 'test/MockStore';
 
 describe('PlaybackComponent', () => {
@@ -49,26 +50,32 @@ describe('PlaybackComponent', () => {
     store = s;
   }));
 
-  it('No buttons activated', () => {
-    store.setPlaybackState({ isSlowMotion: false, isPlaying: false, isRepeating: false });
+  function callNgOnInit(playback?: PlaybackState) {
+    if (playback) {
+      store.setPlaybackState(playback);
+    }
     component.ngOnInit();
     fixture.detectChanges();
-    const buttons = fixture.debugElement.queryAll(By.css('md-icon.activated')).map(d => d.nativeElement);
+  }
+
+  it('No buttons activated', () => {
+    callNgOnInit();
+    const buttons =
+      fixture.debugElement.queryAll(By.css('md-icon.activated'))
+        .map(d => d.nativeElement);
     expect(buttons.length).toBe(0);
   });
 
   it('All buttons activated', () => {
-    store.setPlaybackState({ isSlowMotion: true, isPlaying: false, isRepeating: true });
-    component.ngOnInit();
-    fixture.detectChanges();
-    const buttons = fixture.debugElement.queryAll(By.css('md-icon.activated')).map(d => d.nativeElement);
+    callNgOnInit({ isSlowMotion: true, isPlaying: false, isRepeating: true });
+    const buttons =
+      fixture.debugElement.queryAll(By.css('md-icon.activated'))
+        .map(d => d.nativeElement);
     expect(buttons.length).toBe(2);
   });
 
   it('Button click trigger store dispatch', fakeAsync(() => {
-    store.setPlaybackState({ isSlowMotion: true, isPlaying: false, isRepeating: true });
-    component.ngOnInit();
-    fixture.detectChanges();
+    callNgOnInit({ isSlowMotion: true, isPlaying: false, isRepeating: true });
 
     const slowMotionClickEvent = { stopPropagation: () => { } };
     const repeatingClickEvent = { stopPropagation: () => { } };
@@ -79,11 +86,12 @@ describe('PlaybackComponent', () => {
 
     const slowMotionButton = fixture.debugElement.query(By.css('button.slow-motion-button'));
     slowMotionButton.triggerEventHandler('click', slowMotionClickEvent);
+    expect(store.dispatch).toHaveBeenCalled();
+    expect(slowMotionClickEvent.stopPropagation).toHaveBeenCalled();
+
     const repeatingButton = fixture.debugElement.query(By.css('button.repeating-button'));
     repeatingButton.triggerEventHandler('click', repeatingClickEvent);
-
-    expect(store.dispatch).toHaveBeenCalledTimes(2);
-    expect(slowMotionClickEvent.stopPropagation).toHaveBeenCalled();
+    expect(store.dispatch).toHaveBeenCalled();
     expect(repeatingClickEvent.stopPropagation).toHaveBeenCalled();
   }));
 });

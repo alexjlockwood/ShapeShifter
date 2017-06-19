@@ -4,14 +4,8 @@ import {
   Store,
 } from '@ngrx/store';
 import { State, productionReducer } from 'app/store';
-import { buildInitialState as buildInitialActionModeState } from 'app/store/actionmode/reducer';
-import { buildInitialState as buildInitialLayerState } from 'app/store/layers/reducer';
-import {
-  State as PlaybackState,
-  buildInitialState as buildInitialPlaybackState,
-} from 'app/store/playback/reducer';
-import { buildInitialState as buildInitialResetState } from 'app/store/reset/reducer';
-import { buildInitialState as buildInitialTimelineState } from 'app/store/timeline/reducer';
+import { State as LayerState } from 'app/store/layers/reducer';
+import { State as PlaybackState } from 'app/store/playback/reducer';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Observable } from 'rxjs/Observable';
 import { Observer } from 'rxjs/Observer';
@@ -38,13 +32,19 @@ export class MockStore extends Store<State> {
 
   dispatch(action: Action) { }
 
+  getState() {
+    return this.subject.getValue();
+  }
+
+  setLayerState(layers: LayerState) {
+    const state = this.getState();
+    const newState: State = { ...state, present: { ...state.present, layers } };
+    this.subject.next(newState);
+  }
+
   setPlaybackState(playback: PlaybackState) {
     const state = this.getState();
     const newState: State = { ...state, present: { ...state.present, playback } };
     this.subject.next(newState);
-  }
-
-  getState() {
-    return this.subject.getValue();
   }
 }
