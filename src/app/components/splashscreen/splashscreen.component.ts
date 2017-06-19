@@ -1,9 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  OnInit,
 } from '@angular/core';
-import { Observable } from 'rxjs/Observable';
 
 @Component({
   selector: 'app-splashscreen',
@@ -11,8 +9,4 @@ import { Observable } from 'rxjs/Observable';
   styleUrls: ['./splashscreen.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SplashScreenComponent implements OnInit {
-
-  ngOnInit() {
-  }
-}
+export class SplashScreenComponent { }
