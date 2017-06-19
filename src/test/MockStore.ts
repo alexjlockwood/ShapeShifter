@@ -6,7 +6,10 @@ import {
 import { State, productionReducer } from 'app/store';
 import { buildInitialState as buildInitialActionModeState } from 'app/store/actionmode/reducer';
 import { buildInitialState as buildInitialLayerState } from 'app/store/layers/reducer';
-import { buildInitialState as buildInitialPlaybackState } from 'app/store/playback/reducer';
+import {
+  State as PlaybackState,
+  buildInitialState as buildInitialPlaybackState,
+} from 'app/store/playback/reducer';
 import { buildInitialState as buildInitialResetState } from 'app/store/reset/reducer';
 import { buildInitialState as buildInitialTimelineState } from 'app/store/timeline/reducer';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
@@ -35,8 +38,10 @@ export class MockStore extends Store<State> {
 
   dispatch(action: Action) { }
 
-  setState(state: State) {
-    this.subject.next(state);
+  setPlaybackState(playback: PlaybackState) {
+    const state = this.getState();
+    const { present } = state;
+    this.subject.next({ ...state, present: { ...present, playback } });
   }
 
   getState() {
