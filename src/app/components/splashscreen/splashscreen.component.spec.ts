@@ -22,8 +22,8 @@ describe('SplashScreenComponent', () => {
         declarations: [SplashScreenComponent],
         imports: [
           HttpModule,
-          MdIconModule,]
-        ,
+          MdIconModule,
+        ],
       })
       .compileComponents();
     loadSvgIcons([
