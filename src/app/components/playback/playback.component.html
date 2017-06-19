@@ -2,7 +2,8 @@
   fxLayout="row"
   fxLayoutAlight="center center">
   <span fxFlex></span>
-  <button md-icon-button
+  <button class="slow-motion-button"
+    md-icon-button
     mdTooltip="Slow motion (S)"
     mdTooltipPosition="below"
     mdTooltipShowDelay="500"
@@ -36,7 +37,8 @@
     (click)="this.fastForwardClick($event)">
     <md-icon>skip_next</md-icon>
   </button>
-  <button md-icon-button
+  <button class="repeating-button"
+    md-icon-button
     mdTooltip="Repeat (R)"
     mdTooltipPosition="below"
     mdTooltipShowDelay="500"

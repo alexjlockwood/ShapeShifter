@@ -69,18 +69,6 @@ export class AnimatorService {
     return this.animatorSubject.asObservable();
   }
 
-  toggleIsSlowMotion() {
-    this.playbackService.toggleIsSlowMotion();
-  }
-
-  toggleIsPlaying() {
-    this.playbackService.toggleIsPlaying();
-  }
-
-  toggleIsRepeating() {
-    this.playbackService.toggleIsRepeating();
-  }
-
   // TODO: make it possible to pause/resume animations (right now playing resets the time back to 0)
   private play() {
     this.animator.play(this.activeAnimation.duration, fraction => {

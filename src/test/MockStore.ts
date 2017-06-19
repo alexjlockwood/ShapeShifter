@@ -40,8 +40,8 @@ export class MockStore extends Store<State> {
 
   setPlaybackState(playback: PlaybackState) {
     const state = this.getState();
-    const { present } = state;
-    this.subject.next({ ...state, present: { ...present, playback } });
+    const newState: State = { ...state, present: { ...state.present, playback } };
+    this.subject.next(newState);
   }
 
   getState() {

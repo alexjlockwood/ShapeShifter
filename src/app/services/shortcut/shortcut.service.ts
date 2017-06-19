@@ -1,6 +1,9 @@
 import { Injectable } from '@angular/core';
-import { ActionModeService } from 'app/services/actionmode/actionmode.service';
-import { AnimatorService } from 'app/services/animator/animator.service';
+import {
+  ActionModeService,
+  AnimatorService,
+  PlaybackService,
+} from 'app/services';
 import {
   State,
   Store,
@@ -38,6 +41,7 @@ export class ShortcutService {
     private readonly store: Store<State>,
     private readonly animatorService: AnimatorService,
     private readonly actionModeService: ActionModeService,
+    private readonly playbackService: PlaybackService,
   ) { }
 
   asObservable() {
@@ -92,7 +96,7 @@ export class ShortcutService {
       }
       if (event.keyCode === 32) {
         // Spacebar.
-        this.animatorService.toggleIsPlaying();
+        this.playbackService.toggleIsPlaying();
         return false;
       }
       if (event.keyCode === 37) {
@@ -109,7 +113,7 @@ export class ShortcutService {
         if (this.actionModeService.isShowingSubPathActionMode()) {
           this.actionModeService.reverseSelectedSubPaths();
         } else {
-          this.animatorService.toggleIsRepeating();
+          this.playbackService.toggleIsRepeating();
         }
         return false;
       }
@@ -118,7 +122,7 @@ export class ShortcutService {
           || this.actionModeService.isShowingSegmentActionMode()) {
           this.actionModeService.toggleSplitSubPathsMode();
         } else {
-          this.animatorService.toggleIsSlowMotion();
+          this.playbackService.toggleIsSlowMotion();
         }
         return false;
       }

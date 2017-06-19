@@ -3,7 +3,10 @@ import {
   Component,
   OnInit,
 } from '@angular/core';
-import { AnimatorService } from 'app/services';
+import {
+  AnimatorService,
+  PlaybackService,
+} from 'app/services';
 import {
   State,
   Store,
@@ -23,6 +26,7 @@ export class PlaybackComponent implements OnInit {
 
   constructor(
     private readonly store: Store<State>,
+    private readonly playbackService: PlaybackService,
     private readonly animatorService: AnimatorService,
   ) { }
 
@@ -32,17 +36,17 @@ export class PlaybackComponent implements OnInit {
 
   isSlowMotionClick(event: MouseEvent) {
     event.stopPropagation();
-    this.animatorService.toggleIsSlowMotion();
-  }
-
-  playPauseButtonClick(event: MouseEvent) {
-    event.stopPropagation();
-    this.animatorService.toggleIsPlaying();
+    this.playbackService.toggleIsSlowMotion();
   }
 
   rewindClick(event: MouseEvent) {
     event.stopPropagation();
     this.animatorService.rewind();
+  }
+
+  playPauseButtonClick(event: MouseEvent) {
+    event.stopPropagation();
+    this.playbackService.toggleIsPlaying();
   }
 
   fastForwardClick(event: MouseEvent) {
@@ -52,7 +56,7 @@ export class PlaybackComponent implements OnInit {
 
   isRepeatingClick(event: MouseEvent) {
     event.stopPropagation();
-    this.animatorService.toggleIsRepeating();
+    this.playbackService.toggleIsRepeating();
   }
 }
 
