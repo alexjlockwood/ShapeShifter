@@ -25,7 +25,6 @@ import {
   Store,
 } from 'app/store';
 import { getToolbarState } from 'app/store/actionmode/selectors';
-import { environment } from 'environments/environment';
 import * as _ from 'lodash';
 import { Observable } from 'rxjs/Observable';
 
@@ -51,7 +50,6 @@ const ACTIVE = 'active';
   ],
 })
 export class ToolbarComponent implements OnInit {
-  readonly SHOULD_SHOW_GITBOOK_MENU_ITEM = false;
 
   toolbarData$: Observable<ToolbarData>;
   actionModeState$: Observable<ActionModeState>;
