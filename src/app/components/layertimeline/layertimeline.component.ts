@@ -901,6 +901,7 @@ export class LayerTimelineComponent
           targetLayerInfo = undefined;
         }
 
+        // TODO: make it possible to drag multiple blocks at a time
         const dragIndicatorInfo: DragIndicatorInfo = { isVisible: !!targetLayerInfo };
         if (targetLayerInfo) {
           dragIndicatorInfo.left = targetLayerInfo.localRect.left;
