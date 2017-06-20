@@ -57,6 +57,7 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
         const selectedLayerId = state.selectedLayerIds.values().next().value;
         const selectedLayer = state.vectorLayer.findLayerById(selectedLayerId);
         if (!(selectedLayer instanceof VectorLayer)) {
+          // Add the new layer as a sibling to the currently selected layer.
           const vl = state.vectorLayer;
           const parent = LayerUtil.findParent(vl, selectedLayerId).clone();
           const children = parent.children.slice();
