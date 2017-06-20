@@ -52,8 +52,18 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
 
     // Add a layer to the tree.
     case actions.ADD_LAYER: {
-      // TODO: add the layer below the currently selected layer, if one exists
       const { layer } = action.payload;
+      if (state.selectedLayerIds.size === 1) {
+        const selectedLayerId = state.selectedLayerIds.values().next().value;
+        const selectedLayer = state.vectorLayer.findLayerById(selectedLayerId);
+        if (!(selectedLayer instanceof VectorLayer)) {
+          const vl = state.vectorLayer;
+          const parent = LayerUtil.findParent(vl, selectedLayerId).clone();
+          const children = parent.children.slice();
+          parent.children = children.concat([layer]);
+          return { ...state, vectorLayer: LayerUtil.replaceLayerInTree(vl, parent) };
+        }
+      }
       const vectorLayer = state.vectorLayer.clone();
       vectorLayer.children = vectorLayer.children.concat([layer]);
       return { ...state, vectorLayer };
