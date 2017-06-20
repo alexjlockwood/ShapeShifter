@@ -10,6 +10,7 @@ import {
 import {
   Animation,
   AnimationBlock,
+  PathAnimationBlock,
 } from 'app/scripts/model/timeline';
 import * as _ from 'lodash';
 
@@ -84,8 +85,15 @@ export function toAnimatedVectorDrawableXmlString(vl: VectorLayer, animation: An
       blockNode.setAttributeNS(ANDROID_NS, 'android:propertyName', block.propertyName);
       conditionalAttr_(blockNode, 'android:startOffset', block.startTime, 0);
       conditionalAttr_(blockNode, 'android:duration', block.endTime - block.startTime);
-      conditionalAttr_(blockNode, 'android:valueFrom', block.fromValue);
-      conditionalAttr_(blockNode, 'android:valueTo', block.toValue);
+      if (block instanceof PathAnimationBlock) {
+        const fromPath = block.fromValue;
+        const toPath = block.toValue;
+        conditionalAttr_(blockNode, 'android:valueFrom', fromPath ? fromPath.getPathString() : '');
+        conditionalAttr_(blockNode, 'android:valueTo', toPath ? toPath.getPathString() : '');
+      } else {
+        conditionalAttr_(blockNode, 'android:valueFrom', block.fromValue);
+        conditionalAttr_(blockNode, 'android:valueTo', block.toValue);
+      }
       conditionalAttr_(
         blockNode,
         'android:valueType',
