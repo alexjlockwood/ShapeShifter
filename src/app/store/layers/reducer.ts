@@ -124,11 +124,7 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
   return state;
 }
 
-function selectLayerId(
-  state: State,
-  layerId: string,
-  clearExisting: boolean,
-) {
+function selectLayerId(state: State, layerId: string, clearExisting: boolean) {
   const selectedLayerIds = new Set(state.selectedLayerIds);
   if (clearExisting) {
     selectedLayerIds.forEach(id => {

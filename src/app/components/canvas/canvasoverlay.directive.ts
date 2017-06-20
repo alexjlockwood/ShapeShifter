@@ -43,9 +43,11 @@ import {
   Path,
   SubPath,
 } from 'app/scripts/model/paths';
-import { ActionModeService } from 'app/services/actionmode/actionmode.service';
-import { AnimatorService } from 'app/services/animator/animator.service';
-import { ShortcutService } from 'app/services/shortcut/shortcut.service';
+import {
+  ActionModeService,
+  AnimatorService,
+  ShortcutService,
+} from 'app/services';
 import {
   State,
   Store,

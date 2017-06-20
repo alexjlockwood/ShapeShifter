@@ -1,5 +1,9 @@
 import 'rxjs/add/operator/distinctUntilChanged';
 import 'rxjs/add/operator/combineLatest';
+import { } from 'app/services/demos/demo.service';
+import { } from 'app/services/dialogs/dialog.service';
+import { } from 'app/services/import/fileimport.service';
+import { } from 'app/services/shortcut/shortcut.service';
 
 import {
   AfterViewInit,
@@ -15,11 +19,13 @@ import {
   ActionMode,
   ActionSource,
 } from 'app/scripts/model/actionmode';
-import { ActionModeService } from 'app/services/actionmode/actionmode.service';
-import { DemoService } from 'app/services/demos/demo.service';
-import { DialogService } from 'app/services/dialogs/dialog.service';
-import { FileImportService } from 'app/services/import/fileimport.service';
-import { ShortcutService } from 'app/services/shortcut/shortcut.service';
+import {
+  ActionModeService,
+  DemoService,
+  DialogService,
+  FileImportService,
+  ShortcutService,
+} from 'app/services';
 import {
   Duration,
   SnackBarService,

@@ -17,7 +17,7 @@ import {
 } from '@angular/material';
 import { DomSanitizer } from '@angular/platform-browser';
 import { By } from '@angular/platform-browser';
-import { ActionModeService } from 'app/services/actionmode/actionmode.service';
+import { ActionModeService } from 'app/services';
 import { Store } from 'app/store';
 import { State as LayerState } from 'app/store/layers/reducer';
 import * as $ from 'jquery';
