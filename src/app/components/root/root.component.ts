@@ -44,7 +44,7 @@ import { Observable } from 'rxjs/Observable';
 
 const SHOULD_AUTO_LOAD_DEMO = false;
 const IS_DEV_BUILD = !environment.production;
-const ELEMENT_RESIZE_DETECTOR = erd();
+const ELEMENT_RESIZE_DETECTOR = erd({ strategy: 'scroll' });
 const STORAGE_KEY_FIRST_TIME_USER = 'storage_key_first_time_user';
 
 declare const ga: Function;
