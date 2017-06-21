@@ -56,7 +56,8 @@ export function toAnimatedVectorDrawableXmlString(vl: VectorLayer, animation: An
 
   animBlocksByLayer.forEach((blocksForLayer, layerId) => {
     const targetNode = xmlDoc.createElement('target');
-    targetNode.setAttributeNS(ANDROID_NS, 'android:name', layerId);
+    const layer = vl.findLayerById(layerId);
+    targetNode.setAttributeNS(ANDROID_NS, 'android:name', layer.name);
     rootNode.appendChild(targetNode);
 
     const animationNode = xmlDoc.createElementNS(AAPT_NS, 'aapt:attr');
@@ -74,7 +75,6 @@ export function toAnimatedVectorDrawableXmlString(vl: VectorLayer, animation: An
       animationNode.appendChild(blockContainerNode);
     }
 
-    const layer = vl.findLayerById(layerId);
     const animatableProperties = layer.animatableProperties;
 
     blocksForLayer.forEach(block => {
