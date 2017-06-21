@@ -109,16 +109,6 @@ export function loadVectorLayerFromSvgString(
     }
 
     if (path) {
-      let pathData = new Path(path);
-      if (context.transforms && context.transforms.length) {
-        const transforms = context.transforms.map(t => t.matrix as Matrix);
-        pathData = new Path(
-          _.chain(pathData.getSubPaths())
-            .flatMap(subPath => subPath.getCommands() as Command[])
-            .map(command => command.mutate().transform(transforms).build())
-            .value());
-      }
-
       // Set the default values as specified by the SVG spec. Note that some of these default
       // values are different than the default values used by VectorDrawables.
       const fillColor =
@@ -126,7 +116,7 @@ export function loadVectorLayerFromSvgString(
       const strokeColor =
         ('strokeColor' in context) ? ColorUtil.svgToAndroidColor(context.strokeColor) : undefined;
       const fillAlpha = ('fillAlpha' in context) ? Number(context.fillAlpha) : 1;
-      const strokeWidth = ('strokeWidth' in context) ? Number(context.strokeWidth) : 1;
+      let strokeWidth = ('strokeWidth' in context) ? Number(context.strokeWidth) : 1;
       const strokeAlpha = ('strokeAlpha' in context) ? Number(context.strokeAlpha) : 1;
       const strokeLinecap: StrokeLineCap = ('strokeLinecap' in context) ? context.strokeLinecap : 'butt';
       const strokeLinejoin: StrokeLineJoin = ('strokeLinejoin' in context) ? context.strokeLinecap : 'miter';
@@ -135,6 +125,22 @@ export function loadVectorLayerFromSvgString(
         return fillRule === 'evenodd' ? 'evenOdd' : 'nonZero';
       };
       const fillType: FillType = ('fillType' in context) ? fillRuleToFillTypeFn(context.fillType) : 'nonZero';
+
+      let pathData = new Path(path);
+      if (context.transforms && context.transforms.length) {
+        const transforms = context.transforms.map(t => {
+          const { a, b, c, d, e, f } = t.matrix;
+          return new Matrix(a, b, c, d, e, f);
+        });
+        pathData = new Path(
+          _.chain(pathData.getSubPaths())
+            .flatMap(subPath => subPath.getCommands() as Command[])
+            .map(command => command.mutate().transform(transforms).build())
+            .value());
+        const flattenedTransform = Matrix.flatten(...transforms);
+        strokeWidth *= flattenedTransform.getScale();
+      }
+
       return new PathLayer({
         id: _.uniqueId(),
         name: makeFinalNodeIdFn(node, 'path'),
