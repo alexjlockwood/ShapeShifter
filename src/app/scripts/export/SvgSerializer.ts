@@ -101,14 +101,20 @@ function vectorLayerToSvgNode(
         conditionalAttr(node, 'id', layer.name);
       }
       const transformValues: string[] = [];
-      if (layer.scaleX !== 1 || layer.scaleY !== 1) {
-        transformValues.push(`scale(${layer.scaleX} ${layer.scaleY})`);
+      if (layer.translateX || layer.translateY) {
+        transformValues.push(`translate(${layer.translateX} ${layer.translateY})`);
       }
       if (layer.rotation) {
         transformValues.push(`rotate(${layer.rotation} ${layer.pivotX} ${layer.pivotY})`);
       }
-      if (layer.translateX || layer.translateY) {
-        transformValues.push(`translate(${layer.translateX} ${layer.translateY})`);
+      if (layer.scaleX !== 1 || layer.scaleY !== 1) {
+        if (layer.pivotX || layer.pivotY) {
+          transformValues.push(`translate(${layer.pivotX} ${layer.pivotY})`);
+        }
+        transformValues.push(`scale(${layer.scaleX} ${layer.scaleY})`);
+        if (layer.pivotX || layer.pivotY) {
+          transformValues.push(`translate(${-layer.pivotX} ${-layer.pivotY})`);
+        }
       }
       if (transformValues.length) {
         node.setAttributeNS(undefined, 'transform', transformValues.join(' '));
