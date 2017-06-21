@@ -1,7 +1,11 @@
 import 'rxjs/add/operator/first';
 
 import { Injectable } from '@angular/core';
-import { AvdSerializer, SpriteSerializer } from 'app/scripts/export';
+import {
+  AvdSerializer,
+  SpriteSerializer,
+  SvgSerializer,
+} from 'app/scripts/export';
 import { LayerUtil, VectorLayer } from 'app/scripts/model/layers';
 import { Animation } from 'app/scripts/model/timeline';
 import {
@@ -58,6 +62,12 @@ export class FileExportService {
     // Export standalone SVG frames.
     const vl = this.getVectorLayerWithoutHiddenLayers();
     const anim = this.getAnimationWithoutHiddenBlocks();
+    if (!anim.blocks.length) {
+      // Just export an SVG if there are no animation blocks defined.
+      const svg = SvgSerializer.toSvgString(vl);
+      downloadFile(svg, `${vl.name}.svg`);
+      return;
+    }
     const zip = new JSZip();
     EXPORTED_FPS.forEach(fps => {
       const numSteps = Math.ceil(anim.duration / 1000 * fps);
