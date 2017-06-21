@@ -8,8 +8,8 @@ export class Dragger {
   private readonly downX: number;
   private readonly downY: number;
   private readonly shouldSkipSlopCheck: boolean;
-  private readonly onBeginDragFn: (event: JQueryMouseEventObject) => void;
-  private readonly onDragFn: (event: JQueryMouseEventObject, point: Point) => void;
+  private readonly onBeginDragFn: (event: JQuery.Event) => void;
+  private readonly onDragFn: (event: JQuery.Event, point: Point) => void;
   private readonly onDropFn: () => void;
   private draggingCursor_: string;
   private isDragging: boolean;
@@ -30,7 +30,7 @@ export class Dragger {
 
     this.draggingCursor = opts.draggingCursor || 'grabbing';
 
-    const mouseMoveHandlerFn = (event: JQueryMouseEventObject) => {
+    const mouseMoveHandlerFn = (event: JQuery.Event) => {
       if (!this.isDragging && this.shouldBeginDragging(event)) {
         this.isDragging = true;
         this.draggingScrim = this.buildDraggingScrim().appendTo(document.body);
@@ -46,7 +46,7 @@ export class Dragger {
       }
     };
 
-    const mouseUpHandlerFn = (event: JQueryMouseEventObject) => {
+    const mouseUpHandlerFn = (event: JQuery.Event) => {
       $(window)
         .off('mousemove', mouseMoveHandlerFn)
         .off('mouseup', mouseUpHandlerFn);
@@ -75,7 +75,7 @@ export class Dragger {
       .on('mouseup', mouseUpHandlerFn);
   }
 
-  private shouldBeginDragging(mouseMoveEvent: JQueryMouseEventObject) {
+  private shouldBeginDragging(mouseMoveEvent: JQuery.Event) {
     if (this.shouldSkipSlopCheck) {
       return true;
     }
@@ -120,8 +120,8 @@ interface ConstructorArgs {
   downX?: number;
   downY?: number;
   shouldSkipSlopCheck?: boolean;
-  onBeginDragFn?: (event: JQueryMouseEventObject) => void;
-  onDragFn?: (event: JQueryMouseEventObject, point: Point) => void;
+  onBeginDragFn?: (event: JQuery.Event) => void;
+  onDragFn?: (event: JQuery.Event, point: Point) => void;
   onDropFn?: () => void;
   draggingCursor?: string;
 }

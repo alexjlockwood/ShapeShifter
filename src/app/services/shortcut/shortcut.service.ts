@@ -21,7 +21,7 @@ export enum Shortcut {
 
 interface ModifierKeyEvent {
   readonly metaKey: boolean;
-  readonly ctrlKey: boolean;
+  readonly ctrlKey?: boolean;
 }
 
 @Injectable()
@@ -34,7 +34,7 @@ export class ShortcutService {
   }
 
   static getOsDependentModifierKey(event: ModifierKeyEvent) {
-    return !!(ShortcutService.isMac() ? event.metaKey : event.ctrlKey);
+    return !!(ShortcutService.isMac() ? !!event.metaKey : !!event.ctrlKey);
   }
 
   constructor(
