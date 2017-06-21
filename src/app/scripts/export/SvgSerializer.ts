@@ -102,7 +102,7 @@ function vectorLayerToSvgNode(
       }
       const transformValues: string[] = [];
       if (layer.scaleX !== 1 || layer.scaleY !== 1) {
-        transformValues.push(`scale(${layer.scaleX} ${layer.scaleY}`);
+        transformValues.push(`scale(${layer.scaleX} ${layer.scaleY})`);
       }
       if (layer.rotation) {
         transformValues.push(`rotate(${layer.rotation} ${layer.pivotX} ${layer.pivotY})`);
