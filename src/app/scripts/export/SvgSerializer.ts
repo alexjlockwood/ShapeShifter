@@ -1,6 +1,7 @@
 import * as XmlSerializer from './XmlSerializer';
 import { ColorUtil } from 'app/scripts/common';
 import {
+  ClipPathLayer,
   GroupLayer,
   Layer,
   LayerUtil,
@@ -22,10 +23,11 @@ export function toSvgString(
   x?: number,
   y?: number,
   withIdsAndNS = true,
+  frameNumber = '',
 ) {
   const xmlDoc = document.implementation.createDocument(undefined, 'svg', undefined);
   const rootNode = xmlDoc.documentElement;
-  vectorLayerToSvgNode(vectorLayer, rootNode, xmlDoc, withIdsAndNS);
+  vectorLayerToSvgNode(vectorLayer, rootNode, xmlDoc, withIdsAndNS, frameNumber);
   if (width !== undefined) {
     rootNode.setAttributeNS(undefined, 'width', width.toString() + 'px');
   }
@@ -50,11 +52,82 @@ function vectorLayerToSvgNode(
   destinationNode: HTMLElement,
   xmlDoc: Document,
   withIdsAndNS = true,
+  frameNumber = '',
 ) {
   if (withIdsAndNS) {
     destinationNode.setAttributeNS(XMLNS_NS, 'xmlns', SVG_NS);
   }
   destinationNode.setAttributeNS(undefined, 'viewBox', `0 0 ${vl.width} ${vl.height}`);
+
+  // Create a map where the keys are all of the clip paths in the tree, and
+  // their corresponding values are any affected clipped siblings.
+  const clipPathToClippedSiblingsMap = new Map<string, Set<string>>();
+  (function recurseFn(layers: ReadonlyArray<Layer>) {
+    for (let i = 0; i < layers.length; i++) {
+      const layer = layers[i];
+      if (layer instanceof ClipPathLayer) {
+        const clippedSiblings =
+          layers.slice(i + 1)
+            .filter(l => !(l instanceof ClipPathLayer))
+            .map(l => l.id);
+        if (clippedSiblings.length) {
+          clipPathToClippedSiblingsMap.set(layer.id, new Set(clippedSiblings));
+        }
+      }
+    }
+    layers.forEach(l => recurseFn(l.children));
+  })(vl.children);
+
+  // Create a map where the keys are clipped siblings, and their values
+  // are the list of clip paths that clipped them.
+  const clippedSiblingToClipPathsMap = new Map<string, Set<string>>();
+  clipPathToClippedSiblingsMap.forEach((clippedSiblingIds, clipPathId) => {
+    clippedSiblingIds.forEach(clippedSiblingId => {
+      const clipPathIds =
+        clippedSiblingToClipPathsMap.has(clippedSiblingId)
+          ? clippedSiblingToClipPathsMap.get(clippedSiblingId)
+          : new Set<string>();
+      clipPathIds.add(clipPathId);
+      clippedSiblingToClipPathsMap.set(clippedSiblingId, clipPathIds);
+    });
+  });
+
+  // Create a map of sibling IDs to the clip path name they should use when
+  // referencing the clip-path.
+  const clippedSiblingToClipPathReferencedIdMap = new Map<string, string>();
+  clippedSiblingToClipPathsMap.forEach((clipPaths, siblingId) => {
+    const siblingName = vl.findLayerById(siblingId).name;
+    clippedSiblingToClipPathReferencedIdMap.set(siblingId, `clip_${siblingName}${frameNumber}`);
+  });
+
+  if (clippedSiblingToClipPathsMap.size) {
+    const defsNode = xmlDoc.createElement('defs');
+    clippedSiblingToClipPathsMap.forEach((clipPathIds, clippedSiblingId) => {
+      const clipPathNode = xmlDoc.createElement('clipPath');
+      const clipPathName = clippedSiblingToClipPathReferencedIdMap.get(clippedSiblingId);
+      conditionalAttr(clipPathNode, 'id', clipPathName);
+      clipPathIds.forEach(clipPathId => {
+        const clipPathData = (vl.findLayerById(clipPathId) as ClipPathLayer).pathData;
+        if (clipPathData && clipPathData.getPathString()) {
+          const pathNode = xmlDoc.createElement('path');
+          conditionalAttr(pathNode, 'd', clipPathData.getPathString());
+          clipPathNode.appendChild(pathNode);
+        }
+      });
+      defsNode.appendChild(clipPathNode);
+    });
+    destinationNode.appendChild(defsNode);
+  }
+
+  const shouldSetClipPathForLayerFn = (layer: Layer) => clippedSiblingToClipPathsMap.has(layer.id);
+
+  const maybeSetClipPathForLayerFn = (layer: Layer, layerNode: HTMLElement) => {
+    if (!shouldSetClipPathForLayerFn(layer)) {
+      return;
+    }
+    const clipPathAttrValue = `url(#${clippedSiblingToClipPathReferencedIdMap.get(layer.id)})`;
+    conditionalAttr(layerNode, 'clip-path', clipPathAttrValue);
+  };
 
   walk(vl, (layer, parentNode) => {
     if (layer instanceof VectorLayer) {
@@ -69,6 +142,7 @@ function vectorLayerToSvgNode(
       if (withIdsAndNS) {
         conditionalAttr(node, 'id', layer.name);
       }
+      maybeSetClipPathForLayerFn(layer, node);
       const path = layer.pathData;
       conditionalAttr(node, 'd', path ? path.getPathString() : '');
       if (layer.fillColor) {
@@ -153,20 +227,20 @@ function vectorLayerToSvgNode(
           transformValues.push(`translate(${-layer.pivotX} ${-layer.pivotY})`);
         }
       }
+      let nodeToAttachToParent = node;
       if (transformValues.length) {
         node.setAttributeNS(undefined, 'transform', transformValues.join(' '));
+        if (shouldSetClipPathForLayerFn(layer)) {
+          // Create a wrapper node so that the clip-path is applied before the transformations.
+          const wrapperNode = xmlDoc.createElement('g');
+          wrapperNode.appendChild(node);
+          nodeToAttachToParent = wrapperNode;
+        }
       }
-      parentNode.appendChild(node);
+      maybeSetClipPathForLayerFn(layer, nodeToAttachToParent);
+      parentNode.appendChild(nodeToAttachToParent);
       return node;
     }
-    // TODO: support exporting clip paths to SVG
-    /* else if (layer instanceof ClipPathLayer) {
-    const node = xmlDoc.createElement('clip-path');
-    conditionalAttr(node, '', layer.name);
-    conditionalAttr(node, 'android:pathData', layer.pathData.getPathString());
-    parentNode.appendChild(node);
-    return parentNode;
-    }*/
   }, destinationNode);
 }
 

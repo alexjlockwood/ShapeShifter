@@ -68,7 +68,7 @@ export function createSvgSprite(
   for (let i = 0; i <= numSteps; i++) {
     const time = i / numSteps * animation.duration;
     const vl = renderer.setAnimationTime(time);
-    svgs.push(SvgSerializer.toSvgString(vl, width, height, width * i, 0, false));
+    svgs.push(SvgSerializer.toSvgString(vl, width, height, width * i, 0, false, i.toString()));
   }
   const totalWidth = width * numSteps;
   let svg = `<svg xmlns="http://www.w3.org/2000/svg" `
