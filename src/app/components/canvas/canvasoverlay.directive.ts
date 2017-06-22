@@ -934,9 +934,9 @@ export class CanvasOverlayDirective
             point, LayerUtil.getFlattenedTransformForLayer(root, layer.id).invert());
         let isSegmentInRangeFn: (distance: number, cmd: Command) => boolean;
         isSegmentInRangeFn = distance => {
-          let maxDistance = this.minSnapThreshold;
+          let maxDistance = 0;
           if (layer instanceof PathLayer && layer.isStroked()) {
-            maxDistance = Math.max(maxDistance, layer.strokeWidth / 2);
+            maxDistance = Math.max(this.minSnapThreshold, layer.strokeWidth / 2);
           }
           return distance <= maxDistance;
         };
@@ -974,9 +974,9 @@ export class CanvasOverlayDirective
     let isSegmentInRangeFn: (distance: number, cmd: Command) => boolean;
     if (!opts.noSegments) {
       isSegmentInRangeFn = distance => {
-        let maxDistance = this.minSnapThreshold;
+        let maxDistance = 0;
         if (pathLayer.isStroked()) {
-          maxDistance = Math.max(maxDistance, (pathLayer as PathLayer).strokeWidth / 2);
+          maxDistance = Math.max(this.minSnapThreshold, (pathLayer as PathLayer).strokeWidth / 2);
         }
         return distance <= maxDistance;
       };
