@@ -3,6 +3,7 @@ import { ColorUtil } from 'app/scripts/common';
 import {
   GroupLayer,
   Layer,
+  LayerUtil,
   PathLayer,
   VectorLayer,
 } from 'app/scripts/model/layers';
@@ -81,10 +82,46 @@ function vectorLayerToSvgNode(
       }
       conditionalAttr(node, 'stroke-opacity', layer.strokeAlpha, 1);
       conditionalAttr(node, 'stroke-width', layer.strokeWidth, 0);
-      // TODO: support exporting trim paths to SVG
-      // conditionalAttr(node, 'android:trimPathStart', layer.trimPathStart, 0);
-      // conditionalAttr(node, 'android:trimPathEnd', layer.trimPathEnd, 1);
-      // conditionalAttr(node, 'android:trimPathOffset', layer.trimPathOffset, 0);
+
+      if (layer.trimPathStart !== 0
+        || layer.trimPathEnd !== 1
+        || layer.trimPathOffset !== 0) {
+        const flattenedTransform = LayerUtil.getFlattenedTransformForLayer(vl, layer.id);
+        const { a, d } = flattenedTransform;
+        let pathLength: number;
+        if (a !== 1 || d !== 1) {
+          // Then recompute the scaled path length.
+          pathLength = layer.pathData.mutate()
+            .addTransforms([flattenedTransform])
+            .build()
+            .getPathLength();
+        } else {
+          pathLength = layer.pathData.getPathLength();
+        }
+
+        // Calculate the visible fraction of the trimmed path. If trimPathStart
+        // is greater than trimPathEnd, then the result should be the combined
+        // length of the two line segments: [trimPathStart,1] and [0,trimPathEnd].
+        let shownFraction = layer.trimPathEnd - layer.trimPathStart;
+        if (layer.trimPathStart > layer.trimPathEnd) {
+          shownFraction += 1;
+        }
+        // Calculate the dash array. The first array element is the length of
+        // the trimmed path and the second element is the gap, which is the
+        // difference in length between the total path length and the visible
+        // trimmed path length.
+        const strokeDashArray =
+          `${shownFraction * pathLength},${(1 - shownFraction + 0.001) * pathLength}`;
+        // The amount to offset the path is equal to the trimPathStart plus
+        // trimPathOffset. We mod the result because the trimmed path
+        // should wrap around once it reaches 1.
+        const strokeDashOffset =
+          `${pathLength * (1 - ((layer.trimPathStart + layer.trimPathOffset) % 1))}`;
+
+        conditionalAttr(node, 'stroke-dasharray', strokeDashArray);
+        conditionalAttr(node, 'stroke-dashoffset', strokeDashOffset);
+      }
+
       conditionalAttr(node, 'stroke-linecap', layer.strokeLinecap, 'butt');
       conditionalAttr(node, 'stroke-linejoin', layer.strokeLinejoin, 'miter');
       conditionalAttr(node, 'stroke-miterlimit', layer.strokeMiterLimit, 4);
