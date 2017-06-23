@@ -1,12 +1,5 @@
 import 'rxjs/add/operator/first';
 
-import * as TimelineConsts from './constants';
-import { Callbacks as LayerListTreeCallbacks } from './layerlisttree.component';
-import {
-  LayerTimelineGridDirective,
-  ScrubEvent,
-} from './layertimelinegrid.directive';
-import { Callbacks as TimelineAnimationRowCallbacks } from './timelineanimationrow.component';
 import {
   AfterViewInit,
   ChangeDetectionStrategy,
@@ -45,11 +38,11 @@ import {
 import {
   Shortcut,
   ShortcutService,
-} from 'app/services/shortcut/shortcut.service';
+} from 'app/services/shortcut.service';
 import {
   Duration,
   SnackBarService,
-} from 'app/services/snackbar/snackbar.service';
+} from 'app/services/snackbar.service';
 import {
   State,
   Store,
@@ -79,6 +72,14 @@ import * as $ from 'jquery';
 import * as _ from 'lodash';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Observable } from 'rxjs/Observable';
+
+import { Callbacks as LayerListTreeCallbacks } from './layerlisttree.component';
+import {
+  LayerTimelineGridDirective,
+  ScrubEvent,
+} from './layertimelinegrid.directive';
+import { Callbacks as TimelineAnimationRowCallbacks } from './timelineanimationrow.component';
+import * as TimelineConsts from './constants';
 
 const IS_DEV_BUILD = !environment.production;
 

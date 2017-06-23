@@ -1,4 +1,3 @@
-import { PlaybackComponent } from './playback.component';
 import {
   ComponentFixture,
   TestBed,
@@ -14,11 +13,13 @@ import {
 } from '@angular/material';
 import { By } from '@angular/platform-browser';
 import { Action } from '@ngrx/store';
-import { AnimatorService } from 'app/services/animator/animator.service';
-import { PlaybackService } from 'app/services/playback/playback.service';
+import { AnimatorService } from 'app/services/animator.service';
+import { PlaybackService } from 'app/services/playback.service';
 import { Store } from 'app/store';
 import { State as PlaybackState } from 'app/store/playback/reducer';
 import { MockStore } from 'test/MockStore';
+
+import { PlaybackComponent } from './playback.component';
 
 describe('PlaybackComponent', () => {
   let component: PlaybackComponent;

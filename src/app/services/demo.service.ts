@@ -5,7 +5,7 @@ import { Http } from '@angular/http';
 import { ModelUtil } from 'app/scripts/common';
 import { VectorLayer } from 'app/scripts/model/layers';
 import { Animation } from 'app/scripts/model/timeline';
-import { FileExportService } from 'app/services/export/fileexport.service';
+import { FileExportService } from 'app/services/fileexport.service';
 
 // TODO: store hidden layer IDs and vector layer inside the animations?
 interface Demo {

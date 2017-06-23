@@ -25,7 +25,7 @@ import {
 import {
   Duration,
   SnackBarService,
-} from 'app/services/snackbar/snackbar.service';
+} from 'app/services/snackbar.service';
 import {
   State,
   Store,

@@ -15,7 +15,7 @@ import {
   AnimatorService,
   FileExportService,
 } from 'app/services';
-import { Duration, SnackBarService } from 'app/services/snackbar/snackbar.service';
+import { Duration, SnackBarService } from 'app/services/snackbar.service';
 import {
   State,
   Store,

@@ -1,15 +1,11 @@
 import {
-  Animator,
-  Callback,
-} from './Animator';
-import {
   Injectable,
   NgZone,
 } from '@angular/core';
 import { AnimationRenderer } from 'app/scripts/animator';
 import { VectorLayer } from 'app/scripts/model/layers';
 import { Animation } from 'app/scripts/model/timeline';
-import { PlaybackService } from 'app/services/playback/playback.service';
+import { PlaybackService } from 'app/services/playback.service';
 import {
   State,
   Store,
@@ -114,4 +110,83 @@ export class AnimatorService {
     this.rewind();
     this.animator = new Animator(this.animatorCallback);
   }
+}
+
+const REPEAT_DELAY = 750;
+const DEFAULT_PLAYBACK_SPEED = 1;
+const SLOW_MOTION_PLAYBACK_SPEED = 5;
+
+/**
+ * A simple class that simulates an animation loop.
+ */
+class Animator {
+  private timeoutId: number;
+  private animationFrameId: number;
+  private playbackSpeed = DEFAULT_PLAYBACK_SPEED;
+  private isRepeating = false;
+
+  // TODO: add the ability to pause/resume animations
+  constructor(private readonly callback: Callback) { }
+
+  setIsRepeating(isRepeating: boolean) {
+    this.isRepeating = isRepeating;
+  }
+
+  setIsSlowMotion(isSlowMotion: boolean) {
+    this.playbackSpeed = isSlowMotion ? SLOW_MOTION_PLAYBACK_SPEED : DEFAULT_PLAYBACK_SPEED;
+  }
+
+  play(duration: number, onUpdateFn: (fraction: number) => void) {
+    this.startAnimation(duration, onUpdateFn);
+    this.callback.setIsPlaying(true);
+  }
+
+  pause() {
+    if (this.timeoutId) {
+      clearTimeout(this.timeoutId);
+      this.timeoutId = undefined;
+    }
+    if (this.animationFrameId) {
+      cancelAnimationFrame(this.animationFrameId);
+      this.animationFrameId = undefined;
+    }
+    this.callback.setIsPlaying(false);
+  }
+
+  rewind() {
+    this.pause();
+  }
+
+  fastForward() {
+    this.pause();
+  }
+
+  private startAnimation(duration: number, onUpdateFn: (fraction: number) => void) {
+    let startTimestamp: number;
+    const playbackSpeed = this.playbackSpeed;
+    const onAnimationFrameFn = (timestamp: number) => {
+      if (!startTimestamp) {
+        startTimestamp = timestamp;
+      }
+      const progress = timestamp - startTimestamp;
+      if (progress < (duration * playbackSpeed)) {
+        this.animationFrameId = requestAnimationFrame(onAnimationFrameFn);
+      } else if (this.isRepeating) {
+        this.timeoutId =
+          window.setTimeout(() => this.startAnimation(duration, onUpdateFn), REPEAT_DELAY);
+      } else {
+        this.pause();
+      }
+      const fraction = Math.min(1, progress / (duration * playbackSpeed));
+      onUpdateFn(fraction);
+    };
+    this.callback.runOutsideAngular(() => {
+      this.animationFrameId = requestAnimationFrame(onAnimationFrameFn);
+    });
+  }
+}
+
+interface Callback {
+  readonly setIsPlaying: (isPlaying: boolean) => void;
+  readonly runOutsideAngular: (fn: () => void) => void;
 }
