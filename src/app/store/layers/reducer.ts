@@ -1,5 +1,4 @@
 import * as actions from './actions';
-import { ModelUtil } from 'app/scripts/common';
 import {
   GroupLayer,
   Layer,

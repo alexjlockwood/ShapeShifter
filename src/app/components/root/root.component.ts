@@ -1,9 +1,5 @@
 import 'rxjs/add/operator/distinctUntilChanged';
 import 'rxjs/add/operator/combineLatest';
-import { } from 'app/services/demos/demo.service';
-import { } from 'app/services/dialogs/dialog.service';
-import { } from 'app/services/import/fileimport.service';
-import { } from 'app/services/shortcut/shortcut.service';
 
 import {
   AfterViewInit,
@@ -40,7 +36,6 @@ import {
 } from 'app/store/actionmode/selectors';
 import { ClearSelections } from 'app/store/common/actions';
 import { isWorkspaceDirty } from 'app/store/common/selectors';
-import { ImportVectorLayers } from 'app/store/layers/actions';
 import { ResetWorkspace } from 'app/store/reset/actions';
 import * as erd from 'element-resize-detector';
 import { environment } from 'environments/environment';
@@ -52,8 +47,6 @@ const SHOULD_AUTO_LOAD_DEMO = false;
 const IS_DEV_BUILD = !environment.production;
 const ELEMENT_RESIZE_DETECTOR = erd({ strategy: 'scroll' });
 const STORAGE_KEY_FIRST_TIME_USER = 'storage_key_first_time_user';
-
-declare const ga: Function;
 
 enum CursorType {
   Default = 1,

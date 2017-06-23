@@ -6,10 +6,7 @@ import {
   OnInit,
   Output,
 } from '@angular/core';
-import {
-  AnimationMap,
-  ModelUtil,
-} from 'app/scripts/common';
+import { ModelUtil } from 'app/scripts/common';
 import { Layer } from 'app/scripts/model/layers';
 import {
   Animation,

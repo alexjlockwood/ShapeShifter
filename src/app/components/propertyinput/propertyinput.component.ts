@@ -3,7 +3,6 @@ import {
   Component,
   OnInit,
 } from '@angular/core';
-import { AutoAwesome } from 'app/scripts/algorithms';
 import {
   ColorUtil,
   ModelUtil,
@@ -102,7 +101,6 @@ export class PropertyInputComponent implements OnInit {
   }
 
   onAutoFixPathsClick(pim: PropertyInputModel) {
-    const block = pim.model as PathAnimationBlock;
     this.actionModeService.autoFixClick();
   }
 

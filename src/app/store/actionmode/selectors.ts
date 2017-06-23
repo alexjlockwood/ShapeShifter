@@ -10,7 +10,6 @@ import {
 } from '../selectors';
 import {
   getAnimation,
-  getSingleSelectedBlockId,
   getSingleSelectedBlockLayerId,
   getSingleSelectedPathBlock,
 } from '../timeline/selectors';
@@ -26,12 +25,10 @@ import {
   MorphableLayer,
   VectorLayer,
 } from 'app/scripts/model/layers';
-import { Path } from 'app/scripts/model/paths';
 import {
   Animation,
   PathAnimationBlock,
 } from 'app/scripts/model/timeline';
-import * as _ from 'lodash';
 import {
   createSelector,
   createStructuredSelector,

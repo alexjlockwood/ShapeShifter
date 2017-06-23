@@ -26,7 +26,7 @@ export class MockStore extends Store<State> {
     this.subject = new BehaviorSubject(productionReducer(undefined, INIT_ACTION));
   }
 
-  readonly select = <T, R>(mapFn: any, ...paths: string[]): Observable<R> => {
+  readonly select = <R>(mapFn: any, ...paths: string[]): Observable<R> => {
     return map.call(this.subject, mapFn);
   }
 

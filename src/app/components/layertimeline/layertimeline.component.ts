@@ -60,7 +60,6 @@ import {
 } from 'app/store/common/selectors';
 import {
   AddLayer,
-  ImportVectorLayers,
   ReplaceLayer,
   SelectLayer,
   ToggleLayerExpansion,
@@ -496,7 +495,7 @@ export class LayerTimelineComponent
     }
 
     const isOverlappingBlockFn = (info: BlockInfo, low: number, high: number) => {
-      const { id, layerId, propertyName } = info.block;
+      const { layerId, propertyName } = info.block;
       return intervalTree.intersectsWith(
         low, high, d => d.layerId === layerId && d.propertyName === propertyName);
     };

@@ -1,6 +1,5 @@
 import 'rxjs/add/operator/first';
 
-import { INTERPOLATORS } from 'app/scripts/model/interpolators';
 import {
   ClipPathLayer,
   FillType,
@@ -14,8 +13,10 @@ import {
 } from 'app/scripts/model/layers';
 import { Path } from 'app/scripts/model/paths';
 import { NameProperty } from 'app/scripts/model/properties';
-import { AnimationBlock } from 'app/scripts/model/timeline';
 import * as _ from 'lodash';
+
+// import { INTERPOLATORS } from 'app/scripts/model/interpolators';
+// import { AnimationBlock } from 'app/scripts/model/timeline';
 
 export function loadVectorLayerFromXmlString(
   xmlString: string,
@@ -111,104 +112,104 @@ function loadVectorLayerFromElement(
   return new VectorLayer({ id: _.uniqueId(), name, children, width, height, alpha });
 }
 
-export function loadAnimationFromXmlString(
-  xmlString: string,
-  animationName: string,
-  doesLayerNameExistFn: (name: string) => boolean) {
+// export function loadAnimationFromXmlString(
+//   xmlString: string,
+//   animationName: string,
+//   doesLayerNameExistFn: (name: string) => boolean) {
 
-  const parser = new DOMParser();
-  const avdNode = parser.parseFromString(xmlString, 'application/xml').documentElement;
-  const vl =
-    _(Array.from(avdNode.childNodes))
-      .filter(elem => {
-        return isElement(elem)
-          && elem.tagName === 'aapt:attr'
-          && elem.hasAttribute('name')
-          && elem.getAttribute('name') === 'android:drawable';
-      })
-      .map((elem: HTMLElement) => {
-        return _(Array.from(elem.childNodes))
-          .filter(e => isElement(e) && e.tagName === 'vector')
-          .map((e: HTMLElement) => loadVectorLayerFromElement(e, doesLayerNameExistFn))
-          .first();
-      })
-      .first();
-  if (!vl) {
-    return undefined;
-  }
-  const blocks =
-    _(Array.from(avdNode.childNodes))
-      .filter(e => {
-        return isElement(e)
-          && e.tagName === 'target'
-          && !!e.getAttribute('android:name');
-      })
-      .flatMap((targetElem: HTMLElement) => {
-        const targetName = targetElem.getAttribute('android:name');
-        const layerId = vl.findLayerByName(targetName).id;
-        const animElem =
-          _(Array.from(targetElem.childNodes))
-            .filter(elem => {
-              return isElement(elem)
-                && elem.tagName === 'aapt:attr'
-                && elem.hasAttribute('name')
-                && elem.getAttribute('name') === 'android:animation'
-                && elem.childNodes.length;
-            })
-            .flatMap((elem: HTMLElement) => Array.from(elem.childNodes))
-            .filter(e => isElement(e) && (e.tagName === 'set' || e.tagName === 'objectAnimator'))
-            .map((e: HTMLElement) => {
-              if (e.tagName === 'set') {
-                // TODO: handle animator set case
-                return undefined;
-              }
-              // Otherwise it is an object animator.
-              return e;
-            })
-            .first() as HTMLElement;
-        const animationBlocks: AnimationBlock[] = [];
-        const propertyName = get(animElem, 'propertyName');
-        const fromValue = get(animElem, 'valueFrom');
-        const toValue = get(animElem, 'valueTo');
-        // TODO: confirm difference between @android:anim and @android:interpolator
-        // TODO: @android:interpolator/linear doesn't work
-        const interpolatorRef =
-          get(animElem, 'interpolator', '@android:anim/accelerate_decelerate_interpolator');
-        const interpolator = _.find(INTERPOLATORS, i => i.androidRef === interpolatorRef).value;
-        const startTime = Number(get(animElem, 'startOffset'));
-        const endTime = startTime + Number(get(animElem, 'duration'));
-        if (get(animElem, 'valueType') === 'pathType' && propertyName === 'pathData') {
-          animationBlocks.push(AnimationBlock.from({
-            layerId,
-            propertyName,
-            fromValue: new Path(fromValue),
-            toValue: new Path(toValue),
-            startTime,
-            endTime,
-            interpolator,
-            type: 'path',
-          }));
-        } else if (propertyName === 'fillAlpha' || propertyName === 'translateX') {
-          animationBlocks.push(AnimationBlock.from({
-            layerId,
-            propertyName,
-            fromValue: Number(fromValue),
-            toValue: Number(toValue),
-            startTime,
-            endTime,
-            interpolator,
-            type: 'number',
-          }));
-        }
-        // TODO: return a list of animation blocks here
-        return animationBlocks;
-      })
-      .value();
-  // const avdTargetElements = avdChildElements.filter(e => e.tagName === 'target');
-  // avdTargetElements.forEach(e => getTargetFn(e));
-  // console.info(vl, avdTargetElements);
-  return undefined;
-}
+//   const parser = new DOMParser();
+//   const avdNode = parser.parseFromString(xmlString, 'application/xml').documentElement;
+//   const vl =
+//     _(Array.from(avdNode.childNodes))
+//       .filter(elem => {
+//         return isElement(elem)
+//           && elem.tagName === 'aapt:attr'
+//           && elem.hasAttribute('name')
+//           && elem.getAttribute('name') === 'android:drawable';
+//       })
+//       .map((elem: HTMLElement) => {
+//         return _(Array.from(elem.childNodes))
+//           .filter(e => isElement(e) && e.tagName === 'vector')
+//           .map((e: HTMLElement) => loadVectorLayerFromElement(e, doesLayerNameExistFn))
+//           .first();
+//       })
+//       .first();
+//   if (!vl) {
+//     return undefined;
+//   }
+//   const blocks =
+//     _(Array.from(avdNode.childNodes))
+//       .filter(e => {
+//         return isElement(e)
+//           && e.tagName === 'target'
+//           && !!e.getAttribute('android:name');
+//       })
+//       .flatMap((targetElem: HTMLElement) => {
+//         const targetName = targetElem.getAttribute('android:name');
+//         const layerId = vl.findLayerByName(targetName).id;
+//         const animElem =
+//           _(Array.from(targetElem.childNodes))
+//             .filter(elem => {
+//               return isElement(elem)
+//                 && elem.tagName === 'aapt:attr'
+//                 && elem.hasAttribute('name')
+//                 && elem.getAttribute('name') === 'android:animation'
+//                 && elem.childNodes.length;
+//             })
+//             .flatMap((elem: HTMLElement) => Array.from(elem.childNodes))
+//             .filter(e => isElement(e) && (e.tagName === 'set' || e.tagName === 'objectAnimator'))
+//             .map((e: HTMLElement) => {
+//               if (e.tagName === 'set') {
+//                 // TODO: handle animator set case
+//                 return undefined;
+//               }
+//               // Otherwise it is an object animator.
+//               return e;
+//             })
+//             .first() as HTMLElement;
+//         const animationBlocks: AnimationBlock[] = [];
+//         const propertyName = get(animElem, 'propertyName');
+//         const fromValue = get(animElem, 'valueFrom');
+//         const toValue = get(animElem, 'valueTo');
+//         // TODO: confirm difference between @android:anim and @android:interpolator
+//         // TODO: @android:interpolator/linear doesn't work
+//         const interpolatorRef =
+//           get(animElem, 'interpolator', '@android:anim/accelerate_decelerate_interpolator');
+//         const interpolator = _.find(INTERPOLATORS, i => i.androidRef === interpolatorRef).value;
+//         const startTime = Number(get(animElem, 'startOffset'));
+//         const endTime = startTime + Number(get(animElem, 'duration'));
+//         if (get(animElem, 'valueType') === 'pathType' && propertyName === 'pathData') {
+//           animationBlocks.push(AnimationBlock.from({
+//             layerId,
+//             propertyName,
+//             fromValue: new Path(fromValue),
+//             toValue: new Path(toValue),
+//             startTime,
+//             endTime,
+//             interpolator,
+//             type: 'path',
+//           }));
+//         } else if (propertyName === 'fillAlpha' || propertyName === 'translateX') {
+//           animationBlocks.push(AnimationBlock.from({
+//             layerId,
+//             propertyName,
+//             fromValue: Number(fromValue),
+//             toValue: Number(toValue),
+//             startTime,
+//             endTime,
+//             interpolator,
+//             type: 'number',
+//           }));
+//         }
+//         // TODO: return a list of animation blocks here
+//         return animationBlocks;
+//       })
+//       .value();
+// const avdTargetElements = avdChildElements.filter(e => e.tagName === 'target');
+// avdTargetElements.forEach(e => getTargetFn(e));
+// console.info(vl, avdTargetElements);
+//   return undefined;
+// }
 
 function isElement(node: Node): node is HTMLElement {
   return node

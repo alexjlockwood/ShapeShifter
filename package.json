@@ -44,7 +44,7 @@
     "redux-undo": "^1.0.0-beta9-9-1",
     "reselect": "^3.0.1",
     "rxjs": "^5.4.0",
-    "sax": "~1.2.2",
+    "sax": "^1.2.4",
     "stable": "^0.1.6",
     "tinycolor2": "^1.4.1",
     "whet.extend": "~0.9.9",

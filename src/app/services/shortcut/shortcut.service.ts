@@ -12,7 +12,6 @@ import { DeleteSelectedModels } from 'app/store/common/actions';
 import { GroupOrUngroupSelectedLayers } from 'app/store/layers/actions';
 import * as $ from 'jquery';
 import { ActionCreators } from 'redux-undo';
-import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
 
 export enum Shortcut {

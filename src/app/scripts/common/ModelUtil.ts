@@ -1,4 +1,4 @@
-import { Layer, LayerUtil, VectorLayer } from '../model/layers';
+import { Layer, VectorLayer } from '../model/layers';
 import { Animation, AnimationBlock } from '../model/timeline';
 import * as _ from 'lodash';
 

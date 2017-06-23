@@ -3,9 +3,6 @@ import {
   Path,
   PathUtil,
 } from 'app/scripts/model/paths';
-import { environment } from 'environments/environment';
-
-const IS_DEV_BUILD = !environment.production;
 
 export class PathProperty extends Property<Path> {
 

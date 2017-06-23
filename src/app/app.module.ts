@@ -1,6 +1,5 @@
 import 'hammerjs';
 
-import { environment } from '../environments/environment';
 import {
   CanvasComponent,
   CanvasContainerDirective,
@@ -56,11 +55,9 @@ import {
 } from '@angular/material';
 import { BrowserModule, DomSanitizer } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { StoreDevtoolsModule } from '@ngrx/store-devtools';
 import { StoreModule } from '@ngrx/store';
 
-const IS_DEV_BUILD = !environment.production;
-// const SHOULD_PROFILE_STORE = IS_DEV_BUILD && false;
+// import { StoreDevtoolsModule } from '@ngrx/store-devtools';
 
 @NgModule({
   declarations: [
