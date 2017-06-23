@@ -797,8 +797,6 @@ export class LayerTimelineComponent
     let targetLayerInfo: LayerInfo;
     let targetEdge: string;
 
-    // TODO: make it is impossible to drag layers across different vector layers?
-
     // tslint:disable-next-line
     new Dragger({
       direction: 'both',
@@ -808,7 +806,7 @@ export class LayerTimelineComponent
       onBeginDragFn: () => {
         this.shouldSuppressClick = true;
 
-        // build up a list of all layers ordered by Y position
+        // Build up a list of all layers ordered by Y position.
         orderedLayerInfos = [];
         scrollerRect = $scroller.get(0).getBoundingClientRect();
         const scrollTop = $scroller.scrollTop();
@@ -831,11 +829,7 @@ export class LayerTimelineComponent
           };
 
           const layer = this.vectorLayer.findLayerById(layerId);
-          orderedLayerInfos.push({
-            layer,
-            element,
-            localRect: rect,
-          });
+          orderedLayerInfos.push({ layer, element, localRect: rect });
 
           // Add a fake target for empty groups.
           if (layer instanceof GroupLayer && !layer.children.length) {
@@ -1021,6 +1015,7 @@ export class LayerTimelineComponent
     return undefined;
   }
 
+  // Called from the LayerTimelineComponent template.
   zoomToFitClick(event: MouseEvent) {
     event.stopPropagation();
     this.autoZoomToAnimation();
