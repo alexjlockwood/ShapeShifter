@@ -1,10 +1,5 @@
 import 'rxjs/add/observable/of';
 
-import { CanvasComponent } from './canvas.component';
-import { CanvasContainerDirective } from './canvascontainer.directive';
-import { CanvasLayersDirective } from './canvaslayers.directive';
-import { CanvasOverlayDirective } from './canvasoverlay.directive';
-import { CanvasRulerDirective } from './canvasruler.directive';
 import {
   ComponentFixture,
   TestBed,
@@ -29,6 +24,12 @@ import {
 import { Store } from 'app/store';
 import { Observable } from 'rxjs/Observable';
 import { MockStore } from 'test/MockStore';
+
+import { CanvasComponent } from './canvas.component';
+import { CanvasContainerDirective } from './canvascontainer.directive';
+import { CanvasLayersDirective } from './canvaslayers.directive';
+import { CanvasOverlayDirective } from './canvasoverlay.directive';
+import { CanvasRulerDirective } from './canvasruler.directive';
 
 describe('CanvasComponent', () => {
   let component: CanvasComponent;

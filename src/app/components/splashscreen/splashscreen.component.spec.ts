@@ -1,4 +1,3 @@
-import { SplashScreenComponent } from './splashscreen.component';
 import {
   ComponentFixture,
   TestBed,
@@ -11,6 +10,8 @@ import {
   MdIconRegistry,
 } from '@angular/material';
 import { DomSanitizer } from '@angular/platform-browser';
+
+import { SplashScreenComponent } from './splashscreen.component';
 
 describe('SplashScreenComponent', () => {
   let component: SplashScreenComponent;

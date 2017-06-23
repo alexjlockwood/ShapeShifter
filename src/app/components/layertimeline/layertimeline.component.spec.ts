@@ -1,7 +1,3 @@
-import { LayerListTreeComponent } from './layerlisttree.component';
-import { LayerTimelineComponent } from './layertimeline.component';
-import { LayerTimelineGridDirective } from './layertimelinegrid.directive';
-import { TimelineAnimationRowComponent } from './timelineanimationrow.component';
 import {
   ComponentFixture,
   TestBed,
@@ -35,6 +31,11 @@ import {
 } from 'app/services';
 import { Store } from 'app/store';
 import { MockStore } from 'test/MockStore';
+
+import { LayerListTreeComponent } from './layerlisttree.component';
+import { LayerTimelineComponent } from './layertimeline.component';
+import { LayerTimelineGridDirective } from './layertimelinegrid.directive';
+import { TimelineAnimationRowComponent } from './timelineanimationrow.component';
 
 describe('LayerTimelineComponent', () => {
   let component: LayerTimelineComponent;
@@ -85,6 +86,7 @@ describe('LayerTimelineComponent', () => {
   beforeEach(inject([Store], (store: MockStore) => {
     fixture = TestBed.createComponent(LayerTimelineComponent);
     component = fixture.componentInstance;
+    component.ngOnInit();
     fixture.detectChanges();
   }));
 

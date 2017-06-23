@@ -1,4 +1,3 @@
-import { PropertyInputComponent } from './propertyinput.component';
 import {
   ComponentFixture,
   TestBed,
@@ -22,6 +21,8 @@ import {
 } from 'app/services';
 import { Store } from 'app/store';
 import { MockStore } from 'test/MockStore';
+
+import { PropertyInputComponent } from './propertyinput.component';
 
 describe('PropertyInputComponent', () => {
   let component: PropertyInputComponent;
@@ -56,6 +57,7 @@ describe('PropertyInputComponent', () => {
   beforeEach(inject([Store], (store: MockStore) => {
     fixture = TestBed.createComponent(PropertyInputComponent);
     component = fixture.componentInstance;
+    component.ngOnInit();
     fixture.detectChanges();
   }));
 

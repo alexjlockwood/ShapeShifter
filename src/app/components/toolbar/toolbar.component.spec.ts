@@ -1,4 +1,3 @@
-import { ToolbarComponent } from './toolbar.component';
 import {
   ComponentFixture,
   TestBed,
@@ -30,6 +29,8 @@ import {
 } from 'app/services';
 import { Store } from 'app/store';
 import { MockStore } from 'test/MockStore';
+
+import { ToolbarComponent } from './toolbar.component';
 
 describe('ToolbarComponent', () => {
   let component: ToolbarComponent;
@@ -65,6 +66,7 @@ describe('ToolbarComponent', () => {
   beforeEach(inject([Store], (store: MockStore) => {
     fixture = TestBed.createComponent(ToolbarComponent);
     component = fixture.componentInstance;
+    component.ngOnInit();
     fixture.detectChanges();
   }));
 

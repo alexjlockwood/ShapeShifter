@@ -1,4 +1,3 @@
-import { LayerListTreeComponent } from './layerlisttree.component';
 import {
   ComponentFixture,
   TestBed,
@@ -22,6 +21,8 @@ import { Store } from 'app/store';
 import { State as LayerState } from 'app/store/layers/reducer';
 import * as $ from 'jquery';
 import { MockStore } from 'test/MockStore';
+
+import { LayerListTreeComponent } from './layerlisttree.component';
 
 describe('LayerListTreeComponent', () => {
   let component: LayerListTreeComponent;

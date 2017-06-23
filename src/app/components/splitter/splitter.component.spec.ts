@@ -1,10 +1,11 @@
-import { SplitterComponent } from './splitter.component';
 import {
   ComponentFixture,
   TestBed,
   async,
   inject,
 } from '@angular/core/testing';
+
+import { SplitterComponent } from './splitter.component';
 
 describe('SplitterComponent', () => {
   let component: SplitterComponent;
@@ -21,6 +22,7 @@ describe('SplitterComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(SplitterComponent);
     component = fixture.componentInstance;
+    component.ngOnInit();
     fixture.detectChanges();
   });
 

@@ -1,4 +1,3 @@
-import { TimelineAnimationRowComponent } from './timelineanimationrow.component';
 import {
   ComponentFixture,
   TestBed,
@@ -10,6 +9,8 @@ import { Layer } from 'app/scripts/model/layers';
 import { ActionModeService } from 'app/services';
 import { Store } from 'app/store';
 import { MockStore } from 'test/MockStore';
+
+import { TimelineAnimationRowComponent } from './timelineanimationrow.component';
 
 describe('TimelineAnimationRowComponent', () => {
   let component: TimelineAnimationRowComponent;
@@ -32,6 +33,7 @@ describe('TimelineAnimationRowComponent', () => {
     fixture = TestBed.createComponent(TimelineAnimationRowComponent);
     component = fixture.componentInstance;
     component.layer = store.getState().present.layers.vectorLayer;
+    component.ngOnInit();
     fixture.detectChanges();
   }));
 
