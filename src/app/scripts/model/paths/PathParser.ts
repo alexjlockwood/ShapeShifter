@@ -1,11 +1,11 @@
 import {
-   Command,
-   SvgChar,
+  Command,
+  SvgChar,
 } from '.';
+import * as SvgUtil from './SvgUtil';
 import {
-   Matrix,
-   Point,
-   SvgUtil,
+  Matrix,
+  Point,
 } from 'app/scripts/common';
 
 enum Token {
@@ -288,20 +288,29 @@ export function parseCommands(
           const startY = currentPoint.y;
           const endX = tempPoint1.x;
           const endY = tempPoint1.y;
-          const bezierCoords = SvgUtil.arcToBeziers({
-            startX, startY,
-            rx, ry, xAxisRotation,
-            largeArcFlag, sweepFlag,
-            endX, endY,
-          });
+          const bezierCoords =
+            SvgUtil.arcToBeziers({
+              startX,
+              startY,
+              rx,
+              ry,
+              xAxisRotation,
+              largeArcFlag,
+              sweepFlag,
+              endX,
+              endY,
+            });
 
           for (let i = 0; i < bezierCoords.length; i += 8) {
             const endPoint = new Point(bezierCoords[i + 6], bezierCoords[i + 7]);
-            commands.push(newBezierCurve(
-              currentPoint,
-              new Point(bezierCoords[i + 2], bezierCoords[i + 3]),
-              new Point(bezierCoords[i + 4], bezierCoords[i + 5]),
-              endPoint));
+            commands.push(
+              newBezierCurve(
+                currentPoint,
+                new Point(bezierCoords[i + 2], bezierCoords[i + 3]),
+                new Point(bezierCoords[i + 4], bezierCoords[i + 5]),
+                endPoint,
+              ),
+            );
             currentPoint = endPoint;
           }
 
@@ -323,7 +332,15 @@ export function parseCommands(
     }
   }
 
-  return matrices ? commands.map(cmd => cmd.mutate().setId(cmd.getId()).transform(matrices).build()) : commands;
+  if (!matrices) {
+    return commands;
+  }
+  return commands.map(cmd => {
+    return cmd.mutate()
+      .setId(cmd.getId())
+      .transform(matrices)
+      .build();
+  });
 }
 
 /**

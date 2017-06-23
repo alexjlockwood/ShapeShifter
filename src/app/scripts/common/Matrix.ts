@@ -1,4 +1,7 @@
-import { MathUtil, Point } from '.';
+import {
+  MathUtil,
+  Point,
+} from '.';
 
 const EPSILON = 1e-8;
 
@@ -35,7 +38,8 @@ export class Matrix {
     public readonly c = 0,
     public readonly d = 1,
     public readonly e = 0,
-    public readonly f = 0) { }
+    public readonly f = 0,
+  ) { }
 
   /**
    * Returns the dot product of this 2D transformation matrices with m.
