@@ -1,5 +1,6 @@
 import 'rxjs/add/operator/first';
 
+import { ColorUtil } from 'app/scripts/common';
 import {
   ClipPathLayer,
   FillType,
@@ -54,18 +55,18 @@ function loadVectorLayerFromElement(
         id: _.uniqueId(),
         name: makeFinalNodeIdFn(node.getAttribute('android:name'), 'path'),
         children: [],
-        pathData: new Path(get(node, 'pathData', '')),
-        fillColor: get(node, 'fillColor', ''),
-        fillAlpha: Number(get(node, 'fillAlpha', '1')),
-        strokeColor: get(node, 'strokeColor', ''),
-        strokeAlpha: Number(get(node, 'strokeAlpha', '1')),
-        strokeWidth: Number(get(node, 'strokeWidth', '0')),
+        pathData: getPath(node),
+        fillColor: getColor(node, 'fillColor', ''),
+        fillAlpha: getNumber(node, 'fillAlpha', '1'),
+        strokeColor: getColor(node, 'strokeColor', ''),
+        strokeAlpha: getNumber(node, 'strokeAlpha', '1'),
+        strokeWidth: getNumber(node, 'strokeWidth', '0'),
         strokeLinecap: get(node, 'strokeLineCap', 'butt') as StrokeLineCap,
         strokeLinejoin: get(node, 'strokeLineJoin', 'miter') as StrokeLineJoin,
-        strokeMiterLimit: Number(get(node, 'strokeMiterLimit', '4')),
-        trimPathStart: Number(get(node, 'trimPathStart', '0')),
-        trimPathEnd: Number(get(node, 'trimPathEnd', '1')),
-        trimPathOffset: Number(get(node, 'trimPathOffset', '0')),
+        strokeMiterLimit: getNumber(node, 'strokeMiterLimit', '4'),
+        trimPathStart: getNumber(node, 'trimPathStart', '0'),
+        trimPathEnd: getNumber(node, 'trimPathEnd', '1'),
+        trimPathOffset: getNumber(node, 'trimPathOffset', '0'),
         fillType: get(node, 'fillType', 'nonZero') as FillType,
       });
     }
@@ -75,7 +76,7 @@ function loadVectorLayerFromElement(
         id: _.uniqueId(),
         name: makeFinalNodeIdFn(get(node, 'name', ''), 'clip-path'),
         children: [],
-        pathData: new Path(get(node, 'pathData', '')),
+        pathData: getPath(node),
       });
     }
 
@@ -88,13 +89,13 @@ function loadVectorLayerFromElement(
           id: _.uniqueId(),
           name: makeFinalNodeIdFn(get(node, 'name', ''), 'group'),
           children,
-          pivotX: Number(get(node, 'pivotX', '0')),
-          pivotY: Number(get(node, 'pivotY', '0')),
-          rotation: Number(get(node, 'rotation', '0')),
-          scaleX: Number(get(node, 'scaleX', '1')),
-          scaleY: Number(get(node, 'scaleY', '1')),
-          translateX: Number(get(node, 'translateX', '0')),
-          translateY: Number(get(node, 'translateY', '0')),
+          pivotX: getNumber(node, 'pivotX', '0'),
+          pivotY: getNumber(node, 'pivotY', '0'),
+          rotation: getNumber(node, 'rotation', '0'),
+          scaleX: getNumber(node, 'scaleX', '1'),
+          scaleY: getNumber(node, 'scaleY', '1'),
+          translateX: getNumber(node, 'translateX', '0'),
+          translateY: getNumber(node, 'translateY', '0'),
         });
       }
     }
@@ -106,9 +107,9 @@ function loadVectorLayerFromElement(
   const children = rootLayer ? rootLayer.children : [];
   const name = makeFinalNodeIdFn(get(docEl, 'name', ''), 'vector');
   usedNames.add(name);
-  const width = Number(get(docEl, 'viewportWidth', '24'));
-  const height = Number(get(docEl, 'viewportHeight', '24'));
-  const alpha = Number(get(docEl, 'alpha', '1'));
+  const width = getNumber(docEl, 'viewportWidth', '24');
+  const height = getNumber(docEl, 'viewportHeight', '24');
+  const alpha = getNumber(docEl, 'alpha', '1');
   return new VectorLayer({ id: _.uniqueId(), name, children, width, height, alpha });
 }
 
@@ -221,4 +222,27 @@ function isElement(node: Node): node is HTMLElement {
 function get(obj: HTMLElement, attr: string, def = '') {
   const androidAttr = `android:${attr}`;
   return obj.hasAttribute(androidAttr) ? obj.getAttribute(androidAttr) : def;
+}
+
+function getNumber(obj: HTMLElement, attr: string, def: string) {
+  const androidAttr = `android:${attr}`;
+  const num = Number(obj.hasAttribute(androidAttr) ? obj.getAttribute(androidAttr) : def);
+  return isFinite(num) ? num : Number(def);
+}
+
+function getPath(obj: HTMLElement) {
+  const androidAttr = 'android:pathData';
+  const pathData = obj.hasAttribute(androidAttr) ? obj.getAttribute(androidAttr) : '';
+  try {
+    return new Path(pathData);
+  } catch (e) {
+    console.warn('Failed to import pathData: ', pathData);
+    return undefined;
+  }
+}
+
+function getColor(obj: HTMLElement, attr: string, def = '') {
+  const androidAttr = `android:${attr}`;
+  const color = obj.hasAttribute(androidAttr) ? obj.getAttribute(androidAttr) : def;
+  return !!ColorUtil.parseAndroidColor(color) ? color : def;
 }
