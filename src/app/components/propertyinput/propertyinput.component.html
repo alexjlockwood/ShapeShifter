@@ -22,8 +22,8 @@
       <div class="spi-selection-description-container"
         fxLayout="column"
         fxFlex>
-        <span class="spi-selection-description">{{model.description}}</span>
-        <span class="spi-selection-sub-description">{{model.subDescription}}</span>
+        <span class="spi-selection-description">{{ model.description }}</span>
+        <span class="spi-selection-sub-description">{{ model.subDescription }}</span>
       </div>
       <md-menu #addTimelineBlockMenu="mdMenu">
         <button md-menu-item
@@ -62,7 +62,7 @@
       </div>
       <div class="spi-property"
         *ngFor="let ip of model.inspectedProperties; trackBy: trackInspectedPropertyFn">
-        <div class="spi-property-name">{{ip.propertyName}}</div>
+        <div class="spi-property-name">{{ ip.propertyName }}</div>
         <div class="spi-property-value"
           fxLayout="row">
           <div *ngIf="ip.typeName === 'ColorProperty'"
@@ -73,7 +73,7 @@
             class="spi-property-value-static"
             fxFlex>
             <!-- Only show text if the property isn't inspectable. -->
-            {{ip.getDisplayValue()}}
+            {{ ip.getDisplayValue() }}
           </span>
           <div *ngIf="ip.isEditable()"
             class="spi-property-value-editor"
@@ -96,13 +96,13 @@
                 <button md-menu-item
                   *ngFor="let option of ip.property.options; trackBy: trackEnumOptionFn"
                   (click)="ip.value = option.value;">
-                  {{option.label}}
+                  {{ option.label }}
                 </button>
               </md-menu>
               <button class="spi-property-value-menu-target"
                 [mdMenuTriggerFor]="enumMenu">
                 <span class="spi-property-value-menu-current-value">
-                  {{ip.getDisplayValue()}}
+                  {{ ip.getDisplayValue() }}
                 </span>
               </button>
             </ng-container>

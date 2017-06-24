@@ -13,13 +13,13 @@
       *ngIf="model.isExpandable"
       (click)="this.layerToggleExpanded($event, this.layer)"
       [disabled]="model.isActionMode"
-      mdTooltip="{{model.isExpanded ? 'Collapse layer' : 'Expand layer'}}"
+      mdTooltip="{{ model.isExpanded ? 'Collapse layer' : 'Expand layer' }}"
       mdTooltipPosition="right"
       mdTooltipShowDelay="1000">
       <md-icon>{{model.isExpanded ? 'expand_more' : 'chevron_right'}}</md-icon>
     </button>
     <!-- Add extra 20px margin if the expand/collapse icon isn't being displayed -->
-    <md-icon svgIcon="{{this.layer.getIconName()}}"
+    <md-icon svgIcon="{{ this.layer.getIconName() }}"
       [style.margin-left]="model.isExpandable ? '0px' : '20px'">
     </md-icon>
     <span class="slt-layer-id-text"
@@ -30,7 +30,7 @@
       class="slt-layer-action-button slt-layer-visibility-toggle"
       (click)="this.layerToggleVisibility($event, this.layer)"
       [disabled]="model.isActionMode"
-      mdTooltip="{{model.isVisible ? 'Hide layer' : 'Show layer'}}"
+      mdTooltip="{{ model.isVisible ? 'Hide layer' : 'Show layer' }}"
       mdTooltipPosition="below"
       mdTooltipShowDelay="1000"
       [ngClass]="{'is-checked': model.isVisible}">

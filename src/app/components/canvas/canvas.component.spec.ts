@@ -7,13 +7,6 @@ import {
   inject,
 } from '@angular/core/testing';
 import { FlexLayoutModule } from '@angular/flex-layout';
-import {
-  MdButtonModule,
-  MdIconModule,
-  MdIconRegistry,
-  MdTooltipModule,
-} from '@angular/material';
-import { DomSanitizer } from '@angular/platform-browser';
 import { ActionSource } from 'app/scripts/model/actionmode';
 import {
   ActionModeService,

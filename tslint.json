@@ -28,11 +28,6 @@
       140
     ],
     "member-access": false,
-    "member-ordering": [
-      true,
-      "static-before-instance",
-      "variables-before-functions"
-    ],
     "no-arg": true,
     "no-bitwise": false,
     "no-console": [
@@ -149,6 +144,18 @@
     "no-access-missing-member": true,
     "templates-use-public": true,
     "invoke-injectable": true,
-    "prefer-object-spread": true
+    "prefer-object-spread": true,
+    "angular-whitespace": [
+      true,
+      "check-interpolation",
+      "check-pipe"
+    ],
+    "banana-in-box": true,
+    "templates-no-negated-async": true,
+    "no-attribute-parameter-decorator": true,
+    "no-forward-ref": true,
+    // TODO: enable this at some point
+    "use-view-encapsulation": false,
+    "template-to-ng-template": true
   }
 }
