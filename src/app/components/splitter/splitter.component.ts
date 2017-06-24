@@ -17,15 +17,16 @@ type Edge = 'left' | 'right' | 'top';
   selector: 'app-splitter',
   templateUrl: './splitter.component.html',
   styleUrls: ['./splitter.component.scss'],
-  // TODO: remove view encapsulation here
-  encapsulation: ViewEncapsulation.None,
   // TODO: use 'OnPush' change detection
 })
 export class SplitterComponent implements OnInit {
   @Input() edge: Edge;
   @Input() min: number;
   @Input() persistId: string;
-  @HostBinding('class') classNames = '';
+  @HostBinding('class.splt-horizontal') spltHorizontal: boolean;
+  @HostBinding('class.splt-vertical') spltVertical: boolean;
+  @HostBinding('class.splt-edge-left') spltEdgeLeft: boolean;
+  @HostBinding('class.splt-edge-right') spltEdgeRight: boolean;
   @HostBinding('style.backgroundColor') backgroundColor = '';
 
   private persistKey: string;
@@ -46,9 +47,11 @@ export class SplitterComponent implements OnInit {
     if (this.persistId) {
       this.persistKey = `\$\$splitter::${this.persistId}`;
     }
-    this.orientation =
-      this.edge === 'left' || this.edge === 'right' ? 'vertical' : 'horizontal';
-    this.classNames = `splt-${this.orientation} splt-edge-${this.edge}`;
+    this.orientation = this.edge === 'left' || this.edge === 'right' ? 'vertical' : 'horizontal';
+    this.spltHorizontal = this.orientation === 'horizontal';
+    this.spltVertical = this.orientation === 'vertical';
+    this.spltEdgeLeft = this.edge === 'left';
+    this.spltEdgeRight = this.edge === 'right';
     const getParentFn = () => $(this.elementRef.nativeElement).parent();
     if (this.orientation === 'vertical') {
       this.sizeGetterFn = () => getParentFn().width();

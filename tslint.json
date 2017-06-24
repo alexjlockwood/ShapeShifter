@@ -153,8 +153,7 @@
     "templates-no-negated-async": true,
     "no-attribute-parameter-decorator": true,
     "no-forward-ref": true,
-    // TODO: enable this at some point
-    "use-view-encapsulation": false,
+    "use-view-encapsulation": true,
     "template-to-ng-template": true
   }
 }
