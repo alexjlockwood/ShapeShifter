@@ -20,11 +20,17 @@ const excludedAttrs = ['display', 'opacity'];
 function removeNonInheritableGroupAttrsFn(item) {
   if (item.isElem('g')) {
     item.eachAttr(function (attr) {
+      // tslint:disable-next-line
       if (~attrsGroups.presentation.indexOf(attr.name)
+        // tslint:disable-next-line
         && ~attrsGroups.graphicalEvent.indexOf(attr.name)
+        // tslint:disable-next-line
         && ~attrsGroups.core.indexOf(attr.name)
+        // tslint:disable-next-line
         && ~attrsGroups.conditionalProcessing.indexOf(attr.name)
+        // tslint:disable-next-line
         && !~excludedAttrs.indexOf(attr.name)
+        // tslint:disable-next-line
         && !~inheritableAttrs.indexOf(attr.name)) {
         item.removeAttr(attr.name);
       }
