@@ -33,7 +33,7 @@ function moveGroupAttrsToElemsFn(item) {
     && item.hasAttr('transform')
     && !item.isEmpty()
     && !item.someAttr(function (attr) {
-      // tslint:disable-next-line
+      // tslint:disable-next-line: no-bitwise
       return ~referencesProps.indexOf(attr.name) && ~attr.value.indexOf('url(');
     })
     && item.content.every(function (inner) {

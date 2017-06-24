@@ -1,3 +1,5 @@
+import * as _ from 'lodash';
+
 import {
   Inspectable,
   NameProperty,
@@ -5,7 +7,6 @@ import {
   Property,
 } from '../properties';
 import { AnimationBlock } from '.';
-import * as _ from 'lodash';
 
 /**
  * An animation represents a collection of layer property tweens for a VectorLayer.
@@ -50,6 +51,4 @@ interface AnimationArgs {
 }
 
 export interface Animation extends AnimationArgs, Inspectable { }
-
-// tslint:disable-next-line
 export interface ConstructorArgs extends AnimationArgs { }

@@ -2,7 +2,6 @@ import {
   ComponentFixture,
   TestBed,
   async,
-  fakeAsync,
   inject,
 } from '@angular/core/testing';
 import { FlexLayoutModule } from '@angular/flex-layout';

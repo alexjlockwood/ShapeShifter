@@ -36,9 +36,9 @@ export class TimelineAnimationRowComponent implements OnInit, Callbacks {
   // MouseEvents from this layer (or children layers further down the tree)
   // are recursively handled by parent components until they reach
   // the LayerTimelineComponent.
-  @Output() timelineBlockClick = new EventEmitter<Event>();
-  @Output() timelineBlockMouseDown = new EventEmitter<Event>();
-  @Output() timelineBlockDoubleClick = new EventEmitter<Event>();
+  @Output() timelineBlockClick = new EventEmitter<AnimationRowEvent>();
+  @Output() timelineBlockMouseDown = new EventEmitter<AnimationRowEvent>();
+  @Output() timelineBlockDoubleClick = new EventEmitter<AnimationRowEvent>();
 
   constructor(
     private readonly store: Store<State>,
@@ -71,6 +71,7 @@ export class TimelineAnimationRowComponent implements OnInit, Callbacks {
     }
   }
 
+  // @Override Callbacks
   onTimelineBlockDoubleClick(event: MouseEvent, block: AnimationBlock) {
     event.stopPropagation();
     if (!this.actionModeService.isActionMode()) {
@@ -97,15 +98,16 @@ export interface Callbacks {
   onTimelineBlockDoubleClick(event: MouseEvent, block: AnimationBlock);
 }
 
+// tslint:disable: no-unused-variable
+interface AnimationRowEvent {
+  readonly event: MouseEvent;
+  readonly block: AnimationBlock;
+}
+
 interface AnimationRowModel {
   readonly animation: Animation;
   readonly blocksByPropertyNameValues: ReadonlyArray<ReadonlyArray<AnimationBlock>>;
   readonly isExpanded: boolean;
   readonly selectedBlockIds: Set<string>;
   readonly isActionMode: boolean;
-}
-
-interface Event {
-  readonly event: MouseEvent;
-  readonly block: AnimationBlock;
 }

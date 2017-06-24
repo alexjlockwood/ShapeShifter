@@ -2,7 +2,6 @@ import {
   ComponentFixture,
   TestBed,
   async,
-  inject,
 } from '@angular/core/testing';
 
 import { SplitterComponent } from './splitter.component';

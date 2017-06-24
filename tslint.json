@@ -61,7 +61,7 @@
       true,
       1
     ],
-    "no-use-before-declare": true,
+    "no-use-before-declare": false,
     "no-var-keyword": true,
     "object-literal-sort-keys": false,
     "one-line": [

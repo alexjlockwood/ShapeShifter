@@ -501,7 +501,7 @@ export class LayerTimelineComponent
         low, high, d => d.layerId === layerId && d.propertyName === propertyName);
     };
 
-    // tslint:disable-next-line
+    // tslint:disable-next-line: no-unused-expression
     new Dragger({
       direction: 'horizontal',
       downX: mouseDownEvent.clientX,
@@ -797,7 +797,7 @@ export class LayerTimelineComponent
     let targetLayerInfo: LayerInfo;
     let targetEdge: string;
 
-    // tslint:disable-next-line
+    // tslint:disable-next-line: no-unused-expression
     new Dragger({
       direction: 'both',
       downX: mouseDownEvent.clientX,

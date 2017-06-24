@@ -3,7 +3,6 @@ import {
   ComponentFixture,
   TestBed,
   async,
-  inject,
 } from '@angular/core/testing';
 
 import { ScrollGroupDirective } from './scrollgroup.directive';

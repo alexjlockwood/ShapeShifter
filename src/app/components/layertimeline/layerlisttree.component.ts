@@ -128,11 +128,13 @@ export interface Callbacks {
   onAddTimelineBlockClick(event: MouseEvent, layer: Layer, propertyName: string);
 }
 
+// tslint:disable: no-unused-variable
 interface LayerEvent {
   readonly event: MouseEvent;
   readonly layer: Layer;
 }
 
+// tslint:disable: no-unused-variable
 interface TimelineBlockEvent {
   readonly event: MouseEvent;
   readonly layer: Layer;

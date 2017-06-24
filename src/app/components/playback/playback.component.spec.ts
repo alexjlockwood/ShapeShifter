@@ -12,7 +12,6 @@ import {
   MdTooltipModule,
 } from '@angular/material';
 import { By } from '@angular/platform-browser';
-import { Action } from '@ngrx/store';
 import { AnimatorService } from 'app/services/animator.service';
 import { PlaybackService } from 'app/services/playback.service';
 import { Store } from 'app/store';

@@ -1,4 +1,12 @@
 import {
+  MathUtil,
+  Matrix,
+  Point,
+} from 'app/scripts/common';
+import { environment } from 'environments/environment';
+import * as _ from 'lodash';
+
+import {
   Command,
   Path,
   SvgChar,
@@ -10,13 +18,6 @@ import {
   SubPathStateMutator,
   flattenSubPathStates,
 } from './SubPathState';
-import {
-  MathUtil,
-  Matrix,
-  Point,
-} from 'app/scripts/common';
-import { environment } from 'environments/environment';
-import * as _ from 'lodash';
 
 const ENABLE_LOGS = !environment.production && false;
 
@@ -645,7 +646,7 @@ export class PathMutator {
   private updateOrderingAfterUnsplitSubPath(subIdx: number) {
     const spsIdx = this.subPathOrdering[subIdx];
     this.subPathOrdering.splice(subIdx, 1);
-    // tslint:disable-next-line
+    // tslint:disable-next-line: prefer-for-of
     for (let i = 0; i < this.subPathOrdering.length; i++) {
       if (spsIdx < this.subPathOrdering[i]) {
         this.subPathOrdering[i]--;
@@ -1088,7 +1089,7 @@ function shiftCommands(subPathState: SubPathState, cmds: Command[]) {
 function LOG(...args: any[]) {
   if (ENABLE_LOGS) {
     const [obj, ...objs] = args;
-    // tslint:disable-next-line
+    // tslint:disable-next-line: no-console
     console.info(obj, ...objs);
   }
 }

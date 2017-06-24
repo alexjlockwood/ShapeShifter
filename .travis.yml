@@ -17,6 +17,7 @@ install:
 script:
   - npm run lint
   - npm run test-once
+  - npm run build
 after_success:
   - npm run coveralls
   - bash <(curl -s https://codecov.io/bash)

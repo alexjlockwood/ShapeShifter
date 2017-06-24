@@ -56,7 +56,7 @@ export class FileImportService {
     }
 
     const files: File[] = [];
-    // tslint:disable-next-line
+    // tslint:disable-next-line: prefer-for-of
     for (let i = 0; i < fileList.length; i++) {
       files.push(fileList[i]);
     }

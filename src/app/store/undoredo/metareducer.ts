@@ -1,8 +1,9 @@
+import { Action, ActionReducer } from '@ngrx/store';
+import undoable, { StateWithHistory, excludeAction } from 'redux-undo';
+
 import * as actionModeActions from '../actionmode/actions';
 import * as playbackActions from '../playback/actions';
 import { AppState } from '../reducer';
-import { Action, ActionReducer } from '@ngrx/store';
-import undoable, { StateWithHistory, excludeAction } from 'redux-undo';
 
 const UNDO_HISTORY_SIZE = 30;
 const UNDO_DEBOUNCE_MILLIS = 1000;
@@ -33,7 +34,7 @@ export function metaReducer(reducer: AppStateReducer): StateReducer {
         return groupCounter;
       }
       groupCounter++;
-      // tslint:disable-next-line
+      // tslint:disable-next-line: no-null-keyword
       return null;
     },
   });

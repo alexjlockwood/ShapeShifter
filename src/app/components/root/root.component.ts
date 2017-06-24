@@ -101,8 +101,8 @@ export class RootComponent implements OnInit, AfterViewInit, OnDestroy {
     });
 
     const displaySize$ = this.displayBoundsSubject.asObservable()
-      .distinctUntilChanged(({ w: w1, h: h1 }, { w: w2, h: h2 }) => {
-        return w1 === w2 && h1 === h2;
+      .distinctUntilChanged((s1, s2) => {
+        return s1.w === s2.w && s1.h === s2.h;
       });
     this.isActionMode$ = this.store.select(getActionMode).map(mode => mode !== ActionMode.None);
     this.canvasBounds$ = Observable.combineLatest(displaySize$, this.isActionMode$)
@@ -162,7 +162,7 @@ export class RootComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
     const files: File[] = [];
-    // tslint:disable-next-line
+    // tslint:disable-next-line: prefer-for-of
     for (let i = 0; i < fileList.length; i++) {
       files.push(fileList[i]);
     }

@@ -1,3 +1,5 @@
+import * as _ from 'lodash';
+
 import { INTERPOLATORS } from '../interpolators';
 import { Path } from '../paths';
 import {
@@ -8,7 +10,6 @@ import {
   PathProperty,
   Property,
 } from '../properties';
-import * as _ from 'lodash';
 
 type AnimationBlockType = 'path' | 'color' | 'number';
 

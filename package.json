@@ -7,7 +7,7 @@
     "start": "node --max-old-space-size=8192 ./node_modules/.bin/ng serve",
     "build": "node --max-old-space-size=8192 ./node_modules/.bin/ng build -prod",
     "test": "node --max-old-space-size=8192 ./node_modules/.bin/ng test",
-    "lint": "node --max-old-space-size=8192 ./node_modules/.bin/ng lint",
+    "lint": "node --max-old-space-size=8192 ./node_modules/.bin/ng lint --type-check",
     "e2e": "node --max-old-space-size=8192 ./node_modules/.bin/ng e2e",
     "test-once": "node --max-old-space-size=8192 ./node_modules/.bin/ng test --single-run --code-coverage",
     "deploy": "node --max-old-space-size=8192 ./node_modules/.bin/ng build -prod && cp ./CNAME ./dist/CNAME && ngh",

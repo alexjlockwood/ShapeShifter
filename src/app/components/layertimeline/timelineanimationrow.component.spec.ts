@@ -5,7 +5,6 @@ import {
   inject,
 } from '@angular/core/testing';
 import { FlexLayoutModule } from '@angular/flex-layout';
-import { Layer } from 'app/scripts/model/layers';
 import { ActionModeService } from 'app/services';
 import { Store } from 'app/store';
 import { MockStore } from 'test/MockStore';

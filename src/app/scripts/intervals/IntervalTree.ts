@@ -18,8 +18,8 @@ export class IntervalTree<T> {
    * An extra predicateFn can be supplied to further filter the results.
    */
   intersectsWith(low: number, high: number, predicateFn = (data: T) => true) {
-    return this.intervals.some(({ low: l, high: h, data: d }) => {
-      return low < h && l < high && predicateFn(d);
+    return this.intervals.some(interval => {
+      return low < interval.high && interval.low < high && predicateFn(interval.data);
     });
   }
 }

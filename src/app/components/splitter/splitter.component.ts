@@ -5,7 +5,6 @@ import {
   HostListener,
   Input,
   OnInit,
-  ViewEncapsulation,
 } from '@angular/core';
 import { Dragger } from 'app/scripts/dragger';
 import * as $ from 'jquery';
@@ -82,7 +81,7 @@ export class SplitterComponent implements OnInit {
     this.isDragging = true;
     this.showSplitter();
 
-    // tslint:disable-next-line
+    // tslint:disable-next-line: no-unused-expression
     new Dragger({
       downX: event.clientX,
       downY: event.clientY,

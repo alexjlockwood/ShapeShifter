@@ -72,7 +72,7 @@ export class LayerTimelineGridDirective {
   onMouseDown(event: MouseEvent) {
     this.handleScrubEvent(
       event.clientX, ShortcutService.getOsDependentModifierKey(event));
-    // tslint:disable-next-line
+    // tslint:disable-next-line: no-unused-expression
     new Dragger({
       direction: 'horizontal',
       downX: event.clientX,

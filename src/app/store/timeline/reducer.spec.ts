@@ -1,5 +1,5 @@
 import { SelectAnimation } from './actions';
-import { buildInitialState, reducer } from './reducer';
+import { reducer } from './reducer';
 
 describe('@ngrx/store timeline', () => {
   it('should select/deselect the animation', () => {
