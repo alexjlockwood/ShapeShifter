@@ -35,14 +35,14 @@
       *ngIf="data.showActionMode"
       class="action-mode-close-icon"
       (click)="onCloseActionModeClick($event)">
-      <md-icon>{{toolbarData.isSelectionMode() ? 'arrow_back' : 'close'}}</md-icon>
+      <md-icon>{{ toolbarData.isSelectionMode() ? 'arrow_back' : 'close' }}</md-icon>
     </button>
 
     <!-- Toolbar text. -->
     <div fxLayout="column">
-      <span class="toolbar-title">{{data.toolbarTitle}}</span>
+      <span class="toolbar-title">{{ data.toolbarTitle }}</span>
       <span *ngIf="data.toolbarSubtitle"
-        class="toolbar-subtitle">{{data.toolbarSubtitle}}
+        class="toolbar-subtitle">{{ data.toolbarSubtitle }}
       </span>
     </div>
 

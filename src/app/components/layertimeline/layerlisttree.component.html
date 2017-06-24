@@ -16,7 +16,7 @@
       mdTooltip="{{ model.isExpanded ? 'Collapse layer' : 'Expand layer' }}"
       mdTooltipPosition="right"
       mdTooltipShowDelay="1000">
-      <md-icon>{{model.isExpanded ? 'expand_more' : 'chevron_right'}}</md-icon>
+      <md-icon>{{ model.isExpanded ? 'expand_more' : 'chevron_right' }}</md-icon>
     </button>
     <!-- Add extra 20px margin if the expand/collapse icon isn't being displayed -->
     <md-icon svgIcon="{{ this.layer.getIconName() }}"
@@ -24,7 +24,7 @@
     </md-icon>
     <span class="slt-layer-id-text"
       fxFlex>
-      {{this.layer.name}}
+      {{ this.layer.name }}
     </span>
     <button md-icon-button
       class="slt-layer-action-button slt-layer-visibility-toggle"
@@ -34,13 +34,13 @@
       mdTooltipPosition="below"
       mdTooltipShowDelay="1000"
       [ngClass]="{'is-checked': model.isVisible}">
-      <md-icon>{{model.isVisible ? 'visibility' : 'visibility_off'}}</md-icon>
+      <md-icon>{{ model.isVisible ? 'visibility' : 'visibility_off' }}</md-icon>
     </button>
     <md-menu #addTimelineBlockMenu="mdMenu">
       <button *ngFor="let propertyName of model.availablePropertyNames"
         (click)="this.addTimelineBlockClick($event, layer, propertyName)"
         md-menu-item>
-        {{propertyName}}
+        {{ propertyName }}
       </button>
     </md-menu>
     <button md-icon-button
@@ -63,7 +63,7 @@
       fxLayout="row"
       fxLayoutAlign="start center"
       *ngFor="let propertyName of model.existingPropertyNames">
-      <span class="slt-property-name">{{propertyName}}</span>
+      <span class="slt-property-name">{{ propertyName }}</span>
       <button md-icon-button
         class="slt-property-add-timeline-block-button"
         (click)="this.addTimelineBlockClick($event, layer, propertyName)"

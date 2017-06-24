@@ -51,7 +51,7 @@
         <app-playback></app-playback>
       </div>
       <!-- Property input panel. -->
-      <app-propertyinput *ngIf="!(this.isActionMode$ | async)"
+      <app-propertyinput *ngIf="(this.isActionMode$ | async) === false"
         fxLayout="column"
         (click)="$event.stopPropagation()">
       </app-propertyinput>

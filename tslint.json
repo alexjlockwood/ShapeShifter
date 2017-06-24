@@ -147,8 +147,7 @@
     "prefer-object-spread": true,
     "angular-whitespace": [
       true,
-      "check-interpolation",
-      "check-pipe"
+      "check-interpolation"
     ],
     "banana-in-box": true,
     "templates-no-negated-async": true,

@@ -9,7 +9,7 @@ import { DEMO_INFOS } from 'app/scripts/demos';
   <md-radio-group class="dialog-radio-group" [(ngModel)]="this.selectedDemoInfo">
     <md-radio-button class="dialog-radio-button"
       *ngFor="let demoInfo of this.demoInfos" [value]="demoInfo">
-      {{demoInfo.title}}
+      {{ demoInfo.title }}
     </md-radio-button>
   </md-radio-group>
   <md-dialog-actions fxLayout="row">
