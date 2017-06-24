@@ -14,7 +14,7 @@ import {
   MdTooltipModule,
 } from '@angular/material';
 import { DomSanitizer } from '@angular/platform-browser';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { SplitterComponent } from 'app/components/splitter/splitter.component';
 import {
   ActionModeService,
@@ -41,13 +41,13 @@ describe('ToolbarComponent', () => {
       .configureTestingModule({
         declarations: [ToolbarComponent],
         imports: [
-          BrowserAnimationsModule,
           HttpModule,
           FlexLayoutModule,
           MdButtonModule,
           MdIconModule,
           MdMenuModule,
           MdTooltipModule,
+          NoopAnimationsModule,
         ],
         providers: [
           { provide: Store, useValue: new MockStore() },
@@ -58,8 +58,8 @@ describe('ToolbarComponent', () => {
     loadSvgIcons([
       { name: 'autofix', path: 'assets/icons/autofix.svg' },
       { name: 'contribute', path: 'assets/icons/contribute.svg' },
-      { name: 'shapeshifter', path: 'assets/shapeshifter.svg' },
       { name: 'reverse', path: 'assets/icons/reverse.svg' },
+      { name: 'shapeshifter', path: 'assets/shapeshifter.svg' },
     ]);
   }));
 

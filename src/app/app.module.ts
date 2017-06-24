@@ -62,7 +62,6 @@ import { reducer } from './store';
 
 @NgModule({
   declarations: [
-    RootComponent,
     CanvasComponent,
     CanvasContainerDirective,
     CanvasLayersDirective,
@@ -77,6 +76,7 @@ import { reducer } from './store';
     LayerTimelineGridDirective,
     PlaybackComponent,
     PropertyInputComponent,
+    RootComponent,
     ScrollGroupDirective,
     SplashScreenComponent,
     SplitterComponent,
