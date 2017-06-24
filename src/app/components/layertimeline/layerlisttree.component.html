@@ -6,12 +6,12 @@
       'is-selected': model.isSelected,
       'is-disabled': model.isActionMode
     }"
-    (click)="this.layerClick($event, this.layer)"
-    (dblclick)="this.layerToggleExpanded($event, this.layer)"
-    (mousedown)="this.layerMouseDown($event, this.layer)">
+    (click)="this.onLayerClick($event, this.layer)"
+    (dblclick)="this.onLayerToggleExpanded($event, this.layer)"
+    (mousedown)="this.onLayerMouseDown($event, this.layer)">
     <button md-icon-button
       *ngIf="model.isExpandable"
-      (click)="this.layerToggleExpanded($event, this.layer)"
+      (click)="this.onLayerToggleExpanded($event, this.layer)"
       [disabled]="model.isActionMode"
       mdTooltip="{{ model.isExpanded ? 'Collapse layer' : 'Expand layer' }}"
       mdTooltipPosition="right"
@@ -28,7 +28,7 @@
     </span>
     <button md-icon-button
       class="slt-layer-action-button slt-layer-visibility-toggle"
-      (click)="this.layerToggleVisibility($event, this.layer)"
+      (click)="this.onLayerToggleVisibility($event, this.layer)"
       [disabled]="model.isActionMode"
       mdTooltip="{{ model.isVisible ? 'Hide layer' : 'Show layer' }}"
       mdTooltipPosition="below"
@@ -38,7 +38,7 @@
     </button>
     <md-menu #addTimelineBlockMenu="mdMenu">
       <button *ngFor="let propertyName of model.availablePropertyNames"
-        (click)="this.addTimelineBlockClick($event, layer, propertyName)"
+        (click)="this.onAddTimelineBlockClick($event, layer, propertyName)"
         md-menu-item>
         {{ propertyName }}
       </button>
@@ -66,7 +66,7 @@
       <span class="slt-property-name">{{ propertyName }}</span>
       <button md-icon-button
         class="slt-property-add-timeline-block-button"
-        (click)="this.addTimelineBlockClick($event, layer, propertyName)"
+        (click)="this.onAddTimelineBlockClick($event, layer, propertyName)"
         [disabled]="model.isActionMode"
         mdTooltip="Add another animation"
         mdTooltipPosition="below"
@@ -83,11 +83,11 @@
       class="slt-layer-container"
       [attr.data-layer-id]="child.id">
       <app-layerlisttree [layer]="child"
-        (onLayerClick)="this.layerClick($event.event, $event.layer)"
-        (onLayerToggleExpanded)="this.layerToggleExpanded($event.event, $event.layer)"
-        (onLayerToggleVisibility)="this.layerToggleVisibility($event.event, $event.layer)"
-        (onAddTimelineBlockClick)="this.addTimelineBlockClick($event.event, $event.layer, $event.propertyName)"
-        (onLayerMouseDown)="this.layerMouseDown($event.event, $event.layer)">
+        (layerMouseDown)="this.onLayerMouseDown($event.event, $event.layer)"
+        (layerClick)="this.onLayerClick($event.event, $event.layer)"
+        (layerToggleExpanded)="this.onLayerToggleExpanded($event.event, $event.layer)"
+        (layerToggleVisibility)="this.onLayerToggleVisibility($event.event, $event.layer)"
+        (addTimelineBlockClick)="this.onAddTimelineBlockClick($event.event, $event.layer, $event.propertyName)">
       </app-layerlisttree>
     </li>
   </ul>

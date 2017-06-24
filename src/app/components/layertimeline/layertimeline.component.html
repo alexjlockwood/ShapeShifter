@@ -19,11 +19,11 @@
       <!-- File menu. -->
       <md-menu #fileMenu="mdMenu">
         <button md-menu-item
-          (click)="this.newWorkspaceClick()">
+          (click)="this.onNewWorkspaceClick()">
           New
         </button>
         <button md-menu-item
-          (click)="this.launchFilePicker('openFileButton')">
+          (click)="this.onLaunchFilePickerClick('openFileButton')">
           Open
           <input
             id="openFileButton"
@@ -32,11 +32,11 @@
             (change)="onImportedFilesPicked(($event.target || $event.srcElement).files)">
         </button>
         <button md-menu-item
-          (click)="this.saveToFileClick()">
+          (click)="this.onSaveToFileClick()">
           Save
         </button>
         <button md-menu-item
-          (click)="this.loadDemoClick()">
+          (click)="this.onLoadDemoClick()">
           Demo
         </button>
       </md-menu>
@@ -49,7 +49,7 @@
       <!-- Import menu. -->
       <md-menu #importMenu="mdMenu">
         <button md-menu-item
-          (click)="this.launchFilePicker('addPathsFromSvgButton')">
+          (click)="this.onLaunchFilePickerClick('addPathsFromSvgButton')">
           SVG
           <input
             multiple
@@ -59,7 +59,7 @@
             (change)="onImportedFilesPicked(($event.target || $event.srcElement).files)">
         </button>
         <button md-menu-item
-          (click)="this.launchFilePicker('addPathsFromXmlButton')">
+          (click)="this.onLaunchFilePickerClick('addPathsFromXmlButton')">
           Vector Drawable
           <input
             multiple
@@ -80,24 +80,24 @@
       <!-- Export menu. -->
       <md-menu #exportMenu="mdMenu">
         <button md-menu-item
-          (click)="exportSvgClick()">
+          (click)="this.onExportSvgClick()">
           SVG
         </button>
         <button md-menu-item
-          (click)="exportVectorDrawableClick()">
+          (click)="this.onExportVectorDrawableClick()">
           Vector Drawable
         </button>
         <button md-menu-item
-          (click)="exportAnimatedVectorDrawableClick()">
+          (click)="this.onExportAnimatedVectorDrawableClick()">
           Animated Vector Drawable
         </button>
         <button md-menu-item
-          (click)="exportSvgSpritesheetClick()">
+          (click)="this.onExportSvgSpritesheetClick()">
           SVG spritesheet
         </button>
         <!--<button md-menu-item
           [disabled]="true"
-          (click)="exportCssKeyframesClick()">
+          (click)="this.onExportCssKeyframesClick()">
           CSS keyframes
         </button>-->
       </md-menu>
@@ -114,15 +114,15 @@
       <!-- Add layer menu. -->
       <md-menu #addLayerMenu="mdMenu">
         <button md-menu-item
-          (click)="addPathLayerClick()">
+          (click)="this.onAddPathLayerClick()">
           New path
         </button>
         <button md-menu-item
-          (click)="addClipPathLayerClick()">
+          (click)="this.onAddClipPathLayerClick()">
           New clip path
         </button>
         <button md-menu-item
-          (click)="addGroupLayerClick()">
+          (click)="this.onAddGroupLayerClick()">
           New group layer
         </button>
       </md-menu>
@@ -150,11 +150,11 @@
           class="slt-layer-container"
           *ngFor="let vectorLayer of [model.vectorLayer]; trackBy: trackLayerFn"
           [layer]="vectorLayer"
-          (onLayerClick)="this.layerClick($event.event, $event.layer)"
-          (onLayerToggleExpanded)="this.layerToggleExpanded($event.event, $event.layer)"
-          (onLayerToggleVisibility)="this.layerToggleVisibility($event.event, $event.layer)"
-          (onLayerMouseDown)="this.layerMouseDown($event.event, $event.layer)"
-          (onAddTimelineBlockClick)="this.addTimelineBlockClick($event.event, $event.layer, $event.propertyName)">
+          (layerClick)="this.onLayerClick($event.event, $event.layer)"
+          (layerToggleExpanded)="this.onLayerToggleExpanded($event.event, $event.layer)"
+          (layerToggleVisibility)="this.onLayerToggleVisibility($event.event, $event.layer)"
+          (layerMouseDown)="this.onLayerMouseDown($event.event, $event.layer)"
+          (addTimelineBlockClick)="this.onAddTimelineBlockClick($event.event, $event.layer, $event.propertyName)">
         </app-layerlisttree>
       </div>
       <div *ngIf="(this.dragIndicatorObservable | async) as dragData"
@@ -183,7 +183,7 @@
           <div class="slt-timeline-animation-meta"
             [class.is-disabled]="model.isActionMode"
             [class.is-selected]="model.isAnimationSelected"
-            (click)="this.animationHeaderTextClick($event)">
+            (click)="this.onAnimationHeaderTextClick($event)">
             <span class="slt-timeline-animation-name"
               [class.is-disabled]="model.isActionMode">
               {{ model.animation.name }}
@@ -194,7 +194,7 @@
             </span>
           </div>
           <button md-icon-button
-            (click)="this.zoomToFitClick($event)"
+            (click)="this.onZoomToFitClick($event)"
             mdTooltip="Zoom to fit ({{ this.shortcutService.getZoomToFitText() }})"
             mdTooltipPosition="below"
             mdTooltipShowDelay="500">
@@ -206,7 +206,7 @@
           [animation]="model.animation"
           [horizZoom]="animationData.horizZoom"
           [isHeader]="true"
-          (onScrub)="this.timelineHeaderScrub($event)">
+          (scrub)="this.onTimelineHeaderScrub($event)">
         </canvas>
       </div>
 
@@ -224,11 +224,11 @@
                ever one layer in the list. We use it because it allows us to recreate
                the component from scratch when the layer id changes (i.e. when
                the workspace is reset). -->
-          <app-timelineanimationrow *ngFor="let vectorLayer of [model.vectorLayer]; trackBy: trackLayerFn"
-            [layer]="vectorLayer"
-            (onTimelineBlockMouseDown)="this.timelineBlockMouseDown($event.event, $event.block)"
-            (onTimelineBlockClick)="this.timelineBlockClick($event.event, $event.block)"
-            (onTimelineBlockDoubleClick)="this.timelineBlockDoubleClick($event.event, $event.block)">
+          <app-timelineanimationrow *ngFor="let vl of [model.vectorLayer]; trackBy: trackLayerFn"
+            [layer]="vl"
+            (timelineBlockMouseDown)="this.onTimelineBlockMouseDown($event.event, $event.block)"
+            (timelineBlockClick)="this.onTimelineBlockClick($event.event, $event.block)"
+            (timelineBlockDoubleClick)="this.onTimelineBlockDoubleClick($event.event, $event.block)">
           </app-timelineanimationrow>
         </div>
       </div>

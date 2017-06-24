@@ -8,9 +8,9 @@
       *ngFor="let blocks of model.blocksByPropertyNameValues">
       <div class="slt-timeline-block"
         *ngFor="let block of blocks"
-        (dblclick)="this.timelineBlockDoubleClick($event, block, this.layer)"
-        (click)="this.timelineBlockClick($event, block, this.layer)"
-        (mousedown)="this.timelineBlockMouseDown($event, block, this.layer)"
+        (dblclick)="this.onTimelineBlockDoubleClick($event, block, this.layer)"
+        (click)="this.onTimelineBlockClick($event, block, this.layer)"
+        (mousedown)="this.onTimelineBlockMouseDown($event, block, this.layer)"
         tabindex="-1"
         [ngStyle]="{
           'left': (100 * block.startTime / model.animation.duration) + '%',
@@ -32,9 +32,9 @@
     *ngIf="layer.children.length > 0 && model.isExpanded">
     <li *ngFor="let child of layer.children; trackBy: trackLayerFn">
       <app-timelineanimationrow [layer]="child"
-        (onTimelineBlockMouseDown)="this.timelineBlockMouseDown($event.event, $event.block, $event.layer)"
-        (onTimelineBlockClick)="this.timelineBlockClick($event.event, $event.block, $event.layer)"
-        (onTimelineBlockDoubleClick)="this.timelineBlockDoubleClick($event.event, $event.block, $event.layer)">
+        (timelineBlockMouseDown)="this.onTimelineBlockMouseDown($event.event, $event.block, $event.layer)"
+        (timelineBlockClick)="this.onTimelineBlockClick($event.event, $event.block, $event.layer)"
+        (timelineBlockDoubleClick)="this.onTimelineBlockDoubleClick($event.event, $event.block, $event.layer)">
       </app-timelineanimationrow>
     </li>
   </ul>

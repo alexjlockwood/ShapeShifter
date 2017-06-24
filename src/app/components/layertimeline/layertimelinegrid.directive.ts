@@ -1,4 +1,3 @@
-import { TIMELINE_ANIMATION_PADDING } from './constants';
 import {
   Directive,
   ElementRef,
@@ -13,16 +12,17 @@ import { ShortcutService } from 'app/services';
 import * as $ from 'jquery';
 import * as _ from 'lodash';
 
+import { TIMELINE_ANIMATION_PADDING } from './constants';
+
 const GRID_INTERVALS_MS = [
-  10, 25, 50, 100, 250, 500,
-  1000, 2500, 5000, 10000, 30000, 60000,
+  10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000, 30000, 60000,
 ];
 
 @Directive({ selector: '[appLayerTimelineGrid]' })
 export class LayerTimelineGridDirective {
 
   @Input() isHeader: boolean;
-  @Output() onScrub = new EventEmitter<ScrubEvent>();
+  @Output() scrub = new EventEmitter<ScrubEvent>();
 
   private readonly canvas: HTMLCanvasElement;
   private readonly $canvas: JQuery;
@@ -90,7 +90,7 @@ export class LayerTimelineGridDirective {
       / (this.$canvas.width() - TIMELINE_ANIMATION_PADDING * 2)
       * this.animation.duration;
     time = _.clamp(time, 0, this.animation.duration);
-    this.onScrub.emit({ time, disableSnap });
+    this.scrub.emit({ time, disableSnap });
   }
 
   private redraw() {

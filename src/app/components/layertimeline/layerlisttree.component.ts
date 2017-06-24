@@ -37,12 +37,12 @@ export class LayerListTreeComponent implements OnInit, Callbacks {
   // MouseEvents from this layer (or children layers further down the tree)
   // are recursively handled by parent components until they reach
   // the LayerTimelineComponent.
-  @Output() onLayerClick = new EventEmitter<LayerEvent>();
-  @Output() onLayerDoubleClick = new EventEmitter<LayerEvent>();
-  @Output() onLayerMouseDown = new EventEmitter<LayerEvent>();
-  @Output() onLayerToggleExpanded = new EventEmitter<LayerEvent>();
-  @Output() onLayerToggleVisibility = new EventEmitter<LayerEvent>();
-  @Output() onAddTimelineBlockClick = new EventEmitter<TimelineBlockEvent>();
+  @Output() layerClick = new EventEmitter<LayerEvent>();
+  @Output() layerDoubleClick = new EventEmitter<LayerEvent>();
+  @Output() layerMouseDown = new EventEmitter<LayerEvent>();
+  @Output() layerToggleExpanded = new EventEmitter<LayerEvent>();
+  @Output() layerToggleVisibility = new EventEmitter<LayerEvent>();
+  @Output() addTimelineBlockClick = new EventEmitter<TimelineBlockEvent>();
 
   constructor(
     private readonly store: Store<State>,
@@ -72,41 +72,41 @@ export class LayerListTreeComponent implements OnInit, Callbacks {
   }
 
   // @Override Callbacks
-  layerClick(event: MouseEvent, layer: Layer) {
+  onLayerClick(event: MouseEvent, layer: Layer) {
     event.stopPropagation();
     if (!this.actionModeService.isActionMode()) {
-      this.onLayerClick.emit({ event, layer });
+      this.layerClick.emit({ event, layer });
     }
   }
 
   // @Override Callbacks
-  layerMouseDown(event: MouseEvent, layer: Layer) {
+  onLayerMouseDown(event: MouseEvent, layer: Layer) {
     if (!this.actionModeService.isActionMode()) {
-      this.onLayerMouseDown.emit({ event, layer });
+      this.layerMouseDown.emit({ event, layer });
     }
   }
 
   // @Override Callbacks
-  layerToggleExpanded(event: MouseEvent, layer: Layer) {
+  onLayerToggleExpanded(event: MouseEvent, layer: Layer) {
     event.stopPropagation();
     if (this.isLayerExpandable()) {
-      this.onLayerToggleExpanded.emit({ event, layer });
+      this.layerToggleExpanded.emit({ event, layer });
     }
   }
 
   // @Override Callbacks
-  layerToggleVisibility(event: MouseEvent, layer: Layer) {
+  onLayerToggleVisibility(event: MouseEvent, layer: Layer) {
     event.stopPropagation();
     if (!this.actionModeService.isActionMode()) {
-      this.onLayerToggleVisibility.emit({ event, layer });
+      this.layerToggleVisibility.emit({ event, layer });
     }
   }
 
   // @Override Callbacks
-  addTimelineBlockClick(event: MouseEvent, layer: Layer, propertyName: string) {
+  onAddTimelineBlockClick(event: MouseEvent, layer: Layer, propertyName: string) {
     event.stopPropagation();
     if (!this.actionModeService.isActionMode()) {
-      this.onAddTimelineBlockClick.emit({ event, layer, propertyName });
+      this.addTimelineBlockClick.emit({ event, layer, propertyName });
     }
   }
 
@@ -121,11 +121,11 @@ export class LayerListTreeComponent implements OnInit, Callbacks {
 }
 
 export interface Callbacks {
-  layerClick(event: MouseEvent, layer: Layer);
-  layerMouseDown(event: MouseEvent, layer: Layer);
-  layerToggleExpanded(event: MouseEvent, layer: Layer);
-  layerToggleVisibility(event: MouseEvent, layer: Layer);
-  addTimelineBlockClick(event: MouseEvent, layer: Layer, propertyName: string);
+  onLayerClick(event: MouseEvent, layer: Layer);
+  onLayerMouseDown(event: MouseEvent, layer: Layer);
+  onLayerToggleExpanded(event: MouseEvent, layer: Layer);
+  onLayerToggleVisibility(event: MouseEvent, layer: Layer);
+  onAddTimelineBlockClick(event: MouseEvent, layer: Layer, propertyName: string);
 }
 
 interface LayerEvent {

@@ -36,9 +36,9 @@ export class TimelineAnimationRowComponent implements OnInit, Callbacks {
   // MouseEvents from this layer (or children layers further down the tree)
   // are recursively handled by parent components until they reach
   // the LayerTimelineComponent.
-  @Output() onTimelineBlockClick = new EventEmitter<Event>();
-  @Output() onTimelineBlockMouseDown = new EventEmitter<Event>();
-  @Output() onTimelineBlockDoubleClick = new EventEmitter<Event>();
+  @Output() timelineBlockClick = new EventEmitter<Event>();
+  @Output() timelineBlockMouseDown = new EventEmitter<Event>();
+  @Output() timelineBlockDoubleClick = new EventEmitter<Event>();
 
   constructor(
     private readonly store: Store<State>,
@@ -64,24 +64,24 @@ export class TimelineAnimationRowComponent implements OnInit, Callbacks {
   }
 
   // @Override Callbacks
-  timelineBlockClick(event: MouseEvent, block: AnimationBlock) {
+  onTimelineBlockClick(event: MouseEvent, block: AnimationBlock) {
     event.stopPropagation();
     if (!this.actionModeService.isActionMode()) {
-      this.onTimelineBlockClick.emit({ event, block });
+      this.timelineBlockClick.emit({ event, block });
     }
   }
 
-  timelineBlockDoubleClick(event: MouseEvent, block: AnimationBlock) {
+  onTimelineBlockDoubleClick(event: MouseEvent, block: AnimationBlock) {
     event.stopPropagation();
     if (!this.actionModeService.isActionMode()) {
-      this.onTimelineBlockDoubleClick.emit({ event, block });
+      this.timelineBlockDoubleClick.emit({ event, block });
     }
   }
 
   // @Override Callbacks
-  timelineBlockMouseDown(event: MouseEvent, block: AnimationBlock) {
+  onTimelineBlockMouseDown(event: MouseEvent, block: AnimationBlock) {
     if (!this.actionModeService.isActionMode()) {
-      this.onTimelineBlockMouseDown.emit({ event, block });
+      this.timelineBlockMouseDown.emit({ event, block });
     }
   }
 
@@ -92,9 +92,9 @@ export class TimelineAnimationRowComponent implements OnInit, Callbacks {
 }
 
 export interface Callbacks {
-  timelineBlockMouseDown(event: MouseEvent, block: AnimationBlock);
-  timelineBlockClick(event: MouseEvent, block: AnimationBlock);
-  timelineBlockDoubleClick(event: MouseEvent, block: AnimationBlock);
+  onTimelineBlockMouseDown(event: MouseEvent, block: AnimationBlock);
+  onTimelineBlockClick(event: MouseEvent, block: AnimationBlock);
+  onTimelineBlockDoubleClick(event: MouseEvent, block: AnimationBlock);
 }
 
 interface AnimationRowModel {

@@ -227,7 +227,7 @@ export class LayerTimelineComponent
   }
 
   // Called from the LayerTimelineComponent template.
-  newWorkspaceClick() {
+  onNewWorkspaceClick() {
     const resetWorkspaceFn = () => {
       ga('send', 'event', 'File', 'New');
       // TODO: figure out if this hack is necessary and/or can be avoided?
@@ -248,13 +248,13 @@ export class LayerTimelineComponent
   }
 
   // Called from the LayerTimelineComponent template.
-  saveToFileClick() {
+  onSaveToFileClick() {
     ga('send', 'event', 'File', 'Save');
     this.fileExportService.exportJSON();
   }
 
   // Called from the LayerTimelineComponent template.
-  loadDemoClick() {
+  onLoadDemoClick() {
     ga('send', 'event', 'File', 'Demo');
     this.dialogService
       .pickDemo()
@@ -280,38 +280,38 @@ export class LayerTimelineComponent
   }
 
   // Called from the LayerTimelineComponent template.
-  exportSvgClick() {
+  onExportSvgClick() {
     ga('send', 'event', 'Export', 'SVG');
     this.fileExportService.exportSvg();
   }
 
   // Called from the LayerTimelineComponent template.
-  exportVectorDrawableClick() {
+  onExportVectorDrawableClick() {
     ga('send', 'event', 'Export', 'Vector Drawable');
     this.fileExportService.exportVectorDrawable();
   }
 
   // Called from the LayerTimelineComponent template.
-  exportAnimatedVectorDrawableClick() {
+  onExportAnimatedVectorDrawableClick() {
     ga('send', 'event', 'Export', 'Animated Vector Drawable');
     this.fileExportService.exportAnimatedVectorDrawable();
   }
 
   // Called from the LayerTimelineComponent template.
-  exportSvgSpritesheetClick() {
+  onExportSvgSpritesheetClick() {
     ga('send', 'event', 'Export', 'SVG Spritesheet');
     this.fileExportService.exportSvgSpritesheet();
   }
 
   // Called from the LayerTimelineComponent template.
-  exportCssKeyframesClick() {
+  onExportCssKeyframesClick() {
     ga('send', 'event', 'Export', 'CSS Keyframes');
     // TODO: uncomment this stuff out in the HTML template once implemented
     this.fileExportService.exportCssKeyframes();
   }
 
   // Called from the LayerTimelineComponent template.
-  animationHeaderTextClick(event: MouseEvent) {
+  onAnimationHeaderTextClick(event: MouseEvent) {
     // Stop propagation to ensure that animationTimelineClick() isn't called.
     event.stopPropagation();
     if (!this.actionModeService.isActionMode()) {
@@ -321,7 +321,7 @@ export class LayerTimelineComponent
   }
 
   // Called from the LayerTimelineComponent template.
-  timelineHeaderScrub(event: ScrubEvent) {
+  onTimelineHeaderScrub(event: ScrubEvent) {
     let time = event.time;
     if (!event.disableSnap) {
       time = this.snapTime(time, false);
@@ -331,7 +331,7 @@ export class LayerTimelineComponent
   }
 
   // Called from the LayerTimelineComponent template.
-  addPathLayerClick() {
+  onAddPathLayerClick() {
     this.store.select(getVectorLayer).first().subscribe(vl => {
       const layer = new PathLayer({
         name: LayerUtil.getUniqueLayerName([vl], 'path'),
@@ -343,7 +343,7 @@ export class LayerTimelineComponent
   }
 
   // Called from the LayerTimelineComponent template.
-  addClipPathLayerClick() {
+  onAddClipPathLayerClick() {
     this.store.select(getVectorLayer).first().subscribe(vl => {
       const layer = new ClipPathLayer({
         name: LayerUtil.getUniqueLayerName([vl], 'mask'),
@@ -355,7 +355,7 @@ export class LayerTimelineComponent
   }
 
   // Called from the LayerTimelineComponent template.
-  addGroupLayerClick() {
+  onAddGroupLayerClick() {
     this.store.select(getVectorLayer).first().subscribe(vl => {
       const name = LayerUtil.getUniqueLayerName([vl], 'group');
       const layer = new GroupLayer({ name, children: [] });
@@ -364,7 +364,7 @@ export class LayerTimelineComponent
   }
 
   // @Override TimelineAnimationRowCallbacks
-  timelineBlockMouseDown(mouseDownEvent: MouseEvent, dragBlock: AnimationBlock) {
+  onTimelineBlockMouseDown(mouseDownEvent: MouseEvent, dragBlock: AnimationBlock) {
     const animation = this.animation;
     // TODO: this JQuery 'class' stuff may not work with view encapsulation enabled
     const $target = $(mouseDownEvent.target);
@@ -738,19 +738,19 @@ export class LayerTimelineComponent
   }
 
   // @Override TimelineAnimationRowCallbacks
-  timelineBlockClick(event: MouseEvent, block: AnimationBlock) {
+  onTimelineBlockClick(event: MouseEvent, block: AnimationBlock) {
     const clearExisting =
       !ShortcutService.getOsDependentModifierKey(event) && !event.shiftKey;
     this.store.dispatch(new SelectBlock(block.id, clearExisting));
   }
 
   // @Override TimelineAnimationRowCallbacks
-  timelineBlockDoubleClick(event: MouseEvent, block: AnimationBlock) {
+  onTimelineBlockDoubleClick(event: MouseEvent, block: AnimationBlock) {
     this.animatorService.setAnimationTime(block.startTime);
   }
 
   // @Override LayerListTreeComponentCallbacks
-  addTimelineBlockClick(
+  onAddTimelineBlockClick(
     event: MouseEvent,
     layer: Layer,
     propertyName: string,
@@ -762,26 +762,26 @@ export class LayerTimelineComponent
   }
 
   // @Override LayerListTreeComponentCallbacks
-  layerClick(event: MouseEvent, layer: Layer) {
+  onLayerClick(event: MouseEvent, layer: Layer) {
     const clearExisting =
       !ShortcutService.getOsDependentModifierKey(event) && !event.shiftKey;
     this.store.dispatch(new SelectLayer(layer.id, clearExisting));
   }
 
   // @Override LayerListTreeComponentCallbacks
-  layerToggleExpanded(event: MouseEvent, layer: Layer) {
+  onLayerToggleExpanded(event: MouseEvent, layer: Layer) {
     const recursive =
       ShortcutService.getOsDependentModifierKey(event) || event.shiftKey;
     this.store.dispatch(new ToggleLayerExpansion(layer.id, recursive));
   }
 
   // @Override LayerListTreeComponentCallbacks
-  layerToggleVisibility(event: MouseEvent, layer: Layer) {
+  onLayerToggleVisibility(event: MouseEvent, layer: Layer) {
     this.store.dispatch(new ToggleLayerVisibility(layer.id));
   }
 
   // @Override LayerListTreeComponentCallbacks
-  layerMouseDown(mouseDownEvent: MouseEvent, dragLayer: Layer) {
+  onLayerMouseDown(mouseDownEvent: MouseEvent, dragLayer: Layer) {
     const $layersList = $(mouseDownEvent.target).parents('.slt-layers-list');
     const $scroller = $(mouseDownEvent.target).parents('.slt-layers-list-scroller');
 
@@ -1016,7 +1016,7 @@ export class LayerTimelineComponent
   }
 
   // Called from the LayerTimelineComponent template.
-  zoomToFitClick(event: MouseEvent) {
+  onZoomToFitClick(event: MouseEvent) {
     event.stopPropagation();
     this.autoZoomToAnimation();
   }
@@ -1032,7 +1032,7 @@ export class LayerTimelineComponent
   // Proxies a button click to the <input> tag that opens the file picker.
   // We clear the element's value to make it possible to import the same file
   // more than once.
-  launchFilePicker(sourceElementId: string) {
+  onLaunchFilePickerClick(sourceElementId: string) {
     $(`#${sourceElementId}`).val('').click();
   }
 
