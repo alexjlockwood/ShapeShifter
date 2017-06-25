@@ -1,5 +1,3 @@
-import { AppState } from '../reducer';
-import * as actions from './metaactions';
 import { ActionReducer } from '@ngrx/store';
 import { AutoAwesome } from 'app/scripts/algorithms';
 import {
@@ -10,10 +8,14 @@ import {
 import { MorphableLayer } from 'app/scripts/model/layers';
 import {
   Path,
+  PathMutator,
   PathUtil,
 } from 'app/scripts/model/paths';
 import { PathAnimationBlock } from 'app/scripts/model/timeline';
 import * as _ from 'lodash';
+
+import { AppState } from '../reducer';
+import * as actions from './metaactions';
 
 export function metaReducer(reducer: ActionReducer<AppState>): ActionReducer<AppState> {
   return (state: AppState, action: actions.Actions) => {
@@ -21,40 +23,19 @@ export function metaReducer(reducer: ActionReducer<AppState>): ActionReducer<App
 
       // Reverse all currently selected subpaths.
       case actions.REVERSE_SELECTED_SUBPATHS: {
-        const selections = getSubPathSelections(state);
-        const { source } = selections[0];
-        const pathMutator = getActivePath(state, source).mutate();
-        for (const { subIdx } of selections) {
-          pathMutator.reverseSubPath(subIdx);
-        }
-        state = updateActivePathBlock(state, source, pathMutator.build());
-        state = clearHover(state);
+        state = mutateSelectedSubPaths(state, (pm, subIdx) => pm.reverseSubPath(subIdx));
         break;
       }
 
       // Shift back all currently selected subpaths.
       case actions.SHIFT_BACK_SELECTED_SUBPATHS: {
-        const selections = getSubPathSelections(state);
-        const { source } = selections[0];
-        const pathMutator = getActivePath(state, source).mutate();
-        for (const { subIdx } of selections) {
-          pathMutator.shiftSubPathBack(subIdx);
-        }
-        state = updateActivePathBlock(state, source, pathMutator.build());
-        state = clearHover(state);
+        state = mutateSelectedSubPaths(state, (pm, subIdx) => pm.shiftSubPathBack(subIdx));
         break;
       }
 
       // Shift forward all currently selected subpaths.
       case actions.SHIFT_FORWARD_SELECTED_SUBPATHS: {
-        const selections = getSubPathSelections(state);
-        const { source } = selections[0];
-        const pathMutator = getActivePath(state, source).mutate();
-        for (const { subIdx } of selections) {
-          pathMutator.shiftSubPathForward(subIdx);
-        }
-        state = updateActivePathBlock(state, source, pathMutator.build());
-        state = clearHover(state);
+        state = mutateSelectedSubPaths(state, (pm, subIdx) => pm.shiftSubPathForward(subIdx));
         break;
       }
 
@@ -73,7 +54,6 @@ export function metaReducer(reducer: ActionReducer<AppState>): ActionReducer<App
         const pathMutator = activePath.mutate();
         pathMutator.shiftSubPathForward(subIdx, cmdIdx);
         state = updateActivePathBlock(state, source, pathMutator.build());
-        // state = clearHover(state);
         break;
       }
 
@@ -221,6 +201,18 @@ function getSegmentSelections(state: AppState) {
 
 function getPointSelections(state: AppState) {
   return state.actionmode.selections.filter(s => s.type === SelectionType.Point);
+}
+
+function mutateSelectedSubPaths(state: AppState, mutatorFn: (pm: PathMutator, subIdx: number) => void) {
+  const selections = getSubPathSelections(state);
+  const { source } = selections[0];
+  const pathMutator = getActivePath(state, source).mutate();
+  for (const { subIdx } of selections) {
+    mutatorFn(pathMutator, subIdx);
+  }
+  state = updateActivePathBlock(state, source, pathMutator.build());
+  state = clearHover(state);
+  return state;
 }
 
 function updateActivePathBlock(state: AppState, source: ActionSource, path: Path) {
