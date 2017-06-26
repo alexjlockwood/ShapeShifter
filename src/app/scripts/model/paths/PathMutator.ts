@@ -205,7 +205,7 @@ export class PathMutator {
   /**
    * Adds transforms on the path using the specified transformation matrices.
    */
-  addTransforms(transforms: Matrix[]) {
+  addTransforms(transforms: ReadonlyArray<Matrix>) {
     return this.applyTransforms(
       transforms, cs => cs.mutate().addTransforms(transforms).build());
   }
@@ -213,12 +213,12 @@ export class PathMutator {
   /**
    * Sets transforms on the path using the specified transformation matrices.
    */
-  setTransforms(transforms: Matrix[]) {
+  setTransforms(transforms: ReadonlyArray<Matrix>) {
     return this.applyTransforms(
       transforms, cs => cs.mutate().setTransforms(transforms).build());
   }
 
-  private applyTransforms(transforms: Matrix[], applyFn: (cs: CommandState) => CommandState) {
+  private applyTransforms(transforms: ReadonlyArray<Matrix>, applyFn: (cs: CommandState) => CommandState) {
     const spss = flattenSubPathStates(this.subPathStateMap);
     for (let spsIdx = 0; spsIdx < spss.length; spsIdx++) {
       const sps = spss[spsIdx];

@@ -1,4 +1,11 @@
 import {
+  MathUtil,
+  Matrix,
+  Point,
+} from 'app/scripts/common';
+import * as _ from 'lodash';
+
+import {
   Command,
   Projection,
   SvgChar,
@@ -8,12 +15,6 @@ import {
   Line,
   newCalculator,
 } from './calculators';
-import {
-  MathUtil,
-  Matrix,
-  Point,
-} from 'app/scripts/common';
-import * as _ from 'lodash';
 
 /**
  * Container class that encapsulates a Command's underlying state.
@@ -351,7 +352,7 @@ class CommandStateMutator {
    * Adds transforms to this command state object using the
    * specified transformation matrices.
    */
-  addTransforms(transforms: Matrix[]) {
+  addTransforms(transforms: ReadonlyArray<Matrix>) {
     return this.setTransforms([].concat(transforms, this.transforms));
   }
 
@@ -359,7 +360,7 @@ class CommandStateMutator {
    * Sets transforms to this command state object using the
    * specified transformation matrices.
    */
-  setTransforms(transforms: Matrix[]) {
+  setTransforms(transforms: ReadonlyArray<Matrix>) {
     this.transforms = [Matrix.flatten(...transforms)];
     this.calculator =
       newCalculator(

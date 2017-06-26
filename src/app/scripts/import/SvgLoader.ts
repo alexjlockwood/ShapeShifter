@@ -3,6 +3,7 @@ import {
   Matrix,
 } from 'app/scripts/common';
 import {
+  ClipPathLayer,
   FillType,
   GroupLayer,
   Layer,
@@ -19,6 +20,8 @@ import {
 import { NameProperty } from 'app/scripts/model/properties';
 import { Svgo } from 'app/scripts/svgo';
 import * as _ from 'lodash';
+
+// TODO: trim ids/strings?
 
 /**
  * Utility function that takes an SVG string as input and
@@ -57,6 +60,9 @@ export function loadVectorLayerFromSvgString(
     usedIds.add(finalName);
     return finalName;
   };
+
+  // TODO: handle clip paths referencing other clip paths
+  const clipPathMap = {};
 
   const nodeToLayerDataFn = (node, attrMap: Map<string, any>, transforms: ReadonlyArray<Matrix>): Layer => {
     if (!node
@@ -120,42 +126,105 @@ export function loadVectorLayerFromSvgString(
 
       let pathData = new Path(path);
       if (transforms.length) {
-        pathData = new Path(
-          _.chain(pathData.getSubPaths())
-            .flatMap(subPath => subPath.getCommands() as Command[])
-            .map(command => command.mutate().transform(transforms).build())
-            .value());
+        pathData = new Path(pathData.mutate().addTransforms(transforms).build().getPathString());
         const flattenedTransform = Matrix.flatten(...transforms);
         strokeWidth *= flattenedTransform.getScale();
       }
 
-      return new PathLayer({
-        id: _.uniqueId(),
-        name: makeFinalNodeIdFn(node, 'path'),
-        children: [],
-        pathData,
-        fillColor,
-        fillAlpha,
-        strokeColor,
-        strokeAlpha,
-        strokeWidth,
-        strokeLinecap,
-        strokeLinejoin,
-        strokeMiterLimit,
-        fillType,
-      });
+      const layer: Layer =
+        new PathLayer({
+          id: _.uniqueId(),
+          name: makeFinalNodeIdFn(node, 'path'),
+          children: [],
+          pathData: new Path(pathData.getPathString()),
+          fillColor,
+          fillAlpha,
+          strokeColor,
+          strokeAlpha,
+          strokeWidth,
+          strokeLinecap,
+          strokeLinejoin,
+          strokeMiterLimit,
+          fillType,
+        });
+
+      if (node.hasAttribute('clip-path')) {
+        let referencedClipPath = node.getAttribute('clip-path');
+        if (referencedClipPath) {
+          referencedClipPath = referencedClipPath.trim();
+          if (referencedClipPath.startsWith('url(#')) {
+            const endIndex = referencedClipPath.indexOf(')');
+            if (endIndex === referencedClipPath.length - 1) {
+              referencedClipPath = referencedClipPath.slice(5, endIndex);
+              let paths: Path[] = clipPathMap[referencedClipPath];
+              // TODO: if an empty clip path, mask the entire thing
+              if (paths && paths.length) {
+                paths = paths.map(p => p.mutate().addTransforms(transforms).build());
+                const groupChildren: Layer[] = [];
+                for (const p of paths) {
+                  groupChildren.push(new ClipPathLayer({
+                    name: makeFinalNodeIdFn(referencedClipPath, 'mask'),
+                    pathData: new Path(p.getPathString()),
+                    children: [],
+                  }));
+                }
+                groupChildren.push(layer);
+                return new GroupLayer({
+                  name: makeFinalNodeIdFn('group', 'group'),
+                  children: groupChildren,
+                });
+              }
+            }
+          }
+        }
+      }
+
+      return layer;
     }
 
     if (node.childNodes.length) {
       const children = Array.from(node.childNodes)
         .map(child => nodeToLayerDataFn(child, new Map(attrMap), transforms))
         .filter(child => !!child);
+
+      const layer = new GroupLayer({
+        id: _.uniqueId(),
+        name: makeFinalNodeIdFn(node, 'group'),
+        children,
+      });
       if (children.length) {
-        return new GroupLayer({
-          id: _.uniqueId(),
-          name: makeFinalNodeIdFn(node, 'group'),
-          children,
-        });
+        if (node.hasAttribute('clip-path')) {
+          let referencedClipPath = node.getAttribute('clip-path');
+          if (referencedClipPath) {
+            referencedClipPath = referencedClipPath.trim();
+            if (referencedClipPath.startsWith('url(#')) {
+              const endIndex = referencedClipPath.indexOf(')');
+              if (endIndex === referencedClipPath.length - 1) {
+                referencedClipPath = referencedClipPath.slice(5, endIndex);
+                let paths: Path[] = clipPathMap[referencedClipPath];
+                // TODO: if an empty clip path, mask the entire thing
+                if (paths && paths.length) {
+                  paths = paths.map(p => p.mutate().addTransforms(transforms).build());
+                  const groupChildren: Layer[] = [];
+                  for (const p of paths) {
+                    groupChildren.push(new ClipPathLayer({
+                      name: makeFinalNodeIdFn(referencedClipPath, 'mask'),
+                      pathData: new Path(p.getPathString()),
+                      children: [],
+                    }));
+                  }
+                  groupChildren.push(layer);
+                  return new GroupLayer({
+                    name: makeFinalNodeIdFn('group', 'group'),
+                    children: groupChildren,
+                  });
+                }
+              }
+            }
+          }
+        }
+
+        return layer;
       }
     }
 
@@ -168,7 +237,6 @@ export function loadVectorLayerFromSvgString(
     return undefined;
   }
 
-  const clipPathMap = [];
   const getClipPathsFn = (node: any) => {
     if (!node
       || node.nodeType === Node.TEXT_NODE
@@ -203,12 +271,13 @@ export function loadVectorLayerFromSvgString(
           }
           const path = child.hasAttribute('d') ? child.getAttribute('d') : '';
           if (path) {
-            return new Path(path).mutate().setTransforms(pathTransforms).build();
+            const p = new Path(path).mutate().addTransforms(pathTransforms).build();
+            return new Path(p.getPathString());
           }
           return undefined;
         }).filter(path => !!path);
         console.info('setting id:', node.getAttribute('id'), paths);
-        clipPathMap.push({ id: node.getAttribute('id'), paths });
+        clipPathMap[node.getAttribute('id')] = paths;
       }
       return;
     }

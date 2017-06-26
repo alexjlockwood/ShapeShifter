@@ -79,7 +79,7 @@ describe('SvgLoader', () => {
             <path d="M 6 6 L 18 6 L 18 18 L 6 18 L 6 6" transform="translate(-10, -10)"/>
         </clipPath>
     </defs>
-    <g clip-path="url(#clip1)">
+    <g>
         <g id="group" transform="translate(64 64) translate(16 16) scale(4 4) translate(-16 -16)">
             <path d="M 0 0 L 8 0 L 8 8 L 0 8 L 0 0" fill="#ff0000" id="path1" clip-path="url(#clip2)"/>
             <path d="M 12 12 L 36 12 L 36 36 L 12 36 L 12 12" fill="#00ff00" id="path2" clip-path="url(#clip3)"/>
@@ -89,6 +89,7 @@ describe('SvgLoader', () => {
 `;
     SvgLoader.loadVectorLayerFromSvgStringWithCallback(svg, vl => {
       // TODO: test stuff
+      console.info(vl);
     }, () => false);
   });
 });

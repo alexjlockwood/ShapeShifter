@@ -50,7 +50,6 @@ import { InspectedProperty } from './InspectedProperty';
 declare const ga: Function;
 
 // TODO: when you enter a 'start time' larger than 'end time', transform 'end time' correctly
-// TODO: POSSIBLE CRASH! don't let user enter action mode when 'M 0' is entered
 @Component({
   selector: 'app-propertyinput',
   templateUrl: './propertyinput.component.html',
