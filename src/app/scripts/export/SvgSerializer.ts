@@ -1,4 +1,3 @@
-import * as XmlSerializer from './XmlSerializer';
 import { ColorUtil } from 'app/scripts/common';
 import {
   ClipPathLayer,
@@ -9,6 +8,8 @@ import {
   VectorLayer,
 } from 'app/scripts/model/layers';
 import * as _ from 'lodash';
+
+import * as XmlSerializer from './XmlSerializer';
 
 const XMLNS_NS = 'http://www.w3.org/2000/xmlns/';
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -58,6 +59,8 @@ function vectorLayerToSvgNode(
     destinationNode.setAttributeNS(XMLNS_NS, 'xmlns', SVG_NS);
   }
   destinationNode.setAttributeNS(undefined, 'viewBox', `0 0 ${vl.width} ${vl.height}`);
+
+  // TODO: would be better to have clip-paths reference other clip paths in order to reduce file size
 
   // Create a map where the keys are all of the clip paths in the tree, and
   // their corresponding values are any affected clipped siblings.
