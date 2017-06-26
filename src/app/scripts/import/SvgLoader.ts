@@ -27,8 +27,8 @@ import * as _ from 'lodash';
 export function loadVectorLayerFromSvgStringWithCallback(
   svgString: string,
   callbackFn: (vl: VectorLayer) => void,
-  doesNameExistFn: (name: string) => boolean) {
-
+  doesNameExistFn: (name: string) => boolean,
+) {
   Svgo.optimize(svgString, (optimizedSvgString: string) => {
     if (!optimizedSvgString) {
       callbackFn(undefined);
