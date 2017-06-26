@@ -168,6 +168,58 @@ export function loadVectorLayerFromSvgString(
     return undefined;
   }
 
+  const clipPathMap = [];
+  const getClipPathsFn = (node: any) => {
+    if (!node
+      || node.nodeType === Node.TEXT_NODE
+      || node.nodeType === Node.COMMENT_NODE) {
+      return;
+    }
+    if (node instanceof SVGClipPathElement) {
+      let clipPathTransforms: ReadonlyArray<Matrix> = [];
+      if (node.transform) {
+        clipPathTransforms =
+          Array.from(node.transform.baseVal as any).reverse().map(t => {
+            const { a, b, c, d, e, f } = (t as any).matrix;
+            return new Matrix(a, b, c, d, e, f);
+          });
+      }
+      if (node.childNodes.length) {
+        const nodes = [];
+        for (let i = 0; i < node.childNodes.length; i++) {
+          const n = node.childNodes.item(i);
+          if (n.nodeName === 'path') {
+            nodes.push(n);
+          }
+        }
+        const paths = nodes.map((child: SVGPathElement) => {
+          let pathTransforms: Matrix[] = [...clipPathTransforms];
+          if (child.transform) {
+            const matrices = Array.from(child.transform.baseVal as any).reverse().map(t => {
+              const { a, b, c, d, e, f } = (t as any).matrix;
+              return new Matrix(a, b, c, d, e, f);
+            });
+            pathTransforms = [...matrices, ...pathTransforms];
+          }
+          const path = child.hasAttribute('d') ? child.getAttribute('d') : '';
+          if (path) {
+            return new Path(path).mutate().setTransforms(pathTransforms).build();
+          }
+          return undefined;
+        }).filter(path => !!path);
+        console.info('setting id:', node.getAttribute('id'), paths);
+        clipPathMap.push({ id: node.getAttribute('id'), paths });
+      }
+      return;
+    }
+    if (node.childNodes.length) {
+      Array.from(node.childNodes).forEach(child => getClipPathsFn(child));
+    }
+  };
+  getClipPathsFn(documentElement);
+
+  console.info(clipPathMap);
+
   const lengthPxFn = svgLength => {
     if (svgLength.baseVal) {
       svgLength = svgLength.baseVal;
