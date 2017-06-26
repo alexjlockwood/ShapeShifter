@@ -58,7 +58,7 @@ export function loadVectorLayerFromSvgString(
     return finalName;
   };
 
-  const nodeToLayerDataFn = (node, context): Layer => {
+  const nodeToLayerDataFn = (node, attrMap: Map<string, any>, transforms: ReadonlyArray<Matrix>): Layer => {
     if (!node
       || node.nodeType === Node.TEXT_NODE
       || node.nodeType === Node.COMMENT_NODE
@@ -68,8 +68,8 @@ export function loadVectorLayerFromSvgString(
     }
 
     const simpleAttrFn = (nodeAttr: string, contextAttr: string) => {
-      if (node.attributes && node.attributes[nodeAttr]) {
-        context[contextAttr] = node.attributes[nodeAttr].value;
+      if (node.hasAttribute(nodeAttr)) {
+        attrMap.set(contextAttr, node.getAttribute(nodeAttr));
       }
     };
 
@@ -84,40 +84,42 @@ export function loadVectorLayerFromSvgString(
     simpleAttrFn('fill-rule', 'fillType');
 
     if (node.transform) {
-      const transforms = Array.from(node.transform.baseVal).reverse();
-      context.transforms = context.transforms ? context.transforms.slice() : [];
-      context.transforms.splice(0, 0, ...transforms);
+      const matrices = Array.from(node.transform.baseVal).reverse().map(t => {
+        const { a, b, c, d, e, f } = (t as any).matrix;
+        return new Matrix(a, b, c, d, e, f);
+      });
+      transforms = [...matrices, ...transforms];
     }
 
-    let path;
-    if (node instanceof SVGPathElement) {
-      path = node.attributes ? (node.attributes as any).d.value : '';
+    let path = '';
+    if (node instanceof SVGPathElement && node.hasAttribute('d')) {
+      path = node.getAttribute('d');
     }
 
     if (path) {
       // Set the default values as specified by the SVG spec. Note that some of these default
       // values are different than the default values used by VectorDrawables.
       const fillColor =
-        ('fillColor' in context) ? ColorUtil.svgToAndroidColor(context.fillColor) : '#000';
+        attrMap.has('fillColor') ? ColorUtil.svgToAndroidColor(attrMap.get('fillColor')) : '#000';
       const strokeColor =
-        ('strokeColor' in context) ? ColorUtil.svgToAndroidColor(context.strokeColor) : undefined;
-      const fillAlpha = ('fillAlpha' in context) ? Number(context.fillAlpha) : 1;
-      let strokeWidth = ('strokeWidth' in context) ? Number(context.strokeWidth) : 1;
-      const strokeAlpha = ('strokeAlpha' in context) ? Number(context.strokeAlpha) : 1;
-      const strokeLinecap: StrokeLineCap = ('strokeLinecap' in context) ? context.strokeLinecap : 'butt';
-      const strokeLinejoin: StrokeLineJoin = ('strokeLinejoin' in context) ? context.strokeLinecap : 'miter';
-      const strokeMiterLimit = ('strokeMiterLimit' in context) ? Number(context.strokeMiterLimit) : 4;
+        attrMap.has('strokeColor') ? ColorUtil.svgToAndroidColor(attrMap.get('strokeColor')) : undefined;
+      const fillAlpha = attrMap.has('fillAlpha') ? Number(attrMap.get('fillAlpha')) : 1;
+      let strokeWidth = attrMap.has('strokeWidth') ? Number(attrMap.get('strokeWidth')) : 1;
+      const strokeAlpha = attrMap.has('strokeAlpha') ? Number(attrMap.get('strokeAlpha')) : 1;
+      const strokeLinecap: StrokeLineCap =
+        attrMap.has('strokeLinecap') ? attrMap.get('strokeLinecap') : 'butt';
+      const strokeLinejoin: StrokeLineJoin =
+        attrMap.has('strokeLinejoin') ? attrMap.get('strokeLinecap') : 'miter';
+      const strokeMiterLimit =
+        attrMap.has('strokeMiterLimit') ? Number(attrMap.get('strokeMiterLimit')) : 4;
       const fillRuleToFillTypeFn = (fillRule: string) => {
         return fillRule === 'evenodd' ? 'evenOdd' : 'nonZero';
       };
-      const fillType: FillType = ('fillType' in context) ? fillRuleToFillTypeFn(context.fillType) : 'nonZero';
+      const fillType: FillType =
+        attrMap.has('fillType') ? fillRuleToFillTypeFn(attrMap.get('fillType')) : 'nonZero';
 
       let pathData = new Path(path);
-      if (context.transforms && context.transforms.length) {
-        const transforms = context.transforms.map(t => {
-          const { a, b, c, d, e, f } = t.matrix;
-          return new Matrix(a, b, c, d, e, f);
-        });
+      if (transforms.length) {
         pathData = new Path(
           _.chain(pathData.getSubPaths())
             .flatMap(subPath => subPath.getCommands() as Command[])
@@ -146,7 +148,7 @@ export function loadVectorLayerFromSvgString(
 
     if (node.childNodes.length) {
       const children = Array.from(node.childNodes)
-        .map(child => nodeToLayerDataFn(child, { ...context }))
+        .map(child => nodeToLayerDataFn(child, new Map(attrMap), transforms))
         .filter(child => !!child);
       if (children.length) {
         return new GroupLayer({
@@ -176,19 +178,18 @@ export function loadVectorLayerFromSvgString(
   let width = lengthPxFn(documentElement.width) || undefined;
   let height = lengthPxFn(documentElement.height) || undefined;
 
-  const context: any = {};
+  const transforms: Matrix[] = [];
+  const attrMap = new Map<string, any>();
   const { viewBox } = documentElement;
   if (viewBox && (!!viewBox.baseVal.width || !!viewBox.baseVal.height)) {
     width = viewBox.baseVal.width;
     height = viewBox.baseVal.height;
 
     // Fake a translate transform for the viewbox.
-    context.transforms = [{
-      matrix: Matrix.fromTranslation(-viewBox.baseVal.x, -viewBox.baseVal.y, ),
-    }];
+    transforms.push(Matrix.fromTranslation(-viewBox.baseVal.x, -viewBox.baseVal.y));
   }
 
-  const rootLayer = nodeToLayerDataFn(documentElement, context);
+  const rootLayer = nodeToLayerDataFn(documentElement, attrMap, transforms);
   const name = makeFinalNodeIdFn(documentElement, 'vector');
   const children = rootLayer ? rootLayer.children : undefined;
   const alpha = documentElement.getAttribute('opacity') || undefined;

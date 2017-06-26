@@ -1,10 +1,11 @@
-import { SvgChar } from '.';
 import {
   MathUtil,
   Matrix,
   Point,
 } from 'app/scripts/common';
 import * as _ from 'lodash';
+
+import { SvgChar } from '.';
 
 /**
  * Represents an individual SVG command. These are the essential building blocks
@@ -167,7 +168,7 @@ export class CommandBuilder {
     return this;
   }
 
-  transform(transforms: Matrix[]) {
+  transform(transforms: ReadonlyArray<Matrix>) {
     this.transforms = [].concat(transforms, this.transforms);
     return this;
   }
