@@ -89,7 +89,7 @@ describe('SvgLoader', () => {
 `;
     SvgLoader.loadVectorLayerFromSvgStringWithCallback(svg, vl => {
       // TODO: test stuff
-      console.info(vl);
+      // console.info(vl);
     }, () => false);
   });
 });

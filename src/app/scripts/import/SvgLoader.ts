@@ -87,10 +87,14 @@ export function loadVectorLayerFromSvgString(
     rootTransforms.push(Matrix.fromTranslation(-viewBox.baseVal.x, -viewBox.baseVal.y));
   }
   const name = makeFinalNodeIdFn(documentElement.getAttribute('id'), 'vector');
-  const vectorLayer = new VectorLayer({ id: _.uniqueId(), name, children: [], width, height, alpha });
+  const vectorLayer = new VectorLayer({
+    id: _.uniqueId(), name, children: [], width, height, alpha,
+  });
   const vectorLayerBoundsPathStr = `M 0 0 h ${width} v ${height} h ${-width} v ${-height}`;
 
-  // TODO: handle clip paths referencing other clip paths
+  // TODO: handle clipPaths that have clip-path attributes
+  // TODO: handle clipPaths that have children path elements with clip-path attributes
+  // TODO: handle clipPaths with clipPathUnits="objectBoundingBox"
   const clipPathMap: StringMap<ReadonlyArray<Path>> = {};
 
   // Find all clip path elements and add them to the map.
@@ -99,8 +103,12 @@ export function loadVectorLayerFromSvgString(
       return;
     }
     if (node instanceof SVGClipPathElement) {
+      const clipPathId = node.getAttribute('id');
+      if (!clipPathId) {
+        return;
+      }
+      const paths: Path[] = [];
       if (node.childNodes) {
-        const paths: Path[] = [];
         const clipPathTransforms = getNodeTransforms(node).reverse();
         for (let i = 0; i < node.childNodes.length; i++) {
           const childNode = node.childNodes.item(i) as Element;
@@ -119,8 +127,8 @@ export function loadVectorLayerFromSvgString(
             );
           }
         }
-        clipPathMap[node.getAttribute('id')] = paths;
       }
+      clipPathMap[clipPathId] = paths;
       return;
     }
     if (node.childNodes) {
@@ -269,8 +277,7 @@ function getNodeTransforms(node: SVGGraphicsElement) {
   const transformList = node.transform.baseVal;
   const matrices: Matrix[] = [];
   for (let i = 0; i < transformList.numberOfItems; i++) {
-    const t = transformList.getItem(i);
-    const { a, b, c, d, e, f } = t.matrix;
+    const { a, b, c, d, e, f } = transformList.getItem(i).matrix;
     matrices.push(new Matrix(a, b, c, d, e, f));
   }
   return matrices;
