@@ -67,24 +67,24 @@ describe('SvgLoader', () => {
   it(`can import simple SVG with clip paths`, () => {
     const svg = `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240">
-    <defs>
-        <clipPath id="clip1" transform="scale(10, 10)">
-            <path d="M 0 0 L 8 0 L 8 8 L 0 8 L 0 0"/>
-        </clipPath>
-        <clipPath id="clip2">
-            <path d="M 4 4 L 24 4 L 24 24 L 4 24 L 4 4"/>
-        </clipPath>
-        <clipPath id="clip3" transform="translate(10, 10)">
-            <path d="M 4 4 L 24 4 L 24 24 L 4 24 L 4 4" transform="translate(-10, -10)"/>
-            <path d="M 6 6 L 18 6 L 18 18 L 6 18 L 6 6" transform="translate(-10, -10)"/>
-        </clipPath>
-    </defs>
-    <g>
-        <g id="group" transform="translate(64 64) translate(16 16) scale(4 4) translate(-16 -16)">
-            <path d="M 0 0 L 8 0 L 8 8 L 0 8 L 0 0" fill="#ff0000" id="path1" clip-path="url(#clip2)"/>
-            <path d="M 12 12 L 36 12 L 36 36 L 12 36 L 12 12" fill="#00ff00" id="path2" clip-path="url(#clip3)"/>
-        </g>
+  <defs>
+    <clipPath id="clip1" transform="scale(10, 10)">
+      <path d="M 0 0 L 8 0 L 8 8 L 0 8 L 0 0"/>
+    </clipPath>
+    <clipPath id="clip2">
+      <path d="M 4 4 L 24 4 L 24 24 L 4 24 L 4 4"/>
+    </clipPath>
+    <clipPath id="clip3" transform="translate(10, 10)">
+      <path d="M 4 4 L 24 4 L 24 24 L 4 24 L 4 4" transform="translate(-10, -10)"/>
+      <path d="M 6 6 L 18 6 L 18 18 L 6 18 L 6 6" transform="translate(-10, -10)"/>
+    </clipPath>
+  </defs>
+  <g>
+    <g id="group" transform="translate(64 64) translate(16 16) scale(4 4) translate(-16 -16)">
+      <path d="M 0 0 L 8 0 L 8 8 L 0 8 L 0 0" fill="#ff0000" id="path1" clip-path="url(#clip2)"/>
+      <path d="M 12 12 L 36 12 L 36 36 L 12 36 L 12 12" fill="#00ff00" id="path2" clip-path="url(#clip3)"/>
     </g>
+  </g>
 </svg>
 `;
     SvgLoader.loadVectorLayerFromSvgStringWithCallback(svg, vl => {
