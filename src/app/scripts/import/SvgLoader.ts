@@ -46,11 +46,8 @@ export function loadVectorLayerFromSvgStringWithCallback(
 
 export function loadVectorLayerFromSvgString(
   svgString: string,
-  doesNameExistFn: (name: string) => boolean): VectorLayer {
-
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(svgString, 'image/svg+xml');
-
+  doesNameExistFn: (name: string) => boolean,
+): VectorLayer {
   const usedIds = new Set<string>();
   const makeFinalNodeIdFn = (node, prefix: string) => {
     const finalName = LayerUtil.getUniqueName(
@@ -61,27 +58,16 @@ export function loadVectorLayerFromSvgString(
     return finalName;
   };
 
-  const lengthPxFn = svgLength => {
-    if (svgLength.baseVal) {
-      svgLength = svgLength.baseVal;
-    }
-    svgLength.convertToSpecifiedUnits(SVGLength.SVG_LENGTHTYPE_PX);
-    return svgLength.valueInSpecifiedUnits;
-  };
-
   const nodeToLayerDataFn = (node, context): Layer => {
-    if (!node) {
-      return undefined;
-    }
-
-    if (node.nodeType === Node.TEXT_NODE
+    if (!node
+      || node.nodeType === Node.TEXT_NODE
       || node.nodeType === Node.COMMENT_NODE
       || node instanceof SVGDefsElement
       || node instanceof SVGUseElement) {
       return undefined;
     }
 
-    const simpleAttrFn = (nodeAttr, contextAttr) => {
+    const simpleAttrFn = (nodeAttr: string, contextAttr: string) => {
       if (node.attributes && node.attributes[nodeAttr]) {
         context[contextAttr] = node.attributes[nodeAttr].value;
       }
@@ -162,7 +148,7 @@ export function loadVectorLayerFromSvgString(
       const children = Array.from(node.childNodes)
         .map(child => nodeToLayerDataFn(child, { ...context }))
         .filter(child => !!child);
-      if (children && children.length) {
+      if (children.length) {
         return new GroupLayer({
           id: _.uniqueId(),
           name: makeFinalNodeIdFn(node, 'group'),
@@ -174,33 +160,35 @@ export function loadVectorLayerFromSvgString(
     return undefined;
   };
 
-  const docElContext: any = {};
-  const documentElement: any = doc.documentElement;
+  const parser = new DOMParser();
+  const { documentElement } = parser.parseFromString(svgString, 'image/svg+xml');
+  if (!isSvgNode(documentElement)) {
+    return undefined;
+  }
+
+  const lengthPxFn = svgLength => {
+    if (svgLength.baseVal) {
+      svgLength = svgLength.baseVal;
+    }
+    svgLength.convertToSpecifiedUnits(SVGLength.SVG_LENGTHTYPE_PX);
+    return svgLength.valueInSpecifiedUnits;
+  };
   let width = lengthPxFn(documentElement.width) || undefined;
   let height = lengthPxFn(documentElement.height) || undefined;
 
-  if (documentElement.viewBox
-    && (!!documentElement.viewBox.baseVal.width
-      || !!documentElement.viewBox.baseVal.height)) {
-    width = documentElement.viewBox.baseVal.width;
-    height = documentElement.viewBox.baseVal.height;
+  const context: any = {};
+  const { viewBox } = documentElement;
+  if (viewBox && (!!viewBox.baseVal.width || !!viewBox.baseVal.height)) {
+    width = viewBox.baseVal.width;
+    height = viewBox.baseVal.height;
 
     // Fake a translate transform for the viewbox.
-    docElContext.transforms = [
-      {
-        matrix: {
-          a: 1,
-          b: 0,
-          c: 0,
-          d: 1,
-          e: -documentElement.viewBox.baseVal.x,
-          f: -documentElement.viewBox.baseVal.y,
-        },
-      },
-    ];
+    context.transforms = [{
+      matrix: Matrix.fromTranslation(-viewBox.baseVal.x, -viewBox.baseVal.y, ),
+    }];
   }
 
-  const rootLayer = nodeToLayerDataFn(documentElement, docElContext);
+  const rootLayer = nodeToLayerDataFn(documentElement, context);
   const name = makeFinalNodeIdFn(documentElement, 'vector');
   const children = rootLayer ? rootLayer.children : undefined;
   const alpha = documentElement.getAttribute('opacity') || undefined;
@@ -212,4 +200,8 @@ export function loadVectorLayerFromSvgString(
     height: height === undefined ? undefined : Number(height),
     alpha: alpha === undefined ? undefined : Number(alpha),
   });
+}
+
+function isSvgNode(node: Element): node is SVGSVGElement {
+  return node.nodeName === 'svg';
 }
