@@ -22,6 +22,7 @@ import { Svgo } from 'app/scripts/svgo';
 import * as _ from 'lodash';
 
 // TODO: trim ids/strings?
+// TODO: check for invalid enum values
 
 /**
  * Utility function that takes an SVG string as input and
@@ -61,10 +62,31 @@ export function loadVectorLayerFromSvgString(
     return finalName;
   };
 
-  // TODO: handle clip paths referencing other clip paths
-  const clipPathMap = {};
+  const parser = new DOMParser();
+  const { documentElement } = parser.parseFromString(svgString, 'image/svg+xml');
+  if (!isSvgNode(documentElement)) {
+    return undefined;
+  }
 
-  const nodeToLayerDataFn = (node, attrMap: Map<string, any>, transforms: ReadonlyArray<Matrix>): Layer => {
+  const toNumberFn = num => num === undefined ? undefined : Number(num);
+  let width = toNumberFn(svgLengthToPx(documentElement.width) || undefined);
+  let height = toNumberFn(svgLengthToPx(documentElement.height) || undefined);
+  const alpha = toNumberFn(documentElement.getAttribute('opacity') || undefined);
+
+  const rootTransforms: Matrix[] = [];
+  const { viewBox } = documentElement;
+  if (viewBox && (!!viewBox.baseVal.width || !!viewBox.baseVal.height)) {
+    width = viewBox.baseVal.width;
+    height = viewBox.baseVal.height;
+
+    // Fake a translate transform for the viewbox.
+    rootTransforms.push(Matrix.fromTranslation(-viewBox.baseVal.x, -viewBox.baseVal.y));
+  }
+
+  // TODO: handle clip paths referencing other clip paths
+  const clipPathMap: { [index: string]: ReadonlyArray<Path> } = {};
+
+  const nodeToLayerDataFn = (node: Element, transforms: ReadonlyArray<Matrix>): Layer => {
     if (!node
       || node.nodeType === Node.TEXT_NODE
       || node.nodeType === Node.COMMENT_NODE
@@ -73,9 +95,10 @@ export function loadVectorLayerFromSvgString(
       return undefined;
     }
 
+    const attrMap: { [index: string]: any } = {};
     const simpleAttrFn = (nodeAttr: string, contextAttr: string) => {
       if (node.hasAttribute(nodeAttr)) {
-        attrMap.set(contextAttr, node.getAttribute(nodeAttr));
+        attrMap[contextAttr] = node.getAttribute(nodeAttr);
       }
     };
 
@@ -89,44 +112,64 @@ export function loadVectorLayerFromSvgString(
     simpleAttrFn('fill-opacity', 'fillAlpha');
     simpleAttrFn('fill-rule', 'fillType');
 
-    if (node.transform) {
-      const matrices = Array.from(node.transform.baseVal).reverse().map(t => {
-        const { a, b, c, d, e, f } = (t as any).matrix;
-        return new Matrix(a, b, c, d, e, f);
-      });
-      transforms = [...matrices, ...transforms];
-    }
-
     let path = '';
     if (node instanceof SVGPathElement && node.hasAttribute('d')) {
       path = node.getAttribute('d');
     }
 
+    const nodeTransforms = getNodeTransforms(node as SVGGraphicsElement).reverse();
+    transforms = [...nodeTransforms, ...transforms];
+
+    // Get the referenced clip-path ID, if one exists.
+    const refClipPathId = getReferencedClipPathId(node);
+
+    const wrapClipPathInGroupFn = (layer: Layer) => {
+      if (refClipPathId) {
+        const paths =
+          (clipPathMap[refClipPathId] || [])
+            .map(p => p.mutate().addTransforms(transforms).build().clone());
+        if (!paths.length) {
+          // If the clipPath has no children, then mask the entire vector layer.
+          paths.push(new Path(`M 0 0 h ${width} v ${height} h ${-width} v ${-height}`));
+        }
+        const groupChildren: Layer[] =
+          paths.map(p => {
+            return new ClipPathLayer({
+              name: makeFinalNodeIdFn(refClipPathId, 'mask'),
+              pathData: p,
+              children: [],
+            });
+          });
+        groupChildren.push(layer);
+        return new GroupLayer({
+          name: makeFinalNodeIdFn('group', 'group'),
+          children: groupChildren,
+        });
+      }
+      return layer;
+    };
+
     if (path) {
       // Set the default values as specified by the SVG spec. Note that some of these default
       // values are different than the default values used by VectorDrawables.
       const fillColor =
-        attrMap.has('fillColor') ? ColorUtil.svgToAndroidColor(attrMap.get('fillColor')) : '#000';
+        ('fillColor' in attrMap) ? ColorUtil.svgToAndroidColor(attrMap['fillColor']) : '#000';
       const strokeColor =
-        attrMap.has('strokeColor') ? ColorUtil.svgToAndroidColor(attrMap.get('strokeColor')) : undefined;
-      const fillAlpha = attrMap.has('fillAlpha') ? Number(attrMap.get('fillAlpha')) : 1;
-      let strokeWidth = attrMap.has('strokeWidth') ? Number(attrMap.get('strokeWidth')) : 1;
-      const strokeAlpha = attrMap.has('strokeAlpha') ? Number(attrMap.get('strokeAlpha')) : 1;
-      const strokeLinecap: StrokeLineCap =
-        attrMap.has('strokeLinecap') ? attrMap.get('strokeLinecap') : 'butt';
-      const strokeLinejoin: StrokeLineJoin =
-        attrMap.has('strokeLinejoin') ? attrMap.get('strokeLinecap') : 'miter';
-      const strokeMiterLimit =
-        attrMap.has('strokeMiterLimit') ? Number(attrMap.get('strokeMiterLimit')) : 4;
+        ('strokeColor' in attrMap) ? ColorUtil.svgToAndroidColor(attrMap['strokeColor']) : undefined;
+      const fillAlpha = ('fillAlpha' in attrMap) ? Number(attrMap['fillAlpha']) : 1;
+      let strokeWidth = ('strokeWidth' in attrMap) ? Number(attrMap['strokeWidth']) : 1;
+      const strokeAlpha = ('strokeAlpha' in attrMap) ? Number(attrMap['strokeAlpha']) : 1;
+      const strokeLinecap: StrokeLineCap = ('strokeLinecap' in attrMap) ? attrMap['strokeLinecap'] : 'butt';
+      const strokeLinejoin: StrokeLineJoin = ('strokeLinejoin' in attrMap) ? attrMap['strokeLinecap'] : 'miter';
+      const strokeMiterLimit = ('strokeMiterLimit' in attrMap) ? Number(attrMap['strokeMiterLimit']) : 4;
       const fillRuleToFillTypeFn = (fillRule: string) => {
         return fillRule === 'evenodd' ? 'evenOdd' : 'nonZero';
       };
-      const fillType: FillType =
-        attrMap.has('fillType') ? fillRuleToFillTypeFn(attrMap.get('fillType')) : 'nonZero';
+      const fillType: FillType = ('fillType' in attrMap) ? fillRuleToFillTypeFn(attrMap['fillType']) : 'nonZero';
 
       let pathData = new Path(path);
       if (transforms.length) {
-        pathData = new Path(pathData.mutate().addTransforms(transforms).build().getPathString());
+        pathData = pathData.mutate().addTransforms(transforms).build().clone();
         const flattenedTransform = Matrix.flatten(...transforms);
         strokeWidth *= flattenedTransform.getScale();
       }
@@ -136,7 +179,7 @@ export function loadVectorLayerFromSvgString(
           id: _.uniqueId(),
           name: makeFinalNodeIdFn(node, 'path'),
           children: [],
-          pathData: new Path(pathData.getPathString()),
+          pathData,
           fillColor,
           fillAlpha,
           strokeColor,
@@ -147,183 +190,108 @@ export function loadVectorLayerFromSvgString(
           strokeMiterLimit,
           fillType,
         });
-
-      if (node.hasAttribute('clip-path')) {
-        let referencedClipPath = node.getAttribute('clip-path');
-        if (referencedClipPath) {
-          referencedClipPath = referencedClipPath.trim();
-          if (referencedClipPath.startsWith('url(#')) {
-            const endIndex = referencedClipPath.indexOf(')');
-            if (endIndex === referencedClipPath.length - 1) {
-              referencedClipPath = referencedClipPath.slice(5, endIndex);
-              let paths: Path[] = clipPathMap[referencedClipPath];
-              // TODO: if an empty clip path, mask the entire thing
-              if (paths && paths.length) {
-                paths = paths.map(p => p.mutate().addTransforms(transforms).build());
-                const groupChildren: Layer[] = [];
-                for (const p of paths) {
-                  groupChildren.push(new ClipPathLayer({
-                    name: makeFinalNodeIdFn(referencedClipPath, 'mask'),
-                    pathData: new Path(p.getPathString()),
-                    children: [],
-                  }));
-                }
-                groupChildren.push(layer);
-                return new GroupLayer({
-                  name: makeFinalNodeIdFn('group', 'group'),
-                  children: groupChildren,
-                });
-              }
-            }
-          }
-        }
-      }
-
-      return layer;
+      return wrapClipPathInGroupFn(layer);
     }
 
-    if (node.childNodes.length) {
-      const children = Array.from(node.childNodes)
-        .map(child => nodeToLayerDataFn(child, new Map(attrMap), transforms))
-        .filter(child => !!child);
-
-      const layer = new GroupLayer({
+    if (node.childNodes) {
+      const children: Layer[] = [];
+      for (let i = 0; i < node.childNodes.length; i++) {
+        const child = node.childNodes.item(i) as Element;
+        const layer = nodeToLayerDataFn(child, transforms);
+        if (layer) {
+          children.push(layer);
+        }
+      }
+      const groupLayer = new GroupLayer({
         id: _.uniqueId(),
         name: makeFinalNodeIdFn(node, 'group'),
         children,
       });
-      if (children.length) {
-        if (node.hasAttribute('clip-path')) {
-          let referencedClipPath = node.getAttribute('clip-path');
-          if (referencedClipPath) {
-            referencedClipPath = referencedClipPath.trim();
-            if (referencedClipPath.startsWith('url(#')) {
-              const endIndex = referencedClipPath.indexOf(')');
-              if (endIndex === referencedClipPath.length - 1) {
-                referencedClipPath = referencedClipPath.slice(5, endIndex);
-                let paths: Path[] = clipPathMap[referencedClipPath];
-                // TODO: if an empty clip path, mask the entire thing
-                if (paths && paths.length) {
-                  paths = paths.map(p => p.mutate().addTransforms(transforms).build());
-                  const groupChildren: Layer[] = [];
-                  for (const p of paths) {
-                    groupChildren.push(new ClipPathLayer({
-                      name: makeFinalNodeIdFn(referencedClipPath, 'mask'),
-                      pathData: new Path(p.getPathString()),
-                      children: [],
-                    }));
-                  }
-                  groupChildren.push(layer);
-                  return new GroupLayer({
-                    name: makeFinalNodeIdFn('group', 'group'),
-                    children: groupChildren,
-                  });
-                }
-              }
-            }
-          }
-        }
-
-        return layer;
-      }
+      return wrapClipPathInGroupFn(groupLayer);
     }
-
     return undefined;
   };
 
-  const parser = new DOMParser();
-  const { documentElement } = parser.parseFromString(svgString, 'image/svg+xml');
-  if (!isSvgNode(documentElement)) {
-    return undefined;
-  }
-
-  const getClipPathsFn = (node: any) => {
-    if (!node
-      || node.nodeType === Node.TEXT_NODE
-      || node.nodeType === Node.COMMENT_NODE) {
+  // Find all clip path elements and add them to the map.
+  (function findClipPathsFn(node: Element) {
+    if (!node || node.nodeType === Node.TEXT_NODE || node.nodeType === Node.COMMENT_NODE) {
       return;
     }
     if (node instanceof SVGClipPathElement) {
-      let clipPathTransforms: ReadonlyArray<Matrix> = [];
-      if (node.transform) {
-        clipPathTransforms =
-          Array.from(node.transform.baseVal as any).reverse().map(t => {
-            const { a, b, c, d, e, f } = (t as any).matrix;
-            return new Matrix(a, b, c, d, e, f);
-          });
-      }
-      if (node.childNodes.length) {
-        const nodes = [];
+      if (node.childNodes) {
+        const paths: Path[] = [];
+        const clipPathTransforms = getNodeTransforms(node).reverse();
         for (let i = 0; i < node.childNodes.length; i++) {
-          const n = node.childNodes.item(i);
-          if (n.nodeName === 'path') {
-            nodes.push(n);
+          const childNode = node.childNodes.item(i) as Element;
+          if (childNode instanceof SVGPathElement && childNode.hasAttribute('d')) {
+            const pathStr = childNode.getAttribute('d');
+            if (!pathStr) {
+              continue;
+            }
+            const matrices = getNodeTransforms(childNode).reverse();
+            paths.push(
+              new Path(pathStr)
+                .mutate()
+                .addTransforms([...matrices, ...clipPathTransforms])
+                .build()
+                .clone(),
+            );
           }
         }
-        const paths = nodes.map((child: SVGPathElement) => {
-          let pathTransforms: Matrix[] = [...clipPathTransforms];
-          if (child.transform) {
-            const matrices = Array.from(child.transform.baseVal as any).reverse().map(t => {
-              const { a, b, c, d, e, f } = (t as any).matrix;
-              return new Matrix(a, b, c, d, e, f);
-            });
-            pathTransforms = [...matrices, ...pathTransforms];
-          }
-          const path = child.hasAttribute('d') ? child.getAttribute('d') : '';
-          if (path) {
-            const p = new Path(path).mutate().addTransforms(pathTransforms).build();
-            return new Path(p.getPathString());
-          }
-          return undefined;
-        }).filter(path => !!path);
-        console.info('setting id:', node.getAttribute('id'), paths);
         clipPathMap[node.getAttribute('id')] = paths;
       }
       return;
     }
-    if (node.childNodes.length) {
-      Array.from(node.childNodes).forEach(child => getClipPathsFn(child));
+    if (node.childNodes) {
+      for (let i = 0; i < node.childNodes.length; i++) {
+        findClipPathsFn(node.childNodes.item(i) as Element);
+      }
     }
-  };
-  getClipPathsFn(documentElement);
+  })(documentElement);
 
-  console.info(clipPathMap);
-
-  const lengthPxFn = svgLength => {
-    if (svgLength.baseVal) {
-      svgLength = svgLength.baseVal;
-    }
-    svgLength.convertToSpecifiedUnits(SVGLength.SVG_LENGTHTYPE_PX);
-    return svgLength.valueInSpecifiedUnits;
-  };
-  let width = lengthPxFn(documentElement.width) || undefined;
-  let height = lengthPxFn(documentElement.height) || undefined;
-
-  const transforms: Matrix[] = [];
-  const attrMap = new Map<string, any>();
-  const { viewBox } = documentElement;
-  if (viewBox && (!!viewBox.baseVal.width || !!viewBox.baseVal.height)) {
-    width = viewBox.baseVal.width;
-    height = viewBox.baseVal.height;
-
-    // Fake a translate transform for the viewbox.
-    transforms.push(Matrix.fromTranslation(-viewBox.baseVal.x, -viewBox.baseVal.y));
-  }
-
-  const rootLayer = nodeToLayerDataFn(documentElement, attrMap, transforms);
+  const rootLayer = nodeToLayerDataFn(documentElement, rootTransforms);
   const name = makeFinalNodeIdFn(documentElement, 'vector');
   const children = rootLayer ? rootLayer.children : undefined;
-  const alpha = documentElement.getAttribute('opacity') || undefined;
-  return new VectorLayer({
-    id: _.uniqueId(),
-    name,
-    children,
-    width: width === undefined ? undefined : Number(width),
-    height: height === undefined ? undefined : Number(height),
-    alpha: alpha === undefined ? undefined : Number(alpha),
-  });
+  return new VectorLayer({ id: _.uniqueId(), name, children, width, height, alpha });
 }
 
 function isSvgNode(node: Element): node is SVGSVGElement {
   return node.nodeName === 'svg';
+}
+
+function getNodeTransforms(node: SVGGraphicsElement) {
+  if (!node.transform) {
+    return [];
+  }
+  const transformList = node.transform.baseVal;
+  const matrices: Matrix[] = [];
+  for (let i = 0; i < transformList.numberOfItems; i++) {
+    const t = transformList.getItem(i);
+    const { a, b, c, d, e, f } = t.matrix;
+    matrices.push(new Matrix(a, b, c, d, e, f));
+  }
+  return matrices;
+}
+
+function getReferencedClipPathId(node: Element) {
+  if (!node.getAttribute('clip-path')) {
+    return undefined;
+  }
+  const clipPathAttr = node.getAttribute('clip-path').trim();
+  if (!clipPathAttr || !clipPathAttr.startsWith('url(#')) {
+    return undefined;
+  }
+  const endParenIndex = clipPathAttr.indexOf(')');
+  if (endParenIndex !== clipPathAttr.length - 1) {
+    return undefined;
+  }
+  return clipPathAttr.slice('url(#'.length, endParenIndex);
+}
+
+function svgLengthToPx(svgLength) {
+  if (svgLength.baseVal) {
+    svgLength = svgLength.baseVal;
+  }
+  svgLength.convertToSpecifiedUnits(SVGLength.SVG_LENGTHTYPE_PX);
+  return svgLength.valueInSpecifiedUnits;
 }

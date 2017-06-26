@@ -1,8 +1,9 @@
-import { Property } from './Property';
 import {
   Path,
   PathUtil,
 } from 'app/scripts/model/paths';
+
+import { Property } from './Property';
 
 export class PathProperty extends Property<Path> {
 
@@ -62,7 +63,7 @@ export class PathProperty extends Property<Path> {
 
   // @Override
   cloneValue(value: Path) {
-    return value ? value.clone() : undefined;
+    return value ? value.mutate().build() : undefined;
   }
 
   // @Override

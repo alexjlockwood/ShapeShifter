@@ -1,3 +1,7 @@
+import { Point } from 'app/scripts/common';
+import { environment } from 'environments/environment';
+import * as _ from 'lodash';
+
 import {
   Command,
   HitOptions,
@@ -9,9 +13,6 @@ import {
 import { PathMutator } from './PathMutator';
 import * as PathParser from './PathParser';
 import { PathState } from './PathState';
-import { Point } from 'app/scripts/common';
-import { environment } from 'environments/environment';
-import * as _ from 'lodash';
 
 /**
  * A compound path that contains all of the information associated with a
@@ -164,10 +165,10 @@ export class Path {
   }
 
   /**
-   * Returns a cloned instance of this path.
+   * Returns a cloned instance of this path. Any existing path state will be cleared.
    */
   clone() {
-    return this.mutate().build();
+    return new Path(this.getPathString());
   }
 
   /**
