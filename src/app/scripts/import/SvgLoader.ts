@@ -24,6 +24,10 @@ import * as _ from 'lodash';
 // TODO: trim ids/strings?
 // TODO: check for invalid enum values
 
+interface StringMap<T> {
+  [index: string]: T;
+}
+
 /**
  * Utility function that takes an SVG string as input and
  * returns a VectorLayer model object.
@@ -53,9 +57,9 @@ export function loadVectorLayerFromSvgString(
   doesNameExistFn: (name: string) => boolean,
 ): VectorLayer {
   const usedIds = new Set<string>();
-  const makeFinalNodeIdFn = (node, prefix: string) => {
+  const makeFinalNodeIdFn = (nodeId: string, prefix: string) => {
     const finalName = LayerUtil.getUniqueName(
-      NameProperty.sanitize(node.id || prefix),
+      NameProperty.sanitize(nodeId || prefix),
       name => doesNameExistFn(name) || usedIds.has(name),
     );
     usedIds.add(finalName);
@@ -82,135 +86,12 @@ export function loadVectorLayerFromSvgString(
     // Fake a translate transform for the viewbox.
     rootTransforms.push(Matrix.fromTranslation(-viewBox.baseVal.x, -viewBox.baseVal.y));
   }
+  const name = makeFinalNodeIdFn(documentElement.getAttribute('id'), 'vector');
+  const vectorLayer = new VectorLayer({ id: _.uniqueId(), name, children: [], width, height, alpha });
+  const vectorLayerBoundsPathStr = `M 0 0 h ${width} v ${height} h ${-width} v ${-height}`;
 
   // TODO: handle clip paths referencing other clip paths
-  const clipPathMap: { [index: string]: ReadonlyArray<Path> } = {};
-
-  const nodeToLayerDataFn = (node: Element, transforms: ReadonlyArray<Matrix>): Layer => {
-    if (!node
-      || node.nodeType === Node.TEXT_NODE
-      || node.nodeType === Node.COMMENT_NODE
-      || node instanceof SVGDefsElement
-      || node instanceof SVGUseElement) {
-      return undefined;
-    }
-
-    const attrMap: { [index: string]: any } = {};
-    const simpleAttrFn = (nodeAttr: string, contextAttr: string) => {
-      if (node.hasAttribute(nodeAttr)) {
-        attrMap[contextAttr] = node.getAttribute(nodeAttr);
-      }
-    };
-
-    simpleAttrFn('stroke', 'strokeColor');
-    simpleAttrFn('stroke-width', 'strokeWidth');
-    simpleAttrFn('stroke-linecap', 'strokeLinecap');
-    simpleAttrFn('stroke-linejoin', 'strokeLinejoin');
-    simpleAttrFn('stroke-miterlimit', 'strokeMiterLimit');
-    simpleAttrFn('stroke-opacity', 'strokeAlpha');
-    simpleAttrFn('fill', 'fillColor');
-    simpleAttrFn('fill-opacity', 'fillAlpha');
-    simpleAttrFn('fill-rule', 'fillType');
-
-    let path = '';
-    if (node instanceof SVGPathElement && node.hasAttribute('d')) {
-      path = node.getAttribute('d');
-    }
-
-    const nodeTransforms = getNodeTransforms(node as SVGGraphicsElement).reverse();
-    transforms = [...nodeTransforms, ...transforms];
-
-    // Get the referenced clip-path ID, if one exists.
-    const refClipPathId = getReferencedClipPathId(node);
-
-    const wrapClipPathInGroupFn = (layer: Layer) => {
-      if (refClipPathId) {
-        const paths =
-          (clipPathMap[refClipPathId] || [])
-            .map(p => p.mutate().addTransforms(transforms).build().clone());
-        if (!paths.length) {
-          // If the clipPath has no children, then mask the entire vector layer.
-          paths.push(new Path(`M 0 0 h ${width} v ${height} h ${-width} v ${-height}`));
-        }
-        const groupChildren: Layer[] =
-          paths.map(p => {
-            return new ClipPathLayer({
-              name: makeFinalNodeIdFn(refClipPathId, 'mask'),
-              pathData: p,
-              children: [],
-            });
-          });
-        groupChildren.push(layer);
-        return new GroupLayer({
-          name: makeFinalNodeIdFn('group', 'group'),
-          children: groupChildren,
-        });
-      }
-      return layer;
-    };
-
-    if (path) {
-      // Set the default values as specified by the SVG spec. Note that some of these default
-      // values are different than the default values used by VectorDrawables.
-      const fillColor =
-        ('fillColor' in attrMap) ? ColorUtil.svgToAndroidColor(attrMap['fillColor']) : '#000';
-      const strokeColor =
-        ('strokeColor' in attrMap) ? ColorUtil.svgToAndroidColor(attrMap['strokeColor']) : undefined;
-      const fillAlpha = ('fillAlpha' in attrMap) ? Number(attrMap['fillAlpha']) : 1;
-      let strokeWidth = ('strokeWidth' in attrMap) ? Number(attrMap['strokeWidth']) : 1;
-      const strokeAlpha = ('strokeAlpha' in attrMap) ? Number(attrMap['strokeAlpha']) : 1;
-      const strokeLinecap: StrokeLineCap = ('strokeLinecap' in attrMap) ? attrMap['strokeLinecap'] : 'butt';
-      const strokeLinejoin: StrokeLineJoin = ('strokeLinejoin' in attrMap) ? attrMap['strokeLinecap'] : 'miter';
-      const strokeMiterLimit = ('strokeMiterLimit' in attrMap) ? Number(attrMap['strokeMiterLimit']) : 4;
-      const fillRuleToFillTypeFn = (fillRule: string) => {
-        return fillRule === 'evenodd' ? 'evenOdd' : 'nonZero';
-      };
-      const fillType: FillType = ('fillType' in attrMap) ? fillRuleToFillTypeFn(attrMap['fillType']) : 'nonZero';
-
-      let pathData = new Path(path);
-      if (transforms.length) {
-        pathData = pathData.mutate().addTransforms(transforms).build().clone();
-        const flattenedTransform = Matrix.flatten(...transforms);
-        strokeWidth *= flattenedTransform.getScale();
-      }
-
-      const layer: Layer =
-        new PathLayer({
-          id: _.uniqueId(),
-          name: makeFinalNodeIdFn(node, 'path'),
-          children: [],
-          pathData,
-          fillColor,
-          fillAlpha,
-          strokeColor,
-          strokeAlpha,
-          strokeWidth,
-          strokeLinecap,
-          strokeLinejoin,
-          strokeMiterLimit,
-          fillType,
-        });
-      return wrapClipPathInGroupFn(layer);
-    }
-
-    if (node.childNodes) {
-      const children: Layer[] = [];
-      for (let i = 0; i < node.childNodes.length; i++) {
-        const child = node.childNodes.item(i) as Element;
-        const layer = nodeToLayerDataFn(child, transforms);
-        if (layer) {
-          children.push(layer);
-        }
-      }
-      const groupLayer = new GroupLayer({
-        id: _.uniqueId(),
-        name: makeFinalNodeIdFn(node, 'group'),
-        children,
-      });
-      return wrapClipPathInGroupFn(groupLayer);
-    }
-    return undefined;
-  };
+  const clipPathMap: StringMap<ReadonlyArray<Path>> = {};
 
   // Find all clip path elements and add them to the map.
   (function findClipPathsFn(node: Element) {
@@ -249,10 +130,132 @@ export function loadVectorLayerFromSvgString(
     }
   })(documentElement);
 
-  const rootLayer = nodeToLayerDataFn(documentElement, rootTransforms);
-  const name = makeFinalNodeIdFn(documentElement, 'vector');
-  const children = rootLayer ? rootLayer.children : undefined;
-  return new VectorLayer({ id: _.uniqueId(), name, children, width, height, alpha });
+  const rootLayer =
+    (function nodeToLayerFn(node: Element, transforms: ReadonlyArray<Matrix>): Layer {
+      if (!node
+        || node.nodeType === Node.TEXT_NODE
+        || node.nodeType === Node.COMMENT_NODE
+        || node instanceof SVGDefsElement
+        || node instanceof SVGUseElement) {
+        return undefined;
+      }
+
+      const attrMap: StringMap<any> = {};
+      const simpleAttrFn = (nodeAttr: string, contextAttr: string) => {
+        if (node.hasAttribute(nodeAttr)) {
+          attrMap[contextAttr] = node.getAttribute(nodeAttr);
+        }
+      };
+
+      simpleAttrFn('stroke', 'strokeColor');
+      simpleAttrFn('stroke-width', 'strokeWidth');
+      simpleAttrFn('stroke-linecap', 'strokeLinecap');
+      simpleAttrFn('stroke-linejoin', 'strokeLinejoin');
+      simpleAttrFn('stroke-miterlimit', 'strokeMiterLimit');
+      simpleAttrFn('stroke-opacity', 'strokeAlpha');
+      simpleAttrFn('fill', 'fillColor');
+      simpleAttrFn('fill-opacity', 'fillAlpha');
+      simpleAttrFn('fill-rule', 'fillType');
+
+      let path = '';
+      if (node instanceof SVGPathElement && node.hasAttribute('d')) {
+        path = node.getAttribute('d');
+      }
+
+      const nodeTransforms = getNodeTransforms(node as SVGGraphicsElement).reverse();
+      transforms = [...nodeTransforms, ...transforms];
+
+      // Get the referenced clip-path ID, if one exists.
+      const refClipPathId = getReferencedClipPathId(node);
+
+      const maybeWrapClipPathInGroupFn = (layer: Layer) => {
+        if (!refClipPathId) {
+          return layer;
+        }
+        const paths =
+          (clipPathMap[refClipPathId] || [])
+            .map(p => p.mutate().addTransforms(transforms).build().clone());
+        if (!paths.length) {
+          // If the clipPath has no children, then mask the entire vector layer.
+          paths.push(new Path(vectorLayerBoundsPathStr));
+        }
+        const groupChildren: Layer[] =
+          paths.map(p => {
+            return new ClipPathLayer({
+              name: makeFinalNodeIdFn(refClipPathId, 'mask'),
+              pathData: p,
+              children: [],
+            });
+          });
+        groupChildren.push(layer);
+        return new GroupLayer({
+          name: makeFinalNodeIdFn('wrapper', 'group'),
+          children: groupChildren,
+        });
+      };
+
+      if (path) {
+        // Set the default values as specified by the SVG spec. Note that some of these default
+        // values are different than the default values used by VectorDrawables.
+        const fillColor =
+          ('fillColor' in attrMap) ? ColorUtil.svgToAndroidColor(attrMap['fillColor']) : '#000';
+        const strokeColor =
+          ('strokeColor' in attrMap) ? ColorUtil.svgToAndroidColor(attrMap['strokeColor']) : undefined;
+        const fillAlpha = ('fillAlpha' in attrMap) ? Number(attrMap['fillAlpha']) : 1;
+        let strokeWidth = ('strokeWidth' in attrMap) ? Number(attrMap['strokeWidth']) : 1;
+        const strokeAlpha = ('strokeAlpha' in attrMap) ? Number(attrMap['strokeAlpha']) : 1;
+        const strokeLinecap: StrokeLineCap = ('strokeLinecap' in attrMap) ? attrMap['strokeLinecap'] : 'butt';
+        const strokeLinejoin: StrokeLineJoin = ('strokeLinejoin' in attrMap) ? attrMap['strokeLinecap'] : 'miter';
+        const strokeMiterLimit = ('strokeMiterLimit' in attrMap) ? Number(attrMap['strokeMiterLimit']) : 4;
+        const fillRuleToFillTypeFn = (fillRule: string) => {
+          return fillRule === 'evenodd' ? 'evenOdd' : 'nonZero';
+        };
+        const fillType: FillType = ('fillType' in attrMap) ? fillRuleToFillTypeFn(attrMap['fillType']) : 'nonZero';
+
+        let pathData = new Path(path);
+        if (transforms.length) {
+          pathData = pathData.mutate().addTransforms(transforms).build().clone();
+          strokeWidth *= Matrix.flatten(...transforms).getScale();
+        }
+        return maybeWrapClipPathInGroupFn(
+          new PathLayer({
+            id: _.uniqueId(),
+            name: makeFinalNodeIdFn(node.getAttribute('id'), 'path'),
+            children: [],
+            pathData,
+            fillColor,
+            fillAlpha,
+            strokeColor,
+            strokeAlpha,
+            strokeWidth,
+            strokeLinecap,
+            strokeLinejoin,
+            strokeMiterLimit,
+            fillType,
+          }));
+      }
+
+      if (node.childNodes) {
+        const children: Layer[] = [];
+        for (let i = 0; i < node.childNodes.length; i++) {
+          const child = node.childNodes.item(i) as Element;
+          const layer = nodeToLayerFn(child, transforms);
+          if (layer) {
+            children.push(layer);
+          }
+        }
+        return maybeWrapClipPathInGroupFn(
+          new GroupLayer({
+            id: _.uniqueId(),
+            name: makeFinalNodeIdFn(node.getAttribute('id'), 'group'),
+            children,
+          }));
+      }
+      return undefined;
+    })(documentElement, rootTransforms);
+
+  vectorLayer.children = rootLayer ? rootLayer.children : undefined;
+  return vectorLayer;
 }
 
 function isSvgNode(node: Element): node is SVGSVGElement {
