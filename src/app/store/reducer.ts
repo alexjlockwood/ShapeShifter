@@ -1,3 +1,12 @@
+import { compose } from '@ngrx/core/compose';
+import {
+  Action,
+  ActionReducer,
+  combineReducers,
+} from '@ngrx/store';
+import { environment } from 'environments/environment';
+import { storeLogger } from 'ngrx-store-logger';
+
 import * as metaActionMode from './actionmode/metareducer';
 import * as fromActionMode from './actionmode/reducer';
 import * as fromLayers from './layers/reducer';
@@ -7,14 +16,6 @@ import * as fromReset from './reset/reducer';
 import * as metaStoreFreeze from './storefreeze/metareducer';
 import * as fromTimeline from './timeline/reducer';
 import * as metaUndoRedo from './undoredo/metareducer';
-import { compose } from '@ngrx/core/compose';
-import {
-  Action,
-  ActionReducer,
-  combineReducers,
-} from '@ngrx/store';
-import { environment } from 'environments/environment';
-import { storeLogger } from 'ngrx-store-logger';
 
 export type State = metaUndoRedo.StateWithHistoryAndTimestamp;
 
@@ -55,8 +56,8 @@ const devMetaReducers = [
   metaStoreFreeze.metaReducer,
 ];
 
-export const productionReducer: ActionReducer<State> = compose(...prodMetaReducers)(sliceReducers);
-const developmentReducer: ActionReducer<State> = compose(...devMetaReducers)(productionReducer);
+export const productionReducer = compose(...prodMetaReducers)(sliceReducers) as ActionReducer<State>;
+const developmentReducer = compose(...devMetaReducers)(productionReducer) as ActionReducer<State>;
 
 export function reducer(state: State, action: Action) {
   if (environment.production) {

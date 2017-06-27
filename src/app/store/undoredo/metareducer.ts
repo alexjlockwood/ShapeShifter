@@ -1,5 +1,5 @@
 import { Action, ActionReducer } from '@ngrx/store';
-import undoable, { StateWithHistory, excludeAction } from 'redux-undo';
+import undoable, { StateWithHistory, UndoableOptions, excludeAction } from 'redux-undo';
 
 import * as actionModeActions from '../actionmode/actions';
 import * as playbackActions from '../playback/actions';
@@ -37,7 +37,7 @@ export function metaReducer(reducer: AppStateReducer): StateReducer {
       // tslint:disable-next-line: no-null-keyword
       return null;
     },
-  });
+  } as UndoableOptions);
   return (state: StateWithHistoryAndTimestamp, action: Action) => {
     return { ...undoableReducer(state, action), timestamp: Date.now() };
   };

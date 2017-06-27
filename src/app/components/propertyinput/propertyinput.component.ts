@@ -86,7 +86,11 @@ export class PropertyInputComponent implements OnInit {
         } else if (isAnimationSelected) {
           return this.buildInspectedAnimationProperties(animation);
         } else {
-          return { numSelections: 0, inspectedProperties: [] };
+          return {
+             numSelections: 0,
+              inspectedProperties: [],
+               availablePropertyNames: [],
+              } as PropertyInputModel;
         }
       });
   }

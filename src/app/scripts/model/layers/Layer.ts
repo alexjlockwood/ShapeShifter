@@ -1,8 +1,9 @@
+import { Rect } from 'app/scripts/common';
+
 import {
   Animatable,
   Inspectable,
 } from '../properties';
-import { Rect } from 'app/scripts/common';
 
 /**
  * Interface that is shared by all vector drawable layer models below.
@@ -28,12 +29,12 @@ export interface Layer extends Inspectable, Animatable {
   /**
    * Returns a shallow clone of this Layer.
    */
-  clone<T extends Layer>(): T;
+  clone(): Layer;
 
   /**
    * Returns a deep clone of this Layer.
    */
-  deepClone<T extends Layer>(): T;
+  deepClone(): Layer;
 
   /**g
    * Returns the name of the icon that represents this Layer type.

@@ -148,7 +148,7 @@ export function adjustViewports(vl1: VectorLayer, vl2: VectorLayer) {
 export function mergeVectorLayers(vl1: VectorLayer, vl2: VectorLayer) {
   const { vl1: newVl1, vl2: newVl2 } = adjustViewports(vl1, vl2);
   const vl: VectorLayer =
-    setLayerChildren(newVl1, newVl1.children.concat(newVl2.children));
+    setLayerChildren(newVl1, [...newVl1.children, ...newVl2.children]);
   if (!newVl1.children.length) {
     // Only replace the vector layer's alpha if there are no children
     // being displayed to the user. This is pretty much the best

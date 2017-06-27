@@ -1,3 +1,6 @@
+import { Rect } from 'app/scripts/common';
+import * as _ from 'lodash';
+
 import {
   Animatable,
   Inspectable,
@@ -11,8 +14,6 @@ import {
   PathLayer,
   VectorLayer,
 } from '.';
-import { Rect } from 'app/scripts/common';
-import * as _ from 'lodash';
 
 /**
  * Root class for all layer types.
@@ -86,10 +87,10 @@ export abstract class AbstractLayer implements Layer {
   }
 
   // Implements the Layer interface.
-  abstract clone<T extends Layer>(): T;
+  abstract clone(): Layer;
 
   // Implements the Layer interface.
-  abstract deepClone<T extends Layer>(): T;
+  abstract deepClone(): Layer;
 
   // Implements the Layer interface.
   abstract getIconName(): string;
