@@ -1,8 +1,8 @@
 /* tslint:disable */
 
-import * as stable from 'stable';
 import * as csso from 'csso';
-import * as specificity from 'csso/lib/compressor/restructure/prepare/specificity';
+import * as specificity from 'csso/lib/restructure/prepare/specificity';
+import * as stable from 'stable';
 
 export const inlineStyles = {
   active: true,
