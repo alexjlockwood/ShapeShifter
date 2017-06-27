@@ -1,17 +1,17 @@
-import * as SAX from 'sax';
+/* tslint:disable */
 
-import { CSSStyleDeclaration } from './CssStyleDeclaration';
+import * as SAX from 'sax';
 import { JSAPI } from './jsAPI';
 
-const entityDeclaration = /<!ENTITY\s+(\S+)\s+(?:'([^\']+)'|"([^\"]+)")\s*>/g;
+var entityDeclaration = /<!ENTITY\s+(\S+)\s+(?:'([^\']+)'|"([^\"]+)")\s*>/g;
 
-const config = {
+var config = {
   strict: true,
   trim: false,
   normalize: true,
   lowercase: true,
   xmlns: true,
-  position: true,
+  position: true
 };
 
 /**
@@ -21,31 +21,25 @@ const config = {
  * @param {Function} callback
  */
 export function svgToJs(data, callback) {
-
-  let sax = SAX.parser(config.strict, config),
-    root = new JSAPI({ elem: '#document' }, undefined),
+  var sax = SAX.parser(config.strict, config),
+    root = new (JSAPI as any)({ elem: '#document' }),
     current = root,
     stack = [root],
     textContext = null,
     parsingError = false;
 
   function pushToContent(content) {
-
     content = new JSAPI(content, current);
-
     (current.content = current.content || []).push(content);
-
     return content;
-
   }
 
   sax.ondoctype = function (doctype) {
-
     pushToContent({
-      doctype: doctype,
+      doctype: doctype
     });
 
-    let subsetStart = doctype.indexOf('['),
+    var subsetStart = doctype.indexOf('['),
       entityMatch;
 
     if (subsetStart >= 0) {
@@ -58,52 +52,39 @@ export function svgToJs(data, callback) {
   };
 
   sax.onprocessinginstruction = function (data) {
-
     pushToContent({
-      processinginstruction: data,
+      processinginstruction: data
     });
-
   };
 
   sax.oncomment = function (comment) {
-
     pushToContent({
-      comment: comment.trim(),
+      comment: comment.trim()
     });
-
   };
 
   sax.oncdata = function (cdata) {
-
     pushToContent({
-      cdata: cdata,
+      cdata: cdata
     });
-
   };
 
   sax.onopentag = function (data) {
-
-    let elem: any = {
+    var elem: any = {
       elem: data.name,
       prefix: data.prefix,
-      local: data.local,
+      local: data.local
     };
-    elem.style = new CSSStyleDeclaration(elem);
 
     if (Object.keys(data.attributes).length) {
       elem.attrs = {};
 
-      for (const name in data.attributes) {
-
-        if (name === 'style') { // has style attribute
-          elem.style.hasStyle();
-        }
-
+      for (var name in data.attributes) {
         elem.attrs[name] = {
           name: name,
           value: data.attributes[name].value,
           prefix: data.attributes[name].prefix,
-          local: data.attributes[name].local,
+          local: data.attributes[name].local
         };
       }
     }
@@ -115,29 +96,21 @@ export function svgToJs(data, callback) {
     if (data.name == 'text' && !data.prefix) {
       textContext = current;
     }
-
     stack.push(elem);
-
   };
 
   sax.ontext = function (text) {
-
     if (/\S/.test(text) || textContext) {
-
       if (!textContext)
         text = text.trim();
-
       pushToContent({
-        text: text,
+        text: text
       });
-
     }
-
   };
 
   sax.onclosetag = function () {
-
-    const last = stack.pop();
+    var last = stack.pop();
 
     // Trim text inside <text> tag.
     if (last == textContext) {
@@ -145,26 +118,21 @@ export function svgToJs(data, callback) {
       textContext = null;
     }
     current = stack[stack.length - 1];
-
   };
 
   sax.onerror = function (e) {
-
     e.message = 'Error in parsing SVG: ' + e.message;
     if (e.message.indexOf('Unexpected end') < 0) {
       throw e;
     }
-
   };
 
   sax.onend = function () {
-
     if (!this.error) {
       callback(root);
     } else {
       callback({ error: this.error.message });
     }
-
   };
 
   try {
@@ -177,18 +145,12 @@ export function svgToJs(data, callback) {
 
   function trim(elem) {
     if (!elem.content) return elem;
-
-    let start = elem.content[0],
+    var start = elem.content[0],
       end = elem.content[elem.content.length - 1];
-
     while (start && start.content && !start.text) start = start.content[0];
     if (start && start.text) start.text = start.text.replace(/^\s+/, '');
-
     while (end && end.content && !end.text) end = end.content[end.content.length - 1];
     if (end && end.text) end.text = end.text.replace(/\s+$/, '');
-
     return elem;
-
   }
-
-}
+};

@@ -1,172 +1,240 @@
-import * as csstree from 'css-tree';
+/* tslint:disable */
 
-import * as cssTools from '../lib/CssTools';
+import * as stable from 'stable';
+import * as csso from 'csso';
+import * as specificity from 'csso/lib/compressor/restructure/prepare/specificity';
 
 export const inlineStyles = {
   active: true,
   type: 'full',
   fn: inlineStylesFn,
   params: {
-    onlyMatchedOnce: true,
+    onlyMatchedOnce: false,
     removeMatchedSelectors: true,
-    useMqs: ['', 'screen'],
-    usePseudos: [''],
+    useMqs: ['screen'],
+    usePseudoClasses: []
   },
 };
 
 /**
- * Moves + merges styles from style elements to element styles
- *
- * Options
- *   onlyMatchedOnce (default: true)
- *     inline only selectors that match once
- *
- *   removeMatchedSelectors (default: true)
- *     clean up matched selectors,
- *     leave selectors that hadn't matched
- *
- *   useMqs (default: ['', 'screen'])
- *     what media queries to be used
- *     empty string element for styles outside media queries
- *
- *   usePseudos (default: [''])
- *     what pseudo-classes/-elements to be used
- *     empty string element for all non-pseudo-classes and/or -elements
- *
- * @param {Object} document document element
- * @param {Object} opts plugin params
- *
- * @author strarsis <strarsis@gmail.com>
- */
-function inlineStylesFn(document, opts) {
-
+  * Moves + merges styles from style elements to element styles
+  *
+  * Options
+  *   onlyMatchedOnce (default: true)
+  *     inline only selectors that match once
+  *
+  *   removeMatchedSelectors (default: true)
+  *     clean up matched selectors,
+  *     leave selectors that hadn't matched
+  *
+  *   useMqs (default: ['screen'])
+  *     what mediaqueries to be used,
+  *     non-mediaquery styles are always used
+  *
+  *   usePseudoClasses (default: [])
+  *     what pseudo-classes to be used,
+  *     non-pseudo-class styles are always used
+  *
+  * @param {Object} root (document)
+  * @param {Object} params plugin params
+  */
+function inlineStylesFn(document, params) {
   // collect <style/>s
-  const styleEls = document.querySelectorAll('style');
+  var styleEls = document.querySelectorAll('style');
 
-  //no <styles/>s, nothing to do
-  if (styleEls === null) {
-    return document;
-  }
+  var styleItems = [],
+    selectorItems = [];
+  for (var styleElIndex in styleEls) {
+    var styleEl = styleEls[styleElIndex];
 
-  let styles = [],
-    selectors = [];
-
-  for (const styleEl of styleEls) {
     if (styleEl.isEmpty()) {
       // skip empty <style/>s
       continue;
     }
-    const cssStr = cssTools.getCssStr(styleEl);
+    var cssStr = styleEl.content[0].text || styleEl.content[0].cdata || [];
 
     // collect <style/>s and their css ast
-    let cssAst = {};
-    try {
-      cssAst = csstree.parse(cssStr, {
-        parseValue: false,
-        parseCustomProperty: false,
-      });
-    } catch (parseError) {
-      console.warn('Warning: Parse error of styles of <style/> element, skipped. Error details: ' + parseError);
-      continue;
-    }
-
-    styles.push({
+    var cssAst = csso.parse(cssStr, { context: 'stylesheet' });
+    styleItems.push({
       styleEl: styleEl,
-      cssAst: cssAst,
+      cssAst: cssAst
     });
 
-    selectors = selectors.concat(cssTools.flattenToSelectors(cssAst));
+    // collect css selectors and their containing ruleset
+    var curAtruleExpNode = null,
+      curPseudoClassItem = null,
+      curPseudoClassList = null;
+    csso.walk(cssAst, function (node, item, list) {
+
+      // media query blocks
+      // "look-behind the SimpleSelector", AtruleExpression node comes _before_ the affected SimpleSelector
+      if (node.type === 'AtruleExpression') { // marks the beginning of an Atrule
+        curAtruleExpNode = node;
+      }
+      // "look-ahead the SimpleSelector", Atrule node comes _after_ the affected SimpleSelector
+      if (node.type === 'Atrule') { // marks the end of an Atrule
+        curAtruleExpNode = null;
+      }
+
+      // Pseudo classes
+      // "look-behind the SimpleSelector", PseudoClass node comes _before_ the affected SimpleSelector
+      if (node.type === 'PseudoClass') {
+        curPseudoClassItem = item;
+        curPseudoClassList = list;
+      }
+
+      if (node.type === 'SimpleSelector') {
+        // csso 'SimpleSelector' to be interpreted with CSS2.1 specs, _not_ with CSS3 Selector module specs:
+        // Selector group ('Selector' in csso) consisting of simple selectors ('SimpleSelector' in csso), separated by comma.
+        // <Selector>: <'SimpleSelector'>, <'SimpleSelector'>, ...
+
+        var curSelectorItem = {
+          simpleSelectorItem: item,
+          rulesetNode: this.ruleset,
+          atRuleExpNode: curAtruleExpNode,
+
+          pseudoClassItem: curPseudoClassItem,
+          pseudoClassList: curPseudoClassList
+        };
+        selectorItems.push(curSelectorItem);
+
+        // pseudo class scope ends with the SimpleSelector
+        curPseudoClassItem = null;
+        curPseudoClassList = null;
+      }
+    });
   }
 
-  // filter for mediaqueries to be used or without any mediaquery
-  const selectorsMq = cssTools.filterByMqs(selectors, opts.useMqs);
 
-  // filter for pseudo elements to be used
-  const selectorsPseudo = cssTools.filterByPseudos(selectorsMq, opts.usePseudos);
+  // filter for mediaqueries to be used or without any mediaquery
+  var selectorItemsMqs = selectorItems.filter(function (selectorItem) {
+    if (selectorItem.atRuleExpNode === null) {
+      return true;
+    }
+    var mqStr = csso.translate(selectorItem.atRuleExpNode);
+    return params.useMqs.indexOf(mqStr) > -1;
+  });
+
+  // filter for pseudo classes to be used or not using a pseudo class
+  var selectorItemsPseudoClasses = selectorItemsMqs.filter(function (selectorItem) {
+    return (selectorItem.pseudoClassItem === null ||
+      params.usePseudoClasses.indexOf(selectorItem.pseudoClassItem.data.name) > -1);
+  });
 
   // remove PseudoClass from its SimpleSelector for proper matching
-  cssTools.cleanPseudos(selectorsPseudo);
+  selectorItemsPseudoClasses.map(function (selectorItem) {
+    if (selectorItem.pseudoClassItem === null) {
+      return;
+    }
+    selectorItem.pseudoClassList.remove(selectorItem.pseudoClassItem);
+  });
 
-  // stable sort selectors
-  const sortedSelectors = cssTools.sortSelectors(selectorsPseudo).reverse();
+  // stable-sort css selectors by their specificity
+  var selectorItemsSorted = stable(selectorItemsPseudoClasses, function (itemA, itemB) {
+    return compareSimpleSelectorNode(itemA.simpleSelectorItem.data, itemB.simpleSelectorItem.data);
+  }).reverse(); // last declaration applies last (final)
 
   // apply <style/> styles to matched elements
-  for (const selector of sortedSelectors) {
-    let selectorStr = csstree.translate(selector.item.data),
+  for (var selectorItemIndex in selectorItemsSorted) {
+    var selectorItem = selectorItemsSorted[selectorItemIndex],
+      selectorStr = csso.translate(selectorItem.simpleSelectorItem.data),
       selectedEls = null;
-
     try {
       selectedEls = document.querySelectorAll(selectorStr);
-    } catch (selectError) {
-      if (selectError.constructor === SyntaxError) {
-        console.warn('Warning: Syntax error when trying to select \n\n' + selectorStr + '\n\n, skipped. Error details: ' + selectError);
+    } catch (e) {
+      if (e.constructor == SyntaxError) {
+        console.warn('Syntax error when trying to select \n\n' + selectorStr + '\n\n, skipped.');
         continue;
       }
-      throw selectError;
+      throw e;
     }
 
-    if (selectedEls === null) {
-      // nothing selected
-      continue;
-    }
-
-    if (opts.onlyMatchedOnce && selectedEls !== null && selectedEls.length > 1) {
+    if (params.onlyMatchedOnce && selectedEls !== null && selectedEls.length > 1) {
       // skip selectors that match more than once if option onlyMatchedOnce is enabled
       continue;
     }
 
-    // apply <style/> to matched elements
-    for (const selectedEl of selectedEls) {
+    for (var selectedElIndex in selectedEls) {
+      var selectedEl = selectedEls[selectedElIndex];
 
-      if (selector.rule === null) {
-        continue;
+      // empty defaults in case there is no style attribute
+      var elInlineStyleAttr = { name: 'style', value: '', prefix: '', local: 'style' },
+        elInlineStyles = '';
+
+      if (selectedEl.hasAttr('style')) {
+        elInlineStyleAttr = selectedEl.attr('style');
+        elInlineStyles = elInlineStyleAttr.value;
       }
+      var inlineCssAst = csso.parse(elInlineStyles, { context: 'block' });
 
-      // merge declarations
-      csstree.walkDeclarations(selector.rule, function (styleCsstreeDeclaration) {
-        const styleDeclaration = cssTools.csstreeToStyleDeclaration(styleCsstreeDeclaration);
-        if (selectedEl.style.getPropertyValue(styleDeclaration.name) !== null &&
-          selectedEl.style.getPropertyPriority(styleDeclaration.name) >= styleDeclaration.priority) {
-          return;
+      // merge element(inline) styles + matching <style/> styles
+      var newInlineCssAst = csso.parse('', { context: 'block' }); // for an empty css ast (in block context)
+
+      var mergedDeclarations = [];
+      var _fetchDeclarations = function (node, item) {
+        if (node.type === 'Declaration') {
+          mergedDeclarations.push(item);
         }
-        selectedEl.style.setProperty(styleDeclaration.name, styleDeclaration.value, styleDeclaration.priority);
+      };
+      var itemRulesetNodeCloned = csso.clone(selectorItem.rulesetNode);
+      // clone to prevent leaking declaration references (csso.translate(...))
+      csso.walk(itemRulesetNodeCloned, _fetchDeclarations);
+      csso.walk(inlineCssAst, _fetchDeclarations);
+
+      // sort by !important(ce)
+      var mergedDeclarationsSorted = stable(mergedDeclarations, function (declarationA, declarationB) {
+        var declarationAScore = ~~declarationA.data.value.important, // (cast boolean to number)
+          declarationBScore = ~~declarationB.data.value.important; //  "
+        return (declarationAScore - declarationBScore);
       });
 
+      // to css
+      for (var mergedDeclarationsSortedIndex in mergedDeclarationsSorted) {
+        var declaration = mergedDeclarationsSorted[mergedDeclarationsSortedIndex];
+        newInlineCssAst.declarations.insert(declaration);
+      }
+      var newCss = csso.translate(newInlineCssAst);
+
+      elInlineStyleAttr.value = newCss;
+      selectedEl.addAttr(elInlineStyleAttr);
     }
 
-    if (opts.removeMatchedSelectors && selectedEls !== null && selectedEls.length > 0) {
+    if (params.removeMatchedSelectors && selectedEls !== null && selectedEls.length > 0) {
       // clean up matching simple selectors if option removeMatchedSelectors is enabled
-      selector.rule.selector.children.remove(selector.item);
+      selectorItem.rulesetNode.selector.selectors.remove(selectorItem.simpleSelectorItem);
     }
   }
 
-  for (const style of styles) {
-    csstree.walkRules(style.cssAst, function (node, item, list) {
+  var styleItem: any = {};
+  for (let styleItemIndex in styleItems) {
+    styleItem = styleItems[styleItemIndex];
+
+    csso.walk(styleItem.cssAst, function (node, item, list) {
       // clean up <style/> atrules without any rulesets left
       if (node.type === 'Atrule' &&
         // only Atrules containing rulesets
         node.block !== null &&
-        node.block.children.isEmpty()) {
+        typeof node.block.rules !== 'undefined' &&
+        node.block.rules.isEmpty()) {
         list.remove(item);
-        return;
       }
 
       // clean up <style/> rulesets without any css selectors left
-      if (node.type === 'Rule' &&
-        node.selector.children.isEmpty()) {
+      if (node.type === 'Ruleset' &&
+        node.selector.selectors.isEmpty()) {
         list.remove(item);
       }
     });
 
-    if (style.cssAst.children.isEmpty()) {
+    if (styleItem.cssAst.rules.isEmpty()) {
       // clean up now emtpy <style/>s
-      const styleParentEl = style.styleEl.parentNode;
-      styleParentEl.spliceContent(styleParentEl.content.indexOf(style.styleEl), 1);
+      var styleParentEl = styleItem.styleEl.parentNode;
+      styleParentEl.spliceContent(styleParentEl.content.indexOf(styleItem.styleEl), 1);
 
       if (styleParentEl.elem === 'defs' &&
         styleParentEl.content.length === 0) {
         // also clean up now empty <def/>s
-        const defsParentEl = styleParentEl.parentNode;
+        var defsParentEl = styleParentEl.parentNode;
         defsParentEl.spliceContent(defsParentEl.content.indexOf(styleParentEl), 1);
       }
 
@@ -174,8 +242,27 @@ function inlineStylesFn(document, opts) {
     }
 
     // update existing, left over <style>s
-    cssTools.setCssStr(style.styleEl, csstree.translate(style.cssAst));
+    styleItem.styleEl.content[0].text = csso.translate(styleItem.cssAst);
   }
 
   return document;
+}
+
+// extracted from https://github.com/keeganstreet/specificity/blob/master/specificity.js#L211
+function compareSpecificity(aSpecificity, bSpecificity) {
+  for (var i = 0; i < 4; i += 1) {
+    if (aSpecificity[i] < bSpecificity[i]) {
+      return -1;
+    } else if (aSpecificity[i] > bSpecificity[i]) {
+      return 1;
+    }
+  }
+
+  return 0;
+}
+
+function compareSimpleSelectorNode(aSimpleSelectorNode, bSimpleSelectorNode) {
+  var aSpecificity = specificity(aSimpleSelectorNode),
+    bSpecificity = specificity(bSimpleSelectorNode);
+  return compareSpecificity(aSpecificity, bSpecificity);
 }
