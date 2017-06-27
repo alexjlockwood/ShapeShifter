@@ -7,6 +7,7 @@ import {
   PathLayer,
   VectorLayer,
 } from 'app/scripts/model/layers';
+import { PathUtil } from 'app/scripts/model/paths';
 import * as _ from 'lodash';
 
 import * as XmlSerializer from './XmlSerializer';
@@ -175,26 +176,20 @@ function vectorLayerToSvgNode(
         } else {
           pathLength = layer.pathData.getPathLength();
         }
-
-        // Calculate the visible fraction of the trimmed path. If trimPathStart
-        // is greater than trimPathEnd, then the result should be the combined
-        // length of the two line segments: [trimPathStart,1] and [0,trimPathEnd].
-        let shownFraction = layer.trimPathEnd - layer.trimPathStart;
-        if (layer.trimPathStart > layer.trimPathEnd) {
-          shownFraction += 1;
-        }
-        // Calculate the dash array. The first array element is the length of
-        // the trimmed path and the second element is the gap, which is the
-        // difference in length between the total path length and the visible
-        // trimmed path length.
         const strokeDashArray =
-          `${shownFraction * pathLength},${(1 - shownFraction + 0.001) * pathLength}`;
-        // The amount to offset the path is equal to the trimPathStart plus
-        // trimPathOffset. We mod the result because the trimmed path
-        // should wrap around once it reaches 1.
+          PathUtil.toStrokeDashArray(
+            layer.trimPathStart,
+            layer.trimPathEnd,
+            layer.trimPathOffset,
+            pathLength,
+          ).join(',');
         const strokeDashOffset =
-          `${pathLength * (1 - ((layer.trimPathStart + layer.trimPathOffset) % 1))}`;
-
+          PathUtil.toStrokeDashOffset(
+            layer.trimPathStart,
+            layer.trimPathEnd,
+            layer.trimPathOffset,
+            pathLength,
+          ).toString();
         conditionalAttr(node, 'stroke-dasharray', strokeDashArray);
         conditionalAttr(node, 'stroke-dashoffset', strokeDashOffset);
       }

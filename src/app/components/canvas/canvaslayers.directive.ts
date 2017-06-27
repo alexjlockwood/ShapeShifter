@@ -2,11 +2,6 @@ import 'rxjs/add/observable/merge';
 import 'rxjs/add/operator/first';
 
 import {
-  CanvasLayoutMixin,
-  Size,
-} from './CanvasLayoutMixin';
-import * as CanvasUtil from './CanvasUtil';
-import {
   AfterViewInit,
   Directive,
   ElementRef,
@@ -22,6 +17,7 @@ import {
   PathLayer,
   VectorLayer,
 } from 'app/scripts/model/layers';
+import { PathUtil } from 'app/scripts/model/paths';
 import { AnimatorService } from 'app/services';
 import {
   State,
@@ -37,6 +33,12 @@ import {
 } from 'app/store/layers/selectors';
 import * as $ from 'jquery';
 import { Observable } from 'rxjs/Observable';
+
+import {
+  CanvasLayoutMixin,
+  Size,
+} from './CanvasLayoutMixin';
+import * as CanvasUtil from './CanvasUtil';
 
 type Context = CanvasRenderingContext2D;
 
@@ -211,26 +213,22 @@ export class CanvasLayersDirective
         pathLength = layer.pathData.getPathLength();
       }
 
-      // Calculate the visible fraction of the trimmed path. If trimPathStart
-      // is greater than trimPathEnd, then the result should be the combined
-      // length of the two line segments: [trimPathStart,1] and [0,trimPathEnd].
-      let shownFraction = layer.trimPathEnd - layer.trimPathStart;
-      if (layer.trimPathStart > layer.trimPathEnd) {
-        shownFraction += 1;
-      }
-      // Calculate the dash array. The first array element is the length of
-      // the trimmed path and the second element is the gap, which is the
-      // difference in length between the total path length and the visible
-      // trimmed path length.
-      ctx.setLineDash([
-        shownFraction * pathLength,
-        (1 - shownFraction + 0.001) * pathLength,
-      ]);
-      // The amount to offset the path is equal to the trimPathStart plus
-      // trimPathOffset. We mod the result because the trimmed path
-      // should wrap around once it reaches 1.
-      ctx.lineDashOffset = pathLength
-        * (1 - ((layer.trimPathStart + layer.trimPathOffset) % 1));
+      const strokeDashArray =
+        PathUtil.toStrokeDashArray(
+          layer.trimPathStart,
+          layer.trimPathEnd,
+          layer.trimPathOffset,
+          pathLength,
+        );
+      const strokeDashOffset =
+        PathUtil.toStrokeDashOffset(
+          layer.trimPathStart,
+          layer.trimPathEnd,
+          layer.trimPathOffset,
+          pathLength,
+        );
+      ctx.setLineDash(strokeDashArray);
+      ctx.lineDashOffset = strokeDashOffset;
     } else {
       ctx.setLineDash([]);
     }

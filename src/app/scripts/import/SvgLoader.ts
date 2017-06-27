@@ -225,6 +225,7 @@ export function loadVectorLayerFromSvgString(
           pathData = pathData.mutate().addTransforms(transforms).build().clone();
           strokeWidth *= Matrix.flatten(...transforms).getScale();
         }
+        // TODO: make best effort attempt to restore trimPath{Start,End,Offset}
         return maybeWrapClipPathInGroupFn(
           new PathLayer({
             id: _.uniqueId(),

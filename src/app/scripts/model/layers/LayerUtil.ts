@@ -1,3 +1,7 @@
+import { Matrix } from 'app/scripts/common';
+import { Path } from 'app/scripts/model/paths';
+import * as _ from 'lodash';
+
 import {
   ClipPathLayer,
   GroupLayer,
@@ -5,9 +9,6 @@ import {
   PathLayer,
   VectorLayer,
 } from '.';
-import { Matrix } from 'app/scripts/common';
-import { Path } from 'app/scripts/model/paths';
-import * as _ from 'lodash';
 
 const PRECISION = 8;
 
@@ -144,10 +145,17 @@ export function adjustViewports(vl1: VectorLayer, vl2: VectorLayer) {
   return { vl1, vl2 };
 }
 
-// TODO: note that we lose information about vl2's alpha value here... can this be fixed?
 export function mergeVectorLayers(vl1: VectorLayer, vl2: VectorLayer) {
   const { vl1: newVl1, vl2: newVl2 } = adjustViewports(vl1, vl2);
-  return setLayerChildren(newVl1, newVl1.children.concat(newVl2.children));
+  const vl: VectorLayer =
+    setLayerChildren(newVl1, newVl1.children.concat(newVl2.children));
+  if (!newVl1.children.length) {
+    // Only replace the vector layer's alpha if there are no children
+    // being displayed to the user. This is pretty much the best
+    // we can do.
+    vl.alpha = newVl2.alpha;
+  }
+  return vl;
 }
 
 export function addLayerToTree(
