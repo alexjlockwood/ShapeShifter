@@ -90,53 +90,17 @@ export function loadVectorLayerFromSvgString(
   const vectorLayer = new VectorLayer({
     id: _.uniqueId(), name, children: [], width, height, alpha,
   });
-  const vectorLayerBoundsPathStr = `M 0 0 h ${width} v ${height} h ${-width} v ${-height}`;
 
   // TODO: handle clipPaths that have clip-path attributes
   // TODO: handle clipPaths that have children path elements with clip-path attributes
   // TODO: handle clipPaths with clipPathUnits="objectBoundingBox"
-  const clipPathMap: StringMap<ReadonlyArray<Path>> = {};
+  const clipPathMap =
+    _.mapValues(buildPathInfosMap(documentElement), infos => {
+      return infos.map(info => info.path);
+    });
 
-  // Find all clip path elements and add them to the map.
-  (function findClipPathsFn(node: Element) {
-    if (!node || node.nodeType === Node.TEXT_NODE || node.nodeType === Node.COMMENT_NODE) {
-      return;
-    }
-    if (node instanceof SVGClipPathElement) {
-      const clipPathId = node.getAttribute('id');
-      if (!clipPathId) {
-        return;
-      }
-      const paths: Path[] = [];
-      if (node.childNodes) {
-        const clipPathTransforms = getNodeTransforms(node).reverse();
-        for (let i = 0; i < node.childNodes.length; i++) {
-          const childNode = node.childNodes.item(i) as Element;
-          if (childNode instanceof SVGPathElement && childNode.hasAttribute('d')) {
-            const pathStr = childNode.getAttribute('d');
-            if (!pathStr) {
-              continue;
-            }
-            const matrices = getNodeTransforms(childNode).reverse();
-            paths.push(
-              new Path(pathStr)
-                .mutate()
-                .addTransforms([...matrices, ...clipPathTransforms])
-                .build()
-                .clone(),
-            );
-          }
-        }
-      }
-      clipPathMap[clipPathId] = paths;
-      return;
-    }
-    if (node.childNodes) {
-      for (let i = 0; i < node.childNodes.length; i++) {
-        findClipPathsFn(node.childNodes.item(i) as Element);
-      }
-    }
-  })(documentElement);
+  console.info('====================');
+  console.info(clipPathMap);
 
   const rootLayer =
     (function nodeToLayerFn(node: Element, transforms: ReadonlyArray<Matrix>): Layer {
@@ -184,8 +148,8 @@ export function loadVectorLayerFromSvgString(
           (clipPathMap[refClipPathId] || [])
             .map(p => p.mutate().addTransforms(transforms).build().clone());
         if (!paths.length) {
-          // If the clipPath has no children, then mask the entire vector layer.
-          paths.push(new Path(vectorLayerBoundsPathStr));
+          // If the clipPath has no children, then clip the entire vector layer.
+          paths.push(new Path('M 0 0 Z'));
         }
         const groupChildren: Layer[] =
           paths.map(p => {
@@ -267,10 +231,21 @@ export function loadVectorLayerFromSvgString(
   return vectorLayer;
 }
 
+function svgLengthToPx(svgLength) {
+  if (svgLength.baseVal) {
+    svgLength = svgLength.baseVal;
+  }
+  svgLength.convertToSpecifiedUnits(SVGLength.SVG_LENGTHTYPE_PX);
+  return svgLength.valueInSpecifiedUnits;
+}
+
 function isSvgNode(node: Element): node is SVGSVGElement {
   return node.nodeName === 'svg';
 }
 
+/**
+ * Returns a list of transform matricies assigned to the specified node.
+ */
 function getNodeTransforms(node: SVGGraphicsElement) {
   if (!node.transform) {
     return [];
@@ -284,6 +259,10 @@ function getNodeTransforms(node: SVGGraphicsElement) {
   return matrices;
 }
 
+/**
+ * Returns the name of the referenced ID assigned to the clip-path attribute,
+ * if one exists.
+ */
 function getReferencedClipPathId(node: Element) {
   if (!node.getAttribute('clip-path')) {
     return undefined;
@@ -299,10 +278,91 @@ function getReferencedClipPathId(node: Element) {
   return clipPathAttr.slice('url(#'.length, endParenIndex);
 }
 
-function svgLengthToPx(svgLength) {
-  if (svgLength.baseVal) {
-    svgLength = svgLength.baseVal;
+interface PathInfo {
+  readonly path: Path;
+  readonly refClipPathId?: string;
+}
+
+interface ClipPathInfo {
+  readonly refClipPathId?: string;
+  readonly pathInfos: ReadonlyArray<PathInfo>;
+}
+
+/**
+ * Builds a map of clip path IDs to their corresponding clip path nodes.
+ */
+function buildClipPathIdMap(rootNode: Element) {
+  const clipPathIdMap: StringMap<SVGClipPathElement> = {};
+  (function recurseFn(node: Element) {
+    if (node instanceof SVGClipPathElement) {
+      const clipPathId = node.getAttribute('id');
+      if (clipPathId) {
+        clipPathIdMap[clipPathId] = node;
+      }
+      return;
+    }
+    if (node && node.childNodes) {
+      for (let i = 0; i < node.childNodes.length; i++) {
+        recurseFn(node.childNodes.item(i) as Element);
+      }
+    }
+  })(rootNode);
+  return clipPathIdMap;
+}
+
+/**
+ * Builds a list of path info objects for the specified clip path element.
+ */
+function buildPathInfosForClipPath(node: SVGClipPathElement) {
+  // TODO: make sure that transforms from parent clip-paths aren't inherited...
+  const clipPathTransforms = getNodeTransforms(node).reverse();
+
+  const pathInfos: PathInfo[] = [];
+  if (node.childNodes) {
+    for (let i = 0; i < node.childNodes.length; i++) {
+      const childNode = node.childNodes.item(i) as Element;
+      if (childNode instanceof SVGPathElement && childNode.getAttribute('d')) {
+        const pathStr = childNode.getAttribute('d');
+        const pathTransforms = getNodeTransforms(childNode).reverse();
+        const transforms = [...pathTransforms, ...clipPathTransforms];
+        const refClipPathId = getReferencedClipPathId(childNode);
+        pathInfos.push({
+          refClipPathId,
+          path: new Path(pathStr).mutate().addTransforms(transforms).build().clone(),
+        });
+      }
+    }
   }
-  svgLength.convertToSpecifiedUnits(SVGLength.SVG_LENGTHTYPE_PX);
-  return svgLength.valueInSpecifiedUnits;
+  return pathInfos;
+}
+
+/**
+ * Builds a map of clip path IDs to their corresponding path info objects.
+ */
+function buildPathInfosMap(root: Element) {
+  const clipPathInfoMap =
+    _.mapValues(buildClipPathIdMap(root), n => {
+      const pathInfos = buildPathInfosForClipPath(n);
+      const refClipPathId = getReferencedClipPathId(n);
+      return { pathInfos, refClipPathId } as ClipPathInfo;
+    });
+  const pathInfosMap: StringMap<ReadonlyArray<PathInfo>> = {};
+  const recurseFn = (clipPathId: string) => {
+    if (pathInfosMap[clipPathId]) {
+      // Then the path infos have already been computed.
+      return;
+    }
+    const { pathInfos, refClipPathId } = clipPathInfoMap[clipPathId];
+    if (!refClipPathId) {
+      // Then simply assign the path infos to the clip path id.
+      pathInfosMap[clipPathId] = pathInfos;
+      return;
+    }
+    // Then concatenate the clip path's path info objects with its
+    // referenced path info objects.
+    recurseFn(refClipPathId);
+    pathInfosMap[clipPathId] = [...pathInfos, ...pathInfosMap[refClipPathId]];
+  };
+  Object.keys(clipPathInfoMap).forEach(recurseFn);
+  return pathInfosMap;
 }
