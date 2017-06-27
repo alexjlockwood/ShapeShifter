@@ -9,7 +9,7 @@ export const inlineStyles = {
   type: 'full',
   fn: inlineStylesFn,
   params: {
-    onlyMatchedOnce: true,
+    onlyMatchedOnce: false,
     removeMatchedSelectors: true,
     useMqs: ['', 'screen'],
     usePseudos: [''],
