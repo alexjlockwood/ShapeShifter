@@ -1,3 +1,5 @@
+/* tslint:disable */
+
 import * as csstree from 'css-tree';
 import * as specificity from 'csso/lib/restructure/prepare/specificity';
 import * as stable from 'stable';

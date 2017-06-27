@@ -1,3 +1,5 @@
+/* tslint:disable */
+
 import * as cssSelect from 'css-select';
 
 import { svgoCssSelectAdapter } from './CssSelectAdapter';

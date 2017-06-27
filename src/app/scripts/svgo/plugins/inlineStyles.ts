@@ -1,3 +1,5 @@
+/* tslint:disable */
+
 import * as csstree from 'css-tree';
 
 import * as cssTools from '../lib/CssTools';

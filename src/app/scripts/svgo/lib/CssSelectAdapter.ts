@@ -1,3 +1,5 @@
+/* tslint:disable */
+
 import * as baseCssAdapter from 'css-select-base-adapter';
 
 /**

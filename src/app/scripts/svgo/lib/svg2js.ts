@@ -1,3 +1,5 @@
+/* tslint:disable */
+
 import * as SAX from 'sax';
 
 import { CSSStyleDeclaration } from './CssStyleDeclaration';
