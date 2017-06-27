@@ -1,8 +1,8 @@
 /* tslint:disable */
 
-import { jsToSvg } from './lib/js2svg';
+import { js2svg } from './lib/js2svg';
 import { executePlugins } from './lib/plugins';
-import { svgToJs } from './lib/svg2js';
+import { svg2js } from './lib/svg2js';
 import { cleanupNumericValues } from './plugins/cleanupNumericValues';
 import { collapseGroups } from './plugins/collapseGroups';
 import { convertPathData } from './plugins/convertPathData';
@@ -1033,13 +1033,13 @@ const batchedSvgoPlugins = plugin => {
 };
 
 function optimize(svgText: string, plugin, callback: (optimizedSvgText: string) => void) {
-  svgToJs(svgText, svgJs => {
+  svg2js(svgText, svgJs => {
     if (svgJs.error) {
       console.warn('Failed to parse the specified SVG string.');
       callback(svgText);
       return;
     }
-    callback(jsToSvg(executePlugins(svgJs, batchedSvgoPlugins(plugin)), {
+    callback(js2svg(executePlugins(svgJs, batchedSvgoPlugins(plugin)), {
       indent: '    ',
       pretty: true,
     }).data);

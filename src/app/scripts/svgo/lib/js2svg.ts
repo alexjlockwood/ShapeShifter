@@ -1,10 +1,12 @@
 /* tslint:disable */
 
-import * as EXTEND from 'whet.extend';
-
 const EOL = '\n';
 
-const defaults = {
+import * as collections from '../plugins/_collections';
+
+const textElem = collections.elemsGroups.textContent.concat('title');
+
+var defaults = {
   doctypeStart: '<!DOCTYPE',
   doctypeEnd: '>',
   procInstStart: '<?',
@@ -28,29 +30,16 @@ const defaults = {
   regValEntities: /[&"<>]/g,
   encodeEntity: encodeEntity,
   pretty: false,
-  useShortTags: true,
+  useShortTags: true
 };
 
-const entities = {
+var entities = {
   '&': '&amp;',
   '\'': '&apos;',
   '"': '&quot;',
   '>': '&gt;',
   '<': '&lt;',
 };
-
-const textElem = [
-  'altGlyph',
-  'altGlyphDef',
-  'altGlyphItem',
-  'glyph',
-  'glyphRef',
-  'textPath',
-  'text',
-  'title',
-  'tref',
-  'tspan',
-];
 
 /**
  * Convert SVG-as-JS object to SVG (XML) string.
@@ -60,14 +49,16 @@ const textElem = [
  *
  * @return {Object} output data
  */
-export function jsToSvg(data, config) {
+export function js2svg(data, config) {
+
   return new JS2SVG(config).convert(data);
+
 };
 
 function JS2SVG(config) {
 
   if (config) {
-    this.config = EXTEND(true, {}, defaults, config);
+    this.config = Object.assign({}, defaults, config);
   } else {
     this.config = defaults;
   }

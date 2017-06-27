@@ -48,7 +48,9 @@
     "stable": "^0.1.6",
     "tinycolor2": "^1.4.1",
     "whet.extend": "~0.9.9",
-    "zone.js": "^0.8.12"
+    "zone.js": "^0.8.12",
+    "css-tree": "1.0.0-alpha19",
+    "js-yaml": "~3.8.4"
   },
   "devDependencies": {
     "@angular/cli": "^1.1.3",
