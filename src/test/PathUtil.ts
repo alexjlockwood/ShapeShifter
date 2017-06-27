@@ -1,10 +1,8 @@
 import {
-  MathUtil,
   Matrix,
   Point,
 } from 'app/scripts/common';
 import {
-  Command,
   Path,
   SvgChar,
 } from 'app/scripts/model/paths';
