@@ -23,10 +23,7 @@ import {
   PathLayer,
   VectorLayer,
 } from 'app/scripts/model/layers';
-import {
-  Animation,
-  AnimationBlock,
-} from 'app/scripts/model/timeline';
+import { Animation, AnimationBlock } from 'app/scripts/model/timeline';
 import {
   ActionModeService,
   AnimatorService,
@@ -35,22 +32,10 @@ import {
   FileExportService,
   FileImportService,
 } from 'app/services';
-import {
-  Shortcut,
-  ShortcutService,
-} from 'app/services/shortcut.service';
-import {
-  Duration,
-  SnackBarService,
-} from 'app/services/snackbar.service';
-import {
-  State,
-  Store,
-} from 'app/store';
-import {
-  getLayerTimelineState,
-  isWorkspaceDirty,
-} from 'app/store/common/selectors';
+import { Shortcut, ShortcutService } from 'app/services/shortcut.service';
+import { Duration, SnackBarService } from 'app/services/snackbar.service';
+import { State, Store } from 'app/store';
+import { getLayerTimelineState, isWorkspaceDirty } from 'app/store/common/selectors';
 import {
   AddLayer,
   ReplaceLayer,
@@ -60,12 +45,7 @@ import {
 } from 'app/store/layers/actions';
 import { getVectorLayer } from 'app/store/layers/selectors';
 import { ResetWorkspace } from 'app/store/reset/actions';
-import {
-  AddBlock,
-  ReplaceBlocks,
-  SelectAnimation,
-  SelectBlock,
-} from 'app/store/timeline/actions';
+import { AddBlock, ReplaceBlocks, SelectAnimation, SelectBlock } from 'app/store/timeline/actions';
 import { getAnimation } from 'app/store/timeline/selectors';
 import { environment } from 'environments/environment';
 import * as $ from 'jquery';
@@ -74,10 +54,7 @@ import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Observable } from 'rxjs/Observable';
 
 import { Callbacks as LayerListTreeCallbacks } from './layerlisttree.component';
-import {
-  LayerTimelineGridDirective,
-  ScrubEvent,
-} from './layertimelinegrid.directive';
+import { LayerTimelineGridDirective, ScrubEvent } from './layertimelinegrid.directive';
 import { Callbacks as TimelineAnimationRowCallbacks } from './timelineanimationrow.component';
 import * as TimelineConsts from './constants';
 
@@ -110,19 +87,19 @@ declare const ga: Function;
   styleUrls: ['./layertimeline.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class LayerTimelineComponent
-  extends DestroyableMixin()
-  implements OnInit, AfterViewInit,
-  TimelineAnimationRowCallbacks, LayerListTreeCallbacks {
-
+export class LayerTimelineComponent extends DestroyableMixin()
+  implements OnInit, AfterViewInit, TimelineAnimationRowCallbacks, LayerListTreeCallbacks {
   @ViewChild('timeline') private timelineRef: ElementRef;
   private $timeline: JQuery;
 
   @ViewChild('timelineAnimation') private timelineAnimationRef: ElementRef;
-  @ViewChildren(LayerTimelineGridDirective) timelineDirectives: QueryList<LayerTimelineGridDirective>;
+  @ViewChildren(LayerTimelineGridDirective)
+  timelineDirectives: QueryList<LayerTimelineGridDirective>;
 
   private readonly dragIndicatorSubject = new BehaviorSubject<DragIndicatorInfo>({
-    isVisible: false, left: 0, top: 0,
+    isVisible: false,
+    left: 0,
+    top: 0,
   });
   dragIndicatorObservable = this.dragIndicatorSubject.asObservable();
   private readonly horizZoomSubject = new BehaviorSubject<number>(DEFAULT_HORIZ_ZOOM);
@@ -156,13 +133,16 @@ export class LayerTimelineComponent
     private readonly demoService: DemoService,
     private readonly actionModeService: ActionModeService,
     public readonly shortcutService: ShortcutService,
-  ) { super(); }
+  ) {
+    super();
+  }
 
   ngOnInit() {
     let currActionMode: ActionMode;
-    this.layerTimelineModel$ =
-      this.store.select(getLayerTimelineState)
-        .map(({
+    this.layerTimelineModel$ = this.store
+      .select(getLayerTimelineState)
+      .map(
+        ({
           animation,
           vectorLayer,
           isAnimationSelected,
@@ -191,13 +171,15 @@ export class LayerTimelineComponent
             isAnimationSelected,
             isActionMode,
           };
-        });
+        },
+      );
     this.registerSubscription(
       this.shortcutService.asObservable().subscribe(shortcut => {
         if (shortcut === Shortcut.ZoomToFit) {
           this.autoZoomToAnimation();
         }
-      }));
+      }),
+    );
   }
 
   ngAfterViewInit() {
@@ -205,7 +187,8 @@ export class LayerTimelineComponent
     this.registerSubscription(
       this.animatorService.asObservable().subscribe(event => {
         this.currentTime = event.currentTime;
-      }));
+      }),
+    );
     setTimeout(() => this.autoZoomToAnimation());
   }
 
@@ -223,7 +206,7 @@ export class LayerTimelineComponent
 
   private set currentTime(currentTime: number) {
     this.currentTime_ = currentTime;
-    this.timelineDirectives.forEach(dir => dir.currentTime = currentTime);
+    this.timelineDirectives.forEach(dir => (dir.currentTime = currentTime));
   }
 
   // Called from the LayerTimelineComponent template.
@@ -238,7 +221,7 @@ export class LayerTimelineComponent
     this.store.select(isWorkspaceDirty).first().subscribe(isDirty => {
       if (isDirty && !IS_DEV_BUILD) {
         this.dialogService
-          .confirm('Start over?', 'You\'ll lose any unsaved changes.')
+          .confirm('Start over?', "You'll lose any unsaved changes.")
           .filter(result => result)
           .subscribe(resetWorkspaceFn);
       } else {
@@ -256,27 +239,26 @@ export class LayerTimelineComponent
   // Called from the LayerTimelineComponent template.
   onLoadDemoClick() {
     ga('send', 'event', 'File', 'Demo');
-    this.dialogService
-      .pickDemo()
-      .filter(demoInfo => !!demoInfo)
-      .subscribe(selectedDemoInfo => {
-        ga('send', 'event', 'Demos', 'Demo selected', selectedDemoInfo.title);
+    this.dialogService.pickDemo().filter(demoInfo => !!demoInfo).subscribe(selectedDemoInfo => {
+      ga('send', 'event', 'Demos', 'Demo selected', selectedDemoInfo.title);
 
-        this.demoService.getDemo(selectedDemoInfo.id)
-          .then(({ vectorLayer, animation, hiddenLayerIds }) => {
-            // TODO: figure out if this hack is necessary and/or can be avoided?
-            this.animatorService.reset();
-            this.store.dispatch(new ResetWorkspace(vectorLayer, animation, hiddenLayerIds));
-            this.animatorService.reset();
-          }).catch(error => {
-            const msg =
-              'serviceWorker' in navigator && navigator.serviceWorker.controller
-                ? 'Demo not available offline'
-                : `Couldn't fetch demo`;
-            this.snackBarService.show(msg, 'Dismiss', Duration.Long);
-            return Promise.reject(error.message || error);
-          });
-      });
+      this.demoService
+        .getDemo(selectedDemoInfo.id)
+        .then(({ vectorLayer, animation, hiddenLayerIds }) => {
+          // TODO: figure out if this hack is necessary and/or can be avoided?
+          this.animatorService.reset();
+          this.store.dispatch(new ResetWorkspace(vectorLayer, animation, hiddenLayerIds));
+          this.animatorService.reset();
+        })
+        .catch(error => {
+          const msg =
+            'serviceWorker' in navigator && navigator.serviceWorker.controller
+              ? 'Demo not available offline'
+              : `Couldn't fetch demo`;
+          this.snackBarService.show(msg, 'Dismiss', Duration.Long);
+          return Promise.reject(error.message || error);
+        });
+    });
   }
 
   // Called from the LayerTimelineComponent template.
@@ -370,11 +352,10 @@ export class LayerTimelineComponent
     const $target = $(mouseDownEvent.target);
 
     // Some geometry and hit-testing basics.
-    const animRect =
-      $(mouseDownEvent.target)
-        .parents('.slt-property')
-        .get(0)
-        .getBoundingClientRect();
+    const animRect = $(mouseDownEvent.target)
+      .parents('.slt-property')
+      .get(0)
+      .getBoundingClientRect();
     const xToTimeFn = x => (x - animRect.left) / animRect.width * animation.duration;
     const downTime = xToTimeFn(mouseDownEvent.clientX);
 
@@ -382,13 +363,15 @@ export class LayerTimelineComponent
     const metaKey = ShortcutService.getOsDependentModifierKey(mouseDownEvent);
     let action = MouseActions.Moving;
     if ($target.hasClass('slt-timeline-block-edge-end')) {
-      action = mouseDownEvent.shiftKey || metaKey
-        ? MouseActions.ScalingTogetherEnd
-        : MouseActions.ScalingUniformEnd;
+      action =
+        mouseDownEvent.shiftKey || metaKey
+          ? MouseActions.ScalingTogetherEnd
+          : MouseActions.ScalingUniformEnd;
     } else if ($target.hasClass('slt-timeline-block-edge-start')) {
-      action = mouseDownEvent.shiftKey || metaKey
-        ? MouseActions.ScalingTogetherStart
-        : MouseActions.ScalingUniformStart;
+      action =
+        mouseDownEvent.shiftKey || metaKey
+          ? MouseActions.ScalingTogetherStart
+          : MouseActions.ScalingUniformStart;
     }
 
     // Start up a cache of info for each selected block, calculating the left and right
@@ -396,17 +379,17 @@ export class LayerTimelineComponent
     const blocksByPropertyByLayer = ModelUtil.getOrderedBlocksByPropertyByLayer(animation);
 
     // Either drag all selected blocks or just the mousedown block.
-    const draggingBlocks =
-      this.selectedBlockIds.has(dragBlock.id)
-        ? animation.blocks.filter(b => this.selectedBlockIds.has(b.id))
-        : [dragBlock];
-    const stagnantBlocks =
-      animation.blocks.filter(block => {
-        return draggingBlocks.every(b => block.id !== b.id)
-          && draggingBlocks.some(({ layerId, propertyName }) => {
-            return block.layerId === layerId && block.propertyName === propertyName;
-          });
-      });
+    const draggingBlocks = this.selectedBlockIds.has(dragBlock.id)
+      ? animation.blocks.filter(b => this.selectedBlockIds.has(b.id))
+      : [dragBlock];
+    const stagnantBlocks = animation.blocks.filter(block => {
+      return (
+        draggingBlocks.every(b => block.id !== b.id) &&
+        draggingBlocks.some(({ layerId, propertyName }) => {
+          return block.layerId === layerId && block.propertyName === propertyName;
+        })
+      );
+    });
 
     interface IntervalInfo {
       readonly blockId: string;
@@ -419,11 +402,13 @@ export class LayerTimelineComponent
     const intervalTree = new IntervalTree<IntervalInfo>();
     stagnantBlocks.forEach(b => {
       const { id, layerId, propertyName, startTime, endTime } = b;
-      intervalTree.insert(
-        Math.min(startTime, animation.duration),
-        Math.max(0, endTime),
-        { blockId: id, layerId, propertyName, startTime, endTime },
-      );
+      intervalTree.insert(Math.min(startTime, animation.duration), Math.max(0, endTime), {
+        blockId: id,
+        layerId,
+        propertyName,
+        startTime,
+        endTime,
+      });
     });
 
     interface BlockInfo {
@@ -485,12 +470,12 @@ export class LayerTimelineComponent
     const dragBlockDownEndTime = dragBlock.endTime;
 
     let minStartTime, maxEndTime;
-    if (action === MouseActions.ScalingTogetherStart
-      || action === MouseActions.ScalingTogetherEnd) {
-      minStartTime =
-        blockInfos.reduce((t, info) => Math.min(t, info.block.startTime), Infinity);
-      maxEndTime =
-        blockInfos.reduce((t, info) => Math.max(t, info.block.endTime), 0);
+    if (
+      action === MouseActions.ScalingTogetherStart ||
+      action === MouseActions.ScalingTogetherEnd
+    ) {
+      minStartTime = blockInfos.reduce((t, info) => Math.min(t, info.block.startTime), Infinity);
+      maxEndTime = blockInfos.reduce((t, info) => Math.max(t, info.block.endTime), 0);
       // Avoid divide by zero.
       maxEndTime = Math.max(maxEndTime, minStartTime + MIN_BLOCK_DURATION);
     }
@@ -498,7 +483,10 @@ export class LayerTimelineComponent
     const isOverlappingBlockFn = (info: BlockInfo, low: number, high: number) => {
       const { layerId, propertyName } = info.block;
       return intervalTree.intersectsWith(
-        low, high, d => d.layerId === layerId && d.propertyName === propertyName);
+        low,
+        high,
+        d => d.layerId === layerId && d.propertyName === propertyName,
+      );
     };
 
     // tslint:disable-next-line: no-unused-expression
@@ -506,16 +494,17 @@ export class LayerTimelineComponent
       direction: 'horizontal',
       downX: mouseDownEvent.clientX,
       downY: mouseDownEvent.clientY,
-      draggingCursor: (action === MouseActions.Moving) ? 'grabbing' : 'ew-resize',
+      draggingCursor: action === MouseActions.Moving ? 'grabbing' : 'ew-resize',
       onBeginDragFn: () => {
         this.shouldSuppressClick = true;
         this.shouldSuppressRebuildSnapTimes = true;
       },
-      onDropFn: () => setTimeout(() => {
-        this.shouldSuppressClick = false;
-        this.shouldSuppressRebuildSnapTimes = false;
-        this.rebuildSnapTimes();
-      }, 0),
+      onDropFn: () =>
+        setTimeout(() => {
+          this.shouldSuppressClick = false;
+          this.shouldSuppressRebuildSnapTimes = false;
+          this.rebuildSnapTimes();
+        }, 0),
       onDragFn: event => {
         // Calculate the 'time delta' (the number of milliseconds the user has moved
         // since the gesture began).
@@ -547,43 +536,41 @@ export class LayerTimelineComponent
               timeDelta = _.clamp(timeDelta, min, max);
             });
 
-            const deltas =
-              _(blockInfos)
-                .filter(info => {
-                  // For each block, check if it overlaps with any of the stagnant blocks.
-                  const low = info.downStartTime + timeDelta;
-                  const end = info.downEndTime + timeDelta;
-                  return isOverlappingBlockFn(info, low, end);
-                })
-                .flatMap(info => {
-                  const { block: { id, layerId, propertyName } } = info;
-                  const neighbors =
-                    blocksByPropertyByLayer[layerId][propertyName]
-                      .filter(ngh => id !== ngh.id);
-                  return _.flatMap(neighbors, ngh => {
-                    return [ngh.startTime - info.downEndTime, ngh.endTime - info.downStartTime];
-                  });
-                })
-                .sort((a, b) => Math.abs(a - timeDelta) - Math.abs(b - timeDelta))
-                .value();
-
-            const deltaIndex =
-              _.findIndex(deltas, delta => {
-                return blockInfos.every(info => {
-                  const low = info.downStartTime + delta;
-                  const high = info.downEndTime + delta;
-                  if (low < 0 || high > animation.duration) {
-                    return false;
-                  }
-                  return !isOverlappingBlockFn(info, low, high);
+            const deltas = _(blockInfos)
+              .filter(info => {
+                // For each block, check if it overlaps with any of the stagnant blocks.
+                const low = info.downStartTime + timeDelta;
+                const end = info.downEndTime + timeDelta;
+                return isOverlappingBlockFn(info, low, end);
+              })
+              .flatMap(info => {
+                const { block: { id, layerId, propertyName } } = info;
+                const neighbors = blocksByPropertyByLayer[layerId][propertyName].filter(
+                  ngh => id !== ngh.id,
+                );
+                return _.flatMap(neighbors, ngh => {
+                  return [ngh.startTime - info.downEndTime, ngh.endTime - info.downStartTime];
                 });
+              })
+              .sort((a, b) => Math.abs(a - timeDelta) - Math.abs(b - timeDelta))
+              .value();
+
+            const deltaIndex = _.findIndex(deltas, delta => {
+              return blockInfos.every(info => {
+                const low = info.downStartTime + delta;
+                const high = info.downEndTime + delta;
+                if (low < 0 || high > animation.duration) {
+                  return false;
+                }
+                return !isOverlappingBlockFn(info, low, high);
               });
+            });
             if (deltaIndex >= 0) {
               timeDelta = deltas[deltaIndex];
             }
 
             blockInfos.forEach(info => {
-              const blockDuration = (info.block.endTime - info.block.startTime);
+              const blockDuration = info.block.endTime - info.block.startTime;
               const block = info.block.clone();
               block.startTime = info.downStartTime + timeDelta;
               block.endTime = block.startTime + blockDuration;
@@ -603,7 +590,7 @@ export class LayerTimelineComponent
               }
               // Clamp time delta.
               const min = info.startBound - info.downStartTime;
-              const max = (info.block.endTime - MIN_BLOCK_DURATION) - info.downStartTime;
+              const max = info.block.endTime - MIN_BLOCK_DURATION - info.downStartTime;
               timeDelta = _.clamp(timeDelta, min, max);
             });
             blockInfos.forEach(info => {
@@ -624,7 +611,7 @@ export class LayerTimelineComponent
                 }
               }
               // Clamp time delta.
-              const min = (info.block.startTime + MIN_BLOCK_DURATION) - info.downEndTime;
+              const min = info.block.startTime + MIN_BLOCK_DURATION - info.downEndTime;
               const max = info.endBound - info.downEndTime;
               timeDelta = _.clamp(timeDelta, min, max);
             });
@@ -636,15 +623,17 @@ export class LayerTimelineComponent
             break;
           }
           case MouseActions.ScalingTogetherStart: {
-            let scale = (dragBlockDownStartTime + timeDelta - maxEndTime)
-              / (dragBlockDownStartTime - maxEndTime);
+            let scale =
+              (dragBlockDownStartTime + timeDelta - maxEndTime) /
+              (dragBlockDownStartTime - maxEndTime);
             scale = Math.min(scale, maxEndTime / (maxEndTime - minStartTime));
             let cancel = false;
             blockInfos.forEach(info => {
               info.newStartTime = maxEndTime - (maxEndTime - info.downStartTime) * scale;
               info.newEndTime = Math.max(
                 maxEndTime - (maxEndTime - info.downEndTime) * scale,
-                info.newStartTime + MIN_BLOCK_DURATION);
+                info.newStartTime + MIN_BLOCK_DURATION,
+              );
               if (info.newStartTime < info.startBound || info.newEndTime > info.endBound) {
                 cancel = true;
               }
@@ -660,16 +649,20 @@ export class LayerTimelineComponent
             break;
           }
           case MouseActions.ScalingTogetherEnd: {
-            let scale = (dragBlockDownEndTime + timeDelta - minStartTime)
-              / (dragBlockDownEndTime - minStartTime);
-            scale =
-              Math.min(scale, (animation.duration - minStartTime) / (maxEndTime - minStartTime));
+            let scale =
+              (dragBlockDownEndTime + timeDelta - minStartTime) /
+              (dragBlockDownEndTime - minStartTime);
+            scale = Math.min(
+              scale,
+              (animation.duration - minStartTime) / (maxEndTime - minStartTime),
+            );
             let cancel = false;
             blockInfos.forEach(info => {
               info.newStartTime = minStartTime + (info.downStartTime - minStartTime) * scale;
               info.newEndTime = Math.max(
                 minStartTime + (info.downEndTime - minStartTime) * scale,
-                info.newStartTime + MIN_BLOCK_DURATION);
+                info.newStartTime + MIN_BLOCK_DURATION,
+              );
               if (info.newStartTime < info.startBound || info.newEndTime > info.endBound) {
                 cancel = true;
               }
@@ -688,8 +681,10 @@ export class LayerTimelineComponent
         this.store.select(getAnimation).first().subscribe(anim => {
           const blocks = replacementBlocks.filter(replacementBlock => {
             const existingBlock = _.find(anim.blocks, b => replacementBlock.id === b.id);
-            return replacementBlock.startTime !== existingBlock.startTime
-              || replacementBlock.endTime !== existingBlock.endTime;
+            return (
+              replacementBlock.startTime !== existingBlock.startTime ||
+              replacementBlock.endTime !== existingBlock.endTime
+            );
           });
           if (blocks.length) {
             this.store.dispatch(new ReplaceBlocks(blocks));
@@ -726,9 +721,7 @@ export class LayerTimelineComponent
     const snapDelta = SNAP_PIXELS / this.horizZoom;
     const reducerFn = (bestSnapTime, snapTime) => {
       const dist = Math.abs(time - snapTime);
-      return (dist < snapDelta && dist < Math.abs(time - bestSnapTime))
-        ? snapTime
-        : bestSnapTime;
+      return dist < snapDelta && dist < Math.abs(time - bestSnapTime) ? snapTime : bestSnapTime;
     };
     let bestSnapTime = snapTimes.reduce(reducerFn, Infinity);
     if (includeActiveTime) {
@@ -739,8 +732,7 @@ export class LayerTimelineComponent
 
   // @Override TimelineAnimationRowCallbacks
   onTimelineBlockClick(event: MouseEvent, block: AnimationBlock) {
-    const clearExisting =
-      !ShortcutService.getOsDependentModifierKey(event) && !event.shiftKey;
+    const clearExisting = !ShortcutService.getOsDependentModifierKey(event) && !event.shiftKey;
     this.store.dispatch(new SelectBlock(block.id, clearExisting));
   }
 
@@ -750,28 +742,24 @@ export class LayerTimelineComponent
   }
 
   // @Override LayerListTreeComponentCallbacks
-  onAddTimelineBlockClick(
-    event: MouseEvent,
-    layer: Layer,
-    propertyName: string,
-  ) {
-    const clonedValue =
-      layer.inspectableProperties.get(propertyName).cloneValue(layer[propertyName]);
+  onAddTimelineBlockClick(event: MouseEvent, layer: Layer, propertyName: string) {
+    const clonedValue = layer.inspectableProperties
+      .get(propertyName)
+      .cloneValue(layer[propertyName]);
     this.store.dispatch(
-      new AddBlock(layer, propertyName, clonedValue, clonedValue, this.currentTime));
+      new AddBlock(layer, propertyName, clonedValue, clonedValue, this.currentTime),
+    );
   }
 
   // @Override LayerListTreeComponentCallbacks
   onLayerClick(event: MouseEvent, layer: Layer) {
-    const clearExisting =
-      !ShortcutService.getOsDependentModifierKey(event) && !event.shiftKey;
+    const clearExisting = !ShortcutService.getOsDependentModifierKey(event) && !event.shiftKey;
     this.store.dispatch(new SelectLayer(layer.id, clearExisting));
   }
 
   // @Override LayerListTreeComponentCallbacks
   onLayerToggleExpanded(event: MouseEvent, layer: Layer) {
-    const recursive =
-      ShortcutService.getOsDependentModifierKey(event) || event.shiftKey;
+    const recursive = ShortcutService.getOsDependentModifierKey(event) || event.shiftKey;
     this.store.dispatch(new ToggleLayerExpansion(layer.id, recursive));
   }
 
@@ -888,10 +876,11 @@ export class LayerTimelineComponent
           }
         }
 
-        if (targetLayerInfo
-          && targetEdge === 'bottom'
-          && LayerUtil.findNextSibling(
-            this.vectorLayer, targetLayerInfo.layer.id) === dragLayer) {
+        if (
+          targetLayerInfo &&
+          targetEdge === 'bottom' &&
+          LayerUtil.findNextSibling(this.vectorLayer, targetLayerInfo.layer.id) === dragLayer
+        ) {
           targetLayerInfo = undefined;
         }
 
@@ -914,9 +903,12 @@ export class LayerTimelineComponent
             const sourceVl = this.vectorLayer;
             replacementVl = LayerUtil.removeLayersFromTree(sourceVl, dragLayer.id);
             const newParent = targetLayerInfo.layer;
-            replacementVl =
-              LayerUtil.addLayerToTree(
-                replacementVl, newParent.id, dragLayer.clone(), newParent.children.length);
+            replacementVl = LayerUtil.addLayerToTree(
+              replacementVl,
+              newParent.id,
+              dragLayer.clone(),
+              newParent.children.length,
+            );
           } else {
             // Moving next to another layer.
             let newParent = LayerUtil.findParent(this.vectorLayer, targetLayerInfo.layer.id);
@@ -924,14 +916,17 @@ export class LayerTimelineComponent
               const sourceVl = this.vectorLayer;
               replacementVl = LayerUtil.removeLayersFromTree(sourceVl, dragLayer.id);
               newParent = LayerUtil.findParent(replacementVl, targetLayerInfo.layer.id);
-              let index =
-                newParent.children
-                  ? _.findIndex(newParent.children, child => child.id === targetLayerInfo.layer.id)
-                  : -1;
+              let index = newParent.children
+                ? _.findIndex(newParent.children, child => child.id === targetLayerInfo.layer.id)
+                : -1;
               if (index >= 0) {
-                index += (targetEdge === 'top') ? 0 : 1;
-                replacementVl =
-                  LayerUtil.addLayerToTree(replacementVl, newParent.id, dragLayer.clone(), index);
+                index += targetEdge === 'top' ? 0 : 1;
+                replacementVl = LayerUtil.addLayerToTree(
+                  replacementVl,
+                  newParent.id,
+                  dragLayer.clone(),
+                  index,
+                );
               }
             }
           }
@@ -942,7 +937,7 @@ export class LayerTimelineComponent
           }
         }
 
-        setTimeout(() => this.shouldSuppressClick = false, 0);
+        setTimeout(() => (this.shouldSuppressClick = false), 0);
       },
     });
   }
@@ -959,9 +954,9 @@ export class LayerTimelineComponent
     const startZoomFn = () => {
       this.$zoomStartActiveAnimation = $(this.timelineAnimationRef.nativeElement);
       this.zoomStartTimeCursorPos =
-        this.$zoomStartActiveAnimation.position().left
-        + (this.currentTime * this.horizZoom)
-        + TimelineConsts.TIMELINE_ANIMATION_PADDING;
+        this.$zoomStartActiveAnimation.position().left +
+        this.currentTime * this.horizZoom +
+        TimelineConsts.TIMELINE_ANIMATION_PADDING;
     };
 
     const performZoomFn = () => {
@@ -970,11 +965,11 @@ export class LayerTimelineComponent
       // Set the scroll offset such that the time cursor remains at zoomStartTimeCursorPos
       if (this.$zoomStartActiveAnimation) {
         const newScrollLeft =
-          this.$zoomStartActiveAnimation.position().left
-          + this.$timeline.scrollLeft()
-          + (this.currentTime * this.horizZoom)
-          + TimelineConsts.TIMELINE_ANIMATION_PADDING
-          - this.zoomStartTimeCursorPos;
+          this.$zoomStartActiveAnimation.position().left +
+          this.$timeline.scrollLeft() +
+          this.currentTime * this.horizZoom +
+          TimelineConsts.TIMELINE_ANIMATION_PADDING -
+          this.zoomStartTimeCursorPos;
         this.$timeline.scrollLeft(newScrollLeft);
       }
     };

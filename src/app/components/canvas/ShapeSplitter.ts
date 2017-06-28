@@ -1,13 +1,11 @@
-import { CanvasOverlayDirective } from './canvasoverlay.directive';
 import { Point } from 'app/scripts/common';
 import { ActionMode } from 'app/scripts/model/actionmode';
 import { HitResult, ProjectionOntoPath } from 'app/scripts/model/paths';
 import { ActionModeService } from 'app/services';
-import {
-  State,
-  Store,
-} from 'app/store';
+import { State, Store } from 'app/store';
 import * as _ from 'lodash';
+
+import { CanvasOverlayDirective } from './canvasoverlay.directive';
 
 interface ProjInfo {
   readonly proj: ProjectionOntoPath;
@@ -125,8 +123,14 @@ export class ShapeSplitter {
     if (initProjInfo && finalProjInfo) {
       const activeLayer = this.component.activePathLayer;
       const pathMutator = activeLayer.pathData.mutate();
-      const { proj: { subIdx: initSubIdx, cmdIdx: initCmdIdx }, isEndPt: isInitEndPt } = initProjInfo;
-      const { proj: { subIdx: finalSubIdx, cmdIdx: finalCmdIdx }, isEndPt: isFinalEndPt } = finalProjInfo;
+      const {
+        proj: { subIdx: initSubIdx, cmdIdx: initCmdIdx },
+        isEndPt: isInitEndPt,
+      } = initProjInfo;
+      const {
+        proj: { subIdx: finalSubIdx, cmdIdx: finalCmdIdx },
+        isEndPt: isFinalEndPt,
+      } = finalProjInfo;
       let lastCmdOffset = 0;
       if (!isInitEndPt || !isFinalEndPt) {
         if (initCmdIdx > finalCmdIdx) {
@@ -169,9 +173,7 @@ export class ShapeSplitter {
         initCmdIdx > finalCmdIdx ? initCmdIdx + lastCmdOffset : finalCmdIdx + lastCmdOffset;
       this.actionModeService.updateActivePathBlock(
         this.component.actionSource,
-        pathMutator
-          .splitFilledSubPath(initSubIdx, startingCmdIdx, endingCmdIdx)
-          .build(),
+        pathMutator.splitFilledSubPath(initSubIdx, startingCmdIdx, endingCmdIdx).build(),
       );
     }
     this.reset();
@@ -198,8 +200,9 @@ export class ShapeSplitter {
       for (const proj of segmentHits) {
         this.finalProjInfos.push({ proj, isEndPt: false });
       }
-      const allowedSubIdxs =
-        new Set<number>(this.initProjInfos.map(projInfo => projInfo.proj.subIdx));
+      const allowedSubIdxs = new Set<number>(
+        this.initProjInfos.map(projInfo => projInfo.proj.subIdx),
+      );
       _.remove(this.finalProjInfos, projInfo => !allowedSubIdxs.has(projInfo.proj.subIdx));
     }
   }

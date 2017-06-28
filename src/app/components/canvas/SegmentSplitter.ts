@@ -1,15 +1,10 @@
-import { CanvasOverlayDirective } from './canvasoverlay.directive';
 import { Point } from 'app/scripts/common';
-import {
-  ActionMode,
-  ActionSource,
-} from 'app/scripts/model/actionmode';
+import { ActionMode, ActionSource } from 'app/scripts/model/actionmode';
 import { ProjectionOntoPath } from 'app/scripts/model/paths';
 import { ActionModeService } from 'app/services';
-import {
-  State,
-  Store,
-} from 'app/store';
+import { State, Store } from 'app/store';
+
+import { CanvasOverlayDirective } from './canvasoverlay.directive';
 
 interface ProjInfo {
   readonly proj: ProjectionOntoPath;
@@ -55,10 +50,7 @@ export class SegmentSplitter {
       this.component.actionModeService.clearHover();
       this.actionModeService.setSelections([]);
       this.currProjInfo = undefined;
-      this.actionModeService.updateActivePathBlock(
-        this.actionSource,
-        pathMutator.build(),
-      );
+      this.actionModeService.updateActivePathBlock(this.actionSource, pathMutator.build());
       this.component.draw();
       return;
     }

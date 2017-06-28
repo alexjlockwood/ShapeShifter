@@ -1,7 +1,4 @@
-import {
-  Matrix,
-  Point,
-} from 'app/scripts/common';
+import { Matrix, Point } from 'app/scripts/common';
 import { Command } from 'app/scripts/model/paths';
 
 type Context = CanvasRenderingContext2D;
@@ -9,11 +6,7 @@ type Context = CanvasRenderingContext2D;
 /**
  * Executes a series of canvas commands for a given path.
  */
-export function executeCommands(
-  ctx: Context,
-  commands: ReadonlyArray<Command>,
-  transform: Matrix,
-) {
+export function executeCommands(ctx: Context, commands: ReadonlyArray<Command>, transform: Matrix) {
   ctx.save();
   const { a, b, c, d, e, f } = transform;
   ctx.transform(a, b, c, d, e, f);
@@ -40,13 +33,20 @@ export function executeCommands(
       ctx.lineTo(end.x, end.y);
     } else if (cmd.getSvgChar() === 'Q') {
       ctx.quadraticCurveTo(
-        cmd.getPoints()[1].x, cmd.getPoints()[1].y,
-        cmd.getPoints()[2].x, cmd.getPoints()[2].y);
+        cmd.getPoints()[1].x,
+        cmd.getPoints()[1].y,
+        cmd.getPoints()[2].x,
+        cmd.getPoints()[2].y,
+      );
     } else if (cmd.getSvgChar() === 'C') {
       ctx.bezierCurveTo(
-        cmd.getPoints()[1].x, cmd.getPoints()[1].y,
-        cmd.getPoints()[2].x, cmd.getPoints()[2].y,
-        cmd.getPoints()[3].x, cmd.getPoints()[3].y);
+        cmd.getPoints()[1].x,
+        cmd.getPoints()[1].y,
+        cmd.getPoints()[2].x,
+        cmd.getPoints()[2].y,
+        cmd.getPoints()[3].x,
+        cmd.getPoints()[3].y,
+      );
     } else if (cmd.getSvgChar() === 'Z') {
       if (start.equals(previousEndPoint)) {
         ctx.closePath();

@@ -1,11 +1,4 @@
-import {
-  Directive,
-  ElementRef,
-  EventEmitter,
-  HostListener,
-  Input,
-  Output,
-} from '@angular/core';
+import { Directive, ElementRef, EventEmitter, HostListener, Input, Output } from '@angular/core';
 import { Dragger } from 'app/scripts/dragger';
 import { Animation } from 'app/scripts/model/timeline';
 import { ShortcutService } from 'app/services';
@@ -14,13 +7,10 @@ import * as _ from 'lodash';
 
 import { TIMELINE_ANIMATION_PADDING } from './constants';
 
-const GRID_INTERVALS_MS = [
-  10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000, 30000, 60000,
-];
+const GRID_INTERVALS_MS = [10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000, 30000, 60000];
 
 @Directive({ selector: '[appLayerTimelineGrid]' })
 export class LayerTimelineGridDirective {
-
   @Input() isHeader: boolean;
   @Output() scrub = new EventEmitter<ScrubEvent>();
 
@@ -70,8 +60,7 @@ export class LayerTimelineGridDirective {
 
   @HostListener('mousedown', ['$event'])
   onMouseDown(event: MouseEvent) {
-    this.handleScrubEvent(
-      event.clientX, ShortcutService.getOsDependentModifierKey(event));
+    this.handleScrubEvent(event.clientX, ShortcutService.getOsDependentModifierKey(event));
     // tslint:disable-next-line: no-unused-expression
     new Dragger({
       direction: 'horizontal',
@@ -86,9 +75,10 @@ export class LayerTimelineGridDirective {
 
   private handleScrubEvent(clientX: number, disableSnap: boolean) {
     const x = clientX - this.$canvas.offset().left;
-    let time = (x - TIMELINE_ANIMATION_PADDING)
-      / (this.$canvas.width() - TIMELINE_ANIMATION_PADDING * 2)
-      * this.animation.duration;
+    let time =
+      (x - TIMELINE_ANIMATION_PADDING) /
+      (this.$canvas.width() - TIMELINE_ANIMATION_PADDING * 2) *
+      this.animation.duration;
     time = _.clamp(time, 0, this.animation.duration);
     this.scrub.emit({ time, disableSnap });
   }
@@ -110,7 +100,7 @@ export class LayerTimelineGridDirective {
     // Compute grid spacing (40 = minimum grid spacing in pixels).
     let interval = 0;
     let spacingMs = GRID_INTERVALS_MS[interval];
-    while ((spacingMs * this.horizZoom) < 40 || interval >= GRID_INTERVALS_MS.length) {
+    while (spacingMs * this.horizZoom < 40 || interval >= GRID_INTERVALS_MS.length) {
       interval++;
       spacingMs = GRID_INTERVALS_MS[interval];
     }
@@ -123,9 +113,7 @@ export class LayerTimelineGridDirective {
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.font = '10px Roboto';
-      for (let x = 0, t = 0;
-        round(x) <= round(width);
-        x += spacingPx, t += spacingMs) {
+      for (let x = 0, t = 0; round(x) <= round(width); x += spacingPx, t += spacingMs) {
         ctx.fillText(`${t / 1000}s`, x, height / 2);
       }
       ctx.fillStyle = 'rgba(244, 67, 54, .7)';
@@ -137,9 +125,11 @@ export class LayerTimelineGridDirective {
     } else {
       // Grid lines.
       ctx.fillStyle = 'rgba(0,0,0,0.1)';
-      for (let x = spacingPx;
+      for (
+        let x = spacingPx;
         round(x) < round(width - TIMELINE_ANIMATION_PADDING * 2);
-        x += spacingPx) {
+        x += spacingPx
+      ) {
         ctx.fillRect(x - 0.5, 0, 1, 1);
       }
       ctx.fillStyle = 'rgba(244, 67, 54, .7)';

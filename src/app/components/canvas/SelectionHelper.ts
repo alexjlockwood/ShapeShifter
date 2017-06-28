@@ -1,17 +1,12 @@
-import { CanvasOverlayDirective } from './canvasoverlay.directive';
 import { MathUtil, Point } from 'app/scripts/common';
-import {
-  ActionSource,
-  HoverType,
-} from 'app/scripts/model/actionmode';
+import { ActionSource, HoverType } from 'app/scripts/model/actionmode';
 import { LayerUtil } from 'app/scripts/model/layers';
 import { ProjectionOntoPath } from 'app/scripts/model/paths';
 import { ActionModeService } from 'app/services';
-import {
-  State,
-  Store,
-} from 'app/store';
+import { State, Store } from 'app/store';
 import * as _ from 'lodash';
+
+import { CanvasOverlayDirective } from './canvasoverlay.directive';
 
 // TODO: use the 'Dragger' to drag points to different locations
 // TODO: clean up this class' messy communication w/ the overlay directive
@@ -27,7 +22,7 @@ export class SelectionHelper {
 
   // Holds a reference to the currently selected split point, which
   // may or may not begin to drag.
-  private currentDraggableSplitIndex: { subIdx: number, cmdIdx: number } | undefined;
+  private currentDraggableSplitIndex: { subIdx: number; cmdIdx: number } | undefined;
   private projectionOntoPath: ProjectionOntoPath;
   private isDragTriggered_ = false;
   private lastKnownMouseLocation: Point;
@@ -53,7 +48,6 @@ export class SelectionHelper {
         this.currentDraggableSplitIndex = { subIdx, cmdIdx };
       } else {
         // Then a click has occurred on top of a non-split point.
-
       }
       return;
     }
@@ -87,9 +81,10 @@ export class SelectionHelper {
       }
     }
     if (this.isDragTriggered_) {
-      this.projectionOntoPath =
-        this.calculateProjectionOntoPath(
-          mouseMove, this.currentDraggableSplitIndex.subIdx);
+      this.projectionOntoPath = this.calculateProjectionOntoPath(
+        mouseMove,
+        this.currentDraggableSplitIndex.subIdx,
+      );
     } else {
       this.checkForHovers(mouseMove);
     }
@@ -124,7 +119,10 @@ export class SelectionHelper {
           const tempProjOntoPath = this.calculateProjectionOntoPath(mouseUp);
           if (oldSubIdx === tempProjOntoPath.subIdx) {
             pathMutator.splitCommand(
-              tempProjOntoPath.subIdx, tempProjOntoPath.cmdIdx, tempProjOntoPath.projection.t);
+              tempProjOntoPath.subIdx,
+              tempProjOntoPath.cmdIdx,
+              tempProjOntoPath.projection.t,
+            );
           } else {
             // If for some reason the projection subIdx changes after the unsplit, we have no
             // choice but to give up.
@@ -148,7 +146,11 @@ export class SelectionHelper {
       } else if (hitResult.isEndPointHit) {
         const { subIdx, cmdIdx } = this.findHitPoint(hitResult.endPointHits);
         this.actionModeService.togglePointSelection(
-          this.actionSource, subIdx, cmdIdx, isShiftOrMetaPressed);
+          this.actionSource,
+          subIdx,
+          cmdIdx,
+          isShiftOrMetaPressed,
+        );
       } else if (hitResult.isSegmentHit || hitResult.isShapeHit) {
         const hits = hitResult.isShapeHit ? hitResult.shapeHits : hitResult.segmentHits;
         const { subIdx } = this.findHitSubPath(hits);
@@ -258,7 +260,7 @@ export class SelectionHelper {
     return infos[lastSplitIndex < 0 ? infos.length - 1 : lastSplitIndex];
   }
 
-  private findHitSegment(hits: ReadonlyArray<{ subIdx: number, cmdIdx: number }>) {
+  private findHitSegment(hits: ReadonlyArray<{ subIdx: number; cmdIdx: number }>) {
     const infos = hits.map(index => {
       const { subIdx, cmdIdx } = index;
       return { subIdx, cmdIdx, cmd: this.component.activePath.getCommand(subIdx, cmdIdx) };
@@ -267,7 +269,7 @@ export class SelectionHelper {
     return infos[lastSplitIndex < 0 ? infos.length - 1 : lastSplitIndex];
   }
 
-  private findHitPoint(hits: ReadonlyArray<{ subIdx: number, cmdIdx: number }>) {
+  private findHitPoint(hits: ReadonlyArray<{ subIdx: number; cmdIdx: number }>) {
     const infos = hits.map(index => {
       const { subIdx, cmdIdx } = index;
       return { subIdx, cmdIdx, cmd: this.component.activePath.getCommand(subIdx, cmdIdx) };
@@ -282,14 +284,12 @@ export class SelectionHelper {
   * closest to the specified off-curve mouse point.
   */
   private calculateProjectionOntoPath(mousePoint: Point, restrictToSubIdx?: number) {
-    const transform =
-      LayerUtil.getFlattenedTransformForLayer(
-        this.component.vectorLayer,
-        this.component.activePathLayer.id);
-    const transformedMousePoint =
-      MathUtil.transformPoint(mousePoint, transform.invert());
-    const projInfo =
-      this.component.activePath.project(transformedMousePoint, restrictToSubIdx);
+    const transform = LayerUtil.getFlattenedTransformForLayer(
+      this.component.vectorLayer,
+      this.component.activePathLayer.id,
+    );
+    const transformedMousePoint = MathUtil.transformPoint(mousePoint, transform.invert());
+    const projInfo = this.component.activePath.project(transformedMousePoint, restrictToSubIdx);
     if (!projInfo) {
       return undefined;
     }

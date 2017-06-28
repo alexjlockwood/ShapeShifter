@@ -24,5 +24,5 @@ export class DemoDialogComponent {
   readonly demoInfos = DEMO_INFOS;
   selectedDemoInfo = DEMO_INFOS[0];
 
-  constructor(public readonly dialogRef: MdDialogRef<DemoDialogComponent>) { }
+  constructor(public readonly dialogRef: MdDialogRef<DemoDialogComponent>) {}
 }

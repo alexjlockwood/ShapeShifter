@@ -1,19 +1,9 @@
 import 'rxjs/add/observable/of';
 
-import {
-  ComponentFixture,
-  TestBed,
-  async,
-  inject,
-} from '@angular/core/testing';
+import { ComponentFixture, TestBed, async, inject } from '@angular/core/testing';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { ActionSource } from 'app/scripts/model/actionmode';
-import {
-  ActionModeService,
-  AnimatorService,
-  PlaybackService,
-  ShortcutService,
-} from 'app/services';
+import { ActionModeService, AnimatorService, PlaybackService, ShortcutService } from 'app/services';
 import { Store } from 'app/store';
 import { Observable } from 'rxjs/Observable';
 import { MockStore } from 'test/MockStore';
@@ -28,9 +18,9 @@ describe('CanvasComponent', () => {
   let component: CanvasComponent;
   let fixture: ComponentFixture<CanvasComponent>;
 
-  beforeEach(async(() => {
-    TestBed
-      .configureTestingModule({
+  beforeEach(
+    async(() => {
+      TestBed.configureTestingModule({
         declarations: [
           CanvasComponent,
           CanvasContainerDirective,
@@ -46,17 +36,19 @@ describe('CanvasComponent', () => {
           PlaybackService,
           ShortcutService,
         ],
-      })
-      .compileComponents();
-  }));
+      }).compileComponents();
+    }),
+  );
 
-  beforeEach(inject([Store], (store: MockStore) => {
-    fixture = TestBed.createComponent(CanvasComponent);
-    component = fixture.componentInstance;
-    component.actionSource = ActionSource.Animated;
-    component.canvasBounds$ = Observable.of({ w: 1000, h: 1000 });
-    fixture.detectChanges();
-  }));
+  beforeEach(
+    inject([Store], (store: MockStore) => {
+      fixture = TestBed.createComponent(CanvasComponent);
+      component = fixture.componentInstance;
+      component.actionSource = ActionSource.Animated;
+      component.canvasBounds$ = Observable.of({ w: 1000, h: 1000 });
+      fixture.detectChanges();
+    }),
+  );
 
   it('should be created', () => {
     expect(component).toBeTruthy();

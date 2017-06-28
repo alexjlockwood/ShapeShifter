@@ -1,9 +1,6 @@
 import { Inject } from '@angular/core';
 import { Component } from '@angular/core';
-import {
-  MD_DIALOG_DATA,
-  MdDialogRef,
-} from '@angular/material';
+import { MD_DIALOG_DATA, MdDialogRef } from '@angular/material';
 
 @Component({
   selector: 'app-confirmdialog',
@@ -23,6 +20,6 @@ import {
 export class ConfirmDialogComponent {
   constructor(
     public readonly dialogRef: MdDialogRef<ConfirmDialogComponent>,
-    @Inject(MD_DIALOG_DATA) public readonly data: { title: string, message: string },
-  ) { }
+    @Inject(MD_DIALOG_DATA) public readonly data: { title: string; message: string },
+  ) {}
 }

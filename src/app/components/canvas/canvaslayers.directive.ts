@@ -1,43 +1,20 @@
 import 'rxjs/add/observable/merge';
 import 'rxjs/add/operator/first';
 
-import {
-  AfterViewInit,
-  Directive,
-  ElementRef,
-  Input,
-} from '@angular/core';
+import { AfterViewInit, Directive, ElementRef, Input } from '@angular/core';
 import { ColorUtil } from 'app/scripts/common';
 import { DestroyableMixin } from 'app/scripts/mixins';
 import { ActionSource } from 'app/scripts/model/actionmode';
-import {
-  ClipPathLayer,
-  Layer,
-  LayerUtil,
-  PathLayer,
-  VectorLayer,
-} from 'app/scripts/model/layers';
+import { ClipPathLayer, Layer, LayerUtil, PathLayer, VectorLayer } from 'app/scripts/model/layers';
 import { PathUtil } from 'app/scripts/model/paths';
 import { AnimatorService } from 'app/services';
-import {
-  State,
-  Store,
-} from 'app/store';
-import {
-  getActionModeEndState,
-  getActionModeStartState,
-} from 'app/store/actionmode/selectors';
-import {
-  getHiddenLayerIds,
-  getVectorLayer,
-} from 'app/store/layers/selectors';
+import { State, Store } from 'app/store';
+import { getActionModeEndState, getActionModeStartState } from 'app/store/actionmode/selectors';
+import { getHiddenLayerIds, getVectorLayer } from 'app/store/layers/selectors';
 import * as $ from 'jquery';
 import { Observable } from 'rxjs/Observable';
 
-import {
-  CanvasLayoutMixin,
-  Size,
-} from './CanvasLayoutMixin';
+import { CanvasLayoutMixin, Size } from './CanvasLayoutMixin';
 import * as CanvasUtil from './CanvasUtil';
 
 type Context = CanvasRenderingContext2D;
@@ -46,10 +23,8 @@ type Context = CanvasRenderingContext2D;
  * Directive that draws the current vector layer to the canvas.
  */
 @Directive({ selector: '[appCanvasLayers]' })
-export class CanvasLayersDirective
-  extends CanvasLayoutMixin(DestroyableMixin())
+export class CanvasLayersDirective extends CanvasLayoutMixin(DestroyableMixin())
   implements AfterViewInit {
-
   @Input() actionSource: ActionSource;
 
   private readonly $renderingCanvas: JQuery;
@@ -81,20 +56,18 @@ export class CanvasLayersDirective
           this.vectorLayer = vectorLayer;
           this.hiddenLayerIds = hiddenLayerIds;
           this.draw();
-        }));
+        }),
+      );
     } else {
       // Start & end canvas specific setup.
       const actionModeSelector =
-        this.actionSource === ActionSource.From
-          ? getActionModeStartState
-          : getActionModeEndState;
+        this.actionSource === ActionSource.From ? getActionModeStartState : getActionModeEndState;
       this.registerSubscription(
-        this.store.select(actionModeSelector)
-          .subscribe(({ vectorLayer, hiddenLayerIds }) => {
-            this.vectorLayer = vectorLayer;
-            this.hiddenLayerIds = hiddenLayerIds;
-            this.draw();
-          }),
+        this.store.select(actionModeSelector).subscribe(({ vectorLayer, hiddenLayerIds }) => {
+          this.vectorLayer = vectorLayer;
+          this.hiddenLayerIds = hiddenLayerIds;
+          this.draw();
+        }),
       );
     }
   }
@@ -110,11 +83,10 @@ export class CanvasLayersDirective
   // @Override
   onDimensionsChanged(bounds: Size, viewport: Size) {
     const { w, h } = this.getViewport();
-    [this.$renderingCanvas, this.$offscreenCanvas]
-      .forEach(canvas => {
-        canvas.attr({ width: w * this.attrScale, height: h * this.attrScale });
-        canvas.css({ width: w * this.cssScale, height: h * this.cssScale });
-      });
+    [this.$renderingCanvas, this.$offscreenCanvas].forEach(canvas => {
+      canvas.attr({ width: w * this.attrScale, height: h * this.attrScale });
+      canvas.css({ width: w * this.cssScale, height: h * this.cssScale });
+    });
     this.draw();
   }
 
@@ -198,14 +170,13 @@ export class CanvasLayersDirective
     ctx.lineJoin = layer.strokeLinejoin;
     ctx.miterLimit = layer.strokeMiterLimit;
 
-    if (layer.trimPathStart !== 0
-      || layer.trimPathEnd !== 1
-      || layer.trimPathOffset !== 0) {
+    if (layer.trimPathStart !== 0 || layer.trimPathEnd !== 1 || layer.trimPathOffset !== 0) {
       const { a, d } = flattenedTransform;
       let pathLength: number;
       if (a !== 1 || d !== 1) {
         // Then recompute the scaled path length.
-        pathLength = layer.pathData.mutate()
+        pathLength = layer.pathData
+          .mutate()
           .addTransforms([flattenedTransform])
           .build()
           .getPathLength();
@@ -213,28 +184,24 @@ export class CanvasLayersDirective
         pathLength = layer.pathData.getPathLength();
       }
 
-      const strokeDashArray =
-        PathUtil.toStrokeDashArray(
-          layer.trimPathStart,
-          layer.trimPathEnd,
-          layer.trimPathOffset,
-          pathLength,
-        );
-      const strokeDashOffset =
-        PathUtil.toStrokeDashOffset(
-          layer.trimPathStart,
-          layer.trimPathEnd,
-          layer.trimPathOffset,
-          pathLength,
-        );
+      const strokeDashArray = PathUtil.toStrokeDashArray(
+        layer.trimPathStart,
+        layer.trimPathEnd,
+        layer.trimPathOffset,
+        pathLength,
+      );
+      const strokeDashOffset = PathUtil.toStrokeDashOffset(
+        layer.trimPathStart,
+        layer.trimPathEnd,
+        layer.trimPathOffset,
+        pathLength,
+      );
       ctx.setLineDash(strokeDashArray);
       ctx.lineDashOffset = strokeDashOffset;
     } else {
       ctx.setLineDash([]);
     }
-    if (layer.isStroked()
-      && layer.strokeWidth
-      && layer.trimPathStart !== layer.trimPathEnd) {
+    if (layer.isStroked() && layer.strokeWidth && layer.trimPathStart !== layer.trimPathEnd) {
       ctx.stroke();
     }
     if (layer.isFilled()) {

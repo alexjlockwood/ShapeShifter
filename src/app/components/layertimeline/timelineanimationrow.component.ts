@@ -8,15 +8,9 @@ import {
 } from '@angular/core';
 import { ModelUtil } from 'app/scripts/common';
 import { Layer } from 'app/scripts/model/layers';
-import {
-  Animation,
-  AnimationBlock,
-} from 'app/scripts/model/timeline';
+import { Animation, AnimationBlock } from 'app/scripts/model/timeline';
 import { ActionModeService } from 'app/services';
-import {
-  State,
-  Store,
-} from 'app/store';
+import { State, Store } from 'app/store';
 import { getTimelineAnimationRowState } from 'app/store/common/selectors';
 import * as _ from 'lodash';
 import { Observable } from 'rxjs/Observable';
@@ -28,7 +22,6 @@ import { Observable } from 'rxjs/Observable';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TimelineAnimationRowComponent implements OnInit, Callbacks {
-
   animationRowModel$: Observable<AnimationRowModel>;
 
   @Input() layer: Layer;
@@ -43,24 +36,25 @@ export class TimelineAnimationRowComponent implements OnInit, Callbacks {
   constructor(
     private readonly store: Store<State>,
     private readonly actionModeService: ActionModeService,
-  ) { }
+  ) {}
 
   ngOnInit() {
-    this.animationRowModel$ =
-      this.store.select(getTimelineAnimationRowState)
-        .map(({ animation, collapsedLayerIds, selectedBlockIds, isActionMode }) => {
-          // Returns a list of animation block lists. Each animation block list corresponds to
-          // a property name displayed in the layer list tree.
-          const blocksByPropertyNameValues =
-            _.values(ModelUtil.getOrderedBlocksByPropertyByLayer(animation)[this.layer.id]);
-          return {
-            animation,
-            blocksByPropertyNameValues,
-            isExpanded: !collapsedLayerIds.has(this.layer.id),
-            selectedBlockIds,
-            isActionMode,
-          };
-        });
+    this.animationRowModel$ = this.store
+      .select(getTimelineAnimationRowState)
+      .map(({ animation, collapsedLayerIds, selectedBlockIds, isActionMode }) => {
+        // Returns a list of animation block lists. Each animation block list corresponds to
+        // a property name displayed in the layer list tree.
+        const blocksByPropertyNameValues = _.values(
+          ModelUtil.getOrderedBlocksByPropertyByLayer(animation)[this.layer.id],
+        );
+        return {
+          animation,
+          blocksByPropertyNameValues,
+          isExpanded: !collapsedLayerIds.has(this.layer.id),
+          selectedBlockIds,
+          isActionMode,
+        };
+      });
   }
 
   // @Override Callbacks

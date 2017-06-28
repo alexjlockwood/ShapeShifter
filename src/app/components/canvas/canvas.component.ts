@@ -1,11 +1,6 @@
 import 'rxjs/add/observable/combineLatest';
 import 'rxjs/add/operator/distinctUntilChanged';
 
-import { CanvasContainerDirective } from './canvascontainer.directive';
-import { CanvasLayersDirective } from './canvaslayers.directive';
-import { CanvasLayoutMixin, Size } from './CanvasLayoutMixin';
-import { CanvasOverlayDirective } from './canvasoverlay.directive';
-import { CanvasRulerDirective } from './canvasruler.directive';
 import {
   AfterViewInit,
   ChangeDetectionStrategy,
@@ -26,6 +21,12 @@ import * as $ from 'jquery';
 import * as _ from 'lodash';
 import { Observable } from 'rxjs/Observable';
 
+import { CanvasContainerDirective } from './canvascontainer.directive';
+import { CanvasLayersDirective } from './canvaslayers.directive';
+import { CanvasOverlayDirective } from './canvasoverlay.directive';
+import { CanvasRulerDirective } from './canvasruler.directive';
+import { CanvasLayoutMixin, Size } from './CanvasLayoutMixin';
+
 // Canvas margin in css pixels.
 const CANVAS_MARGIN = 36;
 
@@ -35,10 +36,8 @@ const CANVAS_MARGIN = 36;
   styleUrls: ['./canvas.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class CanvasComponent
-  extends CanvasLayoutMixin(DestroyableMixin())
+export class CanvasComponent extends CanvasLayoutMixin(DestroyableMixin())
   implements AfterViewInit {
-
   @ViewChild(CanvasContainerDirective) canvasContainer: CanvasContainerDirective;
   @ViewChild(CanvasLayersDirective) canvasLayers: CanvasLayersDirective;
   @ViewChild(CanvasOverlayDirective) canvasOverlay: CanvasOverlayDirective;
@@ -49,27 +48,29 @@ export class CanvasComponent
 
   private readonly $element: JQuery;
 
-  constructor(
-    elementRef: ElementRef,
-    private readonly store: Store<State>,
-  ) {
+  constructor(elementRef: ElementRef, private readonly store: Store<State>) {
     super();
     this.$element = $(elementRef.nativeElement);
   }
 
   ngAfterViewInit() {
-    const activeViewport$ =
-      this.store.select(getVectorLayer)
-        .map(vl => { return { w: vl.width, h: vl.height }; })
-        .distinctUntilChanged((x, y) => _.isEqual(x, y));
+    const activeViewport$ = this.store
+      .select(getVectorLayer)
+      .map(vl => {
+        return { w: vl.width, h: vl.height };
+      })
+      .distinctUntilChanged((x, y) => _.isEqual(x, y));
     this.registerSubscription(
       Observable.combineLatest(this.canvasBounds$, activeViewport$)
-        .map(([bounds, viewport]) => { return { bounds, viewport }; })
+        .map(([bounds, viewport]) => {
+          return { bounds, viewport };
+        })
         .subscribe(({ bounds, viewport }) => {
           const w = Math.max(1, bounds.w - CANVAS_MARGIN * 2);
           const h = Math.max(1, bounds.h - CANVAS_MARGIN * 2);
           this.setDimensions({ w, h }, viewport);
-        }));
+        }),
+    );
   }
 
   // @Override

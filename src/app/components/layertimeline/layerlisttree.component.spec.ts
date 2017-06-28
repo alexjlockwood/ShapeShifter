@@ -1,9 +1,4 @@
-import {
-  ComponentFixture,
-  TestBed,
-  async,
-  inject,
-} from '@angular/core/testing';
+import { ComponentFixture, TestBed, async, inject } from '@angular/core/testing';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { HttpModule } from '@angular/http';
 import {
@@ -28,9 +23,9 @@ describe('LayerListTreeComponent', () => {
   let fixture: ComponentFixture<LayerListTreeComponent>;
   let store: MockStore;
 
-  beforeEach(async(() => {
-    TestBed
-      .configureTestingModule({
+  beforeEach(
+    async(() => {
+      TestBed.configureTestingModule({
         declarations: [LayerListTreeComponent],
         imports: [
           HttpModule,
@@ -40,23 +35,22 @@ describe('LayerListTreeComponent', () => {
           MdMenuModule,
           MdTooltipModule,
         ],
-        providers: [
-          { provide: Store, useValue: new MockStore() },
-          ActionModeService,
-        ],
-      })
-      .compileComponents();
-    loadSvgIcons([
-      { name: 'animationblock', path: 'assets/icons/animationblock.svg' },
-      { name: 'vectorlayer', path: 'assets/icons/vectorlayer.svg' },
-    ]);
-  }));
+        providers: [{ provide: Store, useValue: new MockStore() }, ActionModeService],
+      }).compileComponents();
+      loadSvgIcons([
+        { name: 'animationblock', path: 'assets/icons/animationblock.svg' },
+        { name: 'vectorlayer', path: 'assets/icons/vectorlayer.svg' },
+      ]);
+    }),
+  );
 
-  beforeEach(inject([Store], (s: MockStore) => {
-    fixture = TestBed.createComponent(LayerListTreeComponent);
-    component = fixture.componentInstance;
-    store = s;
-  }));
+  beforeEach(
+    inject([Store], (s: MockStore) => {
+      fixture = TestBed.createComponent(LayerListTreeComponent);
+      component = fixture.componentInstance;
+      store = s;
+    }),
+  );
 
   function callNgOnInit(layers?: LayerState) {
     if (layers) {
@@ -69,13 +63,12 @@ describe('LayerListTreeComponent', () => {
 
   it('Initialize w/ default state', () => {
     callNgOnInit();
-    const vectorLayerElem =
-      fixture.debugElement.query(By.css('.slt-layer-id-text')).nativeElement;
+    const vectorLayerElem = fixture.debugElement.query(By.css('.slt-layer-id-text')).nativeElement;
     expect($(vectorLayerElem).text().trim()).toBe('vector');
   });
 });
 
-function loadSvgIcons(svgIcons: Array<{ name: string, path: string }>) {
+function loadSvgIcons(svgIcons: Array<{ name: string; path: string }>) {
   const mdIconRegistry = TestBed.get(MdIconRegistry);
   const sanitizer = TestBed.get(DomSanitizer);
   for (const { name, path } of svgIcons) {

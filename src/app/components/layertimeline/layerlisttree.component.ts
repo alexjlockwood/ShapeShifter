@@ -7,17 +7,10 @@ import {
   Output,
 } from '@angular/core';
 import { ModelUtil } from 'app/scripts/common';
-import {
-  GroupLayer,
-  Layer,
-  VectorLayer,
-} from 'app/scripts/model/layers';
+import { GroupLayer, Layer, VectorLayer } from 'app/scripts/model/layers';
 import { Animation } from 'app/scripts/model/timeline';
 import { ActionModeService } from 'app/services';
-import {
-  State,
-  Store,
-} from 'app/store';
+import { State, Store } from 'app/store';
 import { getLayerListTreeState } from 'app/store/common/selectors';
 import * as _ from 'lodash';
 import { Observable } from 'rxjs/Observable';
@@ -29,7 +22,6 @@ import { Observable } from 'rxjs/Observable';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LayerListTreeComponent implements OnInit, Callbacks {
-
   layerModel$: Observable<LayerModel>;
 
   @Input() layer: Layer;
@@ -47,28 +39,30 @@ export class LayerListTreeComponent implements OnInit, Callbacks {
   constructor(
     private readonly store: Store<State>,
     private readonly actionModeService: ActionModeService,
-  ) { }
+  ) {}
 
   ngOnInit() {
-    this.layerModel$ =
-      this.store.select(getLayerListTreeState)
-        .map(({ animation, selectedLayerIds, collapsedLayerIds, hiddenLayerIds, isActionMode }) => {
-          const isExpandable = this.isLayerExpandable();
-          const availablePropertyNames =
-            Array.from(ModelUtil.getAvailablePropertyNamesForLayer(this.layer, animation));
-          const existingPropertyNames =
-            Array.from(_.keys(ModelUtil.getOrderedBlocksByPropertyByLayer(animation)[this.layer.id]));
-          return {
-            animation,
-            isSelected: selectedLayerIds.has(this.layer.id),
-            isExpandable,
-            isExpanded: !collapsedLayerIds.has(this.layer.id),
-            isVisible: !hiddenLayerIds.has(this.layer.id),
-            availablePropertyNames,
-            existingPropertyNames,
-            isActionMode,
-          };
-        });
+    this.layerModel$ = this.store
+      .select(getLayerListTreeState)
+      .map(({ animation, selectedLayerIds, collapsedLayerIds, hiddenLayerIds, isActionMode }) => {
+        const isExpandable = this.isLayerExpandable();
+        const availablePropertyNames = Array.from(
+          ModelUtil.getAvailablePropertyNamesForLayer(this.layer, animation),
+        );
+        const existingPropertyNames = Array.from(
+          _.keys(ModelUtil.getOrderedBlocksByPropertyByLayer(animation)[this.layer.id]),
+        );
+        return {
+          animation,
+          isSelected: selectedLayerIds.has(this.layer.id),
+          isExpandable,
+          isExpanded: !collapsedLayerIds.has(this.layer.id),
+          isVisible: !hiddenLayerIds.has(this.layer.id),
+          availablePropertyNames,
+          existingPropertyNames,
+          isActionMode,
+        };
+      });
   }
 
   // @Override Callbacks
