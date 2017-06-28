@@ -31,17 +31,21 @@ export function parseAndroidColor(val: string): ColorFormats.RGBA | undefined {
     return undefined;
   }
 
-  return (isNaN(dict.r) || isNaN(dict.g) || isNaN(dict.b) || isNaN(dict.a)) ? undefined : dict;
+  return isNaN(dict.r) || isNaN(dict.g) || isNaN(dict.b) || isNaN(dict.a) ? undefined : dict;
 }
 
 export function toAndroidString(dict: ColorFormats.RGBA): string {
   let str = '#';
   if (dict.a !== 255) {
-    str += ((dict.a < 16) ? '0' : '') + dict.a.toString(16);
+    str += (dict.a < 16 ? '0' : '') + dict.a.toString(16);
   }
-  str += ((dict.r < 16) ? '0' : '') + dict.r.toString(16)
-    + ((dict.g < 16) ? '0' : '') + dict.g.toString(16)
-    + ((dict.b < 16) ? '0' : '') + dict.b.toString(16);
+  str +=
+    (dict.r < 16 ? '0' : '') +
+    dict.r.toString(16) +
+    (dict.g < 16 ? '0' : '') +
+    dict.g.toString(16) +
+    (dict.b < 16 ? '0' : '') +
+    dict.b.toString(16);
   return str;
 }
 
@@ -61,11 +65,15 @@ export function androidToCssHexColor(androidColor: string | undefined, multAlpha
   }
   const d = parseAndroidColor(androidColor);
   let str = '#';
-  str += ((d.r < 16) ? '0' : '') + d.r.toString(16)
-    + ((d.g < 16) ? '0' : '') + d.g.toString(16)
-    + ((d.b < 16) ? '0' : '') + d.b.toString(16);
+  str +=
+    (d.r < 16 ? '0' : '') +
+    d.r.toString(16) +
+    (d.g < 16 ? '0' : '') +
+    d.g.toString(16) +
+    (d.b < 16 ? '0' : '') +
+    d.b.toString(16);
   if (d.a !== 255) {
-    str += ((d.a < 16) ? '0' : '') + d.a.toString(16);
+    str += (d.a < 16 ? '0' : '') + d.a.toString(16);
   }
   return str;
 }

@@ -1,13 +1,7 @@
-import {
-  MathUtil,
-  Point,
-} from '../common';
-import {
-  Command,
-  Path,
-  PathUtil,
-} from '../model/paths';
 import * as _ from 'lodash';
+
+import { MathUtil, Point } from '../common';
+import { Command, Path, PathUtil } from '../model/paths';
 
 // Needleman-Wunsch scoring function constants.
 const MATCH = 1;
@@ -21,11 +15,7 @@ const INDEL = 0;
  *
  * TODO: this can still be optimized a lot... work in progress!
  */
-export function autoFix(
-  subIdx: number,
-  srcFromPath: Path,
-  srcToPath: Path) {
-
+export function autoFix(subIdx: number, srcFromPath: Path, srcToPath: Path) {
   // Create and return a list of reversed and shifted paths to test.
   // TODO: can this be optimized? (this essentially brute-forces all possible permutations)
   const createFromCmdGroupsFn = (...paths: Path[]): Path[] => {
@@ -54,9 +44,11 @@ export function autoFix(
   // commands are considered matches. However, the farther away the points
   // are from each other, the lower the score.
   const getScoreFn = (cmdA: Command, cmdB: Command) => {
-    if (cmdA.getSvgChar() !== cmdB.getSvgChar()
-      && !cmdA.canConvertTo(cmdB.getSvgChar())
-      && !cmdB.canConvertTo(cmdA.getSvgChar())) {
+    if (
+      cmdA.getSvgChar() !== cmdB.getSvgChar() &&
+      !cmdA.canConvertTo(cmdB.getSvgChar()) &&
+      !cmdB.canConvertTo(cmdA.getSvgChar())
+    ) {
       return MISMATCH;
     }
     const { x, y } = cmdA.getEnd();
@@ -69,10 +61,10 @@ export function autoFix(
   };
 
   // Align each generated 'from path' with the target 'to path'.
-  const fromPaths =
-    createFromCmdGroupsFn(srcFromPath, srcFromPath.mutate()
-      .reverseSubPath(subIdx)
-      .build());
+  const fromPaths = createFromCmdGroupsFn(
+    srcFromPath,
+    srcFromPath.mutate().reverseSubPath(subIdx).build(),
+  );
   const alignmentInfos = fromPaths.map(generatedFromPath => {
     const fromCmds = generatedFromPath.getSubPaths()[subIdx].getCommands();
     const toCmds = srcToPath.getSubPaths()[subIdx].getCommands();
@@ -87,12 +79,16 @@ export function autoFix(
   });
 
   // For each alignment, determine whether it and its neighbor is a gap.
-  interface CmdInfo { isGap: boolean; isNextGap: boolean; nextCmdIdx: number; }
+  interface CmdInfo {
+    isGap: boolean;
+    isNextGap: boolean;
+    nextCmdIdx: number;
+  }
   const processAlignmentsFn = (alignments: Alignment<Command>[]) => {
     let nextCmdIdx = 0;
     return alignments.map((alignment, i) => {
       const isGap = !alignment.obj;
-      const isNextGap = (i + 1 < alignments.length) && !alignments[i + 1].obj;
+      const isNextGap = i + 1 < alignments.length && !alignments[i + 1].obj;
       if (!isGap) {
         nextCmdIdx++;
       }
@@ -124,7 +120,7 @@ export function autoFix(
 
   // Fill in the gaps by applying linear subdivide batch splits.
   const applySplitsFn = (path: Path, gapGroups: CmdInfo[][]) => {
-    const splitOps: { subIdx: number, cmdIdx: number, ts: number[] }[] = [];
+    const splitOps: { subIdx: number; cmdIdx: number; ts: number[] }[] = [];
     const numPaths = path.getSubPaths()[subIdx].getCommands().length;
     for (let i = gapGroups.length - 1; i >= 0; i--) {
       const gapGroup = gapGroups[i];
@@ -154,11 +150,7 @@ export function autoFix(
  * Takes two paths with an equal number of commands and makes them compatible
  * by converting each pair one-by-one.
  */
-export function autoConvert(
-  subIdx: number,
-  srcFromPath: Path,
-  srcToPath: Path) {
-
+export function autoConvert(subIdx: number, srcFromPath: Path, srcToPath: Path) {
   const fromCmds = srcFromPath.getSubPaths()[subIdx].getCommands();
   const toCmds = srcToPath.getSubPaths()[subIdx].getCommands();
   const fromMutator = srcFromPath.mutate();
@@ -188,10 +180,14 @@ interface Alignment<T> {
 function align<T>(
   from: ReadonlyArray<T>,
   to: ReadonlyArray<T>,
-  scoringFunction: (t1: T, t2: T) => number) {
-
-  const listA: Alignment<T>[] = from.map(obj => { return { obj }; });
-  const listB: Alignment<T>[] = to.map(obj => { return { obj }; });
+  scoringFunction: (t1: T, t2: T) => number,
+) {
+  const listA: Alignment<T>[] = from.map(obj => {
+    return { obj };
+  });
+  const listB: Alignment<T>[] = to.map(obj => {
+    return { obj };
+  });
   const alignedListA: Alignment<T>[] = [];
   const alignedListB: Alignment<T>[] = [];
 
@@ -212,8 +208,7 @@ function align<T>(
   // Process the scoring matrix.
   for (let i = 1; i < listA.length; i++) {
     for (let j = 1; j < listB.length; j++) {
-      const match =
-        matrix[i - 1][j - 1] + scoringFunction(listA[i].obj, listB[j].obj);
+      const match = matrix[i - 1][j - 1] + scoringFunction(listA[i].obj, listB[j].obj);
       const ins = matrix[i][j - 1] + INDEL;
       const del = matrix[i - 1][j] + INDEL;
       matrix[i][j] = Math.max(match, ins, del);
@@ -225,9 +220,11 @@ function align<T>(
   let j = listB.length - 1;
 
   while (i > 0 || j > 0) {
-    if (i > 0 && j > 0
-      && matrix[i][j] === matrix[i - 1][j - 1]
-      + scoringFunction(listA[i].obj, listB[j].obj)) {
+    if (
+      i > 0 &&
+      j > 0 &&
+      matrix[i][j] === matrix[i - 1][j - 1] + scoringFunction(listA[i].obj, listB[j].obj)
+    ) {
       alignedListA.unshift(listA[i--]);
       alignedListB.unshift(listB[j--]);
     } else if (i > 0 && matrix[i][j] === matrix[i - 1][j] + INDEL) {

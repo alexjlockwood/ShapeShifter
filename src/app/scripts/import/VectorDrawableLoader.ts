@@ -213,10 +213,12 @@ function loadVectorLayerFromElement(
 // }
 
 function isElement(node: Node): node is HTMLElement {
-  return node
-    && node.nodeType !== Node.TEXT_NODE
-    && node.nodeType !== Node.COMMENT_NODE
-    && _.isElement(node);
+  return (
+    node &&
+    node.nodeType !== Node.TEXT_NODE &&
+    node.nodeType !== Node.COMMENT_NODE &&
+    _.isElement(node)
+  );
 }
 
 function get(obj: HTMLElement, attr: string, def = '') {

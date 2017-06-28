@@ -1,13 +1,7 @@
 import { ModelUtil } from 'app/scripts/common';
 import { INTERPOLATORS } from 'app/scripts/model/interpolators';
-import {
-  Layer,
-  VectorLayer,
-} from 'app/scripts/model/layers';
-import {
-  Animation,
-  AnimationBlock,
-} from 'app/scripts/model/timeline';
+import { Layer, VectorLayer } from 'app/scripts/model/layers';
+import { Animation, AnimationBlock } from 'app/scripts/model/timeline';
 import * as _ from 'lodash';
 
 const DEFAULT_LAYER_PROPERTY_STATE: PropertyState = {
@@ -48,7 +42,7 @@ export class AnimationRenderer {
   setAnimationTime(timeMillis: number) {
     Object.keys(this.animDataByLayer).forEach(layerId => {
       const animData = this.animDataByLayer[layerId];
-      animData.cachedState = animData.cachedState || {} as PropertyState;
+      animData.cachedState = animData.cachedState || ({} as PropertyState);
 
       Object.keys(animData.orderedBlocks).forEach(propertyName => {
         const blocks = animData.orderedBlocks[propertyName];
@@ -64,8 +58,8 @@ export class AnimationRenderer {
           if (timeMillis < block.endTime) {
             const f = (timeMillis - block.startTime) / (block.endTime - block.startTime);
             // TODO: this is a bit hacky... no need to perform a search every time.
-            const interpolatorFn =
-              _.find(INTERPOLATORS, i => i.value === block.interpolator).interpolateFn;
+            const interpolatorFn = _.find(INTERPOLATORS, i => i.value === block.interpolator)
+              .interpolateFn;
             value = property.interpolateValue(block.fromValue, block.toValue, interpolatorFn(f));
             _ar.activeBlock = block;
             _ar.interpolatedValue = true;

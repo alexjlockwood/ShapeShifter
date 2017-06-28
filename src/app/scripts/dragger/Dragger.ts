@@ -21,9 +21,9 @@ export class Dragger {
     this.downY = opts.downY;
     this.shouldSkipSlopCheck = !!opts.shouldSkipSlopCheck;
 
-    this.onBeginDragFn = opts.onBeginDragFn || (() => { });
-    this.onDragFn = opts.onDragFn || (() => { });
-    this.onDropFn = opts.onDropFn || (() => { });
+    this.onBeginDragFn = opts.onBeginDragFn || (() => {});
+    this.onDragFn = opts.onDragFn || (() => {});
+    this.onDropFn = opts.onDropFn || (() => {});
 
     this.isDragging = false;
     this.draggingScrim = undefined;
@@ -39,23 +39,15 @@ export class Dragger {
       }
 
       if (this.isDragging) {
-        this.onDragFn(event, new Point(
-          event.clientX - this.downX,
-          event.clientY - this.downY,
-        ));
+        this.onDragFn(event, new Point(event.clientX - this.downX, event.clientY - this.downY));
       }
     };
 
     const mouseUpHandlerFn = (event: JQuery.Event) => {
-      $(window)
-        .off('mousemove', mouseMoveHandlerFn)
-        .off('mouseup', mouseUpHandlerFn);
+      $(window).off('mousemove', mouseMoveHandlerFn).off('mouseup', mouseUpHandlerFn);
 
       if (this.isDragging) {
-        this.onDragFn(event, new Point(
-          event.clientX - this.downX,
-          event.clientY - this.downY,
-        ));
+        this.onDragFn(event, new Point(event.clientX - this.downX, event.clientY - this.downY));
 
         this.onDropFn();
 
@@ -70,9 +62,7 @@ export class Dragger {
       return undefined;
     };
 
-    $(window)
-      .on('mousemove', mouseMoveHandlerFn)
-      .on('mouseup', mouseUpHandlerFn);
+    $(window).on('mousemove', mouseMoveHandlerFn).on('mouseup', mouseUpHandlerFn);
   }
 
   private shouldBeginDragging(mouseMoveEvent: JQuery.Event) {
@@ -81,10 +71,10 @@ export class Dragger {
     }
     let begin = false;
     if (this.direction === 'both' || this.direction === 'horizontal') {
-      begin = begin || (Math.abs(mouseMoveEvent.clientX - this.downX) > DRAG_SLOP_PIXELS);
+      begin = begin || Math.abs(mouseMoveEvent.clientX - this.downX) > DRAG_SLOP_PIXELS;
     }
     if (this.direction === 'both' || this.direction === 'vertical') {
-      begin = begin || (Math.abs(mouseMoveEvent.clientY - this.downY) > DRAG_SLOP_PIXELS);
+      begin = begin || Math.abs(mouseMoveEvent.clientY - this.downY) > DRAG_SLOP_PIXELS;
     }
     return begin;
   }
@@ -101,15 +91,14 @@ export class Dragger {
   }
 
   private buildDraggingScrim() {
-    return $('<div>')
-      .css({
-        position: 'fixed',
-        left: 0,
-        top: 0,
-        right: 0,
-        bottom: 0,
-        zIndex: 9999,
-      });
+    return $('<div>').css({
+      position: 'fixed',
+      left: 0,
+      top: 0,
+      right: 0,
+      bottom: 0,
+      zIndex: 9999,
+    });
   }
 }
 

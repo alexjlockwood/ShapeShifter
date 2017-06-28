@@ -4,7 +4,7 @@ const EPSILON = 1e-8;
 
 /** Returns the floor modulus of the integer argument. */
 export function floorMod(num: number, maxNum: number) {
-  return ((num % maxNum) + maxNum) % maxNum;
+  return (num % maxNum + maxNum) % maxNum;
 }
 
 /** Linearly interpolate between point a and point b using time t. */
@@ -43,10 +43,7 @@ export function transformPoint(point: Point, ...matrices: Matrix[]): Point {
     // [a c e]   [p.x]
     // [b d f] * [p.y]
     // [0 0 1]   [ 1 ]
-    return new Point(
-      m.a * p.x + m.c * p.y + m.e * 1,
-      m.b * p.x + m.d * p.y + m.f * 1,
-    );
+    return new Point(m.a * p.x + m.c * p.y + m.e * 1, m.b * p.x + m.d * p.y + m.f * 1);
   }, new Point(point.x, point.y));
 }
 

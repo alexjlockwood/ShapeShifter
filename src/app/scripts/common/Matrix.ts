@@ -1,7 +1,4 @@
-import {
-  MathUtil,
-  Point,
-} from '.';
+import { MathUtil, Point } from '.';
 
 const EPSILON = 1e-8;
 
@@ -10,7 +7,6 @@ const EPSILON = 1e-8;
  * matrix notation.
  */
 export class Matrix {
-
   static flatten(...matrices: Matrix[]) {
     return matrices.reduce((prev, curr) => curr.dot(prev), new Matrix());
   }
@@ -39,7 +35,7 @@ export class Matrix {
     public readonly d = 1,
     public readonly e = 0,
     public readonly f = 0,
-  ) { }
+  ) {}
 
   /**
    * Returns the dot product of this 2D transformation matrices with m.
@@ -49,12 +45,12 @@ export class Matrix {
     // [b d f] * [b' d' f']
     // [0 0 1]   [0  0  1 ]
     return new Matrix(
-      (this.a * m.a + this.c * m.b) || 0,
-      (this.b * m.a + this.d * m.b) || 0,
-      (this.a * m.c + this.c * m.d) || 0,
-      (this.b * m.c + this.d * m.d) || 0,
-      (this.a * m.e + this.c * m.f + this.e) || 0,
-      (this.b * m.e + this.d * m.f + this.f) || 0,
+      this.a * m.a + this.c * m.b || 0,
+      this.b * m.a + this.d * m.b || 0,
+      this.a * m.c + this.c * m.d || 0,
+      this.b * m.c + this.d * m.d || 0,
+      this.a * m.e + this.c * m.f + this.e || 0,
+      this.b * m.e + this.d * m.f + this.f || 0,
     );
   }
 
@@ -70,12 +66,12 @@ export class Matrix {
     }
     det = 1 / det;
     return new Matrix(
-      (m.d * det) || 0,
-      (-m.b * det) || 0,
-      (-m.c * det) || 0,
-      (m.a * det) || 0,
-      ((m.c * m.f - m.d * m.e) * det) || 0,
-      ((m.b * m.e - m.a * m.f) * det) || 0,
+      m.d * det || 0,
+      -m.b * det || 0,
+      -m.c * det || 0,
+      m.a * det || 0,
+      (m.c * m.f - m.d * m.e) * det || 0,
+      (m.b * m.e - m.a * m.f) * det || 0,
     );
   }
 
@@ -105,11 +101,13 @@ export class Matrix {
    * Returns true if the matrix is approximately equal to this matrix.
    */
   equals(m: Matrix) {
-    return Math.abs(this.a - m.a) < EPSILON
-      && Math.abs(this.b - m.b) < EPSILON
-      && Math.abs(this.c - m.c) < EPSILON
-      && Math.abs(this.d - m.d) < EPSILON
-      && Math.abs(this.e - m.e) < EPSILON
-      && Math.abs(this.f - m.f) < EPSILON;
+    return (
+      Math.abs(this.a - m.a) < EPSILON &&
+      Math.abs(this.b - m.b) < EPSILON &&
+      Math.abs(this.c - m.c) < EPSILON &&
+      Math.abs(this.d - m.d) < EPSILON &&
+      Math.abs(this.e - m.e) < EPSILON &&
+      Math.abs(this.f - m.f) < EPSILON
+    );
   }
 }

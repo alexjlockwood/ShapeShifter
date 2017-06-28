@@ -9,15 +9,19 @@ describe('SvgLoader', () => {
   <path id="test_path" fill="#000" d="M 0 0 L 10 10 L 20 20 L 30 30"/>
 </svg>
 `;
-    SvgLoader.loadVectorLayerFromSvgStringWithCallback(svg, vl => {
-      expect(vl.width).toBe(24);
-      expect(vl.height).toBe(24);
-      expect(vl.children.length).toBe(1);
-      const pathLayer = vl.children[0] as PathLayer;
-      expect(pathLayer.name).toBe('test_path');
-      expect(pathLayer.fillColor).toBe('#000');
-      expect(pathLayer.pathData.getPathString()).toBe('M 0 0 L 10 10 L 20 20 L 30 30');
-    }, () => false);
+    SvgLoader.loadVectorLayerFromSvgStringWithCallback(
+      svg,
+      vl => {
+        expect(vl.width).toBe(24);
+        expect(vl.height).toBe(24);
+        expect(vl.children.length).toBe(1);
+        const pathLayer = vl.children[0] as PathLayer;
+        expect(pathLayer.name).toBe('test_path');
+        expect(pathLayer.fillColor).toBe('#000');
+        expect(pathLayer.pathData.getPathString()).toBe('M 0 0 L 10 10 L 20 20 L 30 30');
+      },
+      () => false,
+    );
   });
 
   it(`can import simple SVG with viewBox translation`, () => {
@@ -26,15 +30,19 @@ describe('SvgLoader', () => {
   <path id="test_path" fill="#000" d="M 0 0 L 10 10 L 20 20 L 30 30"/>
 </svg>
 `;
-    SvgLoader.loadVectorLayerFromSvgStringWithCallback(svg, vl => {
-      expect(vl.width).toBe(24);
-      expect(vl.height).toBe(24);
-      expect(vl.children.length).toBe(1);
-      const pathLayer = vl.children[0] as PathLayer;
-      expect(pathLayer.name).toBe('test_path');
-      expect(pathLayer.fillColor).toBe('#000');
-      expect(pathLayer.pathData.getPathString()).toBe('M -5 10 L 5 20 L 15 30 L 25 40');
-    }, () => false);
+    SvgLoader.loadVectorLayerFromSvgStringWithCallback(
+      svg,
+      vl => {
+        expect(vl.width).toBe(24);
+        expect(vl.height).toBe(24);
+        expect(vl.children.length).toBe(1);
+        const pathLayer = vl.children[0] as PathLayer;
+        expect(pathLayer.name).toBe('test_path');
+        expect(pathLayer.fillColor).toBe('#000');
+        expect(pathLayer.pathData.getPathString()).toBe('M -5 10 L 5 20 L 15 30 L 25 40');
+      },
+      () => false,
+    );
   });
 
   it(`can import simple SVG with group/path transformations`, () => {
@@ -50,18 +58,22 @@ describe('SvgLoader', () => {
   </g>
 </svg>
 `;
-    SvgLoader.loadVectorLayerFromSvgStringWithCallback(svg, vl => {
-      const paths = [
-        'M 0 0 L 20 20 L 40 40 L 60 60',
-        'M 0 0 L -20 -20 L -40 -40 L -60 -60',
-        'M 0 0 L -20 -20 L -40 -40 L -60 -60',
-        'M 10 20 L -10 0 L -30 -20 L -50 -40',
-        'M -20 -40 L -40 -60 L -60 -80 L -80 -100',
-        'M 20 40 L 40 60 L 60 80 L 80 100',
-      ];
-      const actualPath = (vl.children[0] as PathLayer).pathData.getPathString();
-      expect(actualPath).toBe(paths.join(' '));
-    }, () => false);
+    SvgLoader.loadVectorLayerFromSvgStringWithCallback(
+      svg,
+      vl => {
+        const paths = [
+          'M 0 0 L 20 20 L 40 40 L 60 60',
+          'M 0 0 L -20 -20 L -40 -40 L -60 -60',
+          'M 0 0 L -20 -20 L -40 -40 L -60 -60',
+          'M 10 20 L -10 0 L -30 -20 L -50 -40',
+          'M -20 -40 L -40 -60 L -60 -80 L -80 -100',
+          'M 20 40 L 40 60 L 60 80 L 80 100',
+        ];
+        const actualPath = (vl.children[0] as PathLayer).pathData.getPathString();
+        expect(actualPath).toBe(paths.join(' '));
+      },
+      () => false,
+    );
   });
 
   it(`can import simple SVG with clip paths`, () => {
@@ -87,9 +99,13 @@ describe('SvgLoader', () => {
   </g>
 </svg>
 `;
-    SvgLoader.loadVectorLayerFromSvgStringWithCallback(svg, vl => {
-      // TODO: test stuff
-      // console.info(vl);
-    }, () => false);
+    SvgLoader.loadVectorLayerFromSvgStringWithCallback(
+      svg,
+      vl => {
+        // TODO: test stuff
+        // console.info(vl);
+      },
+      () => false,
+    );
   });
 });

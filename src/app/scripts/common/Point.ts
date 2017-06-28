@@ -4,10 +4,7 @@ const EPSILON = 1e-8;
  * An immutable point class.
  */
 export class Point {
-  constructor(
-    public readonly x = 0,
-    public readonly y = 0,
-  ) { }
+  constructor(public readonly x = 0, public readonly y = 0) {}
 
   /**
    * Returns true if the point is approximately equal to this point.

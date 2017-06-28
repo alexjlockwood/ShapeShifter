@@ -1,8 +1,4 @@
-import {
-  MathUtil,
-  Matrix,
-  Point,
-} from '.';
+import { MathUtil, Matrix, Point } from '.';
 
 describe('MathUtil', () => {
   it('#transformPoint', () => {
@@ -13,6 +9,8 @@ describe('MathUtil', () => {
   });
 
   it('#areCollinear', () => {
-    expect(MathUtil.areCollinear(new Point(16, 6), new Point(14, 5), new Point(19, 20))).toEqual(false);
+    expect(MathUtil.areCollinear(new Point(16, 6), new Point(14, 5), new Point(19, 20))).toEqual(
+      false,
+    );
   });
 });
