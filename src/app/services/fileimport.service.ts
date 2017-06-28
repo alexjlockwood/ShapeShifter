@@ -2,24 +2,12 @@ import 'rxjs/add/operator/first';
 
 import { Injectable } from '@angular/core';
 import { ModelUtil } from 'app/scripts/common';
-import {
-  SvgLoader,
-  VectorDrawableLoader,
-} from 'app/scripts/import';
-import {
-  LayerUtil,
-  VectorLayer,
-} from 'app/scripts/model/layers';
+import { SvgLoader, VectorDrawableLoader } from 'app/scripts/import';
+import { LayerUtil, VectorLayer } from 'app/scripts/model/layers';
 import { Animation } from 'app/scripts/model/timeline';
-import {
-  AnimatorService,
-  FileExportService,
-} from 'app/services';
+import { AnimatorService, FileExportService } from 'app/services';
 import { Duration, SnackBarService } from 'app/services/snackbar.service';
-import {
-  State,
-  Store,
-} from 'app/store';
+import { State, Store } from 'app/store';
 import { ImportVectorLayers } from 'app/store/layers/actions';
 import { getVectorLayer } from 'app/store/layers/selectors';
 import { ResetWorkspace } from 'app/store/reset/actions';
@@ -37,16 +25,15 @@ enum ImportType {
  */
 @Injectable()
 export class FileImportService {
-
   constructor(
     private readonly store: Store<State>,
     private readonly snackBarService: SnackBarService,
     private readonly animatorService: AnimatorService,
-  ) { }
+  ) {}
 
   private get vectorLayer() {
     let vectorLayer: VectorLayer;
-    this.store.select(getVectorLayer).first().subscribe(vl => vectorLayer = vl);
+    this.store.select(getVectorLayer).first().subscribe(vl => (vectorLayer = vl));
     return vectorLayer;
   }
 
@@ -81,20 +68,18 @@ export class FileImportService {
 
       fileReader.onload = event => {
         const text = (event.target as any).result;
-        const callbackFn =
-          vectorLayer => {
-            if (!vectorLayer) {
-              numErrors++;
-              maybeAddVectorLayersFn();
-              return;
-            }
-            addedVls.push(vectorLayer);
+        const callbackFn = vectorLayer => {
+          if (!vectorLayer) {
+            numErrors++;
             maybeAddVectorLayersFn();
-          };
-        const doesNameExistFn =
-          (name: string) => {
-            return !!LayerUtil.findLayerByName([existingVl, ...addedVls], name);
-          };
+            return;
+          }
+          addedVls.push(vectorLayer);
+          maybeAddVectorLayersFn();
+        };
+        const doesNameExistFn = (name: string) => {
+          return !!LayerUtil.findLayerByName([existingVl, ...addedVls], name);
+        };
         if (file.type.includes('svg')) {
           importType = ImportType.Svg;
           SvgLoader.loadVectorLayerFromSvgStringWithCallback(text, callbackFn, doesNameExistFn);

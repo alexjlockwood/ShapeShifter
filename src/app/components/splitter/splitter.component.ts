@@ -1,11 +1,4 @@
-import {
-  Component,
-  ElementRef,
-  HostBinding,
-  HostListener,
-  Input,
-  OnInit,
-} from '@angular/core';
+import { Component, ElementRef, HostBinding, HostListener, Input, OnInit } from '@angular/core';
 import { Dragger } from 'app/scripts/dragger';
 import * as $ from 'jquery';
 
@@ -37,7 +30,7 @@ export class SplitterComponent implements OnInit {
   private isHovering = false;
   private isDragging = false;
 
-  constructor(private readonly elementRef: ElementRef) { }
+  constructor(private readonly elementRef: ElementRef) {}
 
   ngOnInit() {
     if (this.min === undefined || this.min <= 0) {
@@ -85,14 +78,14 @@ export class SplitterComponent implements OnInit {
     new Dragger({
       downX: event.clientX,
       downY: event.clientY,
-      direction: (this.orientation === 'vertical') ? 'horizontal' : 'vertical',
-      draggingCursor: (this.orientation === 'vertical') ? 'col-resize' : 'row-resize',
+      direction: this.orientation === 'vertical' ? 'horizontal' : 'vertical',
+      draggingCursor: this.orientation === 'vertical' ? 'col-resize' : 'row-resize',
       onBeginDragFn: () => {
         this.isDragging = true;
         this.showSplitter();
       },
       onDragFn: (_, p) => {
-        const sign = (this.edge === 'left' || this.edge === 'top') ? -1 : 1;
+        const sign = this.edge === 'left' || this.edge === 'top' ? -1 : 1;
         const d = this.orientation === 'vertical' ? p.x : p.y;
         this.setSize(Math.max(this.min, downSize + sign * d));
       },

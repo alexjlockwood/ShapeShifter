@@ -9,10 +9,7 @@ import {
   Selection,
 } from 'app/scripts/model/actionmode';
 import { Path } from 'app/scripts/model/paths';
-import {
-  State,
-  Store,
-} from 'app/store';
+import { State, Store } from 'app/store';
 import {
   SetActionMode,
   SetActionModeHover,
@@ -48,8 +45,7 @@ import * as _ from 'lodash';
  */
 @Injectable()
 export class ActionModeService {
-
-  constructor(private readonly store: Store<State>) { }
+  constructor(private readonly store: Store<State>) {}
 
   isActionMode() {
     return this.getActionMode() !== ActionMode.None;
@@ -57,7 +53,7 @@ export class ActionModeService {
 
   getActionMode() {
     let mode: ActionMode;
-    this.store.select(getActionMode).first().subscribe(m => mode = m);
+    this.store.select(getActionMode).first().subscribe(m => (mode = m));
     return mode;
   }
 
@@ -170,7 +166,7 @@ export class ActionModeService {
     this.store.dispatch(new PairSubPath(subIdx, source));
   }
 
-  setUnpairedSubPath(unpair: { subIdx: number, source: ActionSource }) {
+  setUnpairedSubPath(unpair: { subIdx: number; source: ActionSource }) {
     this.store.dispatch(new SetUnpairedSubPath(unpair));
   }
 
@@ -184,21 +180,17 @@ export class ActionModeService {
     cmdIdx: number,
     isShiftOrMetaPressed: boolean,
   ) {
-    this.store.dispatch(
-      new TogglePointSelection(source, subIdx, cmdIdx, isShiftOrMetaPressed));
+    this.store.dispatch(new TogglePointSelection(source, subIdx, cmdIdx, isShiftOrMetaPressed));
   }
 
   toggleSegmentSelections(
     source: ActionSource,
-    segments: ReadonlyArray<{ subIdx: number, cmdIdx: number }>,
+    segments: ReadonlyArray<{ subIdx: number; cmdIdx: number }>,
   ) {
     this.store.dispatch(new ToggleSegmentSelections(source, segments));
   }
 
-  toggleSubPathSelection(
-    source: ActionSource,
-    subIdx: number,
-  ) {
+  toggleSubPathSelection(source: ActionSource, subIdx: number) {
     this.store.dispatch(new ToggleSubPathSelection(source, subIdx));
   }
 

@@ -1,71 +1,71 @@
 @import '../../styles/variables';
 @import '../../styles/theme';
 button {
-  margin: 0px 3px;
+    margin: 0px 3px;
 }
 
 button {
-  &[md-icon-button] {
-    md-icon {
-      color: $colorBlackTextSecondary;
+    &[md-icon-button] {
+        md-icon {
+            color: $colorBlackTextSecondary;
+        }
+        md-icon.activated {
+            color: mat-color(mat-palette($mat-orange, 900));
+        }
     }
-    md-icon.activated {
-      color: mat-color(mat-palette($mat-orange, 900));
+    &[md-icon-button][disabled] {
+        md-icon {
+            color: $colorBlackTextDisabled;
+        }
     }
-  }
-  &[md-icon-button][disabled] {
-    md-icon {
-      color: $colorBlackTextDisabled;
-    }
-  }
 }
 
 .play-pause-icon {
-  $numAnimationFrames: 21;
-  position: absolute;
-  overflow: hidden;
-  left: 50%;
-  top: 50%;
-  width: 24px;
-  height: 24px;
-  transform: translate(-50%, -50%);
-  &::after {
-    content: '';
-    display: block;
-    pointer-events: none;
+    $numAnimationFrames: 21;
     position: absolute;
-    left: 0;
-    top: 0;
-    width: ($numAnimationFrames * 24px);
+    overflow: hidden;
+    left: 50%;
+    top: 50%;
+    width: 24px;
     height: 24px;
-    background-size: ($numAnimationFrames * 24px) 24px;
-    background-position: 0% 0%;
-    background-image: url('../../../assets/icons/pauseplay-white.png');
-    transform: translateX(($numAnimationFrames - 1) * -24px);
-    animation-duration: (1s * $numAnimationFrames / 60);
-    animation-timing-function: steps($numAnimationFrames - 1);
-  }
-  &.can-animate::after {
-    animation-name: pauseplay;
-  }
-  &.can-animate.is-playing::after {
-    background-image: url('../../../assets/icons/playpause-white.png');
-    animation-name: playpause;
-  }
-  @keyframes playpause {
-    from {
-      transform: translateX(0);
+    transform: translate(-50%, -50%);
+    &::after {
+        content: '';
+        display: block;
+        pointer-events: none;
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: ($numAnimationFrames * 24px);
+        height: 24px;
+        background-size: ($numAnimationFrames * 24px) 24px;
+        background-position: 0% 0%;
+        background-image: url('../../../assets/icons/pauseplay-white.png');
+        transform: translateX(($numAnimationFrames - 1) * -24px);
+        animation-duration: (1s * $numAnimationFrames / 60);
+        animation-timing-function: steps($numAnimationFrames - 1);
     }
-    to {
-      transform: translateX(($numAnimationFrames - 1) * -24px);
+    &.can-animate::after {
+        animation-name: pauseplay;
     }
-  }
-  @keyframes pauseplay {
-    from {
-      transform: translateX(0);
+    &.can-animate.is-playing::after {
+        background-image: url('../../../assets/icons/playpause-white.png');
+        animation-name: playpause;
     }
-    to {
-      transform: translateX(($numAnimationFrames - 1) * -24px);
+    @keyframes playpause {
+        from {
+            transform: translateX(0);
+        }
+        to {
+            transform: translateX(($numAnimationFrames - 1) * -24px);
+        }
     }
-  }
+    @keyframes pauseplay {
+        from {
+            transform: translateX(0);
+        }
+        to {
+            transform: translateX(($numAnimationFrames - 1) * -24px);
+        }
+    }
 }

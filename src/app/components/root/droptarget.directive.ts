@@ -1,11 +1,4 @@
-import {
-  Directive,
-  ElementRef,
-  EventEmitter,
-  HostListener,
-  OnInit,
-  Output,
-} from '@angular/core';
+import { Directive, ElementRef, EventEmitter, HostListener, OnInit, Output } from '@angular/core';
 import * as $ from 'jquery';
 
 enum DragState {
@@ -24,7 +17,7 @@ export class DropTargetDirective implements OnInit {
   private dragState = DragState.None;
   private notDraggingTimeoutId: number;
 
-  constructor(private readonly elementRef: ElementRef) { }
+  constructor(private readonly elementRef: ElementRef) {}
 
   ngOnInit() {
     this.element = $(this.elementRef.nativeElement);
@@ -82,8 +75,7 @@ export class DropTargetDirective implements OnInit {
       if (this.notDraggingTimeoutId) {
         window.clearTimeout(this.notDraggingTimeoutId);
       }
-      this.notDraggingTimeoutId =
-        window.setTimeout(() => this.setDragState(DragState.None), 100);
+      this.notDraggingTimeoutId = window.setTimeout(() => this.setDragState(DragState.None), 100);
     }
   }
 }

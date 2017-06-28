@@ -1,13 +1,6 @@
 import { Injectable } from '@angular/core';
-import {
-  ActionModeService,
-  AnimatorService,
-  PlaybackService,
-} from 'app/services';
-import {
-  State,
-  Store,
-} from 'app/store';
+import { ActionModeService, AnimatorService, PlaybackService } from 'app/services';
+import { State, Store } from 'app/store';
 import { DeleteSelectedModels } from 'app/store/common/actions';
 import { GroupOrUngroupSelectedLayers } from 'app/store/layers/actions';
 import * as $ from 'jquery';
@@ -41,7 +34,7 @@ export class ShortcutService {
     private readonly animatorService: AnimatorService,
     private readonly actionModeService: ActionModeService,
     private readonly playbackService: PlaybackService,
-  ) { }
+  ) {}
 
   asObservable() {
     return this.shortcutSubject.asObservable();
@@ -117,8 +110,10 @@ export class ShortcutService {
         return false;
       }
       if (event.keyCode === 'S'.charCodeAt(0)) {
-        if (this.actionModeService.isShowingSubPathActionMode()
-          || this.actionModeService.isShowingSegmentActionMode()) {
+        if (
+          this.actionModeService.isShowingSubPathActionMode() ||
+          this.actionModeService.isShowingSegmentActionMode()
+        ) {
           this.actionModeService.toggleSplitSubPathsMode();
         } else {
           this.playbackService.toggleIsSlowMotion();
@@ -126,8 +121,10 @@ export class ShortcutService {
         return false;
       }
       if (event.keyCode === 'A'.charCodeAt(0)) {
-        if (this.actionModeService.isShowingSubPathActionMode()
-          || this.actionModeService.isShowingSegmentActionMode()) {
+        if (
+          this.actionModeService.isShowingSubPathActionMode() ||
+          this.actionModeService.isShowingSegmentActionMode()
+        ) {
           this.actionModeService.toggleSplitCommandsMode();
         } else if (this.actionModeService.isShowingPointActionMode()) {
           this.actionModeService.splitInHalfClick();
@@ -135,8 +132,10 @@ export class ShortcutService {
         return false;
       }
       if (event.keyCode === 'D'.charCodeAt(0)) {
-        if (this.actionModeService.isShowingSubPathActionMode()
-          || this.actionModeService.isShowingSegmentActionMode()) {
+        if (
+          this.actionModeService.isShowingSubPathActionMode() ||
+          this.actionModeService.isShowingSegmentActionMode()
+        ) {
           this.actionModeService.togglePairSubPathsMode();
         }
         return false;

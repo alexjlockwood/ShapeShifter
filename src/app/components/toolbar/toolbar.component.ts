@@ -1,15 +1,5 @@
-import {
-  animate,
-  state,
-  style,
-  transition,
-  trigger,
-} from '@angular/animations';
-import {
-  ChangeDetectionStrategy,
-  Component,
-  OnInit,
-} from '@angular/core';
+import { animate, state, style, transition, trigger } from '@angular/animations';
+import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import {
   ActionMode,
   ActionModeUtil,
@@ -20,10 +10,7 @@ import {
 import { MorphableLayer } from 'app/scripts/model/layers';
 import { PathAnimationBlock } from 'app/scripts/model/timeline';
 import { ActionModeService } from 'app/services';
-import {
-  State,
-  Store,
-} from 'app/store';
+import { State, Store } from 'app/store';
 import { getToolbarState } from 'app/store/actionmode/selectors';
 import * as _ from 'lodash';
 import { Observable } from 'rxjs/Observable';
@@ -50,25 +37,24 @@ const ACTIVE = 'active';
   ],
 })
 export class ToolbarComponent implements OnInit {
-
   toolbarData$: Observable<ToolbarData>;
   actionModeState$: Observable<ActionModeState>;
 
   constructor(
     private readonly actionModeService: ActionModeService,
     private readonly store: Store<State>,
-  ) { }
+  ) {}
 
   ngOnInit() {
     const toolbarState = this.store.select(getToolbarState);
-    this.toolbarData$ = toolbarState
-      .map(({ mode, fromMl, toMl, selections, unpairedSubPath, block }) => {
+    this.toolbarData$ = toolbarState.map(
+      ({ mode, fromMl, toMl, selections, unpairedSubPath, block }) => {
         return new ToolbarData(mode, fromMl, toMl, selections, unpairedSubPath, block);
-      });
-    this.actionModeState$ =
-      toolbarState.map(({ mode }) => {
-        return mode === ActionMode.None ? INACTIVE : ACTIVE;
-      });
+      },
+    );
+    this.actionModeState$ = toolbarState.map(({ mode }) => {
+      return mode === ActionMode.None ? INACTIVE : ACTIVE;
+    });
   }
 
   onSendFeedbackClick(event: MouseEvent) {
@@ -163,8 +149,8 @@ export class ToolbarComponent implements OnInit {
 
 class ToolbarData {
   private readonly subPaths: ReadonlyArray<number> = [];
-  private readonly segments: ReadonlyArray<{ subIdx: number, cmdIdx: number }> = [];
-  private readonly points: ReadonlyArray<{ subIdx: number, cmdIdx: number }> = [];
+  private readonly segments: ReadonlyArray<{ subIdx: number; cmdIdx: number }> = [];
+  private readonly points: ReadonlyArray<{ subIdx: number; cmdIdx: number }> = [];
   private readonly numSplitSubPaths: number;
   private readonly numSplitPoints: number;
   private readonly showSetFirstPosition: boolean;
@@ -181,7 +167,7 @@ class ToolbarData {
     startMorphableLayer: MorphableLayer,
     endMorphableLayer: MorphableLayer,
     public readonly selections: ReadonlyArray<Selection>,
-    unpair: { source: ActionSource; subIdx: number; },
+    unpair: { source: ActionSource; subIdx: number },
     private readonly block: PathAnimationBlock | undefined,
   ) {
     // Precondition: assume all selections are for the same canvas type
@@ -198,29 +184,24 @@ class ToolbarData {
     const activePath = morphableLayer.pathData;
     this.isFilled = morphableLayer.isFilled();
     this.isStroked = morphableLayer.isStroked();
-    this.subPaths =
-      selections
-        .filter(s => s.type === SelectionType.SubPath)
-        .map(s => s.subIdx);
-    this.segments =
-      selections
-        .filter(s => {
-          const { subIdx, cmdIdx } = s;
-          return s.type === SelectionType.Segment
-            && morphableLayer.isFilled()
-            && activePath.getCommand(subIdx, cmdIdx).isSplitSegment();
-        })
-        .map(s => {
-          const { subIdx, cmdIdx } = s;
-          return { subIdx, cmdIdx };
-        });
-    this.points =
-      selections
-        .filter(s => s.type === SelectionType.Point)
-        .map(s => {
-          const { subIdx, cmdIdx } = s;
-          return { subIdx, cmdIdx };
-        });
+    this.subPaths = selections.filter(s => s.type === SelectionType.SubPath).map(s => s.subIdx);
+    this.segments = selections
+      .filter(s => {
+        const { subIdx, cmdIdx } = s;
+        return (
+          s.type === SelectionType.Segment &&
+          morphableLayer.isFilled() &&
+          activePath.getCommand(subIdx, cmdIdx).isSplitSegment()
+        );
+      })
+      .map(s => {
+        const { subIdx, cmdIdx } = s;
+        return { subIdx, cmdIdx };
+      });
+    this.points = selections.filter(s => s.type === SelectionType.Point).map(s => {
+      const { subIdx, cmdIdx } = s;
+      return { subIdx, cmdIdx };
+    });
 
     this.numSplitSubPaths = _.sumBy(this.subPaths, subIdx => {
       return activePath.getSubPath(subIdx).isUnsplittable() ? 1 : 0;
@@ -229,25 +210,26 @@ class ToolbarData {
       const { subIdx, cmdIdx } = s;
       return activePath.getCommand(subIdx, cmdIdx).isSplitPoint() ? 1 : 0;
     });
-    this.showSetFirstPosition = this.points.length === 1
-      && this.points[0].cmdIdx
-      && activePath.getSubPath(this.points[0].subIdx).isClosed();
-    this.showShiftSubPath = this.subPaths.length > 0
-      && activePath.getSubPath(this.subPaths[0]).isClosed();
+    this.showSetFirstPosition =
+      this.points.length === 1 &&
+      this.points[0].cmdIdx &&
+      activePath.getSubPath(this.points[0].subIdx).isClosed();
+    this.showShiftSubPath =
+      this.subPaths.length > 0 && activePath.getSubPath(this.subPaths[0]).isClosed();
     this.showSplitInHalf = this.points.length === 1 && !!this.points[0].cmdIdx;
     if (this.mode === ActionMode.PairSubPaths) {
       if (unpair) {
         this.unpairedSubPathSource = unpair.source;
       }
     }
-    if (startMorphableLayer.pathData.getSubPaths().length === 1
-      && endMorphableLayer.pathData.getSubPaths().length === 1) {
+    if (
+      startMorphableLayer.pathData.getSubPaths().length === 1 &&
+      endMorphableLayer.pathData.getSubPaths().length === 1
+    ) {
       this.showPairSubPaths = false;
     } else {
       this.showPairSubPaths =
-        this.getNumSubPaths() === 1
-        || this.getNumSegments() > 0
-        || (!this.isSelectionMode());
+        this.getNumSubPaths() === 1 || this.getNumSegments() > 0 || !this.isSelectionMode();
     }
   }
 
@@ -311,8 +293,9 @@ class ToolbarData {
       }
       return 'Select a subpath';
     } else if (this.mode === ActionMode.Selection) {
-      const { areCompatible, errorPath, numPointsMissing } =
-        ActionModeUtil.checkPathsCompatible(this.block);
+      const { areCompatible, errorPath, numPointsMissing } = ActionModeUtil.checkPathsCompatible(
+        this.block,
+      );
       if (!areCompatible) {
         const createSubtitleFn = (direction: string) => {
           if (numPointsMissing === 1) {

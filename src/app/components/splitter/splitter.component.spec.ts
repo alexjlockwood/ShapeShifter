@@ -1,8 +1,4 @@
-import {
-  ComponentFixture,
-  TestBed,
-  async,
-} from '@angular/core/testing';
+import { ComponentFixture, TestBed, async } from '@angular/core/testing';
 
 import { SplitterComponent } from './splitter.component';
 
@@ -10,13 +6,13 @@ describe('SplitterComponent', () => {
   let component: SplitterComponent;
   let fixture: ComponentFixture<SplitterComponent>;
 
-  beforeEach(async(() => {
-    TestBed
-      .configureTestingModule({
+  beforeEach(
+    async(() => {
+      TestBed.configureTestingModule({
         declarations: [SplitterComponent],
-      })
-      .compileComponents();
-  }));
+      }).compileComponents();
+    }),
+  );
 
   beforeEach(() => {
     fixture = TestBed.createComponent(SplitterComponent);

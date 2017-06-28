@@ -11,10 +11,7 @@ import {
   ViewChild,
 } from '@angular/core';
 import { DropFilesAction } from 'app/components/dialogs';
-import {
-  ActionMode,
-  ActionSource,
-} from 'app/scripts/model/actionmode';
+import { ActionMode, ActionSource } from 'app/scripts/model/actionmode';
 import {
   ActionModeService,
   ClipboardService,
@@ -23,18 +20,9 @@ import {
   FileImportService,
   ShortcutService,
 } from 'app/services';
-import {
-  Duration,
-  SnackBarService,
-} from 'app/services/snackbar.service';
-import {
-  State,
-  Store,
-} from 'app/store';
-import {
-  getActionMode,
-  getActionModeHover,
-} from 'app/store/actionmode/selectors';
+import { Duration, SnackBarService } from 'app/services/snackbar.service';
+import { State, Store } from 'app/store';
+import { getActionMode, getActionModeHover } from 'app/store/actionmode/selectors';
 import { ClearSelections } from 'app/store/common/actions';
 import { isWorkspaceDirty } from 'app/store/common/selectors';
 import { ResetWorkspace } from 'app/store/reset/actions';
@@ -87,7 +75,7 @@ export class RootComponent implements OnInit, AfterViewInit, OnDestroy {
     private readonly demoService: DemoService,
     private readonly dialogService: DialogService,
     private readonly clipboardService: ClipboardService,
-  ) { }
+  ) {}
 
   ngOnInit() {
     this.shortcutService.init();
@@ -95,36 +83,37 @@ export class RootComponent implements OnInit, AfterViewInit, OnDestroy {
 
     $(window).on('beforeunload', event => {
       let isDirty: boolean;
-      this.store.select(isWorkspaceDirty).first().subscribe(dirty => isDirty = dirty);
+      this.store.select(isWorkspaceDirty).first().subscribe(dirty => (isDirty = dirty));
       if (isDirty && !IS_DEV_BUILD) {
-        return 'You\'ve made changes but haven\'t saved. ' +
-          'Are you sure you want to navigate away?';
+        return (
+          "You've made changes but haven't saved. " + 'Are you sure you want to navigate away?'
+        );
       }
       return undefined;
     });
 
-    const displaySize$ = this.displayBoundsSubject.asObservable()
-      .distinctUntilChanged((s1, s2) => {
-        return s1.w === s2.w && s1.h === s2.h;
-      });
+    const displaySize$ = this.displayBoundsSubject.asObservable().distinctUntilChanged((s1, s2) => {
+      return s1.w === s2.w && s1.h === s2.h;
+    });
     this.isActionMode$ = this.store.select(getActionMode).map(mode => mode !== ActionMode.None);
-    this.canvasBounds$ = Observable.combineLatest(displaySize$, this.isActionMode$)
-      .map(([{ w, h }, shouldShowThreeCanvases]) => {
-        return { w: w / (shouldShowThreeCanvases ? 3 : 1), h };
-      });
+    this.canvasBounds$ = Observable.combineLatest(
+      displaySize$,
+      this.isActionMode$,
+    ).map(([{ w, h }, shouldShowThreeCanvases]) => {
+      return { w: w / (shouldShowThreeCanvases ? 3 : 1), h };
+    });
 
-    this.cursorType$ =
-      Observable.combineLatest(
-        this.store.select(getActionMode),
-        this.store.select(getActionModeHover),
-      ).map(([mode, hover]) => {
-        if (mode === ActionMode.SplitCommands || mode === ActionMode.SplitSubPaths) {
-          return CursorType.Pen;
-        } else if (hover) {
-          return CursorType.Pointer;
-        }
-        return CursorType.Default;
-      });
+    this.cursorType$ = Observable.combineLatest(
+      this.store.select(getActionMode),
+      this.store.select(getActionModeHover),
+    ).map(([mode, hover]) => {
+      if (mode === ActionMode.SplitCommands || mode === ActionMode.SplitSubPaths) {
+        return CursorType.Pen;
+      } else if (hover) {
+        return CursorType.Pointer;
+      }
+      return CursorType.Default;
+    });
   }
 
   ngAfterViewInit() {
@@ -146,7 +135,8 @@ export class RootComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     if (IS_DEV_BUILD && SHOULD_AUTO_LOAD_DEMO) {
-      this.demoService.getDemo('morphinganimals')
+      this.demoService
+        .getDemo('morphinganimals')
         .then(({ vectorLayer, animation, hiddenLayerIds }) => {
           this.store.dispatch(new ResetWorkspace(vectorLayer, animation, hiddenLayerIds));
         });
@@ -181,15 +171,13 @@ export class RootComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    this.dialogService
-      .dropFiles()
-      .subscribe(action => {
-        if (action === DropFilesAction.AddToWorkspace) {
-          this.fileImportService.import(fileList);
-        } else if (action === DropFilesAction.ResetWorkspace) {
-          this.fileImportService.import(fileList, true /* resetWorkspace */);
-        }
-      });
+    this.dialogService.dropFiles().subscribe(action => {
+      if (action === DropFilesAction.AddToWorkspace) {
+        this.fileImportService.import(fileList);
+      } else if (action === DropFilesAction.ResetWorkspace) {
+        this.fileImportService.import(fileList, true /* resetWorkspace */);
+      }
+    });
   }
 
   onClick(event: MouseEvent) {

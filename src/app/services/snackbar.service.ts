@@ -8,8 +8,7 @@ export enum Duration {
 
 @Injectable()
 export class SnackBarService {
-
-  constructor(private readonly snackBar: MdSnackBar) { }
+  constructor(private readonly snackBar: MdSnackBar) {}
 
   show(message: string, action = '', duration = Duration.Short) {
     this.snackBar.open(message, action.toUpperCase(), { duration });

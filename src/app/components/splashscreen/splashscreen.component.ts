@@ -1,7 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 
 @Component({
   selector: 'app-splashscreen',
@@ -9,4 +6,4 @@ import {
   styleUrls: ['./splashscreen.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SplashScreenComponent { }
+export class SplashScreenComponent {}

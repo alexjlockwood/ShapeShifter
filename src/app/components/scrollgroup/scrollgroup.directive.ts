@@ -1,10 +1,4 @@
-import {
-  Directive,
-  ElementRef,
-  HostListener,
-  Input,
-  OnDestroy,
-} from '@angular/core';
+import { Directive, ElementRef, HostListener, Input, OnDestroy } from '@angular/core';
 import * as $ from 'jquery';
 
 const GROUPS = new Map<string, JQuery[]>();
@@ -24,8 +18,7 @@ export class ScrollGroupDirective implements OnDestroy {
   }
 
   ngOnDestroy() {
-    GROUPS.get(this.scrollGroup)
-      .splice(GROUPS.get(this.scrollGroup).indexOf(this.element), 1);
+    GROUPS.get(this.scrollGroup).splice(GROUPS.get(this.scrollGroup).indexOf(this.element), 1);
   }
 
   @HostListener('scroll', ['$event'])

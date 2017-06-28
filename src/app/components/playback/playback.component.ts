@@ -1,16 +1,6 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  OnInit,
-} from '@angular/core';
-import {
-  AnimatorService,
-  PlaybackService,
-} from 'app/services';
-import {
-  State,
-  Store,
-} from 'app/store';
+import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { AnimatorService, PlaybackService } from 'app/services';
+import { State, Store } from 'app/store';
 import { getPlaybackState } from 'app/store/playback/selectors';
 import { Observable } from 'rxjs/Observable';
 
@@ -21,14 +11,13 @@ import { Observable } from 'rxjs/Observable';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PlaybackComponent implements OnInit {
-
   playbackModel$: Observable<PlaybackModel>;
 
   constructor(
     private readonly store: Store<State>,
     private readonly playbackService: PlaybackService,
     private readonly animatorService: AnimatorService,
-  ) { }
+  ) {}
 
   ngOnInit() {
     this.playbackModel$ = this.store.select(getPlaybackState);

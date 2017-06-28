@@ -16,20 +16,17 @@ interface Demo {
 
 @Injectable()
 export class DemoService {
-
-  constructor(private readonly http: Http) { }
+  constructor(private readonly http: Http) {}
 
   /**
    * Fetches a demo via HTTP.
    * @param demoName the id of the demo (i.e. 'searchtoclose' or 'visibilitystrike')
    */
   getDemo(demoId: string): Promise<Demo> {
-    return this.http.get(`demos/${demoId}.shapeshifter`)
-      .toPromise()
-      .then(response => {
-        const jsonObj = response.json();
-        const { vectorLayer, animation, hiddenLayerIds } = FileExportService.fromJSON(jsonObj);
-        return ModelUtil.regenerateModelIds(vectorLayer, animation, hiddenLayerIds) as Demo;
-      });
+    return this.http.get(`demos/${demoId}.shapeshifter`).toPromise().then(response => {
+      const jsonObj = response.json();
+      const { vectorLayer, animation, hiddenLayerIds } = FileExportService.fromJSON(jsonObj);
+      return ModelUtil.regenerateModelIds(vectorLayer, animation, hiddenLayerIds) as Demo;
+    });
   }
 }

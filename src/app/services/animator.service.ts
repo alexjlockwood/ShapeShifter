@@ -1,21 +1,11 @@
-import {
-  Injectable,
-  NgZone,
-} from '@angular/core';
+import { Injectable, NgZone } from '@angular/core';
 import { AnimationRenderer } from 'app/scripts/animator';
 import { VectorLayer } from 'app/scripts/model/layers';
 import { Animation } from 'app/scripts/model/timeline';
 import { PlaybackService } from 'app/services/playback.service';
-import {
-  State,
-  Store,
-} from 'app/store';
+import { State, Store } from 'app/store';
 import { getAnimatorState } from 'app/store/common/selectors';
-import {
-  getIsPlaying,
-  getIsRepeating,
-  getIsSlowMotion,
-} from 'app/store/playback/selectors';
+import { getIsPlaying, getIsRepeating, getIsSlowMotion } from 'app/store/playback/selectors';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 
 const DEFAULT_ANIMATOR_EVENT = {
@@ -47,14 +37,13 @@ export class AnimatorService {
     };
     this.animator = new Animator(this.animatorCallback);
     this.store.select(getIsSlowMotion).subscribe(s => this.animator.setIsSlowMotion(s));
-    this.store.select(getIsPlaying).subscribe(p => p ? this.play() : this.pause());
+    this.store.select(getIsPlaying).subscribe(p => (p ? this.play() : this.pause()));
     this.store.select(getIsRepeating).subscribe(r => this.animator.setIsRepeating(r));
-    this.store.select(getAnimatorState)
-      .subscribe(({ vectorLayer, animation }) => {
-        this.activeAnimation = animation;
-        this.animationRenderer = new AnimationRenderer(vectorLayer, animation);
-        this.animator.rewind();
-      });
+    this.store.select(getAnimatorState).subscribe(({ vectorLayer, animation }) => {
+      this.activeAnimation = animation;
+      this.animationRenderer = new AnimationRenderer(vectorLayer, animation);
+      this.animator.rewind();
+    });
   }
 
   getCurrentTime() {
@@ -126,7 +115,7 @@ class Animator {
   private isRepeating = false;
 
   // TODO: add the ability to pause/resume animations
-  constructor(private readonly callback: Callback) { }
+  constructor(private readonly callback: Callback) {}
 
   setIsRepeating(isRepeating: boolean) {
     this.isRepeating = isRepeating;
@@ -169,11 +158,13 @@ class Animator {
         startTimestamp = timestamp;
       }
       const progress = timestamp - startTimestamp;
-      if (progress < (duration * playbackSpeed)) {
+      if (progress < duration * playbackSpeed) {
         this.animationFrameId = requestAnimationFrame(onAnimationFrameFn);
       } else if (this.isRepeating) {
-        this.timeoutId =
-          window.setTimeout(() => this.startAnimation(duration, onUpdateFn), REPEAT_DELAY);
+        this.timeoutId = window.setTimeout(
+          () => this.startAnimation(duration, onUpdateFn),
+          REPEAT_DELAY,
+        );
       } else {
         this.pause();
       }

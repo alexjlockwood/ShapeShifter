@@ -1,28 +1,16 @@
 import 'rxjs/add/operator/first';
 
 import { Injectable } from '@angular/core';
-import {
-  State,
-  Store,
-} from 'app/store';
-import {
-  SetIsPlaying,
-  SetIsRepeating,
-  SetIsSlowMotion,
-} from 'app/store/playback/actions';
-import {
-  getIsPlaying,
-  getIsRepeating,
-  getIsSlowMotion,
-} from 'app/store/playback/selectors';
+import { State, Store } from 'app/store';
+import { SetIsPlaying, SetIsRepeating, SetIsSlowMotion } from 'app/store/playback/actions';
+import { getIsPlaying, getIsRepeating, getIsSlowMotion } from 'app/store/playback/selectors';
 
 /**
  * A simple service that provides an interface for making playback changes.
  */
 @Injectable()
 export class PlaybackService {
-
-  constructor(private readonly store: Store<State>) { }
+  constructor(private readonly store: Store<State>) {}
 
   setIsPlaying(isPlaying: boolean) {
     this.store.select(getIsPlaying).first().subscribe(curr => {

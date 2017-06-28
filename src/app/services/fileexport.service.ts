@@ -1,21 +1,11 @@
 import 'rxjs/add/operator/first';
 
 import { Injectable } from '@angular/core';
-import {
-  AvdSerializer,
-  SpriteSerializer,
-  SvgSerializer,
-} from 'app/scripts/export';
+import { AvdSerializer, SpriteSerializer, SvgSerializer } from 'app/scripts/export';
 import { LayerUtil, VectorLayer } from 'app/scripts/model/layers';
 import { Animation } from 'app/scripts/model/timeline';
-import {
-  State,
-  Store,
-} from 'app/store';
-import {
-  getHiddenLayerIds,
-  getVectorLayer,
-} from 'app/store/layers/selectors';
+import { State, Store } from 'app/store';
+import { getHiddenLayerIds, getVectorLayer } from 'app/store/layers/selectors';
 import { getAnimation } from 'app/store/timeline/selectors';
 import * as $ from 'jquery';
 import * as JSZip from 'jszip';
@@ -31,7 +21,6 @@ const EXPORTED_FPS = [30, 60];
  */
 @Injectable()
 export class FileExportService {
-
   static fromJSON(jsonObj: any) {
     const { layers, timeline } = jsonObj;
     const vectorLayer = new VectorLayer(layers.vectorLayer);
@@ -40,21 +29,25 @@ export class FileExportService {
     return { vectorLayer, hiddenLayerIds, animation };
   }
 
-  constructor(private readonly store: Store<State>) { }
+  constructor(private readonly store: Store<State>) {}
 
   exportJSON() {
     const vl = this.getVectorLayer();
     const anim = this.getAnimation();
-    const jsonStr = JSON.stringify({
-      version: IMPORT_EXPORT_VERSION,
-      layers: {
-        vectorLayer: vl.toJSON(),
-        hiddenLayerIds: Array.from(this.getHiddenLayerIds()),
+    const jsonStr = JSON.stringify(
+      {
+        version: IMPORT_EXPORT_VERSION,
+        layers: {
+          vectorLayer: vl.toJSON(),
+          hiddenLayerIds: Array.from(this.getHiddenLayerIds()),
+        },
+        timeline: {
+          animation: anim.toJSON(),
+        },
       },
-      timeline: {
-        animation: anim.toJSON(),
-      },
-    }, undefined, 2);
+      undefined,
+      2,
+    );
     downloadFile(jsonStr, `${vl.name}.shapeshifter`);
   }
 
@@ -107,8 +100,7 @@ export class FileExportService {
     EXPORTED_FPS.forEach(fps => {
       const numSteps = Math.ceil(anim.duration / 1000 * fps);
       const svgSprite = SpriteSerializer.createSvgSprite(vl, anim, numSteps);
-      const cssSprite =
-        SpriteSerializer.createCss(vl.width, vl.height, anim.duration, numSteps);
+      const cssSprite = SpriteSerializer.createCss(vl.width, vl.height, anim.duration, numSteps);
       const fileName = `sprite_${fps}fps`;
       const htmlSprite = SpriteSerializer.createHtml(`${fileName}.svg`, `${fileName}.css`);
       const spriteFolder = zip.folder(`${fps}fps`);
@@ -127,19 +119,19 @@ export class FileExportService {
 
   private getVectorLayer() {
     let vectorLayer: VectorLayer;
-    this.store.select(getVectorLayer).first().subscribe(vl => vectorLayer = vl);
+    this.store.select(getVectorLayer).first().subscribe(vl => (vectorLayer = vl));
     return vectorLayer;
   }
 
   private getAnimation() {
     let animation: Animation;
-    this.store.select(getAnimation).first().subscribe(anim => animation = anim);
+    this.store.select(getAnimation).first().subscribe(anim => (animation = anim));
     return animation;
   }
 
   private getHiddenLayerIds() {
     let hiddenLayerIds: Set<string>;
-    this.store.select(getHiddenLayerIds).first().subscribe(ids => hiddenLayerIds = ids);
+    this.store.select(getHiddenLayerIds).first().subscribe(ids => (hiddenLayerIds = ids));
     return hiddenLayerIds;
   }
 
@@ -156,7 +148,6 @@ export class FileExportService {
     anim.blocks = anim.blocks.filter(b => !hiddenLayerIds.has(b.layerId));
     return anim;
   }
-
 }
 
 function downloadFile(content: string | Blob, fileName: string) {

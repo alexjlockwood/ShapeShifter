@@ -1,9 +1,4 @@
-import {
-  ComponentFixture,
-  TestBed,
-  async,
-  inject,
-} from '@angular/core/testing';
+import { ComponentFixture, TestBed, async, inject } from '@angular/core/testing';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { HttpModule } from '@angular/http';
 import {
@@ -36,9 +31,9 @@ describe('ToolbarComponent', () => {
   let component: ToolbarComponent;
   let fixture: ComponentFixture<ToolbarComponent>;
 
-  beforeEach(async(() => {
-    TestBed
-      .configureTestingModule({
+  beforeEach(
+    async(() => {
+      TestBed.configureTestingModule({
         declarations: [ToolbarComponent],
         imports: [
           HttpModule,
@@ -49,33 +44,32 @@ describe('ToolbarComponent', () => {
           MdTooltipModule,
           NoopAnimationsModule,
         ],
-        providers: [
-          { provide: Store, useValue: new MockStore() },
-          ActionModeService,
-        ],
-      })
-      .compileComponents();
-    loadSvgIcons([
-      { name: 'autofix', path: 'assets/icons/autofix.svg' },
-      { name: 'contribute', path: 'assets/icons/contribute.svg' },
-      { name: 'reverse', path: 'assets/icons/reverse.svg' },
-      { name: 'shapeshifter', path: 'assets/shapeshifter.svg' },
-    ]);
-  }));
+        providers: [{ provide: Store, useValue: new MockStore() }, ActionModeService],
+      }).compileComponents();
+      loadSvgIcons([
+        { name: 'autofix', path: 'assets/icons/autofix.svg' },
+        { name: 'contribute', path: 'assets/icons/contribute.svg' },
+        { name: 'reverse', path: 'assets/icons/reverse.svg' },
+        { name: 'shapeshifter', path: 'assets/shapeshifter.svg' },
+      ]);
+    }),
+  );
 
-  beforeEach(inject([Store], (store: MockStore) => {
-    fixture = TestBed.createComponent(ToolbarComponent);
-    component = fixture.componentInstance;
-    component.ngOnInit();
-    fixture.detectChanges();
-  }));
+  beforeEach(
+    inject([Store], (store: MockStore) => {
+      fixture = TestBed.createComponent(ToolbarComponent);
+      component = fixture.componentInstance;
+      component.ngOnInit();
+      fixture.detectChanges();
+    }),
+  );
 
   it('should be created', () => {
     expect(component).toBeTruthy();
   });
 });
 
-function loadSvgIcons(svgIcons: Array<{ name: string, path: string }>) {
+function loadSvgIcons(svgIcons: Array<{ name: string; path: string }>) {
   const mdIconRegistry = TestBed.get(MdIconRegistry);
   const sanitizer = TestBed.get(DomSanitizer);
   for (const { name, path } of svgIcons) {

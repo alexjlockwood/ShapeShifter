@@ -1,12 +1,7 @@
 import 'hammerjs';
 
 import { NgModule } from '@angular/core';
-import {
-  ComponentFixture,
-  TestBed,
-  async,
-  inject,
-} from '@angular/core/testing';
+import { ComponentFixture, TestBed, async, inject } from '@angular/core/testing';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { FormsModule } from '@angular/forms';
 import { HttpModule } from '@angular/http';
@@ -68,9 +63,9 @@ describe('RootComponent', () => {
   let component: RootComponent;
   let fixture: ComponentFixture<RootComponent>;
 
-  beforeEach(async(() => {
-    TestBed
-      .configureTestingModule({
+  beforeEach(
+    async(() => {
+      TestBed.configureTestingModule({
         declarations: [
           CanvasComponent,
           CanvasContainerDirective,
@@ -123,30 +118,32 @@ describe('RootComponent', () => {
           ShortcutService,
           SnackBarService,
         ],
-      })
-      .compileComponents();
-    loadSvgIcons([
-      { name: 'addlayer', path: 'assets/icons/addlayer.svg' },
-      { name: 'animationblock', path: 'assets/icons/animationblock.svg' },
-      { name: 'contribute', path: 'assets/icons/contribute.svg' },
-      { name: 'shapeshifter', path: 'assets/shapeshifter.svg' },
-      { name: 'vectorlayer', path: 'assets/icons/vectorlayer.svg' },
-    ]);
-  }));
+      }).compileComponents();
+      loadSvgIcons([
+        { name: 'addlayer', path: 'assets/icons/addlayer.svg' },
+        { name: 'animationblock', path: 'assets/icons/animationblock.svg' },
+        { name: 'contribute', path: 'assets/icons/contribute.svg' },
+        { name: 'shapeshifter', path: 'assets/shapeshifter.svg' },
+        { name: 'vectorlayer', path: 'assets/icons/vectorlayer.svg' },
+      ]);
+    }),
+  );
 
-  beforeEach(inject([Store], (store: MockStore) => {
-    fixture = TestBed.createComponent(RootComponent);
-    component = fixture.componentInstance;
-    component.ngOnInit();
-    fixture.detectChanges();
-  }));
+  beforeEach(
+    inject([Store], (store: MockStore) => {
+      fixture = TestBed.createComponent(RootComponent);
+      component = fixture.componentInstance;
+      component.ngOnInit();
+      fixture.detectChanges();
+    }),
+  );
 
   it('should be created', () => {
     expect(component).toBeTruthy();
   });
 });
 
-function loadSvgIcons(svgIcons: Array<{ name: string, path: string }>) {
+function loadSvgIcons(svgIcons: Array<{ name: string; path: string }>) {
   const mdIconRegistry = TestBed.get(MdIconRegistry);
   const sanitizer = TestBed.get(DomSanitizer);
   for (const { name, path } of svgIcons) {

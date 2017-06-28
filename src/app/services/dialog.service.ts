@@ -1,8 +1,5 @@
 import { Injectable } from '@angular/core';
-import {
-  MdDialog,
-  MdDialogConfig,
-} from '@angular/material';
+import { MdDialog, MdDialogConfig } from '@angular/material';
 import {
   ConfirmDialogComponent,
   DemoDialogComponent,
@@ -14,8 +11,7 @@ import { Observable } from 'rxjs/Observable';
 
 @Injectable()
 export class DialogService {
-
-  constructor(private readonly dialog: MdDialog) { }
+  constructor(private readonly dialog: MdDialog) {}
 
   confirm(title: string, message: string): Observable<boolean> {
     const config = new MdDialogConfig();

@@ -1,16 +1,6 @@
-import {
-  ComponentFixture,
-  TestBed,
-  async,
-  fakeAsync,
-  inject,
-} from '@angular/core/testing';
+import { ComponentFixture, TestBed, async, fakeAsync, inject } from '@angular/core/testing';
 import { FlexLayoutModule } from '@angular/flex-layout';
-import {
-  MdButtonModule,
-  MdIconModule,
-  MdTooltipModule,
-} from '@angular/material';
+import { MdButtonModule, MdIconModule, MdTooltipModule } from '@angular/material';
 import { By } from '@angular/platform-browser';
 import { AnimatorService } from 'app/services/animator.service';
 import { PlaybackService } from 'app/services/playback.service';
@@ -25,30 +15,27 @@ describe('PlaybackComponent', () => {
   let fixture: ComponentFixture<PlaybackComponent>;
   let store: MockStore;
 
-  beforeEach(async(() => {
-    TestBed
-      .configureTestingModule({
+  beforeEach(
+    async(() => {
+      TestBed.configureTestingModule({
         declarations: [PlaybackComponent],
-        imports: [
-          FlexLayoutModule,
-          MdButtonModule,
-          MdIconModule,
-          MdTooltipModule,
-        ],
+        imports: [FlexLayoutModule, MdButtonModule, MdIconModule, MdTooltipModule],
         providers: [
           { provide: Store, useValue: new MockStore() },
           AnimatorService,
           PlaybackService,
         ],
-      })
-      .compileComponents();
-  }));
+      }).compileComponents();
+    }),
+  );
 
-  beforeEach(inject([Store], (s: MockStore) => {
-    fixture = TestBed.createComponent(PlaybackComponent);
-    component = fixture.componentInstance;
-    store = s;
-  }));
+  beforeEach(
+    inject([Store], (s: MockStore) => {
+      fixture = TestBed.createComponent(PlaybackComponent);
+      component = fixture.componentInstance;
+      store = s;
+    }),
+  );
 
   function callNgOnInit(playback?: PlaybackState) {
     if (playback) {
@@ -60,38 +47,41 @@ describe('PlaybackComponent', () => {
 
   it('No buttons activated', () => {
     callNgOnInit();
-    const buttons =
-      fixture.debugElement.queryAll(By.css('md-icon.activated'))
-        .map(d => d.nativeElement);
+    const buttons = fixture.debugElement
+      .queryAll(By.css('md-icon.activated'))
+      .map(d => d.nativeElement);
     expect(buttons.length).toBe(0);
   });
 
   it('All buttons activated', () => {
     callNgOnInit({ isSlowMotion: true, isPlaying: false, isRepeating: true });
-    const buttons =
-      fixture.debugElement.queryAll(By.css('md-icon.activated'))
-        .map(d => d.nativeElement);
+    const buttons = fixture.debugElement
+      .queryAll(By.css('md-icon.activated'))
+      .map(d => d.nativeElement);
     expect(buttons.length).toBe(2);
   });
 
-  it('Button click trigger store dispatch', fakeAsync(() => {
-    callNgOnInit({ isSlowMotion: true, isPlaying: false, isRepeating: true });
+  it(
+    'Button click trigger store dispatch',
+    fakeAsync(() => {
+      callNgOnInit({ isSlowMotion: true, isPlaying: false, isRepeating: true });
 
-    const slowMotionClickEvent = { stopPropagation: () => { } };
-    const repeatingClickEvent = { stopPropagation: () => { } };
+      const slowMotionClickEvent = { stopPropagation: () => {} };
+      const repeatingClickEvent = { stopPropagation: () => {} };
 
-    spyOn(store, 'dispatch');
-    spyOn(slowMotionClickEvent, 'stopPropagation');
-    spyOn(repeatingClickEvent, 'stopPropagation');
+      spyOn(store, 'dispatch');
+      spyOn(slowMotionClickEvent, 'stopPropagation');
+      spyOn(repeatingClickEvent, 'stopPropagation');
 
-    const slowMotionButton = fixture.debugElement.query(By.css('button.slow-motion-button'));
-    slowMotionButton.triggerEventHandler('click', slowMotionClickEvent);
-    expect(store.dispatch).toHaveBeenCalled();
-    expect(slowMotionClickEvent.stopPropagation).toHaveBeenCalled();
+      const slowMotionButton = fixture.debugElement.query(By.css('button.slow-motion-button'));
+      slowMotionButton.triggerEventHandler('click', slowMotionClickEvent);
+      expect(store.dispatch).toHaveBeenCalled();
+      expect(slowMotionClickEvent.stopPropagation).toHaveBeenCalled();
 
-    const repeatingButton = fixture.debugElement.query(By.css('button.repeating-button'));
-    repeatingButton.triggerEventHandler('click', repeatingClickEvent);
-    expect(store.dispatch).toHaveBeenCalled();
-    expect(repeatingClickEvent.stopPropagation).toHaveBeenCalled();
-  }));
+      const repeatingButton = fixture.debugElement.query(By.css('button.repeating-button'));
+      repeatingButton.triggerEventHandler('click', repeatingClickEvent);
+      expect(store.dispatch).toHaveBeenCalled();
+      expect(repeatingClickEvent.stopPropagation).toHaveBeenCalled();
+    }),
+  );
 });

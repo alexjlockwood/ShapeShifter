@@ -118,32 +118,31 @@ import { reducer } from './store';
     ShortcutService,
     SnackBarService,
   ],
-  entryComponents: [
-    ConfirmDialogComponent,
-    DemoDialogComponent,
-    DropFilesDialogComponent,
-  ],
+  entryComponents: [ConfirmDialogComponent, DemoDialogComponent, DropFilesDialogComponent],
   bootstrap: [RootComponent],
 })
 export class AppModule {
-
-  constructor(mdIconRegistry: MdIconRegistry, sanitizer: DomSanitizer) {
+  constructor(mdIconRegistry: MdIconRegistry, private readonly sanitizer: DomSanitizer) {
     mdIconRegistry
       // Logo.
-      .addSvgIcon('shapeshifter', sanitizer.bypassSecurityTrustResourceUrl('assets/shapeshifter.svg'))
+      .addSvgIcon('shapeshifter', this.trustUrl('assets/shapeshifter.svg'))
       // Icons.
-      .addSvgIcon('addlayer', sanitizer.bypassSecurityTrustResourceUrl('assets/icons/addlayer.svg'))
-      .addSvgIcon('autofix', sanitizer.bypassSecurityTrustResourceUrl('assets/icons/autofix.svg'))
-      .addSvgIcon('contribute', sanitizer.bypassSecurityTrustResourceUrl('assets/icons/contribute.svg'))
-      .addSvgIcon('reverse', sanitizer.bypassSecurityTrustResourceUrl('assets/icons/reverse.svg'))
-      .addSvgIcon('animation', sanitizer.bypassSecurityTrustResourceUrl('assets/icons/animation.svg'))
-      .addSvgIcon('collection', sanitizer.bypassSecurityTrustResourceUrl('assets/icons/collection.svg'))
-      .addSvgIcon('animationblock', sanitizer.bypassSecurityTrustResourceUrl('assets/icons/animationblock.svg'))
-      .addSvgIcon('clippathlayer', sanitizer.bypassSecurityTrustResourceUrl('assets/icons/clippathlayer.svg'))
-      .addSvgIcon('grouplayer', sanitizer.bypassSecurityTrustResourceUrl('assets/icons/grouplayer.svg'))
-      .addSvgIcon('pathlayer', sanitizer.bypassSecurityTrustResourceUrl('assets/icons/pathlayer.svg'))
-      .addSvgIcon('vectorlayer', sanitizer.bypassSecurityTrustResourceUrl('assets/icons/vectorlayer.svg'))
+      .addSvgIcon('addlayer', this.trustUrl('assets/icons/addlayer.svg'))
+      .addSvgIcon('autofix', this.trustUrl('assets/icons/autofix.svg'))
+      .addSvgIcon('contribute', this.trustUrl('assets/icons/contribute.svg'))
+      .addSvgIcon('reverse', this.trustUrl('assets/icons/reverse.svg'))
+      .addSvgIcon('animation', this.trustUrl('assets/icons/animation.svg'))
+      .addSvgIcon('collection', this.trustUrl('assets/icons/collection.svg'))
+      .addSvgIcon('animationblock', this.trustUrl('assets/icons/animationblock.svg'))
+      .addSvgIcon('clippathlayer', this.trustUrl('assets/icons/clippathlayer.svg'))
+      .addSvgIcon('grouplayer', this.trustUrl('assets/icons/grouplayer.svg'))
+      .addSvgIcon('pathlayer', this.trustUrl('assets/icons/pathlayer.svg'))
+      .addSvgIcon('vectorlayer', this.trustUrl('assets/icons/vectorlayer.svg'))
       // Cursors.
-      .addSvgIcon('selectioncursor', sanitizer.bypassSecurityTrustResourceUrl('assets/cursors/selectioncursor.svg'));
+      .addSvgIcon('selectioncursor', this.trustUrl('assets/cursors/selectioncursor.svg'));
+  }
+
+  private trustUrl(url: string) {
+    return this.sanitizer.bypassSecurityTrustResourceUrl(url);
   }
 }
