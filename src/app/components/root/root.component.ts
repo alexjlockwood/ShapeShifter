@@ -85,9 +85,7 @@ export class RootComponent implements OnInit, AfterViewInit, OnDestroy {
       let isDirty: boolean;
       this.store.select(isWorkspaceDirty).first().subscribe(dirty => (isDirty = dirty));
       if (isDirty && !IS_DEV_BUILD) {
-        return (
-          "You've made changes but haven't saved. " + 'Are you sure you want to navigate away?'
-        );
+        return `You've made changes but haven't saved. Are you sure you want to navigate away?`;
       }
       return undefined;
     });

@@ -221,7 +221,7 @@ export class LayerTimelineComponent extends DestroyableMixin()
     this.store.select(isWorkspaceDirty).first().subscribe(isDirty => {
       if (isDirty && !IS_DEV_BUILD) {
         this.dialogService
-          .confirm('Start over?', "You'll lose any unsaved changes.")
+          .confirm('Start over?', `You'll lose any unsaved changes.`)
           .filter(result => result)
           .subscribe(resetWorkspaceFn);
       } else {
