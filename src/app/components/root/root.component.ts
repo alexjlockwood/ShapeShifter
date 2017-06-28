@@ -17,6 +17,7 @@ import {
 } from 'app/scripts/model/actionmode';
 import {
   ActionModeService,
+  ClipboardService,
   DemoService,
   DialogService,
   FileImportService,
@@ -85,10 +86,12 @@ export class RootComponent implements OnInit, AfterViewInit, OnDestroy {
     private readonly shortcutService: ShortcutService,
     private readonly demoService: DemoService,
     private readonly dialogService: DialogService,
+    private readonly clipboardService: ClipboardService,
   ) { }
 
   ngOnInit() {
     this.shortcutService.init();
+    this.clipboardService.init();
 
     $(window).on('beforeunload', event => {
       let isDirty: boolean;
@@ -153,6 +156,7 @@ export class RootComponent implements OnInit, AfterViewInit, OnDestroy {
   ngOnDestroy() {
     ELEMENT_RESIZE_DETECTOR.removeAllListeners(this.$displayContainer.get(0));
     this.shortcutService.destroy();
+    this.clipboardService.destroy();
     $(window).unbind('beforeunload');
   }
 

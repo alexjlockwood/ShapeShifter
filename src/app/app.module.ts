@@ -31,10 +31,12 @@ import { SplitterComponent } from './components/splitter/splitter.component';
 import { ToolbarComponent } from './components/toolbar/toolbar.component';
 import { ActionModeService } from './services/actionmode.service';
 import { AnimatorService } from './services/animator.service';
+import { ClipboardService } from './services/clipboard.service';
 import { DemoService } from './services/demo.service';
 import { DialogService } from './services/dialog.service';
 import { FileExportService } from './services/fileexport.service';
 import { FileImportService } from './services/fileimport.service';
+import { LayerTimelineService } from './services/layertimeline.service';
 import { PlaybackService } from './services/playback.service';
 import { ShortcutService } from './services/shortcut.service';
 import { SnackBarService } from './services/snackbar.service';
@@ -106,10 +108,12 @@ import { reducer } from './store';
   providers: [
     ActionModeService,
     AnimatorService,
+    ClipboardService,
     DemoService,
     DialogService,
     FileExportService,
     FileImportService,
+    LayerTimelineService,
     PlaybackService,
     ShortcutService,
     SnackBarService,

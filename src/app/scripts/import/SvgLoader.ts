@@ -70,6 +70,7 @@ export function loadVectorLayerFromSvgString(
 
   // TODO: handle clipPaths that have children path elements with clip-path attributes
   // TODO: handle clipPaths with clipPathUnits="objectBoundingBox"
+  // TODO: confirm that clipPath transforms (and any referenced transforms) are handled correctly
   const clipPathMap =
     _.mapValues(buildPathInfosMap(documentElement), infos => {
       return infos.map(info => info.path);
