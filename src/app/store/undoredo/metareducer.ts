@@ -26,18 +26,21 @@ type StateReducer = ActionReducer<StateWithHistoryAndTimestamp>;
 type AppStateReducer = ActionReducer<AppState>;
 
 export function metaReducer(reducer: AppStateReducer): StateReducer {
-  const undoableReducer = undoable(reducer, {
-    limit: UNDO_HISTORY_SIZE,
-    filter: excludeAction(UNDO_EXCLUDED_ACTIONS),
-    groupBy: (action: Action, currState: AppState, prevState: StateWithHistoryAndTimestamp) => {
-      if (Date.now() - prevState.timestamp < UNDO_DEBOUNCE_MILLIS) {
-        return groupCounter;
-      }
-      groupCounter++;
-      // tslint:disable-next-line: no-null-keyword
-      return null;
-    },
-  } as UndoableOptions);
+  const undoableReducer = undoable(
+    reducer,
+    {
+      limit: UNDO_HISTORY_SIZE,
+      filter: excludeAction(UNDO_EXCLUDED_ACTIONS),
+      groupBy: (action: Action, currState: AppState, prevState: StateWithHistoryAndTimestamp) => {
+        if (Date.now() - prevState.timestamp < UNDO_DEBOUNCE_MILLIS) {
+          return groupCounter;
+        }
+        groupCounter++;
+        // tslint:disable-next-line: no-null-keyword
+        return null;
+      },
+    } as UndoableOptions,
+  );
   return (state: StateWithHistoryAndTimestamp, action: Action) => {
     return { ...undoableReducer(state, action), timestamp: Date.now() };
   };

@@ -1,9 +1,5 @@
 import { compose } from '@ngrx/core/compose';
-import {
-  Action,
-  ActionReducer,
-  combineReducers,
-} from '@ngrx/store';
+import { Action, ActionReducer, combineReducers } from '@ngrx/store';
 import { environment } from 'environments/environment';
 import { storeLogger } from 'ngrx-store-logger';
 
@@ -56,7 +52,9 @@ const devMetaReducers = [
   metaStoreFreeze.metaReducer,
 ];
 
-export const productionReducer = compose(...prodMetaReducers)(sliceReducers) as ActionReducer<State>;
+export const productionReducer = compose(...prodMetaReducers)(sliceReducers) as ActionReducer<
+  State
+>;
 const developmentReducer = compose(...devMetaReducers)(productionReducer) as ActionReducer<State>;
 
 export function reducer(state: State, action: Action) {

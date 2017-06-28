@@ -7,15 +7,11 @@ export const RESET_WORKSPACE = '__reset__RESET_WORKSPACE';
 export class ResetWorkspace implements Action {
   readonly type = RESET_WORKSPACE;
   readonly payload: {
-    vectorLayer?: VectorLayer,
-    animation?: Animation,
-    hiddenLayerIds?: Set<string>,
+    vectorLayer?: VectorLayer;
+    animation?: Animation;
+    hiddenLayerIds?: Set<string>;
   };
-  constructor(
-    vectorLayer?: VectorLayer,
-    animation?: Animation,
-    hiddenLayerIds?: Set<string>,
-  ) {
+  constructor(vectorLayer?: VectorLayer, animation?: Animation, hiddenLayerIds?: Set<string>) {
     this.payload = { vectorLayer, animation, hiddenLayerIds };
   }
 }

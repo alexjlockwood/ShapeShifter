@@ -1,8 +1,4 @@
-import {
-  Action,
-  ActionReducer,
-  Store,
-} from '@ngrx/store';
+import { Action, ActionReducer, Store } from '@ngrx/store';
 import { State, productionReducer } from 'app/store';
 import { State as LayerState } from 'app/store/layers/reducer';
 import { State as PlaybackState } from 'app/store/playback/reducer';
@@ -14,7 +10,6 @@ import { map } from 'rxjs/operator/map';
 const INIT_ACTION: Action = { type: '__test123__' };
 
 export class MockStore extends Store<State> {
-
   private readonly subject: BehaviorSubject<State>;
 
   constructor() {
@@ -28,9 +23,9 @@ export class MockStore extends Store<State> {
 
   readonly select = <R>(mapFn: any, ...paths: string[]): Observable<R> => {
     return map.call(this.subject, mapFn);
-  }
+  };
 
-  dispatch(action: Action) { }
+  dispatch(action: Action) {}
 
   getState() {
     return this.subject.getValue();

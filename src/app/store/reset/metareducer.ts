@@ -1,6 +1,7 @@
+import { ActionReducer } from '@ngrx/store';
+
 import { AppState } from '../reducer';
 import * as actions from './actions';
-import { ActionReducer } from '@ngrx/store';
 
 export function metaReducer(reducer: ActionReducer<AppState>): ActionReducer<AppState> {
   return (state: AppState, action: actions.Actions) => {

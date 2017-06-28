@@ -1,22 +1,13 @@
 import { Path } from '../paths';
-import {
-  PathProperty,
-  Property,
-} from '../properties';
+import { PathProperty, Property } from '../properties';
 import { MorphableLayer } from '.';
-import {
-  ConstructorArgs as AbstractConstructorArgs,
-  AbstractLayer,
-} from './AbstractLayer';
+import { ConstructorArgs as AbstractConstructorArgs, AbstractLayer } from './AbstractLayer';
 
 /**
  * Model object that mirrors the VectorDrawable's '<clip-path>' element.
  */
-@Property.register(
-  new PathProperty('pathData', { isAnimatable: true }),
-)
+@Property.register(new PathProperty('pathData', { isAnimatable: true }))
 export class ClipPathLayer extends AbstractLayer implements MorphableLayer {
-
   constructor(obj: ConstructorArgs) {
     super(obj);
     this.pathData = obj.pathData;
@@ -62,5 +53,5 @@ interface ClipPathLayerArgs {
   pathData: Path;
 }
 
-export interface ClipPathLayer extends AbstractLayer, ClipPathLayerArgs { }
-export interface ConstructorArgs extends AbstractConstructorArgs, ClipPathLayerArgs { }
+export interface ClipPathLayer extends AbstractLayer, ClipPathLayerArgs {}
+export interface ConstructorArgs extends AbstractConstructorArgs, ClipPathLayerArgs {}

@@ -44,8 +44,8 @@ export class AutoFixClick implements Action {
 export class UpdateActivePathBlock implements Action {
   readonly type = UPDATE_ACTIVE_PATH_BLOCK;
   readonly payload: {
-    source: ActionSource,
-    path: Path,
+    source: ActionSource;
+    path: Path;
   };
   constructor(source: ActionSource, path: Path) {
     this.payload = { source, path };
@@ -54,7 +54,7 @@ export class UpdateActivePathBlock implements Action {
 
 export class PairSubPath implements Action {
   readonly type = PAIR_SUBPATH;
-  readonly payload: { subIdx: number, source: ActionSource; };
+  readonly payload: { subIdx: number; source: ActionSource };
   constructor(subIdx: number, source: ActionSource) {
     this.payload = { subIdx, source };
   }
@@ -62,14 +62,14 @@ export class PairSubPath implements Action {
 
 export class SetUnpairedSubPath implements Action {
   readonly type = SET_UNPAIRED_SUBPATH;
-  readonly payload: { unpairedSubPath: { source: ActionSource, subIdx: number } };
-  constructor(unpairedSubPath: { source: ActionSource, subIdx: number }) {
+  readonly payload: { unpairedSubPath: { source: ActionSource; subIdx: number } };
+  constructor(unpairedSubPath: { source: ActionSource; subIdx: number }) {
     this.payload = { unpairedSubPath };
   }
 }
 
 export type Actions =
-  ReverseSelectedSubPaths
+  | ReverseSelectedSubPaths
   | ShiftBackSelectedSubPaths
   | ShiftForwardSelectedSubPaths
   | DeleteActionModeSelections

@@ -1,3 +1,5 @@
+import * as _ from 'lodash';
+
 import { Path } from '../paths';
 import {
   ColorProperty,
@@ -8,11 +10,7 @@ import {
   Property,
 } from '../properties';
 import { MorphableLayer } from '.';
-import {
-  ConstructorArgs as AbstractConstructorArgs,
-  AbstractLayer,
-} from './AbstractLayer';
-import * as _ from 'lodash';
+import { ConstructorArgs as AbstractConstructorArgs, AbstractLayer } from './AbstractLayer';
 
 const ENUM_LINECAP_OPTIONS = [
   { value: 'butt', label: 'Butt' },
@@ -49,12 +47,11 @@ const ENUM_FILLTYPE_OPTIONS = [
   new FractionProperty('trimPathOffset', { isAnimatable: true }),
   new EnumProperty('fillType', ENUM_FILLTYPE_OPTIONS),
 )
-// TODO: need to fix enum properties so they store/return strings instead of options?
-export class PathLayer extends AbstractLayer implements MorphableLayer {
-
+export // TODO: need to fix enum properties so they store/return strings instead of options?
+class PathLayer extends AbstractLayer implements MorphableLayer {
   constructor(obj: ConstructorArgs) {
     super(obj);
-    const setterFn = (num: number, def: number) => _.isNil(num) ? def : num;
+    const setterFn = (num: number, def: number) => (_.isNil(num) ? def : num);
     this.pathData = obj.pathData;
     this.fillColor = obj.fillColor || '';
     this.fillAlpha = setterFn(obj.fillAlpha, 1);
@@ -133,8 +130,8 @@ interface PathLayerArgs {
   fillType?: FillType;
 }
 
-export interface PathLayer extends AbstractLayer, PathLayerArgs { }
-export interface ConstructorArgs extends AbstractConstructorArgs, PathLayerArgs { }
+export interface PathLayer extends AbstractLayer, PathLayerArgs {}
+export interface ConstructorArgs extends AbstractConstructorArgs, PathLayerArgs {}
 
 export type StrokeLineCap = 'butt' | 'square' | 'round';
 export type StrokeLineJoin = 'miter' | 'round' | 'bevel';

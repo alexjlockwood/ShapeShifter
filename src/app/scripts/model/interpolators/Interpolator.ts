@@ -8,9 +8,9 @@ export interface Interpolator {
   readonly webRef: string;
 }
 
-const FAST_OUT_SLOW_IN_EASING = BezierEasing.create(.4, 0, .2, 1);
-const FAST_OUT_LINEAR_IN_EASING = BezierEasing.create(.4, 0, 1, 1);
-const LINEAR_OUT_SLOW_IN_EASING = BezierEasing.create(0, 0, .2, 1);
+const FAST_OUT_SLOW_IN_EASING = BezierEasing.create(0.4, 0, 0.2, 1);
+const FAST_OUT_LINEAR_IN_EASING = BezierEasing.create(0.4, 0, 1, 1);
+const LINEAR_OUT_SLOW_IN_EASING = BezierEasing.create(0, 0, 0.2, 1);
 
 export const INTERPOLATORS: ReadonlyArray<Interpolator> = [
   {
@@ -52,9 +52,8 @@ export const INTERPOLATORS: ReadonlyArray<Interpolator> = [
     value: 'DECELERATE',
     label: 'Decelerate',
     androidRef: '@android:anim/decelerate_interpolator',
-    interpolateFn: f => (1 - (1 - f) * (1 - f)),
+    interpolateFn: f => 1 - (1 - f) * (1 - f),
     webRef: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-
   },
   {
     value: 'LINEAR',
@@ -110,7 +109,7 @@ export const INTERPOLATORS: ReadonlyArray<Interpolator> = [
       if (f < 0.5) {
         return 0.5 * a(f * 2, 2 * 1.5);
       } else {
-        return 0.5 * (o(f * 2 - 2, 2 * 1.5) + 2.);
+        return 0.5 * (o(f * 2 - 2, 2 * 1.5) + 2);
       }
     },
     webRef: 'cubic-bezier(0.4, 0, 0.2, 1)', // TODO: support exporting this interpolator!

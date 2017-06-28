@@ -32,8 +32,7 @@ export function checkPathsCompatible(block: PathAnimationBlock): Result {
       continue;
     }
     const errorSubIdx = i;
-    const errorPath =
-      fromCmds.length < toCmds.length ? ActionSource.From : ActionSource.To;
+    const errorPath = fromCmds.length < toCmds.length ? ActionSource.From : ActionSource.To;
     const numPointsMissing = Math.abs(fromCmds.length - toCmds.length);
     return { areCompatible: false, errorPath, errorSubIdx, numPointsMissing };
   }

@@ -1,16 +1,8 @@
 import { ActionReducer } from '@ngrx/store';
 import { AutoAwesome } from 'app/scripts/algorithms';
-import {
-  ActionSource,
-  Selection,
-  SelectionType,
-} from 'app/scripts/model/actionmode';
+import { ActionSource, Selection, SelectionType } from 'app/scripts/model/actionmode';
 import { MorphableLayer } from 'app/scripts/model/layers';
-import {
-  Path,
-  PathMutator,
-  PathUtil,
-} from 'app/scripts/model/paths';
+import { Path, PathMutator, PathUtil } from 'app/scripts/model/paths';
 import { PathAnimationBlock } from 'app/scripts/model/timeline';
 import * as _ from 'lodash';
 
@@ -20,7 +12,6 @@ import * as actions from './metaactions';
 export function metaReducer(reducer: ActionReducer<AppState>): ActionReducer<AppState> {
   return (state: AppState, action: actions.Actions) => {
     switch (action.type) {
-
       // Reverse all currently selected subpaths.
       case actions.REVERSE_SELECTED_SUBPATHS: {
         state = mutateSelectedSubPaths(state, (pm, subIdx) => pm.reverseSubPath(subIdx));
@@ -73,8 +64,10 @@ export function metaReducer(reducer: ActionReducer<AppState>): ActionReducer<App
       case actions.AUTO_FIX_CLICK: {
         let resultStartPath = getActivePath(state, ActionSource.From);
         let resultEndPath = getActivePath(state, ActionSource.To);
-        const numSubPaths =
-          Math.min(resultStartPath.getSubPaths().length, resultEndPath.getSubPaths().length);
+        const numSubPaths = Math.min(
+          resultStartPath.getSubPaths().length,
+          resultEndPath.getSubPaths().length,
+        );
         for (let subIdx = 0; subIdx < numSubPaths; subIdx++) {
           // Pass the command with the larger subpath as the 'from' command.
           const numStartCmds = resultStartPath.getSubPath(subIdx).getCommands().length;
@@ -110,25 +103,31 @@ export function metaReducer(reducer: ActionReducer<AppState>): ActionReducer<App
           const fromSelections = selections.filter(s => s.source === fromSource);
           const toSelections = selections.filter(s => s.source === toSource);
           if (fromSelections.length) {
-            state = setSelections(state, fromSelections.map(s => {
-              const { subIdx: sIdx, cmdIdx, source, type } = s;
-              return {
-                subIdx: sIdx === fromSubIdx ? 0 : sIdx,
-                cmdIdx,
-                source,
-                type,
-              };
-            }));
+            state = setSelections(
+              state,
+              fromSelections.map(s => {
+                const { subIdx: sIdx, cmdIdx, source, type } = s;
+                return {
+                  subIdx: sIdx === fromSubIdx ? 0 : sIdx,
+                  cmdIdx,
+                  source,
+                  type,
+                };
+              }),
+            );
           } else if (toSelections.length) {
-            state = setSelections(state, toSelections.map(s => {
-              const { subIdx: sIdx, cmdIdx, source, type } = s;
-              return {
-                subIdx: sIdx === toSubIdx ? 0 : sIdx,
-                cmdIdx,
-                source,
-                type,
-              };
-            }));
+            state = setSelections(
+              state,
+              toSelections.map(s => {
+                const { subIdx: sIdx, cmdIdx, source, type } = s;
+                return {
+                  subIdx: sIdx === toSubIdx ? 0 : sIdx,
+                  cmdIdx,
+                  source,
+                  type,
+                };
+              }),
+            );
           }
           const pairedSubPaths = new Set();
           state.actionmode.pairedSubPaths.forEach(p => pairedSubPaths.add(p));
@@ -144,15 +143,13 @@ export function metaReducer(reducer: ActionReducer<AppState>): ActionReducer<App
           state = updateActivePathBlock(
             state,
             fromSource,
-            getActivePath(state, fromSource).mutate()
-              .moveSubPath(fromSubIdx, 0)
-              .build());
+            getActivePath(state, fromSource).mutate().moveSubPath(fromSubIdx, 0).build(),
+          );
           state = updateActivePathBlock(
             state,
             toSource,
-            getActivePath(state, toSource).mutate()
-              .moveSubPath(toSubIdx, 0)
-              .build());
+            getActivePath(state, toSource).mutate().moveSubPath(toSubIdx, 0).build(),
+          );
         } else {
           state = setUnpairedSubPath(state, { source: actionSource, subIdx });
         }
@@ -203,7 +200,10 @@ function getPointSelections(state: AppState) {
   return state.actionmode.selections.filter(s => s.type === SelectionType.Point);
 }
 
-function mutateSelectedSubPaths(state: AppState, mutatorFn: (pm: PathMutator, subIdx: number) => void) {
+function mutateSelectedSubPaths(
+  state: AppState,
+  mutatorFn: (pm: PathMutator, subIdx: number) => void,
+) {
   const selections = getSubPathSelections(state);
   const { source } = selections[0];
   const pathMutator = getActivePath(state, source).mutate();
@@ -257,8 +257,7 @@ function updateActivePathBlock(state: AppState, source: ActionSource, path: Path
       for (let i = minIdx; i < maxIdx; i++) {
         // TODO: allow the user to specify the location of collapsing paths?
         const pole = oppPathToChange.getPoleOfInaccessibility(i);
-        mutator.addCollapsingSubPath(
-          pole, oppPathToChange.getSubPath(i).getCommands().length);
+        mutator.addCollapsingSubPath(pole, oppPathToChange.getSubPath(i).getCommands().length);
       }
       if (numSubPaths < numOppSubPaths) {
         path = mutator.build();
@@ -316,7 +315,7 @@ function setPairedSubPaths(state: AppState, pairedSubPaths: Set<number>) {
 
 function setUnpairedSubPath(
   state: AppState,
-  unpairedSubPath: { source: ActionSource, subIdx: number },
+  unpairedSubPath: { source: ActionSource; subIdx: number },
 ) {
   const { actionmode } = state;
   return { ...state, actionmode: { ...actionmode, unpairedSubPath } };
@@ -367,7 +366,7 @@ function deleteSelectedPoints(state: AppState) {
   // Precondition: all selections exist in the same canvas.
   const source = selections[0].source;
   const activePath = getActivePath(state, source);
-  const unsplitOpsMap: Map<number, Array<{ subIdx: number, cmdIdx: number }>> = new Map();
+  const unsplitOpsMap: Map<number, Array<{ subIdx: number; cmdIdx: number }>> = new Map();
   for (const selection of selections) {
     const { subIdx, cmdIdx } = selection;
     if (!activePath.getCommand(subIdx, cmdIdx).isSplitPoint()) {

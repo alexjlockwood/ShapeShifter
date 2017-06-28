@@ -1,18 +1,8 @@
-import {
-  NumberProperty,
-  Property,
-} from '../properties';
-import {
-  ConstructorArgs as AbstractConstructorArgs,
-  AbstractLayer,
-} from './AbstractLayer';
-import {
-  MathUtil,
-  Matrix,
-  Point,
-  Rect,
-} from 'app/scripts/common';
+import { MathUtil, Matrix, Point, Rect } from 'app/scripts/common';
 import * as _ from 'lodash';
+
+import { NumberProperty, Property } from '../properties';
+import { ConstructorArgs as AbstractConstructorArgs, AbstractLayer } from './AbstractLayer';
 
 /**
  * Model object that mirrors the VectorDrawable's '<group>' element.
@@ -29,7 +19,7 @@ import * as _ from 'lodash';
 export class GroupLayer extends AbstractLayer {
   constructor(obj: ConstructorArgs) {
     super(obj);
-    const setterFn = (num: number, def: number) => _.isNil(num) ? def : num;
+    const setterFn = (num: number, def: number) => (_.isNil(num) ? def : num);
     this.pivotX = setterFn(obj.pivotX, 0);
     this.pivotY = setterFn(obj.pivotY, 0);
     this.rotation = setterFn(obj.rotation, 0);
@@ -121,5 +111,5 @@ interface GroupLayerArgs {
   translateY?: number;
 }
 
-export interface GroupLayer extends AbstractLayer, GroupLayerArgs { }
-export interface ConstructorArgs extends AbstractConstructorArgs, GroupLayerArgs { }
+export interface GroupLayer extends AbstractLayer, GroupLayerArgs {}
+export interface ConstructorArgs extends AbstractConstructorArgs, GroupLayerArgs {}

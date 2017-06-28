@@ -1,11 +1,7 @@
-import * as actions from './actions';
-import {
-  GroupLayer,
-  Layer,
-  LayerUtil,
-  VectorLayer,
-} from 'app/scripts/model/layers';
+import { GroupLayer, Layer, LayerUtil, VectorLayer } from 'app/scripts/model/layers';
 import * as _ from 'lodash';
+
+import * as actions from './actions';
 
 export interface State {
   readonly vectorLayer: VectorLayer;
@@ -25,7 +21,6 @@ export function buildInitialState() {
 
 export function reducer(state = buildInitialState(), action: actions.Actions) {
   switch (action.type) {
-
     // Import vector layers into the tree.
     case actions.IMPORT_VECTOR_LAYERS: {
       const importedVls = action.payload.vectorLayers.slice();
@@ -215,8 +210,10 @@ function groupOrUngroupSelectedLayers(state: State, shouldGroup: boolean) {
 
     // Find destination parent and insertion point.
     const firstSelectedLayerParent = LayerUtil.findParent(vectorLayer, tempSelLayers[0].id).clone();
-    const firstSelectedLayerIndexInParent =
-      _.findIndex(firstSelectedLayerParent.children, l => l.id === tempSelLayers[0].id);
+    const firstSelectedLayerIndexInParent = _.findIndex(
+      firstSelectedLayerParent.children,
+      l => l.id === tempSelLayers[0].id,
+    );
 
     // Remove all selected items from their parents and move them into a new parent.
     const newGroup = new GroupLayer({
@@ -225,27 +222,27 @@ function groupOrUngroupSelectedLayers(state: State, shouldGroup: boolean) {
     });
     const parentChildren = firstSelectedLayerParent.children.slice();
     parentChildren.splice(firstSelectedLayerIndexInParent, 0, newGroup);
-    _.remove(parentChildren, child => _.find(tempSelLayers, selectedLayer => selectedLayer.id === child.id));
+    _.remove(parentChildren, child =>
+      _.find(tempSelLayers, selectedLayer => selectedLayer.id === child.id),
+    );
     firstSelectedLayerParent.children = parentChildren;
     vectorLayer = LayerUtil.replaceLayerInTree(vectorLayer, firstSelectedLayerParent);
     selectedLayerIds = new Set([newGroup.id]);
   } else {
     // Ungroup selected groups layers.
     const newSelectedLayers: Layer[] = [];
-    tempSelLayers
-      .filter(layer => layer instanceof GroupLayer)
-      .forEach(groupLayer => {
-        // Move children into parent.
-        const parent = LayerUtil.findParent(vectorLayer, groupLayer.id).clone();
-        const indexInParent = Math.max(0, _.findIndex(parent.children, l => l.id === groupLayer.id));
-        const newChildren = parent.children.slice();
-        newChildren.splice(indexInParent, 0, ...groupLayer.children);
-        parent.children = newChildren;
-        vectorLayer = LayerUtil.replaceLayerInTree(vectorLayer, parent);
-        newSelectedLayers.splice(0, 0, ...groupLayer.children);
-        // Delete the parent.
-        vectorLayer = LayerUtil.removeLayersFromTree(vectorLayer, groupLayer.id);
-      });
+    tempSelLayers.filter(layer => layer instanceof GroupLayer).forEach(groupLayer => {
+      // Move children into parent.
+      const parent = LayerUtil.findParent(vectorLayer, groupLayer.id).clone();
+      const indexInParent = Math.max(0, _.findIndex(parent.children, l => l.id === groupLayer.id));
+      const newChildren = parent.children.slice();
+      newChildren.splice(indexInParent, 0, ...groupLayer.children);
+      parent.children = newChildren;
+      vectorLayer = LayerUtil.replaceLayerInTree(vectorLayer, parent);
+      newSelectedLayers.splice(0, 0, ...groupLayer.children);
+      // Delete the parent.
+      vectorLayer = LayerUtil.removeLayersFromTree(vectorLayer, groupLayer.id);
+    });
     selectedLayerIds = new Set(newSelectedLayers.map(l => l.id));
   }
   return { ...state, vectorLayer, selectedLayerIds };

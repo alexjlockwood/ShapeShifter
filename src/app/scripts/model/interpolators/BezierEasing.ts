@@ -6,9 +6,15 @@ const kSplineTableSize = 11;
 const kSampleStepSize = 1 / (kSplineTableSize - 1);
 const float32ArraySupported = typeof Float32Array === 'function';
 
-function A(aA1: number, aA2: number) { return 1 - 3 * aA2 + 3 * aA1; }
-function B(aA1: number, aA2: number) { return 3 * aA2 - 6 * aA1; }
-function C(aA1: number) { return 3 * aA1; }
+function A(aA1: number, aA2: number) {
+  return 1 - 3 * aA2 + 3 * aA1;
+}
+function B(aA1: number, aA2: number) {
+  return 3 * aA2 - 6 * aA1;
+}
+function C(aA1: number) {
+  return 3 * aA1;
+}
 
 // Returns x(t) given t, x1, and x2, or y(t) given t, y1, and y2.
 function calcBezier(aT: number, aA1: number, aA2: number) {
@@ -21,7 +27,9 @@ function getSlope(aT: number, aA1: number, aA2: number) {
 }
 
 function binarySubdivide(aX: number, aA: number, aB: number, mX1: number, mX2: number) {
-  let currentX, currentT, i = 0;
+  let currentX,
+    currentT,
+    i = 0;
   do {
     currentT = aA + (aB - aA) / 2;
     currentX = calcBezier(currentT, mX1, mX2) - aX;
@@ -52,10 +60,9 @@ export function create(mX1: number, mY1: number, mX2: number, mY2: number) {
   }
 
   // Precompute samples table
-  const sampleValues =
-    float32ArraySupported
-      ? new Float32Array(kSplineTableSize)
-      : new Array(kSplineTableSize);
+  const sampleValues = float32ArraySupported
+    ? new Float32Array(kSplineTableSize)
+    : new Array(kSplineTableSize);
   if (mX1 !== mY1 || mX2 !== mY2) {
     for (let i = 0; i < kSplineTableSize; i++) {
       sampleValues[i] = calcBezier(i * kSampleStepSize, mX1, mX2);
@@ -73,7 +80,9 @@ export function create(mX1: number, mY1: number, mX2: number, mY2: number) {
     currentSample--;
 
     // Interpolate to provide an initial guess for t
-    const dist = (aX - sampleValues[currentSample]) / (sampleValues[currentSample + 1] - sampleValues[currentSample]);
+    const dist =
+      (aX - sampleValues[currentSample]) /
+      (sampleValues[currentSample + 1] - sampleValues[currentSample]);
     const guessForT = intervalStart + dist * kSampleStepSize;
 
     const initialSlope = getSlope(guessForT, mX1, mX2);

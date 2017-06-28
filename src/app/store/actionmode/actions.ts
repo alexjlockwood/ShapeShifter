@@ -1,10 +1,5 @@
 import { Action } from '@ngrx/store';
-import {
-  ActionMode,
-  ActionSource,
-  Hover,
-  Selection,
-} from 'app/scripts/model/actionmode';
+import { ActionMode, ActionSource, Hover, Selection } from 'app/scripts/model/actionmode';
 
 export const START_ACTION_MODE = '__actionmode__START_ACTION_MODE';
 export const SET_ACTION_MODE = '__actionmode__SET_ACTION_MODE';
@@ -40,7 +35,7 @@ export class SetActionModeSelections implements Action {
 
 export class ToggleSubPathSelection implements Action {
   readonly type = TOGGLE_SUBPATH_SELECTION;
-  readonly payload: { source: ActionSource, subIdx: number };
+  readonly payload: { source: ActionSource; subIdx: number };
   // TODO: support multi-selection for subpaths
   constructor(source: ActionSource, subIdx: number) {
     this.payload = { source, subIdx };
@@ -50,11 +45,11 @@ export class ToggleSubPathSelection implements Action {
 export class ToggleSegmentSelections implements Action {
   readonly type = TOGGLE_SEGMENT_SELECTIONS;
   readonly payload: {
-    source: ActionSource,
-    segments: ReadonlyArray<{ subIdx: number, cmdIdx: number }>,
+    source: ActionSource;
+    segments: ReadonlyArray<{ subIdx: number; cmdIdx: number }>;
   };
   // TODO: support multi-selection for segments
-  constructor(source: ActionSource, segments: ReadonlyArray<{ subIdx: number, cmdIdx: number }>) {
+  constructor(source: ActionSource, segments: ReadonlyArray<{ subIdx: number; cmdIdx: number }>) {
     this.payload = { source, segments };
   }
 }
@@ -62,23 +57,18 @@ export class ToggleSegmentSelections implements Action {
 export class TogglePointSelection implements Action {
   readonly type = TOGGLE_POINT_SELECTION;
   readonly payload: {
-    source: ActionSource,
-    subIdx: number,
-    cmdIdx: number,
-    appendToList: boolean,
+    source: ActionSource;
+    subIdx: number;
+    cmdIdx: number;
+    appendToList: boolean;
   };
-  constructor(
-    source: ActionSource,
-    subIdx: number,
-    cmdIdx: number,
-    appendToList = false,
-  ) {
+  constructor(source: ActionSource, subIdx: number, cmdIdx: number, appendToList = false) {
     this.payload = { source, subIdx, cmdIdx, appendToList };
   }
 }
 
 export type Actions =
-  SetActionMode
+  | SetActionMode
   | SetActionModeHover
   | SetActionModeSelections
   | ToggleSubPathSelection

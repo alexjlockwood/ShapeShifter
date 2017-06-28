@@ -2,13 +2,7 @@ import { Matrix } from 'app/scripts/common';
 import { Path } from 'app/scripts/model/paths';
 import * as _ from 'lodash';
 
-import {
-  ClipPathLayer,
-  GroupLayer,
-  Layer,
-  PathLayer,
-  VectorLayer,
-} from '.';
+import { ClipPathLayer, GroupLayer, Layer, PathLayer, VectorLayer } from '.';
 
 const PRECISION = 8;
 
@@ -70,7 +64,8 @@ export function adjustViewports(vl1: VectorLayer, vl2: VectorLayer) {
     return Math.max(w1, h1, w2, h2, n) === n;
   };
 
-  let scale1 = 1, scale2 = 1;
+  let scale1 = 1,
+    scale2 = 1;
   if (isMaxDimenFn(w1)) {
     scale2 = w1 / w2;
   } else if (isMaxDimenFn(h1)) {
@@ -93,7 +88,10 @@ export function adjustViewports(vl1: VectorLayer, vl2: VectorLayer) {
     h2 = _.round(h2, PRECISION);
   }
 
-  let tx1 = 0, ty1 = 0, tx2 = 0, ty2 = 0;
+  let tx1 = 0,
+    ty1 = 0,
+    tx2 = 0,
+    ty2 = 0;
   if (w1 > w2) {
     tx2 = (w1 - w2) / 2;
   } else if (w1 < w2) {
@@ -104,34 +102,32 @@ export function adjustViewports(vl1: VectorLayer, vl2: VectorLayer) {
     ty1 = (h2 - h1) / 2;
   }
 
-  const transformLayerFn =
-    (vl: VectorLayer, scale: number, tx: number, ty: number) => {
-      const transforms = [
-        Matrix.fromScaling(scale, scale),
-        Matrix.fromTranslation(tx, ty),
-      ];
-      (function recurseFn(layer: Layer) {
-        if (layer instanceof PathLayer || layer instanceof ClipPathLayer) {
-          if (layer instanceof PathLayer && layer.isStroked()) {
-            layer.strokeWidth *= scale;
-          }
-          if (layer.pathData) {
-            layer.pathData = new Path(layer.pathData.getCommands().map(cmd => {
+  const transformLayerFn = (vl: VectorLayer, scale: number, tx: number, ty: number) => {
+    const transforms = [Matrix.fromScaling(scale, scale), Matrix.fromTranslation(tx, ty)];
+    (function recurseFn(layer: Layer) {
+      if (layer instanceof PathLayer || layer instanceof ClipPathLayer) {
+        if (layer instanceof PathLayer && layer.isStroked()) {
+          layer.strokeWidth *= scale;
+        }
+        if (layer.pathData) {
+          layer.pathData = new Path(
+            layer.pathData.getCommands().map(cmd => {
               return cmd.mutate().transform(transforms).build();
-            }));
-          }
-          return;
+            }),
+          );
         }
-        if (layer instanceof GroupLayer) {
-          const l = layer as GroupLayer;
-          l.translateX *= scale;
-          l.translateY *= scale;
-          l.pivotX *= scale;
-          l.pivotY *= scale;
-        }
-        layer.children.forEach(l => recurseFn(l));
-      })(vl);
-    };
+        return;
+      }
+      if (layer instanceof GroupLayer) {
+        const l = layer as GroupLayer;
+        l.translateX *= scale;
+        l.translateY *= scale;
+        l.pivotX *= scale;
+        l.pivotY *= scale;
+      }
+      layer.children.forEach(l => recurseFn(l));
+    })(vl);
+  };
 
   transformLayerFn(vl1, scale1, tx1, ty1);
   transformLayerFn(vl2, scale2, tx2, ty2);
@@ -147,8 +143,7 @@ export function adjustViewports(vl1: VectorLayer, vl2: VectorLayer) {
 
 export function mergeVectorLayers(vl1: VectorLayer, vl2: VectorLayer) {
   const { vl1: newVl1, vl2: newVl2 } = adjustViewports(vl1, vl2);
-  const vl: VectorLayer =
-    setLayerChildren(newVl1, [...newVl1.children, ...newVl2.children]);
+  const vl: VectorLayer = setLayerChildren(newVl1, [...newVl1.children, ...newVl2.children]);
   if (!newVl1.children.length) {
     // Only replace the vector layer's alpha if there are no children
     // being displayed to the user. This is pretty much the best
@@ -198,10 +193,7 @@ export function removeLayersFromTree(vl: VectorLayer, ...removedLayerIds: string
   })(vl) as VectorLayer;
 }
 
-export function replaceLayerInTree(
-  root: VectorLayer,
-  replacement: Layer,
-) {
+export function replaceLayerInTree(root: VectorLayer, replacement: Layer) {
   return (function recurseFn(curr: Layer) {
     if (curr.id === replacement.id) {
       return replacement;
@@ -258,20 +250,11 @@ function findSibling(layerId: string, parent: Layer, offset: number) {
   return parent.children[index];
 }
 
-export function getUniqueLayerName(
-  layers: ReadonlyArray<Layer>,
-  prefix: string,
-) {
-  return getUniqueName(
-    prefix,
-    name => findLayerByName(layers, name),
-  );
+export function getUniqueLayerName(layers: ReadonlyArray<Layer>, prefix: string) {
+  return getUniqueName(prefix, name => findLayerByName(layers, name));
 }
 
-export function getUniqueName(
-  prefix = '',
-  objectByNameFn = (s: string) => undefined,
-) {
+export function getUniqueName(prefix = '', objectByNameFn = (s: string) => undefined) {
   let n = 0;
   const nameFn = () => prefix + (n ? `_${n}` : '');
   while (true) {

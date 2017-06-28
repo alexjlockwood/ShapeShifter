@@ -1,28 +1,14 @@
 import { Rect } from 'app/scripts/common';
 import * as _ from 'lodash';
 
-import {
-  Animatable,
-  Inspectable,
-  NameProperty,
-  Property,
-} from '../properties';
-import {
-  ClipPathLayer,
-  GroupLayer,
-  Layer,
-  PathLayer,
-  VectorLayer,
-} from '.';
+import { Animatable, Inspectable, NameProperty, Property } from '../properties';
+import { ClipPathLayer, GroupLayer, Layer, PathLayer, VectorLayer } from '.';
 
 /**
  * Root class for all layer types.
  */
-@Property.register(
-  new NameProperty('name'),
-)
+@Property.register(new NameProperty('name'))
 export abstract class AbstractLayer implements Layer {
-
   constructor(obj: ConstructorArgs) {
     this.id = obj.id || _.uniqueId();
     this.name = obj.name || '';
@@ -65,8 +51,10 @@ export abstract class AbstractLayer implements Layer {
     if (this instanceof PathLayer || this instanceof ClipPathLayer) {
       return this.pathData.isMorphableWith((layer as any).pathData);
     }
-    return this.children.length === layer.children.length
-      && this.children.every((c, i) => c.isMorphableWith(layer.children[i]));
+    return (
+      this.children.length === layer.children.length &&
+      this.children.every((c, i) => c.isMorphableWith(layer.children[i]))
+    );
   }
 
   // Implements the Layer interface.
@@ -109,8 +97,8 @@ interface AbstractLayerArgs {
   children: ReadonlyArray<Layer>;
 }
 
-export interface AbstractLayer extends AbstractLayerArgs, Inspectable, Animatable { }
-export interface ConstructorArgs extends AbstractLayerArgs { }
+export interface AbstractLayer extends AbstractLayerArgs, Inspectable, Animatable {}
+export interface ConstructorArgs extends AbstractLayerArgs {}
 
 function load(obj: AbstractLayer | any): Layer {
   if (obj instanceof AbstractLayer) {

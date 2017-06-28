@@ -1,14 +1,9 @@
-import * as actions from './actions';
 import { ModelUtil } from 'app/scripts/common';
-import {
-  ColorProperty,
-  PathProperty,
-} from 'app/scripts/model/properties';
-import {
-  Animation,
-  AnimationBlock,
-} from 'app/scripts/model/timeline';
+import { ColorProperty, PathProperty } from 'app/scripts/model/properties';
+import { Animation, AnimationBlock } from 'app/scripts/model/timeline';
 import * as _ from 'lodash';
+
+import * as actions from './actions';
 
 export interface State {
   readonly animation: Animation;
@@ -26,7 +21,6 @@ export function buildInitialState() {
 
 export function reducer(state = buildInitialState(), action: actions.Actions) {
   switch (action.type) {
-
     // Replace the animation.
     case actions.REPLACE_ANIMATION: {
       const { animation } = action.payload;
@@ -49,10 +43,10 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
       // neighboring blocks closest to the active time cursor, of a minimum size.
       const blocksByLayerId = ModelUtil.getOrderedBlocksByPropertyByLayer(animation);
       const blockNeighbors = (blocksByLayerId[layer.id] || {})[propertyName] || [];
-      let gaps: Array<{ start: number, end: number }> = [];
+      let gaps: Array<{ start: number; end: number }> = [];
       for (let i = 0; i < blockNeighbors.length; i++) {
         gaps.push({
-          start: (i === 0) ? 0 : blockNeighbors[i - 1].endTime,
+          start: i === 0 ? 0 : blockNeighbors[i - 1].endTime,
           end: blockNeighbors[i].startTime,
         });
       }
@@ -62,12 +56,11 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
       });
       gaps = gaps
         .filter(gap => gap.end - gap.start > newBlockDuration)
-        .map(gap => Object.assign(gap, {
-          dist: Math.min(
-            Math.abs(gap.end - activeTime),
-            Math.abs(gap.start - activeTime),
-          ),
-        }))
+        .map(gap =>
+          Object.assign(gap, {
+            dist: Math.min(Math.abs(gap.end - activeTime), Math.abs(gap.start - activeTime)),
+          }),
+        )
         .sort((a, b) => a.dist - b.dist);
 
       if (!gaps.length) {

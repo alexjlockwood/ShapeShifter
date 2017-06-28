@@ -1,11 +1,9 @@
-import {
-  ClearSelections,
-  DeleteSelectedModels,
-} from '../common/actions';
-import { SelectLayer } from '../layers/actions';
 import { Action } from '@ngrx/store';
 import { Layer } from 'app/scripts/model/layers';
 import { Animation, AnimationBlock } from 'app/scripts/model/timeline';
+
+import { ClearSelections, DeleteSelectedModels } from '../common/actions';
+import { SelectLayer } from '../layers/actions';
 
 export const REPLACE_ANIMATION = '__timeline__REPLACE_ANIMATION';
 export const SELECT_ANIMATION = '__timeline__SELECT_ANIMATION';
@@ -34,11 +32,11 @@ export class SelectAnimation implements Action {
 export class AddBlock implements Action {
   readonly type = ADD_BLOCK;
   readonly payload: {
-    layer: Layer,
-    propertyName: string,
-    fromValue: any,
-    toValue: any,
-    activeTime: number,
+    layer: Layer;
+    propertyName: string;
+    fromValue: any;
+    toValue: any;
+    activeTime: number;
   };
   constructor(
     layer: Layer,
@@ -61,14 +59,14 @@ export class ReplaceBlocks implements Action {
 
 export class SelectBlock implements Action {
   readonly type = SELECT_BLOCK;
-  readonly payload: { blockId: string, clearExisting: boolean };
+  readonly payload: { blockId: string; clearExisting: boolean };
   constructor(blockId: string, clearExisting = true) {
     this.payload = { blockId, clearExisting };
   }
 }
 
 export type Actions =
-  ReplaceAnimation
+  | ReplaceAnimation
   | SelectAnimation
   | AddBlock
   | ReplaceBlocks

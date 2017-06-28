@@ -1,17 +1,8 @@
-import {
-  ClearSelections,
-  DeleteSelectedModels,
-} from '../common/actions';
-import {
-  AddBlock,
-  SelectAnimation,
-  SelectBlock,
-} from '../timeline/actions';
 import { Action } from '@ngrx/store';
-import {
-  Layer,
-  VectorLayer,
-} from 'app/scripts/model/layers';
+import { Layer, VectorLayer } from 'app/scripts/model/layers';
+
+import { ClearSelections, DeleteSelectedModels } from '../common/actions';
+import { AddBlock, SelectAnimation, SelectBlock } from '../timeline/actions';
 
 export const IMPORT_VECTOR_LAYERS = '__layers__IMPORT_VECTOR_LAYERS';
 export const ADD_LAYER = '__layers__ADD_LAYER';
@@ -41,7 +32,7 @@ export class AddLayer implements Action {
 
 export class ToggleLayerExpansion implements Action {
   readonly type = TOGGLE_LAYER_EXPANSION;
-  readonly payload: { layerId: string, recursive: boolean };
+  readonly payload: { layerId: string; recursive: boolean };
   constructor(layerId: string, recursive = false) {
     this.payload = { layerId, recursive };
   }
@@ -66,7 +57,7 @@ export class ReplaceLayer implements Action {
 
 export class SelectLayer implements Action {
   readonly type = SELECT_LAYER;
-  readonly payload: { layerId: string, clearExisting: boolean };
+  readonly payload: { layerId: string; clearExisting: boolean };
   constructor(layerId: string, clearExisting: boolean) {
     this.payload = { layerId, clearExisting };
   }
@@ -81,7 +72,7 @@ export class GroupOrUngroupSelectedLayers implements Action {
 }
 
 export type Actions =
-  ImportVectorLayers
+  | ImportVectorLayers
   | AddLayer
   | ToggleLayerExpansion
   | ToggleLayerVisibility

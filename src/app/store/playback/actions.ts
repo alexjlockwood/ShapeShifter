@@ -28,7 +28,4 @@ export class SetIsRepeating implements Action {
   }
 }
 
-export type Actions =
-  SetIsSlowMotion
-  | SetIsPlaying
-  | SetIsRepeating;
+export type Actions = SetIsSlowMotion | SetIsPlaying | SetIsRepeating;

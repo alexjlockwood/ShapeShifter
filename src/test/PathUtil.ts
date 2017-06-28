@@ -1,14 +1,25 @@
-import {
-  Matrix,
-  Point,
-} from 'app/scripts/common';
-import {
-  Path,
-  SvgChar,
-} from 'app/scripts/model/paths';
+import { Matrix, Point } from 'app/scripts/common';
+import { Path, SvgChar } from 'app/scripts/model/paths';
 
-type PathOp = 'RV' | 'SB' | 'SF' | 'S' | 'SIH' | 'US' | 'CV' | 'UCV' | 'RT' | 'M'
-  | 'AC' | 'DC' | 'SSSP' | 'SFSP' | 'DFSP' | 'DFSPS' | 'DSSP' | 'T';
+type PathOp =
+  | 'RV'
+  | 'SB'
+  | 'SF'
+  | 'S'
+  | 'SIH'
+  | 'US'
+  | 'CV'
+  | 'UCV'
+  | 'RT'
+  | 'M'
+  | 'AC'
+  | 'DC'
+  | 'SSSP'
+  | 'SFSP'
+  | 'DFSP'
+  | 'DFSPS'
+  | 'DSSP'
+  | 'T';
 
 export function fromPathOpString(pathString: string, pathOpsString: string) {
   const A = pathOpsString.split(' ');

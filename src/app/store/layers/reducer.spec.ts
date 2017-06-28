@@ -1,17 +1,7 @@
-import {
-  SelectLayer,
-  ToggleLayerExpansion,
-  ToggleLayerVisibility,
-} from './actions';
-import {
-  buildInitialState,
-  reducer,
-} from './reducer';
-import {
-  GroupLayer,
-  PathLayer,
-  VectorLayer,
-} from 'app/scripts/model/layers';
+import { GroupLayer, PathLayer, VectorLayer } from 'app/scripts/model/layers';
+
+import { SelectLayer, ToggleLayerExpansion, ToggleLayerVisibility } from './actions';
+import { buildInitialState, reducer } from './reducer';
 
 describe('@ngrx/store timeline', () => {
   it('select a layer', () => {

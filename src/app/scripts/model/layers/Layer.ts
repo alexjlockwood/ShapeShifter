@@ -1,15 +1,11 @@
 import { Rect } from 'app/scripts/common';
 
-import {
-  Animatable,
-  Inspectable,
-} from '../properties';
+import { Animatable, Inspectable } from '../properties';
 
 /**
  * Interface that is shared by all vector drawable layer models below.
  */
 export interface Layer extends Inspectable, Animatable {
-
   /**
    * A non-user-visible string that uniquely identifies this layer in the tree.
    */

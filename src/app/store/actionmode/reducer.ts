@@ -1,4 +1,3 @@
-import * as actions from './actions';
 import {
   ActionMode,
   ActionSource,
@@ -8,12 +7,14 @@ import {
 } from 'app/scripts/model/actionmode';
 import * as _ from 'lodash';
 
+import * as actions from './actions';
+
 export interface State {
   readonly mode: ActionMode;
   readonly hover: Hover;
   readonly selections: ReadonlyArray<Selection>;
   readonly pairedSubPaths: Set<number>;
-  readonly unpairedSubPath: { source: ActionSource; subIdx: number; };
+  readonly unpairedSubPath: { source: ActionSource; subIdx: number };
 }
 
 export function buildInitialState() {
@@ -28,7 +29,6 @@ export function buildInitialState() {
 
 export function reducer(state = buildInitialState(), action: actions.Actions) {
   switch (action.type) {
-
     // Set the app mode during action mode.
     case actions.SET_ACTION_MODE: {
       const { mode } = action.payload;
@@ -68,7 +68,8 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
       selections = toggleSelections(
         selections,
         [{ type: SelectionType.SubPath, source, subIdx }],
-        false);
+        false,
+      );
       return { ...state, selections };
     }
 
@@ -83,7 +84,8 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
           const { subIdx, cmdIdx } = segment;
           return { type: SelectionType.Segment, source, subIdx, cmdIdx };
         }),
-        false);
+        false,
+      );
       return { ...state, selections };
     }
 

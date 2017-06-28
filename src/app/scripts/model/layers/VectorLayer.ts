@@ -1,14 +1,8 @@
-import {
-  FractionProperty,
-  NumberProperty,
-  Property,
-} from '../properties';
-import {
-  ConstructorArgs as AbstractConstructorArgs,
-  AbstractLayer,
-} from './AbstractLayer';
 import { Rect } from 'app/scripts/common';
 import * as _ from 'lodash';
+
+import { FractionProperty, NumberProperty, Property } from '../properties';
+import { ConstructorArgs as AbstractConstructorArgs, AbstractLayer } from './AbstractLayer';
 
 /**
  * Model object that mirrors the VectorDrawable's '<vector>' element.
@@ -20,10 +14,9 @@ import * as _ from 'lodash';
   new FractionProperty('alpha', { isAnimatable: true }),
 )
 export class VectorLayer extends AbstractLayer {
-
   constructor(obj = { children: [], name: 'vector' } as ConstructorArgs) {
     super(obj);
-    const setterFn = (num: number, def: number) => _.isNil(num) ? def : num;
+    const setterFn = (num: number, def: number) => (_.isNil(num) ? def : num);
     this.width = setterFn(obj.width, 24);
     this.height = setterFn(obj.height, 24);
     this.alpha = setterFn(obj.alpha, 1);
@@ -69,5 +62,5 @@ interface VectorLayerArgs {
   alpha?: number;
 }
 
-export interface VectorLayer extends AbstractLayer, VectorLayerArgs { }
-export interface ConstructorArgs extends AbstractConstructorArgs, VectorLayerArgs { }
+export interface VectorLayer extends AbstractLayer, VectorLayerArgs {}
+export interface ConstructorArgs extends AbstractConstructorArgs, VectorLayerArgs {}
