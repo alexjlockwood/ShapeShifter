@@ -1,5 +1,5 @@
-import { Layer, VectorLayer } from '../model/layers';
-import { Animation, AnimationBlock } from '../model/timeline';
+import { Layer, VectorLayer } from 'app/scripts/model/layers';
+import { Animation, AnimationBlock } from 'app/scripts/model/timeline';
 import * as _ from 'lodash';
 
 /**
@@ -7,7 +7,7 @@ import * as _ from 'lodash';
  * maps of property names to their corresponding animation blocks.
  */
 export function getOrderedBlocksByPropertyByLayer(animation: Animation) {
-  const blocksByPropertyByLayer: LayerMap<PropertyMap<AnimationBlock[]>> = {};
+  const blocksByPropertyByLayer: Dictionary<Dictionary<AnimationBlock[]>> = {};
 
   animation.blocks.forEach(block => {
     let blocksByProperty = blocksByPropertyByLayer[block.layerId];
@@ -42,18 +42,6 @@ export function getAvailablePropertyNamesForLayer(layer: Layer, animation: Anima
     }
   }
   return availablePropertyNames;
-}
-
-export interface LayerMap<T> {
-  [layerId: string]: T;
-}
-
-export interface AnimationMap<T> {
-  [animationId: string]: T;
-}
-
-export interface PropertyMap<T> {
-  [propertyName: string]: T;
 }
 
 export function regenerateModelIds(

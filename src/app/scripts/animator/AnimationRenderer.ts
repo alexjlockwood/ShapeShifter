@@ -1,8 +1,4 @@
-import {
-  LayerMap,
-  ModelUtil,
-  PropertyMap,
-} from 'app/scripts/common';
+import { ModelUtil } from 'app/scripts/common';
 import { INTERPOLATORS } from 'app/scripts/model/interpolators';
 import {
   Layer,
@@ -27,7 +23,7 @@ export class AnimationRenderer {
   private readonly renderedVectorLayer: VectorLayer;
 
   // Keys are layerIds and values are RenderedData objects.
-  private readonly animDataByLayer: LayerMap<RendererData> = {};
+  private readonly animDataByLayer: Dictionary<RendererData> = {};
 
   constructor(originalVectorLayer: VectorLayer, activeAnimation: Animation) {
     // TODO: technically this could be more performant if we only cloned the affected layers
@@ -93,7 +89,8 @@ export class AnimationRenderer {
 interface RendererData {
   readonly originalLayer: Layer;
   readonly renderedLayer: Layer;
-  readonly orderedBlocks: PropertyMap<AnimationBlock[]>;
+  // Maps property names to animation block lists.
+  readonly orderedBlocks: Dictionary<AnimationBlock[]>;
   cachedState?: PropertyState;
 }
 

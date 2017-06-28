@@ -24,10 +24,6 @@ import * as _ from 'lodash';
 // TODO: trim ids/strings?
 // TODO: check for invalid enum values
 
-interface StringMap<T> {
-  [index: string]: T;
-}
-
 /**
  * Utility function that takes an SVG string as input and
  * returns a VectorLayer model object.
@@ -72,26 +68,6 @@ export function loadVectorLayerFromSvgString(
     return undefined;
   }
 
-  const toNumberFn = num => num === undefined ? undefined : Number(num);
-  let width = toNumberFn(svgLengthToPx(documentElement.width) || undefined);
-  let height = toNumberFn(svgLengthToPx(documentElement.height) || undefined);
-  const alpha = toNumberFn(documentElement.getAttribute('opacity') || undefined);
-
-  const rootTransforms: Matrix[] = [];
-  const { viewBox } = documentElement;
-  if (viewBox && (!!viewBox.baseVal.width || !!viewBox.baseVal.height)) {
-    width = viewBox.baseVal.width;
-    height = viewBox.baseVal.height;
-
-    // Fake a translate transform for the viewbox.
-    rootTransforms.push(Matrix.fromTranslation(-viewBox.baseVal.x, -viewBox.baseVal.y));
-  }
-  const name = makeFinalNodeIdFn(documentElement.getAttribute('id'), 'vector');
-  const vectorLayer = new VectorLayer({
-    id: _.uniqueId(), name, children: [], width, height, alpha,
-  });
-
-  // TODO: handle clipPaths that have clip-path attributes
   // TODO: handle clipPaths that have children path elements with clip-path attributes
   // TODO: handle clipPaths with clipPathUnits="objectBoundingBox"
   const clipPathMap =
@@ -99,20 +75,50 @@ export function loadVectorLayerFromSvgString(
       return infos.map(info => info.path);
     });
 
-  console.info('====================');
-  console.info(clipPathMap);
+  const nodeToLayerFn = (node: Element, transforms: ReadonlyArray<Matrix>): Layer => {
+    if (!node
+      || node.nodeType === Node.TEXT_NODE
+      || node.nodeType === Node.COMMENT_NODE
+      || node instanceof SVGDefsElement
+      || node instanceof SVGUseElement) {
+      return undefined;
+    }
 
-  const rootLayer =
-    (function nodeToLayerFn(node: Element, transforms: ReadonlyArray<Matrix>): Layer {
-      if (!node
-        || node.nodeType === Node.TEXT_NODE
-        || node.nodeType === Node.COMMENT_NODE
-        || node instanceof SVGDefsElement
-        || node instanceof SVGUseElement) {
-        return undefined;
+    const nodeTransforms = getNodeTransforms(node as SVGGraphicsElement).reverse();
+    transforms = [...nodeTransforms, ...transforms];
+
+    // Get the referenced clip-path ID, if one exists.
+    const refClipPathId = getReferencedClipPathId(node);
+
+    const maybeWrapClipPathInGroupFn = (layer: Layer) => {
+      if (!refClipPathId) {
+        return layer;
       }
+      const paths =
+        (clipPathMap[refClipPathId] || [])
+          .map(p => p.mutate().addTransforms(transforms).build().clone());
+      if (!paths.length) {
+        // If the clipPath has no children, then clip the entire layer.
+        paths.push(new Path('M 0 0 Z'));
+      }
+      const groupChildren: Layer[] =
+        paths.map(p => {
+          return new ClipPathLayer({
+            name: makeFinalNodeIdFn(refClipPathId, 'mask'),
+            pathData: p,
+            children: [],
+          });
+        });
+      groupChildren.push(layer);
+      return new GroupLayer({
+        name: makeFinalNodeIdFn('wrapper', 'group'),
+        children: groupChildren,
+      });
+    };
 
-      const attrMap: StringMap<any> = {};
+    if (node instanceof SVGPathElement && node.getAttribute('d')) {
+      const path = node.getAttribute('d');
+      const attrMap: Dictionary<any> = {};
       const simpleAttrFn = (nodeAttr: string, contextAttr: string) => {
         if (node.hasAttribute(nodeAttr)) {
           attrMap[contextAttr] = node.getAttribute(nodeAttr);
@@ -129,106 +135,89 @@ export function loadVectorLayerFromSvgString(
       simpleAttrFn('fill-opacity', 'fillAlpha');
       simpleAttrFn('fill-rule', 'fillType');
 
-      let path = '';
-      if (node instanceof SVGPathElement && node.hasAttribute('d')) {
-        path = node.getAttribute('d');
-      }
-
-      const nodeTransforms = getNodeTransforms(node as SVGGraphicsElement).reverse();
-      transforms = [...nodeTransforms, ...transforms];
-
-      // Get the referenced clip-path ID, if one exists.
-      const refClipPathId = getReferencedClipPathId(node);
-
-      const maybeWrapClipPathInGroupFn = (layer: Layer) => {
-        if (!refClipPathId) {
-          return layer;
-        }
-        const paths =
-          (clipPathMap[refClipPathId] || [])
-            .map(p => p.mutate().addTransforms(transforms).build().clone());
-        if (!paths.length) {
-          // If the clipPath has no children, then clip the entire vector layer.
-          paths.push(new Path('M 0 0 Z'));
-        }
-        const groupChildren: Layer[] =
-          paths.map(p => {
-            return new ClipPathLayer({
-              name: makeFinalNodeIdFn(refClipPathId, 'mask'),
-              pathData: p,
-              children: [],
-            });
-          });
-        groupChildren.push(layer);
-        return new GroupLayer({
-          name: makeFinalNodeIdFn('wrapper', 'group'),
-          children: groupChildren,
-        });
+      // Set the default values as specified by the SVG spec. Note that some of these default
+      // values are different than the default values used by VectorDrawables.
+      const fillColor =
+        ('fillColor' in attrMap) ? ColorUtil.svgToAndroidColor(attrMap['fillColor']) : '#000';
+      const strokeColor =
+        ('strokeColor' in attrMap) ? ColorUtil.svgToAndroidColor(attrMap['strokeColor']) : undefined;
+      const fillAlpha = ('fillAlpha' in attrMap) ? Number(attrMap['fillAlpha']) : 1;
+      let strokeWidth = ('strokeWidth' in attrMap) ? Number(attrMap['strokeWidth']) : 1;
+      const strokeAlpha = ('strokeAlpha' in attrMap) ? Number(attrMap['strokeAlpha']) : 1;
+      const strokeLinecap: StrokeLineCap = ('strokeLinecap' in attrMap) ? attrMap['strokeLinecap'] : 'butt';
+      const strokeLinejoin: StrokeLineJoin = ('strokeLinejoin' in attrMap) ? attrMap['strokeLinecap'] : 'miter';
+      const strokeMiterLimit = ('strokeMiterLimit' in attrMap) ? Number(attrMap['strokeMiterLimit']) : 4;
+      const fillRuleToFillTypeFn = (fillRule: string) => {
+        return fillRule === 'evenodd' ? 'evenOdd' : 'nonZero';
       };
+      const fillType: FillType = ('fillType' in attrMap) ? fillRuleToFillTypeFn(attrMap['fillType']) : 'nonZero';
 
-      if (path) {
-        // Set the default values as specified by the SVG spec. Note that some of these default
-        // values are different than the default values used by VectorDrawables.
-        const fillColor =
-          ('fillColor' in attrMap) ? ColorUtil.svgToAndroidColor(attrMap['fillColor']) : '#000';
-        const strokeColor =
-          ('strokeColor' in attrMap) ? ColorUtil.svgToAndroidColor(attrMap['strokeColor']) : undefined;
-        const fillAlpha = ('fillAlpha' in attrMap) ? Number(attrMap['fillAlpha']) : 1;
-        let strokeWidth = ('strokeWidth' in attrMap) ? Number(attrMap['strokeWidth']) : 1;
-        const strokeAlpha = ('strokeAlpha' in attrMap) ? Number(attrMap['strokeAlpha']) : 1;
-        const strokeLinecap: StrokeLineCap = ('strokeLinecap' in attrMap) ? attrMap['strokeLinecap'] : 'butt';
-        const strokeLinejoin: StrokeLineJoin = ('strokeLinejoin' in attrMap) ? attrMap['strokeLinecap'] : 'miter';
-        const strokeMiterLimit = ('strokeMiterLimit' in attrMap) ? Number(attrMap['strokeMiterLimit']) : 4;
-        const fillRuleToFillTypeFn = (fillRule: string) => {
-          return fillRule === 'evenodd' ? 'evenOdd' : 'nonZero';
-        };
-        const fillType: FillType = ('fillType' in attrMap) ? fillRuleToFillTypeFn(attrMap['fillType']) : 'nonZero';
-
-        let pathData = new Path(path);
-        if (transforms.length) {
-          pathData = pathData.mutate().addTransforms(transforms).build().clone();
-          strokeWidth *= Matrix.flatten(...transforms).getScale();
-        }
-        // TODO: make best effort attempt to restore trimPath{Start,End,Offset}
-        return maybeWrapClipPathInGroupFn(
-          new PathLayer({
-            id: _.uniqueId(),
-            name: makeFinalNodeIdFn(node.getAttribute('id'), 'path'),
-            children: [],
-            pathData,
-            fillColor,
-            fillAlpha,
-            strokeColor,
-            strokeAlpha,
-            strokeWidth,
-            strokeLinecap,
-            strokeLinejoin,
-            strokeMiterLimit,
-            fillType,
-          }));
+      let pathData = new Path(path);
+      if (transforms.length) {
+        pathData = pathData.mutate().addTransforms(transforms).build().clone();
+        strokeWidth *= Matrix.flatten(...transforms).getScale();
       }
+      // TODO: make best effort attempt to restore trimPath{Start,End,Offset}
+      return maybeWrapClipPathInGroupFn(
+        new PathLayer({
+          id: _.uniqueId(),
+          name: makeFinalNodeIdFn(node.getAttribute('id'), 'path'),
+          children: [],
+          pathData,
+          fillColor,
+          fillAlpha,
+          strokeColor,
+          strokeAlpha,
+          strokeWidth,
+          strokeLinecap,
+          strokeLinejoin,
+          strokeMiterLimit,
+          fillType,
+        }));
+    }
 
-      if (node.childNodes) {
-        const children: Layer[] = [];
-        for (let i = 0; i < node.childNodes.length; i++) {
-          const child = node.childNodes.item(i) as Element;
-          const layer = nodeToLayerFn(child, transforms);
-          if (layer) {
-            children.push(layer);
-          }
+    if (node.childNodes) {
+      const children: Layer[] = [];
+      for (let i = 0; i < node.childNodes.length; i++) {
+        const child = node.childNodes.item(i) as Element;
+        const layer = nodeToLayerFn(child, transforms);
+        if (layer) {
+          children.push(layer);
         }
-        return maybeWrapClipPathInGroupFn(
-          new GroupLayer({
-            id: _.uniqueId(),
-            name: makeFinalNodeIdFn(node.getAttribute('id'), 'group'),
-            children,
-          }));
       }
-      return undefined;
-    })(documentElement, rootTransforms);
+      return maybeWrapClipPathInGroupFn(
+        new GroupLayer({
+          id: _.uniqueId(),
+          name: makeFinalNodeIdFn(node.getAttribute('id'), 'group'),
+          children,
+        }));
+    }
+    return undefined;
+  };
 
-  vectorLayer.children = rootLayer ? rootLayer.children : undefined;
-  return vectorLayer;
+  const toNumberFn = num => num === undefined ? undefined : Number(num);
+  let width = toNumberFn(svgLengthToPx(documentElement.width) || undefined);
+  let height = toNumberFn(svgLengthToPx(documentElement.height) || undefined);
+  const alpha = toNumberFn(documentElement.getAttribute('opacity') || undefined);
+
+  const rootTransforms: Matrix[] = [];
+  const { viewBox } = documentElement;
+  if (viewBox && (!!viewBox.baseVal.width || !!viewBox.baseVal.height)) {
+    width = viewBox.baseVal.width;
+    height = viewBox.baseVal.height;
+
+    // Fake a translate transform for the viewbox.
+    rootTransforms.push(Matrix.fromTranslation(-viewBox.baseVal.x, -viewBox.baseVal.y));
+  }
+  const rootLayer = nodeToLayerFn(documentElement, rootTransforms);
+  return new VectorLayer({
+    id: _.uniqueId(),
+    name: makeFinalNodeIdFn(documentElement.getAttribute('id'), 'vector'),
+    children: rootLayer ? rootLayer.children : undefined,
+    width,
+    height,
+    alpha,
+  });
 }
 
 function svgLengthToPx(svgLength) {
@@ -284,15 +273,15 @@ interface PathInfo {
 }
 
 interface ClipPathInfo {
-  readonly refClipPathId?: string;
   readonly pathInfos: ReadonlyArray<PathInfo>;
+  readonly refClipPathId?: string;
 }
 
 /**
  * Builds a map of clip path IDs to their corresponding clip path nodes.
  */
 function buildClipPathIdMap(rootNode: Element) {
-  const clipPathIdMap: StringMap<SVGClipPathElement> = {};
+  const clipPathIdMap: Dictionary<SVGClipPathElement> = {};
   (function recurseFn(node: Element) {
     if (node instanceof SVGClipPathElement) {
       const clipPathId = node.getAttribute('id');
@@ -346,7 +335,7 @@ function buildPathInfosMap(root: Element) {
       const refClipPathId = getReferencedClipPathId(n);
       return { pathInfos, refClipPathId } as ClipPathInfo;
     });
-  const pathInfosMap: StringMap<ReadonlyArray<PathInfo>> = {};
+  const pathInfosMap: Dictionary<ReadonlyArray<PathInfo>> = {};
   const recurseFn = (clipPathId: string) => {
     if (pathInfosMap[clipPathId]) {
       // Then the path infos have already been computed.
