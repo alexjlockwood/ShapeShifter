@@ -1,11 +1,6 @@
 import * as _ from 'lodash';
 
-import {
-  Inspectable,
-  NameProperty,
-  NumberProperty,
-  Property,
-} from '../properties';
+import { Inspectable, NameProperty, NumberProperty, Property } from '../properties';
 import { AnimationBlock } from '.';
 
 /**
@@ -19,7 +14,6 @@ import { AnimationBlock } from '.';
   new NumberProperty('duration', { min: 100, max: 60000 }),
 )
 export class Animation {
-
   constructor(obj = {} as ConstructorArgs) {
     this.id = obj.id || _.uniqueId();
     this.name = obj.name || 'anim';
@@ -50,5 +44,5 @@ interface AnimationArgs {
   blocks?: ReadonlyArray<AnimationBlock>;
 }
 
-export interface Animation extends AnimationArgs, Inspectable { }
-export interface ConstructorArgs extends AnimationArgs { }
+export interface Animation extends AnimationArgs, Inspectable {}
+export interface ConstructorArgs extends AnimationArgs {}

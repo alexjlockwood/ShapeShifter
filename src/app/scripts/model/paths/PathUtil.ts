@@ -1,12 +1,6 @@
-import {
-  MathUtil,
-  Point,
-} from 'app/scripts/common';
+import { MathUtil, Point } from 'app/scripts/common';
 
-import {
-  Command,
-  Path,
-} from '.';
+import { Command, Path } from '.';
 
 /**
  * Interpolates between a start and end path using the specified fraction.
@@ -43,13 +37,12 @@ export function interpolate(start: Path, end: Path, fraction: number) {
 /**
  * Sorts a list of path ops in descending order.
  */
-export function sortPathOps(ops: Array<{ subIdx: number, cmdIdx: number }>) {
-  return ops.sort(
-    ({ subIdx: s1, cmdIdx: c1 }, { subIdx: s2, cmdIdx: c2 }) => {
-      // Perform higher index splits first so that we don't alter the
-      // indices of the lower index split operations.
-      return s1 !== s2 ? s2 - s1 : c2 - c1;
-    });
+export function sortPathOps(ops: Array<{ subIdx: number; cmdIdx: number }>) {
+  return ops.sort(({ subIdx: s1, cmdIdx: c1 }, { subIdx: s2, cmdIdx: c2 }) => {
+    // Perform higher index splits first so that we don't alter the
+    // indices of the lower index split operations.
+    return s1 !== s2 ? s2 - s1 : c2 - c1;
+  });
 }
 
 export function toStrokeDashArray(
@@ -81,5 +74,5 @@ export function toStrokeDashOffset(
   // The amount to offset the path is equal to the trimPathStart plus
   // trimPathOffset. We mod the result because the trimmed path
   // should wrap around once it reaches 1.
-  return pathLength * (1 - ((trimPathStart + trimPathOffset) % 1));
+  return pathLength * (1 - (trimPathStart + trimPathOffset) % 1);
 }

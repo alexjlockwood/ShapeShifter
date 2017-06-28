@@ -1,19 +1,13 @@
-import {
-  Projection,
-  SvgChar,
-} from '..';
-import { CommandBuilder } from '../Command';
-import {
-  BBox,
-  Calculator,
-  Line,
-} from '.';
-import { LineCalculator } from './LineCalculator';
-import { PointCalculator } from './PointCalculator';
 import { Point } from 'app/scripts/common';
 import * as BezierJs from 'bezier-js';
 import { environment } from 'environments/environment';
 import * as _ from 'lodash';
+
+import { Projection, SvgChar } from '..';
+import { CommandBuilder } from '../Command';
+import { BBox, Calculator, Line } from '.';
+import { LineCalculator } from './LineCalculator';
+import { PointCalculator } from './PointCalculator';
 
 /**
  * A simple typed wrapper class around the amazing bezier-js library.
@@ -24,11 +18,7 @@ export class BezierCalculator implements Calculator {
   private bbox: BBox;
   private bezierJs_: any;
 
-  constructor(
-    private readonly id: string,
-    private readonly svgChar: SvgChar,
-    ...points: Point[],
-  ) {
+  constructor(private readonly id: string, private readonly svgChar: SvgChar, ...points: Point[]) {
     this.points = points;
 
     // Don't initialize variables lazily for dev builds (to avoid
@@ -62,10 +52,10 @@ export class BezierCalculator implements Calculator {
 
   split(t1: number, t2: number): Calculator {
     if (t1 === t2) {
-      const p: { x: number, y: number } = this.bezierJs.get(t1);
+      const p: { x: number; y: number } = this.bezierJs.get(t1);
       return new PointCalculator(this.id, this.svgChar, new Point(p.x, p.y));
     }
-    const splitBezPoints: Array<{ x: number, y: number }> = this.bezierJs.split(t1, t2).points;
+    const splitBezPoints: Array<{ x: number; y: number }> = this.bezierJs.split(t1, t2).points;
     const points: Point[] = splitBezPoints.map(p => new Point(p.x, p.y));
     const uniquePoints: Point[] = _.uniqWith(points, (p1: Point, p2: Point) => p1.equals(p2));
     if (uniquePoints.length === 2) {
@@ -84,11 +74,13 @@ export class BezierCalculator implements Calculator {
       const qcp2 = this.points[2];
       const ccp0 = qcp0;
       const ccp1 = new Point(
-        qcp0.x + (2 / 3) * (qcp1.x - qcp0.x),
-        qcp0.y + (2 / 3) * (qcp1.y - qcp0.y));
+        qcp0.x + 2 / 3 * (qcp1.x - qcp0.x),
+        qcp0.y + 2 / 3 * (qcp1.y - qcp0.y),
+      );
       const ccp2 = new Point(
-        qcp2.x + (2 / 3) * (qcp1.x - qcp2.x),
-        qcp2.y + (2 / 3) * (qcp1.y - qcp2.y));
+        qcp2.x + 2 / 3 * (qcp1.x - qcp2.x),
+        qcp2.y + 2 / 3 * (qcp1.y - qcp2.y),
+      );
       const ccp3 = qcp2;
       return new BezierCalculator(this.id, svgChar, ccp0, ccp1, ccp2, ccp3);
     }
@@ -123,7 +115,8 @@ export class BezierCalculator implements Calculator {
       // TODO: handle degenerate curves!!!!!
       console.warn(
         'Could not find the midpoint for: ',
-        `${this.svgChar} ` + this.points.toString());
+        `${this.svgChar} ` + this.points.toString(),
+      );
       return originalDistance;
     }
 

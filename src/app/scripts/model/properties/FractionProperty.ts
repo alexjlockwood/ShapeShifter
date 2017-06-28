@@ -1,7 +1,4 @@
-import {
-  NumberConfig,
-  NumberProperty,
-} from './NumberProperty';
+import { NumberConfig, NumberProperty } from './NumberProperty';
 
 export class FractionProperty extends NumberProperty {
   constructor(name: string, config: NumberConfig = {}) {

@@ -1,21 +1,12 @@
-import {
-  Command,
-  HitOptions,
-  HitResult,
-  Line,
-  ProjectionOntoPath,
-  SubPath,
-} from '.';
-import { CommandState } from './CommandState';
-import * as PathParser from './PathParser';
-import { createSubPaths } from './SubPath';
-import {
-  SubPathState,
-  findSubPathState,
-} from './SubPathState';
 import { MathUtil, Point, Rect } from 'app/scripts/common';
 import * as _ from 'lodash';
 import * as polylabel from 'polylabel';
+
+import { Command, HitOptions, HitResult, Line, ProjectionOntoPath, SubPath } from '.';
+import { CommandState } from './CommandState';
+import * as PathParser from './PathParser';
+import { createSubPaths } from './SubPath';
+import { SubPathState, findSubPathState } from './SubPathState';
 
 /**
  * Container class that encapsulates a Path's underlying state.
@@ -34,27 +25,26 @@ export class PathState {
     // The number of collapsing subpaths appended to the end of the subPathStateMap.
     public readonly numCollapsingSubPaths = 0,
   ) {
-    const commands = (typeof obj === 'string' ? PathParser.parseCommands(obj) : obj);
+    const commands = typeof obj === 'string' ? PathParser.parseCommands(obj) : obj;
     const subPaths = createSubPaths(commands);
     this.subPathStateMap =
-      subPathStateMap || subPaths.map(s => {
+      subPathStateMap ||
+      subPaths.map(s => {
         return new SubPathState(s.getCommands().map(c => new CommandState(c)));
       });
     this.subPathOrdering = subPathOrdering || subPaths.map((_, i) => i);
     this.subPaths = subPaths.map((subPath, subIdx) => {
       const cmds = subPath.getCommands().map((cmd, cmdIdx) => {
         const { cs, splitIdx } = this.findCommandStateInfo(subIdx, cmdIdx);
-        return cmd.mutate()
-          .setId(cs.getIdAtIndex(splitIdx))
-          .build();
+        return cmd.mutate().setId(cs.getIdAtIndex(splitIdx)).build();
       });
       const spsIdx = this.subPathOrdering[subIdx];
-      const isCollapsing =
-        this.subPathOrdering.length - this.numCollapsingSubPaths <= spsIdx;
+      const isCollapsing = this.subPathOrdering.length - this.numCollapsingSubPaths <= spsIdx;
       const sps = this.findSubPathState(subIdx);
       const isSplit = isSubPathSplit(this.subPathStateMap, spsIdx);
       const isUnsplittable = !this.subPathStateMap.includes(sps);
-      return subPath.mutate()
+      return subPath
+        .mutate()
         .setId(sps.getId())
         .setCommands(cmds)
         .setIsCollapsing(isCollapsing)
@@ -75,40 +65,41 @@ export class PathState {
   }
 
   project(point: Point, restrictToSubIdx?: number): ProjectionOntoPath | undefined {
-    const minProjectionResultInfo =
-      _.chain(this.subPaths)
-        .map((subPath, subIdx) => { return { subPath, subIdx }; })
-        .filter(obj => {
-          const { subPath, subIdx } = obj;
-          return !subPath.isCollapsing()
-            && (restrictToSubIdx === undefined || restrictToSubIdx === subIdx);
-        })
-        .map(obj => {
-          const { subIdx } = obj;
-          const sps = this.findSubPathState(subIdx);
-          return sps.getCommandStates()
-            .map((cs, csIdx) => {
-              const csProjection = cs.project(point);
-              if (csProjection && sps.isReversed()) {
-                const t = csProjection.projection.t;
-                csProjection.projection.t = 1 - t;
-              }
-              return {
-                spsIdx: this.subPathOrdering[subIdx],
-                csIdx,
-                splitIdx: csProjection ? csProjection.splitIdx : 0,
-                projection: csProjection ? csProjection.projection : undefined,
-              };
-            });
-        })
-        .flatMap(projections => projections)
-        .filter(obj => !!obj.projection)
-        // Reverse so that commands drawn with higher z-orders are preferred.
-        .reverse()
-        .reduce((prev, curr) => {
-          return prev && prev.projection.d < curr.projection.d ? prev : curr;
-        }, undefined)
-        .value();
+    const minProjectionResultInfo = _.chain(this.subPaths)
+      .map((subPath, subIdx) => {
+        return { subPath, subIdx };
+      })
+      .filter(obj => {
+        const { subPath, subIdx } = obj;
+        return (
+          !subPath.isCollapsing() && (restrictToSubIdx === undefined || restrictToSubIdx === subIdx)
+        );
+      })
+      .map(obj => {
+        const { subIdx } = obj;
+        const sps = this.findSubPathState(subIdx);
+        return sps.getCommandStates().map((cs, csIdx) => {
+          const csProjection = cs.project(point);
+          if (csProjection && sps.isReversed()) {
+            const t = csProjection.projection.t;
+            csProjection.projection.t = 1 - t;
+          }
+          return {
+            spsIdx: this.subPathOrdering[subIdx],
+            csIdx,
+            splitIdx: csProjection ? csProjection.splitIdx : 0,
+            projection: csProjection ? csProjection.projection : undefined,
+          };
+        });
+      })
+      .flatMap(projections => projections)
+      .filter(obj => !!obj.projection)
+      // Reverse so that commands drawn with higher z-orders are preferred.
+      .reverse()
+      .reduce((prev, curr) => {
+        return prev && prev.projection.d < curr.projection.d ? prev : curr;
+      }, undefined)
+      .value();
     if (!minProjectionResultInfo) {
       return undefined;
     }
@@ -123,27 +114,27 @@ export class PathState {
     const segmentHits: ProjectionOntoPath[] = [];
     const shapeHits: Array<{ subIdx: number }> = [];
     const defaultRestrictToSubIdx = this.subPaths.map((_, i) => i);
-    const restrictToSubIdxSet =
-      new Set<number>(opts.restrictToSubIdx || defaultRestrictToSubIdx);
+    const restrictToSubIdxSet = new Set<number>(opts.restrictToSubIdx || defaultRestrictToSubIdx);
 
     if (opts.isPointInRangeFn) {
-      endPointHits.push(...
-        _.chain(this.subPaths)
-          .map((subPath, subIdx) => { return { subPath, subIdx }; })
+      endPointHits.push(
+        ..._.chain(this.subPaths)
+          .map((subPath, subIdx) => {
+            return { subPath, subIdx };
+          })
           .filter(obj => {
             const { subPath, subIdx } = obj;
             return !subPath.isCollapsing() && restrictToSubIdxSet.has(subIdx);
           })
           .map(obj => {
             const { subPath, subIdx } = obj;
-            return subPath.getCommands()
-              .map((cmd, cmdIdx) => {
-                const { x, y } = cmd.getEnd();
-                const d = MathUtil.distance(cmd.getEnd(), point);
-                const t = 1;
-                const projection = { x, y, d, t };
-                return { subIdx, cmdIdx, projection, cmd };
-              });
+            return subPath.getCommands().map((cmd, cmdIdx) => {
+              const { x, y } = cmd.getEnd();
+              const d = MathUtil.distance(cmd.getEnd(), point);
+              const t = 1;
+              const projection = { x, y, d, t };
+              return { subIdx, cmdIdx, projection, cmd };
+            });
           })
           .flatMap(pointInfos => pointInfos)
           .filter(pointInfo => opts.isPointInRangeFn(pointInfo.projection.d, pointInfo.cmd))
@@ -158,9 +149,11 @@ export class PathState {
     if (opts.isSegmentInRangeFn) {
       // TODO: also check to see if the hit occurred at a stroke-linejoin vertex
       // TODO: take stroke width scaling into account as well?
-      segmentHits.push(...
-        _.chain(this.subPaths)
-          .map((subPath, subIdx) => { return { subPath, subIdx }; })
+      segmentHits.push(
+        ..._.chain(this.subPaths)
+          .map((subPath, subIdx) => {
+            return { subPath, subIdx };
+          })
           .filter(obj => {
             const { subPath, subIdx } = obj;
             return !subPath.isCollapsing() && restrictToSubIdxSet.has(subIdx);
@@ -193,13 +186,14 @@ export class PathState {
     }
 
     if (opts.findShapesInRange) {
-      shapeHits.push(...
-        _.chain(this.subPaths)
-          .map((subPath, subIdx) => { return { subPath, subIdx }; })
+      shapeHits.push(
+        ..._.chain(this.subPaths)
+          .map((subPath, subIdx) => {
+            return { subPath, subIdx };
+          })
           .filter(obj => {
             const { subPath, subIdx } = obj;
-            return subPath.isClosed()
-              && !subPath.isCollapsing() && restrictToSubIdxSet.has(subIdx);
+            return subPath.isClosed() && !subPath.isCollapsing() && restrictToSubIdxSet.has(subIdx);
           })
           .flatMap(obj => {
             const { subIdx } = obj;
@@ -281,8 +275,7 @@ export class PathState {
 
   private findCommandStateInfo(subIdx: number, cmdIdx: number) {
     const sps = this.findSubPathState(subIdx);
-    const numCommandsInSubPath =
-      _.sumBy(sps.getCommandStates(), cs => cs.getCommands().length);
+    const numCommandsInSubPath = _.sumBy(sps.getCommandStates(), cs => cs.getCommands().length);
     if (cmdIdx && sps.isReversed()) {
       cmdIdx = numCommandsInSubPath - cmdIdx;
     }
@@ -307,7 +300,7 @@ export class PathState {
     const commandStates = sps.getCommandStates();
     const numCmds = _.sumBy(commandStates, cs => cs.getCommands().length);
     let cmdIdx =
-      splitIdx + _.sum(commandStates.map((cs, i) => i < csIdx ? cs.getCommands().length : 0));
+      splitIdx + _.sum(commandStates.map((cs, i) => (i < csIdx ? cs.getCommands().length : 0)));
     let shiftOffset = sps.getShiftOffset();
     if (sps.isReversed()) {
       cmdIdx = numCmds - cmdIdx;

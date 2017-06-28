@@ -2,7 +2,6 @@ import { Command } from '.';
 import * as PathParser from './PathParser';
 
 describe('PathParser', () => {
-
   it(`sub paths begin with lowercase 'm'`, () => {
     let path = 'm 9 7 -1 1 -8 -8 L 10 10 Z';
     let cmds = PathParser.parseCommands(path);

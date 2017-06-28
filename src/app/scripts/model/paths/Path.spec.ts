@@ -1,22 +1,13 @@
-import {
-  MathUtil,
-  Point,
-} from 'app/scripts/common';
+import { MathUtil, Point } from 'app/scripts/common';
 import * as _ from 'lodash';
 import * as PathUtil from 'test/PathUtil';
 
-import {
-  Command,
-  Path,
-  ProjectionOntoPath,
-  SvgChar,
-} from '.';
+import { Command, Path, ProjectionOntoPath, SvgChar } from '.';
 
 const lerp = MathUtil.lerp;
 const fromPathOpString = PathUtil.fromPathOpString;
 
 describe('Path', () => {
-
   describe('constructing new Path objects', () => {
     function buildPath(svgChars: string) {
       const numSvgCharArgsFn = (svgChar: SvgChar) => {
@@ -32,10 +23,15 @@ describe('Path', () => {
             return 0;
         }
       };
-      return new Path(svgChars.split('').map((svgChar: SvgChar) => {
-        const args = '5'.repeat(numSvgCharArgsFn(svgChar)).split('').join(' ');
-        return svgChar === 'Z' ? 'Z' : `${svgChar} ${args}`;
-      }).join(' '));
+      return new Path(
+        svgChars
+          .split('')
+          .map((svgChar: SvgChar) => {
+            const args = '5'.repeat(numSvgCharArgsFn(svgChar)).split('').join(' ');
+            return svgChar === 'Z' ? 'Z' : `${svgChar} ${args}`;
+          })
+          .join(' '),
+      );
     }
 
     const TESTS = [
@@ -99,24 +95,19 @@ describe('Path', () => {
   describe('mutating Path objects', () => {
     it('command IDs persist correctly after mutations', () => {
       const totalIds = new Set();
-      const extractPathIdsFn =
-        (path: Path, expectedSize: number, expectedTotalSize: number) => {
-          const ids = path.getCommands().map(cmd => cmd.getId());
-          ids.forEach(id => totalIds.add(id));
-          expect(new Set(ids).size).toEqual(expectedSize);
-          expect(totalIds.size).toEqual(expectedTotalSize);
-        };
+      const extractPathIdsFn = (path: Path, expectedSize: number, expectedTotalSize: number) => {
+        const ids = path.getCommands().map(cmd => cmd.getId());
+        ids.forEach(id => totalIds.add(id));
+        expect(new Set(ids).size).toEqual(expectedSize);
+        expect(totalIds.size).toEqual(expectedTotalSize);
+      };
 
       // Creating a new path generates 4 new ids.
       let path = new Path('M 0 0 L 0 0 L 0 0 L 0 0');
       extractPathIdsFn(path, 4, 4);
 
       // Reversing/shifting an existing path generates no new ids.
-      path = path.mutate()
-        .shiftSubPathBack(0)
-        .reverseSubPath(0)
-        .shiftSubPathForward(0)
-        .build();
+      path = path.mutate().shiftSubPathBack(0).reverseSubPath(0).shiftSubPathForward(0).build();
       extractPathIdsFn(path, 4, 4);
 
       // Splitting an existing path generates no new ids.
@@ -137,41 +128,17 @@ describe('Path', () => {
 
     const MUTATION_TESTS = [
       // Reverse/shift commands.
-      makeTest(
-        'M 0 0 10 10 20 20',
-        'RV 0',
-        'M 20 20 10 10 0 0',
-      ),
-      makeTest(
-        'M 0 0 L 10 10 L 20 20 Z',
-        'RV 0',
-        'M 0 0 L 20 20 L 10 10 L 0 0',
-      ),
-      makeTest(
-        'M 19 11 L 5 11 L 5 13 L 19 13 Z',
-        'RV 0',
-        'M 19 11 L 19 13 L 5 13 L 5 11 L 19 11',
-      ),
+      makeTest('M 0 0 10 10 20 20', 'RV 0', 'M 20 20 10 10 0 0'),
+      makeTest('M 0 0 L 10 10 L 20 20 Z', 'RV 0', 'M 0 0 L 20 20 L 10 10 L 0 0'),
+      makeTest('M 19 11 L 5 11 L 5 13 L 19 13 Z', 'RV 0', 'M 19 11 L 19 13 L 5 13 L 5 11 L 19 11'),
       makeTest(
         'M 19 11 L 19 13 L 5 13 L 5 11 L 19 11',
         'RV 0',
         'M 19 11 L 5 11 L 5 13 L 19 13 L 19 11',
       ),
-      makeTest(
-        'M 19 11 L 5 11 L 5 13 L 19 13 Z',
-        'RV 0 RV 0',
-        'M 19 11 L 5 11 L 5 13 L 19 13 Z',
-      ),
-      makeTest(
-        'M 19 11 L 5 11 L 5 13 L 19 13 Z',
-        'SF 0',
-        'M 5 11 L 5 13 L 19 13 L 19 11 L 5 11',
-      ),
-      makeTest(
-        'M 19 11 L 5 11 L 5 13 L 19 13 Z',
-        'SB 0 SF 0',
-        'M 19 11 L 5 11 L 5 13 L 19 13 Z',
-      ),
+      makeTest('M 19 11 L 5 11 L 5 13 L 19 13 Z', 'RV 0 RV 0', 'M 19 11 L 5 11 L 5 13 L 19 13 Z'),
+      makeTest('M 19 11 L 5 11 L 5 13 L 19 13 Z', 'SF 0', 'M 5 11 L 5 13 L 19 13 L 19 11 L 5 11'),
+      makeTest('M 19 11 L 5 11 L 5 13 L 19 13 Z', 'SB 0 SF 0', 'M 19 11 L 5 11 L 5 13 L 19 13 Z'),
       makeTest(
         'M 19 11 C 19 11 5 11 5 11 C 5 11 5 13 5 13 L 19 13 L 19 11',
         'RV 0',
@@ -185,64 +152,32 @@ describe('Path', () => {
       makeTest(
         'M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z',
         'SIH 0 4 SFSP 0 1 4 SIH 0 4 SFSP 0 4 7',
-        'M 20 11 L 7.83 11 L 8 8 L 4 12 L 8 16 L 7.83 13 L 20 13 L 20 11 L 20 11 M 8 16 L 12 20 L 13.41 18.59 '
-        + 'L 7.83 13 L 8 16 M 7.83 11 L 13.42 5.41 L 12 4 L 8 8 L 7.83 11',
+        'M 20 11 L 7.83 11 L 8 8 L 4 12 L 8 16 L 7.83 13 L 20 13 L 20 11 L 20 11 M 8 16 L 12 20 L 13.41 18.59 ' +
+          'L 7.83 13 L 8 16 M 7.83 11 L 13.42 5.41 L 12 4 L 8 8 L 7.83 11',
       ),
       makeTest(
         'M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z',
         'SIH 0 4 SFSP 0 1 4 SIH 0 4 SFSP 0 4 7 SB 0 SF 0',
-        'M 20 11 L 7.83 11 L 8 8 L 4 12 L 8 16 L 7.83 13 L 20 13 L 20 11 L 20 11 M 8 16 L 12 20 L 13.41 18.59 '
-        + 'L 7.83 13 L 8 16 M 7.83 11 L 13.42 5.41 L 12 4 L 8 8 L 7.83 11',
+        'M 20 11 L 7.83 11 L 8 8 L 4 12 L 8 16 L 7.83 13 L 20 13 L 20 11 L 20 11 M 8 16 L 12 20 L 13.41 18.59 ' +
+          'L 7.83 13 L 8 16 M 7.83 11 L 13.42 5.41 L 12 4 L 8 8 L 7.83 11',
       ),
       // Split commands.
-      makeTest(
-        'M 0 0 L 10 10 L 20 20',
-        'S 0 1 0.5',
-        'M 0 0 L 5 5 L 10 10 L 20 20',
-      ),
-      makeTest(
-        'M 0 0 L 10 10 L 20 20',
-        'SIH 0 1',
-        'M 0 0 L 5 5 L 10 10 L 20 20',
-      ),
-      makeTest(
-        'M 0 0 L 5 5 L 10 10 L 20 20',
-        'SIH 0 2',
-        'M 0 0 L 5 5 L 7.5 7.5 L 10 10 L 20 20',
-      ),
-      makeTest(
-        'M 0 0 L 10 10 L 20 20',
-        'SIH 0 2',
-        'M 0 0 L 10 10 L 15 15 L 20 20',
-      ),
-      makeTest(
-        'M 0 0 L 10 10 L 20 20',
-        'RV 0 SIH 0 1',
-        'M 20 20 L 15 15 L 10 10 L 0 0',
-      ),
+      makeTest('M 0 0 L 10 10 L 20 20', 'S 0 1 0.5', 'M 0 0 L 5 5 L 10 10 L 20 20'),
+      makeTest('M 0 0 L 10 10 L 20 20', 'SIH 0 1', 'M 0 0 L 5 5 L 10 10 L 20 20'),
+      makeTest('M 0 0 L 5 5 L 10 10 L 20 20', 'SIH 0 2', 'M 0 0 L 5 5 L 7.5 7.5 L 10 10 L 20 20'),
+      makeTest('M 0 0 L 10 10 L 20 20', 'SIH 0 2', 'M 0 0 L 10 10 L 15 15 L 20 20'),
+      makeTest('M 0 0 L 10 10 L 20 20', 'RV 0 SIH 0 1', 'M 20 20 L 15 15 L 10 10 L 0 0'),
       makeTest(
         'M 20 22 L 4 22 L 4 2 L 6 2 L 6 14 L 8 14 L 8 2 L 10 2 L 10 14 Z',
         'S 0 2 0.5',
         'M 20 22 L 4 22 L 4 12 L 4 2 L 6 2 L 6 14 L 8 14 L 8 2 L 10 2 L 10 14 Z',
       ),
       // Split at t=0.
-      makeTest(
-        'M 0 0 L 0 10 L 10 10',
-        'S 0 2 0',
-        'M 0 0 L 0 10 L 0 10 L 10 10',
-      ),
+      makeTest('M 0 0 L 0 10 L 10 10', 'S 0 2 0', 'M 0 0 L 0 10 L 0 10 L 10 10'),
       // Split at t=1.
-      makeTest(
-        'M 0 0 L 0 10 L 10 10',
-        'S 0 2 1',
-        'M 0 0 L 0 10 L 10 10 L 10 10',
-      ),
+      makeTest('M 0 0 L 0 10 L 10 10', 'S 0 2 1', 'M 0 0 L 0 10 L 10 10 L 10 10'),
       // Split 0-length path.
-      makeTest(
-        'M 0 0 L 0 0',
-        'S 0 1 0 S 0 1 0.5 S 0 1 1',
-        'M 0 0 L 0 0 L 0 0 L 0 0 L 0 0',
-      ),
+      makeTest('M 0 0 L 0 0', 'S 0 1 0 S 0 1 0.5 S 0 1 1', 'M 0 0 L 0 0 L 0 0 L 0 0 L 0 0'),
       makeTest(
         'M 0 0 L 0 10 L 10 10 L 10 0 L 0 0',
         'S 0 2 0.25 0.5',
@@ -259,23 +194,11 @@ describe('Path', () => {
         'M 12 4 L 4 4 L 4 20 L 20 20 L 20 4 L 18 4 L 16 4 L 14 4 L 12 4',
       ),
       // Split closepath command.
-      makeTest(
-        'M 0 0 L 0 10 L 10 10 Z',
-        'S 0 3 0.5',
-        'M 0 0 L 0 10 L 10 10 L 5 5 Z',
-      ),
+      makeTest('M 0 0 L 0 10 L 10 10 Z', 'S 0 3 0.5', 'M 0 0 L 0 10 L 10 10 L 5 5 Z'),
       // Split in half closepath command.
-      makeTest(
-        'M 0 0 L 0 10 L 10 10 Z',
-        'SIH 0 3',
-        'M 0 0 L 0 10 L 10 10 L 5 5 Z',
-      ),
+      makeTest('M 0 0 L 0 10 L 10 10 Z', 'SIH 0 3', 'M 0 0 L 0 10 L 10 10 L 5 5 Z'),
       // Move sub paths.
-      makeTest(
-        'M 0 0 L 0 0 L 1 1',
-        'M 0 0',
-        'M 0 0 L 0 0 L 1 1',
-      ),
+      makeTest('M 0 0 L 0 0 L 1 1', 'M 0 0', 'M 0 0 L 0 0 L 1 1'),
       makeTest(
         'M 0 0 L 0 0 L 0 0 M 1 1 L 1 1 L 1 1 M 2 2 L 2 2 L 2 2',
         'M 0 1',
@@ -337,74 +260,46 @@ describe('Path', () => {
         'M 0 0 L 0 0 M 2 2 L 2 2 M 3 3 L 3 3 M 4 4 L 4 4 L 4 4 M 1 1 L 1 1',
       ),
       makeTest(
-        'M 9 4 C 9 2.89 9.89 2 11 2 C 12.11 2 13 2.89 13 4 C 13 5.11 12.11 6 11 6 C 9.89 6 9 5.11 9 4 Z '
-        + 'M 16 13 C 16 14.333 16 15.667 16 17 C 15 17 14 17 13 17 C 13 18.667 13 20.333 13 22 C 12 22 11 22 10 22 '
-        + 'C 10 20.333 10 18.667 10 17 C 9.333 17 8.667 17 8 17 C 8 14.667 8 12.333 8 10 C 8 8.34 9.34 7 11 7 C 12.66 7 14 8.34 14 10 '
-        + 'C 15.17 10.49 15.99 11.66 16 13 L 16 13 M 15 5.5 C 15 5.5 15 5.5 15 5.5 C 15 5.5 15 5.5 15 5.5 C 15 5.5 15 5.5 15 5.5 '
-        + 'C 15 5.5 15 5.5 15 5.5 L 15 5.5 M 19.5 9.5 C 19.5 9.5 19.5 9.5 19.5 9.5 C 19.5 9.5 19.5 9.5 19.5 9.5 '
-        + 'C 19.5 9.5 19.5 9.5 19.5 9.5 C 19.5 9.5 19.5 9.5 19.5 9.5 L 19.5 9.5 M 11.99 16.24 C 11.99 16.24 11.99 16.24 11.99 16.24 '
-        + 'C 11.99 16.24 11.99 16.24 11.99 16.24 C 11.99 16.24 11.99 16.24 11.99 16.24 C 11.99 16.24 11.99 16.24 11.99 16.24 '
-        + 'C 11.99 16.24 11.99 16.24 11.99 16.24 C 11.99 16.24 11.99 16.24 11.99 16.24 C 11.99 16.24 11.99 16.24 11.99 16.24 '
-        + 'C 11.99 16.24 11.99 16.24 11.99 16.24 C 11.99 16.24 11.99 16.24 11.99 16.24 C 11.99 16.24 11.99 16.24 11.99 16.24 '
-        + 'C 11.99 16.24 11.99 16.24 11.99 16.24 L 11.99 16.24 C 11.99 16.24 11.99 16.24 11.99 16.24 '
-        + 'C 11.99 16.24 11.99 16.24 11.99 16.24 C 11.99 16.24 11.99 16.24 11.99 16.24 L 11.99 16.24',
+        'M 9 4 C 9 2.89 9.89 2 11 2 C 12.11 2 13 2.89 13 4 C 13 5.11 12.11 6 11 6 C 9.89 6 9 5.11 9 4 Z ' +
+          'M 16 13 C 16 14.333 16 15.667 16 17 C 15 17 14 17 13 17 C 13 18.667 13 20.333 13 22 C 12 22 11 22 10 22 ' +
+          'C 10 20.333 10 18.667 10 17 C 9.333 17 8.667 17 8 17 C 8 14.667 8 12.333 8 10 C 8 8.34 9.34 7 11 7 C 12.66 7 14 8.34 14 10 ' +
+          'C 15.17 10.49 15.99 11.66 16 13 L 16 13 M 15 5.5 C 15 5.5 15 5.5 15 5.5 C 15 5.5 15 5.5 15 5.5 C 15 5.5 15 5.5 15 5.5 ' +
+          'C 15 5.5 15 5.5 15 5.5 L 15 5.5 M 19.5 9.5 C 19.5 9.5 19.5 9.5 19.5 9.5 C 19.5 9.5 19.5 9.5 19.5 9.5 ' +
+          'C 19.5 9.5 19.5 9.5 19.5 9.5 C 19.5 9.5 19.5 9.5 19.5 9.5 L 19.5 9.5 M 11.99 16.24 C 11.99 16.24 11.99 16.24 11.99 16.24 ' +
+          'C 11.99 16.24 11.99 16.24 11.99 16.24 C 11.99 16.24 11.99 16.24 11.99 16.24 C 11.99 16.24 11.99 16.24 11.99 16.24 ' +
+          'C 11.99 16.24 11.99 16.24 11.99 16.24 C 11.99 16.24 11.99 16.24 11.99 16.24 C 11.99 16.24 11.99 16.24 11.99 16.24 ' +
+          'C 11.99 16.24 11.99 16.24 11.99 16.24 C 11.99 16.24 11.99 16.24 11.99 16.24 C 11.99 16.24 11.99 16.24 11.99 16.24 ' +
+          'C 11.99 16.24 11.99 16.24 11.99 16.24 L 11.99 16.24 C 11.99 16.24 11.99 16.24 11.99 16.24 ' +
+          'C 11.99 16.24 11.99 16.24 11.99 16.24 C 11.99 16.24 11.99 16.24 11.99 16.24 L 11.99 16.24',
         'M 1 4',
-        'M 9 4 C 9 2.89 9.89 2 11 2 C 12.11 2 13 2.89 13 4 C 13 5.11 12.11 6 11 6 C 9.89 6 9 5.11 9 4 Z '
-        + 'M 15 5.5 C 15 5.5 15 5.5 15 5.5 C 15 5.5 15 5.5 15 5.5 C 15 5.5 15 5.5 15 5.5 '
-        + 'C 15 5.5 15 5.5 15 5.5 L 15 5.5 M 19.5 9.5 C 19.5 9.5 19.5 9.5 19.5 9.5 C 19.5 9.5 19.5 9.5 19.5 9.5 '
-        + 'C 19.5 9.5 19.5 9.5 19.5 9.5 C 19.5 9.5 19.5 9.5 19.5 9.5 L 19.5 9.5 M 11.99 16.24 C 11.99 16.24 11.99 16.24 11.99 16.24 '
-        + 'C 11.99 16.24 11.99 16.24 11.99 16.24 C 11.99 16.24 11.99 16.24 11.99 16.24 C 11.99 16.24 11.99 16.24 11.99 16.24 '
-        + 'C 11.99 16.24 11.99 16.24 11.99 16.24 C 11.99 16.24 11.99 16.24 11.99 16.24 C 11.99 16.24 11.99 16.24 11.99 16.24 '
-        + 'C 11.99 16.24 11.99 16.24 11.99 16.24 C 11.99 16.24 11.99 16.24 11.99 16.24 C 11.99 16.24 11.99 16.24 11.99 16.24 '
-        + 'C 11.99 16.24 11.99 16.24 11.99 16.24 L 11.99 16.24 C 11.99 16.24 11.99 16.24 11.99 16.24 '
-        + 'C 11.99 16.24 11.99 16.24 11.99 16.24 C 11.99 16.24 11.99 16.24 11.99 16.24 L 11.99 16.24'
-        + 'M 16 13 C 16 14.333 16 15.667 16 17 C 15 17 14 17 13 17 C 13 18.667 13 20.333 13 22 C 12 22 11 22 10 22 '
-        + 'C 10 20.333 10 18.667 10 17 C 9.333 17 8.667 17 8 17 C 8 14.667 8 12.333 8 10 C 8 8.34 9.34 7 11 7 C 12.66 7 14 8.34 14 10 '
-        + 'C 15.17 10.49 15.99 11.66 16 13 L 16 13',
+        'M 9 4 C 9 2.89 9.89 2 11 2 C 12.11 2 13 2.89 13 4 C 13 5.11 12.11 6 11 6 C 9.89 6 9 5.11 9 4 Z ' +
+          'M 15 5.5 C 15 5.5 15 5.5 15 5.5 C 15 5.5 15 5.5 15 5.5 C 15 5.5 15 5.5 15 5.5 ' +
+          'C 15 5.5 15 5.5 15 5.5 L 15 5.5 M 19.5 9.5 C 19.5 9.5 19.5 9.5 19.5 9.5 C 19.5 9.5 19.5 9.5 19.5 9.5 ' +
+          'C 19.5 9.5 19.5 9.5 19.5 9.5 C 19.5 9.5 19.5 9.5 19.5 9.5 L 19.5 9.5 M 11.99 16.24 C 11.99 16.24 11.99 16.24 11.99 16.24 ' +
+          'C 11.99 16.24 11.99 16.24 11.99 16.24 C 11.99 16.24 11.99 16.24 11.99 16.24 C 11.99 16.24 11.99 16.24 11.99 16.24 ' +
+          'C 11.99 16.24 11.99 16.24 11.99 16.24 C 11.99 16.24 11.99 16.24 11.99 16.24 C 11.99 16.24 11.99 16.24 11.99 16.24 ' +
+          'C 11.99 16.24 11.99 16.24 11.99 16.24 C 11.99 16.24 11.99 16.24 11.99 16.24 C 11.99 16.24 11.99 16.24 11.99 16.24 ' +
+          'C 11.99 16.24 11.99 16.24 11.99 16.24 L 11.99 16.24 C 11.99 16.24 11.99 16.24 11.99 16.24 ' +
+          'C 11.99 16.24 11.99 16.24 11.99 16.24 C 11.99 16.24 11.99 16.24 11.99 16.24 L 11.99 16.24' +
+          'M 16 13 C 16 14.333 16 15.667 16 17 C 15 17 14 17 13 17 C 13 18.667 13 20.333 13 22 C 12 22 11 22 10 22 ' +
+          'C 10 20.333 10 18.667 10 17 C 9.333 17 8.667 17 8 17 C 8 14.667 8 12.333 8 10 C 8 8.34 9.34 7 11 7 C 12.66 7 14 8.34 14 10 ' +
+          'C 15.17 10.49 15.99 11.66 16 13 L 16 13',
       ),
       // Convert/unconvert commands.
-      makeTest(
-        'M 0 0 L 3 3',
-        'CV 0 1 C',
-        'M 0 0 C 1 1 2 2 3 3',
-      ),
-      makeTest(
-        'M 0 0 L 3 3',
-        'CV 0 1 C UCV 0',
-        'M 0 0 L 3 3',
-      ),
+      makeTest('M 0 0 L 3 3', 'CV 0 1 C', 'M 0 0 C 1 1 2 2 3 3'),
+      makeTest('M 0 0 L 3 3', 'CV 0 1 C UCV 0', 'M 0 0 L 3 3'),
       // Transform paths.
-      makeTest(
-        'M-4-8h8v16h-8v-16',
-        'T translate 4 8',
-        'M0 0h8v16h-8v-16',
-      ),
-      makeTest(
-        'M-4-8h8v16h-8v-16',
-        'T rotate 90',
-        'M 8 -4 v 8 h -16 v -8 h 16',
-      ),
-      makeTest(
-        'M-4-8h8v16h-8v-16',
-        'T rotate 180',
-        'M 4 8 h -8 v -16 h 8 v 16',
-      ),
-      makeTest(
-        'M-4-8h8v16h-8v-16',
-        'T scale 0.5 0.5',
-        'M -2 -4 h 4 v 8 h -4 v -8',
-      ),
+      makeTest('M-4-8h8v16h-8v-16', 'T translate 4 8', 'M0 0h8v16h-8v-16'),
+      makeTest('M-4-8h8v16h-8v-16', 'T rotate 90', 'M 8 -4 v 8 h -16 v -8 h 16'),
+      makeTest('M-4-8h8v16h-8v-16', 'T rotate 180', 'M 4 8 h -8 v -16 h 8 v 16'),
+      makeTest('M-4-8h8v16h-8v-16', 'T scale 0.5 0.5', 'M -2 -4 h 4 v 8 h -4 v -8'),
       makeTest(
         'M-4-8h8v16h-8v-16',
         'T translate 1 2 scale 2 3 rotate 34 translate 3 4 RT',
         'M-4-8h8v16h-8v-16',
       ),
       // Add/delete collapsing sub paths.
-      makeTest(
-        'M 0 0 L 3 3',
-        'AC 5 5 10',
-        `M 0 0 L 3 3 M 5 5${' L 5 5'.repeat(9)}`,
-      ),
+      makeTest('M 0 0 L 3 3', 'AC 5 5 10', `M 0 0 L 3 3 M 5 5${' L 5 5'.repeat(9)}`),
       makeTest(
         'M 0 0 L 3 3',
         'AC 5 5 5 AC 3 4 6',
@@ -415,16 +310,8 @@ describe('Path', () => {
         'AC 5 5 5 AC 3 4 6 M 0 1',
         `M 5 5${' L 5 5'.repeat(4)} M 1 1 L 3 3 L 1 1 M 3 4${' L 3 4'.repeat(5)}`,
       ),
-      makeTest(
-        'M 1 1 L 3 3 L 1 1',
-        'AC 5 5 5 AC 3 4 6 M 0 1 DC',
-        `M 1 1 L 3 3 L 1 1`,
-      ),
-      makeTest(
-        'M 1 1 L 3 3 L 1 1',
-        'AC 5 5 5 AC 3 4 6 M 0 1 RT',
-        `M 1 1 L 3 3 L 1 1`,
-      ),
+      makeTest('M 1 1 L 3 3 L 1 1', 'AC 5 5 5 AC 3 4 6 M 0 1 DC', `M 1 1 L 3 3 L 1 1`),
+      makeTest('M 1 1 L 3 3 L 1 1', 'AC 5 5 5 AC 3 4 6 M 0 1 RT', `M 1 1 L 3 3 L 1 1`),
       makeTest(
         'M 1 1 L 2 2 L 3 3 M 10 10 L 20 20 L 30 30',
         'AC 3 4 2',
@@ -483,17 +370,17 @@ describe('Path', () => {
       ),
       makeTest(
         'M 0 0 L 10 10 L 20 20 L 30 30 L 40 40 L 50 50',
-        'SIH 0 4 SSSP 0 4 M 0 1 S 0 1 0.6 RV 0 S 0 2 0.5 RT '
-        + 'SIH 0 4 SSSP 0 4 M 0 1 S 0 1 0.6 RV 0 S 0 2 0.5 RT '
-        + 'SIH 0 4 SSSP 0 4 M 0 1 S 0 1 0.6 RT',
+        'SIH 0 4 SSSP 0 4 M 0 1 S 0 1 0.6 RV 0 S 0 2 0.5 RT ' +
+          'SIH 0 4 SSSP 0 4 M 0 1 S 0 1 0.6 RV 0 S 0 2 0.5 RT ' +
+          'SIH 0 4 SSSP 0 4 M 0 1 S 0 1 0.6 RT',
         'M 0 0 L 10 10 L 20 20 L 30 30 L 40 40 L 50 50',
       ),
       makeTest(
         'M 0 0 L 10 10 L 20 20 L 30 30 L 40 40 L 50 50',
-        'SIH 0 4 SSSP 0 4 M 0 1 S 0 1 0.6 RV 0 S 0 2 0.5 RT '
-        + 'SIH 0 4 SSSP 0 4 M 0 1 S 0 1 0.6 RV 0 S 0 2 0.5 RT '
-        + 'SIH 0 4 SSSP 0 4 M 0 1 S 0 1 0.6 RT '
-        + 'SIH 0 4 SSSP 0 4',
+        'SIH 0 4 SSSP 0 4 M 0 1 S 0 1 0.6 RV 0 S 0 2 0.5 RT ' +
+          'SIH 0 4 SSSP 0 4 M 0 1 S 0 1 0.6 RV 0 S 0 2 0.5 RT ' +
+          'SIH 0 4 SSSP 0 4 M 0 1 S 0 1 0.6 RT ' +
+          'SIH 0 4 SSSP 0 4',
         'M 0 0 L 10 10 L 20 20 L 30 30 L 35 35 M 35 35 L 40 40 L 50 50',
       ),
       makeTest(
@@ -591,7 +478,11 @@ describe('Path', () => {
       makeTest(
         'M 8 5 L 8 19 L 19 12 L 8 5',
         'SIH 0 1 SFSP 0 1 3 S 0 3 0.4',
-        `M 8 5 L 8 12 L 19 12 L ${lerp(19, 8, 0.4)} ${lerp(12, 5, 0.4)} L 8 5 M 8 12 L 8 19 L 19 12 L 8 12`,
+        `M 8 5 L 8 12 L 19 12 L ${lerp(19, 8, 0.4)} ${lerp(
+          12,
+          5,
+          0.4,
+        )} L 8 5 M 8 12 L 8 19 L 19 12 L 8 12`,
       ),
       makeTest(
         'M 8 5 L 8 19 L 19 12 L 8 5',
@@ -608,16 +499,8 @@ describe('Path', () => {
         'SFSP 0 1 3',
         'M 0 0 L 0 0 L 10 10 L 10 0 L 0 0 M 0 0 L 0 10 L 10 10 L 0 0',
       ),
-      makeTest(
-        'M0 0L0 0v10h10v-10h-10',
-        'SFSP 0 1 3 DSSP 0',
-        'M0 0L0 0v10h10v-10h-10',
-      ),
-      makeTest(
-        'M0 0L0 0v10h10v-10h-10',
-        'SFSP 0 1 3 SF 1 RV 1 DSSP 0',
-        'M0 0L0 0v10h10v-10h-10',
-      ),
+      makeTest('M0 0L0 0v10h10v-10h-10', 'SFSP 0 1 3 DSSP 0', 'M0 0L0 0v10h10v-10h-10'),
+      makeTest('M0 0L0 0v10h10v-10h-10', 'SFSP 0 1 3 SF 1 RV 1 DSSP 0', 'M0 0L0 0v10h10v-10h-10'),
       makeTest(
         'M0 0L0 0v10h10v-10h-10',
         'SFSP 0 1 3 RV 0 SF 1 SF 1 DSSP 1',
@@ -802,26 +685,26 @@ describe('Path', () => {
       makeTest(
         'M 12 5.5 C 8.69 5.5 6 8.19 6 11.5 C 6 14.81 8.69 17.5 12 17.5 C 15.31 17.5 18 14.81 18 11.5 C 18 8.19 15.31 5.5 12 5.5 L 12 5.5',
         'SFSP 0 0 2',
-        'M 12 5.5 L 12 17.5 C 15.31 17.5 18 14.81 18 11.5 C 18 8.19 15.31 5.5 12 5.5 L 12 5.5 M 12 5.5 C 8.69 5.5 6 8.19 6 11.5 '
-        + 'C 6 14.81 8.69 17.5 12 17.5 L 12 5.5',
+        'M 12 5.5 L 12 17.5 C 15.31 17.5 18 14.81 18 11.5 C 18 8.19 15.31 5.5 12 5.5 L 12 5.5 M 12 5.5 C 8.69 5.5 6 8.19 6 11.5 ' +
+          'C 6 14.81 8.69 17.5 12 17.5 L 12 5.5',
       ),
       makeTest(
         'M 12 5.5 C 8.69 5.5 6 8.19 6 11.5 C 6 14.81 8.69 17.5 12 17.5 C 15.31 17.5 18 14.81 18 11.5 C 18 8.19 15.31 5.5 12 5.5 L 12 5.5',
         'SFSP 0 0 2 SFSP 1 0 1',
-        'M 12 5.5 L 12 17.5 C 15.31 17.5 18 14.81 18 11.5 C 18 8.19 15.31 5.5 12 5.5 L 12 5.5 M 12 5.5 L 6 11.5 '
-        + 'C 6 14.81 8.69 17.5 12 17.5 L 12 5.5 M 12 5.5 C 8.69 5.5 6 8.19 6 11.5 L 12 5.5',
+        'M 12 5.5 L 12 17.5 C 15.31 17.5 18 14.81 18 11.5 C 18 8.19 15.31 5.5 12 5.5 L 12 5.5 M 12 5.5 L 6 11.5 ' +
+          'C 6 14.81 8.69 17.5 12 17.5 L 12 5.5 M 12 5.5 C 8.69 5.5 6 8.19 6 11.5 L 12 5.5',
       ),
       makeTest(
         'M 12 5.5 C 8.69 5.5 6 8.19 6 11.5 C 6 14.81 8.69 17.5 12 17.5 C 15.31 17.5 18 14.81 18 11.5 C 18 8.19 15.31 5.5 12 5.5 L 12 5.5',
         'SFSP 0 0 2 SFSP 1 0 1 DFSPS 2 2',
-        'M 12 5.5 L 12 17.5 C 15.31 17.5 18 14.81 18 11.5 C 18 8.19 15.31 5.5 12 5.5 L 12 5.5 M 12 5.5 C 8.69 5.5 6 8.19 6 11.5 '
-        + 'C 6 14.81 8.69 17.5 12 17.5 L 12 5.5',
+        'M 12 5.5 L 12 17.5 C 15.31 17.5 18 14.81 18 11.5 C 18 8.19 15.31 5.5 12 5.5 L 12 5.5 M 12 5.5 C 8.69 5.5 6 8.19 6 11.5 ' +
+          'C 6 14.81 8.69 17.5 12 17.5 L 12 5.5',
       ),
       makeTest(
         'M 12 5.5 C 8.69 5.5 6 8.19 6 11.5 C 6 14.81 8.69 17.5 12 17.5 C 15.31 17.5 18 14.81 18 11.5 C 18 8.19 15.31 5.5 12 5.5 L 12 5.5',
         'SFSP 0 0 1 SFSP 0 1 3 SFSP 1 1 2',
-        'M 12 5.5 L 6 11.5 L 18 11.5 C 18 8.19 15.31 5.5 12 5.5 L 12 5.5 M 6 11.5 C 6 14.81 8.69 17.5 12 17.5 L 18 11.5 L 6 11.5 '
-        + 'M 12 17.5 C 15.31 17.5 18 14.81 18 11.5 L 12 17.5 M 12 5.5 C 8.69 5.5 6 8.19 6 11.5 L 12 5.5',
+        'M 12 5.5 L 6 11.5 L 18 11.5 C 18 8.19 15.31 5.5 12 5.5 L 12 5.5 M 6 11.5 C 6 14.81 8.69 17.5 12 17.5 L 18 11.5 L 6 11.5 ' +
+          'M 12 17.5 C 15.31 17.5 18 14.81 18 11.5 L 12 17.5 M 12 5.5 C 8.69 5.5 6 8.19 6 11.5 L 12 5.5',
       ),
       makeTest(
         'M 12 5.5 C 8.69 5.5 6 8.19 6 11.5 C 6 14.81 8.69 17.5 12 17.5 C 15.31 17.5 18 14.81 18 11.5 C 18 8.19 15.31 5.5 12 5.5 L 12 5.5',
@@ -841,8 +724,8 @@ describe('Path', () => {
       makeTest(
         'M 12 5.5 C 8.69 5.5 6 8.19 6 11.5 C 6 14.81 8.69 17.5 12 17.5 C 15.31 17.5 18 14.81 18 11.5 C 18 8.19 15.31 5.5 12 5.5 L 12 5.5',
         'SFSP 0 0 1 SFSP 0 1 3 SFSP 1 1 2 DFSP 0',
-        'M 12 5.5 C 8.69 5.5 6 8.19 6 11.5 C 6 14.81 8.69 17.5 12 17.5 L 18 11.5 C 18 8.19 15.31 5.5 12 5.5 L 12 5.5 M 12 17.5 '
-        + 'C 15.31 17.5 18 14.81 18 11.5 L 12 17.5',
+        'M 12 5.5 C 8.69 5.5 6 8.19 6 11.5 C 6 14.81 8.69 17.5 12 17.5 L 18 11.5 C 18 8.19 15.31 5.5 12 5.5 L 12 5.5 M 12 17.5 ' +
+          'C 15.31 17.5 18 14.81 18 11.5 L 12 17.5',
       ),
       // TODO: determine if this is the right behavior
       // makeTest(
@@ -867,9 +750,21 @@ describe('Path', () => {
 
   describe('assigning subpath IDs', () => {
     const SUBPATH_ID_TESTS = [
-      { desc: 'id set on single-subpath path', path: 'M 0 0 L 0 0 L 0 0 L 0 0 L 0 0 L 0 0', expected: 1 },
-      { desc: 'id set on two-subpath path', path: 'M 0 0 L 0 0 M 0 0 L 0 0 L 0 0 L 0 0', expected: 2 },
-      { desc: 'id set on three-subpath path', path: 'M 0 0 L 0 0 M 0 0 L 0 0 M 0 0 L 0 0', expected: 3 },
+      {
+        desc: 'id set on single-subpath path',
+        path: 'M 0 0 L 0 0 L 0 0 L 0 0 L 0 0 L 0 0',
+        expected: 1,
+      },
+      {
+        desc: 'id set on two-subpath path',
+        path: 'M 0 0 L 0 0 M 0 0 L 0 0 L 0 0 L 0 0',
+        expected: 2,
+      },
+      {
+        desc: 'id set on three-subpath path',
+        path: 'M 0 0 L 0 0 M 0 0 L 0 0 M 0 0 L 0 0',
+        expected: 3,
+      },
     ];
 
     const countUniqueSubPathIdsFn = (pathString: string) => {
@@ -896,7 +791,12 @@ describe('Path', () => {
 
   // TODO: add more projection tests for split subpaths
   describe('#project', () => {
-    const TESTS_PROJECT: Array<{ point: Point, path: string | Path, proj: ProjectionOntoPath, subIdx?: number }> = [
+    const TESTS_PROJECT: Array<{
+      point: Point;
+      path: string | Path;
+      proj: ProjectionOntoPath;
+      subIdx?: number;
+    }> = [
       {
         point: new Point(5, 5),
         path: 'M 0 0 L 10 10',
@@ -938,8 +838,10 @@ describe('Path', () => {
 
     TESTS_PROJECT.forEach(a => {
       const point = a.point as Point;
-      const path = (typeof a.path === 'string') ? new Path(a.path) : a.path;
-      it(`projecting '(${point.x},${point.y})' onto '${path.getPathString()}' yields ${JSON.stringify(a.proj)}`, () => {
+      const path = typeof a.path === 'string' ? new Path(a.path) : a.path;
+      it(`projecting '(${point.x},${point.y})' onto '${path.getPathString()}' yields ${JSON.stringify(
+        a.proj,
+      )}`, () => {
         const result = path.project(point, a.subIdx);
         result.projection.t = _.round(result.projection.t, 10);
         expect(result).toEqual(a.proj as ProjectionOntoPath);
@@ -964,20 +866,41 @@ describe('Path', () => {
       [new Point(14, 10), fromPathOpString('M8 5L8 19L19 12L8 5', 'SIH 0 1 SFSP 0 1 3'), true],
       [new Point(17, 6), fromPathOpString('M8 5L8 19L19 12L8 5', 'SIH 0 1 SFSP 0 1 3'), false],
       [new Point(11, 9), fromPathOpString('M8 5L8 19L19 12L8 5', 'SIH 0 1 SFSP 0 1 3'), true],
-      [new Point(11, 9), fromPathOpString('M8 5L8 19L19 12L8 5', 'SIH 0 1 S 0 3 1 SFSP 0 1 3'), true],
+      [
+        new Point(11, 9),
+        fromPathOpString('M8 5L8 19L19 12L8 5', 'SIH 0 1 S 0 3 1 SFSP 0 1 3'),
+        true,
+      ],
     ];
 
     const TESTS_HIT_TEST_STROKE = [
-      [new Point(4, 12), 'M 20 22 L 4 22 L 4 2 L 6 2 L 6 14 L 8 14 L 8 2 L 10 2 L 10 14 Z', 1, true],
-      [new Point(2, 12), 'M 20 22 L 4 22 L 4 2 L 6 2 L 6 14 L 8 14 L 8 2 L 10 2 L 10 14 Z', 1, false],
-      [new Point(6, 16), 'M 20 22 L 4 22 L 4 2 L 6 2 L 6 14 L 8 14 L 8 2 L 10 2 L 10 14 Z', 1, false],
+      [
+        new Point(4, 12),
+        'M 20 22 L 4 22 L 4 2 L 6 2 L 6 14 L 8 14 L 8 2 L 10 2 L 10 14 Z',
+        1,
+        true,
+      ],
+      [
+        new Point(2, 12),
+        'M 20 22 L 4 22 L 4 2 L 6 2 L 6 14 L 8 14 L 8 2 L 10 2 L 10 14 Z',
+        1,
+        false,
+      ],
+      [
+        new Point(6, 16),
+        'M 20 22 L 4 22 L 4 2 L 6 2 L 6 14 L 8 14 L 8 2 L 10 2 L 10 14 Z',
+        1,
+        false,
+      ],
     ];
 
     TESTS_HIT_TEST_FILL.forEach(a => {
       const point = a[0] as Point;
-      const path = (typeof a[1] === 'string') ? new Path(a[1] as string) : a[1] as Path;
+      const path = typeof a[1] === 'string' ? new Path(a[1] as string) : a[1] as Path;
       it(`hit test for '(${point.x},${point.y})' on fill path '${a[1]}' yields '${a[2]}'`, () => {
-        expect(path.hitTest(point, { findShapesInRange: true }).isShapeHit).toEqual(a[2] as boolean);
+        expect(path.hitTest(point, { findShapesInRange: true }).isShapeHit).toEqual(
+          a[2] as boolean,
+        );
       });
     });
 

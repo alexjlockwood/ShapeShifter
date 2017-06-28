@@ -1,12 +1,9 @@
-import { Property } from './Property';
-import {
-  ColorUtil,
-  MathUtil,
-} from 'app/scripts/common';
+import { ColorUtil, MathUtil } from 'app/scripts/common';
 import * as _ from 'lodash';
 
-export class ColorProperty extends Property<string> {
+import { Property } from './Property';
 
+export class ColorProperty extends Property<string> {
   // @Override
   setEditableValue(model: any, propertyName: string, value: string) {
     if (!value) {

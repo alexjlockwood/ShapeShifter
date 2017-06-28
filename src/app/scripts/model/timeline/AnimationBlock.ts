@@ -22,7 +22,6 @@ type AnimationBlockType = 'path' | 'color' | 'number';
   new EnumProperty('interpolator', INTERPOLATORS),
 )
 export abstract class AnimationBlock {
-
   static from(obj: ConstructorArgs) {
     switch (obj.type) {
       case 'path':
@@ -79,12 +78,8 @@ export abstract class AnimationBlock {
 /**
  * An animation block that animates the 'pathData' property.
  */
-@Property.register(
-  new PathProperty('fromValue'),
-  new PathProperty('toValue'),
-)
+@Property.register(new PathProperty('fromValue'), new PathProperty('toValue'))
 export class PathAnimationBlock extends AnimationBlock {
-
   // @Override
   toJSON() {
     return Object.assign(super.toJSON(), {
@@ -102,12 +97,8 @@ export class PathAnimationBlock extends AnimationBlock {
 /**
  * An animation block that animates a color property.
  */
-@Property.register(
-  new ColorProperty('fromValue'),
-  new ColorProperty('toValue'),
-)
+@Property.register(new ColorProperty('fromValue'), new ColorProperty('toValue'))
 export class ColorAnimationBlock extends AnimationBlock {
-
   // @Override
   isAnimatable() {
     // TODO should this be more specific (i.e. check if valid color values?)
@@ -118,12 +109,8 @@ export class ColorAnimationBlock extends AnimationBlock {
 /**
  * An animation block that animates a number property.
  */
-@Property.register(
-  new NumberProperty('fromValue'),
-  new NumberProperty('toValue'),
-)
+@Property.register(new NumberProperty('fromValue'), new NumberProperty('toValue'))
 export class NumberAnimationBlock extends AnimationBlock {
-
   // @Override
   isAnimatable() {
     return _.isFinite(this.fromValue) && _.isFinite(this.toValue);
@@ -142,8 +129,8 @@ interface AnimationBlockArgs {
   type: AnimationBlockType;
 }
 
-export interface AnimationBlock extends AnimationBlockArgs, Inspectable { }
-export interface ConstructorArgs extends AnimationBlockArgs { }
+export interface AnimationBlock extends AnimationBlockArgs, Inspectable {}
+export interface ConstructorArgs extends AnimationBlockArgs {}
 
 export interface PathAnimationBlock {
   fromValue: Path;

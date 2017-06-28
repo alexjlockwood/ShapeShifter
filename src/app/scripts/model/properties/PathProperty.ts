@@ -1,12 +1,8 @@
-import {
-  Path,
-  PathUtil,
-} from 'app/scripts/model/paths';
+import { Path, PathUtil } from 'app/scripts/model/paths';
 
 import { Property } from './Property';
 
 export class PathProperty extends Property<Path> {
-
   // @Override
   setEditableValue(model: any, propertyName: string, value: string) {
     let path: Path;

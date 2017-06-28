@@ -1,30 +1,20 @@
-import {
-  Projection,
-  SvgChar,
-} from '..';
-import { CommandBuilder } from '../Command';
-import {
-  BBox,
-  Calculator,
-  Line,
-} from '.';
-import { PointCalculator } from './PointCalculator';
-import {
-  MathUtil,
-  Point,
-} from 'app/scripts/common';
+import { MathUtil, Point } from 'app/scripts/common';
 import * as _ from 'lodash';
+
+import { Projection, SvgChar } from '..';
+import { CommandBuilder } from '../Command';
+import { BBox, Calculator, Line } from '.';
+import { PointCalculator } from './PointCalculator';
 
 const ROUNDING_PRECISION = 10;
 
 export class LineCalculator implements Calculator {
-
   constructor(
     private readonly id: string,
     private readonly svgChar: SvgChar,
     private readonly p1: Point,
     private readonly p2: Point,
-  ) { }
+  ) {}
 
   getPathLength() {
     return MathUtil.distance(this.p1, this.p2);
@@ -70,12 +60,8 @@ export class LineCalculator implements Calculator {
   split(t1: number, t2: number): Calculator {
     const { x: x1, y: y1 } = this.p1;
     const { x: x2, y: y2 } = this.p2;
-    const p1 = new Point(
-      MathUtil.lerp(x1, x2, t1),
-      MathUtil.lerp(y1, y2, t1));
-    const p2 = new Point(
-      MathUtil.lerp(x1, x2, t2),
-      MathUtil.lerp(y1, y2, t2));
+    const p1 = new Point(MathUtil.lerp(x1, x2, t1), MathUtil.lerp(y1, y2, t1));
+    const p2 = new Point(MathUtil.lerp(x1, x2, t2), MathUtil.lerp(y1, y2, t2));
     if (p1.equals(p2)) {
       return new PointCalculator(this.id, this.svgChar, p1);
     }
@@ -100,16 +86,19 @@ export class LineCalculator implements Calculator {
       case 'Q':
         const cp = new Point(
           MathUtil.lerp(this.p1.x, this.p2.x, 0.5),
-          MathUtil.lerp(this.p1.y, this.p2.y, 0.5));
+          MathUtil.lerp(this.p1.y, this.p2.y, 0.5),
+        );
         points = [this.p1, cp, this.p2];
         break;
       case 'C':
         const cp1 = new Point(
           MathUtil.lerp(this.p1.x, this.p2.x, 1 / 3),
-          MathUtil.lerp(this.p1.y, this.p2.y, 1 / 3));
+          MathUtil.lerp(this.p1.y, this.p2.y, 1 / 3),
+        );
         const cp2 = new Point(
           MathUtil.lerp(this.p1.x, this.p2.x, 2 / 3),
-          MathUtil.lerp(this.p1.y, this.p2.y, 2 / 3));
+          MathUtil.lerp(this.p1.y, this.p2.y, 2 / 3),
+        );
         points = [this.p1, cp1, cp2, this.p2];
         break;
       default:
@@ -148,7 +137,7 @@ export class LineCalculator implements Calculator {
     } else {
       const t = round(((s - q) * (r - a) + (p - r) * (s - b)) / det);
       const u = round(((b - d) * (r - a) + (c - a) * (s - b)) / det);
-      return (0 <= t && t <= 1) && (0 <= u && u <= 1) ? [t] : [];
+      return 0 <= t && t <= 1 && (0 <= u && u <= 1) ? [t] : [];
     }
   }
 }

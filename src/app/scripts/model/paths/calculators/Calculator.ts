@@ -1,13 +1,11 @@
-import {
-  Command,
-  SvgChar,
-} from '..';
+import { Point } from 'app/scripts/common';
+import * as _ from 'lodash';
+
+import { Command, SvgChar } from '..';
 import { BezierCalculator } from './BezierCalculator';
 import { LineCalculator } from './LineCalculator';
 import { MoveCalculator } from './MoveCalculator';
 import { PointCalculator } from './PointCalculator';
-import { Point } from 'app/scripts/common';
-import * as _ from 'lodash';
 
 /**
  * A wrapper around a backing SVG command that abstracts a lot of the math-y
@@ -41,8 +39,7 @@ export function newCalculator(cmd: Command): Calculator {
   }
   if (cmd.getSvgChar() === 'C') {
     const pts = cmd.getPoints();
-    return new BezierCalculator(
-      cmd.getId(), cmd.getSvgChar(), pts[0], pts[1], pts[2], pts[3]);
+    return new BezierCalculator(cmd.getId(), cmd.getSvgChar(), pts[0], pts[1], pts[2], pts[3]);
   }
   throw new Error('Invalid command type: ' + cmd.getSvgChar());
 }

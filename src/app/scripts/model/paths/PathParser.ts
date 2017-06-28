@@ -1,12 +1,7 @@
-import {
-  Command,
-  SvgChar,
-} from '.';
+import { Matrix, Point } from 'app/scripts/common';
+
+import { Command, SvgChar } from '.';
 import * as SvgUtil from './SvgUtil';
-import {
-  Matrix,
-  Point,
-} from 'app/scripts/common';
 
 enum Token {
   AbsoluteCommand = 1,
@@ -20,10 +15,7 @@ enum Token {
  * list of DrawCommands that represent the SVG path's individual sequence of instructions.
  * Arcs are converted to bezier curves because they make life too complicated. :D
  */
-export function parseCommands(
-  pathString: string,
-  matrices?: Matrix[]): Command[] {
-
+export function parseCommands(pathString: string, matrices?: Matrix[]): Command[] {
   // Trim surrounding whitespace.
   pathString = pathString.trim();
 
@@ -66,10 +58,7 @@ export function parseCommands(
     while (tempIndex < pathString.length) {
       const c = pathString.charAt(tempIndex);
 
-      if (!('0' <= c && c <= '9')
-        && (c !== '.' || seenDot)
-        && (c !== '-' || !start)
-        && c !== 'e') {
+      if (!('0' <= c && c <= '9') && (c !== '.' || seenDot) && (c !== '-' || !start) && c !== 'e') {
         // End of value.
         break;
       }
@@ -288,18 +277,17 @@ export function parseCommands(
           const startY = currentPoint.y;
           const endX = tempPoint1.x;
           const endY = tempPoint1.y;
-          const bezierCoords =
-            SvgUtil.arcToBeziers({
-              startX,
-              startY,
-              rx,
-              ry,
-              xAxisRotation,
-              largeArcFlag,
-              sweepFlag,
-              endX,
-              endY,
-            });
+          const bezierCoords = SvgUtil.arcToBeziers({
+            startX,
+            startY,
+            rx,
+            ry,
+            xAxisRotation,
+            largeArcFlag,
+            sweepFlag,
+            endX,
+            endY,
+          });
 
           for (let i = 0; i < bezierCoords.length; i += 8) {
             const endPoint = new Point(bezierCoords[i + 6], bezierCoords[i + 7]);
@@ -336,10 +324,7 @@ export function parseCommands(
     return commands;
   }
   return commands.map(cmd => {
-    return cmd.mutate()
-      .setId(cmd.getId())
-      .transform(matrices)
-      .build();
+    return cmd.mutate().setId(cmd.getId()).transform(matrices).build();
   });
 }
 
@@ -351,8 +336,8 @@ export function commandsToString(commands: ReadonlyArray<Command>) {
   commands.forEach(cmd => {
     tokens.push(cmd.getSvgChar());
     const isClosePathCommand = cmd.getSvgChar() === 'Z';
-    const pointsToNumberListFunc =
-      (...points: Point[]) => points.reduce((list, p) => list.concat(p.x, p.y), []);
+    const pointsToNumberListFunc = (...points: Point[]) =>
+      points.reduce((list, p) => list.concat(p.x, p.y), []);
     const args = pointsToNumberListFunc(...(isClosePathCommand ? [] : cmd.getPoints().slice(1)));
     tokens.splice(tokens.length, 0, ...args.map(n => Number(n.toFixed(3)).toString() as SvgChar));
   });
@@ -371,8 +356,7 @@ function newQuadraticCurve(start: Point, cp: Point, end: Point) {
   return new Command('Q', [start, cp, end]);
 }
 
-function newBezierCurve(
-  start: Point, cp1: Point, cp2: Point, end: Point) {
+function newBezierCurve(start: Point, cp1: Point, cp2: Point, end: Point) {
   return new Command('C', [start, cp1, cp2, end]);
 }
 

@@ -1,8 +1,8 @@
-import { Property } from './Property';
 import * as _ from 'lodash';
 
-export class EnumProperty extends Property<string> {
+import { Property } from './Property';
 
+export class EnumProperty extends Property<string> {
   constructor(name: string, public readonly options: ReadonlyArray<Option>) {
     super(name);
   }

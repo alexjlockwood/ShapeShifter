@@ -1,22 +1,15 @@
-import {
-  Projection,
-  SvgChar,
-} from '..';
-import { CommandBuilder } from '../Command';
-import {
-  BBox,
-  Calculator,
-  Line,
-} from '.';
 import { Point } from 'app/scripts/common';
 
-export class MoveCalculator implements Calculator {
+import { Projection, SvgChar } from '..';
+import { CommandBuilder } from '../Command';
+import { BBox, Calculator, Line } from '.';
 
+export class MoveCalculator implements Calculator {
   constructor(
     private readonly id: string,
     private readonly startPoint: Point | undefined,
     private readonly endPoint: Point,
-  ) { }
+  ) {}
 
   getPathLength() {
     return 0;

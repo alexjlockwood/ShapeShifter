@@ -2,14 +2,7 @@ import { Point } from 'app/scripts/common';
 import { environment } from 'environments/environment';
 import * as _ from 'lodash';
 
-import {
-  Command,
-  HitOptions,
-  HitResult,
-  Line,
-  Projection,
-  ProjectionOntoPath,
-} from '.';
+import { Command, HitOptions, HitResult, Line, Projection, ProjectionOntoPath } from '.';
 import { PathMutator } from './PathMutator';
 import * as PathParser from './PathParser';
 import { PathState } from './PathState';
@@ -76,8 +69,9 @@ export class Path {
     const numSubPaths = this.getSubPaths().length;
     if (subIdx < 0 || numSubPaths <= subIdx) {
       console.error(this);
-      throw new Error(`Subpath index out of bounds: `
-        + `subIdx=${subIdx} numSubPaths=${numSubPaths}`);
+      throw new Error(
+        `Subpath index out of bounds: ` + `subIdx=${subIdx} numSubPaths=${numSubPaths}`,
+      );
     }
     return this.getSubPaths()[subIdx];
   }
@@ -97,8 +91,10 @@ export class Path {
     const numCommands = subPath.getCommands().length;
     if (cmdIdx < 0 || numCommands <= cmdIdx) {
       console.error(this);
-      throw new Error(`Command index out of bounds: `
-        + `subIdx=${subIdx} cmdIdx=${cmdIdx}, numCommands=${numCommands}`);
+      throw new Error(
+        `Command index out of bounds: ` +
+          `subIdx=${subIdx} cmdIdx=${cmdIdx}, numCommands=${numCommands}`,
+      );
     }
     return subPath.getCommands()[cmdIdx];
   }
@@ -116,9 +112,10 @@ export class Path {
   isMorphableWith(path: Path) {
     const cmds1 = this.getCommands();
     const cmds2 = path.getCommands();
-    return cmds1.length === cmds2.length
-      && cmds1.every((cmd1, i) =>
-        cmd1.getSvgChar() === cmds2[i].getSvgChar());
+    return (
+      cmds1.length === cmds2.length &&
+      cmds1.every((cmd1, i) => cmd1.getSvgChar() === cmds2[i].getSvgChar())
+    );
   }
 
   /**

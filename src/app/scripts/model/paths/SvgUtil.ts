@@ -34,8 +34,8 @@ export function arcToBeziers(arc: EllipticalArc) {
   const dy2 = (yf - yt) / 2;
 
   // Step 1 : Compute (x1', y1') - the transformed start point
-  const x1 = (cosAngle * dx2 + sinAngle * dy2);
-  const y1 = (-sinAngle * dx2 + cosAngle * dy2);
+  const x1 = cosAngle * dx2 + sinAngle * dy2;
+  const y1 = -sinAngle * dx2 + cosAngle * dy2;
 
   let rx_sq = rx * rx;
   let ry_sq = ry * ry;
@@ -54,12 +54,12 @@ export function arcToBeziers(arc: EllipticalArc) {
   }
 
   // Step 2 : Compute (cx1, cy1) - the transformed centre point
-  let sign = (largeArcFlag === sweepFlag) ? -1 : 1;
-  let sq = ((rx_sq * ry_sq) - (rx_sq * y1_sq) - (ry_sq * x1_sq)) / ((rx_sq * y1_sq) + (ry_sq * x1_sq));
-  sq = (sq < 0) ? 0 : sq;
-  const coef = (sign * Math.sqrt(sq));
-  const cx1 = coef * ((rx * y1) / ry);
-  const cy1 = coef * -((ry * x1) / rx);
+  let sign = largeArcFlag === sweepFlag ? -1 : 1;
+  let sq = (rx_sq * ry_sq - rx_sq * y1_sq - ry_sq * x1_sq) / (rx_sq * y1_sq + ry_sq * x1_sq);
+  sq = sq < 0 ? 0 : sq;
+  const coef = sign * Math.sqrt(sq);
+  const cx1 = coef * (rx * y1 / ry);
+  const cy1 = coef * -(ry * x1 / rx);
 
   // Step 3 : Compute (cx, cy) from (cx1, cy1)
   const sx2 = (xf + xt) / 2;
@@ -75,16 +75,16 @@ export function arcToBeziers(arc: EllipticalArc) {
   let p, n;
 
   // Compute the angle start
-  n = Math.sqrt((ux * ux) + (uy * uy));
+  n = Math.sqrt(ux * ux + uy * uy);
   p = ux; // (1 * ux) + (0 * uy)
-  sign = (uy < 0) ? -1 : 1;
-  let angleStart = (sign * Math.acos(p / n)) * 180 / Math.PI;
+  sign = uy < 0 ? -1 : 1;
+  let angleStart = sign * Math.acos(p / n) * 180 / Math.PI;
 
   // Compute the angle extent
   n = Math.sqrt((ux * ux + uy * uy) * (vx * vx + vy * vy));
   p = ux * vx + uy * vy;
-  sign = (ux * vy - uy * vx < 0) ? -1 : 1;
-  let angleExtent = (sign * Math.acos(p / n)) * 180 / Math.PI;
+  sign = ux * vy - uy * vx < 0 ? -1 : 1;
+  let angleExtent = sign * Math.acos(p / n) * 180 / Math.PI;
   if (!sweepFlag && angleExtent > 0) {
     angleExtent -= 360;
   } else if (sweepFlag && angleExtent < 0) {
@@ -106,15 +106,9 @@ export function arcToBeziers(arc: EllipticalArc) {
     // dot product
     const x = bezierCoords[i];
     const y = bezierCoords[i + 1];
-    bezierCoords[i] =
-      cosAngle * rx * x +
-      -sinAngle * ry * y +
-      cx;
+    bezierCoords[i] = cosAngle * rx * x + -sinAngle * ry * y + cx;
 
-    bezierCoords[i + 1] =
-      sinAngle * rx * x +
-      cosAngle * ry * y +
-      cy;
+    bezierCoords[i + 1] = sinAngle * rx * x + cosAngle * ry * y + cy;
   }
 
   // The last point in the bezier set should match exactly the last coord pair in the arc (ie: x,y). But
@@ -165,16 +159,16 @@ function unitCircleArcToBeziers(angleStart: number, angleExtent: number): number
     coords[pos++] = dy;
 
     // First control point
-    coords[pos++] = (dx - controlLength * dy);
-    coords[pos++] = (dy + controlLength * dx);
+    coords[pos++] = dx - controlLength * dy;
+    coords[pos++] = dy + controlLength * dx;
 
     // Second control point
     angle += angleIncrement;
     dx = Math.cos(angle);
     dy = Math.sin(angle);
 
-    coords[pos++] = (dx + controlLength * dy);
-    coords[pos++] = (dy - controlLength * dx);
+    coords[pos++] = dx + controlLength * dy;
+    coords[pos++] = dy - controlLength * dx;
 
     // Endpoint of bezier
     coords[pos++] = dx;

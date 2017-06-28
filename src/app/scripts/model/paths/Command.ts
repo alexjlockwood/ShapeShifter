@@ -1,8 +1,4 @@
-import {
-  MathUtil,
-  Matrix,
-  Point,
-} from 'app/scripts/common';
+import { MathUtil, Matrix, Point } from 'app/scripts/common';
 import * as _ from 'lodash';
 
 import { SvgChar } from '.';
@@ -12,7 +8,6 @@ import { SvgChar } from '.';
  * of all Paths and SubPath objects.
  */
 export class Command {
-
   constructor(
     private readonly svgChar: SvgChar,
     private readonly points: ReadonlyArray<Point>,
@@ -90,13 +85,11 @@ export class Command {
       case 'Z':
         return ch === 'L' || ch === 'Q' || ch === 'C';
       case 'Q': {
-        const uniquePoints =
-          _.uniqWith(this.points, (p1: Point, p2: Point) => p1.equals(p2));
-        return ch === 'C' || ch === 'L' && uniquePoints.length <= 2;
+        const uniquePoints = _.uniqWith(this.points, (p1: Point, p2: Point) => p1.equals(p2));
+        return ch === 'C' || (ch === 'L' && uniquePoints.length <= 2);
       }
       case 'C': {
-        const uniquePoints =
-          _.uniqWith(this.points, (p1: Point, p2: Point) => p1.equals(p2));
+        const uniquePoints = _.uniqWith(this.points, (p1: Point, p2: Point) => p1.equals(p2));
         return ch === 'L' && uniquePoints.length <= 2;
       }
     }
@@ -137,7 +130,7 @@ export class CommandBuilder {
     private isSplitPoint = false,
     private id = '',
     private isSplitSegment = false,
-  ) { }
+  ) {}
 
   setSvgChar(svgChar: SvgChar) {
     this.svgChar = svgChar;
@@ -185,7 +178,7 @@ export class CommandBuilder {
   build(): Command {
     return new Command(
       this.svgChar,
-      this.points.map(p => p ? MathUtil.transformPoint(p, ...this.transforms) : p),
+      this.points.map(p => (p ? MathUtil.transformPoint(p, ...this.transforms) : p)),
       this.isSplitPoint,
       this.id || _.uniqueId(),
       this.isSplitSegment,

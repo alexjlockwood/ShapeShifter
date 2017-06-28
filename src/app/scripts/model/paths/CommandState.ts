@@ -1,26 +1,13 @@
-import {
-  MathUtil,
-  Matrix,
-  Point,
-} from 'app/scripts/common';
+import { MathUtil, Matrix, Point } from 'app/scripts/common';
 import * as _ from 'lodash';
 
-import {
-  Command,
-  Projection,
-  SvgChar,
-} from '.';
-import {
-  Calculator,
-  Line,
-  newCalculator,
-} from './calculators';
+import { Command, Projection, SvgChar } from '.';
+import { Calculator, Line, newCalculator } from './calculators';
 
 /**
  * Container class that encapsulates a Command's underlying state.
  */
 export class CommandState {
-
   constructor(
     // The original un-mutated command.
     private readonly backingCommand: Command,
@@ -33,11 +20,13 @@ export class CommandState {
     // has since been modified. Since the command state always holds a
     // reference to its initial backing command, these modifications
     // can be reversed simply by removing mutations from the list.
-    private readonly mutations: ReadonlyArray<Mutation> = [{
-      id: backingCommand.getId(),
-      t: 1,
-      svgChar: backingCommand.getSvgChar(),
-    }],
+    private readonly mutations: ReadonlyArray<Mutation> = [
+      {
+        id: backingCommand.getId(),
+        t: 1,
+        svgChar: backingCommand.getSvgChar(),
+      },
+    ],
     // The transformation matricies used to transform this command state object.
     private readonly transforms: ReadonlyArray<Matrix> = [new Matrix()],
     // The calculator that will do all of the math-y stuff for us.
@@ -52,7 +41,7 @@ export class CommandState {
     private readonly splitSegmentId = '',
     // The parent command state object (i.e. the one that created the new split segment).
     private readonly parentCommandState: CommandState = undefined,
-  ) { }
+  ) {}
 
   getBackingId() {
     return this.backingCommand.getId();
@@ -78,7 +67,7 @@ export class CommandState {
     return this.calculator.getPathLength();
   }
 
-  project(point: Point): { projection: Projection, splitIdx: number } | undefined {
+  project(point: Point): { projection: Projection; splitIdx: number } | undefined {
     const projection = this.calculator.project(point);
     if (!projection) {
       return undefined;
@@ -92,7 +81,7 @@ export class CommandState {
       return undefined;
     }
     // Count the number of t values that are less than the projection.
-    const splitIdx = _.sumBy(this.mutations, m => m.t < projection.t ? 1 : 0);
+    const splitIdx = _.sumBy(this.mutations, m => (m.t < projection.t ? 1 : 0));
     const tempSplits = [this.minT, ...this.mutations.map(m => m.t)];
     const startSplit = tempSplits[splitIdx];
     const endSplit = tempSplits[splitIdx + 1];
@@ -169,7 +158,6 @@ interface Mutation {
  * A builder class for creating new mutated CommandState objects.
  */
 class CommandStateMutator {
-
   constructor(
     private backingCommand: Command,
     private mutations: Mutation[],
@@ -179,7 +167,7 @@ class CommandStateMutator {
     private maxT: number,
     private splitSegmentId: string,
     private parentCommandState: CommandState,
-  ) { }
+  ) {}
 
   /**
    * Slices this command state object at the specified index, discarding
@@ -228,10 +216,12 @@ class CommandStateMutator {
     this.backingCommand = this.backingCommand.mutate().reverse().build();
     this.calculator = newCalculator(this.backingCommand);
     const lastMutation = this.mutations.pop();
-    this.mutations = this.mutations.map(m => {
-      const { id, svgChar } = m;
-      return { id, svgChar, t: MathUtil.lerp(this.maxT, this.minT, m.t) };
-    }).reverse();
+    this.mutations = this.mutations
+      .map(m => {
+        const { id, svgChar } = m;
+        return { id, svgChar, t: MathUtil.lerp(this.maxT, this.minT, m.t) };
+      })
+      .reverse();
     this.mutations.push(lastMutation);
     return this;
   }
@@ -270,8 +260,7 @@ class CommandStateMutator {
       const id = _.uniqueId();
       const svgChar = currSvgChars[_.sortedIndex(currSplits, t)];
       const mutation = { id, t, svgChar };
-      const insertionIdx =
-        _.sortedIndexBy<Mutation>(this.mutations, mutation, m => m.t);
+      const insertionIdx = _.sortedIndexBy<Mutation>(this.mutations, mutation, m => m.t);
       this.mutations.splice(insertionIdx, 0, { id, t, svgChar });
     }
     for (let i = 0; i < this.mutations.length - 1; i++) {
@@ -362,11 +351,9 @@ class CommandStateMutator {
    */
   setTransforms(transforms: ReadonlyArray<Matrix>) {
     this.transforms = [Matrix.flatten(...transforms)];
-    this.calculator =
-      newCalculator(
-        this.backingCommand.mutate()
-          .transform(this.transforms)
-          .build());
+    this.calculator = newCalculator(
+      this.backingCommand.mutate().transform(this.transforms).build(),
+    );
     return this;
   }
 
@@ -374,11 +361,13 @@ class CommandStateMutator {
    * Reverts this command state object back to its original state.
    */
   revert() {
-    this.mutations = [{
-      id: _.last(this.mutations).id,
-      t: _.last(this.mutations).t,
-      svgChar: this.backingCommand.getSvgChar(),
-    }];
+    this.mutations = [
+      {
+        id: _.last(this.mutations).id,
+        t: _.last(this.mutations).t,
+        svgChar: this.backingCommand.getSvgChar(),
+      },
+    ];
     this.transforms = [new Matrix()];
     this.calculator = newCalculator(this.backingCommand);
     return this;
@@ -393,8 +382,7 @@ class CommandStateMutator {
     let prevT = this.minT;
     for (let i = 0; i < this.mutations.length; i++) {
       const currT = this.mutations[i].t;
-      const isSplitSegment =
-        this.mutations[i].svgChar !== 'M' && !!this.parentCommandState;
+      const isSplitSegment = this.mutations[i].svgChar !== 'M' && !!this.parentCommandState;
       builtCommands.push(
         this.calculator
           .split(prevT, currT)
@@ -404,7 +392,8 @@ class CommandStateMutator {
           .setId(this.mutations[i].id)
           .setIsSplitPoint(i !== this.mutations.length - 1)
           .setIsSplitSegment(isSplitSegment)
-          .build());
+          .build(),
+      );
       prevT = currT;
     }
     return new CommandState(

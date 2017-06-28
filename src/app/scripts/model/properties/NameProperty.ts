@@ -1,7 +1,6 @@
 import { Property } from './Property';
 
 export class NameProperty extends Property<string> {
-
   static sanitize(value = '') {
     return value
       .toLowerCase()

@@ -1,9 +1,7 @@
-import {
-  Config,
-  Property,
-} from './Property';
 import { MathUtil } from 'app/scripts/common';
 import * as _ from 'lodash';
+
+import { Config, Property } from './Property';
 
 export class NumberProperty extends Property<number> {
   private readonly min: number;

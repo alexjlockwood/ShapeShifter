@@ -1,12 +1,12 @@
-import { Command } from '.';
 import * as _ from 'lodash';
+
+import { Command } from '.';
 
 /**
  * Represents a string of Commands, beginning with a 'moveTo' command and ending
  * with either a 'closepath' command or the next 'moveTo' command.
  */
 export class SubPath {
-
   constructor(
     private readonly commands: ReadonlyArray<Command>,
     private readonly id = _.uniqueId(),
@@ -15,7 +15,7 @@ export class SubPath {
     private readonly shiftOffset = 0,
     private readonly isSplit_ = false,
     private readonly isUnsplittable_ = false,
-  ) { }
+  ) {}
 
   /**
    * Returns a unique ID for this subpath.
@@ -127,7 +127,6 @@ export function createSubPaths(commands: ReadonlyArray<Command>) {
 }
 
 export class SubPathBuilder {
-
   constructor(
     private commands: ReadonlyArray<Command>,
     private id: string,
@@ -136,7 +135,7 @@ export class SubPathBuilder {
     private shiftOffset: number,
     private isSplit: boolean,
     private isUnsplittable: boolean,
-  ) { }
+  ) {}
 
   setCommands(commands: Command[]) {
     this.commands = commands;

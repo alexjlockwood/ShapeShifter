@@ -1,11 +1,11 @@
-import { CommandState } from './CommandState';
 import * as _ from 'lodash';
+
+import { CommandState } from './CommandState';
 
 /**
  * Container class that encapsulates a SubPath's underlying state.
  */
 export class SubPathState {
-
   constructor(
     private readonly commandStates: ReadonlyArray<CommandState>,
     private readonly isReversed_ = false,
@@ -14,7 +14,7 @@ export class SubPathState {
     // Either empty if this sub path is not split, or an array
     // containing this sub path's split children.
     private readonly splitSubPaths: ReadonlyArray<SubPathState> = [],
-  ) { }
+  ) {}
 
   getId() {
     return this.id;
@@ -59,14 +59,13 @@ export class SubPathState {
  * Builder class for creating new SubPathState objects.
  */
 export class SubPathStateMutator {
-
   constructor(
     private commandStates: CommandState[],
     private isReversed: boolean,
     private shiftOffset: number,
     private id: string,
     private splitSubPaths: ReadonlyArray<SubPathState>,
-  ) { }
+  ) {}
 
   setCommandStates(commandStates: CommandState[]) {
     this.commandStates = commandStates.slice();
