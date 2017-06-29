@@ -54,6 +54,7 @@ import { DemoService } from 'app/services/demo.service';
 import { DialogService } from 'app/services/dialog.service';
 import { FileExportService } from 'app/services/fileexport.service';
 import { FileImportService } from 'app/services/fileimport.service';
+import { LayerTimelineService } from 'app/services/layertimeline.service';
 import { PlaybackService } from 'app/services/playback.service';
 import { ShortcutService } from 'app/services/shortcut.service';
 import { SnackBarService } from 'app/services/snackbar.service';
@@ -116,6 +117,7 @@ describe('RootComponent', () => {
           DialogService,
           FileExportService,
           FileImportService,
+          LayerTimelineService,
           PlaybackService,
           ShortcutService,
           SnackBarService,
