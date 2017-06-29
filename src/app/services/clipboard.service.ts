@@ -2,9 +2,12 @@ import { Injectable } from '@angular/core';
 import { GroupLayer, Layer, VectorLayer } from 'app/scripts/model/layers';
 import { State, Store } from 'app/store';
 import { DeleteSelectedModels } from 'app/store/common/actions';
+import { environment } from 'environments/environment';
 import * as $ from 'jquery';
 
 import { LayerTimelineService } from './layertimeline.service';
+
+const IS_DEV_BUILD = !environment.production;
 
 @Injectable()
 export class ClipboardService {
@@ -126,10 +129,14 @@ export class ClipboardService {
     const copyHandler = (event: JQuery.Event) => cutCopyHandlerFn(event, false);
     const pasteHandler = pasteHandlerFn;
 
-    $(window).on('cut', cutHandler).on('copy', copyHandler).on('paste', pasteHandler);
+    if (IS_DEV_BUILD) {
+      $(window).on('cut', cutHandler).on('copy', copyHandler).on('paste', pasteHandler);
+    }
   }
 
   destroy() {
-    $(window).unbind('cut').unbind('copy').unbind('paste');
+    if (IS_DEV_BUILD) {
+      $(window).unbind('cut').unbind('copy').unbind('paste');
+    }
   }
 }
