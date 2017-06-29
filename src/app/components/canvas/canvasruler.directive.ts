@@ -19,12 +19,12 @@ const TICK_SIZE = 6;
 export class CanvasRulerDirective extends CanvasLayoutMixin() {
   @Input() orientation: Orientation;
 
-  private readonly $canvas: JQuery;
+  private readonly $canvas: JQuery<HTMLCanvasElement>;
   private mousePoint: Point;
 
   constructor(elementRef: ElementRef) {
     super();
-    this.$canvas = $(elementRef.nativeElement);
+    this.$canvas = $(elementRef.nativeElement) as JQuery<HTMLCanvasElement>;
   }
 
   // @Override
@@ -57,7 +57,7 @@ export class CanvasRulerDirective extends CanvasLayoutMixin() {
       height: height * window.devicePixelRatio,
     });
 
-    const ctx = (this.$canvas.get(0) as HTMLCanvasElement).getContext('2d');
+    const ctx = this.$canvas.get(0).getContext('2d');
     ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
     ctx.translate(isHorizontal ? EXTRA_PADDING : 0, isHorizontal ? 0 : EXTRA_PADDING);
 

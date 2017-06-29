@@ -27,8 +27,8 @@ export class CanvasLayersDirective extends CanvasLayoutMixin(DestroyableMixin())
   implements AfterViewInit {
   @Input() actionSource: ActionSource;
 
-  private readonly $renderingCanvas: JQuery;
-  private readonly $offscreenCanvas: JQuery;
+  private readonly $renderingCanvas: JQuery<HTMLCanvasElement>;
+  private readonly $offscreenCanvas: JQuery<HTMLCanvasElement>;
   private vectorLayer: VectorLayer;
   private hiddenLayerIds = new Set<string>();
 
@@ -38,8 +38,8 @@ export class CanvasLayersDirective extends CanvasLayoutMixin(DestroyableMixin())
     private readonly store: Store<State>,
   ) {
     super();
-    this.$renderingCanvas = $(elementRef.nativeElement);
-    this.$offscreenCanvas = $(document.createElement('canvas'));
+    this.$renderingCanvas = $(elementRef.nativeElement) as JQuery<HTMLCanvasElement>;
+    this.$offscreenCanvas = $(document.createElement('canvas')) as JQuery<HTMLCanvasElement>;
   }
 
   ngAfterViewInit() {
@@ -73,11 +73,11 @@ export class CanvasLayersDirective extends CanvasLayoutMixin(DestroyableMixin())
   }
 
   private get renderingCtx() {
-    return (this.$renderingCanvas.get(0) as HTMLCanvasElement).getContext('2d');
+    return this.$renderingCanvas.get(0).getContext('2d');
   }
 
   private get offscreenCtx() {
-    return (this.$offscreenCanvas.get(0) as HTMLCanvasElement).getContext('2d');
+    return this.$offscreenCanvas.get(0).getContext('2d');
   }
 
   // @Override

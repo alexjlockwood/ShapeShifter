@@ -1,12 +1,5 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  OnInit,
-} from '@angular/core';
-import {
-  ColorUtil,
-  ModelUtil,
-} from 'app/scripts/common';
+import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { ColorUtil, ModelUtil } from 'app/scripts/common';
 import { ActionMode } from 'app/scripts/model/actionmode';
 import {
   ClipPathLayer,
@@ -16,31 +9,13 @@ import {
   PathLayer,
   VectorLayer,
 } from 'app/scripts/model/layers';
-import {
-  FractionProperty,
-  NameProperty,
-  Option,
-} from 'app/scripts/model/properties';
-import {
-  Animation,
-  PathAnimationBlock,
-} from 'app/scripts/model/timeline';
-import {
-  ActionModeService,
-  AnimatorService,
-  ShortcutService,
-} from 'app/services';
-import {
-  State,
-  Store,
-} from 'app/store';
+import { FractionProperty, NameProperty, Option } from 'app/scripts/model/properties';
+import { Animation, PathAnimationBlock } from 'app/scripts/model/timeline';
+import { ActionModeService, AnimatorService, ShortcutService } from 'app/services';
+import { State, Store } from 'app/store';
 import { getPropertyInputState } from 'app/store/common/selectors';
 import { ReplaceLayer } from 'app/store/layers/actions';
-import {
-  AddBlock,
-  ReplaceAnimation,
-  ReplaceBlocks,
-} from 'app/store/timeline/actions';
+import { AddBlock, ReplaceAnimation, ReplaceBlocks } from 'app/store/timeline/actions';
 import * as $ from 'jquery';
 import * as _ from 'lodash';
 import { Observable } from 'rxjs/Observable';
@@ -57,7 +32,6 @@ declare const ga: Function;
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PropertyInputComponent implements OnInit {
-
   propertyInputModel$: Observable<PropertyInputModel>;
 
   // Map used to track user state that has been entered into textfields
@@ -68,31 +42,28 @@ export class PropertyInputComponent implements OnInit {
     private readonly store: Store<State>,
     private readonly actionModeService: ActionModeService,
     private readonly animatorService: AnimatorService,
-  ) { }
+  ) {}
 
   ngOnInit() {
-    this.propertyInputModel$ =
-      this.store.select(getPropertyInputState).map(({
-        animation,
-        isAnimationSelected,
-        selectedBlockIds,
-        vectorLayer,
-        selectedLayerIds,
-      }) => {
-        if (selectedLayerIds.size) {
-          return this.buildInspectedLayerProperties(vectorLayer, selectedLayerIds, animation);
-        } else if (selectedBlockIds.size) {
-          return this.buildInspectedBlockProperties(vectorLayer, animation, selectedBlockIds);
-        } else if (isAnimationSelected) {
-          return this.buildInspectedAnimationProperties(animation);
-        } else {
-          return {
-            numSelections: 0,
-            inspectedProperties: [],
-            availablePropertyNames: [],
-          } as PropertyInputModel;
-        }
-      });
+    this.propertyInputModel$ = this.store
+      .select(getPropertyInputState)
+      .map(
+        ({ animation, isAnimationSelected, selectedBlockIds, vectorLayer, selectedLayerIds }) => {
+          if (selectedLayerIds.size) {
+            return this.buildInspectedLayerProperties(vectorLayer, selectedLayerIds, animation);
+          } else if (selectedBlockIds.size) {
+            return this.buildInspectedBlockProperties(vectorLayer, animation, selectedBlockIds);
+          } else if (isAnimationSelected) {
+            return this.buildInspectedAnimationProperties(animation);
+          } else {
+            return {
+              numSelections: 0,
+              inspectedProperties: [],
+              availablePropertyNames: [],
+            } as PropertyInputModel;
+          }
+        },
+      );
   }
 
   shouldShowStartActionModeButton(pim: PropertyInputModel) {
@@ -100,8 +71,9 @@ export class PropertyInputComponent implements OnInit {
   }
 
   shouldDisableStartActionModeButton(pim: PropertyInputModel) {
-    return this.shouldShowStartActionModeButton(pim)
-      && (!pim.model.fromValue || !pim.model.toValue);
+    return (
+      this.shouldShowStartActionModeButton(pim) && (!pim.model.fromValue || !pim.model.toValue)
+    );
   }
 
   onAutoFixPathsClick(pim: PropertyInputModel) {
@@ -114,26 +86,30 @@ export class PropertyInputComponent implements OnInit {
   }
 
   shouldShowAnimateLayerButton(pim: PropertyInputModel) {
-    return pim.availablePropertyNames.length > 0
-      && pim.numSelections === 1
-      && (pim.model instanceof VectorLayer
-        || pim.model instanceof GroupLayer
-        || pim.model instanceof ClipPathLayer
-        || pim.model instanceof PathLayer);
+    return (
+      pim.availablePropertyNames.length > 0 &&
+      pim.numSelections === 1 &&
+      (pim.model instanceof VectorLayer ||
+        pim.model instanceof GroupLayer ||
+        pim.model instanceof ClipPathLayer ||
+        pim.model instanceof PathLayer)
+    );
   }
 
   onAnimateLayerClick(layer: Layer, propertyName: string) {
-    const clonedValue =
-      layer.inspectableProperties.get(propertyName).cloneValue(layer[propertyName]);
+    const clonedValue = layer.inspectableProperties
+      .get(propertyName)
+      .cloneValue(layer[propertyName]);
     const currentTime = this.animatorService.getCurrentTime();
-    this.store.dispatch(
-      new AddBlock(layer, propertyName, clonedValue, clonedValue, currentTime));
+    this.store.dispatch(new AddBlock(layer, propertyName, clonedValue, clonedValue, currentTime));
   }
 
   shouldShowInvalidPathAnimationBlockMsg(pim: PropertyInputModel) {
-    return pim.numSelections === 1
-      && pim.model instanceof PathAnimationBlock
-      && !pim.model.isAnimatable();
+    return (
+      pim.numSelections === 1 &&
+      pim.model instanceof PathAnimationBlock &&
+      !pim.model.isAnimatable()
+    );
   }
 
   isPathBlockFromValueEmpty(block: PathAnimationBlock) {
@@ -150,15 +126,15 @@ export class PropertyInputComponent implements OnInit {
       case 38:
       case 40:
         ip.resolveEnteredValue();
-        const $target = $(event.target);
+        const $target = $(event.target) as JQuery<HTMLInputElement>;
         const numberValue = Number($target.val());
         if (isNaN(numberValue)) {
           break;
         }
-        let delta = (event.keyCode === 38) ? 1 : -1;
+        let delta = event.keyCode === 38 ? 1 : -1;
 
         if (ip.property instanceof FractionProperty) {
-          delta *= .1;
+          delta *= 0.1;
         }
 
         if (event.shiftKey) {
@@ -170,7 +146,7 @@ export class PropertyInputComponent implements OnInit {
         }
 
         ip.property.setEditableValue(ip, 'value', Number((numberValue + delta).toFixed(6)));
-        setTimeout(() => ($target.get(0) as HTMLInputElement).select(), 0);
+        setTimeout(() => $target.get(0).select(), 0);
         return false;
     }
     return undefined;
@@ -201,31 +177,34 @@ export class PropertyInputComponent implements OnInit {
     const description = layer.name;
     const inspectedProperties: InspectedProperty<any>[] = [];
     layer.inspectableProperties.forEach((property, propertyName) => {
-      inspectedProperties.push(new InspectedProperty<any>(
-        layer,
-        property,
-        propertyName,
-        enteredValueMap,
-        (value) => {
-          // TODO: avoid dispatching the action if the properties are equal
-          const clonedLayer = layer.clone();
-          clonedLayer[propertyName] = value;
-          store.dispatch(new ReplaceLayer(clonedLayer));
-        },
-        // TODO: return the 'rendered' value if an animation is ongoing? (see AIA)
-        undefined,
-        (enteredValue) => {
-          if (property instanceof NameProperty) {
-            return LayerUtil.getUniqueLayerName([vl], NameProperty.sanitize(enteredValue));
-          }
-          return enteredValue;
-        },
-        // TODO: copy AIA conditions to determine whether this should be editable
-        undefined,
-      ));
+      inspectedProperties.push(
+        new InspectedProperty<any>(
+          layer,
+          property,
+          propertyName,
+          enteredValueMap,
+          value => {
+            // TODO: avoid dispatching the action if the properties are equal
+            const clonedLayer = layer.clone();
+            clonedLayer[propertyName] = value;
+            store.dispatch(new ReplaceLayer(clonedLayer));
+          },
+          // TODO: return the 'rendered' value if an animation is ongoing? (see AIA)
+          undefined,
+          enteredValue => {
+            if (property instanceof NameProperty) {
+              return LayerUtil.getUniqueLayerName([vl], NameProperty.sanitize(enteredValue));
+            }
+            return enteredValue;
+          },
+          // TODO: copy AIA conditions to determine whether this should be editable
+          undefined,
+        ),
+      );
     });
-    const availablePropertyNames =
-      Array.from(ModelUtil.getAvailablePropertyNamesForLayer(layer, animation));
+    const availablePropertyNames = Array.from(
+      ModelUtil.getAvailablePropertyNamesForLayer(layer, animation),
+    );
     return {
       model: layer,
       numSelections,
@@ -264,18 +243,14 @@ export class PropertyInputComponent implements OnInit {
     const subDescription = `for '${blockLayer.name}'`;
     const inspectedProperties: InspectedProperty<any>[] = [];
     block.inspectableProperties.forEach((property, propertyName) => {
-      inspectedProperties.push(new InspectedProperty<any>(
-        block,
-        property,
-        propertyName,
-        enteredValueMap,
-        (value) => {
+      inspectedProperties.push(
+        new InspectedProperty<any>(block, property, propertyName, enteredValueMap, value => {
           // TODO: avoid dispatching the action if the properties are equal
           const clonedBlock = block.clone();
           clonedBlock[propertyName] = value;
           store.dispatch(new ReplaceBlocks([clonedBlock]));
-        },
-      ));
+        }),
+      );
     });
     return {
       model: block,
@@ -295,21 +270,23 @@ export class PropertyInputComponent implements OnInit {
     const description = animation.name;
     const inspectedProperties: InspectedProperty<any>[] = [];
     animation.inspectableProperties.forEach((property, propertyName) => {
-      inspectedProperties.push(new InspectedProperty<any>(
-        animation,
-        property,
-        propertyName,
-        enteredValueMap,
-        (value) => {
-          // TODO: avoid dispatching the action if the properties are equal
-          const clonedAnimation = animation.clone();
-          clonedAnimation[propertyName] = value;
-          store.dispatch(new ReplaceAnimation(clonedAnimation));
-        },
-        undefined,
-        undefined,
-        undefined,
-      ));
+      inspectedProperties.push(
+        new InspectedProperty<any>(
+          animation,
+          property,
+          propertyName,
+          enteredValueMap,
+          value => {
+            // TODO: avoid dispatching the action if the properties are equal
+            const clonedAnimation = animation.clone();
+            clonedAnimation[propertyName] = value;
+            store.dispatch(new ReplaceAnimation(clonedAnimation));
+          },
+          undefined,
+          undefined,
+          undefined,
+        ),
+      );
     });
     return {
       model: animation,

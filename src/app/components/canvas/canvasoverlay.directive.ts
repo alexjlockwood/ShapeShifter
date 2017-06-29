@@ -88,7 +88,7 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
   implements AfterViewInit {
   @Input() actionSource: ActionSource;
 
-  private readonly $canvas: JQuery;
+  private readonly $canvas: JQuery<HTMLCanvasElement>;
   vectorLayer: VectorLayer;
   // Normal mode variables.
   private hiddenLayerIds = new Set<string>();
@@ -117,7 +117,7 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
     private readonly animatorService: AnimatorService,
   ) {
     super();
-    this.$canvas = $(elementRef.nativeElement);
+    this.$canvas = $(elementRef.nativeElement) as JQuery<HTMLCanvasElement>;
   }
 
   ngAfterViewInit() {
@@ -260,7 +260,7 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
   }
 
   private get overlayCtx() {
-    return (this.$canvas.get(0) as HTMLCanvasElement).getContext('2d');
+    return this.$canvas.get(0).getContext('2d');
   }
 
   private get highlightLineWidth() {

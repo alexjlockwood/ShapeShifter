@@ -8,19 +8,12 @@ import { LayerTimelineService } from './layertimeline.service';
 
 @Injectable()
 export class ClipboardService {
-  private isInit = false;
-
   constructor(
     private readonly layerTimelineService: LayerTimelineService,
     private readonly store: Store<State>,
   ) {}
 
   init() {
-    if (this.isInit) {
-      return;
-    }
-    this.isInit = true;
-
     const cutCopyHandlerFn = (event: JQuery.Event, shouldCut: boolean) => {
       if (document.activeElement.matches('input')) {
         return true;
@@ -137,10 +130,6 @@ export class ClipboardService {
   }
 
   destroy() {
-    if (!this.isInit) {
-      return;
-    }
-    this.isInit = false;
     $(window).unbind('cut').unbind('copy').unbind('paste');
   }
 }
