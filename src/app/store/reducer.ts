@@ -6,6 +6,7 @@ import { storeLogger } from 'ngrx-store-logger';
 import * as metaActionMode from './actionmode/metareducer';
 import * as fromActionMode from './actionmode/reducer';
 import * as fromLayers from './layers/reducer';
+import * as metaMultiAction from './multiaction/metareducer';
 import * as fromPlayback from './playback/reducer';
 import * as metaReset from './reset/metareducer';
 import * as fromReset from './reset/reducer';
@@ -34,6 +35,8 @@ const sliceReducers = {
 const prodMetaReducers = [
   // Meta-reducer that records past/present/future state.
   metaUndoRedo.metaReducer,
+  // Meta-reducer that adds the ability to dispatch multiple actions at a time.
+  metaMultiAction.metaReducer,
   // Meta-reducer that adds the ability to reset the entire state tree.
   metaReset.metaReducer,
   // Meta-reducer that allows us to perform actions that modify different
@@ -52,15 +55,13 @@ const devMetaReducers = [
   metaStoreFreeze.metaReducer,
 ];
 
-export const productionReducer = compose(...prodMetaReducers)(sliceReducers) as ActionReducer<
-  State
->;
-const developmentReducer = compose(...devMetaReducers)(productionReducer) as ActionReducer<State>;
+export const prodReducer = compose(...prodMetaReducers)(sliceReducers) as ActionReducer<State>;
+const devReducer = compose(...devMetaReducers)(prodReducer) as ActionReducer<State>;
 
 export function reducer(state: State, action: Action) {
   if (environment.production) {
-    return productionReducer(state, action);
+    return prodReducer(state, action);
   } else {
-    return developmentReducer(state, action);
+    return devReducer(state, action);
   }
 }

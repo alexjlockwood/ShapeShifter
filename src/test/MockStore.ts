@@ -1,5 +1,5 @@
 import { Action, ActionReducer, Store } from '@ngrx/store';
-import { State, productionReducer } from 'app/store';
+import { State, prodReducer } from 'app/store';
 import { State as LayerState } from 'app/store/layers/reducer';
 import { State as PlaybackState } from 'app/store/playback/reducer';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
@@ -18,7 +18,7 @@ export class MockStore extends Store<State> {
       undefined as Observer<ActionReducer<any>>,
       undefined as Observable<any>,
     );
-    this.subject = new BehaviorSubject(productionReducer(undefined, INIT_ACTION));
+    this.subject = new BehaviorSubject(prodReducer(undefined, INIT_ACTION));
   }
 
   readonly select = <R>(mapFn: any, ...paths: string[]): Observable<R> => {
