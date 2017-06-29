@@ -102,12 +102,6 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
       return { ...state, vectorLayer };
     }
 
-    // Select a layer.
-    case actions.SELECT_LAYER: {
-      const { layerId, clearExisting } = action.payload;
-      return selectLayerId(state, layerId, clearExisting);
-    }
-
     // Group/ungroup selected layers.
     case actions.GROUP_OR_UNGROUP_SELECTED_LAYERS: {
       const { shouldGroup } = action.payload;
@@ -120,30 +114,15 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
     }
 
     case actions.CLEAR_SELECTIONS:
-    case actions.SELECT_ANIMATION:
-    case actions.SELECT_BLOCK:
     case actions.ADD_BLOCK: {
       return { ...state, selectedLayerIds: new Set<string>() };
     }
+
+    case actions.SET_SELECTED_LAYERS: {
+      return { ...state, selectedLayerIds: new Set<string>(action.payload.layerIds) };
+    }
   }
   return state;
-}
-
-function selectLayerId(state: State, layerId: string, clearExisting: boolean) {
-  const selectedLayerIds = new Set(state.selectedLayerIds);
-  if (clearExisting) {
-    selectedLayerIds.forEach(id => {
-      if (id !== layerId) {
-        selectedLayerIds.delete(id);
-      }
-    });
-  }
-  if (!clearExisting && selectedLayerIds.has(layerId)) {
-    selectedLayerIds.delete(layerId);
-  } else {
-    selectedLayerIds.add(layerId);
-  }
-  return { ...state, selectedLayerIds };
 }
 
 function deleteSelectedLayers(state: State) {

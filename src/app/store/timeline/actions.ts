@@ -3,14 +3,13 @@ import { Layer } from 'app/scripts/model/layers';
 import { Animation, AnimationBlock } from 'app/scripts/model/timeline';
 
 import { ClearSelections, DeleteSelectedModels } from '../common/actions';
-import { SelectLayer } from '../layers/actions';
 
 export const REPLACE_ANIMATION = '__timeline__REPLACE_ANIMATION';
 export const SELECT_ANIMATION = '__timeline__SELECT_ANIMATION';
 export const ADD_BLOCK = '__timeline__ADD_BLOCK';
 export const REPLACE_BLOCKS = '__timeline__REPLACE_BLOCKS';
 export const SELECT_BLOCK = '__timeline__SELECT_BLOCK';
-export { SELECT_LAYER } from '../layers/actions';
+export const SET_SELECTED_BLOCKS = '__timeline__SET_SELECTED_BLOCKS';
 export { CLEAR_SELECTIONS, DELETE_SELECTED_MODELS } from '../common/actions';
 
 export class ReplaceAnimation implements Action {
@@ -57,11 +56,11 @@ export class ReplaceBlocks implements Action {
   }
 }
 
-export class SelectBlock implements Action {
-  readonly type = SELECT_BLOCK;
-  readonly payload: { blockId: string; clearExisting: boolean };
-  constructor(blockId: string, clearExisting = true) {
-    this.payload = { blockId, clearExisting };
+export class SetSelectedBlocks implements Action {
+  readonly type = SET_SELECTED_BLOCKS;
+  readonly payload: { blockIds: Set<string> };
+  constructor(blockIds: Set<string>) {
+    this.payload = { blockIds };
   }
 }
 
@@ -70,7 +69,6 @@ export type Actions =
   | SelectAnimation
   | AddBlock
   | ReplaceBlocks
-  | SelectBlock
-  | SelectLayer
   | ClearSelections
-  | DeleteSelectedModels;
+  | DeleteSelectedModels
+  | SetSelectedBlocks;

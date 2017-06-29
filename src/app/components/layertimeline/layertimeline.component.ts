@@ -31,6 +31,7 @@ import {
   DialogService,
   FileExportService,
   FileImportService,
+  LayerTimelineService,
 } from 'app/services';
 import { Shortcut, ShortcutService } from 'app/services/shortcut.service';
 import { Duration, SnackBarService } from 'app/services/snackbar.service';
@@ -39,13 +40,12 @@ import { getLayerTimelineState, isWorkspaceDirty } from 'app/store/common/select
 import {
   AddLayer,
   ReplaceLayer,
-  SelectLayer,
   ToggleLayerExpansion,
   ToggleLayerVisibility,
 } from 'app/store/layers/actions';
 import { getVectorLayer } from 'app/store/layers/selectors';
 import { ResetWorkspace } from 'app/store/reset/actions';
-import { AddBlock, ReplaceBlocks, SelectAnimation, SelectBlock } from 'app/store/timeline/actions';
+import { AddBlock, ReplaceBlocks } from 'app/store/timeline/actions';
 import { getAnimation } from 'app/store/timeline/selectors';
 import { environment } from 'environments/environment';
 import * as $ from 'jquery';
@@ -133,6 +133,7 @@ export class LayerTimelineComponent extends DestroyableMixin()
     private readonly demoService: DemoService,
     private readonly actionModeService: ActionModeService,
     public readonly shortcutService: ShortcutService,
+    private readonly layerTimelineService: LayerTimelineService,
   ) {
     super();
   }
@@ -298,7 +299,7 @@ export class LayerTimelineComponent extends DestroyableMixin()
     event.stopPropagation();
     if (!this.actionModeService.isActionMode()) {
       const isSelected = !ShortcutService.getOsDependentModifierKey(event) && !event.shiftKey;
-      this.store.dispatch(new SelectAnimation(isSelected));
+      this.layerTimelineService.selectAnimation(isSelected);
     }
   }
 
@@ -733,7 +734,7 @@ export class LayerTimelineComponent extends DestroyableMixin()
   // @Override TimelineAnimationRowCallbacks
   onTimelineBlockClick(event: MouseEvent, block: AnimationBlock) {
     const clearExisting = !ShortcutService.getOsDependentModifierKey(event) && !event.shiftKey;
-    this.store.dispatch(new SelectBlock(block.id, clearExisting));
+    this.layerTimelineService.selectBlock(block.id, clearExisting);
   }
 
   // @Override TimelineAnimationRowCallbacks
@@ -754,7 +755,7 @@ export class LayerTimelineComponent extends DestroyableMixin()
   // @Override LayerListTreeComponentCallbacks
   onLayerClick(event: MouseEvent, layer: Layer) {
     const clearExisting = !ShortcutService.getOsDependentModifierKey(event) && !event.shiftKey;
-    this.store.dispatch(new SelectLayer(layer.id, clearExisting));
+    this.layerTimelineService.selectLayer(layer.id, clearExisting);
   }
 
   // @Override LayerListTreeComponentCallbacks

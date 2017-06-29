@@ -23,7 +23,12 @@ import {
 } from 'app/scripts/model/layers';
 import { Command } from 'app/scripts/model/paths';
 import { HitResult, Path, SubPath } from 'app/scripts/model/paths';
-import { ActionModeService, AnimatorService, ShortcutService } from 'app/services';
+import {
+  ActionModeService,
+  AnimatorService,
+  LayerTimelineService,
+  ShortcutService,
+} from 'app/services';
 import { State, Store } from 'app/store';
 import {
   getActionMode,
@@ -33,7 +38,6 @@ import {
 } from 'app/store/actionmode/selectors';
 import { ClearSelections } from 'app/store/common/actions';
 import { getCanvasOverlayState } from 'app/store/common/selectors';
-import { SelectLayer } from 'app/store/layers/actions';
 import { getVectorLayer } from 'app/store/layers/selectors';
 import * as $ from 'jquery';
 import * as _ from 'lodash';
@@ -115,6 +119,7 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
     public readonly store: Store<State>,
     public readonly actionModeService: ActionModeService,
     private readonly animatorService: AnimatorService,
+    private readonly layerTimelineService: LayerTimelineService,
   ) {
     super();
     this.$canvas = $(elementRef.nativeElement) as JQuery<HTMLCanvasElement>;
@@ -817,7 +822,7 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
       const isMetaOrShiftPressed =
         ShortcutService.getOsDependentModifierKey(event) || event.shiftKey;
       if (hitLayer) {
-        this.store.dispatch(new SelectLayer(hitLayer.id, !isMetaOrShiftPressed));
+        this.layerTimelineService.selectLayer(hitLayer.id, !isMetaOrShiftPressed);
       } else if (!isMetaOrShiftPressed) {
         this.store.dispatch(new ClearSelections());
       }

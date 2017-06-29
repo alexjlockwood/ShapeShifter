@@ -3,7 +3,13 @@ import 'rxjs/add/observable/of';
 import { ComponentFixture, TestBed, async, inject } from '@angular/core/testing';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { ActionSource } from 'app/scripts/model/actionmode';
-import { ActionModeService, AnimatorService, PlaybackService, ShortcutService } from 'app/services';
+import {
+  ActionModeService,
+  AnimatorService,
+  LayerTimelineService,
+  PlaybackService,
+  ShortcutService,
+} from 'app/services';
 import { Store } from 'app/store';
 import { Observable } from 'rxjs/Observable';
 import { MockStore } from 'test/MockStore';
@@ -33,6 +39,7 @@ describe('CanvasComponent', () => {
           { provide: Store, useValue: new MockStore() },
           ActionModeService,
           AnimatorService,
+          LayerTimelineService,
           PlaybackService,
           ShortcutService,
         ],

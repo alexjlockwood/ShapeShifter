@@ -2,16 +2,16 @@ import { Action } from '@ngrx/store';
 import { Layer, VectorLayer } from 'app/scripts/model/layers';
 
 import { ClearSelections, DeleteSelectedModels } from '../common/actions';
-import { AddBlock, SelectAnimation, SelectBlock } from '../timeline/actions';
+import { AddBlock } from '../timeline/actions';
 
 export const IMPORT_VECTOR_LAYERS = '__layers__IMPORT_VECTOR_LAYERS';
 export const ADD_LAYER = '__layers__ADD_LAYER';
 export const TOGGLE_LAYER_EXPANSION = '__layers__TOGGLE_LAYER_EXPANSION';
 export const TOGGLE_LAYER_VISIBILITY = '__layers__TOGGLE_LAYER_VISIBILITY';
 export const REPLACE_LAYER = '__layers__REPLACE_LAYER';
-export const SELECT_LAYER = '__layers__SELECT_LAYER';
 export const GROUP_OR_UNGROUP_SELECTED_LAYERS = '__layers__GROUP_OR_UNGROUP_SELECTED_LAYERS';
-export { SELECT_ANIMATION, ADD_BLOCK, SELECT_BLOCK } from '../timeline/actions';
+export const SET_SELECTED_LAYERS = '__layers__SET_SELECTED_LAYERS';
+export { ADD_BLOCK } from '../timeline/actions';
 export { CLEAR_SELECTIONS, DELETE_SELECTED_MODELS } from '../common/actions';
 
 export class ImportVectorLayers implements Action {
@@ -55,19 +55,19 @@ export class ReplaceLayer implements Action {
   }
 }
 
-export class SelectLayer implements Action {
-  readonly type = SELECT_LAYER;
-  readonly payload: { layerId: string; clearExisting: boolean };
-  constructor(layerId: string, clearExisting: boolean) {
-    this.payload = { layerId, clearExisting };
-  }
-}
-
 export class GroupOrUngroupSelectedLayers implements Action {
   readonly type = GROUP_OR_UNGROUP_SELECTED_LAYERS;
   readonly payload: { shouldGroup: boolean };
   constructor(shouldGroup: boolean) {
     this.payload = { shouldGroup };
+  }
+}
+
+export class SetSelectedLayers implements Action {
+  readonly type = SET_SELECTED_LAYERS;
+  readonly payload: { layerIds: Set<string> };
+  constructor(layerIds: Set<string>) {
+    this.payload = { layerIds };
   }
 }
 
@@ -77,10 +77,8 @@ export type Actions =
   | ToggleLayerExpansion
   | ToggleLayerVisibility
   | ReplaceLayer
-  | SelectLayer
   | GroupOrUngroupSelectedLayers
-  | SelectAnimation
-  | SelectBlock
   | AddBlock
   | ClearSelections
-  | DeleteSelectedModels;
+  | DeleteSelectedModels
+  | SetSelectedLayers;

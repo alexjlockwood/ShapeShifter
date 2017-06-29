@@ -63,7 +63,7 @@
     "@types/jquery": "^3.2.5",
     "@types/jszip": "0.0.33",
     "@types/lodash": "^4.14.66",
-    "@types/node": "^8.0.5",
+    "@types/node": "^8.0.6",
     "@types/tinycolor2": "^1.4.0",
     "angular-cli-ghpages": "^0.5.1",
     "codelyzer": "^3.1.1",

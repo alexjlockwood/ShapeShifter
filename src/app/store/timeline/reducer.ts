@@ -29,8 +29,7 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
 
     // Select an animation.
     case actions.SELECT_ANIMATION: {
-      const { isAnimationSelected } = action.payload;
-      return { ...state, isAnimationSelected, selectedBlockIds: new Set<string>() };
+      return { ...state, isAnimationSelected: action.payload.isAnimationSelected };
     }
 
     // Add an animation block to the currently active animation.
@@ -126,14 +125,7 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
       return { ...state, animation };
     }
 
-    // Select an animation block.
-    case actions.SELECT_BLOCK: {
-      const { blockId, clearExisting } = action.payload;
-      return selectBlockId(state, blockId, clearExisting);
-    }
-
-    case actions.CLEAR_SELECTIONS:
-    case actions.SELECT_LAYER: {
+    case actions.CLEAR_SELECTIONS: {
       return { ...state, isAnimationSelected: false, selectedBlockIds: new Set<string>() };
     }
 
@@ -142,6 +134,10 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
       state = deleteSelectedAnimation(state);
       state = deleteSelectedBlocks(state);
       return state;
+    }
+
+    case actions.SET_SELECTED_BLOCKS: {
+      return { ...state, selectedBlockIds: new Set<string>(action.payload.blockIds) };
     }
   }
 
