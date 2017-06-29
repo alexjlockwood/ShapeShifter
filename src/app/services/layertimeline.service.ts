@@ -19,40 +19,6 @@ import * as _ from 'lodash';
 export class LayerTimelineService {
   constructor(private readonly store: Store<State>) {}
 
-  private getSelectedLayerIds() {
-    let layerIds: Set<string>;
-    this.store.select(getSelectedLayerIds).first().subscribe(ids => {
-      layerIds = new Set(ids);
-    });
-    return layerIds;
-  }
-
-  getSelectedLayers() {
-    let layers: ReadonlyArray<Layer>;
-    this.store.select(getVectorLayer).first().subscribe(vl => {
-      const layerIds = this.getSelectedLayerIds();
-      layers = Array.from(layerIds).map(id => vl.findLayerById(id));
-    });
-    return layers;
-  }
-
-  private getSelectedBlockIds() {
-    let blockIds: Set<string>;
-    this.store.select(getSelectedBlockIds).first().subscribe(ids => {
-      blockIds = new Set(ids);
-    });
-    return blockIds;
-  }
-
-  getSelectedBlocks() {
-    let blocks: ReadonlyArray<AnimationBlock>;
-    this.store.select(getAnimation).first().subscribe(anim => {
-      const blockIds = this.getSelectedBlockIds();
-      blocks = Array.from(blockIds).map(id => _.find(anim.blocks, b => b.id === id));
-    });
-    return blocks;
-  }
-
   selectLayer(layerId: string, clearExisting: boolean) {
     const selectedLayerIds = this.getSelectedLayerIds();
     if (clearExisting) {
@@ -67,13 +33,7 @@ export class LayerTimelineService {
     } else {
       selectedLayerIds.add(layerId);
     }
-    this.store.dispatch(
-      new MultiAction(
-        new SetSelectedLayers(selectedLayerIds),
-        new SelectAnimation(false),
-        new SetSelectedBlocks(new Set()),
-      ),
-    );
+    this.updateSelections(false, new Set(), selectedLayerIds);
   }
 
   selectBlock(blockId: string, clearExisting: boolean) {
@@ -90,32 +50,62 @@ export class LayerTimelineService {
     } else {
       selectedBlockIds.add(blockId);
     }
-    this.store.dispatch(
-      new MultiAction(
-        new SetSelectedBlocks(selectedBlockIds),
-        new SelectAnimation(false),
-        new SetSelectedLayers(new Set()),
-      ),
-    );
+    this.updateSelections(false, selectedBlockIds, new Set());
   }
 
   selectAnimation(isSelected: boolean) {
+    this.updateSelections(isSelected, new Set(), new Set());
+  }
+
+  clearSelections() {
+    this.updateSelections(false, new Set(), new Set());
+  }
+
+  private updateSelections(
+    isAnimationSelected: boolean,
+    selectedBlockIds: Set<string>,
+    selectedLayerIds: Set<string>,
+  ) {
     this.store.dispatch(
       new MultiAction(
-        new SetSelectedBlocks(new Set()),
-        new SelectAnimation(isSelected),
-        new SetSelectedLayers(new Set()),
+        new SelectAnimation(isAnimationSelected),
+        new SetSelectedBlocks(selectedBlockIds),
+        new SetSelectedLayers(selectedLayerIds),
       ),
     );
   }
 
-  clearSelections() {
-    this.store.dispatch(
-      new MultiAction(
-        new SetSelectedBlocks(new Set()),
-        new SelectAnimation(false),
-        new SetSelectedLayers(new Set()),
-      ),
-    );
+  private getSelectedLayerIds() {
+    let layerIds: Set<string>;
+    this.store.select(getSelectedLayerIds).first().subscribe(ids => {
+      layerIds = new Set(ids);
+    });
+    return layerIds;
+  }
+
+  private getSelectedBlockIds() {
+    let blockIds: Set<string>;
+    this.store.select(getSelectedBlockIds).first().subscribe(ids => {
+      blockIds = new Set(ids);
+    });
+    return blockIds;
+  }
+
+  getSelectedLayers() {
+    let layers: ReadonlyArray<Layer>;
+    this.store.select(getVectorLayer).first().subscribe(vl => {
+      const layerIds = this.getSelectedLayerIds();
+      layers = Array.from(layerIds).map(id => vl.findLayerById(id));
+    });
+    return layers;
+  }
+
+  getSelectedBlocks() {
+    let blocks: ReadonlyArray<AnimationBlock>;
+    this.store.select(getAnimation).first().subscribe(anim => {
+      const blockIds = this.getSelectedBlockIds();
+      blocks = Array.from(blockIds).map(id => _.find(anim.blocks, b => b.id === id));
+    });
+    return blocks;
   }
 }
