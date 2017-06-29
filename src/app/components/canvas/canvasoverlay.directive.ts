@@ -36,7 +36,6 @@ import {
   getActionModeHover,
   getActionModeStartState,
 } from 'app/store/actionmode/selectors';
-import { ClearSelections } from 'app/store/common/actions';
 import { getCanvasOverlayState } from 'app/store/common/selectors';
 import { getVectorLayer } from 'app/store/layers/selectors';
 import * as $ from 'jquery';
@@ -824,7 +823,7 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
       if (hitLayer) {
         this.layerTimelineService.selectLayer(hitLayer.id, !isMetaOrShiftPressed);
       } else if (!isMetaOrShiftPressed) {
-        this.store.dispatch(new ClearSelections());
+        this.layerTimelineService.clearSelections();
       }
       return;
     }

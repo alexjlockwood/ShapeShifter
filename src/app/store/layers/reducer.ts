@@ -113,7 +113,6 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
       return deleteSelectedLayers(state);
     }
 
-    case actions.CLEAR_SELECTIONS:
     case actions.ADD_BLOCK: {
       return { ...state, selectedLayerIds: new Set<string>() };
     }

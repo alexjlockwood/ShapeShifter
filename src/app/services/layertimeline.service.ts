@@ -109,4 +109,14 @@ export class LayerTimelineService {
       ),
     );
   }
+
+  clearSelections() {
+    this.store.dispatch(
+      new MultiAction(
+        new SetSelectedBlocks(new Set()),
+        new SelectAnimation(false),
+        new SetSelectedLayers(new Set()),
+      ),
+    );
+  }
 }

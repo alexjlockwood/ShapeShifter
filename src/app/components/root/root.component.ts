@@ -18,12 +18,12 @@ import {
   DemoService,
   DialogService,
   FileImportService,
+  LayerTimelineService,
   ShortcutService,
 } from 'app/services';
 import { Duration, SnackBarService } from 'app/services/snackbar.service';
 import { State, Store } from 'app/store';
 import { getActionMode, getActionModeHover } from 'app/store/actionmode/selectors';
-import { ClearSelections } from 'app/store/common/actions';
 import { isWorkspaceDirty } from 'app/store/common/selectors';
 import { ResetWorkspace } from 'app/store/reset/actions';
 import * as erd from 'element-resize-detector';
@@ -75,6 +75,7 @@ export class RootComponent implements OnInit, AfterViewInit, OnDestroy {
     private readonly demoService: DemoService,
     private readonly dialogService: DialogService,
     private readonly clipboardService: ClipboardService,
+    private readonly layerTimelineService: LayerTimelineService,
   ) {}
 
   ngOnInit() {
@@ -181,7 +182,7 @@ export class RootComponent implements OnInit, AfterViewInit, OnDestroy {
   onClick(event: MouseEvent) {
     const actionMode = this.actionModeService.getActionMode();
     if (actionMode === ActionMode.None) {
-      this.store.dispatch(new ClearSelections());
+      this.layerTimelineService.clearSelections();
     } else if (actionMode === ActionMode.Selection) {
       this.actionModeService.setSelections([]);
     } else {

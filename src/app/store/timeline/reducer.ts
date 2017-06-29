@@ -125,10 +125,6 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
       return { ...state, animation };
     }
 
-    case actions.CLEAR_SELECTIONS: {
-      return { ...state, isAnimationSelected: false, selectedBlockIds: new Set<string>() };
-    }
-
     // Delete all selected animations, blocks, and layers.
     case actions.DELETE_SELECTED_MODELS: {
       state = deleteSelectedAnimation(state);

@@ -1,7 +1,7 @@
 import { Action } from '@ngrx/store';
 import { Layer, VectorLayer } from 'app/scripts/model/layers';
 
-import { ClearSelections, DeleteSelectedModels } from '../common/actions';
+import { DeleteSelectedModels } from '../common/actions';
 import { AddBlock } from '../timeline/actions';
 
 export const IMPORT_VECTOR_LAYERS = '__layers__IMPORT_VECTOR_LAYERS';
@@ -12,7 +12,7 @@ export const REPLACE_LAYER = '__layers__REPLACE_LAYER';
 export const GROUP_OR_UNGROUP_SELECTED_LAYERS = '__layers__GROUP_OR_UNGROUP_SELECTED_LAYERS';
 export const SET_SELECTED_LAYERS = '__layers__SET_SELECTED_LAYERS';
 export { ADD_BLOCK } from '../timeline/actions';
-export { CLEAR_SELECTIONS, DELETE_SELECTED_MODELS } from '../common/actions';
+export { DELETE_SELECTED_MODELS } from '../common/actions';
 
 export class ImportVectorLayers implements Action {
   readonly type = IMPORT_VECTOR_LAYERS;
@@ -79,6 +79,5 @@ export type Actions =
   | ReplaceLayer
   | GroupOrUngroupSelectedLayers
   | AddBlock
-  | ClearSelections
   | DeleteSelectedModels
   | SetSelectedLayers;
