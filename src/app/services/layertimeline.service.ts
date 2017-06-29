@@ -11,7 +11,6 @@ import { MultiAction } from 'app/store/multiaction/actions';
 import { SelectAnimation, SetSelectedBlocks } from 'app/store/timeline/actions';
 import { getAnimation, getSelectedBlockIds } from 'app/store/timeline/selectors';
 import * as _ from 'lodash';
-import { Observable } from 'rxjs/Observable';
 
 /**
  * A simple service that provides an interface for making layer/timeline changes.
