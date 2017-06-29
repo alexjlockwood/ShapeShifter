@@ -37,12 +37,7 @@ import { Shortcut, ShortcutService } from 'app/services/shortcut.service';
 import { Duration, SnackBarService } from 'app/services/snackbar.service';
 import { State, Store } from 'app/store';
 import { getLayerTimelineState, isWorkspaceDirty } from 'app/store/common/selectors';
-import {
-  AddLayer,
-  ReplaceLayer,
-  ToggleLayerExpansion,
-  ToggleLayerVisibility,
-} from 'app/store/layers/actions';
+import { ReplaceLayer } from 'app/store/layers/actions';
 import { getVectorLayer } from 'app/store/layers/selectors';
 import { ResetWorkspace } from 'app/store/reset/actions';
 import { AddBlock, ReplaceBlocks } from 'app/store/timeline/actions';
@@ -321,7 +316,7 @@ export class LayerTimelineComponent extends DestroyableMixin()
         children: [],
         pathData: undefined,
       });
-      this.store.dispatch(new AddLayer(layer));
+      this.layerTimelineService.addLayer(layer);
     });
   }
 
@@ -333,7 +328,7 @@ export class LayerTimelineComponent extends DestroyableMixin()
         children: [],
         pathData: undefined,
       });
-      this.store.dispatch(new AddLayer(layer));
+      this.layerTimelineService.addLayer(layer);
     });
   }
 
@@ -342,7 +337,7 @@ export class LayerTimelineComponent extends DestroyableMixin()
     this.store.select(getVectorLayer).first().subscribe(vl => {
       const name = LayerUtil.getUniqueLayerName([vl], 'group');
       const layer = new GroupLayer({ name, children: [] });
-      this.store.dispatch(new AddLayer(layer));
+      this.layerTimelineService.addLayer(layer);
     });
   }
 
@@ -761,12 +756,12 @@ export class LayerTimelineComponent extends DestroyableMixin()
   // @Override LayerListTreeComponentCallbacks
   onLayerToggleExpanded(event: MouseEvent, layer: Layer) {
     const recursive = ShortcutService.getOsDependentModifierKey(event) || event.shiftKey;
-    this.store.dispatch(new ToggleLayerExpansion(layer.id, recursive));
+    this.layerTimelineService.toggleExpandedLayer(layer.id, recursive);
   }
 
   // @Override LayerListTreeComponentCallbacks
   onLayerToggleVisibility(event: MouseEvent, layer: Layer) {
-    this.store.dispatch(new ToggleLayerVisibility(layer.id));
+    this.layerTimelineService.toggleVisibleLayer(layer.id);
   }
 
   // @Override LayerListTreeComponentCallbacks

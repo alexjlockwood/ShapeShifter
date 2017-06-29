@@ -5,10 +5,9 @@ import { ModelUtil } from 'app/scripts/common';
 import { SvgLoader, VectorDrawableLoader } from 'app/scripts/import';
 import { LayerUtil, VectorLayer } from 'app/scripts/model/layers';
 import { Animation } from 'app/scripts/model/timeline';
-import { AnimatorService, FileExportService } from 'app/services';
+import { AnimatorService, FileExportService, LayerTimelineService } from 'app/services';
 import { Duration, SnackBarService } from 'app/services/snackbar.service';
 import { State, Store } from 'app/store';
-import { ImportVectorLayers } from 'app/store/layers/actions';
 import { getVectorLayer } from 'app/store/layers/selectors';
 import { ResetWorkspace } from 'app/store/reset/actions';
 
@@ -29,6 +28,7 @@ export class FileImportService {
     private readonly store: Store<State>,
     private readonly snackBarService: SnackBarService,
     private readonly animatorService: AnimatorService,
+    private readonly layerTimelineService: LayerTimelineService,
   ) {}
 
   private get vectorLayer() {
@@ -167,7 +167,7 @@ export class FileImportService {
         this.store.dispatch(new ResetWorkspace());
         this.animatorService.reset();
       }
-      this.store.dispatch(new ImportVectorLayers(vls));
+      this.layerTimelineService.importLayers(vls);
       // TODO: count number of individual layers?
       this.snackBarService.show(
         `Imported ${vls.length} layers${vls.length === 1 ? '' : 's'}`,
