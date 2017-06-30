@@ -2,8 +2,11 @@ import 'rxjs/add/operator/first';
 import 'rxjs/add/observable/combineLatest';
 
 import { Injectable } from '@angular/core';
+import { Action } from '@ngrx/store';
+import { ModelUtil } from 'app/scripts/common';
 import { Layer, LayerUtil, VectorLayer } from 'app/scripts/model/layers';
-import { AnimationBlock } from 'app/scripts/model/timeline';
+import { ColorProperty, PathProperty } from 'app/scripts/model/properties';
+import { Animation, AnimationBlock } from 'app/scripts/model/timeline';
 import { State, Store } from 'app/store';
 import {
   ReplaceLayer,
@@ -18,9 +21,14 @@ import {
   getVectorLayer,
 } from 'app/store/layers/selectors';
 import { MultiAction } from 'app/store/multiaction/actions';
-import { SelectAnimation, SetSelectedBlocks } from 'app/store/timeline/actions';
-import { getAnimation, getSelectedBlockIds } from 'app/store/timeline/selectors';
+import { ReplaceAnimation, SelectAnimation, SetSelectedBlocks } from 'app/store/timeline/actions';
+import {
+  getAnimation,
+  getSelectedBlockIds,
+  isAnimationSelected,
+} from 'app/store/timeline/selectors';
 import * as _ from 'lodash';
+import { OutputSelector } from 'reselect';
 
 /**
  * A simple service that provides an interface for making layer/timeline changes.
@@ -40,6 +48,10 @@ export class LayerTimelineService {
    * Selects or deselects the specified block ID.
    */
   selectBlock(blockId: string, clearExisting: boolean) {
+    this.store.dispatch(new MultiAction(...this.buildSelectBlockActions(blockId, clearExisting)));
+  }
+
+  private buildSelectBlockActions(blockId: string, clearExisting: boolean) {
     const selectedBlockIds = this.getSelectedBlockIds();
     if (clearExisting) {
       selectedBlockIds.forEach(id => {
@@ -53,7 +65,11 @@ export class LayerTimelineService {
     } else {
       selectedBlockIds.add(blockId);
     }
-    this.updateSelections(false, selectedBlockIds, new Set());
+    return [
+      new SelectAnimation(false),
+      new SetSelectedBlocks(selectedBlockIds),
+      new SetSelectedLayers(new Set()),
+    ];
   }
 
   /**
@@ -130,26 +146,26 @@ export class LayerTimelineService {
     this.store.dispatch(new SetHiddenLayers(layerIds));
   }
 
-  importLayers(vls: ReadonlyArray<VectorLayer>) {
-    if (!vls.length) {
+  /**
+   * Imports a list of vector layers into the workspace.
+   */
+  importLayers(importedVls: ReadonlyArray<VectorLayer>) {
+    if (!importedVls.length) {
       return;
     }
-    const importedVls = vls.slice();
-    const vectorLayer = this.getVectorLayer();
-    let vectorLayers = [vectorLayer];
-    if (!vectorLayer.children.length) {
-      // Simply replace the empty vector layer rather than merging with it.
-      const vl = importedVls[0].clone();
-      vl.name = vl.name;
-      importedVls[0] = vl;
-      vectorLayers = [];
+    let mergeVls: VectorLayer[];
+    const currVl = this.getVectorLayer();
+    if (currVl.children.length) {
+      // Merge the imported vector layers with the current vector layer.
+      mergeVls = [currVl, ...importedVls];
+    } else {
+      // Simply replace the current vector layer rather than merging with it.
+      const [vl, ...vls] = importedVls;
+      mergeVls = [vl.clone(), ...vls];
     }
-    const newVectorLayers = [...vectorLayers, ...importedVls];
-    const replacementVl =
-      newVectorLayers.length === 1
-        ? newVectorLayers[0]
-        : newVectorLayers.reduce(LayerUtil.mergeVectorLayers);
-    this.store.dispatch(new ReplaceLayer(replacementVl));
+    const newVl =
+      mergeVls.length === 1 ? mergeVls[0] : mergeVls.reduce(LayerUtil.mergeVectorLayers);
+    this.store.dispatch(new ReplaceLayer(newVl));
   }
 
   /**
@@ -170,63 +186,181 @@ export class LayerTimelineService {
       }
     }
     const vectorLayer = vl.clone();
-    vl.children = vl.children.concat([layer]);
+    vl.children = [...vl.children, layer];
     this.store.dispatch(new ReplaceLayer(vl));
   }
 
+  deleteSelectedModels() {
+    const collapsedLayerIds = this.getCollapsedLayerIds();
+    const hiddenLayerIds = this.getHiddenLayerIds();
+    const selectedLayerIds = this.getSelectedLayerIds();
+
+    let vectorLayer = this.getVectorLayer();
+    if (selectedLayerIds.has(vectorLayer.id)) {
+      vectorLayer = new VectorLayer();
+      collapsedLayerIds.clear();
+      hiddenLayerIds.clear();
+    } else {
+      selectedLayerIds.forEach(layerId => {
+        vectorLayer = LayerUtil.removeLayersFromTree(vectorLayer, layerId);
+        collapsedLayerIds.delete(layerId);
+        hiddenLayerIds.delete(layerId);
+      });
+    }
+
+    let animation = this.getAnimation();
+    if (this.isAnimationSelected()) {
+      animation = new Animation();
+    }
+
+    const selectedBlockIds = this.getSelectedBlockIds();
+    if (selectedBlockIds.size) {
+      animation = animation.clone();
+      animation.blocks = animation.blocks.filter(b => !selectedBlockIds.has(b.id));
+    }
+
+    this.store.dispatch(
+      new MultiAction(
+        new ReplaceLayer(vectorLayer),
+        new SetCollapsedLayers(collapsedLayerIds),
+        new SetHiddenLayers(hiddenLayerIds),
+        new SetSelectedLayers(new Set()),
+        new SelectAnimation(false),
+        new ReplaceAnimation(animation),
+        new SetSelectedBlocks(new Set()),
+      ),
+    );
+  }
+
+  replaceBlocks(blocks: ReadonlyArray<AnimationBlock>) {
+    if (!blocks.length) {
+      return;
+    }
+    const animation = this.getAnimation().clone();
+    animation.blocks = animation.blocks.map(block => {
+      const newBlock = _.find(blocks, b => block.id === b.id);
+      return newBlock ? newBlock : block;
+    });
+    this.store.dispatch(new ReplaceAnimation(animation));
+  }
+
+  addBlock(layer: Layer, propertyName: string, fromValue: any, toValue: any, activeTime: number) {
+    let animation = this.getAnimation();
+    const newBlockDuration = 100;
+
+    // Find the right start time for the block, which should be a gap between
+    // neighboring blocks closest to the active time cursor, of a minimum size.
+    const blocksByLayerId = ModelUtil.getOrderedBlocksByPropertyByLayer(animation);
+    const blockNeighbors = (blocksByLayerId[layer.id] || {})[propertyName] || [];
+    let gaps: Array<{ start: number; end: number }> = [];
+    for (let i = 0; i < blockNeighbors.length; i++) {
+      gaps.push({
+        start: i === 0 ? 0 : blockNeighbors[i - 1].endTime,
+        end: blockNeighbors[i].startTime,
+      });
+    }
+    gaps.push({
+      start: blockNeighbors.length ? blockNeighbors[blockNeighbors.length - 1].endTime : 0,
+      end: animation.duration,
+    });
+    gaps = gaps
+      .filter(gap => gap.end - gap.start > newBlockDuration)
+      .map(gap =>
+        Object.assign(gap, {
+          dist: Math.min(Math.abs(gap.end - activeTime), Math.abs(gap.start - activeTime)),
+        }),
+      )
+      .sort((a, b) => a.dist - b.dist);
+
+    if (!gaps.length) {
+      // No available gaps, cancel.
+      // TODO: show a disabled button to prevent this case?
+      console.warn('Ignoring failed attempt to add animation block');
+      return;
+    }
+
+    let startTime = Math.max(activeTime, gaps[0].start);
+    const endTime = Math.min(startTime + newBlockDuration, gaps[0].end);
+    if (endTime - startTime < newBlockDuration) {
+      startTime = endTime - newBlockDuration;
+    }
+
+    // Generate the new block.
+    const property = layer.animatableProperties.get(propertyName);
+    const typeMap = {
+      PathProperty: 'path',
+      ColorProperty: 'color',
+      NumberProperty: 'number',
+    };
+
+    // TODO: clone the current rendered property value and set the from/to values appropriately
+    // const valueAtCurrentTime =
+    //   this.studioState_.animationRenderer
+    //     .getLayerPropertyValue(layer.id, propertyName);
+
+    const newBlock = AnimationBlock.from({
+      layerId: layer.id,
+      propertyName,
+      startTime,
+      endTime,
+      fromValue,
+      toValue,
+      type: typeMap[property.getTypeName()],
+    });
+    animation = animation.clone();
+    animation.blocks = animation.blocks.concat(newBlock);
+
+    this.store.dispatch(
+      new MultiAction(
+        new ReplaceAnimation(animation),
+        // Auto-select the new animation block.
+        ...this.buildSelectBlockActions(newBlock.id, true),
+      ),
+    );
+  }
+
   getVectorLayer() {
-    let vectorLayer: VectorLayer;
-    this.store.select(getVectorLayer).first().subscribe(vl => (vectorLayer = vl));
-    return vectorLayer;
+    return this.queryStore(getVectorLayer);
   }
 
   private getSelectedLayerIds() {
-    let layerIds: Set<string>;
-    this.store.select(getSelectedLayerIds).first().subscribe(ids => {
-      layerIds = new Set(ids);
-    });
-    return layerIds;
+    return new Set(this.queryStore(getSelectedLayerIds));
   }
 
   getSelectedLayers() {
-    let layers: ReadonlyArray<Layer>;
-    this.store.select(getVectorLayer).first().subscribe(vl => {
-      const layerIds = this.getSelectedLayerIds();
-      layers = Array.from(layerIds).map(id => vl.findLayerById(id));
-    });
-    return layers;
+    const vl = this.getVectorLayer();
+    return Array.from(this.getSelectedLayerIds()).map(id => vl.findLayerById(id));
   }
 
   private getHiddenLayerIds() {
-    let layerIds: Set<string>;
-    this.store.select(getHiddenLayerIds).first().subscribe(ids => {
-      layerIds = new Set(ids);
-    });
-    return layerIds;
+    return new Set(this.queryStore(getHiddenLayerIds));
   }
 
   private getCollapsedLayerIds() {
-    let layerIds: Set<string>;
-    this.store.select(getCollapsedLayerIds).first().subscribe(ids => {
-      layerIds = new Set(ids);
-    });
-    return layerIds;
+    return new Set(this.queryStore(getCollapsedLayerIds));
   }
 
   private getSelectedBlockIds() {
-    let blockIds: Set<string>;
-    this.store.select(getSelectedBlockIds).first().subscribe(ids => {
-      blockIds = new Set(ids);
-    });
-    return blockIds;
+    return new Set(this.queryStore(getSelectedBlockIds));
   }
 
   getSelectedBlocks() {
-    let blocks: ReadonlyArray<AnimationBlock>;
-    this.store.select(getAnimation).first().subscribe(anim => {
-      const blockIds = this.getSelectedBlockIds();
-      blocks = Array.from(blockIds).map(id => _.find(anim.blocks, b => b.id === id));
-    });
-    return blocks;
+    const anim = this.getAnimation();
+    const blockIds = this.getSelectedBlockIds();
+    return Array.from(blockIds).map(id => _.find(anim.blocks, b => b.id === id));
+  }
+
+  getAnimation() {
+    return this.queryStore(getAnimation);
+  }
+
+  isAnimationSelected() {
+    return this.queryStore(isAnimationSelected);
+  }
+
+  private queryStore<T>(selector: OutputSelector<Object, T, (res: Object) => T>) {
+    let obj: T;
+    this.store.select(selector).first().subscribe(o => (obj = o));
+    return obj;
   }
 }

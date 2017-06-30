@@ -21,26 +21,16 @@ export function buildInitialState() {
 
 export function reducer(state = buildInitialState(), action: actions.Actions) {
   switch (action.type) {
-    // Replace a layer.
     case actions.REPLACE_LAYER: {
-      const replacementLayer = action.payload.layer;
-      const vectorLayer = LayerUtil.replaceLayerInTree(state.vectorLayer, replacementLayer);
-      return { ...state, vectorLayer };
+      return {
+        ...state,
+        vectorLayer: LayerUtil.replaceLayerInTree(state.vectorLayer, action.payload.layer),
+      };
     }
 
-    // Group/ungroup selected layers.
     case actions.GROUP_OR_UNGROUP_SELECTED_LAYERS: {
       const { shouldGroup } = action.payload;
       return groupOrUngroupSelectedLayers(state, shouldGroup);
-    }
-
-    // Delete all selected layers.
-    case actions.DELETE_SELECTED_MODELS: {
-      return deleteSelectedLayers(state);
-    }
-
-    case actions.ADD_BLOCK: {
-      return { ...state, selectedLayerIds: new Set<string>() };
     }
 
     case actions.SET_SELECTED_LAYERS: {
@@ -56,30 +46,6 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
     }
   }
   return state;
-}
-
-function deleteSelectedLayers(state: State) {
-  let { vectorLayer } = state;
-  const collapsedLayerIds = new Set(state.collapsedLayerIds);
-  const hiddenLayerIds = new Set(state.hiddenLayerIds);
-  if (state.selectedLayerIds.has(vectorLayer.id)) {
-    vectorLayer = new VectorLayer();
-    collapsedLayerIds.clear();
-    hiddenLayerIds.clear();
-  } else {
-    state.selectedLayerIds.forEach(layerId => {
-      vectorLayer = LayerUtil.removeLayersFromTree(vectorLayer, layerId);
-      collapsedLayerIds.delete(layerId);
-      hiddenLayerIds.delete(layerId);
-    });
-  }
-  return {
-    ...state,
-    vectorLayer,
-    selectedLayerIds: new Set<string>(),
-    collapsedLayerIds,
-    hiddenLayerIds,
-  };
 }
 
 function groupOrUngroupSelectedLayers(state: State, shouldGroup: boolean) {

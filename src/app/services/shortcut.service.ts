@@ -1,11 +1,12 @@
 import { Injectable } from '@angular/core';
 import { ActionModeService, AnimatorService, PlaybackService } from 'app/services';
 import { State, Store } from 'app/store';
-import { DeleteSelectedModels } from 'app/store/common/actions';
 import { GroupOrUngroupSelectedLayers } from 'app/store/layers/actions';
 import * as $ from 'jquery';
 import { ActionCreators } from 'redux-undo';
 import { Subject } from 'rxjs/Subject';
+
+import { LayerTimelineService } from './layertimeline.service';
 
 export enum Shortcut {
   ZoomToFit = 1,
@@ -34,6 +35,7 @@ export class ShortcutService {
     private readonly animatorService: AnimatorService,
     private readonly actionModeService: ActionModeService,
     private readonly playbackService: PlaybackService,
+    private readonly layerTimelineService: LayerTimelineService,
   ) {}
 
   asObservable() {
@@ -77,7 +79,7 @@ export class ShortcutService {
         if (this.actionModeService.isActionMode()) {
           this.actionModeService.deleteSelections();
         } else {
-          this.store.dispatch(new DeleteSelectedModels());
+          this.layerTimelineService.deleteSelectedModels();
         }
         return false;
       }

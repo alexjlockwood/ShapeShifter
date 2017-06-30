@@ -11,11 +11,16 @@ import {
 } from 'app/scripts/model/layers';
 import { FractionProperty, NameProperty, Option } from 'app/scripts/model/properties';
 import { Animation, PathAnimationBlock } from 'app/scripts/model/timeline';
-import { ActionModeService, AnimatorService, ShortcutService } from 'app/services';
+import {
+  ActionModeService,
+  AnimatorService,
+  LayerTimelineService,
+  ShortcutService,
+} from 'app/services';
 import { State, Store } from 'app/store';
 import { getPropertyInputState } from 'app/store/common/selectors';
 import { ReplaceLayer } from 'app/store/layers/actions';
-import { AddBlock, ReplaceAnimation, ReplaceBlocks } from 'app/store/timeline/actions';
+import { ReplaceAnimation } from 'app/store/timeline/actions';
 import * as $ from 'jquery';
 import * as _ from 'lodash';
 import { Observable } from 'rxjs/Observable';
@@ -42,6 +47,7 @@ export class PropertyInputComponent implements OnInit {
     private readonly store: Store<State>,
     private readonly actionModeService: ActionModeService,
     private readonly animatorService: AnimatorService,
+    private readonly layerTimelineService: LayerTimelineService,
   ) {}
 
   ngOnInit() {
@@ -101,7 +107,7 @@ export class PropertyInputComponent implements OnInit {
       .get(propertyName)
       .cloneValue(layer[propertyName]);
     const currentTime = this.animatorService.getCurrentTime();
-    this.store.dispatch(new AddBlock(layer, propertyName, clonedValue, clonedValue, currentTime));
+    this.layerTimelineService.addBlock(layer, propertyName, clonedValue, clonedValue, currentTime);
   }
 
   shouldShowInvalidPathAnimationBlockMsg(pim: PropertyInputModel) {
@@ -248,7 +254,7 @@ export class PropertyInputComponent implements OnInit {
           // TODO: avoid dispatching the action if the properties are equal
           const clonedBlock = block.clone();
           clonedBlock[propertyName] = value;
-          store.dispatch(new ReplaceBlocks([clonedBlock]));
+          this.layerTimelineService.replaceBlocks([clonedBlock]);
         }),
       );
     });

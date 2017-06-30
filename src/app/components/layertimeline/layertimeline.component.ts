@@ -40,7 +40,6 @@ import { getLayerTimelineState, isWorkspaceDirty } from 'app/store/common/select
 import { ReplaceLayer } from 'app/store/layers/actions';
 import { getVectorLayer } from 'app/store/layers/selectors';
 import { ResetWorkspace } from 'app/store/reset/actions';
-import { AddBlock, ReplaceBlocks } from 'app/store/timeline/actions';
 import { getAnimation } from 'app/store/timeline/selectors';
 import { environment } from 'environments/environment';
 import * as $ from 'jquery';
@@ -682,9 +681,7 @@ export class LayerTimelineComponent extends DestroyableMixin()
               replacementBlock.endTime !== existingBlock.endTime
             );
           });
-          if (blocks.length) {
-            this.store.dispatch(new ReplaceBlocks(blocks));
-          }
+          this.layerTimelineService.replaceBlocks(blocks);
         });
       },
     });
@@ -742,8 +739,12 @@ export class LayerTimelineComponent extends DestroyableMixin()
     const clonedValue = layer.inspectableProperties
       .get(propertyName)
       .cloneValue(layer[propertyName]);
-    this.store.dispatch(
-      new AddBlock(layer, propertyName, clonedValue, clonedValue, this.currentTime),
+    this.layerTimelineService.addBlock(
+      layer,
+      propertyName,
+      clonedValue,
+      clonedValue,
+      this.currentTime,
     );
   }
 

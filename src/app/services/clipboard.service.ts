@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
 import { GroupLayer, Layer, VectorLayer } from 'app/scripts/model/layers';
 import { State, Store } from 'app/store';
-import { DeleteSelectedModels } from 'app/store/common/actions';
 import { environment } from 'environments/environment';
 import * as $ from 'jquery';
 
@@ -36,7 +35,7 @@ export class ClipboardService {
         );
         if (shouldCut) {
           // TODO: change to 'delete selected layers'
-          this.store.dispatch(new DeleteSelectedModels());
+          this.layerTimelineService.deleteSelectedModels();
         }
         return false;
       }
@@ -50,7 +49,7 @@ export class ClipboardService {
         );
         if (shouldCut) {
           // TODO: change to 'delete selected blocks'
-          this.store.dispatch(new DeleteSelectedModels());
+          this.layerTimelineService.deleteSelectedModels();
         }
         return false;
       }
