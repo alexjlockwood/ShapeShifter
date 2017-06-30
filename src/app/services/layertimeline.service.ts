@@ -293,14 +293,14 @@ export class LayerTimelineService {
     const hiddenLayerIds = this.getHiddenLayerIds();
     const selectedLayerIds = this.getSelectedLayerIds();
 
-    let vectorLayer = this.getVectorLayer();
-    if (selectedLayerIds.has(vectorLayer.id)) {
-      vectorLayer = new VectorLayer();
+    let vl = this.getVectorLayer();
+    if (selectedLayerIds.has(vl.id)) {
+      vl = new VectorLayer();
       collapsedLayerIds.clear();
       hiddenLayerIds.clear();
     } else {
       selectedLayerIds.forEach(layerId => {
-        vectorLayer = LayerUtil.removeLayersFromTree(vectorLayer, layerId);
+        vl = LayerUtil.removeLayersFromTree(vl, layerId);
         collapsedLayerIds.delete(layerId);
         hiddenLayerIds.delete(layerId);
       });
@@ -317,9 +317,16 @@ export class LayerTimelineService {
       animation.blocks = animation.blocks.filter(b => !selectedBlockIds.has(b.id));
     }
 
+    // Remove any blocks corresponding to deleted layers.
+    const filteredBlocks = animation.blocks.filter(b => !!vl.findLayerById(b.layerId));
+    if (filteredBlocks.length !== animation.blocks.length) {
+      animation = animation.clone();
+      animation.blocks = filteredBlocks;
+    }
+
     this.store.dispatch(
       new MultiAction(
-        new SetVectorLayer(vectorLayer),
+        new SetVectorLayer(vl),
         new SetCollapsedLayers(collapsedLayerIds),
         new SetHiddenLayers(hiddenLayerIds),
         new SetSelectedLayers(new Set()),
