@@ -2,9 +2,7 @@ import 'rxjs/add/operator/first';
 import 'rxjs/add/observable/combineLatest';
 
 import { Injectable } from '@angular/core';
-import { Action } from '@ngrx/store';
 import { GroupLayer, Layer, LayerUtil, VectorLayer } from 'app/model/layers';
-import { ColorProperty, PathProperty } from 'app/model/properties';
 import { Animation, AnimationBlock } from 'app/model/timeline';
 import { ModelUtil } from 'app/scripts/common';
 import { State, Store } from 'app/store';
@@ -189,8 +187,8 @@ export class LayerTimelineService {
       }
     }
     const vectorLayer = vl.clone();
-    vl.children = [...vl.children, layer];
-    this.replaceLayer(vl);
+    vectorLayer.children = [...vectorLayer.children, layer];
+    this.replaceLayer(vectorLayer);
   }
 
   setVectorLayer(vl: VectorLayer) {
