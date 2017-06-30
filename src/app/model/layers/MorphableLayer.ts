@@ -1,4 +1,5 @@
-import { Path } from '../paths';
+import { Path } from 'app/model/paths';
+
 import { Layer } from './Layer';
 
 /**

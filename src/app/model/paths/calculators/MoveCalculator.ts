@@ -1,7 +1,7 @@
+import { Projection, SvgChar } from 'app/model/paths';
+import { CommandBuilder } from 'app/model/paths/Command';
 import { Point } from 'app/scripts/common';
 
-import { Projection, SvgChar } from '..';
-import { CommandBuilder } from '../Command';
 import { BBox, Calculator, Line } from '.';
 
 export class MoveCalculator implements Calculator {

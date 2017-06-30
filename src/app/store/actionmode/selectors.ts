@@ -1,17 +1,17 @@
-import { ActionMode, ActionModeUtil, ActionSource, SelectionType } from 'app/model/actionmode';
+import { ActionMode, ActionSource, SelectionType } from 'app/model/actionmode';
 import { LayerUtil, MorphableLayer, VectorLayer } from 'app/model/layers';
 import { Animation, PathAnimationBlock } from 'app/model/timeline';
+import { ActionModeUtil } from 'app/scripts/actionmode';
 import { AnimationRenderer } from 'app/scripts/animator';
-import { createSelector, createStructuredSelector } from 'reselect';
-
-import { getHiddenLayerIds, getSelectedLayerIds, getVectorLayer } from '../layers/selectors';
-import { State } from '../reducer';
-import { createDeepEqualSelector, getAppState } from '../selectors';
+import { getHiddenLayerIds, getSelectedLayerIds, getVectorLayer } from 'app/store/layers/selectors';
+import { State } from 'app/store/reducer';
+import { createDeepEqualSelector, getAppState } from 'app/store/selectors';
 import {
   getAnimation,
   getSingleSelectedBlockLayerId,
   getSingleSelectedPathBlock,
-} from '../timeline/selectors';
+} from 'app/store/timeline/selectors';
+import { createSelector, createStructuredSelector } from 'reselect';
 
 const getActionModeState = createSelector(getAppState, s => s.actionmode);
 export const getActionMode = createSelector(getActionModeState, s => s.mode);

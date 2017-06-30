@@ -1,8 +1,7 @@
 /* tslint:disable */
 
+import * as cssTools from 'app/scripts/svgo/lib/css-tools';
 import * as csstree from 'css-tree';
-
-import * as cssTools from '../lib/css-tools';
 
 export const inlineStyles = {
   active: true,
@@ -41,7 +40,6 @@ export const inlineStyles = {
  * @author strarsis <strarsis@gmail.com>
  */
 function inlineStylesFn(document, opts) {
-
   // collect <style/>s
   var styleEls = document.querySelectorAll('style');
 
@@ -65,25 +63,25 @@ function inlineStylesFn(document, opts) {
     try {
       cssAst = csstree.parse(cssStr, {
         parseValue: false,
-        parseCustomProperty: false
+        parseCustomProperty: false,
       });
     } catch (parseError) {
-      console.warn('Warning: Parse error of styles of <style/> element, skipped. Error details: ' + parseError);
+      console.warn(
+        'Warning: Parse error of styles of <style/> element, skipped. Error details: ' + parseError,
+      );
       continue;
     }
 
     styles.push({
       styleEl: styleEl,
-      cssAst: cssAst
+      cssAst: cssAst,
     });
 
     selectors = selectors.concat(cssTools.flattenToSelectors(cssAst));
   }
 
-
   // filter for mediaqueries to be used or without any mediaquery
   var selectorsMq = cssTools.filterByMqs(selectors, opts.useMqs);
-
 
   // filter for pseudo elements to be used
   var selectorsPseudo = cssTools.filterByPseudos(selectorsMq, opts.usePseudos);
@@ -91,10 +89,8 @@ function inlineStylesFn(document, opts) {
   // remove PseudoClass from its SimpleSelector for proper matching
   cssTools.cleanPseudos(selectorsPseudo);
 
-
   // stable sort selectors
   var sortedSelectors = cssTools.sortSelectors(selectorsPseudo).reverse();
-
 
   // apply <style/> styles to matched elements
   for (var selector of sortedSelectors) {
@@ -105,7 +101,12 @@ function inlineStylesFn(document, opts) {
       selectedEls = document.querySelectorAll(selectorStr);
     } catch (selectError) {
       if (selectError.constructor === SyntaxError) {
-        console.warn('Warning: Syntax error when trying to select \n\n' + selectorStr + '\n\n, skipped. Error details: ' + selectError);
+        console.warn(
+          'Warning: Syntax error when trying to select \n\n' +
+            selectorStr +
+            '\n\n, skipped. Error details: ' +
+            selectError,
+        );
         continue;
       }
       throw selectError;
@@ -123,21 +124,25 @@ function inlineStylesFn(document, opts) {
 
     // apply <style/> to matched elements
     for (var selectedEl of selectedEls) {
-
       if (selector.rule === null) {
         continue;
       }
 
       // merge declarations
-      csstree.walkDeclarations(selector.rule, function (styleCsstreeDeclaration) {
+      csstree.walkDeclarations(selector.rule, function(styleCsstreeDeclaration) {
         var styleDeclaration = cssTools.csstreeToStyleDeclaration(styleCsstreeDeclaration);
-        if (selectedEl.style.getPropertyValue(styleDeclaration.name) !== null &&
-          selectedEl.style.getPropertyPriority(styleDeclaration.name) >= styleDeclaration.priority) {
+        if (
+          selectedEl.style.getPropertyValue(styleDeclaration.name) !== null &&
+          selectedEl.style.getPropertyPriority(styleDeclaration.name) >= styleDeclaration.priority
+        ) {
           return;
         }
-        selectedEl.style.setProperty(styleDeclaration.name, styleDeclaration.value, styleDeclaration.priority);
+        selectedEl.style.setProperty(
+          styleDeclaration.name,
+          styleDeclaration.value,
+          styleDeclaration.priority,
+        );
       });
-
     }
 
     if (opts.removeMatchedSelectors && selectedEls !== null && selectedEls.length > 0) {
@@ -146,33 +151,31 @@ function inlineStylesFn(document, opts) {
     }
   }
 
-
   for (var style of styles) {
-    csstree.walkRules(style.cssAst, function (node, item, list) {
+    csstree.walkRules(style.cssAst, function(node, item, list) {
       // clean up <style/> atrules without any rulesets left
-      if (node.type === 'Atrule' &&
+      if (
+        node.type === 'Atrule' &&
         // only Atrules containing rulesets
         node.block !== null &&
-        node.block.children.isEmpty()) {
+        node.block.children.isEmpty()
+      ) {
         list.remove(item);
         return;
       }
 
       // clean up <style/> rulesets without any css selectors left
-      if (node.type === 'Rule' &&
-        node.selector.children.isEmpty()) {
+      if (node.type === 'Rule' && node.selector.children.isEmpty()) {
         list.remove(item);
       }
     });
-
 
     if (style.cssAst.children.isEmpty()) {
       // clean up now emtpy <style/>s
       var styleParentEl = style.styleEl.parentNode;
       styleParentEl.spliceContent(styleParentEl.content.indexOf(style.styleEl), 1);
 
-      if (styleParentEl.elem === 'defs' &&
-        styleParentEl.content.length === 0) {
+      if (styleParentEl.elem === 'defs' && styleParentEl.content.length === 0) {
         // also clean up now empty <def/>s
         var defsParentEl = styleParentEl.parentNode;
         defsParentEl.spliceContent(defsParentEl.content.indexOf(styleParentEl), 1);
@@ -181,11 +184,9 @@ function inlineStylesFn(document, opts) {
       continue;
     }
 
-
     // update existing, left over <style>s
     cssTools.setCssStr(style.styleEl, csstree.translate(style.cssAst));
   }
 
-
   return document;
-};
+}

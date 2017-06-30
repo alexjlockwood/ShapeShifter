@@ -1,8 +1,8 @@
+import { Projection, SvgChar } from 'app/model/paths';
+import { CommandBuilder } from 'app/model/paths/Command';
 import { MathUtil, Point } from 'app/scripts/common';
 import * as _ from 'lodash';
 
-import { Projection, SvgChar } from '..';
-import { CommandBuilder } from '../Command';
 import { BBox, Calculator, Line } from '.';
 import { PointCalculator } from './PointCalculator';
 

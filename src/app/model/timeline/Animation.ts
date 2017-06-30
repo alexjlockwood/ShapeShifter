@@ -1,6 +1,6 @@
+import { Inspectable, NameProperty, NumberProperty, Property } from 'app/model/properties';
 import * as _ from 'lodash';
 
-import { Inspectable, NameProperty, NumberProperty, Property } from '../properties';
 import { AnimationBlock } from '.';
 
 /**

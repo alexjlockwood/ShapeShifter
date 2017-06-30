@@ -2,7 +2,7 @@
 
 const EOL = '\n';
 
-import * as collections from '../plugins/_collections';
+import * as collections from 'app/scripts/svgo/plugins/_collections';
 
 const textElem = collections.elemsGroups.textContent.concat('title');
 
@@ -30,12 +30,12 @@ var defaults = {
   regValEntities: /[&"<>]/g,
   encodeEntity: encodeEntity,
   pretty: false,
-  useShortTags: true
+  useShortTags: true,
 };
 
 var entities = {
   '&': '&amp;',
-  '\'': '&apos;',
+  "'": '&apos;',
   '"': '&quot;',
   '>': '&gt;',
   '<': '&lt;',
@@ -50,13 +50,10 @@ var entities = {
  * @return {Object} output data
  */
 export function js2svg(data, config) {
-
   return new JS2SVG(config).convert(data);
-
-};
+}
 
 function JS2SVG(config) {
-
   if (config) {
     this.config = Object.assign({}, defaults, config);
   } else {
@@ -66,7 +63,7 @@ function JS2SVG(config) {
   var indent = this.config.indent;
   if (typeof indent == 'number' && !isNaN(indent)) {
     this.config.indent = '';
-    for (var i = indent; i-- > 0;) this.config.indent += ' ';
+    for (var i = indent; i-- > 0; ) this.config.indent += ' ';
   } else if (typeof indent != 'string') {
     this.config.indent = '    ';
   }
@@ -84,7 +81,6 @@ function JS2SVG(config) {
 
   this.indentLevel = 0;
   this.textContext = null;
-
 }
 
 function encodeEntity(char) {
@@ -98,16 +94,13 @@ function encodeEntity(char) {
  *
  * @return {String}
  */
-JS2SVG.prototype.convert = function (data) {
-
+JS2SVG.prototype.convert = function(data) {
   var svg = '';
 
   if (data.content) {
-
     this.indentLevel++;
 
-    data.content.forEach(function (item) {
-
+    data.content.forEach(function(item) {
       if (item.elem) {
         svg += this.createElem(item);
       } else if (item.text) {
@@ -121,9 +114,7 @@ JS2SVG.prototype.convert = function (data) {
       } else if (item.cdata) {
         svg += this.createCDATA(item.cdata);
       }
-
     }, this);
-
   }
 
   this.indentLevel--;
@@ -132,10 +123,9 @@ JS2SVG.prototype.convert = function (data) {
     data: svg,
     info: {
       width: this.width,
-      height: this.height
-    }
+      height: this.height,
+    },
   };
-
 };
 
 /**
@@ -143,8 +133,7 @@ JS2SVG.prototype.convert = function (data) {
  *
  * @return {String}
  */
-JS2SVG.prototype.createIndent = function () {
-
+JS2SVG.prototype.createIndent = function() {
   var indent = '';
 
   if (this.config.pretty && !this.textContext) {
@@ -154,7 +143,6 @@ JS2SVG.prototype.createIndent = function () {
   }
 
   return indent;
-
 };
 
 /**
@@ -164,12 +152,8 @@ JS2SVG.prototype.createIndent = function () {
  *
  * @return {String}
  */
-JS2SVG.prototype.createDoctype = function (doctype) {
-
-  return this.config.doctypeStart +
-    doctype +
-    this.config.doctypeEnd;
-
+JS2SVG.prototype.createDoctype = function(doctype) {
+  return this.config.doctypeStart + doctype + this.config.doctypeEnd;
 };
 
 /**
@@ -179,14 +163,10 @@ JS2SVG.prototype.createDoctype = function (doctype) {
  *
  * @return {String}
  */
-JS2SVG.prototype.createProcInst = function (instruction) {
-
-  return this.config.procInstStart +
-    instruction.name +
-    ' ' +
-    instruction.body +
-    this.config.procInstEnd;
-
+JS2SVG.prototype.createProcInst = function(instruction) {
+  return (
+    this.config.procInstStart + instruction.name + ' ' + instruction.body + this.config.procInstEnd
+  );
 };
 
 /**
@@ -196,12 +176,8 @@ JS2SVG.prototype.createProcInst = function (instruction) {
  *
  * @return {String}
  */
-JS2SVG.prototype.createComment = function (comment) {
-
-  return this.config.commentStart +
-    comment +
-    this.config.commentEnd;
-
+JS2SVG.prototype.createComment = function(comment) {
+  return this.config.commentStart + comment + this.config.commentEnd;
 };
 
 /**
@@ -211,13 +187,8 @@ JS2SVG.prototype.createComment = function (comment) {
  *
  * @return {String}
  */
-JS2SVG.prototype.createCDATA = function (cdata) {
-
-  return this.createIndent() +
-    this.config.cdataStart +
-    cdata +
-    this.config.cdataEnd;
-
+JS2SVG.prototype.createCDATA = function(cdata) {
+  return this.createIndent() + this.config.cdataStart + cdata + this.config.cdataEnd;
 };
 
 /**
@@ -227,14 +198,9 @@ JS2SVG.prototype.createCDATA = function (cdata) {
  *
  * @return {String}
  */
-JS2SVG.prototype.createElem = function (data) {
-
+JS2SVG.prototype.createElem = function(data) {
   // beautiful injection for obtaining SVG information :)
-  if (
-    data.isElem('svg') &&
-    data.hasAttr('width') &&
-    data.hasAttr('height')
-  ) {
+  if (data.isElem('svg') && data.hasAttr('width') && data.hasAttr('height')) {
     this.width = data.attr('width').value;
     this.height = data.attr('height').value;
   }
@@ -242,20 +208,24 @@ JS2SVG.prototype.createElem = function (data) {
   // empty element and short tag
   if (data.isEmpty()) {
     if (this.config.useShortTags) {
-      return this.createIndent() +
+      return (
+        this.createIndent() +
         this.config.tagShortStart +
         data.elem +
         this.createAttrs(data) +
-        this.config.tagShortEnd;
+        this.config.tagShortEnd
+      );
     } else {
-      return this.createIndent() +
+      return (
+        this.createIndent() +
         this.config.tagShortStart +
         data.elem +
         this.createAttrs(data) +
         this.config.tagOpenEnd +
         this.config.tagCloseStart +
         data.elem +
-        this.config.tagCloseEnd;
+        this.config.tagCloseEnd
+      );
     }
     // non-empty element
   } else {
@@ -288,7 +258,8 @@ JS2SVG.prototype.createElem = function (data) {
       if (this.config.pretty) dataEnd = EOL;
     }
 
-    return openIndent +
+    return (
+      openIndent +
       tagOpenStart +
       data.elem +
       this.createAttrs(data) +
@@ -299,10 +270,9 @@ JS2SVG.prototype.createElem = function (data) {
       this.createIndent() +
       tagCloseStart +
       data.elem +
-      tagCloseEnd;
-
+      tagCloseEnd
+    );
   }
-
 };
 
 /**
@@ -312,29 +282,23 @@ JS2SVG.prototype.createElem = function (data) {
  *
  * @return {String}
  */
-JS2SVG.prototype.createAttrs = function (elem) {
-
+JS2SVG.prototype.createAttrs = function(elem) {
   var attrs = '';
 
-  elem.eachAttr(function (attr) {
-
+  elem.eachAttr(function(attr) {
     if (attr.value !== undefined) {
-      attrs += ' ' +
+      attrs +=
+        ' ' +
         attr.name +
         this.config.attrStart +
         String(attr.value).replace(this.config.regValEntities, this.config.encodeEntity) +
         this.config.attrEnd;
+    } else {
+      attrs += ' ' + attr.name;
     }
-    else {
-      attrs += ' ' +
-        attr.name;
-    }
-
-
   }, this);
 
   return attrs;
-
 };
 
 /**
@@ -344,11 +308,11 @@ JS2SVG.prototype.createAttrs = function (elem) {
  *
  * @return {String}
  */
-JS2SVG.prototype.createText = function (text) {
-
-  return this.createIndent() +
+JS2SVG.prototype.createText = function(text) {
+  return (
+    this.createIndent() +
     this.config.textStart +
     text.replace(this.config.regEntities, this.config.encodeEntity) +
-    (this.textContext ? '' : this.config.textEnd);
-
+    (this.textContext ? '' : this.config.textEnd)
+  );
 };

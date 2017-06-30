@@ -1,7 +1,7 @@
+import { FractionProperty, NumberProperty, Property } from 'app/model/properties';
 import { Rect } from 'app/scripts/common';
 import * as _ from 'lodash';
 
-import { FractionProperty, NumberProperty, Property } from '../properties';
 import { ConstructorArgs as AbstractConstructorArgs, AbstractLayer } from './AbstractLayer';
 
 /**

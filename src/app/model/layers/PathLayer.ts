@@ -1,6 +1,4 @@
-import * as _ from 'lodash';
-
-import { Path } from '../paths';
+import { Path } from 'app/model/paths';
 import {
   ColorProperty,
   EnumProperty,
@@ -8,7 +6,9 @@ import {
   NumberProperty,
   PathProperty,
   Property,
-} from '../properties';
+} from 'app/model/properties';
+import * as _ from 'lodash';
+
 import { MorphableLayer } from '.';
 import { ConstructorArgs as AbstractConstructorArgs, AbstractLayer } from './AbstractLayer';
 

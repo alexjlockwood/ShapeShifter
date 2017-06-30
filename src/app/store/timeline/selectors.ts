@@ -1,8 +1,7 @@
 import { PathAnimationBlock } from 'app/model/timeline';
+import { createDeepEqualSelector, getAppState } from 'app/store/selectors';
 import * as _ from 'lodash';
 import { createSelector } from 'reselect';
-
-import { createDeepEqualSelector, getAppState } from '../selectors';
 
 const getTimelineState = createSelector(getAppState, s => s.timeline);
 export const getAnimation = createSelector(getTimelineState, t => t.animation);

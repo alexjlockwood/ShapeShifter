@@ -1,10 +1,10 @@
+import { Projection, SvgChar } from 'app/model/paths';
+import { CommandBuilder } from 'app/model/paths/Command';
 import { Point } from 'app/scripts/common';
 import * as BezierJs from 'bezier-js';
 import { environment } from 'environments/environment';
 import * as _ from 'lodash';
 
-import { Projection, SvgChar } from '..';
-import { CommandBuilder } from '../Command';
 import { BBox, Calculator, Line } from '.';
 import { LineCalculator } from './LineCalculator';
 import { PointCalculator } from './PointCalculator';

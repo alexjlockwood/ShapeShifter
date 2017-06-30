@@ -4,9 +4,9 @@ import { MorphableLayer } from 'app/model/layers';
 import { Path, PathMutator, PathUtil } from 'app/model/paths';
 import { PathAnimationBlock } from 'app/model/timeline';
 import { AutoAwesome } from 'app/scripts/algorithms';
+import { AppState } from 'app/store/reducer';
 import * as _ from 'lodash';
 
-import { AppState } from '../reducer';
 import * as actions from './metaactions';
 
 export function metaReducer(reducer: ActionReducer<AppState>): ActionReducer<AppState> {

@@ -1,7 +1,5 @@
-import * as _ from 'lodash';
-
-import { INTERPOLATORS } from '../interpolators';
-import { Path } from '../paths';
+import { INTERPOLATORS } from 'app/model/interpolators';
+import { Path } from 'app/model/paths';
 import {
   ColorProperty,
   EnumProperty,
@@ -9,7 +7,8 @@ import {
   NumberProperty,
   PathProperty,
   Property,
-} from '../properties';
+} from 'app/model/properties';
+import * as _ from 'lodash';
 
 type AnimationBlockType = 'path' | 'color' | 'number';
 

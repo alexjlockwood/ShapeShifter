@@ -1,9 +1,8 @@
 import { Action, ActionReducer } from '@ngrx/store';
+import * as actionModeActions from 'app/store/actionmode/actions';
+import * as playbackActions from 'app/store/playback/actions';
+import { AppState } from 'app/store/reducer';
 import undoable, { StateWithHistory, UndoableOptions, excludeAction } from 'redux-undo';
-
-import * as actionModeActions from '../actionmode/actions';
-import * as playbackActions from '../playback/actions';
-import { AppState } from '../reducer';
 
 const UNDO_HISTORY_SIZE = 30;
 const UNDO_DEBOUNCE_MILLIS = 1000;

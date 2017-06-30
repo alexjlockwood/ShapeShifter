@@ -1,20 +1,19 @@
-import { createSelector, createStructuredSelector } from 'reselect';
-
-import { getActionMode, isActionMode } from '../actionmode/selectors';
+import { getActionMode, isActionMode } from 'app/store/actionmode/selectors';
 import {
   getCollapsedLayerIds,
   getHiddenLayerIds,
   getSelectedLayerIds,
   getVectorLayer,
-} from '../layers/selectors';
-import { isBeingReset } from '../reset/selectors';
+} from 'app/store/layers/selectors';
+import { isBeingReset } from 'app/store/reset/selectors';
 import {
   getAnimation,
   getSelectedBlockIds,
   getSelectedBlockLayerIds,
   getSingleSelectedPathBlock,
   isAnimationSelected,
-} from '../timeline/selectors';
+} from 'app/store/timeline/selectors';
+import { createSelector, createStructuredSelector } from 'reselect';
 
 export const getCanvasOverlayState = createStructuredSelector({
   hiddenLayerIds: getHiddenLayerIds,

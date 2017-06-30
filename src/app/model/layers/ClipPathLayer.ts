@@ -1,5 +1,6 @@
-import { Path } from '../paths';
-import { PathProperty, Property } from '../properties';
+import { Path } from 'app/model/paths';
+import { PathProperty, Property } from 'app/model/properties';
+
 import { MorphableLayer } from '.';
 import { ConstructorArgs as AbstractConstructorArgs, AbstractLayer } from './AbstractLayer';
 
