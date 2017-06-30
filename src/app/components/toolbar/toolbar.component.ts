@@ -3,7 +3,7 @@ import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { ActionMode, ActionSource, Selection, SelectionType } from 'app/model/actionmode';
 import { MorphableLayer } from 'app/model/layers';
 import { PathAnimationBlock } from 'app/model/timeline';
-import { ActionModeUtil } from 'app/scripts/actionmode';
+import { ActionModeUtil } from 'app/scripts/common';
 import { ActionModeService } from 'app/services';
 import { State, Store } from 'app/store';
 import { getToolbarState } from 'app/store/actionmode/selectors';
