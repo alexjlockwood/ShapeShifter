@@ -1,4 +1,4 @@
-import { PathAnimationBlock } from 'app/scripts/model/timeline';
+import { PathAnimationBlock } from 'app/model/timeline';
 import * as _ from 'lodash';
 import { createSelector } from 'reselect';
 

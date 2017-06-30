@@ -1,4 +1,4 @@
-import { Property } from 'app/scripts/model/properties';
+import { Property } from 'app/model/properties';
 
 /**
  * Stores information about an inspected property.

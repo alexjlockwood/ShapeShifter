@@ -2,7 +2,7 @@ import 'rxjs/add/observable/of';
 
 import { ComponentFixture, TestBed, async, inject } from '@angular/core/testing';
 import { FlexLayoutModule } from '@angular/flex-layout';
-import { ActionSource } from 'app/scripts/model/actionmode';
+import { ActionSource } from 'app/model/actionmode';
 import {
   ActionModeService,
   AnimatorService,

@@ -1,10 +1,10 @@
 import 'rxjs/add/operator/first';
 
 import { Injectable } from '@angular/core';
+import { LayerUtil, VectorLayer } from 'app/model/layers';
+import { Animation } from 'app/model/timeline';
 import { ModelUtil } from 'app/scripts/common';
 import { SvgLoader, VectorDrawableLoader } from 'app/scripts/import';
-import { LayerUtil, VectorLayer } from 'app/scripts/model/layers';
-import { Animation } from 'app/scripts/model/timeline';
 import { AnimatorService } from 'app/services/animator.service';
 import { FileExportService } from 'app/services/fileexport.service';
 import { LayerTimelineService } from 'app/services/layertimeline.service';

@@ -6,9 +6,9 @@ import {
   OnInit,
   Output,
 } from '@angular/core';
+import { GroupLayer, Layer, VectorLayer } from 'app/model/layers';
+import { Animation } from 'app/model/timeline';
 import { ModelUtil } from 'app/scripts/common';
-import { GroupLayer, Layer, VectorLayer } from 'app/scripts/model/layers';
-import { Animation } from 'app/scripts/model/timeline';
 import { ActionModeService } from 'app/services';
 import { State, Store } from 'app/store';
 import { getLayerListTreeState } from 'app/store/common/selectors';

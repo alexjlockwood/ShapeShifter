@@ -1,4 +1,4 @@
-import { Path, PathUtil } from 'app/scripts/model/paths';
+import { Path, PathUtil } from 'app/model/paths';
 
 import { Property } from './Property';
 

@@ -12,9 +12,9 @@ import {
   ViewChild,
   ViewChildren,
 } from '@angular/core';
+import { ActionSource } from 'app/model/actionmode';
 import { Point } from 'app/scripts/common';
 import { DestroyableMixin } from 'app/scripts/mixins';
-import { ActionSource } from 'app/scripts/model/actionmode';
 import { State, Store } from 'app/store';
 import { getVectorLayer } from 'app/store/layers/selectors';
 import * as $ from 'jquery';

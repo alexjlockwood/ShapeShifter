@@ -1,7 +1,6 @@
+import { Command, Path, PathUtil } from 'app/model/paths';
+import { MathUtil, Point } from 'app/scripts/common';
 import * as _ from 'lodash';
-
-import { MathUtil, Point } from '../common';
-import { Command, Path, PathUtil } from '../model/paths';
 
 // Needleman-Wunsch scoring function constants.
 const MATCH = 1;

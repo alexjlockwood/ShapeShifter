@@ -1,7 +1,7 @@
 import { Injectable, NgZone } from '@angular/core';
+import { VectorLayer } from 'app/model/layers';
+import { Animation } from 'app/model/timeline';
 import { AnimationRenderer } from 'app/scripts/animator';
-import { VectorLayer } from 'app/scripts/model/layers';
-import { Animation } from 'app/scripts/model/timeline';
 import { PlaybackService } from 'app/services/playback.service';
 import { State, Store } from 'app/store';
 import { getAnimatorState } from 'app/store/common/selectors';

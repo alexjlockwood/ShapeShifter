@@ -1,8 +1,9 @@
-import * as SvgSerializer from './SvgSerializer';
+import { VectorLayer } from 'app/model/layers';
+import { Animation } from 'app/model/timeline';
 import { AnimationRenderer } from 'app/scripts/animator';
-import { VectorLayer } from 'app/scripts/model/layers';
-import { Animation } from 'app/scripts/model/timeline';
 import { Svgo } from 'app/scripts/svgo';
+
+import * as SvgSerializer from './SvgSerializer';
 
 export function createHtml(svgFileName: string, cssFileName: string) {
   return `<html>
@@ -17,7 +18,9 @@ export function createHtml(svgFileName: string, cssFileName: string) {
 }
 
 export function createCss(width: number, height: number, duration: number, numSteps: number) {
-  return createKeyframes(width, numSteps) + `
+  return (
+    createKeyframes(width, numSteps) +
+    `
 .shapeshifter {
   animation-duration: ${duration}ms;
   animation-timing-function: steps(${numSteps});
@@ -28,7 +31,8 @@ export function createCss(width: number, height: number, duration: number, numSt
 .shapeshifter.play {
   animation-name: play${numSteps};
 }
-`;
+`
+  );
 }
 
 function createKeyframes(width: number, numSteps: number) {
@@ -42,11 +46,7 @@ function createKeyframes(width: number, numSteps: number) {
 }`;
 }
 
-export function createSvgFrames(
-  vectorLayer: VectorLayer,
-  animation: Animation,
-  numSteps: number,
-) {
+export function createSvgFrames(vectorLayer: VectorLayer, animation: Animation, numSteps: number) {
   const renderer = new AnimationRenderer(vectorLayer, animation);
   const svgs: string[] = [];
   const { width, height } = vectorLayer;
@@ -57,11 +57,7 @@ export function createSvgFrames(
   return svgs;
 }
 
-export function createSvgSprite(
-  vectorLayer: VectorLayer,
-  animation: Animation,
-  numSteps: number,
-) {
+export function createSvgSprite(vectorLayer: VectorLayer, animation: Animation, numSteps: number) {
   const renderer = new AnimationRenderer(vectorLayer, animation);
   const svgs: string[] = [];
   const { width, height } = vectorLayer;
@@ -71,11 +67,12 @@ export function createSvgSprite(
     svgs.push(SvgSerializer.toSvgString(vl, width, height, width * i, 0, false, i.toString()));
   }
   const totalWidth = width * numSteps;
-  let svg = `<svg xmlns="http://www.w3.org/2000/svg" `
-    + `viewBox="0 0 ${totalWidth} ${height}" width="${totalWidth}px" height="${height}px">
+  let svg =
+    `<svg xmlns="http://www.w3.org/2000/svg" ` +
+    `viewBox="0 0 ${totalWidth} ${height}" width="${totalWidth}px" height="${height}px">
 ${svgs.join('\n')}
 </svg>
 `;
-  Svgo.optimize(svg, optimizedSvgText => svg = optimizedSvgText);
+  Svgo.optimize(svg, optimizedSvgText => (svg = optimizedSvgText));
   return svg;
 }

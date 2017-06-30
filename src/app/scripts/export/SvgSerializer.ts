@@ -1,4 +1,3 @@
-import { ColorUtil } from 'app/scripts/common';
 import {
   ClipPathLayer,
   GroupLayer,
@@ -6,8 +5,9 @@ import {
   LayerUtil,
   PathLayer,
   VectorLayer,
-} from 'app/scripts/model/layers';
-import { PathUtil } from 'app/scripts/model/paths';
+} from 'app/model/layers';
+import { PathUtil } from 'app/model/paths';
+import { ColorUtil } from 'app/scripts/common';
 import * as _ from 'lodash';
 
 import * as XmlSerializer from './XmlSerializer';
@@ -70,10 +70,10 @@ function vectorLayerToSvgNode(
     for (let i = 0; i < layers.length; i++) {
       const layer = layers[i];
       if (layer instanceof ClipPathLayer) {
-        const clippedSiblings =
-          layers.slice(i + 1)
-            .filter(l => !(l instanceof ClipPathLayer))
-            .map(l => l.id);
+        const clippedSiblings = layers
+          .slice(i + 1)
+          .filter(l => !(l instanceof ClipPathLayer))
+          .map(l => l.id);
         if (clippedSiblings.length) {
           clipPathToClippedSiblingsMap.set(layer.id, new Set(clippedSiblings));
         }
@@ -87,10 +87,9 @@ function vectorLayerToSvgNode(
   const clippedSiblingToClipPathsMap = new Map<string, Set<string>>();
   clipPathToClippedSiblingsMap.forEach((clippedSiblingIds, clipPathId) => {
     clippedSiblingIds.forEach(clippedSiblingId => {
-      const clipPathIds =
-        clippedSiblingToClipPathsMap.has(clippedSiblingId)
-          ? clippedSiblingToClipPathsMap.get(clippedSiblingId)
-          : new Set<string>();
+      const clipPathIds = clippedSiblingToClipPathsMap.has(clippedSiblingId)
+        ? clippedSiblingToClipPathsMap.get(clippedSiblingId)
+        : new Set<string>();
       clipPathIds.add(clipPathId);
       clippedSiblingToClipPathsMap.set(clippedSiblingId, clipPathIds);
     });
@@ -133,113 +132,113 @@ function vectorLayerToSvgNode(
     conditionalAttr(layerNode, 'clip-path', clipPathAttrValue);
   };
 
-  walk(vl, (layer, parentNode) => {
-    if (layer instanceof VectorLayer) {
-      if (withIdsAndNS) {
-        conditionalAttr(destinationNode, 'id', vl.name, '');
-      }
-      conditionalAttr(destinationNode, 'opacity', vl.alpha, 1);
-      return parentNode;
-    }
-    if (layer instanceof PathLayer) {
-      const node = xmlDoc.createElement('path');
-      if (withIdsAndNS) {
-        conditionalAttr(node, 'id', layer.name);
-      }
-      maybeSetClipPathForLayerFn(layer, node);
-      const path = layer.pathData;
-      conditionalAttr(node, 'd', path ? path.getPathString() : '');
-      if (layer.fillColor) {
-        conditionalAttr(node, 'fill', ColorUtil.androidToCssHexColor(layer.fillColor), '');
-      } else {
-        conditionalAttr(node, 'fill', 'none');
-      }
-      conditionalAttr(node, 'fill-opacity', layer.fillAlpha, 1);
-      if (layer.strokeColor) {
-        conditionalAttr(node, 'stroke', ColorUtil.androidToCssHexColor(layer.strokeColor), '');
-      }
-      conditionalAttr(node, 'stroke-opacity', layer.strokeAlpha, 1);
-      conditionalAttr(node, 'stroke-width', layer.strokeWidth, 0);
-
-      if (layer.trimPathStart !== 0
-        || layer.trimPathEnd !== 1
-        || layer.trimPathOffset !== 0) {
-        const flattenedTransform = LayerUtil.getFlattenedTransformForLayer(vl, layer.id);
-        const { a, d } = flattenedTransform;
-        let pathLength: number;
-        if (a !== 1 || d !== 1) {
-          // Then recompute the scaled path length.
-          pathLength = layer.pathData.mutate()
-            .addTransforms([flattenedTransform])
-            .build()
-            .getPathLength();
-        } else {
-          pathLength = layer.pathData.getPathLength();
+  walk(
+    vl,
+    (layer, parentNode) => {
+      if (layer instanceof VectorLayer) {
+        if (withIdsAndNS) {
+          conditionalAttr(destinationNode, 'id', vl.name, '');
         }
-        const strokeDashArray =
-          PathUtil.toStrokeDashArray(
+        conditionalAttr(destinationNode, 'opacity', vl.alpha, 1);
+        return parentNode;
+      }
+      if (layer instanceof PathLayer) {
+        const node = xmlDoc.createElement('path');
+        if (withIdsAndNS) {
+          conditionalAttr(node, 'id', layer.name);
+        }
+        maybeSetClipPathForLayerFn(layer, node);
+        const path = layer.pathData;
+        conditionalAttr(node, 'd', path ? path.getPathString() : '');
+        if (layer.fillColor) {
+          conditionalAttr(node, 'fill', ColorUtil.androidToCssHexColor(layer.fillColor), '');
+        } else {
+          conditionalAttr(node, 'fill', 'none');
+        }
+        conditionalAttr(node, 'fill-opacity', layer.fillAlpha, 1);
+        if (layer.strokeColor) {
+          conditionalAttr(node, 'stroke', ColorUtil.androidToCssHexColor(layer.strokeColor), '');
+        }
+        conditionalAttr(node, 'stroke-opacity', layer.strokeAlpha, 1);
+        conditionalAttr(node, 'stroke-width', layer.strokeWidth, 0);
+
+        if (layer.trimPathStart !== 0 || layer.trimPathEnd !== 1 || layer.trimPathOffset !== 0) {
+          const flattenedTransform = LayerUtil.getFlattenedTransformForLayer(vl, layer.id);
+          const { a, d } = flattenedTransform;
+          let pathLength: number;
+          if (a !== 1 || d !== 1) {
+            // Then recompute the scaled path length.
+            pathLength = layer.pathData
+              .mutate()
+              .addTransforms([flattenedTransform])
+              .build()
+              .getPathLength();
+          } else {
+            pathLength = layer.pathData.getPathLength();
+          }
+          const strokeDashArray = PathUtil.toStrokeDashArray(
             layer.trimPathStart,
             layer.trimPathEnd,
             layer.trimPathOffset,
             pathLength,
           ).join(',');
-        const strokeDashOffset =
-          PathUtil.toStrokeDashOffset(
+          const strokeDashOffset = PathUtil.toStrokeDashOffset(
             layer.trimPathStart,
             layer.trimPathEnd,
             layer.trimPathOffset,
             pathLength,
           ).toString();
-        conditionalAttr(node, 'stroke-dasharray', strokeDashArray);
-        conditionalAttr(node, 'stroke-dashoffset', strokeDashOffset);
-      }
+          conditionalAttr(node, 'stroke-dasharray', strokeDashArray);
+          conditionalAttr(node, 'stroke-dashoffset', strokeDashOffset);
+        }
 
-      conditionalAttr(node, 'stroke-linecap', layer.strokeLinecap, 'butt');
-      conditionalAttr(node, 'stroke-linejoin', layer.strokeLinejoin, 'miter');
-      conditionalAttr(node, 'stroke-miterlimit', layer.strokeMiterLimit, 4);
-      const fillRule =
-        !layer.fillType || layer.fillType === 'nonZero' ? 'nonzero' : 'evenodd';
-      conditionalAttr(node, 'fill-rule', fillRule, 'nonzero');
-      parentNode.appendChild(node);
-      return parentNode;
-    }
-    if (layer instanceof GroupLayer) {
-      // TODO: create one node per group property being animated
-      const node = xmlDoc.createElement('g');
-      if (withIdsAndNS) {
-        conditionalAttr(node, 'id', layer.name);
+        conditionalAttr(node, 'stroke-linecap', layer.strokeLinecap, 'butt');
+        conditionalAttr(node, 'stroke-linejoin', layer.strokeLinejoin, 'miter');
+        conditionalAttr(node, 'stroke-miterlimit', layer.strokeMiterLimit, 4);
+        const fillRule = !layer.fillType || layer.fillType === 'nonZero' ? 'nonzero' : 'evenodd';
+        conditionalAttr(node, 'fill-rule', fillRule, 'nonzero');
+        parentNode.appendChild(node);
+        return parentNode;
       }
-      const transformValues: string[] = [];
-      if (layer.translateX || layer.translateY) {
-        transformValues.push(`translate(${layer.translateX} ${layer.translateY})`);
-      }
-      if (layer.rotation) {
-        transformValues.push(`rotate(${layer.rotation} ${layer.pivotX} ${layer.pivotY})`);
-      }
-      if (layer.scaleX !== 1 || layer.scaleY !== 1) {
-        if (layer.pivotX || layer.pivotY) {
-          transformValues.push(`translate(${layer.pivotX} ${layer.pivotY})`);
+      if (layer instanceof GroupLayer) {
+        // TODO: create one node per group property being animated
+        const node = xmlDoc.createElement('g');
+        if (withIdsAndNS) {
+          conditionalAttr(node, 'id', layer.name);
         }
-        transformValues.push(`scale(${layer.scaleX} ${layer.scaleY})`);
-        if (layer.pivotX || layer.pivotY) {
-          transformValues.push(`translate(${-layer.pivotX} ${-layer.pivotY})`);
+        const transformValues: string[] = [];
+        if (layer.translateX || layer.translateY) {
+          transformValues.push(`translate(${layer.translateX} ${layer.translateY})`);
         }
-      }
-      let nodeToAttachToParent = node;
-      if (transformValues.length) {
-        node.setAttributeNS(undefined, 'transform', transformValues.join(' '));
-        if (shouldSetClipPathForLayerFn(layer)) {
-          // Create a wrapper node so that the clip-path is applied before the transformations.
-          const wrapperNode = xmlDoc.createElement('g');
-          wrapperNode.appendChild(node);
-          nodeToAttachToParent = wrapperNode;
+        if (layer.rotation) {
+          transformValues.push(`rotate(${layer.rotation} ${layer.pivotX} ${layer.pivotY})`);
         }
+        if (layer.scaleX !== 1 || layer.scaleY !== 1) {
+          if (layer.pivotX || layer.pivotY) {
+            transformValues.push(`translate(${layer.pivotX} ${layer.pivotY})`);
+          }
+          transformValues.push(`scale(${layer.scaleX} ${layer.scaleY})`);
+          if (layer.pivotX || layer.pivotY) {
+            transformValues.push(`translate(${-layer.pivotX} ${-layer.pivotY})`);
+          }
+        }
+        let nodeToAttachToParent = node;
+        if (transformValues.length) {
+          node.setAttributeNS(undefined, 'transform', transformValues.join(' '));
+          if (shouldSetClipPathForLayerFn(layer)) {
+            // Create a wrapper node so that the clip-path is applied before the transformations.
+            const wrapperNode = xmlDoc.createElement('g');
+            wrapperNode.appendChild(node);
+            nodeToAttachToParent = wrapperNode;
+          }
+        }
+        maybeSetClipPathForLayerFn(layer, nodeToAttachToParent);
+        parentNode.appendChild(nodeToAttachToParent);
+        return node;
       }
-      maybeSetClipPathForLayerFn(layer, nodeToAttachToParent);
-      parentNode.appendChild(nodeToAttachToParent);
-      return node;
-    }
-  }, destinationNode);
+    },
+    destinationNode,
+  );
 }
 
 function conditionalAttr(node: HTMLElement, attr, value, skipValue?) {

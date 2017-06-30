@@ -1,6 +1,6 @@
 import { Action } from '@ngrx/store';
-import { VectorLayer } from 'app/scripts/model/layers';
-import { Animation } from 'app/scripts/model/timeline';
+import { VectorLayer } from 'app/model/layers';
+import { Animation } from 'app/model/timeline';
 
 export const RESET_WORKSPACE = '__reset__RESET_WORKSPACE';
 

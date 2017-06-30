@@ -1,7 +1,7 @@
+import { ActionSource, HoverType } from 'app/model/actionmode';
+import { LayerUtil } from 'app/model/layers';
+import { ProjectionOntoPath } from 'app/model/paths';
 import { MathUtil, Point } from 'app/scripts/common';
-import { ActionSource, HoverType } from 'app/scripts/model/actionmode';
-import { LayerUtil } from 'app/scripts/model/layers';
-import { ProjectionOntoPath } from 'app/scripts/model/paths';
 import { ActionModeService } from 'app/services';
 import { State, Store } from 'app/store';
 import * as _ from 'lodash';

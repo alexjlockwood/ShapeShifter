@@ -2,9 +2,9 @@ import 'rxjs/add/operator/toPromise';
 
 import { Injectable } from '@angular/core';
 import { Http } from '@angular/http';
+import { VectorLayer } from 'app/model/layers';
+import { Animation } from 'app/model/timeline';
 import { ModelUtil } from 'app/scripts/common';
-import { VectorLayer } from 'app/scripts/model/layers';
-import { Animation } from 'app/scripts/model/timeline';
 import { FileExportService } from 'app/services/fileexport.service';
 
 // TODO: store hidden layer IDs and vector layer inside the animations?

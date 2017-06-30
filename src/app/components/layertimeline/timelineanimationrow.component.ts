@@ -6,9 +6,9 @@ import {
   OnInit,
   Output,
 } from '@angular/core';
+import { Layer } from 'app/model/layers';
+import { Animation, AnimationBlock } from 'app/model/timeline';
 import { ModelUtil } from 'app/scripts/common';
-import { Layer } from 'app/scripts/model/layers';
-import { Animation, AnimationBlock } from 'app/scripts/model/timeline';
 import { ActionModeService } from 'app/services';
 import { State, Store } from 'app/store';
 import { getTimelineAnimationRowState } from 'app/store/common/selectors';

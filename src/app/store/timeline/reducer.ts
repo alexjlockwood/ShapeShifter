@@ -1,4 +1,4 @@
-import { Animation } from 'app/scripts/model/timeline';
+import { Animation } from 'app/model/timeline';
 
 import * as actions from './actions';
 

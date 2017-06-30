@@ -1,4 +1,3 @@
-import { ColorUtil, Matrix } from 'app/scripts/common';
 import {
   ClipPathLayer,
   FillType,
@@ -9,9 +8,10 @@ import {
   StrokeLineCap,
   StrokeLineJoin,
   VectorLayer,
-} from 'app/scripts/model/layers';
-import { Command, Path } from 'app/scripts/model/paths';
-import { NameProperty } from 'app/scripts/model/properties';
+} from 'app/model/layers';
+import { Command, Path } from 'app/model/paths';
+import { NameProperty } from 'app/model/properties';
+import { ColorUtil, Matrix } from 'app/scripts/common';
 import { Svgo } from 'app/scripts/svgo';
 import * as _ from 'lodash';
 

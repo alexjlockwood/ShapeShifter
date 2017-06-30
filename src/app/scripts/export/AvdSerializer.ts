@@ -1,6 +1,6 @@
-import { INTERPOLATORS } from 'app/scripts/model/interpolators';
-import { ClipPathLayer, GroupLayer, Layer, PathLayer, VectorLayer } from 'app/scripts/model/layers';
-import { Animation, AnimationBlock, PathAnimationBlock } from 'app/scripts/model/timeline';
+import { INTERPOLATORS } from 'app/model/interpolators';
+import { ClipPathLayer, GroupLayer, Layer, PathLayer, VectorLayer } from 'app/model/layers';
+import { Animation, AnimationBlock, PathAnimationBlock } from 'app/model/timeline';
 import * as _ from 'lodash';
 
 import * as XmlSerializer from './XmlSerializer';

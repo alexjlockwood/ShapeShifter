@@ -10,11 +10,7 @@ import {
   ViewChild,
   ViewChildren,
 } from '@angular/core';
-import { ModelUtil } from 'app/scripts/common';
-import { Dragger } from 'app/scripts/dragger';
-import { IntervalTree } from 'app/scripts/intervals';
-import { DestroyableMixin } from 'app/scripts/mixins';
-import { ActionMode } from 'app/scripts/model/actionmode';
+import { ActionMode } from 'app/model/actionmode';
 import {
   ClipPathLayer,
   GroupLayer,
@@ -22,8 +18,12 @@ import {
   LayerUtil,
   PathLayer,
   VectorLayer,
-} from 'app/scripts/model/layers';
-import { Animation, AnimationBlock } from 'app/scripts/model/timeline';
+} from 'app/model/layers';
+import { Animation, AnimationBlock } from 'app/model/timeline';
+import { ModelUtil } from 'app/scripts/common';
+import { Dragger } from 'app/scripts/dragger';
+import { IntervalTree } from 'app/scripts/intervals';
+import { DestroyableMixin } from 'app/scripts/mixins';
 import {
   ActionModeService,
   AnimatorService,

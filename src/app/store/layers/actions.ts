@@ -1,5 +1,5 @@
 import { Action } from '@ngrx/store';
-import { Layer } from 'app/scripts/model/layers';
+import { Layer } from 'app/model/layers';
 
 export const REPLACE_LAYER = '__layers__REPLACE_LAYER';
 export const SET_SELECTED_LAYERS = '__layers__SET_SELECTED_LAYERS';

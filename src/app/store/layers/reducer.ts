@@ -1,4 +1,4 @@
-import { LayerUtil, VectorLayer } from 'app/scripts/model/layers';
+import { LayerUtil, VectorLayer } from 'app/model/layers';
 
 import * as actions from './actions';
 

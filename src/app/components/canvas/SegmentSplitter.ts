@@ -1,6 +1,6 @@
+import { ActionMode, ActionSource } from 'app/model/actionmode';
+import { ProjectionOntoPath } from 'app/model/paths';
 import { Point } from 'app/scripts/common';
-import { ActionMode, ActionSource } from 'app/scripts/model/actionmode';
-import { ProjectionOntoPath } from 'app/scripts/model/paths';
 import { ActionModeService } from 'app/services';
 import { State, Store } from 'app/store';
 

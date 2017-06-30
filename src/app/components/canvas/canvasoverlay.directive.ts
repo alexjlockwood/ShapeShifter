@@ -2,8 +2,6 @@ import 'rxjs/add/observable/combineLatest';
 import 'rxjs/add/observable/merge';
 
 import { AfterViewInit, Directive, ElementRef, HostListener, Input } from '@angular/core';
-import { MathUtil, Matrix, Point } from 'app/scripts/common';
-import { DestroyableMixin } from 'app/scripts/mixins';
 import {
   ActionMode,
   ActionSource,
@@ -11,7 +9,7 @@ import {
   HoverType,
   Selection,
   SelectionType,
-} from 'app/scripts/model/actionmode';
+} from 'app/model/actionmode';
 import {
   ClipPathLayer,
   GroupLayer,
@@ -20,9 +18,11 @@ import {
   MorphableLayer,
   PathLayer,
   VectorLayer,
-} from 'app/scripts/model/layers';
-import { Command } from 'app/scripts/model/paths';
-import { HitResult, Path, SubPath } from 'app/scripts/model/paths';
+} from 'app/model/layers';
+import { Command } from 'app/model/paths';
+import { HitResult, Path, SubPath } from 'app/model/paths';
+import { MathUtil, Matrix, Point } from 'app/scripts/common';
+import { DestroyableMixin } from 'app/scripts/mixins';
 import {
   ActionModeService,
   AnimatorService,

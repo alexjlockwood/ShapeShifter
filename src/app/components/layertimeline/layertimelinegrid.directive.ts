@@ -1,6 +1,6 @@
 import { Directive, ElementRef, EventEmitter, HostListener, Input, Output } from '@angular/core';
+import { Animation } from 'app/model/timeline';
 import { Dragger } from 'app/scripts/dragger';
-import { Animation } from 'app/scripts/model/timeline';
 import { ShortcutService } from 'app/services';
 import * as $ from 'jquery';
 import * as _ from 'lodash';

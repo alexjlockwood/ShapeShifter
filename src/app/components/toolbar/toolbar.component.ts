@@ -6,9 +6,9 @@ import {
   ActionSource,
   Selection,
   SelectionType,
-} from 'app/scripts/model/actionmode';
-import { MorphableLayer } from 'app/scripts/model/layers';
-import { PathAnimationBlock } from 'app/scripts/model/timeline';
+} from 'app/model/actionmode';
+import { MorphableLayer } from 'app/model/layers';
+import { PathAnimationBlock } from 'app/model/timeline';
 import { ActionModeService } from 'app/services';
 import { State, Store } from 'app/store';
 import { getToolbarState } from 'app/store/actionmode/selectors';

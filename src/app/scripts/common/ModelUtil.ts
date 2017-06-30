@@ -1,5 +1,5 @@
-import { Layer, VectorLayer } from 'app/scripts/model/layers';
-import { Animation, AnimationBlock } from 'app/scripts/model/timeline';
+import { Layer, VectorLayer } from 'app/model/layers';
+import { Animation, AnimationBlock } from 'app/model/timeline';
 import * as _ from 'lodash';
 
 /**

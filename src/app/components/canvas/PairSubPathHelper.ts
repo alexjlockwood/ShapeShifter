@@ -1,5 +1,5 @@
+import { ActionMode, ActionSource, HoverType } from 'app/model/actionmode';
 import { Point } from 'app/scripts/common';
-import { ActionMode, ActionSource, HoverType } from 'app/scripts/model/actionmode';
 import { ActionModeService } from 'app/services';
 import { State, Store } from 'app/store';
 import * as _ from 'lodash';

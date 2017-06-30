@@ -1,4 +1,4 @@
-import { PathLayer } from 'app/scripts/model/layers';
+import { PathLayer } from 'app/model/layers';
 
 import { SvgLoader } from '.';
 

@@ -1,5 +1,5 @@
+import { Path } from 'app/model/paths';
 import { Matrix } from 'app/scripts/common';
-import { Path } from 'app/scripts/model/paths';
 import * as _ from 'lodash';
 
 import { ClipPathLayer, GroupLayer, Layer, PathLayer, VectorLayer } from '.';

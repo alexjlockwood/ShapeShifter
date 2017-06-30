@@ -1,4 +1,4 @@
-// import { GroupLayer, PathLayer, VectorLayer } from 'app/scripts/model/layers';
+// import { GroupLayer, PathLayer, VectorLayer } from 'app/model/layers';
 
 // import { SelectLayer, ToggleLayerExpansion, ToggleLayerVisibility } from './actions';
 // import { buildInitialState, reducer } from './reducer';

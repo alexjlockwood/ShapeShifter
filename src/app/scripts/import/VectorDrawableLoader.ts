@@ -1,6 +1,5 @@
 import 'rxjs/add/operator/first';
 
-import { ColorUtil } from 'app/scripts/common';
 import {
   ClipPathLayer,
   FillType,
@@ -11,13 +10,14 @@ import {
   StrokeLineCap,
   StrokeLineJoin,
   VectorLayer,
-} from 'app/scripts/model/layers';
-import { Path } from 'app/scripts/model/paths';
-import { NameProperty } from 'app/scripts/model/properties';
+} from 'app/model/layers';
+import { Path } from 'app/model/paths';
+import { NameProperty } from 'app/model/properties';
+import { ColorUtil } from 'app/scripts/common';
 import * as _ from 'lodash';
 
-// import { INTERPOLATORS } from 'app/scripts/model/interpolators';
-// import { AnimationBlock } from 'app/scripts/model/timeline';
+// import { INTERPOLATORS } from 'app/model/interpolators';
+// import { AnimationBlock } from 'app/model/timeline';
 
 export function loadVectorLayerFromXmlString(
   xmlString: string,

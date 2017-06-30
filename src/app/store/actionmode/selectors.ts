@@ -1,12 +1,7 @@
+import { ActionMode, ActionModeUtil, ActionSource, SelectionType } from 'app/model/actionmode';
+import { LayerUtil, MorphableLayer, VectorLayer } from 'app/model/layers';
+import { Animation, PathAnimationBlock } from 'app/model/timeline';
 import { AnimationRenderer } from 'app/scripts/animator';
-import {
-  ActionMode,
-  ActionModeUtil,
-  ActionSource,
-  SelectionType,
-} from 'app/scripts/model/actionmode';
-import { LayerUtil, MorphableLayer, VectorLayer } from 'app/scripts/model/layers';
-import { Animation, PathAnimationBlock } from 'app/scripts/model/timeline';
 import { createSelector, createStructuredSelector } from 'reselect';
 
 import { getHiddenLayerIds, getSelectedLayerIds, getVectorLayer } from '../layers/selectors';

@@ -2,11 +2,11 @@ import 'rxjs/add/observable/merge';
 import 'rxjs/add/operator/first';
 
 import { AfterViewInit, Directive, ElementRef, Input } from '@angular/core';
+import { ActionSource } from 'app/model/actionmode';
+import { ClipPathLayer, Layer, LayerUtil, PathLayer, VectorLayer } from 'app/model/layers';
+import { PathUtil } from 'app/model/paths';
 import { ColorUtil } from 'app/scripts/common';
 import { DestroyableMixin } from 'app/scripts/mixins';
-import { ActionSource } from 'app/scripts/model/actionmode';
-import { ClipPathLayer, Layer, LayerUtil, PathLayer, VectorLayer } from 'app/scripts/model/layers';
-import { PathUtil } from 'app/scripts/model/paths';
 import { AnimatorService } from 'app/services';
 import { State, Store } from 'app/store';
 import { getActionModeEndState, getActionModeStartState } from 'app/store/actionmode/selectors';

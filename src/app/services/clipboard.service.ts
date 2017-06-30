@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
-import { GroupLayer, Layer, VectorLayer } from 'app/scripts/model/layers';
-
+import { GroupLayer, Layer, VectorLayer } from 'app/model/layers';
 import { environment } from 'environments/environment';
 import * as $ from 'jquery';
 

@@ -1,9 +1,9 @@
 import 'rxjs/add/operator/first';
 
 import { Injectable } from '@angular/core';
+import { LayerUtil, VectorLayer } from 'app/model/layers';
+import { Animation } from 'app/model/timeline';
 import { AvdSerializer, SpriteSerializer, SvgSerializer } from 'app/scripts/export';
-import { LayerUtil, VectorLayer } from 'app/scripts/model/layers';
-import { Animation } from 'app/scripts/model/timeline';
 import { State, Store } from 'app/store';
 import { getHiddenLayerIds, getVectorLayer } from 'app/store/layers/selectors';
 import { getAnimation } from 'app/store/timeline/selectors';

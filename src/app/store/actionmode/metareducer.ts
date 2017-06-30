@@ -1,9 +1,9 @@
 import { ActionReducer } from '@ngrx/store';
+import { ActionSource, Selection, SelectionType } from 'app/model/actionmode';
+import { MorphableLayer } from 'app/model/layers';
+import { Path, PathMutator, PathUtil } from 'app/model/paths';
+import { PathAnimationBlock } from 'app/model/timeline';
 import { AutoAwesome } from 'app/scripts/algorithms';
-import { ActionSource, Selection, SelectionType } from 'app/scripts/model/actionmode';
-import { MorphableLayer } from 'app/scripts/model/layers';
-import { Path, PathMutator, PathUtil } from 'app/scripts/model/paths';
-import { PathAnimationBlock } from 'app/scripts/model/timeline';
 import * as _ from 'lodash';
 
 import { AppState } from '../reducer';

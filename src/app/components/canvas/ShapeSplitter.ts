@@ -1,6 +1,6 @@
+import { ActionMode } from 'app/model/actionmode';
+import { HitResult, ProjectionOntoPath } from 'app/model/paths';
 import { Point } from 'app/scripts/common';
-import { ActionMode } from 'app/scripts/model/actionmode';
-import { HitResult, ProjectionOntoPath } from 'app/scripts/model/paths';
 import { ActionModeService } from 'app/services';
 import { State, Store } from 'app/store';
 import * as _ from 'lodash';

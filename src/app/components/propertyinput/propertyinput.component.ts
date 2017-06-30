@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
-import { ColorUtil, ModelUtil } from 'app/scripts/common';
-import { ActionMode } from 'app/scripts/model/actionmode';
+import { ActionMode } from 'app/model/actionmode';
 import {
   ClipPathLayer,
   GroupLayer,
@@ -8,9 +7,10 @@ import {
   LayerUtil,
   PathLayer,
   VectorLayer,
-} from 'app/scripts/model/layers';
-import { FractionProperty, NameProperty, Option } from 'app/scripts/model/properties';
-import { Animation, PathAnimationBlock } from 'app/scripts/model/timeline';
+} from 'app/model/layers';
+import { FractionProperty, NameProperty, Option } from 'app/model/properties';
+import { Animation, PathAnimationBlock } from 'app/model/timeline';
+import { ColorUtil, ModelUtil } from 'app/scripts/common';
 import {
   ActionModeService,
   AnimatorService,
@@ -19,7 +19,6 @@ import {
 } from 'app/services';
 import { State, Store } from 'app/store';
 import { getPropertyInputState } from 'app/store/common/selectors';
-
 import { ReplaceAnimation } from 'app/store/timeline/actions';
 import * as $ from 'jquery';
 import * as _ from 'lodash';

@@ -11,7 +11,7 @@ import {
   ViewChild,
 } from '@angular/core';
 import { DropFilesAction } from 'app/components/dialogs';
-import { ActionMode, ActionSource } from 'app/scripts/model/actionmode';
+import { ActionMode, ActionSource } from 'app/model/actionmode';
 import {
   ActionModeService,
   ClipboardService,
