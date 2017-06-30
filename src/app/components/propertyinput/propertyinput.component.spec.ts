@@ -1,9 +1,4 @@
-import {
-  ComponentFixture,
-  TestBed,
-  async,
-  inject,
-} from '@angular/core/testing';
+import { ComponentFixture, TestBed, async, inject } from '@angular/core/testing';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { FormsModule } from '@angular/forms';
 import {
@@ -17,6 +12,7 @@ import { SplitterComponent } from 'app/components/splitter/splitter.component';
 import {
   ActionModeService,
   AnimatorService,
+  LayerTimelineService,
   PlaybackService,
 } from 'app/services';
 import { Store } from 'app/store';
@@ -28,13 +24,10 @@ describe('PropertyInputComponent', () => {
   let component: PropertyInputComponent;
   let fixture: ComponentFixture<PropertyInputComponent>;
 
-  beforeEach(async(() => {
-    TestBed
-      .configureTestingModule({
-        declarations: [
-          PropertyInputComponent,
-          SplitterComponent,
-        ],
+  beforeEach(
+    async(() => {
+      TestBed.configureTestingModule({
+        declarations: [PropertyInputComponent, SplitterComponent],
         imports: [
           FlexLayoutModule,
           FormsModule,
@@ -48,18 +41,21 @@ describe('PropertyInputComponent', () => {
           { provide: Store, useValue: new MockStore() },
           ActionModeService,
           AnimatorService,
+          LayerTimelineService,
           PlaybackService,
         ],
-      })
-      .compileComponents();
-  }));
+      }).compileComponents();
+    }),
+  );
 
-  beforeEach(inject([Store], (store: MockStore) => {
-    fixture = TestBed.createComponent(PropertyInputComponent);
-    component = fixture.componentInstance;
-    component.ngOnInit();
-    fixture.detectChanges();
-  }));
+  beforeEach(
+    inject([Store], (store: MockStore) => {
+      fixture = TestBed.createComponent(PropertyInputComponent);
+      component = fixture.componentInstance;
+      component.ngOnInit();
+      fixture.detectChanges();
+    }),
+  );
 
   it('should be created', () => {
     expect(component).toBeTruthy();
