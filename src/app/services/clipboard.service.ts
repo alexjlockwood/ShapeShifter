@@ -1,9 +1,11 @@
 import { Injectable } from '@angular/core';
 import { VectorLayer } from 'app/model/layers';
+import { AnimationBlock } from 'app/model/timeline';
 import { SvgLoader, VectorDrawableLoader } from 'app/scripts/import';
 import { environment } from 'environments/environment';
 import * as $ from 'jquery';
 
+import { AnimatorService } from './animator.service';
 import { LayerTimelineService } from './layertimeline.service';
 
 const IS_DEV_BUILD = !environment.production;
@@ -12,7 +14,10 @@ declare const ga: Function;
 
 @Injectable()
 export class ClipboardService {
-  constructor(private readonly layerTimelineService: LayerTimelineService) {}
+  constructor(
+    private readonly layerTimelineService: LayerTimelineService,
+    private readonly animatorService: AnimatorService,
+  ) {}
 
   init() {
     const cutCopyHandlerFn = (event: JQuery.Event, shouldCut: boolean) => {
@@ -41,11 +46,11 @@ export class ClipboardService {
 
       const clipboardData = (event.originalEvent as ClipboardEvent).clipboardData;
       const str = clipboardData.getData('text/plain');
+      const existingVl = this.layerTimelineService.getVectorLayer();
 
       if (str.match(/<\/svg>\s*$/)) {
         // Paste SVG.
         ga('send', 'event', 'paste', 'svg');
-        const existingVl = this.layerTimelineService.getVectorLayer();
         let importedVl: VectorLayer;
         SvgLoader.loadVectorLayerFromSvgStringWithCallback(
           str,
@@ -58,7 +63,6 @@ export class ClipboardService {
       } else if (str.match(/<\/vector>\s*$/)) {
         // Paste VD.
         ga('send', 'event', 'paste', 'vd');
-        const existingVl = this.layerTimelineService.getVectorLayer();
         const importedVl = VectorDrawableLoader.loadVectorLayerFromXmlString(
           str,
           name => !!existingVl.findLayerByName(name),
@@ -76,7 +80,33 @@ export class ClipboardService {
         }
         if (parsed.blocks) {
           ga('send', 'event', 'paste', 'json.blocks');
-          // pasteLayers = parsed.layers.map(l => BaseLayer.load(l));
+          for (const b of parsed.blocks) {
+            const block = AnimationBlock.from(b);
+            const {
+              layerId,
+              propertyName,
+              fromValue,
+              toValue,
+              interpolator,
+              startTime,
+              endTime,
+            } = block;
+            const layer = existingVl.findLayerById(layerId);
+            if (!layer) {
+              continue;
+            }
+            const duration = endTime - startTime;
+            // TODO: avoid executing this inside a loop (do a batch insert instead)
+            this.layerTimelineService.addBlock(
+              layer,
+              propertyName,
+              fromValue,
+              toValue,
+              this.animatorService.getCurrentTime(),
+              duration,
+              interpolator,
+            );
+          }
         } else {
           ga('send', 'event', 'paste', 'json.unknown');
         }

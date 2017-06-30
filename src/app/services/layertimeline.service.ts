@@ -2,6 +2,7 @@ import 'rxjs/add/operator/first';
 import 'rxjs/add/observable/combineLatest';
 
 import { Injectable } from '@angular/core';
+import { INTERPOLATORS } from 'app/model/interpolators';
 import { GroupLayer, Layer, LayerUtil, VectorLayer } from 'app/model/layers';
 import { Animation, AnimationBlock } from 'app/model/timeline';
 import { ModelUtil } from 'app/scripts/common';
@@ -341,9 +342,17 @@ export class LayerTimelineService {
     this.store.dispatch(new SetAnimation(animation));
   }
 
-  addBlock(layer: Layer, propertyName: string, fromValue: any, toValue: any, activeTime: number) {
+  addBlock(
+    layer: Layer,
+    propertyName: string,
+    fromValue: any,
+    toValue: any,
+    activeTime: number,
+    duration = 100,
+    interpolator = INTERPOLATORS[0].value,
+  ) {
     let animation = this.getAnimation();
-    const newBlockDuration = 100;
+    const newBlockDuration = duration;
 
     // Find the right start time for the block, which should be a gap between
     // neighboring blocks closest to the active time cursor, of a minimum size.
@@ -402,6 +411,7 @@ export class LayerTimelineService {
       endTime,
       fromValue,
       toValue,
+      interpolator,
       type: typeMap[property.getTypeName()],
     });
     animation = animation.clone();
