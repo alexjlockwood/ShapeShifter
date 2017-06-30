@@ -124,7 +124,6 @@
         "multiline": {
           "objects": "always",
           "arrays": "always",
-          "functions": "always",
           "typeLiterals": "always"
         }
       }

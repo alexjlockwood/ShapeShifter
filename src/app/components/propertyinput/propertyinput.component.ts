@@ -106,7 +106,13 @@ export class PropertyInputComponent implements OnInit {
       .get(propertyName)
       .cloneValue(layer[propertyName]);
     const currentTime = this.animatorService.getCurrentTime();
-    this.layerTimelineService.addBlock(layer, propertyName, clonedValue, clonedValue, currentTime);
+    this.layerTimelineService.addBlocks({
+      layerId: layer.id,
+      propertyName,
+      fromValue: clonedValue,
+      toValue: clonedValue,
+      currentTime,
+    });
   }
 
   shouldShowInvalidPathAnimationBlockMsg(pim: PropertyInputModel) {

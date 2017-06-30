@@ -342,17 +342,42 @@ export class LayerTimelineService {
     this.store.dispatch(new SetAnimation(animation));
   }
 
-  addBlock(
-    layer: Layer,
-    propertyName: string,
-    fromValue: any,
-    toValue: any,
-    activeTime: number,
-    duration = 100,
-    interpolator = INTERPOLATORS[0].value,
+  addBlocks(
+    ...blocks: Array<{
+      layerId: string;
+      propertyName: string;
+      fromValue: any;
+      toValue: any;
+      currentTime: number;
+      duration?: number;
+      interpolator?: string;
+    }>
   ) {
     let animation = this.getAnimation();
-    const newBlockDuration = duration;
+    for (const block of blocks) {
+      animation = this.addBlockToAnimation(block);
+    }
+    this.store.dispatch(new SetAnimation(animation));
+  }
+
+  private addBlockToAnimation(block: {
+    layerId: string;
+    propertyName: string;
+    fromValue: any;
+    toValue: any;
+    currentTime: number;
+    duration?: number;
+    interpolator?: string;
+  }) {
+    let animation = this.getAnimation();
+    const layer = this.getVectorLayer().findLayerById(block.layerId);
+    if (!layer) {
+      return animation;
+    }
+    const newBlockDuration = block.duration || 100;
+    const interpolator = block.interpolator || INTERPOLATORS[0].value;
+    const propertyName = block.propertyName;
+    const currentTime = block.currentTime;
 
     // Find the right start time for the block, which should be a gap between
     // neighboring blocks closest to the active time cursor, of a minimum size.
@@ -373,7 +398,7 @@ export class LayerTimelineService {
       .filter(gap => gap.end - gap.start > newBlockDuration)
       .map(gap =>
         Object.assign(gap, {
-          dist: Math.min(Math.abs(gap.end - activeTime), Math.abs(gap.start - activeTime)),
+          dist: Math.min(Math.abs(gap.end - currentTime), Math.abs(gap.start - currentTime)),
         }),
       )
       .sort((a, b) => a.dist - b.dist);
@@ -382,10 +407,10 @@ export class LayerTimelineService {
       // No available gaps, cancel.
       // TODO: show a disabled button to prevent this case?
       console.warn('Ignoring failed attempt to add animation block');
-      return;
+      return animation;
     }
 
-    let startTime = Math.max(activeTime, gaps[0].start);
+    let startTime = Math.max(currentTime, gaps[0].start);
     const endTime = Math.min(startTime + newBlockDuration, gaps[0].end);
     if (endTime - startTime < newBlockDuration) {
       startTime = endTime - newBlockDuration;
@@ -409,21 +434,14 @@ export class LayerTimelineService {
       propertyName,
       startTime,
       endTime,
-      fromValue,
-      toValue,
+      fromValue: block.fromValue,
+      toValue: block.toValue,
       interpolator,
       type: typeMap[property.getTypeName()],
     });
     animation = animation.clone();
     animation.blocks = [...animation.blocks, newBlock];
-
-    this.store.dispatch(
-      new MultiAction(
-        new SetAnimation(animation),
-        // Auto-select the new animation block.
-        ...this.buildSelectBlockActions(newBlock.id, true),
-      ),
-    );
+    return animation;
   }
 
   getVectorLayer() {

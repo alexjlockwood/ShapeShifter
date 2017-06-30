@@ -80,33 +80,30 @@ export class ClipboardService {
         }
         if (parsed.blocks) {
           ga('send', 'event', 'paste', 'json.blocks');
-          for (const b of parsed.blocks) {
-            const block = AnimationBlock.from(b);
-            const {
-              layerId,
-              propertyName,
-              fromValue,
-              toValue,
-              interpolator,
-              startTime,
-              endTime,
-            } = block;
-            const layer = existingVl.findLayerById(layerId);
-            if (!layer) {
-              continue;
-            }
-            const duration = endTime - startTime;
-            // TODO: avoid executing this inside a loop (do a batch insert instead)
-            this.layerTimelineService.addBlock(
-              layer,
-              propertyName,
-              fromValue,
-              toValue,
-              this.animatorService.getCurrentTime(),
-              duration,
-              interpolator,
-            );
-          }
+          this.layerTimelineService.addBlocks(
+            ...parsed.blocks.map(b => {
+              const block = AnimationBlock.from(b);
+              const {
+                layerId,
+                propertyName,
+                fromValue,
+                toValue,
+                interpolator,
+                startTime,
+                endTime,
+              } = block;
+              const duration = endTime - startTime;
+              return {
+                layerId,
+                propertyName,
+                fromValue,
+                toValue,
+                currentTime: this.animatorService.getCurrentTime(),
+                duration,
+                interpolator,
+              };
+            }),
+          );
         } else {
           ga('send', 'event', 'paste', 'json.unknown');
         }
