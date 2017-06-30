@@ -5,7 +5,6 @@ export const REPLACE_LAYER = '__layers__REPLACE_LAYER';
 export const SET_SELECTED_LAYERS = '__layers__SET_SELECTED_LAYERS';
 export const SET_HIDDEN_LAYERS = '__layers__SET_HIDDEN_LAYERS';
 export const SET_COLLAPSED_LAYERS = '__layers__SET_COLLAPSED_LAYERS';
-export const GROUP_OR_UNGROUP_SELECTED_LAYERS = '__layers__GROUP_OR_UNGROUP_SELECTED_LAYERS';
 
 // TODO: change this to 'replace layers' (plural)
 export class ReplaceLayer implements Action {
@@ -40,17 +39,4 @@ export class SetCollapsedLayers implements Action {
   }
 }
 
-export class GroupOrUngroupSelectedLayers implements Action {
-  readonly type = GROUP_OR_UNGROUP_SELECTED_LAYERS;
-  readonly payload: { shouldGroup: boolean };
-  constructor(shouldGroup: boolean) {
-    this.payload = { shouldGroup };
-  }
-}
-
-export type Actions =
-  | ReplaceLayer
-  | GroupOrUngroupSelectedLayers
-  | SetHiddenLayers
-  | SetCollapsedLayers
-  | SetSelectedLayers;
+export type Actions = ReplaceLayer | SetHiddenLayers | SetCollapsedLayers | SetSelectedLayers;

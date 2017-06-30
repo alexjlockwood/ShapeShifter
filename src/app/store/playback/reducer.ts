@@ -17,16 +17,13 @@ export function buildInitialState() {
 export function reducer(state = buildInitialState(), action: actions.Actions) {
   switch (action.type) {
     case actions.SET_IS_SLOW_MOTION: {
-      const { isSlowMotion } = action.payload;
-      return { ...state, isSlowMotion };
+      return { ...state, isSlowMotion: action.payload };
     }
     case actions.SET_IS_PLAYING: {
-      const { isPlaying } = action.payload;
-      return { ...state, isPlaying };
+      return { ...state, isPlaying: action.payload };
     }
     case actions.SET_IS_REPEATING: {
-      const { isRepeating } = action.payload;
-      return { ...state, isRepeating };
+      return { ...state, isRepeating: action.payload };
     }
   }
   return state;

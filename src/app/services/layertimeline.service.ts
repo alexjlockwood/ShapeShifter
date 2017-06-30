@@ -4,7 +4,7 @@ import 'rxjs/add/observable/combineLatest';
 import { Injectable } from '@angular/core';
 import { Action } from '@ngrx/store';
 import { ModelUtil } from 'app/scripts/common';
-import { Layer, LayerUtil, VectorLayer } from 'app/scripts/model/layers';
+import { GroupLayer, Layer, LayerUtil, VectorLayer } from 'app/scripts/model/layers';
 import { ColorProperty, PathProperty } from 'app/scripts/model/properties';
 import { Animation, AnimationBlock } from 'app/scripts/model/timeline';
 import { State, Store } from 'app/store';
@@ -192,6 +192,94 @@ export class LayerTimelineService {
 
   replaceLayer(layer: Layer) {
     this.store.dispatch(new ReplaceLayer(layer));
+  }
+
+  groupOrUngroupSelectedLayers(shouldGroup: boolean) {
+    let selectedLayerIds = this.getSelectedLayerIds();
+    if (!selectedLayerIds.size) {
+      return;
+    }
+    let vectorLayer = this.getVectorLayer();
+
+    // Sort selected layers by order they appear in tree.
+    let tempSelLayers = Array.from(selectedLayerIds).map(id => vectorLayer.findLayerById(id));
+    const selLayerOrdersMap = new Map<string, number>();
+    let n = 0;
+    vectorLayer.walk(layer => {
+      if (_.find(tempSelLayers, l => l.id === layer.id)) {
+        selLayerOrdersMap.set(layer.id, n);
+        n++;
+      }
+    });
+    tempSelLayers.sort((a, b) => selLayerOrdersMap.get(a.id) - selLayerOrdersMap.get(b.id));
+
+    if (shouldGroup) {
+      // Remove any layers that are descendants of other selected layers,
+      // and remove the vectorLayer itself if selected.
+      tempSelLayers = tempSelLayers.filter(layer => {
+        if (layer instanceof VectorLayer) {
+          return false;
+        }
+        let p = LayerUtil.findParent(vectorLayer, layer.id);
+        while (p) {
+          if (_.find(tempSelLayers, l => l.id === p.id)) {
+            return false;
+          }
+          p = LayerUtil.findParent(vectorLayer, p.id);
+        }
+        return true;
+      });
+
+      if (!tempSelLayers.length) {
+        return;
+      }
+
+      // Find destination parent and insertion point.
+      const firstSelectedLayerParent = LayerUtil.findParent(
+        vectorLayer,
+        tempSelLayers[0].id,
+      ).clone();
+      const firstSelectedLayerIndexInParent = _.findIndex(
+        firstSelectedLayerParent.children,
+        l => l.id === tempSelLayers[0].id,
+      );
+
+      // Remove all selected items from their parents and move them into a new parent.
+      const newGroup = new GroupLayer({
+        name: LayerUtil.getUniqueLayerName([vectorLayer], 'group'),
+        children: tempSelLayers,
+      });
+      const parentChildren = firstSelectedLayerParent.children.slice();
+      parentChildren.splice(firstSelectedLayerIndexInParent, 0, newGroup);
+      _.remove(parentChildren, child =>
+        _.find(tempSelLayers, selectedLayer => selectedLayer.id === child.id),
+      );
+      firstSelectedLayerParent.children = parentChildren;
+      vectorLayer = LayerUtil.replaceLayerInTree(vectorLayer, firstSelectedLayerParent);
+      selectedLayerIds = new Set([newGroup.id]);
+    } else {
+      // Ungroup selected groups layers.
+      const newSelectedLayers: Layer[] = [];
+      tempSelLayers.filter(layer => layer instanceof GroupLayer).forEach(groupLayer => {
+        // Move children into parent.
+        const parent = LayerUtil.findParent(vectorLayer, groupLayer.id).clone();
+        const indexInParent = Math.max(
+          0,
+          _.findIndex(parent.children, l => l.id === groupLayer.id),
+        );
+        const newChildren = parent.children.slice();
+        newChildren.splice(indexInParent, 0, ...groupLayer.children);
+        parent.children = newChildren;
+        vectorLayer = LayerUtil.replaceLayerInTree(vectorLayer, parent);
+        newSelectedLayers.splice(0, 0, ...groupLayer.children);
+        // Delete the parent.
+        vectorLayer = LayerUtil.removeLayersFromTree(vectorLayer, groupLayer.id);
+      });
+      selectedLayerIds = new Set(newSelectedLayers.map(l => l.id));
+    }
+    this.store.dispatch(
+      new MultiAction(new ReplaceLayer(vectorLayer), new SetSelectedLayers(selectedLayerIds)),
+    );
   }
 
   deleteSelectedModels() {

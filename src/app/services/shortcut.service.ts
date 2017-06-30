@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
 import { ActionModeService, AnimatorService, PlaybackService } from 'app/services';
 import { State, Store } from 'app/store';
-import { GroupOrUngroupSelectedLayers } from 'app/store/layers/actions';
 import * as $ from 'jquery';
 import { ActionCreators } from 'redux-undo';
 import { Subject } from 'rxjs/Subject';
@@ -57,7 +56,7 @@ export class ShortcutService {
           return false;
         }
         if (event.keyCode === 'G'.charCodeAt(0)) {
-          this.store.dispatch(new GroupOrUngroupSelectedLayers(!event.shiftKey));
+          this.layerTimelineService.groupOrUngroupSelectedLayers(!event.shiftKey);
           return false;
         }
         if (event.keyCode === 'O'.charCodeAt(0)) {
