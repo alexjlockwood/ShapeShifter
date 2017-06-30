@@ -9,10 +9,10 @@ import { Animation, AnimationBlock } from 'app/model/timeline';
 import { ModelUtil } from 'app/scripts/common';
 import { State, Store } from 'app/store';
 import {
-  ReplaceLayer,
   SetCollapsedLayers,
   SetHiddenLayers,
   SetSelectedLayers,
+  SetVectorLayer,
 } from 'app/store/layers/actions';
 import {
   getCollapsedLayerIds,
@@ -149,23 +149,26 @@ export class LayerTimelineService {
   /**
    * Imports a list of vector layers into the workspace.
    */
-  importLayers(importedVls: ReadonlyArray<VectorLayer>) {
-    if (!importedVls.length) {
+  importLayers(vls: ReadonlyArray<VectorLayer>) {
+    if (!vls.length) {
       return;
     }
-    let mergeVls: VectorLayer[];
-    const currVl = this.getVectorLayer();
-    if (currVl.children.length) {
-      // Merge the imported vector layers with the current vector layer.
-      mergeVls = [currVl, ...importedVls];
-    } else {
-      // Simply replace the current vector layer rather than merging with it.
-      const [vl, ...vls] = importedVls;
-      mergeVls = [vl.clone(), ...vls];
+    const importedVls = vls.slice();
+    const vectorLayer = this.getVectorLayer();
+    let vectorLayers = [vectorLayer];
+    if (!vectorLayer.children.length) {
+      // Simply replace the empty vector layer rather than merging with it.
+      const vl = importedVls[0].clone();
+      vl.name = vectorLayer.name;
+      importedVls[0] = vl;
+      vectorLayers = [];
     }
-    this.replaceLayer(
-      mergeVls.length === 1 ? mergeVls[0] : mergeVls.reduce(LayerUtil.mergeVectorLayers),
-    );
+    const newVectorLayers = [...vectorLayers, ...importedVls];
+    const newVl =
+      newVectorLayers.length === 1
+        ? newVectorLayers[0]
+        : newVectorLayers.reduce(LayerUtil.mergeVectorLayers);
+    this.setVectorLayer(newVl);
   }
 
   /**
@@ -181,7 +184,7 @@ export class LayerTimelineService {
         const parent = LayerUtil.findParent(vl, selectedLayer.id).clone();
         const children = parent.children.slice();
         parent.children = children.concat([layer]);
-        this.replaceLayer(LayerUtil.replaceLayerInTree(vl, parent));
+        this.replaceLayer(parent);
         return;
       }
     }
@@ -190,8 +193,12 @@ export class LayerTimelineService {
     this.replaceLayer(vl);
   }
 
+  setVectorLayer(vl: VectorLayer) {
+    this.store.dispatch(new SetVectorLayer(vl));
+  }
+
   replaceLayer(layer: Layer) {
-    this.store.dispatch(new ReplaceLayer(layer));
+    this.setVectorLayer(LayerUtil.replaceLayerInTree(this.getVectorLayer(), layer));
   }
 
   groupOrUngroupSelectedLayers(shouldGroup: boolean) {
@@ -278,7 +285,7 @@ export class LayerTimelineService {
       selectedLayerIds = new Set(newSelectedLayers.map(l => l.id));
     }
     this.store.dispatch(
-      new MultiAction(new ReplaceLayer(vectorLayer), new SetSelectedLayers(selectedLayerIds)),
+      new MultiAction(new SetVectorLayer(vectorLayer), new SetSelectedLayers(selectedLayerIds)),
     );
   }
 
@@ -313,7 +320,7 @@ export class LayerTimelineService {
 
     this.store.dispatch(
       new MultiAction(
-        new ReplaceLayer(vectorLayer),
+        new SetVectorLayer(vectorLayer),
         new SetCollapsedLayers(collapsedLayerIds),
         new SetHiddenLayers(hiddenLayerIds),
         new SetSelectedLayers(new Set()),

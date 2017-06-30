@@ -1,17 +1,16 @@
 import { Action } from '@ngrx/store';
-import { Layer } from 'app/model/layers';
+import { VectorLayer } from 'app/model/layers';
 
-export const REPLACE_LAYER = '__layers__REPLACE_LAYER';
+export const SET_VECTOR_LAYER = '__layers__SET_VECTOR_LAYER';
 export const SET_SELECTED_LAYERS = '__layers__SET_SELECTED_LAYERS';
 export const SET_HIDDEN_LAYERS = '__layers__SET_HIDDEN_LAYERS';
 export const SET_COLLAPSED_LAYERS = '__layers__SET_COLLAPSED_LAYERS';
 
-// TODO: change this to 'replace layers' (plural)
-export class ReplaceLayer implements Action {
-  readonly type = REPLACE_LAYER;
-  readonly payload: { layer: Layer };
-  constructor(layer: Layer) {
-    this.payload = { layer };
+export class SetVectorLayer implements Action {
+  readonly type = SET_VECTOR_LAYER;
+  readonly payload: { vectorLayer: VectorLayer };
+  constructor(vectorLayer: VectorLayer) {
+    this.payload = { vectorLayer };
   }
 }
 
@@ -39,4 +38,4 @@ export class SetCollapsedLayers implements Action {
   }
 }
 
-export type Actions = ReplaceLayer | SetHiddenLayers | SetCollapsedLayers | SetSelectedLayers;
+export type Actions = SetVectorLayer | SetHiddenLayers | SetCollapsedLayers | SetSelectedLayers;

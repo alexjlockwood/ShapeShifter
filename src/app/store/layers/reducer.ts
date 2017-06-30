@@ -1,4 +1,4 @@
-import { LayerUtil, VectorLayer } from 'app/model/layers';
+import { VectorLayer } from 'app/model/layers';
 
 import * as actions from './actions';
 
@@ -20,9 +20,8 @@ export function buildInitialState() {
 
 export function reducer(state = buildInitialState(), action: actions.Actions) {
   switch (action.type) {
-    case actions.REPLACE_LAYER: {
-      const vectorLayer = LayerUtil.replaceLayerInTree(state.vectorLayer, action.payload.layer);
-      return { ...state, vectorLayer };
+    case actions.SET_VECTOR_LAYER: {
+      return { ...state, vectorLayer: action.payload.vectorLayer };
     }
     case actions.SET_SELECTED_LAYERS: {
       return { ...state, selectedLayerIds: new Set<string>(action.payload.layerIds) };

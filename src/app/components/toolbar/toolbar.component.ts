@@ -10,11 +10,11 @@ import { getToolbarState } from 'app/store/actionmode/selectors';
 import * as _ from 'lodash';
 import { Observable } from 'rxjs/Observable';
 
-declare const ga: Function;
-
 type ActionModeState = 'inactive' | 'active';
 const INACTIVE = 'inactive';
 const ACTIVE = 'active';
+
+declare const ga: Function;
 
 @Component({
   selector: 'app-toolbar',

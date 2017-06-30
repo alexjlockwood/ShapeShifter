@@ -1,10 +1,13 @@
 import { Path } from 'app/model/paths';
 import { Matrix } from 'app/scripts/common';
+import { environment } from 'environments/environment';
 import * as _ from 'lodash';
 
 import { ClipPathLayer, GroupLayer, Layer, PathLayer, VectorLayer } from '.';
 
 const PRECISION = 8;
+
+const IS_DEV_BUILD = !environment.production;
 
 /**
  * Returns a list of parent transforms for the specified layer ID. The transforms
@@ -194,6 +197,9 @@ export function removeLayersFromTree(vl: VectorLayer, ...removedLayerIds: string
 }
 
 export function replaceLayerInTree(root: VectorLayer, replacement: Layer) {
+  if (IS_DEV_BUILD && !root.findLayerById(replacement.id)) {
+    console.warn('Attempt to replace a layer that does not exist in the tree');
+  }
   return (function recurseFn(curr: Layer) {
     if (curr.id === replacement.id) {
       return replacement;

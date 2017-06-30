@@ -37,7 +37,6 @@ import { Shortcut, ShortcutService } from 'app/services/shortcut.service';
 import { Duration, SnackBarService } from 'app/services/snackbar.service';
 import { State, Store } from 'app/store';
 import { getLayerTimelineState, isWorkspaceDirty } from 'app/store/common/selectors';
-import { ReplaceLayer } from 'app/store/layers/actions';
 import { getVectorLayer } from 'app/store/layers/selectors';
 import { ResetWorkspace } from 'app/store/reset/actions';
 import { getAnimation } from 'app/store/timeline/selectors';
@@ -929,7 +928,7 @@ export class LayerTimelineComponent extends DestroyableMixin()
           }
           if (replacementVl) {
             setTimeout(() => {
-              this.store.dispatch(new ReplaceLayer(replacementVl));
+              this.layerTimelineService.setVectorLayer(replacementVl);
             });
           }
         }

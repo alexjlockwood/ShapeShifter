@@ -42,7 +42,7 @@ export function loadVectorLayerFromSvgStringWithCallback(
   });
 }
 
-export function loadVectorLayerFromSvgString(
+function loadVectorLayerFromSvgString(
   svgString: string,
   doesNameExistFn: (name: string) => boolean,
 ): VectorLayer {
