@@ -355,21 +355,23 @@ export class LayerTimelineService {
   ) {
     let animation = this.getAnimation();
     for (const block of blocks) {
-      animation = this.addBlockToAnimation(block);
+      animation = this.addBlockToAnimation(animation, block);
     }
     this.store.dispatch(new SetAnimation(animation));
   }
 
-  private addBlockToAnimation(block: {
-    layerId: string;
-    propertyName: string;
-    fromValue: any;
-    toValue: any;
-    currentTime: number;
-    duration?: number;
-    interpolator?: string;
-  }) {
-    let animation = this.getAnimation();
+  private addBlockToAnimation(
+    animation: Animation,
+    block: {
+      layerId: string;
+      propertyName: string;
+      fromValue: any;
+      toValue: any;
+      currentTime: number;
+      duration?: number;
+      interpolator?: string;
+    },
+  ) {
     const layer = this.getVectorLayer().findLayerById(block.layerId);
     if (!layer) {
       return animation;
@@ -418,11 +420,14 @@ export class LayerTimelineService {
 
     // Generate the new block.
     const property = layer.animatableProperties.get(propertyName);
-    const typeMap = {
-      PathProperty: 'path',
-      ColorProperty: 'color',
-      NumberProperty: 'number',
-    };
+    let type: 'path' | 'color' | 'number';
+    if (property.getTypeName() === 'PathProperty') {
+      type = 'path';
+    } else if (property.getTypeName() === 'ColorProperty') {
+      type = 'color';
+    } else {
+      type = 'number';
+    }
 
     // TODO: clone the current rendered property value and set the from/to values appropriately
     // const valueAtCurrentTime =
@@ -437,7 +442,7 @@ export class LayerTimelineService {
       fromValue: block.fromValue,
       toValue: block.toValue,
       interpolator,
-      type: typeMap[property.getTypeName()],
+      type,
     });
     animation = animation.clone();
     animation.blocks = [...animation.blocks, newBlock];
