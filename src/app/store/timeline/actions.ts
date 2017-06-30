@@ -1,6 +1,6 @@
 import { Action } from '@ngrx/store';
-import { Layer } from 'app/scripts/model/layers';
-import { Animation, AnimationBlock } from 'app/scripts/model/timeline';
+
+import { Animation } from 'app/scripts/model/timeline';
 
 export const REPLACE_ANIMATION = '__timeline__REPLACE_ANIMATION';
 export const SELECT_ANIMATION = '__timeline__SELECT_ANIMATION';

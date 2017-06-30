@@ -19,7 +19,7 @@ import {
 } from 'app/services';
 import { State, Store } from 'app/store';
 import { getPropertyInputState } from 'app/store/common/selectors';
-import { ReplaceLayer } from 'app/store/layers/actions';
+
 import { ReplaceAnimation } from 'app/store/timeline/actions';
 import * as $ from 'jquery';
 import * as _ from 'lodash';
@@ -176,7 +176,6 @@ export class PropertyInputComponent implements OnInit {
       } as PropertyInputModel;
     }
     // Edit a single layer.
-    const store = this.store;
     const enteredValueMap = this.enteredValueMap;
     const layer = selectedLayers[0];
     const icon = layer.getIconName();
@@ -193,7 +192,7 @@ export class PropertyInputComponent implements OnInit {
             // TODO: avoid dispatching the action if the properties are equal
             const clonedLayer = layer.clone();
             clonedLayer[propertyName] = value;
-            store.dispatch(new ReplaceLayer(clonedLayer));
+            this.layerTimelineService.replaceLayer(clonedLayer);
           },
           // TODO: return the 'rendered' value if an animation is ongoing? (see AIA)
           undefined,
@@ -240,7 +239,6 @@ export class PropertyInputComponent implements OnInit {
         availablePropertyNames: [],
       } as PropertyInputModel;
     }
-    const store = this.store;
     const enteredValueMap = this.enteredValueMap;
     const block = selectedBlocks[0];
     const icon = 'animationblock';

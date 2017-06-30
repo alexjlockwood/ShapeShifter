@@ -163,9 +163,9 @@ export class LayerTimelineService {
       const [vl, ...vls] = importedVls;
       mergeVls = [vl.clone(), ...vls];
     }
-    const newVl =
-      mergeVls.length === 1 ? mergeVls[0] : mergeVls.reduce(LayerUtil.mergeVectorLayers);
-    this.store.dispatch(new ReplaceLayer(newVl));
+    this.replaceLayer(
+      mergeVls.length === 1 ? mergeVls[0] : mergeVls.reduce(LayerUtil.mergeVectorLayers),
+    );
   }
 
   /**
@@ -181,13 +181,17 @@ export class LayerTimelineService {
         const parent = LayerUtil.findParent(vl, selectedLayer.id).clone();
         const children = parent.children.slice();
         parent.children = children.concat([layer]);
-        this.store.dispatch(new ReplaceLayer(LayerUtil.replaceLayerInTree(vl, parent)));
+        this.replaceLayer(LayerUtil.replaceLayerInTree(vl, parent));
         return;
       }
     }
     const vectorLayer = vl.clone();
     vl.children = [...vl.children, layer];
-    this.store.dispatch(new ReplaceLayer(vl));
+    this.replaceLayer(vl);
+  }
+
+  replaceLayer(layer: Layer) {
+    this.store.dispatch(new ReplaceLayer(layer));
   }
 
   deleteSelectedModels() {

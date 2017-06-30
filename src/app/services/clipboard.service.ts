@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { GroupLayer, Layer, VectorLayer } from 'app/scripts/model/layers';
-import { State, Store } from 'app/store';
+
 import { environment } from 'environments/environment';
 import * as $ from 'jquery';
 
@@ -10,10 +10,7 @@ const IS_DEV_BUILD = !environment.production;
 
 @Injectable()
 export class ClipboardService {
-  constructor(
-    private readonly layerTimelineService: LayerTimelineService,
-    private readonly store: Store<State>,
-  ) {}
+  constructor(private readonly layerTimelineService: LayerTimelineService) {}
 
   init() {
     const cutCopyHandlerFn = (event: JQuery.Event, shouldCut: boolean) => {
