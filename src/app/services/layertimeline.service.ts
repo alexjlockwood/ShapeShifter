@@ -19,7 +19,7 @@ import {
   getVectorLayer,
 } from 'app/store/layers/selectors';
 import { MultiAction } from 'app/store/multiaction/actions';
-import { ReplaceAnimation, SelectAnimation, SetSelectedBlocks } from 'app/store/timeline/actions';
+import { SelectAnimation, SetAnimation, SetSelectedBlocks } from 'app/store/timeline/actions';
 import {
   getAnimation,
   getSelectedBlockIds,
@@ -323,7 +323,7 @@ export class LayerTimelineService {
         new SetHiddenLayers(hiddenLayerIds),
         new SetSelectedLayers(new Set()),
         new SelectAnimation(false),
-        new ReplaceAnimation(animation),
+        new SetAnimation(animation),
         new SetSelectedBlocks(new Set()),
       ),
     );
@@ -338,7 +338,7 @@ export class LayerTimelineService {
       const newBlock = _.find(blocks, b => block.id === b.id);
       return newBlock ? newBlock : block;
     });
-    this.store.dispatch(new ReplaceAnimation(animation));
+    this.store.dispatch(new SetAnimation(animation));
   }
 
   addBlock(layer: Layer, propertyName: string, fromValue: any, toValue: any, activeTime: number) {
@@ -405,11 +405,11 @@ export class LayerTimelineService {
       type: typeMap[property.getTypeName()],
     });
     animation = animation.clone();
-    animation.blocks = animation.blocks.concat(newBlock);
+    animation.blocks = [...animation.blocks, newBlock];
 
     this.store.dispatch(
       new MultiAction(
-        new ReplaceAnimation(animation),
+        new SetAnimation(animation),
         // Auto-select the new animation block.
         ...this.buildSelectBlockActions(newBlock.id, true),
       ),

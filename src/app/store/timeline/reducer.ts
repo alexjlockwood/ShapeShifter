@@ -18,8 +18,8 @@ export function buildInitialState() {
 
 export function reducer(state = buildInitialState(), action: actions.Actions) {
   switch (action.type) {
-    case actions.REPLACE_ANIMATION: {
-      return { ...state, animation: action.payload };
+    case actions.SET_ANIMATION: {
+      return { ...state, animation: action.payload.animation };
     }
     case actions.SELECT_ANIMATION: {
       return { ...state, isAnimationSelected: action.payload.isAnimationSelected };

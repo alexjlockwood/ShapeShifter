@@ -1,12 +1,12 @@
 import { Action } from '@ngrx/store';
 import { Animation } from 'app/model/timeline';
 
-export const REPLACE_ANIMATION = '__timeline__REPLACE_ANIMATION';
+export const SET_ANIMATION = '__timeline__SET_ANIMATION';
 export const SELECT_ANIMATION = '__timeline__SELECT_ANIMATION';
 export const SET_SELECTED_BLOCKS = '__timeline__SET_SELECTED_BLOCKS';
 
-export class ReplaceAnimation implements Action {
-  readonly type = REPLACE_ANIMATION;
+export class SetAnimation implements Action {
+  readonly type = SET_ANIMATION;
   readonly payload: { animation: Animation };
   constructor(animation: Animation) {
     this.payload = { animation };
@@ -29,4 +29,4 @@ export class SetSelectedBlocks implements Action {
   }
 }
 
-export type Actions = ReplaceAnimation | SelectAnimation | SetSelectedBlocks;
+export type Actions = SetAnimation | SelectAnimation | SetSelectedBlocks;

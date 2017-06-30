@@ -19,7 +19,7 @@ import {
 } from 'app/services';
 import { State, Store } from 'app/store';
 import { getPropertyInputState } from 'app/store/common/selectors';
-import { ReplaceAnimation } from 'app/store/timeline/actions';
+import { SetAnimation } from 'app/store/timeline/actions';
 import * as $ from 'jquery';
 import * as _ from 'lodash';
 import { Observable } from 'rxjs/Observable';
@@ -283,7 +283,7 @@ export class PropertyInputComponent implements OnInit {
             // TODO: avoid dispatching the action if the properties are equal
             const clonedAnimation = animation.clone();
             clonedAnimation[propertyName] = value;
-            store.dispatch(new ReplaceAnimation(clonedAnimation));
+            store.dispatch(new SetAnimation(clonedAnimation));
           },
           undefined,
           undefined,
