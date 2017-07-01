@@ -4,6 +4,12 @@ import * as _ from 'lodash';
 
 import { ConstructorArgs as AbstractConstructorArgs, AbstractLayer } from './AbstractLayer';
 
+const DEFAULTS = {
+  width: 24,
+  height: 24,
+  alpha: 1,
+};
+
 /**
  * Model object that mirrors the VectorDrawable's '<vector>' element.
  */
@@ -17,9 +23,9 @@ export class VectorLayer extends AbstractLayer {
   constructor(obj = { children: [], name: 'vector' } as ConstructorArgs) {
     super(obj);
     const setterFn = (num: number, def: number) => (_.isNil(num) ? def : num);
-    this.width = setterFn(obj.width, 24);
-    this.height = setterFn(obj.height, 24);
-    this.alpha = setterFn(obj.alpha, 1);
+    this.width = setterFn(obj.width, DEFAULTS.width);
+    this.height = setterFn(obj.height, DEFAULTS.height);
+    this.alpha = setterFn(obj.alpha, DEFAULTS.alpha);
   }
 
   getIconName() {
@@ -47,12 +53,18 @@ export class VectorLayer extends AbstractLayer {
   }
 
   toJSON() {
-    return Object.assign(super.toJSON(), {
+    const obj = Object.assign(super.toJSON(), {
       width: this.width,
       height: this.height,
       alpha: this.alpha,
       children: this.children.map(child => child.toJSON()),
     });
+    Object.entries(DEFAULTS).forEach(([key, value]) => {
+      if (obj[key] === value) {
+        delete obj[key];
+      }
+    });
+    return obj;
   }
 }
 

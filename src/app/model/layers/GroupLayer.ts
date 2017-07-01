@@ -4,6 +4,16 @@ import * as _ from 'lodash';
 
 import { ConstructorArgs as AbstractConstructorArgs, AbstractLayer } from './AbstractLayer';
 
+const DEFAULTS = {
+  rotation: 0,
+  scaleX: 1,
+  scaleY: 1,
+  pivotX: 0,
+  pivotY: 0,
+  translateX: 0,
+  translateY: 0,
+};
+
 /**
  * Model object that mirrors the VectorDrawable's '<group>' element.
  */
@@ -20,13 +30,13 @@ export class GroupLayer extends AbstractLayer {
   constructor(obj: ConstructorArgs) {
     super(obj);
     const setterFn = (num: number, def: number) => (_.isNil(num) ? def : num);
-    this.pivotX = setterFn(obj.pivotX, 0);
-    this.pivotY = setterFn(obj.pivotY, 0);
-    this.rotation = setterFn(obj.rotation, 0);
-    this.scaleX = setterFn(obj.scaleX, 1);
-    this.scaleY = setterFn(obj.scaleY, 1);
-    this.translateX = setterFn(obj.translateX, 0);
-    this.translateY = setterFn(obj.translateY, 0);
+    this.pivotX = setterFn(obj.pivotX, DEFAULTS.pivotX);
+    this.pivotY = setterFn(obj.pivotY, DEFAULTS.pivotY);
+    this.rotation = setterFn(obj.rotation, DEFAULTS.rotation);
+    this.scaleX = setterFn(obj.scaleX, DEFAULTS.scaleX);
+    this.scaleY = setterFn(obj.scaleY, DEFAULTS.scaleY);
+    this.translateX = setterFn(obj.translateX, DEFAULTS.translateX);
+    this.translateY = setterFn(obj.translateY, DEFAULTS.translateY);
   }
 
   getIconName() {
@@ -88,7 +98,7 @@ export class GroupLayer extends AbstractLayer {
   }
 
   toJSON() {
-    return Object.assign(super.toJSON(), {
+    const obj = Object.assign(super.toJSON(), {
       rotation: this.rotation,
       scaleX: this.scaleX,
       scaleY: this.scaleY,
@@ -98,6 +108,12 @@ export class GroupLayer extends AbstractLayer {
       translateY: this.translateY,
       children: this.children.map(child => child.toJSON()),
     });
+    Object.entries(DEFAULTS).forEach(([key, value]) => {
+      if (obj[key] === value) {
+        delete obj[key];
+      }
+    });
+    return obj;
   }
 }
 

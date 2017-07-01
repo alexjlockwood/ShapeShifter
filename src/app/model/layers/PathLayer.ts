@@ -29,6 +29,21 @@ const ENUM_FILLTYPE_OPTIONS = [
   { value: 'evenOdd', label: 'evenOdd' },
 ];
 
+const DEFAULTS = {
+  fillColor: '',
+  fillAlpha: 1,
+  strokeColor: '',
+  strokeAlpha: 1,
+  strokeWidth: 0,
+  strokeLinecap: 'butt' as StrokeLineCap,
+  strokeLinejoin: 'miter' as StrokeLineJoin,
+  strokeMiterLimit: 4,
+  trimPathStart: 0,
+  trimPathEnd: 1,
+  trimPathOffset: 0,
+  fillType: 'nonZero' as FillType,
+};
+
 /**
  * Model object that mirrors the VectorDrawable's '<path>' element.
  */
@@ -53,18 +68,18 @@ class PathLayer extends AbstractLayer implements MorphableLayer {
     super(obj);
     const setterFn = (num: number, def: number) => (_.isNil(num) ? def : num);
     this.pathData = obj.pathData;
-    this.fillColor = obj.fillColor || '';
-    this.fillAlpha = setterFn(obj.fillAlpha, 1);
-    this.strokeColor = obj.strokeColor || '';
-    this.strokeAlpha = setterFn(obj.strokeAlpha, 1);
-    this.strokeWidth = setterFn(obj.strokeWidth, 0);
-    this.strokeLinecap = obj.strokeLinecap || 'butt';
-    this.strokeLinejoin = obj.strokeLinejoin || 'miter';
-    this.strokeMiterLimit = setterFn(obj.strokeMiterLimit, 4);
-    this.trimPathStart = setterFn(obj.trimPathStart, 0);
-    this.trimPathEnd = setterFn(obj.trimPathEnd, 1);
-    this.trimPathOffset = setterFn(obj.trimPathOffset, 0);
-    this.fillType = obj.fillType || 'nonZero';
+    this.fillColor = obj.fillColor || DEFAULTS.fillColor;
+    this.fillAlpha = setterFn(obj.fillAlpha, DEFAULTS.fillAlpha);
+    this.strokeColor = obj.strokeColor || DEFAULTS.strokeColor;
+    this.strokeAlpha = setterFn(obj.strokeAlpha, DEFAULTS.strokeAlpha);
+    this.strokeWidth = setterFn(obj.strokeWidth, DEFAULTS.strokeWidth);
+    this.strokeLinecap = obj.strokeLinecap || DEFAULTS.strokeLinecap;
+    this.strokeLinejoin = obj.strokeLinejoin || DEFAULTS.strokeLinejoin;
+    this.strokeMiterLimit = setterFn(obj.strokeMiterLimit, DEFAULTS.strokeMiterLimit);
+    this.trimPathStart = setterFn(obj.trimPathStart, DEFAULTS.trimPathStart);
+    this.trimPathEnd = setterFn(obj.trimPathEnd, DEFAULTS.trimPathEnd);
+    this.trimPathOffset = setterFn(obj.trimPathOffset, DEFAULTS.trimPathOffset);
+    this.fillType = obj.fillType || DEFAULTS.fillType;
   }
 
   getIconName() {
@@ -96,7 +111,7 @@ class PathLayer extends AbstractLayer implements MorphableLayer {
   }
 
   toJSON() {
-    return Object.assign(super.toJSON(), {
+    const obj = Object.assign(super.toJSON(), {
       pathData: this.pathData ? this.pathData.getPathString() : '',
       fillColor: this.fillColor,
       fillAlpha: this.fillAlpha,
@@ -111,6 +126,12 @@ class PathLayer extends AbstractLayer implements MorphableLayer {
       trimPathOffset: this.trimPathOffset,
       fillType: this.fillType,
     });
+    Object.entries(DEFAULTS).forEach(([key, value]) => {
+      if (obj[key] === value) {
+        delete obj[key];
+      }
+    });
+    return obj;
   }
 }
 
