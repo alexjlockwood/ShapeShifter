@@ -129,7 +129,7 @@ export class LayerTimelineService {
     } else {
       layerIds.forEach(id => collapsedLayerIds.add(id));
     }
-    this.store.dispatch(new SetCollapsedLayers(layerIds));
+    this.store.dispatch(new SetCollapsedLayers(collapsedLayerIds));
   }
 
   /**
