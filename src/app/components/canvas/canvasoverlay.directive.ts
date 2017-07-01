@@ -349,7 +349,7 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
 
   // Recursively draws all layer selections to the canvas.
   private drawLayerSelections(ctx: Context, curr: Layer) {
-    if (this.hiddenLayerIds.has(curr.id) || this.isActionMode) {
+    if (this.isActionMode) {
       // Don't draw selections for hidden layers or while in action mode.
       return;
     }
