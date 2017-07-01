@@ -79,7 +79,7 @@
             class="spi-property-value-editor"
             fxLayout="column"
             fxFlex>
-            <input (keydown)="this.valueEditorKeyDown($event, ip)"
+            <input (keydown)="this.onValueEditorKeyDown($event, ip)"
               [ngClass]="{
                 'has-input-error': ip.typeName === 'PathProperty' && this.shouldShowInvalidPathAnimationBlockMsg(model)
               }"

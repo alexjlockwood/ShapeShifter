@@ -131,7 +131,7 @@ export class PropertyInputComponent implements OnInit {
     return !block.toValue || !block.toValue.getPathString();
   }
 
-  valueEditorKeyDown(event: KeyboardEvent, ip: InspectedProperty<any>) {
+  onValueEditorKeyDown(event: KeyboardEvent, ip: InspectedProperty<any>) {
     switch (event.keyCode) {
       // Up/down arrow buttons.
       case 38:
