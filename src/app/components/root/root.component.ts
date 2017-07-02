@@ -6,6 +6,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   ElementRef,
+  HostBinding,
   OnDestroy,
   OnInit,
   ViewChild,
@@ -58,6 +59,7 @@ export class RootComponent implements OnInit, AfterViewInit, OnDestroy {
   readonly CURSOR_POINTER = CursorType.Pointer;
   readonly CURSOR_PEN = CursorType.Pen;
 
+  @HostBinding('class.shapeshifter-dark-theme') isDarkTheme = false;
   @ViewChild('displayContainer') displayContainerRef: ElementRef;
   private $displayContainer: JQuery;
 

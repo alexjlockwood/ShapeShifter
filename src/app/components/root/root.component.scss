@@ -1,6 +1,6 @@
 @import '../../styles/material-shadows';
 @import '../../styles/variables';
-@import '../../styles/theme';
+@import '~@angular/material/theming';
 :host,
 .app-container {
     position: absolute;
@@ -22,13 +22,6 @@ app-canvas.end {
 div.toolbar-container {
     position: relative;
     z-index: 1;
-}
-
-div.display-container {
-    box-sizing: border-box;
-    padding: 16px;
-    background-color: mat-color(mat-palette($mat-grey, 300));
-    user-select: none;
 }
 
 .file-drop-target {
@@ -69,4 +62,16 @@ div.display-container {
 
 .show-pen-cursor {
     cursor: url(/assets/cursor/penaddcursorsmall.png) 5 0, auto;
+}
+
+@mixin ss-root-theme($theme) {
+    $primary: map-get($theme, primary);
+    $warn: map-get($theme, warn);
+    $background: map-get($theme, background);
+    div.display-container {
+        box-sizing: border-box;
+        padding: 16px;
+        background-color: mat-color($background, background);
+        user-select: none;
+    }
 }

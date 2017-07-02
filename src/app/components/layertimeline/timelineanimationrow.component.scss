@@ -1,6 +1,6 @@
 @import '../../styles/material-shadows';
 @import '../../styles/variables';
-@import '../../styles/theme';
+@import '~@angular/material/theming';
 $timelineAnimationPadding: 20px;
 ul {
     margin: 0;

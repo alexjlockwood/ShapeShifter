@@ -1,6 +1,6 @@
 @import '../../styles/material-shadows';
 @import '../../styles/variables';
-@import '../../styles/theme';
+@import '~@angular/material/theming';
 :host {
     user-select: none;
 }
@@ -30,7 +30,7 @@ li {
         box-shadow: 0 0 0 1px $colorFocusBorder inset;
     }
     &.is-selected {
-        background-color: mat-color($app-accent);
+        background-color: mat-color(mat-palette($mat-blue, A400)); //$app-accent);
         box-shadow: none;
         color: #fff;
         &,

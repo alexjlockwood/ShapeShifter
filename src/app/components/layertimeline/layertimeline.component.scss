@@ -1,6 +1,6 @@
 @import '../../styles/material-shadows';
 @import '../../styles/variables';
-@import '../../styles/theme';
+@import '~@angular/material/theming';
 .studio-layer-timeline {
     background-color: #fff;
     height: 300px;
