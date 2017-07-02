@@ -1,5 +1,6 @@
 @import '~@angular/material/theming';
 @import '../components/canvas/_canvas-theme.scss';
+@import '../components/dialogs/_dialog-theme.scss';
 @import '../components/layertimeline/_layerlisttree-theme.scss';
 @import '../components/layertimeline/_layertimeline-theme.scss';
 @import '../components/layertimeline/_timelineanimationrow-theme.scss';
@@ -8,6 +9,93 @@
 @import '../components/root/_root-theme.scss';
 @import '../components/toolbar/_toolbar-theme.scss';
 @include mat-core();
+
+$ss-light-theme-foreground: (
+  // base:              black,
+  // divider:           $black-12-opacity,
+  // dividers:          $black-12-opacity,
+  // disabled:          rgba(black, 0.38),
+  // disabled-button:   rgba(black, 0.38),
+  disabled-text:          rgba(black, 0.38),
+  disabled-text-inverse:  rgba(white, 0.5),
+  // hint-text:         rgba(black, 0.38),
+  secondary-text:         rgba(black, 0.54),
+  secondary-text-inverse: rgba(white, 0.7),
+  // icon:              rgba(black, 0.54),
+  // icons:             rgba(black, 0.54),
+  primary-text:           rgba(black, 0.87),
+  primary-text-inverse:   white,
+  // slider-off:        rgba(black, 0.26),
+  // slider-off-active: rgba(black, 0.38),
+);
+$ss-dark-theme-foreground: (
+  // base:              white,
+  // divider:           $white-12-opacity,
+  // dividers:          $white-12-opacity,
+  // disabled:          rgba(white, 0.3),
+  // disabled-button:   rgba(white, 0.3),
+  disabled-text:         rgba(white, 0.5),
+  disabled-text-inverse: rgba(black, 0.38),
+  // hint-text:         rgba(white, 0.3),
+  secondary-text:         rgba(white, 0.7),
+  secondary-text-inverse: rgba(black, 0.54),
+  // icon:              white,
+  // icons:             white,
+  primary-text:           white,
+  primary-text-inverse:   rgba(black, 0.87),
+  // slider-off:        rgba(white, 0.3),
+  // slider-off-active: rgba(white, 0.3),
+);
+
+$ss-light-theme-background: (
+  base: white,
+  // status-bar: map_get($mat-grey, 300),
+  // app-bar:    map_get($mat-grey, 100),
+  // background: map_get($mat-grey, 50),
+  // hover:      rgba(black, 0.04), // TODO(kara): check style with Material Design UX
+  // card:       white,
+  // dialog:     white,
+  // disabled-button: $black-12-opacity,
+  // raised-button: white,
+  // focused-button: $black-6-opacity,
+  // selected-button: map_get($mat-grey, 300),
+  // selected-disabled-button: map_get($mat-grey, 400),
+  // disabled-button-toggle: map_get($mat-grey, 200),
+);
+$ss-dark-theme-background: (
+  base: black,
+  // status-bar: black,
+  // app-bar:    map_get($mat-grey, 900),
+  // background: #303030,
+  // hover:      rgba(white, 0.04), // TODO(kara): check style with Material Design UX
+  // card:       map_get($mat-grey, 800),
+  // dialog:     map_get($mat-grey, 800),
+  // disabled-button: $white-12-opacity,
+  // raised-button: map-get($mat-grey, 800),
+  // focused-button: $white-6-opacity,
+  // selected-button: map_get($mat-grey, 900),
+  // selected-disabled-button: map_get($mat-grey, 800),
+  // disabled-button-toggle: map_get($mat-grey, 1000),
+);
+
+@function ss-light-theme($primary, $accent, $warn: mat-palette($mat-red)) {
+    $base-theme: mat-light-theme($primary, $accent, $warn);
+    $result: map_merge( $base-theme, (
+      ss-foreground: $ss-light-theme-foreground,
+      ss-background: $ss-light-theme-background,
+    ));
+    @return $result;
+}
+
+@function ss-dark-theme($primary, $accent, $warn: mat-palette($mat-red)) {
+    $base-theme: mat-dark-theme($primary, $accent, $warn);
+    $result: map_merge( $base-theme, (
+      ss-foreground: $ss-dark-theme-foreground,
+      ss-background: $ss-dark-theme-background,
+    ));
+    @return $result;
+}
+
 @mixin custom-theme($theme) {
     @include angular-material-theme($theme);
     @include ss-canvas-theme($theme);
@@ -26,8 +114,8 @@ $light-warn: mat-palette($mat-red);
 $dark-primary: mat-palette($mat-blue-grey);
 $dark-accent: mat-palette($mat-amber, A200, A100, A400);
 $dark-warn: mat-palette($mat-deep-orange);
-$light-theme: mat-light-theme($light-primary, $light-accent, $light-warn);
-$dark-theme: mat-dark-theme($dark-primary, $dark-accent, $dark-warn);
+$light-theme: ss-light-theme($light-primary, $light-accent, $light-warn);
+$dark-theme: ss-dark-theme($dark-primary, $dark-accent, $dark-warn);
 @include custom-theme($light-theme);
 .shapeshifter-dark-theme {
     @include custom-theme($dark-theme);

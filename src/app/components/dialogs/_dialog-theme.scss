@@ -1,0 +1,12 @@
+@mixin ss-dialog-theme($theme) {
+    $foreground: map-get($theme, ss-foreground);
+    $background: map-get($theme, ss-background);
+    md-dialog-actions {
+        button {
+            color: mat-color(mat-palette($mat-blue, A400)); //$app-accent);
+        }
+    }
+    md-dialog-content {
+        color: mat-color($foreground, secondary-text);
+    }
+}

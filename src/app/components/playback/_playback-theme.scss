@@ -1,5 +1,6 @@
 @mixin ss-playback-theme($theme) {
-    $background: map-get($theme, background);
+    $foreground: map-get($theme, ss-foreground);
+    $background: map-get($theme, ss-background);
     .playback {
         button {
             margin: 0px 3px;
@@ -7,7 +8,7 @@
         button {
             &[md-icon-button] {
                 md-icon {
-                    color: $colorBlackTextSecondary;
+                    color: mat-color($foreground, secondary-text);
                 }
                 md-icon.activated {
                     color: mat-color(mat-palette($mat-orange, 900));
@@ -15,7 +16,7 @@
             }
             &[md-icon-button][disabled] {
                 md-icon {
-                    color: $colorBlackTextDisabled;
+                    color: mat-color($foreground, disabled-text);
                 }
             }
         }

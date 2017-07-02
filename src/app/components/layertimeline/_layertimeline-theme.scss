@@ -1,30 +1,29 @@
 @mixin ss-layertimeline-theme($theme) {
-    $foreground: map-get($theme, foreground);
-    $background: map-get($theme, background);
+    $foreground: map-get($theme, ss-foreground);
+    $background: map-get($theme, ss-background);
     .studio-layer-timeline {
         $headerHeight: 40px;
-        background-color: #fff;
+        background-color: mat-color($background, base);
         .slt-layers {
             .slt-header {
                 .slt-layers-menu-group-button {
-                    color: $colorBlackTextSecondary;
-                    background-color: transparent;
+                    color: mat-color($foreground, secondary-text);
                     &:focus {
                         background-color: rgba(#000, .08);
                     }
                     &.is-disabled {
-                        color: $colorBlackTextDisabled;
+                        color: mat-color($foreground, disabled-text);
                     }
                 }
                 button {
                     &[md-icon-button] {
                         md-icon {
-                            color: $colorBlackTextSecondary;
+                            color: mat-color($foreground, secondary-text);
                         }
                     }
                     &[md-icon-button][disabled] {
                         md-icon {
-                            color: $colorBlackTextDisabled;
+                            color: mat-color($foreground, disabled-text);
                         }
                     }
                 }
@@ -66,14 +65,14 @@
                     &.is-selected,
                     &.is-selected .slt-timeline-animation-name {
                         background-color: $colorSelection;
-                        color: $colorWhiteTextPrimary;
+                        color: mat-color($foreground, primary-text-inverse);
                     }
                     &.is-disabled {
                         cursor: default;
                     }
                 }
                 .slt-timeline-animation-name {
-                    color: $colorBlackTextPrimary;
+                    color: mat-color($foreground, primary-text);
                     margin-right: 4px;
                     font-weight: 500;
                 }

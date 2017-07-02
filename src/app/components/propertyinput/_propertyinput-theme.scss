@@ -1,31 +1,32 @@
 @mixin ss-propertyinput-theme($theme) {
-    $background: map-get($theme, background);
+    $foreground: map-get($theme, ss-foreground);
+    $background: map-get($theme, ss-background);
     .property-input {
         background-color: mat-color(mat-palette($mat-grey, 200));
     }
     .spi-header {
         background-color: #fff;
         .spi-selection-icon {
-            color: $colorBlackTextSecondary;
+            color: mat-color($foreground, secondary-text);
         }
         button.spi-secondary-icon {
-            color: $colorBlackTextSecondary;
+            color: mat-color($foreground, secondary-text);
             &[md-icon-button][disabled] {
                 md-icon {
-                    color: $colorBlackTextDisabled;
+                    color: mat-color($foreground, disabled-text);
                 }
             }
         }
         .spi-selection-description {
-            color: $colorBlackTextPrimary;
+            color: mat-color($foreground, primary-text);
         }
         .spi-selection-sub-description {
-            color: $colorBlackTextSecondary;
+            color: mat-color($foreground, secondary-text);
         }
     }
     .spi-body {
         .spi-property-name {
-            color: $colorBlackTextSecondary;
+            color: mat-color($foreground, secondary-text);
         }
         .spi-property-value-static,
         .spi-property-value-editor input,
@@ -44,7 +45,7 @@
         }
         .spi-property-value-menu-target {
             &::after {
-                color: $colorBlackTextDisabled;
+                color: mat-color($foreground, disabled-text);
             }
         }
         .spi-property-color-preview {
@@ -52,7 +53,7 @@
         }
     }
     .spi-empty {
-        color: $colorBlackTextDisabled;
+        color: mat-color($foreground, disabled-text);
     }
     .alert-danger {
         color: #c63937;

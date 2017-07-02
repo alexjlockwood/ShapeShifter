@@ -1,4 +1,3 @@
-@import '../../styles/variables';
 @import '~@angular/material/theming';
 button {
     text-transform: uppercase;
@@ -10,8 +9,4 @@ button {
 
 md-dialog-actions {
     min-width: 220px;
-}
-
-md-dialog-content {
-    color: $colorBlackTextSecondary;
 }
