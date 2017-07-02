@@ -36,7 +36,9 @@ declare const ga: Function;
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PropertyInputComponent implements OnInit {
-  @HostBinding('class.mat-elevation-z4') matElevation = true;
+  @HostBinding('class.mat-elevation-z4')
+  @HostBinding('class.property-input')
+  hostBinding = true;
 
   propertyInputModel$: Observable<PropertyInputModel>;
 

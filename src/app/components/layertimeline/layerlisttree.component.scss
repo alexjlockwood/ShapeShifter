@@ -22,20 +22,10 @@ li {
     padding: 2px;
     font-size: 12px;
     cursor: pointer;
-    color: $colorBlackTextSecondary;
     outline: none;
     border-radius: 2px 0 0 2px;
-    &:focus {
-        box-shadow: 0 0 0 1px $colorFocusBorder inset;
-    }
     &.is-selected {
-        background-color: mat-color(mat-palette($mat-blue, A400)); //$app-accent);
         box-shadow: none;
-        color: #fff;
-        &,
-        & md-icon {
-            color: #fff;
-        }
     }
     &.is-disabled {
         cursor: default;
@@ -151,17 +141,12 @@ md-menu {
     margin-left: 40px; // indent by both the icon (20px) and expand toggle (20px)
     margin-right: -2px; // hide inset shadow
     padding-right: 2px; // offset margin
-    box-shadow: 0 0 0 1px $thinBorderColor inset;
     border-radius: 2px;
 }
 
 .slt-property {
-    color: $colorBlackTextSecondary;
     padding-left: 8px;
     font-size: 12px;
-    &:not(:last-child) {
-        box-shadow: 0 -1px 0 $thinBorderColor inset;
-    }
     .slt-property-name {
         flex: 1 1 0;
         min-width: 0;
@@ -177,17 +162,11 @@ md-menu {
         min-height: 20px;
         &[md-icon-button] {
             md-icon {
-                color: $colorBlackTextDisabled;
                 width: 16px;
                 height: 16px;
                 font-size: 16px;
                 line-height: normal;
                 vertical-align: top;
-            }
-        }
-        &[md-icon-button][disabled] {
-            md-icon {
-                color: $colorBlackTextVeryLight;
             }
         }
     }
@@ -199,7 +178,6 @@ md-menu {
     left: 0;
     right: 0;
     margin-top: -1px;
-    background-color: $colorPrimary400;
     pointer-events: none;
     &::before {
         position: absolute;
@@ -208,7 +186,6 @@ md-menu {
         top: -3px;
         height: 8px;
         width: 8px;
-        background-color: $colorPrimary400;
         border-radius: 50%;
     }
 }

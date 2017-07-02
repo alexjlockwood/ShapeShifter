@@ -1,0 +1,6 @@
+@mixin ss-root-theme($theme) {
+    $background: map-get($theme, background);
+    div.display-container {
+        background-color: mat-color(mat-palette($mat-grey, 300));
+    }
+}

@@ -1,0 +1,25 @@
+@mixin ss-timelineanimationrow-theme($theme) {
+    $foreground: map-get($theme, foreground);
+    $background: map-get($theme, background);
+    .slt-properties {
+        background-color: #fff;
+        box-shadow: 0 0 0 1px $thinBorderColor inset;
+        .slt-property {
+            &:not(:last-child) {
+                box-shadow: 0 -1px 0 $thinBorderColor inset;
+            }
+            .slt-timeline-block {
+                background-color: mat-color(mat-palette($mat-green, 200));
+                &.is-selected {
+                    background-color: $colorSelectedAnimationBlock;
+                }
+                &.has-error {
+                    background-color: mat-color(mat-palette($mat-red, A200));
+                }
+                &.is-selected-with-error {
+                    background-color: mat-color(mat-palette($mat-red, A700));
+                }
+            }
+        }
+    }
+}

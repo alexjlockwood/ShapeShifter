@@ -1,0 +1,45 @@
+@mixin ss-layerlisttree-theme($theme) {
+    $foreground: map-get($theme, foreground);
+    $background: map-get($theme, background);
+    .slt-layer {
+        color: $colorBlackTextSecondary;
+        &:focus {
+            box-shadow: 0 0 0 1px $colorFocusBorder inset;
+        }
+        &.is-selected {
+            background-color: mat-color(mat-palette($mat-blue, A400)); //$app-accent);
+            color: #fff;
+            &,
+            & md-icon {
+                color: #fff;
+            }
+        }
+    }
+    .slt-properties {
+        box-shadow: 0 0 0 1px $thinBorderColor inset;
+    }
+    .slt-property {
+        color: $colorBlackTextSecondary;
+        &:not(:last-child) {
+            box-shadow: 0 -1px 0 $thinBorderColor inset;
+        }
+        button {
+            &[md-icon-button] {
+                md-icon {
+                    color: $colorBlackTextDisabled;
+                }
+            }
+            &[md-icon-button][disabled] {
+                md-icon {
+                    color: $colorBlackTextVeryLight;
+                }
+            }
+        }
+    }
+    .slt-layers-list-drag-indicator {
+        background-color: $colorPrimary400;
+        &::before {
+            background-color: $colorPrimary400;
+        }
+    }
+}

@@ -1,9 +1,23 @@
 @import '~@angular/material/theming';
-@import '../components/root/root.component.scss';
+@import '../components/canvas/_canvas-theme.scss';
+@import '../components/layertimeline/_layerlisttree-theme.scss';
+@import '../components/layertimeline/_layertimeline-theme.scss';
+@import '../components/layertimeline/_timelineanimationrow-theme.scss';
+@import '../components/playback/_playback-theme.scss';
+@import '../components/propertyinput/_propertyinput-theme.scss';
+@import '../components/root/_root-theme.scss';
+@import '../components/toolbar/_toolbar-theme.scss';
 @include mat-core();
 @mixin custom-theme($theme) {
     @include angular-material-theme($theme);
+    @include ss-canvas-theme($theme);
+    @include ss-layerlisttree-theme($theme);
+    @include ss-layertimeline-theme($theme);
+    @include ss-timelineanimationrow-theme($theme);
+    @include ss-playback-theme($theme);
+    @include ss-propertyinput-theme($theme);
     @include ss-root-theme($theme);
+    @include ss-toolbar-theme($theme);
 }
 
 $light-primary: mat-palette($mat-blue-grey, 500);

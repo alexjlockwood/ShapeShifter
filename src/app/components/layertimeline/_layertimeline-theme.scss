@@ -1,0 +1,87 @@
+@mixin ss-layertimeline-theme($theme) {
+    $foreground: map-get($theme, foreground);
+    $background: map-get($theme, background);
+    .studio-layer-timeline {
+        $headerHeight: 40px;
+        background-color: #fff;
+        .slt-layers {
+            .slt-header {
+                .slt-layers-menu-group-button {
+                    color: $colorBlackTextSecondary;
+                    background-color: transparent;
+                    &:focus {
+                        background-color: rgba(#000, .08);
+                    }
+                    &.is-disabled {
+                        color: $colorBlackTextDisabled;
+                    }
+                }
+                button {
+                    &[md-icon-button] {
+                        md-icon {
+                            color: $colorBlackTextSecondary;
+                        }
+                    }
+                    &[md-icon-button][disabled] {
+                        md-icon {
+                            color: $colorBlackTextDisabled;
+                        }
+                    }
+                }
+            }
+            .slt-layers-list-drag-indicator {
+                background-color: $colorPrimary400;
+                &::before {
+                    background-color: $colorPrimary400;
+                }
+            }
+        }
+        .slt-timeline {
+            background-color: mat-color(mat-palette($mat-grey, 300));
+            .slt-timeline-animation {
+                position: relative;
+                background-color: mat-color(mat-palette($mat-grey, 100));
+                margin-left: 4px;
+                box-sizing: content-box;
+                width: 100px;
+                overflow: hidden;
+                flex: 0 0 auto;
+                box-shadow: 4px 0 0 mat-color(mat-palette($mat-grey, 500)), -4px 0 0 mat-color(mat-palette($mat-grey, 500));
+                &.is-selected {
+                    background-color: $colorSelectedAnimationBlock;
+                }
+            }
+            .slt-header {
+                .slt-timeline-animation-meta {
+                    height: $headerHeight / 2 - 4px;
+                    line-height: $headerHeight / 2 - 4px;
+                    margin: 2px -4px;
+                    padding: 0 4px;
+                    border-radius: 2px;
+                    cursor: pointer;
+                    outline: 0;
+                    align-self: flex-start;
+                    display: flex;
+                    flex-direction: row;
+                    &.is-selected,
+                    &.is-selected .slt-timeline-animation-name {
+                        background-color: $colorSelection;
+                        color: $colorWhiteTextPrimary;
+                    }
+                    &.is-disabled {
+                        cursor: default;
+                    }
+                }
+                .slt-timeline-animation-name {
+                    color: $colorBlackTextPrimary;
+                    margin-right: 4px;
+                    font-weight: 500;
+                }
+            }
+        }
+        .slt-header {
+            background-color: mat-color(mat-palette($mat-grey, 100));
+            color: mat-color(mat-palette($mat-grey, 700));
+        }
+    }
+}

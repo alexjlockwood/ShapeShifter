@@ -1,0 +1,6 @@
+@mixin ss-propertyinput-theme($theme) {
+    $background: map-get($theme, background);
+    .property-input {
+        background-color: mat-color(mat-palette($mat-grey, 200));
+    }
+}

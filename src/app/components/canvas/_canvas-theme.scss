@@ -1,0 +1,9 @@
+@mixin ss-canvas-theme($theme) {
+    .app-canvas-container {
+        .canvas-container {
+            canvas.rendering-canvas {
+                background-color: #fff;
+            }
+        }
+    }
+}

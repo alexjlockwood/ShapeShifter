@@ -1,7 +1,6 @@
 @import '../../styles/variables';
 @import '~@angular/material/theming';
 .studio-layer-timeline {
-    background-color: #fff;
     height: 300px;
     display: flex;
     flex-direction: row;
@@ -63,31 +62,23 @@
                 height: $headerHeight;
                 font-size: 12px;
                 font-weight: 500;
-                color: $colorBlackTextSecondary;
                 line-height: $headerHeight;
                 padding: 0 8px 0 8px;
                 margin: 0;
                 outline: 0;
-                background-color: transparent;
-                &:focus {
-                    background-color: rgba(#000, .08);
-                }
                 &.is-disabled {
                     cursor: default;
-                    color: $colorBlackTextDisabled;
                 }
             }
             button {
                 &[md-icon-button] {
                     md-icon {
                         line-height: 0px;
-                        color: $colorBlackTextSecondary;
                     }
                 }
                 &[md-icon-button][disabled] {
                     md-icon {
                         line-height: 0px;
-                        color: $colorBlackTextDisabled;
                     }
                 }
             }
@@ -98,7 +89,6 @@
             left: 0;
             right: 0;
             margin-top: -1px;
-            background-color: $colorPrimary400;
             pointer-events: none;
             &::before {
                 position: absolute;
@@ -107,13 +97,11 @@
                 top: -3px;
                 height: 8px;
                 width: 8px;
-                background-color: $colorPrimary400;
                 border-radius: 50%;
             }
         }
     }
     .slt-timeline {
-        background-color: mat-color(mat-palette($mat-grey, 300));
         overflow-x: auto;
         overflow-y: hidden;
         flex: 1;
@@ -133,19 +121,14 @@
         }
         .slt-timeline-animation {
             position: relative;
-            background-color: mat-color(mat-palette($mat-grey, 100));
             margin-left: 4px;
             box-sizing: content-box;
             width: 100px;
             overflow: hidden;
             flex: 0 0 auto;
-            box-shadow: 4px 0 0 mat-color(mat-palette($mat-grey, 500)), -4px 0 0 mat-color(mat-palette($mat-grey, 500));
             opacity: 1;
             &.is-disabled {
                 opacity: 0.5;
-            }
-            &.is-selected {
-                background-color: $colorSelectedAnimationBlock;
             }
         }
         .slt-timeline-animation-rows {
@@ -176,17 +159,11 @@
                 align-self: flex-start;
                 display: flex;
                 flex-direction: row;
-                &.is-selected,
-                &.is-selected .slt-timeline-animation-name {
-                    background-color: $colorSelection;
-                    color: $colorWhiteTextPrimary;
-                }
                 &.is-disabled {
                     cursor: default;
                 }
             }
             .slt-timeline-animation-name {
-                color: $colorBlackTextPrimary;
                 margin-right: 4px;
                 font-weight: 500;
             }
@@ -229,10 +206,8 @@
         height: $headerHeight;
         box-sizing: border-box;
         width: 100%;
-        background-color: mat-color(mat-palette($mat-grey, 100));
         font-size: 12px;
         line-height: $headerHeight;
-        color: mat-color(mat-palette($mat-grey, 700));
         padding: 0 16px;
         z-index: 2;
     }
