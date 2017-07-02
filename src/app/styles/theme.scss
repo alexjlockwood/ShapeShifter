@@ -75,7 +75,7 @@ $ss-dark-theme-background: (
   base50: #303030,
   base100: map_get($mat-grey, 800),
   base200: map_get($mat-grey, 900),
-  base300: map_get($mat-grey, 1000),
+  base300: #101010,
   blue400: map-get($mat-blue, 400), // TODO: update this color
   blue500: map-get($mat-blue, 500), // TODO: update this color
   blue600: map-get($mat-blue, 600), // TODO: update this color
