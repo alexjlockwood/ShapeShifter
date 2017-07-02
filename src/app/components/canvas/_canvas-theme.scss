@@ -1,8 +1,9 @@
 @mixin ss-canvas-theme($theme) {
+    $background: map-get($theme, ss-background);
     .app-canvas-container {
         .canvas-container {
             canvas.rendering-canvas {
-                background-color: #fff;
+                background-color: mat-color($background, base);
             }
         }
     }

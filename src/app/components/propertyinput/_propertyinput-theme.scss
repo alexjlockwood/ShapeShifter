@@ -5,7 +5,7 @@
         background-color: mat-color($background, base200);
     }
     .spi-header {
-        background-color: #fff;
+        background-color: mat-color($background, base);
         .spi-selection-icon {
             color: mat-color($foreground, secondary-text);
         }
