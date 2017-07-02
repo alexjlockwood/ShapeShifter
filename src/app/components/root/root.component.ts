@@ -13,6 +13,7 @@ import {
 } from '@angular/core';
 import { DropFilesAction } from 'app/components/dialogs';
 import { ActionMode, ActionSource } from 'app/model/actionmode';
+import { DestroyableMixin } from 'app/scripts/mixins';
 import {
   ActionModeService,
   ClipboardService,
@@ -21,12 +22,14 @@ import {
   FileImportService,
   LayerTimelineService,
   ShortcutService,
+  ThemeService,
 } from 'app/services';
 import { Duration, SnackBarService } from 'app/services/snackbar.service';
 import { State, Store } from 'app/store';
 import { getActionMode, getActionModeHover } from 'app/store/actionmode/selectors';
 import { isWorkspaceDirty } from 'app/store/common/selectors';
 import { ResetWorkspace } from 'app/store/reset/actions';
+import { isDarkTheme } from 'app/store/theme/selectors';
 import * as erd from 'element-resize-detector';
 import { environment } from 'environments/environment';
 import * as $ from 'jquery';
@@ -50,7 +53,7 @@ enum CursorType {
   styleUrls: ['./root.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class RootComponent implements OnInit, AfterViewInit, OnDestroy {
+export class RootComponent extends DestroyableMixin() implements OnInit, AfterViewInit, OnDestroy {
   readonly ACTION_SOURCE_FROM = ActionSource.From;
   readonly ACTION_SOURCE_ANIMATED = ActionSource.Animated;
   readonly ACTION_SOURCE_TO = ActionSource.To;
@@ -59,7 +62,7 @@ export class RootComponent implements OnInit, AfterViewInit, OnDestroy {
   readonly CURSOR_POINTER = CursorType.Pointer;
   readonly CURSOR_PEN = CursorType.Pen;
 
-  @HostBinding('class.ss-dark-theme') isDarkTheme = true;
+  @HostBinding('class.ss-dark-theme') isDarkThemeHostBinding: boolean;
   @ViewChild('displayContainer') displayContainerRef: ElementRef;
   private $displayContainer: JQuery;
 
@@ -78,11 +81,18 @@ export class RootComponent implements OnInit, AfterViewInit, OnDestroy {
     private readonly dialogService: DialogService,
     private readonly clipboardService: ClipboardService,
     private readonly layerTimelineService: LayerTimelineService,
-  ) {}
+    private readonly themeService: ThemeService,
+  ) {
+    super();
+  }
 
   ngOnInit() {
     this.shortcutService.init();
     this.clipboardService.init();
+
+    this.registerSubscription(
+      this.store.select(isDarkTheme).subscribe(isDark => (this.isDarkThemeHostBinding = isDark)),
+    );
 
     $(window).on('beforeunload', event => {
       let isDirty: boolean;
@@ -145,6 +155,7 @@ export class RootComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy() {
+    super.ngOnDestroy();
     ELEMENT_RESIZE_DETECTOR.removeAllListeners(this.$displayContainer.get(0));
     this.shortcutService.destroy();
     this.clipboardService.destroy();

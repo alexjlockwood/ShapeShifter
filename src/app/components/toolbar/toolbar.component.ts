@@ -1,18 +1,23 @@
+import 'rxjs/add/operator/combineLatest';
+
 import { animate, state, style, transition, trigger } from '@angular/animations';
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { ActionMode, ActionSource, Selection, SelectionType } from 'app/model/actionmode';
 import { MorphableLayer } from 'app/model/layers';
 import { PathAnimationBlock } from 'app/model/timeline';
 import { ActionModeUtil } from 'app/scripts/common';
-import { ActionModeService } from 'app/services';
+import { ActionModeService, ThemeService } from 'app/services';
 import { State, Store } from 'app/store';
 import { getToolbarState } from 'app/store/actionmode/selectors';
+import { isDarkTheme } from 'app/store/theme/selectors';
 import * as _ from 'lodash';
 import { Observable } from 'rxjs/Observable';
 
-type ActionModeState = 'inactive' | 'active';
-const INACTIVE = 'inactive';
-const ACTIVE = 'active';
+type ToolbarColor = 'inactive_light' | 'active_light' | 'inactive_dark' | 'active_dark';
+const INACTIVE_LIGHT: ToolbarColor = 'inactive_light';
+const ACTIVE_LIGHT: ToolbarColor = 'active_light';
+const INACTIVE_DARK: ToolbarColor = 'inactive_dark';
+const ACTIVE_DARK: ToolbarColor = 'active_dark';
 
 declare const ga: Function;
 
@@ -22,34 +27,52 @@ declare const ga: Function;
   styleUrls: ['./toolbar.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   animations: [
-    trigger('actionModeState', [
-      // Blue grey 500.
-      state(INACTIVE, style({ backgroundColor: '#607D8B' })),
-      // Blue A400.
-      state(ACTIVE, style({ backgroundColor: '#2979FF' })),
+    trigger('toolbarColor', [
+      state(INACTIVE_LIGHT, style({ backgroundColor: '#607D8B' })), // Blue grey 500.
+      state(ACTIVE_LIGHT, style({ backgroundColor: '#2979FF' })), // Blue A400.
+      state(INACTIVE_DARK, style({ backgroundColor: '#7B1FA2' })), // Purple 700.
+      state(ACTIVE_DARK, style({ backgroundColor: '#00E676' })), // Green A400.
       transition('* => *', animate('200ms ease-out')),
     ]),
   ],
 })
 export class ToolbarComponent implements OnInit {
   toolbarData$: Observable<ToolbarData>;
-  actionModeState$: Observable<ActionModeState>;
+  toolbarColor$: Observable<ToolbarColor>;
+  isDarkTheme$: Observable<boolean>;
 
   constructor(
     private readonly actionModeService: ActionModeService,
+    private readonly themeService: ThemeService,
     private readonly store: Store<State>,
   ) {}
 
   ngOnInit() {
     const toolbarState = this.store.select(getToolbarState);
+    this.isDarkTheme$ = this.store.select(isDarkTheme);
     this.toolbarData$ = toolbarState.map(
       ({ mode, fromMl, toMl, selections, unpairedSubPath, block }) => {
         return new ToolbarData(mode, fromMl, toMl, selections, unpairedSubPath, block);
       },
     );
-    this.actionModeState$ = toolbarState.map(({ mode }) => {
-      return mode === ActionMode.None ? INACTIVE : ACTIVE;
+    this.toolbarColor$ = Observable.combineLatest(
+      toolbarState,
+      this.isDarkTheme$,
+    ).map(([{ mode }, isDark]) => {
+      if (mode === ActionMode.None && isDark) {
+        return INACTIVE_DARK;
+      } else if (mode === ActionMode.None && !isDark) {
+        return INACTIVE_LIGHT;
+      } else if (mode !== ActionMode.None && isDark) {
+        return ACTIVE_DARK;
+      } else {
+        return ACTIVE_LIGHT;
+      }
     });
+  }
+
+  onDarkThemeSliderClick() {
+    this.themeService.toggleTheme();
   }
 
   onSendFeedbackClick(event: MouseEvent) {

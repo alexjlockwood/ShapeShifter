@@ -11,6 +11,7 @@ import * as fromPlayback from './playback/reducer';
 import * as metaReset from './reset/metareducer';
 import * as fromReset from './reset/reducer';
 import * as metaStoreFreeze from './storefreeze/metareducer';
+import * as fromTheme from './theme/reducer';
 import * as fromTimeline from './timeline/reducer';
 import * as metaUndoRedo from './undoredo/metareducer';
 
@@ -22,6 +23,7 @@ export interface AppState {
   readonly playback: fromPlayback.State;
   readonly actionmode: fromActionMode.State;
   readonly reset: fromReset.State;
+  readonly theme: fromTheme.State;
 }
 
 const sliceReducers = {
@@ -30,6 +32,7 @@ const sliceReducers = {
   playback: fromPlayback.reducer,
   actionmode: fromActionMode.reducer,
   reset: fromReset.reducer,
+  theme: fromTheme.reducer,
 };
 
 const prodMetaReducers = [
