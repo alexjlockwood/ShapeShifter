@@ -1,15 +1,17 @@
 @mixin ss-timelineanimationrow-theme($theme) {
+    $foreground: map-get($theme, ss-foreground);
+    $background: map-get($theme, ss-background);
     .slt-properties {
         background-color: #fff;
-        box-shadow: 0 0 0 1px $thinBorderColor inset;
+        box-shadow: 0 0 0 1px mat-color($foreground, divider) inset;
         .slt-property {
             &:not(:last-child) {
-                box-shadow: 0 -1px 0 $thinBorderColor inset;
+                box-shadow: 0 -1px 0 mat-color($foreground, divider) inset;
             }
             .slt-timeline-block {
                 background-color: mat-color(mat-palette($mat-green, 200));
                 &.is-selected {
-                    background-color: $colorSelectedAnimationBlock;
+                    background-color: mat-color($background, blue500);
                 }
                 &.has-error {
                     background-color: mat-color(mat-palette($mat-red, A200));

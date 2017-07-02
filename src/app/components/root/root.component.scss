@@ -33,8 +33,6 @@ div.toolbar-container {
     bottom: 0;
     z-index: 9999;
     animation: pulsate-color .66s ease 0s infinite;
-    background-color: rgba($colorPrimary600, .5);
-    box-shadow: 0 0 0 8px $colorPrimary600 inset;
     pointer-events: none;
     transform: translateZ(0);
   }

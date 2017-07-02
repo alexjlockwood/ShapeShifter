@@ -1,6 +1,12 @@
 @mixin ss-root-theme($theme) {
-    $background: map-get($theme, background);
+    $background: map-get($theme, ss-background);
     div.display-container {
         background-color: mat-color(mat-palette($mat-grey, 300));
+    }
+    .file-drop-target {
+        &.is-dragging-over::after {
+            background-color: mat-color($background, blue600, 0.5);
+            box-shadow: 0 0 0 8px mat-color($background, blue600) inset;
+        }
     }
 }

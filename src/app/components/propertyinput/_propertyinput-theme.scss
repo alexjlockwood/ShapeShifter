@@ -31,7 +31,7 @@
         .spi-property-value-static,
         .spi-property-value-editor input,
         .spi-property-value-menu-target {
-            box-shadow: 0 0 0 1px $thinBorderColor inset;
+            box-shadow: 0 0 0 1px mat-color($foreground, divider) inset;
             &.has-input-error {
                 border-left: 4px solid #c63937;
             }
@@ -40,7 +40,7 @@
         .spi-property-value-menu-target {
             background-color: #fff;
             &:focus {
-                box-shadow: 0 0 0 1px $colorFocusBorder inset;
+                box-shadow: 0 0 0 1px mat-color($background, blue400) inset;
             }
         }
         .spi-property-value-menu-target {
@@ -49,7 +49,7 @@
             }
         }
         .spi-property-color-preview {
-            box-shadow: 0 0 0 1px $thinBorderColor inset;
+            box-shadow: 0 0 0 1px mat-color($foreground, divider) inset;
         }
     }
     .spi-empty {

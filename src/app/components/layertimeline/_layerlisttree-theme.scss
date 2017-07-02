@@ -1,9 +1,10 @@
 @mixin ss-layerlisttree-theme($theme) {
     $foreground: map-get($theme, ss-foreground);
+    $background: map-get($theme, ss-background);
     .slt-layer {
         color: mat-color($foreground, secondary-text);
         &:focus {
-            box-shadow: 0 0 0 1px $colorFocusBorder inset;
+            box-shadow: 0 0 0 1px mat-color($background, blue400) inset;
         }
         &.is-selected {
             background-color: mat-color(mat-palette($mat-blue, A400)); //$app-accent);
@@ -15,12 +16,12 @@
         }
     }
     .slt-properties {
-        box-shadow: 0 0 0 1px $thinBorderColor inset;
+        box-shadow: 0 0 0 1px mat-color($foreground, divider) inset;
     }
     .slt-property {
         color: mat-color($foreground, secondary-text);
         &:not(:last-child) {
-            box-shadow: 0 -1px 0 $thinBorderColor inset;
+            box-shadow: 0 -1px 0 mat-color($foreground, divider) inset;
         }
         button {
             &[md-icon-button] {
@@ -36,9 +37,9 @@
         }
     }
     .slt-layers-list-drag-indicator {
-        background-color: $colorPrimary400;
+        background-color: mat-color($background, blue400);
         &::before {
-            background-color: $colorPrimary400;
+            background-color: mat-color($background, blue400);
         }
     }
 }

@@ -12,7 +12,7 @@
 
 $ss-light-theme-foreground: (
   // base:              black,
-  // divider:           $black-12-opacity,
+  divider:                rgba(black, 0.12),
   // dividers:          $black-12-opacity,
   // disabled:          rgba(black, 0.38),
   // disabled-button:   rgba(black, 0.38),
@@ -30,7 +30,7 @@ $ss-light-theme-foreground: (
 );
 $ss-dark-theme-foreground: (
   // base:              white,
-  // divider:           $white-12-opacity,
+  divider:                rgba(white, 0.12),
   // dividers:          $white-12-opacity,
   // disabled:          rgba(white, 0.3),
   // disabled-button:   rgba(white, 0.3),
@@ -49,6 +49,14 @@ $ss-dark-theme-foreground: (
 
 $ss-light-theme-background: (
   base: white,
+  base50: map-get($mat-grey, 50),
+  base100: map-get($mat-grey, 100),
+  base200: map-get($mat-grey, 200),
+  base300: map-get($mat-grey, 300),
+  blue400: map-get($mat-blue, 400),
+  blue500: map-get($mat-blue, 500),
+  blue600: map-get($mat-blue, 600),
+  blue700: map-get($mat-blue, 700),
   // status-bar: map_get($mat-grey, 300),
   // app-bar:    map_get($mat-grey, 100),
   // background: map_get($mat-grey, 50),
@@ -64,6 +72,14 @@ $ss-light-theme-background: (
 );
 $ss-dark-theme-background: (
   base: black,
+  base50: #303030,
+  base100: map_get($mat-grey, 800),
+  base200: map_get($mat-grey, 900),
+  base300: map_get($mat-grey, 1000),
+  blue400: map-get($mat-blue, 400), // TODO: update this color
+  blue500: map-get($mat-blue, 500), // TODO: update this color
+  blue600: map-get($mat-blue, 600), // TODO: update this color
+  blue700: map-get($mat-blue, 700), // TODO: update this color
   // status-bar: black,
   // app-bar:    map_get($mat-grey, 900),
   // background: #303030,
@@ -117,6 +133,6 @@ $dark-warn: mat-palette($mat-deep-orange);
 $light-theme: ss-light-theme($light-primary, $light-accent, $light-warn);
 $dark-theme: ss-dark-theme($dark-primary, $dark-accent, $dark-warn);
 @include custom-theme($light-theme);
-.shapeshifter-dark-theme {
+.ss-dark-theme {
     @include custom-theme($dark-theme);
 }

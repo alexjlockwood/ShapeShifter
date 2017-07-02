@@ -9,7 +9,7 @@
                 .slt-layers-menu-group-button {
                     color: mat-color($foreground, secondary-text);
                     &:focus {
-                        background-color: rgba(#000, .08);
+                        background-color: mat-color($foreground, divider);
                     }
                     &.is-disabled {
                         color: mat-color($foreground, disabled-text);
@@ -29,9 +29,9 @@
                 }
             }
             .slt-layers-list-drag-indicator {
-                background-color: $colorPrimary400;
+                background-color: mat-color($background, blue400);
                 &::before {
-                    background-color: $colorPrimary400;
+                    background-color: mat-color($background, blue400);
                 }
             }
         }
@@ -47,7 +47,7 @@
                 flex: 0 0 auto;
                 box-shadow: 4px 0 0 mat-color(mat-palette($mat-grey, 500)), -4px 0 0 mat-color(mat-palette($mat-grey, 500));
                 &.is-selected {
-                    background-color: $colorSelectedAnimationBlock;
+                    background-color: mat-color($background, blue500);
                 }
             }
             .slt-header {
@@ -64,7 +64,7 @@
                     flex-direction: row;
                     &.is-selected,
                     &.is-selected .slt-timeline-animation-name {
-                        background-color: $colorSelection;
+                        background-color: mat-color($background, blue700);
                         color: mat-color($foreground, primary-text-inverse);
                     }
                     &.is-disabled {
