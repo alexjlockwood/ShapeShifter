@@ -1,7 +1,5 @@
-@import '~@angular/material/theming';
 button {
     text-transform: uppercase;
-    color: mat-color(mat-palette($mat-blue, A400)); //$app-accent);
     &:md-dialog-close {
         margin-right: 8px;
     }
