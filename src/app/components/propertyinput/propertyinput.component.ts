@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, HostBinding, OnInit } from '@angular/core';
 import { ActionMode } from 'app/model/actionmode';
 import {
   ClipPathLayer,
@@ -36,6 +36,8 @@ declare const ga: Function;
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PropertyInputComponent implements OnInit {
+  @HostBinding('class.mat-elevation-z4') matElevation = true;
+
   propertyInputModel$: Observable<PropertyInputModel>;
 
   // Map used to track user state that has been entered into textfields

@@ -1,18 +1,18 @@
-<div class="studio-layer-timeline"
+<div class="studio-layer-timeline mat-elevation-z8"
   *ngIf="(this.layerTimelineModel$ | async) as model">
   <app-splitter [edge]="'top'"
     [min]="200"
     [persistId]="'layer-timeline'">
   </app-splitter>
 
-  <div class="slt-layers"
+  <div class="slt-layers mat-elevation-z2"
     fxLayout="column">
     <app-splitter [edge]="'right'"
       [min]="200"
       [persistId]="'layer-list'">
     </app-splitter>
 
-    <div class="slt-header"
+    <div class="slt-header mat-elevation-z2"
       fxLayout="row"
       fxLayoutAlign="start center">
 
@@ -177,7 +177,7 @@
       class="slt-timeline-animation is-active"
       [ngStyle]="{'width': (model.animation.duration * animationData.horizZoom + 40) + 'px'}"
       fxLayout="column">
-      <div class="slt-header">
+      <div class="slt-header mat-elevation-z2">
         <div fxLayout="row"
           fxLayoutAlign="start center">
           <div class="slt-timeline-animation-meta"

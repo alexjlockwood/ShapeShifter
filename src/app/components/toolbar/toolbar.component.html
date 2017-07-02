@@ -1,7 +1,7 @@
 <div *ngIf="(this.toolbarData$ | async) as toolbarData"
   fxLayout="row"
   fxLayoutAlign="center center"
-  class="toolbar"
+  class="toolbar mat-elevation-z2"
   [@actionModeState]="this.actionModeState$ | async">
 
   <ng-container *ngIf="{

@@ -1,4 +1,3 @@
-@import '../../styles/material-shadows';
 @import '../../styles/variables';
 @import '~@angular/material/theming';
 .studio-layer-timeline {
@@ -8,7 +7,6 @@
     flex-direction: row;
     flex-shrink: 0;
     overflow: hidden;
-    box-shadow: material-shadow(8);
     z-index: 1;
     position: relative;
     $headerHeight: 40px;
@@ -31,7 +29,6 @@
     }
     .slt-layers {
         width: 300px;
-        box-shadow: material-shadow(2);
         position: relative;
         z-index: 3;
         user-select: none;
@@ -237,7 +234,6 @@
         line-height: $headerHeight;
         color: mat-color(mat-palette($mat-grey, 700));
         padding: 0 16px;
-        box-shadow: material-shadow(2);
         z-index: 2;
     }
 }

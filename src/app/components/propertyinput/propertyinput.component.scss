@@ -1,11 +1,9 @@
 @import '../../styles/variables';
 @import '../../styles/material-icons';
-@import '../../styles/material-shadows';
 @import '~@angular/material/theming';
 :host {
     background-color: mat-color(mat-palette($mat-grey, 200));
     width: 320px;
-    box-shadow: material-shadow(4);
     user-select: none;
     cursor: default;
     position: relative;
@@ -13,7 +11,6 @@
 
 .spi-header {
     background-color: #fff;
-    box-shadow: material-shadow(2);
     z-index: 1;
     display: flex;
     flex-direction: row;

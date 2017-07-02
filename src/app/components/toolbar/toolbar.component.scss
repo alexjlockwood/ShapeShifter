@@ -1,11 +1,9 @@
-@import '../../styles/material-shadows';
 @import '../../styles/variables';
 @import '~@angular/material/theming';
 .toolbar {
     padding: 8px 16px;
     background-color: mat-color(mat-palette($mat-blue-grey, 500)); //$app-primary);
     color: mat-color(mat-palette($mat-blue-grey, 500), default-contrast);
-    box-shadow: material-shadow(1);
     z-index: 1;
     .toolbar-logo {
         width: 40px;
