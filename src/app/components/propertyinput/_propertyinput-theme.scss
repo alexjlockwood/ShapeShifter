@@ -2,7 +2,7 @@
     $foreground: map-get($theme, ss-foreground);
     $background: map-get($theme, ss-background);
     .property-input {
-        background-color: mat-color(mat-palette($mat-grey, 200));
+        background-color: mat-color($background, base200);
     }
     .spi-header {
         background-color: #fff;

@@ -36,10 +36,10 @@
             }
         }
         .slt-timeline {
-            background-color: mat-color(mat-palette($mat-grey, 300));
+            background-color: mat-color($background, base300);
             .slt-timeline-animation {
                 position: relative;
-                background-color: mat-color(mat-palette($mat-grey, 100));
+                background-color: mat-color($background, base100);
                 margin-left: 4px;
                 box-sizing: content-box;
                 width: 100px;
@@ -79,7 +79,7 @@
             }
         }
         .slt-header {
-            background-color: mat-color(mat-palette($mat-grey, 100));
+            background-color: mat-color($background, base100);
             color: mat-color(mat-palette($mat-grey, 700));
         }
     }

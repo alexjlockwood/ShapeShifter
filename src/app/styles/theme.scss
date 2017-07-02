@@ -115,6 +115,7 @@ $ss-dark-theme-background: (
 @mixin custom-theme($theme) {
     @include angular-material-theme($theme);
     @include ss-canvas-theme($theme);
+    @include ss-dialog-theme($theme);
     @include ss-layerlisttree-theme($theme);
     @include ss-layertimeline-theme($theme);
     @include ss-timelineanimationrow-theme($theme);
@@ -125,10 +126,10 @@ $ss-dark-theme-background: (
 }
 
 $light-primary: mat-palette($mat-blue-grey, 500);
-$light-accent: mat-palette($mat-blue, A400);
+$light-accent: mat-palette($mat-blue, A200, A100, A400);
 $light-warn: mat-palette($mat-red);
-$dark-primary: mat-palette($mat-blue-grey);
-$dark-accent: mat-palette($mat-amber, A200, A100, A400);
+$dark-primary: mat-palette($mat-purple, 700, 500, 800);
+$dark-accent: mat-palette($mat-green, A200, A100, A400);
 $dark-warn: mat-palette($mat-deep-orange);
 $light-theme: ss-light-theme($light-primary, $light-accent, $light-warn);
 $dark-theme: ss-dark-theme($dark-primary, $dark-accent, $dark-warn);

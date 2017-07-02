@@ -59,7 +59,7 @@ export class RootComponent implements OnInit, AfterViewInit, OnDestroy {
   readonly CURSOR_POINTER = CursorType.Pointer;
   readonly CURSOR_PEN = CursorType.Pen;
 
-  @HostBinding('class.ss-dark-theme') isDarkTheme = false;
+  @HostBinding('class.ss-dark-theme') isDarkTheme = true;
   @ViewChild('displayContainer') displayContainerRef: ElementRef;
   private $displayContainer: JQuery;
 

@@ -1,9 +1,10 @@
 @mixin ss-dialog-theme($theme) {
+    $accent: map-get($theme, accent);
     $foreground: map-get($theme, ss-foreground);
     $background: map-get($theme, ss-background);
     md-dialog-actions {
         button {
-            color: mat-color(mat-palette($mat-blue, A400)); //$app-accent);
+            color: mat-color($accent, darker);
         }
     }
     md-dialog-content {
