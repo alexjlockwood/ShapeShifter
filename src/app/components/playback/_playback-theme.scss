@@ -1,3 +1,23 @@
 @mixin ss-playback-theme($theme) {
     $background: map-get($theme, background);
+    .playback {
+        button {
+            margin: 0px 3px;
+        }
+        button {
+            &[md-icon-button] {
+                md-icon {
+                    color: $colorBlackTextSecondary;
+                }
+                md-icon.activated {
+                    color: mat-color(mat-palette($mat-orange, 900));
+                }
+            }
+            &[md-icon-button][disabled] {
+                md-icon {
+                    color: $colorBlackTextDisabled;
+                }
+            }
+        }
+    }
 }

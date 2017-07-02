@@ -1,3 +1,19 @@
 @mixin ss-toolbar-theme($theme) {
     $background: map-get($theme, background);
+    .toolbar {
+        background-color: mat-color(mat-palette($mat-blue-grey, 500)); //$app-primary);
+        color: mat-color(mat-palette($mat-blue-grey, 500), default-contrast);
+        button {
+            &[md-icon-button][disabled] {
+                md-icon {
+                    color: $colorWhiteTextDisabled;
+                }
+            }
+        }
+        button.activated {
+            md-icon {
+                color: mat-color(mat-palette($mat-orange, A200));
+            }
+        }
+    }
 }
