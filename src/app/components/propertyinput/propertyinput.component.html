@@ -1,5 +1,5 @@
 <div class="property-input mat-elevation-z4"
-  [@propertyInputColor]="this.themeType$ | async"
+  [@propertyInputColor]="this.themeService.asObservable() | async"
   fxLayout="column"
   fxFlex>
   <app-splitter [persistId]="'property-inspector'"

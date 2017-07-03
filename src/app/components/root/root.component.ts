@@ -31,8 +31,6 @@ import { State, Store } from 'app/store';
 import { getActionMode, getActionModeHover } from 'app/store/actionmode/selectors';
 import { isWorkspaceDirty } from 'app/store/common/selectors';
 import { ResetWorkspace } from 'app/store/reset/actions';
-import { ThemeType } from 'app/store/theme/reducer';
-import { getThemeType } from 'app/store/theme/selectors';
 import * as erd from 'element-resize-detector';
 import { environment } from 'environments/environment';
 import * as $ from 'jquery';
@@ -80,7 +78,6 @@ export class RootComponent extends DestroyableMixin() implements OnInit, AfterVi
   canvasBounds$: Observable<Size>;
   isActionMode$: Observable<boolean>;
   cursorType$: Observable<CursorType>;
-  themeType$: Observable<ThemeType>;
 
   constructor(
     private readonly snackBarService: SnackBarService,
@@ -92,7 +89,7 @@ export class RootComponent extends DestroyableMixin() implements OnInit, AfterVi
     private readonly dialogService: DialogService,
     private readonly clipboardService: ClipboardService,
     private readonly layerTimelineService: LayerTimelineService,
-    private readonly themeService: ThemeService,
+    public readonly themeService: ThemeService,
     private readonly overlayContainer: OverlayContainer,
   ) {
     super();
@@ -102,9 +99,8 @@ export class RootComponent extends DestroyableMixin() implements OnInit, AfterVi
     this.shortcutService.init();
     this.clipboardService.init();
 
-    this.themeType$ = this.store.select(getThemeType);
     this.registerSubscription(
-      this.themeType$.subscribe(type => {
+      this.themeService.asObservable().subscribe(type => {
         const isDark = type === 'dark';
         this.isDarkThemeHostBinding = isDark;
         this.overlayContainer.themeClass = isDark ? 'ss-dark-theme' : undefined;

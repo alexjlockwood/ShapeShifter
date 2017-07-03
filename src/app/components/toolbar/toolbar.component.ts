@@ -40,17 +40,15 @@ declare const ga: Function;
 export class ToolbarComponent implements OnInit {
   toolbarData$: Observable<ToolbarData>;
   toolbarColor$: Observable<ToolbarColor>;
-  themeType$: Observable<ThemeType>;
 
   constructor(
     private readonly actionModeService: ActionModeService,
-    private readonly themeService: ThemeService,
+    public readonly themeService: ThemeService,
     private readonly store: Store<State>,
   ) {}
 
   ngOnInit() {
     const toolbarState = this.store.select(getToolbarState);
-    this.themeType$ = this.store.select(getThemeType);
     this.toolbarData$ = toolbarState.map(
       ({ mode, fromMl, toMl, selections, unpairedSubPath, block }) => {
         return new ToolbarData(mode, fromMl, toMl, selections, unpairedSubPath, block);
@@ -58,7 +56,7 @@ export class ToolbarComponent implements OnInit {
     );
     this.toolbarColor$ = Observable.combineLatest(
       toolbarState,
-      this.themeType$,
+      this.themeService.asObservable(),
     ).map(([{ mode }, type]) => {
       if (mode === ActionMode.None && type === 'dark') {
         return INACTIVE_DARK;

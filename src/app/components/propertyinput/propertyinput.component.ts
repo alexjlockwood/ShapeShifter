@@ -1,5 +1,5 @@
 import { animate, state, style, transition, trigger } from '@angular/animations';
-import { ChangeDetectionStrategy, Component, HostBinding, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { ActionMode } from 'app/model/actionmode';
 import {
   ClipPathLayer,
@@ -17,11 +17,10 @@ import {
   AnimatorService,
   LayerTimelineService,
   ShortcutService,
+  ThemeService,
 } from 'app/services';
 import { State, Store } from 'app/store';
 import { getPropertyInputState } from 'app/store/common/selectors';
-import { ThemeType } from 'app/store/theme/reducer';
-import { getThemeType } from 'app/store/theme/selectors';
 import { SetAnimation } from 'app/store/timeline/actions';
 import * as $ from 'jquery';
 import * as _ from 'lodash';
@@ -47,7 +46,6 @@ declare const ga: Function;
 })
 export class PropertyInputComponent implements OnInit {
   propertyInputModel$: Observable<PropertyInputModel>;
-  themeType$: Observable<ThemeType>;
 
   // Map used to track user state that has been entered into textfields
   // but may not have been saved in the store.
@@ -58,10 +56,10 @@ export class PropertyInputComponent implements OnInit {
     private readonly actionModeService: ActionModeService,
     private readonly animatorService: AnimatorService,
     private readonly layerTimelineService: LayerTimelineService,
+    public readonly themeService: ThemeService,
   ) {}
 
   ngOnInit() {
-    this.themeType$ = this.store.select(getThemeType);
     this.propertyInputModel$ = this.store
       .select(getPropertyInputState)
       .map(

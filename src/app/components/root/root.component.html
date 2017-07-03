@@ -19,7 +19,7 @@
     <div fxLayout="row"
       fxFlex>
       <div class="display-container"
-        [@displayContainerColor]="this.themeType$ | async"
+        [@displayContainerColor]="this.themeService.asObservable() | async"
         fxLayout="column"
         fxFlex>
         <!-- Canvas -->

@@ -9,7 +9,6 @@ import {
   ElementRef,
   HostListener,
   Input,
-  OnInit,
   QueryList,
   ViewChild,
   ViewChildren,
@@ -17,10 +16,9 @@ import {
 import { ActionSource } from 'app/model/actionmode';
 import { Point } from 'app/scripts/common';
 import { DestroyableMixin } from 'app/scripts/mixins';
+import { ThemeService } from 'app/services';
 import { State, Store } from 'app/store';
 import { getVectorLayer } from 'app/store/layers/selectors';
-import { ThemeType } from 'app/store/theme/reducer';
-import { getThemeType } from 'app/store/theme/selectors';
 import * as $ from 'jquery';
 import * as _ from 'lodash';
 import { Observable } from 'rxjs/Observable';
@@ -48,7 +46,7 @@ const CANVAS_MARGIN = 36;
   ],
 })
 export class CanvasComponent extends CanvasLayoutMixin(DestroyableMixin())
-  implements OnInit, AfterViewInit {
+  implements AfterViewInit {
   @ViewChild(CanvasContainerDirective) canvasContainer: CanvasContainerDirective;
   @ViewChild(CanvasLayersDirective) canvasLayers: CanvasLayersDirective;
   @ViewChild(CanvasOverlayDirective) canvasOverlay: CanvasOverlayDirective;
@@ -58,15 +56,14 @@ export class CanvasComponent extends CanvasLayoutMixin(DestroyableMixin())
   @Input() canvasBounds$: Observable<Size>;
 
   private readonly $element: JQuery;
-  themeType$: Observable<ThemeType>;
 
-  constructor(elementRef: ElementRef, private readonly store: Store<State>) {
+  constructor(
+    elementRef: ElementRef,
+    private readonly store: Store<State>,
+    public readonly themeService: ThemeService,
+  ) {
     super();
     this.$element = $(elementRef.nativeElement);
-  }
-
-  ngOnInit() {
-    this.themeType$ = this.store.select(getThemeType);
   }
 
   ngAfterViewInit() {

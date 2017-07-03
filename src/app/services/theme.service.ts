@@ -22,4 +22,8 @@ export class ThemeService {
     this.store.select(getThemeType).first().subscribe(res => (result = res));
     return result;
   }
+
+  asObservable() {
+    return this.store.select(getThemeType);
+  }
 }
