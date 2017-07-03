@@ -17,6 +17,7 @@ import {
   MdSnackBarModule,
   MdToolbarModule,
   MdTooltipModule,
+  OverlayContainer,
 } from '@angular/material';
 import { BrowserModule, DomSanitizer } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';

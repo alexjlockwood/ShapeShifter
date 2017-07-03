@@ -9,7 +9,8 @@ import { ActionModeUtil } from 'app/scripts/common';
 import { ActionModeService, ThemeService } from 'app/services';
 import { State, Store } from 'app/store';
 import { getToolbarState } from 'app/store/actionmode/selectors';
-import { isDarkTheme } from 'app/store/theme/selectors';
+import { ThemeType } from 'app/store/theme/reducer';
+import { getThemeType } from 'app/store/theme/selectors';
 import * as _ from 'lodash';
 import { Observable } from 'rxjs/Observable';
 
@@ -32,14 +33,14 @@ declare const ga: Function;
       state(ACTIVE_LIGHT, style({ backgroundColor: '#2979FF' })), // Blue A400.
       state(INACTIVE_DARK, style({ backgroundColor: '#7B1FA2' })), // Purple 700.
       state(ACTIVE_DARK, style({ backgroundColor: '#00E676' })), // Green A400.
-      transition('* => *', animate('200ms ease-out')),
+      transition('* => *', animate('2000ms ease-out')),
     ]),
   ],
 })
 export class ToolbarComponent implements OnInit {
   toolbarData$: Observable<ToolbarData>;
   toolbarColor$: Observable<ToolbarColor>;
-  isDarkTheme$: Observable<boolean>;
+  themeType$: Observable<ThemeType>;
 
   constructor(
     private readonly actionModeService: ActionModeService,
@@ -49,7 +50,7 @@ export class ToolbarComponent implements OnInit {
 
   ngOnInit() {
     const toolbarState = this.store.select(getToolbarState);
-    this.isDarkTheme$ = this.store.select(isDarkTheme);
+    this.themeType$ = this.store.select(getThemeType);
     this.toolbarData$ = toolbarState.map(
       ({ mode, fromMl, toMl, selections, unpairedSubPath, block }) => {
         return new ToolbarData(mode, fromMl, toMl, selections, unpairedSubPath, block);
@@ -57,13 +58,13 @@ export class ToolbarComponent implements OnInit {
     );
     this.toolbarColor$ = Observable.combineLatest(
       toolbarState,
-      this.isDarkTheme$,
-    ).map(([{ mode }, isDark]) => {
-      if (mode === ActionMode.None && isDark) {
+      this.themeType$,
+    ).map(([{ mode }, type]) => {
+      if (mode === ActionMode.None && type === 'dark') {
         return INACTIVE_DARK;
-      } else if (mode === ActionMode.None && !isDark) {
+      } else if (mode === ActionMode.None && type === 'light') {
         return INACTIVE_LIGHT;
-      } else if (mode !== ActionMode.None && isDark) {
+      } else if (mode !== ActionMode.None && type === 'dark') {
         return ACTIVE_DARK;
       } else {
         return ACTIVE_LIGHT;

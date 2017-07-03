@@ -19,6 +19,7 @@
     <div fxLayout="row"
       fxFlex>
       <div class="display-container"
+        [@displayContainerColor]="this.themeType$ | async"
         fxLayout="column"
         fxFlex>
         <!-- Canvas -->

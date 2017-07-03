@@ -29,3 +29,12 @@
 .toolbar-action-button {
     margin-left: 16px;
 }
+
+a {
+    button.mat-menu-item {
+            md-icon {
+                margin-right: 20px;
+
+        }
+    }
+}

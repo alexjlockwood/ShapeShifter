@@ -1,6 +1,7 @@
 import 'rxjs/add/observable/combineLatest';
 import 'rxjs/add/operator/distinctUntilChanged';
 
+import { animate, state, style, transition, trigger } from '@angular/animations';
 import {
   AfterViewInit,
   ChangeDetectionStrategy,
@@ -8,6 +9,7 @@ import {
   ElementRef,
   HostListener,
   Input,
+  OnInit,
   QueryList,
   ViewChild,
   ViewChildren,
@@ -17,6 +19,8 @@ import { Point } from 'app/scripts/common';
 import { DestroyableMixin } from 'app/scripts/mixins';
 import { State, Store } from 'app/store';
 import { getVectorLayer } from 'app/store/layers/selectors';
+import { ThemeType } from 'app/store/theme/reducer';
+import { getThemeType } from 'app/store/theme/selectors';
 import * as $ from 'jquery';
 import * as _ from 'lodash';
 import { Observable } from 'rxjs/Observable';
@@ -35,9 +39,16 @@ const CANVAS_MARGIN = 36;
   templateUrl: './canvas.component.html',
   styleUrls: ['./canvas.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  animations: [
+    trigger('renderingCanvasColor', [
+      state('light', style({ backgroundColor: '#ffffff' })), // Base (light).
+      state('dark', style({ backgroundColor: '#000000' })), // Base (dark).
+      transition('* => *', animate('2000ms ease-out')),
+    ]),
+  ],
 })
 export class CanvasComponent extends CanvasLayoutMixin(DestroyableMixin())
-  implements AfterViewInit {
+  implements OnInit, AfterViewInit {
   @ViewChild(CanvasContainerDirective) canvasContainer: CanvasContainerDirective;
   @ViewChild(CanvasLayersDirective) canvasLayers: CanvasLayersDirective;
   @ViewChild(CanvasOverlayDirective) canvasOverlay: CanvasOverlayDirective;
@@ -47,10 +58,15 @@ export class CanvasComponent extends CanvasLayoutMixin(DestroyableMixin())
   @Input() canvasBounds$: Observable<Size>;
 
   private readonly $element: JQuery;
+  themeType$: Observable<ThemeType>;
 
   constructor(elementRef: ElementRef, private readonly store: Store<State>) {
     super();
     this.$element = $(elementRef.nativeElement);
+  }
+
+  ngOnInit() {
+    this.themeType$ = this.store.select(getThemeType);
   }
 
   ngAfterViewInit() {

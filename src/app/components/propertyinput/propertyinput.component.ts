@@ -1,3 +1,4 @@
+import { animate, state, style, transition, trigger } from '@angular/animations';
 import { ChangeDetectionStrategy, Component, HostBinding, OnInit } from '@angular/core';
 import { ActionMode } from 'app/model/actionmode';
 import {
@@ -19,6 +20,8 @@ import {
 } from 'app/services';
 import { State, Store } from 'app/store';
 import { getPropertyInputState } from 'app/store/common/selectors';
+import { ThemeType } from 'app/store/theme/reducer';
+import { getThemeType } from 'app/store/theme/selectors';
 import { SetAnimation } from 'app/store/timeline/actions';
 import * as $ from 'jquery';
 import * as _ from 'lodash';
@@ -34,13 +37,17 @@ declare const ga: Function;
   templateUrl: './propertyinput.component.html',
   styleUrls: ['./propertyinput.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  animations: [
+    trigger('propertyInputColor', [
+      state('light', style({ backgroundColor: '#EEEEEE' })), // Base 200 (light).
+      state('dark', style({ backgroundColor: '#212121' })), // Base 200 (dark).
+      transition('* => *', animate('2000ms ease-out')),
+    ]),
+  ],
 })
 export class PropertyInputComponent implements OnInit {
-  @HostBinding('class.mat-elevation-z4')
-  @HostBinding('class.property-input')
-  hostBinding = true;
-
   propertyInputModel$: Observable<PropertyInputModel>;
+  themeType$: Observable<ThemeType>;
 
   // Map used to track user state that has been entered into textfields
   // but may not have been saved in the store.
@@ -54,6 +61,7 @@ export class PropertyInputComponent implements OnInit {
   ) {}
 
   ngOnInit() {
+    this.themeType$ = this.store.select(getThemeType);
     this.propertyInputModel$ = this.store
       .select(getPropertyInputState)
       .map(

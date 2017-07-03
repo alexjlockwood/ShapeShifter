@@ -1,6 +1,7 @@
 import 'rxjs/add/operator/distinctUntilChanged';
 import 'rxjs/add/operator/combineLatest';
 
+import { animate, state, style, transition, trigger } from '@angular/animations';
 import {
   AfterViewInit,
   ChangeDetectionStrategy,
@@ -11,6 +12,7 @@ import {
   OnInit,
   ViewChild,
 } from '@angular/core';
+import { OverlayContainer } from '@angular/material';
 import { DropFilesAction } from 'app/components/dialogs';
 import { ActionMode, ActionSource } from 'app/model/actionmode';
 import { DestroyableMixin } from 'app/scripts/mixins';
@@ -29,7 +31,8 @@ import { State, Store } from 'app/store';
 import { getActionMode, getActionModeHover } from 'app/store/actionmode/selectors';
 import { isWorkspaceDirty } from 'app/store/common/selectors';
 import { ResetWorkspace } from 'app/store/reset/actions';
-import { isDarkTheme } from 'app/store/theme/selectors';
+import { ThemeType } from 'app/store/theme/reducer';
+import { getThemeType } from 'app/store/theme/selectors';
 import * as erd from 'element-resize-detector';
 import { environment } from 'environments/environment';
 import * as $ from 'jquery';
@@ -52,6 +55,13 @@ enum CursorType {
   templateUrl: './root.component.html',
   styleUrls: ['./root.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  animations: [
+    trigger('displayContainerColor', [
+      state('light', style({ backgroundColor: '#E0E0E0' })), // Base 300 (light).
+      state('dark', style({ backgroundColor: '#101010' })), // Base 300 (dark).
+      transition('* => *', animate('2000ms ease-out')),
+    ]),
+  ],
 })
 export class RootComponent extends DestroyableMixin() implements OnInit, AfterViewInit, OnDestroy {
   readonly ACTION_SOURCE_FROM = ActionSource.From;
@@ -70,6 +80,7 @@ export class RootComponent extends DestroyableMixin() implements OnInit, AfterVi
   canvasBounds$: Observable<Size>;
   isActionMode$: Observable<boolean>;
   cursorType$: Observable<CursorType>;
+  themeType$: Observable<ThemeType>;
 
   constructor(
     private readonly snackBarService: SnackBarService,
@@ -82,6 +93,7 @@ export class RootComponent extends DestroyableMixin() implements OnInit, AfterVi
     private readonly clipboardService: ClipboardService,
     private readonly layerTimelineService: LayerTimelineService,
     private readonly themeService: ThemeService,
+    private readonly overlayContainer: OverlayContainer,
   ) {
     super();
   }
@@ -90,8 +102,13 @@ export class RootComponent extends DestroyableMixin() implements OnInit, AfterVi
     this.shortcutService.init();
     this.clipboardService.init();
 
+    this.themeType$ = this.store.select(getThemeType);
     this.registerSubscription(
-      this.store.select(isDarkTheme).subscribe(isDark => (this.isDarkThemeHostBinding = isDark)),
+      this.themeType$.subscribe(type => {
+        const isDark = type === 'dark';
+        this.isDarkThemeHostBinding = isDark;
+        this.overlayContainer.themeClass = isDark ? 'ss-dark-theme' : undefined;
+      }),
     );
 
     $(window).on('beforeunload', event => {
