@@ -3,7 +3,7 @@
     $background: map-get($theme, ss-background);
     .studio-layer-timeline {
         $headerHeight: 40px;
-        background-color: mat-color($background, base);
+        background-color: mat-color($background, base100);
         .slt-layers {
             .slt-header {
                 .slt-layers-menu-group-button {
@@ -36,15 +36,7 @@
             }
         }
         .slt-timeline {
-            background-color: mat-color($background, base300);
             .slt-timeline-animation {
-                position: relative;
-                background-color: mat-color($background, base100);
-                margin-left: 4px;
-                box-sizing: content-box;
-                width: 100px;
-                overflow: hidden;
-                flex: 0 0 auto;
                 box-shadow: 4px 0 0 mat-color(mat-palette($mat-grey, 500)), -4px 0 0 mat-color(mat-palette($mat-grey, 500));
                 &.is-selected {
                     background-color: mat-color($background, blue500);
@@ -52,16 +44,6 @@
             }
             .slt-header {
                 .slt-timeline-animation-meta {
-                    height: $headerHeight / 2 - 4px;
-                    line-height: $headerHeight / 2 - 4px;
-                    margin: 2px -4px;
-                    padding: 0 4px;
-                    border-radius: 2px;
-                    cursor: pointer;
-                    outline: 0;
-                    align-self: flex-start;
-                    display: flex;
-                    flex-direction: row;
                     &.is-selected,
                     &.is-selected .slt-timeline-animation-name {
                         background-color: mat-color($background, blue700);
@@ -79,7 +61,6 @@
             }
         }
         .slt-header {
-            background-color: mat-color($background, base100);
             color: mat-color(mat-palette($mat-grey, 700));
         }
     }

@@ -1,5 +1,6 @@
 import 'rxjs/add/operator/first';
 
+import { animate, state, style, transition, trigger } from '@angular/animations';
 import {
   AfterViewInit,
   ChangeDetectionStrategy,
@@ -32,6 +33,7 @@ import {
   FileExportService,
   FileImportService,
   LayerTimelineService,
+  ThemeService,
 } from 'app/services';
 import { Shortcut, ShortcutService } from 'app/services/shortcut.service';
 import { Duration, SnackBarService } from 'app/services/snackbar.service';
@@ -79,6 +81,13 @@ declare const ga: Function;
   templateUrl: './layertimeline.component.html',
   styleUrls: ['./layertimeline.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  animations: [
+    trigger('layerTimelineColor', [
+      state('light', style({ backgroundColor: '#f5f5f5' })), // Base 100 (light).
+      state('dark', style({ backgroundColor: '#424242' })), // Base 100 (dark).
+      transition('* => *', animate('2000ms ease-out')),
+    ]),
+  ],
 })
 export class LayerTimelineComponent extends DestroyableMixin()
   implements OnInit, AfterViewInit, TimelineAnimationRowCallbacks, LayerListTreeCallbacks {
@@ -127,6 +136,7 @@ export class LayerTimelineComponent extends DestroyableMixin()
     private readonly actionModeService: ActionModeService,
     public readonly shortcutService: ShortcutService,
     private readonly layerTimelineService: LayerTimelineService,
+    public readonly themeService: ThemeService,
   ) {
     super();
   }

@@ -13,6 +13,7 @@
     </app-splitter>
 
     <div class="slt-header mat-elevation-z2"
+      [@layerTimelineColor]="this.themeService.asObservable() | async"
       fxLayout="row"
       fxLayoutAlign="start center">
 
@@ -138,6 +139,7 @@
     </div>
 
     <div appScrollGroup="timeline"
+      [@layerTimelineColor]="this.themeService.asObservable() | async"
       class="slt-layers-list-scroller"
       fxFlex>
       <!-- Layer list. -->
@@ -177,45 +179,49 @@
       class="slt-timeline-animation is-active"
       [ngStyle]="{'width': (model.animation.duration * animationData.horizZoom + 40) + 'px'}"
       fxLayout="column">
-      <div class="slt-header mat-elevation-z2">
-        <div fxLayout="row"
-          fxLayoutAlign="start center">
-          <div class="slt-timeline-animation-meta"
-            [class.is-disabled]="model.isActionMode"
-            [class.is-selected]="model.isAnimationSelected"
-            (click)="this.onAnimationHeaderTextClick($event)">
-            <span class="slt-timeline-animation-name"
-              [class.is-disabled]="model.isActionMode">
+      <div fxLayout="row">
+        <div class="slt-header mat-elevation-z2"
+          [@layerTimelineColor]="this.themeService.asObservable() | async">
+          <div fxLayout="row"
+            fxLayoutAlign="start center">
+            <div class="slt-timeline-animation-meta"
+              [class.is-disabled]="model.isActionMode"
+              [class.is-selected]="model.isAnimationSelected"
+              (click)="this.onAnimationHeaderTextClick($event)">
+              <span class="slt-timeline-animation-name"
+                [class.is-disabled]="model.isActionMode">
               {{ model.animation.name }}
             </span>
-            <span class="slt-timeline-animation-duration"
-              [class.is-disabled]="model.isActionMode">
+              <span class="slt-timeline-animation-duration"
+                [class.is-disabled]="model.isActionMode">
               {{ model.animation.duration }}ms
             </span>
-          </div>
-          <button md-icon-button
-            (click)="this.onZoomToFitClick($event)"
-            mdTooltip="Zoom to fit ({{ this.shortcutService.getZoomToFitText() }})"
-            mdTooltipPosition="below"
-            mdTooltipShowDelay="500">
+            </div>
+            <button md-icon-button
+              (click)="this.onZoomToFitClick($event)"
+              mdTooltip="Zoom to fit ({{ this.shortcutService.getZoomToFitText() }})"
+              mdTooltipPosition="below"
+              mdTooltipShowDelay="500">
             <md-icon>zoom_out_map</md-icon>
           </button>
+          </div>
+          <canvas appLayerTimelineGrid
+            class="slt-timeline-header-grid"
+            [animation]="model.animation"
+            [horizZoom]="animationData.horizZoom"
+            [isHeader]="true"
+            (scrub)="this.onTimelineHeaderScrub($event)">
+          </canvas>
         </div>
+
         <canvas appLayerTimelineGrid
-          class="slt-timeline-header-grid"
+          [@layerTimelineColor]="this.themeService.asObservable() | async"
+          class="slt-timeline-grid"
+          [isHeader]="false"
           [animation]="model.animation"
-          [horizZoom]="animationData.horizZoom"
-          [isHeader]="true"
-          (scrub)="this.onTimelineHeaderScrub($event)">
+          [horizZoom]="animationData.horizZoom">
         </canvas>
       </div>
-
-      <canvas appLayerTimelineGrid
-        class="slt-timeline-grid"
-        [isHeader]="false"
-        [animation]="model.animation"
-        [horizZoom]="animationData.horizZoom">
-      </canvas>
 
       <div appScrollGroup="timeline"
         class="slt-timeline-animation-scroller">
