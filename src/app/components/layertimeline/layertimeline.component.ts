@@ -1,6 +1,5 @@
 import 'rxjs/add/operator/first';
 
-import { animate, state, style, transition, trigger } from '@angular/animations';
 import {
   AfterViewInit,
   ChangeDetectionStrategy,
@@ -81,13 +80,6 @@ declare const ga: Function;
   templateUrl: './layertimeline.component.html',
   styleUrls: ['./layertimeline.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  animations: [
-    trigger('layerTimelineColor', [
-      state('light', style({ backgroundColor: '#f5f5f5' })), // Base 100 (light).
-      state('dark', style({ backgroundColor: '#424242' })), // Base 100 (dark).
-      transition('* => *', animate('2000ms ease-out')),
-    ]),
-  ],
 })
 export class LayerTimelineComponent extends DestroyableMixin()
   implements OnInit, AfterViewInit, TimelineAnimationRowCallbacks, LayerListTreeCallbacks {

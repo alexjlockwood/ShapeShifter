@@ -1,7 +1,6 @@
 import 'rxjs/add/observable/combineLatest';
 import 'rxjs/add/operator/distinctUntilChanged';
 
-import { animate, state, style, transition, trigger } from '@angular/animations';
 import {
   AfterViewInit,
   ChangeDetectionStrategy,
@@ -37,13 +36,6 @@ const CANVAS_MARGIN = 36;
   templateUrl: './canvas.component.html',
   styleUrls: ['./canvas.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  animations: [
-    trigger('renderingCanvasColor', [
-      state('light', style({ backgroundColor: '#ffffff' })), // Base (light).
-      state('dark', style({ backgroundColor: '#000000' })), // Base (dark).
-      transition('* => *', animate('2000ms ease-out')),
-    ]),
-  ],
 })
 export class CanvasComponent extends CanvasLayoutMixin(DestroyableMixin())
   implements AfterViewInit {

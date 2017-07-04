@@ -1,7 +1,7 @@
 <div class="property-input mat-elevation-z4"
   *ngIf="(this.themeService.asObservable() | async) as theme"
-  [class.dark-theme-disabled]="!theme.isInitialPageLoad && theme.themeType === 'light'"
-  [class.dark-theme-enabled]="!theme.isInitialPageLoad && theme.themeType === 'dark'"
+  [class.dark-to-light-base200]="!theme.isInitialPageLoad && theme.themeType === 'light'"
+  [class.light-to-dark-base200]="!theme.isInitialPageLoad && theme.themeType === 'dark'"
   fxLayout="column"
   fxFlex>
   <app-splitter [persistId]="'property-inspector'"

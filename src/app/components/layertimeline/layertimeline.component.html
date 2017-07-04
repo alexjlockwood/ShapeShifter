@@ -13,7 +13,9 @@
     </app-splitter>
 
     <div class="slt-header mat-elevation-z2"
-      [@layerTimelineColor]="this.themeService.asObservable() | async"
+      *ngIf="(this.themeService.asObservable() | async) as theme"
+      [class.dark-to-light-base100]="!theme.isInitialPageLoad && theme.themeType === 'light'"
+      [class.light-to-dark-base100]="!theme.isInitialPageLoad && theme.themeType === 'dark'"
       fxLayout="row"
       fxLayoutAlign="start center">
 
@@ -139,7 +141,9 @@
     </div>
 
     <div appScrollGroup="timeline"
-      [@layerTimelineColor]="this.themeService.asObservable() | async"
+      *ngIf="(this.themeService.asObservable() | async) as theme"
+      [class.dark-to-light-base100]="!theme.isInitialPageLoad && theme.themeType === 'light'"
+      [class.light-to-dark-base100]="!theme.isInitialPageLoad && theme.themeType === 'dark'"
       class="slt-layers-list-scroller"
       fxFlex>
       <!-- Layer list. -->
@@ -181,7 +185,9 @@
       fxLayout="column">
       <div fxLayout="row">
         <div class="slt-header mat-elevation-z2"
-          [@layerTimelineColor]="this.themeService.asObservable() | async">
+          *ngIf="(this.themeService.asObservable() | async) as theme"
+          [class.dark-to-light-base100]="!theme.isInitialPageLoad && theme.themeType === 'light'"
+          [class.light-to-dark-base100]="!theme.isInitialPageLoad && theme.themeType === 'dark'">
           <div fxLayout="row"
             fxLayoutAlign="start center">
             <div class="slt-timeline-animation-meta"
@@ -215,7 +221,9 @@
         </div>
 
         <canvas appLayerTimelineGrid
-          [@layerTimelineColor]="this.themeService.asObservable() | async"
+          *ngIf="(this.themeService.asObservable() | async) as theme"
+          [class.dark-to-light-base100]="!theme.isInitialPageLoad && theme.themeType === 'light'"
+          [class.light-to-dark-base100]="!theme.isInitialPageLoad && theme.themeType === 'dark'"
           class="slt-timeline-grid"
           [isHeader]="false"
           [animation]="model.animation"

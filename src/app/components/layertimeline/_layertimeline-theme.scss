@@ -43,6 +43,7 @@
                 }
             }
             .slt-header {
+                background-color: mat-color($background, base100);
                 .slt-timeline-animation-meta {
                     &.is-selected,
                     &.is-selected .slt-timeline-animation-name {

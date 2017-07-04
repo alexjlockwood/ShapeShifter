@@ -1,7 +1,6 @@
 import 'rxjs/add/operator/distinctUntilChanged';
 import 'rxjs/add/operator/combineLatest';
 
-import { animate, state, style, transition, trigger } from '@angular/animations';
 import {
   AfterViewInit,
   ChangeDetectionStrategy,
@@ -53,13 +52,6 @@ enum CursorType {
   templateUrl: './root.component.html',
   styleUrls: ['./root.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  animations: [
-    trigger('displayContainerColor', [
-      state('light', style({ backgroundColor: '#E0E0E0' })), // Base 300 (light).
-      state('dark', style({ backgroundColor: '#101010' })), // Base 300 (dark).
-      transition('* => *', animate('2000ms ease-out')),
-    ]),
-  ],
 })
 export class RootComponent extends DestroyableMixin() implements OnInit, AfterViewInit, OnDestroy {
   readonly ACTION_SOURCE_FROM = ActionSource.From;

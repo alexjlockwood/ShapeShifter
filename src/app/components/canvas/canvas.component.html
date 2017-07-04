@@ -12,7 +12,9 @@
     class="canvas-container">
     <canvas appCanvasLayers
       class="rendering-canvas mat-elevation-z4"
-      [@renderingCanvasColor]="this.themeService.asObservable() | async"
+      *ngIf="(this.themeService.asObservable() | async) as theme"
+      [class.dark-to-light-base]="!theme.isInitialPageLoad && theme.themeType === 'light'"
+      [class.light-to-dark-base]="!theme.isInitialPageLoad && theme.themeType === 'dark'"
       [actionSource]="this.actionSource">
     </canvas>
     <canvas appCanvasOverlay

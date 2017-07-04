@@ -19,7 +19,9 @@
     <div fxLayout="row"
       fxFlex>
       <div class="display-container"
-        [@displayContainerColor]="this.themeService.asObservable() | async"
+        *ngIf="(this.themeService.asObservable() | async) as theme"
+        [class.dark-to-light-base300]="!theme.isInitialPageLoad && theme.themeType === 'light'"
+        [class.light-to-dark-base300]="!theme.isInitialPageLoad && theme.themeType === 'dark'"
         fxLayout="column"
         fxFlex>
         <!-- Canvas -->
