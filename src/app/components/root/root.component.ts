@@ -100,8 +100,8 @@ export class RootComponent extends DestroyableMixin() implements OnInit, AfterVi
     this.clipboardService.init();
 
     this.registerSubscription(
-      this.themeService.asObservable().subscribe(type => {
-        const isDark = type === 'dark';
+      this.themeService.asObservable().subscribe(t => {
+        const isDark = t.themeType === 'dark';
         this.isDarkThemeHostBinding = isDark;
         this.overlayContainer.themeClass = isDark ? 'ss-dark-theme' : undefined;
       }),

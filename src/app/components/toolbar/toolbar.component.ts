@@ -56,7 +56,7 @@ export class ToolbarComponent implements OnInit {
     );
     this.toolbarColor$ = Observable.combineLatest(
       toolbarState,
-      this.themeService.asObservable(),
+      this.themeService.asObservable().map(t => t.themeType),
     ).map(([{ mode }, type]) => {
       if (mode === ActionMode.None && type === 'dark') {
         return INACTIVE_DARK;

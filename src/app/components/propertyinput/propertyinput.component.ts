@@ -36,13 +36,13 @@ declare const ga: Function;
   templateUrl: './propertyinput.component.html',
   styleUrls: ['./propertyinput.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  animations: [
-    trigger('propertyInputColor', [
-      state('light', style({ backgroundColor: '#EEEEEE' })), // Base 200 (light).
-      state('dark', style({ backgroundColor: '#212121' })), // Base 200 (dark).
-      transition('* => *', animate('2000ms ease-out')),
-    ]),
-  ],
+  // animations: [
+  //   trigger('propertyInputColor', [
+  //     state('light', style({ backgroundColor: '#EEEEEE' })), // Base 200 (light).
+  //     state('dark', style({ backgroundColor: '#212121' })), // Base 200 (dark).
+  //     transition('* => *', animate('2000ms ease-out')),
+  //   ]),
+  // ],
 })
 export class PropertyInputComponent implements OnInit {
   propertyInputModel$: Observable<PropertyInputModel>;

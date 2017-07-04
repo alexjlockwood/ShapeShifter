@@ -14,11 +14,11 @@ export class ThemeService {
   constructor(private readonly store: Store<State>) {}
 
   toggleTheme() {
-    this.store.dispatch(new SetTheme(this.getThemeType() === 'dark' ? 'light' : 'dark'));
+    this.store.dispatch(new SetTheme(this.getThemeType().themeType === 'dark' ? 'light' : 'dark'));
   }
 
   getThemeType() {
-    let result: ThemeType;
+    let result: { themeType: ThemeType; isInitialPageLoad: boolean };
     this.store.select(getThemeType).first().subscribe(res => (result = res));
     return result;
   }

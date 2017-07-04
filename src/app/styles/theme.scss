@@ -57,6 +57,7 @@ $ss-light-theme-background: (
   blue500: map-get($mat-blue, 500),
   blue600: map-get($mat-blue, 600),
   blue700: map-get($mat-blue, 700),
+  base200-inverse: map-get($mat-grey, 900),
   // status-bar: map_get($mat-grey, 300),
   // app-bar:    map_get($mat-grey, 100),
   // background: map_get($mat-grey, 50),
@@ -80,6 +81,7 @@ $ss-dark-theme-background: (
   blue500: map-get($mat-blue, 500), // TODO: update this color
   blue600: map-get($mat-blue, 600), // TODO: update this color
   blue700: map-get($mat-blue, 700), // TODO: update this color
+  base200-inverse: map-get($mat-grey, 200),
   // status-bar: black,
   // app-bar:    map_get($mat-grey, 900),
   // background: #303030,
@@ -112,7 +114,7 @@ $ss-dark-theme-background: (
     @return $result;
 }
 
-@mixin custom-theme($theme) {
+@mixin build-custom-theme($theme) {
     @include angular-material-theme($theme);
     @include ss-canvas-theme($theme);
     @include ss-dialog-theme($theme);
@@ -133,7 +135,39 @@ $dark-accent: mat-palette($mat-green, A200, A100, A400);
 $dark-warn: mat-palette($mat-deep-orange);
 $light-theme: ss-light-theme($light-primary, $light-accent, $light-warn);
 $dark-theme: ss-dark-theme($dark-primary, $dark-accent, $dark-warn);
-@include custom-theme($light-theme);
+@include build-custom-theme($light-theme);
 .ss-dark-theme {
-    @include custom-theme($dark-theme);
+    @include build-custom-theme($dark-theme);
 }
+
+@mixin theme-animation-properties {
+    animation-duration: 2000ms;
+    animation-timing-function: ease-out;
+    animation-fill-mode: forwards;
+}
+
+@mixin build-theme-animations($bgKey) {
+    $light-background: map-get($light-theme, ss-background);
+    $dark-background: map-get($dark-theme, ss-background);
+    .dark-to-light-#{$bgKey} {
+        animation-name: darkToLight#{$bgKey};
+        @include theme-animation-properties;
+    }
+    .light-to-dark-#{$bgKey} {
+        animation-name: lightToDark#{$bgKey};
+        @include theme-animation-properties;
+    }
+    @keyframes lightToDark#{$bgKey} {
+        0% { background-color: mat-color($light-background, $bgKey); }
+        100% { background-color: mat-color($dark-background, $bgKey); }
+    }
+    @keyframes darkToLight#{$bgKey} {
+        0% { background-color: mat-color($dark-background, $bgKey); }
+        100% { background-color: mat-color($light-background, $bgKey); }
+    }
+}
+
+@include build-theme-animations(base);
+@include build-theme-animations(base100);
+@include build-theme-animations(base200);
+@include build-theme-animations(base300);
