@@ -15,9 +15,6 @@ const DARK_DISABLED_TEXT = 'rgba(255, 255, 255, 0.3)';
 const LIGHT_DIVIDER_TEXT = 'rgba(0, 0, 0, 0.12)';
 const DARK_DIVIDER_TEXT = 'rgba(255, 255, 255, 0.12)';
 
-// TODO: trigger invalidate redraw in canvas ruler/timeline grid when theme changes
-// TODO: figure out why animation blocks are being hidden after theme changes
-
 /**
  * A simple service that provides an interface for making theme changes.
  */
