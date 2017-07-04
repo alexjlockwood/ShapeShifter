@@ -1,5 +1,6 @@
 import { Directive, ElementRef, Input } from '@angular/core';
 import { Point } from 'app/scripts/common';
+import { ThemeService } from 'app/services';
 import * as $ from 'jquery';
 import * as _ from 'lodash';
 
@@ -22,7 +23,7 @@ export class CanvasRulerDirective extends CanvasLayoutMixin() {
   private readonly $canvas: JQuery<HTMLCanvasElement>;
   private mousePoint: Point;
 
-  constructor(elementRef: ElementRef) {
+  constructor(elementRef: ElementRef, private readonly themeService: ThemeService) {
     super();
     this.$canvas = $(elementRef.nativeElement) as JQuery<HTMLCanvasElement>;
   }
@@ -78,15 +79,17 @@ export class CanvasRulerDirective extends CanvasLayoutMixin() {
 
     const spacingRulerPx = spacingArtPx * zoom;
 
+    const roundFn = n => _.round(n, 8);
+
     // Text labels.
-    ctx.fillStyle = 'rgba(0,0,0,.3)';
+    ctx.fillStyle = this.themeService.getDisabledTextColor();
     ctx.font = '10px Roboto, Helvetica Neue, sans-serif';
     if (isHorizontal) {
       ctx.textBaseline = 'alphabetic';
       ctx.textAlign = 'center';
       for (
         let x = 0, t = 0;
-        round(x) <= round(width - EXTRA_PADDING * 2);
+        roundFn(x) <= roundFn(width - EXTRA_PADDING * 2);
         x += spacingRulerPx, t += spacingArtPx
       ) {
         ctx.fillText(t.toString(), x, height - LABEL_OFFSET);
@@ -97,7 +100,7 @@ export class CanvasRulerDirective extends CanvasLayoutMixin() {
       ctx.textAlign = 'right';
       for (
         let y = 0, t = 0;
-        round(y) <= round(height - EXTRA_PADDING * 2);
+        roundFn(y) <= roundFn(height - EXTRA_PADDING * 2);
         y += spacingRulerPx, t += spacingArtPx
       ) {
         ctx.fillText(t.toString(), width - LABEL_OFFSET, y);
@@ -105,7 +108,7 @@ export class CanvasRulerDirective extends CanvasLayoutMixin() {
       }
     }
 
-    ctx.fillStyle = 'rgba(0,0,0,.7)';
+    ctx.fillStyle = this.themeService.getSecondaryTextColor();
     const mouseX = this.mousePoint ? this.mousePoint.x : -1;
     const mouseY = this.mousePoint ? this.mousePoint.y : -1;
     if (isHorizontal && mouseX >= 0) {
@@ -114,10 +117,6 @@ export class CanvasRulerDirective extends CanvasLayoutMixin() {
       ctx.fillText(mouseY.toString(), width - LABEL_OFFSET, mouseY * zoom);
     }
   }
-}
-
-function round(n: number) {
-  return _.round(n, 8);
 }
 
 export type Orientation = 'horizontal' | 'vertical';

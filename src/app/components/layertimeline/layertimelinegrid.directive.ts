@@ -1,7 +1,7 @@
 import { Directive, ElementRef, EventEmitter, HostListener, Input, Output } from '@angular/core';
 import { Animation } from 'app/model/timeline';
 import { Dragger } from 'app/scripts/dragger';
-import { ShortcutService } from 'app/services';
+import { ShortcutService, ThemeService } from 'app/services';
 import * as $ from 'jquery';
 import * as _ from 'lodash';
 
@@ -20,7 +20,7 @@ export class LayerTimelineGridDirective {
   private currentTime_: number;
   private horizZoom_: number;
 
-  constructor(elementRef: ElementRef) {
+  constructor(elementRef: ElementRef, private readonly themeService: ThemeService) {
     this.canvas = elementRef.nativeElement;
     this.$canvas = $(this.canvas);
   }
@@ -109,7 +109,7 @@ export class LayerTimelineGridDirective {
 
     if (this.isHeader) {
       // Text labels.
-      ctx.fillStyle = 'rgba(0,0,0,0.4)';
+      ctx.fillStyle = this.themeService.getSecondaryTextColor();
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.font = '10px Roboto';
@@ -124,7 +124,7 @@ export class LayerTimelineGridDirective {
       ctx.fillRect(this.currentTime * this.horizZoom - 1, height / 2 + 4, 2, height);
     } else {
       // Grid lines.
-      ctx.fillStyle = 'rgba(0,0,0,0.1)';
+      ctx.fillStyle = this.themeService.getDividerTextColor();
       for (
         let x = spacingPx;
         round(x) < round(width - TIMELINE_ANIMATION_PADDING * 2);

@@ -18,6 +18,7 @@
     .slt-layers-list,
     .slt-timeline-animation-rows {
         padding: 8px 0;
+        z-index: 2;
     }
     .slt-layer {
         box-sizing: border-box;
@@ -133,6 +134,7 @@
         .slt-timeline-animation-rows {
             padding-left: $timelineAnimationPadding;
             padding-right: $timelineAnimationPadding;
+            z-index: 2;
         }
         .slt-timeline-grid {
             position: absolute;
