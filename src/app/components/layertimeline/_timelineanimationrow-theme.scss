@@ -1,6 +1,7 @@
 @mixin ss-timelineanimationrow-theme($theme) {
     $foreground: map-get($theme, ss-foreground);
     $background: map-get($theme, ss-background);
+    $accent: map-get($theme, accent);
     .slt-properties {
         background-color: mat-color($background, base);
         box-shadow: 0 0 0 1px mat-color($foreground, divider) inset;

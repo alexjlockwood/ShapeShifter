@@ -20,7 +20,7 @@ const HEADER_HEIGHT = 40;
 const GRID_INTERVALS_MS = [10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000, 30000, 60000];
 
 @Directive({ selector: '[appLayerTimelineGrid]' })
-export class LayerTimelineGridDirective extends DestroyableMixin() {
+export class LayerTimelineGridDirective extends DestroyableMixin() implements OnInit {
   @Input() isHeader: boolean;
   @Output() scrub = new EventEmitter<ScrubEvent>();
 

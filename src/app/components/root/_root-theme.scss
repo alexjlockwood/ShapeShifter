@@ -1,5 +1,6 @@
 @mixin ss-root-theme($theme) {
     $background: map-get($theme, ss-background);
+    $accent: map-get($theme, accent);
     div.display-container {
         background-color: mat-color($background, base300);
     }

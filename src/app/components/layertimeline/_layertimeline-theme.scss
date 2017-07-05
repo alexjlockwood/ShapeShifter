@@ -1,6 +1,7 @@
 @mixin ss-layertimeline-theme($theme) {
     $foreground: map-get($theme, ss-foreground);
     $background: map-get($theme, ss-background);
+    $accent: map-get($theme, accent);
     .studio-layer-timeline {
         $headerHeight: 40px;
         background-color: mat-color($background, base100);

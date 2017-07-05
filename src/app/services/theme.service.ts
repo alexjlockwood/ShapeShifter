@@ -7,6 +7,7 @@ import { ThemeType } from 'app/store/theme/reducer';
 import { getThemeType } from 'app/store/theme/selectors';
 
 // TODO: make the canvas theme aware
+// TODO: change the animation block green color
 
 const LIGHT_PRIMARY_TEXT = 'rgba(0, 0, 0, 0.87)';
 const DARK_PRIMARY_TEXT = 'rgba(255, 255, 255, 1)';
