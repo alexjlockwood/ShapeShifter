@@ -3,7 +3,8 @@
     .app-canvas-container {
         .canvas-container {
             canvas.rendering-canvas {
-                background-color: mat-color($background, base);
+                // background-color: mat-color($background, base);
+                background-color: #fff;
             }
         }
     }
