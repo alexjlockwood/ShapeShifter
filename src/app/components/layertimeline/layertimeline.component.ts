@@ -711,9 +711,9 @@ export class LayerTimelineComponent extends DestroyableMixin()
     const animation = this.animation;
     const snapTimes = this.snapTimes.get(animation.id);
     const snapDelta = SNAP_PIXELS / this.horizZoom;
-    const reducerFn = (bestSnapTime, snapTime) => {
+    const reducerFn = (best, snapTime) => {
       const dist = Math.abs(time - snapTime);
-      return dist < snapDelta && dist < Math.abs(time - bestSnapTime) ? snapTime : bestSnapTime;
+      return dist < snapDelta && dist < Math.abs(time - best) ? snapTime : best;
     };
     let bestSnapTime = snapTimes.reduce(reducerFn, Infinity);
     if (includeActiveTime) {
@@ -794,7 +794,7 @@ export class LayerTimelineComponent extends DestroyableMixin()
         orderedLayerInfos = [];
         scrollerRect = $scroller.get(0).getBoundingClientRect();
         const scrollTop = $scroller.scrollTop();
-        $layersList.find('.slt-layer-container').each((_, element) => {
+        $layersList.find('.slt-layer-container').each((__, element) => {
           // toString() is necessary because JQuery converts the ID into a number.
           const layerId: string = ($(element).data('layer-id') || '').toString();
           if (!layerId) {

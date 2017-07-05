@@ -49,6 +49,7 @@
     "sax": "^1.2.4",
     "stable": "^0.1.6",
     "tinycolor2": "^1.4.1",
+    "typescript": "^2.4.1",
     "whet.extend": "~0.9.9",
     "zone.js": "^0.8.12"
   },
@@ -85,7 +86,6 @@
     "sass-lint": "^1.10.2",
     "ts-node": "^3.2.0",
     "tslint": "^5.5.0",
-    "typescript": "~2.4.1",
     "webdriver-manager": "12.0.6"
   },
   "importSort": {
