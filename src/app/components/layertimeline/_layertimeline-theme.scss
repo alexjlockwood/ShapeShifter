@@ -59,6 +59,9 @@
                     margin-right: 4px;
                     font-weight: 500;
                 }
+                .slt-timeline-header-grid {
+                    background-color: mat-color($background, base100);
+                }
             }
         }
         .slt-header {

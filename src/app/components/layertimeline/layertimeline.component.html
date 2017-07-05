@@ -10,7 +10,6 @@
 
     <div class="slt-layers mat-elevation-z2"
       fxLayout="column"
-      *ngIf="(this.themeService.asObservable() | async) as theme"
       [class.dark-to-light-base100]="!theme.isInitialPageLoad && theme.themeType === 'light'"
       [class.light-to-dark-base100]="!theme.isInitialPageLoad && theme.themeType === 'dark'">
       <app-splitter [edge]="'right'"
@@ -26,17 +25,17 @@
         <md-menu #fileMenu="mdMenu">
           <button md-menu-item
             (click)="this.onNewWorkspaceClick()">
-          New
-        </button>
+            New
+          </button>
           <button md-menu-item
             (click)="this.onLaunchFilePickerClick('openFileButton')">
-          Open
-          <input
-            id="openFileButton"
-            type="file"
-            accept=".shapeshifter"
-            (change)="onImportedFilesPicked(($event.target || $event.srcElement).files)">
-        </button>
+            Open
+            <input
+              id="openFileButton"
+              type="file"
+              accept=".shapeshifter"
+              (change)="onImportedFilesPicked(($event.target || $event.srcElement).files)">
+          </button>
           <button md-menu-item
             (click)="this.onSaveToFileClick()">
           Save
@@ -166,10 +165,10 @@
         <div *ngIf="(this.dragIndicatorObservable | async) as dragData"
           class="slt-layers-list-drag-indicator"
           [ngStyle]="{
-          'display': dragData.isVisible ? 'block' : 'none',
-          'left': dragData.left + 'px',
-          'top': dragData.top + 'px'
-        }">
+            'display': dragData.isVisible ? 'block' : 'none',
+            'left': dragData.left + 'px',
+            'top': dragData.top + 'px'
+          }">
         </div>
       </div>
     </div>
@@ -210,6 +209,8 @@
             </div>
             <canvas appLayerTimelineGrid
               class="slt-timeline-header-grid"
+              [class.dark-to-light-base100]="!theme.isInitialPageLoad && theme.themeType === 'light'"
+              [class.light-to-dark-base100]="!theme.isInitialPageLoad && theme.themeType === 'dark'"
               [animation]="model.animation"
               [horizZoom]="animationData.horizZoom"
               [isHeader]="true"
