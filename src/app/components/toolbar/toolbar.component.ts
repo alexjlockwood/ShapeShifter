@@ -1,6 +1,5 @@
 import 'rxjs/add/operator/combineLatest';
 
-import { animate, state, style, transition, trigger } from '@angular/animations';
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { ActionMode, ActionSource, Selection, SelectionType } from 'app/model/actionmode';
 import { MorphableLayer } from 'app/model/layers';
@@ -14,12 +13,6 @@ import { getThemeType } from 'app/store/theme/selectors';
 import * as _ from 'lodash';
 import { Observable } from 'rxjs/Observable';
 
-type ToolbarColor = 'inactive_light' | 'active_light' | 'inactive_dark' | 'active_dark';
-const INACTIVE_LIGHT: ToolbarColor = 'inactive_light';
-const ACTIVE_LIGHT: ToolbarColor = 'active_light';
-const INACTIVE_DARK: ToolbarColor = 'inactive_dark';
-const ACTIVE_DARK: ToolbarColor = 'active_dark';
-
 declare const ga: Function;
 
 @Component({
@@ -27,19 +20,16 @@ declare const ga: Function;
   templateUrl: './toolbar.component.html',
   styleUrls: ['./toolbar.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  animations: [
-    trigger('toolbarColor', [
-      state(INACTIVE_LIGHT, style({ backgroundColor: '#607D8B' })), // Blue grey 500.
-      state(ACTIVE_LIGHT, style({ backgroundColor: '#2979FF' })), // Blue A400.
-      state(INACTIVE_DARK, style({ backgroundColor: '#7B1FA2' })), // Purple 700.
-      state(ACTIVE_DARK, style({ backgroundColor: '#00E676' })), // Green A400.
-      transition('* => *', animate('2000ms ease-out')),
-    ]),
-  ],
 })
 export class ToolbarComponent implements OnInit {
   toolbarData$: Observable<ToolbarData>;
-  toolbarColor$: Observable<ToolbarColor>;
+  toolbarState$: Observable<{
+    prevThemeType: ThemeType;
+    currThemeType: ThemeType;
+    prevIsActionMode: boolean;
+    currIsActionMode: boolean;
+  }>;
+  private hasActionModeBeenEnabled = false;
 
   constructor(
     private readonly actionModeService: ActionModeService,
@@ -48,25 +38,25 @@ export class ToolbarComponent implements OnInit {
   ) {}
 
   ngOnInit() {
+    let prevThemeType: ThemeType;
+    let currThemeType = this.themeService.getThemeType().themeType;
+    let prevIsActionMode: boolean;
+    let currIsActionMode = this.actionModeService.getActionMode() !== ActionMode.None;
     const toolbarState = this.store.select(getToolbarState);
     this.toolbarData$ = toolbarState.map(
       ({ mode, fromMl, toMl, selections, unpairedSubPath, block }) => {
         return new ToolbarData(mode, fromMl, toMl, selections, unpairedSubPath, block);
       },
     );
-    this.toolbarColor$ = Observable.combineLatest(
+    this.toolbarState$ = Observable.combineLatest(
       toolbarState,
       this.themeService.asObservable().map(t => t.themeType),
-    ).map(([{ mode }, type]) => {
-      if (mode === ActionMode.None && type === 'dark') {
-        return INACTIVE_DARK;
-      } else if (mode === ActionMode.None && type === 'light') {
-        return INACTIVE_LIGHT;
-      } else if (mode !== ActionMode.None && type === 'dark') {
-        return ACTIVE_DARK;
-      } else {
-        return ACTIVE_LIGHT;
-      }
+    ).map(([{ mode }, themeType]) => {
+      prevThemeType = currThemeType;
+      currThemeType = themeType;
+      prevIsActionMode = currIsActionMode;
+      currIsActionMode = mode !== ActionMode.None;
+      return { prevThemeType, currThemeType, prevIsActionMode, currIsActionMode };
     });
   }
 

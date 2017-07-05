@@ -1,212 +1,221 @@
-<div *ngIf="(this.toolbarData$ | async) as toolbarData"
-  fxLayout="row"
-  fxLayoutAlign="center center"
-  class="toolbar mat-elevation-z2"
-  [@toolbarColor]="this.toolbarColor$ | async">
+<ng-container *ngIf="(this.toolbarData$ | async) as toolbarData">
+  <div fxLayout="row"
+    fxLayoutAlign="center center"
+    *ngIf="(this.toolbarState$ | async) as state"
+    [class.dark-to-light-primary]="state.prevThemeType === 'dark' && state.currThemeType === 'light' && !state.currIsActionMode"
+    [class.light-to-dark-primary]="state.prevThemeType === 'light' && state.currThemeType === 'dark' && !state.currIsActionMode"
+    [class.dark-to-light-accent]="state.prevThemeType === 'dark' && state.currThemeType === 'light' && state.currIsActionMode"
+    [class.light-to-dark-accent]="state.prevThemeType === 'light' && state.currThemeType === 'dark' && state.currIsActionMode"
+    [class.action-mode-on-to-off-dark]="state.prevIsActionMode && !state.currIsActionMode && state.currThemeType === 'dark'"
+    [class.action-mode-off-to-on-dark]="!state.prevIsActionMode && state.currIsActionMode && state.currThemeType === 'dark'"
+    [class.action-mode-on-to-off-light]="state.prevIsActionMode && !state.currIsActionMode && state.currThemeType === 'light'"
+    [class.action-mode-off-to-on-light]="!state.prevIsActionMode && state.currIsActionMode && state.currThemeType === 'light'"
+    class="toolbar mat-elevation-z2">
 
-  <ng-container *ngIf="{
-    showActionMode: toolbarData.shouldShowActionMode(),
-    numSubPaths: toolbarData.getNumSubPaths(),
-    numSegments: toolbarData.getNumSegments(),
-    numPoints: toolbarData.getNumPoints(),
-    toolbarTitle: toolbarData.getToolbarTitle(),
-    toolbarSubtitle: toolbarData.getToolbarSubtitle(),
-    showAddPoints: toolbarData.getNumSubPaths() > 0 || toolbarData.getNumSegments() > 0 || !toolbarData.isSelectionMode(),
-    showSplitSubPaths: toolbarData.getNumSubPaths() > 0 || toolbarData.getNumSegments() > 0 || !toolbarData.isSelectionMode(),
-    showPairSubPaths: toolbarData.shouldShowPairSubPaths(),
-    showReverseSubPaths: toolbarData.getNumSubPaths() === 1,
-    showShiftSubPath: toolbarData.shouldShowShiftSubPath(),
-    showSetFirstPosition: toolbarData.shouldShowSetFirstPosition(),
-    showDeleteSubPaths: toolbarData.getNumSplitSubPaths() > 0,
-    showDeleteSegments: toolbarData.getNumSegments() > 0,
-    showDeletePoints: toolbarData.getNumSplitPoints() > 0,
-    showSplitInHalf: toolbarData.shouldShowSplitInHalf(),
-    showAutoFix: toolbarData.shouldShowAutoFix()
-  } as data">
+    <ng-container *ngIf="{
+      showActionMode: toolbarData.shouldShowActionMode(),
+      numSubPaths: toolbarData.getNumSubPaths(),
+      numSegments: toolbarData.getNumSegments(),
+      numPoints: toolbarData.getNumPoints(),
+      toolbarTitle: toolbarData.getToolbarTitle(),
+      toolbarSubtitle: toolbarData.getToolbarSubtitle(),
+      showAddPoints: toolbarData.getNumSubPaths() > 0 || toolbarData.getNumSegments() > 0 || !toolbarData.isSelectionMode(),
+      showSplitSubPaths: toolbarData.getNumSubPaths() > 0 || toolbarData.getNumSegments() > 0 || !toolbarData.isSelectionMode(),
+      showPairSubPaths: toolbarData.shouldShowPairSubPaths(),
+      showReverseSubPaths: toolbarData.getNumSubPaths() === 1,
+      showShiftSubPath: toolbarData.shouldShowShiftSubPath(),
+      showSetFirstPosition: toolbarData.shouldShowSetFirstPosition(),
+      showDeleteSubPaths: toolbarData.getNumSplitSubPaths() > 0,
+      showDeleteSegments: toolbarData.getNumSegments() > 0,
+      showDeletePoints: toolbarData.getNumSplitPoints() > 0,
+      showSplitInHalf: toolbarData.shouldShowSplitInHalf(),
+      showAutoFix: toolbarData.shouldShowAutoFix()
+    } as data">
 
-    <!-- Shape Shifter logo. -->
-    <md-icon *ngIf="!data.showActionMode"
-      class="toolbar-logo"
-      svgIcon="shapeshifter">
-    </md-icon>
+      <!-- Shape Shifter logo. -->
+      <md-icon *ngIf="!data.showActionMode"
+        class="toolbar-logo"
+        svgIcon="shapeshifter">
+      </md-icon>
 
-    <!-- Action mode close button. -->
-    <button md-icon-button
-      *ngIf="data.showActionMode"
-      class="action-mode-close-icon"
-      (click)="onCloseActionModeClick($event)">
+      <!-- Action mode close button. -->
+      <button md-icon-button
+        *ngIf="data.showActionMode"
+        class="action-mode-close-icon"
+        (click)="onCloseActionModeClick($event)">
       <md-icon>{{ toolbarData.isSelectionMode() ? 'arrow_back' : 'close' }}</md-icon>
     </button>
 
-    <!-- Toolbar text. -->
-    <div fxLayout="column">
-      <span class="toolbar-title">{{ data.toolbarTitle }}</span>
-      <span *ngIf="data.toolbarSubtitle"
-        class="toolbar-subtitle">{{ data.toolbarSubtitle }}
+      <!-- Toolbar text. -->
+      <div fxLayout="column">
+        <span class="toolbar-title">{{ data.toolbarTitle }}</span>
+        <span *ngIf="data.toolbarSubtitle"
+          class="toolbar-subtitle">{{ data.toolbarSubtitle }}
       </span>
-    </div>
+      </div>
 
-    <span fxFlex="1 1 auto"></span>
+      <span fxFlex="1 1 auto"></span>
 
-    <button md-icon-button
-      class="toolbar-action-button"
-      (click)="onAutoFixClick($event)"
-      mdTooltip="Auto fix"
-      mdTooltipShowDelay="500"
-      *ngIf="data.showAutoFix"
-      mdTooltipPosition="below">
+      <button md-icon-button
+        class="toolbar-action-button"
+        (click)="onAutoFixClick($event)"
+        mdTooltip="Auto fix"
+        mdTooltipShowDelay="500"
+        *ngIf="data.showAutoFix"
+        mdTooltipPosition="below">
       <md-icon svgIcon="autofix"></md-icon>
     </button>
 
-    <!-- SubPath mode. -->
-    <button md-icon-button
-      class="toolbar-action-button"
-      mdTooltip="Add points (A)"
-      mdTooltipPosition="below"
-      *ngIf="data.showAddPoints"
-      mdTooltipShowDelay="500"
-      (click)="onAddPointsClick($event)"
-      [class.activated]="toolbarData.isAddPointsMode()">
+      <!-- SubPath mode. -->
+      <button md-icon-button
+        class="toolbar-action-button"
+        mdTooltip="Add points (A)"
+        mdTooltipPosition="below"
+        *ngIf="data.showAddPoints"
+        mdTooltipShowDelay="500"
+        (click)="onAddPointsClick($event)"
+        [class.activated]="toolbarData.isAddPointsMode()">
       <md-icon>add_circle_outline</md-icon>
     </button>
-    <button md-icon-button
-      class="toolbar-action-button"
-      mdTooltip="Split subpaths (S)"
-      mdTooltipPosition="below"
-      *ngIf="data.showSplitSubPaths"
-      mdTooltipShowDelay="500"
-      (click)="onSplitSubPathsClick($event)"
-      [class.activated]="toolbarData.isSplitSubPathsMode()">
+      <button md-icon-button
+        class="toolbar-action-button"
+        mdTooltip="Split subpaths (S)"
+        mdTooltipPosition="below"
+        *ngIf="data.showSplitSubPaths"
+        mdTooltipShowDelay="500"
+        (click)="onSplitSubPathsClick($event)"
+        [class.activated]="toolbarData.isSplitSubPathsMode()">
       <md-icon>content_cut</md-icon>
     </button>
-    <button md-icon-button
-      class="toolbar-action-button"
-      mdTooltip="Pair subpaths (D)"
-      mdTooltipPosition="below"
-      *ngIf="data.showPairSubPaths"
-      mdTooltipShowDelay="500"
-      (click)="onPairSubPathsClick($event)"
-      [class.activated]="toolbarData.isPairSubPathsMode()">
+      <button md-icon-button
+        class="toolbar-action-button"
+        mdTooltip="Pair subpaths (D)"
+        mdTooltipPosition="below"
+        *ngIf="data.showPairSubPaths"
+        mdTooltipShowDelay="500"
+        (click)="onPairSubPathsClick($event)"
+        [class.activated]="toolbarData.isPairSubPathsMode()">
       <md-icon>compare_arrows</md-icon>
     </button>
-    <button md-icon-button
-      class="toolbar-action-button"
-      mdTooltip="Reverse points (R)"
-      mdTooltipPosition="below"
-      *ngIf="data.showReverseSubPaths"
-      mdTooltipShowDelay="500"
-      (click)="onReversePointsClick($event)"
-      [disabled]="!toolbarData.isSelectionMode()">
+      <button md-icon-button
+        class="toolbar-action-button"
+        mdTooltip="Reverse points (R)"
+        mdTooltipPosition="below"
+        *ngIf="data.showReverseSubPaths"
+        mdTooltipShowDelay="500"
+        (click)="onReversePointsClick($event)"
+        [disabled]="!toolbarData.isSelectionMode()">
       <md-icon svgIcon="reverse"></md-icon>
     </button>
-    <button md-icon-button
-      class="toolbar-action-button"
-      mdTooltip="Shift back points (B)"
-      mdTooltipPosition="below"
-      *ngIf="data.showShiftSubPath"
-      mdTooltipShowDelay="500"
-      (click)="onShiftBackPointsClick($event)"
-      [disabled]="!toolbarData.isSelectionMode()">
+      <button md-icon-button
+        class="toolbar-action-button"
+        mdTooltip="Shift back points (B)"
+        mdTooltipPosition="below"
+        *ngIf="data.showShiftSubPath"
+        mdTooltipShowDelay="500"
+        (click)="onShiftBackPointsClick($event)"
+        [disabled]="!toolbarData.isSelectionMode()">
       <md-icon>skip_previous</md-icon>
     </button>
-    <button md-icon-button
-      class="toolbar-action-button"
-      mdTooltip="Shift forward points (F)"
-      mdTooltipPosition="below"
-      *ngIf="data.showShiftSubPath"
-      mdTooltipShowDelay="500"
-      (click)="onShiftForwardPointsClick($event)"
-      [disabled]="!toolbarData.isSelectionMode()">
+      <button md-icon-button
+        class="toolbar-action-button"
+        mdTooltip="Shift forward points (F)"
+        mdTooltipPosition="below"
+        *ngIf="data.showShiftSubPath"
+        mdTooltipShowDelay="500"
+        (click)="onShiftForwardPointsClick($event)"
+        [disabled]="!toolbarData.isSelectionMode()">
       <md-icon>skip_next</md-icon>
     </button>
-    <button md-icon-button
-      class="toolbar-action-button"
-      mdTooltipPosition="below"
-      mdTooltip="Delete subpath{{data.numSubPaths === 1 ? '' : 's'}}"
-      mdTooltipShowDelay="500"
-      *ngIf="data.showDeleteSubPaths"
-      (click)="onDeleteSubPathsClick($event)">
+      <button md-icon-button
+        class="toolbar-action-button"
+        mdTooltipPosition="below"
+        mdTooltip="Delete subpath{{data.numSubPaths === 1 ? '' : 's'}}"
+        mdTooltipShowDelay="500"
+        *ngIf="data.showDeleteSubPaths"
+        (click)="onDeleteSubPathsClick($event)">
       <md-icon>delete</md-icon>
     </button>
 
-    <!-- Segment mode. -->
-    <button md-icon-button
-      class="toolbar-action-button"
-      mdTooltipPosition="below"
-      mdTooltip="Delete segment{{data.numSegments === 1 ? '' : 's'}}"
-      mdTooltipShowDelay="500"
-      *ngIf="data.showDeleteSegments"
-      (click)="onDeleteSegmentsClick($event)">
+      <!-- Segment mode. -->
+      <button md-icon-button
+        class="toolbar-action-button"
+        mdTooltipPosition="below"
+        mdTooltip="Delete segment{{data.numSegments === 1 ? '' : 's'}}"
+        mdTooltipShowDelay="500"
+        *ngIf="data.showDeleteSegments"
+        (click)="onDeleteSegmentsClick($event)">
       <md-icon>delete</md-icon>
     </button>
 
-    <!-- Point mode. -->
-    <button md-icon-button
-      mdTooltip="Add point (A)"
-      mdTooltipPosition="below"
-      mdTooltipShowDelay="500"
-      *ngIf="data.showSplitInHalf"
-      (mouseenter)="onSplitInHalfHoverEvent(true)"
-      (mouseleave)="onSplitInHalfHoverEvent(false)"
-      (click)="onSplitInHalfClick($event)">
+      <!-- Point mode. -->
+      <button md-icon-button
+        mdTooltip="Add point (A)"
+        mdTooltipPosition="below"
+        mdTooltipShowDelay="500"
+        *ngIf="data.showSplitInHalf"
+        (mouseenter)="onSplitInHalfHoverEvent(true)"
+        (mouseleave)="onSplitInHalfHoverEvent(false)"
+        (click)="onSplitInHalfClick($event)">
       <md-icon>add_circle_outline</md-icon>
     </button>
-    <button md-icon-button
-      class="toolbar-action-button"
-      mdTooltip="Set first point (F)"
-      mdTooltipPosition="below"
-      mdTooltipShowDelay="500"
-      *ngIf="data.showSetFirstPosition"
-      (click)="onSetFirstPositionClick($event)">
+      <button md-icon-button
+        class="toolbar-action-button"
+        mdTooltip="Set first point (F)"
+        mdTooltipPosition="below"
+        mdTooltipShowDelay="500"
+        *ngIf="data.showSetFirstPosition"
+        (click)="onSetFirstPositionClick($event)">
       <md-icon>looks_one</md-icon>
     </button>
-    <button md-icon-button
-      class="toolbar-action-button"
-      mdTooltipPosition="below"
-      mdTooltip="Delete point{{data.numPoints === 1 ? '' : 's'}}"
-      mdTooltipShowDelay="500"
-      *ngIf="data.showDeletePoints"
-      (click)="onDeletePointsClick($event)">
+      <button md-icon-button
+        class="toolbar-action-button"
+        mdTooltipPosition="below"
+        mdTooltip="Delete point{{data.numPoints === 1 ? '' : 's'}}"
+        mdTooltipShowDelay="500"
+        *ngIf="data.showDeletePoints"
+        (click)="onDeletePointsClick($event)">
       <md-icon>delete</md-icon>
     </button>
 
-    <!-- Overflow menu buttons. -->
-    <button class="toolbar-action-button"
-      md-icon-button
-      (click)="$event.stopPropagation()"
-      [mdMenuTriggerFor]="overflowMenu">
+      <!-- Overflow menu buttons. -->
+      <button class="toolbar-action-button"
+        md-icon-button
+        (click)="$event.stopPropagation()"
+        [mdMenuTriggerFor]="overflowMenu">
       <md-icon>more_vert</md-icon>
     </button>
-    <md-menu #overflowMenu="mdMenu">
-      <div md-menu-item
-        (click)="this.onDarkThemeSliderClick()">
-        <md-slide-toggle [(ngModel)]="darkTheme"></md-slide-toggle>
-        <span>Dark theme</span>
-      </div>
-      <a href="http://www.androiddesignpatterns.com/2016/11/introduction-to-icon-animation-techniques.html"
-        target="_blank"
-        class="toolbar-overflow-link-item">
+      <md-menu #overflowMenu="mdMenu">
+        <div md-menu-item
+          (click)="this.onDarkThemeSliderClick()">
+          <md-slide-toggle [(ngModel)]="darkTheme"></md-slide-toggle>
+          <span>Dark theme</span>
+        </div>
+        <a href="http://www.androiddesignpatterns.com/2016/11/introduction-to-icon-animation-techniques.html"
+          target="_blank"
+          class="toolbar-overflow-link-item">
         <button md-menu-item (click)="this.onGettingStartedClick()">
           <md-icon>info</md-icon>
           <span>Getting started</span>
         </button>
       </a>
-      <a href="https://github.com/alexjlockwood/ShapeShifter"
-        target="_blank"
-        class="toolbar-overflow-link-item">
+        <a href="https://github.com/alexjlockwood/ShapeShifter"
+          target="_blank"
+          class="toolbar-overflow-link-item">
         <button md-menu-item (click)="this.onContributeClick()">
           <md-icon style="line-height: 1" svgIcon="contribute"></md-icon>
           <span>Contribute</span>
         </button>
       </a>
-      <a href="https://github.com/alexjlockwood/ShapeShifter/issues"
-        target="_blank"
-        class="toolbar-overflow-link-item">
+        <a href="https://github.com/alexjlockwood/ShapeShifter/issues"
+          target="_blank"
+          class="toolbar-overflow-link-item">
         <button md-menu-item (click)="this.onSendFeedbackClick()">
           <md-icon>bug_report</md-icon>
           <span>Send feedback</span>
         </button>
       </a>
-    </md-menu>
-  </ng-container>
-</div>
+      </md-menu>
+    </ng-container>
+  </div>
+</ng-container>

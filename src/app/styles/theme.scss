@@ -100,28 +100,63 @@ $dark-theme: ss-dark-theme($dark-primary, $dark-accent, $dark-warn);
     animation-fill-mode: forwards;
 }
 
-@mixin build-theme-animations($bgKey) {
-    $light-background: map-get($light-theme, ss-background);
-    $dark-background: map-get($dark-theme, ss-background);
-    .dark-to-light-#{$bgKey} {
-        animation-name: darkToLight#{$bgKey};
+@mixin build-theme-animations($themeKey, $paletteKey, $animName) {
+    $light: map-get($light-theme, $themeKey);
+    $dark: map-get($dark-theme, $themeKey);
+    .dark-to-light-#{$animName} {
+        animation-name: darkToLight#{$animName};
         @include theme-animation-properties;
     }
-    .light-to-dark-#{$bgKey} {
-        animation-name: lightToDark#{$bgKey};
+    .light-to-dark-#{$animName} {
+        animation-name: lightToDark#{$animName};
         @include theme-animation-properties;
     }
-    @keyframes lightToDark#{$bgKey} {
-        0% { background-color: mat-color($light-background, $bgKey); }
-        100% { background-color: mat-color($dark-background, $bgKey); }
+    @keyframes lightToDark#{$animName} {
+        0% { background-color: mat-color($light, $paletteKey); }
+        100% { background-color: mat-color($dark, $paletteKey); }
     }
-    @keyframes darkToLight#{$bgKey} {
-        0% { background-color: mat-color($dark-background, $bgKey); }
-        100% { background-color: mat-color($light-background, $bgKey); }
+    @keyframes darkToLight#{$animName} {
+        0% { background-color: mat-color($dark, $paletteKey); }
+        100% { background-color: mat-color($light, $paletteKey); }
     }
 }
 
-@include build-theme-animations(base);
-@include build-theme-animations(base100);
-@include build-theme-animations(base200);
-@include build-theme-animations(base300);
+@include build-theme-animations(ss-background, base, base);
+@include build-theme-animations(ss-background, base100, base100);
+@include build-theme-animations(ss-background, base200, base200);
+@include build-theme-animations(ss-background, base300, base300);
+@include build-theme-animations(primary, default, primary);
+@include build-theme-animations(accent, default, accent);
+
+.action-mode-on-to-off-dark {
+    animation-name: actionModeOnToOffDark;
+    @include theme-animation-properties;
+}
+.action-mode-off-to-on-dark {
+    animation-name: actionModeOffToOnDark;
+    @include theme-animation-properties;
+}
+.action-mode-on-to-off-light {
+    animation-name: actionModeOnToOffLight;
+    @include theme-animation-properties;
+}
+.action-mode-off-to-on-light {
+    animation-name: actionModeOffToOnLight;
+    @include theme-animation-properties;
+}
+@keyframes actionModeOnToOffDark {
+    0% { background-color: mat-color(map-get($dark-theme, accent)); }
+    100% { background-color: mat-color(map-get($dark-theme, primary)); }
+}
+@keyframes actionModeOffToOnDark {
+    0% { background-color: mat-color(map-get($dark-theme, primary)); }
+    100% { background-color: mat-color(map-get($dark-theme, accent)); }
+}
+@keyframes actionModeOnToOffLight {
+    0% { background-color: mat-color(map-get($light-theme, accent)); }
+    100% { background-color: mat-color(map-get($light-theme, primary)); }
+}
+@keyframes actionModeOffToOnLight {
+    0% { background-color: mat-color(map-get($light-theme, primary)); }
+    100% { background-color: mat-color(map-get($light-theme, accent)); }
+}
