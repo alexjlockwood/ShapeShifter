@@ -6,6 +6,8 @@ import { SetTheme } from 'app/store/theme/actions';
 import { ThemeType } from 'app/store/theme/reducer';
 import { getThemeType } from 'app/store/theme/selectors';
 
+// TODO: make the canvas theme aware
+
 const LIGHT_PRIMARY_TEXT = 'rgba(0, 0, 0, 0.87)';
 const DARK_PRIMARY_TEXT = 'rgba(255, 255, 255, 1)';
 const LIGHT_SECONDARY_TEXT = 'rgba(0, 0, 0, 0.54)';
