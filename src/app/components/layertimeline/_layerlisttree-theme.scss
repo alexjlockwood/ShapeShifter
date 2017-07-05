@@ -5,10 +5,10 @@
     .slt-layer {
         color: mat-color($foreground, secondary-text);
         &:focus {
-            box-shadow: 0 0 0 1px mat-color($background, blue400) inset;
+            box-shadow: 0 0 0 1px mat-color($accent) inset;
         }
         &.is-selected {
-            background-color: mat-color($accent, darker);
+            background-color: mat-color($accent);
             color: #fff;
             &,
             & md-icon {
@@ -38,9 +38,9 @@
         }
     }
     .slt-layers-list-drag-indicator {
-        background-color: mat-color($background, blue400);
+        background-color: mat-color($accent);
         &::before {
-            background-color: mat-color($background, blue400);
+            background-color: mat-color($accent);
         }
     }
 }

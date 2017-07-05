@@ -19,6 +19,7 @@
     <div *ngIf="model.numSelections > 0"
       fxLayout="column"
       fxFlex>
+      <!-- TODO: animate the backgrounmd color when theme changes -->
       <div class="spi-header mat-elevation-z2"
         fxLayoutAlign="center center"
         fxFlex="none">
@@ -78,17 +79,17 @@
             <span *ngIf="!ip.isEditable()"
               class="spi-property-value-static"
               fxFlex>
-            <!-- Only show text if the property isn't inspectable. -->
-            {{ ip.getDisplayValue() }}
-          </span>
+              <!-- Only show text if the property isn't inspectable. -->
+              {{ ip.getDisplayValue() }}
+            </span>
             <div *ngIf="ip.isEditable()"
               class="spi-property-value-editor"
               fxLayout="column"
               fxFlex>
               <input (keydown)="this.onValueEditorKeyDown($event, ip)"
                 [ngClass]="{
-                'has-input-error': ip.typeName === 'PathProperty' && this.shouldShowInvalidPathAnimationBlockMsg(model)
-              }"
+                  'has-input-error': ip.typeName === 'PathProperty' && this.shouldShowInvalidPathAnimationBlockMsg(model)
+                }"
                 (blur)="ip.resolveEnteredValue()"
                 name="{{ip.propertyName}}"
                 [(ngModel)]="ip.editableValue"

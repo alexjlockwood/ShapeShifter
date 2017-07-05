@@ -2,7 +2,7 @@
     $foreground: map-get($theme, ss-foreground);
     $background: map-get($theme, ss-background);
     .slt-properties {
-        background-color: #fff;
+        background-color: mat-color($background, base);
         box-shadow: 0 0 0 1px mat-color($foreground, divider) inset;
         .slt-property {
             &:not(:last-child) {
@@ -11,7 +11,7 @@
             .slt-timeline-block {
                 background-color: mat-color(mat-palette($mat-green, 200));
                 &.is-selected {
-                    background-color: mat-color($background, blue500);
+                    background-color: mat-color($accent);
                 }
                 &.has-error {
                     background-color: mat-color(mat-palette($mat-red, A200));

@@ -180,7 +180,7 @@
     <md-menu #overflowMenu="mdMenu">
       <div md-menu-item
         (click)="this.onDarkThemeSliderClick()">
-        <md-slide-toggle [checked]="(this.themeService.asObservable() | async) === 'dark'"></md-slide-toggle>
+        <md-slide-toggle [(ngModel)]="darkTheme"></md-slide-toggle>
         <span>Dark theme</span>
       </div>
       <a href="http://www.androiddesignpatterns.com/2016/11/introduction-to-icon-animation-techniques.html"

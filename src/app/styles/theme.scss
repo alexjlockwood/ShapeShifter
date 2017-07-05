@@ -11,40 +11,25 @@
 @include mat-core();
 
 $ss-light-theme-foreground: (
-  // base:              black,
   divider:                rgba(black, 0.12),
-  // dividers:          $black-12-opacity,
-  // disabled:          rgba(black, 0.38),
-  // disabled-button:   rgba(black, 0.38),
+  divider-inverse:        rgba(white, 0.12),
   disabled-text:          rgba(black, 0.38),
   disabled-text-inverse:  rgba(white, 0.5),
-  // hint-text:         rgba(black, 0.38),
   secondary-text:         rgba(black, 0.54),
   secondary-text-inverse: rgba(white, 0.7),
-  // icon:              rgba(black, 0.54),
-  // icons:             rgba(black, 0.54),
   primary-text:           rgba(black, 0.87),
-  primary-text-inverse:   white,
-  // slider-off:        rgba(black, 0.26),
-  // slider-off-active: rgba(black, 0.38),
+  primary-text-inverse:   rgba(white, 1),
 );
+
 $ss-dark-theme-foreground: (
-  // base:              white,
   divider:                rgba(white, 0.12),
-  // dividers:          $white-12-opacity,
-  // disabled:          rgba(white, 0.3),
-  // disabled-button:   rgba(white, 0.3),
-  disabled-text:         rgba(white, 0.5),
-  disabled-text-inverse: rgba(black, 0.38),
-  // hint-text:         rgba(white, 0.3),
+  divider-inverse:        rgba(black, 0.12),
+  disabled-text:          rgba(white, 0.5),
+  disabled-text-inverse:  rgba(black, 0.38),
   secondary-text:         rgba(white, 0.7),
   secondary-text-inverse: rgba(black, 0.54),
-  // icon:              white,
-  // icons:             white,
-  primary-text:           white,
+  primary-text:           rgba(white, 1),
   primary-text-inverse:   rgba(black, 0.87),
-  // slider-off:        rgba(white, 0.3),
-  // slider-off-active: rgba(white, 0.3),
 );
 
 $ss-light-theme-background: (
@@ -52,48 +37,17 @@ $ss-light-theme-background: (
   base50: map-get($mat-grey, 50),
   base100: map-get($mat-grey, 100),
   base200: map-get($mat-grey, 200),
-  base300: map-get($mat-grey, 300),
-  blue400: map-get($mat-blue, 400),
-  blue500: map-get($mat-blue, 500),
-  blue600: map-get($mat-blue, 600),
-  blue700: map-get($mat-blue, 700),
   base200-inverse: map-get($mat-grey, 900),
-  // status-bar: map_get($mat-grey, 300),
-  // app-bar:    map_get($mat-grey, 100),
-  // background: map_get($mat-grey, 50),
-  // hover:      rgba(black, 0.04), // TODO(kara): check style with Material Design UX
-  // card:       white,
-  // dialog:     white,
-  // disabled-button: $black-12-opacity,
-  // raised-button: white,
-  // focused-button: $black-6-opacity,
-  // selected-button: map_get($mat-grey, 300),
-  // selected-disabled-button: map_get($mat-grey, 400),
-  // disabled-button-toggle: map_get($mat-grey, 200),
+  base300: map-get($mat-grey, 300),
 );
+
 $ss-dark-theme-background: (
   base: black,
   base50: #303030,
   base100: map_get($mat-grey, 800),
   base200: map_get($mat-grey, 900),
-  base300: #101010,
-  blue400: map-get($mat-blue, 400), // TODO: update this color
-  blue500: map-get($mat-blue, 500), // TODO: update this color
-  blue600: map-get($mat-blue, 600), // TODO: update this color
-  blue700: map-get($mat-blue, 700), // TODO: update this color
   base200-inverse: map-get($mat-grey, 200),
-  // status-bar: black,
-  // app-bar:    map_get($mat-grey, 900),
-  // background: #303030,
-  // hover:      rgba(white, 0.04), // TODO(kara): check style with Material Design UX
-  // card:       map_get($mat-grey, 800),
-  // dialog:     map_get($mat-grey, 800),
-  // disabled-button: $white-12-opacity,
-  // raised-button: map-get($mat-grey, 800),
-  // focused-button: $white-6-opacity,
-  // selected-button: map_get($mat-grey, 900),
-  // selected-disabled-button: map_get($mat-grey, 800),
-  // disabled-button-toggle: map_get($mat-grey, 1000),
+  base300: #101010,
 );
 
 @function ss-light-theme($primary, $accent, $warn: mat-palette($mat-red)) {
@@ -128,7 +82,7 @@ $ss-dark-theme-background: (
 }
 
 $light-primary: mat-palette($mat-blue-grey, 500);
-$light-accent: mat-palette($mat-blue, A200, A100, A400);
+$light-accent: mat-palette($mat-blue, A400, A200, A700);
 $light-warn: mat-palette($mat-red);
 $dark-primary: mat-palette($mat-purple, 700, 500, 800);
 $dark-accent: mat-palette($mat-deep-orange, A200, A100, A400);

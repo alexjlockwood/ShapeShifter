@@ -70,6 +70,14 @@ export class ToolbarComponent implements OnInit {
     });
   }
 
+  get darkTheme() {
+    return this.themeService.getThemeType().themeType === 'dark';
+  }
+
+  set darkTheme(isDark: boolean) {
+    this.themeService.setTheme(isDark ? 'dark' : 'light');
+  }
+
   onDarkThemeSliderClick() {
     this.themeService.toggleTheme();
   }

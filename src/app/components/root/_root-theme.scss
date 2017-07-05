@@ -5,8 +5,8 @@
     }
     .file-drop-target {
         &.is-dragging-over::after {
-            background-color: mat-color($background, blue600, 0.5);
-            box-shadow: 0 0 0 8px mat-color($background, blue600) inset;
+            background-color: mat-color($accent, darker, 0.5);
+            box-shadow: 0 0 0 8px mat-color($accent, darker) inset;
         }
     }
 }

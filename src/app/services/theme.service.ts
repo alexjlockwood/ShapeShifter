@@ -22,8 +22,12 @@ const DARK_DIVIDER_TEXT = 'rgba(255, 255, 255, 0.12)';
 export class ThemeService {
   constructor(private readonly store: Store<State>) {}
 
+  setTheme(themeType: ThemeType) {
+    this.store.dispatch(new SetTheme(themeType));
+  }
+
   toggleTheme() {
-    this.store.dispatch(new SetTheme(this.getThemeType().themeType === 'dark' ? 'light' : 'dark'));
+    this.setTheme(this.getThemeType().themeType === 'dark' ? 'light' : 'dark');
   }
 
   getThemeType() {
