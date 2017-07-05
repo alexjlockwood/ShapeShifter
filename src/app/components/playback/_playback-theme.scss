@@ -11,7 +11,7 @@
                     color: mat-color($foreground, secondary-text);
                 }
                 md-icon.activated {
-                    color: mat-color(mat-palette($mat-orange, 900));
+                    color: mat-color(mat-palette($mat-orange, A700));
                 }
             }
             &[md-icon-button][disabled] {

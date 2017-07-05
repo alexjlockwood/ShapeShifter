@@ -1,4 +1,5 @@
 @mixin ss-timelineanimationrow-theme($theme) {
+    $is-dark: map-get($theme, is-dark);
     $foreground: map-get($theme, ss-foreground);
     $background: map-get($theme, ss-background);
     $accent: map-get($theme, accent);
@@ -10,7 +11,7 @@
                 box-shadow: 0 -1px 0 mat-color($foreground, divider) inset;
             }
             .slt-timeline-block {
-                background-color: mat-color(mat-palette($mat-green, 200));
+                background-color: mat-color(if($is-dark, mat-palette($mat-purple, 200), mat-palette($mat-green, 200)));
                 &.is-selected {
                     background-color: mat-color($accent);
                 }
