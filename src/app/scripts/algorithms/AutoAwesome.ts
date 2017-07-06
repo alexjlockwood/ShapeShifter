@@ -2,6 +2,23 @@ import { Command, Path, PathUtil } from 'app/model/paths';
 import { MathUtil, Point } from 'app/scripts/common';
 import * as _ from 'lodash';
 
+// POSSIBLE IMPROVEMENTS
+//
+// - Add additional points to both shapes first such that every segment longer than
+//   a certain distance is bisected. This may help reduce a bit of noise during alignment.
+// - Tweaking the placement of added points with simulated annealing.
+// - Using a cost function that factors in self-intersections at the halfway mark in
+//   addition to distance traveled.
+// - Use triangulation and/or Volonoi topology diagram in order to more accurately morph
+//   between SVGs with differing numbers of subpaths.
+//
+// Useful links/examples:
+// - Triangulation: https://goo.gl/Ug2pj9
+// - Jigsaw morphing: https://goo.gl/Za3akJ
+// - Voronoi topology: https://goo.gl/VNM7Tb
+// - Smoother polygon transitions: https://goo.gl/5njTsf
+// - Redistricting: https://goo.gl/sMkYEM
+
 // Needleman-Wunsch scoring function constants.
 const MATCH = 1;
 const MISMATCH = -1;

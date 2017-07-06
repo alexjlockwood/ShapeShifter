@@ -42,6 +42,7 @@ export function loadVectorLayerFromSvgStringWithCallback(
   });
 }
 
+// TODO: give better error message when user attempts to import SVG w/o a namespace declaration
 function loadVectorLayerFromSvgString(
   svgString: string,
   doesNameExistFn: (name: string) => boolean,
@@ -221,6 +222,9 @@ function loadVectorLayerFromSvgString(
 }
 
 function svgLengthToPx(svgLength) {
+  if (!svgLength) {
+    return 0;
+  }
   if (svgLength.baseVal) {
     svgLength = svgLength.baseVal;
   }
