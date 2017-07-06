@@ -1,7 +1,7 @@
 <ng-container *ngIf="(this.toolbarData$ | async) as toolbarData">
   <div fxLayout="row"
     fxLayoutAlign="center center"
-    *ngIf="(this.toolbarState$ | async) as state"
+    *ngIf="(this.themeState$ | async) as state"
     [class.dark-to-light-primary]="state.prevThemeType === 'dark' && state.currThemeType === 'light' && !state.currIsActionMode"
     [class.light-to-dark-primary]="state.prevThemeType === 'light' && state.currThemeType === 'dark' && !state.currIsActionMode"
     [class.dark-to-light-accent]="state.prevThemeType === 'dark' && state.currThemeType === 'light' && state.currIsActionMode"

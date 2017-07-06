@@ -2,6 +2,7 @@
     $foreground: map-get($theme, ss-foreground);
     $background: map-get($theme, ss-background);
     $accent: map-get($theme, accent);
+    $is-dark: map-get($theme, is-dark);
     .slt-layer {
         color: mat-color($foreground, secondary-text);
         &:focus {
@@ -17,6 +18,7 @@
         }
     }
     .slt-properties {
+        background-color: mat-color($background, if($is-dark, base50, base));
         box-shadow: 0 0 0 1px mat-color($foreground, divider) inset;
     }
     .slt-property {

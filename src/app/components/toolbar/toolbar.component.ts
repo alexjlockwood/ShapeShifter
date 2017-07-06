@@ -23,7 +23,7 @@ declare const ga: Function;
 })
 export class ToolbarComponent implements OnInit {
   toolbarData$: Observable<ToolbarData>;
-  toolbarState$: Observable<{
+  themeState$: Observable<{
     prevThemeType: ThemeType;
     currThemeType: ThemeType;
     prevIsActionMode: boolean;
@@ -48,7 +48,7 @@ export class ToolbarComponent implements OnInit {
         return new ToolbarData(mode, fromMl, toMl, selections, unpairedSubPath, block);
       },
     );
-    this.toolbarState$ = Observable.combineLatest(
+    this.themeState$ = Observable.combineLatest(
       toolbarState,
       this.themeService.asObservable().map(t => t.themeType),
     ).map(([{ mode }, themeType]) => {
