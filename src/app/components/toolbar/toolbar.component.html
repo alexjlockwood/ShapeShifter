@@ -43,15 +43,16 @@
         *ngIf="data.showActionMode"
         class="action-mode-close-icon"
         (click)="onCloseActionModeClick($event)">
-      <md-icon>{{ toolbarData.isSelectionMode() ? 'arrow_back' : 'close' }}</md-icon>
-    </button>
+        <md-icon>{{ toolbarData.isSelectionMode() ? 'arrow_back' : 'close' }}</md-icon>
+      </button>
 
       <!-- Toolbar text. -->
       <div fxLayout="column">
         <span class="toolbar-title">{{ data.toolbarTitle }}</span>
         <span *ngIf="data.toolbarSubtitle"
-          class="toolbar-subtitle">{{ data.toolbarSubtitle }}
-      </span>
+          class="toolbar-subtitle">
+          {{ data.toolbarSubtitle }}
+        </span>
       </div>
 
       <span fxFlex="1 1 auto"></span>
@@ -63,8 +64,8 @@
         mdTooltipShowDelay="500"
         *ngIf="data.showAutoFix"
         mdTooltipPosition="below">
-      <md-icon svgIcon="autofix"></md-icon>
-    </button>
+        <md-icon svgIcon="autofix"></md-icon>
+      </button>
 
       <!-- SubPath mode. -->
       <button md-icon-button
@@ -75,8 +76,8 @@
         mdTooltipShowDelay="500"
         (click)="onAddPointsClick($event)"
         [class.activated]="toolbarData.isAddPointsMode()">
-      <md-icon>add_circle_outline</md-icon>
-    </button>
+        <md-icon>add_circle_outline</md-icon>
+      </button>
       <button md-icon-button
         class="toolbar-action-button"
         mdTooltip="Split subpaths (S)"
@@ -85,8 +86,8 @@
         mdTooltipShowDelay="500"
         (click)="onSplitSubPathsClick($event)"
         [class.activated]="toolbarData.isSplitSubPathsMode()">
-      <md-icon>content_cut</md-icon>
-    </button>
+        <md-icon>content_cut</md-icon>
+      </button>
       <button md-icon-button
         class="toolbar-action-button"
         mdTooltip="Pair subpaths (D)"
@@ -95,8 +96,8 @@
         mdTooltipShowDelay="500"
         (click)="onPairSubPathsClick($event)"
         [class.activated]="toolbarData.isPairSubPathsMode()">
-      <md-icon>compare_arrows</md-icon>
-    </button>
+        <md-icon>compare_arrows</md-icon>
+      </button>
       <button md-icon-button
         class="toolbar-action-button"
         mdTooltip="Reverse points (R)"
@@ -105,8 +106,8 @@
         mdTooltipShowDelay="500"
         (click)="onReversePointsClick($event)"
         [disabled]="!toolbarData.isSelectionMode()">
-      <md-icon svgIcon="reverse"></md-icon>
-    </button>
+        <md-icon svgIcon="reverse"></md-icon>
+      </button>
       <button md-icon-button
         class="toolbar-action-button"
         mdTooltip="Shift back points (B)"
@@ -115,8 +116,8 @@
         mdTooltipShowDelay="500"
         (click)="onShiftBackPointsClick($event)"
         [disabled]="!toolbarData.isSelectionMode()">
-      <md-icon>skip_previous</md-icon>
-    </button>
+        <md-icon>skip_previous</md-icon>
+      </button>
       <button md-icon-button
         class="toolbar-action-button"
         mdTooltip="Shift forward points (F)"
@@ -125,8 +126,8 @@
         mdTooltipShowDelay="500"
         (click)="onShiftForwardPointsClick($event)"
         [disabled]="!toolbarData.isSelectionMode()">
-      <md-icon>skip_next</md-icon>
-    </button>
+        <md-icon>skip_next</md-icon>
+      </button>
       <button md-icon-button
         class="toolbar-action-button"
         mdTooltipPosition="below"
@@ -134,8 +135,8 @@
         mdTooltipShowDelay="500"
         *ngIf="data.showDeleteSubPaths"
         (click)="onDeleteSubPathsClick($event)">
-      <md-icon>delete</md-icon>
-    </button>
+        <md-icon>delete</md-icon>
+      </button>
 
       <!-- Segment mode. -->
       <button md-icon-button
@@ -145,8 +146,8 @@
         mdTooltipShowDelay="500"
         *ngIf="data.showDeleteSegments"
         (click)="onDeleteSegmentsClick($event)">
-      <md-icon>delete</md-icon>
-    </button>
+        <md-icon>delete</md-icon>
+      </button>
 
       <!-- Point mode. -->
       <button md-icon-button
@@ -157,8 +158,8 @@
         (mouseenter)="onSplitInHalfHoverEvent(true)"
         (mouseleave)="onSplitInHalfHoverEvent(false)"
         (click)="onSplitInHalfClick($event)">
-      <md-icon>add_circle_outline</md-icon>
-    </button>
+        <md-icon>add_circle_outline</md-icon>
+      </button>
       <button md-icon-button
         class="toolbar-action-button"
         mdTooltip="Set first point (F)"
@@ -166,8 +167,8 @@
         mdTooltipShowDelay="500"
         *ngIf="data.showSetFirstPosition"
         (click)="onSetFirstPositionClick($event)">
-      <md-icon>looks_one</md-icon>
-    </button>
+        <md-icon>looks_one</md-icon>
+      </button>
       <button md-icon-button
         class="toolbar-action-button"
         mdTooltipPosition="below"
@@ -183,38 +184,39 @@
         md-icon-button
         (click)="$event.stopPropagation()"
         [mdMenuTriggerFor]="overflowMenu">
-      <md-icon>more_vert</md-icon>
-    </button>
+        <md-icon>more_vert</md-icon>
+      </button>
       <md-menu #overflowMenu="mdMenu">
         <div md-menu-item
-          (click)="this.onDarkThemeSliderClick()">
-          <md-slide-toggle [(ngModel)]="darkTheme"></md-slide-toggle>
+          (click)="this.darkTheme = !this.darkTheme">
+          <md-slide-toggle (click)="this.darkTheme = !this.darkTheme; $event.stopPropagation()"
+            [(ngModel)]="darkTheme"></md-slide-toggle>
           <span>Dark theme</span>
         </div>
         <a href="http://www.androiddesignpatterns.com/2016/11/introduction-to-icon-animation-techniques.html"
           target="_blank"
           class="toolbar-overflow-link-item">
-        <button md-menu-item (click)="this.onGettingStartedClick()">
-          <md-icon>info</md-icon>
-          <span>Getting started</span>
-        </button>
-      </a>
+          <button md-menu-item (click)="this.onGettingStartedClick()">
+            <md-icon>info</md-icon>
+            <span>Getting started</span>
+          </button>
+        </a>
         <a href="https://github.com/alexjlockwood/ShapeShifter"
           target="_blank"
           class="toolbar-overflow-link-item">
-        <button md-menu-item (click)="this.onContributeClick()">
-          <md-icon style="line-height: 1" svgIcon="contribute"></md-icon>
-          <span>Contribute</span>
-        </button>
-      </a>
+          <button md-menu-item (click)="this.onContributeClick()">
+            <md-icon style="line-height: 1" svgIcon="contribute"></md-icon>
+            <span>Contribute</span>
+          </button>
+        </a>
         <a href="https://github.com/alexjlockwood/ShapeShifter/issues"
           target="_blank"
           class="toolbar-overflow-link-item">
-        <button md-menu-item (click)="this.onSendFeedbackClick()">
-          <md-icon>bug_report</md-icon>
-          <span>Send feedback</span>
-        </button>
-      </a>
+          <button md-menu-item (click)="this.onSendFeedbackClick()">
+            <md-icon>bug_report</md-icon>
+            <span>Send feedback</span>
+          </button>
+        </a>
       </md-menu>
     </ng-container>
   </div>

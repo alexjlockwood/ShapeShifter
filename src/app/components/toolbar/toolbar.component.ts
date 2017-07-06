@@ -66,7 +66,9 @@ export class ToolbarComponent implements OnInit {
     this.themeService.setTheme(isDark ? 'dark' : 'light');
   }
 
-  onDarkThemeSliderClick() {
+  onDarkThemeSliderClick(event: MouseEvent) {
+    event.stopPropagation();
+    console.info('onDarkThemeSliderClick()');
     this.themeService.toggleTheme();
   }
 
