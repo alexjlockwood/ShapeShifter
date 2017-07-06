@@ -99,13 +99,13 @@ export class LayerTimelineService {
   }
 
   private updateSelections(
-    isAnimationSelected: boolean,
+    isAnimSelected: boolean,
     selectedBlockIds: Set<string>,
     selectedLayerIds: Set<string>,
   ) {
     this.store.dispatch(
       new MultiAction(
-        new SelectAnimation(isAnimationSelected),
+        new SelectAnimation(isAnimSelected),
         new SetSelectedBlocks(selectedBlockIds),
         new SetSelectedLayers(selectedLayerIds),
       ),
@@ -405,11 +405,10 @@ export class LayerTimelineService {
     });
     gaps = gaps
       .filter(gap => gap.end - gap.start > newBlockDuration)
-      .map(gap =>
-        Object.assign(gap, {
-          dist: Math.min(Math.abs(gap.end - currentTime), Math.abs(gap.start - currentTime)),
-        }),
-      )
+      .map(gap => {
+        const dist = Math.min(Math.abs(gap.end - currentTime), Math.abs(gap.start - currentTime));
+        return { ...gap, dist };
+      })
       .sort((a, b) => a.dist - b.dist);
 
     if (!gaps.length) {

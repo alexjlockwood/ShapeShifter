@@ -528,7 +528,7 @@ export class PathMutator {
       // In addition to deleting the split segment, we will also have to merge its
       // two adjacent sub paths together into one.
       const parentBackingId2 = _.last(splitCss2).getParentCommandState().getBackingId();
-      const parentBackingCmd2 = _.find(pcss, cs => parentBackingId2 === cs.getBackingId());
+      const parentBackingCmd2 = _.find(pcss, c => parentBackingId2 === c.getBackingId());
 
       const newCss: CommandState[] = [];
       let cs: CommandState;
@@ -638,7 +638,7 @@ export class PathMutator {
       splitIdx = -1;
     for (; csIdx < css.length; csIdx++) {
       const cs = css[csIdx];
-      const csIds = cs.getCommands().map((_, idx) => cs.getIdAtIndex(idx));
+      const csIds = cs.getCommands().map((unused, idx) => cs.getIdAtIndex(idx));
       splitIdx = csIds.indexOf(splitCmdId);
       if (splitIdx >= 0) {
         break;
@@ -714,7 +714,7 @@ export class PathMutator {
   revert() {
     this.deleteCollapsingSubPaths();
     this.subPathStateMap = this.subPathStateMap.map(sps => sps.revert());
-    this.subPathOrdering = this.subPathStateMap.map((_, i) => i);
+    this.subPathOrdering = this.subPathStateMap.map((unused, i) => i);
     return this;
   }
 
@@ -737,7 +737,7 @@ export class PathMutator {
       reverseAndShiftCommands(sps),
     );
     const orderedSubPathCmds = this.subPathOrdering.map(
-      (_, subIdx) => spsCmds[this.subPathOrdering[subIdx]],
+      (unused, subIdx) => spsCmds[this.subPathOrdering[subIdx]],
     );
     return _.chain(orderedSubPathCmds)
       .map((cmds, subIdx) => {

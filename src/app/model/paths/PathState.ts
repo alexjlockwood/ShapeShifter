@@ -32,7 +32,7 @@ export class PathState {
       subPaths.map(s => {
         return new SubPathState(s.getCommands().map(c => new CommandState(c)));
       });
-    this.subPathOrdering = subPathOrdering || subPaths.map((_, i) => i);
+    this.subPathOrdering = subPathOrdering || subPaths.map((unused, i) => i);
     this.subPaths = subPaths.map((subPath, subIdx) => {
       const cmds = subPath.getCommands().map((cmd, cmdIdx) => {
         const { cs, splitIdx } = this.findCommandStateInfo(subIdx, cmdIdx);
@@ -66,11 +66,8 @@ export class PathState {
 
   project(point: Point, restrictToSubIdx?: number): ProjectionOntoPath | undefined {
     const minProjectionResultInfo = _.chain(this.subPaths)
-      .map((subPath, subIdx) => {
-        return { subPath, subIdx };
-      })
-      .filter(obj => {
-        const { subPath, subIdx } = obj;
+      .map((subPath, subIdx) => ({ subPath, subIdx }))
+      .filter(({ subPath, subIdx }) => {
         return (
           !subPath.isCollapsing() && (restrictToSubIdx === undefined || restrictToSubIdx === subIdx)
         );
@@ -103,17 +100,16 @@ export class PathState {
     if (!minProjectionResultInfo) {
       return undefined;
     }
-    const { spsIdx, csIdx, splitIdx, projection } = minProjectionResultInfo;
-    const subIdx = this.subPathOrdering.indexOf(spsIdx);
-    const cmdIdx = this.toCmdIdx(spsIdx, csIdx, splitIdx);
-    return { projection, subIdx, cmdIdx };
+    const { spsIdx, splitIdx, projection } = minProjectionResultInfo;
+    const cmdIdx = this.toCmdIdx(spsIdx, minProjectionResultInfo.csIdx, splitIdx);
+    return { projection, subIdx: this.subPathOrdering.indexOf(spsIdx), cmdIdx };
   }
 
   hitTest(point: Point, opts: HitOptions = {}): HitResult {
     const endPointHits: ProjectionOntoPath[] = [];
     const segmentHits: ProjectionOntoPath[] = [];
     const shapeHits: Array<{ subIdx: number }> = [];
-    const defaultRestrictToSubIdx = this.subPaths.map((_, i) => i);
+    const defaultRestrictToSubIdx = this.subPaths.map((unused, i) => i);
     const restrictToSubIdxSet = new Set<number>(opts.restrictToSubIdx || defaultRestrictToSubIdx);
 
     if (opts.isPointInRangeFn) {

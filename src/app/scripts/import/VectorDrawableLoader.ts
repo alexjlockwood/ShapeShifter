@@ -39,7 +39,7 @@ function loadVectorLayerFromElement(
   const makeFinalNodeIdFn = (value: string, prefix: string) => {
     const finalName = LayerUtil.getUniqueName(
       NameProperty.sanitize(value || prefix),
-      name => doesLayerNameExistFn(name) || usedNames.has(name),
+      n => doesLayerNameExistFn(n) || usedNames.has(n),
     );
     usedNames.add(finalName);
     return finalName;
@@ -104,13 +104,19 @@ function loadVectorLayerFromElement(
   };
 
   const rootLayer = nodeToLayerDataFn(docEl);
-  const children = rootLayer ? rootLayer.children : [];
   const name = makeFinalNodeIdFn(get(docEl, 'name', ''), 'vector');
   usedNames.add(name);
   const width = getNumber(docEl, 'viewportWidth', '24');
   const height = getNumber(docEl, 'viewportHeight', '24');
   const alpha = getNumber(docEl, 'alpha', '1');
-  return new VectorLayer({ id: _.uniqueId(), name, children, width, height, alpha });
+  return new VectorLayer({
+    id: _.uniqueId(),
+    name,
+    children: rootLayer ? rootLayer.children : [],
+    width,
+    height,
+    alpha,
+  });
 }
 
 // export function loadAnimationFromXmlString(

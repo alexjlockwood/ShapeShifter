@@ -224,11 +224,9 @@ function updateActivePathBlock(state: AppState, source: ActionSource, path: Path
   let block = blocks[blockIndex];
 
   // Remove any existing conversions and collapsing sub paths from the path.
-  const pathMutator = path.mutate();
-  path.getSubPaths().forEach((_, subIdx) => {
-    pathMutator.unconvertSubPath(subIdx);
-  });
-  path = pathMutator.deleteCollapsingSubPaths().build();
+  const pm = path.mutate();
+  path.getSubPaths().forEach((unused, subIdx) => pm.unconvertSubPath(subIdx));
+  path = pm.deleteCollapsingSubPaths().build();
 
   const getBlockPathFn = (t: ActionSource) => {
     return t === ActionSource.From ? block.fromValue : block.toValue;

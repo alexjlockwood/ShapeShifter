@@ -418,10 +418,9 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
       for (const subPath of selectedSubPaths) {
         // If the subpath has a split segment, highlight it in orange. Otherwise,
         // use the default blue highlight color.
-        const cmds = subPath.getCommands();
-        const isSplitSubPath = cmds.some(c => c.isSplitSegment());
+        const isSplitSubPath = subPath.getCommands().some(c => c.isSplitSegment());
         const highlightColor = isSplitSubPath ? SPLIT_POINT_COLOR : HIGHLIGHT_COLOR;
-        CanvasUtil.executeCommands(ctx, cmds, flattenedTransform);
+        CanvasUtil.executeCommands(ctx, subPath.getCommands(), flattenedTransform);
         executeHighlights(ctx, highlightColor, this.selectedSegmentLineWidth);
       }
 
@@ -464,12 +463,12 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
     }
 
     // Draw any existing split shape segments to the canvas.
-    const cmds = _(activePath.getSubPaths() as SubPath[])
+    const commands = _(activePath.getSubPaths() as SubPath[])
       .filter(s => !s.isCollapsing())
       .flatMap(s => s.getCommands() as Command[])
       .filter(c => c.isSplitSegment())
       .value();
-    CanvasUtil.executeCommands(ctx, cmds, flattenedTransform);
+    CanvasUtil.executeCommands(ctx, commands, flattenedTransform);
     executeHighlights(ctx, SPLIT_POINT_COLOR, this.unselectedSegmentLineWidth);
 
     if (this.pairSubPathHelper) {

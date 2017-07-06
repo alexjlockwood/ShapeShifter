@@ -23,7 +23,6 @@ import {
 import { State, Store } from 'app/store';
 import { getPropertyInputState } from 'app/store/common/selectors';
 import { ThemeType } from 'app/store/theme/reducer';
-import { getThemeType } from 'app/store/theme/selectors';
 import { SetAnimation } from 'app/store/timeline/actions';
 import * as $ from 'jquery';
 import * as _ from 'lodash';

@@ -95,8 +95,8 @@ describe('Path', () => {
   describe('mutating Path objects', () => {
     it('command IDs persist correctly after mutations', () => {
       const totalIds = new Set();
-      const extractPathIdsFn = (path: Path, expectedSize: number, expectedTotalSize: number) => {
-        const ids = path.getCommands().map(cmd => cmd.getId());
+      const extractPathIdsFn = (p: Path, expectedSize: number, expectedTotalSize: number) => {
+        const ids = p.getCommands().map(cmd => cmd.getId());
         ids.forEach(id => totalIds.add(id));
         expect(new Set(ids).size).toEqual(expectedSize);
         expect(totalIds.size).toEqual(expectedTotalSize);

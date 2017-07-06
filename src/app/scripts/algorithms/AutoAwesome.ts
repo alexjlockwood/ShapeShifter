@@ -18,18 +18,18 @@ export function autoFix(subIdx: number, srcFromPath: Path, srcToPath: Path) {
   // Create and return a list of reversed and shifted paths to test.
   // TODO: can this be optimized? (this essentially brute-forces all possible permutations)
   const createFromCmdGroupsFn = (...paths: Path[]): Path[] => {
-    const fromPaths: Path[] = [];
+    const fromPathList: Path[] = [];
     for (const p of paths) {
-      fromPaths.push(p);
+      fromPathList.push(p);
       if (!p.getSubPath(subIdx).isClosed()) {
         continue;
       }
       const numFromCmds = p.getSubPaths()[subIdx].getCommands().length;
       for (let i = 1; i < numFromCmds - 1; i++) {
-        fromPaths.push(p.mutate().shiftSubPathBack(subIdx, i).build());
+        fromPathList.push(p.mutate().shiftSubPathBack(subIdx, i).build());
       }
     }
-    return fromPaths;
+    return fromPathList;
   };
 
   // TODO: experiment with this... need to test this more
@@ -127,7 +127,7 @@ export function autoFix(subIdx: number, srcFromPath: Path, srcToPath: Path) {
       // where the alignment algorithm attempts to append new commands to the
       // front and back of the sequence.
       const cmdIdx = MathUtil.clamp(_.last(gapGroup).nextCmdIdx, 1, numPaths - 1);
-      const ts = gapGroup.map((_, gapIdx) => (gapIdx + 1) / (gapGroup.length + 1));
+      const ts = gapGroup.map((unused, gapIdx) => (gapIdx + 1) / (gapGroup.length + 1));
       splitOps.push({ subIdx, cmdIdx, ts });
     }
     PathUtil.sortPathOps(splitOps);
@@ -181,12 +181,8 @@ function align<T>(
   to: ReadonlyArray<T>,
   scoringFunction: (t1: T, t2: T) => number,
 ) {
-  const listA: Alignment<T>[] = from.map(obj => {
-    return { obj };
-  });
-  const listB: Alignment<T>[] = to.map(obj => {
-    return { obj };
-  });
+  const listA: Alignment<T>[] = from.map(obj => ({ obj }));
+  const listB: Alignment<T>[] = to.map(obj => ({ obj }));
   const alignedListA: Alignment<T>[] = [];
   const alignedListB: Alignment<T>[] = [];
 
@@ -194,19 +190,21 @@ function align<T>(
   listA.unshift(undefined);
   listB.unshift(undefined);
 
+  let i: number, j: number;
+
   // Initialize the scoring matrix.
   const matrix: number[][] = [];
-  for (let i = 0; i < listA.length; i++) {
+  for (i = 0; i < listA.length; i++) {
     const row = [];
-    for (let j = 0; j < listB.length; j++) {
+    for (j = 0; j < listB.length; j++) {
       row.push(i === 0 ? -j : j === 0 ? -i : 0);
     }
     matrix.push(row);
   }
 
   // Process the scoring matrix.
-  for (let i = 1; i < listA.length; i++) {
-    for (let j = 1; j < listB.length; j++) {
+  for (i = 1; i < listA.length; i++) {
+    for (j = 1; j < listB.length; j++) {
       const match = matrix[i - 1][j - 1] + scoringFunction(listA[i].obj, listB[j].obj);
       const ins = matrix[i][j - 1] + INDEL;
       const del = matrix[i - 1][j] + INDEL;
@@ -215,8 +213,8 @@ function align<T>(
   }
 
   // Backtracking.
-  let i = listA.length - 1;
-  let j = listB.length - 1;
+  i = listA.length - 1;
+  j = listB.length - 1;
 
   while (i > 0 || j > 0) {
     if (

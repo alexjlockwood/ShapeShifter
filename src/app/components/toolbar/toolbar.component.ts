@@ -9,7 +9,6 @@ import { ActionModeService, ThemeService } from 'app/services';
 import { State, Store } from 'app/store';
 import { getToolbarState } from 'app/store/actionmode/selectors';
 import { ThemeType } from 'app/store/theme/reducer';
-import { getThemeType } from 'app/store/theme/selectors';
 import * as _ from 'lodash';
 import { Observable } from 'rxjs/Observable';
 
@@ -29,7 +28,6 @@ export class ToolbarComponent implements OnInit {
     prevIsActionMode: boolean;
     currIsActionMode: boolean;
   }>;
-  private hasActionModeBeenEnabled = false;
 
   constructor(
     private readonly actionModeService: ActionModeService,
