@@ -14,10 +14,12 @@ export const replaceUseElems = {
 function replaceUseElemsFn(document, params) {
   const defsElems = document.querySelectorAll('defs') || [];
 
-  const queryReferencedElementFn = function (selector: string) {
+  const queryReferencedElementFn = (selector: string) => {
     for (const defs of defsElems) {
       const referencedElem = defs.querySelector(selector);
       if (referencedElem) {
+        // Remove the style to avoid circular reference during clone.
+        delete referencedElem.style;
         return referencedElem.clone();
       }
     }
@@ -42,7 +44,7 @@ function replaceUseElemsFn(document, params) {
       continue;
     }
 
-    const addAttrFn = function (elem, attrName: string, attrValue: string) {
+    const addAttrFn = function(elem, attrName: string, attrValue: string) {
       elem.addAttr({
         name: attrName,
         value: attrValue,
