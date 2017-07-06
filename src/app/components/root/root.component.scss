@@ -1,72 +1,66 @@
-@import '../../styles/material-shadows';
-@import '../../styles/variables';
-@import '../../styles/theme';
 :host,
 .app-container {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  user-select: none;
+}
+
+app-canvas.start {
+  margin-right: 48px;
+}
+
+app-canvas.end {
+  margin-left: 48px;
+}
+
+div.toolbar-container {
+  position: relative;
+  z-index: 1;
+}
+
+.file-drop-target {
+  &.is-dragging-over::after {
+    content: '';
     position: absolute;
     left: 0;
     top: 0;
     right: 0;
     bottom: 0;
-    user-select: none;
-}
-
-app-canvas.start {
-    margin-right: 48px;
-}
-
-app-canvas.end {
-    margin-left: 48px;
-}
-
-div.toolbar-container {
-    position: relative;
-    z-index: 1;
-}
-
-div.display-container {
-    box-sizing: border-box;
-    padding: 16px;
-    background-color: mat-color(mat-palette($mat-grey, 300));
-    user-select: none;
-}
-
-.file-drop-target {
-    &.is-dragging-over::after {
-        content: '';
-        position: absolute;
-        left: 0;
-        top: 0;
-        right: 0;
-        bottom: 0;
-        z-index: 9999;
-        animation: pulsate-color .66s ease 0s infinite;
-        background-color: rgba($colorPrimary600, .5);
-        box-shadow: 0 0 0 8px $colorPrimary600 inset;
-        pointer-events: none;
-        transform: translateZ(0);
+    z-index: 9999;
+    animation: pulsate-color .66s ease 0s infinite;
+    pointer-events: none;
+    transform: translateZ(0);
+  }
+  @keyframes pulsate-color {
+    0% {
+      opacity: .5;
     }
-    @keyframes pulsate-color {
-        0% {
-            opacity: .5;
-        }
-        50% {
-            opacity: 1;
-        }
-        100% {
-            opacity: .5;
-        }
+    50% {
+      opacity: 1;
     }
+    100% {
+      opacity: .5;
+    }
+  }
 }
 
 .show-default-cursor {
-    cursor: default;
+  cursor: default;
 }
 
 .show-pointer-cursor {
-    cursor: pointer;
+  cursor: pointer;
 }
 
 .show-pen-cursor {
-    cursor: url(/assets/cursor/penaddcursorsmall.png) 5 0, auto;
+  cursor: url(/assets/cursor/penaddcursorsmall.png) 5 0, auto;
+}
+
+div.display-container {
+  box-sizing: border-box;
+  padding: 16px;
+  user-select: none;
 }

@@ -6,12 +6,15 @@ import {
   ChangeDetectionStrategy,
   Component,
   ElementRef,
+  HostBinding,
   OnDestroy,
   OnInit,
   ViewChild,
 } from '@angular/core';
+import { OverlayContainer } from '@angular/material';
 import { DropFilesAction } from 'app/components/dialogs';
 import { ActionMode, ActionSource } from 'app/model/actionmode';
+import { DestroyableMixin } from 'app/scripts/mixins';
 import {
   ActionModeService,
   ClipboardService,
@@ -20,6 +23,7 @@ import {
   FileImportService,
   LayerTimelineService,
   ShortcutService,
+  ThemeService,
 } from 'app/services';
 import { Duration, SnackBarService } from 'app/services/snackbar.service';
 import { State, Store } from 'app/store';
@@ -49,7 +53,7 @@ enum CursorType {
   styleUrls: ['./root.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class RootComponent implements OnInit, AfterViewInit, OnDestroy {
+export class RootComponent extends DestroyableMixin() implements OnInit, AfterViewInit, OnDestroy {
   readonly ACTION_SOURCE_FROM = ActionSource.From;
   readonly ACTION_SOURCE_ANIMATED = ActionSource.Animated;
   readonly ACTION_SOURCE_TO = ActionSource.To;
@@ -58,6 +62,7 @@ export class RootComponent implements OnInit, AfterViewInit, OnDestroy {
   readonly CURSOR_POINTER = CursorType.Pointer;
   readonly CURSOR_PEN = CursorType.Pen;
 
+  @HostBinding('class.ss-dark-theme') isDarkThemeHostBinding: boolean;
   @ViewChild('displayContainer') displayContainerRef: ElementRef;
   private $displayContainer: JQuery;
 
@@ -76,11 +81,23 @@ export class RootComponent implements OnInit, AfterViewInit, OnDestroy {
     private readonly dialogService: DialogService,
     private readonly clipboardService: ClipboardService,
     private readonly layerTimelineService: LayerTimelineService,
-  ) {}
+    public readonly themeService: ThemeService,
+    private readonly overlayContainer: OverlayContainer,
+  ) {
+    super();
+  }
 
   ngOnInit() {
     this.shortcutService.init();
     this.clipboardService.init();
+
+    this.registerSubscription(
+      this.themeService.asObservable().subscribe(t => {
+        const isDark = t.themeType === 'dark';
+        this.isDarkThemeHostBinding = isDark;
+        this.overlayContainer.themeClass = isDark ? 'ss-dark-theme' : undefined;
+      }),
+    );
 
     $(window).on('beforeunload', event => {
       let isDirty: boolean;
@@ -143,6 +160,7 @@ export class RootComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy() {
+    super.ngOnDestroy();
     ELEMENT_RESIZE_DETECTOR.removeAllListeners(this.$displayContainer.get(0));
     this.shortcutService.destroy();
     this.clipboardService.destroy();

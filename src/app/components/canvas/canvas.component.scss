@@ -1,15 +1,13 @@
-@import '../../styles/material-shadows';
-@import '../../styles/variables';
 .app-canvas-container {
     position: relative;
     .canvas-ruler {
         position: absolute;
-        transition: opacity $animTimeFast ease, visibility 0s linear $animTimeFast;
+        transition: opacity .15s ease, visibility 0s linear .15s;
         opacity: 0;
         visibility: hidden;
     }
     &:hover .canvas-ruler {
-        transition: opacity $animTimeFast ease;
+        transition: opacity .15s ease;
         opacity: 1;
         visibility: visible;
     }
@@ -17,8 +15,6 @@
         position: relative;
         canvas.rendering-canvas {
             position: absolute;
-            background-color: #fff;
-            box-shadow: material-shadow(2);
             z-index: 1;
         }
         canvas.overlay-canvas {

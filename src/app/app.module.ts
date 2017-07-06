@@ -13,6 +13,7 @@ import {
   MdMenuModule,
   MdOptionModule,
   MdRadioModule,
+  MdSlideToggleModule,
   MdSnackBarModule,
   MdToolbarModule,
   MdTooltipModule,
@@ -40,6 +41,7 @@ import { LayerTimelineService } from './services/layertimeline.service';
 import { PlaybackService } from './services/playback.service';
 import { ShortcutService } from './services/shortcut.service';
 import { SnackBarService } from './services/snackbar.service';
+import { ThemeService } from './services/theme.service';
 import {
   CanvasComponent,
   CanvasContainerDirective,
@@ -100,6 +102,7 @@ import { reducer } from './store';
     MdMenuModule,
     MdOptionModule,
     MdRadioModule,
+    MdSlideToggleModule,
     MdSnackBarModule,
     MdToolbarModule,
     MdTooltipModule,
@@ -117,6 +120,7 @@ import { reducer } from './store';
     PlaybackService,
     ShortcutService,
     SnackBarService,
+    ThemeService,
   ],
   entryComponents: [ConfirmDialogComponent, DemoDialogComponent, DropFilesDialogComponent],
   bootstrap: [RootComponent],

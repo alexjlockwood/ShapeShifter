@@ -1,5 +1,4 @@
-@import '../../styles/variables';
-@import '../../styles/theme';
+@import '~@angular/material/theming';
 :host {
     position: absolute;
     left: 0;

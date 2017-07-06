@@ -1,16 +1,26 @@
-import { Directive, ElementRef, EventEmitter, HostListener, Input, Output } from '@angular/core';
+import {
+  Directive,
+  ElementRef,
+  EventEmitter,
+  HostListener,
+  Input,
+  OnInit,
+  Output,
+} from '@angular/core';
 import { Animation } from 'app/model/timeline';
 import { Dragger } from 'app/scripts/dragger';
-import { ShortcutService } from 'app/services';
+import { DestroyableMixin } from 'app/scripts/mixins';
+import { ShortcutService, ThemeService } from 'app/services';
 import * as $ from 'jquery';
 import * as _ from 'lodash';
 
 import { TIMELINE_ANIMATION_PADDING } from './constants';
 
+const HEADER_HEIGHT = 40;
 const GRID_INTERVALS_MS = [10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000, 30000, 60000];
 
 @Directive({ selector: '[appLayerTimelineGrid]' })
-export class LayerTimelineGridDirective {
+export class LayerTimelineGridDirective extends DestroyableMixin() implements OnInit {
   @Input() isHeader: boolean;
   @Output() scrub = new EventEmitter<ScrubEvent>();
 
@@ -20,9 +30,19 @@ export class LayerTimelineGridDirective {
   private currentTime_: number;
   private horizZoom_: number;
 
-  constructor(elementRef: ElementRef) {
+  constructor(elementRef: ElementRef, private readonly themeService: ThemeService) {
+    super();
     this.canvas = elementRef.nativeElement;
     this.$canvas = $(this.canvas);
+  }
+
+  ngOnInit() {
+    this.registerSubscription(
+      this.themeService
+        .asObservable()
+        .filter(t => !t.isInitialPageLoad)
+        .subscribe(t => this.redraw()),
+    );
   }
 
   get horizZoom() {
@@ -91,7 +111,7 @@ export class LayerTimelineGridDirective {
     const width = this.$canvas.width();
     const height = this.$canvas.height();
     this.$canvas.attr('width', width * window.devicePixelRatio);
-    this.$canvas.attr('height', this.isHeader ? height * window.devicePixelRatio : 1);
+    this.$canvas.attr('height', height * window.devicePixelRatio);
 
     const ctx = this.canvas.getContext('2d');
     ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
@@ -109,7 +129,7 @@ export class LayerTimelineGridDirective {
 
     if (this.isHeader) {
       // Text labels.
-      ctx.fillStyle = 'rgba(0,0,0,0.4)';
+      ctx.fillStyle = this.themeService.getSecondaryTextColor();
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.font = '10px Roboto';
@@ -124,16 +144,16 @@ export class LayerTimelineGridDirective {
       ctx.fillRect(this.currentTime * this.horizZoom - 1, height / 2 + 4, 2, height);
     } else {
       // Grid lines.
-      ctx.fillStyle = 'rgba(0,0,0,0.1)';
+      ctx.fillStyle = this.themeService.getDividerTextColor();
       for (
         let x = spacingPx;
         round(x) < round(width - TIMELINE_ANIMATION_PADDING * 2);
         x += spacingPx
       ) {
-        ctx.fillRect(x - 0.5, 0, 1, 1);
+        ctx.fillRect(x - 0.5, HEADER_HEIGHT, 1, height - HEADER_HEIGHT);
       }
       ctx.fillStyle = 'rgba(244, 67, 54, .7)';
-      ctx.fillRect(this.currentTime * this.horizZoom - 1, 0, 2, 1);
+      ctx.fillRect(this.currentTime * this.horizZoom - 1, HEADER_HEIGHT, 2, height - HEADER_HEIGHT);
     }
   }
 

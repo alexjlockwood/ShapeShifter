@@ -32,6 +32,7 @@ import {
   FileExportService,
   FileImportService,
   LayerTimelineService,
+  ThemeService,
 } from 'app/services';
 import { Shortcut, ShortcutService } from 'app/services/shortcut.service';
 import { Duration, SnackBarService } from 'app/services/snackbar.service';
@@ -127,6 +128,7 @@ export class LayerTimelineComponent extends DestroyableMixin()
     private readonly actionModeService: ActionModeService,
     public readonly shortcutService: ShortcutService,
     private readonly layerTimelineService: LayerTimelineService,
+    public readonly themeService: ThemeService,
   ) {
     super();
   }

@@ -1,8 +1,5 @@
-@import '../../styles/variables';
-@import '../../styles/theme';
 button {
     text-transform: uppercase;
-    color: mat-color($app-accent);
     &:md-dialog-close {
         margin-right: 8px;
     }
@@ -10,8 +7,4 @@ button {
 
 md-dialog-actions {
     min-width: 220px;
-}
-
-md-dialog-content {
-    color: $colorBlackTextSecondary;
 }

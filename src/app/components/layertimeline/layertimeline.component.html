@@ -1,55 +1,60 @@
-<div class="studio-layer-timeline"
-  *ngIf="(this.layerTimelineModel$ | async) as model">
-  <app-splitter [edge]="'top'"
-    [min]="200"
-    [persistId]="'layer-timeline'">
-  </app-splitter>
-
-  <div class="slt-layers"
-    fxLayout="column">
-    <app-splitter [edge]="'right'"
+<ng-container *ngIf="(this.layerTimelineModel$ | async) as model">
+  <div class="studio-layer-timeline mat-elevation-z8"
+    *ngIf="(this.themeService.asObservable() | async) as theme"
+    [class.dark-to-light-base100]="!theme.isInitialPageLoad && theme.themeType === 'light'"
+    [class.light-to-dark-base100]="!theme.isInitialPageLoad && theme.themeType === 'dark'">
+    <app-splitter [edge]="'top'"
       [min]="200"
-      [persistId]="'layer-list'">
+      [persistId]="'layer-timeline'">
     </app-splitter>
 
-    <div class="slt-header"
-      fxLayout="row"
-      fxLayoutAlign="start center">
+    <div class="slt-layers mat-elevation-z2"
+      fxLayout="column"
+      [class.dark-to-light-base100]="!theme.isInitialPageLoad && theme.themeType === 'light'"
+      [class.light-to-dark-base100]="!theme.isInitialPageLoad && theme.themeType === 'dark'">
+      <app-splitter [edge]="'right'"
+        [min]="200"
+        [persistId]="'layer-list'">
+      </app-splitter>
 
-      <!-- File menu. -->
-      <md-menu #fileMenu="mdMenu">
-        <button md-menu-item
-          (click)="this.onNewWorkspaceClick()">
-          New
-        </button>
-        <button md-menu-item
-          (click)="this.onLaunchFilePickerClick('openFileButton')">
-          Open
-          <input
-            id="openFileButton"
-            type="file"
-            accept=".shapeshifter"
-            (change)="onImportedFilesPicked(($event.target || $event.srcElement).files)">
-        </button>
-        <button md-menu-item
-          (click)="this.onSaveToFileClick()">
+      <div class="slt-header mat-elevation-z2"
+        fxLayout="row"
+        fxLayoutAlign="start center">
+
+        <!-- File menu. -->
+        <md-menu #fileMenu="mdMenu">
+          <button md-menu-item
+            (click)="this.onNewWorkspaceClick()">
+            New
+          </button>
+          <button md-menu-item
+            (click)="this.onLaunchFilePickerClick('openFileButton')">
+            Open
+            <input
+              id="openFileButton"
+              type="file"
+              accept=".shapeshifter"
+              (change)="onImportedFilesPicked(($event.target || $event.srcElement).files)">
+          </button>
+          <button md-menu-item
+            (click)="this.onSaveToFileClick()">
           Save
         </button>
-        <button md-menu-item
-          (click)="this.onLoadDemoClick()">
+          <button md-menu-item
+            (click)="this.onLoadDemoClick()">
           Demo
         </button>
-      </md-menu>
-      <button class="slt-layers-menu-group-button"
-        (click)="$event.stopPropagation()"
-        [mdMenuTriggerFor]="fileMenu">
+        </md-menu>
+        <button class="slt-layers-menu-group-button"
+          (click)="$event.stopPropagation()"
+          [mdMenuTriggerFor]="fileMenu">
         File
       </button>
 
-      <!-- Import menu. -->
-      <md-menu #importMenu="mdMenu">
-        <button md-menu-item
-          (click)="this.onLaunchFilePickerClick('addPathsFromSvgButton')">
+        <!-- Import menu. -->
+        <md-menu #importMenu="mdMenu">
+          <button md-menu-item
+            (click)="this.onLaunchFilePickerClick('addPathsFromSvgButton')">
           SVG
           <input
             multiple
@@ -58,8 +63,8 @@
             accept=".svg"
             (change)="onImportedFilesPicked(($event.target || $event.srcElement).files)">
         </button>
-        <button md-menu-item
-          (click)="this.onLaunchFilePickerClick('addPathsFromXmlButton')">
+          <button md-menu-item
+            (click)="this.onLaunchFilePickerClick('addPathsFromXmlButton')">
           Vector Drawable
           <input
             multiple
@@ -68,170 +73,174 @@
             accept=".xml"
             (change)="onImportedFilesPicked(($event.target || $event.srcElement).files)">
         </button>
-      </md-menu>
-      <button class="slt-layers-menu-group-button"
-        (click)="$event.stopPropagation()"
-        [ngClass]="{'is-disabled': model.isActionMode}"
-        [disabled]="model.isActionMode"
-        [mdMenuTriggerFor]="importMenu">
+        </md-menu>
+        <button class="slt-layers-menu-group-button"
+          (click)="$event.stopPropagation()"
+          [ngClass]="{'is-disabled': model.isActionMode}"
+          [disabled]="model.isActionMode"
+          [mdMenuTriggerFor]="importMenu">
         Import
       </button>
 
-      <!-- Export menu. -->
-      <md-menu #exportMenu="mdMenu">
-        <button md-menu-item
-          (click)="this.onExportSvgClick()">
+        <!-- Export menu. -->
+        <md-menu #exportMenu="mdMenu">
+          <button md-menu-item
+            (click)="this.onExportSvgClick()">
           SVG
         </button>
-        <button md-menu-item
-          (click)="this.onExportVectorDrawableClick()">
+          <button md-menu-item
+            (click)="this.onExportVectorDrawableClick()">
           Vector Drawable
         </button>
-        <button md-menu-item
-          (click)="this.onExportAnimatedVectorDrawableClick()">
+          <button md-menu-item
+            (click)="this.onExportAnimatedVectorDrawableClick()">
           Animated Vector Drawable
         </button>
-        <button md-menu-item
-          (click)="this.onExportSvgSpritesheetClick()">
+          <button md-menu-item
+            (click)="this.onExportSvgSpritesheetClick()">
           SVG spritesheet
         </button>
-        <!--<button md-menu-item
+          <!--<button md-menu-item
           [disabled]="true"
           (click)="this.onExportCssKeyframesClick()">
           CSS keyframes
         </button>-->
-      </md-menu>
-      <button class="slt-layers-menu-group-button"
-        (click)="$event.stopPropagation()"
-        [ngClass]="{'is-disabled': model.isActionMode}"
-        [disabled]="model.isActionMode"
-        [mdMenuTriggerFor]="exportMenu">
+        </md-menu>
+        <button class="slt-layers-menu-group-button"
+          (click)="$event.stopPropagation()"
+          [ngClass]="{'is-disabled': model.isActionMode}"
+          [disabled]="model.isActionMode"
+          [mdMenuTriggerFor]="exportMenu">
         Export
       </button>
 
-      <div fxFlex></div>
+        <div fxFlex></div>
 
-      <!-- Add layer menu. -->
-      <md-menu #addLayerMenu="mdMenu">
-        <button md-menu-item
-          (click)="this.onAddPathLayerClick()">
+        <!-- Add layer menu. -->
+        <md-menu #addLayerMenu="mdMenu">
+          <button md-menu-item
+            (click)="this.onAddPathLayerClick()">
           New path
         </button>
-        <button md-menu-item
-          (click)="this.onAddClipPathLayerClick()">
+          <button md-menu-item
+            (click)="this.onAddClipPathLayerClick()">
           New clip path
         </button>
-        <button md-menu-item
-          (click)="this.onAddGroupLayerClick()">
+          <button md-menu-item
+            (click)="this.onAddGroupLayerClick()">
           New group layer
         </button>
-      </md-menu>
-      <button md-icon-button
-        (click)="$event.stopPropagation()"
-        mdTooltip="Add layer"
-        mdTooltipPosition="below"
-        mdTooltipShowDelay="500"
-        [disabled]="model.isActionMode"
-        [mdMenuTriggerFor]="addLayerMenu">
+        </md-menu>
+        <button md-icon-button
+          (click)="$event.stopPropagation()"
+          mdTooltip="Add layer"
+          mdTooltipPosition="below"
+          mdTooltipShowDelay="500"
+          [disabled]="model.isActionMode"
+          [mdMenuTriggerFor]="addLayerMenu">
         <md-icon svgIcon="addlayer"></md-icon>
       </button>
-    </div>
+      </div>
 
-    <div appScrollGroup="timeline"
-      class="slt-layers-list-scroller"
-      fxFlex>
-      <!-- Layer list. -->
-      <div class="slt-layers-list">
-        <!-- Note the *ngFor loop is intentional here even though there is only
+      <div appScrollGroup="timeline"
+        class="slt-layers-list-scroller"
+        fxFlex>
+        <!-- Layer list. -->
+        <div class="slt-layers-list">
+          <!-- Note the *ngFor loop is intentional here even though there is only
              ever one layer in the list. We use it because it allows us to recreate
              the component from scratch when the layer id changes (i.e. when
              the workspace is reset). -->
-        <app-layerlisttree fxLayout="column"
-          class="slt-layer-container"
-          *ngFor="let vectorLayer of [model.vectorLayer]; trackBy: trackLayerFn"
-          [layer]="vectorLayer"
-          (layerClick)="this.onLayerClick($event.event, $event.layer)"
-          (layerToggleExpanded)="this.onLayerToggleExpanded($event.event, $event.layer)"
-          (layerToggleVisibility)="this.onLayerToggleVisibility($event.event, $event.layer)"
-          (layerMouseDown)="this.onLayerMouseDown($event.event, $event.layer)"
-          (addTimelineBlockClick)="this.onAddTimelineBlockClick($event.event, $event.layer, $event.propertyName)">
-        </app-layerlisttree>
-      </div>
-      <div *ngIf="(this.dragIndicatorObservable | async) as dragData"
-        class="slt-layers-list-drag-indicator"
-        [ngStyle]="{
-          'display': dragData.isVisible ? 'block' : 'none',
-          'left': dragData.left + 'px',
-          'top': dragData.top + 'px'
-        }">
+          <app-layerlisttree fxLayout="column"
+            class="slt-layer-container"
+            *ngFor="let vectorLayer of [model.vectorLayer]; trackBy: trackLayerFn"
+            [layer]="vectorLayer"
+            (layerClick)="this.onLayerClick($event.event, $event.layer)"
+            (layerToggleExpanded)="this.onLayerToggleExpanded($event.event, $event.layer)"
+            (layerToggleVisibility)="this.onLayerToggleVisibility($event.event, $event.layer)"
+            (layerMouseDown)="this.onLayerMouseDown($event.event, $event.layer)"
+            (addTimelineBlockClick)="this.onAddTimelineBlockClick($event.event, $event.layer, $event.propertyName)">
+          </app-layerlisttree>
+        </div>
+        <div *ngIf="(this.dragIndicatorObservable | async) as dragData"
+          class="slt-layers-list-drag-indicator"
+          [ngStyle]="{
+            'display': dragData.isVisible ? 'block' : 'none',
+            'left': dragData.left + 'px',
+            'top': dragData.top + 'px'
+          }">
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- Animation timeline. -->
-  <div #timeline
-    class="slt-timeline"
-    (mousewheel)="this.onWheelEvent($event)">
-    <div #timelineAnimation
-      *ngIf="{ horizZoom: (this.horizZoomObservable | async) } as animationData"
-      class="slt-timeline-animation is-active"
-      [ngStyle]="{'width': (model.animation.duration * animationData.horizZoom + 40) + 'px'}"
-      fxLayout="column">
-      <div class="slt-header">
-        <div fxLayout="row"
-          fxLayoutAlign="start center">
-          <div class="slt-timeline-animation-meta"
-            [class.is-disabled]="model.isActionMode"
-            [class.is-selected]="model.isAnimationSelected"
-            (click)="this.onAnimationHeaderTextClick($event)">
-            <span class="slt-timeline-animation-name"
-              [class.is-disabled]="model.isActionMode">
-              {{ model.animation.name }}
-            </span>
-            <span class="slt-timeline-animation-duration"
-              [class.is-disabled]="model.isActionMode">
-              {{ model.animation.duration }}ms
-            </span>
+    <!-- Animation timeline. -->
+    <div #timeline
+      class="slt-timeline"
+      (mousewheel)="this.onWheelEvent($event)">
+      <div #timelineAnimation
+        *ngIf="{ horizZoom: (this.horizZoomObservable | async) } as animationData"
+        class="slt-timeline-animation is-active"
+        [ngStyle]="{'width': (model.animation.duration * animationData.horizZoom + 40) + 'px'}"
+        fxLayout="column">
+        <div fxLayout="row">
+          <div class="slt-header mat-elevation-z2">
+            <div fxLayout="row"
+              fxLayoutAlign="start center">
+              <div class="slt-timeline-animation-meta"
+                [class.is-disabled]="model.isActionMode"
+                [class.is-selected]="model.isAnimationSelected"
+                (click)="this.onAnimationHeaderTextClick($event)">
+                <span class="slt-timeline-animation-name"
+                  [class.is-disabled]="model.isActionMode">
+                  {{ model.animation.name }}
+                </span>
+                <span class="slt-timeline-animation-duration"
+                  [class.is-disabled]="model.isActionMode">
+                  {{ model.animation.duration }}ms
+                </span>
+              </div>
+              <button md-icon-button
+                (click)="this.onZoomToFitClick($event)"
+                mdTooltip="Zoom to fit ({{ this.shortcutService.getZoomToFitText() }})"
+                mdTooltipPosition="below"
+                mdTooltipShowDelay="500">
+                <md-icon>zoom_out_map</md-icon>
+              </button>
+            </div>
+            <canvas appLayerTimelineGrid
+              class="slt-timeline-header-grid"
+              [class.dark-to-light-base100]="!theme.isInitialPageLoad && theme.themeType === 'light'"
+              [class.light-to-dark-base100]="!theme.isInitialPageLoad && theme.themeType === 'dark'"
+              [animation]="model.animation"
+              [horizZoom]="animationData.horizZoom"
+              [isHeader]="true"
+              (scrub)="this.onTimelineHeaderScrub($event)">
+            </canvas>
           </div>
-          <button md-icon-button
-            (click)="this.onZoomToFitClick($event)"
-            mdTooltip="Zoom to fit ({{ this.shortcutService.getZoomToFitText() }})"
-            mdTooltipPosition="below"
-            mdTooltipShowDelay="500">
-            <md-icon>zoom_out_map</md-icon>
-          </button>
+          <canvas appLayerTimelineGrid
+            class="slt-timeline-grid"
+            [isHeader]="false"
+            [animation]="model.animation"
+            [horizZoom]="animationData.horizZoom">
+          </canvas>
         </div>
-        <canvas appLayerTimelineGrid
-          class="slt-timeline-header-grid"
-          [animation]="model.animation"
-          [horizZoom]="animationData.horizZoom"
-          [isHeader]="true"
-          (scrub)="this.onTimelineHeaderScrub($event)">
-        </canvas>
-      </div>
 
-      <canvas appLayerTimelineGrid
-        class="slt-timeline-grid"
-        [isHeader]="false"
-        [animation]="model.animation"
-        [horizZoom]="animationData.horizZoom">
-      </canvas>
-
-      <div appScrollGroup="timeline"
-        class="slt-timeline-animation-scroller">
-        <div class="slt-timeline-animation-rows">
-          <!-- Note the *ngFor loop is intentional here even though there is only
+        <div appScrollGroup="timeline"
+          class="slt-timeline-animation-scroller">
+          <div class="slt-timeline-animation-rows">
+            <!-- Note the *ngFor loop is intentional here even though there is only
                ever one layer in the list. We use it because it allows us to recreate
                the component from scratch when the layer id changes (i.e. when
                the workspace is reset). -->
-          <app-timelineanimationrow *ngFor="let vl of [model.vectorLayer]; trackBy: trackLayerFn"
-            [layer]="vl"
-            (timelineBlockMouseDown)="this.onTimelineBlockMouseDown($event.event, $event.block)"
-            (timelineBlockClick)="this.onTimelineBlockClick($event.event, $event.block)"
-            (timelineBlockDoubleClick)="this.onTimelineBlockDoubleClick($event.event, $event.block)">
-          </app-timelineanimationrow>
+            <app-timelineanimationrow *ngFor="let vl of [model.vectorLayer]; trackBy: trackLayerFn"
+              [layer]="vl"
+              (timelineBlockMouseDown)="this.onTimelineBlockMouseDown($event.event, $event.block)"
+              (timelineBlockClick)="this.onTimelineBlockClick($event.event, $event.block)"
+              (timelineBlockDoubleClick)="this.onTimelineBlockDoubleClick($event.event, $event.block)">
+            </app-timelineanimationrow>
+          </div>
         </div>
       </div>
     </div>
   </div>
-</div>
+</ng-container>

@@ -1,3 +1,5 @@
+import 'rxjs/add/operator/combineLatest';
+
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { ActionMode } from 'app/model/actionmode';
 import {
@@ -16,9 +18,12 @@ import {
   AnimatorService,
   LayerTimelineService,
   ShortcutService,
+  ThemeService,
 } from 'app/services';
 import { State, Store } from 'app/store';
 import { getPropertyInputState } from 'app/store/common/selectors';
+import { ThemeType } from 'app/store/theme/reducer';
+import { getThemeType } from 'app/store/theme/selectors';
 import { SetAnimation } from 'app/store/timeline/actions';
 import * as $ from 'jquery';
 import * as _ from 'lodash';
@@ -42,18 +47,24 @@ export class PropertyInputComponent implements OnInit {
   // but may not have been saved in the store.
   private readonly enteredValueMap = new Map<string, any>();
 
+  themeState$: Observable<{ prevThemeType: ThemeType; currThemeType: ThemeType }>;
+
   constructor(
     private readonly store: Store<State>,
     private readonly actionModeService: ActionModeService,
     private readonly animatorService: AnimatorService,
     private readonly layerTimelineService: LayerTimelineService,
+    public readonly themeService: ThemeService,
   ) {}
 
   ngOnInit() {
+    let prevThemeType: ThemeType;
+    let currThemeType = this.themeService.getThemeType().themeType;
     this.propertyInputModel$ = this.store
       .select(getPropertyInputState)
       .map(
         ({ animation, isAnimationSelected, selectedBlockIds, vectorLayer, selectedLayerIds }) => {
+          prevThemeType = currThemeType = this.themeService.getThemeType().themeType;
           if (selectedLayerIds.size) {
             return this.buildInspectedLayerProperties(vectorLayer, selectedLayerIds, animation);
           } else if (selectedBlockIds.size) {
@@ -69,6 +80,14 @@ export class PropertyInputComponent implements OnInit {
           }
         },
       );
+    this.themeState$ = Observable.combineLatest(
+      this.propertyInputModel$,
+      this.themeService.asObservable(),
+    ).map(([unused, { themeType }]) => {
+      prevThemeType = currThemeType;
+      currThemeType = this.themeService.getThemeType().themeType;
+      return { prevThemeType, currThemeType };
+    });
   }
 
   shouldShowStartActionModeButton(pim: PropertyInputModel) {

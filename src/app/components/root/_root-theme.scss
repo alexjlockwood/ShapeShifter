@@ -1,0 +1,13 @@
+@mixin ss-root-theme($theme) {
+    $background: map-get($theme, ss-background);
+    $accent: map-get($theme, accent);
+    div.display-container {
+        background-color: mat-color($background, base300);
+    }
+    .file-drop-target {
+        &.is-dragging-over::after {
+            background-color: mat-color($accent, darker, 0.5);
+            box-shadow: 0 0 0 8px mat-color($accent, darker) inset;
+        }
+    }
+}

@@ -1,6 +1,3 @@
-@import '../../styles/material-shadows';
-@import '../../styles/variables';
-@import '../../styles/theme';
 $timelineAnimationPadding: 20px;
 ul {
     margin: 0;
@@ -24,19 +21,13 @@ li {
 
 .slt-properties {
     margin: 4px 0;
-    background-color: #fff;
     border-radius: 2px;
-    box-shadow: 0 0 0 1px $thinBorderColor inset;
     .slt-property {
         position: relative;
         line-height: 24px;
         height: 24px;
-        &:not(:last-child) {
-            box-shadow: 0 -1px 0 $thinBorderColor inset;
-        }
         .slt-timeline-block {
             position: absolute;
-            background-color: mat-color(mat-palette($mat-green, 200));
             height: 12px;
             border-radius: 6px;
             top: 50%;
@@ -58,15 +49,6 @@ li {
             }
             &.is-disabled {
                 cursor: default;
-            }
-            &.is-selected {
-                background-color: $colorSelectedAnimationBlock;
-            }
-            &.has-error {
-                background-color: mat-color(mat-palette($mat-red, A200));
-            }
-            &.is-selected-with-error {
-                background-color: mat-color(mat-palette($mat-red, A700));
             }
         }
     }

@@ -1,11 +1,5 @@
-@import '../../styles/material-shadows';
-@import '../../styles/variables';
-@import '../../styles/theme';
 .toolbar {
     padding: 8px 16px;
-    background-color: mat-color($app-primary);
-    color: mat-color($app-primary, default-contrast);
-    box-shadow: material-shadow(1);
     z-index: 1;
     .toolbar-logo {
         width: 40px;
@@ -32,20 +26,15 @@
     margin-right: 8px;
 }
 
-button {
-    &[md-icon-button][disabled] {
-        md-icon {
-            color: $colorWhiteTextDisabled;
-        }
-    }
-}
-
-button.activated {
-    md-icon {
-        color: mat-color(mat-palette($mat-orange, A200));
-    }
-}
-
 .toolbar-action-button {
     margin-left: 16px;
+}
+
+a {
+    button.mat-menu-item {
+            md-icon {
+                margin-right: 20px;
+
+        }
+    }
 }

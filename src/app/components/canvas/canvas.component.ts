@@ -15,6 +15,7 @@ import {
 import { ActionSource } from 'app/model/actionmode';
 import { Point } from 'app/scripts/common';
 import { DestroyableMixin } from 'app/scripts/mixins';
+import { ThemeService } from 'app/services';
 import { State, Store } from 'app/store';
 import { getVectorLayer } from 'app/store/layers/selectors';
 import * as $ from 'jquery';
@@ -48,7 +49,11 @@ export class CanvasComponent extends CanvasLayoutMixin(DestroyableMixin())
 
   private readonly $element: JQuery;
 
-  constructor(elementRef: ElementRef, private readonly store: Store<State>) {
+  constructor(
+    elementRef: ElementRef,
+    private readonly store: Store<State>,
+    public readonly themeService: ThemeService,
+  ) {
     super();
     this.$element = $(elementRef.nativeElement);
   }

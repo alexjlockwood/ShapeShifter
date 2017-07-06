@@ -1,18 +1,17 @@
-import { animate, state, style, transition, trigger } from '@angular/animations';
+import 'rxjs/add/operator/combineLatest';
+
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { ActionMode, ActionSource, Selection, SelectionType } from 'app/model/actionmode';
 import { MorphableLayer } from 'app/model/layers';
 import { PathAnimationBlock } from 'app/model/timeline';
 import { ActionModeUtil } from 'app/scripts/common';
-import { ActionModeService } from 'app/services';
+import { ActionModeService, ThemeService } from 'app/services';
 import { State, Store } from 'app/store';
 import { getToolbarState } from 'app/store/actionmode/selectors';
+import { ThemeType } from 'app/store/theme/reducer';
+import { getThemeType } from 'app/store/theme/selectors';
 import * as _ from 'lodash';
 import { Observable } from 'rxjs/Observable';
-
-type ActionModeState = 'inactive' | 'active';
-const INACTIVE = 'inactive';
-const ACTIVE = 'active';
 
 declare const ga: Function;
 
@@ -21,35 +20,56 @@ declare const ga: Function;
   templateUrl: './toolbar.component.html',
   styleUrls: ['./toolbar.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  animations: [
-    trigger('actionModeState', [
-      // Blue grey 500.
-      state(INACTIVE, style({ backgroundColor: '#607D8B' })),
-      // Blue A400.
-      state(ACTIVE, style({ backgroundColor: '#2979FF' })),
-      transition('* => *', animate('200ms ease-out')),
-    ]),
-  ],
 })
 export class ToolbarComponent implements OnInit {
   toolbarData$: Observable<ToolbarData>;
-  actionModeState$: Observable<ActionModeState>;
+  themeState$: Observable<{
+    prevThemeType: ThemeType;
+    currThemeType: ThemeType;
+    prevIsActionMode: boolean;
+    currIsActionMode: boolean;
+  }>;
+  private hasActionModeBeenEnabled = false;
 
   constructor(
     private readonly actionModeService: ActionModeService,
+    public readonly themeService: ThemeService,
     private readonly store: Store<State>,
   ) {}
 
   ngOnInit() {
+    let prevThemeType: ThemeType;
+    let currThemeType = this.themeService.getThemeType().themeType;
+    let prevIsActionMode: boolean;
+    let currIsActionMode = this.actionModeService.getActionMode() !== ActionMode.None;
     const toolbarState = this.store.select(getToolbarState);
     this.toolbarData$ = toolbarState.map(
       ({ mode, fromMl, toMl, selections, unpairedSubPath, block }) => {
         return new ToolbarData(mode, fromMl, toMl, selections, unpairedSubPath, block);
       },
     );
-    this.actionModeState$ = toolbarState.map(({ mode }) => {
-      return mode === ActionMode.None ? INACTIVE : ACTIVE;
+    this.themeState$ = Observable.combineLatest(
+      toolbarState,
+      this.themeService.asObservable().map(t => t.themeType),
+    ).map(([{ mode }, themeType]) => {
+      prevThemeType = currThemeType;
+      currThemeType = themeType;
+      prevIsActionMode = currIsActionMode;
+      currIsActionMode = mode !== ActionMode.None;
+      return { prevThemeType, currThemeType, prevIsActionMode, currIsActionMode };
     });
+  }
+
+  get darkTheme() {
+    return this.themeService.getThemeType().themeType === 'dark';
+  }
+
+  set darkTheme(isDark: boolean) {
+    this.themeService.setTheme(isDark ? 'dark' : 'light');
+  }
+
+  onDarkThemeSliderClick() {
+    this.themeService.toggleTheme();
   }
 
   onSendFeedbackClick(event: MouseEvent) {

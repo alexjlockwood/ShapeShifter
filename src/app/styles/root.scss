@@ -1,5 +1,3 @@
-@import './theme';
-@import './variables';
 html,
 body {
     margin: 0;
@@ -9,6 +7,9 @@ body {
     overflow: hidden;
 }
 
+$mdFontFamily: Roboto,
+'Helvetica Neue',
+sans-serif !default;
 html {
     font-family: $mdFontFamily;
 }
