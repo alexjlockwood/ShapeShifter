@@ -1,10 +1,11 @@
-import { FractionProperty, NumberProperty, Property } from 'app/model/properties';
+import { ColorProperty, FractionProperty, NumberProperty, Property } from 'app/model/properties';
 import { Rect } from 'app/scripts/common';
 import * as _ from 'lodash';
 
 import { ConstructorArgs as AbstractConstructorArgs, AbstractLayer } from './AbstractLayer';
 
 const DEFAULTS = {
+  canvasColor: '',
   width: 24,
   height: 24,
   alpha: 1,
@@ -14,7 +15,7 @@ const DEFAULTS = {
  * Model object that mirrors the VectorDrawable's '<vector>' element.
  */
 @Property.register(
-  // TODO: add 'canvas color' property?
+  new ColorProperty('canvasColor'),
   new NumberProperty('width', { isAnimatable: false, min: 1, isInteger: true }),
   new NumberProperty('height', { isAnimatable: false, min: 1, isInteger: true }),
   new FractionProperty('alpha', { isAnimatable: true }),
@@ -23,6 +24,7 @@ export class VectorLayer extends AbstractLayer {
   constructor(obj = { children: [], name: 'vector' } as ConstructorArgs) {
     super(obj);
     const setterFn = (num: number, def: number) => (_.isNil(num) ? def : num);
+    this.canvasColor = obj.canvasColor || DEFAULTS.canvasColor;
     this.width = setterFn(obj.width, DEFAULTS.width);
     this.height = setterFn(obj.height, DEFAULTS.height);
     this.alpha = setterFn(obj.alpha, DEFAULTS.alpha);
@@ -54,6 +56,7 @@ export class VectorLayer extends AbstractLayer {
 
   toJSON() {
     const obj = Object.assign(super.toJSON(), {
+      canvasColor: this.canvasColor,
       width: this.width,
       height: this.height,
       alpha: this.alpha,
@@ -69,6 +72,7 @@ export class VectorLayer extends AbstractLayer {
 }
 
 interface VectorLayerArgs {
+  canvasColor?: string;
   width?: number;
   height?: number;
   alpha?: number;

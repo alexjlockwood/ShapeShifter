@@ -105,6 +105,10 @@ export class CanvasLayersDirective extends CanvasLayoutMixin(DestroyableMixin())
 
     this.renderingCtx.save();
     setupCtxWithViewportCoordsFn(this.renderingCtx);
+    if (this.vectorLayer.canvasColor) {
+      this.renderingCtx.fillStyle = ColorUtil.androidToCssRgbaColor(this.vectorLayer.canvasColor);
+      this.renderingCtx.fillRect(0, 0, this.vectorLayer.width, this.vectorLayer.height);
+    }
 
     const currentAlpha = this.vectorLayer ? this.vectorLayer.alpha : 1;
     if (currentAlpha < 1) {
