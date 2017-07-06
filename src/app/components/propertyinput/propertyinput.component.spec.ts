@@ -14,6 +14,7 @@ import {
   AnimatorService,
   LayerTimelineService,
   PlaybackService,
+  ThemeService,
 } from 'app/services';
 import { Store } from 'app/store';
 import { MockStore } from 'test/MockStore';
@@ -43,6 +44,7 @@ describe('PropertyInputComponent', () => {
           AnimatorService,
           LayerTimelineService,
           PlaybackService,
+          ThemeService,
         ],
       }).compileComponents();
     }),

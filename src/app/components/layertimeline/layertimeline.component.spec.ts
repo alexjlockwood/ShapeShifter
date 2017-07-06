@@ -24,6 +24,7 @@ import {
   PlaybackService,
   ShortcutService,
   SnackBarService,
+  ThemeService,
 } from 'app/services';
 import { Store } from 'app/store';
 import { MockStore } from 'test/MockStore';
@@ -70,6 +71,7 @@ describe('LayerTimelineComponent', () => {
           PlaybackService,
           ShortcutService,
           SnackBarService,
+          ThemeService,
         ],
       }).compileComponents();
       loadSvgIcons([

@@ -9,6 +9,7 @@ import {
   LayerTimelineService,
   PlaybackService,
   ShortcutService,
+  ThemeService,
 } from 'app/services';
 import { Store } from 'app/store';
 import { Observable } from 'rxjs/Observable';
@@ -42,6 +43,7 @@ describe('CanvasComponent', () => {
           LayerTimelineService,
           PlaybackService,
           ShortcutService,
+          ThemeService,
         ],
       }).compileComponents();
     }),

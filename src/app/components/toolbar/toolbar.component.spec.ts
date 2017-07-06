@@ -1,11 +1,13 @@
 import { ComponentFixture, TestBed, async, inject } from '@angular/core/testing';
 import { FlexLayoutModule } from '@angular/flex-layout';
+import { FormsModule } from '@angular/forms';
 import { HttpModule } from '@angular/http';
 import {
   MdButtonModule,
   MdIconModule,
   MdIconRegistry,
   MdMenuModule,
+  MdSlideToggleModule,
   MdTooltipModule,
 } from '@angular/material';
 import { DomSanitizer } from '@angular/platform-browser';
@@ -21,6 +23,7 @@ import {
   PlaybackService,
   ShortcutService,
   SnackBarService,
+  ThemeService,
 } from 'app/services';
 import { Store } from 'app/store';
 import { MockStore } from 'test/MockStore';
@@ -38,13 +41,15 @@ describe('ToolbarComponent', () => {
         imports: [
           HttpModule,
           FlexLayoutModule,
+          FormsModule,
           MdButtonModule,
           MdIconModule,
           MdMenuModule,
           MdTooltipModule,
+          MdSlideToggleModule,
           NoopAnimationsModule,
         ],
-        providers: [{ provide: Store, useValue: new MockStore() }, ActionModeService],
+        providers: [{ provide: Store, useValue: new MockStore() }, ActionModeService, ThemeService],
       }).compileComponents();
       loadSvgIcons([
         { name: 'autofix', path: 'assets/icons/autofix.svg' },

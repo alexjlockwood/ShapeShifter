@@ -14,6 +14,7 @@ import {
   MdMenuModule,
   MdOptionModule,
   MdRadioModule,
+  MdSlideToggleModule,
   MdSnackBarModule,
   MdToolbarModule,
   MdTooltipModule,
@@ -47,17 +48,20 @@ import { ScrollGroupDirective } from 'app/components/scrollgroup/scrollgroup.dir
 import { SplashScreenComponent } from 'app/components/splashscreen/splashscreen.component';
 import { SplitterComponent } from 'app/components/splitter/splitter.component';
 import { ToolbarComponent } from 'app/components/toolbar/toolbar.component';
-import { ActionModeService } from 'app/services/actionmode.service';
-import { AnimatorService } from 'app/services/animator.service';
-import { ClipboardService } from 'app/services/clipboard.service';
-import { DemoService } from 'app/services/demo.service';
-import { DialogService } from 'app/services/dialog.service';
-import { FileExportService } from 'app/services/fileexport.service';
-import { FileImportService } from 'app/services/fileimport.service';
-import { LayerTimelineService } from 'app/services/layertimeline.service';
-import { PlaybackService } from 'app/services/playback.service';
-import { ShortcutService } from 'app/services/shortcut.service';
-import { SnackBarService } from 'app/services/snackbar.service';
+import {
+  ActionModeService,
+  AnimatorService,
+  ClipboardService,
+  DemoService,
+  DialogService,
+  FileExportService,
+  FileImportService,
+  LayerTimelineService,
+  PlaybackService,
+  ShortcutService,
+  SnackBarService,
+  ThemeService,
+} from 'app/services';
 import { Store } from 'app/store';
 import { MockStore } from 'test/MockStore';
 
@@ -104,6 +108,7 @@ describe('RootComponent', () => {
           MdMenuModule,
           MdOptionModule,
           MdRadioModule,
+          MdSlideToggleModule,
           MdSnackBarModule,
           MdToolbarModule,
           MdTooltipModule,
@@ -121,6 +126,7 @@ describe('RootComponent', () => {
           PlaybackService,
           ShortcutService,
           SnackBarService,
+          ThemeService,
         ],
       }).compileComponents();
       loadSvgIcons([
