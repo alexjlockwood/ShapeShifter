@@ -20,4 +20,3 @@ script:
   - npm run build
 after_success:
   - npm run coveralls
-  - bash <(curl -s https://codecov.io/bash)
