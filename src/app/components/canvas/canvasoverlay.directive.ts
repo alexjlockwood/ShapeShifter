@@ -402,18 +402,17 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
     if (this.selectionHelper) {
       // Draw any highlighted subpaths. We'll highlight a subpath if a subpath
       // selection or a point selection exists.
-      const selectedSubPaths = _(this.actionSelections as Selection[])
+      const selectedSubPathsInfos = this.actionSelections
         .filter(s => {
           return (
             s.source === this.actionSource &&
             (s.type === SelectionType.Point || s.type === SelectionType.SubPath)
           );
         })
-        .map(s => s.subIdx)
-        .uniq()
+        .map(s => s.subIdx);
+      const selectedSubPaths = _.uniq(selectedSubPathsInfos)
         .map(subIdx => activePath.getSubPath(subIdx))
-        .filter(subPath => !subPath.isCollapsing())
-        .value();
+        .filter(subPath => !subPath.isCollapsing());
 
       for (const subPath of selectedSubPaths) {
         // If the subpath has a split segment, highlight it in orange. Otherwise,
@@ -463,11 +462,11 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
     }
 
     // Draw any existing split shape segments to the canvas.
-    const commands = _(activePath.getSubPaths() as SubPath[])
+    const commands = activePath
+      .getSubPaths()
       .filter(s => !s.isCollapsing())
-      .flatMap(s => s.getCommands() as Command[])
-      .filter(c => c.isSplitSegment())
-      .value();
+      .reduce((prev, curr) => [...prev, ...curr.getCommands()], [] as Command[])
+      .filter(c => c.isSplitSegment());
     CanvasUtil.executeCommands(ctx, commands, flattenedTransform);
     executeHighlights(ctx, SPLIT_POINT_COLOR, this.unselectedSegmentLineWidth);
 
@@ -565,16 +564,16 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
     }
 
     // Create a list of all path points in their normal order.
-    const pointInfos = _(path.getSubPaths() as SubPath[])
+    const pointInfos = path
+      .getSubPaths()
       .filter(s => !s.isCollapsing())
       .map((s, subIdx) => {
         return s.getCommands().map((cmd, cmdIdx) => {
           return { cmd, subIdx, cmdIdx } as PointInfo;
         });
       })
-      .flatMap(pis => pis)
-      .reverse()
-      .value();
+      .reduce((prev, curr) => [...prev, ...curr])
+      .reverse();
 
     const subPathSelections = this.actionSelections.filter(s => s.type === SelectionType.SubPath);
     const pointSelections = this.actionSelections.filter(s => s.type === SelectionType.Point);

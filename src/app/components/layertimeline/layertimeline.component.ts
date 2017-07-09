@@ -532,24 +532,21 @@ export class LayerTimelineComponent extends DestroyableMixin()
               timeDelta = _.clamp(timeDelta, min, max);
             });
 
-            const deltas = _(blockInfos)
-              .filter(info => {
-                // For each block, check if it overlaps with any of the stagnant blocks.
-                const low = info.downStartTime + timeDelta;
-                const end = info.downEndTime + timeDelta;
-                return isOverlappingBlockFn(info, low, end);
-              })
-              .flatMap(info => {
-                const { block: { id, layerId, propertyName } } = info;
-                const neighbors = blocksByPropertyByLayer[layerId][propertyName].filter(
-                  ngh => id !== ngh.id,
-                );
-                return _.flatMap(neighbors, ngh => {
-                  return [ngh.startTime - info.downEndTime, ngh.endTime - info.downStartTime];
-                });
-              })
-              .sort((a, b) => Math.abs(a - timeDelta) - Math.abs(b - timeDelta))
-              .value();
+            const deltaInfos = blockInfos.filter(info => {
+              // For each block, check if it overlaps with any of the stagnant blocks.
+              const low = info.downStartTime + timeDelta;
+              const end = info.downEndTime + timeDelta;
+              return isOverlappingBlockFn(info, low, end);
+            });
+            const deltas = _.flatMap(deltaInfos, info => {
+              const { block: { id, layerId, propertyName } } = info;
+              const neighbors = blocksByPropertyByLayer[layerId][propertyName].filter(
+                ngh => id !== ngh.id,
+              );
+              return _.flatMap(neighbors, ngh => {
+                return [ngh.startTime - info.downEndTime, ngh.endTime - info.downStartTime];
+              });
+            }).sort((a, b) => Math.abs(a - timeDelta) - Math.abs(b - timeDelta));
 
             const deltaIndex = _.findIndex(deltas, delta => {
               return blockInfos.every(info => {
