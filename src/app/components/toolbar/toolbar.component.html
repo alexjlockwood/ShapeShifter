@@ -6,10 +6,10 @@
     [class.light-to-dark-primary]="state.prevThemeType === 'light' && state.currThemeType === 'dark' && !state.currIsActionMode"
     [class.dark-to-light-accent]="state.prevThemeType === 'dark' && state.currThemeType === 'light' && state.currIsActionMode"
     [class.light-to-dark-accent]="state.prevThemeType === 'light' && state.currThemeType === 'dark' && state.currIsActionMode"
-    [class.action-mode-on-to-off-dark]="state.prevIsActionMode && !state.currIsActionMode && state.currThemeType === 'dark'"
-    [class.action-mode-off-to-on-dark]="!state.prevIsActionMode && state.currIsActionMode && state.currThemeType === 'dark'"
-    [class.action-mode-on-to-off-light]="state.prevIsActionMode && !state.currIsActionMode && state.currThemeType === 'light'"
-    [class.action-mode-off-to-on-light]="!state.prevIsActionMode && state.currIsActionMode && state.currThemeType === 'light'"
+    [class.action-mode-on-to-off-dark]="!state.currIsActionMode && state.currThemeType === 'dark'"
+    [class.action-mode-off-to-on-dark]="state.currIsActionMode && state.currThemeType === 'dark'"
+    [class.action-mode-on-to-off-light]="!state.currIsActionMode && state.currThemeType === 'light'"
+    [class.action-mode-off-to-on-light]="state.currIsActionMode && state.currThemeType === 'light'"
     class="toolbar mat-elevation-z2">
 
     <ng-container *ngIf="{
