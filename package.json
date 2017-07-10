@@ -29,7 +29,6 @@
     "@angular/service-worker": "^1.0.0-beta.15",
     "@ngrx/core": "^1.2.0",
     "@ngrx/store": "^2.2.2",
-    "@types/polylabel": "^1.0.3",
     "bezier-js": "^2.2.3",
     "core-js": "^2.4.1",
     "css-select": "^1.3.0-rc0",
@@ -49,7 +48,6 @@
     "sax": "^1.2.4",
     "stable": "^0.1.6",
     "tinycolor2": "^1.4.1",
-    "typescript": "^2.4.1",
     "whet.extend": "~0.9.9",
     "zone.js": "^0.8.12"
   },
@@ -66,6 +64,7 @@
     "@types/jszip": "0.0.33",
     "@types/lodash": "^4.14.68",
     "@types/node": "^8.0.9",
+    "@types/polylabel": "^1.0.3",
     "@types/tinycolor2": "^1.4.0",
     "angular-cli-ghpages": "^0.5.1",
     "codelyzer": "^3.1.2",
