@@ -50,9 +50,13 @@ $ss-dark-theme-background: (
   base300: #101010,
 );
 
+$light-accent: mat-palette($mat-blue, A400, A200, A700);
+$dark-accent: mat-palette($mat-deep-orange, A200, A100, A400);
+
 @function ss-light-theme($primary, $accent, $warn: mat-palette($mat-red)) {
     $base-theme: mat-light-theme($primary, $accent, $warn);
-    $result: map_merge( $base-theme, (
+    $result: map_merge($base-theme, (
+      accent-inverse: $dark-accent,
       ss-foreground: $ss-light-theme-foreground,
       ss-background: $ss-light-theme-background,
     ));
@@ -61,7 +65,8 @@ $ss-dark-theme-background: (
 
 @function ss-dark-theme($primary, $accent, $warn: mat-palette($mat-red)) {
     $base-theme: mat-dark-theme($primary, $accent, $warn);
-    $result: map_merge( $base-theme, (
+    $result: map_merge($base-theme, (
+      accent-inverse: $light-accent,
       ss-foreground: $ss-dark-theme-foreground,
       ss-background: $ss-dark-theme-background,
     ));
@@ -82,10 +87,8 @@ $ss-dark-theme-background: (
 }
 
 $light-primary: mat-palette($mat-blue-grey, 500);
-$light-accent: mat-palette($mat-blue, A400, A200, A700);
 $light-warn: mat-palette($mat-red);
 $dark-primary: mat-palette($mat-indigo, 700);
-$dark-accent: mat-palette($mat-deep-orange, A200, A100, A400);
 $dark-warn: mat-palette($mat-red);
 $light-theme: ss-light-theme($light-primary, $light-accent, $light-warn);
 $dark-theme: ss-dark-theme($dark-primary, $dark-accent, $dark-warn);

@@ -94,9 +94,11 @@ export class PropertyInputComponent implements OnInit {
   }
 
   shouldDisableStartActionModeButton(pim: PropertyInputModel) {
-    return (
-      this.shouldShowStartActionModeButton(pim) && (!pim.model.fromValue || !pim.model.toValue)
-    );
+    if (!this.shouldShowStartActionModeButton(pim)) {
+      return false;
+    }
+    const { fromValue, toValue } = pim.model as PathAnimationBlock;
+    return !fromValue || !fromValue.getPathString() || !toValue || !toValue.getPathString();
   }
 
   onAutoFixPathsClick(pim: PropertyInputModel) {

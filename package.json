@@ -11,18 +11,20 @@
     "e2e": "node --max-old-space-size=8192 ./node_modules/.bin/ng e2e",
     "test-once": "node --max-old-space-size=8192 ./node_modules/.bin/ng test --single-run --code-coverage",
     "deploy": "node --max-old-space-size=8192 ./node_modules/.bin/ng build -prod && cp ./CNAME ./dist/CNAME && ngh",
-    "coveralls": "cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js"
+    "coveralls": "cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
+    "bundle-report": "node --max-old-space-size=8192 ./node_modules/.bin/ng build --prod --target=production --environment=prod --aot --stats-json && webpack-bundle-analyzer dist/stats.json"
   },
   "private": true,
   "dependencies": {
     "@angular/animations": "^4.2.6",
+    "@angular/cdk": "^2.0.0-beta.8",
     "@angular/common": "^4.2.6",
     "@angular/compiler": "^4.2.6",
     "@angular/core": "^4.2.6",
     "@angular/flex-layout": "^2.0.0-rc.1",
     "@angular/forms": "^4.2.6",
     "@angular/http": "^4.2.6",
-    "@angular/material": "2.0.0-beta.7",
+    "@angular/material": "2.0.0-beta.8",
     "@angular/platform-browser": "^4.2.6",
     "@angular/platform-browser-dynamic": "^4.2.6",
     "@angular/router": "^4.2.6",
