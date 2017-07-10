@@ -1034,6 +1034,12 @@ export class LayerTimelineComponent extends DestroyableMixin()
     this.fileImportService.import(fileList);
   }
 
+  onTopSplitterChanged() {
+    if (this.timelineDirectives) {
+      this.timelineDirectives.forEach(d => d.redraw());
+    }
+  }
+
   // Used by *ngFor loop.
   trackLayerFn(index: number, layer: Layer) {
     return layer.id;

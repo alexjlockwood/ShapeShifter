@@ -1,4 +1,13 @@
-import { Component, ElementRef, HostBinding, HostListener, Input, OnInit } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  EventEmitter,
+  HostBinding,
+  HostListener,
+  Input,
+  OnInit,
+  Output,
+} from '@angular/core';
 import { Dragger } from 'app/scripts/dragger';
 import * as $ from 'jquery';
 
@@ -15,6 +24,7 @@ export class SplitterComponent implements OnInit {
   @Input() edge: Edge;
   @Input() min: number;
   @Input() persistId: string;
+  @Output() split = new EventEmitter<number>();
   @HostBinding('class.splt-horizontal') spltHorizontal: boolean;
   @HostBinding('class.splt-vertical') spltVertical: boolean;
   @HostBinding('class.splt-edge-left') spltEdgeLeft: boolean;
@@ -47,11 +57,17 @@ export class SplitterComponent implements OnInit {
     const getParentFn = () => $(this.elementRef.nativeElement).parent();
     if (this.orientation === 'vertical') {
       this.sizeGetterFn = () => getParentFn().width();
-      this.sizeSetterFn = size => getParentFn().width(size);
+      this.sizeSetterFn = size => {
+        getParentFn().width(size);
+        this.split.emit(size);
+      };
       this.clientXY = 'clientX';
     } else {
       this.sizeGetterFn = () => getParentFn().height();
-      this.sizeSetterFn = size => getParentFn().height(size);
+      this.sizeSetterFn = size => {
+        getParentFn().height(size);
+        this.split.emit(size);
+      };
       this.clientXY = 'clientY';
     }
     if (this.persistKey in localStorage) {

@@ -103,7 +103,7 @@ export class LayerTimelineGridDirective extends DestroyableMixin() implements On
     this.scrub.emit({ time, disableSnap });
   }
 
-  private redraw() {
+  redraw() {
     if (!this.$canvas.is(':visible')) {
       return;
     }

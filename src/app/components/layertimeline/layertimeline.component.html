@@ -4,6 +4,7 @@
     [class.dark-to-light-base100]="!theme.isInitialPageLoad && theme.themeType === 'light'"
     [class.light-to-dark-base100]="!theme.isInitialPageLoad && theme.themeType === 'dark'">
     <app-splitter [edge]="'top'"
+      (split)="onTopSplitterChanged()"
       [min]="200"
       [persistId]="'layer-timeline'">
     </app-splitter>
