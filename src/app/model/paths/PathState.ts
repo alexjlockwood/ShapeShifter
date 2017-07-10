@@ -16,7 +16,7 @@ export class PathState {
   readonly commands: ReadonlyArray<Command>;
 
   constructor(
-    obj: string | ReadonlyArray<Command>,
+    obj: string | Command[],
     // Maps internal spsIdx indices to SubPathState objects. The last 'numCollapsingSubPaths'
     // indices hold references to the collapsing sub paths.
     public readonly subPathStateMap?: ReadonlyArray<SubPathState>,
@@ -29,7 +29,9 @@ export class PathState {
     const subPaths = createSubPaths(commands);
     this.subPathStateMap =
       subPathStateMap ||
-      subPaths.map(s => new SubPathState(s.getCommands().map(c => new CommandState(c))));
+      subPaths.map(s => {
+        return new SubPathState(s.getCommands().map(c => new CommandState(c)));
+      });
     this.subPathOrdering = subPathOrdering || subPaths.map((unused, i) => i);
     this.subPaths = subPaths.map((subPath, subIdx) => {
       const cmds = subPath.getCommands().map((cmd, cmdIdx) => {
@@ -113,7 +115,9 @@ export class PathState {
     if (opts.isPointInRangeFn) {
       endPointHits.push(
         ..._(this.subPaths)
-          .map((subPath, subIdx) => ({ subPath, subIdx }))
+          .map((subPath, subIdx) => {
+            return { subPath, subIdx };
+          })
           .filter(obj => {
             const { subPath, subIdx } = obj;
             return !subPath.isCollapsing() && restrictToSubIdxSet.has(subIdx);
@@ -143,7 +147,9 @@ export class PathState {
       // TODO: take stroke width scaling into account as well?
       segmentHits.push(
         ..._(this.subPaths)
-          .map((subPath, subIdx) => ({ subPath, subIdx }))
+          .map((subPath, subIdx) => {
+            return { subPath, subIdx };
+          })
           .filter(obj => {
             const { subPath, subIdx } = obj;
             return !subPath.isCollapsing() && restrictToSubIdxSet.has(subIdx);
@@ -178,7 +184,9 @@ export class PathState {
     if (opts.findShapesInRange) {
       shapeHits.push(
         ..._(this.subPaths)
-          .map((subPath, subIdx) => ({ subPath, subIdx }))
+          .map((subPath, subIdx) => {
+            return { subPath, subIdx };
+          })
           .filter(obj => {
             const { subPath, subIdx } = obj;
             return subPath.isClosed() && !subPath.isCollapsing() && restrictToSubIdxSet.has(subIdx);
