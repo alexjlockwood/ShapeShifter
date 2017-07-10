@@ -36,6 +36,7 @@ export class ToolbarComponent implements OnInit {
   ) {}
 
   ngOnInit() {
+    let hasActionModeBeenEnabled = false;
     let prevThemeType: ThemeType;
     let currThemeType = this.themeService.getThemeType().themeType;
     let prevIsActionMode: boolean;
@@ -50,11 +51,18 @@ export class ToolbarComponent implements OnInit {
       toolbarState,
       this.themeService.asObservable().map(t => t.themeType),
     ).map(([{ mode }, themeType]) => {
+      hasActionModeBeenEnabled = hasActionModeBeenEnabled || mode !== ActionMode.None;
       prevThemeType = currThemeType;
       currThemeType = themeType;
       prevIsActionMode = currIsActionMode;
       currIsActionMode = mode !== ActionMode.None;
-      return { prevThemeType, currThemeType, prevIsActionMode, currIsActionMode };
+      return {
+        hasActionModeBeenEnabled,
+        prevThemeType,
+        currThemeType,
+        prevIsActionMode,
+        currIsActionMode,
+      };
     });
   }
 
