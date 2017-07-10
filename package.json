@@ -28,7 +28,7 @@
     "@angular/router": "^4.2.6",
     "@angular/service-worker": "^1.0.0-beta.15",
     "@ngrx/core": "^1.2.0",
-    "@ngrx/store": "^2.2.2",
+    "@ngrx/store": "^2.2.3",
     "bezier-js": "^2.2.3",
     "core-js": "^2.4.1",
     "css-select": "^1.3.0-rc0",
