@@ -468,18 +468,19 @@ export class PathMutator {
     LOG('deleteFilledSubPath', subIdx);
     const targetCss = this.findSubPathStateLeaf(subIdx).getCommandStates();
     // Get the list of parent split segment IDs.
-    const parentSplitSegIds = _.uniq(
-      this.findSubPathStateParent(subIdx)
-        .getCommandStates()
-        .map(cs => cs.getSplitSegmentId())
-        .filter(id => !!id),
-    );
+    const parentSplitSegIds = _(this.findSubPathStateParent(subIdx).getCommandStates())
+      .map(cs => cs.getSplitSegmentId())
+      .compact()
+      .uniq()
+      .value();
     // Get the list of sibling split segment IDs, not including split segment
     // IDs inherited from the parent.
-    const targetSplitSegIds = _.uniq(
-      targetCss.map(cs => cs.getSplitSegmentId()).filter(id => !!id),
-    );
-    const siblingSplitSegIds = _.difference(parentSplitSegIds);
+    const siblingSplitSegIds = _(targetCss)
+      .map(cs => cs.getSplitSegmentId())
+      .compact()
+      .uniq()
+      .difference(parentSplitSegIds)
+      .value();
     siblingSplitSegIds.forEach(id => {
       const targetCs = _.find(targetCss, cs => cs.getSplitSegmentId() === id);
       const deletedSubIdxs = this.calculateDeletedSubIdxs(subIdx, targetCs);
@@ -737,7 +738,7 @@ export class PathMutator {
     const orderedSubPathCmds = this.subPathOrdering.map(
       (unused, subIdx) => spsCmds[this.subPathOrdering[subIdx]],
     );
-    return orderedSubPathCmds
+    return _(orderedSubPathCmds)
       .map((cmds, subIdx) => {
         const moveCmd = cmds[0];
         if (subIdx === 0 && moveCmd.getStart()) {
@@ -748,7 +749,8 @@ export class PathMutator {
         }
         return cmds;
       })
-      .reduce((prev, curr) => [...prev, ...curr], []);
+      .flatMap(cmds => cmds)
+      .value();
   }
 
   /**
