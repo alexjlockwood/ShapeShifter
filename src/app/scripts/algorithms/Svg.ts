@@ -3,8 +3,9 @@ import * as Path from 'svgpath';
 
 import { INVALID_INPUT } from './Errors';
 import { normalizeRing } from './Normalize';
+import { Ring } from './Types';
 
-function parse(str) {
+function parse(str: string) {
   return new Path(str).abs();
 }
 
@@ -19,30 +20,29 @@ function split(parsed) {
     .filter(d => d);
 }
 
-export function toPathString(ring) {
+export function toPathString(ring: Ring) {
   return 'M' + ring.join('L') + 'Z';
 }
 
-export function splitPathString(str) {
+export function splitPathString(str: string) {
   return split(parse(str));
 }
 
-export function pathStringToRing(str, maxSegmentLength) {
-  let parsed = parse(str);
-
+export function pathStringToRing(str: string, maxSegmentLength: number) {
+  const parsed = parse(str);
   return exactRing(parsed) || approximateRing(parsed, maxSegmentLength);
 }
 
 function exactRing(parsed) {
-  let segments = parsed.segments || [],
-    ring = [];
+  const segments = parsed.segments || [];
+  const ring: Ring = [];
 
   if (!segments.length || segments[0][0] !== 'M') {
     return false;
   }
 
   for (let i = 0; i < segments.length; i++) {
-    let [command, x, y] = segments[i];
+    const [command, x, y] = segments[i];
     if ((command === 'M' && i) || command === 'Z') {
       break;
     } else if (command === 'M' || command === 'L') {
@@ -59,13 +59,12 @@ function exactRing(parsed) {
   return ring.length ? { ring } : false;
 }
 
-function approximateRing(parsed, maxSegmentLength) {
-  let ringPath = split(parsed)[0],
-    ring = [],
-    props,
-    len,
-    m,
-    numPoints = 3;
+function approximateRing(parsed, maxSegmentLength: number) {
+  const ringPath = split(parsed)[0];
+  const ring: Ring = [];
+  let len;
+  let m;
+  let numPoints = 3;
 
   if (!ringPath) {
     throw new TypeError(INVALID_INPUT);
@@ -79,7 +78,7 @@ function approximateRing(parsed, maxSegmentLength) {
   }
 
   for (let i = 0; i < numPoints; i++) {
-    let p = m.getPointAtLength(len * i / numPoints);
+    const p = m.getPointAtLength(len * i / numPoints);
     ring.push([p.x, p.y]);
   }
 
@@ -90,10 +89,8 @@ function approximateRing(parsed, maxSegmentLength) {
 }
 
 function measure(d) {
-  let svg = window.document.createElementNS('http://www.w3.org/2000/svg', 'svg'),
-    path = window.document.createElementNS('http://www.w3.org/2000/svg', 'path');
-
+  const svg = window.document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  const path = window.document.createElementNS('http://www.w3.org/2000/svg', 'path');
   path.setAttributeNS(null, 'd', d);
-
   return path;
 }

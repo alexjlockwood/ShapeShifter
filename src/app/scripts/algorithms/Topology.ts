@@ -2,8 +2,10 @@ import { bisector } from 'd3-array';
 import { polygonArea } from 'd3-polygon';
 import { feature, mergeArcs, neighbors } from 'topojson-client';
 
+import { Ring } from './Types';
+
 // TODO use TopoJSON native instead?
-export function createTopology(triangles, ring) {
+export function createTopology(triangles, ring: Ring) {
   const arcIndices = {},
     topology = {
       type: 'Topology',

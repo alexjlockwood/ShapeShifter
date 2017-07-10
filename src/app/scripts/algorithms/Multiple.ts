@@ -11,16 +11,16 @@ export function separate(
   toShapes,
   { maxSegmentLength = 10, string = true, single = false } = {},
 ) {
-  let fromRing = normalizeRing(fromShape, maxSegmentLength);
+  const fromRing = normalizeRing(fromShape, maxSegmentLength);
 
   if (fromRing.length < toShapes.length + 2) {
     addPoints(fromRing, toShapes.length + 2 - fromRing.length);
   }
 
-  let fromRings = triangulate(fromRing, toShapes.length),
-    toRings = toShapes.map(d => normalizeRing(d, maxSegmentLength)),
-    t0 = typeof fromShape === 'string' && fromShape,
-    t1;
+  const fromRings = triangulate(fromRing, toShapes.length);
+  const toRings = toShapes.map(d => normalizeRing(d, maxSegmentLength));
+  const t0 = typeof fromShape === 'string' && fromShape;
+  let t1;
 
   if (!single || toShapes.every(s => typeof s === 'string')) {
     t1 = toShapes.slice(0);
@@ -34,7 +34,7 @@ export function combine(
   toShape,
   { maxSegmentLength = 10, string = true, single = false } = {},
 ) {
-  let interpolators = separate(toShape, fromShapes, { maxSegmentLength, string, single });
+  const interpolators = separate(toShape, fromShapes, { maxSegmentLength, string, single });
   return single ? t => interpolators(1 - t) : interpolators.map(fn => t => fn(1 - t));
 }
 
@@ -52,11 +52,11 @@ export function interpolateAll(
     throw new TypeError(INVALID_INPUT_ALL);
   }
 
-  let normalize = s => normalizeRing(s, maxSegmentLength),
-    fromRings = fromShapes.map(normalize),
-    toRings = toShapes.map(normalize),
-    t0,
-    t1;
+  const normalize = s => normalizeRing(s, maxSegmentLength);
+  const fromRings = fromShapes.map(normalize);
+  const toRings = toShapes.map(normalize);
+  let t0;
+  let t1;
 
   if (single) {
     if (fromShapes.every(s => typeof s === 'string')) {
@@ -74,8 +74,8 @@ export function interpolateAll(
 }
 
 function interpolateSets(fromRings, toRings, { string, single, t0, t1, match }: any = {}) {
-  let order = match ? pieceOrder(fromRings, toRings) : fromRings.map((d, i) => i),
-    interpolators = order.map((d, i) => interpolateRing(fromRings[d], toRings[i], string));
+  const order = match ? pieceOrder(fromRings, toRings) : fromRings.map((d, i) => i);
+  const interpolators = order.map((d, i) => interpolateRing(fromRings[d], toRings[i], string));
 
   if (match && Array.isArray(t0)) {
     t0 = order.map(d => t0[d]);
@@ -91,7 +91,7 @@ function interpolateSets(fromRings, toRings, { string, single, t0, t1, match }: 
   }
 
   if (single) {
-    let multiInterpolator = string
+    const multiInterpolator = string
       ? t => interpolators.map(fn => fn(t)).join(' ')
       : t => interpolators.map(fn => fn(t));
 

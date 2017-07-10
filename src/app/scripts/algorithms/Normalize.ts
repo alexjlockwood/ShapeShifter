@@ -4,12 +4,15 @@ import { bisect } from './Add';
 import { INVALID_INPUT, TOO_FEW_POINTS } from './Errors';
 import { samePoint } from './Math';
 import { pathStringToRing } from './Svg';
+import { Ring } from './Types';
 
-export function normalizeRing(ring, maxSegmentLength) {
-  let points, area, skipBisect;
+export function normalizeRing(ring: Ring, maxSegmentLength: number) {
+  let points: Ring;
+  let area: number;
+  let skipBisect;
 
   if (typeof ring === 'string') {
-    let converted: any = pathStringToRing(ring, maxSegmentLength);
+    const converted: any = pathStringToRing(ring, maxSegmentLength);
     ring = converted.ring;
     skipBisect = converted.skipBisect;
   } else if (!Array.isArray(ring)) {
@@ -22,7 +25,7 @@ export function normalizeRing(ring, maxSegmentLength) {
     throw new TypeError(INVALID_INPUT);
   }
 
-  //No duplicate closing point for now
+  // No duplicate closing point for now.
   if (points.length > 1 && samePoint(points[0], points[points.length - 1])) {
     points.pop();
   }
@@ -51,7 +54,7 @@ export function normalizeRing(ring, maxSegmentLength) {
   return points;
 }
 
-function validRing(ring) {
+function validRing(ring: Ring) {
   return ring.every(function(point) {
     return (
       Array.isArray(point) &&
