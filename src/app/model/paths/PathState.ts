@@ -62,6 +62,21 @@ export class PathState {
     return _.sumBy(sps.getCommandStates(), cs => cs.getPathLength());
   }
 
+  getPointAtLength(distance: number) {
+    const subPathStateMap = this.subPathStateMap;
+    let length = 0;
+    for (const sps of subPathStateMap) {
+      for (const cs of sps.getCommandStates()) {
+        const len = cs.getPathLength();
+        if (length <= distance && distance < length + len) {
+          return cs.getPointAtLength(length + len - distance);
+        }
+        length += len;
+      }
+    }
+    return undefined;
+  }
+
   project(point: Point, restrictToSubIdx?: number): ProjectionOntoPath | undefined {
     const minProjectionResultInfo = _(this.subPaths)
       .map((subPath, subIdx) => ({ subPath, subIdx }))

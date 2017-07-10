@@ -20,6 +20,12 @@ export class LineCalculator implements Calculator {
     return MathUtil.distance(this.p1, this.p2);
   }
 
+  getPointAtLength(distance: number): Point {
+    const x = MathUtil.lerp(this.p1.x, this.p2.x, distance / this.getPathLength());
+    const y = MathUtil.lerp(this.p1.y, this.p2.y, distance / this.getPathLength());
+    return new Point(x, y);
+  }
+
   project({ x, y }: Point): Projection {
     const { x: x1, y: y1 } = this.p1;
     const { x: x2, y: y2 } = this.p2;
