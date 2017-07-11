@@ -63,7 +63,5 @@ export const getAnimatorState = createStructuredSelector({
 
 export const isWorkspaceDirty = createSelector(
   [getVectorLayer, getAnimation],
-  (vectorLayer, animation) => {
-    return vectorLayer.children.length > 0 || animation.blocks.length > 0;
-  },
+  (vl, anim) => vl.children.length > 0 || anim.blocks.length > 0,
 );

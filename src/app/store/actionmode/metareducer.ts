@@ -62,24 +62,12 @@ export function metaReducer(reducer: ActionReducer<AppState>): ActionReducer<App
 
       // Auto fix the currently active paths.
       case actions.AUTO_FIX_CLICK: {
-        let resultStartPath = getActivePath(state, ActionSource.From);
-        let resultEndPath = getActivePath(state, ActionSource.To);
-        const numSubPaths = Math.min(
-          resultStartPath.getSubPaths().length,
-          resultEndPath.getSubPaths().length,
+        const { from, to } = AutoAwesome.fix(
+          getActivePath(state, ActionSource.From),
+          getActivePath(state, ActionSource.To),
         );
-        for (let subIdx = 0; subIdx < numSubPaths; subIdx++) {
-          // Pass the command with the larger subpath as the 'from' command.
-          const numStartCmds = resultStartPath.getSubPath(subIdx).getCommands().length;
-          const numEndCmds = resultEndPath.getSubPath(subIdx).getCommands().length;
-          const fromCmd = numStartCmds >= numEndCmds ? resultStartPath : resultEndPath;
-          const toCmd = numStartCmds >= numEndCmds ? resultEndPath : resultStartPath;
-          const { from, to } = AutoAwesome.autoFix(subIdx, fromCmd, toCmd);
-          resultStartPath = numStartCmds >= numEndCmds ? from : to;
-          resultEndPath = numStartCmds >= numEndCmds ? to : from;
-        }
-        state = updateActivePathBlock(state, ActionSource.From, resultStartPath);
-        state = updateActivePathBlock(state, ActionSource.To, resultEndPath);
+        state = updateActivePathBlock(state, ActionSource.From, from);
+        state = updateActivePathBlock(state, ActionSource.To, to);
         break;
       }
 

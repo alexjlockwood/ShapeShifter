@@ -14,16 +14,13 @@ export function separate(
   { maxSegmentLength = 10, string = true, single = false } = {},
 ) {
   const fromRing = normalizeRing(fromShape, maxSegmentLength);
-  console.info('fromRing', fromRing);
 
   if (fromRing.length < toShapes.length + 2) {
     addPoints(fromRing, toShapes.length + 2 - fromRing.length);
   }
 
   const fromRings = triangulate(fromRing, toShapes.length);
-  console.info('fromRings', fromRings);
   const toRings = toShapes.map(d => normalizeRing(d, maxSegmentLength));
-  console.info('toShapes', toShapes);
   return interpolateSets(fromRings, toRings, {
     match: true,
     string,
@@ -34,7 +31,7 @@ export function separate(
 }
 
 export function combine(
-  fromShapes: string[],
+  fromShapes: ReadonlyArray<string>,
   toShape: string,
   { maxSegmentLength = 10, string = true, single = false } = {},
 ) {
@@ -61,17 +58,17 @@ export function interpolateAll(
 }
 
 interface Options {
-  string?: boolean;
-  single?: boolean;
-  t0?: string | ReadonlyArray<string>;
-  t1?: string | ReadonlyArray<string> | undefined;
-  match?: boolean;
+  string: boolean;
+  single: boolean;
+  t0: string | ReadonlyArray<string>;
+  t1: string | ReadonlyArray<string>;
+  match: boolean;
 }
 
 function interpolateSets(
   fromRings: ReadonlyArray<Ring>,
   toRings: ReadonlyArray<Ring>,
-  { string, single, t0, t1, match }: Options = {},
+  { string, single, t0, t1, match }: Options,
 ) {
   const order = match ? pieceOrder(fromRings, toRings) : fromRings.map((d, i) => i);
   const interpolators = order.map((d, i) => interpolateRing(fromRings[d], toRings[i], string));
@@ -96,7 +93,7 @@ function interpolateSets(
 
     if (string && (t0 || t1)) {
       return (t: number) =>
-        ((t < 1e-4 && t0) || (1 - t < 1e-4 && t1) || multiInterpolator(t)) as string;
+        /*(t < 1e-4 && t0) || (1 - t < 1e-4 && t1) ||*/ multiInterpolator(t) as string;
     }
     return multiInterpolator;
   } else if (string) {
