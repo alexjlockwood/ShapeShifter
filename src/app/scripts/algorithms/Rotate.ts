@@ -1,17 +1,16 @@
 import { distance } from './Math';
-import { Ring } from './Types';
+import { Point, Ring } from './Types';
 
 export function rotate(ring: Ring, vs: Ring) {
   const len = ring.length;
   let min = Infinity;
   let bestOffset: number;
-  let sumOfSquares: number;
-  let spliced: Ring;
+  let spliced: Point[];
 
   for (let offset = 0; offset < len; offset++) {
-    sumOfSquares = 0;
+    let sumOfSquares = 0;
 
-    vs.forEach(function(p, i) {
+    vs.forEach((p, i) => {
       const d = distance(ring[(offset + i) % len], p);
       sumOfSquares += d * d;
     });

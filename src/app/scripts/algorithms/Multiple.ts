@@ -5,10 +5,11 @@ import { normalizeRing } from './Normalize';
 import { pieceOrder } from './Order';
 import { toPathString } from './Svg';
 import { triangulate } from './Triangulate';
+import { Ring } from './Types';
 
 export function separate(
-  fromShape,
-  toShapes,
+  fromShape: string | Ring,
+  toShapes: string[] | Ring[],
   { maxSegmentLength = 10, string = true, single = false } = {},
 ) {
   const fromRing = normalizeRing(fromShape, maxSegmentLength);
@@ -18,7 +19,9 @@ export function separate(
   }
 
   const fromRings = triangulate(fromRing, toShapes.length);
-  const toRings = toShapes.map(d => normalizeRing(d, maxSegmentLength));
+  const toRings = toShapes.map<string | Ring>((d: string | Ring) =>
+    normalizeRing(d, maxSegmentLength),
+  );
   const t0 = typeof fromShape === 'string' && fromShape;
   let t1;
 
@@ -30,17 +33,17 @@ export function separate(
 }
 
 export function combine(
-  fromShapes,
-  toShape,
+  fromShapes: string[] | Ring[],
+  toShape: string | Ring,
   { maxSegmentLength = 10, string = true, single = false } = {},
 ) {
   const interpolators = separate(toShape, fromShapes, { maxSegmentLength, string, single });
-  return single ? t => interpolators(1 - t) : interpolators.map(fn => t => fn(1 - t));
+  return single ? (t: number) => interpolators(1 - t) : interpolators.map(fn => t => fn(1 - t));
 }
 
 export function interpolateAll(
-  fromShapes,
-  toShapes,
+  fromShapes: string[] | Ring[],
+  toShapes: string[] | Ring[],
   { maxSegmentLength = 10, string = true, single = false } = {},
 ) {
   if (
@@ -52,7 +55,7 @@ export function interpolateAll(
     throw new TypeError(INVALID_INPUT_ALL);
   }
 
-  const normalize = s => normalizeRing(s, maxSegmentLength);
+  const normalize = (s: string | Ring) => normalizeRing(s, maxSegmentLength);
   const fromRings = fromShapes.map(normalize);
   const toRings = toShapes.map(normalize);
   let t0;
@@ -73,7 +76,11 @@ export function interpolateAll(
   return interpolateSets(fromRings, toRings, { string, single, t0, t1, match: false });
 }
 
-function interpolateSets(fromRings, toRings, { string, single, t0, t1, match }: any = {}) {
+function interpolateSets(
+  fromRings: Ring[],
+  toRings: Ring[],
+  { string, single, t0, t1, match }: any = {},
+) {
   const order = match ? pieceOrder(fromRings, toRings) : fromRings.map((d, i) => i);
   const interpolators = order.map((d, i) => interpolateRing(fromRings[d], toRings[i], string));
 

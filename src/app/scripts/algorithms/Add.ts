@@ -25,6 +25,7 @@ export function addPoints(ring: Ring, numPoints: number, maxLength = Infinity) {
       insertAt += step;
       continue;
     }
+
     cursor += segment;
     i++;
   }
@@ -35,7 +36,7 @@ export function bisect(ring: Ring, maxSegmentLength = Infinity) {
     const a = ring[i];
     let b = i === ring.length - 1 ? ring[0] : ring[i + 1];
 
-    // Could splice the whole set for a segment instead, but a bit messy.
+    // Could splice the whole set for a segment instead, but a bit messy
     while (distance(a, b) > maxSegmentLength) {
       b = pointAlong(a, b, 0.5);
       ring.splice(i + 1, 0, b);

@@ -18,7 +18,7 @@ export function bestOrder(start: Ring[], end: Ring[], distances: number[][]) {
   let min = Infinity;
   let best = start.map((d, i) => i);
 
-  function permute(arr: number[], order = [], sum = 0) {
+  function permute(arr: number[], order: number[] = [], sum = 0) {
     for (let i = 0; i < arr.length; i++) {
       const cur = arr.splice(i, 1);
       const dist = distances[cur[0]][order.length];

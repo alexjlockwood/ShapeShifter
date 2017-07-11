@@ -4,7 +4,11 @@ import { normalizeRing } from './Normalize';
 import { rotate } from './Rotate';
 import { Ring } from './Types';
 
-export function interpolate(fromShape, toShape, { maxSegmentLength = 10, string = true } = {}) {
+export function interpolate(
+  fromShape: string | Ring,
+  toShape: string | Ring,
+  { maxSegmentLength = 10, string = true } = {},
+) {
   const fromRing = normalizeRing(fromShape, maxSegmentLength);
   const toRing = normalizeRing(toShape, maxSegmentLength);
   const interpolator = interpolateRing(fromRing, toRing, string);

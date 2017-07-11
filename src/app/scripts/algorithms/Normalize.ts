@@ -2,14 +2,12 @@ import { polygonArea } from 'd3-polygon';
 
 import { bisect } from './Add';
 import { INVALID_INPUT, TOO_FEW_POINTS } from './Errors';
-import { samePoint } from './Math';
+import { isFiniteNumber, samePoint } from './Math';
 import { pathStringToRing } from './Svg';
-import { Ring } from './Types';
+import { Point, Ring } from './Types';
 
-export function normalizeRing(ring: Ring, maxSegmentLength: number) {
-  let points: Ring;
-  let area: number;
-  let skipBisect;
+export function normalizeRing(ring: string | Ring, maxSegmentLength: number) {
+  let skipBisect: boolean;
 
   if (typeof ring === 'string') {
     const converted: any = pathStringToRing(ring, maxSegmentLength);
@@ -19,13 +17,13 @@ export function normalizeRing(ring: Ring, maxSegmentLength: number) {
     throw new TypeError(INVALID_INPUT);
   }
 
-  points = ring.slice(0);
+  const points = ring.slice(0) as Ring;
 
   if (!validRing(points)) {
     throw new TypeError(INVALID_INPUT);
   }
 
-  // No duplicate closing point for now.
+  // No duplicate closing point for now
   if (points.length > 1 && samePoint(points[0], points[points.length - 1])) {
     points.pop();
   }
@@ -35,19 +33,14 @@ export function normalizeRing(ring: Ring, maxSegmentLength: number) {
     throw new TypeError(TOO_FEW_POINTS);
   }
 
-  area = polygonArea(points);
+  const area = polygonArea(points);
 
   // Make all rings clockwise
   if (area > 0) {
     points.reverse();
   }
 
-  if (
-    !skipBisect &&
-    maxSegmentLength &&
-    Number.isFinite(maxSegmentLength) &&
-    maxSegmentLength > 0
-  ) {
+  if (!skipBisect && maxSegmentLength && isFiniteNumber(maxSegmentLength) && maxSegmentLength > 0) {
     bisect(points, maxSegmentLength);
   }
 
@@ -55,12 +48,12 @@ export function normalizeRing(ring: Ring, maxSegmentLength: number) {
 }
 
 function validRing(ring: Ring) {
-  return ring.every(function(point) {
+  return ring.every(point => {
     return (
       Array.isArray(point) &&
       point.length >= 2 &&
-      Number.isFinite(point[0]) &&
-      Number.isFinite(point[1])
+      isFiniteNumber(point[0]) &&
+      isFiniteNumber(point[1])
     );
   });
 }
