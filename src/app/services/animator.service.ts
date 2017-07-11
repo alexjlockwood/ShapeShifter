@@ -39,9 +39,12 @@ export class AnimatorService {
     this.store.select(getIsSlowMotion).subscribe(s => this.animator.setIsSlowMotion(s));
     this.store.select(getIsPlaying).subscribe(p => (p ? this.play() : this.pause()));
     this.store.select(getIsRepeating).subscribe(r => this.animator.setIsRepeating(r));
-    this.store.select(getAnimatorState).subscribe(({ vectorLayer, animation }) => {
+    this.store.select(getAnimatorState).subscribe(({ vectorLayer: vl, animation }) => {
       this.activeAnimation = animation;
-      this.animationRenderer = new AnimationRenderer(vectorLayer, animation);
+      this.animationRenderer = new AnimationRenderer(vl, animation);
+      const currentTime = this.getCurrentTime();
+      vl = this.animationRenderer.setAnimationTime(currentTime);
+      this.animatorSubject.next({ vl, currentTime });
       this.animator.rewind();
     });
   }
