@@ -430,13 +430,12 @@ const hawaii = new Path(
   2.977-.008 1.548.925 1.24-.188 2.598-1.854 1.534.923z`,
 );
 
-const interp: any = separate(
+const interp = separate(
   texas.getPathString(),
   hawaii.getSubPaths().map(s => new Path(s.getCommands().slice()).getPathString()),
   { single: true },
 );
-console.info(interp);
-console.info(interp(0.85));
+// console.info(interp(0.85));
 
 // const points = texas.getCommands().map(cmd => [cmd.getEnd().x, cmd.getEnd().y] as [number, number]);
 // const pieces = triangulate(points, 6);

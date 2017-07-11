@@ -31,14 +31,16 @@ export function separate(
   return interpolateSets(fromRings, toRings, { match: true, string, single, t0, t1 });
 }
 
-// export function combine(
-//   fromShapes: string[],
-//   toShape: string,
-//   { maxSegmentLength = 10, string = true, single = false } = {},
-// ) {
-//   const interpolators = separate(toShape, fromShapes, { maxSegmentLength, string, single });
-//   return single ? (t: number) => interpolators(1 - t) : interpolators.map(fn => t => fn(1 - t));
-// }
+export function combine(
+  fromShapes: string[],
+  toShape: string,
+  { maxSegmentLength = 10, string = true, single = false } = {},
+) {
+  const interpolators = separate(toShape, fromShapes, { maxSegmentLength, string, single });
+  return Array.isArray(interpolators)
+    ? interpolators.map(fn => t => fn(1 - t))
+    : (t: number) => interpolators(1 - t);
+}
 
 export function interpolateAll(
   fromShapes: ReadonlyArray<string>,
@@ -59,8 +61,8 @@ export function interpolateAll(
 interface Options {
   string?: boolean;
   single?: boolean;
-  t0?;
-  t1?;
+  t0?: string | ReadonlyArray<string>;
+  t1?: string | ReadonlyArray<string>;
   match?: boolean;
 }
 
@@ -87,11 +89,12 @@ function interpolateSets(
 
   if (single) {
     const multiInterpolator = string
-      ? t => interpolators.map(fn => fn(t)).join(' ')
-      : t => interpolators.map(fn => fn(t));
+      ? (t: number) => interpolators.map(fn => fn(t)).join(' ')
+      : (t: number) => interpolators.map(fn => fn(t));
 
     if (string && (t0 || t1)) {
-      return t => (t < 1e-4 && t0) || (1 - t < 1e-4 && t1) || multiInterpolator(t);
+      return (t: number) =>
+        ((t < 1e-4 && t0) || (1 - t < 1e-4 && t1) || multiInterpolator(t)) as string;
     }
     return multiInterpolator;
   } else if (string) {
@@ -100,7 +103,7 @@ function interpolateSets(
 
     return interpolators.map((fn, i) => {
       if (t0[i] || t1[i]) {
-        return t => (t < 1e-4 && t0[i]) || (1 - t < 1e-4 && t1[i]) || fn(t);
+        return (t: number) => ((t < 1e-4 && t0[i]) || (1 - t < 1e-4 && t1[i]) || fn(t)) as string;
       }
       return fn;
     });

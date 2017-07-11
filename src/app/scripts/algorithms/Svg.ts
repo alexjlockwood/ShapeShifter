@@ -17,7 +17,7 @@ function split(parsed: Path) {
       d = d.trim();
       return i && d ? 'M' + d : d;
     })
-    .filter(d => d);
+    .filter(d => !!d);
 }
 
 export function toPathString(ring: Ring) {
@@ -28,7 +28,13 @@ export function splitPathString(str: string) {
   return split(parse(str));
 }
 
-export function pathStringToRing(str: string, maxSegmentLength: number) {
+export function pathStringToRing(
+  str: string,
+  maxSegmentLength: number,
+): {
+  readonly ring: Ring;
+  readonly skipBisect?: boolean;
+} {
   const parsed = parse(str);
   return exactRing(parsed) || approximateRing(parsed, maxSegmentLength);
 }
@@ -36,10 +42,10 @@ export function pathStringToRing(str: string, maxSegmentLength: number) {
 function exactRing(parsed: Path) {
   const commands = parsed.getCommands();
   if (!commands.length || commands.some(c => c.getSvgChar() === 'Q' || c.getSvgChar() === 'C')) {
-    return false;
+    return undefined;
   }
   const ring = commands.map(c => [c.getEnd().x, c.getEnd().y] as Point);
-  return ring.length ? { ring } : false;
+  return ring.length ? { ring } : undefined;
 }
 
 function approximateRing(parsed: Path, maxSegmentLength: number) {

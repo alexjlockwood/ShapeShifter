@@ -9,7 +9,7 @@ export function normalizeRing(ring: string | Ring, maxSegmentLength: number) {
   let skipBisect: boolean;
 
   if (typeof ring === 'string') {
-    const converted: any = pathStringToRing(ring, maxSegmentLength);
+    const converted = pathStringToRing(ring, maxSegmentLength);
     ring = converted.ring;
     skipBisect = converted.skipBisect;
   } else if (!Array.isArray(ring)) {
