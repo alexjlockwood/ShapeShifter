@@ -6,17 +6,15 @@ import { pathStringToRing } from './Svg';
 import { Point, Ring } from './Types';
 
 export function normalizeRing(ring: string | Ring, maxSegmentLength: number) {
-  let skipBisect: boolean;
+  let skipBisect = false;
 
   if (typeof ring === 'string') {
     const converted = pathStringToRing(ring, maxSegmentLength);
     ring = converted.ring;
     skipBisect = converted.skipBisect;
-  } else if (!Array.isArray(ring)) {
-    throw new TypeError(INVALID_INPUT);
   }
 
-  const points = ring.slice(0) as Ring;
+  const points = ring.slice() as Ring;
 
   if (!validRing(points)) {
     throw new TypeError(INVALID_INPUT);

@@ -1,9 +1,9 @@
 import { polygonLength } from 'd3-polygon';
+import { polygonCentroid } from 'd3-polygon';
 
 import { INVALID_INPUT_ALL } from './Errors';
 import { distance, pointAlong } from './Math';
 import { normalizeRing } from './Normalize';
-import { pieceOrder } from './Order';
 import { toPathString } from './Svg';
 import { triangulate } from './Triangulate';
 import { Point, Ring } from './Types';
@@ -14,21 +14,23 @@ export function separate(
   { maxSegmentLength = 10, string = true, single = false } = {},
 ) {
   const fromRing = normalizeRing(fromShape, maxSegmentLength);
+  console.info('fromRing', fromRing);
 
   if (fromRing.length < toShapes.length + 2) {
     addPoints(fromRing, toShapes.length + 2 - fromRing.length);
   }
 
   const fromRings = triangulate(fromRing, toShapes.length);
+  console.info('fromRings', fromRings);
   const toRings = toShapes.map(d => normalizeRing(d, maxSegmentLength));
-  const t0 = typeof fromShape === 'string' && fromShape;
-  let t1: string[];
-
-  if (!single || toShapes.every(s => typeof s === 'string')) {
-    t1 = toShapes.slice();
-  }
-
-  return interpolateSets(fromRings, toRings, { match: true, string, single, t0, t1 });
+  console.info('toShapes', toShapes);
+  return interpolateSets(fromRings, toRings, {
+    match: true,
+    string,
+    single,
+    t0: fromShape,
+    t1: toShapes.slice(),
+  });
 }
 
 export function combine(
@@ -62,7 +64,7 @@ interface Options {
   string?: boolean;
   single?: boolean;
   t0?: string | ReadonlyArray<string>;
-  t1?: string | ReadonlyArray<string>;
+  t1?: string | ReadonlyArray<string> | undefined;
   match?: boolean;
 }
 
@@ -110,6 +112,46 @@ function interpolateSets(
   }
 
   return interpolators;
+}
+
+export function pieceOrder(start: ReadonlyArray<Ring>, end: ReadonlyArray<Ring>) {
+  const squaredDistanceFn = (p1: Ring, p2: Ring) => {
+    const d = distance(polygonCentroid(p1), polygonCentroid(p2));
+    return d * d;
+  };
+  const distances = start.map(p1 => end.map(p2 => squaredDistanceFn(p1, p2)));
+  const order = bestOrder(start, end, distances);
+  // Don't permute array containing more than 8 pieces.
+  return start.length > 8 ? start.map((d, i) => i) : bestOrder(start, end, distances);
+}
+
+function bestOrder(
+  start: ReadonlyArray<Ring>,
+  end: ReadonlyArray<Ring>,
+  distances: ReadonlyArray<ReadonlyArray<number>>,
+): ReadonlyArray<number> {
+  let min = Infinity;
+  let best = start.map((d, i) => i);
+
+  (function permute(arr: number[], order: ReadonlyArray<number> = [], sum = 0) {
+    for (let i = 0; i < arr.length; i++) {
+      const cur = arr.splice(i, 1);
+      const dist = distances[cur[0]][order.length];
+      if (sum + dist < min) {
+        if (arr.length) {
+          permute(arr.slice(), order.concat(cur), sum + dist);
+        } else {
+          min = sum + dist;
+          best = order.concat(cur);
+        }
+      }
+      if (arr.length) {
+        arr.splice(i, 0, cur[0]);
+      }
+    }
+  })(best);
+
+  return best;
 }
 
 function interpolateRing(fromRing: Ring, toRing: Ring, string: boolean) {
