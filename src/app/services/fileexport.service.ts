@@ -9,7 +9,7 @@ import { getHiddenLayerIds, getVectorLayer } from 'app/store/layers/selectors';
 import { getAnimation } from 'app/store/timeline/selectors';
 import * as $ from 'jquery';
 import * as JSZip from 'jszip';
-import * as _ from 'lodash';
+import * as _ from 'lodash-es';
 
 // Store a version number just in case we ever change the export format...
 const IMPORT_EXPORT_VERSION = 1;

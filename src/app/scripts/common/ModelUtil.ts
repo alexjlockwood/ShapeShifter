@@ -1,6 +1,6 @@
 import { Layer, VectorLayer } from 'app/model/layers';
 import { Animation, AnimationBlock } from 'app/model/timeline';
-import * as _ from 'lodash';
+import * as _ from 'lodash-es';
 
 /**
  * Builds a map where the keys are layer IDs and the values are

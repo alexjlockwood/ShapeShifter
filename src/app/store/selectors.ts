@@ -1,4 +1,4 @@
-import * as _ from 'lodash';
+import * as _ from 'lodash-es';
 import { createSelector, createSelectorCreator, defaultMemoize } from 'reselect';
 
 import { State } from './reducer';

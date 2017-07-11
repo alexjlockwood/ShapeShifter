@@ -25,7 +25,7 @@ import { getPropertyInputState } from 'app/store/common/selectors';
 import { ThemeType } from 'app/store/theme/reducer';
 import { SetAnimation } from 'app/store/timeline/actions';
 import * as $ from 'jquery';
-import * as _ from 'lodash';
+import * as _ from 'lodash-es';
 import { Observable } from 'rxjs/Observable';
 
 import { InspectedProperty } from './InspectedProperty';

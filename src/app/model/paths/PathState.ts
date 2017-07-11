@@ -1,5 +1,5 @@
 import { MathUtil, Point, Rect } from 'app/scripts/common';
-import * as _ from 'lodash';
+import * as _ from 'lodash-es';
 import * as polylabel from 'polylabel';
 
 import { Command, HitOptions, HitResult, Line, ProjectionOntoPath, SubPath } from '.';

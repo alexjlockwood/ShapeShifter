@@ -1,7 +1,7 @@
 import { INTERPOLATORS } from 'app/model/interpolators';
 import { ClipPathLayer, GroupLayer, Layer, PathLayer, VectorLayer } from 'app/model/layers';
 import { Animation, AnimationBlock, PathAnimationBlock } from 'app/model/timeline';
-import * as _ from 'lodash';
+import * as _ from 'lodash-es';
 
 import * as XmlSerializer from './XmlSerializer';
 

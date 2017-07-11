@@ -1,5 +1,5 @@
 import { Inspectable, NameProperty, NumberProperty, Property } from 'app/model/properties';
-import * as _ from 'lodash';
+import * as _ from 'lodash-es';
 
 import { AnimationBlock } from '.';
 

@@ -1,5 +1,5 @@
 import { Rect } from 'app/scripts/common';
-import * as _ from 'lodash';
+import * as _ from 'lodash-es';
 
 import { Animatable, Inspectable, NameProperty, Property } from '../properties';
 import { ClipPathLayer, GroupLayer, Layer, PathLayer, VectorLayer } from '.';

@@ -13,7 +13,7 @@ import { Command, Path } from 'app/model/paths';
 import { NameProperty } from 'app/model/properties';
 import { ColorUtil, Matrix } from 'app/scripts/common';
 import { Svgo } from 'app/scripts/svgo';
-import * as _ from 'lodash';
+import * as _ from 'lodash-es';
 
 // TODO: trim ids/strings?
 // TODO: check for invalid enum values

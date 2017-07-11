@@ -1,6 +1,6 @@
 import { ColorProperty, FractionProperty, NumberProperty, Property } from 'app/model/properties';
 import { Rect } from 'app/scripts/common';
-import * as _ from 'lodash';
+import * as _ from 'lodash-es';
 
 import { ConstructorArgs as AbstractConstructorArgs, AbstractLayer } from './AbstractLayer';
 

@@ -1,6 +1,6 @@
 import { MathUtil, Matrix, Point } from 'app/scripts/common';
 import { environment } from 'environments/environment';
-import * as _ from 'lodash';
+import * as _ from 'lodash-es';
 
 import { Command, Path, SvgChar } from '.';
 import { CommandState } from './CommandState';

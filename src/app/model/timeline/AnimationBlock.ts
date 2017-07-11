@@ -8,7 +8,7 @@ import {
   PathProperty,
   Property,
 } from 'app/model/properties';
-import * as _ from 'lodash';
+import * as _ from 'lodash-es';
 
 type AnimationBlockType = 'path' | 'color' | 'number';
 

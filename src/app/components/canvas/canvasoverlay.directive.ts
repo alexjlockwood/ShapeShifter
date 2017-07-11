@@ -39,7 +39,7 @@ import {
 import { getCanvasOverlayState } from 'app/store/common/selectors';
 import { getVectorLayer } from 'app/store/layers/selectors';
 import * as $ from 'jquery';
-import * as _ from 'lodash';
+import * as _ from 'lodash-es';
 import { Observable } from 'rxjs/Observable';
 
 import { CanvasLayoutMixin } from './CanvasLayoutMixin';

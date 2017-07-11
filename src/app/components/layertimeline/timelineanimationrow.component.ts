@@ -12,7 +12,7 @@ import { ModelUtil } from 'app/scripts/common';
 import { ActionModeService } from 'app/services';
 import { State, Store } from 'app/store';
 import { getTimelineAnimationRowState } from 'app/store/common/selectors';
-import * as _ from 'lodash';
+import * as _ from 'lodash-es';
 import { Observable } from 'rxjs/Observable';
 
 @Component({
