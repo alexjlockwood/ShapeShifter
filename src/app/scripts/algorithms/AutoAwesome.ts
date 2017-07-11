@@ -430,7 +430,7 @@ const hawaii = new Path(
   2.977-.008 1.548.925 1.24-.188 2.598-1.854 1.534.923z`,
 );
 
-const interp = separate(
+const interp: any = separate(
   texas.getPathString(),
   hawaii.getSubPaths().map(s => new Path(s.getCommands().slice()).getPathString()),
   { single: true },
