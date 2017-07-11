@@ -4,7 +4,7 @@
   "license": "Apache-2.0",
   "scripts": {
     "ng": "ng",
-    "start": "node --max-old-space-size=8192 ./node_modules/.bin/ng serve",
+    "start": "node --max-old-space-size=8192 ./node_modules/.bin/ng serve --open",
     "build": "node --max-old-space-size=8192 ./node_modules/.bin/ng build -prod",
     "test": "node --max-old-space-size=8192 ./node_modules/.bin/ng test",
     "lint": "node --max-old-space-size=8192 ./node_modules/.bin/ng lint --type-check",
@@ -64,6 +64,8 @@
     "@angular/compiler-cli": "^4.2.6",
     "@angular/language-service": "^4.2.6",
     "@ngrx/store-devtools": "^3.2.4",
+    "@types/d3-array": "^1.2.0",
+    "@types/d3-polygon": "^1.0.5",
     "@types/es6-promise": "0.0.32",
     "@types/google.analytics": "0.0.33",
     "@types/hammerjs": "^2.0.34",

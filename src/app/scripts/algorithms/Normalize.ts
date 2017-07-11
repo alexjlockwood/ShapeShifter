@@ -1,8 +1,7 @@
 import { polygonArea } from 'd3-polygon';
 
-import { bisect } from './Add';
 import { INVALID_INPUT, TOO_FEW_POINTS } from './Errors';
-import { isFiniteNumber, samePoint } from './Math';
+import { distance, isFiniteNumber, pointAlong } from './Math';
 import { pathStringToRing } from './Svg';
 import { Point, Ring } from './Types';
 
@@ -56,4 +55,21 @@ function validRing(ring: Ring) {
       isFiniteNumber(point[1])
     );
   });
+}
+
+function bisect(ring: Ring, maxSegmentLength = Infinity) {
+  for (let i = 0; i < ring.length; i++) {
+    const a = ring[i];
+    let b = i === ring.length - 1 ? ring[0] : ring[i + 1];
+
+    // Could splice the whole set for a segment instead, but a bit messy
+    while (distance(a, b) > maxSegmentLength) {
+      b = pointAlong(a, b, 0.5);
+      ring.splice(i + 1, 0, b);
+    }
+  }
+}
+
+function samePoint(a: Point, b: Point) {
+  return distance(a, b) < 1e-9;
 }

@@ -3,22 +3,25 @@ import { polygonCentroid } from 'd3-polygon';
 import { distance } from './Math';
 import { Ring } from './Types';
 
-export function pieceOrder(start: Ring[], end: Ring[]) {
+export function pieceOrder(start: ReadonlyArray<Ring>, end: ReadonlyArray<Ring>) {
   const distances = start.map(p1 => end.map(p2 => squaredDistance(p1, p2)));
   const order = bestOrder(start, end, distances);
-
-  // Don't permute huge array
+  // Don't permute huge array.
   if (start.length > 8) {
     return start.map((d, i) => i);
   }
   return bestOrder(start, end, distances);
 }
 
-export function bestOrder(start: Ring[], end: Ring[], distances: number[][]) {
+function bestOrder(
+  start: ReadonlyArray<Ring>,
+  end: ReadonlyArray<Ring>,
+  distances: ReadonlyArray<ReadonlyArray<number>>,
+) {
   let min = Infinity;
   let best = start.map((d, i) => i);
 
-  function permute(arr: number[], order: number[] = [], sum = 0) {
+  (function permute(arr: number[], order: ReadonlyArray<number> = [], sum = 0) {
     for (let i = 0; i < arr.length; i++) {
       const cur = arr.splice(i, 1);
       const dist = distances[cur[0]][order.length];
@@ -34,9 +37,8 @@ export function bestOrder(start: Ring[], end: Ring[], distances: number[][]) {
         arr.splice(i, 0, cur[0]);
       }
     }
-  }
+  })(best);
 
-  permute(best);
   return best;
 }
 
