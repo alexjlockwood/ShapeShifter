@@ -2,10 +2,10 @@ import { bisector } from 'd3-array';
 import { polygonArea } from 'd3-polygon';
 import { feature, mergeArcs, neighbors } from 'topojson-client';
 
-import { Ring } from './Types';
+import { Ring, Triangle } from './Types';
 
 // TODO use TopoJSON native instead?
-export function createTopology(triangles, ring: Ring) {
+export function createTopology(triangles: Triangle[], ring: Ring) {
   const arcIndices = {},
     topology = {
       type: 'Topology',
@@ -18,14 +18,12 @@ export function createTopology(triangles, ring: Ring) {
       arcs: [],
     };
 
-  triangles.forEach(function(triangle) {
+  triangles.forEach(triangle => {
     const geometry = [];
 
-    triangle.forEach(function(arc, i) {
+    triangle.forEach((arc, i) => {
       const slug = arc[0] < arc[1] ? arc.join(',') : arc[1] + ',' + arc[0],
-        coordinates = arc.map(function(pointIndex) {
-          return ring[pointIndex];
-        });
+        coordinates = arc.map(pointIndex => ring[pointIndex]);
 
       if (slug in arcIndices) {
         geometry.push(~arcIndices[slug]);
@@ -37,29 +35,20 @@ export function createTopology(triangles, ring: Ring) {
 
     topology.objects.triangles.geometries.push({
       type: 'Polygon',
-      area: Math.abs(
-        polygonArea(
-          triangle.map(function(d) {
-            return ring[d[0]];
-          }),
-        ),
-      ),
+      area: Math.abs(polygonArea(triangle.map(d => ring[d[0]]))),
       arcs: [geometry],
     });
   });
 
   // Sort smallest first
   // TODO sorted insertion?
-  topology.objects.triangles.geometries.sort(function(a, b) {
-    return a.area - b.area;
-  });
-
+  topology.objects.triangles.geometries.sort((a, b) => a.area - b.area);
   return topology;
 }
 
-export function collapseTopology(topology, numPieces) {
-  const geometries = topology.objects.triangles.geometries,
-    bisect = bisector(d => d.area).left;
+export function collapseTopology(topology, numPieces: number) {
+  const geometries = topology.objects.triangles.geometries;
+  const bisect = bisector(d => d.area).left;
 
   while (geometries.length > numPieces) {
     mergeSmallestFeature();

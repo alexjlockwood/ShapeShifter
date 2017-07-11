@@ -8,8 +8,8 @@ import { triangulate } from './Triangulate';
 import { Ring } from './Types';
 
 export function separate(
-  fromShape: string | Ring,
-  toShapes: string[] | Ring[],
+  fromShape: string,
+  toShapes: string[],
   { maxSegmentLength = 10, string = true, single = false } = {},
 ) {
   const fromRing = normalizeRing(fromShape, maxSegmentLength);
@@ -19,11 +19,9 @@ export function separate(
   }
 
   const fromRings = triangulate(fromRing, toShapes.length);
-  const toRings = toShapes.map<string | Ring>((d: string | Ring) =>
-    normalizeRing(d, maxSegmentLength),
-  );
+  const toRings = toShapes.map(d => normalizeRing(d, maxSegmentLength));
   const t0 = typeof fromShape === 'string' && fromShape;
-  let t1;
+  let t1: string[];
 
   if (!single || toShapes.every(s => typeof s === 'string')) {
     t1 = toShapes.slice(0);
@@ -32,18 +30,18 @@ export function separate(
   return interpolateSets(fromRings, toRings, { match: true, string, single, t0, t1 });
 }
 
-export function combine(
-  fromShapes: string[] | Ring[],
-  toShape: string | Ring,
-  { maxSegmentLength = 10, string = true, single = false } = {},
-) {
-  const interpolators = separate(toShape, fromShapes, { maxSegmentLength, string, single });
-  return single ? (t: number) => interpolators(1 - t) : interpolators.map(fn => t => fn(1 - t));
-}
+// export function combine(
+//   fromShapes: string[],
+//   toShape: string,
+//   { maxSegmentLength = 10, string = true, single = false } = {},
+// ) {
+//   const interpolators = separate(toShape, fromShapes, { maxSegmentLength, string, single });
+//   return single ? (t: number) => interpolators(1 - t) : interpolators.map(fn => t => fn(1 - t));
+// }
 
 export function interpolateAll(
-  fromShapes: string[] | Ring[],
-  toShapes: string[] | Ring[],
+  fromShapes: string[],
+  toShapes: string[],
   { maxSegmentLength = 10, string = true, single = false } = {},
 ) {
   if (
@@ -55,7 +53,7 @@ export function interpolateAll(
     throw new TypeError(INVALID_INPUT_ALL);
   }
 
-  const normalize = (s: string | Ring) => normalizeRing(s, maxSegmentLength);
+  const normalize = (s: string) => normalizeRing(s, maxSegmentLength);
   const fromRings = fromShapes.map(normalize);
   const toRings = toShapes.map(normalize);
   let t0;
