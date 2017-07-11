@@ -1,5 +1,5 @@
 import { ColorUtil, MathUtil } from 'app/scripts/common';
-import * as _ from 'lodash-es';
+import * as _ from 'lodash';
 
 import { Property } from './Property';
 

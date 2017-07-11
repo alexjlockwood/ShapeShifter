@@ -5,7 +5,7 @@ import { Path, PathMutator, PathUtil } from 'app/model/paths';
 import { PathAnimationBlock } from 'app/model/timeline';
 import { AutoAwesome } from 'app/scripts/algorithms';
 import { AppState } from 'app/store/reducer';
-import * as _ from 'lodash-es';
+import * as _ from 'lodash';
 
 import * as actions from './metaactions';
 

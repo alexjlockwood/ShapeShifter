@@ -43,7 +43,7 @@ import { ResetWorkspace } from 'app/store/reset/actions';
 import { getAnimation } from 'app/store/timeline/selectors';
 import { environment } from 'environments/environment';
 import * as $ from 'jquery';
-import * as _ from 'lodash-es';
+import * as _ from 'lodash';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Observable } from 'rxjs/Observable';
 

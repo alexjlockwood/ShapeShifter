@@ -3,7 +3,7 @@ import { CommandBuilder } from 'app/model/paths/Command';
 import { Point } from 'app/scripts/common';
 import * as BezierJs from 'bezier-js';
 import { environment } from 'environments/environment';
-import * as _ from 'lodash-es';
+import * as _ from 'lodash';
 
 import { BBox, Calculator, Line } from '.';
 import { LineCalculator } from './LineCalculator';

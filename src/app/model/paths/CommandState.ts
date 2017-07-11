@@ -1,5 +1,5 @@
 import { MathUtil, Matrix, Point } from 'app/scripts/common';
-import * as _ from 'lodash-es';
+import * as _ from 'lodash';
 
 import { Command, Projection, SvgChar } from '.';
 import { Calculator, Line, newCalculator } from './calculators';

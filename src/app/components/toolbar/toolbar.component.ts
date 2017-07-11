@@ -9,7 +9,7 @@ import { ActionModeService, ThemeService } from 'app/services';
 import { State, Store } from 'app/store';
 import { getToolbarState } from 'app/store/actionmode/selectors';
 import { ThemeType } from 'app/store/theme/reducer';
-import * as _ from 'lodash-es';
+import * as _ from 'lodash';
 import { Observable } from 'rxjs/Observable';
 
 declare const ga: Function;

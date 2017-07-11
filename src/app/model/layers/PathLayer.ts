@@ -7,7 +7,7 @@ import {
   PathProperty,
   Property,
 } from 'app/model/properties';
-import * as _ from 'lodash-es';
+import * as _ from 'lodash';
 
 import { MorphableLayer } from '.';
 import { ConstructorArgs as AbstractConstructorArgs, AbstractLayer } from './AbstractLayer';

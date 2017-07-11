@@ -32,7 +32,7 @@ import {
   getActionModeSelections,
   getActionModeSubPathSelections,
 } from 'app/store/actionmode/selectors';
-import * as _ from 'lodash-es';
+import * as _ from 'lodash';
 
 /**
  * A simple service that provides an interface for making action mode changes.

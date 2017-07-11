@@ -1,6 +1,6 @@
 import { Point } from 'app/scripts/common';
 import { environment } from 'environments/environment';
-import * as _ from 'lodash-es';
+import * as _ from 'lodash';
 
 import { Command, HitOptions, HitResult, Line, Projection, ProjectionOntoPath } from '.';
 import { PathMutator } from './PathMutator';

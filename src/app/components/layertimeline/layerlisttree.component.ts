@@ -12,7 +12,7 @@ import { ModelUtil } from 'app/scripts/common';
 import { ActionModeService } from 'app/services';
 import { State, Store } from 'app/store';
 import { getLayerListTreeState } from 'app/store/common/selectors';
-import * as _ from 'lodash-es';
+import * as _ from 'lodash';
 import { Observable } from 'rxjs/Observable';
 
 @Component({

@@ -8,7 +8,7 @@ import {
 } from 'app/model/layers';
 import { PathUtil } from 'app/model/paths';
 import { ColorUtil } from 'app/scripts/common';
-import * as _ from 'lodash-es';
+import * as _ from 'lodash';
 
 import * as XmlSerializer from './XmlSerializer';
 

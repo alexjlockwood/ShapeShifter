@@ -1,5 +1,5 @@
 import { ActionMode, ActionSource, Hover, Selection, SelectionType } from 'app/model/actionmode';
-import * as _ from 'lodash-es';
+import * as _ from 'lodash';
 
 import * as actions from './actions';
 

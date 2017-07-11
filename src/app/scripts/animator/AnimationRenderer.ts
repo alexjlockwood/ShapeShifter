@@ -2,7 +2,7 @@ import { INTERPOLATORS } from 'app/model/interpolators';
 import { Layer, VectorLayer } from 'app/model/layers';
 import { Animation, AnimationBlock } from 'app/model/timeline';
 import { ModelUtil } from 'app/scripts/common';
-import * as _ from 'lodash-es';
+import * as _ from 'lodash';
 
 const DEFAULT_LAYER_PROPERTY_STATE: PropertyState = {
   activeBlock: undefined,

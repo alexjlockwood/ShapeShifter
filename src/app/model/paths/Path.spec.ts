@@ -1,5 +1,5 @@
 import { MathUtil, Point } from 'app/scripts/common';
-import * as _ from 'lodash-es';
+import * as _ from 'lodash';
 import * as PathUtil from 'test/PathUtil';
 
 import { Command, Path, ProjectionOntoPath, SvgChar } from '.';

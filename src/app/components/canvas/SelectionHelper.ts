@@ -4,7 +4,7 @@ import { ProjectionOntoPath } from 'app/model/paths';
 import { MathUtil, Point } from 'app/scripts/common';
 import { ActionModeService } from 'app/services';
 import { State, Store } from 'app/store';
-import * as _ from 'lodash-es';
+import * as _ from 'lodash';
 
 import { CanvasOverlayDirective } from './canvasoverlay.directive';
 

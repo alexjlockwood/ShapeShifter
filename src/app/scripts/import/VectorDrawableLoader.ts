@@ -14,7 +14,7 @@ import {
 import { Path } from 'app/model/paths';
 import { NameProperty } from 'app/model/properties';
 import { ColorUtil } from 'app/scripts/common';
-import * as _ from 'lodash-es';
+import * as _ from 'lodash';
 
 // import { INTERPOLATORS } from 'app/model/interpolators';
 // import { AnimationBlock } from 'app/model/timeline';

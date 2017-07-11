@@ -19,7 +19,7 @@ import { ThemeService } from 'app/services';
 import { State, Store } from 'app/store';
 import { getVectorLayer } from 'app/store/layers/selectors';
 import * as $ from 'jquery';
-import * as _ from 'lodash-es';
+import * as _ from 'lodash';
 import { Observable } from 'rxjs/Observable';
 
 import { CanvasContainerDirective } from './canvascontainer.directive';

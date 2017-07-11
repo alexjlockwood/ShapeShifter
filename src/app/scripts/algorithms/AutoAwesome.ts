@@ -1,6 +1,6 @@
 import { Command, Path, PathUtil } from 'app/model/paths';
 import { MathUtil, Point } from 'app/scripts/common';
-import * as _ from 'lodash-es';
+import * as _ from 'lodash';
 
 // POSSIBLE IMPROVEMENTS
 //

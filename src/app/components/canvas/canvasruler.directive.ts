@@ -2,7 +2,7 @@ import { Directive, ElementRef, Input } from '@angular/core';
 import { Point } from 'app/scripts/common';
 import { ThemeService } from 'app/services';
 import * as $ from 'jquery';
-import * as _ from 'lodash-es';
+import * as _ from 'lodash';
 
 import { CanvasLayoutMixin } from './CanvasLayoutMixin';
 

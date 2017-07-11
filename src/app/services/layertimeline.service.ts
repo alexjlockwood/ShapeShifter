@@ -26,7 +26,7 @@ import {
   getSelectedBlockIds,
   isAnimationSelected,
 } from 'app/store/timeline/selectors';
-import * as _ from 'lodash-es';
+import * as _ from 'lodash';
 import { OutputSelector } from 'reselect';
 
 /**
