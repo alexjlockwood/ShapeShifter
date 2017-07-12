@@ -36,7 +36,7 @@ export class ShapeSplitter {
     this.initProjInfos = [];
     this.finalProjInfos = [];
     this.lastKnownMouseLocation = mouseDown;
-    this.hitResult = this.component.performHitTest(mouseDown);
+    this.hitResult = this.performHitTest(mouseDown);
     const { isEndPointHit, isSegmentHit, endPointHits, segmentHits } = this.hitResult;
     if (isEndPointHit || isSegmentHit) {
       for (const proj of endPointHits) {
@@ -54,7 +54,7 @@ export class ShapeSplitter {
   onMouseMove(mouseMove: Point) {
     this.finalProjInfos = [];
     this.lastKnownMouseLocation = mouseMove;
-    this.hitResult = this.component.performHitTest(mouseMove);
+    this.hitResult = this.performHitTest(mouseMove);
     if (!this.initProjInfos.length) {
       this.component.draw();
       return;
@@ -183,7 +183,7 @@ export class ShapeSplitter {
   onMouseLeave(mouseLeave: Point) {
     this.finalProjInfos = [];
     this.lastKnownMouseLocation = mouseLeave;
-    this.hitResult = this.component.performHitTest(mouseLeave);
+    this.hitResult = this.performHitTest(mouseLeave);
     if (!this.initProjInfos.length) {
       return;
     }
@@ -205,6 +205,10 @@ export class ShapeSplitter {
       );
       _.remove(this.finalProjInfos, projInfo => !allowedSubIdxs.has(projInfo.proj.subIdx));
     }
+  }
+
+  private performHitTest(mousePoint: Point) {
+    return this.component.performHitTest(mousePoint, { withExtraSegmentPadding: true });
   }
 
   private reset() {

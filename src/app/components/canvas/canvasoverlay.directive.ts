@@ -987,9 +987,9 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
     let isSegmentInRangeFn: (distance: number, cmd: Command) => boolean;
     if (!opts.noSegments) {
       isSegmentInRangeFn = distance => {
-        let maxDistance = 0;
+        let maxDistance = opts.withExtraSegmentPadding ? this.minSnapThreshold : 0;
         if (pathLayer.isStroked()) {
-          maxDistance = Math.max(this.minSnapThreshold, (pathLayer as PathLayer).strokeWidth / 2);
+          maxDistance = Math.max(maxDistance, (pathLayer as PathLayer).strokeWidth / 2);
         }
         return distance <= maxDistance;
       };
@@ -1066,8 +1066,9 @@ function applyGroupTransform(mousePoint: Point, transform: Matrix) {
 }
 
 interface HitTestOpts {
-  noPoints?: boolean;
-  noSegments?: boolean;
-  noShapes?: boolean;
-  restrictToSubIdx?: number[];
+  readonly noPoints?: boolean;
+  readonly noSegments?: boolean;
+  readonly noShapes?: boolean;
+  readonly restrictToSubIdx?: ReadonlyArray<number>;
+  readonly withExtraSegmentPadding?: boolean;
 }

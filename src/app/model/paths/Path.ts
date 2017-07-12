@@ -178,10 +178,10 @@ export class Path {
 
 /** Represents the options for a hit test. */
 export interface HitOptions {
-  isPointInRangeFn?: (distance: number, cmd?: Command) => boolean;
-  isSegmentInRangeFn?: (distance: number, cmd?: Command) => boolean;
-  findShapesInRange?: boolean;
-  restrictToSubIdx?: number[];
+  readonly isPointInRangeFn?: (distance: number, cmd?: Command) => boolean;
+  readonly isSegmentInRangeFn?: (distance: number, cmd?: Command) => boolean;
+  readonly findShapesInRange?: boolean;
+  readonly restrictToSubIdx?: ReadonlyArray<number>;
 }
 
 /** Represents the result of a hit test. */
