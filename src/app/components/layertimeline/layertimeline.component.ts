@@ -988,7 +988,7 @@ export class LayerTimelineComponent extends DestroyableMixin()
       }
 
       event.preventDefault();
-      this.targetHorizZoom *= Math.pow(1.01, -event.deltaY);
+      this.targetHorizZoom *= 1.01 ** -event.deltaY;
       this.targetHorizZoom = _.clamp(this.targetHorizZoom, MIN_ZOOM, MAX_ZOOM);
       if (this.targetHorizZoom !== this.horizZoom) {
         // Zoom has changed.

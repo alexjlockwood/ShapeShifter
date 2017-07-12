@@ -113,7 +113,7 @@ export class BezierCalculator implements Calculator {
       }
       // Jump half the t-distance in the direction of the bias.
       step = step - 1;
-      distance += (diff > 0 ? -1 : 1) * Math.pow(2, step);
+      distance += (diff > 0 ? -1 : 1) * 2 ** step;
     }
 
     if (step === maxDepth) {

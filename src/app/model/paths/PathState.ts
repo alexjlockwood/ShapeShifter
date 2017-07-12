@@ -2,7 +2,7 @@ import { MathUtil, Point, Rect } from 'app/scripts/common';
 import * as _ from 'lodash';
 import * as polylabel from 'polylabel';
 
-import { Command, HitOptions, HitResult, Line, ProjectionOntoPath, SubPath } from '.';
+import { Command, HitOptions, HitResult, Line, Projection, ProjectionOntoPath, SubPath } from '.';
 import { CommandState } from './CommandState';
 import * as PathParser from './PathParser';
 import { createSubPaths } from './SubPath';
@@ -78,6 +78,12 @@ export class PathState {
   }
 
   project(point: Point, restrictToSubIdx?: number): ProjectionOntoPath | undefined {
+    interface ReduceArg {
+      readonly spsIdx: number;
+      readonly csIdx: number;
+      readonly splitIdx: number;
+      readonly projection: Projection;
+    }
     const minProjectionResultInfo = _(this.subPaths)
       .map((subPath, subIdx) => ({ subPath, subIdx }))
       .filter(
@@ -106,10 +112,9 @@ export class PathState {
       .filter(obj => !!obj.projection)
       // Reverse so that commands drawn with higher z-orders are preferred.
       .reverse()
-      .reduce((prev, curr) => {
+      .reduce((prev: ReduceArg, curr: ReduceArg) => {
         return prev && prev.projection.d < curr.projection.d ? prev : curr;
-      }, undefined)
-      .value();
+      }, undefined);
     if (!minProjectionResultInfo) {
       return undefined;
     }
@@ -121,7 +126,7 @@ export class PathState {
   hitTest(point: Point, opts: HitOptions = {}): HitResult {
     const endPointHits: ProjectionOntoPath[] = [];
     const segmentHits: ProjectionOntoPath[] = [];
-    const shapeHits: Array<{ subIdx: number }> = [];
+    const shapeHits: Array<{ readonly subIdx: number }> = [];
     const defaultRestrictToSubIdx = this.subPaths.map((unused, i) => i);
     const restrictToSubIdxSet = new Set<number>(opts.restrictToSubIdx || defaultRestrictToSubIdx);
 
@@ -204,7 +209,7 @@ export class PathState {
             const bounds = createBoundingBox(css);
             if (!bounds.contains(point)) {
               // Nothing to see here. Check the next subpath.
-              return [] as Array<{ subIdx: number }>;
+              return [] as Array<{ readonly subIdx: number }>;
             }
             // The point is inside the subpath's bounding box, so next, we will
             // use the 'even-odd rule' to determine if the filled path has been hit.
@@ -217,7 +222,7 @@ export class PathState {
             const numIntersections = _.sumBy(intersectionResults, ts => ts.length);
             if (numIntersections % 2 === 0) {
               // Nothing to see here. Check the next subpath.
-              return [] as Array<{ subIdx: number }>;
+              return [] as Array<{ readonly subIdx: number }>;
             }
             return [{ subIdx }];
           })
