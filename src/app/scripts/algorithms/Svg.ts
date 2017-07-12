@@ -1,7 +1,6 @@
 import { Path } from 'app/model/paths';
 import * as _ from 'lodash-es';
 
-import { normalizeRing } from './Normalize';
 import { Point, Ring } from './Types';
 
 export function toPathString(ring: Ring) {

@@ -99,9 +99,9 @@ function interpolateSets(
 export function pieceOrder(start: ReadonlyArray<Ring>, end: ReadonlyArray<Ring>) {
   const squaredDistanceFn = (p1: Ring, p2: Ring) =>
     MathUtil.distance(polygonCentroid(p1), polygonCentroid(p2)) ** 2;
-  const distances = start.map(p1 => end.map(p2 => squaredDistanceFn(p1, p2)));
-  const order = bestOrder(start, end, distances);
-  return start.length > 8 ? start.map((d, i) => i) : bestOrder(start, end, distances);
+  return start.length > 8
+    ? start.map((d, i) => i)
+    : bestOrder(start, end, start.map(p1 => end.map(p2 => squaredDistanceFn(p1, p2))));
 }
 
 function bestOrder(
