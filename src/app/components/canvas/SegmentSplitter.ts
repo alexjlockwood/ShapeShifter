@@ -88,7 +88,7 @@ export class SegmentSplitter {
 
   private findProjInfo(mousePoint: Point) {
     const projInfos: ProjInfo[] = [];
-    const hitResult = this.component.performHitTest(mousePoint);
+    const hitResult = this.component.performHitTest(mousePoint, { withExtraSegmentPadding: true });
     const { isEndPointHit, isSegmentHit, endPointHits, segmentHits } = hitResult;
     if (isEndPointHit) {
       for (const proj of endPointHits) {
