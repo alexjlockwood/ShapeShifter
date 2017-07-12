@@ -2,6 +2,8 @@ import { Command, Path, PathUtil } from 'app/model/paths';
 import { MathUtil, Point } from 'app/scripts/common';
 import * as _ from 'lodash';
 
+type ReadonlyTable<T> = ReadonlyArray<ReadonlyArray<T>>;
+
 // POSSIBLE IMPROVEMENTS
 //
 // - Add additional points to both shapes first such that every segment longer than
@@ -113,7 +115,9 @@ function autoFixSubPath(subIdx: number, from: Path, to: Path) {
   }
 
   // For each alignment, determine whether it and its neighbor is a gap.
-  const processAlignmentsFn = (alignments: Alignment<Command>[]) => {
+  const processAlignmentsFn = (
+    alignments: ReadonlyArray<Alignment<Command>>,
+  ): ReadonlyArray<CmdInfo> => {
     let nextCmdIdx = 0;
     return alignments.map((alignment, i) => {
       const isGap = !alignment.obj;
@@ -142,14 +146,14 @@ function autoFixSubPath(subIdx: number, from: Path, to: Path) {
         }
       }
     }
-    return gapStreaks;
+    return gapStreaks as ReadonlyTable<CmdInfo>;
   };
   const fromGapGroups = createGapStreaksFn(fromCmdInfos);
   const toGapGroups = createGapStreaksFn(toCmdInfos);
 
   // Fill in the gaps by applying linear subdivide batch splits.
-  const applySplitsFn = (path: Path, gapGroups: CmdInfo[][]) => {
-    const splitOps: { subIdx: number; cmdIdx: number; ts: number[] }[] = [];
+  const applySplitsFn = (path: Path, gapGroups: ReadonlyTable<CmdInfo>) => {
+    const splitOps: Array<{ subIdx: number; cmdIdx: number; ts: number[] }> = [];
     const numPaths = path.getSubPaths()[subIdx].getCommands().length;
     for (let i = gapGroups.length - 1; i >= 0; i--) {
       const gapGroup = gapGroups[i];
@@ -262,8 +266,8 @@ function align<T>(
   }
 
   return {
-    from: alignedListA,
-    to: alignedListB,
+    from: alignedListA as ReadonlyArray<Alignment<T>>,
+    to: alignedListB as ReadonlyArray<Alignment<T>>,
     score: _.last(_.last(matrix)),
   };
 }
