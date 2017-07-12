@@ -16,7 +16,7 @@ export class MoveCalculator implements Calculator {
   }
 
   getPointAtLength(distance: number): Point {
-    return undefined;
+    return this.endPoint;
   }
 
   project(point: Point): Projection | undefined {

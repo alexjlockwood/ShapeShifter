@@ -21,8 +21,11 @@ export class LineCalculator implements Calculator {
   }
 
   getPointAtLength(distance: number): Point {
-    const x = MathUtil.lerp(this.p1.x, this.p2.x, distance / this.getPathLength());
-    const y = MathUtil.lerp(this.p1.y, this.p2.y, distance / this.getPathLength());
+    const t = distance / this.getPathLength();
+    const { x: x1, y: y1 } = this.p1;
+    const { x: x2, y: y2 } = this.p2;
+    const x = MathUtil.lerp(x1, x2, t);
+    const y = MathUtil.lerp(y1, y2, t);
     return new Point(x, y);
   }
 

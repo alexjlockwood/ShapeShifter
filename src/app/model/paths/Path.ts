@@ -107,6 +107,13 @@ export class Path {
   }
 
   /**
+   * Returns the length of the subpath.
+   */
+  getSubPathLength(subIdx: number) {
+    return this.ps.getSubPathLength(subIdx);
+  }
+
+  /**
    * Returns the point at the given length along the path.
    */
   getPointAtLength(distance: number) {

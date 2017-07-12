@@ -56,20 +56,22 @@ export class PathState {
   }
 
   getPathLength() {
-    // Note that we only return the length of the first sub path due to
-    // https://code.google.com/p/android/issues/detail?id=172547
-    const sps = this.findSubPathState(0);
+    return _.sumBy(this.subPathStateMap, (unused, i) => this.getSubPathLength(i));
+  }
+
+  getSubPathLength(subIdx: number) {
+    const sps = this.findSubPathState(subIdx);
     return _.sumBy(sps.getCommandStates(), cs => cs.getPathLength());
   }
 
   getPointAtLength(distance: number) {
-    const subPathStateMap = this.subPathStateMap;
+    const spss = this.subPathStateMap.map((unused, i) => this.findSubPathState(i));
     let length = 0;
-    for (const sps of subPathStateMap) {
+    for (const sps of spss) {
       for (const cs of sps.getCommandStates()) {
         const len = cs.getPathLength();
         if (length <= distance && distance < length + len) {
-          return cs.getPointAtLength(length + len - distance);
+          return cs.getPointAtLength(distance - length);
         }
         length += len;
       }
