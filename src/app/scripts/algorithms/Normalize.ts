@@ -1,73 +1,52 @@
 import { polygonArea } from 'd3-polygon';
+import * as _ from 'lodash-es';
 
-import { INVALID_INPUT, TOO_FEW_POINTS } from './Errors';
-import { distance, isFiniteNumber, pointAlong } from './Math';
+import { distance, lerp } from './Math';
 import { pathStringToRing } from './Svg';
 import { Point, Ring } from './Types';
 
 export function normalizeRing(ring: string | Ring, maxSegmentLength: number) {
   let skipBisect = false;
-
   if (typeof ring === 'string') {
     const converted = pathStringToRing(ring, maxSegmentLength);
     ring = converted.ring;
     skipBisect = converted.skipBisect;
   }
-
-  const points = ring.slice() as Ring;
-
+  const points = [...ring] as Ring;
   if (!validRing(points)) {
-    throw new TypeError(INVALID_INPUT);
+    throw new TypeError(
+      'All shapes must be supplied as arrays of [x, y] points or an SVG path string',
+    );
   }
-
-  // No duplicate closing point for now
-  if (points.length > 1 && samePoint(points[0], points[points.length - 1])) {
+  const samePointFn = (a: Point, b: Point) => distance(a, b) < 1e-9;
+  if (points.length > 1 && samePointFn(points[0], points[points.length - 1])) {
     points.pop();
   }
-
-  // 3+ points to make a polygon
   if (points.length < 3) {
-    throw new TypeError(TOO_FEW_POINTS);
+    throw new TypeError('Polygons must have at least three points');
   }
-
   const area = polygonArea(points);
-
-  // Make all rings clockwise
   if (area > 0) {
+    // Make all rings clockwise.
     points.reverse();
   }
-
-  if (!skipBisect && maxSegmentLength && isFiniteNumber(maxSegmentLength) && maxSegmentLength > 0) {
+  if (!skipBisect && maxSegmentLength && _.isFinite(maxSegmentLength) && maxSegmentLength > 0) {
     bisect(points, maxSegmentLength);
   }
-
   return points;
 }
 
 function validRing(ring: Ring) {
-  return ring.every(point => {
-    return (
-      Array.isArray(point) &&
-      point.length >= 2 &&
-      isFiniteNumber(point[0]) &&
-      isFiniteNumber(point[1])
-    );
-  });
+  return ring.every(p => Array.isArray(p) && p.length >= 2 && _.isFinite(p[0]) && _.isFinite(p[1]));
 }
 
 function bisect(ring: Ring, maxSegmentLength = Infinity) {
   for (let i = 0; i < ring.length; i++) {
     const a = ring[i];
     let b = i === ring.length - 1 ? ring[0] : ring[i + 1];
-
-    // Could splice the whole set for a segment instead, but a bit messy
     while (distance(a, b) > maxSegmentLength) {
-      b = pointAlong(a, b, 0.5);
+      b = lerp(a, b, 0.5);
       ring.splice(i + 1, 0, b);
     }
   }
-}
-
-function samePoint(a: Point, b: Point) {
-  return distance(a, b) < 1e-9;
 }

@@ -1,7 +1,6 @@
 import { Path } from 'app/model/paths';
+import * as _ from 'lodash-es';
 
-import { INVALID_INPUT } from './Errors';
-import { isFiniteNumber } from './Math';
 import { normalizeRing } from './Normalize';
 import { Point, Ring } from './Types';
 
@@ -28,13 +27,12 @@ export function splitPathString(str: string) {
   return split(parse(str));
 }
 
-export function pathStringToRing(
-  str: string,
-  maxSegmentLength: number,
-): {
+interface Result {
   readonly ring: Ring;
   readonly skipBisect?: boolean;
-} {
+}
+
+export function pathStringToRing(str: string, maxSegmentLength: number): Result {
   const parsed = parse(str);
   return exactRing(parsed) || approximateRing(parsed, maxSegmentLength);
 }
@@ -52,7 +50,9 @@ function approximateRing(parsed: Path, maxSegmentLength: number) {
   const ringPath = split(parsed)[0];
 
   if (!ringPath) {
-    throw new TypeError(INVALID_INPUT);
+    throw new TypeError(
+      'All shapes must be supplied as arrays of [x, y] points or an SVG path string',
+    );
   }
 
   const ring: Ring = [];
@@ -61,7 +61,7 @@ function approximateRing(parsed: Path, maxSegmentLength: number) {
   const m = new Path(ringPath);
   const len = m.getPathLength();
 
-  if (maxSegmentLength && isFiniteNumber(maxSegmentLength) && maxSegmentLength > 0) {
+  if (maxSegmentLength && _.isFinite(maxSegmentLength) && maxSegmentLength > 0) {
     numPoints = Math.max(numPoints, Math.ceil(len / maxSegmentLength));
   }
 
@@ -70,8 +70,5 @@ function approximateRing(parsed: Path, maxSegmentLength: number) {
     ring.push([p.x, p.y]);
   }
 
-  return {
-    ring,
-    skipBisect: true,
-  };
+  return { ring, skipBisect: true };
 }
