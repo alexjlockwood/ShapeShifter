@@ -1,7 +1,7 @@
 import { Projection, SvgChar } from 'app/model/paths';
 import { CommandBuilder } from 'app/model/paths/Command';
 import { Point } from 'app/scripts/common';
-import { Bezier } from 'bezier-js';
+import * as BezierJs from 'bezier-js';
 import { environment } from 'environments/environment';
 import * as _ from 'lodash';
 
@@ -16,7 +16,7 @@ export class BezierCalculator implements Calculator {
   private readonly points: ReadonlyArray<Point>;
   private length: number;
   private bbox: BBox;
-  private bezierJs_: Bezier;
+  private bezierJs_: any;
 
   constructor(private readonly id: string, private readonly svgChar: SvgChar, ...points: Point[]) {
     this.points = points;
@@ -31,7 +31,7 @@ export class BezierCalculator implements Calculator {
 
   get bezierJs() {
     if (this.bezierJs_ === undefined) {
-      this.bezierJs_ = new Bezier(this.points as Point[]);
+      this.bezierJs_ = new BezierJs(this.points);
     }
     return this.bezierJs_;
   }
@@ -45,7 +45,7 @@ export class BezierCalculator implements Calculator {
 
   project(point: Point): Projection {
     // Create a new bezier curve for dev builds to avoid ngrx-store-freeze crashes.
-    const bezierJs = !environment.production ? new Bezier(this.points as Point[]) : this.bezierJs;
+    const bezierJs = !environment.production ? new BezierJs(this.points) : this.bezierJs;
     const { x, y, t, d } = bezierJs.project(point);
     return { x, y, t, d };
   }
@@ -138,11 +138,11 @@ export class BezierCalculator implements Calculator {
     return this.bbox;
   }
 
-  intersects(line: Line) {
+  intersects(line: Line): number[] {
     if (this.points[0].equals(_.last(this.points))) {
       // Points can't be intersected.
       return [];
     }
-    return this.bezierJs.intersects(line) as number[];
+    return this.bezierJs.intersects(line);
   }
 }
