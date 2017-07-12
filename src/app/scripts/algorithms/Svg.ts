@@ -1,5 +1,5 @@
 import { Path } from 'app/model/paths';
-import * as _ from 'lodash-es';
+import * as _ from 'lodash';
 
 import { Point, Ring } from './Types';
 

@@ -1,6 +1,6 @@
 import { MathUtil } from 'app/scripts/common';
 import { polygonArea } from 'd3-polygon';
-import * as _ from 'lodash-es';
+import * as _ from 'lodash';
 
 import { pathStringToRing } from './Svg';
 import { Point, Ring } from './Types';
