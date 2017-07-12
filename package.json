@@ -52,8 +52,6 @@
     "rxjs": "^5.4.2",
     "sax": "^1.2.4",
     "stable": "^0.1.6",
-    "svg-path-properties": "^0.4.0",
-    "svgpath": "^2.2.1",
     "tinycolor2": "^1.4.1",
     "topojson-client": "^3.0.0",
     "whet.extend": "~0.9.9",
