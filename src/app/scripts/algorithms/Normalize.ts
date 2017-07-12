@@ -1,7 +1,7 @@
+import { MathUtil } from 'app/scripts/common';
 import { polygonArea } from 'd3-polygon';
 import * as _ from 'lodash-es';
 
-import { distance, lerp } from './Math';
 import { pathStringToRing } from './Svg';
 import { Point, Ring } from './Types';
 
@@ -18,7 +18,7 @@ export function normalizeRing(ring: string | Ring, maxSegmentLength: number) {
       'All shapes must be supplied as arrays of [x, y] points or an SVG path string',
     );
   }
-  const samePointFn = (a: Point, b: Point) => distance(a, b) < 1e-9;
+  const samePointFn = (a: Point, b: Point) => MathUtil.distance(a, b) < 1e-9;
   if (points.length > 1 && samePointFn(points[0], points[points.length - 1])) {
     points.pop();
   }
@@ -44,8 +44,8 @@ function bisect(ring: Ring, maxSegmentLength = Infinity) {
   for (let i = 0; i < ring.length; i++) {
     const a = ring[i];
     let b = i === ring.length - 1 ? ring[0] : ring[i + 1];
-    while (distance(a, b) > maxSegmentLength) {
-      b = lerp(a, b, 0.5);
+    while (MathUtil.distance(a, b) > maxSegmentLength) {
+      b = MathUtil.lerp(a, b, 0.5);
       ring.splice(i + 1, 0, b);
     }
   }

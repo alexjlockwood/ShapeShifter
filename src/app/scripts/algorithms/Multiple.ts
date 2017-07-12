@@ -1,7 +1,7 @@
+import { MathUtil } from 'app/scripts/common';
 import { polygonLength } from 'd3-polygon';
 import { polygonCentroid } from 'd3-polygon';
 
-import { distance, lerp } from './Math';
 import { normalizeRing } from './Normalize';
 import { toPathString } from './Svg';
 import { triangulate } from './Triangulate';
@@ -98,7 +98,7 @@ function interpolateSets(
 
 export function pieceOrder(start: ReadonlyArray<Ring>, end: ReadonlyArray<Ring>) {
   const squaredDistanceFn = (p1: Ring, p2: Ring) =>
-    distance(polygonCentroid(p1), polygonCentroid(p2)) ** 2;
+    MathUtil.distance(polygonCentroid(p1), polygonCentroid(p2)) ** 2;
   const distances = start.map(p1 => end.map(p2 => squaredDistanceFn(p1, p2)));
   const order = bestOrder(start, end, distances);
   return start.length > 8 ? start.map((d, i) => i) : bestOrder(start, end, distances);
@@ -148,9 +148,9 @@ function addPoints(ring: Ring, numPoints: number, maxLength = Infinity) {
   while (ring.length < desiredLength) {
     const a = ring[i];
     const b = ring[(i + 1) % ring.length];
-    const segment = distance(a, b);
+    const segment = MathUtil.distance(a, b);
     if (insertAt <= cursor + segment) {
-      const p = segment ? lerp(a, b, (insertAt - cursor) / segment) : [...a] as Point;
+      const p = segment ? MathUtil.lerp(a, b, (insertAt - cursor) / segment) : [...a] as Point;
       ring.splice(i + 1, 0, p);
       insertAt += step;
       continue;
@@ -167,7 +167,7 @@ function rotate(ring: Ring, vs: Ring) {
   let spliced: Point[];
   for (let offset = 0; offset < len; offset++) {
     let sumOfSquares = 0;
-    vs.forEach((p, i) => (sumOfSquares += distance(ring[(offset + i) % len], p) ** 2));
+    vs.forEach((p, i) => (sumOfSquares += MathUtil.distance(ring[(offset + i) % len], p) ** 2));
     if (sumOfSquares < min) {
       min = sumOfSquares;
       bestOffset = offset;
