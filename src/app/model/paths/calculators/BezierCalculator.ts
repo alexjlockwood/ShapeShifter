@@ -55,8 +55,8 @@ export class BezierCalculator implements Calculator {
       const p: { x: number; y: number } = this.bezierJs.get(t1);
       return new PointCalculator(this.id, this.svgChar, new Point(p.x, p.y));
     }
-    const splitBezPoints = this.bezierJs.split(t1, t2).points;
-    const points = splitBezPoints.map(p => new Point(p.x, p.y));
+    const splitPoints: ReadonlyArray<{ x: number; y: number }> = this.bezierJs.split(t1, t2).points;
+    const points = splitPoints.map(p => new Point(p.x, p.y));
     const uniquePoints: Point[] = _.uniqWith(points, (p1: Point, p2: Point) => p1.equals(p2));
     if (uniquePoints.length === 2) {
       return new LineCalculator(this.id, this.svgChar, _.first(points), _.last(points));
