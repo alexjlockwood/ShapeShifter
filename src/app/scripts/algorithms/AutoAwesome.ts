@@ -31,7 +31,27 @@ const INDEL = 0;
  *
  * TODO: this can still be optimized a lot... work in progress!
  */
-export function autoFix(subIdx: number, srcFromPath: Path, srcToPath: Path) {
+export function autoFix(fromPath: Path, toPath: Path) {
+  const numSubPaths = Math.min(fromPath.getSubPaths().length, toPath.getSubPaths().length);
+  for (let subIdx = 0; subIdx < numSubPaths; subIdx++) {
+    // Pass the command with the larger subpath as the 'from' command.
+    const numFromCmds = fromPath.getSubPath(subIdx).getCommands().length;
+    const numToCmds = toPath.getSubPath(subIdx).getCommands().length;
+    const { from, to } = autoFixInternal(
+      subIdx,
+      numFromCmds >= numToCmds ? fromPath : toPath,
+      numFromCmds >= numToCmds ? toPath : fromPath,
+    );
+    fromPath = numFromCmds >= numToCmds ? from : to;
+    toPath = numFromCmds >= numToCmds ? to : from;
+  }
+  return {
+    from: fromPath,
+    to: toPath,
+  };
+}
+
+function autoFixInternal(subIdx: number, srcFromPath: Path, srcToPath: Path) {
   // Create and return a list of reversed and shifted paths to test.
   // TODO: can this be optimized? (this essentially brute-forces all possible permutations)
   const createFromCmdGroupsFn = (...paths: Path[]): Path[] => {
