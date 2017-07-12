@@ -42,24 +42,23 @@ export function fix(fromPath: Path, toPath: Path) {
  *
  * TODO: this can still be optimized a lot... work in progress!
  */
-export function autoFix(resultStartPath: Path, resultEndPath: Path) {
-  const numSubPaths = Math.min(
-    resultStartPath.getSubPaths().length,
-    resultEndPath.getSubPaths().length,
-  );
+export function autoFix(fromPath: Path, toPath: Path) {
+  const numSubPaths = Math.min(fromPath.getSubPaths().length, toPath.getSubPaths().length);
   for (let subIdx = 0; subIdx < numSubPaths; subIdx++) {
     // Pass the command with the larger subpath as the 'from' command.
-    const numStartCmds = resultStartPath.getSubPath(subIdx).getCommands().length;
-    const numEndCmds = resultEndPath.getSubPath(subIdx).getCommands().length;
-    const fromCmd = numStartCmds >= numEndCmds ? resultStartPath : resultEndPath;
-    const toCmd = numStartCmds >= numEndCmds ? resultEndPath : resultStartPath;
-    const { from, to } = autoFixInternal(subIdx, fromCmd, toCmd);
-    resultStartPath = numStartCmds >= numEndCmds ? from : to;
-    resultEndPath = numStartCmds >= numEndCmds ? to : from;
+    const numFromCmds = fromPath.getSubPath(subIdx).getCommands().length;
+    const numToCmds = toPath.getSubPath(subIdx).getCommands().length;
+    const { from, to } = autoFixInternal(
+      subIdx,
+      numFromCmds >= numToCmds ? fromPath : toPath,
+      numFromCmds >= numToCmds ? toPath : fromPath,
+    );
+    fromPath = numFromCmds >= numToCmds ? from : to;
+    toPath = numFromCmds >= numToCmds ? to : from;
   }
   return {
-    from: resultStartPath,
-    to: resultEndPath,
+    from: fromPath,
+    to: toPath,
   };
 }
 
