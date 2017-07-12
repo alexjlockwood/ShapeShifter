@@ -4,8 +4,12 @@ import * as _ from 'lodash-es';
 import { normalizeRing } from './Normalize';
 import { Point, Ring } from './Types';
 
-function parse(str: string) {
-  return new Path(str);
+export function toPathString(ring: Ring) {
+  return 'M' + ring.join('L') + 'Z';
+}
+
+export function splitPathString(str: string) {
+  return split(new Path(str));
 }
 
 function split(parsed: Path) {
@@ -19,21 +23,14 @@ function split(parsed: Path) {
     .filter(d => !!d);
 }
 
-export function toPathString(ring: Ring) {
-  return 'M' + ring.join('L') + 'Z';
-}
-
-export function splitPathString(str: string) {
-  return split(parse(str));
-}
-
-interface Result {
+export function pathStringToRing(
+  str: string,
+  maxSegmentLength: number,
+): {
   readonly ring: Ring;
   readonly skipBisect?: boolean;
-}
-
-export function pathStringToRing(str: string, maxSegmentLength: number): Result {
-  const parsed = parse(str);
+} {
+  const parsed = new Path(str);
   return exactRing(parsed) || approximateRing(parsed, maxSegmentLength);
 }
 
