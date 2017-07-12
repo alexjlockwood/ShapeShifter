@@ -37,7 +37,7 @@ export function autoFix(fromPath: Path, toPath: Path) {
     // Pass the command with the larger subpath as the 'from' command.
     const numFromCmds = fromPath.getSubPath(subIdx).getCommands().length;
     const numToCmds = toPath.getSubPath(subIdx).getCommands().length;
-    const { from, to } = autoFixInternal(
+    const { from, to } = autoFixSubPath(
       subIdx,
       numFromCmds >= numToCmds ? fromPath : toPath,
       numFromCmds >= numToCmds ? toPath : fromPath,
@@ -51,23 +51,22 @@ export function autoFix(fromPath: Path, toPath: Path) {
   };
 }
 
-function autoFixInternal(subIdx: number, srcFromPath: Path, srcToPath: Path) {
-  // Create and return a list of reversed and shifted paths to test.
-  // TODO: can this be optimized? (this essentially brute-forces all possible permutations)
-  const createFromCmdGroupsFn = (...paths: Path[]): Path[] => {
-    const fromPathList: Path[] = [];
-    for (const p of paths) {
-      fromPathList.push(p);
-      if (!p.getSubPath(subIdx).isClosed()) {
-        continue;
+// TODO: can this be optimized? (this essentially brute-forces all possible permutations)
+function autoFixSubPath(subIdx: number, from: Path, to: Path) {
+  // Create and return a list of reversed and shifted from paths to test.
+  // Each generated 'from path' will be aligned with the target 'to path'.
+  const fromPaths: ReadonlyArray<Path> = _.flatMap(
+    [from, from.mutate().reverseSubPath(subIdx).build()],
+    p => {
+      const paths = [p];
+      if (p.getSubPath(subIdx).isClosed()) {
+        for (let i = 1; i < p.getSubPaths()[subIdx].getCommands().length - 1; i++) {
+          paths.push(p.mutate().shiftSubPathBack(subIdx, i).build());
+        }
       }
-      const numFromCmds = p.getSubPaths()[subIdx].getCommands().length;
-      for (let i = 1; i < numFromCmds - 1; i++) {
-        fromPathList.push(p.mutate().shiftSubPathBack(subIdx, i).build());
-      }
-    }
-    return fromPathList;
-  };
+      return paths;
+    },
+  );
 
   // TODO: experiment with this... need to test this more
   // Approximate the centers of the start and end subpaths. We'll use this information
@@ -79,31 +78,24 @@ function autoFixInternal(subIdx: number, srcFromPath: Path, srcToPath: Path) {
   // The scoring function to use to calculate the alignment. Convert-able
   // commands are considered matches. However, the farther away the points
   // are from each other, the lower the score.
-  const getScoreFn = (cmdA: Command, cmdB: Command) => {
-    if (
-      cmdA.getSvgChar() !== cmdB.getSvgChar() &&
-      !cmdA.canConvertTo(cmdB.getSvgChar()) &&
-      !cmdB.canConvertTo(cmdA.getSvgChar())
-    ) {
+  const getScoreFn = (a: Command, b: Command) => {
+    const charA = a.getSvgChar();
+    const charB = b.getSvgChar();
+    if (charA !== charB && !a.canConvertTo(charB) && !b.canConvertTo(charA)) {
       return MISMATCH;
     }
-    const { x, y } = cmdA.getEnd();
+    const { x, y } = a.getEnd();
     // TODO: experiment with this... need to test this more
     // const start = new Point(x + centerOffset.x, y + centerOffset.y);
     const start = new Point(x, y);
-    const end = cmdB.getEnd();
+    const end = b.getEnd();
     const distance = Math.max(MATCH, MathUtil.distance(start, end));
     return 1 / distance;
   };
 
-  // Align each generated 'from path' with the target 'to path'.
-  const fromPaths = createFromCmdGroupsFn(
-    srcFromPath,
-    srcFromPath.mutate().reverseSubPath(subIdx).build(),
-  );
   const alignmentInfos = fromPaths.map(generatedFromPath => {
     const fromCmds = generatedFromPath.getSubPaths()[subIdx].getCommands();
-    const toCmds = srcToPath.getSubPaths()[subIdx].getCommands();
+    const toCmds = to.getSubPaths()[subIdx].getCommands();
     return { generatedFromPath, alignment: align(fromCmds, toCmds, getScoreFn) };
   });
 
@@ -114,12 +106,13 @@ function autoFixInternal(subIdx: number, srcFromPath: Path, srcToPath: Path) {
     return prevScore > currScore ? prev : curr;
   });
 
-  // For each alignment, determine whether it and its neighbor is a gap.
   interface CmdInfo {
     isGap: boolean;
     isNextGap: boolean;
     nextCmdIdx: number;
   }
+
+  // For each alignment, determine whether it and its neighbor is a gap.
   const processAlignmentsFn = (alignments: Alignment<Command>[]) => {
     let nextCmdIdx = 0;
     return alignments.map((alignment, i) => {
@@ -137,9 +130,9 @@ function autoFixInternal(subIdx: number, srcFromPath: Path, srcToPath: Path) {
 
   // Process each list of alignments. Each streak of gaps represents a series
   // of one or more splits we'll perform on the path.
-  const createGapStreaksFn = (cmdInfos: CmdInfo[]) => {
+  const createGapStreaksFn = (cmdInfos: ReadonlyArray<CmdInfo>) => {
     const gapStreaks: CmdInfo[][] = [];
-    let currentGapStreak = [];
+    let currentGapStreak: CmdInfo[] = [];
     for (const cmdInfo of cmdInfos) {
       if (cmdInfo.isGap) {
         currentGapStreak.push(cmdInfo);
@@ -176,7 +169,7 @@ function autoFixInternal(subIdx: number, srcFromPath: Path, srcToPath: Path) {
   };
 
   const fromPathResult = applySplitsFn(alignmentInfo.generatedFromPath, fromGapGroups);
-  const toPathResult = applySplitsFn(srcToPath, toGapGroups);
+  const toPathResult = applySplitsFn(to, toGapGroups);
 
   // Finally, convert the commands before returning the result.
   return autoConvert(subIdx, fromPathResult, toPathResult);
@@ -186,13 +179,11 @@ function autoFixInternal(subIdx: number, srcFromPath: Path, srcToPath: Path) {
  * Takes two paths with an equal number of commands and makes them compatible
  * by converting each pair one-by-one.
  */
-export function autoConvert(subIdx: number, srcFromPath: Path, srcToPath: Path) {
-  const fromCmds = srcFromPath.getSubPaths()[subIdx].getCommands();
-  const toCmds = srcToPath.getSubPaths()[subIdx].getCommands();
-  const fromMutator = srcFromPath.mutate();
-  const toMutator = srcToPath.mutate();
-  fromCmds.forEach((fromCmd, cmdIdx) => {
-    const toCmd = toCmds[cmdIdx];
+export function autoConvert(subIdx: number, from: Path, to: Path) {
+  const fromMutator = from.mutate();
+  const toMutator = to.mutate();
+  from.getSubPath(subIdx).getCommands().forEach((fromCmd, cmdIdx) => {
+    const toCmd = to.getCommand(subIdx, cmdIdx);
     if (fromCmd.getSvgChar() === toCmd.getSvgChar()) {
       return;
     }
