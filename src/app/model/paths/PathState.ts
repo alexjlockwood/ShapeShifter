@@ -56,7 +56,11 @@ export class PathState {
   }
 
   getPathLength() {
-    return _.sumBy(this.subPathStateMap, (unused, i) => this.getSubPathLength(i));
+    let length = 0;
+    for (let i = 0; i < this.subPathStateMap.length; i++) {
+      length += this.getSubPathLength(i);
+    }
+    return length;
   }
 
   getSubPathLength(subIdx: number) {
