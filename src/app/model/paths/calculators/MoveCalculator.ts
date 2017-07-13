@@ -23,6 +23,10 @@ export class MoveCalculator implements Calculator {
     return undefined;
   }
 
+  getPointAtLength(distance: number): Point {
+    return this.endPoint;
+  }
+
   split(t1: number, t2: number): Calculator {
     return this;
   }

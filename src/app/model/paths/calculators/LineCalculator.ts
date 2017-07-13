@@ -37,7 +37,8 @@ export class LineCalculator implements Calculator {
     const dot = (x - x1) * a + (y - y1) * b;
     const lenSq = round(a * a + b * b);
     const param = lenSq === 0 ? -1 : round(dot / lenSq);
-    let xx, yy;
+    let xx: number;
+    let yy: number;
     if (param < 0) {
       xx = x1;
       yy = y1;
@@ -51,7 +52,7 @@ export class LineCalculator implements Calculator {
     const dx = x - xx;
     const dy = y - yy;
     const dd = Math.sqrt(dx * dx + dy * dy);
-    let dt;
+    let dt: number;
     const rx1 = round(x1);
     const rx2 = round(x2);
     const ry1 = round(y1);
@@ -66,7 +67,7 @@ export class LineCalculator implements Calculator {
     return { x: round(xx), y: round(yy), d: round(dd), t: round(dt) };
   }
 
-  split(t1: number, t2: number): Calculator {
+  split(t1: number, t2: number) {
     const { x: x1, y: y1 } = this.p1;
     const { x: x2, y: y2 } = this.p2;
     const p1 = new Point(MathUtil.lerp(x1, x2, t1), MathUtil.lerp(y1, y2, t1));
@@ -86,7 +87,7 @@ export class LineCalculator implements Calculator {
   }
 
   toCommand() {
-    let points;
+    let points: Point[];
     switch (this.svgChar) {
       case 'L':
       case 'Z':
