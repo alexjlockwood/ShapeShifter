@@ -13,7 +13,6 @@ import {
   ViewChildren,
 } from '@angular/core';
 import { ActionSource } from 'app/model/actionmode';
-import { Point } from 'app/scripts/common';
 import { DestroyableMixin } from 'app/scripts/mixins';
 import { ThemeService } from 'app/services';
 import { State, Store } from 'app/store';
