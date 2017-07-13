@@ -512,15 +512,9 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
       if (proj1) {
         // Draw a line from the starting projection to the final projection (or
         // to the last known mouse location, if one doesn't exist).
-        const startPoint = applyGroupTransform(
-          new Point(proj1.projection.x, proj1.projection.y),
-          flattenedTransform,
-        );
+        const startPoint = applyGroupTransform(proj1.projection, flattenedTransform);
         const endPoint = proj2
-          ? applyGroupTransform(
-              new Point(proj2.projection.x, proj2.projection.y),
-              flattenedTransform,
-            )
+          ? applyGroupTransform(proj2.projection, flattenedTransform)
           : this.shapeSplitter.getLastKnownMouseLocation();
         ctx.beginPath();
         ctx.moveTo(startPoint.x, startPoint.y);
@@ -690,10 +684,10 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
       this.vectorLayer,
       this.blockLayerId,
     );
-    const { x, y, d } = this.selectionHelper.getProjectionOntoPath().projection;
+    const projection = this.selectionHelper.getProjectionOntoPath().projection;
     const point =
-      d < this.minSnapThreshold
-        ? applyGroupTransform(new Point(x, y), flattenedTransform)
+      projection.d < this.minSnapThreshold
+        ? applyGroupTransform(projection, flattenedTransform)
         : this.selectionHelper.getLastKnownMouseLocation();
     executeLabeledPoint(ctx, this.attrScale, point, this.splitPointRadius, SPLIT_POINT_COLOR);
   }
@@ -715,8 +709,8 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
     ) {
       return;
     }
-    const { x, y, d } = this.segmentSplitter.getProjectionOntoPath().projection;
-    if (d < this.minSnapThreshold) {
+    const projection = this.segmentSplitter.getProjectionOntoPath().projection;
+    if (projection.d < this.minSnapThreshold) {
       const flattenedTransform = LayerUtil.getFlattenedTransformForLayer(
         this.vectorLayer,
         this.blockLayerId,
@@ -724,7 +718,7 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
       executeLabeledPoint(
         ctx,
         this.attrScale,
-        applyGroupTransform(new Point(x, y), flattenedTransform),
+        applyGroupTransform(projection, flattenedTransform),
         this.splitPointRadius,
         SPLIT_POINT_COLOR,
       );
@@ -749,16 +743,13 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
       executeLabeledPoint(
         ctx,
         this.attrScale,
-        applyGroupTransform(new Point(proj1.projection.x, proj1.projection.y), flattenedTransform),
+        applyGroupTransform(proj1.projection, flattenedTransform),
         this.splitPointRadius,
         SPLIT_POINT_COLOR,
       );
       if (this.shapeSplitter.willFinalProjectionOntoPathCreateSplitPoint()) {
         const endPoint = proj2
-          ? applyGroupTransform(
-              new Point(proj2.projection.x, proj2.projection.y),
-              flattenedTransform,
-            )
+          ? applyGroupTransform(proj2.projection, flattenedTransform)
           : this.shapeSplitter.getLastKnownMouseLocation();
         executeLabeledPoint(
           ctx,
@@ -769,12 +760,12 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
         );
       }
     } else if (this.shapeSplitter.getCurrentProjectionOntoPath()) {
-      const { x, y, d } = this.shapeSplitter.getCurrentProjectionOntoPath().projection;
-      if (d < this.minSnapThreshold) {
+      const projection = this.shapeSplitter.getCurrentProjectionOntoPath().projection;
+      if (projection.d < this.minSnapThreshold) {
         executeLabeledPoint(
           ctx,
           this.attrScale,
-          applyGroupTransform(new Point(x, y), flattenedTransform),
+          applyGroupTransform(projection, flattenedTransform),
           this.splitPointRadius,
           SPLIT_POINT_COLOR,
         );
@@ -927,7 +918,7 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
     const canvasOffset = this.$canvas.offset();
     const x = (event.pageX - canvasOffset.left) / this.cssScale;
     const y = (event.pageY - canvasOffset.top) / this.cssScale;
-    return new Point(x, y);
+    return { x, y };
   }
 
   private hitTestForLayer(point: Point) {

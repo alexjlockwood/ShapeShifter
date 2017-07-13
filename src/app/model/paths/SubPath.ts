@@ -1,3 +1,4 @@
+import { MathUtil } from 'app/scripts/common';
 import * as _ from 'lodash';
 
 import { Command } from '.';
@@ -72,7 +73,7 @@ export class SubPath {
   isClosed() {
     const start = _.first(this.getCommands()).getEnd();
     const end = _.last(this.getCommands()).getEnd();
-    return start.equals(end);
+    return MathUtil.arePointsEqual(start, end);
   }
 
   /**

@@ -74,7 +74,7 @@ export function fromPathOpString(pathString: string, pathOpsString: string) {
         i += 2;
         break;
       case 'AC': // Add collapsing sub path.
-        mutator.addCollapsingSubPath(new Point(+A[i + 1], +A[i + 2]), +A[i + 3]);
+        mutator.addCollapsingSubPath({ x: +A[i + 1], y: +A[i + 2] }, +A[i + 3]);
         i += 3;
         break;
       case 'DC': // Delete collapsing sub paths.

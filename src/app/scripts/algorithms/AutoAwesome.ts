@@ -89,7 +89,7 @@ function autoFixSubPath(subIdx: number, from: Path, to: Path) {
     const { x, y } = a.getEnd();
     // TODO: experiment with this... need to test this more
     // const start = new Point(x + centerOffset.x, y + centerOffset.y);
-    const start = new Point(x, y);
+    const start = { x, y };
     const end = b.getEnd();
     const distance = Math.max(MATCH, MathUtil.distance(start, end));
     return 1 / distance;

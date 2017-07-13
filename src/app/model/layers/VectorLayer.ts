@@ -51,7 +51,7 @@ export class VectorLayer extends AbstractLayer {
   }
 
   getBoundingBox() {
-    return new Rect(0, 0, this.width, this.height);
+    return { l: 0, t: 0, r: this.width, b: this.height } as Rect;
   }
 
   toJSON() {

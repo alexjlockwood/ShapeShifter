@@ -24,9 +24,10 @@ export class LineCalculator implements Calculator {
     const t = distance / this.getPathLength();
     const { x: x1, y: y1 } = this.p1;
     const { x: x2, y: y2 } = this.p2;
-    const x = MathUtil.lerp(x1, x2, t);
-    const y = MathUtil.lerp(y1, y2, t);
-    return new Point(x, y);
+    return {
+      x: MathUtil.lerp(x1, x2, t),
+      y: MathUtil.lerp(y1, y2, t),
+    };
   }
 
   project({ x, y }: Point): Projection {
@@ -70,9 +71,9 @@ export class LineCalculator implements Calculator {
   split(t1: number, t2: number) {
     const { x: x1, y: y1 } = this.p1;
     const { x: x2, y: y2 } = this.p2;
-    const p1 = new Point(MathUtil.lerp(x1, x2, t1), MathUtil.lerp(y1, y2, t1));
-    const p2 = new Point(MathUtil.lerp(x1, x2, t2), MathUtil.lerp(y1, y2, t2));
-    if (p1.equals(p2)) {
+    const p1 = { x: MathUtil.lerp(x1, x2, t1), y: MathUtil.lerp(y1, y2, t1) };
+    const p2 = { x: MathUtil.lerp(x1, x2, t2), y: MathUtil.lerp(y1, y2, t2) };
+    if (MathUtil.arePointsEqual(p1, p2)) {
       return new PointCalculator(this.id, this.svgChar, p1);
     }
     return new LineCalculator(this.id, this.svgChar, p1, p2);
@@ -94,21 +95,21 @@ export class LineCalculator implements Calculator {
         points = [this.p1, this.p2];
         break;
       case 'Q':
-        const cp = new Point(
-          MathUtil.lerp(this.p1.x, this.p2.x, 0.5),
-          MathUtil.lerp(this.p1.y, this.p2.y, 0.5),
-        );
+        const cp = {
+          x: MathUtil.lerp(this.p1.x, this.p2.x, 0.5),
+          y: MathUtil.lerp(this.p1.y, this.p2.y, 0.5),
+        };
         points = [this.p1, cp, this.p2];
         break;
       case 'C':
-        const cp1 = new Point(
-          MathUtil.lerp(this.p1.x, this.p2.x, 1 / 3),
-          MathUtil.lerp(this.p1.y, this.p2.y, 1 / 3),
-        );
-        const cp2 = new Point(
-          MathUtil.lerp(this.p1.x, this.p2.x, 2 / 3),
-          MathUtil.lerp(this.p1.y, this.p2.y, 2 / 3),
-        );
+        const cp1 = {
+          x: MathUtil.lerp(this.p1.x, this.p2.x, 1 / 3),
+          y: MathUtil.lerp(this.p1.y, this.p2.y, 1 / 3),
+        };
+        const cp2 = {
+          x: MathUtil.lerp(this.p1.x, this.p2.x, 2 / 3),
+          y: MathUtil.lerp(this.p1.y, this.p2.y, 2 / 3),
+        };
         points = [this.p1, cp1, cp2, this.p2];
         break;
       default:
@@ -122,13 +123,11 @@ export class LineCalculator implements Calculator {
     const miny = Math.min(this.p1.y, this.p2.y);
     const maxx = Math.max(this.p1.x, this.p2.x);
     const maxy = Math.max(this.p1.y, this.p2.y);
-    const x = { min: minx, max: maxx };
-    const y = { min: miny, max: maxy };
-    return { x, y } as BBox;
+    return { x: { min: minx, max: maxx }, y: { min: miny, max: maxy } } as BBox;
   }
 
   intersects(line: Line) {
-    if (this.p1.equals(this.p2)) {
+    if (MathUtil.arePointsEqual(this.p1, this.p2)) {
       // Points can't be intersected.
       return [];
     }

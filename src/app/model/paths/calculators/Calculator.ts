@@ -1,4 +1,4 @@
-import { Point } from 'app/scripts/common';
+import { MathUtil, Point } from 'app/scripts/common';
 import * as _ from 'lodash';
 
 import { Command, SvgChar } from '..';
@@ -28,7 +28,7 @@ export function newCalculator(cmd: Command): Calculator {
   if (cmd.getSvgChar() === 'M') {
     return new MoveCalculator(cmd.getId(), points[0], points[1]);
   }
-  const uniquePoints: Point[] = _.uniqWith(points, (p1: Point, p2: Point) => p1.equals(p2));
+  const uniquePoints: Point[] = _.uniqWith(points, MathUtil.arePointsEqual);
   if (uniquePoints.length === 1) {
     return new PointCalculator(cmd.getId(), cmd.getSvgChar(), points[0]);
   }

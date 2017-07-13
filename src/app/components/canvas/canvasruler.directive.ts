@@ -1,5 +1,5 @@
 import { Directive, ElementRef, Input } from '@angular/core';
-import { Point } from 'app/scripts/common';
+import { MathUtil, Point } from 'app/scripts/common';
 import { ThemeService } from 'app/services';
 import * as $ from 'jquery';
 import * as _ from 'lodash';
@@ -41,7 +41,7 @@ export class CanvasRulerDirective extends CanvasLayoutMixin() {
   }
 
   showMouse(mousePoint: Point) {
-    if (!this.mousePoint || !this.mousePoint.equals(mousePoint)) {
+    if (!this.mousePoint || !MathUtil.arePointsEqual(this.mousePoint, mousePoint)) {
       this.mousePoint = mousePoint;
       this.draw();
     }

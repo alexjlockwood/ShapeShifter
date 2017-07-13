@@ -88,8 +88,8 @@ export class Matrix {
     // return the minimal height of the 2 bases.
 
     const matrix = new Matrix(this.a, this.b, this.c, this.d, 0, 0);
-    const vecA = MathUtil.transformPoint(new Point(0, 1), matrix);
-    const vecB = MathUtil.transformPoint(new Point(1, 0), matrix);
+    const vecA = MathUtil.transformPoint({ x: 0, y: 1 }, matrix);
+    const vecB = MathUtil.transformPoint({ x: 1, y: 0 }, matrix);
     const scaleX = Math.hypot(vecA.x, vecA.y);
     const scaleY = Math.hypot(vecB.x, vecB.y);
     const crossProduct = vecA.y * vecB.x - vecA.x * vecB.y;
