@@ -1,7 +1,5 @@
 import { Matrix, Point } from '.';
 
-const EPSILON = 1e-8;
-
 /** Returns the floor modulus of the integer argument. */
 export function floorMod(num: number, maxNum: number) {
   return (num % maxNum + maxNum) % maxNum;
@@ -18,19 +16,8 @@ export function lerp(a: number | [number, number], b: number | [number, number],
   }
 }
 
-/** Clamps the specified number between a min and max value. */
-export function clamp(num: number, min: number, max: number) {
-  if (num < min) {
-    return min;
-  } else if (num > max) {
-    return max;
-  } else {
-    return num;
-  }
-}
-
 /** Returns true if the points are collinear. */
-export function areCollinear(...points: Point[]) {
+export function areCollinear(...points: Array<{ readonly x: number; readonly y: number }>) {
   if (points.length < 3) {
     return true;
   }
@@ -39,12 +26,15 @@ export function areCollinear(...points: Point[]) {
   return points.every(({ x, y }: Point) => {
     // The points are collinear if the area of the triangle they form
     // is equal to (or in this case, close to) zero.
-    return Math.abs(a * (n - y) + m * (y - b) + x * (b - n)) < EPSILON;
+    return Math.abs(a * (n - y) + m * (y - b) + x * (b - n)) < 1e-9;
   });
 }
 
 /** Applies a list of transformation matrices to the specified point. */
-export function transformPoint(point: Point, ...matrices: Matrix[]): Point {
+export function transformPoint(
+  point: { readonly x: number; readonly y: number },
+  ...matrices: Matrix[]
+) {
   return matrices.reduce((p: Point, m: Matrix) => {
     // [a c e]   [p.x]
     // [b d f] * [p.y]
