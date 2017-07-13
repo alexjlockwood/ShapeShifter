@@ -189,7 +189,7 @@ class CommandStateMutator {
     return this;
   }
 
-  setMutations(mutations: Mutation[]) {
+  setMutations(mutations: ReadonlyArray<Mutation>) {
     this.mutations = mutations.slice();
     return this;
   }
@@ -231,7 +231,7 @@ class CommandStateMutator {
    * are linearly interpolated between the split values at splitIdx and
    * splitIdx + 1 to ensure the split is done in relation to the mutated command.
    */
-  splitAtIndex(splitIdx: number, ts: number[]) {
+  splitAtIndex(splitIdx: number, ts: ReadonlyArray<number>) {
     const tempSplits = [this.minT, ...this.mutations.map(m => m.t)];
     const startSplit = tempSplits[splitIdx];
     const endSplit = tempSplits[splitIdx + 1];
@@ -250,7 +250,7 @@ class CommandStateMutator {
     return this.split([this.calculator.findTimeByDistance(distance)]);
   }
 
-  private split(ts: number[]) {
+  private split(ts: ReadonlyArray<number>) {
     if (!ts.length || this.backingCommand.getSvgChar() === 'M') {
       return this;
     }
