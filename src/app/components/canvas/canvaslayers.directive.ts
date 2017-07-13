@@ -176,6 +176,8 @@ export class CanvasLayersDirective extends CanvasLayoutMixin(DestroyableMixin())
 
     if (layer.trimPathStart !== 0 || layer.trimPathEnd !== 1 || layer.trimPathOffset !== 0) {
       const { a, d } = flattenedTransform;
+      // Note that we only return the length of the first sub path due to
+      // https://code.google.com/p/android/issues/detail?id=172547
       let pathLength: number;
       if (a !== 1 || d !== 1) {
         // Then recompute the scaled path length.
@@ -183,9 +185,9 @@ export class CanvasLayersDirective extends CanvasLayoutMixin(DestroyableMixin())
           .mutate()
           .addTransforms([flattenedTransform])
           .build()
-          .getPathLength();
+          .getSubPathLength(0);
       } else {
-        pathLength = layer.pathData.getPathLength();
+        pathLength = layer.pathData.getSubPathLength(0);
       }
 
       const strokeDashArray = PathUtil.toStrokeDashArray(

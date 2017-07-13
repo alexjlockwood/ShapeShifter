@@ -17,6 +17,10 @@ export class PointCalculator implements Calculator {
     return 0;
   }
 
+  getPointAtLength(distance: number) {
+    return this.point;
+  }
+
   project(point: Point) {
     const x = this.point.x;
     const y = this.point.y;

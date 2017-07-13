@@ -67,6 +67,10 @@ export class CommandState {
     return this.calculator.getPathLength();
   }
 
+  getPointAtLength(distance: number) {
+    return this.calculator.getPointAtLength(distance);
+  }
+
   project(point: Point): { projection: Projection; splitIdx: number } | undefined {
     const projection = this.calculator.project(point);
     if (!projection) {

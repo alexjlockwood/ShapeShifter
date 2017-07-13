@@ -36,6 +36,11 @@ export class BezierCalculator implements Calculator {
     return this.bezierJs_;
   }
 
+  getPointAtLength(distance: number) {
+    const { x, y } = this.bezierJs.get(this.findTimeByDistance(distance));
+    return new Point(x, y);
+  }
+
   getPathLength() {
     if (this.length === undefined) {
       this.length = this.bezierJs.length();

@@ -13,6 +13,7 @@ import { PointCalculator } from './PointCalculator';
  */
 export interface Calculator {
   getPathLength(): number;
+  getPointAtLength(distance: number): Point;
   project(point: Point): Projection | undefined;
   split(t1: number, t2: number): Calculator;
   convert(svgChar: SvgChar): Calculator;

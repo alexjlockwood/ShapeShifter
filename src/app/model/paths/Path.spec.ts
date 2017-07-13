@@ -8,6 +8,12 @@ const lerp = MathUtil.lerp;
 const fromPathOpString = PathUtil.fromPathOpString;
 
 describe('Path', () => {
+  beforeEach(() => {
+    jasmine.addCustomEqualityTester(
+      (p1, p2) => (p1 instanceof Point && p2 instanceof Point ? p1.equals(p2) : undefined),
+    );
+  });
+
   describe('constructing new Path objects', () => {
     function buildPath(svgChars: string) {
       const numSvgCharArgsFn = (svgChar: SvgChar) => {
@@ -873,7 +879,7 @@ describe('Path', () => {
       ],
     ];
 
-    const TESTS_HIT_TEST_STROKE = [
+    const TESTS_HIT_TEST_STROKE: [Point, string, number, boolean][] = [
       [
         new Point(4, 12),
         'M 20 22 L 4 22 L 4 2 L 6 2 L 6 14 L 8 14 L 8 2 L 10 2 L 10 14 Z',
@@ -909,11 +915,19 @@ describe('Path', () => {
       const path = new Path(a[1] as string);
       it(`hit test for '(${point.x},${point.y})' on stroke path '${a[1]}' yields '${a[3]}'`, () => {
         const hitResult = path.hitTest(point, {
-          isSegmentInRangeFn: dist => {
-            return dist < a[2];
-          },
+          isSegmentInRangeFn: dist => dist < a[2],
         });
         expect(hitResult.isSegmentHit).toEqual(a[3] as boolean);
+      });
+    });
+  });
+
+  describe('#getPointAtLength', () => {
+    const TESTS: [string, number, Point][] = [['M 0 0 L 0 100', 10, new Point(0, 10)]];
+
+    TESTS.forEach(([pathStr, length, expectedPoint]) => {
+      it(`point at length ${length} on path ${pathStr} yields '(${expectedPoint.x},${expectedPoint.y})`, () => {
+        expect(new Path(pathStr).getPointAtLength(length)).toEqual(expectedPoint);
       });
     });
   });
