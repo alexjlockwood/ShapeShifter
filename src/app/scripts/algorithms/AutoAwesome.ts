@@ -120,9 +120,9 @@ function autoFixSubPath(subIdx: number, from: Path, to: Path) {
   });
 
   interface CmdInfo {
-    isGap: boolean;
-    isNextGap: boolean;
-    nextCmdIdx: number;
+    readonly isGap: boolean;
+    readonly isNextGap: boolean;
+    readonly nextCmdIdx: number;
   }
 
   // For each alignment, determine whether it and its neighbor is a gap.
@@ -165,7 +165,7 @@ function autoFixSubPath(subIdx: number, from: Path, to: Path) {
   // Fill in the gaps by applying linear subdivide batch splits.
   const applySplitsFn = (path: Path, gapGroups: ReadonlyTable<CmdInfo>) => {
     const splitOps: Array<{ subIdx: number; cmdIdx: number; ts: number[] }> = [];
-    const numPaths = path.getSubPaths()[subIdx].getCommands().length;
+    const numPaths = path.getSubPath(subIdx).getCommands().length;
     for (let i = gapGroups.length - 1; i >= 0; i--) {
       const gapGroup = gapGroups[i];
       // Clamp the index between 1 and numCommands - 1 to account for cases
@@ -222,7 +222,7 @@ interface Alignment<T> {
 function align<T>(
   from: ReadonlyArray<T>,
   to: ReadonlyArray<T>,
-  scoringFunction: (t1: T, t2: T) => number,
+  scoringFn: (t1: T, t2: T) => number,
 ) {
   const listA: Alignment<T>[] = from.map(obj => ({ obj }));
   const listB: Alignment<T>[] = to.map(obj => ({ obj }));
@@ -248,7 +248,7 @@ function align<T>(
   // Process the scoring matrix.
   for (i = 1; i < listA.length; i++) {
     for (j = 1; j < listB.length; j++) {
-      const match = matrix[i - 1][j - 1] + scoringFunction(listA[i].obj, listB[j].obj);
+      const match = matrix[i - 1][j - 1] + scoringFn(listA[i].obj, listB[j].obj);
       const ins = matrix[i][j - 1] + INDEL;
       const del = matrix[i - 1][j] + INDEL;
       matrix[i][j] = Math.max(match, ins, del);
@@ -263,7 +263,7 @@ function align<T>(
     if (
       i > 0 &&
       j > 0 &&
-      matrix[i][j] === matrix[i - 1][j - 1] + scoringFunction(listA[i].obj, listB[j].obj)
+      matrix[i][j] === matrix[i - 1][j - 1] + scoringFn(listA[i].obj, listB[j].obj)
     ) {
       alignedListA.unshift(listA[i--]);
       alignedListB.unshift(listB[j--]);
