@@ -39,7 +39,7 @@ export class Dragger {
       }
 
       if (this.isDragging) {
-        this.onDragFn(event, new Point(event.clientX - this.downX, event.clientY - this.downY));
+        this.onDragFn(event, { x: event.clientX - this.downX, y: event.clientY - this.downY });
       }
     };
 
@@ -47,7 +47,7 @@ export class Dragger {
       $(window).off('mousemove', mouseMoveHandlerFn).off('mouseup', mouseUpHandlerFn);
 
       if (this.isDragging) {
-        this.onDragFn(event, new Point(event.clientX - this.downX, event.clientY - this.downY));
+        this.onDragFn(event, { x: event.clientX - this.downX, y: event.clientY - this.downY });
 
         this.onDropFn();
 

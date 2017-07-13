@@ -85,11 +85,11 @@ export class Command {
       case 'Z':
         return ch === 'L' || ch === 'Q' || ch === 'C';
       case 'Q': {
-        const uniquePoints = _.uniqWith(this.points, (p1: Point, p2: Point) => p1.equals(p2));
+        const uniquePoints = _.uniqWith(this.points, MathUtil.arePointsEqual);
         return ch === 'C' || (ch === 'L' && uniquePoints.length <= 2);
       }
       case 'C': {
-        const uniquePoints = _.uniqWith(this.points, (p1: Point, p2: Point) => p1.equals(p2));
+        const uniquePoints = _.uniqWith(this.points, MathUtil.arePointsEqual);
         return ch === 'L' && uniquePoints.length <= 2;
       }
     }

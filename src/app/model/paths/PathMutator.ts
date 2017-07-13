@@ -62,7 +62,7 @@ export class PathMutator {
     }
     const firstCmd = sps.getCommandStates()[0].getCommands()[0];
     const lastCmd = _.last(_.last(sps.getCommandStates()).getCommands());
-    if (!firstCmd.getEnd().equals(lastCmd.getEnd())) {
+    if (!MathUtil.arePointsEqual(firstCmd.getEnd(), lastCmd.getEnd())) {
       // TODO: in some cases there may be rounding errors that cause a closed subpath
       // to show up as non-closed. is there anything we can do to alleviate this?
       console.warn('Ignoring attempt to shift a non-closed subpath');
@@ -1027,7 +1027,11 @@ function reverseCommands(subPathState: SubPathState) {
  */
 function shiftCommands(subPathState: SubPathState, cmds: Command[]) {
   let shiftOffset = subPathState.getShiftOffset();
-  if (!shiftOffset || cmds.length === 1 || !_.first(cmds).getEnd().equals(_.last(cmds).getEnd())) {
+  if (
+    !shiftOffset ||
+    cmds.length === 1 ||
+    !MathUtil.arePointsEqual(_.first(cmds).getEnd(), _.last(cmds).getEnd())
+  ) {
     // If there is no shift offset, the sub path is one command long,
     // or if the sub path is not closed, then do nothing.
     return cmds;

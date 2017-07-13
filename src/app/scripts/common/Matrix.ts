@@ -1,7 +1,5 @@
 import { MathUtil, Point } from '.';
 
-const EPSILON = 1e-8;
-
 /**
  * An immutable Matrix class that uses the standard SVG transformation
  * matrix notation.
@@ -88,8 +86,8 @@ export class Matrix {
     // return the minimal height of the 2 bases.
 
     const matrix = new Matrix(this.a, this.b, this.c, this.d, 0, 0);
-    const vecA = MathUtil.transformPoint(new Point(0, 1), matrix);
-    const vecB = MathUtil.transformPoint(new Point(1, 0), matrix);
+    const vecA = MathUtil.transformPoint({ x: 0, y: 1 }, matrix);
+    const vecB = MathUtil.transformPoint({ x: 1, y: 0 }, matrix);
     const scaleX = Math.hypot(vecA.x, vecA.y);
     const scaleY = Math.hypot(vecB.x, vecB.y);
     const crossProduct = vecA.y * vecB.x - vecA.x * vecB.y;
@@ -102,12 +100,12 @@ export class Matrix {
    */
   equals(m: Matrix) {
     return (
-      Math.abs(this.a - m.a) < EPSILON &&
-      Math.abs(this.b - m.b) < EPSILON &&
-      Math.abs(this.c - m.c) < EPSILON &&
-      Math.abs(this.d - m.d) < EPSILON &&
-      Math.abs(this.e - m.e) < EPSILON &&
-      Math.abs(this.f - m.f) < EPSILON
+      Math.abs(this.a - m.a) < 1e-9 &&
+      Math.abs(this.b - m.b) < 1e-9 &&
+      Math.abs(this.c - m.c) < 1e-9 &&
+      Math.abs(this.d - m.d) < 1e-9 &&
+      Math.abs(this.e - m.e) < 1e-9 &&
+      Math.abs(this.f - m.f) < 1e-9
     );
   }
 }

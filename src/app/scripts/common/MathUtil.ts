@@ -17,13 +17,13 @@ export function lerp(a: number | [number, number], b: number | [number, number],
 }
 
 /** Returns true if the points are collinear. */
-export function areCollinear(...points: Array<{ readonly x: number; readonly y: number }>) {
+export function areCollinear(...points: Point[]) {
   if (points.length < 3) {
     return true;
   }
   const { x: a, y: b } = points[0];
   const { x: m, y: n } = points[1];
-  return points.every(({ x, y }: Point) => {
+  return points.every(({ x, y }) => {
     // The points are collinear if the area of the triangle they form
     // is equal to (or in this case, close to) zero.
     return Math.abs(a * (n - y) + m * (y - b) + x * (b - n)) < 1e-9;
@@ -31,23 +31,29 @@ export function areCollinear(...points: Array<{ readonly x: number; readonly y: 
 }
 
 /** Applies a list of transformation matrices to the specified point. */
-export function transformPoint(
-  point: { readonly x: number; readonly y: number },
-  ...matrices: Matrix[]
-) {
+export function transformPoint(point: Point, ...matrices: Matrix[]) {
   return matrices.reduce((p: Point, m: Matrix) => {
     // [a c e]   [p.x]
     // [b d f] * [p.y]
     // [0 0 1]   [ 1 ]
-    return new Point(m.a * p.x + m.c * p.y + m.e * 1, m.b * p.x + m.d * p.y + m.f * 1);
-  }, new Point(point.x, point.y));
+    return { x: m.a * p.x + m.c * p.y + m.e * 1, y: m.b * p.x + m.d * p.y + m.f * 1 };
+  }, point);
+}
+
+function instanceOfPoint(p: any): p is Point {
+  return 'x' in p && 'y' in p;
 }
 
 /** Calculates the distance between two points. */
 export function distance(p1: [number, number], p2: [number, number]): number;
 export function distance(p1: Point, p2: Point): number;
 export function distance(p1: [number, number] | Point, p2: [number, number] | Point) {
-  const dx = p1 instanceof Point && p2 instanceof Point ? p1.x - p2.x : p1[0] - p2[0];
-  const dy = p1 instanceof Point && p2 instanceof Point ? p1.y - p2.y : p1[1] - p2[1];
+  const dx = instanceOfPoint(p1) && instanceOfPoint(p2) ? p1.x - p2.x : p1[0] - p2[0];
+  const dy = instanceOfPoint(p1) && instanceOfPoint(p2) ? p1.y - p2.y : p1[1] - p2[1];
   return Math.sqrt(dx ** 2 + dy ** 2);
+}
+
+/** Returns true if the two points are equal. */
+export function arePointsEqual(p1: Point, p2: Point) {
+  return p1 && p2 && distance(p1, p2) < 1e-9;
 }

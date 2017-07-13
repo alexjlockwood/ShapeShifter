@@ -113,7 +113,7 @@ export class CanvasComponent extends CanvasLayoutMixin(DestroyableMixin())
     const canvasOffset = this.$element.offset();
     const x = (event.pageX - canvasOffset.left) / Math.max(1, this.cssScale);
     const y = (event.pageY - canvasOffset.top) / Math.max(1, this.cssScale);
-    this.canvasRulers.forEach(r => r.showMouse(new Point(_.round(x), _.round(y))));
+    this.canvasRulers.forEach(r => r.showMouse({ x: _.round(x), y: _.round(y) }));
   }
 
   private hideRuler() {

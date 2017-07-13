@@ -92,7 +92,7 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): Command[
       x += currentPoint.x;
       y += currentPoint.y;
     }
-    return new Point(x, y);
+    return { x, y };
   };
 
   const commands: Command[] = [];
@@ -153,7 +153,7 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): Command[
           if (currentControlPoint) {
             const x = currentPoint.x + (currentPoint.x - currentControlPoint.x);
             const y = currentPoint.y + (currentPoint.y - currentControlPoint.y);
-            cp1 = new Point(x, y);
+            cp1 = { x, y };
           } else {
             cp1 = cp2;
           }
@@ -192,7 +192,7 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): Command[
           if (currentControlPoint) {
             const x = currentPoint.x + (currentPoint.x - currentControlPoint.x);
             const y = currentPoint.y + (currentPoint.y - currentControlPoint.y);
-            cp = new Point(x, y);
+            cp = { x, y };
           } else {
             cp = end;
           }
@@ -230,7 +230,7 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): Command[
           if (isRelative) {
             x += currentPoint.x;
           }
-          const end = new Point(x, y);
+          const end = { x, y };
           commands.push(newLine(currentPoint, end));
 
           currentControlPoint = undefined;
@@ -250,7 +250,7 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): Command[
           if (isRelative) {
             y += currentPoint.y;
           }
-          const end = new Point(x, y);
+          const end = { x, y };
           commands.push(newLine(currentPoint, end));
 
           currentControlPoint = undefined;
@@ -290,12 +290,12 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): Command[
           });
 
           for (let i = 0; i < bezierCoords.length; i += 8) {
-            const endPoint = new Point(bezierCoords[i + 6], bezierCoords[i + 7]);
+            const endPoint = { x: bezierCoords[i + 6], y: bezierCoords[i + 7] };
             commands.push(
               newBezierCurve(
                 currentPoint,
-                new Point(bezierCoords[i + 2], bezierCoords[i + 3]),
-                new Point(bezierCoords[i + 4], bezierCoords[i + 5]),
+                { x: bezierCoords[i + 2], y: bezierCoords[i + 3] },
+                { x: bezierCoords[i + 4], y: bezierCoords[i + 5] },
                 endPoint,
               ),
             );

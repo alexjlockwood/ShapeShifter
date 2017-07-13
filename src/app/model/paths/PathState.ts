@@ -213,7 +213,7 @@ export class PathState {
             const { subIdx } = obj;
             const css = this.findSubPathState(subIdx).getCommandStates();
             const bounds = createBoundingBox(css);
-            if (!bounds.contains(point)) {
+            if (!containsPoint(bounds, point)) {
               // Nothing to see here. Check the next subpath.
               return [] as Array<{ readonly subIdx: number }>;
             }
@@ -223,7 +223,7 @@ export class PathState {
             // inside the path (in this case, we use a coordinate outside the path's
             // bounded box). A hit has occured if and only if the number of
             // intersections between the line and the path is odd.
-            const line = { p1: point, p2: new Point(bounds.r + 1, bounds.b + 1) };
+            const line = { p1: point, p2: { x: bounds.r + 1, y: bounds.b + 1 } };
             const intersectionResults = css.map(cs => cs.intersects(line));
             const numIntersections = _.sumBy(intersectionResults, ts => ts.length);
             if (numIntersections % 2 === 0) {
@@ -274,7 +274,7 @@ export class PathState {
       polygon.push(...[[p1x, p1y], [p2x, p2y]]);
     }
     const pole = polylabel([polygon]);
-    return new Point(pole[0], pole[1]);
+    return { x: pole[0], y: pole[1] };
   }
 
   // TODO: cache this?
@@ -333,7 +333,7 @@ export class PathState {
 
 // TODO: cache this?
 function createBoundingBox(css: ReadonlyArray<CommandState>) {
-  const bounds = new Rect(Infinity, Infinity, -Infinity, -Infinity);
+  const bounds = { l: Infinity, t: Infinity, r: -Infinity, b: -Infinity };
 
   const expandBoundsFn = (x: number, y: number) => {
     if (isNaN(x) || isNaN(y)) {
@@ -359,4 +359,8 @@ function createBoundingBox(css: ReadonlyArray<CommandState>) {
 
 function isSubPathSplit(map: ReadonlyArray<SubPathState>, spsIdx: number) {
   return !!findSubPathState(map, spsIdx).getSplitSubPaths().length;
+}
+
+function containsPoint(rect: Rect, p: Point) {
+  return rect.l <= p.x && p.x < rect.r && rect.t <= p.y && p.y < rect.b;
 }

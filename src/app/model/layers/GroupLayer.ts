@@ -60,7 +60,7 @@ export class GroupLayer extends AbstractLayer {
   }
 
   getBoundingBox() {
-    let bounds: Rect = undefined;
+    let bounds: { l: number; t: number; r: number; b: number };
     this.children.forEach(child => {
       const childBounds = child.getBoundingBox();
       if (!childBounds) {
@@ -72,7 +72,7 @@ export class GroupLayer extends AbstractLayer {
         bounds.r = Math.max(childBounds.r, bounds.r);
         bounds.b = Math.max(childBounds.b, bounds.b);
       } else {
-        bounds = childBounds.clone();
+        bounds = { ...childBounds };
       }
     });
     if (!bounds) {
@@ -87,14 +87,14 @@ export class GroupLayer extends AbstractLayer {
       Matrix.fromRotation(this.rotation),
       Matrix.fromTranslation(this.translateX, this.translateY),
     ];
-    const topLeft = MathUtil.transformPoint(new Point(bounds.l, bounds.t), ...transforms);
-    const bottomRight = MathUtil.transformPoint(new Point(bounds.r, bounds.b), ...transforms);
-    return new Rect(
-      topLeft.x + this.pivotX,
-      topLeft.y + this.pivotY,
-      bottomRight.x + this.pivotX,
-      bottomRight.y + this.pivotY,
-    );
+    const topLeft = MathUtil.transformPoint({ x: bounds.l, y: bounds.t }, ...transforms);
+    const bottomRight = MathUtil.transformPoint({ x: bounds.r, y: bounds.b }, ...transforms);
+    return {
+      l: topLeft.x + this.pivotX,
+      t: topLeft.y + this.pivotY,
+      r: bottomRight.x + this.pivotX,
+      b: bottomRight.y + this.pivotY,
+    } as Rect;
   }
 
   toJSON() {

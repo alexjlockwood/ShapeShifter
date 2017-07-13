@@ -23,7 +23,7 @@ export function interpolate(start: Path, end: Path, fraction: number) {
         // will be undefined. Skip it.
         const px = MathUtil.lerp(p1.x, p2.x, fraction);
         const py = MathUtil.lerp(p1.y, p2.y, fraction);
-        points.push(new Point(px, py));
+        points.push({ x: px, y: py });
       } else {
         points.push(undefined);
       }

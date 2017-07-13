@@ -1,6 +1,6 @@
 import { Projection, SvgChar } from 'app/model/paths';
 import { CommandBuilder } from 'app/model/paths/Command';
-import { Point } from 'app/scripts/common';
+import { MathUtil, Point } from 'app/scripts/common';
 import * as BezierJs from 'bezier-js';
 import { environment } from 'environments/environment';
 import * as _ from 'lodash';
@@ -37,8 +37,7 @@ export class BezierCalculator implements Calculator {
   }
 
   getPointAtLength(distance: number) {
-    const { x, y } = this.bezierJs.get(this.findTimeByDistance(distance));
-    return new Point(x, y);
+    return this.bezierJs.get(this.findTimeByDistance(distance)) as Point;
   }
 
   getPathLength() {
@@ -57,12 +56,10 @@ export class BezierCalculator implements Calculator {
 
   split(t1: number, t2: number): Calculator {
     if (t1 === t2) {
-      const p: { x: number; y: number } = this.bezierJs.get(t1);
-      return new PointCalculator(this.id, this.svgChar, new Point(p.x, p.y));
+      return new PointCalculator(this.id, this.svgChar, this.bezierJs.get(t1) as Point);
     }
-    const splitPoints: ReadonlyArray<{ x: number; y: number }> = this.bezierJs.split(t1, t2).points;
-    const points = splitPoints.map(p => new Point(p.x, p.y));
-    const uniquePoints: Point[] = _.uniqWith(points, (p1: Point, p2: Point) => p1.equals(p2));
+    const points: ReadonlyArray<Point> = this.bezierJs.split(t1, t2).points;
+    const uniquePoints: Point[] = _.uniqWith(points, MathUtil.arePointsEqual);
     if (uniquePoints.length === 2) {
       return new LineCalculator(this.id, this.svgChar, _.first(points), _.last(points));
     }
@@ -78,14 +75,14 @@ export class BezierCalculator implements Calculator {
       const qcp1 = this.points[1];
       const qcp2 = this.points[2];
       const ccp0 = qcp0;
-      const ccp1 = new Point(
-        qcp0.x + 2 / 3 * (qcp1.x - qcp0.x),
-        qcp0.y + 2 / 3 * (qcp1.y - qcp0.y),
-      );
-      const ccp2 = new Point(
-        qcp2.x + 2 / 3 * (qcp1.x - qcp2.x),
-        qcp2.y + 2 / 3 * (qcp1.y - qcp2.y),
-      );
+      const ccp1 = {
+        x: qcp0.x + 2 / 3 * (qcp1.x - qcp0.x),
+        y: qcp0.y + 2 / 3 * (qcp1.y - qcp0.y),
+      };
+      const ccp2 = {
+        x: qcp2.x + 2 / 3 * (qcp1.x - qcp2.x),
+        y: qcp2.y + 2 / 3 * (qcp1.y - qcp2.y),
+      };
       const ccp3 = qcp2;
       return new BezierCalculator(this.id, svgChar, ccp0, ccp1, ccp2, ccp3);
     }
@@ -144,7 +141,7 @@ export class BezierCalculator implements Calculator {
   }
 
   intersects(line: Line): number[] {
-    if (this.points[0].equals(_.last(this.points))) {
+    if (MathUtil.arePointsEqual(_.first(this.points), _.last(this.points))) {
       // Points can't be intersected.
       return [];
     }

@@ -1,5 +1,5 @@
 import { Command } from 'app/model/paths';
-import { Matrix, Point } from 'app/scripts/common';
+import { MathUtil, Matrix, Point } from 'app/scripts/common';
 
 type Context = CanvasRenderingContext2D;
 
@@ -21,7 +21,7 @@ export function executeCommands(ctx: Context, commands: ReadonlyArray<Command>, 
     const start = cmd.getStart();
     const end = cmd.getEnd();
 
-    if (start && !start.equals(previousEndPoint)) {
+    if (start && !MathUtil.arePointsEqual(start, previousEndPoint)) {
       // This is to support the case where the list of commands
       // is size fragmented.
       ctx.moveTo(start.x, start.y);
@@ -48,7 +48,7 @@ export function executeCommands(ctx: Context, commands: ReadonlyArray<Command>, 
         cmd.getPoints()[3].y,
       );
     } else if (cmd.getSvgChar() === 'Z') {
-      if (start.equals(previousEndPoint)) {
+      if (MathUtil.arePointsEqual(start, previousEndPoint)) {
         ctx.closePath();
       } else {
         // This is to support the case where the list of commands

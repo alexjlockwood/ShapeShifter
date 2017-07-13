@@ -1,8 +1,8 @@
 import { ActionMode, ActionSource, SelectionType } from 'app/model/actionmode';
 import { LayerUtil, MorphableLayer, VectorLayer } from 'app/model/layers';
 import { Animation, PathAnimationBlock } from 'app/model/timeline';
+import { ActionModeUtil } from 'app/scripts/actionmode';
 import { AnimationRenderer } from 'app/scripts/animator';
-import { ActionModeUtil } from 'app/scripts/common';
 import { getHiddenLayerIds, getSelectedLayerIds, getVectorLayer } from 'app/store/layers/selectors';
 import { State } from 'app/store/reducer';
 import { createDeepEqualSelector, getAppState } from 'app/store/selectors';

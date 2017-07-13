@@ -8,12 +8,6 @@ const lerp = MathUtil.lerp;
 const fromPathOpString = PathUtil.fromPathOpString;
 
 describe('Path', () => {
-  beforeEach(() => {
-    jasmine.addCustomEqualityTester(
-      (p1, p2) => (p1 instanceof Point && p2 instanceof Point ? p1.equals(p2) : undefined),
-    );
-  });
-
   describe('constructing new Path objects', () => {
     function buildPath(svgChars: string) {
       const numSvgCharArgsFn = (svgChar: SvgChar) => {
@@ -804,39 +798,39 @@ describe('Path', () => {
       subIdx?: number;
     }> = [
       {
-        point: new Point(5, 5),
+        point: newPoint(5, 5),
         path: 'M 0 0 L 10 10',
         proj: { subIdx: 0, cmdIdx: 1, projection: { x: 5, y: 5, d: 0, t: 0.5 } },
       },
       {
-        point: new Point(24, 12),
+        point: newPoint(24, 12),
         path: fromPathOpString('M 8 5 L 8 19 L 19 12 Z', 'SIH 0 2 S 0 1 0.5 SFSP 0 1 4 US 1 2'),
         proj: { subIdx: 0, cmdIdx: 2, projection: { x: 19, y: 12, d: 5, t: 1 } },
       },
       {
-        point: new Point(7, 16.9),
+        point: newPoint(7, 16.9),
         path: fromPathOpString('M 8 5 L 8 19 L 19 12 Z', 'S 0 1 0.5 SFSP 0 1 3'),
         proj: { subIdx: 1, cmdIdx: 1, projection: { x: 8, y: 16.9, d: 1, t: 0.7 } },
       },
       {
-        point: new Point(3, 12),
+        point: newPoint(3, 12),
         path: 'M 18 19 18 15 14 5 14 19 18 19 M 10 19 10 5 6 5 6 19 10 19',
         proj: { subIdx: 1, cmdIdx: 3, projection: { x: 6, y: 12, d: 3, t: 0.5 } },
       },
       {
-        point: new Point(3, 12),
+        point: newPoint(3, 12),
         path: 'M 18 19 18 15 14 5 14 19 18 19 M 10 19 10 5 6 5 6 19 10 19',
         proj: { subIdx: 1, cmdIdx: 3, projection: { x: 6, y: 12, d: 3, t: 0.5 } },
         subIdx: 1,
       },
       {
-        point: new Point(21, 12),
+        point: newPoint(21, 12),
         path: 'M 18 19 18 15 14 5 14 19 18 19 M 10 19 10 5 6 5 6 19 10 19',
         proj: { subIdx: 1, cmdIdx: 1, projection: { x: 10, y: 12, d: 11, t: 0.5 } },
         subIdx: 1,
       },
       {
-        point: new Point(4, 12),
+        point: newPoint(4, 12),
         path: 'M 20 22 L 4 22 L 4 2 L 6 2 L 6 14 L 8 14 L 8 2 L 10 2 L 10 14 Z',
         proj: { subIdx: 0, cmdIdx: 2, projection: { x: 4, y: 12, d: 0, t: 0.5 } },
       },
@@ -858,42 +852,37 @@ describe('Path', () => {
   // TODO: add more projection tests for split subpaths
   describe('#hitTest', () => {
     const TESTS_HIT_TEST_FILL = [
-      [new Point(5, 5), 'M4 4h2v2h-2v-2', true],
-      [new Point(5, 5), 'M4 4Q 5 4 6 4 Q6 5 6 6 Q5 6 4 6 Q4 5 4 4', true],
-      [new Point(16, 7), 'M6 19h4V5H6v14zm8-14v14h4V5h-4z', true],
-      [new Point(16, 12), 'M6 19h4V5H6v14zm8-14v14h4V5h-4z', true],
-      [new Point(16, 17), 'M6 19h4V5H6v14zm8-14v14h4V5h-4z', true],
-      [new Point(0, 0), 'M6 19h4V5H6v14zm8-14v14h4V5h-4z', false],
-      [new Point(0, 12), 'M6 19h4V5H6v14zm8-14v14h4V5h-4z', false],
-      [new Point(12, 12), 'M6 19h4V5H6v14zm8-14v14h4V5h-4z', false],
-      [new Point(12, 0), 'M6 19h4V5H6v14zm8-14v14h4V5h-4z', false],
-      [new Point(24, 24), 'M6 19h4V5H6v14zm8-14v14h4V5h-4z', false],
-      [new Point(19, 20), 'M6 19h4V5H6v14zm8-14v14h4V5h-4z', false],
-      [new Point(14, 10), fromPathOpString('M8 5L8 19L19 12L8 5', 'SIH 0 1 SFSP 0 1 3'), true],
-      [new Point(17, 6), fromPathOpString('M8 5L8 19L19 12L8 5', 'SIH 0 1 SFSP 0 1 3'), false],
-      [new Point(11, 9), fromPathOpString('M8 5L8 19L19 12L8 5', 'SIH 0 1 SFSP 0 1 3'), true],
+      [newPoint(5, 5), 'M4 4h2v2h-2v-2', true],
+      [newPoint(5, 5), 'M4 4Q 5 4 6 4 Q6 5 6 6 Q5 6 4 6 Q4 5 4 4', true],
+      [newPoint(16, 7), 'M6 19h4V5H6v14zm8-14v14h4V5h-4z', true],
+      [newPoint(16, 12), 'M6 19h4V5H6v14zm8-14v14h4V5h-4z', true],
+      [newPoint(16, 17), 'M6 19h4V5H6v14zm8-14v14h4V5h-4z', true],
+      [newPoint(0, 0), 'M6 19h4V5H6v14zm8-14v14h4V5h-4z', false],
+      [newPoint(0, 12), 'M6 19h4V5H6v14zm8-14v14h4V5h-4z', false],
+      [newPoint(12, 12), 'M6 19h4V5H6v14zm8-14v14h4V5h-4z', false],
+      [newPoint(12, 0), 'M6 19h4V5H6v14zm8-14v14h4V5h-4z', false],
+      [newPoint(24, 24), 'M6 19h4V5H6v14zm8-14v14h4V5h-4z', false],
+      [newPoint(19, 20), 'M6 19h4V5H6v14zm8-14v14h4V5h-4z', false],
+      [newPoint(14, 10), fromPathOpString('M8 5L8 19L19 12L8 5', 'SIH 0 1 SFSP 0 1 3'), true],
+      [newPoint(17, 6), fromPathOpString('M8 5L8 19L19 12L8 5', 'SIH 0 1 SFSP 0 1 3'), false],
+      [newPoint(11, 9), fromPathOpString('M8 5L8 19L19 12L8 5', 'SIH 0 1 SFSP 0 1 3'), true],
       [
-        new Point(11, 9),
+        newPoint(11, 9),
         fromPathOpString('M8 5L8 19L19 12L8 5', 'SIH 0 1 S 0 3 1 SFSP 0 1 3'),
         true,
       ],
     ];
 
     const TESTS_HIT_TEST_STROKE: [Point, string, number, boolean][] = [
+      [newPoint(4, 12), 'M 20 22 L 4 22 L 4 2 L 6 2 L 6 14 L 8 14 L 8 2 L 10 2 L 10 14 Z', 1, true],
       [
-        new Point(4, 12),
-        'M 20 22 L 4 22 L 4 2 L 6 2 L 6 14 L 8 14 L 8 2 L 10 2 L 10 14 Z',
-        1,
-        true,
-      ],
-      [
-        new Point(2, 12),
+        newPoint(2, 12),
         'M 20 22 L 4 22 L 4 2 L 6 2 L 6 14 L 8 14 L 8 2 L 10 2 L 10 14 Z',
         1,
         false,
       ],
       [
-        new Point(6, 16),
+        newPoint(6, 16),
         'M 20 22 L 4 22 L 4 2 L 6 2 L 6 14 L 8 14 L 8 2 L 10 2 L 10 14 Z',
         1,
         false,
@@ -923,7 +912,7 @@ describe('Path', () => {
   });
 
   describe('#getPointAtLength', () => {
-    const TESTS: [string, number, Point][] = [['M 0 0 L 0 100', 10, new Point(0, 10)]];
+    const TESTS: [string, number, Point][] = [['M 0 0 L 0 100', 10, newPoint(0, 10)]];
 
     TESTS.forEach(([pathStr, length, expectedPoint]) => {
       it(`point at length ${length} on path ${pathStr} yields '(${expectedPoint.x},${expectedPoint.y})`, () => {
@@ -957,4 +946,8 @@ function checkCommandsEqual(actual: ReadonlyArray<Command>, expected: ReadonlyAr
       }
     }
   }
+}
+
+function newPoint(x: number, y: number) {
+  return { x, y };
 }
