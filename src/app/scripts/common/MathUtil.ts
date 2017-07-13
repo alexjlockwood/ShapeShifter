@@ -1,7 +1,5 @@
 import { Matrix, Point } from '.';
 
-const EPSILON = 1e-8;
-
 /** Returns the floor modulus of the integer argument. */
 export function floorMod(num: number, maxNum: number) {
   return (num % maxNum + maxNum) % maxNum;
@@ -10,17 +8,6 @@ export function floorMod(num: number, maxNum: number) {
 /** Linearly interpolate between point a and point b using time t. */
 export function lerp(a: number, b: number, t: number) {
   return a + (b - a) * t;
-}
-
-/** Clamps the specified number between a min and max value. */
-export function clamp(num: number, min: number, max: number) {
-  if (num < min) {
-    return min;
-  } else if (num > max) {
-    return max;
-  } else {
-    return num;
-  }
 }
 
 /** Returns true if the points are collinear. */
@@ -33,7 +20,7 @@ export function areCollinear(...points: Point[]) {
   return points.every(({ x, y }: Point) => {
     // The points are collinear if the area of the triangle they form
     // is equal to (or in this case, close to) zero.
-    return Math.abs(a * (n - y) + m * (y - b) + x * (b - n)) < EPSILON;
+    return Math.abs(a * (n - y) + m * (y - b) + x * (b - n)) < 1e-9;
   });
 }
 
