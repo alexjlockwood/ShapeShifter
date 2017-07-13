@@ -1,7 +1,5 @@
 import { MathUtil, Point } from '.';
 
-const EPSILON = 1e-8;
-
 /**
  * An immutable Matrix class that uses the standard SVG transformation
  * matrix notation.
@@ -102,12 +100,12 @@ export class Matrix {
    */
   equals(m: Matrix) {
     return (
-      Math.abs(this.a - m.a) < EPSILON &&
-      Math.abs(this.b - m.b) < EPSILON &&
-      Math.abs(this.c - m.c) < EPSILON &&
-      Math.abs(this.d - m.d) < EPSILON &&
-      Math.abs(this.e - m.e) < EPSILON &&
-      Math.abs(this.f - m.f) < EPSILON
+      Math.abs(this.a - m.a) < 1e-9 &&
+      Math.abs(this.b - m.b) < 1e-9 &&
+      Math.abs(this.c - m.c) < 1e-9 &&
+      Math.abs(this.d - m.d) < 1e-9 &&
+      Math.abs(this.e - m.e) < 1e-9 &&
+      Math.abs(this.f - m.f) < 1e-9
     );
   }
 }
