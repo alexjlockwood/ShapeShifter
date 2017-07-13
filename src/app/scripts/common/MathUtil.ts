@@ -17,13 +17,13 @@ export function lerp(a: number | [number, number], b: number | [number, number],
 }
 
 /** Returns true if the points are collinear. */
-export function areCollinear(...points: Array<{ readonly x: number; readonly y: number }>) {
+export function areCollinear(...points: Point[]) {
   if (points.length < 3) {
     return true;
   }
   const { x: a, y: b } = points[0];
   const { x: m, y: n } = points[1];
-  return points.every(({ x, y }: Point) => {
+  return points.every(({ x, y }) => {
     // The points are collinear if the area of the triangle they form
     // is equal to (or in this case, close to) zero.
     return Math.abs(a * (n - y) + m * (y - b) + x * (b - n)) < 1e-9;
@@ -31,10 +31,7 @@ export function areCollinear(...points: Array<{ readonly x: number; readonly y: 
 }
 
 /** Applies a list of transformation matrices to the specified point. */
-export function transformPoint(
-  point: { readonly x: number; readonly y: number },
-  ...matrices: Matrix[]
-) {
+export function transformPoint(point: Point, ...matrices: Matrix[]) {
   return matrices.reduce((p: Point, m: Matrix) => {
     // [a c e]   [p.x]
     // [b d f] * [p.y]
