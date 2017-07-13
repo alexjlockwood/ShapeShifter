@@ -10,11 +10,12 @@ export function triangulate(ring: Ring, numPieces: number) {
 }
 
 function cut(ring: Ring) {
-  const vertices = ring.reduce((arr, point) => arr.concat(point.slice(0, 2)), []);
-  const cuts = earcut(vertices);
+  const cuts: ReadonlyArray<number> = earcut(
+    ring.reduce((arr, point) => [...arr, ...point], [] as number[]),
+  );
   const triangles: Triangle[] = [];
-  for (let i = 0, l = cuts.length; i < l; i += 3) {
-    // Save each triangle as segments [a, b], [b, c], [c, a]
+  for (let i = 0; i < cuts.length; i += 3) {
+    // Save each triangle as segments [a, b], [b, c], [c, a].
     triangles.push([[cuts[i], cuts[i + 1]], [cuts[i + 1], cuts[i + 2]], [cuts[i + 2], cuts[i]]]);
   }
   return triangles;
