@@ -70,7 +70,7 @@ export class FileImportService {
 
       fileReader.onload = event => {
         const text = (event.target as any).result;
-        const callbackFn = vectorLayer => {
+        const callbackFn = (vectorLayer: VectorLayer) => {
           if (!vectorLayer) {
             numErrors++;
             maybeAddVectorLayersFn();

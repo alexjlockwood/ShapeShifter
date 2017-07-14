@@ -4,9 +4,7 @@
     "outDir": "./dist/out-tsc",
     "baseUrl": "src",
     "paths": {
-      "src/*": [
-        "./src/*"
-      ]
+      "src/*": ["./src/*"]
     },
     "sourceMap": true,
     "declaration": false,
@@ -17,13 +15,7 @@
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "target": "es5",
-    "typeRoots": [
-      "node_modules/@types"
-    ],
-    "lib": [
-      "es2016",
-      "dom",
-      "es2017.object"
-    ]
+    "typeRoots": ["node_modules/@types"],
+    "lib": ["es2016", "dom", "es2017.object"]
   }
 }

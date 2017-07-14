@@ -352,7 +352,7 @@ export class LayerTimelineComponent extends DestroyableMixin()
       .parents('.slt-property')
       .get(0)
       .getBoundingClientRect();
-    const xToTimeFn = x => (x - animRect.left) / animRect.width * animation.duration;
+    const xToTimeFn = (x: number) => (x - animRect.left) / animRect.width * animation.duration;
     const downTime = xToTimeFn(mouseDownEvent.clientX);
 
     // Determine the action based on where the user clicked and the modifier keys.
@@ -465,7 +465,8 @@ export class LayerTimelineComponent extends DestroyableMixin()
     const dragBlockDownStartTime = dragBlock.startTime;
     const dragBlockDownEndTime = dragBlock.endTime;
 
-    let minStartTime, maxEndTime;
+    let minStartTime: number;
+    let maxEndTime: number;
     if (
       action === MouseActions.ScalingTogetherStart ||
       action === MouseActions.ScalingTogetherEnd
@@ -713,7 +714,7 @@ export class LayerTimelineComponent extends DestroyableMixin()
     const animation = this.animation;
     const snapTimes = this.snapTimes.get(animation.id);
     const snapDelta = SNAP_PIXELS / this.horizZoom;
-    const reducerFn = (best, snapTime) => {
+    const reducerFn = (best: number, snapTime: number) => {
       const dist = Math.abs(time - snapTime);
       return dist < snapDelta && dist < Math.abs(time - best) ? snapTime : best;
     };
@@ -851,7 +852,7 @@ export class LayerTimelineComponent extends DestroyableMixin()
 
           for (const edge of ['top', 'bottom']) {
             // Test distance to top edge.
-            const distance = Math.abs(localEventY - layerInfo.localRect[edge]);
+            const distance = Math.abs(localEventY - layerInfo.localRect[edge as 'top' | 'bottom']);
             const indent = layerInfo.localRect.left;
             if (distance <= minDistance) {
               if (distance !== minDistance || indent > minDistanceIndent) {
@@ -888,7 +889,7 @@ export class LayerTimelineComponent extends DestroyableMixin()
         const dragIndicatorInfo: DragIndicatorInfo = { isVisible: !!targetLayerInfo };
         if (targetLayerInfo) {
           dragIndicatorInfo.left = targetLayerInfo.localRect.left;
-          dragIndicatorInfo.top = targetLayerInfo.localRect[targetEdge];
+          dragIndicatorInfo.top = targetLayerInfo.localRect[targetEdge as 'top' | 'bottom'];
         }
         this.updateDragIndicator(dragIndicatorInfo);
       },
@@ -931,9 +932,7 @@ export class LayerTimelineComponent extends DestroyableMixin()
             }
           }
           if (replacementVl) {
-            setTimeout(() => {
-              this.layerTimelineService.setVectorLayer(replacementVl);
-            });
+            setTimeout(() => this.layerTimelineService.setVectorLayer(replacementVl));
           }
         }
 
