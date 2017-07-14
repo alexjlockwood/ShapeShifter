@@ -3,7 +3,6 @@ import { polygonArea } from 'd3-polygon';
 import earcut from 'earcut';
 import { feature, mergeArcs, neighbors } from 'topojson-client';
 
-import { toPathString } from './Svg';
 import { Point, Ring, Triangle } from './Types';
 
 export function triangulate(ring: Ring, numPieces: number) {
