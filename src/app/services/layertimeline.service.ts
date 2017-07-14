@@ -350,7 +350,8 @@ export class LayerTimelineService {
   }
 
   addBlocks(
-    ...blocks: Array<{
+    blocks: Array<{
+      id?: string;
       layerId: string;
       propertyName: string;
       fromValue: any;
@@ -358,18 +359,30 @@ export class LayerTimelineService {
       currentTime: number;
       duration?: number;
       interpolator?: string;
-    }>
+    }>,
+    autoSelectBlocks = true,
   ) {
+    blocks.forEach(b => {
+      if (!b.id) {
+        b.id = _.uniqueId();
+      }
+    });
     let animation = this.getAnimation();
     for (const block of blocks) {
       animation = this.addBlockToAnimation(animation, block);
     }
-    this.store.dispatch(new SetAnimation(animation));
+    this.store.dispatch(
+      new MultiAction(
+        new SetAnimation(animation),
+        new SetSelectedBlocks(new Set(blocks.map(b => b.id))),
+      ),
+    );
   }
 
   private addBlockToAnimation(
     animation: Animation,
     block: {
+      id?: string;
       layerId: string;
       propertyName: string;
       fromValue: any;
@@ -441,6 +454,7 @@ export class LayerTimelineService {
     //     .getLayerPropertyValue(layer.id, propertyName);
 
     const newBlock = AnimationBlock.from({
+      id: block.id ? block.id : undefined,
       layerId: layer.id,
       propertyName,
       startTime,

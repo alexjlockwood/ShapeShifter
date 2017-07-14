@@ -98,7 +98,6 @@ export class LayerListTreeComponent implements OnInit, Callbacks {
 
   // @Override Callbacks
   onAddTimelineBlockClick(event: MouseEvent, layer: Layer, propertyName: string) {
-    event.stopPropagation();
     if (!this.actionModeService.isActionMode()) {
       this.addTimelineBlockClick.emit({ event, layer, propertyName });
     }

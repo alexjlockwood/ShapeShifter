@@ -81,7 +81,7 @@ export class ClipboardService {
         if (parsed.blocks) {
           ga('send', 'event', 'paste', 'json.blocks');
           this.layerTimelineService.addBlocks(
-            ...parsed.blocks.map(b => {
+            parsed.blocks.map(b => {
               const block = AnimationBlock.from(b);
               const {
                 layerId,
@@ -103,6 +103,7 @@ export class ClipboardService {
                 interpolator,
               };
             }),
+            false,
           );
         } else {
           ga('send', 'event', 'paste', 'json.unknown');
