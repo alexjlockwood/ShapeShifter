@@ -740,13 +740,15 @@ export class LayerTimelineComponent extends DestroyableMixin()
     const clonedValue = layer.inspectableProperties
       .get(propertyName)
       .cloneValue(layer[propertyName]);
-    this.layerTimelineService.addBlocks({
-      layerId: layer.id,
-      propertyName,
-      fromValue: clonedValue,
-      toValue: clonedValue,
-      currentTime: this.currentTime,
-    });
+    this.layerTimelineService.addBlocks([
+      {
+        layerId: layer.id,
+        propertyName,
+        fromValue: clonedValue,
+        toValue: clonedValue,
+        currentTime: this.currentTime,
+      },
+    ]);
   }
 
   // @Override LayerListTreeComponentCallbacks
