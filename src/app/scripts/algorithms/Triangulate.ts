@@ -3,6 +3,7 @@ import { polygonArea } from 'd3-polygon';
 import earcut from 'earcut';
 import { feature, mergeArcs, neighbors } from 'topojson-client';
 
+import { toPathString } from './Svg';
 import { Point, Ring, Triangle } from './Types';
 
 export function triangulate(ring: Ring, numPieces: number) {
@@ -18,6 +19,17 @@ function cut(ring: Ring) {
     // Save each triangle as segments [a, b], [b, c], [c, a].
     triangles.push([[cuts[i], cuts[i + 1]], [cuts[i + 1], cuts[i + 2]], [cuts[i + 2], cuts[i]]]);
   }
+  const tris: Ring[] = [];
+  for (let i = 0; i < cuts.length; i += 3) {
+    const c1 = cuts[i];
+    const c2 = cuts[i + 1];
+    const c3 = cuts[i + 2];
+    tris.push([ring[c1], ring[c2], ring[c3]]);
+  }
+
+  // console.info(toPathString(ring));
+  // console.info(tris.map(t => toPathString(t)).join(' '));
+
   return triangles;
 }
 

@@ -62,7 +62,7 @@ function approximateRing(parsed: Path, maxSegmentLength: number) {
   }
 
   for (let i = 0; i < numPoints; i++) {
-    const p = m.getPointAtLength(len * i / numPoints);
+    const p = m.getPointAtLength(len * (i / numPoints));
     ring.push([p.x, p.y]);
   }
 

@@ -37,7 +37,7 @@ export class BezierCalculator implements Calculator {
   }
 
   getPointAtLength(distance: number) {
-    return this.bezierJs.get(this.findTimeByDistance(distance)) as Point;
+    return this.bezierJs.get(this.findTimeByDistance(distance / this.getPathLength())) as Point;
   }
 
   getPathLength() {
@@ -90,6 +90,9 @@ export class BezierCalculator implements Calculator {
   }
 
   findTimeByDistance(distance: number): number {
+    if (distance < 0 || distance > 1) {
+      console.warn('distance must be a number between 0 and 1.');
+    }
     if (distance === 0 || distance === 1) {
       return distance;
     }
