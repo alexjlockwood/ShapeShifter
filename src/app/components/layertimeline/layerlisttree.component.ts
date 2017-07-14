@@ -114,11 +114,11 @@ export class LayerListTreeComponent implements OnInit, Callbacks {
 }
 
 export interface Callbacks {
-  onLayerClick(event: MouseEvent, layer: Layer);
-  onLayerMouseDown(event: MouseEvent, layer: Layer);
-  onLayerToggleExpanded(event: MouseEvent, layer: Layer);
-  onLayerToggleVisibility(event: MouseEvent, layer: Layer);
-  onAddTimelineBlockClick(event: MouseEvent, layer: Layer, propertyName: string);
+  onLayerClick(event: MouseEvent, layer: Layer): void;
+  onLayerMouseDown(event: MouseEvent, layer: Layer): void;
+  onLayerToggleExpanded(event: MouseEvent, layer: Layer): void;
+  onLayerToggleVisibility(event: MouseEvent, layer: Layer): void;
+  onAddTimelineBlockClick(event: MouseEvent, layer: Layer, propertyName: string): void;
 }
 
 // tslint:disable: no-unused-variable

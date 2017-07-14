@@ -58,6 +58,6 @@ export interface CanvasLayoutMixin {
   readonly attrScale: number;
   getViewport(): Size;
   getBounds(): Size;
-  setDimensions(bounds: Size, viewport: Size);
-  onDimensionsChanged(bounds: Size, viewport: Size);
+  setDimensions(bounds: Size, viewport: Size): void;
+  onDimensionsChanged(bounds: Size, viewport: Size): void;
 }

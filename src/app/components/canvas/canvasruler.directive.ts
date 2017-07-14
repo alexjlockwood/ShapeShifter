@@ -79,7 +79,7 @@ export class CanvasRulerDirective extends CanvasLayoutMixin() {
 
     const spacingRulerPx = spacingArtPx * zoom;
 
-    const roundFn = n => _.round(n, 8);
+    const roundFn = (n: number) => _.round(n, 8);
 
     // Text labels.
     ctx.fillStyle = this.themeService.getDisabledTextColor();

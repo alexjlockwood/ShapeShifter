@@ -90,7 +90,7 @@ export class PathState {
       readonly splitIdx: number;
       readonly projection: Projection;
     }
-    const minProjectionResultInfo = _(this.subPaths)
+    const minProjectionResultInfo = _(this.subPaths as SubPath[])
       .map((subPath, subIdx) => ({ subPath, subIdx }))
       .filter(
         ({ subPath, subIdx }) =>
@@ -138,7 +138,7 @@ export class PathState {
 
     if (opts.isPointInRangeFn) {
       endPointHits.push(
-        ..._(this.subPaths)
+        ..._(this.subPaths as SubPath[])
           .map((subPath, subIdx) => ({ subPath, subIdx }))
           .filter(obj => {
             const { subPath, subIdx } = obj;
@@ -168,7 +168,7 @@ export class PathState {
       // TODO: also check to see if the hit occurred at a stroke-linejoin vertex
       // TODO: take stroke width scaling into account as well?
       segmentHits.push(
-        ..._(this.subPaths)
+        ..._(this.subPaths as SubPath[])
           .map((subPath, subIdx) => ({ subPath, subIdx }))
           .filter(obj => {
             const { subPath, subIdx } = obj;
@@ -203,7 +203,7 @@ export class PathState {
 
     if (opts.findShapesInRange) {
       shapeHits.push(
-        ..._(this.subPaths)
+        ..._(this.subPaths as SubPath[])
           .map((subPath, subIdx) => ({ subPath, subIdx }))
           .filter(obj => {
             const { subPath, subIdx } = obj;

@@ -424,14 +424,14 @@ export class PathMutator {
     const parent = this.findSubPathStateParent(subIdx);
 
     // Find the backing IDs for each parent command state that is a split segment.
-    const parentSplitBackingIds = _(parent ? parent.getCommandStates() : [])
+    const parentSplitBackingIds = _((parent ? parent.getCommandStates() : []) as CommandState[])
       .filter(cs => !!cs.getSplitSegmentId())
       .map(cs => cs.getBackingId())
       .value();
 
     // Find the backing IDs for each sibling command state that is a split segment,
     // not including split segments that were inherited from the parent.
-    const siblingSplitBackingIds = _(targetSps.getCommandStates())
+    const siblingSplitBackingIds = _(targetSps.getCommandStates() as CommandState[])
       .filter(cs => !!cs.getSplitSegmentId() && !parentSplitBackingIds.includes(cs.getBackingId()))
       .map(cs => cs.getBackingId())
       .value();
@@ -469,14 +469,16 @@ export class PathMutator {
     LOG('deleteFilledSubPath', subIdx);
     const targetCss = this.findSubPathStateLeaf(subIdx).getCommandStates();
     // Get the list of parent split segment IDs.
-    const parentSplitSegIds = _(this.findSubPathStateParent(subIdx).getCommandStates())
+    const parentSplitSegIds = _(
+      this.findSubPathStateParent(subIdx).getCommandStates() as CommandState[],
+    )
       .map(cs => cs.getSplitSegmentId())
       .compact()
       .uniq()
       .value();
     // Get the list of sibling split segment IDs, not including split segment
     // IDs inherited from the parent.
-    const siblingSplitSegIds = _(targetCss)
+    const siblingSplitSegIds = _(targetCss as CommandState[])
       .map(cs => cs.getSplitSegmentId())
       .compact()
       .uniq()
@@ -862,7 +864,7 @@ export class PathMutator {
    * Finds the first node in the tree that contains the specified split segment ID.
    */
   private findSplitSegmentParentNode(splitSegId: string): SubPathState {
-    return (function recurseFn(...states: SubPathState[]) {
+    return (function recurseFn(...states: SubPathState[]): SubPathState {
       for (const state of states) {
         for (const sps of state.getSplitSubPaths()) {
           if (sps.getCommandStates().some(cs => cs.getSplitSegmentId() === splitSegId)) {

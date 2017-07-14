@@ -87,9 +87,9 @@ export class TimelineAnimationRowComponent implements OnInit, Callbacks {
 }
 
 export interface Callbacks {
-  onTimelineBlockMouseDown(event: MouseEvent, block: AnimationBlock);
-  onTimelineBlockClick(event: MouseEvent, block: AnimationBlock);
-  onTimelineBlockDoubleClick(event: MouseEvent, block: AnimationBlock);
+  onTimelineBlockMouseDown(event: MouseEvent, block: AnimationBlock): void;
+  onTimelineBlockClick(event: MouseEvent, block: AnimationBlock): void;
+  onTimelineBlockDoubleClick(event: MouseEvent, block: AnimationBlock): void;
 }
 
 // tslint:disable: no-unused-variable
