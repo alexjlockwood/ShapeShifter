@@ -134,7 +134,7 @@ export class RootComponent extends DestroyableMixin() implements OnInit, AfterVi
 
   ngAfterViewInit() {
     this.$displayContainer = $(this.displayContainerRef.nativeElement);
-    ELEMENT_RESIZE_DETECTOR.listenTo(this.$displayContainer.get(0), el => {
+    ELEMENT_RESIZE_DETECTOR.listenTo(this.$displayContainer.get(0), () => {
       const w = this.$displayContainer.width();
       const h = this.$displayContainer.height();
       this.displayBoundsSubject.next({ w, h });
