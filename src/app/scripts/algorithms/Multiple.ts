@@ -1,9 +1,11 @@
 import { MathUtil } from 'app/scripts/common';
 import { polygonLength } from 'd3-polygon';
 import { polygonCentroid } from 'd3-polygon';
+import { polygonArea } from 'd3-polygon';
+import * as _ from 'lodash';
 
-import { normalizeRing } from './Normalize';
 import { toPathString } from './Svg';
+import { pathStringToRing } from './Svg';
 import { triangulate } from './Triangulate';
 import { Point, Ring } from './Types';
 
@@ -96,7 +98,7 @@ function interpolateSets(
   return interpolators;
 }
 
-export function pieceOrder(start: ReadonlyArray<Ring>, end: ReadonlyArray<Ring>) {
+function pieceOrder(start: ReadonlyArray<Ring>, end: ReadonlyArray<Ring>) {
   const squaredDistanceFn = (p1: Ring, p2: Ring) =>
     MathUtil.distance(polygonCentroid(p1), polygonCentroid(p2)) ** 2;
   return start.length > 8
@@ -189,4 +191,36 @@ function interpolatePoints(a: ReadonlyArray<Point>, b: ReadonlyArray<Point>, str
 
 function interpolatePoint(a: Point, b: Point) {
   return (t: number) => a.map((d, i) => d + t * (b[i] - d)) as Point;
+}
+
+function normalizeRing(pathStr: string, maxSegmentLength: number) {
+  const { ring, skipBisect } = pathStringToRing(pathStr, maxSegmentLength);
+  const points = [...ring];
+  const samePointFn = (a: Point, b: Point) => MathUtil.distance(a, b) < 1e-9;
+  if (points.length > 1 && samePointFn(points[0], points[points.length - 1])) {
+    points.pop();
+  }
+  if (points.length < 3) {
+    throw new TypeError('Polygons must have at least three points');
+  }
+  const area = polygonArea(points);
+  if (area > 0) {
+    // Make all rings clockwise.
+    points.reverse();
+  }
+  if (!skipBisect && maxSegmentLength && _.isFinite(maxSegmentLength) && maxSegmentLength > 0) {
+    bisect(points, maxSegmentLength);
+  }
+  return points;
+}
+
+function bisect(ring: Ring, maxSegmentLength = Infinity) {
+  for (let i = 0; i < ring.length; i++) {
+    const a = ring[i];
+    let b = i === ring.length - 1 ? ring[0] : ring[i + 1];
+    while (MathUtil.distance(a, b) > maxSegmentLength) {
+      b = MathUtil.lerp(a, b, 0.5);
+      ring.splice(i + 1, 0, b);
+    }
+  }
 }
