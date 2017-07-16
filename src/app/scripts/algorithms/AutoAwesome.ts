@@ -3,6 +3,7 @@ import { MathUtil, Point } from 'app/scripts/common';
 import * as _ from 'lodash';
 
 import { separate } from './Multiple';
+import { Alignment, MATCH, MISMATCH, align } from './NeedlemanWunsch';
 
 type ReadonlyTable<T> = ReadonlyArray<ReadonlyArray<T>>;
 
@@ -22,11 +23,6 @@ type ReadonlyTable<T> = ReadonlyArray<ReadonlyArray<T>>;
 // - Voronoi topology: https://goo.gl/VNM7Tb
 // - Smoother polygon transitions: https://goo.gl/5njTsf
 // - Redistricting: https://goo.gl/sMkYEM
-
-// Needleman-Wunsch scoring function constants.
-const MATCH = 1;
-const MISMATCH = -1;
-const INDEL = 0;
 
 export function fix(fromPath: Path, toPath: Path) {
   const interpolator = separate(
@@ -73,7 +69,7 @@ function autoFixSubPath(subIdx: number, from: Path, to: Path) {
     p => {
       const paths = [p];
       if (p.getSubPath(subIdx).isClosed()) {
-        for (let i = 1; i < p.getSubPaths()[subIdx].getCommands().length - 1; i++) {
+        for (let i = 1; i < p.getSubPath(subIdx).getCommands().length - 1; i++) {
           paths.push(p.mutate().shiftSubPathBack(subIdx, i).build());
         }
       }
@@ -98,12 +94,9 @@ function autoFixSubPath(subIdx: number, from: Path, to: Path) {
       return MISMATCH;
     }
     const { x, y } = a.getEnd();
-    // TODO: experiment with this... need to test this more
-    // const start = new Point(x + centerOffset.x, y + centerOffset.y);
     const start = { x, y };
     const end = b.getEnd();
-    const distance = Math.max(MATCH, MathUtil.distance(start, end));
-    return 1 / distance;
+    return 1 / Math.max(MATCH, MathUtil.distance(start, end));
   };
 
   const alignmentInfos = fromPaths.map(generatedFromPath => {
@@ -209,76 +202,4 @@ export function autoConvert(subIdx: number, from: Path, to: Path) {
     }
   });
   return { from: fromMutator.build(), to: toMutator.build() };
-}
-
-/** Represents either a valid object or an empty gap slot. */
-interface Alignment<T> {
-  obj?: T;
-}
-
-/**
- * Aligns two sequences of objects using the Needleman-Wunsch algorithm.
- */
-function align<T>(
-  from: ReadonlyArray<T>,
-  to: ReadonlyArray<T>,
-  scoringFn: (t1: T, t2: T) => number,
-) {
-  const listA: Alignment<T>[] = from.map(obj => ({ obj }));
-  const listB: Alignment<T>[] = to.map(obj => ({ obj }));
-  const alignedListA: Alignment<T>[] = [];
-  const alignedListB: Alignment<T>[] = [];
-
-  // Add dummy nodes at the first position of each list.
-  listA.unshift(undefined);
-  listB.unshift(undefined);
-
-  let i: number, j: number;
-
-  // Initialize the scoring matrix.
-  const matrix: number[][] = [];
-  for (i = 0; i < listA.length; i++) {
-    const row = [];
-    for (j = 0; j < listB.length; j++) {
-      row.push(i === 0 ? -j : j === 0 ? -i : 0);
-    }
-    matrix.push(row);
-  }
-
-  // Process the scoring matrix.
-  for (i = 1; i < listA.length; i++) {
-    for (j = 1; j < listB.length; j++) {
-      const match = matrix[i - 1][j - 1] + scoringFn(listA[i].obj, listB[j].obj);
-      const ins = matrix[i][j - 1] + INDEL;
-      const del = matrix[i - 1][j] + INDEL;
-      matrix[i][j] = Math.max(match, ins, del);
-    }
-  }
-
-  // Backtracking.
-  i = listA.length - 1;
-  j = listB.length - 1;
-
-  while (i > 0 || j > 0) {
-    if (
-      i > 0 &&
-      j > 0 &&
-      matrix[i][j] === matrix[i - 1][j - 1] + scoringFn(listA[i].obj, listB[j].obj)
-    ) {
-      alignedListA.unshift(listA[i--]);
-      alignedListB.unshift(listB[j--]);
-    } else if (i > 0 && matrix[i][j] === matrix[i - 1][j] + INDEL) {
-      alignedListA.unshift(listA[i--]);
-      alignedListB.unshift({});
-    } else {
-      alignedListA.unshift({});
-      alignedListB.unshift(listB[j--]);
-    }
-  }
-
-  return {
-    from: alignedListA as ReadonlyArray<Alignment<T>>,
-    to: alignedListB as ReadonlyArray<Alignment<T>>,
-    score: _.last(_.last(matrix)),
-  };
 }
