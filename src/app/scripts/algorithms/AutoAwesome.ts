@@ -2,7 +2,7 @@ import { Command, Path, PathUtil } from 'app/model/paths';
 import { MathUtil, Point } from 'app/scripts/common';
 import * as _ from 'lodash';
 
-import { separate } from './Multiple';
+import { separate } from './AutoMorph';
 import { Alignment, MATCH, MISMATCH, align } from './NeedlemanWunsch';
 
 // POSSIBLE IMPROVEMENTS
@@ -25,7 +25,7 @@ import { Alignment, MATCH, MISMATCH, align } from './NeedlemanWunsch';
 export function fix(fromPath: Path, toPath: Path) {
   const interpolator = separate(
     fromPath.getPathString(),
-    toPath.getSubPaths().map(s => new Path(s.getCommands().slice()).getPathString()),
+    toPath.getSubPaths().map(s => new Path([...s.getCommands()]).getPathString()),
     { single: true },
   ) as (t: number) => string;
   return { from: new Path(interpolator(0)), to: new Path(interpolator(1)) };
@@ -68,6 +68,7 @@ function autoFixSubPath(subIdx: number, from: Path, to: Path) {
       const paths = [p];
       if (p.getSubPath(subIdx).isClosed()) {
         for (let i = 1; i < p.getSubPath(subIdx).getCommands().length - 1; i++) {
+          // TODO: we need to find a way to reduce the number of paths to try.
           paths.push(p.mutate().shiftSubPathBack(subIdx, i).build());
         }
       }
@@ -98,9 +99,12 @@ function autoFixSubPath(subIdx: number, from: Path, to: Path) {
   };
 
   const alignmentInfos = fromPaths.map(generatedFromPath => {
-    const fromCmds = generatedFromPath.getSubPaths()[subIdx].getCommands();
-    const toCmds = to.getSubPaths()[subIdx].getCommands();
-    return { generatedFromPath, alignment: align(fromCmds, toCmds, getScoreFn) };
+    const fromCmds = generatedFromPath.getSubPath(subIdx).getCommands();
+    const toCmds = to.getSubPath(subIdx).getCommands();
+    return {
+      generatedFromPath,
+      alignment: align(fromCmds, toCmds, getScoreFn),
+    };
   });
 
   // Find the alignment with the highest score.

@@ -1,9 +1,9 @@
 import { MathUtil } from 'app/scripts/common';
 import { polygonLength } from 'd3-polygon';
-import { polygonCentroid } from 'd3-polygon';
 import { polygonArea } from 'd3-polygon';
 import * as _ from 'lodash';
 
+import { findBestSubPathMapping } from './Shapes';
 import { toPathString } from './Svg';
 import { pathStringToRing } from './Svg';
 import { triangulate } from './Triangulate';
@@ -71,7 +71,7 @@ function interpolateSets(
   toRings: ReadonlyArray<Ring>,
   { string, single, t0, t1, match }: InterpolateOptions,
 ) {
-  const order = match ? pieceOrder(fromRings, toRings) : fromRings.map((d, i) => i);
+  const order = match ? findBestSubPathMapping(fromRings, toRings) : fromRings.map((d, i) => i);
   const interpolators = order.map((d, i) => interpolateRing(fromRings[d], toRings[i], string));
   if (match && Array.isArray(t0)) {
     t0 = order.map(d => t0[d]);
@@ -96,41 +96,6 @@ function interpolateSets(
     return interpolators.map((fn, i) => (t0[i] || t1[i] ? (t: number) => fn(t) as string : fn));
   }
   return interpolators;
-}
-
-function pieceOrder(start: ReadonlyArray<Ring>, end: ReadonlyArray<Ring>) {
-  const squaredDistanceFn = (p1: Ring, p2: Ring) =>
-    MathUtil.distance(polygonCentroid(p1), polygonCentroid(p2)) ** 2;
-  return start.length > 8
-    ? start.map((d, i) => i)
-    : bestOrder(start, end, start.map(p1 => end.map(p2 => squaredDistanceFn(p1, p2))));
-}
-
-function bestOrder(
-  start: ReadonlyArray<Ring>,
-  end: ReadonlyArray<Ring>,
-  distances: ReadonlyTable<number>,
-) {
-  let min = Infinity;
-  let best = start.map((d, i) => i);
-  (function permute(arr: number[], order: ReadonlyArray<number> = [], sum = 0) {
-    for (let i = 0; i < arr.length; i++) {
-      const cur = arr.splice(i, 1);
-      const dist = distances[cur[0]][order.length];
-      if (sum + dist < min) {
-        if (arr.length) {
-          permute([...arr], [...order, ...cur], sum + dist);
-        } else {
-          min = sum + dist;
-          best = [...order, ...cur];
-        }
-      }
-      if (arr.length) {
-        arr.splice(i, 0, cur[0]);
-      }
-    }
-  })(best);
-  return best as ReadonlyArray<number>;
 }
 
 function interpolateRing(fromRing: Ring, toRing: Ring, string: boolean) {
@@ -176,7 +141,7 @@ function addPoints(ring: Ring, numPoints: number) {
 function rotate(ring: Ring, vs: Ring) {
   const len = ring.length;
   let min = Infinity;
-  let bestOffset: number;
+  let bestOffset = 0;
   let spliced: Point[];
   for (let offset = 0; offset < len; offset++) {
     let sumOfSquares = 0;
