@@ -5,8 +5,6 @@ import * as _ from 'lodash';
 import { separate } from './Multiple';
 import { Alignment, MATCH, MISMATCH, align } from './NeedlemanWunsch';
 
-type ReadonlyTable<T> = ReadonlyArray<ReadonlyArray<T>>;
-
 // POSSIBLE IMPROVEMENTS
 //
 // - Add additional points to both shapes first such that every segment longer than

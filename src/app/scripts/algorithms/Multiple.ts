@@ -109,7 +109,7 @@ function pieceOrder(start: ReadonlyArray<Ring>, end: ReadonlyArray<Ring>) {
 function bestOrder(
   start: ReadonlyArray<Ring>,
   end: ReadonlyArray<Ring>,
-  distances: ReadonlyArray<ReadonlyArray<number>>,
+  distances: ReadonlyTable<number>,
 ) {
   let min = Infinity;
   let best = start.map((d, i) => i);
@@ -135,13 +135,24 @@ function bestOrder(
 
 function interpolateRing(fromRing: Ring, toRing: Ring, string: boolean) {
   const diff = fromRing.length - toRing.length;
+  // TODO: this could be more efficient if we added and split segments in the same step
   addPoints(fromRing, diff < 0 ? diff * -1 : 0);
   addPoints(toRing, diff > 0 ? diff : 0);
   rotate(fromRing, toRing);
-  return interpolatePoints(fromRing, toRing, string);
+  const interpolators = fromRing.map((fromPoint, index) => {
+    const toPoint = toRing[index];
+    return (t: number) => fromPoint.map((d, i) => d + t * (toPoint[i] - d)) as Point;
+  });
+  return (t: number) => {
+    const values = interpolators.map(fn => fn(t));
+    return string ? toPathString(values) : values;
+  };
 }
 
-function addPoints(ring: Ring, numPoints: number, maxLength = Infinity) {
+/**
+ * Adds the specified number of dummy points to the provided ring.
+ */
+function addPoints(ring: Ring, numPoints: number) {
   const desiredLength = ring.length + numPoints;
   const step = polygonLength(ring) / numPoints;
   let i = 0;
@@ -181,20 +192,8 @@ function rotate(ring: Ring, vs: Ring) {
   }
 }
 
-function interpolatePoints(a: ReadonlyArray<Point>, b: ReadonlyArray<Point>, string: boolean) {
-  const interpolators = a.map((d, i) => interpolatePoint(d, b[i]));
-  return (t: number) => {
-    const values = interpolators.map(fn => fn(t));
-    return string ? toPathString(values) : values;
-  };
-}
-
-function interpolatePoint(a: Point, b: Point) {
-  return (t: number) => a.map((d, i) => d + t * (b[i] - d)) as Point;
-}
-
 function normalizeRing(pathStr: string, maxSegmentLength: number) {
-  const { ring, skipBisect } = pathStringToRing(pathStr, maxSegmentLength);
+  const { ring, skipSplit } = pathStringToRing(pathStr, maxSegmentLength);
   const points = [...ring];
   const samePointFn = (a: Point, b: Point) => MathUtil.distance(a, b) < 1e-9;
   if (points.length > 1 && samePointFn(points[0], points[points.length - 1])) {
@@ -208,13 +207,16 @@ function normalizeRing(pathStr: string, maxSegmentLength: number) {
     // Make all rings clockwise.
     points.reverse();
   }
-  if (!skipBisect && maxSegmentLength && _.isFinite(maxSegmentLength) && maxSegmentLength > 0) {
-    bisect(points, maxSegmentLength);
+  if (!skipSplit && maxSegmentLength && _.isFinite(maxSegmentLength) && maxSegmentLength > 0) {
+    splitRing(points, maxSegmentLength);
   }
   return points;
 }
 
-function bisect(ring: Ring, maxSegmentLength = Infinity) {
+/**
+ * Iterates through a ring, splitting any segment that exceeds maxSegmentLength.
+ */
+function splitRing(ring: Ring, maxSegmentLength = Infinity) {
   for (let i = 0; i < ring.length; i++) {
     const a = ring[i];
     let b = i === ring.length - 1 ? ring[0] : ring[i + 1];

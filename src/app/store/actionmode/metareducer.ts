@@ -62,7 +62,7 @@ export function metaReducer(reducer: ActionReducer<AppState>): ActionReducer<App
 
       // Auto fix the currently active paths.
       case actions.AUTO_FIX_CLICK: {
-        const { from, to } = AutoAwesome.fix(
+        const { from, to } = AutoAwesome.autoFix(
           getActivePath(state, ActionSource.From),
           getActivePath(state, ActionSource.To),
         );
