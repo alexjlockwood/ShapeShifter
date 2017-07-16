@@ -1,4 +1,4 @@
-export function serializeToString(node: Node, options): string {
+export function serializeToString(node, options): string {
   options = options || {};
   options.rootNode = true;
   return removeInvalidCharacters(nodeTreeToXHTML(node, options));
