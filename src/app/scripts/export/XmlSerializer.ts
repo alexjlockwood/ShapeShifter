@@ -19,10 +19,7 @@ function serializeAttributeValue(value: string) {
 }
 
 function serializeTextContent(content: string) {
-  return content
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
+  return content.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 function serializeAttribute(attr) {
@@ -30,7 +27,7 @@ function serializeAttribute(attr) {
   return attr.name + '="' + serializeAttributeValue(value) + '"';
 }
 
-function getTagName(node) {
+function getTagName(node: Element) {
   let tagName = node.tagName;
 
   // Aid in serializing of original HTML documents.
@@ -41,25 +38,33 @@ function getTagName(node) {
 }
 
 function serializeNamespace(node, options) {
-  const nodeHasXmlnsAttr = Array.prototype.map.call(node.attributes || node.attrs, function (attr) {
-    return attr.name;
-  }).indexOf('xmlns') >= 0;
+  const nodeHasXmlnsAttr =
+    Array.prototype.map
+      .call(node.attributes || node.attrs, attr => {
+        return attr.name;
+      })
+      .indexOf('xmlns') >= 0;
 
   // Serialize the namespace as an xmlns attribute whenever the element
   // doesn't already have one and the inherited namespace does not match
   // the element's namespace.
-  if (!nodeHasXmlnsAttr && node.namespaceURI &&
-    (options.isRootNode/* ||
-         node.namespaceURI !== node.parentNode.namespaceURI*/)) {
+  if (
+    !nodeHasXmlnsAttr &&
+    node.namespaceURI &&
+    options.isRootNode /* ||
+         node.namespaceURI !== node.parentNode.namespaceURI*/
+  ) {
     return ' xmlns="' + node.namespaceURI + '"';
   }
   return '';
 }
 
-function serializeChildren(node, options) {
-  return Array.prototype.map.call(node.childNodes, function (childNode) {
-    return nodeTreeToXHTML(childNode, options);
-  }).join('');
+function serializeChildren(node: Element, options) {
+  return Array.prototype.map
+    .call(node.childNodes, childNode => {
+      return nodeTreeToXHTML(childNode, options);
+    })
+    .join('');
 }
 
 function serializeTag(node, options) {
@@ -71,10 +76,12 @@ function serializeTag(node, options) {
   output += serializeNamespace(node, options.isRootNode);
 
   const attributes = node.attributes || node.attrs;
-  Array.prototype.forEach.call(attributes, function (attr) {
+  Array.prototype.forEach.call(attributes, attr => {
     if (options.multiAttributeIndent && attributes.length > 1) {
       output += '\n';
-      output += Array((options._indentLevel || 0) * options.indent + options.multiAttributeIndent + 1).join(' ');
+      output += Array(
+        (options._indentLevel || 0) * options.indent + options.multiAttributeIndent + 1,
+      ).join(' ');
     } else {
       output += ' ';
     }
@@ -109,19 +116,15 @@ function serializeText(node) {
 }
 
 function serializeComment(node) {
-  return '<!--' +
-    node.data
-      .replace(/-/g, '&#45;') +
-    '-->';
+  return '<!--' + node.data.replace(/-/g, '&#45;') + '-->';
 }
 
-function serializeCDATA(node) {
+function serializeCDATA(node: Element) {
   return '<![CDATA[' + node.nodeValue + ']]>';
 }
 
-function nodeTreeToXHTML(node, options) {
-  if (node.nodeName === '#document' ||
-    node.nodeName === '#document-fragment') {
+function nodeTreeToXHTML(node: Element, options) {
+  if (node.nodeName === '#document' || node.nodeName === '#document-fragment') {
     return serializeChildren(node, options);
   } else {
     if (node.tagName) {

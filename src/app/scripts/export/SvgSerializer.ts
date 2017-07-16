@@ -134,7 +134,7 @@ function vectorLayerToSvgNode(
 
   walk(
     vl,
-    (layer, parentNode) => {
+    (layer: VectorLayer | GroupLayer | PathLayer, parentNode: Node) => {
       if (layer instanceof VectorLayer) {
         if (withIdsAndNS) {
           conditionalAttr(destinationNode, 'id', vl.name, '');
@@ -238,14 +238,20 @@ function vectorLayerToSvgNode(
         parentNode.appendChild(nodeToAttachToParent);
         return node;
       }
+      return undefined;
     },
     destinationNode,
   );
 }
 
-function conditionalAttr(node: HTMLElement, attr, value, skipValue?) {
+function conditionalAttr(
+  node: HTMLElement,
+  attr: string,
+  value: string | number,
+  skipValue?: string | number,
+) {
   if (!_.isNil(value) && (skipValue === undefined || value !== skipValue)) {
-    node.setAttributeNS(undefined, attr, value);
+    node.setAttributeNS(undefined, attr, value.toString());
   }
 }
 
@@ -253,8 +259,8 @@ function serializeXmlNode(xmlNode: HTMLElement) {
   return XmlSerializer.serializeToString(xmlNode, { indent: 4, multiAttributeIndent: 4 });
 }
 
-function walk(layer: VectorLayer, fn, context) {
-  const visitFn = (l: Layer, ctx) => {
+function walk(layer: VectorLayer, fn: (layer: Layer, ctx: Node) => Node, context: Node) {
+  const visitFn = (l: Layer, ctx: Node) => {
     const childCtx = fn(l, ctx);
     if (l.children) {
       l.children.forEach(child => visitFn(child, childCtx));

@@ -374,7 +374,9 @@ export class LayerTimelineService {
     this.store.dispatch(
       new MultiAction(
         new SetAnimation(animation),
+        new SelectAnimation(false),
         new SetSelectedBlocks(new Set(blocks.map(b => b.id))),
+        new SetSelectedLayers(new Set()),
       ),
     );
   }
