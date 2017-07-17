@@ -167,7 +167,7 @@ export function addLayerToTree(
       // If we have reached the added layer's parent, then
       // clone the parent, insert the new layer into its list
       // of children, and return the new parent node.
-      const children = curr.children.slice();
+      const children = [...curr.children];
       children.splice(childIndex, 0, addedLayer);
       return setLayerChildren(curr, children);
     }
@@ -176,7 +176,7 @@ export function addLayerToTree(
       if (clonedChild) {
         // Then clone the current layer, insert the cloned child
         // into its list of children, and return the cloned current layer.
-        const children = curr.children.slice();
+        const children = [...curr.children];
         children[i] = clonedChild;
         return setLayerChildren(curr, children);
       }

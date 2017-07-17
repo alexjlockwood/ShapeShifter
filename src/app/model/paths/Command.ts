@@ -102,7 +102,7 @@ export class Command {
   mutate() {
     return new CommandBuilder(
       this.svgChar,
-      this.points.slice(),
+      [...this.points],
       this.isSplitPoint(),
       this.id,
       this.isSplitSegment_,

@@ -118,7 +118,7 @@ export class CommandState {
       console.warn('Merging command states out of order', this, cs);
     }
     return this.mutate()
-      .setMutations(cs.mutations.slice(0, cs.mutations.length - 1).concat(this.mutations.slice()))
+      .setMutations([...cs.mutations.slice(0, cs.mutations.length - 1), ...this.mutations])
       .setMinT(cs.minT)
       .build();
   }
@@ -141,8 +141,8 @@ export class CommandState {
   mutate() {
     return new CommandStateMutator(
       this.backingCommand,
-      this.mutations.slice(),
-      this.transforms.slice(),
+      [...this.mutations],
+      [...this.transforms],
       this.calculator,
       this.minT,
       this.maxT,
@@ -194,7 +194,7 @@ class CommandStateMutator {
   }
 
   setMutations(mutations: ReadonlyArray<Mutation>) {
-    this.mutations = mutations.slice();
+    this.mutations = [...mutations];
     return this;
   }
 

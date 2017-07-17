@@ -175,7 +175,7 @@ export class SubPathBuilder {
 
   build() {
     return new SubPath(
-      this.commands.slice(),
+      [...this.commands],
       this.id,
       this.isCollapsing,
       this.isReversed,

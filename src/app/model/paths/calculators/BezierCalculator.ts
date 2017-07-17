@@ -129,7 +129,7 @@ export class BezierCalculator implements Calculator {
   }
 
   toCommand() {
-    return new CommandBuilder(this.svgChar, this.points.slice()).setId(this.id).build();
+    return new CommandBuilder(this.svgChar, [...this.points]).setId(this.id).build();
   }
 
   getBoundingBox() {

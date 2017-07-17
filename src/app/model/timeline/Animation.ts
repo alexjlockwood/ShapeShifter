@@ -23,7 +23,7 @@ export class Animation {
 
   clone() {
     const clone = new Animation(this);
-    clone.blocks = clone.blocks.slice();
+    clone.blocks = [...clone.blocks];
     return clone;
   }
 

@@ -46,11 +46,11 @@ export class SubPathState {
 
   mutate() {
     return new SubPathStateMutator(
-      this.commandStates.slice(),
+      [...this.commandStates],
       this.isReversed_,
       this.shiftOffset,
       this.id,
-      this.splitSubPaths.slice(),
+      [...this.splitSubPaths],
     );
   }
 }
@@ -68,7 +68,7 @@ export class SubPathStateMutator {
   ) {}
 
   setCommandStates(commandStates: CommandState[]) {
-    this.commandStates = commandStates.slice();
+    this.commandStates = [...commandStates];
     return this;
   }
 
@@ -95,7 +95,7 @@ export class SubPathStateMutator {
   }
 
   setSplitSubPaths(splitSubPaths: SubPathState[]) {
-    this.splitSubPaths = splitSubPaths.slice();
+    this.splitSubPaths = [...splitSubPaths];
     return this;
   }
 
