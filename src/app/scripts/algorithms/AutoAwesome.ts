@@ -39,6 +39,10 @@ export function fix(fromPath: Path, toPath: Path) {
  * TODO: this can still be optimized a lot... work in progress!
  */
 export function autoFix(fromPath: Path, toPath: Path) {
+  const subPathOrder = findOptimalSubPathMapping(fromPath, toPath);
+  // TODO: use this to reorder the subpaths.
+  // TODO: make sure the from > to length stuff works.
+
   const numSubPaths = Math.min(fromPath.getSubPaths().length, toPath.getSubPaths().length);
   for (let subIdx = 0; subIdx < numSubPaths; subIdx++) {
     // Pass the command with the larger subpath as the 'from' command.
@@ -204,4 +208,59 @@ export function autoConvert(subIdx: number, from: Path, to: Path) {
     }
   });
   return { from: fromMutator.build(), to: toMutator.build() };
+}
+
+export function findOptimalSubPathMapping(from: Path, to: Path) {
+  if (from.getSubPaths().length < to.getSubPaths().length) {
+    throw new Error('from path has too few subpaths');
+  }
+
+  const fromSubPaths = from.getSubPaths();
+  const toSubPaths = to.getSubPaths();
+
+  if (toSubPaths.length > 8) {
+    // Don't permute huge arrays.
+    return _.range(toSubPaths.length);
+  }
+
+  const distances = fromSubPaths.map((f, i) =>
+    toSubPaths.map((t, j) => squaredDistance(from, i, to, j)),
+  );
+
+  let min = Infinity;
+  let best: ReadonlyArray<number> = [];
+
+  (function recurseFn(
+    arr: number[] = _.range(fromSubPaths.length),
+    order: ReadonlyArray<number> = [],
+  ) {
+    if (order.length === toSubPaths.length) {
+      let sum = 0;
+      for (let i = 0; i < order.length; i++) {
+        sum += distances[order[i]][i];
+      }
+      if (sum < min) {
+        min = sum;
+        best = order;
+      }
+      return;
+    }
+    for (let i = 0; i < arr.length; i++) {
+      const [cur] = arr.splice(i, 1);
+      recurseFn([...arr], [...order, cur]);
+      if (arr.length) {
+        arr.splice(i, 0, cur);
+      }
+    }
+  })();
+
+  console.info(min, best.toString());
+
+  return best;
+}
+
+function squaredDistance(path1: Path, subIdx1: number, path2: Path, subIdx2: number) {
+  const p1 = path1.getPoleOfInaccessibility(subIdx1);
+  const p2 = path2.getPoleOfInaccessibility(subIdx2);
+  return MathUtil.distance(p1, p2) ** 2;
 }
