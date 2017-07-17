@@ -2,6 +2,7 @@ import 'rxjs/add/operator/first';
 import 'rxjs/add/observable/combineLatest';
 
 import { Injectable } from '@angular/core';
+import { Action } from '@ngrx/store';
 import { INTERPOLATORS } from 'app/model/interpolators';
 import { GroupLayer, Layer, LayerUtil, VectorLayer } from 'app/model/layers';
 import { Animation, AnimationBlock } from 'app/model/timeline';
@@ -47,10 +48,6 @@ export class LayerTimelineService {
    * Selects or deselects the specified block ID.
    */
   selectBlock(blockId: string, clearExisting: boolean) {
-    this.store.dispatch(new MultiAction(...this.buildSelectBlockActions(blockId, clearExisting)));
-  }
-
-  private buildSelectBlockActions(blockId: string, clearExisting: boolean) {
     const selectedBlockIds = this.getSelectedBlockIds();
     if (clearExisting) {
       selectedBlockIds.forEach(id => {
@@ -64,11 +61,7 @@ export class LayerTimelineService {
     } else {
       selectedBlockIds.add(blockId);
     }
-    return [
-      new SelectAnimation(false),
-      new SetSelectedBlocks(selectedBlockIds),
-      new SetSelectedLayers(new Set()),
-    ];
+    this.updateSelections(false, selectedBlockIds, new Set());
   }
 
   /**
@@ -103,13 +96,19 @@ export class LayerTimelineService {
     selectedBlockIds: Set<string>,
     selectedLayerIds: Set<string>,
   ) {
-    this.store.dispatch(
-      new MultiAction(
-        new SelectAnimation(isAnimSelected),
-        new SetSelectedBlocks(selectedBlockIds),
-        new SetSelectedLayers(selectedLayerIds),
-      ),
-    );
+    const actions: Action[] = [];
+    if (this.isAnimationSelected() !== isAnimSelected) {
+      actions.push(new SelectAnimation(isAnimSelected));
+    }
+    if (!_.isEqual(this.getSelectedBlockIds(), selectedBlockIds)) {
+      actions.push(new SetSelectedBlocks(selectedBlockIds));
+    }
+    if (!_.isEqual(this.getSelectedLayerIds(), selectedLayerIds)) {
+      actions.push(new SetSelectedLayers(selectedLayerIds));
+    }
+    if (actions.length) {
+      this.store.dispatch(new MultiAction(...actions));
+    }
   }
 
   /**
