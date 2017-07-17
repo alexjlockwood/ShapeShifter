@@ -33,6 +33,7 @@ import {
   getActionModeSubPathSelections,
 } from 'app/store/actionmode/selectors';
 import * as _ from 'lodash';
+import { OutputSelector } from 'reselect';
 
 /**
  * A simple service that provides an interface for making action mode changes.
@@ -46,9 +47,7 @@ export class ActionModeService {
   }
 
   getActionMode() {
-    let mode: ActionMode;
-    this.store.select(getActionMode).first().subscribe(m => (mode = m));
-    return mode;
+    return this.queryStore(getActionMode);
   }
 
   setActionMode(mode: ActionMode) {
@@ -61,7 +60,7 @@ export class ActionModeService {
       return;
     }
     if (mode === ActionMode.Selection) {
-      if (this.hasSelections()) {
+      if (this.queryStore(getActionModeSelections).length) {
         this.store.dispatch(new SetActionModeSelections([]));
       } else {
         this.store.dispatch(new SetActionMode(ActionMode.None));
@@ -69,14 +68,6 @@ export class ActionModeService {
     } else {
       this.store.dispatch(new SetActionMode(ActionMode.Selection));
     }
-  }
-
-  private hasSelections() {
-    let result: boolean;
-    this.store.select(getActionModeSelections).first().subscribe(selections => {
-      result = !!selections.length;
-    });
-    return result;
   }
 
   setSelections(selections: ReadonlyArray<Selection>) {
@@ -107,8 +98,7 @@ export class ActionModeService {
     if (currentMode === ActionMode.None) {
       return;
     }
-    const newMode = currentMode === modeToToggle ? ActionMode.Selection : modeToToggle;
-    this.store.dispatch(new SetActionMode(newMode));
+    this.setActionMode(currentMode === modeToToggle ? ActionMode.Selection : modeToToggle);
   }
 
   reverseSelectedSubPaths() {
@@ -136,20 +126,18 @@ export class ActionModeService {
   }
 
   splitInHalfHover() {
-    this.store.select(getActionModePointSelections).first().subscribe(selections => {
-      if (selections.length) {
-        const { source, subIdx, cmdIdx } = selections[0];
-        this.setHover({ type: HoverType.Split, source, subIdx, cmdIdx });
-      }
-    });
+    const selections = this.queryStore(getActionModePointSelections);
+    if (selections.length) {
+      const { source, subIdx, cmdIdx } = selections[0];
+      this.setHover({ type: HoverType.Split, source, subIdx, cmdIdx });
+    }
   }
 
   setHover(newHover: Hover) {
-    this.store.select(getActionModeHover).first().subscribe(currHover => {
-      if (!_.isEqual(newHover, currHover)) {
-        this.store.dispatch(new SetActionModeHover(newHover));
-      }
-    });
+    const currHover = this.queryStore(getActionModeHover);
+    if (!_.isEqual(newHover, currHover)) {
+      this.store.dispatch(new SetActionModeHover(newHover));
+    }
   }
 
   clearHover() {
@@ -222,5 +210,11 @@ export class ActionModeService {
       hasPointSelections = !!selections.length;
     });
     return hasPointSelections || currentMode !== ActionMode.Selection;
+  }
+
+  private queryStore<T>(selector: OutputSelector<Object, T, (res: Object) => T>) {
+    let obj: T;
+    this.store.select(selector).first().subscribe(o => (obj = o));
+    return obj;
   }
 }
