@@ -846,7 +846,7 @@ export class PathMutator {
           replaceNodeFn(states, i);
           return states;
         }
-        const recurseStates = recurseFn([...currentState.getSplitSubPaths()];
+        const recurseStates = recurseFn([...currentState.getSplitSubPaths()]);
         if (recurseStates) {
           states[i] = currentState.mutate().setSplitSubPaths(recurseStates).build();
           return states;
@@ -854,7 +854,7 @@ export class PathMutator {
       }
       // Return undefined to signal that the parent was not found.
       return undefined;
-    })([...this.subPathStateMap];
+    })([...this.subPathStateMap]);
   }
 
   /**
