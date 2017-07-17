@@ -20,8 +20,8 @@ export class PathMutator {
   private numCollapsingSubPaths: number;
 
   constructor(ps: PathState) {
-    this.subPathStateMap = ps.subPathStateMap.slice();
-    this.subPathOrdering = ps.subPathOrdering.slice();
+    this.subPathStateMap = [...ps.subPathStateMap];
+    this.subPathOrdering = [...ps.subPathOrdering];
     this.numCollapsingSubPaths = ps.numCollapsingSubPaths;
   }
 
@@ -581,11 +581,8 @@ export class PathMutator {
       for (i = i + 1; i < splitCss1.length; i++) {
         newCss.push(splitCss1[i]);
       }
-      const splits = pssps.slice();
-      splits[splitSubPathIdx1] = new SubPathState(newCss.slice())
-        .mutate()
-        .setId(targetSpsId)
-        .build();
+      const splits = [...pssps];
+      splits[splitSubPathIdx1] = new SubPathState([...newCss]).mutate().setId(targetSpsId).build();
       splits.splice(splitSubPathIdx2, 1);
       updatedSplitSubPaths = splits;
     }
@@ -849,7 +846,7 @@ export class PathMutator {
           replaceNodeFn(states, i);
           return states;
         }
-        const recurseStates = recurseFn(currentState.getSplitSubPaths().slice());
+        const recurseStates = recurseFn([...currentState.getSplitSubPaths()];
         if (recurseStates) {
           states[i] = currentState.mutate().setSplitSubPaths(recurseStates).build();
           return states;
@@ -857,7 +854,7 @@ export class PathMutator {
       }
       // Return undefined to signal that the parent was not found.
       return undefined;
-    })(this.subPathStateMap.slice());
+    })([...this.subPathStateMap];
   }
 
   /**
@@ -892,7 +889,7 @@ function reverseAndShiftCommandStates(
 ) {
   // If the last command is a 'Z', replace it with a line before we shift.
   // TODO: replacing the 'Z' messes up certain stroke-linejoin values
-  const newCss = css.slice();
+  const newCss = [...css];
   newCss[newCss.length - 1] = _.last(css).mutate().forceConvertClosepathsToLines().build();
   return shiftCommandStates(reverseCommandStates(newCss, isReversed), isReversed, shiftOffset);
 }
@@ -995,7 +992,7 @@ function reverseCommands(subPathState: SubPathState) {
     // Consider a segment A ---- B ---- C with AB split and
     // BC non-split. When reversed, we want the user to see
     // C ---- B ---- A w/ CB split and BA non-split.
-    const cmCmds = cm.getCommands().slice();
+    const cmCmds = [...cm.getCommands()];
     if (cmCmds[0].getSvgChar() === 'M') {
       return cmCmds;
     }

@@ -49,7 +49,7 @@ export class GroupLayer extends AbstractLayer {
 
   clone() {
     const clone = new GroupLayer(this);
-    clone.children = this.children.slice();
+    clone.children = [...this.children];
     return clone;
   }
 

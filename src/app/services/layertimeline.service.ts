@@ -151,7 +151,7 @@ export class LayerTimelineService {
     if (!vls.length) {
       return;
     }
-    const importedVls = vls.slice();
+    const importedVls = [...vls];
     const vectorLayer = this.getVectorLayer();
     let vectorLayers = [vectorLayer];
     if (!vectorLayer.children.length) {
@@ -180,7 +180,7 @@ export class LayerTimelineService {
       if (!(selectedLayer instanceof VectorLayer)) {
         // Add the new layer as a sibling to the currently selected layer.
         const parent = LayerUtil.findParent(vl, selectedLayer.id).clone();
-        const children = parent.children.slice();
+        const children = [...parent.children];
         parent.children = children.concat([layer]);
         this.replaceLayer(parent);
         return;
@@ -254,7 +254,7 @@ export class LayerTimelineService {
         name: LayerUtil.getUniqueLayerName([vectorLayer], 'group'),
         children: tempSelLayers,
       });
-      const parentChildren = firstSelectedLayerParent.children.slice();
+      const parentChildren = [...firstSelectedLayerParent.children];
       parentChildren.splice(firstSelectedLayerIndexInParent, 0, newGroup);
       _.remove(parentChildren, child =>
         _.find(tempSelLayers, selectedLayer => selectedLayer.id === child.id),
@@ -272,7 +272,7 @@ export class LayerTimelineService {
           0,
           _.findIndex(parent.children, l => l.id === groupLayer.id),
         );
-        const newChildren = parent.children.slice();
+        const newChildren = [...parent.children];
         newChildren.splice(indexInParent, 0, ...groupLayer.children);
         parent.children = newChildren;
         vectorLayer = LayerUtil.replaceLayerInTree(vectorLayer, parent);

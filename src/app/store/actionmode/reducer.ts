@@ -57,7 +57,7 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
     // Toggle a subpath selection.
     case actions.TOGGLE_SUBPATH_SELECTION: {
       const { source, subIdx } = action.payload;
-      let selections = state.selections.slice();
+      let selections = [...state.selections];
       _.remove(selections, s => s.type !== SelectionType.SubPath && s.source !== source);
       selections = toggleSelections(
         selections,
@@ -70,7 +70,7 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
     // Toggle a segment selection.
     case actions.TOGGLE_SEGMENT_SELECTIONS: {
       const { source, segments } = action.payload;
-      let selections = state.selections.slice();
+      let selections = [...state.selections];
       _.remove(selections, s => s.type !== SelectionType.Segment);
       selections = toggleSelections(
         selections,
@@ -86,7 +86,7 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
     // Toggle a point selection.
     case actions.TOGGLE_POINT_SELECTION: {
       const { source, subIdx, cmdIdx, appendToList } = action.payload;
-      let selections = state.selections.slice();
+      let selections = [...state.selections];
       _.remove(selections, s => s.type !== SelectionType.Point && s.source !== source);
       selections = toggleSelections(
         selections,

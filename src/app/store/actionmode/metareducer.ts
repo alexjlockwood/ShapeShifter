@@ -207,7 +207,7 @@ function updateActivePathBlock(state: AppState, source: ActionSource, path: Path
   const blockId = state.timeline.selectedBlockIds.values().next().value;
   const { timeline } = state;
   let { animation } = timeline;
-  const blocks = animation.blocks.slice();
+  const blocks = [...animation.blocks];
   const blockIndex = _.findIndex(blocks, b => b.id === blockId);
   let block = blocks[blockIndex];
 
