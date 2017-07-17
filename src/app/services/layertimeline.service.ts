@@ -48,10 +48,6 @@ export class LayerTimelineService {
    * Selects or deselects the specified block ID.
    */
   selectBlock(blockId: string, clearExisting: boolean) {
-    this.store.dispatch(new MultiAction(...this.buildSelectBlockActions(blockId, clearExisting)));
-  }
-
-  private buildSelectBlockActions(blockId: string, clearExisting: boolean) {
     const selectedBlockIds = this.getSelectedBlockIds();
     if (clearExisting) {
       selectedBlockIds.forEach(id => {
@@ -65,11 +61,7 @@ export class LayerTimelineService {
     } else {
       selectedBlockIds.add(blockId);
     }
-    return [
-      new SelectAnimation(false),
-      new SetSelectedBlocks(selectedBlockIds),
-      new SetSelectedLayers(new Set()),
-    ];
+    this.updateSelections(false, selectedBlockIds, new Set());
   }
 
   /**
