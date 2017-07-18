@@ -89,7 +89,7 @@ export class ToolbarComponent implements OnInit {
   onAutoFixClick(event: MouseEvent) {
     ga('send', 'event', 'Action mode', 'Auto fix click');
     event.stopPropagation();
-    this.actionModeService.autoFixClick();
+    this.actionModeService.autoFix();
   }
 
   onCloseActionModeClick(event: MouseEvent) {
@@ -132,12 +132,12 @@ export class ToolbarComponent implements OnInit {
 
   onDeleteSubPathsClick(event: MouseEvent) {
     event.stopPropagation();
-    this.actionModeService.deleteSelections();
+    this.actionModeService.deleteSelectedActionModeModels();
   }
 
   onDeleteSegmentsClick(event: MouseEvent) {
     event.stopPropagation();
-    this.actionModeService.deleteSelections();
+    this.actionModeService.deleteSelectedActionModeModels();
   }
 
   onSetFirstPositionClick(event: MouseEvent) {
@@ -160,7 +160,7 @@ export class ToolbarComponent implements OnInit {
 
   onDeletePointsClick(event: MouseEvent) {
     event.stopPropagation();
-    this.actionModeService.deleteSelections();
+    this.actionModeService.deleteSelectedActionModeModels();
   }
 }
 
@@ -316,9 +316,9 @@ class ToolbarData {
       if (!areCompatible) {
         const createSubtitleFn = (direction: string) => {
           if (numPointsMissing === 1) {
-            return `Add 1 point to the subpath on the ${direction}`;
+            return `Add 1 point to the highlighted subpath on the ${direction}`;
           } else {
-            return `Add ${numPointsMissing} points to the subpath on the ${direction}`;
+            return `Add ${numPointsMissing} points to the highlighted subpath on the ${direction}`;
           }
         };
         if (errorPath === ActionSource.From) {

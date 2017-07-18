@@ -2,15 +2,9 @@ import { Action } from '@ngrx/store';
 import { ActionSource } from 'app/model/actionmode';
 import { Path } from 'app/model/paths';
 
-export const DELETE_ACTION_MODE_SELECTIONS = '__metaactionmode__DELETE_ACTION_MODE_SELECTIONS';
-export const AUTO_FIX_CLICK = '__metaactionmode__AUTO_FIX_CLICK';
 export const UPDATE_ACTIVE_PATH_BLOCK = '__metaactionmode__UPDATE_ACTIVE_PATH_BLOCK';
 export const PAIR_SUBPATH = '__metaactionmode__PAIR_SUBPATH';
 export const SET_UNPAIRED_SUBPATH = '__metaactionmode__SET_UNPAIRED_SUBPATH';
-
-export class DeleteActionModeSelections implements Action {
-  readonly type = DELETE_ACTION_MODE_SELECTIONS;
-}
 
 export class UpdateActivePathBlock implements Action {
   readonly type = UPDATE_ACTIVE_PATH_BLOCK;
@@ -39,8 +33,4 @@ export class SetUnpairedSubPath implements Action {
   }
 }
 
-export type Actions =
-  | DeleteActionModeSelections
-  | UpdateActivePathBlock
-  | PairSubPath
-  | SetUnpairedSubPath;
+export type Actions = UpdateActivePathBlock | PairSubPath | SetUnpairedSubPath;
