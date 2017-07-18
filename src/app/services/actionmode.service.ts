@@ -1,6 +1,7 @@
 import 'rxjs/add/operator/first';
 
 import { Injectable } from '@angular/core';
+import { Action } from '@ngrx/store';
 import {
   ActionMode,
   ActionSource,
@@ -18,18 +19,18 @@ import {
   SetActionMode,
   SetActionModeHover,
   SetActionModeSelections,
-} from 'app/store/actionmode/actions';
-import {
-  PairSubPath,
+  SetPairedSubPaths,
   SetUnpairedSubPath,
-  UpdateActivePathBlock,
-} from 'app/store/actionmode/metaactions';
+} from 'app/store/actionmode/actions';
 import {
   getActionMode,
   getActionModeHover,
   getActionModeSelections,
+  getPairedSubPaths,
+  getUnpairedSubPath,
 } from 'app/store/actionmode/selectors';
 import { MultiAction } from 'app/store/multiaction/actions';
+import { SetAnimation } from 'app/store/timeline/actions';
 import * as _ from 'lodash';
 import { OutputSelector } from 'reselect';
 
@@ -237,7 +238,7 @@ export class ActionModeService {
     }
     this.store.dispatch(
       new MultiAction(
-        new UpdateActivePathBlock(source, pm.build()),
+        this.buildUpdatedActivePathBlockAnimationAction(source, pm.build()),
         new SetActionModeHover(undefined),
       ),
     );
@@ -251,7 +252,7 @@ export class ActionModeService {
     const activePath = this.getActivePathBlockValue(source);
     const pm = activePath.mutate();
     pm.shiftSubPathForward(subIdx, cmdIdx);
-    this.store.dispatch(new UpdateActivePathBlock(source, pm.build()));
+    this.store.dispatch(this.buildUpdatedActivePathBlockAnimationAction(source, pm.build()));
   }
 
   splitSelectedPointInHalf() {
@@ -262,7 +263,7 @@ export class ActionModeService {
     pm.splitCommandInHalf(subIdx, cmdIdx);
     this.store.dispatch(
       new MultiAction(
-        new UpdateActivePathBlock(source, pm.build()),
+        this.buildUpdatedActivePathBlockAnimationAction(source, pm.build()),
         new SetActionModeSelections([]),
         new SetActionModeHover(undefined),
       ),
@@ -271,12 +272,86 @@ export class ActionModeService {
 
   // Pair/unpair subpaths.
 
-  pairSubPath(subIdx: number, source: ActionSource) {
-    this.store.dispatch(new PairSubPath(subIdx, source));
+  pairSubPath(subIdx: number, actionSource: ActionSource) {
+    const currUnpair = this.getUnpairedSubPath();
+    const actions: Action[] = [];
+    if (currUnpair && actionSource !== currUnpair.source) {
+      const { source: fromSource, subIdx: fromSubIdx } = currUnpair;
+      const toSource = actionSource;
+      const toSubIdx = subIdx;
+      actions.push(new SetUnpairedSubPath(undefined));
+      const fromSelections = this.getSelections().filter(s => s.source === fromSource);
+      const toSelections = this.getSelections().filter(s => s.source === toSource);
+      if (fromSelections.length) {
+        actions.push(
+          new SetActionModeSelections(
+            fromSelections.map(s => {
+              const { subIdx: sIdx, cmdIdx, source, type } = s;
+              return {
+                subIdx: sIdx === fromSubIdx ? 0 : sIdx,
+                cmdIdx,
+                source,
+                type,
+              };
+            }),
+          ),
+        );
+      } else if (toSelections.length) {
+        actions.push(
+          new SetActionModeSelections(
+            toSelections.map(s => {
+              const { subIdx: sIdx, cmdIdx, source, type } = s;
+              return {
+                subIdx: sIdx === toSubIdx ? 0 : sIdx,
+                cmdIdx,
+                source,
+                type,
+              };
+            }),
+          ),
+        );
+      }
+      const pairedSubPaths = new Set<number>();
+      this.getPairedSubPaths().forEach(p => pairedSubPaths.add(p));
+      if (pairedSubPaths.has(fromSubIdx)) {
+        pairedSubPaths.delete(fromSubIdx);
+      }
+      if (pairedSubPaths.has(toSubIdx)) {
+        pairedSubPaths.delete(toSubIdx);
+      }
+      pairedSubPaths.add(pairedSubPaths.size);
+      actions.push(new SetPairedSubPaths(pairedSubPaths));
+      actions.push(new SetActionModeHover(undefined));
+      actions.push(
+        this.buildUpdatedActivePathBlockAnimationAction(
+          fromSource,
+          this.getActivePathBlockValue(fromSource).mutate().moveSubPath(fromSubIdx, 0).build(),
+        ),
+      );
+      actions.push(
+        this.buildUpdatedActivePathBlockAnimationAction(
+          toSource,
+          this.getActivePathBlockValue(toSource).mutate().moveSubPath(toSubIdx, 0).build(),
+        ),
+      );
+    } else {
+      actions.push(new SetUnpairedSubPath({ source: actionSource, subIdx }));
+    }
+    this.store.dispatch(new MultiAction(...actions));
+  }
+
+  private getPairedSubPaths() {
+    return this.queryStore(getPairedSubPaths);
   }
 
   setUnpairedSubPath(unpair: { subIdx: number; source: ActionSource }) {
-    this.store.dispatch(new SetUnpairedSubPath(unpair));
+    if (!_.isEqual(this.getUnpairedSubPath(), unpair)) {
+      this.store.dispatch(new SetUnpairedSubPath(unpair));
+    }
+  }
+
+  private getUnpairedSubPath() {
+    return this.queryStore(getUnpairedSubPath);
   }
 
   // Autofix.
@@ -286,12 +361,9 @@ export class ActionModeService {
       this.getActivePathBlockValue(ActionSource.From),
       this.getActivePathBlockValue(ActionSource.To),
     );
-    this.store.dispatch(
-      new MultiAction(
-        new UpdateActivePathBlock(ActionSource.From, from),
-        new UpdateActivePathBlock(ActionSource.To, to),
-      ),
-    );
+    let animation = this.buildUpdatedActivePathBlockAnimation(ActionSource.From, from);
+    animation = this.buildUpdatedActivePathBlockAnimation(ActionSource.To, to, animation);
+    this.store.dispatch(new SetAnimation(animation));
   }
 
   // Delete selected action mode models.
@@ -307,26 +379,26 @@ export class ActionModeService {
     const subPathSelections = selections.filter(s => s.type === SelectionType.SubPath);
     const segmentSelections = selections.filter(s => s.type === SelectionType.Segment);
     const pointSelections = selections.filter(s => s.type === SelectionType.Point);
-    let updatePathAction: UpdateActivePathBlock;
+    let updatePathAction: SetAnimation;
     if (subPathSelections.length) {
       // Precondition: all selections exist in the same canvas.
       const { source, subIdx } = subPathSelections[0];
       const path = this.getActivePathBlockValue(source);
       if (path.getSubPath(subIdx).isSplit()) {
         const pm = path.mutate();
-        const layer = this.getActivePathLayer();
+        const layer = this.getActivePathBlockLayer();
         if (layer.isFilled()) {
           pm.deleteFilledSubPath(subIdx);
         } else if (layer.isStroked()) {
           pm.deleteStrokedSubPath(subIdx);
         }
-        updatePathAction = new UpdateActivePathBlock(source, pm.build());
+        updatePathAction = this.buildUpdatedActivePathBlockAnimationAction(source, pm.build());
       }
     } else if (segmentSelections.length) {
       const { source, subIdx, cmdIdx } = segmentSelections[0];
       const path = this.getActivePathBlockValue(source);
       if (path.getCommand(subIdx, cmdIdx).isSplitSegment()) {
-        updatePathAction = new UpdateActivePathBlock(
+        updatePathAction = this.buildUpdatedActivePathBlockAnimationAction(
           source,
           path.mutate().deleteFilledSubPathSegment(subIdx, cmdIdx).build(),
         );
@@ -352,7 +424,7 @@ export class ActionModeService {
           PathUtil.sortPathOps(ops);
           ops.forEach(op => pm.unsplitCommand(op.subIdx, op.cmdIdx));
         });
-        updatePathAction = new UpdateActivePathBlock(source, pm.build());
+        updatePathAction = this.buildUpdatedActivePathBlockAnimationAction(source, pm.build());
       }
     }
     if (updatePathAction) {
@@ -369,18 +441,108 @@ export class ActionModeService {
   // Update active path block.
 
   updateActivePathBlock(source: ActionSource, path: Path) {
-    this.store.dispatch(new UpdateActivePathBlock(source, path));
+    this.store.dispatch(this.buildUpdatedActivePathBlockAnimationAction(source, path));
   }
 
-  private getActivePathLayer() {
-    const block = this.layerTimelineService.getSelectedBlocks()[0] as PathAnimationBlock;
-    const vl = this.layerTimelineService.getVectorLayer();
-    return vl.findLayerById(block.layerId) as MorphableLayer;
+  private buildUpdatedActivePathBlockAnimationAction(
+    source: ActionSource,
+    path: Path,
+    animation = this.layerTimelineService.getAnimation(),
+  ) {
+    return new SetAnimation(this.buildUpdatedActivePathBlockAnimation(source, path, animation));
+  }
+
+  private buildUpdatedActivePathBlockAnimation(
+    source: ActionSource,
+    path: Path,
+    animation = this.layerTimelineService.getAnimation(),
+  ) {
+    const blockId = this.getActivePathBlock().id;
+    const blocks = [...animation.blocks];
+    const blockIndex = _.findIndex(blocks, b => b.id === blockId);
+    let block = blocks[blockIndex];
+
+    // Remove any existing conversions and collapsing sub paths from the path.
+    const pm = path.mutate();
+    path.getSubPaths().forEach((unused, subIdx) => pm.unconvertSubPath(subIdx));
+    path = pm.deleteCollapsingSubPaths().build();
+
+    const getBlockPathFn = (t: ActionSource) => {
+      return t === ActionSource.From ? block.fromValue : block.toValue;
+    };
+    const setBlockPathFn = (t: ActionSource, p: Path) => {
+      block = block.clone();
+      if (t === ActionSource.From) {
+        block.fromValue = p;
+      } else {
+        block.toValue = p;
+      }
+    };
+
+    const oppSource = source === ActionSource.From ? ActionSource.To : ActionSource.From;
+    let oppPath = getBlockPathFn(oppSource);
+    if (oppPath) {
+      oppPath = oppPath.mutate().deleteCollapsingSubPaths().build();
+      const numSubPaths = path.getSubPaths().length;
+      const numOppSubPaths = oppPath.getSubPaths().length;
+      if (numSubPaths !== numOppSubPaths) {
+        const pathToChange = numSubPaths < numOppSubPaths ? path : oppPath;
+        const oppPathToChange = numSubPaths < numOppSubPaths ? oppPath : path;
+        const minIdx = Math.min(numSubPaths, numOppSubPaths);
+        const maxIdx = Math.max(numSubPaths, numOppSubPaths);
+        const mutator = pathToChange.mutate();
+        for (let i = minIdx; i < maxIdx; i++) {
+          // TODO: allow the user to specify the location of collapsing paths?
+          const pole = oppPathToChange.getPoleOfInaccessibility(i);
+          mutator.addCollapsingSubPath(pole, oppPathToChange.getSubPath(i).getCommands().length);
+        }
+        if (numSubPaths < numOppSubPaths) {
+          path = mutator.build();
+        } else {
+          oppPath = mutator.build();
+        }
+      }
+      for (let subIdx = 0; subIdx < Math.max(numSubPaths, numOppSubPaths); subIdx++) {
+        const numCmds = path.getSubPath(subIdx).getCommands().length;
+        const numOppCommands = oppPath.getSubPath(subIdx).getCommands().length;
+        if (numCmds === numOppCommands) {
+          // Only auto convert when the number of commands in both canvases
+          // are equal. Otherwise we'll wait for the user to add more points.
+          const autoConvertResults = AutoAwesome.autoConvert(
+            subIdx,
+            path,
+            oppPath.mutate().unconvertSubPath(subIdx).build(),
+          );
+          path = autoConvertResults.from;
+
+          // This is the one case where a change in one canvas type's vector layer
+          // will cause corresponding changes to be made in the opposite canvas type's
+          // vector layer.
+          oppPath = autoConvertResults.to;
+        }
+      }
+    }
+    setBlockPathFn(source, path);
+    setBlockPathFn(oppSource, oppPath);
+
+    blocks[blockIndex] = block;
+    animation = animation.clone();
+    animation.blocks = blocks;
+    return animation;
+  }
+
+  private getActivePathBlock() {
+    return this.layerTimelineService.getSelectedBlocks()[0] as PathAnimationBlock;
   }
 
   private getActivePathBlockValue(source: ActionSource) {
-    const activeBlock = this.layerTimelineService.getSelectedBlocks()[0] as PathAnimationBlock;
+    const activeBlock = this.getActivePathBlock();
     return source === ActionSource.From ? activeBlock.fromValue : activeBlock.toValue;
+  }
+
+  private getActivePathBlockLayer() {
+    const vl = this.layerTimelineService.getVectorLayer();
+    return vl.findLayerById(this.getActivePathBlock().layerId) as MorphableLayer;
   }
 
   private queryStore<T>(selector: OutputSelector<Object, T, (res: Object) => T>) {

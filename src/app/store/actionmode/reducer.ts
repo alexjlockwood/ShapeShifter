@@ -8,7 +8,7 @@ export interface State {
   readonly hover: Hover;
   readonly selections: ReadonlyArray<Selection>;
   readonly pairedSubPaths: Set<number>;
-  readonly unpairedSubPath: { source: ActionSource; subIdx: number };
+  readonly unpairedSubPath: { readonly source: ActionSource; readonly subIdx: number };
 }
 
 export function buildInitialState() {
@@ -52,6 +52,18 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
     case actions.SET_ACTION_MODE_SELECTIONS: {
       const { selections } = action.payload;
       return { ...state, selections };
+    }
+
+    // Set the currently paired subpaths.
+    case actions.SET_PAIRED_SUBPATHS: {
+      const pairedSubPaths = new Set(action.payload.pairedSubPaths);
+      return { ...state, pairedSubPaths };
+    }
+
+    // Set the currently unpaired subpath in pair subpaths mode.
+    case actions.SET_UNPAIRED_SUBPATH: {
+      const { unpairedSubPath } = action.payload;
+      return { ...state, unpairedSubPath };
     }
   }
   return state;
