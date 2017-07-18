@@ -2,6 +2,7 @@
     $foreground: map-get($theme, ss-foreground);
     $background: map-get($theme, ss-background);
     $accent: map-get($theme, accent);
+    $is-dark: map-get($theme, is-dark);
     .property-input {
         background-color: mat-color($background, base200);
     }
@@ -34,7 +35,7 @@
         .spi-property-value-menu-target {
             box-shadow: 0 0 0 1px mat-color($foreground, divider) inset;
             &.has-input-error {
-                border-left: 4px solid #c63937;
+                border-left: 4px solid mat-color(mat-palette($mat-red, A700));
             }
         }
         .spi-property-value-editor input,
@@ -58,8 +59,8 @@
         color: mat-color($foreground, disabled-text);
     }
     .alert-danger {
-        color: #c63937;
-        background-color: #f2dede;
-        border-color: #ebccd1;
+        color: mat-color(mat-palette($mat-red, A700));
+        background-color: mat-color(mat-palette($mat-red, 50));
+        border-color: mat-color(mat-palette($mat-red, 100));
     }
 }

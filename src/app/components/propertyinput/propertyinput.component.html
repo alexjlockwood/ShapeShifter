@@ -54,7 +54,7 @@
           [disabled]="this.shouldDisableStartActionModeButton(model)"
           *ngIf="this.shouldShowStartActionModeButton(model)"
           (click)="this.onStartActionModeClick()"
-          mdTooltip="Customize paths"
+          mdTooltip="Edit path morphing animation"
           mdTooltipPosition="left"
           mdTooltipShowDelay="500">
         <md-icon>edit</md-icon>
@@ -128,7 +128,7 @@
                 ? '<i>toValue</i> must not be empty'
                 : (this.isPathBlockFromValueEmpty(model.model) && this.isPathBlockToValueEmpty(model.model))
                   ? '<i>fromValue</i> and <i>toValue</i> must not be empty'
-                  : 'Paths are incompatible. <i>Auto fix</i> or click the <i>customize paths</i> button above.'">
+                  : 'Paths are incompatible. <i>Auto fix</i> or click the <i>edit path morphing animation</i> button above.'">
         </span>
           <button md-icon-button
             class="auto-fix-button"
