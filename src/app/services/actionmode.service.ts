@@ -27,10 +27,7 @@ import {
 import {
   getActionMode,
   getActionModeHover,
-  getActionModePointSelections,
-  getActionModeSegmentSelections,
   getActionModeSelections,
-  getActionModeSubPathSelections,
 } from 'app/store/actionmode/selectors';
 import { MultiAction } from 'app/store/multiaction/actions';
 import * as _ from 'lodash';
@@ -206,9 +203,9 @@ export class ActionModeService {
   }
 
   splitInHalfHover() {
-    const selections = this.queryStore(getActionModePointSelections);
-    if (selections.length) {
-      const { source, subIdx, cmdIdx } = selections[0];
+    const pointSelections = this.getSelections().filter(s => s.type === SelectionType.Point);
+    if (pointSelections.length) {
+      const { source, subIdx, cmdIdx } = pointSelections[0];
       this.setHover({ type: HoverType.Split, source, subIdx, cmdIdx });
     }
   }
