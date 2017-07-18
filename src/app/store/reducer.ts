@@ -3,7 +3,6 @@ import { Action, ActionReducer, combineReducers } from '@ngrx/store';
 import { environment } from 'environments/environment';
 import { storeLogger } from 'ngrx-store-logger';
 
-import * as metaActionMode from './actionmode/metareducer';
 import * as fromActionMode from './actionmode/reducer';
 import * as fromLayers from './layers/reducer';
 import * as metaMultiAction from './multiaction/metareducer';
@@ -42,9 +41,6 @@ const prodMetaReducers = [
   metaMultiAction.metaReducer,
   // Meta-reducer that adds the ability to reset the entire state tree.
   metaReset.metaReducer,
-  // Meta-reducer that allows us to perform actions that modify different
-  // aspects of the state tree while in action mode.
-  metaActionMode.metaReducer,
   // Meta-reducer that maps our slice reducers to the keys in our state tree.
   combineReducers,
 ];
