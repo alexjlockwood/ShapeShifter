@@ -381,7 +381,6 @@ export class ActionModeService {
     const pointSelections = selections.filter(s => s.type === SelectionType.Point);
     let updatePathAction: SetAnimation;
     if (subPathSelections.length) {
-      // Precondition: all selections exist in the same canvas.
       const { source, subIdx } = subPathSelections[0];
       const path = this.getActivePathBlockValue(source);
       if (path.getSubPath(subIdx).isSplit()) {
