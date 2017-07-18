@@ -10,7 +10,6 @@ const UNDO_EXCLUDED_ACTIONS = [
   playbackActions.SET_IS_SLOW_MOTION,
   playbackActions.SET_IS_PLAYING,
   playbackActions.SET_IS_REPEATING,
-  actionModeActions.START_ACTION_MODE,
   actionModeActions.SET_ACTION_MODE,
   actionModeActions.SET_ACTION_MODE_HOVER,
 ];
@@ -35,8 +34,7 @@ export function metaReducer(reducer: AppStateReducer): StateReducer {
           return groupCounter;
         }
         groupCounter++;
-        // tslint:disable-next-line: no-null-keyword
-        return null;
+        return undefined;
       },
     } as UndoableOptions,
   );

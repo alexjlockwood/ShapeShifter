@@ -12,62 +12,11 @@ import * as actions from './metaactions';
 export function metaReducer(reducer: ActionReducer<AppState>): ActionReducer<AppState> {
   return (state: AppState, action: actions.Actions) => {
     switch (action.type) {
-      // Reverse all currently selected subpaths.
-      case actions.REVERSE_SELECTED_SUBPATHS: {
-        state = mutateSelectedSubPaths(state, (pm, subIdx) => pm.reverseSubPath(subIdx));
-        break;
-      }
-
-      // Shift back all currently selected subpaths.
-      case actions.SHIFT_BACK_SELECTED_SUBPATHS: {
-        state = mutateSelectedSubPaths(state, (pm, subIdx) => pm.shiftSubPathBack(subIdx));
-        break;
-      }
-
-      // Shift forward all currently selected subpaths.
-      case actions.SHIFT_FORWARD_SELECTED_SUBPATHS: {
-        state = mutateSelectedSubPaths(state, (pm, subIdx) => pm.shiftSubPathForward(subIdx));
-        break;
-      }
-
       // Delete all currently selected subpaths/segments/points.
       case actions.DELETE_ACTION_MODE_SELECTIONS: {
         state = deleteSelectedSubPaths(state);
         state = deleteSelectedSegments(state);
         state = deleteSelectedPoints(state);
-        break;
-      }
-
-      // Shift point to the front of its subpath.
-      case actions.SHIFT_POINT_TO_FRONT: {
-        const { source, subIdx, cmdIdx } = getPointSelections(state)[0];
-        const activePath = getActivePath(state, source);
-        const pathMutator = activePath.mutate();
-        pathMutator.shiftSubPathForward(subIdx, cmdIdx);
-        state = updateActivePathBlock(state, source, pathMutator.build());
-        break;
-      }
-
-      // Split the currently selected point.
-      case actions.SPLIT_COMMAND_IN_HALF_CLICK: {
-        const { source, subIdx, cmdIdx } = getPointSelections(state)[0];
-        const activePath = getActivePath(state, source);
-        const pathMutator = activePath.mutate();
-        pathMutator.splitCommandInHalf(subIdx, cmdIdx);
-        state = updateActivePathBlock(state, source, pathMutator.build());
-        state = clearSelections(state);
-        state = clearHover(state);
-        break;
-      }
-
-      // Auto fix the currently active paths.
-      case actions.AUTO_FIX_CLICK: {
-        const { from, to } = AutoAwesome.autoFix(
-          getActivePath(state, ActionSource.From),
-          getActivePath(state, ActionSource.To),
-        );
-        state = updateActivePathBlock(state, ActionSource.From, from);
-        state = updateActivePathBlock(state, ActionSource.To, to);
         break;
       }
 
@@ -188,21 +137,6 @@ function getPointSelections(state: AppState) {
   return state.actionmode.selections.filter(s => s.type === SelectionType.Point);
 }
 
-function mutateSelectedSubPaths(
-  state: AppState,
-  mutatorFn: (pm: PathMutator, subIdx: number) => void,
-) {
-  const selections = getSubPathSelections(state);
-  const { source } = selections[0];
-  const pathMutator = getActivePath(state, source).mutate();
-  for (const { subIdx } of selections) {
-    mutatorFn(pathMutator, subIdx);
-  }
-  state = updateActivePathBlock(state, source, pathMutator.build());
-  state = clearHover(state);
-  return state;
-}
-
 function updateActivePathBlock(state: AppState, source: ActionSource, path: Path) {
   const blockId = state.timeline.selectedBlockIds.values().next().value;
   const { timeline } = state;
@@ -308,7 +242,7 @@ function setUnpairedSubPath(
 }
 
 function deleteSelectedSubPaths(state: AppState) {
-  // TODO: support deleting multiple segments at a time?
+  // TODO: support deleting multiple subpaths at a time?
   const selections = getSubPathSelections(state);
   if (!selections.length) {
     return state;

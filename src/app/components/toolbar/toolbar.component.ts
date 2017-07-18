@@ -155,7 +155,7 @@ export class ToolbarComponent implements OnInit {
 
   onSplitInHalfClick(event: MouseEvent) {
     event.stopPropagation();
-    this.actionModeService.splitInHalfClick();
+    this.actionModeService.splitSelectedPointInHalf();
   }
 
   onDeletePointsClick(event: MouseEvent) {
