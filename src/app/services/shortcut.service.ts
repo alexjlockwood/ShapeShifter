@@ -128,7 +128,7 @@ export class ShortcutService {
         ) {
           this.actionModeService.toggleSplitCommandsMode();
         } else if (this.actionModeService.isShowingPointActionMode()) {
-          this.actionModeService.splitInHalfClick();
+          this.actionModeService.splitSelectedPointInHalf();
         }
         return false;
       }

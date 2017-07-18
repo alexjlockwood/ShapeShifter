@@ -155,7 +155,7 @@ export class ToolbarComponent implements OnInit {
 
   onSplitInHalfClick(event: MouseEvent) {
     event.stopPropagation();
-    this.actionModeService.splitInHalfClick();
+    this.actionModeService.splitSelectedPointInHalf();
   }
 
   onDeletePointsClick(event: MouseEvent) {
@@ -289,7 +289,7 @@ class ToolbarData {
     } else if (numPoints > 0) {
       return `${ptStr} selected`;
     } else if (this.mode === ActionMode.Selection) {
-      return 'Select something below to edit its properties';
+      return 'Edit path morphing animation';
     }
     return 'Shape Shifter';
   }
@@ -328,6 +328,9 @@ class ToolbarData {
         }
         // This should never happen, but return empty string just to be safe.
         return '';
+      }
+      if (!this.getNumSubPaths() && !this.getNumSegments() && !this.getNumPoints()) {
+        return 'Select something below to edit its properties';
       }
     }
     return '';
