@@ -316,9 +316,9 @@ class ToolbarData {
       if (!areCompatible) {
         const createSubtitleFn = (direction: string) => {
           if (numPointsMissing === 1) {
-            return `Add 1 point to the subpath on the ${direction}`;
+            return `Add 1 point to the highlighted subpath on the ${direction}`;
           } else {
-            return `Add ${numPointsMissing} points to the subpath on the ${direction}`;
+            return `Add ${numPointsMissing} points to the highlighted subpath on the ${direction}`;
           }
         };
         if (errorPath === ActionSource.From) {
