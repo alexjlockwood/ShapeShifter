@@ -311,24 +311,26 @@ export class ActionModeService {
     if (subPathSelections.length) {
       // Precondition: all selections exist in the same canvas.
       const { source, subIdx } = subPathSelections[0];
-      const pm = this.getActivePathBlockValue(source).mutate();
-      const layer = this.getActivePathLayer();
-      if (layer.isFilled()) {
-        pm.deleteFilledSubPath(subIdx);
-      } else if (layer.isStroked()) {
-        pm.deleteStrokedSubPath(subIdx);
+      const path = this.getActivePathBlockValue(source);
+      if (path.getSubPath(subIdx).isSplit()) {
+        const pm = path.mutate();
+        const layer = this.getActivePathLayer();
+        if (layer.isFilled()) {
+          pm.deleteFilledSubPath(subIdx);
+        } else if (layer.isStroked()) {
+          pm.deleteStrokedSubPath(subIdx);
+        }
+        updatePathAction = new UpdateActivePathBlock(source, pm.build());
       }
-      updatePathAction = new UpdateActivePathBlock(source, pm.build());
     } else if (segmentSelections.length) {
-      // Precondition: all selections exist in the same canvas.
       const { source, subIdx, cmdIdx } = segmentSelections[0];
-      updatePathAction = new UpdateActivePathBlock(
-        source,
-        this.getActivePathBlockValue(source)
-          .mutate()
-          .deleteFilledSubPathSegment(subIdx, cmdIdx)
-          .build(),
-      );
+      const path = this.getActivePathBlockValue(source);
+      if (path.getCommand(subIdx, cmdIdx).isSplitSegment()) {
+        updatePathAction = new UpdateActivePathBlock(
+          source,
+          path.mutate().deleteFilledSubPathSegment(subIdx, cmdIdx).build(),
+        );
+      }
     } else if (pointSelections.length) {
       const source = pointSelections[0].source;
       const path = this.getActivePathBlockValue(source);
@@ -344,14 +346,14 @@ export class ActionModeService {
         subIdxOps.push({ subIdx, cmdIdx });
         unsplitOpsMap.set(subIdx, subIdxOps);
       }
-      const pm = path.mutate();
-      unsplitOpsMap.forEach((ops, idx) => {
-        PathUtil.sortPathOps(ops);
-        for (const op of ops) {
-          pm.unsplitCommand(op.subIdx, op.cmdIdx);
-        }
-      });
-      updatePathAction = new UpdateActivePathBlock(source, pm.build());
+      if (unsplitOpsMap.size) {
+        const pm = path.mutate();
+        unsplitOpsMap.forEach((ops, idx) => {
+          PathUtil.sortPathOps(ops);
+          ops.forEach(op => pm.unsplitCommand(op.subIdx, op.cmdIdx));
+        });
+        updatePathAction = new UpdateActivePathBlock(source, pm.build());
+      }
     }
     if (updatePathAction) {
       this.store.dispatch(
