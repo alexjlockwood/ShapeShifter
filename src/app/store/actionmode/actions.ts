@@ -1,5 +1,5 @@
 import { Action } from '@ngrx/store';
-import { ActionMode, ActionSource, Hover, Selection } from 'app/model/actionmode';
+import { ActionMode, Hover, Selection } from 'app/model/actionmode';
 
 export const SET_ACTION_MODE = '__actionmode__SET_ACTION_MODE';
 export const SET_ACTION_MODE_HOVER = '__actionmode__SET_ACTION_MODE_HOVER';
