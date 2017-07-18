@@ -102,7 +102,7 @@ export class PropertyInputComponent implements OnInit {
   }
 
   onAutoFixPathsClick(pim: PropertyInputModel) {
-    this.actionModeService.autoFixClick();
+    this.actionModeService.autoFix();
   }
 
   onStartActionModeClick() {

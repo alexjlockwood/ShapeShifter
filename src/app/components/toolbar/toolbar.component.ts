@@ -89,7 +89,7 @@ export class ToolbarComponent implements OnInit {
   onAutoFixClick(event: MouseEvent) {
     ga('send', 'event', 'Action mode', 'Auto fix click');
     event.stopPropagation();
-    this.actionModeService.autoFixClick();
+    this.actionModeService.autoFix();
   }
 
   onCloseActionModeClick(event: MouseEvent) {
@@ -132,12 +132,12 @@ export class ToolbarComponent implements OnInit {
 
   onDeleteSubPathsClick(event: MouseEvent) {
     event.stopPropagation();
-    this.actionModeService.deleteSelections();
+    this.actionModeService.deleteSelectedActionModeModels();
   }
 
   onDeleteSegmentsClick(event: MouseEvent) {
     event.stopPropagation();
-    this.actionModeService.deleteSelections();
+    this.actionModeService.deleteSelectedActionModeModels();
   }
 
   onSetFirstPositionClick(event: MouseEvent) {
@@ -160,7 +160,7 @@ export class ToolbarComponent implements OnInit {
 
   onDeletePointsClick(event: MouseEvent) {
     event.stopPropagation();
-    this.actionModeService.deleteSelections();
+    this.actionModeService.deleteSelectedActionModeModels();
   }
 }
 

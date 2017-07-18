@@ -500,6 +500,7 @@ export class PathMutator {
     LOG('deleteSubPathSplitSegment', subIdx, cmdIdx);
     const { targetCs } = this.findReversedAndShiftedInternalIndices(subIdx, cmdIdx);
     this.deleteFilledSubPathSegmentInternal(subIdx, targetCs);
+    return this;
   }
 
   /**

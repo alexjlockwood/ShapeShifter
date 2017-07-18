@@ -12,14 +12,6 @@ import * as actions from './metaactions';
 export function metaReducer(reducer: ActionReducer<AppState>): ActionReducer<AppState> {
   return (state: AppState, action: actions.Actions) => {
     switch (action.type) {
-      // Delete all currently selected subpaths/segments/points.
-      case actions.DELETE_ACTION_MODE_SELECTIONS: {
-        state = deleteSelectedSubPaths(state);
-        state = deleteSelectedSegments(state);
-        state = deleteSelectedPoints(state);
-        break;
-      }
-
       // Update a path animation block in action mode.
       case actions.UPDATE_ACTIVE_PATH_BLOCK: {
         const { source, path } = action.payload;
@@ -125,18 +117,6 @@ function getActivePath(state: AppState, source: ActionSource) {
   return source === ActionSource.From ? block.fromValue : block.toValue;
 }
 
-function getSubPathSelections(state: AppState) {
-  return state.actionmode.selections.filter(s => s.type === SelectionType.SubPath);
-}
-
-function getSegmentSelections(state: AppState) {
-  return state.actionmode.selections.filter(s => s.type === SelectionType.Segment);
-}
-
-function getPointSelections(state: AppState) {
-  return state.actionmode.selections.filter(s => s.type === SelectionType.Point);
-}
-
 function updateActivePathBlock(state: AppState, source: ActionSource, path: Path) {
   const blockId = state.timeline.selectedBlockIds.values().next().value;
   const { timeline } = state;
@@ -239,75 +219,4 @@ function setUnpairedSubPath(
 ) {
   const { actionmode } = state;
   return { ...state, actionmode: { ...actionmode, unpairedSubPath } };
-}
-
-function deleteSelectedSubPaths(state: AppState) {
-  // TODO: support deleting multiple subpaths at a time?
-  const selections = getSubPathSelections(state);
-  if (!selections.length) {
-    return state;
-  }
-  // Precondition: all selections exist in the same canvas.
-  const { source, subIdx } = selections[0];
-  const pathMutator = getActivePath(state, source).mutate();
-  const activePathLayer = getActivePathBlockLayer(state);
-  if (activePathLayer.isStroked()) {
-    pathMutator.deleteStrokedSubPath(subIdx);
-  } else if (activePathLayer.isFilled()) {
-    pathMutator.deleteFilledSubPath(subIdx);
-  }
-  state = updateActivePathBlock(state, source, pathMutator.build());
-  state = clearSelections(state);
-  state = clearHover(state);
-  return state;
-}
-
-function deleteSelectedSegments(state: AppState) {
-  // TODO: support deleting multiple segments at a time?
-  const selections = getSegmentSelections(state);
-  if (!selections.length) {
-    return state;
-  }
-  // Precondition: all selections exist in the same canvas.
-  const { source, subIdx, cmdIdx } = selections[0];
-  const mutator = getActivePath(state, source).mutate();
-  mutator.deleteFilledSubPathSegment(subIdx, cmdIdx);
-  state = updateActivePathBlock(state, source, mutator.build());
-  state = clearSelections(state);
-  state = clearHover(state);
-  return state;
-}
-
-function deleteSelectedPoints(state: AppState) {
-  const selections = getPointSelections(state);
-  if (!selections.length) {
-    return state;
-  }
-  // Precondition: all selections exist in the same canvas.
-  const source = selections[0].source;
-  const activePath = getActivePath(state, source);
-  const unsplitOpsMap: Map<number, Array<{ subIdx: number; cmdIdx: number }>> = new Map();
-  for (const selection of selections) {
-    const { subIdx, cmdIdx } = selection;
-    if (!activePath.getCommand(subIdx, cmdIdx).isSplitPoint()) {
-      continue;
-    }
-    let subIdxOps = unsplitOpsMap.get(subIdx);
-    if (!subIdxOps) {
-      subIdxOps = [];
-    }
-    subIdxOps.push({ subIdx, cmdIdx });
-    unsplitOpsMap.set(subIdx, subIdxOps);
-  }
-  const mutator = activePath.mutate();
-  unsplitOpsMap.forEach((ops, idx) => {
-    PathUtil.sortPathOps(ops);
-    for (const op of ops) {
-      mutator.unsplitCommand(op.subIdx, op.cmdIdx);
-    }
-  });
-  state = updateActivePathBlock(state, source, mutator.build());
-  state = clearSelections(state);
-  state = clearHover(state);
-  return state;
 }

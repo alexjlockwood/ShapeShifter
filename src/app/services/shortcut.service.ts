@@ -76,7 +76,7 @@ export class ShortcutService {
         // In case there's a JS error, never navigate away.
         event.preventDefault();
         if (this.actionModeService.isActionMode()) {
-          this.actionModeService.deleteSelections();
+          this.actionModeService.deleteSelectedActionModeModels();
         } else {
           this.layerTimelineService.deleteSelectedModels();
         }
