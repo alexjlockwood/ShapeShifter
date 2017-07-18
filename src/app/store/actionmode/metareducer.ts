@@ -117,7 +117,7 @@ export function metaReducer(reducer: ActionReducer<AppState>): ActionReducer<App
               }),
             );
           }
-          const pairedSubPaths = new Set();
+          const pairedSubPaths = new Set<number>();
           state.actionmode.pairedSubPaths.forEach(p => pairedSubPaths.add(p));
           if (pairedSubPaths.has(fromSubIdx)) {
             pairedSubPaths.delete(fromSubIdx);
