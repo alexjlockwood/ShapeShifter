@@ -36,11 +36,11 @@ export const getActionModePointSelections = createDeepEqualSelector(
   selections => selections.filter(s => s.type === SelectionType.Point),
 );
 
-const getPairedSubPaths = createDeepEqualSelector(
+export const getPairedSubPaths = createDeepEqualSelector(
   getActionModeState,
   state => state.pairedSubPaths,
 );
-const getUnpairedSubPath = createDeepEqualSelector(
+export const getUnpairedSubPath = createDeepEqualSelector(
   getActionModeState,
   state => state.unpairedSubPath,
 );
