@@ -39,16 +39,23 @@ export function fix(fromPath: Path, toPath: Path) {
  * TODO: this can still be optimized a lot... work in progress!
  */
 export function autoFix(fromPath: Path, toPath: Path) {
-  fromPath = fromPath.mutate().deleteCollapsingSubPaths().build();
-  toPath = toPath.mutate().deleteCollapsingSubPaths().build();
+  const resetPathFn = (p: Path) => {
+    const pm = p.mutate();
+    p.getSubPaths().forEach((unused, subIdx) => pm.unconvertSubPath(subIdx));
+    return pm.deleteCollapsingSubPaths().build();
+  };
+  resetPathFn(fromPath);
+  resetPathFn(toPath);
 
-  const { from: orderedFromPath, to: orderedToPath } = reorderSubPaths(fromPath, toPath);
+  const result = reorderSubPaths(fromPath, toPath);
+  fromPath = result.from;
+  toPath = result.to;
 
-  const fromSubPaths = orderedFromPath.getSubPaths();
-  const toSubPaths = orderedToPath.getSubPaths();
+  const fromSubPaths = fromPath.getSubPaths();
+  const toSubPaths = toPath.getSubPaths();
 
-  const minSubPaths = Math.min(fromSubPaths.length, toSubPaths.length);
-  for (let subIdx = 0; subIdx < minSubPaths; subIdx++) {
+  const min = Math.min(fromSubPaths.length, toSubPaths.length);
+  for (let subIdx = 0; subIdx < min; subIdx++) {
     // Pass the command with the larger subpath as the 'from' command.
     const numFromCmds = fromSubPaths[subIdx].getCommands().length;
     const numToCmds = toSubPaths[subIdx].getCommands().length;
@@ -220,6 +227,9 @@ export function reorderSubPaths(from: Path, to: Path) {
     return { from, to };
   }
 
+  console.info(from.getPathString());
+  console.info(to.getPathString());
+
   const shouldSwap = from.getSubPaths().length < to.getSubPaths().length;
   if (shouldSwap) {
     const temp = from;
@@ -257,11 +267,13 @@ export function reorderSubPaths(from: Path, to: Path) {
       }
     }
   })();
+  console.info(best.toString());
 
   const pm = from.mutate();
   for (let i = 0; i < best.length; i++) {
     const m = best[i];
     pm.moveSubPath(m, i);
+    console.info('moving ' + m + ' to ' + i);
     for (let j = i + 1; j < best.length; j++) {
       const n = best[j];
       if (n < m) {
@@ -277,6 +289,9 @@ export function reorderSubPaths(from: Path, to: Path) {
     from = to;
     to = from;
   }
+
+  console.info(from.getPathString());
+  console.info(to.getPathString());
 
   return { from, to };
 }

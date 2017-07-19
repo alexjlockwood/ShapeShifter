@@ -462,15 +462,56 @@ export class ActionModeService {
     let block = blocks[blockIndex];
 
     // Remove any existing conversions and collapsing sub paths from the path.
-    const pm = path.mutate();
-    path.getSubPaths().forEach((unused, subIdx) => pm.unconvertSubPath(subIdx));
-    path = pm.deleteCollapsingSubPaths().build();
-
-    const getBlockPathFn = (t: ActionSource) => {
-      return t === ActionSource.From ? block.fromValue : block.toValue;
+    const resetPathFn = (p: Path) => {
+      const pm = p.mutate();
+      p.getSubPaths().forEach((unused, subIdx) => pm.unconvertSubPath(subIdx));
+      return pm.deleteCollapsingSubPaths().build();
     };
-    const setBlockPathFn = (t: ActionSource, p: Path) => {
-      block = block.clone();
+
+    let oppPath = source === ActionSource.From ? block.toValue : block.fromValue;
+    path = resetPathFn(path);
+    oppPath = resetPathFn(oppPath);
+
+    const numSubPaths = path.getSubPaths().length;
+    const numOppSubPaths = oppPath.getSubPaths().length;
+    const min = Math.min(numSubPaths, numOppSubPaths);
+    const max = Math.max(numSubPaths, numOppSubPaths);
+    if (numSubPaths !== numOppSubPaths) {
+      const mutator = (numSubPaths < numOppSubPaths ? path : oppPath).mutate();
+      for (let subIdx = min; subIdx < max; subIdx++) {
+        // TODO: allow the user to specify the location of collapsing paths?
+        const opp = numSubPaths < numOppSubPaths ? oppPath : path;
+        const pole = opp.getPoleOfInaccessibility(subIdx);
+        mutator.addCollapsingSubPath(pole, opp.getSubPath(subIdx).getCommands().length);
+      }
+      if (numSubPaths < numOppSubPaths) {
+        path = mutator.build();
+      } else {
+        oppPath = mutator.build();
+      }
+    }
+    for (let subIdx = 0; subIdx < max; subIdx++) {
+      if (
+        path.getSubPath(subIdx).getCommands().length ===
+        oppPath.getSubPath(subIdx).getCommands().length
+      ) {
+        // Only auto convert when the number of commands in both canvases
+        // are equal. Otherwise we'll wait for the user to add more points.
+        const autoConvertResults = AutoAwesome.autoConvert(
+          subIdx,
+          path,
+          oppPath.mutate().unconvertSubPath(subIdx).build(),
+        );
+        path = autoConvertResults.from;
+
+        // This is the one case where a change in one canvas type's vector layer
+        // will cause corresponding changes to be made in the opposite canvas type's
+        // vector layer.
+        oppPath = autoConvertResults.to;
+      }
+    }
+
+    const setBlockValueFn = (t: ActionSource, p: Path) => {
       if (t === ActionSource.From) {
         block.fromValue = p;
       } else {
@@ -478,51 +519,9 @@ export class ActionModeService {
       }
     };
 
-    const oppSource = source === ActionSource.From ? ActionSource.To : ActionSource.From;
-    let oppPath = getBlockPathFn(oppSource);
-    if (oppPath) {
-      oppPath = oppPath.mutate().deleteCollapsingSubPaths().build();
-      const numSubPaths = path.getSubPaths().length;
-      const numOppSubPaths = oppPath.getSubPaths().length;
-      if (numSubPaths !== numOppSubPaths) {
-        const pathToChange = numSubPaths < numOppSubPaths ? path : oppPath;
-        const oppPathToChange = numSubPaths < numOppSubPaths ? oppPath : path;
-        const minIdx = Math.min(numSubPaths, numOppSubPaths);
-        const maxIdx = Math.max(numSubPaths, numOppSubPaths);
-        const mutator = pathToChange.mutate();
-        for (let i = minIdx; i < maxIdx; i++) {
-          // TODO: allow the user to specify the location of collapsing paths?
-          const pole = oppPathToChange.getPoleOfInaccessibility(i);
-          mutator.addCollapsingSubPath(pole, oppPathToChange.getSubPath(i).getCommands().length);
-        }
-        if (numSubPaths < numOppSubPaths) {
-          path = mutator.build();
-        } else {
-          oppPath = mutator.build();
-        }
-      }
-      for (let subIdx = 0; subIdx < Math.max(numSubPaths, numOppSubPaths); subIdx++) {
-        const numCmds = path.getSubPath(subIdx).getCommands().length;
-        const numOppCommands = oppPath.getSubPath(subIdx).getCommands().length;
-        if (numCmds === numOppCommands) {
-          // Only auto convert when the number of commands in both canvases
-          // are equal. Otherwise we'll wait for the user to add more points.
-          const autoConvertResults = AutoAwesome.autoConvert(
-            subIdx,
-            path,
-            oppPath.mutate().unconvertSubPath(subIdx).build(),
-          );
-          path = autoConvertResults.from;
-
-          // This is the one case where a change in one canvas type's vector layer
-          // will cause corresponding changes to be made in the opposite canvas type's
-          // vector layer.
-          oppPath = autoConvertResults.to;
-        }
-      }
-    }
-    setBlockPathFn(source, path);
-    setBlockPathFn(oppSource, oppPath);
+    block = block.clone();
+    setBlockValueFn(source, path);
+    setBlockValueFn(source === ActionSource.From ? ActionSource.To : ActionSource.From, oppPath);
 
     blocks[blockIndex] = block;
     animation = animation.clone();
