@@ -2,7 +2,6 @@ import { Command, Path, PathMutator, PathUtil } from 'app/model/paths';
 import { MathUtil, Point } from 'app/scripts/common';
 import * as _ from 'lodash';
 
-import { separate } from './AutoMorph';
 import { Alignment, MATCH, MISMATCH, align } from './NeedlemanWunsch';
 
 // POSSIBLE IMPROVEMENTS
@@ -22,14 +21,14 @@ import { Alignment, MATCH, MISMATCH, align } from './NeedlemanWunsch';
 // - Smoother polygon transitions: https://goo.gl/5njTsf
 // - Redistricting: https://goo.gl/sMkYEM
 
-export function fix(fromPath: Path, toPath: Path) {
-  const interpolator = separate(
-    fromPath.getPathString(),
-    toPath.getSubPaths().map(s => new Path([...s.getCommands()]).getPathString()),
-    { single: true },
-  ) as (t: number) => string;
-  return { from: new Path(interpolator(0)), to: new Path(interpolator(1)) };
-}
+// export function fix(fromPath: Path, toPath: Path) {
+//   const interpolator = separate(
+//     fromPath.getPathString(),
+//     toPath.getSubPaths().map(s => new Path([...s.getCommands()]).getPathString()),
+//     { single: true },
+//   ) as (t: number) => string;
+//   return { from: new Path(interpolator(0)), to: new Path(interpolator(1)) };
+// }
 
 /**
  * Takes two arbitrary paths, calculates a best-estimate alignment of the two,
