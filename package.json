@@ -55,13 +55,12 @@
     "tinycolor2": "^1.4.1",
     "topojson-client": "^3.0.0",
     "whet.extend": "~0.9.9",
-    "zone.js": "0.8.12"
+    "zone.js": "0.8.14"
   },
   "devDependencies": {
     "@angular/cli": "^1.2.1",
     "@angular/compiler-cli": "^4.3.0",
     "@angular/language-service": "^4.3.0",
-    "@ngrx/store-devtools": "^3.2.4",
     "@types/d3-array": "^1.2.0",
     "@types/d3-polygon": "^1.0.5",
     "@types/es6-promise": "0.0.32",
