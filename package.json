@@ -21,7 +21,7 @@
     "@angular/common": "^4.3.0",
     "@angular/compiler": "^4.3.0",
     "@angular/core": "^4.3.0",
-    "@angular/flex-layout": "^2.0.0-rc.1",
+    "@angular/flex-layout": "^2.0.0-beta.8",
     "@angular/forms": "^4.3.0",
     "@angular/http": "^4.3.0",
     "@angular/material": "^2.0.0-beta.8",
