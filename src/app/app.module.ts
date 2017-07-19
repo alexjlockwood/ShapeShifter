@@ -62,8 +62,6 @@ import {
 } from './components/layertimeline';
 import { reducer } from './store';
 
-// import { StoreDevtoolsModule } from '@ngrx/store-devtools';
-
 @NgModule({
   declarations: [
     CanvasComponent,
@@ -106,7 +104,6 @@ import { reducer } from './store';
     MdSnackBarModule,
     MdToolbarModule,
     MdTooltipModule,
-    // StoreDevtoolsModule.instrumentOnlyWithExtension({ maxAge: 5 }),
   ],
   providers: [
     ActionModeService,
