@@ -91,7 +91,7 @@ import { reducer } from './store';
     FlexLayoutModule,
     FormsModule,
     HttpModule,
-    StoreModule.provideStore(reducer),
+    StoreModule.forRoot(reducer),
     // Angular material components.
     MdButtonModule,
     MdDialogModule,

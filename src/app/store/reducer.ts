@@ -1,5 +1,4 @@
-import { compose } from '@ngrx/core/compose';
-import { Action, ActionReducer, combineReducers } from '@ngrx/store';
+import { Action, ActionReducer, combineReducers, compose } from '@ngrx/store';
 import { environment } from 'environments/environment';
 import { storeLogger } from 'ngrx-store-logger';
 
