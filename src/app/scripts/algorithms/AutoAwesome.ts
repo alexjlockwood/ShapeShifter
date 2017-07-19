@@ -1,4 +1,4 @@
-import { Command, Path, PathUtil } from 'app/model/paths';
+import { Command, Path, PathMutator, PathUtil } from 'app/model/paths';
 import { MathUtil, Point } from 'app/scripts/common';
 import * as _ from 'lodash';
 
@@ -67,9 +67,56 @@ export function autoFix(fromPath: Path, toPath: Path) {
     fromPath = numFromCmds >= numToCmds ? from : to;
     toPath = numFromCmds >= numToCmds ? to : from;
   }
+
+  for (let subIdx = 0; subIdx < min; subIdx++) {
+    const { from, to } = autoPermute(fromPath, toPath, subIdx);
+    fromPath = from;
+    toPath = to;
+  }
+
   return {
     from: fromPath,
     to: toPath,
+  };
+}
+
+function autoPermute(from: Path, to: Path, subIdx: number) {
+  // Create and return a list of reversed and shifted from paths to test.
+  // Each generated 'from path' will be aligned with the target 'to path'.
+  const fromPaths: ReadonlyArray<Path> = _.flatMap(
+    [from, from.mutate().reverseSubPath(subIdx).build()],
+    p => {
+      const paths = [p];
+      if (p.getSubPath(subIdx).isClosed()) {
+        for (let i = 1; i < p.getSubPath(subIdx).getCommands().length - 1; i++) {
+          // TODO: we need to find a way to reduce the number of paths to try.
+          paths.push(p.mutate().shiftSubPathBack(subIdx, i).build());
+        }
+      }
+      return paths;
+    },
+  );
+
+  let bestPath = from;
+  let min = Infinity;
+  for (const fromPath of fromPaths) {
+    const pm = fromPath.mutate();
+    const fromCmds = fromPath.getSubPath(subIdx).getCommands();
+    const numCmds = fromCmds.length;
+    let sumOfSquares = 0;
+    const toCmds = to.getSubPath(subIdx).getCommands();
+    fromCmds.forEach(
+      (c, cmdIdx) => (sumOfSquares += MathUtil.distance(c.getEnd(), toCmds[cmdIdx].getEnd()) ** 2),
+    );
+    if (sumOfSquares < min) {
+      min = sumOfSquares;
+      bestPath = fromPath;
+    }
+  }
+
+  return {
+    from: bestPath,
+    to,
   };
 }
 
@@ -90,13 +137,6 @@ function autoFixSubPath(subIdx: number, from: Path, to: Path) {
       return paths;
     },
   );
-
-  // TODO: experiment with this... need to test this more
-  // Approximate the centers of the start and end subpaths. We'll use this information
-  // to achieve a more accurate alignment score.
-  // const fromCenter = srcFromPath.getPoleOfInaccessibility(subIdx);
-  // const toCenter = srcToPath.getPoleOfInaccessibility(subIdx);
-  // const centerOffset = new Point(toCenter.x - fromCenter.x, toCenter.y - fromCenter.y);
 
   // The scoring function to use to calculate the alignment. Convert-able
   // commands are considered matches. However, the farther away the points
@@ -174,7 +214,11 @@ function autoFixSubPath(subIdx: number, from: Path, to: Path) {
 
   // Fill in the gaps by applying linear subdivide batch splits.
   const applySplitsFn = (path: Path, gapGroups: ReadonlyTable<CmdInfo>) => {
-    const splitOps: Array<{ subIdx: number; cmdIdx: number; ts: number[] }> = [];
+    const splitOps: Array<{
+      readonly subIdx: number;
+      readonly cmdIdx: number;
+      readonly ts: number[];
+    }> = [];
     const numPaths = path.getSubPath(subIdx).getCommands().length;
     for (let i = gapGroups.length - 1; i >= 0; i--) {
       const gapGroup = gapGroups[i];
@@ -227,9 +271,6 @@ export function reorderSubPaths(from: Path, to: Path) {
     return { from, to };
   }
 
-  console.info(from.getPathString());
-  console.info(to.getPathString());
-
   const shouldSwap = from.getSubPaths().length < to.getSubPaths().length;
   if (shouldSwap) {
     const temp = from;
@@ -267,13 +308,11 @@ export function reorderSubPaths(from: Path, to: Path) {
       }
     }
   })();
-  console.info(best.toString());
 
   const pm = from.mutate();
   for (let i = 0; i < best.length; i++) {
     const m = best[i];
     pm.moveSubPath(m, i);
-    console.info('moving ' + m + ' to ' + i);
     for (let j = i + 1; j < best.length; j++) {
       const n = best[j];
       if (n < m) {
@@ -289,9 +328,6 @@ export function reorderSubPaths(from: Path, to: Path) {
     from = to;
     to = from;
   }
-
-  console.info(from.getPathString());
-  console.info(to.getPathString());
 
   return { from, to };
 }
