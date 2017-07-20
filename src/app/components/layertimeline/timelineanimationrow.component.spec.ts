@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed, async, inject } from '@angular/core/testing';
 import { FlexLayoutModule } from '@angular/flex-layout';
-import { ActionModeService } from 'app/services';
+import { ActionModeService, LayerTimelineService } from 'app/services';
 import { Store } from 'app/store';
 import { MockStore } from 'test/MockStore';
 
@@ -15,7 +15,11 @@ describe('TimelineAnimationRowComponent', () => {
       TestBed.configureTestingModule({
         declarations: [TimelineAnimationRowComponent],
         imports: [FlexLayoutModule],
-        providers: [{ provide: Store, useValue: new MockStore() }, ActionModeService],
+        providers: [
+          { provide: Store, useValue: new MockStore() },
+          ActionModeService,
+          LayerTimelineService,
+        ],
       }).compileComponents();
     }),
   );

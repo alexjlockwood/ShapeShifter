@@ -20,6 +20,7 @@ import {
   DialogService,
   FileExportService,
   FileImportService,
+  LayerTimelineService,
   PlaybackService,
   ShortcutService,
   SnackBarService,
@@ -49,7 +50,12 @@ describe('ToolbarComponent', () => {
           MdSlideToggleModule,
           NoopAnimationsModule,
         ],
-        providers: [{ provide: Store, useValue: new MockStore() }, ActionModeService, ThemeService],
+        providers: [
+          { provide: Store, useValue: new MockStore() },
+          ActionModeService,
+          LayerTimelineService,
+          ThemeService,
+        ],
       }).compileComponents();
       loadSvgIcons([
         { name: 'autofix', path: 'assets/icons/autofix.svg' },

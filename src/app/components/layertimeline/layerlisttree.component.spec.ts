@@ -10,7 +10,7 @@ import {
 } from '@angular/material';
 import { DomSanitizer } from '@angular/platform-browser';
 import { By } from '@angular/platform-browser';
-import { ActionModeService } from 'app/services';
+import { ActionModeService, LayerTimelineService } from 'app/services';
 import { Store } from 'app/store';
 import { State as LayerState } from 'app/store/layers/reducer';
 import * as $ from 'jquery';
@@ -35,7 +35,11 @@ describe('LayerListTreeComponent', () => {
           MdMenuModule,
           MdTooltipModule,
         ],
-        providers: [{ provide: Store, useValue: new MockStore() }, ActionModeService],
+        providers: [
+          { provide: Store, useValue: new MockStore() },
+          ActionModeService,
+          LayerTimelineService,
+        ],
       }).compileComponents();
       loadSvgIcons([
         { name: 'animationblock', path: 'assets/icons/animationblock.svg' },
