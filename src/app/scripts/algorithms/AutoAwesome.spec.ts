@@ -2,7 +2,7 @@ import { Path } from 'app/model/paths';
 
 import { AutoAwesome } from '.';
 
-fdescribe('AutoAwesome', () => {
+describe('AutoAwesome', () => {
   describe('#findOptimalSubPathMapping', () => {
     const TESTS = [
       {
@@ -42,7 +42,7 @@ fdescribe('AutoAwesome', () => {
     ];
     TESTS.forEach(({ from: f, to: t, expectedFrom, expectedTo }) => {
       it(`from: ${f}, to: ${t}`, () => {
-        const { from, to } = AutoAwesome.reorderSubPaths(new Path(f), new Path(t));
+        const [from, to] = AutoAwesome.orderSubPaths(new Path(f), new Path(t));
         expect(from.getPathString()).toEqual(new Path(expectedFrom).getPathString());
         expect(to.getPathString()).toEqual(new Path(expectedTo).getPathString());
       });

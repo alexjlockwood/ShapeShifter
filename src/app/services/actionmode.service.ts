@@ -357,7 +357,7 @@ export class ActionModeService {
   // Autofix.
 
   autoFix() {
-    const { from, to } = AutoAwesome.autoFix(
+    const [from, to] = AutoAwesome.autoFix(
       this.getActivePathBlockValue(ActionSource.From),
       this.getActivePathBlockValue(ActionSource.To),
     );
@@ -497,17 +497,17 @@ export class ActionModeService {
       ) {
         // Only auto convert when the number of commands in both canvases
         // are equal. Otherwise we'll wait for the user to add more points.
-        const autoConvertResults = AutoAwesome.autoConvert(
-          subIdx,
+        const results = AutoAwesome.autoConvert(
           path,
           oppPath.mutate().unconvertSubPath(subIdx).build(),
+          subIdx,
         );
-        path = autoConvertResults.from;
+        path = results[0];
 
         // This is the one case where a change in one canvas type's vector layer
         // will cause corresponding changes to be made in the opposite canvas type's
         // vector layer.
-        oppPath = autoConvertResults.to;
+        oppPath = results[1];
       }
     }
 

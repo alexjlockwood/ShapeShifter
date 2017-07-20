@@ -1,3 +1,5 @@
+// TODO: test stroked paths
+
 import { Command, Path, PathMutator, PathUtil } from 'app/model/paths';
 import { MathUtil, Point } from 'app/scripts/common';
 import * as _ from 'lodash';
@@ -34,108 +36,125 @@ import { Alignment, MATCH, MISMATCH, align } from './NeedlemanWunsch';
  * Takes two arbitrary paths, calculates a best-estimate alignment of the two,
  * and then inserts no-op commands into the alignment gaps to make the two paths
  * compatible with each other.
- *
- * TODO: this can still be optimized a lot... work in progress!
  */
-export function autoFix(fromPath: Path, toPath: Path) {
-  const resetPathFn = (p: Path) => {
-    const pm = p.mutate();
-    p.getSubPaths().forEach((unused, subIdx) => pm.unconvertSubPath(subIdx));
-    return pm.deleteCollapsingSubPaths().build();
-  };
-  resetPathFn(fromPath);
-  resetPathFn(toPath);
+export function autoFix(from: Path, to: Path): [Path, Path] {
+  [from, to] = clearState(from, to);
+  [from, to] = orderSubPaths(from, to);
 
-  const result = reorderSubPaths(fromPath, toPath);
-  fromPath = result.from;
-  toPath = result.to;
-
-  const fromSubPaths = fromPath.getSubPaths();
-  const toSubPaths = toPath.getSubPaths();
-
-  const min = Math.min(fromSubPaths.length, toSubPaths.length);
+  const min = Math.min(from.getSubPaths().length, to.getSubPaths().length);
   for (let subIdx = 0; subIdx < min; subIdx++) {
+    // [from, to] = permuteSubPath(from, to, subIdx);
+
     // Pass the command with the larger subpath as the 'from' command.
-    const numFromCmds = fromSubPaths[subIdx].getCommands().length;
-    const numToCmds = toSubPaths[subIdx].getCommands().length;
-    const { from, to } = autoFixSubPath(
-      subIdx,
-      numFromCmds >= numToCmds ? fromPath : toPath,
-      numFromCmds >= numToCmds ? toPath : fromPath,
-    );
-    fromPath = numFromCmds >= numToCmds ? from : to;
-    toPath = numFromCmds >= numToCmds ? to : from;
-  }
-
-  for (let subIdx = 0; subIdx < min; subIdx++) {
-    const { from, to } = autoPermute(fromPath, toPath, subIdx);
-    fromPath = from;
-    toPath = to;
-  }
-
-  return {
-    from: fromPath,
-    to: toPath,
-  };
-}
-
-function autoPermute(from: Path, to: Path, subIdx: number) {
-  // Create and return a list of reversed and shifted from paths to test.
-  // Each generated 'from path' will be aligned with the target 'to path'.
-  const fromPaths: ReadonlyArray<Path> = _.flatMap(
-    [from, from.mutate().reverseSubPath(subIdx).build()],
-    p => {
-      const paths = [p];
-      if (p.getSubPath(subIdx).isClosed()) {
-        for (let i = 1; i < p.getSubPath(subIdx).getCommands().length - 1; i++) {
-          // TODO: we need to find a way to reduce the number of paths to try.
-          paths.push(p.mutate().shiftSubPathBack(subIdx, i).build());
-        }
-      }
-      return paths;
-    },
-  );
-
-  let bestPath = from;
-  let min = Infinity;
-  for (const fromPath of fromPaths) {
-    const pm = fromPath.mutate();
-    const fromCmds = fromPath.getSubPath(subIdx).getCommands();
-    const numCmds = fromCmds.length;
-    let sumOfSquares = 0;
-    const toCmds = to.getSubPath(subIdx).getCommands();
-    fromCmds.forEach(
-      (c, cmdIdx) => (sumOfSquares += MathUtil.distance(c.getEnd(), toCmds[cmdIdx].getEnd()) ** 2),
-    );
-    if (sumOfSquares < min) {
-      min = sumOfSquares;
-      bestPath = fromPath;
+    const numFromCmds = from.getSubPath(subIdx).getCommands().length;
+    const numToCmds = to.getSubPath(subIdx).getCommands().length;
+    const shouldSwap = numFromCmds < numToCmds;
+    if (shouldSwap) {
+      [from, to] = [to, from];
+    }
+    [from, to] = alignSubPath(from, to, subIdx);
+    if (shouldSwap) {
+      [from, to] = [to, from];
     }
   }
 
-  return {
-    from: bestPath,
-    to,
-  };
+  for (let subIdx = 0; subIdx < min; subIdx++) {
+    [from, to] = permuteSubPath(from, to, subIdx);
+  }
+
+  return [from, to];
 }
 
-// TODO: can this be optimized? (this essentially brute-forces all possible permutations)
-function autoFixSubPath(subIdx: number, from: Path, to: Path) {
+/** Deletes conversions and collapsing subpaths from the specified paths. */
+function clearState(...paths: Path[]) {
+  return paths.map(p => {
+    const pm = p.mutate();
+    p.getSubPaths().forEach((unused, subIdx) => pm.unconvertSubPath(subIdx));
+    return pm.deleteCollapsingSubPaths().build();
+  });
+}
+
+/**
+ * Reorders the subpaths in each path to minimize the distance each shape will
+ * travel during the morph.
+ */
+// TODO: don't export this function (test it indirectly instead)
+export function orderSubPaths(from: Path, to: Path): [Path, Path] {
+  if (from.getSubPaths().length > 8 || to.getSubPaths().length > 8) {
+    // Don't attempt to order paths with many subpaths.
+    return [from, to];
+  }
+
+  const shouldSwap = from.getSubPaths().length < to.getSubPaths().length;
+  if (shouldSwap) {
+    [from, to] = [to, from];
+  }
+
+  const fromSubPaths = from.getSubPaths();
+  const toSubPaths = to.getSubPaths();
+
+  const distances = fromSubPaths.map((f, i) => {
+    return toSubPaths.map((t, j) => {
+      const pole1 = from.getPoleOfInaccessibility(i);
+      const pole2 = to.getPoleOfInaccessibility(j);
+      return MathUtil.distance(pole1, pole2);
+    });
+  });
+
+  let min = Infinity;
+  let best: number[] = [];
+
+  (function recurseFn(arr: number[], order: number[] = []) {
+    if (order.length === toSubPaths.length) {
+      let sum = 0;
+      for (let i = 0; i < order.length; i++) {
+        sum += distances[order[i]][i];
+      }
+      if (sum < min) {
+        min = sum;
+        best = order;
+      }
+      return;
+    }
+    for (let i = 0; i < arr.length; i++) {
+      const [cur] = arr.splice(i, 1);
+      recurseFn([...arr], [...order, cur]);
+      if (arr.length) {
+        arr.splice(i, 0, cur);
+      }
+    }
+  })(_.range(fromSubPaths.length));
+
+  const pm = from.mutate();
+  for (let i = 0; i < best.length; i++) {
+    const m = best[i];
+    pm.moveSubPath(m, i);
+    for (let j = i + 1; j < best.length; j++) {
+      const n = best[j];
+      if (n < m) {
+        best[j]++;
+      }
+    }
+  }
+  from = pm.build();
+
+  if (shouldSwap) {
+    [from, to] = [to, from];
+  }
+
+  return [from, to];
+}
+
+/** Aligns two paths using the Needleman-Wunsch algorithm. */
+function alignSubPath(from: Path, to: Path, subIdx: number): [Path, Path] {
   // Create and return a list of reversed and shifted from paths to test.
   // Each generated 'from path' will be aligned with the target 'to path'.
-  const fromPaths: ReadonlyArray<Path> = _.flatMap(
-    [from, from.mutate().reverseSubPath(subIdx).build()],
-    p => {
-      const paths = [p];
-      if (p.getSubPath(subIdx).isClosed()) {
-        for (let i = 1; i < p.getSubPath(subIdx).getCommands().length - 1; i++) {
-          // TODO: we need to find a way to reduce the number of paths to try.
-          paths.push(p.mutate().shiftSubPathBack(subIdx, i).build());
-        }
-      }
-      return paths;
-    },
-  );
+  const fromPaths: Path[] = [from];
+  if (from.getSubPath(subIdx).isClosed()) {
+    for (let i = 1; i < from.getSubPath(subIdx).getCommands().length - 1; i++) {
+      fromPaths.push(from.mutate().shiftSubPathBack(subIdx, i).build());
+    }
+  }
 
   // The scoring function to use to calculate the alignment. Convert-able
   // commands are considered matches. However, the farther away the points
@@ -240,14 +259,14 @@ function autoFixSubPath(subIdx: number, from: Path, to: Path) {
   const toPathResult = applySplitsFn(to, toGapGroups);
 
   // Finally, convert the commands before returning the result.
-  return autoConvert(subIdx, fromPathResult, toPathResult);
+  return autoConvert(fromPathResult, toPathResult, subIdx);
 }
 
 /**
  * Takes two paths with an equal number of commands and makes them compatible
  * by converting each pair one-by-one.
  */
-export function autoConvert(subIdx: number, from: Path, to: Path) {
+export function autoConvert(from: Path, to: Path, subIdx: number): [Path, Path] {
   const fromMutator = from.mutate();
   const toMutator = to.mutate();
   from.getSubPath(subIdx).getCommands().forEach((fromCmd, cmdIdx) => {
@@ -261,78 +280,41 @@ export function autoConvert(subIdx: number, from: Path, to: Path) {
       toMutator.convertCommand(subIdx, cmdIdx, fromCmd.getSvgChar());
     }
   });
-  return { from: fromMutator.build(), to: toMutator.build() };
+  return [fromMutator.build(), toMutator.build()];
 }
 
-export function reorderSubPaths(from: Path, to: Path) {
-  if (from.getSubPaths().length > 8 || to.getSubPaths().length > 8) {
-    // Don't permute huge arrays.
-    return { from, to };
+function permuteSubPath(from: Path, to: Path, subIdx: number): [Path, Path] {
+  if (from.isClockwise(subIdx) !== to.isClockwise(subIdx)) {
+    // Make sure the paths share the same direction.
+    to = to.mutate().reverseSubPath(subIdx).build();
   }
 
-  const shouldSwap = from.getSubPaths().length < to.getSubPaths().length;
-  if (shouldSwap) {
-    const temp = from;
-    from = to;
-    to = temp;
+  // Create and return a list of reversed and shifted from paths to test.
+  // Each generated 'from path' will be aligned with the target 'to path'.
+  const fromPaths: Path[] = [from];
+  if (from.getSubPath(subIdx).isClosed()) {
+    for (let i = 1; i < from.getSubPath(subIdx).getCommands().length - 1; i++) {
+      // TODO: we need to find a way to reduce the number of paths to try.
+      fromPaths.push(from.mutate().shiftSubPathBack(subIdx, i).build());
+    }
   }
 
-  const fromSubPaths = from.getSubPaths();
-  const toSubPaths = to.getSubPaths();
-
-  const distances = fromSubPaths.map((f, i) =>
-    toSubPaths.map((t, j) => squaredDistance(from, i, to, j)),
-  );
-
+  let bestFromPath = from;
   let min = Infinity;
-  let best: number[] = [];
-
-  (function recurseFn(arr: number[] = _.range(fromSubPaths.length), order: number[] = []) {
-    if (order.length === toSubPaths.length) {
-      let sum = 0;
-      for (let i = 0; i < order.length; i++) {
-        sum += distances[order[i]][i];
-      }
-      if (sum < min) {
-        min = sum;
-        best = order;
-      }
-      return;
-    }
-    for (let i = 0; i < arr.length; i++) {
-      const [cur] = arr.splice(i, 1);
-      recurseFn([...arr], [...order, cur]);
-      if (arr.length) {
-        arr.splice(i, 0, cur);
-      }
-    }
-  })();
-
-  const pm = from.mutate();
-  for (let i = 0; i < best.length; i++) {
-    const m = best[i];
-    pm.moveSubPath(m, i);
-    for (let j = i + 1; j < best.length; j++) {
-      const n = best[j];
-      if (n < m) {
-        best[j]++;
-      }
+  for (const fromPath of fromPaths) {
+    const pm = fromPath.mutate();
+    const fromCmds = fromPath.getSubPath(subIdx).getCommands();
+    const numCmds = fromCmds.length;
+    let sumOfSquares = 0;
+    const toCmds = to.getSubPath(subIdx).getCommands();
+    fromCmds.forEach(
+      (c, cmdIdx) => (sumOfSquares += MathUtil.distance(c.getEnd(), toCmds[cmdIdx].getEnd()) ** 2),
+    );
+    if (sumOfSquares < min) {
+      min = sumOfSquares;
+      bestFromPath = fromPath;
     }
   }
 
-  from = pm.build();
-
-  if (shouldSwap) {
-    const temp = from;
-    from = to;
-    to = from;
-  }
-
-  return { from, to };
-}
-
-function squaredDistance(path1: Path, subIdx1: number, path2: Path, subIdx2: number) {
-  const p1 = path1.getPoleOfInaccessibility(subIdx1);
-  const p2 = path2.getPoleOfInaccessibility(subIdx2);
-  return MathUtil.distance(p1, p2) ** 2;
+  return [bestFromPath, to];
 }

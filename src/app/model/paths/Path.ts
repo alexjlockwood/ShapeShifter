@@ -169,6 +169,13 @@ export class Path {
   }
 
   /**
+   * Returns true iff the subpath at the specified index is clockwise.
+   */
+  isClockwise(subIdx: number) {
+    return this.ps.isClockwise(subIdx);
+  }
+
+  /**
    * Creates a builder that can create a mutated Path object.
    */
   mutate() {

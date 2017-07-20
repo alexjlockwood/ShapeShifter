@@ -283,6 +283,17 @@ export class PathState {
     return createBoundingBox(css);
   }
 
+  isClockwise(subIdx: number) {
+    const cmds = this.subPaths[subIdx].getCommands();
+    let sum = 0;
+    for (let i = 0; i < cmds.length; i++) {
+      const { x: x0, y: y0 } = cmds[i].getEnd();
+      const { x: x1, y: y1 } = cmds[(i + 1) % cmds.length].getEnd();
+      sum += (x1 - x0) * (y1 - y0);
+    }
+    return sum >= 0;
+  }
+
   private findSubPathState(subIdx: number) {
     return findSubPathState(this.subPathStateMap, this.subPathOrdering[subIdx]);
   }
