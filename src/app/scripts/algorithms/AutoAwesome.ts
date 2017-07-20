@@ -23,22 +23,14 @@ import { Alignment, MATCH, MISMATCH, align } from './NeedlemanWunsch';
 // - Smoother polygon transitions: https://goo.gl/5njTsf
 // - Redistricting: https://goo.gl/sMkYEM
 
-// export function fix(fromPath: Path, toPath: Path) {
-//   const interpolator = separate(
-//     fromPath.getPathString(),
-//     toPath.getSubPaths().map(s => new Path([...s.getCommands()]).getPathString()),
-//     { single: true },
-//   ) as (t: number) => string;
-//   return { from: new Path(interpolator(0)), to: new Path(interpolator(1)) };
-// }
-
 /**
  * Takes two arbitrary paths, calculates a best-estimate alignment of the two,
  * and then inserts no-op commands into the alignment gaps to make the two paths
  * compatible with each other.
  */
 export function autoFix(from: Path, to: Path): [Path, Path] {
-  [from, to] = clearState(from, to);
+  [from, to] = autoUnconvertSubPaths(from, to);
+  [from, to] = autoAddCollapsingSubPaths(from, to);
   [from, to] = orderSubPaths(from, to);
 
   const min = Math.min(from.getSubPaths().length, to.getSubPaths().length);
@@ -65,21 +57,48 @@ export function autoFix(from: Path, to: Path): [Path, Path] {
   return [from, to];
 }
 
-/** Deletes conversions and collapsing subpaths from the specified paths. */
-function clearState(...paths: Path[]) {
-  return paths.map(p => {
+function autoUnconvertSubPaths(from: Path, to: Path) {
+  return [from, to].map(p => {
     const pm = p.mutate();
     p.getSubPaths().forEach((unused, subIdx) => pm.unconvertSubPath(subIdx));
-    return pm.deleteCollapsingSubPaths().build();
-  });
+    return pm.build();
+  }) as [Path, Path];
+}
+
+export function autoAddCollapsingSubPaths(from: Path, to: Path): [Path, Path] {
+  const deleteCollapsingSubPathsFn = (p: Path) => {
+    return p.getSubPaths().some(s => s.isCollapsing())
+      ? p.mutate().deleteCollapsingSubPaths().build()
+      : p;
+  };
+  from = deleteCollapsingSubPathsFn(from);
+  to = deleteCollapsingSubPathsFn(to);
+
+  const numFrom = from.getSubPaths().length;
+  const numTo = to.getSubPaths().length;
+  if (numFrom === numTo) {
+    return [from, to];
+  }
+  // TODO: allow the user to specify the location of collapsing paths?
+  const pm = (numFrom < numTo ? from : to).mutate();
+  for (let subIdx = Math.min(numFrom, numTo); subIdx < Math.max(numFrom, numTo); subIdx++) {
+    const opp = numFrom < numTo ? to : from;
+    const pole = opp.getPoleOfInaccessibility(subIdx);
+    pm.addCollapsingSubPath(pole, opp.getSubPath(subIdx).getCommands().length);
+  }
+  if (numFrom < numTo) {
+    from = pm.build();
+  } else {
+    to = pm.build();
+  }
+  return [from, to];
 }
 
 /**
  * Reorders the subpaths in each path to minimize the distance each shape will
  * travel during the morph.
  */
-// TODO: don't export this function (test it indirectly instead)
-export function orderSubPaths(from: Path, to: Path): [Path, Path] {
+function orderSubPaths(from: Path, to: Path): [Path, Path] {
   if (from.getSubPaths().length > 8 || to.getSubPaths().length > 8) {
     // Don't attempt to order paths with many subpaths.
     return [from, to];
@@ -259,28 +278,47 @@ function alignSubPath(from: Path, to: Path, subIdx: number): [Path, Path] {
   const toPathResult = applySplitsFn(to, toGapGroups);
 
   // Finally, convert the commands before returning the result.
-  return autoConvert(fromPathResult, toPathResult, subIdx);
+  return autoConvertSubPath(fromPathResult, toPathResult, subIdx);
 }
 
 /**
  * Takes two paths with an equal number of commands and makes them compatible
  * by converting each pair one-by-one.
  */
-export function autoConvert(from: Path, to: Path, subIdx: number): [Path, Path] {
-  const fromMutator = from.mutate();
-  const toMutator = to.mutate();
-  from.getSubPath(subIdx).getCommands().forEach((fromCmd, cmdIdx) => {
+export function autoConvert(from: Path, to: Path): [Path, Path] {
+  [from, to] = autoUnconvertSubPaths(from, to);
+  const numFrom = from.getSubPaths().length;
+  const numTo = to.getSubPaths().length;
+  for (let subIdx = 0; subIdx < Math.min(numFrom, numTo); subIdx++) {
+    // Only auto convert when the number of commands in both canvases
+    // are equal. Otherwise we'll wait for the user to add more points.
+    [from, to] = autoConvertSubPath(from, to, subIdx);
+  }
+  return [from, to];
+}
+
+function autoConvertSubPath(from: Path, to: Path, subIdx: number): [Path, Path] {
+  const numFrom = from.getSubPath(subIdx).getCommands().length;
+  const numTo = to.getSubPath(subIdx).getCommands().length;
+  if (numFrom !== numTo) {
+    // Only auto convert when the number of commands in both subpaths are equal.
+    return [from, to];
+  }
+  const fromPm = from.mutate();
+  const toPm = to.mutate();
+  for (let cmdIdx = 0; cmdIdx < numFrom; cmdIdx++) {
+    const fromCmd = from.getCommand(subIdx, cmdIdx);
     const toCmd = to.getCommand(subIdx, cmdIdx);
     if (fromCmd.getSvgChar() === toCmd.getSvgChar()) {
-      return;
+      continue;
     }
     if (fromCmd.canConvertTo(toCmd.getSvgChar())) {
-      fromMutator.convertCommand(subIdx, cmdIdx, toCmd.getSvgChar());
+      fromPm.convertCommand(subIdx, cmdIdx, toCmd.getSvgChar());
     } else if (toCmd.canConvertTo(fromCmd.getSvgChar())) {
-      toMutator.convertCommand(subIdx, cmdIdx, fromCmd.getSvgChar());
+      toPm.convertCommand(subIdx, cmdIdx, fromCmd.getSvgChar());
     }
-  });
-  return [fromMutator.build(), toMutator.build()];
+  }
+  return [fromPm.build(), toPm.build()];
 }
 
 function permuteSubPath(from: Path, to: Path, subIdx: number): [Path, Path] {
@@ -318,3 +356,12 @@ function permuteSubPath(from: Path, to: Path, subIdx: number): [Path, Path] {
 
   return [bestFromPath, to];
 }
+
+// export function fix(fromPath: Path, toPath: Path) {
+//   const interpolator = separate(
+//     fromPath.getPathString(),
+//     toPath.getSubPaths().map(s => new Path([...s.getCommands()]).getPathString()),
+//     { single: true },
+//   ) as (t: number) => string;
+//   return { from: new Path(interpolator(0)), to: new Path(interpolator(1)) };
+// }

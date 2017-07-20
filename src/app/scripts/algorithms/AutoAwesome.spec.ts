@@ -40,12 +40,12 @@ describe('AutoAwesome', () => {
       //   expected: [1, undefined, 0],
       // },
     ];
-    TESTS.forEach(({ from: f, to: t, expectedFrom, expectedTo }) => {
-      it(`from: ${f}, to: ${t}`, () => {
-        const [from, to] = AutoAwesome.orderSubPaths(new Path(f), new Path(t));
-        expect(from.getPathString()).toEqual(new Path(expectedFrom).getPathString());
-        expect(to.getPathString()).toEqual(new Path(expectedTo).getPathString());
-      });
-    });
+    // TESTS.forEach(({ from: f, to: t, expectedFrom, expectedTo }) => {
+    //   it(`from: ${f}, to: ${t}`, () => {
+    //     const [from, to] = AutoAwesome.orderSubPaths(new Path(f), new Path(t));
+    //     expect(from.getPathString()).toEqual(new Path(expectedFrom).getPathString());
+    //     expect(to.getPathString()).toEqual(new Path(expectedTo).getPathString());
+    //   });
+    // });
   });
 });
