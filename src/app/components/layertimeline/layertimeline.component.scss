@@ -21,10 +21,6 @@
     .slt-layer-container {
         padding-top: 8px;
     }
-    .slt-timeline-animation-rows {
-        padding-top: 8px;
-        z-index: 2;
-    }
     .slt-layer {
         box-sizing: border-box;
         line-height: 20px;
@@ -116,7 +112,6 @@
         flex-direction: row;
         align-items: stretch;
         .slt-timeline-animation-scroller {
-            padding-top: 20px;
             position: relative;
             overflow-x: hidden;
             overflow-y: auto;
@@ -138,6 +133,7 @@
             }
         }
         .slt-timeline-animation-rows {
+            padding-top: 8px;
             padding-left: $timelineAnimationPadding;
             padding-right: $timelineAnimationPadding;
             z-index: 2;

@@ -478,7 +478,7 @@ export class ActionModeService {
     setBlockValueFn(newBlock, source, path);
     setBlockValueFn(newBlock, oppSource, oppPath);
 
-    const newBlocks = animation.blocks.map((b, i) => (i === blockIndex ? block : b));
+    const newBlocks = animation.blocks.map((b, i) => (i === blockIndex ? newBlock : b));
     animation = animation.clone();
     animation.blocks = newBlocks;
     return animation;

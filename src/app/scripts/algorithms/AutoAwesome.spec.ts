@@ -2,9 +2,29 @@ import { Path } from 'app/model/paths';
 
 import { AutoAwesome } from '.';
 
-describe('AutoAwesome', () => {
+fdescribe('AutoAwesome', () => {
   describe('#autoFix', () => {
     const TESTS = [
+      {
+        actual: {
+          from: 'M 2 2 L 12 2 L 12 12 L 2 12 L 2 2',
+          to: 'M 12 12 L 2 12 L 2 2 L 12 2 L 12 12',
+        },
+        expected: {
+          from: 'M 12 12 L 2 12 L 2 2 L 12 2 L 12 12',
+          to: 'M 12 12 L 2 12 L 2 2 L 12 2 L 12 12',
+        },
+      },
+      {
+        actual: {
+          from: 'M 0 0 h10v10h-10v-10 M 20 20 h10v10h-10v-10',
+          to: 'M 20 20 h10v10h-10v-10 M 0 0 h10v10h-10v-10',
+        },
+        expected: {
+          from: 'M 20 20 h10v10h-10v-10 M 0 0 h10v10h-10v-10',
+          to: 'M 20 20 h10v10h-10v-10 M 0 0 h10v10h-10v-10',
+        },
+      },
       {
         actual: {
           from: 'M 0 0 h10v10h-10v-10 M 20 20 h10v10h-10v-10',
