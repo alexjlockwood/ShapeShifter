@@ -1,7 +1,7 @@
 // TODO: test stroked paths
 
-import { Command, Path, PathMutator, PathUtil } from 'app/model/paths';
-import { MathUtil, Point } from 'app/scripts/common';
+import { Command, Path, PathUtil } from 'app/model/paths';
+import { MathUtil } from 'app/scripts/common';
 import * as _ from 'lodash';
 
 import { Alignment, MATCH, MISMATCH, align } from './NeedlemanWunsch';
@@ -340,9 +340,7 @@ function permuteSubPath(from: Path, to: Path, subIdx: number): [Path, Path] {
   let bestFromPath = from;
   let min = Infinity;
   for (const fromPath of fromPaths) {
-    const pm = fromPath.mutate();
     const fromCmds = fromPath.getSubPath(subIdx).getCommands();
-    const numCmds = fromCmds.length;
     let sumOfSquares = 0;
     const toCmds = to.getSubPath(subIdx).getCommands();
     fromCmds.forEach(
