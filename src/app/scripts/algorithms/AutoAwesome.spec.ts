@@ -2,7 +2,7 @@ import { Path } from 'app/model/paths';
 
 import { AutoAwesome } from '.';
 
-fdescribe('AutoAwesome', () => {
+describe('AutoAwesome', () => {
   describe('#autoFix', () => {
     const TESTS = [
       {
