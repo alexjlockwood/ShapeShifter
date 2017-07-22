@@ -190,7 +190,10 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
           const layer = this.activePathLayer;
           if (
             this.actionMode === ActionMode.SplitCommands ||
-            (this.actionMode === ActionMode.SplitSubPaths && layer && layer.isStroked())
+            (this.actionMode === ActionMode.SplitSubPaths &&
+              layer &&
+              layer.isStroked() &&
+              !layer.isFilled())
           ) {
             const subIdxs = new Set<number>();
             for (const s of this.actionSelections) {
