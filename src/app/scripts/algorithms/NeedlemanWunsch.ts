@@ -34,7 +34,7 @@ export function align<T>(
   for (i = 0; i < listA.length; i++) {
     const row = [];
     for (j = 0; j < listB.length; j++) {
-      row.push(i === 0 ? -j : j === 0 ? -i : 0);
+      row.push(i === 0 ? j * INDEL : j === 0 ? i * INDEL : 0);
     }
     matrix.push(row);
   }
