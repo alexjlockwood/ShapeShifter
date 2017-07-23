@@ -354,12 +354,3 @@ function permuteSubPath(from: Path, to: Path, subIdx: number): [Path, Path] {
 
   return [bestFromPath, to];
 }
-
-// export function fix(fromPath: Path, toPath: Path) {
-//   const interpolator = separate(
-//     fromPath.getPathString(),
-//     toPath.getSubPaths().map(s => new Path([...s.getCommands()]).getPathString()),
-//     { single: true },
-//   ) as (t: number) => string;
-//   return { from: new Path(interpolator(0)), to: new Path(interpolator(1)) };
-// }
