@@ -119,6 +119,7 @@ and [Steph Yim][steph-yim-website] for all of their help during the early stages
 
   [report-feature-request]: https://github.com/alexjlockwood/ShapeShifter/issues/new
   [adp-icon-animations]: http://www.androiddesignpatterns.com/2016/11/introduction-to-icon-animation-techniques.html
+  [adp-path-morphing]: http://www.androiddesignpatterns.com/2016/11/introduction-to-icon-animation-techniques.html#morphing-paths
   [sketch]: https://www.sketchapp.com/
   [illustrator]: http://www.adobe.com/products/illustrator.html
   [Needleman-Wunsch]: https://en.wikipedia.org/wiki/Needleman%E2%80%93Wunsch_algorithm
