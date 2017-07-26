@@ -54,7 +54,7 @@
     "zone.js": "0.8.14"
   },
   "devDependencies": {
-    "@angular/cli": "^1.2.3",
+    "@angular/cli": "^1.2.4",
     "@angular/compiler-cli": "^4.3.1",
     "@angular/language-service": "^4.3.1",
     "@types/es6-promise": "0.0.32",
@@ -64,7 +64,7 @@
     "@types/jquery": "^3.2.9",
     "@types/jszip": "0.0.33",
     "@types/lodash": "^4.14.71",
-    "@types/node": "^8.0.15",
+    "@types/node": "^8.0.16",
     "@types/polylabel": "^1.0.3",
     "@types/tinycolor2": "^1.4.0",
     "angular-cli-ghpages": "^0.5.1",
@@ -85,7 +85,7 @@
     "protractor": "~5.1.2",
     "redux": "^3.7.2",
     "sass-lint": "^1.10.2",
-    "ts-node": "^3.2.1",
+    "ts-node": "^3.3.0",
     "tslint": "^5.5.0",
     "typescript": "^2.4.2",
     "webdriver-manager": "12.0.6"
