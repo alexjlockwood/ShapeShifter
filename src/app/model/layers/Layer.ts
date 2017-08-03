@@ -38,6 +38,7 @@ export interface Layer extends Inspectable, Animatable {
 
   /**
    * Returns the prefix that represents this Layer type.
+   * NOTE: this string value should not change, as it is used to identify the layer type.
    */
   getPrefix(): string;
 

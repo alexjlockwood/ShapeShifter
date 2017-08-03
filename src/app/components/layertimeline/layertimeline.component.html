@@ -160,7 +160,9 @@
             (layerToggleExpanded)="this.onLayerToggleExpanded($event.event, $event.layer)"
             (layerToggleVisibility)="this.onLayerToggleVisibility($event.event, $event.layer)"
             (layerMouseDown)="this.onLayerMouseDown($event.event, $event.layer)"
-            (addTimelineBlockClick)="this.onAddTimelineBlockClick($event.event, $event.layer, $event.propertyName)">
+            (addTimelineBlockClick)="this.onAddTimelineBlockClick($event.event, $event.layer, $event.propertyName)"
+            (convertToClipPathClick)="this.onConvertToClipPathClick($event.event, $event.layer)"
+            (convertToPathClick)="this.onConvertToPathClick($event.event, $event.layer)">
           </app-layerlisttree>
         </div>
         <div *ngIf="(this.dragIndicatorObservable | async) as dragData"
@@ -196,20 +198,20 @@
               (click)="this.onAnimationHeaderTextClick($event)">
               <span class="slt-timeline-animation-name"
                 [class.is-disabled]="model.isActionMode">
-                  {{ model.animation.name }}
-                </span>
+                {{ model.animation.name }}
+              </span>
               <span class="slt-timeline-animation-duration"
                 [class.is-disabled]="model.isActionMode">
-                  {{ model.animation.duration }}ms
-                </span>
+                {{ model.animation.duration }}ms
+              </span>
             </div>
             <button md-icon-button
               (click)="this.onZoomToFitClick($event)"
               mdTooltip="Zoom to fit ({{ this.shortcutService.getZoomToFitText() }})"
               mdTooltipPosition="below"
               mdTooltipShowDelay="500">
-                <md-icon>zoom_out_map</md-icon>
-              </button>
+              <md-icon>zoom_out_map</md-icon>
+            </button>
           </div>
           <canvas appLayerTimelineGrid
             class="slt-timeline-header-grid"

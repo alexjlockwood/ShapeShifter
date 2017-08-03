@@ -753,6 +753,18 @@ export class LayerTimelineComponent extends DestroyableMixin()
   }
 
   // @Override LayerListTreeComponentCallbacks
+  onConvertToClipPathClick(event: MouseEvent, layer: Layer) {
+    const clipPathLayer = new ClipPathLayer(layer as PathLayer);
+    this.layerTimelineService.replaceLayer(clipPathLayer);
+  }
+
+  // @Override LayerListTreeComponentCallbacks
+  onConvertToPathClick(event: MouseEvent, layer: Layer) {
+    const pathLayer = new PathLayer(layer as ClipPathLayer);
+    this.layerTimelineService.replaceLayer(pathLayer);
+  }
+
+  // @Override LayerListTreeComponentCallbacks
   onLayerClick(event: MouseEvent, layer: Layer) {
     const clearExisting = !ShortcutService.getOsDependentModifierKey(event) && !event.shiftKey;
     this.layerTimelineService.selectLayer(layer.id, clearExisting);
@@ -1043,7 +1055,7 @@ export class LayerTimelineComponent extends DestroyableMixin()
 
   // Used by *ngFor loop.
   trackLayerFn(index: number, layer: Layer) {
-    return layer.id;
+    return layer.id + ',' + layer.getPrefix();
   }
 }
 

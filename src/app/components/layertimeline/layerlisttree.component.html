@@ -26,6 +26,28 @@
       fxFlex>
       {{ this.layer.name }}
     </span>
+    <!-- Show overflow options. -->
+    <md-menu #showOverflowOptionsMenu="mdMenu">
+      <button *ngIf="model.isPathLayer"
+        (click)="this.onConvertToClipPathClick($event, layer)"
+        md-menu-item>
+        Convert to clip path
+      </button>
+      <button *ngIf="model.isClipPathLayer"
+        (click)="this.onConvertToPathClick($event, layer)"
+        md-menu-item>
+        Convert to path
+      </button>
+    </md-menu>
+    <button md-icon-button
+      *ngIf="model.isMorphableLayer"
+      class="slt-layer-action-button slt-layer-more-actions"
+      (click)="$event.stopPropagation()"
+      [disabled]="model.isActionMode"
+      [mdMenuTriggerFor]="showOverflowOptionsMenu">
+      <md-icon>more_vert</md-icon>
+    </button>
+    <!-- Visibility toggle. -->
     <button md-icon-button
       class="slt-layer-action-button slt-layer-visibility-toggle"
       (click)="this.onLayerToggleVisibility($event, this.layer)"
@@ -36,6 +58,7 @@
       [ngClass]="{'is-checked': model.isVisible}">
       <md-icon>{{ model.isVisible ? 'visibility' : 'visibility_off' }}</md-icon>
     </button>
+    <!-- Animate layer. -->
     <md-menu #addTimelineBlockMenu="mdMenu">
       <button *ngFor="let propertyName of model.availablePropertyNames"
         (click)="this.onAddTimelineBlockClick($event, layer, propertyName)"
@@ -87,7 +110,9 @@
         (layerClick)="this.onLayerClick($event.event, $event.layer)"
         (layerToggleExpanded)="this.onLayerToggleExpanded($event.event, $event.layer)"
         (layerToggleVisibility)="this.onLayerToggleVisibility($event.event, $event.layer)"
-        (addTimelineBlockClick)="this.onAddTimelineBlockClick($event.event, $event.layer, $event.propertyName)">
+        (addTimelineBlockClick)="this.onAddTimelineBlockClick($event.event, $event.layer, $event.propertyName)"
+        (convertToClipPathClick)="this.onConvertToClipPathClick($event.event, $event.layer)"
+        (convertToPathClick)="this.onConvertToPathClick($event.event, $event.layer)">
       </app-layerlisttree>
     </li>
   </ul>

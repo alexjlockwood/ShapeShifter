@@ -180,8 +180,7 @@ export class LayerTimelineService {
       if (!(selectedLayer instanceof VectorLayer)) {
         // Add the new layer as a sibling to the currently selected layer.
         const parent = LayerUtil.findParent(vl, selectedLayer.id).clone();
-        const children = [...parent.children];
-        parent.children = children.concat([layer]);
+        parent.children = [...parent.children, layer];
         this.replaceLayer(parent);
         return;
       }
@@ -196,7 +195,21 @@ export class LayerTimelineService {
   }
 
   replaceLayer(layer: Layer) {
-    this.setVectorLayer(LayerUtil.replaceLayerInTree(this.getVectorLayer(), layer));
+    const currVl = this.getVectorLayer();
+    const currLayer = currVl.findLayerById(layer.id);
+    const vl = LayerUtil.replaceLayerInTree(currVl, layer);
+    const actions: Action[] = [new SetVectorLayer(vl)];
+    const animatableProperties = new Set(layer.animatableProperties.keys());
+    const animation = this.getAnimation();
+    const layerBlocks = animation.blocks.filter(
+      b => b.layerId === layer.id && animatableProperties.has(b.propertyName),
+    );
+    if (animation.blocks.length !== layerBlocks.length) {
+      const newAnimation = animation.clone();
+      newAnimation.blocks = layerBlocks;
+      actions.push(new SetAnimation(newAnimation));
+    }
+    this.store.dispatch(new MultiAction(...actions));
   }
 
   groupOrUngroupSelectedLayers(shouldGroup: boolean) {
