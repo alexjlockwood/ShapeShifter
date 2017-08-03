@@ -82,6 +82,7 @@ export class TimelineAnimationRowComponent implements OnInit, Callbacks {
 
   // Used by *ngFor loop.
   trackLayerFn(index: number, layer: Layer) {
+    // NOTE: if the layer's prefix changes then recreate the element
     return layer.id + ',' + layer.getPrefix();
   }
 }
