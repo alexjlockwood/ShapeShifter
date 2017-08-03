@@ -37,8 +37,8 @@
           <button md-menu-item
             *ngFor="let propertyName of model.availablePropertyNames"
             (click)="this.onAnimateLayerClick(model.model, propertyName)">
-          {{ propertyName }}
-        </button>
+            {{ propertyName }}
+          </button>
         </md-menu>
         <button md-icon-button
           class="spi-secondary-icon"
@@ -109,10 +109,10 @@
                 </md-menu>
                 <button class="spi-property-value-menu-target"
                   [mdMenuTriggerFor]="enumMenu">
-                <span class="spi-property-value-menu-current-value">
-                  {{ ip.getDisplayValue() }}
-                </span>
-              </button>
+                  <span class="spi-property-value-menu-current-value">
+                    {{ ip.getDisplayValue() }}
+                  </span>
+                </button>
               </ng-container>
             </div>
           </div>
@@ -129,7 +129,7 @@
                 : (this.isPathBlockFromValueEmpty(model.model) && this.isPathBlockToValueEmpty(model.model))
                   ? '<i>fromValue</i> and <i>toValue</i> must not be empty'
                   : 'Paths are incompatible. <i>Auto fix</i> or click the <i>edit path morphing animation</i> button above.'">
-        </span>
+          </span>
           <button md-icon-button
             class="auto-fix-button"
             *ngIf="!this.isPathBlockFromValueEmpty(model.model) && !this.isPathBlockToValueEmpty(model.model)"
@@ -137,8 +137,8 @@
             mdTooltip="Auto fix"
             mdTooltipPosition="below"
             mdTooltipShowDelay="500">
-          <md-icon svgIcon="autofix"></md-icon>
-        </button>
+            <md-icon svgIcon="autofix"></md-icon>
+          </button>
         </div>
       </div>
     </div>
