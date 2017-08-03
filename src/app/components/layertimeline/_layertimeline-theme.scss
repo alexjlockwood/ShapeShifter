@@ -36,6 +36,9 @@
                 }
             }
         }
+        .slt-layers-empty {
+            color: mat-color($foreground, disabled-text);
+        }
         .slt-timeline {
             .slt-timeline-animation {
                 box-shadow: 4px 0 0 mat-color(mat-palette($mat-grey, 500)), -4px 0 0 mat-color(mat-palette($mat-grey, 500));

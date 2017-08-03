@@ -60,9 +60,7 @@ export class CanvasComponent extends CanvasLayoutMixin(DestroyableMixin())
   ngAfterViewInit() {
     const activeViewport$ = this.store
       .select(getVectorLayer)
-      .map(vl => {
-        return { w: vl.width, h: vl.height };
-      })
+      .map(vl => ({ w: vl.width, h: vl.height }))
       .distinctUntilChanged((x, y) => _.isEqual(x, y));
     this.registerSubscription(
       Observable.combineLatest(this.canvasBounds$, activeViewport$)

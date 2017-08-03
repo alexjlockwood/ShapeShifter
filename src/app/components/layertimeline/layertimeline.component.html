@@ -171,6 +171,10 @@
             'top': dragData.top + 'px'
           }">
         </div>
+        <div class="slt-layers-empty"
+          *ngIf="model.vectorLayer.children.length === 0">
+          To get started, drag + drop an SVG file here
+        </div>
       </div>
     </div>
 
