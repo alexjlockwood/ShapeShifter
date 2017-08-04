@@ -196,7 +196,6 @@ export class LayerTimelineService {
 
   replaceLayer(newLayer: Layer, shouldRegenerateId = false) {
     const currVl = this.getVectorLayer();
-    const currLayer = currVl.findLayerById(newLayer.id);
     const actions: Action[] = [new SetVectorLayer(LayerUtil.replaceLayerInTree(currVl, newLayer))];
     const animation = this.getAnimation();
     const layerBlocks = animation.blocks.filter(b => b.layerId === newLayer.id);
