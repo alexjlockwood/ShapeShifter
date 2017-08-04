@@ -59,7 +59,7 @@ export class GroupLayer extends AbstractLayer {
     return clone;
   }
 
-  getBoundingBox() {
+  getBoundingBox(): Rect {
     let bounds: { l: number; t: number; r: number; b: number };
     this.children.forEach(child => {
       const childBounds = child.getBoundingBox();
@@ -94,7 +94,7 @@ export class GroupLayer extends AbstractLayer {
       t: topLeft.y + this.pivotY,
       r: bottomRight.x + this.pivotX,
       b: bottomRight.y + this.pivotY,
-    } as Rect;
+    };
   }
 
   toJSON() {

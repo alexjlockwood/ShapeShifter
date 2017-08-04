@@ -4,9 +4,17 @@ import 'rxjs/add/observable/combineLatest';
 import { Injectable } from '@angular/core';
 import { Action } from '@ngrx/store';
 import { INTERPOLATORS } from 'app/model/interpolators';
-import { GroupLayer, Layer, LayerUtil, VectorLayer } from 'app/model/layers';
+import {
+  ClipPathLayer,
+  GroupLayer,
+  Layer,
+  LayerUtil,
+  PathLayer,
+  VectorLayer,
+} from 'app/model/layers';
+import { Path } from 'app/model/paths';
 import { Animation, AnimationBlock } from 'app/model/timeline';
-import { ModelUtil } from 'app/scripts/common';
+import { Matrix, ModelUtil } from 'app/scripts/common';
 import { State, Store } from 'app/store';
 import {
   SetCollapsedLayers,
@@ -218,6 +226,55 @@ export class LayerTimelineService {
     this.store.dispatch(new MultiAction(...actions));
   }
 
+  /**
+   * Merges the specified group layer into its children layers.
+   */
+  mergeGroupLayer(layerId: string) {
+    const vl = this.getVectorLayer();
+    const layer = vl.findLayerById(layerId) as GroupLayer;
+    if (!layer.children.length) {
+      return;
+    }
+    const parent = LayerUtil.findParent(vl, layerId);
+    const layerIndex = _.findIndex(parent.children, l => l.id === layer.id);
+    const getTransformsFn = (l: GroupLayer) => [
+      Matrix.fromTranslation(l.pivotX, l.pivotY),
+      Matrix.fromTranslation(l.translateX, l.translateY),
+      Matrix.fromRotation(l.rotation),
+      Matrix.fromScaling(l.scaleX, l.scaleY),
+      Matrix.fromTranslation(-l.pivotX, -l.pivotY),
+    ];
+    const transforms = getTransformsFn(layer);
+    const transformedChildren = layer.children.map(
+      (l: GroupLayer | PathLayer | ClipPathLayer): Layer => {
+        if (l instanceof GroupLayer) {
+          // TODO: implement this
+          return l.clone();
+        }
+        const path = l.pathData;
+        if (!path || !l.pathData.getPathString()) {
+          return l;
+        }
+        const clonedLayer = l.clone();
+        clonedLayer.pathData = new Path(
+          path.mutate().addTransforms(transforms).build().getPathString(),
+        );
+        return clonedLayer;
+      },
+    );
+    const parentChildren = [...parent.children];
+    parentChildren.splice(layerIndex, 1, ...transformedChildren);
+    const clonedParent = parent.clone();
+    clonedParent.children = parentChildren;
+    // TODO: perform these actions in batch
+    // TODO: also need to remove id from collapsed id list, hidden id list, etc.
+    this.clearSelections();
+    this.replaceLayer(clonedParent);
+  }
+
+  /**
+   * Groups or ungroups the selected layers.
+   */
   groupOrUngroupSelectedLayers(shouldGroup: boolean) {
     let selectedLayerIds = this.getSelectedLayerIds();
     if (!selectedLayerIds.size) {
