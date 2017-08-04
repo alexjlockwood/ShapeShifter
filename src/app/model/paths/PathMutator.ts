@@ -621,7 +621,7 @@ export class PathMutator {
     });
     const pssp1 = pssps[splitSubPathIdx1];
     const pssp2 = pssps[splitSubPathIdx2];
-    const deletedSps = flattenSubPathStates([pssp1]).concat(flattenSubPathStates([pssp2]));
+    const deletedSps = [...flattenSubPathStates([pssp1]), ...flattenSubPathStates([pssp2])];
     const spss = flattenSubPathStates(this.subPathStateMap);
     return deletedSps
       .slice(1)

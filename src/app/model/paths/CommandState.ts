@@ -346,7 +346,7 @@ class CommandStateMutator {
    * specified transformation matrices.
    */
   addTransforms(transforms: ReadonlyArray<Matrix>) {
-    return this.setTransforms([].concat(transforms, this.transforms));
+    return this.setTransforms([...transforms, ...this.transforms]);
   }
 
   /**

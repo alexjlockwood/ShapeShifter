@@ -32,7 +32,7 @@ function getTransformsForLayer(root: Layer, layerId: string) {
       });
     }
     for (const child of current.children) {
-      const transforms = getTransformsFn(parents.concat([current]), child);
+      const transforms = getTransformsFn([...parents, current], child);
       if (transforms) {
         return transforms;
       }

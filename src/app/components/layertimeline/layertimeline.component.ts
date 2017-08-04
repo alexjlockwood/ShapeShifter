@@ -1061,6 +1061,7 @@ export class LayerTimelineComponent extends DestroyableMixin()
   // Used by *ngFor loop.
   trackLayerFn(index: number, layer: Layer) {
     // NOTE: if the layer's prefix changes then recreate the element
+    // TODO: avoid this hack
     return layer.id + ',' + layer.getPrefix();
   }
 }

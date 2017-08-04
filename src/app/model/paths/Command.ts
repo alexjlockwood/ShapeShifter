@@ -162,7 +162,7 @@ export class CommandBuilder {
   }
 
   transform(transforms: ReadonlyArray<Matrix>) {
-    this.transforms = [].concat(transforms, this.transforms);
+    this.transforms = [...transforms, ...this.transforms];
     return this;
   }
 

@@ -337,7 +337,7 @@ export function commandsToString(commands: ReadonlyArray<Command>) {
     tokens.push(cmd.getSvgChar());
     const isClosePathCommand = cmd.getSvgChar() === 'Z';
     const pointsToNumberListFunc = (...points: Point[]) =>
-      points.reduce((list, p) => list.concat(p.x, p.y), []);
+      points.reduce((list, p) => [...list, p.x, p.y], []);
     const args = pointsToNumberListFunc(...(isClosePathCommand ? [] : cmd.getPoints().slice(1)));
     tokens.splice(tokens.length, 0, ...args.map(n => Number(n.toFixed(3)).toString() as SvgChar));
   });

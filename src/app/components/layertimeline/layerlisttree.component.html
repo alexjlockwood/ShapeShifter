@@ -41,7 +41,7 @@
       <button *ngIf="model.isMergeable"
         (click)="this.onMergeGroupClick($event, layer)"
         md-menu-item>
-        Merge group with children {{this.layer.children.length === 1 ? 'layer' : 'layers'}}
+        Merge with {{this.layer.children.length === 1 ? 'child layer' : 'children layers'}}
       </button>
     </md-menu>
     <button md-icon-button
