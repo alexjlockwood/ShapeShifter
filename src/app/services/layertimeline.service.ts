@@ -190,11 +190,17 @@ export class LayerTimelineService {
     this.replaceLayer(vectorLayer);
   }
 
+  /**
+   * Sets the current vector layer.
+   */
   setVectorLayer(vl: VectorLayer) {
     this.store.dispatch(new SetVectorLayer(vl));
   }
 
-  replaceLayer(newLayer: Layer, shouldRegenerateId = false) {
+  /**
+   * Replaces the layer in the tree.
+   */
+  replaceLayer(newLayer: Layer) {
     const currVl = this.getVectorLayer();
     const actions: Action[] = [new SetVectorLayer(LayerUtil.replaceLayerInTree(currVl, newLayer))];
     const animation = this.getAnimation();
