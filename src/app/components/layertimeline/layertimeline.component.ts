@@ -765,6 +765,11 @@ export class LayerTimelineComponent extends DestroyableMixin()
   }
 
   // @Override LayerListTreeComponentCallbacks
+  onMergeGroupClick(event: MouseEvent, layer: Layer) {
+    console.info('onMergeGroupClick');
+  }
+
+  // @Override LayerListTreeComponentCallbacks
   onLayerClick(event: MouseEvent, layer: Layer) {
     const clearExisting = !ShortcutService.getOsDependentModifierKey(event) && !event.shiftKey;
     this.layerTimelineService.selectLayer(layer.id, clearExisting);

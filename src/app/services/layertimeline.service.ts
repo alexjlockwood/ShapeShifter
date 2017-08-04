@@ -194,19 +194,20 @@ export class LayerTimelineService {
     this.store.dispatch(new SetVectorLayer(vl));
   }
 
-  replaceLayer(layer: Layer) {
+  replaceLayer(newLayer: Layer, shouldRegenerateId = false) {
     const currVl = this.getVectorLayer();
-    const currLayer = currVl.findLayerById(layer.id);
-    const vl = LayerUtil.replaceLayerInTree(currVl, layer);
-    const actions: Action[] = [new SetVectorLayer(vl)];
-    const animatableProperties = new Set(layer.animatableProperties.keys());
+    const currLayer = currVl.findLayerById(newLayer.id);
+    const actions: Action[] = [new SetVectorLayer(LayerUtil.replaceLayerInTree(currVl, newLayer))];
     const animation = this.getAnimation();
-    const layerBlocks = animation.blocks.filter(
-      b => b.layerId === layer.id && animatableProperties.has(b.propertyName),
-    );
-    if (animation.blocks.length !== layerBlocks.length) {
+    const layerBlocks = animation.blocks.filter(b => b.layerId === newLayer.id);
+    const animatableProperties = new Set(newLayer.animatableProperties.keys());
+    const newLayerBlocks = layerBlocks.filter(b => animatableProperties.has(b.propertyName));
+    if (layerBlocks.length !== newLayerBlocks.length) {
       const newAnimation = animation.clone();
-      newAnimation.blocks = layerBlocks;
+      newAnimation.blocks = [
+        ...animation.blocks.filter(b => b.layerId !== newLayer.id),
+        ...newLayerBlocks,
+      ];
       actions.push(new SetAnimation(newAnimation));
     }
     this.store.dispatch(new MultiAction(...actions));
@@ -221,15 +222,15 @@ export class LayerTimelineService {
 
     // Sort selected layers by order they appear in tree.
     let tempSelLayers = Array.from(selectedLayerIds).map(id => vectorLayer.findLayerById(id));
-    const selLayerOrdersMap = new Map<string, number>();
+    const selLayerOrdersMap: Dictionary<number> = {};
     let n = 0;
     vectorLayer.walk(layer => {
       if (_.find(tempSelLayers, l => l.id === layer.id)) {
-        selLayerOrdersMap.set(layer.id, n);
+        selLayerOrdersMap[layer.id] = n;
         n++;
       }
     });
-    tempSelLayers.sort((a, b) => selLayerOrdersMap.get(a.id) - selLayerOrdersMap.get(b.id));
+    tempSelLayers.sort((a, b) => selLayerOrdersMap[a.id] - selLayerOrdersMap[b.id]);
 
     if (shouldGroup) {
       // Remove any layers that are descendants of other selected layers,

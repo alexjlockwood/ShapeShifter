@@ -38,9 +38,14 @@
         md-menu-item>
         Convert to path
       </button>
+      <button *ngIf="model.isMergeable"
+        (click)="this.onMergeGroupClick($event, layer)"
+        md-menu-item>
+        Merge group with children {{this.layer.children.length === 1 ? 'layer' : 'layers'}}
+      </button>
     </md-menu>
     <button md-icon-button
-      *ngIf="model.isMorphableLayer"
+      *ngIf="model.isMorphableLayer || model.isMergeable"
       class="slt-layer-action-button slt-layer-more-actions"
       (click)="$event.stopPropagation()"
       [disabled]="model.isActionMode"
@@ -112,7 +117,8 @@
         (layerToggleVisibility)="this.onLayerToggleVisibility($event.event, $event.layer)"
         (addTimelineBlockClick)="this.onAddTimelineBlockClick($event.event, $event.layer, $event.propertyName)"
         (convertToClipPathClick)="this.onConvertToClipPathClick($event.event, $event.layer)"
-        (convertToPathClick)="this.onConvertToPathClick($event.event, $event.layer)">
+        (convertToPathClick)="this.onConvertToPathClick($event.event, $event.layer)"
+        (mergeGroupClick)="this.onMergeGroupClick($event.event, $event.layer)">
       </app-layerlisttree>
     </li>
   </ul>

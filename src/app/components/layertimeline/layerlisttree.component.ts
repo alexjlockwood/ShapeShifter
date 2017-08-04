@@ -37,6 +37,7 @@ export class LayerListTreeComponent implements OnInit, Callbacks {
   @Output() addTimelineBlockClick = new EventEmitter<TimelineBlockEvent>();
   @Output() convertToClipPathClick = new EventEmitter<LayerEvent>();
   @Output() convertToPathClick = new EventEmitter<LayerEvent>();
+  @Output() mergeGroupClick = new EventEmitter<LayerEvent>();
 
   constructor(
     private readonly store: Store<State>,
@@ -56,6 +57,10 @@ export class LayerListTreeComponent implements OnInit, Callbacks {
         );
         const isClipPathLayer = this.layer instanceof ClipPathLayer;
         const isPathLayer = this.layer instanceof PathLayer;
+        const isMergeable =
+          this.layer instanceof GroupLayer &&
+          this.layer.children.length > 0 &&
+          existingPropertyNames.length === 0;
         return {
           animation,
           isSelected: selectedLayerIds.has(this.layer.id),
@@ -68,6 +73,7 @@ export class LayerListTreeComponent implements OnInit, Callbacks {
           isClipPathLayer,
           isPathLayer,
           isMorphableLayer: isClipPathLayer || isPathLayer,
+          isMergeable,
         };
       });
   }
@@ -124,6 +130,13 @@ export class LayerListTreeComponent implements OnInit, Callbacks {
     }
   }
 
+  // @Override Callbacks
+  onMergeGroupClick(event: MouseEvent, layer: Layer) {
+    if (!this.actionModeService.isActionMode()) {
+      this.mergeGroupClick.emit({ event, layer });
+    }
+  }
+
   // Used by *ngFor loop.
   trackLayerFn(index: number, layer: Layer) {
     // NOTE: if the layer's prefix changes then recreate the element
@@ -143,6 +156,7 @@ export interface Callbacks {
   onAddTimelineBlockClick(event: MouseEvent, layer: Layer, propertyName: string): void;
   onConvertToClipPathClick(event: MouseEvent, layer: Layer): void;
   onConvertToPathClick(event: MouseEvent, layer: Layer): void;
+  onMergeGroupClick(event: MouseEvent, layer: Layer): void;
 }
 
 // tslint:disable: no-unused-variable

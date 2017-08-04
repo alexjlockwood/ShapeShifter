@@ -50,12 +50,12 @@ export function regenerateModelIds(
   hiddenLayerIds: Set<string>,
 ) {
   // Create a map of old IDs to new IDs.
-  const layerIdMap = new Map<string, string>();
-  vectorLayer.walk(layer => layerIdMap.set(layer.id, _.uniqueId()));
+  const layerIdMap: Dictionary<string> = {};
+  vectorLayer.walk(layer => (layerIdMap[layer.id] = _.uniqueId()));
 
   vectorLayer = (function recurseFn(layer: Layer) {
     const clone = layer.clone();
-    clone.id = layerIdMap.get(clone.id);
+    clone.id = layerIdMap[clone.id];
     clone.children = clone.children.map(l => recurseFn(l));
     return clone;
   })(vectorLayer);
@@ -65,12 +65,12 @@ export function regenerateModelIds(
   clonedAnim.blocks = clonedAnim.blocks.map(block => {
     const clonedBlock = block.clone();
     clonedBlock.id = _.uniqueId();
-    clonedBlock.layerId = layerIdMap.get(clonedBlock.layerId);
+    clonedBlock.layerId = layerIdMap[clonedBlock.layerId];
     return clonedBlock;
   });
   animation = clonedAnim;
 
-  hiddenLayerIds = new Set(Array.from(hiddenLayerIds).map(id => layerIdMap.get(id)));
+  hiddenLayerIds = new Set(Array.from(hiddenLayerIds).map(id => layerIdMap[id]));
 
   return { vectorLayer, animation, hiddenLayerIds };
 }
