@@ -136,10 +136,7 @@ export class FileExportService {
   }
 
   private getVectorLayerWithoutHiddenLayers() {
-    return LayerUtil.removeLayersFromTree(
-      this.getVectorLayer(),
-      ...Array.from(this.getHiddenLayerIds()),
-    );
+    return LayerUtil.removeLayers(this.getVectorLayer(), ...Array.from(this.getHiddenLayerIds()));
   }
 
   private getAnimationWithoutHiddenBlocks() {

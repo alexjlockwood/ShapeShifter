@@ -64,7 +64,7 @@ function getVectorLayerValue(getTimeFn: (block: PathAnimationBlock) => number) {
       // Replace the interpolated value with the block's to/from value.
       const layer = vl.findLayerById(block.layerId).clone() as MorphableLayer;
       layer.pathData = timeMillis === block.startTime ? block.fromValue : block.toValue;
-      return LayerUtil.replaceLayerInTree(renderedVl, layer);
+      return LayerUtil.updateLayer(renderedVl, layer);
     },
   );
 }

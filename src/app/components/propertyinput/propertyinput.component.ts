@@ -219,7 +219,7 @@ export class PropertyInputComponent implements OnInit {
             // TODO: avoid dispatching the action if the properties are equal
             const clonedLayer = layer.clone();
             clonedLayer[propertyName] = value;
-            this.layerTimelineService.replaceLayer(clonedLayer);
+            this.layerTimelineService.updateLayer(clonedLayer);
           },
           // TODO: return the 'rendered' value if an animation is ongoing? (see AIA)
           undefined,
@@ -279,7 +279,7 @@ export class PropertyInputComponent implements OnInit {
           // TODO: avoid dispatching the action if the properties are equal
           const clonedBlock = block.clone();
           clonedBlock[propertyName] = value;
-          this.layerTimelineService.replaceBlocks([clonedBlock]);
+          this.layerTimelineService.updateBlocks([clonedBlock]);
         }),
       );
     });

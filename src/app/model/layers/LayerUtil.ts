@@ -156,7 +156,7 @@ export function mergeVectorLayers(vl1: VectorLayer, vl2: VectorLayer) {
   return vl;
 }
 
-export function addLayerToTree(
+export function addLayer(
   root: VectorLayer,
   addedLayerParentId: string,
   addedLayer: Layer,
@@ -185,7 +185,7 @@ export function addLayerToTree(
   })(root) as VectorLayer;
 }
 
-export function removeLayersFromTree(vl: VectorLayer, ...removedLayerIds: string[]) {
+export function removeLayers(vl: VectorLayer, ...removedLayerIds: string[]) {
   const layerIds = new Set(removedLayerIds);
   return (function recurseFn(curr: Layer) {
     if (layerIds.has(curr.id)) {
@@ -196,16 +196,19 @@ export function removeLayersFromTree(vl: VectorLayer, ...removedLayerIds: string
   })(vl) as VectorLayer;
 }
 
-export function replaceLayerInTree(root: VectorLayer, replacement: Layer) {
-  if (IS_DEV_BUILD && !root.findLayerById(replacement.id)) {
+export function updateLayer(vl: VectorLayer, layer: Layer) {
+  return replaceLayer(vl, layer.id, layer);
+}
+
+export function replaceLayer(vl: VectorLayer, layerId: string, replacement: Layer) {
+  if (IS_DEV_BUILD && !vl.findLayerById(layerId)) {
     console.warn('Attempt to replace a layer that does not exist in the tree');
   }
   return (function recurseFn(curr: Layer) {
-    if (curr.id === replacement.id) {
-      return replacement;
-    }
-    return setLayerChildren(curr, curr.children.map(child => recurseFn(child)));
-  })(root) as VectorLayer;
+    return curr.id === layerId
+      ? replacement
+      : setLayerChildren(curr, curr.children.map(child => recurseFn(child)));
+  })(vl) as VectorLayer;
 }
 
 export function findLayerByName(vls: ReadonlyArray<VectorLayer>, layerName: string) {

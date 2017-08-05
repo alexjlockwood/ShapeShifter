@@ -683,7 +683,7 @@ export class LayerTimelineComponent extends DestroyableMixin()
               replacementBlock.endTime !== existingBlock.endTime
             );
           });
-          this.layerTimelineService.replaceBlocks(blocks);
+          this.layerTimelineService.updateBlocks(blocks);
         });
       },
     });
@@ -755,13 +755,15 @@ export class LayerTimelineComponent extends DestroyableMixin()
   // @Override LayerListTreeComponentCallbacks
   onConvertToClipPathClick(event: MouseEvent, layer: Layer) {
     const clipPathLayer = new ClipPathLayer(layer as PathLayer);
-    this.layerTimelineService.replaceLayer(clipPathLayer);
+    clipPathLayer.id = _.uniqueId();
+    this.layerTimelineService.replaceLayer(layer.id, clipPathLayer);
   }
 
   // @Override LayerListTreeComponentCallbacks
   onConvertToPathClick(event: MouseEvent, layer: Layer) {
     const pathLayer = new PathLayer(layer as ClipPathLayer);
-    this.layerTimelineService.replaceLayer(pathLayer);
+    pathLayer.id = _.uniqueId();
+    this.layerTimelineService.replaceLayer(layer.id, pathLayer);
   }
 
   // @Override LayerListTreeComponentCallbacks
@@ -919,9 +921,9 @@ export class LayerTimelineComponent extends DestroyableMixin()
           if (targetLayerInfo.moveIntoEmptyLayerGroup) {
             // Moving into an empty layer group.
             const sourceVl = this.vectorLayer;
-            replacementVl = LayerUtil.removeLayersFromTree(sourceVl, dragLayer.id);
+            replacementVl = LayerUtil.removeLayers(sourceVl, dragLayer.id);
             const newParent = targetLayerInfo.layer;
-            replacementVl = LayerUtil.addLayerToTree(
+            replacementVl = LayerUtil.addLayer(
               replacementVl,
               newParent.id,
               dragLayer.clone(),
@@ -932,14 +934,14 @@ export class LayerTimelineComponent extends DestroyableMixin()
             let newParent = LayerUtil.findParent(this.vectorLayer, targetLayerInfo.layer.id);
             if (newParent) {
               const sourceVl = this.vectorLayer;
-              replacementVl = LayerUtil.removeLayersFromTree(sourceVl, dragLayer.id);
+              replacementVl = LayerUtil.removeLayers(sourceVl, dragLayer.id);
               newParent = LayerUtil.findParent(replacementVl, targetLayerInfo.layer.id);
               let index = newParent.children
                 ? _.findIndex(newParent.children, child => child.id === targetLayerInfo.layer.id)
                 : -1;
               if (index >= 0) {
                 index += targetEdge === 'top' ? 0 : 1;
-                replacementVl = LayerUtil.addLayerToTree(
+                replacementVl = LayerUtil.addLayer(
                   replacementVl,
                   newParent.id,
                   dragLayer.clone(),
