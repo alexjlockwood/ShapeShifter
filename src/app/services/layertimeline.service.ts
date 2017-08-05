@@ -222,7 +222,6 @@ export class LayerTimelineService {
       return;
     }
     const vl = this.getVectorLayer();
-    const layer = vl.findLayerById(layerId);
     const parent = LayerUtil.findParent(vl, layerId).clone();
     const layerIndex = _.findIndex(parent.children, l => l.id === layerId);
     const children = [...parent.children];
@@ -236,6 +235,7 @@ export class LayerTimelineService {
       const animation = this.getAnimation();
       const oldLayerBlocks = animation.blocks.filter(b => b.layerId === layerId);
       const newAnimatableProperties = new Set(newLayer.animatableProperties.keys());
+      // Preserve any blocks that are still animatable with the new layer.
       const newLayerBlocks = oldLayerBlocks
         .filter(b => newAnimatableProperties.has(b.propertyName))
         .map(b => {
@@ -316,58 +316,6 @@ export class LayerTimelineService {
     }
     return actions;
   }
-
-  /**
-   * Builds a list of actions to dispatch in order to cleanup after
-   * the deletion of the specified IDs.
-   */
-  // private buildCleanupLayerStateActions(...deletedLayerIds: string[]) {
-  // const collapsedLayerIds = this.getCollapsedLayerIds();
-  // const hiddenLayerIds = this.getHiddenLayerIds();
-  // const selectedLayerIds = this.getSelectedLayerIds();
-  // const differenceFn = (s: Set<string>, a: string[]) => new Set(_.difference(Array.from(s), a));
-  // const actions: Action[] = [];
-  // if (deletedLayerIds.some(id => collapsedLayerIds.has(id))) {
-  //   actions.push(new SetCollapsedLayers(differenceFn(collapsedLayerIds, deletedLayerIds)));
-  // }
-  // if (deletedLayerIds.some(id => hiddenLayerIds.has(id))) {
-  //   actions.push(new SetHiddenLayers(differenceFn(hiddenLayerIds, deletedLayerIds)));
-  // }
-  // if (deletedLayerIds.some(id => selectedLayerIds.has(id))) {
-  //   actions.push(new SetSelectedLayers(differenceFn(selectedLayerIds, deletedLayerIds)));
-  // }
-  // const animationBlocks = this.getAnimation().blocks;
-  // if (animationBlocks.some(b => deletedLayerIds.includes(b.layerId))) {
-  //   const newAnimation = this.getAnimation().clone();
-  //   newAnimation.blocks = newAnimation.blocks.filter(b => !deletedLayerIds.includes(b.layerId));
-  // }
-  // let animation = this.getAnimation();
-  // if (this.isAnimationSelected()) {
-  //   animation = new Animation();
-  // }
-  // const selectedBlockIds = this.getSelectedBlockIds();
-  // if (selectedBlockIds.size) {
-  //   animation = animation.clone();
-  //   animation.blocks = animation.blocks.filter(b => !selectedBlockIds.has(b.id));
-  // }
-  // // Remove any blocks corresponding to deleted layers.
-  // const filteredBlocks = animation.blocks.filter(b => !!vl.findLayerById(b.layerId));
-  // if (filteredBlocks.length !== animation.blocks.length) {
-  //   animation = animation.clone();
-  //   animation.blocks = filteredBlocks;
-  // }
-  // this.store.dispatch(
-  //   new MultiAction(
-  //     new SetVectorLayer(vl),
-  //     new SetCollapsedLayers(collapsedLayerIds),
-  //     new SetHiddenLayers(hiddenLayerIds),
-  //     new SetSelectedLayers(new Set()),
-  //     new SelectAnimation(false),
-  //     new SetAnimation(animation),
-  //     new SetSelectedBlocks(new Set()),
-  //   ),
-  // );
-  // }
 
   /**
    * Groups or ungroups the selected layers.
