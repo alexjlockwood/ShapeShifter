@@ -756,14 +756,14 @@ export class LayerTimelineComponent extends DestroyableMixin()
   onConvertToClipPathClick(event: MouseEvent, layer: Layer) {
     const clipPathLayer = new ClipPathLayer(layer as PathLayer);
     clipPathLayer.id = _.uniqueId();
-    this.layerTimelineService.replaceLayer(layer.id, clipPathLayer, true);
+    this.layerTimelineService.swapLayers(layer.id, clipPathLayer);
   }
 
   // @Override LayerListTreeComponentCallbacks
   onConvertToPathClick(event: MouseEvent, layer: Layer) {
     const pathLayer = new PathLayer(layer as ClipPathLayer);
     pathLayer.id = _.uniqueId();
-    this.layerTimelineService.replaceLayer(layer.id, pathLayer, true);
+    this.layerTimelineService.swapLayers(layer.id, pathLayer);
   }
 
   // @Override LayerListTreeComponentCallbacks
