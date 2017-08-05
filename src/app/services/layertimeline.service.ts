@@ -213,38 +213,44 @@ export class LayerTimelineService {
   }
 
   /**
-   * Replaces an existing layer in the tree with a new layer with a
-   * potentially different ID. Any state associate with the deleted
-   * ID will be removed.
+   * Replaces an existing layer in the tree with a new layer. Note that
+   * this method assumes that both layers still have the same children layers.
    */
-  replaceLayer(layerId: string, newLayer: Layer) {
+  replaceLayer(layerId: string, newLayer: Layer, preserveValidBlocks = false) {
     if (layerId === newLayer.id) {
       this.updateLayer(newLayer);
       return;
     }
-    // TODO: rethink all of this crap... maybe add a 'swap layers' method too?
     const vl = this.getVectorLayer();
     const layer = vl.findLayerById(layerId);
-    const parent = LayerUtil.findParent(vl, layerId);
+    const parent = LayerUtil.findParent(vl, layerId).clone();
+    const layerIndex = _.findIndex(parent.children, l => l.id === layerId);
     const children = [...parent.children];
-    const layerIndex = _.findIndex(children, l => l.id === layerId);
     children.splice(layerIndex, 1, newLayer);
-    const clonedParent = parent.clone();
-    clonedParent.children = children;
-    const actions: Action[] = [new SetVectorLayer(LayerUtil.updateLayer(vl, clonedParent))];
-    const animation = this.getAnimation();
-    const layerBlocks = animation.blocks.filter(b => b.layerId === newLayer.id);
-    const animatableProperties = new Set(newLayer.animatableProperties.keys());
-    const newLayerBlocks = layerBlocks.filter(b => animatableProperties.has(b.propertyName));
-    if (layerBlocks.length !== newLayerBlocks.length) {
+    parent.children = children;
+    const actions: Action[] = [
+      new SetVectorLayer(LayerUtil.updateLayer(vl, parent)),
+      ...this.buildCleanupLayerIdActions(layerId),
+    ];
+    if (preserveValidBlocks) {
+      const animation = this.getAnimation();
+      const oldLayerBlocks = animation.blocks.filter(b => b.layerId === layerId);
+      const newAnimatableProperties = new Set(newLayer.animatableProperties.keys());
+      const newLayerBlocks = oldLayerBlocks
+        .filter(b => newAnimatableProperties.has(b.propertyName))
+        .map(b => {
+          b = b.clone();
+          b.layerId = newLayer.id;
+          return b;
+        });
       const newAnimation = animation.clone();
       newAnimation.blocks = [
-        ...animation.blocks.filter(b => b.layerId !== newLayer.id),
+        ...animation.blocks.filter(b => b.layerId !== layerId),
         ...newLayerBlocks,
       ];
       actions.push(new SetAnimation(newAnimation));
     }
-    this.updateLayer(clonedParent);
+    this.store.dispatch(new MultiAction(...actions));
   }
 
   /**
@@ -293,57 +299,75 @@ export class LayerTimelineService {
     this.updateLayer(clonedParent);
   }
 
+  private buildCleanupLayerIdActions(...deletedLayerIds: string[]) {
+    const collapsedLayerIds = this.getCollapsedLayerIds();
+    const hiddenLayerIds = this.getHiddenLayerIds();
+    const selectedLayerIds = this.getSelectedLayerIds();
+    const differenceFn = (s: Set<string>, a: string[]) => new Set(_.difference(Array.from(s), a));
+    const actions: Action[] = [];
+    if (deletedLayerIds.some(id => collapsedLayerIds.has(id))) {
+      actions.push(new SetCollapsedLayers(differenceFn(collapsedLayerIds, deletedLayerIds)));
+    }
+    if (deletedLayerIds.some(id => hiddenLayerIds.has(id))) {
+      actions.push(new SetHiddenLayers(differenceFn(hiddenLayerIds, deletedLayerIds)));
+    }
+    if (deletedLayerIds.some(id => selectedLayerIds.has(id))) {
+      actions.push(new SetSelectedLayers(differenceFn(selectedLayerIds, deletedLayerIds)));
+    }
+    return actions;
+  }
+
   /**
    * Builds a list of actions to dispatch in order to cleanup after
    * the deletion of the specified IDs.
    */
-  private buildCleanupLayerStateActions(...deletedLayerIds: string[]) {
-    // const collapsedLayerIds = this.getCollapsedLayerIds();
-    // const hiddenLayerIds = this.getHiddenLayerIds();
-    // const selectedLayerIds = this.getSelectedLayerIds();
-    // const differenceFn = (s: Set<string>, a: string[]) => new Set(_.difference(Array.from(s), a));
-    // const actions: Action[] = [];
-    // if (deletedLayerIds.some(id => collapsedLayerIds.has(id))) {
-    //   actions.push(new SetCollapsedLayers(differenceFn(collapsedLayerIds, deletedLayerIds)));
-    // }
-    // if (deletedLayerIds.some(id => hiddenLayerIds.has(id))) {
-    //   actions.push(new SetHiddenLayers(differenceFn(hiddenLayerIds, deletedLayerIds)));
-    // }
-    // if (deletedLayerIds.some(id => selectedLayerIds.has(id))) {
-    //   actions.push(new SetSelectedLayers(differenceFn(selectedLayerIds, deletedLayerIds)));
-    // }
-    // const animationBlocks = this.getAnimation().blocks;
-    // if (animationBlocks.some(b => deletedLayerIds.includes(b.layerId))) {
-    //   const newAnimation = this.getAnimation().clone();
-    //   newAnimation.blocks = newAnimation.blocks.filter(b => !deletedLayerIds.includes(b.layerId));
-    // }
-    // let animation = this.getAnimation();
-    // if (this.isAnimationSelected()) {
-    //   animation = new Animation();
-    // }
-    // const selectedBlockIds = this.getSelectedBlockIds();
-    // if (selectedBlockIds.size) {
-    //   animation = animation.clone();
-    //   animation.blocks = animation.blocks.filter(b => !selectedBlockIds.has(b.id));
-    // }
-    // // Remove any blocks corresponding to deleted layers.
-    // const filteredBlocks = animation.blocks.filter(b => !!vl.findLayerById(b.layerId));
-    // if (filteredBlocks.length !== animation.blocks.length) {
-    //   animation = animation.clone();
-    //   animation.blocks = filteredBlocks;
-    // }
-    // this.store.dispatch(
-    //   new MultiAction(
-    //     new SetVectorLayer(vl),
-    //     new SetCollapsedLayers(collapsedLayerIds),
-    //     new SetHiddenLayers(hiddenLayerIds),
-    //     new SetSelectedLayers(new Set()),
-    //     new SelectAnimation(false),
-    //     new SetAnimation(animation),
-    //     new SetSelectedBlocks(new Set()),
-    //   ),
-    // );
-  }
+  // private buildCleanupLayerStateActions(...deletedLayerIds: string[]) {
+  // const collapsedLayerIds = this.getCollapsedLayerIds();
+  // const hiddenLayerIds = this.getHiddenLayerIds();
+  // const selectedLayerIds = this.getSelectedLayerIds();
+  // const differenceFn = (s: Set<string>, a: string[]) => new Set(_.difference(Array.from(s), a));
+  // const actions: Action[] = [];
+  // if (deletedLayerIds.some(id => collapsedLayerIds.has(id))) {
+  //   actions.push(new SetCollapsedLayers(differenceFn(collapsedLayerIds, deletedLayerIds)));
+  // }
+  // if (deletedLayerIds.some(id => hiddenLayerIds.has(id))) {
+  //   actions.push(new SetHiddenLayers(differenceFn(hiddenLayerIds, deletedLayerIds)));
+  // }
+  // if (deletedLayerIds.some(id => selectedLayerIds.has(id))) {
+  //   actions.push(new SetSelectedLayers(differenceFn(selectedLayerIds, deletedLayerIds)));
+  // }
+  // const animationBlocks = this.getAnimation().blocks;
+  // if (animationBlocks.some(b => deletedLayerIds.includes(b.layerId))) {
+  //   const newAnimation = this.getAnimation().clone();
+  //   newAnimation.blocks = newAnimation.blocks.filter(b => !deletedLayerIds.includes(b.layerId));
+  // }
+  // let animation = this.getAnimation();
+  // if (this.isAnimationSelected()) {
+  //   animation = new Animation();
+  // }
+  // const selectedBlockIds = this.getSelectedBlockIds();
+  // if (selectedBlockIds.size) {
+  //   animation = animation.clone();
+  //   animation.blocks = animation.blocks.filter(b => !selectedBlockIds.has(b.id));
+  // }
+  // // Remove any blocks corresponding to deleted layers.
+  // const filteredBlocks = animation.blocks.filter(b => !!vl.findLayerById(b.layerId));
+  // if (filteredBlocks.length !== animation.blocks.length) {
+  //   animation = animation.clone();
+  //   animation.blocks = filteredBlocks;
+  // }
+  // this.store.dispatch(
+  //   new MultiAction(
+  //     new SetVectorLayer(vl),
+  //     new SetCollapsedLayers(collapsedLayerIds),
+  //     new SetHiddenLayers(hiddenLayerIds),
+  //     new SetSelectedLayers(new Set()),
+  //     new SelectAnimation(false),
+  //     new SetAnimation(animation),
+  //     new SetSelectedBlocks(new Set()),
+  //   ),
+  // );
+  // }
 
   /**
    * Groups or ungroups the selected layers.
