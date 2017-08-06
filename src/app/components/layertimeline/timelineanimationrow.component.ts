@@ -92,7 +92,6 @@ export interface Callbacks {
   onTimelineBlockDoubleClick(event: MouseEvent, block: AnimationBlock): void;
 }
 
-// tslint:disable: no-unused-variable
 interface AnimationRowEvent {
   readonly event: MouseEvent;
   readonly block: AnimationBlock;
