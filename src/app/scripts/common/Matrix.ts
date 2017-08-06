@@ -1,3 +1,5 @@
+import * as _ from 'lodash';
+
 import { MathUtil, Point } from '.';
 
 /**
@@ -5,8 +7,12 @@ import { MathUtil, Point } from '.';
  * matrix notation.
  */
 export class Matrix {
-  static flatten(...matrices: Matrix[]) {
-    return matrices.reduce((prev, curr) => curr.dot(prev), new Matrix());
+  static flatten(matrices: ReadonlyArray<Matrix>) {
+    return matrices.reduce((prev, curr) => prev.dot(curr), new Matrix(1, 0, 0, 1, 0, 0));
+  }
+
+  static identity() {
+    return new Matrix(1, 0, 0, 1, 0, 0);
   }
 
   static fromRotation(degrees: number) {
@@ -27,12 +33,12 @@ export class Matrix {
    * Note that the default no-args constructor creates the identity matrix.
    */
   constructor(
-    public readonly a = 1,
-    public readonly b = 0,
-    public readonly c = 0,
-    public readonly d = 1,
-    public readonly e = 0,
-    public readonly f = 0,
+    public readonly a,
+    public readonly b,
+    public readonly c,
+    public readonly d,
+    public readonly e,
+    public readonly f,
   ) {}
 
   /**

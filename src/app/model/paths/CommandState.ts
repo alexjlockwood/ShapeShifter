@@ -28,7 +28,7 @@ export class CommandState {
       },
     ],
     // The transformation matricies used to transform this command state object.
-    private readonly transforms: ReadonlyArray<Matrix> = [new Matrix()],
+    private readonly transforms: ReadonlyArray<Matrix> = [Matrix.identity()],
     // The calculator that will do all of the math-y stuff for us.
     private readonly calculator: Calculator = newCalculator(backingCommand),
     // The lower bound T value (may be > 0 for split subpaths).
@@ -354,7 +354,7 @@ class CommandStateMutator {
    * specified transformation matrices.
    */
   setTransforms(transforms: ReadonlyArray<Matrix>) {
-    this.transforms = [Matrix.flatten(...transforms)];
+    this.transforms = [...transforms];
     this.calculator = newCalculator(
       this.backingCommand.mutate().transform(this.transforms).build(),
     );
@@ -372,7 +372,7 @@ class CommandStateMutator {
         svgChar: this.backingCommand.getSvgChar(),
       },
     ];
-    this.transforms = [new Matrix()];
+    this.transforms = [Matrix.identity()];
     this.calculator = newCalculator(this.backingCommand);
     return this;
   }

@@ -1,3 +1,5 @@
+import * as _ from 'lodash';
+
 import { Matrix, Point } from '.';
 
 /** Returns the floor modulus of the integer argument. */
@@ -56,4 +58,9 @@ export function distance(p1: [number, number] | Point, p2: [number, number] | Po
 /** Returns true if the two points are equal. */
 export function arePointsEqual(p1: Point, p2: Point) {
   return p1 && p2 && distance(p1, p2) < 1e-9;
+}
+
+/** Rounds the number to a prespecified precision. */
+export function round(n: number) {
+  return _.round(n, 9);
 }

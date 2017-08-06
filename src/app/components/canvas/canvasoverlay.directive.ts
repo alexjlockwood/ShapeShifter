@@ -358,7 +358,7 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
     }
     if (this.selectedLayerIds.has(curr.id) || this.selectedBlockLayerIds.has(curr.id)) {
       const root = this.vectorLayer;
-      const flattenedTransform = LayerUtil.getFlattenedTransformForLayer(root, curr.id);
+      const flattenedTransform = LayerUtil.getCanvasTransformForLayer(root, curr.id);
       if (curr instanceof ClipPathLayer) {
         if (curr.pathData && curr.pathData.getCommands().length) {
           CanvasUtil.executeCommands(ctx, curr.pathData.getCommands(), flattenedTransform);
@@ -394,7 +394,7 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
       return;
     }
 
-    const flattenedTransform = LayerUtil.getFlattenedTransformForLayer(
+    const flattenedTransform = LayerUtil.getCanvasTransformForLayer(
       this.vectorLayer,
       this.blockLayerId,
     );
@@ -655,7 +655,7 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
       } else {
         color = NORMAL_POINT_COLOR;
       }
-      const flattenedTransform = LayerUtil.getFlattenedTransformForLayer(
+      const flattenedTransform = LayerUtil.getCanvasTransformForLayer(
         this.vectorLayer,
         this.blockLayerId,
       );
@@ -683,7 +683,7 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
     ) {
       return;
     }
-    const flattenedTransform = LayerUtil.getFlattenedTransformForLayer(
+    const flattenedTransform = LayerUtil.getCanvasTransformForLayer(
       this.vectorLayer,
       this.blockLayerId,
     );
@@ -714,7 +714,7 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
     }
     const projection = this.segmentSplitter.getProjectionOntoPath().projection;
     if (projection.d < this.minSnapThreshold) {
-      const flattenedTransform = LayerUtil.getFlattenedTransformForLayer(
+      const flattenedTransform = LayerUtil.getCanvasTransformForLayer(
         this.vectorLayer,
         this.blockLayerId,
       );
@@ -736,7 +736,7 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
     if (this.actionMode !== ActionMode.SplitSubPaths || !this.shapeSplitter) {
       return;
     }
-    const flattenedTransform = LayerUtil.getFlattenedTransformForLayer(
+    const flattenedTransform = LayerUtil.getCanvasTransformForLayer(
       this.vectorLayer,
       this.blockLayerId,
     );
@@ -937,7 +937,7 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
       if ((layer instanceof PathLayer || layer instanceof ClipPathLayer) && layer.pathData) {
         const transformedPoint = MathUtil.transformPoint(
           point,
-          LayerUtil.getFlattenedTransformForLayer(root, layer.id).invert(),
+          LayerUtil.getCanvasTransformForLayer(root, layer.id).invert(),
         );
         let isSegmentInRangeFn: (distance: number, cmd: Command) => boolean;
         isSegmentInRangeFn = distance => {
@@ -962,7 +962,7 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
 
   // NOTE: this should only be used in action mode
   performHitTest(mousePoint: Point, opts: HitTestOpts = {}) {
-    const flattenedTransform = LayerUtil.getFlattenedTransformForLayer(
+    const flattenedTransform = LayerUtil.getCanvasTransformForLayer(
       this.vectorLayer,
       this.blockLayerId,
     );

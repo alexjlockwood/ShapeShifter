@@ -10,12 +10,22 @@ const PRECISION = 8;
 const IS_DEV_BUILD = !environment.production;
 
 /**
+ * Returns a single flattened transform matrix that can be used to perform canvas
+ * transform operations. The resulting matrix will transform path coordinates to
+ * canvas drawing coordinates. The inverse of the matrix will transform canvas
+ * drawing coordinates back to path coordinates.
+ */
+export function getCanvasTransformForLayer(root: Layer, layerId: string) {
+  return Matrix.flatten(getCanvasTransformsForLayer(root, layerId));
+}
+
+/**
  * Returns a list of parent transforms for the specified layer ID. The transforms
  * are returned in top-down order (i.e. the transform for the layer's
  * immediate parent will be the very last matrix in the returned list).
  */
-function getTransformsForLayer(root: Layer, layerId: string) {
-  const getTransformsFn = (parents: Layer[], current: Layer): Matrix[] => {
+function getCanvasTransformsForLayer(root: Layer, layerId: string) {
+  return (function recurseFn(parents: Layer[], current: Layer): Matrix[] {
     if (current.id === layerId) {
       return _.flatMap(parents, layer => {
         if (layer instanceof GroupLayer) {
@@ -32,22 +42,13 @@ function getTransformsForLayer(root: Layer, layerId: string) {
       });
     }
     for (const child of current.children) {
-      const transforms = getTransformsFn([...parents, current], child);
+      const transforms = recurseFn([...parents, current], child);
       if (transforms) {
         return transforms;
       }
     }
     return undefined;
-  };
-  return getTransformsFn([], root);
-}
-
-/**
- * Returns a single flattened transform matrix that can be used to perform canvas
- * transform operations.
- */
-export function getFlattenedTransformForLayer(root: Layer, layerId: string) {
-  return Matrix.flatten(...getTransformsForLayer(root, layerId).reverse());
+  })([], root);
 }
 
 /**
@@ -67,8 +68,8 @@ export function adjustViewports(vl1: VectorLayer, vl2: VectorLayer) {
     return Math.max(w1, h1, w2, h2, n) === n;
   };
 
-  let scale1 = 1,
-    scale2 = 1;
+  let scale1 = 1;
+  let scale2 = 1;
   if (isMaxDimenFn(w1)) {
     scale2 = w1 / w2;
   } else if (isMaxDimenFn(h1)) {
@@ -91,10 +92,10 @@ export function adjustViewports(vl1: VectorLayer, vl2: VectorLayer) {
     h2 = _.round(h2, PRECISION);
   }
 
-  let tx1 = 0,
-    ty1 = 0,
-    tx2 = 0,
-    ty2 = 0;
+  let tx1 = 0;
+  let ty1 = 0;
+  let tx2 = 0;
+  let ty2 = 0;
   if (w1 > w2) {
     tx2 = (w1 - w2) / 2;
   } else if (w1 < w2) {
@@ -114,9 +115,7 @@ export function adjustViewports(vl1: VectorLayer, vl2: VectorLayer) {
         }
         if (layer.pathData) {
           layer.pathData = new Path(
-            layer.pathData.getCommands().map(cmd => {
-              return cmd.mutate().transform(transforms).build();
-            }),
+            layer.pathData.getCommands().map(cmd => cmd.mutate().transform(transforms).build()),
           );
         }
         return;

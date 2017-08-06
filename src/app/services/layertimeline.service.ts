@@ -14,6 +14,7 @@ import {
 } from 'app/model/layers';
 import { Path } from 'app/model/paths';
 import { Animation, AnimationBlock } from 'app/model/timeline';
+import { MathUtil } from 'app/scripts/common';
 import { Matrix, ModelUtil } from 'app/scripts/common';
 import { State, Store } from 'app/store';
 import {
@@ -262,31 +263,28 @@ export class LayerTimelineService {
     }
     const getTransformsFn = (l: GroupLayer) => [
       Matrix.fromTranslation(l.pivotX, l.pivotY),
-      Matrix.fromTranslation(l.translateX, l.translateY),
-      Matrix.fromRotation(l.rotation),
       Matrix.fromScaling(l.scaleX, l.scaleY),
+      Matrix.fromRotation(l.rotation),
+      Matrix.fromTranslation(l.translateX, l.translateY),
       Matrix.fromTranslation(-l.pivotX, -l.pivotY),
     ];
     const transforms = getTransformsFn(layer);
     const transformedChildren = layer.children.map(
       (l: GroupLayer | PathLayer | ClipPathLayer): Layer => {
         if (l instanceof GroupLayer) {
-          const flattenedTransform = Matrix.flatten(
-            ...[...getTransformsFn(layer), ...getTransformsFn(l)].reverse(),
-          );
-          // TODO: double check this math... kinda hacked it together
+          const flattenedTransform = Matrix.flatten([...transforms, ...getTransformsFn(l)]);
           const { a, b, c, d, e: tx, f: ty } = flattenedTransform;
-          const sx = -Math.sign(a) * Math.sqrt(a ** 2 + b ** 2);
-          const sy = -Math.sign(d) * Math.sqrt(c ** 2 + d ** 2);
-          const degrees = -180 / Math.PI * Math.atan2(-b, a);
+          const sx = (a >= 0 ? 1 : -1) * Math.sqrt(a ** 2 + c ** 2);
+          const sy = (d >= 0 ? 1 : -1) * Math.sqrt(b ** 2 + d ** 2);
+          const degrees = 180 / Math.PI * Math.atan2(-c, a);
           const newGroupLayer = l.clone();
           newGroupLayer.pivotX = 0;
           newGroupLayer.pivotY = 0;
-          newGroupLayer.translateX = tx;
-          newGroupLayer.translateY = ty;
-          newGroupLayer.rotation = degrees;
-          newGroupLayer.scaleX = sx;
-          newGroupLayer.scaleY = sy;
+          newGroupLayer.translateX = MathUtil.round(tx);
+          newGroupLayer.translateY = MathUtil.round(ty);
+          newGroupLayer.rotation = MathUtil.round(degrees);
+          newGroupLayer.scaleX = MathUtil.round(sx);
+          newGroupLayer.scaleY = MathUtil.round(sy);
           return newGroupLayer;
         }
         const path = l.pathData;
@@ -294,9 +292,7 @@ export class LayerTimelineService {
           return l;
         }
         const clonedLayer = l.clone();
-        clonedLayer.pathData = new Path(
-          path.mutate().addTransforms(transforms.reverse()).build().getPathString(),
-        );
+        clonedLayer.pathData = path.mutate().addTransforms(transforms).build().clone();
         return clonedLayer;
       },
     );

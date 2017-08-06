@@ -154,7 +154,7 @@ function loadVectorLayerFromSvgString(
       let pathData = new Path(path);
       if (transforms.length) {
         pathData = pathData.mutate().addTransforms(transforms).build().clone();
-        strokeWidth *= Matrix.flatten(...transforms).getScale();
+        strokeWidth *= Matrix.flatten(transforms).getScale();
       }
       // TODO: make best effort attempt to restore trimPath{Start,End,Offset}
       return maybeWrapClipPathInGroupFn(

@@ -284,11 +284,11 @@ export class SelectionHelper {
   * closest to the specified off-curve mouse point.
   */
   private calculateProjectionOntoPath(mousePoint: Point, restrictToSubIdx?: number) {
-    const transform = LayerUtil.getFlattenedTransformForLayer(
+    const transform = LayerUtil.getCanvasTransformForLayer(
       this.component.vectorLayer,
       this.component.activePathLayer.id,
-    );
-    const transformedMousePoint = MathUtil.transformPoint(mousePoint, transform.invert());
+    ).invert();
+    const transformedMousePoint = MathUtil.transformPoint(mousePoint, transform);
     const projInfo = this.component.activePath.project(transformedMousePoint, restrictToSubIdx);
     if (!projInfo) {
       return undefined;

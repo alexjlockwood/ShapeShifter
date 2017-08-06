@@ -152,7 +152,7 @@ export class CanvasLayersDirective extends CanvasLayoutMixin(DestroyableMixin())
     if (!layer.pathData || !layer.pathData.getCommands().length) {
       return;
     }
-    const flattenedTransform = LayerUtil.getFlattenedTransformForLayer(vl, layer.id);
+    const flattenedTransform = LayerUtil.getCanvasTransformForLayer(vl, layer.id);
     CanvasUtil.executeCommands(ctx, layer.pathData.getCommands(), flattenedTransform);
     ctx.clip();
   }
@@ -163,8 +163,9 @@ export class CanvasLayersDirective extends CanvasLayoutMixin(DestroyableMixin())
     }
     ctx.save();
 
-    const flattenedTransform = LayerUtil.getFlattenedTransformForLayer(vl, layer.id);
-    CanvasUtil.executeCommands(ctx, layer.pathData.getCommands(), flattenedTransform);
+    const canvasTransform = LayerUtil.getCanvasTransformForLayer(vl, layer.id);
+    const flattenedTransform = canvasTransform.invert();
+    CanvasUtil.executeCommands(ctx, layer.pathData.getCommands(), canvasTransform);
 
     const strokeWidthMultiplier = flattenedTransform.getScale();
     ctx.strokeStyle = ColorUtil.androidToCssRgbaColor(layer.strokeColor, layer.strokeAlpha);
