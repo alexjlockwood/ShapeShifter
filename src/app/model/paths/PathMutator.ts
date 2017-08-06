@@ -203,7 +203,7 @@ export class PathMutator {
 
   /**
    * Adds transforms on the path using the specified transformation matrices.
-   * TODO: move this method into Path (no need to track transforms as part of the path state)
+   * DEPRECATED: move this method into Path (no need to track transforms as part of the path state)
    */
   addTransforms(transforms: ReadonlyArray<Matrix>) {
     return this.applyTransforms(transforms, cs => cs.mutate().addTransforms(transforms).build());

@@ -1,4 +1,4 @@
-import { Point } from 'app/scripts/common';
+import { Matrix, Point } from 'app/scripts/common';
 import { environment } from 'environments/environment';
 import * as _ from 'lodash';
 
@@ -173,6 +173,13 @@ export class Path {
    */
   isClockwise(subIdx: number) {
     return this.ps.isClockwise(subIdx);
+  }
+
+  /**
+   * Transforms the path using the specified transform matrix.
+   */
+  transform(transform: Matrix) {
+    return this.mutate().addTransforms([transform]).build().clone();
   }
 
   /**

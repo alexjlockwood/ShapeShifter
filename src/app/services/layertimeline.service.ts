@@ -292,7 +292,7 @@ export class LayerTimelineService {
           return l;
         }
         const clonedLayer = l.clone();
-        clonedLayer.pathData = path.mutate().addTransforms(transforms).build().clone();
+        clonedLayer.pathData = path.transform(Matrix.flatten(transforms));
         return clonedLayer;
       },
     );
