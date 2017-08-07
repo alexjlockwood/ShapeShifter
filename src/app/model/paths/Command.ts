@@ -122,7 +122,7 @@ export class Command {
 }
 
 export class CommandBuilder {
-  private transforms: Matrix[] = [];
+  private matrix: Matrix = Matrix.identity();
 
   constructor(
     private svgChar: SvgChar,
@@ -161,8 +161,8 @@ export class CommandBuilder {
     return this;
   }
 
-  transform(transforms: ReadonlyArray<Matrix>) {
-    this.transforms = [...transforms, ...this.transforms];
+  transform(transform: Matrix) {
+    this.matrix = transform.dot(this.matrix);
     return this;
   }
 
@@ -178,7 +178,7 @@ export class CommandBuilder {
   build() {
     return new Command(
       this.svgChar,
-      this.points.map(p => (p ? MathUtil.transformPoint(p, ...this.transforms) : p)),
+      this.points.map(p => (p ? MathUtil.transformPoint(p, this.matrix) : p)),
       this.isSplitPoint,
       this.id || _.uniqueId(),
       this.isSplitSegment,

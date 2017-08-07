@@ -194,31 +194,28 @@ export class PathMutator {
    */
   unconvertSubPath(subIdx: number) {
     const sps = this.findSubPathStateLeaf(subIdx);
-    const commandStates = sps.getCommandStates().map((cs, csIdx) => {
+    const css = sps.getCommandStates().map((cs, csIdx) => {
       return csIdx === 0 ? cs : cs.mutate().unconvertSubpath().build();
     });
-    this.setSubPathStateLeaf(subIdx, sps.mutate().setCommandStates(commandStates).build());
+    this.setSubPathStateLeaf(subIdx, sps.mutate().setCommandStates(css).build());
     return this;
   }
 
   /**
-   * Adds transforms on the path using the specified transformation matrices.
-   * DEPRECATED: move this method into Path (no need to track transforms as part of the path state)
+   * Transforms the path using the specified transformation matrix.
    */
-  addTransforms(transforms: ReadonlyArray<Matrix>) {
-    return this.applyTransforms(transforms, cs => cs.mutate().addTransforms(transforms).build());
-  }
-
-  private applyTransforms(
-    transforms: ReadonlyArray<Matrix>,
-    applyFn: (cs: CommandState) => CommandState,
-  ) {
+  transform(transform: Matrix) {
     const spss = flattenSubPathStates(this.subPathStateMap);
     for (let spsIdx = 0; spsIdx < spss.length; spsIdx++) {
       const sps = spss[spsIdx];
+      const css = sps.getCommandStates();
+      const subIdx = this.subPathOrdering.indexOf(spsIdx);
       this.setSubPathStateLeaf(
-        this.subPathOrdering.indexOf(spsIdx),
-        sps.mutate().setCommandStates(sps.getCommandStates().map(cs => applyFn(cs))).build(),
+        subIdx,
+        sps
+          .mutate()
+          .setCommandStates(css.map(cs => cs.mutate().transform(transform).build()))
+          .build(),
       );
     }
     return this;

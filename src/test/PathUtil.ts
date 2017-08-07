@@ -124,7 +124,7 @@ export function fromPathOpString(pathString: string, pathOpsString: string) {
             default:
               throw new Error('Invalid transform op: ' + transformOp);
           }
-          mutator.addTransforms([matrix]);
+          mutator.transform(matrix);
         }
         break;
       default:

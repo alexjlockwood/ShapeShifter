@@ -28,7 +28,7 @@ export class CommandState {
       },
     ],
     // The transformation matricies used to transform this command state object.
-    private readonly transforms: ReadonlyArray<Matrix> = [Matrix.identity()],
+    private readonly transform: Matrix = Matrix.identity(),
     // The calculator that will do all of the math-y stuff for us.
     private readonly calculator: Calculator = newCalculator(backingCommand),
     // The lower bound T value (may be > 0 for split subpaths).
@@ -142,7 +142,7 @@ export class CommandState {
     return new CommandStateMutator(
       this.backingCommand,
       [...this.mutations],
-      [...this.transforms],
+      this.transform,
       this.calculator,
       this.minT,
       this.maxT,
@@ -165,7 +165,7 @@ class CommandStateMutator {
   constructor(
     private backingCommand: Command,
     private mutations: Mutation[],
-    private transforms: Matrix[],
+    private matrix: Matrix,
     private calculator: Calculator,
     private minT: number,
     private maxT: number,
@@ -345,19 +345,9 @@ class CommandStateMutator {
    * Adds transforms to this command state object using the
    * specified transformation matrices.
    */
-  addTransforms(transforms: ReadonlyArray<Matrix>) {
-    return this.setTransforms([...transforms, ...this.transforms]);
-  }
-
-  /**
-   * Sets transforms to this command state object using the
-   * specified transformation matrices.
-   */
-  setTransforms(transforms: ReadonlyArray<Matrix>) {
-    this.transforms = [...transforms];
-    this.calculator = newCalculator(
-      this.backingCommand.mutate().transform(this.transforms).build(),
-    );
+  transform(transform: Matrix) {
+    this.matrix = transform.dot(this.matrix);
+    this.calculator = newCalculator(this.backingCommand.mutate().transform(this.matrix).build());
     return this;
   }
 
@@ -372,7 +362,7 @@ class CommandStateMutator {
         svgChar: this.backingCommand.getSvgChar(),
       },
     ];
-    this.transforms = [Matrix.identity()];
+    this.matrix = Matrix.identity();
     this.calculator = newCalculator(this.backingCommand);
     return this;
   }
@@ -404,7 +394,7 @@ class CommandStateMutator {
       this.backingCommand,
       builtCommands,
       this.mutations,
-      this.transforms,
+      this.matrix,
       this.calculator,
       this.minT,
       this.maxT,

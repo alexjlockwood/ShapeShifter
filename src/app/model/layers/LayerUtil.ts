@@ -107,7 +107,10 @@ export function adjustViewports(vl1: VectorLayer, vl2: VectorLayer) {
   }
 
   const transformLayerFn = (vl: VectorLayer, scale: number, tx: number, ty: number) => {
-    const transforms = [Matrix.fromScaling(scale, scale), Matrix.fromTranslation(tx, ty)];
+    const transforms = Matrix.flatten([
+      Matrix.fromScaling(scale, scale),
+      Matrix.fromTranslation(tx, ty),
+    ]);
     (function recurseFn(layer: Layer) {
       if (layer instanceof PathLayer || layer instanceof ClipPathLayer) {
         if (layer instanceof PathLayer && layer.isStroked()) {

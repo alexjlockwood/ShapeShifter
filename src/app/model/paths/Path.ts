@@ -179,7 +179,7 @@ export class Path {
    * Transforms the path using the specified transform matrix.
    */
   transform(transform: Matrix) {
-    return this.mutate().addTransforms([transform]).build().clone();
+    return this.mutate().transform(transform).build().clone();
   }
 
   /**

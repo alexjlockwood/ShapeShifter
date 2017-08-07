@@ -323,8 +323,9 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): Command[
   if (!matrices) {
     return commands;
   }
+  const flattenedMatrices = Matrix.flatten(matrices);
   return commands.map(cmd => {
-    return cmd.mutate().setId(cmd.getId()).transform(matrices).build();
+    return cmd.mutate().setId(cmd.getId()).transform(flattenedMatrices).build();
   });
 }
 
