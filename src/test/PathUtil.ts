@@ -110,15 +110,15 @@ export function fromPathOpString(pathString: string, pathOpsString: string) {
           let matrix: Matrix;
           switch (transformOp) {
             case 'scale':
-              matrix = Matrix.fromScaling(+A[i + 2], +A[i + 3]);
+              matrix = Matrix.scaling(+A[i + 2], +A[i + 3]);
               i += 3;
               break;
             case 'rotate':
-              matrix = Matrix.fromRotation(+A[i + 2]);
+              matrix = Matrix.rotation(+A[i + 2]);
               i += 2;
               break;
             case 'translate':
-              matrix = Matrix.fromTranslation(+A[i + 2], +A[i + 3]);
+              matrix = Matrix.translation(+A[i + 2], +A[i + 3]);
               i += 3;
               break;
             default:

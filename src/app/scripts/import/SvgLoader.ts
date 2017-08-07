@@ -11,7 +11,7 @@ import {
 } from 'app/model/layers';
 import { Command, Path } from 'app/model/paths';
 import { NameProperty } from 'app/model/properties';
-import { ColorUtil, Matrix } from 'app/scripts/common';
+import { ColorUtil, MathUtil, Matrix } from 'app/scripts/common';
 import { Svgo } from 'app/scripts/svgo';
 import * as _ from 'lodash';
 
@@ -81,8 +81,9 @@ function loadVectorLayerFromSvgString(
       return undefined;
     }
 
-    const nodeTransforms = getNodeTransforms(node as SVGGraphicsElement).reverse();
-    transforms = [...nodeTransforms, ...transforms];
+    const nodeTransforms = getNodeTransforms(node as SVGGraphicsElement);
+    transforms = [...transforms, ...nodeTransforms];
+    const flattenedTransforms = Matrix.flatten(transforms);
 
     // Get the referenced clip-path ID, if one exists.
     const refClipPathId = getReferencedClipPathId(node);
@@ -91,8 +92,7 @@ function loadVectorLayerFromSvgString(
       if (!refClipPathId) {
         return layer;
       }
-      const paths = (clipPathMap[refClipPathId] || [])
-        .map(p => p.transform(Matrix.flatten(transforms)));
+      const paths = (clipPathMap[refClipPathId] || []).map(p => p.transform(flattenedTransforms));
       if (!paths.length) {
         // If the clipPath has no children, then clip the entire layer.
         paths.push(new Path('M 0 0 Z'));
@@ -153,8 +153,8 @@ function loadVectorLayerFromSvgString(
 
       let pathData = new Path(path);
       if (transforms.length) {
-        pathData = pathData.transform(Matrix.flatten(transforms));
-        strokeWidth *= Matrix.flatten(transforms).getScale();
+        pathData = pathData.transform(flattenedTransforms);
+        strokeWidth = MathUtil.round(strokeWidth * flattenedTransforms.getScaleFactor());
       }
       // TODO: make best effort attempt to restore trimPath{Start,End,Offset}
       return maybeWrapClipPathInGroupFn(
@@ -208,7 +208,7 @@ function loadVectorLayerFromSvgString(
     height = viewBox.baseVal.height;
 
     // Fake a translate transform for the viewbox.
-    rootTransforms.push(Matrix.fromTranslation(-viewBox.baseVal.x, -viewBox.baseVal.y));
+    rootTransforms.push(Matrix.translation(-viewBox.baseVal.x, -viewBox.baseVal.y));
   }
   const rootLayer = nodeToLayerFn(documentElement, rootTransforms);
   return new VectorLayer({

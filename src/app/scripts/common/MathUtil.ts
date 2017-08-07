@@ -7,15 +7,9 @@ export function floorMod(num: number, maxNum: number) {
   return (num % maxNum + maxNum) % maxNum;
 }
 
-/** Linearly interpolate between point a and point b using time t. */
-export function lerp(a: number, b: number, t: number): number;
-export function lerp(a: [number, number], b: [number, number], t: number): [number, number];
-export function lerp(a: number | [number, number], b: number | [number, number], t: number) {
-  if (typeof a === 'number' && typeof b === 'number') {
-    return a + (b - a) * t;
-  } else {
-    return [lerp(a[0], b[0], t), lerp(a[1], b[1], t)] as [number, number];
-  }
+/** Linearly interpolate between a and b using time t. */
+export function lerp(a: number, b: number, t: number) {
+  return a + (b - a) * t;
 }
 
 /** Returns true if the points are collinear. */
@@ -38,21 +32,15 @@ export function transformPoint(point: Point, ...matrices: Matrix[]) {
     // [a c e]   [p.x]
     // [b d f] * [p.y]
     // [0 0 1]   [ 1 ]
-    return { x: m.a * p.x + m.c * p.y + m.e * 1, y: m.b * p.x + m.d * p.y + m.f * 1 };
+    const x = round(m.a * p.x + m.c * p.y + m.e * 1);
+    const y = round(m.b * p.x + m.d * p.y + m.f * 1);
+    return { x, y };
   }, point);
 }
 
-function instanceOfPoint(p: any): p is Point {
-  return 'x' in p && 'y' in p;
-}
-
 /** Calculates the distance between two points. */
-export function distance(p1: [number, number], p2: [number, number]): number;
-export function distance(p1: Point, p2: Point): number;
-export function distance(p1: [number, number] | Point, p2: [number, number] | Point) {
-  const dx = instanceOfPoint(p1) && instanceOfPoint(p2) ? p1.x - p2.x : p1[0] - p2[0];
-  const dy = instanceOfPoint(p1) && instanceOfPoint(p2) ? p1.y - p2.y : p1[1] - p2[1];
-  return Math.sqrt(dx ** 2 + dy ** 2);
+export function distance(p1: Point, p2: Point) {
+  return Math.hypot(p1.x - p2.x, p1.y - p2.y);
 }
 
 /** Returns true if the two points are equal. */

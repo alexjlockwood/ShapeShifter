@@ -167,7 +167,7 @@ export class CanvasLayersDirective extends CanvasLayoutMixin(DestroyableMixin())
     const flattenedTransform = canvasTransform.invert();
     CanvasUtil.executeCommands(ctx, layer.pathData.getCommands(), canvasTransform);
 
-    const strokeWidthMultiplier = flattenedTransform.getScale();
+    const strokeWidthMultiplier = flattenedTransform.getScaleFactor();
     ctx.strokeStyle = ColorUtil.androidToCssRgbaColor(layer.strokeColor, layer.strokeAlpha);
     ctx.lineWidth = layer.strokeWidth * strokeWidthMultiplier;
     ctx.fillStyle = ColorUtil.androidToCssRgbaColor(layer.fillColor, layer.fillAlpha);
@@ -180,7 +180,7 @@ export class CanvasLayersDirective extends CanvasLayoutMixin(DestroyableMixin())
       // Note that we only return the length of the first sub path due to
       // https://code.google.com/p/android/issues/detail?id=172547
       let pathLength: number;
-      if (a !== 1 || d !== 1) {
+      if (Math.abs(a) !== 1 || Math.abs(d) !== 1) {
         // Then recompute the scaled path length.
         pathLength = layer.pathData.transform(flattenedTransform).getSubPathLength(0);
       } else {

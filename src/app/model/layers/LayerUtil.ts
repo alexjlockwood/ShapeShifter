@@ -5,8 +5,6 @@ import * as _ from 'lodash';
 
 import { ClipPathLayer, GroupLayer, Layer, PathLayer, VectorLayer } from '.';
 
-const PRECISION = 8;
-
 const IS_DEV_BUILD = !environment.production;
 
 /**
@@ -27,18 +25,8 @@ export function getCanvasTransformForLayer(root: Layer, layerId: string) {
 function getCanvasTransformsForLayer(root: Layer, layerId: string) {
   return (function recurseFn(parents: Layer[], current: Layer): Matrix[] {
     if (current.id === layerId) {
-      return _.flatMap(parents, layer => {
-        if (layer instanceof GroupLayer) {
-          const l = layer as GroupLayer;
-          return [
-            Matrix.fromTranslation(l.pivotX, l.pivotY),
-            Matrix.fromTranslation(l.translateX, l.translateY),
-            Matrix.fromRotation(l.rotation),
-            Matrix.fromScaling(l.scaleX, l.scaleY),
-            Matrix.fromTranslation(-l.pivotX, -l.pivotY),
-          ];
-        }
-        return [];
+      return _.flatMap(parents, l => {
+        return l instanceof GroupLayer ? getCanvasTransformsForGroupLayer(l) : [];
       });
     }
     for (const child of current.children) {
@@ -49,6 +37,22 @@ function getCanvasTransformsForLayer(root: Layer, layerId: string) {
     }
     return undefined;
   })([], root);
+}
+
+/**
+ * Returns a list of matrix transforms for a given group layer.
+ */
+export function getCanvasTransformsForGroupLayer(l: GroupLayer) {
+  // First negative pivot, then scale, then rotation, then translation, then pivot.
+  // When drawing a path, the transforms are applied at the bottom up, which
+  // is why the order appears to be reversed below.
+  return [
+    Matrix.translation(l.pivotX, l.pivotY),
+    Matrix.translation(l.translateX, l.translateY),
+    Matrix.rotation(l.rotation),
+    Matrix.scaling(l.scaleX, l.scaleY),
+    Matrix.translation(-l.pivotX, -l.pivotY),
+  ];
 }
 
 /**
@@ -81,15 +85,15 @@ export function adjustViewports(vl1: VectorLayer, vl2: VectorLayer) {
   }
 
   if (isMaxDimenFn(w1) || isMaxDimenFn(h1)) {
-    w1 = _.round(w1, PRECISION);
-    h1 = _.round(h1, PRECISION);
-    w2 = _.round(w2 * scale2, PRECISION);
-    h2 = _.round(h2 * scale2, PRECISION);
+    w1 = _.round(w1, 9);
+    h1 = _.round(h1, 9);
+    w2 = _.round(w2 * scale2, 9);
+    h2 = _.round(h2 * scale2, 9);
   } else {
-    w1 = _.round(w1 * scale1, PRECISION);
-    h1 = _.round(h1 * scale1, PRECISION);
-    w2 = _.round(w2, PRECISION);
-    h2 = _.round(h2, PRECISION);
+    w1 = _.round(w1 * scale1, 9);
+    h1 = _.round(h1 * scale1, 9);
+    w2 = _.round(w2, 9);
+    h2 = _.round(h2, 9);
   }
 
   let tx1 = 0;
@@ -107,10 +111,7 @@ export function adjustViewports(vl1: VectorLayer, vl2: VectorLayer) {
   }
 
   const transformLayerFn = (vl: VectorLayer, scale: number, tx: number, ty: number) => {
-    const transforms = Matrix.flatten([
-      Matrix.fromScaling(scale, scale),
-      Matrix.fromTranslation(tx, ty),
-    ]);
+    const transforms = Matrix.flatten([Matrix.scaling(scale, scale), Matrix.translation(tx, ty)]);
     (function recurseFn(layer: Layer) {
       if (layer instanceof PathLayer || layer instanceof ClipPathLayer) {
         if (layer instanceof PathLayer && layer.isStroked()) {

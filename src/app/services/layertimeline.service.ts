@@ -261,45 +261,37 @@ export class LayerTimelineService {
     if (!layer.children.length) {
       return;
     }
-    const getTransformsFn = (l: GroupLayer) => [
-      Matrix.fromTranslation(l.pivotX, l.pivotY),
-      Matrix.fromScaling(l.scaleX, l.scaleY),
-      Matrix.fromRotation(l.rotation),
-      Matrix.fromTranslation(l.translateX, l.translateY),
-      Matrix.fromTranslation(-l.pivotX, -l.pivotY),
-    ];
-    const transforms = getTransformsFn(layer);
-    const transformedChildren = layer.children.map(
-      (l: GroupLayer | PathLayer | ClipPathLayer): Layer => {
-        if (l instanceof GroupLayer) {
-          const flattenedTransform = Matrix.flatten([...transforms, ...getTransformsFn(l)]);
-          const { a, b, c, d, e: tx, f: ty } = flattenedTransform;
-          const sx = (a >= 0 ? 1 : -1) * Math.sqrt(a ** 2 + c ** 2);
-          const sy = (d >= 0 ? 1 : -1) * Math.sqrt(b ** 2 + d ** 2);
-          const degrees = 180 / Math.PI * Math.atan2(-c, a);
-          const newGroupLayer = l.clone();
-          newGroupLayer.pivotX = 0;
-          newGroupLayer.pivotY = 0;
-          newGroupLayer.translateX = MathUtil.round(tx);
-          newGroupLayer.translateY = MathUtil.round(ty);
-          newGroupLayer.rotation = MathUtil.round(degrees);
-          newGroupLayer.scaleX = MathUtil.round(sx);
-          newGroupLayer.scaleY = MathUtil.round(sy);
-          return newGroupLayer;
-        }
-        const path = l.pathData;
-        if (!path || !l.pathData.getPathString()) {
-          return l;
-        }
-        const clonedLayer = l.clone();
-        clonedLayer.pathData = path.transform(Matrix.flatten(transforms));
-        return clonedLayer;
-      },
-    );
+    const layerTransform = Matrix.flatten(LayerUtil.getCanvasTransformsForGroupLayer(layer));
+    const layerChildren = layer.children.map((l: GroupLayer | PathLayer | ClipPathLayer): Layer => {
+      if (l instanceof GroupLayer) {
+        const flattenedTransform = Matrix.flatten([
+          layerTransform,
+          ...LayerUtil.getCanvasTransformsForGroupLayer(l),
+        ]);
+        const { sx, sy } = flattenedTransform.getScaling();
+        const degrees = flattenedTransform.getRotation();
+        const { tx, ty } = flattenedTransform.getTranslation();
+        const newLayer = l.clone();
+        newLayer.pivotX = 0;
+        newLayer.pivotY = 0;
+        newLayer.translateX = tx;
+        newLayer.translateY = ty;
+        newLayer.rotation = degrees;
+        newLayer.scaleX = sx;
+        newLayer.scaleY = sy;
+        return newLayer;
+      }
+      const path = l.pathData;
+      if (!path || !l.pathData.getPathString()) {
+        return l;
+      }
+      const clonedLayer = l.clone();
+      clonedLayer.pathData = path.transform(layerTransform);
+      return clonedLayer;
+    });
     const parent = LayerUtil.findParent(vl, layerId).clone();
-    const layerIndex = _.findIndex(parent.children, l => l.id === layerId);
     const children = [...parent.children];
-    children.splice(layerIndex, 1, ...transformedChildren);
+    children.splice(_.findIndex(parent.children, l => l.id === layerId), 1, ...layerChildren);
     parent.children = children;
     const actions: Action[] = [
       new SetVectorLayer(LayerUtil.updateLayer(vl, parent)),

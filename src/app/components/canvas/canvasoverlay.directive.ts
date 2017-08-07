@@ -1026,7 +1026,7 @@ function executeLabeledPoint(
   // Convert the point and the radius to physical pixel coordinates.
   // We do this to avoid fractional font sizes less than 1px, which
   // show up OK on Chrome but not on Firefox or Safari.
-  point = MathUtil.transformPoint(point, Matrix.fromScaling(attrScale, attrScale));
+  point = MathUtil.transformPoint(point, Matrix.scaling(attrScale, attrScale));
   radius *= attrScale;
 
   ctx.save();

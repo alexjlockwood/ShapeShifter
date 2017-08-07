@@ -83,9 +83,9 @@ export class GroupLayer extends AbstractLayer {
     bounds.r -= this.pivotX;
     bounds.b -= this.pivotY;
     const transforms = [
-      Matrix.fromScaling(this.scaleX, this.scaleY),
-      Matrix.fromRotation(this.rotation),
-      Matrix.fromTranslation(this.translateX, this.translateY),
+      Matrix.scaling(this.scaleX, this.scaleY),
+      Matrix.rotation(this.rotation),
+      Matrix.translation(this.translateX, this.translateY),
     ];
     const topLeft = MathUtil.transformPoint({ x: bounds.l, y: bounds.t }, ...transforms);
     const bottomRight = MathUtil.transformPoint({ x: bounds.r, y: bounds.b }, ...transforms);
