@@ -14,29 +14,26 @@ export function CSSStyleDeclaration(node) {
   this.styleValue = null;
 
   this.parseError = false;
-};
+}
 
-CSSStyleDeclaration.prototype.hasStyle = function () {
-  this.styleAttr = { // empty style attr
-    'name': 'style',
-    'value': null
+CSSStyleDeclaration.prototype.hasStyle = function() {
+  this.styleAttr = {
+    // empty style attr
+    name: 'style',
+    value: null,
   };
 
   this.addStyleHandler();
 };
 
-
-
-
 // attr.style
 
-CSSStyleDeclaration.prototype.addStyleHandler = function () {
-
+CSSStyleDeclaration.prototype.addStyleHandler = function() {
   Object.defineProperty(this.parentNode.attrs, 'style', {
     get: this.getStyleAttr.bind(this),
     set: this.setStyleAttr.bind(this),
     enumerable: true,
-    configurable: true
+    configurable: true,
   });
 
   this.addStyleValueHandler();
@@ -44,21 +41,20 @@ CSSStyleDeclaration.prototype.addStyleHandler = function () {
 
 // attr.style.value
 
-CSSStyleDeclaration.prototype.addStyleValueHandler = function () {
-
+CSSStyleDeclaration.prototype.addStyleValueHandler = function() {
   Object.defineProperty(this.styleAttr, 'value', {
     get: this.getStyleValue.bind(this),
     set: this.setStyleValue.bind(this),
     enumerable: true,
-    configurable: true
+    configurable: true,
   });
 };
 
-CSSStyleDeclaration.prototype.getStyleAttr = function () {
+CSSStyleDeclaration.prototype.getStyleAttr = function() {
   return this.styleAttr;
 };
 
-CSSStyleDeclaration.prototype.setStyleAttr = function (newStyleAttr) {
+CSSStyleDeclaration.prototype.setStyleAttr = function(newStyleAttr) {
   this.setStyleValue(newStyleAttr.value); // must before applying value handler!
 
   this.styleAttr = newStyleAttr;
@@ -66,20 +62,17 @@ CSSStyleDeclaration.prototype.setStyleAttr = function (newStyleAttr) {
   this.hasSynced = false; // raw css changed
 };
 
-CSSStyleDeclaration.prototype.getStyleValue = function () {
+CSSStyleDeclaration.prototype.getStyleValue = function() {
   return this.getCssText();
 };
 
-CSSStyleDeclaration.prototype.setStyleValue = function (newValue) {
+CSSStyleDeclaration.prototype.setStyleValue = function(newValue) {
   this.properties.clear(); // reset all existing properties
   this.styleValue = newValue;
   this.hasSynced = false; // raw css changed
 };
 
-
-
-
-CSSStyleDeclaration.prototype._loadCssText = function () {
+CSSStyleDeclaration.prototype._loadCssText = function() {
   if (this.hasSynced) {
     return;
   }
@@ -94,7 +87,7 @@ CSSStyleDeclaration.prototype._loadCssText = function () {
   try {
     declarations = csstree.parse(inlineCssStr, {
       context: 'declarationList',
-      parseValue: false
+      parseValue: false,
     });
   } catch (parseError) {
     this.parseError = parseError;
@@ -103,12 +96,11 @@ CSSStyleDeclaration.prototype._loadCssText = function () {
   this.parseError = false;
 
   var self = this;
-  declarations.children.each(function (declaration) {
+  declarations.children.each(function(declaration) {
     var styleDeclaration = csstools.csstreeToStyleDeclaration(declaration);
     self.setProperty(styleDeclaration.name, styleDeclaration.value, styleDeclaration.priority);
   });
 };
-
 
 // only reads from properties
 
@@ -117,7 +109,7 @@ CSSStyleDeclaration.prototype._loadCssText = function () {
  *
  * @return {String} Textual representation of the declaration block (empty string for no properties)
  */
-CSSStyleDeclaration.prototype.getCssText = function () {
+CSSStyleDeclaration.prototype.getCssText = function() {
   var properties = this.getProperties();
 
   if (this.parseError) {
@@ -126,21 +118,23 @@ CSSStyleDeclaration.prototype.getCssText = function () {
   }
 
   var cssText = [];
-  properties.forEach(function (property, propertyName) {
+  properties.forEach(function(property, propertyName) {
     var strImportant = property.priority === 'important' ? '!important' : '';
     cssText.push(propertyName.trim() + ':' + property.value.trim() + strImportant);
   });
   return cssText.join(';');
 };
 
-CSSStyleDeclaration.prototype._handleParseError = function () {
+CSSStyleDeclaration.prototype._handleParseError = function() {
   if (this.parseError) {
-    console.warn('Warning: Parse error when parsing inline styles, style properties of this element cannot be used. The raw styles can still be get/set using .attr(\'style\').value. Error details: ' + this.parseError);
+    console.warn(
+      "Warning: Parse error when parsing inline styles, style properties of this element cannot be used. The raw styles can still be get/set using .attr('style').value. Error details: " +
+        this.parseError,
+    );
   }
 };
 
-
-CSSStyleDeclaration.prototype._getProperty = function (propertyName) {
+CSSStyleDeclaration.prototype._getProperty = function(propertyName) {
   var properties = this.getProperties();
   this._handleParseError();
 
@@ -154,7 +148,7 @@ CSSStyleDeclaration.prototype._getProperty = function (propertyName) {
  * @param {String} propertyName representing the property name to be checked.
  * @return {String} priority that represents the priority (e.g. "important") if one exists. If none exists, returns the empty string.
  */
-CSSStyleDeclaration.prototype.getPropertyPriority = function (propertyName) {
+CSSStyleDeclaration.prototype.getPropertyPriority = function(propertyName) {
   var property = this._getProperty(propertyName);
   return property ? property.priority : '';
 };
@@ -165,7 +159,7 @@ CSSStyleDeclaration.prototype.getPropertyPriority = function (propertyName) {
  * @param {String} propertyName representing the property name to be checked.
  * @return {String} value containing the value of the property. If not set, returns the empty string.
  */
-CSSStyleDeclaration.prototype.getPropertyValue = function (propertyName) {
+CSSStyleDeclaration.prototype.getPropertyValue = function(propertyName) {
   var property = this._getProperty(propertyName);
   return property ? property.value : null;
 };
@@ -176,7 +170,7 @@ CSSStyleDeclaration.prototype.getPropertyValue = function (propertyName) {
  * @param {Number} index of the node to be fetched. The index is zero-based.
  * @return {String} propertyName that is the name of the CSS property at the specified index.
  */
-CSSStyleDeclaration.prototype.item = function (index) {
+CSSStyleDeclaration.prototype.item = function(index) {
   var properties = this.getProperties();
   this._handleParseError();
 
@@ -188,11 +182,10 @@ CSSStyleDeclaration.prototype.item = function (index) {
  *
  * @return {Map} properties that is a Map with propertyName as key and property (propertyValue + propertyPriority) as value.
  */
-CSSStyleDeclaration.prototype.getProperties = function () {
+CSSStyleDeclaration.prototype.getProperties = function() {
   this._loadCssText();
   return this.properties;
 };
-
 
 // writes to properties
 
@@ -202,7 +195,7 @@ CSSStyleDeclaration.prototype.getProperties = function () {
  * @param {String} propertyName representing the property name to be removed.
  * @return {String} oldValue equal to the value of the CSS property before it was removed.
  */
-CSSStyleDeclaration.prototype.removeProperty = function (propertyName) {
+CSSStyleDeclaration.prototype.removeProperty = function(propertyName) {
   this.hasStyle();
 
   var properties = this.getProperties();
@@ -221,7 +214,7 @@ CSSStyleDeclaration.prototype.removeProperty = function (propertyName) {
  * @param {String} [priority] allowing the "important" CSS priority to be set. If not specified, treated as the empty string.
  * @return {undefined}
  */
-CSSStyleDeclaration.prototype.setProperty = function (propertyName, value, priority) {
+CSSStyleDeclaration.prototype.setProperty = function(propertyName, value, priority) {
   this.hasStyle();
 
   var properties = this.getProperties();
@@ -229,7 +222,7 @@ CSSStyleDeclaration.prototype.setProperty = function (propertyName, value, prior
 
   var property = {
     value: value.trim(),
-    priority: priority.trim()
+    priority: priority.trim(),
   };
   properties.set(propertyName.trim(), property);
 
