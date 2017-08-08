@@ -1,5 +1,4 @@
-import { ActionMode, ActionSource, Hover, Selection, SelectionType } from 'app/model/actionmode';
-import * as _ from 'lodash';
+import { ActionMode, ActionSource, Hover, Selection } from 'app/model/actionmode';
 
 import * as actions from './actions';
 

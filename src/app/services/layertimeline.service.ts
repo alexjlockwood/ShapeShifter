@@ -12,9 +12,7 @@ import {
   PathLayer,
   VectorLayer,
 } from 'app/model/layers';
-import { Path } from 'app/model/paths';
 import { Animation, AnimationBlock } from 'app/model/timeline';
-import { MathUtil } from 'app/scripts/common';
 import { Matrix, ModelUtil } from 'app/scripts/common';
 import { State, Store } from 'app/store';
 import {

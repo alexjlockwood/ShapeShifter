@@ -1,4 +1,4 @@
-import { MathUtil, Matrix, Point } from '.';
+import { MathUtil, Matrix } from '.';
 
 describe('MathUtil', () => {
   it('#transformPoint', () => {

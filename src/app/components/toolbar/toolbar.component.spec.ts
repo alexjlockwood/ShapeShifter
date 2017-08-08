@@ -12,20 +12,7 @@ import {
 } from '@angular/material';
 import { DomSanitizer } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { SplitterComponent } from 'app/components/splitter/splitter.component';
-import {
-  ActionModeService,
-  AnimatorService,
-  DemoService,
-  DialogService,
-  FileExportService,
-  FileImportService,
-  LayerTimelineService,
-  PlaybackService,
-  ShortcutService,
-  SnackBarService,
-  ThemeService,
-} from 'app/services';
+import { ActionModeService, LayerTimelineService, ThemeService } from 'app/services';
 import { Store } from 'app/store';
 import { MockStore } from 'test/MockStore';
 

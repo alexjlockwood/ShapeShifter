@@ -9,7 +9,7 @@ import {
   StrokeLineJoin,
   VectorLayer,
 } from 'app/model/layers';
-import { Command, Path } from 'app/model/paths';
+import { Path } from 'app/model/paths';
 import { NameProperty } from 'app/model/properties';
 import { ColorUtil, MathUtil, Matrix } from 'app/scripts/common';
 import { Svgo } from 'app/scripts/svgo';

@@ -1,6 +1,5 @@
 import 'hammerjs';
 
-import { NgModule } from '@angular/core';
 import { ComponentFixture, TestBed, async, inject } from '@angular/core/testing';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { FormsModule } from '@angular/forms';
@@ -21,7 +20,6 @@ import {
 } from '@angular/material';
 import { BrowserModule, DomSanitizer } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { StoreModule } from '@ngrx/store';
 import {
   CanvasComponent,
   CanvasContainerDirective,

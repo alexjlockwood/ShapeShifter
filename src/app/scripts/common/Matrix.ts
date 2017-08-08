@@ -1,6 +1,4 @@
-import * as _ from 'lodash';
-
-import { MathUtil, Point } from '.';
+import { MathUtil } from '.';
 
 /**
  * An immutable Matrix class that uses the standard SVG transformation

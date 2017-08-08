@@ -1,5 +1,5 @@
 import { NumberProperty, Property } from 'app/model/properties';
-import { MathUtil, Matrix, Point, Rect } from 'app/scripts/common';
+import { MathUtil, Matrix, Rect } from 'app/scripts/common';
 import * as _ from 'lodash';
 
 import { ConstructorArgs as AbstractConstructorArgs, AbstractLayer } from './AbstractLayer';
