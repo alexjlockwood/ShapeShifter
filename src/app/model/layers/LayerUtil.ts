@@ -1,5 +1,5 @@
 import { Path } from 'app/model/paths';
-import { Matrix } from 'app/scripts/common';
+import { MathUtil, Matrix } from 'app/scripts/common';
 import { environment } from 'environments/environment';
 import * as _ from 'lodash';
 
@@ -85,15 +85,15 @@ export function adjustViewports(vl1: VectorLayer, vl2: VectorLayer) {
   }
 
   if (isMaxDimenFn(w1) || isMaxDimenFn(h1)) {
-    w1 = _.round(w1, 9);
-    h1 = _.round(h1, 9);
-    w2 = _.round(w2 * scale2, 9);
-    h2 = _.round(h2 * scale2, 9);
+    w1 = MathUtil.round(w1);
+    h1 = MathUtil.round(h1);
+    w2 = MathUtil.round(w2 * scale2);
+    h2 = MathUtil.round(h2 * scale2);
   } else {
-    w1 = _.round(w1 * scale1, 9);
-    h1 = _.round(h1 * scale1, 9);
-    w2 = _.round(w2, 9);
-    h2 = _.round(h2, 9);
+    w1 = MathUtil.round(w1 * scale1);
+    h1 = MathUtil.round(h1 * scale1);
+    w2 = MathUtil.round(w2);
+    h2 = MathUtil.round(h2);
   }
 
   let tx1 = 0;
