@@ -39,9 +39,9 @@
         Convert to path
       </button>
       <button *ngIf="model.isMergeable"
-        (click)="this.onMergeGroupClick($event, layer)"
+        (click)="this.onFlattenGroupClick($event, layer)"
         md-menu-item>
-        Merge with {{ this.layer.children.length === 1 ? this.layer.children[0].name : 'children layers' }}
+        Flatten group
       </button>
     </md-menu>
     <button md-icon-button
@@ -118,7 +118,7 @@
         (addTimelineBlockClick)="this.onAddTimelineBlockClick($event.event, $event.layer, $event.propertyName)"
         (convertToClipPathClick)="this.onConvertToClipPathClick($event.event, $event.layer)"
         (convertToPathClick)="this.onConvertToPathClick($event.event, $event.layer)"
-        (mergeGroupClick)="this.onMergeGroupClick($event.event, $event.layer)">
+        (flattenGroupClick)="this.onFlattenGroupClick($event.event, $event.layer)">
       </app-layerlisttree>
     </li>
   </ul>

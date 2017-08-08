@@ -170,7 +170,11 @@ function vectorLayerToSvgNode(
           let pathLength: number;
           if (Math.abs(a) !== 1 || Math.abs(d) !== 1) {
             // Then recompute the scaled path length.
-            pathLength = layer.pathData.transform(flattenedTransform).getSubPathLength(0);
+            pathLength = layer.pathData
+              .mutate()
+              .transform(flattenedTransform)
+              .build()
+              .getSubPathLength(0);
           } else {
             pathLength = layer.pathData.getSubPathLength(0);
           }

@@ -92,7 +92,9 @@ function loadVectorLayerFromSvgString(
       if (!refClipPathId) {
         return layer;
       }
-      const paths = (clipPathMap[refClipPathId] || []).map(p => p.transform(flattenedTransforms));
+      const paths = (clipPathMap[refClipPathId] || []).map(p => {
+        return new Path(p.mutate().transform(flattenedTransforms).build().getPathString());
+      });
       if (!paths.length) {
         // If the clipPath has no children, then clip the entire layer.
         paths.push(new Path('M 0 0 Z'));
@@ -153,7 +155,9 @@ function loadVectorLayerFromSvgString(
 
       let pathData = new Path(path);
       if (transforms.length) {
-        pathData = pathData.transform(flattenedTransforms);
+        pathData = new Path(
+          pathData.mutate().transform(flattenedTransforms).build().getPathString(),
+        );
         strokeWidth = MathUtil.round(strokeWidth * flattenedTransforms.getScaleFactor());
       }
       // TODO: make best effort attempt to restore trimPath{Start,End,Offset}
@@ -321,7 +325,13 @@ function buildPathInfosForClipPath(node: SVGClipPathElement) {
         const refClipPathId = getReferencedClipPathId(childNode);
         pathInfos.push({
           refClipPathId,
-          path: new Path(pathStr).transform(Matrix.flatten(transforms)),
+          path: new Path(
+            new Path(pathStr)
+              .mutate()
+              .transform(Matrix.flatten(transforms))
+              .build()
+              .getPathString(),
+          ),
         });
       }
     }

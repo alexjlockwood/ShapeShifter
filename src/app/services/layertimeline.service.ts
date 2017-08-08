@@ -12,7 +12,7 @@ import {
   PathLayer,
   VectorLayer,
 } from 'app/model/layers';
-import { Animation, AnimationBlock } from 'app/model/timeline';
+import { Animation, AnimationBlock, PathAnimationBlock } from 'app/model/timeline';
 import { Matrix, ModelUtil } from 'app/scripts/common';
 import { State, Store } from 'app/store';
 import {
@@ -252,8 +252,9 @@ export class LayerTimelineService {
 
   /**
    * Merges the specified group layer into its children layers.
+   * TODO: make it possible to merge groups that contain animation blocks?
    */
-  mergeGroupLayer(layerId: string) {
+  flattenGroupLayer(layerId: string) {
     const vl = this.getVectorLayer();
     const layer = vl.findLayerById(layerId) as GroupLayer;
     if (!layer.children.length) {
@@ -284,7 +285,7 @@ export class LayerTimelineService {
         return l;
       }
       const clonedLayer = l.clone();
-      clonedLayer.pathData = path.transform(layerTransform);
+      clonedLayer.pathData = path.mutate().transform(layerTransform).build();
       return clonedLayer;
     });
     const parent = LayerUtil.findParent(vl, layerId).clone();
@@ -295,12 +296,20 @@ export class LayerTimelineService {
       new SetVectorLayer(LayerUtil.updateLayer(vl, parent)),
       ...this.buildCleanupLayerIdActions(layerId),
     ];
-    const animation = this.getAnimation();
-    if (animation.blocks.some(b => b.layerId === layerId)) {
-      const newAnimation = animation.clone();
-      newAnimation.blocks = newAnimation.blocks.filter(b => b.layerId !== layerId);
-      actions.push(new SetAnimation(newAnimation));
-    }
+    const newAnimation = this.getAnimation().clone();
+    // TODO: show a dialog if the user is about to unknowingly delete any blocks?
+    newAnimation.blocks = newAnimation.blocks.filter(b => b.layerId !== layerId);
+    // TODO: also attempt to merge children group animation blocks?
+    newAnimation.blocks = newAnimation.blocks.map(b => {
+      if (!(b instanceof PathAnimationBlock)) {
+        return b;
+      }
+      const block = b.clone();
+      block.fromValue = block.fromValue.mutate().transform(layerTransform).build();
+      block.toValue = block.toValue.mutate().transform(layerTransform).build();
+      return block;
+    });
+    actions.push(new SetAnimation(newAnimation));
     this.store.dispatch(new MultiAction(...actions));
   }
 

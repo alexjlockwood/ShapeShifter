@@ -163,7 +163,7 @@
             (addTimelineBlockClick)="this.onAddTimelineBlockClick($event.event, $event.layer, $event.propertyName)"
             (convertToClipPathClick)="this.onConvertToClipPathClick($event.event, $event.layer)"
             (convertToPathClick)="this.onConvertToPathClick($event.event, $event.layer)"
-            (mergeGroupClick)="this.onMergeGroupClick($event.event, $event.layer)">
+            (flattenGroupClick)="this.onFlattenGroupClick($event.event, $event.layer)">
           </app-layerlisttree>
         </div>
         <div *ngIf="(this.dragIndicatorObservable | async) as dragData"

@@ -767,8 +767,8 @@ export class LayerTimelineComponent extends DestroyableMixin()
   }
 
   // @Override LayerListTreeComponentCallbacks
-  onMergeGroupClick(event: MouseEvent, layer: Layer) {
-    this.layerTimelineService.mergeGroupLayer(layer.id);
+  onFlattenGroupClick(event: MouseEvent, layer: Layer) {
+    this.layerTimelineService.flattenGroupLayer(layer.id);
   }
 
   // @Override LayerListTreeComponentCallbacks

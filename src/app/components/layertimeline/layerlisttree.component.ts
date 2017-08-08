@@ -37,7 +37,7 @@ export class LayerListTreeComponent implements OnInit, Callbacks {
   @Output() addTimelineBlockClick = new EventEmitter<TimelineBlockEvent>();
   @Output() convertToClipPathClick = new EventEmitter<LayerEvent>();
   @Output() convertToPathClick = new EventEmitter<LayerEvent>();
-  @Output() mergeGroupClick = new EventEmitter<LayerEvent>();
+  @Output() flattenGroupClick = new EventEmitter<LayerEvent>();
 
   constructor(
     private readonly store: Store<State>,
@@ -52,15 +52,25 @@ export class LayerListTreeComponent implements OnInit, Callbacks {
         const availablePropertyNames = Array.from(
           ModelUtil.getAvailablePropertyNamesForLayer(this.layer, animation),
         );
-        const existingPropertyNames = Array.from(
-          _.keys(ModelUtil.getOrderedBlocksByPropertyByLayer(animation)[this.layer.id]),
-        );
+        const getExistingPropertyNamesFn = (layerId: string) => {
+          return _.keys(ModelUtil.getOrderedBlocksByPropertyByLayer(animation)[layerId]);
+        };
+        const existingPropertyNames = getExistingPropertyNamesFn(this.layer.id);
         const isClipPathLayer = this.layer instanceof ClipPathLayer;
         const isPathLayer = this.layer instanceof PathLayer;
         const isMergeable =
           this.layer instanceof GroupLayer &&
           this.layer.children.length > 0 &&
-          existingPropertyNames.length === 0;
+          // TODO: allow merging groups w/ existing blocks in some cases?
+          existingPropertyNames.length === 0 &&
+          this.layer.children.every(l => {
+            return (
+              l instanceof PathLayer ||
+              l instanceof ClipPathLayer ||
+              // TODO: allow merging groups into groups w/ existing blocks in some cases?
+              getExistingPropertyNamesFn(l.id).length === 0
+            );
+          });
         return {
           animation,
           isSelected: selectedLayerIds.has(this.layer.id),
@@ -131,9 +141,9 @@ export class LayerListTreeComponent implements OnInit, Callbacks {
   }
 
   // @Override Callbacks
-  onMergeGroupClick(event: MouseEvent, layer: Layer) {
+  onFlattenGroupClick(event: MouseEvent, layer: Layer) {
     if (!this.actionModeService.isActionMode()) {
-      this.mergeGroupClick.emit({ event, layer });
+      this.flattenGroupClick.emit({ event, layer });
     }
   }
 
@@ -155,7 +165,7 @@ export interface Callbacks {
   onAddTimelineBlockClick(event: MouseEvent, layer: Layer, propertyName: string): void;
   onConvertToClipPathClick(event: MouseEvent, layer: Layer): void;
   onConvertToPathClick(event: MouseEvent, layer: Layer): void;
-  onMergeGroupClick(event: MouseEvent, layer: Layer): void;
+  onFlattenGroupClick(event: MouseEvent, layer: Layer): void;
 }
 
 // tslint:disable: no-unused-variable
