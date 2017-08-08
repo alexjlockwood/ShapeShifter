@@ -73,7 +73,7 @@
     "deep-freeze-strict": "^1.1.1",
     "jasmine-core": "^2.7.0",
     "jasmine-jquery": "^2.1.1",
-    "jasmine-spec-reporter": "~4.1.0",
+    "jasmine-spec-reporter": "~4.2.0",
     "karma": "~1.7.0",
     "karma-chrome-launcher": "^2.2.0",
     "karma-cli": "~1.0.1",

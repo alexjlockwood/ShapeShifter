@@ -20,7 +20,7 @@ describe('Matrix', () => {
   });
 
   it('#invert', () => {
-    expect(Matrix.identity().invert()).toEqual(Matrix.identity());
+    expect(Matrix.identity().invert()).toEqual(new Matrix(1, -0, -0, 1, 0, 0));
     expect(new Matrix(1, 2, 2, 3, 3, 4).invert()).toEqual(new Matrix(-3, 2, 2, -1, 1, -2));
   });
 
