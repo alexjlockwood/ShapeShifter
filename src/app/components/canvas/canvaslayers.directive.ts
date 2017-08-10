@@ -117,7 +117,7 @@ export class CanvasLayersDirective extends CanvasLayoutMixin(DestroyableMixin())
     }
 
     // If the canvas is disabled, draw the layer to an offscreen canvas
-    // so that we can draw it translucently w/ o affecting the rest of
+    // so that we can draw it translucently w/o affecting the rest of
     // the layer's appearance.
     const layerCtx = currentAlpha < 1 ? this.offscreenCtx : this.renderingCtx;
     this.drawLayer(this.vectorLayer, this.vectorLayer, layerCtx);
