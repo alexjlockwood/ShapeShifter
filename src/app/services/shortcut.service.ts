@@ -1,11 +1,13 @@
 import { Injectable } from '@angular/core';
-import { ActionModeService, AnimatorService, PlaybackService } from 'app/services';
 import { State, Store } from 'app/store';
 import * as $ from 'jquery';
 import { ActionCreators } from 'redux-undo';
 import { Subject } from 'rxjs/Subject';
 
+import { ActionModeService } from './actionmode.service';
+import { AnimatorService } from './animator.service';
 import { LayerTimelineService } from './layertimeline.service';
+import { PlaybackService } from './playback.service';
 
 export enum Shortcut {
   ZoomToFit = 1,
