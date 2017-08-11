@@ -3,7 +3,11 @@ import { MathUtil, Matrix } from 'app/scripts/common';
 import { environment } from 'environments/environment';
 import * as _ from 'lodash';
 
-import { ClipPathLayer, GroupLayer, Layer, PathLayer, VectorLayer } from '.';
+import { ClipPathLayer } from './ClipPathLayer';
+import { GroupLayer } from './GroupLayer';
+import { Layer } from './Layer';
+import { PathLayer } from './PathLayer';
+import { VectorLayer } from './VectorLayer';
 
 const IS_DEV_BUILD = !environment.production;
 
@@ -149,7 +153,7 @@ export function adjustViewports(vl1: VectorLayer, vl2: VectorLayer) {
 
 export function mergeVectorLayers(vl1: VectorLayer, vl2: VectorLayer) {
   const { vl1: newVl1, vl2: newVl2 } = adjustViewports(vl1, vl2);
-  const vl: VectorLayer = setLayerChildren(newVl1, [...newVl1.children, ...newVl2.children]);
+  const vl = <VectorLayer>setLayerChildren(newVl1, [...newVl1.children, ...newVl2.children]);
   if (!newVl1.children.length) {
     // Only replace the vector layer's alpha if there are no children
     // being displayed to the user. This is pretty much the best
@@ -214,11 +218,11 @@ export function replaceLayer(vl: VectorLayer, layerId: string, replacement: Laye
   })(vl) as VectorLayer;
 }
 
-export function findLayerByName(vls: ReadonlyArray<VectorLayer>, layerName: string) {
-  for (const vl of vls) {
-    const layer = vl.findLayerByName(layerName);
-    if (layer) {
-      return layer;
+export function findLayerByName(layers: ReadonlyArray<Layer>, layerName: string) {
+  for (const layer of layers) {
+    const target = layer.findLayerByName(layerName);
+    if (target) {
+      return target;
     }
   }
   return undefined;
@@ -279,7 +283,7 @@ export function getUniqueName(prefix = '', objectByNameFn = (s: string) => undef
   return nameFn();
 }
 
-function setLayerChildren(layer: Layer, children: ReadonlyArray<Layer>) {
+function setLayerChildren<T extends Layer>(layer: T, children: ReadonlyArray<Layer>) {
   const clone = layer.clone();
   clone.children = children;
   return clone;

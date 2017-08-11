@@ -2,7 +2,7 @@ import { NumberProperty, Property } from 'app/model/properties';
 import { MathUtil, Matrix, Rect } from 'app/scripts/common';
 import * as _ from 'lodash';
 
-import { ConstructorArgs as AbstractConstructorArgs, AbstractLayer } from './AbstractLayer';
+import { Layer, ConstructorArgs as LayerConstructorArgs } from './Layer';
 
 const DEFAULTS = {
   rotation: 0,
@@ -26,7 +26,7 @@ const DEFAULTS = {
   new NumberProperty('translateX', { isAnimatable: true }),
   new NumberProperty('translateY', { isAnimatable: true }),
 )
-export class GroupLayer extends AbstractLayer {
+export class GroupLayer extends Layer {
   constructor(obj: ConstructorArgs) {
     super(obj);
     const setterFn = (num: number, def: number) => (_.isNil(num) ? def : num);
@@ -39,26 +39,31 @@ export class GroupLayer extends AbstractLayer {
     this.translateY = setterFn(obj.translateY, DEFAULTS.translateY);
   }
 
+  // @Override
   getIconName() {
     return 'grouplayer';
   }
 
+  // @Override
   getPrefix() {
     return 'group';
   }
 
+  // @Override
   clone() {
     const clone = new GroupLayer(this);
     clone.children = [...this.children];
     return clone;
   }
 
+  // @Override
   deepClone() {
     const clone = this.clone();
     clone.children = this.children.map(c => c.deepClone());
     return clone;
   }
 
+  // @Override
   getBoundingBox(): Rect {
     let bounds: { l: number; t: number; r: number; b: number };
     this.children.forEach(child => {
@@ -97,6 +102,7 @@ export class GroupLayer extends AbstractLayer {
     };
   }
 
+  // @Override
   toJSON() {
     const obj = Object.assign(super.toJSON(), {
       rotation: this.rotation,
@@ -127,5 +133,5 @@ interface GroupLayerArgs {
   translateY?: number;
 }
 
-export interface GroupLayer extends AbstractLayer, GroupLayerArgs {}
-export interface ConstructorArgs extends AbstractConstructorArgs, GroupLayerArgs {}
+export interface GroupLayer extends Layer, GroupLayerArgs {}
+export interface ConstructorArgs extends LayerConstructorArgs, GroupLayerArgs {}

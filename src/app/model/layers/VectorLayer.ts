@@ -2,7 +2,7 @@ import { ColorProperty, FractionProperty, NumberProperty, Property } from 'app/m
 import { Rect } from 'app/scripts/common';
 import * as _ from 'lodash';
 
-import { ConstructorArgs as AbstractConstructorArgs, AbstractLayer } from './AbstractLayer';
+import { Layer, ConstructorArgs as LayerConstructorArgs } from './Layer';
 
 const DEFAULTS = {
   canvasColor: '',
@@ -20,7 +20,7 @@ const DEFAULTS = {
   new NumberProperty('height', { isAnimatable: false, min: 1, isInteger: true }),
   new FractionProperty('alpha', { isAnimatable: true }),
 )
-export class VectorLayer extends AbstractLayer {
+export class VectorLayer extends Layer {
   constructor(obj = { children: [], name: 'vector' } as ConstructorArgs) {
     super(obj);
     const setterFn = (num: number, def: number) => (_.isNil(num) ? def : num);
@@ -30,30 +30,36 @@ export class VectorLayer extends AbstractLayer {
     this.alpha = setterFn(obj.alpha, DEFAULTS.alpha);
   }
 
+  // @Override
   getIconName() {
     return 'vectorlayer';
   }
 
+  // @Override
   getPrefix() {
     return 'vector';
   }
 
+  // @Override
   clone() {
     const clone = new VectorLayer(this);
     clone.children = [...this.children];
     return clone;
   }
 
+  // @Override
   deepClone() {
     const clone = this.clone();
     clone.children = this.children.map(c => c.deepClone());
     return clone;
   }
 
+  // @Override
   getBoundingBox() {
     return { l: 0, t: 0, r: this.width, b: this.height } as Rect;
   }
 
+  // @Override
   toJSON() {
     const obj = Object.assign(super.toJSON(), {
       canvasColor: this.canvasColor,
@@ -78,5 +84,5 @@ interface VectorLayerArgs {
   alpha?: number;
 }
 
-export interface VectorLayer extends AbstractLayer, VectorLayerArgs {}
-export interface ConstructorArgs extends AbstractConstructorArgs, VectorLayerArgs {}
+export interface VectorLayer extends Layer, VectorLayerArgs {}
+export interface ConstructorArgs extends LayerConstructorArgs, VectorLayerArgs {}
