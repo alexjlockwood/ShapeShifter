@@ -53,7 +53,7 @@ export function regenerateModelIds(
   const layerIdMap: Dictionary<string> = {};
   vectorLayer.walk(layer => (layerIdMap[layer.id] = _.uniqueId()));
 
-  vectorLayer = <VectorLayer>(function recurseFn<T extends Layer>(layer: Layer) {
+  vectorLayer = <VectorLayer>(function recurseFn<T extends Layer>(layer: T) {
     const clone = layer.clone();
     clone.id = layerIdMap[clone.id];
     clone.children = clone.children.map(l => recurseFn(l));
