@@ -250,14 +250,6 @@ export class PathState {
     };
   }
 
-  intersects(line: Line) {
-    return _.sumBy(this.subPaths, (subPath, subIdx) => {
-      const css = this.findSubPathState(subIdx).getCommandStates();
-      const intersectionResults = css.map(cs => cs.intersects(line));
-      return _.sumBy(intersectionResults, ts => ts.length);
-    });
-  }
-
   // TODO: move this math stuff into the calculators module
   // TODO: approximate bezier curves by splitting them up into line segments
   // TODO: write tests for this stuff

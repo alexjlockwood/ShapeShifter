@@ -148,13 +148,6 @@ export class Path {
   }
 
   /**
-   * Returns the number of intersection points of this path with the specified line segment.
-   */
-  intersects(line: Line) {
-    return this.ps.intersects(line);
-  }
-
-  /**
    * Returns the pole of inaccessibility for the specified subpath index.
    */
   getPoleOfInaccessibility(subIdx: number) {
