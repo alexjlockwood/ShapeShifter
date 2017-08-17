@@ -3,9 +3,12 @@ import 'rxjs/add/observable/merge';
 
 import { AfterViewInit, Directive, ElementRef, HostListener, Input } from '@angular/core';
 import { ActionSource } from 'app/model/actionmode';
+import { LayerUtil, PathLayer } from 'app/model/layers';
+import { Path } from 'app/model/paths';
+import { LayerTimelineService } from 'app/services';
 import * as $ from 'jquery';
 import * as paper from 'paper';
-import { Path, Point, Segment, Tool } from 'paper';
+import { Point, Segment, Size } from 'paper';
 import { Observable } from 'rxjs/Observable';
 
 import { CanvasLayoutMixin } from './CanvasLayoutMixin';
@@ -19,17 +22,18 @@ export class CanvasPaperDirective extends CanvasLayoutMixin() implements AfterVi
   private readonly $canvas: JQuery<HTMLCanvasElement>;
   private isDragging = false;
   private isDrawing = false;
-  private path: Path;
+  private path: paper.Path;
   private segment: Segment;
   private lastPoint: Point;
 
-  constructor(elementRef: ElementRef) {
+  constructor(elementRef: ElementRef, private readonly layerTimelineService: LayerTimelineService) {
     super();
     this.$canvas = $(elementRef.nativeElement) as JQuery<HTMLCanvasElement>;
   }
 
   ngAfterViewInit() {
     paper.setup(this.$canvas.get(0));
+    paper.settings.handleSize = 8;
   }
 
   // @Override
@@ -37,6 +41,9 @@ export class CanvasPaperDirective extends CanvasLayoutMixin() implements AfterVi
     const { w, h } = this.getViewport();
     this.$canvas.attr({ width: w * this.attrScale, height: h * this.attrScale });
     this.$canvas.css({ width: w * this.cssScale, height: h * this.cssScale });
+    paper.view.size.width = w * this.cssScale;
+    paper.view.size.height = h * this.cssScale;
+    paper.view.viewSize = new Size(w * this.cssScale, h * this.cssScale);
   }
 
   // Called by the CanvasComponent.
@@ -45,14 +52,15 @@ export class CanvasPaperDirective extends CanvasLayoutMixin() implements AfterVi
     this.segment = undefined;
     const hitResult = paper.project.hitTest(this.lastPoint, {
       segments: true,
-      stroke: true,
+      stroke: false,
       fill: true,
       tolerance: 5,
     });
+    console.log(hitResult);
     if (hitResult) {
       this.isDragging = true;
       this.isDrawing = false;
-      this.path = hitResult.item as Path;
+      this.path = hitResult.item as paper.Path;
       if (hitResult.type === 'segment') {
         this.segment = hitResult.segment;
       } else if (hitResult.type === 'stroke') {
@@ -69,25 +77,35 @@ export class CanvasPaperDirective extends CanvasLayoutMixin() implements AfterVi
       if (this.path) {
         this.path.selected = false;
       }
-      this.path = new Path({
+      const lightness = (Math.random() - 0.5) * 0.4 + 0.4;
+      const hue = Math.random() * 360;
+      this.path = new paper.Path({
         segments: [this.lastPoint],
         strokeColor: 'black',
-        fillColor: 'black',
+        fillColor: {
+          hue,
+          saturation: 1,
+          lightness,
+        },
         fullySelected: true,
       });
+      this.path.closed = true;
     }
   }
 
   // Called by the CanvasComponent.
   onMouseMove(p: { readonly x: number; readonly y: number }) {
+    paper.project.activeLayer.selected = false;
     const point = new Point(p);
     const delta = point.subtract(this.lastPoint);
     if (this.isDragging) {
       if (this.segment) {
-        this.segment.point = this.segment.point.add(delta);
+        this.segment.point.x += delta.x;
+        this.segment.point.y += delta.y;
         this.path.smooth();
       } else if (this.path) {
-        this.path.position = this.path.position.add(delta);
+        this.path.position.x += delta.x;
+        this.path.position.y += delta.y;
       }
     } else if (this.isDrawing) {
       this.path.add(point);
@@ -100,9 +118,15 @@ export class CanvasPaperDirective extends CanvasLayoutMixin() implements AfterVi
     this.isDragging = false;
     this.isDrawing = false;
     this.lastPoint = undefined;
-    this.path.simplify(10);
-    this.path.fullySelected = true;
-    this.path.closed = true;
+    // this.path.simplify(10);
+    // this.path.fullySelected = true;
+    const pathStr = this.path.pathData;
+    const pathLayer = new PathLayer({
+      name: LayerUtil.getUniqueLayerName([this.layerTimelineService.getVectorLayer()], 'path'),
+      children: [],
+      pathData: new Path(pathStr),
+    });
+    this.layerTimelineService.addLayer(pathLayer);
   }
 
   // Called by the CanvasComponent.
