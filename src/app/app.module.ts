@@ -47,6 +47,7 @@ import {
   CanvasContainerDirective,
   CanvasLayersDirective,
   CanvasOverlayDirective,
+  CanvasPaperDirective,
   CanvasRulerDirective,
 } from './components/canvas';
 import {
@@ -68,6 +69,7 @@ import { reducer } from './store';
     CanvasContainerDirective,
     CanvasLayersDirective,
     CanvasOverlayDirective,
+    CanvasPaperDirective,
     CanvasRulerDirective,
     ConfirmDialogComponent,
     DemoDialogComponent,
