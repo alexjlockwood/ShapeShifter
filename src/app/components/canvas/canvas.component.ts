@@ -88,21 +88,25 @@ export class CanvasComponent extends CanvasLayoutMixin(DestroyableMixin())
 
   @HostListener('mousedown', ['$event'])
   onMouseDown(event: MouseEvent) {
+    this.canvasOverlay.onMouseDown(event);
     this.showRuler(event);
   }
 
   @HostListener('mousemove', ['$event'])
   onMouseMove(event: MouseEvent) {
+    this.canvasOverlay.onMouseMove(event);
     this.showRuler(event);
   }
 
   @HostListener('mouseup', ['$event'])
   onMouseUp(event: MouseEvent) {
+    this.canvasOverlay.onMouseUp(event);
     this.showRuler(event);
   }
 
   @HostListener('mouseleave', ['$event'])
   onMouseLeave(event: MouseEvent) {
+    this.canvasOverlay.onMouseLeave(event);
     this.hideRuler();
   }
 
