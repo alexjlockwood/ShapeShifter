@@ -1,7 +1,7 @@
 import 'rxjs/add/observable/combineLatest';
 import 'rxjs/add/observable/merge';
 
-import { AfterViewInit, Directive, ElementRef, HostListener, Input } from '@angular/core';
+import { AfterViewInit, Directive, ElementRef, Input } from '@angular/core';
 import {
   ActionMode,
   ActionSource,
@@ -805,7 +805,7 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
     }
   }
 
-  @HostListener('mousedown', ['$event'])
+  // Called by the CanvasComponent.
   onMouseDown(event: MouseEvent) {
     const mouseDown = this.mouseEventToViewportCoords(event);
     if (this.actionSource === ActionSource.Animated && !this.isActionMode) {
@@ -846,7 +846,7 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
     }
   }
 
-  @HostListener('mousemove', ['$event'])
+  // Called by the CanvasComponent.
   onMouseMove(event: MouseEvent) {
     if (this.actionSource === ActionSource.Animated && !this.isActionMode) {
       return;
@@ -868,7 +868,7 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
     }
   }
 
-  @HostListener('mouseup', ['$event'])
+  // Called by the CanvasComponent.
   onMouseUp(event: MouseEvent) {
     if (this.actionSource === ActionSource.Animated && !this.isActionMode) {
       return;
@@ -893,7 +893,7 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
     }
   }
 
-  @HostListener('mouseleave', ['$event'])
+  // Called by the CanvasComponent.
   onMouseLeave(event: MouseEvent) {
     if (this.actionSource === ActionSource.Animated && !this.isActionMode) {
       return;
