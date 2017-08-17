@@ -12,6 +12,8 @@ import { State, Store } from 'app/store';
 import { getActionModeEndState, getActionModeStartState } from 'app/store/actionmode/selectors';
 import { getHiddenLayerIds, getVectorLayer } from 'app/store/layers/selectors';
 import * as $ from 'jquery';
+import * as paper from 'paper';
+import { Path, Point, Segment, Tool } from 'paper';
 import { Observable } from 'rxjs/Observable';
 
 import { CanvasLayoutMixin, Size } from './CanvasLayoutMixin';
@@ -43,6 +45,8 @@ export class CanvasLayersDirective extends CanvasLayoutMixin(DestroyableMixin())
   }
 
   ngAfterViewInit() {
+    paper.setup(this.$renderingCanvas.get(0));
+
     if (this.actionSource === ActionSource.Animated) {
       // Preview canvas specific setup.
       this.registerSubscription(

@@ -42,6 +42,7 @@ export class CanvasComponent extends CanvasLayoutMixin(DestroyableMixin())
   @ViewChild(CanvasLayersDirective) canvasLayers: CanvasLayersDirective;
   @ViewChild(CanvasOverlayDirective) canvasOverlay: CanvasOverlayDirective;
   @ViewChildren(CanvasRulerDirective) canvasRulers: QueryList<CanvasRulerDirective>;
+  @ViewChild('renderingCanvas') renderingCanvasRef: ElementRef;
 
   @Input() actionSource: ActionSource;
   @Input() canvasBounds$: Observable<Size>;
