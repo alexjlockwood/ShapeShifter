@@ -18,6 +18,10 @@ export class CanvasPaperDirective extends CanvasLayoutMixin() implements AfterVi
 
   private readonly $canvas: JQuery<HTMLCanvasElement>;
   private isDragging = false;
+  private isDrawing = false;
+  private path: Path;
+  private segment: Segment;
+  private lastPoint: Point;
 
   constructor(elementRef: ElementRef) {
     super();
@@ -35,21 +39,72 @@ export class CanvasPaperDirective extends CanvasLayoutMixin() implements AfterVi
     this.$canvas.css({ width: w * this.cssScale, height: h * this.cssScale });
   }
 
-  @HostListener('mousedown', ['$event'])
-  onMouseDown(event: MouseEvent) {
-    event.stopPropagation();
-    console.log(new Point(event.x, event.y), new Point(event.clientX, event.clientY));
+  // Called by the CanvasComponent.
+  onMouseDown(p: { readonly x: number; readonly y: number }) {
+    this.lastPoint = new Point(p);
+    this.segment = undefined;
+    const hitResult = paper.project.hitTest(this.lastPoint, {
+      segments: true,
+      stroke: true,
+      fill: true,
+      tolerance: 5,
+    });
+    if (hitResult) {
+      this.isDragging = true;
+      this.isDrawing = false;
+      this.path = hitResult.item as Path;
+      if (hitResult.type === 'segment') {
+        this.segment = hitResult.segment;
+      } else if (hitResult.type === 'stroke') {
+        const location = hitResult.location;
+        this.segment = this.path.insert(location.index + 1, this.lastPoint);
+        this.path.smooth();
+      }
+      if (hitResult.type === 'fill') {
+        paper.project.activeLayer.addChild(hitResult.item);
+      }
+    } else {
+      this.isDragging = false;
+      this.isDrawing = true;
+      if (this.path) {
+        this.path.selected = false;
+      }
+      this.path = new Path({
+        segments: [this.lastPoint],
+        strokeColor: 'black',
+        fillColor: 'black',
+        fullySelected: true,
+      });
+    }
   }
 
-  @HostListener('mousemove', ['$event'])
-  onMouseMove(event: MouseEvent) {
-    event.stopPropagation();
-    console.log(new Point(event.x, event.y), new Point(event.clientX, event.clientY));
+  // Called by the CanvasComponent.
+  onMouseMove(p: { readonly x: number; readonly y: number }) {
+    const point = new Point(p);
+    const delta = point.subtract(this.lastPoint);
+    if (this.isDragging) {
+      if (this.segment) {
+        this.segment.point = this.segment.point.add(delta);
+        this.path.smooth();
+      } else if (this.path) {
+        this.path.position = this.path.position.add(delta);
+      }
+    } else if (this.isDrawing) {
+      this.path.add(point);
+    }
+    this.lastPoint = point;
   }
 
-  @HostListener('mouseup', ['$event'])
-  onMouseUp(event: MouseEvent) {
-    event.stopPropagation();
-    console.log(new Point(event.x, event.y), new Point(event.clientX, event.clientY));
+  // Called by the CanvasComponent.
+  onMouseUp(point: { readonly x: number; readonly y: number }) {
+    this.isDragging = false;
+    this.isDrawing = false;
+    this.lastPoint = undefined;
+    this.path.simplify(10);
+    this.path.fullySelected = true;
+    this.path.closed = true;
   }
+
+  // Called by the CanvasComponent.
+  onMouseLeave(point: { readonly x: number; readonly y: number }) {}
 }

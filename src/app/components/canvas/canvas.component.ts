@@ -24,6 +24,7 @@ import { Observable } from 'rxjs/Observable';
 import { CanvasContainerDirective } from './canvascontainer.directive';
 import { CanvasLayersDirective } from './canvaslayers.directive';
 import { CanvasOverlayDirective } from './canvasoverlay.directive';
+import { CanvasPaperDirective } from './canvaspaper.directive';
 import { CanvasRulerDirective } from './canvasruler.directive';
 import { CanvasLayoutMixin, Size } from './CanvasLayoutMixin';
 
@@ -41,6 +42,7 @@ export class CanvasComponent extends CanvasLayoutMixin(DestroyableMixin())
   @ViewChild(CanvasContainerDirective) canvasContainer: CanvasContainerDirective;
   @ViewChild(CanvasLayersDirective) canvasLayers: CanvasLayersDirective;
   @ViewChild(CanvasOverlayDirective) canvasOverlay: CanvasOverlayDirective;
+  @ViewChild(CanvasPaperDirective) canvasPaper: CanvasPaperDirective;
   @ViewChildren(CanvasRulerDirective) canvasRulers: QueryList<CanvasRulerDirective>;
   @ViewChild('renderingCanvas') renderingCanvasRef: ElementRef;
 
@@ -82,6 +84,7 @@ export class CanvasComponent extends CanvasLayoutMixin(DestroyableMixin())
       this.canvasContainer,
       this.canvasLayers,
       this.canvasOverlay,
+      this.canvasPaper,
       ...this.canvasRulers.toArray(),
     ];
     directives.forEach(d => d.setDimensions(bounds, viewport));
@@ -90,35 +93,47 @@ export class CanvasComponent extends CanvasLayoutMixin(DestroyableMixin())
   @HostListener('mousedown', ['$event'])
   onMouseDown(event: MouseEvent) {
     this.canvasOverlay.onMouseDown(event);
+    this.canvasPaper.onMouseDown(this.eventToPoint(event));
     this.showRuler(event);
   }
 
   @HostListener('mousemove', ['$event'])
   onMouseMove(event: MouseEvent) {
     this.canvasOverlay.onMouseMove(event);
+    this.canvasPaper.onMouseMove(this.eventToPoint(event));
     this.showRuler(event);
   }
 
   @HostListener('mouseup', ['$event'])
   onMouseUp(event: MouseEvent) {
     this.canvasOverlay.onMouseUp(event);
+    this.canvasPaper.onMouseUp(this.eventToPoint(event));
     this.showRuler(event);
   }
 
   @HostListener('mouseleave', ['$event'])
   onMouseLeave(event: MouseEvent) {
     this.canvasOverlay.onMouseLeave(event);
+    this.canvasPaper.onMouseLeave(this.eventToPoint(event));
     this.hideRuler();
   }
 
   private showRuler(event: MouseEvent) {
-    const canvasOffset = this.$element.offset();
-    const x = (event.pageX - canvasOffset.left) / Math.max(1, this.cssScale);
-    const y = (event.pageY - canvasOffset.top) / Math.max(1, this.cssScale);
-    this.canvasRulers.forEach(r => r.showMouse({ x: _.round(x), y: _.round(y) }));
+    const point = this.eventToPoint(event);
+    point.x = Math.round(point.x / Math.max(1, this.attrScale));
+    point.y = Math.round(point.y / Math.max(1, this.attrScale));
+    this.canvasRulers.forEach(r => r.showMouse(point));
   }
 
   private hideRuler() {
     this.canvasRulers.forEach(r => r.hideMouse());
+  }
+
+  /** Converts mouse event coordinates to canvas-based coordinates. */
+  private eventToPoint(event: MouseEvent) {
+    const canvasOffset = this.$element.offset();
+    const x = (event.pageX - canvasOffset.left) * devicePixelRatio;
+    const y = (event.pageY - canvasOffset.top) * devicePixelRatio;
+    return { x, y };
   }
 }
