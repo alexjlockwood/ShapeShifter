@@ -30,6 +30,7 @@ import { ScrollGroupDirective } from './components/scrollgroup/scrollgroup.direc
 import { SplashScreenComponent } from './components/splashscreen/splashscreen.component';
 import { SplitterComponent } from './components/splitter/splitter.component';
 import { ToolbarComponent } from './components/toolbar/toolbar.component';
+import { ToolPanelComponent } from './components/toolpanel/toolpanel.component';
 import { ActionModeService } from './services/actionmode.service';
 import { AnimatorService } from './services/animator.service';
 import { ClipboardService } from './services/clipboard.service';
@@ -86,6 +87,7 @@ import { reducer } from './store';
     SplitterComponent,
     TimelineAnimationRowComponent,
     ToolbarComponent,
+    ToolPanelComponent,
   ],
   imports: [
     BrowserModule,
@@ -142,7 +144,12 @@ export class AppModule {
       .addSvgIcon('pathlayer', this.trustUrl('assets/icons/pathlayer.svg'))
       .addSvgIcon('vectorlayer', this.trustUrl('assets/icons/vectorlayer.svg'))
       // Cursors.
-      .addSvgIcon('selectioncursor', this.trustUrl('assets/cursors/selectioncursor.svg'));
+      .addSvgIcon('selectioncursor', this.trustUrl('assets/cursors/selectioncursor.svg'))
+      // Tools.
+      .addSvgIcon('tool_select', this.trustUrl('assets/tools/tool_select.svg'))
+      .addSvgIcon('tool_detailselect', this.trustUrl('assets/tools/tool_detailselect.svg'))
+      .addSvgIcon('tool_draw', this.trustUrl('assets/tools/tool_draw.svg'))
+      .addSvgIcon('tool_bezier', this.trustUrl('assets/tools/tool_bezier.svg'));
   }
 
   private trustUrl(url: string) {
