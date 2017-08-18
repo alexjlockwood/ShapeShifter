@@ -45,13 +45,9 @@ export function createToolStack() {
   toolStack.activeTool = undefined;
   toolStack.lastPoint = new paper.Point(0, 0);
   toolStack.command = function(cb) {
-    if (this.activeTool !== undefined) {
+    if (this.activeTool) {
       return;
     }
-    /*	if (this.hotTool) {
-		this.hotTool.fire('deactivate');
-		this.hotTool = undefined;
-	}*/
     if (cb) {
       cb();
     }
