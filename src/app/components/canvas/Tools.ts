@@ -2,10 +2,11 @@ import { ToolMode } from 'app/model/toolMode';
 import * as $ from 'jquery';
 import * as paper from 'paper';
 
-let clipboard = null;
+// TODO: make use of the clipboard somehow?
+const clipboard = undefined;
 
-let selectionBounds = null;
-let selectionBoundsShape = null;
+let selectionBounds = undefined;
+let selectionBoundsShape = undefined;
 let drawSelectionBounds = 0;
 
 const oppositeCorner = {
@@ -40,16 +41,16 @@ export function createToolStack() {
     createToolDirectSelect(),
     createToolSelect(),
   ];
-  toolStack.hotTool = null;
-  toolStack.activeTool = null;
+  toolStack.hotTool = undefined;
+  toolStack.activeTool = undefined;
   toolStack.lastPoint = new paper.Point(0, 0);
   toolStack.command = function(cb) {
-    if (this.activeTool != null) {
+    if (this.activeTool !== undefined) {
       return;
     }
     /*	if (this.hotTool) {
 		this.hotTool.fire('deactivate');
-		this.hotTool = null;
+		this.hotTool = undefined;
 	}*/
     if (cb) {
       cb();
@@ -67,7 +68,7 @@ export function createToolStack() {
   toolStack.testHot = function(type, event) {
     // Reset the state of the tool before testing.
     const prev = this.hotTool;
-    this.hotTool = null;
+    this.hotTool = undefined;
     for (const s of this.stack) {
       s.resetHot(type, event, this.mode);
     }
@@ -78,7 +79,7 @@ export function createToolStack() {
         break;
       }
     }
-    if (prev != this.hotTool) {
+    if (prev !== this.hotTool) {
       if (prev) {
         prev.fire('deactivate');
       }
@@ -89,13 +90,13 @@ export function createToolStack() {
   };
   toolStack.on({
     activate: function() {
-      this.activeTool = null;
-      this.hotTool = null;
+      this.activeTool = undefined;
+      this.hotTool = undefined;
     },
 
     deactivate: function() {
-      this.activeTool = null;
-      this.hotTool = null;
+      this.activeTool = undefined;
+      this.hotTool = undefined;
     },
 
     mousedown: function(event) {
@@ -111,7 +112,7 @@ export function createToolStack() {
       if (this.activeTool) {
         this.activeTool.fire('mouseup', event);
       }
-      this.activeTool = null;
+      this.activeTool = undefined;
       this.testHot('mouseup', event);
     },
 
@@ -166,11 +167,11 @@ function createToolSelect() {
 
   const toolSelect: ToolSelect = new paper.Tool();
   toolSelect.mouseStartPos = new paper.Point(0, 0);
-  toolSelect.mode = null;
-  toolSelect.hitItem = null;
-  toolSelect.originalContent = null;
+  toolSelect.mode = undefined;
+  toolSelect.hitItem = undefined;
+  toolSelect.originalContent = undefined;
   toolSelect.changed = false;
-  toolSelect.duplicates = null;
+  toolSelect.duplicates = undefined;
 
   toolSelect.createDuplicates = function(content) {
     this.duplicates = [];
@@ -186,18 +187,18 @@ function createToolSelect() {
     for (const dup of this.duplicates) {
       dup.remove();
     }
-    this.duplicates = null;
+    this.duplicates = undefined;
   };
 
   toolSelect.resetHot = function(type, event, mode) {};
   toolSelect.testHot = function(type, event, mode) {
-    /*	if (mode != 'tool-select')
+    /*	if (mode !=='tool-select')
 		return false;*/
     return this.hitTest(event);
   };
   toolSelect.hitTest = function(event) {
     const hitSize = 4.0; // / paper.view.zoom;
-    this.hitItem = null;
+    this.hitItem = undefined;
 
     // Hit test items.
     if (event.point) {
@@ -209,7 +210,7 @@ function createToolSelect() {
     }
 
     if (this.hitItem) {
-      if (this.hitItem.type == 'fill' || this.hitItem.type == 'stroke') {
+      if (this.hitItem.type === 'fill' || this.hitItem.type === 'stroke') {
         if (this.hitItem.item.selected) {
           setCanvasCursor('cursor-arrow-small');
         } else {
@@ -234,11 +235,11 @@ function createToolSelect() {
       hideSelectionBounds();
     },
     mousedown: function(event) {
-      this.mode = null;
+      this.mode = undefined;
       this.changed = false;
 
       if (this.hitItem) {
-        if (this.hitItem.type == 'fill' || this.hitItem.type == 'stroke') {
+        if (this.hitItem.type === 'fill' || this.hitItem.type === 'stroke') {
           if (event.modifiers.shift) {
             this.hitItem.item.selected = !this.hitItem.item.selected;
           } else {
@@ -262,13 +263,13 @@ function createToolSelect() {
       }
     },
     mouseup: function(event) {
-      if (this.mode == 'move-shapes') {
+      if (this.mode === 'move-shapes') {
         if (this.changed) {
           clearSelectionBounds();
           // undo.snapshot('Move Shapes');
         }
-        this.duplicates = null;
-      } else if (this.mode == 'box-select') {
+        this.duplicates = undefined;
+      } else if (this.mode === 'box-select') {
         const box = new paper.Rectangle(this.mouseStartPos, event.point);
 
         if (!event.modifiers.shift) {
@@ -292,11 +293,11 @@ function createToolSelect() {
       }
     },
     mousedrag: function(event) {
-      if (this.mode == 'move-shapes') {
+      if (this.mode === 'move-shapes') {
         this.changed = true;
 
         if (event.modifiers.option) {
-          if (this.duplicates == null) {
+          if (this.duplicates === undefined) {
             this.createDuplicates(this.originalContent);
           }
           setCanvasCursor('cursor-arrow-duplicate');
@@ -319,7 +320,7 @@ function createToolSelect() {
           item.position = item.position.add(delta);
         }
         updateSelectionState();
-      } else if (this.mode == 'box-select') {
+      } else if (this.mode === 'box-select') {
         dragRect(this.mouseStartPos, event.point);
       }
     },
@@ -348,25 +349,25 @@ function createToolDirectSelect() {
 
   const toolDirectSelect: ToolDirectSelect = new paper.Tool();
   toolDirectSelect.mouseStartPos = new paper.Point(0, 0);
-  toolDirectSelect.mode = null;
-  toolDirectSelect.hitItem = null;
-  toolDirectSelect.originalContent = null;
-  toolDirectSelect.originalHandleIn = null;
-  toolDirectSelect.originalHandleOut = null;
+  toolDirectSelect.mode = undefined;
+  toolDirectSelect.hitItem = undefined;
+  toolDirectSelect.originalContent = undefined;
+  toolDirectSelect.originalHandleIn = undefined;
+  toolDirectSelect.originalHandleOut = undefined;
   toolDirectSelect.changed = false;
 
   toolDirectSelect.resetHot = function(type, event, mode) {};
   toolDirectSelect.testHot = function(type, event, mode) {
-    if (mode != 'tool-direct-select') {
+    if (mode !== 'tool-direct-select') {
       return;
     }
     return this.hitTest(event);
   };
 
   toolDirectSelect.hitTest = function(event) {
-    var hitSize = 4.0; // / paper.view.zoom;
-    var hit = null;
-    this.hitItem = null;
+    const hitSize = 4.0; // / paper.view.zoom;
+    let hit = undefined;
+    this.hitItem = undefined;
 
     // Hit test items.
     if (event.point) {
@@ -378,7 +379,7 @@ function createToolDirectSelect() {
     }
 
     // Hit test selected handles
-    hit = null;
+    hit = undefined;
     if (event.point) {
       hit = paper.project.hitTest(event.point, {
         selected: true,
@@ -390,7 +391,7 @@ function createToolDirectSelect() {
       this.hitItem = hit;
     }
     // Hit test points
-    hit = null;
+    hit = undefined;
     if (event.point) {
       hit = paper.project.hitTest(event.point, { segments: true, tolerance: hitSize });
     }
@@ -399,16 +400,16 @@ function createToolDirectSelect() {
     }
 
     if (this.hitItem) {
-      if (this.hitItem.type == 'fill' || this.hitItem.type == 'stroke') {
+      if (this.hitItem.type === 'fill' || this.hitItem.type === 'stroke') {
         if (this.hitItem.item.selected) {
           setCanvasCursor('cursor-arrow-small');
         } else {
           setCanvasCursor('cursor-arrow-white-shape');
         }
       } else if (
-        this.hitItem.type == 'segment' ||
-        this.hitItem.type == 'handle-in' ||
-        this.hitItem.type == 'handle-out'
+        this.hitItem.type === 'segment' ||
+        this.hitItem.type === 'handle-in' ||
+        this.hitItem.type === 'handle-out'
       ) {
         if (this.hitItem.segment.selected) {
           setCanvasCursor('cursor-arrow-small-point');
@@ -427,17 +428,17 @@ function createToolDirectSelect() {
       $('#tools').children().removeClass('selected');
       $('#tool-direct-select').addClass('selected');
       setCanvasCursor('cursor-arrow-white');
-      // this.hitItem = null;
+      // this.hitItem = undefined;
     },
     deactivate: function() {
       // this.clearSelectionBounds();
     },
     mousedown: function(event) {
-      this.mode = null;
+      this.mode = undefined;
       this.changed = false;
 
       if (this.hitItem) {
-        if (this.hitItem.type == 'fill' || this.hitItem.type == 'stroke') {
+        if (this.hitItem.type === 'fill' || this.hitItem.type === 'stroke') {
           if (event.modifiers.shift) {
             this.hitItem.item.selected = !this.hitItem.item.selected;
           } else {
@@ -452,7 +453,7 @@ function createToolDirectSelect() {
             this.mouseStartPos = event.point.clone();
             this.originalContent = captureSelectionState();
           }
-        } else if (this.hitItem.type == 'segment') {
+        } else if (this.hitItem.type === 'segment') {
           if (event.modifiers.shift) {
             this.hitItem.segment.selected = !this.hitItem.segment.selected;
           } else {
@@ -466,13 +467,13 @@ function createToolDirectSelect() {
             this.mouseStartPos = event.point.clone();
             this.originalContent = captureSelectionState();
           }
-        } else if (this.hitItem.type == 'handle-in' || this.hitItem.type == 'handle-out') {
+        } else if (this.hitItem.type === 'handle-in' || this.hitItem.type === 'handle-out') {
           this.mode = 'move-handle';
           this.mouseStartPos = event.point.clone();
           this.originalHandleIn = this.hitItem.segment.handleIn.clone();
           this.originalHandleOut = this.hitItem.segment.handleOut.clone();
 
-          /*				if (this.hitItem.type == 'handle-out') {
+          /*				if (this.hitItem.type ==='handle-out') {
 					this.originalHandlePos = this.hitItem.segment.handleOut.clone();
 					this.originalOppHandleLength = this.hitItem.segment.handleIn.length;
 				} else {
@@ -489,22 +490,22 @@ function createToolDirectSelect() {
       }
     },
     mouseup: function(event) {
-      if (this.mode == 'move-shapes') {
+      if (this.mode === 'move-shapes') {
         if (this.changed) {
           clearSelectionBounds();
           // undo.snapshot('Move Shapes');
         }
-      } else if (this.mode == 'move-points') {
+      } else if (this.mode === 'move-points') {
         if (this.changed) {
           clearSelectionBounds();
           // undo.snapshot('Move Points');
         }
-      } else if (this.mode == 'move-handle') {
+      } else if (this.mode === 'move-handle') {
         if (this.changed) {
           clearSelectionBounds();
           // undo.snapshot('Move Handle');
         }
-      } else if (this.mode == 'box-select') {
+      } else if (this.mode === 'box-select') {
         const box = new paper.Rectangle(this.mouseStartPos, event.point);
 
         if (!event.modifiers.shift) {
@@ -536,7 +537,7 @@ function createToolDirectSelect() {
     },
     mousedrag: function(event) {
       this.changed = true;
-      if (this.mode == 'move-shapes') {
+      if (this.mode === 'move-shapes') {
         setCanvasCursor('cursor-arrow-small');
 
         let delta = event.point.subtract(this.mouseStartPos);
@@ -550,7 +551,7 @@ function createToolDirectSelect() {
           item.position = item.position.add(delta);
         }
         updateSelectionState();
-      } else if (this.mode == 'move-points') {
+      } else if (this.mode === 'move-points') {
         setCanvasCursor('cursor-arrow-small');
 
         let delta = event.point.subtract(this.mouseStartPos);
@@ -568,10 +569,10 @@ function createToolDirectSelect() {
           }
         }
         updateSelectionState();
-      } else if (this.mode == 'move-handle') {
+      } else if (this.mode === 'move-handle') {
         const delta = event.point.subtract(this.mouseStartPos);
 
-        if (this.hitItem.type == 'handle-out') {
+        if (this.hitItem.type === 'handle-out') {
           let handlePos = this.originalHandleOut.add(delta);
           if (event.modifiers.shift) {
             handlePos = snapDeltaToAngle(handlePos, Math.PI * 2 / 8);
@@ -588,7 +589,7 @@ function createToolDirectSelect() {
         }
 
         updateSelectionState();
-      } else if (this.mode == 'box-select') {
+      } else if (this.mode === 'box-select') {
         dragRect(this.mouseStartPos, event.point);
       }
     },
@@ -618,25 +619,25 @@ function createToolScale() {
 
   const toolScale: ToolScale = new paper.Tool();
   toolScale.mouseStartPos = new paper.Point(0, 0);
-  toolScale.mode = null;
-  toolScale.hitItem = null;
-  toolScale.pivot = null;
-  toolScale.corner = null;
-  toolScale.originalCenter = null;
-  toolScale.originalSize = null;
-  toolScale.originalContent = null;
+  toolScale.mode = undefined;
+  toolScale.hitItem = undefined;
+  toolScale.pivot = undefined;
+  toolScale.corner = undefined;
+  toolScale.originalCenter = undefined;
+  toolScale.originalSize = undefined;
+  toolScale.originalContent = undefined;
   toolScale.changed = false;
 
   toolScale.resetHot = function(type, event, mode) {};
   toolScale.testHot = function(type, event, mode) {
-    /*	if (mode != 'tool-select')
+    /*	if (mode !=='tool-select')
 		return false;*/
     return this.hitTest(event);
   };
 
   toolScale.hitTest = function(event) {
     const hitSize = 6.0; // / paper.view.zoom;
-    this.hitItem = null;
+    this.hitItem = undefined;
 
     if (!selectionBoundsShape || !selectionBounds) {
       updateSelectionState();
@@ -655,7 +656,7 @@ function createToolScale() {
       });
     }
 
-    if (this.hitItem && this.hitItem.type == 'bounds') {
+    if (this.hitItem && this.hitItem.type === 'bounds') {
       // Normalize the direction so that corners are at 45° angles.
       const dir = event.point.subtract(selectionBounds.center);
       dir.x /= selectionBounds.width * 0.5;
@@ -679,10 +680,10 @@ function createToolScale() {
       hideSelectionBounds();
     },
     mousedown: function(event) {
-      this.mode = null;
+      this.mode = undefined;
       this.changed = false;
       if (this.hitItem) {
-        if (this.hitItem.type == 'bounds') {
+        if (this.hitItem.type === 'bounds') {
           this.originalContent = captureSelectionState();
           this.mode = 'scale';
           const pivotName = (paper as any).Base.camelize(oppositeCorner[this.hitItem.name]);
@@ -696,7 +697,7 @@ function createToolScale() {
       }
     },
     mouseup: function(event) {
-      if (this.mode == 'scale') {
+      if (this.mode === 'scale') {
         if (this.changed) {
           clearSelectionBounds();
           // undo.snapshot('Scale Shapes');
@@ -704,7 +705,7 @@ function createToolScale() {
       }
     },
     mousedrag: function(event) {
-      if (this.mode == 'scale') {
+      if (this.mode === 'scale') {
         let pivot = this.pivot;
         let originalSize = this.originalSize;
 
@@ -771,25 +772,25 @@ function createToolRotate() {
 
   const toolRotate: ToolRotate = new paper.Tool();
   toolRotate.mouseStartPos = new paper.Point(0, 0);
-  toolRotate.mode = null;
-  toolRotate.hitItem = null;
-  toolRotate.originalCenter = null;
+  toolRotate.mode = undefined;
+  toolRotate.hitItem = undefined;
+  toolRotate.originalCenter = undefined;
   toolRotate.originalAngle = 0;
-  toolRotate.originalContent = null;
-  toolRotate.originalShape = null;
-  toolRotate.cursorDir = null;
+  toolRotate.originalContent = undefined;
+  toolRotate.originalShape = undefined;
+  toolRotate.cursorDir = undefined;
   toolRotate.changed = false;
 
   toolRotate.resetHot = function(type, event, mode) {};
   toolRotate.testHot = function(type, event, mode) {
-    /*	if (mode != 'tool-select')
+    /*	if (mode !=='tool-select')
 		return false;*/
     return this.hitTest(event);
   };
 
   toolRotate.hitTest = function(event) {
     const hitSize = 12.0; // / paper.view.zoom;
-    this.hitItem = null;
+    this.hitItem = undefined;
 
     if (!selectionBoundsShape || !selectionBounds) {
       updateSelectionState();
@@ -800,7 +801,7 @@ function createToolRotate() {
     }
 
     // Hit test selection rectangle
-    this.hitItem = null;
+    this.hitItem = undefined;
     if (event.point && !selectionBounds.contains(event.point)) {
       this.hitItem = selectionBoundsShape.hitTest(event.point, {
         bounds: true,
@@ -809,7 +810,7 @@ function createToolRotate() {
       });
     }
 
-    if (this.hitItem && this.hitItem.type == 'bounds') {
+    if (this.hitItem && this.hitItem.type === 'bounds') {
       // Normalize the direction so that corners are at 45° angles.
       const dir = event.point.subtract(selectionBounds.center);
       dir.x /= selectionBounds.width * 0.5;
@@ -834,10 +835,10 @@ function createToolRotate() {
       hideSelectionBounds();
     },
     mousedown: function(event) {
-      this.mode = null;
+      this.mode = undefined;
       this.changed = false;
       if (this.hitItem) {
-        if (this.hitItem.type == 'bounds') {
+        if (this.hitItem.type === 'bounds') {
           this.originalContent = captureSelectionState();
           this.originalShape = selectionBoundsShape.exportJSON({ asString: false });
           this.mode = 'rotate';
@@ -849,7 +850,7 @@ function createToolRotate() {
       }
     },
     mouseup: function(event) {
-      if (this.mode == 'rotate') {
+      if (this.mode === 'rotate') {
         if (this.changed) {
           clearSelectionBounds();
           // undo.snapshot('Rotate Shapes');
@@ -858,7 +859,7 @@ function createToolRotate() {
       updateSelectionState();
     },
     mousedrag: function(event) {
-      if (this.mode == 'rotate') {
+      if (this.mode === 'rotate') {
         const delta = event.point.subtract(this.originalCenter);
         const angle = Math.atan2(delta.y, delta.x);
         let da = angle - this.originalAngle;
@@ -917,7 +918,7 @@ function createToolZoomPan() {
   toolZoomPan.resetHot = function(type, event, mode) {};
   toolZoomPan.testHot = function(type, event, mode) {
     const spacePressed = event && event.modifiers.space;
-    if (mode != 'tool-zoompan' && !spacePressed) {
+    if (mode !== 'tool-zoompan' && !spacePressed) {
       return false;
     }
     return this.hitTest(event);
@@ -952,7 +953,7 @@ function createToolZoomPan() {
       }
     },
     mouseup: function(event) {
-      if (this.mode == 'zoom') {
+      if (this.mode === 'zoom') {
         const zoomCenter = event.point.subtract(paper.view.center);
         const moveFactor = this.zoomFactor - 1.0;
         if (event.modifiers.command && !event.modifiers.option) {
@@ -964,7 +965,7 @@ function createToolZoomPan() {
           paper.view.zoom /= this.zoomFactor;
           paper.view.center = paper.view.center.subtract(zoomCenter.multiply(moveFactor));
         }
-      } else if (this.mode == 'zoom-rect') {
+      } else if (this.mode === 'zoom-rect') {
         const start = paper.view.center.add(this.mouseStartPos);
         const end = event.point;
         paper.view.center = start.add(end).multiply(0.5);
@@ -976,13 +977,13 @@ function createToolZoomPan() {
       this.mode = '';
     },
     mousedrag: function(event) {
-      if (this.mode == 'zoom') {
+      if (this.mode === 'zoom') {
         // If dragging mouse while in zoom mode, switch to zoom-rect instead.
         this.mode = 'zoom-rect';
-      } else if (this.mode == 'zoom-rect') {
+      } else if (this.mode === 'zoom-rect') {
         // While dragging the zoom rectangle, paint the selected area.
         dragRect(paper.view.center.add(this.mouseStartPos), event.point);
-      } else if (this.mode == 'pan') {
+      } else if (this.mode === 'pan') {
         // Handle panning by moving the view center.
         const pt = event.point.subtract(paper.view.center);
         const delta = this.mouseStartPos.subtract(pt);
@@ -1024,25 +1025,25 @@ function createToolPen(toolStack: { mode?: string }) {
 
   const toolPen: ToolPen = new paper.Tool();
   toolPen.pathId = -1;
-  toolPen.hitResult = null;
-  toolPen.mouseStartPos = null;
-  toolPen.originalHandleIn = null;
-  toolPen.originalHandleOut = null;
-  toolPen.currentSegment = null;
+  toolPen.hitResult = undefined;
+  toolPen.mouseStartPos = undefined;
+  toolPen.originalHandleIn = undefined;
+  toolPen.originalHandleOut = undefined;
+  toolPen.currentSegment = undefined;
 
   toolPen.closePath = function() {
-    if (this.pathId != -1) {
+    if (this.pathId !== -1) {
       deselectAllPoints();
       this.pathId = -1;
     }
   };
   toolPen.updateTail = function(point) {
     const path = findItemById(this.pathId);
-    if (path == null) {
+    if (path === undefined) {
       return;
     }
     const nsegs = path.segments.length;
-    if (nsegs == 0) {
+    if (nsegs === 0) {
       return;
     }
 
@@ -1067,14 +1068,14 @@ function createToolPen(toolStack: { mode?: string }) {
   };
   toolPen.resetHot = function(type, event, mode) {};
   toolPen.testHot = function(type, event, mode) {
-    if (mode != 'tool-pen') {
+    if (mode !== 'tool-pen') {
       return false;
     }
     if (event.modifiers.command) {
       return false;
     }
-    if (type == 'keyup') {
-      if (event.key == 'enter' || event.key == 'escape') {
+    if (type === 'keyup') {
+      if (event.key === 'enter' || event.key === 'escape') {
         this.closePath();
       }
     }
@@ -1082,11 +1083,11 @@ function createToolPen(toolStack: { mode?: string }) {
   };
   toolPen.hitTest = function(event, type) {
     const hitSize = 4.0; // paper.view.zoom;
-    let result = null;
-    // var isKeyEvent = type == 'mode' || type == 'command' || type == 'keydown' || type == 'keyup';
+    let result = undefined;
+    // var isKeyEvent = type ==='mode' || type ==='command' || type ==='keydown' || type ==='keyup';
 
-    this.currentSegment = null;
-    this.hitResult = null;
+    this.currentSegment = undefined;
+    this.hitResult = undefined;
 
     if (event.point) {
       result = paper.project.hitTest(event.point, {
@@ -1097,19 +1098,19 @@ function createToolPen(toolStack: { mode?: string }) {
     }
 
     if (result) {
-      if (result.type == 'stroke') {
+      if (result.type === 'stroke') {
         if (result.item.selected) {
           // Insert point.
           this.mode = 'insert';
           setCanvasCursor('cursor-pen-add');
         } else {
-          result = null;
+          result = undefined;
         }
-      } else if (result.type == 'segment') {
+      } else if (result.type === 'segment') {
         const last = result.item.segments.length - 1;
-        if (!result.item.closed && (result.segment.index == 0 || result.segment.index == last)) {
-          if (result.item.id == this.pathId) {
-            if (result.segment.index == 0) {
+        if (!result.item.closed && (result.segment.index === 0 || result.segment.index === last)) {
+          if (result.item.id === this.pathId) {
+            if (result.segment.index === 0) {
               // Close
               this.mode = 'close';
               setCanvasCursor('cursor-pen-close');
@@ -1120,7 +1121,7 @@ function createToolPen(toolStack: { mode?: string }) {
               setCanvasCursor('cursor-pen-adjust');
             }
           } else {
-            if (this.pathId != -1) {
+            if (this.pathId !== -1) {
               this.mode = 'join';
               setCanvasCursor('cursor-pen-join');
               this.updateTail(result.segment.point);
@@ -1138,7 +1139,7 @@ function createToolPen(toolStack: { mode?: string }) {
             setCanvasCursor('cursor-pen-remove');
           }
         } else {
-          result = null;
+          result = undefined;
         }
       }
     }
@@ -1162,18 +1163,18 @@ function createToolPen(toolStack: { mode?: string }) {
       setCanvasCursor('cursor-pen-add');
     },
     deactivate: function() {
-      if (toolStack.mode != 'tool-pen') {
+      if (toolStack.mode !== 'tool-pen') {
         this.closePath();
         updateSelectionState();
       }
-      this.currentSegment = null;
+      this.currentSegment = undefined;
     },
     mousedown: function(event) {
       deselectAllPoints();
 
-      if (this.mode == 'create') {
+      if (this.mode === 'create') {
         let path = findItemById(this.pathId);
-        if (path == null) {
+        if (path === undefined) {
           deselectAll();
           path = new paper.Path();
           path.strokeColor = 'black';
@@ -1184,8 +1185,8 @@ function createToolPen(toolStack: { mode?: string }) {
         this.mouseStartPos = event.point.clone();
         this.originalHandleIn = this.currentSegment.handleIn.clone();
         this.originalHandleOut = this.currentSegment.handleOut.clone();
-      } else if (this.mode == 'insert') {
-        if (this.hitResult != null) {
+      } else if (this.mode === 'insert') {
+        if (this.hitResult !== undefined) {
           const location = this.hitResult.location;
 
           const values = location.curve.getValues();
@@ -1212,10 +1213,10 @@ function createToolPen(toolStack: { mode?: string }) {
           deselectAllPoints();
           seg.selected = true;
 
-          this.hitResult = null;
+          this.hitResult = undefined;
         }
-      } else if (this.mode == 'close') {
-        if (this.pathId != -1) {
+      } else if (this.mode === 'close') {
+        if (this.pathId !== -1) {
           const path = findItemById(this.pathId);
           path.closed = true;
         }
@@ -1226,15 +1227,15 @@ function createToolPen(toolStack: { mode?: string }) {
         this.mouseStartPos = event.point.clone();
         this.originalHandleIn = this.currentSegment.handleIn.clone();
         this.originalHandleOut = this.currentSegment.handleOut.clone();
-      } else if (this.mode == 'adjust') {
+      } else if (this.mode === 'adjust') {
         this.currentSegment = this.hitResult.segment;
         this.currentSegment.handleOut.set(0, 0);
 
         this.mouseStartPos = event.point.clone();
         this.originalHandleIn = this.currentSegment.handleIn.clone();
         this.originalHandleOut = this.currentSegment.handleOut.clone();
-      } else if (this.mode == 'continue') {
-        if (this.hitResult.segment.index == 0) {
+      } else if (this.mode === 'continue') {
+        if (this.hitResult.segment.index === 0) {
           this.hitResult.item.reverse();
         }
 
@@ -1245,7 +1246,7 @@ function createToolPen(toolStack: { mode?: string }) {
         this.mouseStartPos = event.point.clone();
         this.originalHandleIn = this.currentSegment.handleIn.clone();
         this.originalHandleOut = this.currentSegment.handleOut.clone();
-      } else if (this.mode == 'convert') {
+      } else if (this.mode === 'convert') {
         this.pathId = this.hitResult.item.id;
         this.currentSegment = this.hitResult.segment;
         this.currentSegment.handleIn.set(0, 0);
@@ -1254,11 +1255,11 @@ function createToolPen(toolStack: { mode?: string }) {
         this.mouseStartPos = event.point.clone();
         this.originalHandleIn = this.currentSegment.handleIn.clone();
         this.originalHandleOut = this.currentSegment.handleOut.clone();
-      } else if (this.mode == 'join') {
+      } else if (this.mode === 'join') {
         const path = findItemById(this.pathId);
-        if (path != null) {
+        if (path !== undefined) {
           const oldPoint = this.hitResult.segment.point.clone();
-          if (this.hitResult.segment.index != 0) {
+          if (this.hitResult.segment.index !== 0) {
             this.hitResult.item.reverse();
           }
           path.join(this.hitResult.item);
@@ -1267,7 +1268,7 @@ function createToolPen(toolStack: { mode?: string }) {
           let dmin = 0;
           for (let i = 0; i < path.segments.length; i++) {
             const d = oldPoint.getDistance(path.segments[i].point);
-            if (imin == -1 || d < dmin) {
+            if (imin === -1 || d < dmin) {
               dmin = d;
               imin = i;
             }
@@ -1281,10 +1282,10 @@ function createToolPen(toolStack: { mode?: string }) {
         } else {
           this.currentSegment = -1;
         }
-      } else if (this.mode == 'remove') {
-        if (this.hitResult != null) {
+      } else if (this.mode === 'remove') {
+        if (this.hitResult !== undefined) {
           this.hitResult.item.removeSegment(this.hitResult.segment.index);
-          this.hitResult = null;
+          this.hitResult = undefined;
         }
       }
 
@@ -1293,23 +1294,23 @@ function createToolPen(toolStack: { mode?: string }) {
       }
     },
     mouseup: function(event) {
-      if (this.mode == 'close') {
+      if (this.mode === 'close') {
         this.closePath();
-      } else if (this.mode == 'join') {
+      } else if (this.mode === 'join') {
         this.closePath();
-      } else if (this.mode == 'convert') {
+      } else if (this.mode === 'convert') {
         this.closePath();
       }
       // undo.snapshot('Pen');
-      this.mode = null;
-      this.currentSegment = null;
+      this.mode = undefined;
+      this.currentSegment = undefined;
     },
     mousedrag: function(event) {
-      if (this.currentSegment == null) {
+      if (this.currentSegment === undefined) {
         return;
       }
-      let path = findItemById(this.pathId);
-      if (path == null) {
+      const path = findItemById(this.pathId);
+      if (path === undefined) {
         return;
       }
 
@@ -1317,28 +1318,28 @@ function createToolPen(toolStack: { mode?: string }) {
       let dragOut = false;
       let invert = false;
 
-      if (this.mode == 'create') {
+      if (this.mode === 'create') {
         dragOut = true;
         if (this.currentSegment.index > 0) {
           dragIn = true;
         }
-      } else if (this.mode == 'close') {
+      } else if (this.mode === 'close') {
         dragIn = true;
         invert = true;
-      } else if (this.mode == 'continue') {
+      } else if (this.mode === 'continue') {
         dragOut = true;
-      } else if (this.mode == 'adjust') {
+      } else if (this.mode === 'adjust') {
         dragOut = true;
-      } else if (this.mode == 'join') {
+      } else if (this.mode === 'join') {
         dragIn = true;
         invert = true;
-      } else if (this.mode == 'convert') {
+      } else if (this.mode === 'convert') {
         dragIn = true;
         dragOut = true;
       }
 
       if (dragIn || dragOut) {
-        var delta = event.point.subtract(this.mouseStartPos);
+        let delta = event.point.subtract(this.mouseStartPos);
         if (invert) {
           delta = delta.negate();
         }
@@ -1377,7 +1378,7 @@ function createToolPen(toolStack: { mode?: string }) {
 function updateSelectionState() {
   clearSelectionBounds();
   selectionBounds = getSelectionBounds();
-  if (selectionBounds != null) {
+  if (selectionBounds !== undefined) {
     const rect = new paper.Path.Rectangle(selectionBounds);
     // var color = paper.project.activeLayer.getSelectedColor();
     rect.strokeColor = 'rgba(0,0,0,0)'; // color ? color : '#009dec';
@@ -1397,12 +1398,12 @@ function clearSelectionBounds() {
   if (selectionBoundsShape) {
     selectionBoundsShape.remove();
   }
-  selectionBoundsShape = null;
-  selectionBounds = null;
+  selectionBoundsShape = undefined;
+  selectionBounds = undefined;
 }
 
 function updateSelectionUI() {
-  if (selectionBounds == null) {
+  if (selectionBounds === undefined) {
     $('#cut').addClass('disabled');
     $('#copy').addClass('disabled');
     $('#delete').addClass('disabled');
@@ -1412,7 +1413,7 @@ function updateSelectionUI() {
     $('#delete').removeClass('disabled');
   }
 
-  if (clipboard == null) {
+  if (clipboard === undefined) {
     $('#paste').addClass('disabled');
   } else {
     $('#paste').removeClass('disabled');
@@ -1421,10 +1422,10 @@ function updateSelectionUI() {
 
 // Returns bounding box of all selected items.
 function getSelectionBounds() {
-  let bounds = null;
+  let bounds = undefined;
   const selected = (paper.project as any).selectedItems;
   for (const item of selected) {
-    if (bounds == null) {
+    if (bounds === undefined) {
       bounds = item.bounds.clone();
     } else {
       bounds = bounds.unite(item.bounds);
@@ -1497,33 +1498,33 @@ function restoreSelectionState(originalContent) {
   }
 }
 
-function findItemById(id) {
-  if (id == -1) {
-    return null;
+function findItemById(id: number) {
+  if (id === -1) {
+    return undefined;
   }
-  function findItem(item) {
-    if (item.id == id) {
+  function findItem(item: paper.Item) {
+    if (item.id === id) {
       return item;
     }
     if (item.children) {
       for (let j = item.children.length - 1; j >= 0; j--) {
         const it = findItem(item.children[j]);
-        if (it != null) {
+        if (it !== undefined) {
           return it;
         }
       }
     }
-    return null;
+    return undefined;
   }
 
   for (let i = 0, l = paper.project.layers.length; i < l; i++) {
     const layer = paper.project.layers[i];
     const it = findItem(layer);
-    if (it != null) {
+    if (it !== undefined) {
       return it;
     }
   }
-  return null;
+  return undefined;
 }
 
 // Returns path points which are contained in the rect.
@@ -1639,7 +1640,7 @@ function hideSelectionBounds() {
   if (drawSelectionBounds > 0) {
     drawSelectionBounds--;
   }
-  if (drawSelectionBounds == 0) {
+  if (drawSelectionBounds === 0) {
     if (selectionBoundsShape) {
       selectionBoundsShape.visible = false;
     }
