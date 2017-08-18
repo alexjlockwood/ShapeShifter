@@ -5,29 +5,31 @@ import { AfterViewInit, Directive, ElementRef, HostListener, Input } from '@angu
 import { ActionSource } from 'app/model/actionmode';
 import { LayerUtil, PathLayer } from 'app/model/layers';
 import { Path } from 'app/model/paths';
-import { LayerTimelineService } from 'app/services';
+import { DestroyableMixin } from 'app/scripts/mixins';
+import { LayerTimelineService, ToolModeService } from 'app/services';
 import * as $ from 'jquery';
 import * as paper from 'paper';
-import { Point } from 'paper';
+import { Point } from 'paper'; // TODO: figure out why this needs to be imported to prevent breaks?
 import { Observable } from 'rxjs/Observable';
 
 import { CanvasLayoutMixin } from './CanvasLayoutMixin';
-import { createToolDirectSelect, createToolSelect } from './Tools';
+import { ToolStack, createToolStack } from './Tools';
 
 type Context = CanvasRenderingContext2D;
 
 @Directive({ selector: '[appCanvasPaper]' })
-export class CanvasPaperDirective extends CanvasLayoutMixin() implements AfterViewInit {
+export class CanvasPaperDirective extends CanvasLayoutMixin(DestroyableMixin())
+  implements AfterViewInit {
   @Input() actionSource: ActionSource;
 
   private readonly $canvas: JQuery<HTMLCanvasElement>;
-  private isDragging = false;
-  private isDrawing = false;
-  private path: paper.Path;
-  private segment: paper.Segment;
-  private lastPoint: paper.Point;
+  private toolStack: ToolStack;
 
-  constructor(elementRef: ElementRef, private readonly layerTimelineService: LayerTimelineService) {
+  constructor(
+    elementRef: ElementRef,
+    private readonly toolModeService: ToolModeService,
+    private readonly layerTimelineService: LayerTimelineService,
+  ) {
     super();
     this.$canvas = $(elementRef.nativeElement) as JQuery<HTMLCanvasElement>;
   }
@@ -37,7 +39,12 @@ export class CanvasPaperDirective extends CanvasLayoutMixin() implements AfterVi
   ngAfterViewInit() {
     paper.setup(this.$canvas.get(0));
     paper.settings.handleSize = 8;
-    this.tool = createToolDirectSelect();
+    this.toolStack = createToolStack();
+    this.registerSubscription(
+      this.toolModeService.asObservable().subscribe(toolMode => {
+        this.toolStack.setToolMode(toolMode);
+      }),
+    );
   }
 
   // @Override

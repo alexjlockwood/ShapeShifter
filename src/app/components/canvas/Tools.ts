@@ -1,3 +1,4 @@
+import { ToolMode } from 'app/model/toolMode';
 import * as $ from 'jquery';
 import * as paper from 'paper';
 
@@ -7,7 +8,148 @@ let selectionBounds = null;
 let selectionBoundsShape = null;
 let drawSelectionBounds = 0;
 
-export function createToolSelect() {
+const oppositeCorner = {
+  'top-left': 'bottom-right',
+  'top-center': 'bottom-center',
+  'top-right': 'bottom-left',
+  'right-center': 'left-center',
+  'bottom-right': 'top-left',
+  'bottom-center': 'top-center',
+  'bottom-left': 'top-right',
+  'left-center': 'right-center',
+};
+
+export interface ToolStack extends paper.Tool {
+  stack?: any;
+  mode?: string;
+  hotTool?: any;
+  activeTool?: any;
+  lastPoint?: paper.Point;
+  command?: Function;
+  setToolMode?: Function;
+  testHot?: Function;
+}
+
+export function createToolStack() {
+  const toolStack: ToolStack = new paper.Tool();
+  toolStack.stack = [
+    createToolZoomPan(),
+    createToolPen(toolStack),
+    createToolScale(),
+    createToolRotate(),
+    createToolDirectSelect(),
+    createToolSelect(),
+  ];
+  toolStack.hotTool = null;
+  toolStack.activeTool = null;
+  toolStack.lastPoint = new paper.Point(0, 0);
+  toolStack.command = function(cb) {
+    if (this.activeTool != null) {
+      return;
+    }
+    /*	if (this.hotTool) {
+		this.hotTool.fire('deactivate');
+		this.hotTool = null;
+	}*/
+    if (cb) {
+      cb();
+    }
+    const event = new paper.Event();
+    (event as any).point = this.lastPoint.clone();
+    this.testHot('command', event);
+  };
+  toolStack.setToolMode = function(mode) {
+    this.mode = mode;
+    const event = new paper.Event();
+    (event as any).point = this.lastPoint.clone();
+    this.testHot('mode', event);
+  };
+  toolStack.testHot = function(type, event) {
+    // Reset the state of the tool before testing.
+    const prev = this.hotTool;
+    this.hotTool = null;
+    for (const s of this.stack) {
+      s.resetHot(type, event, this.mode);
+    }
+    // Pick the first hot tool.
+    for (const s of this.stack) {
+      if (s.testHot(type, event, this.mode)) {
+        this.hotTool = s;
+        break;
+      }
+    }
+    if (prev != this.hotTool) {
+      if (prev) {
+        prev.fire('deactivate');
+      }
+      if (this.hotTool) {
+        this.hotTool.fire('activate');
+      }
+    }
+  };
+  toolStack.on({
+    activate: function() {
+      this.activeTool = null;
+      this.hotTool = null;
+    },
+
+    deactivate: function() {
+      this.activeTool = null;
+      this.hotTool = null;
+    },
+
+    mousedown: function(event) {
+      this.lastPoint = event.point.clone();
+      if (this.hotTool) {
+        this.activeTool = this.hotTool;
+        this.activeTool.fire('mousedown', event);
+      }
+    },
+
+    mouseup: function(event) {
+      this.lastPoint = event.point.clone();
+      if (this.activeTool) {
+        this.activeTool.fire('mouseup', event);
+      }
+      this.activeTool = null;
+      this.testHot('mouseup', event);
+    },
+
+    mousedrag: function(event) {
+      this.lastPoint = event.point.clone();
+      if (this.activeTool) {
+        this.activeTool.fire('mousedrag', event);
+      }
+    },
+
+    mousemove: function(event) {
+      this.lastPoint = event.point.clone();
+      this.testHot('mousemove', event);
+    },
+
+    keydown: function(event) {
+      event.point = this.lastPoint.clone();
+      if (this.activeTool) {
+        this.activeTool.fire('keydown', event);
+      } else {
+        this.testHot('keydown', event);
+      }
+    },
+
+    keyup: function(event) {
+      event.point = this.lastPoint.clone();
+      if (this.activeTool) {
+        this.activeTool.fire('keyup', event);
+      } else {
+        this.testHot('keyup', event);
+      }
+    },
+  });
+
+  return toolStack;
+}
+
+function createToolSelect() {
   interface ToolSelect extends paper.Tool {
     mouseStartPos?: paper.Point;
     mode?: string;
@@ -186,30 +328,10 @@ export function createToolSelect() {
     },
   });
 
-  function showSelectionBounds() {
-    drawSelectionBounds++;
-    if (drawSelectionBounds > 0) {
-      if (selectionBoundsShape) {
-        selectionBoundsShape.visible = true;
-      }
-    }
-  }
-
-  function hideSelectionBounds() {
-    if (drawSelectionBounds > 0) {
-      drawSelectionBounds--;
-    }
-    if (drawSelectionBounds == 0) {
-      if (selectionBoundsShape) {
-        selectionBoundsShape.visible = false;
-      }
-    }
-  }
-
   return toolSelect as paper.Tool;
 }
 
-export function createToolDirectSelect() {
+function createToolDirectSelect() {
   interface ToolDirectSelect extends paper.Tool {
     mouseStartPos?: paper.Point;
     mode?: string;
@@ -235,7 +357,9 @@ export function createToolDirectSelect() {
 
   toolDirectSelect.resetHot = function(type, event, mode) {};
   toolDirectSelect.testHot = function(type, event, mode) {
-    if (mode != 'tool-direct-select') return;
+    if (mode != 'tool-direct-select') {
+      return;
+    }
     return this.hitTest(event);
   };
 
@@ -355,7 +479,7 @@ export function createToolDirectSelect() {
 					this.originalHandlePos = this.hitItem.segment.handleIn.clone();
 					this.originalOppHandleLength = this.hitItem.segment.handleOut.length;
 				}*/
-          //				this.originalContent = captureSelectionState(); // For some reason this does not work!
+          // this.originalContent = captureSelectionState(); // For some reason this does not work!
         }
         updateSelectionState();
       } else {
@@ -476,6 +600,780 @@ export function createToolDirectSelect() {
   return toolDirectSelect as paper.Tool;
 }
 
+function createToolScale() {
+  interface ToolScale extends paper.Tool {
+    mouseStartPos?: paper.Point;
+    mode?: string;
+    hitItem?: paper.Item;
+    pivot?: any;
+    corner?: any;
+    originalCenter?: any;
+    originalSize?: any;
+    originalContent?: any;
+    changed?: boolean;
+    resetHot?: Function;
+    testHot?: Function;
+    hitTest?: Function;
+  }
+
+  const toolScale: ToolScale = new paper.Tool();
+  toolScale.mouseStartPos = new paper.Point(0, 0);
+  toolScale.mode = null;
+  toolScale.hitItem = null;
+  toolScale.pivot = null;
+  toolScale.corner = null;
+  toolScale.originalCenter = null;
+  toolScale.originalSize = null;
+  toolScale.originalContent = null;
+  toolScale.changed = false;
+
+  toolScale.resetHot = function(type, event, mode) {};
+  toolScale.testHot = function(type, event, mode) {
+    /*	if (mode != 'tool-select')
+		return false;*/
+    return this.hitTest(event);
+  };
+
+  toolScale.hitTest = function(event) {
+    const hitSize = 6.0; // / paper.view.zoom;
+    this.hitItem = null;
+
+    if (!selectionBoundsShape || !selectionBounds) {
+      updateSelectionState();
+    }
+
+    if (!selectionBoundsShape || !selectionBounds) {
+      return undefined;
+    }
+
+    // Hit test selection rectangle
+    if (event.point) {
+      this.hitItem = selectionBoundsShape.hitTest(event.point, {
+        bounds: true,
+        guides: true,
+        tolerance: hitSize,
+      });
+    }
+
+    if (this.hitItem && this.hitItem.type == 'bounds') {
+      // Normalize the direction so that corners are at 45° angles.
+      const dir = event.point.subtract(selectionBounds.center);
+      dir.x /= selectionBounds.width * 0.5;
+      dir.y /= selectionBounds.height * 0.5;
+      setCanvasScaleCursor(dir);
+      return true;
+    }
+
+    return false;
+  };
+
+  toolScale.on({
+    activate: function() {
+      $('#tools').children().removeClass('selected');
+      $('#tool-select').addClass('selected');
+      setCanvasCursor('cursor-arrow-black');
+      updateSelectionState();
+      showSelectionBounds();
+    },
+    deactivate: function() {
+      hideSelectionBounds();
+    },
+    mousedown: function(event) {
+      this.mode = null;
+      this.changed = false;
+      if (this.hitItem) {
+        if (this.hitItem.type == 'bounds') {
+          this.originalContent = captureSelectionState();
+          this.mode = 'scale';
+          const pivotName = (paper as any).Base.camelize(oppositeCorner[this.hitItem.name]);
+          const cornerName = (paper as any).Base.camelize(this.hitItem.name);
+          this.pivot = selectionBounds[pivotName].clone();
+          this.corner = selectionBounds[cornerName].clone();
+          this.originalSize = this.corner.subtract(this.pivot);
+          this.originalCenter = selectionBounds.center;
+        }
+        updateSelectionState();
+      }
+    },
+    mouseup: function(event) {
+      if (this.mode == 'scale') {
+        if (this.changed) {
+          clearSelectionBounds();
+          // undo.snapshot('Scale Shapes');
+        }
+      }
+    },
+    mousedrag: function(event) {
+      if (this.mode == 'scale') {
+        let pivot = this.pivot;
+        let originalSize = this.originalSize;
+
+        if (event.modifiers.option) {
+          pivot = this.originalCenter;
+          originalSize = originalSize.multiply(0.5);
+        }
+
+        this.corner = this.corner.add(event.delta);
+        const size = this.corner.subtract(pivot);
+        let sx = 1.0;
+        let sy = 1.0;
+        if (Math.abs(originalSize.x) > 0.0000001) {
+          sx = size.x / originalSize.x;
+        }
+        if (Math.abs(originalSize.y) > 0.0000001) {
+          sy = size.y / originalSize.y;
+        }
+
+        if (event.modifiers.shift) {
+          const signx = sx > 0 ? 1 : -1;
+          const signy = sy > 0 ? 1 : -1;
+          sx = sy = Math.max(Math.abs(sx), Math.abs(sy));
+          sx *= signx;
+          sy *= signy;
+        }
+
+        restoreSelectionState(this.originalContent);
+
+        const selected = (paper.project as any).selectedItems;
+        for (const item of selected) {
+          if (item.guide) {
+            continue;
+          }
+          item.scale(sx, sy, pivot);
+        }
+        updateSelectionState();
+        this.changed = true;
+      }
+    },
+    mousemove: function(event) {
+      this.hitTest(event);
+    },
+  });
+
+  return toolScale as paper.Tool;
+}
+
+function createToolRotate() {
+  interface ToolRotate extends paper.Tool {
+    mouseStartPos?: paper.Point;
+    mode?: string;
+    hitItem?: paper.Item;
+    originalCenter?: any;
+    originalAngle?: any;
+    originalContent?: any;
+    originalShape?: any;
+    cursorDir?: any;
+    changed?: boolean;
+    resetHot?: Function;
+    testHot?: Function;
+    hitTest?: Function;
+  }
+
+  const toolRotate: ToolRotate = new paper.Tool();
+  toolRotate.mouseStartPos = new paper.Point(0, 0);
+  toolRotate.mode = null;
+  toolRotate.hitItem = null;
+  toolRotate.originalCenter = null;
+  toolRotate.originalAngle = 0;
+  toolRotate.originalContent = null;
+  toolRotate.originalShape = null;
+  toolRotate.cursorDir = null;
+  toolRotate.changed = false;
+
+  toolRotate.resetHot = function(type, event, mode) {};
+  toolRotate.testHot = function(type, event, mode) {
+    /*	if (mode != 'tool-select')
+		return false;*/
+    return this.hitTest(event);
+  };
+
+  toolRotate.hitTest = function(event) {
+    const hitSize = 12.0; // / paper.view.zoom;
+    this.hitItem = null;
+
+    if (!selectionBoundsShape || !selectionBounds) {
+      updateSelectionState();
+    }
+
+    if (!selectionBoundsShape || !selectionBounds) {
+      return undefined;
+    }
+
+    // Hit test selection rectangle
+    this.hitItem = null;
+    if (event.point && !selectionBounds.contains(event.point)) {
+      this.hitItem = selectionBoundsShape.hitTest(event.point, {
+        bounds: true,
+        guides: true,
+        tolerance: hitSize,
+      });
+    }
+
+    if (this.hitItem && this.hitItem.type == 'bounds') {
+      // Normalize the direction so that corners are at 45° angles.
+      const dir = event.point.subtract(selectionBounds.center);
+      dir.x /= selectionBounds.width * 0.5;
+      dir.y /= selectionBounds.height * 0.5;
+      setCanvasRotateCursor(dir, 0);
+      toolRotate.cursorDir = dir;
+      return true;
+    }
+
+    return false;
+  };
+
+  toolRotate.on({
+    activate: function() {
+      $('#tools').children().removeClass('selected');
+      $('#tool-select').addClass('selected');
+      setCanvasCursor('cursor-arrow-black');
+      updateSelectionState();
+      showSelectionBounds();
+    },
+    deactivate: function() {
+      hideSelectionBounds();
+    },
+    mousedown: function(event) {
+      this.mode = null;
+      this.changed = false;
+      if (this.hitItem) {
+        if (this.hitItem.type == 'bounds') {
+          this.originalContent = captureSelectionState();
+          this.originalShape = selectionBoundsShape.exportJSON({ asString: false });
+          this.mode = 'rotate';
+          this.originalCenter = selectionBounds.center.clone();
+          const delta = event.point.subtract(this.originalCenter);
+          this.originalAngle = Math.atan2(delta.y, delta.x);
+        }
+        updateSelectionState();
+      }
+    },
+    mouseup: function(event) {
+      if (this.mode == 'rotate') {
+        if (this.changed) {
+          clearSelectionBounds();
+          // undo.snapshot('Rotate Shapes');
+        }
+      }
+      updateSelectionState();
+    },
+    mousedrag: function(event) {
+      if (this.mode == 'rotate') {
+        const delta = event.point.subtract(this.originalCenter);
+        const angle = Math.atan2(delta.y, delta.x);
+        let da = angle - this.originalAngle;
+
+        if (event.modifiers.shift) {
+          const snapeAngle = Math.PI / 4;
+          da = Math.round(da / snapeAngle) * snapeAngle;
+        }
+
+        restoreSelectionState(this.originalContent);
+
+        const id = selectionBoundsShape.id;
+        selectionBoundsShape.importJSON(this.originalShape);
+        selectionBoundsShape._id = id;
+
+        const deg = da / Math.PI * 180;
+
+        selectionBoundsShape.rotate(deg, this.originalCenter);
+
+        const selected = (paper.project as any).selectedItems;
+        for (const item of selected) {
+          if (item.guide) {
+            continue;
+          }
+          item.rotate(deg, this.originalCenter);
+        }
+
+        setCanvasRotateCursor(toolRotate.cursorDir, da);
+        this.changed = true;
+      }
+    },
+    mousemove: function(event) {
+      this.hitTest(event);
+    },
+  });
+
+  return toolRotate as paper.Tool;
+}
+
+function createToolZoomPan() {
+  interface ToolPanZoom extends paper.Tool {
+    mouseStartPos?: paper.Point;
+    distanceThreshold?: number;
+    mode?: string;
+    zoomFactor?: number;
+    resetHot?: Function;
+    testHot?: Function;
+    hitTest?: Function;
+  }
+
+  const toolZoomPan: ToolPanZoom = new paper.Tool();
+  toolZoomPan.distanceThreshold = 8;
+  toolZoomPan.mouseStartPos = new paper.Point(0, 0);
+  toolZoomPan.mode = 'pan';
+  toolZoomPan.zoomFactor = 1.3;
+  toolZoomPan.resetHot = function(type, event, mode) {};
+  toolZoomPan.testHot = function(type, event, mode) {
+    const spacePressed = event && event.modifiers.space;
+    if (mode != 'tool-zoompan' && !spacePressed) {
+      return false;
+    }
+    return this.hitTest(event);
+  };
+  toolZoomPan.hitTest = function(event) {
+    if (event.modifiers.command) {
+      if (event.modifiers.command && !event.modifiers.option) {
+        setCanvasCursor('cursor-zoom-in');
+      } else if (event.modifiers.command && event.modifiers.option) {
+        setCanvasCursor('cursor-zoom-out');
+      }
+    } else {
+      setCanvasCursor('cursor-hand');
+    }
+    return true;
+  };
+  toolZoomPan.on({
+    activate: function() {
+      $('#tools').children().removeClass('selected');
+      $('#tool-zoompan').addClass('selected');
+      setCanvasCursor('cursor-hand');
+    },
+    deactivate: function() {},
+    mousedown: function(event) {
+      this.mouseStartPos = event.point.subtract(paper.view.center);
+      this.mode = '';
+      if (event.modifiers.command) {
+        this.mode = 'zoom';
+      } else {
+        setCanvasCursor('cursor-hand-grab');
+        this.mode = 'pan';
+      }
+    },
+    mouseup: function(event) {
+      if (this.mode == 'zoom') {
+        const zoomCenter = event.point.subtract(paper.view.center);
+        const moveFactor = this.zoomFactor - 1.0;
+        if (event.modifiers.command && !event.modifiers.option) {
+          paper.view.zoom *= this.zoomFactor;
+          paper.view.center = paper.view.center.add(
+            zoomCenter.multiply(moveFactor / this.zoomFactor),
+          );
+        } else if (event.modifiers.command && event.modifiers.option) {
+          paper.view.zoom /= this.zoomFactor;
+          paper.view.center = paper.view.center.subtract(zoomCenter.multiply(moveFactor));
+        }
+      } else if (this.mode == 'zoom-rect') {
+        const start = paper.view.center.add(this.mouseStartPos);
+        const end = event.point;
+        paper.view.center = start.add(end).multiply(0.5);
+        const dx = paper.view.bounds.width / Math.abs(end.x - start.x);
+        const dy = paper.view.bounds.height / Math.abs(end.y - start.y);
+        paper.view.zoom = Math.min(dx, dy) * paper.view.zoom;
+      }
+      this.hitTest(event);
+      this.mode = '';
+    },
+    mousedrag: function(event) {
+      if (this.mode == 'zoom') {
+        // If dragging mouse while in zoom mode, switch to zoom-rect instead.
+        this.mode = 'zoom-rect';
+      } else if (this.mode == 'zoom-rect') {
+        // While dragging the zoom rectangle, paint the selected area.
+        dragRect(paper.view.center.add(this.mouseStartPos), event.point);
+      } else if (this.mode == 'pan') {
+        // Handle panning by moving the view center.
+        const pt = event.point.subtract(paper.view.center);
+        const delta = this.mouseStartPos.subtract(pt);
+        paper.view.scrollBy(delta);
+        this.mouseStartPos = pt;
+      }
+    },
+
+    mousemove: function(event) {
+      this.hitTest(event);
+    },
+
+    keydown: function(event) {
+      this.hitTest(event);
+    },
+
+    keyup: function(event) {
+      this.hitTest(event);
+    },
+  });
+
+  return toolZoomPan as paper.Tool;
+}
+
+function createToolPen(toolStack: { mode?: string }) {
+  interface ToolPen extends paper.Tool {
+    pathId?: number;
+    hitResult?: any;
+    mouseStartPos?: paper.Point;
+    originalHandleIn?: any;
+    originalHandleOut?: any;
+    currentSegment?: any;
+    closePath?: Function;
+    resetHot?: Function;
+    testHot?: Function;
+    updateTail?: Function;
+    hitTest?: Function;
+  }
+
+  const toolPen: ToolPen = new paper.Tool();
+  toolPen.pathId = -1;
+  toolPen.hitResult = null;
+  toolPen.mouseStartPos = null;
+  toolPen.originalHandleIn = null;
+  toolPen.originalHandleOut = null;
+  toolPen.currentSegment = null;
+
+  toolPen.closePath = function() {
+    if (this.pathId != -1) {
+      deselectAllPoints();
+      this.pathId = -1;
+    }
+  };
+  toolPen.updateTail = function(point) {
+    const path = findItemById(this.pathId);
+    if (path == null) {
+      return;
+    }
+    const nsegs = path.segments.length;
+    if (nsegs == 0) {
+      return;
+    }
+
+    const color = (paper.project.activeLayer as any).getSelectedColor();
+    const tail = new paper.Path();
+    tail.strokeColor = color ? color : '#009dec';
+    tail.strokeWidth = 1.0 / paper.view.zoom;
+    (tail as any).guide = true;
+
+    const prevPoint = path.segments[nsegs - 1].point;
+    const prevHandleOut = path.segments[nsegs - 1].point.add(path.segments[nsegs - 1].handleOut);
+
+    tail.moveTo(prevPoint);
+    tail.cubicCurveTo(prevHandleOut, point, point);
+
+    tail.removeOn({
+      drag: true,
+      up: true,
+      down: true,
+      move: true,
+    });
+  };
+  toolPen.resetHot = function(type, event, mode) {};
+  toolPen.testHot = function(type, event, mode) {
+    if (mode != 'tool-pen') {
+      return false;
+    }
+    if (event.modifiers.command) {
+      return false;
+    }
+    if (type == 'keyup') {
+      if (event.key == 'enter' || event.key == 'escape') {
+        this.closePath();
+      }
+    }
+    return this.hitTest(event, type);
+  };
+  toolPen.hitTest = function(event, type) {
+    const hitSize = 4.0; // paper.view.zoom;
+    let result = null;
+    // var isKeyEvent = type == 'mode' || type == 'command' || type == 'keydown' || type == 'keyup';
+
+    this.currentSegment = null;
+    this.hitResult = null;
+
+    if (event.point) {
+      result = paper.project.hitTest(event.point, {
+        segments: true,
+        stroke: true,
+        tolerance: hitSize,
+      });
+    }
+
+    if (result) {
+      if (result.type == 'stroke') {
+        if (result.item.selected) {
+          // Insert point.
+          this.mode = 'insert';
+          setCanvasCursor('cursor-pen-add');
+        } else {
+          result = null;
+        }
+      } else if (result.type == 'segment') {
+        const last = result.item.segments.length - 1;
+        if (!result.item.closed && (result.segment.index == 0 || result.segment.index == last)) {
+          if (result.item.id == this.pathId) {
+            if (result.segment.index == 0) {
+              // Close
+              this.mode = 'close';
+              setCanvasCursor('cursor-pen-close');
+              this.updateTail(result.segment.point);
+            } else {
+              // Adjust last handle
+              this.mode = 'adjust';
+              setCanvasCursor('cursor-pen-adjust');
+            }
+          } else {
+            if (this.pathId != -1) {
+              this.mode = 'join';
+              setCanvasCursor('cursor-pen-join');
+              this.updateTail(result.segment.point);
+            } else {
+              this.mode = 'continue';
+              setCanvasCursor('cursor-pen-edit');
+            }
+          }
+        } else if (result.item.selected) {
+          if (event.modifiers.option) {
+            this.mode = 'convert';
+            setCanvasCursor('cursor-pen-adjust');
+          } else {
+            this.mode = 'remove';
+            setCanvasCursor('cursor-pen-remove');
+          }
+        } else {
+          result = null;
+        }
+      }
+    }
+
+    if (!result) {
+      this.mode = 'create';
+      setCanvasCursor('cursor-pen-create');
+      if (event.point) {
+        this.updateTail(event.point);
+      }
+    }
+
+    this.hitResult = result;
+
+    return true;
+  };
+  toolPen.on({
+    activate: function() {
+      $('#tools').children().removeClass('selected');
+      $('#tool-pen').addClass('selected');
+      setCanvasCursor('cursor-pen-add');
+    },
+    deactivate: function() {
+      if (toolStack.mode != 'tool-pen') {
+        this.closePath();
+        updateSelectionState();
+      }
+      this.currentSegment = null;
+    },
+    mousedown: function(event) {
+      deselectAllPoints();
+
+      if (this.mode == 'create') {
+        let path = findItemById(this.pathId);
+        if (path == null) {
+          deselectAll();
+          path = new paper.Path();
+          path.strokeColor = 'black';
+          this.pathId = path.id;
+        }
+        this.currentSegment = path.add(event.point);
+
+        this.mouseStartPos = event.point.clone();
+        this.originalHandleIn = this.currentSegment.handleIn.clone();
+        this.originalHandleOut = this.currentSegment.handleOut.clone();
+      } else if (this.mode == 'insert') {
+        if (this.hitResult != null) {
+          const location = this.hitResult.location;
+
+          const values = location.curve.getValues();
+          const isLinear = location.curve.isLinear();
+          const parts = (paper.Curve as any).subdivide(values, location.parameter);
+          const left = parts[0];
+          const right = parts[1];
+
+          const x = left[6];
+          const y = left[7];
+          const segment = new paper.Segment(
+            new paper.Point(x, y),
+            !isLinear && new paper.Point(left[4] - x, left[5] - y),
+            !isLinear && new paper.Point(right[2] - x, right[3] - y),
+          );
+
+          const seg = this.hitResult.item.insert(location.index + 1, segment);
+
+          if (!isLinear) {
+            seg.previous.handleOut.set(left[2] - left[0], left[3] - left[1]);
+            seg.next.handleIn.set(right[4] - right[6], right[5] - right[7]);
+          }
+
+          deselectAllPoints();
+          seg.selected = true;
+
+          this.hitResult = null;
+        }
+      } else if (this.mode == 'close') {
+        if (this.pathId != -1) {
+          const path = findItemById(this.pathId);
+          path.closed = true;
+        }
+
+        this.currentSegment = this.hitResult.segment;
+        this.currentSegment.handleIn.set(0, 0);
+
+        this.mouseStartPos = event.point.clone();
+        this.originalHandleIn = this.currentSegment.handleIn.clone();
+        this.originalHandleOut = this.currentSegment.handleOut.clone();
+      } else if (this.mode == 'adjust') {
+        this.currentSegment = this.hitResult.segment;
+        this.currentSegment.handleOut.set(0, 0);
+
+        this.mouseStartPos = event.point.clone();
+        this.originalHandleIn = this.currentSegment.handleIn.clone();
+        this.originalHandleOut = this.currentSegment.handleOut.clone();
+      } else if (this.mode == 'continue') {
+        if (this.hitResult.segment.index == 0) {
+          this.hitResult.item.reverse();
+        }
+
+        this.pathId = this.hitResult.item.id;
+        this.currentSegment = this.hitResult.segment;
+        this.currentSegment.handleOut.set(0, 0);
+
+        this.mouseStartPos = event.point.clone();
+        this.originalHandleIn = this.currentSegment.handleIn.clone();
+        this.originalHandleOut = this.currentSegment.handleOut.clone();
+      } else if (this.mode == 'convert') {
+        this.pathId = this.hitResult.item.id;
+        this.currentSegment = this.hitResult.segment;
+        this.currentSegment.handleIn.set(0, 0);
+        this.currentSegment.handleOut.set(0, 0);
+
+        this.mouseStartPos = event.point.clone();
+        this.originalHandleIn = this.currentSegment.handleIn.clone();
+        this.originalHandleOut = this.currentSegment.handleOut.clone();
+      } else if (this.mode == 'join') {
+        const path = findItemById(this.pathId);
+        if (path != null) {
+          const oldPoint = this.hitResult.segment.point.clone();
+          if (this.hitResult.segment.index != 0) {
+            this.hitResult.item.reverse();
+          }
+          path.join(this.hitResult.item);
+          // Find nearest point to the hit point.
+          let imin = -1;
+          let dmin = 0;
+          for (let i = 0; i < path.segments.length; i++) {
+            const d = oldPoint.getDistance(path.segments[i].point);
+            if (imin == -1 || d < dmin) {
+              dmin = d;
+              imin = i;
+            }
+          }
+          this.currentSegment = path.segments[imin];
+          this.currentSegment.handleIn.set(0, 0);
+
+          this.mouseStartPos = event.point.clone();
+          this.originalHandleIn = this.currentSegment.handleIn.clone();
+          this.originalHandleOut = this.currentSegment.handleOut.clone();
+        } else {
+          this.currentSegment = -1;
+        }
+      } else if (this.mode == 'remove') {
+        if (this.hitResult != null) {
+          this.hitResult.item.removeSegment(this.hitResult.segment.index);
+          this.hitResult = null;
+        }
+      }
+
+      if (this.currentSegment) {
+        this.currentSegment.selected = true;
+      }
+    },
+    mouseup: function(event) {
+      if (this.mode == 'close') {
+        this.closePath();
+      } else if (this.mode == 'join') {
+        this.closePath();
+      } else if (this.mode == 'convert') {
+        this.closePath();
+      }
+      // undo.snapshot('Pen');
+      this.mode = null;
+      this.currentSegment = null;
+    },
+    mousedrag: function(event) {
+      if (this.currentSegment == null) {
+        return;
+      }
+      let path = findItemById(this.pathId);
+      if (path == null) {
+        return;
+      }
+
+      let dragIn = false;
+      let dragOut = false;
+      let invert = false;
+
+      if (this.mode == 'create') {
+        dragOut = true;
+        if (this.currentSegment.index > 0) {
+          dragIn = true;
+        }
+      } else if (this.mode == 'close') {
+        dragIn = true;
+        invert = true;
+      } else if (this.mode == 'continue') {
+        dragOut = true;
+      } else if (this.mode == 'adjust') {
+        dragOut = true;
+      } else if (this.mode == 'join') {
+        dragIn = true;
+        invert = true;
+      } else if (this.mode == 'convert') {
+        dragIn = true;
+        dragOut = true;
+      }
+
+      if (dragIn || dragOut) {
+        var delta = event.point.subtract(this.mouseStartPos);
+        if (invert) {
+          delta = delta.negate();
+        }
+        if (dragIn && dragOut) {
+          let handlePos = this.originalHandleOut.add(delta);
+          if (event.modifiers.shift) {
+            handlePos = snapDeltaToAngle(handlePos, Math.PI * 2 / 8);
+          }
+          this.currentSegment.handleOut = handlePos;
+          this.currentSegment.handleIn = handlePos.negate();
+        } else if (dragOut) {
+          let handlePos = this.originalHandleOut.add(delta);
+          if (event.modifiers.shift) {
+            handlePos = snapDeltaToAngle(handlePos, Math.PI * 2 / 8);
+          }
+          this.currentSegment.handleOut = handlePos;
+          this.currentSegment.handleIn = handlePos.normalize(-this.originalHandleIn.length);
+        } else {
+          let handlePos = this.originalHandleIn.add(delta);
+          if (event.modifiers.shift) {
+            handlePos = snapDeltaToAngle(handlePos, Math.PI * 2 / 8);
+          }
+          this.currentSegment.handleIn = handlePos;
+          this.currentSegment.handleOut = handlePos.normalize(-this.originalHandleOut.length);
+        }
+      }
+    },
+    mousemove: function(event) {
+      this.hitTest(event);
+    },
+  });
+
+  return toolPen;
+}
+
 function updateSelectionState() {
   clearSelectionBounds();
   selectionBounds = getSelectionBounds();
@@ -564,8 +1462,8 @@ function getPathsIntersectingRect(rect) {
     }
   }
 
-  for (var i = 0, l = paper.project.layers.length; i < l; i++) {
-    var layer = paper.project.layers[i];
+  for (let i = 0, l = paper.project.layers.length; i < l; i++) {
+    const layer = paper.project.layers[i];
     checkPathItem(layer);
   }
 
@@ -575,7 +1473,8 @@ function getPathsIntersectingRect(rect) {
 }
 
 function setCanvasCursor(name) {
-  $('#canvas')
+  // TODO: make this a constant somehow...
+  $('.paper-canvas')
     .removeClass(function(index, css) {
       return (css.match(/\bcursor-\S+/g) || []).join(' ');
     })
@@ -725,4 +1624,58 @@ function dragRect(p1, p2) {
   });
   (rect as any).guide = true;
   return rect;
+}
+
+function showSelectionBounds() {
+  drawSelectionBounds++;
+  if (drawSelectionBounds > 0) {
+    if (selectionBoundsShape) {
+      selectionBoundsShape.visible = true;
+    }
+  }
+}
+
+function hideSelectionBounds() {
+  if (drawSelectionBounds > 0) {
+    drawSelectionBounds--;
+  }
+  if (drawSelectionBounds == 0) {
+    if (selectionBoundsShape) {
+      selectionBoundsShape.visible = false;
+    }
+  }
+}
+
+function indexFromAngle(angle) {
+  const octant = Math.PI * 2 / 8;
+  let index = Math.round(angle / octant);
+  if (index < 0) {
+    index += 8;
+  }
+  return index % 8;
+}
+
+function setCanvasRotateCursor(dir, da) {
+  // zero is up, counter clockwise
+  const angle = Math.atan2(dir.x, -dir.y) + da;
+  const index = indexFromAngle(angle);
+  const cursors = [
+    'cursor-rotate-0',
+    'cursor-rotate-45',
+    'cursor-rotate-90',
+    'cursor-rotate-135',
+    'cursor-rotate-180',
+    'cursor-rotate-225',
+    'cursor-rotate-270',
+    'cursor-rotate-315',
+  ];
+  setCanvasCursor(cursors[index % 8]);
+}
+
+function setCanvasScaleCursor(dir) {
+  // zero is up, counter clockwise
+  const angle = Math.atan2(dir.x, -dir.y);
+  const index = indexFromAngle(angle);
+  const cursors = ['cursor-scale-0', 'cursor-scale-45', 'cursor-scale-90', 'cursor-scale-135'];
+  setCanvasCursor(cursors[index % 4]);
 }

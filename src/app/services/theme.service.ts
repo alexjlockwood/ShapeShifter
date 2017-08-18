@@ -6,7 +6,6 @@ import { SetTheme } from 'app/store/theme/actions';
 import { ThemeType } from 'app/store/theme/reducer';
 import { getThemeType } from 'app/store/theme/selectors';
 
-// TODO: make the canvas theme aware
 // TODO: change the animation block green color
 
 const LIGHT_PRIMARY_TEXT = 'rgba(0, 0, 0, 0.87)';
@@ -35,7 +34,7 @@ export class ThemeService {
 
   getThemeType() {
     let result: { themeType: ThemeType; isInitialPageLoad: boolean };
-    this.store.select(getThemeType).first().subscribe(res => (result = res));
+    this.asObservable().first().subscribe(res => (result = res));
     return result;
   }
 

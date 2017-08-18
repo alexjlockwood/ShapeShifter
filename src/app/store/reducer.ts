@@ -12,6 +12,7 @@ import * as fromReset from './reset/reducer';
 import * as metaStoreFreeze from './storefreeze/metareducer';
 import * as fromTheme from './theme/reducer';
 import * as fromTimeline from './timeline/reducer';
+import * as fromToolMode from './toolmode/reducer';
 import * as metaUndoRedo from './undoredo/metareducer';
 
 export type State = metaUndoRedo.StateWithHistoryAndTimestamp;
@@ -23,6 +24,7 @@ export interface AppState {
   readonly actionmode: fromActionMode.State;
   readonly reset: fromReset.State;
   readonly theme: fromTheme.State;
+  readonly toolmode: fromToolMode.State;
 }
 
 const sliceReducers = {
@@ -32,6 +34,7 @@ const sliceReducers = {
   actionmode: fromActionMode.reducer,
   reset: fromReset.reducer,
   theme: fromTheme.reducer,
+  toolmode: fromToolMode.reducer,
 };
 
 const prodMetaReducers = [

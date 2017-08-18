@@ -6,6 +6,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpModule } from '@angular/http';
 import {
   MdButtonModule,
+  MdButtonToggleModule,
   MdDialogModule,
   MdIconModule,
   MdIconRegistry,
@@ -43,6 +44,7 @@ import { PlaybackService } from './services/playback.service';
 import { ShortcutService } from './services/shortcut.service';
 import { SnackBarService } from './services/snackbar.service';
 import { ThemeService } from './services/theme.service';
+import { ToolModeService } from './services/toolmode.service';
 import {
   CanvasComponent,
   CanvasContainerDirective,
@@ -98,6 +100,7 @@ import { reducer } from './store';
     StoreModule.provideStore(reducer),
     // Angular material components.
     MdButtonModule,
+    MdButtonToggleModule,
     MdDialogModule,
     MdIconModule,
     MdInputModule,
@@ -122,6 +125,7 @@ import { reducer } from './store';
     ShortcutService,
     SnackBarService,
     ThemeService,
+    ToolModeService,
   ],
   entryComponents: [ConfirmDialogComponent, DemoDialogComponent, DropFilesDialogComponent],
   bootstrap: [RootComponent],
@@ -149,7 +153,8 @@ export class AppModule {
       .addSvgIcon('tool_select', this.trustUrl('assets/tools/tool_select.svg'))
       .addSvgIcon('tool_detailselect', this.trustUrl('assets/tools/tool_detailselect.svg'))
       .addSvgIcon('tool_draw', this.trustUrl('assets/tools/tool_draw.svg'))
-      .addSvgIcon('tool_bezier', this.trustUrl('assets/tools/tool_bezier.svg'));
+      .addSvgIcon('tool_bezier', this.trustUrl('assets/tools/tool_bezier.svg'))
+      .addSvgIcon('tool_zoompan', this.trustUrl('assets/tools/tool_zoompan.svg'));
   }
 
   private trustUrl(url: string) {
