@@ -23,9 +23,7 @@ const oppositeCorner = {
 };
 
 interface CommonTool extends paper.Tool {
-  resetHot(type: string, event: paper.ToolEvent, mode: string): void;
   testHot(type: string, event: paper.ToolEvent, mode: string): boolean;
-  hitTest(event: paper.ToolEvent): boolean;
 }
 
 export class ToolStack extends paper.Tool {
@@ -110,12 +108,8 @@ export class ToolStack extends paper.Tool {
   }
 
   private testHot(type: string, event: paper.ToolEvent) {
-    // Reset the state of the tool before testing.
     const prev = this.hotTool;
     this.hotTool = undefined;
-    for (const s of this.stack) {
-      s.resetHot(type, event, this.mode);
-    }
     // Pick the first hot tool.
     for (const s of this.stack) {
       if (s.testHot(type, event, this.mode)) {
@@ -147,7 +141,7 @@ class SelectTool extends paper.Tool implements CommonTool {
 
     this.on({
       activate: () => {
-        setCanvasCursor('cursor-arrow-black');
+        ToolsUtil.setCanvasCursor('cursor-arrow-black');
         updateSelectionState();
         showSelectionBounds();
       },
@@ -194,7 +188,7 @@ class SelectTool extends paper.Tool implements CommonTool {
             deselectAll();
           }
 
-          const selectedPaths = getPathsIntersectingRect(box);
+          const selectedPaths = ToolsUtil.getPathsIntersectingRect(box);
           for (const path of selectedPaths) {
             path.selected = !path.selected;
           }
@@ -204,9 +198,9 @@ class SelectTool extends paper.Tool implements CommonTool {
 
         if (this.hitResult) {
           if (this.hitResult.item.selected) {
-            setCanvasCursor('cursor-arrow-small');
+            ToolsUtil.setCanvasCursor('cursor-arrow-small');
           } else {
-            setCanvasCursor('cursor-arrow-black-shape');
+            ToolsUtil.setCanvasCursor('cursor-arrow-black-shape');
           }
         }
       },
@@ -218,12 +212,12 @@ class SelectTool extends paper.Tool implements CommonTool {
             if (!this.duplicates) {
               this.createDuplicates(this.originalContent);
             }
-            setCanvasCursor('cursor-arrow-duplicate');
+            ToolsUtil.setCanvasCursor('cursor-arrow-duplicate');
           } else {
             if (this.duplicates) {
               this.removeDuplicates();
             }
-            setCanvasCursor('cursor-arrow-small');
+            ToolsUtil.setCanvasCursor('cursor-arrow-small');
           }
 
           let delta = event.point.subtract(this.mouseStartPos);
@@ -264,13 +258,11 @@ class SelectTool extends paper.Tool implements CommonTool {
     this.duplicates = undefined;
   }
 
-  resetHot(type: string, event: paper.ToolEvent, mode: string) {}
-
   testHot(type: string, event: paper.ToolEvent, mode: string) {
     return this.hitTest(event);
   }
 
-  hitTest(event: paper.ToolEvent) {
+  private hitTest(event: paper.ToolEvent) {
     const hitSize = 4;
     this.hitResult = undefined;
 
@@ -286,13 +278,13 @@ class SelectTool extends paper.Tool implements CommonTool {
     if (this.hitResult) {
       if (this.hitResult.type === 'fill' || this.hitResult.type === 'stroke') {
         if (this.hitResult.item.selected) {
-          setCanvasCursor('cursor-arrow-small');
+          ToolsUtil.setCanvasCursor('cursor-arrow-small');
         } else {
-          setCanvasCursor('cursor-arrow-black-shape');
+          ToolsUtil.setCanvasCursor('cursor-arrow-black-shape');
         }
       }
     } else {
-      setCanvasCursor('cursor-arrow-black');
+      ToolsUtil.setCanvasCursor('cursor-arrow-black');
     }
 
     return true;
@@ -313,7 +305,7 @@ class DirectSelectTool extends paper.Tool implements CommonTool {
     super();
 
     this.on({
-      activate: () => setCanvasCursor('cursor-arrow-white'),
+      activate: () => ToolsUtil.setCanvasCursor('cursor-arrow-white'),
       deactivate: () => {},
       mousedown: (event: paper.ToolEvent) => {
         this.mode = undefined;
@@ -399,7 +391,7 @@ class DirectSelectTool extends paper.Tool implements CommonTool {
               segment.selected = !segment.selected;
             }
           } else {
-            const selectedPaths = getPathsIntersectingRect(box);
+            const selectedPaths = ToolsUtil.getPathsIntersectingRect(box);
             for (const path of selectedPaths) {
               path.selected = !path.selected;
             }
@@ -410,16 +402,16 @@ class DirectSelectTool extends paper.Tool implements CommonTool {
 
         if (this.hitResult) {
           if (this.hitResult.item.selected) {
-            setCanvasCursor('cursor-arrow-small');
+            ToolsUtil.setCanvasCursor('cursor-arrow-small');
           } else {
-            setCanvasCursor('cursor-arrow-white-shape');
+            ToolsUtil.setCanvasCursor('cursor-arrow-white-shape');
           }
         }
       },
       mousedrag: (event: paper.ToolEvent) => {
         this.changed = true;
         if (this.mode === 'move-shapes') {
-          setCanvasCursor('cursor-arrow-small');
+          ToolsUtil.setCanvasCursor('cursor-arrow-small');
 
           let delta = event.point.subtract(this.mouseStartPos);
           if (event.modifiers.shift) {
@@ -433,7 +425,7 @@ class DirectSelectTool extends paper.Tool implements CommonTool {
           }
           updateSelectionState();
         } else if (this.mode === 'move-points') {
-          setCanvasCursor('cursor-arrow-small');
+          ToolsUtil.setCanvasCursor('cursor-arrow-small');
 
           let delta = event.point.subtract(this.mouseStartPos);
           if (event.modifiers.shift) {
@@ -478,8 +470,6 @@ class DirectSelectTool extends paper.Tool implements CommonTool {
     });
   }
 
-  resetHot(type: string, event: paper.ToolEvent, mode: string) {}
-
   testHot(type: string, event: paper.ToolEvent, mode: string) {
     if (mode !== 'tool-direct-select') {
       return undefined;
@@ -487,14 +477,14 @@ class DirectSelectTool extends paper.Tool implements CommonTool {
     return this.hitTest(event);
   }
 
-  hitTest(event: paper.ToolEvent) {
+  private hitTest({ point }: paper.ToolEvent) {
     const hitSize = 4;
     let hit = undefined;
     this.hitResult = undefined;
 
     // Hit test items.
-    if (event.point) {
-      this.hitResult = paper.project.hitTest(event.point, {
+    if (point) {
+      this.hitResult = paper.project.hitTest(point, {
         fill: true,
         stroke: true,
         tolerance: hitSize,
@@ -503,8 +493,8 @@ class DirectSelectTool extends paper.Tool implements CommonTool {
 
     // Hit test selected handles.
     hit = undefined;
-    if (event.point) {
-      hit = paper.project.hitTest(event.point, {
+    if (point) {
+      hit = paper.project.hitTest(point, {
         selected: true,
         handles: true,
         tolerance: hitSize,
@@ -515,8 +505,8 @@ class DirectSelectTool extends paper.Tool implements CommonTool {
     }
     // Hit test points.
     hit = undefined;
-    if (event.point) {
-      hit = paper.project.hitTest(event.point, { segments: true, tolerance: hitSize });
+    if (point) {
+      hit = paper.project.hitTest(point, { segments: true, tolerance: hitSize });
     }
     if (hit) {
       this.hitResult = hit;
@@ -525,9 +515,9 @@ class DirectSelectTool extends paper.Tool implements CommonTool {
     if (this.hitResult) {
       if (this.hitResult.type === 'fill' || this.hitResult.type === 'stroke') {
         if (this.hitResult.item.selected) {
-          setCanvasCursor('cursor-arrow-small');
+          ToolsUtil.setCanvasCursor('cursor-arrow-small');
         } else {
-          setCanvasCursor('cursor-arrow-white-shape');
+          ToolsUtil.setCanvasCursor('cursor-arrow-white-shape');
         }
       } else if (
         this.hitResult.type === 'segment' ||
@@ -535,13 +525,13 @@ class DirectSelectTool extends paper.Tool implements CommonTool {
         this.hitResult.type === 'handle-out'
       ) {
         if (this.hitResult.segment.selected) {
-          setCanvasCursor('cursor-arrow-small-point');
+          ToolsUtil.setCanvasCursor('cursor-arrow-small-point');
         } else {
-          setCanvasCursor('cursor-arrow-white-point');
+          ToolsUtil.setCanvasCursor('cursor-arrow-white-point');
         }
       }
     } else {
-      setCanvasCursor('cursor-arrow-white');
+      ToolsUtil.setCanvasCursor('cursor-arrow-white');
     }
 
     return true;
@@ -564,7 +554,7 @@ class ScaleTool extends paper.Tool implements CommonTool {
 
     this.on({
       activate: () => {
-        setCanvasCursor('cursor-arrow-black');
+        ToolsUtil.setCanvasCursor('cursor-arrow-black');
         updateSelectionState();
         showSelectionBounds();
       },
@@ -642,13 +632,11 @@ class ScaleTool extends paper.Tool implements CommonTool {
     });
   }
 
-  resetHot(type: string, event: paper.ToolEvent, mode: string) {}
-
   testHot(type: string, event: paper.ToolEvent, mode: string) {
     return this.hitTest(event);
   }
 
-  hitTest(event: paper.ToolEvent) {
+  private hitTest(event: paper.ToolEvent) {
     const hitSize = 6;
     this.hitResult = undefined;
 
@@ -674,7 +662,7 @@ class ScaleTool extends paper.Tool implements CommonTool {
       const dir = event.point.subtract(selectionBounds.center);
       dir.x /= selectionBounds.width / 2;
       dir.y /= selectionBounds.height / 2;
-      setCanvasScaleCursor(dir);
+      ToolsUtil.setCanvasScaleCursor(dir);
       return true;
     }
 
@@ -698,7 +686,7 @@ class RotateTool extends paper.Tool implements CommonTool {
 
     this.on({
       activate: () => {
-        setCanvasCursor('cursor-arrow-black');
+        ToolsUtil.setCanvasCursor('cursor-arrow-black');
         updateSelectionState();
         showSelectionBounds();
       },
@@ -756,7 +744,7 @@ class RotateTool extends paper.Tool implements CommonTool {
             item.rotate(deg, this.originalCenter);
           }
 
-          setCanvasRotateCursor(this.cursorDir, da);
+          ToolsUtil.setCanvasRotateCursor(this.cursorDir, da);
           this.changed = true;
         }
       },
@@ -764,13 +752,11 @@ class RotateTool extends paper.Tool implements CommonTool {
     });
   }
 
-  resetHot(type: string, event: paper.ToolEvent, mode: string) {}
-
   testHot(type: string, event: paper.ToolEvent, mode: string) {
     return this.hitTest(event);
   }
 
-  hitTest(event: paper.ToolEvent) {
+  private hitTest(event: paper.ToolEvent) {
     const hitSize = 12;
     this.hitResult = undefined;
 
@@ -795,9 +781,9 @@ class RotateTool extends paper.Tool implements CommonTool {
     if (this.hitResult && this.hitResult.type === 'bounds') {
       // Normalize the direction so that corners are at 45° angles.
       const dir = event.point.subtract(selectionBounds.center);
-      dir.x /= selectionBounds.width * 0.5;
-      dir.y /= selectionBounds.height * 0.5;
-      setCanvasRotateCursor(dir, 0);
+      dir.x /= selectionBounds.width / 2;
+      dir.y /= selectionBounds.height / 2;
+      ToolsUtil.setCanvasRotateCursor(dir, 0);
       this.cursorDir = dir;
       return true;
     }
@@ -816,9 +802,7 @@ class ZoomPanTool extends paper.Tool implements CommonTool {
     super();
 
     this.on({
-      activate: () => {
-        setCanvasCursor('cursor-hand');
-      },
+      activate: () => ToolsUtil.setCanvasCursor('cursor-hand'),
       deactivate: () => {},
       mousedown: (event: paper.ToolEvent) => {
         this.mouseStartPos = event.point.subtract(paper.view.center);
@@ -826,7 +810,7 @@ class ZoomPanTool extends paper.Tool implements CommonTool {
         if (event.modifiers.command) {
           this.mode = 'zoom';
         } else {
-          setCanvasCursor('cursor-hand-grab');
+          ToolsUtil.setCanvasCursor('cursor-hand-grab');
           this.mode = 'pan';
         }
       },
@@ -875,8 +859,6 @@ class ZoomPanTool extends paper.Tool implements CommonTool {
     });
   }
 
-  resetHot(type: string, event: paper.ToolEvent, mode: string) {}
-
   testHot(type: string, event: paper.ToolEvent, mode: string) {
     const spacePressed = event && event.modifiers.space;
     if (mode !== 'tool-zoompan' && !spacePressed) {
@@ -885,15 +867,15 @@ class ZoomPanTool extends paper.Tool implements CommonTool {
     return this.hitTest(event);
   }
 
-  hitTest(event: paper.ToolEvent) {
+  private hitTest(event: paper.ToolEvent) {
     if (event.modifiers.command) {
       if (event.modifiers.command && !event.modifiers.option) {
-        setCanvasCursor('cursor-zoom-in');
+        ToolsUtil.setCanvasCursor('cursor-zoom-in');
       } else if (event.modifiers.command && event.modifiers.option) {
-        setCanvasCursor('cursor-zoom-out');
+        ToolsUtil.setCanvasCursor('cursor-zoom-out');
       }
     } else {
-      setCanvasCursor('cursor-hand');
+      ToolsUtil.setCanvasCursor('cursor-hand');
     }
     return true;
   }
@@ -912,7 +894,7 @@ class PenTool extends paper.Tool implements CommonTool {
     super();
 
     this.on({
-      activate: () => setCanvasCursor('cursor-pen-add'),
+      activate: () => ToolsUtil.setCanvasCursor('cursor-pen-add'),
       deactivate: () => {
         if (toolStack.getToolMode() !== 'tool-pen') {
           this.closePath();
@@ -924,7 +906,7 @@ class PenTool extends paper.Tool implements CommonTool {
         deselectAllPoints();
 
         if (this.mode === 'create') {
-          let path = findItemById(this.pathId);
+          let path = ToolsUtil.findItemById(this.pathId);
           if (path === undefined) {
             deselectAll();
             path = new paper.Path();
@@ -970,7 +952,7 @@ class PenTool extends paper.Tool implements CommonTool {
           }
         } else if (this.mode === 'close') {
           if (this.pathId !== -1) {
-            findItemById(this.pathId).closed = true;
+            ToolsUtil.findItemById(this.pathId).closed = true;
           }
 
           this.currentSegment = this.hitResult.segment;
@@ -1013,7 +995,7 @@ class PenTool extends paper.Tool implements CommonTool {
           this.originalHandleIn = this.currentSegment.handleIn.clone();
           this.originalHandleOut = this.currentSegment.handleOut.clone();
         } else if (this.mode === 'join') {
-          const path = findItemById(this.pathId);
+          const path = ToolsUtil.findItemById(this.pathId);
           if (path !== undefined) {
             const oldPoint = this.hitResult.segment.point.clone();
             if (this.hitResult.segment.index !== 0) {
@@ -1067,7 +1049,7 @@ class PenTool extends paper.Tool implements CommonTool {
         if (this.currentSegment === undefined) {
           return;
         }
-        const path = findItemById(this.pathId);
+        const path = ToolsUtil.findItemById(this.pathId);
         if (path === undefined) {
           return;
         }
@@ -1131,8 +1113,6 @@ class PenTool extends paper.Tool implements CommonTool {
     });
   }
 
-  resetHot(type: string, event: paper.ToolEvent, mode: string) {}
-
   testHot(type: string, event: paper.ToolEvent, mode: string) {
     if (mode !== 'tool-pen') {
       return false;
@@ -1148,7 +1128,7 @@ class PenTool extends paper.Tool implements CommonTool {
     return this.hitTest(event);
   }
 
-  hitTest(event: paper.ToolEvent) {
+  private hitTest(event: paper.ToolEvent) {
     const hitSize = 4;
     let result = undefined;
     // var isKeyEvent = type ==='mode' || type ==='command' || type ==='keydown' || type ==='keyup';
@@ -1169,7 +1149,7 @@ class PenTool extends paper.Tool implements CommonTool {
         if (result.item.selected) {
           // Insert point.
           this.mode = 'insert';
-          setCanvasCursor('cursor-pen-add');
+          ToolsUtil.setCanvasCursor('cursor-pen-add');
         } else {
           result = undefined;
         }
@@ -1180,30 +1160,30 @@ class PenTool extends paper.Tool implements CommonTool {
             if (result.segment.index === 0) {
               // Close
               this.mode = 'close';
-              setCanvasCursor('cursor-pen-close');
+              ToolsUtil.setCanvasCursor('cursor-pen-close');
               this.updateTail(result.segment.point);
             } else {
               // Adjust last handle
               this.mode = 'adjust';
-              setCanvasCursor('cursor-pen-adjust');
+              ToolsUtil.setCanvasCursor('cursor-pen-adjust');
             }
           } else {
             if (this.pathId !== -1) {
               this.mode = 'join';
-              setCanvasCursor('cursor-pen-join');
+              ToolsUtil.setCanvasCursor('cursor-pen-join');
               this.updateTail(result.segment.point);
             } else {
               this.mode = 'continue';
-              setCanvasCursor('cursor-pen-edit');
+              ToolsUtil.setCanvasCursor('cursor-pen-edit');
             }
           }
         } else if (result.item.selected) {
           if (event.modifiers.option) {
             this.mode = 'convert';
-            setCanvasCursor('cursor-pen-adjust');
+            ToolsUtil.setCanvasCursor('cursor-pen-adjust');
           } else {
             this.mode = 'remove';
-            setCanvasCursor('cursor-pen-remove');
+            ToolsUtil.setCanvasCursor('cursor-pen-remove');
           }
         } else {
           result = undefined;
@@ -1213,7 +1193,7 @@ class PenTool extends paper.Tool implements CommonTool {
 
     if (!result) {
       this.mode = 'create';
-      setCanvasCursor('cursor-pen-create');
+      ToolsUtil.setCanvasCursor('cursor-pen-create');
       if (event.point) {
         this.updateTail(event.point);
       }
@@ -1232,7 +1212,7 @@ class PenTool extends paper.Tool implements CommonTool {
   }
 
   private updateTail(point: paper.Point) {
-    const path = findItemById(this.pathId);
+    const path = ToolsUtil.findItemById(this.pathId);
     if (path === undefined) {
       return;
     }
@@ -1301,57 +1281,11 @@ function getSelectionBounds() {
   }
   return bounds;
 }
-// Returns all items intersecting the rect.
-// Note: only the item outlines are tested.
-function getPathsIntersectingRect(rect) {
-  const paths = [];
-  const boundingRect = new paper.Path.Rectangle(rect);
-
-  function checkPathItem(item) {
-    const children = item.children;
-    if (item.equals(boundingRect)) {
-      return;
-    }
-    if (!rect.intersects(item.bounds)) {
-      return;
-    }
-    if (item instanceof paper.PathItem) {
-      if (rect.contains(item.bounds)) {
-        paths.push(item);
-        return;
-      }
-      const isects = boundingRect.getIntersections(item);
-      if (isects.length > 0) {
-        paths.push(item);
-      }
-    } else {
-      for (let j = children.length - 1; j >= 0; j--) {
-        checkPathItem(children[j]);
-      }
-    }
-  }
-
-  for (const layer of paper.project.layers) {
-    checkPathItem(layer);
-  }
-
-  boundingRect.remove();
-  return paths;
-}
-
-function setCanvasCursor(name) {
-  // TODO: make this a constant somehow...
-  $('.paper-canvas')
-    .removeClass(function(index, css) {
-      return (css.match(/\bcursor-\S+/g) || []).join(' ');
-    })
-    .addClass(name);
-}
 
 // Restore the state of selected items.
-function restoreSelectionState(originalContent) {
+function restoreSelectionState(originalContent: ReadonlyArray<SelectionState>) {
   for (const orig of originalContent) {
-    const item = findItemById(orig.id);
+    const item = ToolsUtil.findItemById(orig.id);
     if (!item) {
       continue;
     }
@@ -1361,35 +1295,6 @@ function restoreSelectionState(originalContent) {
     item.importJSON(orig.json);
     item._id = id;
   }
-}
-
-function findItemById(id: number) {
-  if (id === -1) {
-    return undefined;
-  }
-  function findItem(item: paper.Item) {
-    if (item.id === id) {
-      return item;
-    }
-    if (item.children) {
-      for (let j = item.children.length - 1; j >= 0; j--) {
-        const it = findItem(item.children[j]);
-        if (it) {
-          return it;
-        }
-      }
-    }
-    return undefined;
-  }
-
-  for (let i = 0, l = paper.project.layers.length; i < l; i++) {
-    const layer = paper.project.layers[i];
-    const it = findItem(layer);
-    if (it) {
-      return it;
-    }
-  }
-  return undefined;
 }
 
 // Returns path points which are contained in the rect.
@@ -1478,42 +1383,8 @@ function hideSelectionBounds() {
   }
 }
 
-function indexFromAngle(angle) {
-  const octant = Math.PI * 2 / 8;
-  let index = Math.round(angle / octant);
-  if (index < 0) {
-    index += 8;
-  }
-  return index % 8;
-}
-
-function setCanvasRotateCursor(dir, da) {
-  // Zero is up, counter clockwise.
-  const angle = Math.atan2(dir.x, -dir.y) + da;
-  const index = indexFromAngle(angle);
-  const cursors = [
-    'cursor-rotate-0',
-    'cursor-rotate-45',
-    'cursor-rotate-90',
-    'cursor-rotate-135',
-    'cursor-rotate-180',
-    'cursor-rotate-225',
-    'cursor-rotate-270',
-    'cursor-rotate-315',
-  ];
-  setCanvasCursor(cursors[index % 8]);
-}
-
-function setCanvasScaleCursor(dir) {
-  // zero is up, counter clockwise
-  const angle = Math.atan2(dir.x, -dir.y);
-  const index = indexFromAngle(angle);
-  const cursors = ['cursor-scale-0', 'cursor-scale-45', 'cursor-scale-90', 'cursor-scale-135'];
-  setCanvasCursor(cursors[index % 4]);
-}
-
 interface SelectionState {
   id: number;
   json: string;
-  selectedSegments: paper.Segment[];
+  selectedSegments: ReadonlyArray<paper.Segment>;
 }
