@@ -2,6 +2,8 @@ import { ToolMode } from 'app/model/toolMode';
 import * as $ from 'jquery';
 import * as paper from 'paper';
 
+import * as ToolsUtil from './ToolsUtil';
+
 // TODO: make use of the clipboard somehow?
 const clipboard = undefined;
 
@@ -20,7 +22,7 @@ const oppositeCorner = {
   'left-center': 'right-center',
 };
 
-interface CommonTool {
+interface CommonTool extends paper.Tool {
   resetHot(type: string, event: paper.ToolEvent, mode: string): void;
   testHot(type: string, event: paper.ToolEvent, mode: string): boolean;
   hitTest(event: paper.ToolEvent): boolean;
@@ -29,19 +31,19 @@ interface CommonTool {
 export class ToolStack extends paper.Tool {
   private stack: ReadonlyArray<CommonTool>;
   private mode: string;
-  private hotTool: any;
-  private activeTool: any;
+  private hotTool: CommonTool;
+  private activeTool: CommonTool;
   private lastPoint = new paper.Point(0, 0);
 
   constructor() {
     super();
     this.stack = [
-      new SelectTool(),
-      new DirectSelectTool(),
+      new ZoomPanTool(),
+      new PenTool(this),
       new ScaleTool(),
       new RotateTool(),
-      new PenTool(this),
-      new ZoomPanTool(),
+      new DirectSelectTool(),
+      new SelectTool(),
     ];
     this.on({
       activate: () => {
@@ -56,13 +58,13 @@ export class ToolStack extends paper.Tool {
         this.lastPoint = event.point.clone();
         if (this.hotTool) {
           this.activeTool = this.hotTool;
-          this.activeTool.fire('mousedown', event);
+          (this.activeTool as any).fire('mousedown', event);
         }
       },
       mouseup: (event: paper.ToolEvent) => {
         this.lastPoint = event.point.clone();
         if (this.activeTool) {
-          this.activeTool.fire('mouseup', event);
+          (this.activeTool as any).fire('mouseup', event);
         }
         this.activeTool = undefined;
         this.testHot('mouseup', event);
@@ -70,7 +72,7 @@ export class ToolStack extends paper.Tool {
       mousedrag: (event: paper.ToolEvent) => {
         this.lastPoint = event.point.clone();
         if (this.activeTool) {
-          this.activeTool.fire('mousedrag', event);
+          (this.activeTool as any).fire('mousedrag', event);
         }
       },
       mousemove: (event: paper.ToolEvent) => {
@@ -80,7 +82,7 @@ export class ToolStack extends paper.Tool {
       keydown: (event: paper.ToolEvent) => {
         event.point = this.lastPoint.clone();
         if (this.activeTool) {
-          this.activeTool.fire('keydown', event);
+          (this.activeTool as any).fire('keydown', event);
         } else {
           this.testHot('keydown', event);
         }
@@ -88,7 +90,7 @@ export class ToolStack extends paper.Tool {
       keyup: (event: paper.ToolEvent) => {
         event.point = this.lastPoint.clone();
         if (this.activeTool) {
-          this.activeTool.fire('keyup', event);
+          (this.activeTool as any).fire('keyup', event);
         } else {
           this.testHot('keyup', event);
         }
@@ -123,10 +125,10 @@ export class ToolStack extends paper.Tool {
     }
     if (prev !== this.hotTool) {
       if (prev) {
-        prev.fire('deactivate');
+        (prev as any).fire('deactivate');
       }
       if (this.hotTool) {
-        this.hotTool.fire('activate');
+        (this.hotTool as any).fire('activate');
       }
     }
   }
@@ -136,7 +138,7 @@ class SelectTool extends paper.Tool implements CommonTool {
   private mouseStartPos = new paper.Point(0, 0);
   private mode: string;
   private hitResult: paper.HitResult;
-  private originalContent: any[];
+  private originalContent: SelectionState[];
   private changed = false;
   private duplicates: any[];
 
@@ -213,7 +215,7 @@ class SelectTool extends paper.Tool implements CommonTool {
           this.changed = true;
 
           if (event.modifiers.option) {
-            if (this.duplicates === undefined) {
+            if (!this.duplicates) {
               this.createDuplicates(this.originalContent);
             }
             setCanvasCursor('cursor-arrow-duplicate');
@@ -226,7 +228,7 @@ class SelectTool extends paper.Tool implements CommonTool {
 
           let delta = event.point.subtract(this.mouseStartPos);
           if (event.modifiers.shift) {
-            delta = snapDeltaToAngle(delta, Math.PI * 2 / 8);
+            delta = ToolsUtil.snapDeltaToAngle(delta, Math.PI * 2 / 8);
           }
 
           restoreSelectionState(this.originalContent);
@@ -237,14 +239,14 @@ class SelectTool extends paper.Tool implements CommonTool {
           }
           updateSelectionState();
         } else if (this.mode === 'box-select') {
-          dragRect(this.mouseStartPos, event.point);
+          ToolsUtil.dragRect(this.mouseStartPos, event.point);
         }
       },
       mousemove: (event: paper.ToolEvent) => this.hitTest(event),
     });
   }
 
-  private createDuplicates(content) {
+  private createDuplicates(content: SelectionState[]) {
     this.duplicates = [];
     for (const orig of content) {
       const item: any = paper.project.importJSON(orig.json);
@@ -301,9 +303,9 @@ class DirectSelectTool extends paper.Tool implements CommonTool {
   private mouseStartPos = new paper.Point(0, 0);
   private mode: string;
   private hitResult: paper.HitResult;
-  private originalContent?: any; // Array of objects?
+  private originalContent: SelectionState[];
   private changed = false;
-  private duplicates: any[]; // Array of objects?
+  private duplicates: SelectionState[];
   private originalHandleIn: paper.Point;
   private originalHandleOut: paper.Point;
 
@@ -311,9 +313,7 @@ class DirectSelectTool extends paper.Tool implements CommonTool {
     super();
 
     this.on({
-      activate: () => {
-        setCanvasCursor('cursor-arrow-white');
-      },
+      activate: () => setCanvasCursor('cursor-arrow-white'),
       deactivate: () => {},
       mousedown: (event: paper.ToolEvent) => {
         this.mode = undefined;
@@ -354,14 +354,13 @@ class DirectSelectTool extends paper.Tool implements CommonTool {
             this.mouseStartPos = event.point.clone();
             this.originalHandleIn = this.hitResult.segment.handleIn.clone();
             this.originalHandleOut = this.hitResult.segment.handleOut.clone();
-
-            /*				if (this.hitResult.type ==='handle-out') {
-            this.originalHandlePos = this.hitResult.segment.handleOut.clone();
-            this.originalOppHandleLength = this.hitResult.segment.handleIn.length;
-          } else {
-            this.originalHandlePos = this.hitResult.segment.handleIn.clone();
-            this.originalOppHandleLength = this.hitResult.segment.handleOut.length;
-          }*/
+            // if (this.hitResult.type === 'handle-out') {
+            //   this.originalHandlePos = this.hitResult.segment.handleOut.clone();
+            //   this.originalOppHandleLength = this.hitResult.segment.handleIn.length;
+            // } else {
+            //   this.originalHandlePos = this.hitResult.segment.handleIn.clone();
+            //   this.originalOppHandleLength = this.hitResult.segment.handleOut.length;
+            // }
             // this.originalContent = captureSelectionState(); // For some reason this does not work!
           }
           updateSelectionState();
@@ -424,7 +423,7 @@ class DirectSelectTool extends paper.Tool implements CommonTool {
 
           let delta = event.point.subtract(this.mouseStartPos);
           if (event.modifiers.shift) {
-            delta = snapDeltaToAngle(delta, Math.PI * 2 / 8);
+            delta = ToolsUtil.snapDeltaToAngle(delta, Math.PI * 2 / 8);
           }
           restoreSelectionState(this.originalContent);
 
@@ -438,7 +437,7 @@ class DirectSelectTool extends paper.Tool implements CommonTool {
 
           let delta = event.point.subtract(this.mouseStartPos);
           if (event.modifiers.shift) {
-            delta = snapDeltaToAngle(delta, Math.PI * 2 / 8);
+            delta = ToolsUtil.snapDeltaToAngle(delta, Math.PI * 2 / 8);
           }
           restoreSelectionState(this.originalContent);
 
@@ -457,14 +456,14 @@ class DirectSelectTool extends paper.Tool implements CommonTool {
           if (this.hitResult.type === 'handle-out') {
             let handlePos = this.originalHandleOut.add(delta);
             if (event.modifiers.shift) {
-              handlePos = snapDeltaToAngle(handlePos, Math.PI * 2 / 8);
+              handlePos = ToolsUtil.snapDeltaToAngle(handlePos, Math.PI * 2 / 8);
             }
             this.hitResult.segment.handleOut = handlePos;
             this.hitResult.segment.handleIn = handlePos.normalize(-this.originalHandleIn.length);
           } else {
             let handlePos = this.originalHandleIn.add(delta);
             if (event.modifiers.shift) {
-              handlePos = snapDeltaToAngle(handlePos, Math.PI * 2 / 8);
+              handlePos = ToolsUtil.snapDeltaToAngle(handlePos, Math.PI * 2 / 8);
             }
             this.hitResult.segment.handleIn = handlePos;
             this.hitResult.segment.handleOut = handlePos.normalize(-this.originalHandleOut.length);
@@ -472,7 +471,7 @@ class DirectSelectTool extends paper.Tool implements CommonTool {
 
           updateSelectionState();
         } else if (this.mode === 'box-select') {
-          dragRect(this.mouseStartPos, event.point);
+          ToolsUtil.dragRect(this.mouseStartPos, event.point);
         }
       },
       mousemove: (event: paper.ToolEvent) => this.hitTest(event),
@@ -557,7 +556,7 @@ class ScaleTool extends paper.Tool implements CommonTool {
   private corner: paper.Point;
   private originalCenter: paper.Point;
   private originalSize: paper.Point;
-  private originalContent: any[];
+  private originalContent: SelectionState[];
   private changed = false;
 
   constructor() {
@@ -609,8 +608,8 @@ class ScaleTool extends paper.Tool implements CommonTool {
 
           this.corner = this.corner.add(event.delta);
           const size = this.corner.subtract(pivot);
-          let sx = 1.0;
-          let sy = 1.0;
+          let sx = 1;
+          let sy = 1;
           if (Math.abs(originalSize.x) > 0.0000001) {
             sx = size.x / originalSize.x;
           }
@@ -628,9 +627,9 @@ class ScaleTool extends paper.Tool implements CommonTool {
 
           restoreSelectionState(this.originalContent);
 
-          const selected = (paper.project as any).selectedItems;
+          const selected: paper.Item[] = (paper.project as any).selectedItems;
           for (const item of selected) {
-            if (item.guide) {
+            if ((item as any).guide) {
               continue;
             }
             item.scale(sx, sy, pivot);
@@ -689,9 +688,9 @@ class RotateTool extends paper.Tool implements CommonTool {
   private hitResult: paper.HitResult;
   private originalCenter: paper.Point;
   private originalAngle: number;
-  private originalContent: any;
-  private originalShape: any;
-  private cursorDir: any;
+  private originalContent: SelectionState[];
+  private originalShape: string;
+  private cursorDir: paper.Point;
   private changed = false;
 
   constructor() {
@@ -861,7 +860,7 @@ class ZoomPanTool extends paper.Tool implements CommonTool {
           this.mode = 'zoom-rect';
         } else if (this.mode === 'zoom-rect') {
           // While dragging the zoom rectangle, paint the selected area.
-          dragRect(paper.view.center.add(this.mouseStartPos), event.point);
+          ToolsUtil.dragRect(paper.view.center.add(this.mouseStartPos), event.point);
         } else if (this.mode === 'pan') {
           // Handle panning by moving the view center.
           const pt = event.point.subtract(paper.view.center);
@@ -971,8 +970,7 @@ class PenTool extends paper.Tool implements CommonTool {
           }
         } else if (this.mode === 'close') {
           if (this.pathId !== -1) {
-            const path = findItemById(this.pathId);
-            path.closed = true;
+            findItemById(this.pathId).closed = true;
           }
 
           this.currentSegment = this.hitResult.segment;
@@ -1106,21 +1104,21 @@ class PenTool extends paper.Tool implements CommonTool {
           if (dragIn && dragOut) {
             let handlePos = this.originalHandleOut.add(delta);
             if (event.modifiers.shift) {
-              handlePos = snapDeltaToAngle(handlePos, Math.PI * 2 / 8);
+              handlePos = ToolsUtil.snapDeltaToAngle(handlePos, Math.PI * 2 / 8);
             }
             this.currentSegment.handleOut = handlePos;
             this.currentSegment.handleIn = new paper.Point(-handlePos.x, -handlePos.y);
           } else if (dragOut) {
             let handlePos = this.originalHandleOut.add(delta);
             if (event.modifiers.shift) {
-              handlePos = snapDeltaToAngle(handlePos, Math.PI * 2 / 8);
+              handlePos = ToolsUtil.snapDeltaToAngle(handlePos, Math.PI * 2 / 8);
             }
             this.currentSegment.handleOut = handlePos;
             this.currentSegment.handleIn = handlePos.normalize(-this.originalHandleIn.length);
           } else {
             let handlePos = this.originalHandleIn.add(delta);
             if (event.modifiers.shift) {
-              handlePos = snapDeltaToAngle(handlePos, Math.PI * 2 / 8);
+              handlePos = ToolsUtil.snapDeltaToAngle(handlePos, Math.PI * 2 / 8);
             }
             this.currentSegment.handleIn = handlePos;
             this.currentSegment.handleOut = handlePos.normalize(-this.originalHandleOut.length);
@@ -1280,7 +1278,6 @@ function updateSelectionState() {
     // rect.transformContent = false;
     selectionBoundsShape = rect;
   }
-  updateSelectionUI();
 }
 
 function clearSelectionBounds() {
@@ -1289,24 +1286,6 @@ function clearSelectionBounds() {
   }
   selectionBoundsShape = undefined;
   selectionBounds = undefined;
-}
-
-function updateSelectionUI() {
-  if (selectionBounds === undefined) {
-    $('#cut').addClass('disabled');
-    $('#copy').addClass('disabled');
-    $('#delete').addClass('disabled');
-  } else {
-    $('#cut').removeClass('disabled');
-    $('#copy').removeClass('disabled');
-    $('#delete').removeClass('disabled');
-  }
-
-  if (clipboard === undefined) {
-    $('#paste').addClass('disabled');
-  } else {
-    $('#paste').removeClass('disabled');
-  }
 }
 
 // Returns bounding box of all selected items.
@@ -1352,13 +1331,11 @@ function getPathsIntersectingRect(rect) {
     }
   }
 
-  for (let i = 0, l = paper.project.layers.length; i < l; i++) {
-    const layer = paper.project.layers[i];
+  for (const layer of paper.project.layers) {
     checkPathItem(layer);
   }
 
   boundingRect.remove();
-
   return paths;
 }
 
@@ -1373,7 +1350,6 @@ function setCanvasCursor(name) {
 
 // Restore the state of selected items.
 function restoreSelectionState(originalContent) {
-  // TODO: could use findItemById() instead.
   for (const orig of originalContent) {
     const item = findItemById(orig.id);
     if (!item) {
@@ -1398,7 +1374,7 @@ function findItemById(id: number) {
     if (item.children) {
       for (let j = item.children.length - 1; j >= 0; j--) {
         const it = findItem(item.children[j]);
-        if (it !== undefined) {
+        if (it) {
           return it;
         }
       }
@@ -1409,7 +1385,7 @@ function findItemById(id: number) {
   for (let i = 0, l = paper.project.layers.length; i < l; i++) {
     const layer = paper.project.layers[i];
     const it = findItem(layer);
-    if (it !== undefined) {
+    if (it) {
       return it;
     }
   }
@@ -1448,15 +1424,6 @@ function getSegmentsInRect(rect) {
   return segments;
 }
 
-function snapDeltaToAngle(delta, snapAngle) {
-  let angle = Math.atan2(delta.y, delta.x);
-  angle = Math.round(angle / snapAngle) * snapAngle;
-  const dirx = Math.cos(angle);
-  const diry = Math.sin(angle);
-  const d = dirx * delta.x + diry * delta.y;
-  return new paper.Point(dirx * d, diry * d);
-}
-
 function deselectAll() {
   paper.project.deselectAll();
 }
@@ -1476,44 +1443,19 @@ function deselectAllPoints() {
 
 // Returns serialized contents of selected items.
 function captureSelectionState() {
-  const originalContent = [];
-  const selected = (paper.project as any).selectedItems;
+  const originalContent: SelectionState[] = [];
+  const selected: paper.Item[] = (paper.project as any).selectedItems;
   for (const item of selected) {
-    if (item.guide) {
+    if ((item as any).guide) {
       continue;
     }
-    const orig = {
+    originalContent.push({
       id: item.id,
       json: item.exportJSON({ asString: false }),
       selectedSegments: [],
-    };
-    originalContent.push(orig);
+    });
   }
   return originalContent;
-}
-
-function dragRect(p1, p2) {
-  // Create pixel perfect dotted rectable for drag selections.
-  const half = new paper.Point(0.5 / paper.view.zoom, 0.5 / paper.view.zoom);
-  const start = p1.add(half);
-  const end = p2.add(half);
-  const rect = new paper.CompoundPath(undefined);
-  rect.moveTo(start);
-  rect.lineTo(new paper.Point(start.x, end.y));
-  rect.lineTo(end);
-  rect.moveTo(start);
-  rect.lineTo(new paper.Point(end.x, start.y));
-  rect.lineTo(end);
-  rect.strokeColor = 'black';
-  rect.strokeWidth = 1.0 / paper.view.zoom;
-  rect.dashOffset = 0.5 / paper.view.zoom;
-  rect.dashArray = [1.0 / paper.view.zoom, 1.0 / paper.view.zoom];
-  rect.removeOn({
-    drag: true,
-    up: true,
-  });
-  (rect as any).guide = true;
-  return rect;
 }
 
 function showSelectionBounds() {
@@ -1546,7 +1488,7 @@ function indexFromAngle(angle) {
 }
 
 function setCanvasRotateCursor(dir, da) {
-  // zero is up, counter clockwise
+  // Zero is up, counter clockwise.
   const angle = Math.atan2(dir.x, -dir.y) + da;
   const index = indexFromAngle(angle);
   const cursors = [
@@ -1568,4 +1510,10 @@ function setCanvasScaleCursor(dir) {
   const index = indexFromAngle(angle);
   const cursors = ['cursor-scale-0', 'cursor-scale-45', 'cursor-scale-90', 'cursor-scale-135'];
   setCanvasCursor(cursors[index % 4]);
+}
+
+interface SelectionState {
+  id: number;
+  json: string;
+  selectedSegments: paper.Segment[];
 }
