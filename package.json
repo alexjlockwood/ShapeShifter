@@ -66,7 +66,6 @@
     "@types/jszip": "0.0.33",
     "@types/lodash": "^4.14.73",
     "@types/node": "^8.0.24",
-    "@types/paper": "^0.9.7",
     "@types/polylabel": "^1.0.3",
     "@types/tinycolor2": "^1.4.0",
     "angular-cli-ghpages": "^0.5.1",

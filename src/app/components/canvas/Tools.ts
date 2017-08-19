@@ -23,7 +23,7 @@ const oppositeCorner = {
 };
 
 interface CommonTool extends paper.Tool {
-  testHot(type: string, event: paper.ToolEvent, mode: string): boolean;
+  testHot(type: string, event: { point: paper.Point; modifiers?: any }, mode: string): boolean;
 }
 
 export class ToolStack extends paper.Tool {
@@ -52,45 +52,45 @@ export class ToolStack extends paper.Tool {
         this.activeTool = undefined;
         this.hotTool = undefined;
       },
-      mousedown: (event: paper.ToolEvent) => {
+      mousedown: (event: paper.MouseEvent) => {
         this.lastPoint = event.point.clone();
         if (this.hotTool) {
           this.activeTool = this.hotTool;
-          (this.activeTool as any).fire('mousedown', event);
+          this.activeTool.fire('mousedown', event);
         }
       },
-      mouseup: (event: paper.ToolEvent) => {
+      mouseup: (event: paper.MouseEvent) => {
         this.lastPoint = event.point.clone();
         if (this.activeTool) {
-          (this.activeTool as any).fire('mouseup', event);
+          this.activeTool.fire('mouseup', event);
         }
         this.activeTool = undefined;
         this.testHot('mouseup', event);
       },
-      mousedrag: (event: paper.ToolEvent) => {
+      mousedrag: (event: paper.MouseEvent) => {
         this.lastPoint = event.point.clone();
         if (this.activeTool) {
-          (this.activeTool as any).fire('mousedrag', event);
+          this.activeTool.fire('mousedrag', event);
         }
       },
-      mousemove: (event: paper.ToolEvent) => {
+      mousemove: (event: paper.MouseEvent) => {
         this.lastPoint = event.point.clone();
         this.testHot('mousemove', event);
       },
-      keydown: (event: paper.ToolEvent) => {
-        event.point = this.lastPoint.clone();
+      keydown: (event: paper.KeyEvent) => {
+        const point = this.lastPoint.clone();
         if (this.activeTool) {
-          (this.activeTool as any).fire('keydown', event);
+          this.activeTool.fire('keydown', event);
         } else {
-          this.testHot('keydown', event);
+          this.testHot('keydown', { point, modifiers: event.modifiers || {} });
         }
       },
-      keyup: (event: paper.ToolEvent) => {
-        event.point = this.lastPoint.clone();
+      keyup: (event: paper.KeyEvent) => {
+        const point = this.lastPoint.clone();
         if (this.activeTool) {
-          (this.activeTool as any).fire('keyup', event);
+          this.activeTool.fire('keyup', event);
         } else {
-          this.testHot('keyup', event);
+          this.testHot('keyup', { point, modifiers: event.modifiers || {} });
         }
       },
     });
@@ -102,12 +102,10 @@ export class ToolStack extends paper.Tool {
 
   setToolMode(mode: string) {
     this.mode = mode;
-    const event = new paper.Event();
-    (event as any).point = this.lastPoint.clone();
-    this.testHot('mode', event as paper.ToolEvent);
+    this.testHot('mode', { point: this.lastPoint.clone() });
   }
 
-  private testHot(type: string, event: paper.ToolEvent) {
+  private testHot(type: string, event: { point: paper.Point; modifiers?: any }) {
     const prev = this.hotTool;
     this.hotTool = undefined;
     // Pick the first hot tool.
@@ -119,10 +117,10 @@ export class ToolStack extends paper.Tool {
     }
     if (prev !== this.hotTool) {
       if (prev) {
-        (prev as any).fire('deactivate');
+        prev.fire('deactivate', undefined);
       }
       if (this.hotTool) {
-        (this.hotTool as any).fire('activate');
+        this.hotTool.fire('activate', undefined);
       }
     }
   }
@@ -146,7 +144,7 @@ class SelectTool extends paper.Tool implements CommonTool {
         showSelectionBounds();
       },
       deactivate: () => hideSelectionBounds(),
-      mousedown: (event: paper.ToolEvent) => {
+      mousedown: (event: paper.MouseEvent) => {
         this.mode = undefined;
         this.changed = false;
 
@@ -174,7 +172,7 @@ class SelectTool extends paper.Tool implements CommonTool {
           this.mode = 'box-select';
         }
       },
-      mouseup: (event: paper.ToolEvent) => {
+      mouseup: (event: paper.MouseEvent) => {
         if (this.mode === 'move-shapes') {
           if (this.changed) {
             clearSelectionBounds();
@@ -204,7 +202,7 @@ class SelectTool extends paper.Tool implements CommonTool {
           }
         }
       },
-      mousedrag: (event: paper.ToolEvent) => {
+      mousedrag: (event: paper.MouseEvent) => {
         if (this.mode === 'move-shapes') {
           this.changed = true;
 
@@ -227,7 +225,7 @@ class SelectTool extends paper.Tool implements CommonTool {
 
           restoreSelectionState(this.originalContent);
 
-          const selected = (paper.project as any).selectedItems;
+          const selected = paper.project.getSelectedItems();
           for (const item of selected) {
             item.position = item.position.add(delta);
           }
@@ -236,7 +234,7 @@ class SelectTool extends paper.Tool implements CommonTool {
           ToolsUtil.dragRect(this.mouseStartPos, event.point);
         }
       },
-      mousemove: (event: paper.ToolEvent) => this.hitTest(event),
+      mousemove: (event: paper.MouseEvent) => this.hitTest(event),
     });
   }
 
@@ -258,17 +256,17 @@ class SelectTool extends paper.Tool implements CommonTool {
     this.duplicates = undefined;
   }
 
-  testHot(type: string, event: paper.ToolEvent, mode: string) {
+  testHot(type: string, event: { point: paper.Point; modifiers?: any }, mode: string) {
     return this.hitTest(event);
   }
 
-  private hitTest(event: paper.ToolEvent) {
+  private hitTest({ point }: { point: paper.Point; modifiers?: any }) {
     const hitSize = 4;
     this.hitResult = undefined;
 
     // Hit test items.
-    if (event.point) {
-      this.hitResult = paper.project.hitTest(event.point, {
+    if (point) {
+      this.hitResult = paper.project.hitTest(point, {
         fill: true,
         stroke: true,
         tolerance: hitSize,
@@ -307,7 +305,7 @@ class DirectSelectTool extends paper.Tool implements CommonTool {
     this.on({
       activate: () => ToolsUtil.setCanvasCursor('cursor-arrow-white'),
       deactivate: () => {},
-      mousedown: (event: paper.ToolEvent) => {
+      mousedown: (event: paper.MouseEvent) => {
         this.mode = undefined;
         this.changed = false;
 
@@ -362,7 +360,7 @@ class DirectSelectTool extends paper.Tool implements CommonTool {
           this.mode = 'box-select';
         }
       },
-      mouseup: (event: paper.ToolEvent) => {
+      mouseup: (event: paper.MouseEvent) => {
         if (this.mode === 'move-shapes') {
           if (this.changed) {
             clearSelectionBounds();
@@ -408,7 +406,7 @@ class DirectSelectTool extends paper.Tool implements CommonTool {
           }
         }
       },
-      mousedrag: (event: paper.ToolEvent) => {
+      mousedrag: (event: paper.MouseEvent) => {
         this.changed = true;
         if (this.mode === 'move-shapes') {
           ToolsUtil.setCanvasCursor('cursor-arrow-small');
@@ -419,7 +417,7 @@ class DirectSelectTool extends paper.Tool implements CommonTool {
           }
           restoreSelectionState(this.originalContent);
 
-          const selected = (paper.project as any).selectedItems;
+          const selected = paper.project.getSelectedItems();
           for (const item of selected) {
             item.position = item.position.add(delta);
           }
@@ -433,11 +431,13 @@ class DirectSelectTool extends paper.Tool implements CommonTool {
           }
           restoreSelectionState(this.originalContent);
 
-          const selected = (paper.project as any).selectedItems;
+          const selected = paper.project.getSelectedItems();
           for (const path of selected) {
-            for (const segment of path.segments) {
-              if (segment.selected) {
-                segment.point = segment.point.add(delta);
+            if (path instanceof paper.Path) {
+              for (const segment of path.segments) {
+                if (segment.selected) {
+                  segment.point = segment.point.add(delta);
+                }
               }
             }
           }
@@ -466,18 +466,18 @@ class DirectSelectTool extends paper.Tool implements CommonTool {
           ToolsUtil.dragRect(this.mouseStartPos, event.point);
         }
       },
-      mousemove: (event: paper.ToolEvent) => this.hitTest(event),
+      mousemove: (event: paper.MouseEvent) => this.hitTest(event),
     });
   }
 
-  testHot(type: string, event: paper.ToolEvent, mode: string) {
+  testHot(type: string, event: { point: paper.Point; modifiers?: any }, mode: string) {
     if (mode !== 'tool-direct-select') {
       return undefined;
     }
     return this.hitTest(event);
   }
 
-  private hitTest({ point }: paper.ToolEvent) {
+  private hitTest({ point }: { point: paper.Point; modifiers?: any }) {
     const hitSize = 4;
     let hit = undefined;
     this.hitResult = undefined;
@@ -561,7 +561,7 @@ class ScaleTool extends paper.Tool implements CommonTool {
       deactivate: () => {
         hideSelectionBounds();
       },
-      mousedown: (event: paper.ToolEvent) => {
+      mousedown: (event: paper.MouseEvent) => {
         this.mode = undefined;
         this.changed = false;
         if (this.hitResult) {
@@ -578,7 +578,7 @@ class ScaleTool extends paper.Tool implements CommonTool {
           updateSelectionState();
         }
       },
-      mouseup: (event: paper.ToolEvent) => {
+      mouseup: (event: paper.MouseEvent) => {
         if (this.mode === 'scale') {
           if (this.changed) {
             clearSelectionBounds();
@@ -586,7 +586,7 @@ class ScaleTool extends paper.Tool implements CommonTool {
           }
         }
       },
-      mousedrag: (event: paper.ToolEvent) => {
+      mousedrag: (event: paper.MouseEvent) => {
         if (this.mode === 'scale') {
           let pivot = this.pivot;
           let originalSize = this.originalSize;
@@ -617,7 +617,7 @@ class ScaleTool extends paper.Tool implements CommonTool {
 
           restoreSelectionState(this.originalContent);
 
-          const selected: paper.Item[] = (paper.project as any).selectedItems;
+          const selected = paper.project.getSelectedItems();
           for (const item of selected) {
             if ((item as any).guide) {
               continue;
@@ -628,15 +628,15 @@ class ScaleTool extends paper.Tool implements CommonTool {
           this.changed = true;
         }
       },
-      mousemove: (event: paper.ToolEvent) => this.hitTest(event),
+      mousemove: (event: paper.MouseEvent) => this.hitTest(event),
     });
   }
 
-  testHot(type: string, event: paper.ToolEvent, mode: string) {
+  testHot(type: string, event: { point: paper.Point; modifiers?: any }, mode: string) {
     return this.hitTest(event);
   }
 
-  private hitTest(event: paper.ToolEvent) {
+  private hitTest({ point }: { point: paper.Point; modifiers?: any }) {
     const hitSize = 6;
     this.hitResult = undefined;
 
@@ -649,8 +649,8 @@ class ScaleTool extends paper.Tool implements CommonTool {
     }
 
     // Hit test selection rectangle.
-    if (event.point) {
-      this.hitResult = selectionBoundsShape.hitTest(event.point, {
+    if (point) {
+      this.hitResult = selectionBoundsShape.hitTest(point, {
         bounds: true,
         guides: true,
         tolerance: hitSize,
@@ -659,7 +659,7 @@ class ScaleTool extends paper.Tool implements CommonTool {
 
     if (this.hitResult && this.hitResult.type === 'bounds') {
       // Normalize the direction so that corners are at 45° angles.
-      const dir = event.point.subtract(selectionBounds.center);
+      const dir = point.subtract(selectionBounds.center);
       dir.x /= selectionBounds.width / 2;
       dir.y /= selectionBounds.height / 2;
       ToolsUtil.setCanvasScaleCursor(dir);
@@ -691,7 +691,7 @@ class RotateTool extends paper.Tool implements CommonTool {
         showSelectionBounds();
       },
       deactivate: () => hideSelectionBounds(),
-      mousedown: (event: paper.ToolEvent) => {
+      mousedown: (event: paper.MouseEvent) => {
         this.mode = undefined;
         this.changed = false;
         if (this.hitResult) {
@@ -706,7 +706,7 @@ class RotateTool extends paper.Tool implements CommonTool {
           updateSelectionState();
         }
       },
-      mouseup: (event: paper.ToolEvent) => {
+      mouseup: (event: paper.MouseEvent) => {
         if (this.mode === 'rotate') {
           if (this.changed) {
             clearSelectionBounds();
@@ -715,7 +715,7 @@ class RotateTool extends paper.Tool implements CommonTool {
         }
         updateSelectionState();
       },
-      mousedrag: (event: paper.ToolEvent) => {
+      mousedrag: (event: paper.MouseEvent) => {
         if (this.mode === 'rotate') {
           const delta = event.point.subtract(this.originalCenter);
           const angle = Math.atan2(delta.y, delta.x);
@@ -736,9 +736,10 @@ class RotateTool extends paper.Tool implements CommonTool {
 
           selectionBoundsShape.rotate(deg, this.originalCenter);
 
-          const selected = (paper.project as any).selectedItems;
+          const selected = paper.project.getSelectedItems();
           for (const item of selected) {
-            if (item.guide) {
+            console.log(item);
+            if ((item as any).guide) {
               continue;
             }
             item.rotate(deg, this.originalCenter);
@@ -748,15 +749,15 @@ class RotateTool extends paper.Tool implements CommonTool {
           this.changed = true;
         }
       },
-      mousemove: (event: paper.ToolEvent) => this.hitTest(event),
+      mousemove: (event: paper.MouseEvent) => this.hitTest(event),
     });
   }
 
-  testHot(type: string, event: paper.ToolEvent, mode: string) {
+  testHot(type: string, event: { point: paper.Point; modifiers?: any }, mode: string) {
     return this.hitTest(event);
   }
 
-  private hitTest(event: paper.ToolEvent) {
+  private hitTest({ point }: { point: paper.Point; modifiers?: any }) {
     const hitSize = 12;
     this.hitResult = undefined;
 
@@ -770,8 +771,8 @@ class RotateTool extends paper.Tool implements CommonTool {
 
     // Hit test selection rectangle
     this.hitResult = undefined;
-    if (event.point && !selectionBounds.contains(event.point)) {
-      this.hitResult = selectionBoundsShape.hitTest(event.point, {
+    if (point && !selectionBounds.contains(point)) {
+      this.hitResult = selectionBoundsShape.hitTest(point, {
         bounds: true,
         guides: true,
         tolerance: hitSize,
@@ -780,7 +781,7 @@ class RotateTool extends paper.Tool implements CommonTool {
 
     if (this.hitResult && this.hitResult.type === 'bounds') {
       // Normalize the direction so that corners are at 45° angles.
-      const dir = event.point.subtract(selectionBounds.center);
+      const dir = point.subtract(selectionBounds.center);
       dir.x /= selectionBounds.width / 2;
       dir.y /= selectionBounds.height / 2;
       ToolsUtil.setCanvasRotateCursor(dir, 0);
@@ -804,7 +805,7 @@ class ZoomPanTool extends paper.Tool implements CommonTool {
     this.on({
       activate: () => ToolsUtil.setCanvasCursor('cursor-hand'),
       deactivate: () => {},
-      mousedown: (event: paper.ToolEvent) => {
+      mousedown: (event: paper.MouseEvent) => {
         this.mouseStartPos = event.point.subtract(paper.view.center);
         this.mode = '';
         if (event.modifiers.command) {
@@ -814,7 +815,7 @@ class ZoomPanTool extends paper.Tool implements CommonTool {
           this.mode = 'pan';
         }
       },
-      mouseup: (event: paper.ToolEvent) => {
+      mouseup: (event: paper.MouseEvent) => {
         if (this.mode === 'zoom') {
           const zoomCenter = event.point.subtract(paper.view.center);
           const moveFactor = this.zoomFactor - 1.0;
@@ -838,40 +839,40 @@ class ZoomPanTool extends paper.Tool implements CommonTool {
         this.hitTest(event);
         this.mode = '';
       },
-      mousedrag: (event: paper.ToolEvent) => {
+      mousedrag: ({ point }: paper.MouseEvent) => {
         if (this.mode === 'zoom') {
           // If dragging mouse while in zoom mode, switch to zoom-rect instead.
           this.mode = 'zoom-rect';
         } else if (this.mode === 'zoom-rect') {
           // While dragging the zoom rectangle, paint the selected area.
-          ToolsUtil.dragRect(paper.view.center.add(this.mouseStartPos), event.point);
+          ToolsUtil.dragRect(paper.view.center.add(this.mouseStartPos), point);
         } else if (this.mode === 'pan') {
           // Handle panning by moving the view center.
-          const pt = event.point.subtract(paper.view.center);
+          const pt = point.subtract(paper.view.center);
           const delta = this.mouseStartPos.subtract(pt);
           paper.view.scrollBy(delta);
           this.mouseStartPos = pt;
         }
       },
-      mousemove: (event: paper.ToolEvent) => this.hitTest(event),
-      keydown: (event: paper.ToolEvent) => this.hitTest(event),
-      keyup: (event: paper.ToolEvent) => this.hitTest(event),
+      mousemove: (event: paper.MouseEvent) => this.hitTest(event),
+      keydown: (event: paper.KeyEvent) => this.hitTest(event),
+      keyup: (event: paper.KeyEvent) => this.hitTest(event),
     });
   }
 
-  testHot(type: string, event: paper.ToolEvent, mode: string) {
-    const spacePressed = event && event.modifiers.space;
+  testHot(type: string, event: { point: paper.Point; modifiers?: any }, mode: string) {
+    const spacePressed = event && (event.modifiers || {}).space;
     if (mode !== 'tool-zoompan' && !spacePressed) {
       return false;
     }
     return this.hitTest(event);
   }
 
-  private hitTest(event: paper.ToolEvent) {
-    if (event.modifiers.command) {
-      if (event.modifiers.command && !event.modifiers.option) {
+  private hitTest({ modifiers = {} }: { modifiers?: any }) {
+    if (modifiers.command) {
+      if (modifiers.command && !modifiers.option) {
         ToolsUtil.setCanvasCursor('cursor-zoom-in');
-      } else if (event.modifiers.command && event.modifiers.option) {
+      } else if (modifiers.command && modifiers.option) {
         ToolsUtil.setCanvasCursor('cursor-zoom-out');
       }
     } else {
@@ -902,12 +903,12 @@ class PenTool extends paper.Tool implements CommonTool {
         }
         this.currentSegment = undefined;
       },
-      mousedown: (event: paper.ToolEvent) => {
+      mousedown: (event: paper.MouseEvent) => {
         deselectAllPoints();
 
         if (this.mode === 'create') {
           let path = ToolsUtil.findItemById(this.pathId);
-          if (path === undefined) {
+          if (!path) {
             deselectAll();
             path = new paper.Path();
             path.strokeColor = 'black';
@@ -1033,7 +1034,7 @@ class PenTool extends paper.Tool implements CommonTool {
           this.currentSegment.selected = true;
         }
       },
-      mouseup: (event: paper.ToolEvent) => {
+      mouseup: (event: paper.MouseEvent) => {
         if (this.mode === 'close') {
           this.closePath();
         } else if (this.mode === 'join') {
@@ -1045,12 +1046,12 @@ class PenTool extends paper.Tool implements CommonTool {
         this.mode = undefined;
         this.currentSegment = undefined;
       },
-      mousedrag: (event: paper.ToolEvent) => {
-        if (this.currentSegment === undefined) {
+      mousedrag: (event: paper.MouseEvent) => {
+        if (!this.currentSegment) {
           return;
         }
         const path = ToolsUtil.findItemById(this.pathId);
-        if (path === undefined) {
+        if (!path) {
           return;
         }
 
@@ -1107,28 +1108,27 @@ class PenTool extends paper.Tool implements CommonTool {
           }
         }
       },
-      mousemove: (event: paper.ToolEvent) => {
-        this.hitTest(event);
-      },
+      mousemove: (event: paper.MouseEvent) => this.hitTest(event),
     });
   }
 
-  testHot(type: string, event: paper.ToolEvent, mode: string) {
+  testHot(type: string, event: { point: paper.Point; modifiers?: any }, mode: string) {
     if (mode !== 'tool-pen') {
       return false;
     }
-    if (event.modifiers.command) {
+    const modifiers = event.modifiers || {};
+    if (modifiers.command) {
       return false;
     }
     if (type === 'keyup') {
-      if (event.modifiers.key === 'enter' || event.modifiers.key === 'escape') {
+      if (modifiers.key === 'enter' || modifiers.key === 'escape') {
         this.closePath();
       }
     }
     return this.hitTest(event);
   }
 
-  private hitTest(event: paper.ToolEvent) {
+  private hitTest({ point, modifiers = {} }: { point: paper.Point; modifiers?: any }) {
     const hitSize = 4;
     let result = undefined;
     // var isKeyEvent = type ==='mode' || type ==='command' || type ==='keydown' || type ==='keyup';
@@ -1136,8 +1136,8 @@ class PenTool extends paper.Tool implements CommonTool {
     this.currentSegment = undefined;
     this.hitResult = undefined;
 
-    if (event.point) {
-      result = paper.project.hitTest(event.point, {
+    if (point) {
+      result = paper.project.hitTest(point, {
         segments: true,
         stroke: true,
         tolerance: hitSize,
@@ -1178,7 +1178,7 @@ class PenTool extends paper.Tool implements CommonTool {
             }
           }
         } else if (result.item.selected) {
-          if (event.modifiers.option) {
+          if (modifiers.option) {
             this.mode = 'convert';
             ToolsUtil.setCanvasCursor('cursor-pen-adjust');
           } else {
@@ -1194,8 +1194,8 @@ class PenTool extends paper.Tool implements CommonTool {
     if (!result) {
       this.mode = 'create';
       ToolsUtil.setCanvasCursor('cursor-pen-create');
-      if (event.point) {
-        this.updateTail(event.point);
+      if (point) {
+        this.updateTail(point);
       }
     }
 
@@ -1271,7 +1271,7 @@ function clearSelectionBounds() {
 // Returns bounding box of all selected items.
 function getSelectionBounds() {
   let bounds = undefined;
-  const selected = (paper.project as any).selectedItems;
+  const selected = paper.project.getSelectedItems();
   for (const item of selected) {
     if (bounds === undefined) {
       bounds = item.bounds.clone();
@@ -1334,7 +1334,7 @@ function deselectAll() {
 }
 
 function deselectAllPoints() {
-  const selected = (paper.project as any).selectedItems;
+  const selected = paper.project.getSelectedItems();
   for (const item of selected) {
     if (item instanceof paper.Path) {
       for (const segment of item.segments) {
@@ -1349,7 +1349,7 @@ function deselectAllPoints() {
 // Returns serialized contents of selected items.
 function captureSelectionState() {
   const originalContent: SelectionState[] = [];
-  const selected: paper.Item[] = (paper.project as any).selectedItems;
+  const selected = paper.project.getSelectedItems();
   for (const item of selected) {
     if ((item as any).guide) {
       continue;
