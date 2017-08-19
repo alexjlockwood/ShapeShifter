@@ -113,7 +113,7 @@ export function getPathsIntersectingRect(rect: paper.Rectangle) {
   return paths;
 }
 
-export function findItemById(id: number) {
+export function findItemById(id: number): paper.Item {
   if (id === -1) {
     return undefined;
   }
@@ -142,9 +142,9 @@ export function findItemById(id: number) {
   return undefined;
 }
 
-// Returns bounding box of all selected items.
+/** Returns bounding box of all selected items. */
 export function getSelectionBounds() {
-  let bounds = undefined;
+  let bounds: paper.Rectangle = undefined;
   const selected = paper.project.getSelectedItems();
   for (const item of selected) {
     if (bounds === undefined) {
@@ -156,7 +156,7 @@ export function getSelectionBounds() {
   return bounds;
 }
 
-// Restore the state of selected items.
+/** Restore the state of selected items. */
 export function restoreSelectionState(originalContent: ReadonlyArray<SelectionState>) {
   for (const orig of originalContent) {
     const item = findItemById(orig.id);
@@ -167,7 +167,7 @@ export function restoreSelectionState(originalContent: ReadonlyArray<SelectionSt
     // store the ID here, and restore after deserialization.
     const id = item.id;
     item.importJSON(orig.json);
-    item._id = id;
+    (item as any)._id = id;
   }
 }
 
@@ -220,7 +220,7 @@ export function deselectAllPoints() {
   }
 }
 
-// Returns serialized contents of selected items.
+/** Returns serialized contents of selected items. */
 export function captureSelectionState() {
   const originalContent: SelectionState[] = [];
   const selected = paper.project.getSelectedItems();

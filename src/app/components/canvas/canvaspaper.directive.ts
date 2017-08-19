@@ -23,7 +23,6 @@ export class CanvasPaperDirective extends CanvasLayoutMixin(DestroyableMixin())
   @Input() actionSource: ActionSource;
 
   private readonly $canvas: JQuery<HTMLCanvasElement>;
-  private toolStack: ToolSwitcher;
 
   constructor(
     elementRef: ElementRef,
@@ -34,17 +33,17 @@ export class CanvasPaperDirective extends CanvasLayoutMixin(DestroyableMixin())
     this.$canvas = $(elementRef.nativeElement) as JQuery<HTMLCanvasElement>;
   }
 
-  tool: paper.Tool;
-
   ngAfterViewInit() {
     paper.setup(this.$canvas.get(0));
     paper.settings.handleSize = 8;
-    this.toolStack = new ToolSwitcher();
+    const toolSwitcher = new ToolSwitcher();
+    console.log(toolSwitcher);
     this.registerSubscription(
       this.toolModeService.asObservable().subscribe(toolMode => {
-        this.toolStack.setToolMode(toolMode);
+        toolSwitcher.setToolMode(toolMode);
       }),
     );
+    console.log(toolSwitcher);
   }
 
   // @Override

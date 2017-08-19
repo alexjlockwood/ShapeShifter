@@ -43,7 +43,7 @@ export class PenTool extends AbstractTool {
         ToolsUtil.deselectAllPoints();
 
         if (this.mode === Mode.Create) {
-          let path = ToolsUtil.findItemById(this.pathId);
+          let path = ToolsUtil.findItemById(this.pathId) as paper.Path;
           if (!path) {
             ToolsUtil.deselectAll();
             path = new paper.Path();
@@ -93,7 +93,7 @@ export class PenTool extends AbstractTool {
           }
         } else if (this.mode === Mode.Close) {
           if (this.pathId !== -1) {
-            ToolsUtil.findItemById(this.pathId).closed = true;
+            (ToolsUtil.findItemById(this.pathId) as paper.Path).closed = true;
           }
 
           this.currentSegment = this.hitResult.segment;
@@ -136,13 +136,13 @@ export class PenTool extends AbstractTool {
           this.originalHandleIn = this.currentSegment.handleIn.clone();
           this.originalHandleOut = this.currentSegment.handleOut.clone();
         } else if (this.mode === Mode.Join) {
-          const path = ToolsUtil.findItemById(this.pathId);
-          if (path !== undefined) {
+          const path = ToolsUtil.findItemById(this.pathId) as paper.Path;
+          if (path) {
             const oldPoint = this.hitResult.segment.point.clone();
             if (this.hitResult.segment.index !== 0) {
               (this.hitResult.item as paper.Path).reverse();
             }
-            path.join(this.hitResult.item);
+            path.join(this.hitResult.item as paper.Path);
 
             // Find nearest point to the hit point.
             let imin = -1;
@@ -179,7 +179,6 @@ export class PenTool extends AbstractTool {
         if (this.mode === Mode.Close || this.mode === Mode.Join || this.mode === Mode.Convert) {
           this.closePath();
         }
-        // undo.snapshot('Pen');
         this.mode = undefined;
         this.currentSegment = undefined;
       },
@@ -343,12 +342,12 @@ export class PenTool extends AbstractTool {
   }
 
   private updateTail(point: paper.Point) {
-    const path = ToolsUtil.findItemById(this.pathId);
-    if (path === undefined) {
+    const path = ToolsUtil.findItemById(this.pathId) as paper.Path;
+    if (!path) {
       return;
     }
-    const nsegs = path.segments.length;
-    if (nsegs === 0) {
+    const numSegs = path.segments.length;
+    if (numSegs === 0) {
       return;
     }
 
@@ -358,8 +357,10 @@ export class PenTool extends AbstractTool {
     tail.strokeWidth = 1 / paper.view.zoom;
     (tail as any).guide = true;
 
-    const prevPoint = path.segments[nsegs - 1].point;
-    const prevHandleOut = path.segments[nsegs - 1].point.add(path.segments[nsegs - 1].handleOut);
+    const prevPoint = path.segments[numSegs - 1].point;
+    const prevHandleOut = path.segments[numSegs - 1].point.add(
+      path.segments[numSegs - 1].handleOut,
+    );
 
     tail.moveTo(prevPoint);
     tail.cubicCurveTo(prevHandleOut, point, point);

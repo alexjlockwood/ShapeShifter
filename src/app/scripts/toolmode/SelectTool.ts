@@ -29,7 +29,6 @@ export class SelectTool extends AbstractTool {
       },
       deactivate: () => this.helper.hideSelectionBounds(),
       mousedown: (event: paper.MouseEvent) => {
-        console.log('mousedown');
         this.mode = undefined;
         this.changed = false;
 
@@ -61,7 +60,6 @@ export class SelectTool extends AbstractTool {
         if (this.mode === Mode.MoveShapes) {
           if (this.changed) {
             this.helper.clearSelectionBounds();
-            // undo.snapshot('Move Shapes');
           }
           this.duplicates = undefined;
         } else if (this.mode === Mode.BoxSelect) {

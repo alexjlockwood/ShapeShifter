@@ -14,17 +14,16 @@ import { ZoomPanTool } from './ZoomPanTool';
 
 export class ToolSwitcher implements SelectionBoundsHelper {
   private readonly tool = new paper.Tool();
-  private readonly toolStack: ReadonlyArray<AbstractTool>;
+  private readonly toolDelegates: ReadonlyArray<AbstractTool>;
   private mode: ToolMode;
   private hotTool: AbstractTool;
-  private activeTool: AbstractTool;
   private lastPoint = new paper.Point(0, 0);
   private selectionBounds = undefined;
-  private selectionBoundsShape = undefined;
+  private selectionBoundsShape: paper.Item = undefined;
   private drawSelectionBounds = 0;
 
   constructor() {
-    this.toolStack = [
+    this.toolDelegates = [
       new ZoomPanTool(),
       new PenTool(this),
       new ScaleTool(this),
@@ -32,28 +31,31 @@ export class ToolSwitcher implements SelectionBoundsHelper {
       new DirectSelectTool(this),
       new SelectTool(this),
     ];
+
+    let activeTool: AbstractTool;
+
     this.tool.on({
-      activate: () => (this.activeTool = this.hotTool = undefined),
-      deactivate: () => (this.activeTool = this.hotTool = undefined),
+      activate: () => (this.hotTool = activeTool = undefined),
+      deactivate: () => (this.hotTool = activeTool = undefined),
       mousedown: (event: paper.MouseEvent) => {
         this.lastPoint = event.point.clone();
         if (this.hotTool) {
-          this.activeTool = this.hotTool;
-          this.activeTool.fire('mousedown', event);
+          activeTool = this.hotTool;
+          activeTool.fire('mousedown', event);
         }
       },
       mouseup: (event: paper.MouseEvent) => {
         this.lastPoint = event.point.clone();
-        if (this.activeTool) {
-          this.activeTool.fire('mouseup', event);
+        if (activeTool) {
+          activeTool.fire('mouseup', event);
         }
-        this.activeTool = undefined;
+        activeTool = undefined;
         this.fire('mouseup', event);
       },
       mousedrag: (event: paper.MouseEvent) => {
         this.lastPoint = event.point.clone();
-        if (this.activeTool) {
-          this.activeTool.fire('mousedrag', event);
+        if (activeTool) {
+          activeTool.fire('mousedrag', event);
         }
       },
       mousemove: (event: paper.MouseEvent) => {
@@ -62,16 +64,16 @@ export class ToolSwitcher implements SelectionBoundsHelper {
       },
       keydown: (event: paper.KeyEvent) => {
         const point = this.lastPoint.clone();
-        if (this.activeTool) {
-          this.activeTool.fire('keydown', { ...event, point });
+        if (activeTool) {
+          activeTool.fire('keydown', { ...event, point });
         } else {
           this.fire('keydown', { point, modifiers: event.modifiers, key: event.key });
         }
       },
       keyup: (event: paper.KeyEvent) => {
         const point = this.lastPoint.clone();
-        if (this.activeTool) {
-          this.activeTool.fire('keyup', { ...event, point });
+        if (activeTool) {
+          activeTool.fire('keyup', { ...event, point });
         } else {
           this.fire('keyup', { point, modifiers: event.modifiers, key: event.key });
         }
@@ -84,7 +86,7 @@ export class ToolSwitcher implements SelectionBoundsHelper {
     this.hotTool = undefined;
 
     // Pick the first hot tool.
-    for (const tool of this.toolStack) {
+    for (const tool of this.toolDelegates) {
       if (tool.dispatchHitTest(type, { point, modifiers, key }, this.mode)) {
         // Use the first tool that handles the event.
         this.hotTool = tool;
@@ -109,50 +111,28 @@ export class ToolSwitcher implements SelectionBoundsHelper {
 
   setToolMode(mode: ToolMode) {
     this.mode = mode;
-    this.fire('mode', { point: this.lastPoint.clone() });
+    this.fire('switchmode', { point: this.lastPoint.clone() });
   }
 
   getSelectionBounds() {
     return this.selectionBounds;
   }
 
-  setSelectionBounds(selectionBounds) {
-    this.selectionBounds = selectionBounds;
-  }
-
   getSelectionBoundsShape() {
     return this.selectionBoundsShape;
   }
 
-  setSelectionBoundsShape(selectionBoundsShape) {
-    this.selectionBoundsShape = selectionBoundsShape;
-  }
-
-  getDrawSelectionBounds() {
-    return this.drawSelectionBounds;
-  }
-
-  setDrawSelectionBounds(drawSelectionBounds: number) {
-    this.drawSelectionBounds = drawSelectionBounds;
-  }
-
   showSelectionBounds() {
     this.drawSelectionBounds++;
-    if (this.drawSelectionBounds > 0) {
-      if (this.selectionBoundsShape) {
-        this.selectionBoundsShape.visible = true;
-      }
+    if (this.selectionBoundsShape) {
+      this.selectionBoundsShape.visible = true;
     }
   }
 
   hideSelectionBounds() {
-    if (this.drawSelectionBounds > 0) {
-      this.drawSelectionBounds--;
-    }
-    if (this.drawSelectionBounds === 0) {
-      if (this.selectionBoundsShape) {
-        this.selectionBoundsShape.visible = false;
-      }
+    this.drawSelectionBounds = Math.max(0, this.drawSelectionBounds - 1);
+    if (this.selectionBoundsShape && this.drawSelectionBounds === 0) {
+      this.selectionBoundsShape.visible = false;
     }
   }
 
@@ -161,15 +141,12 @@ export class ToolSwitcher implements SelectionBoundsHelper {
     this.selectionBounds = ToolsUtil.getSelectionBounds();
     if (this.selectionBounds) {
       const rect = new paper.Path.Rectangle(this.selectionBounds);
-      // var color = paper.project.activeLayer.getSelectedColor();
-      rect.strokeColor = 'rgba(0,0,0,0)'; // color ? color : '#009dec';
+      rect.strokeColor = 'rgba(0,0,0,0)';
       rect.strokeWidth = 1 / paper.view.zoom;
-      // rect._boundsSelected = true;
       rect.selected = true;
       (rect as any).setFullySelected(true);
       (rect as any).guide = true;
       rect.visible = this.drawSelectionBounds > 0;
-      // rect.transformContent = false;
       this.selectionBoundsShape = rect;
     }
   }
@@ -183,4 +160,4 @@ export class ToolSwitcher implements SelectionBoundsHelper {
   }
 }
 
-type FireType = 'mode' | 'mousedown' | 'mousemove' | 'mouseup' | 'keydown' | 'keyup';
+type FireType = 'switchmode' | 'mousedown' | 'mousemove' | 'mouseup' | 'keydown' | 'keyup';
