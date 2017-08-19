@@ -3918,7 +3918,7 @@ declare module 'paper' {
     emit(type: string, event: any): boolean;
 
     // ADDED BY ALEX LOCKWOOD
-    fire(type: string, event: any): boolean;
+    fire(type: FireType, event: any): boolean;
 
     /**
      * Check if the tool has one or more event handlers of the specified type.
@@ -4155,3 +4155,14 @@ declare module 'paper' {
     stop(): void;
   }
 }
+
+// ADDED BY ALEX LOCKWOOD
+type FireType =
+  | 'activate'
+  | 'deactivate'
+  | 'mousedown'
+  | 'mousemove'
+  | 'mousedrag'
+  | 'mouseup'
+  | 'keydown'
+  | 'keyup';

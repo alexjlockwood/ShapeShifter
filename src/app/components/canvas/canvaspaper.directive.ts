@@ -6,6 +6,7 @@ import { ActionSource } from 'app/model/actionmode';
 import { LayerUtil, PathLayer } from 'app/model/layers';
 import { Path } from 'app/model/paths';
 import { DestroyableMixin } from 'app/scripts/mixins';
+import { ToolSwitcher } from 'app/scripts/toolmode';
 import { LayerTimelineService, ToolModeService } from 'app/services';
 import * as $ from 'jquery';
 import * as paper from 'paper';
@@ -13,7 +14,6 @@ import { Point } from 'paper'; // TODO: figure out why this needs to be imported
 import { Observable } from 'rxjs/Observable';
 
 import { CanvasLayoutMixin } from './CanvasLayoutMixin';
-import { ToolStack } from './Tools';
 
 type Context = CanvasRenderingContext2D;
 
@@ -23,7 +23,7 @@ export class CanvasPaperDirective extends CanvasLayoutMixin(DestroyableMixin())
   @Input() actionSource: ActionSource;
 
   private readonly $canvas: JQuery<HTMLCanvasElement>;
-  private toolStack: ToolStack;
+  private toolStack: ToolSwitcher;
 
   constructor(
     elementRef: ElementRef,
@@ -39,7 +39,7 @@ export class CanvasPaperDirective extends CanvasLayoutMixin(DestroyableMixin())
   ngAfterViewInit() {
     paper.setup(this.$canvas.get(0));
     paper.settings.handleSize = 8;
-    this.toolStack = new ToolStack();
+    this.toolStack = new ToolSwitcher();
     this.registerSubscription(
       this.toolModeService.asObservable().subscribe(toolMode => {
         this.toolStack.setToolMode(toolMode);

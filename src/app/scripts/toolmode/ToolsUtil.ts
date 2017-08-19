@@ -141,3 +141,104 @@ export function findItemById(id: number) {
   }
   return undefined;
 }
+
+// Returns bounding box of all selected items.
+export function getSelectionBounds() {
+  let bounds = undefined;
+  const selected = paper.project.getSelectedItems();
+  for (const item of selected) {
+    if (bounds === undefined) {
+      bounds = item.bounds.clone();
+    } else {
+      bounds = bounds.unite(item.bounds);
+    }
+  }
+  return bounds;
+}
+
+// Restore the state of selected items.
+export function restoreSelectionState(originalContent: ReadonlyArray<SelectionState>) {
+  for (const orig of originalContent) {
+    const item = findItemById(orig.id);
+    if (!item) {
+      continue;
+    }
+    // HACK: paper does not retain item IDs after importJSON,
+    // store the ID here, and restore after deserialization.
+    const id = item.id;
+    item.importJSON(orig.json);
+    item._id = id;
+  }
+}
+
+// Returns path points which are contained in the rect.
+export function getSegmentsInRect(rect) {
+  const segments = [];
+
+  function checkPathItem(item) {
+    if (item._locked || !item._visible || item._guide) {
+      return;
+    }
+    const children = item.children;
+    if (!rect.intersects(item.bounds)) {
+      return;
+    }
+    if (item instanceof paper.Path) {
+      for (const segment of item.segments) {
+        if (rect.contains(segment.point)) {
+          segments.push(segment);
+        }
+      }
+    } else {
+      for (let j = children.length - 1; j >= 0; j--) {
+        checkPathItem(children[j]);
+      }
+    }
+  }
+
+  for (let i = paper.project.layers.length - 1; i >= 0; i--) {
+    checkPathItem(paper.project.layers[i]);
+  }
+
+  return segments;
+}
+
+export function deselectAll() {
+  paper.project.deselectAll();
+}
+
+export function deselectAllPoints() {
+  const selected = paper.project.getSelectedItems();
+  for (const item of selected) {
+    if (item instanceof paper.Path) {
+      for (const segment of item.segments) {
+        if (segment.selected) {
+          segment.selected = false;
+        }
+      }
+    }
+  }
+}
+
+// Returns serialized contents of selected items.
+export function captureSelectionState() {
+  const originalContent: SelectionState[] = [];
+  const selected = paper.project.getSelectedItems();
+  for (const item of selected) {
+    if ((item as any).guide) {
+      continue;
+    }
+    originalContent.push({
+      id: item.id,
+      json: item.exportJSON({ asString: false }),
+      selectedSegments: [],
+    });
+  }
+  return originalContent;
+}
+
+export interface SelectionState {
+  id: number;
+  json: string;
+  selectedSegments: ReadonlyArray<paper.Segment>;
+}
