@@ -13,7 +13,7 @@ import { Point } from 'paper'; // TODO: figure out why this needs to be imported
 import { Observable } from 'rxjs/Observable';
 
 import { CanvasLayoutMixin } from './CanvasLayoutMixin';
-import { ToolStack, createToolStack } from './Tools';
+import { ToolStack } from './Tools';
 
 type Context = CanvasRenderingContext2D;
 
@@ -39,7 +39,7 @@ export class CanvasPaperDirective extends CanvasLayoutMixin(DestroyableMixin())
   ngAfterViewInit() {
     paper.setup(this.$canvas.get(0));
     paper.settings.handleSize = 8;
-    this.toolStack = createToolStack();
+    this.toolStack = new ToolStack();
     this.registerSubscription(
       this.toolModeService.asObservable().subscribe(toolMode => {
         this.toolStack.setToolMode(toolMode);
