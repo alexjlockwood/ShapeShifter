@@ -269,7 +269,6 @@ class SelectTool extends paper.Tool implements CommonTool {
   }
 
   hitTest(event: paper.ToolEvent) {
-    console.log(event);
     const hitSize = 4;
     this.hitResult = undefined;
 
