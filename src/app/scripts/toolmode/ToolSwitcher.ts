@@ -1,4 +1,3 @@
-import { ToolMode } from 'app/model/toolMode';
 import * as $ from 'jquery';
 import * as paper from 'paper';
 
@@ -8,6 +7,7 @@ import { PenTool } from './PenTool';
 import { RotateTool } from './RotateTool';
 import { ScaleTool } from './ScaleTool';
 import { SelectTool } from './SelectTool';
+import { ToolMode } from './ToolMode';
 import * as ToolsUtil from './ToolsUtil';
 import { SelectionState } from './ToolsUtil';
 import { ZoomPanTool } from './ZoomPanTool';
@@ -15,7 +15,7 @@ import { ZoomPanTool } from './ZoomPanTool';
 export class ToolSwitcher implements SelectionBoundsHelper {
   private readonly tool = new paper.Tool();
   private readonly toolStack: ReadonlyArray<AbstractTool>;
-  private mode: string;
+  private mode: ToolMode;
   private hotTool: AbstractTool;
   private activeTool: AbstractTool;
   private lastPoint = new paper.Point(0, 0);
@@ -48,7 +48,7 @@ export class ToolSwitcher implements SelectionBoundsHelper {
           this.activeTool.fire('mouseup', event);
         }
         this.activeTool = undefined;
-        this.testHot('mouseup', event);
+        this.fire('mouseup', event);
       },
       mousedrag: (event: paper.MouseEvent) => {
         this.lastPoint = event.point.clone();
@@ -58,34 +58,58 @@ export class ToolSwitcher implements SelectionBoundsHelper {
       },
       mousemove: (event: paper.MouseEvent) => {
         this.lastPoint = event.point.clone();
-        this.testHot('mousemove', event);
+        this.fire('mousemove', event);
       },
       keydown: (event: paper.KeyEvent) => {
         const point = this.lastPoint.clone();
         if (this.activeTool) {
-          this.activeTool.fire('keydown', event);
+          this.activeTool.fire('keydown', { ...event, point });
         } else {
-          this.testHot('keydown', { point, modifiers: event.modifiers || {} });
+          this.fire('keydown', { point, modifiers: event.modifiers, key: event.key });
         }
       },
       keyup: (event: paper.KeyEvent) => {
         const point = this.lastPoint.clone();
         if (this.activeTool) {
-          this.activeTool.fire('keyup', event);
+          this.activeTool.fire('keyup', { ...event, point });
         } else {
-          this.testHot('keyup', { point, modifiers: event.modifiers || {} });
+          this.fire('keyup', { point, modifiers: event.modifiers, key: event.key });
         }
       },
     });
+  }
+
+  private fire(type: FireType, { point, modifiers = {}, key = '' }: HitTestArgs) {
+    const prevHotTool = this.hotTool;
+    this.hotTool = undefined;
+
+    // Pick the first hot tool.
+    for (const tool of this.toolStack) {
+      if (tool.dispatchHitTest(type, { point, modifiers, key }, this.mode)) {
+        // Use the first tool that handles the event.
+        this.hotTool = tool;
+        break;
+      }
+    }
+    if (prevHotTool !== this.hotTool) {
+      if (prevHotTool) {
+        // Deactivate the previous tool.
+        prevHotTool.fire('deactivate', undefined);
+      }
+      if (this.hotTool) {
+        // Activate the new tool.
+        this.hotTool.fire('activate', undefined);
+      }
+    }
   }
 
   getToolMode() {
     return this.mode;
   }
 
-  setToolMode(mode: string) {
+  setToolMode(mode: ToolMode) {
     this.mode = mode;
-    this.testHot('mode', { point: this.lastPoint.clone() });
+    this.fire('mode', { point: this.lastPoint.clone() });
   }
 
   getSelectionBounds() {
@@ -157,24 +181,6 @@ export class ToolSwitcher implements SelectionBoundsHelper {
     this.selectionBoundsShape = undefined;
     this.selectionBounds = undefined;
   }
-
-  private testHot(type: string, event: HitTestArgs) {
-    const prev = this.hotTool;
-    this.hotTool = undefined;
-    // Pick the first hot tool.
-    for (const s of this.toolStack) {
-      if (s.dispatchHitTest(type, event, this.mode)) {
-        this.hotTool = s;
-        break;
-      }
-    }
-    if (prev !== this.hotTool) {
-      if (prev) {
-        prev.fire('deactivate', undefined);
-      }
-      if (this.hotTool) {
-        this.hotTool.fire('activate', undefined);
-      }
-    }
-  }
 }
+
+type FireType = 'mode' | 'mousedown' | 'mousemove' | 'mouseup' | 'keydown' | 'keyup';

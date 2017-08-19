@@ -29,6 +29,7 @@ export class SelectTool extends AbstractTool {
       },
       deactivate: () => this.helper.hideSelectionBounds(),
       mousedown: (event: paper.MouseEvent) => {
+        console.log('mousedown');
         this.mode = undefined;
         this.changed = false;
 

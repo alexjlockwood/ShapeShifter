@@ -1,7 +1,7 @@
-import { ToolMode } from 'app/model/toolmode';
 import * as paper from 'paper';
 
 import { AbstractTool, HitTestArgs, SelectionBoundsHelper } from './AbstractTool';
+import { ToolMode } from './ToolMode';
 import * as ToolsUtil from './ToolsUtil';
 import { SelectionState } from './ToolsUtil';
 
@@ -25,6 +25,7 @@ export class ZoomPanTool extends AbstractTool {
       activate: () => ToolsUtil.setCanvasCursor('cursor-hand'),
       deactivate: () => {},
       mousedown: (event: paper.MouseEvent) => {
+        console.log('mousedown');
         mouseStartPos = event.point.subtract(paper.view.center);
         mode = Mode.None;
         if (event.modifiers.command) {

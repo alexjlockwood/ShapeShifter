@@ -10,6 +10,7 @@ export abstract class AbstractTool extends paper.Tool {
 export interface HitTestArgs {
   point?: paper.Point;
   modifiers?: any;
+  key?: string;
 }
 
 export interface SelectionBoundsHelper {

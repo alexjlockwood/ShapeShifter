@@ -1,7 +1,7 @@
-import { ToolMode } from 'app/model/toolmode';
 import * as paper from 'paper';
 
 import { AbstractTool, HitTestArgs, SelectionBoundsHelper } from './AbstractTool';
+import { ToolMode } from './ToolMode';
 import * as ToolsUtil from './ToolsUtil';
 import { SelectionState } from './ToolsUtil';
 
@@ -39,6 +39,7 @@ export class PenTool extends AbstractTool {
         this.currentSegment = undefined;
       },
       mousedown: (event: paper.MouseEvent) => {
+        console.log('mousedown');
         ToolsUtil.deselectAllPoints();
 
         if (this.mode === Mode.Create) {
@@ -142,6 +143,7 @@ export class PenTool extends AbstractTool {
               (this.hitResult.item as paper.Path).reverse();
             }
             path.join(this.hitResult.item);
+
             // Find nearest point to the hit point.
             let imin = -1;
             let dmin = 0;
@@ -248,14 +250,14 @@ export class PenTool extends AbstractTool {
   }
 
   // @Override
-  dispatchHitTest(type: string, { point, modifiers = {} }: HitTestArgs, mode: string) {
-    if (mode !== 'tool-pen') {
+  dispatchHitTest(type: string, { point, modifiers = {}, key = '' }: HitTestArgs, mode: string) {
+    if (mode !== ToolMode.Pen) {
       return false;
     }
     if (modifiers.command) {
       return false;
     }
-    if ((type === 'keyup' && modifiers.key === 'enter') || modifiers.key === 'escape') {
+    if (type === 'keyup' && (key === 'enter' || key === 'escape')) {
       this.closePath();
     }
     return this.hitTest({ point, modifiers });

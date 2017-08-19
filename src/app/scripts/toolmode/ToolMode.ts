@@ -1,8 +1,8 @@
-import { ToolMode as ToolModeModel } from 'app/model/toolmode';
-
 export enum ToolMode {
-  DirectSelect = ToolModeModel.DirectSelect,
-  Pen = ToolModeModel.Pen,
-  Select = ToolModeModel.Select,
-  ZoomPan = ToolModeModel.ZoomPan,
+  DirectSelect = 'tool-direct-select',
+  Pen = 'tool-pen',
+  Select = 'tool-select',
+  ZoomPan = 'tool-zoompan',
+  Scale = 'tool-scale',
+  Rotate = 'tool-rotate',
 }

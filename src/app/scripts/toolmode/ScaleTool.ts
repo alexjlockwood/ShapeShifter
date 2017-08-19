@@ -37,6 +37,7 @@ export class ScaleTool extends AbstractTool {
       },
       deactivate: () => this.helper.hideSelectionBounds(),
       mousedown: (event: paper.MouseEvent) => {
+        console.log('mousedown');
         isScaling = false;
         hasChanged = false;
         if (!this.hitResult) {
@@ -76,12 +77,13 @@ export class ScaleTool extends AbstractTool {
         const size = corner.subtract(origPivot);
         let sx = 1;
         let sy = 1;
-        if (Math.abs(origSize.x) > 1e-8) {
+        if (Math.abs(origSize.x) > 1e-6) {
           sx = size.x / origSize.x;
         }
-        if (Math.abs(origSize.y) > 1e-8) {
+        if (Math.abs(origSize.y) > 1e-6) {
           sy = size.y / origSize.y;
         }
+        console.log(corner, size, origSize, sx, sy);
 
         if (event.modifiers.shift) {
           const signx = sx > 0 ? 1 : -1;
