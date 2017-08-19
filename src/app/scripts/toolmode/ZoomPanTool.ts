@@ -1,46 +1,52 @@
+import { ToolMode } from 'app/model/toolmode';
 import * as paper from 'paper';
 
 import { AbstractTool, HitTestArgs, SelectionBoundsHelper } from './AbstractTool';
 import * as ToolsUtil from './ToolsUtil';
 import { SelectionState } from './ToolsUtil';
 
-export class ZoomPanTool extends AbstractTool {
-  private mouseStartPos = new paper.Point(0, 0);
-  private distanceThreshold = 8;
-  private mode = 'pan';
-  private zoomFactor = 1.3;
+enum Mode {
+  None,
+  Zoom,
+  ZoomRect,
+  Pan,
+}
 
+export class ZoomPanTool extends AbstractTool {
   constructor() {
     super();
+
+    let mode = Mode.None;
+    let mouseStartPos = new paper.Point(0, 0);
+    const distanceThreshold = 8;
+    const zoomFactor = 1.3;
 
     this.on({
       activate: () => ToolsUtil.setCanvasCursor('cursor-hand'),
       deactivate: () => {},
       mousedown: (event: paper.MouseEvent) => {
-        this.mouseStartPos = event.point.subtract(paper.view.center);
-        this.mode = '';
+        mouseStartPos = event.point.subtract(paper.view.center);
+        mode = Mode.None;
         if (event.modifiers.command) {
-          this.mode = 'zoom';
+          mode = Mode.Zoom;
         } else {
           ToolsUtil.setCanvasCursor('cursor-hand-grab');
-          this.mode = 'pan';
+          mode = Mode.Pan;
         }
       },
       mouseup: (event: paper.MouseEvent) => {
-        if (this.mode === 'zoom') {
+        if (mode === Mode.Zoom) {
           const zoomCenter = event.point.subtract(paper.view.center);
-          const moveFactor = this.zoomFactor - 1.0;
+          const moveFactor = zoomFactor - 1;
           if (event.modifiers.command && !event.modifiers.option) {
-            paper.view.zoom *= this.zoomFactor;
-            paper.view.center = paper.view.center.add(
-              zoomCenter.multiply(moveFactor / this.zoomFactor),
-            );
+            paper.view.zoom *= zoomFactor;
+            paper.view.center = paper.view.center.add(zoomCenter.multiply(moveFactor / zoomFactor));
           } else if (event.modifiers.command && event.modifiers.option) {
-            paper.view.zoom /= this.zoomFactor;
+            paper.view.zoom /= zoomFactor;
             paper.view.center = paper.view.center.subtract(zoomCenter.multiply(moveFactor));
           }
-        } else if (this.mode === 'zoom-rect') {
-          const start = paper.view.center.add(this.mouseStartPos);
+        } else if (mode === Mode.ZoomRect) {
+          const start = paper.view.center.add(mouseStartPos);
           const end = event.point;
           paper.view.center = start.add(end).multiply(0.5);
           const dx = paper.view.bounds.width / Math.abs(end.x - start.x);
@@ -48,21 +54,21 @@ export class ZoomPanTool extends AbstractTool {
           paper.view.zoom = Math.min(dx, dy) * paper.view.zoom;
         }
         this.hitTest(event);
-        this.mode = '';
+        mode = Mode.None;
       },
       mousedrag: ({ point }: paper.MouseEvent) => {
-        if (this.mode === 'zoom') {
+        if (mode === Mode.Zoom) {
           // If dragging mouse while in zoom mode, switch to zoom-rect instead.
-          this.mode = 'zoom-rect';
-        } else if (this.mode === 'zoom-rect') {
+          mode = Mode.ZoomRect;
+        } else if (mode === Mode.ZoomRect) {
           // While dragging the zoom rectangle, paint the selected area.
-          ToolsUtil.dragRect(paper.view.center.add(this.mouseStartPos), point);
-        } else if (this.mode === 'pan') {
+          ToolsUtil.dragRect(paper.view.center.add(mouseStartPos), point);
+        } else if (mode === Mode.Pan) {
           // Handle panning by moving the view center.
           const pt = point.subtract(paper.view.center);
-          const delta = this.mouseStartPos.subtract(pt);
+          const delta = mouseStartPos.subtract(pt);
           paper.view.scrollBy(delta);
-          this.mouseStartPos = pt;
+          mouseStartPos = pt;
         }
       },
       mousemove: (event: paper.MouseEvent) => this.hitTest(event),
@@ -71,15 +77,14 @@ export class ZoomPanTool extends AbstractTool {
     });
   }
 
-  testHot(type: string, event: { point: paper.Point; modifiers?: any }, mode: string) {
-    const spacePressed = event && (event.modifiers || {}).space;
-    if (mode !== 'tool-zoompan' && !spacePressed) {
+  dispatchHitTest(type: string, { modifiers = {} }: HitTestArgs, mode: string) {
+    if (mode !== ToolMode.ZoomPan && !modifiers.space) {
       return false;
     }
-    return this.hitTest(event);
+    return super.dispatchHitTest(type, { modifiers }, mode);
   }
 
-  private hitTest({ modifiers = {} }: { modifiers?: any }) {
+  protected hitTest({ modifiers = {} }: HitTestArgs) {
     if (modifiers.command) {
       if (modifiers.command && !modifiers.option) {
         ToolsUtil.setCanvasCursor('cursor-zoom-in');

@@ -79,17 +79,14 @@ export class DirectSelectTool extends AbstractTool {
         if (this.mode === 'move-shapes') {
           if (this.changed) {
             this.helper.clearSelectionBounds();
-            // undo.snapshot('Move Shapes');
           }
         } else if (this.mode === 'move-points') {
           if (this.changed) {
             this.helper.clearSelectionBounds();
-            // undo.snapshot('Move Points');
           }
         } else if (this.mode === 'move-handle') {
           if (this.changed) {
             this.helper.clearSelectionBounds();
-            // undo.snapshot('Move Handle');
           }
         } else if (this.mode === 'box-select') {
           const box = new paper.Rectangle(this.mouseStartPos, event.point);
@@ -185,14 +182,16 @@ export class DirectSelectTool extends AbstractTool {
     });
   }
 
-  testHot(type: string, event: { point: paper.Point; modifiers?: any }, mode: string) {
+  // @Override
+  dispatchHitTest(type: string, event: HitTestArgs, mode: string) {
     if (mode !== 'tool-direct-select') {
       return undefined;
     }
     return this.hitTest(event);
   }
 
-  private hitTest({ point }: { point: paper.Point; modifiers?: any }) {
+  // @Override
+  protected hitTest({ point }: HitTestArgs) {
     const hitSize = 4;
     let hit = undefined;
     this.hitResult = undefined;

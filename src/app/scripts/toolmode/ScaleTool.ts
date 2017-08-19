@@ -16,18 +16,18 @@ const oppositeCorner = {
 };
 
 export class ScaleTool extends AbstractTool {
-  private mouseStartPos = new paper.Point(0, 0);
-  private mode: string;
   private hitResult: paper.HitResult;
-  private pivot: paper.Point;
-  private corner: paper.Point;
-  private originalCenter: paper.Point;
-  private originalSize: paper.Point;
-  private originalContent: SelectionState[];
-  private changed = false;
 
   constructor(private readonly helper: SelectionBoundsHelper) {
     super();
+
+    let isScaling = false;
+    let hasChanged = false;
+    let originalCenter: paper.Point;
+    let originalSize: paper.Point;
+    let originalContent: SelectionState[];
+    let pivot: paper.Point;
+    let corner: paper.Point;
 
     this.on({
       activate: () => {
@@ -37,81 +37,78 @@ export class ScaleTool extends AbstractTool {
       },
       deactivate: () => this.helper.hideSelectionBounds(),
       mousedown: (event: paper.MouseEvent) => {
-        this.mode = undefined;
-        this.changed = false;
-        if (this.hitResult) {
-          if (this.hitResult.type === 'bounds') {
-            this.originalContent = ToolsUtil.captureSelectionState();
-            this.mode = 'scale';
-            const pivotName = (paper as any).Base.camelize(oppositeCorner[this.hitResult.name]);
-            const cornerName = (paper as any).Base.camelize(this.hitResult.name);
-            this.pivot = this.helper.getSelectionBounds()[pivotName].clone();
-            this.corner = this.helper.getSelectionBounds()[cornerName].clone();
-            this.originalSize = this.corner.subtract(this.pivot);
-            this.originalCenter = this.helper.getSelectionBounds().center;
-          }
-          this.helper.updateSelectionBounds();
+        isScaling = false;
+        hasChanged = false;
+        if (!this.hitResult) {
+          return;
         }
+        if (this.hitResult.type === 'bounds') {
+          isScaling = true;
+          originalContent = ToolsUtil.captureSelectionState();
+          const pivotName = camelize(oppositeCorner[this.hitResult.name]);
+          const cornerName = camelize(this.hitResult.name);
+          pivot = this.helper.getSelectionBounds()[pivotName].clone();
+          corner = this.helper.getSelectionBounds()[cornerName].clone();
+          originalSize = corner.subtract(pivot);
+          originalCenter = this.helper.getSelectionBounds().center;
+        }
+        this.helper.updateSelectionBounds();
       },
       mouseup: (event: paper.MouseEvent) => {
-        if (this.mode === 'scale') {
-          if (this.changed) {
-            this.helper.clearSelectionBounds();
-            // undo.snapshot('Scale Shapes');
-          }
+        if (!isScaling || !hasChanged) {
+          return;
         }
+        this.helper.clearSelectionBounds();
       },
       mousedrag: (event: paper.MouseEvent) => {
-        if (this.mode === 'scale') {
-          let pivot = this.pivot;
-          let originalSize = this.originalSize;
-
-          if (event.modifiers.option) {
-            pivot = this.originalCenter;
-            originalSize = originalSize.multiply(0.5);
-          }
-
-          this.corner = this.corner.add(event.delta);
-          const size = this.corner.subtract(pivot);
-          let sx = 1;
-          let sy = 1;
-          if (Math.abs(originalSize.x) > 0.0000001) {
-            sx = size.x / originalSize.x;
-          }
-          if (Math.abs(originalSize.y) > 0.0000001) {
-            sy = size.y / originalSize.y;
-          }
-
-          if (event.modifiers.shift) {
-            const signx = sx > 0 ? 1 : -1;
-            const signy = sy > 0 ? 1 : -1;
-            sx = sy = Math.max(Math.abs(sx), Math.abs(sy));
-            sx *= signx;
-            sy *= signy;
-          }
-
-          ToolsUtil.restoreSelectionState(this.originalContent);
-
-          const selected = paper.project.getSelectedItems();
-          for (const item of selected) {
-            if ((item as any).guide) {
-              continue;
-            }
-            item.scale(sx, sy, pivot);
-          }
-          this.helper.updateSelectionBounds();
-          this.changed = true;
+        if (!isScaling) {
+          return;
         }
+        let origPivot = pivot;
+        let origSize = originalSize;
+
+        if (event.modifiers.option) {
+          origPivot = originalCenter;
+          origSize = origSize.multiply(0.5);
+        }
+
+        corner = corner.add(event.delta);
+        const size = corner.subtract(origPivot);
+        let sx = 1;
+        let sy = 1;
+        if (Math.abs(origSize.x) > 1e-8) {
+          sx = size.x / origSize.x;
+        }
+        if (Math.abs(origSize.y) > 1e-8) {
+          sy = size.y / origSize.y;
+        }
+
+        if (event.modifiers.shift) {
+          const signx = sx > 0 ? 1 : -1;
+          const signy = sy > 0 ? 1 : -1;
+          sx = sy = Math.max(Math.abs(sx), Math.abs(sy));
+          sx *= signx;
+          sy *= signy;
+        }
+
+        ToolsUtil.restoreSelectionState(originalContent);
+
+        const selected = paper.project.getSelectedItems();
+        for (const item of selected) {
+          if ((item as any).guide) {
+            continue;
+          }
+          item.scale(sx, sy, origPivot);
+        }
+        this.helper.updateSelectionBounds();
+        hasChanged = true;
       },
       mousemove: (event: paper.MouseEvent) => this.hitTest(event),
     });
   }
 
-  testHot(type: string, event: { point: paper.Point; modifiers?: any }, mode: string) {
-    return this.hitTest(event);
-  }
-
-  private hitTest({ point }: { point: paper.Point; modifiers?: any }) {
+  // @Override
+  protected hitTest({ point }: HitTestArgs) {
     const hitSize = 6;
     this.hitResult = undefined;
 
@@ -143,4 +140,8 @@ export class ScaleTool extends AbstractTool {
 
     return false;
   }
+}
+
+function camelize(str: string) {
+  return str.replace(/-(.)/g, (match, chr) => chr.toUpperCase());
 }

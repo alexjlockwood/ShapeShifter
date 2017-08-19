@@ -2,6 +2,9 @@
 // Project: http://paperjs.org/
 // Definitions by: Clark Stevenson <http://github.com/clark-stevenson>
 // Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
+
+// NOTE: all modifications are commented with 'ADDED BY ALEX LOCKWOOD'
+
 type NativeMouseEvent = MouseEvent;
 
 declare module 'paper' {

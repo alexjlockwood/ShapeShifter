@@ -4,9 +4,15 @@ import { AbstractTool, HitTestArgs, SelectionBoundsHelper } from './AbstractTool
 import * as ToolsUtil from './ToolsUtil';
 import { SelectionState } from './ToolsUtil';
 
+enum Mode {
+  None,
+  MoveShapes,
+  BoxSelect,
+}
+
 export class SelectTool extends AbstractTool {
   private mouseStartPos = new paper.Point(0, 0);
-  private mode: string;
+  private mode = Mode.None;
   private hitResult: paper.HitResult;
   private originalContent: SelectionState[];
   private changed = false;
@@ -37,7 +43,7 @@ export class SelectTool extends AbstractTool {
               this.hitResult.item.selected = true;
             }
             if (this.hitResult.item.selected) {
-              this.mode = 'move-shapes';
+              this.mode = Mode.MoveShapes;
               ToolsUtil.deselectAllPoints();
               this.mouseStartPos = event.point.clone();
               this.originalContent = ToolsUtil.captureSelectionState();
@@ -47,17 +53,17 @@ export class SelectTool extends AbstractTool {
         } else {
           // Clicked on and empty area, engage box select.
           this.mouseStartPos = event.point.clone();
-          this.mode = 'box-select';
+          this.mode = Mode.BoxSelect;
         }
       },
       mouseup: (event: paper.MouseEvent) => {
-        if (this.mode === 'move-shapes') {
+        if (this.mode === Mode.MoveShapes) {
           if (this.changed) {
             this.helper.clearSelectionBounds();
             // undo.snapshot('Move Shapes');
           }
           this.duplicates = undefined;
-        } else if (this.mode === 'box-select') {
+        } else if (this.mode === Mode.BoxSelect) {
           const box = new paper.Rectangle(this.mouseStartPos, event.point);
 
           if (!event.modifiers.shift) {
@@ -81,7 +87,7 @@ export class SelectTool extends AbstractTool {
         }
       },
       mousedrag: (event: paper.MouseEvent) => {
-        if (this.mode === 'move-shapes') {
+        if (this.mode === Mode.MoveShapes) {
           this.changed = true;
 
           if (event.modifiers.option) {
@@ -108,7 +114,7 @@ export class SelectTool extends AbstractTool {
             item.position = item.position.add(delta);
           }
           this.helper.updateSelectionBounds();
-        } else if (this.mode === 'box-select') {
+        } else if (this.mode === Mode.BoxSelect) {
           ToolsUtil.dragRect(this.mouseStartPos, event.point);
         }
       },
@@ -134,11 +140,8 @@ export class SelectTool extends AbstractTool {
     this.duplicates = undefined;
   }
 
-  testHot(type: string, event: { point: paper.Point; modifiers?: any }, mode: string) {
-    return this.hitTest(event);
-  }
-
-  private hitTest({ point }: { point: paper.Point; modifiers?: any }) {
+  // @Override
+  protected hitTest({ point }: HitTestArgs) {
     const hitSize = 4;
     this.hitResult = undefined;
 

@@ -5,18 +5,18 @@ import * as ToolsUtil from './ToolsUtil';
 import { SelectionState } from './ToolsUtil';
 
 export class RotateTool extends AbstractTool {
-  private mouseStartPos = new paper.Point(0, 0);
-  private mode: string;
   private hitResult: paper.HitResult;
   private originalCenter: paper.Point;
-  private originalAngle: number;
   private originalContent: SelectionState[];
   private originalShape: string;
   private cursorDir: paper.Point;
-  private changed = false;
 
   constructor(private readonly helper: SelectionBoundsHelper) {
     super();
+
+    let isRotating = false;
+    let hasChanged = false;
+    let originalAngle = 0;
 
     this.on({
       activate: () => {
@@ -26,36 +26,34 @@ export class RotateTool extends AbstractTool {
       },
       deactivate: () => this.helper.hideSelectionBounds(),
       mousedown: (event: paper.MouseEvent) => {
-        this.mode = undefined;
-        this.changed = false;
+        isRotating = false;
+        hasChanged = false;
+        originalAngle = 0;
         if (this.hitResult) {
           if (this.hitResult.type === 'bounds') {
             this.originalContent = ToolsUtil.captureSelectionState();
             this.originalShape = this.helper
               .getSelectionBoundsShape()
               .exportJSON({ asString: false });
-            this.mode = 'rotate';
+            isRotating = true;
             this.originalCenter = this.helper.getSelectionBounds().center.clone();
             const delta = event.point.subtract(this.originalCenter);
-            this.originalAngle = Math.atan2(delta.y, delta.x);
+            originalAngle = Math.atan2(delta.y, delta.x);
           }
           this.helper.updateSelectionBounds();
         }
       },
       mouseup: (event: paper.MouseEvent) => {
-        if (this.mode === 'rotate') {
-          if (this.changed) {
-            this.helper.clearSelectionBounds();
-            // undo.snapshot('Rotate Shapes');
-          }
+        if (isRotating && hasChanged) {
+          this.helper.clearSelectionBounds();
         }
         this.helper.updateSelectionBounds();
       },
       mousedrag: (event: paper.MouseEvent) => {
-        if (this.mode === 'rotate') {
+        if (isRotating) {
           const delta = event.point.subtract(this.originalCenter);
           const angle = Math.atan2(delta.y, delta.x);
-          let da = angle - this.originalAngle;
+          let da = angle - originalAngle;
 
           if (event.modifiers.shift) {
             const snapeAngle = Math.PI / 4;
@@ -64,6 +62,7 @@ export class RotateTool extends AbstractTool {
 
           ToolsUtil.restoreSelectionState(this.originalContent);
 
+          // TODO: fix this hackiness
           const id = this.helper.getSelectionBoundsShape().id;
           this.helper.getSelectionBoundsShape().importJSON(this.originalShape);
           this.helper.getSelectionBoundsShape()._id = id;
@@ -74,7 +73,6 @@ export class RotateTool extends AbstractTool {
 
           const selected = paper.project.getSelectedItems();
           for (const item of selected) {
-            console.log(item);
             if ((item as any).guide) {
               continue;
             }
@@ -82,18 +80,15 @@ export class RotateTool extends AbstractTool {
           }
 
           ToolsUtil.setCanvasRotateCursor(this.cursorDir, da);
-          this.changed = true;
+          hasChanged = true;
         }
       },
       mousemove: (event: paper.MouseEvent) => this.hitTest(event),
     });
   }
 
-  testHot(type: string, event: { point: paper.Point; modifiers?: any }, mode: string) {
-    return this.hitTest(event);
-  }
-
-  private hitTest({ point }: { point: paper.Point; modifiers?: any }) {
+  // @Override
+  protected hitTest({ point }: HitTestArgs) {
     const hitSize = 12;
     this.hitResult = undefined;
 

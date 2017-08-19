@@ -1,12 +1,25 @@
+import { ToolMode } from 'app/model/toolmode';
 import * as paper from 'paper';
 
 import { AbstractTool, HitTestArgs, SelectionBoundsHelper } from './AbstractTool';
 import * as ToolsUtil from './ToolsUtil';
 import { SelectionState } from './ToolsUtil';
 
+enum Mode {
+  None,
+  Create,
+  Insert,
+  Adjust,
+  Continue,
+  Convert,
+  Remove,
+  Join,
+  Close,
+}
+
 export class PenTool extends AbstractTool {
   private pathId = -1;
-  private mode: string;
+  private mode = Mode.None;
   private hitResult: paper.HitResult;
   private mouseStartPos: paper.Point;
   private originalHandleIn: paper.Point;
@@ -19,7 +32,7 @@ export class PenTool extends AbstractTool {
     this.on({
       activate: () => ToolsUtil.setCanvasCursor('cursor-pen-add'),
       deactivate: () => {
-        if (helper.getToolMode() !== 'tool-pen') {
+        if (helper.getToolMode() !== ToolMode.Pen) {
           this.closePath();
           helper.updateSelectionBounds();
         }
@@ -28,7 +41,7 @@ export class PenTool extends AbstractTool {
       mousedown: (event: paper.MouseEvent) => {
         ToolsUtil.deselectAllPoints();
 
-        if (this.mode === 'create') {
+        if (this.mode === Mode.Create) {
           let path = ToolsUtil.findItemById(this.pathId);
           if (!path) {
             ToolsUtil.deselectAll();
@@ -41,8 +54,8 @@ export class PenTool extends AbstractTool {
           this.mouseStartPos = event.point.clone();
           this.originalHandleIn = this.currentSegment.handleIn.clone();
           this.originalHandleOut = this.currentSegment.handleOut.clone();
-        } else if (this.mode === 'insert') {
-          if (this.hitResult !== undefined) {
+        } else if (this.mode === Mode.Insert) {
+          if (this.hitResult) {
             const location = this.hitResult.location;
 
             const values = (location.curve as any).getValues();
@@ -59,6 +72,10 @@ export class PenTool extends AbstractTool {
               !isLinear && new paper.Point(right[2] - x, right[3] - y),
             );
 
+            // TODO: this can sometimes cause exceptions... investigate
+            if (!this.hitResult.item || !(this.hitResult.item as paper.Path).insert) {
+              console.warn(this.hitResult);
+            }
             const seg = (this.hitResult.item as paper.Path).insert(location.index + 1, segment);
 
             if (!isLinear) {
@@ -73,7 +90,7 @@ export class PenTool extends AbstractTool {
 
             this.hitResult = undefined;
           }
-        } else if (this.mode === 'close') {
+        } else if (this.mode === Mode.Close) {
           if (this.pathId !== -1) {
             ToolsUtil.findItemById(this.pathId).closed = true;
           }
@@ -85,7 +102,7 @@ export class PenTool extends AbstractTool {
           this.mouseStartPos = event.point.clone();
           this.originalHandleIn = this.currentSegment.handleIn.clone();
           this.originalHandleOut = this.currentSegment.handleOut.clone();
-        } else if (this.mode === 'adjust') {
+        } else if (this.mode === Mode.Adjust) {
           this.currentSegment = this.hitResult.segment;
           this.currentSegment.handleOut.x = 0;
           this.currentSegment.handleOut.y = 0;
@@ -93,7 +110,7 @@ export class PenTool extends AbstractTool {
           this.mouseStartPos = event.point.clone();
           this.originalHandleIn = this.currentSegment.handleIn.clone();
           this.originalHandleOut = this.currentSegment.handleOut.clone();
-        } else if (this.mode === 'continue') {
+        } else if (this.mode === Mode.Continue) {
           if (this.hitResult.segment.index === 0) {
             this.hitResult.item.reverseChildren();
           }
@@ -106,7 +123,7 @@ export class PenTool extends AbstractTool {
           this.mouseStartPos = event.point.clone();
           this.originalHandleIn = this.currentSegment.handleIn.clone();
           this.originalHandleOut = this.currentSegment.handleOut.clone();
-        } else if (this.mode === 'convert') {
+        } else if (this.mode === Mode.Convert) {
           this.pathId = this.hitResult.item.id;
           this.currentSegment = this.hitResult.segment;
           this.currentSegment.handleIn.x = 0;
@@ -117,7 +134,7 @@ export class PenTool extends AbstractTool {
           this.mouseStartPos = event.point.clone();
           this.originalHandleIn = this.currentSegment.handleIn.clone();
           this.originalHandleOut = this.currentSegment.handleOut.clone();
-        } else if (this.mode === 'join') {
+        } else if (this.mode === Mode.Join) {
           const path = ToolsUtil.findItemById(this.pathId);
           if (path !== undefined) {
             const oldPoint = this.hitResult.segment.point.clone();
@@ -145,8 +162,8 @@ export class PenTool extends AbstractTool {
           } else {
             this.currentSegment = undefined;
           }
-        } else if (this.mode === 'remove') {
-          if (this.hitResult !== undefined) {
+        } else if (this.mode === Mode.Remove) {
+          if (this.hitResult) {
             (this.hitResult.item as paper.Path).removeSegment(this.hitResult.segment.index);
             this.hitResult = undefined;
           }
@@ -157,11 +174,7 @@ export class PenTool extends AbstractTool {
         }
       },
       mouseup: (event: paper.MouseEvent) => {
-        if (this.mode === 'close') {
-          this.closePath();
-        } else if (this.mode === 'join') {
-          this.closePath();
-        } else if (this.mode === 'convert') {
+        if (this.mode === Mode.Close || this.mode === Mode.Join || this.mode === Mode.Convert) {
           this.closePath();
         }
         // undo.snapshot('Pen');
@@ -181,22 +194,22 @@ export class PenTool extends AbstractTool {
         let dragOut = false;
         let invert = false;
 
-        if (this.mode === 'create') {
+        if (this.mode === Mode.Create) {
           dragOut = true;
           if (this.currentSegment.index > 0) {
             dragIn = true;
           }
-        } else if (this.mode === 'close') {
+        } else if (this.mode === Mode.Close) {
           dragIn = true;
           invert = true;
-        } else if (this.mode === 'continue') {
+        } else if (this.mode === Mode.Continue) {
           dragOut = true;
-        } else if (this.mode === 'adjust') {
+        } else if (this.mode === Mode.Adjust) {
           dragOut = true;
-        } else if (this.mode === 'join') {
+        } else if (this.mode === Mode.Join) {
           dragIn = true;
           invert = true;
-        } else if (this.mode === 'convert') {
+        } else if (this.mode === Mode.Convert) {
           dragIn = true;
           dragOut = true;
         }
@@ -234,26 +247,24 @@ export class PenTool extends AbstractTool {
     });
   }
 
-  testHot(type: string, event: { point: paper.Point; modifiers?: any }, mode: string) {
+  // @Override
+  dispatchHitTest(type: string, { point, modifiers = {} }: HitTestArgs, mode: string) {
     if (mode !== 'tool-pen') {
       return false;
     }
-    const modifiers = event.modifiers || {};
     if (modifiers.command) {
       return false;
     }
-    if (type === 'keyup') {
-      if (modifiers.key === 'enter' || modifiers.key === 'escape') {
-        this.closePath();
-      }
+    if ((type === 'keyup' && modifiers.key === 'enter') || modifiers.key === 'escape') {
+      this.closePath();
     }
-    return this.hitTest(event);
+    return this.hitTest({ point, modifiers });
   }
 
-  private hitTest({ point, modifiers = {} }: { point: paper.Point; modifiers?: any }) {
+  // @Override
+  protected hitTest({ point, modifiers = {} }: HitTestArgs) {
     const hitSize = 4;
     let result = undefined;
-    // var isKeyEvent = type ==='mode' || type ==='command' || type ==='keydown' || type ==='keyup';
 
     this.currentSegment = undefined;
     this.hitResult = undefined;
@@ -269,8 +280,7 @@ export class PenTool extends AbstractTool {
     if (result) {
       if (result.type === 'stroke') {
         if (result.item.selected) {
-          // Insert point.
-          this.mode = 'insert';
+          this.mode = Mode.Insert;
           ToolsUtil.setCanvasCursor('cursor-pen-add');
         } else {
           result = undefined;
@@ -280,31 +290,29 @@ export class PenTool extends AbstractTool {
         if (!result.item.closed && (result.segment.index === 0 || result.segment.index === last)) {
           if (result.item.id === this.pathId) {
             if (result.segment.index === 0) {
-              // Close
-              this.mode = 'close';
+              this.mode = Mode.Close;
               ToolsUtil.setCanvasCursor('cursor-pen-close');
               this.updateTail(result.segment.point);
             } else {
-              // Adjust last handle
-              this.mode = 'adjust';
+              this.mode = Mode.Adjust;
               ToolsUtil.setCanvasCursor('cursor-pen-adjust');
             }
           } else {
             if (this.pathId !== -1) {
-              this.mode = 'join';
+              this.mode = Mode.Join;
               ToolsUtil.setCanvasCursor('cursor-pen-join');
               this.updateTail(result.segment.point);
             } else {
-              this.mode = 'continue';
+              this.mode = Mode.Continue;
               ToolsUtil.setCanvasCursor('cursor-pen-edit');
             }
           }
         } else if (result.item.selected) {
           if (modifiers.option) {
-            this.mode = 'convert';
+            this.mode = Mode.Convert;
             ToolsUtil.setCanvasCursor('cursor-pen-adjust');
           } else {
-            this.mode = 'remove';
+            this.mode = Mode.Remove;
             ToolsUtil.setCanvasCursor('cursor-pen-remove');
           }
         } else {
@@ -314,7 +322,7 @@ export class PenTool extends AbstractTool {
     }
 
     if (!result) {
-      this.mode = 'create';
+      this.mode = Mode.Create;
       ToolsUtil.setCanvasCursor('cursor-pen-create');
       if (point) {
         this.updateTail(point);
@@ -322,7 +330,6 @@ export class PenTool extends AbstractTool {
     }
 
     this.hitResult = result;
-
     return true;
   }
 

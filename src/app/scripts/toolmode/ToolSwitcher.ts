@@ -163,7 +163,7 @@ export class ToolSwitcher implements SelectionBoundsHelper {
     this.hotTool = undefined;
     // Pick the first hot tool.
     for (const s of this.toolStack) {
-      if (s.testHot(type, event, this.mode)) {
+      if (s.dispatchHitTest(type, event, this.mode)) {
         this.hotTool = s;
         break;
       }
