@@ -25,7 +25,6 @@ export class ZoomPanTool extends AbstractTool {
       activate: () => ToolsUtil.setCanvasCursor('cursor-hand'),
       deactivate: () => {},
       mousedown: (event: paper.MouseEvent) => {
-        console.log('mousedown');
         mouseStartPos = event.point.subtract(paper.view.center);
         mode = Mode.None;
         if (event.modifiers.command) {

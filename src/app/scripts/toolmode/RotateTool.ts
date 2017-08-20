@@ -26,7 +26,6 @@ export class RotateTool extends AbstractTool {
       },
       deactivate: () => this.helper.hideSelectionBounds(),
       mousedown: (event: paper.MouseEvent) => {
-        console.log('mousedown');
         isRotating = false;
         hasChanged = false;
         originalAngle = 0;

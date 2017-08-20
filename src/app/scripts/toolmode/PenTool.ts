@@ -39,7 +39,6 @@ export class PenTool extends AbstractTool {
         this.currentSegment = undefined;
       },
       mousedown: (event: paper.MouseEvent) => {
-        console.log('mousedown');
         ToolsUtil.deselectAllPoints();
 
         if (this.mode === Mode.Create) {

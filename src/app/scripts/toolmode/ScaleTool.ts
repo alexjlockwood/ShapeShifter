@@ -37,7 +37,6 @@ export class ScaleTool extends AbstractTool {
       },
       deactivate: () => this.helper.hideSelectionBounds(),
       mousedown: (event: paper.MouseEvent) => {
-        console.log('mousedown');
         isScaling = false;
         hasChanged = false;
         if (!this.hitResult) {

@@ -1,8 +1,17 @@
 import * as paper from 'paper';
 
 import { AbstractTool, HitTestArgs, SelectionBoundsHelper } from './AbstractTool';
+import { ToolMode } from './ToolMode';
 import * as ToolsUtil from './ToolsUtil';
 import { SelectionState } from './ToolsUtil';
+
+enum Mode {
+  None,
+  MoveShapes,
+  MovePoints,
+  MoveHandle,
+  BoxSelect,
+}
 
 export class DirectSelectTool extends AbstractTool {
   private hitResult: paper.HitResult;
@@ -11,7 +20,7 @@ export class DirectSelectTool extends AbstractTool {
     super();
 
     let mouseStartPos = new paper.Point(0, 0);
-    let mode: string;
+    let mode = Mode.None;
     let originalContent: SelectionState[];
     let hasChanged = false;
     let originalHandleIn: paper.Point;
@@ -21,7 +30,6 @@ export class DirectSelectTool extends AbstractTool {
       activate: () => ToolsUtil.setCanvasCursor('cursor-arrow-white'),
       deactivate: () => {},
       mousedown: (event: paper.MouseEvent) => {
-        console.log('mousedown');
         mode = undefined;
         hasChanged = false;
 
@@ -36,7 +44,7 @@ export class DirectSelectTool extends AbstractTool {
               this.hitResult.item.selected = true;
             }
             if (this.hitResult.item.selected) {
-              mode = 'move-shapes';
+              mode = Mode.MoveShapes;
               ToolsUtil.deselectAllPoints();
               mouseStartPos = event.point.clone();
               originalContent = ToolsUtil.captureSelectionState();
@@ -51,12 +59,12 @@ export class DirectSelectTool extends AbstractTool {
               this.hitResult.segment.selected = true;
             }
             if (this.hitResult.segment.selected) {
-              mode = 'move-points';
+              mode = Mode.MovePoints;
               mouseStartPos = event.point.clone();
               originalContent = ToolsUtil.captureSelectionState();
             }
           } else if (this.hitResult.type === 'handle-in' || this.hitResult.type === 'handle-out') {
-            mode = 'move-handle';
+            mode = Mode.MoveHandle;
             mouseStartPos = event.point.clone();
             originalHandleIn = this.hitResult.segment.handleIn.clone();
             originalHandleOut = this.hitResult.segment.handleOut.clone();
@@ -73,23 +81,23 @@ export class DirectSelectTool extends AbstractTool {
         } else {
           // Clicked on and empty area, engage box select.
           mouseStartPos = event.point.clone();
-          mode = 'box-select';
+          mode = Mode.BoxSelect;
         }
       },
       mouseup: (event: paper.MouseEvent) => {
-        if (mode === 'move-shapes') {
+        if (mode === Mode.MoveShapes) {
           if (hasChanged) {
             this.helper.clearSelectionBounds();
           }
-        } else if (mode === 'move-points') {
+        } else if (mode === Mode.MovePoints) {
           if (hasChanged) {
             this.helper.clearSelectionBounds();
           }
-        } else if (mode === 'move-handle') {
+        } else if (mode === Mode.MoveHandle) {
           if (hasChanged) {
             this.helper.clearSelectionBounds();
           }
-        } else if (mode === 'box-select') {
+        } else if (mode === Mode.BoxSelect) {
           const box = new paper.Rectangle(mouseStartPos, event.point);
 
           if (!event.modifiers.shift) {
@@ -121,7 +129,7 @@ export class DirectSelectTool extends AbstractTool {
       },
       mousedrag: (event: paper.MouseEvent) => {
         hasChanged = true;
-        if (mode === 'move-shapes') {
+        if (mode === Mode.MoveShapes) {
           ToolsUtil.setCanvasCursor('cursor-arrow-small');
 
           let delta = event.point.subtract(mouseStartPos);
@@ -135,7 +143,7 @@ export class DirectSelectTool extends AbstractTool {
             item.position = item.position.add(delta);
           }
           this.helper.updateSelectionBounds();
-        } else if (mode === 'move-points') {
+        } else if (mode === Mode.MovePoints) {
           ToolsUtil.setCanvasCursor('cursor-arrow-small');
 
           let delta = event.point.subtract(mouseStartPos);
@@ -155,7 +163,7 @@ export class DirectSelectTool extends AbstractTool {
             }
           }
           this.helper.updateSelectionBounds();
-        } else if (mode === 'move-handle') {
+        } else if (mode === Mode.MoveHandle) {
           const delta = event.point.subtract(mouseStartPos);
 
           if (this.hitResult.type === 'handle-out') {
@@ -175,7 +183,7 @@ export class DirectSelectTool extends AbstractTool {
           }
 
           this.helper.updateSelectionBounds();
-        } else if (mode === 'box-select') {
+        } else if (mode === Mode.BoxSelect) {
           ToolsUtil.dragRect(mouseStartPos, event.point);
         }
       },
@@ -185,7 +193,7 @@ export class DirectSelectTool extends AbstractTool {
 
   // @Override
   dispatchHitTest(type: string, event: HitTestArgs, mode: string) {
-    if (mode !== 'tool-direct-select') {
+    if (mode !== ToolMode.DirectSelect) {
       return undefined;
     }
     return this.hitTest(event);
