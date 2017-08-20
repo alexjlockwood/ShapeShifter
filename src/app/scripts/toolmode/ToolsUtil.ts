@@ -23,9 +23,9 @@ export function dragRect(p1: paper.Point, p2: paper.Point) {
   rect.lineTo(new paper.Point(end.x, start.y));
   rect.lineTo(end);
   rect.strokeColor = 'black';
-  rect.strokeWidth = 1.0 / paper.view.zoom;
+  rect.strokeWidth = 1 / paper.view.zoom;
   rect.dashOffset = 0.5 / paper.view.zoom;
-  rect.dashArray = [1.0 / paper.view.zoom, 1.0 / paper.view.zoom];
+  rect.dashArray = [1 / paper.view.zoom, 1 / paper.view.zoom];
   rect.removeOn({
     drag: true,
     up: true,
@@ -52,7 +52,7 @@ export function setCanvasRotateCursor(dir: paper.Point, da: number) {
 }
 
 export function setCanvasScaleCursor(dir: paper.Point) {
-  // zero is up, counter clockwise
+  // Zero is up, counter clockwise.
   const angle = Math.atan2(dir.x, -dir.y);
   const index = indexFromAngle(angle);
   const cursors = ['cursor-scale-0', 'cursor-scale-45', 'cursor-scale-90', 'cursor-scale-135'];
@@ -60,6 +60,10 @@ export function setCanvasScaleCursor(dir: paper.Point) {
 }
 
 export function setCanvasCursor(name: string) {
+  // TODO: make this a constant somehow...
+  // TODO: make this a constant somehow...
+  // TODO: make this a constant somehow...
+  // TODO: make this a constant somehow...
   // TODO: make this a constant somehow...
   $('.paper-canvas')
     .removeClass((index, css) => (css.match(/\bcursor-\S+/g) || []).join(' '))
@@ -99,8 +103,8 @@ export function getPathsIntersectingRect(rect: paper.Rectangle) {
         paths.push(item);
       }
     } else {
-      for (let j = children.length - 1; j >= 0; j--) {
-        checkPathItem(children[j]);
+      for (let i = children.length - 1; i >= 0; i--) {
+        checkPathItem(children[i]);
       }
     }
   }
@@ -122,8 +126,8 @@ export function findItemById(id: number): paper.Item {
       return item;
     }
     if (item.children) {
-      for (let j = item.children.length - 1; j >= 0; j--) {
-        const it = findItem(item.children[j]);
+      for (let i = item.children.length - 1; i >= 0; i--) {
+        const it = findItem(item.children[i]);
         if (it) {
           return it;
         }
@@ -132,8 +136,7 @@ export function findItemById(id: number): paper.Item {
     return undefined;
   }
 
-  for (let i = 0, l = paper.project.layers.length; i < l; i++) {
-    const layer = paper.project.layers[i];
+  for (const layer of paper.project.layers) {
     const it = findItem(layer);
     if (it) {
       return it;
@@ -190,8 +193,8 @@ export function getSegmentsInRect(rect) {
         }
       }
     } else {
-      for (let j = children.length - 1; j >= 0; j--) {
-        checkPathItem(children[j]);
+      for (let i = children.length - 1; i >= 0; i--) {
+        checkPathItem(children[i]);
       }
     }
   }

@@ -6,9 +6,6 @@ import { SelectionState } from './ToolsUtil';
 
 export class RotateTool extends AbstractTool {
   private hitResult: paper.HitResult;
-  private originalCenter: paper.Point;
-  private originalContent: SelectionState[];
-  private originalShape: string;
   private cursorDir: paper.Point;
 
   constructor(private readonly helper: SelectionBoundsHelper) {
@@ -17,6 +14,9 @@ export class RotateTool extends AbstractTool {
     let isRotating = false;
     let hasChanged = false;
     let originalAngle = 0;
+    let originalCenter: paper.Point;
+    let originalContent: SelectionState[];
+    let originalShape: string;
 
     this.on({
       activate: () => {
@@ -32,13 +32,11 @@ export class RotateTool extends AbstractTool {
         originalAngle = 0;
         if (this.hitResult) {
           if (this.hitResult.type === 'bounds') {
-            this.originalContent = ToolsUtil.captureSelectionState();
-            this.originalShape = this.helper
-              .getSelectionBoundsShape()
-              .exportJSON({ asString: false });
+            originalContent = ToolsUtil.captureSelectionState();
+            originalShape = this.helper.getSelectionBoundsShape().exportJSON({ asString: false });
             isRotating = true;
-            this.originalCenter = this.helper.getSelectionBounds().center.clone();
-            const delta = event.point.subtract(this.originalCenter);
+            originalCenter = this.helper.getSelectionBounds().center.clone();
+            const delta = event.point.subtract(originalCenter);
             originalAngle = Math.atan2(delta.y, delta.x);
           }
           this.helper.updateSelectionBounds();
@@ -52,7 +50,7 @@ export class RotateTool extends AbstractTool {
       },
       mousedrag: (event: paper.MouseEvent) => {
         if (isRotating) {
-          const delta = event.point.subtract(this.originalCenter);
+          const delta = event.point.subtract(originalCenter);
           const angle = Math.atan2(delta.y, delta.x);
           let da = angle - originalAngle;
 
@@ -61,23 +59,23 @@ export class RotateTool extends AbstractTool {
             da = Math.round(da / snapeAngle) * snapeAngle;
           }
 
-          ToolsUtil.restoreSelectionState(this.originalContent);
+          ToolsUtil.restoreSelectionState(originalContent);
 
           // TODO: fix this hackiness
           const id = this.helper.getSelectionBoundsShape().id;
-          this.helper.getSelectionBoundsShape().importJSON(this.originalShape);
+          this.helper.getSelectionBoundsShape().importJSON(originalShape);
           this.helper.getSelectionBoundsShape()._id = id;
 
           const deg = da / Math.PI * 180;
 
-          this.helper.getSelectionBoundsShape().rotate(deg, this.originalCenter);
+          this.helper.getSelectionBoundsShape().rotate(deg, originalCenter);
 
           const selected = paper.project.getSelectedItems();
           for (const item of selected) {
             if ((item as any).guide) {
               continue;
             }
-            item.rotate(deg, this.originalCenter);
+            item.rotate(deg, originalCenter);
           }
 
           ToolsUtil.setCanvasRotateCursor(this.cursorDir, da);

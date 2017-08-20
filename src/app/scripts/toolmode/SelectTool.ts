@@ -11,15 +11,16 @@ enum Mode {
 }
 
 export class SelectTool extends AbstractTool {
-  private mouseStartPos = new paper.Point(0, 0);
-  private mode = Mode.None;
   private hitResult: paper.HitResult;
-  private originalContent: SelectionState[];
-  private changed = false;
   private duplicates: paper.Item[];
 
   constructor(private readonly helper: SelectionBoundsHelper) {
     super();
+
+    let mouseStartPos = new paper.Point(0, 0);
+    let mode = Mode.None;
+    let originalContent: SelectionState[];
+    let hasChanged = false;
 
     this.on({
       activate: () => {
@@ -29,8 +30,8 @@ export class SelectTool extends AbstractTool {
       },
       deactivate: () => this.helper.hideSelectionBounds(),
       mousedown: (event: paper.MouseEvent) => {
-        this.mode = undefined;
-        this.changed = false;
+        mode = undefined;
+        hasChanged = false;
 
         if (this.hitResult) {
           if (this.hitResult.type === 'fill' || this.hitResult.type === 'stroke') {
@@ -43,27 +44,27 @@ export class SelectTool extends AbstractTool {
               this.hitResult.item.selected = true;
             }
             if (this.hitResult.item.selected) {
-              this.mode = Mode.MoveShapes;
+              mode = Mode.MoveShapes;
               ToolsUtil.deselectAllPoints();
-              this.mouseStartPos = event.point.clone();
-              this.originalContent = ToolsUtil.captureSelectionState();
+              mouseStartPos = event.point.clone();
+              originalContent = ToolsUtil.captureSelectionState();
             }
           }
           this.helper.updateSelectionBounds();
         } else {
           // Clicked on and empty area, engage box select.
-          this.mouseStartPos = event.point.clone();
-          this.mode = Mode.BoxSelect;
+          mouseStartPos = event.point.clone();
+          mode = Mode.BoxSelect;
         }
       },
       mouseup: (event: paper.MouseEvent) => {
-        if (this.mode === Mode.MoveShapes) {
-          if (this.changed) {
+        if (mode === Mode.MoveShapes) {
+          if (hasChanged) {
             this.helper.clearSelectionBounds();
           }
           this.duplicates = undefined;
-        } else if (this.mode === Mode.BoxSelect) {
-          const box = new paper.Rectangle(this.mouseStartPos, event.point);
+        } else if (mode === Mode.BoxSelect) {
+          const box = new paper.Rectangle(mouseStartPos, event.point);
 
           if (!event.modifiers.shift) {
             ToolsUtil.deselectAll();
@@ -86,12 +87,12 @@ export class SelectTool extends AbstractTool {
         }
       },
       mousedrag: (event: paper.MouseEvent) => {
-        if (this.mode === Mode.MoveShapes) {
-          this.changed = true;
+        if (mode === Mode.MoveShapes) {
+          hasChanged = true;
 
           if (event.modifiers.option) {
             if (!this.duplicates) {
-              this.createDuplicates(this.originalContent);
+              this.createDuplicates(originalContent);
             }
             ToolsUtil.setCanvasCursor('cursor-arrow-duplicate');
           } else {
@@ -101,20 +102,20 @@ export class SelectTool extends AbstractTool {
             ToolsUtil.setCanvasCursor('cursor-arrow-small');
           }
 
-          let delta = event.point.subtract(this.mouseStartPos);
+          let delta = event.point.subtract(mouseStartPos);
           if (event.modifiers.shift) {
             delta = ToolsUtil.snapDeltaToAngle(delta, Math.PI * 2 / 8);
           }
 
-          ToolsUtil.restoreSelectionState(this.originalContent);
+          ToolsUtil.restoreSelectionState(originalContent);
 
           const selected = paper.project.getSelectedItems();
           for (const item of selected) {
             item.position = item.position.add(delta);
           }
           this.helper.updateSelectionBounds();
-        } else if (this.mode === Mode.BoxSelect) {
-          ToolsUtil.dragRect(this.mouseStartPos, event.point);
+        } else if (mode === Mode.BoxSelect) {
+          ToolsUtil.dragRect(mouseStartPos, event.point);
         }
       },
       mousemove: (event: paper.MouseEvent) => this.hitTest(event),
