@@ -17,7 +17,7 @@ export interface HitTestArgs {
 
 export interface SelectionBoundsHelper {
   getSelectionBounds: Function;
-  getSelectionBoundsShape: Function;
+  getSelectionBoundsPath: Function;
   showSelectionBounds: Function;
   hideSelectionBounds: Function;
   clearSelectionBounds: Function;

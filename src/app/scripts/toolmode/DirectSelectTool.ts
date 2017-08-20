@@ -45,7 +45,7 @@ export class DirectSelectTool extends AbstractTool {
             }
             if (this.hitResult.item.selected) {
               mode = Mode.MoveShapes;
-              ToolsUtil.deselectAllPoints();
+              ToolsUtil.deselectAllSegments();
               mouseStartPos = event.point.clone();
               originalContent = ToolsUtil.captureSelectionState();
             }
@@ -54,7 +54,7 @@ export class DirectSelectTool extends AbstractTool {
               this.hitResult.segment.selected = !this.hitResult.segment.selected;
             } else {
               if (!this.hitResult.segment.selected) {
-                ToolsUtil.deselectAllPoints();
+                ToolsUtil.deselectAllSegments();
               }
               this.hitResult.segment.selected = true;
             }

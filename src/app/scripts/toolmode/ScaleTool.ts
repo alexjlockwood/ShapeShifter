@@ -113,17 +113,17 @@ export class ScaleTool extends AbstractTool {
     const hitSize = 6;
     this.hitResult = undefined;
 
-    if (!this.helper.getSelectionBoundsShape() || !this.helper.getSelectionBounds()) {
+    if (!this.helper.getSelectionBoundsPath() || !this.helper.getSelectionBounds()) {
       this.helper.updateSelectionBounds();
     }
 
-    if (!this.helper.getSelectionBoundsShape() || !this.helper.getSelectionBounds()) {
+    if (!this.helper.getSelectionBoundsPath() || !this.helper.getSelectionBounds()) {
       return undefined;
     }
 
     // Hit test selection rectangle.
     if (point) {
-      this.hitResult = this.helper.getSelectionBoundsShape().hitTest(point, {
+      this.hitResult = this.helper.getSelectionBoundsPath().hitTest(point, {
         bounds: true,
         guides: true,
         tolerance: hitSize,

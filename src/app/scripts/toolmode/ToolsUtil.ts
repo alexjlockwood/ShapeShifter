@@ -10,7 +10,7 @@ export function snapDeltaToAngle(delta: paper.Point, snapAngle: number) {
   return new paper.Point(dirx * d, diry * d);
 }
 
-export function dragRect(p1: paper.Point, p2: paper.Point) {
+export function createDragRect(p1: paper.Point, p2: paper.Point) {
   // Create pixel perfect dotted rectable for drag selections.
   const half = new paper.Point(0.5 / paper.view.zoom, 0.5 / paper.view.zoom);
   const start = p1.add(half);
@@ -26,10 +26,8 @@ export function dragRect(p1: paper.Point, p2: paper.Point) {
   rect.strokeWidth = 1 / paper.view.zoom;
   rect.dashOffset = 0.5 / paper.view.zoom;
   rect.dashArray = [1 / paper.view.zoom, 1 / paper.view.zoom];
-  rect.removeOn({
-    drag: true,
-    up: true,
-  });
+  rect.removeOn({ drag: true, up: true });
+  // TODO: missing types
   (rect as any).guide = true;
   return rect;
 }
@@ -87,8 +85,8 @@ export function getPathsIntersectingRect(rect: paper.Rectangle) {
   const paths: paper.PathItem[] = [];
   const boundingRect = new paper.Path.Rectangle(rect);
 
-  function checkPathItem(item) {
-    const children = item.children;
+  // TODO: missing types
+  const checkPathItemFn = item => {
     if (item.equals(boundingRect)) {
       return;
     }
@@ -104,14 +102,15 @@ export function getPathsIntersectingRect(rect: paper.Rectangle) {
       if (isects.length > 0) {
         paths.push(item);
       }
-    } else {
-      for (let i = children.length - 1; i >= 0; i--) {
-        checkPathItem(children[i]);
-      }
+      return;
     }
-  }
+    for (let i = item.children.length - 1; i >= 0; i--) {
+      checkPathItemFn(item.children[i]);
+    }
+  };
+
   for (const layer of paper.project.layers) {
-    checkPathItem(layer);
+    checkPathItemFn(layer);
   }
   boundingRect.remove();
   return paths;
@@ -121,23 +120,22 @@ export function findItemById(id: number): paper.Item {
   if (id === -1) {
     return undefined;
   }
-  function findItem(item: paper.Item) {
+  const findItemFn = (item: paper.Item) => {
     if (item.id === id) {
       return item;
     }
     if (item.children) {
       for (let i = item.children.length - 1; i >= 0; i--) {
-        const it = findItem(item.children[i]);
+        const it = findItemFn(item.children[i]);
         if (it) {
           return it;
         }
       }
     }
     return undefined;
-  }
-
+  };
   for (const layer of paper.project.layers) {
-    const it = findItem(layer);
+    const it = findItemFn(layer);
     if (it) {
       return it;
     }
@@ -145,38 +143,24 @@ export function findItemById(id: number): paper.Item {
   return undefined;
 }
 
-/** Returns bounding box of all selected items. */
+/**
+ * Returns the bounding box of all selected items.
+ */
 export function getSelectionBounds() {
-  let bounds: paper.Rectangle = undefined;
-  const selected = paper.project.getSelectedItems();
-  for (const item of selected) {
-    if (bounds === undefined) {
-      bounds = item.bounds.clone();
-    } else {
+  let bounds: paper.Rectangle;
+  paper.project.getSelectedItems().forEach(item => {
+    if (bounds) {
       bounds = bounds.unite(item.bounds);
+    } else {
+      bounds = item.bounds.clone();
     }
-  }
+  });
   return bounds;
-}
-
-/** Restore the state of selected items. */
-export function restoreSelectionState(originalContent: ReadonlyArray<SelectionState>) {
-  for (const orig of originalContent) {
-    const item = findItemById(orig.id);
-    if (!item) {
-      continue;
-    }
-    // HACK: paper does not retain item IDs after importJSON,
-    // store the ID here, and restore after deserialization.
-    const id = item.id;
-    item.importJSON(orig.json);
-    (item as any)._id = id;
-  }
 }
 
 // Returns path points which are contained in the rect.
 export function getSegmentsInRect(rect) {
-  const segments = [];
+  const segments: paper.Segment[] = [];
 
   function checkPathItem(item) {
     if (item._locked || !item._visible || item._guide) {
@@ -210,24 +194,22 @@ export function deselectAll() {
   paper.project.deselectAll();
 }
 
-export function deselectAllPoints() {
-  const selected = paper.project.getSelectedItems();
-  for (const item of selected) {
+export function deselectAllSegments() {
+  paper.project.getSelectedItems().forEach(item => {
     if (item instanceof paper.Path) {
-      for (const segment of item.segments) {
-        if (segment.selected) {
-          segment.selected = false;
-        }
-      }
+      item.segments.forEach(s => (s.selected = false));
     }
-  }
+  });
 }
 
-/** Returns serialized contents of selected items. */
+/**
+ * Returns serialized contents of all selected items.
+ */
 export function captureSelectionState() {
   const originalContent: SelectionState[] = [];
   const selected = paper.project.getSelectedItems();
   for (const item of selected) {
+    // TODO: missing types
     if ((item as any).guide) {
       continue;
     }
@@ -238,6 +220,23 @@ export function captureSelectionState() {
     });
   }
   return originalContent;
+}
+
+/**
+ * Restores the state of all selected items.
+ */
+export function restoreSelectionState(originalContent: ReadonlyArray<SelectionState>) {
+  for (const orig of originalContent) {
+    const item = findItemById(orig.id);
+    if (!item) {
+      continue;
+    }
+    // HACK: paper does not retain item IDs after importJSON,
+    // store the ID here, and restore after deserialization.
+    const id = item.id;
+    item.importJSON(orig.json);
+    (item as any)._id = id;
+  }
 }
 
 export interface SelectionState {

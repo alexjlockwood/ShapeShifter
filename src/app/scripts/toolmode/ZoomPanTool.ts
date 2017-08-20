@@ -12,6 +12,7 @@ enum Mode {
   Pan,
 }
 
+// TODO: shouldn't be allowed to zoom out so much that the physical size exceeds the viewport
 export class ZoomPanTool extends AbstractTool {
   constructor() {
     super();
@@ -32,6 +33,21 @@ export class ZoomPanTool extends AbstractTool {
         } else {
           ToolsUtil.setCanvasCursor('cursor-hand-grab');
           mode = Mode.Pan;
+        }
+      },
+      mousedrag: ({ point }: paper.MouseEvent) => {
+        if (mode === Mode.Zoom) {
+          // If dragging mouse while in zoom mode, switch to zoom-rect instead.
+          mode = Mode.ZoomRect;
+        } else if (mode === Mode.ZoomRect) {
+          // While dragging the zoom rectangle, paint the selected area.
+          ToolsUtil.createDragRect(paper.view.center.add(mouseStartPos), point);
+        } else if (mode === Mode.Pan) {
+          // Handle panning by moving the view center.
+          const pt = point.subtract(paper.view.center);
+          const delta = mouseStartPos.subtract(pt);
+          paper.view.scrollBy(delta);
+          mouseStartPos = pt;
         }
       },
       mouseup: (event: paper.MouseEvent) => {
@@ -55,21 +71,6 @@ export class ZoomPanTool extends AbstractTool {
         }
         this.hitTest(event);
         mode = Mode.None;
-      },
-      mousedrag: ({ point }: paper.MouseEvent) => {
-        if (mode === Mode.Zoom) {
-          // If dragging mouse while in zoom mode, switch to zoom-rect instead.
-          mode = Mode.ZoomRect;
-        } else if (mode === Mode.ZoomRect) {
-          // While dragging the zoom rectangle, paint the selected area.
-          ToolsUtil.dragRect(paper.view.center.add(mouseStartPos), point);
-        } else if (mode === Mode.Pan) {
-          // Handle panning by moving the view center.
-          const pt = point.subtract(paper.view.center);
-          const delta = mouseStartPos.subtract(pt);
-          paper.view.scrollBy(delta);
-          mouseStartPos = pt;
-        }
       },
       mousemove: (event: paper.MouseEvent) => this.hitTest(event),
       keydown: (event: paper.KeyEvent) => this.hitTest(event),

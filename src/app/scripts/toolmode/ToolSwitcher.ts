@@ -12,40 +12,41 @@ import * as ToolsUtil from './ToolsUtil';
 import { SelectionState } from './ToolsUtil';
 import { ZoomPanTool } from './ZoomPanTool';
 
-export class ToolSwitcher implements SelectionBoundsHelper {
+export class ToolSwitcher {
   private readonly tool = new paper.Tool();
   private readonly toolDelegates: ReadonlyArray<AbstractTool>;
-  private mode: ToolMode;
+  private readonly toolState = new ToolState();
   private hotTool: AbstractTool;
-  private lastPoint = new paper.Point(0, 0);
-  private selectionBounds = undefined;
-  private selectionBoundsShape: paper.Item = undefined;
-  private drawSelectionBounds = 0;
+  private lastMousePoint: paper.Point;
 
   constructor() {
     this.toolDelegates = [
       new ZoomPanTool(),
-      new PenTool(this),
-      new ScaleTool(this),
-      new RotateTool(this),
-      new DirectSelectTool(this),
-      new SelectTool(this),
+      new PenTool(this.toolState),
+      new ScaleTool(this.toolState),
+      new RotateTool(this.toolState),
+      new DirectSelectTool(this.toolState),
+      new SelectTool(this.toolState),
     ];
 
+    // Keep a reference to the tool we will be using throughout the gesture.
     let activeTool: AbstractTool;
 
     this.tool.on({
+      // TODO: figure out how activating/deactivating the tool switcher works?
       activate: () => (this.hotTool = activeTool = undefined),
       deactivate: () => (this.hotTool = activeTool = undefined),
       mousedown: (event: paper.MouseEvent) => {
-        this.lastPoint = event.point.clone();
+        this.lastMousePoint = event.point.clone();
         if (this.hotTool) {
           activeTool = this.hotTool;
           activeTool.fire('mousedown', event);
+        } else {
+          this.fire('mousedown', event);
         }
       },
       mouseup: (event: paper.MouseEvent) => {
-        this.lastPoint = event.point.clone();
+        this.lastMousePoint = event.point.clone();
         if (activeTool) {
           activeTool.fire('mouseup', event);
         }
@@ -53,29 +54,31 @@ export class ToolSwitcher implements SelectionBoundsHelper {
         this.fire('mouseup', event);
       },
       mousedrag: (event: paper.MouseEvent) => {
-        this.lastPoint = event.point.clone();
+        this.lastMousePoint = event.point.clone();
         if (activeTool) {
           activeTool.fire('mousedrag', event);
         }
       },
       mousemove: (event: paper.MouseEvent) => {
-        this.lastPoint = event.point.clone();
+        this.lastMousePoint = event.point.clone();
         this.fire('mousemove', event);
       },
       keydown: (event: paper.KeyEvent) => {
-        const point = this.lastPoint.clone();
+        const point = this.lastMousePoint.clone();
         if (activeTool) {
           activeTool.fire('keydown', { ...event, point });
         } else {
-          this.fire('keydown', { point, modifiers: event.modifiers, key: event.key });
+          const { modifiers, key } = event;
+          this.fire('keydown', { point, modifiers, key });
         }
       },
       keyup: (event: paper.KeyEvent) => {
-        const point = this.lastPoint.clone();
+        const point = this.lastMousePoint.clone();
         if (activeTool) {
           activeTool.fire('keyup', { ...event, point });
         } else {
-          this.fire('keyup', { point, modifiers: event.modifiers, key: event.key });
+          const { modifiers, key } = event;
+          this.fire('keyup', { point, modifiers, key });
         }
       },
     });
@@ -87,7 +90,7 @@ export class ToolSwitcher implements SelectionBoundsHelper {
 
     // Pick the first hot tool.
     for (const tool of this.toolDelegates) {
-      if (tool.dispatchHitTest(type, { point, modifiers, key }, this.mode)) {
+      if (tool.dispatchHitTest(type, { point, modifiers, key }, this.getToolMode())) {
         // Use the first tool that handles the event.
         this.hotTool = tool;
         break;
@@ -106,57 +109,76 @@ export class ToolSwitcher implements SelectionBoundsHelper {
   }
 
   getToolMode() {
+    return this.toolState.getToolMode();
+  }
+
+  setToolMode(mode: ToolMode) {
+    this.toolState.setToolMode(mode);
+    // TODO: improve this API ('switchmode' is meaningless)
+    this.fire('switchmode', { point: this.lastMousePoint.clone() });
+  }
+}
+
+class ToolState implements SelectionBoundsHelper {
+  private mode: ToolMode;
+  private selectionBounds: paper.Rectangle;
+  private selectionBoundsPath: paper.Path.Rectangle;
+  private numSelections = 0;
+
+  getToolMode() {
     return this.mode;
   }
 
   setToolMode(mode: ToolMode) {
     this.mode = mode;
-    this.fire('switchmode', { point: this.lastPoint.clone() });
   }
 
   getSelectionBounds() {
     return this.selectionBounds;
   }
 
-  getSelectionBoundsShape() {
-    return this.selectionBoundsShape;
+  getSelectionBoundsPath() {
+    return this.selectionBoundsPath;
   }
 
   showSelectionBounds() {
-    this.drawSelectionBounds++;
-    if (this.selectionBoundsShape) {
-      this.selectionBoundsShape.visible = true;
+    this.numSelections++;
+    if (this.selectionBoundsPath) {
+      this.selectionBoundsPath.visible = true;
     }
   }
 
   hideSelectionBounds() {
-    this.drawSelectionBounds = Math.max(0, this.drawSelectionBounds - 1);
-    if (this.selectionBoundsShape && this.drawSelectionBounds === 0) {
-      this.selectionBoundsShape.visible = false;
+    this.numSelections = Math.max(0, this.numSelections - 1);
+    if (this.selectionBoundsPath && this.numSelections === 0) {
+      this.selectionBoundsPath.visible = false;
     }
   }
 
   updateSelectionBounds() {
     this.clearSelectionBounds();
     this.selectionBounds = ToolsUtil.getSelectionBounds();
-    if (this.selectionBounds) {
-      const rect = new paper.Path.Rectangle(this.selectionBounds);
-      rect.strokeColor = 'rgba(0,0,0,0)';
-      rect.strokeWidth = 1 / paper.view.zoom;
-      rect.selected = true;
-      (rect as any).setFullySelected(true);
-      (rect as any).guide = true;
-      rect.visible = this.drawSelectionBounds > 0;
-      this.selectionBoundsShape = rect;
+    if (!this.selectionBounds) {
+      return;
     }
+    const rect = new paper.Path.Rectangle(this.selectionBounds);
+    // rect.strokeColor = 'rgba(0,0,0,0)';
+    rect.strokeWidth = 1 / paper.view.zoom;
+    rect.selected = true;
+    // TODO: missing types
+    (rect as any).setFullySelected(true);
+    (rect as any).guide = true;
+    rect.visible = this.numSelections > 0;
+    this.selectionBoundsPath = rect;
   }
 
   clearSelectionBounds() {
-    if (this.selectionBoundsShape) {
-      this.selectionBoundsShape.remove();
-    }
-    this.selectionBoundsShape = undefined;
     this.selectionBounds = undefined;
+    if (this.selectionBoundsPath) {
+      this.selectionBoundsPath.remove();
+      this.selectionBoundsPath = undefined;
+    }
+    this.numSelections = 0;
   }
 }
 

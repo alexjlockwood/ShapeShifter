@@ -39,7 +39,7 @@ export class PenTool extends AbstractTool {
         this.currentSegment = undefined;
       },
       mousedown: (event: paper.MouseEvent) => {
-        ToolsUtil.deselectAllPoints();
+        ToolsUtil.deselectAllSegments();
 
         if (this.mode === Mode.Create) {
           let path = ToolsUtil.findItemById(this.pathId) as paper.Path;
@@ -85,7 +85,7 @@ export class PenTool extends AbstractTool {
               seg.next.handleIn.y = right[5] - right[7];
             }
 
-            ToolsUtil.deselectAllPoints();
+            ToolsUtil.deselectAllSegments();
             seg.selected = true;
 
             this.hitResult = undefined;
@@ -335,7 +335,7 @@ export class PenTool extends AbstractTool {
 
   private closePath() {
     if (this.pathId !== -1) {
-      ToolsUtil.deselectAllPoints();
+      ToolsUtil.deselectAllSegments();
       this.pathId = -1;
     }
   }

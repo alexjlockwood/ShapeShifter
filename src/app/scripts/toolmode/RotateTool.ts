@@ -32,7 +32,7 @@ export class RotateTool extends AbstractTool {
         if (this.hitResult) {
           if (this.hitResult.type === 'bounds') {
             originalContent = ToolsUtil.captureSelectionState();
-            originalShape = this.helper.getSelectionBoundsShape().exportJSON({ asString: false });
+            originalShape = this.helper.getSelectionBoundsPath().exportJSON({ asString: false });
             isRotating = true;
             originalCenter = this.helper.getSelectionBounds().center.clone();
             const delta = event.point.subtract(originalCenter);
@@ -61,13 +61,13 @@ export class RotateTool extends AbstractTool {
           ToolsUtil.restoreSelectionState(originalContent);
 
           // TODO: fix this hackiness
-          const id = this.helper.getSelectionBoundsShape().id;
-          this.helper.getSelectionBoundsShape().importJSON(originalShape);
-          this.helper.getSelectionBoundsShape()._id = id;
+          const id = this.helper.getSelectionBoundsPath().id;
+          this.helper.getSelectionBoundsPath().importJSON(originalShape);
+          this.helper.getSelectionBoundsPath()._id = id;
 
           const deg = da / Math.PI * 180;
 
-          this.helper.getSelectionBoundsShape().rotate(deg, originalCenter);
+          this.helper.getSelectionBoundsPath().rotate(deg, originalCenter);
 
           const selected = paper.project.getSelectedItems();
           for (const item of selected) {
@@ -90,18 +90,18 @@ export class RotateTool extends AbstractTool {
     const hitSize = 12;
     this.hitResult = undefined;
 
-    if (!this.helper.getSelectionBoundsShape() || !this.helper.getSelectionBounds()) {
+    if (!this.helper.getSelectionBoundsPath() || !this.helper.getSelectionBounds()) {
       this.helper.updateSelectionBounds();
     }
 
-    if (!this.helper.getSelectionBoundsShape() || !this.helper.getSelectionBounds()) {
+    if (!this.helper.getSelectionBoundsPath() || !this.helper.getSelectionBounds()) {
       return undefined;
     }
 
     // Hit test selection rectangle
     this.hitResult = undefined;
     if (point && !this.helper.getSelectionBounds().contains(point)) {
-      this.hitResult = this.helper.getSelectionBoundsShape().hitTest(point, {
+      this.hitResult = this.helper.getSelectionBoundsPath().hitTest(point, {
         bounds: true,
         guides: true,
         tolerance: hitSize,

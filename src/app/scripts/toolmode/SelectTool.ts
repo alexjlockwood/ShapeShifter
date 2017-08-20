@@ -4,7 +4,7 @@ import { AbstractTool, HitTestArgs, SelectionBoundsHelper } from './AbstractTool
 import * as ToolsUtil from './ToolsUtil';
 import { SelectionState } from './ToolsUtil';
 
-enum Mode {
+enum SelectionMode {
   None,
   MoveShapes,
   BoxSelect,
@@ -17,10 +17,10 @@ export class SelectTool extends AbstractTool {
   constructor(private readonly helper: SelectionBoundsHelper) {
     super();
 
-    let mouseStartPos = new paper.Point(0, 0);
-    let mode = Mode.None;
-    let originalContent: SelectionState[];
-    let hasChanged = false;
+    let initialMousePoint: paper.Point;
+    let selectionMode = SelectionMode.None;
+    let hasSelectionChanged = false;
+    let initialSelectionState: SelectionState[];
 
     this.on({
       activate: () => {
@@ -30,49 +30,91 @@ export class SelectTool extends AbstractTool {
       },
       deactivate: () => this.helper.hideSelectionBounds(),
       mousedown: (event: paper.MouseEvent) => {
-        mode = undefined;
-        hasChanged = false;
+        selectionMode = SelectionMode.None;
+        hasSelectionChanged = false;
+        initialMousePoint = event.point.clone();
 
         if (this.hitResult) {
+          // TODO: make it possible to select the selection rectangle too?
           if (this.hitResult.type === 'fill' || this.hitResult.type === 'stroke') {
+            const hitItem = this.hitResult.item;
             if (event.modifiers.shift) {
-              this.hitResult.item.selected = !this.hitResult.item.selected;
+              // Toggle the selected item.
+              hitItem.selected = !hitItem.selected;
             } else {
-              if (!this.hitResult.item.selected) {
+              // Deselect all other selections and select the hit item.
+              if (!hitItem.selected) {
                 ToolsUtil.deselectAll();
               }
-              this.hitResult.item.selected = true;
+              hitItem.selected = true;
             }
-            if (this.hitResult.item.selected) {
-              mode = Mode.MoveShapes;
-              ToolsUtil.deselectAllPoints();
-              mouseStartPos = event.point.clone();
-              originalContent = ToolsUtil.captureSelectionState();
+            if (hitItem.selected) {
+              // Clicked on a shape, engage move shape mode. Deselect all segments
+              // so that only the selected shapes remain.
+              selectionMode = SelectionMode.MoveShapes;
+              initialMousePoint = event.point.clone();
+              ToolsUtil.deselectAllSegments();
+              initialSelectionState = ToolsUtil.captureSelectionState();
             }
           }
           this.helper.updateSelectionBounds();
         } else {
-          // Clicked on and empty area, engage box select.
-          mouseStartPos = event.point.clone();
-          mode = Mode.BoxSelect;
+          // Clicked on and empty area, engage box select mode.
+          selectionMode = SelectionMode.BoxSelect;
         }
       },
+      mousedrag: (event: paper.MouseEvent) => {
+        switch (selectionMode) {
+          case SelectionMode.MoveShapes: {
+            hasSelectionChanged = true;
+            if (event.modifiers.option) {
+              if (!this.duplicates) {
+                this.createDuplicates(initialSelectionState);
+              }
+              ToolsUtil.setCanvasCursor('cursor-arrow-duplicate');
+            } else {
+              if (this.duplicates) {
+                this.duplicates.forEach(dup => dup.remove());
+                this.duplicates = undefined;
+              }
+              ToolsUtil.setCanvasCursor('cursor-arrow-small');
+            }
+
+            let delta = event.point.subtract(initialMousePoint);
+            if (event.modifiers.shift) {
+              delta = ToolsUtil.snapDeltaToAngle(delta, Math.PI * 2 / 8);
+            }
+
+            ToolsUtil.restoreSelectionState(initialSelectionState);
+            paper.project
+              .getSelectedItems()
+              .forEach(item => (item.position = item.position.add(delta)));
+            this.helper.updateSelectionBounds();
+            break;
+          }
+          case SelectionMode.BoxSelect: {
+            ToolsUtil.createDragRect(initialMousePoint, event.point);
+            break;
+          }
+        }
+      },
+      mousemove: (event: paper.MouseEvent) => this.hitTest(event),
       mouseup: (event: paper.MouseEvent) => {
-        if (mode === Mode.MoveShapes) {
-          if (hasChanged) {
-            this.helper.clearSelectionBounds();
+        switch (selectionMode) {
+          case SelectionMode.MoveShapes: {
+            if (hasSelectionChanged) {
+              this.helper.clearSelectionBounds();
+            }
+            this.duplicates = undefined;
+            break;
           }
-          this.duplicates = undefined;
-        } else if (mode === Mode.BoxSelect) {
-          const box = new paper.Rectangle(mouseStartPos, event.point);
-
-          if (!event.modifiers.shift) {
-            ToolsUtil.deselectAll();
-          }
-
-          const selectedPaths = ToolsUtil.getPathsIntersectingRect(box);
-          for (const path of selectedPaths) {
-            path.selected = !path.selected;
+          case SelectionMode.BoxSelect: {
+            if (!event.modifiers.shift) {
+              ToolsUtil.deselectAll();
+            }
+            const box = new paper.Rectangle(initialMousePoint, event.point);
+            ToolsUtil.getPathsIntersectingRect(box).forEach(p => (p.selected = !p.selected));
+            break;
           }
         }
 
@@ -86,58 +128,19 @@ export class SelectTool extends AbstractTool {
           }
         }
       },
-      mousedrag: (event: paper.MouseEvent) => {
-        if (mode === Mode.MoveShapes) {
-          hasChanged = true;
-
-          if (event.modifiers.option) {
-            if (!this.duplicates) {
-              this.createDuplicates(originalContent);
-            }
-            ToolsUtil.setCanvasCursor('cursor-arrow-duplicate');
-          } else {
-            if (this.duplicates) {
-              this.removeDuplicates();
-            }
-            ToolsUtil.setCanvasCursor('cursor-arrow-small');
-          }
-
-          let delta = event.point.subtract(mouseStartPos);
-          if (event.modifiers.shift) {
-            delta = ToolsUtil.snapDeltaToAngle(delta, Math.PI * 2 / 8);
-          }
-
-          ToolsUtil.restoreSelectionState(originalContent);
-
-          const selected = paper.project.getSelectedItems();
-          for (const item of selected) {
-            item.position = item.position.add(delta);
-          }
-          this.helper.updateSelectionBounds();
-        } else if (mode === Mode.BoxSelect) {
-          ToolsUtil.dragRect(mouseStartPos, event.point);
-        }
-      },
-      mousemove: (event: paper.MouseEvent) => this.hitTest(event),
     });
   }
 
   private createDuplicates(content: SelectionState[]) {
     this.duplicates = [];
     for (const orig of content) {
+      // TODO: missing types
       const item: paper.Item = paper.project.importJSON(orig.json) as any;
       if (item) {
         item.selected = false;
         this.duplicates.push(item);
       }
     }
-  }
-
-  private removeDuplicates() {
-    for (const dup of this.duplicates) {
-      dup.remove();
-    }
-    this.duplicates = undefined;
   }
 
   // @Override
