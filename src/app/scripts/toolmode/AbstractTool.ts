@@ -15,7 +15,7 @@ export interface HitTestArgs {
   key?: string;
 }
 
-export interface SelectionBoundsHelper {
+export interface ToolState {
   getSelectionBounds: Function;
   getSelectionBoundsPath: Function;
   showSelectionBounds: Function;

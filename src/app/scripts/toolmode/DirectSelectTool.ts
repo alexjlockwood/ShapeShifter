@@ -1,6 +1,6 @@
 import * as paper from 'paper';
 
-import { AbstractTool, HitTestArgs, SelectionBoundsHelper } from './AbstractTool';
+import { AbstractTool, HitTestArgs, ToolState } from './AbstractTool';
 import { ToolMode } from './ToolMode';
 import * as ToolsUtil from './ToolsUtil';
 import { SelectionState } from './ToolsUtil';
@@ -13,112 +13,156 @@ enum Mode {
   BoxSelect,
 }
 
+/**
+ * Selection tool that allows for the modification of segments and handles.
+ */
 export class DirectSelectTool extends AbstractTool {
   private hitResult: paper.HitResult;
 
-  constructor(private readonly helper: SelectionBoundsHelper) {
+  // TODO: somehow combine this tool with the select tool?
+  // TODO: figure out how capture/restore selection state was used in this tool
+  constructor(private readonly toolState: ToolState) {
     super();
 
-    let mouseStartPos = new paper.Point(0, 0);
+    let initialMousePoint = new paper.Point(0, 0);
     let mode = Mode.None;
-    let originalContent: SelectionState[];
-    let hasChanged = false;
-    let originalHandleIn: paper.Point;
-    let originalHandleOut: paper.Point;
+    let initialSelectionState: SelectionState[];
+    let hasSelectionChanged = false;
+    let initialHandleIn: paper.Point;
+    let initialHandleOut: paper.Point;
 
     this.on({
+      // TODO: figure out how activate/deactivate works here?
       activate: () => ToolsUtil.setCanvasCursor('cursor-arrow-white'),
       deactivate: () => {},
       mousedown: (event: paper.MouseEvent) => {
-        mode = undefined;
-        hasChanged = false;
+        mode = Mode.None;
+        hasSelectionChanged = false;
+        initialMousePoint = event.point.clone();
 
         if (this.hitResult) {
           if (this.hitResult.type === 'fill' || this.hitResult.type === 'stroke') {
+            const hitItem = this.hitResult.item;
             if (event.modifiers.shift) {
-              this.hitResult.item.selected = !this.hitResult.item.selected;
+              hitItem.selected = !hitItem.selected;
             } else {
-              if (!this.hitResult.item.selected) {
+              if (!hitItem.selected) {
                 ToolsUtil.deselectAll();
               }
-              this.hitResult.item.selected = true;
+              hitItem.selected = true;
             }
-            if (this.hitResult.item.selected) {
+            if (hitItem.selected) {
               mode = Mode.MoveShapes;
               ToolsUtil.deselectAllSegments();
-              mouseStartPos = event.point.clone();
-              originalContent = ToolsUtil.captureSelectionState();
+              initialSelectionState = ToolsUtil.captureSelectionState();
             }
           } else if (this.hitResult.type === 'segment') {
+            const hitSegment = this.hitResult.segment;
             if (event.modifiers.shift) {
-              this.hitResult.segment.selected = !this.hitResult.segment.selected;
+              hitSegment.selected = !hitSegment.selected;
             } else {
-              if (!this.hitResult.segment.selected) {
+              if (!hitSegment.selected) {
                 ToolsUtil.deselectAllSegments();
               }
-              this.hitResult.segment.selected = true;
+              hitSegment.selected = true;
             }
-            if (this.hitResult.segment.selected) {
+            if (hitSegment.selected) {
               mode = Mode.MovePoints;
-              mouseStartPos = event.point.clone();
-              originalContent = ToolsUtil.captureSelectionState();
+              initialSelectionState = ToolsUtil.captureSelectionState();
             }
           } else if (this.hitResult.type === 'handle-in' || this.hitResult.type === 'handle-out') {
             mode = Mode.MoveHandle;
-            mouseStartPos = event.point.clone();
-            originalHandleIn = this.hitResult.segment.handleIn.clone();
-            originalHandleOut = this.hitResult.segment.handleOut.clone();
-            // if (this.hitResult.type === 'handle-out') {
-            //   this.originalHandlePos = this.hitResult.segment.handleOut.clone();
-            //   this.originalOppHandleLength = this.hitResult.segment.handleIn.length;
-            // } else {
-            //   this.originalHandlePos = this.hitResult.segment.handleIn.clone();
-            //   this.originalOppHandleLength = this.hitResult.segment.handleOut.length;
-            // }
-            // this.originalContent = captureSelectionState(); // For some reason this does not work!
+            const hitSegment = this.hitResult.segment;
+            initialHandleIn = hitSegment.handleIn.clone();
+            initialHandleOut = hitSegment.handleOut.clone();
           }
-          this.helper.updateSelectionBounds();
+          this.toolState.updateSelectionBounds();
         } else {
           // Clicked on and empty area, engage box select.
-          mouseStartPos = event.point.clone();
           mode = Mode.BoxSelect;
         }
       },
+      mousedrag: (event: paper.MouseEvent) => {
+        hasSelectionChanged = true;
+        switch (mode) {
+          case Mode.MoveShapes: {
+            ToolsUtil.setCanvasCursor('cursor-arrow-small');
+            let delta = event.point.subtract(initialMousePoint);
+            if (event.modifiers.shift) {
+              delta = ToolsUtil.snapDeltaToAngle(delta, Math.PI * 2 / 8);
+            }
+            ToolsUtil.restoreSelectionState(initialSelectionState);
+            paper.project
+              .getSelectedItems()
+              .forEach(item => (item.position = item.position.add(delta)));
+            this.toolState.updateSelectionBounds();
+            break;
+          }
+          case Mode.MovePoints: {
+            ToolsUtil.setCanvasCursor('cursor-arrow-small');
+            let delta = event.point.subtract(initialMousePoint);
+            if (event.modifiers.shift) {
+              delta = ToolsUtil.snapDeltaToAngle(delta, Math.PI * 2 / 8);
+            }
+            ToolsUtil.restoreSelectionState(initialSelectionState);
+            paper.project.getSelectedItems().forEach(path => {
+              if (path instanceof paper.Path) {
+                path.segments.forEach(segment => {
+                  if (segment.selected) {
+                    segment.point = segment.point.add(delta);
+                  }
+                });
+              }
+            });
+            this.toolState.updateSelectionBounds();
+            break;
+          }
+          case Mode.MoveHandle: {
+            const delta = event.point.subtract(initialMousePoint);
+            if (this.hitResult.type === 'handle-out') {
+              let handlePos = initialHandleOut.add(delta);
+              if (event.modifiers.shift) {
+                handlePos = ToolsUtil.snapDeltaToAngle(handlePos, Math.PI * 2 / 8);
+              }
+              this.hitResult.segment.handleOut = handlePos;
+              this.hitResult.segment.handleIn = handlePos.normalize(-initialHandleIn.length);
+            } else {
+              let handlePos = initialHandleIn.add(delta);
+              if (event.modifiers.shift) {
+                handlePos = ToolsUtil.snapDeltaToAngle(handlePos, Math.PI * 2 / 8);
+              }
+              this.hitResult.segment.handleIn = handlePos;
+              this.hitResult.segment.handleOut = handlePos.normalize(-initialHandleOut.length);
+            }
+            this.toolState.updateSelectionBounds();
+            break;
+          }
+          case Mode.BoxSelect: {
+            ToolsUtil.createDragRect(initialMousePoint, event.point);
+            break;
+          }
+        }
+      },
+      mousemove: (event: paper.MouseEvent) => this.hitTest(event),
       mouseup: (event: paper.MouseEvent) => {
-        if (mode === Mode.MoveShapes) {
-          if (hasChanged) {
-            this.helper.clearSelectionBounds();
-          }
-        } else if (mode === Mode.MovePoints) {
-          if (hasChanged) {
-            this.helper.clearSelectionBounds();
-          }
-        } else if (mode === Mode.MoveHandle) {
-          if (hasChanged) {
-            this.helper.clearSelectionBounds();
+        if (mode === Mode.MoveShapes || mode === Mode.MovePoints || Mode.MoveHandle) {
+          if (hasSelectionChanged) {
+            this.toolState.clearSelectionBounds();
           }
         } else if (mode === Mode.BoxSelect) {
-          const box = new paper.Rectangle(mouseStartPos, event.point);
-
+          const box = new paper.Rectangle(initialMousePoint, event.point);
           if (!event.modifiers.shift) {
             ToolsUtil.deselectAll();
           }
-
           const selectedSegments = ToolsUtil.getSegmentsInRect(box);
-          if (selectedSegments.length > 0) {
-            for (const segment of selectedSegments) {
-              segment.selected = !segment.selected;
-            }
-          } else {
-            const selectedPaths = ToolsUtil.getPathsIntersectingRect(box);
-            for (const path of selectedPaths) {
-              path.selected = !path.selected;
-            }
+          selectedSegments.forEach(s => (s.selected = !s.selected));
+          if (selectedSegments.length === 0) {
+            ToolsUtil.getPathsIntersectingRect(box).forEach(p => (p.selected = !p.selected));
           }
         }
+        this.toolState.updateSelectionBounds();
 
-        this.helper.updateSelectionBounds();
-
+        // TODO: is this already handled in the hit test code below?
         if (this.hitResult) {
           if (this.hitResult.item.selected) {
             ToolsUtil.setCanvasCursor('cursor-arrow-small');
@@ -127,76 +171,12 @@ export class DirectSelectTool extends AbstractTool {
           }
         }
       },
-      mousedrag: (event: paper.MouseEvent) => {
-        hasChanged = true;
-        if (mode === Mode.MoveShapes) {
-          ToolsUtil.setCanvasCursor('cursor-arrow-small');
-
-          let delta = event.point.subtract(mouseStartPos);
-          if (event.modifiers.shift) {
-            delta = ToolsUtil.snapDeltaToAngle(delta, Math.PI * 2 / 8);
-          }
-          ToolsUtil.restoreSelectionState(originalContent);
-
-          const selected = paper.project.getSelectedItems();
-          for (const item of selected) {
-            item.position = item.position.add(delta);
-          }
-          this.helper.updateSelectionBounds();
-        } else if (mode === Mode.MovePoints) {
-          ToolsUtil.setCanvasCursor('cursor-arrow-small');
-
-          let delta = event.point.subtract(mouseStartPos);
-          if (event.modifiers.shift) {
-            delta = ToolsUtil.snapDeltaToAngle(delta, Math.PI * 2 / 8);
-          }
-          ToolsUtil.restoreSelectionState(originalContent);
-
-          const selected = paper.project.getSelectedItems();
-          for (const path of selected) {
-            if (path instanceof paper.Path) {
-              for (const segment of path.segments) {
-                if (segment.selected) {
-                  segment.point = segment.point.add(delta);
-                }
-              }
-            }
-          }
-          this.helper.updateSelectionBounds();
-        } else if (mode === Mode.MoveHandle) {
-          const delta = event.point.subtract(mouseStartPos);
-
-          if (this.hitResult.type === 'handle-out') {
-            let handlePos = originalHandleOut.add(delta);
-            if (event.modifiers.shift) {
-              handlePos = ToolsUtil.snapDeltaToAngle(handlePos, Math.PI * 2 / 8);
-            }
-            this.hitResult.segment.handleOut = handlePos;
-            this.hitResult.segment.handleIn = handlePos.normalize(-originalHandleIn.length);
-          } else {
-            let handlePos = originalHandleIn.add(delta);
-            if (event.modifiers.shift) {
-              handlePos = ToolsUtil.snapDeltaToAngle(handlePos, Math.PI * 2 / 8);
-            }
-            this.hitResult.segment.handleIn = handlePos;
-            this.hitResult.segment.handleOut = handlePos.normalize(-originalHandleOut.length);
-          }
-
-          this.helper.updateSelectionBounds();
-        } else if (mode === Mode.BoxSelect) {
-          ToolsUtil.dragRect(mouseStartPos, event.point);
-        }
-      },
-      mousemove: (event: paper.MouseEvent) => this.hitTest(event),
     });
   }
 
   // @Override
   dispatchHitTest(type: string, event: HitTestArgs, mode: string) {
-    if (mode !== ToolMode.DirectSelect) {
-      return undefined;
-    }
-    return this.hitTest(event);
+    return mode === ToolMode.DirectSelect && this.hitTest(event);
   }
 
   // @Override

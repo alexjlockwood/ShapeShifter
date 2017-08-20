@@ -1,7 +1,7 @@
 import * as $ from 'jquery';
 import * as paper from 'paper';
 
-import { AbstractTool, HitTestArgs, SelectionBoundsHelper } from './AbstractTool';
+import { AbstractTool, HitTestArgs, ToolState } from './AbstractTool';
 import { DirectSelectTool } from './DirectSelectTool';
 import { PenTool } from './PenTool';
 import { RotateTool } from './RotateTool';
@@ -15,9 +15,9 @@ import { ZoomPanTool } from './ZoomPanTool';
 export class ToolSwitcher {
   private readonly tool = new paper.Tool();
   private readonly toolDelegates: ReadonlyArray<AbstractTool>;
-  private readonly toolState = new ToolState();
+  private readonly toolState = new ToolStateImpl();
   private hotTool: AbstractTool;
-  private lastMousePoint: paper.Point;
+  private lastMousePoint = new paper.Point(0, 0);
 
   constructor() {
     this.toolDelegates = [
@@ -119,7 +119,7 @@ export class ToolSwitcher {
   }
 }
 
-class ToolState implements SelectionBoundsHelper {
+class ToolStateImpl implements ToolState {
   private mode: ToolMode;
   private selectionBounds: paper.Rectangle;
   private selectionBoundsPath: paper.Path.Rectangle;
@@ -141,6 +141,7 @@ class ToolState implements SelectionBoundsHelper {
     return this.selectionBoundsPath;
   }
 
+  // TODO: figure out what this is used for
   showSelectionBounds() {
     this.numSelections++;
     if (this.selectionBoundsPath) {
@@ -148,6 +149,7 @@ class ToolState implements SelectionBoundsHelper {
     }
   }
 
+  // TODO: figure out what this is used for
   hideSelectionBounds() {
     this.numSelections = Math.max(0, this.numSelections - 1);
     if (this.selectionBoundsPath && this.numSelections === 0) {
@@ -162,7 +164,7 @@ class ToolState implements SelectionBoundsHelper {
       return;
     }
     const rect = new paper.Path.Rectangle(this.selectionBounds);
-    // rect.strokeColor = 'rgba(0,0,0,0)';
+    rect.strokeColor = 'rgba(0,0,0,0)';
     rect.strokeWidth = 1 / paper.view.zoom;
     rect.selected = true;
     // TODO: missing types
@@ -172,13 +174,14 @@ class ToolState implements SelectionBoundsHelper {
     this.selectionBoundsPath = rect;
   }
 
+  // TODO: should we set numSelections to 0 here?
+  // doing so makes rotate/scale stop working after the first selection
   clearSelectionBounds() {
     this.selectionBounds = undefined;
     if (this.selectionBoundsPath) {
       this.selectionBoundsPath.remove();
       this.selectionBoundsPath = undefined;
     }
-    this.numSelections = 0;
   }
 }
 

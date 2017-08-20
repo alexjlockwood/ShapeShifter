@@ -1,6 +1,6 @@
 import * as paper from 'paper';
 
-import { AbstractTool, HitTestArgs, SelectionBoundsHelper } from './AbstractTool';
+import { AbstractTool, HitTestArgs, ToolState } from './AbstractTool';
 import * as ToolsUtil from './ToolsUtil';
 import { SelectionState } from './ToolsUtil';
 
@@ -15,10 +15,13 @@ const oppositeCorner = {
   'left-center': 'right-center',
 };
 
+/**
+ * Scaling tool for scaling shapes.
+ */
 export class ScaleTool extends AbstractTool {
   private hitResult: paper.HitResult;
 
-  constructor(private readonly helper: SelectionBoundsHelper) {
+  constructor(private readonly toolState: ToolState) {
     super();
 
     let isScaling = false;
@@ -32,10 +35,10 @@ export class ScaleTool extends AbstractTool {
     this.on({
       activate: () => {
         ToolsUtil.setCanvasCursor('cursor-arrow-black');
-        this.helper.updateSelectionBounds();
-        this.helper.showSelectionBounds();
+        this.toolState.updateSelectionBounds();
+        this.toolState.showSelectionBounds();
       },
-      deactivate: () => this.helper.hideSelectionBounds(),
+      deactivate: () => this.toolState.hideSelectionBounds(),
       mousedown: (event: paper.MouseEvent) => {
         isScaling = false;
         hasChanged = false;
@@ -47,18 +50,18 @@ export class ScaleTool extends AbstractTool {
           originalContent = ToolsUtil.captureSelectionState();
           const pivotName = camelize(oppositeCorner[this.hitResult.name]);
           const cornerName = camelize(this.hitResult.name);
-          pivot = this.helper.getSelectionBounds()[pivotName].clone();
-          corner = this.helper.getSelectionBounds()[cornerName].clone();
+          pivot = this.toolState.getSelectionBounds()[pivotName].clone();
+          corner = this.toolState.getSelectionBounds()[cornerName].clone();
           originalSize = corner.subtract(pivot);
-          originalCenter = this.helper.getSelectionBounds().center;
+          originalCenter = this.toolState.getSelectionBounds().center;
         }
-        this.helper.updateSelectionBounds();
+        this.toolState.updateSelectionBounds();
       },
       mouseup: (event: paper.MouseEvent) => {
         if (!isScaling || !hasChanged) {
           return;
         }
-        this.helper.clearSelectionBounds();
+        this.toolState.clearSelectionBounds();
       },
       mousedrag: (event: paper.MouseEvent) => {
         if (!isScaling) {
@@ -101,7 +104,7 @@ export class ScaleTool extends AbstractTool {
           }
           item.scale(sx, sy, origPivot);
         }
-        this.helper.updateSelectionBounds();
+        this.toolState.updateSelectionBounds();
         hasChanged = true;
       },
       mousemove: (event: paper.MouseEvent) => this.hitTest(event),
@@ -113,17 +116,17 @@ export class ScaleTool extends AbstractTool {
     const hitSize = 6;
     this.hitResult = undefined;
 
-    if (!this.helper.getSelectionBoundsPath() || !this.helper.getSelectionBounds()) {
-      this.helper.updateSelectionBounds();
+    if (!this.toolState.getSelectionBoundsPath() || !this.toolState.getSelectionBounds()) {
+      this.toolState.updateSelectionBounds();
     }
 
-    if (!this.helper.getSelectionBoundsPath() || !this.helper.getSelectionBounds()) {
+    if (!this.toolState.getSelectionBoundsPath() || !this.toolState.getSelectionBounds()) {
       return undefined;
     }
 
     // Hit test selection rectangle.
     if (point) {
-      this.hitResult = this.helper.getSelectionBoundsPath().hitTest(point, {
+      this.hitResult = this.toolState.getSelectionBoundsPath().hitTest(point, {
         bounds: true,
         guides: true,
         tolerance: hitSize,
@@ -132,9 +135,9 @@ export class ScaleTool extends AbstractTool {
 
     if (this.hitResult && this.hitResult.type === 'bounds') {
       // Normalize the direction so that corners are at 45° angles.
-      const dir = point.subtract(this.helper.getSelectionBounds().center);
-      dir.x /= this.helper.getSelectionBounds().width / 2;
-      dir.y /= this.helper.getSelectionBounds().height / 2;
+      const dir = point.subtract(this.toolState.getSelectionBounds().center);
+      dir.x /= this.toolState.getSelectionBounds().width / 2;
+      dir.y /= this.toolState.getSelectionBounds().height / 2;
       ToolsUtil.setCanvasScaleCursor(dir);
       return true;
     }

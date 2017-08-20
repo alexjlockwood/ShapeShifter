@@ -1,6 +1,6 @@
 import * as paper from 'paper';
 
-import { AbstractTool, HitTestArgs, SelectionBoundsHelper } from './AbstractTool';
+import { AbstractTool, HitTestArgs, ToolState } from './AbstractTool';
 import * as ToolsUtil from './ToolsUtil';
 import { SelectionState } from './ToolsUtil';
 
@@ -10,11 +10,14 @@ enum SelectionMode {
   BoxSelect,
 }
 
+/**
+ * A simple selection tool for moving and selecting shapes.
+ */
 export class SelectTool extends AbstractTool {
   private hitResult: paper.HitResult;
-  private duplicates: paper.Item[];
 
-  constructor(private readonly helper: SelectionBoundsHelper) {
+  // TODO: rotate/scale operations dont work after the initial selection
+  constructor(private readonly toolState: ToolState) {
     super();
 
     let initialMousePoint: paper.Point;
@@ -25,10 +28,10 @@ export class SelectTool extends AbstractTool {
     this.on({
       activate: () => {
         ToolsUtil.setCanvasCursor('cursor-arrow-black');
-        this.helper.updateSelectionBounds();
-        this.helper.showSelectionBounds();
+        this.toolState.updateSelectionBounds();
+        this.toolState.showSelectionBounds();
       },
-      deactivate: () => this.helper.hideSelectionBounds(),
+      deactivate: () => this.toolState.hideSelectionBounds(),
       mousedown: (event: paper.MouseEvent) => {
         selectionMode = SelectionMode.None;
         hasSelectionChanged = false;
@@ -57,7 +60,7 @@ export class SelectTool extends AbstractTool {
               initialSelectionState = ToolsUtil.captureSelectionState();
             }
           }
-          this.helper.updateSelectionBounds();
+          this.toolState.updateSelectionBounds();
         } else {
           // Clicked on and empty area, engage box select mode.
           selectionMode = SelectionMode.BoxSelect;
@@ -68,28 +71,19 @@ export class SelectTool extends AbstractTool {
           case SelectionMode.MoveShapes: {
             hasSelectionChanged = true;
             if (event.modifiers.option) {
-              if (!this.duplicates) {
-                this.createDuplicates(initialSelectionState);
-              }
               ToolsUtil.setCanvasCursor('cursor-arrow-duplicate');
             } else {
-              if (this.duplicates) {
-                this.duplicates.forEach(dup => dup.remove());
-                this.duplicates = undefined;
-              }
               ToolsUtil.setCanvasCursor('cursor-arrow-small');
             }
-
             let delta = event.point.subtract(initialMousePoint);
             if (event.modifiers.shift) {
               delta = ToolsUtil.snapDeltaToAngle(delta, Math.PI * 2 / 8);
             }
-
             ToolsUtil.restoreSelectionState(initialSelectionState);
             paper.project
               .getSelectedItems()
               .forEach(item => (item.position = item.position.add(delta)));
-            this.helper.updateSelectionBounds();
+            this.toolState.updateSelectionBounds();
             break;
           }
           case SelectionMode.BoxSelect: {
@@ -103,9 +97,8 @@ export class SelectTool extends AbstractTool {
         switch (selectionMode) {
           case SelectionMode.MoveShapes: {
             if (hasSelectionChanged) {
-              this.helper.clearSelectionBounds();
+              this.toolState.clearSelectionBounds();
             }
-            this.duplicates = undefined;
             break;
           }
           case SelectionMode.BoxSelect: {
@@ -118,7 +111,7 @@ export class SelectTool extends AbstractTool {
           }
         }
 
-        this.helper.updateSelectionBounds();
+        this.toolState.updateSelectionBounds();
 
         if (this.hitResult) {
           if (this.hitResult.item.selected) {
@@ -129,18 +122,6 @@ export class SelectTool extends AbstractTool {
         }
       },
     });
-  }
-
-  private createDuplicates(content: SelectionState[]) {
-    this.duplicates = [];
-    for (const orig of content) {
-      // TODO: missing types
-      const item: paper.Item = paper.project.importJSON(orig.json) as any;
-      if (item) {
-        item.selected = false;
-        this.duplicates.push(item);
-      }
-    }
   }
 
   // @Override

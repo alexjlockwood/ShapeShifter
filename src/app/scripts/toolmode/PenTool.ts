@@ -1,6 +1,6 @@
 import * as paper from 'paper';
 
-import { AbstractTool, HitTestArgs, SelectionBoundsHelper } from './AbstractTool';
+import { AbstractTool, HitTestArgs, ToolState } from './AbstractTool';
 import { ToolMode } from './ToolMode';
 import * as ToolsUtil from './ToolsUtil';
 import { SelectionState } from './ToolsUtil';
@@ -26,15 +26,15 @@ export class PenTool extends AbstractTool {
   private originalHandleOut: paper.Point;
   private currentSegment: paper.Segment;
 
-  constructor(helper: SelectionBoundsHelper) {
+  constructor(toolState: ToolState) {
     super();
 
     this.on({
       activate: () => ToolsUtil.setCanvasCursor('cursor-pen-add'),
       deactivate: () => {
-        if (helper.getToolMode() !== ToolMode.Pen) {
+        if (toolState.getToolMode() !== ToolMode.Pen) {
           this.closePath();
-          helper.updateSelectionBounds();
+          toolState.updateSelectionBounds();
         }
         this.currentSegment = undefined;
       },

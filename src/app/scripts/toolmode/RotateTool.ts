@@ -1,14 +1,17 @@
 import * as paper from 'paper';
 
-import { AbstractTool, HitTestArgs, SelectionBoundsHelper } from './AbstractTool';
+import { AbstractTool, HitTestArgs, ToolState } from './AbstractTool';
 import * as ToolsUtil from './ToolsUtil';
 import { SelectionState } from './ToolsUtil';
 
+/**
+ * Rotate tool for rotating shapes.
+ */
 export class RotateTool extends AbstractTool {
   private hitResult: paper.HitResult;
   private cursorDir: paper.Point;
 
-  constructor(private readonly helper: SelectionBoundsHelper) {
+  constructor(private readonly toolState: ToolState) {
     super();
 
     let isRotating = false;
@@ -21,10 +24,10 @@ export class RotateTool extends AbstractTool {
     this.on({
       activate: () => {
         ToolsUtil.setCanvasCursor('cursor-arrow-black');
-        this.helper.updateSelectionBounds();
-        this.helper.showSelectionBounds();
+        this.toolState.updateSelectionBounds();
+        this.toolState.showSelectionBounds();
       },
-      deactivate: () => this.helper.hideSelectionBounds(),
+      deactivate: () => this.toolState.hideSelectionBounds(),
       mousedown: (event: paper.MouseEvent) => {
         isRotating = false;
         hasChanged = false;
@@ -32,20 +35,14 @@ export class RotateTool extends AbstractTool {
         if (this.hitResult) {
           if (this.hitResult.type === 'bounds') {
             originalContent = ToolsUtil.captureSelectionState();
-            originalShape = this.helper.getSelectionBoundsPath().exportJSON({ asString: false });
+            originalShape = this.toolState.getSelectionBoundsPath().exportJSON({ asString: false });
             isRotating = true;
-            originalCenter = this.helper.getSelectionBounds().center.clone();
+            originalCenter = this.toolState.getSelectionBounds().center.clone();
             const delta = event.point.subtract(originalCenter);
             originalAngle = Math.atan2(delta.y, delta.x);
           }
-          this.helper.updateSelectionBounds();
+          this.toolState.updateSelectionBounds();
         }
-      },
-      mouseup: (event: paper.MouseEvent) => {
-        if (isRotating && hasChanged) {
-          this.helper.clearSelectionBounds();
-        }
-        this.helper.updateSelectionBounds();
       },
       mousedrag: (event: paper.MouseEvent) => {
         if (isRotating) {
@@ -54,23 +51,23 @@ export class RotateTool extends AbstractTool {
           let da = angle - originalAngle;
 
           if (event.modifiers.shift) {
-            const snapeAngle = Math.PI / 4;
-            da = Math.round(da / snapeAngle) * snapeAngle;
+            const snapAngle = Math.PI * 2 / 8;
+            da = Math.round(da / snapAngle) * snapAngle;
           }
 
           ToolsUtil.restoreSelectionState(originalContent);
 
-          // TODO: fix this hackiness
-          const id = this.helper.getSelectionBoundsPath().id;
-          this.helper.getSelectionBoundsPath().importJSON(originalShape);
-          this.helper.getSelectionBoundsPath()._id = id;
+          // TODO: missing types
+          const id = this.toolState.getSelectionBoundsPath().id;
+          this.toolState.getSelectionBoundsPath().importJSON(originalShape);
+          this.toolState.getSelectionBoundsPath()._id = id;
 
           const deg = da / Math.PI * 180;
-
-          this.helper.getSelectionBoundsPath().rotate(deg, originalCenter);
+          this.toolState.getSelectionBoundsPath().rotate(deg, originalCenter);
 
           const selected = paper.project.getSelectedItems();
           for (const item of selected) {
+            // TODO: missing types
             if ((item as any).guide) {
               continue;
             }
@@ -82,6 +79,12 @@ export class RotateTool extends AbstractTool {
         }
       },
       mousemove: (event: paper.MouseEvent) => this.hitTest(event),
+      mouseup: (event: paper.MouseEvent) => {
+        if (isRotating && hasChanged) {
+          this.toolState.clearSelectionBounds();
+        }
+        this.toolState.updateSelectionBounds();
+      },
     });
   }
 
@@ -90,18 +93,18 @@ export class RotateTool extends AbstractTool {
     const hitSize = 12;
     this.hitResult = undefined;
 
-    if (!this.helper.getSelectionBoundsPath() || !this.helper.getSelectionBounds()) {
-      this.helper.updateSelectionBounds();
+    if (!this.toolState.getSelectionBoundsPath() || !this.toolState.getSelectionBounds()) {
+      this.toolState.updateSelectionBounds();
     }
 
-    if (!this.helper.getSelectionBoundsPath() || !this.helper.getSelectionBounds()) {
-      return undefined;
+    if (!this.toolState.getSelectionBoundsPath() || !this.toolState.getSelectionBounds()) {
+      return false;
     }
 
     // Hit test selection rectangle
     this.hitResult = undefined;
-    if (point && !this.helper.getSelectionBounds().contains(point)) {
-      this.hitResult = this.helper.getSelectionBoundsPath().hitTest(point, {
+    if (point && !this.toolState.getSelectionBounds().contains(point)) {
+      this.hitResult = this.toolState.getSelectionBoundsPath().hitTest(point, {
         bounds: true,
         guides: true,
         tolerance: hitSize,
@@ -110,9 +113,9 @@ export class RotateTool extends AbstractTool {
 
     if (this.hitResult && this.hitResult.type === 'bounds') {
       // Normalize the direction so that corners are at 45° angles.
-      const dir = point.subtract(this.helper.getSelectionBounds().center);
-      dir.x /= this.helper.getSelectionBounds().width / 2;
-      dir.y /= this.helper.getSelectionBounds().height / 2;
+      const dir = point.subtract(this.toolState.getSelectionBounds().center);
+      dir.x /= this.toolState.getSelectionBounds().width / 2;
+      dir.y /= this.toolState.getSelectionBounds().height / 2;
       ToolsUtil.setCanvasRotateCursor(dir, 0);
       this.cursorDir = dir;
       return true;

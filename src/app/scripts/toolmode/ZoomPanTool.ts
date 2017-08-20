@@ -1,6 +1,6 @@
 import * as paper from 'paper';
 
-import { AbstractTool, HitTestArgs, SelectionBoundsHelper } from './AbstractTool';
+import { AbstractTool, HitTestArgs, ToolState } from './AbstractTool';
 import { ToolMode } from './ToolMode';
 import * as ToolsUtil from './ToolsUtil';
 import { SelectionState } from './ToolsUtil';
