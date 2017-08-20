@@ -37,13 +37,11 @@ export class CanvasPaperDirective extends CanvasLayoutMixin(DestroyableMixin())
     paper.setup(this.$canvas.get(0));
     paper.settings.handleSize = 8;
     const toolSwitcher = new ToolSwitcher();
-    console.log(toolSwitcher);
     this.registerSubscription(
       this.toolModeService.asObservable().subscribe(toolMode => {
         toolSwitcher.setToolMode(toolMode);
       }),
     );
-    console.log(toolSwitcher);
   }
 
   // @Override

@@ -79,10 +79,12 @@ function indexFromAngle(angle: number) {
   return index % 8;
 }
 
-// Returns all items intersecting the rect.
-// Note: only the item outlines are tested.
+/**
+ * Returns all items intersecting the rect.
+ * Note: only the item outlines are tested.
+ */
 export function getPathsIntersectingRect(rect: paper.Rectangle) {
-  const paths = [];
+  const paths: paper.PathItem[] = [];
   const boundingRect = new paper.Path.Rectangle(rect);
 
   function checkPathItem(item) {
@@ -108,11 +110,9 @@ export function getPathsIntersectingRect(rect: paper.Rectangle) {
       }
     }
   }
-
   for (const layer of paper.project.layers) {
     checkPathItem(layer);
   }
-
   boundingRect.remove();
   return paths;
 }
