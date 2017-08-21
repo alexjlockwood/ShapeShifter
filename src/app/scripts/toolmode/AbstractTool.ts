@@ -3,7 +3,7 @@ import * as paper from 'paper';
 import { ToolMode } from './ToolMode';
 
 export abstract class AbstractTool extends paper.Tool {
-  dispatchHitTest(type: string, event: HitTestArgs, mode: string) {
+  dispatchHitTest(type: string, event: HitTestArgs, toolMode: ToolMode) {
     return this.hitTest(event);
   }
   protected abstract hitTest(args: HitTestArgs): boolean;
@@ -16,11 +16,11 @@ export interface HitTestArgs {
 }
 
 export interface ToolState {
-  getSelectionBounds: Function;
-  getSelectionBoundsPath: Function;
-  showSelectionBounds: Function;
-  hideSelectionBounds: Function;
-  clearSelectionBounds: Function;
-  updateSelectionBounds: Function;
+  getSelectionBounds(): paper.Rectangle;
+  getSelectionBoundsPath(): paper.Path.Rectangle;
+  showSelectionBounds(): void;
+  hideSelectionBounds(): void;
+  clearSelectionBounds(): void;
+  updateSelectionBounds(): void;
   getToolMode(): ToolMode;
 }

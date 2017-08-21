@@ -12,13 +12,16 @@ enum Mode {
   Pan,
 }
 
-// TODO: shouldn't be allowed to zoom out so much that the physical size exceeds the viewport
+/**
+ * Zoom/pan tool that allows for zooming and panning the canvas.
+ */
 export class ZoomPanTool extends AbstractTool {
+  // TODO: shouldn't be allowed to zoom out so much that the physical size exceeds the viewport
   constructor() {
     super();
 
     let mode = Mode.None;
-    let mouseStartPos = new paper.Point(0, 0);
+    let initialMousePoint = new paper.Point(0, 0);
     const distanceThreshold = 8;
     const zoomFactor = 1.3;
 
@@ -26,7 +29,7 @@ export class ZoomPanTool extends AbstractTool {
       activate: () => ToolsUtil.setCanvasCursor('cursor-hand'),
       deactivate: () => {},
       mousedown: (event: paper.MouseEvent) => {
-        mouseStartPos = event.point.subtract(paper.view.center);
+        initialMousePoint = event.point.subtract(paper.view.center);
         mode = Mode.None;
         if (event.modifiers.command) {
           mode = Mode.Zoom;
@@ -41,13 +44,13 @@ export class ZoomPanTool extends AbstractTool {
           mode = Mode.ZoomRect;
         } else if (mode === Mode.ZoomRect) {
           // While dragging the zoom rectangle, paint the selected area.
-          ToolsUtil.createDragRect(paper.view.center.add(mouseStartPos), point);
+          ToolsUtil.createDragRect(paper.view.center.add(initialMousePoint), point);
         } else if (mode === Mode.Pan) {
           // Handle panning by moving the view center.
           const pt = point.subtract(paper.view.center);
-          const delta = mouseStartPos.subtract(pt);
+          const delta = initialMousePoint.subtract(pt);
           paper.view.scrollBy(delta);
-          mouseStartPos = pt;
+          initialMousePoint = pt;
         }
       },
       mouseup: (event: paper.MouseEvent) => {
@@ -62,7 +65,7 @@ export class ZoomPanTool extends AbstractTool {
             paper.view.center = paper.view.center.subtract(zoomCenter.multiply(moveFactor));
           }
         } else if (mode === Mode.ZoomRect) {
-          const start = paper.view.center.add(mouseStartPos);
+          const start = paper.view.center.add(initialMousePoint);
           const end = event.point;
           paper.view.center = start.add(end).multiply(0.5);
           const dx = paper.view.bounds.width / Math.abs(end.x - start.x);
@@ -78,11 +81,11 @@ export class ZoomPanTool extends AbstractTool {
     });
   }
 
-  dispatchHitTest(type: string, { modifiers = {} }: HitTestArgs, mode: string) {
-    if (mode !== ToolMode.ZoomPan && !modifiers.space) {
+  dispatchHitTest(type: string, { modifiers = {} }: HitTestArgs, toolMode: ToolMode) {
+    if (toolMode !== ToolMode.ZoomPan && !modifiers.space) {
       return false;
     }
-    return super.dispatchHitTest(type, { modifiers }, mode);
+    return super.dispatchHitTest(type, { modifiers }, toolMode);
   }
 
   protected hitTest({ modifiers = {} }: HitTestArgs) {

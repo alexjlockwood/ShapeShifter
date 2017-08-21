@@ -175,8 +175,8 @@ export class DirectSelectTool extends AbstractTool {
   }
 
   // @Override
-  dispatchHitTest(type: string, event: HitTestArgs, mode: string) {
-    return mode === ToolMode.DirectSelect && this.hitTest(event);
+  dispatchHitTest(type: string, event: HitTestArgs, toolMode: ToolMode) {
+    return toolMode === ToolMode.DirectSelect && this.hitTest(event);
   }
 
   // @Override
@@ -206,6 +206,7 @@ export class DirectSelectTool extends AbstractTool {
     if (hit) {
       this.hitResult = hit;
     }
+
     // Hit test points.
     hit = undefined;
     if (point) {

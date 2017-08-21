@@ -577,6 +577,9 @@ declare module 'paper' {
     divide(point: Point): Point;
     divide(point: number[]): Point;
     divide(point: number): Point;
+
+    // ADDED BY ALEX LOCKWOOD
+    set(x: number, y: number): void;
   }
   /**
    * A Rectangle specifies an area that is enclosed by it's top-left point (x, y), its width, and its height. It should not be confused with a rectangular path, it is not an item.
