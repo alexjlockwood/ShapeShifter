@@ -99,8 +99,7 @@ export class ZoomPanTool extends AbstractTool {
   dispatchHitTest(type: string, { modifiers = {} }: HitTestArgs, toolMode: ToolMode) {
     // TODO: make sure the 'space' modifier does not conflict with the play/pause shortcut
     return (
-      toolMode === ToolMode.ZoomPan &&
-      modifiers.space &&
+      (toolMode === ToolMode.ZoomPan || modifiers.space) &&
       super.dispatchHitTest(type, { modifiers }, toolMode)
     );
   }
