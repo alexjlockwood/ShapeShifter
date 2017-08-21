@@ -25,7 +25,7 @@ export class ScaleTool extends AbstractTool {
     super();
 
     let isScaling = false;
-    let hasChanged = false;
+    let hasScaleChanged = false;
     let originalCenter: paper.Point;
     let originalSize: paper.Point;
     let originalContent: SelectionState[];
@@ -41,7 +41,7 @@ export class ScaleTool extends AbstractTool {
       deactivate: () => this.toolState.hideSelectionBounds(),
       mousedown: (event: paper.MouseEvent) => {
         isScaling = false;
-        hasChanged = false;
+        hasScaleChanged = false;
         if (!this.hitResult) {
           return;
         }
@@ -56,12 +56,6 @@ export class ScaleTool extends AbstractTool {
           originalCenter = this.toolState.getSelectionBounds().center;
         }
         this.toolState.updateSelectionBounds();
-      },
-      mouseup: (event: paper.MouseEvent) => {
-        if (!isScaling || !hasChanged) {
-          return;
-        }
-        this.toolState.clearSelectionBounds();
       },
       mousedrag: (event: paper.MouseEvent) => {
         if (!isScaling) {
@@ -85,7 +79,6 @@ export class ScaleTool extends AbstractTool {
         if (Math.abs(origSize.y) > 1e-6) {
           sy = size.y / origSize.y;
         }
-        console.log(corner, size, origSize, sx, sy);
 
         if (event.modifiers.shift) {
           const signx = sx > 0 ? 1 : -1;
@@ -97,17 +90,23 @@ export class ScaleTool extends AbstractTool {
 
         ToolsUtil.restoreSelectionState(originalContent);
 
-        const selected = paper.project.getSelectedItems();
-        for (const item of selected) {
+        paper.project.getSelectedItems().forEach(item => {
+          // TODO: missing types
           if ((item as any).guide) {
-            continue;
+            return;
           }
           item.scale(sx, sy, origPivot);
-        }
+        });
         this.toolState.updateSelectionBounds();
-        hasChanged = true;
+        hasScaleChanged = true;
       },
       mousemove: (event: paper.MouseEvent) => this.hitTest(event),
+      mouseup: (event: paper.MouseEvent) => {
+        if (!isScaling || !hasScaleChanged) {
+          return;
+        }
+        this.toolState.clearSelectionBounds();
+      },
     });
   }
 
@@ -121,7 +120,7 @@ export class ScaleTool extends AbstractTool {
     }
 
     if (!this.toolState.getSelectionBoundsPath() || !this.toolState.getSelectionBounds()) {
-      return undefined;
+      return false;
     }
 
     // Hit test selection rectangle.
@@ -133,16 +132,16 @@ export class ScaleTool extends AbstractTool {
       });
     }
 
-    if (this.hitResult && this.hitResult.type === 'bounds') {
-      // Normalize the direction so that corners are at 45° angles.
-      const dir = point.subtract(this.toolState.getSelectionBounds().center);
-      dir.x /= this.toolState.getSelectionBounds().width / 2;
-      dir.y /= this.toolState.getSelectionBounds().height / 2;
-      ToolsUtil.setCanvasScaleCursor(dir);
-      return true;
+    if (!this.hitResult && this.hitResult.type !== 'bounds') {
+      return false;
     }
 
-    return false;
+    // Normalize the direction so that corners are at 45° angles.
+    const dir = point.subtract(this.toolState.getSelectionBounds().center);
+    dir.x /= this.toolState.getSelectionBounds().width / 2;
+    dir.y /= this.toolState.getSelectionBounds().height / 2;
+    ToolsUtil.setCanvasScaleCursor(dir);
+    return true;
   }
 }
 
