@@ -36,15 +36,15 @@ export function setCanvasRotateCursor(dir: paper.Point, da: number) {
   // Zero is up, counter clockwise.
   const angle = Math.atan2(dir.x, -dir.y) + da;
   const index = indexFromAngle(angle);
-  const cursors = [
-    'cursor-rotate-0',
-    'cursor-rotate-45',
-    'cursor-rotate-90',
-    'cursor-rotate-135',
-    'cursor-rotate-180',
-    'cursor-rotate-225',
-    'cursor-rotate-270',
-    'cursor-rotate-315',
+  const cursors: ReadonlyArray<Cursor> = [
+    Cursor.Rotate0,
+    Cursor.Rotate45,
+    Cursor.Rotate90,
+    Cursor.Rotate135,
+    Cursor.Rotate180,
+    Cursor.Rotate225,
+    Cursor.Rotate270,
+    Cursor.Rotate315,
   ];
   setCanvasCursor(cursors[index % 8]);
 }
@@ -53,11 +53,16 @@ export function setCanvasScaleCursor(dir: paper.Point) {
   // Zero is up, counter clockwise.
   const angle = Math.atan2(dir.x, -dir.y);
   const index = indexFromAngle(angle);
-  const cursors = ['cursor-scale-0', 'cursor-scale-45', 'cursor-scale-90', 'cursor-scale-135'];
+  const cursors: ReadonlyArray<Cursor> = [
+    Cursor.Scale0,
+    Cursor.Scale45,
+    Cursor.Scale90,
+    Cursor.Scale135,
+  ];
   setCanvasCursor(cursors[index % 4]);
 }
 
-export function setCanvasCursor(name: string) {
+export function setCanvasCursor(name: Cursor) {
   // TODO: make this a constant somehow...
   // TODO: make this a constant somehow...
   // TODO: make this a constant somehow...
@@ -243,4 +248,38 @@ export interface SelectionState {
   id: number;
   json: string;
   selectedSegments: ReadonlyArray<paper.Segment>;
+}
+
+export enum Cursor {
+  Hand = 'cursor-hand',
+  HandGrab = 'cursor-hand-grab',
+  ZoomIn = 'cursor-zoom-in',
+  ZoomOut = 'cursor-zoom-out',
+  ArrowBlack = 'cursor-arrow-black',
+  ArrowBlackShape = 'cursor-arrow-black-shape',
+  ArrowWhite = 'cursor-arrow-white',
+  ArrowSmall = 'cursor-arrow-small',
+  ArrowDuplicate = 'cursor-arrow-duplicate',
+  ArrowWhiteShape = 'cursor-arrow-white-shape',
+  ArrowSmallPoint = 'cursor-arrow-small-point',
+  ArrowWhitePoint = 'cursor-arrow-white-point',
+  PenAdd = 'cursor-pen-add',
+  PenClose = 'cursor-pen-close',
+  PenAdjust = 'cursor-pen-adjust',
+  PenJoin = 'cursor-pen-join',
+  PenEdit = 'cursor-pen-edit',
+  PenRemove = 'cursor-pen-remove',
+  PenCreate = 'cursor-pen-create',
+  Rotate0 = 'cursor-rotate-0',
+  Rotate45 = 'cursor-rotate-45',
+  Rotate90 = 'cursor-rotate-90',
+  Rotate135 = 'cursor-rotate-135',
+  Rotate180 = 'cursor-rotate-180',
+  Rotate225 = 'cursor-rotate-225',
+  Rotate270 = 'cursor-rotate-270',
+  Rotate315 = 'cursor-rotate-315',
+  Scale0 = 'cursor-scale-0',
+  Scale45 = 'cursor-scale-45',
+  Scale90 = 'cursor-scale-90',
+  Scale135 = 'cursor-scale-135',
 }

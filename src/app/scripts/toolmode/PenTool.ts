@@ -4,6 +4,7 @@ import { AbstractTool, HitTestArgs, ToolState } from './AbstractTool';
 import { ToolMode } from './ToolMode';
 import * as ToolsUtil from './ToolsUtil';
 import { SelectionState } from './ToolsUtil';
+import { Cursor } from './ToolsUtil';
 
 enum Mode {
   None,
@@ -24,23 +25,23 @@ export class PenTool extends AbstractTool {
   private pathId = -1;
   private mode = Mode.None;
   private hitResult: paper.HitResult;
-  private currentSegment: paper.Segment;
+  private currSegment: paper.Segment;
 
   constructor(toolState: ToolState) {
     super();
 
     let initialMousePoint: paper.Point;
-    let originalHandleIn: paper.Point;
-    let originalHandleOut: paper.Point;
+    let origHandleIn: paper.Point;
+    let origHandleOut: paper.Point;
 
     this.on({
-      activate: () => ToolsUtil.setCanvasCursor('cursor-pen-add'),
+      activate: () => ToolsUtil.setCanvasCursor(Cursor.PenAdd),
       deactivate: () => {
         if (toolState.getToolMode() !== ToolMode.Pen) {
           this.closePath();
           toolState.updateSelectionBounds();
         }
-        this.currentSegment = undefined;
+        this.currSegment = undefined;
       },
       mousedown: (event: paper.MouseEvent) => {
         ToolsUtil.deselectAllSegments();
@@ -55,10 +56,10 @@ export class PenTool extends AbstractTool {
               path.strokeColor = 'black';
               this.pathId = path.id;
             }
-            this.currentSegment = path.add(event.point);
+            this.currSegment = path.add(event.point);
             initialMousePoint = event.point.clone();
-            originalHandleIn = this.currentSegment.handleIn.clone();
-            originalHandleOut = this.currentSegment.handleOut.clone();
+            origHandleIn = this.currSegment.handleIn.clone();
+            origHandleOut = this.currSegment.handleOut.clone();
             break;
           }
           case Mode.Insert: {
@@ -99,19 +100,19 @@ export class PenTool extends AbstractTool {
               // TODO: missing types
               (ToolsUtil.findItemById(this.pathId) as paper.Path).closed = true;
             }
-            this.currentSegment = this.hitResult.segment;
-            this.currentSegment.handleIn.set(0, 0);
+            this.currSegment = this.hitResult.segment;
+            this.currSegment.handleIn.set(0, 0);
             initialMousePoint = event.point.clone();
-            originalHandleIn = this.currentSegment.handleIn.clone();
-            originalHandleOut = this.currentSegment.handleOut.clone();
+            origHandleIn = this.currSegment.handleIn.clone();
+            origHandleOut = this.currSegment.handleOut.clone();
             break;
           }
           case Mode.Adjust: {
-            this.currentSegment = this.hitResult.segment;
-            this.currentSegment.handleOut.set(0, 0);
+            this.currSegment = this.hitResult.segment;
+            this.currSegment.handleOut.set(0, 0);
             initialMousePoint = event.point.clone();
-            originalHandleIn = this.currentSegment.handleIn.clone();
-            originalHandleOut = this.currentSegment.handleOut.clone();
+            origHandleIn = this.currSegment.handleIn.clone();
+            origHandleOut = this.currSegment.handleOut.clone();
             break;
           }
           case Mode.Continue: {
@@ -119,21 +120,21 @@ export class PenTool extends AbstractTool {
               this.hitResult.item.reverseChildren();
             }
             this.pathId = this.hitResult.item.id;
-            this.currentSegment = this.hitResult.segment;
-            this.currentSegment.handleOut.set(0, 0);
+            this.currSegment = this.hitResult.segment;
+            this.currSegment.handleOut.set(0, 0);
             initialMousePoint = event.point.clone();
-            originalHandleIn = this.currentSegment.handleIn.clone();
-            originalHandleOut = this.currentSegment.handleOut.clone();
+            origHandleIn = this.currSegment.handleIn.clone();
+            origHandleOut = this.currSegment.handleOut.clone();
             break;
           }
           case Mode.Convert: {
             this.pathId = this.hitResult.item.id;
-            this.currentSegment = this.hitResult.segment;
-            this.currentSegment.handleIn.set(0, 0);
-            this.currentSegment.handleOut.set(0, 0);
+            this.currSegment = this.hitResult.segment;
+            this.currSegment.handleIn.set(0, 0);
+            this.currSegment.handleOut.set(0, 0);
             initialMousePoint = event.point.clone();
-            originalHandleIn = this.currentSegment.handleIn.clone();
-            originalHandleOut = this.currentSegment.handleOut.clone();
+            origHandleIn = this.currSegment.handleIn.clone();
+            origHandleOut = this.currSegment.handleOut.clone();
             break;
           }
           case Mode.Join: {
@@ -156,13 +157,13 @@ export class PenTool extends AbstractTool {
                   imin = i;
                 }
               }
-              this.currentSegment = path.segments[imin];
-              this.currentSegment.handleIn.set(0, 0);
+              this.currSegment = path.segments[imin];
+              this.currSegment.handleIn.set(0, 0);
               initialMousePoint = event.point.clone();
-              originalHandleIn = this.currentSegment.handleIn.clone();
-              originalHandleOut = this.currentSegment.handleOut.clone();
+              origHandleIn = this.currSegment.handleIn.clone();
+              origHandleOut = this.currSegment.handleOut.clone();
             } else {
-              this.currentSegment = undefined;
+              this.currSegment = undefined;
             }
             break;
           }
@@ -175,12 +176,12 @@ export class PenTool extends AbstractTool {
             break;
           }
         }
-        if (this.currentSegment) {
-          this.currentSegment.selected = true;
+        if (this.currSegment) {
+          this.currSegment.selected = true;
         }
       },
       mousedrag: (event: paper.MouseEvent) => {
-        if (!this.currentSegment) {
+        if (!this.currSegment) {
           return;
         }
         const path = ToolsUtil.findItemById(this.pathId);
@@ -193,7 +194,7 @@ export class PenTool extends AbstractTool {
         switch (this.mode) {
           case Mode.Create:
             dragOut = true;
-            if (this.currentSegment.index > 0) {
+            if (this.currSegment.index > 0) {
               dragIn = true;
             }
             break;
@@ -219,26 +220,26 @@ export class PenTool extends AbstractTool {
             delta = new paper.Point(-delta.x, -delta.y);
           }
           if (dragIn && dragOut) {
-            let handlePos = originalHandleOut.add(delta);
+            let handlePos = origHandleOut.add(delta);
             if (event.modifiers.shift) {
               handlePos = ToolsUtil.snapDeltaToAngle(handlePos, Math.PI * 2 / 8);
             }
-            this.currentSegment.handleOut = handlePos;
-            this.currentSegment.handleIn = new paper.Point(-handlePos.x, -handlePos.y);
+            this.currSegment.handleOut = handlePos;
+            this.currSegment.handleIn = new paper.Point(-handlePos.x, -handlePos.y);
           } else if (dragOut) {
-            let handlePos = originalHandleOut.add(delta);
+            let handlePos = origHandleOut.add(delta);
             if (event.modifiers.shift) {
               handlePos = ToolsUtil.snapDeltaToAngle(handlePos, Math.PI * 2 / 8);
             }
-            this.currentSegment.handleOut = handlePos;
-            this.currentSegment.handleIn = handlePos.normalize(-originalHandleIn.length);
+            this.currSegment.handleOut = handlePos;
+            this.currSegment.handleIn = handlePos.normalize(-origHandleIn.length);
           } else {
-            let handlePos = originalHandleIn.add(delta);
+            let handlePos = origHandleIn.add(delta);
             if (event.modifiers.shift) {
               handlePos = ToolsUtil.snapDeltaToAngle(handlePos, Math.PI * 2 / 8);
             }
-            this.currentSegment.handleIn = handlePos;
-            this.currentSegment.handleOut = handlePos.normalize(-originalHandleOut.length);
+            this.currSegment.handleIn = handlePos;
+            this.currSegment.handleOut = handlePos.normalize(-origHandleOut.length);
           }
         }
       },
@@ -248,7 +249,7 @@ export class PenTool extends AbstractTool {
           this.closePath();
         }
         this.mode = undefined;
-        this.currentSegment = undefined;
+        this.currSegment = undefined;
       },
     });
   }
@@ -275,7 +276,7 @@ export class PenTool extends AbstractTool {
   protected hitTest({ point, modifiers = {} }: HitTestArgs) {
     const hitSize = 4;
     let result = undefined;
-    this.currentSegment = undefined;
+    this.currSegment = undefined;
     this.hitResult = undefined;
     if (point) {
       result = paper.project.hitTest(point, {
@@ -288,7 +289,7 @@ export class PenTool extends AbstractTool {
       if (result.type === 'stroke') {
         if (result.item.selected) {
           this.mode = Mode.Insert;
-          ToolsUtil.setCanvasCursor('cursor-pen-add');
+          ToolsUtil.setCanvasCursor(Cursor.PenAdd);
         } else {
           result = undefined;
         }
@@ -298,29 +299,29 @@ export class PenTool extends AbstractTool {
           if (result.item.id === this.pathId) {
             if (result.segment.index === 0) {
               this.mode = Mode.Close;
-              ToolsUtil.setCanvasCursor('cursor-pen-close');
+              ToolsUtil.setCanvasCursor(Cursor.PenClose);
               this.updateTail(result.segment.point);
             } else {
               this.mode = Mode.Adjust;
-              ToolsUtil.setCanvasCursor('cursor-pen-adjust');
+              ToolsUtil.setCanvasCursor(Cursor.PenAdjust);
             }
           } else {
             if (this.pathId !== -1) {
               this.mode = Mode.Join;
-              ToolsUtil.setCanvasCursor('cursor-pen-join');
+              ToolsUtil.setCanvasCursor(Cursor.PenJoin);
               this.updateTail(result.segment.point);
             } else {
               this.mode = Mode.Continue;
-              ToolsUtil.setCanvasCursor('cursor-pen-edit');
+              ToolsUtil.setCanvasCursor(Cursor.PenEdit);
             }
           }
         } else if (result.item.selected) {
           if (modifiers.option) {
             this.mode = Mode.Convert;
-            ToolsUtil.setCanvasCursor('cursor-pen-adjust');
+            ToolsUtil.setCanvasCursor(Cursor.PenAdjust);
           } else {
             this.mode = Mode.Remove;
-            ToolsUtil.setCanvasCursor('cursor-pen-remove');
+            ToolsUtil.setCanvasCursor(Cursor.PenRemove);
           }
         } else {
           result = undefined;
@@ -329,7 +330,7 @@ export class PenTool extends AbstractTool {
     }
     if (!result) {
       this.mode = Mode.Create;
-      ToolsUtil.setCanvasCursor('cursor-pen-create');
+      ToolsUtil.setCanvasCursor(Cursor.PenCreate);
       if (point) {
         this.updateTail(point);
       }

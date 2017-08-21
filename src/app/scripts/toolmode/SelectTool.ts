@@ -3,8 +3,9 @@ import * as paper from 'paper';
 import { AbstractTool, HitTestArgs, ToolState } from './AbstractTool';
 import * as ToolsUtil from './ToolsUtil';
 import { SelectionState } from './ToolsUtil';
+import { Cursor } from './ToolsUtil';
 
-enum SelectionMode {
+enum Mode {
   None,
   MoveShapes,
   BoxSelect,
@@ -17,23 +18,23 @@ export class SelectTool extends AbstractTool {
   private hitResult: paper.HitResult;
 
   // TODO: rotate/scale operations dont work after the initial selection
-  constructor(private readonly toolState: ToolState) {
+  constructor(toolState: ToolState) {
     super();
 
     let initialMousePoint: paper.Point;
-    let selectionMode = SelectionMode.None;
+    let mode = Mode.None;
     let hasSelectionChanged = false;
     let initialSelectionState: SelectionState[];
 
     this.on({
       activate: () => {
-        ToolsUtil.setCanvasCursor('cursor-arrow-black');
-        this.toolState.updateSelectionBounds();
-        this.toolState.showSelectionBounds();
+        ToolsUtil.setCanvasCursor(Cursor.ArrowBlack);
+        toolState.updateSelectionBounds();
+        toolState.showSelectionBounds();
       },
-      deactivate: () => this.toolState.hideSelectionBounds(),
+      deactivate: () => toolState.hideSelectionBounds(),
       mousedown: (event: paper.MouseEvent) => {
-        selectionMode = SelectionMode.None;
+        mode = Mode.None;
         hasSelectionChanged = false;
         initialMousePoint = event.point.clone();
 
@@ -54,26 +55,27 @@ export class SelectTool extends AbstractTool {
             if (hitItem.selected) {
               // Clicked on a shape, engage move shape mode. Deselect all segments
               // so that only the selected shapes remain.
-              selectionMode = SelectionMode.MoveShapes;
+              mode = Mode.MoveShapes;
               initialMousePoint = event.point.clone();
               ToolsUtil.deselectAllSegments();
               initialSelectionState = ToolsUtil.captureSelectionState();
             }
           }
-          this.toolState.updateSelectionBounds();
+          toolState.updateSelectionBounds();
         } else {
           // Clicked on and empty area, engage box select mode.
-          selectionMode = SelectionMode.BoxSelect;
+          mode = Mode.BoxSelect;
         }
       },
       mousedrag: (event: paper.MouseEvent) => {
-        switch (selectionMode) {
-          case SelectionMode.MoveShapes: {
+        switch (mode) {
+          case Mode.MoveShapes: {
             hasSelectionChanged = true;
             if (event.modifiers.option) {
-              ToolsUtil.setCanvasCursor('cursor-arrow-duplicate');
+              // TODO: implement duplicate selection
+              ToolsUtil.setCanvasCursor(Cursor.ArrowDuplicate);
             } else {
-              ToolsUtil.setCanvasCursor('cursor-arrow-small');
+              ToolsUtil.setCanvasCursor(Cursor.ArrowSmall);
             }
             let delta = event.point.subtract(initialMousePoint);
             if (event.modifiers.shift) {
@@ -83,10 +85,10 @@ export class SelectTool extends AbstractTool {
             paper.project
               .getSelectedItems()
               .forEach(item => (item.position = item.position.add(delta)));
-            this.toolState.updateSelectionBounds();
+            toolState.updateSelectionBounds();
             break;
           }
-          case SelectionMode.BoxSelect: {
+          case Mode.BoxSelect: {
             ToolsUtil.createDragRect(initialMousePoint, event.point);
             break;
           }
@@ -94,14 +96,14 @@ export class SelectTool extends AbstractTool {
       },
       mousemove: (event: paper.MouseEvent) => this.hitTest(event),
       mouseup: (event: paper.MouseEvent) => {
-        switch (selectionMode) {
-          case SelectionMode.MoveShapes: {
+        switch (mode) {
+          case Mode.MoveShapes: {
             if (hasSelectionChanged) {
-              this.toolState.clearSelectionBounds();
+              toolState.clearSelectionBounds();
             }
             break;
           }
-          case SelectionMode.BoxSelect: {
+          case Mode.BoxSelect: {
             if (!event.modifiers.shift) {
               ToolsUtil.deselectAll();
             }
@@ -110,14 +112,12 @@ export class SelectTool extends AbstractTool {
             break;
           }
         }
-
-        this.toolState.updateSelectionBounds();
-
+        toolState.updateSelectionBounds();
         if (this.hitResult) {
           if (this.hitResult.item.selected) {
-            ToolsUtil.setCanvasCursor('cursor-arrow-small');
+            ToolsUtil.setCanvasCursor(Cursor.ArrowSmall);
           } else {
-            ToolsUtil.setCanvasCursor('cursor-arrow-black-shape');
+            ToolsUtil.setCanvasCursor(Cursor.ArrowBlackShape);
           }
         }
       },
@@ -141,13 +141,13 @@ export class SelectTool extends AbstractTool {
     if (this.hitResult) {
       if (this.hitResult.type === 'fill' || this.hitResult.type === 'stroke') {
         if (this.hitResult.item.selected) {
-          ToolsUtil.setCanvasCursor('cursor-arrow-small');
+          ToolsUtil.setCanvasCursor(Cursor.ArrowSmall);
         } else {
-          ToolsUtil.setCanvasCursor('cursor-arrow-black-shape');
+          ToolsUtil.setCanvasCursor(Cursor.ArrowBlackShape);
         }
       }
     } else {
-      ToolsUtil.setCanvasCursor('cursor-arrow-black');
+      ToolsUtil.setCanvasCursor(Cursor.ArrowBlack);
     }
 
     return true;

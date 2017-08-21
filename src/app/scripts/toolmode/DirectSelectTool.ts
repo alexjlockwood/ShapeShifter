@@ -4,6 +4,7 @@ import { AbstractTool, HitTestArgs, ToolState } from './AbstractTool';
 import { ToolMode } from './ToolMode';
 import * as ToolsUtil from './ToolsUtil';
 import { SelectionState } from './ToolsUtil';
+import { Cursor } from './ToolsUtil';
 
 enum Mode {
   None,
@@ -26,14 +27,14 @@ export class DirectSelectTool extends AbstractTool {
 
     let initialMousePoint = new paper.Point(0, 0);
     let mode = Mode.None;
-    let initialSelectionState: SelectionState[];
     let hasSelectionChanged = false;
+    let initialSelectionState: SelectionState[];
     let initialHandleIn: paper.Point;
     let initialHandleOut: paper.Point;
 
     this.on({
       // TODO: figure out how activate/deactivate works here?
-      activate: () => ToolsUtil.setCanvasCursor('cursor-arrow-white'),
+      activate: () => ToolsUtil.setCanvasCursor(Cursor.ArrowWhite),
       deactivate: () => {},
       mousedown: (event: paper.MouseEvent) => {
         mode = Mode.None;
@@ -86,7 +87,7 @@ export class DirectSelectTool extends AbstractTool {
         hasSelectionChanged = true;
         switch (mode) {
           case Mode.MoveShapes: {
-            ToolsUtil.setCanvasCursor('cursor-arrow-small');
+            ToolsUtil.setCanvasCursor(Cursor.ArrowSmall);
             let delta = event.point.subtract(initialMousePoint);
             if (event.modifiers.shift) {
               delta = ToolsUtil.snapDeltaToAngle(delta, Math.PI * 2 / 8);
@@ -99,7 +100,7 @@ export class DirectSelectTool extends AbstractTool {
             break;
           }
           case Mode.MovePoints: {
-            ToolsUtil.setCanvasCursor('cursor-arrow-small');
+            ToolsUtil.setCanvasCursor(Cursor.ArrowSmall);
             let delta = event.point.subtract(initialMousePoint);
             if (event.modifiers.shift) {
               delta = ToolsUtil.snapDeltaToAngle(delta, Math.PI * 2 / 8);
@@ -165,9 +166,9 @@ export class DirectSelectTool extends AbstractTool {
         // TODO: is this already handled in the hit test code below?
         if (this.hitResult) {
           if (this.hitResult.item.selected) {
-            ToolsUtil.setCanvasCursor('cursor-arrow-small');
+            ToolsUtil.setCanvasCursor(Cursor.ArrowSmall);
           } else {
-            ToolsUtil.setCanvasCursor('cursor-arrow-white-shape');
+            ToolsUtil.setCanvasCursor(Cursor.ArrowWhiteShape);
           }
         }
       },
@@ -219,9 +220,9 @@ export class DirectSelectTool extends AbstractTool {
     if (this.hitResult) {
       if (this.hitResult.type === 'fill' || this.hitResult.type === 'stroke') {
         if (this.hitResult.item.selected) {
-          ToolsUtil.setCanvasCursor('cursor-arrow-small');
+          ToolsUtil.setCanvasCursor(Cursor.ArrowSmall);
         } else {
-          ToolsUtil.setCanvasCursor('cursor-arrow-white-shape');
+          ToolsUtil.setCanvasCursor(Cursor.ArrowWhiteShape);
         }
       } else if (
         this.hitResult.type === 'segment' ||
@@ -229,13 +230,13 @@ export class DirectSelectTool extends AbstractTool {
         this.hitResult.type === 'handle-out'
       ) {
         if (this.hitResult.segment.selected) {
-          ToolsUtil.setCanvasCursor('cursor-arrow-small-point');
+          ToolsUtil.setCanvasCursor(Cursor.ArrowSmallPoint);
         } else {
-          ToolsUtil.setCanvasCursor('cursor-arrow-white-point');
+          ToolsUtil.setCanvasCursor(Cursor.ArrowWhitePoint);
         }
       }
     } else {
-      ToolsUtil.setCanvasCursor('cursor-arrow-white');
+      ToolsUtil.setCanvasCursor(Cursor.ArrowWhite);
     }
 
     return true;

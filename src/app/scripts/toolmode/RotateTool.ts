@@ -3,6 +3,7 @@ import * as paper from 'paper';
 import { AbstractTool, HitTestArgs, ToolState } from './AbstractTool';
 import * as ToolsUtil from './ToolsUtil';
 import { SelectionState } from './ToolsUtil';
+import { Cursor } from './ToolsUtil';
 
 /**
  * Rotate tool for rotating shapes.
@@ -23,7 +24,7 @@ export class RotateTool extends AbstractTool {
 
     this.on({
       activate: () => {
-        ToolsUtil.setCanvasCursor('cursor-arrow-black');
+        ToolsUtil.setCanvasCursor(Cursor.ArrowBlack);
         this.toolState.updateSelectionBounds();
         this.toolState.showSelectionBounds();
       },
@@ -62,7 +63,7 @@ export class RotateTool extends AbstractTool {
         // TODO: missing types
         const id = this.toolState.getSelectionBoundsPath().id;
         this.toolState.getSelectionBoundsPath().importJSON(originalShape);
-        this.toolState.getSelectionBoundsPath()._id = id;
+        (this.toolState.getSelectionBoundsPath() as any)._id = id;
 
         const deg = da / Math.PI * 180;
         this.toolState.getSelectionBoundsPath().rotate(deg, originalCenter);

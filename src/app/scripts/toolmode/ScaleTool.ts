@@ -3,6 +3,7 @@ import * as paper from 'paper';
 import { AbstractTool, HitTestArgs, ToolState } from './AbstractTool';
 import * as ToolsUtil from './ToolsUtil';
 import { SelectionState } from './ToolsUtil';
+import { Cursor } from './ToolsUtil';
 
 const oppositeCorner = {
   'top-left': 'bottom-right',
@@ -34,7 +35,7 @@ export class ScaleTool extends AbstractTool {
 
     this.on({
       activate: () => {
-        ToolsUtil.setCanvasCursor('cursor-arrow-black');
+        ToolsUtil.setCanvasCursor(Cursor.ArrowBlack);
         this.toolState.updateSelectionBounds();
         this.toolState.showSelectionBounds();
       },
@@ -132,7 +133,7 @@ export class ScaleTool extends AbstractTool {
       });
     }
 
-    if (!this.hitResult && this.hitResult.type !== 'bounds') {
+    if (!this.hitResult || this.hitResult.type !== 'bounds') {
       return false;
     }
 
