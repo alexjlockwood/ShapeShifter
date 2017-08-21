@@ -22,7 +22,7 @@ export class ZoomPanTool extends AbstractTool {
     super();
 
     let mode = Mode.None;
-    let initialMousePoint = new paper.Point(0, 0);
+    let lastMousePoint = new paper.Point(0, 0);
     const distanceThreshold = 8;
     const zoomFactor = 1.3;
 
@@ -30,7 +30,7 @@ export class ZoomPanTool extends AbstractTool {
       activate: () => ToolsUtil.setCanvasCursor(Cursor.Hand),
       deactivate: () => {},
       mousedown: (event: paper.MouseEvent) => {
-        initialMousePoint = event.point.subtract(paper.view.center);
+        lastMousePoint = event.point.subtract(paper.view.center);
         mode = Mode.None;
         if (event.modifiers.command) {
           mode = Mode.Zoom;
@@ -48,15 +48,15 @@ export class ZoomPanTool extends AbstractTool {
           }
           case Mode.ZoomRect: {
             // While dragging the zoom rectangle, paint the selected area.
-            ToolsUtil.createDragRect(paper.view.center.add(initialMousePoint), point);
+            ToolsUtil.createDragRect(paper.view.center.add(lastMousePoint), point);
             break;
           }
           case Mode.Pan: {
             // Handle panning by moving the view center.
             const pt = point.subtract(paper.view.center);
-            const delta = initialMousePoint.subtract(pt);
+            const delta = lastMousePoint.subtract(pt);
             paper.view.scrollBy(delta);
-            initialMousePoint = pt;
+            lastMousePoint = pt;
             break;
           }
         }
@@ -79,7 +79,7 @@ export class ZoomPanTool extends AbstractTool {
             break;
           }
           case Mode.ZoomRect: {
-            const start = paper.view.center.add(initialMousePoint);
+            const start = paper.view.center.add(lastMousePoint);
             const end = event.point;
             paper.view.center = start.add(end).multiply(0.5);
             const dx = paper.view.bounds.width / Math.abs(end.x - start.x);

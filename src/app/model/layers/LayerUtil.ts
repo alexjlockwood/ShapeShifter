@@ -72,9 +72,7 @@ export function adjustViewports(vl1: VectorLayer, vl2: VectorLayer) {
 
   let { width: w1, height: h1 } = vl1;
   let { width: w2, height: h2 } = vl2;
-  const isMaxDimenFn = (n: number) => {
-    return Math.max(w1, h1, w2, h2, n) === n;
-  };
+  const isMaxDimenFn = (n: number) => Math.max(w1, h1, w2, h2, n) === n;
 
   let scale1 = 1;
   let scale2 = 1;
