@@ -35,7 +35,7 @@ export class DirectSelectTool extends AbstractTool {
     this.on({
       // TODO: figure out how activate/deactivate works here?
       activate: () => ToolsUtil.setCanvasCursor(Cursor.ArrowWhite),
-      deactivate: () => {},
+      deactivate: () => toolState.hideSelectionBounds(),
       mousedown: (event: paper.MouseEvent) => {
         mode = Mode.None;
         hasSelectionChanged = false;
@@ -45,11 +45,15 @@ export class DirectSelectTool extends AbstractTool {
           if (this.hitResult.type === 'fill' || this.hitResult.type === 'stroke') {
             const hitItem = this.hitResult.item;
             if (event.modifiers.shift) {
+              // Toggle the selected item.
+              // TODO: make sure that parent layers are also deselected
               hitItem.selected = !hitItem.selected;
             } else {
-              if (!hitItem.selected) {
-                ToolsUtil.deselectAll();
-              }
+              // Deselect all other selections and select the hit item.
+              // TODO: figure out what this code was meant to do (caused parent layers from being deselected)
+              // if (!hitItem.selected) {
+              ToolsUtil.deselectAll();
+              // }
               hitItem.selected = true;
             }
             if (hitItem.selected) {

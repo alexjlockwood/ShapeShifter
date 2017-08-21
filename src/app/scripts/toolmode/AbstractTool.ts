@@ -23,4 +23,6 @@ export interface ToolState {
   clearSelectionBounds(): void;
   updateSelectionBounds(): void;
   getToolMode(): ToolMode;
+  getFillColor(): string;
+  getStrokeColor(): string;
 }

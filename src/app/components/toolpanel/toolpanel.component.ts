@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ToolMode } from 'app/model/toolmode';
+import { ColorUtil } from 'app/scripts/common';
 import { ToolModeService } from 'app/services';
 import { Observable } from 'rxjs/Observable';
 
@@ -16,10 +17,11 @@ export class ToolPanelComponent implements OnInit {
 
   private toolMode$: Observable<ToolMode>;
 
+  // TODO: deal with invalid fill/stroke colors
   constructor(private readonly toolModeService: ToolModeService) {}
 
   ngOnInit() {
-    this.toolMode$ = this.toolModeService.asObservable();
+    this.toolMode$ = this.toolModeService.getToolModeObservable();
   }
 
   onSelectClick() {
@@ -36,5 +38,22 @@ export class ToolPanelComponent implements OnInit {
 
   onZoomPanClick() {
     this.toolModeService.setToolMode(ToolMode.ZoomPan);
+  }
+
+  get fillColor() {
+    return this.toolModeService.getFillColor();
+  }
+
+  set fillColor(color: string) {
+    console.log('fillColor', color);
+    this.toolModeService.setFillColor(color);
+  }
+
+  get strokeColor() {
+    return this.toolModeService.getStrokeColor();
+  }
+
+  set strokeColor(color: string) {
+    this.toolModeService.setStrokeColor(color);
   }
 }

@@ -117,6 +117,32 @@ export class ToolSwitcher {
     // TODO: improve this API ('switchmode' is meaningless)
     this.fire('switchmode', { point: this.lastMousePoint.clone() });
   }
+
+  setFillColor(fillColor: string) {
+    this.toolState.setFillColor(fillColor);
+
+    // TODO: can any other types of items be included?
+    const items = paper.project
+      .getSelectedItems()
+      .filter(item => item instanceof paper.PathItem) as paper.PathItem[];
+    for (const item of items) {
+      // TODO: only set valid colors on the path items
+      item.fillColor = fillColor;
+    }
+  }
+
+  setStrokeColor(strokeColor: string) {
+    this.toolState.setStrokeColor(strokeColor);
+
+    // TODO: can any other types of items be included?
+    const items = paper.project
+      .getSelectedItems()
+      .filter(item => item instanceof paper.PathItem) as paper.PathItem[];
+    for (const item of items) {
+      // TODO: only set valid colors on the path items
+      item.strokeColor = strokeColor;
+    }
+  }
 }
 
 class ToolStateImpl implements ToolState {
@@ -124,6 +150,10 @@ class ToolStateImpl implements ToolState {
   private selectionBounds: paper.Rectangle;
   private selectionBoundsPath: paper.Path.Rectangle;
   private numSelections = 0;
+
+  // TODO: fetch this directly from the store instead of storing a cached value here?
+  private fillColor: string;
+  private strokeColor: string;
 
   getToolMode() {
     return this.mode;
@@ -139,6 +169,22 @@ class ToolStateImpl implements ToolState {
 
   getSelectionBoundsPath() {
     return this.selectionBoundsPath;
+  }
+
+  getFillColor() {
+    return this.fillColor;
+  }
+
+  setFillColor(fillColor: string) {
+    this.fillColor = fillColor;
+  }
+
+  getStrokeColor() {
+    return this.strokeColor;
+  }
+
+  setStrokeColor(strokeColor: string) {
+    this.strokeColor = strokeColor;
   }
 
   // TODO: figure out what this is used for

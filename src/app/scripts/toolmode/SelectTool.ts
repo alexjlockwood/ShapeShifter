@@ -42,21 +42,23 @@ export class SelectTool extends AbstractTool {
           // TODO: make it possible to select the selection rectangle too?
           if (this.hitResult.type === 'fill' || this.hitResult.type === 'stroke') {
             const hitItem = this.hitResult.item;
+            console.log(hitItem);
             if (event.modifiers.shift) {
               // Toggle the selected item.
+              // TODO: make sure that parent layers are also deselected
               hitItem.selected = !hitItem.selected;
             } else {
               // Deselect all other selections and select the hit item.
-              if (!hitItem.selected) {
-                ToolsUtil.deselectAll();
-              }
+              // TODO: figure out what this code was meant to do (caused parent layers from being deselected)
+              // if (!hitItem.selected) {
+              ToolsUtil.deselectAll();
+              // }
               hitItem.selected = true;
             }
             if (hitItem.selected) {
               // Clicked on a shape, engage move shape mode. Deselect all segments
               // so that only the selected shapes remain.
               mode = Mode.MoveShapes;
-              initialMousePoint = event.point.clone();
               ToolsUtil.deselectAllSegments();
               initialSelectionState = ToolsUtil.captureSelectionState();
             }
@@ -112,6 +114,7 @@ export class SelectTool extends AbstractTool {
             break;
           }
         }
+
         toolState.updateSelectionBounds();
         if (this.hitResult) {
           if (this.hitResult.item.selected) {

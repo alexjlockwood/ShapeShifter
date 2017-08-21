@@ -1,13 +1,13 @@
-import 'rxjs/add/observable/combineLatest';
-import 'rxjs/add/observable/merge';
-
 import { AfterViewInit, Directive, ElementRef, HostListener, Input } from '@angular/core';
 import { ActionSource } from 'app/model/actionmode';
 import { LayerUtil, PathLayer } from 'app/model/layers';
 import { Path } from 'app/model/paths';
 import { DestroyableMixin } from 'app/scripts/mixins';
 import { ToolSwitcher } from 'app/scripts/toolmode';
+import * as PaperUtil from 'app/scripts/toolmode/PaperUtil';
 import { LayerTimelineService, ToolModeService } from 'app/services';
+import { State, Store } from 'app/store';
+import { getVectorLayer } from 'app/store/layers/selectors';
 import * as $ from 'jquery';
 import * as paper from 'paper';
 import { Point } from 'paper'; // TODO: figure out why this needs to be imported to prevent breaks?
@@ -28,6 +28,7 @@ export class CanvasPaperDirective extends CanvasLayoutMixin(DestroyableMixin())
     elementRef: ElementRef,
     private readonly toolModeService: ToolModeService,
     private readonly layerTimelineService: LayerTimelineService,
+    private readonly store: Store<State>,
   ) {
     super();
     this.$canvas = $(elementRef.nativeElement) as JQuery<HTMLCanvasElement>;
@@ -38,8 +39,28 @@ export class CanvasPaperDirective extends CanvasLayoutMixin(DestroyableMixin())
     paper.settings.handleSize = 8;
     const toolSwitcher = new ToolSwitcher();
     this.registerSubscription(
-      this.toolModeService.asObservable().subscribe(toolMode => {
+      this.toolModeService.getToolModeObservable().subscribe(toolMode => {
         toolSwitcher.setToolMode(toolMode);
+      }),
+    );
+    this.registerSubscription(
+      this.toolModeService.getFillColorObservable().subscribe(fillColor => {
+        toolSwitcher.setFillColor(fillColor);
+      }),
+    );
+    this.registerSubscription(
+      this.toolModeService.getStrokeColorObservable().subscribe(strokeColor => {
+        toolSwitcher.setStrokeColor(strokeColor);
+      }),
+    );
+    this.registerSubscription(
+      this.store.select(getVectorLayer).subscribe(vl => {
+        const rootItem = PaperUtil.fromLayer(vl);
+        const scale = this.cssScale;
+        paper.project.activeLayer.matrix = new paper.Matrix(scale, 0, 0, scale, 0, 0);
+        paper.project.activeLayer.removeChildren();
+        paper.project.activeLayer.addChild(rootItem);
+        console.log(paper.project.activeLayer);
       }),
     );
   }
@@ -49,8 +70,6 @@ export class CanvasPaperDirective extends CanvasLayoutMixin(DestroyableMixin())
     const { w, h } = this.getViewport();
     this.$canvas.attr({ width: w * this.attrScale, height: h * this.attrScale });
     this.$canvas.css({ width: w * this.cssScale, height: h * this.cssScale });
-    paper.view.size.width = w * this.cssScale;
-    paper.view.size.height = h * this.cssScale;
     paper.view.viewSize = new paper.Size(w * this.cssScale, h * this.cssScale);
   }
 

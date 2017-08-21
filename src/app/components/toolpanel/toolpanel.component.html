@@ -1,4 +1,4 @@
-<div *ngIf="(this.toolModeService.asObservable() | async) as toolMode"
+<div *ngIf="(this.toolModeService.getToolModeObservable() | async) as toolMode"
   class="tool-panel mat-elevation-z4"
   fxLayout="column"
   fxFlex>
@@ -27,4 +27,6 @@
       (click)="onZoomPanClick()">
     </md-icon>
   </div>
+  <input [(ngModel)]="this.fillColor">
+  <input [(ngModel)]="this.strokeColor">
 </div>

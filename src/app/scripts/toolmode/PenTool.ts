@@ -53,7 +53,8 @@ export class PenTool extends AbstractTool {
             if (!path) {
               ToolsUtil.deselectAll();
               path = new paper.Path();
-              path.strokeColor = 'black';
+              path.fillColor = toolState.getFillColor();
+              path.strokeColor = toolState.getStrokeColor();
               this.pathId = path.id;
             }
             this.currSegment = path.add(event.point);
