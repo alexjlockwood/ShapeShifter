@@ -276,32 +276,36 @@ export class PenTool extends AbstractTool {
   // @Override
   protected hitTest({ point, modifiers = {} }: HitTestArgs) {
     const hitSize = 4;
-    let result = undefined;
+    let hitResult: paper.HitResult = undefined;
     this.currSegment = undefined;
     this.hitResult = undefined;
     if (point) {
-      result = paper.project.hitTest(point, {
+      hitResult = paper.project.hitTest(point, {
         segments: true,
         stroke: true,
         tolerance: hitSize,
       });
     }
-    if (result) {
-      if (result.type === 'stroke') {
-        if (result.item.selected) {
+    if (hitResult) {
+      if (hitResult.type === 'stroke') {
+        if (hitResult.item.selected) {
           this.mode = Mode.Insert;
           ToolsUtil.setCanvasCursor(Cursor.PenAdd);
         } else {
-          result = undefined;
+          hitResult = undefined;
         }
-      } else if (result.type === 'segment') {
-        const last = result.item.segments.length - 1;
-        if (!result.item.closed && (result.segment.index === 0 || result.segment.index === last)) {
-          if (result.item.id === this.pathId) {
-            if (result.segment.index === 0) {
+      } else if (hitResult.type === 'segment') {
+        // TODO: missing types
+        const last = (hitResult.item as paper.Path).segments.length - 1;
+        if (
+          !(hitResult.item as paper.Path).closed &&
+          (hitResult.segment.index === 0 || hitResult.segment.index === last)
+        ) {
+          if (hitResult.item.id === this.pathId) {
+            if (hitResult.segment.index === 0) {
               this.mode = Mode.Close;
               ToolsUtil.setCanvasCursor(Cursor.PenClose);
-              this.updateTail(result.segment.point);
+              this.updateTail(hitResult.segment.point);
             } else {
               this.mode = Mode.Adjust;
               ToolsUtil.setCanvasCursor(Cursor.PenAdjust);
@@ -310,13 +314,13 @@ export class PenTool extends AbstractTool {
             if (this.pathId !== -1) {
               this.mode = Mode.Join;
               ToolsUtil.setCanvasCursor(Cursor.PenJoin);
-              this.updateTail(result.segment.point);
+              this.updateTail(hitResult.segment.point);
             } else {
               this.mode = Mode.Continue;
               ToolsUtil.setCanvasCursor(Cursor.PenEdit);
             }
           }
-        } else if (result.item.selected) {
+        } else if (hitResult.item.selected) {
           if (modifiers.option) {
             this.mode = Mode.Convert;
             ToolsUtil.setCanvasCursor(Cursor.PenAdjust);
@@ -325,18 +329,18 @@ export class PenTool extends AbstractTool {
             ToolsUtil.setCanvasCursor(Cursor.PenRemove);
           }
         } else {
-          result = undefined;
+          hitResult = undefined;
         }
       }
     }
-    if (!result) {
+    if (!hitResult) {
       this.mode = Mode.Create;
       ToolsUtil.setCanvasCursor(Cursor.PenCreate);
       if (point) {
         this.updateTail(point);
       }
     }
-    this.hitResult = result;
+    this.hitResult = hitResult;
     return true;
   }
 
@@ -367,11 +371,6 @@ export class PenTool extends AbstractTool {
     );
     tail.moveTo(prevPoint);
     tail.cubicCurveTo(prevHandleOut, point, point);
-    tail.removeOn({
-      drag: true,
-      up: true,
-      down: true,
-      move: true,
-    });
+    tail.removeOn({ drag: true, up: true, down: true, move: true });
   }
 }

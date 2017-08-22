@@ -106,11 +106,7 @@ export class ZoomPanTool extends AbstractTool {
 
   protected hitTest({ modifiers = {} }: HitTestArgs) {
     if (modifiers.command) {
-      if (modifiers.command && !modifiers.option) {
-        ToolsUtil.setCanvasCursor(Cursor.ZoomIn);
-      } else if (modifiers.command && modifiers.option) {
-        ToolsUtil.setCanvasCursor(Cursor.ZoomOut);
-      }
+      ToolsUtil.setCanvasCursor(modifiers.option ? Cursor.ZoomOut : Cursor.ZoomIn);
     } else {
       ToolsUtil.setCanvasCursor(Cursor.Hand);
     }
