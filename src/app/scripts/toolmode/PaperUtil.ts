@@ -33,7 +33,8 @@ export function fromLayer(rootLayer: Layer) {
       return item;
     }
     if (layer instanceof ClipPathLayer) {
-      const item = new paper.CompoundPath(layer.pathData.getPathString());
+      const pathStr = layer.pathData ? layer.pathData.getPathString() : '';
+      const item = new paper.CompoundPath(pathStr);
       item.clipMask = true;
       return item;
     }

@@ -61,6 +61,7 @@ export class RotateTool extends AbstractTool {
         ToolsUtil.restoreSelectionState(originalContent);
 
         // TODO: missing types
+        // TODO: store the id in the data instead?
         const id = this.toolState.getSelectionBoundsPath().id;
         this.toolState.getSelectionBoundsPath().importJSON(originalShape);
         (this.toolState.getSelectionBoundsPath() as any)._id = id;
@@ -69,11 +70,9 @@ export class RotateTool extends AbstractTool {
         this.toolState.getSelectionBoundsPath().rotate(deg, originalCenter);
 
         paper.project.getSelectedItems().forEach(item => {
-          // TODO: missing types
-          if ((item as any).guide) {
-            return;
+          if (!item.guide) {
+            item.rotate(deg, originalCenter);
           }
-          item.rotate(deg, originalCenter);
         });
 
         ToolsUtil.setCanvasRotateCursor(this.cursorDir, da);

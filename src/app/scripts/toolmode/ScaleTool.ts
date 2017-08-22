@@ -92,11 +92,9 @@ export class ScaleTool extends AbstractTool {
         ToolsUtil.restoreSelectionState(originalContent);
 
         paper.project.getSelectedItems().forEach(item => {
-          // TODO: missing types
-          if ((item as any).guide) {
-            return;
+          if (!item.guide) {
+            item.scale(sx, sy, origPivot);
           }
-          item.scale(sx, sy, origPivot);
         });
         this.toolState.updateSelectionBounds();
         hasScaleChanged = true;

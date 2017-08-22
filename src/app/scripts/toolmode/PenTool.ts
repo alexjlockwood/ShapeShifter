@@ -356,12 +356,11 @@ export class PenTool extends AbstractTool {
     if (numSegs === 0) {
       return;
     }
-    const color = (paper.project.activeLayer as any).getSelectedColor();
+    const color = paper.project.activeLayer.selectedColor;
     const tail = new paper.Path();
     tail.strokeColor = color ? color : '#009dec';
     tail.strokeWidth = 1 / paper.view.zoom;
-    // TODO: missing types
-    (tail as any).guide = true;
+    tail.guide = true;
     const prevPoint = path.segments[numSegs - 1].point;
     const prevHandleOut = path.segments[numSegs - 1].point.add(
       path.segments[numSegs - 1].handleOut,

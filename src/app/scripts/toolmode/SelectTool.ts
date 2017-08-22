@@ -17,7 +17,6 @@ enum Mode {
 export class SelectTool extends AbstractTool {
   private hitResult: paper.HitResult;
 
-  // TODO: rotate/scale operations dont work after the initial selection
   constructor(toolState: ToolState) {
     super();
 
@@ -38,36 +37,36 @@ export class SelectTool extends AbstractTool {
         hasSelectionChanged = false;
         initialMousePoint = event.point.clone();
 
-        if (this.hitResult) {
-          // TODO: make it possible to select the selection rectangle too?
-          if (this.hitResult.type === 'fill' || this.hitResult.type === 'stroke') {
-            const hitItem = this.hitResult.item;
-            console.log(hitItem);
-            if (event.modifiers.shift) {
-              // Toggle the selected item.
-              // TODO: make sure that parent layers are also deselected
-              hitItem.selected = !hitItem.selected;
-            } else {
-              // Deselect all other selections and select the hit item.
-              // TODO: figure out what this code was meant to do (caused parent layers from being deselected)
-              // if (!hitItem.selected) {
-              ToolsUtil.deselectAll();
-              // }
-              hitItem.selected = true;
-            }
-            if (hitItem.selected) {
-              // Clicked on a shape, engage move shape mode. Deselect all segments
-              // so that only the selected shapes remain.
-              mode = Mode.MoveShapes;
-              ToolsUtil.deselectAllSegments();
-              initialSelectionState = ToolsUtil.captureSelectionState();
-            }
-          }
-          toolState.updateSelectionBounds();
-        } else {
+        if (!this.hitResult) {
           // Clicked on and empty area, engage box select mode.
           mode = Mode.BoxSelect;
+          return;
         }
+
+        // TODO: make it possible to select the selection rectangle too?
+        if (this.hitResult.type === 'fill' || this.hitResult.type === 'stroke') {
+          const hitItem = this.hitResult.item;
+          if (event.modifiers.shift) {
+            // Toggle the selected item.
+            // TODO: make sure that parent layers are also deselected
+            hitItem.selected = !hitItem.selected;
+          } else {
+            // Deselect all other selections and select the hit item.
+            // TODO: figure out what this code was meant to do (caused parent layers from being deselected)
+            // if (!hitItem.selected) {
+            ToolsUtil.deselectAll();
+            // }
+            hitItem.selected = true;
+          }
+          if (hitItem.selected) {
+            // Clicked on a shape, engage move shape mode. Deselect all segments
+            // so that only the selected shapes remain.
+            mode = Mode.MoveShapes;
+            ToolsUtil.deselectAllSegments();
+            initialSelectionState = ToolsUtil.captureSelectionState();
+          }
+        }
+        toolState.updateSelectionBounds();
       },
       mousedrag: (event: paper.MouseEvent) => {
         switch (mode) {
@@ -129,28 +128,24 @@ export class SelectTool extends AbstractTool {
 
   // @Override
   protected hitTest({ point }: HitTestArgs) {
-    const hitSize = 4;
     this.hitResult = undefined;
 
-    // Hit test items.
     if (point) {
       this.hitResult = paper.project.hitTest(point, {
         fill: true,
         stroke: true,
-        tolerance: hitSize,
+        tolerance: 4,
       });
     }
 
-    if (this.hitResult) {
-      if (this.hitResult.type === 'fill' || this.hitResult.type === 'stroke') {
-        if (this.hitResult.item.selected) {
-          ToolsUtil.setCanvasCursor(Cursor.ArrowSmall);
-        } else {
-          ToolsUtil.setCanvasCursor(Cursor.ArrowBlackShape);
-        }
-      }
-    } else {
+    if (!this.hitResult) {
       ToolsUtil.setCanvasCursor(Cursor.ArrowBlack);
+      return true;
+    }
+
+    if (this.hitResult.type === 'fill' || this.hitResult.type === 'stroke') {
+      const cursor = this.hitResult.item.selected ? Cursor.ArrowSmall : Cursor.ArrowBlackShape;
+      ToolsUtil.setCanvasCursor(cursor);
     }
 
     return true;

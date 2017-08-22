@@ -41,7 +41,9 @@ export class ToolModeService {
   }
 
   setFillColor(fillColor: string) {
-    this.store.dispatch(new SetFillColor(fillColor));
+    if (this.getFillColor() !== fillColor) {
+      this.store.dispatch(new SetFillColor(fillColor));
+    }
   }
 
   getStrokeColor() {
@@ -49,7 +51,9 @@ export class ToolModeService {
   }
 
   setStrokeColor(strokeColor: string) {
-    this.store.dispatch(new SetStrokeColor(strokeColor));
+    if (this.getStrokeColor() !== strokeColor) {
+      this.store.dispatch(new SetStrokeColor(strokeColor));
+    }
   }
 
   private queryStore<T>(selector: OutputSelector<Object, T, (res: Object) => T>) {

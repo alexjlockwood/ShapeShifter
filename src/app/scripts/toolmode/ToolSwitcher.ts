@@ -213,9 +213,8 @@ class ToolStateImpl implements ToolState {
     rect.strokeColor = 'rgba(0,0,0,0)';
     rect.strokeWidth = 1 / paper.view.zoom;
     rect.selected = true;
-    // TODO: missing types
-    (rect as any).setFullySelected(true);
-    (rect as any).guide = true;
+    rect.setFullySelected(true);
+    rect.guide = true;
     rect.visible = this.numSelections > 0;
     this.selectionBoundsPath = rect;
   }

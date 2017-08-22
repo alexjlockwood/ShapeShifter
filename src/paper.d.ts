@@ -1268,6 +1268,15 @@ declare module 'paper' {
      */
     selectedColor: Color | string;
 
+    // ADDED BY ALEX LOCKWOOD
+    guide: boolean;
+
+    // ADDED BY ALEX LOCKWOOD
+    equals(item: Item): boolean;
+
+    // ADDED BY ALEX LOCKWOOD
+    setFullySelected(selected: boolean): void;
+
     /**
      * Item level handler function to be called on each frame of an animation.
      * The function receives an event object which contains information about the frame event:

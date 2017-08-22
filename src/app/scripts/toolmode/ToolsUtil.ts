@@ -27,8 +27,7 @@ export function createDragRect(p1: paper.Point, p2: paper.Point) {
   rect.dashOffset = 0.5 / paper.view.zoom;
   rect.dashArray = [1 / paper.view.zoom, 1 / paper.view.zoom];
   rect.removeOn({ drag: true, up: true });
-  // TODO: missing types
-  (rect as any).guide = true;
+  rect.guide = true;
   return rect;
 }
 
@@ -90,8 +89,7 @@ export function getPathsIntersectingRect(rect: paper.Rectangle) {
   const paths: paper.PathItem[] = [];
   const boundingRect = new paper.Path.Rectangle(rect);
 
-  // TODO: missing types
-  const checkPathItemFn = item => {
+  const checkPathItemFn = (item: paper.Item) => {
     if (item.equals(boundingRect)) {
       return;
     }
@@ -114,9 +112,7 @@ export function getPathsIntersectingRect(rect: paper.Rectangle) {
     }
   };
 
-  for (const layer of paper.project.layers) {
-    checkPathItemFn(layer);
-  }
+  paper.project.layers.forEach(layer => checkPathItemFn(layer));
   boundingRect.remove();
   return paths;
 }
@@ -212,18 +208,15 @@ export function deselectAllSegments() {
  */
 export function captureSelectionState() {
   const originalContent: SelectionState[] = [];
-  const selected = paper.project.getSelectedItems();
-  for (const item of selected) {
-    // TODO: missing types
-    if ((item as any).guide) {
-      continue;
+  paper.project.getSelectedItems().forEach(item => {
+    if (!item.guide) {
+      originalContent.push({
+        id: item.id,
+        json: item.exportJSON({ asString: false }),
+        selectedSegments: [],
+      });
     }
-    originalContent.push({
-      id: item.id,
-      json: item.exportJSON({ asString: false }),
-      selectedSegments: [],
-    });
-  }
+  });
   return originalContent;
 }
 
@@ -238,6 +231,8 @@ export function restoreSelectionState(originalContent: ReadonlyArray<SelectionSt
     }
     // HACK: paper does not retain item IDs after importJSON,
     // store the ID here, and restore after deserialization.
+    // TODO: missing types
+    // TODO: store the id in the data instead?
     const id = item.id;
     item.importJSON(orig.json);
     (item as any)._id = id;
