@@ -21,7 +21,6 @@ export function buildInitialState() {
 export function reducer(state = buildInitialState(), action: actions.Actions) {
   switch (action.type) {
     case actions.SET_TOOL_MODE:
-      console.log('set tool mode', action.payload.toolMode);
       return { ...state, toolMode: action.payload.toolMode };
     case actions.SET_FILL_COLOR:
       return { ...state, fillColor: action.payload.fillColor };

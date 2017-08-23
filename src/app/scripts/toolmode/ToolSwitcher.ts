@@ -1,17 +1,17 @@
+import { ToolMode } from 'app/model/toolmode';
 import * as $ from 'jquery';
 import * as paper from 'paper';
 
-import { DirectSelectTool } from './DirectSelectTool';
+import { DetailSelectTool } from './DetailSelectTool';
 import { PenTool } from './PenTool';
 import { SelectTool } from './SelectTool';
-import { ToolMode } from './ToolMode';
 import { ToolWrapper } from './ToolWrapper';
 import * as PaperUtil from './util/PaperUtil';
 
 export class ToolSwitcher {
   private readonly tools = new Map<ToolMode, ToolWrapper>([
     [ToolMode.Select, new SelectTool()],
-    [ToolMode.DirectSelect, new DirectSelectTool()],
+    [ToolMode.DetailSelect, new DetailSelectTool()],
     [ToolMode.Pen, new PenTool()],
   ]);
   private activeToolMode: ToolMode;

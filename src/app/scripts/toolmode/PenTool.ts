@@ -1,7 +1,7 @@
 import * as paper from 'paper';
 
 import { ToolWrapper } from './ToolWrapper';
-import * as ToolUtil from './util/ToolUtil';
+import * as PaperUtil from './util/PaperUtil';
 
 enum Mode {
   None,
@@ -24,15 +24,12 @@ export class PenTool extends ToolWrapper {
     let type: string;
     let hoverHitResult: paper.HitResult;
 
-    const hitOptions = {
+    const hitOptions: paper.HitOptions = {
       segments: true,
       stroke: true,
       curves: true,
-      // TODO: figure out which one to use ('guide' or 'guides')
-      guide: false,
-      guides: false,
       tolerance: 5 / paper.view.zoom,
-    } as any; // TODO: missing types
+    };
 
     this.tool.on({
       mousedown: (event: paper.ToolEvent) => {
@@ -43,7 +40,7 @@ export class PenTool extends ToolWrapper {
 
         if (!currPath) {
           if (!hoverHitResult) {
-            ToolUtil.clearSelection();
+            PaperUtil.clearSelection();
             currPath = new paper.Path();
             currPath.fillColor = 'blue';
             currPath.strokeColor = 'black';

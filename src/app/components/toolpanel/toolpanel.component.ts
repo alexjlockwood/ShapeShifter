@@ -10,10 +10,10 @@ import { Observable } from 'rxjs/Observable';
   styleUrls: ['./toolpanel.component.scss'],
 })
 export class ToolPanelComponent implements OnInit {
-  private readonly TOOL_MODE_SELECT = ToolMode.Select;
-  private readonly TOOL_MODE_DIRECT_SELECT = ToolMode.DirectSelect;
-  private readonly TOOL_MODE_PEN = ToolMode.Pen;
-  private readonly TOOL_MODE_ZOOMPAN = ToolMode.ZoomPan;
+  readonly TOOL_MODE_SELECT = ToolMode.Select;
+  readonly TOOL_MODE_DETAIL_SELECT = ToolMode.DetailSelect;
+  readonly TOOL_MODE_PEN = ToolMode.Pen;
+  readonly TOOL_MODE_ZOOMPAN = ToolMode.ZoomPan;
 
   private toolMode$: Observable<ToolMode>;
 
@@ -25,17 +25,14 @@ export class ToolPanelComponent implements OnInit {
   }
 
   onSelectClick() {
-    console.log('select');
     this.toolModeService.setToolMode(ToolMode.Select);
   }
 
-  onDirectSelectClick() {
-    console.log('direct select');
-    this.toolModeService.setToolMode(ToolMode.DirectSelect);
+  onDetailSelectClick() {
+    this.toolModeService.setToolMode(ToolMode.DetailSelect);
   }
 
   onPenClick() {
-    console.log('pen');
     this.toolModeService.setToolMode(ToolMode.Pen);
   }
 
@@ -48,7 +45,6 @@ export class ToolPanelComponent implements OnInit {
   }
 
   set fillColor(color: string) {
-    console.log('fillColor', color);
     this.toolModeService.setFillColor(color);
   }
 

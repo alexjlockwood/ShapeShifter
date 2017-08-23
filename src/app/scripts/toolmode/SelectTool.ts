@@ -5,7 +5,6 @@ import { ToolWrapper } from './ToolWrapper';
 import * as GuideUtil from './util/GuideUtil';
 import * as HoverUtil from './util/HoverUtil';
 import * as PaperUtil from './util/PaperUtil';
-import * as ToolUtil from './util/ToolUtil';
 
 enum Mode {
   None,
@@ -41,16 +40,13 @@ export class SelectTool extends ToolWrapper {
     let rotGroupPivot: paper.Point;
     const prevRot: number[] = [];
 
-    const hitOptions = {
+    const hitOptions: paper.HitOptions = {
       segments: true,
       stroke: true,
       curves: true,
       fill: true,
-      // TODO: figure out which one to use ('guide' or 'guides')
-      guides: false,
-      guide: false,
       tolerance: 8 / paper.view.zoom,
-    } as any; // TODO: missing types
+    };
 
     this.tool.on({
       activate: () => {
@@ -62,7 +58,6 @@ export class SelectTool extends ToolWrapper {
       deactivate: () => {
         HoverUtil.clearHoveredItem();
         this.removeBoundsPath();
-        // pg.menu.clearToolEntries();
         $(document).off('DeleteItems Undo Grouped Ungrouped SelectionChanged');
       },
       mousedown: (event: paper.ToolEvent) => {
@@ -81,12 +76,12 @@ export class SelectTool extends ToolWrapper {
             corner = bounds[getRectCornerNameByIndex(index)].clone();
             origSize = corner.subtract(pivot);
             origCenter = bounds.center;
-            scaleItems = ToolUtil.getSelectedPaths();
+            scaleItems = PaperUtil.getSelectedPaths();
           } else if (data && data.isRotHandle) {
             mode = Mode.Rotate;
             const { bounds } = this.boundsPath;
             rotGroupPivot = bounds.center;
-            rotItems = ToolUtil.getSelectedPaths();
+            rotItems = PaperUtil.getSelectedPaths();
             rotItems.forEach((item, i) => (prevRot[i] = event.point.subtract(rotGroupPivot).angle));
           } else {
             // Deselect all by default if the shift key isn't pressed
@@ -94,23 +89,23 @@ export class SelectTool extends ToolWrapper {
             // as their children are not marked as "selected".
             if (!event.modifiers.shift) {
               const root = PaperUtil.findParentLayer(hitResult.item);
-              if (isGroup(root) || root instanceof paper.CompoundPath) {
+              if (PaperUtil.isGroup(root) || PaperUtil.isCompoundPath(root)) {
                 if (!root.selected) {
-                  ToolUtil.clearSelection();
+                  PaperUtil.clearSelection();
                 }
               } else if (!hitResult.item.selected) {
-                ToolUtil.clearSelection();
+                PaperUtil.clearSelection();
               }
             }
             // Deselect a currently selected item if shift is pressed.
             if (event.modifiers.shift && hitResult.item.selected) {
-              ToolUtil.setItemSelection(hitResult.item, false);
+              PaperUtil.setItemSelection(hitResult.item, false);
             } else {
-              ToolUtil.setItemSelection(hitResult.item, true);
+              PaperUtil.setItemSelection(hitResult.item, true);
 
               if (event.modifiers.alt) {
                 mode = Mode.CloneShapes;
-                ToolUtil.cloneSelection();
+                PaperUtil.cloneSelection();
               } else {
                 mode = Mode.MoveShapes;
               }
@@ -121,7 +116,7 @@ export class SelectTool extends ToolWrapper {
         } else {
           if (!event.modifiers.shift) {
             this.removeBoundsPath();
-            ToolUtil.clearSelection();
+            PaperUtil.clearSelection();
           }
           mode = Mode.BoxSelect;
         }
@@ -131,7 +126,7 @@ export class SelectTool extends ToolWrapper {
 
         if (mode === Mode.BoxSelect) {
           selectionRect = GuideUtil.rectSelect(event);
-          // Remove this rect on the next drag and up event
+          // Remove this rect on the next drag and up event.
           selectionRect.removeOnDrag();
         } else if (mode === Mode.Scale) {
           itemGroup = new paper.Group(scaleItems);
@@ -200,7 +195,7 @@ export class SelectTool extends ToolWrapper {
           });
         } else if (mode === Mode.MoveShapes || mode === Mode.CloneShapes) {
           const dragVector = event.point.subtract(event.downPoint);
-          const selectedItems = ToolUtil.getSelectedPaths();
+          const selectedItems = PaperUtil.getSelectedPaths();
 
           for (const item of selectedItems) {
             // add the position of the item before the drag started
@@ -211,7 +206,7 @@ export class SelectTool extends ToolWrapper {
 
             if (event.modifiers.shift) {
               item.position = item.data.origPos.add(
-                ToolUtil.snapDeltaToAngle(dragVector, Math.PI * 2 / 8),
+                PaperUtil.snapDeltaToAngle(dragVector, Math.PI * 2 / 8),
               );
             } else {
               item.position = item.position.add(event.delta);
@@ -222,11 +217,11 @@ export class SelectTool extends ToolWrapper {
       mousemove: (event: paper.ToolEvent) => HoverUtil.handleHoveredItem(hitOptions, event),
       mouseup: (event: paper.ToolEvent) => {
         if (mode === Mode.BoxSelect && selectionRect) {
-          ToolUtil.processRectangularSelection(event, selectionRect);
+          PaperUtil.processRectangularSelection(event, selectionRect);
           selectionRect.remove();
         } else if (mode === Mode.MoveShapes || mode === Mode.CloneShapes) {
           // Resetting the items origin point for the next usage.
-          const selectedItems = ToolUtil.getSelectedPaths();
+          const selectedItems = PaperUtil.getSelectedPaths();
 
           selectedItems.forEach(item => {
             // Remove the orig pos again.
@@ -243,7 +238,7 @@ export class SelectTool extends ToolWrapper {
         mode = Mode.None;
         selectionRect = undefined;
 
-        if (ToolUtil.getSelectedPaths().length <= 0) {
+        if (PaperUtil.getSelectedPaths().length === 0) {
           this.removeBoundsPath();
         } else {
           this.setSelectionBounds();
@@ -256,7 +251,7 @@ export class SelectTool extends ToolWrapper {
   private setSelectionBounds() {
     this.removeBoundsPath();
 
-    const items = ToolUtil.getSelectedPaths();
+    const items = PaperUtil.getSelectedPaths();
     if (items.length === 0) {
       return;
     }
@@ -299,7 +294,7 @@ export class SelectTool extends ToolWrapper {
         this.boundsRotHandles[index] = new paper.Path.Circle({
           center: segment.point.add(offset),
           data: {
-            offset: offset,
+            offset,
             isRotHandle: true,
             isHelperItem: true,
             noSelect: true,
@@ -393,7 +388,3 @@ function getOpposingRectCornerNameByIndex(index: number) {
 //   });
 //   setSelectionBounds();
 // };
-
-function isGroup(item: paper.Item) {
-  return item && item.className && item.className === 'Group';
-}

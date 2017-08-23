@@ -78,7 +78,7 @@ export function getGuideColor(colorName: 'blue' | 'grey') {
 }
 
 export function removeHelperItems() {
-  PaperUtil.getAllPaperItems(true).forEach((item, index) => {
+  PaperUtil.getAllItems(true).forEach((item, index) => {
     if (item.data && item.data.isHelperItem) {
       item.remove();
     }

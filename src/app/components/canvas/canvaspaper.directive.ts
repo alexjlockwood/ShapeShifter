@@ -38,11 +38,11 @@ export class CanvasPaperDirective extends CanvasLayoutMixin(DestroyableMixin())
     this.toolModeService.setup(this.$canvas.get(0));
     this.registerSubscription(
       this.store.select(getVectorLayer).subscribe(vl => {
-        const rootItem = PaperUtil.fromLayer(vl);
-        const scale = this.cssScale;
-        paper.project.activeLayer.matrix = new paper.Matrix(scale, 0, 0, scale, 0, 0);
-        paper.project.activeLayer.removeChildren();
-        paper.project.activeLayer.addChild(rootItem);
+        // const rootItem = PaperUtil.fromLayer(vl);
+        // const scale = this.cssScale;
+        // paper.project.activeLayer.matrix = new paper.Matrix(scale, 0, 0, scale, 0, 0);
+        // paper.project.activeLayer.removeChildren();
+        // paper.project.activeLayer.addChild(rootItem);
       }),
     );
   }
