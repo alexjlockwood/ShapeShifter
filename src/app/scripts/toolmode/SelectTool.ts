@@ -2,9 +2,6 @@ import * as $ from 'jquery';
 import * as paper from 'paper';
 
 import { AbstractTool, HitTestArgs, ToolState } from './AbstractTool';
-import { Cursor } from './ToolsUtil';
-import * as ToolsUtil from './ToolsUtil';
-import { SelectionState } from './ToolsUtil';
 import { ToolWrapper } from './ToolWrapper';
 import * as GuideUtil from './util/GuideUtil';
 import * as HoverUtil from './util/HoverUtil';

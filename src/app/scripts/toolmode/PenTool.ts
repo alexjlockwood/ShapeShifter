@@ -2,9 +2,6 @@ import * as paper from 'paper';
 
 import { AbstractTool, HitTestArgs, ToolState } from './AbstractTool';
 import { ToolMode } from './ToolMode';
-import * as ToolsUtil from './ToolsUtil';
-import { SelectionState } from './ToolsUtil';
-import { Cursor } from './ToolsUtil';
 import { ToolWrapper } from './ToolWrapper';
 import * as ToolUtil from './util/ToolUtil';
 
@@ -91,38 +88,41 @@ export class PenTool extends ToolWrapper {
             }
           }
 
-          if (!currentSegment) {
-            if (hoverHitResult) {
-              const item = hoverHitResult.item as paper.Path;
-              if (hoverHitResult.type === 'segment' && !item.closed) {
-                // Joining two paths.
-                const hoverPath = item;
-                // Check if the connection point is the first segment
-                // reverse path if it is not because join()
-                // always connects to first segment).
-                if (hoverPath.firstSegment !== hoverHitResult.segment) {
-                  hoverPath.reverse();
-                }
-                path.join(hoverPath);
-                path = undefined;
-              } else if (hoverHitResult.type === 'curve' || hoverHitResult.type === 'stroke') {
-                mode = Mode.Add;
-                // inserting segment on curve/stroke
-                const location = hoverHitResult.location;
-                currentSegment = path.insert(location.index + 1, event.point);
-                currentSegment.selected = true;
-              }
-            } else {
-              mode = Mode.Add;
-              // add a new segment to the path
-              currentSegment = path.add(event.point);
-              currentSegment.selected = true;
+          if (currentSegment) {
+            return;
+          }
+
+          if (!hoverHitResult) {
+            mode = Mode.Add;
+            // Add a new segment to the path.
+            currentSegment = path.add(event.point);
+            currentSegment.selected = true;
+            return;
+          }
+
+          const item = hoverHitResult.item as paper.Path;
+          if (hoverHitResult.type === 'segment' && !item.closed) {
+            // Joining two paths.
+            const hoverPath = item;
+            // Check if the connection point is the first segment
+            // reverse path if it is not because join()
+            // always connects to first segment).
+            if (hoverPath.firstSegment !== hoverHitResult.segment) {
+              hoverPath.reverse();
             }
+            path.join(hoverPath);
+            path = undefined;
+          } else if (hoverHitResult.type === 'curve' || hoverHitResult.type === 'stroke') {
+            mode = Mode.Add;
+            // Inserting segment on curve/stroke.
+            const location = hoverHitResult.location;
+            currentSegment = path.insert(location.index + 1, event.point);
+            currentSegment.selected = true;
           }
         }
       },
       mousedrag: (event: paper.ToolEvent) => {
-        let delta = event.delta.clone();
+        let delta = event.delta;
         if (type === 'handle-out' || mode === Mode.Add) {
           delta = delta.multiply(-1);
         }
