@@ -52,3 +52,12 @@ export function arePointsEqual(p1: Point, p2: Point) {
 export function round(n: number) {
   return _.round(n, 9);
 }
+
+/** Snaps a point delta to the specified angle. */
+export function snapDeltaToAngle(delta: Point, snapAngle: number): Point {
+  const angle = Math.round(Math.atan2(delta.y, delta.x) / snapAngle) * snapAngle;
+  const dirx = Math.cos(angle);
+  const diry = Math.sin(angle);
+  const d = dirx * delta.x + diry * delta.y;
+  return { x: dirx * d, y: diry * d };
+}

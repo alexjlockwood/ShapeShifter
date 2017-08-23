@@ -1,7 +1,7 @@
 import * as paper from 'paper';
 
+import * as ItemUtil from './ItemUtil';
 import { ToolWrapper } from './ToolWrapper';
-import * as PaperUtil from './util/PaperUtil';
 
 enum Mode {
   None,
@@ -13,127 +13,132 @@ enum Mode {
 
 /**
  * Pen tool that allows for creating new shapes and lines.
+ * TODO: figure out how to deal with right mouse clicks and double clicks
  */
 export class PenTool extends ToolWrapper {
-  constructor() {
-    super();
+  private currPath: paper.Path;
+  private currSegment: paper.Segment;
+  private mode = Mode.None;
+  private type: string;
+  private hoverHitResult: paper.HitResult;
 
-    let currPath: paper.Path;
-    let currSegment: paper.Segment;
-    let mode = Mode.None;
-    let type: string;
-    let hoverHitResult: paper.HitResult;
+  // @Override
+  onActivate() {}
 
-    const hitOptions: paper.HitOptions = {
-      segments: true,
-      stroke: true,
-      curves: true,
-      tolerance: 5 / paper.view.zoom,
-    };
+  // @Override
+  onMouseDown(event: paper.ToolEvent) {
+    if (this.currSegment) {
+      this.currSegment.selected = false;
+    }
+    this.mode = this.type = this.currSegment = undefined;
 
-    this.tool.on({
-      mousedown: (event: paper.ToolEvent) => {
-        if (currSegment) {
-          currSegment.selected = false;
-        }
-        mode = type = currSegment = undefined;
-
-        if (!currPath) {
-          if (!hoverHitResult) {
-            PaperUtil.clearSelection();
-            currPath = new paper.Path();
-            currPath.fillColor = 'blue';
-            currPath.strokeColor = 'black';
-            currPath.strokeWidth = 10;
-            // path = pg.stylebar.applyActiveToolbarStyle(path);
-          } else {
-            const item = hoverHitResult.item as paper.Path;
-            if (item.closed) {
-              currPath = item;
-            } else {
-              mode = Mode.Continue;
-              currPath = item;
-              currSegment = hoverHitResult.segment;
-              if (item.lastSegment !== hoverHitResult.segment) {
-                currPath.reverse();
-              }
-            }
-          }
-        }
-
-        if (currPath) {
-          const result = findHandle(currPath, event.point);
-          if (result && mode !== Mode.Continue) {
-            currSegment = result.segment;
-            type = result.type;
-            if (result.type === 'segment') {
-              if (result.segment.index === 0 && currPath.segments.length > 1 && !currPath.closed) {
-                mode = Mode.Close;
-                currPath.closed = true;
-                currPath.firstSegment.selected = true;
-              } else {
-                mode = Mode.Remove;
-                result.segment.remove();
-              }
-            }
-          }
-
-          if (currSegment) {
-            return;
-          }
-
-          if (!hoverHitResult) {
-            mode = Mode.Add;
-            // Add a new segment to the path.
-            currSegment = currPath.add(event.point);
-            currSegment.selected = true;
-            return;
-          }
-
-          const item = hoverHitResult.item as paper.Path;
-          if (hoverHitResult.type === 'segment' && !item.closed) {
-            // Joining two paths.
-            const hoverPath = item;
-            // Check if the connection point is the first segment
-            // reverse path if it is not because join()
-            // always connects to first segment).
-            if (hoverPath.firstSegment !== hoverHitResult.segment) {
-              hoverPath.reverse();
-            }
-            currPath.join(hoverPath);
-            currPath = undefined;
-          } else if (hoverHitResult.type === 'curve' || hoverHitResult.type === 'stroke') {
-            mode = Mode.Add;
-            // Inserting segment on curve/stroke.
-            const { location } = hoverHitResult;
-            currSegment = currPath.insert(location.index + 1, event.point);
-            currSegment.selected = true;
-          }
-        }
-      },
-      mousedrag: (event: paper.ToolEvent) => {
-        let delta = event.delta;
-        if (type === 'handle-out' || mode === Mode.Add) {
-          delta = delta.multiply(-1);
-        }
-        currSegment.handleIn = currSegment.handleIn.add(delta);
-        currSegment.handleOut = currSegment.handleOut.subtract(delta);
-      },
-      mousemove: (event: paper.ToolEvent) => {
-        const hitResult = paper.project.hitTest(event.point, hitOptions);
-        if (hitResult && hitResult.item && hitResult.item.selected) {
-          hoverHitResult = hitResult;
+    if (!this.currPath) {
+      if (!this.hoverHitResult) {
+        ItemUtil.clearSelection();
+        this.currPath = new paper.Path();
+        this.currPath.fillColor = 'blue';
+        this.currPath.strokeColor = 'black';
+        this.currPath.strokeWidth = 10;
+        // path = pg.stylebar.applyActiveToolbarStyle(path);
+      } else {
+        const item = this.hoverHitResult.item as paper.Path;
+        if (item.closed) {
+          this.currPath = item;
         } else {
-          hoverHitResult = undefined;
+          this.mode = Mode.Continue;
+          this.currPath = item;
+          this.currSegment = this.hoverHitResult.segment;
+          if (item.lastSegment !== this.hoverHitResult.segment) {
+            this.currPath.reverse();
+          }
         }
-      },
-      mouseup: (event: paper.ToolEvent) => {
-        if (currPath && currPath.closed) {
-          currPath = undefined;
+      }
+    }
+
+    if (this.currPath) {
+      const result = findHandle(this.currPath, event.point);
+      if (result && this.mode !== Mode.Continue) {
+        this.currSegment = result.segment;
+        this.type = result.type;
+        if (result.type === 'segment') {
+          if (
+            result.segment.index === 0 &&
+            this.currPath.segments.length > 1 &&
+            !this.currPath.closed
+          ) {
+            this.mode = Mode.Close;
+            this.currPath.closed = true;
+            this.currPath.firstSegment.selected = true;
+          } else {
+            this.mode = Mode.Remove;
+            result.segment.remove();
+          }
         }
-      },
-    });
+      }
+
+      if (this.currSegment) {
+        return;
+      }
+
+      if (!this.hoverHitResult) {
+        this.mode = Mode.Add;
+        // Add a new segment to the path.
+        this.currSegment = this.currPath.add(event.point);
+        this.currSegment.selected = true;
+        return;
+      }
+
+      const item = this.hoverHitResult.item as paper.Path;
+      if (this.hoverHitResult.type === 'segment' && !item.closed) {
+        // Joining two paths.
+        const hoverPath = item;
+        // Check if the connection point is the first segment
+        // reverse path if it is not because join()
+        // always connects to first segment).
+        if (hoverPath.firstSegment !== this.hoverHitResult.segment) {
+          hoverPath.reverse();
+        }
+        this.currPath.join(hoverPath);
+        this.currPath = undefined;
+      } else if (this.hoverHitResult.type === 'curve' || this.hoverHitResult.type === 'stroke') {
+        this.mode = Mode.Add;
+        // Inserting segment on curve/stroke.
+        const { location } = this.hoverHitResult;
+        this.currSegment = this.currPath.insert(location.index + 1, event.point);
+        this.currSegment.selected = true;
+      }
+    }
   }
+
+  // @Override
+  onMouseDrag(event: paper.ToolEvent) {
+    let delta = event.delta;
+    if (this.type === 'handle-out' || this.mode === Mode.Add) {
+      delta = delta.multiply(-1);
+    }
+    this.currSegment.handleIn = this.currSegment.handleIn.add(delta);
+    this.currSegment.handleOut = this.currSegment.handleOut.subtract(delta);
+  }
+
+  // @Override
+  onMouseMove(event: paper.ToolEvent) {
+    const hitResult = paper.project.hitTest(event.point, createHitOptions());
+    if (hitResult && hitResult.item && hitResult.item.selected) {
+      this.hoverHitResult = hitResult;
+    } else {
+      this.hoverHitResult = undefined;
+    }
+  }
+
+  // @Override
+  onMouseUp(event: paper.ToolEvent) {
+    if (this.currPath && this.currPath.closed) {
+      this.currPath = undefined;
+    }
+  }
+
+  // @Override
+  onDeactivate() {}
 }
 
 function findHandle(path: paper.Path, point: paper.Point) {
@@ -152,4 +157,13 @@ function findHandle(path: paper.Path, point: paper.Point) {
     }
   }
   return undefined;
+}
+
+function createHitOptions(): paper.HitOptions {
+  return {
+    segments: true,
+    stroke: true,
+    curves: true,
+    tolerance: 5 / paper.view.zoom,
+  };
 }

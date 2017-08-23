@@ -4,7 +4,6 @@ import { LayerUtil, PathLayer } from 'app/model/layers';
 import { Path } from 'app/model/paths';
 import { DestroyableMixin } from 'app/scripts/mixins';
 import { ToolSwitcher } from 'app/scripts/toolmode';
-import { PaperUtil } from 'app/scripts/toolmode/util';
 import { LayerTimelineService, ToolModeService } from 'app/services';
 import { State, Store } from 'app/store';
 import { getVectorLayer } from 'app/store/layers/selectors';
@@ -38,7 +37,7 @@ export class CanvasPaperDirective extends CanvasLayoutMixin(DestroyableMixin())
     this.toolModeService.setup(this.$canvas.get(0));
     this.registerSubscription(
       this.store.select(getVectorLayer).subscribe(vl => {
-        // const rootItem = PaperUtil.fromLayer(vl);
+        // const rootItem = PaperJsUtil.fromLayer(vl);
         // const scale = this.cssScale;
         // paper.project.activeLayer.matrix = new paper.Matrix(scale, 0, 0, scale, 0, 0);
         // paper.project.activeLayer.removeChildren();

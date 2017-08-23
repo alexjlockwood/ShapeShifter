@@ -1,335 +1,309 @@
+import { MathUtil } from 'app/scripts/common';
 import * as $ from 'jquery';
 import * as paper from 'paper';
 
+import * as ItemUtil from './ItemUtil';
 import { ToolWrapper } from './ToolWrapper';
-import * as GuideUtil from './util/GuideUtil';
-import * as HoverUtil from './util/HoverUtil';
-import * as PaperUtil from './util/PaperUtil';
 
 enum Mode {
   None,
-  MoveShapes,
-  BoxSelect,
   Scale,
   Rotate,
+  MoveShapes,
   CloneShapes,
+  SelectionBox,
 }
 
 /**
  * A simple selection tool for moving, scaling, rotating, and selecting shapes.
+ * TODO: figure out how to deal with right mouse clicks and double clicks
  */
 export class SelectTool extends ToolWrapper {
-  private boundsPath: paper.Path.Rectangle;
-  private boundsScaleHandles: paper.Item[] = [];
-  private boundsRotHandles: paper.Item[] = [];
+  private currentGesture: Gesture;
 
-  constructor() {
-    super();
+  // @Override
+  onActivate() {}
 
-    let mode = Mode.None;
-    let selectionRect: paper.Path.Rectangle;
-    let itemGroup: paper.Group;
-    let pivot: paper.Point;
-    let corner: paper.Point;
-    let origPivot: paper.Point;
-    let origSize: paper.Point;
-    let origCenter: paper.Point;
-    let scaleItems: paper.Item[];
+  // @Override
+  onMouseDown(event: paper.ToolEvent) {
+    ItemUtil.removeHoverPath();
 
-    let rotItems: paper.Item[] = [];
-    let rotGroupPivot: paper.Point;
-    const prevRot: number[] = [];
+    const hitResult = paper.project.hitTest(event.point, this.createHitOptions());
+    if (hitResult) {
+      const hitItem = hitResult.item;
+      if (ItemUtil.isScaleHandle(hitItem)) {
+        this.currentGesture = new ScaleGesture();
+      } else if (ItemUtil.isRotationHandle(hitItem)) {
+        this.currentGesture = new RotateGesture();
+      } else if (event.modifiers.shift && hitItem.selected) {
+        // Simply de-select the event and we are done.
+        this.currentGesture = new class extends Gesture {
+          // @Override
+          onMouseDown(e: paper.ToolEvent, { item }: paper.HitResult) {
+            ItemUtil.setItemSelection(item, false);
+          }
+        }();
+      } else {
+        const shouldCloneShape = event.modifiers.alt;
+        this.currentGesture = new SelectGesture(shouldCloneShape);
+      }
+    } else {
+      this.currentGesture = new SelectionBoxGesture();
+    }
 
-    const hitOptions: paper.HitOptions = {
+    this.currentGesture.onMouseDown(event, hitResult);
+  }
+
+  // @Override
+  onMouseDrag(event: paper.ToolEvent) {
+    this.currentGesture.onMouseDrag(event);
+  }
+
+  // @Override
+  onMouseMove(event: paper.ToolEvent) {
+    ItemUtil.maybeCreateHoverPath(event.point, this.createHitOptions());
+  }
+
+  // @Override
+  onMouseUp(event: paper.ToolEvent) {
+    this.currentGesture.onMouseUp(event);
+
+    if (ItemUtil.getSelectedPaths().length === 0) {
+      ItemUtil.removeSelectionGroup();
+    } else {
+      ItemUtil.maybeCreateSelectionGroup();
+    }
+  }
+
+  // @Override
+  onDeactivate() {}
+
+  private createHitOptions(): paper.HitOptions {
+    return {
       segments: true,
       stroke: true,
       curves: true,
       fill: true,
       tolerance: 8 / paper.view.zoom,
     };
+  }
+}
 
-    this.tool.on({
-      activate: () => {
-        this.setSelectionBounds();
-        $(document).on('DeleteItems Undo Grouped Ungrouped SelectionChanged', () => {
-          this.setSelectionBounds();
-        });
-      },
-      deactivate: () => {
-        HoverUtil.clearHoveredItem();
-        this.removeBoundsPath();
-        $(document).off('DeleteItems Undo Grouped Ungrouped SelectionChanged');
-      },
-      mousedown: (event: paper.ToolEvent) => {
-        scaleItems = undefined;
-        HoverUtil.clearHoveredItem();
+// TODO: make use of this function!
+// var preProcessSelection = function() {
+//   // when switching to the select tool while having a child object of a
+//   // compound path selected, deselect the child and select the compound path
+//   // instead. (otherwise the compound path breaks because of scale-grouping)
+//   var items = pg.selection.getSelectedItems();
+//   jQuery.each(items, function(index, item) {
+//     if(pg.compoundPath.isCompoundPathChild(item)) {
+//       var cp = pg.compoundPath.getItemsCompoundPath(item);
+//       pg.selection.setItemSelection(item, false);
+//       pg.selection.setItemSelection(cp, true);
+//     }
+//   });
+//   setSelectionBounds();
+// };
 
-        const hitResult = paper.project.hitTest(event.point, hitOptions);
-        if (hitResult) {
-          const { data } = hitResult.item;
-          if (data && data.isScaleHandle) {
-            mode = Mode.Scale;
-            const { index } = data;
-            const { bounds } = this.boundsPath;
-            pivot = bounds[getOpposingRectCornerNameByIndex(index)].clone();
-            origPivot = bounds[getOpposingRectCornerNameByIndex(index)].clone();
-            corner = bounds[getRectCornerNameByIndex(index)].clone();
-            origSize = corner.subtract(pivot);
-            origCenter = bounds.center;
-            scaleItems = PaperUtil.getSelectedPaths();
-          } else if (data && data.isRotHandle) {
-            mode = Mode.Rotate;
-            const { bounds } = this.boundsPath;
-            rotGroupPivot = bounds.center;
-            rotItems = PaperUtil.getSelectedPaths();
-            rotItems.forEach((item, i) => (prevRot[i] = event.point.subtract(rotGroupPivot).angle));
-          } else {
-            // Deselect all by default if the shift key isn't pressed
-            // also needs some special love for compound paths and groups,
-            // as their children are not marked as "selected".
-            if (!event.modifiers.shift) {
-              const root = PaperUtil.findParentLayer(hitResult.item);
-              if (PaperUtil.isGroup(root) || PaperUtil.isCompoundPath(root)) {
-                if (!root.selected) {
-                  PaperUtil.clearSelection();
-                }
-              } else if (!hitResult.item.selected) {
-                PaperUtil.clearSelection();
-              }
-            }
-            // Deselect a currently selected item if shift is pressed.
-            if (event.modifiers.shift && hitResult.item.selected) {
-              PaperUtil.setItemSelection(hitResult.item, false);
-            } else {
-              PaperUtil.setItemSelection(hitResult.item, true);
+abstract class Gesture {
+  onMouseDown(event: paper.ToolEvent, hitResult?: paper.HitResult) {}
+  onMouseDrag(event: paper.ToolEvent) {}
+  onMouseUp(event: paper.ToolEvent) {}
+}
 
-              if (event.modifiers.alt) {
-                mode = Mode.CloneShapes;
-                PaperUtil.cloneSelection();
-              } else {
-                mode = Mode.MoveShapes;
-              }
-            }
-          }
-          // While transforming object, never show the bounds stuff.
-          this.removeBoundsPath();
-        } else {
-          if (!event.modifiers.shift) {
-            this.removeBoundsPath();
-            PaperUtil.clearSelection();
-          }
-          mode = Mode.BoxSelect;
-        }
-      },
-      mousedrag: (event: paper.ToolEvent) => {
-        let modOrigSize = origSize;
+class ScaleGesture extends Gesture {
+  // @Override
+  onMouseDown(event: paper.ToolEvent) {
+    const selectedPaths = ItemUtil.getSelectedPaths();
+    const selectionBounds = selectedPaths.map(i => i.bounds).reduce((p, c) => p.unite(c));
 
-        if (mode === Mode.BoxSelect) {
-          selectionRect = GuideUtil.rectSelect(event);
-          // Remove this rect on the next drag and up event.
-          selectionRect.removeOnDrag();
-        } else if (mode === Mode.Scale) {
-          itemGroup = new paper.Group(scaleItems);
-          itemGroup.addChild(this.boundsPath);
-          itemGroup.data.isHelperItem = true;
-          itemGroup.strokeScaling = false;
-          itemGroup.applyMatrix = false;
-
-          if (event.modifiers.alt) {
-            pivot = origCenter;
-            modOrigSize = origSize.multiply(0.5);
-          } else {
-            pivot = origPivot;
-          }
-
-          corner = corner.add(event.delta);
-          const size = corner.subtract(pivot);
-          let sx = 1;
-          let sy = 1;
-          if (Math.abs(modOrigSize.x) > 1e-9) {
-            sx = size.x / modOrigSize.x;
-          }
-          if (Math.abs(modOrigSize.y) > 1e-9) {
-            sy = size.y / modOrigSize.y;
-          }
-
-          if (event.modifiers.shift) {
-            const signx = sx > 0 ? 1 : -1;
-            const signy = sy > 0 ? 1 : -1;
-            sx = sy = Math.max(Math.abs(sx), Math.abs(sy));
-            sx *= signx;
-            sy *= signy;
-          }
-
-          itemGroup.scale(sx, sy, pivot);
-
-          this.boundsScaleHandles.forEach((handle, index) => {
-            handle.position = itemGroup.bounds[getRectCornerNameByIndex(index)];
-            handle.bringToFront();
-          });
-
-          this.boundsRotHandles.forEach((handle, index) => {
-            if (!handle) {
-              return;
-            }
-            const cornerName = getRectCornerNameByIndex(index);
-            handle.position = itemGroup.bounds[cornerName].add(handle.data.offset);
-            handle.bringToFront();
-          });
-        } else if (mode === Mode.Rotate) {
-          let rotAngle = event.point.subtract(rotGroupPivot).angle;
-
-          rotItems.forEach((item, i) => {
-            if (!item.data.origRot) {
-              item.data.origRot = item.rotation;
-            }
-            if (event.modifiers.shift) {
-              rotAngle = Math.round(rotAngle / 45) * 45;
-              item.applyMatrix = false;
-              item.pivot = rotGroupPivot;
-              item.rotation = rotAngle;
-            } else {
-              item.rotate(rotAngle - prevRot[i], rotGroupPivot);
-            }
-            prevRot[i] = rotAngle;
-          });
-        } else if (mode === Mode.MoveShapes || mode === Mode.CloneShapes) {
-          const dragVector = event.point.subtract(event.downPoint);
-          const selectedItems = PaperUtil.getSelectedPaths();
-
-          for (const item of selectedItems) {
-            // add the position of the item before the drag started
-            // for later use in the snap calculation
-            if (!item.data.origPos) {
-              item.data.origPos = item.position;
-            }
-
-            if (event.modifiers.shift) {
-              item.position = item.data.origPos.add(
-                PaperUtil.snapDeltaToAngle(dragVector, Math.PI * 2 / 8),
-              );
-            } else {
-              item.position = item.position.add(event.delta);
-            }
-          }
-        }
-      },
-      mousemove: (event: paper.ToolEvent) => HoverUtil.handleHoveredItem(hitOptions, event),
-      mouseup: (event: paper.ToolEvent) => {
-        if (mode === Mode.BoxSelect && selectionRect) {
-          PaperUtil.processRectangularSelection(event, selectionRect);
-          selectionRect.remove();
-        } else if (mode === Mode.MoveShapes || mode === Mode.CloneShapes) {
-          // Resetting the items origin point for the next usage.
-          const selectedItems = PaperUtil.getSelectedPaths();
-
-          selectedItems.forEach(item => {
-            // Remove the orig pos again.
-            item.data.origPos = undefined;
-          });
-        } else if (mode === Mode.Scale) {
-          itemGroup.applyMatrix = true;
-          itemGroup.layer.addChildren(itemGroup.children);
-          itemGroup.remove();
-        } else if (mode === Mode.Rotate) {
-          rotItems.forEach(item => (item.applyMatrix = true));
-        }
-
-        mode = Mode.None;
-        selectionRect = undefined;
-
-        if (PaperUtil.getSelectedPaths().length === 0) {
-          this.removeBoundsPath();
-        } else {
-          this.setSelectionBounds();
-        }
-      },
-      // TODO: deal with key events?
-    });
+    // this.scaleItems = undefined;
+    // mode = Mode.Scale;
+    // const position = ItemUtil.getScaleHandlePosition(hitItem);
+    // const oppCornerName = getOpposingRectCornerName(position);
+    // const cornerName = getRectCornerName(position);
+    // pivot = selectionBounds[oppCornerName].clone();
+    // origPivot = selectionBounds[oppCornerName].clone();
+    // corner = selectionBounds[cornerName].clone();
+    // origSize = corner.subtract(pivot);
+    // origCenter = selectionBounds.center.clone();
+    // scaleItems = ItemUtil.getSelectedPaths();
+    // While transforming object, never show the bounds stuff.
+    ItemUtil.removeSelectionGroup();
   }
 
-  private setSelectionBounds() {
-    this.removeBoundsPath();
+  // @Override
+  onMouseDrag(event: paper.ToolEvent) {
+    const selectionBounds = ItemUtil.getSelectedPaths()
+      .map(i => i.bounds)
+      .reduce((p, c) => p.unite(c));
+    // let modOrigSize = this.origSize;
 
-    const items = PaperUtil.getSelectedPaths();
-    if (items.length === 0) {
-      return;
-    }
+    // itemGroup = new paper.Group(scaleItems);
+    // itemGroup.addChild(selectionBounds);
+    // itemGroup.data.isHelperItem = true;
+    // itemGroup.strokeScaling = false;
+    // itemGroup.applyMatrix = false;
+    // if (event.modifiers.alt) {
+    //   pivot = origCenter;
+    //   modOrigSize = origSize.multiply(0.5);
+    // } else {
+    //   pivot = origPivot;
+    // }
+    // corner = corner.add(event.delta);
+    // const size = corner.subtract(pivot);
+    // let sx = 1;
+    // let sy = 1;
+    // if (Math.abs(modOrigSize.x) > 1e-9) {
+    //   sx = size.x / modOrigSize.x;
+    // }
+    // if (Math.abs(modOrigSize.y) > 1e-9) {
+    //   sy = size.y / modOrigSize.y;
+    // }
+    // if (event.modifiers.shift) {
+    //   const signx = sx > 0 ? 1 : -1;
+    //   const signy = sy > 0 ? 1 : -1;
+    //   sx = sy = Math.max(Math.abs(sx), Math.abs(sy));
+    //   sx *= signx;
+    //   sy *= signy;
+    // }
+    // itemGroup.scale(sx, sy, pivot);
+    // this.boundsScaleHandles.forEach((handle, index) => {
+    //   handle.position = itemGroup.bounds[getRectCornerName(index)];
+    //   handle.bringToFront();
+    // });
+    // this.boundsRotHandles.forEach((handle, index) => {
+    //   if (!handle) {
+    //     return;
+    //   }
+    //   const cornerName = getRectCornerName(index);
+    //   handle.position = itemGroup.bounds[cornerName].add(handle.data.offset);
+    //   handle.bringToFront();
+    // });
+    // return;
+  }
 
-    let rect: paper.Rectangle;
-    items.forEach(item => {
-      if (rect) {
-        rect = rect.unite(item.bounds);
+  // @Override
+  onMouseUp(event: paper.ToolEvent) {
+    // itemGroup.applyMatrix = true;
+    // itemGroup.layer.addChildren(itemGroup.children);
+    // itemGroup.remove();
+  }
+}
+
+class RotateGesture extends Gesture {
+  private groupPivot: paper.Point;
+  private rotatingItems: paper.Item[];
+  private rotationAngles: number[];
+
+  // @Override
+  onMouseDown(event: paper.ToolEvent) {
+    this.rotatingItems = ItemUtil.getSelectedPaths();
+    const selectionBounds = this.rotatingItems.map(i => i.bounds).reduce((p, c) => p.unite(c));
+    this.groupPivot = selectionBounds.center;
+    this.rotationAngles = this.rotatingItems.map(() => event.point.subtract(this.groupPivot).angle);
+
+    // While transforming object, never show the bounds.
+    ItemUtil.removeSelectionGroup();
+  }
+
+  // @Override
+  onMouseDrag(event: paper.ToolEvent) {
+    let angle = event.point.subtract(this.groupPivot).angle;
+    this.rotatingItems.forEach((item, i) => {
+      if (event.modifiers.shift) {
+        angle = Math.round(angle / 45) * 45;
+        item.applyMatrix = false;
+        item.pivot = this.groupPivot.clone();
+        item.rotation = angle;
       } else {
-        rect = item.bounds;
+        item.rotate(angle - this.rotationAngles[i], this.groupPivot);
       }
-    });
-
-    if (!this.boundsPath) {
-      this.boundsPath = new paper.Path.Rectangle(rect);
-      this.boundsPath.curves[0].divideAtTime(0.5);
-      this.boundsPath.curves[2].divideAtTime(0.5);
-      this.boundsPath.curves[4].divideAtTime(0.5);
-      this.boundsPath.curves[6].divideAtTime(0.5);
-    }
-    this.boundsPath.guide = true;
-    this.boundsPath.data.isSelectionBound = true;
-    this.boundsPath.data.isHelperItem = true;
-    this.boundsPath.fillColor = undefined;
-    this.boundsPath.strokeScaling = false;
-    this.boundsPath.fullySelected = true;
-    this.boundsPath.parent = PaperUtil.findGuideLayer();
-
-    this.boundsPath.segments.forEach((segment, index) => {
-      let size = 4;
-
-      if (index % 2 === 0) {
-        size = 6;
-      }
-
-      if (index === 7) {
-        const offset = new paper.Point(0, 10 / paper.view.zoom);
-        // TODO: this is a bit hacky... we shouldn't be blindly setting the index like this
-        // TODO: provide different mechanism for rotating shapes
-        this.boundsRotHandles[index] = new paper.Path.Circle({
-          center: segment.point.add(offset),
-          data: {
-            offset,
-            isRotHandle: true,
-            isHelperItem: true,
-            noSelect: true,
-            noHover: true,
-          },
-          radius: 5 / paper.view.zoom,
-          strokeColor: GuideUtil.getGuideColor('blue'),
-          fillColor: 'white',
-          strokeWidth: 0.5 / paper.view.zoom,
-          parent: PaperUtil.findGuideLayer(),
-        });
-      }
-
-      // TODO: this is a bit hacky... we shouldn't be blindly setting the index like this
-      this.boundsScaleHandles[index] = new paper.Path.Rectangle({
-        center: segment.point,
-        data: {
-          index,
-          isScaleHandle: true,
-          isHelperItem: true,
-          noSelect: true,
-          noHover: true,
-        },
-        size: [size / paper.view.zoom, size / paper.view.zoom],
-        fillColor: GuideUtil.getGuideColor('blue'),
-        parent: PaperUtil.findGuideLayer(),
-      });
+      this.rotationAngles[i] = angle;
     });
   }
 
-  private removeBoundsPath() {
-    GuideUtil.removeHelperItems();
-    this.boundsPath = undefined;
-    this.boundsScaleHandles = [];
-    this.boundsRotHandles = [];
+  // @Override
+  onMouseUp(event: paper.ToolEvent) {
+    this.rotatingItems.forEach(item => (item.applyMatrix = true));
+  }
+}
+
+class SelectGesture extends Gesture {
+  private selectedPaths: paper.Item[];
+  private initialPositions: paper.Point[];
+
+  constructor(private readonly shouldCloneShape: boolean) {
+    super();
+  }
+
+  // @Override
+  onMouseDown(event: paper.ToolEvent, { item }: paper.HitResult) {
+    // Deselect all by default if the shift key isn't pressed
+    // also needs some special love for compound paths and groups,
+    // as their children are not marked as "selected".
+    if (!event.modifiers.shift) {
+      const root = ItemUtil.getParentLayer(item);
+      // TODO: re-look at this stuff once we support groups and compound paths!
+      // TODO: re-look at this stuff once we support groups and compound paths!
+      // TODO: re-look at this stuff once we support groups and compound paths!
+      // TODO: re-look at this stuff once we support groups and compound paths!
+      // TODO: re-look at this stuff once we support groups and compound paths!
+      if (ItemUtil.isGroup(root) || ItemUtil.isCompoundPath(root)) {
+        if (!root.selected) {
+          ItemUtil.clearSelection();
+        }
+      } else if (!item.selected) {
+        ItemUtil.clearSelection();
+      }
+    }
+    ItemUtil.setItemSelection(item, true);
+
+    // While moving/cloning the shape, never show the selection bounds.
+    if (this.shouldCloneShape) {
+      ItemUtil.cloneSelection();
+    }
+    ItemUtil.removeSelectionGroup();
+
+    this.selectedPaths = ItemUtil.getSelectedPaths();
+    this.initialPositions = this.selectedPaths.map(path => path.position);
+  }
+
+  // @Override
+  onMouseDrag(event: paper.ToolEvent) {
+    const dragVector = event.point.subtract(event.downPoint);
+    this.selectedPaths.forEach((item, i) => {
+      if (event.modifiers.shift) {
+        const snapPoint = new paper.Point(MathUtil.snapDeltaToAngle(dragVector, Math.PI / 4));
+        item.position = this.initialPositions[i].add(snapPoint);
+      } else {
+        item.position = item.position.add(event.delta);
+      }
+    });
+  }
+}
+
+class SelectionBoxGesture extends Gesture {
+  // @Override
+  onMouseDown(event: paper.ToolEvent) {
+    if (!event.modifiers.shift) {
+      ItemUtil.removeSelectionGroup();
+      ItemUtil.clearSelection();
+    }
+  }
+
+  // @Override
+  onMouseDrag(event: paper.ToolEvent) {
+    ItemUtil.createSelectionBoxPath(event.downPoint, event.point).removeOnDrag();
+  }
+
+  // @Override
+  onMouseUp(event: paper.ToolEvent) {
+    const path = ItemUtil.getSelectionBoxPath();
+    if (path) {
+      ItemUtil.processRectangularSelection(event, path);
+      path.remove();
+    }
   }
 }
 
@@ -354,7 +328,7 @@ const rectCornerNames: ReadonlyArray<CornerNameType> = [
   'bottomCenter',
 ];
 
-function getRectCornerNameByIndex(index: number) {
+function getRectCornerName(index: number) {
   return rectCornerNames[index];
 }
 
@@ -369,22 +343,6 @@ const opposingRectCornerNames: ReadonlyArray<CornerNameType> = [
   'topCenter',
 ];
 
-function getOpposingRectCornerNameByIndex(index: number) {
+function getOpposingRectCornerName(index: number) {
   return opposingRectCornerNames[index];
 }
-
-// TODO: make use of this function!
-// var preProcessSelection = function() {
-//   // when switching to the select tool while having a child object of a
-//   // compound path selected, deselect the child and select the compound path
-//   // instead. (otherwise the compound path breaks because of scale-grouping)
-//   var items = pg.selection.getSelectedItems();
-//   jQuery.each(items, function(index, item) {
-//     if(pg.compoundPath.isCompoundPathChild(item)) {
-//       var cp = pg.compoundPath.getItemsCompoundPath(item);
-//       pg.selection.setItemSelection(item, false);
-//       pg.selection.setItemSelection(cp, true);
-//     }
-//   });
-//   setSelectionBounds();
-// };

@@ -3291,6 +3291,9 @@ declare module 'paper' {
      * @param options.expandShapes - whether imported shape items should be expanded to path items.
      */
     importSVG(svg: SVGElement | string, options?: any): Item;
+
+    // ADDED BY ALEX LOCKWOOD
+    addLayer(layer: Layer): Layer | null;
   }
   // ADDED BY ALEX LOCKWOOD
   export interface HitOptions {
@@ -3790,6 +3793,9 @@ declare module 'paper' {
      * Updates the view if there are changes. Note that when using built-in event hanlders for interaction, animation and load events, this method is invoked for you automatically at the end.
      */
     update(): void;
+
+    // ADDED BY ALEX LOCKWOOD
+    requestUpdate(): void;
 
     /**
      *
