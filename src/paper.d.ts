@@ -3054,6 +3054,12 @@ declare module 'paper' {
      * @param isParameter - pass true if offset is a curve time parameter. default: false
      */
     getCurvatureAt(offset: number, isParameter?: boolean): Point;
+
+    // ADDED BY ALEX LOCKWOOD
+    divideAt(location: CurveLocation | number): Curve;
+
+    // ADDED BY ALEX LOCKWOOD
+    divideAtTime(time: number): Curve;
   }
   /**
    * CurveLocation objects describe a location on Curve objects, as defined by the curve parameter, a value between 0 (beginning of the curve) and 1 (end of the curve). If the curve is part of a Path item, its index inside the path.curves array is also provided.

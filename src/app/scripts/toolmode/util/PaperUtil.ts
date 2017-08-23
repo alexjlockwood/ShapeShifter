@@ -43,7 +43,7 @@ export function findGuideLayer() {
 /**
  * Returns the first ancestor of 'item' that is a paper.Layer instance.
  */
-export function findParentLayer(item: paper.Item) {
+export function findParentLayer(item: paper.Item | undefined): paper.Layer {
   return isLayer(item) ? item : findParentLayer(item.parent);
 }
 

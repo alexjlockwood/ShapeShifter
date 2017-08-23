@@ -15,7 +15,7 @@ export function clearSelection() {
 }
 
 export function splitPathAtSelectedSegments() {
-  const items = getSelectedNonGroupedItems().filter(i => i instanceof paper.Path) as paper.Path[];
+  const items = getSelectedNonGroupedItems().filter(p => PaperUtil.isPath(p)) as paper.Path[];
   for (const item of items) {
     for (let j = 0; j < item.segments.length; j++) {
       const seg = item.segments[j];
@@ -82,7 +82,7 @@ export function cloneSelection() {
 
 export function setItemSelection(item: paper.Item, isSelected: boolean) {
   const parentGroup = getItemsGroup(item);
-  const itemsCompoundPath = item.parent instanceof paper.CompoundPath ? item.parent : undefined;
+  const itemsCompoundPath = PaperUtil.isCompoundPath(item.parent) ? item.parent : undefined;
 
   // If the selection is in a group, select the group, not the individual items.
   if (parentGroup) {
@@ -118,7 +118,7 @@ export function setItemSelection(item: paper.Item, isSelected: boolean) {
 export function getSelectedNonGroupedItems() {
   const itemsAndGroups: paper.Item[] = [];
   for (const item of paper.project.selectedItems) {
-    if (!isGroup(item.parent) && item.data && !item.data.isSelectionBound) {
+    if (!PaperUtil.isGroup(item.parent) && item.data && !item.data.isSelectionBound) {
       itemsAndGroups.push(item);
     }
   }
@@ -131,7 +131,7 @@ export function getSelectedNonGroupedItems() {
  * Only returns selected paths (no compound paths, groups, or any other stuff).
  */
 export function getSelectedPaths() {
-  return getSelectedNonGroupedItems().filter(p => p instanceof paper.Path) as paper.Path[];
+  return getSelectedNonGroupedItems().filter(p => PaperUtil.isPath(p)) as paper.Path[];
 }
 
 export function processRectangularSelection(
@@ -141,8 +141,8 @@ export function processRectangularSelection(
 ) {
   itemLoop: for (const item of getAllSelectableItems()) {
     // Check for item segment points inside selectionRect.
-    if (isGroup(item) || item instanceof paper.CompoundPath) {
-      if (!rectangularSelectionGroupLoop(item as paper.Group, rect, item, event, processDetails)) {
+    if (PaperUtil.isGroup(item) || PaperUtil.isCompoundPath(item)) {
+      if (!rectangularSelectionGroupLoop(item, rect, item, event, processDetails)) {
         continue itemLoop;
       }
     } else {
@@ -162,8 +162,8 @@ function rectangularSelectionGroupLoop(
   processDetails: boolean,
 ) {
   for (const child of group.children) {
-    if (isGroup(child) || child instanceof paper.CompoundPath) {
-      rectangularSelectionGroupLoop(child as paper.Group, rect, root, event, processDetails);
+    if (PaperUtil.isGroup(child) || PaperUtil.isCompoundPath(child)) {
+      rectangularSelectionGroupLoop(child, rect, root, event, processDetails);
     } else if (!handleRectangularSelectionItems(child, event, rect, processDetails)) {
       return false;
     }
@@ -177,7 +177,7 @@ function handleRectangularSelectionItems(
   rect: paper.Path.Rectangle,
   processDetails: boolean,
 ) {
-  if (item instanceof paper.Path) {
+  if (PaperUtil.isPath(item)) {
     let segmentMode = false;
 
     // First round checks for segments inside the selectionRect.
@@ -276,17 +276,8 @@ function checkBoundsItem(
   return false;
 }
 
-function getItemsGroup(item) {
-  const itemParent = item.parent;
-  if (isGroup(itemParent)) {
-    return itemParent;
-  } else {
-    return undefined;
-  }
-}
-
-function isGroup(item: paper.Item) {
-  return item && item.className && item.className === 'Group';
+function getItemsGroup(item: paper.Item) {
+  return PaperUtil.isGroup(item.parent) ? item.parent : undefined;
 }
 
 export function getAllSelectableItems() {

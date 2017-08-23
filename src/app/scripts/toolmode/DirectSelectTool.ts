@@ -1,7 +1,5 @@
 import * as paper from 'paper';
 
-import { AbstractTool, HitTestArgs, ToolState } from './AbstractTool';
-import { ToolMode } from './ToolMode';
 import { ToolWrapper } from './ToolWrapper';
 import * as GuideUtil from './util/GuideUtil';
 import * as HoverUtil from './util/HoverUtil';

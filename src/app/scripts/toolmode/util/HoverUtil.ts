@@ -19,7 +19,7 @@ export function handleHoveredItem(hitOptions: paper.HitOptions, event: paper.Too
   if (!item.selected) {
     if (item instanceof paper.Shape) {
       hoveredItem = GuideUtil.hoverBounds(item);
-    } else if (isGroupChild(item)) {
+    } else if (PaperUtil.isGroup(PaperUtil.findParentLayer(item))) {
       hoveredItem = GuideUtil.hoverBounds(PaperUtil.findParentLayer(item));
     } else {
       hoveredItem = GuideUtil.hoverItem(hitResult);
@@ -33,12 +33,4 @@ export function clearHoveredItem() {
     hoveredItem = undefined;
   }
   paper.view.update();
-}
-
-function isGroupChild(item) {
-  return isGroup(PaperUtil.findParentLayer(item));
-}
-
-function isGroup(item: paper.Item) {
-  return item && item.className && item.className === 'Group';
 }

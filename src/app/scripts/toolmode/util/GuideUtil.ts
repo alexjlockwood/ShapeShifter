@@ -40,7 +40,7 @@ export function rectSelect(event: paper.ToolEvent, color = guideGrey) {
   const start = event.downPoint.add(half);
   const end = event.point.add(half);
   const rect = new paper.Path.Rectangle(start, end);
-  const zoom = 1.0 / paper.view.zoom;
+  const zoom = 1 / paper.view.zoom;
   setDefaultGuideStyle(rect);
   rect.parent = PaperUtil.findGuideLayer();
   rect.strokeColor = color;
@@ -52,8 +52,7 @@ export function rectSelect(event: paper.ToolEvent, color = guideGrey) {
 }
 
 function rotPivot(center: paper.Point, color = guideBlue) {
-  const zoom = 1 / paper.view.zoom;
-  const path = new paper.Path.Circle(center, 3 * zoom);
+  const path = new paper.Path.Circle(center, 3 / paper.view.zoom);
   setDefaultGuideStyle(path);
   path.parent = PaperUtil.findGuideLayer();
   path.fillColor = color;
@@ -79,12 +78,9 @@ export function getGuideColor(colorName: 'blue' | 'grey') {
 }
 
 export function removeHelperItems() {
-  const allItems = PaperUtil.getAllPaperItems(true);
-  $.each(allItems, (index, item) => {
-    $.each(['isHelperItem'], (ti, tag) => {
-      if (item.data && item.data[tag]) {
-        item.remove();
-      }
-    });
+  PaperUtil.getAllPaperItems(true).forEach((item, index) => {
+    if (item.data && item.data.isHelperItem) {
+      item.remove();
+    }
   });
 }

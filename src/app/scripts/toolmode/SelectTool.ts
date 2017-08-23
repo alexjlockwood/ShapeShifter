@@ -1,7 +1,6 @@
 import * as $ from 'jquery';
 import * as paper from 'paper';
 
-import { AbstractTool, HitTestArgs, ToolState } from './AbstractTool';
 import { ToolWrapper } from './ToolWrapper';
 import * as GuideUtil from './util/GuideUtil';
 import * as HoverUtil from './util/HoverUtil';
@@ -21,14 +20,13 @@ enum Mode {
  * A simple selection tool for moving, scaling, rotating, and selecting shapes.
  */
 export class SelectTool extends ToolWrapper {
-  private boundsPath;
-  private boundsScaleHandles = [];
-  private boundsRotHandles = [];
+  private boundsPath: paper.Path.Rectangle;
+  private boundsScaleHandles: paper.Item[] = [];
+  private boundsRotHandles: paper.Item[] = [];
 
   constructor() {
     super();
 
-    const keyModifiers = {};
     let mode = Mode.None;
     let selectionRect: paper.Path.Rectangle;
     let itemGroup: paper.Group;
@@ -89,10 +87,7 @@ export class SelectTool extends ToolWrapper {
             const { bounds } = this.boundsPath;
             rotGroupPivot = bounds.center;
             rotItems = ToolUtil.getSelectedPaths();
-
-            $.each(rotItems, (i, item) => {
-              prevRot[i] = event.point.subtract(rotGroupPivot).angle;
-            });
+            rotItems.forEach((item, i) => (prevRot[i] = event.point.subtract(rotGroupPivot).angle));
           } else {
             // Deselect all by default if the shift key isn't pressed
             // also needs some special love for compound paths and groups,
@@ -173,27 +168,26 @@ export class SelectTool extends ToolWrapper {
 
           itemGroup.scale(sx, sy, pivot);
 
-          $.each(this.boundsScaleHandles, (index, handle) => {
+          this.boundsScaleHandles.forEach((handle, index) => {
             handle.position = itemGroup.bounds[getRectCornerNameByIndex(index)];
             handle.bringToFront();
           });
 
-          $.each(this.boundsRotHandles, (index, handle) => {
-            if (handle) {
-              handle.position = itemGroup.bounds[getRectCornerNameByIndex(index)].add(
-                handle.data.offset,
-              );
-              handle.bringToFront();
+          this.boundsRotHandles.forEach((handle, index) => {
+            if (!handle) {
+              return;
             }
+            const cornerName = getRectCornerNameByIndex(index);
+            handle.position = itemGroup.bounds[cornerName].add(handle.data.offset);
+            handle.bringToFront();
           });
         } else if (mode === Mode.Rotate) {
           let rotAngle = event.point.subtract(rotGroupPivot).angle;
 
-          $.each(rotItems, (i, item) => {
+          rotItems.forEach((item, i) => {
             if (!item.data.origRot) {
               item.data.origRot = item.rotation;
             }
-
             if (event.modifiers.shift) {
               rotAngle = Math.round(rotAngle / 45) * 45;
               item.applyMatrix = false;
@@ -234,21 +228,16 @@ export class SelectTool extends ToolWrapper {
           // Resetting the items origin point for the next usage.
           const selectedItems = ToolUtil.getSelectedPaths();
 
-          $.each(selectedItems, (index, item) => {
+          selectedItems.forEach(item => {
             // Remove the orig pos again.
             item.data.origPos = undefined;
           });
-          // pg.undo.snapshot('moveSelection');
         } else if (mode === Mode.Scale) {
           itemGroup.applyMatrix = true;
           itemGroup.layer.addChildren(itemGroup.children);
           itemGroup.remove();
-          // pg.undo.snapshot('scaleSelection');
         } else if (mode === Mode.Rotate) {
-          $.each(rotItems, (i, item) => {
-            item.applyMatrix = true;
-          });
-          // pg.undo.snapshot('rotateSelection');
+          rotItems.forEach(item => (item.applyMatrix = true));
         }
 
         mode = Mode.None;
@@ -273,7 +262,7 @@ export class SelectTool extends ToolWrapper {
     }
 
     let rect: paper.Rectangle;
-    $.each(items, (index, item) => {
+    items.forEach(item => {
       if (rect) {
         rect = rect.unite(item.bounds);
       } else {
@@ -296,16 +285,17 @@ export class SelectTool extends ToolWrapper {
     this.boundsPath.fullySelected = true;
     this.boundsPath.parent = PaperUtil.findGuideLayer();
 
-    $.each(this.boundsPath.segments, (i, segment) => {
+    this.boundsPath.segments.forEach((segment, index) => {
       let size = 4;
 
-      const index = +i;
       if (index % 2 === 0) {
         size = 6;
       }
 
       if (index === 7) {
         const offset = new paper.Point(0, 10 / paper.view.zoom);
+        // TODO: this is a bit hacky... we shouldn't be blindly setting the index like this
+        // TODO: provide different mechanism for rotating shapes
         this.boundsRotHandles[index] = new paper.Path.Circle({
           center: segment.point.add(offset),
           data: {
@@ -323,6 +313,7 @@ export class SelectTool extends ToolWrapper {
         });
       }
 
+      // TODO: this is a bit hacky... we shouldn't be blindly setting the index like this
       this.boundsScaleHandles[index] = new paper.Path.Rectangle({
         center: segment.point,
         data: {
@@ -347,7 +338,17 @@ export class SelectTool extends ToolWrapper {
   }
 }
 
-const rectCornerNames = [
+type CornerNameType =
+  | 'bottomLeft'
+  | 'leftCenter'
+  | 'topLeft'
+  | 'topCenter'
+  | 'topRight'
+  | 'rightCenter'
+  | 'bottomRight'
+  | 'bottomCenter';
+
+const rectCornerNames: ReadonlyArray<CornerNameType> = [
   'bottomLeft',
   'leftCenter',
   'topLeft',
@@ -362,7 +363,7 @@ function getRectCornerNameByIndex(index: number) {
   return rectCornerNames[index];
 }
 
-const opposingRectCornerNames = [
+const opposingRectCornerNames: ReadonlyArray<CornerNameType> = [
   'topRight',
   'rightCenter',
   'bottomRight',

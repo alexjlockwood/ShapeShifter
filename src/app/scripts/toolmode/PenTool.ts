@@ -1,7 +1,5 @@
 import * as paper from 'paper';
 
-import { AbstractTool, HitTestArgs, ToolState } from './AbstractTool';
-import { ToolMode } from './ToolMode';
 import { ToolWrapper } from './ToolWrapper';
 import * as ToolUtil from './util/ToolUtil';
 
@@ -17,16 +15,11 @@ enum Mode {
  * Pen tool that allows for creating new shapes and lines.
  */
 export class PenTool extends ToolWrapper {
-  private pathId = -1;
-  private mode = Mode.None;
-  private hitResult: paper.HitResult;
-  private currSegment: paper.Segment;
-
   constructor() {
     super();
 
-    let path: paper.Path;
-    let currentSegment: paper.Segment;
+    let currPath: paper.Path;
+    let currSegment: paper.Segment;
     let mode = Mode.None;
     let type: string;
     let hoverHitResult: paper.HitResult;
@@ -43,44 +36,44 @@ export class PenTool extends ToolWrapper {
 
     this.tool.on({
       mousedown: (event: paper.ToolEvent) => {
-        if (currentSegment) {
-          currentSegment.selected = false;
+        if (currSegment) {
+          currSegment.selected = false;
         }
-        mode = type = currentSegment = undefined;
+        mode = type = currSegment = undefined;
 
-        if (!path) {
+        if (!currPath) {
           if (!hoverHitResult) {
             ToolUtil.clearSelection();
-            path = new paper.Path();
-            path.fillColor = 'blue';
-            path.strokeColor = 'black';
-            path.strokeWidth = 10;
+            currPath = new paper.Path();
+            currPath.fillColor = 'blue';
+            currPath.strokeColor = 'black';
+            currPath.strokeWidth = 10;
             // path = pg.stylebar.applyActiveToolbarStyle(path);
           } else {
             const item = hoverHitResult.item as paper.Path;
             if (item.closed) {
-              path = item;
+              currPath = item;
             } else {
               mode = Mode.Continue;
-              path = item;
-              currentSegment = hoverHitResult.segment;
+              currPath = item;
+              currSegment = hoverHitResult.segment;
               if (item.lastSegment !== hoverHitResult.segment) {
-                path.reverse();
+                currPath.reverse();
               }
             }
           }
         }
 
-        if (path) {
-          const result = findHandle(path, event.point);
+        if (currPath) {
+          const result = findHandle(currPath, event.point);
           if (result && mode !== Mode.Continue) {
-            currentSegment = result.segment;
+            currSegment = result.segment;
             type = result.type;
             if (result.type === 'segment') {
-              if (result.segment.index === 0 && path.segments.length > 1 && !path.closed) {
+              if (result.segment.index === 0 && currPath.segments.length > 1 && !currPath.closed) {
                 mode = Mode.Close;
-                path.closed = true;
-                path.firstSegment.selected = true;
+                currPath.closed = true;
+                currPath.firstSegment.selected = true;
               } else {
                 mode = Mode.Remove;
                 result.segment.remove();
@@ -88,15 +81,15 @@ export class PenTool extends ToolWrapper {
             }
           }
 
-          if (currentSegment) {
+          if (currSegment) {
             return;
           }
 
           if (!hoverHitResult) {
             mode = Mode.Add;
             // Add a new segment to the path.
-            currentSegment = path.add(event.point);
-            currentSegment.selected = true;
+            currSegment = currPath.add(event.point);
+            currSegment.selected = true;
             return;
           }
 
@@ -110,14 +103,14 @@ export class PenTool extends ToolWrapper {
             if (hoverPath.firstSegment !== hoverHitResult.segment) {
               hoverPath.reverse();
             }
-            path.join(hoverPath);
-            path = undefined;
+            currPath.join(hoverPath);
+            currPath = undefined;
           } else if (hoverHitResult.type === 'curve' || hoverHitResult.type === 'stroke') {
             mode = Mode.Add;
             // Inserting segment on curve/stroke.
-            const location = hoverHitResult.location;
-            currentSegment = path.insert(location.index + 1, event.point);
-            currentSegment.selected = true;
+            const { location } = hoverHitResult;
+            currSegment = currPath.insert(location.index + 1, event.point);
+            currSegment.selected = true;
           }
         }
       },
@@ -126,8 +119,8 @@ export class PenTool extends ToolWrapper {
         if (type === 'handle-out' || mode === Mode.Add) {
           delta = delta.multiply(-1);
         }
-        currentSegment.handleIn = currentSegment.handleIn.add(delta);
-        currentSegment.handleOut = currentSegment.handleOut.subtract(delta);
+        currSegment.handleIn = currSegment.handleIn.add(delta);
+        currSegment.handleOut = currSegment.handleOut.subtract(delta);
       },
       mousemove: (event: paper.ToolEvent) => {
         const hitResult = paper.project.hitTest(event.point, hitOptions);
@@ -138,9 +131,8 @@ export class PenTool extends ToolWrapper {
         }
       },
       mouseup: (event: paper.ToolEvent) => {
-        if (path && path.closed) {
-          // pg.undo.snapshot('bezier');
-          path = undefined;
+        if (currPath && currPath.closed) {
+          currPath = undefined;
         }
       },
     });
@@ -148,14 +140,16 @@ export class PenTool extends ToolWrapper {
 }
 
 function findHandle(path: paper.Path, point: paper.Point) {
-  const types = ['segment', 'handle-in', 'handle-out'];
-  for (let i = 0, l = path.segments.length; i < l; i++) {
-    for (let j = 0; j < 3; j++) {
-      const type = types[j];
-      const segment = path.segments[i];
-      const segmentPoint = type === 'segment' ? segment.point : segment.point + segment[type];
-      const distance = point.subtract(segmentPoint).length;
-      if (distance < 6) {
+  for (const segment of path.segments) {
+    for (const type of ['segment', 'handle-in', 'handle-out']) {
+      let segmentPoint = segment.point;
+      if (type === 'handle-in') {
+        segmentPoint = segmentPoint.add(segment.handleIn);
+      } else if (type === 'handle-out') {
+        segmentPoint = segmentPoint.add(segment.handleOut);
+      }
+      // TODO: the '6' seems arbitrary here... investigate?
+      if (point.subtract(segmentPoint).length < 6) {
         return { type, segment };
       }
     }

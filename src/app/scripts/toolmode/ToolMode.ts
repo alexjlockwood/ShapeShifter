@@ -3,6 +3,4 @@ export enum ToolMode {
   Pen = 'tool-pen',
   Select = 'tool-select',
   ZoomPan = 'tool-zoompan',
-  Scale = 'tool-scale',
-  Rotate = 'tool-rotate',
 }
