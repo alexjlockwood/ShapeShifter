@@ -1,7 +1,6 @@
 import * as $ from 'jquery';
 import * as paper from 'paper';
 
-import * as HelperUtil from './HelperUtil';
 import * as HoverUtil from './HoverUtil';
 import * as PaperUtil from './PaperUtil';
 
@@ -292,7 +291,7 @@ function isGroup(item: paper.Item) {
 
 export function getAllSelectableItems() {
   const selectables: paper.Item[] = [];
-  for (const item of HelperUtil.getAllPaperItems()) {
+  for (const item of PaperUtil.getAllPaperItems()) {
     if (item.data && !item.data.isHelperItem) {
       selectables.push(item);
     }

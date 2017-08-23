@@ -21,6 +21,18 @@ export function setupPaperJs(canvas: HTMLCanvasElement) {
   isPaperJsSetup = true;
 }
 
+export function getAllPaperItems(includeGuides = false) {
+  const allItems: paper.Item[] = [];
+  for (const layer of paper.project.layers) {
+    for (const child of layer.children) {
+      if (includeGuides || !child.guide) {
+        allItems.push(child);
+      }
+    }
+  }
+  return allItems;
+}
+
 /**
  * Returns the guide layer on which to draw temporary selections.
  */

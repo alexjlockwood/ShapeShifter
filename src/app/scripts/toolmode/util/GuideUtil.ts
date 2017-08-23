@@ -1,6 +1,5 @@
 import * as paper from 'paper';
 
-import * as HelperUtil from './HelperUtil';
 import * as PaperUtil from './PaperUtil';
 
 const guideBlue = '#009dec';
@@ -80,5 +79,12 @@ export function getGuideColor(colorName: 'blue' | 'grey') {
 }
 
 export function removeHelperItems() {
-  HelperUtil.removePaperItemsByDataTags(['isHelperItem']);
+  const allItems = PaperUtil.getAllPaperItems(true);
+  $.each(allItems, (index, item) => {
+    $.each(['isHelperItem'], (ti, tag) => {
+      if (item.data && item.data[tag]) {
+        item.remove();
+      }
+    });
+  });
 }
