@@ -149,7 +149,7 @@ export function findItemById(id: number): paper.Item {
  */
 export function getSelectionBounds() {
   let bounds: paper.Rectangle;
-  paper.project.getSelectedItems().forEach(item => {
+  paper.project.selectedItems.forEach(item => {
     if (bounds) {
       bounds = bounds.unite(item.bounds);
     } else {
@@ -196,7 +196,7 @@ export function deselectAll() {
 }
 
 export function deselectAllSegments() {
-  paper.project.getSelectedItems().forEach(item => {
+  paper.project.selectedItems.forEach(item => {
     if (item instanceof paper.Path) {
       item.segments.forEach(s => (s.selected = false));
     }
@@ -208,7 +208,7 @@ export function deselectAllSegments() {
  */
 export function captureSelectionState() {
   const originalContent: SelectionState[] = [];
-  paper.project.getSelectedItems().forEach(item => {
+  paper.project.selectedItems.forEach(item => {
     if (!item.guide) {
       originalContent.push({
         id: item.id,

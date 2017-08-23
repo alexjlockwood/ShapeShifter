@@ -91,7 +91,7 @@ export class ScaleTool extends AbstractTool {
 
         ToolsUtil.restoreSelectionState(originalContent);
 
-        paper.project.getSelectedItems().forEach(item => {
+        paper.project.selectedItems.forEach(item => {
           if (!item.guide) {
             item.scale(sx, sy, origPivot);
           }

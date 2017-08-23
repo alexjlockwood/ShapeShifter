@@ -69,7 +69,7 @@ export class RotateTool extends AbstractTool {
         const deg = da / Math.PI * 180;
         this.toolState.getSelectionBoundsPath().rotate(deg, originalCenter);
 
-        paper.project.getSelectedItems().forEach(item => {
+        paper.project.selectedItems.forEach(item => {
           if (!item.guide) {
             item.rotate(deg, originalCenter);
           }

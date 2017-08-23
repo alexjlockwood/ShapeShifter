@@ -5,372 +5,160 @@ import { ToolMode } from './ToolMode';
 import * as ToolsUtil from './ToolsUtil';
 import { SelectionState } from './ToolsUtil';
 import { Cursor } from './ToolsUtil';
+import { ToolWrapper } from './ToolWrapper';
+import * as ToolUtil from './util/ToolUtil';
 
 enum Mode {
   None,
-  Create,
-  Insert,
-  Adjust,
+  Add,
   Continue,
-  Convert,
   Remove,
-  Join,
   Close,
 }
 
 /**
  * Pen tool that allows for creating new shapes and lines.
  */
-export class PenTool extends AbstractTool {
+export class PenTool extends ToolWrapper {
   private pathId = -1;
   private mode = Mode.None;
   private hitResult: paper.HitResult;
   private currSegment: paper.Segment;
 
-  constructor(toolState: ToolState) {
+  constructor() {
     super();
 
-    let initialMousePoint: paper.Point;
-    let origHandleIn: paper.Point;
-    let origHandleOut: paper.Point;
+    let path: paper.Path;
+    let currentSegment: paper.Segment;
+    let mode = Mode.None;
+    let type: string;
+    let hoverHitResult: paper.HitResult;
 
-    this.on({
-      activate: () => ToolsUtil.setCanvasCursor(Cursor.PenAdd),
-      deactivate: () => {
-        if (toolState.getToolMode() !== ToolMode.Pen) {
-          this.closePath();
-          toolState.updateSelectionBounds();
-        }
-        this.currSegment = undefined;
-      },
-      mousedown: (event: paper.MouseEvent) => {
-        ToolsUtil.deselectAllSegments();
+    const hitOptions = {
+      segments: true,
+      stroke: true,
+      curves: true,
+      // TODO: figure out which one to use ('guide' or 'guides')
+      guide: false,
+      guides: false,
+      tolerance: 5 / paper.view.zoom,
+    } as any; // TODO: missing types
 
-        switch (this.mode) {
-          case Mode.Create: {
-            // TODO: missing types
-            let path = ToolsUtil.findItemById(this.pathId) as paper.Path;
-            if (!path) {
-              ToolsUtil.deselectAll();
-              path = new paper.Path();
-              path.fillColor = toolState.getFillColor();
-              path.strokeColor = toolState.getStrokeColor();
-              this.pathId = path.id;
-            }
-            this.currSegment = path.add(event.point);
-            initialMousePoint = event.point.clone();
-            origHandleIn = this.currSegment.handleIn.clone();
-            origHandleOut = this.currSegment.handleOut.clone();
-            break;
-          }
-          case Mode.Insert: {
-            if (this.hitResult) {
-              const location = this.hitResult.location;
-              const values = (location.curve as any).getValues();
-              const isLinear = location.curve.isLinear();
-              const parts = (paper.Curve as any).subdivide(values, location.parameter);
-              const left = parts[0];
-              const right = parts[1];
-              const x = left[6];
-              const y = left[7];
-              const segment = new paper.Segment(
-                new paper.Point(x, y),
-                !isLinear && new paper.Point(left[4] - x, left[5] - y),
-                !isLinear && new paper.Point(right[2] - x, right[3] - y),
-              );
-              // TODO: this can sometimes cause exceptions... investigate
-              if (!this.hitResult.item || !(this.hitResult.item as paper.Path).insert) {
-                console.warn(this.hitResult);
-              }
-              // TODO: missing types
-              const seg = (this.hitResult.item as paper.Path).insert(location.index + 1, segment);
-              if (!isLinear) {
-                seg.previous.handleOut.x = left[2] - left[0];
-                seg.previous.handleOut.y = left[3] - left[1];
-                seg.next.handleIn.x = right[4] - right[6];
-                seg.next.handleIn.y = right[5] - right[7];
-              }
-              ToolsUtil.deselectAllSegments();
-              seg.selected = true;
-              this.hitResult = undefined;
-            }
-            break;
-          }
-          case Mode.Close: {
-            if (this.pathId !== -1) {
-              // TODO: missing types
-              (ToolsUtil.findItemById(this.pathId) as paper.Path).closed = true;
-            }
-            this.currSegment = this.hitResult.segment;
-            this.currSegment.handleIn.set(0, 0);
-            initialMousePoint = event.point.clone();
-            origHandleIn = this.currSegment.handleIn.clone();
-            origHandleOut = this.currSegment.handleOut.clone();
-            break;
-          }
-          case Mode.Adjust: {
-            this.currSegment = this.hitResult.segment;
-            this.currSegment.handleOut.set(0, 0);
-            initialMousePoint = event.point.clone();
-            origHandleIn = this.currSegment.handleIn.clone();
-            origHandleOut = this.currSegment.handleOut.clone();
-            break;
-          }
-          case Mode.Continue: {
-            if (this.hitResult.segment.index === 0) {
-              this.hitResult.item.reverseChildren();
-            }
-            this.pathId = this.hitResult.item.id;
-            this.currSegment = this.hitResult.segment;
-            this.currSegment.handleOut.set(0, 0);
-            initialMousePoint = event.point.clone();
-            origHandleIn = this.currSegment.handleIn.clone();
-            origHandleOut = this.currSegment.handleOut.clone();
-            break;
-          }
-          case Mode.Convert: {
-            this.pathId = this.hitResult.item.id;
-            this.currSegment = this.hitResult.segment;
-            this.currSegment.handleIn.set(0, 0);
-            this.currSegment.handleOut.set(0, 0);
-            initialMousePoint = event.point.clone();
-            origHandleIn = this.currSegment.handleIn.clone();
-            origHandleOut = this.currSegment.handleOut.clone();
-            break;
-          }
-          case Mode.Join: {
-            const path = ToolsUtil.findItemById(this.pathId) as paper.Path;
-            if (path) {
-              const oldPoint = this.hitResult.segment.point.clone();
-              if (this.hitResult.segment.index !== 0) {
-                // TODO: missing types
-                (this.hitResult.item as paper.Path).reverse();
-              }
-              // TODO: missing types
-              path.join(this.hitResult.item as paper.Path);
-              // Find nearest point to the hit point.
-              let imin = -1;
-              let dmin = 0;
-              for (let i = 0; i < path.segments.length; i++) {
-                const d = oldPoint.getDistance(path.segments[i].point);
-                if (imin === -1 || d < dmin) {
-                  dmin = d;
-                  imin = i;
-                }
-              }
-              this.currSegment = path.segments[imin];
-              this.currSegment.handleIn.set(0, 0);
-              initialMousePoint = event.point.clone();
-              origHandleIn = this.currSegment.handleIn.clone();
-              origHandleOut = this.currSegment.handleOut.clone();
-            } else {
-              this.currSegment = undefined;
-            }
-            break;
-          }
-          case Mode.Remove: {
-            if (this.hitResult) {
-              // TODO: missing types
-              (this.hitResult.item as paper.Path).removeSegment(this.hitResult.segment.index);
-              this.hitResult = undefined;
-            }
-            break;
-          }
+    this.tool.on({
+      mousedown: (event: paper.ToolEvent) => {
+        if (currentSegment) {
+          currentSegment.selected = false;
         }
-        if (this.currSegment) {
-          this.currSegment.selected = true;
-        }
-      },
-      mousedrag: (event: paper.MouseEvent) => {
-        if (!this.currSegment) {
-          return;
-        }
-        const path = ToolsUtil.findItemById(this.pathId);
+        mode = type = currentSegment = undefined;
+
         if (!path) {
-          return;
-        }
-        let dragIn = false;
-        let dragOut = false;
-        let invert = false;
-        switch (this.mode) {
-          case Mode.Create:
-            dragOut = true;
-            if (this.currSegment.index > 0) {
-              dragIn = true;
-            }
-            break;
-          case Mode.Close:
-            dragIn = invert = true;
-            break;
-          case Mode.Continue:
-            dragOut = true;
-            break;
-          case Mode.Adjust:
-            dragOut = true;
-            break;
-          case Mode.Join:
-            dragIn = invert = true;
-            break;
-          case Mode.Convert:
-            dragIn = dragOut = true;
-            break;
-        }
-        if (dragIn || dragOut) {
-          let delta = event.point.subtract(initialMousePoint);
-          if (invert) {
-            delta = new paper.Point(-delta.x, -delta.y);
-          }
-          if (dragIn && dragOut) {
-            let handlePos = origHandleOut.add(delta);
-            if (event.modifiers.shift) {
-              handlePos = ToolsUtil.snapDeltaToAngle(handlePos, Math.PI * 2 / 8);
-            }
-            this.currSegment.handleOut = handlePos;
-            this.currSegment.handleIn = new paper.Point(-handlePos.x, -handlePos.y);
-          } else if (dragOut) {
-            let handlePos = origHandleOut.add(delta);
-            if (event.modifiers.shift) {
-              handlePos = ToolsUtil.snapDeltaToAngle(handlePos, Math.PI * 2 / 8);
-            }
-            this.currSegment.handleOut = handlePos;
-            this.currSegment.handleIn = handlePos.normalize(-origHandleIn.length);
+          if (!hoverHitResult) {
+            ToolUtil.clearSelection();
+            path = new paper.Path();
+            path.fillColor = 'blue';
+            path.strokeColor = 'black';
+            path.strokeWidth = 10;
+            // path = pg.stylebar.applyActiveToolbarStyle(path);
           } else {
-            let handlePos = origHandleIn.add(delta);
-            if (event.modifiers.shift) {
-              handlePos = ToolsUtil.snapDeltaToAngle(handlePos, Math.PI * 2 / 8);
+            const item = hoverHitResult.item as paper.Path;
+            if (item.closed) {
+              path = item;
+            } else {
+              mode = Mode.Continue;
+              path = item;
+              currentSegment = hoverHitResult.segment;
+              if (item.lastSegment !== hoverHitResult.segment) {
+                path.reverse();
+              }
             }
-            this.currSegment.handleIn = handlePos;
-            this.currSegment.handleOut = handlePos.normalize(-origHandleOut.length);
+          }
+        }
+
+        if (path) {
+          const result = findHandle(path, event.point);
+          if (result && mode !== Mode.Continue) {
+            currentSegment = result.segment;
+            type = result.type;
+            if (result.type === 'segment') {
+              if (result.segment.index === 0 && path.segments.length > 1 && !path.closed) {
+                mode = Mode.Close;
+                path.closed = true;
+                path.firstSegment.selected = true;
+              } else {
+                mode = Mode.Remove;
+                result.segment.remove();
+              }
+            }
+          }
+
+          if (!currentSegment) {
+            if (hoverHitResult) {
+              const item = hoverHitResult.item as paper.Path;
+              if (hoverHitResult.type === 'segment' && !item.closed) {
+                // Joining two paths.
+                const hoverPath = item;
+                // Check if the connection point is the first segment
+                // reverse path if it is not because join()
+                // always connects to first segment).
+                if (hoverPath.firstSegment !== hoverHitResult.segment) {
+                  hoverPath.reverse();
+                }
+                path.join(hoverPath);
+                path = undefined;
+              } else if (hoverHitResult.type === 'curve' || hoverHitResult.type === 'stroke') {
+                mode = Mode.Add;
+                // inserting segment on curve/stroke
+                const location = hoverHitResult.location;
+                currentSegment = path.insert(location.index + 1, event.point);
+                currentSegment.selected = true;
+              }
+            } else {
+              mode = Mode.Add;
+              // add a new segment to the path
+              currentSegment = path.add(event.point);
+              currentSegment.selected = true;
+            }
           }
         }
       },
-      mousemove: (event: paper.MouseEvent) => this.hitTest(event),
-      mouseup: (event: paper.MouseEvent) => {
-        if (this.mode === Mode.Close || this.mode === Mode.Join || this.mode === Mode.Convert) {
-          this.closePath();
+      mousedrag: (event: paper.ToolEvent) => {
+        let delta = event.delta.clone();
+        if (type === 'handle-out' || mode === Mode.Add) {
+          delta = delta.multiply(-1);
         }
-        this.mode = undefined;
-        this.currSegment = undefined;
+        currentSegment.handleIn = currentSegment.handleIn.add(delta);
+        currentSegment.handleOut = currentSegment.handleOut.subtract(delta);
+      },
+      mousemove: (event: paper.ToolEvent) => {
+        const hitResult = paper.project.hitTest(event.point, hitOptions);
+        if (hitResult && hitResult.item && hitResult.item.selected) {
+          hoverHitResult = hitResult;
+        } else {
+          hoverHitResult = undefined;
+        }
+      },
+      mouseup: (event: paper.ToolEvent) => {
+        if (path && path.closed) {
+          // pg.undo.snapshot('bezier');
+          path = undefined;
+        }
       },
     });
   }
+}
 
-  // @Override
-  dispatchHitTest(
-    type: string,
-    { point, modifiers = {}, key = '' }: HitTestArgs,
-    toolMode: ToolMode,
-  ) {
-    if (toolMode !== ToolMode.Pen) {
-      return false;
-    }
-    if (modifiers.command) {
-      return false;
-    }
-    if (type === 'keyup' && (key === 'enter' || key === 'escape')) {
-      this.closePath();
-    }
-    return this.hitTest({ point, modifiers });
-  }
-
-  // @Override
-  protected hitTest({ point, modifiers = {} }: HitTestArgs) {
-    const hitSize = 4;
-    let hitResult: paper.HitResult = undefined;
-    this.currSegment = undefined;
-    this.hitResult = undefined;
-    if (point) {
-      hitResult = paper.project.hitTest(point, {
-        segments: true,
-        stroke: true,
-        tolerance: hitSize,
-      });
-    }
-    if (hitResult) {
-      if (hitResult.type === 'stroke') {
-        if (hitResult.item.selected) {
-          this.mode = Mode.Insert;
-          ToolsUtil.setCanvasCursor(Cursor.PenAdd);
-        } else {
-          hitResult = undefined;
-        }
-      } else if (hitResult.type === 'segment') {
-        // TODO: missing types
-        const last = (hitResult.item as paper.Path).segments.length - 1;
-        if (
-          !(hitResult.item as paper.Path).closed &&
-          (hitResult.segment.index === 0 || hitResult.segment.index === last)
-        ) {
-          if (hitResult.item.id === this.pathId) {
-            if (hitResult.segment.index === 0) {
-              this.mode = Mode.Close;
-              ToolsUtil.setCanvasCursor(Cursor.PenClose);
-              this.updateTail(hitResult.segment.point);
-            } else {
-              this.mode = Mode.Adjust;
-              ToolsUtil.setCanvasCursor(Cursor.PenAdjust);
-            }
-          } else {
-            if (this.pathId !== -1) {
-              this.mode = Mode.Join;
-              ToolsUtil.setCanvasCursor(Cursor.PenJoin);
-              this.updateTail(hitResult.segment.point);
-            } else {
-              this.mode = Mode.Continue;
-              ToolsUtil.setCanvasCursor(Cursor.PenEdit);
-            }
-          }
-        } else if (hitResult.item.selected) {
-          if (modifiers.option) {
-            this.mode = Mode.Convert;
-            ToolsUtil.setCanvasCursor(Cursor.PenAdjust);
-          } else {
-            this.mode = Mode.Remove;
-            ToolsUtil.setCanvasCursor(Cursor.PenRemove);
-          }
-        } else {
-          hitResult = undefined;
-        }
+function findHandle(path: paper.Path, point: paper.Point) {
+  const types = ['segment', 'handle-in', 'handle-out'];
+  for (let i = 0, l = path.segments.length; i < l; i++) {
+    for (let j = 0; j < 3; j++) {
+      const type = types[j];
+      const segment = path.segments[i];
+      const segmentPoint = type === 'segment' ? segment.point : segment.point + segment[type];
+      const distance = point.subtract(segmentPoint).length;
+      if (distance < 6) {
+        return { type, segment };
       }
     }
-    if (!hitResult) {
-      this.mode = Mode.Create;
-      ToolsUtil.setCanvasCursor(Cursor.PenCreate);
-      if (point) {
-        this.updateTail(point);
-      }
-    }
-    this.hitResult = hitResult;
-    return true;
   }
-
-  private closePath() {
-    if (this.pathId !== -1) {
-      ToolsUtil.deselectAllSegments();
-      this.pathId = -1;
-    }
-  }
-
-  private updateTail(point: paper.Point) {
-    const path = ToolsUtil.findItemById(this.pathId) as paper.Path;
-    if (!path) {
-      return;
-    }
-    const numSegs = path.segments.length;
-    if (numSegs === 0) {
-      return;
-    }
-    const color = paper.project.activeLayer.selectedColor;
-    const tail = new paper.Path();
-    tail.strokeColor = color ? color : '#009dec';
-    tail.strokeWidth = 1 / paper.view.zoom;
-    tail.guide = true;
-    const prevPoint = path.segments[numSegs - 1].point;
-    const prevHandleOut = path.segments[numSegs - 1].point.add(
-      path.segments[numSegs - 1].handleOut,
-    );
-    tail.moveTo(prevPoint);
-    tail.cubicCurveTo(prevHandleOut, point, point);
-    tail.removeOn({ drag: true, up: true, down: true, move: true });
-  }
+  return undefined;
 }

@@ -4,7 +4,7 @@ import { LayerUtil, PathLayer } from 'app/model/layers';
 import { Path } from 'app/model/paths';
 import { DestroyableMixin } from 'app/scripts/mixins';
 import { ToolSwitcher } from 'app/scripts/toolmode';
-import * as PaperUtil from 'app/scripts/toolmode/PaperUtil';
+import { PaperUtil } from 'app/scripts/toolmode/util';
 import { LayerTimelineService, ToolModeService } from 'app/services';
 import { State, Store } from 'app/store';
 import { getVectorLayer } from 'app/store/layers/selectors';
@@ -35,24 +35,7 @@ export class CanvasPaperDirective extends CanvasLayoutMixin(DestroyableMixin())
   }
 
   ngAfterViewInit() {
-    paper.setup(this.$canvas.get(0));
-    paper.settings.handleSize = 8;
-    const toolSwitcher = new ToolSwitcher();
-    this.registerSubscription(
-      this.toolModeService.getToolModeObservable().subscribe(toolMode => {
-        toolSwitcher.setToolMode(toolMode);
-      }),
-    );
-    this.registerSubscription(
-      this.toolModeService.getFillColorObservable().subscribe(fillColor => {
-        toolSwitcher.setFillColor(fillColor);
-      }),
-    );
-    this.registerSubscription(
-      this.toolModeService.getStrokeColorObservable().subscribe(strokeColor => {
-        toolSwitcher.setStrokeColor(strokeColor);
-      }),
-    );
+    this.toolModeService.setup(this.$canvas.get(0));
     this.registerSubscription(
       this.store.select(getVectorLayer).subscribe(vl => {
         const rootItem = PaperUtil.fromLayer(vl);
@@ -60,7 +43,6 @@ export class CanvasPaperDirective extends CanvasLayoutMixin(DestroyableMixin())
         paper.project.activeLayer.matrix = new paper.Matrix(scale, 0, 0, scale, 0, 0);
         paper.project.activeLayer.removeChildren();
         paper.project.activeLayer.addChild(rootItem);
-        console.log(paper.project.activeLayer);
       }),
     );
   }

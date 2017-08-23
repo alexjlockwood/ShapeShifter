@@ -25,14 +25,17 @@ export class ToolPanelComponent implements OnInit {
   }
 
   onSelectClick() {
+    console.log('select');
     this.toolModeService.setToolMode(ToolMode.Select);
   }
 
   onDirectSelectClick() {
+    console.log('direct select');
     this.toolModeService.setToolMode(ToolMode.DirectSelect);
   }
 
   onPenClick() {
+    console.log('pen');
     this.toolModeService.setToolMode(ToolMode.Pen);
   }
 

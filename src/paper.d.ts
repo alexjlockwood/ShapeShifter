@@ -1272,10 +1272,10 @@ declare module 'paper' {
     guide: boolean;
 
     // ADDED BY ALEX LOCKWOOD
-    equals(item: Item): boolean;
+    fullySelected: boolean;
 
     // ADDED BY ALEX LOCKWOOD
-    setFullySelected(selected: boolean): void;
+    equals(item: Item): boolean;
 
     /**
      * Item level handler function to be called on each frame of an animation.
@@ -2109,7 +2109,17 @@ declare module 'paper' {
      * Describes the type of the hit result. For example, if you hit a segment point, the type would be 'segment'.
      * type String('segment', 'handle-in', 'handle-out', 'curve', 'stroke', 'fill', 'bounds', 'center', 'pixel')
      */
-    type: string;
+    // ADDED BY ALEX LOCKWOOD
+    readonly type:
+      | 'segment'
+      | 'handle-in'
+      | 'handle-out'
+      | 'curve'
+      | 'stroke'
+      | 'fill'
+      | 'bounds'
+      | 'center'
+      | 'pixel';
 
     /**
      * If the HitResult has a hitResult.type of 'bounds', this property describes which corner of the bounding rectangle was hit.
@@ -3175,6 +3185,9 @@ declare module 'paper' {
      */
     symbols: Symbol[];
 
+    // ADDED BY ALEX LOCKWOOD
+    selectedItems: Item[];
+
     /**
      * Activates this project, so all newly created items will be placed in it.
      */
@@ -3222,23 +3235,7 @@ declare module 'paper' {
      * @param options.guides - hit-test items that have Item#guide set to true.
      * @param options.selected - only hit selected items.
      */
-    hitTest(
-      point: Point,
-      options?: {
-        tolerance?: number;
-        class?: string;
-        fill?: boolean;
-        stroke?: boolean;
-        segments?: boolean;
-        curves?: boolean;
-        handles?: boolean;
-        ends?: boolean;
-        bounds?: boolean;
-        center?: boolean;
-        guides?: boolean;
-        selected?: boolean;
-      },
-    ): HitResult;
+    hitTest(point: Point, options?: HitOptions): HitResult;
 
     /**
      * Fetch items contained within the project whose properties match the criteria in the specified object.
@@ -3288,9 +3285,21 @@ declare module 'paper' {
      * @param options.expandShapes - whether imported shape items should be expanded to path items.
      */
     importSVG(svg: SVGElement | string, options?: any): Item;
-
-    // ADDED BY ALEX LOCKWOOD
-    getSelectedItems(): Item[];
+  }
+  // ADDED BY ALEX LOCKWOOD
+  export interface HitOptions {
+    tolerance?: number;
+    class?: string;
+    fill?: boolean;
+    stroke?: boolean;
+    segments?: boolean;
+    curves?: boolean;
+    handles?: boolean;
+    ends?: boolean;
+    bounds?: boolean;
+    center?: boolean;
+    guides?: boolean;
+    selected?: boolean;
   }
   /**
    * Symbols allow you to place multiple instances of an item in your project. This can save memory, since all instances of a symbol simply refer to the original item and it can speed up moving around complex objects, since internal properties such as segment lists and gradient positions don't need to be updated with every transformation.
@@ -3945,8 +3954,22 @@ declare module 'paper' {
     /**
      * Read Only
      */
-    modifiers: any;
+    // ADDED BY ALEX LOCKWOOD
+    readonly modifiers: {
+      readonly shift: boolean;
+      readonly control: boolean;
+      readonly alt: boolean;
+      readonly meta: boolean;
+      readonly capsLock: boolean;
+      readonly space: boolean;
+      readonly option: boolean;
+      readonly command: boolean;
+    };
+
+    // ADDED BY ALEX LOCKWOOD
+    readonly timeStamp: number;
   }
+
   /**
    * ToolEvent The ToolEvent object is received by the Tool's mouse event handlers tool.onMouseDown, tool.onMouseDrag, tool.onMouseMove and tool.onMouseUp. The ToolEvent object is the only parameter passed to these functions and contains information about the mouse event.
    */
@@ -4141,12 +4164,6 @@ declare module 'paper' {
       | 'mousemove'
       | 'mouseenter'
       | 'mouseleave';
-
-    /**
-     * The time at which the event was created, in milliseconds since the
-     * epoch.
-     */
-    timeStamp(): number;
 
     /**
      * Cancels the event if it is cancelable, without stopping further
