@@ -84,6 +84,7 @@ export function getAllItems(includeGuides = false) {
   return items;
 }
 
+/** Finds the first Item in the project with the specified name. */
 function findItemByName(name: string) {
   for (const layer of paper.project.layers) {
     const match = (function fn(item: paper.Item) {
@@ -105,7 +106,9 @@ function findItemByName(name: string) {
   return undefined;
 }
 
-// ===== Hover path =====
+// ====================== //
+// ===== Hover path ===== //
+// ====================== //
 
 export function getHoverPath() {
   return findItemByName(HOVER_PATH_NAME);
@@ -113,7 +116,7 @@ export function getHoverPath() {
 
 export function maybeCreateHoverPath(point: paper.Point, hitOptions: paper.HitOptions) {
   // TODO: can this removal/addition be made more efficient?
-  removeHoverPath();
+  hideHoverPath();
   const hitResult = paper.project.hitTest(point, hitOptions);
   if (!hitResult) {
     return;
@@ -128,14 +131,12 @@ export function maybeCreateHoverPath(point: paper.Point, hitOptions: paper.HitOp
 function createHoverPath(path: paper.Path, addToGuideLayer = true) {
   const clone = new paper.Path(path.segments);
   clone.remove();
-  applyDefaultGuideItemStyle(clone);
   clone.name = HOVER_PATH_NAME;
   clone.closed = true;
   clone.strokeColor = GUIDE_COLOR;
   clone.fillColor = undefined;
   clone.guide = true;
-  // TODO: missing types
-  clone.data.isHelperItem = true;
+  (clone.strokeWidth = 1 / paper.view.zoom), (clone.data.isHelperItem = true); // TODO: missing types
   if (addToGuideLayer) {
     getGuideLayer().addChild(clone);
     clone.bringToFront();
@@ -143,16 +144,16 @@ function createHoverPath(path: paper.Path, addToGuideLayer = true) {
   return clone;
 }
 
-export function removeHoverPath() {
+export function hideHoverPath() {
   const hoverPath = getHoverPath();
   if (hoverPath) {
     hoverPath.remove();
-    // TODO: check to see if this is actually necessary (might not be?)
-    paper.view.update();
   }
 }
 
+// ========================= //
 // ===== Selection box ===== //
+// ========================= //
 
 export function getSelectionBoxPath() {
   return findItemByName(SELECTION_BOX_NAME) as paper.Path;
@@ -165,7 +166,8 @@ export function createSelectionBoxPath(
 ) {
   const clone = new paper.Path.Rectangle(createSelectionBoxRect(downPoint, point));
   clone.remove();
-  applyDefaultGuideItemStyle(clone);
+  clone.strokeWidth = 1 / paper.view.zoom;
+  clone.guide = true;
   clone.name = SELECTION_BOX_NAME;
   clone.strokeColor = SELECTION_BOX_COLOR;
   clone.dashArray = [3 / paper.view.zoom, 3 / paper.view.zoom];
@@ -187,15 +189,21 @@ function createSelectionBoxRect(downPoint: paper.Point, point: paper.Point) {
   return new paper.Rectangle(start, end);
 }
 
+// =========================== //
 // ===== Selection group ===== //
+// =========================== //
 
 export function getSelectionGroup() {
   return findItemByName(SELECTION_GROUP_NAME) as paper.Group;
 }
 
-export function maybeCreateSelectionGroup() {
+/**
+ * Shows a selection group around all currently selected items, or hides the
+ * selection group if no selected items exist.
+ */
+export function showOrHideSelectionGroup() {
   // TODO: can this removal/addition be made more efficient?
-  removeSelectionGroup();
+  hideSelectionGroup();
   // TODO: support group selections, compound path selections, etc.
   const items = getSelectedPaths();
   if (items.length === 0) {
@@ -204,19 +212,20 @@ export function maybeCreateSelectionGroup() {
   createSelectionGroup(items.map(i => i.bounds).reduce((p, c) => p.unite(c)));
 }
 
-export function createSelectionGroup(bounds: paper.Rectangle, addToGuideLayer = true) {
+function createSelectionGroup(bounds: paper.Rectangle, addToGuideLayer = true) {
   const group = new paper.Group();
   group.remove();
   group.name = SELECTION_GROUP_NAME;
 
   // Create the selection bounds rectangle.
-  const selectionRect = new paper.Path.Rectangle(bounds);
+  const selectionRect = new paper.Path.Rectangle({
+    bounds,
+    strokeScaling: false,
+    fullySelected: true,
+    strokeWidth: 1 / paper.view.zoom,
+    guide: true,
+  });
   selectionRect.remove();
-  applyDefaultGuideItemStyle(selectionRect);
-  selectionRect.fillColor = undefined;
-  selectionRect.strokeScaling = false;
-  // TODO: does this need to be selected?
-  selectionRect.fullySelected = true;
   selectionRect.curves[0].divideAtTime(0.5);
   selectionRect.curves[2].divideAtTime(0.5);
   selectionRect.curves[4].divideAtTime(0.5);
@@ -283,20 +292,54 @@ export function isRotationHandle(item: paper.Item) {
   return item.name === ROTATION_HANDLE_NAME;
 }
 
-export function removeSelectionGroup() {
+export function hideSelectionGroup() {
   const selectionGroup = getSelectionGroup();
   if (selectionGroup) {
     selectionGroup.remove();
-    // TODO: check to see if this is actually necessary (might not be?)
-    paper.view.update();
   }
 }
 
-function applyDefaultGuideItemStyle(item: paper.Item) {
-  item.strokeWidth = 1 / paper.view.zoom;
-  item.opacity = 1;
-  item.blendMode = 'normal';
-  item.guide = true;
+// =========================== //
+// ===== Select/deselect ===== //
+// =========================== //
+
+export function setSelection(item: paper.Item, isSelected: boolean) {
+  // const parentGroup = isGroup(item.parent) ? item.parent : undefined;
+  // const itemsCompoundPath = isCompoundPath(item.parent) ? item.parent : undefined;
+
+  // // If the selection is in a group, select the group, not the individual items.
+  // if (parentGroup) {
+  //   setSelection(parentGroup, isSelected);
+  // } else if (itemsCompoundPath) {
+  //   setSelection(itemsCompoundPath, isSelected);
+  // } else {
+  //   if (item.data && item.data.noSelect) {
+  //     return;
+  //   }
+
+  // Fully selected segments need to be unselected first, so
+  // that the item can be normally selected.
+  item.fullySelected = false;
+  item.selected = isSelected;
+
+  //   // Deselect children of compound paths and groups.
+  //   if (isGroup(item) || isCompoundPath(item)) {
+  //     (item.children || []).forEach(child => (child.selected = !isSelected));
+  //   }
+  // }
+}
+
+export function deselectAll() {
+  hideHoverPath();
+  hideSelectionGroup();
+  paper.project.deselectAll();
+}
+
+export function cloneSelection() {
+  getSelectedNonGroupedItems().forEach(item => {
+    item.clone();
+    item.selected = false;
+  });
 }
 
 export function getGuideColor() {
@@ -333,40 +376,6 @@ export function getSelectedNonGroupedItems() {
  */
 export function getSelectedPaths() {
   return getSelectedNonGroupedItems().filter(p => isPath(p)) as paper.Path[];
-}
-
-export function cloneSelection() {
-  getSelectedNonGroupedItems().forEach(item => {
-    item.clone();
-    item.selected = false;
-  });
-}
-
-export function setItemSelection(item: paper.Item, isSelected: boolean) {
-  const parentGroup = isGroup(item.parent) ? item.parent : undefined;
-  const itemsCompoundPath = isCompoundPath(item.parent) ? item.parent : undefined;
-
-  // If the selection is in a group, select the group, not the individual items.
-  if (parentGroup) {
-    setItemSelection(parentGroup, isSelected);
-  } else if (itemsCompoundPath) {
-    setItemSelection(itemsCompoundPath, isSelected);
-  } else {
-    if (item.data && item.data.noSelect) {
-      return;
-    }
-    // Fully selected segments need to be unselected first, so
-    // that the item can be normally selected.
-    item.fullySelected = false;
-    item.selected = isSelected;
-    // Deselect children of compound paths and groups.
-    if (isGroup(item) || isCompoundPath(item)) {
-      (item.children || []).forEach(child => (child.selected = !isSelected));
-    }
-  }
-
-  // TODO: figure out better way of sending notifications
-  // $(document).trigger('SelectionChanged');
 }
 
 export function processRectangularSelection(
@@ -430,9 +439,9 @@ function handleRectangularSelectionItems(
           segmentMode = true;
         } else {
           if (event.modifiers.shift && item.selected) {
-            setItemSelection(item, false);
+            setSelection(item, false);
           } else {
-            setItemSelection(item, true);
+            setSelection(item, true);
           }
           return false;
         }
@@ -462,9 +471,9 @@ function handleRectangularSelectionItems(
         }
       } else {
         if (event.modifiers.shift && item.selected) {
-          setItemSelection(item, false);
+          setSelection(item, false);
         } else {
-          setItemSelection(item, true);
+          setSelection(item, true);
         }
         return false;
       }
@@ -500,9 +509,9 @@ function checkBoundsItem(
       (i === 0 && selectionRect.getIntersections(itemBounds).length > 0)
     ) {
       if (event.modifiers.shift && item.selected) {
-        setItemSelection(item, false);
+        setSelection(item, false);
       } else {
-        setItemSelection(item, true);
+        setSelection(item, true);
       }
       itemBounds.remove();
       return true;
@@ -521,10 +530,4 @@ function getAllSelectableItems() {
     }
   }
   return selectables;
-}
-
-export function clearSelection() {
-  paper.project.deselectAll();
-  removeHoverPath();
-  // $(document).trigger('SelectionChanged');
 }

@@ -38,11 +38,15 @@ export abstract class AbstractTool {
     if (hadClickMessage) {
       this.handler.removePendingMessages();
     }
+    const isDoubleClickFn = (firstUp: paper.ToolEvent, secondDown: paper.ToolEvent) => {
+      const deltaTime = secondDown.timeStamp - firstUp.timeStamp;
+      return DOUBLE_CLICK_MIN_TIME <= deltaTime && deltaTime <= DOUBLE_CLICK_TIMEOUT;
+    };
     if (
       this.currentDownEvent &&
       this.previousUpEvent &&
       hadClickMessage &&
-      isConsideredDoubleClick(this.previousUpEvent, event)
+      isDoubleClickFn(this.previousUpEvent, event)
     ) {
       // This is a second tap, so give a callback with the
       // first click of the double click.
@@ -55,7 +59,7 @@ export abstract class AbstractTool {
           // If the user's mouse is still down, do not count it as a click.
           this.deferSingleClick = true;
         } else {
-          this.onSingleClick(event);
+          this.onSingleClickConfirmed(event);
         }
       }, DOUBLE_CLICK_TIMEOUT);
     }
@@ -80,14 +84,14 @@ export abstract class AbstractTool {
   }
 
   private mouseUp(event: paper.ToolEvent) {
-    this.stillDown = false;
     if (!this.isDoubleClicking) {
+      this.onMouseUp(event);
+      this.onSingleClick(event);
       if (this.deferSingleClick) {
-        this.onSingleClick(event);
-      } else {
-        this.onMouseUp(event);
+        this.onSingleClickConfirmed(event);
       }
     }
+    this.stillDown = false;
     this.previousUpEvent = event;
     this.isDoubleClicking = false;
     this.deferSingleClick = false;
@@ -99,11 +103,7 @@ export abstract class AbstractTool {
   protected onMouseMove(event: paper.ToolEvent) {}
   protected onMouseUp(event: paper.ToolEvent) {}
   protected onSingleClick(event: paper.ToolEvent) {}
+  protected onSingleClickConfirmed(event: paper.ToolEvent) {}
   protected onDoubleClick(event: paper.ToolEvent) {}
   protected onDeactivate() {}
-}
-
-function isConsideredDoubleClick(firstUp: paper.ToolEvent, secondDown: paper.ToolEvent) {
-  const deltaTime = secondDown.timeStamp - firstUp.timeStamp;
-  return DOUBLE_CLICK_MIN_TIME <= deltaTime && deltaTime <= DOUBLE_CLICK_TIMEOUT;
 }

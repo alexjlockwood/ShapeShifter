@@ -26,7 +26,7 @@ export class SelectTool extends AbstractTool {
 
   // @Override
   protected onMouseDown(event: paper.ToolEvent) {
-    ItemUtil.removeHoverPath();
+    ItemUtil.hideHoverPath();
 
     const hitResult = paper.project.hitTest(event.point, this.createHitOptions());
     if (hitResult) {
@@ -40,7 +40,7 @@ export class SelectTool extends AbstractTool {
         this.currentGesture = new class extends Gesture {
           // @Override
           onMouseDown(e: paper.ToolEvent, { item }: paper.HitResult) {
-            ItemUtil.setItemSelection(item, false);
+            ItemUtil.setSelection(item, false);
           }
         }();
       } else {
@@ -66,17 +66,18 @@ export class SelectTool extends AbstractTool {
 
   // @Override
   protected onMouseUp(event: paper.ToolEvent) {
+    console.log('onMouseUp');
     this.currentGesture.onMouseUp(event);
 
     if (ItemUtil.getSelectedPaths().length) {
-      ItemUtil.maybeCreateSelectionGroup();
+      ItemUtil.showOrHideSelectionGroup();
     } else {
-      ItemUtil.removeSelectionGroup();
+      ItemUtil.hideSelectionGroup();
     }
   }
 
   // @Override
-  protected onSingleClick(event: paper.ToolEvent) {}
+  protected onSingleClickConfirmed(event: paper.ToolEvent) {}
 
   // @Override
   protected onDoubleClick(event: paper.ToolEvent) {}
@@ -117,6 +118,87 @@ abstract class Gesture {
   onMouseUp(event: paper.ToolEvent) {}
 }
 
+/** A gesture that performs selection operations. */
+class SelectGesture extends Gesture {
+  private selectedPaths: ReadonlyArray<paper.Item>;
+  private initialPositions: ReadonlyArray<paper.Point>;
+
+  constructor(private readonly shouldCloneShape: boolean) {
+    super();
+  }
+
+  // @Override
+  onMouseDown(event: paper.ToolEvent, { item }: paper.HitResult) {
+    // Deselect all by default if the shift key isn't pressed
+    // also needs some special love for compound paths and groups,
+    // as their children are not marked as "selected".
+    if (!event.modifiers.shift) {
+      const root = ItemUtil.getParentLayer(item);
+      // TODO: re-look at this stuff once we support groups and compound paths!
+      // TODO: re-look at this stuff once we support groups and compound paths!
+      // TODO: re-look at this stuff once we support groups and compound paths!
+      // TODO: re-look at this stuff once we support groups and compound paths!
+      // TODO: re-look at this stuff once we support groups and compound paths!
+      if (ItemUtil.isGroup(root) || ItemUtil.isCompoundPath(root)) {
+        if (!root.selected) {
+          ItemUtil.deselectAll();
+        }
+      } else if (!item.selected) {
+        ItemUtil.deselectAll();
+      }
+    }
+    ItemUtil.setSelection(item, true);
+
+    // While moving/cloning the shape, never show the selection bounds.
+    if (this.shouldCloneShape) {
+      ItemUtil.cloneSelection();
+    }
+    ItemUtil.hideSelectionGroup();
+
+    this.selectedPaths = ItemUtil.getSelectedPaths();
+    this.initialPositions = this.selectedPaths.map(path => path.position);
+  }
+
+  // @Override
+  onMouseDrag(event: paper.ToolEvent) {
+    const dragVector = event.point.subtract(event.downPoint);
+    this.selectedPaths.forEach((item, i) => {
+      if (event.modifiers.shift) {
+        const snapPoint = new paper.Point(MathUtil.snapDeltaToAngle(dragVector, Math.PI / 4));
+        item.position = this.initialPositions[i].add(snapPoint);
+      } else {
+        item.position = item.position.add(event.delta);
+      }
+    });
+  }
+}
+
+/** A gesture that selects multiple items using a bounded box. */
+class SelectionBoxGesture extends Gesture {
+  // @Override
+  onMouseDown(event: paper.ToolEvent) {
+    if (!event.modifiers.shift) {
+      ItemUtil.hideSelectionGroup();
+      ItemUtil.deselectAll();
+    }
+  }
+
+  // @Override
+  onMouseDrag(event: paper.ToolEvent) {
+    ItemUtil.createSelectionBoxPath(event.downPoint, event.point).removeOnDrag();
+  }
+
+  // @Override
+  onMouseUp(event: paper.ToolEvent) {
+    const path = ItemUtil.getSelectionBoxPath();
+    if (path) {
+      ItemUtil.processRectangularSelection(event, path);
+      path.remove();
+    }
+  }
+}
+
+/** A gesture that performs scaling operations. */
 class ScaleGesture extends Gesture {
   private scaleItems: paper.Item[];
   private pivot: paper.Point;
@@ -142,7 +224,7 @@ class ScaleGesture extends Gesture {
     // this.scaleItems = selectedPaths;
 
     // While transforming object, never show the bounds stuff.
-    ItemUtil.removeSelectionGroup();
+    ItemUtil.hideSelectionGroup();
   }
 
   // @Override
@@ -202,6 +284,7 @@ class ScaleGesture extends Gesture {
   }
 }
 
+/** A gesture that performs rotation operations. */
 class RotateGesture extends Gesture {
   private groupPivot: paper.Point;
   private rotatingItems: paper.Item[];
@@ -215,7 +298,7 @@ class RotateGesture extends Gesture {
     this.rotationAngles = this.rotatingItems.map(() => event.point.subtract(this.groupPivot).angle);
 
     // While transforming object, never show the bounds.
-    ItemUtil.removeSelectionGroup();
+    ItemUtil.hideSelectionGroup();
   }
 
   // @Override
@@ -237,84 +320,6 @@ class RotateGesture extends Gesture {
   // @Override
   onMouseUp(event: paper.ToolEvent) {
     this.rotatingItems.forEach(item => (item.applyMatrix = true));
-  }
-}
-
-class SelectGesture extends Gesture {
-  private selectedPaths: ReadonlyArray<paper.Item>;
-  private initialPositions: ReadonlyArray<paper.Point>;
-
-  constructor(private readonly shouldCloneShape: boolean) {
-    super();
-  }
-
-  // @Override
-  onMouseDown(event: paper.ToolEvent, { item }: paper.HitResult) {
-    // Deselect all by default if the shift key isn't pressed
-    // also needs some special love for compound paths and groups,
-    // as their children are not marked as "selected".
-    if (!event.modifiers.shift) {
-      const root = ItemUtil.getParentLayer(item);
-      // TODO: re-look at this stuff once we support groups and compound paths!
-      // TODO: re-look at this stuff once we support groups and compound paths!
-      // TODO: re-look at this stuff once we support groups and compound paths!
-      // TODO: re-look at this stuff once we support groups and compound paths!
-      // TODO: re-look at this stuff once we support groups and compound paths!
-      if (ItemUtil.isGroup(root) || ItemUtil.isCompoundPath(root)) {
-        if (!root.selected) {
-          ItemUtil.clearSelection();
-        }
-      } else if (!item.selected) {
-        ItemUtil.clearSelection();
-      }
-    }
-    ItemUtil.setItemSelection(item, true);
-
-    // While moving/cloning the shape, never show the selection bounds.
-    if (this.shouldCloneShape) {
-      ItemUtil.cloneSelection();
-    }
-    ItemUtil.removeSelectionGroup();
-
-    this.selectedPaths = ItemUtil.getSelectedPaths();
-    this.initialPositions = this.selectedPaths.map(path => path.position);
-  }
-
-  // @Override
-  onMouseDrag(event: paper.ToolEvent) {
-    const dragVector = event.point.subtract(event.downPoint);
-    this.selectedPaths.forEach((item, i) => {
-      if (event.modifiers.shift) {
-        const snapPoint = new paper.Point(MathUtil.snapDeltaToAngle(dragVector, Math.PI / 4));
-        item.position = this.initialPositions[i].add(snapPoint);
-      } else {
-        item.position = item.position.add(event.delta);
-      }
-    });
-  }
-}
-
-class SelectionBoxGesture extends Gesture {
-  // @Override
-  onMouseDown(event: paper.ToolEvent) {
-    if (!event.modifiers.shift) {
-      ItemUtil.removeSelectionGroup();
-      ItemUtil.clearSelection();
-    }
-  }
-
-  // @Override
-  onMouseDrag(event: paper.ToolEvent) {
-    ItemUtil.createSelectionBoxPath(event.downPoint, event.point).removeOnDrag();
-  }
-
-  // @Override
-  onMouseUp(event: paper.ToolEvent) {
-    const path = ItemUtil.getSelectionBoxPath();
-    if (path) {
-      ItemUtil.processRectangularSelection(event, path);
-      path.remove();
-    }
   }
 }
 

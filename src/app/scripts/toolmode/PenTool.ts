@@ -34,7 +34,7 @@ export class PenTool extends AbstractTool {
 
     if (!this.currPath) {
       if (!this.hoverHitResult) {
-        ItemUtil.clearSelection();
+        ItemUtil.deselectAll();
         this.currPath = new paper.Path();
         this.currPath.fillColor = 'blue';
         this.currPath.strokeColor = 'black';

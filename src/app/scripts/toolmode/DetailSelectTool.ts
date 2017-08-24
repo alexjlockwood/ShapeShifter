@@ -29,7 +29,7 @@ export class DetailSelectTool extends AbstractTool {
       if (event.timeStamp - this.lastEvent.timeStamp < 250) {
         doubleClicked = true;
         if (!modifiers.shift) {
-          ItemUtil.clearSelection();
+          ItemUtil.deselectAll();
         }
       } else {
         doubleClicked = false;
@@ -37,11 +37,11 @@ export class DetailSelectTool extends AbstractTool {
     }
     this.lastEvent = event;
 
-    ItemUtil.removeHoverPath();
+    ItemUtil.hideHoverPath();
     const hitResult = paper.project.hitTest(point, createHitOptions());
     if (!hitResult) {
       if (!modifiers.shift) {
-        ItemUtil.clearSelection();
+        ItemUtil.deselectAll();
       }
       this.doRectSelection = true;
       return;
@@ -246,7 +246,7 @@ export class DetailSelectTool extends AbstractTool {
 
   // @Override
   protected onDeactivate() {
-    ItemUtil.removeHoverPath();
+    ItemUtil.hideHoverPath();
   }
 }
 
