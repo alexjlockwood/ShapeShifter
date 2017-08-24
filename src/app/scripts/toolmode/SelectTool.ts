@@ -2,8 +2,8 @@ import { MathUtil } from 'app/scripts/common';
 import * as $ from 'jquery';
 import * as paper from 'paper';
 
+import { AbstractTool } from './AbstractTool';
 import * as ItemUtil from './ItemUtil';
-import { ToolWrapper } from './ToolWrapper';
 
 enum Mode {
   None,
@@ -18,14 +18,14 @@ enum Mode {
  * A simple selection tool for moving, scaling, rotating, and selecting shapes.
  * TODO: figure out how to deal with right mouse clicks and double clicks
  */
-export class SelectTool extends ToolWrapper {
+export class SelectTool extends AbstractTool {
   private currentGesture: Gesture;
 
   // @Override
-  onActivate() {}
+  protected onActivate() {}
 
   // @Override
-  onMouseDown(event: paper.ToolEvent) {
+  protected onMouseDown(event: paper.ToolEvent) {
     ItemUtil.removeHoverPath();
 
     const hitResult = paper.project.hitTest(event.point, this.createHitOptions());
@@ -55,28 +55,34 @@ export class SelectTool extends ToolWrapper {
   }
 
   // @Override
-  onMouseDrag(event: paper.ToolEvent) {
+  protected onMouseDrag(event: paper.ToolEvent) {
     this.currentGesture.onMouseDrag(event);
   }
 
   // @Override
-  onMouseMove(event: paper.ToolEvent) {
+  protected onMouseMove(event: paper.ToolEvent) {
     ItemUtil.maybeCreateHoverPath(event.point, this.createHitOptions());
   }
 
   // @Override
-  onMouseUp(event: paper.ToolEvent) {
+  protected onMouseUp(event: paper.ToolEvent) {
     this.currentGesture.onMouseUp(event);
 
-    if (ItemUtil.getSelectedPaths().length === 0) {
-      ItemUtil.removeSelectionGroup();
-    } else {
+    if (ItemUtil.getSelectedPaths().length) {
       ItemUtil.maybeCreateSelectionGroup();
+    } else {
+      ItemUtil.removeSelectionGroup();
     }
   }
 
   // @Override
-  onDeactivate() {}
+  protected onSingleClick(event: paper.ToolEvent) {}
+
+  // @Override
+  protected onDoubleClick(event: paper.ToolEvent) {}
+
+  // @Override
+  protected onDeactivate() {}
 
   private createHitOptions(): paper.HitOptions {
     return {
@@ -112,46 +118,52 @@ abstract class Gesture {
 }
 
 class ScaleGesture extends Gesture {
-  // @Override
-  onMouseDown(event: paper.ToolEvent) {
-    const selectedPaths = ItemUtil.getSelectedPaths();
-    const selectionBounds = selectedPaths.map(i => i.bounds).reduce((p, c) => p.unite(c));
+  private scaleItems: paper.Item[];
+  private pivot: paper.Point;
+  private origPivot: paper.Point;
+  private corner: paper.Point;
+  private origSize: paper.Point;
+  private origCenter: paper.Point;
+  private itemGroup: paper.Group;
+  private selectionBounds: paper.Path.Rectangle;
 
-    // this.scaleItems = undefined;
-    // mode = Mode.Scale;
-    // const position = ItemUtil.getScaleHandlePosition(hitItem);
+  // @Override
+  onMouseDown(event: paper.ToolEvent, { item }: paper.HitResult) {
+    // const selectedPaths = ItemUtil.getSelectedPaths();
+    // this.selectionBounds = selectedPaths.map(i => i.bounds).reduce((p, c) => p.unite(c));
+    // const position = ItemUtil.getScaleHandlePosition(item);
     // const oppCornerName = getOpposingRectCornerName(position);
     // const cornerName = getRectCornerName(position);
-    // pivot = selectionBounds[oppCornerName].clone();
-    // origPivot = selectionBounds[oppCornerName].clone();
-    // corner = selectionBounds[cornerName].clone();
-    // origSize = corner.subtract(pivot);
-    // origCenter = selectionBounds.center.clone();
-    // scaleItems = ItemUtil.getSelectedPaths();
+    // this.pivot = this.selectionBounds[oppCornerName].clone();
+    // this.origPivot = this.selectionBounds[oppCornerName].clone();
+    // this.corner = this.selectionBounds[cornerName].clone();
+    // this.origSize = this.corner.subtract(this.pivot);
+    // this.origCenter = this.selectionBounds.center.clone();
+    // this.scaleItems = selectedPaths;
+
     // While transforming object, never show the bounds stuff.
     ItemUtil.removeSelectionGroup();
   }
 
   // @Override
   onMouseDrag(event: paper.ToolEvent) {
-    const selectionBounds = ItemUtil.getSelectedPaths()
-      .map(i => i.bounds)
-      .reduce((p, c) => p.unite(c));
+    // const selectionBounds = ItemUtil.getSelectedPaths()
+    //   .map(i => i.bounds)
+    //   .reduce((p, c) => p.unite(c));
     // let modOrigSize = this.origSize;
-
-    // itemGroup = new paper.Group(scaleItems);
-    // itemGroup.addChild(selectionBounds);
-    // itemGroup.data.isHelperItem = true;
-    // itemGroup.strokeScaling = false;
-    // itemGroup.applyMatrix = false;
+    // this.itemGroup = new paper.Group(this.scaleItems);
+    // this.itemGroup.addChild(this.selectionBounds);
+    // this.itemGroup.data.isHelperItem = true;
+    // this.itemGroup.strokeScaling = false;
+    // this.itemGroup.applyMatrix = false;
     // if (event.modifiers.alt) {
-    //   pivot = origCenter;
-    //   modOrigSize = origSize.multiply(0.5);
+    //   this.pivot = this.origCenter;
+    //   modOrigSize = this.origSize.multiply(0.5);
     // } else {
-    //   pivot = origPivot;
+    //   this.pivot = this.origPivot;
     // }
-    // corner = corner.add(event.delta);
-    // const size = corner.subtract(pivot);
+    // this.corner = this.corner.add(event.delta);
+    // const size = this.corner.subtract(this.pivot);
     // let sx = 1;
     // let sy = 1;
     // if (Math.abs(modOrigSize.x) > 1e-9) {
@@ -167,7 +179,7 @@ class ScaleGesture extends Gesture {
     //   sx *= signx;
     //   sy *= signy;
     // }
-    // itemGroup.scale(sx, sy, pivot);
+    // this.itemGroup.scale(sx, sy, pivot);
     // this.boundsScaleHandles.forEach((handle, index) => {
     //   handle.position = itemGroup.bounds[getRectCornerName(index)];
     //   handle.bringToFront();
@@ -180,7 +192,6 @@ class ScaleGesture extends Gesture {
     //   handle.position = itemGroup.bounds[cornerName].add(handle.data.offset);
     //   handle.bringToFront();
     // });
-    // return;
   }
 
   // @Override
@@ -230,8 +241,8 @@ class RotateGesture extends Gesture {
 }
 
 class SelectGesture extends Gesture {
-  private selectedPaths: paper.Item[];
-  private initialPositions: paper.Point[];
+  private selectedPaths: ReadonlyArray<paper.Item>;
+  private initialPositions: ReadonlyArray<paper.Point>;
 
   constructor(private readonly shouldCloneShape: boolean) {
     super();
@@ -317,7 +328,7 @@ type CornerNameType =
   | 'bottomRight'
   | 'bottomCenter';
 
-const rectCornerNames: ReadonlyArray<CornerNameType> = [
+const CORNER_NAMES: ReadonlyArray<CornerNameType> = [
   'bottomLeft',
   'leftCenter',
   'topLeft',
@@ -328,21 +339,5 @@ const rectCornerNames: ReadonlyArray<CornerNameType> = [
   'bottomCenter',
 ];
 
-function getRectCornerName(index: number) {
-  return rectCornerNames[index];
-}
-
-const opposingRectCornerNames: ReadonlyArray<CornerNameType> = [
-  'topRight',
-  'rightCenter',
-  'bottomRight',
-  'bottomCenter',
-  'bottomLeft',
-  'leftCenter',
-  'topLeft',
-  'topCenter',
-];
-
-function getOpposingRectCornerName(index: number) {
-  return opposingRectCornerNames[index];
-}
+const OPP_CORNER_NAMES: ReadonlyArray<CornerNameType> = ((arr: ReadonlyArray<CornerNameType>) =>
+  arr.map((_, i) => arr[(i + arr.length / 2) % arr.length]))(CORNER_NAMES);

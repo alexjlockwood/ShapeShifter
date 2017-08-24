@@ -1,7 +1,7 @@
 import * as paper from 'paper';
 
+import { AbstractTool } from './AbstractTool';
 import * as ItemUtil from './ItemUtil';
-import { ToolWrapper } from './ToolWrapper';
 
 enum Mode {
   None,
@@ -15,7 +15,7 @@ enum Mode {
  * Pen tool that allows for creating new shapes and lines.
  * TODO: figure out how to deal with right mouse clicks and double clicks
  */
-export class PenTool extends ToolWrapper {
+export class PenTool extends AbstractTool {
   private currPath: paper.Path;
   private currSegment: paper.Segment;
   private mode = Mode.None;
@@ -23,10 +23,10 @@ export class PenTool extends ToolWrapper {
   private hoverHitResult: paper.HitResult;
 
   // @Override
-  onActivate() {}
+  protected onActivate() {}
 
   // @Override
-  onMouseDown(event: paper.ToolEvent) {
+  protected onMouseDown(event: paper.ToolEvent) {
     if (this.currSegment) {
       this.currSegment.selected = false;
     }
@@ -111,7 +111,7 @@ export class PenTool extends ToolWrapper {
   }
 
   // @Override
-  onMouseDrag(event: paper.ToolEvent) {
+  protected onMouseDrag(event: paper.ToolEvent) {
     let delta = event.delta;
     if (this.type === 'handle-out' || this.mode === Mode.Add) {
       delta = delta.multiply(-1);
@@ -121,7 +121,7 @@ export class PenTool extends ToolWrapper {
   }
 
   // @Override
-  onMouseMove(event: paper.ToolEvent) {
+  protected onMouseMove(event: paper.ToolEvent) {
     const hitResult = paper.project.hitTest(event.point, createHitOptions());
     if (hitResult && hitResult.item && hitResult.item.selected) {
       this.hoverHitResult = hitResult;
@@ -131,14 +131,14 @@ export class PenTool extends ToolWrapper {
   }
 
   // @Override
-  onMouseUp(event: paper.ToolEvent) {
+  protected onMouseUp(event: paper.ToolEvent) {
     if (this.currPath && this.currPath.closed) {
       this.currPath = undefined;
     }
   }
 
   // @Override
-  onDeactivate() {}
+  protected onDeactivate() {}
 }
 
 function findHandle(path: paper.Path, point: paper.Point) {

@@ -1,25 +1,25 @@
 import { MathUtil } from 'app/scripts/common';
 import * as paper from 'paper';
 
+import { AbstractTool } from './AbstractTool';
 import * as ItemUtil from './ItemUtil';
-import { ToolWrapper } from './ToolWrapper';
 
 /**
  * Selection tool that allows for the modification of segments and handles.
  * TODO: combine this tool with the select tool
  * TODO: figure out how to deal with right mouse clicks and double clicks
  */
-export class DetailSelectTool extends ToolWrapper {
+export class DetailSelectTool extends AbstractTool {
   private doRectSelection = false;
   private hitType: HitType;
   private lastEvent: paper.ToolEvent = undefined;
   private selectionDragged = false;
 
   // @Override
-  onActivate() {}
+  protected onActivate() {}
 
   // @Override
-  onMouseDown(event: paper.ToolEvent) {
+  protected onMouseDown(event: paper.ToolEvent) {
     const { point, modifiers } = event;
     this.selectionDragged = false;
     this.hitType = undefined;
@@ -127,7 +127,7 @@ export class DetailSelectTool extends ToolWrapper {
   }
 
   // @Override
-  onMouseDrag(event: paper.ToolEvent) {
+  protected onMouseDrag(event: paper.ToolEvent) {
     const { point, downPoint, delta, modifiers } = event;
     if (this.doRectSelection) {
       const box = ItemUtil.createSelectionBoxPath(event.downPoint, event.point);
@@ -215,12 +215,12 @@ export class DetailSelectTool extends ToolWrapper {
   }
 
   // @Override
-  onMouseMove(event: paper.ToolEvent) {
+  protected onMouseMove(event: paper.ToolEvent) {
     ItemUtil.maybeCreateHoverPath(event.point, createHitOptions());
   }
 
   // @Override
-  onMouseUp(event: paper.ToolEvent) {
+  protected onMouseUp(event: paper.ToolEvent) {
     if (this.doRectSelection) {
       const path = ItemUtil.getSelectionBoxPath();
       if (path) {
@@ -245,7 +245,7 @@ export class DetailSelectTool extends ToolWrapper {
   }
 
   // @Override
-  onDeactivate() {
+  protected onDeactivate() {
     ItemUtil.removeHoverPath();
   }
 }
