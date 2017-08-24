@@ -1,3 +1,4 @@
+import { Handler } from 'app/scripts/gesture';
 import * as paper from 'paper';
 
 const DOUBLE_CLICK_MIN_TIME = 40;
@@ -5,7 +6,7 @@ const DOUBLE_CLICK_TIMEOUT = 300;
 
 export abstract class AbstractTool {
   private readonly tool = new paper.Tool();
-  private readonly handler = new ClickHandler();
+  private readonly handler = new Handler();
 
   /**
    * True when the user is still touching for the second
@@ -100,31 +101,6 @@ export abstract class AbstractTool {
   protected onSingleClick(event: paper.ToolEvent) {}
   protected onDoubleClick(event: paper.ToolEvent) {}
   protected onDeactivate() {}
-}
-
-class ClickHandler {
-  private readonly pendingMessageIds = new Set<number>();
-
-  postDelayed(fn: () => void, delayMillis: number) {
-    if (delayMillis <= 0) {
-      fn();
-      return;
-    }
-    const id = window.setTimeout(() => {
-      this.pendingMessageIds.delete(id);
-      fn();
-    }, delayMillis);
-    this.pendingMessageIds.add(id);
-  }
-
-  hasPendingMessages() {
-    return this.pendingMessageIds.size > 0;
-  }
-
-  removePendingMessages() {
-    this.pendingMessageIds.forEach(id => window.clearTimeout(id));
-    this.pendingMessageIds.clear();
-  }
 }
 
 function isConsideredDoubleClick(firstUp: paper.ToolEvent, secondDown: paper.ToolEvent) {
