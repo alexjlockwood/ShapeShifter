@@ -3,14 +3,14 @@ import * as $ from 'jquery';
 import * as paper from 'paper';
 
 import { AbstractTool } from './AbstractTool';
-import { DetailSelectTool } from './DetailSelectTool';
+import { DetailSelectionTool } from './DetailSelectionTool';
 import { PenTool } from './PenTool';
-import { SelectTool } from './SelectTool';
+import { SelectionTool } from './SelectionTool';
 
 export class ToolSwitcher {
   private readonly tools = new Map<ToolMode, AbstractTool>([
-    [ToolMode.Select, new SelectTool()],
-    [ToolMode.DetailSelect, new DetailSelectTool()],
+    [ToolMode.Selection, new SelectionTool()],
+    [ToolMode.DetailSelection, new DetailSelectionTool()],
     [ToolMode.Pen, new PenTool()],
   ]);
   private activeToolMode: ToolMode;

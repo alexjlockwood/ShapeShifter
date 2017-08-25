@@ -11,7 +11,7 @@ export interface State {
 
 export function buildInitialState() {
   return {
-    toolMode: ToolMode.Select,
+    toolMode: ToolMode.Selection,
     // TODO: figure out if these are appropriate initial values
     fillColor: '#000000',
     strokeColor: '#000000',

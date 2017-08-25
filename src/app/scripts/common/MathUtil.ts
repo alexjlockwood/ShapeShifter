@@ -61,3 +61,7 @@ export function snapDeltaToAngle(delta: Point, snapAngle: number): Point {
   const d = dirx * delta.x + diry * delta.y;
   return { x: dirx * d, y: diry * d };
 }
+
+export function isNearZero(n: number) {
+  return round(n) === 0;
+}

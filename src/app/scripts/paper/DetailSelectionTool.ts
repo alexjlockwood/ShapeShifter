@@ -2,14 +2,14 @@ import { MathUtil } from 'app/scripts/common';
 import * as paper from 'paper';
 
 import { AbstractTool } from './AbstractTool';
-import * as ItemUtil from './ItemUtil';
+import { Guides, Items, Selections } from './util';
 
 /**
  * Selection tool that allows for the modification of segments and handles.
  * TODO: combine this tool with the select tool
  * TODO: figure out how to deal with right mouse clicks and double clicks
  */
-export class DetailSelectTool extends AbstractTool {
+export class DetailSelectionTool extends AbstractTool {
   private doRectSelection = false;
   private hitType: HitType;
   private lastEvent: paper.ToolEvent = undefined;
@@ -29,7 +29,7 @@ export class DetailSelectTool extends AbstractTool {
       if (event.timeStamp - this.lastEvent.timeStamp < 250) {
         doubleClicked = true;
         if (!modifiers.shift) {
-          ItemUtil.deselectAll();
+          Selections.deselectAll();
         }
       } else {
         doubleClicked = false;
@@ -37,11 +37,11 @@ export class DetailSelectTool extends AbstractTool {
     }
     this.lastEvent = event;
 
-    ItemUtil.hideHoverPath();
+    Guides.hideHoverPath();
     const hitResult = paper.project.hitTest(point, createHitOptions());
     if (!hitResult) {
       if (!modifiers.shift) {
-        ItemUtil.deselectAll();
+        Selections.deselectAll();
       }
       this.doRectSelection = true;
       return;
@@ -58,7 +58,7 @@ export class DetailSelectTool extends AbstractTool {
           hitResult.item.fullySelected = true;
         }
         if (modifiers.option) {
-          ItemUtil.cloneSelection();
+          Selections.cloneSelectedItems();
         }
       } else {
         if (modifiers.shift) {
@@ -68,7 +68,7 @@ export class DetailSelectTool extends AbstractTool {
           hitResult.item.fullySelected = true;
 
           if (modifiers.option) {
-            ItemUtil.cloneSelection();
+            Selections.cloneSelectedItems();
           }
         }
       }
@@ -94,7 +94,7 @@ export class DetailSelectTool extends AbstractTool {
       }
 
       if (modifiers.option) {
-        ItemUtil.cloneSelection();
+        Selections.cloneSelectedItems();
       }
       return;
     }
@@ -111,7 +111,7 @@ export class DetailSelectTool extends AbstractTool {
       }
 
       if (modifiers.option) {
-        ItemUtil.cloneSelection();
+        Selections.cloneSelectedItems();
       }
       return;
     }
@@ -130,7 +130,7 @@ export class DetailSelectTool extends AbstractTool {
   protected onMouseDrag(event: paper.ToolEvent) {
     const { point, downPoint, delta, modifiers } = event;
     if (this.doRectSelection) {
-      const box = ItemUtil.createSelectionBoxPath(event.downPoint, event.point);
+      const box = Guides.showSelectionBoxPath(event.downPoint, event.point);
       box.removeOnDrag();
       box.removeOnUp();
       return;
@@ -138,11 +138,11 @@ export class DetailSelectTool extends AbstractTool {
     this.selectionDragged = true;
 
     const dragVector = point.subtract(downPoint);
-    for (const item of ItemUtil.getSelectedPaths()) {
+    for (const item of Selections.getSelectedPaths()) {
       if (this.hitType === 'fill' || !item.segments) {
         // If the item has a compound path as a parent, don't move its
         // own item, as it would lead to double movement.
-        if (ItemUtil.isCompoundPath(item.parent)) {
+        if (Items.isCompoundPath(item.parent)) {
           continue;
         }
 
@@ -216,15 +216,15 @@ export class DetailSelectTool extends AbstractTool {
 
   // @Override
   protected onMouseMove(event: paper.ToolEvent) {
-    ItemUtil.maybeCreateHoverPath(event.point, createHitOptions());
+    maybeShowHoverPath(event.point, createHitOptions());
   }
 
   // @Override
   protected onMouseUp(event: paper.ToolEvent) {
     if (this.doRectSelection) {
-      const path = ItemUtil.getSelectionBoxPath();
+      const path = Guides.getSelectionBoxPath();
       if (path) {
-        ItemUtil.processRectangularSelection(event, path);
+        Selections.processRectangularSelection(event, path);
         path.remove();
       }
     } else {
@@ -232,7 +232,7 @@ export class DetailSelectTool extends AbstractTool {
         this.selectionDragged = false;
       }
       // Resetting the items and segments origin points for the next usage.
-      for (const item of ItemUtil.getSelectedPaths()) {
+      for (const item of Selections.getSelectedPaths()) {
         // TODO: missing types
         (item as any).origPos = undefined;
         if (item.segments) {
@@ -246,7 +246,7 @@ export class DetailSelectTool extends AbstractTool {
 
   // @Override
   protected onDeactivate() {
-    ItemUtil.hideHoverPath();
+    Guides.hideHoverPath();
   }
 }
 
@@ -262,3 +262,32 @@ function createHitOptions(): paper.HitOptions {
 }
 
 type HitType = 'fill' | 'stroke' | 'curve' | 'segment' | 'handle-in' | 'handle-out';
+
+function maybeShowHoverPath(point: paper.Point, hitOptions: paper.HitOptions) {
+  // TODO: can this removal/addition be made more efficient?
+  Guides.hideHoverPath();
+  const hitResult = paper.project.hitTest(point, hitOptions);
+  if (!hitResult) {
+    return;
+  }
+  // TODO: support hover events for groups and layers?
+  const { item } = hitResult;
+  if (!item.selected && Items.isPath(item)) {
+    Guides.showHoverPath(item);
+  }
+}
+
+/**
+ * Shows a selection group around all currently selected items, or hides the
+ * selection group if no selected items exist.
+ */
+function maybeShowSelectionBounds() {
+  // TODO: can this removal/addition be made more efficient?
+  Guides.hideSelectionBounds();
+  // TODO: support group selections, compound path selections, etc.
+  const items = Selections.getSelectedPaths();
+  if (items.length === 0) {
+    return;
+  }
+  Guides.showSelectionBounds(items.map(i => i.bounds).reduce((p, c) => p.unite(c)));
+}

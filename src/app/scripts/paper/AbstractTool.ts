@@ -1,4 +1,3 @@
-import { Handler } from 'app/scripts/gesture';
 import * as paper from 'paper';
 
 const DOUBLE_CLICK_MIN_TIME = 40;
@@ -7,11 +6,6 @@ const DOUBLE_CLICK_TIMEOUT = 300;
 export abstract class AbstractTool {
   private readonly tool = new paper.Tool();
   private readonly handler = new Handler();
-
-  /**
-   * True when the user is still touching for the second
-   * click (down, move, and up events).
-   */
   private isDoubleClicking = false;
   private deferSingleClick = false;
   private stillDown = false;
@@ -106,4 +100,25 @@ export abstract class AbstractTool {
   protected onSingleClickConfirmed(event: paper.ToolEvent) {}
   protected onDoubleClick(event: paper.ToolEvent) {}
   protected onDeactivate() {}
+}
+
+class Handler {
+  private readonly pendingMessageIds = new Set<number>();
+
+  postDelayed(fn: () => void, delayMillis: number) {
+    const id = window.setTimeout(() => {
+      this.pendingMessageIds.delete(id);
+      fn();
+    }, Math.max(0, delayMillis));
+    this.pendingMessageIds.add(id);
+  }
+
+  hasPendingMessages() {
+    return this.pendingMessageIds.size > 0;
+  }
+
+  removePendingMessages() {
+    this.pendingMessageIds.forEach(id => window.clearTimeout(id));
+    this.pendingMessageIds.clear();
+  }
 }

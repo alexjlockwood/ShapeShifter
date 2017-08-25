@@ -1,6 +1,6 @@
 export enum ToolMode {
-  DetailSelect = 'tool-detail-select',
+  DetailSelection = 'tool-detail-selection',
   Pen = 'tool-pen',
-  Select = 'tool-select',
+  Selection = 'tool-selection',
   ZoomPan = 'tool-zoompan',
 }

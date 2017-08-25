@@ -2,8 +2,7 @@ import 'rxjs/add/operator/first';
 
 import { Injectable } from '@angular/core';
 import { ToolMode } from 'app/model/toolmode';
-import { ToolSwitcher } from 'app/scripts/toolmode';
-import { PaperJsUtil } from 'app/scripts/toolmode';
+import { PaperUtil, ToolSwitcher } from 'app/scripts/paper';
 import { State, Store } from 'app/store';
 import { SetFillColor, SetStrokeColor, SetToolMode } from 'app/store/toolmode/actions';
 import { getFillColor, getStrokeColor, getToolMode } from 'app/store/toolmode/selectors';
@@ -19,7 +18,7 @@ export class ToolModeService {
   constructor(private readonly store: Store<State>) {}
 
   setup(canvas: HTMLCanvasElement) {
-    PaperJsUtil.setup(canvas);
+    PaperUtil.setup(canvas);
     if (!this.toolSwitcher) {
       this.toolSwitcher = new ToolSwitcher();
       this.toolSwitcher.setToolMode(this.getToolMode());
