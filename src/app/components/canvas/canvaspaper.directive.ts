@@ -65,7 +65,9 @@ export class CanvasPaperDirective extends CanvasLayoutMixin(DestroyableMixin())
   // @Override
   onDimensionsChanged() {
     const { w, h } = this.getViewport();
-    this.$canvas.attr({ width: w * this.attrScale, height: h * this.attrScale });
+    paper.view.viewSize = new paper.Size(w * this.cssScale, h * this.cssScale);
+    // TODO: the guide layer does not resize properly on browser resize events
+    // this.$canvas.attr({ width: w * this.attrScale, height: h * this.attrScale });
     this.$canvas.css({ width: w * this.cssScale, height: h * this.cssScale });
     this.updatePaper();
   }
@@ -78,7 +80,6 @@ export class CanvasPaperDirective extends CanvasLayoutMixin(DestroyableMixin())
     paper.project.activeLayer.matrix = new paper.Matrix(scale, 0, 0, scale, 0, 0);
     paper.project.activeLayer.removeChildren();
     paper.project.activeLayer.addChild(rootItem);
-    paper.view.viewSize = new paper.Size(vl.width * scale, vl.height * scale);
   }
 
   // Called by the CanvasComponent.

@@ -39,8 +39,10 @@ export class SelectionTool extends AbstractTool {
     if (hitResult) {
       const hitItem = hitResult.item;
       if (Guides.isScaleHandle(hitItem)) {
+        console.log('scale');
         this.currentGesture = new ScaleGesture();
       } else if (Guides.isRotationHandle(hitItem)) {
+        console.log('rotation');
         this.currentGesture = new RotateGesture();
       } else if (event.modifiers.shift && hitItem.selected) {
         // Simply de-select the event and we are done.
@@ -127,7 +129,8 @@ function maybeShowHoverPath(point: paper.Point, hitOptions: paper.HitOptions) {
   }
   // TODO: support hover events for groups and layers?
   const { item } = hitResult;
-  if (!item.selected && Items.isPath(item)) {
+  // TODO: also require item to be 'selectable' here?
+  if (Items.isPath(item) && Items.isHoverable(item) && !item.selected) {
     Guides.showHoverPath(item);
   }
 }
@@ -144,6 +147,5 @@ function maybeShowSelectionBounds() {
   if (items.length === 0) {
     return;
   }
-  console.log('showSelectionBounds', Items.computeBoundingBox(items));
   Guides.showSelectionBounds(Items.computeBoundingBox(items));
 }

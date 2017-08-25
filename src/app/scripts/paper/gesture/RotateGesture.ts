@@ -1,20 +1,19 @@
-import { Guides, Selections } from 'app/scripts/paper/util';
+import { Guides, Items, Selections } from 'app/scripts/paper/util';
 import * as paper from 'paper';
 
 import { Gesture } from '.';
 
 /** A gesture that performs rotation operations. */
 export class RotateGesture extends Gesture {
-  private groupPivot: paper.Point;
-  private rotatingItems: paper.Item[];
-  private rotationAngles: number[];
+  private selectedItems: ReadonlyArray<paper.Item>;
+  private initialMatrices: ReadonlyArray<paper.Matrix>;
+  private pivot: paper.Point;
 
   // @Override
   onMouseDown(event: paper.ToolEvent) {
-    this.rotatingItems = Selections.getSelectedItems();
-    const selectionBounds = this.rotatingItems.map(i => i.bounds).reduce((p, c) => p.unite(c));
-    this.groupPivot = selectionBounds.center;
-    this.rotationAngles = this.rotatingItems.map(() => event.point.subtract(this.groupPivot).angle);
+    this.selectedItems = Selections.getSelectedItems();
+    this.initialMatrices = this.selectedItems.map(i => i.matrix.clone());
+    this.pivot = Items.computeBoundingBox(this.selectedItems).center.clone();
 
     // While transforming object, never show the bounds.
     Guides.hideSelectionBounds();
@@ -22,22 +21,12 @@ export class RotateGesture extends Gesture {
 
   // @Override
   onMouseDrag(event: paper.ToolEvent) {
-    let angle = event.point.subtract(this.groupPivot).angle;
-    this.rotatingItems.forEach((item, i) => {
-      if (event.modifiers.shift) {
-        angle = Math.round(angle / 45) * 45;
-        item.applyMatrix = false;
-        item.pivot = this.groupPivot.clone();
-        item.rotation = angle;
-      } else {
-        item.rotate(angle - this.rotationAngles[i], this.groupPivot);
-      }
-      this.rotationAngles[i] = angle;
+    let angle = event.point.subtract(this.pivot).angle;
+    if (event.modifiers.shift) {
+      angle = Math.round(angle / 15) * 15;
+    }
+    this.selectedItems.forEach((i, index) => {
+      i.matrix = this.initialMatrices[index].clone().rotate(angle, this.pivot);
     });
-  }
-
-  // @Override
-  onMouseUp(event: paper.ToolEvent) {
-    this.rotatingItems.forEach(item => (item.applyMatrix = true));
   }
 }

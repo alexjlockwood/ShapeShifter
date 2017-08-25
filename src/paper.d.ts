@@ -20,6 +20,7 @@ declare module 'paper' {
     applyMatrix: boolean;
     handleSize: number;
     hitTolerance: number;
+    insertItems: boolean;
   };
 
   /**
@@ -553,14 +554,14 @@ declare module 'paper' {
      * @param point - The point you want to add with
      */
     add(point: Point): Point;
-    add(point: number[]): Point;
+    add(point: number): Point;
 
     /*
      * Returns a new point
      * @param point - The point you want to subtract with
      */
     subtract(point: Point): Point;
-    subtract(point: number[]): Point;
+    subtract(point: number): Point;
 
     /*
      * Returns the new multiplied point
@@ -2593,7 +2594,7 @@ declare module 'paper' {
        * @param point - the rectangle's top-left corner.
        * @param size - the rectangle's size.
        */
-      constructor(point: Point, size: Size);
+      constructor(topLeft: Point, size: Size);
 
       /**
        * Creates a rectangular path item from the passed points. These do not necessarily need to be the top left and bottom right corners, the constructor figures out how to fit a rectangle between them.

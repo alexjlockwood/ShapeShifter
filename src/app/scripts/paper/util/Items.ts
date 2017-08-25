@@ -1,6 +1,13 @@
 import * as _ from 'lodash';
 import * as paper from 'paper';
 
+const DATA_DISABLE_SELECT = 'disableSelect';
+const DATA_DISABLE_HOVER = 'disableHover';
+
+// ================================ //
+// ===== Item instance checks ===== //
+// ================================ //
+
 export function instanceOfPathItem(item: paper.Item): item is paper.PathItem {
   return item instanceof paper.PathItem;
 }
@@ -27,6 +34,70 @@ export function isLayer(item: paper.Item): item is paper.Layer {
 
 function isSameClass<T>(obj: any, cls: new (...args: any[]) => T): obj is T {
   return !_.isNil(obj) && obj.constructor === cls;
+}
+
+// ============================== //
+// ===== Metadata functions ===== //
+// ============================== //
+
+export function isSelectable(item: paper.Item) {
+  return !item.data[DATA_DISABLE_SELECT];
+}
+
+export function setSelectable(item: paper.Item, selectable: boolean) {
+  item.data[DATA_DISABLE_SELECT] = !selectable;
+}
+
+export function isHoverable(item: paper.Item) {
+  return !item.data[DATA_DISABLE_HOVER];
+}
+
+export function setHoverable(item: paper.Item, hoverable: boolean) {
+  item.data[DATA_DISABLE_HOVER] = !hoverable;
+}
+
+// ========================== //
+// ===== Item factories ===== //
+// ========================== //
+
+export function newPath(segments: ReadonlyArray<paper.Segment>) {
+  const path = new paper.Path(segments);
+  path.remove();
+  return path;
+}
+
+export function newRectangle(bounds: paper.Rectangle): paper.Path.Rectangle;
+export function newRectangle(point: paper.Point, size: paper.Size): paper.Path.Rectangle;
+export function newRectangle(
+  arg1: paper.Rectangle | paper.Point,
+  arg2?: paper.Size,
+): paper.Path.Rectangle {
+  let rect: paper.Path.Rectangle;
+  if (arg1 instanceof paper.Rectangle) {
+    rect = new paper.Path.Rectangle(arg1);
+  } else {
+    rect = new paper.Path.Rectangle(arg1, arg2);
+  }
+  rect.remove();
+  return rect;
+}
+
+export function newCircle(point: paper.Point, radius: number) {
+  const circle = new paper.Path.Circle(point, radius);
+  circle.remove();
+  return circle;
+}
+
+export function newGroup(obj: { name?: string } = {}) {
+  const group = new paper.Group(obj);
+  group.remove();
+  return group;
+}
+
+export function newLayer(obj: { name?: string } = {}) {
+  const layer = new paper.Layer(obj);
+  layer.remove();
+  return layer;
 }
 
 /** Returns all items, optionally including guides. */

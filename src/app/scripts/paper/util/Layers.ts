@@ -9,6 +9,7 @@ export function fromLayer(vl: VectorLayer) {
       // TODO: support compound paths
       const pathStr = layer.pathData ? layer.pathData.getPathString() : '';
       const item = new paper.Path(pathStr);
+      item.applyMatrix = false;
       item.fillColor = layer.fillColor;
       item.strokeColor = layer.strokeColor;
       item.strokeWidth = layer.strokeWidth;
@@ -35,6 +36,7 @@ export function fromLayer(vl: VectorLayer) {
       // TODO: support compound paths
       const pathStr = layer.pathData ? layer.pathData.getPathString() : '';
       const item = new paper.Path(pathStr);
+      item.applyMatrix = false;
       item.clipMask = true;
       return item;
     }
