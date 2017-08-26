@@ -28,7 +28,7 @@ export function createGuideLayer() {
 }
 
 export function getGuideLayer() {
-  return _.find(paper.project.layers, l => l.name === GUIDE_LAYER_NAME);
+  return paper.project.getItem({ name: GUIDE_LAYER_NAME });
 }
 
 // ====================== //
@@ -36,7 +36,7 @@ export function getGuideLayer() {
 // ====================== //
 
 function getHoverPath() {
-  return Items.findItemByName(HOVER_PATH_NAME) as paper.Path;
+  return getGuideLayer().getItem({ name: HOVER_PATH_NAME }) as paper.Path;
 }
 
 export function showHoverPath(path: paper.Path) {
@@ -44,9 +44,8 @@ export function showHoverPath(path: paper.Path) {
   hoverPath.name = HOVER_PATH_NAME;
   hoverPath.closed = true;
   hoverPath.strokeColor = GUIDE_COLOR;
-  hoverPath.fillColor = undefined;
   hoverPath.guide = true;
-  hoverPath.strokeWidth = 1 / paper.view.zoom;
+  hoverPath.strokeWidth = 1.5 / paper.view.zoom;
   hoverPath.matrix = path.matrix.clone();
   getGuideLayer().addChild(hoverPath);
   return hoverPath;
@@ -64,18 +63,18 @@ export function hideHoverPath() {
 // ========================= //
 
 export function getSelectionBoxPath() {
-  return Items.findItemByName(SELECTION_BOX_NAME) as paper.Path;
+  return getGuideLayer().getItem({ name: SELECTION_BOX_NAME }) as paper.Path;
 }
 
 export function showSelectionBoxPath(downPoint: paper.Point, point: paper.Point) {
-  const clone = Items.newRectangle(createSelectionBoxRect(downPoint, point));
-  clone.strokeWidth = 1 / paper.view.zoom;
-  clone.guide = true;
-  clone.name = SELECTION_BOX_NAME;
-  clone.strokeColor = SELECTION_BOX_COLOR;
-  clone.dashArray = [3 / paper.view.zoom, 3 / paper.view.zoom];
-  getGuideLayer().addChild(clone);
-  return clone;
+  const rect = Items.newRectangle(createSelectionBoxRect(downPoint, point));
+  rect.strokeWidth = 1 / paper.view.zoom;
+  rect.guide = true;
+  rect.name = SELECTION_BOX_NAME;
+  rect.strokeColor = SELECTION_BOX_COLOR;
+  rect.dashArray = [3 / paper.view.zoom, 3 / paper.view.zoom];
+  getGuideLayer().addChild(rect);
+  return rect;
 }
 
 function createSelectionBoxRect(from: paper.Point, to: paper.Point) {
@@ -88,7 +87,7 @@ function createSelectionBoxRect(from: paper.Point, to: paper.Point) {
 // =========================== //
 
 function getSelectionBoundsGroup() {
-  return Items.findItemByName(SELECTION_GROUP_NAME) as paper.Group;
+  return getGuideLayer().getItem({ name: SELECTION_GROUP_NAME }) as paper.Group;
 }
 
 export function showSelectionBounds(bounds: paper.Rectangle) {
@@ -144,6 +143,13 @@ export function showSelectionBounds(bounds: paper.Rectangle) {
   return group;
 }
 
+export function hideSelectionBounds() {
+  const selectionGroup = getSelectionBoundsGroup();
+  if (selectionGroup) {
+    selectionGroup.remove();
+  }
+}
+
 export function isScaleHandle(item: paper.Item): item is paper.Path.Rectangle {
   return item.name === SCALE_HANDLE_NAME;
 }
@@ -158,11 +164,4 @@ export function getHandleType(item: paper.Item): HandleType {
 
 export function getOppositeHandleType(item: paper.Item): HandleType {
   return item.data[DATA_OPPOSITE_HANDLE_TYPE];
-}
-
-export function hideSelectionBounds() {
-  const selectionGroup = getSelectionBoundsGroup();
-  if (selectionGroup) {
-    selectionGroup.remove();
-  }
 }

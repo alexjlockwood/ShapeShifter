@@ -54,6 +54,7 @@ export class ScaleGesture extends Gesture {
       sx *= signx;
       sy *= signy;
     }
+    console.log(sx, sy);
     // TODO: set strokeScaling to false?
     this.selectedItems.forEach((i, index) => {
       i.matrix = this.initialMatrices[index].clone().scale(sx, sy, currentPivot);

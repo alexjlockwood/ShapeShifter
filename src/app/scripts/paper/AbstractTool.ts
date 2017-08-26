@@ -60,31 +60,23 @@ export abstract class AbstractTool {
     this.currentDownEvent = event;
     this.stillDown = true;
     this.deferSingleClick = false;
-    if (!this.isDoubleClicking) {
-      this.onMouseDown(event);
-    }
+    this.onMouseDown(event);
   }
 
   private mouseDrag(event: paper.ToolEvent) {
-    if (!this.isDoubleClicking) {
-      this.onMouseDrag(event);
-    }
+    this.onMouseDrag(event);
   }
 
   private mouseMove(event: paper.ToolEvent) {
-    if (!this.isDoubleClicking) {
-      this.onMouseMove(event);
-    }
+    this.onMouseMove(event);
   }
 
   private mouseUp(event: paper.ToolEvent) {
-    if (!this.isDoubleClicking) {
-      this.onMouseUp(event);
-      this.onSingleClick(event);
-      if (this.deferSingleClick) {
-        this.onSingleClickConfirmed(event);
-      }
+    this.onSingleClick(event);
+    if (this.deferSingleClick) {
+      this.onSingleClickConfirmed(event);
     }
+    this.onMouseUp(event);
     this.stillDown = false;
     this.previousUpEvent = event;
     this.isDoubleClicking = false;
@@ -100,6 +92,10 @@ export abstract class AbstractTool {
   protected onSingleClickConfirmed(event: paper.ToolEvent) {}
   protected onDoubleClick(event: paper.ToolEvent) {}
   protected onDeactivate() {}
+
+  protected isDoubleClickEvent() {
+    return this.isDoubleClicking;
+  }
 }
 
 class Handler {

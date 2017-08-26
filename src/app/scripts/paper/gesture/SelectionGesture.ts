@@ -9,13 +9,14 @@ export class SelectionGesture extends Gesture {
   private selectedPaths: ReadonlyArray<paper.Item>;
   private initialPositions: ReadonlyArray<paper.Point>;
 
+  // TODO: pressing alt should allow the user to select the item
+  // directly beneath the hit item, if one exists.
   constructor(private readonly shouldCloneSelectedItems: boolean) {
     super();
   }
 
   // @Override
   onMouseDown(event: paper.ToolEvent, hitResult: paper.HitResult) {
-    console.log(hitResult);
     if (!event.modifiers.shift && !hitResult.item.selected) {
       Selections.deselectAll();
     }
@@ -25,7 +26,6 @@ export class SelectionGesture extends Gesture {
     if (this.shouldCloneSelectedItems) {
       Selections.cloneSelectedItems();
     }
-    Guides.hideSelectionBounds();
 
     this.selectedPaths = Selections.getSelectedItems();
     this.initialPositions = this.selectedPaths.map(path => path.position);
@@ -36,7 +36,7 @@ export class SelectionGesture extends Gesture {
     const dragVector = event.point.subtract(event.downPoint);
     this.selectedPaths.forEach((item, i) => {
       if (event.modifiers.shift) {
-        const snapPoint = new paper.Point(MathUtil.snapDeltaToAngle(dragVector, Math.PI / 4));
+        const snapPoint = new paper.Point(MathUtil.snapDeltaToAngle(dragVector, 15));
         item.position = this.initialPositions[i].add(snapPoint);
       } else {
         item.position = item.position.add(event.delta);

@@ -11,12 +11,9 @@ import { Guides, Items, Selections } from './util';
  */
 export class DetailSelectionTool extends AbstractTool {
   private doRectSelection = false;
-  private hitType: HitType;
+  private hitType: paper.HitType;
   private lastEvent: paper.ToolEvent = undefined;
   private selectionDragged = false;
-
-  // @Override
-  protected onActivate() {}
 
   // @Override
   protected onMouseDown(event: paper.ToolEvent) {
@@ -156,9 +153,7 @@ export class DetailSelectionTool extends AbstractTool {
 
         if (modifiers.shift) {
           // TODO: missing types
-          item.position = (item as any).origPos.add(
-            MathUtil.snapDeltaToAngle(dragVector, Math.PI / 4),
-          );
+          item.position = (item as any).origPos.add(MathUtil.snapDeltaToAngle(dragVector, 45));
         } else {
           item.position = item.position.add(delta);
         }
@@ -180,9 +175,7 @@ export class DetailSelectionTool extends AbstractTool {
         ) {
           if (modifiers.shift) {
             // TODO: missing types
-            seg.point = (seg as any).origPoint.add(
-              MathUtil.snapDeltaToAngle(dragVector, Math.PI / 4),
-            );
+            seg.point = (seg as any).origPoint.add(MathUtil.snapDeltaToAngle(dragVector, 45));
           } else {
             seg.point = seg.point.add(event.delta);
           }
@@ -243,11 +236,6 @@ export class DetailSelectionTool extends AbstractTool {
     }
     this.doRectSelection = false;
   }
-
-  // @Override
-  protected onDeactivate() {
-    Guides.hideHoverPath();
-  }
 }
 
 function createHitOptions(): paper.HitOptions {
@@ -260,8 +248,6 @@ function createHitOptions(): paper.HitOptions {
     tolerance: 3 / paper.view.zoom,
   };
 }
-
-type HitType = 'fill' | 'stroke' | 'curve' | 'segment' | 'handle-in' | 'handle-out';
 
 function maybeShowHoverPath(point: paper.Point, hitOptions: paper.HitOptions) {
   // TODO: can this removal/addition be made more efficient?

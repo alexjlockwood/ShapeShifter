@@ -5,6 +5,10 @@ import { Gesture } from '.';
 
 /** A gesture that selects multiple items using a bounded box. */
 export class SelectionBoxGesture extends Gesture {
+  constructor(private readonly processDetails: boolean) {
+    super();
+  }
+
   // @Override
   onMouseDown(event: paper.ToolEvent) {
     if (!event.modifiers.shift) {
@@ -25,7 +29,7 @@ export class SelectionBoxGesture extends Gesture {
   onMouseUp(event: paper.ToolEvent) {
     const selectionBoxPath = Guides.getSelectionBoxPath();
     if (selectionBoxPath) {
-      Selections.processRectangularSelection(event, selectionBoxPath);
+      Selections.processRectangularSelection(event, selectionBoxPath, this.processDetails);
       selectionBoxPath.remove();
     }
   }

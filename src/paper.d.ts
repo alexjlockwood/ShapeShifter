@@ -1,22 +1,15 @@
-// Type definitions for Paper.js v0.9.23
-// Project: http://paperjs.org/
-// Definitions by: Clark Stevenson <http://github.com/clark-stevenson>
-// Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
-
-// NOTE: all modifications are commented with 'ADDED BY ALEX LOCKWOOD'
-
 type NativeMouseEvent = MouseEvent;
 
 declare module 'paper' {
   /**
    * The version of Paper.js, as a string.
    */
-  export var version: string;
+  export const version: string;
 
   /**
    * Gives access to paper's configurable settings.
    */
-  export var settings: {
+  export const settings: {
     applyMatrix: boolean;
     handleSize: number;
     hitTolerance: number;
@@ -26,28 +19,28 @@ declare module 'paper' {
   /**
    * The currently active project.
    */
-  export var project: Project;
+  export const project: Project;
 
   /**
    * The list of all open projects within the current Paper.js context.
    */
-  export var projects: Project[];
+  export const projects: ReadonlyArray<Project>;
 
   /**
    * The reference to the active project's view.
    * Read Only.
    */
-  export var view: View;
+  export const view: View;
 
   /**
    * The reference to the active tool.
    */
-  export var tool: Tool;
+  export const tool: Tool;
 
   /**
    * The list of available tools.
    */
-  export var tools: Tool[];
+  export const tools: ReadonlyArray<Tool>;
 
   /**
    * Injects the paper scope into any other given scope. Can be used for examle to inject the currently active PaperScope into the window's global scope, to emulate PaperScript-style globally accessible Paper classes and objects
@@ -2102,6 +2095,16 @@ declare module 'paper' {
      */
     symbol: Symbol;
   }
+  export type HitType =
+    | 'segment'
+    | 'handle-in'
+    | 'handle-out'
+    | 'curve'
+    | 'stroke'
+    | 'fill'
+    | 'bounds'
+    | 'center'
+    | 'pixel';
   /**
    * A HitResult object contains information about the results of a hit test. It is returned by item.hitTest(point) and project.hitTest(point).
    */
@@ -2111,16 +2114,7 @@ declare module 'paper' {
      * type String('segment', 'handle-in', 'handle-out', 'curve', 'stroke', 'fill', 'bounds', 'center', 'pixel')
      */
     // ADDED BY ALEX LOCKWOOD
-    readonly type:
-      | 'segment'
-      | 'handle-in'
-      | 'handle-out'
-      | 'curve'
-      | 'stroke'
-      | 'fill'
-      | 'bounds'
-      | 'center'
-      | 'pixel';
+    readonly type: HitType;
 
     /**
      * If the HitResult has a hitResult.type of 'bounds', this property describes which corner of the bounding rectangle was hit.
