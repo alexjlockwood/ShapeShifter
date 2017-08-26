@@ -6,6 +6,7 @@ import { AbstractTool } from './AbstractTool';
 import {
   DetailSelectionGesture,
   Gesture,
+  HoverGesture,
   RotateGesture,
   ScaleGesture,
   SelectionBoxGesture,
@@ -27,20 +28,41 @@ enum Mode {
  * TODO: figure out how to deal with right mouse clicks
  */
 export class SelectionTool extends AbstractTool {
-  private currentGesture: Gesture;
-  private isDetailSelectionMode = false;
+  private _currentGesture: Gesture = new HoverGesture();
+  private _detailSelectedPath: paper.Path;
+  private hitResult: paper.HitResult;
+
+  private get currentGesture() {
+    return this._currentGesture;
+  }
+
+  private set currentGesture(gesture: Gesture) {
+    this._currentGesture = gesture;
+  }
+
+  private get detailSelectedItem() {
+    return this._detailSelectedPath;
+  }
+
+  private set detailSelectedItem(path: paper.Path) {
+    this._detailSelectedPath = path;
+  }
 
   // @Override
   protected onMouseDown(event: paper.ToolEvent) {
-    Guides.hideHoverPath();
-
-    let hitResult: paper.HitResult;
-
-    if (this.isDetailSelectionMode) {
-      hitResult = paper.project.hitTest(event.point, this.createDetailHitOptions());
-      if (hitResult) {
+    // If a detail selected item is set, then we are in detail selection mode.
+    if (this.detailSelectedItem) {
+      this.hitResult = this.detailSelectedItem.hitTest(event.point, {
+        segments: true,
+        stroke: true,
+        curves: true,
+        handles: true,
+        fill: true,
+        tolerance: 3 / paper.view.zoom,
+      });
+      if (this.hitResult) {
         // Process the detail selection gesture for the hit item.
-        this.currentGesture = new DetailSelectionGesture();
+        this.currentGesture = new DetailSelectionGesture(this.detailSelectedItem);
       } else {
         // TODO: Only enter selection box mode when we are certain that a drag
         // has occurred. If a drag does not occur, then we should interpret the
@@ -53,9 +75,15 @@ export class SelectionTool extends AbstractTool {
         this.currentGesture = new SelectionBoxGesture(true);
       }
     } else {
-      hitResult = paper.project.hitTest(event.point, this.createDefaultHitOptions());
-      if (hitResult) {
-        const hitItem = hitResult.item;
+      this.hitResult = paper.project.hitTest(event.point, {
+        segments: true,
+        stroke: true,
+        curves: true,
+        fill: true,
+        tolerance: 8 / paper.view.zoom,
+      });
+      if (this.hitResult) {
+        const hitItem = this.hitResult.item;
         if (Guides.isScaleHandle(hitItem)) {
           // If the hit item is a scale handle, then perform a scale gesture.
           this.currentGesture = new ScaleGesture();
@@ -69,12 +97,14 @@ export class SelectionTool extends AbstractTool {
           // parent layer should result in the editable item being selected (it is
           // actually a tiny bit more complicated than that but you get the idea).
 
+          // TODO: possible to double click on a non-Path object? (missing types below!)
+
           // If a double click event occurs on top of a hit item, then enter
           // detail selection mode.
-          this.isDetailSelectionMode = true;
+          this.detailSelectedItem = hitItem as paper.Path;
           this.currentGesture = new class extends Gesture {
             onMouseDown(e: paper.ToolEvent, { item }: paper.HitResult) {
-              item.selected = false;
+              Selections.deselectAll();
               item.fullySelected = true;
             }
           }();
@@ -114,61 +144,28 @@ export class SelectionTool extends AbstractTool {
         this.currentGesture = new SelectionBoxGesture(false);
       }
     }
-    if (!hitResult) {
-      this.isDetailSelectionMode = false;
-    }
-    this.currentGesture.onMouseDown(event, hitResult);
+    this.currentGesture.onMouseDown(event, this.hitResult);
   }
 
   // @Override
   protected onMouseDrag(event: paper.ToolEvent) {
-    if (this.isDoubleClickEvent()) {
-      return;
-    }
     this.currentGesture.onMouseDrag(event);
   }
 
   // @Override
   protected onMouseMove(event: paper.ToolEvent) {
-    if (this.isDoubleClickEvent()) {
-      return;
-    }
-    maybeShowHoverPath(event.point, this.createDefaultHitOptions());
+    this.currentGesture.onMouseMove(event);
   }
 
   // @Override
   protected onMouseUp(event: paper.ToolEvent) {
-    if (this.isDoubleClickEvent()) {
-      return;
-    }
     this.currentGesture.onMouseUp(event);
-
-    if (Selections.getSelectedItems().length) {
-      maybeShowSelectionBounds();
-    } else {
-      Guides.hideSelectionBounds();
+    if (this.detailSelectedItem && !this.hitResult) {
+      // TODO: only exit detail selection mode if the selection box
+      // gesture resulted in no items being selected
+      this.detailSelectedItem = undefined;
     }
-  }
-
-  private createDefaultHitOptions(): paper.HitOptions {
-    return {
-      segments: true,
-      stroke: true,
-      curves: true,
-      fill: true,
-      tolerance: 8 / paper.view.zoom,
-    };
-  }
-
-  private createDetailHitOptions(): paper.HitOptions {
-    return {
-      segments: true,
-      stroke: true,
-      curves: true,
-      handles: true,
-      fill: true,
-      tolerance: 3 / paper.view.zoom,
-    };
+    this.currentGesture = new HoverGesture();
   }
 }
 
@@ -187,33 +184,3 @@ export class SelectionTool extends AbstractTool {
 //   });
 //   setSelectionBounds();
 // };
-
-function maybeShowHoverPath(point: paper.Point, hitOptions: paper.HitOptions) {
-  // TODO: can this removal/addition be made more efficient?
-  Guides.hideHoverPath();
-  const hitResult = paper.project.hitTest(point, hitOptions);
-  if (!hitResult) {
-    return;
-  }
-  // TODO: support hover events for groups and layers?
-  const { item } = hitResult;
-  // TODO: also require item to be 'selectable' here?
-  if (Items.isPath(item) && Items.isHoverable(item) && !item.selected) {
-    Guides.showHoverPath(item);
-  }
-}
-
-/**
- * Shows a selection group around all currently selected items, or hides the
- * selection group if no selected items exist.
- */
-function maybeShowSelectionBounds() {
-  // TODO: can this removal/addition be made more efficient?
-  Guides.hideSelectionBounds();
-  // TODO: support group selections, compound path selections, etc.
-  const items = Selections.getSelectedItems();
-  if (items.length === 0) {
-    return;
-  }
-  Guides.showSelectionBounds(Items.computeBoundingBox(items));
-}

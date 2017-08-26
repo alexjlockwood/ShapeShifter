@@ -1,4 +1,4 @@
-import { Guides, Selections } from 'app/scripts/paper/util';
+import { Guides, Items, Selections } from 'app/scripts/paper/util';
 import * as paper from 'paper';
 
 import { Gesture } from '.';
@@ -11,6 +11,8 @@ export class SelectionBoxGesture extends Gesture {
 
   // @Override
   onMouseDown(event: paper.ToolEvent) {
+    Guides.hideHoverPath();
+
     if (!event.modifiers.shift) {
       // A selection box implies that the gesture began with a failed hit
       // test, so deselect everything on mouse down (unless the user is
@@ -31,6 +33,12 @@ export class SelectionBoxGesture extends Gesture {
     if (selectionBoxPath) {
       Selections.processRectangularSelection(event, selectionBoxPath, this.processDetails);
       selectionBoxPath.remove();
+    }
+
+    Guides.hideSelectionBounds();
+    const selectedItems = Selections.getSelectedItems();
+    if (selectedItems.length) {
+      Guides.showSelectionBounds(Items.computeBoundingBox(selectedItems));
     }
   }
 }

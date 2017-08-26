@@ -10,7 +10,6 @@ import { SelectionTool } from './SelectionTool';
 export class ToolSwitcher {
   private readonly tools = new Map<ToolMode, AbstractTool>([
     [ToolMode.Selection, new SelectionTool()],
-    [ToolMode.DetailSelection, new DetailSelectionTool()],
     [ToolMode.Pen, new PenTool()],
   ]);
   private activeToolMode: ToolMode;

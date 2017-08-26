@@ -39,6 +39,21 @@ function getHoverPath() {
   return getGuideLayer().getItem({ name: HOVER_PATH_NAME }) as paper.Path;
 }
 
+export function showOrHideHoverPath(point: paper.Point, hitOptions: paper.HitOptions) {
+  // TODO: can this removal/addition be made more efficient?
+  hideHoverPath();
+  const hitResult = paper.project.hitTest(point, hitOptions);
+  if (!hitResult) {
+    return;
+  }
+  // TODO: support hover events for groups and layers?
+  const { item } = hitResult;
+  // TODO: also require item to be 'selectable' here?
+  if (Items.isPath(item) && Items.isHoverable(item) && !item.selected) {
+    showHoverPath(item);
+  }
+}
+
 export function showHoverPath(path: paper.Path) {
   const hoverPath = Items.newPath(path.segments);
   hoverPath.name = HOVER_PATH_NAME;

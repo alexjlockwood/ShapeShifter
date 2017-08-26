@@ -11,6 +11,8 @@ export class RotateGesture extends Gesture {
 
   // @Override
   onMouseDown(event: paper.ToolEvent) {
+    Guides.hideHoverPath();
+
     this.selectedItems = Selections.getSelectedItems();
     this.initialMatrices = this.selectedItems.map(i => i.matrix.clone());
     this.pivot = Items.computeBoundingBox(this.selectedItems).center.clone();
@@ -28,5 +30,14 @@ export class RotateGesture extends Gesture {
     this.selectedItems.forEach((i, index) => {
       i.matrix = this.initialMatrices[index].clone().rotate(angle, this.pivot);
     });
+  }
+
+  // @Override
+  onMouseUp(event: paper.ToolEvent) {
+    Guides.hideSelectionBounds();
+    const selectedItems = Selections.getSelectedItems();
+    if (selectedItems.length) {
+      Guides.showSelectionBounds(Items.computeBoundingBox(selectedItems));
+    }
   }
 }

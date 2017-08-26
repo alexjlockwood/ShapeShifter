@@ -17,6 +17,8 @@ export class SelectionGesture extends Gesture {
 
   // @Override
   onMouseDown(event: paper.ToolEvent, hitResult: paper.HitResult) {
+    Guides.hideHoverPath();
+
     if (!event.modifiers.shift && !hitResult.item.selected) {
       Selections.deselectAll();
     }
@@ -42,5 +44,14 @@ export class SelectionGesture extends Gesture {
         item.position = item.position.add(event.delta);
       }
     });
+  }
+
+  // @Override
+  onMouseUp(event: paper.ToolEvent) {
+    Guides.hideSelectionBounds();
+    const selectedItems = Selections.getSelectedItems();
+    if (selectedItems.length) {
+      Guides.showSelectionBounds(Items.computeBoundingBox(selectedItems));
+    }
   }
 }

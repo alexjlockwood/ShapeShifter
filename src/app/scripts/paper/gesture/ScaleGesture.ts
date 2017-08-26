@@ -16,6 +16,8 @@ export class ScaleGesture extends Gesture {
 
   // @Override
   onMouseDown(event: paper.ToolEvent, { item }: paper.HitResult) {
+    Guides.hideHoverPath();
+
     this.selectedItems = Selections.getSelectedItems();
     this.initialMatrices = this.selectedItems.map(i => i.matrix.clone());
     const selectionBounds = Items.computeBoundingBox(this.selectedItems);
@@ -59,5 +61,14 @@ export class ScaleGesture extends Gesture {
     this.selectedItems.forEach((i, index) => {
       i.matrix = this.initialMatrices[index].clone().scale(sx, sy, currentPivot);
     });
+  }
+
+  // @Override
+  onMouseUp(event: paper.ToolEvent) {
+    Guides.hideSelectionBounds();
+    const selectedItems = Selections.getSelectedItems();
+    if (selectedItems.length) {
+      Guides.showSelectionBounds(Items.computeBoundingBox(selectedItems));
+    }
   }
 }

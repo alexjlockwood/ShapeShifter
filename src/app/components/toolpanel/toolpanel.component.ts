@@ -11,7 +11,6 @@ import { Observable } from 'rxjs/Observable';
 })
 export class ToolPanelComponent implements OnInit {
   readonly TOOL_MODE_SELECT = ToolMode.Selection;
-  readonly TOOL_MODE_DETAIL_SELECT = ToolMode.DetailSelection;
   readonly TOOL_MODE_PEN = ToolMode.Pen;
   readonly TOOL_MODE_ZOOMPAN = ToolMode.ZoomPan;
 
@@ -26,10 +25,6 @@ export class ToolPanelComponent implements OnInit {
 
   onSelectClick() {
     this.toolModeService.setToolMode(ToolMode.Selection);
-  }
-
-  onDetailSelectClick() {
-    this.toolModeService.setToolMode(ToolMode.DetailSelection);
   }
 
   onPenClick() {

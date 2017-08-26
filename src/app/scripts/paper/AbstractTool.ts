@@ -28,6 +28,11 @@ export abstract class AbstractTool {
   }
 
   private mouseDown(event: paper.ToolEvent) {
+    this.checkForDoubleClick(event);
+    this.onMouseDown(event);
+  }
+
+  private checkForDoubleClick(event: paper.ToolEvent) {
     const hadClickMessage = this.handler.hasPendingMessages();
     if (hadClickMessage) {
       this.handler.removePendingMessages();
@@ -60,7 +65,6 @@ export abstract class AbstractTool {
     this.currentDownEvent = event;
     this.stillDown = true;
     this.deferSingleClick = false;
-    this.onMouseDown(event);
   }
 
   private mouseDrag(event: paper.ToolEvent) {

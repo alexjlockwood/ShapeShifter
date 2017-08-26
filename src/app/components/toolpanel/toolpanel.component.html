@@ -8,12 +8,6 @@
       (click)="onSelectClick()">
     </md-icon>
   </div>
-  <div class="tool-button"
-    [class.is-checked]="toolMode === this.TOOL_MODE_DETAIL_SELECT">
-    <md-icon svgIcon="tool_detailselect"
-      (click)="onDetailSelectClick()">
-    </md-icon>
-  </div>
   <!-- <md-icon svgIcon="tool_draw"></md-icon> -->
   <div class="tool-button"
     [class.is-checked]="toolMode === this.TOOL_MODE_PEN">
@@ -21,12 +15,12 @@
       (click)="onPenClick()">
     </md-icon>
   </div>
-  <div class="tool-button"
+  <!-- <div class="tool-button"
     [class.is-checked]="toolMode === this.TOOL_MODE_ZOOMPAN">
     <md-icon svgIcon="tool_zoompan"
       (click)="onZoomPanClick()">
     </md-icon>
-  </div>
+  </div> -->
   <input [(ngModel)]="this.fillColor">
   <input [(ngModel)]="this.strokeColor">
 </div>
