@@ -7,14 +7,14 @@ import { Gesture } from '.';
 /**
  * A gesture that performs selection operations on path segments and handles.
  */
-export class DetailSelectionGesture extends Gesture {
+export class SegmentSelectionGesture extends Gesture {
   private readonly initialSegmentPoints = new Map<paper.Segment, paper.Point>();
   private hitType: paper.HitType;
   private hitItem: paper.Item;
 
-  constructor(private readonly detailSelectionItem: paper.Path) {
+  constructor(private readonly segmentSelectionItem: paper.Path) {
     super();
-    detailSelectionItem.segments.forEach(s => this.initialSegmentPoints.set(s, s.point));
+    segmentSelectionItem.segments.forEach(s => this.initialSegmentPoints.set(s, s.point));
   }
 
   // @Override
@@ -63,7 +63,7 @@ export class DetailSelectionGesture extends Gesture {
   onMouseDrag(event: paper.ToolEvent) {
     const { point, downPoint, delta, modifiers } = event;
     const dragVector = point.subtract(downPoint);
-    for (const seg of this.detailSelectionItem.segments) {
+    for (const seg of this.segmentSelectionItem.segments) {
       switch (this.hitType) {
         case 'segment':
         case 'stroke':

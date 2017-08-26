@@ -89,11 +89,12 @@ export class ShortcutService {
         this.actionModeService.closeActionMode();
         return false;
       }
-      if (event.keyCode === 32) {
-        // Spacebar.
-        this.playbackService.toggleIsPlaying();
-        return false;
-      }
+      // TODO: uncomment this!
+      // if (event.keyCode === 32) {
+      //   // Spacebar.
+      //   this.playbackService.toggleIsPlaying();
+      //   return false;
+      // }
       if (event.keyCode === 37) {
         // Left arrow.
         this.animatorService.rewind();

@@ -23,9 +23,6 @@ export class PenTool extends AbstractTool {
   private hoverHitResult: paper.HitResult;
 
   // @Override
-  protected onActivate() {}
-
-  // @Override
   protected onMouseDown(event: paper.ToolEvent) {
     if (this.currSegment) {
       this.currSegment.selected = false;
@@ -138,7 +135,10 @@ export class PenTool extends AbstractTool {
   }
 
   // @Override
-  protected onDeactivate() {}
+  protected onKeyDown(event: paper.KeyEvent) {}
+
+  // @Override
+  protected onKeyUp(event: paper.KeyEvent) {}
 }
 
 function findHandle(path: paper.Path, point: paper.Point) {

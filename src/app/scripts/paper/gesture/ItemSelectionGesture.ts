@@ -5,7 +5,7 @@ import * as paper from 'paper';
 import { Gesture } from '.';
 
 /** A gesture that performs selection, move, and clone operations. */
-export class SelectionGesture extends Gesture {
+export class ItemSelectionGesture extends Gesture {
   private selectedPaths: ReadonlyArray<paper.Item>;
   private initialPositions: ReadonlyArray<paper.Point>;
 

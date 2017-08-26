@@ -4,13 +4,13 @@ import * as paper from 'paper';
 
 import { AbstractTool } from './AbstractTool';
 import {
-  DetailSelectionGesture,
   Gesture,
   HoverGesture,
+  ItemSelectionGesture,
   RotateGesture,
   ScaleGesture,
+  SegmentSelectionGesture,
   SelectionBoxGesture,
-  SelectionGesture,
 } from './gesture';
 import { Guides, Items, Selections } from './util';
 
@@ -28,31 +28,15 @@ enum Mode {
  * TODO: figure out how to deal with right mouse clicks
  */
 export class SelectionTool extends AbstractTool {
-  private _currentGesture: Gesture = new HoverGesture();
-  private _detailSelectedPath: paper.Path;
+  private currentGesture: Gesture = new HoverGesture();
+  private segmentSelectedPath: paper.Path;
   private hitResult: paper.HitResult;
-
-  private get currentGesture() {
-    return this._currentGesture;
-  }
-
-  private set currentGesture(gesture: Gesture) {
-    this._currentGesture = gesture;
-  }
-
-  private get detailSelectedItem() {
-    return this._detailSelectedPath;
-  }
-
-  private set detailSelectedItem(path: paper.Path) {
-    this._detailSelectedPath = path;
-  }
 
   // @Override
   protected onMouseDown(event: paper.ToolEvent) {
-    // If a detail selected item is set, then we are in detail selection mode.
-    if (this.detailSelectedItem) {
-      this.hitResult = this.detailSelectedItem.hitTest(event.point, {
+    // If a segment selected item is set, then we are in segment selection mode.
+    if (this.segmentSelectedPath) {
+      this.hitResult = this.segmentSelectedPath.hitTest(event.point, {
         segments: true,
         stroke: true,
         curves: true,
@@ -61,16 +45,16 @@ export class SelectionTool extends AbstractTool {
         tolerance: 3 / paper.view.zoom,
       });
       if (this.hitResult) {
-        // Process the detail selection gesture for the hit item.
-        this.currentGesture = new DetailSelectionGesture(this.detailSelectedItem);
+        // Process the segment selection gesture for the hit item.
+        this.currentGesture = new SegmentSelectionGesture(this.segmentSelectedPath);
       } else {
         // TODO: Only enter selection box mode when we are certain that a drag
         // has occurred. If a drag does not occur, then we should interpret the
         // gesture as a click. If a click occurs and shift is not pressed, then
-        // we should exit detail selection mode.
+        // we should exit segment selection mode.
 
-        // If there is no hit item and we are in detail selection mode, then
-        // enter selection box mode for the detail selected item so we can
+        // If there is no hit item and we are in segment selection mode, then
+        // enter selection box mode for the segment selected item so we can
         // batch select its individual properties.
         this.currentGesture = new SelectionBoxGesture(true);
       }
@@ -91,7 +75,7 @@ export class SelectionTool extends AbstractTool {
           // If the hit item is a rotate handle, then perform a rotate gesture.
           this.currentGesture = new RotateGesture();
         } else if (this.isDoubleClickEvent()) {
-          // TODO: It should only be possible to enter detail selection mode
+          // TODO: It should only be possible to enter segment selection mode
           // for an editable item (i.e. a path, but not a group). Double clicking
           // on a non-selected and editable item that is contained inside a selected
           // parent layer should result in the editable item being selected (it is
@@ -100,8 +84,8 @@ export class SelectionTool extends AbstractTool {
           // TODO: possible to double click on a non-Path object? (missing types below!)
 
           // If a double click event occurs on top of a hit item, then enter
-          // detail selection mode.
-          this.detailSelectedItem = hitItem as paper.Path;
+          // segment selection mode.
+          this.segmentSelectedPath = hitItem as paper.Path;
           this.currentGesture = new class extends Gesture {
             onMouseDown(e: paper.ToolEvent, { item }: paper.HitResult) {
               Selections.deselectAll();
@@ -137,7 +121,7 @@ export class SelectionTool extends AbstractTool {
           // there is only one selected item. In both cases the hit item should
           // end up being selected. If alt is being pressed, then we should
           // clone the item as well.
-          this.currentGesture = new SelectionGesture(event.modifiers.alt);
+          this.currentGesture = new ItemSelectionGesture(event.modifiers.alt);
         }
       } else {
         // If there is no hit item, then enter selection box mode.
@@ -160,27 +144,37 @@ export class SelectionTool extends AbstractTool {
   // @Override
   protected onMouseUp(event: paper.ToolEvent) {
     this.currentGesture.onMouseUp(event);
-    if (this.detailSelectedItem && !this.hitResult) {
-      // TODO: only exit detail selection mode if the selection box
+    if (this.segmentSelectedPath && !this.hitResult) {
+      // TODO: only exit segment selection mode if the selection box
       // gesture resulted in no items being selected
-      this.detailSelectedItem = undefined;
+      this.segmentSelectedPath = undefined;
     }
     this.currentGesture = new HoverGesture();
   }
+
+  // @Override
+  protected onKeyDown(event: paper.KeyEvent) {
+    this.currentGesture.onKeyDown(event);
+  }
+
+  // @Override
+  protected onKeyUp(event: paper.KeyEvent) {
+    this.currentGesture.onKeyUp(event);
+  }
 }
 
-// TODO: make use of this function!
-// var preProcessSelection = function() {
-//   // when switching to the select tool while having a child object of a
-//   // compound path selected, deselect the child and select the compound path
-//   // instead. (otherwise the compound path breaks because of scale-grouping)
-//   var items = pg.selection.getSelectedItems();
-//   jQuery.each(items, function(index, item) {
-//     if(pg.compoundPath.isCompoundPathChild(item)) {
-//       var cp = pg.compoundPath.getItemsCompoundPath(item);
-//       pg.selection.setItemSelection(item, false);
-//       pg.selection.setItemSelection(cp, true);
-//     }
-//   });
-//   setSelectionBounds();
-// };
+class Stack<T> {
+  private readonly stack: T[] = [];
+
+  push(obj: T) {
+    this.stack.push(obj);
+  }
+
+  pop() {
+    return this.stack.pop();
+  }
+
+  peek() {
+    return this.stack[this.stack.length - 1];
+  }
+}

@@ -3,7 +3,6 @@ import * as $ from 'jquery';
 import * as paper from 'paper';
 
 import { AbstractTool } from './AbstractTool';
-import { DetailSelectionTool } from './DetailSelectionTool';
 import { PenTool } from './PenTool';
 import { SelectionTool } from './SelectionTool';
 
