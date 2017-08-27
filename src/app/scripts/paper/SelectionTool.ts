@@ -46,7 +46,7 @@ export class SelectionTool extends AbstractTool {
       });
       if (this.hitResult) {
         // Process the segment selection gesture for the hit item.
-        this.currentGesture = new SegmentSelectionGesture(this.segmentSelectedPath);
+        this.currentGesture = new SegmentSelectionGesture(this.segmentSelectedPath, this.hitResult);
       } else {
         // TODO: Only enter selection box mode when we are certain that a drag
         // has occurred. If a drag does not occur, then we should interpret the
@@ -70,7 +70,7 @@ export class SelectionTool extends AbstractTool {
         const hitItem = this.hitResult.item;
         if (Guides.isScaleHandle(hitItem)) {
           // If the hit item is a scale handle, then perform a scale gesture.
-          this.currentGesture = new ScaleGesture();
+          this.currentGesture = new ScaleGesture(hitItem);
         } else if (Guides.isRotationHandle(hitItem)) {
           // If the hit item is a rotate handle, then perform a rotate gesture.
           this.currentGesture = new RotateGesture();
@@ -87,9 +87,10 @@ export class SelectionTool extends AbstractTool {
           // segment selection mode.
           this.segmentSelectedPath = hitItem as paper.Path;
           this.currentGesture = new class extends Gesture {
-            onMouseDown(e: paper.ToolEvent, { item }: paper.HitResult) {
+            onMouseDown(e: paper.ToolEvent) {
               Selections.deselectAll();
-              item.fullySelected = true;
+              hitItem.fullySelected = true;
+              hitItem.selected = false;
             }
           }();
         } else if (
@@ -103,8 +104,8 @@ export class SelectionTool extends AbstractTool {
           // If the hit item is selected, shift is pressed, and there is at least
           // one other selected item, then deselect the hit item.
           this.currentGesture = new class extends Gesture {
-            onMouseDown(e: paper.ToolEvent, { item }: paper.HitResult) {
-              Selections.setSelection(item, false);
+            onMouseDown(e: paper.ToolEvent) {
+              Selections.setSelection(hitItem, false);
             }
           }();
         } else {
@@ -121,14 +122,14 @@ export class SelectionTool extends AbstractTool {
           // there is only one selected item. In both cases the hit item should
           // end up being selected. If alt is being pressed, then we should
           // clone the item as well.
-          this.currentGesture = new ItemSelectionGesture(event.modifiers.alt);
+          this.currentGesture = new ItemSelectionGesture(hitItem, event.modifiers.alt);
         }
       } else {
         // If there is no hit item, then enter selection box mode.
         this.currentGesture = new SelectionBoxGesture(false);
       }
     }
-    this.currentGesture.onMouseDown(event, this.hitResult);
+    this.currentGesture.onMouseDown(event);
   }
 
   // @Override

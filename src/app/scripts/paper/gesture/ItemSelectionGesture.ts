@@ -11,18 +11,21 @@ export class ItemSelectionGesture extends Gesture {
 
   // TODO: pressing alt should allow the user to select the item
   // directly beneath the hit item, if one exists.
-  constructor(private readonly shouldCloneSelectedItems: boolean) {
+  constructor(
+    private readonly initialHitItem: paper.Item,
+    private readonly shouldCloneSelectedItems: boolean,
+  ) {
     super();
   }
 
   // @Override
-  onMouseDown(event: paper.ToolEvent, hitResult: paper.HitResult) {
+  onMouseDown(event: paper.ToolEvent) {
     Guides.hideHoverPath();
 
-    if (!event.modifiers.shift && !hitResult.item.selected) {
+    if (!event.modifiers.shift && !this.initialHitItem.selected) {
       Selections.deselectAll();
     }
-    Selections.setSelection(hitResult.item, true);
+    Selections.setSelection(this.initialHitItem, true);
 
     // While moving/cloning the shape, never show the selection bounds.
     if (this.shouldCloneSelectedItems) {

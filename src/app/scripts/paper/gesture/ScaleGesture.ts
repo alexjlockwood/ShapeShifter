@@ -14,15 +14,19 @@ export class ScaleGesture extends Gesture {
   private initialCenter: paper.Point;
   private currentHandle: paper.Point;
 
+  constructor(private readonly initialHitItem: paper.Item) {
+    super();
+  }
+
   // @Override
-  onMouseDown(event: paper.ToolEvent, { item }: paper.HitResult) {
+  onMouseDown(event: paper.ToolEvent) {
     Guides.hideHoverPath();
 
     this.selectedItems = Selections.getSelectedItems();
     this.initialMatrices = this.selectedItems.map(i => i.matrix.clone());
     const selectionBounds = Items.computeBoundingBox(this.selectedItems);
-    const handleType = Guides.getHandleType(item);
-    const oppHandleType = Guides.getOppositeHandleType(item);
+    const handleType = Guides.getHandleType(this.initialHitItem);
+    const oppHandleType = Guides.getOppositeHandleType(this.initialHitItem);
     this.initialPivot = selectionBounds[oppHandleType].clone();
     this.currentHandle = selectionBounds[handleType].clone();
     this.initialSize = this.currentHandle.subtract(this.initialPivot);

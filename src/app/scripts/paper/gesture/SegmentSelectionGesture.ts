@@ -9,38 +9,37 @@ import { Gesture } from '.';
  */
 export class SegmentSelectionGesture extends Gesture {
   private readonly initialSegmentPoints = new Map<paper.Segment, paper.Point>();
-  private hitType: paper.HitType;
-  private hitItem: paper.Item;
 
-  constructor(private readonly segmentSelectionItem: paper.Path) {
+  constructor(
+    private readonly segmentSelectionItem: paper.Path,
+    private readonly initialHitResult: paper.HitResult,
+  ) {
     super();
     segmentSelectionItem.segments.forEach(s => this.initialSegmentPoints.set(s, s.point));
   }
 
   // @Override
-  onMouseDown(event: paper.ToolEvent, hitResult: paper.HitResult) {
-    this.hitType = hitResult.type;
-
-    switch (this.hitType) {
+  onMouseDown(event: paper.ToolEvent) {
+    switch (this.initialHitResult.type) {
       case 'segment':
-        if (hitResult.segment.selected) {
+        if (this.initialHitResult.segment.selected) {
           // Selected points with no handles get handles if selected again.
-          hitResult.segment.selected = true;
+          this.initialHitResult.segment.selected = true;
           if (event.modifiers.shift) {
-            hitResult.segment.selected = false;
+            this.initialHitResult.segment.selected = false;
           }
         } else {
           if (event.modifiers.shift) {
-            hitResult.segment.selected = true;
+            this.initialHitResult.segment.selected = true;
           } else {
             Selections.deselectAll();
-            hitResult.segment.selected = true;
+            this.initialHitResult.segment.selected = true;
           }
         }
         break;
       case 'stroke':
       case 'curve':
-        const { curve } = hitResult.location;
+        const { curve } = this.initialHitResult.location;
         if (event.modifiers.shift) {
           curve.selected = !curve.selected;
         } else if (!curve.selected) {
@@ -53,8 +52,8 @@ export class SegmentSelectionGesture extends Gesture {
         if (!event.modifiers.shift) {
           Selections.deselectAll();
         }
-        hitResult.segment.handleIn.selected = true;
-        hitResult.segment.handleOut.selected = true;
+        this.initialHitResult.segment.handleIn.selected = true;
+        this.initialHitResult.segment.handleOut.selected = true;
         break;
     }
   }
@@ -64,7 +63,7 @@ export class SegmentSelectionGesture extends Gesture {
     const { point, downPoint, delta, modifiers } = event;
     const dragVector = point.subtract(downPoint);
     for (const seg of this.segmentSelectionItem.segments) {
-      switch (this.hitType) {
+      switch (this.initialHitResult.type) {
         case 'segment':
         case 'stroke':
         case 'curve':
