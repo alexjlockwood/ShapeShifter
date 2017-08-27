@@ -89,8 +89,8 @@ export class SelectionTool extends AbstractTool {
           this.currentGesture = new class extends Gesture {
             onMouseDown(e: paper.ToolEvent) {
               Selections.deselectAll();
+              hitItem.selected = true;
               hitItem.fullySelected = true;
-              hitItem.selected = false;
             }
           }();
         } else if (
@@ -161,21 +161,5 @@ export class SelectionTool extends AbstractTool {
   // @Override
   protected onKeyUp(event: paper.KeyEvent) {
     this.currentGesture.onKeyUp(event);
-  }
-}
-
-class Stack<T> {
-  private readonly stack: T[] = [];
-
-  push(obj: T) {
-    this.stack.push(obj);
-  }
-
-  pop() {
-    return this.stack.pop();
-  }
-
-  peek() {
-    return this.stack[this.stack.length - 1];
   }
 }
