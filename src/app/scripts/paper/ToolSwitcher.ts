@@ -8,7 +8,7 @@ import { SelectionTool } from './SelectionTool';
 import { ZoomPanTool } from './ZoomPanTool';
 
 /**
- * The entry class used for switching between different tools.
+ * The entry class used for switching between different tool types.
  *
  * TODO: figure out how to deal with right mouse clicks in each tool
  */

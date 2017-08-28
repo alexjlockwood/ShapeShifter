@@ -6,7 +6,7 @@ import * as paper from 'paper';
 import { BaseTool } from './BaseTool';
 import { ClickDetector } from './detector';
 import {
-  DetailSelectionGesture,
+  EditPathGesture,
   Gesture,
   HoverGesture,
   RotateGesture,
@@ -17,13 +17,37 @@ import {
 import { Guides, Items, Selections } from './util';
 
 /**
- * A simple selection tool for moving, scaling, rotating, and selecting shapes.
+ * A tool that selects, moves, rotates, scales, and modifies items.
+ * The selection tool has two different states:
+ *
+ * (1) The first is the standard selection mode, in which the user can
+ *     click on items in the canvas in order to select them. Items may be
+ *     selected individually or in batches by selecting a rectangular region.
+ *     Selected items can then be rotated and scaled by dragging its edge and
+ *     corner segments.
+ *
+ * (2) The second is edit path mode, in which there is a single selected
+ *     path. The user can then make modifications to the path by
+ *     selecting/moving/creating/deleting segments on the path. If the path
+ *     is open, then the user can continue creating the path by adding new
+ *     segments to its end points. Selecting a segment shows the handles for
+ *     the two curves associated with that segment, which can also be modified.
+ *     Double clicking on a segment with no handles creates and displays two
+ *     new handles for that segment. Similarly, double clicking on a segment
+ *     with handles will result in those handles being deleted. The user
+ *     enters this mode by double clicking on a single selected path while
+ *     in mode (1).
+ *
+ * TODO: describe how 'enter' and 'escape' should both behave
  */
 export class SelectionTool extends BaseTool {
   private readonly clickDetector = new ClickDetector();
   private currentGesture: Gesture = new HoverGesture();
-  private segmentSelectedPath: paper.Path;
-  private hitResult: paper.HitResult;
+  private mouseDownHitResult: paper.HitResult;
+
+  // If this is non-nil, then we are in edit path mode. Otherwise, we are in
+  // selection mode.
+  private selectedEditPath: paper.Path;
 
   // @Override
   protected onInterceptEvent(toolMode: ToolMode, event?: paper.ToolEvent | paper.KeyEvent) {
@@ -45,109 +69,119 @@ export class SelectionTool extends BaseTool {
   }
 
   private onMouseDown(event: paper.ToolEvent) {
-    // If a segment selected item is set, then we are in segment selection mode.
-    if (this.segmentSelectedPath) {
-      this.hitResult = this.segmentSelectedPath.hitTest(event.point, {
-        segments: true,
-        stroke: true,
-        curves: true,
-        handles: true,
-        fill: true,
-        tolerance: 3 / paper.view.zoom,
-      });
-      if (this.hitResult) {
-        // Process the segment selection gesture for the hit item.
-        this.currentGesture = new DetailSelectionGesture(this.segmentSelectedPath, this.hitResult);
-      } else {
-        // TODO: Only enter selection box mode when we are certain that a drag
-        // has occurred. If a drag does not occur, then we should interpret the
-        // gesture as a click. If a click occurs and shift is not pressed, then
-        // we should exit segment selection mode.
-
-        // If there is no hit item and we are in segment selection mode, then
-        // enter selection box mode for the segment selected item so we can
-        // batch select its individual properties.
-        this.currentGesture = new SelectionBoxGesture(true);
-      }
+    if (this.selectedEditPath) {
+      // If a segment selected item is set, then we are in segment selection mode.
+      this.currentGesture = this.createEditPathModeGesture(event);
     } else {
-      this.hitResult = paper.project.hitTest(event.point, {
-        segments: true,
-        stroke: true,
-        curves: true,
-        fill: true,
-        tolerance: 8 / paper.view.zoom,
-      });
-      if (this.hitResult) {
-        const hitItem = this.hitResult.item;
-        if (Guides.isScaleHandle(hitItem)) {
-          // If the hit item is a scale handle, then perform a scale gesture.
-          this.currentGesture = new ScaleGesture(hitItem);
-        } else if (Guides.isRotationHandle(hitItem)) {
-          // If the hit item is a rotate handle, then perform a rotate gesture.
-          this.currentGesture = new RotateGesture();
-        } else if (this.clickDetector.isDoubleClick()) {
-          // TODO: It should only be possible to enter segment selection mode
-          // for an editable item (i.e. a path, but not a group). Double clicking
-          // on a non-selected and editable item that is contained inside a selected
-          // parent layer should result in the editable item being selected (it is
-          // actually a tiny bit more complicated than that but you get the idea).
-
-          // TODO: possible to double click on a non-Path object? (missing types below!)
-          // If a double click event occurs on top of a hit item, then enter
-          // segment selection mode.
-          this.segmentSelectedPath = hitItem as paper.Path;
-          this.currentGesture = new class extends Gesture {
-            onMouseDown(e: paper.ToolEvent) {
-              Selections.deselectAll();
-              hitItem.selected = true;
-              hitItem.fullySelected = true;
-            }
-          }();
-        } else if (
-          event.modifiers.shift &&
-          hitItem.selected &&
-          Selections.getSelectedItems().length > 1
-        ) {
-          // TODO: After the item is deselected, it should still be possible
-          // to drag/clone any other selected items in subsequent mouse events
-
-          // If the hit item is selected, shift is pressed, and there is at least
-          // one other selected item, then deselect the hit item.
-          this.currentGesture = new class extends Gesture {
-            onMouseDown(e: paper.ToolEvent) {
-              Selections.setSelection(hitItem, false);
-            }
-          }();
-        } else {
-          // TODO: The actual behavior in Sketch is a bit more complicated.
-          // For example, (1) a cloned item will not be generated until the next
-          // onMouseDrag event, (2) on the next onMouseDrag event, the
-          // cloned item should be selected and the currently selected item should
-          // be deselected, (3) the user can cancel a clone operation mid-drag by
-          // pressing/unpressing alt (even if alt wasn't initially pressed in
-          // onMouseDown).
-
-          // At this point we know that either (1) the hit item is not selected
-          // or (2) the hit item is selected, shift is not being pressed, and
-          // there is only one selected item. In both cases the hit item should
-          // end up being selected. If alt is being pressed, then we should
-          // clone the item as well.
-          this.currentGesture = new SelectionGesture(hitItem, event.modifiers.alt);
-        }
-      } else {
-        // If there is no hit item, then enter selection box mode.
-        this.currentGesture = new SelectionBoxGesture(false);
-      }
+      // Otherwise we are in selection mode.
+      this.currentGesture = this.createSelectionModeGesture(event);
     }
     this.currentGesture.onMouseDown(event);
   }
 
+  private createSelectionModeGesture(event: paper.ToolEvent) {
+    this.mouseDownHitResult = paper.project.hitTest(event.point, {
+      segments: true,
+      stroke: true,
+      curves: true,
+      fill: true,
+      tolerance: 8 / paper.view.zoom,
+    });
+    if (this.mouseDownHitResult) {
+      const hitItem = this.mouseDownHitResult.item;
+      if (Guides.isScaleHandle(hitItem)) {
+        // If the hit item is a scale handle, then perform a scale gesture.
+        return new ScaleGesture(hitItem);
+      } else if (Guides.isRotationHandle(hitItem)) {
+        // If the hit item is a rotate handle, then perform a rotate gesture.
+        return new RotateGesture();
+      } else if (this.clickDetector.isDoubleClick()) {
+        // TODO: It should only be possible to enter edit path mode
+        // for an editable item (i.e. a path, but not a group). Double clicking
+        // on a non-selected and editable item that is contained inside a selected
+        // parent layer should result in the editable item being selected (it is
+        // actually a tiny bit more complicated than that but you get the idea).
+
+        // TODO: possible to double click on a non-Path object? (missing types below!)
+
+        // If a double click event occurs on top of a hit item, then enter
+        // edit path mode.
+        this.selectedEditPath = hitItem as paper.Path;
+        return new class extends Gesture {
+          onMouseDown(e: paper.ToolEvent) {
+            Selections.deselectAll();
+            hitItem.selected = true;
+            hitItem.fullySelected = true;
+          }
+        }();
+      } else if (
+        event.modifiers.shift &&
+        hitItem.selected &&
+        Selections.getSelectedItems().length > 1
+      ) {
+        // TODO: After the item is deselected, it should still be possible
+        // to drag/clone any other selected items in subsequent mouse events
+
+        // If the hit item is selected, shift is pressed, and there is at least
+        // one other selected item, then deselect the hit item.
+        return new class extends Gesture {
+          onMouseDown(e: paper.ToolEvent) {
+            Selections.setSelection(hitItem, false);
+          }
+        }();
+      } else {
+        // TODO: The actual behavior in Sketch is a bit more complicated.
+        // For example, (1) a cloned item will not be generated until the next
+        // onMouseDrag event, (2) on the next onMouseDrag event, the
+        // cloned item should be selected and the currently selected item should
+        // be deselected, (3) the user can cancel a clone operation mid-drag by
+        // pressing/unpressing alt (even if alt wasn't initially pressed in
+        // onMouseDown).
+
+        // At this point we know that either (1) the hit item is not selected
+        // or (2) the hit item is selected, shift is not being pressed, and
+        // there is only one selected item. In both cases the hit item should
+        // end up being selected. If alt is being pressed, then we should
+        // clone the item as well.
+        return new SelectionGesture(hitItem, event.modifiers.alt);
+      }
+    } else {
+      // If there is no hit item, then enter selection box mode.
+      return new SelectionBoxGesture(false);
+    }
+  }
+
+  private createEditPathModeGesture(event: paper.ToolEvent) {
+    this.mouseDownHitResult = this.selectedEditPath.hitTest(event.point, {
+      segments: true,
+      stroke: true,
+      curves: true,
+      handles: true,
+      fill: true,
+      tolerance: 3 / paper.view.zoom,
+    });
+    if (this.mouseDownHitResult) {
+      // Process the segment selection gesture for the hit item.
+      return new EditPathGesture(this.selectedEditPath, this.mouseDownHitResult);
+    } else {
+      // TODO: Only enter selection box mode when we are certain that a drag
+      // has occurred. If a drag does not occur, then we should interpret the
+      // gesture as a click. If a click occurs and shift is not pressed, then
+      // we should exit edit path mode.
+
+      // If there is no hit item and we are in edit path mode, then
+      // enter selection box mode for the selected item so we can
+      // batch select its individual properties.
+      return new SelectionBoxGesture(true);
+    }
+  }
+
   private onMouseUp(event: paper.ToolEvent) {
     this.currentGesture.onMouseUp(event);
-    if (this.segmentSelectedPath && !this.hitResult) {
+    if (this.selectedEditPath && !this.mouseDownHitResult) {
       // TODO: only exit segment selection mode if the selection box
       // gesture resulted in no items being selected
-      this.segmentSelectedPath = undefined;
+      this.selectedEditPath = undefined;
     }
     this.currentGesture = new HoverGesture();
   }

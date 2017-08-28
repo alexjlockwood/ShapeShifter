@@ -22,7 +22,7 @@ export class PenTool extends BaseTool {
   private currSegment: paper.Segment;
   private mode = Mode.None;
   private type: Type;
-  private hoverHitResult: paper.HitResult;
+  private mouseMoveHitResult: paper.HitResult;
 
   // @Override
   protected onInterceptEvent(toolMode: ToolMode, event?: paper.ToolEvent | paper.KeyEvent) {
@@ -49,7 +49,7 @@ export class PenTool extends BaseTool {
     this.mode = this.type = this.currSegment = undefined;
 
     if (!this.currPath) {
-      if (!this.hoverHitResult) {
+      if (!this.mouseMoveHitResult) {
         Selections.deselectAll();
         this.currPath = new paper.Path();
         this.currPath.fillColor = 'blue';
@@ -57,14 +57,14 @@ export class PenTool extends BaseTool {
         this.currPath.strokeWidth = 10;
         // path = pg.stylebar.applyActiveToolbarStyle(path);
       } else {
-        const item = this.hoverHitResult.item as paper.Path;
+        const item = this.mouseMoveHitResult.item as paper.Path;
         if (item.closed) {
           this.currPath = item;
         } else {
           this.mode = Mode.Continue;
           this.currPath = item;
-          this.currSegment = this.hoverHitResult.segment;
-          if (item.lastSegment !== this.hoverHitResult.segment) {
+          this.currSegment = this.mouseMoveHitResult.segment;
+          if (item.lastSegment !== this.mouseMoveHitResult.segment) {
             this.currPath.reverse();
           }
         }
@@ -96,7 +96,7 @@ export class PenTool extends BaseTool {
         return;
       }
 
-      if (!this.hoverHitResult) {
+      if (!this.mouseMoveHitResult) {
         this.mode = Mode.Add;
         // Add a new segment to the path.
         this.currSegment = this.currPath.add(event.point);
@@ -104,22 +104,25 @@ export class PenTool extends BaseTool {
         return;
       }
 
-      const item = this.hoverHitResult.item as paper.Path;
-      if (this.hoverHitResult.type === 'segment' && !item.closed) {
+      const item = this.mouseMoveHitResult.item as paper.Path;
+      if (this.mouseMoveHitResult.type === 'segment' && !item.closed) {
         // Joining two paths.
         const hoverPath = item;
         // Check if the connection point is the first segment
         // reverse path if it is not because join()
         // always connects to first segment).
-        if (hoverPath.firstSegment !== this.hoverHitResult.segment) {
+        if (hoverPath.firstSegment !== this.mouseMoveHitResult.segment) {
           hoverPath.reverse();
         }
         this.currPath.join(hoverPath);
         this.currPath = undefined;
-      } else if (this.hoverHitResult.type === 'curve' || this.hoverHitResult.type === 'stroke') {
+      } else if (
+        this.mouseMoveHitResult.type === 'curve' ||
+        this.mouseMoveHitResult.type === 'stroke'
+      ) {
         this.mode = Mode.Add;
         // Inserting segment on curve/stroke.
-        const { location } = this.hoverHitResult;
+        const { location } = this.mouseMoveHitResult;
         this.currSegment = this.currPath.insert(location.index + 1, event.point);
         this.currSegment.selected = true;
       }
@@ -138,9 +141,9 @@ export class PenTool extends BaseTool {
   private onMouseMove(event: paper.ToolEvent) {
     const hitResult = paper.project.hitTest(event.point, createHitOptions());
     if (hitResult && hitResult.item && hitResult.item.selected) {
-      this.hoverHitResult = hitResult;
+      this.mouseMoveHitResult = hitResult;
     } else {
-      this.hoverHitResult = undefined;
+      this.mouseMoveHitResult = undefined;
     }
   }
 

@@ -8,7 +8,7 @@ import { Gesture } from './Gesture';
  * A gesture that performs selection operations on a single
  * focused path's segments and handles.
  */
-export class DetailSelectionGesture extends Gesture {
+export class EditPathGesture extends Gesture {
   private readonly initialSegmentPoints = new Map<paper.Segment, paper.Point>();
 
   constructor(
