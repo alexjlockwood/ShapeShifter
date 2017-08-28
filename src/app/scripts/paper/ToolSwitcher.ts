@@ -38,7 +38,6 @@ export class ToolSwitcher {
   }
 
   private processEvent(event?: paper.ToolEvent | paper.KeyEvent) {
-    console.log(event);
     const prevTool = this.currentTool;
     this.currentTool = undefined;
     for (const tool of this.tools) {

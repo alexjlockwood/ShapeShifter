@@ -49,7 +49,6 @@ export class SelectionTool extends BaseTool {
   private onMouseDown(event: paper.ToolEvent) {
     // If a segment selected item is set, then we are in segment selection mode.
     if (this.segmentSelectedPath) {
-      console.log('segmentSelectedPath');
       this.hitResult = this.segmentSelectedPath.hitTest(event.point, {
         segments: true,
         stroke: true,
@@ -81,14 +80,11 @@ export class SelectionTool extends BaseTool {
         tolerance: 8 / paper.view.zoom,
       });
       if (this.hitResult) {
-        console.log('hitResult');
         const hitItem = this.hitResult.item;
         if (Guides.isScaleHandle(hitItem)) {
-          console.log('isScaleHandle');
           // If the hit item is a scale handle, then perform a scale gesture.
           this.currentGesture = new ScaleGesture(hitItem);
         } else if (Guides.isRotationHandle(hitItem)) {
-          console.log('isRotationHandle');
           // If the hit item is a rotate handle, then perform a rotate gesture.
           this.currentGesture = new RotateGesture();
         } else if (this.clickDetector.isDoubleClick()) {
@@ -101,7 +97,6 @@ export class SelectionTool extends BaseTool {
           // TODO: possible to double click on a non-Path object? (missing types below!)
           // If a double click event occurs on top of a hit item, then enter
           // segment selection mode.
-          console.log('isDoubleClickEvent');
           this.segmentSelectedPath = hitItem as paper.Path;
           this.currentGesture = new class extends Gesture {
             onMouseDown(e: paper.ToolEvent) {
