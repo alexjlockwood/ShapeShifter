@@ -4,10 +4,7 @@ import * as paper from 'paper';
 
 import { Gesture } from './Gesture';
 
-/**
- * A gesture that performs selection operations on a single
- * focused path's segments and handles.
- */
+// TODO: migrate this over to 'select curves', 'select segments', and 'select handles'
 export class EditPathGesture extends Gesture {
   private readonly initialSegmentPoints = new Map<paper.Segment, paper.Point>();
 
@@ -22,22 +19,20 @@ export class EditPathGesture extends Gesture {
   // @Override
   onMouseDown(event: paper.ToolEvent) {
     switch (this.initialHitResult.type) {
-      case 'segment':
-        if (this.initialHitResult.segment.selected) {
-          // Selected points with no handles get handles if selected again.
-          this.initialHitResult.segment.selected = true;
-          if (event.modifiers.shift) {
-            this.initialHitResult.segment.selected = false;
-          }
-        } else {
-          if (event.modifiers.shift) {
-            this.initialHitResult.segment.selected = true;
-          } else {
-            Selections.deselectAll();
-            this.initialHitResult.segment.selected = true;
-          }
-        }
-        break;
+      // case 'segment':
+      //   if (this.initialHitResult.segment.selected) {
+      //     // Selected points with no handles get handles if selected again.
+      //     this.initialHitResult.segment.selected = true;
+      //     if (event.modifiers.shift) {
+      //       this.initialHitResult.segment.selected = false;
+      //     }
+      //   } else {
+      //     if (!event.modifiers.shift) {
+      //       Selections.deselectAll();
+      //     }
+      //     this.initialHitResult.segment.selected = true;
+      //   }
+      //   break;
       case 'stroke':
       case 'curve':
         const { curve } = this.initialHitResult.location;
@@ -65,7 +60,7 @@ export class EditPathGesture extends Gesture {
     const dragVector = point.subtract(downPoint);
     for (const seg of this.focusedPath.segments) {
       switch (this.initialHitResult.type) {
-        case 'segment':
+        // case 'segment':
         case 'stroke':
         case 'curve':
           if (!seg.selected) {

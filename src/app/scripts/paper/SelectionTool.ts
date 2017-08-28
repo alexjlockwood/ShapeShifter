@@ -11,8 +11,11 @@ import {
   HoverGesture,
   RotateGesture,
   ScaleGesture,
+  SelectCurvesGesture,
+  SelectHandlesGesture,
+  SelectItemsGesture,
+  SelectSegmentsGesture,
   SelectionBoxGesture,
-  SelectionGesture,
 } from './gesture';
 import { Guides, Items, Selections } from './util';
 
@@ -87,67 +90,71 @@ export class SelectionTool extends BaseTool {
       fill: true,
       tolerance: 8 / paper.view.zoom,
     });
-    if (this.mouseDownHitResult) {
-      const hitItem = this.mouseDownHitResult.item;
-      if (Guides.isScaleHandle(hitItem)) {
-        // If the hit item is a scale handle, then perform a scale gesture.
-        return new ScaleGesture(hitItem);
-      } else if (Guides.isRotationHandle(hitItem)) {
-        // If the hit item is a rotate handle, then perform a rotate gesture.
-        return new RotateGesture();
-      } else if (this.clickDetector.isDoubleClick()) {
-        // TODO: It should only be possible to enter edit path mode
-        // for an editable item (i.e. a path, but not a group). Double clicking
-        // on a non-selected and editable item that is contained inside a selected
-        // parent layer should result in the editable item being selected (it is
-        // actually a tiny bit more complicated than that but you get the idea).
-
-        // TODO: possible to double click on a non-Path object? (missing types below!)
-
-        // If a double click event occurs on top of a hit item, then enter
-        // edit path mode.
-        this.selectedEditPath = hitItem as paper.Path;
-        return new class extends Gesture {
-          onMouseDown(e: paper.ToolEvent) {
-            Selections.deselectAll();
-            hitItem.selected = true;
-            hitItem.fullySelected = true;
-          }
-        }();
-      } else if (
-        event.modifiers.shift &&
-        hitItem.selected &&
-        Selections.getSelectedItems().length > 1
-      ) {
-        // TODO: After the item is deselected, it should still be possible
-        // to drag/clone any other selected items in subsequent mouse events
-
-        // If the hit item is selected, shift is pressed, and there is at least
-        // one other selected item, then deselect the hit item.
-        return new class extends Gesture {
-          onMouseDown(e: paper.ToolEvent) {
-            Selections.setSelection(hitItem, false);
-          }
-        }();
-      } else {
-        // TODO: The actual behavior in Sketch is a bit more complicated.
-        // For example, (1) a cloned item will not be generated until the next
-        // onMouseDrag event, (2) on the next onMouseDrag event, the
-        // cloned item should be selected and the currently selected item should
-        // be deselected, (3) the user can cancel a clone operation mid-drag by
-        // pressing/unpressing alt (even if alt wasn't initially pressed in
-        // onMouseDown).
-
-        // At this point we know that either (1) the hit item is not selected
-        // or (2) the hit item is selected, shift is not being pressed, and
-        // there is only one selected item. In both cases the hit item should
-        // end up being selected. If alt is being pressed, then we should
-        // clone the item as well.
-        return new SelectionGesture(hitItem, event.modifiers.alt);
-      }
-    } else {
+    if (!this.mouseDownHitResult) {
       // If there is no hit item, then enter selection box mode.
       return new SelectionBoxGesture(false);
+    }
+
+    const hitItem = this.mouseDownHitResult.item;
+    if (Guides.isScaleHandle(hitItem)) {
+      // If the hit item is a scale handle, then perform a scale gesture.
+      return new ScaleGesture(hitItem);
+    } else if (Guides.isRotationHandle(hitItem)) {
+      // If the hit item is a rotate handle, then perform a rotate gesture.
+      return new RotateGesture();
+    } else if (this.clickDetector.isDoubleClick()) {
+      // TODO: It should only be possible to enter edit path mode
+      // for an editable item (i.e. a path, but not a group). Double clicking
+      // on a non-selected and editable item that is contained inside a selected
+      // parent layer should result in the editable item being selected (it is
+      // actually a tiny bit more complicated than that but you get the idea).
+
+      // TODO: possible to double click on a non-Path object? (missing types below!)
+      const hitPath = hitItem as paper.Path;
+
+      // If a double click event occurs on top of a hit item, then enter
+      // edit path mode.
+      this.selectedEditPath = hitPath;
+      return new class extends Gesture {
+        onMouseDown(e: paper.ToolEvent) {
+          // Begin edit path mode by selecting the last two curves in the path.
+          Selections.deselectAll();
+          const startIndex = Math.max(0, hitPath.curves.length - 2);
+          const endIndex = hitPath.curves.length;
+          const lastTwoCurves = hitPath.curves.slice(startIndex, endIndex);
+          lastTwoCurves.forEach(c => (c.selected = true));
+        }
+      }();
+    } else if (
+      event.modifiers.shift &&
+      hitItem.selected &&
+      Selections.getSelectedItems().length > 1
+    ) {
+      // TODO: After the item is deselected, it should still be possible
+      // to drag/clone any other selected items in subsequent mouse events
+
+      // If the hit item is selected, shift is pressed, and there is at least
+      // one other selected item, then deselect the hit item.
+      return new class extends Gesture {
+        onMouseDown(e: paper.ToolEvent) {
+          Selections.setSelection(hitItem, false);
+        }
+      }();
+    } else {
+      // TODO: The actual behavior in Sketch is a bit more complicated.
+      // For example, (1) a cloned item will not be generated until the next
+      // onMouseDrag event, (2) on the next onMouseDrag event, the
+      // cloned item should be selected and the currently selected item should
+      // be deselected, (3) the user can cancel a clone operation mid-drag by
+      // pressing/unpressing alt (even if alt wasn't initially pressed in
+      // onMouseDown).
+
+      // At this point we know that either (1) the hit item is not selected
+      // or (2) the hit item is selected, shift is not being pressed, and
+      // there is only one selected item. In both cases the hit item should
+      // end up being selected. If alt is being pressed, then we should
+      // clone the item as well.
+      return new SelectItemsGesture(hitItem, event.modifiers.alt);
     }
   }
 
@@ -160,10 +167,7 @@ export class SelectionTool extends BaseTool {
       fill: true,
       tolerance: 3 / paper.view.zoom,
     });
-    if (this.mouseDownHitResult) {
-      // Process the segment selection gesture for the hit item.
-      return new EditPathGesture(this.selectedEditPath, this.mouseDownHitResult);
-    } else {
+    if (!this.mouseDownHitResult) {
       // TODO: Only enter selection box mode when we are certain that a drag
       // has occurred. If a drag does not occur, then we should interpret the
       // gesture as a click. If a click occurs and shift is not pressed, then
@@ -174,6 +178,20 @@ export class SelectionTool extends BaseTool {
       // batch select its individual properties.
       return new SelectionBoxGesture(true);
     }
+
+    const { type } = this.mouseDownHitResult;
+    if (type === 'segment') {
+      return new SelectSegmentsGesture(this.selectedEditPath, this.mouseDownHitResult.segment);
+    }
+    if (type === 'stroke' || type === 'curve') {
+      return new SelectCurvesGesture();
+    }
+    if (type === 'handle-in' || type === 'handle-out') {
+      return new SelectHandlesGesture();
+    }
+
+    // TODO: return some kind of 'hover' gesture instead?
+    return new class extends Gesture {}();
   }
 
   private onMouseUp(event: paper.ToolEvent) {

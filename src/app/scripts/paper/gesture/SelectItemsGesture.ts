@@ -2,17 +2,20 @@ import { MathUtil } from 'app/scripts/common';
 import { Guides, Items, Selections } from 'app/scripts/paper/util';
 import * as paper from 'paper';
 
-import { Gesture } from '.';
+import { Gesture } from './Gesture';
 
-/** A gesture that performs selection, move, and clone operations. */
-export class SelectionGesture extends Gesture {
-  private selectedPaths: ReadonlyArray<paper.Item>;
-  private initialPositions: ReadonlyArray<paper.Point>;
+/**
+ * A gesture that performs selection, move, and clone operations on one or
+ * more items.
+ */
+export class SelectItemsGesture extends Gesture {
+  private selectedItems: ReadonlyArray<paper.Item>;
+  private initialItemPositions: ReadonlyArray<paper.Point>;
 
   // TODO: pressing alt should allow the user to select the item
   // directly beneath the hit item, if one exists.
   constructor(
-    private readonly initialHitItem: paper.Item,
+    private readonly mouseDownHitItem: paper.Item,
     private readonly shouldCloneSelectedItems: boolean,
   ) {
     super();
@@ -22,27 +25,26 @@ export class SelectionGesture extends Gesture {
   onMouseDown(event: paper.ToolEvent) {
     Guides.hideHoverPath();
 
-    if (!event.modifiers.shift && !this.initialHitItem.selected) {
+    if (!event.modifiers.shift && !this.mouseDownHitItem.selected) {
       Selections.deselectAll();
     }
-    Selections.setSelection(this.initialHitItem, true);
+    Selections.setSelection(this.mouseDownHitItem, true);
 
-    // While moving/cloning the shape, never show the selection bounds.
     if (this.shouldCloneSelectedItems) {
       Selections.cloneSelectedItems();
     }
 
-    this.selectedPaths = Selections.getSelectedItems();
-    this.initialPositions = this.selectedPaths.map(path => path.position);
+    this.selectedItems = Selections.getSelectedItems();
+    this.initialItemPositions = this.selectedItems.map(path => path.position);
   }
 
   // @Override
   onMouseDrag(event: paper.ToolEvent) {
     const dragVector = event.point.subtract(event.downPoint);
-    this.selectedPaths.forEach((item, i) => {
+    this.selectedItems.forEach((item, i) => {
       if (event.modifiers.shift) {
         const snapPoint = new paper.Point(MathUtil.snapDeltaToAngle(dragVector, 15));
-        item.position = this.initialPositions[i].add(snapPoint);
+        item.position = this.initialItemPositions[i].add(snapPoint);
       } else {
         item.position = item.position.add(event.delta);
       }
@@ -52,9 +54,8 @@ export class SelectionGesture extends Gesture {
   // @Override
   onMouseUp(event: paper.ToolEvent) {
     Guides.hideSelectionBounds();
-    const selectedItems = Selections.getSelectedItems();
-    if (selectedItems.length) {
-      Guides.showSelectionBounds(Items.computeBoundingBox(selectedItems));
+    if (this.selectedItems.length) {
+      Guides.showSelectionBounds(Items.computeBoundingBox(this.selectedItems));
     }
   }
 }
