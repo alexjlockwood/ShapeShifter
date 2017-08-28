@@ -1,6 +1,11 @@
 import { ToolMode } from 'app/model/paper';
 import * as paper from 'paper';
 
+/**
+ * Represents the base class for for all canvas editor tools. Subclasses should
+ * override the protected 'onXXXXX' methods, which will be invoked in response
+ * to external calls to the 'dispatchXXX' methods.
+ */
 export abstract class BaseTool {
   dispatchActivate() {
     this.onActivate();

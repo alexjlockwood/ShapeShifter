@@ -5,17 +5,18 @@ import * as paper from 'paper';
 import { Gesture } from './Gesture';
 
 /**
- * A gesture that performs selection operations on path segments and handles.
+ * A gesture that performs selection operations on a single
+ * focused path's segments and handles.
  */
-export class SegmentSelectionGesture extends Gesture {
+export class DetailSelectionGesture extends Gesture {
   private readonly initialSegmentPoints = new Map<paper.Segment, paper.Point>();
 
   constructor(
-    private readonly segmentSelectionItem: paper.Path,
+    private readonly focusedPath: paper.Path,
     private readonly initialHitResult: paper.HitResult,
   ) {
     super();
-    segmentSelectionItem.segments.forEach(s => this.initialSegmentPoints.set(s, s.point));
+    focusedPath.segments.forEach(s => this.initialSegmentPoints.set(s, s.point));
   }
 
   // @Override
@@ -62,7 +63,7 @@ export class SegmentSelectionGesture extends Gesture {
   onMouseDrag(event: paper.ToolEvent) {
     const { point, downPoint, delta, modifiers } = event;
     const dragVector = point.subtract(downPoint);
-    for (const seg of this.segmentSelectionItem.segments) {
+    for (const seg of this.focusedPath.segments) {
       switch (this.initialHitResult.type) {
         case 'segment':
         case 'stroke':

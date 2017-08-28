@@ -1,3 +1,8 @@
+/**
+ * A Handler implements a simple asynchronous message queue. Useful for
+ * actions that are inherently asynchronous, such as click events and
+ * other gestures.
+ */
 export class Handler {
   private readonly pendingMessageIds = new Set<number>();
 

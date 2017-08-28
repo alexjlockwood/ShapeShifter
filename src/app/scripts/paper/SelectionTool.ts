@@ -6,25 +6,24 @@ import * as paper from 'paper';
 import { BaseTool } from './BaseTool';
 import { ClickDetector } from './detector';
 import {
+  DetailSelectionGesture,
   Gesture,
   HoverGesture,
-  ItemSelectionGesture,
   RotateGesture,
   ScaleGesture,
-  SegmentSelectionGesture,
   SelectionBoxGesture,
+  SelectionGesture,
 } from './gesture';
 import { Guides, Items, Selections } from './util';
 
 /**
  * A simple selection tool for moving, scaling, rotating, and selecting shapes.
- * TODO: figure out how to deal with right mouse clicks
  */
 export class SelectionTool extends BaseTool {
+  private readonly clickDetector = new ClickDetector();
   private currentGesture: Gesture = new HoverGesture();
   private segmentSelectedPath: paper.Path;
   private hitResult: paper.HitResult;
-  private readonly clickDetector = new ClickDetector();
 
   // @Override
   protected onInterceptEvent(toolMode: ToolMode, event?: paper.ToolEvent | paper.KeyEvent) {
@@ -58,7 +57,7 @@ export class SelectionTool extends BaseTool {
       });
       if (this.hitResult) {
         // Process the segment selection gesture for the hit item.
-        this.currentGesture = new SegmentSelectionGesture(this.segmentSelectedPath, this.hitResult);
+        this.currentGesture = new DetailSelectionGesture(this.segmentSelectedPath, this.hitResult);
       } else {
         // TODO: Only enter selection box mode when we are certain that a drag
         // has occurred. If a drag does not occur, then we should interpret the
@@ -133,7 +132,7 @@ export class SelectionTool extends BaseTool {
           // there is only one selected item. In both cases the hit item should
           // end up being selected. If alt is being pressed, then we should
           // clone the item as well.
-          this.currentGesture = new ItemSelectionGesture(hitItem, event.modifiers.alt);
+          this.currentGesture = new SelectionGesture(hitItem, event.modifiers.alt);
         }
       } else {
         // If there is no hit item, then enter selection box mode.

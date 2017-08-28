@@ -7,6 +7,11 @@ import { PenTool } from './PenTool';
 import { SelectionTool } from './SelectionTool';
 import { ZoomPanTool } from './ZoomPanTool';
 
+/**
+ * The entry class used for switching between different tools.
+ *
+ * TODO: figure out how to deal with right mouse clicks in each tool
+ */
 export class ToolSwitcher {
   private readonly tools: ReadonlyArray<BaseTool> = [
     new ZoomPanTool(),

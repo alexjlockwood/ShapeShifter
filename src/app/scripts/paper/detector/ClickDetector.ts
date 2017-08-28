@@ -5,6 +5,9 @@ import { Handler } from './Handler';
 const DOUBLE_CLICK_MIN_TIME = 40;
 const DOUBLE_CLICK_TIMEOUT = 300;
 
+/**
+ * Helper class for detecting single/double click events.
+ */
 export class ClickDetector {
   private readonly handler = new Handler();
   private currentDownEvent: paper.ToolEvent;

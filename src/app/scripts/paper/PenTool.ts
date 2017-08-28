@@ -12,15 +12,16 @@ enum Mode {
   Close,
 }
 
+type Type = 'segment' | 'handle-in' | 'handle-out';
+
 /**
  * Pen tool that allows for creating new shapes and lines.
- * TODO: figure out how to deal with right mouse clicks and double clicks
  */
 export class PenTool extends BaseTool {
   private currPath: paper.Path;
   private currSegment: paper.Segment;
   private mode = Mode.None;
-  private type: string;
+  private type: Type;
   private hoverHitResult: paper.HitResult;
 
   // @Override
@@ -161,7 +162,7 @@ function findHandle(path: paper.Path, point: paper.Point) {
       }
       // TODO: the '6' seems arbitrary here... investigate?
       if (point.subtract(segmentPoint).length < 6) {
-        return { type, segment };
+        return { type: type as Type, segment };
       }
     }
   }
