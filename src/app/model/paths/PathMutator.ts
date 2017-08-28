@@ -2,10 +2,12 @@ import { MathUtil, Matrix, Point } from 'app/scripts/common';
 import { environment } from 'environments/environment';
 import * as _ from 'lodash';
 
-import { Command, Path, SvgChar } from '.';
+import { Command } from './Command';
 import { CommandState } from './CommandState';
+import { Path } from './Path';
 import { PathState } from './PathState';
 import { SubPathState, SubPathStateMutator, flattenSubPathStates } from './SubPathState';
+import { SvgChar } from './SvgChar';
 
 const ENABLE_LOGS = !environment.production && false;
 

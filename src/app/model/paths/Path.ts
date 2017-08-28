@@ -2,7 +2,8 @@ import { Matrix, Point } from 'app/scripts/common';
 import { environment } from 'environments/environment';
 import * as _ from 'lodash';
 
-import { Command, HitOptions, HitResult, Line, Projection, ProjectionOntoPath } from '.';
+import { Line, Projection } from './calculators';
+import { Command } from './Command';
 import { PathMutator } from './PathMutator';
 import * as PathParser from './PathParser';
 import { PathState } from './PathState';
