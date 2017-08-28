@@ -1,5 +1,3 @@
-export { ToolSwitcher } from './ToolSwitcher';
-
 import * as paper from 'paper';
 
 import * as Guides from './util/Guides';
@@ -22,3 +20,5 @@ export const PaperUtil = {
   },
   fromLayer: Layers.fromLayer,
 };
+
+export { ToolSwitcher } from './ToolSwitcher';

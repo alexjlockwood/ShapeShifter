@@ -3985,7 +3985,7 @@ declare module 'paper' {
      * The type of tool event.
      * String('mousedown', 'mouseup', 'mousemove', 'mousedrag')
      */
-    type: string;
+    type: 'mousedown' | 'mouseup' | 'mousemove' | 'mousedrag';
 
     /**
      * The position of the mouse in project coordinates when the event was fired.
@@ -4042,7 +4042,7 @@ declare module 'paper' {
      * The type of key event.
      * String('keydown', 'keyup')
      */
-    type: string;
+    type: 'keydown' | 'keyup';
 
     /**
      * The string character of the key that caused this key event.

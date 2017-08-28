@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { ToolMode } from 'app/model/toolmode';
+import { ToolMode } from 'app/model/paper';
 import { ColorUtil } from 'app/scripts/common';
 import { ToolModeService } from 'app/services';
 import { Observable } from 'rxjs/Observable';

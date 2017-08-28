@@ -1,5 +1,5 @@
 import { Action } from '@ngrx/store';
-import { ToolMode } from 'app/model/toolmode';
+import { ToolMode } from 'app/model/paper';
 
 export const SET_TOOL_MODE = '__toolmode__SET_TOOL_MODE';
 export const SET_FILL_COLOR = '__toolmode__SET_FILL_COLOR';

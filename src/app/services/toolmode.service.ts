@@ -1,8 +1,9 @@
 import 'rxjs/add/operator/first';
 
 import { Injectable } from '@angular/core';
-import { ToolMode } from 'app/model/toolmode';
-import { PaperUtil, ToolSwitcher } from 'app/scripts/paper';
+import { ToolMode } from 'app/model/paper';
+import { ToolSwitcher } from 'app/scripts/paper';
+import { PaperUtil } from 'app/scripts/paper';
 import { State, Store } from 'app/store';
 import { SetFillColor, SetStrokeColor, SetToolMode } from 'app/store/toolmode/actions';
 import { getFillColor, getStrokeColor, getToolMode } from 'app/store/toolmode/selectors';

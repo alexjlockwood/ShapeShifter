@@ -4,7 +4,7 @@ import { LayerUtil, PathLayer, VectorLayer } from 'app/model/layers';
 import { Path } from 'app/model/paths';
 import { SvgLoader } from 'app/scripts/import';
 import { DestroyableMixin } from 'app/scripts/mixins';
-import { PaperUtil, ToolSwitcher } from 'app/scripts/paper';
+import { PaperUtil } from 'app/scripts/paper';
 import { LayerTimelineService, ToolModeService } from 'app/services';
 import { State, Store } from 'app/store';
 import { SetVectorLayer } from 'app/store/layers/actions';

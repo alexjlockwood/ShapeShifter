@@ -1,4 +1,4 @@
-import { ToolMode } from 'app/model/toolmode';
+import { ToolMode } from 'app/model/paper';
 
 import * as actions from './actions';
 
