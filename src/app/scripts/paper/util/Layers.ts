@@ -20,7 +20,6 @@ export function fromLayer(vl: VectorLayer) {
         // Note that the 'o' is intentionally not capitalized here.
         item.fillRule = 'evenodd';
       }
-      console.log(item);
       // TODO: convert trim path properties to/from stroke dash array
       // TODO: deal with fill and stroke opacity!!!!!
       const { trimPathStart, trimPathEnd, trimPathOffset, fillAlpha, strokeAlpha } = layer;

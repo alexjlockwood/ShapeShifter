@@ -4,6 +4,7 @@ import * as $ from 'jquery';
 import * as paper from 'paper';
 
 import { BaseTool } from './BaseTool';
+import { ClickDetector } from './detector';
 import {
   Gesture,
   HoverGesture,
@@ -23,26 +24,32 @@ export class SelectionTool extends BaseTool {
   private currentGesture: Gesture = new HoverGesture();
   private segmentSelectedPath: paper.Path;
   private hitResult: paper.HitResult;
+  private readonly clickDetector = new ClickDetector();
 
   // @Override
-  shouldInterceptToolModeEvent(toolMode: ToolMode) {
+  protected onInterceptEvent(toolMode: ToolMode, event?: paper.ToolEvent | paper.KeyEvent) {
     return toolMode === ToolMode.Selection;
   }
 
   // @Override
-  shouldInterceptMouseEvent(toolMode: ToolMode, event: paper.ToolEvent) {
-    return toolMode === ToolMode.Selection;
+  protected onMouseEvent(event: paper.ToolEvent) {
+    console.log(event);
+    this.clickDetector.onMouseEvent(event);
+    if (event.type === 'mousedown') {
+      this.onMouseDown(event);
+    } else if (event.type === 'mousedrag') {
+      this.currentGesture.onMouseDrag(event);
+    } else if (event.type === 'mousemove') {
+      this.currentGesture.onMouseMove(event);
+    } else if (event.type === 'mouseup') {
+      this.onMouseUp(event);
+    }
   }
 
-  // @Override
-  shouldInterceptKeyEvent(toolMode: ToolMode, event: paper.KeyEvent) {
-    return toolMode === ToolMode.Selection;
-  }
-
-  // @Override
-  onMouseDownEvent(event: paper.ToolEvent) {
+  private onMouseDown(event: paper.ToolEvent) {
     // If a segment selected item is set, then we are in segment selection mode.
     if (this.segmentSelectedPath) {
+      console.log('segmentSelectedPath');
       this.hitResult = this.segmentSelectedPath.hitTest(event.point, {
         segments: true,
         stroke: true,
@@ -74,31 +81,35 @@ export class SelectionTool extends BaseTool {
         tolerance: 8 / paper.view.zoom,
       });
       if (this.hitResult) {
+        console.log('hitResult');
         const hitItem = this.hitResult.item;
         if (Guides.isScaleHandle(hitItem)) {
+          console.log('isScaleHandle');
           // If the hit item is a scale handle, then perform a scale gesture.
           this.currentGesture = new ScaleGesture(hitItem);
         } else if (Guides.isRotationHandle(hitItem)) {
+          console.log('isRotationHandle');
           // If the hit item is a rotate handle, then perform a rotate gesture.
           this.currentGesture = new RotateGesture();
-        } else if (false) {
-          // this.isDoubleClickEvent()) {
+        } else if (this.clickDetector.isDoubleClick()) {
           // TODO: It should only be possible to enter segment selection mode
           // for an editable item (i.e. a path, but not a group). Double clicking
           // on a non-selected and editable item that is contained inside a selected
           // parent layer should result in the editable item being selected (it is
           // actually a tiny bit more complicated than that but you get the idea).
+
           // TODO: possible to double click on a non-Path object? (missing types below!)
           // If a double click event occurs on top of a hit item, then enter
           // segment selection mode.
-          // this.segmentSelectedPath = hitItem as paper.Path;
-          // this.currentGesture = new class extends Gesture {
-          //   onMouseDown(e: paper.ToolEvent) {
-          //     Selections.deselectAll();
-          //     hitItem.selected = true;
-          //     hitItem.fullySelected = true;
-          //   }
-          // }();
+          console.log('isDoubleClickEvent');
+          this.segmentSelectedPath = hitItem as paper.Path;
+          this.currentGesture = new class extends Gesture {
+            onMouseDown(e: paper.ToolEvent) {
+              Selections.deselectAll();
+              hitItem.selected = true;
+              hitItem.fullySelected = true;
+            }
+          }();
         } else if (
           event.modifiers.shift &&
           hitItem.selected &&
@@ -138,18 +149,7 @@ export class SelectionTool extends BaseTool {
     this.currentGesture.onMouseDown(event);
   }
 
-  // @Override
-  protected onMouseDragEvent(event: paper.ToolEvent) {
-    this.currentGesture.onMouseDrag(event);
-  }
-
-  // @Override
-  protected onMouseMoveEvent(event: paper.ToolEvent) {
-    this.currentGesture.onMouseMove(event);
-  }
-
-  // @Override
-  protected onMouseUpEvent(event: paper.ToolEvent) {
+  private onMouseUp(event: paper.ToolEvent) {
     this.currentGesture.onMouseUp(event);
     if (this.segmentSelectedPath && !this.hitResult) {
       // TODO: only exit segment selection mode if the selection box
@@ -160,12 +160,11 @@ export class SelectionTool extends BaseTool {
   }
 
   // @Override
-  protected onKeyDownEvent(event: paper.KeyEvent) {
-    this.currentGesture.onKeyDown(event);
-  }
-
-  // @Override
-  protected onKeyUpEvent(event: paper.KeyEvent) {
-    this.currentGesture.onKeyUp(event);
+  protected onKeyEvent(event: paper.KeyEvent) {
+    if (event.type === 'keydown') {
+      this.currentGesture.onKeyDown(event);
+    } else if (event.type === 'keyup') {
+      this.currentGesture.onKeyUp(event);
+    }
   }
 }

@@ -24,25 +24,24 @@ export class PenTool extends BaseTool {
   private hoverHitResult: paper.HitResult;
 
   // @Override
-  shouldInterceptToolModeEvent(toolMode: ToolMode) {
-    console.log('intercepting tool mode event', toolMode === ToolMode.Pen);
+  protected onInterceptEvent(toolMode: ToolMode, event?: paper.ToolEvent | paper.KeyEvent) {
     return toolMode === ToolMode.Pen;
   }
 
   // @Override
-  shouldInterceptMouseEvent(toolMode: ToolMode, event: paper.ToolEvent) {
-    console.log('intercepting mouse event', toolMode === ToolMode.Pen);
-    return toolMode === ToolMode.Pen;
+  protected onMouseEvent(event: paper.ToolEvent) {
+    if (event.type === 'mousedown') {
+      this.onMouseDown(event);
+    } else if (event.type === 'mousedrag') {
+      this.onMouseDrag(event);
+    } else if (event.type === 'mousemove') {
+      this.onMouseMove(event);
+    } else if (event.type === 'mouseup') {
+      this.onMouseUp(event);
+    }
   }
 
-  // @Override
-  shouldInterceptKeyEvent(toolMode: ToolMode, event: paper.KeyEvent) {
-    console.log('intercepting key event', toolMode === ToolMode.Pen);
-    return toolMode === ToolMode.Pen;
-  }
-
-  // @Override
-  protected onMouseDownEvent(event: paper.ToolEvent) {
+  private onMouseDown(event: paper.ToolEvent) {
     if (this.currSegment) {
       this.currSegment.selected = false;
     }
@@ -126,8 +125,7 @@ export class PenTool extends BaseTool {
     }
   }
 
-  // @Override
-  protected onMouseDragEvent(event: paper.ToolEvent) {
+  private onMouseDrag(event: paper.ToolEvent) {
     let delta = event.delta;
     if (this.type === 'handle-out' || this.mode === Mode.Add) {
       delta = delta.multiply(-1);
@@ -136,8 +134,7 @@ export class PenTool extends BaseTool {
     this.currSegment.handleOut = this.currSegment.handleOut.subtract(delta);
   }
 
-  // @Override
-  protected onMouseMoveEvent(event: paper.ToolEvent) {
+  private onMouseMove(event: paper.ToolEvent) {
     const hitResult = paper.project.hitTest(event.point, createHitOptions());
     if (hitResult && hitResult.item && hitResult.item.selected) {
       this.hoverHitResult = hitResult;
@@ -146,18 +143,11 @@ export class PenTool extends BaseTool {
     }
   }
 
-  // @Override
-  protected onMouseUpEvent(event: paper.ToolEvent) {
+  private onMouseUp(event: paper.ToolEvent) {
     if (this.currPath && this.currPath.closed) {
       this.currPath = undefined;
     }
   }
-
-  // @Override
-  protected onKeyDownEvent(event: paper.KeyEvent) {}
-
-  // @Override
-  protected onKeyUpEvent(event: paper.KeyEvent) {}
 }
 
 function findHandle(path: paper.Path, point: paper.Point) {

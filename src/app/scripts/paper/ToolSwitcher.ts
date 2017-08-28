@@ -18,70 +18,15 @@ export class ToolSwitcher {
   private currentTool: BaseTool;
 
   constructor() {
+    const processEventFn = (event: paper.ToolEvent | paper.KeyEvent) => this.processEvent(event);
     this.masterTool.on({
-      mousedown: (event: paper.ToolEvent) => this.processMouseEvent(event),
-      mousedrag: (event: paper.ToolEvent) => this.processMouseEvent(event),
-      mousemove: (event: paper.ToolEvent) => this.processMouseEvent(event),
-      mouseup: (event: paper.ToolEvent) => this.processMouseEvent(event),
-      keydown: (event: paper.KeyEvent) => this.processKeyEvent(event),
-      keyup: (event: paper.KeyEvent) => this.processKeyEvent(event),
+      mousedown: processEventFn,
+      mousedrag: processEventFn,
+      mousemove: processEventFn,
+      mouseup: processEventFn,
+      keydown: processEventFn,
+      keyup: processEventFn,
     });
-  }
-
-  private processToolModeEvent() {
-    const prevTool = this.currentTool;
-    this.currentTool = undefined;
-    for (const tool of this.tools) {
-      if (tool.shouldInterceptToolModeEvent(this.currentToolMode)) {
-        this.currentTool = tool;
-        break;
-      }
-    }
-    this.switchTools(prevTool, this.currentTool);
-    if (this.currentTool) {
-      this.currentTool.onToolModeEvent(this.currentToolMode);
-    }
-  }
-
-  private processMouseEvent(mouseEvent: paper.ToolEvent) {
-    const prevTool = this.currentTool;
-    this.currentTool = undefined;
-    for (const tool of this.tools) {
-      if (tool.shouldInterceptMouseEvent(this.currentToolMode, mouseEvent)) {
-        this.currentTool = tool;
-        break;
-      }
-    }
-    this.switchTools(prevTool, this.currentTool);
-    if (this.currentTool) {
-      this.currentTool.dispatchMouseEvent(mouseEvent);
-    }
-  }
-
-  private processKeyEvent(keyEvent: paper.KeyEvent) {
-    const prevTool = this.currentTool;
-    this.currentTool = undefined;
-    for (const tool of this.tools) {
-      if (tool.shouldInterceptKeyEvent(this.currentToolMode, keyEvent)) {
-        this.currentTool = tool;
-        break;
-      }
-    }
-    this.switchTools(prevTool, this.currentTool);
-    if (this.currentTool) {
-      this.currentTool.dispatchKeyEvent(keyEvent);
-    }
-  }
-
-  private switchTools(prevTool: BaseTool, currTool: BaseTool) {
-    if (prevTool !== this.currentTool) {
-      if (prevTool) {
-        prevTool.onDeactivate();
-      }
-      if (currTool) {
-        currTool.onActivate();
-      }
-    }
   }
 
   setToolMode(toolMode: ToolMode) {
@@ -89,6 +34,31 @@ export class ToolSwitcher {
       return;
     }
     this.currentToolMode = toolMode;
-    this.processToolModeEvent();
+    this.processEvent();
+  }
+
+  private processEvent(event?: paper.ToolEvent | paper.KeyEvent) {
+    console.log(event);
+    const prevTool = this.currentTool;
+    this.currentTool = undefined;
+    for (const tool of this.tools) {
+      const mode = this.currentToolMode;
+      if (tool.dispatchInterceptEvent(mode, event)) {
+        console.log(this.currentTool);
+        this.currentTool = tool;
+        break;
+      }
+    }
+    if (prevTool !== this.currentTool) {
+      if (prevTool) {
+        prevTool.dispatchDeactivate();
+      }
+      if (this.currentTool) {
+        this.currentTool.dispatchActivate();
+      }
+    }
+    if (this.currentTool) {
+      this.currentTool.dispatchEvent(event);
+    }
   }
 }

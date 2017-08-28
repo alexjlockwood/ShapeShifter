@@ -2,65 +2,32 @@ import { ToolMode } from 'app/model/paper';
 import * as paper from 'paper';
 
 export abstract class BaseTool {
-  shouldInterceptToolModeEvent(toolMode: ToolMode) {
-    return false;
+  dispatchActivate() {
+    this.onActivate();
   }
 
-  shouldInterceptMouseEvent(toolMode: ToolMode, event: paper.ToolEvent) {
-    return false;
+  dispatchInterceptEvent(toolMode: ToolMode, event?: paper.ToolEvent | paper.KeyEvent) {
+    return this.onInterceptEvent(toolMode, event);
   }
 
-  shouldInterceptKeyEvent(toolMode: ToolMode, event: paper.KeyEvent) {
-    return false;
-  }
-
-  onActivate() {
-    console.log(this.constructor.name, 'onActivate');
-  }
-
-  onDeactivate() {
-    console.log(this.constructor.name, 'onDeactivate');
-  }
-
-  onToolModeEvent(toolMode: ToolMode) {}
-
-  dispatchMouseEvent(mouseEvent: paper.ToolEvent) {
-    switch (mouseEvent.type) {
-      case 'mousedown':
-        this.onMouseDownEvent(mouseEvent);
-        break;
-      case 'mousedrag':
-        this.onMouseDragEvent(mouseEvent);
-        break;
-      case 'mousemove':
-        this.onMouseMoveEvent(mouseEvent);
-        break;
-      case 'mouseup':
-        this.onMouseUpEvent(mouseEvent);
-        break;
+  dispatchEvent(event: ToolMode | paper.ToolEvent | paper.KeyEvent) {
+    if (event instanceof paper.ToolEvent) {
+      this.onMouseEvent(event);
+    } else if (event instanceof paper.KeyEvent) {
+      this.onKeyEvent(event);
+    } else {
+      this.onToolModeEvent(event);
     }
   }
 
-  protected onMouseDownEvent(mouseEvent: paper.ToolEvent) {}
-
-  protected onMouseDragEvent(mouseEvent: paper.ToolEvent) {}
-
-  protected onMouseMoveEvent(mouseEvent: paper.ToolEvent) {}
-
-  protected onMouseUpEvent(mouseEvent: paper.ToolEvent) {}
-
-  dispatchKeyEvent(keyEvent: paper.KeyEvent) {
-    switch (keyEvent.type) {
-      case 'keydown':
-        this.onKeyDownEvent(keyEvent);
-        break;
-      case 'keyup':
-        this.onKeyUpEvent(keyEvent);
-        break;
-    }
+  dispatchDeactivate() {
+    this.onDeactivate();
   }
 
-  protected onKeyDownEvent(keyEvent: paper.KeyEvent) {}
-
-  protected onKeyUpEvent(keyEvent: paper.KeyEvent) {}
+  protected onActivate() {}
+  protected abstract onInterceptEvent(m: ToolMode, e?: paper.ToolEvent | paper.KeyEvent): boolean;
+  protected onToolModeEvent(mode: ToolMode) {}
+  protected onMouseEvent(event: paper.ToolEvent) {}
+  protected onKeyEvent(event: paper.KeyEvent) {}
+  protected onDeactivate() {}
 }
