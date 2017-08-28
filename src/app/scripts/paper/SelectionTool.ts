@@ -33,7 +33,6 @@ export class SelectionTool extends BaseTool {
 
   // @Override
   protected onMouseEvent(event: paper.ToolEvent) {
-    console.log(event);
     this.clickDetector.onMouseEvent(event);
     if (event.type === 'mousedown') {
       this.onMouseDown(event);

@@ -43,7 +43,6 @@ export class ToolSwitcher {
     for (const tool of this.tools) {
       const mode = this.currentToolMode;
       if (tool.dispatchInterceptEvent(mode, event)) {
-        console.log(this.currentTool);
         this.currentTool = tool;
         break;
       }
