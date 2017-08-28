@@ -5,7 +5,6 @@ export { SelectionBoxGesture } from './SelectionBoxGesture';
 export { SelectItemsGesture } from './SelectItemsGesture';
 export { EditPathGesture } from './EditPathGesture';
 export { HoverGesture } from './HoverGesture';
-export { ZoomPanGesture } from './ZoomPanGesture';
 export { SelectSegmentsGesture } from './SelectSegmentsGesture';
 export { SelectCurvesGesture } from './SelectCurvesGesture';
 export { SelectHandlesGesture } from './SelectHandlesGesture';
