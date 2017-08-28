@@ -1,6 +1,7 @@
+import { ToolMode } from 'app/model/paper';
 import * as paper from 'paper';
 
-import { AbstractTool } from './AbstractTool';
+import { BaseTool } from './BaseTool';
 import { Selections } from './util';
 
 enum Mode {
@@ -15,7 +16,7 @@ enum Mode {
  * Pen tool that allows for creating new shapes and lines.
  * TODO: figure out how to deal with right mouse clicks and double clicks
  */
-export class PenTool extends AbstractTool {
+export class PenTool extends BaseTool {
   private currPath: paper.Path;
   private currSegment: paper.Segment;
   private mode = Mode.None;
@@ -23,7 +24,25 @@ export class PenTool extends AbstractTool {
   private hoverHitResult: paper.HitResult;
 
   // @Override
-  protected onMouseDown(event: paper.ToolEvent) {
+  shouldInterceptToolModeEvent(toolMode: ToolMode) {
+    console.log('intercepting tool mode event', toolMode === ToolMode.Pen);
+    return toolMode === ToolMode.Pen;
+  }
+
+  // @Override
+  shouldInterceptMouseEvent(toolMode: ToolMode, event: paper.ToolEvent) {
+    console.log('intercepting mouse event', toolMode === ToolMode.Pen);
+    return toolMode === ToolMode.Pen;
+  }
+
+  // @Override
+  shouldInterceptKeyEvent(toolMode: ToolMode, event: paper.KeyEvent) {
+    console.log('intercepting key event', toolMode === ToolMode.Pen);
+    return toolMode === ToolMode.Pen;
+  }
+
+  // @Override
+  protected onMouseDownEvent(event: paper.ToolEvent) {
     if (this.currSegment) {
       this.currSegment.selected = false;
     }
@@ -108,7 +127,7 @@ export class PenTool extends AbstractTool {
   }
 
   // @Override
-  protected onMouseDrag(event: paper.ToolEvent) {
+  protected onMouseDragEvent(event: paper.ToolEvent) {
     let delta = event.delta;
     if (this.type === 'handle-out' || this.mode === Mode.Add) {
       delta = delta.multiply(-1);
@@ -118,7 +137,7 @@ export class PenTool extends AbstractTool {
   }
 
   // @Override
-  protected onMouseMove(event: paper.ToolEvent) {
+  protected onMouseMoveEvent(event: paper.ToolEvent) {
     const hitResult = paper.project.hitTest(event.point, createHitOptions());
     if (hitResult && hitResult.item && hitResult.item.selected) {
       this.hoverHitResult = hitResult;
@@ -128,17 +147,17 @@ export class PenTool extends AbstractTool {
   }
 
   // @Override
-  protected onMouseUp(event: paper.ToolEvent) {
+  protected onMouseUpEvent(event: paper.ToolEvent) {
     if (this.currPath && this.currPath.closed) {
       this.currPath = undefined;
     }
   }
 
   // @Override
-  protected onKeyDown(event: paper.KeyEvent) {}
+  protected onKeyDownEvent(event: paper.KeyEvent) {}
 
   // @Override
-  protected onKeyUp(event: paper.KeyEvent) {}
+  protected onKeyUpEvent(event: paper.KeyEvent) {}
 }
 
 function findHandle(path: paper.Path, point: paper.Point) {

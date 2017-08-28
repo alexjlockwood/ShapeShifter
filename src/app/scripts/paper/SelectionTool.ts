@@ -1,8 +1,9 @@
+import { ToolMode } from 'app/model/paper';
 import { MathUtil } from 'app/scripts/common';
 import * as $ from 'jquery';
 import * as paper from 'paper';
 
-import { AbstractTool } from './AbstractTool';
+import { BaseTool } from './BaseTool';
 import {
   Gesture,
   HoverGesture,
@@ -14,26 +15,32 @@ import {
 } from './gesture';
 import { Guides, Items, Selections } from './util';
 
-enum Mode {
-  None,
-  Scale,
-  Rotate,
-  MoveShapes,
-  CloneShapes,
-  SelectionBox,
-}
-
 /**
  * A simple selection tool for moving, scaling, rotating, and selecting shapes.
  * TODO: figure out how to deal with right mouse clicks
  */
-export class SelectionTool extends AbstractTool {
+export class SelectionTool extends BaseTool {
   private currentGesture: Gesture = new HoverGesture();
   private segmentSelectedPath: paper.Path;
   private hitResult: paper.HitResult;
 
   // @Override
-  protected onMouseDown(event: paper.ToolEvent) {
+  shouldInterceptToolModeEvent(toolMode: ToolMode) {
+    return toolMode === ToolMode.Selection;
+  }
+
+  // @Override
+  shouldInterceptMouseEvent(toolMode: ToolMode, event: paper.ToolEvent) {
+    return toolMode === ToolMode.Selection;
+  }
+
+  // @Override
+  shouldInterceptKeyEvent(toolMode: ToolMode, event: paper.KeyEvent) {
+    return toolMode === ToolMode.Selection;
+  }
+
+  // @Override
+  onMouseDownEvent(event: paper.ToolEvent) {
     // If a segment selected item is set, then we are in segment selection mode.
     if (this.segmentSelectedPath) {
       this.hitResult = this.segmentSelectedPath.hitTest(event.point, {
@@ -74,25 +81,24 @@ export class SelectionTool extends AbstractTool {
         } else if (Guides.isRotationHandle(hitItem)) {
           // If the hit item is a rotate handle, then perform a rotate gesture.
           this.currentGesture = new RotateGesture();
-        } else if (this.isDoubleClickEvent()) {
+        } else if (false) {
+          // this.isDoubleClickEvent()) {
           // TODO: It should only be possible to enter segment selection mode
           // for an editable item (i.e. a path, but not a group). Double clicking
           // on a non-selected and editable item that is contained inside a selected
           // parent layer should result in the editable item being selected (it is
           // actually a tiny bit more complicated than that but you get the idea).
-
           // TODO: possible to double click on a non-Path object? (missing types below!)
-
           // If a double click event occurs on top of a hit item, then enter
           // segment selection mode.
-          this.segmentSelectedPath = hitItem as paper.Path;
-          this.currentGesture = new class extends Gesture {
-            onMouseDown(e: paper.ToolEvent) {
-              Selections.deselectAll();
-              hitItem.selected = true;
-              hitItem.fullySelected = true;
-            }
-          }();
+          // this.segmentSelectedPath = hitItem as paper.Path;
+          // this.currentGesture = new class extends Gesture {
+          //   onMouseDown(e: paper.ToolEvent) {
+          //     Selections.deselectAll();
+          //     hitItem.selected = true;
+          //     hitItem.fullySelected = true;
+          //   }
+          // }();
         } else if (
           event.modifiers.shift &&
           hitItem.selected &&
@@ -133,17 +139,17 @@ export class SelectionTool extends AbstractTool {
   }
 
   // @Override
-  protected onMouseDrag(event: paper.ToolEvent) {
+  protected onMouseDragEvent(event: paper.ToolEvent) {
     this.currentGesture.onMouseDrag(event);
   }
 
   // @Override
-  protected onMouseMove(event: paper.ToolEvent) {
+  protected onMouseMoveEvent(event: paper.ToolEvent) {
     this.currentGesture.onMouseMove(event);
   }
 
   // @Override
-  protected onMouseUp(event: paper.ToolEvent) {
+  protected onMouseUpEvent(event: paper.ToolEvent) {
     this.currentGesture.onMouseUp(event);
     if (this.segmentSelectedPath && !this.hitResult) {
       // TODO: only exit segment selection mode if the selection box
@@ -154,12 +160,12 @@ export class SelectionTool extends AbstractTool {
   }
 
   // @Override
-  protected onKeyDown(event: paper.KeyEvent) {
+  protected onKeyDownEvent(event: paper.KeyEvent) {
     this.currentGesture.onKeyDown(event);
   }
 
   // @Override
-  protected onKeyUp(event: paper.KeyEvent) {
+  protected onKeyUpEvent(event: paper.KeyEvent) {
     this.currentGesture.onKeyUp(event);
   }
 }

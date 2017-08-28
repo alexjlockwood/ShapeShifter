@@ -3,17 +3,21 @@ import * as $ from 'jquery';
 import * as paper from 'paper';
 
 import { BaseTool } from './BaseTool';
+import { PenTool } from './PenTool';
 import { SelectionTool } from './SelectionTool';
 import { ZoomPanTool } from './ZoomPanTool';
 
 export class ToolSwitcher {
-  private readonly tools: ReadonlyArray<BaseTool>;
+  private readonly tools: ReadonlyArray<BaseTool> = [
+    new ZoomPanTool(),
+    new PenTool(),
+    new SelectionTool(),
+  ];
   private readonly masterTool = new paper.Tool();
   private currentToolMode: ToolMode;
   private currentTool: BaseTool;
 
   constructor() {
-    this.tools = [new ZoomPanTool() as BaseTool];
     this.masterTool.on({
       mousedown: (event: paper.ToolEvent) => this.processMouseEvent(event),
       mousedrag: (event: paper.ToolEvent) => this.processMouseEvent(event),
@@ -40,7 +44,6 @@ export class ToolSwitcher {
   }
 
   private processMouseEvent(mouseEvent: paper.ToolEvent) {
-    console.log('processMouseEvent');
     const prevTool = this.currentTool;
     this.currentTool = undefined;
     for (const tool of this.tools) {

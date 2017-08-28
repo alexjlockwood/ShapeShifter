@@ -10,16 +10,6 @@ export class ZoomPanTool extends BaseTool {
   private lastPoint: paper.Point;
 
   // @Override
-  onActivate() {
-    console.log('activate');
-  }
-
-  // @Override
-  onDeactivate() {
-    console.log('deactivate');
-  }
-
-  // @Override
   shouldInterceptToolModeEvent(toolMode: ToolMode) {
     console.log('intercepting tool mode event', toolMode === ToolMode.ZoomPan);
     return toolMode === ToolMode.ZoomPan;
@@ -38,7 +28,7 @@ export class ZoomPanTool extends BaseTool {
   }
 
   // @Override
-  onMouseDownEvent(event: paper.ToolEvent) {
+  protected onMouseDownEvent(event: paper.ToolEvent) {
     if (event.modifiers.space) {
       this.lastPoint = paper.view.projectToView(event.point);
       return;
@@ -49,7 +39,7 @@ export class ZoomPanTool extends BaseTool {
   }
 
   // @Override
-  onMouseDragEvent(event: paper.ToolEvent) {
+  protected onMouseDragEvent(event: paper.ToolEvent) {
     // TODO: need to handle the case where the last point may be nil
     if (!event.modifiers.space) {
       return;
@@ -66,11 +56,11 @@ export class ZoomPanTool extends BaseTool {
   }
 
   // @Override
-  onMouseUpEvent(event: paper.ToolEvent) {}
+  protected onMouseUpEvent(event: paper.ToolEvent) {}
 
   // @Override
-  onKeyDownEvent(event: paper.KeyEvent) {}
+  protected onKeyDownEvent(event: paper.KeyEvent) {}
 
   // @Override
-  onKeyUpEvent(event: paper.KeyEvent) {}
+  protected onKeyUpEvent(event: paper.KeyEvent) {}
 }

@@ -14,9 +14,13 @@ export abstract class BaseTool {
     return false;
   }
 
-  onActivate() {}
+  onActivate() {
+    console.log(this.constructor.name, 'onActivate');
+  }
 
-  onDeactivate() {}
+  onDeactivate() {
+    console.log(this.constructor.name, 'onDeactivate');
+  }
 
   onToolModeEvent(toolMode: ToolMode) {}
 
