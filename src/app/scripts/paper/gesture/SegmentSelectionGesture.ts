@@ -2,7 +2,7 @@ import { MathUtil } from 'app/scripts/common';
 import { Guides, Items, Selections } from 'app/scripts/paper/util';
 import * as paper from 'paper';
 
-import { Gesture } from '.';
+import { Gesture } from './Gesture';
 
 /**
  * A gesture that performs selection operations on path segments and handles.

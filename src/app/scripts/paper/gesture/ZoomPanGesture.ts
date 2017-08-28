@@ -3,7 +3,7 @@
 import { Guides, Items, Selections } from 'app/scripts/paper/util';
 import * as paper from 'paper';
 
-import { Gesture } from '.';
+import { Gesture } from './Gesture';
 
 /** A gesture that enables the user to pan and zoom the canvas. */
 export class ZoomPanGesture extends Gesture {
