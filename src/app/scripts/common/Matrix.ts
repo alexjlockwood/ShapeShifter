@@ -1,4 +1,4 @@
-import { MathUtil } from '.';
+import * as MathUtil from './MathUtil';
 
 /**
  * An immutable Matrix class that uses the standard SVG transformation

@@ -1,6 +1,7 @@
 import { MathUtil, Point } from 'app/scripts/common';
 
-import { Command, Path } from '.';
+import { Command } from './Command';
+import { Path } from './Path';
 
 /**
  * Interpolates between a start and end path using the specified fraction.

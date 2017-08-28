@@ -1,6 +1,7 @@
 import * as _ from 'lodash';
 
-import { Matrix, Point } from '.';
+import { Matrix } from './Matrix';
+import { Point } from './Point';
 
 /** Returns the floor modulus of the integer argument. */
 export function floorMod(num: number, maxNum: number) {

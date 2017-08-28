@@ -1,7 +1,7 @@
 import { Inspectable, NameProperty, NumberProperty, Property } from 'app/model/properties';
 import * as _ from 'lodash';
 
-import { AnimationBlock } from '.';
+import { AnimationBlock } from './AnimationBlock';
 
 /**
  * An animation represents a collection of layer property tweens for a VectorLayer.
