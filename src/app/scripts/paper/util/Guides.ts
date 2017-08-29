@@ -4,8 +4,9 @@
 import * as _ from 'lodash';
 import * as paper from 'paper';
 
-import { Handles, Items } from '.';
 import { HandleType } from './Handles';
+import * as Handles from './Handles';
+import * as Items from './Items';
 
 const GUIDE_LAYER_NAME = 'guideLayer';
 const HOVER_PATH_NAME = 'hoverPath';

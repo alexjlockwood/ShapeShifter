@@ -2,7 +2,8 @@
 
 import * as paper from 'paper';
 
-import { Guides, Items } from '.';
+import * as Guides from './Guides';
+import * as Items from './Items';
 
 // =========================== //
 // ===== Select/deselect ===== //
