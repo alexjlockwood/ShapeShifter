@@ -1413,14 +1413,14 @@ declare module 'paper' {
      * @param match.inside - the rectangle in which the items need to be fully contained.
      * @param match.overlapping - the rectangle with which the items need to at least partly overlap.
      */
-    getItems(match: any): Item[];
+    getItems(match?: any): Item[];
 
     /**
      * Fetch the first descendant (child or child of child) of this item that matches the properties in the specified object.
      * Extended matching is possible by providing a compare function or regular expression. Matching points, colors only work as a comparison of the full object, not partial matching (e.g. only providing the x- coordinate to match all points with that x-value). Partial matching does work for item.data.
      * @param match - the criteria to match against
      */
-    getItem(match: any): Item;
+    getItem(match?: any): Item;
 
     /**
      * Exports (serializes) the project with all its layers and child items to a JSON data string.

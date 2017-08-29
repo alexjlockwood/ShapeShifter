@@ -37,7 +37,7 @@ export function setSelection(item: paper.Item, isSelected: boolean) {
 
 export function deselectAll() {
   Guides.hideHoverPath();
-  Guides.hideSelectionBounds();
+  Guides.hideSelectionBoundsPath();
   paper.project.deselectAll();
 }
 

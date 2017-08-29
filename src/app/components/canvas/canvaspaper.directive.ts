@@ -56,6 +56,15 @@ export class CanvasPaperDirective extends CanvasLayoutMixin(DestroyableMixin())
           "strokeColor": "#000000",
           "fillColor": "#f00",
           "strokeWidth": 12
+        },
+        {
+          "id": "45",
+          "name": "path",
+          "type": "path",
+          "pathData": "M 1 1 h 3 v 4 h -3 v -4 z",
+          "strokeColor": "#000000",
+          "fillColor": "#f00",
+          "strokeWidth": 6
         }
       ]
     }`);

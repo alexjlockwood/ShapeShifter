@@ -2,7 +2,7 @@ import * as _ from 'lodash';
 import * as paper from 'paper';
 
 const DATA_DISABLE_SELECT = 'disableSelect';
-const DATA_DISABLE_HOVER = 'disableHover';
+// const DATA_DISABLE_HOVER = 'disableHover';
 
 // ================================ //
 // ===== Item instance checks ===== //
@@ -48,13 +48,13 @@ export function setSelectable(item: paper.Item, selectable: boolean) {
   item.data[DATA_DISABLE_SELECT] = !selectable;
 }
 
-export function isHoverable(item: paper.Item) {
-  return !item.data[DATA_DISABLE_HOVER];
-}
+// export function isHoverable(item: paper.Item) {
+//   return !item.data[DATA_DISABLE_HOVER];
+// }
 
-export function setHoverable(item: paper.Item, hoverable: boolean) {
-  item.data[DATA_DISABLE_HOVER] = !hoverable;
-}
+// export function setHoverable(item: paper.Item, hoverable: boolean) {
+//   item.data[DATA_DISABLE_HOVER] = !hoverable;
+// }
 
 // ========================== //
 // ===== Item factories ===== //

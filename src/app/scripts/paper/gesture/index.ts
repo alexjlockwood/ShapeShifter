@@ -8,3 +8,7 @@ export { HoverGesture } from './HoverGesture';
 export { SelectSegmentsGesture } from './SelectSegmentsGesture';
 export { SelectCurvesGesture } from './SelectCurvesGesture';
 export { SelectHandlesGesture } from './SelectHandlesGesture';
+export { EnterEditPathModeGesture } from './EnterEditPathModeGesture';
+export { CreateSegmentHandlesGesture } from './CreateSegmentHandlesGesture';
+export { DeleteSegmentHandlesGesture } from './DeleteSegmentHandlesGesture';
+export { DeselectItemGesture } from './DeselectItemGesture';

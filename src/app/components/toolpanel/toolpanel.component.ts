@@ -11,6 +11,8 @@ import { Observable } from 'rxjs/Observable';
 })
 export class ToolPanelComponent implements OnInit {
   readonly TOOL_MODE_SELECT = ToolMode.Selection;
+  readonly TOOL_MODE_TRANSFORM = ToolMode.Transform;
+  readonly TOOL_MODE_ROTATE = ToolMode.Rotate;
   readonly TOOL_MODE_PEN = ToolMode.Pen;
   readonly TOOL_MODE_ZOOMPAN = ToolMode.ZoomPan;
 

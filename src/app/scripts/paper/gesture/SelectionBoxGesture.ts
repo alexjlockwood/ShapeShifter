@@ -35,10 +35,10 @@ export class SelectionBoxGesture extends Gesture {
       selectionBoxPath.remove();
     }
 
-    Guides.hideSelectionBounds();
+    Guides.hideSelectionBoundsPath();
     const selectedItems = Selections.getSelectedItems();
     if (selectedItems.length) {
-      Guides.showSelectionBounds(Items.computeBoundingBox(selectedItems));
+      Guides.showSelectionBoundsPath(Items.computeBoundingBox(selectedItems));
     }
   }
 }

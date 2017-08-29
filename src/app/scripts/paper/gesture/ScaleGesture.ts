@@ -1,12 +1,18 @@
 import { MathUtil } from 'app/scripts/common';
-import { Guides, Handles, Items, Selections } from 'app/scripts/paper/util';
+import { Guides, Items, Pivots, Selections } from 'app/scripts/paper/util';
 import * as paper from 'paper';
 
 import { Gesture } from './Gesture';
 
-/** A gesture that performs scaling operations. */
+/**
+ * A gesture that performs scaling operations.
+ *
+ * - This gesture begins with a mouse down and ends with a mouse up.
+ * - This gesture is created in selection mode.
+ * - This gesture implies that one or more items were previously selected
+ *   and that its selection bounds are currently being shown.
+ */
 export class ScaleGesture extends Gesture {
-  private selectedItems: ReadonlyArray<paper.Item>;
   private initialMatrices: ReadonlyArray<paper.Matrix>;
   private initialPivot: paper.Point;
   private initialSize: paper.Point;
@@ -14,7 +20,10 @@ export class ScaleGesture extends Gesture {
   private initialCenter: paper.Point;
   private currentHandle: paper.Point;
 
-  constructor(private readonly initialHitItem: paper.Item) {
+  constructor(
+    private readonly hitSegment: paper.Segment,
+    private readonly selectedItems: ReadonlyArray<paper.Item>,
+  ) {
     super();
   }
 
@@ -22,19 +31,18 @@ export class ScaleGesture extends Gesture {
   onMouseDown(event: paper.ToolEvent) {
     Guides.hideHoverPath();
 
-    this.selectedItems = Selections.getSelectedItems();
     this.initialMatrices = this.selectedItems.map(i => i.matrix.clone());
-    const selectionBounds = Items.computeBoundingBox(this.selectedItems);
-    const handleType = Guides.getHandleType(this.initialHitItem);
-    const oppHandleType = Guides.getOppositeHandleType(this.initialHitItem);
-    this.initialPivot = selectionBounds[oppHandleType].clone();
-    this.currentHandle = selectionBounds[handleType].clone();
+    const scalingBounds = Items.computeBoundingBox(this.selectedItems);
+    const pivotType = Pivots.getPivotType(this.hitSegment.index);
+    const oppPivotType = Pivots.getOppositePivotType(this.hitSegment.index);
+    this.initialPivot = scalingBounds[oppPivotType].clone();
+    this.currentHandle = scalingBounds[pivotType].clone();
     this.initialSize = this.currentHandle.subtract(this.initialPivot);
     this.centeredInitialSize = this.initialSize.divide(2);
-    this.initialCenter = selectionBounds.center.clone();
+    this.initialCenter = scalingBounds.center.clone();
 
     // Don't show the selection bounds while transforming the shape.
-    Guides.hideSelectionBounds();
+    Guides.hideSelectionBoundsPath();
   }
 
   // @Override
@@ -68,10 +76,10 @@ export class ScaleGesture extends Gesture {
 
   // @Override
   onMouseUp(event: paper.ToolEvent) {
-    Guides.hideSelectionBounds();
+    Guides.hideSelectionBoundsPath();
     const selectedItems = Selections.getSelectedItems();
     if (selectedItems.length) {
-      Guides.showSelectionBounds(Items.computeBoundingBox(selectedItems));
+      Guides.showSelectionBoundsPath(Items.computeBoundingBox(selectedItems));
     }
   }
 }

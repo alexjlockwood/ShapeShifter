@@ -3,7 +3,14 @@ import * as paper from 'paper';
 
 import { Gesture } from './Gesture';
 
-/** A gesture that performs rotation operations. */
+/**
+ * A gesture that performs rotation operations.
+ *
+ * - This gesture begins with a mouse down and ends with a mouse up.
+ * - This gesture is created in selection mode.
+ * - This gesture implies that one or more items were previously selected
+ *   and that its selection bounds are currently being shown.
+ */
 export class RotateGesture extends Gesture {
   private selectedItems: ReadonlyArray<paper.Item>;
   private initialMatrices: ReadonlyArray<paper.Matrix>;
@@ -18,7 +25,7 @@ export class RotateGesture extends Gesture {
     this.pivot = Items.computeBoundingBox(this.selectedItems).center.clone();
 
     // While transforming object, never show the bounds.
-    Guides.hideSelectionBounds();
+    Guides.hideSelectionBoundsPath();
   }
 
   // @Override
@@ -34,10 +41,10 @@ export class RotateGesture extends Gesture {
 
   // @Override
   onMouseUp(event: paper.ToolEvent) {
-    Guides.hideSelectionBounds();
+    Guides.hideSelectionBoundsPath();
     const selectedItems = Selections.getSelectedItems();
     if (selectedItems.length) {
-      Guides.showSelectionBounds(Items.computeBoundingBox(selectedItems));
+      Guides.showSelectionBoundsPath(Items.computeBoundingBox(selectedItems));
     }
   }
 }

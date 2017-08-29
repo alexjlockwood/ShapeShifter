@@ -5,8 +5,7 @@ import * as paper from 'paper';
 import { Gesture } from './Gesture';
 
 /**
- * A gesture that performs selection, move, and clone operations on one or
- * more items.
+ * A gesture that performs selection, move, and clone operations on one or more items.
  */
 export class SelectItemsGesture extends Gesture {
   private selectedItems: ReadonlyArray<paper.Item>;
@@ -53,9 +52,9 @@ export class SelectItemsGesture extends Gesture {
 
   // @Override
   onMouseUp(event: paper.ToolEvent) {
-    Guides.hideSelectionBounds();
+    Guides.hideSelectionBoundsPath();
     if (this.selectedItems.length) {
-      Guides.showSelectionBounds(Items.computeBoundingBox(this.selectedItems));
+      Guides.showSelectionBoundsPath(Items.computeBoundingBox(this.selectedItems));
     }
   }
 }

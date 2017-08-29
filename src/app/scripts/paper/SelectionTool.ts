@@ -6,7 +6,11 @@ import * as paper from 'paper';
 import { BaseTool } from './BaseTool';
 import { ClickDetector } from './detector';
 import {
+  CreateSegmentHandlesGesture,
+  DeleteSegmentHandlesGesture,
+  DeselectItemGesture,
   EditPathGesture,
+  EnterEditPathModeGesture,
   Gesture,
   HoverGesture,
   RotateGesture,
@@ -46,6 +50,8 @@ import { Guides, Items, Selections } from './util';
 export class SelectionTool extends BaseTool {
   private readonly clickDetector = new ClickDetector();
   private currentGesture: Gesture = new HoverGesture();
+
+  // TODO: remove this variable and find more reliable way of exiting edit path mode
   private mouseDownHitResult: paper.HitResult;
 
   // If this is non-nil, then we are in edit path mode. Otherwise, we are in
@@ -83,6 +89,19 @@ export class SelectionTool extends BaseTool {
   }
 
   private createSelectionModeGesture(event: paper.ToolEvent) {
+    const selectionBounds = Guides.getSelectionBoundsPath();
+    if (selectionBounds) {
+      // First perform a hit test on the selection bounds, if they exist.
+      const hitResult = selectionBounds.hitTest(event.point, {
+        segments: true,
+        tolerance: 8 / paper.view.zoom,
+      });
+      if (hitResult) {
+        // If the hit item is a selection bounds segment, then perform a scale gesture.
+        return new ScaleGesture(hitResult.segment, Selections.getSelectedItems());
+      }
+    }
+
     this.mouseDownHitResult = paper.project.hitTest(event.point, {
       segments: true,
       stroke: true,
@@ -96,13 +115,7 @@ export class SelectionTool extends BaseTool {
     }
 
     const hitItem = this.mouseDownHitResult.item;
-    if (Guides.isScaleHandle(hitItem)) {
-      // If the hit item is a scale handle, then perform a scale gesture.
-      return new ScaleGesture(hitItem);
-    } else if (Guides.isRotationHandle(hitItem)) {
-      // If the hit item is a rotate handle, then perform a rotate gesture.
-      return new RotateGesture();
-    } else if (this.clickDetector.isDoubleClick()) {
+    if (this.clickDetector.isDoubleClick()) {
       // TODO: It should only be possible to enter edit path mode
       // for an editable item (i.e. a path, but not a group). Double clicking
       // on a non-selected and editable item that is contained inside a selected
@@ -115,16 +128,7 @@ export class SelectionTool extends BaseTool {
       // If a double click event occurs on top of a hit item, then enter
       // edit path mode.
       this.selectedEditPath = hitPath;
-      return new class extends Gesture {
-        onMouseDown(e: paper.ToolEvent) {
-          // Begin edit path mode by selecting the last two curves in the path.
-          Selections.deselectAll();
-          const startIndex = Math.max(0, hitPath.curves.length - 2);
-          const endIndex = hitPath.curves.length;
-          const lastTwoCurves = hitPath.curves.slice(startIndex, endIndex);
-          lastTwoCurves.forEach(c => (c.selected = true));
-        }
-      }();
+      return new EnterEditPathModeGesture(hitPath);
     } else if (
       event.modifiers.shift &&
       hitItem.selected &&
@@ -135,11 +139,7 @@ export class SelectionTool extends BaseTool {
 
       // If the hit item is selected, shift is pressed, and there is at least
       // one other selected item, then deselect the hit item.
-      return new class extends Gesture {
-        onMouseDown(e: paper.ToolEvent) {
-          Selections.setSelection(hitItem, false);
-        }
-      }();
+      return new DeselectItemGesture(hitItem);
     } else {
       // TODO: The actual behavior in Sketch is a bit more complicated.
       // For example, (1) a cloned item will not be generated until the next
@@ -181,6 +181,16 @@ export class SelectionTool extends BaseTool {
 
     const { type } = this.mouseDownHitResult;
     if (type === 'segment') {
+      const isDoubleClick = this.clickDetector.isDoubleClick();
+      const { segment } = this.mouseDownHitResult;
+      if (isDoubleClick) {
+        // If a double click occurred on top of a segment,
+        // then either create or delete its handles.
+        if (segment.handleIn || segment.handleOut) {
+          // segment.
+        } else {
+        }
+      }
       return new SelectSegmentsGesture(this.selectedEditPath, this.mouseDownHitResult.segment);
     }
     if (type === 'stroke' || type === 'curve') {
@@ -190,8 +200,7 @@ export class SelectionTool extends BaseTool {
       return new SelectHandlesGesture();
     }
 
-    // TODO: return some kind of 'hover' gesture instead?
-    return new class extends Gesture {}();
+    return new HoverGesture(this.selectedEditPath);
   }
 
   private onMouseUp(event: paper.ToolEvent) {
@@ -201,7 +210,7 @@ export class SelectionTool extends BaseTool {
       // gesture resulted in no items being selected
       this.selectedEditPath = undefined;
     }
-    this.currentGesture = new HoverGesture();
+    this.currentGesture = new HoverGesture(this.selectedEditPath);
   }
 
   // @Override

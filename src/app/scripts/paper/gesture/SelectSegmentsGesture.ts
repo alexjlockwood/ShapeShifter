@@ -19,10 +19,13 @@ export class SelectSegmentsGesture extends Gesture {
 
   // @Override
   onMouseDown(event: paper.ToolEvent) {
-    if (!event.modifiers.shift) {
+    if (event.modifiers.shift || event.modifiers.command) {
+      this.mouseDownHitSegment.selected = !this.mouseDownHitSegment.selected;
+    } else {
+      // If shift isn't pressed, deselect any currently selected segments.
       this.selectedPath.segments.forEach(s => (s.selected = false));
+      this.mouseDownHitSegment.selected = true;
     }
-    this.mouseDownHitSegment.selected = true;
     this.selectedSegments = this.selectedPath.segments.filter(s => s.selected);
     this.initialSegmentPositions = this.selectedSegments.map(s => s.point);
   }
