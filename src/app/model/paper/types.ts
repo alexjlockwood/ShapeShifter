@@ -1,8 +1,5 @@
 export enum ToolMode {
-  Selection,
-  Edit,
-  Transform,
-  Rotate,
+  Selection = 1,
   Pen,
   ZoomPan,
 }
