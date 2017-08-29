@@ -1,5 +1,6 @@
 import 'rxjs/add/observable/combineLatest';
 import 'rxjs/add/operator/distinctUntilChanged';
+import 'rxjs/add/operator/map';
 
 import {
   AfterViewInit,

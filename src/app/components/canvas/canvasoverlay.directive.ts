@@ -1,5 +1,6 @@
 import 'rxjs/add/observable/combineLatest';
 import 'rxjs/add/observable/merge';
+import 'rxjs/add/operator/map';
 
 import { AfterViewInit, Directive, ElementRef, Input } from '@angular/core';
 import {
