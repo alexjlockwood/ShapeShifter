@@ -1,4 +1,5 @@
 import 'rxjs/add/operator/combineLatest';
+import 'rxjs/add/operator/map';
 
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { ActionMode, ActionSource, Selection, SelectionType } from 'app/model/actionmode';
