@@ -8,20 +8,11 @@
       (click)="onSelectClick()">
     </md-icon>
   </div>
-  <!-- <md-icon svgIcon="tool_draw"></md-icon> -->
   <div class="tool-button"
     [class.is-checked]="toolMode === this.TOOL_MODE_PEN">
     <md-icon svgIcon="tool_bezier"
       (click)="onPenClick()">
     </md-icon>
-  </div>
-  <div class="tool-button"
-    [class.is-checked]="toolMode === this.TOOL_MODE_TRANSFORM">
-    <md-icon (click)="onTransformClick()">transform</md-icon>
-  </div>
-  <div class="tool-button"
-    [class.is-checked]="toolMode === this.TOOL_MODE_ROTATE">
-    <md-icon (click)="onRotateClick()">rotate_left</md-icon>
   </div>
   <div class="tool-button"
     [class.is-checked]="toolMode === this.TOOL_MODE_ZOOMPAN">
