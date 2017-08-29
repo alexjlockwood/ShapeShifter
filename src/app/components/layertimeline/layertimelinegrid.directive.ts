@@ -1,3 +1,5 @@
+import 'rxjs/add/operator/filter';
+
 import {
   Directive,
   ElementRef,
