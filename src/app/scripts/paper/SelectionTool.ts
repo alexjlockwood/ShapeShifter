@@ -6,8 +6,9 @@ import * as paper from 'paper';
 import { BaseTool } from './BaseTool';
 import { ClickDetector } from './detector';
 import {
-  CreateSegmentHandlesGesture,
-  DeleteSegmentHandlesGesture,
+  BatchSelectItemsGesture,
+  BatchSelectSegmentsGesture,
+  CreateOrDeleteSegmentHandlesGesture,
   DeselectItemGesture,
   EditPathGesture,
   EnterEditPathModeGesture,
@@ -19,9 +20,8 @@ import {
   SelectHandlesGesture,
   SelectItemsGesture,
   SelectSegmentsGesture,
-  SelectionBoxGesture,
 } from './gesture';
-import { Guides, Items, Selections } from './util';
+import { Guides, HitTests, Items, Selections } from './util';
 
 /**
  * A tool that selects, moves, rotates, scales, and modifies items.
@@ -46,20 +46,18 @@ import { Guides, Items, Selections } from './util';
  *     in mode (1).
  *
  * TODO: describe how 'enter' and 'escape' should both behave
+ * TODO: https://medium.com/sketch-app/mastering-the-bezier-curve-in-sketch-4da8fdf0dbbb
  */
 export class SelectionTool extends BaseTool {
   private readonly clickDetector = new ClickDetector();
   private currentGesture: Gesture = new HoverGesture();
-
-  // TODO: remove this variable and find more reliable way of exiting edit path mode
-  private mouseDownHitResult: paper.HitResult;
 
   // If this is non-nil, then we are in edit path mode. Otherwise, we are in
   // selection mode.
   private selectedEditPath: paper.Path;
 
   // @Override
-  protected onInterceptEvent(toolMode: ToolMode, event?: paper.ToolEvent | paper.KeyEvent) {
+  protected onInterceptEvent(toolMode: ToolMode) {
     return toolMode === ToolMode.Selection;
   }
 
@@ -79,7 +77,7 @@ export class SelectionTool extends BaseTool {
 
   private onMouseDown(event: paper.ToolEvent) {
     if (this.selectedEditPath) {
-      // If a segment selected item is set, then we are in segment selection mode.
+      // If a segment selected item is set, then we are in edit path mode.
       this.currentGesture = this.createEditPathModeGesture(event);
     } else {
       // Otherwise we are in selection mode.
@@ -92,29 +90,24 @@ export class SelectionTool extends BaseTool {
     const selectionBounds = Guides.getSelectionBoundsPath();
     if (selectionBounds) {
       // First perform a hit test on the selection bounds, if they exist.
-      const hitResult = selectionBounds.hitTest(event.point, {
-        segments: true,
-        tolerance: 8 / paper.view.zoom,
-      });
-      if (hitResult) {
+      const res = HitTests.selectionBoundsPivot(selectionBounds, event.point);
+      if (res) {
         // If the hit item is a selection bounds segment, then perform a scale gesture.
-        return new ScaleGesture(hitResult.segment, Selections.getSelectedItems());
+        return new ScaleGesture(res.segment, Selections.getSelectedItems());
       }
     }
 
-    this.mouseDownHitResult = paper.project.hitTest(event.point, {
-      segments: true,
+    const hitResult = paper.project.hitTest(event.point, {
       stroke: true,
-      curves: true,
       fill: true,
       tolerance: 8 / paper.view.zoom,
     });
-    if (!this.mouseDownHitResult) {
+    if (!hitResult) {
       // If there is no hit item, then enter selection box mode.
-      return new SelectionBoxGesture(false);
+      return new BatchSelectItemsGesture();
     }
 
-    const hitItem = this.mouseDownHitResult.item;
+    const hitItem = hitResult.item;
     if (this.clickDetector.isDoubleClick()) {
       // TODO: It should only be possible to enter edit path mode
       // for an editable item (i.e. a path, but not a group). Double clicking
@@ -129,37 +122,35 @@ export class SelectionTool extends BaseTool {
       // edit path mode.
       this.selectedEditPath = hitPath;
       return new EnterEditPathModeGesture(hitPath);
-    } else if (
-      event.modifiers.shift &&
-      hitItem.selected &&
-      Selections.getSelectedItems().length > 1
-    ) {
+    }
+
+    if (event.modifiers.shift && hitItem.selected && Selections.getSelectedItems().length > 1) {
       // TODO: After the item is deselected, it should still be possible
       // to drag/clone any other selected items in subsequent mouse events
 
       // If the hit item is selected, shift is pressed, and there is at least
       // one other selected item, then deselect the hit item.
       return new DeselectItemGesture(hitItem);
-    } else {
-      // TODO: The actual behavior in Sketch is a bit more complicated.
-      // For example, (1) a cloned item will not be generated until the next
-      // onMouseDrag event, (2) on the next onMouseDrag event, the
-      // cloned item should be selected and the currently selected item should
-      // be deselected, (3) the user can cancel a clone operation mid-drag by
-      // pressing/unpressing alt (even if alt wasn't initially pressed in
-      // onMouseDown).
-
-      // At this point we know that either (1) the hit item is not selected
-      // or (2) the hit item is selected, shift is not being pressed, and
-      // there is only one selected item. In both cases the hit item should
-      // end up being selected. If alt is being pressed, then we should
-      // clone the item as well.
-      return new SelectItemsGesture(hitItem, event.modifiers.alt);
     }
+
+    // TODO: The actual behavior in Sketch is a bit more complicated.
+    // For example, (1) a cloned item will not be generated until the next
+    // onMouseDrag event, (2) on the next onMouseDrag event, the
+    // cloned item should be selected and the currently selected item should
+    // be deselected, (3) the user can cancel a clone operation mid-drag by
+    // pressing/unpressing alt (even if alt wasn't initially pressed in
+    // onMouseDown).
+
+    // At this point we know that either (1) the hit item is not selected
+    // or (2) the hit item is selected, shift is not being pressed, and
+    // there is only one selected item. In both cases the hit item should
+    // end up being selected. If alt is being pressed, then we should
+    // clone the item as well.
+    return new SelectItemsGesture(hitItem, event.modifiers.alt);
   }
 
   private createEditPathModeGesture(event: paper.ToolEvent) {
-    this.mouseDownHitResult = this.selectedEditPath.hitTest(event.point, {
+    const hitResult = this.selectedEditPath.hitTest(event.point, {
       segments: true,
       stroke: true,
       curves: true,
@@ -167,7 +158,7 @@ export class SelectionTool extends BaseTool {
       fill: true,
       tolerance: 3 / paper.view.zoom,
     });
-    if (!this.mouseDownHitResult) {
+    if (!hitResult) {
       // TODO: Only enter selection box mode when we are certain that a drag
       // has occurred. If a drag does not occur, then we should interpret the
       // gesture as a click. If a click occurs and shift is not pressed, then
@@ -176,22 +167,19 @@ export class SelectionTool extends BaseTool {
       // If there is no hit item and we are in edit path mode, then
       // enter selection box mode for the selected item so we can
       // batch select its individual properties.
-      return new SelectionBoxGesture(true);
+      return new BatchSelectSegmentsGesture(this.selectedEditPath);
     }
 
-    const { type } = this.mouseDownHitResult;
+    const { type } = hitResult;
     if (type === 'segment') {
       const isDoubleClick = this.clickDetector.isDoubleClick();
-      const { segment } = this.mouseDownHitResult;
+      const { segment } = hitResult;
       if (isDoubleClick) {
         // If a double click occurred on top of a segment,
         // then either create or delete its handles.
-        if (segment.handleIn || segment.handleOut) {
-          // segment.
-        } else {
-        }
+        return new CreateOrDeleteSegmentHandlesGesture(segment);
       }
-      return new SelectSegmentsGesture(this.selectedEditPath, this.mouseDownHitResult.segment);
+      return new SelectSegmentsGesture(this.selectedEditPath, hitResult.segment);
     }
     if (type === 'stroke' || type === 'curve') {
       return new SelectCurvesGesture();
@@ -205,7 +193,7 @@ export class SelectionTool extends BaseTool {
 
   private onMouseUp(event: paper.ToolEvent) {
     this.currentGesture.onMouseUp(event);
-    if (this.selectedEditPath && !this.mouseDownHitResult) {
+    if (this.selectedEditPath && this.currentGesture instanceof BatchSelectSegmentsGesture) {
       // TODO: only exit segment selection mode if the selection box
       // gesture resulted in no items being selected
       this.selectedEditPath = undefined;

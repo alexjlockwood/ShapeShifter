@@ -100,6 +100,8 @@ export function getSelectionBoxPath() {
 }
 
 export function showSelectionBoxPath(downPoint: paper.Point, point: paper.Point) {
+  hideSelectionBoxPath();
+
   const rect = Items.newRectangle(createSelectionBoxRect(downPoint, point));
   rect.strokeWidth = 1 / paper.view.zoom;
   rect.guide = true;
@@ -113,4 +115,11 @@ export function showSelectionBoxPath(downPoint: paper.Point, point: paper.Point)
 function createSelectionBoxRect(from: paper.Point, to: paper.Point) {
   const half = new paper.Point(0.5 / paper.view.zoom, 0.5 / paper.view.zoom);
   return new paper.Rectangle(from.add(half), to.add(half));
+}
+
+function hideSelectionBoxPath() {
+  const selectionBox = getSelectionBoxPath();
+  if (selectionBox) {
+    selectionBox.remove();
+  }
 }

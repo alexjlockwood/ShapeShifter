@@ -1,4 +1,12 @@
-import { Cursor, Cursors, Guides, Items, Selections } from 'app/scripts/paper/util';
+import {
+  Cursor,
+  Cursors,
+  Guides,
+  HitTests,
+  Items,
+  Pivots,
+  Selections,
+} from 'app/scripts/paper/util';
 import * as paper from 'paper';
 
 import { Gesture } from './Gesture';
@@ -42,6 +50,16 @@ export class HoverGesture extends Gesture {
       Guides.showHoverPath(hitResult.item as paper.Path);
     } else {
       Guides.hideHoverPath();
+    }
+
+    const selectionBounds = Guides.getSelectionBoundsPath();
+
+    if (selectionBounds) {
+      const res = HitTests.selectionBoundsPivot(selectionBounds, point);
+      if (res) {
+        const cursor = Pivots.getResizeCursor(res.segment.index);
+        Cursors.set(cursor);
+      }
     }
   }
 

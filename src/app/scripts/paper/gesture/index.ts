@@ -1,7 +1,8 @@
 export { Gesture } from './Gesture';
 export { RotateGesture } from './RotateGesture';
 export { ScaleGesture } from './ScaleGesture';
-export { SelectionBoxGesture } from './SelectionBoxGesture';
+export { BatchSelectItemsGesture } from './BatchSelectItemsGesture';
+export { BatchSelectSegmentsGesture } from './BatchSelectSegmentsGesture';
 export { SelectItemsGesture } from './SelectItemsGesture';
 export { EditPathGesture } from './EditPathGesture';
 export { HoverGesture } from './HoverGesture';
@@ -9,6 +10,5 @@ export { SelectSegmentsGesture } from './SelectSegmentsGesture';
 export { SelectCurvesGesture } from './SelectCurvesGesture';
 export { SelectHandlesGesture } from './SelectHandlesGesture';
 export { EnterEditPathModeGesture } from './EnterEditPathModeGesture';
-export { CreateSegmentHandlesGesture } from './CreateSegmentHandlesGesture';
-export { DeleteSegmentHandlesGesture } from './DeleteSegmentHandlesGesture';
+export { CreateOrDeleteSegmentHandlesGesture } from './CreateOrDeleteSegmentHandlesGesture';
 export { DeselectItemGesture } from './DeselectItemGesture';

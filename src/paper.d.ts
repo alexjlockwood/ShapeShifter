@@ -3030,11 +3030,9 @@ declare module 'paper' {
     getPointAt(offset: number, isParameter?: boolean): Point;
 
     /**
-     * Calculates the tangent vector of the curve at the given offset.
-     * @param offset - the offset on the curve, or the curve time parameter if isParameter is true
-     * @param isParameter [optional] - pass true if offset is a curve time parameter. default: false
+     * Calculates the tangent vector of the curve at the given location.
      */
-    getTangentAt(offset: number, isParameter?: boolean): Point;
+    getTangentAt(location: number | CurveLocation): Point;
 
     /**
      * Calculates the normal vector of the curve at the given offset.
