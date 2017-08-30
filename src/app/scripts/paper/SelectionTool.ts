@@ -8,7 +8,7 @@ import { ClickDetector } from './detector';
 import {
   BatchSelectItemsGesture,
   BatchSelectSegmentsGesture,
-  CreateOrDeleteSegmentHandlesGesture,
+  CreateOrDeleteHandlesGesture,
   DeselectItemGesture,
   EditPathGesture,
   EnterEditPathModeGesture,
@@ -177,7 +177,7 @@ export class SelectionTool extends BaseTool {
       if (isDoubleClick) {
         // If a double click occurred on top of a segment,
         // then either create or delete its handles.
-        return new CreateOrDeleteSegmentHandlesGesture(segment);
+        return new CreateOrDeleteHandlesGesture(segment);
       }
       return new SelectSegmentsGesture(this.selectedEditPath, hitResult.segment);
     }

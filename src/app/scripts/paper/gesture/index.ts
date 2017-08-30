@@ -10,5 +10,5 @@ export { SelectSegmentsGesture } from './SelectSegmentsGesture';
 export { SelectCurvesGesture } from './SelectCurvesGesture';
 export { SelectHandlesGesture } from './SelectHandlesGesture';
 export { EnterEditPathModeGesture } from './EnterEditPathModeGesture';
-export { CreateOrDeleteSegmentHandlesGesture } from './CreateOrDeleteSegmentHandlesGesture';
+export { CreateOrDeleteHandlesGesture } from './CreateOrDeleteHandlesGesture';
 export { DeselectItemGesture } from './DeselectItemGesture';

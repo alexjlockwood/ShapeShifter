@@ -5,7 +5,7 @@ import { Gesture } from './Gesture';
 /**
  * A gesture that can be used to create/delete handles for a given segment.
  */
-export class CreateOrDeleteSegmentHandlesGesture extends Gesture {
+export class CreateOrDeleteHandlesGesture extends Gesture {
   constructor(private readonly segment: paper.Segment) {
     super();
   }
