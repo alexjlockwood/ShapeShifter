@@ -2841,6 +2841,14 @@ declare module 'paper' {
      * @param matrix - the matrix to transform the segment by
      */
     transform(matrix: Matrix): void;
+
+    hasHandles(): boolean;
+
+    isSmooth(): boolean;
+
+    clearHandles(): void;
+
+    smooth(options?: any): void;
   }
   /**
    * The Curve object represents the parts of a path that are connected by two following Segment objects. The curves of a path can be accessed through its path.curves array.

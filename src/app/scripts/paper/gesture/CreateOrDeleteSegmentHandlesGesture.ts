@@ -11,11 +11,10 @@ export class CreateOrDeleteSegmentHandlesGesture extends Gesture {
   }
 
   onMouseDown(event: paper.ToolEvent) {
-    if (this.segment.handleIn || this.segment.handleOut) {
-      this.segment.handleIn = undefined;
-      this.segment.handleOut = undefined;
+    if (this.segment.hasHandles()) {
+      this.segment.clearHandles();
     } else {
-      // TODO: generate a pair of mirrored handles somehow
+      this.segment.smooth();
     }
   }
 }

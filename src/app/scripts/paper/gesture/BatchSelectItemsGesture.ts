@@ -66,5 +66,7 @@ function selectItemsInBounds(
       Selections.setSelection(item, !event.modifiers.shift || !item.selected);
       return;
     }
+
+    Selections.setSelection(item, false);
   });
 }
