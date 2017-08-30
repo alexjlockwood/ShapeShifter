@@ -17,7 +17,7 @@ export class ToolPanelComponent implements OnInit {
   private toolMode$: Observable<ToolMode>;
 
   // TODO: deal with invalid fill/stroke colors
-  constructor(private readonly toolModeService: ToolModeService) {}
+  constructor(readonly toolModeService: ToolModeService) {}
 
   ngOnInit() {
     this.toolMode$ = this.toolModeService.getToolModeObservable();
