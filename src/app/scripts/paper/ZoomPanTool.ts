@@ -1,4 +1,5 @@
 import { ToolMode } from 'app/model/paper';
+import { Cursor, Cursors } from 'app/scripts/paper/util';
 import * as paper from 'paper';
 
 import { BaseTool } from './BaseTool';
@@ -10,16 +11,18 @@ export class ZoomPanTool extends BaseTool {
   private lastPoint: paper.Point;
 
   // @Override
+  protected onActivate() {
+    Cursors.set(Cursor.ZoomIn);
+  }
+
+  protected onDeactivate() {
+    Cursors.clear();
+  }
+
+  // @Override
   protected onInterceptEvent(toolMode: ToolMode, event?: paper.ToolEvent | paper.KeyEvent) {
-    if (toolMode === ToolMode.ZoomPan) {
-      // Intercept the event if the user is in zoom/pan mode.
-      return true;
-    }
-    if (event instanceof paper.ToolEvent || event instanceof paper.KeyEvent) {
-      // If this is a mouse or key event, intercept the event if space is pressed.
-      return event.modifiers.space;
-    }
-    return false;
+    // Intercept the event if the user is in zoom/pan mode or if space is pressed.
+    return toolMode === ToolMode.ZoomPan || (event && event.modifiers.space);
   }
 
   // @Override
@@ -28,6 +31,8 @@ export class ZoomPanTool extends BaseTool {
       this.onMouseDown(event);
     } else if (event.type === 'mousedrag') {
       this.onMouseDrag(event);
+    } else if (event.type === 'mouseup') {
+      this.onMouseUp(event);
     }
   }
 
@@ -46,6 +51,7 @@ export class ZoomPanTool extends BaseTool {
     if (!event.modifiers.space) {
       return;
     }
+    Cursors.add(Cursor.Grabbing);
 
     // In order to have coordinate changes not mess up the
     // dragging, we need to convert coordinates to view space,
@@ -55,5 +61,34 @@ export class ZoomPanTool extends BaseTool {
     const last = paper.view.viewToProject(this.lastPoint);
     paper.view.scrollBy(last.subtract(event.point));
     this.lastPoint = point;
+  }
+
+  private onMouseUp(event: paper.ToolEvent) {
+    Cursors.remove(Cursor.Grabbing);
+  }
+
+  // @Override
+  protected onKeyEvent(event: paper.KeyEvent) {
+    if (event.type === 'keydown') {
+      this.onKeyDown(event);
+    } else if (event.type === 'keyup') {
+      this.onKeyUp(event);
+    }
+  }
+
+  private onKeyDown(event: paper.KeyEvent) {
+    if (event.key === 'alt') {
+      Cursors.add(Cursor.ZoomOut);
+    } else if (event.key === 'space') {
+      Cursors.add(Cursor.Grab);
+    }
+  }
+
+  private onKeyUp(event: paper.KeyEvent) {
+    if (event.key === 'alt') {
+      Cursors.remove(Cursor.ZoomOut);
+    } else if (event.key === 'space') {
+      Cursors.remove(Cursor.Grab);
+    }
   }
 }

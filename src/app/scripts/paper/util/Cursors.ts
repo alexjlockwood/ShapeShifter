@@ -1,33 +1,42 @@
 import * as $ from 'jquery';
 
-export function clear() {
-  set(Cursor.Auto);
+export function add(cursor: Cursor) {
+  $('.paper-canvas').addClass(cursor);
+}
+
+export function remove(cursor: Cursor) {
+  $('.paper-canvas').removeClass(cursor);
 }
 
 export function set(cursor: Cursor) {
-  $('.paper-canvas').css('cursor', cursor);
+  clear();
+  $('.paper-canvas').addClass(cursor);
 }
 
+export function clear() {
+  $('.paper-canvas').removeClass((index, css) => (css.match(/\bcursor-\S+/g) || []).join(' '));
+}
+
+// These names correspond to the names declared in root.component.scss
 export enum Cursor {
-  Auto = 'auto',
-  PointSelect = 'url(/assets/cursor/pointSelectCursor.png) 0 0, auto',
-  Pen = 'url(/assets/cursor/penCursor.png) 0 0, auto',
-  PenAdd = 'url(/assets/cursor/penAddCursor.png) 0 0, auto',
-  PenClose = 'url(/assets/cursor/penCloseCursor.png) 0 0, auto',
-  Resize0 = 'ns-resize',
-  Resize45 = 'nesw-resize',
-  Resize90 = 'ew-resize',
-  Resize135 = 'nwse-resize',
-  Rotate0 = 'url(/assets/cursor/rotateTopCursor.png) 0 0, auto',
-  Rotate45 = 'url(/assets/cursor/rotateTopRightCursor.png) 0 0, auto',
-  Rotate90 = 'url(/assets/cursor/rotateRightCursor.png) 0 0, auto',
-  Rotate135 = 'url(/assets/cursor/rotateBottomRightCursor.png) 0 0, auto',
-  Rotate180 = 'url(/assets/cursor/rotateBottomCursor.png) 0 0, auto',
-  Rotate225 = 'url(/assets/cursor/rotateBottomLeftCursor.png) 0 0, auto',
-  Rotate270 = 'url(/assets/cursor/rotateLeftCursor.png) 0 0, auto',
-  Rotate315 = 'url(/assets/cursor/rotateTopLeftCursor.png) 0 0, auto',
-  ZoomIn = 'zoom-in',
-  ZoomOut = 'zoom-out',
-  Grab = 'grab',
-  Grabbing = 'grabbing',
+  PointSelect = 'cursor-point-select',
+  Pen = 'cursor-pen',
+  PenAdd = 'cursor-pen-add',
+  PenClose = 'cursor-pen-close',
+  Resize0 = 'cursor-resize-0',
+  Resize45 = 'cursor-resize-45',
+  Resize90 = 'cursor-resize-90',
+  Resize135 = 'cursor-resize-135',
+  Rotate0 = 'cursor-rotate-0',
+  Rotate45 = 'cursor-rotate-45',
+  Rotate90 = 'cursor-rotate-90',
+  Rotate135 = 'cursor-rotate-135',
+  Rotate180 = 'cursor-rotate-180',
+  Rotate225 = 'cursor-rotate-225',
+  Rotate270 = 'cursor-rotate-270',
+  Rotate315 = 'cursor-rotate-315',
+  ZoomIn = 'cursor-zoom-in',
+  ZoomOut = 'cursor-zoom-out',
+  Grab = 'cursor-grab',
+  Grabbing = 'cursor-grabbing',
 }

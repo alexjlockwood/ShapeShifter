@@ -42,133 +42,82 @@
     }
 }
 
-// Cursor types used by the paper canvas below.
+.cursor-point-select {
+	cursor: url('/assets/cursor/pointSelectCursor.png') 0 0, default;
+}
 
-.cursor-pen-create {
-	cursor: url('/assets/cursor/cursor-pen-create.png') 6 2, default;
+.cursor-pen {
+	cursor: url('/assets/cursor/penCursor.png') 0 0, default;
 }
 
 .cursor-pen-add {
-	cursor: url('/assets/cursor/cursor-pen-add.png') 6 2, default;
-}
-
-.cursor-pen-remove {
-	cursor: url('/assets/cursor/cursor-pen-remove.png') 6 2, default;
-}
-
-.cursor-pen-edit {
-	cursor: url('/assets/cursor/cursor-pen-edit.png') 6 2, default;
+	cursor: url('/assets/cursor/penAddCursor.png') 0 0, default;
 }
 
 .cursor-pen-close {
-	cursor: url('/assets/cursor/cursor-pen-close.png') 6 2, default;
+	cursor: url('/assets/cursor/penCloseCursor.png') 0 0, default;
 }
 
-.cursor-pen-adjust {
-	cursor: url('/assets/cursor/cursor-pen-adjust.png') 6 2, default;
+.cursor-resize-0 {
+	cursor: ns-resize;
 }
 
-.cursor-pen-join {
-	cursor: url('/assets/cursor/cursor-pen-join.png') 6 2, default;
+.cursor-resize-45 {
+	cursor: nesw-resize;
 }
 
-.cursor-zoom-in {
-	cursor: url('/assets/cursor/cursor-zoom-in.png') 7 7, default;
+.cursor-resize-90 {
+	cursor: ew-resize;
 }
 
-.cursor-zoom-out {
-	cursor: url('/assets/cursor/cursor-zoom-out.png') 7 7, default;
-}
-
-.cursor-hand {
-	cursor: url('/assets/cursor/cursor-hand.png') 10 10, default;
-}
-
-.cursor-hand-grab {
-	cursor: url('/assets/cursor/cursor-hand-grab.png') 10 10, default;
-}
-
-.cursor-arrow-black {
-	cursor: url('/assets/cursor/cursor-arrow-black.png') 2 2, default;
-}
-
-.cursor-arrow-black-point {
-	cursor: url('/assets/cursor/cursor-arrow-black-point.png') 2 2, default;
-}
-
-.cursor-arrow-black-shape {
-	cursor: url('/assets/cursor/cursor-arrow-black-shape.png') 2 2, default;
-}
-
-.cursor-arrow-white {
-	cursor: url('/assets/cursor/cursor-arrow-white.png') 2 2, default;
-}
-
-.cursor-arrow-white-point {
-	cursor: url('/assets/cursor/cursor-arrow-white-point.png') 2 2, default;
-}
-
-.cursor-arrow-white-shape {
-	cursor: url('/assets/cursor/cursor-arrow-white-shape.png') 2 2, default;
-}
-
-.cursor-arrow-small {
-	cursor: url('/assets/cursor/cursor-arrow-small.png') 2 2, default;
-}
-
-.cursor-arrow-small-point {
-	cursor: url('/assets/cursor/cursor-arrow-small-point.png') 2 2, default;
-}
-
-.cursor-arrow-duplicate {
-	cursor: url('/assets/cursor/cursor-arrow-duplicate.png') 2 2, default;
-}
-
-.cursor-scale-0 {
-	cursor: url('/assets/cursor/cursor-scale-0.png') 9 9, default;
-}
-
-.cursor-scale-45 {
-	cursor: url('/assets/cursor/cursor-scale-45.png') 9 9, default;
-}
-
-.cursor-scale-90 {
-	cursor: url('/assets/cursor/cursor-scale-90.png') 9 9, default;
-}
-
-.cursor-scale-135 {
-	cursor: url('/assets/cursor/cursor-scale-135.png') 9 9, default;
+.cursor-resize-135 {
+	cursor: nwse-resize;
 }
 
 .cursor-rotate-0 {
-	cursor: url('/assets/cursor/cursor-rotate-0.png') 9 9, default;
+	cursor: url('/assets/cursor/rotateTopCursor.png') 0 0, default;
 }
 
 .cursor-rotate-45 {
-	cursor: url('/assets/cursor/cursor-rotate-45.png') 9 9, default;
+	cursor: url('/assets/cursor/rotateTopRightCursor.png') 0 0, default;
 }
 
 .cursor-rotate-90 {
-	cursor: url('/assets/cursor/cursor-rotate-90.png') 9 9, default;
+	cursor: url('/assets/cursor/rotateRightCursor.png') 0 0, default;
 }
 
 .cursor-rotate-135 {
-	cursor: url('/assets/cursor/cursor-rotate-135.png') 9 9, default;
+	cursor: url('/assets/cursor/rotateBottomRightCursor.png') 0 0, default;
 }
 
 .cursor-rotate-180 {
-	cursor: url('/assets/cursor/cursor-rotate-180.png') 9 9, default;
+	cursor: url('/assets/cursor/rotateBottomCursor.png') 0 0, default;
 }
 
 .cursor-rotate-225 {
-	cursor: url('/assets/cursor/cursor-rotate-225.png') 9 9, default;
+	cursor: url('/assets/cursor/rotateBottomLeftCursor.png') 0 0, default;
 }
 
 .cursor-rotate-270 {
-	cursor: url('/assets/cursor/cursor-rotate-270.png') 9 9, default;
+	cursor: url('/assets/cursor/rotateLeftCursor.png') 0 0, default;
 }
 
 .cursor-rotate-315 {
-	cursor: url('/assets/cursor/cursor-rotate-315.png') 9 9, default;
+	cursor: url('/assets/cursor/rotateTopLeftCursor.png') 0 0, default;
 }
 
+.cursor-zoom-in {
+	cursor: zoom-in;
+}
+
+.cursor-zoom-out {
+	cursor: zoom-out;
+}
+
+.cursor-grab {
+	cursor: grab;
+}
+
+.cursor-grabbing {
+	cursor: grabbing;
+}

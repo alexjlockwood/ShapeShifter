@@ -1,7 +1,6 @@
 // Helper functions for guide/overlay related functionality.
 // Depends on Items and Handles.
 
-import * as _ from 'lodash';
 import * as paper from 'paper';
 
 import * as Items from './Items';
