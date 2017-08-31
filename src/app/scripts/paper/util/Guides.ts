@@ -143,6 +143,7 @@ export function showAddSegmentToCurveHoverGroup(location: paper.CurveLocation) {
 
   const highlightedCurve = Items.newPath([curve.segment1, curve.segment2]);
   highlightedCurve.guide = true;
+  highlightedCurve.matrix = location.path.matrix.clone();
   highlightedCurve.strokeColor = 'red';
   highlightedCurve.strokeWidth = 4 / paper.view.zoom;
   group.addChild(highlightedCurve);

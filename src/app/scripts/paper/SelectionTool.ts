@@ -7,7 +7,6 @@ import { BaseTool } from './BaseTool';
 import { ClickDetector } from './detector';
 import {
   AddDeleteHandlesGesture,
-  AddSegmentToCurveGesture,
   BatchSelectItemsGesture,
   BatchSelectSegmentsGesture,
   DeselectItemGesture,
@@ -162,7 +161,7 @@ export class SelectionTool extends BaseTool {
           return new SelectDragSegmentsGesture(this.selectedEditPath, hitResult.segment);
         case 'stroke':
         case 'curve':
-          return new AddSegmentToCurveGesture();
+          return new SelectDragSegmentsGesture(this.selectedEditPath, hitResult.location);
         case 'handle-in':
         case 'handle-out':
           return new SelectDragHandleGesture(
