@@ -10,7 +10,6 @@ import {
   BatchSelectItemsGesture,
   BatchSelectSegmentsGesture,
   DeselectItemGesture,
-  EditPathGesture,
   EnterEditPathModeGesture,
   Gesture,
   HoverItemsGesture,

@@ -4,7 +4,6 @@ export { ScaleItemsGesture } from './ScaleItemsGesture';
 export { BatchSelectItemsGesture } from './BatchSelectItemsGesture';
 export { BatchSelectSegmentsGesture } from './BatchSelectSegmentsGesture';
 export { SelectDragCloneItemsGesture } from './SelectDragCloneItemsGesture';
-export { EditPathGesture } from './EditPathGesture';
 export { HoverItemsGesture } from './HoverItemsGesture';
 export { HoverSegmentsCurvesGesture } from './HoverSegmentsCurvesGesture';
 export { SelectDragSegmentsGesture } from './SelectDragSegmentsGesture';
