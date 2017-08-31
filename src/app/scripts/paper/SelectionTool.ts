@@ -17,8 +17,8 @@ import {
   RotateItemsGesture,
   ScaleItemsGesture,
   SelectDragCloneItemsGesture,
+  SelectDragDrawSegmentsGesture,
   SelectDragHandleGesture,
-  SelectDragSegmentsGesture,
 } from './gesture';
 import { Guides, HitTests, Items, Selections } from './util';
 
@@ -85,6 +85,29 @@ export class SelectionTool extends BaseTool {
     this.currentGesture.onMouseDown(event);
   }
 
+  private onMouseUp(event: paper.ToolEvent) {
+    this.currentGesture.onMouseUp(event);
+    if (this.selectedEditPath && this.currentGesture instanceof BatchSelectSegmentsGesture) {
+      // TODO: only exit segment selection mode if the selection box
+      // gesture resulted in no items being selected
+      this.selectedEditPath = undefined;
+    }
+    if (this.selectedEditPath) {
+      this.currentGesture = new HoverSegmentsCurvesGesture(this.selectedEditPath);
+    } else {
+      this.currentGesture = new HoverItemsGesture();
+    }
+  }
+
+  // @Override
+  protected onKeyEvent(event: paper.KeyEvent) {
+    if (event.type === 'keydown') {
+      this.currentGesture.onKeyDown(event);
+    } else if (event.type === 'keyup') {
+      this.currentGesture.onKeyUp(event);
+    }
+  }
+
   private createSelectionModeGesture(event: paper.ToolEvent) {
     const selectionBounds = Guides.getSelectionBoundsPath();
     if (selectionBounds) {
@@ -141,26 +164,24 @@ export class SelectionTool extends BaseTool {
     // there is only one selected item. In both cases the hit item should
     // end up being selected. If alt is being pressed, then we should
     // clone the item as well.
-    return new SelectDragCloneItemsGesture(hitItem, event.modifiers.alt);
+    const shouldCloneSelectedItems = event.modifiers.alt;
+    return new SelectDragCloneItemsGesture(hitItem, shouldCloneSelectedItems);
   }
 
   private createEditPathModeGesture(event: paper.ToolEvent) {
     const hitResult = HitTests.editPathMode(this.selectedEditPath, event.point);
     if (hitResult) {
-      const { type } = hitResult;
       switch (hitResult.type) {
         case 'segment':
-          const isDoubleClick = this.clickDetector.isDoubleClick();
-          const { segment } = hitResult;
-          if (isDoubleClick) {
+          if (this.clickDetector.isDoubleClick()) {
             // If a double click occurred on top of a segment,
             // then either create or delete its handles.
-            return new AddDeleteHandlesGesture(segment);
+            return new AddDeleteHandlesGesture(hitResult.segment);
           }
-          return new SelectDragSegmentsGesture(this.selectedEditPath, hitResult.segment);
+          return new SelectDragDrawSegmentsGesture(this.selectedEditPath, hitResult.segment);
         case 'stroke':
         case 'curve':
-          return new SelectDragSegmentsGesture(this.selectedEditPath, hitResult.location);
+          return new SelectDragDrawSegmentsGesture(this.selectedEditPath, hitResult.location);
         case 'handle-in':
         case 'handle-out':
           return new SelectDragHandleGesture(
@@ -169,6 +190,15 @@ export class SelectionTool extends BaseTool {
             hitResult.type,
           );
       }
+    }
+
+    const selectedSegments = this.selectedEditPath.segments.filter(s => s.selected);
+    const hasSingleSelectedEndPointSegment =
+      !this.selectedEditPath.closed &&
+      selectedSegments.length === 1 &&
+      (selectedSegments[0].isFirst() || selectedSegments[0].isLast());
+    if (hasSingleSelectedEndPointSegment) {
+      return new SelectDragDrawSegmentsGesture(this.selectedEditPath);
     }
 
     // TODO: Only enter selection box mode when we are certain that a drag
@@ -180,28 +210,5 @@ export class SelectionTool extends BaseTool {
     // enter selection box mode for the selected item so we can
     // batch select its individual properties.
     return new BatchSelectSegmentsGesture(this.selectedEditPath);
-  }
-
-  private onMouseUp(event: paper.ToolEvent) {
-    this.currentGesture.onMouseUp(event);
-    if (this.selectedEditPath && this.currentGesture instanceof BatchSelectSegmentsGesture) {
-      // TODO: only exit segment selection mode if the selection box
-      // gesture resulted in no items being selected
-      this.selectedEditPath = undefined;
-    }
-    if (this.selectedEditPath) {
-      this.currentGesture = new HoverSegmentsCurvesGesture(this.selectedEditPath);
-    } else {
-      this.currentGesture = new HoverItemsGesture();
-    }
-  }
-
-  // @Override
-  protected onKeyEvent(event: paper.KeyEvent) {
-    if (event.type === 'keydown') {
-      this.currentGesture.onKeyDown(event);
-    } else if (event.type === 'keyup') {
-      this.currentGesture.onKeyUp(event);
-    }
   }
 }

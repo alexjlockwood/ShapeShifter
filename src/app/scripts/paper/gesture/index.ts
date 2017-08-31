@@ -6,7 +6,7 @@ export { BatchSelectSegmentsGesture } from './BatchSelectSegmentsGesture';
 export { SelectDragCloneItemsGesture } from './SelectDragCloneItemsGesture';
 export { HoverItemsGesture } from './HoverItemsGesture';
 export { HoverSegmentsCurvesGesture } from './HoverSegmentsCurvesGesture';
-export { SelectDragSegmentsGesture } from './SelectDragSegmentsGesture';
+export { SelectDragDrawSegmentsGesture } from './SelectDragDrawSegmentsGesture';
 export { SelectDragHandleGesture } from './SelectDragHandleGesture';
 export { EnterEditPathModeGesture } from './EnterEditPathModeGesture';
 export { AddDeleteHandlesGesture } from './AddDeleteHandlesGesture';

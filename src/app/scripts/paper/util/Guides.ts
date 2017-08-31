@@ -10,6 +10,7 @@ const HOVER_PATH_NAME = 'hoverPath';
 const SELECTION_BOX_NAME = 'selectionBox';
 const SELECTION_PATH_NAME = 'selectionPath';
 const ADD_SEGMENT_TO_CURVE_HOVER_GROUP_NAME = 'addSegmentToCurveHoverGroup';
+const PEN_PATH_PREVIEW_LINE_NAME = 'penPathPreviewLine';
 // TODO: implement a 'rotation tool' similar to sketch
 // TODO: implement a 'transform tool' similar to sketch
 const GUIDE_COLOR = '#009dec';
@@ -161,5 +162,32 @@ export function hideAddSegmentToCurveHoverGroup() {
   const hoverGroup = getAddSegmentToCurveHoverGroup();
   if (hoverGroup) {
     hoverGroup.remove();
+  }
+}
+
+// ======================-========== //
+// ===== Pen path preview line ===== //
+// ================================= //
+
+function getPenPathPreviewLine() {
+  return getGuideLayer().getItem({ name: PEN_PATH_PREVIEW_LINE_NAME }) as paper.Path.Line;
+}
+
+export function showPenPathPreviewLine(from: paper.Point, to: paper.Point) {
+  hidePenPathPreviewLine();
+
+  const line = Items.newLine(from, to);
+  line.name = PEN_PATH_PREVIEW_LINE_NAME;
+  line.guide = true;
+  line.strokeWidth = 4 / paper.view.zoom;
+  line.strokeColor = 'red';
+  getGuideLayer().addChild(line);
+  return line;
+}
+
+export function hidePenPathPreviewLine() {
+  const line = getPenPathPreviewLine();
+  if (line) {
+    line.remove();
   }
 }

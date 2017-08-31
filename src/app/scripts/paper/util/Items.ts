@@ -88,6 +88,12 @@ export function newCircle(point: paper.Point, radius: number) {
   return circle;
 }
 
+export function newLine(from: paper.Point, to: paper.Point) {
+  const line = new paper.Path.Line(from, to);
+  line.remove();
+  return line;
+}
+
 export function newGroup(obj: { name?: string } = {}) {
   const group = new paper.Group(obj);
   group.remove();

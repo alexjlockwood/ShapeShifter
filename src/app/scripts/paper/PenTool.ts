@@ -7,9 +7,9 @@ import { Selections } from './util';
 enum Mode {
   None,
   Add,
-  Continue,
-  Remove,
   Close,
+  // TODO: remove this
+  Remove,
 }
 
 type Type = 'segment' | 'handle-in' | 'handle-out';
@@ -22,7 +22,6 @@ export class PenTool extends BaseTool {
   private currSegment: paper.Segment;
   private mode = Mode.None;
   private type: Type;
-  private mouseMoveHitResult: paper.HitResult;
 
   // @Override
   protected onInterceptEvent(toolMode: ToolMode, event?: paper.ToolEvent | paper.KeyEvent) {
@@ -43,89 +42,80 @@ export class PenTool extends BaseTool {
   }
 
   private onMouseDown(event: paper.ToolEvent) {
+    const hitResult = paper.project.hitTest(event.point, {
+      segments: true,
+      stroke: true,
+      curves: true,
+      tolerance: 5 / paper.view.zoom,
+    });
+    const lastHitResult =
+      hitResult && hitResult.item && hitResult.item.selected ? hitResult : undefined;
+
     if (this.currSegment) {
       this.currSegment.selected = false;
     }
-    this.mode = this.type = this.currSegment = undefined;
+    this.mode = Mode.None;
+    this.type = undefined;
+    this.currSegment = undefined;
 
     if (!this.currPath) {
-      if (!this.mouseMoveHitResult) {
-        Selections.deselectAll();
-        this.currPath = new paper.Path();
-        this.currPath.fillColor = 'blue';
-        this.currPath.strokeColor = 'black';
-        this.currPath.strokeWidth = 10;
-        // path = pg.stylebar.applyActiveToolbarStyle(path);
-      } else {
-        const item = this.mouseMoveHitResult.item as paper.Path;
-        if (item.closed) {
-          this.currPath = item;
+      Selections.deselectAll();
+      this.currPath = new paper.Path();
+      this.currPath.fillColor = 'blue';
+      this.currPath.strokeColor = 'black';
+      this.currPath.strokeWidth = 10;
+    }
+
+    const result = findHandle(this.currPath, event.point);
+    if (result) {
+      this.currSegment = result.segment;
+      this.type = result.type;
+      if (result.type === 'segment') {
+        if (
+          result.segment.index === 0 &&
+          this.currPath.segments.length > 1 &&
+          !this.currPath.closed
+        ) {
+          this.mode = Mode.Close;
+          this.currPath.closed = true;
+          this.currPath.firstSegment.selected = true;
         } else {
-          this.mode = Mode.Continue;
-          this.currPath = item;
-          this.currSegment = this.mouseMoveHitResult.segment;
-          if (item.lastSegment !== this.mouseMoveHitResult.segment) {
-            this.currPath.reverse();
-          }
+          this.mode = Mode.Remove;
+          result.segment.remove();
         }
       }
     }
 
-    if (this.currPath) {
-      const result = findHandle(this.currPath, event.point);
-      if (result && this.mode !== Mode.Continue) {
-        this.currSegment = result.segment;
-        this.type = result.type;
-        if (result.type === 'segment') {
-          if (
-            result.segment.index === 0 &&
-            this.currPath.segments.length > 1 &&
-            !this.currPath.closed
-          ) {
-            this.mode = Mode.Close;
-            this.currPath.closed = true;
-            this.currPath.firstSegment.selected = true;
-          } else {
-            this.mode = Mode.Remove;
-            result.segment.remove();
-          }
-        }
-      }
+    if (this.currSegment) {
+      return;
+    }
 
-      if (this.currSegment) {
-        return;
-      }
+    if (!lastHitResult) {
+      this.mode = Mode.Add;
+      // Add a new segment to the path.
+      this.currSegment = this.currPath.add(event.point);
+      this.currSegment.selected = true;
+      return;
+    }
 
-      if (!this.mouseMoveHitResult) {
-        this.mode = Mode.Add;
-        // Add a new segment to the path.
-        this.currSegment = this.currPath.add(event.point);
-        this.currSegment.selected = true;
-        return;
+    const item = lastHitResult.item as paper.Path;
+    if (lastHitResult.type === 'segment' && !item.closed) {
+      // Joining two paths.
+      const hoverPath = item;
+      // Check if the connection point is the first segment
+      // reverse path if it is not because join()
+      // always connects to first segment).
+      if (hoverPath.firstSegment !== lastHitResult.segment) {
+        hoverPath.reverse();
       }
-
-      const item = this.mouseMoveHitResult.item as paper.Path;
-      if (this.mouseMoveHitResult.type === 'segment' && !item.closed) {
-        // Joining two paths.
-        const hoverPath = item;
-        // Check if the connection point is the first segment
-        // reverse path if it is not because join()
-        // always connects to first segment).
-        if (hoverPath.firstSegment !== this.mouseMoveHitResult.segment) {
-          hoverPath.reverse();
-        }
-        this.currPath.join(hoverPath);
-        this.currPath = undefined;
-      } else if (
-        this.mouseMoveHitResult.type === 'curve' ||
-        this.mouseMoveHitResult.type === 'stroke'
-      ) {
-        this.mode = Mode.Add;
-        // Inserting segment on curve/stroke.
-        const { location } = this.mouseMoveHitResult;
-        this.currSegment = this.currPath.insert(location.index + 1, event.point);
-        this.currSegment.selected = true;
-      }
+      this.currPath.join(hoverPath);
+      this.currPath = undefined;
+    } else if (lastHitResult.type === 'curve' || lastHitResult.type === 'stroke') {
+      this.mode = Mode.Add;
+      // Inserting segment on curve/stroke.
+      const { location } = lastHitResult;
+      this.currSegment = this.currPath.insert(location.index + 1, event.point);
+      this.currSegment.selected = true;
     }
   }
 
@@ -139,16 +129,14 @@ export class PenTool extends BaseTool {
   }
 
   private onMouseMove(event: paper.ToolEvent) {
-    const hitResult = paper.project.hitTest(event.point, createHitOptions());
-    if (hitResult && hitResult.item && hitResult.item.selected) {
-      this.mouseMoveHitResult = hitResult;
-    } else {
-      this.mouseMoveHitResult = undefined;
-    }
+    // TODO: draw a line indicating how the path will be extended
   }
 
   private onMouseUp(event: paper.ToolEvent) {
     if (this.currPath && this.currPath.closed) {
+      // TODO: exit 'pen tool' mode and return to 'edit path mode' for the new path
+
+      // If there is a current path and it is closed, then we are done.
       this.currPath = undefined;
     }
   }
@@ -170,13 +158,4 @@ function findHandle(path: paper.Path, point: paper.Point) {
     }
   }
   return undefined;
-}
-
-function createHitOptions(): paper.HitOptions {
-  return {
-    segments: true,
-    stroke: true,
-    curves: true,
-    tolerance: 5 / paper.view.zoom,
-  };
 }

@@ -2,6 +2,9 @@ import * as paper from 'paper';
 
 import * as Items from './Items';
 
+/**
+ * Executes a hit test in search of selection bound pivots.
+ */
 export function selectionBoundsPivot(selectionBounds: paper.Path.Rectangle, point: paper.Point) {
   return selectionBounds.hitTest(point, {
     segments: true,
@@ -9,6 +12,9 @@ export function selectionBoundsPivot(selectionBounds: paper.Path.Rectangle, poin
   });
 }
 
+/**
+ * Executes a standard selection mode hit test.
+ */
 export function selectionMode(point: paper.Point, matchFn?: (result: paper.HitResult) => boolean) {
   return paper.project.activeLayer.hitTest(point, {
     stroke: true,
@@ -18,6 +24,9 @@ export function selectionMode(point: paper.Point, matchFn?: (result: paper.HitRe
   });
 }
 
+/**
+ * Executes a standard edit path mode hit test.
+ */
 export function editPathMode(selectedEditPath: paper.Path, point: paper.Point) {
   return selectedEditPath.hitTest(point, {
     segments: true,

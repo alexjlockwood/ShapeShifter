@@ -2810,6 +2810,10 @@ declare module 'paper' {
      */
     previous: Segment;
 
+    isFirst(): boolean;
+
+    isLast(): boolean;
+
     /**
      * Returns true if the the two segments are the beginning of two lines and if these two lines are running parallel.
      * @param segment

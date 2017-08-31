@@ -69,7 +69,7 @@ export class CanvasPaperDirective extends CanvasLayoutMixin(DestroyableMixin())
       ]
     }`);
     const vl = new VectorLayer(jsonObj);
-    this.store.dispatch(new SetVectorLayer(vl));
+    // this.store.dispatch(new SetVectorLayer(vl));
   }
 
   // @Override
