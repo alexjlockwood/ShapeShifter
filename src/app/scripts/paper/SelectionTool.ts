@@ -6,20 +6,21 @@ import * as paper from 'paper';
 import { BaseTool } from './BaseTool';
 import { ClickDetector } from './detector';
 import {
+  AddDeleteHandlesGesture,
+  AddSegmentToCurveGesture,
   BatchSelectItemsGesture,
   BatchSelectSegmentsGesture,
-  CreateOrDeleteHandlesGesture,
   DeselectItemGesture,
   EditPathGesture,
   EnterEditPathModeGesture,
   Gesture,
-  HoverGesture,
-  RotateGesture,
-  ScaleGesture,
-  SelectCurvesGesture,
-  SelectHandlesGesture,
-  SelectItemsGesture,
-  SelectSegmentsGesture,
+  HoverItemsGesture,
+  HoverSegmentsCurvesGesture,
+  RotateItemsGesture,
+  ScaleItemsGesture,
+  SelectDragCloneItemsGesture,
+  SelectDragHandleGesture,
+  SelectDragSegmentsGesture,
 } from './gesture';
 import { Guides, HitTests, Items, Selections } from './util';
 
@@ -50,7 +51,7 @@ import { Guides, HitTests, Items, Selections } from './util';
  */
 export class SelectionTool extends BaseTool {
   private readonly clickDetector = new ClickDetector();
-  private currentGesture: Gesture = new HoverGesture();
+  private currentGesture: Gesture = new HoverItemsGesture();
 
   // If this is non-nil, then we are in edit path mode. Otherwise, we are in
   // selection mode.
@@ -93,15 +94,11 @@ export class SelectionTool extends BaseTool {
       const res = HitTests.selectionBoundsPivot(selectionBounds, event.point);
       if (res) {
         // If the hit item is a selection bounds segment, then perform a scale gesture.
-        return new ScaleGesture(res.segment, Selections.getSelectedItems());
+        return new ScaleItemsGesture(res.segment, Selections.getSelectedItems());
       }
     }
 
-    const hitResult = paper.project.hitTest(event.point, {
-      stroke: true,
-      fill: true,
-      tolerance: 8 / paper.view.zoom,
-    });
+    const hitResult = HitTests.selectionMode(event.point);
     if (!hitResult) {
       // If there is no hit item, then enter selection box mode.
       return new BatchSelectItemsGesture();
@@ -146,49 +143,45 @@ export class SelectionTool extends BaseTool {
     // there is only one selected item. In both cases the hit item should
     // end up being selected. If alt is being pressed, then we should
     // clone the item as well.
-    return new SelectItemsGesture(hitItem, event.modifiers.alt);
+    return new SelectDragCloneItemsGesture(hitItem, event.modifiers.alt);
   }
 
   private createEditPathModeGesture(event: paper.ToolEvent) {
-    const hitResult = this.selectedEditPath.hitTest(event.point, {
-      segments: true,
-      stroke: true,
-      curves: true,
-      handles: true,
-      fill: true,
-      tolerance: 3 / paper.view.zoom,
-    });
-    if (!hitResult) {
-      // TODO: Only enter selection box mode when we are certain that a drag
-      // has occurred. If a drag does not occur, then we should interpret the
-      // gesture as a click. If a click occurs and shift is not pressed, then
-      // we should exit edit path mode.
-
-      // If there is no hit item and we are in edit path mode, then
-      // enter selection box mode for the selected item so we can
-      // batch select its individual properties.
-      return new BatchSelectSegmentsGesture(this.selectedEditPath);
-    }
-
-    const { type } = hitResult;
-    if (type === 'segment') {
-      const isDoubleClick = this.clickDetector.isDoubleClick();
-      const { segment } = hitResult;
-      if (isDoubleClick) {
-        // If a double click occurred on top of a segment,
-        // then either create or delete its handles.
-        return new CreateOrDeleteHandlesGesture(segment);
+    const hitResult = HitTests.editPathMode(this.selectedEditPath, event.point);
+    if (hitResult) {
+      const { type } = hitResult;
+      switch (hitResult.type) {
+        case 'segment':
+          const isDoubleClick = this.clickDetector.isDoubleClick();
+          const { segment } = hitResult;
+          if (isDoubleClick) {
+            // If a double click occurred on top of a segment,
+            // then either create or delete its handles.
+            return new AddDeleteHandlesGesture(segment);
+          }
+          return new SelectDragSegmentsGesture(this.selectedEditPath, hitResult.segment);
+        case 'stroke':
+        case 'curve':
+          return new AddSegmentToCurveGesture();
+        case 'handle-in':
+        case 'handle-out':
+          return new SelectDragHandleGesture(
+            this.selectedEditPath,
+            hitResult.segment,
+            hitResult.type,
+          );
       }
-      return new SelectSegmentsGesture(this.selectedEditPath, hitResult.segment);
-    }
-    if (type === 'stroke' || type === 'curve') {
-      return new SelectCurvesGesture();
-    }
-    if (type === 'handle-in' || type === 'handle-out') {
-      return new SelectHandlesGesture();
     }
 
-    return new HoverGesture(this.selectedEditPath);
+    // TODO: Only enter selection box mode when we are certain that a drag
+    // has occurred. If a drag does not occur, then we should interpret the
+    // gesture as a click. If a click occurs and shift is not pressed, then
+    // we should exit edit path mode.
+
+    // If there is no hit item and we are in edit path mode, then
+    // enter selection box mode for the selected item so we can
+    // batch select its individual properties.
+    return new BatchSelectSegmentsGesture(this.selectedEditPath);
   }
 
   private onMouseUp(event: paper.ToolEvent) {
@@ -198,7 +191,11 @@ export class SelectionTool extends BaseTool {
       // gesture resulted in no items being selected
       this.selectedEditPath = undefined;
     }
-    this.currentGesture = new HoverGesture(this.selectedEditPath);
+    if (this.selectedEditPath) {
+      this.currentGesture = new HoverSegmentsCurvesGesture(this.selectedEditPath);
+    } else {
+      this.currentGesture = new HoverItemsGesture();
+    }
   }
 
   // @Override

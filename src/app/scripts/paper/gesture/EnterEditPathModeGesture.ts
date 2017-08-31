@@ -11,6 +11,7 @@ export class EnterEditPathModeGesture extends Gesture {
     super();
   }
 
+  // @Override
   onMouseDown(event: paper.ToolEvent) {
     Selections.deselectAll();
 

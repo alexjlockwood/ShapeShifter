@@ -4,16 +4,17 @@ import * as paper from 'paper';
 import { Gesture } from './Gesture';
 
 /**
- * A gesture that can be used to delete handles for a given segment.
+ * A gesture that can be used to deselect a single item. This gesture
+ * is only used during selection mode.
  */
 export class DeselectItemGesture extends Gesture {
   constructor(private readonly hitItem: paper.Item) {
     super();
   }
 
+  // @Override
   onMouseDown(event: paper.ToolEvent) {
-    this.hitItem.selected = false;
-    console.log(Items.computeBoundingBox(Selections.getSelectedItems()));
+    Selections.deselect(this.hitItem);
     Guides.showSelectionBoundsPath(Items.computeBoundingBox(Selections.getSelectedItems()));
   }
 }

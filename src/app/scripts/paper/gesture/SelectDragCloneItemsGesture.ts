@@ -5,9 +5,10 @@ import * as paper from 'paper';
 import { Gesture } from './Gesture';
 
 /**
- * A gesture that performs selection, move, and clone operations on one or more items.
+ * A gesture that performs selection, move, and clone operations
+ * on one or more items. This gesture is only used during selection mode.
  */
-export class SelectItemsGesture extends Gesture {
+export class SelectDragCloneItemsGesture extends Gesture {
   private selectedItems: ReadonlyArray<paper.Item>;
   private initialItemPositions: ReadonlyArray<paper.Point>;
 

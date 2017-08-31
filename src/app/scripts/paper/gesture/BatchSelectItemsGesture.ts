@@ -5,6 +5,7 @@ import { Gesture } from './Gesture';
 
 /**
  * A gesture that selects multiple items using a bounded box.
+ * This gesture is only used during selection mode.
  */
 export class BatchSelectItemsGesture extends Gesture {
   // @Override

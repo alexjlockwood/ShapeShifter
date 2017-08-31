@@ -4,14 +4,16 @@ import * as paper from 'paper';
 import { Gesture } from './Gesture';
 
 /**
- * A gesture that performs selection operations on a path segment.
+ * A gesture that performs selection and drag operations
+ * on one or more path segments. This gesture is only used
+ * during edit path mode.
  */
-export class SelectSegmentsGesture extends Gesture {
+export class SelectDragSegmentsGesture extends Gesture {
   private selectedSegments: ReadonlyArray<paper.Segment>;
   private initialSegmentPositions: ReadonlyArray<paper.Point>;
 
   constructor(
-    private readonly selectedPath: paper.Path,
+    private readonly selectedEditPath: paper.Path,
     private readonly mouseDownHitSegment: paper.Segment,
   ) {
     super();
@@ -20,23 +22,25 @@ export class SelectSegmentsGesture extends Gesture {
   // @Override
   onMouseDown(event: paper.ToolEvent) {
     if (event.modifiers.shift || event.modifiers.command) {
+      // If shift or command is pressed, toggle the segment's selection state.
       this.mouseDownHitSegment.selected = !this.mouseDownHitSegment.selected;
     } else {
-      // If shift isn't pressed, deselect any currently selected segments.
-      this.selectedPath.segments.forEach(s => (s.selected = false));
+      // If shift isn't pressed, select the hit segment and deselect all others.
+      this.selectedEditPath.segments.forEach(s => (s.selected = false));
       this.mouseDownHitSegment.selected = true;
     }
-    this.selectedSegments = this.selectedPath.segments.filter(s => s.selected);
-    this.initialSegmentPositions = this.selectedSegments.map(s => s.point);
+    this.selectedSegments = this.selectedEditPath.segments.filter(s => s.selected);
+    this.initialSegmentPositions = this.selectedSegments.map(s => s.point.clone());
   }
 
   // @Override
   onMouseDrag(event: paper.ToolEvent) {
-    const { point, downPoint, delta, modifiers } = event;
-    const dragVector = point.subtract(downPoint);
+    const dragVector = event.point.subtract(event.downPoint);
+    const snapPoint = event.modifiers.shift
+      ? new paper.Point(MathUtil.snapDeltaToAngle(dragVector, 15))
+      : undefined;
     this.selectedSegments.forEach((segment, i) => {
       if (event.modifiers.shift) {
-        const snapPoint = new paper.Point(MathUtil.snapDeltaToAngle(dragVector, 15));
         segment.point = this.initialSegmentPositions[i].add(snapPoint);
       } else {
         segment.point = segment.point.add(event.delta);

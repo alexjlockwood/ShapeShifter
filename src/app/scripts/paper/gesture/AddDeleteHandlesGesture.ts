@@ -5,7 +5,7 @@ import { Gesture } from './Gesture';
 /**
  * A gesture that can be used to create/delete handles for a given segment.
  */
-export class CreateOrDeleteHandlesGesture extends Gesture {
+export class AddDeleteHandlesGesture extends Gesture {
   constructor(private readonly segment: paper.Segment) {
     super();
   }
@@ -14,6 +14,7 @@ export class CreateOrDeleteHandlesGesture extends Gesture {
     if (this.segment.hasHandles()) {
       this.segment.clearHandles();
     } else {
+      // TODO: polish this a bit more using the extra options argument?
       this.segment.smooth();
     }
   }

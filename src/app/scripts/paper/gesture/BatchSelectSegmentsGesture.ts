@@ -5,6 +5,7 @@ import { Gesture } from './Gesture';
 
 /**
  * A gesture that selects multiple segments using a bounded box.
+ * This gesture is only used during edit path mode.
  */
 export class BatchSelectSegmentsGesture extends Gesture {
   constructor(private readonly selectedEditPath: paper.Path) {

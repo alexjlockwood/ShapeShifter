@@ -12,7 +12,7 @@ import { Gesture } from './Gesture';
  * - This gesture implies that one or more items were previously selected
  *   and that its selection bounds are currently being shown.
  */
-export class ScaleGesture extends Gesture {
+export class ScaleItemsGesture extends Gesture {
   private initialMatrices: ReadonlyArray<paper.Matrix>;
   private initialPivot: paper.Point;
   private initialSize: paper.Point;

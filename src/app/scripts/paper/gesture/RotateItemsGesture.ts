@@ -11,7 +11,7 @@ import { Gesture } from './Gesture';
  * - This gesture implies that one or more items were previously selected
  *   and that its selection bounds are currently being shown.
  */
-export class RotateGesture extends Gesture {
+export class RotateItemsGesture extends Gesture {
   private selectedItems: ReadonlyArray<paper.Item>;
   private initialMatrices: ReadonlyArray<paper.Matrix>;
   private pivot: paper.Point;

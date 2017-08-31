@@ -8,9 +8,10 @@ import * as Items from './Items';
 const GUIDE_LAYER_NAME = 'guideLayer';
 const HOVER_PATH_NAME = 'hoverPath';
 const SELECTION_BOX_NAME = 'selectionBox';
+const SELECTION_PATH_NAME = 'selectionPath';
+const ADD_SEGMENT_TO_CURVE_HOVER_GROUP_NAME = 'addSegmentToCurveHoverGroup';
 // TODO: implement a 'rotation tool' similar to sketch
 // TODO: implement a 'transform tool' similar to sketch
-const SELECTION_PATH_NAME = 'selectionPath';
 const GUIDE_COLOR = '#009dec';
 const SELECTION_BOX_COLOR = '#aaaaaa';
 
@@ -121,5 +122,43 @@ function hideSelectionBoxPath() {
   const selectionBox = getSelectionBoxPath();
   if (selectionBox) {
     selectionBox.remove();
+  }
+}
+
+// ======================-=============== //
+// ===== Add segment to curve hover ===== //
+// ====================================== //
+
+function getAddSegmentToCurveHoverGroup() {
+  return getGuideLayer().getItem({ name: ADD_SEGMENT_TO_CURVE_HOVER_GROUP_NAME }) as paper.Group;
+}
+
+export function showAddSegmentToCurveHoverGroup(location: paper.CurveLocation) {
+  hideAddSegmentToCurveHoverGroup();
+
+  const group = Items.newGroup({ name: ADD_SEGMENT_TO_CURVE_HOVER_GROUP_NAME });
+  group.guide = true;
+
+  const { curve, point } = location;
+
+  const highlightedCurve = Items.newPath([curve.segment1, curve.segment2]);
+  highlightedCurve.guide = true;
+  highlightedCurve.strokeColor = 'red';
+  highlightedCurve.strokeWidth = 4 / paper.view.zoom;
+  group.addChild(highlightedCurve);
+
+  const highlightedPoint = Items.newCircle(point, 7 / paper.view.zoom);
+  highlightedPoint.guide = true;
+  highlightedPoint.fillColor = 'green';
+  group.addChild(highlightedPoint);
+
+  getGuideLayer().addChild(group);
+  return group;
+}
+
+export function hideAddSegmentToCurveHoverGroup() {
+  const hoverGroup = getAddSegmentToCurveHoverGroup();
+  if (hoverGroup) {
+    hoverGroup.remove();
   }
 }
