@@ -9,6 +9,5 @@ export { HoverItemsGesture } from './HoverItemsGesture';
 export { HoverSegmentsCurvesGesture } from './HoverSegmentsCurvesGesture';
 export { SelectDragDrawSegmentsGesture } from './SelectDragDrawSegmentsGesture';
 export { SelectDragHandleGesture } from './SelectDragHandleGesture';
-export { EnterEditPathModeGesture } from './EnterEditPathModeGesture';
 export { AddDeleteHandlesGesture } from './AddDeleteHandlesGesture';
 export { DeselectItemGesture } from './DeselectItemGesture';

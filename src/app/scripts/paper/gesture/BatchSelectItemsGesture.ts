@@ -41,6 +41,7 @@ export class BatchSelectItemsGesture extends Gesture {
   }
 }
 
+// TODO: could we use Item#getItems() instead? (using the 'overlapping' option)
 function selectItemsInBounds(
   event: paper.ToolEvent,
   selectionBox: paper.Path.Rectangle,

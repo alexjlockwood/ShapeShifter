@@ -10,7 +10,6 @@ import {
   BatchSelectItemsGesture,
   BatchSelectSegmentsGesture,
   DeselectItemGesture,
-  EnterEditPathModeGesture,
   Gesture,
   HoverItemsGesture,
   HoverSegmentsCurvesGesture,
@@ -138,8 +137,8 @@ export class SelectionTool extends BaseTool {
 
       // If a double click event occurs on top of a hit item, then enter
       // edit path mode.
-      this.selectedEditPath = hitPath;
-      return new EnterEditPathModeGesture(hitPath);
+      this.enterEditPathMode(hitPath);
+      return new class extends Gesture {}();
     }
 
     if (event.modifiers.shift && hitItem.selected && Selections.getSelectedItems().length > 1) {
@@ -210,5 +209,17 @@ export class SelectionTool extends BaseTool {
     // enter selection box mode for the selected item so we can
     // batch select its individual properties.
     return new BatchSelectSegmentsGesture(this.selectedEditPath);
+  }
+
+  private enterEditPathMode(hitPath: paper.Path) {
+    this.selectedEditPath = hitPath;
+
+    Selections.deselectAll();
+
+    // Begin edit path mode by selecting the last two curves in the path.
+    const startIndex = Math.max(0, this.selectedEditPath.curves.length - 2);
+    const endIndex = this.selectedEditPath.curves.length;
+    const lastTwoCurves = this.selectedEditPath.curves.slice(startIndex, endIndex);
+    lastTwoCurves.forEach(c => (c.selected = true));
   }
 }
