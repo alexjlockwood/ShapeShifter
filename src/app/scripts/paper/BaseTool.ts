@@ -7,14 +7,24 @@ import * as paper from 'paper';
  * to external calls to the 'dispatchXXX' methods.
  */
 export abstract class BaseTool {
+  /**
+   * Dispatcher method that invokes the onActivate() callback.
+   */
   dispatchActivate() {
     this.onActivate();
   }
 
+  /**
+   * Dispatcher method that invokes the onInterceptEvent() callback.
+   */
   dispatchInterceptEvent(toolMode: ToolMode, event?: paper.ToolEvent | paper.KeyEvent) {
     return this.onInterceptEvent(toolMode, event);
   }
 
+  /**
+   * Dispatcher method that invokes the onMouseEvent(), onKeyEvent(),
+   * and onToolModeEvent() callbacks.
+   */
   dispatchEvent(event: ToolMode | paper.ToolEvent | paper.KeyEvent) {
     if (event instanceof paper.ToolEvent) {
       this.onMouseEvent(event);
@@ -25,6 +35,9 @@ export abstract class BaseTool {
     }
   }
 
+  /**
+   * Dispatcher method that invokes the onDeactivate() callback.
+   */
   dispatchDeactivate() {
     this.onDeactivate();
   }

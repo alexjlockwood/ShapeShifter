@@ -1425,7 +1425,7 @@ declare module 'paper' {
     getItems<T extends Item>(options?: {
       recursive?: boolean;
       match?: (item: Item) => boolean;
-      class?: Constructor<T>;
+      class?: new (...args: any[]) => T;
       inside?: Rectangle;
       overlapping?: Rectangle;
     }): Item[];
@@ -2149,7 +2149,8 @@ declare module 'paper' {
     color: Color;
 
     /**
-     * If the HitResult has a type of 'stroke', 'segment', 'handle-in' or 'handle-out', this property refers to the segment that was hit or that is closest to the hitResult.location on the curve.
+     * If the HitResult has a type of 'stroke', 'segment', 'handle-in' or 'handle-out',
+     * this property refers to the segment that was hit or that is closest to the hitResult.location on the curve.
      */
     segment: Segment;
 
@@ -2176,23 +2177,88 @@ declare module 'paper' {
   }
   export interface PathItem extends PathItemProps {}
   /**
-   * The PathItem class is the base for any items that describe paths and offer standardised methods for drawing and path manipulation, such as Path and CompoundPath.
+   * The PathItem class is the base for any items that describe paths and offer
+   * standardised methods for drawing and path manipulation, such as Path and CompoundPath.
    */
   export abstract class PathItem extends Item {
     /**
-     * Returns all intersections between two PathItem items as an array of CurveLocation objects. CompoundPath items are also supported.
+     * Returns all intersections between two PathItem items as an array of
+     * CurveLocation objects. CompoundPath items are also supported.
      * @param path - the other item to find the intersections with
-     * @param sorted [optional] - specifies whether the returned CurveLocation objects should be sorted by path and offset, default: false
+     * @param sorted [optional] - specifies whether the returned CurveLocation
+     * objects should be sorted by path and offset, default: false
      */
     getIntersections(path: PathItem, sorted?: boolean): CurveLocation[];
 
     /**
-     * Smooth bezier curves without changing the amount of segments or their points, by only smoothing and adjusting their handle points, for both open ended and closed paths.
+     * Smooths the path item without changing the amount of segments in
+     * the path or moving the segments’ locations, by smoothing and adjusting the
+     * angle and length of the segments’ handles based on the position and distance
+     * of neighboring segments.
+     *
+     * Smoothing works both for open paths and closed paths, and can be applied to
+     * the full path, as well as a sub-range of it. If a range is defined using
+     * the options.from and options.to properties, only the curve handles inside
+     * that range are touched. If one or both limits of the range are specified
+     * in negative indices, the indices are wrapped around the end of the curve.
+     * That way, a smoothing range in a close path can even wrap around the
+     * connection between the last and the first segment.
+     *
+     * Four different smoothing methods are available:
+     *
+     * - 'continuous' smooths the path item by adjusting its curve handles so that the
+     * first and second derivatives of all involved curves are continuous across their boundaries.
+     * This method tends to result in the smoothest results, but does not allow for further
+     * parametrization of the handles.
+     *
+     * - 'asymmetric' is based on the same principle as 'continuous' but uses different
+     * factors so that the result is asymmetric. This used to the only method available
+     * until v0.10.0, and is currently still the default when no method is specified,
+     * for reasons of backward compatibility. It will eventually be removed.
+     *
+     * - 'catmull-rom' uses the Catmull-Rom spline to smooth the segment.
+     * The optionally passed factor controls the knot parametrization of the algorithm:
+     *
+     * 0.0: the standard, uniform Catmull-Rom spline
+     * 0.5: the centripetal Catmull-Rom spline, guaranteeing no self-intersections
+     * 1.0: the chordal Catmull-Rom spline
+     *
+     * 'geometric' use a simple heuristic and empiric geometric method to smooth the
+     * segment’s handles. The handles were weighted, meaning that big differences
+     * in distances between the segments will lead to probably undesired results.
+     *
+     * The optionally passed factor defines the tension parameter (0…1), controlling
+     * the amount of smoothing as a factor by which to scale each handle.
+     *
+     * @param options
+     * options.type: String — the type of smoothing method: ‘continuous’,
+     * ‘asymmetric’, ‘catmull-rom’, ‘geometric’ — default: ‘asymmetric’
+     *
+     * options.factor: Number — the factor parameterizing the smoothing
+     * method — default: 0.5 for 'catmull-rom', 0.4 for 'geometric'
+     *
+     * options.from: Number⟋Segment⟋Curve — the segment or curve at which to
+     * start smoothing, if not the full path shall be smoothed (inclusive). This
+     * can either be a segment index, or a segment or curve object that is part of
+     * the path. If the passed number is negative, the index is wrapped around the
+     * end of the path.
+     *
+     * options.to: Number⟋Segment⟋Curve — the segment or curve to which the handles
+     * of the path shall be processed (inclusive). This can either be a segment index,
+     * or a segment or curve object that is part of the path. If the passed number
+     * is negative, the index is wrapped around the end of the path.
      */
-    smooth(): void;
+    smooth(options?: {
+      type?: 'continuous' | 'asymmetric' | 'catmull-rom' | 'geometric';
+      factor?: number;
+      from?: number | Segment | Curve;
+      to?: number | Segment | Curve;
+    }): void;
 
     /**
-     * On a normal empty Path, the point is simply added as the path's first segment. If called on a CompoundPath, a new Path is created as a child and the point is added as its first segment.
+     * On a normal empty Path, the point is simply added as the path's first
+     * segment. If called on a CompoundPath, a new Path is created as a
+     * child and the point is added as its first segment.
      * @param point - the path's first segment
      */
     moveTo(point: Point): void;
@@ -2219,7 +2285,9 @@ declare module 'paper' {
     quadraticCurveTo(handle: Point, to: Point): void;
 
     /**
-     * Draws a curve from the position of the last segment point in the path that goes through the specified through point, to the specified to point by adding one segment to the path.
+     * Draws a curve from the position of the last segment point in the path
+     * that goes through the specified through point, to the specified to
+     * point by adding one segment to the path.
      * @param through - the point through which the curve should go
      * @param to - the point where the curve should end
      * @param parameter [optional] - default: 0.5
@@ -2227,34 +2295,42 @@ declare module 'paper' {
     curveTo(through: Point, to: Point, parameter?: number): void;
 
     /**
-     * Draws an arc from the position of the last segment point in the path that goes through the specified through point, to the specified to point by adding one or more segments to the path.
+     * Draws an arc from the position of the last segment point in the path that
+     * goes through the specified through point, to the specified to point by adding
+     * one or more segments to the path.
      * @param through - the point where the arc should pass through
      * @param to - the point where the arc should end
      */
     arcTo(through: Point, to: Point): void;
 
     /**
-     * Draws an arc from the position of the last segment point in the path to the specified point by adding one or more segments to the path.
+     * Draws an arc from the position of the last segment point in the path to the
+     * specified point by adding one or more segments to the path.
      * @param to - the point where the arc should end
-     * @param closewise [optional] - specifies whether the arc should be drawn in clockwise direction. optional, default: true
+     * @param closewise [optional] - specifies whether the arc should be drawn in
+     * clockwise direction. optional, default: true
      */
     arcTo(to: Point, clockwise?: boolean): void;
 
     /**
-     * Closes the path. When closed, Paper.js connects the first and last segment of the path with an additional curve.
-     * @param join - controls whether the method should attempt to merge the first segment with the last if they lie in the same location.
+     * Closes the path. When closed, Paper.js connects the first and last segment
+     * of the path with an additional curve.
+     * @param join - controls whether the method should attempt to merge the first
+     * segment with the last if they lie in the same location.
      */
     closePath(join: boolean): void;
 
     /**
-     * If called on a CompoundPath, a new Path is created as a child and a point is added as its first segment relative to the position of the last segment of the current path.
+     * If called on a CompoundPath, a new Path is created as a child and a point is
+     * added as its first segment relative to the position of the last segment of the current path.
      * @param to -
      */
     moveBy(to: Point): void;
 
     /**
      * Adds a segment relative to the last segment point of the path.
-     * @param to - the vector which is added to the position of the last segment of the path, to get to the position of the new segment.
+     * @param to - the vector which is added to the position of the last segment of
+     * the path, to get to the position of the new segment.
      */
     lineBy(to: Point): void;
 
@@ -2402,7 +2478,8 @@ declare module 'paper' {
   export class Path extends PathItem {
     /**
      * Creates a new path item and places it at the top of the active layer.
-     * @param segments [optional] - An array of segments (or points to be converted to segments) that will be added to the path
+     * @param segments [optional] - An array of segments (or points to be
+     * converted to segments) that will be added to the path
      */
     constructor(segments?: Segment[] | Point[]);
 
@@ -2421,7 +2498,8 @@ declare module 'paper' {
     /**
      * Adds one or more segments to the end of the segments array of this path.
      * @param segment - the segment or point to be added.
-     * Returns the added segment. This is not necessarily the same object, e.g. if the segment to be added already belongs to another path.
+     * Returns the added segment. This is not necessarily the same object,
+     * e.g. if the segment to be added already belongs to another path.
      */
     add(segment: Segment | Point): Segment;
 
@@ -2429,14 +2507,17 @@ declare module 'paper' {
      * Inserts one or more segments at a given index in the list of this path's segments.
      * @param index - the index at which to insert the segment.
      * @param segment - the segment or point to be inserted.
-     * Returns the added segment. This is not necessarily the same object, e.g. if the segment to be added already belongs to another path.
+     * Returns the added segment. This is not necessarily the same object, e.g.
+     * if the segment to be added already belongs to another path.
      */
     insert(index: number, segment: Segment | Point): Segment;
 
     /**
-     * Adds an array of segments (or types that can be converted to segments) to the end of the segments array.
+     * Adds an array of segments (or types that can be converted to segments)
+     * to the end of the segments array.
      * @param segments - Array of Segment objects
-     * Returns an array of the added segments. These segments are not necessarily the same objects, e.g. if the segment to be added already belongs to another path.
+     * Returns an array of the added segments. These segments are not necessarily
+     * the same objects, e.g. if the segment to be added already belongs to another path.
      */
     addSegments(segments: Segment[]): Segment[];
 
@@ -2444,7 +2525,8 @@ declare module 'paper' {
      * Inserts an array of segments at a given index in the path's segments array.
      * @param index - the index at which to insert the segments.
      * @param segments - the segments to be inserted.
-     * Returns an array of the added segments. These segments are not necessarily the same objects, e.g. if the segment to be added already belongs to another path.
+     * Returns an array of the added segments. These segments are not necessarily
+     * the same objects, e.g. if the segment to be added already belongs to another path.
      */
     insertSegments(index: number, segments: Segment[]): Segment[];
 
@@ -2462,7 +2544,8 @@ declare module 'paper' {
     removeSegments(): Segment[];
 
     /**
-     * Removes the segments from the specified from index to the to index from the path's segments array.
+     * Removes the segments from the specified from index to the to index
+     * from the path's segments array.
      * @param from - the beginning index, inclusive
      * @param to [optional = segments.length] - the ending index
      * Returns an array containing the removed segments
@@ -2470,33 +2553,39 @@ declare module 'paper' {
     removeSegments(from: number, to?: number): Segment[];
 
     /**
-     * Converts the curves in a path to straight lines with an even distribution of points. The distance between the produced segments is as close as possible to the value specified by the maxDistance parameter.
+     * Converts the curves in a path to straight lines with an even distribution of points.
+     * The distance between the produced segments is as close as possible to the value
+     * specified by the maxDistance parameter.
      * @param maxDistance - the maximum distance between the points
      */
     flatten(maxDistance: number): void;
 
     /**
-     * Smooths a path by simplifying it. The path.segments array is analyzed and replaced by a more optimal set of segments, reducing memory usage and speeding up drawing.
+     * Smooths a path by simplifying it. The path.segments array is analyzed and replaced
+     * by a more optimal set of segments, reducing memory usage and speeding up drawing.
      * @param tolerance [optional = 2.5] -
      */
     simplify(tolerance?: number): void;
 
     /**
-     * Splits the path at the given offset. After splitting, the path will be open. If the path was open already, splitting will result in two paths.
+     * Splits the path at the given offset. After splitting, the path will be open.
+     * If the path was open already, splitting will result in two paths.
      * @param offset - the offset at which to split the path as a number between 0 and path.length
      * Returns the newly created path after splitting, if any
      */
     split(offset: number): Path;
 
     /**
-     * Splits the path at the given curve location. After splitting, the path will be open. If the path was open already, splitting will result in two paths.
+     * Splits the path at the given curve location. After splitting, the path will be open.
+     * If the path was open already, splitting will result in two paths.
      * @param location - the curve location at which to split the path
      * Returns the newly created path after splitting, if any
      */
     split(location: CurveLocation): Path;
 
     /**
-     * Splits the path at the given curve index and parameter. After splitting, the path will be open. If the path was open already, splitting will result in two paths.
+     * Splits the path at the given curve index and parameter. After splitting, the path
+     * will be open. If the path was open already, splitting will result in two paths.
      * @param index - the index of the curve in the path.curves array at which to split
      * @param parameter - the parameter at which the curve will be split
      * Returns the newly created path after splitting, if any
@@ -2848,7 +2937,10 @@ declare module 'paper' {
     isColinear(segment: Segment): boolean;
 
     /**
-     * Returns true if the segment at the given index is the beginning of an orthogonal arc segment. The code looks at the length of the handles and their relation to the distance to the imaginary corner point. If the relation is kappa, then it's an arc.
+     * Returns true if the segment at the given index is the beginning of an
+     * orthogonal arc segment. The code looks at the length of the handles and
+     * their relation to the distance to the imaginary corner point. If the
+     * relation is kappa, then it's an arc.
      */
     isArc(): boolean;
 
@@ -2875,11 +2967,45 @@ declare module 'paper' {
 
     hasHandles(): boolean;
 
+    /**
+     * Checks if the segment connects two curves smoothly, meaning that
+     * its two handles are collinear and segment does not form a corner.
+     */
     isSmooth(): boolean;
 
     clearHandles(): void;
 
-    smooth(options?: any): void;
+    /**
+     * Smooths the bezier curves that pass through this segment by taking
+     * into account the segment’s position and distance to the neighboring
+     * segments and changing the direction and length of the segment’s handles
+     * accordingly without moving the segment itself.
+     *
+     * Two different smoothing methods are available:
+     *
+     * - 'catmull-rom' uses the Catmull-Rom spline to smooth the segment.
+     * The optionally passed factor controls the knot parametrization of the algorithm:
+     *
+     * 0.0: the standard, uniform Catmull-Rom spline
+     * 0.5: the centripetal Catmull-Rom spline, guaranteeing no self-intersections
+     * 1.0: the chordal Catmull-Rom spline
+     *
+     * - 'geometric' use a simple heuristic and empiric geometric method to
+     * smooth the segment’s handles. The handles were weighted, meaning that
+     * big differences in distances between the segments will lead to probably
+     * undesired results.
+     *
+     * The optionally passed factor defines the tension parameter (0…1),
+     * controlling the amount of smoothing as a factor by which to scale each handle.
+     *
+     * @param options
+     * options.type: String — the type of smoothing method: ‘catmull-rom’,
+     * ‘geometric’ — default: ‘catmull-rom’
+     *
+     * options.factor: Number — the factor parameterizing the smoothing
+     * method — default: 0.5 for 'catmull-rom', 0.4 for 'geometric'
+     */
+    smooth(options?: { type?: 'catmull-rom' | 'geometric'; factor?: number }): void;
   }
   /**
    * The Curve object represents the parts of a path that are connected by two following Segment objects. The curves of a path can be accessed through its path.curves array.
