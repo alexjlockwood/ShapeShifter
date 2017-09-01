@@ -6,11 +6,6 @@ import { Gesture } from './Gesture';
 
 /**
  * A gesture that performs scaling operations.
- *
- * - This gesture begins with a mouse down and ends with a mouse up.
- * - This gesture is created in selection mode.
- * - This gesture implies that one or more items were previously selected
- *   and that its selection bounds are currently being shown.
  */
 export class ScaleItemsGesture extends Gesture {
   private initialMatrices: ReadonlyArray<paper.Matrix>;
@@ -18,7 +13,7 @@ export class ScaleItemsGesture extends Gesture {
   private initialSize: paper.Point;
   private centeredInitialSize: paper.Point;
   private initialCenter: paper.Point;
-  private currentHandle: paper.Point;
+  private currentPivot: paper.Point;
 
   constructor(
     private readonly hitSegment: paper.Segment,
@@ -36,8 +31,8 @@ export class ScaleItemsGesture extends Gesture {
     const pivotType = Pivots.getPivotType(this.hitSegment.index);
     const oppPivotType = Pivots.getOppositePivotType(this.hitSegment.index);
     this.initialPivot = scalingBounds[oppPivotType].clone();
-    this.currentHandle = scalingBounds[pivotType].clone();
-    this.initialSize = this.currentHandle.subtract(this.initialPivot);
+    this.currentPivot = scalingBounds[pivotType].clone();
+    this.initialSize = this.currentPivot.subtract(this.initialPivot);
     this.centeredInitialSize = this.initialSize.divide(2);
     this.initialCenter = scalingBounds.center.clone();
 
@@ -48,10 +43,10 @@ export class ScaleItemsGesture extends Gesture {
   // @Override
   onMouseDrag(event: paper.ToolEvent) {
     // Transform about the center if alt is pressed. Otherwise trasform about
-    // the handle opposite of the currently active handle.
+    // the pivot opposite of the currently active pivot.
     const currentPivot = event.modifiers.alt ? this.initialCenter : this.initialPivot;
-    this.currentHandle = this.currentHandle.add(event.delta);
-    const currentSize = this.currentHandle.subtract(currentPivot);
+    this.currentPivot = this.currentPivot.add(event.delta);
+    const currentSize = this.currentPivot.subtract(currentPivot);
     const initialSize = event.modifiers.alt ? this.centeredInitialSize : this.initialSize;
     let sx = 1;
     let sy = 1;

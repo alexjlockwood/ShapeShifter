@@ -1,4 +1,5 @@
 import * as _ from 'lodash';
+import * as createDistorter from 'perspective-transform';
 
 import { Matrix } from './Matrix';
 import { Point } from './Point';
@@ -67,3 +68,32 @@ export function snapDeltaToAngle(delta: Point, snapAngleDegrees: number): Point 
 export function isNearZero(n: number) {
   return round(n) === 0;
 }
+
+type Quadrilateral = [Point, Point, Point, Point];
+
+/**
+ * Distorts a source point to a new destination coordinate space.
+ */
+export function distortPoint(srcPoint: Point, src: Quadrilateral, dst: Quadrilateral) {
+  const srcCorners = _.flatMap(src, p => [p.x, p.y]);
+  const dstCorners = _.flatMap(dst, p => [p.x, p.y]);
+  const distorter = createDistorter(srcCorners, dstCorners);
+  const [x, y] = distorter.transform(srcPoint.x, srcPoint.y);
+  return { x, y };
+}
+
+// const s: Quadrilateral = [
+//   { x: 158, y: 64 },
+//   { x: 494, y: 69 },
+//   { x: 495, y: 404 },
+//   { x: 158, y: 404 },
+// ];
+
+// const d: Quadrilateral = [
+//   { x: 100, y: 500 },
+//   { x: 152, y: 564 },
+//   { x: 148, y: 604 },
+//   { x: 100, y: 560 },
+// ];
+
+// console.log(distortPoint({ x: 250, y: 120 }, s, d));

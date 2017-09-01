@@ -6,10 +6,7 @@ import { Gesture } from './Gesture';
 /**
  * A gesture that performs rotation operations.
  *
- * - This gesture begins with a mouse down and ends with a mouse up.
- * - This gesture is created in selection mode.
- * - This gesture implies that one or more items were previously selected
- *   and that its selection bounds are currently being shown.
+ * TODO: create a rotation tool instead?
  */
 export class RotateItemsGesture extends Gesture {
   private selectedItems: ReadonlyArray<paper.Item>;

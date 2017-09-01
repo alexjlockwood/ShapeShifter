@@ -7,3 +7,4 @@ import * as Pivots from './Pivots';
 import * as Selections from './Selections';
 export { Guides, Items, Layers, Selections, Pivots, Cursors, HitTests };
 export { Cursor } from './Cursors';
+export { PivotType } from './Pivots';
