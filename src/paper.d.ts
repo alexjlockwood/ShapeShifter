@@ -311,7 +311,7 @@ declare module 'paper' {
      */
     applyToContext(ctx: CanvasRenderingContext2D): void;
   }
-  interface PointProps {
+  export interface PointProps {
     /**
      * The x coordinate of the point
      */
@@ -577,7 +577,7 @@ declare module 'paper' {
     // ADDED BY ALEX LOCKWOOD
     set(x: number, y: number): void;
   }
-  interface RectangleProps {
+  export interface RectangleProps {
     /**
      * The x position of the rectangle.
      */
@@ -810,7 +810,7 @@ declare module 'paper' {
      */
     scale(hor: number, ver: number): Rectangle;
   }
-  interface SizeProps {
+  export interface SizeProps {
     /**
      * The width of the size
      */
@@ -821,7 +821,7 @@ declare module 'paper' {
      */
     height: number;
   }
-  interface Size extends SizeProps {}
+  export interface Size extends SizeProps {}
   /**
    * The Size object is used to describe the size or dimensions of something, through its width and height properties.
    */
@@ -1024,7 +1024,7 @@ declare module 'paper' {
      */
     static get(id: string): PaperScope;
   }
-  interface ItemProps {
+  export interface ItemProps {
     /**
      * The tangential vector to the #curve at the given location.
      */
@@ -1844,7 +1844,7 @@ declare module 'paper' {
      */
     removeOnUp(): void;
   }
-  interface GroupProps extends ItemProps {
+  export interface GroupProps extends ItemProps {
     /**
      * Specifies whether the group item is to be clipped.
      * When setting to true, the first child in the group is automatically defined as the clipping mask.
@@ -1868,7 +1868,7 @@ declare module 'paper' {
      */
     constructor(object?: Partial<GroupProps>);
   }
-  interface LayerProps extends GroupProps {}
+  export interface LayerProps extends GroupProps {}
   export interface Layer extends LayerProps {}
   /**
    * The Layer item represents a layer in a Paper.js project.
@@ -1892,7 +1892,7 @@ declare module 'paper' {
      */
     activate(): void;
   }
-  interface ShapeProps extends ItemProps {
+  export interface ShapeProps extends ItemProps {
     /**
      * The type of shape of the item as a string.
      */
@@ -2160,7 +2160,7 @@ declare module 'paper' {
     | 'bounds'
     | 'center'
     | 'pixel';
-  interface PathItemProps {
+  export interface PathItemProps {
     /**
      * The path's geometry, formatted as SVG style path data.
      */
@@ -2317,7 +2317,7 @@ declare module 'paper' {
      */
     divide(path: PathItem): PathItem;
   }
-  interface PathProps extends PathItemProps {
+  export interface PathProps extends PathItemProps {
     /**
      * The segments contained within the path.
      * Array of Segment objects
@@ -2684,7 +2684,7 @@ declare module 'paper' {
       constructor(object?: Partial<PathProps>);
     }
   }
-  interface CompoundPathProps extends PathItemProps {
+  export interface CompoundPathProps extends PathItemProps {
     /**
      * Specifies whether the compound path is oriented clock-wise.
      */

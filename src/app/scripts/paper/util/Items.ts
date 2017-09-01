@@ -102,14 +102,14 @@ export function newLine(from: paper.Point, to: paper.Point) {
   return line;
 }
 
-export function newGroup(obj: { name?: string } = {}) {
+export function newGroup(obj: Partial<paper.GroupProps> = {}) {
   const group = new paper.Group(obj);
   group.applyMatrix = false;
   group.remove();
   return group;
 }
 
-export function newLayer(obj: { name?: string } = {}) {
+export function newLayer(obj: Partial<paper.LayerProps> = {}) {
   const layer = new paper.Layer(obj);
   layer.applyMatrix = false;
   layer.remove();
