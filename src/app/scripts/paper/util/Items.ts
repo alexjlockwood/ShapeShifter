@@ -60,48 +60,58 @@ export function setSelectable(item: paper.Item, selectable: boolean) {
 // ===== Item factories ===== //
 // ========================== //
 
-export function newPath(segments: ReadonlyArray<paper.Segment>) {
-  const path = new paper.Path(segments);
+export function newCompoundPath(pathData: string) {
+  const compoundPath = new paper.Path(pathData);
+  compoundPath.applyMatrix = true;
+  compoundPath.remove();
+  return compoundPath;
+}
+
+export function newPath(arg: string | ReadonlyArray<paper.Segment>) {
+  const path = new paper.Path(arg);
+  path.applyMatrix = true;
   path.remove();
   return path;
 }
 
 export function newRectangle(bounds: paper.Rectangle): paper.Path.Rectangle;
 export function newRectangle(point: paper.Point, size: paper.Size): paper.Path.Rectangle;
-export function newRectangle(
-  arg1: paper.Rectangle | paper.Point,
-  arg2?: paper.Size,
-): paper.Path.Rectangle {
+export function newRectangle(arg1: paper.Rectangle | paper.Point, arg2?: paper.Size) {
   let rect: paper.Path.Rectangle;
   if (arg1 instanceof paper.Rectangle) {
     rect = new paper.Path.Rectangle(arg1);
   } else {
     rect = new paper.Path.Rectangle(arg1, arg2);
   }
+  rect.applyMatrix = true;
   rect.remove();
   return rect;
 }
 
 export function newCircle(point: paper.Point, radius: number) {
   const circle = new paper.Path.Circle(point, radius);
+  circle.applyMatrix = true;
   circle.remove();
   return circle;
 }
 
 export function newLine(from: paper.Point, to: paper.Point) {
   const line = new paper.Path.Line(from, to);
+  line.applyMatrix = true;
   line.remove();
   return line;
 }
 
 export function newGroup(obj: { name?: string } = {}) {
   const group = new paper.Group(obj);
+  group.applyMatrix = false;
   group.remove();
   return group;
 }
 
 export function newLayer(obj: { name?: string } = {}) {
   const layer = new paper.Layer(obj);
+  layer.applyMatrix = false;
   layer.remove();
   return layer;
 }
