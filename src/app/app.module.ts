@@ -135,10 +135,10 @@ export class AppModule {
       .addSvgIcon('animation', this.trustUrl('assets/icons/animation.svg'))
       .addSvgIcon('collection', this.trustUrl('assets/icons/collection.svg'))
       .addSvgIcon('animationblock', this.trustUrl('assets/icons/animationblock.svg'))
-      .addSvgIcon('clippathlayer', this.trustUrl('assets/icons/clippathlayer.svg'))
-      .addSvgIcon('grouplayer', this.trustUrl('assets/icons/grouplayer.svg'))
-      .addSvgIcon('pathlayer', this.trustUrl('assets/icons/pathlayer.svg'))
-      .addSvgIcon('vectorlayer', this.trustUrl('assets/icons/vectorlayer.svg'))
+      .addSvgIcon('mask', this.trustUrl('assets/icons/clippathlayer.svg'))
+      .addSvgIcon('group', this.trustUrl('assets/icons/grouplayer.svg'))
+      .addSvgIcon('path', this.trustUrl('assets/icons/pathlayer.svg'))
+      .addSvgIcon('vector', this.trustUrl('assets/icons/vectorlayer.svg'))
       // Cursors.
       .addSvgIcon('selectioncursor', this.trustUrl('assets/cursors/selectioncursor.svg'));
   }

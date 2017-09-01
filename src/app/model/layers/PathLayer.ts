@@ -61,9 +61,11 @@ const DEFAULTS = {
   new FractionProperty('trimPathEnd', { isAnimatable: true }),
   new FractionProperty('trimPathOffset', { isAnimatable: true }),
   new EnumProperty('fillType', ENUM_FILLTYPE_OPTIONS),
-)
-export // TODO: need to fix enum properties so they store/return strings instead of options?
-class PathLayer extends Layer implements MorphableLayer {
+) // TODO: need to fix enum properties so they store/return strings instead of options?
+export class PathLayer extends Layer implements MorphableLayer {
+  // @Override
+  readonly type = 'path';
+
   constructor(obj: ConstructorArgs) {
     super(obj);
     const setterFn = (num: number, def: number) => (_.isNil(num) ? def : num);
@@ -83,13 +85,8 @@ class PathLayer extends Layer implements MorphableLayer {
   }
 
   // @Override
-  getIconName() {
-    return 'pathlayer';
-  }
-
-  // @Override
-  getPrefix() {
-    return 'path';
+  get bounds() {
+    return this.pathData ? this.pathData.getBoundingBox() : undefined;
   }
 
   // @Override
@@ -100,11 +97,6 @@ class PathLayer extends Layer implements MorphableLayer {
   // @Override
   deepClone() {
     return this.clone();
-  }
-
-  // @Override
-  getBoundingBox() {
-    return this.pathData ? this.pathData.getBoundingBox() : undefined;
   }
 
   // @Override

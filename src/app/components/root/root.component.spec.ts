@@ -132,7 +132,7 @@ describe('RootComponent', () => {
         { name: 'animationblock', path: 'assets/icons/animationblock.svg' },
         { name: 'contribute', path: 'assets/icons/contribute.svg' },
         { name: 'shapeshifter', path: 'assets/shapeshifter.svg' },
-        { name: 'vectorlayer', path: 'assets/icons/vectorlayer.svg' },
+        { name: 'vector', path: 'assets/icons/vectorlayer.svg' },
       ]);
     }),
   );

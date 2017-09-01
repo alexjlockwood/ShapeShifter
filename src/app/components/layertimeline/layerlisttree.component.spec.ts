@@ -43,7 +43,7 @@ describe('LayerListTreeComponent', () => {
       }).compileComponents();
       loadSvgIcons([
         { name: 'animationblock', path: 'assets/icons/animationblock.svg' },
-        { name: 'vectorlayer', path: 'assets/icons/vectorlayer.svg' },
+        { name: 'vector', path: 'assets/icons/vectorlayer.svg' },
       ]);
     }),
   );
@@ -68,7 +68,11 @@ describe('LayerListTreeComponent', () => {
   it('Initialize w/ default state', () => {
     callNgOnInit();
     const vectorLayerElem = fixture.debugElement.query(By.css('.slt-layer-id-text')).nativeElement;
-    expect($(vectorLayerElem).text().trim()).toBe('vector');
+    expect(
+      $(vectorLayerElem)
+        .text()
+        .trim(),
+    ).toBe('vector');
   });
 });
 

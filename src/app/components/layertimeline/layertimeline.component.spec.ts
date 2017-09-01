@@ -77,7 +77,7 @@ describe('LayerTimelineComponent', () => {
       loadSvgIcons([
         { name: 'addlayer', path: 'assets/icons/addlayer.svg' },
         { name: 'animationblock', path: 'assets/icons/animationblock.svg' },
-        { name: 'vectorlayer', path: 'assets/icons/vectorlayer.svg' },
+        { name: 'vector', path: 'assets/icons/vectorlayer.svg' },
       ]);
     }),
   );
