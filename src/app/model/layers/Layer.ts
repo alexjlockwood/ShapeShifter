@@ -25,6 +25,17 @@ export abstract class Layer implements Inspectable, Animatable {
    */
   children: ReadonlyArray<Layer>;
 
+  /**
+   * Returns the Layer type. This string value should not change,
+   * as it is used to identify the layer type and icon.
+   */
+  abstract type: string;
+
+  /**
+   * Returns the bounding box for this Layer (or undefined if none exists).
+   */
+  abstract bounds: Rect | undefined;
+
   constructor(obj: ConstructorArgs) {
     this.id = obj.id || _.uniqueId();
     this.name = obj.name || '';
@@ -82,7 +93,7 @@ export abstract class Layer implements Inspectable, Animatable {
     return {
       id: this.id,
       name: this.name,
-      type: this.getPrefix(),
+      type: this.type,
     };
   }
 
@@ -95,22 +106,6 @@ export abstract class Layer implements Inspectable, Animatable {
    * Returns a deep clone of this Layer.
    */
   abstract deepClone(): Layer;
-
-  /**
-   * Returns the name of the icon that represents this Layer type.
-   */
-  abstract getIconName(): string;
-
-  /**
-   * Returns the prefix that represents this Layer type.
-   * NOTE: this string value should not change, as it is used to identify the layer type.
-   */
-  abstract getPrefix(): string;
-
-  /**
-   * Returns the bounding box for this Layer (or undefined if none exists).
-   */
-  abstract getBoundingBox(): Rect | undefined;
 }
 
 // TODO: share this interface with Layer?

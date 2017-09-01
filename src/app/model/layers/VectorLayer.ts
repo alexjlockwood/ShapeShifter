@@ -21,6 +21,9 @@ const DEFAULTS = {
   new FractionProperty('alpha', { isAnimatable: true }),
 )
 export class VectorLayer extends Layer {
+  // @Override
+  readonly type = 'vector';
+
   constructor(obj = { children: [], name: 'vector' } as ConstructorArgs) {
     super(obj);
     const setterFn = (num: number, def: number) => (_.isNil(num) ? def : num);
@@ -31,13 +34,8 @@ export class VectorLayer extends Layer {
   }
 
   // @Override
-  getIconName() {
-    return 'vectorlayer';
-  }
-
-  // @Override
-  getPrefix() {
-    return 'vector';
+  get bounds() {
+    return { l: 0, t: 0, r: this.width, b: this.height };
   }
 
   // @Override
@@ -52,11 +50,6 @@ export class VectorLayer extends Layer {
     const clone = this.clone();
     clone.children = this.children.map(c => c.deepClone());
     return clone;
-  }
-
-  // @Override
-  getBoundingBox() {
-    return { l: 0, t: 0, r: this.width, b: this.height } as Rect;
   }
 
   // @Override

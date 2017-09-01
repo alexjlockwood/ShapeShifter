@@ -27,6 +27,9 @@ const DEFAULTS = {
   new NumberProperty('translateY', { isAnimatable: true }),
 )
 export class GroupLayer extends Layer {
+  // @Override
+  readonly type = 'group';
+
   constructor(obj: ConstructorArgs) {
     super(obj);
     const setterFn = (num: number, def: number) => (_.isNil(num) ? def : num);
@@ -40,34 +43,10 @@ export class GroupLayer extends Layer {
   }
 
   // @Override
-  getIconName() {
-    return 'grouplayer';
-  }
-
-  // @Override
-  getPrefix() {
-    return 'group';
-  }
-
-  // @Override
-  clone() {
-    const clone = new GroupLayer(this);
-    clone.children = [...this.children];
-    return clone;
-  }
-
-  // @Override
-  deepClone() {
-    const clone = this.clone();
-    clone.children = this.children.map(c => c.deepClone());
-    return clone;
-  }
-
-  // @Override
-  getBoundingBox(): Rect {
+  get bounds() {
     let bounds: { l: number; t: number; r: number; b: number };
     this.children.forEach(child => {
-      const childBounds = child.getBoundingBox();
+      const childBounds = child.bounds;
       if (!childBounds) {
         return;
       }
@@ -100,6 +79,20 @@ export class GroupLayer extends Layer {
       r: bottomRight.x + this.pivotX,
       b: bottomRight.y + this.pivotY,
     };
+  }
+
+  // @Override
+  clone() {
+    const clone = new GroupLayer(this);
+    clone.children = [...this.children];
+    return clone;
+  }
+
+  // @Override
+  deepClone() {
+    const clone = this.clone();
+    clone.children = this.children.map(c => c.deepClone());
+    return clone;
   }
 
   // @Override

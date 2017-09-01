@@ -9,19 +9,17 @@ import { MorphableLayer } from './MorphableLayer';
  */
 @Property.register(new PathProperty('pathData', { isAnimatable: true }))
 export class ClipPathLayer extends Layer implements MorphableLayer {
+  // @Override
+  readonly type = 'mask';
+
   constructor(obj: ConstructorArgs) {
     super(obj);
     this.pathData = obj.pathData;
   }
 
   // @Override
-  getIconName() {
-    return 'clippathlayer';
-  }
-
-  // @Override
-  getPrefix() {
-    return 'mask';
+  get bounds() {
+    return this.pathData ? this.pathData.getBoundingBox() : undefined;
   }
 
   // @Override
@@ -32,11 +30,6 @@ export class ClipPathLayer extends Layer implements MorphableLayer {
   // @Override
   deepClone() {
     return this.clone();
-  }
-
-  // @Override
-  getBoundingBox() {
-    return this.pathData ? this.pathData.getBoundingBox() : undefined;
   }
 
   // @Override

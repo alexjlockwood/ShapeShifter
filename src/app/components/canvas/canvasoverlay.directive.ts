@@ -374,7 +374,7 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
           ctx.restore();
         }
       } else if (curr instanceof VectorLayer || curr instanceof GroupLayer) {
-        const bounds = curr.getBoundingBox();
+        const bounds = curr.bounds;
         if (bounds) {
           ctx.save();
           const { a, b, c, d, e, f } = flattenedTransform;
