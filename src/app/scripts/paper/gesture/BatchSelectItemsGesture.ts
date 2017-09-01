@@ -22,7 +22,7 @@ export class BatchSelectItemsGesture extends Gesture {
   onMouseDrag(event: paper.ToolEvent) {
     const selectionBox = Guides.showSelectionBoxPath(event.downPoint, event.point);
     // TODO: make sure to only process selectable items
-    selectItemsInBounds(event, selectionBox, paper.project.activeLayer.getItems({}));
+    selectItemsInBounds(event, selectionBox, paper.project.activeLayer.getItems());
   }
 
   // @Override
@@ -30,7 +30,7 @@ export class BatchSelectItemsGesture extends Gesture {
     const selectionBox = Guides.getSelectionBoxPath();
     if (selectionBox) {
       // TODO: make sure to only process selectable items
-      selectItemsInBounds(event, selectionBox, paper.project.activeLayer.getItems({}));
+      selectItemsInBounds(event, selectionBox, paper.project.activeLayer.getItems());
       selectionBox.remove();
     }
     Guides.hideSelectionBoundsPath();

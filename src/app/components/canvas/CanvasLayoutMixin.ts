@@ -1,4 +1,3 @@
-import { Constructor } from 'app/scripts/mixins';
 import * as _ from 'lodash';
 
 export function CanvasLayoutMixin<T extends Constructor<{}>>(Base = class {} as T) {

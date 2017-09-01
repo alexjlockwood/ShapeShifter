@@ -1421,14 +1421,22 @@ declare module 'paper' {
      * @param match.inside - the rectangle in which the items need to be fully contained.
      * @param match.overlapping - the rectangle with which the items need to at least partly overlap.
      */
-    getItems(match?: any): Item[];
+    getItems(matchFn?: (item: Item) => boolean): Item[];
+    getItems<T extends Item>(options?: {
+      recursive?: boolean;
+      match?: (item: Item) => boolean;
+      class?: Constructor<T>;
+      inside?: Rectangle;
+      overlapping?: Rectangle;
+    }): Item[];
 
     /**
      * Fetch the first descendant (child or child of child) of this item that matches the properties in the specified object.
      * Extended matching is possible by providing a compare function or regular expression. Matching points, colors only work as a comparison of the full object, not partial matching (e.g. only providing the x- coordinate to match all points with that x-value). Partial matching does work for item.data.
      * @param match - the criteria to match against
      */
-    getItem(match?: any): Item;
+    getItem(matchFn?: (item: Item) => boolean);
+    getItem<T extends Partial<ItemProps>>(object?: { [P in keyof T]: T[P] }): Item;
 
     /**
      * Exports (serializes) the project with all its layers and child items to a JSON data string.
@@ -2117,7 +2125,7 @@ declare module 'paper' {
      * Describes the type of the hit result. For example, if you hit a segment point, the type would be 'segment'.
      * type String('segment', 'handle-in', 'handle-out', 'curve', 'stroke', 'fill', 'bounds', 'center', 'pixel')
      */
-    readonly type: HitType;
+    type: HitType;
 
     /**
      * If the HitResult has a hitResult.type of 'bounds', this property describes which corner of the bounding rectangle was hit.
@@ -2160,7 +2168,7 @@ declare module 'paper' {
     | 'bounds'
     | 'center'
     | 'pixel';
-  export interface PathItemProps {
+  export interface PathItemProps extends ItemProps {
     /**
      * The path's geometry, formatted as SVG style path data.
      */

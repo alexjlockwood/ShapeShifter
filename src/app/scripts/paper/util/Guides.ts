@@ -25,6 +25,7 @@ export function createGuideLayer() {
 }
 
 export function getGuideLayer() {
+  // TODO: Project#getItem() is missing types
   return paper.project.getItem({ name: GUIDE_LAYER_NAME });
 }
 
@@ -33,7 +34,7 @@ export function getGuideLayer() {
 // ====================== //
 
 function getHoverPath() {
-  return getGuideLayer().getItem({ name: HOVER_PATH_NAME }) as paper.Path;
+  return getGuideLayer().getItem<Partial<paper.PathProps>>({ name: HOVER_PATH_NAME }) as paper.Path;
 }
 
 export function showHoverPath(path: paper.Path) {
@@ -165,7 +166,7 @@ export function hideAddSegmentToCurveHoverGroup() {
   }
 }
 
-// ======================-========== //
+// ================================= //
 // ===== Pen path preview line ===== //
 // ================================= //
 
@@ -173,6 +174,7 @@ function getPenPathPreviewLine() {
   return getGuideLayer().getItem({ name: PEN_PATH_PREVIEW_LINE_NAME }) as paper.Path.Line;
 }
 
+// TODO: this should return a curve/arc, not only a line
 export function showPenPathPreviewLine(from: paper.Point, to: paper.Point) {
   hidePenPathPreviewLine();
 
