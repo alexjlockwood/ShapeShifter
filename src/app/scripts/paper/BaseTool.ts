@@ -22,17 +22,22 @@ export abstract class BaseTool {
   }
 
   /**
-   * Dispatcher method that invokes the onMouseEvent(), onKeyEvent(),
-   * and onToolModeEvent() callbacks.
+   * Dispatcher method that invokes the onMouseEvent() and
+   * onKeyEvent() callbacks.
    */
-  dispatchEvent(event: ToolMode | paper.ToolEvent | paper.KeyEvent) {
+  dispatchEvent(event: paper.ToolEvent | paper.KeyEvent) {
     if (event instanceof paper.ToolEvent) {
       this.onMouseEvent(event);
     } else if (event instanceof paper.KeyEvent) {
       this.onKeyEvent(event);
-    } else {
-      this.onToolModeEvent(event);
     }
+  }
+
+  /**
+   * Dispatcher method that invokes the onToolModeChanged() callback.
+   */
+  dispatchToolModeChanged(toolMode: ToolMode) {
+    this.onToolModeChanged(toolMode);
   }
 
   /**
@@ -43,8 +48,11 @@ export abstract class BaseTool {
   }
 
   protected onActivate() {}
-  protected abstract onInterceptEvent(m: ToolMode, e?: paper.ToolEvent | paper.KeyEvent): boolean;
-  protected onToolModeEvent(mode: ToolMode) {}
+  protected abstract onInterceptEvent(
+    toolMode: ToolMode,
+    event?: paper.ToolEvent | paper.KeyEvent,
+  ): boolean;
+  protected onToolModeChanged(toolMode: ToolMode) {}
   protected onMouseEvent(event: paper.ToolEvent) {}
   protected onKeyEvent(event: paper.KeyEvent) {}
   protected onDeactivate() {}

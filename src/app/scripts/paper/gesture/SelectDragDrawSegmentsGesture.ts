@@ -55,14 +55,19 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
       this.selectedEditPath.segments.forEach(s => (s.selected = false));
       hitSegment.curve.selected = true;
     } else {
-      // Note that a nil hit result here implies that there is only one selected
-      // end point on the open path (since if there wasn't, we would have used
-      // a batch selection gesture instead).
-      const selectedSegment = selectedSegments[0];
-      const addedSegment = selectedSegment.isFirst()
-        ? this.selectedEditPath.insert(0, event.point)
-        : this.selectedEditPath.add(event.point);
-      selectedSegment.selected = false;
+      // Otherwise, we are either (1) extending an existing open path (beginning
+      // at one of its selected end points), or (2) beginning to create a new path
+      // from scratch.
+      let addedSegment: paper.Segment;
+      if (this.selectedEditPath.segments.length === 0) {
+        addedSegment = this.selectedEditPath.add(event.point);
+      } else {
+        const selectedSegment = selectedSegments[0];
+        addedSegment = selectedSegment.isLast()
+          ? this.selectedEditPath.add(event.point)
+          : this.selectedEditPath.insert(0, event.point);
+        selectedSegment.selected = false;
+      }
       addedSegment.selected = true;
     }
 

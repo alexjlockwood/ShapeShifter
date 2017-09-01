@@ -49,18 +49,27 @@ import { Guides, HitTests, Items, Selections } from './util';
 export class SelectionTool extends BaseTool {
   private readonly clickDetector = new ClickDetector();
   private currentGesture: Gesture = new HoverItemsGesture();
+  private currentToolMode = ToolMode.Selection;
 
   // If this is non-nil, then we are in edit path mode. Otherwise, we are in
   // selection mode.
   private selectedEditPath: paper.Path;
 
   // @Override
-  protected onInterceptEvent(toolMode: ToolMode) {
-    return toolMode === ToolMode.Selection;
+  protected onInterceptEvent(toolMode: ToolMode, event?: paper.ToolEvent | paper.KeyEvent) {
+    console.log('onInterceptEvent', toolMode);
+    return toolMode === ToolMode.Selection || toolMode === ToolMode.Pen;
+  }
+
+  // @Override
+  protected onToolModeChanged(toolMode: ToolMode) {
+    console.log('onToolModeEvent', toolMode);
+    this.currentToolMode = toolMode;
   }
 
   // @Override
   protected onMouseEvent(event: paper.ToolEvent) {
+    console.log('onMouseEvent', event);
     this.clickDetector.onMouseEvent(event);
     if (event.type === 'mousedown') {
       this.onMouseDown(event);
@@ -74,6 +83,16 @@ export class SelectionTool extends BaseTool {
   }
 
   private onMouseDown(event: paper.ToolEvent) {
+    console.log('onMouseDown', this.currentToolMode, this.selectedEditPath);
+    if (this.currentToolMode === ToolMode.Pen && !this.selectedEditPath) {
+      // Then the user is in pen mode and is about to begin
+      // creating a new path.
+      Selections.deselectAll();
+      const newPath = new paper.Path();
+      newPath.strokeColor = 'black';
+      newPath.strokeWidth = 10;
+      this.enterEditPathMode(newPath);
+    }
     if (this.selectedEditPath) {
       // If a segment selected item is set, then we are in edit path mode.
       this.currentGesture = this.createEditPathModeGesture(event);
@@ -191,12 +210,18 @@ export class SelectionTool extends BaseTool {
       }
     }
 
+    if (this.selectedEditPath.segments.length === 0) {
+      // Then we are beginning to build a new path from scratch.
+      return new SelectDragDrawSegmentsGesture(this.selectedEditPath);
+    }
+
     const selectedSegments = this.selectedEditPath.segments.filter(s => s.selected);
     const hasSingleSelectedEndPointSegment =
       !this.selectedEditPath.closed &&
       selectedSegments.length === 1 &&
       (selectedSegments[0].isFirst() || selectedSegments[0].isLast());
     if (hasSingleSelectedEndPointSegment) {
+      // Then we are extending an existing open path.
       return new SelectDragDrawSegmentsGesture(this.selectedEditPath);
     }
 
@@ -212,6 +237,7 @@ export class SelectionTool extends BaseTool {
   }
 
   private enterEditPathMode(hitPath: paper.Path) {
+    console.log('entering select edit path mode');
     this.selectedEditPath = hitPath;
 
     Selections.deselectAll();

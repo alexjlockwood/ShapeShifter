@@ -15,7 +15,7 @@ import { ZoomPanTool } from './ZoomPanTool';
 export class ToolSwitcher {
   private readonly tools: ReadonlyArray<BaseTool> = [
     new ZoomPanTool(),
-    new PenTool(),
+    // new PenTool(),
     new SelectionTool(),
   ];
   private readonly masterTool = new paper.Tool();
@@ -46,8 +46,7 @@ export class ToolSwitcher {
     const prevTool = this.currentTool;
     this.currentTool = undefined;
     for (const tool of this.tools) {
-      const mode = this.currentToolMode;
-      if (tool.dispatchInterceptEvent(mode, event)) {
+      if (tool.dispatchInterceptEvent(this.currentToolMode, event)) {
         this.currentTool = tool;
         break;
       }
@@ -61,7 +60,11 @@ export class ToolSwitcher {
       }
     }
     if (this.currentTool) {
-      this.currentTool.dispatchEvent(event);
+      if (event instanceof paper.ToolEvent || event instanceof paper.KeyEvent) {
+        this.currentTool.dispatchEvent(event);
+      } else {
+        this.currentTool.dispatchToolModeChanged(this.currentToolMode);
+      }
     }
   }
 }

@@ -2926,8 +2926,14 @@ declare module 'paper' {
      */
     constructor(object?: Partial<SegmentProps>);
 
+    /**
+     * Checks if the this is the first segment in the path.segments array.
+     */
     isFirst(): boolean;
 
+    /**
+     * Checks if the this is the last segment in the path.segments array.
+     */
     isLast(): boolean;
 
     /**
