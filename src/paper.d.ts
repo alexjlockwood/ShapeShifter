@@ -311,6 +311,47 @@ declare module 'paper' {
      */
     applyToContext(ctx: CanvasRenderingContext2D): void;
   }
+  interface PointProps {
+    /**
+     * The x coordinate of the point
+     */
+    x: number;
+
+    /**
+         * The y coordinate of the point
+         */
+    y: number;
+
+    /**
+         * The length of the vector that is represented by this point's coordinates.
+         * Each point can be interpreted as a vector that points from the origin (x = 0, y = 0) to the point's location.
+         * Setting the length changes the location but keeps the vector's angle.
+         */
+    length: number;
+
+    /**
+         * The vector's angle in degrees, measured from the x-axis to the vector.
+         */
+    angle: number;
+
+    /**
+         * The vector's angle in radians, measured from the x-axis to the vector.
+         */
+    angleInRadians: number;
+
+    /**
+         * The quadrant of the angle of the point.
+         * Angles between 0 and 90 degrees are in quadrant 1. Angles between 90 and 180 degrees are in quadrant 2, angles between 180 and 270 degrees are in quadrant 3 and angles between 270 and 360 degrees are in quadrant 4.
+         * Read only.
+         */
+    quadrant: number;
+
+    /**
+         * This property is only present if the point is an anchor or control point of a Segment or a Curve. In this case, it returns true it is selected, false otherwise
+         */
+    selected: boolean;
+  }
+  export interface Point extends PointProps {}
   /**
    * The Point object represents a point in the two dimensional space of the Paper.js project. It is also used to represent two dimensional vector objects.
    */
@@ -351,7 +392,7 @@ declare module 'paper' {
      * Creates a Point object using the properties in the given object.
      * @param object - the object describing the point's properties
      */
-    constructor(object: any);
+    constructor(object?: Partial<PointProps>);
 
     /**
      * Creates a Point object using the width and height values of the given Size object.
@@ -364,45 +405,6 @@ declare module 'paper' {
      * @param point - the point to copy
      */
     constructor(point: Point);
-
-    /**
-     * The x coordinate of the point
-     */
-    x: number;
-
-    /**
-     * The y coordinate of the point
-     */
-    y: number;
-
-    /**
-     * The length of the vector that is represented by this point's coordinates.
-     * Each point can be interpreted as a vector that points from the origin (x = 0, y = 0) to the point's location.
-     * Setting the length changes the location but keeps the vector's angle.
-     */
-    length: number;
-
-    /**
-     * The vector's angle in degrees, measured from the x-axis to the vector.
-     */
-    angle: number;
-
-    /**
-     * The vector's angle in radians, measured from the x-axis to the vector.
-     */
-    angleInRadians: number;
-
-    /**
-     * The quadrant of the angle of the point.
-     * Angles between 0 and 90 degrees are in quadrant 1. Angles between 90 and 180 degrees are in quadrant 2, angles between 180 and 270 degrees are in quadrant 3 and angles between 270 and 360 degrees are in quadrant 4.
-     * Read only.
-     */
-    quadrant: number;
-
-    /**
-     * This property is only present if the point is an anchor or control point of a Segment or a Curve. In this case, it returns true it is selected, false otherwise
-     */
-    selected: boolean;
 
     /**
      * Checks whether the coordinates of the point are equal to that of the supplied point.
@@ -575,6 +577,115 @@ declare module 'paper' {
     // ADDED BY ALEX LOCKWOOD
     set(x: number, y: number): void;
   }
+  interface RectangleProps {
+    /**
+     * The x position of the rectangle.
+     */
+    x: number;
+
+    /**
+         * The y position of the rectangle.
+         */
+    y: number;
+
+    /**
+         * The width of the rectangle.
+         */
+    width: number;
+
+    /**
+         * The height of the rectangle.
+         */
+    height: number;
+
+    /**
+         * The top-left point of the rectangle
+         */
+    point: Point;
+
+    /**
+         * The size of the rectangle
+         */
+    size: Size;
+
+    /**
+         * The position of the left hand side of the rectangle. Note that this doesn't move the whole rectangle; the right hand side stays where it was.
+         */
+    left: number;
+
+    /**
+         * The top coordinate of the rectangle. Note that this doesn't move the whole rectangle: the bottom won't move.
+         */
+    top: number;
+
+    /**
+         * The position of the right hand side of the rectangle. Note that this doesn't move the whole rectangle; the left hand side stays where it was.
+         */
+    right: number;
+
+    /**
+         * The bottom coordinate of the rectangle. Note that this doesn't move the whole rectangle: the top won't move.
+         */
+    bottom: number;
+
+    /**
+         * The center point of the rectangle.
+         */
+    center: Point;
+
+    /**
+         * The top-left point of the rectangle.
+         */
+    topLeft: Point;
+
+    /**
+         * The top-right point of the rectangle.
+         */
+    topRight: Point;
+
+    /**
+         * The bottom-left point of the rectangle.
+         */
+    bottomLeft: Point;
+
+    /**
+         * The bottom-right point of the rectangle.
+         */
+    bottomRight: Point;
+
+    /**
+         * The left-center point of the rectangle.
+         */
+    leftCenter: Point;
+
+    /**
+         * The top-center point of the rectangle.
+         */
+    topCenter: Point;
+
+    /**
+         * The right-center point of the rectangle.
+         */
+    rightCenter: Point;
+
+    /**
+         * The bottom-center point of the rectangle.
+         */
+    bottomCenter: Point;
+
+    /**
+         * The area of the rectangle in square points.
+         * Read only.
+         */
+    area: number;
+
+    /**
+         * Specifies whether an item's bounds are selected and will also mark the item as selected.
+         * Paper.js draws the visual bounds of selected items on top of your project. This can be useful for debugging.
+         */
+    selected: boolean;
+  }
+  export interface Rectangle extends RectangleProps {}
   /**
    * A Rectangle specifies an area that is enclosed by it's top-left point (x, y), its width, and its height. It should not be confused with a rectangular path, it is not an item.
    */
@@ -599,7 +710,7 @@ declare module 'paper' {
      * Creates a Rectangle object.
      * @param object - an object containing properties to be set on the rectangle.
      */
-    constructor(object: any);
+    constructor(object?: Partial<RectangleProps>);
 
     /**
      * Creates a rectangle object from the passed points. These do not necessarily need to be the top left and bottom right corners, the constructor figures out how to fit a rectangle between them.
@@ -613,113 +724,6 @@ declare module 'paper' {
      * @param rt - the rectangle to copy from
      */
     constructor(rt: Rectangle);
-
-    /**
-     * The x position of the rectangle.
-     */
-    x: number;
-
-    /**
-     * The y position of the rectangle.
-     */
-    y: number;
-
-    /**
-     * The width of the rectangle.
-     */
-    width: number;
-
-    /**
-     * The height of the rectangle.
-     */
-    height: number;
-
-    /**
-     * The top-left point of the rectangle
-     */
-    point: Point;
-
-    /**
-     * The size of the rectangle
-     */
-    size: Size;
-
-    /**
-     * The position of the left hand side of the rectangle. Note that this doesn't move the whole rectangle; the right hand side stays where it was.
-     */
-    left: number;
-
-    /**
-     * The top coordinate of the rectangle. Note that this doesn't move the whole rectangle: the bottom won't move.
-     */
-    top: number;
-
-    /**
-     * The position of the right hand side of the rectangle. Note that this doesn't move the whole rectangle; the left hand side stays where it was.
-     */
-    right: number;
-
-    /**
-     * The bottom coordinate of the rectangle. Note that this doesn't move the whole rectangle: the top won't move.
-     */
-    bottom: number;
-
-    /**
-     * The center point of the rectangle.
-     */
-    center: Point;
-
-    /**
-     * The top-left point of the rectangle.
-     */
-    topLeft: Point;
-
-    /**
-     * The top-right point of the rectangle.
-     */
-    topRight: Point;
-
-    /**
-     * The bottom-left point of the rectangle.
-     */
-    bottomLeft: Point;
-
-    /**
-     * The bottom-right point of the rectangle.
-     */
-    bottomRight: Point;
-
-    /**
-     * The left-center point of the rectangle.
-     */
-    leftCenter: Point;
-
-    /**
-     * The top-center point of the rectangle.
-     */
-    topCenter: Point;
-
-    /**
-     * The right-center point of the rectangle.
-     */
-    rightCenter: Point;
-
-    /**
-     * The bottom-center point of the rectangle.
-     */
-    bottomCenter: Point;
-
-    /**
-     * The area of the rectangle in square points.
-     * Read only.
-     */
-    area: number;
-
-    /**
-     * Specifies whether an item's bounds are selected and will also mark the item as selected.
-     * Paper.js draws the visual bounds of selected items on top of your project. This can be useful for debugging.
-     */
-    selected: boolean;
 
     /**
      * Returns a copy of the rectangle.
@@ -806,6 +810,18 @@ declare module 'paper' {
      */
     scale(hor: number, ver: number): Rectangle;
   }
+  interface SizeProps {
+    /**
+     * The width of the size
+     */
+    width: number;
+
+    /**
+         * The height of the size
+         */
+    height: number;
+  }
+  interface Size extends SizeProps {}
   /**
    * The Size object is used to describe the size or dimensions of something, through its width and height properties.
    */
@@ -846,7 +862,7 @@ declare module 'paper' {
      * Creates a Size object using the properties in the given object.
      * @param object - the object literal containing properies (width:10, height:10 etc)
      */
-    constructor(object: any);
+    constructor(object?: Partial<SizeProps>);
 
     /**
      * Creates a Size object using the coordinates of the given Size object.
@@ -859,16 +875,6 @@ declare module 'paper' {
      * @param point - the point from which to create a size
      */
     constructor(point: Point);
-
-    /**
-     * The width of the size
-     */
-    width: number;
-
-    /**
-     * The height of the size
-     */
-    height: number;
 
     /**
      * WARNING - This seems undocumented/incorrect
@@ -1018,248 +1024,245 @@ declare module 'paper' {
      */
     static get(id: string): PaperScope;
   }
-  /**
-   * The Item type allows you to access and modify the items in Paper.js projects. Its functionality is inherited by different project item types such as Path, CompoundPath, Group, Layer and Raster. They each add a layer of functionality that is unique to their type, but share the underlying properties and functions that they inherit from Item.
-   */
-  export class Item {
+  interface ItemProps {
     /**
      * The tangential vector to the #curve at the given location.
      */
     tangent: Point;
 
     /**
-     * The normal vector to the #curve at the given location.
-     */
+         * The normal vector to the #curve at the given location.
+         */
     normal: Point;
 
     /**
-     * The curvature of the #curve at the given location.
-     */
+         * The curvature of the #curve at the given location.
+         */
     curvature: number;
 
     /**
-     * The unique id of the item.
-     * Read Only.
-     */
+         * The unique id of the item.
+         * Read Only.
+         */
     id: number;
 
     /**
-     * The class name of the item as a string.
-     * String('Group', 'Layer', 'Path', 'CompoundPath', 'Shape', 'Raster', 'PlacedSymbol', 'PointText')
-     */
+         * The class name of the item as a string.
+         * String('Group', 'Layer', 'Path', 'CompoundPath', 'Shape', 'Raster', 'PlacedSymbol', 'PointText')
+         */
     className: string;
 
     /**
-     * The name of the item. If the item has a name, it can be accessed by name through its parent's children list.
-     */
+         * The name of the item. If the item has a name, it can be accessed by name through its parent's children list.
+         */
     name: string;
 
     /**
-     * The path style of the item.
-     */
+         * The path style of the item.
+         */
     style: Style;
 
     /**
-     * Specifies whether the item is visible. When set to false, the item won't be drawn.
-     */
+         * Specifies whether the item is visible. When set to false, the item won't be drawn.
+         */
     visible: boolean;
 
     /**
-     * The blend mode with which the item is composited onto the canvas. Both the standard canvas compositing modes, as well as the new CSS blend modes are supported. If blend-modes cannot be rendered natively, they are emulated. Be aware that emulation can have an impact on performance.
-     * String('normal', 'multiply', 'screen', 'overlay', 'soft-light', 'hard-light', 'color-dodge', 'color-burn', 'darken', 'lighten', 'difference', 'exclusion', 'hue', 'saturation', 'luminosity', 'color', 'add', 'subtract', 'average', 'pin-light', 'negation', 'source-over', 'source-in', 'source-out', 'source-atop', 'destination-over', 'destination-in', 'destination-out', 'destination-atop', 'lighter', 'darker', 'copy', 'xor')
-     */
+         * The blend mode with which the item is composited onto the canvas. Both the standard canvas compositing modes, as well as the new CSS blend modes are supported. If blend-modes cannot be rendered natively, they are emulated. Be aware that emulation can have an impact on performance.
+         * String('normal', 'multiply', 'screen', 'overlay', 'soft-light', 'hard-light', 'color-dodge', 'color-burn', 'darken', 'lighten', 'difference', 'exclusion', 'hue', 'saturation', 'luminosity', 'color', 'add', 'subtract', 'average', 'pin-light', 'negation', 'source-over', 'source-in', 'source-out', 'source-atop', 'destination-over', 'destination-in', 'destination-out', 'destination-atop', 'lighter', 'darker', 'copy', 'xor')
+         */
     blendMode: string;
 
     /**
-     * The opacity of the item as a value between 0 and 1.
-     */
+         * The opacity of the item as a value between 0 and 1.
+         */
     opacity: number;
 
     /**
-     * Specifies whether the item is selected. This will also return true for Group items if they are partially selected, e.g. groups containing selected or partially selected paths.
-     * Paper.js draws the visual outlines of selected items on top of your project. This can be useful for debugging, as it allows you to see the construction of paths, position of path curves, individual segment points and bounding boxes of symbol and raster items.
-     */
+         * Specifies whether the item is selected. This will also return true for Group items if they are partially selected, e.g. groups containing selected or partially selected paths.
+         * Paper.js draws the visual outlines of selected items on top of your project. This can be useful for debugging, as it allows you to see the construction of paths, position of path curves, individual segment points and bounding boxes of symbol and raster items.
+         */
     selected: boolean;
 
     /**
-     * Specifies whether the item defines a clip mask. This can only be set on paths, compound paths, and text frame objects, and only if the item is already contained within a clipping group.
-     */
+         * Specifies whether the item defines a clip mask. This can only be set on paths, compound paths, and text frame objects, and only if the item is already contained within a clipping group.
+         */
     clipMask: boolean;
 
     /**
-     * A plain javascript object which can be used to store arbitrary data on the item.
-     */
+         * A plain javascript object which can be used to store arbitrary data on the item.
+         */
     data: any;
 
     /**
-     * The item's position within the parent item's coordinate system. By default, this is the rectangle.center of the item's bounds rectangle.
-     */
+         * The item's position within the parent item's coordinate system. By default, this is the rectangle.center of the item's bounds rectangle.
+         */
     position: Point;
 
     /**
-     * The item's pivot point specified in the item coordinate system, defining the point around which all transformations are hinging. This is also the reference point for position. By default, it is set to null, meaning the rectangle.center of the item's bounds rectangle is used as pivot.
-     */
+         * The item's pivot point specified in the item coordinate system, defining the point around which all transformations are hinging. This is also the reference point for position. By default, it is set to null, meaning the rectangle.center of the item's bounds rectangle is used as pivot.
+         */
     pivot: Point;
 
     /**
-     * The bounding rectangle of the item excluding stroke width.
-     */
+         * The bounding rectangle of the item excluding stroke width.
+         */
     bounds: Rectangle;
 
     /**
-     * The bounding rectangle of the item including stroke width.
-     */
+         * The bounding rectangle of the item including stroke width.
+         */
     strokeBounds: Rectangle;
 
     /**
-     * The bounding rectangle of the item including handles.
-     */
+         * The bounding rectangle of the item including handles.
+         */
     handleBounds: Rectangle;
 
     /**
-     * The current rotation angle of the item, as described by its matrix.
-     */
+         * The current rotation angle of the item, as described by its matrix.
+         */
     rotation: number;
 
     /**
-     * The current scale factor of the item, as described by its matrix.
-     */
+         * The current scale factor of the item, as described by its matrix.
+         */
     scaling: Point;
 
     /**
-     * The item's transformation matrix, defining position and dimensions in relation to its parent item in which it is contained.
-     */
+         * The item's transformation matrix, defining position and dimensions in relation to its parent item in which it is contained.
+         */
     matrix: Matrix;
 
     /**
-     * The item's global transformation matrix in relation to the global project coordinate space. Note that the view's transformations resulting from zooming and panning are not factored in.
-     * Read Only.
-     */
+         * The item's global transformation matrix in relation to the global project coordinate space. Note that the view's transformations resulting from zooming and panning are not factored in.
+         * Read Only.
+         */
     globalMatrix: Matrix;
 
     /**
-     * Controls whether the transformations applied to the item (e.g. through transform(matrix), rotate(angle), scale(scale), etc.) are stored in its matrix property, or whether they are directly applied to its contents or children (passed on to the segments in Path items, the children of Group items, etc.).
-     */
+         * Controls whether the transformations applied to the item (e.g. through transform(matrix), rotate(angle), scale(scale), etc.) are stored in its matrix property, or whether they are directly applied to its contents or children (passed on to the segments in Path items, the children of Group items, etc.).
+         */
     applyMatrix: boolean;
 
     /**
-     * The project that this item belongs to.
-     * Read only.
-     */
+         * The project that this item belongs to.
+         * Read only.
+         */
     project: Project;
 
     /**
-     * The view that this item belongs to.
-     * Read Only.
-     */
+         * The view that this item belongs to.
+         * Read Only.
+         */
     view: View;
 
     /**
-     * The layer that this item is contained within.
-     * Read Only.
-     */
+         * The layer that this item is contained within.
+         * Read Only.
+         */
     layer: Layer;
 
     /**
-     * The item that this item is contained within.
-     */
+         * The item that this item is contained within.
+         */
     parent: Item;
 
     /**
-     * The children items contained within this item. Items that define a name can also be accessed by name.
-     * Please note: The children array should not be modified directly using array functions. To remove single items from the children list, use item.remove(), to remove all items from the children list, use item.removeChildren(). To add items to the children list, use item.addChild(item) or item.insertChild(index, item).
-     */
+         * The children items contained within this item. Items that define a name can also be accessed by name.
+         * Please note: The children array should not be modified directly using array functions. To remove single items from the children list, use item.remove(), to remove all items from the children list, use item.removeChildren(). To add items to the children list, use item.addChild(item) or item.insertChild(index, item).
+         */
     children: Item[];
 
     /**
-     * The first item contained within this item. This is a shortcut for accessing item.children[0].
-     */
+         * The first item contained within this item. This is a shortcut for accessing item.children[0].
+         */
     firstChild: Item;
 
     /**
-     * The last item contained within this item.This is a shortcut for accessing item.children[item.children.length - 1].
-     */
+         * The last item contained within this item.This is a shortcut for accessing item.children[item.children.length - 1].
+         */
     lastChild: Item;
 
     /**
-     * The next item on the same level as this item.
-     * Read Only.
-     */
+         * The next item on the same level as this item.
+         * Read Only.
+         */
     nextSibling: Item;
 
     /**
-     * The previous item on the same level as this item.
-     * Read Only.
-     */
+         * The previous item on the same level as this item.
+         * Read Only.
+         */
     previousSibling: Item;
 
     /**
-     * The index of this item within the list of its parent's children.
-     * Read only.
-     */
+         * The index of this item within the list of its parent's children.
+         * Read only.
+         */
     index: number;
 
     /**
-     * The color of the stroke.
-     */
+         * The color of the stroke.
+         */
     strokeColor: Color | string;
 
     /**
-     * The width of the stroke.
-     */
+         * The width of the stroke.
+         */
     strokeWidth: number;
 
     /**
-     * The shape to be used at the beginning and end of open Path items, when they have a stroke.
-     * String('round', 'square', 'butt')
-     */
+         * The shape to be used at the beginning and end of open Path items, when they have a stroke.
+         * String('round', 'square', 'butt')
+         */
     strokeCap: string;
 
     /**
-     * The shape to be used at the segments and corners of Path items when they have a stroke.
-     * String('miter', 'round', 'bevel')
-     */
+         * The shape to be used at the segments and corners of Path items when they have a stroke.
+         * String('miter', 'round', 'bevel')
+         */
     strokeJoin: string;
 
     /**
-     * The dash offset of the stroke.
-     */
+         * The dash offset of the stroke.
+         */
     dashOffset: number;
 
     /**
-     * Specifies whether the stroke is to be drawn taking the current affine transformation into account (the default behavior), or whether it should appear as a non-scaling stroke.
-     */
+         * Specifies whether the stroke is to be drawn taking the current affine transformation into account (the default behavior), or whether it should appear as a non-scaling stroke.
+         */
     strokeScaling: boolean;
 
     /**
-     * Specifies an array containing the dash and gap lengths of the stroke.
-     */
+         * Specifies an array containing the dash and gap lengths of the stroke.
+         */
     dashArray: number[];
 
     /**
-     * When two line segments meet at a sharp angle and miter joins have been specified for item.strokeJoin, it is possible for the miter to extend far beyond the item.strokeWidth of the path. The miterLimit imposes a limit on the ratio of the miter length to the item.strokeWidth.
-     */
+         * When two line segments meet at a sharp angle and miter joins have been specified for item.strokeJoin, it is possible for the miter to extend far beyond the item.strokeWidth of the path. The miterLimit imposes a limit on the ratio of the miter length to the item.strokeWidth.
+         */
     miterLimit: number;
 
     /**
-     * The winding-rule with which the shape gets filled. Please note that only modern browsers support winding-rules other than 'nonzero'.
-     * String('nonzero', 'evenodd')
-     */
+         * The winding-rule with which the shape gets filled. Please note that only modern browsers support winding-rules other than 'nonzero'.
+         * String('nonzero', 'evenodd')
+         */
     windingRule: string;
 
     /**
-     * The fill color of the item.
-     */
+         * The fill color of the item.
+         */
     fillColor: Color | string;
 
     /**
-     * The fill rule.
-     */
+         * The fill rule.
+         */
     fillRule: string;
 
     /**
-     * The color the item is highlighted with when selected. If the item does not specify its own color, the color defined by its layer is used instead.
-     */
+         * The color the item is highlighted with when selected. If the item does not specify its own color, the color defined by its layer is used instead.
+         */
     selectedColor: Color | string;
 
     // ADDED BY ALEX LOCKWOOD
@@ -1267,7 +1270,12 @@ declare module 'paper' {
 
     // ADDED BY ALEX LOCKWOOD
     fullySelected: boolean;
-
+  }
+  export interface Item extends ItemProps {}
+  /**
+   * The Item type allows you to access and modify the items in Paper.js projects. Its functionality is inherited by different project item types such as Path, CompoundPath, Group, Layer and Raster. They each add a layer of functionality that is unique to their type, but share the underlying properties and functions that they inherit from Item.
+   */
+  export abstract class Item {
     // ADDED BY ALEX LOCKWOOD
     equals(item: Item): boolean;
 
@@ -1836,6 +1844,14 @@ declare module 'paper' {
      */
     removeOnUp(): void;
   }
+  interface GroupProps extends ItemProps {
+    /**
+     * Specifies whether the group item is to be clipped.
+     * When setting to true, the first child in the group is automatically defined as the clipping mask.
+     */
+    clipped: boolean;
+  }
+  export interface Group extends GroupProps {}
   /**
    * A Group is a collection of items. When you transform a Group, its children are treated as a single unit without changing their relative positions.
    */
@@ -1850,14 +1866,10 @@ declare module 'paper' {
      * Creates a new Group item and places it at the top of the active layer.
      * @param object [optional] - an object literal containing the properties to be set on the group.
      */
-    constructor(object?: any);
-
-    /**
-     * Specifies whether the group item is to be clipped.
-     * When setting to true, the first child in the group is automatically defined as the clipping mask.
-     */
-    clipped: boolean;
+    constructor(object?: Partial<GroupProps>);
   }
+  interface LayerProps extends GroupProps {}
+  export interface Layer extends LayerProps {}
   /**
    * The Layer item represents a layer in a Paper.js project.
    * The layer which is currently active can be accessed through project.activeLayer.
@@ -1873,13 +1885,30 @@ declare module 'paper' {
      * Creates a new Layer item and places it at the end of the project.layers array. The newly created layer will be activated, so all newly created items will be placed within it.
      * @param object [optional] - an object literal containing the properties to be set on the layer.
      */
-    constructor(object?: any);
+    constructor(object?: Partial<LayerProps>);
 
     /**
      * Activates the layer.
      */
     activate(): void;
   }
+  interface ShapeProps extends ItemProps {
+    /**
+     * The type of shape of the item as a string.
+     */
+    type: string;
+
+    /**
+         * The size of the shape.
+         */
+    size: Size;
+
+    /**
+         * The radius of the shape, as a number if it is a circle, or a size object for ellipses and rounded rectangles.
+         */
+    radius: number | Size;
+  }
+  export interface Shape extends ShapeProps {}
   export class Shape extends Item {
     /**
      * Creates a circular shape item.
@@ -1892,7 +1921,7 @@ declare module 'paper' {
      * Creates a circular shape item from the properties described by an object literal.
      * @param object - an object literal containing properties descriving the shapes attributes
      */
-    static Circle(object: any): Shape;
+    static Circle(object?: Partial<ShapeProps>): Shape;
 
     /**
      * Creates a rectangular shape item, with optionally rounded corners.
@@ -1919,7 +1948,7 @@ declare module 'paper' {
      * Creates a rectangular shape item from the properties described by an object literal.
      * @param object - an object literal containing properties describing the shape's attributes
      */
-    static Rectangle(object: any): Shape;
+    static Rectangle(object?: Partial<ShapeProps>): Shape;
 
     /**
      * Creates an elliptical shape item.
@@ -1931,22 +1960,7 @@ declare module 'paper' {
      * Creates an elliptical shape item from the properties described by an object literal.
      * @param object - an object literal containing properties describing the shape's attributes
      */
-    static Ellipse(object: any): Shape;
-
-    /**
-     * The type of shape of the item as a string.
-     */
-    type: string;
-
-    /**
-     * The size of the shape.
-     */
-    size: Size;
-
-    /**
-     * The radius of the shape, as a number if it is a circle, or a size object for ellipses and rounded rectangles.
-     */
-    radius: number | Size;
+    static Ellipse(object?: Partial<ShapeProps>): Shape;
   }
   /**
    * The Raster item represents an image in a Paper.js project.
@@ -2095,16 +2109,6 @@ declare module 'paper' {
      */
     symbol: Symbol;
   }
-  export type HitType =
-    | 'segment'
-    | 'handle-in'
-    | 'handle-out'
-    | 'curve'
-    | 'stroke'
-    | 'fill'
-    | 'bounds'
-    | 'center'
-    | 'pixel';
   /**
    * A HitResult object contains information about the results of a hit test. It is returned by item.hitTest(point) and project.hitTest(point).
    */
@@ -2113,7 +2117,6 @@ declare module 'paper' {
      * Describes the type of the hit result. For example, if you hit a segment point, the type would be 'segment'.
      * type String('segment', 'handle-in', 'handle-out', 'curve', 'stroke', 'fill', 'bounds', 'center', 'pixel')
      */
-    // ADDED BY ALEX LOCKWOOD
     readonly type: HitType;
 
     /**
@@ -2147,15 +2150,27 @@ declare module 'paper' {
      */
     point: Point;
   }
-  /**
-   * The PathItem class is the base for any items that describe paths and offer standardised methods for drawing and path manipulation, such as Path and CompoundPath.
-   */
-  export class PathItem extends Item {
+  export type HitType =
+    | 'segment'
+    | 'handle-in'
+    | 'handle-out'
+    | 'curve'
+    | 'stroke'
+    | 'fill'
+    | 'bounds'
+    | 'center'
+    | 'pixel';
+  interface PathItemProps {
     /**
      * The path's geometry, formatted as SVG style path data.
      */
     pathData: string;
-
+  }
+  export interface PathItem extends PathItemProps {}
+  /**
+   * The PathItem class is the base for any items that describe paths and offer standardised methods for drawing and path manipulation, such as Path and CompoundPath.
+   */
+  export abstract class PathItem extends Item {
     /**
      * Returns all intersections between two PathItem items as an array of CurveLocation objects. CompoundPath items are also supported.
      * @param path - the other item to find the intersections with
@@ -2302,6 +2317,77 @@ declare module 'paper' {
      */
     divide(path: PathItem): PathItem;
   }
+  interface PathProps extends PathItemProps {
+    /**
+     * The segments contained within the path.
+     * Array of Segment objects
+     */
+    segments: Segment[];
+
+    /**
+         * The first Segment contained within the path.
+         * Read only.
+         */
+    firstSegment: Segment;
+
+    /**
+         * The last Segment contained within the path
+         * Read only.
+         */
+    lastSegment: Segment;
+
+    /**
+         * The curves contained within the path.
+         * Array of Curve objects
+         */
+    curves: Curve[];
+
+    /**
+         * The first Curve contained within the path.
+         * Read only.
+         */
+    firstCurve: Curve;
+
+    /**
+         * The last Curve contained within the path.
+         * Read only.
+         */
+    lastCurve: Curve;
+
+    /**
+         * Specifies whether the path is closed. If it is closed, Paper.js connects the first and last segments.
+         */
+    closed: boolean;
+
+    /**
+         * The approximate length of the path in points.
+         * Read only.
+         */
+    length: number;
+
+    /**
+         * The area of the path in square points. Self-intersecting paths can contain sub-areas that cancel each other out.
+         * Read only.
+         */
+    area: number;
+
+    /**
+         * Specifies whether the path and all its segments are selected. Cannot be true on an empty path.
+         */
+    fullySelected: boolean;
+
+    /**
+         * Specifies whether the path is oriented clock-wise.
+         */
+    clockwise: boolean;
+
+    /**
+         * Returns a point that is guaranteed to be inside the path.
+         * Read only.
+         */
+    interiorPoint: Point;
+  }
+  export interface Path extends PathProps {}
   /**
    * The path item represents a path in a Paper.js project.
    */
@@ -2316,82 +2402,13 @@ declare module 'paper' {
      * Creates a new path item from an object description and places it at the top of the active layer.
      * @param object - an object literal containing properties describing the path's attributes
      */
-    constructor(object?: any);
+    constructor(object?: Partial<PathProps>);
 
     /**
      * Creates a new path item from SVG path-data and places it at the top of the active layer.
      * @param pathData - the SVG path-data that describes the geometry of this path.
      */
     constructor(pathData?: string);
-
-    /**
-     * The segments contained within the path.
-     * Array of Segment objects
-     */
-    segments: Segment[];
-
-    /**
-     * The first Segment contained within the path.
-     * Read only.
-     */
-    firstSegment: Segment;
-
-    /**
-     * The last Segment contained within the path
-     * Read only.
-     */
-    lastSegment: Segment;
-
-    /**
-     * The curves contained within the path.
-     * Array of Curve objects
-     */
-    curves: Curve[];
-
-    /**
-     * The first Curve contained within the path.
-     * Read only.
-     */
-    firstCurve: Curve;
-
-    /**
-     * The last Curve contained within the path.
-     * Read only.
-     */
-    lastCurve: Curve;
-
-    /**
-     * Specifies whether the path is closed. If it is closed, Paper.js connects the first and last segments.
-     */
-    closed: boolean;
-
-    /**
-     * The approximate length of the path in points.
-     * Read only.
-     */
-    length: number;
-
-    /**
-     * The area of the path in square points. Self-intersecting paths can contain sub-areas that cancel each other out.
-     * Read only.
-     */
-    area: number;
-
-    /**
-     * Specifies whether the path and all its segments are selected. Cannot be true on an empty path.
-     */
-    fullySelected: boolean;
-
-    /**
-     * Specifies whether the path is oriented clock-wise.
-     */
-    clockwise: boolean;
-
-    /**
-     * Returns a point that is guaranteed to be inside the path.
-     * Read only.
-     */
-    interiorPoint: Point;
 
     /**
      * Adds one or more segments to the end of the segments array of this path.
@@ -2557,7 +2574,7 @@ declare module 'paper' {
        * Creates a linear path item from the properties described by an object literal.
        * @param object - an object literal containing properties describing the path's attributes
        */
-      constructor(object: any);
+      constructor(object?: Partial<PathProps>);
     }
 
     export class Circle extends Path {
@@ -2572,7 +2589,7 @@ declare module 'paper' {
        * Creates a circular path item from the properties described by an object literal.
        * @param object - an object literal containing properties describing the path's attributes
        */
-      constructor(object: any);
+      constructor(object?: Partial<PathProps>);
     }
 
     export class Rectangle extends Path {
@@ -2601,7 +2618,7 @@ declare module 'paper' {
        * Creates a rectangular path item from the properties described by an object literal.
        * @param object - an object literal containing properties describing the path's attributes
        */
-      constructor(object: any);
+      constructor(object?: Partial<PathProps>);
     }
 
     export class Ellipse extends Path {
@@ -2615,7 +2632,7 @@ declare module 'paper' {
        * Creates an elliptical path item from the properties described by an object literal.
        * @param object - an object literal containing properties describing the path's attributes
        */
-      constructor(object: any);
+      constructor(object?: Partial<PathProps>);
     }
 
     export class Arc extends Path {
@@ -2631,7 +2648,7 @@ declare module 'paper' {
        * Creates an circular arc path item from the properties described by an object literal.
        * @param object - an object literal containing properties describing the path's attributes
        */
-      constructor(object: any);
+      constructor(object?: Partial<PathProps>);
     }
 
     export class RegularPolygon extends Path {
@@ -2647,7 +2664,7 @@ declare module 'paper' {
        * Creates a regular polygon shaped path item from the properties described by an object literal.
        * @param object - an object literal containing properties describing the path's attributes
        */
-      constructor(object: any);
+      constructor(object?: Partial<PathProps>);
     }
 
     export class Star extends Path {
@@ -2664,10 +2681,52 @@ declare module 'paper' {
        * Creates a star shaped path item from the properties described by an object literal.
        * @param object - an object literal containing properties describing the path's attributes
        */
-      constructor(object: any);
+      constructor(object?: Partial<PathProps>);
     }
   }
+  interface CompoundPathProps extends PathItemProps {
+    /**
+     * Specifies whether the compound path is oriented clock-wise.
+     */
+    clockwise: boolean;
 
+    /**
+         * The first Segment contained within the path.
+         * Read Only
+         */
+    firstSegment: Segment;
+
+    /**
+         * The last Segment contained within the path.
+         * Read Only
+         */
+    lastSegment: Segment;
+
+    /**
+         * All the curves contained within the compound-path, from all its child Path items.
+         * Read Only
+         */
+    curves: Curve[];
+
+    /**
+         * The first Curve contained within the path.
+         * Read Only
+         */
+    firstCurve: Curve;
+
+    /**
+         * The last Curve contained within the path.
+         * Read only.
+         */
+    lastCurve: Curve;
+
+    /**
+         * The area of the path in square points. Self-intersecting paths can contain sub-areas that cancel each other out.
+         * Read Only.
+         */
+    area: number;
+  }
+  export interface CompoundPath extends CompoundPathProps {}
   /**
    * A compound path contains two or more paths, holes are drawn where the paths overlap. All the paths in a compound path take on the style of the backmost path and can be accessed through its item.children list.
    */
@@ -2676,7 +2735,7 @@ declare module 'paper' {
      * Creates a new compound path item from an object description and places it at the top of the active layer.
      * @param object - an object literal containing properties to be set on the path
      */
-    constructor(object: any);
+    constructor(object?: Partial<CompoundPathProps>);
 
     /**
      * Creates a new compound path item from SVG path-data and places it at the top of the active layer.
@@ -2685,56 +2744,77 @@ declare module 'paper' {
     constructor(pathData: string);
 
     /**
-     * Specifies whether the compound path is oriented clock-wise.
-     */
-    clockwise: boolean;
-
-    /**
-     * The first Segment contained within the path.
-     * Read Only
-     */
-    firstSegment: Segment;
-
-    /**
-     * The last Segment contained within the path.
-     * Read Only
-     */
-    lastSegment: Segment;
-
-    /**
-     * All the curves contained within the compound-path, from all its child Path items.
-     * Read Only
-     */
-    curves: Curve[];
-
-    /**
-     * The first Curve contained within the path.
-     * Read Only
-     */
-    firstCurve: Curve;
-
-    /**
-     * The last Curve contained within the path.
-     * Read only.
-     */
-    lastCurve: Curve;
-
-    /**
-     * The area of the path in square points. Self-intersecting paths can contain sub-areas that cancel each other out.
-     * Read Only.
-     */
-    area: number;
-
-    /**
      * Reverses the orientation of all nested paths.
      */
     reverse(): void;
+  }
+  abstract class SegmentProps {
+    /**
+     * The anchor point of the segment.
+     */
+    point: Point;
+
+    /**
+         * The handle point relative to the anchor point of the segment that describes the in tangent of the segment.
+         */
+    handleIn: Point;
+
+    /**
+         * The handle point relative to the anchor point of the segment that describes the out tangent of the segment.
+         */
+    handleOut: Point;
+
+    /**
+         * Specifies whether the segment has no handles defined, meaning it connects two straight lines.
+         */
+    linear: boolean;
+
+    /**
+         * Specifies whether the point of the segment is selected.
+         */
+    selected: boolean;
+
+    /**
+         * The index of the segment in the path.segments array that the segment belongs to.
+         * Read Only
+         */
+    index: number;
+
+    /**
+         * The path that the segment belongs to.
+         * Read Only
+         */
+    path: Path;
+
+    /**
+         * The curve that the segment belongs to. For the last segment of an open path, the previous segment is returned.
+         * Read only.
+         */
+    curve: Curve;
+
+    /**
+         * The curve location that describes this segment's position ont the path.
+         * Read Only.
+         */
+    location: CurveLocation;
+
+    /**
+         * The next segment in the path.segments array that the segment belongs to. If the segments belongs to a closed path, the first segment is returned for the last segment of the path.
+         * Read Only.
+         */
+    next: Segment;
+
+    /**
+         * The previous segment in the path.segments array that the segment belongs to. If the segments belongs to a closed path, the last segment is returned for the first segment of the path.
+         * Read Only.
+         */
+    previous: Segment;
   }
   /**
    * The Segment object represents the points of a path through which its Curve objects pass. The segments of a path can be accessed through its path.segments array.
    * Each segment consists of an anchor point (segment.point) and optionaly an incoming and an outgoing handle (segment.handleIn and segment.handleOut), describing the tangents of the two Curve objects that are connected by this segment.
    */
-  export class Segment {
+  export class Segment extends SegmentProps {
     /**
      * Creates a new Segment object.
      * @param point [optional] - the anchor point of the segment default: {x: 0, y: 0}
@@ -2747,68 +2827,7 @@ declare module 'paper' {
      * Creates a new Segment object.
      * @param object - an object literal containing properties to be set on the segment.
      */
-    constructor(object?: any);
-
-    /**
-     * The anchor point of the segment.
-     */
-    point: Point;
-
-    /**
-     * The handle point relative to the anchor point of the segment that describes the in tangent of the segment.
-     */
-    handleIn: Point;
-
-    /**
-     * The handle point relative to the anchor point of the segment that describes the out tangent of the segment.
-     */
-    handleOut: Point;
-
-    /**
-     * Specifies whether the segment has no handles defined, meaning it connects two straight lines.
-     */
-    linear: boolean;
-
-    /**
-     * Specifies whether the point of the segment is selected.
-     */
-    selected: boolean;
-
-    /**
-     * The index of the segment in the path.segments array that the segment belongs to.
-     * Read Only
-     */
-    index: number;
-
-    /**
-     * The path that the segment belongs to.
-     * Read Only
-     */
-    path: Path;
-
-    /**
-     * The curve that the segment belongs to. For the last segment of an open path, the previous segment is returned.
-     * Read only.
-     */
-    curve: Curve;
-
-    /**
-     * The curve location that describes this segment's position ont the path.
-     * Read Only.
-     */
-    location: CurveLocation;
-
-    /**
-     * The next segment in the path.segments array that the segment belongs to. If the segments belongs to a closed path, the first segment is returned for the last segment of the path.
-     * Read Only.
-     */
-    next: Segment;
-
-    /**
-     * The previous segment in the path.segments array that the segment belongs to. If the segments belongs to a closed path, the last segment is returned for the first segment of the path.
-     * Read Only.
-     */
-    previous: Segment;
+    constructor(object?: Partial<SegmentProps>);
 
     isFirst(): boolean;
 
@@ -3958,9 +3977,6 @@ declare module 'paper' {
      */
     emit(type: string, event: any): boolean;
 
-    // ADDED BY ALEX LOCKWOOD
-    fire(type: FireType, event: any): boolean;
-
     /**
      * Check if the tool has one or more event handlers of the specified type.
      * @param type - String('mousedown'|'mouseup'|'mousedrag'|'mousemove'|'keydown'|'keyup') the event type
@@ -4204,14 +4220,3 @@ declare module 'paper' {
     stop(): void;
   }
 }
-
-// ADDED BY ALEX LOCKWOOD
-type FireType =
-  | 'activate'
-  | 'deactivate'
-  | 'mousedown'
-  | 'mousemove'
-  | 'mousedrag'
-  | 'mouseup'
-  | 'keydown'
-  | 'keyup';
