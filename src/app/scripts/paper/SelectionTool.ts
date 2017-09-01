@@ -57,19 +57,16 @@ export class SelectionTool extends BaseTool {
 
   // @Override
   protected onInterceptEvent(toolMode: ToolMode, event?: paper.ToolEvent | paper.KeyEvent) {
-    console.log('onInterceptEvent', toolMode);
     return toolMode === ToolMode.Selection || toolMode === ToolMode.Pen;
   }
 
   // @Override
   protected onToolModeChanged(toolMode: ToolMode) {
-    console.log('onToolModeEvent', toolMode);
     this.currentToolMode = toolMode;
   }
 
   // @Override
   protected onMouseEvent(event: paper.ToolEvent) {
-    console.log('onMouseEvent', event);
     this.clickDetector.onMouseEvent(event);
     if (event.type === 'mousedown') {
       this.onMouseDown(event);
@@ -83,7 +80,6 @@ export class SelectionTool extends BaseTool {
   }
 
   private onMouseDown(event: paper.ToolEvent) {
-    console.log('onMouseDown', this.currentToolMode, this.selectedEditPath);
     if (this.currentToolMode === ToolMode.Pen && !this.selectedEditPath) {
       // Then the user is in pen mode and is about to begin
       // creating a new path.
@@ -237,7 +233,6 @@ export class SelectionTool extends BaseTool {
   }
 
   private enterEditPathMode(hitPath: paper.Path) {
-    console.log('entering select edit path mode');
     this.selectedEditPath = hitPath;
 
     Selections.deselectAll();

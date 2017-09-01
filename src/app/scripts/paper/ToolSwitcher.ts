@@ -3,7 +3,6 @@ import * as $ from 'jquery';
 import * as paper from 'paper';
 
 import { BaseTool } from './BaseTool';
-import { PenTool } from './PenTool';
 import { SelectionTool } from './SelectionTool';
 import { ZoomPanTool } from './ZoomPanTool';
 
