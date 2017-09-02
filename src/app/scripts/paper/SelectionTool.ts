@@ -9,10 +9,13 @@ import {
   AddDeleteHandlesGesture,
   BatchSelectItemsGesture,
   BatchSelectSegmentsGesture,
+  CircleGesture,
   DeselectItemGesture,
   Gesture,
   HoverItemsGesture,
   HoverSegmentsCurvesGesture,
+  PencilGesture,
+  RectangleGesture,
   RotateItemsGesture,
   ScaleItemsGesture,
   SelectDragCloneItemsGesture,
@@ -57,7 +60,13 @@ export class SelectionTool extends BaseTool {
 
   // @Override
   protected onInterceptEvent(toolMode: ToolMode, event?: paper.ToolEvent | paper.KeyEvent) {
-    return toolMode === ToolMode.Selection || toolMode === ToolMode.Pen;
+    return (
+      toolMode === ToolMode.Selection ||
+      toolMode === ToolMode.Pencil ||
+      toolMode === ToolMode.Pen ||
+      toolMode === ToolMode.Circle ||
+      toolMode === ToolMode.Rectangle
+    );
   }
 
   // @Override
@@ -80,21 +89,27 @@ export class SelectionTool extends BaseTool {
   }
 
   private onMouseDown(event: paper.ToolEvent) {
-    if (this.currentToolMode === ToolMode.Pen && !this.selectedEditPath) {
-      // Then the user is in pen mode and is about to begin
-      // creating a new path.
-      Selections.deselectAll();
-      const newPath = new paper.Path();
-      newPath.strokeColor = 'black';
-      newPath.strokeWidth = 10;
-      this.enterEditPathMode(newPath);
-    }
-    if (this.selectedEditPath) {
-      // If a segment selected item is set, then we are in edit path mode.
-      this.currentGesture = this.createEditPathModeGesture(event);
+    if (this.currentToolMode === ToolMode.Pencil) {
+    } else if (this.currentToolMode === ToolMode.Circle) {
+      this.currentGesture = new CircleGesture();
+    } else if (this.currentToolMode === ToolMode.Rectangle) {
     } else {
-      // Otherwise we are in selection mode.
-      this.currentGesture = this.createSelectionModeGesture(event);
+      if (this.currentToolMode === ToolMode.Pen && !this.selectedEditPath) {
+        // Then the user is in pen mode and is about to begin
+        // creating a new path.
+        Selections.deselectAll();
+        const newPath = new paper.Path();
+        newPath.strokeColor = 'black';
+        newPath.strokeWidth = 10;
+        this.enterEditPathMode(newPath);
+      }
+      if (this.selectedEditPath) {
+        // If a segment selected item is set, then we are in edit path mode.
+        this.currentGesture = this.createEditPathModeGesture(event);
+      } else {
+        // Otherwise we are in selection mode.
+        this.currentGesture = this.createSelectionModeGesture(event);
+      }
     }
     this.currentGesture.onMouseDown(event);
   }

@@ -11,3 +11,6 @@ export { SelectDragDrawSegmentsGesture } from './SelectDragDrawSegmentsGesture';
 export { SelectDragHandleGesture } from './SelectDragHandleGesture';
 export { AddDeleteHandlesGesture } from './AddDeleteHandlesGesture';
 export { DeselectItemGesture } from './DeselectItemGesture';
+export { PencilGesture } from './PencilGesture';
+export { CircleGesture } from './CircleGesture';
+export { RectangleGesture } from './RectangleGesture';

@@ -1969,6 +1969,8 @@ declare module 'paper' {
      * @param object - an object literal containing properties describing the shape's attributes
      */
     static Ellipse(object?: Partial<ShapeProps>): Shape;
+
+    toPath(insert: boolean): Path;
   }
   /**
    * The Raster item represents an image in a Paper.js project.

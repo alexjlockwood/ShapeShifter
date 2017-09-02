@@ -34,6 +34,7 @@ export class ToolSwitcher {
   }
 
   setToolMode(toolMode: ToolMode) {
+    console.log(this.currentToolMode, toolMode);
     if (this.currentToolMode === toolMode) {
       return;
     }

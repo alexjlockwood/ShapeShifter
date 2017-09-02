@@ -11,7 +11,10 @@ import { Observable } from 'rxjs/Observable';
 })
 export class ToolPanelComponent implements OnInit {
   readonly TOOL_MODE_SELECT = ToolMode.Selection;
+  readonly TOOL_MODE_PENCIL = ToolMode.Pencil;
   readonly TOOL_MODE_PEN = ToolMode.Pen;
+  readonly TOOL_MODE_CIRCLE = ToolMode.Circle;
+  readonly TOOL_MODE_RECTANGLE = ToolMode.Rectangle;
   readonly TOOL_MODE_ZOOMPAN = ToolMode.ZoomPan;
 
   private toolMode$: Observable<ToolMode>;
@@ -27,8 +30,20 @@ export class ToolPanelComponent implements OnInit {
     this.toolModeService.setToolMode(ToolMode.Selection);
   }
 
+  onPencilClick() {
+    this.toolModeService.setToolMode(ToolMode.Pencil);
+  }
+
   onPenClick() {
     this.toolModeService.setToolMode(ToolMode.Pen);
+  }
+
+  onCircleClick() {
+    this.toolModeService.setToolMode(ToolMode.Circle);
+  }
+
+  onRectangleClick() {
+    this.toolModeService.setToolMode(ToolMode.Rectangle);
   }
 
   onZoomPanClick() {
