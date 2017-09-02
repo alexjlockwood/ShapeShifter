@@ -4,7 +4,7 @@
   "license": "Apache-2.0",
   "scripts": {
     "ng": "ng",
-    "start": "node --max-old-space-size=8192 ./node_modules/.bin/ng serve --open",
+    "start": "node --max-old-space-size=8192 ./node_modules/.bin/ng serve",
     "build": "node --max-old-space-size=8192 ./node_modules/.bin/ng build -prod",
     "test": "node --max-old-space-size=8192 ./node_modules/.bin/ng test",
     "lint": "node --max-old-space-size=8192 ./node_modules/.bin/ng lint --type-check",
