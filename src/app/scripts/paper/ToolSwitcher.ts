@@ -34,10 +34,11 @@ export class ToolSwitcher {
   }
 
   setToolMode(toolMode: ToolMode) {
-    console.log(this.currentToolMode, toolMode);
     if (this.currentToolMode === toolMode) {
       return;
     }
+    // TODO: clean this fixed distance code up?
+    this.masterTool.fixedDistance = toolMode === ToolMode.Pencil ? 4 : undefined;
     this.currentToolMode = toolMode;
     this.processEvent();
   }
