@@ -2,12 +2,12 @@ import { ToolMode } from 'app/model/paper';
 import { Cursor, Cursors } from 'app/scripts/paper/util';
 import * as paper from 'paper';
 
-import { BaseTool } from './BaseTool';
+import { Tool } from './Tool';
 
 /**
  * Tool that enables zooming and panning the canvas.
  */
-export class ZoomPanTool extends BaseTool {
+export class ZoomPanTool extends Tool {
   private lastPoint: paper.Point;
 
   // @Override

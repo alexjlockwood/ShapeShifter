@@ -4,7 +4,7 @@ import * as paper from 'paper';
 /**
  * Represents the base class for all canvas editor tools.
  */
-export abstract class BaseTool {
+export abstract class Tool {
   onActivate() {}
   onToolModeChanged(toolMode: ToolMode) {}
   onMouseEvent(event: paper.ToolEvent) {}

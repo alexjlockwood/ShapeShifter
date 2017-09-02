@@ -2,9 +2,7 @@ import { ToolMode } from 'app/model/paper';
 import * as $ from 'jquery';
 import * as paper from 'paper';
 
-import { BaseTool } from './BaseTool';
-import { MasterTool } from './MasterTool';
-import { ZoomPanTool } from './ZoomPanTool';
+import { MasterTool, Tool, ZoomPanTool } from './tool';
 
 /**
  * The entry class used for switching between different tool types.
@@ -16,7 +14,7 @@ export class ToolSwitcher {
   private readonly zoomPanTool = new ZoomPanTool();
   private readonly paperTool = new paper.Tool();
   private currentToolMode: ToolMode;
-  private currentTool: BaseTool;
+  private currentTool: Tool;
 
   constructor() {
     const processEventFn = (event: paper.ToolEvent | paper.KeyEvent) => this.processEvent(event);

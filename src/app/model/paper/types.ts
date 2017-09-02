@@ -5,4 +5,6 @@ export enum ToolMode {
   Circle,
   Rectangle,
   ZoomPan,
+  Rotate,
+  Transform,
 }

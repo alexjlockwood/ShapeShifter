@@ -1,10 +1,6 @@
 import { ToolMode } from 'app/model/paper';
 import { MathUtil } from 'app/scripts/common';
-import * as $ from 'jquery';
-import * as paper from 'paper';
-
-import { BaseTool } from './BaseTool';
-import { ClickDetector } from './detector';
+import { ClickDetector } from 'app/scripts/paper/detector';
 import {
   AddDeleteHandlesGesture,
   BatchSelectItemsGesture,
@@ -21,8 +17,12 @@ import {
   SelectDragCloneItemsGesture,
   SelectDragDrawSegmentsGesture,
   SelectDragHandleGesture,
-} from './gesture';
-import { Guides, HitTests, Items, Selections } from './util';
+} from 'app/scripts/paper/gesture';
+import { Guides, HitTests, Items, Selections } from 'app/scripts/paper/util';
+import * as $ from 'jquery';
+import * as paper from 'paper';
+
+import { Tool } from './Tool';
 
 /**
  * A tool that selects, moves, rotates, scales, and modifies items.
@@ -49,7 +49,7 @@ import { Guides, HitTests, Items, Selections } from './util';
  * TODO: describe how 'enter' and 'escape' should both behave
  * TODO: https://medium.com/sketch-app/mastering-the-bezier-curve-in-sketch-4da8fdf0dbbb
  */
-export class MasterTool extends BaseTool {
+export class MasterTool extends Tool {
   private readonly clickDetector = new ClickDetector();
   private currentGesture: Gesture = new HoverItemsGesture();
   private currentToolMode = ToolMode.Selection;
