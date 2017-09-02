@@ -11,17 +11,17 @@ export class ZoomPanTool extends BaseTool {
   private lastPoint: paper.Point;
 
   // @Override
-  protected onActivate() {
+  onActivate() {
     Cursors.set(Cursor.ZoomIn);
   }
 
   // @Override
-  protected onDeactivate() {
+  onDeactivate() {
     Cursors.clear();
   }
 
   // @Override
-  protected onMouseEvent(event: paper.ToolEvent) {
+  onMouseEvent(event: paper.ToolEvent) {
     if (event.type === 'mousedown') {
       this.onMouseDown(event);
     } else if (event.type === 'mousedrag') {
@@ -63,7 +63,7 @@ export class ZoomPanTool extends BaseTool {
   }
 
   // @Override
-  protected onKeyEvent(event: paper.KeyEvent) {
+  onKeyEvent(event: paper.KeyEvent) {
     if (event.type === 'keydown') {
       this.onKeyDown(event);
     } else if (event.type === 'keyup') {

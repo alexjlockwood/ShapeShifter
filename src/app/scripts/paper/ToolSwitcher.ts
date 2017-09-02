@@ -48,17 +48,19 @@ export class ToolSwitcher {
         : this.selectionTool;
     if (prevTool !== this.currentTool) {
       if (prevTool) {
-        prevTool.dispatchDeactivate();
+        prevTool.onDeactivate();
       }
       if (this.currentTool) {
-        this.currentTool.dispatchActivate();
+        this.currentTool.onActivate();
       }
     }
     if (this.currentTool) {
-      if (event instanceof paper.ToolEvent || event instanceof paper.KeyEvent) {
-        this.currentTool.dispatchEvent(event);
+      if (event instanceof paper.ToolEvent) {
+        this.currentTool.onMouseEvent(event);
+      } else if (event instanceof paper.KeyEvent) {
+        this.currentTool.onKeyEvent(event);
       } else {
-        this.currentTool.dispatchToolModeChanged(this.currentToolMode);
+        this.currentTool.onToolModeChanged(this.currentToolMode);
       }
     }
   }

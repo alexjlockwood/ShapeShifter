@@ -59,12 +59,12 @@ export class MasterTool extends BaseTool {
   private selectedEditPath: paper.Path;
 
   // @Override
-  protected onToolModeChanged(toolMode: ToolMode) {
+  onToolModeChanged(toolMode: ToolMode) {
     this.currentToolMode = toolMode;
   }
 
   // @Override
-  protected onMouseEvent(event: paper.ToolEvent) {
+  onMouseEvent(event: paper.ToolEvent) {
     this.clickDetector.onMouseEvent(event);
     if (event.type === 'mousedown') {
       this.onMouseDown(event);
@@ -120,7 +120,7 @@ export class MasterTool extends BaseTool {
   }
 
   // @Override
-  protected onKeyEvent(event: paper.KeyEvent) {
+  onKeyEvent(event: paper.KeyEvent) {
     if (event.type === 'keydown') {
       this.currentGesture.onKeyDown(event);
     } else if (event.type === 'keyup') {
