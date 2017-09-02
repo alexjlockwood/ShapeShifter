@@ -2660,6 +2660,7 @@ declare module 'paper' {
      */
     getNearestPoint(point: Point): Point;
   }
+  type Rect = Rectangle;
   namespace Path {
     export class Line extends Path {
       /**
@@ -2697,7 +2698,7 @@ declare module 'paper' {
        * @param rectangle - the rectangle object describing the geometry of the rectangular path to be created.
        * @param radius [optional] - the size of the rounded corners default: null
        */
-      constructor(rectangle: Rectangle, radius?: number);
+      constructor(rectangle: Rect, radius?: Size);
 
       /**
        * Creates a rectangular path item from a point and a size object.
@@ -2725,7 +2726,7 @@ declare module 'paper' {
        * Creates an elliptical path item.
        * @param rectangle - the rectangle circumscribing the ellipse
        */
-      constructor(rectangle: Rectangle);
+      constructor(rectangle: Rect);
 
       /**
        * Creates an elliptical path item from the properties described by an object literal.

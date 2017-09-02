@@ -90,9 +90,11 @@ export class SelectionTool extends BaseTool {
 
   private onMouseDown(event: paper.ToolEvent) {
     if (this.currentToolMode === ToolMode.Pencil) {
+      this.currentGesture = new PencilGesture();
     } else if (this.currentToolMode === ToolMode.Circle) {
       this.currentGesture = new CircleGesture();
     } else if (this.currentToolMode === ToolMode.Rectangle) {
+      this.currentGesture = new RectangleGesture();
     } else {
       if (this.currentToolMode === ToolMode.Pen && !this.selectedEditPath) {
         // Then the user is in pen mode and is about to begin
