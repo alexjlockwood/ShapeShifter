@@ -10,7 +10,7 @@ const HOVER_PATH_NAME = 'hoverPath';
 const SELECTION_BOX_NAME = 'selectionBox';
 const SELECTION_PATH_NAME = 'selectionPath';
 const ADD_SEGMENT_TO_CURVE_HOVER_GROUP_NAME = 'addSegmentToCurveHoverGroup';
-const PEN_PATH_PREVIEW_LINE_NAME = 'penPathPreviewLine';
+const PEN_PREVIEW_PATH = 'penPreviewPath';
 // TODO: implement a 'rotation tool' similar to sketch
 // TODO: implement a 'transform tool' similar to sketch
 const GUIDE_COLOR = '#009dec';
@@ -167,29 +167,41 @@ export function hideAddSegmentToCurveHoverGroup() {
 }
 
 // ================================= //
-// ===== Pen path preview line ===== //
+// ===== Pen path preview path ===== //
 // ================================= //
 
-function getPenPathPreviewLine() {
-  return getGuideLayer().getItem({ name: PEN_PATH_PREVIEW_LINE_NAME }) as paper.Path.Line;
+function getPenPathPreviewPath() {
+  return getGuideLayer().getItem({ name: PEN_PREVIEW_PATH }) as paper.Path;
 }
 
-// TODO: this should return a curve/arc, not only a line
-export function showPenPathPreviewLine(from: paper.Point, to: paper.Point) {
-  hidePenPathPreviewLine();
+export function showPenPathPreviewPath(from: paper.Segment, to: paper.Point) {
+  hidePenPathPreviewPath();
 
-  const line = Items.newLine(from, to);
-  line.name = PEN_PATH_PREVIEW_LINE_NAME;
-  line.guide = true;
-  line.strokeWidth = 4 / paper.view.zoom;
-  line.strokeColor = 'red';
-  getGuideLayer().addChild(line);
-  return line;
+  const path = Items.newPath({
+    name: PEN_PREVIEW_PATH,
+    guide: true,
+    strokeWidth: 4 / paper.view.zoom,
+    strokeColor: 'red',
+  });
+  const fromPoint = from.point.clone();
+  const fromHandleIn = from.handleIn ? from.handleIn.clone() : undefined;
+  const fromHandleOut = from.handleOut ? from.handleOut.clone() : undefined;
+  path.add(
+    new paper.Segment({
+      point: fromPoint,
+      handleIn: fromHandleIn,
+      handleOut: fromHandleOut,
+    }),
+  );
+  path.add(to.clone());
+
+  getGuideLayer().addChild(path);
+  return path;
 }
 
-export function hidePenPathPreviewLine() {
-  const line = getPenPathPreviewLine();
-  if (line) {
-    line.remove();
+export function hidePenPathPreviewPath() {
+  const path = getPenPathPreviewPath();
+  if (path) {
+    path.remove();
   }
 }

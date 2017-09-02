@@ -34,5 +34,12 @@ export function editPathMode(selectedEditPath: paper.Path, point: paper.Point) {
     handles: true,
     stroke: true,
     tolerance: 8 / paper.view.zoom,
+    match: (hitResult: paper.HitResult) => {
+      // Don't return hits for handles belonging to un-selected segments.
+      return !(
+        (hitResult.type === 'handle-in' || hitResult.type === 'handle-out') &&
+        !hitResult.segment.selected
+      );
+    },
   });
 }

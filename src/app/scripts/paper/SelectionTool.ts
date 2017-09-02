@@ -185,6 +185,8 @@ export class SelectionTool extends BaseTool {
   private createEditPathModeGesture(event: paper.ToolEvent) {
     const hitResult = HitTests.editPathMode(this.selectedEditPath, event.point);
     if (hitResult) {
+      // We've hit a segment or a handle belonging to a selected segment,
+      // so begin a drag gesture.
       switch (hitResult.type) {
         case 'segment':
           if (this.clickDetector.isDoubleClick()) {
@@ -206,18 +208,12 @@ export class SelectionTool extends BaseTool {
       }
     }
 
-    if (this.selectedEditPath.segments.length === 0) {
+    if (
       // Then we are beginning to build a new path from scratch.
-      return new SelectDragDrawSegmentsGesture(this.selectedEditPath);
-    }
-
-    const selectedSegments = this.selectedEditPath.segments.filter(s => s.selected);
-    const hasSingleSelectedEndPointSegment =
-      !this.selectedEditPath.closed &&
-      selectedSegments.length === 1 &&
-      (selectedSegments[0].isFirst() || selectedSegments[0].isLast());
-    if (hasSingleSelectedEndPointSegment) {
+      this.selectedEditPath.segments.length === 0 ||
       // Then we are extending an existing open path.
+      Selections.hasSingleSelectedEndPointSegment(this.selectedEditPath)
+    ) {
       return new SelectDragDrawSegmentsGesture(this.selectedEditPath);
     }
 

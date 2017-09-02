@@ -46,3 +46,16 @@ export function deselectAll() {
   Guides.getGuideLayer().removeChildren();
   paper.project.deselectAll();
 }
+
+/**
+ * Returns true iff the given path is open and has a single selected
+ * end point segment.
+ */
+export function hasSingleSelectedEndPointSegment(path: paper.Path) {
+  const selectedSegments = path.segments.filter(s => s.selected);
+  return (
+    !path.closed &&
+    selectedSegments.length === 1 &&
+    (selectedSegments[0].isFirst() || selectedSegments[0].isLast())
+  );
+}

@@ -75,6 +75,7 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
     this.selectedSegments = this.selectedEditPath.segments.filter(s => s.selected);
     this.initialSegmentPositions = this.selectedSegments.map(s => s.point.clone());
 
+    Guides.hidePenPathPreviewPath();
     Cursors.set(Cursor.PointSelect);
   }
 
@@ -87,6 +88,8 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
       ? new paper.Point(MathUtil.snapDeltaToAngle(dragVector, 15))
       : undefined;
     if (this.updateHandlePositionsOnDrag) {
+      // Then we have just added a segment to the path in onMouseDown()
+      // and should thus move the segment's handles onMouseDrag().
       const selectedSegment = this.selectedSegments[0];
       if (event.modifiers.shift) {
         selectedSegment.handleIn = this.initialSegmentPositions[0].subtract(snapPoint);
@@ -96,6 +99,8 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
         selectedSegment.handleOut = selectedSegment.handleOut.add(event.delta);
       }
     } else {
+      // Then we selected an existing segment in onMouseDown() and should
+      // move the segment according to the new mouse position.
       this.selectedSegments.forEach((segment, i) => {
         if (event.modifiers.shift) {
           segment.point = this.initialSegmentPositions[i].add(snapPoint);

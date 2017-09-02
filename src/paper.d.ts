@@ -3456,10 +3456,8 @@ declare module 'paper' {
      */
     importSVG(svg: SVGElement | string, options?: any): Item;
 
-    // ADDED BY ALEX LOCKWOOD
     addLayer(layer: Layer): Layer | null;
   }
-  // ADDED BY ALEX LOCKWOOD
   export interface HitOptions {
     tolerance?: number;
     class?: string;

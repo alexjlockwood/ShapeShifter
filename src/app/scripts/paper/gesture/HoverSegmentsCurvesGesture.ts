@@ -24,7 +24,7 @@ export class HoverSegmentsCurvesGesture extends Gesture {
   // @Override
   onMouseMove({ point }: paper.ToolEvent) {
     Cursors.clear();
-    Guides.hidePenPathPreviewLine();
+    Guides.hidePenPathPreviewPath();
     Guides.hideAddSegmentToCurveHoverGroup();
 
     const hitResult = HitTests.editPathMode(this.selectedEditPath, point);
@@ -32,7 +32,7 @@ export class HoverSegmentsCurvesGesture extends Gesture {
       const singleSelectedSegment = this.findSingleSelectedEndSegment();
       if (singleSelectedSegment) {
         Cursors.set(Cursor.PenAdd);
-        Guides.showPenPathPreviewLine(singleSelectedSegment.point, point);
+        Guides.showPenPathPreviewPath(singleSelectedSegment, point);
       }
       return;
     }
@@ -49,7 +49,7 @@ export class HoverSegmentsCurvesGesture extends Gesture {
           (singleSelectedSegment.isLast() && hitResult.segment.isFirst()))
       ) {
         Cursors.set(Cursor.PenAdd);
-        Guides.showPenPathPreviewLine(singleSelectedSegment.point, hitResult.segment.point);
+        Guides.showPenPathPreviewPath(singleSelectedSegment, hitResult.segment.point);
         return;
       }
     }
