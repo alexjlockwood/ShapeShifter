@@ -1,8 +1,13 @@
+import { Animatable, Inspectable, NameProperty, Property } from 'app/model/properties';
 import { Rect } from 'app/scripts/common';
 import * as _ from 'lodash';
 
-import { Animatable, Inspectable, NameProperty, Property } from '../properties';
-import { ClipPathLayer, GroupLayer, PathLayer, VectorLayer } from '.';
+import { ClipPathLayer } from './ClipPathLayer';
+import { GroupLayer } from './GroupLayer';
+import { PathLayer } from './PathLayer';
+import { VectorLayer } from './VectorLayer';
+
+type Type = 'vector' | 'group' | 'mask' | 'path';
 
 /**
  * Interface that is shared by all vector drawable layer models below.
@@ -29,7 +34,7 @@ export abstract class Layer implements Inspectable, Animatable {
    * Returns the Layer type. This string value should not change,
    * as it is used to identify the layer type and icon.
    */
-  abstract type: string;
+  abstract type: Type;
 
   /**
    * Returns the bounding box for this Layer (or undefined if none exists).

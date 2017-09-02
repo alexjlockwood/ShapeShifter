@@ -1,6 +1,7 @@
 import { Matrix, Point } from 'app/scripts/common';
 
-import { Command, SvgChar } from '.';
+import { Command } from './Command';
+import { SvgChar } from './SvgChar';
 import * as SvgUtil from './SvgUtil';
 
 enum Token {
@@ -325,7 +326,11 @@ export function parseCommands(pathString: string, matrices?: Matrix[]): Command[
   }
   const flattenedMatrices = Matrix.flatten(matrices);
   return commands.map(cmd => {
-    return cmd.mutate().setId(cmd.getId()).transform(flattenedMatrices).build();
+    return cmd
+      .mutate()
+      .setId(cmd.getId())
+      .transform(flattenedMatrices)
+      .build();
   });
 }
 
