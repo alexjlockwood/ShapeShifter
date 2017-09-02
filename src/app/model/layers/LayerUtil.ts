@@ -3,11 +3,7 @@ import { MathUtil, Matrix } from 'app/scripts/common';
 import { environment } from 'environments/environment';
 import * as _ from 'lodash';
 
-import { ClipPathLayer } from './ClipPathLayer';
-import { GroupLayer } from './GroupLayer';
-import { Layer } from './Layer';
-import { PathLayer } from './PathLayer';
-import { VectorLayer } from './VectorLayer';
+import { ClipPathLayer, GroupLayer, Layer, PathLayer, VectorLayer } from './Layer';
 
 const IS_DEV_BUILD = !environment.production;
 
@@ -123,7 +119,12 @@ export function adjustViewports(vl1: VectorLayer, vl2: VectorLayer) {
         }
         if (layer.pathData) {
           layer.pathData = new Path(
-            layer.pathData.getCommands().map(cmd => cmd.mutate().transform(transforms).build()),
+            layer.pathData.getCommands().map(cmd =>
+              cmd
+                .mutate()
+                .transform(transforms)
+                .build(),
+            ),
           );
         }
         return;
