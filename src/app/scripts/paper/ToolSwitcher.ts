@@ -3,7 +3,7 @@ import * as $ from 'jquery';
 import * as paper from 'paper';
 
 import { BaseTool } from './BaseTool';
-import { SelectionTool } from './SelectionTool';
+import { MasterTool } from './MasterTool';
 import { ZoomPanTool } from './ZoomPanTool';
 
 /**
@@ -12,18 +12,15 @@ import { ZoomPanTool } from './ZoomPanTool';
  * TODO: figure out how to deal with right mouse clicks in each tool
  */
 export class ToolSwitcher {
-  private readonly tools: ReadonlyArray<BaseTool> = [
-    new ZoomPanTool(),
-    // new PenTool(),
-    new SelectionTool(),
-  ];
-  private readonly masterTool = new paper.Tool();
+  private readonly selectionTool = new MasterTool();
+  private readonly zoomPanTool = new ZoomPanTool();
+  private readonly paperTool = new paper.Tool();
   private currentToolMode: ToolMode;
   private currentTool: BaseTool;
 
   constructor() {
     const processEventFn = (event: paper.ToolEvent | paper.KeyEvent) => this.processEvent(event);
-    this.masterTool.on({
+    this.paperTool.on({
       mousedown: processEventFn,
       mousedrag: processEventFn,
       mousemove: processEventFn,
@@ -38,20 +35,17 @@ export class ToolSwitcher {
       return;
     }
     // TODO: clean this fixed distance code up?
-    this.masterTool.fixedDistance = toolMode === ToolMode.Pencil ? 4 : undefined;
+    this.paperTool.fixedDistance = toolMode === ToolMode.Pencil ? 4 : undefined;
     this.currentToolMode = toolMode;
     this.processEvent();
   }
 
   private processEvent(event?: paper.ToolEvent | paper.KeyEvent) {
     const prevTool = this.currentTool;
-    this.currentTool = undefined;
-    for (const tool of this.tools) {
-      if (tool.dispatchInterceptEvent(this.currentToolMode, event)) {
-        this.currentTool = tool;
-        break;
-      }
-    }
+    this.currentTool =
+      this.currentToolMode === ToolMode.ZoomPan || (event && event.modifiers.space)
+        ? this.zoomPanTool
+        : this.selectionTool;
     if (prevTool !== this.currentTool) {
       if (prevTool) {
         prevTool.dispatchDeactivate();

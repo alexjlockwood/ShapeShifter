@@ -15,13 +15,6 @@ export abstract class BaseTool {
   }
 
   /**
-   * Dispatcher method that invokes the onInterceptEvent() callback.
-   */
-  dispatchInterceptEvent(toolMode: ToolMode, event?: paper.ToolEvent | paper.KeyEvent) {
-    return this.onInterceptEvent(toolMode, event);
-  }
-
-  /**
    * Dispatcher method that invokes the onMouseEvent() and
    * onKeyEvent() callbacks.
    */
@@ -48,10 +41,6 @@ export abstract class BaseTool {
   }
 
   protected onActivate() {}
-  protected abstract onInterceptEvent(
-    toolMode: ToolMode,
-    event?: paper.ToolEvent | paper.KeyEvent,
-  ): boolean;
   protected onToolModeChanged(toolMode: ToolMode) {}
   protected onMouseEvent(event: paper.ToolEvent) {}
   protected onKeyEvent(event: paper.KeyEvent) {}

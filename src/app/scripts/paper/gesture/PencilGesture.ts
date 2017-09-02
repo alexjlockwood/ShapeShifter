@@ -6,10 +6,6 @@ import { Gesture } from './Gesture';
 export class PencilGesture extends Gesture {
   private path: paper.Path;
 
-  constructor() {
-    super();
-  }
-
   // @Override
   onMouseDown(event: paper.ToolEvent) {
     this.path = new paper.Path();

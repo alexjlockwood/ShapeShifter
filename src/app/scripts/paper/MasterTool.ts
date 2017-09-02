@@ -49,7 +49,7 @@ import { Guides, HitTests, Items, Selections } from './util';
  * TODO: describe how 'enter' and 'escape' should both behave
  * TODO: https://medium.com/sketch-app/mastering-the-bezier-curve-in-sketch-4da8fdf0dbbb
  */
-export class SelectionTool extends BaseTool {
+export class MasterTool extends BaseTool {
   private readonly clickDetector = new ClickDetector();
   private currentGesture: Gesture = new HoverItemsGesture();
   private currentToolMode = ToolMode.Selection;
@@ -57,17 +57,6 @@ export class SelectionTool extends BaseTool {
   // If this is non-nil, then we are in edit path mode. Otherwise, we are in
   // selection mode.
   private selectedEditPath: paper.Path;
-
-  // @Override
-  protected onInterceptEvent(toolMode: ToolMode, event?: paper.ToolEvent | paper.KeyEvent) {
-    return (
-      toolMode === ToolMode.Selection ||
-      toolMode === ToolMode.Pencil ||
-      toolMode === ToolMode.Pen ||
-      toolMode === ToolMode.Circle ||
-      toolMode === ToolMode.Rectangle
-    );
-  }
 
   // @Override
   protected onToolModeChanged(toolMode: ToolMode) {

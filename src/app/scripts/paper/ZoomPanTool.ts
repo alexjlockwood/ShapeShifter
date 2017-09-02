@@ -15,14 +15,9 @@ export class ZoomPanTool extends BaseTool {
     Cursors.set(Cursor.ZoomIn);
   }
 
+  // @Override
   protected onDeactivate() {
     Cursors.clear();
-  }
-
-  // @Override
-  protected onInterceptEvent(toolMode: ToolMode, event?: paper.ToolEvent | paper.KeyEvent) {
-    // Intercept the event if the user is in zoom/pan mode or if space is pressed.
-    return toolMode === ToolMode.ZoomPan || (event && event.modifiers.space);
   }
 
   // @Override
