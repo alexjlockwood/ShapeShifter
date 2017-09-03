@@ -95,7 +95,7 @@ export function newLayer(obj?: Partial<paper.LayerProps>) {
   return applyMatrixAndRemove(new paper.Layer(obj), false /* applyMatrix */);
 }
 
-function applyMatrixAndRemove<T extends paper.Item>(item: T, applyMatrix = true) {
+function applyMatrixAndRemove<T extends paper.Item>(item: T, applyMatrix = false) {
   item.applyMatrix = applyMatrix;
   item.remove();
   return item;

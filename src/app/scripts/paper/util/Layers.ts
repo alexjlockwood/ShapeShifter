@@ -68,7 +68,7 @@ export function fromVectorLayer(vl: VectorLayer) {
     if (layer instanceof VectorLayer) {
       // TODO: for some reason using Items.newGroup() doesn't work. investigate...
       // TODO: confirm that stroke scaling works as expected
-      const item = new paper.Group();
+      const item = Items.newGroup();
       item.addChildren(layer.children.map(l => recurseFn(l)));
       return item;
     }

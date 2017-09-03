@@ -8,7 +8,6 @@ import * as Items from './Items';
 export function selectionBoundsPivot(selectionBounds: paper.Path.Rectangle, point: paper.Point) {
   return selectionBounds.hitTest(point, {
     segments: true,
-    tolerance: 8 / paper.view.zoom,
   });
 }
 
@@ -16,10 +15,9 @@ export function selectionBoundsPivot(selectionBounds: paper.Path.Rectangle, poin
  * Executes a standard selection mode hit test.
  */
 export function selectionMode(point: paper.Point, matchFn?: (result: paper.HitResult) => boolean) {
-  return paper.project.activeLayer.hitTest(point, {
+  return paper.project.hitTest(point, {
     stroke: true,
     fill: true,
-    tolerance: 8 / paper.view.zoom,
     match: matchFn,
   });
 }
@@ -33,7 +31,6 @@ export function editPathMode(selectedEditPath: paper.Path, point: paper.Point) {
     curves: true,
     handles: true,
     stroke: true,
-    tolerance: 8 / paper.view.zoom,
     match: (hitResult: paper.HitResult) => {
       // Don't return hits for handles belonging to un-selected segments.
       return !(

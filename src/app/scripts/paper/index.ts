@@ -12,6 +12,9 @@ export const PaperUtil = {
     }
     paper.setup(canvas);
     paper.settings.handleSize = 8;
+    paper.settings.applyMatrix = false;
+    // TODO: should we set a hit tolerance here?
+    paper.settings.hitTolerance = 0;
     const mainLayer = new paper.Layer({ name: 'mainLayer' });
     paper.project.addLayer(mainLayer);
     paper.project.addLayer(Guides.createGuideLayer());

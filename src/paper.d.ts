@@ -1146,18 +1146,30 @@ declare module 'paper' {
     scaling: Point;
 
     /**
-     * The item's transformation matrix, defining position and dimensions in relation to its parent item in which it is contained.
+     * The item's transformation matrix, defining position and dimensions in relation to its
+     * parent item in which it is contained.
      */
     matrix: Matrix;
 
     /**
-     * The item's global transformation matrix in relation to the global project coordinate space. Note that the view's transformations resulting from zooming and panning are not factored in.
+     * The item's global transformation matrix in relation to the global project coordinate space.
+     * Note that the view's transformations resulting from zooming and panning are not factored in.
      * Read Only.
      */
     globalMatrix: Matrix;
 
     /**
-     * Controls whether the transformations applied to the item (e.g. through transform(matrix), rotate(angle), scale(scale), etc.) are stored in its matrix property, or whether they are directly applied to its contents or children (passed on to the segments in Path items, the children of Group items, etc.).
+     * The item’s global matrix in relation to the view coordinate space. This means that
+     * the view’s transformations resulting from zooming and panning are factored in.
+     * Read only.
+     */
+    viewMatrix: Matrix;
+
+    /**
+     * Controls whether the transformations applied to the item (e.g. through transform(matrix),
+     * rotate(angle), scale(scale), etc.) are stored in its matrix property, or whether they are
+     * directly applied to its contents or children (passed on to the segments in Path items,
+     * the children of Group items, etc.).
      */
     applyMatrix: boolean;
 

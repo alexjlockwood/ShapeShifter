@@ -54,10 +54,8 @@ export class CanvasPaperDirective extends CanvasLayoutMixin(DestroyableMixin())
           "type": "group",
           "pivotX": "12",
           "pivotY": "12",
-          "scaleX": "1.5",
-          "scaleY": "1.5",
-          "translateX": "0",
-          "translateY": "12",
+          "translateX": "4",
+          "translateY": "0",
           "children": [
             {
               "id": "45",
@@ -66,7 +64,7 @@ export class CanvasPaperDirective extends CanvasLayoutMixin(DestroyableMixin())
               "pathData": "M6,12c0,-3.31371 2.68629,-6 6,-6c3.31371,0 6,2.68629 6,6c0,3.31371 -2.6863,6 -6,6c-3.31371,0 -6,-2.6863 -6,-6z",
               "strokeColor": "#000000",
               "fillColor": "#f00",
-              "strokeWidth": 12
+              "strokeWidth": "1"
             },
             {
               "id": "45",
@@ -74,8 +72,7 @@ export class CanvasPaperDirective extends CanvasLayoutMixin(DestroyableMixin())
               "type": "path",
               "pathData": "M 1 1 h 3 v 4 h -3 v -4 z",
               "strokeColor": "#000000",
-              "fillColor": "#f00",
-              "strokeWidth": 6
+              "fillColor": "#f00"
             }
           ]
         }
