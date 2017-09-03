@@ -2,7 +2,7 @@ import { ToolMode } from 'app/model/paper';
 import * as paper from 'paper';
 
 /**
- * Represents the base class for all canvas editor tools.
+ * Represents the base class for all tool modes.
  */
 export abstract class Tool {
   onActivate() {}

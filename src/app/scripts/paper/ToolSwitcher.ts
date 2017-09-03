@@ -1,7 +1,7 @@
 import { ToolMode } from 'app/model/paper';
 import * as paper from 'paper';
 
-import { DefaultTool, Tool, ZoomPanTool } from './tool';
+import { MasterTool, Tool, ZoomPanTool } from './tool';
 
 /**
  * The entry class used for switching between different tool types.
@@ -9,7 +9,7 @@ import { DefaultTool, Tool, ZoomPanTool } from './tool';
  * TODO: figure out how to deal with right mouse clicks in each tool
  */
 export class ToolSwitcher {
-  private readonly defaultTool = new DefaultTool();
+  private readonly masterTool = new MasterTool();
   private readonly zoomPanTool = new ZoomPanTool();
   private readonly paperTool = new paper.Tool();
   private currentToolMode: ToolMode;
@@ -42,7 +42,7 @@ export class ToolSwitcher {
     this.currentTool =
       this.currentToolMode === ToolMode.ZoomPan || (event && event.modifiers.space)
         ? this.zoomPanTool
-        : this.defaultTool;
+        : this.masterTool;
     if (prevTool !== this.currentTool) {
       if (prevTool) {
         prevTool.onDeactivate();

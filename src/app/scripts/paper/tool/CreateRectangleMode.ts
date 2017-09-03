@@ -3,7 +3,7 @@ import * as paper from 'paper';
 
 import { Tool } from './Tool';
 
-export class SelectionTool extends Tool {
+export class CreateRectangleTool extends Tool {
   onActivate() {}
   onToolModeChanged(toolMode: ToolMode) {}
   onMouseEvent(event: paper.ToolEvent) {}
