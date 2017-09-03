@@ -1,3 +1,3 @@
 export { Tool } from './Tool';
-export { MasterTool } from './MasterTool';
+export { DefaultTool } from './DefaultTool';
 export { ZoomPanTool } from './ZoomPanTool';
