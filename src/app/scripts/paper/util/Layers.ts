@@ -1,67 +1,75 @@
-import { ClipPathLayer, GroupLayer, Layer, PathLayer, VectorLayer } from 'app/model/layers';
+import {
+  ClipPathLayer,
+  GroupLayer,
+  Layer,
+  LayerUtil,
+  PathLayer,
+  VectorLayer,
+} from 'app/model/layers';
+import { ColorUtil } from 'app/scripts/common';
 import * as paper from 'paper';
 
-// TODO: move this somewhere else?
-export function fromLayer(vl: VectorLayer) {
+import * as Items from './Items';
+
+export function fromVectorLayer(vl: VectorLayer) {
   return (function recurseFn(layer: Layer) {
     if (layer instanceof PathLayer) {
-      // TODO: what to do about the 'stroke scaling' property for items?
-      // TODO: support compound paths
-      const pathStr = layer.pathData ? layer.pathData.getPathString() : '';
-      const item = new paper.Path(pathStr);
-      item.applyMatrix = false;
-      item.fillColor = layer.fillColor;
-      item.strokeColor = layer.strokeColor;
-      item.strokeWidth = layer.strokeWidth;
-      item.miterLimit = layer.strokeMiterLimit;
-      item.strokeJoin = layer.strokeLinejoin;
-      item.strokeCap = layer.strokeLinecap;
-      if (layer.fillType === 'evenOdd') {
-        // Note that the 'o' is intentionally not capitalized here.
-        item.fillRule = 'evenodd';
-      }
-      // TODO: convert trim path properties to/from stroke dash array
-      // TODO: deal with fill and stroke opacity!!!!!
-      const { trimPathStart, trimPathEnd, trimPathOffset, fillAlpha, strokeAlpha } = layer;
-      item.data = {
-        trimPathStart,
-        trimPathEnd,
-        trimPathOffset,
-        fillAlpha,
-        strokeAlpha,
-      };
-      return item;
+      const { fillColor, fillAlpha, strokeColor, strokeAlpha } = layer;
+      const { trimPathStart, trimPathEnd, trimPathOffset } = layer;
+      const pathData = layer.pathData ? layer.pathData.getPathString() : '';
+      // TODO: make sure this works with compound paths as well (Android behavior is different)
+      const pathLength = layer.pathData ? layer.pathData.getPathLength() : 0;
+      const dashArray = pathLength
+        ? LayerUtil.toStrokeDashArray(trimPathStart, trimPathEnd, trimPathOffset, pathLength)
+        : undefined;
+      const dashOffset = pathLength
+        ? LayerUtil.toStrokeDashOffset(trimPathStart, trimPathEnd, trimPathOffset, pathLength)
+        : undefined;
+      const f = ColorUtil.parseAndroidColor(fillColor);
+      const s = ColorUtil.parseAndroidColor(strokeColor);
+      // TODO: import a compound path instead
+      return Items.newPath({
+        pathData,
+        fillColor: f ? new paper.Color(f.r, f.g, f.b, f.a * fillAlpha) : undefined,
+        strokeColor: s ? new paper.Color(s.r, s.g, s.b, s.a * strokeAlpha) : undefined,
+        strokeWidth: layer.strokeWidth,
+        miterLimit: layer.strokeMiterLimit,
+        strokeJoin: layer.strokeLinejoin,
+        strokeCap: layer.strokeLinecap,
+        fillRule: layer.fillType === 'evenOdd' ? 'evenodd' : 'nonzero',
+        dashArray,
+        dashOffset,
+      });
     }
     if (layer instanceof ClipPathLayer) {
-      // TODO: support compound paths
-      const pathStr = layer.pathData ? layer.pathData.getPathString() : '';
-      const item = new paper.Path(pathStr);
-      item.applyMatrix = false;
-      item.clipMask = true;
-      return item;
+      // TODO: import a compound path instead
+      const pathData = layer.pathData ? layer.pathData.getPathString() : '';
+      return Items.newPath({ pathData, clipMask: true });
     }
+
     if (layer instanceof GroupLayer) {
-      const item = new paper.Group();
-      item.applyMatrix = false;
-      const { pivotX, pivotY, scaleX, scaleY, translateX, translateY, rotation } = layer;
-      item.data = {
-        pivotX,
-        pivotY,
-        scaleX,
-        scaleY,
-        translateX,
-        translateY,
-        rotation,
-      };
-      const children = layer.children.map(l => recurseFn(l));
-      item.addChildren(children);
+      const { pivotX, pivotY, scaleX, scaleY, rotation, translateX, translateY } = layer;
+      const item = Items.newGroup();
+      const pivot = new paper.Matrix(1, 0, 0, 1, pivotX, pivotY);
+      const scale = new paper.Matrix(scaleX, 0, 0, scaleY, 0, 0);
+      const cosr = Math.cos(rotation * Math.PI / 180);
+      const sinr = Math.sin(rotation * Math.PI / 180);
+      const rotate = new paper.Matrix(cosr, sinr, -sinr, cosr, 0, 0);
+      const translate = new paper.Matrix(1, 0, 0, 1, translateX, translateY);
+      item.matrix = new paper.Matrix()
+        .prepend(pivot.inverted())
+        .prepend(scale)
+        .prepend(rotate)
+        .prepend(translate)
+        .prepend(pivot);
+      item.addChildren(layer.children.map(l => recurseFn(l)));
       return item;
     }
     if (layer instanceof VectorLayer) {
+      // TODO: for some reason using Items.newGroup() doesn't work. investigate...
+      // TODO: confirm that stroke scaling works as expected
       const item = new paper.Group();
-      item.applyMatrix = false;
-      const children = layer.children.map(l => recurseFn(l));
-      item.addChildren(children);
+      item.addChildren(layer.children.map(l => recurseFn(l)));
       return item;
     }
     throw new TypeError('Unknown layer type: ' + layer);

@@ -49,22 +49,35 @@ export class CanvasPaperDirective extends CanvasLayoutMixin(DestroyableMixin())
       "type": "vector",
       "children": [
         {
-          "id": "45",
-          "name": "path",
-          "type": "path",
-          "pathData": "M6,12c0,-3.31371 2.68629,-6 6,-6c3.31371,0 6,2.68629 6,6c0,3.31371 -2.68629,6 -6,6c-3.31371,0 -6,-2.68629 -6,-6z",
-          "strokeColor": "#000000",
-          "fillColor": "#f00",
-          "strokeWidth": 12
-        },
-        {
-          "id": "45",
-          "name": "path",
-          "type": "path",
-          "pathData": "M 1 1 h 3 v 4 h -3 v -4 z",
-          "strokeColor": "#000000",
-          "fillColor": "#f00",
-          "strokeWidth": 6
+          "id": "102",
+          "name": "group",
+          "type": "group",
+          "pivotX": "12",
+          "pivotY": "12",
+          "scaleX": "1.5",
+          "scaleY": "1.5",
+          "translateX": "0",
+          "translateY": "12",
+          "children": [
+            {
+              "id": "45",
+              "name": "path",
+              "type": "path",
+              "pathData": "M6,12c0,-3.31371 2.68629,-6 6,-6c3.31371,0 6,2.68629 6,6c0,3.31371 -2.6863,6 -6,6c-3.31371,0 -6,-2.6863 -6,-6z",
+              "strokeColor": "#000000",
+              "fillColor": "#f00",
+              "strokeWidth": 12
+            },
+            {
+              "id": "45",
+              "name": "path",
+              "type": "path",
+              "pathData": "M 1 1 h 3 v 4 h -3 v -4 z",
+              "strokeColor": "#000000",
+              "fillColor": "#f00",
+              "strokeWidth": 6
+            }
+          ]
         }
       ]
     }`);
@@ -85,7 +98,7 @@ export class CanvasPaperDirective extends CanvasLayoutMixin(DestroyableMixin())
   private updatePaper() {
     // TODO: make this more efficient
     const vl = this.layerTimelineService.getVectorLayer();
-    const rootItem = PaperUtil.fromLayer(vl);
+    const rootItem = PaperUtil.fromVectorLayer(vl);
     const scale = this.cssScale;
     paper.project.activeLayer.matrix = new paper.Matrix(scale, 0, 0, scale, 0, 0);
     paper.project.activeLayer.removeChildren();

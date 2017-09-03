@@ -18,7 +18,7 @@ export const PaperUtil = {
     mainLayer.activate();
     isPaperJsSetup = true;
   },
-  fromLayer: Layers.fromLayer,
+  fromVectorLayer: Layers.fromVectorLayer,
 };
 
 export { ToolSwitcher } from './ToolSwitcher';

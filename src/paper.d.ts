@@ -67,6 +67,11 @@ declare module 'paper' {
    */
   export class Matrix {
     /**
+     * Creates a 2D affine transformation matrix that describes the identity transformation.
+     */
+    constructor();
+
+    /**
      * Creates a 2D affine transform.
      * @param a - the a property of the transform
      * @param c - the c property of the transform
@@ -78,37 +83,44 @@ declare module 'paper' {
     constructor(a: number, c: number, b: number, d: number, tx: number, ty: number);
 
     /**
-     * The value that affects the transformation along the x axis when scaling or rotating, positioned at (0, 0) in the transformation matrix.
+     * The value that affects the transformation along the x axis when scaling or rotating,
+     * positioned at (0, 0) in the transformation matrix.
      */
     a: number;
 
     /**
-     * The value that affects the transformation along the y axis when rotating or skewing, positioned at (1, 0) in the transformation matrix.
+     * The value that affects the transformation along the y axis when rotating or skewing,
+     * positioned at (1, 0) in the transformation matrix.
      */
     c: number;
 
     /**
-     * The value that affects the transformation along the x axis when rotating or skewing, positioned at (0, 1) in the transformation matrix.
+     * The value that affects the transformation along the x axis when rotating or skewing,
+     * positioned at (0, 1) in the transformation matrix.
      */
     b: number;
 
     /**
-     * The value that affects the transformation along the y axis when scaling or rotating, positioned at (1, 1) in the transformation matrix.
+     * The value that affects the transformation along the y axis when scaling or rotating,
+     * positioned at (1, 1) in the transformation matrix.
      */
     d: number;
 
     /**
-     * The distance by which to translate along the x axis, positioned at (2, 0) in the transformation matrix.
+     * The distance by which to translate along the x axis, positioned at (2, 0) in
+     * the transformation matrix.
      */
     tx: number;
 
     /**
-     * The distance by which to translate along the y axis, positioned at (2, 1) in the transformation matrix.
+     * The distance by which to translate along the y axis, positioned at (2, 1) in
+     * the transformation matrix.
      */
     ty: number;
 
     /**
-     * The transform values as an array, in the same sequence as they are passed to initialize(a, c,b,d,tx,ty).
+     * The transform values as an array, in the same sequence as they are passed to
+     * initialize(a, c,b,d,tx,ty).
      * Read only.
      */
     values: number;
@@ -246,13 +258,17 @@ declare module 'paper' {
      * Concatenates the given affine transform to this transform.
      * @param mx - the transform to concatenate
      */
-    concatenate(mx: Matrix): Matrix;
+    append(mx: Matrix): Matrix;
+
+    appended(mx: Matrix): Matrix;
 
     /**
      * Pre-concatenates the given affine transform to this transform.
      * @param mx - the transform to preconcatenate
      */
-    preConcatenate(mx: Matrix): Matrix;
+    prepend(mx: Matrix): Matrix;
+
+    prepended(mx: Matrix): Matrix;
 
     /**
      * Returns a new instance of the result of the concatenation of the given affine transform with this transform.

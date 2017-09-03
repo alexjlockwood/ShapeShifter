@@ -192,13 +192,13 @@ export class CanvasLayersDirective extends CanvasLayoutMixin(DestroyableMixin())
         pathLength = layer.pathData.getSubPathLength(0);
       }
 
-      const strokeDashArray = PathUtil.toStrokeDashArray(
+      const strokeDashArray = LayerUtil.toStrokeDashArray(
         layer.trimPathStart,
         layer.trimPathEnd,
         layer.trimPathOffset,
         pathLength,
       );
-      const strokeDashOffset = PathUtil.toStrokeDashOffset(
+      const strokeDashOffset = LayerUtil.toStrokeDashOffset(
         layer.trimPathStart,
         layer.trimPathEnd,
         layer.trimPathOffset,
