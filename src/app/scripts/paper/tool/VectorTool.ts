@@ -3,7 +3,7 @@ import * as paper from 'paper';
 
 import { Tool } from './Tool';
 
-export class CreateEllipseTool extends Tool {
+export class VectorTool extends Tool {
   onActivate() {}
   onToolModeChanged(toolMode: ToolMode) {}
   onMouseEvent(event: paper.ToolEvent) {}
