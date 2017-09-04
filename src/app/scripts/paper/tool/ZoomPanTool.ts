@@ -1,5 +1,6 @@
 import { ToolMode } from 'app/model/paper';
 import { Cursor, Cursors } from 'app/scripts/paper/util';
+import { State, Store } from 'app/store';
 import * as paper from 'paper';
 
 import { Tool } from './Tool';
@@ -9,6 +10,10 @@ import { Tool } from './Tool';
  */
 export class ZoomPanTool extends Tool {
   private lastPoint: paper.Point;
+
+  constructor(store: Store<State>) {
+    super(store);
+  }
 
   // @Override
   onActivate() {

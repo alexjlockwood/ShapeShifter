@@ -19,6 +19,7 @@ import {
   SelectDragHandleGesture,
 } from 'app/scripts/paper/gesture';
 import { Guides, HitTests, Items, Selections } from 'app/scripts/paper/util';
+import { State, Store } from 'app/store';
 import * as paper from 'paper';
 
 import { Tool } from './Tool';
@@ -56,6 +57,10 @@ export class MasterTool extends Tool {
   // If this is non-nil, then we are in edit path mode. Otherwise, we are in
   // selection mode.
   private selectedEditPath: paper.Path;
+
+  constructor(store: Store<State>) {
+    super(store);
+  }
 
   // @Override
   onToolModeChanged(toolMode: ToolMode) {
