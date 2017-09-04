@@ -11,6 +11,8 @@ const SELECTION_BOX_NAME = 'selectionBox';
 const SELECTION_PATH_NAME = 'selectionPath';
 const ADD_SEGMENT_TO_CURVE_HOVER_GROUP_NAME = 'addSegmentToCurveHoverGroup';
 const PEN_PREVIEW_PATH = 'penPreviewPath';
+// TODO: implement a 'rotation tool' similar to sketch
+// TODO: implement a 'transform tool' similar to sketch
 const GUIDE_COLOR = '#009dec';
 const SELECTION_BOX_COLOR = '#aaaaaa';
 
@@ -38,21 +40,13 @@ function getHoverPath() {
 export function showHoverPath(path: paper.Path) {
   hideHoverPath();
 
-  // TODO: deal with incorrect stroke width
-  const matrix = new paper.Matrix();
-  let item: paper.Item = path;
-  while (item.parent && !Items.isLayer(item.parent)) {
-    matrix.prepend(item.parent.matrix.clone());
-    item = item.parent;
-  }
-
   const hoverPath = Items.newPath(path.segments);
   hoverPath.name = HOVER_PATH_NAME;
   hoverPath.closed = path.closed;
   hoverPath.strokeColor = GUIDE_COLOR;
   hoverPath.guide = true;
   hoverPath.strokeWidth = 1.5 / paper.view.zoom;
-  hoverPath.matrix = matrix;
+  hoverPath.matrix = path.matrix.clone();
   getGuideLayer().addChild(hoverPath);
   return hoverPath;
 }

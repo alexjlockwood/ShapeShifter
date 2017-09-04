@@ -20,49 +20,49 @@ export class ToolPanelComponent implements OnInit {
   private toolMode$: Observable<ToolMode>;
 
   // TODO: deal with invalid fill/stroke colors
-  constructor(public readonly paperService: PaperService) {}
+  constructor(readonly toolModeService: PaperService) {}
 
   ngOnInit() {
-    this.toolMode$ = this.paperService.getToolModeObservable();
+    this.toolMode$ = this.toolModeService.getToolModeObservable();
   }
 
   onSelectClick() {
-    this.paperService.setToolMode(ToolMode.Selection);
+    this.toolModeService.setToolMode(ToolMode.Selection);
   }
 
   onPencilClick() {
-    this.paperService.setToolMode(ToolMode.Pencil);
+    this.toolModeService.setToolMode(ToolMode.Pencil);
   }
 
   onPenClick() {
-    this.paperService.setToolMode(ToolMode.Pen);
+    this.toolModeService.setToolMode(ToolMode.Pen);
   }
 
   onCircleClick() {
-    this.paperService.setToolMode(ToolMode.Circle);
+    this.toolModeService.setToolMode(ToolMode.Circle);
   }
 
   onRectangleClick() {
-    this.paperService.setToolMode(ToolMode.Rectangle);
+    this.toolModeService.setToolMode(ToolMode.Rectangle);
   }
 
   onZoomPanClick() {
-    this.paperService.setToolMode(ToolMode.ZoomPan);
+    this.toolModeService.setToolMode(ToolMode.ZoomPan);
   }
 
   get fillColor() {
-    return this.paperService.getFillColor();
+    return this.toolModeService.getFillColor();
   }
 
   set fillColor(color: string) {
-    this.paperService.setFillColor(color);
+    this.toolModeService.setFillColor(color);
   }
 
   get strokeColor() {
-    return this.paperService.getStrokeColor();
+    return this.toolModeService.getStrokeColor();
   }
 
   set strokeColor(color: string) {
-    this.paperService.setStrokeColor(color);
+    this.toolModeService.setStrokeColor(color);
   }
 }
