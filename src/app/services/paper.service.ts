@@ -10,10 +10,10 @@ import { getFillColor, getStrokeColor, getToolMode } from 'app/store/toolmode/se
 import { OutputSelector } from 'reselect';
 
 /**
- * A simple service that provides an interface for tool panel changes.
+ * A simple service that provides an interface for making paper.js changes.
  */
 @Injectable()
-export class ToolModeService {
+export class PaperService {
   private toolSwitcher: ToolSwitcher;
 
   constructor(private readonly store: Store<State>) {}

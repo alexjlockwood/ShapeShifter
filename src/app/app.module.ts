@@ -40,11 +40,11 @@ import { DialogService } from './services/dialog.service';
 import { FileExportService } from './services/fileexport.service';
 import { FileImportService } from './services/fileimport.service';
 import { LayerTimelineService } from './services/layertimeline.service';
+import { PaperService } from './services/paper.service';
 import { PlaybackService } from './services/playback.service';
 import { ShortcutService } from './services/shortcut.service';
 import { SnackBarService } from './services/snackbar.service';
 import { ThemeService } from './services/theme.service';
-import { ToolModeService } from './services/toolmode.service';
 import {
   CanvasComponent,
   CanvasContainerDirective,
@@ -125,7 +125,7 @@ import { reducer } from './store';
     ShortcutService,
     SnackBarService,
     ThemeService,
-    ToolModeService,
+    PaperService,
   ],
   entryComponents: [ConfirmDialogComponent, DemoDialogComponent, DropFilesDialogComponent],
   bootstrap: [RootComponent],

@@ -5,7 +5,7 @@ import { Path } from 'app/model/paths';
 import { SvgLoader } from 'app/scripts/import';
 import { DestroyableMixin } from 'app/scripts/mixins';
 import { Paper } from 'app/scripts/paper';
-import { LayerTimelineService, ToolModeService } from 'app/services';
+import { LayerTimelineService, PaperService } from 'app/services';
 import { State, Store } from 'app/store';
 import { SetVectorLayer } from 'app/store/layers/actions';
 import { getVectorLayer } from 'app/store/layers/selectors';
@@ -27,7 +27,7 @@ export class CanvasPaperDirective extends CanvasLayoutMixin(DestroyableMixin())
 
   constructor(
     elementRef: ElementRef,
-    private readonly toolModeService: ToolModeService,
+    private readonly toolModeService: PaperService,
     private readonly layerTimelineService: LayerTimelineService,
     private readonly store: Store<State>,
   ) {

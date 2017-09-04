@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ToolMode } from 'app/model/paper';
 import { ColorUtil } from 'app/scripts/common';
-import { ToolModeService } from 'app/services';
+import { PaperService } from 'app/services';
 import { Observable } from 'rxjs/Observable';
 
 @Component({
@@ -20,7 +20,7 @@ export class ToolPanelComponent implements OnInit {
   private toolMode$: Observable<ToolMode>;
 
   // TODO: deal with invalid fill/stroke colors
-  constructor(readonly toolModeService: ToolModeService) {}
+  constructor(readonly toolModeService: PaperService) {}
 
   ngOnInit() {
     this.toolMode$ = this.toolModeService.getToolModeObservable();
