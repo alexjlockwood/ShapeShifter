@@ -4,7 +4,7 @@ import { LayerUtil, PathLayer, VectorLayer } from 'app/model/layers';
 import { Path } from 'app/model/paths';
 import { SvgLoader } from 'app/scripts/import';
 import { DestroyableMixin } from 'app/scripts/mixins';
-import { PaperUtil } from 'app/scripts/paper';
+import { Paper } from 'app/scripts/paper';
 import { LayerTimelineService, ToolModeService } from 'app/services';
 import { State, Store } from 'app/store';
 import { SetVectorLayer } from 'app/store/layers/actions';
@@ -39,7 +39,7 @@ export class CanvasPaperDirective extends CanvasLayoutMixin(DestroyableMixin())
     this.toolModeService.setup(this.$canvas.get(0));
     this.registerSubscription(
       this.store.select(getVectorLayer).subscribe(() => {
-        this.updatePaper();
+        Paper.updateLayers(this.layerTimelineService.getVectorLayer());
       }),
     );
     // TODO: remove this debug code
@@ -67,7 +67,7 @@ export class CanvasPaperDirective extends CanvasLayoutMixin(DestroyableMixin())
               "strokeWidth": "1"
             },
             {
-              "id": "45",
+              "id": "46",
               "name": "path",
               "type": "path",
               "pathData": "M 1 1 h 3 v 4 h -3 v -4 z",
@@ -78,28 +78,16 @@ export class CanvasPaperDirective extends CanvasLayoutMixin(DestroyableMixin())
         }
       ]
     }`);
-    const vl = new VectorLayer(jsonObj);
-    this.store.dispatch(new SetVectorLayer(vl));
+    // TODO: remove this debug code
+    this.store.dispatch(new SetVectorLayer(new VectorLayer(jsonObj)));
   }
 
   // @Override
   onDimensionsChanged() {
     const { w, h } = this.getViewport();
-    paper.view.viewSize = new paper.Size(w * this.cssScale, h * this.cssScale);
-    // TODO: the guide layer does not resize properly on browser resize events
-    // this.$canvas.attr({ width: w * this.attrScale, height: h * this.attrScale });
-    this.$canvas.css({ width: w * this.cssScale, height: h * this.cssScale });
-    this.updatePaper();
-  }
-
-  private updatePaper() {
-    // TODO: make this more efficient
-    const vl = this.layerTimelineService.getVectorLayer();
-    const rootItem = PaperUtil.fromVectorLayer(vl);
     const scale = this.cssScale;
-    paper.project.activeLayer.matrix = new paper.Matrix(scale, 0, 0, scale, 0, 0);
-    paper.project.activeLayer.removeChildren();
-    paper.project.activeLayer.addChild(rootItem);
+    this.$canvas.css({ width: w * scale, height: h * scale });
+    Paper.updateDimensions(w, h, w * scale, h * scale);
   }
 
   // Called by the CanvasComponent.

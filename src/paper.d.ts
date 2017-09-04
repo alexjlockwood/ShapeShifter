@@ -1040,6 +1040,9 @@ declare module 'paper' {
      */
     static get(id: string): PaperScope;
   }
+  export interface ItemData {
+    id?: string;
+  }
   export interface ItemProps {
     /**
      * The tangential vector to the #curve at the given location.
@@ -1084,10 +1087,45 @@ declare module 'paper' {
     visible: boolean;
 
     /**
-     * The blend mode with which the item is composited onto the canvas. Both the standard canvas compositing modes, as well as the new CSS blend modes are supported. If blend-modes cannot be rendered natively, they are emulated. Be aware that emulation can have an impact on performance.
-     * String('normal', 'multiply', 'screen', 'overlay', 'soft-light', 'hard-light', 'color-dodge', 'color-burn', 'darken', 'lighten', 'difference', 'exclusion', 'hue', 'saturation', 'luminosity', 'color', 'add', 'subtract', 'average', 'pin-light', 'negation', 'source-over', 'source-in', 'source-out', 'source-atop', 'destination-over', 'destination-in', 'destination-out', 'destination-atop', 'lighter', 'darker', 'copy', 'xor')
+     * The blend mode with which the item is composited onto the canvas. Both the standard canvas
+     * compositing modes, as well as the new CSS blend modes are supported. If blend-modes
+     * cannot be rendered natively, they are emulated. Be aware that emulation can have an
+     * impact on performance.
      */
-    blendMode: string;
+    blendMode:
+      | 'normal'
+      | 'multiply'
+      | 'screen'
+      | 'overlay'
+      | 'soft-light'
+      | 'hard-light'
+      | 'color-dodge'
+      | 'color-burn'
+      | 'darken'
+      | 'lighten'
+      | 'difference'
+      | 'exclusion'
+      | 'hue'
+      | 'saturation'
+      | 'luminosity'
+      | 'color'
+      | 'add'
+      | 'subtract'
+      | 'average'
+      | 'pin-light'
+      | 'negation'
+      | 'source-over'
+      | 'source-in'
+      | 'source-out'
+      | 'source-atop'
+      | 'destination-over'
+      | 'destination-in'
+      | 'destination-out'
+      | 'destination-atop'
+      | 'lighter'
+      | 'darker'
+      | 'copy'
+      | 'xor';
 
     /**
      * The opacity of the item as a value between 0 and 1.
@@ -1095,28 +1133,36 @@ declare module 'paper' {
     opacity: number;
 
     /**
-     * Specifies whether the item is selected. This will also return true for Group items if they are partially selected, e.g. groups containing selected or partially selected paths.
-     * Paper.js draws the visual outlines of selected items on top of your project. This can be useful for debugging, as it allows you to see the construction of paths, position of path curves, individual segment points and bounding boxes of symbol and raster items.
+     * Specifies whether the item is selected. This will also return true for Group items
+     * if they are partially selected, e.g. groups containing selected or partially selected paths.
+     * Paper.js draws the visual outlines of selected items on top of your project.
+     * This can be useful for debugging, as it allows you to see the construction of paths,
+     * position of path curves, individual segment points and bounding boxes of symbol and raster items.
      */
     selected: boolean;
 
     /**
-     * Specifies whether the item defines a clip mask. This can only be set on paths, compound paths, and text frame objects, and only if the item is already contained within a clipping group.
+     * Specifies whether the item defines a clip mask. This can only be set on paths,
+     * compound paths, and text frame objects, and only if the item is already contained
+     * within a clipping group.
      */
     clipMask: boolean;
 
     /**
      * A plain javascript object which can be used to store arbitrary data on the item.
      */
-    data: any;
+    data: ItemData;
 
     /**
-     * The item's position within the parent item's coordinate system. By default, this is the rectangle.center of the item's bounds rectangle.
+     * The item's position within the parent item's coordinate system. By default, this is
+     * the rectangle.center of the item's bounds rectangle.
      */
     position: Point;
 
     /**
-     * The item's pivot point specified in the item coordinate system, defining the point around which all transformations are hinging. This is also the reference point for position. By default, it is set to null, meaning the rectangle.center of the item's bounds rectangle is used as pivot.
+     * The item's pivot point specified in the item coordinate system, defining the point around
+     * which all transformations are hinging. This is also the reference point for position.
+     * By default, it is set to null, meaning the rectangle.center of the item's bounds rectangle is used as pivot.
      */
     pivot: Point;
 
@@ -2849,14 +2895,17 @@ declare module 'paper' {
     lastCurve: Curve;
 
     /**
-     * The area of the path in square points. Self-intersecting paths can contain sub-areas that cancel each other out.
+     * The area of the path in square points. Self-intersecting paths
+     * can contain sub-areas that cancel each other out.
      * Read Only.
      */
     area: number;
   }
   export interface CompoundPath extends CompoundPathProps {}
   /**
-   * A compound path contains two or more paths, holes are drawn where the paths overlap. All the paths in a compound path take on the style of the backmost path and can be accessed through its item.children list.
+   * A compound path contains two or more paths, holes are drawn where
+   * the paths overlap. All the paths in a compound path take on the
+   * style of the backmost path and can be accessed through its item.children list.
    */
   export class CompoundPath extends PathItem {
     /**
@@ -2915,7 +2964,8 @@ declare module 'paper' {
     path: Path;
 
     /**
-     * The curve that the segment belongs to. For the last segment of an open path, the previous segment is returned.
+     * The curve that the segment belongs to. For the last segment of an open
+     * path, the previous segment is returned.
      * Read only.
      */
     curve: Curve;
@@ -2927,27 +2977,38 @@ declare module 'paper' {
     location: CurveLocation;
 
     /**
-     * The next segment in the path.segments array that the segment belongs to. If the segments belongs to a closed path, the first segment is returned for the last segment of the path.
+     * The next segment in the path.segments array that the segment belongs to.
+     * If the segments belongs to a closed path, the first segment is returned
+     * for the last segment of the path.
      * Read Only.
      */
     next: Segment;
 
     /**
-     * The previous segment in the path.segments array that the segment belongs to. If the segments belongs to a closed path, the last segment is returned for the first segment of the path.
+     * The previous segment in the path.segments array that the segment belongs to.
+     * If the segments belongs to a closed path, the last segment is returned
+     * for the first segment of the path.
      * Read Only.
      */
     previous: Segment;
   }
   /**
-   * The Segment object represents the points of a path through which its Curve objects pass. The segments of a path can be accessed through its path.segments array.
-   * Each segment consists of an anchor point (segment.point) and optionaly an incoming and an outgoing handle (segment.handleIn and segment.handleOut), describing the tangents of the two Curve objects that are connected by this segment.
+   * The Segment object represents the points of a path through which its
+   * Curve objects pass. The segments of a path can be accessed through
+   * its path.segments array.
+   * Each segment consists of an anchor point (segment.point) and
+   * optionaly an incoming and an outgoing handle (segment.handleIn
+   * and segment.handleOut), describing the tangents of the two Curve
+   * objects that are connected by this segment.
    */
   export class Segment extends SegmentProps {
     /**
      * Creates a new Segment object.
      * @param point [optional] - the anchor point of the segment default: {x: 0, y: 0}
-     * @param handleIn [optional] - the handle point relative to the anchor point of the segment that describes the in tangent of the segment default: {x: 0, y: 0}
-     * @param handleOut [optional] - the handle point relative to the anchor point of the segment that describes the out tangent of the segment default: {x: 0, y: 0}
+     * @param handleIn [optional] - the handle point relative to the anchor point of
+     * the segment that describes the in tangent of the segment default: {x: 0, y: 0}
+     * @param handleOut [optional] - the handle point relative to the anchor point
+     * of the segment that describes the out tangent of the segment default: {x: 0, y: 0}
      */
     constructor(point?: Point, handleIn?: Point, handleOut?: Point);
 
@@ -3420,16 +3481,23 @@ declare module 'paper' {
     deselectAll(): void;
 
     /**
-     * Perform a hit-test on the items contained within the project at the location of the specified point.
-     * The options object allows you to control the specifics of the hit-test and may contain a combination of the following values:
+     * Perform a hit-test on the items contained within the project at
+     * the location of the specified point.
+     * The options object allows you to control the specifics of the
+     * hit-test and may contain a combination of the following values:
      * @param point - the point where the hit-test should be performed
-     * @param options.tolerance -the tolerance of the hit-test in points. Can also be controlled through paperScope.settings.hitTolerance
-     * @param options.class - only hit-test again a certain item class and its sub-classes: Group, Layer, Path, CompoundPath, Shape, Raster, PlacedSymbol, PointText, etc.
+     * @param options.tolerance -the tolerance of the hit-test in points.
+     * Can also be controlled through paperScope.settings.hitTolerance
+     * @param options.class - only hit-test again a certain item class
+     * and its sub-classes:
+     * Group, Layer, Path, CompoundPath, Shape, Raster, PlacedSymbol, PointText, etc.
      * @param options.fill - hit-test the fill of items.
-     * @param options.stroke - hit-test the stroke of path items, taking into account the setting of stroke color and width.
+     * @param options.stroke - hit-test the stroke of path items,
+     * taking into account the setting of stroke color and width.
      * @param options.segments - hit-test for segment.point of Path items.
-     * @param options.curves - hit-test the curves of path items, without taking the stroke color or width into account.
-     * @param options.handles - hit-test for the handles.  (segment.handleIn / segment.handleOut) of path segments.
+     * @param options.curves - hit-test the curves of path items, without
+     * taking the stroke color or width into account.
+     * @param options.handles - hit-test for the handles. (segment.handleIn / segment.handleOut) of path segments.
      * @param options.ends - only hit-test for the first or last segment points of open path items.
      * @param options.bounds - hit-test the corners and side-centers of the bounding rectangle of items (item.bounds).
      * @param options.center - hit-test the rectangle.center of the bounding rectangle of items (item.bounds).
@@ -3439,15 +3507,25 @@ declare module 'paper' {
     hitTest(point: Point, options?: HitOptions): HitResult;
 
     /**
-     * Fetch items contained within the project whose properties match the criteria in the specified object.
-     * Extended matching is possible by providing a compare function or regular expression. Matching points, colors only work as a comparison of the full object, not partial matching (e.g. only providing the x- coordinate to match all points with that x-value). Partial matching does work for item.data.
-     * Matching items against a rectangular area is also possible, by setting either match.inside or match.overlapping to a rectangle describing the area in which the items either have to be fully or partly contained.
+     * Fetch items contained within the project whose properties match the criteria
+     * in the specified object.
+     * Extended matching is possible by providing a compare function or regular expression.
+     * Matching points, colors only work as a comparison of the full object, not partial
+     * matching (e.g. only providing the x- coordinate to match all points with that x-value).
+     * Partial matching does work for item.data.
+     * Matching items against a rectangular area is also possible, by setting either
+     * match.inside or match.overlapping to a rectangle describing the area in which
+     * the items either have to be fully or partly contained.
      */
     getItems(match: any): Item[];
 
     /**
-     * Fetch the first item contained within the project whose properties match the criteria in the specified object.
-     * Extended matching is possible by providing a compare function or regular expression. Matching points, colors only work as a comparison of the full object, not partial matching (e.g. only providing the x- coordinate to match all points with that x-value). Partial matching does work for item.data.
+     * Fetch the first item contained within the project whose properties match the
+     * criteria in the specified object.
+     * Extended matching is possible by providing a compare function or regular
+     * expression. Matching points, colors only work as a comparison of the full
+     * object, not partial matching (e.g. only providing the x- coordinate to
+     * match all points with that x-value). Partial matching does work for item.data.
      */
     getItem(match: any): Item;
 
@@ -3491,7 +3569,7 @@ declare module 'paper' {
   }
   export interface HitOptions {
     tolerance?: number;
-    class?: string;
+    class?: Constructor<Group | Layer | Path | CompoundPath | Shape | Raster | Symbol | PointText>;
     fill?: boolean;
     stroke?: boolean;
     segments?: boolean;

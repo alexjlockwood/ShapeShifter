@@ -29,6 +29,7 @@ export function fromVectorLayer(vl: VectorLayer) {
       const s = ColorUtil.parseAndroidColor(strokeColor);
       // TODO: import a compound path instead
       return Items.newPath({
+        data: { id: layer.id },
         pathData,
         fillColor: f ? new paper.Color(f.r, f.g, f.b, f.a * fillAlpha) : undefined,
         strokeColor: s ? new paper.Color(s.r, s.g, s.b, s.a * strokeAlpha) : undefined,
@@ -44,12 +45,16 @@ export function fromVectorLayer(vl: VectorLayer) {
     if (layer instanceof ClipPathLayer) {
       // TODO: import a compound path instead
       const pathData = layer.pathData ? layer.pathData.getPathString() : '';
-      return Items.newPath({ pathData, clipMask: true });
+      return Items.newPath({
+        data: { id: layer.id },
+        pathData,
+        clipMask: true,
+      });
     }
 
     if (layer instanceof GroupLayer) {
+      const item = Items.newGroup({ data: { id: layer.id } });
       const { pivotX, pivotY, scaleX, scaleY, rotation, translateX, translateY } = layer;
-      const item = Items.newGroup();
       const pivot = new paper.Matrix(1, 0, 0, 1, pivotX, pivotY);
       const scale = new paper.Matrix(scaleX, 0, 0, scaleY, 0, 0);
       const cosr = Math.cos(rotation * Math.PI / 180);
@@ -68,7 +73,7 @@ export function fromVectorLayer(vl: VectorLayer) {
     if (layer instanceof VectorLayer) {
       // TODO: for some reason using Items.newGroup() doesn't work. investigate...
       // TODO: confirm that stroke scaling works as expected
-      const item = Items.newGroup();
+      const item = Items.newGroup({ data: { id: layer.id } });
       item.addChildren(layer.children.map(l => recurseFn(l)));
       return item;
     }
