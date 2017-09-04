@@ -40,10 +40,10 @@ const CANVAS_MARGIN = 36;
 })
 export class CanvasComponent extends CanvasLayoutMixin(DestroyableMixin())
   implements AfterViewInit {
-  @ViewChild(CanvasContainerDirective) canvasContainer: CanvasContainerDirective;
-  @ViewChild(CanvasLayersDirective) canvasLayers: CanvasLayersDirective;
-  @ViewChild(CanvasOverlayDirective) canvasOverlay: CanvasOverlayDirective;
-  @ViewChild(CanvasPaperDirective) canvasPaper: CanvasPaperDirective;
+  @ViewChildren(CanvasContainerDirective) canvasContainer: QueryList<CanvasContainerDirective>;
+  @ViewChildren(CanvasLayersDirective) canvasLayers: QueryList<CanvasLayersDirective>;
+  @ViewChildren(CanvasOverlayDirective) canvasOverlay: QueryList<CanvasOverlayDirective>;
+  @ViewChildren(CanvasPaperDirective) canvasPaper: QueryList<CanvasPaperDirective>;
   @ViewChildren(CanvasRulerDirective) canvasRulers: QueryList<CanvasRulerDirective>;
 
   @Input() actionSource: ActionSource;
@@ -81,10 +81,10 @@ export class CanvasComponent extends CanvasLayoutMixin(DestroyableMixin())
   // @Override
   onDimensionsChanged(bounds: Size, viewport: Size) {
     const directives = [
-      this.canvasContainer,
-      this.canvasLayers,
-      this.canvasOverlay,
-      this.canvasPaper,
+      ...this.canvasContainer.toArray(),
+      ...this.canvasLayers.toArray(),
+      ...this.canvasOverlay.toArray(),
+      ...this.canvasPaper.toArray(),
       ...this.canvasRulers.toArray(),
     ];
     directives.forEach(d => d.setDimensions(bounds, viewport));
@@ -92,25 +92,25 @@ export class CanvasComponent extends CanvasLayoutMixin(DestroyableMixin())
 
   @HostListener('mousedown', ['$event'])
   onMouseDown(event: MouseEvent) {
-    this.canvasOverlay.onMouseDown(event);
+    this.canvasOverlay.forEach(c => c.onMouseDown(event));
     this.showRuler(event);
   }
 
   @HostListener('mousemove', ['$event'])
   onMouseMove(event: MouseEvent) {
-    this.canvasOverlay.onMouseMove(event);
+    this.canvasOverlay.forEach(c => c.onMouseMove(event));
     this.showRuler(event);
   }
 
   @HostListener('mouseup', ['$event'])
   onMouseUp(event: MouseEvent) {
-    this.canvasOverlay.onMouseUp(event);
+    this.canvasOverlay.forEach(c => c.onMouseUp(event));
     this.showRuler(event);
   }
 
   @HostListener('mouseleave', ['$event'])
   onMouseLeave(event: MouseEvent) {
-    this.canvasOverlay.onMouseLeave(event);
+    this.canvasOverlay.forEach(c => c.onMouseLeave(event));
     this.hideRuler();
   }
 
