@@ -1,13 +1,17 @@
 import { VectorLayer } from 'app/model/layers';
+import { State, Store } from 'app/store';
+import { getVectorLayer } from 'app/store/layers/selectors';
 import * as paper from 'paper';
 
+import { ToolSwitcher } from './ToolSwitcher';
 import * as Guides from './util/Guides';
 import * as Layers from './util/Layers';
 
-let isPaperJsSetup = false;
+let toolSwitcher: ToolSwitcher;
 
-export function setup(canvas: HTMLCanvasElement) {
-  if (isPaperJsSetup) {
+export function attach(canvas: HTMLCanvasElement, store: Store<State>) {
+  if (toolSwitcher) {
+    // We've already been initialized, so do nothing.
     return;
   }
   paper.setup(canvas);
@@ -19,10 +23,17 @@ export function setup(canvas: HTMLCanvasElement) {
   paper.project.addLayer(mainLayer);
   paper.project.addLayer(Guides.createGuideLayer());
   mainLayer.activate();
-  isPaperJsSetup = true;
+
+  toolSwitcher = new ToolSwitcher(store);
+
+  store.select(getVectorLayer).subscribe(vl => {
+    // TODO: make this more efficient?
+    paper.project.activeLayer.removeChildren();
+    paper.project.activeLayer.addChild(Layers.fromVectorLayer(vl));
+  });
 }
 
-export function updateDimensions(
+export function updateProjectDimensions(
   viewportWidth: number,
   viewportHeight: number,
   viewWidth: number,
@@ -34,10 +45,4 @@ export function updateDimensions(
     const sy = viewHeight / viewportHeight;
     l.matrix = new paper.Matrix(sx, 0, 0, sy, 0, 0);
   });
-}
-
-export function updateLayers(vl: VectorLayer) {
-  // TODO: make this more efficient?
-  paper.project.activeLayer.removeChildren();
-  paper.project.activeLayer.addChild(Layers.fromVectorLayer(vl));
 }

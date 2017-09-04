@@ -2,8 +2,6 @@ import 'rxjs/add/operator/first';
 
 import { Injectable } from '@angular/core';
 import { ToolMode } from 'app/model/paper';
-import { ToolSwitcher } from 'app/scripts/paper';
-import { Paper } from 'app/scripts/paper';
 import { State, Store } from 'app/store';
 import { SetFillColor, SetStrokeColor, SetToolMode } from 'app/store/toolmode/actions';
 import { getFillColor, getStrokeColor, getToolMode } from 'app/store/toolmode/selectors';
@@ -14,23 +12,12 @@ import { OutputSelector } from 'reselect';
  */
 @Injectable()
 export class PaperService {
-  private toolSwitcher: ToolSwitcher;
-
   constructor(private readonly store: Store<State>) {}
-
-  setup(canvas: HTMLCanvasElement) {
-    Paper.setup(canvas);
-    if (!this.toolSwitcher) {
-      this.toolSwitcher = new ToolSwitcher();
-      this.toolSwitcher.setToolMode(this.getToolMode());
-    }
-  }
 
   setToolMode(toolMode: ToolMode) {
     if (this.getToolMode() !== toolMode) {
       this.store.dispatch(new SetToolMode(toolMode));
     }
-    this.toolSwitcher.setToolMode(toolMode);
   }
 
   getToolMode() {
