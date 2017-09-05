@@ -40,13 +40,19 @@ export class SelectDragCloneItemsGesture extends Gesture {
 
   // @Override
   onMouseDrag(event: paper.ToolEvent) {
+    console.log(event.point, event.lastPoint);
     const dragVector = event.point.subtract(event.downPoint);
     this.selectedItems.forEach((item, i) => {
       if (event.modifiers.shift) {
+        // TODO: transform the drag vector liek we do below
         const snapPoint = new paper.Point(MathUtil.snapDeltaToAngle(dragVector, 15));
         item.position = this.initialItemPositions[i].add(snapPoint);
       } else {
-        item.position = item.position.add(event.delta);
+        const downPoint = transformPoint(item, event.downPoint);
+        const lastPoint = transformPoint(item, event.lastPoint);
+        const point = transformPoint(item, event.point);
+        const delta = point.subtract(lastPoint);
+        item.position = item.position.add(delta);
       }
     });
   }
@@ -58,4 +64,13 @@ export class SelectDragCloneItemsGesture extends Gesture {
       Guides.showSelectionBoundsPath(Items.computeBoundingBox(this.selectedItems));
     }
   }
+}
+
+function transformPoint(item: paper.Item, point: paper.Point) {
+  const matrix = new paper.Matrix();
+  while (item.parent) {
+    matrix.append(item.parent.matrix.inverted());
+    item = item.parent;
+  }
+  return point.transform(matrix);
 }

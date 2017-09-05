@@ -43,6 +43,13 @@ function initializeTools(paperService: PaperService) {
   let currentTool: Tool;
 
   const onEventFn = (event?: paper.ToolEvent | paper.KeyEvent) => {
+    // if (event instanceof paper.ToolEvent) {
+    //   const sx = paper.project.activeLayer.matrix.a;
+    //   const sy = paper.project.activeLayer.matrix.d;
+    //   console.log(event.type);
+    //   console.log(event.point.x, event.point.y);
+    //   console.log(event.point.x / sx, event.point.y / sy);
+    // }
     const prevTool = currentTool;
     currentTool =
       paperService.getToolMode() === ToolMode.ZoomPan || (event && event.modifiers.space)
