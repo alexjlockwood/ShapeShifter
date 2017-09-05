@@ -6,13 +6,13 @@ import { storeLogger } from 'ngrx-store-logger';
 import * as fromActionMode from './actionmode/reducer';
 import * as fromLayers from './layers/reducer';
 import * as metaMultiAction from './multiaction/metareducer';
+import * as fromToolMode from './paper/reducer';
 import * as fromPlayback from './playback/reducer';
 import * as metaReset from './reset/metareducer';
 import * as fromReset from './reset/reducer';
 import * as metaStoreFreeze from './storefreeze/metareducer';
 import * as fromTheme from './theme/reducer';
 import * as fromTimeline from './timeline/reducer';
-import * as fromToolMode from './toolmode/reducer';
 import * as metaUndoRedo from './undoredo/metareducer';
 
 export type State = metaUndoRedo.StateWithHistoryAndTimestamp;

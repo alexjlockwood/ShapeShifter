@@ -105,6 +105,11 @@ function applyMatrixAndRemove<T extends paper.Item>(item: T, applyMatrix = false
 // ===== Helper functions ===== //
 // ============================ //
 
+export function findItemById(layerId: string) {
+  const { activeLayer } = paper.project;
+  return _.first(activeLayer.getItems({ match: ({ data: { id } }) => layerId === id }));
+}
+
 /** Computes the bounding box for the specified items. */
 export function computeBoundingBox(items: ReadonlyArray<paper.Item>) {
   return items.reduce((p, c) => p.unite(c.bounds), items[0].bounds);

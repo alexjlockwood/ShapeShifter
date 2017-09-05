@@ -19,7 +19,7 @@ import {
   SelectDragHandleGesture,
 } from 'app/scripts/paper/gesture';
 import { Guides, HitTests, Items, Selections } from 'app/scripts/paper/util';
-import { State, Store } from 'app/store';
+import { PaperService } from 'app/services';
 import * as paper from 'paper';
 
 import { Tool } from './Tool';
@@ -52,19 +52,17 @@ import { Tool } from './Tool';
 export class MasterTool extends Tool {
   private readonly clickDetector = new ClickDetector();
   private currentGesture: Gesture = new HoverItemsGesture();
-  private currentToolMode = ToolMode.Selection;
 
   // If this is non-nil, then we are in edit path mode. Otherwise, we are in
   // selection mode.
   private selectedEditPath: paper.Path;
 
-  constructor(store: Store<State>) {
-    super(store);
+  constructor(private readonly paperService: PaperService) {
+    super();
   }
 
-  // @Override
-  onToolModeChanged(toolMode: ToolMode) {
-    this.currentToolMode = toolMode;
+  private get currentToolMode() {
+    return this.paperService.getToolMode();
   }
 
   // @Override

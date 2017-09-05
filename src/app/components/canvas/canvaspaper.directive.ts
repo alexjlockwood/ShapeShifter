@@ -12,7 +12,7 @@ import { Path } from 'app/model/paths';
 import { SvgLoader } from 'app/scripts/import';
 import { DestroyableMixin } from 'app/scripts/mixins';
 import { Paper } from 'app/scripts/paper';
-import { LayerTimelineService } from 'app/services';
+import { PaperService } from 'app/services';
 import { State, Store } from 'app/store';
 import { SetVectorLayer } from 'app/store/layers/actions';
 import { getVectorLayer } from 'app/store/layers/selectors';
@@ -34,7 +34,7 @@ export class CanvasPaperDirective extends CanvasLayoutMixin(DestroyableMixin())
 
   constructor(
     elementRef: ElementRef,
-    private readonly layerTimelineService: LayerTimelineService,
+    private readonly paperService: PaperService,
     private readonly store: Store<State>,
   ) {
     super();
@@ -42,7 +42,7 @@ export class CanvasPaperDirective extends CanvasLayoutMixin(DestroyableMixin())
   }
 
   ngAfterViewInit() {
-    Paper.attach(this.$canvas.get(0), this.store);
+    Paper.initialize(this.$canvas.get(0), this.paperService);
 
     // TODO: remove this debug code
     const jsonObj = JSON.parse(`{
@@ -60,7 +60,7 @@ export class CanvasPaperDirective extends CanvasLayoutMixin(DestroyableMixin())
           "scaleY": ".5",
           "children": [
             {
-              "id": "102",
+              "id": "103",
               "name": "group",
               "type": "group",
               "pivotX": "12",

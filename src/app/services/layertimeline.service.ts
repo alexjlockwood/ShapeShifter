@@ -18,12 +18,14 @@ import { State, Store } from 'app/store';
 import {
   SetCollapsedLayers,
   SetHiddenLayers,
+  SetHoveredLayer,
   SetSelectedLayers,
   SetVectorLayer,
 } from 'app/store/layers/actions';
 import {
   getCollapsedLayerIds,
   getHiddenLayerIds,
+  getHoveredLayerId,
   getSelectedLayerIds,
   getVectorLayer,
 } from 'app/store/layers/selectors';
@@ -285,7 +287,10 @@ export class LayerTimelineService {
         return l;
       }
       const clonedLayer = l.clone();
-      clonedLayer.pathData = path.mutate().transform(layerTransform).build();
+      clonedLayer.pathData = path
+        .mutate()
+        .transform(layerTransform)
+        .build();
       return clonedLayer;
     });
     const parent = LayerUtil.findParent(vl, layerId).clone();
@@ -305,8 +310,14 @@ export class LayerTimelineService {
         return b;
       }
       const block = b.clone();
-      block.fromValue = block.fromValue.mutate().transform(layerTransform).build();
-      block.toValue = block.toValue.mutate().transform(layerTransform).build();
+      block.fromValue = block.fromValue
+        .mutate()
+        .transform(layerTransform)
+        .build();
+      block.toValue = block.toValue
+        .mutate()
+        .transform(layerTransform)
+        .build();
       return block;
     });
     actions.push(new SetAnimation(newAnimation));
@@ -643,7 +654,10 @@ export class LayerTimelineService {
 
   private queryStore<T>(selector: OutputSelector<Object, T, (res: Object) => T>) {
     let obj: T;
-    this.store.select(selector).first().subscribe(o => (obj = o));
+    this.store
+      .select(selector)
+      .first()
+      .subscribe(o => (obj = o));
     return obj;
   }
 }

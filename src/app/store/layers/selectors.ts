@@ -4,6 +4,7 @@ import { createSelector } from 'reselect';
 const getLayerState = createSelector(getAppState, s => s.layers);
 export const getVectorLayer = createSelector(getLayerState, l => l.vectorLayer);
 export const getSelectedLayerIds = createDeepEqualSelector(getLayerState, l => l.selectedLayerIds);
+export const getHoveredLayerId = createSelector(getLayerState, l => l.hoveredLayerId);
 export const getCollapsedLayerIds = createDeepEqualSelector(
   getLayerState,
   l => l.collapsedLayerIds,
