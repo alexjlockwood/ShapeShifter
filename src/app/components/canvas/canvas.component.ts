@@ -114,21 +114,13 @@ export class CanvasComponent extends CanvasLayoutMixin(DestroyableMixin())
   }
 
   private showRuler(event: MouseEvent) {
-    const point = this.eventToPoint(event);
-    point.x = Math.round(point.x / Math.max(1, this.attrScale));
-    point.y = Math.round(point.y / Math.max(1, this.attrScale));
-    this.canvasRulers.forEach(r => r.showMouse(point));
+    const canvasOffset = this.$element.offset();
+    const x = (event.pageX - canvasOffset.left) / Math.max(1, this.cssScale);
+    const y = (event.pageY - canvasOffset.top) / Math.max(1, this.cssScale);
+    this.canvasRulers.forEach(r => r.showMouse({ x: _.round(x), y: _.round(y) }));
   }
 
   private hideRuler() {
     this.canvasRulers.forEach(r => r.hideMouse());
-  }
-
-  /** Converts mouse event coordinates to canvas-based coordinates. */
-  private eventToPoint(event: MouseEvent) {
-    const canvasOffset = this.$element.offset();
-    const x = (event.pageX - canvasOffset.left) * devicePixelRatio;
-    const y = (event.pageY - canvasOffset.top) * devicePixelRatio;
-    return { x, y };
   }
 }
