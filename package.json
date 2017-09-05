@@ -35,7 +35,7 @@
     "core-js": "^2.5.1",
     "css-select": "^1.3.0-rc0",
     "css-select-base-adapter": "^0.1.0",
-    "css-tree": "^1.0.0-alpha20",
+    "css-tree": "^1.0.0-alpha21",
     "csso": "^3.1.1",
     "element-resize-detector": "^1.1.12",
     "hammerjs": "^2.0.8",
