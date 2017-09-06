@@ -40,7 +40,6 @@ export class SelectDragCloneItemsGesture extends Gesture {
 
   // @Override
   onMouseDrag(event: paper.ToolEvent) {
-    console.log(event.point, event.lastPoint);
     const dragVector = event.point.subtract(event.downPoint);
     this.selectedItems.forEach((item, i) => {
       if (event.modifiers.shift) {

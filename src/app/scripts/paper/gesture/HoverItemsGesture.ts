@@ -7,6 +7,7 @@ import {
   Pivots,
   Selections,
 } from 'app/scripts/paper/util';
+import { PaperService } from 'app/services';
 import * as paper from 'paper';
 
 import { Gesture } from './Gesture';
@@ -19,6 +20,10 @@ import { Gesture } from './Gesture';
  * on top of items and changing the cursor style accordingly.
  */
 export class HoverItemsGesture extends Gesture {
+  constructor(private readonly paperService: PaperService) {
+    super();
+  }
+
   // @Override
   onMouseMove({ point }: paper.ToolEvent) {
     Cursors.clear();
@@ -27,9 +32,9 @@ export class HoverItemsGesture extends Gesture {
       return Items.isPath(item) && !item.selected;
     });
     if (hitResult) {
-      Guides.showHoverPath(hitResult.item as paper.Path);
+      this.paperService.setHoveredLayer(hitResult.item.data.id);
     } else {
-      Guides.hideHoverPath();
+      this.paperService.clearHoveredLayer();
     }
 
     const selectionBounds = Guides.getSelectionBoundsPath();

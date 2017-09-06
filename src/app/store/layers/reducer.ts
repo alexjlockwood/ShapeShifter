@@ -26,7 +26,7 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
       return { ...state, vectorLayer: action.payload.vectorLayer };
     case actions.SET_SELECTED_LAYERS:
       return { ...state, selectedLayerIds: new Set<string>(action.payload.layerIds) };
-    case actions.SET_HOVERED_LAYERS:
+    case actions.SET_HOVERED_LAYER:
       return { ...state, hoveredLayerId: action.payload.layerId };
     case actions.SET_HIDDEN_LAYERS:
       return { ...state, hiddenLayerIds: new Set<string>(action.payload.layerIds) };

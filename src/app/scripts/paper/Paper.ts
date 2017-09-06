@@ -1,5 +1,6 @@
 import { VectorLayer } from 'app/model/layers';
 import { ToolMode } from 'app/model/paper';
+import { Matrix } from 'app/scripts/common';
 import { PaperService } from 'app/services';
 import { State, Store } from 'app/store';
 import { getHoveredLayerId, getSelectedLayerIds, getVectorLayer } from 'app/store/layers/selectors';
@@ -7,33 +8,30 @@ import { getToolMode } from 'app/store/paper/selectors';
 import * as paper from 'paper';
 import { OutputSelector } from 'reselect';
 
+import { PaperLayer } from './layers';
 import { MasterTool, Tool, ZoomPanTool } from './tool';
-import * as Guides from './util/Guides';
-import * as Items from './util/Items';
-import * as Layers from './util/Layers';
+import { Guides, Items } from './util';
 
-let isInitialized = false;
+let paperLayer: PaperLayer;
 
 export function initialize(canvas: HTMLCanvasElement, paperService: PaperService) {
-  if (isInitialized) {
+  if (paperLayer) {
     return;
   }
   initializeCanvas(canvas);
   initializeTools(paperService);
   initializeListeners(paperService);
-  isInitialized = true;
 }
 
 function initializeCanvas(canvas: HTMLCanvasElement) {
   paper.setup(canvas);
   paper.settings.handleSize = 8;
   paper.settings.applyMatrix = false;
+  paper.settings.insertItems = false;
   // TODO: should we set a hit tolerance here?
   paper.settings.hitTolerance = 0;
-  const mainLayer = new paper.Layer({ name: 'mainLayer' });
-  paper.project.addLayer(mainLayer);
-  paper.project.addLayer(Guides.createGuideLayer());
-  mainLayer.activate();
+  paperLayer = new PaperLayer();
+  paper.project.addLayer(paperLayer);
 }
 
 function initializeTools(paperService: PaperService) {
@@ -43,13 +41,6 @@ function initializeTools(paperService: PaperService) {
   let currentTool: Tool;
 
   const onEventFn = (event?: paper.ToolEvent | paper.KeyEvent) => {
-    // if (event instanceof paper.ToolEvent) {
-    //   const sx = paper.project.activeLayer.matrix.a;
-    //   const sy = paper.project.activeLayer.matrix.d;
-    //   console.log(event.type);
-    //   console.log(event.point.x, event.point.y);
-    //   console.log(event.point.x / sx, event.point.y / sy);
-    // }
     const prevTool = currentTool;
     currentTool =
       paperService.getToolMode() === ToolMode.ZoomPan || (event && event.modifiers.space)
@@ -90,22 +81,13 @@ function initializeTools(paperService: PaperService) {
 
 function initializeListeners(paperService: PaperService) {
   paperService.getVectorLayerObservable().subscribe(vl => {
-    // TODO: make this more efficient?
-    paper.project.activeLayer.removeChildren();
-    paper.project.activeLayer.addChild(Layers.fromVectorLayer(vl));
+    paperLayer.setVectorLayer(vl);
   });
   paperService.getSelectedLayerIdsObservable().subscribe(layerIds => {
-    const { activeLayer } = paper.project;
-    const selectedItems = activeLayer.getItems({ match: item => item.selected });
-    selectedItems.forEach(item => (item.selected = layerIds.has(item.data.id)));
-    layerIds.forEach(id => (Items.findItemById(id).selected = true));
+    paperLayer.setSelectedLayerIds(layerIds);
   });
   paperService.getHoveredLayerIdObservable().subscribe(layerId => {
-    if (layerId) {
-      // TODO: implement this
-    } else {
-      Guides.hideHoverPath();
-    }
+    paperLayer.setHoveredLayerId(layerId);
   });
 }
 
@@ -116,9 +98,7 @@ export function updateProjectDimensions(
   viewHeight: number,
 ) {
   paper.view.viewSize = new paper.Size(viewWidth, viewHeight);
-  paper.project.layers.forEach(l => {
-    const sx = viewWidth / viewportWidth;
-    const sy = viewHeight / viewportHeight;
-    l.matrix = new paper.Matrix(sx, 0, 0, sy, 0, 0);
-  });
+  const sx = viewWidth / viewportWidth;
+  const sy = viewHeight / viewportHeight;
+  paperLayer.matrix = new paper.Matrix(sx, 0, 0, sy, 0, 0);
 }

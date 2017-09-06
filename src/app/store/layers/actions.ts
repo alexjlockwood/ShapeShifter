@@ -3,7 +3,7 @@ import { VectorLayer } from 'app/model/layers';
 
 export const SET_VECTOR_LAYER = '__layers__SET_VECTOR_LAYER';
 export const SET_SELECTED_LAYERS = '__layers__SET_SELECTED_LAYERS';
-export const SET_HOVERED_LAYERS = '__layers__SET_HOVERED_LAYERS';
+export const SET_HOVERED_LAYER = '__layers__SET_HOVERED_LAYER';
 export const SET_HIDDEN_LAYERS = '__layers__SET_HIDDEN_LAYERS';
 export const SET_COLLAPSED_LAYERS = '__layers__SET_COLLAPSED_LAYERS';
 
@@ -24,7 +24,7 @@ export class SetSelectedLayers implements Action {
 }
 
 export class SetHoveredLayer implements Action {
-  readonly type = SET_HOVERED_LAYERS;
+  readonly type = SET_HOVERED_LAYER;
   readonly payload: { layerId: string };
   constructor(layerId: string) {
     this.payload = { layerId };

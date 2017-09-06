@@ -19,12 +19,12 @@ const SELECTION_BOX_COLOR = '#aaaaaa';
 // ======================= //
 
 export function createGuideLayer() {
-  return Items.newLayer({ name: GUIDE_LAYER_NAME });
+  return new paper.Layer({ name: GUIDE_LAYER_NAME });
 }
 
 export function getGuideLayer() {
   // TODO: Project#getItem() is missing types
-  return paper.project.getItem({ name: GUIDE_LAYER_NAME });
+  return paper.project.getItem({ name: GUIDE_LAYER_NAME }) || new paper.Group();
 }
 
 // ====================== //
@@ -46,7 +46,7 @@ export function showHoverPath(path: paper.Path) {
     item = item.parent;
   }
 
-  const hoverPath = Items.newPath(path.segments);
+  const hoverPath = new paper.Path(path.segments);
   hoverPath.name = HOVER_PATH_NAME;
   hoverPath.closed = path.closed;
   hoverPath.strokeColor = GUIDE_COLOR;
@@ -79,7 +79,7 @@ export function getSelectionBoundsPath() {
 export function showSelectionBoundsPath(bounds: paper.Rectangle) {
   hideSelectionBoundsPath();
 
-  const rect = Items.newRectangle(bounds);
+  const rect = new paper.Path.Rectangle(bounds);
   rect.name = SELECTION_PATH_NAME;
   rect.curves[0].divideAtTime(0.5);
   rect.curves[2].divideAtTime(0.5);
@@ -111,7 +111,7 @@ export function getSelectionBoxPath() {
 export function showSelectionBoxPath(downPoint: paper.Point, point: paper.Point) {
   hideSelectionBoxPath();
 
-  const rect = Items.newRectangle(createSelectionBoxRect(downPoint, point));
+  const rect = new paper.Path.Rectangle(createSelectionBoxRect(downPoint, point));
   rect.strokeWidth = 1 / paper.view.zoom;
   rect.guide = true;
   rect.name = SELECTION_BOX_NAME;
@@ -144,19 +144,19 @@ function getAddSegmentToCurveHoverGroup() {
 export function showAddSegmentToCurveHoverGroup(location: paper.CurveLocation) {
   hideAddSegmentToCurveHoverGroup();
 
-  const group = Items.newGroup({ name: ADD_SEGMENT_TO_CURVE_HOVER_GROUP_NAME });
+  const group = new paper.Group({ name: ADD_SEGMENT_TO_CURVE_HOVER_GROUP_NAME });
   group.guide = true;
 
   const { curve, point } = location;
 
-  const highlightedCurve = Items.newPath([curve.segment1, curve.segment2]);
+  const highlightedCurve = new paper.Path([curve.segment1, curve.segment2]);
   highlightedCurve.guide = true;
   highlightedCurve.matrix = location.path.matrix.clone();
   highlightedCurve.strokeColor = 'red';
   highlightedCurve.strokeWidth = 4 / paper.view.zoom;
   group.addChild(highlightedCurve);
 
-  const highlightedPoint = Items.newCircle(point, 7 / paper.view.zoom);
+  const highlightedPoint = new paper.Path.Circle(point, 7 / paper.view.zoom);
   highlightedPoint.guide = true;
   highlightedPoint.fillColor = 'green';
   group.addChild(highlightedPoint);
@@ -183,7 +183,7 @@ function getPenPathPreviewPath() {
 export function showPenPathPreviewPath(from: paper.Segment, to: paper.Point) {
   hidePenPathPreviewPath();
 
-  const path = Items.newPath({
+  const path = new paper.Path({
     name: PEN_PREVIEW_PATH,
     guide: true,
     strokeWidth: 4 / paper.view.zoom,

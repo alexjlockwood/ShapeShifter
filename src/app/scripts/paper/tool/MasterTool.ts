@@ -51,7 +51,7 @@ import { Tool } from './Tool';
  */
 export class MasterTool extends Tool {
   private readonly clickDetector = new ClickDetector();
-  private currentGesture: Gesture = new HoverItemsGesture();
+  private currentGesture: Gesture = new HoverItemsGesture(this.paperService);
 
   // If this is non-nil, then we are in edit path mode. Otherwise, we are in
   // selection mode.
@@ -117,7 +117,7 @@ export class MasterTool extends Tool {
     if (this.selectedEditPath) {
       this.currentGesture = new HoverSegmentsCurvesGesture(this.selectedEditPath);
     } else {
-      this.currentGesture = new HoverItemsGesture();
+      this.currentGesture = new HoverItemsGesture(this.paperService);
     }
   }
 
