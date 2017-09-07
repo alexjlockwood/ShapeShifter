@@ -1,9 +1,11 @@
 import { Action } from '@ngrx/store';
 import { ToolMode } from 'app/model/paper';
+import { Point } from 'app/scripts/common';
 
-export const SET_TOOL_MODE = '__toolmode__SET_TOOL_MODE';
-export const SET_FILL_COLOR = '__toolmode__SET_FILL_COLOR';
-export const SET_STROKE_COLOR = '__toolmode__SET_STROKE_COLOR';
+export const SET_TOOL_MODE = '__paper__SET_TOOL_MODE';
+export const SET_FILL_COLOR = '__paper__SET_FILL_COLOR';
+export const SET_STROKE_COLOR = '__paper__SET_STROKE_COLOR';
+export const SET_SELECTION_BOX = '__paper__SET_SELECTION_BOX';
 
 export class SetToolMode implements Action {
   readonly type = SET_TOOL_MODE;
@@ -29,4 +31,12 @@ export class SetStrokeColor implements Action {
   }
 }
 
-export type Actions = SetToolMode | SetFillColor | SetStrokeColor;
+export class SetSelectionBox implements Action {
+  readonly type = SET_SELECTION_BOX;
+  readonly payload: { selectionBox: { from: Point; to: Point } };
+  constructor(selectionBox?: { from: Point; to: Point }) {
+    this.payload = { selectionBox };
+  }
+}
+
+export type Actions = SetToolMode | SetFillColor | SetStrokeColor | SetSelectionBox;

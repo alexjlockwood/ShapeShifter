@@ -2,11 +2,23 @@ import 'rxjs/add/operator/first';
 
 import { Injectable } from '@angular/core';
 import { ToolMode } from 'app/model/paper';
+import { Point } from 'app/scripts/common';
 import { State, Store } from 'app/store';
 import { SetHoveredLayer } from 'app/store/layers/actions';
 import { getHoveredLayerId, getSelectedLayerIds, getVectorLayer } from 'app/store/layers/selectors';
-import { SetFillColor, SetStrokeColor, SetToolMode } from 'app/store/paper/actions';
-import { getFillColor, getStrokeColor, getToolMode } from 'app/store/paper/selectors';
+import {
+  SetFillColor,
+  SetSelectionBox,
+  SetStrokeColor,
+  SetToolMode,
+} from 'app/store/paper/actions';
+import {
+  getFillColor,
+  getSelectionBox,
+  getStrokeColor,
+  getToolMode,
+} from 'app/store/paper/selectors';
+import * as _ from 'lodash';
 import { OutputSelector } from 'reselect';
 
 import { LayerTimelineService } from './layertimeline.service';
@@ -43,6 +55,19 @@ export class PaperService {
     this.setHoveredLayer(undefined);
   }
 
+  setSelectionBox(from: Point, to: Point) {
+    const box = { from, to };
+    if (!_.isEqual(this.getSelectionBox(), box)) {
+      this.store.dispatch(new SetSelectionBox(box));
+    }
+  }
+
+  clearSelectionBox() {
+    if (this.queryStore(getSelectionBox)) {
+      this.store.dispatch(new SetSelectionBox(undefined));
+    }
+  }
+
   getVectorLayerObservable() {
     return this.store.select(getVectorLayer);
   }
@@ -53,6 +78,14 @@ export class PaperService {
 
   getHoveredLayerIdObservable() {
     return this.store.select(getHoveredLayerId);
+  }
+
+  getSelectionBoxObservable() {
+    return this.store.select(getSelectionBox);
+  }
+
+  getSelectionBox() {
+    return this.queryStore(getSelectionBox);
   }
 
   // Tool modes.

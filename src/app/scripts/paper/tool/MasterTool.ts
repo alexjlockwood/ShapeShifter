@@ -144,7 +144,7 @@ export class MasterTool extends Tool {
     const hitResult = HitTests.selectionMode(event.point);
     if (!hitResult) {
       // If there is no hit item, then enter selection box mode.
-      return new BatchSelectItemsGesture();
+      return new BatchSelectItemsGesture(this.paperService);
     }
 
     const hitItem = hitResult.item;

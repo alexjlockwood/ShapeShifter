@@ -56,16 +56,15 @@ export class CanvasPaperDirective extends CanvasLayoutMixin(DestroyableMixin())
           "type": "group",
           "pivotX": "12",
           "pivotY": "12",
-          "scaleX": "1",
-          "scaleY": "1",
-          "rotation": "180",
+          "scaleX": "1.25",
+          "scaleY": "1.25",
+          "rotation": "90",
           "children": [
                 {
                   "id": "46",
                   "name": "path",
                   "type": "path",
-                  "pathData": "M 8 8 h 8 v 8 h -8 v -8",
-                  "strokeColor": "#000000",
+                  "pathData": "M 10 8 h 4 v 8 h -4 v -8",
                   "fillColor": "#f00"
                 }
           ]

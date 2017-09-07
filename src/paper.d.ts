@@ -1458,7 +1458,9 @@ declare module 'paper' {
       point: Point,
       options?: {
         tolerance?: number;
-        class?: string;
+        class?: Constructor<
+          Group | Layer | Path | CompoundPath | Shape | Raster | Symbol | PointText
+        >;
         fill?: boolean;
         stroke?: boolean;
         segments?: boolean;
@@ -1499,7 +1501,9 @@ declare module 'paper' {
     getItems<T extends Item>(options?: {
       recursive?: boolean;
       match?: (item: Item) => boolean;
-      class?: new (...args: any[]) => T;
+      class?: Constructor<
+        Group | Layer | Path | CompoundPath | Shape | Raster | Symbol | PointText
+      >;
       inside?: Rectangle;
       overlapping?: Rectangle;
     }): Item[];
@@ -4023,6 +4027,11 @@ declare module 'paper' {
      * The zoom factor by which the project coordinates are magnified.
      */
     zoom: number;
+
+    /**
+     * The current scale factor of the view, as described by its matrix.
+     */
+    scaling: Point;
 
     /**
      * Handler function to be called on each frame of an animation.

@@ -1,4 +1,5 @@
 import { ToolMode } from 'app/model/paper';
+import { Point } from 'app/scripts/common';
 
 import * as actions from './actions';
 
@@ -7,15 +8,17 @@ export interface State {
   readonly toolMode: ToolMode;
   readonly fillColor: string;
   readonly strokeColor: string;
+  readonly selectionBox: Readonly<{ from: Point; to: Point }>;
 }
 
-export function buildInitialState() {
+export function buildInitialState(): State {
   return {
     toolMode: ToolMode.Selection,
     // TODO: figure out if these are appropriate initial values
     fillColor: '#000000',
     strokeColor: '#000000',
-  } as State;
+    selectionBox: undefined,
+  };
 }
 
 export function reducer(state = buildInitialState(), action: actions.Actions) {
@@ -26,6 +29,8 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
       return { ...state, fillColor: action.payload.fillColor };
     case actions.SET_STROKE_COLOR:
       return { ...state, strokeColor: action.payload.strokeColor };
+    case actions.SET_SELECTION_BOX:
+      return { ...state, selectionBox: action.payload.selectionBox };
   }
   return state;
 }

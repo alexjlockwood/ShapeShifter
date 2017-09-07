@@ -1,7 +1,9 @@
 import { getAppState } from 'app/store/selectors';
+import { createDeepEqualSelector } from 'app/store/selectors';
 import { createSelector } from 'reselect';
 
-const getToolModeState = createSelector(getAppState, s => s.toolmode);
-export const getToolMode = createSelector(getToolModeState, t => t.toolMode);
-export const getFillColor = createSelector(getToolModeState, t => t.fillColor);
-export const getStrokeColor = createSelector(getToolModeState, t => t.strokeColor);
+const getPaperState = createSelector(getAppState, s => s.paper);
+export const getToolMode = createSelector(getPaperState, t => t.toolMode);
+export const getFillColor = createSelector(getPaperState, t => t.fillColor);
+export const getStrokeColor = createSelector(getPaperState, t => t.strokeColor);
+export const getSelectionBox = createDeepEqualSelector(getPaperState, t => t.selectionBox);

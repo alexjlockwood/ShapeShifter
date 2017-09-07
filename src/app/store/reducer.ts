@@ -6,7 +6,7 @@ import { storeLogger } from 'ngrx-store-logger';
 import * as fromActionMode from './actionmode/reducer';
 import * as fromLayers from './layers/reducer';
 import * as metaMultiAction from './multiaction/metareducer';
-import * as fromToolMode from './paper/reducer';
+import * as fromPaper from './paper/reducer';
 import * as fromPlayback from './playback/reducer';
 import * as metaReset from './reset/metareducer';
 import * as fromReset from './reset/reducer';
@@ -24,7 +24,7 @@ export interface AppState {
   readonly actionmode: fromActionMode.State;
   readonly reset: fromReset.State;
   readonly theme: fromTheme.State;
-  readonly toolmode: fromToolMode.State;
+  readonly paper: fromPaper.State;
 }
 
 const sliceReducers = {
@@ -34,7 +34,7 @@ const sliceReducers = {
   actionmode: fromActionMode.reducer,
   reset: fromReset.reducer,
   theme: fromTheme.reducer,
-  toolmode: fromToolMode.reducer,
+  paper: fromPaper.reducer,
 };
 
 const prodMetaReducers = [

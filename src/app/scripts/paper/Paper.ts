@@ -89,6 +89,13 @@ function initializeListeners(paperService: PaperService) {
   paperService.getHoveredLayerIdObservable().subscribe(layerId => {
     paperLayer.setHoveredLayer(layerId);
   });
+  paperService.getSelectionBoxObservable().subscribe(box => {
+    if (box) {
+      paperLayer.setSelectionBox({ from: new paper.Point(box.from), to: new paper.Point(box.to) });
+    } else {
+      paperLayer.clearSelectionBox();
+    }
+  });
 }
 
 export function updateProjectDimensions(
