@@ -8,7 +8,7 @@ import { getToolMode } from 'app/store/paper/selectors';
 import * as paper from 'paper';
 import { OutputSelector } from 'reselect';
 
-import { PaperLayer } from './layers';
+import { PaperLayer } from './item';
 import { MasterTool, Tool, ZoomPanTool } from './tool';
 import { Guides, Items } from './util';
 
@@ -84,10 +84,10 @@ function initializeListeners(paperService: PaperService) {
     paperLayer.setVectorLayer(vl);
   });
   paperService.getSelectedLayerIdsObservable().subscribe(layerIds => {
-    paperLayer.setSelectedLayerIds(layerIds);
+    paperLayer.setSelectedLayers(layerIds);
   });
   paperService.getHoveredLayerIdObservable().subscribe(layerId => {
-    paperLayer.setHoveredLayerId(layerId);
+    paperLayer.setHoveredLayer(layerId);
   });
 }
 
