@@ -93,6 +93,10 @@ export class LayerTimelineService {
     this.updateSelections(false, new Set(), selectedLayerIds);
   }
 
+  setSelectedLayers(layerIds: Set<string>) {
+    this.updateSelections(false, new Set(), new Set(layerIds));
+  }
+
   /**
    * Clears all animation/block/layer selections.
    */

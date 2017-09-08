@@ -31,11 +31,7 @@ export class HoverItemsGesture extends Gesture {
     const hitResult = HitTests.selectionMode(point, ({ item }: paper.HitResult) => {
       return Items.isPath(item) && !item.selected;
     });
-    if (hitResult) {
-      this.paperService.setHoveredLayer(hitResult.item.data.id);
-    } else {
-      this.paperService.clearHoveredLayer();
-    }
+    this.paperService.setHoveredLayer(hitResult ? hitResult.item.data.id : undefined);
 
     const selectionBounds = Guides.getSelectionBoundsPath();
     if (selectionBounds) {

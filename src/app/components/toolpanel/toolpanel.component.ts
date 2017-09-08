@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { ToolMode } from 'app/model/paper';
 import { ColorUtil } from 'app/scripts/common';
 import { PaperService } from 'app/services';
+import { getToolMode } from 'app/store/paper/selectors';
 import { Observable } from 'rxjs/Observable';
 
 @Component({
@@ -17,13 +18,13 @@ export class ToolPanelComponent implements OnInit {
   readonly TOOL_MODE_RECTANGLE = ToolMode.Rectangle;
   readonly TOOL_MODE_ZOOMPAN = ToolMode.ZoomPan;
 
-  private toolMode$: Observable<ToolMode>;
+  toolMode$: Observable<ToolMode>;
 
   // TODO: deal with invalid fill/stroke colors
   constructor(public readonly paperService: PaperService) {}
 
   ngOnInit() {
-    this.toolMode$ = this.paperService.getToolModeObservable();
+    this.toolMode$ = this.paperService.store.select(getToolMode);
   }
 
   onSelectClick() {
@@ -51,18 +52,14 @@ export class ToolPanelComponent implements OnInit {
   }
 
   get fillColor() {
-    return this.paperService.getFillColor();
+    return '#000000';
   }
 
-  set fillColor(color: string) {
-    this.paperService.setFillColor(color);
-  }
+  set fillColor(color: string) {}
 
   get strokeColor() {
-    return this.paperService.getStrokeColor();
+    return '#000000';
   }
 
-  set strokeColor(color: string) {
-    this.paperService.setStrokeColor(color);
-  }
+  set strokeColor(color: string) {}
 }

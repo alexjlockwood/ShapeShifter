@@ -31,20 +31,16 @@ export class PaperLayer extends paper.Layer {
   }
 
   setSelectionBox(box: { from: paper.Point; to: paper.Point }) {
-    this.clearSelectionBox();
+    if (this.selectionBoxPath) {
+      this.selectionBoxPath.remove();
+      this.selectionBoxPath = undefined;
+    }
     if (box) {
       this.selectionBoxPath = Layers.newSelectionBox(
         Transforms.mousePointToLocalCoordinates(box.from),
         Transforms.mousePointToLocalCoordinates(box.to),
       );
       this.updateChildren();
-    }
-  }
-
-  clearSelectionBox() {
-    if (this.selectionBoxPath) {
-      this.selectionBoxPath.remove();
-      this.selectionBoxPath = undefined;
     }
   }
 
@@ -100,12 +96,13 @@ export class PaperLayer extends paper.Layer {
   }
 
   /** Finds all vector layer items that overlap with the specified bounds. */
-  findItemsInBounds(bounds: paper.Rectangle) {
+  findItemsInBounds(bounds: paper.Rectangle, partialOverlap: boolean) {
     return this.vectorLayerItem.getItems({
       // TODO: figure out how to deal with groups and compound paths
       // TODO: look at stylii to see how it handles paper.Shape items
       class: paper.Path,
-      overlapping: new paper.Rectangle(bounds),
+      overlapping: partialOverlap ? new paper.Rectangle(bounds) : undefined,
+      inside: partialOverlap ? undefined : new paper.Rectangle(bounds),
     });
   }
 

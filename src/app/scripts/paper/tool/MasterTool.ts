@@ -2,21 +2,12 @@ import { ToolMode } from 'app/model/paper';
 import { MathUtil } from 'app/scripts/common';
 import { ClickDetector } from 'app/scripts/paper/detector';
 import {
-  AddDeleteHandlesGesture,
   BatchSelectItemsGesture,
-  BatchSelectSegmentsGesture,
-  CircleGesture,
   DeselectItemGesture,
   Gesture,
   HoverItemsGesture,
-  HoverSegmentsCurvesGesture,
-  PencilGesture,
-  RectangleGesture,
-  RotateItemsGesture,
   ScaleItemsGesture,
   SelectDragCloneItemsGesture,
-  SelectDragDrawSegmentsGesture,
-  SelectDragHandleGesture,
 } from 'app/scripts/paper/gesture';
 import { Guides, HitTests, Items, Selections } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
@@ -29,24 +20,14 @@ import { Tool } from './Tool';
  * TODO: https://medium.com/sketch-app/mastering-the-bezier-curve-in-sketch-4da8fdf0dbbb
  */
 export class MasterTool extends Tool {
-  private readonly clickDetector = new ClickDetector();
-  private currentGesture: Gesture = new HoverItemsGesture(this.paperService);
+  private currentGesture: Gesture = new HoverItemsGesture(this.ps);
 
-  // If this is non-nil, then we are in edit path mode. Otherwise, we are in
-  // selection mode.
-  private selectedEditPath: paper.Path;
-
-  constructor(private readonly paperService: PaperService) {
+  constructor(private readonly ps: PaperService) {
     super();
-  }
-
-  private get currentToolMode() {
-    return this.paperService.getToolMode();
   }
 
   // @Override
   onMouseEvent(event: paper.ToolEvent) {
-    this.clickDetector.onMouseEvent(event);
     if (event.type === 'mousedown') {
       this.onMouseDown(event);
     } else if (event.type === 'mousedrag') {
@@ -59,54 +40,13 @@ export class MasterTool extends Tool {
   }
 
   private onMouseDown(event: paper.ToolEvent) {
-    if (this.currentToolMode === ToolMode.Pencil) {
-      this.currentGesture = new PencilGesture();
-    } else if (this.currentToolMode === ToolMode.Circle) {
-      this.currentGesture = new CircleGesture();
-    } else if (this.currentToolMode === ToolMode.Rectangle) {
-      this.currentGesture = new RectangleGesture();
-    } else {
-      if (this.currentToolMode === ToolMode.Pen && !this.selectedEditPath) {
-        // Then the user is in pen mode and is about to begin
-        // creating a new path.
-        Selections.deselectAll();
-        const newPath = new paper.Path();
-        newPath.strokeColor = 'black';
-        newPath.strokeWidth = 10;
-        this.enterEditPathMode(newPath);
-      }
-      if (this.selectedEditPath) {
-        // If a segment selected item is set, then we are in edit path mode.
-        this.currentGesture = this.createEditPathModeGesture(event);
-      } else {
-        // Otherwise we are in selection mode.
-        this.currentGesture = this.createSelectionModeGesture(event);
-      }
-    }
+    this.currentGesture = this.createSelectionModeGesture(event);
     this.currentGesture.onMouseDown(event);
   }
 
   private onMouseUp(event: paper.ToolEvent) {
     this.currentGesture.onMouseUp(event);
-    if (this.selectedEditPath && this.currentGesture instanceof BatchSelectSegmentsGesture) {
-      // TODO: only exit segment selection mode if the selection box
-      // gesture resulted in no items being selected
-      this.selectedEditPath = undefined;
-    }
-    if (this.selectedEditPath) {
-      this.currentGesture = new HoverSegmentsCurvesGesture(this.selectedEditPath);
-    } else {
-      this.currentGesture = new HoverItemsGesture(this.paperService);
-    }
-  }
-
-  // @Override
-  onKeyEvent(event: paper.KeyEvent) {
-    if (event.type === 'keydown') {
-      this.currentGesture.onKeyDown(event);
-    } else if (event.type === 'keyup') {
-      this.currentGesture.onKeyUp(event);
-    }
+    this.currentGesture = new HoverItemsGesture(this.ps);
   }
 
   private createSelectionModeGesture(event: paper.ToolEvent) {
@@ -123,26 +63,10 @@ export class MasterTool extends Tool {
     const hitResult = HitTests.selectionMode(event.point);
     if (!hitResult) {
       // If there is no hit item, then enter selection box mode.
-      return new BatchSelectItemsGesture(this.paperService);
+      return new BatchSelectItemsGesture(this.ps);
     }
 
     const hitItem = hitResult.item;
-    if (this.clickDetector.isDoubleClick()) {
-      // TODO: It should only be possible to enter edit path mode
-      // for an editable item (i.e. a path, but not a group). Double clicking
-      // on a non-selected and editable item that is contained inside a selected
-      // parent layer should result in the editable item being selected (it is
-      // actually a tiny bit more complicated than that but you get the idea).
-
-      // TODO: possible to double click on a non-Path object? (missing types below!)
-      const hitPath = hitItem as paper.Path;
-
-      // If a double click event occurs on top of a hit item, then enter
-      // edit path mode.
-      this.enterEditPathMode(hitPath);
-      return new class extends Gesture {}();
-    }
-
     if (event.modifiers.shift && hitItem.selected && Selections.getSelectedItems().length > 1) {
       // TODO: After the item is deselected, it should still be possible
       // to drag/clone any other selected items in subsequent mouse events
@@ -169,61 +93,18 @@ export class MasterTool extends Tool {
     return new SelectDragCloneItemsGesture(hitItem, shouldCloneSelectedItems);
   }
 
-  private createEditPathModeGesture(event: paper.ToolEvent) {
-    const hitResult = HitTests.editPathMode(this.selectedEditPath, event.point);
-    if (hitResult) {
-      // We've hit a segment or a handle belonging to a selected segment,
-      // so begin a drag gesture.
-      switch (hitResult.type) {
-        case 'segment':
-          if (this.clickDetector.isDoubleClick()) {
-            // If a double click occurred on top of a segment,
-            // then either create or delete its handles.
-            return new AddDeleteHandlesGesture(hitResult.segment);
-          }
-          return new SelectDragDrawSegmentsGesture(this.selectedEditPath, hitResult.segment);
-        case 'stroke':
-        case 'curve':
-          return new SelectDragDrawSegmentsGesture(this.selectedEditPath, hitResult.location);
-        case 'handle-in':
-        case 'handle-out':
-          return new SelectDragHandleGesture(
-            this.selectedEditPath,
-            hitResult.segment,
-            hitResult.type,
-          );
-      }
+  // @Override
+  onKeyEvent(event: paper.KeyEvent) {
+    if (event.type === 'keydown') {
+      this.currentGesture.onKeyDown(event);
+    } else if (event.type === 'keyup') {
+      this.currentGesture.onKeyUp(event);
     }
-
-    if (
-      // Then we are beginning to build a new path from scratch.
-      this.selectedEditPath.segments.length === 0 ||
-      // Then we are extending an existing open path.
-      Selections.hasSingleSelectedEndPointSegment(this.selectedEditPath)
-    ) {
-      return new SelectDragDrawSegmentsGesture(this.selectedEditPath);
-    }
-
-    // TODO: Only enter selection box mode when we are certain that a drag
-    // has occurred. If a drag does not occur, then we should interpret the
-    // gesture as a click. If a click occurs and shift is not pressed, then
-    // we should exit edit path mode.
-
-    // If there is no hit item and we are in edit path mode, then
-    // enter selection box mode for the selected item so we can
-    // batch select its individual properties.
-    return new BatchSelectSegmentsGesture(this.selectedEditPath);
   }
 
-  private enterEditPathMode(hitPath: paper.Path) {
-    this.selectedEditPath = hitPath;
+  // ========================== //
+  // ===== Helper methods ===== //
+  // ========================== //
 
-    Selections.deselectAll();
-
-    // Begin edit path mode by selecting the last two curves in the path.
-    const startIndex = Math.max(0, this.selectedEditPath.curves.length - 2);
-    const endIndex = this.selectedEditPath.curves.length;
-    const lastTwoCurves = this.selectedEditPath.curves.slice(startIndex, endIndex);
-    lastTwoCurves.forEach(c => (c.selected = true));
-  }
+  private getSelectedLayersIds() {}
 }

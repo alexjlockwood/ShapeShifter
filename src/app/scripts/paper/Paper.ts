@@ -4,6 +4,7 @@ import { Matrix } from 'app/scripts/common';
 import { PaperService } from 'app/services';
 import { State, Store } from 'app/store';
 import { getHoveredLayerId, getSelectedLayerIds, getVectorLayer } from 'app/store/layers/selectors';
+import { getSelectionBox } from 'app/store/paper/selectors';
 import { getToolMode } from 'app/store/paper/selectors';
 import * as paper from 'paper';
 import { OutputSelector } from 'reselect';
@@ -34,16 +35,16 @@ function initializeCanvas(canvas: HTMLCanvasElement) {
   paper.project.addLayer(paperLayer);
 }
 
-function initializeTools(paperService: PaperService) {
+function initializeTools(ps: PaperService) {
   const paperTool = new paper.Tool();
-  const masterTool = new MasterTool(paperService);
-  const zoomPanTool = new ZoomPanTool(paperService);
+  const masterTool = new MasterTool(ps);
+  const zoomPanTool = new ZoomPanTool(ps);
   let currentTool: Tool;
 
   const onEventFn = (event?: paper.ToolEvent | paper.KeyEvent) => {
     const prevTool = currentTool;
     currentTool =
-      paperService.getToolMode() === ToolMode.ZoomPan || (event && event.modifiers.space)
+      ps.getToolMode() === ToolMode.ZoomPan || (event && event.modifiers.space)
         ? zoomPanTool
         : masterTool;
     if (prevTool !== currentTool) {
@@ -63,9 +64,9 @@ function initializeTools(paperService: PaperService) {
     }
   };
 
-  paperService.getToolModeObservable().subscribe(m => {
+  ps.store.select(getToolMode).subscribe(toolMode => {
     // TODO: clean this fixed distance code up?
-    paperTool.fixedDistance = m === ToolMode.Pencil ? 4 : undefined;
+    paperTool.fixedDistance = toolMode === ToolMode.Pencil ? 4 : undefined;
     onEventFn();
   });
 
@@ -79,21 +80,19 @@ function initializeTools(paperService: PaperService) {
   });
 }
 
-function initializeListeners(paperService: PaperService) {
-  paperService.getVectorLayerObservable().subscribe(vl => {
-    paperLayer.setVectorLayer(vl);
-  });
-  paperService.getSelectedLayerIdsObservable().subscribe(layerIds => {
-    paperLayer.setSelectedLayers(layerIds);
-  });
-  paperService.getHoveredLayerIdObservable().subscribe(layerId => {
-    paperLayer.setHoveredLayer(layerId);
-  });
-  paperService.getSelectionBoxObservable().subscribe(box => {
+function initializeListeners(ps: PaperService) {
+  const pl = paperLayer;
+  ps.store.select(getVectorLayer).subscribe(vl => paperLayer.setVectorLayer(vl));
+  ps.store.select(getSelectedLayerIds).subscribe(ids => pl.setSelectedLayers(ids));
+  ps.store.select(getHoveredLayerId).subscribe(id => pl.setHoveredLayer(id));
+  ps.store.select(getSelectionBox).subscribe(box => {
     if (box) {
-      paperLayer.setSelectionBox({ from: new paper.Point(box.from), to: new paper.Point(box.to) });
+      pl.setSelectionBox({
+        from: new paper.Point(box.from),
+        to: new paper.Point(box.to),
+      });
     } else {
-      paperLayer.clearSelectionBox();
+      pl.setSelectionBox(undefined);
     }
   });
 }

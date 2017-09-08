@@ -10,6 +10,7 @@ import { Gesture } from './Gesture';
  */
 export class BatchSelectItemsGesture extends Gesture {
   private readonly paperLayer = paper.project.activeLayer as PaperLayer;
+  private initialSelectedLayers: Set<string>;
   constructor(private readonly paperService: PaperService) {
     super();
   }
@@ -20,35 +21,49 @@ export class BatchSelectItemsGesture extends Gesture {
       // A selection box implies that the gesture began with a failed hit
       // test, so deselect everything on mouse down (unless the user is
       // holding shift).
-      this.paperService.clearSelections();
+      this.paperService.setSelectedLayers(new Set());
     }
+    // TODO: make use of this information (i.e. toggle the layers when shift is pressed)
+    this.initialSelectedLayers = this.paperService.getSelectedLayers();
   }
 
   // @Override
   onMouseDrag(event: paper.ToolEvent) {
-    this.paperService.setSelectionBox(event.downPoint, event.point);
-    this.selectItemsInSelectionBox(event);
+    this.paperService.setSelectionBox({ from: event.downPoint, to: event.point });
+    this.selectItemsInSelectionBox(event.modifiers.alt);
   }
 
   // @Override
   onMouseUp(event: paper.ToolEvent) {
-    this.selectItemsInSelectionBox(event);
-    this.paperService.clearSelectionBox();
+    this.selectItemsInSelectionBox(event.modifiers.alt);
+    this.paperService.setSelectionBox(undefined);
   }
 
-  private selectItemsInSelectionBox(event: paper.ToolEvent) {
-    const selectionBox = this.paperService.getSelectionBox();
-    if (!selectionBox) {
+  // @Override
+  onKeyDown(event: paper.KeyEvent) {
+    if (event.key === 'alt') {
+      this.selectItemsInSelectionBox(true);
+    }
+  }
+
+  // @Override
+  onKeyUp(event: paper.KeyEvent) {
+    if (event.key === 'alt') {
+      this.selectItemsInSelectionBox(false);
+    }
+  }
+
+  private selectItemsInSelectionBox(isAltPressed: boolean) {
+    const box = this.paperService.getSelectionBox();
+    if (!box) {
       return;
     }
-    const from = Transforms.mousePointToLocalCoordinates(new paper.Point(selectionBox.from));
-    const to = Transforms.mousePointToLocalCoordinates(new paper.Point(selectionBox.to));
-    const selectedItems = this.paperLayer.findItemsInBounds(new paper.Rectangle(from, to));
-
-    // TODO: select layers all at once rather than individually
-    // TODO: make this properly deselect items when no matches are found
-    selectedItems.forEach(item =>
-      this.paperService.selectLayer(item.data.id, !event.modifiers.shift),
+    const from = Transforms.mousePointToLocalCoordinates(new paper.Point(box.from));
+    const to = Transforms.mousePointToLocalCoordinates(new paper.Point(box.to));
+    const selectedItems = this.paperLayer.findItemsInBounds(
+      new paper.Rectangle(from, to),
+      !isAltPressed,
     );
+    this.paperService.setSelectedLayers(new Set(selectedItems.map(i => i.data.id)));
   }
 }

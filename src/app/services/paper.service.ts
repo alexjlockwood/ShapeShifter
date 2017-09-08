@@ -30,17 +30,15 @@ import { LayerTimelineService } from './layertimeline.service';
 export class PaperService {
   constructor(
     private readonly layerTimelineService: LayerTimelineService,
-    private readonly store: Store<State>,
+    public readonly store: Store<State>,
   ) {}
 
-  // Layers.
-
-  selectLayer(layerId: string, clearExisting: boolean) {
-    this.layerTimelineService.selectLayer(layerId, clearExisting);
+  setSelectedLayers(layerIds: Set<string>) {
+    this.layerTimelineService.setSelectedLayers(layerIds);
   }
 
-  clearSelections() {
-    this.layerTimelineService.clearSelections();
+  getSelectedLayers() {
+    return this.queryStore(getSelectedLayerIds);
   }
 
   /** Sets the hovered layer. */
@@ -50,46 +48,10 @@ export class PaperService {
     }
   }
 
-  /** Clears an existing hovered layer. */
-  clearHoveredLayer() {
-    this.setHoveredLayer(undefined);
-  }
-
-  setSelectionBox(from: Point, to: Point) {
-    const box = { from, to };
+  setSelectionBox(box: { from: Point; to: Point } | undefined) {
     if (!_.isEqual(this.getSelectionBox(), box)) {
       this.store.dispatch(new SetSelectionBox(box));
     }
-  }
-
-  clearSelectionBox() {
-    if (this.queryStore(getSelectionBox)) {
-      this.store.dispatch(new SetSelectionBox(undefined));
-    }
-  }
-
-  getVectorLayerObservable() {
-    return this.store.select(getVectorLayer);
-  }
-
-  getVectorLayer() {
-    return this.queryStore(getVectorLayer);
-  }
-
-  getSelectedLayerIdsObservable() {
-    return this.store.select(getSelectedLayerIds);
-  }
-
-  getSelectedLayerIds() {
-    return this.queryStore(getSelectedLayerIds);
-  }
-
-  getHoveredLayerIdObservable() {
-    return this.store.select(getHoveredLayerId);
-  }
-
-  getSelectionBoxObservable() {
-    return this.store.select(getSelectionBox);
   }
 
   getSelectionBox() {
@@ -106,40 +68,6 @@ export class PaperService {
 
   getToolMode() {
     return this.queryStore(getToolMode);
-  }
-
-  getToolModeObservable() {
-    return this.store.select(getToolMode);
-  }
-
-  // Fill/stroke colors.
-
-  getFillColorObservable() {
-    return this.store.select(getFillColor);
-  }
-
-  getStrokeColorObservable() {
-    return this.store.select(getStrokeColor);
-  }
-
-  getFillColor() {
-    return this.queryStore(getFillColor);
-  }
-
-  setFillColor(fillColor: string) {
-    if (this.getFillColor() !== fillColor) {
-      this.store.dispatch(new SetFillColor(fillColor));
-    }
-  }
-
-  getStrokeColor() {
-    return this.queryStore(getStrokeColor);
-  }
-
-  setStrokeColor(strokeColor: string) {
-    if (this.getStrokeColor() !== strokeColor) {
-      this.store.dispatch(new SetStrokeColor(strokeColor));
-    }
   }
 
   private queryStore<T>(selector: OutputSelector<Object, T, (res: Object) => T>) {
