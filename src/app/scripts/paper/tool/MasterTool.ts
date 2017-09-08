@@ -25,27 +25,6 @@ import * as paper from 'paper';
 import { Tool } from './Tool';
 
 /**
- * A tool that selects, moves, rotates, scales, and modifies items.
- * The selection tool has two different states:
- *
- * (1) The first is the standard selection mode, in which the user can
- *     click on items in the canvas in order to select them. Items may be
- *     selected individually or in batches by selecting a rectangular region.
- *     Selected items can then be rotated and scaled by dragging its edge and
- *     corner segments.
- *
- * (2) The second is edit path mode, in which there is a single selected
- *     path. The user can then make modifications to the path by
- *     selecting/moving/creating/deleting segments on the path. If the path
- *     is open, then the user can continue creating the path by adding new
- *     segments to its end points. Selecting a segment shows the handles for
- *     the two curves associated with that segment, which can also be modified.
- *     Double clicking on a segment with no handles creates and displays two
- *     new handles for that segment. Similarly, double clicking on a segment
- *     with handles will result in those handles being deleted. The user
- *     enters this mode by double clicking on a single selected path while
- *     in mode (1).
- *
  * TODO: describe how 'enter' and 'escape' should both behave
  * TODO: https://medium.com/sketch-app/mastering-the-bezier-curve-in-sketch-4da8fdf0dbbb
  */

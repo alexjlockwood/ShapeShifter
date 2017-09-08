@@ -72,8 +72,16 @@ export class PaperService {
     return this.store.select(getVectorLayer);
   }
 
+  getVectorLayer() {
+    return this.queryStore(getVectorLayer);
+  }
+
   getSelectedLayerIdsObservable() {
     return this.store.select(getSelectedLayerIds);
+  }
+
+  getSelectedLayerIds() {
+    return this.queryStore(getSelectedLayerIds);
   }
 
   getHoveredLayerIdObservable() {

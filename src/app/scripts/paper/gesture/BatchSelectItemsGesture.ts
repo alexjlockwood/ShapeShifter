@@ -1,6 +1,5 @@
 import { PaperLayer } from 'app/scripts/paper/item';
-import * as Util from 'app/scripts/paper/item/Util';
-import { Guides, Items, Selections } from 'app/scripts/paper/util';
+import { Guides, Items, Layers, Selections, Transforms } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
 import * as paper from 'paper';
 
@@ -42,8 +41,8 @@ export class BatchSelectItemsGesture extends Gesture {
     if (!selectionBox) {
       return;
     }
-    const from = Util.mousePointToLocalCoordinates(new paper.Point(selectionBox.from));
-    const to = Util.mousePointToLocalCoordinates(new paper.Point(selectionBox.to));
+    const from = Transforms.mousePointToLocalCoordinates(new paper.Point(selectionBox.from));
+    const to = Transforms.mousePointToLocalCoordinates(new paper.Point(selectionBox.to));
     const selectedItems = this.paperLayer.findItemsInBounds(new paper.Rectangle(from, to));
 
     // TODO: select layers all at once rather than individually

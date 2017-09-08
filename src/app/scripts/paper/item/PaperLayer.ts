@@ -1,10 +1,8 @@
 import { VectorLayer } from 'app/model/layers';
 import { ColorUtil } from 'app/scripts/common';
-import { Items } from 'app/scripts/paper/util';
+import { Items, Layers, Transforms } from 'app/scripts/paper/util';
 import * as _ from 'lodash';
 import * as paper from 'paper';
-
-import * as Util from './Util';
 
 // TODO: use Item#visible to hook up 'visible layer ids' from store
 export class PaperLayer extends paper.Layer {
@@ -35,9 +33,9 @@ export class PaperLayer extends paper.Layer {
   setSelectionBox(box: { from: paper.Point; to: paper.Point }) {
     this.clearSelectionBox();
     if (box) {
-      this.selectionBoxPath = Util.newSelectionBoxPath(
-        Util.mousePointToLocalCoordinates(box.from),
-        Util.mousePointToLocalCoordinates(box.to),
+      this.selectionBoxPath = Layers.newSelectionBox(
+        Transforms.mousePointToLocalCoordinates(box.from),
+        Transforms.mousePointToLocalCoordinates(box.to),
       );
       this.updateChildren();
     }
@@ -54,7 +52,7 @@ export class PaperLayer extends paper.Layer {
     if (this.vectorLayerItem) {
       this.vectorLayerItem.remove();
     }
-    this.vectorLayerItem = Util.newVectorLayerItem(vl);
+    this.vectorLayerItem = Layers.newVectorLayerItem(vl);
     this.updateChildren();
   }
 
@@ -67,7 +65,7 @@ export class PaperLayer extends paper.Layer {
       this.findItemByLayerId(layerId),
     );
     if (selectedItems.length) {
-      this.selectionBoundsItem = Util.newSelectionBoundsItem(selectedItems);
+      this.selectionBoundsItem = Layers.newSelectionBounds(selectedItems);
     }
     this.updateChildren();
   }
@@ -79,7 +77,7 @@ export class PaperLayer extends paper.Layer {
     }
     if (this.hoveredLayerId) {
       const item = this.findItemByLayerId(this.hoveredLayerId);
-      this.hoverPath = Util.newHoverPath(item);
+      this.hoverPath = Layers.newHover(item);
     }
     this.updateChildren();
   }
@@ -111,7 +109,7 @@ export class PaperLayer extends paper.Layer {
     });
   }
 
-  private findItemByLayerId(layerId: string) {
+  findItemByLayerId(layerId: string) {
     if (this.vectorLayerItem.data.id === layerId) {
       return this.vectorLayerItem;
     }
