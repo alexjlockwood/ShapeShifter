@@ -32,7 +32,7 @@ export class PaperLayer extends paper.Layer {
     this.updateHoverPath();
   }
 
-  setSelectionBox(box: { from: paper.Point; to: paper.Point } | undefined) {
+  setSelectionBox(box: { from: paper.Point; to: paper.Point }) {
     this.clearSelectionBox();
     if (box) {
       this.selectionBoxPath = Util.newSelectionBoxPath(
