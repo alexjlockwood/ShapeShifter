@@ -15,7 +15,7 @@ export class RotateItemsGesture extends Gesture {
 
   // @Override
   onMouseDown(event: paper.ToolEvent) {
-    Guides.hideHoverPath();
+    // Guides.hideHoverPath();
 
     this.selectedItems = Selections.getSelectedItems();
     this.initialMatrices = this.selectedItems.map(i => i.matrix.clone());

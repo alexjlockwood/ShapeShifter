@@ -21,7 +21,7 @@ export class TransformItemsGesture extends Gesture {
 
   // @Override
   onMouseDown(event: paper.ToolEvent) {
-    Guides.hideHoverPath();
+    // Guides.hideHoverPath();
 
     this.selectedPaths.forEach(path => {
       const initialSegmentPositions = path.segments.map(s => s.point.clone());

@@ -200,6 +200,15 @@ export function newSelectedPath(path: paper.Path) {
   return group;
 }
 
+export function newShapePreview(pathData: string) {
+  const path = new paper.Path(pathData);
+  path.strokeScaling = false;
+  path.strokeWidth = 1 / paper.view.zoom;
+  path.guide = true;
+  path.strokeColor = 'black';
+  return path;
+}
+
 export function newSelectionBox(from: paper.Point, to: paper.Point) {
   const path = new paper.Path.Rectangle(new paper.Rectangle(from, to));
   path.strokeScaling = false;

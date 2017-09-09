@@ -3,8 +3,10 @@ import { MathUtil } from 'app/scripts/common';
 import { ClickDetector } from 'app/scripts/paper/detector';
 import {
   BatchSelectItemsGesture,
+  CircleGesture,
   Gesture,
   HoverItemsGesture,
+  RectangleGesture,
   ScaleItemsGesture,
   SelectDragCloneItemsGesture,
 } from 'app/scripts/paper/gesture';
@@ -41,7 +43,14 @@ export class MasterTool extends Tool {
   }
 
   private onMouseDown(event: paper.ToolEvent) {
-    this.currentGesture = this.createSelectionModeGesture(event);
+    const toolMode = this.ps.getToolMode();
+    if (toolMode === ToolMode.Circle) {
+      this.currentGesture = new CircleGesture(this.ps);
+    } else if (toolMode === ToolMode.Rectangle) {
+      this.currentGesture = new RectangleGesture(this.ps);
+    } else {
+      this.currentGesture = this.createSelectionModeGesture(event);
+    }
     this.currentGesture.onMouseDown(event);
   }
 
@@ -57,7 +66,10 @@ export class MasterTool extends Tool {
       const res = this.paperLayer.hitTestSelectionBounds(event.point);
       if (res) {
         // If the hit item is a selection bounds segment, then perform a scale gesture.
-        return new ScaleItemsGesture(this.ps, res.item.data.id as PivotType);
+        // return new ScaleItemsGesture(this.ps, res.item.data.id as PivotType);
+
+        // TODO: implement scaling!
+        return new class extends Gesture {}();
       }
     }
 

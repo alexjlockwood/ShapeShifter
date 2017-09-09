@@ -27,50 +27,9 @@ export function getGuideLayer() {
   return paper.project.getItem({ name: GUIDE_LAYER_NAME }) || new paper.Group();
 }
 
-// ====================== //
-// ===== Hover path ===== //
-// ====================== //
-
-function getHoverPath() {
-  return getGuideLayer().getItem<Partial<paper.PathProps>>({ name: HOVER_PATH_NAME }) as paper.Path;
-}
-
-export function showHoverPath(path: paper.Path) {
-  hideHoverPath();
-
-  // TODO: deal with incorrect stroke width
-  const matrix = new paper.Matrix();
-  let item: paper.Item = path;
-  while (item.parent && !Items.isLayer(item.parent)) {
-    matrix.prepend(item.parent.matrix.clone());
-    item = item.parent;
-  }
-
-  const hoverPath = new paper.Path(path.segments);
-  hoverPath.name = HOVER_PATH_NAME;
-  hoverPath.closed = path.closed;
-  hoverPath.strokeColor = GUIDE_COLOR;
-  hoverPath.guide = true;
-  hoverPath.strokeWidth = 1.5 / paper.view.zoom;
-  hoverPath.matrix = matrix;
-  getGuideLayer().addChild(hoverPath);
-  return hoverPath;
-}
-
-export function hideHoverPath() {
-  const hoverPath = getHoverPath();
-  if (hoverPath) {
-    hoverPath.remove();
-  }
-}
-
 // ========================== //
 // ===== Selection path ===== //
 // ========================== //
-
-export function isSelectionBoundsPath() {
-  return getGuideLayer().getItem({ name: SELECTION_PATH_NAME }) as paper.Path.Rectangle;
-}
 
 export function getSelectionBoundsPath() {
   return getGuideLayer().getItem({ name: SELECTION_PATH_NAME }) as paper.Path.Rectangle;

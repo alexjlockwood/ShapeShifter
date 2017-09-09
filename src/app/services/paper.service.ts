@@ -7,18 +7,8 @@ import { Matrix, Point } from 'app/scripts/common';
 import { State, Store } from 'app/store';
 import { SetHoveredLayer } from 'app/store/layers/actions';
 import { getHoveredLayerId, getSelectedLayerIds, getVectorLayer } from 'app/store/layers/selectors';
-import {
-  SetFillColor,
-  SetSelectionBox,
-  SetStrokeColor,
-  SetToolMode,
-} from 'app/store/paper/actions';
-import {
-  getFillColor,
-  getSelectionBox,
-  getStrokeColor,
-  getToolMode,
-} from 'app/store/paper/selectors';
+import { SetSelectionBox, SetShapePreview, SetToolMode } from 'app/store/paper/actions';
+import { getSelectionBox, getShapePreview, getToolMode } from 'app/store/paper/selectors';
 import * as _ from 'lodash';
 import { OutputSelector } from 'reselect';
 
@@ -74,6 +64,18 @@ export class PaperService {
   /** Gets the current selection box. */
   getSelectionBox() {
     return this.queryStore(getSelectionBox);
+  }
+
+  /** Sets the current shape preview. */
+  setShapePreview(pathData: string) {
+    if (this.getShapePreview() !== pathData) {
+      this.store.dispatch(new SetShapePreview(pathData));
+    }
+  }
+
+  /** Gets the current shape preview. */
+  getShapePreview() {
+    return this.queryStore(getShapePreview);
   }
 
   /** Sets the current tool mode. */

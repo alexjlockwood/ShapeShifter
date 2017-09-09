@@ -19,6 +19,7 @@ import { Gesture } from './Gesture';
  * on one or more items. This gesture is only used during selection mode.
  *
  * TODO: don't allow modifications to be made to groups and paths/masks simultaneously
+ * TODO: make it possible to drag/clone groups
  */
 export class SelectDragCloneItemsGesture extends Gesture {
   private readonly paperLayer = paper.project.activeLayer as PaperLayer;

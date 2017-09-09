@@ -10,6 +10,7 @@ export class PaperLayer extends paper.Layer {
   private selectionBoundsItem: paper.Item;
   private hoverPath: paper.Path;
   private selectionBoxPath: paper.Path;
+  private shapePreviewPath: paper.Path;
 
   private selectedLayerIds = new Set<string>();
   private hoveredLayerId: string;
@@ -28,6 +29,18 @@ export class PaperLayer extends paper.Layer {
   setHoveredLayer(layerId: string) {
     this.hoveredLayerId = layerId;
     this.updateHoverPath();
+  }
+
+  setShapePreview(pathData: string) {
+    console.log(pathData);
+    if (this.shapePreviewPath) {
+      this.shapePreviewPath.remove();
+      this.shapePreviewPath = undefined;
+    }
+    if (pathData) {
+      this.shapePreviewPath = Layers.newShapePreview(pathData);
+      this.updateChildren();
+    }
   }
 
   setSelectionBox(box: { from: paper.Point; to: paper.Point }) {
@@ -88,6 +101,9 @@ export class PaperLayer extends paper.Layer {
     }
     if (this.hoverPath) {
       children.push(this.hoverPath);
+    }
+    if (this.shapePreviewPath) {
+      children.push(this.shapePreviewPath);
     }
     if (this.selectionBoxPath) {
       children.push(this.selectionBoxPath);

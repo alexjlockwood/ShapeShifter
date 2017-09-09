@@ -14,10 +14,6 @@ import { Gesture } from './Gesture';
 
 /**
  * A gesture that performs hover operations.
- *
- * This gesture is used as the default gesture during selection mode.
- * It listens for mouse move events and reacts by drawing overlays
- * on top of items and changing the cursor style accordingly.
  */
 export class HoverItemsGesture extends Gesture {
   constructor(private readonly paperService: PaperService) {

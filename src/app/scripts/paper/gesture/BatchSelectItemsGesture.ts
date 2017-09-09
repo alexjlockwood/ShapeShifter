@@ -11,7 +11,7 @@ import { Gesture } from './Gesture';
 export class BatchSelectItemsGesture extends Gesture {
   private readonly paperLayer = paper.project.activeLayer as PaperLayer;
   private initialSelectedLayers: Set<string>;
-  constructor(private readonly paperService: PaperService) {
+  constructor(private readonly ps: PaperService) {
     super();
   }
 
@@ -21,22 +21,22 @@ export class BatchSelectItemsGesture extends Gesture {
       // A selection box implies that the gesture began with a failed hit
       // test, so deselect everything on mouse down (unless the user is
       // holding shift).
-      this.paperService.setSelectedLayers(new Set());
+      this.ps.setSelectedLayers(new Set());
     }
     // TODO: make use of this information (i.e. toggle the layers when shift is pressed)
-    this.initialSelectedLayers = this.paperService.getSelectedLayers();
+    this.initialSelectedLayers = this.ps.getSelectedLayers();
   }
 
   // @Override
   onMouseDrag(event: paper.ToolEvent) {
-    this.paperService.setSelectionBox({ from: event.downPoint, to: event.point });
+    this.ps.setSelectionBox({ from: event.downPoint, to: event.point });
     this.selectItemsInSelectionBox(event.modifiers.alt);
   }
 
   // @Override
   onMouseUp(event: paper.ToolEvent) {
     this.selectItemsInSelectionBox(event.modifiers.alt);
-    this.paperService.setSelectionBox(undefined);
+    this.ps.setSelectionBox(undefined);
   }
 
   // @Override
@@ -54,7 +54,7 @@ export class BatchSelectItemsGesture extends Gesture {
   }
 
   private selectItemsInSelectionBox(isAltPressed: boolean) {
-    const box = this.paperService.getSelectionBox();
+    const box = this.ps.getSelectionBox();
     if (!box) {
       return;
     }
@@ -64,6 +64,6 @@ export class BatchSelectItemsGesture extends Gesture {
       new paper.Rectangle(from, to),
       !isAltPressed,
     );
-    this.paperService.setSelectedLayers(new Set(selectedItems.map(i => i.data.id)));
+    this.ps.setSelectedLayers(new Set(selectedItems.map(i => i.data.id)));
   }
 }
