@@ -89,7 +89,7 @@ export class SelectDragCloneItemsGesture extends Gesture {
       const point = Transforms.mousePointToLocalCoordinates(event.point, item);
       const localDelta = point.subtract(downPoint);
       const finalDelta = event.modifiers.shift
-        ? new paper.Point(MathUtil.snapDeltaToAngle(localDelta, 15))
+        ? new paper.Point(MathUtil.snapDeltaToAngle(localDelta, 90))
         : localDelta;
       translateLayerFn(item.data.id, finalDelta);
     });
