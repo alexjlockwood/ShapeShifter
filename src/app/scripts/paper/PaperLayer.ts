@@ -60,7 +60,7 @@ export class PaperLayer extends paper.Layer {
     const selectedItems = Array.from(this.selectedLayerIds).map(layerId =>
       this.findItemByLayerId(layerId),
     );
-    if (selectedItems.length) {
+    if (selectedItems.length > 0) {
       this.selectionBoundsItem = Layers.newSelectionBounds(selectedItems);
     }
     this.updateChildren();
@@ -113,5 +113,12 @@ export class PaperLayer extends paper.Layer {
     return layerId
       ? _.first(this.vectorLayerItem.getItems({ match: ({ data: { id } }) => layerId === id }))
       : undefined;
+  }
+
+  hitTestSelectionBounds(mousePoint: paper.Point) {
+    const point = Transforms.mousePointToLocalCoordinates(mousePoint);
+    return this.selectionBoundsItem.hitTest(point, {
+      class: paper.Raster,
+    });
   }
 }

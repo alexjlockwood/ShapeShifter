@@ -56,7 +56,7 @@
     "zone.js": "^0.8.17"
   },
   "devDependencies": {
-    "@angular/cli": "^1.4.0",
+    "@angular/cli": "^1.4.1",
     "@angular/compiler-cli": "^4.4.0-RC.0",
     "@angular/language-service": "^4.4.0-RC.0",
     "@types/es6-promise": "0.0.33",
@@ -66,7 +66,7 @@
     "@types/jquery": "^3.2.12",
     "@types/jszip": "0.0.33",
     "@types/lodash": "^4.14.74",
-    "@types/node": "^8.0.26",
+    "@types/node": "^8.0.28",
     "@types/polylabel": "^1.0.3",
     "@types/tinycolor2": "^1.4.0",
     "angular-cli-ghpages": "^0.5.1",

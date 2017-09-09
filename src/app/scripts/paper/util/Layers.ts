@@ -142,6 +142,7 @@ export function newSelectionBounds(items: ReadonlyArray<paper.Item>) {
   // Create segments for the bounded box.
   const segmentSize = 6 / paper.view.zoom / Transforms.getCssScaling();
   const createSegmentFn = (center: paper.Point) => {
+    // TODO: avoid creating rasters in a loop like this
     const handle = new paper.Raster('/assets/handle.png', center);
     const scaleFactor = 1 / Transforms.getAttrScaling();
     handle.scale(scaleFactor, scaleFactor);
@@ -181,6 +182,7 @@ export function newSelectedPath(path: paper.Path) {
     line.transform(matrix);
     group.addChild(line);
   };
+  // TODO: avoid creating rasters in a loop like this
   path.segments.forEach(s => {
     const center = s.point;
     if (s.handleIn) {

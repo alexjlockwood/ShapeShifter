@@ -1,5 +1,7 @@
 import { MathUtil } from 'app/scripts/common';
-import { Guides, Items, Pivots, Selections } from 'app/scripts/paper/util';
+import { PaperLayer } from 'app/scripts/paper/PaperLayer';
+import { Guides, Items, PivotType, Pivots, Selections } from 'app/scripts/paper/util';
+import { PaperService } from 'app/services';
 import * as paper from 'paper';
 
 import { Gesture } from './Gesture';
@@ -8,6 +10,8 @@ import { Gesture } from './Gesture';
  * A gesture that performs scaling operations.
  */
 export class ScaleItemsGesture extends Gesture {
+  private readonly paperLayer = paper.project.activeLayer as PaperLayer;
+  private selectedItems: ReadonlyArray<paper.Item>;
   private initialMatrices: ReadonlyArray<paper.Matrix>;
   private initialPivot: paper.Point;
   private initialSize: paper.Point;
@@ -15,29 +19,32 @@ export class ScaleItemsGesture extends Gesture {
   private initialCenter: paper.Point;
   private currentPivot: paper.Point;
 
-  constructor(
-    private readonly hitSegment: paper.Segment,
-    private readonly selectedItems: ReadonlyArray<paper.Item>,
-  ) {
+  constructor(private readonly ps: PaperService, private readonly hitPivotType: PivotType) {
     super();
   }
 
   // @Override
   onMouseDown(event: paper.ToolEvent) {
-    Guides.hideHoverPath();
+    this.ps.setHoveredLayer(undefined);
+
+    this.selectedItems = Array.from(this.ps.getSelectedLayers()).map(id =>
+      this.paperLayer.findItemByLayerId(id),
+    );
 
     this.initialMatrices = this.selectedItems.map(i => i.matrix.clone());
     const scalingBounds = Items.computeBoundingBox(this.selectedItems);
-    const pivotType = Pivots.getPivotType(this.hitSegment.index);
-    const oppPivotType = Pivots.getOppositePivotType(this.hitSegment.index);
+    const pivotType = this.hitPivotType;
+    // TODO: implement this
+    // TODO: implement this
+    // TODO: implement this
+    // TODO: implement this
+    // TODO: implement this
+    const oppPivotType = this.hitPivotType; // Pivots.getOppositePivotType(this.hitSegment.index);
     this.initialPivot = scalingBounds[oppPivotType].clone();
     this.currentPivot = scalingBounds[pivotType].clone();
     this.initialSize = this.currentPivot.subtract(this.initialPivot);
     this.centeredInitialSize = this.initialSize.divide(2);
     this.initialCenter = scalingBounds.center.clone();
-
-    // Don't show the selection bounds while transforming the shape.
-    Guides.hideSelectionBoundsPath();
   }
 
   // @Override

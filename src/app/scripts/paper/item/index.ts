@@ -1,1 +1,0 @@
-export { PaperLayer } from './PaperLayer';

@@ -1350,7 +1350,6 @@ declare module 'paper' {
    * The Item type allows you to access and modify the items in Paper.js projects. Its functionality is inherited by different project item types such as Path, CompoundPath, Group, Layer and Raster. They each add a layer of functionality that is unique to their type, but share the underlying properties and functions that they inherit from Item.
    */
   export abstract class Item {
-    // ADDED BY ALEX LOCKWOOD
     equals(item: Item): boolean;
 
     /**
@@ -2050,6 +2049,7 @@ declare module 'paper' {
 
     toPath(insert: boolean): Path;
   }
+
   /**
    * The Raster item represents an image in a Paper.js project.
    */

@@ -3,13 +3,13 @@ import { MathUtil } from 'app/scripts/common';
 import { ClickDetector } from 'app/scripts/paper/detector';
 import {
   BatchSelectItemsGesture,
-  DeselectItemGesture,
   Gesture,
   HoverItemsGesture,
   ScaleItemsGesture,
   SelectDragCloneItemsGesture,
 } from 'app/scripts/paper/gesture';
-import { Guides, HitTests, Items, Selections } from 'app/scripts/paper/util';
+import { PaperLayer } from 'app/scripts/paper/PaperLayer';
+import { Guides, HitTests, Items, PivotType, Selections } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
 import * as paper from 'paper';
 
@@ -20,6 +20,7 @@ import { Tool } from './Tool';
  * TODO: https://medium.com/sketch-app/mastering-the-bezier-curve-in-sketch-4da8fdf0dbbb
  */
 export class MasterTool extends Tool {
+  private readonly paperLayer = paper.project.activeLayer as PaperLayer;
   private currentGesture: Gesture = new HoverItemsGesture(this.ps);
 
   constructor(private readonly ps: PaperService) {
@@ -50,30 +51,38 @@ export class MasterTool extends Tool {
   }
 
   private createSelectionModeGesture(event: paper.ToolEvent) {
-    const selectionBounds = Guides.getSelectionBoundsPath();
-    if (selectionBounds) {
-      // First perform a hit test on the selection bounds, if they exist.
-      const res = HitTests.selectionBoundsPivot(selectionBounds, event.point);
+    const selectedLayers = this.ps.getSelectedLayers();
+    if (selectedLayers.size > 0) {
+      // First perform a hit test on the selection bounds.
+      const res = this.paperLayer.hitTestSelectionBounds(event.point);
       if (res) {
         // If the hit item is a selection bounds segment, then perform a scale gesture.
-        return new ScaleItemsGesture(res.segment, Selections.getSelectedItems());
+        return new ScaleItemsGesture(this.ps, res.item.data.id as PivotType);
       }
     }
 
     const hitResult = HitTests.selectionMode(event.point);
     if (!hitResult) {
-      // If there is no hit item, then enter selection box mode.
+      // If there is no hit item, then batch select items using a selection box box.
       return new BatchSelectItemsGesture(this.ps);
     }
 
     const hitItem = hitResult.item;
-    if (event.modifiers.shift && hitItem.selected && Selections.getSelectedItems().length > 1) {
+    if (event.modifiers.shift && selectedLayers.has(hitItem.data.id) && selectedLayers.size > 1) {
       // TODO: After the item is deselected, it should still be possible
       // to drag/clone any other selected items in subsequent mouse events
 
       // If the hit item is selected, shift is pressed, and there is at least
       // one other selected item, then deselect the hit item.
-      return new DeselectItemGesture(hitItem);
+      const ps = this.ps;
+      return new class extends Gesture {
+        // @Override
+        onMouseDown(e: paper.ToolEvent) {
+          const layerIds = new Set(selectedLayers);
+          layerIds.delete(hitItem.data.id);
+          ps.setSelectedLayers(layerIds);
+        }
+      }();
     }
 
     // TODO: The actual behavior in Sketch is a bit more complicated.
@@ -89,8 +98,7 @@ export class MasterTool extends Tool {
     // there is only one selected item. In both cases the hit item should
     // end up being selected. If alt is being pressed, then we should
     // clone the item as well.
-    const shouldCloneSelectedItems = event.modifiers.alt;
-    return new SelectDragCloneItemsGesture(hitItem, shouldCloneSelectedItems);
+    return new SelectDragCloneItemsGesture(this.ps, hitItem);
   }
 
   // @Override
@@ -101,10 +109,4 @@ export class MasterTool extends Tool {
       this.currentGesture.onKeyUp(event);
     }
   }
-
-  // ========================== //
-  // ===== Helper methods ===== //
-  // ========================== //
-
-  private getSelectedLayersIds() {}
 }
