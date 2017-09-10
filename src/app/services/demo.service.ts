@@ -11,7 +11,7 @@ import { FileExportService } from 'app/services/fileexport.service';
 interface Demo {
   readonly vectorLayer: VectorLayer;
   readonly animation: Animation;
-  readonly hiddenLayerIds: Set<string>;
+  readonly hiddenLayerIds: ReadonlySet<string>;
 }
 
 @Injectable()
@@ -23,10 +23,13 @@ export class DemoService {
    * @param demoName the id of the demo (i.e. 'searchtoclose' or 'visibilitystrike')
    */
   getDemo(demoId: string): Promise<Demo> {
-    return this.http.get(`demos/${demoId}.shapeshifter`).toPromise().then(response => {
-      const jsonObj = response.json();
-      const { vectorLayer, animation, hiddenLayerIds } = FileExportService.fromJSON(jsonObj);
-      return ModelUtil.regenerateModelIds(vectorLayer, animation, hiddenLayerIds) as Demo;
-    });
+    return this.http
+      .get(`demos/${demoId}.shapeshifter`)
+      .toPromise()
+      .then(response => {
+        const jsonObj = response.json();
+        const { vectorLayer, animation, hiddenLayerIds } = FileExportService.fromJSON(jsonObj);
+        return ModelUtil.regenerateModelIds(vectorLayer, animation, hiddenLayerIds) as Demo;
+      });
   }
 }

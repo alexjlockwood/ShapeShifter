@@ -6,7 +6,7 @@ export interface State {
   readonly mode: ActionMode;
   readonly hover: Hover;
   readonly selections: ReadonlyArray<Selection>;
-  readonly pairedSubPaths: Set<number>;
+  readonly pairedSubPaths: ReadonlySet<number>;
   readonly unpairedSubPath: { readonly source: ActionSource; readonly subIdx: number };
 }
 

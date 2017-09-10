@@ -16,24 +16,24 @@ export class SetVectorLayer implements Action {
 
 export class SetSelectedLayers implements Action {
   readonly type = SET_SELECTED_LAYERS;
-  readonly payload: { layerIds: Set<string> };
-  constructor(layerIds: Set<string>) {
+  readonly payload: { layerIds: ReadonlySet<string> };
+  constructor(layerIds: ReadonlySet<string>) {
     this.payload = { layerIds };
   }
 }
 
 export class SetHiddenLayers implements Action {
   readonly type = SET_HIDDEN_LAYERS;
-  readonly payload: { layerIds: Set<string> };
-  constructor(layerIds: Set<string>) {
+  readonly payload: { layerIds: ReadonlySet<string> };
+  constructor(layerIds: ReadonlySet<string>) {
     this.payload = { layerIds };
   }
 }
 
 export class SetCollapsedLayers implements Action {
   readonly type = SET_COLLAPSED_LAYERS;
-  readonly payload: { layerIds: Set<string> };
-  constructor(layerIds: Set<string>) {
+  readonly payload: { layerIds: ReadonlySet<string> };
+  constructor(layerIds: ReadonlySet<string>) {
     this.payload = { layerIds };
   }
 }

@@ -31,7 +31,7 @@ export class CanvasLayersDirective extends CanvasLayoutMixin(DestroyableMixin())
   private readonly $renderingCanvas: JQuery<HTMLCanvasElement>;
   private readonly $offscreenCanvas: JQuery<HTMLCanvasElement>;
   private vectorLayer: VectorLayer;
-  private hiddenLayerIds = new Set<string>();
+  private hiddenLayerIds: ReadonlySet<string> = new Set<string>();
 
   constructor(
     elementRef: ElementRef,

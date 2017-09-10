@@ -47,7 +47,7 @@ export function getAvailablePropertyNamesForLayer(layer: Layer, animation: Anima
 export function regenerateModelIds(
   vectorLayer: VectorLayer,
   animation: Animation,
-  hiddenLayerIds: Set<string>,
+  hiddenLayerIds: ReadonlySet<string>,
 ) {
   // Create a map of old IDs to new IDs.
   const layerIdMap: Dictionary<string> = {};

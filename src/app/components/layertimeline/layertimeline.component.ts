@@ -108,7 +108,7 @@ export class LayerTimelineComponent extends DestroyableMixin()
 
   private animation: Animation;
   private vectorLayer: VectorLayer;
-  private selectedBlockIds: Set<string>;
+  private selectedBlockIds: ReadonlySet<string>;
 
   layerTimelineModel$: Observable<LayerTimelineModel>;
 
@@ -216,16 +216,19 @@ export class LayerTimelineComponent extends DestroyableMixin()
       this.store.dispatch(new ResetWorkspace());
       this.animatorService.reset();
     };
-    this.store.select(isWorkspaceDirty).first().subscribe(isDirty => {
-      if (isDirty && !IS_DEV_BUILD) {
-        this.dialogService
-          .confirm('Start over?', `You'll lose any unsaved changes.`)
-          .filter(result => result)
-          .subscribe(resetWorkspaceFn);
-      } else {
-        resetWorkspaceFn();
-      }
-    });
+    this.store
+      .select(isWorkspaceDirty)
+      .first()
+      .subscribe(isDirty => {
+        if (isDirty && !IS_DEV_BUILD) {
+          this.dialogService
+            .confirm('Start over?', `You'll lose any unsaved changes.`)
+            .filter(result => result)
+            .subscribe(resetWorkspaceFn);
+        } else {
+          resetWorkspaceFn();
+        }
+      });
   }
 
   // Called from the LayerTimelineComponent template.
@@ -237,26 +240,29 @@ export class LayerTimelineComponent extends DestroyableMixin()
   // Called from the LayerTimelineComponent template.
   onLoadDemoClick() {
     ga('send', 'event', 'File', 'Demo');
-    this.dialogService.pickDemo().filter(demoInfo => !!demoInfo).subscribe(selectedDemoInfo => {
-      ga('send', 'event', 'Demos', 'Demo selected', selectedDemoInfo.title);
+    this.dialogService
+      .pickDemo()
+      .filter(demoInfo => !!demoInfo)
+      .subscribe(selectedDemoInfo => {
+        ga('send', 'event', 'Demos', 'Demo selected', selectedDemoInfo.title);
 
-      this.demoService
-        .getDemo(selectedDemoInfo.id)
-        .then(({ vectorLayer, animation, hiddenLayerIds }) => {
-          // TODO: figure out if this hack is necessary and/or can be avoided?
-          this.animatorService.reset();
-          this.store.dispatch(new ResetWorkspace(vectorLayer, animation, hiddenLayerIds));
-          this.animatorService.reset();
-        })
-        .catch(error => {
-          const msg =
-            'serviceWorker' in navigator && navigator.serviceWorker.controller
-              ? 'Demo not available offline'
-              : `Couldn't fetch demo`;
-          this.snackBarService.show(msg, 'Dismiss', Duration.Long);
-          return Promise.reject(error.message || error);
-        });
-    });
+        this.demoService
+          .getDemo(selectedDemoInfo.id)
+          .then(({ vectorLayer, animation, hiddenLayerIds }) => {
+            // TODO: figure out if this hack is necessary and/or can be avoided?
+            this.animatorService.reset();
+            this.store.dispatch(new ResetWorkspace(vectorLayer, animation, hiddenLayerIds));
+            this.animatorService.reset();
+          })
+          .catch(error => {
+            const msg =
+              'serviceWorker' in navigator && navigator.serviceWorker.controller
+                ? 'Demo not available offline'
+                : `Couldn't fetch demo`;
+            this.snackBarService.show(msg, 'Dismiss', Duration.Long);
+            return Promise.reject(error.message || error);
+          });
+      });
   }
 
   // Called from the LayerTimelineComponent template.
@@ -312,35 +318,44 @@ export class LayerTimelineComponent extends DestroyableMixin()
 
   // Called from the LayerTimelineComponent template.
   onAddPathLayerClick() {
-    this.store.select(getVectorLayer).first().subscribe(vl => {
-      const layer = new PathLayer({
-        name: LayerUtil.getUniqueLayerName([vl], 'path'),
-        children: [],
-        pathData: undefined,
+    this.store
+      .select(getVectorLayer)
+      .first()
+      .subscribe(vl => {
+        const layer = new PathLayer({
+          name: LayerUtil.getUniqueLayerName([vl], 'path'),
+          children: [],
+          pathData: undefined,
+        });
+        this.layerTimelineService.addLayer(layer);
       });
-      this.layerTimelineService.addLayer(layer);
-    });
   }
 
   // Called from the LayerTimelineComponent template.
   onAddClipPathLayerClick() {
-    this.store.select(getVectorLayer).first().subscribe(vl => {
-      const layer = new ClipPathLayer({
-        name: LayerUtil.getUniqueLayerName([vl], 'mask'),
-        children: [],
-        pathData: undefined,
+    this.store
+      .select(getVectorLayer)
+      .first()
+      .subscribe(vl => {
+        const layer = new ClipPathLayer({
+          name: LayerUtil.getUniqueLayerName([vl], 'mask'),
+          children: [],
+          pathData: undefined,
+        });
+        this.layerTimelineService.addLayer(layer);
       });
-      this.layerTimelineService.addLayer(layer);
-    });
   }
 
   // Called from the LayerTimelineComponent template.
   onAddGroupLayerClick() {
-    this.store.select(getVectorLayer).first().subscribe(vl => {
-      const name = LayerUtil.getUniqueLayerName([vl], 'group');
-      const layer = new GroupLayer({ name, children: [] });
-      this.layerTimelineService.addLayer(layer);
-    });
+    this.store
+      .select(getVectorLayer)
+      .first()
+      .subscribe(vl => {
+        const name = LayerUtil.getUniqueLayerName([vl], 'group');
+        const layer = new GroupLayer({ name, children: [] });
+        this.layerTimelineService.addLayer(layer);
+      });
   }
 
   // @Override TimelineAnimationRowCallbacks
@@ -677,16 +692,19 @@ export class LayerTimelineComponent extends DestroyableMixin()
             break;
           }
         }
-        this.store.select(getAnimation).first().subscribe(anim => {
-          const blocks = replacementBlocks.filter(replacementBlock => {
-            const existingBlock = _.find(anim.blocks, b => replacementBlock.id === b.id);
-            return (
-              replacementBlock.startTime !== existingBlock.startTime ||
-              replacementBlock.endTime !== existingBlock.endTime
-            );
+        this.store
+          .select(getAnimation)
+          .first()
+          .subscribe(anim => {
+            const blocks = replacementBlocks.filter(replacementBlock => {
+              const existingBlock = _.find(anim.blocks, b => replacementBlock.id === b.id);
+              return (
+                replacementBlock.startTime !== existingBlock.startTime ||
+                replacementBlock.endTime !== existingBlock.endTime
+              );
+            });
+            this.layerTimelineService.updateBlocks(blocks);
           });
-          this.layerTimelineService.updateBlocks(blocks);
-        });
       },
     });
   }
@@ -1048,7 +1066,9 @@ export class LayerTimelineComponent extends DestroyableMixin()
   // We clear the element's value to make it possible to import the same file
   // more than once.
   onLaunchFilePickerClick(sourceElementId: string) {
-    $(`#${sourceElementId}`).val('').click();
+    $(`#${sourceElementId}`)
+      .val('')
+      .click();
   }
 
   // Called from the LayerTimelineComponent template.

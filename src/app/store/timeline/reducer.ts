@@ -5,7 +5,7 @@ import * as actions from './actions';
 export interface State {
   readonly animation: Animation;
   readonly isAnimationSelected: boolean;
-  readonly selectedBlockIds: Set<string>;
+  readonly selectedBlockIds: ReadonlySet<string>;
 }
 
 export function buildInitialState() {

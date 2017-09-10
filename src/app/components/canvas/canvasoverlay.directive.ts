@@ -95,8 +95,8 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
   private readonly $canvas: JQuery<HTMLCanvasElement>;
   vectorLayer: VectorLayer;
   // Normal mode variables.
-  private hiddenLayerIds = new Set<string>();
-  private selectedLayerIds = new Set<string>();
+  private hiddenLayerIds: ReadonlySet<string> = new Set<string>();
+  private selectedLayerIds: ReadonlySet<string> = new Set<string>();
   // Shape Shifter mode variables.
   private blockLayerId: string;
   actionMode: ActionMode;
@@ -106,7 +106,7 @@ export class CanvasOverlayDirective extends CanvasLayoutMixin(DestroyableMixin()
   pairedSubPaths: Set<number>;
   unpairedSubPath: { source: ActionSource; subIdx: number };
   private isActionMode: boolean;
-  private selectedBlockLayerIds = new Set<string>();
+  private selectedBlockLayerIds: ReadonlySet<string> = new Set<string>();
   private subIdxWithError: number;
 
   private selectionHelper: SelectionHelper | undefined;
