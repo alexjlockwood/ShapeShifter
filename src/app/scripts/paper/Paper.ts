@@ -26,7 +26,6 @@ export function initialize(canvas: HTMLCanvasElement, paperService: PaperService
 
 function initializeCanvas(canvas: HTMLCanvasElement) {
   paper.setup(canvas);
-  paper.settings.handleSize = 8;
   paper.settings.applyMatrix = false;
   paper.settings.insertItems = false;
   // TODO: should we set a hit tolerance here (physical or viewport pixels?)
