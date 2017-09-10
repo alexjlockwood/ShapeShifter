@@ -82,10 +82,10 @@ function initializeTools(ps: PaperService) {
 
 function initializeListeners(ps: PaperService) {
   const pl = paperLayer;
-  ps.store.select(getVectorLayer).subscribe(pl.setVectorLayer);
-  ps.store.select(getSelectedLayerIds).subscribe(pl.setSelectedLayers);
-  ps.store.select(getHoveredLayerId).subscribe(pl.setHoveredLayer);
-  ps.store.select(getPathPreview).subscribe(pl.setPathPreview);
+  ps.store.select(getVectorLayer).subscribe(vl => pl.setVectorLayer(vl));
+  ps.store.select(getSelectedLayerIds).subscribe(ids => pl.setSelectedLayers(ids));
+  ps.store.select(getHoveredLayerId).subscribe(id => pl.setHoveredLayer(id));
+  ps.store.select(getPathPreview).subscribe(pathData => pl.setPathPreview(pathData));
   ps.store.select(getSelectionBox).subscribe(box => {
     if (box) {
       pl.setSelectionBox({
