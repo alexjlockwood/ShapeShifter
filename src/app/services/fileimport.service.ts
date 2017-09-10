@@ -35,7 +35,10 @@ export class FileImportService {
 
   private get vectorLayer() {
     let vectorLayer: VectorLayer;
-    this.store.select(getVectorLayer).first().subscribe(vl => (vectorLayer = vl));
+    this.store
+      .select(getVectorLayer)
+      .first()
+      .subscribe(vl => (vectorLayer = vl));
     return vectorLayer;
   }
 
@@ -99,7 +102,7 @@ export class FileImportService {
           importType = ImportType.Json;
           let vl: VectorLayer;
           let animation: Animation;
-          let hiddenLayerIds: Set<string>;
+          let hiddenLayerIds: ReadonlySet<string>;
           try {
             const jsonObj = JSON.parse(text);
             const parsedObj = FileExportService.fromJSON(jsonObj);
@@ -149,7 +152,7 @@ export class FileImportService {
     resetWorkspace: boolean,
     vls: ReadonlyArray<VectorLayer>,
     animation?: Animation,
-    hiddenLayerIds?: Set<string>,
+    hiddenLayerIds?: ReadonlySet<string>,
   ) {
     if (importType === ImportType.Json) {
       ga('send', 'event', 'Import', 'JSON');

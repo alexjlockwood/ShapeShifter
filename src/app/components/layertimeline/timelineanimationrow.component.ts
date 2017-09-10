@@ -103,6 +103,6 @@ interface AnimationRowModel {
   readonly animation: Animation;
   readonly blocksByPropertyNameValues: ReadonlyTable<AnimationBlock>;
   readonly isExpanded: boolean;
-  readonly selectedBlockIds: Set<string>;
+  readonly selectedBlockIds: ReadonlySet<string>;
   readonly isActionMode: boolean;
 }

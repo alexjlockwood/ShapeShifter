@@ -4,10 +4,10 @@ import * as actions from './actions';
 
 export interface State {
   readonly vectorLayer: VectorLayer;
-  readonly selectedLayerIds: Set<string>;
+  readonly selectedLayerIds: ReadonlySet<string>;
   readonly hoveredLayerId: string;
-  readonly collapsedLayerIds: Set<string>;
-  readonly hiddenLayerIds: Set<string>;
+  readonly collapsedLayerIds: ReadonlySet<string>;
+  readonly hiddenLayerIds: ReadonlySet<string>;
 }
 
 export function buildInitialState(): State {

@@ -33,8 +33,8 @@ export class SetActionModeSelections implements Action {
 
 export class SetPairedSubPaths implements Action {
   readonly type = SET_PAIRED_SUBPATHS;
-  readonly payload: { pairedSubPaths: Set<number> };
-  constructor(pairedSubPaths: Set<number>) {
+  readonly payload: { pairedSubPaths: ReadonlySet<number> };
+  constructor(pairedSubPaths: ReadonlySet<number>) {
     this.payload = { pairedSubPaths };
   }
 }

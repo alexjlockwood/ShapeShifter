@@ -106,8 +106,8 @@ export class LayerTimelineService {
 
   private updateSelections(
     isAnimSelected: boolean,
-    selectedBlockIds: Set<string>,
-    selectedLayerIds: Set<string>,
+    selectedBlockIds: ReadonlySet<string>,
+    selectedLayerIds: ReadonlySet<string>,
   ) {
     const actions: Action[] = [];
     if (this.isAnimationSelected() !== isAnimSelected) {
@@ -332,7 +332,8 @@ export class LayerTimelineService {
     const collapsedLayerIds = this.getCollapsedLayerIds();
     const hiddenLayerIds = this.getHiddenLayerIds();
     const selectedLayerIds = this.getSelectedLayerIds();
-    const differenceFn = (s: Set<string>, a: string[]) => new Set(_.difference(Array.from(s), a));
+    const differenceFn = (s: ReadonlySet<string>, a: string[]) =>
+      new Set(_.difference(Array.from(s), a));
     const actions: Action[] = [];
     if (deletedLayerIds.some(id => collapsedLayerIds.has(id))) {
       actions.push(new SetCollapsedLayers(differenceFn(collapsedLayerIds, deletedLayerIds)));

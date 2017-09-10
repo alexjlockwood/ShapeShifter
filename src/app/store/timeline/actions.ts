@@ -23,8 +23,8 @@ export class SelectAnimation implements Action {
 
 export class SetSelectedBlocks implements Action {
   readonly type = SET_SELECTED_BLOCKS;
-  readonly payload: { blockIds: Set<string> };
-  constructor(blockIds: Set<string>) {
+  readonly payload: { blockIds: ReadonlySet<string> };
+  constructor(blockIds: ReadonlySet<string>) {
     this.payload = { blockIds };
   }
 }

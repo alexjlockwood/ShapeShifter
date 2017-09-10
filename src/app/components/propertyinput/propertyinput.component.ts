@@ -188,7 +188,7 @@ export class PropertyInputComponent implements OnInit {
 
   private buildInspectedLayerProperties(
     vl: VectorLayer,
-    selectedLayerIds: Set<string>,
+    selectedLayerIds: ReadonlySet<string>,
     animation: Animation,
   ) {
     const numSelections = selectedLayerIds.size;
@@ -251,7 +251,7 @@ export class PropertyInputComponent implements OnInit {
   private buildInspectedBlockProperties(
     vl: VectorLayer,
     animation: Animation,
-    selectedBlockIds: Set<string>,
+    selectedBlockIds: ReadonlySet<string>,
   ) {
     const numSelections = selectedBlockIds.size;
     const selectedBlocks = Array.from(selectedBlockIds).map(id => {

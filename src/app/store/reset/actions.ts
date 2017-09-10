@@ -9,9 +9,13 @@ export class ResetWorkspace implements Action {
   readonly payload: {
     vectorLayer?: VectorLayer;
     animation?: Animation;
-    hiddenLayerIds?: Set<string>;
+    hiddenLayerIds?: ReadonlySet<string>;
   };
-  constructor(vectorLayer?: VectorLayer, animation?: Animation, hiddenLayerIds?: Set<string>) {
+  constructor(
+    vectorLayer?: VectorLayer,
+    animation?: Animation,
+    hiddenLayerIds?: ReadonlySet<string>,
+  ) {
     this.payload = { vectorLayer, animation, hiddenLayerIds };
   }
 }
