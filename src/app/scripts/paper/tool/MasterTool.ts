@@ -3,10 +3,10 @@ import { MathUtil } from 'app/scripts/common';
 import { ClickDetector } from 'app/scripts/paper/detector';
 import {
   BatchSelectItemsGesture,
-  CircleGesture,
+  CreateEllipseGesture,
+  CreateRectangleGesture,
   Gesture,
   HoverItemsGesture,
-  RectangleGesture,
   ScaleItemsGesture,
   SelectDragCloneItemsGesture,
 } from 'app/scripts/paper/gesture';
@@ -45,9 +45,9 @@ export class MasterTool extends Tool {
   private onMouseDown(event: paper.ToolEvent) {
     const toolMode = this.ps.getToolMode();
     if (toolMode === ToolMode.Circle) {
-      this.currentGesture = new CircleGesture(this.ps);
+      this.currentGesture = new CreateEllipseGesture(this.ps);
     } else if (toolMode === ToolMode.Rectangle) {
-      this.currentGesture = new RectangleGesture(this.ps);
+      this.currentGesture = new CreateRectangleGesture(this.ps);
     } else {
       this.currentGesture = this.createSelectionModeGesture(event);
     }

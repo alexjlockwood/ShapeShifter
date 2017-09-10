@@ -7,8 +7,11 @@ import * as paper from 'paper';
 
 import { Gesture } from './Gesture';
 
-export class RectangleGesture extends Gesture {
-  constructor(private readonly ps: PaperService, private readonly cornerRadius = 0) {
+/**
+ * A gesture that creates an elliptical bath.
+ */
+export class CreateEllipseGesture extends Gesture {
+  constructor(private readonly ps: PaperService) {
     super();
   }
 
@@ -16,22 +19,25 @@ export class RectangleGesture extends Gesture {
   onMouseDrag(event: paper.ToolEvent) {
     const downPoint = Transforms.mousePointToLocalCoordinates(event.downPoint);
     const point = Transforms.mousePointToLocalCoordinates(event.point);
-
-    const rect = new paper.Rectangle(downPoint, point);
-    if (event.modifiers.shift) {
-      rect.height = rect.width;
-    }
-    const path = new paper.Path.Rectangle(
-      rect,
-      new paper.Size(this.cornerRadius, this.cornerRadius),
+    const ex = point.x;
+    const ey = point.y;
+    const ellipseSize = new paper.Size(
+      ex - downPoint.x,
+      // If shift is pressed, then create a circle.
+      event.modifiers.shift ? ex - downPoint.x : ey - downPoint.y,
     );
-    path.applyMatrix = true;
+    const ellipsePath = paper.Shape
+      .Ellipse(new paper.Rectangle(downPoint, ellipseSize))
+      .toPath(false);
+    ellipsePath.applyMatrix = true;
     if (event.modifiers.alt) {
-      const halfWidth = rect.width / 2;
-      const halfHeight = rect.height / 2;
-      path.transform(new paper.Matrix(1, 0, 0, 1, -halfWidth, -halfHeight));
+      // If alt is pressed, then the initial downpoint represents the ellipse's
+      // center point.
+      const halfWidth = ellipseSize.width / 2;
+      const halfHeight = ellipseSize.height / 2;
+      ellipsePath.transform(new paper.Matrix(1, 0, 0, 1, -halfWidth, -halfHeight));
     }
-    this.ps.setShapePreview(path.pathData);
+    this.ps.setShapePreview(ellipsePath.pathData);
   }
 
   // @Override
@@ -54,4 +60,7 @@ export class RectangleGesture extends Gesture {
     }
     this.ps.setToolMode(ToolMode.Selection);
   }
+
+  // TODO: listen for key press events and update the shape preview accordingly
+  // TODO: double the size of the shape when alt is pressed
 }

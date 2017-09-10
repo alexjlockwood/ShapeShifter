@@ -7,8 +7,11 @@ import * as paper from 'paper';
 
 import { Gesture } from './Gesture';
 
-export class CircleGesture extends Gesture {
-  constructor(private readonly ps: PaperService) {
+/**
+ * A gesture that creates a rectangular bath.
+ */
+export class CreateRectangleGesture extends Gesture {
+  constructor(private readonly ps: PaperService, private readonly cornerRadius = 0) {
     super();
   }
 
@@ -16,23 +19,25 @@ export class CircleGesture extends Gesture {
   onMouseDrag(event: paper.ToolEvent) {
     const downPoint = Transforms.mousePointToLocalCoordinates(event.downPoint);
     const point = Transforms.mousePointToLocalCoordinates(event.point);
-    const ex = point.x;
-    const ey = point.y;
-    const ellipse = paper.Shape.Ellipse(new paper.Rectangle(downPoint, new paper.Size(0, 0)));
+
+    const rect = new paper.Rectangle(downPoint, point);
     if (event.modifiers.shift) {
-      ellipse.size = new paper.Size(downPoint.x - ex, downPoint.x - ex);
-    } else {
-      ellipse.size = new paper.Size(downPoint.x - ex, downPoint.y - ey);
+      // If shift is pressed, then create a square.
+      rect.height = rect.width;
     }
-    const ellipsePath = ellipse.toPath(false);
-    ellipsePath.applyMatrix = true;
+    const path = new paper.Path.Rectangle(
+      rect,
+      new paper.Size(this.cornerRadius, this.cornerRadius),
+    );
+    path.applyMatrix = true;
     if (event.modifiers.alt) {
-      ellipsePath.transform(new paper.Matrix(1, 0, 0, 1, downPoint.x, downPoint.y));
-    } else {
-      const position = downPoint.subtract(new paper.Point(ellipse.size.divide(2)));
-      ellipsePath.transform(new paper.Matrix(1, 0, 0, 1, position.x, position.y));
+      // If alt is pressed, then the initial downpoint represents the rectangle's
+      // center point.
+      const halfWidth = rect.width / 2;
+      const halfHeight = rect.height / 2;
+      path.transform(new paper.Matrix(1, 0, 0, 1, -halfWidth, -halfHeight));
     }
-    this.ps.setShapePreview(ellipsePath.pathData);
+    this.ps.setShapePreview(path.pathData);
   }
 
   // @Override
@@ -55,4 +60,7 @@ export class CircleGesture extends Gesture {
     }
     this.ps.setToolMode(ToolMode.Selection);
   }
+
+  // TODO: listen for key press events and update the shape preview accordingly
+  // TODO: double the size of the shape when alt is pressed
 }
