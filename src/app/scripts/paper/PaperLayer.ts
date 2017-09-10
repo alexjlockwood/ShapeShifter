@@ -38,7 +38,7 @@ export class PaperLayer extends paper.Layer {
     this.updateHoverPath();
   }
 
-  setShapePreview(pathData: string) {
+  setPathPreview(pathData: string) {
     if (this.shapePreviewPath) {
       this.shapePreviewPath.remove();
       this.shapePreviewPath = undefined;

@@ -29,7 +29,7 @@ function initializeCanvas(canvas: HTMLCanvasElement) {
   paper.settings.handleSize = 8;
   paper.settings.applyMatrix = false;
   paper.settings.insertItems = false;
-  // TODO: should we set a hit tolerance here?
+  // TODO: should we set a hit tolerance here (physical or viewport pixels?)
   paper.settings.hitTolerance = 0;
   paperLayer = new PaperLayer();
   paper.project.addLayer(paperLayer);
@@ -66,6 +66,7 @@ function initializeTools(ps: PaperService) {
 
   ps.store.select(getToolMode).subscribe(toolMode => {
     // TODO: clean this fixed distance code up?
+    // TODO: should the '4' here be in terms of physical pixels or viewport pixels?
     paperTool.fixedDistance = toolMode === ToolMode.Pencil ? 4 : undefined;
     onEventFn();
   });
@@ -82,10 +83,10 @@ function initializeTools(ps: PaperService) {
 
 function initializeListeners(ps: PaperService) {
   const pl = paperLayer;
-  ps.store.select(getVectorLayer).subscribe(vl => pl.setVectorLayer(vl));
-  ps.store.select(getSelectedLayerIds).subscribe(ids => pl.setSelectedLayers(ids));
-  ps.store.select(getHoveredLayerId).subscribe(id => pl.setHoveredLayer(id));
-  ps.store.select(getPathPreview).subscribe(pathData => pl.setShapePreview(pathData));
+  ps.store.select(getVectorLayer).subscribe(pl.setVectorLayer);
+  ps.store.select(getSelectedLayerIds).subscribe(pl.setSelectedLayers);
+  ps.store.select(getHoveredLayerId).subscribe(pl.setHoveredLayer);
+  ps.store.select(getPathPreview).subscribe(pl.setPathPreview);
   ps.store.select(getSelectionBox).subscribe(box => {
     if (box) {
       pl.setSelectionBox({
