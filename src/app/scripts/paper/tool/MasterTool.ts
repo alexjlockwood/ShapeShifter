@@ -7,6 +7,7 @@ import {
   CreateRectangleGesture,
   Gesture,
   HoverItemsGesture,
+  PencilGesture,
   ScaleItemsGesture,
   SelectDragCloneItemsGesture,
 } from 'app/scripts/paper/gesture';
@@ -48,6 +49,11 @@ export class MasterTool extends Tool {
       this.currentGesture = new CreateEllipseGesture(this.ps);
     } else if (toolMode === ToolMode.Rectangle) {
       this.currentGesture = new CreateRectangleGesture(this.ps);
+    } else if (toolMode === ToolMode.Pencil) {
+      this.currentGesture = new PencilGesture(this.ps);
+    } else if (toolMode === ToolMode.Pen) {
+    } else if (toolMode === ToolMode.Rotate) {
+    } else if (toolMode === ToolMode.Transform) {
     } else {
       this.currentGesture = this.createSelectionModeGesture(event);
     }

@@ -37,12 +37,12 @@ export class CreateRectangleGesture extends Gesture {
       const halfHeight = rect.height / 2;
       path.transform(new paper.Matrix(1, 0, 0, 1, -halfWidth, -halfHeight));
     }
-    this.ps.setShapePreview(path.pathData);
+    this.ps.setPathPreview(path.pathData);
   }
 
   // @Override
   onMouseUp(event: paper.ToolEvent) {
-    const shapePreview = this.ps.getShapePreview();
+    const shapePreview = this.ps.getPathPreview();
     if (shapePreview) {
       const path = new paper.Path(shapePreview);
       const vl = this.ps.getVectorLayer().clone();
@@ -55,7 +55,7 @@ export class CreateRectangleGesture extends Gesture {
       const children = [...vl.children, pl];
       vl.children = children;
       this.ps.setVectorLayer(vl);
-      this.ps.setShapePreview(undefined);
+      this.ps.setPathPreview(undefined);
       this.ps.setSelectedLayers(new Set([pl.id]));
     }
     this.ps.setToolMode(ToolMode.Selection);

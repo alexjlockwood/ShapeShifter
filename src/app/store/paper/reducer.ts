@@ -9,7 +9,7 @@ export interface State {
   readonly fillColor: string;
   readonly strokeColor: string;
   readonly selectionBox: Readonly<{ from: Point; to: Point }>;
-  readonly shapePreview: string;
+  readonly pathPreview: string;
 }
 
 export function buildInitialState(): State {
@@ -19,7 +19,7 @@ export function buildInitialState(): State {
     fillColor: '#000000',
     strokeColor: '#000000',
     selectionBox: undefined,
-    shapePreview: undefined,
+    pathPreview: undefined,
   };
 }
 
@@ -33,8 +33,8 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
       return { ...state, strokeColor: action.payload.strokeColor };
     case actions.SET_SELECTION_BOX:
       return { ...state, selectionBox: action.payload.selectionBox };
-    case actions.SET_SHAPE_PREVIEW:
-      return { ...state, shapePreview: action.payload.pathData };
+    case actions.SET_PATH_PREVIEW:
+      return { ...state, pathPreview: action.payload.pathData };
   }
   return state;
 }

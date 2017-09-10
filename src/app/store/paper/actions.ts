@@ -6,7 +6,7 @@ export const SET_TOOL_MODE = '__paper__SET_TOOL_MODE';
 export const SET_FILL_COLOR = '__paper__SET_FILL_COLOR';
 export const SET_STROKE_COLOR = '__paper__SET_STROKE_COLOR';
 export const SET_SELECTION_BOX = '__paper__SET_SELECTION_BOX';
-export const SET_SHAPE_PREVIEW = '__paper__SET_SHAPE_PREVIEW';
+export const SET_PATH_PREVIEW = '__paper__SET_PATH_PREVIEW';
 
 export class SetToolMode implements Action {
   readonly type = SET_TOOL_MODE;
@@ -40,8 +40,8 @@ export class SetSelectionBox implements Action {
   }
 }
 
-export class SetShapePreview implements Action {
-  readonly type = SET_SHAPE_PREVIEW;
+export class SetPathPreview implements Action {
+  readonly type = SET_PATH_PREVIEW;
   readonly payload: { pathData: string };
   constructor(pathData: string) {
     this.payload = { pathData };
@@ -53,4 +53,4 @@ export type Actions =
   | SetFillColor
   | SetStrokeColor
   | SetSelectionBox
-  | SetShapePreview;
+  | SetPathPreview;
