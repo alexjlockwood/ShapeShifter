@@ -5,7 +5,7 @@ import { PaperLayer } from 'app/scripts/paper/PaperLayer';
 import { PaperService } from 'app/services';
 import { State, Store } from 'app/store';
 import { getHoveredLayerId, getSelectedLayerIds, getVectorLayer } from 'app/store/layers/selectors';
-import { getPathPreview, getSelectionBox } from 'app/store/paper/selectors';
+import { getFocusedEditPath, getPathPreview, getSelectionBox } from 'app/store/paper/selectors';
 import { getToolMode } from 'app/store/paper/selectors';
 import * as paper from 'paper';
 import { OutputSelector } from 'reselect';
@@ -86,6 +86,9 @@ function initializeListeners(ps: PaperService) {
   ps.store.select(getSelectedLayerIds).subscribe(ids => pl.setSelectedLayers(ids));
   ps.store.select(getHoveredLayerId).subscribe(id => pl.setHoveredLayer(id));
   ps.store.select(getPathPreview).subscribe(pathData => pl.setPathPreview(pathData));
+  ps.store
+    .select(getFocusedEditPath)
+    .subscribe(focusedEditPath => pl.setFocusedEditPath(focusedEditPath));
   ps.store.select(getSelectionBox).subscribe(box => {
     if (box) {
       pl.setSelectionBox({

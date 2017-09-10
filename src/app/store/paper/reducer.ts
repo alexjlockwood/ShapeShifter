@@ -2,14 +2,17 @@ import { ToolMode } from 'app/model/paper';
 import { Point } from 'app/scripts/common';
 
 import * as actions from './actions';
+import { FocusedEditPath } from './actions';
 
 // TODO: fill/stroke color will need to be associated with the currently selected items as well
 export interface State {
   readonly toolMode: ToolMode;
   readonly fillColor: string;
   readonly strokeColor: string;
+  // TODO: should we store things in terms of viewport or physical pixels?
   readonly selectionBox: Readonly<{ from: Point; to: Point }>;
   readonly pathPreview: string;
+  readonly focusedEditPath: FocusedEditPath;
 }
 
 export function buildInitialState(): State {
@@ -20,6 +23,7 @@ export function buildInitialState(): State {
     strokeColor: '#000000',
     selectionBox: undefined,
     pathPreview: undefined,
+    focusedEditPath: undefined,
   };
 }
 
@@ -35,6 +39,8 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
       return { ...state, selectionBox: action.payload.selectionBox };
     case actions.SET_PATH_PREVIEW:
       return { ...state, pathPreview: action.payload.pathData };
+    case actions.SET_FOCUSED_EDIT_PATH:
+      return { ...state, focusedEditPath: action.payload.focusedEditPath };
   }
   return state;
 }

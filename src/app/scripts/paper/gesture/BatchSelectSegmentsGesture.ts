@@ -1,4 +1,6 @@
-import { Guides, Items, Selections } from 'app/scripts/paper/util';
+import { PaperLayer } from 'app/scripts/paper/PaperLayer';
+import { Guides, Items, Selections, Transforms } from 'app/scripts/paper/util';
+import { PaperService } from 'app/services';
 import * as paper from 'paper';
 
 import { Gesture } from './Gesture';
@@ -8,36 +10,49 @@ import { Gesture } from './Gesture';
  * This gesture is only used during edit path mode.
  */
 export class BatchSelectSegmentsGesture extends Gesture {
-  constructor(private readonly selectedEditPath: paper.Path) {
+  private readonly paperLayer = paper.project.activeLayer as PaperLayer;
+  private isDragging = false;
+
+  constructor(private readonly ps: PaperService) {
     super();
   }
 
   // @Override
   onMouseDown(event: paper.ToolEvent) {
     if (!event.modifiers.shift) {
-      this.selectedEditPath.segments.forEach(s => (s.selected = false));
+      const focusedEditPath = this.ps.getFocusedEditPath();
+      this.ps.setFocusedEditPath({ ...focusedEditPath, selectedSegments: [] });
     }
   }
 
   // @Override
   onMouseDrag(event: paper.ToolEvent) {
-    const selectionBox = Guides.showSelectionBoxPath(event.downPoint, event.point);
-    this.selectSegmentsInBounds(event, selectionBox);
+    this.isDragging = true;
+    // this.ps.setSelectionBox({ from: event.downPoint, to: event.point });
+    // const selectionBox = new paper.Rectangle(event.)
+    // const { layerId } = this.ps.getFocusedEditPath();
+    // const editPath = this.paperLayer.findItemByLayerId(layerId) as paper.Path;
+    // editPath.segments.forEach(segment => {
+    //   segment.curve.selected =
+    //     selectionBox.contains(segment.point) || (event.modifiers.shift && segment.selected);
+    // });
   }
 
   // @Override
   onMouseUp(event: paper.ToolEvent) {
-    const selectionBox = Guides.getSelectionBoxPath();
-    if (selectionBox) {
-      this.selectSegmentsInBounds(event, selectionBox);
-      selectionBox.remove();
-    }
-  }
+    // const selectionBox = this.ps.getSelectionBox();
+    // if (selectionBox) {
+    //   this.selectedEditPath.segments.forEach(segment => {
+    //     segment.curve.selected =
+    //       selectionBox.contains(segment.point) || (event.modifiers.shift && segment.selected);
+    //   });
+    //   this.ps.setSelectionBox(undefined);
+    // }
 
-  private selectSegmentsInBounds(event: paper.ToolEvent, selectionBox: paper.Path.Rectangle) {
-    this.selectedEditPath.segments.forEach(segment => {
-      segment.curve.selected =
-        selectionBox.contains(segment.point) || (event.modifiers.shift && segment.selected);
-    });
+    if (!this.isDragging) {
+      const { layerId } = this.ps.getFocusedEditPath();
+      this.ps.setFocusedEditPath(undefined);
+      this.ps.setSelectedLayers(new Set([layerId]));
+    }
   }
 }

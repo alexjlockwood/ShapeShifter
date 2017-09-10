@@ -7,6 +7,7 @@ export const SET_FILL_COLOR = '__paper__SET_FILL_COLOR';
 export const SET_STROKE_COLOR = '__paper__SET_STROKE_COLOR';
 export const SET_SELECTION_BOX = '__paper__SET_SELECTION_BOX';
 export const SET_PATH_PREVIEW = '__paper__SET_PATH_PREVIEW';
+export const SET_FOCUSED_EDIT_PATH = '__paper__SET_FOCUSED_EDIT_PATH';
 
 export class SetToolMode implements Action {
   readonly type = SET_TOOL_MODE;
@@ -48,9 +49,28 @@ export class SetPathPreview implements Action {
   }
 }
 
+export interface FocusedEditPath {
+  readonly layerId: string;
+  readonly selectedSegments: ReadonlyArray<{
+    readonly segmentIndex: number;
+    readonly point: boolean;
+    readonly handleIn: boolean;
+    readonly handleOut: boolean;
+  }>;
+}
+
+export class SetFocusedEditPath implements Action {
+  readonly type = SET_FOCUSED_EDIT_PATH;
+  readonly payload: { focusedEditPath: FocusedEditPath };
+  constructor(focusedEditPath: FocusedEditPath) {
+    this.payload = { focusedEditPath };
+  }
+}
+
 export type Actions =
   | SetToolMode
   | SetFillColor
   | SetStrokeColor
   | SetSelectionBox
-  | SetPathPreview;
+  | SetPathPreview
+  | SetFocusedEditPath;

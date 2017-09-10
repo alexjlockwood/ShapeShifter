@@ -1,5 +1,6 @@
 import { MathUtil } from 'app/scripts/common';
 import { Cursor, Cursors, Guides } from 'app/scripts/paper/util';
+import { PaperService } from 'app/services';
 import * as _ from 'lodash';
 import * as paper from 'paper';
 
@@ -20,63 +21,61 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
   private updateHandlePositionsOnDrag: boolean;
 
   constructor(
-    private readonly selectedEditPath: paper.Path,
-    private readonly mouseDownHit?: paper.Segment | paper.CurveLocation,
+    private readonly ps: PaperService,
+    private readonly mouseDownHit?: number | paper.CurveLocation,
   ) {
     super();
   }
 
   // @Override
   onMouseDown(event: paper.ToolEvent) {
-    const selectedSegments = this.selectedEditPath.segments.filter(s => s.selected);
-    if (this.mouseDownHit instanceof paper.Segment) {
-      const hasSingleSelectedEndPointSegment =
-        !this.selectedEditPath.closed &&
-        selectedSegments.length === 1 &&
-        (selectedSegments[0].isFirst() || selectedSegments[0].isLast());
-      if (hasSingleSelectedEndPointSegment && this.mouseDownHit !== selectedSegments[0]) {
-        // If the path is open, one of the end points is selected, and the
-        // user is hovering over the other end point, then close the path.
-        this.selectedEditPath.closed = true;
-        selectedSegments[0].selected = false;
-        this.mouseDownHit.selected = true;
-      } else if (event.modifiers.shift || event.modifiers.command) {
-        // If shift or command is pressed, toggle the segment's selection state.
-        this.mouseDownHit.selected = !this.mouseDownHit.selected;
-      } else {
-        // If shift isn't pressed, select the hit segment and deselect all others.
-        this.selectedEditPath.segments.forEach(s => (s.selected = false));
-        this.mouseDownHit.selected = true;
-      }
-    } else if (this.mouseDownHit instanceof paper.CurveLocation) {
-      // If there is no hit segment, then create one along the curve
-      // at the given location and select the new segment.
-      const hitSegment = this.mouseDownHit.curve.divideAt(this.mouseDownHit).segment1;
-      this.selectedEditPath.segments.forEach(s => (s.selected = false));
-      hitSegment.curve.selected = true;
-    } else {
-      // Otherwise, we are either (1) extending an existing open path (beginning
-      // at one of its selected end points), or (2) beginning to create a new path
-      // from scratch.
-      let addedSegment: paper.Segment;
-      if (this.selectedEditPath.segments.length === 0) {
-        addedSegment = this.selectedEditPath.add(event.point);
-      } else {
-        const selectedSegment = selectedSegments[0];
-        addedSegment = selectedSegment.isLast()
-          ? this.selectedEditPath.add(event.point)
-          : this.selectedEditPath.insert(0, event.point);
-        selectedSegment.selected = false;
-      }
-      addedSegment.selected = true;
-    }
-
-    this.updateHandlePositionsOnDrag = !this.mouseDownHit;
-    this.selectedSegments = this.selectedEditPath.segments.filter(s => s.selected);
-    this.initialSegmentPositions = this.selectedSegments.map(s => s.point.clone());
-
-    Guides.hidePenPathPreviewPath();
-    Cursors.set(Cursor.PointSelect);
+    // const selectedSegments = this.selectedEditPath.segments.filter(s => s.selected);
+    // if (this.mouseDownHit instanceof paper.Segment) {
+    //   const hasSingleSelectedEndPointSegment =
+    //     !this.selectedEditPath.closed &&
+    //     selectedSegments.length === 1 &&
+    //     (selectedSegments[0].isFirst() || selectedSegments[0].isLast());
+    //   if (hasSingleSelectedEndPointSegment && this.mouseDownHit !== selectedSegments[0]) {
+    //     // If the path is open, one of the end points is selected, and the
+    //     // user is hovering over the other end point, then close the path.
+    //     this.selectedEditPath.closed = true;
+    //     selectedSegments[0].selected = false;
+    //     this.mouseDownHit.selected = true;
+    //   } else if (event.modifiers.shift || event.modifiers.command) {
+    //     // If shift or command is pressed, toggle the segment's selection state.
+    //     this.mouseDownHit.selected = !this.mouseDownHit.selected;
+    //   } else {
+    //     // If shift isn't pressed, select the hit segment and deselect all others.
+    //     this.selectedEditPath.segments.forEach(s => (s.selected = false));
+    //     this.mouseDownHit.selected = true;
+    //   }
+    // } else if (this.mouseDownHit instanceof paper.CurveLocation) {
+    //   // If there is no hit segment, then create one along the curve
+    //   // at the given location and select the new segment.
+    //   const hitSegment = this.mouseDownHit.curve.divideAt(this.mouseDownHit).segment1;
+    //   this.selectedEditPath.segments.forEach(s => (s.selected = false));
+    //   hitSegment.curve.selected = true;
+    // } else {
+    //   // Otherwise, we are either (1) extending an existing open path (beginning
+    //   // at one of its selected end points), or (2) beginning to create a new path
+    //   // from scratch.
+    //   let addedSegment: paper.Segment;
+    //   if (this.selectedEditPath.segments.length === 0) {
+    //     addedSegment = this.selectedEditPath.add(event.point);
+    //   } else {
+    //     const selectedSegment = selectedSegments[0];
+    //     addedSegment = selectedSegment.isLast()
+    //       ? this.selectedEditPath.add(event.point)
+    //       : this.selectedEditPath.insert(0, event.point);
+    //     selectedSegment.selected = false;
+    //   }
+    //   addedSegment.selected = true;
+    // }
+    // this.updateHandlePositionsOnDrag = !this.mouseDownHit;
+    // this.selectedSegments = this.selectedEditPath.segments.filter(s => s.selected);
+    // this.initialSegmentPositions = this.selectedSegments.map(s => s.point.clone());
+    // Guides.hidePenPathPreviewPath();
+    // Cursors.set(Cursor.PointSelect);
   }
 
   // @Override

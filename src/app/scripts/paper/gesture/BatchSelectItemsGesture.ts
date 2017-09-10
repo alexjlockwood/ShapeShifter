@@ -10,7 +10,8 @@ import { Gesture } from './Gesture';
  */
 export class BatchSelectItemsGesture extends Gesture {
   private readonly paperLayer = paper.project.activeLayer as PaperLayer;
-  private initialSelectedLayers: Set<string>;
+  private initialSelectedLayers: ReadonlySet<string>;
+
   constructor(private readonly ps: PaperService) {
     super();
   }

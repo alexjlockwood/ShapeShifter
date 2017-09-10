@@ -7,8 +7,19 @@ import { Matrix, Point } from 'app/scripts/common';
 import { State, Store } from 'app/store';
 import { SetHoveredLayer } from 'app/store/layers/actions';
 import { getHoveredLayerId, getSelectedLayerIds, getVectorLayer } from 'app/store/layers/selectors';
-import { SetPathPreview, SetSelectionBox, SetToolMode } from 'app/store/paper/actions';
-import { getPathPreview, getSelectionBox, getToolMode } from 'app/store/paper/selectors';
+import {
+  FocusedEditPath,
+  SetFocusedEditPath,
+  SetPathPreview,
+  SetSelectionBox,
+  SetToolMode,
+} from 'app/store/paper/actions';
+import {
+  getFocusedEditPath,
+  getPathPreview,
+  getSelectionBox,
+  getToolMode,
+} from 'app/store/paper/selectors';
 import * as _ from 'lodash';
 import { OutputSelector } from 'reselect';
 
@@ -88,6 +99,21 @@ export class PaperService {
   /** Gets the current tool mode. */
   getToolMode() {
     return this.queryStore(getToolMode);
+  }
+
+  /** Sets the current focused edit path. */
+  setFocusedEditPath(focusedEditPath: FocusedEditPath) {
+    if (focusedEditPath && typeof focusedEditPath.layerId !== 'string') {
+      throw new Error();
+    }
+    if (!_.isEqual(this.getFocusedEditPath(), focusedEditPath)) {
+      this.store.dispatch(new SetFocusedEditPath(focusedEditPath));
+    }
+  }
+
+  /** Gets the current focused edit path. */
+  getFocusedEditPath() {
+    return this.queryStore(getFocusedEditPath);
   }
 
   private queryStore<T>(selector: OutputSelector<Object, T, (res: Object) => T>) {

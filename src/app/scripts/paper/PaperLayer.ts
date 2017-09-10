@@ -8,6 +8,7 @@ import {
 } from 'app/model/layers';
 import { ColorUtil } from 'app/scripts/common';
 import { Items, Transforms } from 'app/scripts/paper/util';
+import { FocusedEditPath } from 'app/store/paper/actions';
 import * as _ from 'lodash';
 import * as paper from 'paper';
 
@@ -18,17 +19,20 @@ export class PaperLayer extends paper.Layer {
   private hoverPath: paper.Path;
   private selectionBoxPath: paper.Path;
   private shapePreviewPath: paper.Path;
+  private focusedEditPathItem: paper.Item;
 
-  private selectedLayerIds = new Set<string>();
+  private vectorLayer: VectorLayer;
+  private selectedLayerIds: ReadonlySet<string> = new Set<string>();
   private hoveredLayerId: string;
 
   setVectorLayer(vl: VectorLayer) {
-    this.updateVectorLayerItem(vl);
+    this.vectorLayer = vl;
+    this.updateVectorLayerItem();
     this.updateSelectionBoundsItem();
     this.updateHoverPath();
   }
 
-  setSelectedLayers(layerIds: Set<string>) {
+  setSelectedLayers(layerIds: ReadonlySet<string>) {
     this.selectedLayerIds = new Set(layerIds);
     this.updateSelectionBoundsItem();
   }
@@ -63,11 +67,24 @@ export class PaperLayer extends paper.Layer {
     }
   }
 
-  private updateVectorLayerItem(vl: VectorLayer) {
+  setFocusedEditPath(focusedEditPath: FocusedEditPath) {
+    if (this.focusedEditPathItem) {
+      this.focusedEditPathItem.remove();
+      this.focusedEditPathItem = undefined;
+    }
+    if (focusedEditPath) {
+      // TODO: is it possible for pathData to be undefined?
+      const path = this.findItemByLayerId(focusedEditPath.layerId) as paper.Path;
+      this.focusedEditPathItem = newFocusedEditPath(path, focusedEditPath);
+      this.updateChildren();
+    }
+  }
+
+  private updateVectorLayerItem() {
     if (this.vectorLayerItem) {
       this.vectorLayerItem.remove();
     }
-    this.vectorLayerItem = newVectorLayerItem(vl);
+    this.vectorLayerItem = newVectorLayerItem(this.vectorLayer);
     this.updateChildren();
   }
 
@@ -76,9 +93,7 @@ export class PaperLayer extends paper.Layer {
       this.selectionBoundsItem.remove();
       this.selectionBoundsItem = undefined;
     }
-    const selectedItems = Array.from(this.selectedLayerIds).map(layerId =>
-      this.findItemByLayerId(layerId),
-    );
+    const selectedItems = Array.from(this.selectedLayerIds).map(id => this.findItemByLayerId(id));
     if (selectedItems.length > 0) {
       this.selectionBoundsItem = newSelectionBounds(selectedItems);
     }
@@ -107,6 +122,9 @@ export class PaperLayer extends paper.Layer {
     }
     if (this.hoverPath) {
       children.push(this.hoverPath);
+    }
+    if (this.focusedEditPathItem) {
+      children.push(this.focusedEditPathItem);
     }
     if (this.shapePreviewPath) {
       children.push(this.shapePreviewPath);
@@ -138,9 +156,16 @@ export class PaperLayer extends paper.Layer {
     return _.first(this.vectorLayerItem.getItems({ match: ({ data: { id } }) => layerId === id }));
   }
 
-  hitTestSelectionBounds(mousePoint: paper.Point) {
+  hitTestSelectionBoundsItem(mousePoint: paper.Point) {
     const point = Transforms.mousePointToLocalCoordinates(mousePoint);
     return this.selectionBoundsItem.hitTest(point, {
+      class: paper.Raster,
+    });
+  }
+
+  hitTestFocusedEditPathItem(mousePoint: paper.Point) {
+    const point = Transforms.mousePointToLocalCoordinates(mousePoint);
+    return this.focusedEditPathItem.hitTest(point, {
       class: paper.Raster,
     });
   }
@@ -298,8 +323,8 @@ function newSelectionBounds(items: ReadonlyArray<paper.Item>) {
   return group;
 }
 
-/** Creates the overlay decorations for the given selected path. */
-function newSelectedPath(path: paper.Path) {
+/** Creates the overlay decorations for the given focused edit path. */
+function newFocusedEditPath(path: paper.Path, focusedEditPath: FocusedEditPath) {
   const group = new paper.Group();
   const scaleFactor = 1 / Transforms.getAttrScaling();
   const matrix = Transforms.localToViewportCoordinates(path);
@@ -308,6 +333,7 @@ function newSelectedPath(path: paper.Path) {
     raster.scale(scaleFactor, scaleFactor);
     raster.transform(matrix);
     group.addChild(raster);
+    return raster;
   };
   const addLineFn = (from: paper.Point, to: paper.Point) => {
     const line = new paper.Path.Line(from, to);
@@ -318,19 +344,30 @@ function newSelectedPath(path: paper.Path) {
     group.addChild(line);
   };
   // TODO: avoid creating rasters in a loop like this
-  path.segments.forEach(s => {
+  focusedEditPath.selectedSegments.forEach(info => {
+    const { segmentIndex } = info;
+    const s = path.segments[segmentIndex];
     const center = s.point;
     if (s.handleIn) {
       const handleIn = center.add(s.handleIn);
       addLineFn(center, handleIn);
-      addRasterFn('/assets/vector_handle.png', handleIn);
+      addRasterFn(
+        info.handleIn ? '/assets/vector_handle_selected.png' : '/assets/vector_handle.png',
+        handleIn,
+      ).data = { focusedEditPath: { segmentIndex, isHandleIn: true } };
     }
     if (s.handleOut) {
       const handleOut = center.add(s.handleOut);
       addLineFn(center, handleOut);
-      addRasterFn('/assets/vector_handle.png', handleOut);
+      addRasterFn(
+        info.handleOut ? '/assets/vector_handle_selected.png' : '/assets/vector_handle.png',
+        handleOut,
+      ).data = { focusedEditPath: { segmentIndex, isHandleOut: true } };
     }
-    addRasterFn('/assets/vector_anchor.png', center);
+    addRasterFn(
+      info.point ? '/assets/vector_anchor_selected.png' : '/assets/vector_anchor.png',
+      center,
+    ).data = { focusedEditPath: { segmentIndex } };
   });
   return group;
 }
