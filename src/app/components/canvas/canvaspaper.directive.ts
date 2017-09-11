@@ -65,7 +65,7 @@ export class CanvasPaperDirective extends CanvasLayoutMixin(DestroyableMixin())
               "type": "path",
               "pathData": "M 12 10 C 9.8 10 8 10.9 8 12 C 8 13.105 9.8 14 12 14 C 14.2 14 16 13.1 16 12 C 16 10.895 14.2 10 12 10 Z",
               "strokeColor": "#000",
-              "strokeWidth": "0.1"
+              "strokeWidth": "0.2"
             }
           ]
         },
@@ -83,7 +83,7 @@ export class CanvasPaperDirective extends CanvasLayoutMixin(DestroyableMixin())
               "type": "path",
               "pathData": "M 4 4 h 2 v 4 h -2 v -4",
               "strokeColor": "#000",
-              "strokeWidth": "0.1"
+              "strokeWidth": "0.2"
             }
           ]
         }
