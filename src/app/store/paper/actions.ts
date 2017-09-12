@@ -3,8 +3,6 @@ import { CanvasCursor, ToolMode } from 'app/model/paper';
 import { Point } from 'app/scripts/common';
 
 export const SET_TOOL_MODE = '__paper__SET_TOOL_MODE';
-export const SET_FILL_COLOR = '__paper__SET_FILL_COLOR';
-export const SET_STROKE_COLOR = '__paper__SET_STROKE_COLOR';
 export const SET_SELECTION_BOX = '__paper__SET_SELECTION_BOX';
 export const SET_PATH_PREVIEW = '__paper__SET_PATH_PREVIEW';
 export const SET_FOCUSED_EDIT_PATH = '__paper__SET_FOCUSED_EDIT_PATH';
@@ -15,22 +13,6 @@ export class SetToolMode implements Action {
   readonly payload: { toolMode: ToolMode };
   constructor(toolMode: ToolMode) {
     this.payload = { toolMode };
-  }
-}
-
-export class SetFillColor implements Action {
-  readonly type = SET_FILL_COLOR;
-  readonly payload: { fillColor: string };
-  constructor(fillColor: string) {
-    this.payload = { fillColor };
-  }
-}
-
-export class SetStrokeColor implements Action {
-  readonly type = SET_STROKE_COLOR;
-  readonly payload: { strokeColor: string };
-  constructor(strokeColor: string) {
-    this.payload = { strokeColor };
   }
 }
 
@@ -77,8 +59,6 @@ export class SetCanvasCursor implements Action {
 
 export type Actions =
   | SetToolMode
-  | SetFillColor
-  | SetStrokeColor
   | SetSelectionBox
   | SetPathPreview
   | SetFocusedEditPath

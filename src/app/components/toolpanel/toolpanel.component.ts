@@ -49,16 +49,4 @@ export class ToolPanelComponent implements OnInit {
   onZoomPanClick() {
     this.paperService.setToolMode(ToolMode.ZoomPan);
   }
-
-  get fillColor() {
-    return '#000000';
-  }
-
-  set fillColor(color: string) {}
-
-  get strokeColor() {
-    return '#000000';
-  }
-
-  set strokeColor(color: string) {}
 }
