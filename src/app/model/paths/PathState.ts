@@ -34,7 +34,10 @@ export class PathState {
     this.subPaths = subPaths.map((subPath, subIdx) => {
       const cmds = subPath.getCommands().map((cmd, cmdIdx) => {
         const { cs, splitIdx } = this.findCommandStateInfo(subIdx, cmdIdx);
-        return cmd.mutate().setId(cs.getIdAtIndex(splitIdx)).build();
+        return cmd
+          .mutate()
+          .setId(cs.getIdAtIndex(splitIdx))
+          .build();
       });
       const spsIdx = this.subPathOrdering[subIdx];
       const isCollapsing = this.subPathOrdering.length - this.numCollapsingSubPaths <= spsIdx;
