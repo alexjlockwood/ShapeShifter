@@ -51,12 +51,11 @@ export class SetPathPreview implements Action {
 
 export interface FocusedEditPath {
   readonly layerId: string;
-  readonly selectedSegments: ReadonlyArray<{
-    readonly segmentIndex: number;
-    readonly point: boolean;
-    readonly handleIn: boolean;
-    readonly handleOut: boolean;
-  }>;
+  readonly selectedSegments: ReadonlySet<number>;
+  readonly visibleHandleIns: ReadonlySet<number>;
+  readonly selectedHandleIns: ReadonlySet<number>;
+  readonly visibleHandleOuts: ReadonlySet<number>;
+  readonly selectedHandleOuts: ReadonlySet<number>;
 }
 
 export class SetFocusedEditPath implements Action {

@@ -76,7 +76,11 @@ export class MasterTool extends Tool {
         this.ps.setVectorLayer(vl);
         this.ps.setFocusedEditPath({
           layerId: pl.id,
-          selectedSegments: [],
+          selectedSegments: new Set<number>(),
+          visibleHandleIns: new Set<number>(),
+          selectedHandleIns: new Set<number>(),
+          visibleHandleOuts: new Set<number>(),
+          selectedHandleOuts: new Set<number>(),
         });
       }
       if (this.ps.getFocusedEditPath()) {
@@ -133,7 +137,11 @@ export class MasterTool extends Tool {
       this.ps.setFocusedEditPath({
         layerId: hitPath.data.id,
         // TODO: auto-select the last curve in the path
-        selectedSegments: [],
+        selectedSegments: new Set<number>(),
+        visibleHandleIns: new Set<number>(),
+        selectedHandleIns: new Set<number>(),
+        visibleHandleOuts: new Set<number>(),
+        selectedHandleOuts: new Set<number>(),
       });
       return new class extends Gesture {}();
     }

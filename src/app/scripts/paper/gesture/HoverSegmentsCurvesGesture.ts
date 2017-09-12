@@ -1,3 +1,4 @@
+import { PaperLayer } from 'app/scripts/paper/PaperLayer';
 import {
   Cursor,
   Cursors,
@@ -18,6 +19,7 @@ import { Gesture } from './Gesture';
  * This gesture is used only during 'edit path' mode.
  */
 export class HoverSegmentsCurvesGesture extends Gesture {
+  private readonly paperLayer = paper.project.activeLayer as PaperLayer;
   constructor(private readonly ps: PaperService) {
     super();
   }
@@ -27,16 +29,18 @@ export class HoverSegmentsCurvesGesture extends Gesture {
     // Cursors.clear();
     // Guides.hidePenPathPreviewPath();
     // Guides.hideAddSegmentToCurveHoverGroup();
-    // const hitResult = HitTests.editPathMode(this.selectedEditPath, point);
-    // if (!hitResult) {
-    //   const singleSelectedSegment = this.findSingleSelectedEndSegment();
-    //   if (singleSelectedSegment) {
-    //     Cursors.set(Cursor.PenAdd);
-    //     Guides.showPenPathPreviewPath(singleSelectedSegment, point);
-    //   }
-    //   return;
-    // }
-    // this.handleMouseMoveHit(hitResult);
+    const focusedEditPath = this.ps.getFocusedEditPath();
+    const editPath = this.paperLayer.findItemByLayerId(focusedEditPath.layerId) as paper.Path;
+    const hitResult = HitTests.editPathMode(editPath, point);
+    if (!hitResult) {
+      const singleSelectedSegment = this.findSingleSelectedEndSegment();
+      if (singleSelectedSegment) {
+        Cursors.set(Cursor.PenAdd);
+        Guides.showPenPathPreviewPath(singleSelectedSegment, point);
+      }
+      return;
+    }
+    this.handleMouseMoveHit(hitResult);
   }
 
   private handleMouseMoveHit(hitResult: paper.HitResult) {
@@ -74,21 +78,23 @@ export class HoverSegmentsCurvesGesture extends Gesture {
    * Returns the single selected end point segment for the selected
    * edit path, or undefined if one doesn't exist.
    */
-  // private findSingleSelectedEndSegment() {
-  //   if (this.selectedEditPath.closed) {
-  //     // Return undefined if the path is closed.
-  //     return undefined;
-  //   }
-  //   const numSelectedSegments = _.sumBy(this.selectedEditPath.segments, s => (s.selected ? 1 : 0));
-  //   if (numSelectedSegments !== 1) {
-  //     // Return undefined if there is not a single selected segment.
-  //     return undefined;
-  //   }
-  //   const { firstSegment, lastSegment } = this.selectedEditPath;
-  //   if (!firstSegment.selected && !lastSegment.selected) {
-  //     // Return undefined if neither end point is selected.
-  //     return undefined;
-  //   }
-  //   return firstSegment.selected ? firstSegment : lastSegment;
-  // }
+  private findSingleSelectedEndSegment() {
+    const focusedEditPath = this.ps.getFocusedEditPath();
+    const editPath = this.paperLayer.findItemByLayerId(focusedEditPath.layerId) as paper.Path;
+    if (editPath.closed) {
+      // Return undefined if the path is closed.
+      return undefined;
+    }
+    const { selectedSegments } = focusedEditPath;
+    if (selectedSegments.size !== 1) {
+      // Return undefined if there is not a single selected segment.
+      return undefined;
+    }
+    const { firstSegment, lastSegment } = editPath;
+    if (!selectedSegments.has(firstSegment.index) && !selectedSegments.has(lastSegment.index)) {
+      // Return undefined if neither end point is selected.
+      return undefined;
+    }
+    return selectedSegments.has(firstSegment.index) ? firstSegment : lastSegment;
+  }
 }

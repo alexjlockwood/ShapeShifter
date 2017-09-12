@@ -103,9 +103,6 @@ export class PaperService {
 
   /** Sets the current focused edit path. */
   setFocusedEditPath(focusedEditPath: FocusedEditPath) {
-    if (focusedEditPath && typeof focusedEditPath.layerId !== 'string') {
-      throw new Error();
-    }
     if (!_.isEqual(this.getFocusedEditPath(), focusedEditPath)) {
       this.store.dispatch(new SetFocusedEditPath(focusedEditPath));
     }

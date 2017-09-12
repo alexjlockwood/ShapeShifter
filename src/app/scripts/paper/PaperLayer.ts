@@ -343,31 +343,40 @@ function newFocusedEditPath(path: paper.Path, focusedEditPath: FocusedEditPath) 
     line.transform(matrix);
     group.addChild(line);
   };
+  const {
+    selectedSegments,
+    visibleHandleIns,
+    selectedHandleIns,
+    visibleHandleOuts,
+    selectedHandleOuts,
+  } = focusedEditPath;
   // TODO: avoid creating rasters in a loop like this
-  focusedEditPath.selectedSegments.forEach(info => {
-    const { segmentIndex } = info;
-    const s = path.segments[segmentIndex];
+  path.segments.forEach((s, i) => {
     const center = s.point;
-    if (s.handleIn) {
+    if (visibleHandleIns.has(i) && s.handleIn) {
       const handleIn = center.add(s.handleIn);
       addLineFn(center, handleIn);
       addRasterFn(
-        info.handleIn ? '/assets/vector_handle_selected.png' : '/assets/vector_handle.png',
+        selectedHandleIns.has(i)
+          ? '/assets/vector_handle_selected.png'
+          : '/assets/vector_handle.png',
         handleIn,
-      ).data = { focusedEditPath: { segmentIndex, isHandleIn: true } };
+      ).data = { focusedEditPath: { segmentIndex: i, isHandleIn: true } };
     }
-    if (s.handleOut) {
+    if (visibleHandleOuts.has(i) && s.handleOut) {
       const handleOut = center.add(s.handleOut);
       addLineFn(center, handleOut);
       addRasterFn(
-        info.handleOut ? '/assets/vector_handle_selected.png' : '/assets/vector_handle.png',
+        selectedHandleOuts.has(i)
+          ? '/assets/vector_handle_selected.png'
+          : '/assets/vector_handle.png',
         handleOut,
-      ).data = { focusedEditPath: { segmentIndex, isHandleOut: true } };
+      ).data = { focusedEditPath: { segmentIndex: i, isHandleOut: true } };
     }
     addRasterFn(
-      info.point ? '/assets/vector_anchor_selected.png' : '/assets/vector_anchor.png',
+      selectedSegments.has(i) ? '/assets/vector_anchor_selected.png' : '/assets/vector_anchor.png',
       center,
-    ).data = { focusedEditPath: { segmentIndex } };
+    ).data = { focusedEditPath: { segmentIndex: i } };
   });
   return group;
 }
