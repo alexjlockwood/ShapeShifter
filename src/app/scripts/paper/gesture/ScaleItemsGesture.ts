@@ -1,6 +1,6 @@
 import { MathUtil } from 'app/scripts/common';
 import { PaperLayer } from 'app/scripts/paper/PaperLayer';
-import { Guides, Items, PivotType, Pivots, Selections } from 'app/scripts/paper/util';
+import { Guides, Items, PivotType, Selections } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
 import * as paper from 'paper';
 

@@ -1,5 +1,6 @@
 import { ToolMode } from 'app/model/paper';
 import { Cursor, Cursors } from 'app/scripts/paper/util';
+import { PaperService } from 'app/services';
 import * as paper from 'paper';
 
 import { Tool } from './Tool';

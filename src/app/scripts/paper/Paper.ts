@@ -1,17 +1,12 @@
-import { VectorLayer } from 'app/model/layers';
 import { ToolMode } from 'app/model/paper';
-import { Matrix } from 'app/scripts/common';
 import { PaperLayer } from 'app/scripts/paper/PaperLayer';
 import { PaperService } from 'app/services';
-import { State, Store } from 'app/store';
 import { getHoveredLayerId, getSelectedLayerIds, getVectorLayer } from 'app/store/layers/selectors';
 import { getFocusedEditPath, getPathPreview, getSelectionBox } from 'app/store/paper/selectors';
 import { getToolMode } from 'app/store/paper/selectors';
 import * as paper from 'paper';
-import { OutputSelector } from 'reselect';
 
 import { MasterTool, Tool, ZoomPanTool } from './tool';
-import { Guides, Items } from './util';
 
 let paperLayer: PaperLayer;
 
