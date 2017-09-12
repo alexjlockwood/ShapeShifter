@@ -10,7 +10,6 @@ import { State, Store } from 'app/store';
 import { SetVectorLayer } from 'app/store/layers/actions';
 import { getVectorLayer } from 'app/store/layers/selectors';
 import * as $ from 'jquery';
-import { Point } from 'paper'; // TODO: figure out why this needs to be imported to prevent breaks?
 
 import { CanvasLayoutMixin } from './CanvasLayoutMixin';
 
