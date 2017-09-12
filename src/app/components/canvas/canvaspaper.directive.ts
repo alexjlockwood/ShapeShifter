@@ -1,13 +1,6 @@
-import {
-  AfterViewInit,
-  Directive,
-  ElementRef,
-  HostListener,
-  Input,
-  OnDestroy,
-} from '@angular/core';
+import { AfterViewInit, Directive, ElementRef, Input, OnDestroy } from '@angular/core';
 import { ActionSource } from 'app/model/actionmode';
-import { LayerUtil, PathLayer, VectorLayer } from 'app/model/layers';
+import { VectorLayer } from 'app/model/layers';
 import { Path } from 'app/model/paths';
 import { SvgLoader } from 'app/scripts/import';
 import { DestroyableMixin } from 'app/scripts/mixins';
@@ -17,13 +10,9 @@ import { State, Store } from 'app/store';
 import { SetVectorLayer } from 'app/store/layers/actions';
 import { getVectorLayer } from 'app/store/layers/selectors';
 import * as $ from 'jquery';
-import * as paper from 'paper';
 import { Point } from 'paper'; // TODO: figure out why this needs to be imported to prevent breaks?
-import { Observable } from 'rxjs/Observable';
 
 import { CanvasLayoutMixin } from './CanvasLayoutMixin';
-
-type Context = CanvasRenderingContext2D;
 
 @Directive({ selector: '[appCanvasPaper]' })
 export class CanvasPaperDirective extends CanvasLayoutMixin(DestroyableMixin())

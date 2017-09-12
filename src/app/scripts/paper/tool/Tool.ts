@@ -1,4 +1,3 @@
-import { ToolMode } from 'app/model/paper';
 import * as paper from 'paper';
 
 /**

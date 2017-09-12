@@ -3,10 +3,10 @@ import 'rxjs/add/operator/first';
 import { Injectable } from '@angular/core';
 import { VectorLayer } from 'app/model/layers';
 import { ToolMode } from 'app/model/paper';
-import { Matrix, Point } from 'app/scripts/common';
+import { Point } from 'app/scripts/common';
 import { State, Store } from 'app/store';
 import { SetHoveredLayer } from 'app/store/layers/actions';
-import { getHoveredLayerId, getSelectedLayerIds, getVectorLayer } from 'app/store/layers/selectors';
+import { getHoveredLayerId, getSelectedLayerIds } from 'app/store/layers/selectors';
 import {
   FocusedEditPath,
   SetFocusedEditPath,

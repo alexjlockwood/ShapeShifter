@@ -4,9 +4,6 @@ import {
   Cursors,
   Guides,
   HitTests,
-  Items,
-  Pivots,
-  Selections,
 } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
 import * as _ from 'lodash';

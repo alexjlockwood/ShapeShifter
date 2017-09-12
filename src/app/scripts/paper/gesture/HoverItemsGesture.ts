@@ -1,12 +1,4 @@
-import {
-  Cursor,
-  Cursors,
-  Guides,
-  HitTests,
-  Items,
-  Pivots,
-  Selections,
-} from 'app/scripts/paper/util';
+import { Cursor, Cursors, HitTests } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
 import * as paper from 'paper';
 
@@ -24,7 +16,7 @@ export class HoverItemsGesture extends Gesture {
 
   // @Override
   onMouseMove({ point }: paper.ToolEvent) {
-    // Cursors.clear();
+    Cursors.clear();
 
     const selectedLayers = this.ps.getSelectedLayers();
     const hitResult = HitTests.selectionMode(point, ({ item }: paper.HitResult) => {

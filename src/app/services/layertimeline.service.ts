@@ -18,14 +18,12 @@ import { State, Store } from 'app/store';
 import {
   SetCollapsedLayers,
   SetHiddenLayers,
-  SetHoveredLayer,
   SetSelectedLayers,
   SetVectorLayer,
 } from 'app/store/layers/actions';
 import {
   getCollapsedLayerIds,
   getHiddenLayerIds,
-  getHoveredLayerId,
   getSelectedLayerIds,
   getVectorLayer,
 } from 'app/store/layers/selectors';

@@ -1,7 +1,7 @@
 import { Layer, LayerUtil, PathLayer } from 'app/model/layers';
 import { ToolMode } from 'app/model/paper';
 import { Path } from 'app/model/paths';
-import { Guides, Items, Selections, Transforms } from 'app/scripts/paper/util';
+import { Transforms } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
 import * as paper from 'paper';
 

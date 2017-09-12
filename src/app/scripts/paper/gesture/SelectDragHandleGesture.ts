@@ -1,5 +1,4 @@
 import { MathUtil } from 'app/scripts/common';
-import { Guides, Items, Selections } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
 import * as paper from 'paper';
 
