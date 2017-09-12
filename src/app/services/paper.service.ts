@@ -2,24 +2,27 @@ import 'rxjs/add/operator/first';
 
 import { Injectable } from '@angular/core';
 import { VectorLayer } from 'app/model/layers';
-import { ToolMode } from 'app/model/paper';
+import { CanvasCursor, ToolMode } from 'app/model/paper';
 import { Point } from 'app/scripts/common';
 import { State, Store } from 'app/store';
 import { SetHoveredLayer } from 'app/store/layers/actions';
 import { getHoveredLayerId, getSelectedLayerIds } from 'app/store/layers/selectors';
 import {
   FocusedEditPath,
+  SetCanvasCursor,
   SetFocusedEditPath,
   SetPathPreview,
   SetSelectionBox,
   SetToolMode,
 } from 'app/store/paper/actions';
 import {
+  getCanvasCursor,
   getFocusedEditPath,
   getPathPreview,
   getSelectionBox,
   getToolMode,
 } from 'app/store/paper/selectors';
+import * as $ from 'jquery';
 import * as _ from 'lodash';
 import { OutputSelector } from 'reselect';
 
@@ -111,6 +114,13 @@ export class PaperService {
   /** Gets the current focused edit path. */
   getFocusedEditPath() {
     return this.queryStore(getFocusedEditPath);
+  }
+
+  /** Gets the current canvas cursor. */
+  setCanvasCursor(canvasCursor: CanvasCursor | undefined) {
+    if (this.queryStore(getCanvasCursor) !== canvasCursor) {
+      this.store.dispatch(new SetCanvasCursor(canvasCursor));
+    }
   }
 
   private queryStore<T>(selector: OutputSelector<Object, T, (res: Object) => T>) {

@@ -9,3 +9,4 @@ export const getStrokeColor = createSelector(getPaperState, t => t.strokeColor);
 export const getSelectionBox = createDeepEqualSelector(getPaperState, t => t.selectionBox);
 export const getPathPreview = createSelector(getPaperState, t => t.pathPreview);
 export const getFocusedEditPath = createDeepEqualSelector(getPaperState, t => t.focusedEditPath);
+export const getCanvasCursor = createSelector(getPaperState, t => t.canvasCursor);

@@ -1,4 +1,4 @@
-import { ToolMode } from 'app/model/paper';
+import { CanvasCursor, ToolMode } from 'app/model/paper';
 import { Point } from 'app/scripts/common';
 
 import * as actions from './actions';
@@ -13,6 +13,7 @@ export interface State {
   readonly selectionBox: Readonly<{ from: Point; to: Point }>;
   readonly pathPreview: string;
   readonly focusedEditPath: FocusedEditPath;
+  readonly canvasCursor: CanvasCursor;
 }
 
 export function buildInitialState(): State {
@@ -24,6 +25,7 @@ export function buildInitialState(): State {
     selectionBox: undefined,
     pathPreview: undefined,
     focusedEditPath: undefined,
+    canvasCursor: undefined,
   };
 }
 
@@ -41,6 +43,8 @@ export function reducer(state = buildInitialState(), action: actions.Actions) {
       return { ...state, pathPreview: action.payload.pathData };
     case actions.SET_FOCUSED_EDIT_PATH:
       return { ...state, focusedEditPath: action.payload.focusedEditPath };
+    case actions.SET_CANVAS_CURSOR:
+      return { ...state, canvasCursor: action.payload.canvasCursor };
   }
   return state;
 }

@@ -18,6 +18,7 @@ import { DestroyableMixin } from 'app/scripts/mixins';
 import { ThemeService } from 'app/services';
 import { State, Store } from 'app/store';
 import { getVectorLayer } from 'app/store/layers/selectors';
+import { getCanvasCursor } from 'app/store/paper/selectors';
 import * as $ from 'jquery';
 import * as _ from 'lodash';
 import { Observable } from 'rxjs/Observable';
@@ -73,6 +74,18 @@ export class CanvasComponent extends CanvasLayoutMixin(DestroyableMixin())
         const w = Math.max(1, bounds.w - CANVAS_MARGIN * 2);
         const h = Math.max(1, bounds.h - CANVAS_MARGIN * 2);
         this.setDimensions({ w, h }, viewport);
+      }),
+    );
+    // TODO: use an [ngClass] binding or something like that
+    this.registerSubscription(
+      this.store.select(getCanvasCursor).subscribe(c => {
+        if (c) {
+          $('.paper-canvas').addClass(c);
+        } else {
+          $('.paper-canvas').removeClass((index, css) =>
+            (css.match(/\bcursor-\S+/g) || []).join(' '),
+          );
+        }
       }),
     );
   }

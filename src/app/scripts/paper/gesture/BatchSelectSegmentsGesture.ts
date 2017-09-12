@@ -25,6 +25,7 @@ export class BatchSelectSegmentsGesture extends Gesture {
   // @Override
   onMouseDown(event: paper.ToolEvent) {
     const focusedEditPath = this.ps.getFocusedEditPath();
+    // TODO: make use of these
     this.initialSelectedSegments = focusedEditPath.selectedSegments;
     this.initialVisibleHandleIns = focusedEditPath.visibleHandleIns;
     this.initialSelectedHandleIns = focusedEditPath.selectedHandleIns;

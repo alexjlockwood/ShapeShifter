@@ -1,5 +1,5 @@
 import { Action } from '@ngrx/store';
-import { ToolMode } from 'app/model/paper';
+import { CanvasCursor, ToolMode } from 'app/model/paper';
 import { Point } from 'app/scripts/common';
 
 export const SET_TOOL_MODE = '__paper__SET_TOOL_MODE';
@@ -8,6 +8,7 @@ export const SET_STROKE_COLOR = '__paper__SET_STROKE_COLOR';
 export const SET_SELECTION_BOX = '__paper__SET_SELECTION_BOX';
 export const SET_PATH_PREVIEW = '__paper__SET_PATH_PREVIEW';
 export const SET_FOCUSED_EDIT_PATH = '__paper__SET_FOCUSED_EDIT_PATH';
+export const SET_CANVAS_CURSOR = '__paper__SET_CANVAS_CURSOR';
 
 export class SetToolMode implements Action {
   readonly type = SET_TOOL_MODE;
@@ -66,10 +67,19 @@ export class SetFocusedEditPath implements Action {
   }
 }
 
+export class SetCanvasCursor implements Action {
+  readonly type = SET_CANVAS_CURSOR;
+  readonly payload: { canvasCursor: CanvasCursor };
+  constructor(canvasCursor: CanvasCursor) {
+    this.payload = { canvasCursor };
+  }
+}
+
 export type Actions =
   | SetToolMode
   | SetFillColor
   | SetStrokeColor
   | SetSelectionBox
   | SetPathPreview
-  | SetFocusedEditPath;
+  | SetFocusedEditPath
+  | SetCanvasCursor;
