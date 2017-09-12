@@ -2,7 +2,7 @@ import { MathUtil, Point, Rect } from 'app/scripts/common';
 import * as _ from 'lodash';
 import * as polylabel from 'polylabel';
 
-import { Command, HitOptions, HitResult, Line, Projection, ProjectionOntoPath, SubPath } from '.';
+import { Command, HitOptions, HitResult, Projection, ProjectionOntoPath, SubPath } from '.';
 import { CommandState } from './CommandState';
 import * as PathParser from './PathParser';
 import { createSubPaths } from './SubPath';
@@ -34,7 +34,10 @@ export class PathState {
     this.subPaths = subPaths.map((subPath, subIdx) => {
       const cmds = subPath.getCommands().map((cmd, cmdIdx) => {
         const { cs, splitIdx } = this.findCommandStateInfo(subIdx, cmdIdx);
-        return cmd.mutate().setId(cs.getIdAtIndex(splitIdx)).build();
+        return cmd
+          .mutate()
+          .setId(cs.getIdAtIndex(splitIdx))
+          .build();
       });
       const spsIdx = this.subPathOrdering[subIdx];
       const isCollapsing = this.subPathOrdering.length - this.numCollapsingSubPaths <= spsIdx;

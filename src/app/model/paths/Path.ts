@@ -2,7 +2,7 @@ import { MathUtil, Matrix, Point } from 'app/scripts/common';
 import { environment } from 'environments/environment';
 import * as _ from 'lodash';
 
-import { Line, Projection } from './calculators';
+import { Projection } from './calculators';
 import { Command } from './Command';
 import { CommandState } from './CommandState';
 import * as PathParser from './PathParser';
