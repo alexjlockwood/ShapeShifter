@@ -23,8 +23,6 @@ function initializeCanvas(canvas: HTMLCanvasElement) {
   paper.setup(canvas);
   paper.settings.applyMatrix = false;
   paper.settings.insertItems = false;
-  // TODO: should we set a hit tolerance here (physical or viewport pixels?)
-  paper.settings.hitTolerance = 0;
   paperLayer = new PaperLayer();
   paper.project.addLayer(paperLayer);
 }

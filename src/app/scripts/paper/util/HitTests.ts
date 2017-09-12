@@ -16,8 +16,8 @@ export function selectionBoundsPivot(selectionBounds: paper.Path.Rectangle, poin
  */
 export function selectionMode(point: paper.Point, matchFn?: (result: paper.HitResult) => boolean) {
   return paper.project.hitTest(point, {
-    stroke: true,
     fill: true,
+    stroke: true,
     match: matchFn,
   });
 }

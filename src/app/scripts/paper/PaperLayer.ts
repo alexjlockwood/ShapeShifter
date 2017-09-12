@@ -25,6 +25,11 @@ export class PaperLayer extends paper.Layer {
   private selectedLayerIds: ReadonlySet<string> = new Set();
   private hoveredLayerId: string;
 
+  constructor() {
+    super();
+    this.strokeScaling = false;
+  }
+
   setVectorLayer(vl: VectorLayer) {
     this.vectorLayer = vl;
     this.updateVectorLayerItem();

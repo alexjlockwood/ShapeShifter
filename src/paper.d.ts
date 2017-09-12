@@ -4066,10 +4066,10 @@ declare module 'paper' {
     isVisible(): boolean;
 
     /**
-     * Scrolls the view by the given vector.
-     * @param point - the vector to scroll by
+     * Translates (scrolls) the view by the given offset vector.
+     * @param delta - the offset to translate the view by
      */
-    scrollBy(point: Point): void;
+    translate(delta: Point): void;
 
     /**
      * Makes all animation play by adding the view to the request animation loop.
@@ -4086,7 +4086,6 @@ declare module 'paper' {
      */
     update(): void;
 
-    // ADDED BY ALEX LOCKWOOD
     requestUpdate(): void;
 
     /**
@@ -4101,7 +4100,7 @@ declare module 'paper' {
      */
     viewToProject(point: Point): Point;
 
-    //I cannot use function: Function as it is a reserved keyword
+    getEventPoint(event: Event): Point;
 
     /**
      * Attach an event handler to the view.
@@ -4140,11 +4139,6 @@ declare module 'paper' {
      * @param type - String('frame'|'resize') the event type
      */
     responds(type: string): boolean;
-
-    /**
-     * Draws the view when using paper.js directly in JavaScript
-     */
-    draw(): void;
   }
   /**
    * The Tool object refers to a script that the user can interact with by using the mouse and keyboard and can be accessed through the global tool variable. All its properties are also available in the paper scope.
@@ -4252,10 +4246,6 @@ declare module 'paper' {
     responds(type: string): boolean;
   }
   export class Event {
-    /**
-     * Read Only
-     */
-    // ADDED BY ALEX LOCKWOOD
     readonly modifiers: {
       readonly shift: boolean;
       readonly control: boolean;
@@ -4267,7 +4257,6 @@ declare module 'paper' {
       readonly command: boolean;
     };
 
-    // ADDED BY ALEX LOCKWOOD
     readonly timeStamp: number;
   }
 
