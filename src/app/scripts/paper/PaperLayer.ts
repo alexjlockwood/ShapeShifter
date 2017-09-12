@@ -18,11 +18,11 @@ export class PaperLayer extends paper.Layer {
   private selectionBoundsItem: paper.Item;
   private hoverPath: paper.Path;
   private selectionBoxPath: paper.Path;
-  private shapePreviewPath: paper.Path;
+  private pathPreview: paper.Path;
   private focusedEditPathItem: paper.Item;
 
   private vectorLayer: VectorLayer;
-  private selectedLayerIds: ReadonlySet<string> = new Set<string>();
+  private selectedLayerIds: ReadonlySet<string> = new Set();
   private hoveredLayerId: string;
 
   setVectorLayer(vl: VectorLayer) {
@@ -43,12 +43,12 @@ export class PaperLayer extends paper.Layer {
   }
 
   setPathPreview(pathData: string) {
-    if (this.shapePreviewPath) {
-      this.shapePreviewPath.remove();
-      this.shapePreviewPath = undefined;
+    if (this.pathPreview) {
+      this.pathPreview.remove();
+      this.pathPreview = undefined;
     }
     if (pathData) {
-      this.shapePreviewPath = newShapePreview(pathData);
+      this.pathPreview = newPathPreview(pathData);
       this.updateChildren();
     }
   }
@@ -126,8 +126,8 @@ export class PaperLayer extends paper.Layer {
     if (this.focusedEditPathItem) {
       children.push(this.focusedEditPathItem);
     }
-    if (this.shapePreviewPath) {
-      children.push(this.shapePreviewPath);
+    if (this.pathPreview) {
+      children.push(this.pathPreview);
     }
     if (this.selectionBoxPath) {
       children.push(this.selectionBoxPath);
@@ -381,7 +381,7 @@ function newFocusedEditPath(path: paper.Path, focusedEditPath: FocusedEditPath) 
   return group;
 }
 
-function newShapePreview(pathData: string) {
+function newPathPreview(pathData: string) {
   const path = new paper.Path(pathData);
   path.strokeScaling = false;
   path.strokeWidth = 1 / paper.view.zoom;
