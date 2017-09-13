@@ -50,8 +50,8 @@ export class BatchSelectSegmentsGesture extends Gesture {
     const focusedEditPath = this.ps.getFocusedEditPath();
     const editPath = this.paperLayer.findItemByLayerId(focusedEditPath.layerId) as paper.Path;
     const selectedSegments = new Set<number>();
-    const from = Transforms.mousePointToLocalCoordinates(event.downPoint, editPath);
-    const to = Transforms.mousePointToLocalCoordinates(event.point, editPath);
+    const from = editPath.globalToLocal(event.downPoint);
+    const to = editPath.globalToLocal(event.point);
     const rectangle = new paper.Rectangle(new paper.Point(from), new paper.Point(to));
     editPath.segments.forEach((s, i) => {
       // TODO: select the entire curve instead
@@ -72,8 +72,8 @@ export class BatchSelectSegmentsGesture extends Gesture {
       const focusedEditPath = this.ps.getFocusedEditPath();
       const editPath = this.paperLayer.findItemByLayerId(focusedEditPath.layerId) as paper.Path;
       const selectedSegments = new Set<number>();
-      const from = Transforms.mousePointToLocalCoordinates(event.downPoint, editPath);
-      const to = Transforms.mousePointToLocalCoordinates(event.point, editPath);
+      const from = editPath.globalToLocal(event.downPoint);
+      const to = editPath.globalToLocal(event.point);
       const rectangle = new paper.Rectangle(new paper.Point(from), new paper.Point(to));
       editPath.segments.forEach((s, i) => {
         // TODO: select the entire curve instead

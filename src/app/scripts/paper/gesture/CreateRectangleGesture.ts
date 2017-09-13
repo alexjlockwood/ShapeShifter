@@ -17,8 +17,8 @@ export class CreateRectangleGesture extends Gesture {
 
   // @Override
   onMouseDrag(event: paper.ToolEvent) {
-    const downPoint = Transforms.mousePointToLocalCoordinates(event.downPoint);
-    const point = Transforms.mousePointToLocalCoordinates(event.point);
+    const downPoint = paper.project.activeLayer.globalToLocal(event.downPoint);
+    const point = paper.project.activeLayer.globalToLocal(event.point);
 
     const rect = new paper.Rectangle(downPoint, point);
     if (event.modifiers.shift) {

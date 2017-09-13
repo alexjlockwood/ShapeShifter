@@ -1,22 +1,6 @@
 import * as paper from 'paper';
 
 /**
- * Converts a point to an item's local coordinate space. If no item is provided,
- * the point is converted to the root vector layer's viewport coordinate space.
- */
-export function mousePointToLocalCoordinates(
-  mousePoint: { x: number; y: number },
-  item: paper.Item = paper.project.activeLayer,
-) {
-  const matrix = new paper.Matrix();
-  while (item) {
-    matrix.prepend(item.matrix);
-    item = item.parent;
-  }
-  return new paper.Point(mousePoint).transform(matrix.inverted());
-}
-
-/**
  * Computes the transform matrix that will transform the specified item to its
  * viewport coordinates.
  */

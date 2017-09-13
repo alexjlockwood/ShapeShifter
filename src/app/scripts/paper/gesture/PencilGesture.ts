@@ -16,10 +16,10 @@ export class PencilGesture extends Gesture {
   onMouseDrag(event: paper.ToolEvent) {
     const pathDataPreview = this.ps.getPathPreview();
     const pathPreview = pathDataPreview ? new paper.Path(pathDataPreview) : new paper.Path();
-    const lastPoint = Transforms.mousePointToLocalCoordinates(event.lastPoint);
-    const point = Transforms.mousePointToLocalCoordinates(event.point);
+    const lastPoint = paper.project.activeLayer.globalToLocal(event.lastPoint);
+    const point = paper.project.activeLayer.globalToLocal(event.point);
     const delta = point.subtract(lastPoint);
-    const middlePoint = Transforms.mousePointToLocalCoordinates(event.middlePoint);
+    const middlePoint = paper.project.activeLayer.globalToLocal(event.middlePoint);
     delta.angle += 90;
     pathPreview.add(middlePoint.add(delta));
     this.ps.setPathPreview(pathPreview.pathData);
@@ -31,7 +31,7 @@ export class PencilGesture extends Gesture {
     if (pathDataPreview) {
       const pathPreview = new paper.Path(pathDataPreview);
       // TODO: express '0.25' in terms of physical pixels, not viewport pixels
-      const point = Transforms.mousePointToLocalCoordinates(event.point);
+      const point = paper.project.activeLayer.globalToLocal(event.point);
       const nearStart = checkPointsClose(pathPreview.firstSegment.point, point, 0.25);
       if (nearStart) {
         pathPreview.closePath(true);

@@ -59,8 +59,8 @@ export class BatchSelectItemsGesture extends Gesture {
     if (!box) {
       return;
     }
-    const from = Transforms.mousePointToLocalCoordinates(new paper.Point(box.from));
-    const to = Transforms.mousePointToLocalCoordinates(new paper.Point(box.to));
+    const from = paper.project.activeLayer.globalToLocal(new paper.Point(box.from));
+    const to = paper.project.activeLayer.globalToLocal(new paper.Point(box.to));
     const selectedItems = this.paperLayer.findItemsInBounds(
       new paper.Rectangle(from, to),
       !isAltPressed,

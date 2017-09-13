@@ -180,7 +180,7 @@ export class MasterTool extends Tool {
     // First do a hit test on the underlying path's stroke/curves.
     const editPath = this.paperLayer.findItemByLayerId(focusedEditPath.layerId) as paper.Path;
     const strokeCurveHitResult = editPath.hitTest(
-      Transforms.mousePointToLocalCoordinates(event.point),
+      paper.project.activeLayer.globalToLocal(event.point),
       { stroke: true, curves: true },
     );
     if (strokeCurveHitResult) {

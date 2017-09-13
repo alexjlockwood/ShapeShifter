@@ -65,8 +65,8 @@ export class PaperLayer extends paper.Layer {
     }
     if (box) {
       this.selectionBoxPath = newSelectionBox(
-        Transforms.mousePointToLocalCoordinates(box.from),
-        Transforms.mousePointToLocalCoordinates(box.to),
+        paper.project.activeLayer.globalToLocal(box.from),
+        paper.project.activeLayer.globalToLocal(box.to),
       );
       this.updateChildren();
     }
@@ -162,14 +162,14 @@ export class PaperLayer extends paper.Layer {
   }
 
   hitTestSelectionBoundsItem(mousePoint: paper.Point) {
-    const point = Transforms.mousePointToLocalCoordinates(mousePoint);
+    const point = paper.project.activeLayer.globalToLocal(mousePoint);
     return this.selectionBoundsItem.hitTest(point, {
       class: paper.Raster,
     });
   }
 
   hitTestFocusedEditPathItem(mousePoint: paper.Point) {
-    const point = Transforms.mousePointToLocalCoordinates(mousePoint);
+    const point = paper.project.activeLayer.globalToLocal(mousePoint);
     return this.focusedEditPathItem.hitTest(point, {
       class: paper.Raster,
     });

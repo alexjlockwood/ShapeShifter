@@ -86,8 +86,8 @@ export class SelectDragCloneItemsGesture extends Gesture {
       this.paperLayer.findItemByLayerId(id),
     );
     selectedItems.forEach(item => {
-      const downPoint = Transforms.mousePointToLocalCoordinates(event.downPoint, item);
-      const point = Transforms.mousePointToLocalCoordinates(event.point, item);
+      const downPoint = item.globalToLocal(event.downPoint);
+      const point = item.globalToLocal(event.point);
       const localDelta = point.subtract(downPoint);
       const finalDelta = event.modifiers.shift
         ? new paper.Point(MathUtil.snapDeltaToAngle(localDelta, 90))

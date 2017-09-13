@@ -17,8 +17,8 @@ export class CreateEllipseGesture extends Gesture {
 
   // @Override
   onMouseDrag(event: paper.ToolEvent) {
-    const downPoint = Transforms.mousePointToLocalCoordinates(event.downPoint);
-    const point = Transforms.mousePointToLocalCoordinates(event.point);
+    const downPoint = paper.project.activeLayer.globalToLocal(event.downPoint);
+    const point = paper.project.activeLayer.globalToLocal(event.point);
     const ex = point.x;
     const ey = point.y;
     const ellipseSize = new paper.Size(
