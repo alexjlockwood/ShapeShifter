@@ -11,7 +11,7 @@ export function getSelectedItems() {
 }
 
 export function getSelectedPaths() {
-  return getSelectedItems().filter(p => Items.isPath(p)) as paper.Path[];
+  return getSelectedItems().filter(p => p instanceof paper.Path) as paper.Path[];
 }
 
 /**

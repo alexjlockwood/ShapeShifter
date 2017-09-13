@@ -75,7 +75,7 @@ export class TransformItemsGesture extends Gesture {
     Guides.hideSelectionBoundsPath();
     const selectedItems = Selections.getSelectedItems();
     if (selectedItems.length) {
-      Guides.showSelectionBoundsPath(Items.computeBoundingBox(selectedItems));
+      Guides.showSelectionBoundsPath(computeBoundingBox(selectedItems));
     }
   }
 }
@@ -99,4 +99,9 @@ function getTransformPivot(rect: paper.Rectangle, pivotType: PivotType, isComman
     case 'bottomCenter':
       return rect.topCenter;
   }
+}
+
+/** Computes the bounding box for the specified items. */
+function computeBoundingBox(items: ReadonlyArray<paper.Item>) {
+  return items.reduce((p, c) => p.unite(c.bounds), items[0].bounds);
 }
