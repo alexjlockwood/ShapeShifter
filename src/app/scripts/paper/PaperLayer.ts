@@ -161,14 +161,14 @@ export class PaperLayer extends paper.Layer {
   }
 
   hitTestSelectionBoundsItem(mousePoint: paper.Point) {
-    const point = paper.project.activeLayer.globalToLocal(mousePoint);
+    const point = this.globalToLocal(mousePoint);
     return this.selectionBoundsItem.hitTest(point, {
       class: paper.Raster,
     });
   }
 
   hitTestFocusedEditPathItem(mousePoint: paper.Point) {
-    const point = paper.project.activeLayer.globalToLocal(mousePoint);
+    const point = this.globalToLocal(mousePoint);
     return this.focusedEditPathItem.hitTest(point, {
       class: paper.Raster,
     });

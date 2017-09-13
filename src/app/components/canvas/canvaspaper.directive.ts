@@ -90,6 +90,6 @@ export class CanvasPaperDirective extends CanvasLayoutMixin(DestroyableMixin())
     const { w, h } = this.getViewport();
     const scale = this.cssScale;
     this.$canvas.css({ width: w * scale, height: h * scale });
-    Paper.updateProjectDimensions(w, h, w * scale, h * scale);
+    Paper.updateDimensions(w, h, w * scale, h * scale);
   }
 }
