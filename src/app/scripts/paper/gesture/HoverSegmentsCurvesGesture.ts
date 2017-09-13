@@ -1,10 +1,5 @@
 import { PaperLayer } from 'app/scripts/paper/PaperLayer';
-import {
-  Cursor,
-  Cursors,
-  Guides,
-  HitTests,
-} from 'app/scripts/paper/util';
+import { Cursor, Cursors, HitTests } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
 import * as _ from 'lodash';
 import * as paper from 'paper';
@@ -26,18 +21,18 @@ export class HoverSegmentsCurvesGesture extends Gesture {
     // Cursors.clear();
     // Guides.hidePenPathPreviewPath();
     // Guides.hideAddSegmentToCurveHoverGroup();
-    const focusedEditPath = this.ps.getFocusedEditPath();
-    const editPath = this.paperLayer.findItemByLayerId(focusedEditPath.layerId) as paper.Path;
-    const hitResult = HitTests.editPathMode(editPath, point);
-    if (!hitResult) {
-      const singleSelectedSegment = this.findSingleSelectedEndSegment();
-      if (singleSelectedSegment) {
-        Cursors.set(Cursor.PenAdd);
-        Guides.showPenPathPreviewPath(singleSelectedSegment, point);
-      }
-      return;
-    }
-    this.handleMouseMoveHit(hitResult);
+    // const focusedEditPath = this.ps.getFocusedEditPath();
+    // const editPath = this.paperLayer.findItemByLayerId(focusedEditPath.layerId) as paper.Path;
+    // const hitResult = HitTests.editPathMode(editPath, point);
+    // if (!hitResult) {
+    //   const singleSelectedSegment = this.findSingleSelectedEndSegment();
+    //   if (singleSelectedSegment) {
+    //     Cursors.set(Cursor.PenAdd);
+    //     Guides.showPenPathPreviewPath(singleSelectedSegment, point);
+    //   }
+    //   return;
+    // }
+    // this.handleMouseMoveHit(hitResult);
   }
 
   private handleMouseMoveHit(hitResult: paper.HitResult) {

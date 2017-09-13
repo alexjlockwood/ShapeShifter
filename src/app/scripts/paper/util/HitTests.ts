@@ -1,7 +1,5 @@
 import * as paper from 'paper';
 
-import * as Items from './Items';
-
 /**
  * Executes a hit test in search of selection bound pivots.
  */

@@ -1,6 +1,6 @@
 import { MathUtil } from 'app/scripts/common';
 import { PaperLayer } from 'app/scripts/paper/PaperLayer';
-import { Guides, Items, PivotType, Selections } from 'app/scripts/paper/util';
+import { PivotType } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
 import * as paper from 'paper';
 
@@ -31,20 +31,20 @@ export class ScaleItemsGesture extends Gesture {
       this.paperLayer.findItemByLayerId(id),
     );
 
-    this.initialMatrices = this.selectedItems.map(i => i.matrix.clone());
-    const scalingBounds = Items.computeBoundingBox(this.selectedItems);
-    const pivotType = this.hitPivotType;
+    // this.initialMatrices = this.selectedItems.map(i => i.matrix.clone());
+    // const scalingBounds = Items.computeBoundingBox(this.selectedItems);
+    // const pivotType = this.hitPivotType;
     // TODO: implement this
     // TODO: implement this
     // TODO: implement this
     // TODO: implement this
     // TODO: implement this
-    const oppPivotType = this.hitPivotType; // Pivots.getOppositePivotType(this.hitSegment.index);
-    this.initialPivot = scalingBounds[oppPivotType].clone();
-    this.currentPivot = scalingBounds[pivotType].clone();
-    this.initialSize = this.currentPivot.subtract(this.initialPivot);
-    this.centeredInitialSize = this.initialSize.divide(2);
-    this.initialCenter = scalingBounds.center.clone();
+    // const oppPivotType = this.hitPivotType; // Pivots.getOppositePivotType(this.hitSegment.index);
+    // this.initialPivot = scalingBounds[oppPivotType].clone();
+    // this.currentPivot = scalingBounds[pivotType].clone();
+    // this.initialSize = this.currentPivot.subtract(this.initialPivot);
+    // this.centeredInitialSize = this.initialSize.divide(2);
+    // this.initialCenter = scalingBounds.center.clone();
   }
 
   // @Override
@@ -78,15 +78,10 @@ export class ScaleItemsGesture extends Gesture {
 
   // @Override
   onMouseUp(event: paper.ToolEvent) {
-    Guides.hideSelectionBoundsPath();
-    const selectedItems = Selections.getSelectedItems();
-    if (selectedItems.length) {
-      Guides.showSelectionBoundsPath(computeBoundingBox(selectedItems));
-    }
+    // Guides.hideSelectionBoundsPath();
+    // const selectedItems = Selections.getSelectedItems();
+    // if (selectedItems.length) {
+    //   Guides.showSelectionBoundsPath(computeBoundingBox(selectedItems));
+    // }
   }
-}
-
-/** Computes the bounding box for the specified items. */
-function computeBoundingBox(items: ReadonlyArray<paper.Item>) {
-  return items.reduce((p, c) => p.unite(c.bounds), items[0].bounds);
 }

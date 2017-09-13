@@ -1,5 +1,4 @@
 import { PaperLayer } from 'app/scripts/paper/PaperLayer';
-import { Transforms } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
 import * as paper from 'paper';
 

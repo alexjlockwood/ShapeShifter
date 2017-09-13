@@ -7,7 +7,6 @@ import {
   VectorLayer,
 } from 'app/model/layers';
 import { ColorUtil } from 'app/scripts/common';
-import { Items, Transforms } from 'app/scripts/paper/util';
 import { FocusedEditPath } from 'app/store/paper/actions';
 import * as _ from 'lodash';
 import * as paper from 'paper';
@@ -278,7 +277,9 @@ function newHover(item: paper.Item) {
   return hoverPath;
 }
 
-/** Creates a new selection bounds item for the specified selected items. */
+/**
+ * Creates a new selection bounds item for the specified selected items.
+ */
 function newSelectionBounds(items: ReadonlyArray<paper.Item>) {
   const group = new paper.Group();
 
@@ -307,11 +308,11 @@ function newSelectionBounds(items: ReadonlyArray<paper.Item>) {
   group.addChild(outlinePath);
 
   // Create segments for the bounded box.
-  const segmentSize = 6 / paper.view.zoom / Transforms.getCssScaling();
+  const segmentSize = 6 / paper.view.zoom / getCssScaling();
   const createSegmentFn = (center: paper.Point) => {
     // TODO: avoid creating rasters in a loop like this
     const handle = new paper.Raster('/assets/handle.png', center);
-    const scaleFactor = 1 / Transforms.getAttrScaling();
+    const scaleFactor = 1 / getAttrScaling();
     handle.scale(scaleFactor, scaleFactor);
     return handle;
   };
@@ -330,10 +331,12 @@ function newSelectionBounds(items: ReadonlyArray<paper.Item>) {
   return group;
 }
 
-/** Creates the overlay decorations for the given focused edit path. */
+/**
+ * Creates the overlay decorations for the given focused edit path.
+ */
 function newFocusedEditPath(path: paper.Path, focusedEditPath: FocusedEditPath) {
   const group = new paper.Group();
-  const scaleFactor = 1 / Transforms.getAttrScaling();
+  const scaleFactor = 1 / getAttrScaling();
   const matrix = localToViewportMatrix(path);
   const addRasterFn = (url: string, center: paper.Point) => {
     const raster = new paper.Raster(url, center);
@@ -407,10 +410,93 @@ function newSelectionBox(from: paper.Point, to: paper.Point) {
   return path;
 }
 
+/** Creates a new 'split segment at location' hover item. */
+function newSplitSegmentAtLocationHover({ curve, point, path }: paper.CurveLocation) {
+  const group = new paper.Group();
+  group.guide = true;
+
+  const highlightedCurve = new paper.Path([curve.segment1, curve.segment2]);
+  highlightedCurve.guide = true;
+  highlightedCurve.matrix = path.matrix.clone();
+  highlightedCurve.strokeColor = 'red';
+  highlightedCurve.strokeWidth = 4 / paper.view.zoom;
+  group.addChild(highlightedCurve);
+
+  const highlightedPoint = new paper.Path.Circle(point, 7 / paper.view.zoom);
+  highlightedPoint.guide = true;
+  highlightedPoint.fillColor = 'green';
+  group.addChild(highlightedPoint);
+
+  return group;
+}
+
+/**
+ * Creates a new pen segment preview path.
+ */
+function newPenSegmentPreview(from: paper.Segment, to: paper.Point) {
+  const path = new paper.Path({
+    guide: true,
+    strokeWidth: 4 / paper.view.zoom,
+    strokeColor: 'red',
+  });
+  const fromPoint = from.point.clone();
+  const fromHandleIn = from.handleIn ? from.handleIn.clone() : undefined;
+  const fromHandleOut = from.handleOut ? from.handleOut.clone() : undefined;
+  path.add(
+    new paper.Segment({
+      point: fromPoint,
+      handleIn: fromHandleIn,
+      handleOut: fromHandleOut,
+    }),
+  );
+  path.add(to.clone());
+  return path;
+}
+
 /**
  * Computes the transform matrix that will transform the specified item to its
  * viewport coordinates.
  */
 function localToViewportMatrix(item: paper.Item) {
   return item.globalMatrix.prepended(paper.project.activeLayer.matrix.inverted());
+}
+
+/**
+ * Returns the project's CSS scale factor, representing the number of CSS pixels
+ * per viewport pixel.
+ */
+function getCssScaling() {
+  // Given unit vectors u0 = (0, 1) and v0 = (1, 0).
+  //
+  // After matrix mapping, we get u1 and v1. Let Θ be the angle between u1 and v1.
+  // Then the final scale we want is:
+  //
+  // Math.min(|u1|sin(Θ),|v1|sin(Θ)) = |u1||v1|sin(Θ) / Math.max(|u1|,|v1|)
+  //
+  // If Math.max(|u1|,|v1|) = 0, that means either x or y has a scale of 0.
+  //
+  // For the non-skew case, which is most of the cases, matrix scale is
+  // computing exactly the scale on x and y axis, and take the minimal of these two.
+  //
+  // For the skew case, an unit square will mapped to a parallelogram,
+  // and this function will return the minimal height of the 2 bases.
+  const { matrix } = paper.project.activeLayer;
+  const m = new paper.Matrix(matrix.a, matrix.b, matrix.c, matrix.d, 0, 0);
+  const u0 = new paper.Point(0, 1);
+  const v0 = new paper.Point(1, 0);
+  const u1 = u0.transform(m);
+  const v1 = v0.transform(m);
+  const sx = Math.hypot(u1.x, u1.y);
+  const sy = Math.hypot(v1.x, v1.y);
+  const dotProduct = u1.y * v1.x - u1.x * v1.y;
+  const maxScale = Math.max(sx, sy);
+  return maxScale > 0 ? Math.abs(dotProduct) / maxScale : 0;
+}
+
+/**
+ * Returns the project's physical scale factor, representing the number of physical
+ * pixels per viewport pixel.
+ */
+function getAttrScaling() {
+  return getCssScaling() * devicePixelRatio;
 }

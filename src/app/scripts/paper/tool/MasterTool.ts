@@ -18,7 +18,7 @@ import {
   SelectDragHandleGesture,
 } from 'app/scripts/paper/gesture';
 import { PaperLayer } from 'app/scripts/paper/PaperLayer';
-import { Guides, HitTests, Items, PivotType, Selections, Transforms } from 'app/scripts/paper/util';
+import { HitTests, PivotType } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
 import * as paper from 'paper';
 
@@ -214,7 +214,7 @@ export class MasterTool extends Tool {
       // Then we are beginning to build a new path from scratch.
       editPath.segments.length === 0 ||
       // Then we are extending an existing open path.
-      Selections.hasSingleSelectedEndPointSegment(editPath)
+      hasSingleSelectedEndPointSegment(editPath)
     ) {
       return new SelectDragDrawSegmentsGesture(this.ps);
     }
@@ -238,4 +238,17 @@ export class MasterTool extends Tool {
       this.currentGesture.onKeyUp(event);
     }
   }
+}
+
+/**
+ * Returns true iff the given path is open and has a single selected
+ * end point segment.
+ */
+function hasSingleSelectedEndPointSegment(path: paper.Path) {
+  const selectedSegments = path.segments.filter(s => s.selected);
+  return (
+    !path.closed &&
+    selectedSegments.length === 1 &&
+    (selectedSegments[0].isFirst() || selectedSegments[0].isLast())
+  );
 }

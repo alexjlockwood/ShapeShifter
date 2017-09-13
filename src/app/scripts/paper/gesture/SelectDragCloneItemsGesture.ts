@@ -8,7 +8,6 @@ import {
 } from 'app/model/layers';
 import { MathUtil, Matrix } from 'app/scripts/common';
 import { PaperLayer } from 'app/scripts/paper/PaperLayer';
-import { Transforms } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
 import * as paper from 'paper';
 

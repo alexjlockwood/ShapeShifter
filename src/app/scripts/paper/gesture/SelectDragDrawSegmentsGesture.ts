@@ -1,5 +1,5 @@
 import { MathUtil } from 'app/scripts/common';
-import { Cursor, Cursors, Guides } from 'app/scripts/paper/util';
+import { Cursor, Cursors } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
 import * as _ from 'lodash';
 import * as paper from 'paper';
@@ -80,7 +80,7 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
 
   // @Override
   onMouseDrag(event: paper.ToolEvent) {
-    Guides.hideAddSegmentToCurveHoverGroup();
+    // Guides.hideAddSegmentToCurveHoverGroup();
 
     const dragVector = event.point.subtract(event.downPoint);
     const snapPoint = event.modifiers.shift

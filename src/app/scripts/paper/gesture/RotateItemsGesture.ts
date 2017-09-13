@@ -1,4 +1,3 @@
-import { Guides, Items, Selections } from 'app/scripts/paper/util';
 import * as paper from 'paper';
 
 import { Gesture } from './Gesture';
@@ -16,13 +15,11 @@ export class RotateItemsGesture extends Gesture {
   // @Override
   onMouseDown(event: paper.ToolEvent) {
     // Guides.hideHoverPath();
-
-    this.selectedItems = Selections.getSelectedItems();
-    this.initialMatrices = this.selectedItems.map(i => i.matrix.clone());
-    this.pivot = Items.computeBoundingBox(this.selectedItems).center.clone();
-
+    // this.selectedItems = Selections.getSelectedItems();
+    // this.initialMatrices = this.selectedItems.map(i => i.matrix.clone());
+    // this.pivot = Items.computeBoundingBox(this.selectedItems).center.clone();
     // While transforming object, never show the bounds.
-    Guides.hideSelectionBoundsPath();
+    // Guides.hideSelectionBoundsPath();
   }
 
   // @Override
@@ -38,15 +35,10 @@ export class RotateItemsGesture extends Gesture {
 
   // @Override
   onMouseUp(event: paper.ToolEvent) {
-    Guides.hideSelectionBoundsPath();
-    const selectedItems = Selections.getSelectedItems();
-    if (selectedItems.length) {
-      Guides.showSelectionBoundsPath(computeBoundingBox(selectedItems));
-    }
+    // Guides.hideSelectionBoundsPath();
+    // const selectedItems = Selections.getSelectedItems();
+    // if (selectedItems.length) {
+    //   Guides.showSelectionBoundsPath(computeBoundingBox(selectedItems));
+    // }
   }
-}
-
-/** Computes the bounding box for the specified items. */
-function computeBoundingBox(items: ReadonlyArray<paper.Item>) {
-  return items.reduce((p, c) => p.unite(c.bounds), items[0].bounds);
 }
