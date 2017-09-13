@@ -272,7 +272,8 @@ function newHover(item: paper.Item) {
     hoverPath.guide = true;
     hoverPath.strokeScaling = false;
     hoverPath.strokeWidth = 2 / paper.view.zoom;
-    hoverPath.matrix = Transforms.localToViewportCoordinates(item);
+    // Transform the hover path from local coordinates to viewport coordinates.
+    hoverPath.matrix = item.globalMatrix.prepended(paper.project.activeLayer.matrix.inverted());
   }
   return hoverPath;
 }
@@ -290,11 +291,12 @@ function newSelectionBounds(items: ReadonlyArray<paper.Item>) {
     }
   });
 
-  const transformRectFn = Transforms.transformRectangle;
-  const localToViewportFn = Transforms.localToViewportCoordinates;
+  const transformRectFn = (rect: paper.Rectangle, m: paper.Matrix) => {
+    return new paper.Rectangle(rect.topLeft.transform(m), rect.bottomRight.transform(m));
+  };
   const bounds = flattenedItems.reduce((p, c) => {
-    return p.unite(transformRectFn(c.bounds, localToViewportFn(c)));
-  }, transformRectFn(flattenedItems[0].bounds, localToViewportFn(flattenedItems[0])));
+    return p.unite(transformRectFn(c.bounds, localToViewportMatrix(c)));
+  }, transformRectFn(flattenedItems[0].bounds, localToViewportMatrix(flattenedItems[0])));
 
   // Draw an outline for the bounded box.
   const outlinePath = new paper.Path.Rectangle(bounds);
@@ -332,7 +334,7 @@ function newSelectionBounds(items: ReadonlyArray<paper.Item>) {
 function newFocusedEditPath(path: paper.Path, focusedEditPath: FocusedEditPath) {
   const group = new paper.Group();
   const scaleFactor = 1 / Transforms.getAttrScaling();
-  const matrix = Transforms.localToViewportCoordinates(path);
+  const matrix = localToViewportMatrix(path);
   const addRasterFn = (url: string, center: paper.Point) => {
     const raster = new paper.Raster(url, center);
     raster.scale(scaleFactor, scaleFactor);
@@ -403,4 +405,12 @@ function newSelectionBox(from: paper.Point, to: paper.Point) {
   path.strokeColor = '#aaaaaa';
   path.dashArray = [3 / paper.view.zoom];
   return path;
+}
+
+/**
+ * Computes the transform matrix that will transform the specified item to its
+ * viewport coordinates.
+ */
+function localToViewportMatrix(item: paper.Item) {
+  return item.globalMatrix.prepended(paper.project.activeLayer.matrix.inverted());
 }

@@ -1,23 +1,6 @@
 import * as paper from 'paper';
 
 /**
- * Computes the transform matrix that will transform the specified item to its
- * viewport coordinates.
- */
-export function localToViewportCoordinates(item: paper.Item) {
-  const matrix = new paper.Matrix();
-  while (item !== paper.project.activeLayer) {
-    matrix.prepend(item.matrix);
-    item = item.parent;
-  }
-  return matrix;
-}
-
-export function transformRectangle(rect: paper.Rectangle, matrix: paper.Matrix) {
-  return new paper.Rectangle(rect.topLeft.transform(matrix), rect.bottomRight.transform(matrix));
-}
-
-/**
  * Returns the project's CSS scale factor, representing the number of CSS pixels
  * per viewport pixel.
  */
