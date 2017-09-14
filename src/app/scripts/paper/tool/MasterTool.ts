@@ -18,7 +18,7 @@ import {
   SelectDragHandleGesture,
 } from 'app/scripts/paper/gesture';
 import { PaperLayer } from 'app/scripts/paper/PaperLayer';
-import { HitTests, PivotType } from 'app/scripts/paper/util';
+import { PivotType } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
 import * as paper from 'paper';
 
@@ -117,7 +117,10 @@ export class MasterTool extends Tool {
       }
     }
 
-    const hitResult = HitTests.selectionMode(event.point);
+    const hitResult = this.paperLayer.hitTest(event.point, {
+      fill: true,
+      stroke: true,
+    });
     if (!hitResult) {
       // If there is no hit item, then batch select items using a selection box box.
       return new BatchSelectItemsGesture(this.ps);
