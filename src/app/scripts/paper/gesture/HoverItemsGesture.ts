@@ -1,4 +1,4 @@
-import { PaperLayer } from 'app/scripts/paper/PaperLayer';
+import { PaperLayer } from 'app/scripts/paper/item';
 import { Cursor, Cursors } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
 import * as paper from 'paper';
@@ -24,7 +24,7 @@ export class HoverItemsGesture extends Gesture {
     const hitResult = this.paperLayer.hitTest(point, {
       fill: true,
       stroke: true,
-      match: ({ item }: paper.HitResult) => {
+      match: ({ item }) => {
         // TODO: support hovering over groups?
         return item instanceof paper.Path && !selectedLayers.has(item.data.id);
       },

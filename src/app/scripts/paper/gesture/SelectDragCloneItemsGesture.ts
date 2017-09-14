@@ -7,7 +7,7 @@ import {
   VectorLayer,
 } from 'app/model/layers';
 import { MathUtil, Matrix } from 'app/scripts/common';
-import { PaperLayer } from 'app/scripts/paper/PaperLayer';
+import { PaperLayer } from 'app/scripts/paper/item';
 import { PaperService } from 'app/services';
 import * as paper from 'paper';
 

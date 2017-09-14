@@ -11,6 +11,10 @@ import { FocusedEditPath } from 'app/store/paper/actions';
 import * as _ from 'lodash';
 import * as paper from 'paper';
 
+import { PathHandleRaster } from './PathHandleRaster';
+import { PathSegmentRaster } from './PathSegmentRaster';
+import { SelectionBoundsSegmentRaster } from './SelectionBoundsSegmentRaster';
+
 // TODO: use Item#visible to hook up 'visible layer ids' from store
 export class PaperLayer extends paper.Layer {
   private vectorLayerItem: paper.Item;
@@ -23,11 +27,6 @@ export class PaperLayer extends paper.Layer {
   private vectorLayer: VectorLayer;
   private selectedLayerIds: ReadonlySet<string> = new Set();
   private hoveredLayerId: string;
-
-  constructor() {
-    super();
-    this.strokeScaling = false;
-  }
 
   setVectorLayer(vl: VectorLayer) {
     this.vectorLayer = vl;
@@ -311,7 +310,7 @@ function newSelectionBounds(items: ReadonlyArray<paper.Item>) {
   const segmentSize = 6 / paper.view.zoom / getCssScaling();
   const createSegmentFn = (center: paper.Point) => {
     // TODO: avoid creating rasters in a loop like this
-    const handle = new paper.Raster('/assets/handle.png', center);
+    const handle = new SelectionBoundsSegmentRaster(center);
     const scaleFactor = 1 / getAttrScaling();
     handle.scale(scaleFactor, scaleFactor);
     return handle;

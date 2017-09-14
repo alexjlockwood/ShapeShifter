@@ -1,5 +1,5 @@
 import { ToolMode } from 'app/model/paper';
-import { PaperLayer } from 'app/scripts/paper/PaperLayer';
+import { PaperLayer } from 'app/scripts/paper/item';
 import { PaperService } from 'app/services';
 import { getHoveredLayerId, getSelectedLayerIds, getVectorLayer } from 'app/store/layers/selectors';
 import { getFocusedEditPath, getPathPreview, getSelectionBox } from 'app/store/paper/selectors';

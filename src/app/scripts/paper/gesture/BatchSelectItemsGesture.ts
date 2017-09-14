@@ -1,4 +1,4 @@
-import { PaperLayer } from 'app/scripts/paper/PaperLayer';
+import { PaperLayer } from 'app/scripts/paper/item';
 import { PaperService } from 'app/services';
 import * as paper from 'paper';
 

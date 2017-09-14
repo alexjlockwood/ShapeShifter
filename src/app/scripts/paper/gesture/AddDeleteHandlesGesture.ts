@@ -11,6 +11,7 @@ export class AddDeleteHandlesGesture extends Gesture {
     super();
   }
 
+  // @Override
   onMouseDown(event: paper.ToolEvent) {
     // if (this.segment.hasHandles()) {
     //   this.segment.clearHandles();

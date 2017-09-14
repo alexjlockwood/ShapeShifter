@@ -60,273 +60,6 @@ declare module 'paper' {
    */
   export function activate(): void;
 
-  /**
-   * An affine transform performs a linear mapping from 2D coordinates to other 2D coordinates that preserves the "straightness" and "parallelness" of lines.
-   * Such a coordinate transformation can be represented by a 3 row by 3 column matrix with an implied last row of [ 0 0 1 ]. This matrix transforms source coordinates (x,y) into destination coordinates (x',y') by considering them to be a column vector and multiplying the coordinate vector by the matrix according to the following process:
-   * This class is optimized for speed and minimizes calculations based on its knowledge of the underlying matrix (as opposed to say simply performing matrix multiplication).
-   */
-  export class Matrix {
-    /**
-     * Creates a 2D affine transformation matrix that describes the identity transformation.
-     */
-    constructor();
-
-    /**
-     * Creates a 2D affine transform.
-     * @param a - the a property of the transform
-     * @param c - the c property of the transform
-     * @param b - the b property of the transform
-     * @param d - the d property of the transform
-     * @param tx - the tx property of the transform
-     * @param ty - the ty property of the transform
-     */
-    constructor(a: number, c: number, b: number, d: number, tx: number, ty: number);
-
-    /**
-     * The value that affects the transformation along the x axis when scaling or rotating,
-     * positioned at (0, 0) in the transformation matrix.
-     */
-    a: number;
-
-    /**
-     * The value that affects the transformation along the y axis when rotating or skewing,
-     * positioned at (1, 0) in the transformation matrix.
-     */
-    c: number;
-
-    /**
-     * The value that affects the transformation along the x axis when rotating or skewing,
-     * positioned at (0, 1) in the transformation matrix.
-     */
-    b: number;
-
-    /**
-     * The value that affects the transformation along the y axis when scaling or rotating,
-     * positioned at (1, 1) in the transformation matrix.
-     */
-    d: number;
-
-    /**
-     * The distance by which to translate along the x axis, positioned at (2, 0) in
-     * the transformation matrix.
-     */
-    tx: number;
-
-    /**
-     * The distance by which to translate along the y axis, positioned at (2, 1) in
-     * the transformation matrix.
-     */
-    ty: number;
-
-    /**
-     * The transform values as an array, in the same sequence as they are passed to
-     * initialize(a, c,b,d,tx,ty).
-     * Read only.
-     */
-    values: number;
-
-    /**
-     * The translation of the matrix as a vector.
-     * Read only.
-     */
-    translation: Point;
-
-    /**
-     * The scaling values of the matrix, if it can be decomposed.
-     * Read only.
-     */
-    scaling: Point;
-
-    /**
-     * The rotation angle of the matrix, if it can be decomposed.
-     * Read only.
-     */
-    rotation: number;
-
-    /**
-     * Sets this transform to the matrix specified by the 6 values.
-     * @param a - the a property of the transform
-     * @param c - the c property of the transform
-     * @param b - the b property of the transform
-     * @param d - the d property of the transform
-     * @param tx - the tx property of the transform
-     * @param ty - the ty property of the transform
-     */
-    set(a: number, c: number, b: number, d: number, tx: number, ty: number): Matrix;
-
-    /**
-     * Returns a copy of this transform
-     */
-    clone(): Matrix;
-
-    /**
-     * Checks whether the two matrices describe the same transformation.
-     * @param matrix - the matrix to compare this matrix to
-     */
-    equals(matrix: Matrix): boolean;
-
-    /**
-     * returns a string representation of this transform
-     */
-    toString(): string;
-
-    /**
-     * Resets the matrix by setting its values to the ones of the identity matrix that results in no transformation.
-     */
-    reset(): void;
-
-    /**
-     * Attempts to apply the matrix to the content of item that it belongs to, meaning its transformation is baked into the item's content or children.
-     * @param recursively - controls whether to apply transformations recursively on children
-     */
-    apply(): boolean;
-
-    /**
-     * Concatenates this transform with a translate transformation.
-     * @param point - the vector to translate by
-     */
-    translate(point: Point): Matrix;
-
-    /**
-     * Concatenates this transform with a translate transformation.
-     * @param dx - the distance to translate in the x direction
-     * @param dy - the distance to translate in the y direction
-     */
-    translate(dx: number, dy: number): Matrix;
-
-    /**
-     * Concatenates this transform with a scaling transformation.
-     * @param scale - the scaling factor
-     * @param center [optional] - the center for the scaling transformation
-     */
-    scale(scale: number, center?: Point): Matrix;
-
-    /**
-     * Concatenates this transform with a scaling transformation.
-     * @param hor - the horizontal scaling factor
-     * @param ver - the vertical scaling factor
-     * @param center [optional] - the center for the scaling transformation
-     */
-    scale(hor: number, ver: number, center?: Point): Matrix;
-
-    /**
-     * Concatenates this transform with a rotation transformation around an anchor point.
-     * @param angle - the angle of rotation measured in degrees
-     * @param center - the anchor point to rotate around
-     */
-    rotate(angle: number, center: Point): Matrix;
-
-    /**
-     * Concatenates this transform with a rotation transformation around an anchor point.
-     * @param angle - the angle of rotation measured in degrees
-     * @param x - the x coordinate of the anchor point
-     * @param y - the y coordinate of the anchor point
-     */
-    rotate(angle: number, x: number, y: number): Matrix;
-
-    /**
-     * Concatenates this transform with a shear transformation.
-     * @param shear - the shear factor in x and y direction
-     * @param center [optional] - the center for the shear transformation
-     */
-    shear(shear: Point, center?: Point): Matrix;
-
-    /**
-     * Concatenates this transform with a shear transformation.
-     * @param hor - the horizontal shear factor
-     * @param ver - the vertical shear factor
-     * @param center [optional] - the center for the shear transformation
-     */
-    shear(hor: number, ver: number, center?: Point): Matrix;
-
-    /**
-     * Concatenates this transform with a skew transformation.
-     * @param skew - the skew angles in x and y direction in degrees
-     * @param center [optional] - the center for the skew transformation
-     */
-    skew(skew: Point, center?: Point): Matrix;
-
-    /**
-     * Concatenates this transform with a skew transformation.
-     * @param hor - the horizontal skew angle in degrees
-     * @param ver - the vertical skew angle in degrees
-     * @param center [optional] - the center for the skew transformation
-     */
-    skew(hor: number, ver: number, center?: Point): Matrix;
-
-    /**
-     * Concatenates the given affine transform to this transform.
-     * @param mx - the transform to concatenate
-     */
-    append(mx: Matrix): Matrix;
-
-    appended(mx: Matrix): Matrix;
-
-    /**
-     * Pre-concatenates the given affine transform to this transform.
-     * @param mx - the transform to preconcatenate
-     */
-    prepend(mx: Matrix): Matrix;
-
-    prepended(mx: Matrix): Matrix;
-
-    /**
-     * Returns a new instance of the result of the concatenation of the given affine transform with this transform.
-     * @param mx - the transform to concatenate
-     */
-    chain(mx: Matrix): Matrix;
-
-    /**
-     * Returns whether this transform is the identity transform
-     */
-    isIdentity(): boolean;
-
-    /**
-     * Returns whether the transform is invertible. A transform is not invertible if the determinant is 0 or any value is non-finite or NaN.
-     */
-    isInvertible(): boolean;
-
-    /**
-     * Checks whether the matrix is singular or not. Singular matrices cannot be inverted.
-     */
-    isSingular(): boolean;
-
-    /**
-     * Transforms a point and returns the result.
-     * @param point - the point to be transformed
-     */
-    transform(point: Point): Matrix;
-
-    /**
-     * Transforms an array of coordinates by this matrix and stores the results into the destination array, which is also returned.
-     * @param src - the array containing the source points as x, y value pairs
-     * @param dst - the array into which to store the transformed point pairs
-     * @param count - the number of points to transform
-     */
-    transform(src: number[], dst: number[], count: number): number[];
-
-    /**
-     * Inverse transforms a point and returns the result.
-     * @param point - the point to be transformed
-     */
-    inverseTransform(point: Point): Matrix;
-
-    /**
-     * Attempts to decompose the affine transformation described by this matrix into scaling, rotation and shearing, and returns an object with these properties if it succeeded, null otherwise.
-     */
-    decompose(): any;
-
-    /**
-     * Creates the inversion of the transformation of the matrix and returns it as a new insteance. If the matrix is not invertible (in which case isSingular() returns true), null is returned.
-     */
-    inverted(): Matrix;
-
-    /**
-     * Applies this matrix to the specified Canvas Context.
-     * @param ctx -
-     */
-    applyToContext(ctx: CanvasRenderingContext2D): void;
-  }
   export interface PointProps {
     /**
      * The x coordinate of the point
@@ -1346,12 +1079,15 @@ declare module 'paper' {
     fullySelected: boolean;
   }
   export interface Item extends ItemProps {}
+
   /**
-   * The Item type allows you to access and modify the items in Paper.js projects. Its functionality is inherited by different project item types such as Path, CompoundPath, Group, Layer and Raster. They each add a layer of functionality that is unique to their type, but share the underlying properties and functions that they inherit from Item.
+   * The Item type allows you to access and modify the items in Paper.js projects.
+   * Its functionality is inherited by different project item types such as Path,
+   * CompoundPath, Group, Layer and Raster. They each add a layer of functionality
+   * that is unique to their type, but share the underlying properties and
+   * functions that they inherit from Item.
    */
   export abstract class Item {
-    equals(item: Item): boolean;
-
     /**
      * Item level handler function to be called on each frame of an animation.
      * The function receives an event object which contains information about the frame event:
@@ -1437,62 +1173,62 @@ declare module 'paper' {
     intersects(item: Item): boolean;
 
     /**
-     * Perform a hit-test on the items contained within the project at the location of the specified point.
-     * The options object allows you to control the specifics of the hit-test and may contain a combination of the following values:
+     * Perform a hit-test on the items contained within the project at the
+     * location of the specified point. The options object allows you to control
+     * the specifics of the hit-test and may contain a combination of the following values:
      * @param point - the point where the hit-test should be performed
-     * @param options.tolerance -the tolerance of the hit-test in points. Can also be controlled through paperScope.settings.hitTolerance
-     * @param options.class - only hit-test again a certain item class and its sub-classes: Group, Layer, Path, CompoundPath, Shape, Raster, PlacedSymbol, PointText, etc.
+     * @param options.tolerance -the tolerance of the hit-test in points.
+     * Can also be controlled through paperScope.settings.hitTolerance
+     * @param options.class - only hit-test again a certain item class and its sub-classes:
+     * Group, Layer, Path, CompoundPath, Shape, Raster, PlacedSymbol, PointText, etc.
      * @param options.fill - hit-test the fill of items.
-     * @param options.stroke - hit-test the stroke of path items, taking into account the setting of stroke color and width.
+     * @param options.stroke - hit-test the stroke of path items, taking into
+     * account the setting of stroke color and width.
      * @param options.segments - hit-test for segment.point of Path items.
-     * @param options.curves - hit-test the curves of path items, without taking the stroke color or width into account.
-     * @param options.handles - hit-test for the handles.  (segment.handleIn / segment.handleOut) of path segments.
-     * @param options.ends - only hit-test for the first or last segment points of open path items.
-     * @param options.bounds - hit-test the corners and side-centers of the bounding rectangle of items (item.bounds).
-     * @param options.center - hit-test the rectangle.center of the bounding rectangle of items (item.bounds).
+     * @param options.curves - hit-test the curves of path items, without
+     * taking the stroke color or width into account.
+     * @param options.handles - hit-test for the handles.
+     * (segment.handleIn / segment.handleOut) of path segments.
+     * @param options.ends - only hit-test for the first or last segment points
+     * of open path items.
+     * @param options.bounds - hit-test the corners and side-centers of the
+     * bounding rectangle of items (item.bounds).
+     * @param options.center - hit-test the rectangle.center of the bounding
+     * rectangle of items (item.bounds).
      * @param options.guides - hit-test items that have Item#guide set to true.
      * @param options.selected - only hit selected items.
      */
-    hitTest(
-      point: Point,
-      options?: {
-        tolerance?: number;
-        class?: Constructor<
-          Group | Layer | Path | CompoundPath | Shape | Raster | Symbol | PointText
-        >;
-        fill?: boolean;
-        stroke?: boolean;
-        segments?: boolean;
-        curves?: boolean;
-        handles?: boolean;
-        ends?: boolean;
-        bounds?: boolean;
-        center?: boolean;
-        guides?: boolean;
-        selected?: boolean;
-        match?: (hit: HitResult) => boolean;
-      },
-    ): HitResult;
+    hitTest<C extends Item = Item>(point: Point, options?: HitOptions<C>): HitResult<C>;
 
     /**
-     * Checks whether the item matches the criteria described by the given object, by iterating over all of its properties and matching against their values through matches(name, compare).
+     * Checks whether the item matches the criteria described by the given object, by iterating
+     * over all of its properties and matching against their values through matches(name, compare).
      * See project.getItems(match) for a selection of illustrated examples.
      * @param match - the criteria to match against.
      */
     matches(match: any): boolean;
 
     /**
-     * Checks whether the item matches the given criteria. Extended matching is possible by providing a compare function or a regular expression.
-     * Matching points, colors only work as a comparison of the full object, not partial matching (e.g. only providing the x-coordinate to match all points with that x-value). Partial matching does work for item.data.
+     * Checks whether the item matches the given criteria. Extended matching is possible by providing
+     * a compare function or a regular expression.
+     * Matching points, colors only work as a comparison of the full object, not partial matching (e.g.
+     * only providing the x-coordinate to match all points with that x-value). Partial matching does
+     * work for item.data.
      * @param name - the name of the state to match against.
      * @param compare - the value, function or regular expression to compare against.
      */
     matches(name: string, compare: any): boolean;
 
     /**
-     * Fetch the descendants (children or children of children) of this item that match the properties in the specified object.
-     * Extended matching is possible by providing a compare function or regular expression. Matching points, colors only work as a comparison of the full object, not partial matching (e.g. only providing the x- coordinate to match all points with that x-value). Partial matching does work for item.data.
-     * Matching items against a rectangular area is also possible, by setting either match.inside or match.overlapping to a rectangle describing the area in which the items either have to be fully or partly contained.
+     * Fetch the descendants (children or children of children) of this item that match the
+     * properties in the specified object.
+     * Extended matching is possible by providing a compare function or regular expression.
+     * Matching points, colors only work as a comparison of the full object, not
+     * partial matching (e.g. only providing the x- coordinate to match all points with
+     * that x-value). Partial matching does work for item.data.
+     * Matching items against a rectangular area is also possible, by setting either
+     * match.inside or match.overlapping to a rectangle describing the area in which
+     * the items either have to be fully or partly contained.
      * @param match.inside - the rectangle in which the items need to be fully contained.
      * @param match.overlapping - the rectangle with which the items need to at least partly overlap.
      */
@@ -1819,8 +1555,6 @@ declare module 'paper' {
      */
     fitBounds(rectangle: Rectangle, fill?: boolean): void;
 
-    //I cannot use function: Function as it is a reserved keyword
-
     /**
      * Attach an event handler to the tool.
      * @param type - String('mousedown'|'mouseup'|'mousedrag'|'mousemove'|'keydown'|'keyup') the event type
@@ -1928,7 +1662,10 @@ declare module 'paper' {
      * Removes the item when the next tool.onMouseUp event is fired.
      */
     removeOnUp(): void;
+
+    equals(item: Item): boolean;
   }
+
   export interface GroupProps extends ItemProps {
     /**
      * Specifies whether the group item is to be clipped.
@@ -2208,10 +1945,11 @@ declare module 'paper' {
      */
     symbol: Symbol;
   }
+
   /**
    * A HitResult object contains information about the results of a hit test. It is returned by item.hitTest(point) and project.hitTest(point).
    */
-  export class HitResult {
+  export class HitResult<C extends Item> {
     /**
      * Describes the type of the hit result. For example, if you hit a segment point, the type would be 'segment'.
      * type String('segment', 'handle-in', 'handle-out', 'curve', 'stroke', 'fill', 'bounds', 'center', 'pixel')
@@ -2250,6 +1988,7 @@ declare module 'paper' {
      */
     point: Point;
   }
+
   export type HitType =
     | 'segment'
     | 'handle-in'
@@ -2260,13 +1999,16 @@ declare module 'paper' {
     | 'bounds'
     | 'center'
     | 'pixel';
+
   export interface PathItemProps extends ItemProps {
     /**
      * The path's geometry, formatted as SVG style path data.
      */
     pathData: string;
   }
+
   export interface PathItem extends PathItemProps {}
+
   /**
    * The PathItem class is the base for any items that describe paths and offer
    * standardised methods for drawing and path manipulation, such as Path and CompoundPath.
@@ -2562,7 +2304,9 @@ declare module 'paper' {
      */
     interiorPoint: Point;
   }
+
   export interface Path extends PathProps {}
+
   /**
    * The path item represents a path in a Paper.js project.
    */
@@ -2749,7 +2493,9 @@ declare module 'paper' {
      */
     getNearestPoint(point: Point): Point;
   }
+
   type Rect = Rectangle;
+
   namespace Path {
     export class Line extends Path {
       /**
@@ -2873,6 +2619,7 @@ declare module 'paper' {
       constructor(object?: Partial<PathProps>);
     }
   }
+
   export interface CompoundPathProps extends PathItemProps {
     /**
      * Specifies whether the compound path is oriented clock-wise.
@@ -2916,7 +2663,9 @@ declare module 'paper' {
      */
     area: number;
   }
+
   export interface CompoundPath extends CompoundPathProps {}
+
   /**
    * A compound path contains two or more paths, holes are drawn where
    * the paths overlap. All the paths in a compound path take on the
@@ -3007,6 +2756,7 @@ declare module 'paper' {
      */
     previous: Segment;
   }
+
   /**
    * The Segment object represents the points of a path through which its
    * Curve objects pass. The segments of a path can be accessed through
@@ -3120,6 +2870,7 @@ declare module 'paper' {
      */
     smooth(options?: { type?: 'catmull-rom' | 'geometric'; factor?: number }): void;
   }
+
   /**
    * The Curve object represents the parts of a path that are connected by two following Segment objects. The curves of a path can be accessed through its path.curves array.
    * While a segment describe the anchor point and its incoming and outgoing handles, a Curve object describes the curve passing between two such segments. Curves and segments represent two different ways of looking at the same thing, but focusing on different aspects. Curves for example offer many convenient ways to work with parts of the path, finding lengths, positions or tangents at given offsets.
@@ -3326,12 +3077,11 @@ declare module 'paper' {
      */
     getCurvatureAt(offset: number, isParameter?: boolean): Point;
 
-    // ADDED BY ALEX LOCKWOOD
     divideAt(location: CurveLocation | number): Curve;
 
-    // ADDED BY ALEX LOCKWOOD
     divideAtTime(time: number): Curve;
   }
+
   /**
    * CurveLocation objects describe a location on Curve objects, as defined by the curve parameter, a value between 0 (beginning of the curve) and 1 (end of the curve). If the curve is part of a Path item, its index inside the path.curves array is also provided.
    * The class is in use in many places, such as path.getLocationAt(offset, isParameter), path.getLocationOf(point), Path#getNearestLocation(point),{@linkPathItem#getIntersections(path), etc.
@@ -3416,6 +3166,7 @@ declare module 'paper' {
      */
     toString(): string;
   }
+
   /**
    * A Project object in Paper.js is what usually is referred to as the document: The top level object that holds all the items contained in the scene graph. As the term document is already taken in the browser context, it is called Project.
    * Projects allow the manipulation of the styles that are applied to all newly created items, give access to the selected items, and will in future versions offer ways to query for items in the scene graph defining specific requirements, and means to persist and load from different formats, such as SVG and PDF.
@@ -3462,7 +3213,6 @@ declare module 'paper' {
      */
     symbols: Symbol[];
 
-    // ADDED BY ALEX LOCKWOOD
     selectedItems: Item[];
 
     /**
@@ -3519,7 +3269,7 @@ declare module 'paper' {
      * @param options.guides - hit-test items that have Item#guide set to true.
      * @param options.selected - only hit selected items.
      */
-    hitTest(point: Point, options?: HitOptions): HitResult;
+    hitTest<C extends Item = Item>(point: Point, options?: HitOptions<C>): HitResult<C>;
 
     /**
      * Fetch items contained within the project whose properties match the criteria
@@ -3582,9 +3332,10 @@ declare module 'paper' {
 
     addLayer(layer: Layer): Layer | null;
   }
-  export interface HitOptions {
+
+  export interface HitOptions<C extends Item = Item> {
     tolerance?: number;
-    class?: Constructor<Group | Layer | Path | CompoundPath | Shape | Raster | Symbol | PointText>;
+    class?: Constructor<C>;
     fill?: boolean;
     stroke?: boolean;
     segments?: boolean;
@@ -3595,8 +3346,9 @@ declare module 'paper' {
     center?: boolean;
     guides?: boolean;
     selected?: boolean;
-    match?: (hitResult: HitResult) => boolean;
+    match?: (hitResult: HitResult<C>) => boolean;
   }
+
   /**
    * Symbols allow you to place multiple instances of an item in your project. This can save memory, since all instances of a symbol simply refer to the original item and it can speed up moving around complex objects, since internal properties such as segment lists and gradient positions don't need to be updated with every transformation.
    */

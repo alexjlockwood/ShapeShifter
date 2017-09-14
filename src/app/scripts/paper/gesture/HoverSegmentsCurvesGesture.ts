@@ -1,4 +1,4 @@
-import { PaperLayer } from 'app/scripts/paper/PaperLayer';
+import { PaperLayer } from 'app/scripts/paper/item';
 import { Cursor, Cursors } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
 import * as _ from 'lodash';
@@ -35,36 +35,36 @@ export class HoverSegmentsCurvesGesture extends Gesture {
     // this.handleMouseMoveHit(hitResult);
   }
 
-  private handleMouseMoveHit(hitResult: paper.HitResult) {
-    // if (hitResult.type === 'segment') {
-    //   const singleSelectedSegment = this.findSingleSelectedEndSegment();
-    //   if (
-    //     singleSelectedSegment &&
-    //     ((singleSelectedSegment.isFirst() && hitResult.segment.isLast()) ||
-    //       (singleSelectedSegment.isLast() && hitResult.segment.isFirst()))
-    //   ) {
-    //     Cursors.set(Cursor.PenAdd);
-    //     Guides.showPenPathPreviewPath(singleSelectedSegment, hitResult.segment.point);
-    //     return;
-    //   }
-    // }
-    // switch (hitResult.type) {
-    //   case 'segment':
-    //   case 'handle-in':
-    //   case 'handle-out':
-    //     // Show a point select cursor if the user is hovering over
-    //     // a segment or handle.
-    //     Cursors.set(Cursor.PointSelect);
-    //     break;
-    //   case 'stroke':
-    //   case 'curve':
-    //     // Show a pen add cursor if the user is hovering over a curve
-    //     // on the selected edit path.
-    //     Cursors.set(Cursor.PenAdd);
-    //     Guides.showAddSegmentToCurveHoverGroup(hitResult.location);
-    //     break;
-    // }
-  }
+  // private handleMouseMoveHit(hitResult: paper.HitResult) {
+  // if (hitResult.type === 'segment') {
+  //   const singleSelectedSegment = this.findSingleSelectedEndSegment();
+  //   if (
+  //     singleSelectedSegment &&
+  //     ((singleSelectedSegment.isFirst() && hitResult.segment.isLast()) ||
+  //       (singleSelectedSegment.isLast() && hitResult.segment.isFirst()))
+  //   ) {
+  //     Cursors.set(Cursor.PenAdd);
+  //     Guides.showPenPathPreviewPath(singleSelectedSegment, hitResult.segment.point);
+  //     return;
+  //   }
+  // }
+  // switch (hitResult.type) {
+  //   case 'segment':
+  //   case 'handle-in':
+  //   case 'handle-out':
+  //     // Show a point select cursor if the user is hovering over
+  //     // a segment or handle.
+  //     Cursors.set(Cursor.PointSelect);
+  //     break;
+  //   case 'stroke':
+  //   case 'curve':
+  //     // Show a pen add cursor if the user is hovering over a curve
+  //     // on the selected edit path.
+  //     Cursors.set(Cursor.PenAdd);
+  //     Guides.showAddSegmentToCurveHoverGroup(hitResult.location);
+  //     break;
+  // }
+  // }
 
   /**
    * Returns the single selected end point segment for the selected
