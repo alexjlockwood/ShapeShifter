@@ -1,5 +1,5 @@
 import { PaperLayer } from 'app/scripts/paper/PaperLayer';
-import { Cursor, Cursors, HitTests } from 'app/scripts/paper/util';
+import { Cursor, Cursors } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
 import * as _ from 'lodash';
 import * as paper from 'paper';
