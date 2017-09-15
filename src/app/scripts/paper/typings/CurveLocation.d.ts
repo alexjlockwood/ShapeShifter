@@ -14,18 +14,18 @@ declare module 'paper' {
     /**
      * The segment of the curve which is closer to the described location.
      */
-    readonly segment: Readonly<Segment>;
+    readonly segment: Segment;
 
     /**
      * The curve that this location belongs to.
      */
-    readonly curve: Readonly<Curve>;
+    readonly curve: Curve;
 
     /**
      * The curve location on the intersecting curve, if this location is the result of a
      * call to pathItem.getIntersections(path) / Curve#getIntersections(curve).
      */
-    readonly intersection: Readonly<CurveLocation>;
+    readonly intersection: CurveLocation;
 
     /**
      * The path this curve belongs to, if any.
@@ -57,7 +57,7 @@ declare module 'paper' {
     /**
      * The point which is defined by the curve and parameter.
      */
-    readonly point: Readonly<Point>;
+    readonly point: Point;
 
     /**
      * The distance from the queried point to the returned location.

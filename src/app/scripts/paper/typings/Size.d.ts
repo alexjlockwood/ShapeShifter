@@ -45,7 +45,7 @@ declare module 'paper' {
      * Creates a Size object using the numbers in the given array as dimensions.
      * @param array - an array of numbers
      */
-    constructor(array: number[]);
+    constructor(array: [number, number]);
 
     /**
      * Creates a Size object using the properties in the given object.
@@ -65,10 +65,11 @@ declare module 'paper' {
      */
     constructor(point: Point);
 
-    /**
-     * WARNING - This seems undocumented/incorrect
-     */
-    equals(): boolean;
+    set(width: number, height: number): void;
+    set(array: [number, number]): void;
+    set(object?: Partial<SizeProps>): void;
+    set(size: Size): void;
+    set(point: Point): void;
 
     /**
      * Returns a copy of the size.
@@ -76,7 +77,7 @@ declare module 'paper' {
     clone(): Size;
 
     /**
-     * a string representation of the size
+     * A string representation of the size.
      */
     toString(): string;
 
@@ -88,7 +89,7 @@ declare module 'paper' {
     /**
      * Checks if the width or the height of the size are NaN.
      */
-    isNan(): boolean;
+    isNaN(): boolean;
 
     /**
      * Returns a new size with rounded width and height values. The object itself is not modified!

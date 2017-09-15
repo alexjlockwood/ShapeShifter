@@ -1,15 +1,18 @@
 declare module 'paper' {
   /**
-   * Style is used for changing the visual styles of items contained within a Paper.js project and is returned by item.style and project.currentStyle.
+   * Style is used for changing the visual styles of items contained within a
+   * Paper.js project and is returned by item.style and project.currentStyle.
    * All properties of Style are also reflected directly in Item, i.e.: item.fillColor.
-   * To set multiple style properties in one go, you can pass an object to item.style. This is a convenient way to define a style once and apply it to a series of items:
+   * To set multiple style properties in one go, you can pass an object
+   * to item.style. This is a convenient way to define a style once and
+   * apply it to a series of items:
    */
   export class Style {
     /**
      * The view that this style belongs to.
      * Read only.
      */
-    view: View;
+    readonly view: View;
 
     /**
      * The color of the stroke.
@@ -23,18 +26,18 @@ declare module 'paper' {
 
     /**
      * The shape to be used at the beginning and end of open Path items, when they have a stroke.
-     * String('round', 'square', 'butt'
      */
-    strokeCap: string;
+    strokeCap: 'round' | 'square' | 'butt';
 
     /**
      * The shape to be used at the segments and corners of Path items when they have a stroke.
-     * String('miter', 'round', 'bevel')
      */
-    strokeJoin: string;
+    strokeJoin: 'miter' | 'round' | 'bevel';
 
     /**
-     * Specifies whether the stroke is to be drawn taking the current affine transformation into account (the default behavior), or whether it should appear as a non-scaling stroke.
+     * Specifies whether the stroke is to be drawn taking the current affine
+     * transformation into account (the default behavior), or whether it
+     * should appear as a non-scaling stroke.
      */
     strokeScaling: boolean;
 
@@ -49,7 +52,10 @@ declare module 'paper' {
     dashArray: number[];
 
     /**
-     * The miter limit of the stroke. When two line segments meet at a sharp angle and miter joins have been specified for strokeJoin, it is possible for the miter to extend far beyond the strokeWidth of the path. The miterLimit imposes a limit on the ratio of the miter length to the strokeWidth.
+     * The miter limit of the stroke. When two line segments meet at a sharp
+     * angle and miter joins have been specified for strokeJoin, it is possible
+     * for the miter to extend far beyond the strokeWidth of the path. The
+     * miterLimit imposes a limit on the ratio of the miter length to the strokeWidth.
      */
     miterLimit: number;
 
@@ -74,7 +80,8 @@ declare module 'paper' {
     shadowOffset: Point;
 
     /**
-     * The color the item is highlighted with when selected. If the item does not specify its own color, the color defined by its layer is used instead.
+     * The color the item is highlighted with when selected. If the item does
+     * not specify its own color, the color defined by its layer is used instead.
      */
     selectedColor: Color | string;
 
@@ -89,7 +96,8 @@ declare module 'paper' {
     fontWeight: string | number;
 
     /**
-     * The font size of text content, as {@Number} in pixels, or as {@String} with optional units 'px', 'pt' and 'em'.
+     * The font size of text content, as {@Number} in pixels, or as {@String}
+     * with optional units 'px', 'pt' and 'em'.
      */
     fontSize: string | number;
 
@@ -141,7 +149,7 @@ declare module 'paper' {
   }
   export interface IGradientColor {
     /**
-     * the gradient object that describes the color stops and type of gradient to be used.
+     * The gradient object that describes the color stops and type of gradient to be used.
      */
     gradient?: Gradient;
     /**
@@ -149,16 +157,19 @@ declare module 'paper' {
      */
     origin?: Point;
     /**
-     * the destination point of the gradient stops: Array of GradientStop - the gradient stops describing the gradient, as an alternative to providing a gradient object
+     * The destination point of the gradient stops: Array of GradientStop.
+     * The gradient stops describing the gradient, as an alternative to providing a gradient object.
      */
     destination?: Point;
     /**
-     * controls whether the gradient is radial, as an alternative to providing a gradient object
+     * Controls whether the gradient is radial, as an alternative to providing a gradient object.
      */
     radial?: boolean;
   }
   /**
-   * All properties and functions that expect color values in the form of instances of Color objects, also accept named colors and hex values as strings which are then converted to instances of Color internally.
+   * All properties and functions that expect color values in the form of instances of Color objects,
+   * also accept named colors and hex values as strings which are then converted to instances of
+   * Color internally.
    */
   export class Color {
     /**
@@ -185,10 +196,6 @@ declare module 'paper' {
 
     /**
      * Creates a gradient Color object.
-     * @param gradient -
-     * @param origin -
-     * @param destination -
-     * @param highlight [optional] -
      */
     constructor(color: Gradient, origin: Point, destination: Point, highlight?: Point);
 
@@ -200,15 +207,13 @@ declare module 'paper' {
 
     /**
      * The type of the color as a string.
-     * String('rgb', 'gray', 'hsb', 'hsl')
      */
-    type: string;
+    type: 'rgb' | 'gray' | 'hsb' | 'hsl';
 
     /**
      * The color components that define the color, including the alpha value if defined.
-     * Read Only.
      */
-    components: number;
+    readonly components: number;
 
     /**
      * The color's alpha value as a number between 0 and 1.
@@ -269,9 +274,9 @@ declare module 'paper' {
 
     /**
      * Converts the color another type.
-     * @param type - String('rgb'|'gray'|'hsb'|'hsl') the color type to convert to.
+     * @param type - the color type to convert to.
      */
-    convert(type: string): Color;
+    convert(type: 'rgb' | 'gray' | 'hsb' | 'hsl'): Color;
 
     /**
      * Checks if the color has an alpha value.

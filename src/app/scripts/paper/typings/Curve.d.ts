@@ -1,22 +1,24 @@
 declare module 'paper' {
   /**
-   * The Curve object represents the parts of a path that are connected by two following Segment objects. The curves of a path can be accessed through its path.curves array.
-   * While a segment describe the anchor point and its incoming and outgoing handles, a Curve object describes the curve passing between two such segments. Curves and segments represent two different ways of looking at the same thing, but focusing on different aspects. Curves for example offer many convenient ways to work with parts of the path, finding lengths, positions or tangents at given offsets.
+   * The Curve object represents the parts of a path that are connected by two
+   * following Segment objects. The curves of a path can be accessed through
+   * its path.curves array.
+   *
+   * While a segment describe the anchor point and its incoming and outgoing
+   * handles, a Curve object describes the curve passing between two such
+   * segments. Curves and segments represent two different ways of looking
+   * at the same thing, but focusing on different aspects. Curves for example
+   * offer many convenient ways to work with parts of the path, finding
+   * lengths, positions or tangents at given offsets.
    */
   export class Curve {
     /**
      * Creates a new curve object.
-     * @param segment1 -
-     * @param segment2 -
      */
     constructor(segment1: Segment, segment2: Segment);
 
     /**
      * Creates a new curve object.
-     * @param point1: Point
-     * @param handle1: Point
-     * @param handle2: Point
-     * @param point2: Point
      */
     constructor(point1: Point, handle1: Point, handle2: Point, point2: Point);
 
@@ -42,39 +44,33 @@ declare module 'paper' {
 
     /**
      * The first segment of the curve.
-     * Read Only.
      */
-    segment1: Segment;
+    readonly segment1: Segment;
 
     /**
      * The second segment of the curve.
-     * Read only.
      */
-    segment2: Segment;
+    readonly segment2: Segment;
 
     /**
      * The path that the curve belongs to.
-     * Read only.
      */
-    path: Path;
+    readonly path: Path;
 
     /**
      * The index of the curve in the path.curves array.
-     * Read Only.
      */
-    index: number;
+    readonly index: number;
 
     /**
      * The next curve in the path.curves array that the curve belongs to.
-     * Read Only
      */
-    next: Curve;
+    readonly next: Curve;
 
     /**
      * The previous curve in the path.curves array that the curve belongs to.
-     * Read Only.
      */
-    previous: Curve;
+    readonly previous: Curve;
 
     /**
      * Specifies whether the points and handles of the curve are selected.
@@ -83,9 +79,8 @@ declare module 'paper' {
 
     /**
      * The approximated length of the curve in points.
-     * Read Only.
      */
-    length: number;
+    readonly length: number;
 
     /**
      * The bounding rectangle of the curve excluding stroke width.
@@ -106,11 +101,6 @@ declare module 'paper' {
      * Checks if this curve is linear, meaning it does not define any curve handle.
      */
     isLinear(): boolean;
-
-    /**
-     * TODO?
-     */
-    //isHorizontal(): boolean;
 
     /**
      * Divides the curve into two curves at the given offset. The curve itself is modified and becomes the first part, the second part is returned as a new curve. If the modified curve belongs to a path item, the second part is also added to the path.

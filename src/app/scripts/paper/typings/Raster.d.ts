@@ -35,9 +35,8 @@ declare module 'paper' {
 
     /**
      * The resolution of the raster at its current size, in PPI (pixels per inch).
-     * Read Only.
      */
-    resolution: Size;
+    readonly resolution: Size;
 
     /**
      * The HTMLImageElement of the raster, if one is associated.
@@ -45,7 +44,10 @@ declare module 'paper' {
     image: HTMLImageElement | HTMLCanvasElement;
 
     /**
-     * The Canvas object of the raster. If the raster was created from an image, accessing its canvas causes the raster to try and create one and draw the image into it. Depending on security policies, this might fail, in which case null is returned instead.
+     * The Canvas object of the raster. If the raster was created from an image,
+     * accessing its canvas causes the raster to try and create one and draw the
+     * image into it. Depending on security policies, this might fail, in which
+     * case null is returned instead.
      */
     canvas: HTMLCanvasElement;
 
@@ -55,7 +57,10 @@ declare module 'paper' {
     context: CanvasRenderingContext2D;
 
     /**
-     * The source of the raster, which can be set using a DOM Image, a Canvas, a data url, a string describing the URL to load the image from, or the ID of a DOM element to get the image from (either a DOM Image or a Canvas). Reading this property will return the url of the source image or a data-url.
+     * The source of the raster, which can be set using a DOM Image, a Canvas,
+     * a data url, a string describing the URL to load the image from, or the
+     * ID of a DOM element to get the image from (either a DOM Image or a Canvas).
+     * Reading this property will return the url of the source image or a data-url.
      */
     source: HTMLImageElement | HTMLCanvasElement | string;
 
@@ -71,7 +76,8 @@ declare module 'paper' {
     getSubCanvas(rect: Rectangle): HTMLCanvasElement;
 
     /**
-     * Extracts a part of the raster item's content as a new raster item, placed in exactly the same place as the original content.
+     * Extracts a part of the raster item's content as a new raster item,
+     * placed in exactly the same place as the original content.
      * @param rect - the boundaries of the sub raster in pixel coordinates
      */
     getSubRaster(rect: Rectangle): Raster;
@@ -89,7 +95,8 @@ declare module 'paper' {
     drawImage(image: HTMLImageElement | HTMLCanvasElement, point: Point): void;
 
     /**
-     * Calculates the average color of the image within the given path, rectangle or point. This can be used for creating raster image effects.
+     * Calculates the average color of the image within the given path,
+     * rectangle or point. This can be used for creating raster image effects.
      * @param object - the path, rectangle or point to get the average image color from
      */
     getAverageColor(object: Path | Rectangle | Point): Color;
@@ -122,24 +129,10 @@ declare module 'paper' {
      */
     setPixel(point: Point, color: Color): void;
 
-    /**
-     *
-     * @param size
-     */
     createImageData(size: Size): ImageData;
 
-    /**
-     *
-     * @param rect
-     */
     getImageData(rect: Rectangle): ImageData;
 
-    /**
-     *
-     *
-     * @param data
-     * @param point
-     */
     getImageData(data: ImageData, point: Point): void;
   }
 }

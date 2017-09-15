@@ -112,9 +112,6 @@ declare module 'paper' {
      */
     time: number;
 
-    /**
-     *
-     */
     delta: number;
   }
 
@@ -141,9 +138,6 @@ declare module 'paper' {
      */
     lastPoint: Point;
 
-    /**
-     *
-     */
     delta: Point;
 
     /**

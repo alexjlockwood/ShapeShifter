@@ -4,43 +4,6 @@ declare module 'paper' {
      * Specifies whether the compound path is oriented clock-wise.
      */
     clockwise: boolean;
-
-    /**
-     * The first Segment contained within the path.
-     * Read Only
-     */
-    firstSegment: Segment;
-
-    /**
-     * The last Segment contained within the path.
-     * Read Only
-     */
-    lastSegment: Segment;
-
-    /**
-     * All the curves contained within the compound-path, from all its child Path items.
-     * Read Only
-     */
-    curves: Curve[];
-
-    /**
-     * The first Curve contained within the path.
-     * Read Only
-     */
-    firstCurve: Curve;
-
-    /**
-     * The last Curve contained within the path.
-     * Read only.
-     */
-    lastCurve: Curve;
-
-    /**
-     * The area of the path in square points. Self-intersecting paths
-     * can contain sub-areas that cancel each other out.
-     * Read Only.
-     */
-    area: number;
   }
 
   export interface CompoundPath extends CompoundPathProps {}
@@ -62,6 +25,39 @@ declare module 'paper' {
      * @param pathData - the SVG path-data that describes the geometry of this path.
      */
     constructor(pathData: string);
+
+    /**
+     * The first Segment contained within the path.
+     */
+    readonly firstSegment: Segment;
+
+    /**
+     * The last Segment contained within the path.
+     */
+    readonly lastSegment: Segment;
+
+    /**
+     * All the curves contained within the compound-path, from all its child Path items.
+     * Read Only
+     */
+    readonly curves: ReadonlyArray<Curve>;
+
+    /**
+     * The first Curve contained within the path.
+     */
+    readonly firstCurve: Curve;
+
+    /**
+     * The last Curve contained within the path.
+     * Read only.
+     */
+    readonly lastCurve: Curve;
+
+    /**
+     * The area of the path in square points. Self-intersecting paths
+     * can contain sub-areas that cancel each other out.
+     */
+    readonly area: number;
 
     /**
      * Reverses the orientation of all nested paths.

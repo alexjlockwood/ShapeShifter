@@ -72,17 +72,17 @@ declare module 'paper' {
     /**
      * The translation of the matrix as a vector.
      */
-    readonly translation: Readonly<Point>;
+    readonly translation: Point;
 
     /**
      * The scaling values of the matrix, if it can be decomposed.
      */
-    readonly scaling: Readonly<Point>;
+    readonly scaling: Point;
 
     /**
      * The rotation angle of the matrix, if it can be decomposed.
      */
-    readonly rotation: Readonly<number>;
+    readonly rotation: number;
 
     /**
      * Sets the matrix to the identity matrix.
@@ -273,7 +273,6 @@ declare module 'paper' {
 
     /**
      * Applies this matrix to the specified Canvas Context.
-     * @param ctx -
      */
     applyToContext(ctx: CanvasRenderingContext2D): void;
   }
