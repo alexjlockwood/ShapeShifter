@@ -19,7 +19,7 @@ export class SetToolMode implements Action {
 export class SetSelectionBox implements Action {
   readonly type = SET_SELECTION_BOX;
   readonly payload: { selectionBox: { from: Point; to: Point } };
-  constructor(selectionBox?: { from: Point; to: Point }) {
+  constructor(selectionBox: { from: Point; to: Point } | undefined) {
     this.payload = { selectionBox };
   }
 }

@@ -1,11 +1,4 @@
 declare module 'paper' {
-  export interface RasterData extends ItemData {
-    readonly focusedEditPath?: {
-      readonly segmentIndex: number;
-      readonly isHandleIn?: boolean;
-      readonly isHandleOut?: boolean;
-    };
-  }
   /**
    * The Raster item represents an image in a Paper.js project.
    */
@@ -63,11 +56,6 @@ declare module 'paper' {
      * Reading this property will return the url of the source image or a data-url.
      */
     source: HTMLImageElement | HTMLCanvasElement | string;
-
-    /**
-     * A plain javascript object which can be used to store arbitrary data on the item.
-     */
-    data: RasterData;
 
     /**
      * Extracts a part of the Raster's content as a sub image, and returns it as a Canvas object.

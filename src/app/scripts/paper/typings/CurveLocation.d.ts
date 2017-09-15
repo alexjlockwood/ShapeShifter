@@ -30,7 +30,7 @@ declare module 'paper' {
     /**
      * The path this curve belongs to, if any.
      */
-    path: Path;
+    readonly path: Path;
 
     /**
      * The index of the curve within the path.curves list, if the curve is part of a Path item.
@@ -46,13 +46,13 @@ declare module 'paper' {
     /**
      * The length of the curve from its beginning up to the location described by this object.
      */
-    curveOffset: number;
+    readonly curveOffset: number;
 
     /**
      * The curve parameter, as used by various bezier curve calculations. It is value between
      * 0 (beginning of the curve) and 1 (end of the curve).
      */
-    parameter: number;
+    readonly time: number;
 
     /**
      * The point which is defined by the curve and parameter.
@@ -75,5 +75,11 @@ declare module 'paper' {
      * Returns a string representation of the curve location
      */
     toString(): string;
+
+    isTouching(): boolean;
+
+    isCrossing(): boolean;
+
+    hasOverlap(): boolean;
   }
 }

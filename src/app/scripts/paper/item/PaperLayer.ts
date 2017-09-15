@@ -11,9 +11,11 @@ import { FocusedEditPath } from 'app/store/paper/actions';
 import * as _ from 'lodash';
 import * as paper from 'paper';
 
-import { PathHandleRaster } from './PathHandleRaster';
-import { PathSegmentRaster } from './PathSegmentRaster';
-import { SelectionBoundsSegmentRaster } from './SelectionBoundsSegmentRaster';
+import { FocusedEditPathRaster } from './FocusedEditPathRaster';
+import {
+  SelectionBoundsRaster,
+  RasterType as SelectionBoundsRasterType,
+} from './SelectionBoundsRaster';
 
 // TODO: use Item#visible to hook up 'visible layer ids' from store
 export class PaperLayer extends paper.Layer {
@@ -27,10 +29,12 @@ export class PaperLayer extends paper.Layer {
   private vectorLayer: VectorLayer;
   private selectedLayerIds: ReadonlySet<string> = new Set();
   private hoveredLayerId: string;
+  private focusedEditPath: FocusedEditPath;
 
   setVectorLayer(vl: VectorLayer) {
     this.vectorLayer = vl;
     this.updateVectorLayerItem();
+    this.updateFocusedEditPathItem();
     this.updateSelectionBoundsItem();
     this.updateHoverPath();
   }
@@ -71,16 +75,8 @@ export class PaperLayer extends paper.Layer {
   }
 
   setFocusedEditPath(focusedEditPath: FocusedEditPath) {
-    if (this.focusedEditPathItem) {
-      this.focusedEditPathItem.remove();
-      this.focusedEditPathItem = undefined;
-    }
-    if (focusedEditPath) {
-      // TODO: is it possible for pathData to be undefined?
-      const path = this.findItemByLayerId(focusedEditPath.layerId) as paper.Path;
-      this.focusedEditPathItem = newFocusedEditPath(path, focusedEditPath);
-      this.updateChildren();
-    }
+    this.focusedEditPath = focusedEditPath;
+    this.updateFocusedEditPathItem();
   }
 
   private updateVectorLayerItem() {
@@ -113,6 +109,19 @@ export class PaperLayer extends paper.Layer {
       this.hoverPath = newHover(item);
     }
     this.updateChildren();
+  }
+
+  private updateFocusedEditPathItem() {
+    if (this.focusedEditPathItem) {
+      this.focusedEditPathItem.remove();
+      this.focusedEditPathItem = undefined;
+    }
+    if (this.focusedEditPath) {
+      // TODO: is it possible for pathData to be undefined?
+      const path = this.findItemByLayerId(this.focusedEditPath.layerId) as paper.Path;
+      this.focusedEditPathItem = newFocusedEditPath(path, this.focusedEditPath);
+      this.updateChildren();
+    }
   }
 
   private updateChildren() {
@@ -156,7 +165,11 @@ export class PaperLayer extends paper.Layer {
     if (this.vectorLayerItem.data.id === layerId) {
       return this.vectorLayerItem;
     }
-    return _.first(this.vectorLayerItem.getItems({ match: ({ data: { id } }) => layerId === id }));
+    return _.first(
+      this.vectorLayerItem.getItems({
+        match: ({ data: { id } }) => layerId === id,
+      }),
+    );
   }
 
   hitTestSelectionBoundsItem(mousePoint: paper.Point) {
@@ -169,7 +182,7 @@ export class PaperLayer extends paper.Layer {
   hitTestFocusedEditPathItem(mousePoint: paper.Point) {
     const point = this.globalToLocal(mousePoint);
     return this.focusedEditPathItem.hitTest(point, {
-      class: paper.Raster,
+      class: FocusedEditPathRaster,
     });
   }
 }
@@ -308,24 +321,26 @@ function newSelectionBounds(items: ReadonlyArray<paper.Item>) {
 
   // Create segments for the bounded box.
   const segmentSize = 6 / paper.view.zoom / getCssScaling();
-  const createSegmentFn = (center: paper.Point) => {
+  const createSegmentFn = (rasterType: SelectionBoundsRasterType) => {
     // TODO: avoid creating rasters in a loop like this
-    const handle = new SelectionBoundsSegmentRaster(center);
+    const center = bounds[rasterType];
+    const handle = new SelectionBoundsRaster(rasterType, center);
     const scaleFactor = 1 / getAttrScaling();
     handle.scale(scaleFactor, scaleFactor);
     return handle;
   };
 
-  [
-    bounds.topLeft,
-    bounds.topCenter,
-    bounds.topRight,
-    bounds.rightCenter,
-    bounds.bottomRight,
-    bounds.bottomCenter,
-    bounds.bottomLeft,
-    bounds.leftCenter,
-  ].forEach(p => group.addChild(createSegmentFn(p)));
+  const rasterTypes: ReadonlyArray<SelectionBoundsRasterType> = [
+    'topLeft',
+    'topCenter',
+    'topRight',
+    'rightCenter',
+    'bottomRight',
+    'bottomCenter',
+    'bottomLeft',
+    'leftCenter',
+  ];
+  rasterTypes.forEach(t => group.addChild(createSegmentFn(t)));
 
   return group;
 }
@@ -337,8 +352,7 @@ function newFocusedEditPath(path: paper.Path, focusedEditPath: FocusedEditPath) 
   const group = new paper.Group();
   const scaleFactor = 1 / getAttrScaling();
   const matrix = localToViewportMatrix(path);
-  const addRasterFn = (url: string, center: paper.Point) => {
-    const raster = new paper.Raster(url, center);
+  const addRasterFn = (raster: paper.Raster) => {
     raster.scale(scaleFactor, scaleFactor);
     raster.transform(matrix);
     group.addChild(raster);
@@ -346,6 +360,7 @@ function newFocusedEditPath(path: paper.Path, focusedEditPath: FocusedEditPath) 
   };
   const addLineFn = (from: paper.Point, to: paper.Point) => {
     const line = new paper.Path.Line(from, to);
+    line.guide = true;
     line.strokeColor = '#aaaaaa';
     line.strokeWidth = 1 / paper.view.zoom;
     line.strokeScaling = false;
@@ -360,50 +375,58 @@ function newFocusedEditPath(path: paper.Path, focusedEditPath: FocusedEditPath) 
     selectedHandleOuts,
   } = focusedEditPath;
   // TODO: avoid creating rasters in a loop like this
-  path.segments.forEach((s, i) => {
-    const center = s.point;
-    if (visibleHandleIns.has(i) && s.handleIn) {
-      const handleIn = center.add(s.handleIn);
+  path.segments.forEach(({ point, handleIn, handleOut }, segmentIndex) => {
+    const center = point;
+    if (handleIn && visibleHandleIns.has(segmentIndex)) {
+      handleIn = center.add(handleIn);
       addLineFn(center, handleIn);
       addRasterFn(
-        selectedHandleIns.has(i)
-          ? '/assets/vector_handle_selected.png'
-          : '/assets/vector_handle.png',
-        handleIn,
-      ).data = { focusedEditPath: { segmentIndex: i, isHandleIn: true } };
+        new FocusedEditPathRaster(
+          'handle-in',
+          segmentIndex,
+          selectedHandleIns.has(segmentIndex),
+          handleIn,
+        ),
+      );
     }
-    if (visibleHandleOuts.has(i) && s.handleOut) {
-      const handleOut = center.add(s.handleOut);
+    if (handleOut && visibleHandleOuts.has(segmentIndex)) {
+      handleOut = center.add(handleOut);
       addLineFn(center, handleOut);
       addRasterFn(
-        selectedHandleOuts.has(i)
-          ? '/assets/vector_handle_selected.png'
-          : '/assets/vector_handle.png',
-        handleOut,
-      ).data = { focusedEditPath: { segmentIndex: i, isHandleOut: true } };
+        new FocusedEditPathRaster(
+          'handle-out',
+          segmentIndex,
+          selectedHandleOuts.has(segmentIndex),
+          handleOut,
+        ),
+      );
     }
     addRasterFn(
-      selectedSegments.has(i) ? '/assets/vector_anchor_selected.png' : '/assets/vector_anchor.png',
-      center,
-    ).data = { focusedEditPath: { segmentIndex: i } };
+      new FocusedEditPathRaster(
+        'segment',
+        segmentIndex,
+        selectedSegments.has(segmentIndex),
+        center,
+      ),
+    );
   });
   return group;
 }
 
 function newPathPreview(pathData: string) {
   const path = new paper.Path(pathData);
+  path.guide = true;
   path.strokeScaling = false;
   path.strokeWidth = 1 / paper.view.zoom;
-  path.guide = true;
   path.strokeColor = 'black';
   return path;
 }
 
 function newSelectionBox(from: paper.Point, to: paper.Point) {
   const path = new paper.Path.Rectangle(new paper.Rectangle(from, to));
+  path.guide = true;
   path.strokeScaling = false;
   path.strokeWidth = 1 / paper.view.zoom;
-  path.guide = true;
   path.strokeColor = '#aaaaaa';
   path.dashArray = [3 / paper.view.zoom];
   return path;

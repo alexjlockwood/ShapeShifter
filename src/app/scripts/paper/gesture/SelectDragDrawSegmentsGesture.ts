@@ -1,4 +1,6 @@
+import { LayerUtil, PathLayer, VectorLayer } from 'app/model/layers';
 import { MathUtil } from 'app/scripts/common';
+import { PaperLayer } from 'app/scripts/paper/item';
 import { Cursor, Cursors } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
 import * as _ from 'lodash';
@@ -16,98 +18,143 @@ import { Gesture } from './Gesture';
  * its end points.
  */
 export class SelectDragDrawSegmentsGesture extends Gesture {
-  private selectedSegments: ReadonlyArray<paper.Segment>;
+  static hitSegment(ps: PaperService, segmentIndex: number) {
+    return new SelectDragDrawSegmentsGesture(ps, segmentIndex);
+  }
+
+  static hitCurve(ps: PaperService, curveIndex: number, curveTime: number) {
+    return new SelectDragDrawSegmentsGesture(ps, undefined, curveIndex, curveTime);
+  }
+
+  static hitNothing(ps: PaperService) {
+    return new SelectDragDrawSegmentsGesture(ps);
+  }
+
+  private readonly paperLayer = paper.project.activeLayer as PaperLayer;
+  private selectedSegmentIndices: ReadonlyArray<number>;
+  private initialVectorLayer: VectorLayer;
   private initialSegmentPositions: ReadonlyArray<paper.Point>;
   private updateHandlePositionsOnDrag: boolean;
 
-  constructor(
+  private constructor(
     private readonly ps: PaperService,
-    private readonly mouseDownHit?: number | paper.CurveLocation,
+    private readonly segmentIndex?: number,
+    private readonly curveIndex?: number,
+    private readonly curveTime?: number,
   ) {
     super();
   }
 
   // @Override
   onMouseDown(event: paper.ToolEvent) {
-    // const selectedSegments = this.selectedEditPath.segments.filter(s => s.selected);
-    // if (this.mouseDownHit instanceof paper.Segment) {
-    //   const hasSingleSelectedEndPointSegment =
-    //     !this.selectedEditPath.closed &&
-    //     selectedSegments.length === 1 &&
-    //     (selectedSegments[0].isFirst() || selectedSegments[0].isLast());
-    //   if (hasSingleSelectedEndPointSegment && this.mouseDownHit !== selectedSegments[0]) {
-    //     // If the path is open, one of the end points is selected, and the
-    //     // user is hovering over the other end point, then close the path.
-    //     this.selectedEditPath.closed = true;
-    //     selectedSegments[0].selected = false;
-    //     this.mouseDownHit.selected = true;
-    //   } else if (event.modifiers.shift || event.modifiers.command) {
-    //     // If shift or command is pressed, toggle the segment's selection state.
-    //     this.mouseDownHit.selected = !this.mouseDownHit.selected;
-    //   } else {
-    //     // If shift isn't pressed, select the hit segment and deselect all others.
-    //     this.selectedEditPath.segments.forEach(s => (s.selected = false));
-    //     this.mouseDownHit.selected = true;
-    //   }
-    // } else if (this.mouseDownHit instanceof paper.CurveLocation) {
-    //   // If there is no hit segment, then create one along the curve
-    //   // at the given location and select the new segment.
-    //   const hitSegment = this.mouseDownHit.curve.divideAt(this.mouseDownHit).segment1;
-    //   this.selectedEditPath.segments.forEach(s => (s.selected = false));
-    //   hitSegment.curve.selected = true;
-    // } else {
-    //   // Otherwise, we are either (1) extending an existing open path (beginning
-    //   // at one of its selected end points), or (2) beginning to create a new path
-    //   // from scratch.
-    //   let addedSegment: paper.Segment;
-    //   if (this.selectedEditPath.segments.length === 0) {
-    //     addedSegment = this.selectedEditPath.add(event.point);
-    //   } else {
-    //     const selectedSegment = selectedSegments[0];
-    //     addedSegment = selectedSegment.isLast()
-    //       ? this.selectedEditPath.add(event.point)
-    //       : this.selectedEditPath.insert(0, event.point);
-    //     selectedSegment.selected = false;
-    //   }
-    //   addedSegment.selected = true;
-    // }
-    // this.updateHandlePositionsOnDrag = !this.mouseDownHit;
-    // this.selectedSegments = this.selectedEditPath.segments.filter(s => s.selected);
+    // TODO: what about when alt/shift is pressed
+    const focusedEditPath = this.ps.getFocusedEditPath();
+    const prevSelectedSegments = focusedEditPath.selectedSegments;
+    const newSelectedSegments = new Set(focusedEditPath.selectedSegments);
+
+    // Save a copy of the initial vector layer and handle position so that
+    // we can make changes to them as we drag.
+    this.initialVectorLayer = this.ps.getVectorLayer();
+
+    const editPath = this.paperLayer
+      .findItemByLayerId(focusedEditPath.layerId)
+      .clone() as paper.Path;
+    // this.initialHandlePosition = editPath.segments[this.segmentIndex][this.hitHandleType].clone();
+
+    const singleSelectedSegmentIndex =
+      prevSelectedSegments.size === 1 ? Array.from(prevSelectedSegments)[0] : undefined;
+    if (this.segmentIndex !== undefined) {
+      const hasSingleSelectedEndPointSegment =
+        !editPath.closed &&
+        prevSelectedSegments.size === 1 &&
+        (singleSelectedSegmentIndex === 0 ||
+          singleSelectedSegmentIndex === editPath.segments.length - 1);
+      if (hasSingleSelectedEndPointSegment && this.segmentIndex !== singleSelectedSegmentIndex) {
+        // If the path is open, one of the end points is selected, and the
+        // user is hovering over the other end point, then close the path.
+        editPath.closed = true;
+        newSelectedSegments.delete(prevSelectedSegments[0]);
+        newSelectedSegments.add(this.segmentIndex);
+      } else if (event.modifiers.shift || event.modifiers.command) {
+        // If shift or command is pressed, toggle the segment's selection state.
+        if (prevSelectedSegments.has(this.segmentIndex)) {
+          newSelectedSegments.delete(this.segmentIndex);
+        } else {
+          newSelectedSegments.add(this.segmentIndex);
+        }
+      } else {
+        // If shift isn't pressed, select the hit segment and deselect all others.
+        newSelectedSegments.clear();
+        newSelectedSegments.add(this.segmentIndex);
+      }
+      this.updateHandlePositionsOnDrag = true;
+    } else if (this.curveIndex !== undefined && this.curveTime !== undefined) {
+      // If there is no hit segment, then create one along the curve
+      // at the given location and select the new segment.
+      // TODO: select the curve instead?
+      // TODO: deselect any currently selected handles as well?
+      const newSegment = editPath.curves[this.curveIndex].divideAt(this.curveTime).segment1;
+      newSelectedSegments.clear();
+      newSelectedSegments.add(newSegment.index);
+      this.updateHandlePositionsOnDrag = true;
+    } else {
+      // Otherwise, we are either (1) extending an existing open path (beginning
+      // at one of its selected end points), or (2) beginning to create a new path
+      // from scratch.
+      let addedSegment: paper.Segment;
+      const point = editPath.globalToLocal(event.point);
+      if (editPath.segments.length === 0) {
+        addedSegment = editPath.add(point);
+      } else {
+        const selectedSegment = editPath.segments[singleSelectedSegmentIndex];
+        addedSegment = selectedSegment.isLast() ? editPath.add(point) : editPath.insert(0, point);
+        newSelectedSegments.delete(singleSelectedSegmentIndex);
+      }
+      newSelectedSegments.add(addedSegment.index);
+
+      this.updateHandlePositionsOnDrag = false;
+    }
+    this.ps.setFocusedEditPath({
+      ...focusedEditPath,
+      selectedSegments: newSelectedSegments,
+      visibleHandleIns: newSelectedSegments,
+      visibleHandleOuts: newSelectedSegments,
+    });
+    // this.selectedSegments = newSelectedS
     // this.initialSegmentPositions = this.selectedSegments.map(s => s.point.clone());
     // Guides.hidePenPathPreviewPath();
-    // Cursors.set(Cursor.PointSelect);
+    Cursors.set(Cursor.PointSelect);
   }
 
   // @Override
   onMouseDrag(event: paper.ToolEvent) {
     // Guides.hideAddSegmentToCurveHoverGroup();
-
-    const dragVector = event.point.subtract(event.downPoint);
-    const snapPoint = event.modifiers.shift
-      ? new paper.Point(MathUtil.snapDeltaToAngle(dragVector, 15))
-      : undefined;
-    if (this.updateHandlePositionsOnDrag) {
-      // Then we have just added a segment to the path in onMouseDown()
-      // and should thus move the segment's handles onMouseDrag().
-      const selectedSegment = this.selectedSegments[0];
-      if (event.modifiers.shift) {
-        selectedSegment.handleIn = this.initialSegmentPositions[0].subtract(snapPoint);
-        selectedSegment.handleOut = this.initialSegmentPositions[0].add(snapPoint);
-      } else {
-        selectedSegment.handleIn = selectedSegment.handleIn.subtract(event.delta);
-        selectedSegment.handleOut = selectedSegment.handleOut.add(event.delta);
-      }
-    } else {
-      // Then we selected an existing segment in onMouseDown() and should
-      // move the segment according to the new mouse position.
-      this.selectedSegments.forEach((segment, i) => {
-        if (event.modifiers.shift) {
-          segment.point = this.initialSegmentPositions[i].add(snapPoint);
-        } else {
-          segment.point = segment.point.add(event.delta);
-        }
-      });
-    }
+    // const dragVector = event.point.subtract(event.downPoint);
+    // const snapPoint = event.modifiers.shift
+    //   ? new paper.Point(MathUtil.snapDeltaToAngle(dragVector, 15))
+    //   : undefined;
+    // if (this.updateHandlePositionsOnDrag) {
+    //   // Then we have just added a segment to the path in onMouseDown()
+    //   // and should thus move the segment's handles onMouseDrag().
+    //   const selectedSegment = this.selectedSegments[0];
+    //   if (event.modifiers.shift) {
+    //     selectedSegment.handleIn = this.initialSegmentPositions[0].subtract(snapPoint);
+    //     selectedSegment.handleOut = this.initialSegmentPositions[0].add(snapPoint);
+    //   } else {
+    //     selectedSegment.handleIn = selectedSegment.handleIn.subtract(event.delta);
+    //     selectedSegment.handleOut = selectedSegment.handleOut.add(event.delta);
+    //   }
+    // } else {
+    //   // Then we selected an existing segment in onMouseDown() and should
+    //   // move the segment according to the new mouse position.
+    //   this.selectedSegments.forEach((segment, i) => {
+    //     if (event.modifiers.shift) {
+    //       segment.point = this.initialSegmentPositions[i].add(snapPoint);
+    //     } else {
+    //       segment.point = segment.point.add(event.delta);
+    //     }
+    //   });
+    // }
   }
 
   // @Override
@@ -116,25 +163,25 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
   }
 }
 
-function findHandle(path: paper.Path, point: paper.Point) {
-  for (const segment of path.segments) {
-    const types: Array<'segment' | 'handle-in' | 'handle-out'> = [
-      'segment',
-      'handle-in',
-      'handle-out',
-    ];
-    for (const type of types) {
-      let segmentPoint = segment.point;
-      if (type === 'handle-in') {
-        segmentPoint = segmentPoint.add(segment.handleIn);
-      } else if (type === 'handle-out') {
-        segmentPoint = segmentPoint.add(segment.handleOut);
-      }
-      // TODO: the '6' seems arbitrary here... investigate?
-      if (point.subtract(segmentPoint).length < 6) {
-        return { type, segment };
-      }
-    }
-  }
-  return undefined;
-}
+// function findHandle(path: paper.Path, point: paper.Point) {
+//   for (const segment of path.segments) {
+//     const types: Array<'segment' | 'handle-in' | 'handle-out'> = [
+//       'segment',
+//       'handle-in',
+//       'handle-out',
+//     ];
+//     for (const type of types) {
+//       let segmentPoint = segment.point;
+//       if (type === 'handle-in') {
+//         segmentPoint = segmentPoint.add(segment.handleIn);
+//       } else if (type === 'handle-out') {
+//         segmentPoint = segmentPoint.add(segment.handleOut);
+//       }
+//       // TODO: the '6' seems arbitrary here... investigate?
+//       if (point.subtract(segmentPoint).length < 6) {
+//         return { type, segment };
+//       }
+//     }
+//   }
+//   return undefined;
+// }
