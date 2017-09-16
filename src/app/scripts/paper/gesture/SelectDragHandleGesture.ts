@@ -62,7 +62,7 @@ export class SelectDragHandleGesture extends Gesture {
     const localDelta = point.subtract(downPoint);
     // TODO: change this snapping behavior so it behaves the same as in sketch?
     const finalDelta = event.modifiers.shift
-      ? new paper.Point(MathUtil.snapDeltaToAngle(localDelta, 15))
+      ? new paper.Point(MathUtil.snapVectorToAngle(localDelta, 15))
       : localDelta;
     const finalHandlePosition = this.initialHandlePosition.add(finalDelta);
     editPath.segments[this.segmentIndex][this.hitHandleType] = finalHandlePosition;

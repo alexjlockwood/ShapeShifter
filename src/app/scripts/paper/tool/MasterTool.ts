@@ -186,18 +186,7 @@ export class MasterTool extends Tool {
     const { ps, paperLayer } = this;
     const focusedEditPath = ps.getFocusedEditPath();
 
-    // First do a hit test on the underlying path's stroke/curves.
-    const editPath = paperLayer.findItemByLayerId(focusedEditPath.layerId) as paper.Path;
-    const strokeCurveHitResult = editPath.hitTest(paperLayer.globalToLocal(event.point), {
-      stroke: true,
-      curves: true,
-    });
-    if (strokeCurveHitResult) {
-      const { location } = strokeCurveHitResult;
-      return SelectDragDrawSegmentsGesture.hitCurve(ps, location.index, location.time);
-    }
-
-    // Second, do a hit test on the focused edit path's segments and handles.
+    // First, do a hit test on the focused edit path's segments and handles.
     const segmentHandleHitResult = paperLayer.hitTestFocusedEditPathItem(event.point);
     if (segmentHandleHitResult) {
       const { type, segmentIndex } = segmentHandleHitResult.item;
@@ -216,11 +205,25 @@ export class MasterTool extends Tool {
       return SelectDragDrawSegmentsGesture.hitSegment(ps, segmentIndex);
     }
 
+    // Second, do a hit test on the underlying path's stroke/curves.
+    const editPath = paperLayer.findItemByLayerId(focusedEditPath.layerId) as paper.Path;
+    const strokeCurveHitResult = editPath.hitTest(editPath.globalToLocal(event.point), {
+      stroke: true,
+      curves: true,
+    });
+    if (strokeCurveHitResult) {
+      const { location } = strokeCurveHitResult;
+      return SelectDragDrawSegmentsGesture.hitCurve(ps, location.index, location.time);
+    }
+
+    const selectedSegments = Array.from(focusedEditPath.selectedSegments);
     if (
       // Then we are beginning to build a new path from scratch.
       editPath.segments.length === 0 ||
-      // Then we are extending an existing open path.
-      hasSingleSelectedEndPointSegment(editPath)
+      // Then we are extending an existing open path with a single selected segment.
+      (!editPath.closed &&
+        selectedSegments.length === 1 &&
+        (selectedSegments[0] === 0 || selectedSegments[0] === editPath.segments.length - 1))
     ) {
       return SelectDragDrawSegmentsGesture.hitNothing(ps);
     }
@@ -244,17 +247,4 @@ export class MasterTool extends Tool {
       this.currentGesture.onKeyUp(event);
     }
   }
-}
-
-/**
- * Returns true iff the given path is open and has a single selected
- * end point segment.
- */
-function hasSingleSelectedEndPointSegment(path: paper.Path) {
-  const selectedSegments = path.segments.filter(s => s.selected);
-  return (
-    !path.closed &&
-    selectedSegments.length === 1 &&
-    (selectedSegments[0].isFirst() || selectedSegments[0].isLast())
-  );
 }

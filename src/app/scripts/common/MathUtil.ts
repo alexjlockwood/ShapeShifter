@@ -55,8 +55,8 @@ export function round(n: number) {
   return _.round(n, 9);
 }
 
-/** Snaps a point delta to the specified angle. */
-export function snapDeltaToAngle(delta: Point, snapAngleDegrees: number): Point {
+/** Snaps a directional vector to the specified angle. */
+export function snapVectorToAngle(delta: Point, snapAngleDegrees: number): Point {
   const snapAngle = snapAngleDegrees * Math.PI / 180;
   const angle = Math.round(Math.atan2(delta.y, delta.x) / snapAngle) * snapAngle;
   const dirx = Math.cos(angle);
