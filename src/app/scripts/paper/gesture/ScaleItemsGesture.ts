@@ -29,12 +29,10 @@ export class ScaleItemsGesture extends Gesture {
   // @Override
   onMouseDown(event: paper.ToolEvent) {
     this.ps.setHoveredLayer(undefined);
-
     this.selectedItems = Array.from(this.ps.getSelectedLayers()).map(id =>
       this.paperLayer.findItemByLayerId(id),
     );
     this.initialMatrices = this.selectedItems.map(i => i.matrix.clone());
-
     const bounds = this.paperLayer.getSelectionBounds();
     const pivotType = this.selectionBoundsRaster.pivotType;
     const oppPivotType = this.selectionBoundsRaster.oppositePivotType;
