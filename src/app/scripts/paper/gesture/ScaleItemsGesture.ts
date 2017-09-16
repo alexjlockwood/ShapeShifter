@@ -1,3 +1,5 @@
+import { LayerUtil, PathLayer, VectorLayer } from 'app/model/layers';
+import { Path } from 'app/model/paths';
 import { MathUtil } from 'app/scripts/common';
 import { PaperLayer } from 'app/scripts/paper/item';
 import { PivotType, SelectionBoundsRaster } from 'app/scripts/paper/item';
@@ -18,6 +20,7 @@ export class ScaleItemsGesture extends Gesture {
   private centeredInitialSize: paper.Point;
   private initialCenter: paper.Point;
   private currentPivot: paper.Point;
+  private initialVectorLayer: VectorLayer;
 
   constructor(
     private readonly ps: PaperService,
@@ -29,9 +32,11 @@ export class ScaleItemsGesture extends Gesture {
   // @Override
   onMouseDown(event: paper.ToolEvent) {
     this.ps.setHoveredLayer(undefined);
-    this.selectedItems = Array.from(this.ps.getSelectedLayers()).map(id =>
-      this.paperLayer.findItemByLayerId(id),
-    );
+    this.selectedItems = Array.from(this.ps.getSelectedLayers()).map(id => {
+      const p = this.paperLayer.findItemByLayerId(id).clone();
+      //p.applyMatrix = true;
+      return p;
+    });
     this.initialMatrices = this.selectedItems.map(i => i.matrix.clone());
     const bounds = this.paperLayer.getSelectionBounds();
     const pivotType = this.selectionBoundsRaster.pivotType;
@@ -41,6 +46,7 @@ export class ScaleItemsGesture extends Gesture {
     this.initialSize = this.currentPivot.subtract(this.initialPivot);
     this.centeredInitialSize = this.initialSize.divide(2);
     this.initialCenter = bounds.center.clone();
+    this.initialVectorLayer = this.ps.getVectorLayer();
   }
 
   // @Override
@@ -48,7 +54,10 @@ export class ScaleItemsGesture extends Gesture {
     // Transform about the center if alt is pressed. Otherwise trasform about
     // the pivot opposite of the currently active pivot.
     const currentPivot = event.modifiers.alt ? this.initialCenter : this.initialPivot;
-    this.currentPivot = this.currentPivot.add(event.delta);
+    const lastPoint = paper.project.activeLayer.globalToLocal(event.lastPoint);
+    const point = paper.project.activeLayer.globalToLocal(event.point);
+    const delta = point.subtract(lastPoint);
+    this.currentPivot = this.currentPivot.add(delta);
     const currentSize = this.currentPivot.subtract(currentPivot);
     const initialSize = event.modifiers.alt ? this.centeredInitialSize : this.initialSize;
     let sx = 1;
@@ -67,17 +76,19 @@ export class ScaleItemsGesture extends Gesture {
       sy *= signy;
     }
     // TODO: set strokeScaling to false?
+    // TODO: this doesn't work yet for paths that are contained in scaled groups
+
+    let newVl = this.initialVectorLayer.clone();
     this.selectedItems.forEach((i, index) => {
       i.matrix = this.initialMatrices[index].clone().scale(sx, sy, currentPivot);
+      // TODO: make this work for groups as well
+      // TODO: make this efficient
+      const path = i.clone() as paper.Path;
+      path.applyMatrix = true;
+      const newPl = newVl.findLayerById(i.data.id).clone() as PathLayer;
+      newPl.pathData = new Path(path.pathData);
+      newVl = LayerUtil.replaceLayer(newVl, i.data.id, newPl);
     });
-  }
-
-  // @Override
-  onMouseUp(event: paper.ToolEvent) {
-    // Guides.hideSelectionBoundsPath();
-    // const selectedItems = Selections.getSelectedItems();
-    // if (selectedItems.length) {
-    //   Guides.showSelectionBoundsPath(computeBoundingBox(selectedItems));
-    // }
+    this.ps.setVectorLayer(newVl);
   }
 }
