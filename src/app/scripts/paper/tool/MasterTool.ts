@@ -12,10 +12,12 @@ import {
   HoverItemsGesture,
   HoverSegmentsCurvesGesture,
   PencilGesture,
+  RotateItemsGesture,
   ScaleItemsGesture,
   SelectDragCloneItemsGesture,
   SelectDragDrawSegmentsGesture,
   SelectDragHandleGesture,
+  TransformItemsGesture,
 } from 'app/scripts/paper/gesture';
 import { PaperLayer } from 'app/scripts/paper/item';
 import { PaperService } from 'app/services';
@@ -24,6 +26,7 @@ import * as paper from 'paper';
 import { Tool } from './Tool';
 
 /**
+ * TODO: hook up rotate and transform tools somehow
  * TODO: describe how 'enter' and 'escape' should both behave
  * TODO: https://medium.com/sketch-app/mastering-the-bezier-curve-in-sketch-4da8fdf0dbbb
  */

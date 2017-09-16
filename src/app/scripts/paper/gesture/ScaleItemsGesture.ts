@@ -21,6 +21,7 @@ export class ScaleItemsGesture extends Gesture {
   private initialCenter: paper.Point;
   private currentPivot: paper.Point;
   private initialVectorLayer: VectorLayer;
+  private lastPoint: paper.Point;
 
   constructor(
     private readonly ps: PaperService,
@@ -33,16 +34,32 @@ export class ScaleItemsGesture extends Gesture {
   onMouseDown(event: paper.ToolEvent) {
     this.ps.setHoveredLayer(undefined);
     this.selectedItems = Array.from(this.ps.getSelectedLayers()).map(id => {
-      const p = this.paperLayer.findItemByLayerId(id).clone();
-      //p.applyMatrix = true;
-      return p;
+      // TODO: do we need to clone these?
+      return this.paperLayer.findItemByLayerId(id).clone();
     });
     this.initialMatrices = this.selectedItems.map(i => i.matrix.clone());
-    const bounds = this.paperLayer.getSelectionBounds();
+
+    // TODO: reuse this code with PaperLayer.ts
+    const flattenedItems: paper.Item[] = [];
+    this.selectedItems.forEach(function recurseFn(i: paper.Item) {
+      if (i.hasChildren()) {
+        i.children.forEach(c => recurseFn(c));
+      } else {
+        flattenedItems.push(i);
+      }
+    });
+    const transformRectFn = (rect: paper.Rectangle, m: paper.Matrix) => {
+      return new paper.Rectangle(rect.topLeft.transform(m), rect.bottomRight.transform(m));
+    };
+    const bounds = flattenedItems
+      .map(i => transformRectFn(i.bounds, localToViewportMatrix(i)))
+      .reduce((p, c) => p.unite(c));
+
     const pivotType = this.selectionBoundsRaster.pivotType;
     const oppPivotType = this.selectionBoundsRaster.oppositePivotType;
     this.initialPivot = bounds[oppPivotType].clone();
     this.currentPivot = bounds[pivotType].clone();
+    this.lastPoint = this.currentPivot;
     this.initialSize = this.currentPivot.subtract(this.initialPivot);
     this.centeredInitialSize = this.initialSize.divide(2);
     this.initialCenter = bounds.center.clone();
@@ -54,9 +71,9 @@ export class ScaleItemsGesture extends Gesture {
     // Transform about the center if alt is pressed. Otherwise trasform about
     // the pivot opposite of the currently active pivot.
     const currentPivot = event.modifiers.alt ? this.initialCenter : this.initialPivot;
-    const lastPoint = paper.project.activeLayer.globalToLocal(event.lastPoint);
-    const point = paper.project.activeLayer.globalToLocal(event.point);
-    const delta = point.subtract(lastPoint);
+    const point = this.paperLayer.globalToLocal(event.point);
+    const delta = point.subtract(this.lastPoint);
+    this.lastPoint = point;
     this.currentPivot = this.currentPivot.add(delta);
     const currentSize = this.currentPivot.subtract(currentPivot);
     const initialSize = event.modifiers.alt ? this.centeredInitialSize : this.initialSize;
@@ -79,16 +96,39 @@ export class ScaleItemsGesture extends Gesture {
     // TODO: this doesn't work yet for paths that are contained in scaled groups
 
     let newVl = this.initialVectorLayer.clone();
-    this.selectedItems.forEach((i, index) => {
-      i.matrix = this.initialMatrices[index].clone().scale(sx, sy, currentPivot);
+    this.selectedItems.forEach((item, index) => {
+      const matrices: paper.Matrix[] = [];
+      let curr = item;
+      while (curr) {
+        matrices.push(curr.matrix);
+        curr = curr.parent;
+      }
+      const matrix = this.initialMatrices[index].clone();
+      for (const m of matrices) {
+        matrix.append(m.inverted());
+      }
+      matrix.scale(sx, sy, currentPivot);
+      for (let i = matrices.length - 1; i >= 0; i--) {
+        matrix.append(matrices[i]);
+      }
+      item.matrix = matrix;
       // TODO: make this work for groups as well
       // TODO: make this efficient
-      const path = i.clone() as paper.Path;
+      const path = item.clone() as paper.Path;
       path.applyMatrix = true;
-      const newPl = newVl.findLayerById(i.data.id).clone() as PathLayer;
+      const newPl = newVl.findLayerById(item.data.id).clone() as PathLayer;
       newPl.pathData = new Path(path.pathData);
-      newVl = LayerUtil.replaceLayer(newVl, i.data.id, newPl);
+      newVl = LayerUtil.replaceLayer(newVl, item.data.id, newPl);
     });
     this.ps.setVectorLayer(newVl);
   }
+}
+
+/**
+ * Computes the transform matrix that will transform the specified item to its
+ * viewport coordinates.
+ */
+function localToViewportMatrix(item: paper.Item) {
+  // TODO: reuse this with PaperLayer.ts
+  return item.globalMatrix.prepended(paper.project.activeLayer.matrix.inverted());
 }
