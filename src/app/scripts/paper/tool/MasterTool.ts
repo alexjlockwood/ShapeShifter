@@ -17,7 +17,7 @@ import {
   SelectDragCloneItemsGesture,
   SelectDragDrawSegmentsGesture,
   SelectDragHandleGesture,
-  TransformItemsGesture,
+  TransformPathsGesture,
 } from 'app/scripts/paper/gesture';
 import { PaperLayer } from 'app/scripts/paper/item';
 import { PaperService } from 'app/services';

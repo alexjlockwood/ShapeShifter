@@ -10,7 +10,7 @@ type Quadrilateral = [paper.Point, paper.Point, paper.Point, paper.Point];
  *
  * TODO: finish this
  */
-export class TransformItemsGesture extends Gesture {
+export class TransformPathsGesture extends Gesture {
   constructor(
     private readonly hitSegment: paper.Segment,
     private readonly selectedPaths: ReadonlyArray<paper.Path>,
