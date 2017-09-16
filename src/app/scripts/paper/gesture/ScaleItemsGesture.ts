@@ -1,6 +1,6 @@
 import { MathUtil } from 'app/scripts/common';
 import { PaperLayer } from 'app/scripts/paper/item';
-import { PivotType } from 'app/scripts/paper/util';
+import { PivotType, SelectionBoundsRaster } from 'app/scripts/paper/item';
 import { PaperService } from 'app/services';
 import * as paper from 'paper';
 
@@ -19,7 +19,10 @@ export class ScaleItemsGesture extends Gesture {
   private initialCenter: paper.Point;
   private currentPivot: paper.Point;
 
-  constructor(private readonly ps: PaperService, private readonly hitPivotType: PivotType) {
+  constructor(
+    private readonly ps: PaperService,
+    private readonly selectionBoundsRaster: SelectionBoundsRaster,
+  ) {
     super();
   }
 
@@ -30,21 +33,16 @@ export class ScaleItemsGesture extends Gesture {
     this.selectedItems = Array.from(this.ps.getSelectedLayers()).map(id =>
       this.paperLayer.findItemByLayerId(id),
     );
+    this.initialMatrices = this.selectedItems.map(i => i.matrix.clone());
 
-    // this.initialMatrices = this.selectedItems.map(i => i.matrix.clone());
-    // const scalingBounds = Items.computeBoundingBox(this.selectedItems);
-    // const pivotType = this.hitPivotType;
-    // TODO: implement this
-    // TODO: implement this
-    // TODO: implement this
-    // TODO: implement this
-    // TODO: implement this
-    // const oppPivotType = this.hitPivotType; // Pivots.getOppositePivotType(this.hitSegment.index);
-    // this.initialPivot = scalingBounds[oppPivotType].clone();
-    // this.currentPivot = scalingBounds[pivotType].clone();
-    // this.initialSize = this.currentPivot.subtract(this.initialPivot);
-    // this.centeredInitialSize = this.initialSize.divide(2);
-    // this.initialCenter = scalingBounds.center.clone();
+    const bounds = this.paperLayer.getSelectionBounds();
+    const pivotType = this.selectionBoundsRaster.pivotType;
+    const oppPivotType = this.selectionBoundsRaster.oppositePivotType;
+    this.initialPivot = bounds[oppPivotType].clone();
+    this.currentPivot = bounds[pivotType].clone();
+    this.initialSize = this.currentPivot.subtract(this.initialPivot);
+    this.centeredInitialSize = this.initialSize.divide(2);
+    this.initialCenter = bounds.center.clone();
   }
 
   // @Override

@@ -12,10 +12,7 @@ import * as _ from 'lodash';
 import * as paper from 'paper';
 
 import { FocusedEditPathRaster } from './FocusedEditPathRaster';
-import {
-  SelectionBoundsRaster,
-  RasterType as SelectionBoundsRasterType,
-} from './SelectionBoundsRaster';
+import { PivotType, SelectionBoundsRaster } from './SelectionBoundsRaster';
 
 // TODO: use Item#visible to hook up 'visible layer ids' from store
 export class PaperLayer extends paper.Layer {
@@ -172,10 +169,14 @@ export class PaperLayer extends paper.Layer {
     );
   }
 
+  getSelectionBounds() {
+    return this.selectionBoundsItem ? this.selectionBoundsItem.bounds : undefined;
+  }
+
   hitTestSelectionBoundsItem(mousePoint: paper.Point) {
     const point = this.globalToLocal(mousePoint);
     return this.selectionBoundsItem.hitTest(point, {
-      class: paper.Raster,
+      class: SelectionBoundsRaster,
     });
   }
 
@@ -307,9 +308,9 @@ function newSelectionBounds(items: ReadonlyArray<paper.Item>) {
   const transformRectFn = (rect: paper.Rectangle, m: paper.Matrix) => {
     return new paper.Rectangle(rect.topLeft.transform(m), rect.bottomRight.transform(m));
   };
-  const bounds = flattenedItems.reduce((p, c) => {
-    return p.unite(transformRectFn(c.bounds, localToViewportMatrix(c)));
-  }, transformRectFn(flattenedItems[0].bounds, localToViewportMatrix(flattenedItems[0])));
+  const bounds = flattenedItems
+    .map(i => transformRectFn(i.bounds, localToViewportMatrix(i)))
+    .reduce((p, c) => p.unite(c));
 
   // Draw an outline for the bounded box.
   const outlinePath = new paper.Path.Rectangle(bounds);
@@ -321,16 +322,16 @@ function newSelectionBounds(items: ReadonlyArray<paper.Item>) {
 
   // Create segments for the bounded box.
   const segmentSize = 6 / paper.view.zoom / getCssScaling();
-  const createSegmentFn = (rasterType: SelectionBoundsRasterType) => {
+  const createSegmentFn = (pivotType: PivotType) => {
     // TODO: avoid creating rasters in a loop like this
-    const center = bounds[rasterType];
-    const handle = new SelectionBoundsRaster(rasterType, center);
+    const center = bounds[pivotType];
+    const handle = new SelectionBoundsRaster(pivotType, center);
     const scaleFactor = 1 / getAttrScaling();
     handle.scale(scaleFactor, scaleFactor);
     return handle;
   };
 
-  const rasterTypes: ReadonlyArray<SelectionBoundsRasterType> = [
+  const pivotTypes: ReadonlyArray<PivotType> = [
     'topLeft',
     'topCenter',
     'topRight',
@@ -340,7 +341,7 @@ function newSelectionBounds(items: ReadonlyArray<paper.Item>) {
     'bottomLeft',
     'leftCenter',
   ];
-  rasterTypes.forEach(t => group.addChild(createSegmentFn(t)));
+  pivotTypes.forEach(t => group.addChild(createSegmentFn(t)));
 
   return group;
 }

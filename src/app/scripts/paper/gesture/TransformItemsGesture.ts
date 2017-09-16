@@ -1,5 +1,4 @@
 import { MathUtil } from 'app/scripts/common';
-import { PivotType, Pivots } from 'app/scripts/paper/util';
 import * as paper from 'paper';
 
 import { Gesture } from './Gesture';
@@ -80,23 +79,23 @@ export class TransformItemsGesture extends Gesture {
   }
 }
 
-function getTransformPivot(rect: paper.Rectangle, pivotType: PivotType, isCommandPressed: boolean) {
-  switch (pivotType) {
-    case 'bottomLeft':
-      return isCommandPressed ? rect.topRight : rect.center;
-    case 'topLeft':
-      return isCommandPressed ? rect.bottomRight : rect.center;
-    case 'topRight':
-      return isCommandPressed ? rect.bottomLeft : rect.center;
-    case 'bottomRight':
-      return isCommandPressed ? rect.topLeft : rect.center;
-    case 'leftCenter':
-      return rect.rightCenter;
-    case 'topCenter':
-      return rect.bottomCenter;
-    case 'rightCenter':
-      return rect.leftCenter;
-    case 'bottomCenter':
-      return rect.topCenter;
-  }
-}
+// function getTransformPivot(rect: paper.Rectangle, pivotType: PivotType, isCommandPressed: boolean) {
+//   switch (pivotType) {
+//     case 'bottomLeft':
+//       return isCommandPressed ? rect.topRight : rect.center;
+//     case 'topLeft':
+//       return isCommandPressed ? rect.bottomRight : rect.center;
+//     case 'topRight':
+//       return isCommandPressed ? rect.bottomLeft : rect.center;
+//     case 'bottomRight':
+//       return isCommandPressed ? rect.topLeft : rect.center;
+//     case 'leftCenter':
+//       return rect.rightCenter;
+//     case 'topCenter':
+//       return rect.bottomCenter;
+//     case 'rightCenter':
+//       return rect.leftCenter;
+//     case 'bottomCenter':
+//       return rect.topCenter;
+//   }
+// }

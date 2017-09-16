@@ -18,7 +18,6 @@ import {
   SelectDragHandleGesture,
 } from 'app/scripts/paper/gesture';
 import { PaperLayer } from 'app/scripts/paper/item';
-import { PivotType } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
 import * as paper from 'paper';
 
@@ -111,10 +110,7 @@ export class MasterTool extends Tool {
       const res = paperLayer.hitTestSelectionBoundsItem(event.point);
       if (res) {
         // If the hit item is a selection bounds segment, then perform a scale gesture.
-        // return new ScaleItemsGesture(this.ps, res.item.data.id as PivotType);
-
-        // TODO: implement scaling!
-        return new class extends Gesture {}();
+        return new ScaleItemsGesture(this.ps, res.item);
       }
     }
 
