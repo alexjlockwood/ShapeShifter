@@ -33,7 +33,7 @@ export class PaperLayer extends paper.Layer {
     this.updateVectorLayerItem();
     this.updateFocusedPathItem();
     this.updateSelectionBoundsItem();
-    this.updateHoverPath();
+    this.updateHoverPathItem();
   }
 
   setSelectedLayers(layerIds: ReadonlySet<string>) {
@@ -43,7 +43,7 @@ export class PaperLayer extends paper.Layer {
 
   setHoveredLayer(layerId: string) {
     this.hoveredLayerId = layerId;
-    this.updateHoverPath();
+    this.updateHoverPathItem();
   }
 
   setPathOverlayInfo(pathOverlayInfo: PathOverlayInfo) {
@@ -93,7 +93,7 @@ export class PaperLayer extends paper.Layer {
     this.updateChildren();
   }
 
-  private updateHoverPath() {
+  private updateHoverPathItem() {
     if (this.hoverPathItem) {
       this.hoverPathItem.remove();
       this.hoverPathItem = undefined;
@@ -119,39 +119,17 @@ export class PaperLayer extends paper.Layer {
   }
 
   private updateChildren() {
-    const children: paper.Item[] = [];
-    if (this.vectorLayerItem) {
-      children.push(this.vectorLayerItem);
-    }
-    if (this.selectionBoundsItem) {
-      children.push(this.selectionBoundsItem);
-    }
-    if (this.hoverPathItem) {
-      children.push(this.hoverPathItem);
-    }
-    if (this.focusedPathItem) {
-      children.push(this.focusedPathItem);
-    }
-    if (this.pathOverlayItem) {
-      children.push(this.pathOverlayItem);
-    }
-    if (this.selectionBoxItem) {
-      children.push(this.selectionBoxItem);
-    }
-    this.children = children;
+    this.children = _.compact([
+      this.vectorLayerItem,
+      this.selectionBoundsItem,
+      this.hoverPathItem,
+      this.focusedPathItem,
+      this.pathOverlayItem,
+      this.selectionBoxItem,
+    ]);
   }
 
-  /** Finds all vector layer items that overlap with the specified bounds. */
-  findItemsInBounds(bounds: paper.Rectangle, partialOverlap: boolean) {
-    return this.vectorLayerItem.getItems({
-      // TODO: figure out how to deal with groups and compound paths
-      // TODO: look at stylii to see how it handles paper.Shape items
-      class: paper.Path,
-      overlapping: partialOverlap ? new paper.Rectangle(bounds) : undefined,
-      inside: partialOverlap ? undefined : new paper.Rectangle(bounds),
-    });
-  }
-
+  /** Finds the vector layer item with the given layer ID. */
   findItemByLayerId(layerId: string) {
     if (!layerId) {
       return undefined;
@@ -166,20 +144,24 @@ export class PaperLayer extends paper.Layer {
     );
   }
 
-  getSelectionBounds() {
-    return this.selectionBoundsItem ? this.selectionBoundsItem.bounds : undefined;
+  /** Finds all vector layer items that overlap with the specified bounds. */
+  findItemsInBounds(bounds: paper.Rectangle, includePartialOverlaps: boolean) {
+    return this.vectorLayerItem.getItems({
+      // TODO: figure out how to deal with groups and compound paths
+      class: paper.Path,
+      overlapping: includePartialOverlaps ? new paper.Rectangle(bounds) : undefined,
+      inside: includePartialOverlaps ? undefined : new paper.Rectangle(bounds),
+    });
   }
 
   hitTestSelectionBoundsItem(mousePoint: paper.Point) {
-    const point = this.globalToLocal(mousePoint);
-    return this.selectionBoundsItem.hitTest(point, {
+    return this.selectionBoundsItem.hitTest(this.globalToLocal(mousePoint), {
       class: SelectionBoundsRaster,
     });
   }
 
   hitTestFocusedPathItem(mousePoint: paper.Point) {
-    const point = this.globalToLocal(mousePoint);
-    return this.focusedPathItem.hitTest(point, {
+    return this.focusedPathItem.hitTest(this.globalToLocal(mousePoint), {
       class: FocusedPathRaster,
     });
   }
@@ -426,47 +408,45 @@ function newSelectionBoxItem(from: paper.Point, to: paper.Point) {
 }
 
 /** Creates a new 'split segment at location' hover item. */
-function newSplitSegmentAtLocationHover({ curve, point, path }: paper.CurveLocation) {
-  const group = new paper.Group();
-  group.guide = true;
+// function newSplitSegmentAtLocationHover({ curve, point, path }: paper.CurveLocation) {
+//   const group = new paper.Group();
+//   group.guide = true;
 
-  const highlightedCurve = new paper.Path([curve.segment1, curve.segment2]);
-  highlightedCurve.guide = true;
-  highlightedCurve.matrix = path.matrix.clone();
-  highlightedCurve.strokeColor = 'red';
-  highlightedCurve.strokeWidth = 4 / paper.view.zoom;
-  group.addChild(highlightedCurve);
+//   const highlightedCurve = new paper.Path([curve.segment1, curve.segment2]);
+//   highlightedCurve.guide = true;
+//   highlightedCurve.matrix = path.matrix.clone();
+//   highlightedCurve.strokeColor = 'red';
+//   highlightedCurve.strokeWidth = 4 / paper.view.zoom;
+//   group.addChild(highlightedCurve);
 
-  const highlightedPoint = new paper.Path.Circle(point, 7 / paper.view.zoom);
-  highlightedPoint.guide = true;
-  highlightedPoint.fillColor = 'green';
-  group.addChild(highlightedPoint);
+//   const highlightedPoint = new paper.Path.Circle(point, 7 / paper.view.zoom);
+//   highlightedPoint.guide = true;
+//   highlightedPoint.fillColor = 'green';
+//   group.addChild(highlightedPoint);
 
-  return group;
-}
+//   return group;
+// }
 
-/**
- * Creates a new pen segment preview path.
- */
-function newPenSegmentPreview(from: paper.Segment, to: paper.Point) {
-  const path = new paper.Path({
-    guide: true,
-    strokeWidth: 4 / paper.view.zoom,
-    strokeColor: 'red',
-  });
-  const fromPoint = from.point.clone();
-  const fromHandleIn = from.handleIn ? from.handleIn.clone() : undefined;
-  const fromHandleOut = from.handleOut ? from.handleOut.clone() : undefined;
-  path.add(
-    new paper.Segment({
-      point: fromPoint,
-      handleIn: fromHandleIn,
-      handleOut: fromHandleOut,
-    }),
-  );
-  path.add(to.clone());
-  return path;
-}
+/** Creates a new pen segment preview path. */
+// function newPenSegmentPreview(from: paper.Segment, to: paper.Point) {
+//   const path = new paper.Path({
+//     guide: true,
+//     strokeWidth: 4 / paper.view.zoom,
+//     strokeColor: 'red',
+//   });
+//   const fromPoint = from.point.clone();
+//   const fromHandleIn = from.handleIn ? from.handleIn.clone() : undefined;
+//   const fromHandleOut = from.handleOut ? from.handleOut.clone() : undefined;
+//   path.add(
+//     new paper.Segment({
+//       point: fromPoint,
+//       handleIn: fromHandleIn,
+//       handleOut: fromHandleOut,
+//     }),
+//   );
+//   path.add(to.clone());
+//   return path;
+// }
 
 /**
  * Computes the transform matrix that will transform the specified item to its

@@ -29,7 +29,10 @@ export class BatchSelectItemsGesture extends Gesture {
 
   // @Override
   onMouseDrag(event: paper.ToolEvent) {
-    this.ps.setSelectionBox({ from: event.downPoint, to: event.point });
+    this.ps.setSelectionBox({
+      from: this.paperLayer.globalToLocal(event.downPoint),
+      to: this.paperLayer.globalToLocal(event.point),
+    });
     this.selectItemsInSelectionBox(event.modifiers.alt);
   }
 
