@@ -1,7 +1,7 @@
 export { Gesture } from './Gesture';
 export { RotateItemsGesture } from './RotateItemsGesture';
 export { ScaleItemsGesture } from './ScaleItemsGesture';
-export { TransformPathsGesture } from './TransformItemsGesture';
+export { TransformPathsGesture } from './TransformPathsGesture';
 export { BatchSelectItemsGesture } from './BatchSelectItemsGesture';
 export { BatchSelectSegmentsGesture } from './BatchSelectSegmentsGesture';
 export { SelectDragCloneItemsGesture } from './SelectDragCloneItemsGesture';
