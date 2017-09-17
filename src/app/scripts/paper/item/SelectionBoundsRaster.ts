@@ -1,7 +1,7 @@
 import * as paper from 'paper';
 
 export class SelectionBoundsRaster extends paper.Raster {
-  public readonly oppositePivotType: PivotType;
+  readonly oppositePivotType: PivotType;
   constructor(public readonly pivotType: PivotType, center: paper.Point) {
     super(`/assets/handle.png`, center);
     this.oppositePivotType = getOppositePivotType(pivotType);
