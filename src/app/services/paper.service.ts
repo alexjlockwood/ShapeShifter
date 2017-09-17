@@ -8,17 +8,18 @@ import { State, Store } from 'app/store';
 import { SetHoveredLayer } from 'app/store/layers/actions';
 import { getHoveredLayerId, getSelectedLayerIds } from 'app/store/layers/selectors';
 import {
-  FocusedEditPath,
+  FocusedPathInfo,
+  PathOverlayInfo,
   SetCanvasCursor,
-  SetFocusedEditPath,
-  SetPathPreview,
+  SetFocusedPathInfo,
+  SetPathOverlayInfo,
   SetSelectionBox,
   SetToolMode,
 } from 'app/store/paper/actions';
 import {
   getCanvasCursor,
-  getFocusedEditPath,
-  getPathPreview,
+  getFocusedPathInfo,
+  getPathOverlayInfo,
   getSelectionBox,
   getToolMode,
 } from 'app/store/paper/selectors';
@@ -61,7 +62,7 @@ export class PaperService {
     return this.queryStore(getSelectedLayerIds);
   }
 
-  /** Sets the currently hovered layer id (or clears it if the layer id is undefined). */
+  /** Sets or clears the currently hovered layer ID. */
   setHoveredLayer(layerId: string | undefined) {
     if (this.queryStore(getHoveredLayerId) !== layerId) {
       this.store.dispatch(new SetHoveredLayer(layerId));
@@ -80,16 +81,16 @@ export class PaperService {
     return this.queryStore(getSelectionBox);
   }
 
-  /** Sets the current path preview. */
-  setPathPreview(pathData: string) {
-    if (this.getPathPreview() !== pathData) {
-      this.store.dispatch(new SetPathPreview(pathData));
+  /** Sets the current path overlay info. */
+  setPathOverlayInfo(pathOverlayInfo: PathOverlayInfo) {
+    if (!_.isEqual(this.getPathOverlayInfo(), pathOverlayInfo)) {
+      this.store.dispatch(new SetPathOverlayInfo(pathOverlayInfo));
     }
   }
 
-  /** Gets the current path preview. */
-  getPathPreview() {
-    return this.queryStore(getPathPreview);
+  /** Gets the current path overlay. */
+  getPathOverlayInfo() {
+    return this.queryStore(getPathOverlayInfo);
   }
 
   /** Sets the current tool mode. */
@@ -104,16 +105,16 @@ export class PaperService {
     return this.queryStore(getToolMode);
   }
 
-  /** Sets the current focused edit path. */
-  setFocusedEditPath(focusedEditPath: FocusedEditPath) {
-    if (!_.isEqual(this.getFocusedEditPath(), focusedEditPath)) {
-      this.store.dispatch(new SetFocusedEditPath(focusedEditPath));
+  /** Sets the current focused path info. */
+  setFocusedPathInfo(focusedPathInfo: FocusedPathInfo) {
+    if (!_.isEqual(this.getFocusedPathInfo(), focusedPathInfo)) {
+      this.store.dispatch(new SetFocusedPathInfo(focusedPathInfo));
     }
   }
 
-  /** Gets the current focused edit path. */
-  getFocusedEditPath() {
-    return this.queryStore(getFocusedEditPath);
+  /** Gets the current focused path info. */
+  getFocusedPathInfo() {
+    return this.queryStore(getFocusedPathInfo);
   }
 
   /** Gets the current canvas cursor. */

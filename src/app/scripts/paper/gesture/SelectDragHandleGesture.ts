@@ -28,7 +28,7 @@ export class SelectDragHandleGesture extends Gesture {
   // @Override
   onMouseDown(event: paper.ToolEvent) {
     // TODO: what about when alt/shift is pressed
-    const focusedEditPath = this.ps.getFocusedEditPath();
+    const focusedPathInfo = this.ps.getFocusedPathInfo();
     const selectedHandleIns = new Set<number>();
     const selectedHandleOuts = new Set<number>();
     if (this.hitHandleType === 'handleIn') {
@@ -36,8 +36,8 @@ export class SelectDragHandleGesture extends Gesture {
     } else if (this.hitHandleType === 'handleOut') {
       selectedHandleOuts.add(this.segmentIndex);
     }
-    this.ps.setFocusedEditPath({
-      ...focusedEditPath,
+    this.ps.setFocusedPathInfo({
+      ...focusedPathInfo,
       selectedSegments: new Set<number>(),
       selectedHandleIns,
       selectedHandleOuts,
@@ -47,15 +47,15 @@ export class SelectDragHandleGesture extends Gesture {
     // we can make changes to them as we drag.
     this.initialVectorLayer = this.ps.getVectorLayer();
 
-    const editPath = this.paperLayer.findItemByLayerId(focusedEditPath.layerId) as paper.Path;
+    const editPath = this.paperLayer.findItemByLayerId(focusedPathInfo.layerId) as paper.Path;
     this.initialHandlePosition = editPath.segments[this.segmentIndex][this.hitHandleType].clone();
   }
 
   // @Override
   onMouseDrag(event: paper.ToolEvent) {
-    const focusedEditPath = this.ps.getFocusedEditPath();
+    const focusedPathInfo = this.ps.getFocusedPathInfo();
     const editPath = this.paperLayer
-      .findItemByLayerId(focusedEditPath.layerId)
+      .findItemByLayerId(focusedPathInfo.layerId)
       .clone() as paper.Path;
     const downPoint = editPath.globalToLocal(event.downPoint);
     const point = editPath.globalToLocal(event.point);
@@ -68,7 +68,7 @@ export class SelectDragHandleGesture extends Gesture {
     editPath.segments[this.segmentIndex][this.hitHandleType] = finalHandlePosition;
     const initialVectorLayer = this.initialVectorLayer.clone();
     const initialPathLayer = initialVectorLayer
-      .findLayerById(focusedEditPath.layerId)
+      .findLayerById(focusedPathInfo.layerId)
       .clone() as PathLayer;
     initialPathLayer.pathData = new Path(editPath.pathData);
     const newVl = LayerUtil.replaceLayer(initialVectorLayer, initialPathLayer.id, initialPathLayer);

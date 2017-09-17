@@ -23,16 +23,16 @@ export class BatchSelectSegmentsGesture extends Gesture {
 
   // @Override
   onMouseDown(event: paper.ToolEvent) {
-    const focusedEditPath = this.ps.getFocusedEditPath();
+    const focusedPathInfo = this.ps.getFocusedPathInfo();
     // TODO: make use of these
-    this.initialSelectedSegments = focusedEditPath.selectedSegments;
-    this.initialVisibleHandleIns = focusedEditPath.visibleHandleIns;
-    this.initialSelectedHandleIns = focusedEditPath.selectedHandleIns;
-    this.initialVisibleHandleOuts = focusedEditPath.visibleHandleOuts;
-    this.initialSelectedHandleOuts = focusedEditPath.selectedHandleOuts;
+    this.initialSelectedSegments = focusedPathInfo.selectedSegments;
+    this.initialVisibleHandleIns = focusedPathInfo.visibleHandleIns;
+    this.initialSelectedHandleIns = focusedPathInfo.selectedHandleIns;
+    this.initialVisibleHandleOuts = focusedPathInfo.visibleHandleOuts;
+    this.initialSelectedHandleOuts = focusedPathInfo.selectedHandleOuts;
     if (!event.modifiers.shift) {
-      this.ps.setFocusedEditPath({
-        layerId: focusedEditPath.layerId,
+      this.ps.setFocusedPathInfo({
+        layerId: focusedPathInfo.layerId,
         selectedSegments: new Set<number>(),
         visibleHandleIns: new Set<number>(),
         selectedHandleIns: new Set<number>(),
@@ -45,31 +45,31 @@ export class BatchSelectSegmentsGesture extends Gesture {
   // @Override
   onMouseDrag(event: paper.ToolEvent) {
     this.isDragging = true;
-    this.ps.setSelectionBox({ from: event.downPoint, to: event.point });
-    const focusedEditPath = this.ps.getFocusedEditPath();
-    const editPath = this.paperLayer.findItemByLayerId(focusedEditPath.layerId) as paper.Path;
-    const selectedSegments = new Set<number>();
+    const focusedPathInfo = this.ps.getFocusedPathInfo();
+    const editPath = this.paperLayer.findItemByLayerId(focusedPathInfo.layerId) as paper.Path;
     const from = editPath.globalToLocal(event.downPoint);
     const to = editPath.globalToLocal(event.point);
-    const rectangle = new paper.Rectangle(new paper.Point(from), new paper.Point(to));
+    this.ps.setSelectionBox({ from, to });
+    const selectedSegments = new Set<number>();
+    const rectangle = new paper.Rectangle(from, to);
     editPath.segments.forEach((s, i) => {
       // TODO: select the entire curve instead
       const curveSelected =
         rectangle.contains(s.point) ||
-        (event.modifiers.shift && focusedEditPath.selectedSegments.has(i));
+        (event.modifiers.shift && focusedPathInfo.selectedSegments.has(i));
       if (curveSelected) {
         selectedSegments.add(i);
       }
     });
-    this.ps.setFocusedEditPath({ ...focusedEditPath, selectedSegments });
+    this.ps.setFocusedPathInfo({ ...focusedPathInfo, selectedSegments });
   }
 
   // @Override
   onMouseUp(event: paper.ToolEvent) {
     const selectionBox = this.ps.getSelectionBox();
     if (selectionBox) {
-      const focusedEditPath = this.ps.getFocusedEditPath();
-      const editPath = this.paperLayer.findItemByLayerId(focusedEditPath.layerId) as paper.Path;
+      const focusedPathInfo = this.ps.getFocusedPathInfo();
+      const editPath = this.paperLayer.findItemByLayerId(focusedPathInfo.layerId) as paper.Path;
       const selectedSegments = new Set<number>();
       const from = editPath.globalToLocal(event.downPoint);
       const to = editPath.globalToLocal(event.point);
@@ -78,18 +78,18 @@ export class BatchSelectSegmentsGesture extends Gesture {
         // TODO: select the entire curve instead
         const curveSelected =
           rectangle.contains(s.point) ||
-          (event.modifiers.shift && focusedEditPath.selectedSegments.has(i));
+          (event.modifiers.shift && focusedPathInfo.selectedSegments.has(i));
         if (curveSelected) {
           selectedSegments.add(i);
         }
       });
       this.ps.setSelectionBox(undefined);
-      this.ps.setFocusedEditPath({ ...focusedEditPath, selectedSegments });
+      this.ps.setFocusedPathInfo({ ...focusedPathInfo, selectedSegments });
     }
 
     if (!this.isDragging) {
-      const { layerId } = this.ps.getFocusedEditPath();
-      this.ps.setFocusedEditPath(undefined);
+      const { layerId } = this.ps.getFocusedPathInfo();
+      this.ps.setFocusedPathInfo(undefined);
       this.ps.setSelectedLayers(new Set([layerId]));
     }
   }

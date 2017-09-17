@@ -52,16 +52,16 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
   // @Override
   onMouseDown(event: paper.ToolEvent) {
     // TODO: what about when alt/shift is pressed
-    const focusedEditPath = this.ps.getFocusedEditPath();
-    const prevSelectedSegments = focusedEditPath.selectedSegments;
-    const newSelectedSegments = new Set(focusedEditPath.selectedSegments);
+    const focusedPathInfo = this.ps.getFocusedPathInfo();
+    const prevSelectedSegments = focusedPathInfo.selectedSegments;
+    const newSelectedSegments = new Set(focusedPathInfo.selectedSegments);
 
     // Save a copy of the initial vector layer and handle position so that
     // we can make changes to them as we drag.
     this.initialVectorLayer = this.ps.getVectorLayer();
 
     const editPath = this.paperLayer
-      .findItemByLayerId(focusedEditPath.layerId)
+      .findItemByLayerId(focusedPathInfo.layerId)
       .clone() as paper.Path;
     let isEditPathModified = false;
     // this.initialHandlePosition = editPath.segments[this.segmentIndex][this.hitHandleType].clone();
@@ -125,7 +125,7 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
 
     if (isEditPathModified) {
       let newVl = this.ps.getVectorLayer().clone();
-      const pl = newVl.findLayerById(focusedEditPath.layerId).clone() as PathLayer;
+      const pl = newVl.findLayerById(focusedPathInfo.layerId).clone() as PathLayer;
       pl.pathData = new Path(editPath.pathData);
       newVl = LayerUtil.replaceLayer(newVl, pl.id, pl);
       this.ps.setVectorLayer(newVl);
@@ -140,8 +140,8 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
       }),
     );
 
-    this.ps.setFocusedEditPath({
-      ...focusedEditPath,
+    this.ps.setFocusedPathInfo({
+      ...focusedPathInfo,
       selectedSegments: newSelectedSegments,
       visibleHandleIns: newSelectedSegments,
       visibleHandleOuts: newSelectedSegments,
@@ -157,9 +157,9 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
   // @Override
   onMouseDrag(event: paper.ToolEvent) {
     // Guides.hideAddSegmentToCurveHoverGroup();
-    const focusedEditPath = this.ps.getFocusedEditPath();
+    const focusedPathInfo = this.ps.getFocusedPathInfo();
     const editPath = this.paperLayer
-      .findItemByLayerId(focusedEditPath.layerId)
+      .findItemByLayerId(focusedPathInfo.layerId)
       .clone() as paper.Path;
     const dragVector = editPath
       .globalToLocal(event.point)
@@ -199,7 +199,7 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
     this.lastPoint = editPath.globalToLocal(event.point);
 
     let newVl = this.ps.getVectorLayer().clone();
-    const pl = newVl.findLayerById(focusedEditPath.layerId).clone() as PathLayer;
+    const pl = newVl.findLayerById(focusedPathInfo.layerId).clone() as PathLayer;
     pl.pathData = new Path(editPath.pathData);
     newVl = LayerUtil.replaceLayer(newVl, pl.id, pl);
     this.ps.setVectorLayer(newVl);

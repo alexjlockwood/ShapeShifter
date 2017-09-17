@@ -63,7 +63,7 @@ export class MasterTool extends Tool {
       this.currentGesture = new PencilGesture(this.ps);
     } else {
       // TODO: also add support for transform/rotate/etc. tools
-      if (toolMode === ToolMode.Pen && !this.ps.getFocusedEditPath()) {
+      if (toolMode === ToolMode.Pen && !this.ps.getFocusedPathInfo()) {
         // Then the user is in pen mode and is about to begin creating a new path.
         this.ps.setSelectedLayers(new Set());
         const vl = this.ps.getVectorLayer().clone();
@@ -76,7 +76,7 @@ export class MasterTool extends Tool {
         const children = [...vl.children, pl];
         vl.children = children;
         this.ps.setVectorLayer(vl);
-        this.ps.setFocusedEditPath({
+        this.ps.setFocusedPathInfo({
           layerId: pl.id,
           selectedSegments: new Set<number>(),
           visibleHandleIns: new Set<number>(),
@@ -85,7 +85,7 @@ export class MasterTool extends Tool {
           selectedHandleOuts: new Set<number>(),
         });
       }
-      if (this.ps.getFocusedEditPath()) {
+      if (this.ps.getFocusedPathInfo()) {
         // The user is editing an existing focused edit path.
         this.currentGesture = this.createEditPathModeGesture(event);
       } else {
@@ -98,7 +98,7 @@ export class MasterTool extends Tool {
 
   private onMouseUp(event: paper.ToolEvent) {
     this.currentGesture.onMouseUp(event);
-    if (this.ps.getFocusedEditPath()) {
+    if (this.ps.getFocusedPathInfo()) {
       this.currentGesture = new HoverSegmentsCurvesGesture(this.ps);
     } else {
       this.currentGesture = new HoverItemsGesture(this.ps);
@@ -138,7 +138,7 @@ export class MasterTool extends Tool {
         onMouseDown(e: paper.ToolEvent) {
           // If a double click event occurs on top of a hit item, then enter edit path mode.
           ps.setSelectedLayers(new Set());
-          ps.setFocusedEditPath({
+          ps.setFocusedPathInfo({
             layerId: hitItem.data.id,
             // TODO: auto-select the last curve in the path
             selectedSegments: new Set<number>(),
@@ -184,10 +184,10 @@ export class MasterTool extends Tool {
 
   private createEditPathModeGesture(event: paper.ToolEvent) {
     const { ps, paperLayer } = this;
-    const focusedEditPath = ps.getFocusedEditPath();
+    const focusedPathInfo = ps.getFocusedPathInfo();
 
     // First, do a hit test on the focused edit path's segments and handles.
-    const segmentHandleHitResult = paperLayer.hitTestFocusedEditPathItem(event.point);
+    const segmentHandleHitResult = paperLayer.hitTestFocusedPathItem(event.point);
     if (segmentHandleHitResult) {
       const { type, segmentIndex } = segmentHandleHitResult.item;
       if (type === 'handle-in' || type === 'handle-out') {
@@ -206,7 +206,7 @@ export class MasterTool extends Tool {
     }
 
     // Second, do a hit test on the underlying path's stroke/curves.
-    const editPath = paperLayer.findItemByLayerId(focusedEditPath.layerId) as paper.Path;
+    const editPath = paperLayer.findItemByLayerId(focusedPathInfo.layerId) as paper.Path;
     const strokeCurveHitResult = editPath.hitTest(editPath.globalToLocal(event.point), {
       stroke: true,
       curves: true,
@@ -216,7 +216,7 @@ export class MasterTool extends Tool {
       return SelectDragDrawSegmentsGesture.hitCurve(ps, location.index, location.time);
     }
 
-    const selectedSegments = Array.from(focusedEditPath.selectedSegments);
+    const selectedSegments = Array.from(focusedPathInfo.selectedSegments);
     if (
       // Then we are beginning to build a new path from scratch.
       editPath.segments.length === 0 ||

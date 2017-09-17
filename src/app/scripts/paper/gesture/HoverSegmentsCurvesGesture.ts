@@ -21,8 +21,8 @@ export class HoverSegmentsCurvesGesture extends Gesture {
     // Cursors.clear();
     // Guides.hidePenPathPreviewPath();
     // Guides.hideAddSegmentToCurveHoverGroup();
-    // const focusedEditPath = this.ps.getFocusedEditPath();
-    // const editPath = this.paperLayer.findItemByLayerId(focusedEditPath.layerId) as paper.Path;
+    // const focusedPathInfo = this.ps.getFocusedPathInfo();
+    // const editPath = this.paperLayer.findItemByLayerId(focusedPathInfo.layerId) as paper.Path;
     // const hitResult = HitTests.editPathMode(editPath, point);
     // if (!hitResult) {
     //   const singleSelectedSegment = this.findSingleSelectedEndSegment();
@@ -71,13 +71,13 @@ export class HoverSegmentsCurvesGesture extends Gesture {
    * edit path, or undefined if one doesn't exist.
    */
   private findSingleSelectedEndSegment() {
-    const focusedEditPath = this.ps.getFocusedEditPath();
-    const editPath = this.paperLayer.findItemByLayerId(focusedEditPath.layerId) as paper.Path;
+    const focusedPathInfo = this.ps.getFocusedPathInfo();
+    const editPath = this.paperLayer.findItemByLayerId(focusedPathInfo.layerId) as paper.Path;
     if (editPath.closed) {
       // Return undefined if the path is closed.
       return undefined;
     }
-    const { selectedSegments } = focusedEditPath;
+    const { selectedSegments } = focusedPathInfo;
     if (selectedSegments.size !== 1) {
       // Return undefined if there is not a single selected segment.
       return undefined;

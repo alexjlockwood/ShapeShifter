@@ -7,31 +7,31 @@ import {
   VectorLayer,
 } from 'app/model/layers';
 import { ColorUtil } from 'app/scripts/common';
-import { FocusedEditPath } from 'app/store/paper/actions';
+import { FocusedPathInfo, PathOverlayInfo } from 'app/store/paper/actions';
 import * as _ from 'lodash';
 import * as paper from 'paper';
 
-import { FocusedEditPathRaster } from './FocusedEditPathRaster';
+import { FocusedPathRaster } from './FocusedPathRaster';
 import { PivotType, SelectionBoundsRaster } from './SelectionBoundsRaster';
 
 // TODO: use Item#visible to hook up 'visible layer ids' from store
 export class PaperLayer extends paper.Layer {
   private vectorLayerItem: paper.Item;
   private selectionBoundsItem: paper.Item;
-  private hoverPath: paper.Path;
-  private selectionBoxPath: paper.Path;
-  private pathPreview: paper.Path;
-  private focusedEditPathItem: paper.Item;
+  private hoverPathItem: paper.Path;
+  private selectionBoxItem: paper.Path;
+  private pathOverlayItem: paper.Path;
+  private focusedPathItem: paper.Item;
 
   private vectorLayer: VectorLayer;
   private selectedLayerIds: ReadonlySet<string> = new Set();
   private hoveredLayerId: string;
-  private focusedEditPath: FocusedEditPath;
+  private focusedPathInfo: FocusedPathInfo;
 
   setVectorLayer(vl: VectorLayer) {
     this.vectorLayer = vl;
     this.updateVectorLayerItem();
-    this.updateFocusedEditPathItem();
+    this.updateFocusedPathItem();
     this.updateSelectionBoundsItem();
     this.updateHoverPath();
   }
@@ -46,34 +46,31 @@ export class PaperLayer extends paper.Layer {
     this.updateHoverPath();
   }
 
-  setPathPreview(pathData: string) {
-    if (this.pathPreview) {
-      this.pathPreview.remove();
-      this.pathPreview = undefined;
+  setPathOverlayInfo(pathOverlayInfo: PathOverlayInfo) {
+    if (this.pathOverlayItem) {
+      this.pathOverlayItem.remove();
+      this.pathOverlayItem = undefined;
     }
-    if (pathData) {
-      this.pathPreview = newPathPreview(pathData);
+    if (pathOverlayInfo) {
+      this.pathOverlayItem = newPathOverlayItem(pathOverlayInfo);
       this.updateChildren();
     }
   }
 
   setSelectionBox(box: { from: paper.Point; to: paper.Point }) {
-    if (this.selectionBoxPath) {
-      this.selectionBoxPath.remove();
-      this.selectionBoxPath = undefined;
+    if (this.selectionBoxItem) {
+      this.selectionBoxItem.remove();
+      this.selectionBoxItem = undefined;
     }
     if (box) {
-      this.selectionBoxPath = newSelectionBox(
-        paper.project.activeLayer.globalToLocal(box.from),
-        paper.project.activeLayer.globalToLocal(box.to),
-      );
+      this.selectionBoxItem = newSelectionBoxItem(box.from, box.to);
       this.updateChildren();
     }
   }
 
-  setFocusedEditPath(focusedEditPath: FocusedEditPath) {
-    this.focusedEditPath = focusedEditPath;
-    this.updateFocusedEditPathItem();
+  setFocusedPathInfo(focusedPathInfo: FocusedPathInfo) {
+    this.focusedPathInfo = focusedPathInfo;
+    this.updateFocusedPathItem();
   }
 
   private updateVectorLayerItem() {
@@ -91,32 +88,32 @@ export class PaperLayer extends paper.Layer {
     }
     const selectedItems = Array.from(this.selectedLayerIds).map(id => this.findItemByLayerId(id));
     if (selectedItems.length > 0) {
-      this.selectionBoundsItem = newSelectionBounds(selectedItems);
+      this.selectionBoundsItem = newSelectionBoundsItem(selectedItems);
     }
     this.updateChildren();
   }
 
   private updateHoverPath() {
-    if (this.hoverPath) {
-      this.hoverPath.remove();
-      this.hoverPath = undefined;
+    if (this.hoverPathItem) {
+      this.hoverPathItem.remove();
+      this.hoverPathItem = undefined;
     }
     if (this.hoveredLayerId) {
       const item = this.findItemByLayerId(this.hoveredLayerId);
-      this.hoverPath = newHover(item);
+      this.hoverPathItem = newHoverPathItem(item);
     }
     this.updateChildren();
   }
 
-  private updateFocusedEditPathItem() {
-    if (this.focusedEditPathItem) {
-      this.focusedEditPathItem.remove();
-      this.focusedEditPathItem = undefined;
+  private updateFocusedPathItem() {
+    if (this.focusedPathItem) {
+      this.focusedPathItem.remove();
+      this.focusedPathItem = undefined;
     }
-    if (this.focusedEditPath) {
+    if (this.focusedPathInfo) {
       // TODO: is it possible for pathData to be undefined?
-      const path = this.findItemByLayerId(this.focusedEditPath.layerId) as paper.Path;
-      this.focusedEditPathItem = newFocusedEditPath(path, this.focusedEditPath);
+      const path = this.findItemByLayerId(this.focusedPathInfo.layerId) as paper.Path;
+      this.focusedPathItem = newFocusedPathItem(path, this.focusedPathInfo);
       this.updateChildren();
     }
   }
@@ -129,17 +126,17 @@ export class PaperLayer extends paper.Layer {
     if (this.selectionBoundsItem) {
       children.push(this.selectionBoundsItem);
     }
-    if (this.hoverPath) {
-      children.push(this.hoverPath);
+    if (this.hoverPathItem) {
+      children.push(this.hoverPathItem);
     }
-    if (this.focusedEditPathItem) {
-      children.push(this.focusedEditPathItem);
+    if (this.focusedPathItem) {
+      children.push(this.focusedPathItem);
     }
-    if (this.pathPreview) {
-      children.push(this.pathPreview);
+    if (this.pathOverlayItem) {
+      children.push(this.pathOverlayItem);
     }
-    if (this.selectionBoxPath) {
-      children.push(this.selectionBoxPath);
+    if (this.selectionBoxItem) {
+      children.push(this.selectionBoxItem);
     }
     this.children = children;
   }
@@ -180,10 +177,10 @@ export class PaperLayer extends paper.Layer {
     });
   }
 
-  hitTestFocusedEditPathItem(mousePoint: paper.Point) {
+  hitTestFocusedPathItem(mousePoint: paper.Point) {
     const point = this.globalToLocal(mousePoint);
-    return this.focusedEditPathItem.hitTest(point, {
-      class: FocusedEditPathRaster,
+    return this.focusedPathItem.hitTest(point, {
+      class: FocusedPathRaster,
     });
   }
 }
@@ -271,7 +268,7 @@ function newVectorLayerItem(vl: VectorLayer): paper.Item {
 }
 
 /** Creates a new hover path for the specified item. */
-function newHover(item: paper.Item) {
+function newHoverPathItem(item: paper.Item) {
   let hoverPath: paper.Path;
   if (item instanceof paper.Group) {
     hoverPath = new paper.Path.Rectangle(item.bounds);
@@ -293,7 +290,7 @@ function newHover(item: paper.Item) {
 /**
  * Creates a new selection bounds item for the specified selected items.
  */
-function newSelectionBounds(items: ReadonlyArray<paper.Item>) {
+function newSelectionBoundsItem(items: ReadonlyArray<paper.Item>) {
   const group = new paper.Group();
 
   const flattenedItems: paper.Item[] = [];
@@ -347,9 +344,9 @@ function newSelectionBounds(items: ReadonlyArray<paper.Item>) {
 }
 
 /**
- * Creates the overlay decorations for the given focused edit path.
+ * Creates the overlay decorations for the given focused path.
  */
-function newFocusedEditPath(path: paper.Path, focusedEditPath: FocusedEditPath) {
+function newFocusedPathItem(path: paper.Path, focusedPathInfo: FocusedPathInfo) {
   const group = new paper.Group();
   const scaleFactor = 1 / getAttrScaling();
   const matrix = localToViewportMatrix(path);
@@ -374,7 +371,7 @@ function newFocusedEditPath(path: paper.Path, focusedEditPath: FocusedEditPath) 
     selectedHandleIns,
     visibleHandleOuts,
     selectedHandleOuts,
-  } = focusedEditPath;
+  } = focusedPathInfo;
   // TODO: avoid creating rasters in a loop like this
   path.segments.forEach(({ point, handleIn, handleOut }, segmentIndex) => {
     const center = point;
@@ -382,7 +379,7 @@ function newFocusedEditPath(path: paper.Path, focusedEditPath: FocusedEditPath) 
       handleIn = center.add(handleIn);
       addLineFn(center, handleIn);
       addRasterFn(
-        new FocusedEditPathRaster(
+        new FocusedPathRaster(
           'handle-in',
           segmentIndex,
           selectedHandleIns.has(segmentIndex),
@@ -394,7 +391,7 @@ function newFocusedEditPath(path: paper.Path, focusedEditPath: FocusedEditPath) 
       handleOut = center.add(handleOut);
       addLineFn(center, handleOut);
       addRasterFn(
-        new FocusedEditPathRaster(
+        new FocusedPathRaster(
           'handle-out',
           segmentIndex,
           selectedHandleOuts.has(segmentIndex),
@@ -403,27 +400,22 @@ function newFocusedEditPath(path: paper.Path, focusedEditPath: FocusedEditPath) 
       );
     }
     addRasterFn(
-      new FocusedEditPathRaster(
-        'segment',
-        segmentIndex,
-        selectedSegments.has(segmentIndex),
-        center,
-      ),
+      new FocusedPathRaster('segment', segmentIndex, selectedSegments.has(segmentIndex), center),
     );
   });
   return group;
 }
 
-function newPathPreview(pathData: string) {
-  const path = new paper.Path(pathData);
+function newPathOverlayItem(pathOverlayInfo: PathOverlayInfo) {
+  const path = new paper.Path(pathOverlayInfo.pathData);
   path.guide = true;
   path.strokeScaling = false;
   path.strokeWidth = 1 / paper.view.zoom;
-  path.strokeColor = 'black';
+  path.strokeColor = pathOverlayInfo.strokeColor;
   return path;
 }
 
-function newSelectionBox(from: paper.Point, to: paper.Point) {
+function newSelectionBoxItem(from: paper.Point, to: paper.Point) {
   const path = new paper.Path.Rectangle(new paper.Rectangle(from, to));
   path.guide = true;
   path.strokeScaling = false;

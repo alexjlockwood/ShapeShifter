@@ -17,9 +17,9 @@ export class AddDeleteHandlesGesture extends Gesture {
 
   // @Override
   onMouseDown(e: paper.ToolEvent) {
-    const focusedEditPath = this.ps.getFocusedEditPath();
+    const focusedPathInfo = this.ps.getFocusedPathInfo();
     const vl = this.ps.getVectorLayer().clone();
-    const pathLayer = vl.findLayerById(focusedEditPath.layerId).clone() as PathLayer;
+    const pathLayer = vl.findLayerById(focusedPathInfo.layerId).clone() as PathLayer;
     const path = new paper.Path(pathLayer.pathData.getPathString());
     const segment = path.segments[this.segmentIndex];
     if (segment.hasHandles()) {

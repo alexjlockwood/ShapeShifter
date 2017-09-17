@@ -1,52 +1,57 @@
 import { Layer, LayerUtil, PathLayer } from 'app/model/layers';
 import { ToolMode } from 'app/model/paper';
 import { Path } from 'app/model/paths';
+import { PaperLayer } from 'app/scripts/paper/item';
 import { PaperService } from 'app/services';
 import * as paper from 'paper';
 
 import { Gesture } from './Gesture';
 
 export class PencilGesture extends Gesture {
+  private readonly paperLayer = paper.project.activeLayer as PaperLayer;
+  private isDragging = false;
   constructor(private readonly ps: PaperService) {
     super();
   }
 
   // @Override
   onMouseDrag(event: paper.ToolEvent) {
-    const pathDataPreview = this.ps.getPathPreview();
-    const pathPreview = pathDataPreview ? new paper.Path(pathDataPreview) : new paper.Path();
-    const lastPoint = paper.project.activeLayer.globalToLocal(event.lastPoint);
-    const point = paper.project.activeLayer.globalToLocal(event.point);
-    const delta = point.subtract(lastPoint);
-    const middlePoint = paper.project.activeLayer.globalToLocal(event.middlePoint);
+    this.isDragging = true;
+    const delta = this.paperLayer
+      .globalToLocal(event.point)
+      .subtract(this.paperLayer.globalToLocal(event.lastPoint));
     delta.angle += 90;
-    pathPreview.add(middlePoint.add(delta));
-    this.ps.setPathPreview(pathPreview.pathData);
+    const pathDataPreview = this.ps.getPathOverlayInfo();
+    const pathOverlay = pathDataPreview ? new paper.Path(pathDataPreview) : new paper.Path();
+    pathOverlay.add(this.paperLayer.globalToLocal(event.middlePoint).add(delta));
+    this.ps.setPathOverlayInfo({ pathData: pathOverlay.pathData, strokeColor: 'black' });
   }
 
   // @Override
   onMouseUp(event: paper.ToolEvent) {
-    const pathDataPreview = this.ps.getPathPreview();
-    if (pathDataPreview) {
-      const pathPreview = new paper.Path(pathDataPreview);
+    if (this.isDragging) {
+      const newPath = new paper.Path(this.ps.getPathOverlayInfo());
       // TODO: express '0.25' in terms of physical pixels, not viewport pixels
-      const point = paper.project.activeLayer.globalToLocal(event.point);
-      const nearStart = checkPointsClose(pathPreview.firstSegment.point, point, 0.25);
+      const nearStart = checkPointsClose(
+        newPath.firstSegment.point,
+        this.paperLayer.globalToLocal(event.point),
+        0.25,
+      );
       if (nearStart) {
-        pathPreview.closePath(true);
+        newPath.closePath(true);
       }
-      pathPreview.smooth({ type: 'continuous' });
+      newPath.smooth({ type: 'continuous' });
       const vl = this.ps.getVectorLayer().clone();
       const pl = new PathLayer({
         name: LayerUtil.getUniqueLayerName([vl], 'path'),
         children: [] as Layer[],
-        pathData: new Path(pathPreview.pathData),
+        pathData: new Path(newPath.pathData),
         fillColor: '#000',
       });
       const children = [...vl.children, pl];
       vl.children = children;
       this.ps.setVectorLayer(vl);
-      this.ps.setPathPreview(undefined);
+      this.ps.setPathOverlayInfo(undefined);
       this.ps.setSelectedLayers(new Set([pl.id]));
     }
     this.ps.setToolMode(ToolMode.Selection);
@@ -56,6 +61,5 @@ export class PencilGesture extends Gesture {
 function checkPointsClose(startPos: paper.Point, eventPoint: paper.Point, threshold: number) {
   const xOff = Math.abs(startPos.x - eventPoint.x);
   const yOff = Math.abs(startPos.y - eventPoint.y);
-  console.log(xOff, yOff, threshold);
   return xOff < threshold && yOff < threshold;
 }

@@ -4,8 +4,8 @@ import { Point } from 'app/scripts/common';
 
 export const SET_TOOL_MODE = '__paper__SET_TOOL_MODE';
 export const SET_SELECTION_BOX = '__paper__SET_SELECTION_BOX';
-export const SET_PATH_PREVIEW = '__paper__SET_PATH_PREVIEW';
-export const SET_FOCUSED_EDIT_PATH = '__paper__SET_FOCUSED_EDIT_PATH';
+export const SET_PATH_OVERLAY_INFO = '__paper__SET_PATH_OVERLAY';
+export const SET_FOCUSED_PATH_INFO = '__paper__SET_FOCUSED_PATH_INFO';
 export const SET_CANVAS_CURSOR = '__paper__SET_CANVAS_CURSOR';
 
 export class SetToolMode implements Action {
@@ -24,28 +24,19 @@ export class SetSelectionBox implements Action {
   }
 }
 
-export class SetPathPreview implements Action {
-  readonly type = SET_PATH_PREVIEW;
-  readonly payload: { pathData: string };
-  constructor(pathData: string) {
-    this.payload = { pathData };
+export class SetPathOverlayInfo implements Action {
+  readonly type = SET_PATH_OVERLAY_INFO;
+  readonly payload: { pathOverlayInfo: PathOverlayInfo };
+  constructor(pathOverlayInfo: PathOverlayInfo) {
+    this.payload = { pathOverlayInfo };
   }
 }
 
-export interface FocusedEditPath {
-  readonly layerId: string;
-  readonly selectedSegments: ReadonlySet<number>;
-  readonly visibleHandleIns: ReadonlySet<number>;
-  readonly selectedHandleIns: ReadonlySet<number>;
-  readonly visibleHandleOuts: ReadonlySet<number>;
-  readonly selectedHandleOuts: ReadonlySet<number>;
-}
-
-export class SetFocusedEditPath implements Action {
-  readonly type = SET_FOCUSED_EDIT_PATH;
-  readonly payload: { focusedEditPath: FocusedEditPath };
-  constructor(focusedEditPath: FocusedEditPath) {
-    this.payload = { focusedEditPath };
+export class SetFocusedPathInfo implements Action {
+  readonly type = SET_FOCUSED_PATH_INFO;
+  readonly payload: { focusedPathInfo: FocusedPathInfo };
+  constructor(focusedPathInfo: FocusedPathInfo) {
+    this.payload = { focusedPathInfo };
   }
 }
 
@@ -60,6 +51,20 @@ export class SetCanvasCursor implements Action {
 export type Actions =
   | SetToolMode
   | SetSelectionBox
-  | SetPathPreview
-  | SetFocusedEditPath
+  | SetPathOverlayInfo
+  | SetFocusedPathInfo
   | SetCanvasCursor;
+
+export interface PathOverlayInfo {
+  readonly pathData: string;
+  readonly strokeColor: string;
+}
+
+export interface FocusedPathInfo {
+  readonly layerId: string;
+  readonly selectedSegments: ReadonlySet<number>;
+  readonly visibleHandleIns: ReadonlySet<number>;
+  readonly selectedHandleIns: ReadonlySet<number>;
+  readonly visibleHandleOuts: ReadonlySet<number>;
+  readonly selectedHandleOuts: ReadonlySet<number>;
+}

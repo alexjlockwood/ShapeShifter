@@ -58,8 +58,8 @@ export class BatchSelectItemsGesture extends Gesture {
     if (!box) {
       return;
     }
-    const from = paper.project.activeLayer.globalToLocal(new paper.Point(box.from));
-    const to = paper.project.activeLayer.globalToLocal(new paper.Point(box.to));
+    const from = new paper.Point(box.from);
+    const to = new paper.Point(box.to);
     const selectedItems = this.paperLayer.findItemsInBounds(
       new paper.Rectangle(from, to),
       !isAltPressed,

@@ -1,29 +1,31 @@
 import { Layer, LayerUtil, PathLayer } from 'app/model/layers';
 import { ToolMode } from 'app/model/paper';
 import { Path } from 'app/model/paths';
+import { PaperLayer } from 'app/scripts/paper/item';
 import { PaperService } from 'app/services';
 import * as paper from 'paper';
 
 import { Gesture } from './Gesture';
 
 /**
- * A gesture that creates an elliptical bath.
+ * A gesture that creates an elliptical path.
  */
 export class CreateEllipseGesture extends Gesture {
+  private readonly paperLayer = paper.project.activeLayer as PaperLayer;
+  private isDragging = false;
   constructor(private readonly ps: PaperService) {
     super();
   }
 
   // @Override
   onMouseDrag(event: paper.ToolEvent) {
-    const downPoint = paper.project.activeLayer.globalToLocal(event.downPoint);
-    const point = paper.project.activeLayer.globalToLocal(event.point);
-    const ex = point.x;
-    const ey = point.y;
+    this.isDragging = true;
+    const downPoint = this.paperLayer.globalToLocal(event.downPoint);
+    const { x, y } = this.paperLayer.globalToLocal(event.point);
     const ellipseSize = new paper.Size(
-      ex - downPoint.x,
+      x - downPoint.x,
       // If shift is pressed, then create a circle.
-      event.modifiers.shift ? ex - downPoint.x : ey - downPoint.y,
+      event.modifiers.shift ? x - downPoint.x : y - downPoint.y,
     );
     const ellipsePath = paper.Shape
       .Ellipse(new paper.Rectangle(downPoint, ellipseSize))
@@ -36,14 +38,14 @@ export class CreateEllipseGesture extends Gesture {
       const halfHeight = ellipseSize.height / 2;
       ellipsePath.transform(new paper.Matrix(1, 0, 0, 1, -halfWidth, -halfHeight));
     }
-    this.ps.setPathPreview(ellipsePath.pathData);
+    this.ps.setPathOverlayInfo({ pathData: ellipsePath.pathData, strokeColor: 'black' });
   }
 
   // @Override
   onMouseUp(event: paper.ToolEvent) {
-    const shapePreview = this.ps.getPathPreview();
-    if (shapePreview) {
-      const path = new paper.Path(shapePreview);
+    if (this.isDragging) {
+      const pathOverlay = this.ps.getPathOverlayInfo();
+      const path = new paper.Path(pathOverlay);
       const vl = this.ps.getVectorLayer().clone();
       const pl = new PathLayer({
         name: LayerUtil.getUniqueLayerName([vl], 'path'),
@@ -54,7 +56,7 @@ export class CreateEllipseGesture extends Gesture {
       const children = [...vl.children, pl];
       vl.children = children;
       this.ps.setVectorLayer(vl);
-      this.ps.setPathPreview(undefined);
+      this.ps.setPathOverlayInfo(undefined);
       this.ps.setSelectedLayers(new Set([pl.id]));
     }
     this.ps.setToolMode(ToolMode.Selection);
