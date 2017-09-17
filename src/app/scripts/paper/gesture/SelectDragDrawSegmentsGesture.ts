@@ -145,7 +145,7 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
     const delta = currentPoint.subtract(this.lastPoint);
     const dragVector = currentPoint.subtract(focusedPath.globalToLocal(event.downPoint));
     const snapPoint = event.modifiers.shift
-      ? new paper.Point(MathUtil.snapVectorToAngle(dragVector, 15))
+      ? new paper.Point(MathUtil.snapVectorToAngle(dragVector, 90))
       : undefined;
     if (this.segmentInfo || this.curveInfo) {
       // Then drag the one or more currently selected segments.
