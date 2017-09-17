@@ -32,3 +32,33 @@ export function replacePathInStore(ps: PaperService, layerId: string, pathData: 
   const newVl = LayerUtil.replaceLayer(vl, layerId, pl);
   ps.setVectorLayer(newVl);
 }
+
+/** Selects the curves associated with the given selected segment indices. */
+export function selectCurves(
+  ps: PaperService,
+  path: paper.Path,
+  selectedSegments: ReadonlySet<number>,
+) {
+  const numSegments = path.segments.length;
+  const visibleHandleIns = new Set(selectedSegments);
+  const visibleHandleOuts = new Set(selectedSegments);
+  selectedSegments.forEach(segmentIndex => {
+    // Also display the out-handle for the previous segment
+    // and the in-handle for the next segment.
+    const { previous, next } = path.segments[segmentIndex];
+    if (previous) {
+      visibleHandleOuts.add(previous.index);
+    }
+    if (next) {
+      visibleHandleIns.add(next.index);
+    }
+  });
+  ps.setFocusedPathInfo({
+    layerId: ps.getFocusedPathInfo().layerId,
+    selectedSegments,
+    visibleHandleIns,
+    visibleHandleOuts,
+    selectedHandleIns: new Set<number>(),
+    selectedHandleOuts: new Set<number>(),
+  });
+}

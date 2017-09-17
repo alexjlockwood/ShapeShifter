@@ -41,8 +41,6 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
   private readonly paperLayer = paper.project.activeLayer as PaperLayer;
   private readonly focusedPathItemId: string;
   private readonly initialSelectedSegments: ReadonlySet<number>;
-  private selectedSegmentIndices: ReadonlyArray<number>;
-  private initialVectorLayer: VectorLayer;
   private lastPoint: paper.Point;
 
   // Maps segment indices to each segment's starting position.
@@ -64,10 +62,6 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
     const focusedPathInfo = this.ps.getFocusedPathInfo();
     const initialSelected = focusedPathInfo.selectedSegments;
     let updatedSelected = new Set(initialSelected);
-
-    // Save a copy of the initial vector layer and handle position so that
-    // we can make changes to them as we drag.
-    this.initialVectorLayer = this.ps.getVectorLayer();
 
     const focusedPath = this.paperLayer
       .findItemByLayerId(focusedPathInfo.layerId)
@@ -107,8 +101,7 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
       const { curveIndex, time } = this.curveInfo;
       const newSegment = focusedPath.curves[curveIndex].divideAtTime(time).segment1;
       PaperUtil.replacePathInStore(this.ps, focusedPathInfo.layerId, focusedPath.pathData);
-      updatedSelected.clear();
-      updatedSelected.add(newSegment.index);
+      updatedSelected = new Set([newSegment.index]);
     } else {
       // Otherwise, we are either (1) extending an existing open path (beginning
       // at one of its selected end points), or (2) beginning to create a new path
@@ -125,7 +118,6 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
         updatedSelected.delete(singleSelectedSegmentIndex);
       }
       updatedSelected.add(addedSegment.index);
-
       PaperUtil.replacePathInStore(this.ps, focusedPathInfo.layerId, focusedPath.pathData);
     }
 
@@ -138,27 +130,17 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
       }),
     );
 
-    this.ps.setFocusedPathInfo({
-      ...focusedPathInfo,
-      selectedSegments: updatedSelected,
-      visibleHandleIns: updatedSelected,
-      visibleHandleOuts: updatedSelected,
-      selectedHandleIns: new Set<number>(),
-      selectedHandleOuts: new Set<number>(),
-    });
-
+    PaperUtil.selectCurves(this.ps, focusedPath, updatedSelected);
     CursorUtil.set(Cursor.PointSelect);
   }
 
   // @Override
   onMouseDrag(event: paper.ToolEvent) {
-    // Guides.hideAddSegmentToCurveHoverGroup();
     const focusedPath = this.paperLayer
       .findItemByLayerId(this.focusedPathItemId)
       .clone() as paper.Path;
-    if (!this.lastPoint) {
-      this.lastPoint = focusedPath.globalToLocal(event.downPoint);
-    }
+    const downPoint = focusedPath.globalToLocal(event.downPoint);
+    this.lastPoint = this.lastPoint ? this.lastPoint : downPoint;
     const currentPoint = focusedPath.globalToLocal(event.point);
     const delta = currentPoint.subtract(this.lastPoint);
     const dragVector = currentPoint.subtract(focusedPath.globalToLocal(event.downPoint));
@@ -166,8 +148,7 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
       ? new paper.Point(MathUtil.snapVectorToAngle(dragVector, 15))
       : undefined;
     if (this.segmentInfo || this.curveInfo) {
-      // Then we selected or created a segment in onMouseDown() and should
-      // move the segment according to the new mouse position.
+      // Then drag the one or more currently selected segments.
       this.selectedSegmentMap.forEach((initialSegmentPoint, segmentIndex) => {
         const segment = focusedPath.segments[segmentIndex];
         segment.point = event.modifiers.shift

@@ -99,27 +99,6 @@ export class BatchSelectSegmentsGesture extends Gesture {
       });
     }
     const focusedPath = this.paperLayer.findItemByLayerId(this.focusedPathItemId) as paper.Path;
-    const numSegments = focusedPath.segments.length;
-    const visibleHandleIns = new Set(selectedSegments);
-    const visibleHandleOuts = new Set(selectedSegments);
-    selectedSegments.forEach(segmentIndex => {
-      // Also display the out-handle for the previous segment
-      // and the in-handle for the next segment.
-      const { previous, next } = focusedPath.segments[segmentIndex];
-      if (previous) {
-        visibleHandleOuts.add(previous.index);
-      }
-      if (next) {
-        visibleHandleIns.add(next.index);
-      }
-    });
-    this.ps.setFocusedPathInfo({
-      layerId: this.focusedPathItemId,
-      selectedSegments,
-      visibleHandleIns,
-      visibleHandleOuts,
-      selectedHandleIns: new Set<number>(),
-      selectedHandleOuts: new Set<number>(),
-    });
+    PaperUtil.selectCurves(this.ps, focusedPath, selectedSegments);
   }
 }

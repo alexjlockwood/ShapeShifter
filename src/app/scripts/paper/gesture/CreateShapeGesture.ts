@@ -41,7 +41,8 @@ abstract class CreateShapeGesture extends Gesture {
   onKeyDown(event: paper.KeyEvent) {
     if (event.key === 'shift' || event.key === 'alt') {
       this.processEvent(event);
-    } else if (event.key === 'esc') {
+    } else if (event.key === 'escape') {
+      // TODO: test that escape works as expected
       this.finishGesture();
     }
   }
