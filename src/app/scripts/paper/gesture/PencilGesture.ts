@@ -2,6 +2,7 @@ import { Layer, LayerUtil, PathLayer } from 'app/model/layers';
 import { ToolMode } from 'app/model/paper';
 import { Path } from 'app/model/paths';
 import { PaperLayer } from 'app/scripts/paper/item';
+import { PaperUtil } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
 import * as paper from 'paper';
 
@@ -21,45 +22,34 @@ export class PencilGesture extends Gesture {
       .globalToLocal(event.point)
       .subtract(this.paperLayer.globalToLocal(event.lastPoint));
     delta.angle += 90;
-    const pathDataPreview = this.ps.getPathOverlayInfo();
-    const pathOverlay = pathDataPreview ? new paper.Path(pathDataPreview) : new paper.Path();
-    pathOverlay.add(this.paperLayer.globalToLocal(event.middlePoint).add(delta));
-    this.ps.setPathOverlayInfo({ pathData: pathOverlay.pathData, strokeColor: 'black' });
+    const pathOverlayInfo = this.ps.getPathOverlayInfo();
+    const pencilPath = pathOverlayInfo
+      ? new paper.Path(pathOverlayInfo.pathData)
+      : new paper.Path();
+    pencilPath.add(this.paperLayer.globalToLocal(event.middlePoint).add(delta));
+    this.ps.setPathOverlayInfo({ pathData: pencilPath.pathData, strokeColor: 'black' });
   }
 
   // @Override
   onMouseUp(event: paper.ToolEvent) {
     if (this.isDragging) {
-      const newPath = new paper.Path(this.ps.getPathOverlayInfo());
-      // TODO: express '0.25' in terms of physical pixels, not viewport pixels
-      const nearStart = checkPointsClose(
-        newPath.firstSegment.point,
-        this.paperLayer.globalToLocal(event.point),
-        0.25,
-      );
-      if (nearStart) {
+      const newPath = new paper.Path(this.ps.getPathOverlayInfo().pathData);
+      if (arePointsClose(this.paperLayer.localToGlobal(newPath.firstSegment.point), event.point)) {
         newPath.closePath(true);
       }
       newPath.smooth({ type: 'continuous' });
-      const vl = this.ps.getVectorLayer().clone();
-      const pl = new PathLayer({
-        name: LayerUtil.getUniqueLayerName([vl], 'path'),
-        children: [] as Layer[],
-        pathData: new Path(newPath.pathData),
-        fillColor: '#000',
-      });
-      const children = [...vl.children, pl];
-      vl.children = children;
-      this.ps.setVectorLayer(vl);
+      const newPathLayer = PaperUtil.addPathToStore(this.ps, newPath.pathData);
+      this.ps.setSelectedLayers(new Set([newPathLayer.id]));
       this.ps.setPathOverlayInfo(undefined);
-      this.ps.setSelectedLayers(new Set([pl.id]));
     }
     this.ps.setToolMode(ToolMode.Selection);
   }
 }
 
-function checkPointsClose(startPos: paper.Point, eventPoint: paper.Point, threshold: number) {
-  const xOff = Math.abs(startPos.x - eventPoint.x);
-  const yOff = Math.abs(startPos.y - eventPoint.y);
-  return xOff < threshold && yOff < threshold;
+/**
+ * Checks if two points are close enough to be connected. Note that p1 and p2 should
+ * belong to the global project coordinate space.
+ */
+function arePointsClose(p1: paper.Point, p2: paper.Point, tolerance = 10) {
+  return Math.abs(p1.x - p2.x) < tolerance && Math.abs(p1.y - p2.y) < tolerance;
 }

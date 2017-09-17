@@ -2,7 +2,7 @@ import { LayerUtil, PathLayer, VectorLayer } from 'app/model/layers';
 import { Path } from 'app/model/paths';
 import { MathUtil } from 'app/scripts/common';
 import { PaperLayer } from 'app/scripts/paper/item';
-import { Cursor, Cursors } from 'app/scripts/paper/util';
+import { Cursor, CursorUtil, PaperUtil } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
 import * as _ from 'lodash';
 import * as paper from 'paper';
@@ -11,129 +11,127 @@ import { Gesture } from './Gesture';
 
 /**
  * A gesture that performs selection and drag operations
- * on one or more path segments. This gesture is only used
- * during edit path mode.
+ * on one or more path segments. It also supports adding
+ * a segment to an existing path's curve, as well as extending
+ * an open path by appending segments to its end points.
  *
- * This gesture also supports adding a segment to the curve,
- * as well as extending an open path by appending segments to
- * its end points.
+ * Preconditions:
+ * - The user is in focused path mode (i.e. there is a valid focused
+ *   path that the user is operating on).
+ * - The user either hit a segment, a curve, or missed entirely.
+ *   The last case occurs when the user is in pen mode (in which
+ *   the user can create new segments by clicking on the canvas).
  */
 export class SelectDragDrawSegmentsGesture extends Gesture {
+  /** Static factory method to use when the user's mouse down hits a segment. */
   static hitSegment(ps: PaperService, segmentIndex: number) {
-    return new SelectDragDrawSegmentsGesture(ps, segmentIndex);
+    return new SelectDragDrawSegmentsGesture(ps, { segmentIndex });
   }
 
+  /** Static factory method to use when the user's mouse down hits a curve. */
   static hitCurve(ps: PaperService, curveIndex: number, curveTime: number) {
-    return new SelectDragDrawSegmentsGesture(ps, undefined, curveIndex, curveTime);
+    return new SelectDragDrawSegmentsGesture(ps, undefined, { curveIndex, time: curveTime });
   }
 
-  static hitNothing(ps: PaperService) {
+  /** Static factory method to use when the user misses the focused path. */
+  static miss(ps: PaperService) {
     return new SelectDragDrawSegmentsGesture(ps);
   }
 
   private readonly paperLayer = paper.project.activeLayer as PaperLayer;
+  private readonly focusedPathItemId: string;
+  private readonly initialSelectedSegments: ReadonlySet<number>;
   private selectedSegmentIndices: ReadonlyArray<number>;
   private initialVectorLayer: VectorLayer;
-  private updateHandlePositionsOnDrag: boolean;
   private lastPoint: paper.Point;
 
-  // Maps segment indices to their initial mouse down position points.
+  // Maps segment indices to each segment's starting position.
   private selectedSegmentMap: ReadonlyMap<number, paper.Point>;
 
   private constructor(
     private readonly ps: PaperService,
-    private readonly segmentIndex?: number,
-    private readonly curveIndex?: number,
-    private readonly curveTime?: number,
+    private readonly segmentInfo?: Readonly<{ segmentIndex: number }>,
+    private readonly curveInfo?: Readonly<{ curveIndex?: number; time: number }>,
   ) {
     super();
+    const focusedPathInfo = this.ps.getFocusedPathInfo();
+    this.focusedPathItemId = focusedPathInfo.layerId;
+    this.initialSelectedSegments = focusedPathInfo.selectedSegments;
   }
 
   // @Override
   onMouseDown(event: paper.ToolEvent) {
-    // TODO: what about when alt/shift is pressed
     const focusedPathInfo = this.ps.getFocusedPathInfo();
-    const prevSelectedSegments = focusedPathInfo.selectedSegments;
-    const newSelectedSegments = new Set(focusedPathInfo.selectedSegments);
+    const initialSelected = focusedPathInfo.selectedSegments;
+    let updatedSelected = new Set(initialSelected);
 
     // Save a copy of the initial vector layer and handle position so that
     // we can make changes to them as we drag.
     this.initialVectorLayer = this.ps.getVectorLayer();
 
-    const editPath = this.paperLayer
+    const focusedPath = this.paperLayer
       .findItemByLayerId(focusedPathInfo.layerId)
       .clone() as paper.Path;
-    let isEditPathModified = false;
-    // this.initialHandlePosition = editPath.segments[this.segmentIndex][this.hitHandleType].clone();
 
     const singleSelectedSegmentIndex =
-      prevSelectedSegments.size === 1 ? Array.from(prevSelectedSegments)[0] : undefined;
-    if (this.segmentIndex !== undefined) {
-      const hasSingleSelectedEndPointSegment =
-        !editPath.closed &&
-        prevSelectedSegments.size === 1 &&
+      initialSelected.size === 1 ? initialSelected.values().next().value : undefined;
+    if (this.segmentInfo) {
+      const { segmentIndex } = this.segmentInfo;
+      const hasSingleSelectedEndPoint =
+        !focusedPath.closed &&
+        initialSelected.size === 1 &&
         (singleSelectedSegmentIndex === 0 ||
-          singleSelectedSegmentIndex === editPath.segments.length - 1);
-      if (hasSingleSelectedEndPointSegment && this.segmentIndex !== singleSelectedSegmentIndex) {
+          singleSelectedSegmentIndex === focusedPath.segments.length - 1);
+      if (hasSingleSelectedEndPoint && segmentIndex !== singleSelectedSegmentIndex) {
         // If the path is open, one of the end points is selected, and the
         // user is hovering over the other end point, then close the path.
-        editPath.closed = true;
-        newSelectedSegments.delete(prevSelectedSegments[0]);
-        newSelectedSegments.add(this.segmentIndex);
-        isEditPathModified = true;
-      } else if (event.modifiers.shift || event.modifiers.command) {
+        focusedPath.closed = true;
+        PaperUtil.replacePathInStore(this.ps, focusedPathInfo.layerId, focusedPath.pathData);
+      }
+      if (event.modifiers.shift || event.modifiers.command) {
         // If shift or command is pressed, toggle the segment's selection state.
-        if (prevSelectedSegments.has(this.segmentIndex)) {
-          newSelectedSegments.delete(this.segmentIndex);
+        if (initialSelected.has(segmentIndex)) {
+          updatedSelected.delete(segmentIndex);
         } else {
-          newSelectedSegments.add(this.segmentIndex);
+          updatedSelected.add(segmentIndex);
         }
       } else {
-        // If shift isn't pressed, select the hit segment and deselect all others.
-        newSelectedSegments.clear();
-        newSelectedSegments.add(this.segmentIndex);
+        // Otherwise, select the hit segment and deselect all others.
+        updatedSelected = new Set([segmentIndex]);
       }
-      this.updateHandlePositionsOnDrag = false;
-    } else if (this.curveIndex !== undefined && this.curveTime !== undefined) {
+    } else if (this.curveInfo) {
       // If there is no hit segment, then create one along the curve
       // at the given location and select the new segment.
       // TODO: select the curve instead?
       // TODO: deselect any currently selected handles as well?
-      const newSegment = editPath.curves[this.curveIndex].divideAtTime(this.curveTime).segment1;
-      newSelectedSegments.clear();
-      newSelectedSegments.add(newSegment.index);
-      this.updateHandlePositionsOnDrag = false;
-      isEditPathModified = true;
+      const { curveIndex, time } = this.curveInfo;
+      const newSegment = focusedPath.curves[curveIndex].divideAtTime(time).segment1;
+      PaperUtil.replacePathInStore(this.ps, focusedPathInfo.layerId, focusedPath.pathData);
+      updatedSelected.clear();
+      updatedSelected.add(newSegment.index);
     } else {
       // Otherwise, we are either (1) extending an existing open path (beginning
       // at one of its selected end points), or (2) beginning to create a new path
       // from scratch.
       let addedSegment: paper.Segment;
-      const point = editPath.globalToLocal(event.point);
-      if (editPath.segments.length === 0) {
-        addedSegment = editPath.add(point);
+      const point = focusedPath.globalToLocal(event.point);
+      if (focusedPath.segments.length === 0) {
+        addedSegment = focusedPath.add(point);
       } else {
-        const selectedSegment = editPath.segments[singleSelectedSegmentIndex];
-        addedSegment = selectedSegment.isLast() ? editPath.add(point) : editPath.insert(0, point);
-        newSelectedSegments.delete(singleSelectedSegmentIndex);
+        const selectedSegment = focusedPath.segments[singleSelectedSegmentIndex];
+        addedSegment = selectedSegment.isLast()
+          ? focusedPath.add(point)
+          : focusedPath.insert(0, point);
+        updatedSelected.delete(singleSelectedSegmentIndex);
       }
-      newSelectedSegments.add(addedSegment.index);
+      updatedSelected.add(addedSegment.index);
 
-      this.updateHandlePositionsOnDrag = true;
-      isEditPathModified = true;
-    }
-
-    if (isEditPathModified) {
-      let newVl = this.ps.getVectorLayer().clone();
-      const pl = newVl.findLayerById(focusedPathInfo.layerId).clone() as PathLayer;
-      pl.pathData = new Path(editPath.pathData);
-      newVl = LayerUtil.replaceLayer(newVl, pl.id, pl);
-      this.ps.setVectorLayer(newVl);
+      PaperUtil.replacePathInStore(this.ps, focusedPathInfo.layerId, focusedPath.pathData);
     }
 
     this.selectedSegmentMap = new Map(
-      Array.from(newSelectedSegments).map(segmentIndex => {
-        return [segmentIndex, editPath.segments[segmentIndex].point.clone()] as [
+      Array.from(updatedSelected).map(segmentIndex => {
+        return [segmentIndex, focusedPath.segments[segmentIndex].point.clone()] as [
           number,
           paper.Point
         ];
@@ -142,71 +140,67 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
 
     this.ps.setFocusedPathInfo({
       ...focusedPathInfo,
-      selectedSegments: newSelectedSegments,
-      visibleHandleIns: newSelectedSegments,
-      visibleHandleOuts: newSelectedSegments,
+      selectedSegments: updatedSelected,
+      visibleHandleIns: updatedSelected,
+      visibleHandleOuts: updatedSelected,
+      selectedHandleIns: new Set<number>(),
+      selectedHandleOuts: new Set<number>(),
     });
-    // this.selectedSegments = newSelectedS
-    // this.initialSegmentPositions = this.selectedSegments.map(s => s.point.clone());
-    // Guides.hidePenPathPreviewPath();
-    Cursors.set(Cursor.PointSelect);
 
-    this.lastPoint = editPath.globalToLocal(event.downPoint);
+    CursorUtil.set(Cursor.PointSelect);
   }
 
   // @Override
   onMouseDrag(event: paper.ToolEvent) {
     // Guides.hideAddSegmentToCurveHoverGroup();
-    const focusedPathInfo = this.ps.getFocusedPathInfo();
-    const editPath = this.paperLayer
-      .findItemByLayerId(focusedPathInfo.layerId)
+    const focusedPath = this.paperLayer
+      .findItemByLayerId(this.focusedPathItemId)
       .clone() as paper.Path;
-    const dragVector = editPath
-      .globalToLocal(event.point)
-      .subtract(editPath.globalToLocal(event.downPoint));
+    if (!this.lastPoint) {
+      this.lastPoint = focusedPath.globalToLocal(event.downPoint);
+    }
+    const currentPoint = focusedPath.globalToLocal(event.point);
+    const delta = currentPoint.subtract(this.lastPoint);
+    const dragVector = currentPoint.subtract(focusedPath.globalToLocal(event.downPoint));
     const snapPoint = event.modifiers.shift
       ? new paper.Point(MathUtil.snapVectorToAngle(dragVector, 15))
       : undefined;
-    if (this.updateHandlePositionsOnDrag) {
+    if (this.segmentInfo || this.curveInfo) {
+      // Then we selected or created a segment in onMouseDown() and should
+      // move the segment according to the new mouse position.
+      this.selectedSegmentMap.forEach((initialSegmentPoint, segmentIndex) => {
+        const segment = focusedPath.segments[segmentIndex];
+        segment.point = event.modifiers.shift
+          ? initialSegmentPoint.add(snapPoint)
+          : segment.point.add(delta);
+      });
+    } else {
       // Then we have just added a segment to the path in onMouseDown()
       // and should thus move the segment's handles onMouseDrag().
       // Note that there will only ever be one selected segment in this case.
       const segmentIndex = this.selectedSegmentMap.keys().next().value;
       const segmentPosition = this.selectedSegmentMap.get(segmentIndex);
-      const selectedSegment = editPath.segments[segmentIndex];
+      const selectedSegment = focusedPath.segments[segmentIndex];
       if (event.modifiers.shift) {
         selectedSegment.handleIn = segmentPosition.subtract(snapPoint);
         selectedSegment.handleOut = segmentPosition.add(snapPoint);
       } else {
         // TODO: need to retain this handle info... saving the pathData to the store isnt enough.
-        const delta = editPath.globalToLocal(event.point).subtract(this.lastPoint);
+        // TODO: need to retain this handle info... saving the pathData to the store isnt enough.
+        // TODO: need to retain this handle info... saving the pathData to the store isnt enough.
+        // TODO: need to retain this handle info... saving the pathData to the store isnt enough.
+        // TODO: need to retain this handle info... saving the pathData to the store isnt enough.
         selectedSegment.handleIn = selectedSegment.handleIn.subtract(delta);
         selectedSegment.handleOut = selectedSegment.handleOut.add(delta);
       }
-    } else {
-      // Then we selected an existing segment in onMouseDown() and should
-      // move the segment according to the new mouse position.
-      this.selectedSegmentMap.forEach((segmentPosition, segmentIndex) => {
-        const segment = editPath.segments[segmentIndex];
-        if (event.modifiers.shift) {
-          segment.point = segmentPosition.add(snapPoint);
-        } else {
-          const delta = editPath.globalToLocal(event.point).subtract(this.lastPoint);
-          segment.point = segment.point.add(delta);
-        }
-      });
     }
-    this.lastPoint = editPath.globalToLocal(event.point);
+    this.lastPoint = currentPoint;
 
-    let newVl = this.ps.getVectorLayer().clone();
-    const pl = newVl.findLayerById(focusedPathInfo.layerId).clone() as PathLayer;
-    pl.pathData = new Path(editPath.pathData);
-    newVl = LayerUtil.replaceLayer(newVl, pl.id, pl);
-    this.ps.setVectorLayer(newVl);
+    PaperUtil.replacePathInStore(this.ps, this.focusedPathItemId, focusedPath.pathData);
   }
 
   // @Override
   onMouseUp(event: paper.ToolEvent) {
-    Cursors.clear();
+    CursorUtil.clear();
   }
 }

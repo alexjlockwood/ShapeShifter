@@ -8,6 +8,7 @@ import {
   BatchSelectSegmentsGesture,
   CreateEllipseGesture,
   CreateRectangleGesture,
+  DeselectItemGesture,
   Gesture,
   HoverItemsGesture,
   HoverSegmentsCurvesGesture,
@@ -17,10 +18,13 @@ import {
   SelectDragCloneItemsGesture,
   SelectDragDrawSegmentsGesture,
   SelectDragHandleGesture,
+  SetFocusedPathGesture,
   TransformPathsGesture,
 } from 'app/scripts/paper/gesture';
 import { PaperLayer } from 'app/scripts/paper/item';
+import { PaperUtil } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
+import { FocusedPathInfo } from 'app/store/paper/actions';
 import * as paper from 'paper';
 
 import { Tool } from './Tool';
@@ -62,34 +66,27 @@ export class MasterTool extends Tool {
     } else if (toolMode === ToolMode.Pencil) {
       this.currentGesture = new PencilGesture(this.ps);
     } else {
-      // TODO: also add support for transform/rotate/etc. tools
-      if (toolMode === ToolMode.Pen && !this.ps.getFocusedPathInfo()) {
-        // Then the user is in pen mode and is about to begin creating a new path.
+      let focusedPathInfo = this.ps.getFocusedPathInfo();
+      if (toolMode === ToolMode.Pen && !focusedPathInfo) {
+        // Then the user has created the first segment of a new path, in which
+        // case we must create a new dummy path and bring it into focus.
         this.ps.setSelectedLayers(new Set());
-        const vl = this.ps.getVectorLayer().clone();
-        const pl = new PathLayer({
-          name: LayerUtil.getUniqueLayerName([vl], 'path'),
-          children: [] as Layer[],
-          pathData: undefined,
-          fillColor: '#000',
-        });
-        const children = [...vl.children, pl];
-        vl.children = children;
-        this.ps.setVectorLayer(vl);
-        this.ps.setFocusedPathInfo({
-          layerId: pl.id,
+        const newPathLayer = PaperUtil.addPathToStore(this.ps, '');
+        focusedPathInfo = {
+          layerId: newPathLayer.id,
           selectedSegments: new Set<number>(),
           visibleHandleIns: new Set<number>(),
           selectedHandleIns: new Set<number>(),
           visibleHandleOuts: new Set<number>(),
           selectedHandleOuts: new Set<number>(),
-        });
+        };
+        this.ps.setFocusedPathInfo(focusedPathInfo);
       }
-      if (this.ps.getFocusedPathInfo()) {
-        // The user is editing an existing focused edit path.
-        this.currentGesture = this.createEditPathModeGesture(event);
+      if (focusedPathInfo) {
+        // The user is editing a focused path.
+        this.currentGesture = this.createFocusedPathModeGesture(event, focusedPathInfo);
       } else {
-        // Otherwise we are in selection mode.
+        // Otherwise the user is in selection mode.
         this.currentGesture = this.createSelectionModeGesture(event);
       }
     }
@@ -106,64 +103,45 @@ export class MasterTool extends Tool {
   }
 
   private createSelectionModeGesture(event: paper.ToolEvent) {
-    const { ps, paperLayer } = this;
-    const selectedLayers = ps.getSelectedLayers();
+    const selectedLayers = this.ps.getSelectedLayers();
     if (selectedLayers.size > 0) {
       // First perform a hit test on the selection bounds.
-      const res = paperLayer.hitTestSelectionBoundsItem(event.point);
+      const res = this.paperLayer.hitTestSelectionBoundsItem(event.point);
       if (res) {
         // If the hit item is a selection bounds segment, then perform a scale gesture.
         return new ScaleItemsGesture(this.ps, res.item);
       }
     }
 
-    const hitResult = paperLayer.hitTest(event.point, {
-      fill: true,
-      stroke: true,
-    });
+    const hitResult = this.paperLayer.hitTest(event.point, { fill: true, stroke: true });
     if (!hitResult) {
       // If there is no hit item, then batch select items using a selection box box.
-      return new BatchSelectItemsGesture(ps);
+      return new BatchSelectItemsGesture(this.ps);
     }
 
-    const hitItem = hitResult.item;
+    const hitItemId = hitResult.item.data.id;
     if (this.clickDetector.isDoubleClick()) {
-      // TODO: It should only be possible to enter edit path mode
+      // If a double click event occurs on top of a hit item, then enter focused path mode.
+
+      // TODO: It should only be possible to enter focused path mode
       // for an editable item (i.e. a path, but not a group). Double clicking
       // on a non-selected and editable item that is contained inside a selected
       // parent layer should result in the editable item being selected (it is
       // actually a tiny bit more complicated than that but you get the idea).
-      return new class extends Gesture {
-        // @Override
-        onMouseDown(e: paper.ToolEvent) {
-          // If a double click event occurs on top of a hit item, then enter edit path mode.
-          ps.setSelectedLayers(new Set());
-          ps.setFocusedPathInfo({
-            layerId: hitItem.data.id,
-            // TODO: auto-select the last curve in the path
-            selectedSegments: new Set<number>(),
-            visibleHandleIns: new Set<number>(),
-            selectedHandleIns: new Set<number>(),
-            visibleHandleOuts: new Set<number>(),
-            selectedHandleOuts: new Set<number>(),
-          });
-        }
-      }();
+      return new SetFocusedPathGesture(this.ps, hitItemId);
     }
 
-    if (event.modifiers.shift && selectedLayers.has(hitItem.data.id) && selectedLayers.size > 1) {
+    if (
+      event.modifiers.shift &&
+      selectedLayers.has(hitResult.item.data.id) &&
+      selectedLayers.size > 1
+    ) {
+      // If the hit item is selected, shift is pressed, and there is at least
+      // one other selected item, then deselect the hit item.
+
       // TODO: After the item is deselected, it should still be possible
       // to drag/clone any other selected items in subsequent mouse events
-      return new class extends Gesture {
-        // @Override
-        onMouseDown(e: paper.ToolEvent) {
-          // If the hit item is selected, shift is pressed, and there is at least
-          // one other selected item, then deselect the hit item.
-          const layerIds = new Set(selectedLayers);
-          layerIds.delete(hitItem.data.id);
-          ps.setSelectedLayers(layerIds);
-        }
-      }();
+      return new DeselectItemGesture(this.ps, hitItemId);
     }
 
     // TODO: The actual behavior in Sketch is a bit more complicated.
@@ -179,64 +157,69 @@ export class MasterTool extends Tool {
     // there is only one selected item. In both cases the hit item should
     // end up being selected. If alt is being pressed, then we should
     // clone the item as well.
-    return new SelectDragCloneItemsGesture(ps, hitItem);
+    return new SelectDragCloneItemsGesture(this.ps, hitItemId);
   }
 
-  private createEditPathModeGesture(event: paper.ToolEvent) {
-    const { ps, paperLayer } = this;
-    const focusedPathInfo = ps.getFocusedPathInfo();
-
-    // First, do a hit test on the focused edit path's segments and handles.
-    const segmentHandleHitResult = paperLayer.hitTestFocusedPathItem(event.point);
+  private createFocusedPathModeGesture(event: paper.ToolEvent, focusedPathInfo: FocusedPathInfo) {
+    // First, do a hit test on the focused path's segments and handles.
+    const segmentHandleHitResult = this.paperLayer.hitTestFocusedPathItem(event.point);
     if (segmentHandleHitResult) {
-      const { type, segmentIndex } = segmentHandleHitResult.item;
+      const { segmentIndex, type } = segmentHandleHitResult.item;
       if (type === 'handle-in' || type === 'handle-out') {
         // If a mouse down event occurred on top of a handle,
-        // then select/drag the handle.
-        return new SelectDragHandleGesture(ps, segmentIndex, type);
+        // then select/drag or begin to drag the handle.
+        return new SelectDragHandleGesture(this.ps, segmentIndex, type);
       }
       if (this.clickDetector.isDoubleClick()) {
         // If a double click occurred on top of a segment,
-        // then create/delete the segment's handles.
-        return new AddDeleteHandlesGesture(ps, segmentIndex);
+        // then add/delete the segment's handles.
+        return new AddDeleteHandlesGesture(this.ps, focusedPathInfo.layerId, segmentIndex);
       }
       // If a mouse down event occurred on top of a segment,
       // then select/drag the segment.
-      return SelectDragDrawSegmentsGesture.hitSegment(ps, segmentIndex);
+      return SelectDragDrawSegmentsGesture.hitSegment(this.ps, segmentIndex);
     }
 
     // Second, do a hit test on the underlying path's stroke/curves.
-    const editPath = paperLayer.findItemByLayerId(focusedPathInfo.layerId) as paper.Path;
-    const strokeCurveHitResult = editPath.hitTest(editPath.globalToLocal(event.point), {
+    const focusedPath = this.paperLayer.findItemByLayerId(focusedPathInfo.layerId) as paper.Path;
+    const focusedPathHitResult = focusedPath.hitTest(focusedPath.globalToLocal(event.point), {
+      fill: true,
       stroke: true,
       curves: true,
     });
-    if (strokeCurveHitResult) {
-      const { location } = strokeCurveHitResult;
-      return SelectDragDrawSegmentsGesture.hitCurve(ps, location.index, location.time);
+    if (focusedPathHitResult) {
+      const { type, location } = focusedPathHitResult;
+      if (type === 'stroke' || type === 'curve') {
+        return SelectDragDrawSegmentsGesture.hitCurve(this.ps, location.index, location.time);
+      } else {
+        // Don't exit focused path mode if the gesture began with a successful filled hit test.
+        const clearFocusedPathOnDraglessClick = false;
+        return new BatchSelectSegmentsGesture(
+          this.ps,
+          focusedPathInfo.layerId,
+          clearFocusedPathOnDraglessClick,
+        );
+      }
     }
 
-    const selectedSegments = Array.from(focusedPathInfo.selectedSegments);
-    if (
+    if (focusedPath.segments.length === 0) {
       // Then we are beginning to build a new path from scratch.
-      editPath.segments.length === 0 ||
-      // Then we are extending an existing open path with a single selected segment.
-      (!editPath.closed &&
-        selectedSegments.length === 1 &&
-        (selectedSegments[0] === 0 || selectedSegments[0] === editPath.segments.length - 1))
-    ) {
-      return SelectDragDrawSegmentsGesture.hitNothing(ps);
+      return SelectDragDrawSegmentsGesture.miss(this.ps);
     }
 
-    // TODO: Only enter selection box mode when we are certain that a drag
-    // has occurred. If a drag does not occur, then we should interpret the
-    // gesture as a click. If a click occurs and shift is not pressed, then
-    // we should exit edit path mode.
+    const { selectedSegments } = focusedPathInfo;
+    if (!focusedPath.closed && selectedSegments.size === 1) {
+      const selectedSegmentIndex = selectedSegments.values().next().value;
+      if (selectedSegmentIndex === 0 || selectedSegmentIndex === focusedPath.segments.length - 1) {
+        // Then we are extending an existing open path with a single selected segment.
+        return SelectDragDrawSegmentsGesture.miss(this.ps);
+      }
+    }
 
-    // If there is no hit item and we are in edit path mode, then
+    // If there is no hit item and we are in focused path mode, then
     // enter selection box mode for the selected item so we can
-    // batch select its individual properties.
-    return new BatchSelectSegmentsGesture(ps);
+    // batch select its individual segments.
+    return new BatchSelectSegmentsGesture(this.ps, focusedPathInfo.layerId);
   }
 
   // @Override

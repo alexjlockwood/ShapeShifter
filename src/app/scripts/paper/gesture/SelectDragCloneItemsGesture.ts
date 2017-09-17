@@ -30,7 +30,7 @@ export class SelectDragCloneItemsGesture extends Gesture {
 
   // TODO: pressing alt should allow the user to select the item
   // directly beneath the hit item, if one exists.
-  constructor(private readonly ps: PaperService, private readonly mouseDownHitItem: paper.Item) {
+  constructor(private readonly ps: PaperService, private readonly hitLayerId: string) {
     super();
   }
 
@@ -40,12 +40,12 @@ export class SelectDragCloneItemsGesture extends Gesture {
     this.ps.setHoveredLayer(undefined);
 
     const selectedLayers = new Set(this.ps.getSelectedLayers());
-    if (!event.modifiers.shift && !selectedLayers.has(this.mouseDownHitItem.data.id)) {
+    if (!event.modifiers.shift && !selectedLayers.has(this.hitLayerId)) {
       // If shift isn't pressed, then clear any existing selections.
       selectedLayers.clear();
     }
     // Select the hit item.
-    selectedLayers.add(this.mouseDownHitItem.data.id);
+    selectedLayers.add(this.hitLayerId);
     this.ps.setSelectedLayers(selectedLayers);
 
     // Save a copy of the initial vector layer so that we can make changes

@@ -1,5 +1,5 @@
 import { PaperLayer } from 'app/scripts/paper/item';
-import { Cursor, Cursors } from 'app/scripts/paper/util';
+import { Cursor, CursorUtil } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
 import * as paper from 'paper';
 
@@ -18,7 +18,7 @@ export class HoverItemsGesture extends Gesture {
 
   // @Override
   onMouseMove({ point }: paper.ToolEvent) {
-    Cursors.clear();
+    CursorUtil.clear();
 
     const selectedLayers = this.ps.getSelectedLayers();
     const hitResult = this.paperLayer.hitTest(point, {

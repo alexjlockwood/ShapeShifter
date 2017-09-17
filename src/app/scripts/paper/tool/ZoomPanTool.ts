@@ -1,5 +1,5 @@
 import { ToolMode } from 'app/model/paper';
-import { Cursor, Cursors } from 'app/scripts/paper/util';
+import { Cursor, CursorUtil } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
 import * as paper from 'paper';
 
@@ -21,12 +21,12 @@ export class ZoomPanTool extends Tool {
 
   // @Override
   onActivate() {
-    Cursors.set(Cursor.ZoomIn);
+    CursorUtil.set(Cursor.ZoomIn);
   }
 
   // @Override
   onDeactivate() {
-    Cursors.clear();
+    CursorUtil.clear();
   }
 
   // @Override
@@ -36,7 +36,7 @@ export class ZoomPanTool extends Tool {
     } else if (event.type === 'mousedrag') {
       this.onMouseDrag(event);
     } else if (event.type === 'mouseup') {
-      Cursors.remove(Cursor.Grabbing);
+      CursorUtil.remove(Cursor.Grabbing);
     }
   }
 
@@ -58,7 +58,7 @@ export class ZoomPanTool extends Tool {
     if (!event.modifiers.space) {
       return;
     }
-    Cursors.add(Cursor.Grabbing);
+    CursorUtil.add(Cursor.Grabbing);
 
     // In order to have coordinate changes not mess up the dragging, we need to
     // convert coordinates to view space, and then back to project space after
@@ -80,17 +80,17 @@ export class ZoomPanTool extends Tool {
 
   private onKeyDown({ key }: paper.KeyEvent) {
     if (key === 'alt') {
-      Cursors.add(Cursor.ZoomOut);
+      CursorUtil.add(Cursor.ZoomOut);
     } else if (key === 'space') {
-      Cursors.add(Cursor.Grab);
+      CursorUtil.add(Cursor.Grab);
     }
   }
 
   private onKeyUp({ key }: paper.KeyEvent) {
     if (key === 'alt') {
-      Cursors.remove(Cursor.ZoomOut);
+      CursorUtil.remove(Cursor.ZoomOut);
     } else if (key === 'space') {
-      Cursors.remove(Cursor.Grab);
+      CursorUtil.remove(Cursor.Grab);
     }
   }
 }

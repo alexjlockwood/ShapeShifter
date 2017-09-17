@@ -55,7 +55,6 @@ export class RotateItemsGesture extends Gesture {
       .reduce((p, c) => p.unite(c));
 
     this.pivot = bounds.center.clone();
-    console.log(this.pivot);
 
     const pivotType = this.selectionBoundsRaster.pivotType;
     this.initialVectorLayer = this.ps.getVectorLayer();
@@ -67,10 +66,8 @@ export class RotateItemsGesture extends Gesture {
   // @Override
   onMouseDrag(event: paper.ToolEvent) {
     const delta = this.paperLayer.globalToLocal(event.point).subtract(this.pivot);
-    let angle = Math.atan2(delta.y, delta.x) / Math.PI * 180 - this.originalAngle;
-    if (event.modifiers.shift) {
-      angle = Math.round(angle / 15) * 15;
-    }
+    const rawAngle = Math.atan2(delta.y, delta.x) / Math.PI * 180 - this.originalAngle;
+    const angle = event.modifiers.shift ? Math.round(rawAngle / 15) * 15 : rawAngle;
 
     // TODO: set strokeScaling to false?
     // TODO: this doesn't work yet for paths that are contained in scaled groups

@@ -172,6 +172,13 @@ export class Path {
   }
 
   /**
+   * Returns true iff the path is closed.
+   */
+  isClosed() {
+    return this.getSubPaths().every(s => s.isClosed());
+  }
+
+  /**
    * Transforms the path using the specified transform matrix.
    */
   transform(transform: Matrix) {

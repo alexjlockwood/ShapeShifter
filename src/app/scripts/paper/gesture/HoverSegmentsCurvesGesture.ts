@@ -1,5 +1,5 @@
 import { PaperLayer } from 'app/scripts/paper/item';
-import { Cursor, Cursors } from 'app/scripts/paper/util';
+import { Cursor, CursorUtil } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
 import * as _ from 'lodash';
 import * as paper from 'paper';
@@ -72,8 +72,8 @@ export class HoverSegmentsCurvesGesture extends Gesture {
    */
   private findSingleSelectedEndSegment() {
     const focusedPathInfo = this.ps.getFocusedPathInfo();
-    const editPath = this.paperLayer.findItemByLayerId(focusedPathInfo.layerId) as paper.Path;
-    if (editPath.closed) {
+    const focusedPath = this.paperLayer.findItemByLayerId(focusedPathInfo.layerId) as paper.Path;
+    if (focusedPath.closed) {
       // Return undefined if the path is closed.
       return undefined;
     }
@@ -82,11 +82,7 @@ export class HoverSegmentsCurvesGesture extends Gesture {
       // Return undefined if there is not a single selected segment.
       return undefined;
     }
-    const { firstSegment, lastSegment } = editPath;
-    if (!selectedSegments.has(firstSegment.index) && !selectedSegments.has(lastSegment.index)) {
-      // Return undefined if neither end point is selected.
-      return undefined;
-    }
-    return selectedSegments.has(firstSegment.index) ? firstSegment : lastSegment;
+    const lastIndex = focusedPath.segments.length - 1;
+    return selectedSegments.has(0) ? 0 : selectedSegments.has(lastIndex) ? lastIndex : undefined;
   }
 }

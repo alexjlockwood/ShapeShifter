@@ -1,8 +1,4 @@
 declare module 'paper' {
-  export interface ItemData {
-    id?: string;
-  }
-
   export interface ItemProps {
     /**
      * The tangential vector to the #curve at the given location.
@@ -20,16 +16,17 @@ declare module 'paper' {
     curvature: number;
 
     /**
-     * The unique id of the item.
-     * Read Only.
-     */
-    id: number;
-
-    /**
      * The class name of the item as a string.
-     * String('Group', 'Layer', 'Path', 'CompoundPath', 'Shape', 'Raster', 'PlacedSymbol', 'PointText')
      */
-    className: string;
+    className:
+      | 'Group'
+      | 'Layer'
+      | 'Path'
+      | 'CompoundPath'
+      | 'Shape'
+      | 'Raster'
+      | 'PlacedSymbol'
+      | 'PointText';
 
     /**
      * The name of the item. If the item has a name, it can be accessed by name through its parent's children list.
@@ -111,7 +108,7 @@ declare module 'paper' {
     /**
      * A plain javascript object which can be used to store arbitrary data on the item.
      */
-    data: ItemData;
+    data: { id: string };
 
     /**
      * The item's position within the parent item's coordinate system. By default, this is
@@ -158,44 +155,12 @@ declare module 'paper' {
     matrix: Matrix;
 
     /**
-     * The item's global transformation matrix in relation to the global project coordinate space.
-     * Note that the view's transformations resulting from zooming and panning are not factored in.
-     * Read Only.
-     */
-    globalMatrix: Matrix;
-
-    /**
-     * The item’s global matrix in relation to the view coordinate space. This means that
-     * the view’s transformations resulting from zooming and panning are factored in.
-     * Read only.
-     */
-    viewMatrix: Matrix;
-
-    /**
      * Controls whether the transformations applied to the item (e.g. through transform(matrix),
      * rotate(angle), scale(scale), etc.) are stored in its matrix property, or whether they are
      * directly applied to its contents or children (passed on to the segments in Path items,
      * the children of Group items, etc.).
      */
     applyMatrix: boolean;
-
-    /**
-     * The project that this item belongs to.
-     * Read only.
-     */
-    project: Project;
-
-    /**
-     * The view that this item belongs to.
-     * Read Only.
-     */
-    view: View;
-
-    /**
-     * The layer that this item is contained within.
-     * Read Only.
-     */
-    layer: Layer;
 
     /**
      * The item that this item is contained within.
@@ -219,24 +184,6 @@ declare module 'paper' {
     lastChild: Item;
 
     /**
-     * The next item on the same level as this item.
-     * Read Only.
-     */
-    nextSibling: Item;
-
-    /**
-     * The previous item on the same level as this item.
-     * Read Only.
-     */
-    previousSibling: Item;
-
-    /**
-     * The index of this item within the list of its parent's children.
-     * Read only.
-     */
-    index: number;
-
-    /**
      * The color of the stroke.
      */
     strokeColor: Color | string;
@@ -248,15 +195,13 @@ declare module 'paper' {
 
     /**
      * The shape to be used at the beginning and end of open Path items, when they have a stroke.
-     * String('round', 'square', 'butt')
      */
-    strokeCap: string;
+    strokeCap: 'round' | 'square' | 'butt';
 
     /**
      * The shape to be used at the segments and corners of Path items when they have a stroke.
-     * String('miter', 'round', 'bevel')
      */
-    strokeJoin: string;
+    strokeJoin: 'miter' | 'round' | 'bevel';
 
     /**
      * The dash offset of the stroke.
@@ -264,7 +209,8 @@ declare module 'paper' {
     dashOffset: number;
 
     /**
-     * Specifies whether the stroke is to be drawn taking the current affine transformation into account (the default behavior), or whether it should appear as a non-scaling stroke.
+     * Specifies whether the stroke is to be drawn taking the current affine transformation into account
+     * (the default behavior), or whether it should appear as a non-scaling stroke.
      */
     strokeScaling: boolean;
 
@@ -274,15 +220,17 @@ declare module 'paper' {
     dashArray: number[];
 
     /**
-     * When two line segments meet at a sharp angle and miter joins have been specified for item.strokeJoin, it is possible for the miter to extend far beyond the item.strokeWidth of the path. The miterLimit imposes a limit on the ratio of the miter length to the item.strokeWidth.
+     * When two line segments meet at a sharp angle and miter joins have been specified for item.strokeJoin,
+     *  it is possible for the miter to extend far beyond the item.strokeWidth of the path.
+     * The miterLimit imposes a limit on the ratio of the miter length to the item.strokeWidth.
      */
     miterLimit: number;
 
     /**
-     * The winding-rule with which the shape gets filled. Please note that only modern browsers support winding-rules other than 'nonzero'.
-     * String('nonzero', 'evenodd')
+     * The winding-rule with which the shape gets filled. Please note that only modern browsers
+     * support winding-rules other than 'nonzero'.
      */
-    windingRule: string;
+    windingRule: 'nonzero' | 'evenodd';
 
     /**
      * The fill color of the item.
@@ -314,6 +262,53 @@ declare module 'paper' {
    * functions that they inherit from Item.
    */
   export abstract class Item {
+    /**
+     * The unique id of the item.
+     */
+    readonly id: number;
+
+    /**
+     * The project that this item belongs to.
+     */
+    readonly project: Project;
+
+    /**
+     * The view that this item belongs to.
+     */
+    readonly view: View;
+
+    /**
+     * The layer that this item is contained within.
+     */
+    readonly layer: Layer;
+
+    /**
+     * The next item on the same level as this item.
+     */
+    readonly nextSibling: Item;
+
+    /**
+     * The previous item on the same level as this item.
+     */
+    readonly previousSibling: Item;
+
+    /**
+     * The index of this item within the list of its parent's children.
+     */
+    readonly index: number;
+
+    /**
+     * The item's global transformation matrix in relation to the global project coordinate space.
+     * Note that the view's transformations resulting from zooming and panning are not factored in.
+     */
+    readonly globalMatrix: Matrix;
+
+    /**
+     * The item’s global matrix in relation to the view coordinate space. This means that
+     * the view’s transformations resulting from zooming and panning are factored in.
+     */
+    readonly viewMatrix: Matrix;
+
     /**
      * Item level handler function to be called on each frame of an animation.
      * The function receives an event object which contains information about the frame event:

@@ -1,96 +1,125 @@
 import { PaperLayer } from 'app/scripts/paper/item';
+import { PaperUtil } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
+import { FocusedPathInfo } from 'app/store/paper/actions';
+import * as _ from 'lodash';
 import * as paper from 'paper';
 
 import { Gesture } from './Gesture';
 
 /**
  * A gesture that selects multiple segments using a bounded box.
- * This gesture is only used during edit path mode.
+ *
+ * Preconditions:
+ * - The user is in focused path mode.
  */
 export class BatchSelectSegmentsGesture extends Gesture {
   private readonly paperLayer = paper.project.activeLayer as PaperLayer;
   private initialSelectedSegments: ReadonlySet<number>;
-  private initialVisibleHandleIns: ReadonlySet<number>;
-  private initialSelectedHandleIns: ReadonlySet<number>;
-  private initialVisibleHandleOuts: ReadonlySet<number>;
-  private initialSelectedHandleOuts: ReadonlySet<number>;
+  private updatedSelectedSegments: ReadonlySet<number>;
   private isDragging = false;
 
-  constructor(private readonly ps: PaperService) {
+  constructor(
+    private readonly ps: PaperService,
+    private readonly focusedPathItemId: string,
+    private readonly clearFocusedPathAfterDraglessClick = true,
+  ) {
     super();
   }
 
   // @Override
   onMouseDown(event: paper.ToolEvent) {
-    const focusedPathInfo = this.ps.getFocusedPathInfo();
-    // TODO: make use of these
-    this.initialSelectedSegments = focusedPathInfo.selectedSegments;
-    this.initialVisibleHandleIns = focusedPathInfo.visibleHandleIns;
-    this.initialSelectedHandleIns = focusedPathInfo.selectedHandleIns;
-    this.initialVisibleHandleOuts = focusedPathInfo.visibleHandleOuts;
-    this.initialSelectedHandleOuts = focusedPathInfo.selectedHandleOuts;
-    if (!event.modifiers.shift) {
-      this.ps.setFocusedPathInfo({
-        layerId: focusedPathInfo.layerId,
-        selectedSegments: new Set<number>(),
-        visibleHandleIns: new Set<number>(),
-        selectedHandleIns: new Set<number>(),
-        visibleHandleOuts: new Set<number>(),
-        selectedHandleOuts: new Set<number>(),
-      });
-    }
+    this.initialSelectedSegments = this.ps.getFocusedPathInfo().selectedSegments;
+    this.updatedSelectedSegments = new Set();
+    this.updateCurrentSelection(event.modifiers.command || event.modifiers.shift);
   }
 
   // @Override
   onMouseDrag(event: paper.ToolEvent) {
     this.isDragging = true;
-    const focusedPathInfo = this.ps.getFocusedPathInfo();
-    const editPath = this.paperLayer.findItemByLayerId(focusedPathInfo.layerId) as paper.Path;
-    const from = editPath.globalToLocal(event.downPoint);
-    const to = editPath.globalToLocal(event.point);
-    this.ps.setSelectionBox({ from, to });
-    const selectedSegments = new Set<number>();
-    const rectangle = new paper.Rectangle(from, to);
-    editPath.segments.forEach((s, i) => {
-      // TODO: select the entire curve instead
-      const curveSelected =
-        rectangle.contains(s.point) ||
-        (event.modifiers.shift && focusedPathInfo.selectedSegments.has(i));
-      if (curveSelected) {
-        selectedSegments.add(i);
-      }
+    this.ps.setSelectionBox({
+      from: this.paperLayer.globalToLocal(event.downPoint),
+      to: this.paperLayer.globalToLocal(event.point),
     });
-    this.ps.setFocusedPathInfo({ ...focusedPathInfo, selectedSegments });
+    this.processToolEvent(event);
   }
 
   // @Override
   onMouseUp(event: paper.ToolEvent) {
-    const selectionBox = this.ps.getSelectionBox();
-    if (selectionBox) {
-      const focusedPathInfo = this.ps.getFocusedPathInfo();
-      const editPath = this.paperLayer.findItemByLayerId(focusedPathInfo.layerId) as paper.Path;
-      const selectedSegments = new Set<number>();
-      const from = editPath.globalToLocal(event.downPoint);
-      const to = editPath.globalToLocal(event.point);
-      const rectangle = new paper.Rectangle(new paper.Point(from), new paper.Point(to));
-      editPath.segments.forEach((s, i) => {
-        // TODO: select the entire curve instead
-        const curveSelected =
-          rectangle.contains(s.point) ||
-          (event.modifiers.shift && focusedPathInfo.selectedSegments.has(i));
-        if (curveSelected) {
-          selectedSegments.add(i);
+    if (this.isDragging) {
+      this.processToolEvent(event);
+    } else if (this.clearFocusedPathAfterDraglessClick) {
+      this.ps.setFocusedPathInfo(undefined);
+      this.ps.setSelectedLayers(new Set([this.focusedPathItemId]));
+    }
+    this.ps.setSelectionBox(undefined);
+  }
+
+  private processToolEvent(event: paper.ToolEvent) {
+    // Calculate the bounding rectangle to use to select segments in
+    // the focused path's local coordinate space.
+    const focusedPath = this.paperLayer.findItemByLayerId(this.focusedPathItemId) as paper.Path;
+    const rectangle = new paper.Rectangle(
+      focusedPath.globalToLocal(event.downPoint),
+      focusedPath.globalToLocal(event.point),
+    );
+    this.updatedSelectedSegments = new Set(
+      _.flatMap(focusedPath.segments, ({ point }, segmentIndex) => {
+        return rectangle.contains(point) ? [segmentIndex] : [];
+      }),
+    );
+    this.updateCurrentSelection(event.modifiers.command || event.modifiers.shift);
+  }
+
+  // @Override
+  onKeyDown(event: paper.KeyEvent) {
+    this.processKeyEvent(event);
+  }
+
+  // @Override
+  onKeyUp(event: paper.KeyEvent) {
+    this.processKeyEvent(event);
+  }
+
+  private processKeyEvent(event: paper.KeyEvent) {
+    if (event.key === 'ctrl' || event.key === 'meta' || event.key === 'shift') {
+      this.updateCurrentSelection(event.modifiers.command || event.modifiers.shift);
+    }
+  }
+
+  private updateCurrentSelection(toggleInitialSelections: boolean) {
+    const selectedSegments = new Set(this.updatedSelectedSegments);
+    if (toggleInitialSelections) {
+      this.initialSelectedSegments.forEach(segmentIndex => {
+        if (selectedSegments.has(segmentIndex)) {
+          selectedSegments.delete(segmentIndex);
+        } else {
+          selectedSegments.add(segmentIndex);
         }
       });
-      this.ps.setSelectionBox(undefined);
-      this.ps.setFocusedPathInfo({ ...focusedPathInfo, selectedSegments });
     }
-
-    if (!this.isDragging) {
-      const { layerId } = this.ps.getFocusedPathInfo();
-      this.ps.setFocusedPathInfo(undefined);
-      this.ps.setSelectedLayers(new Set([layerId]));
-    }
+    const focusedPath = this.paperLayer.findItemByLayerId(this.focusedPathItemId) as paper.Path;
+    const numSegments = focusedPath.segments.length;
+    const visibleHandleIns = new Set(selectedSegments);
+    const visibleHandleOuts = new Set(selectedSegments);
+    selectedSegments.forEach(segmentIndex => {
+      // Also display the out-handle for the previous segment
+      // and the in-handle for the next segment.
+      const { previous, next } = focusedPath.segments[segmentIndex];
+      if (previous) {
+        visibleHandleOuts.add(previous.index);
+      }
+      if (next) {
+        visibleHandleIns.add(next.index);
+      }
+    });
+    this.ps.setFocusedPathInfo({
+      layerId: this.focusedPathItemId,
+      selectedSegments,
+      visibleHandleIns,
+      visibleHandleOuts,
+      selectedHandleIns: new Set<number>(),
+      selectedHandleOuts: new Set<number>(),
+    });
   }
 }
