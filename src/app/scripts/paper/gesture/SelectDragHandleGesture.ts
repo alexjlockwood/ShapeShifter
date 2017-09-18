@@ -73,12 +73,9 @@ export class SelectDragHandleGesture extends Gesture {
     const { downPoint, point } = this.lastDragEventInfo;
     const handle = this.initialHandle.add(point.subtract(downPoint));
     if (shift) {
-      // TODO: project the point onto the angle line instead to match sketch behavior!
-      const angle1 = this.initialHandle.angle;
-      const angle2 = 0 <= angle1 ? angle1 - 180 : angle1 + 180;
-      const diff1 = Math.abs(handle.angle - angle1);
-      const diff2 = Math.abs(handle.angle - angle2);
-      handle.angle = diff1 < diff2 ? angle1 : angle2;
+      // Project the new handle vector onto the original handle vector.
+      const theta = -(this.initialHandle.angle - handle.angle) * Math.PI / 180;
+      handle.set(this.initialHandle.normalize().multiply(handle.length * Math.cos(theta)));
     }
     const focusedPath = this.paperLayer
       .findItemByLayerId(this.focusedPathItemId)
