@@ -19,6 +19,7 @@ import { Gesture } from './Gesture';
  *
  * TODO: don't allow modifications to be made to groups and paths/masks simultaneously
  * TODO: make it possible to drag/clone groups
+ * TODO: show a 'grabbing' cursor while dragging items
  */
 export class SelectDragCloneItemsGesture extends Gesture {
   private readonly paperLayer = paper.project.activeLayer as PaperLayer;

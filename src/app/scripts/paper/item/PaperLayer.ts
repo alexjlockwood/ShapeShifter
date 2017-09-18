@@ -89,7 +89,9 @@ export class PaperLayer extends paper.Layer {
     }
     const selectedItems = Array.from(this.selectedLayerIds).map(id => this.findItemByLayerId(id));
     if (selectedItems.length > 0) {
-      this.selectionBoundsItem = newSelectionBoundsItem(selectedItems, this.matrix);
+      this.selectionBoundsItem = newSelectionBoundsItem(
+        PaperUtil.computeSelectionBounds(selectedItems, this),
+      );
     }
     this.updateChildren();
   }
@@ -273,9 +275,8 @@ function newHoverPathItem(item: paper.Item) {
 /**
  * Creates a new selection bounds item for the specified selected items.
  */
-function newSelectionBoundsItem(items: ReadonlyArray<paper.Item>, paperLayerMatrix: paper.Matrix) {
+function newSelectionBoundsItem(bounds: paper.Rectangle) {
   const group = new paper.Group();
-  const bounds = PaperUtil.computeSelectionBounds(items, paperLayerMatrix);
 
   // Draw an outline for the bounded box.
   const outlinePath = new paper.Path.Rectangle(bounds);

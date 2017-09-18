@@ -63,10 +63,7 @@ export function selectCurves(
 }
 
 /** Computes the selection bounds for the specified items. */
-export function computeSelectionBounds(
-  items: ReadonlyArray<paper.Item>,
-  paperLayerMatrix: paper.Matrix,
-) {
+export function computeSelectionBounds(items: ReadonlyArray<paper.Item>, paperLayer: paper.Item) {
   const flattenedItems: paper.Item[] = [];
   items.forEach(function recurseFn(i: paper.Item) {
     if (i.hasChildren()) {
@@ -79,7 +76,7 @@ export function computeSelectionBounds(
     .map(item => {
       // Compute the matrix that takes this item from its local coordinate
       // space to the project's viewport coordinate space.
-      const localToViewportMatrix = item.globalMatrix.prepended(paperLayerMatrix.inverted());
+      const localToViewportMatrix = item.globalMatrix.prepended(paperLayer.matrix.inverted());
       return new paper.Rectangle(
         item.bounds.topLeft.transform(localToViewportMatrix),
         item.bounds.bottomRight.transform(localToViewportMatrix),
