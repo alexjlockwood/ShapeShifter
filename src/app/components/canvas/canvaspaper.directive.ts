@@ -39,27 +39,39 @@ export class CanvasPaperDirective extends CanvasLayoutMixin(DestroyableMixin())
       "type": "vector",
       "children": [
         {
-          "id": "102",
+          "id": "1062",
           "name": "group1",
           "type": "group",
-          "pivotX": "12",
-          "pivotY": "12",
-          "scaleX": "1.25",
-          "scaleY": "1.25",
+          "pivotX": "4",
+          "pivotY": "4",
+          "scaleX": "1.1",
+          "scaleY": "1.1",
           "children": [
             {
-              "id": "46",
-              "name": "ellipse",
-              "type": "path",
-              "pathData": "M 12 10 C 9.8 10 8 10.9 8 12 C 8 13.105 9.8 14 12 14 C 14.2 14 16 13.1 16 12 C 16 10.895 14.2 10 12 10 Z",
-              "strokeColor": "#000",
-              "strokeWidth": "0.2"
+              "id": "102",
+              "name": "group2",
+              "type": "group",
+              "pivotX": "12",
+              "pivotY": "12",
+              "scaleX": "1.25",
+              "scaleY": "1.25",
+              "children": [
+                {
+                  "id": "46",
+                  "name": "ellipse",
+                  "type": "path",
+                  "pathData": "M 12 10 C 9.8 10 8 10.9 8 12 C 8 13.105 9.8 14 12 14 C 14.2 14 16 13.1 16 12 C 16 10.895 14.2 10 12 10 Z",
+                  "fillColor": "#ff0000",
+                  "strokeColor": "#000000",
+                  "strokeWidth": "0.4"
+                }
+              ]
             }
           ]
         },
         {
           "id": "6103",
-          "name": "group2",
+          "name": "group3",
           "type": "group",
           "pivotX": "12",
           "pivotY": "12",
@@ -69,11 +81,19 @@ export class CanvasPaperDirective extends CanvasLayoutMixin(DestroyableMixin())
               "id": "460",
               "name": "rect",
               "type": "path",
-              "pathData": "M 4 4 h 2 v 4 h -2 v -4",
+              "pathData": "M 4 4 h 2 v 4 h -2 v -4 Z",
               "strokeColor": "#000",
-              "strokeWidth": "0.2"
+              "strokeWidth": "0.4"
             }
           ]
+        },
+        {
+          "id": "3490",
+          "name": "line",
+          "type": "path",
+          "pathData": "M 1 1 2 2 3 3 4 4 5 5 6 6 7 7 1 7 1 4",
+          "strokeColor": "#000",
+          "strokeWidth": "0.4"
         }
       ]
     }`);

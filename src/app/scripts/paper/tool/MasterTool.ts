@@ -211,7 +211,7 @@ export class MasterTool extends Tool {
     if (!focusedPath.closed && selectedSegments.size === 1) {
       const selectedSegmentIndex = selectedSegments.values().next().value;
       if (selectedSegmentIndex === 0 || selectedSegmentIndex === focusedPath.segments.length - 1) {
-        // Then we are extending an existing open path with a single selected segment.
+        // Then we are extending an existing open path with a single selected end point segment.
         return SelectDragDrawSegmentsGesture.miss(this.ps);
       }
     }
@@ -224,6 +224,7 @@ export class MasterTool extends Tool {
 
   // @Override
   onKeyEvent(event: paper.KeyEvent) {
+    // TODO: add support for other gestures (i.e. move shape 10px using keyboard, etc.)
     if (event.type === 'keydown') {
       this.currentGesture.onKeyDown(event);
     } else if (event.type === 'keyup') {

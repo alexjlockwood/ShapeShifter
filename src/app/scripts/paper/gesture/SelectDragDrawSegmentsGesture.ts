@@ -67,18 +67,18 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
       .findItemByLayerId(focusedPathInfo.layerId)
       .clone() as paper.Path;
 
-    const singleSelectedSegmentIndex =
-      initialSelected.size === 1 ? initialSelected.values().next().value : undefined;
     if (this.segmentInfo) {
+      const isEndPointFn = (i: number) => i === 0 || i === focusedPath.segments.length - 1;
       const { segmentIndex } = this.segmentInfo;
-      const hasSingleSelectedEndPoint =
+      if (
         !focusedPath.closed &&
         initialSelected.size === 1 &&
-        (singleSelectedSegmentIndex === 0 ||
-          singleSelectedSegmentIndex === focusedPath.segments.length - 1);
-      if (hasSingleSelectedEndPoint && segmentIndex !== singleSelectedSegmentIndex) {
+        isEndPointFn(segmentIndex) &&
+        isEndPointFn(initialSelected.values().next().value) &&
+        segmentIndex !== initialSelected.values().next().value
+      ) {
         // If the path is open, one of the end points is selected, and the
-        // user is hovering over the other end point, then close the path.
+        // user clicked the other end point segment, then close the path.
         focusedPath.closed = true;
         PaperUtil.replacePathInStore(this.ps, focusedPathInfo.layerId, focusedPath.pathData);
       }
@@ -96,8 +96,6 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
     } else if (this.curveInfo) {
       // If there is no hit segment, then create one along the curve
       // at the given location and select the new segment.
-      // TODO: select the curve instead?
-      // TODO: deselect any currently selected handles as well?
       const { curveIndex, time } = this.curveInfo;
       const newSegment = focusedPath.curves[curveIndex].divideAtTime(time).segment1;
       PaperUtil.replacePathInStore(this.ps, focusedPathInfo.layerId, focusedPath.pathData);
@@ -111,6 +109,9 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
       if (focusedPath.segments.length === 0) {
         addedSegment = focusedPath.add(point);
       } else {
+        // Note that there will always be a single selected end point segment in this case
+        // (otherwise we would have used a batch select segments gesture instead).
+        const singleSelectedSegmentIndex = initialSelected.values().next().value;
         const selectedSegment = focusedPath.segments[singleSelectedSegmentIndex];
         addedSegment = selectedSegment.isLast()
           ? focusedPath.add(point)
@@ -144,11 +145,10 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
       .clone() as paper.Path;
     const downPoint = focusedPath.globalToLocal(event.downPoint);
     this.lastPoint = this.lastPoint ? this.lastPoint : downPoint;
-    const currentPoint = focusedPath.globalToLocal(event.point);
-    const delta = currentPoint.subtract(this.lastPoint);
-    const dragVector = currentPoint.subtract(focusedPath.globalToLocal(event.downPoint));
+    const point = focusedPath.globalToLocal(event.point);
+    const delta = point.subtract(this.lastPoint);
     const snapPoint = event.modifiers.shift
-      ? new paper.Point(MathUtil.snapVectorToAngle(dragVector, 90))
+      ? new paper.Point(MathUtil.snapVectorToAngle(point.subtract(downPoint), 90))
       : undefined;
     if (this.segmentInfo || this.curveInfo) {
       // Then drag the one or more currently selected segments.
@@ -178,7 +178,7 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
         selectedSegment.handleOut = selectedSegment.handleOut.add(delta);
       }
     }
-    this.lastPoint = currentPoint;
+    this.lastPoint = point;
 
     PaperUtil.replacePathInStore(this.ps, this.focusedPathItemId, focusedPath.pathData);
   }
