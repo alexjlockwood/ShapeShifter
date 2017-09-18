@@ -53,12 +53,11 @@ export function selectCurves(
       visibleHandleIns.add(next.index);
     }
   });
-  ps.setFocusedPathInfo({
-    layerId: ps.getFocusedPathInfo().layerId,
+  return {
     selectedSegments,
     visibleHandleIns,
     visibleHandleOuts,
-    selectedHandleIns: new Set<number>(),
-    selectedHandleOuts: new Set<number>(),
-  });
+    selectedHandleIn: undefined,
+    selectedHandleOut: undefined,
+  };
 }

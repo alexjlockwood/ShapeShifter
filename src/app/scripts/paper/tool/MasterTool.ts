@@ -76,9 +76,9 @@ export class MasterTool extends Tool {
           layerId: newPathLayer.id,
           selectedSegments: new Set<number>(),
           visibleHandleIns: new Set<number>(),
-          selectedHandleIns: new Set<number>(),
           visibleHandleOuts: new Set<number>(),
-          selectedHandleOuts: new Set<number>(),
+          selectedHandleIn: undefined,
+          selectedHandleOut: undefined,
         };
         this.ps.setFocusedPathInfo(focusedPathInfo);
       }

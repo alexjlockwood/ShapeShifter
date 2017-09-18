@@ -2,6 +2,7 @@ import { LayerUtil, PathLayer, VectorLayer } from 'app/model/layers';
 import { Path } from 'app/model/paths';
 import { MathUtil } from 'app/scripts/common';
 import { PaperLayer } from 'app/scripts/paper/item';
+import { PaperUtil } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
 import * as paper from 'paper';
 
@@ -13,8 +14,9 @@ import { Gesture } from './Gesture';
 export class SelectDragHandleGesture extends Gesture {
   private readonly paperLayer = paper.project.activeLayer as PaperLayer;
   private readonly hitHandleType: 'handleIn' | 'handleOut';
-  private initialVectorLayer: VectorLayer;
-  private initialHandlePosition: paper.Point;
+  private focusedPathItemId: string;
+  private initialHandle: paper.Point;
+  private lastDragEventInfo: Readonly<{ downPoint: paper.Point; point: paper.Point }>;
 
   constructor(
     private readonly ps: PaperService,
@@ -23,55 +25,65 @@ export class SelectDragHandleGesture extends Gesture {
   ) {
     super();
     this.hitHandleType = hitResultType === 'handle-in' ? 'handleIn' : 'handleOut';
+    this.focusedPathItemId = this.ps.getFocusedPathInfo().layerId;
   }
 
   // @Override
   onMouseDown(event: paper.ToolEvent) {
-    // TODO: what about when alt/shift is pressed
-    const focusedPathInfo = this.ps.getFocusedPathInfo();
-    const selectedHandleIns = new Set<number>();
-    const selectedHandleOuts = new Set<number>();
-    if (this.hitHandleType === 'handleIn') {
-      selectedHandleIns.add(this.segmentIndex);
-    } else if (this.hitHandleType === 'handleOut') {
-      selectedHandleOuts.add(this.segmentIndex);
-    }
+    const selectedSegments = new Set<number>();
+    const selectedHandleIn = this.hitHandleType === 'handleIn' ? this.segmentIndex : undefined;
+    const selectedHandleOut = this.hitHandleType === 'handleOut' ? this.segmentIndex : undefined;
     this.ps.setFocusedPathInfo({
-      ...focusedPathInfo,
-      selectedSegments: new Set<number>(),
-      selectedHandleIns,
-      selectedHandleOuts,
+      ...this.ps.getFocusedPathInfo(),
+      selectedSegments,
+      selectedHandleIn,
+      selectedHandleOut,
     });
-
-    // Save a copy of the initial vector layer and handle position so that
-    // we can make changes to them as we drag.
-    this.initialVectorLayer = this.ps.getVectorLayer();
-
-    const editPath = this.paperLayer.findItemByLayerId(focusedPathInfo.layerId) as paper.Path;
-    this.initialHandlePosition = editPath.segments[this.segmentIndex][this.hitHandleType].clone();
+    const focusedPath = this.paperLayer.findItemByLayerId(this.focusedPathItemId) as paper.Path;
+    this.initialHandle = focusedPath.segments[this.segmentIndex][this.hitHandleType].clone();
   }
 
   // @Override
   onMouseDrag(event: paper.ToolEvent) {
-    const focusedPathInfo = this.ps.getFocusedPathInfo();
-    const editPath = this.paperLayer
-      .findItemByLayerId(focusedPathInfo.layerId)
+    const focusedPath = this.paperLayer.findItemByLayerId(this.focusedPathItemId);
+    const downPoint = focusedPath.globalToLocal(event.downPoint);
+    const point = focusedPath.globalToLocal(event.point);
+    this.lastDragEventInfo = { downPoint, point };
+    this.processEvent(event);
+  }
+
+  // @Override
+  onKeyDown(event: paper.KeyEvent) {
+    if (event.key === 'shift') {
+      this.processEvent(event);
+    }
+  }
+
+  // @Override
+  onKeyUp(event: paper.KeyEvent) {
+    if (event.key === 'shift') {
+      this.processEvent(event);
+    }
+  }
+
+  private processEvent({ modifiers: { shift } }: paper.Event) {
+    if (!this.lastDragEventInfo) {
+      return;
+    }
+    const { downPoint, point } = this.lastDragEventInfo;
+    const handle = this.initialHandle.add(point.subtract(downPoint));
+    if (shift) {
+      // TODO: project the point onto the angle line instead to match sketch behavior!
+      const angle1 = this.initialHandle.angle;
+      const angle2 = 0 <= angle1 ? angle1 - 180 : angle1 + 180;
+      const diff1 = Math.abs(handle.angle - angle1);
+      const diff2 = Math.abs(handle.angle - angle2);
+      handle.angle = diff1 < diff2 ? angle1 : angle2;
+    }
+    const focusedPath = this.paperLayer
+      .findItemByLayerId(this.focusedPathItemId)
       .clone() as paper.Path;
-    const downPoint = editPath.globalToLocal(event.downPoint);
-    const point = editPath.globalToLocal(event.point);
-    const localDelta = point.subtract(downPoint);
-    // TODO: change this snapping behavior so it behaves the same as in sketch?
-    const finalDelta = event.modifiers.shift
-      ? new paper.Point(MathUtil.snapVectorToAngle(localDelta, 15))
-      : localDelta;
-    const finalHandlePosition = this.initialHandlePosition.add(finalDelta);
-    editPath.segments[this.segmentIndex][this.hitHandleType] = finalHandlePosition;
-    const initialVectorLayer = this.initialVectorLayer.clone();
-    const initialPathLayer = initialVectorLayer
-      .findLayerById(focusedPathInfo.layerId)
-      .clone() as PathLayer;
-    initialPathLayer.pathData = new Path(editPath.pathData);
-    const newVl = LayerUtil.replaceLayer(initialVectorLayer, initialPathLayer.id, initialPathLayer);
-    this.ps.setVectorLayer(newVl);
+    focusedPath.segments[this.segmentIndex][this.hitHandleType] = handle;
+    PaperUtil.replacePathInStore(this.ps, this.focusedPathItemId, focusedPath.pathData);
   }
 }

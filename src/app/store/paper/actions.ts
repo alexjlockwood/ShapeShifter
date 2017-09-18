@@ -64,7 +64,7 @@ export interface FocusedPathInfo {
   readonly layerId: string;
   readonly selectedSegments: ReadonlySet<number>;
   readonly visibleHandleIns: ReadonlySet<number>;
-  readonly selectedHandleIns: ReadonlySet<number>;
   readonly visibleHandleOuts: ReadonlySet<number>;
-  readonly selectedHandleOuts: ReadonlySet<number>;
+  readonly selectedHandleIn: number;
+  readonly selectedHandleOut: number;
 }

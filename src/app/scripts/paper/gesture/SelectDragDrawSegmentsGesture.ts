@@ -130,7 +130,10 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
       }),
     );
 
-    PaperUtil.selectCurves(this.ps, focusedPath, updatedSelected);
+    this.ps.setFocusedPathInfo({
+      ...focusedPathInfo,
+      ...PaperUtil.selectCurves(this.ps, focusedPath, updatedSelected),
+    });
     CursorUtil.set(Cursor.PointSelect);
   }
 

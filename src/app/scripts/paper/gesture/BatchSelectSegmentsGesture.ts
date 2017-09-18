@@ -99,6 +99,9 @@ export class BatchSelectSegmentsGesture extends Gesture {
       });
     }
     const focusedPath = this.paperLayer.findItemByLayerId(this.focusedPathItemId) as paper.Path;
-    PaperUtil.selectCurves(this.ps, focusedPath, selectedSegments);
+    this.ps.setFocusedPathInfo({
+      layerId: this.focusedPathItemId,
+      ...PaperUtil.selectCurves(this.ps, focusedPath, selectedSegments),
+    });
   }
 }

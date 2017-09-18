@@ -350,9 +350,9 @@ function newFocusedPathItem(path: paper.Path, focusedPathInfo: FocusedPathInfo) 
   const {
     selectedSegments,
     visibleHandleIns,
-    selectedHandleIns,
+    selectedHandleIn,
     visibleHandleOuts,
-    selectedHandleOuts,
+    selectedHandleOut,
   } = focusedPathInfo;
   // TODO: avoid creating rasters in a loop like this
   path.segments.forEach(({ point, handleIn, handleOut }, segmentIndex) => {
@@ -364,7 +364,7 @@ function newFocusedPathItem(path: paper.Path, focusedPathInfo: FocusedPathInfo) 
         new FocusedPathRaster(
           'handle-in',
           segmentIndex,
-          selectedHandleIns.has(segmentIndex),
+          selectedHandleIn === segmentIndex,
           handleIn,
         ),
       );
@@ -376,7 +376,7 @@ function newFocusedPathItem(path: paper.Path, focusedPathInfo: FocusedPathInfo) 
         new FocusedPathRaster(
           'handle-out',
           segmentIndex,
-          selectedHandleOuts.has(segmentIndex),
+          selectedHandleOut === segmentIndex,
           handleOut,
         ),
       );
