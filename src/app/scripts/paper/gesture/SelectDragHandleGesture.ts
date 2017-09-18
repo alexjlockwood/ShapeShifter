@@ -54,13 +54,15 @@ export class SelectDragHandleGesture extends Gesture {
 
   // @Override
   onKeyDown(event: paper.KeyEvent) {
-    if (event.key === 'shift') {
-      this.processEvent(event);
-    }
+    this.processKeyEvent(event);
   }
 
   // @Override
   onKeyUp(event: paper.KeyEvent) {
+    this.processKeyEvent(event);
+  }
+
+  private processKeyEvent(event: paper.KeyEvent) {
     if (event.key === 'shift') {
       this.processEvent(event);
     }

@@ -8,9 +8,13 @@ import * as paper from 'paper';
 
 import { Gesture } from './Gesture';
 
+/**
+ * A gesture that draws a path using the mouse.
+ */
 export class PencilGesture extends Gesture {
   private readonly paperLayer = paper.project.activeLayer as PaperLayer;
   private isDragging = false;
+
   constructor(private readonly ps: PaperService) {
     super();
   }
