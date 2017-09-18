@@ -28,8 +28,7 @@ export class SelectDragCloneItemsGesture extends Gesture {
   private initialVectorLayer: VectorLayer;
   private isDragging = false;
 
-  // TODO: pressing alt should allow the user to select the item
-  // directly beneath the hit item, if one exists.
+  // TODO: pressing alt should select the item directly beneath the hit item
   constructor(private readonly ps: PaperService, private readonly hitLayerId: string) {
     super();
   }

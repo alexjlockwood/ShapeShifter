@@ -7,6 +7,7 @@ import {
   VectorLayer,
 } from 'app/model/layers';
 import { ColorUtil } from 'app/scripts/common';
+import { PaperUtil } from 'app/scripts/paper/util';
 import { FocusedPathInfo, PathOverlayInfo } from 'app/store/paper/actions';
 import * as _ from 'lodash';
 import * as paper from 'paper';
@@ -88,7 +89,7 @@ export class PaperLayer extends paper.Layer {
     }
     const selectedItems = Array.from(this.selectedLayerIds).map(id => this.findItemByLayerId(id));
     if (selectedItems.length > 0) {
-      this.selectionBoundsItem = newSelectionBoundsItem(selectedItems);
+      this.selectionBoundsItem = newSelectionBoundsItem(selectedItems, this.matrix);
     }
     this.updateChildren();
   }
@@ -113,7 +114,7 @@ export class PaperLayer extends paper.Layer {
     if (this.focusedPathInfo) {
       // TODO: is it possible for pathData to be undefined?
       const path = this.findItemByLayerId(this.focusedPathInfo.layerId) as paper.Path;
-      this.focusedPathItem = newFocusedPathItem(path, this.focusedPathInfo);
+      this.focusedPathItem = newFocusedPathItem(path, this.focusedPathInfo, this.matrix);
       this.updateChildren();
     }
   }
@@ -272,24 +273,9 @@ function newHoverPathItem(item: paper.Item) {
 /**
  * Creates a new selection bounds item for the specified selected items.
  */
-function newSelectionBoundsItem(items: ReadonlyArray<paper.Item>) {
+function newSelectionBoundsItem(items: ReadonlyArray<paper.Item>, paperLayerMatrix: paper.Matrix) {
   const group = new paper.Group();
-
-  const flattenedItems: paper.Item[] = [];
-  items.forEach(function recurseFn(i: paper.Item) {
-    if (i.hasChildren()) {
-      i.children.forEach(c => recurseFn(c));
-    } else {
-      flattenedItems.push(i);
-    }
-  });
-
-  const transformRectFn = (rect: paper.Rectangle, m: paper.Matrix) => {
-    return new paper.Rectangle(rect.topLeft.transform(m), rect.bottomRight.transform(m));
-  };
-  const bounds = flattenedItems
-    .map(i => transformRectFn(i.bounds, localToViewportMatrix(i)))
-    .reduce((p, c) => p.unite(c));
+  const bounds = PaperUtil.computeSelectionBounds(items, paperLayerMatrix);
 
   // Draw an outline for the bounded box.
   const outlinePath = new paper.Path.Rectangle(bounds);
@@ -328,10 +314,15 @@ function newSelectionBoundsItem(items: ReadonlyArray<paper.Item>) {
 /**
  * Creates the overlay decorations for the given focused path.
  */
-function newFocusedPathItem(path: paper.Path, focusedPathInfo: FocusedPathInfo) {
+function newFocusedPathItem(
+  path: paper.Path,
+  focusedPathInfo: FocusedPathInfo,
+  paperLayerMatrix: paper.Matrix,
+) {
   const group = new paper.Group();
   const scaleFactor = 1 / getAttrScaling();
-  const matrix = localToViewportMatrix(path);
+
+  const matrix = path.globalMatrix.prepended(paperLayerMatrix.inverted());
   const addRasterFn = (raster: paper.Raster) => {
     raster.scale(scaleFactor, scaleFactor);
     raster.transform(matrix);
@@ -447,14 +438,6 @@ function newSelectionBoxItem(from: paper.Point, to: paper.Point) {
 //   path.add(to.clone());
 //   return path;
 // }
-
-/**
- * Computes the transform matrix that will transform the specified item to its
- * viewport coordinates.
- */
-function localToViewportMatrix(item: paper.Item) {
-  return item.globalMatrix.prepended(paper.project.activeLayer.matrix.inverted());
-}
 
 /**
  * Returns the project's CSS scale factor, representing the number of CSS pixels

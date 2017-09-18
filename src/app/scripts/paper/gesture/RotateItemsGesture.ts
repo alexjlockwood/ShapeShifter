@@ -3,6 +3,7 @@ import { Path } from 'app/model/paths';
 import { MathUtil } from 'app/scripts/common';
 import { PaperLayer } from 'app/scripts/paper/item';
 import { PivotType, SelectionBoundsRaster } from 'app/scripts/paper/item';
+import { PaperUtil } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
 import * as paper from 'paper';
 
@@ -11,16 +12,18 @@ import { Gesture } from './Gesture';
 /**
  * A gesture that performs rotation operations.
  *
- * TODO: make it possible to move the pivot position
+ * TODO: make it possible to move the pivot with the mouse
  * TODO: avoid jank at beginning of rotation (when angle is near 0)
  */
 export class RotateItemsGesture extends Gesture {
   private readonly paperLayer = paper.project.activeLayer as PaperLayer;
   private selectedItems: ReadonlyArray<paper.Item>;
-  private initialMatrices: ReadonlyArray<paper.Matrix>;
-  private pivot: paper.Point;
+  private localToViewportMatrices: ReadonlyArray<paper.Matrix>;
   private initialVectorLayer: VectorLayer;
-  private originalAngle: number;
+  private pivot: paper.Point;
+
+  private downPoint: paper.Point;
+  private point: paper.Point;
 
   constructor(
     private readonly ps: PaperService,
@@ -32,81 +35,76 @@ export class RotateItemsGesture extends Gesture {
   // @Override
   onMouseDown(event: paper.ToolEvent) {
     this.ps.setHoveredLayer(undefined);
-    this.selectedItems = Array.from(this.ps.getSelectedLayers()).map(id => {
-      // TODO: do we need to clone these?
-      return this.paperLayer.findItemByLayerId(id).clone();
+    this.selectedItems = Array.from(this.ps.getSelectedLayers()).map(id =>
+      this.paperLayer.findItemByLayerId(id),
+    );
+    const invertedPaperLayerMatrix = this.paperLayer.matrix.inverted();
+    this.localToViewportMatrices = this.selectedItems.map(item => {
+      // Compute the matrices to directly transform while performing rotations.
+      return item.globalMatrix.prepended(invertedPaperLayerMatrix).inverted();
     });
-    this.initialMatrices = this.selectedItems.map(i => i.matrix.clone());
-
-    // TODO: reuse this code with PaperLayer.ts
-    const flattenedItems: paper.Item[] = [];
-    this.selectedItems.forEach(function recurseFn(i: paper.Item) {
-      if (i.hasChildren()) {
-        i.children.forEach(c => recurseFn(c));
-      } else {
-        flattenedItems.push(i);
-      }
-    });
-    const transformRectFn = (rect: paper.Rectangle, m: paper.Matrix) => {
-      return new paper.Rectangle(rect.topLeft.transform(m), rect.bottomRight.transform(m));
-    };
-    const bounds = flattenedItems
-      .map(i => transformRectFn(i.bounds, localToViewportMatrix(i)))
-      .reduce((p, c) => p.unite(c));
-
-    this.pivot = bounds.center.clone();
-
-    const pivotType = this.selectionBoundsRaster.pivotType;
+    this.pivot = PaperUtil.computeSelectionBounds(
+      this.selectedItems,
+      this.paperLayer.matrix,
+    ).center;
     this.initialVectorLayer = this.ps.getVectorLayer();
-
-    const delta = this.paperLayer.globalToLocal(event.point).subtract(this.pivot);
-    this.originalAngle = Math.atan2(delta.y, delta.x) / Math.PI * 180;
+    this.downPoint = this.paperLayer.globalToLocal(event.downPoint);
   }
 
   // @Override
   onMouseDrag(event: paper.ToolEvent) {
-    const delta = this.paperLayer.globalToLocal(event.point).subtract(this.pivot);
-    const rawAngle = Math.atan2(delta.y, delta.x) / Math.PI * 180 - this.originalAngle;
-    const angle = event.modifiers.shift ? Math.round(rawAngle / 15) * 15 : rawAngle;
+    this.point = this.paperLayer.globalToLocal(event.point);
+    this.processEvent(event);
+  }
+
+  // @Override
+  onKeyDown(event: paper.KeyEvent) {
+    this.processKeyEvent(event);
+  }
+
+  // @Override
+  onKeyUp(event: paper.KeyEvent) {
+    this.processKeyEvent(event);
+  }
+
+  private processKeyEvent(event: paper.KeyEvent) {
+    if (event.key === 'shift') {
+      this.processEvent(event);
+    }
+  }
+
+  private processEvent(event: paper.Event) {
+    if (!this.point) {
+      return;
+    }
 
     // TODO: set strokeScaling to false?
     // TODO: this doesn't work yet for paths that are contained in scaled groups
 
+    const rotationAngle = this.getRotationAngle(event);
     let newVl = this.initialVectorLayer.clone();
     this.selectedItems.forEach((item, index) => {
-      // TODO: make this efficient
+      // TODO: make this stuff works for groups as well
       const path = item.clone() as paper.Path;
       path.applyMatrix = true;
-
-      const matrices: paper.Matrix[] = [];
-      let curr = item;
-      while (curr) {
-        matrices.push(curr.matrix);
-        curr = curr.parent;
-      }
-      const matrix = this.initialMatrices[index].clone();
-      for (const m of matrices) {
-        matrix.append(m.inverted());
-      }
-      matrix.rotate(angle, this.pivot);
-      for (let i = matrices.length - 1; i >= 0; i--) {
-        matrix.append(matrices[i]);
-      }
-      item.matrix = matrix;
-      // TODO: make this work for groups as well
+      const localToViewportMatrix = this.localToViewportMatrices[index];
+      const matrix = localToViewportMatrix.clone();
+      matrix.rotate(rotationAngle, this.pivot);
+      matrix.append(localToViewportMatrix.inverted());
+      path.matrix = matrix;
       const newPl = newVl.findLayerById(item.data.id).clone() as PathLayer;
       newPl.pathData = new Path(path.pathData);
       newVl = LayerUtil.replaceLayer(newVl, item.data.id, newPl);
     });
     this.ps.setVectorLayer(newVl);
   }
-}
 
-/**
- * Computes the transform matrix that will transform the specified item to its
- * viewport coordinates.
- */
-function localToViewportMatrix(item: paper.Item) {
-  // TODO: reuse this with PaperLayer.ts
-  return item.globalMatrix.prepended(paper.project.activeLayer.matrix.inverted());
+  private getRotationAngle(event: paper.Event) {
+    const initialDelta = this.downPoint.subtract(this.pivot);
+    const initialAngle = Math.atan2(initialDelta.y, initialDelta.x) * 180 / Math.PI;
+    const delta = this.point.subtract(this.pivot);
+    const angle = Math.atan2(delta.y, delta.x) * 180 / Math.PI - initialAngle;
+    // TODO: this doesn't round properly if the angle was previously changed
+    return event.modifiers.shift ? Math.round(angle / 15) * 15 : angle;
+  }
 }

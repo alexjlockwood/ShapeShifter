@@ -61,3 +61,29 @@ export function selectCurves(
     selectedHandleOut: undefined,
   };
 }
+
+/** Computes the selection bounds for the specified items. */
+export function computeSelectionBounds(
+  items: ReadonlyArray<paper.Item>,
+  paperLayerMatrix: paper.Matrix,
+) {
+  const flattenedItems: paper.Item[] = [];
+  items.forEach(function recurseFn(i: paper.Item) {
+    if (i.hasChildren()) {
+      i.children.forEach(c => recurseFn(c));
+    } else {
+      flattenedItems.push(i);
+    }
+  });
+  return flattenedItems
+    .map(item => {
+      // Compute the matrix that takes this item from its local coordinate
+      // space to the project's viewport coordinate space.
+      const localToViewportMatrix = item.globalMatrix.prepended(paperLayerMatrix.inverted());
+      return new paper.Rectangle(
+        item.bounds.topLeft.transform(localToViewportMatrix),
+        item.bounds.bottomRight.transform(localToViewportMatrix),
+      );
+    })
+    .reduce((p, c) => p.unite(c));
+}
