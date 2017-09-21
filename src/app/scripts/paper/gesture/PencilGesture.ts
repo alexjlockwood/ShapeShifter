@@ -13,7 +13,7 @@ import { Gesture } from './Gesture';
  */
 export class PencilGesture extends Gesture {
   private readonly paperLayer = paper.project.activeLayer as PaperLayer;
-  private isDragging = false;
+  private lastPoint: paper.Point;
 
   constructor(private readonly ps: PaperService) {
     super();
@@ -21,10 +21,12 @@ export class PencilGesture extends Gesture {
 
   // @Override
   onMouseDrag(event: paper.ToolEvent) {
-    this.isDragging = true;
+    if (!this.lastPoint) {
+      this.lastPoint = event.downPoint;
+    }
     const delta = this.paperLayer
       .globalToLocal(event.point)
-      .subtract(this.paperLayer.globalToLocal(event.lastPoint));
+      .subtract(this.paperLayer.globalToLocal(this.lastPoint));
     delta.angle += 90;
     const pathOverlayInfo = this.ps.getPathOverlayInfo();
     const pencilPath = pathOverlayInfo
@@ -32,11 +34,12 @@ export class PencilGesture extends Gesture {
       : new paper.Path();
     pencilPath.add(this.paperLayer.globalToLocal(event.middlePoint).add(delta));
     this.ps.setPathOverlayInfo({ pathData: pencilPath.pathData, strokeColor: 'black' });
+    this.lastPoint = event.point;
   }
 
   // @Override
   onMouseUp(event: paper.ToolEvent) {
-    if (this.isDragging) {
+    if (this.lastPoint) {
       const newPath = new paper.Path(this.ps.getPathOverlayInfo().pathData);
       if (arePointsClose(this.paperLayer.localToGlobal(newPath.firstSegment.point), event.point)) {
         newPath.closePath(true);

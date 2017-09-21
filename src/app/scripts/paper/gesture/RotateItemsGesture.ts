@@ -43,7 +43,10 @@ export class RotateItemsGesture extends Gesture {
       // Compute the matrices to directly transform while performing rotations.
       return item.globalMatrix.prepended(invertedPaperLayerMatrix).inverted();
     });
-    this.pivot = PaperUtil.computeSelectionBounds(this.selectedItems, this.paperLayer).center;
+    this.pivot = PaperUtil.transformRectangle(
+      PaperUtil.computeBounds(...this.selectedItems),
+      this.paperLayer.matrix.inverted(),
+    ).center;
     this.initialVectorLayer = this.ps.getVectorLayer();
     this.downPoint = this.paperLayer.globalToLocal(event.downPoint);
   }

@@ -43,7 +43,10 @@ export class ScaleItemsGesture extends Gesture {
       // Compute the matrices to directly transform while performing rotations.
       return item.globalMatrix.prepended(invertedPaperLayerMatrix).inverted();
     });
-    const bounds = PaperUtil.computeSelectionBounds(this.selectedItems, this.paperLayer);
+    const bounds = PaperUtil.transformRectangle(
+      PaperUtil.computeBounds(...this.selectedItems),
+      this.paperLayer.matrix.inverted(),
+    );
     this.initialPivot = bounds[this.selectionBoundsRaster.oppositePivotType];
     this.draggedSegment = bounds[this.selectionBoundsRaster.pivotType];
     this.lastPoint = this.draggedSegment;

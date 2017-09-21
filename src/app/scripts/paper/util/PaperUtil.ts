@@ -62,8 +62,13 @@ export function selectCurves(
   };
 }
 
-/** Computes the selection bounds for the specified items. */
-export function computeSelectionBounds(items: ReadonlyArray<paper.Item>, paperLayer: paper.Item) {
+/** Returns a new matrix that has been transformed by the specified matrix m. */
+export function transformRectangle(rect: paper.Rectangle, m: paper.Matrix) {
+  return new paper.Rectangle(rect.topLeft.transform(m), rect.bottomRight.transform(m));
+}
+
+/** Computes the bounds for the specified items in global project coordinates. */
+export function computeBounds(...items: paper.Item[]): paper.Rectangle {
   const flattenedItems: paper.Item[] = [];
   items.forEach(function recurseFn(i: paper.Item) {
     if (i.hasChildren()) {
@@ -73,14 +78,6 @@ export function computeSelectionBounds(items: ReadonlyArray<paper.Item>, paperLa
     }
   });
   return flattenedItems
-    .map(item => {
-      // Compute the matrix that takes this item from its local coordinate
-      // space to the project's viewport coordinate space.
-      const localToViewportMatrix = item.globalMatrix.prepended(paperLayer.matrix.inverted());
-      return new paper.Rectangle(
-        item.bounds.topLeft.transform(localToViewportMatrix),
-        item.bounds.bottomRight.transform(localToViewportMatrix),
-      );
-    })
+    .map(item => transformRectangle(item.bounds, item.globalMatrix))
     .reduce((p, c) => p.unite(c));
 }

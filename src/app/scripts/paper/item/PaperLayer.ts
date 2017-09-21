@@ -90,7 +90,10 @@ export class PaperLayer extends paper.Layer {
     const selectedItems = Array.from(this.selectedLayerIds).map(id => this.findItemByLayerId(id));
     if (selectedItems.length > 0) {
       this.selectionBoundsItem = newSelectionBoundsItem(
-        PaperUtil.computeSelectionBounds(selectedItems, this),
+        PaperUtil.transformRectangle(
+          PaperUtil.computeBounds(...selectedItems),
+          this.matrix.inverted(),
+        ),
       );
     }
     this.updateChildren();
@@ -214,8 +217,12 @@ function newVectorLayerItem(vl: VectorLayer): paper.Item {
     return new paper.Path({
       data: { id: layer.id },
       pathData: layer.pathData ? layer.pathData.getPathString() : '',
-      fillColor: f ? new paper.Color(f.r, f.g, f.b, f.a * fillAlpha) : undefined,
-      strokeColor: s ? new paper.Color(s.r, s.g, s.b, s.a * strokeAlpha) : undefined,
+      fillColor: f
+        ? new paper.Color(f.r / 255, f.g / 255, f.b / 255, f.a / 255 * fillAlpha)
+        : undefined,
+      strokeColor: s
+        ? new paper.Color(s.r / 255, s.g / 255, s.b / 255, s.a / 255 * strokeAlpha)
+        : undefined,
       strokeWidth: layer.strokeWidth,
       miterLimit: layer.strokeMiterLimit,
       strokeJoin: layer.strokeLinejoin,

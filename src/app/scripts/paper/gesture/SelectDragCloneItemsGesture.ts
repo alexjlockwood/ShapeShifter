@@ -12,6 +12,7 @@ import { PaperService } from 'app/services';
 import * as paper from 'paper';
 
 import { Gesture } from './Gesture';
+import { MouseSnapper } from './MouseSnapper';
 
 /**
  * A gesture that performs selection, move, and clone operations
@@ -20,9 +21,12 @@ import { Gesture } from './Gesture';
  * TODO: don't allow modifications to be made to groups and paths/masks simultaneously
  * TODO: make it possible to drag/clone groups
  * TODO: show a 'grabbing' cursor while dragging items
+ * TODO: confirm that it is impossible for vector layers to be translated/transformed
+ * TODO: make it possible to drag/clone multiple items at a time (doesn't seem to work)
  */
 export class SelectDragCloneItemsGesture extends Gesture {
   private readonly paperLayer = paper.project.activeLayer as PaperLayer;
+  private mouseSnapper: MouseSnapper;
   private selectedItems: ReadonlyArray<paper.Item>;
   private initialItemPositions: ReadonlyArray<paper.Point>;
   private initialMatrices: ReadonlyArray<paper.Matrix>;
@@ -51,10 +55,17 @@ export class SelectDragCloneItemsGesture extends Gesture {
     // Save a copy of the initial vector layer so that we can make changes
     // to it as we drag.
     this.initialVectorLayer = this.ps.getVectorLayer();
+
+    this.mouseSnapper = new MouseSnapper(this.ps);
   }
 
   // @Override
   onMouseDrag(event: paper.ToolEvent) {
+    this.mouseSnapper.onMouseEvent(event);
+    const { horizontal, vertical } = this.mouseSnapper.getSnapInfo();
+    console.log('horizontal', horizontal);
+    console.log('vertical', vertical);
+
     if (!this.isDragging) {
       if (event.modifiers.alt) {
         // TODO: clone the selected items
@@ -63,7 +74,6 @@ export class SelectDragCloneItemsGesture extends Gesture {
     }
 
     // TODO: make sure groups and paths/masks aren't modified simultaneously
-    // TODO: confirm that it is impossible for vector layers to be transformed.
     let newVl = this.initialVectorLayer.clone();
     const translateLayerFn = (layerId: string, distance: paper.Point) => {
       const initialLayer = this.initialVectorLayer.findLayerById(layerId);
@@ -81,9 +91,7 @@ export class SelectDragCloneItemsGesture extends Gesture {
       }
     };
 
-    const selectedItems = Array.from(this.ps.getSelectedLayers()).map(id =>
-      this.paperLayer.findItemByLayerId(id),
-    );
+    const selectedItems = this.getSelectedItems();
     selectedItems.forEach(item => {
       const downPoint = item.globalToLocal(event.downPoint);
       const point = item.globalToLocal(event.point);
@@ -95,5 +103,9 @@ export class SelectDragCloneItemsGesture extends Gesture {
     });
 
     this.ps.setVectorLayer(newVl);
+  }
+
+  private getSelectedItems() {
+    return Array.from(this.ps.getSelectedLayers()).map(id => this.paperLayer.findItemByLayerId(id));
   }
 }
