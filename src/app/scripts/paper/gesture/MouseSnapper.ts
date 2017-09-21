@@ -51,19 +51,9 @@ export class MouseSnapper {
         vertical: { sibling, ...vertical },
       };
     });
-    const horizontalSnapResult = filterByMinDelta(
-      siblingSnapResults.map(({ horizontal }) => horizontal),
-    );
-    const verticalSnapResult = filterByMinDelta(siblingSnapResults.map(({ vertical }) => vertical));
     this.snapInfo = {
-      horizontal: {
-        delta: horizontalSnapResult.delta,
-        values: horizontalSnapResult.values,
-      },
-      vertical: {
-        delta: verticalSnapResult.delta,
-        values: verticalSnapResult.values,
-      },
+      horizontal: filterByMinDelta(siblingSnapResults.map(({ horizontal }) => horizontal)),
+      vertical: filterByMinDelta(siblingSnapResults.map(({ vertical }) => vertical)),
     };
   }
 
@@ -164,9 +154,8 @@ function runVerticalSnapTest(
 function filterByMinDelta<T>(
   values: (T & Delta)[],
 ): {
-  delta: number;
-  values: T[];
-} {
+  readonly values: ReadonlyArray<T>;
+} & Delta {
   if (!values.length) {
     return undefined;
   }
