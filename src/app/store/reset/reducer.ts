@@ -4,13 +4,13 @@ export interface State {
   readonly isBeingReset: boolean;
 }
 
-export function buildInitialState() {
+export function buildInitialState(): State {
   return {
     isBeingReset: false,
-  } as State;
+  };
 }
 
-export function reducer(state = buildInitialState(), action: actions.Actions) {
+export function reducer(state = buildInitialState(), action: actions.Actions): State {
   if (action.type === actions.RESET_WORKSPACE) {
     return { ...state, isBeingReset: true };
   }

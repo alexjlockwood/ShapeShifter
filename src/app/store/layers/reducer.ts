@@ -20,7 +20,7 @@ export function buildInitialState(): State {
   };
 }
 
-export function reducer(state = buildInitialState(), action: actions.Actions) {
+export function reducer(state = buildInitialState(), action: actions.Actions): State {
   switch (action.type) {
     case actions.SET_VECTOR_LAYER:
       return { ...state, vectorLayer: action.payload.vectorLayer };

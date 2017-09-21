@@ -8,14 +8,21 @@ import {
 } from 'app/model/layers';
 import { ColorUtil } from 'app/scripts/common';
 import { PaperUtil } from 'app/scripts/paper/util';
-import { FocusedPathInfo, PathOverlayInfo } from 'app/store/paper/actions';
+import { FocusedPathInfo, PathOverlayInfo, SnapGuideInfo } from 'app/store/paper/actions';
 import * as _ from 'lodash';
 import * as paper from 'paper';
 
 import { FocusedPathRaster } from './FocusedPathRaster';
-import { PivotType, SelectionBoundsRaster } from './SelectionBoundsRaster';
+import {
+  PivotType as SelectionBoundsPivotType,
+  SelectionBoundsRaster,
+} from './SelectionBoundsRaster';
 
-// TODO: use Item#visible to hook up 'visible layer ids' from store
+/**
+ * The root layer used of our paper.js project. Note that this layer is
+ * assigned a scale matrix that converts global project coordinates to
+ * local viewport coordinates.
+ */
 export class PaperLayer extends paper.Layer {
   private vectorLayerItem: paper.Item;
   private selectionBoundsItem: paper.Item;
@@ -23,7 +30,9 @@ export class PaperLayer extends paper.Layer {
   private selectionBoxItem: paper.Path;
   private pathOverlayItem: paper.Path;
   private focusedPathItem: paper.Item;
+  private snapGuideItem: paper.Item;
 
+  // TODO: use Item#visible to hook up 'visible layer ids' from store
   private vectorLayer: VectorLayer;
   private selectedLayerIds: ReadonlySet<string> = new Set();
   private hoveredLayerId: string;
@@ -47,13 +56,29 @@ export class PaperLayer extends paper.Layer {
     this.updateHoverPathItem();
   }
 
-  setPathOverlayInfo(pathOverlayInfo: PathOverlayInfo) {
+  setPathOverlayInfo(info: PathOverlayInfo) {
     if (this.pathOverlayItem) {
       this.pathOverlayItem.remove();
       this.pathOverlayItem = undefined;
     }
-    if (pathOverlayInfo) {
-      this.pathOverlayItem = newPathOverlayItem(pathOverlayInfo);
+    if (info) {
+      this.pathOverlayItem = newPathOverlayItem(info);
+      this.updateChildren();
+    }
+  }
+
+  setFocusedPathInfo(info: FocusedPathInfo) {
+    this.focusedPathInfo = info;
+    this.updateFocusedPathItem();
+  }
+
+  setSnapGuideInfo(info: SnapGuideInfo) {
+    if (this.snapGuideItem) {
+      this.snapGuideItem.remove();
+      this.snapGuideItem = undefined;
+    }
+    if (info) {
+      this.snapGuideItem = newSnapGuideItem(info, this.matrix);
       this.updateChildren();
     }
   }
@@ -67,11 +92,6 @@ export class PaperLayer extends paper.Layer {
       this.selectionBoxItem = newSelectionBoxItem(box.from, box.to);
       this.updateChildren();
     }
-  }
-
-  setFocusedPathInfo(focusedPathInfo: FocusedPathInfo) {
-    this.focusedPathInfo = focusedPathInfo;
-    this.updateFocusedPathItem();
   }
 
   private updateVectorLayerItem() {
@@ -131,6 +151,7 @@ export class PaperLayer extends paper.Layer {
       this.hoverPathItem,
       this.focusedPathItem,
       this.pathOverlayItem,
+      this.snapGuideItem,
       this.selectionBoxItem,
     ]);
   }
@@ -279,6 +300,26 @@ function newHoverPathItem(item: paper.Item) {
   return hoverPath;
 }
 
+const PIVOT_TYPES: [
+  'topLeft',
+  'topCenter',
+  'topRight',
+  'rightCenter',
+  'bottomRight',
+  'bottomCenter',
+  'bottomLeft',
+  'leftCenter'
+] = [
+  'topLeft',
+  'topCenter',
+  'topRight',
+  'rightCenter',
+  'bottomRight',
+  'bottomCenter',
+  'bottomLeft',
+  'leftCenter',
+];
+
 /**
  * Creates a new selection bounds item for the specified selected items.
  */
@@ -295,26 +336,14 @@ function newSelectionBoundsItem(bounds: paper.Rectangle) {
 
   // Create segments for the bounded box.
   const segmentSize = 6 / paper.view.zoom / getCssScaling();
-  const createSegmentFn = (pivotType: PivotType) => {
+  PIVOT_TYPES.forEach(pivotType => {
     // TODO: avoid creating rasters in a loop like this
     const center = bounds[pivotType];
     const handle = new SelectionBoundsRaster(pivotType, center);
     const scaleFactor = 1 / getAttrScaling();
     handle.scale(scaleFactor, scaleFactor);
-    return handle;
-  };
-
-  const pivotTypes: ReadonlyArray<PivotType> = [
-    'topLeft',
-    'topCenter',
-    'topRight',
-    'rightCenter',
-    'bottomRight',
-    'bottomCenter',
-    'bottomLeft',
-    'leftCenter',
-  ];
-  pivotTypes.forEach(t => group.addChild(createSegmentFn(t)));
+    group.addChild(handle);
+  });
 
   return group;
 }
@@ -324,7 +353,7 @@ function newSelectionBoundsItem(bounds: paper.Rectangle) {
  */
 function newFocusedPathItem(
   path: paper.Path,
-  focusedPathInfo: FocusedPathInfo,
+  info: FocusedPathInfo,
   paperLayerMatrix: paper.Matrix,
 ) {
   const group = new paper.Group();
@@ -352,7 +381,7 @@ function newFocusedPathItem(
     selectedHandleIn,
     visibleHandleOuts,
     selectedHandleOut,
-  } = focusedPathInfo;
+  } = info;
   // TODO: avoid creating rasters in a loop like this
   path.segments.forEach(({ point, handleIn, handleOut }, segmentIndex) => {
     const center = point;
@@ -387,13 +416,79 @@ function newFocusedPathItem(
   return group;
 }
 
-function newPathOverlayItem(pathOverlayInfo: PathOverlayInfo) {
-  const path = new paper.Path(pathOverlayInfo.pathData);
+function newPathOverlayItem(info: PathOverlayInfo) {
+  const path = new paper.Path(info.pathData);
   path.guide = true;
   path.strokeScaling = false;
   path.strokeWidth = 1 / paper.view.zoom;
-  path.strokeColor = pathOverlayInfo.strokeColor;
+  path.strokeColor = info.strokeColor;
   return path;
+}
+
+function newSnapGuideItem(info: SnapGuideInfo, paperLayerMatrix: paper.Matrix) {
+  const group = new paper.Group();
+
+  const newLineFn = (from: paper.Point, to: paper.Point) => {
+    const line = new paper.Path.Line(from, to);
+    line.guide = true;
+    line.strokeScaling = false;
+    line.strokeWidth = 1 / paper.view.zoom;
+    line.strokeColor = 'red';
+    return line;
+  };
+
+  info.guides.forEach(({ from, to }) => {
+    group.addChild(newLineFn(new paper.Point(from), new paper.Point(to)));
+  });
+
+  const addToAngleFn = (point: paper.Point, angle: number) => {
+    point = point.clone();
+    point.angle += angle;
+    return point;
+  };
+
+  const newHandleLineFn = (endPoint: paper.Point, handle: paper.Point) => {
+    const from = endPoint.add(addToAngleFn(handle, 90));
+    const to = endPoint.add(addToAngleFn(handle, -90));
+    return newLineFn(from, to);
+  };
+
+  const newRulerLabelFn = (point: paper.Point, content: string) => {
+    // TODO: add padding above/to the side of the label
+    return new paper.PointText({
+      point,
+      content,
+      fillColor: 'red',
+      justification: 'center',
+      fontSize: 12 / paper.view.zoom / getCssScaling(),
+    });
+  };
+
+  const handleLengthPixels = 8;
+  info.rulers.forEach(({ line, delta }) => {
+    const from = new paper.Point(line.from);
+    const to = new paper.Point(line.to);
+    const mid = from.add(to.subtract(from).multiply(0.5));
+    const globalFrom = from.transform(paperLayerMatrix);
+    const globalTo = to.transform(paperLayerMatrix);
+    const rulerHandle = to
+      .transform(paperLayerMatrix)
+      .subtract(from.transform(paperLayerMatrix))
+      .normalize()
+      .multiply(handleLengthPixels)
+      .transform(paperLayerMatrix.inverted());
+    // TODO: make sure the rounded vs. actual values are equal!
+    // TODO: only display decimals for small viewports
+    const pointTextLabel = _.round(from.getDistance(to), 1).toString();
+    group.addChildren([
+      newLineFn(from, to),
+      newHandleLineFn(from, rulerHandle),
+      newHandleLineFn(to, rulerHandle),
+      newRulerLabelFn(mid, pointTextLabel),
+    ]);
+  });
+
+  return group;
 }
 
 function newSelectionBoxItem(from: paper.Point, to: paper.Point) {

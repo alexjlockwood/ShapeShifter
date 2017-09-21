@@ -9,10 +9,13 @@ import {
 import { MathUtil, Matrix } from 'app/scripts/common';
 import { PaperLayer } from 'app/scripts/paper/item';
 import { PaperService } from 'app/services';
+import { Line, Ruler, SnapGuideInfo } from 'app/store/paper/actions';
 import * as paper from 'paper';
 
 import { Gesture } from './Gesture';
 import { MouseSnapper } from './MouseSnapper';
+
+const SNAP_TOLERANCE = 10;
 
 /**
  * A gesture that performs selection, move, and clone operations
@@ -61,10 +64,66 @@ export class SelectDragCloneItemsGesture extends Gesture {
 
   // @Override
   onMouseDrag(event: paper.ToolEvent) {
-    this.mouseSnapper.onMouseEvent(event);
-    const { horizontal, vertical } = this.mouseSnapper.getSnapInfo();
-    console.log('horizontal', horizontal);
-    console.log('vertical', vertical);
+    const snapInfo = this.mouseSnapper.getSnapInfo(event);
+    if (snapInfo) {
+      const guides: Line[] = [];
+      const rulers: Ruler[] = [];
+      const newPointFn = (x: number, y: number) => {
+        // Convert the point to viewport coordinates.
+        return this.paperLayer.globalToLocal(new paper.Point(x, y));
+      };
+      if (snapInfo.horizontal.delta <= SNAP_TOLERANCE) {
+        snapInfo.horizontal.values.forEach(value => {
+          const { dragSnapBounds, siblingSnapBounds, values } = value;
+          values.forEach(({ drag, sibling }) => {
+            const guideTop = Math.min(dragSnapBounds.top, siblingSnapBounds.top);
+            const guideBottom = Math.max(dragSnapBounds.bottom, siblingSnapBounds.bottom);
+            const guideX = siblingSnapBounds[sibling];
+            guides.push({
+              from: newPointFn(guideX, guideTop),
+              to: newPointFn(guideX, guideBottom),
+            });
+          });
+        });
+      }
+      if (snapInfo.vertical.delta <= SNAP_TOLERANCE) {
+        snapInfo.vertical.values.forEach(value => {
+          const { dragSnapBounds: dsb, siblingSnapBounds: ssb, values } = value;
+          values.forEach(({ drag, sibling }) => {
+            const leftMostBounds = dsb.left < ssb.left ? dsb : ssb;
+            const rightMostBounds = dsb.right < ssb.right ? ssb : dsb;
+            const topMostBounds = dsb.top < ssb.top ? dsb : ssb;
+            const nonTopMostBounds = dsb.top < ssb.top ? ssb : dsb;
+            const bottomMostBounds = dsb.bottom < ssb.bottom ? ssb : dsb;
+            const nonBottomMostBounds = dsb.bottom < ssb.bottom ? dsb : ssb;
+            const shortestBounds = dsb.height < ssb.height ? dsb : ssb;
+            const tallestBounds = dsb.height < ssb.height ? ssb : dsb;
+            const guideLeft = leftMostBounds.left;
+            const guideRight = rightMostBounds.right;
+            const guideY = ssb[sibling];
+            guides.push({
+              from: newPointFn(guideLeft, guideY),
+              to: newPointFn(guideRight, guideY),
+            });
+            const rulerLeft = leftMostBounds.right;
+            const rulerRight = rightMostBounds.left;
+            const rulerTop = nonTopMostBounds.top;
+            const rulerBottom = nonBottomMostBounds.bottom;
+            // TODO: handle the 'rulerTop === rulerBottom' case like sketch does
+            const rulerY = rulerTop + (rulerBottom - rulerTop) * 0.5;
+            const rulerFrom = newPointFn(rulerLeft, rulerY);
+            const rulerTo = newPointFn(rulerRight, rulerY);
+            rulers.push({
+              line: { from: rulerFrom, to: rulerTo },
+              delta: rulerTo.x - rulerFrom.x,
+            });
+          });
+        });
+      }
+      this.ps.setSnapGuideInfo({ guides, rulers });
+    } else {
+      this.ps.setSnapGuideInfo(undefined);
+    }
 
     if (!this.isDragging) {
       if (event.modifiers.alt) {
@@ -73,25 +132,28 @@ export class SelectDragCloneItemsGesture extends Gesture {
       this.isDragging = true;
     }
 
+    // TODO: snap the dragged shapes as they are dragged
     // TODO: make sure groups and paths/masks aren't modified simultaneously
     let newVl = this.initialVectorLayer.clone();
-    const translateLayerFn = (layerId: string, distance: paper.Point) => {
+    const translateLayerFn = (layerId: string, dist: paper.Point) => {
       const initialLayer = this.initialVectorLayer.findLayerById(layerId);
       if (initialLayer instanceof PathLayer || initialLayer instanceof ClipPathLayer) {
         const replacementLayer = initialLayer.clone();
         replacementLayer.pathData = initialLayer.pathData.transform(
-          Matrix.translation(distance.x, distance.y),
+          Matrix.translation(dist.x, dist.y),
         );
         newVl = LayerUtil.replaceLayer(newVl, layerId, replacementLayer);
       } else if (initialLayer instanceof GroupLayer) {
         const replacementLayer = initialLayer.clone();
-        replacementLayer.translateX += distance.x;
-        replacementLayer.translateY += distance.y;
+        replacementLayer.translateX += dist.x;
+        replacementLayer.translateY += dist.y;
         newVl = LayerUtil.replaceLayer(newVl, layerId, replacementLayer);
       }
     };
 
-    const selectedItems = this.getSelectedItems();
+    const selectedItems = Array.from(this.ps.getSelectedLayers()).map(id =>
+      this.paperLayer.findItemByLayerId(id),
+    );
     selectedItems.forEach(item => {
       const downPoint = item.globalToLocal(event.downPoint);
       const point = item.globalToLocal(event.point);
@@ -105,7 +167,8 @@ export class SelectDragCloneItemsGesture extends Gesture {
     this.ps.setVectorLayer(newVl);
   }
 
-  private getSelectedItems() {
-    return Array.from(this.ps.getSelectedLayers()).map(id => this.paperLayer.findItemByLayerId(id));
+  // @Override
+  onMouseUp(event: paper.ToolEvent) {
+    this.ps.setSnapGuideInfo(undefined);
   }
 }

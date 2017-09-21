@@ -8,25 +8,22 @@ export interface State {
   readonly selectedBlockIds: ReadonlySet<string>;
 }
 
-export function buildInitialState() {
+export function buildInitialState(): State {
   return {
     animation: new Animation(),
     isAnimationSelected: false,
     selectedBlockIds: new Set<string>(),
-  } as State;
+  };
 }
 
-export function reducer(state = buildInitialState(), action: actions.Actions) {
+export function reducer(state = buildInitialState(), action: actions.Actions): State {
   switch (action.type) {
-    case actions.SET_ANIMATION: {
+    case actions.SET_ANIMATION:
       return { ...state, animation: action.payload.animation };
-    }
-    case actions.SELECT_ANIMATION: {
+    case actions.SELECT_ANIMATION:
       return { ...state, isAnimationSelected: action.payload.isAnimationSelected };
-    }
-    case actions.SET_SELECTED_BLOCKS: {
+    case actions.SET_SELECTED_BLOCKS:
       return { ...state, selectedBlockIds: new Set<string>(action.payload.blockIds) };
-    }
   }
   return state;
 }

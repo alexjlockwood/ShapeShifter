@@ -10,17 +10,17 @@ export interface State {
   readonly unpairedSubPath: { readonly source: ActionSource; readonly subIdx: number };
 }
 
-export function buildInitialState() {
+export function buildInitialState(): State {
   return {
     mode: ActionMode.None,
     hover: undefined,
     selections: [],
     pairedSubPaths: new Set<number>(),
     unpairedSubPath: undefined,
-  } as State;
+  };
 }
 
-export function reducer(state = buildInitialState(), action: actions.Actions) {
+export function reducer(state = buildInitialState(), action: actions.Actions): State {
   switch (action.type) {
     // Set the app mode during action mode.
     case actions.SET_ACTION_MODE: {

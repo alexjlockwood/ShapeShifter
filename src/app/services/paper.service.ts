@@ -14,13 +14,16 @@ import {
   SetFocusedPathInfo,
   SetPathOverlayInfo,
   SetSelectionBox,
+  SetSnapGuideInfo,
   SetToolMode,
+  SnapGuideInfo,
 } from 'app/store/paper/actions';
 import {
   getCanvasCursor,
   getFocusedPathInfo,
   getPathOverlayInfo,
   getSelectionBox,
+  getSnapGuideInfo,
   getToolMode,
 } from 'app/store/paper/selectors';
 import * as $ from 'jquery';
@@ -82,9 +85,9 @@ export class PaperService {
   }
 
   /** Sets the current path overlay info. */
-  setPathOverlayInfo(pathOverlayInfo: PathOverlayInfo) {
-    if (!_.isEqual(this.getPathOverlayInfo(), pathOverlayInfo)) {
-      this.store.dispatch(new SetPathOverlayInfo(pathOverlayInfo));
+  setPathOverlayInfo(info: PathOverlayInfo | undefined) {
+    if (!_.isEqual(this.getPathOverlayInfo(), info)) {
+      this.store.dispatch(new SetPathOverlayInfo(info));
     }
   }
 
@@ -106,9 +109,9 @@ export class PaperService {
   }
 
   /** Sets the current focused path info. */
-  setFocusedPathInfo(focusedPathInfo: FocusedPathInfo) {
-    if (!_.isEqual(this.getFocusedPathInfo(), focusedPathInfo)) {
-      this.store.dispatch(new SetFocusedPathInfo(focusedPathInfo));
+  setFocusedPathInfo(info: FocusedPathInfo | undefined) {
+    if (!_.isEqual(this.getFocusedPathInfo(), info)) {
+      this.store.dispatch(new SetFocusedPathInfo(info));
     }
   }
 
@@ -117,10 +120,17 @@ export class PaperService {
     return this.queryStore(getFocusedPathInfo);
   }
 
-  /** Gets the current canvas cursor. */
+  /** Sets the current canvas cursor. */
   setCanvasCursor(canvasCursor: CanvasCursor | undefined) {
     if (this.queryStore(getCanvasCursor) !== canvasCursor) {
       this.store.dispatch(new SetCanvasCursor(canvasCursor));
+    }
+  }
+
+  /** Sets the current snap guide info. */
+  setSnapGuideInfo(info: SnapGuideInfo | undefined) {
+    if (!_.isEqual(this.queryStore(getSnapGuideInfo), info)) {
+      this.store.dispatch(new SetSnapGuideInfo(info));
     }
   }
 

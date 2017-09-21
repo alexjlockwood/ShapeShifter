@@ -7,6 +7,7 @@ export const SET_SELECTION_BOX = '__paper__SET_SELECTION_BOX';
 export const SET_PATH_OVERLAY_INFO = '__paper__SET_PATH_OVERLAY';
 export const SET_FOCUSED_PATH_INFO = '__paper__SET_FOCUSED_PATH_INFO';
 export const SET_CANVAS_CURSOR = '__paper__SET_CANVAS_CURSOR';
+export const SET_SNAP_GUIDE_INFO = '__paper__SET_SNAP_GUIDE_INFO';
 
 export class SetToolMode implements Action {
   readonly type = SET_TOOL_MODE;
@@ -48,12 +49,21 @@ export class SetCanvasCursor implements Action {
   }
 }
 
+export class SetSnapGuideInfo implements Action {
+  readonly type = SET_SNAP_GUIDE_INFO;
+  readonly payload: { snapGuideInfo: SnapGuideInfo };
+  constructor(snapGuideInfo: SnapGuideInfo) {
+    this.payload = { snapGuideInfo };
+  }
+}
+
 export type Actions =
   | SetToolMode
   | SetSelectionBox
   | SetPathOverlayInfo
   | SetFocusedPathInfo
-  | SetCanvasCursor;
+  | SetCanvasCursor
+  | SetSnapGuideInfo;
 
 export interface PathOverlayInfo {
   readonly pathData: string;
@@ -67,4 +77,13 @@ export interface FocusedPathInfo {
   readonly visibleHandleOuts: ReadonlySet<number>;
   readonly selectedHandleIn: number;
   readonly selectedHandleOut: number;
+}
+
+export type Line = Readonly<{ from: Point; to: Point }>;
+export type Guide = ReadonlyArray<Line>;
+export type Ruler = Readonly<{ line: Line; delta: number }>;
+
+export interface SnapGuideInfo {
+  readonly guides: ReadonlyArray<Line>;
+  readonly rulers: ReadonlyArray<Ruler>;
 }

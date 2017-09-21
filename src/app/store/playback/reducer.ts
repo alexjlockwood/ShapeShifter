@@ -6,15 +6,15 @@ export interface State {
   readonly isRepeating: boolean;
 }
 
-export function buildInitialState() {
+export function buildInitialState(): State {
   return {
     isSlowMotion: false,
     isPlaying: false,
     isRepeating: false,
-  } as State;
+  };
 }
 
-export function reducer(state = buildInitialState(), action: actions.Actions) {
+export function reducer(state = buildInitialState(), action: actions.Actions): State {
   switch (action.type) {
     case actions.SET_IS_SLOW_MOTION: {
       return { ...state, isSlowMotion: action.payload.isSlowMotion };

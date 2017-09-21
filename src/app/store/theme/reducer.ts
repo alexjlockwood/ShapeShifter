@@ -8,14 +8,14 @@ export interface State {
   readonly isInitialPageLoad: boolean;
 }
 
-export function buildInitialState() {
+export function buildInitialState(): State {
   return {
-    themeType: window.localStorage.getItem(STORAGE_KEY_THEME_TYPE) || 'light',
+    themeType: (window.localStorage.getItem(STORAGE_KEY_THEME_TYPE) || 'light') as ThemeType,
     isInitialPageLoad: true,
-  } as State;
+  };
 }
 
-export function reducer(state = buildInitialState(), action: actions.Actions) {
+export function reducer(state = buildInitialState(), action: actions.Actions): State {
   if (action.type === actions.SET_THEME) {
     const { themeType } = action.payload;
     window.localStorage.setItem(STORAGE_KEY_THEME_TYPE, themeType);
