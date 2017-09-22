@@ -17,13 +17,13 @@
                     }
                 }
                 button {
-                    &[md-icon-button] {
-                        md-icon {
+                    &[mat-icon-button] {
+                        mat-icon {
                             color: mat-color($foreground, secondary-text);
                         }
                     }
-                    &[md-icon-button][disabled] {
-                        md-icon {
+                    &[mat-icon-button][disabled] {
+                        mat-icon {
                             color: mat-color($foreground, disabled-text);
                         }
                     }

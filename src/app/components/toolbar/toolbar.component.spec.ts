@@ -68,9 +68,9 @@ describe('ToolbarComponent', () => {
 });
 
 function loadSvgIcons(svgIcons: Array<{ name: string; path: string }>) {
-  const mdIconRegistry = TestBed.get(MatIconRegistry);
+  const matIconRegistry = TestBed.get(MatIconRegistry);
   const sanitizer = TestBed.get(DomSanitizer);
   for (const { name, path } of svgIcons) {
-    mdIconRegistry.addSvgIcon(name, sanitizer.bypassSecurityTrustResourceUrl(path));
+    matIconRegistry.addSvgIcon(name, sanitizer.bypassSecurityTrustResourceUrl(path));
   }
 }

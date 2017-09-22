@@ -12,7 +12,7 @@
             background-color: mat-color($accent);
             color: #fff;
             &,
-            & md-icon {
+            & mat-icon {
                 color: #fff;
             }
         }
@@ -27,13 +27,13 @@
             box-shadow: 0 -1px 0 mat-color($foreground, divider) inset;
         }
         button {
-            &[md-icon-button] {
-                md-icon {
+            &[mat-icon-button] {
+                mat-icon {
                     color: mat-color($foreground, disabled-text);
                 }
             }
-            &[md-icon-button][disabled] {
-                md-icon {
+            &[mat-icon-button][disabled] {
+                mat-icon {
                     color: mat-color($foreground, disabled-text, 0.5);
                 }
             }
