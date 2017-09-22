@@ -125,8 +125,8 @@ import { reducer } from './store';
   bootstrap: [RootComponent],
 })
 export class AppModule {
-  constructor(mdIconRegistry: MatIconRegistry, private readonly sanitizer: DomSanitizer) {
-    mdIconRegistry
+  constructor(matIconRegistry: MatIconRegistry, private readonly sanitizer: DomSanitizer) {
+    matIconRegistry
       // Logo.
       .addSvgIcon('shapeshifter', this.trustUrl('assets/shapeshifter.svg'))
       // Icons.

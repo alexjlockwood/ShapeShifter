@@ -7,14 +7,14 @@
         background-color: mat-color($primary);
         color: mat-color($primary, default-contrast);
         button {
-            &[md-icon-button][disabled] {
-                md-icon {
+            &[mat-icon-button][disabled] {
+                mat-icon {
                     color: mat-color($foreground, if($is-dark, disabled-text, disabled-text-inverse));
                 }
             }
         }
         button.activated {
-            md-icon {
+            mat-icon {
                 color: mat-color($accent-inverse);
             }
         }
