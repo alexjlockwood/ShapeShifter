@@ -4,36 +4,36 @@
   fxFlex>
   <div class="tool-button"
     [class.is-checked]="toolMode === this.TOOL_MODE_SELECT">
-    <md-icon svgIcon="tool_select"
+    <mat-icon svgIcon="tool_select"
       (click)="onSelectClick()">
-    </md-icon>
+    </mat-icon>
   </div>
   <div class="tool-button"
     [class.is-checked]="toolMode === this.TOOL_MODE_PENCIL">
-    <md-icon svgIcon="tool_draw"
+    <mat-icon svgIcon="tool_draw"
       (click)="onPencilClick()">
-    </md-icon>
+    </mat-icon>
   </div>
   <div class="tool-button"
     [class.is-checked]="toolMode === this.TOOL_MODE_PEN">
-    <md-icon svgIcon="tool_bezier"
+    <mat-icon svgIcon="tool_bezier"
       (click)="onPenClick()">
-    </md-icon>
+    </mat-icon>
   </div>
   <div class="tool-button"
     [class.is-checked]="toolMode === this.TOOL_MODE_CIRCLE">
-    <md-icon svgIcon="tool_circle"
+    <mat-icon svgIcon="tool_circle"
       (click)="onCircleClick()">
-    </md-icon>
+    </mat-icon>
   </div>
   <div class="tool-button"
     [class.is-checked]="toolMode === this.TOOL_MODE_RECTANGLE">
-    <md-icon svgIcon="tool_rectangle"
+    <mat-icon svgIcon="tool_rectangle"
       (click)="onRectangleClick()">
-    </md-icon>
+    </mat-icon>
   </div>
   <div class="tool-button"
     [class.is-checked]="toolMode === this.TOOL_MODE_ZOOMPAN">
-    <md-icon (click)="onZoomPanClick()">zoom_in</md-icon>
+    <mat-icon (click)="onZoomPanClick()">zoom_in</mat-icon>
   </div>
 </div>
