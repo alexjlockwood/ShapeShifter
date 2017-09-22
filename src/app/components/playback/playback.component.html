@@ -4,24 +4,24 @@
   fxLayoutAlign="center center">
   <span fxFlex></span>
   <button class="slow-motion-button"
-    md-icon-button
-    mdTooltip="Slow motion (S)"
-    mdTooltipPosition="below"
-    mdTooltipShowDelay="500"
+    mat-icon-button
+    matTooltip="Slow motion (S)"
+    matTooltipPosition="below"
+    matTooltipShowDelay="500"
     (click)="this.isSlowMotionClick($event)">
-    <md-icon [class.activated]="model.isSlowMotion">slow_motion_video</md-icon>
+    <mat-icon [class.activated]="model.isSlowMotion">slow_motion_video</mat-icon>
   </button>
-  <button md-icon-button
-    mdTooltip="Rewind (Left)"
-    mdTooltipPosition="below"
-    mdTooltipShowDelay="500"
+  <button mat-icon-button
+    matTooltip="Rewind (Left)"
+    matTooltipPosition="below"
+    matTooltipShowDelay="500"
     (click)="this.rewindClick($event)">
-    <md-icon>skip_previous</md-icon>
+    <mat-icon>skip_previous</mat-icon>
   </button>
-  <button md-mini-fab
-    mdTooltip="{{ (model.isPlaying) ? 'Pause' : 'Play' }} (Spacebar)"
-    mdTooltipPosition="below"
-    mdTooltipShowDelay="500"
+  <button mat-mini-fab
+    matTooltip="{{ (model.isPlaying) ? 'Pause' : 'Play' }} (Spacebar)"
+    matTooltipPosition="below"
+    matTooltipShowDelay="500"
     (click)="this.playPauseButtonClick($event)">
     <div
       class="play-pause-icon"
@@ -31,20 +31,20 @@
       }">
     </div>
   </button>
-  <button md-icon-button
-    mdTooltip="Fast forward (Right)"
-    mdTooltipPosition="below"
-    mdTooltipShowDelay="500"
+  <button mat-icon-button
+    matTooltip="Fast forward (Right)"
+    matTooltipPosition="below"
+    matTooltipShowDelay="500"
     (click)="this.fastForwardClick($event)">
-    <md-icon>skip_next</md-icon>
+    <mat-icon>skip_next</mat-icon>
   </button>
   <button class="repeating-button"
-    md-icon-button
-    mdTooltip="Repeat (R)"
-    mdTooltipPosition="below"
-    mdTooltipShowDelay="500"
+    mat-icon-button
+    matTooltip="Repeat (R)"
+    matTooltipPosition="below"
+    matTooltipShowDelay="500"
     (click)="this.isRepeatingClick($event)">
-    <md-icon [class.activated]="model.isRepeating">repeat</md-icon>
+    <mat-icon [class.activated]="model.isRepeating">repeat</mat-icon>
   </button>
   <span fxFlex></span>
 </div>

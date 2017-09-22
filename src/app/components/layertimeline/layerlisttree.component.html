@@ -9,78 +9,78 @@
     (click)="this.onLayerClick($event, this.layer)"
     (dblclick)="this.onLayerToggleExpanded($event, this.layer)"
     (mousedown)="this.onLayerMouseDown($event, this.layer)">
-    <button md-icon-button
+    <button mat-icon-button
       *ngIf="model.isExpandable"
       (click)="this.onLayerToggleExpanded($event, this.layer)"
       [disabled]="model.isActionMode"
-      mdTooltip="{{ model.isExpanded ? 'Collapse layer' : 'Expand layer' }}"
-      mdTooltipPosition="right"
-      mdTooltipShowDelay="1000">
-      <md-icon>{{ model.isExpanded ? 'expand_more' : 'chevron_right' }}</md-icon>
+      matTooltip="{{ model.isExpanded ? 'Collapse layer' : 'Expand layer' }}"
+      matTooltipPosition="right"
+      matTooltipShowDelay="1000">
+      <mat-icon>{{ model.isExpanded ? 'expand_more' : 'chevron_right' }}</mat-icon>
     </button>
     <!-- Add extra 20px margin if the expand/collapse icon isn't being displayed -->
-    <md-icon svgIcon="{{ this.layer.type }}"
+    <mat-icon svgIcon="{{ this.layer.type }}"
       [style.margin-left]="model.isExpandable ? '0px' : '20px'">
-    </md-icon>
+    </mat-icon>
     <span class="slt-layer-id-text"
       fxFlex>
       {{ this.layer.name }}
     </span>
     <!-- Show overflow options. -->
-    <md-menu #showOverflowOptionsMenu="mdMenu">
+    <mat-menu #showOverflowOptionsMenu="matMenu">
       <button *ngIf="model.isPathLayer"
         (click)="this.onConvertToClipPathClick($event, layer)"
-        md-menu-item>
+        mat-menu-item>
         Convert to clip path
       </button>
       <button *ngIf="model.isClipPathLayer"
         (click)="this.onConvertToPathClick($event, layer)"
-        md-menu-item>
+        mat-menu-item>
         Convert to path
       </button>
       <button *ngIf="model.isMergeable"
         (click)="this.onFlattenGroupClick($event, layer)"
-        md-menu-item>
+        mat-menu-item>
         Flatten group
       </button>
-    </md-menu>
-    <button md-icon-button
+    </mat-menu>
+    <button mat-icon-button
       *ngIf="model.isMorphableLayer || model.isMergeable"
       class="slt-layer-action-button slt-layer-more-actions"
       (click)="$event.stopPropagation()"
       [disabled]="model.isActionMode"
-      [mdMenuTriggerFor]="showOverflowOptionsMenu">
-      <md-icon>more_vert</md-icon>
+      [matMenuTriggerFor]="showOverflowOptionsMenu">
+      <mat-icon>more_vert</mat-icon>
     </button>
     <!-- Visibility toggle. -->
-    <button md-icon-button
+    <button mat-icon-button
       class="slt-layer-action-button slt-layer-visibility-toggle"
       (click)="this.onLayerToggleVisibility($event, this.layer)"
       [disabled]="model.isActionMode"
-      mdTooltip="{{ model.isVisible ? 'Hide layer' : 'Show layer' }}"
-      mdTooltipPosition="below"
-      mdTooltipShowDelay="1000"
+      matTooltip="{{ model.isVisible ? 'Hide layer' : 'Show layer' }}"
+      matTooltipPosition="below"
+      matTooltipShowDelay="1000"
       [ngClass]="{'is-checked': model.isVisible}">
-      <md-icon>{{ model.isVisible ? 'visibility' : 'visibility_off' }}</md-icon>
+      <mat-icon>{{ model.isVisible ? 'visibility' : 'visibility_off' }}</mat-icon>
     </button>
     <!-- Animate layer. -->
-    <md-menu #addTimelineBlockMenu="mdMenu">
+    <mat-menu #addTimelineBlockMenu="matMenu">
       <button *ngFor="let propertyName of model.availablePropertyNames"
         (click)="this.onAddTimelineBlockClick($event, layer, propertyName)"
-        md-menu-item>
+        mat-menu-item>
         {{ propertyName }}
       </button>
-    </md-menu>
-    <button md-icon-button
+    </mat-menu>
+    <button mat-icon-button
       *ngIf="model.availablePropertyNames.length > 0"
       class="slt-layer-action-button"
       (click)="$event.stopPropagation()"
       [disabled]="model.isActionMode"
-      mdTooltip="Animate this layer"
-      mdTooltipPosition="below"
-      mdTooltipShowDelay="1000"
-      [mdMenuTriggerFor]="addTimelineBlockMenu">
-      <md-icon svgIcon="animationblock"></md-icon>
+      matTooltip="Animate this layer"
+      matTooltipPosition="below"
+      matTooltipShowDelay="1000"
+      [matMenuTriggerFor]="addTimelineBlockMenu">
+      <mat-icon svgIcon="animationblock"></mat-icon>
     </button>
   </div>
 
@@ -92,14 +92,14 @@
       fxLayoutAlign="start center"
       *ngFor="let propertyName of model.existingPropertyNames">
       <span class="slt-property-name">{{ propertyName }}</span>
-      <button md-icon-button
+      <button mat-icon-button
         class="slt-property-add-timeline-block-button"
         (click)="this.onAddTimelineBlockClick($event, layer, propertyName)"
         [disabled]="model.isActionMode"
-        mdTooltip="Add another animation"
-        mdTooltipPosition="below"
-        mdTooltipShowDelay="1000">
-        <md-icon>add</md-icon>
+        matTooltip="Add another animation"
+        matTooltipPosition="below"
+        matTooltipShowDelay="1000">
+        <mat-icon>add</mat-icon>
       </button>
     </div>
   </div>

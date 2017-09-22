@@ -96,13 +96,18 @@ export class RootComponent extends DestroyableMixin() implements OnInit, AfterVi
       this.themeService.asObservable().subscribe(t => {
         const isDark = t.themeType === 'dark';
         this.isDarkThemeHostBinding = isDark;
-        this.overlayContainer.themeClass = isDark ? 'ss-dark-theme' : undefined;
+        this.overlayContainer
+          .getContainerElement()
+          .classList.add(isDark ? 'ss-dark-theme' : undefined);
       }),
     );
 
     $(window).on('beforeunload', event => {
       let isDirty: boolean;
-      this.store.select(isWorkspaceDirty).first().subscribe(dirty => (isDirty = dirty));
+      this.store
+        .select(isWorkspaceDirty)
+        .first()
+        .subscribe(dirty => (isDirty = dirty));
       if (isDirty && !IS_DEV_BUILD) {
         return `You've made changes but haven't saved. Are you sure you want to navigate away?`;
       }

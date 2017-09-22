@@ -2,11 +2,11 @@ import { ComponentFixture, TestBed, async, inject } from '@angular/core/testing'
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { FormsModule } from '@angular/forms';
 import {
-  MdButtonModule,
-  MdIconModule,
-  MdInputModule,
-  MdMenuModule,
-  MdTooltipModule,
+  MatButtonModule,
+  MatIconModule,
+  MatInputModule,
+  MatMenuModule,
+  MatTooltipModule,
 } from '@angular/material';
 import { SplitterComponent } from 'app/components/splitter/splitter.component';
 import {
@@ -32,11 +32,11 @@ describe('PropertyInputComponent', () => {
         imports: [
           FlexLayoutModule,
           FormsModule,
-          MdButtonModule,
-          MdIconModule,
-          MdInputModule,
-          MdMenuModule,
-          MdTooltipModule,
+          MatButtonModule,
+          MatIconModule,
+          MatInputModule,
+          MatMenuModule,
+          MatTooltipModule,
         ],
         providers: [
           { provide: Store, useValue: new MockStore() },

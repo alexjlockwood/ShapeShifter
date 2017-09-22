@@ -32,7 +32,7 @@
         z-index: 3;
         user-select: none;
         flex: 0 0 auto;
-        md-icon {
+        mat-icon {
             width: 16px;
             height: 16px;
             font-size: 16px;
@@ -49,7 +49,7 @@
         .slt-layers-list {
             padding-left: 8px;
         }
-        md-menu {
+        mat-menu {
             display: flex;
         }
         .slt-header {
@@ -72,13 +72,13 @@
                 }
             }
             button {
-                &[md-icon-button] {
-                    md-icon {
+                &[mat-icon-button] {
+                    mat-icon {
                         line-height: 0px;
                     }
                 }
-                &[md-icon-button][disabled] {
-                    md-icon {
+                &[mat-icon-button][disabled] {
+                    mat-icon {
                         line-height: 0px;
                     }
                 }
@@ -185,7 +185,7 @@
                 z-index: 1;
                 cursor: pointer;
             }
-            md-icon {
+            mat-icon {
                 width: 13px;
                 height: 13px;
                 font-size: 13px;
@@ -200,8 +200,8 @@
                 padding-top: 1px;
                 padding-bottom: 1px;
                 margin-left: 4px;
-                &[md-icon-button] {
-                    md-icon {
+                &[mat-icon-button] {
+                    mat-icon {
                         line-height: normal;
                         vertical-align: top;
                     }
@@ -223,7 +223,7 @@
 }
 
 button {
-    &[md-menu-item] {
+    &[mat-menu-item] {
         input[type="file"] {
             position: absolute;
             left: 0;

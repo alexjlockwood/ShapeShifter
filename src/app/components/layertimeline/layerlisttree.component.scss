@@ -35,7 +35,7 @@ li {
         text-overflow: ellipsis;
         margin-left: 4px;
     }
-    md-icon {
+    mat-icon {
         width: 16px;
         height: 16px;
         font-size: 16px;
@@ -45,8 +45,8 @@ li {
         height: 20px;
         width: 20px;
         min-height: 20px;
-        &[md-icon-button] {
-            md-icon {
+        &[mat-icon-button] {
+            mat-icon {
                 line-height: normal;
                 vertical-align: top;
             }
@@ -71,7 +71,7 @@ li {
     width: 20px;
     line-height: 16px;
     min-height: 20px;
-    md-icon {
+    mat-icon {
         vertical-align: top;
     }
 }
@@ -116,7 +116,7 @@ li {
     }
 }
 
-md-menu {
+mat-menu {
     display: flex;
 }
 
@@ -162,8 +162,8 @@ md-menu {
         height: 20px;
         width: 20px;
         min-height: 20px;
-        &[md-icon-button] {
-            md-icon {
+        &[mat-icon-button] {
+            mat-icon {
                 width: 16px;
                 height: 16px;
                 font-size: 16px;
