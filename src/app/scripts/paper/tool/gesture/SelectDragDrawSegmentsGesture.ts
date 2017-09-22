@@ -4,6 +4,7 @@ import { MathUtil } from 'app/scripts/common';
 import { PaperLayer } from 'app/scripts/paper/item';
 import { Cursor, CursorUtil, PaperUtil, SnapUtil } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
+import { Line } from 'app/store/paper/actions';
 import * as _ from 'lodash';
 import * as paper from 'paper';
 
@@ -182,9 +183,15 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
       // TODO: also snap segment handles below
       // TODO: should we compute the snap before or after modifying the segments?
       // TODO: only snap the primary dragged segment (even when there are multiple drag segments)?
-      const snapInfo = SnapUtil.getSnapInfo(dragSnapPoints, siblingSnapPointsTable);
       this.ps.setSnapGuideInfo({
-        guides: SnapUtil.buildSnapGuides(snapInfo),
+        guides: SnapUtil.buildSnapGuides(
+          SnapUtil.getSnapInfo(dragSnapPoints, siblingSnapPointsTable),
+        ).map(({ from, to }: Line) => {
+          return {
+            from: this.paperLayer.globalToLocal(new paper.Point(from)),
+            to: this.paperLayer.globalToLocal(new paper.Point(to)),
+          };
+        }),
         rulers: [],
       });
     } else {

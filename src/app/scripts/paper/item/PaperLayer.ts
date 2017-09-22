@@ -429,6 +429,7 @@ function newPathOverlayItem(info: PathOverlayInfo) {
 }
 
 function newSnapGuideItem(info: SnapGuideInfo, paperLayerMatrix: paper.Matrix) {
+  console.log(info);
   const group = new paper.Group();
 
   const newLineFn = (from: paper.Point, to: paper.Point) => {
