@@ -111,7 +111,7 @@ export class PaperLayer extends paper.Layer {
     if (selectedItems.length > 0) {
       this.selectionBoundsItem = newSelectionBoundsItem(
         PaperUtil.transformRectangle(
-          PaperUtil.computeBounds(...selectedItems),
+          PaperUtil.computeGlobalBounds(...selectedItems),
           this.matrix.inverted(),
         ),
       );

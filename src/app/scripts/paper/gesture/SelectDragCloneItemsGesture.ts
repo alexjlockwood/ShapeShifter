@@ -13,8 +13,9 @@ import { Line, Ruler, SnapGuideInfo } from 'app/store/paper/actions';
 import * as paper from 'paper';
 
 import { Gesture } from './Gesture';
-import { MouseSnapper } from './MouseSnapper';
+import { SnapHelper } from './SnapHelper';
 
+// TODO: move this into snap helper instead?
 const SNAP_TOLERANCE = 10;
 
 /**
@@ -29,7 +30,7 @@ const SNAP_TOLERANCE = 10;
  */
 export class SelectDragCloneItemsGesture extends Gesture {
   private readonly paperLayer = paper.project.activeLayer as PaperLayer;
-  private mouseSnapper: MouseSnapper;
+  private snapHelper: SnapHelper;
   private selectedItems: ReadonlyArray<paper.Item>;
   private initialItemPositions: ReadonlyArray<paper.Point>;
   private initialMatrices: ReadonlyArray<paper.Matrix>;
@@ -59,12 +60,12 @@ export class SelectDragCloneItemsGesture extends Gesture {
     // to it as we drag.
     this.initialVectorLayer = this.ps.getVectorLayer();
 
-    this.mouseSnapper = new MouseSnapper(this.ps);
+    this.snapHelper = SnapHelper.forSelectedItems(this.ps.getSelectedLayers());
   }
 
   // @Override
   onMouseDrag(event: paper.ToolEvent) {
-    const snapInfo = this.mouseSnapper.getSnapInfo(event);
+    const snapInfo = this.snapHelper.getSnapInfo(event);
     if (snapInfo) {
       const guides: Line[] = [];
       const rulers: Ruler[] = [];
@@ -74,37 +75,41 @@ export class SelectDragCloneItemsGesture extends Gesture {
       };
       if (snapInfo.horizontal.delta <= SNAP_TOLERANCE) {
         snapInfo.horizontal.values.forEach(value => {
-          const { dragSnapBounds, siblingSnapBounds, values } = value;
-          values.forEach(({ drag, sibling }) => {
-            const guideTop = Math.min(dragSnapBounds.top, siblingSnapBounds.top);
-            const guideBottom = Math.max(dragSnapBounds.bottom, siblingSnapBounds.bottom);
-            const guideX = siblingSnapBounds[sibling];
+          const { dragSnapBounds: dsb, siblingSnapBounds: ssb, values } = value;
+          if (values.length) {
+            const { siblingIndex } = values[0];
+            const guideTop = Math.min(dsb.top, ssb.top);
+            const guideBottom = Math.max(dsb.bottom, ssb.bottom);
+            const guideX = ssb.snapPoints[siblingIndex].x;
             guides.push({
               from: newPointFn(guideX, guideTop),
               to: newPointFn(guideX, guideBottom),
             });
-          });
+          }
         });
       }
       if (snapInfo.vertical.delta <= SNAP_TOLERANCE) {
         snapInfo.vertical.values.forEach(value => {
           const { dragSnapBounds: dsb, siblingSnapBounds: ssb, values } = value;
-          values.forEach(({ drag, sibling }) => {
-            const leftMostBounds = dsb.left < ssb.left ? dsb : ssb;
-            const rightMostBounds = dsb.right < ssb.right ? ssb : dsb;
-            const topMostBounds = dsb.top < ssb.top ? dsb : ssb;
-            const nonTopMostBounds = dsb.top < ssb.top ? ssb : dsb;
-            const bottomMostBounds = dsb.bottom < ssb.bottom ? ssb : dsb;
-            const nonBottomMostBounds = dsb.bottom < ssb.bottom ? dsb : ssb;
-            const shortestBounds = dsb.height < ssb.height ? dsb : ssb;
-            const tallestBounds = dsb.height < ssb.height ? ssb : dsb;
+          const leftMostBounds = dsb.left < ssb.left ? dsb : ssb;
+          const rightMostBounds = dsb.right < ssb.right ? ssb : dsb;
+          const topMostBounds = dsb.top < ssb.top ? dsb : ssb;
+          const nonTopMostBounds = dsb.top < ssb.top ? ssb : dsb;
+          const bottomMostBounds = dsb.bottom < ssb.bottom ? ssb : dsb;
+          const nonBottomMostBounds = dsb.bottom < ssb.bottom ? dsb : ssb;
+          const shortestBounds = dsb.height < ssb.height ? dsb : ssb;
+          const tallestBounds = dsb.height < ssb.height ? ssb : dsb;
+          if (values.length) {
+            const { siblingIndex } = values[0];
             const guideLeft = leftMostBounds.left;
             const guideRight = rightMostBounds.right;
-            const guideY = ssb[sibling];
+            const guideY = ssb.snapPoints[siblingIndex].y;
             guides.push({
               from: newPointFn(guideLeft, guideY),
               to: newPointFn(guideRight, guideY),
             });
+          }
+          values.forEach(() => {
             const rulerLeft = leftMostBounds.right;
             const rulerRight = rightMostBounds.left;
             const rulerTop = nonTopMostBounds.top;
