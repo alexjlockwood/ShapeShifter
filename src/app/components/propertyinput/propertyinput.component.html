@@ -24,40 +24,40 @@
         [class.light-to-dark-base]="theme.prevThemeType === 'light' && theme.currThemeType === 'dark'"
         fxLayoutAlign="center center"
         fxFlex="none">
-        <md-icon class="spi-selection-icon"
+        <mat-icon class="spi-selection-icon"
           svgIcon="{{model.icon}}">
-        </md-icon>
+        </mat-icon>
         <div class="spi-selection-description-container"
           fxLayout="column"
           fxFlex>
           <span class="spi-selection-description">{{ model.description }}</span>
           <span class="spi-selection-sub-description">{{ model.subDescription }}</span>
         </div>
-        <md-menu #addTimelineBlockMenu="mdMenu">
-          <button md-menu-item
+        <mat-menu #addTimelineBlockMenu="matMenu">
+          <button mat-menu-item
             *ngFor="let propertyName of model.availablePropertyNames"
             (click)="this.onAnimateLayerClick(model.model, propertyName)">
             {{ propertyName }}
           </button>
-        </md-menu>
-        <button md-icon-button
+        </mat-menu>
+        <button mat-icon-button
           class="spi-secondary-icon"
           *ngIf="this.shouldShowAnimateLayerButton(model)"
-          mdTooltip="Animate this layer"
-          mdTooltipPosition="left"
-          mdTooltipShowDelay="500"
-          [mdMenuTriggerFor]="addTimelineBlockMenu">
-          <md-icon svgIcon="animationblock"></md-icon>
+          matTooltip="Animate this layer"
+          matTooltipPosition="left"
+          matTooltipShowDelay="500"
+          [matMenuTriggerFor]="addTimelineBlockMenu">
+          <mat-icon svgIcon="animationblock"></mat-icon>
         </button>
-        <button md-icon-button
+        <button mat-icon-button
           class="spi-secondary-icon"
           [disabled]="this.shouldDisableStartActionModeButton(model)"
           *ngIf="this.shouldShowStartActionModeButton(model)"
           (click)="this.onStartActionModeClick()"
-          mdTooltip="Edit path morphing animation"
-          mdTooltipPosition="left"
-          mdTooltipShowDelay="500">
-          <md-icon>edit</md-icon>
+          matTooltip="Edit path morphing animation"
+          matTooltipPosition="left"
+          matTooltipShowDelay="500">
+          <mat-icon>edit</mat-icon>
         </button>
       </div>
       <div class="spi-body"
@@ -100,15 +100,15 @@
                 || ip.typeName === 'NumberProperty'
                 || ip.typeName === 'FractionProperty'">
               <ng-container *ngIf="ip.typeName === 'EnumProperty'">
-                <md-menu #enumMenu="mdMenu">
-                  <button md-menu-item
+                <mat-menu #enumMenu="matMenu">
+                  <button mat-menu-item
                     *ngFor="let option of ip.property.options; trackBy: trackEnumOptionFn"
                     (click)="ip.value = option.value;">
                   {{ option.label }}
                 </button>
-                </md-menu>
+                </mat-menu>
                 <button class="spi-property-value-menu-target"
-                  [mdMenuTriggerFor]="enumMenu">
+                  [matMenuTriggerFor]="enumMenu">
                   <span class="spi-property-value-menu-current-value">
                     {{ ip.getDisplayValue() }}
                   </span>
@@ -130,14 +130,14 @@
                   ? '<i>fromValue</i> and <i>toValue</i> must not be empty'
                   : 'Paths are incompatible. <i>Auto fix</i> or click the <i>edit path morphing animation</i> button above.'">
           </span>
-          <button md-icon-button
+          <button mat-icon-button
             class="auto-fix-button"
             *ngIf="!this.isPathBlockFromValueEmpty(model.model) && !this.isPathBlockToValueEmpty(model.model)"
             (click)="this.onAutoFixPathsClick(model)"
-            mdTooltip="Auto fix"
-            mdTooltipPosition="below"
-            mdTooltipShowDelay="500">
-            <md-icon svgIcon="autofix"></md-icon>
+            matTooltip="Auto fix"
+            matTooltipPosition="below"
+            matTooltipShowDelay="500">
+            <mat-icon svgIcon="autofix"></mat-icon>
           </button>
         </div>
       </div>

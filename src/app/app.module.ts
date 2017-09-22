@@ -5,19 +5,20 @@ import { FlexLayoutModule } from '@angular/flex-layout';
 import { FormsModule } from '@angular/forms';
 import { HttpModule } from '@angular/http';
 import {
-  MdButtonModule,
-  MdDialogModule,
-  MdIconModule,
-  MdIconRegistry,
-  MdInputModule,
-  MdMenuModule,
-  MdOptionModule,
-  MdRadioModule,
-  MdSlideToggleModule,
-  MdSnackBarModule,
-  MdToolbarModule,
-  MdTooltipModule,
+  MatButtonModule,
+  MatDialogModule,
+  MatIconModule,
+  MatIconRegistry,
+  MatInputModule,
+  MatMenuModule,
+  MatOptionModule,
+  MatRadioModule,
+  MatSlideToggleModule,
+  MatSnackBarModule,
+  MatToolbarModule,
+  MatTooltipModule,
 } from '@angular/material';
+import { MATERIAL_COMPATIBILITY_MODE } from '@angular/material/core';
 import { BrowserModule, DomSanitizer } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { StoreModule } from '@ngrx/store';
@@ -93,17 +94,17 @@ import { reducer } from './store';
     HttpModule,
     StoreModule.provideStore(reducer),
     // Angular material components.
-    MdButtonModule,
-    MdDialogModule,
-    MdIconModule,
-    MdInputModule,
-    MdMenuModule,
-    MdOptionModule,
-    MdRadioModule,
-    MdSlideToggleModule,
-    MdSnackBarModule,
-    MdToolbarModule,
-    MdTooltipModule,
+    MatButtonModule,
+    MatDialogModule,
+    MatIconModule,
+    MatInputModule,
+    MatMenuModule,
+    MatOptionModule,
+    MatRadioModule,
+    MatSlideToggleModule,
+    MatSnackBarModule,
+    MatToolbarModule,
+    MatTooltipModule,
   ],
   providers: [
     ActionModeService,
@@ -118,12 +119,13 @@ import { reducer } from './store';
     ShortcutService,
     SnackBarService,
     ThemeService,
+    { provide: MATERIAL_COMPATIBILITY_MODE, useValue: true },
   ],
   entryComponents: [ConfirmDialogComponent, DemoDialogComponent, DropFilesDialogComponent],
   bootstrap: [RootComponent],
 })
 export class AppModule {
-  constructor(mdIconRegistry: MdIconRegistry, private readonly sanitizer: DomSanitizer) {
+  constructor(mdIconRegistry: MatIconRegistry, private readonly sanitizer: DomSanitizer) {
     mdIconRegistry
       // Logo.
       .addSvgIcon('shapeshifter', this.trustUrl('assets/shapeshifter.svg'))

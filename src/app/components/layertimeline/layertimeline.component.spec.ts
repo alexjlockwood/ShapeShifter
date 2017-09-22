@@ -2,13 +2,13 @@ import { ComponentFixture, TestBed, async, inject } from '@angular/core/testing'
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { HttpModule } from '@angular/http';
 import {
-  MdButtonModule,
-  MdDialogModule,
-  MdIconModule,
-  MdIconRegistry,
-  MdMenuModule,
-  MdSnackBarModule,
-  MdTooltipModule,
+  MatButtonModule,
+  MatDialogModule,
+  MatIconModule,
+  MatIconRegistry,
+  MatMenuModule,
+  MatSnackBarModule,
+  MatTooltipModule,
 } from '@angular/material';
 import { DomSanitizer } from '@angular/platform-browser';
 import { ScrollGroupDirective } from 'app/components/scrollgroup/scrollgroup.directive';
@@ -52,12 +52,12 @@ describe('LayerTimelineComponent', () => {
         imports: [
           HttpModule,
           FlexLayoutModule,
-          MdButtonModule,
-          MdIconModule,
-          MdMenuModule,
-          MdTooltipModule,
-          MdSnackBarModule,
-          MdDialogModule,
+          MatButtonModule,
+          MatIconModule,
+          MatMenuModule,
+          MatTooltipModule,
+          MatSnackBarModule,
+          MatDialogModule,
         ],
         providers: [
           { provide: Store, useValue: new MockStore() },
@@ -97,7 +97,7 @@ describe('LayerTimelineComponent', () => {
 });
 
 function loadSvgIcons(svgIcons: Array<{ name: string; path: string }>) {
-  const mdIconRegistry = TestBed.get(MdIconRegistry);
+  const mdIconRegistry = TestBed.get(MatIconRegistry);
   const sanitizer = TestBed.get(DomSanitizer);
   for (const { name, path } of svgIcons) {
     mdIconRegistry.addSvgIcon(name, sanitizer.bypassSecurityTrustResourceUrl(path));

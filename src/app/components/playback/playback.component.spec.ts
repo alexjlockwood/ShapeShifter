@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed, async, fakeAsync, inject } from '@angular/core/testing';
 import { FlexLayoutModule } from '@angular/flex-layout';
-import { MdButtonModule, MdIconModule, MdTooltipModule } from '@angular/material';
+import { MatButtonModule, MatIconModule, MatTooltipModule } from '@angular/material';
 import { By } from '@angular/platform-browser';
 import { AnimatorService } from 'app/services/animator.service';
 import { PlaybackService } from 'app/services/playback.service';
@@ -19,7 +19,7 @@ describe('PlaybackComponent', () => {
     async(() => {
       TestBed.configureTestingModule({
         declarations: [PlaybackComponent],
-        imports: [FlexLayoutModule, MdButtonModule, MdIconModule, MdTooltipModule],
+        imports: [FlexLayoutModule, MatButtonModule, MatIconModule, MatTooltipModule],
         providers: [
           { provide: Store, useValue: new MockStore() },
           AnimatorService,
@@ -48,7 +48,7 @@ describe('PlaybackComponent', () => {
   it('No buttons activated', () => {
     callNgOnInit();
     const buttons = fixture.debugElement
-      .queryAll(By.css('md-icon.activated'))
+      .queryAll(By.css('mat-icon.activated'))
       .map(d => d.nativeElement);
     expect(buttons.length).toBe(0);
   });
@@ -56,7 +56,7 @@ describe('PlaybackComponent', () => {
   it('All buttons activated', () => {
     callNgOnInit({ isSlowMotion: true, isPlaying: false, isRepeating: true });
     const buttons = fixture.debugElement
-      .queryAll(By.css('md-icon.activated'))
+      .queryAll(By.css('mat-icon.activated'))
       .map(d => d.nativeElement);
     expect(buttons.length).toBe(2);
   });
