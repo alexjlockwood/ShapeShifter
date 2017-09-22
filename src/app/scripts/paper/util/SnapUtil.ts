@@ -168,11 +168,6 @@ class SnapBounds {
   }
 }
 
-// export interface SnapInfo {
-//   readonly horizontal: SnapInfoInternal;
-//   readonly vertical: SnapInfoInternal;
-// }
-
 function runSnapTest(
   dsb: SnapBounds,
   ssb: SnapBounds,

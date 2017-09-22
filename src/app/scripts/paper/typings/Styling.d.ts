@@ -10,7 +10,6 @@ declare module 'paper' {
   export class Style {
     /**
      * The view that this style belongs to.
-     * Read only.
      */
     readonly view: View;
 

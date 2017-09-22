@@ -120,7 +120,6 @@ export function updateDimensions(
 
   // The viewport size represents the user-visible dimensions (i.e. the default 24x24).
   // Note that sx will always be equal to sy.
-  const sx = viewWidth / viewportWidth;
-  const sy = viewHeight / viewportHeight;
-  paperLayer.matrix = new paper.Matrix(sx, 0, 0, sy, 0, 0);
+  const cssScaling = viewWidth / viewportWidth;
+  paperLayer.setCssScaling(cssScaling);
 }

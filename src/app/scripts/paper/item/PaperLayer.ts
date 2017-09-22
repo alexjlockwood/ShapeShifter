@@ -24,6 +24,7 @@ import {
  * local viewport coordinates.
  */
 export class PaperLayer extends paper.Layer {
+  private readonly canvasColorShape: paper.Shape;
   private vectorLayerItem: paper.Item;
   private selectionBoundsItem: paper.Item;
   private hoverPathItem: paper.Path;
@@ -38,8 +39,23 @@ export class PaperLayer extends paper.Layer {
   private hoveredLayerId: string;
   private focusedPathInfo: FocusedPathInfo;
 
+  private cssScaling = 1;
+
+  constructor() {
+    super();
+    this.canvasColorShape = paper.Shape.Rectangle(new paper.Point(0, 0));
+    this.canvasColorShape.guide = true;
+    this.updateChildren();
+  }
+
+  setCssScaling(scaling: number) {
+    this.cssScaling = scaling;
+    this.matrix = new paper.Matrix(scaling, 0, 0, scaling, 0, 0);
+  }
+
   setVectorLayer(vl: VectorLayer) {
     this.vectorLayer = vl;
+    this.updateCanvasColorShape();
     this.updateVectorLayerItem();
     this.updateFocusedPathItem();
     this.updateSelectionBoundsItem();
@@ -78,7 +94,7 @@ export class PaperLayer extends paper.Layer {
       this.snapGuideItem = undefined;
     }
     if (info) {
-      this.snapGuideItem = newSnapGuideItem(info, this.matrix);
+      this.snapGuideItem = newSnapGuideItem(info, this.cssScaling);
       this.updateChildren();
     }
   }
@@ -92,6 +108,15 @@ export class PaperLayer extends paper.Layer {
       this.selectionBoxItem = newSelectionBoxItem(box.from, box.to);
       this.updateChildren();
     }
+  }
+
+  private updateCanvasColorShape() {
+    this.canvasColorShape.size = new paper.Size(
+      this.vectorLayer.width,
+      this.vectorLayer.height,
+    ).multiply(devicePixelRatio);
+    this.canvasColorShape.fillColor = parseAndroidColor(this.vectorLayer.canvasColor) || 'white';
+    this.updateChildren();
   }
 
   private updateVectorLayerItem() {
@@ -114,6 +139,7 @@ export class PaperLayer extends paper.Layer {
           PaperUtil.computeGlobalBounds(selectedItems),
           this.matrix.inverted(),
         ),
+        this.cssScaling,
       );
     }
     this.updateChildren();
@@ -139,13 +165,14 @@ export class PaperLayer extends paper.Layer {
     if (this.focusedPathInfo) {
       // TODO: is it possible for pathData to be undefined?
       const path = this.findItemByLayerId(this.focusedPathInfo.layerId) as paper.Path;
-      this.focusedPathItem = newFocusedPathItem(path, this.focusedPathInfo, this.matrix);
+      this.focusedPathItem = newFocusedPathItem(path, this.focusedPathInfo, this.cssScaling);
       this.updateChildren();
     }
   }
 
   private updateChildren() {
     this.children = _.compact([
+      this.canvasColorShape,
       this.vectorLayerItem,
       this.selectionBoundsItem,
       this.hoverPathItem,
@@ -197,34 +224,20 @@ export class PaperLayer extends paper.Layer {
   }
 }
 
+function parseAndroidColor(androidColor: string, alpha = 1) {
+  const color = ColorUtil.parseAndroidColor(androidColor);
+  return color
+    ? new paper.Color(color.r / 255, color.g / 255, color.b / 255, color.a / 255 * alpha)
+    : undefined;
+}
+
 function newVectorLayerItem(vl: VectorLayer): paper.Item {
   const item = new paper.Group();
   if (!vl) {
     return item;
   }
-  item.data.id = vl.id;
-  item.opacity = vl.alpha;
-  item.addChildren(
-    vl.children.map(function recurseFn(layer: Layer) {
-      if (layer instanceof PathLayer) {
-        // TODO: return a compound path instead
-        return fromPathLayer(layer);
-      }
-      if (layer instanceof ClipPathLayer) {
-        // TODO: return a compound path instead
-        return fromClipPathLayer(layer);
-      }
-      if (layer instanceof GroupLayer) {
-        const groupItem = fromGroupLayer(layer);
-        groupItem.addChildren(layer.children.map(l => recurseFn(l)));
-        return groupItem;
-      }
-      throw new TypeError('Unknown layer type: ' + layer);
-    }),
-  );
-  return item;
 
-  function fromPathLayer(layer: PathLayer) {
+  const fromPathLayerFn = (layer: PathLayer) => {
     const { fillColor, fillAlpha, strokeColor, strokeAlpha } = layer;
     const { trimPathStart, trimPathEnd, trimPathOffset } = layer;
     // TODO: make sure this works with compound paths as well (Android behavior is different)
@@ -241,12 +254,8 @@ function newVectorLayerItem(vl: VectorLayer): paper.Item {
     return new paper.Path({
       data: { id: layer.id },
       pathData: layer.pathData ? layer.pathData.getPathString() : '',
-      fillColor: f
-        ? new paper.Color(f.r / 255, f.g / 255, f.b / 255, f.a / 255 * fillAlpha)
-        : undefined,
-      strokeColor: s
-        ? new paper.Color(s.r / 255, s.g / 255, s.b / 255, s.a / 255 * strokeAlpha)
-        : undefined,
+      fillColor: parseAndroidColor(fillColor, fillAlpha),
+      strokeColor: parseAndroidColor(strokeColor, strokeAlpha),
       strokeWidth: layer.strokeWidth,
       miterLimit: layer.strokeMiterLimit,
       strokeJoin: layer.strokeLinejoin,
@@ -255,17 +264,17 @@ function newVectorLayerItem(vl: VectorLayer): paper.Item {
       dashArray,
       dashOffset,
     });
-  }
+  };
 
-  function fromClipPathLayer(layer: ClipPathLayer) {
+  const fromClipPathLayerFn = (layer: ClipPathLayer) => {
     return new paper.Path({
       data: { id: layer.id },
       pathData: layer.pathData ? layer.pathData.getPathString() : '',
       clipMask: true,
     });
-  }
+  };
 
-  function fromGroupLayer(layer: GroupLayer) {
+  const fromGroupLayerFn = (layer: GroupLayer) => {
     const { pivotX, pivotY, scaleX, scaleY, rotation, translateX, translateY } = layer;
     const pivot = new paper.Matrix(1, 0, 0, 1, pivotX, pivotY);
     const scale = new paper.Matrix(scaleX, 0, 0, scaleY, 0, 0);
@@ -280,7 +289,29 @@ function newVectorLayerItem(vl: VectorLayer): paper.Item {
       .prepend(translate)
       .prepend(pivot);
     return new paper.Group({ data: { id: layer.id }, matrix });
-  }
+  };
+
+  item.data.id = vl.id;
+  item.opacity = vl.alpha;
+  item.addChildren(
+    vl.children.map(function recurseFn(layer: Layer) {
+      if (layer instanceof PathLayer) {
+        // TODO: return a compound path instead
+        return fromPathLayerFn(layer);
+      }
+      if (layer instanceof ClipPathLayer) {
+        // TODO: return a compound path instead
+        return fromClipPathLayerFn(layer);
+      }
+      if (layer instanceof GroupLayer) {
+        const groupItem = fromGroupLayerFn(layer);
+        groupItem.addChildren(layer.children.map(l => recurseFn(l)));
+        return groupItem;
+      }
+      throw new TypeError('Unknown layer type: ' + layer);
+    }),
+  );
+  return item;
 }
 
 /** Creates a new hover path for the specified item. */
@@ -326,7 +357,7 @@ const PIVOT_TYPES: [
 /**
  * Creates a new selection bounds item for the specified selected items.
  */
-function newSelectionBoundsItem(bounds: paper.Rectangle) {
+function newSelectionBoundsItem(bounds: paper.Rectangle, cssScaling: number) {
   const group = new paper.Group();
 
   // Draw an outline for the bounded box.
@@ -338,12 +369,12 @@ function newSelectionBoundsItem(bounds: paper.Rectangle) {
   group.addChild(outlinePath);
 
   // Create segments for the bounded box.
-  const segmentSize = 6 / paper.view.zoom / getCssScaling();
+  const segmentSize = 6 / paper.view.zoom / cssScaling;
   PIVOT_TYPES.forEach(pivotType => {
     // TODO: avoid creating rasters in a loop like this
     const center = bounds[pivotType];
     const handle = new SelectionBoundsRaster(pivotType, center);
-    const scaleFactor = 1 / getAttrScaling();
+    const scaleFactor = 1 / (cssScaling * devicePixelRatio);
     handle.scale(scaleFactor, scaleFactor);
     group.addChild(handle);
   });
@@ -354,15 +385,13 @@ function newSelectionBoundsItem(bounds: paper.Rectangle) {
 /**
  * Creates the overlay decorations for the given focused path.
  */
-function newFocusedPathItem(
-  path: paper.Path,
-  info: FocusedPathInfo,
-  paperLayerMatrix: paper.Matrix,
-) {
+function newFocusedPathItem(path: paper.Path, info: FocusedPathInfo, cssScaling: number) {
   const group = new paper.Group();
-  const scaleFactor = 1 / getAttrScaling();
+  const scaleFactor = 1 / (cssScaling * devicePixelRatio);
 
-  const matrix = path.globalMatrix.prepended(paperLayerMatrix.inverted());
+  const matrix = path.globalMatrix.prepended(
+    new paper.Matrix(1 / cssScaling, 0, 0, 1 / cssScaling, 0, 0),
+  );
   const addRasterFn = (raster: paper.Raster) => {
     raster.scale(scaleFactor, scaleFactor);
     raster.transform(matrix);
@@ -428,8 +457,7 @@ function newPathOverlayItem(info: PathOverlayInfo) {
   return path;
 }
 
-function newSnapGuideItem(info: SnapGuideInfo, paperLayerMatrix: paper.Matrix) {
-  console.log(info);
+function newSnapGuideItem(info: SnapGuideInfo, cssScaling: number) {
   const group = new paper.Group();
 
   const newLineFn = (from: paper.Point, to: paper.Point) => {
@@ -464,23 +492,24 @@ function newSnapGuideItem(info: SnapGuideInfo, paperLayerMatrix: paper.Matrix) {
       content,
       fillColor: 'red',
       justification: 'center',
-      fontSize: 12 / paper.view.zoom / getCssScaling(),
+      fontSize: 12 / paper.view.zoom / cssScaling,
     });
   };
 
   const handleLengthPixels = 8;
+  const matrix = new paper.Matrix(cssScaling, 0, 0, cssScaling, 0, 0);
   info.rulers.forEach(({ line, delta }) => {
     const from = new paper.Point(line.from);
     const to = new paper.Point(line.to);
     const mid = from.add(to.subtract(from).multiply(0.5));
-    const globalFrom = from.transform(paperLayerMatrix);
-    const globalTo = to.transform(paperLayerMatrix);
+    const globalFrom = from.transform(matrix);
+    const globalTo = to.transform(matrix);
     const rulerHandle = to
-      .transform(paperLayerMatrix)
-      .subtract(from.transform(paperLayerMatrix))
+      .transform(matrix)
+      .subtract(from.transform(matrix))
       .normalize()
       .multiply(handleLengthPixels)
-      .transform(paperLayerMatrix.inverted());
+      .transform(matrix.inverted());
     // TODO: make sure the rounded vs. actual values are equal!
     // TODO: only display decimals for small viewports
     const pointTextLabel = _.round(from.getDistance(to), 1).toString();
@@ -545,43 +574,3 @@ function newSelectionBoxItem(from: paper.Point, to: paper.Point) {
 //   path.add(to.clone());
 //   return path;
 // }
-
-/**
- * Returns the project's CSS scale factor, representing the number of CSS pixels
- * per viewport pixel.
- */
-function getCssScaling() {
-  // Given unit vectors u0 = (0, 1) and v0 = (1, 0).
-  //
-  // After matrix mapping, we get u1 and v1. Let Θ be the angle between u1 and v1.
-  // Then the final scale we want is:
-  //
-  // Math.min(|u1|sin(Θ),|v1|sin(Θ)) = |u1||v1|sin(Θ) / Math.max(|u1|,|v1|)
-  //
-  // If Math.max(|u1|,|v1|) = 0, that means either x or y has a scale of 0.
-  //
-  // For the non-skew case, which is most of the cases, matrix scale is
-  // computing exactly the scale on x and y axis, and take the minimal of these two.
-  //
-  // For the skew case, an unit square will mapped to a parallelogram,
-  // and this function will return the minimal height of the 2 bases.
-  const { matrix } = paper.project.activeLayer;
-  const m = new paper.Matrix(matrix.a, matrix.b, matrix.c, matrix.d, 0, 0);
-  const u0 = new paper.Point(0, 1);
-  const v0 = new paper.Point(1, 0);
-  const u1 = u0.transform(m);
-  const v1 = v0.transform(m);
-  const sx = Math.hypot(u1.x, u1.y);
-  const sy = Math.hypot(v1.x, v1.y);
-  const dotProduct = u1.y * v1.x - u1.x * v1.y;
-  const maxScale = Math.max(sx, sy);
-  return maxScale > 0 ? Math.abs(dotProduct) / maxScale : 0;
-}
-
-/**
- * Returns the project's physical scale factor, representing the number of physical
- * pixels per viewport pixel.
- */
-function getAttrScaling() {
-  return getCssScaling() * devicePixelRatio;
-}
