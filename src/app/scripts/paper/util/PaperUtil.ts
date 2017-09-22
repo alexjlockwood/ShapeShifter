@@ -68,9 +68,9 @@ export function transformRectangle(rect: paper.Rectangle, m: paper.Matrix) {
 }
 
 /** Computes the bounds for the specified items in global project coordinates. */
-export function computeGlobalBounds(...items: paper.Item[]): paper.Rectangle {
+export function computeGlobalBounds(arg: paper.Item | ReadonlyArray<paper.Item>) {
   const flattenedItems: paper.Item[] = [];
-  items.forEach(function recurseFn(i: paper.Item) {
+  (Array.isArray(arg) ? arg : [arg]).forEach(function recurseFn(i: paper.Item) {
     if (i.hasChildren()) {
       i.children.forEach(c => recurseFn(c));
     } else {

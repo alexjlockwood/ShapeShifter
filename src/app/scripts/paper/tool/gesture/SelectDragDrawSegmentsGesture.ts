@@ -2,12 +2,14 @@ import { LayerUtil, PathLayer, VectorLayer } from 'app/model/layers';
 import { Path } from 'app/model/paths';
 import { MathUtil } from 'app/scripts/common';
 import { PaperLayer } from 'app/scripts/paper/item';
-import { Cursor, CursorUtil, PaperUtil } from 'app/scripts/paper/util';
+import { Cursor, CursorUtil, PaperUtil, SnapUtil } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
 import * as _ from 'lodash';
 import * as paper from 'paper';
 
 import { Gesture } from './Gesture';
+
+// import { Snapper } from './snap';
 
 /**
  * A gesture that performs selection and drag operations
@@ -68,7 +70,8 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
       .clone() as paper.Path;
 
     if (this.segmentInfo) {
-      const isEndPointFn = (i: number) => i === 0 || i === focusedPath.segments.length - 1;
+      const isEndPointFn = (index: number) =>
+        index === 0 || index === focusedPath.segments.length - 1;
       const { segmentIndex } = this.segmentInfo;
       if (
         !focusedPath.closed &&
@@ -124,10 +127,8 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
 
     this.selectedSegmentMap = new Map(
       Array.from(updatedSelected).map(segmentIndex => {
-        return [segmentIndex, focusedPath.segments[segmentIndex].point.clone()] as [
-          number,
-          paper.Point
-        ];
+        const point = focusedPath.segments[segmentIndex].point.clone();
+        return [segmentIndex, point] as [number, paper.Point];
       }),
     );
 
@@ -152,11 +153,39 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
       : undefined;
     if (this.segmentInfo || this.curveInfo) {
       // Then drag the one or more currently selected segments.
+      const selectedSegmentIndices = new Set(this.selectedSegmentMap.keys());
+      const nonSelectedSegmentIndices = Array.from(
+        focusedPath.segments.map((s, i) => i).filter(i => !selectedSegmentIndices.has(i)),
+      );
       this.selectedSegmentMap.forEach((initialSegmentPoint, segmentIndex) => {
         const segment = focusedPath.segments[segmentIndex];
         segment.point = event.modifiers.shift
           ? initialSegmentPoint.add(snapPoint)
           : segment.point.add(delta);
+      });
+      const dragSnapPoints = Array.from(selectedSegmentIndices).map(i =>
+        focusedPath.localToGlobal(focusedPath.segments[i].point),
+      );
+      const { topLeft, center, bottomRight } = Array.from(this.selectedSegmentMap.values())
+        .map(p => focusedPath.localToGlobal(p))
+        .reduce(
+          (rect: paper.Rectangle, p: paper.Point) =>
+            rect ? rect.include(p) : new paper.Rectangle(p, new paper.Size(0, 0)),
+          undefined,
+        );
+      const siblingSnapPointsTable = [
+        [topLeft, center, bottomRight],
+        ...nonSelectedSegmentIndices.map(i => {
+          return [focusedPath.localToGlobal(focusedPath.segments[i].point)];
+        }),
+      ];
+      // TODO: also snap segment handles below
+      // TODO: should we compute the snap before or after modifying the segments?
+      // TODO: only snap the primary dragged segment (even when there are multiple drag segments)?
+      const snapInfo = SnapUtil.getSnapInfo(dragSnapPoints, siblingSnapPointsTable);
+      this.ps.setSnapGuideInfo({
+        guides: SnapUtil.buildSnapGuides(snapInfo),
+        rulers: [],
       });
     } else {
       // Then we have just added a segment to the path in onMouseDown()
@@ -186,5 +215,6 @@ export class SelectDragDrawSegmentsGesture extends Gesture {
   // @Override
   onMouseUp(event: paper.ToolEvent) {
     CursorUtil.clear();
+    this.ps.setSnapGuideInfo(undefined);
   }
 }

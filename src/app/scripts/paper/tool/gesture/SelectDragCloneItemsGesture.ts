@@ -8,15 +8,12 @@ import {
 } from 'app/model/layers';
 import { MathUtil, Matrix } from 'app/scripts/common';
 import { PaperLayer } from 'app/scripts/paper/item';
+import { PaperUtil, SnapUtil } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
 import { Line, Ruler, SnapGuideInfo } from 'app/store/paper/actions';
 import * as paper from 'paper';
 
 import { Gesture } from './Gesture';
-import { SnapHelper } from './SnapHelper';
-
-// TODO: move this into snap helper instead?
-const SNAP_TOLERANCE = 10;
 
 /**
  * A gesture that performs selection, move, and clone operations
@@ -30,7 +27,6 @@ const SNAP_TOLERANCE = 10;
  */
 export class SelectDragCloneItemsGesture extends Gesture {
   private readonly paperLayer = paper.project.activeLayer as PaperLayer;
-  private snapHelper: SnapHelper;
   private selectedItems: ReadonlyArray<paper.Item>;
   private initialItemPositions: ReadonlyArray<paper.Point>;
   private initialMatrices: ReadonlyArray<paper.Matrix>;
@@ -59,77 +55,10 @@ export class SelectDragCloneItemsGesture extends Gesture {
     // Save a copy of the initial vector layer so that we can make changes
     // to it as we drag.
     this.initialVectorLayer = this.ps.getVectorLayer();
-
-    this.snapHelper = SnapHelper.forSelectedItems(this.ps.getSelectedLayers());
   }
 
   // @Override
   onMouseDrag(event: paper.ToolEvent) {
-    const snapInfo = this.snapHelper.getSnapInfo(event);
-    if (snapInfo) {
-      const guides: Line[] = [];
-      const rulers: Ruler[] = [];
-      const newPointFn = (x: number, y: number) => {
-        // Convert the point to viewport coordinates.
-        return this.paperLayer.globalToLocal(new paper.Point(x, y));
-      };
-      if (snapInfo.horizontal.delta <= SNAP_TOLERANCE) {
-        snapInfo.horizontal.values.forEach(value => {
-          const { dragSnapBounds: dsb, siblingSnapBounds: ssb, values } = value;
-          if (values.length) {
-            const { siblingIndex } = values[0];
-            const guideTop = Math.min(dsb.top, ssb.top);
-            const guideBottom = Math.max(dsb.bottom, ssb.bottom);
-            const guideX = ssb.snapPoints[siblingIndex].x;
-            guides.push({
-              from: newPointFn(guideX, guideTop),
-              to: newPointFn(guideX, guideBottom),
-            });
-          }
-        });
-      }
-      if (snapInfo.vertical.delta <= SNAP_TOLERANCE) {
-        snapInfo.vertical.values.forEach(value => {
-          const { dragSnapBounds: dsb, siblingSnapBounds: ssb, values } = value;
-          const leftMostBounds = dsb.left < ssb.left ? dsb : ssb;
-          const rightMostBounds = dsb.right < ssb.right ? ssb : dsb;
-          const topMostBounds = dsb.top < ssb.top ? dsb : ssb;
-          const nonTopMostBounds = dsb.top < ssb.top ? ssb : dsb;
-          const bottomMostBounds = dsb.bottom < ssb.bottom ? ssb : dsb;
-          const nonBottomMostBounds = dsb.bottom < ssb.bottom ? dsb : ssb;
-          const shortestBounds = dsb.height < ssb.height ? dsb : ssb;
-          const tallestBounds = dsb.height < ssb.height ? ssb : dsb;
-          if (values.length) {
-            const { siblingIndex } = values[0];
-            const guideLeft = leftMostBounds.left;
-            const guideRight = rightMostBounds.right;
-            const guideY = ssb.snapPoints[siblingIndex].y;
-            guides.push({
-              from: newPointFn(guideLeft, guideY),
-              to: newPointFn(guideRight, guideY),
-            });
-          }
-          values.forEach(() => {
-            const rulerLeft = leftMostBounds.right;
-            const rulerRight = rightMostBounds.left;
-            const rulerTop = nonTopMostBounds.top;
-            const rulerBottom = nonBottomMostBounds.bottom;
-            // TODO: handle the 'rulerTop === rulerBottom' case like sketch does
-            const rulerY = rulerTop + (rulerBottom - rulerTop) * 0.5;
-            const rulerFrom = newPointFn(rulerLeft, rulerY);
-            const rulerTo = newPointFn(rulerRight, rulerY);
-            rulers.push({
-              line: { from: rulerFrom, to: rulerTo },
-              delta: rulerTo.x - rulerFrom.x,
-            });
-          });
-        });
-      }
-      this.ps.setSnapGuideInfo({ guides, rulers });
-    } else {
-      this.ps.setSnapGuideInfo(undefined);
-    }
-
     if (!this.isDragging) {
       if (event.modifiers.alt) {
         // TODO: clone the selected items
@@ -170,6 +99,51 @@ export class SelectDragCloneItemsGesture extends Gesture {
     });
 
     this.ps.setVectorLayer(newVl);
+
+    // TODO: should we compute the snap before or after modifying the items?
+    this.ps.setSnapGuideInfo(this.getSnapGuideInfo());
+  }
+
+  private getSnapGuideInfo(): SnapGuideInfo {
+    const dragItems = Array.from(this.ps.getSelectedLayers()).map(id =>
+      this.paperLayer.findItemByLayerId(id),
+    );
+    if (!dragItems.length) {
+      return undefined;
+    }
+    const { parent } = dragItems[0];
+    if (!dragItems.every(item => item.parent === parent)) {
+      // TODO: determine if there is an alternative to exiting early here?
+      console.warn('all snapped items must share the same parent item');
+      return undefined;
+    }
+    const siblingItems = parent.children.filter(i => !dragItems.includes(i));
+    if (!siblingItems.length) {
+      return undefined;
+    }
+
+    // Perform the snap test.
+    const toSnapPointsFn = (items: paper.Item[]) => {
+      const { topLeft, center, bottomRight } = PaperUtil.computeGlobalBounds(items);
+      return [topLeft, center, bottomRight];
+    };
+    const snapInfo = SnapUtil.getSnapInfo(
+      toSnapPointsFn(dragItems),
+      siblingItems.map(siblingItem => toSnapPointsFn([siblingItem])),
+    );
+    const transformLineFn = ({ from, to }: Line) => {
+      return {
+        from: this.paperLayer.globalToLocal(new paper.Point(from)),
+        to: this.paperLayer.globalToLocal(new paper.Point(to)),
+      };
+    };
+    return {
+      guides: SnapUtil.buildSnapGuides(snapInfo).map(transformLineFn),
+      rulers: SnapUtil.buildSnapRulers(snapInfo).map(ruler => ({
+        ...ruler,
+        line: transformLineFn(ruler.line),
+      })),
+    };
   }
 
   // @Override

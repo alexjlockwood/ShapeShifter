@@ -2,6 +2,7 @@ import { Layer, LayerUtil, PathLayer } from 'app/model/layers';
 import { ToolMode } from 'app/model/paper';
 import { MathUtil } from 'app/scripts/common';
 import { ClickDetector } from 'app/scripts/paper/detector';
+import { PaperLayer } from 'app/scripts/paper/item';
 import {
   AddDeleteHandlesGesture,
   BatchSelectItemsGesture,
@@ -20,8 +21,7 @@ import {
   SelectDragHandleGesture,
   SetFocusedPathGesture,
   TransformPathsGesture,
-} from 'app/scripts/paper/gesture';
-import { PaperLayer } from 'app/scripts/paper/item';
+} from 'app/scripts/paper/tool/gesture';
 import { PaperUtil } from 'app/scripts/paper/util';
 import { PaperService } from 'app/services';
 import { FocusedPathInfo } from 'app/store/paper/actions';

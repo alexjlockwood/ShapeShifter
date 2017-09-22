@@ -44,7 +44,7 @@ export class ScaleItemsGesture extends Gesture {
       return item.globalMatrix.prepended(invertedPaperLayerMatrix).inverted();
     });
     const bounds = PaperUtil.transformRectangle(
-      PaperUtil.computeGlobalBounds(...this.selectedItems),
+      PaperUtil.computeGlobalBounds(this.selectedItems),
       this.paperLayer.matrix.inverted(),
     );
     this.initialPivot = bounds[this.selectionBoundsRaster.oppositePivotType];

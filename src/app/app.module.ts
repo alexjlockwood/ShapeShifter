@@ -19,6 +19,7 @@ import {
   MdToolbarModule,
   MdTooltipModule,
 } from '@angular/material';
+import { MATERIAL_COMPATIBILITY_MODE } from '@angular/material/core';
 import { BrowserModule, DomSanitizer } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { StoreModule } from '@ngrx/store';
@@ -126,6 +127,7 @@ import { reducer } from './store';
     SnackBarService,
     ThemeService,
     PaperService,
+    { provide: MATERIAL_COMPATIBILITY_MODE, useValue: true },
   ],
   entryComponents: [ConfirmDialogComponent, DemoDialogComponent, DropFilesDialogComponent],
   bootstrap: [RootComponent],
