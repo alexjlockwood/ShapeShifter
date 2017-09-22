@@ -112,6 +112,14 @@ If you want to contribute, you can build and serve the web app locally as follow
 
 If you're having issues with the build, make sure your `Node.js` version is up-to-date before reporting issues.
 
+## Guide
+
+[Video guide by Alex Lockwood](https://www.youtube.com/watch?v=2aq3ljlnQdI)
+
+[and also this one (52 minutes)](https://www.youtube.com/watch?v=k_rZkDE6ne8)
+
+an [online tool](http://editor.method.ac/) to create and modify vector-drawable, path, SVG and than use in [ShapeShifter](https://shapeshifter.design/).
+
 ## Special thanks
 
 Huge thanks to [Nick Butcher][nick-butcher-twitter], [Roman Nurik][roman-nurik-twitter],
