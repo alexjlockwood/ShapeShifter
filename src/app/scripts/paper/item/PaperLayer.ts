@@ -171,7 +171,10 @@ export class PaperLayer extends paper.Layer {
     );
   }
 
-  /** Finds all vector layer items that overlap with the specified bounds. */
+  /**
+   * Finds all vector layer items that overlap with the specified bounds.
+   * Note that the bounds must be in viewport coordinates.
+   */
   findItemsInBounds(bounds: paper.Rectangle, includePartialOverlaps: boolean) {
     return this.vectorLayerItem.getItems({
       // TODO: figure out how to deal with groups and compound paths

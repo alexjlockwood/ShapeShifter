@@ -454,15 +454,7 @@ declare module 'paper' {
      * @param match.overlapping - the rectangle with which the items need to at least partly overlap.
      */
     getItems(matchFn?: (item: Item) => boolean): Item[];
-    getItems<T extends Item>(options?: {
-      recursive?: boolean;
-      match?: (item: Item) => boolean;
-      class?: Constructor<
-        Group | Layer | Path | CompoundPath | Shape | Raster | Symbol | PointText
-      >;
-      inside?: Rectangle;
-      overlapping?: Rectangle;
-    }): Item[];
+    getItems<C extends Item = Item>(options?: GetItemsOptions<C>): C[];
 
     /**
      * Fetch the first descendant (child or child of child) of this item that matches the properties in the specified object.
@@ -885,5 +877,13 @@ declare module 'paper' {
     removeOnUp(): void;
 
     equals(item: Item): boolean;
+  }
+
+  export interface GetItemsOptions<C extends Item> {
+    recursive?: boolean;
+    match?: (item: C) => boolean;
+    class?: Constructor<C>;
+    inside?: Rectangle;
+    overlapping?: Rectangle;
   }
 }
