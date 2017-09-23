@@ -111,12 +111,17 @@ declare module 'paper' {
      */
     abs(): Size;
 
+    add(point: Size): Size;
+    add(point: number): Size;
+
+    subtract(point: Size): Size;
+    subtract(point: number): Size;
+
     /*
      * Returns the new multiplied size
      * @param point - The size you want to multiply with
      */
     multiply(point: Size): Size;
-    multiply(point: number[]): Size;
     multiply(point: number): Size;
 
     /*
@@ -124,7 +129,6 @@ declare module 'paper' {
      * @param point - The size you want to divide with
      */
     divide(point: Size): Size;
-    divide(point: number[]): Size;
     divide(point: number): Size;
   }
 }

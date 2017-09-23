@@ -9,3 +9,4 @@ export const getPathOverlayInfo = createSelector(getPaperState, p => p.pathOverl
 export const getFocusedPathInfo = createDeepEqualSelector(getPaperState, p => p.focusedPathInfo);
 export const getCanvasCursor = createSelector(getPaperState, p => p.canvasCursor);
 export const getSnapGuideInfo = createSelector(getPaperState, p => p.snapGuideInfo);
+export const getZoomPanInfo = createSelector(getPaperState, p => p.zoomPanInfo);

@@ -16,7 +16,9 @@ import {
   SetSelectionBox,
   SetSnapGuideInfo,
   SetToolMode,
+  SetZoomPanInfo,
   SnapGuideInfo,
+  ZoomPanInfo,
 } from 'app/store/paper/actions';
 import {
   getCanvasCursor,
@@ -25,6 +27,7 @@ import {
   getSelectionBox,
   getSnapGuideInfo,
   getToolMode,
+  getZoomPanInfo,
 } from 'app/store/paper/selectors';
 import * as $ from 'jquery';
 import * as _ from 'lodash';
@@ -131,6 +134,13 @@ export class PaperService {
   setSnapGuideInfo(info: SnapGuideInfo | undefined) {
     if (!_.isEqual(this.queryStore(getSnapGuideInfo), info)) {
       this.store.dispatch(new SetSnapGuideInfo(info));
+    }
+  }
+
+  /** Sets the current zoom/pan info. */
+  setZoomPanInfo(info: ZoomPanInfo) {
+    if (!_.isEqual(this.queryStore(getZoomPanInfo), info)) {
+      this.store.dispatch(new SetZoomPanInfo(info));
     }
   }
 

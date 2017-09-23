@@ -7,6 +7,7 @@ import {
   getPathOverlayInfo,
   getSelectionBox,
   getSnapGuideInfo,
+  getZoomPanInfo,
 } from 'app/store/paper/selectors';
 import { getToolMode } from 'app/store/paper/selectors';
 import * as paper from 'paper';
@@ -102,6 +103,11 @@ function initializeListeners(ps: PaperService) {
     } else {
       pl.setSelectionBox(undefined);
     }
+  });
+  ps.store.select(getZoomPanInfo).subscribe(info => {
+    paper.view.zoom = info.zoom;
+    paper.view.matrix.tx = info.translation.x;
+    paper.view.matrix.ty = info.translation.y;
   });
 }
 

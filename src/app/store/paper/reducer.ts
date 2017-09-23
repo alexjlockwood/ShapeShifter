@@ -2,7 +2,7 @@ import { CanvasCursor, ToolMode } from 'app/model/paper';
 import { Point } from 'app/scripts/common';
 
 import * as actions from './actions';
-import { FocusedPathInfo, PathOverlayInfo, SnapGuideInfo } from './actions';
+import { FocusedPathInfo, PathOverlayInfo, SnapGuideInfo, ZoomPanInfo } from './actions';
 
 export interface State {
   readonly toolMode: ToolMode;
@@ -11,6 +11,7 @@ export interface State {
   readonly focusedPathInfo: FocusedPathInfo;
   readonly canvasCursor: CanvasCursor;
   readonly snapGuideInfo: SnapGuideInfo;
+  readonly zoomPanInfo: ZoomPanInfo;
 }
 
 export function buildInitialState(): State {
@@ -21,6 +22,7 @@ export function buildInitialState(): State {
     focusedPathInfo: undefined,
     canvasCursor: undefined,
     snapGuideInfo: undefined,
+    zoomPanInfo: { zoom: 1, translation: { x: 0, y: 0 } },
   };
 }
 
@@ -38,6 +40,8 @@ export function reducer(state = buildInitialState(), action: actions.Actions): S
       return { ...state, canvasCursor: action.payload.canvasCursor };
     case actions.SET_SNAP_GUIDE_INFO:
       return { ...state, snapGuideInfo: action.payload.snapGuideInfo };
+    case actions.SET_ZOOM_PAN_INFO:
+      return { ...state, zoomPanInfo: action.payload.zoomPanInfo };
   }
   return state;
 }
